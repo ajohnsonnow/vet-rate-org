@@ -12,7 +12,22 @@
 export function normalizeCondition(condition) {
   const normalized = condition.toLowerCase().trim();
 
-  // Mental Health Conditions
+  return (
+    normalizeMentalHealthCondition(normalized) ||
+    normalizeAuditoryCondition(normalized) ||
+    normalizeSleepCondition(normalized) ||
+    normalizeKneeCondition(normalized) ||
+    normalizeShoulderCondition(normalized) ||
+    normalizeHipCondition(normalized) ||
+    normalizeAnkleCondition(normalized) ||
+    normalizeSpineCondition(normalized) ||
+    normalizePainCondition(normalized) ||
+    normalizeNeuropathyCondition(normalized) ||
+    null
+  );
+}
+
+function normalizeMentalHealthCondition(normalized) {
   if (
     normalized.includes("ptsd") ||
     normalized.includes("post-traumatic stress") ||
@@ -33,8 +48,10 @@ export function normalizeCondition(condition) {
   ) {
     return "depression";
   }
+  return null;
+}
 
-  // Auditory Conditions
+function normalizeAuditoryCondition(normalized) {
   if (
     normalized.includes("tinnitus") ||
     normalized.includes("ringing in ears") ||
@@ -49,8 +66,10 @@ export function normalizeCondition(condition) {
   ) {
     return "hearing_loss";
   }
+  return null;
+}
 
-  // Sleep Conditions
+function normalizeSleepCondition(normalized) {
   if (
     normalized.includes("sleep apnea") ||
     normalized.includes("osa") ||
@@ -60,8 +79,10 @@ export function normalizeCondition(condition) {
   ) {
     return "sleep_apnea";
   }
+  return null;
+}
 
-  // Knee Conditions (laterality matters)
+function normalizeKneeCondition(normalized) {
   if (
     (normalized.includes("knee") || normalized.includes("patella")) &&
     (normalized.includes("right") ||
@@ -82,8 +103,10 @@ export function normalizeCondition(condition) {
     // If knee is mentioned but no side specified, could match both
     return "knee_unspecified";
   }
+  return null;
+}
 
-  // Shoulder Conditions
+function normalizeShoulderCondition(normalized) {
   if (
     (normalized.includes("shoulder") || normalized.includes("rotator cuff")) &&
     (normalized.includes("right") ||
@@ -100,8 +123,10 @@ export function normalizeCondition(condition) {
   ) {
     return "shoulder_left";
   }
+  return null;
+}
 
-  // Hip Conditions
+function normalizeHipCondition(normalized) {
   if (
     normalized.includes("hip") &&
     (normalized.includes("right") ||
@@ -118,8 +143,10 @@ export function normalizeCondition(condition) {
   ) {
     return "hip_left";
   }
+  return null;
+}
 
-  // Ankle Conditions
+function normalizeAnkleCondition(normalized) {
   if (
     normalized.includes("ankle") &&
     (normalized.includes("right") ||
@@ -136,8 +163,10 @@ export function normalizeCondition(condition) {
   ) {
     return "ankle_left";
   }
+  return null;
+}
 
-  // Spine Conditions
+function normalizeSpineCondition(normalized) {
   if (
     normalized.includes("lumbar") ||
     normalized.includes("lower back") ||
@@ -153,8 +182,10 @@ export function normalizeCondition(condition) {
   ) {
     return "cervical_spine";
   }
+  return null;
+}
 
-  // Pain Conditions (important for NSAID medication bridge)
+function normalizePainCondition(normalized) {
   if (
     (normalized.includes("pain") ||
       normalized.includes("arthritis") ||
@@ -169,8 +200,10 @@ export function normalizeCondition(condition) {
   ) {
     return "chronic_pain_nsaid";
   }
+  return null;
+}
 
-  // Peripheral Neuropathy
+function normalizeNeuropathyCondition(normalized) {
   if (
     normalized.includes("neuropathy") ||
     normalized.includes("peripheral neuropathy") ||
@@ -178,7 +211,6 @@ export function normalizeCondition(condition) {
   ) {
     return "peripheral_neuropathy";
   }
-
   return null;
 }
 

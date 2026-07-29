@@ -34,6 +34,12 @@ import {
   BUG_CATEGORIES,
 } from "../../utils/bugReportUtils";
 
+const getReportButtonLabel = (reportState) => {
+  if (reportState === "saved") return "Reported ✓";
+  if (reportState === "saving") return "Reporting…";
+  return "Report this problem";
+};
+
 export default class ErrorBoundary extends Component {
   static contextType = ToastContext;
 
@@ -111,7 +117,7 @@ export default class ErrorBoundary extends Component {
         className={
           isApp
             ? "min-h-screen flex items-center justify-center bg-gray-50 dark:bg-emerald-950 px-4 py-8 pb-[calc(env(safe-area-inset-bottom)+2rem)]"
-            : "flex items-center justify-center p-4"
+            : "flex-1 flex items-center justify-center p-4 pb-[calc(70px+5.5rem+env(safe-area-inset-bottom))] md:pb-4"
         }
       >
         <div className="w-full max-w-md text-center bg-white dark:bg-emerald-900 border border-gray-200 dark:border-emerald-800 rounded-2xl shadow-lg p-6">
@@ -159,11 +165,7 @@ export default class ErrorBoundary extends Component {
               disabled={reportBusy}
               className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-60 dark:border-emerald-700 dark:text-gray-200 dark:hover:bg-emerald-800"
             >
-              {reportState === "saved"
-                ? "Reported ✓"
-                : reportState === "saving"
-                  ? "Reporting…"
-                  : "Report this problem"}
+              {getReportButtonLabel(reportState)}
             </button>
           </div>
         </div>

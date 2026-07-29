@@ -17,6 +17,82 @@ import {
 import { generateWhatsNewChangelog } from "../utils/changelogGenerator";
 import { useLanguage } from "../contexts/LanguageContext";
 
+const getIcon = (type, isNew) => {
+  if (isNew) return <Rocket className="w-4 h-4 text-emerald-500" />;
+  switch (type) {
+    case "feature":
+      return (
+        <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />
+      );
+    case "fix":
+      return <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+    case "security":
+      return <Shield className="w-4 h-4 text-red-600 dark:text-red-400" />;
+    case "improvement":
+      return <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />;
+    default:
+      return (
+        <CheckCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+      );
+  }
+};
+
+const getTypeBadgeColor = (type, isNew) => {
+  if (isNew) return "bg-gradient-to-r from-emerald-500 to-green-500 text-white";
+  const colors = {
+    feature:
+      "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
+    fix: "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+    security: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
+    improvement:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300",
+  };
+  return (
+    colors[type] ||
+    "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+  );
+};
+
+const getTypeLabel = (type, isNew) => {
+  if (isNew) return "🆕 NEW";
+  const labels = {
+    feature: "Feature",
+    fix: "Bug Fix",
+    security: "Security",
+    improvement: "Improvement",
+    change: "Change",
+  };
+  return labels[type] || "Update";
+};
+
+const ChangelogItem = ({ item }) => (
+  <div className="border-l-2 border-gray-300 dark:border-gray-600 pl-3 py-1">
+    <div className="flex items-start gap-2 mb-1">
+      {getIcon(item.type, item.isNew)}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-medium ${getTypeBadgeColor(item.type, item.isNew)}`}
+          >
+            {getTypeLabel(item.type, item.isNew)}
+          </span>
+          {item.category && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {item.category}
+            </span>
+          )}
+        </div>
+        <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-0.5">
+          {item.title}
+        </h4>
+        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+          {item.description}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
 const VersionDropdown = () => {
   const { _t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -43,55 +119,6 @@ const VersionDropdown = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
-
-  const getIcon = (type, isNew) => {
-    if (isNew) return <Rocket className="w-4 h-4 text-emerald-500" />;
-    switch (type) {
-      case "feature":
-        return (
-          <Sparkles className="w-4 h-4 text-green-600 dark:text-green-400" />
-        );
-      case "fix":
-        return <Wrench className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
-      case "security":
-        return <Shield className="w-4 h-4 text-red-600 dark:text-red-400" />;
-      case "improvement":
-        return <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />;
-      default:
-        return (
-          <CheckCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-        );
-    }
-  };
-
-  const getTypeBadgeColor = (type, isNew) => {
-    if (isNew)
-      return "bg-gradient-to-r from-emerald-500 to-green-500 text-white";
-    const colors = {
-      feature:
-        "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
-      fix: "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
-      security: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
-      improvement:
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300",
-    };
-    return (
-      colors[type] ||
-      "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
-    );
-  };
-
-  const getTypeLabel = (type, isNew) => {
-    if (isNew) return "🆕 NEW";
-    const labels = {
-      feature: "Feature",
-      fix: "Bug Fix",
-      security: "Security",
-      improvement: "Improvement",
-      change: "Change",
-    };
-    return labels[type] || "Update";
-  };
 
   if (!changelogData) {
     return (
@@ -130,34 +157,7 @@ const VersionDropdown = () => {
           {/* Changelog Items */}
           <div className="p-3 space-y-3">
             {changelog.map((item, index) => (
-              <div
-                key={index}
-                className="border-l-2 border-gray-300 dark:border-gray-600 pl-3 py-1"
-              >
-                <div className="flex items-start gap-2 mb-1">
-                  {getIcon(item.type, item.isNew)}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${getTypeBadgeColor(item.type, item.isNew)}`}
-                      >
-                        {getTypeLabel(item.type, item.isNew)}
-                      </span>
-                      {item.category && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {item.category}
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-0.5">
-                      {item.title}
-                    </h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <ChangelogItem key={index} item={item} />
             ))}
           </div>
 

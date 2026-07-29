@@ -205,18 +205,10 @@ const checkLockout = () => {
 
 const AdminAuthContext = createContext(null);
 
-export function AdminAuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentAdmin, setCurrentAdmin] = useState(null);
-  const [sessionExpiry, setSessionExpiry] = useState(null);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [lockoutInfo, setLockoutInfo] = useState({
-    isLocked: false,
-    remainingTime: 0,
-  });
-
-  // Check lockout status on mount
+/**
+ * Check lockout status on mount and keep it ticking while locked.
+ */
+function useLockoutMountEffect(setLockoutInfo) {
   useEffect(() => {
     const status = checkLockout();
     setLockoutInfo(status);
@@ -230,9 +222,13 @@ export function AdminAuthProvider({ children }) {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, []);
+  }, [setLockoutInfo]);
+}
 
-  // Session timeout checker
+/**
+ * Session timeout checker
+ */
+function useSessionTimeoutEffect(isAuthenticated, sessionExpiry, logout) {
   useEffect(() => {
     if (!isAuthenticated || !sessionExpiry) return;
 
@@ -249,15 +245,12 @@ export function AdminAuthProvider({ children }) {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, sessionExpiry]);
+}
 
-  // Extend session on activity
-  const extendSession = useCallback(() => {
-    if (isAuthenticated) {
-      setSessionExpiry(Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT);
-    }
-  }, [isAuthenticated]);
-
-  // Listen for user activity to extend session
+/**
+ * Listen for user activity to extend session
+ */
+function useActivityListenerEffect(isAuthenticated, extendSession) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -270,138 +263,18 @@ export function AdminAuthProvider({ children }) {
     return () =>
       events.forEach((event) => window.removeEventListener(event, handler));
   }, [isAuthenticated, extendSession]);
+}
 
-  /**
-   * Attempt to authenticate with PIN
-   * @param {string} pin - The PIN to authenticate with
-   * @returns {Promise<Object>} - { success, error }
-   */
-  const authenticate = async (pin) => {
-    // Check lockout first
-    const lockStatus = checkLockout();
-    if (lockStatus.isLocked) {
-      const minutes = Math.ceil(lockStatus.remainingTime / 60000);
-      logAuthEvent("LOGIN_BLOCKED", { reason: "lockout" });
-      return {
-        success: false,
-        error: `Account locked. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`,
-      };
-    }
-
-    // Validate PIN format
-    if (!pin || pin.length < SECURITY_CONFIG.MIN_PIN_LENGTH) {
-      return { success: false, error: "Invalid PIN format" };
-    }
-
-    // Try to authenticate against each admin
-    for (const admin of ADMIN_CREDENTIALS) {
-      const isValid = await verifyPin(pin, admin.pinHash);
-
-      if (isValid) {
-        // Success!
-        clearLockout();
-        setIsAuthenticated(true);
-        setCurrentAdmin(admin);
-        setSessionExpiry(Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT);
-        setShowAdminLogin(false);
-
-        logAuthEvent("LOGIN_SUCCESS", {
-          adminId: admin.id,
-          role: admin.role,
-        });
-
-        return { success: true };
-      }
-    }
-
-    // Failed attempt
-    const { failedAttempts } = getLockoutStatus();
-    const newAttempts = failedAttempts + 1;
-
-    logAuthEvent("LOGIN_FAILED", { attempts: newAttempts });
-
-    if (newAttempts >= SECURITY_CONFIG.MAX_FAILED_ATTEMPTS) {
-      const lockedUntil = Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION;
-      setLockoutStatus(newAttempts, lockedUntil);
-      setLockoutInfo({
-        isLocked: true,
-        remainingTime: SECURITY_CONFIG.LOCKOUT_DURATION,
-      });
-
-      logAuthEvent("ACCOUNT_LOCKED", {
-        duration: SECURITY_CONFIG.LOCKOUT_DURATION,
-      });
-
-      return {
-        success: false,
-        error: "Too many failed attempts. Account locked for 15 minutes.",
-      };
-    }
-
-    setLockoutStatus(newAttempts);
-    const remaining = SECURITY_CONFIG.MAX_FAILED_ATTEMPTS - newAttempts;
-
-    return {
-      success: false,
-      error: `Invalid PIN. ${remaining} attempt${remaining > 1 ? "s" : ""} remaining.`,
-    };
-  };
-
-  /**
-   * Logout and clear session
-   * @param {string} reason - Logout reason for audit
-   */
-  const logout = useCallback(
-    (reason = "User logout") => {
-      logAuthEvent("LOGOUT", { reason, adminId: currentAdmin?.id });
-
-      setIsAuthenticated(false);
-      setCurrentAdmin(null);
-      setSessionExpiry(null);
-      setShowAdminPanel(false);
-    },
-    [currentAdmin],
-  );
-
-  /**
-   * Open admin login modal (via secret shortcut)
-   */
-  const openAdminLogin = useCallback(() => {
-    if (!isAuthenticated) {
-      setShowAdminLogin(true);
-      logAuthEvent("LOGIN_MODAL_OPENED");
-    } else {
-      setShowAdminPanel(true);
-      extendSession();
-    }
-  }, [isAuthenticated, extendSession]);
-
-  /**
-   * Close admin login modal
-   */
-  const closeAdminLogin = useCallback(() => {
-    setShowAdminLogin(false);
-  }, []);
-
-  /**
-   * Open admin panel (if authenticated)
-   */
-  const openAdminPanel = useCallback(() => {
-    if (isAuthenticated) {
-      setShowAdminPanel(true);
-      extendSession();
-      logAuthEvent("ADMIN_PANEL_OPENED", { adminId: currentAdmin?.id });
-    }
-  }, [isAuthenticated, extendSession, currentAdmin]);
-
-  /**
-   * Close admin panel
-   */
-  const closeAdminPanel = useCallback(() => {
-    setShowAdminPanel(false);
-  }, []);
-
-  // Secret keyboard shortcut: Ctrl+Shift+A
+/**
+ * Secret keyboard shortcut: Ctrl+Shift+A
+ */
+function useAdminKeyboardShortcut(
+  openAdminLogin,
+  showAdminLogin,
+  showAdminPanel,
+  setShowAdminLogin,
+  setShowAdminPanel,
+) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ctrl+Shift+A to open admin login/panel
@@ -419,7 +292,221 @@ export function AdminAuthProvider({ children }) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [openAdminLogin, showAdminLogin, showAdminPanel]);
+  }, [
+    openAdminLogin,
+    showAdminLogin,
+    showAdminPanel,
+    setShowAdminLogin,
+    setShowAdminPanel,
+  ]);
+}
+
+/**
+ * Bundles the admin login/panel open/close actions.
+ */
+function useAdminPanelActions(
+  isAuthenticated,
+  extendSession,
+  currentAdmin,
+  setShowAdminLogin,
+  setShowAdminPanel,
+) {
+  /**
+   * Open admin login modal (via secret shortcut)
+   */
+  const openAdminLogin = useCallback(() => {
+    if (!isAuthenticated) {
+      setShowAdminLogin(true);
+      logAuthEvent("LOGIN_MODAL_OPENED");
+    } else {
+      setShowAdminPanel(true);
+      extendSession();
+    }
+  }, [isAuthenticated, extendSession, setShowAdminLogin, setShowAdminPanel]);
+
+  /**
+   * Close admin login modal
+   */
+  const closeAdminLogin = useCallback(() => {
+    setShowAdminLogin(false);
+  }, [setShowAdminLogin]);
+
+  /**
+   * Open admin panel (if authenticated)
+   */
+  const openAdminPanel = useCallback(() => {
+    if (isAuthenticated) {
+      setShowAdminPanel(true);
+      extendSession();
+      logAuthEvent("ADMIN_PANEL_OPENED", { adminId: currentAdmin?.id });
+    }
+  }, [isAuthenticated, extendSession, currentAdmin, setShowAdminPanel]);
+
+  /**
+   * Close admin panel
+   */
+  const closeAdminPanel = useCallback(() => {
+    setShowAdminPanel(false);
+  }, [setShowAdminPanel]);
+
+  return { openAdminLogin, closeAdminLogin, openAdminPanel, closeAdminPanel };
+}
+
+/**
+ * Attempt to authenticate with PIN
+ * @param {string} pin - The PIN to authenticate with
+ * @param {Object} setters - State setters from AdminAuthProvider
+ * @returns {Promise<Object>} - { success, error }
+ */
+async function performAuthenticate(pin, setters) {
+  const {
+    setIsAuthenticated,
+    setCurrentAdmin,
+    setSessionExpiry,
+    setShowAdminLogin,
+    setLockoutInfo,
+  } = setters;
+
+  // Check lockout first
+  const lockStatus = checkLockout();
+  if (lockStatus.isLocked) {
+    const minutes = Math.ceil(lockStatus.remainingTime / 60000);
+    logAuthEvent("LOGIN_BLOCKED", { reason: "lockout" });
+    return {
+      success: false,
+      error: `Account locked. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`,
+    };
+  }
+
+  // Validate PIN format
+  if (!pin || pin.length < SECURITY_CONFIG.MIN_PIN_LENGTH) {
+    return { success: false, error: "Invalid PIN format" };
+  }
+
+  // Try to authenticate against each admin
+  for (const admin of ADMIN_CREDENTIALS) {
+    const isValid = await verifyPin(pin, admin.pinHash);
+
+    if (isValid) {
+      // Success!
+      clearLockout();
+      setIsAuthenticated(true);
+      setCurrentAdmin(admin);
+      setSessionExpiry(Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT);
+      setShowAdminLogin(false);
+
+      logAuthEvent("LOGIN_SUCCESS", {
+        adminId: admin.id,
+        role: admin.role,
+      });
+
+      return { success: true };
+    }
+  }
+
+  // Failed attempt
+  const { failedAttempts } = getLockoutStatus();
+  const newAttempts = failedAttempts + 1;
+
+  logAuthEvent("LOGIN_FAILED", { attempts: newAttempts });
+
+  if (newAttempts >= SECURITY_CONFIG.MAX_FAILED_ATTEMPTS) {
+    const lockedUntil = Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION;
+    setLockoutStatus(newAttempts, lockedUntil);
+    setLockoutInfo({
+      isLocked: true,
+      remainingTime: SECURITY_CONFIG.LOCKOUT_DURATION,
+    });
+
+    logAuthEvent("ACCOUNT_LOCKED", {
+      duration: SECURITY_CONFIG.LOCKOUT_DURATION,
+    });
+
+    return {
+      success: false,
+      error: "Too many failed attempts. Account locked for 15 minutes.",
+    };
+  }
+
+  setLockoutStatus(newAttempts);
+  const remaining = SECURITY_CONFIG.MAX_FAILED_ATTEMPTS - newAttempts;
+
+  return {
+    success: false,
+    error: `Invalid PIN. ${remaining} attempt${remaining > 1 ? "s" : ""} remaining.`,
+  };
+}
+
+export function AdminAuthProvider({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentAdmin, setCurrentAdmin] = useState(null);
+  const [sessionExpiry, setSessionExpiry] = useState(null);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [lockoutInfo, setLockoutInfo] = useState({
+    isLocked: false,
+    remainingTime: 0,
+  });
+
+  useLockoutMountEffect(setLockoutInfo);
+
+  /**
+   * Logout and clear session
+   * @param {string} reason - Logout reason for audit
+   */
+  const logout = useCallback(
+    (reason = "User logout") => {
+      logAuthEvent("LOGOUT", { reason, adminId: currentAdmin?.id });
+
+      setIsAuthenticated(false);
+      setCurrentAdmin(null);
+      setSessionExpiry(null);
+      setShowAdminPanel(false);
+    },
+    [currentAdmin],
+  );
+
+  useSessionTimeoutEffect(isAuthenticated, sessionExpiry, logout);
+
+  // Extend session on activity
+  const extendSession = useCallback(() => {
+    if (isAuthenticated) {
+      setSessionExpiry(Date.now() + SECURITY_CONFIG.SESSION_TIMEOUT);
+    }
+  }, [isAuthenticated]);
+
+  useActivityListenerEffect(isAuthenticated, extendSession);
+
+  /**
+   * Attempt to authenticate with PIN
+   * @param {string} pin - The PIN to authenticate with
+   * @returns {Promise<Object>} - { success, error }
+   */
+  const authenticate = (pin) =>
+    performAuthenticate(pin, {
+      setIsAuthenticated,
+      setCurrentAdmin,
+      setSessionExpiry,
+      setShowAdminLogin,
+      setLockoutInfo,
+    });
+
+  const { openAdminLogin, closeAdminLogin, openAdminPanel, closeAdminPanel } =
+    useAdminPanelActions(
+      isAuthenticated,
+      extendSession,
+      currentAdmin,
+      setShowAdminLogin,
+      setShowAdminPanel,
+    );
+
+  useAdminKeyboardShortcut(
+    openAdminLogin,
+    showAdminLogin,
+    showAdminPanel,
+    setShowAdminLogin,
+    setShowAdminPanel,
+  );
 
   const value = {
     // State

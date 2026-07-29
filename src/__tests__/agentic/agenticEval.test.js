@@ -116,9 +116,9 @@ describe("Agentic harness — system-prompt fingerprints", () => {
   // To intentionally rotate: run the suite, copy the actual hash from
   // the failure message, and update the table below.
   const EXPECTED = {
-    auditor: "421f8082c4993be13d3de4907e050087ddd7df4356c91cd1043faa4cdc2aec66",
+    auditor: "6e18353607757605a3b77be1150313f71aff78d516be4dbf45c0898b645cccdc",
     writer: "97c52df9d11a554fa2e754c93f65c9083a6017cbcacb2e5b75057e5f257c633a",
-    rater: "158bf9127d60dea1abcdfae7c5e5b2bc916e00f1170b5ab09cb5b6361af04100",
+    rater: "7a9bd47dbac60a5efd4583b70900bd87fd61ec3b4e5f8e9f6ae9d95ac27d899c",
   };
 
   it("auditor prompt fingerprint is stable", () => {

@@ -30,10 +30,6 @@ const GDRIVE_CONFIG = {
 let accessToken = null;
 let currentUser = null;
 let tokenClient = null;
-// eslint-disable-next-line no-unused-vars
-let gapiInited = false;
-// eslint-disable-next-line no-unused-vars
-let gisInited = false;
 
 /**
  * RT8-7: Lazy-load the Google API scripts on first cloud-sync interaction
@@ -97,7 +93,6 @@ function initializeGapiClient() {
         await window.gapi.client.init({
           discoveryDocs: GDRIVE_CONFIG.discoveryDocs,
         });
-        gapiInited = true;
         // eslint-disable-next-line no-console
         console.log("✅ GAPI client initialized");
         resolve(true);
@@ -143,7 +138,6 @@ function initializeGisClient() {
         },
       });
 
-      gisInited = true;
       // eslint-disable-next-line no-console
       console.log("✅ GIS client initialized");
       resolve(true);
@@ -215,7 +209,7 @@ export async function signInToGoogleDrive() {
         const userInfo = await fetchUserInfo(accessToken);
         currentUser = userInfo;
         resolve(userInfo);
-      } catch (err) {
+      } catch {
         // Even if we can't get user info, we're still signed in
         resolve({ email: "Google User", name: "Google User" });
       }

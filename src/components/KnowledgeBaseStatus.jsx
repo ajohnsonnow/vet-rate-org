@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import disabilityDataJson from "../data/disabilityData.json";
+import { getAllConditions } from "../services/knowledgeQuery";
 import { useColorSchemas } from "../hooks/useColorSchemas";
 import {
   isMobileDevice,
@@ -21,7 +21,7 @@ import {
   FULL_DATABASE_COUNT,
 } from "../utils/dkbIndexedDB";
 
-const disabilityData = disabilityDataJson.disabilities || [];
+const disabilityData = getAllConditions();
 
 /**
  * Knowledge Source Metadata
@@ -223,47 +223,39 @@ const getSourceMetadata = (sourceKey) => {
   return SOURCE_METADATA["Unknown"];
 };
 
-/**
- * Knowledge Base Status Indicator
- * Shows real-time stats from Diamond Knowledge Base (DKB) - Official sources only
- * CKB is hidden until approved for use
- */
-export default function KnowledgeBaseStatus({ compact = false }) {
-  // eslint-disable-next-line no-unused-vars
-  const { t } = useLanguage();
-  // eslint-disable-next-line no-unused-vars
-  // eslint-disable-next-line no-unused-vars
-  const { getColorClass, colors, getDropdownClasses } = useColorSchemas();
-  // eslint-disable-next-line no-unused-vars
-  const dropdownClasses = getDropdownClasses();
+// Custom scrollbar styles for a cleaner look
+const scrollbarStyles = `
+    .dkb-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .dkb-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 3px;
+    }
+    .dkb-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(16, 185, 129, 0.3);
+      border-radius: 3px;
+    }
+    .dkb-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.5);
+    }
+    .dark .dkb-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.3);
+    }
+    .dark .dkb-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(52, 211, 153, 0.5);
+    }
+  `;
 
-  const [showDetails, setShowDetails] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isFullCached, setIsFullCached] = useState(false);
-  const [kbStatus, setKbStatus] = useState({
-    lastUpdated: null,
-    totalConditions: 0,
-    // DKB (Diamond Knowledge Base) - Official sources
-    dkbEntries: 0,
-    dkbSources: {},
-    // Full database count (available with Local LLM or IndexedDB)
-    fullDatabaseCount: FULL_DATABASE_COUNT, // Full DKB entries
-    isWebOptimized: true, // True when using web version (truncated)
-    localAIReady: false, // Whether Local AI is loaded
-    // Combined for display
-    totalEntries: 0,
-    sources: {},
-    // Full DKB source counts (calculated dynamically from cached data)
-    fullSources: {},
-    ecfrCurrent: true,
-    ecfrDate: "2026-01-27",
-    loading: true,
-  });
-  const dropdownRef = useRef(null);
-
-  // Check device type and cache status on mount
+// Check device type + full-DKB cache status on mount; auto-download the
+// full database on desktop when it isn't cached yet.
+function useDkbInitialCacheCheck({
+  setIsMobile,
+  setIsFullCached,
+  setIsDownloading,
+  setDownloadProgress,
+  setKbStatus,
+}) {
   useEffect(() => {
     const checkDeviceAndCache = async () => {
       const mobile = isMobileDevice();
@@ -328,8 +320,19 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     };
 
     checkDeviceAndCache();
+  }, [
+    setDownloadProgress,
+    setIsDownloading,
+    setIsFullCached,
+    setIsMobile,
+    setKbStatus,
+  ]);
+}
 
-    // Listen for cache updates
+// Listen for cache updates broadcast elsewhere in the app (e.g. after a
+// background sync finishes populating the full DKB).
+function useDkbCacheUpdateListener({ setIsFullCached, setKbStatus }) {
+  useEffect(() => {
     const handleCacheUpdate = (event) => {
       const { entryCount, fullDatabase } = event.detail || {};
       if (fullDatabase) {
@@ -346,9 +349,11 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     window.addEventListener("dkb-cache-updated", handleCacheUpdate);
     return () =>
       window.removeEventListener("dkb-cache-updated", handleCacheUpdate);
-  }, []);
+  }, [setIsFullCached, setKbStatus]);
+}
 
-  // Close dropdown when clicking outside
+// Close the compact dropdown when clicking outside of it.
+function useDkbDropdownDismiss({ dropdownRef, showDetails, setShowDetails }) {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -362,9 +367,12 @@ export default function KnowledgeBaseStatus({ compact = false }) {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [showDetails]);
+  }, [dropdownRef, setShowDetails, showDetails]);
+}
 
-  // Listen for Local AI status changes
+// Listen for Local AI (on-device model) status changes and switch between
+// web-optimized and full-DKB stats accordingly.
+function useDkbLocalAIListener({ setKbStatus }) {
   useEffect(() => {
     const handleLocalAIStatusChange = (event) => {
       const { ready, fullDKBAvailable } = event.detail || {};
@@ -406,10 +414,12 @@ export default function KnowledgeBaseStatus({ compact = false }) {
         handleLocalAIStatusChange,
       );
     };
-  }, []);
+  }, [setKbStatus]);
+}
 
+// Load Diamond Knowledge Base (DKB) - Official sources only.
+function useDkbStatsLoader({ setKbStatus }) {
   useEffect(() => {
-    // Load Diamond Knowledge Base (DKB) - Official sources only
     const loadKnowledgeBaseStats = async () => {
       try {
         // Load DKB (official sources - for AI/training)
@@ -469,9 +479,17 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     };
 
     loadKnowledgeBaseStats();
-  }, []);
+  }, [setKbStatus]);
+}
 
-  // Handle manual download of full DKB (for mobile users)
+// Handle manual download of full DKB (for mobile users).
+function useDkbManualDownload({
+  isDownloading,
+  setIsDownloading,
+  setDownloadProgress,
+  setIsFullCached,
+  setKbStatus,
+}) {
   const handleDownloadFullDKB = async () => {
     if (isDownloading) return;
 
@@ -503,6 +521,11 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     }
   };
 
+  return handleDownloadFullDKB;
+}
+
+// Derives "days since update" presentation helpers from kbStatus.
+function useDkbStatusPresentation(kbStatus) {
   const getDaysSinceUpdate = () => {
     if (!kbStatus.lastUpdated) return null;
     const lastUpdate = new Date(kbStatus.lastUpdated);
@@ -528,30 +551,6 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     return "🔄";
   };
 
-  // Custom scrollbar styles for a cleaner look
-  const scrollbarStyles = `
-    .dkb-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .dkb-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-      border-radius: 3px;
-    }
-    .dkb-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(16, 185, 129, 0.3);
-      border-radius: 3px;
-    }
-    .dkb-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(16, 185, 129, 0.5);
-    }
-    .dark .dkb-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(52, 211, 153, 0.3);
-    }
-    .dark .dkb-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(52, 211, 153, 0.5);
-    }
-  `;
-
   // Format date for display
   const formatDate = (dateStr) => {
     if (!dateStr) return "Pending";
@@ -563,549 +562,747 @@ export default function KnowledgeBaseStatus({ compact = false }) {
     });
   };
 
-  // Group sources by authority level for better organization
-  // eslint-disable-next-line no-unused-vars
-  const getGroupedSources = () => {
-    const grouped = {};
-    Object.entries(kbStatus.dkbSources).forEach(([source, count]) => {
-      const metadata = getSourceMetadata(source);
-      const level = metadata.authorityLevel;
-      if (!grouped[level]) {
-        grouped[level] = [];
-      }
-      grouped[level].push({ source, count, metadata });
-    });
-    return grouped;
-  };
+  return { getStatusColor, getStatusIcon, formatDate };
+}
 
-  if (compact) {
+/**
+ * Loads and tracks Diamond Knowledge Base (DKB) status: device/cache
+ * detection, background download of the full database, Local AI status
+ * changes, and the outside-click handling for the compact dropdown.
+ */
+function useKnowledgeBaseStatus() {
+  const [showDetails, setShowDetails] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isFullCached, setIsFullCached] = useState(false);
+  const [kbStatus, setKbStatus] = useState({
+    lastUpdated: null,
+    totalConditions: 0,
+    // DKB (Diamond Knowledge Base) - Official sources
+    dkbEntries: 0,
+    dkbSources: {},
+    // Full database count (available with Local LLM or IndexedDB)
+    fullDatabaseCount: FULL_DATABASE_COUNT, // Full DKB entries
+    isWebOptimized: true, // True when using web version (truncated)
+    localAIReady: false, // Whether Local AI is loaded
+    // Combined for display
+    totalEntries: 0,
+    sources: {},
+    // Full DKB source counts (calculated dynamically from cached data)
+    fullSources: {},
+    ecfrCurrent: true,
+    ecfrDate: "2026-01-27",
+    loading: true,
+  });
+  const dropdownRef = useRef(null);
+
+  useDkbInitialCacheCheck({
+    setIsMobile,
+    setIsFullCached,
+    setIsDownloading,
+    setDownloadProgress,
+    setKbStatus,
+  });
+  useDkbCacheUpdateListener({ setIsFullCached, setKbStatus });
+  useDkbDropdownDismiss({ dropdownRef, showDetails, setShowDetails });
+  useDkbLocalAIListener({ setKbStatus });
+  useDkbStatsLoader({ setKbStatus });
+
+  const handleDownloadFullDKB = useDkbManualDownload({
+    isDownloading,
+    setIsDownloading,
+    setDownloadProgress,
+    setIsFullCached,
+    setKbStatus,
+  });
+  const { getStatusColor, getStatusIcon, formatDate } =
+    useDkbStatusPresentation(kbStatus);
+
+  return {
+    showDetails,
+    setShowDetails,
+    isDownloading,
+    downloadProgress,
+    isMobile,
+    isFullCached,
+    kbStatus,
+    dropdownRef,
+    handleDownloadFullDKB,
+    getStatusColor,
+    getStatusIcon,
+    formatDate,
+  };
+}
+
+function CompactBadgeLabel({ kbStatus }) {
+  if (kbStatus.localAIReady && !kbStatus.isWebOptimized && !kbStatus.loading) {
     return (
-      <div ref={dropdownRef} className="relative">
-        <style>{scrollbarStyles}</style>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-xs bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-          aria-label="Diamond Knowledge Base - Click for details"
+      <>
+        <span className="text-emerald-600 dark:text-emerald-400">FULL DKB</span>
+        <span
+          className="text-emerald-500 dark:text-emerald-400 ml-1"
+          aria-label="Full DKB active with Local AI"
         >
-          <span className={getStatusColor()}>{getStatusIcon()}</span>
-          <span className="font-medium text-gray-700 dark:text-gray-200">
-            {kbStatus.localAIReady &&
-            !kbStatus.isWebOptimized &&
-            !kbStatus.loading ? (
-              <>
-                <span className="text-emerald-600 dark:text-emerald-400">
-                  FULL DKB
-                </span>
-                <span
-                  className="text-emerald-500 dark:text-emerald-400 ml-1"
-                  aria-label="Full DKB active with Local AI"
-                >
-                  🧠
-                </span>
-              </>
-            ) : (
-              <>
-                DKB:{" "}
-                {kbStatus.loading
-                  ? "Loading..."
-                  : `${kbStatus.dkbEntries.toLocaleString()}`}
-                {kbStatus.isWebOptimized && !kbStatus.loading && (
-                  <span
-                    className="text-amber-500 dark:text-amber-400 ml-1"
-                    aria-label={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}
-                  >
-                    *
-                  </span>
-                )}
-              </>
-            )}
-          </span>
-          {kbStatus.ecfrCurrent && (
-            <span
-              className="text-green-500 dark:text-green-400"
-              aria-label="Diamond Certified - Official VA Sources"
+          🧠
+        </span>
+      </>
+    );
+  }
+
+  return (
+    <>
+      DKB:{" "}
+      {kbStatus.loading
+        ? "Loading..."
+        : `${kbStatus.dkbEntries.toLocaleString()}`}
+      {kbStatus.isWebOptimized && !kbStatus.loading && (
+        <span
+          className="text-amber-500 dark:text-amber-400 ml-1"
+          aria-label={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}
+        >
+          *
+        </span>
+      )}
+    </>
+  );
+}
+
+function CompactDetailsHeader({ kbStatus }) {
+  return (
+    <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-2">
+        <span className="text-2xl">💎</span>
+        <div>
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+            Diamond Knowledge Base
+          </h4>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Official VA sources for AI training
+          </p>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+          {kbStatus.loading ? "..." : kbStatus.dkbEntries.toLocaleString()}
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          entries loaded
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompactWebOptimizedNotice({
+  kbStatus,
+  isFullCached,
+  isMobile,
+  isDownloading,
+  downloadProgress,
+  handleDownloadFullDKB,
+}) {
+  if (!kbStatus.isWebOptimized || kbStatus.loading || isFullCached) {
+    return null;
+  }
+
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+      <div className="flex items-start gap-2">
+        <span className="text-amber-500 text-lg">⚡</span>
+        <div className="flex-1">
+          <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+            Web-Optimized Mode
+          </div>
+          <div className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+            Showing <strong>{kbStatus.dkbEntries.toLocaleString()}</strong>{" "}
+            high-priority entries for fast loading. Full database has{" "}
+            <strong>{kbStatus.fullDatabaseCount.toLocaleString()}</strong>{" "}
+            entries.
+          </div>
+
+          {/* Download Button for Mobile */}
+          {isMobile && !isDownloading && (
+            <button
+              onClick={handleDownloadFullDKB}
+              className="mt-3 w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              💎
-            </span>
+              <span>📥</span>
+              <span>Download Full Database (~8 MB)</span>
+            </button>
           )}
 
-          {showDetails && (
-            <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-              className="absolute top-full left-0 mt-2 w-[420px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 text-left z-50"
-              onClick={(e) => e.stopPropagation()}
+          {/* Download Progress */}
+          {isDownloading && (
+            <div className="mt-3">
+              <div className="flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 mb-1">
+                <span>Downloading full database...</span>
+                <span>{downloadProgress}%</span>
+              </div>
+              <div className="w-full h-2 bg-amber-200 dark:bg-amber-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-300"
+                  style={{ width: `${downloadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Desktop notice */}
+          {!isMobile && !isDownloading && (
+            <div className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
+              <span>🧠</span>
+              <span>
+                Load <strong>Local LLM</strong> (Diamond Swarm) for complete
+                knowledge access.
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompactFullDkbCachedNotice({ kbStatus, isFullCached }) {
+  if (!isFullCached || kbStatus.localAIReady || kbStatus.loading) {
+    return null;
+  }
+
+  return (
+    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+      <div className="flex items-start gap-2">
+        <span className="text-emerald-500 text-lg">💾</span>
+        <div>
+          <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+            Full Database Cached
+          </div>
+          <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+            <strong>{kbStatus.fullDatabaseCount.toLocaleString()}</strong>{" "}
+            entries saved locally for offline access.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompactFullDkbActiveNotice({ kbStatus }) {
+  if (!kbStatus.localAIReady || kbStatus.isWebOptimized || kbStatus.loading) {
+    return null;
+  }
+
+  return (
+    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+      <div className="flex items-start gap-2">
+        <span className="text-emerald-500 text-lg">🧠</span>
+        <div>
+          <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+            Full Knowledge Base Active
+          </div>
+          <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+            Local AI loaded with complete{" "}
+            <strong>{kbStatus.fullDatabaseCount.toLocaleString()}</strong> DKB
+            entries. All official sources available for comprehensive analysis.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompactDetailsSourceList({ kbStatus, formatDate }) {
+  if (kbStatus.loading) return null;
+
+  return (
+    <div className="space-y-2">
+      <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+        Knowledge Sources
+      </h5>
+
+      <div className="dkb-scrollbar max-h-48 overflow-y-auto pr-1 space-y-2">
+        {Object.entries(kbStatus.dkbSources)
+          .map(([source, count]) => {
+            const metadata = getSourceMetadata(source);
+            return { source, count, metadata };
+          })
+          .sort(
+            (a, b) =>
+              a.metadata.authorityLevel - b.metadata.authorityLevel ||
+              b.count - a.count,
+          )
+          .map(({ source, count, metadata }) => (
+            <div
+              key={source}
+              className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5 border border-gray-100 dark:border-gray-600"
             >
-              <div className="space-y-4">
-                {/* Header with total stats */}
-                <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">💎</span>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                        Diamond Knowledge Base
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Official VA sources for AI training
-                      </p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-base flex-shrink-0">
+                    {metadata.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                      {metadata.displayName}
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                      {kbStatus.loading
-                        ? "..."
-                        : kbStatus.dkbEntries.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      entries loaded
+                    <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                      {metadata.description}
                     </div>
                   </div>
                 </div>
-
-                {/* Web Optimization Notice */}
-                {kbStatus.isWebOptimized &&
-                  !kbStatus.loading &&
-                  !isFullCached && (
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                        <span className="text-amber-500 text-lg">⚡</span>
-                        <div className="flex-1">
-                          <div className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                            Web-Optimized Mode
-                          </div>
-                          <div className="text-xs text-amber-700 dark:text-amber-400 mt-1">
-                            Showing{" "}
-                            <strong>
-                              {kbStatus.dkbEntries.toLocaleString()}
-                            </strong>{" "}
-                            high-priority entries for fast loading. Full
-                            database has{" "}
-                            <strong>
-                              {kbStatus.fullDatabaseCount.toLocaleString()}
-                            </strong>{" "}
-                            entries.
-                          </div>
-
-                          {/* Download Button for Mobile */}
-                          {isMobile && !isDownloading && (
-                            <button
-                              onClick={handleDownloadFullDKB}
-                              className="mt-3 w-full px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-                            >
-                              <span>📥</span>
-                              <span>Download Full Database (~8 MB)</span>
-                            </button>
-                          )}
-
-                          {/* Download Progress */}
-                          {isDownloading && (
-                            <div className="mt-3">
-                              <div className="flex items-center justify-between text-xs text-amber-700 dark:text-amber-400 mb-1">
-                                <span>Downloading full database...</span>
-                                <span>{downloadProgress}%</span>
-                              </div>
-                              <div className="w-full h-2 bg-amber-200 dark:bg-amber-800 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-emerald-500 transition-all duration-300"
-                                  style={{ width: `${downloadProgress}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Desktop notice */}
-                          {!isMobile && !isDownloading && (
-                            <div className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
-                              <span>🧠</span>
-                              <span>
-                                Load <strong>Local LLM</strong> (Diamond Swarm)
-                                for complete knowledge access.
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                {/* Full DKB Cached Notice */}
-                {isFullCached &&
-                  !kbStatus.localAIReady &&
-                  !kbStatus.loading && (
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                        <span className="text-emerald-500 text-lg">💾</span>
-                        <div>
-                          <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                            Full Database Cached
-                          </div>
-                          <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-                            <strong>
-                              {kbStatus.fullDatabaseCount.toLocaleString()}
-                            </strong>{" "}
-                            entries saved locally for offline access.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                {/* Full DKB Active Notice */}
-                {kbStatus.localAIReady &&
-                  !kbStatus.isWebOptimized &&
-                  !kbStatus.loading && (
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                        <span className="text-emerald-500 text-lg">🧠</span>
-                        <div>
-                          <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                            Full Knowledge Base Active
-                          </div>
-                          <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-                            Local AI loaded with complete{" "}
-                            <strong>
-                              {kbStatus.fullDatabaseCount.toLocaleString()}
-                            </strong>{" "}
-                            DKB entries. All official sources available for
-                            comprehensive analysis.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                {/* Source list with metadata */}
-                <div className="space-y-2">
-                  <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                    Knowledge Sources
-                  </h5>
-
-                  {!kbStatus.loading && (
-                    <div className="dkb-scrollbar max-h-48 overflow-y-auto pr-1 space-y-2">
-                      {Object.entries(kbStatus.dkbSources)
-                        .map(([source, count]) => {
-                          const metadata = getSourceMetadata(source);
-                          return { source, count, metadata };
-                        })
-                        .sort(
-                          (a, b) =>
-                            a.metadata.authorityLevel -
-                              b.metadata.authorityLevel || b.count - a.count,
-                        )
-                        .map(({ source, count, metadata }) => (
-                          <div
-                            key={source}
-                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5 border border-gray-100 dark:border-gray-600"
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-base flex-shrink-0">
-                                  {metadata.icon}
-                                </span>
-                                <div className="min-w-0">
-                                  <div className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                                    {metadata.displayName}
-                                  </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-                                    {metadata.description}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right flex-shrink-0">
-                                <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                                  {count.toLocaleString()}
-                                </div>
-                                <div
-                                  className={`text-xs ${metadata.lastUpdated ? "text-gray-500 dark:text-gray-400" : "text-amber-500 dark:text-amber-400"}`}
-                                >
-                                  {metadata.lastUpdated
-                                    ? formatDate(metadata.lastUpdated)
-                                    : "Planned"}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Authority Levels Legend */}
-                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">
-                    📊 Authority Levels
-                  </h5>
-                  <div className="flex flex-wrap gap-1.5 text-xs">
-                    <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">
-                      1-Statutory
-                    </span>
-                    <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                      2-Judicial
-                    </span>
-                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
-                      3-Admin
-                    </span>
-                    <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full">
-                      4-Policy
-                    </span>
-                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
-                      5-Procedures
-                    </span>
-                    <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
-                      6-Reference
-                    </span>
+                <div className="text-right flex-shrink-0">
+                  <div className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                    {count.toLocaleString()}
                   </div>
-                </div>
-
-                {/* Footer */}
-                <div className="pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center justify-between">
-                    <span>Last KB Update: {formatDate(kbStatus.ecfrDate)}</span>
-                    <a
-                      href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      View eCFR →
-                    </a>
+                  <div
+                    className={`text-xs ${metadata.lastUpdated ? "text-gray-500 dark:text-gray-400" : "text-amber-500 dark:text-amber-400"}`}
+                  >
+                    {metadata.lastUpdated
+                      ? formatDate(metadata.lastUpdated)
+                      : "Planned"}
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </button>
+          ))}
       </div>
+    </div>
+  );
+}
+
+function CompactDetailsLegend() {
+  return (
+    <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+      <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">
+        📊 Authority Levels
+      </h5>
+      <div className="flex flex-wrap gap-1.5 text-xs">
+        <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">
+          1-Statutory
+        </span>
+        <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+          2-Judicial
+        </span>
+        <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
+          3-Admin
+        </span>
+        <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full">
+          4-Policy
+        </span>
+        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+          5-Procedures
+        </span>
+        <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+          6-Reference
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function CompactDetailsFooter({ kbStatus, formatDate }) {
+  return (
+    <div className="pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-between">
+        <span>Last KB Update: {formatDate(kbStatus.ecfrDate)}</span>
+        <a
+          href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-blue-400 hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          View eCFR →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function CompactDetailsPanel({
+  kbStatus,
+  isFullCached,
+  isMobile,
+  isDownloading,
+  downloadProgress,
+  handleDownloadFullDKB,
+  formatDate,
+}) {
+  return (
+    <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+      className="absolute top-full left-0 mt-2 w-[420px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 text-left z-50"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="space-y-4">
+        <CompactDetailsHeader kbStatus={kbStatus} />
+        <CompactWebOptimizedNotice
+          kbStatus={kbStatus}
+          isFullCached={isFullCached}
+          isMobile={isMobile}
+          isDownloading={isDownloading}
+          downloadProgress={downloadProgress}
+          handleDownloadFullDKB={handleDownloadFullDKB}
+        />
+        <CompactFullDkbCachedNotice
+          kbStatus={kbStatus}
+          isFullCached={isFullCached}
+        />
+        <CompactFullDkbActiveNotice kbStatus={kbStatus} />
+        <CompactDetailsSourceList kbStatus={kbStatus} formatDate={formatDate} />
+        <CompactDetailsLegend />
+        <CompactDetailsFooter kbStatus={kbStatus} formatDate={formatDate} />
+      </div>
+    </div>
+  );
+}
+
+function CompactKnowledgeBaseStatus({
+  dropdownRef,
+  showDetails,
+  setShowDetails,
+  getStatusColor,
+  getStatusIcon,
+  kbStatus,
+  isMobile,
+  isDownloading,
+  downloadProgress,
+  isFullCached,
+  handleDownloadFullDKB,
+  formatDate,
+}) {
+  return (
+    <div ref={dropdownRef} className="relative">
+      <style>{scrollbarStyles}</style>
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-xs bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+        aria-label="Diamond Knowledge Base - Click for details"
+      >
+        <span className={getStatusColor()}>{getStatusIcon()}</span>
+        <span className="font-medium text-gray-700 dark:text-gray-200">
+          <CompactBadgeLabel kbStatus={kbStatus} />
+        </span>
+        {kbStatus.ecfrCurrent && (
+          <span
+            className="text-green-500 dark:text-green-400"
+            aria-label="Diamond Certified - Official VA Sources"
+          >
+            💎
+          </span>
+        )}
+
+        {showDetails && (
+          <CompactDetailsPanel
+            kbStatus={kbStatus}
+            isFullCached={isFullCached}
+            isMobile={isMobile}
+            isDownloading={isDownloading}
+            downloadProgress={downloadProgress}
+            handleDownloadFullDKB={handleDownloadFullDKB}
+            formatDate={formatDate}
+          />
+        )}
+      </button>
+    </div>
+  );
+}
+
+function FullKnowledgeBaseHeader({ kbStatus, entriesCaption }) {
+  return (
+    <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">💎</span>
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            Diamond Knowledge Base
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Official VA sources for AI training
+          </p>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          {kbStatus.localAIReady &&
+          !kbStatus.isWebOptimized &&
+          !kbStatus.loading ? (
+            <span className="flex items-center gap-1">
+              <span>FULL</span>
+              <span className="text-lg">🧠</span>
+            </span>
+          ) : (
+            <>
+              {kbStatus.loading ? "..." : kbStatus.dkbEntries.toLocaleString()}
+              {kbStatus.isWebOptimized && !kbStatus.loading && (
+                <span className="text-amber-500 text-lg ml-1">*</span>
+              )}
+            </>
+          )}
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          {entriesCaption}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FullKnowledgeBaseWebNotice({ kbStatus }) {
+  if (!kbStatus.isWebOptimized || kbStatus.loading) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+      <div className="flex items-start gap-3">
+        <span className="text-amber-500 text-2xl">⚡</span>
+        <div className="flex-1">
+          <div className="text-base font-semibold text-amber-800 dark:text-amber-300">
+            Web-Optimized Mode Active
+          </div>
+          <div className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+            Currently showing{" "}
+            <strong>{kbStatus.dkbEntries.toLocaleString()}</strong>{" "}
+            high-priority entries (top 6% by quality score) for faster browser
+            loading.
+          </div>
+          <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">
+                  Full Database
+                </div>
+                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {kbStatus.fullDatabaseCount.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  total entries
+                </div>
+              </div>
+              <div className="text-center">
+                <span className="text-2xl">🧠</span>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  Available with
+                </div>
+                <div className="text-xs font-semibold text-purple-600 dark:text-purple-400">
+                  Local LLM
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="text-xs text-amber-600 dark:text-amber-500 mt-2">
+            💡 Load <strong>Diamond Swarm</strong> (Local AI) for complete 130K+
+            entry access with offline capability.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FullKnowledgeBaseSourceList({ kbStatus, formatDate }) {
+  if (kbStatus.loading) return null;
+
+  return (
+    <div>
+      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
+        Knowledge Sources
+      </h4>
+
+      <div className="dkb-scrollbar max-h-64 overflow-y-auto pr-2 space-y-3">
+        {Object.entries(kbStatus.dkbSources)
+          .map(([source, count]) => {
+            const metadata = getSourceMetadata(source);
+            return { source, count, metadata };
+          })
+          .sort(
+            (a, b) =>
+              a.metadata.authorityLevel - b.metadata.authorityLevel ||
+              b.count - a.count,
+          )
+          .map(({ source, count, metadata }) => (
+            <div
+              key={source}
+              className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-700/30 rounded-xl p-4 border border-gray-100 dark:border-gray-600 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <span className="text-2xl flex-shrink-0 mt-0.5">
+                    {metadata.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-base text-gray-900 dark:text-white">
+                      {metadata.displayName}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                      {metadata.description}
+                    </div>
+                    <div className="mt-2 flex items-center gap-3 text-xs">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
+                          metadata.lastUpdated
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                        }`}
+                      >
+                        📅{" "}
+                        {metadata.lastUpdated
+                          ? formatDate(metadata.lastUpdated)
+                          : "Planned"}
+                      </span>
+                      <span className="text-gray-400 dark:text-gray-500">
+                        Level {metadata.authorityLevel} Authority
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                    {count.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    entries
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+function FullKnowledgeBaseLegend() {
+  return (
+    <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
+        📊 Authority Hierarchy
+      </h4>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg border border-red-100 dark:border-red-800">
+          <span className="font-bold">1</span>
+          <span>Statutory Law</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-3 py-2 rounded-lg border border-green-100 dark:border-green-800">
+          <span className="font-bold">2</span>
+          <span>Judicial Precedent</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-3 py-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
+          <span className="font-bold">3</span>
+          <span>Administrative</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 px-3 py-2 rounded-lg border border-orange-100 dark:border-orange-800">
+          <span className="font-bold">4</span>
+          <span>Policy Guidance</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800">
+          <span className="font-bold">5</span>
+          <span>Procedures</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-3 py-2 rounded-lg border border-purple-100 dark:border-purple-800">
+          <span className="font-bold">6</span>
+          <span>Reference Data</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FullKnowledgeBaseFooter({ kbStatus, formatDate }) {
+  return (
+    <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+      <div className="text-sm text-gray-500 dark:text-gray-400">
+        <span
+          className={`inline-flex items-center gap-1 ${
+            kbStatus.ecfrCurrent
+              ? "text-green-600 dark:text-green-400"
+              : "text-orange-600 dark:text-orange-400"
+          }`}
+        >
+          {kbStatus.ecfrCurrent ? "✅ eCFR Current" : "🔄 Update Available"}
+        </span>
+        <span className="ml-2 text-gray-400">
+          as of {formatDate(kbStatus.ecfrDate)}
+        </span>
+      </div>
+      <a
+        href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+      >
+        View Official eCFR →
+      </a>
+    </div>
+  );
+}
+
+function FullKnowledgeBaseStatus({ kbStatus, formatDate }) {
+  let entriesCaption;
+  if (kbStatus.localAIReady && !kbStatus.isWebOptimized) {
+    entriesCaption = (
+      <span className="text-emerald-500 dark:text-emerald-400 font-semibold">
+        {kbStatus.fullDatabaseCount.toLocaleString()} entries
+      </span>
+    );
+  } else if (kbStatus.isWebOptimized) {
+    entriesCaption = "web-optimized entries";
+  } else {
+    entriesCaption = "total entries";
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-5">
+      <style>{scrollbarStyles}</style>
+      <div className="space-y-5">
+        <FullKnowledgeBaseHeader
+          kbStatus={kbStatus}
+          entriesCaption={entriesCaption}
+        />
+        <FullKnowledgeBaseWebNotice kbStatus={kbStatus} />
+        <FullKnowledgeBaseSourceList
+          kbStatus={kbStatus}
+          formatDate={formatDate}
+        />
+        <FullKnowledgeBaseLegend />
+        <FullKnowledgeBaseFooter kbStatus={kbStatus} formatDate={formatDate} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Knowledge Base Status Indicator
+ * Shows real-time stats from Diamond Knowledge Base (DKB) - Official sources only
+ * CKB is hidden until approved for use
+ */
+export default function KnowledgeBaseStatus({ compact = false }) {
+  useLanguage();
+  useColorSchemas();
+  const kb = useKnowledgeBaseStatus();
+
+  if (compact) {
+    return (
+      <CompactKnowledgeBaseStatus
+        dropdownRef={kb.dropdownRef}
+        showDetails={kb.showDetails}
+        setShowDetails={kb.setShowDetails}
+        getStatusColor={kb.getStatusColor}
+        getStatusIcon={kb.getStatusIcon}
+        kbStatus={kb.kbStatus}
+        isMobile={kb.isMobile}
+        isDownloading={kb.isDownloading}
+        downloadProgress={kb.downloadProgress}
+        isFullCached={kb.isFullCached}
+        handleDownloadFullDKB={kb.handleDownloadFullDKB}
+        formatDate={kb.formatDate}
+      />
     );
   }
 
   // Full display version - DKB only (CKB hidden until approved)
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-5">
-      <style>{scrollbarStyles}</style>
-      <div className="space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">💎</span>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Diamond Knowledge Base
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Official VA sources for AI training
-              </p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              {kbStatus.localAIReady &&
-              !kbStatus.isWebOptimized &&
-              !kbStatus.loading ? (
-                <span className="flex items-center gap-1">
-                  <span>FULL</span>
-                  <span className="text-lg">🧠</span>
-                </span>
-              ) : (
-                <>
-                  {kbStatus.loading
-                    ? "..."
-                    : kbStatus.dkbEntries.toLocaleString()}
-                  {kbStatus.isWebOptimized && !kbStatus.loading && (
-                    <span className="text-amber-500 text-lg ml-1">*</span>
-                  )}
-                </>
-              )}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              {kbStatus.localAIReady && !kbStatus.isWebOptimized ? (
-                <span className="text-emerald-500 dark:text-emerald-400 font-semibold">
-                  {kbStatus.fullDatabaseCount.toLocaleString()} entries
-                </span>
-              ) : kbStatus.isWebOptimized ? (
-                "web-optimized entries"
-              ) : (
-                "total entries"
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Web Optimization Notice */}
-        {kbStatus.isWebOptimized && !kbStatus.loading && (
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-amber-500 text-2xl">⚡</span>
-              <div className="flex-1">
-                <div className="text-base font-semibold text-amber-800 dark:text-amber-300">
-                  Web-Optimized Mode Active
-                </div>
-                <div className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                  Currently showing{" "}
-                  <strong>{kbStatus.dkbEntries.toLocaleString()}</strong>{" "}
-                  high-priority entries (top 6% by quality score) for faster
-                  browser loading.
-                </div>
-                <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">
-                        Full Database
-                      </div>
-                      <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                        {kbStatus.fullDatabaseCount.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        total entries
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-2xl">🧠</span>
-                      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        Available with
-                      </div>
-                      <div className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-                        Local LLM
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-xs text-amber-600 dark:text-amber-500 mt-2">
-                  💡 Load <strong>Diamond Swarm</strong> (Local AI) for complete
-                  130K+ entry access with offline capability.
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Source Cards */}
-        <div>
-          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
-            Knowledge Sources
-          </h4>
-
-          {!kbStatus.loading && (
-            <div className="dkb-scrollbar max-h-64 overflow-y-auto pr-2 space-y-3">
-              {Object.entries(kbStatus.dkbSources)
-                .map(([source, count]) => {
-                  const metadata = getSourceMetadata(source);
-                  return { source, count, metadata };
-                })
-                .sort(
-                  (a, b) =>
-                    a.metadata.authorityLevel - b.metadata.authorityLevel ||
-                    b.count - a.count,
-                )
-                .map(({ source, count, metadata }) => (
-                  <div
-                    key={source}
-                    className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-700/50 dark:to-gray-700/30 rounded-xl p-4 border border-gray-100 dark:border-gray-600 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <span className="text-2xl flex-shrink-0 mt-0.5">
-                          {metadata.icon}
-                        </span>
-                        <div className="min-w-0">
-                          <div className="font-semibold text-base text-gray-900 dark:text-white">
-                            {metadata.displayName}
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                            {metadata.description}
-                          </div>
-                          <div className="mt-2 flex items-center gap-3 text-xs">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
-                                metadata.lastUpdated
-                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                                  : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
-                              }`}
-                            >
-                              📅{" "}
-                              {metadata.lastUpdated
-                                ? formatDate(metadata.lastUpdated)
-                                : "Planned"}
-                            </span>
-                            <span className="text-gray-400 dark:text-gray-500">
-                              Level {metadata.authorityLevel} Authority
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                          {count.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          entries
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {/* Authority Levels Legend */}
-        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
-            📊 Authority Hierarchy
-          </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            <div className="flex items-center gap-2 text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg border border-red-100 dark:border-red-800">
-              <span className="font-bold">1</span>
-              <span>Statutory Law</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-3 py-2 rounded-lg border border-green-100 dark:border-green-800">
-              <span className="font-bold">2</span>
-              <span>Judicial Precedent</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-3 py-2 rounded-lg border border-emerald-100 dark:border-emerald-800">
-              <span className="font-bold">3</span>
-              <span>Administrative</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 px-3 py-2 rounded-lg border border-orange-100 dark:border-orange-800">
-              <span className="font-bold">4</span>
-              <span>Policy Guidance</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800">
-              <span className="font-bold">5</span>
-              <span>Procedures</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-3 py-2 rounded-lg border border-purple-100 dark:border-purple-800">
-              <span className="font-bold">6</span>
-              <span>Reference Data</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <span
-              className={`inline-flex items-center gap-1 ${
-                kbStatus.ecfrCurrent
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-orange-600 dark:text-orange-400"
-              }`}
-            >
-              {kbStatus.ecfrCurrent ? "✅ eCFR Current" : "🔄 Update Available"}
-            </span>
-            <span className="ml-2 text-gray-400">
-              as of {formatDate(kbStatus.ecfrDate)}
-            </span>
-          </div>
-          <a
-            href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
-          >
-            View Official eCFR →
-          </a>
-        </div>
-      </div>
-    </div>
+    <FullKnowledgeBaseStatus
+      kbStatus={kb.kbStatus}
+      formatDate={kb.formatDate}
+    />
   );
 }

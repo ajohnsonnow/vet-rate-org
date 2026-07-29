@@ -1,0 +1,215 @@
+{
+  "state": "Idaho",
+  "stateCode": "ID",
+  "officialSource": "https://veterans.idaho.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "id-property_tax_exemption-property-tax-benefit-for-100-disabled-veterans",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Property Tax Benefit for 100% Disabled Veterans",
+      "description": "Idaho reduces property taxes by up to $1,500 on a home and up to one acre of land for veterans recognized as 100% service-connected disabled, or who receive 100% VA compensation due to individual unemployability, as of January 1 of the tax year. Applicants must own and reside in the Idaho home as their primary residence (with a current homeowner's exemption; mobile homes qualify) before April 15 of the qualifying year. There are no income requirements. Veterans in care facilities or nursing homes may still qualify. Applications are due between January 1 and April 15 each year via the Idaho State Tax Commission's online portal or a paper form to the county assessor, along with a current VA letter confirming the 100% disability rating; veterans with a VA \"permanent and total\" disability rating file once and the benefit renews automatically as long as residence doesn't change, while those without a permanent rating must reapply annually with a current rating letter. Solid waste, irrigation, and other government fees are excluded from the reduction.",
+      "value": "Up to $1,500 reduction in property taxes on home and up to one acre",
+      "estimatedAnnualValue": 1500,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "100% service-connected disability or 100% VA compensation for individual unemployability as of January 1",
+          "Own and reside in the Idaho home as primary residence before April 15",
+          "Current VA letter confirming disability rating required",
+          "Annual reapplication required unless VA rating is designated permanent and total",
+          "Application window January 1 - April 15"
+        ]
+      },
+      "application": {
+        "agency": "Idaho State Tax Commission / County Assessor",
+        "form": null,
+        "url": "https://tax.idaho.gov/taxes/property/homeowners/veteran-benefit/",
+        "documentation": [
+          "Current VA letter confirming 100% disability rating (or individual unemployability compensation)",
+          "Proof of homeowner's exemption on the primary residence"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://tax.idaho.gov/taxes/property/homeowners/veteran-benefit/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "id-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Idaho issues a Disabled Veteran license plate at no initial or renewal cost to honorably discharged veterans with a 100% service-connected disability rating. Separately, Idaho Code § 49-403 also waives the registration/reregistration fee for a motor vehicle owned by a veteran receiving VA compensation for 100% service-connected disability, or for specific qualifying disabilities (loss or permanent loss of use of one or both feet, loss or permanent loss of use of one or both hands, or loss of sight/virtual blindness in both eyes). Veterans are limited to one set of Disabled Veteran plates and must provide a copy of their VA Benefit Summary Letter, obtained via a Disabled Veteran Plate Eligibility Letter requested from the VA Regional Office in Boise.",
+      "value": "No initial or renewal fee for the Disabled Veteran plate; registration fee waived for qualifying disabled veterans under Idaho Code 49-403",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge",
+          "100% service-connected disability rating (or one of the specific enumerated disabilities under Idaho Code 49-403)",
+          "Limited to one set of Disabled Veteran plates",
+          "VA Benefit Summary Letter / Disabled Veteran Plate Eligibility Letter required"
+        ]
+      },
+      "application": {
+        "agency": "Idaho Transportation Department",
+        "form": "ITD 3397",
+        "url": "https://veterans.idaho.gov/idaho-military-license-plate-applications/",
+        "documentation": [
+          "VA Benefit Summary Letter",
+          "Disabled Veteran Plate Eligibility Letter from the VA Regional Office"
+        ]
+      },
+      "legalCitation": "Idaho Code § 49-403",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.idaho.gov/idaho-military-license-plate-applications/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "id-recreation-disabled-veteran-hunting-fishing-license-discoun",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting & Fishing License Discounts",
+      "description": "Idaho residents who are disabled American veterans with a service-connected disability rating of 40% or greater can obtain a combination hunting and fishing license for a nominal fee (roughly $5.00-$5.75 for a full annual fishing credential), plus reduced-rate big game tags: deer $10.75, elk $16.50, bear $6.75, turkey $10.75. Disability documentation (VA Benefit Summary Letter, submitted to an Idaho Fish and Game Regional Office by mail, email, or in person) is only required for the initial application. Separately, Idaho Fish and Game distributes five complimentary big game tags annually (deer, elk, pronghorn, black bear, or mountain lion, excluding controlled hunts with fewer than 10 tags) to disabled veterans through qualified 501(c)(3)/501(c)(4)/501(c)(19) nonprofits or government agencies, prioritizing Idaho Division of Veterans Services-sponsored applicants (40%+ service-connected disability); this is a once-in-a-lifetime opportunity with a January 2-31 application window. Nonresident disabled American veterans with a 40%+ VA disability rating qualify for reduced-fee licenses and tags (e.g., DAV hunting with 3-day fishing license $31.75; deer tag $23.75; elk tag $39.75), limited to 500 deer tags and 300 elk tags annually.",
+      "value": "Resident combination hunting/fishing license ~$5.00-$5.75 plus reduced big-game tags (40%+ disability); free once-in-a-lifetime big game tag via nonprofit sponsorship; reduced nonresident DAV license/tag pricing",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 40,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Service-connected disability rating of 40% or greater",
+          "VA Benefit Summary Letter/Disability Percentage Rating letter required (initial application only for residents)",
+          "Free big-game tag program limited to five tags annually, once-in-a-lifetime, via qualified nonprofit/agency sponsorship, application window January 2-31"
+        ]
+      },
+      "application": {
+        "agency": "Idaho Department of Fish and Game",
+        "form": null,
+        "url": "https://idfg.idaho.gov/licenses/dav-programs",
+        "documentation": [
+          "VA Benefit Summary Letter or official VA Disability Percentage Rating letter (40%+ service-connected disability)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://idfg.idaho.gov/licenses/dav-programs",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "id-hiring_preference-state-local-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State/Local Employment Veterans' Preference",
+      "description": "Idaho grants veterans' preference for state, county, city, and local public-employer positions (including taxing districts for sewers, roads, schools, and cemeteries): qualified veterans discharged under honorable or general conditions after at least 180 days of service receive a five-percentage-point increase to their earned civil service rating; veterans with a 10%+ service-connected disability receive a ten-percentage-point increase; and veterans with a 30%+ service-connected disability are entitled to an interview if they meet all position qualifications. Preference is also available to Purple Heart recipients and to spouses, widows, or widowers of honorably discharged preference-eligible veterans. Preference applies only to initial appointment, not to internal promotions, transfers, reassignments, second positions with the same employer, key/elected positions, or temporary/casual positions.",
+      "value": "5 percentage-point rating increase (veterans); 10 percentage-point increase (10%+ disabled veterans); guaranteed interview (30%+ disabled veterans meeting qualifications)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Discharge under honorable or general conditions after at least 180 days of service",
+          "10-point-equivalent preference requires 10%+ service-connected disability",
+          "Interview guarantee requires 30%+ service-connected disability and meeting all position qualifications",
+          "Applies to initial appointment only, not promotions/transfers/reassignments"
+        ]
+      },
+      "application": {
+        "agency": "Idaho Department of Labor / Idaho Division of Human Resources",
+        "form": null,
+        "url": "https://www.labor.idaho.gov/job-seekers/veterans-services/veterans-preference/",
+        "documentation": [
+          "DD-214 or proof of honorable/general discharge",
+          "VA documentation of disability rating (for enhanced preference)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.labor.idaho.gov/job-seekers/veterans-services/veterans-preference/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "id-education_tuition-armed-forces-and-public-safety-officer-pso-depen",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Armed Forces and Public Safety Officer (PSO) Dependent Scholarship",
+      "description": "Idaho's Armed Forces and Public Safety Officer Dependent Scholarship, administered through Next Steps Idaho, provides a waiver of tuition and fees, plus up to $750 per semester for books, and on-campus housing and subsistence, for undergraduate dependents of service members or public safety officers who were killed or became permanently disabled in the line of duty. The scholarship applies at Idaho public colleges and universities, including community colleges and four-year institutions.",
+      "value": "Waiver of tuition and fees, up to $750/semester for books, plus on-campus housing and subsistence",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Applicant must be an undergraduate dependent of a service member or public safety officer killed or permanently disabled in the line of duty",
+          "Apply through the Next Steps Idaho scholarship portal"
+        ]
+      },
+      "application": {
+        "agency": "Idaho Division of Veterans Services / Next Steps Idaho",
+        "form": null,
+        "url": "https://veterans.idaho.gov/education/",
+        "documentation": [
+          "Proof of qualifying service member's/officer's death or permanent disability in the line of duty",
+          "Proof of dependent relationship"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.idaho.gov/education/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "id-state_veterans_home-idaho-state-veterans-homes-boise-lewiston-pocate",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Idaho State Veterans Homes (Boise, Lewiston, Pocatello, Post Falls)",
+      "description": "Idaho operates four state veterans homes (Boise, Lewiston, Pocatello, and Post Falls) providing nursing care to veterans who can no longer care for themselves. Eligibility requires proof of honorable military service (DD-214) showing a minimum of 90 days of active duty, or an earlier honorable discharge due to a service-connected disability; the veteran must be an Idaho resident at the time of admission. Spouses, widows, or widowers of an eligible veteran may also qualify for nursing care with proof of the veteran's honorable service and proof of marriage or a death certificate. Admission forms are available from the Home, a County or State Service Officer, or online; a State Service Officer assigned to each home reviews VA benefit eligibility and assists with the application, including Medicaid applications where relevant.",
+      "value": "Nursing care and supportive services for veterans and eligible spouses/widows/widowers",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "DD-214 or Military Discharge showing minimum 90 days active-duty honorable service (or earlier honorable discharge due to service-connected disability)",
+          "Idaho residency at time of admission",
+          "Spouses/widows/widowers require proof of the veteran's honorable service plus proof of marriage or a death certificate"
+        ]
+      },
+      "application": {
+        "agency": "Idaho Division of Veterans Services",
+        "form": "Idaho State Veterans Home Application for Admission",
+        "url": "https://veterans.idaho.gov/veterans-homes/",
+        "documentation": [
+          "DD-214 or Military Discharge documentation",
+          "Proof of marriage/death certificate (for spouse/widow(er) applicants)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.idaho.gov/veterans-homes/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

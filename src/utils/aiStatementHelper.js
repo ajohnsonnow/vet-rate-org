@@ -52,6 +52,64 @@ const _getApiKey = () => {
  * 2. Current Symptoms (what's wrong now)
  * 3. The Nexus/Link (how the event causes the current condition)
  */
+function buildSecondaryThreePillars(answers, condition, primaryCondition) {
+  // For secondary claims, the "event" is the primary condition
+  const pillar1_Event = `I have a service-connected condition: ${primaryCondition}.`;
+  const pillar2_Symptoms =
+    [
+      answers.specificExamples,
+      answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
+      answers.socialImpact
+        ? `Social/family impact: ${answers.socialImpact}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ") || "Ongoing symptoms affecting daily life.";
+
+  // The nexus for secondary is how the primary causes/aggravates the secondary
+  const mechanismText = answers.aggravationMechanism || "";
+  const explanationText = answers.aggravationExplanation || "";
+  const incidentText = answers.specificIncident || "";
+  const pillar3_Nexus =
+    [mechanismText, explanationText, incidentText].filter(Boolean).join(" ") ||
+    `My ${primaryCondition} causes or aggravates my ${condition}.`;
+
+  return { pillar1_Event, pillar2_Symptoms, pillar3_Nexus };
+}
+
+function buildDirectThreePillars(answers, condition) {
+  // For primary/direct claims
+  const pillar1_Event =
+    answers.inServiceEvent ||
+    answers.specificIncident ||
+    `During my military service, I developed/experienced issues related to ${condition}.`;
+  const pillar2_Symptoms =
+    [
+      answers.specificExamples,
+      answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
+      answers.socialImpact
+        ? `Social/family impact: ${answers.socialImpact}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ") || "I currently experience ongoing symptoms.";
+  const pillar3_Nexus =
+    answers.nexusExplanation ||
+    `The symptoms started during/after service and have persisted since ${answers.symptomOnsetDate || "that time"}.`;
+
+  return { pillar1_Event, pillar2_Symptoms, pillar3_Nexus };
+}
+
+function deriveTreatmentStatus(answers) {
+  if (answers.hasTreatment === "yes-va") {
+    return "Currently receiving VA treatment";
+  }
+  if (answers.hasTreatment === "yes-private") {
+    return "Currently receiving private treatment";
+  }
+  return "Not currently in formal treatment";
+}
+
 const buildStatementPrompt = (
   answers,
   condition,
@@ -61,53 +119,11 @@ const buildStatementPrompt = (
   const isSecondary = claimType === "secondary";
 
   // Build the Three Pillars from user input
-  let pillar1_Event = "";
-  let pillar2_Symptoms = "";
-  let pillar3_Nexus = "";
+  const { pillar1_Event, pillar2_Symptoms, pillar3_Nexus } = isSecondary
+    ? buildSecondaryThreePillars(answers, condition, primaryCondition)
+    : buildDirectThreePillars(answers, condition);
 
-  if (isSecondary) {
-    // For secondary claims, the "event" is the primary condition
-    pillar1_Event = `I have a service-connected condition: ${primaryCondition}.`;
-    pillar2_Symptoms =
-      [
-        answers.specificExamples,
-        answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
-        answers.socialImpact
-          ? `Social/family impact: ${answers.socialImpact}`
-          : "",
-      ]
-        .filter(Boolean)
-        .join(" ") || "Ongoing symptoms affecting daily life.";
-
-    // The nexus for secondary is how the primary causes/aggravates the secondary
-    const mechanismText = answers.aggravationMechanism || "";
-    const explanationText = answers.aggravationExplanation || "";
-    const incidentText = answers.specificIncident || "";
-    pillar3_Nexus =
-      [mechanismText, explanationText, incidentText]
-        .filter(Boolean)
-        .join(" ") ||
-      `My ${primaryCondition} causes or aggravates my ${condition}.`;
-  } else {
-    // For primary/direct claims
-    pillar1_Event =
-      answers.inServiceEvent ||
-      answers.specificIncident ||
-      `During my military service, I developed/experienced issues related to ${condition}.`;
-    pillar2_Symptoms =
-      [
-        answers.specificExamples,
-        answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
-        answers.socialImpact
-          ? `Social/family impact: ${answers.socialImpact}`
-          : "",
-      ]
-        .filter(Boolean)
-        .join(" ") || "I currently experience ongoing symptoms.";
-    pillar3_Nexus =
-      answers.nexusExplanation ||
-      `The symptoms started during/after service and have persisted since ${answers.symptomOnsetDate || "that time"}.`;
-  }
+  const treatmentStatus = deriveTreatmentStatus(answers);
 
   return `Draft a Personal Statement in Support of Claim (VA Form 21-4138) based on the following Three Pillars:
 
@@ -117,7 +133,7 @@ ${pillar1_Event}
 === PILLAR 2: CURRENT SYMPTOMS ===
 Condition: ${condition}
 ${pillar2_Symptoms}
-Treatment: ${answers.hasTreatment === "yes-va" ? "Currently receiving VA treatment" : answers.hasTreatment === "yes-private" ? "Currently receiving private treatment" : "Not currently in formal treatment"}
+Treatment: ${treatmentStatus}
 
 === PILLAR 3: THE NEXUS/LINK ===
 ${pillar3_Nexus}
@@ -350,6 +366,195 @@ const recordAIRequest = () => {
 };
 
 /**
+ * If the user input contains crisis language, dispatch the crisis modal
+ * event and return the blocking error response. Returns null if the AI
+ * call is safe to proceed.
+ */
+function blockIfCrisisDetected(userInput) {
+  if (!userInput) return null;
+
+  const crisisCheck = interceptBeforeAICall(userInput);
+  if (!crisisCheck.shouldBlock) return null;
+
+  console.warn(
+    "🚨 CRISIS LANGUAGE DETECTED - Blocking AI call and triggering crisis modal",
+  );
+
+  // Dispatch custom event to trigger crisis modal
+  window.dispatchEvent(
+    new CustomEvent("vetrate:crisis", {
+      detail: {
+        severity: crisisCheck.severity,
+        source: "ai-statement-helper",
+      },
+    }),
+  );
+
+  return {
+    success: false,
+    error:
+      "This application has been paused. Please connect with crisis support.",
+    crisisDetected: true,
+  };
+}
+
+/**
+ * Map a Cloud (Gemini) AI error message to a user-facing error response,
+ * or return null if the message doesn't match a known Cloud AI error.
+ */
+function mapCloudAIError(errorMsg) {
+  if (errorMsg.includes("API key")) {
+    return {
+      success: false,
+      error:
+        "Invalid or missing API key. Please check your Gemini API key in Settings.",
+      errorType: "api_key",
+    };
+  }
+
+  if (errorMsg.includes("Rate limit") || errorMsg.includes("429")) {
+    return {
+      success: false,
+      error:
+        "⏳ Rate limit reached. Please wait a minute before trying again, or switch to Local AI.",
+      errorType: "rate_limit",
+    };
+  }
+
+  if (errorMsg.includes("timed out") || errorMsg.includes("timeout")) {
+    return {
+      success: false,
+      error:
+        "⏱️ Request timed out. Try a shorter prompt or switch to Local AI.",
+      errorType: "timeout",
+    };
+  }
+
+  if (errorMsg.includes("Network error") || errorMsg.includes("offline")) {
+    return {
+      success: false,
+      error:
+        "📡 Network error. Check your internet connection, or use Local AI which works offline.",
+      errorType: "network",
+    };
+  }
+
+  if (errorMsg.includes("region") || errorMsg.includes("not available in")) {
+    return {
+      success: false,
+      error:
+        "🌍 Gemini may not be available in your region. Try using Local AI for 100% private, offline processing.",
+      errorType: "region",
+    };
+  }
+
+  if (
+    errorMsg.includes("servers") &&
+    (errorMsg.includes("500") || errorMsg.includes("unavailable"))
+  ) {
+    return {
+      success: false,
+      error:
+        "🔧 Google's servers are temporarily down. Please try again later or switch to Local AI.",
+      errorType: "server_error",
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Map a Local (WebLLM) AI error message to a user-facing error response,
+ * or return null if the message doesn't match a known Local AI error.
+ */
+function mapLocalAIError(errorMsg) {
+  if (errorMsg.includes("warming up")) {
+    return {
+      success: false,
+      error:
+        "🔄 Local AI is still warming up... Please wait for the loading bar to complete.",
+      isWarmingUp: true,
+      errorType: "warming_up",
+    };
+  }
+
+  if (
+    errorMsg.includes("Local AI not initialized") ||
+    errorMsg.includes("not ready") ||
+    errorMsg.includes("Neural Engine")
+  ) {
+    return {
+      success: false,
+      error:
+        "🧠 Local AI not ready. Please open Settings and initialize the Neural Engine first.",
+      errorType: "not_initialized",
+    };
+  }
+
+  if (errorMsg.includes("GPU") || errorMsg.includes("WebGPU")) {
+    return {
+      success: false,
+      error:
+        "💻 GPU error. Your device may not support Local AI. Try Cloud AI instead, or use Chrome/Edge browser.",
+      errorType: "gpu_error",
+    };
+  }
+
+  if (errorMsg.includes("out of memory") || errorMsg.includes("OOM")) {
+    return {
+      success: false,
+      error:
+        "💾 GPU out of memory. Try a smaller model or close other browser tabs.",
+      errorType: "memory",
+    };
+  }
+
+  if (errorMsg.includes("ModelNotLoaded")) {
+    return {
+      success: false,
+      error:
+        "⏳ Model not loaded yet. Please wait for the AI to finish loading.",
+      errorType: "not_loaded",
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Map an AI service error into the user-facing error response shape,
+ * checking crisis / Cloud AI / Local AI causes before falling back to a
+ * generic message.
+ */
+function mapAIErrorToResponse(error) {
+  const errorMsg = error.message || "";
+
+  if (errorMsg === "CRISIS_DETECTED") {
+    return {
+      success: false,
+      error:
+        "This application has been paused. Please connect with crisis support.",
+      crisisDetected: true,
+    };
+  }
+
+  const cloudError = mapCloudAIError(errorMsg);
+  if (cloudError) return cloudError;
+
+  const localError = mapLocalAIError(errorMsg);
+  if (localError) return localError;
+
+  // Generic fallback
+  return {
+    success: false,
+    error:
+      "AI error: " +
+      (errorMsg || "Please try again or use the standard template."),
+    errorType: "unknown",
+  };
+}
+
+/**
  * Call AI service (Unified - supports both Cloud and Local AI)
  * Now with built-in rate limiting ("The Cooldown") and crisis detection
  * Seamlessly switches between Cloud (Gemini) and Local (WebLLM) AI
@@ -359,32 +564,8 @@ const recordAIRequest = () => {
  */
 const callGeminiAPI = async (prompt, userInput = null) => {
   // ═══ CRISIS DETECTION CHECK (HIGHEST PRIORITY) ═══
-  if (userInput) {
-    const crisisCheck = interceptBeforeAICall(userInput);
-    if (crisisCheck.shouldBlock) {
-      console.warn(
-        "🚨 CRISIS LANGUAGE DETECTED - Blocking AI call and triggering crisis modal",
-      );
-
-      // Dispatch custom event to trigger crisis modal
-      window.dispatchEvent(
-        new CustomEvent("vetrate:crisis", {
-          detail: {
-            severity: crisisCheck.severity,
-            source: "ai-statement-helper",
-          },
-        }),
-      );
-
-      // Return error that prevents AI engagement
-      return {
-        success: false,
-        error:
-          "This application has been paused. Please connect with crisis support.",
-        crisisDetected: true,
-      };
-    }
-  }
+  const crisisBlock = blockIfCrisisDetected(userInput);
+  if (crisisBlock) return crisisBlock;
 
   // ═══ RATE LIMIT CHECK ═══
   const rateLimitCheck = checkRateLimit();
@@ -428,134 +609,7 @@ const callGeminiAPI = async (prompt, userInput = null) => {
     };
   } catch (error) {
     console.error("Error calling AI service:", error);
-    const errorMsg = error.message || "";
-
-    if (errorMsg === "CRISIS_DETECTED") {
-      return {
-        success: false,
-        error:
-          "This application has been paused. Please connect with crisis support.",
-        crisisDetected: true,
-      };
-    }
-
-    // ===== Cloud AI Errors =====
-    if (errorMsg.includes("API key")) {
-      return {
-        success: false,
-        error:
-          "Invalid or missing API key. Please check your Gemini API key in Settings.",
-        errorType: "api_key",
-      };
-    }
-
-    if (errorMsg.includes("Rate limit") || errorMsg.includes("429")) {
-      return {
-        success: false,
-        error:
-          "⏳ Rate limit reached. Please wait a minute before trying again, or switch to Local AI.",
-        errorType: "rate_limit",
-      };
-    }
-
-    if (errorMsg.includes("timed out") || errorMsg.includes("timeout")) {
-      return {
-        success: false,
-        error:
-          "⏱️ Request timed out. Try a shorter prompt or switch to Local AI.",
-        errorType: "timeout",
-      };
-    }
-
-    if (errorMsg.includes("Network error") || errorMsg.includes("offline")) {
-      return {
-        success: false,
-        error:
-          "📡 Network error. Check your internet connection, or use Local AI which works offline.",
-        errorType: "network",
-      };
-    }
-
-    if (errorMsg.includes("region") || errorMsg.includes("not available in")) {
-      return {
-        success: false,
-        error:
-          "🌍 Gemini may not be available in your region. Try using Local AI for 100% private, offline processing.",
-        errorType: "region",
-      };
-    }
-
-    if (
-      errorMsg.includes("servers") &&
-      (errorMsg.includes("500") || errorMsg.includes("unavailable"))
-    ) {
-      return {
-        success: false,
-        error:
-          "🔧 Google's servers are temporarily down. Please try again later or switch to Local AI.",
-        errorType: "server_error",
-      };
-    }
-
-    // ===== Local AI Errors =====
-    if (errorMsg.includes("warming up")) {
-      return {
-        success: false,
-        error:
-          "🔄 Local AI is still warming up... Please wait for the loading bar to complete.",
-        isWarmingUp: true,
-        errorType: "warming_up",
-      };
-    }
-
-    if (
-      errorMsg.includes("Local AI not initialized") ||
-      errorMsg.includes("not ready") ||
-      errorMsg.includes("Neural Engine")
-    ) {
-      return {
-        success: false,
-        error:
-          "🧠 Local AI not ready. Please open Settings and initialize the Neural Engine first.",
-        errorType: "not_initialized",
-      };
-    }
-
-    if (errorMsg.includes("GPU") || errorMsg.includes("WebGPU")) {
-      return {
-        success: false,
-        error:
-          "💻 GPU error. Your device may not support Local AI. Try Cloud AI instead, or use Chrome/Edge browser.",
-        errorType: "gpu_error",
-      };
-    }
-
-    if (errorMsg.includes("out of memory") || errorMsg.includes("OOM")) {
-      return {
-        success: false,
-        error:
-          "💾 GPU out of memory. Try a smaller model or close other browser tabs.",
-        errorType: "memory",
-      };
-    }
-
-    if (errorMsg.includes("ModelNotLoaded")) {
-      return {
-        success: false,
-        error:
-          "⏳ Model not loaded yet. Please wait for the AI to finish loading.",
-        errorType: "not_loaded",
-      };
-    }
-
-    // Generic fallback
-    return {
-      success: false,
-      error:
-        "AI error: " +
-        (errorMsg || "Please try again or use the standard template."),
-      errorType: "unknown",
-    };
+    return mapAIErrorToResponse(error);
   }
 };
 
@@ -749,6 +803,210 @@ export const enhanceFormStatement = async (formType, formData) => {
 };
 
 /**
+ * Privacy-first disclosure shown when the user is on Local AI (WebLLM) -
+ * nothing leaves the device, so the same object covers every statement type.
+ */
+const LOCAL_AI_DATA_DISCLOSURE = {
+  provider: "🔒 Local AI (WebLLM)",
+  purpose:
+    'To help write a more professional and effective statement using the "Three Pillars" approach',
+  retention: "ALL PROCESSING HAPPENS ON YOUR DEVICE. No data is sent anywhere.",
+  isPrivate: true,
+  privacyNote:
+    "✅ 100% Private: Your data never leaves your device. The AI model runs entirely in your browser using WebGPU.",
+  dataShared: [],
+  notShared: ["ALL DATA STAYS LOCAL - Nothing is transmitted over the network"],
+};
+
+const CLOUD_AI_DATA_DISCLOSURE_BASE_INFO = {
+  provider: "☁️ Google Gemini (Cloud AI)",
+  purpose:
+    'To help write a more professional and effective statement using the "Three Pillars" approach',
+  retention: "Google does not store prompts from free API tier for training",
+  isPrivate: false,
+  privacyNote:
+    "⚠️ Data is sent to Google servers. For 100% privacy, switch to Local AI in settings.",
+};
+
+/**
+ * Per-statement-type data disclosure shown when the user is on Cloud AI.
+ * Keyed by statementType, used by getAIDataDisclosure() for the consent modal.
+ */
+const CLOUD_AI_DATA_DISCLOSURE_BY_TYPE = {
+  personal: {
+    ...CLOUD_AI_DATA_DISCLOSURE_BASE_INFO,
+    pillars: [
+      {
+        name: "Pillar 1: The Event",
+        description:
+          "What happened in service (or your primary condition for secondary claims)",
+        example:
+          'e.g., "I have service-connected PTSD" or "Injury during deployment"',
+      },
+      {
+        name: "Pillar 2: Current Symptoms",
+        description: "What is wrong now - your symptom descriptions",
+        example: 'e.g., "Back pain every morning, difficulty standing"',
+      },
+      {
+        name: "Pillar 3: The Nexus/Link",
+        description:
+          "How the event causes or aggravates your current condition",
+        example:
+          'e.g., "The pain started after the injury and never went away"',
+      },
+    ],
+    dataShared: [
+      "Condition name being claimed",
+      "Primary condition name (if secondary claim)",
+      "Your description of symptoms and impact",
+      "How you describe the connection between service and condition",
+      "Treatment status (VA, private, or none)",
+      "Impact on work and social life (your words)",
+    ],
+    notShared: [
+      "Your name or any identifying information",
+      "Your address, SSN, or VA file number",
+      "Specific dates, locations, or unit names",
+      "Medical record numbers",
+      "Any information you have not entered in the form",
+    ],
+  },
+  buddy: {
+    ...CLOUD_AI_DATA_DISCLOSURE_BASE_INFO,
+    pillars: [
+      {
+        name: "Pillar 1: Your Relationship",
+        description: "Who you are and how you know the veteran",
+        example: 'e.g., "Spouse for 15 years" or "Fellow service member"',
+      },
+      {
+        name: "Pillar 2: What You Observed",
+        description: "Specific things you personally witnessed",
+        example: 'e.g., "I see them struggle to get out of bed each morning"',
+      },
+      {
+        name: "Pillar 3: Impact You've Witnessed",
+        description: "How the condition affects their daily life",
+        example: 'e.g., "They can no longer play with their children"',
+      },
+    ],
+    dataShared: [
+      "Condition name being supported",
+      "Relationship type (friend, family, coworker)",
+      "Your observations (in your words)",
+      "Changes you have noticed",
+      "Daily impact you have witnessed",
+    ],
+    notShared: [
+      "Your name or the veteran's name",
+      "Addresses or contact information",
+      "Specific dates or locations",
+      "Any information you have not entered",
+    ],
+  },
+  ptsd: {
+    ...CLOUD_AI_DATA_DISCLOSURE_BASE_INFO,
+    pillars: [
+      {
+        name: "Pillar 1: The Traumatic Event",
+        description: "General type of stressor experienced",
+        example: 'e.g., "Combat exposure" or "Military sexual trauma"',
+      },
+      {
+        name: "Pillar 2: Current Symptoms",
+        description: "PTSD symptoms you experience now",
+        example: 'e.g., "Nightmares, hypervigilance, avoidance"',
+      },
+      {
+        name: "Pillar 3: How It Affects Life Now",
+        description: "Daily impact of your PTSD",
+        example:
+          'e.g., "Difficulty maintaining relationships, can\'t work in crowds"',
+      },
+    ],
+    dataShared: [
+      "Type of stressor (general category)",
+      "General description of events (as you wrote)",
+      "Current symptoms description",
+      "Daily life impact description",
+    ],
+    notShared: [
+      "Your name or identifying information",
+      "Unit names, specific locations, or dates",
+      "Names of others involved",
+      "Any information you have not entered",
+    ],
+  },
+  appeal: {
+    ...CLOUD_AI_DATA_DISCLOSURE_BASE_INFO,
+    pillars: [
+      {
+        name: "Pillar 1: Why Decision is Incorrect",
+        description: "What was wrong with the original decision",
+        example: 'e.g., "Evidence shows severity is greater than 10% rating"',
+      },
+      {
+        name: "Pillar 2: Supporting Evidence",
+        description: "What evidence supports your appeal",
+        example: 'e.g., "Medical records show daily symptoms"',
+      },
+      {
+        name: "Pillar 3: Desired Outcome",
+        description: "What you are asking for",
+        example: 'e.g., "Request 30% rating based on rating criteria"',
+      },
+    ],
+    dataShared: [
+      "Condition name",
+      "Original and desired rating",
+      "Your description of why decision is incorrect",
+      "Summary of supporting evidence",
+    ],
+    notShared: [
+      "Your name or identifying information",
+      "Decision letter details",
+      "Specific dates or claim numbers",
+      "Any information you have not entered",
+    ],
+  },
+  nexusRequest: {
+    ...CLOUD_AI_DATA_DISCLOSURE_BASE_INFO,
+    purpose:
+      "To help you communicate with your doctor about VA nexus letter requirements",
+    pillars: [
+      {
+        name: "Pillar 1: The Condition",
+        description: "What condition needs medical support",
+        example: 'e.g., "Lumbar strain secondary to knee injury"',
+      },
+      {
+        name: "Pillar 2: The Connection",
+        description: "How it relates to service or primary condition",
+        example: 'e.g., "Altered gait from knee causes back strain"',
+      },
+      {
+        name: "Pillar 3: Medical Support Needed",
+        description: "What the doctor needs to address",
+        example: 'e.g., "Medical opinion on causation"',
+      },
+    ],
+    dataShared: [
+      "Condition name being claimed",
+      "Primary condition (if secondary)",
+      "Connection theory",
+      "Symptom descriptions",
+    ],
+    notShared: [
+      "Your name or doctor's name",
+      "Medical record numbers",
+      "Facility names or locations",
+      "Any information you have not entered",
+    ],
+  },
+};
+
+/**
  * Get information about what data is shared with AI (Three Pillars structure)
  * Used for the consent modal
  * Now AI-mode aware - shows different info for Cloud vs Local AI
@@ -758,213 +1016,86 @@ export const getAIDataDisclosure = (statementType) => {
 
   // If using Local AI, show privacy-first message
   if (status.effectiveMode === AI_MODES.LOCAL) {
-    return {
-      provider: "🔒 Local AI (WebLLM)",
-      purpose:
-        'To help write a more professional and effective statement using the "Three Pillars" approach',
-      retention:
-        "ALL PROCESSING HAPPENS ON YOUR DEVICE. No data is sent anywhere.",
-      isPrivate: true,
-      privacyNote:
-        "✅ 100% Private: Your data never leaves your device. The AI model runs entirely in your browser using WebGPU.",
-      dataShared: [],
-      notShared: [
-        "ALL DATA STAYS LOCAL - Nothing is transmitted over the network",
-      ],
-    };
+    return LOCAL_AI_DATA_DISCLOSURE;
   }
 
-  const baseInfo = {
-    provider: "☁️ Google Gemini (Cloud AI)",
-    purpose:
-      'To help write a more professional and effective statement using the "Three Pillars" approach',
-    retention: "Google does not store prompts from free API tier for training",
-    isPrivate: false,
-    privacyNote:
-      "⚠️ Data is sent to Google servers. For 100% privacy, switch to Local AI in settings.",
-  };
-
-  const dataByType = {
-    personal: {
-      ...baseInfo,
-      pillars: [
-        {
-          name: "Pillar 1: The Event",
-          description:
-            "What happened in service (or your primary condition for secondary claims)",
-          example:
-            'e.g., "I have service-connected PTSD" or "Injury during deployment"',
-        },
-        {
-          name: "Pillar 2: Current Symptoms",
-          description: "What is wrong now - your symptom descriptions",
-          example: 'e.g., "Back pain every morning, difficulty standing"',
-        },
-        {
-          name: "Pillar 3: The Nexus/Link",
-          description:
-            "How the event causes or aggravates your current condition",
-          example:
-            'e.g., "The pain started after the injury and never went away"',
-        },
-      ],
-      dataShared: [
-        "Condition name being claimed",
-        "Primary condition name (if secondary claim)",
-        "Your description of symptoms and impact",
-        "How you describe the connection between service and condition",
-        "Treatment status (VA, private, or none)",
-        "Impact on work and social life (your words)",
-      ],
-      notShared: [
-        "Your name or any identifying information",
-        "Your address, SSN, or VA file number",
-        "Specific dates, locations, or unit names",
-        "Medical record numbers",
-        "Any information you have not entered in the form",
-      ],
-    },
-    buddy: {
-      ...baseInfo,
-      pillars: [
-        {
-          name: "Pillar 1: Your Relationship",
-          description: "Who you are and how you know the veteran",
-          example: 'e.g., "Spouse for 15 years" or "Fellow service member"',
-        },
-        {
-          name: "Pillar 2: What You Observed",
-          description: "Specific things you personally witnessed",
-          example: 'e.g., "I see them struggle to get out of bed each morning"',
-        },
-        {
-          name: "Pillar 3: Impact You've Witnessed",
-          description: "How the condition affects their daily life",
-          example: 'e.g., "They can no longer play with their children"',
-        },
-      ],
-      dataShared: [
-        "Condition name being supported",
-        "Relationship type (friend, family, coworker)",
-        "Your observations (in your words)",
-        "Changes you have noticed",
-        "Daily impact you have witnessed",
-      ],
-      notShared: [
-        "Your name or the veteran's name",
-        "Addresses or contact information",
-        "Specific dates or locations",
-        "Any information you have not entered",
-      ],
-    },
-    ptsd: {
-      ...baseInfo,
-      pillars: [
-        {
-          name: "Pillar 1: The Traumatic Event",
-          description: "General type of stressor experienced",
-          example: 'e.g., "Combat exposure" or "Military sexual trauma"',
-        },
-        {
-          name: "Pillar 2: Current Symptoms",
-          description: "PTSD symptoms you experience now",
-          example: 'e.g., "Nightmares, hypervigilance, avoidance"',
-        },
-        {
-          name: "Pillar 3: How It Affects Life Now",
-          description: "Daily impact of your PTSD",
-          example:
-            'e.g., "Difficulty maintaining relationships, can\'t work in crowds"',
-        },
-      ],
-      dataShared: [
-        "Type of stressor (general category)",
-        "General description of events (as you wrote)",
-        "Current symptoms description",
-        "Daily life impact description",
-      ],
-      notShared: [
-        "Your name or identifying information",
-        "Unit names, specific locations, or dates",
-        "Names of others involved",
-        "Any information you have not entered",
-      ],
-    },
-    appeal: {
-      ...baseInfo,
-      pillars: [
-        {
-          name: "Pillar 1: Why Decision is Incorrect",
-          description: "What was wrong with the original decision",
-          example: 'e.g., "Evidence shows severity is greater than 10% rating"',
-        },
-        {
-          name: "Pillar 2: Supporting Evidence",
-          description: "What evidence supports your appeal",
-          example: 'e.g., "Medical records show daily symptoms"',
-        },
-        {
-          name: "Pillar 3: Desired Outcome",
-          description: "What you are asking for",
-          example: 'e.g., "Request 30% rating based on rating criteria"',
-        },
-      ],
-      dataShared: [
-        "Condition name",
-        "Original and desired rating",
-        "Your description of why decision is incorrect",
-        "Summary of supporting evidence",
-      ],
-      notShared: [
-        "Your name or identifying information",
-        "Decision letter details",
-        "Specific dates or claim numbers",
-        "Any information you have not entered",
-      ],
-    },
-    nexusRequest: {
-      ...baseInfo,
-      purpose:
-        "To help you communicate with your doctor about VA nexus letter requirements",
-      pillars: [
-        {
-          name: "Pillar 1: The Condition",
-          description: "What condition needs medical support",
-          example: 'e.g., "Lumbar strain secondary to knee injury"',
-        },
-        {
-          name: "Pillar 2: The Connection",
-          description: "How it relates to service or primary condition",
-          example: 'e.g., "Altered gait from knee causes back strain"',
-        },
-        {
-          name: "Pillar 3: Medical Support Needed",
-          description: "What the doctor needs to address",
-          example: 'e.g., "Medical opinion on causation"',
-        },
-      ],
-      dataShared: [
-        "Condition name being claimed",
-        "Primary condition (if secondary)",
-        "Connection theory",
-        "Symptom descriptions",
-      ],
-      notShared: [
-        "Your name or doctor's name",
-        "Medical record numbers",
-        "Facility names or locations",
-        "Any information you have not entered",
-      ],
-    },
-  };
-
-  return dataByType[statementType] || dataByType.personal;
+  return (
+    CLOUD_AI_DATA_DISCLOSURE_BY_TYPE[statementType] ||
+    CLOUD_AI_DATA_DISCLOSURE_BY_TYPE.personal
+  );
 };
 
 /**
  * Generate AI-assisted text for a specific textarea field
  * Helps veterans articulate their symptoms and impacts
  */
+function buildFieldSuggestionPrompts(condition, primaryCondition, currentText) {
+  const continuationInstruction = currentText
+    ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.`
+    : "Generate a compelling first-person example.";
+
+  return {
+    workImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their ability to work. 
+${continuationInstruction}
+
+Focus on:
+- Concentration and productivity issues
+- Days missed or reduced hours
+- Performance impacts documented by supervisors
+- Safety concerns
+- Career limitations
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    socialImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their social and family life.
+${continuationInstruction}
+
+Focus on:
+- Relationship strain with spouse/partner
+- Difficulty with children or family activities
+- Social isolation and avoiding gatherings
+- Mood changes noticed by others
+- Loss of hobbies or activities
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    specificExamples: `As a VA claims specialist, help a veteran describe specific examples of how ${condition} limits their daily activities.
+${continuationInstruction}
+
+Focus on:
+- Driving limitations
+- Self-care difficulties
+- Household task limitations
+- Need for rest/breaks
+- Memory or cognitive issues
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    aggravationExplanation: `As a VA claims specialist, help a veteran explain how their service-connected ${primaryCondition} causes or worsens their ${condition}.
+${continuationInstruction}
+
+Focus on:
+- The medical/logical connection
+- Timing correlation
+- How symptoms interact
+- Observable patterns
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+
+    specificIncident: `As a VA claims specialist, help a veteran describe a specific recent incident where their ${primaryCondition || "primary condition"} and ${condition} interacted.
+${continuationInstruction}
+
+Focus on:
+- Specific date or timeframe ("last month", "two weeks ago")
+- What triggered the episode
+- How symptoms manifested
+- Who witnessed it
+- The aftermath
+
+Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
+  };
+}
+
 export const generateFieldSuggestion = async (
   fieldType,
   condition,
@@ -980,66 +1111,11 @@ export const generateFieldSuggestion = async (
     };
   }
 
-  const prompts = {
-    workImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their ability to work. 
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
-
-Focus on:
-- Concentration and productivity issues
-- Days missed or reduced hours
-- Performance impacts documented by supervisors
-- Safety concerns
-- Career limitations
-
-Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
-
-    socialImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their social and family life.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
-
-Focus on:
-- Relationship strain with spouse/partner
-- Difficulty with children or family activities
-- Social isolation and avoiding gatherings
-- Mood changes noticed by others
-- Loss of hobbies or activities
-
-Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
-
-    specificExamples: `As a VA claims specialist, help a veteran describe specific examples of how ${condition} limits their daily activities.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
-
-Focus on:
-- Driving limitations
-- Self-care difficulties
-- Household task limitations
-- Need for rest/breaks
-- Memory or cognitive issues
-
-Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
-
-    aggravationExplanation: `As a VA claims specialist, help a veteran explain how their service-connected ${primaryCondition} causes or worsens their ${condition}.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
-
-Focus on:
-- The medical/logical connection
-- Timing correlation
-- How symptoms interact
-- Observable patterns
-
-Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
-
-    specificIncident: `As a VA claims specialist, help a veteran describe a specific recent incident where their ${primaryCondition || "primary condition"} and ${condition} interacted.
-${currentText ? `They've started writing: "${currentText}"\n\nExpand and improve this, keeping their voice.` : "Generate a compelling first-person example."}
-
-Focus on:
-- Specific date or timeframe ("last month", "two weeks ago")
-- What triggered the episode
-- How symptoms manifested
-- Who witnessed it
-- The aftermath
-
-Write 2-3 sentences in first person, specific and vivid. Do NOT use brackets or placeholders.`,
-  };
+  const prompts = buildFieldSuggestionPrompts(
+    condition,
+    primaryCondition,
+    currentText,
+  );
 
   const prompt = prompts[fieldType];
   if (!prompt) {
@@ -1179,6 +1255,16 @@ Important:
  * @param {number|string} rating - VA rating percentage (e.g., 100, "70%")
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
+function normalizeStateCode(state) {
+  if (state.length === 2) return state.toUpperCase();
+  // Simple state name -> code mapping (extend as needed)
+  if (state === "Texas") return "TX";
+  if (state === "California") return "CA";
+  if (state === "Florida") return "FL";
+  if (state === "Virginia") return "VA";
+  return state.toUpperCase().substring(0, 2);
+}
+
 export const searchStateBenefits = async (state, rating) => {
   try {
     // Import the real state benefits database
@@ -1186,19 +1272,7 @@ export const searchStateBenefits = async (state, rating) => {
       await import("../data/stateBenefits.js");
 
     // Convert state name to code if needed
-    const stateCode =
-      state.length === 2
-        ? state.toUpperCase()
-        : // Simple state name -> code mapping (extend as needed)
-          state === "Texas"
-          ? "TX"
-          : state === "California"
-            ? "CA"
-            : state === "Florida"
-              ? "FL"
-              : state === "Virginia"
-                ? "VA"
-                : state.toUpperCase().substring(0, 2);
+    const stateCode = normalizeStateCode(state);
 
     // Convert rating string to number if needed
     const ratingNum =
@@ -1215,13 +1289,22 @@ export const searchStateBenefits = async (state, rating) => {
     }
 
     // Format the response to match the expected structure
+    const stateName = benefits[0]?.state || state;
+    const count = benefits.length;
+    const plural = count === 1 ? "" : "s";
+    const summary =
+      count === 0
+        ? `No benefits found for a ${ratingNum}% rating in ${stateName}.`
+        : `${count} benefit${plural} found for a ${ratingNum}% rating in ${stateName}.`;
     const formattedData = {
-      state: benefits[0]?.state || state,
+      state: stateName,
       stateCode: stateCode,
       disabilityRating: `${ratingNum}%`,
       lastUpdated: benefits[0]?.lastUpdated || "2026-01-24",
       dataSource: "scraped",
       verified: benefits[0]?.verified || false,
+      summary,
+      link: benefits[0]?.officialSource || benefits[0]?.sourceUrl || null,
       benefits: benefits.map((b) => ({
         category: b.category,
         name: b.name || b.benefitName,
@@ -1644,6 +1727,167 @@ Be empathetic but professional. This veteran is confused and possibly upset. Hel
 };
 
 /**
+ * Strip markdown code fences and extract the JSON object span from a raw
+ * AI text response. Uses index lookup instead of a greedy regex to avoid
+ * super-linear backtracking on adversarial/malformed AI output.
+ */
+function extractJSONCandidate(textStr) {
+  let cleanedText = textStr.trim();
+
+  if (cleanedText.startsWith("```json")) {
+    cleanedText = cleanedText.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+  } else if (cleanedText.startsWith("```")) {
+    cleanedText = cleanedText.replace(/^```\n?/, "").replace(/\n?```$/, "");
+  }
+
+  const firstBrace = cleanedText.indexOf("{");
+  const lastBrace = cleanedText.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    cleanedText = cleanedText.slice(firstBrace, lastBrace + 1);
+  }
+
+  return cleanedText;
+}
+
+/**
+ * Handle a JSON parse failure for the decision decoder response, returning
+ * the most specific user-facing error we can infer from the raw text.
+ */
+function handleDecisionDecoderParseError(parseError, textStr) {
+  console.error(" Failed to parse decision decoder JSON:", parseError, textStr);
+
+  // Check if the AI response indicates it's still loading
+  const lowerText = textStr.toLowerCase();
+  if (
+    lowerText.includes("loading") ||
+    lowerText.includes("wait") ||
+    lowerText.includes("initializing")
+  ) {
+    return {
+      success: false,
+      error:
+        "AI model is still loading. Please wait for the model to fully load and try again.",
+      isModelLoading: true,
+    };
+  }
+
+  // Check if it looks like a partial/cut-off response
+  if (!textStr.includes("}") || textStr.length < 50) {
+    return {
+      success: false,
+      error:
+        "AI response was incomplete. This may be due to token limits. Please try with a shorter excerpt of your decision letter.",
+      isIncomplete: true,
+    };
+  }
+
+  return {
+    success: false,
+    error: "Failed to parse AI response. Please try again.",
+  };
+}
+
+/**
+ * Parse the raw decision-decoder AI response text into the final result,
+ * including fallback/truncation metadata for the UI.
+ */
+function parseDecisionDecoderResponse(textStr, fallbackInfo, truncation) {
+  const { usedFallback, fallbackReason, fallbackNote } = fallbackInfo;
+
+  try {
+    const cleanedText = extractJSONCandidate(textStr);
+
+    // Check if response is an error message (not JSON)
+    // Note: '[]' is valid JSON (empty array), so we check specifically for error-like patterns
+    if (
+      cleanedText.startsWith("[") &&
+      !cleanedText.startsWith("[{") &&
+      cleanedText !== "[]"
+    ) {
+      // Likely an error message like "[Warrant Council..."
+      console.error(
+        "AI returned error message instead of JSON:",
+        cleanedText.substring(0, 200),
+      );
+      return {
+        success: false,
+        error:
+          "AI model is still loading or encountered an error. Please wait a moment and try again.",
+        isModelLoading:
+          cleanedText.includes("loading") || cleanedText.includes("wait"),
+      };
+    }
+
+    const decodedData = JSON.parse(cleanedText);
+
+    // Include fallback info and truncation info in response for UI to show helpful messages
+    return {
+      success: true,
+      data: decodedData,
+      // Pass through fallback info so UI can show helpful message
+      ...(usedFallback && {
+        usedFallback: true,
+        fallbackReason,
+        fallbackNote,
+      }),
+      // Pass through truncation info so UI can show notice about truncated content
+      ...(truncation.wasTruncated && {
+        wasTruncated: true,
+        originalTokens: truncation.originalTokens,
+        truncatedTokens: truncation.truncatedTokens,
+        truncationNote: `Your document was too large (${truncation.originalTokens} tokens). We analyzed the first and last sections to fit within AI limits.`,
+      }),
+    };
+  } catch (parseError) {
+    return handleDecisionDecoderParseError(parseError, textStr);
+  }
+}
+
+/**
+ * Map a decodeDecision() error into the user-facing error response shape.
+ */
+function mapDecodeDecisionError(error) {
+  console.error("Decision decoder error:", error);
+
+  // Check for context overflow error and provide helpful message
+  const errorMsg = error.message || "";
+  if (
+    errorMsg.includes("too large") ||
+    errorMsg.includes("context") ||
+    errorMsg.includes("4096") ||
+    errorMsg.includes("ContextWindowSizeExceeded") ||
+    errorMsg.includes("prompt tokens exceed")
+  ) {
+    return {
+      success: false,
+      error:
+        'Document is too large for AI processing. Please try pasting only the "Reasons for Decision" section of your letter.',
+      isContextOverflow: true,
+    };
+  }
+
+  // Check for model loading errors
+  if (
+    errorMsg.includes("warming up") ||
+    errorMsg.includes("not loaded") ||
+    errorMsg.includes("not ready")
+  ) {
+    return {
+      success: false,
+      error:
+        "AI model is still loading. Please wait for the model to fully load and try again.",
+      isModelLoading: true,
+    };
+  }
+
+  return {
+    success: false,
+    error:
+      errorMsg || "Network error. Please check your connection and try again.",
+  };
+}
+
+/**
  * Decode a VA decision letter using Gemini AI
  * Now with smart truncation to prevent context overflow for Local AI (4096 token limit)
  * @param {string} decisionText - The decision letter text to analyze
@@ -1694,9 +1938,11 @@ export const decodeDecision = async (decisionText) => {
 
     // generateAI returns { text, mode, fallback?, fallbackReason?, note? } object
     const text = response?.text || response;
-    const usedFallback = response?.fallback || false;
-    const fallbackReason = response?.fallbackReason || null;
-    const fallbackNote = response?.note || null;
+    const fallbackInfo = {
+      usedFallback: response?.fallback || false,
+      fallbackReason: response?.fallbackReason || null,
+      fallbackNote: response?.note || null,
+    };
 
     if (!text) {
       return {
@@ -1708,142 +1954,9 @@ export const decodeDecision = async (decisionText) => {
     const textStr = typeof text === "string" ? text : JSON.stringify(text);
 
     // Better JSON parsing with multiple fallback strategies
-    try {
-      let cleanedText = textStr.trim();
-
-      // Remove markdown code blocks
-      if (cleanedText.startsWith("```json")) {
-        cleanedText = cleanedText
-          .replace(/^```json\n?/, "")
-          .replace(/\n?```$/, "");
-      } else if (cleanedText.startsWith("```")) {
-        cleanedText = cleanedText.replace(/^```\n?/, "").replace(/\n?```$/, "");
-      }
-
-      // Try to extract JSON if the response has extra text
-      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        cleanedText = jsonMatch[0];
-      }
-
-      // Check if response is an error message (not JSON)
-      // Note: '[]' is valid JSON (empty array), so we check specifically for error-like patterns
-      if (
-        cleanedText.startsWith("[") &&
-        !cleanedText.startsWith("[{") &&
-        cleanedText !== "[]"
-      ) {
-        // Likely an error message like "[Warrant Council..."
-        console.error(
-          "AI returned error message instead of JSON:",
-          cleanedText.substring(0, 200),
-        );
-        return {
-          success: false,
-          error:
-            "AI model is still loading or encountered an error. Please wait a moment and try again.",
-          isModelLoading:
-            cleanedText.includes("loading") || cleanedText.includes("wait"),
-        };
-      }
-
-      const decodedData = JSON.parse(cleanedText);
-
-      // Include fallback info and truncation info in response for UI to show helpful messages
-      return {
-        success: true,
-        data: decodedData,
-        // Pass through fallback info so UI can show helpful message
-        ...(usedFallback && {
-          usedFallback: true,
-          fallbackReason,
-          fallbackNote,
-        }),
-        // Pass through truncation info so UI can show notice about truncated content
-        ...(truncation.wasTruncated && {
-          wasTruncated: true,
-          originalTokens: truncation.originalTokens,
-          truncatedTokens: truncation.truncatedTokens,
-          truncationNote: `Your document was too large (${truncation.originalTokens} tokens). We analyzed the first and last sections to fit within AI limits.`,
-        }),
-      };
-    } catch (parseError) {
-      console.error(
-        " Failed to parse decision decoder JSON:",
-        parseError,
-        textStr,
-      );
-
-      // Check if the AI response indicates it's still loading
-      const lowerText = textStr.toLowerCase();
-      if (
-        lowerText.includes("loading") ||
-        lowerText.includes("wait") ||
-        lowerText.includes("initializing")
-      ) {
-        return {
-          success: false,
-          error:
-            "AI model is still loading. Please wait for the model to fully load and try again.",
-          isModelLoading: true,
-        };
-      }
-
-      // Check if it looks like a partial/cut-off response
-      if (!textStr.includes("}") || textStr.length < 50) {
-        return {
-          success: false,
-          error:
-            "AI response was incomplete. This may be due to token limits. Please try with a shorter excerpt of your decision letter.",
-          isIncomplete: true,
-        };
-      }
-
-      return {
-        success: false,
-        error: "Failed to parse AI response. Please try again.",
-      };
-    }
+    return parseDecisionDecoderResponse(textStr, fallbackInfo, truncation);
   } catch (error) {
-    console.error("Decision decoder error:", error);
-
-    // Check for context overflow error and provide helpful message
-    const errorMsg = error.message || "";
-    if (
-      errorMsg.includes("too large") ||
-      errorMsg.includes("context") ||
-      errorMsg.includes("4096") ||
-      errorMsg.includes("ContextWindowSizeExceeded") ||
-      errorMsg.includes("prompt tokens exceed")
-    ) {
-      return {
-        success: false,
-        error:
-          'Document is too large for AI processing. Please try pasting only the "Reasons for Decision" section of your letter.',
-        isContextOverflow: true,
-      };
-    }
-
-    // Check for model loading errors
-    if (
-      errorMsg.includes("warming up") ||
-      errorMsg.includes("not loaded") ||
-      errorMsg.includes("not ready")
-    ) {
-      return {
-        success: false,
-        error:
-          "AI model is still loading. Please wait for the model to fully load and try again.",
-        isModelLoading: true,
-      };
-    }
-
-    return {
-      success: false,
-      error:
-        errorMsg ||
-        "Network error. Please check your connection and try again.",
-    };
+    return mapDecodeDecisionError(error);
   }
 };
 

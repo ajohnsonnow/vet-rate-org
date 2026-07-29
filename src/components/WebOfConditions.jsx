@@ -529,6 +529,94 @@ const _getAllConditions = () => {
   return Array.from(conditions);
 };
 
+const applyRepulsion = (nodes, positions, velocities) => {
+  // Repulsion between all nodes (inverse square)
+  nodes.forEach((nodeA) => {
+    nodes.forEach((nodeB) => {
+      if (nodeA.id === nodeB.id) return;
+
+      const posA = positions[nodeA.id];
+      const posB = positions[nodeB.id];
+      if (!posA || !posB) return;
+
+      const dx = posB.x - posA.x;
+      const dy = posB.y - posA.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+      const repulsion = 2000 / (dist * dist);
+      const fx = (dx / dist) * repulsion;
+      const fy = (dy / dist) * repulsion;
+
+      velocities[nodeA.id].vx -= fx * 0.1;
+      velocities[nodeA.id].vy -= fy * 0.1;
+    });
+  });
+};
+
+const applyLinkAttraction = (links, positions, velocities) => {
+  // Spring attraction along links
+  links.forEach((link) => {
+    const posA = positions[link.source];
+    const posB = positions[link.target];
+    if (!posA || !posB) return;
+
+    const dx = posB.x - posA.x;
+    const dy = posB.y - posA.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+    const targetDist = 120;
+    const spring = (dist - targetDist) * 0.01 * link.strength;
+    const fx = (dx / dist) * spring;
+    const fy = (dy / dist) * spring;
+
+    velocities[link.source].vx += fx;
+    velocities[link.source].vy += fy;
+    velocities[link.target].vx -= fx;
+    velocities[link.target].vy -= fy;
+  });
+};
+
+const applyCenterGravity = (nodes, positions, velocities, centerX, centerY) => {
+  nodes.forEach((node) => {
+    const pos = positions[node.id];
+    if (!pos) return;
+
+    const dx = centerX - pos.x;
+    const dy = centerY - pos.y;
+
+    velocities[node.id].vx += dx * 0.001;
+    velocities[node.id].vy += dy * 0.001;
+  });
+};
+
+const applyVelocitiesWithDamping = (
+  nodes,
+  positions,
+  velocities,
+  width,
+  height,
+) => {
+  // Apply velocities with damping, clamp to bounds, and track total motion
+  let totalMotion = 0;
+  nodes.forEach((node) => {
+    const vel = velocities[node.id];
+    const pos = positions[node.id];
+    if (!vel || !pos) return;
+
+    vel.vx *= 0.9;
+    vel.vy *= 0.9;
+
+    pos.x += vel.vx;
+    pos.y += vel.vy;
+
+    pos.x = Math.max(50, Math.min(width - 50, pos.x));
+    pos.y = Math.max(50, Math.min(height - 50, pos.y));
+
+    totalMotion += Math.abs(vel.vx) + Math.abs(vel.vy);
+  });
+  return totalMotion;
+};
+
 /**
  * Physics simulation for force-directed graph
  */
@@ -574,84 +662,17 @@ const useForceSimulation = (nodes, links, width, height) => {
       setPositions((prev) => {
         const newPos = { ...prev };
         const newVel = { ...velocities.current };
-        let totalMotion = 0;
 
-        // Repulsion between all nodes
-        nodes.forEach((nodeA) => {
-          nodes.forEach((nodeB) => {
-            if (nodeA.id === nodeB.id) return;
-
-            const posA = newPos[nodeA.id];
-            const posB = newPos[nodeB.id];
-            if (!posA || !posB) return;
-
-            const dx = posB.x - posA.x;
-            const dy = posB.y - posA.y;
-            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-
-            // Repulsion force (inverse square)
-            const repulsion = 2000 / (dist * dist);
-            const fx = (dx / dist) * repulsion;
-            const fy = (dy / dist) * repulsion;
-
-            newVel[nodeA.id].vx -= fx * 0.1;
-            newVel[nodeA.id].vy -= fy * 0.1;
-          });
-        });
-
-        // Attraction along links
-        links.forEach((link) => {
-          const posA = newPos[link.source];
-          const posB = newPos[link.target];
-          if (!posA || !posB) return;
-
-          const dx = posB.x - posA.x;
-          const dy = posB.y - posA.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-
-          // Spring force
-          const targetDist = 120;
-          const spring = (dist - targetDist) * 0.01 * link.strength;
-          const fx = (dx / dist) * spring;
-          const fy = (dy / dist) * spring;
-
-          newVel[link.source].vx += fx;
-          newVel[link.source].vy += fy;
-          newVel[link.target].vx -= fx;
-          newVel[link.target].vy -= fy;
-        });
-
-        // Center gravity
-        nodes.forEach((node) => {
-          const pos = newPos[node.id];
-          if (!pos) return;
-
-          const dx = centerX - pos.x;
-          const dy = centerY - pos.y;
-
-          newVel[node.id].vx += dx * 0.001;
-          newVel[node.id].vy += dy * 0.001;
-        });
-
-        // Apply velocities with damping
-        nodes.forEach((node) => {
-          const vel = newVel[node.id];
-          const pos = newPos[node.id];
-          if (!vel || !pos) return;
-
-          vel.vx *= 0.9;
-          vel.vy *= 0.9;
-
-          pos.x += vel.vx;
-          pos.y += vel.vy;
-
-          // Bounds
-          pos.x = Math.max(50, Math.min(width - 50, pos.x));
-          pos.y = Math.max(50, Math.min(height - 50, pos.y));
-
-          // Track total motion for auto-stop
-          totalMotion += Math.abs(vel.vx) + Math.abs(vel.vy);
-        });
+        applyRepulsion(nodes, newPos, newVel);
+        applyLinkAttraction(links, newPos, newVel);
+        applyCenterGravity(nodes, newPos, newVel, centerX, centerY);
+        const totalMotion = applyVelocitiesWithDamping(
+          nodes,
+          newPos,
+          newVel,
+          width,
+          height,
+        );
 
         velocities.current = newVel;
 
@@ -684,13 +705,631 @@ const useForceSimulation = (nodes, links, width, height) => {
   return positions;
 };
 
-export default function WebOfConditions({
-  onClose,
-  onSelectCondition,
-  onReportBug,
-}) {
-  const { _t } = useLanguage();
+/**
+ * Build the node/link graph data, optionally filtered to one category
+ */
+const buildGraphData = (filterCategory) => {
+  const nodeMap = {};
+  const linkList = [];
 
+  Object.entries(CONDITION_WEB).forEach(([primary, data]) => {
+    nodeMap[primary] = {
+      id: primary,
+      type: "primary",
+      category: data.category,
+      color: data.color,
+      size: 30,
+    };
+
+    data.secondaries.forEach((sec) => {
+      if (!nodeMap[sec.condition]) {
+        nodeMap[sec.condition] = {
+          id: sec.condition,
+          type: "secondary",
+          category: "Secondary",
+          color: "#6B7280",
+          size: 20,
+        };
+      }
+
+      linkList.push({
+        source: primary,
+        target: sec.condition,
+        strength: sec.strength,
+        nexus: sec.nexus,
+      });
+    });
+  });
+
+  // Filter by category if set
+  let filteredNodes = Object.values(nodeMap);
+  let filteredLinks = linkList;
+
+  if (filterCategory) {
+    const relevantPrimaries = Object.entries(CONDITION_WEB)
+      .filter(([_, data]) => data.category === filterCategory)
+      .map(([name]) => name);
+
+    const relevantSecondaries = new Set();
+    relevantPrimaries.forEach((p) => {
+      CONDITION_WEB[p].secondaries.forEach((s) =>
+        relevantSecondaries.add(s.condition),
+      );
+    });
+
+    filteredNodes = filteredNodes.filter(
+      (n) => relevantPrimaries.includes(n.id) || relevantSecondaries.has(n.id),
+    );
+
+    filteredLinks = linkList.filter((l) =>
+      relevantPrimaries.includes(l.source),
+    );
+  }
+
+  return { nodes: filteredNodes, links: filteredLinks };
+};
+
+const renderGraphLinks = (
+  links,
+  positions,
+  selectedNode,
+  selectedLink,
+  onLinkClick,
+) =>
+  links.map((link, i) => {
+    const sourcePos = positions[link.source];
+    const targetPos = positions[link.target];
+    if (!sourcePos || !targetPos) return null;
+
+    const isHighlighted =
+      selectedNode === link.source ||
+      selectedNode === link.target ||
+      (selectedLink?.source === link.source &&
+        selectedLink?.target === link.target);
+
+    return (
+      <g key={i}>
+        <line
+          x1={sourcePos.x}
+          y1={sourcePos.y}
+          x2={targetPos.x}
+          y2={targetPos.y}
+          stroke={isHighlighted ? "#A78BFA" : "#4B5563"}
+          strokeWidth={isHighlighted ? 3 : 1 + link.strength * 2}
+          strokeOpacity={selectedNode && !isHighlighted ? 0.2 : 0.6}
+          className="cursor-pointer transition-all duration-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            onLinkClick(link);
+          }}
+        />
+        {/* Clickable wider area */}
+        <line
+          x1={sourcePos.x}
+          y1={sourcePos.y}
+          x2={targetPos.x}
+          y2={targetPos.y}
+          stroke="transparent"
+          strokeWidth={15}
+          className="cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onLinkClick(link);
+          }}
+        />
+      </g>
+    );
+  });
+
+const renderGraphNodes = (
+  nodes,
+  positions,
+  selectedNode,
+  connections,
+  hoveredNode,
+  onNodeClick,
+  onNodeHover,
+) =>
+  nodes.map((node) => {
+    const pos = positions[node.id];
+    if (!pos) return null;
+
+    const isSelected = selectedNode === node.id;
+    const isConnected = connections.some((c) => c.connected === node.id);
+    const isHovered = hoveredNode === node.id;
+    const isDimmed = selectedNode && !isSelected && !isConnected;
+
+    return (
+      <g
+        key={node.id}
+        transform={`translate(${pos.x}, ${pos.y})`}
+        className="cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          onNodeClick(node);
+        }}
+        onMouseEnter={() => onNodeHover(node.id)}
+        onMouseLeave={() => onNodeHover(null)}
+      >
+        {/* Glow effect */}
+        {(isSelected || isHovered) && (
+          <circle
+            r={node.size + 10}
+            fill={node.color}
+            opacity={0.3}
+            filter="url(#glow)"
+          />
+        )}
+
+        {/* Node circle */}
+        <circle
+          r={isSelected ? node.size + 5 : node.size}
+          fill={node.color}
+          opacity={isDimmed ? 0.3 : 1}
+          stroke={isSelected ? "white" : "transparent"}
+          strokeWidth={2}
+          className="transition-all duration-200"
+        />
+
+        {/* Node label */}
+        <text
+          y={node.size + 15}
+          textAnchor="middle"
+          fill={isDimmed ? "#6B7280" : "white"}
+          fontSize={node.type === "primary" ? 12 : 10}
+          fontWeight={node.type === "primary" ? "bold" : "normal"}
+          className="pointer-events-none select-none"
+        >
+          {node.id.length > 20 ? node.id.substring(0, 18) + "..." : node.id}
+        </text>
+
+        {/* Type indicator */}
+        {node.type === "primary" && (
+          <text
+            y={-node.size - 5}
+            textAnchor="middle"
+            fill={node.color}
+            fontSize={8}
+            className="pointer-events-none select-none uppercase"
+          >
+            ★ Primary
+          </text>
+        )}
+      </g>
+    );
+  });
+
+const GraphDefs = () => (
+  <defs>
+    <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+      <stop offset="100%" stopColor="white" stopOpacity="0" />
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+);
+
+const GraphInstructionsOverlay = () => (
+  <div className="absolute bottom-4 left-4 bg-gray-900/80 rounded-xl p-4 max-w-sm">
+    <p className="text-purple-300 text-sm">
+      <span className="text-lg mr-2">💡</span>
+      Click a node to see its connections, or click a link to see the nexus
+      logic.
+    </p>
+  </div>
+);
+
+const GraphCanvas = ({
+  containerRef,
+  dimensions,
+  nodes,
+  links,
+  positions,
+  selectedNode,
+  selectedLink,
+  hoveredNode,
+  connections,
+  onLinkClick,
+  onNodeClick,
+  onNodeHover,
+}) => (
+  <div ref={containerRef} className="flex-1 relative">
+    <svg
+      width={dimensions.width}
+      height={dimensions.height}
+      className="bg-gray-950"
+    >
+      <GraphDefs />
+
+      {/* Links - Memoized */}
+      {useMemo(
+        () =>
+          renderGraphLinks(
+            links,
+            positions,
+            selectedNode,
+            selectedLink,
+            onLinkClick,
+          ),
+        [links, positions, selectedNode, selectedLink, onLinkClick],
+      )}
+
+      {/* Nodes - Memoized */}
+      {useMemo(
+        () =>
+          renderGraphNodes(
+            nodes,
+            positions,
+            selectedNode,
+            connections,
+            hoveredNode,
+            onNodeClick,
+            onNodeHover,
+          ),
+        [
+          nodes,
+          positions,
+          selectedNode,
+          connections,
+          hoveredNode,
+          onNodeClick,
+          onNodeHover,
+        ],
+      )}
+    </svg>
+
+    {/* Instructions overlay */}
+    {!selectedNode && !selectedLink && <GraphInstructionsOverlay />}
+  </div>
+);
+
+const CategoryFilterBar = ({
+  categories,
+  filterCategory,
+  onSelectCategory,
+}) => (
+  <div className="mb-6 flex flex-wrap items-center gap-2">
+    <span className="text-purple-300 text-sm mr-2">Filter:</span>
+    <button
+      onClick={() => onSelectCategory(null)}
+      className={`px-3 py-1 rounded-full text-sm transition-colors ${
+        !filterCategory
+          ? "bg-purple-600 text-white"
+          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+      }`}
+    >
+      All
+    </button>
+    {categories.map((cat) => (
+      <button
+        key={cat}
+        onClick={() => onSelectCategory(filterCategory === cat ? null : cat)}
+        className={`px-3 py-1 rounded-full text-sm transition-colors ${
+          filterCategory === cat
+            ? "bg-purple-600 text-white"
+            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+        }`}
+      >
+        {cat}
+      </button>
+    ))}
+  </div>
+);
+
+const WebOfConditionsHeader = ({ onClose, onReportBug }) => (
+  <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+    <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+
+    <div className="relative flex items-start justify-between">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+          <span className="text-3xl">🕸️</span>
+        </div>
+        <div>
+          <h2
+            id="web-of-conditions-title"
+            className="text-2xl sm:text-3xl font-bold text-black"
+          >
+            Web of Conditions{" "}
+            <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-yellow-800 text-sm sm:text-base mt-1">
+            Interactive Secondary Condition Map
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="dark"
+            moduleName="Web of Conditions"
+          />
+        )}
+        <button
+          onClick={onClose}
+          className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const LinkDetailsPanel = ({ selectedLink, onSelectCondition }) => (
+  <div className="p-4 space-y-4">
+    <div className="flex items-center gap-2">
+      <span className="text-2xl">🔗</span>
+      <h3 className="font-bold text-white">Connection</h3>
+    </div>
+
+    <div className="bg-purple-900/30 rounded-xl p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+        <span className="text-white font-semibold">{selectedLink.source}</span>
+      </div>
+      <div className="text-center text-purple-400">↓</div>
+      <div className="flex items-center gap-2">
+        <span className="w-3 h-3 rounded-full bg-gray-500"></span>
+        <span className="text-white font-semibold">{selectedLink.target}</span>
+      </div>
+    </div>
+
+    <div className="bg-gray-800/50 rounded-xl p-4">
+      <h4 className="text-sm text-purple-300 uppercase mb-2">Medical Nexus</h4>
+      <p className="text-white text-sm leading-relaxed">{selectedLink.nexus}</p>
+    </div>
+
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-gray-400">Connection Strength:</span>
+      <div className="flex items-center gap-2">
+        <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-purple-600 to-purple-400"
+            style={{ width: `${selectedLink.strength * 100}%` }}
+          ></div>
+        </div>
+        <span className="text-purple-400 font-bold">
+          {Math.round(selectedLink.strength * 100)}%
+        </span>
+      </div>
+    </div>
+
+    <button
+      onClick={() => {
+        if (onSelectCondition) {
+          onSelectCondition(selectedLink.target);
+        }
+      }}
+      className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-indigo-700 transition-all"
+    >
+      📋 Add {selectedLink.target} to Claim
+    </button>
+  </div>
+);
+
+const NodeDetailsPanel = ({
+  selectedNode,
+  nodes,
+  connections,
+  onLinkClick,
+}) => (
+  <div className="p-4 space-y-4">
+    <div className="flex items-center gap-2">
+      <span
+        className="w-4 h-4 rounded-full"
+        style={{
+          backgroundColor: nodes.find((n) => n.id === selectedNode)?.color,
+        }}
+      ></span>
+      <h3 className="font-bold text-white text-lg">{selectedNode}</h3>
+    </div>
+
+    {CONDITION_WEB[selectedNode] && (
+      <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 rounded-full text-sm">
+        {CONDITION_WEB[selectedNode].category}
+      </span>
+    )}
+
+    <div className="space-y-2">
+      <h4 className="text-sm text-purple-300 uppercase">
+        {CONDITION_WEB[selectedNode]
+          ? "Secondary Conditions"
+          : "Connected Primary Conditions"}
+      </h4>
+
+      {connections.map((conn, i) => (
+        <button
+          key={i}
+          onClick={() =>
+            onLinkClick({
+              source: conn.source,
+              target: conn.target,
+              nexus: conn.nexus,
+              strength: conn.strength,
+            })
+          }
+          className="w-full text-left p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-white">{conn.connected}</span>
+            <span className="text-purple-400 text-sm">
+              {Math.round(conn.strength * 100)}%
+            </span>
+          </div>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-xs text-gray-400">
+              {conn.direction === "outgoing" ? "↳ Secondary" : "↰ Primary"}
+            </span>
+          </div>
+        </button>
+      ))}
+    </div>
+
+    {CONDITION_WEB[selectedNode] && (
+      <div className="bg-purple-900/20 border border-purple-700/30 rounded-xl p-4">
+        <p className="text-purple-200 text-sm">
+          <span className="text-lg mr-2">⚡</span>
+          This is a <strong>primary condition</strong> that can establish
+          secondary service connection for{" "}
+          {CONDITION_WEB[selectedNode].secondaries.length} other conditions.
+        </p>
+      </div>
+    )}
+  </div>
+);
+
+const HowToUseGuide = () => (
+  <>
+    <h3 className="font-bold text-white text-lg">How to Use</h3>
+
+    <div className="space-y-3">
+      <div className="flex gap-3">
+        <span className="text-2xl">🟡</span>
+        <div>
+          <p className="text-white font-semibold">Primary Conditions</p>
+          <p className="text-gray-400 text-sm">
+            Large colored nodes are service-connected primaries
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <span className="text-2xl">⚪</span>
+        <div>
+          <p className="text-white font-semibold">Secondary Conditions</p>
+          <p className="text-gray-400 text-sm">
+            Smaller gray nodes are potential secondaries
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <span className="text-2xl">➖</span>
+        <div>
+          <p className="text-white font-semibold">Connection Lines</p>
+          <p className="text-gray-400 text-sm">
+            Thicker lines = stronger medical link
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-indigo-900/30 border border-indigo-700/50 rounded-xl p-4">
+      <p className="text-indigo-200 text-sm">
+        <span className="text-lg mr-2">🎯</span>
+        Click any connection to see the <strong>medical nexus</strong>{" "}
+        explaining the relationship.
+      </p>
+    </div>
+  </>
+);
+
+const ConditionLegend = () => (
+  <div className="pt-4 border-t border-gray-700">
+    <h4 className="text-sm text-gray-400 uppercase mb-2">Legend</h4>
+    <div className="space-y-2">
+      {Object.entries(CONDITION_WEB)
+        .slice(0, 5)
+        .map(([name, data]) => (
+          <div key={name} className="flex items-center gap-2">
+            <span
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: data.color }}
+            ></span>
+            <span className="text-gray-300 text-sm">{data.category}</span>
+          </div>
+        ))}
+    </div>
+  </div>
+);
+
+const ResearchSupportCTA = () => (
+  <div className="pt-4 border-t border-gray-700">
+    <div className="bg-purple-900/30 border border-purple-700/50 rounded-xl p-4">
+      <div className="flex items-center gap-3">
+        <img
+          src="/images/Anth.jpg"
+          alt="Anthony"
+          className="w-10 h-10 rounded-full object-cover border-2 border-purple-500 flex-shrink-0"
+        />
+        <div>
+          <p className="text-purple-200 text-sm font-semibold">
+            🔬 Medical research takes time
+          </p>
+          <p className="text-purple-300/70 text-xs mt-1">
+            Each nexus connection is backed by real medical literature. Help
+            fund more research.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const DefaultDetailsPanel = () => (
+  <div className="p-4 space-y-4">
+    <HowToUseGuide />
+    <ConditionLegend />
+    <ResearchSupportCTA />
+  </div>
+);
+
+const DetailsPanel = ({
+  selectedLink,
+  selectedNode,
+  nodes,
+  connections,
+  onSelectCondition,
+  onLinkClick,
+}) => {
+  if (selectedLink) {
+    return (
+      <LinkDetailsPanel
+        selectedLink={selectedLink}
+        onSelectCondition={onSelectCondition}
+      />
+    );
+  }
+
+  if (selectedNode) {
+    return (
+      <NodeDetailsPanel
+        selectedNode={selectedNode}
+        nodes={nodes}
+        connections={connections}
+        onLinkClick={onLinkClick}
+      />
+    );
+  }
+
+  return <DefaultDetailsPanel />;
+};
+
+function useWebOfConditionsGraph() {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedNode, setSelectedNode] = useState(null);
@@ -716,67 +1355,10 @@ export default function WebOfConditions({
   }, []);
 
   // Build nodes and links
-  const { nodes, links } = useMemo(() => {
-    const nodeMap = {};
-    const linkList = [];
-
-    Object.entries(CONDITION_WEB).forEach(([primary, data]) => {
-      nodeMap[primary] = {
-        id: primary,
-        type: "primary",
-        category: data.category,
-        color: data.color,
-        size: 30,
-      };
-
-      data.secondaries.forEach((sec) => {
-        if (!nodeMap[sec.condition]) {
-          nodeMap[sec.condition] = {
-            id: sec.condition,
-            type: "secondary",
-            category: "Secondary",
-            color: "#6B7280",
-            size: 20,
-          };
-        }
-
-        linkList.push({
-          source: primary,
-          target: sec.condition,
-          strength: sec.strength,
-          nexus: sec.nexus,
-        });
-      });
-    });
-
-    // Filter by category if set
-    let filteredNodes = Object.values(nodeMap);
-    let filteredLinks = linkList;
-
-    if (filterCategory) {
-      const relevantPrimaries = Object.entries(CONDITION_WEB)
-        .filter(([_, data]) => data.category === filterCategory)
-        .map(([name]) => name);
-
-      const relevantSecondaries = new Set();
-      relevantPrimaries.forEach((p) => {
-        CONDITION_WEB[p].secondaries.forEach((s) =>
-          relevantSecondaries.add(s.condition),
-        );
-      });
-
-      filteredNodes = filteredNodes.filter(
-        (n) =>
-          relevantPrimaries.includes(n.id) || relevantSecondaries.has(n.id),
-      );
-
-      filteredLinks = linkList.filter((l) =>
-        relevantPrimaries.includes(l.source),
-      );
-    }
-
-    return { nodes: filteredNodes, links: filteredLinks };
-  }, [filterCategory]);
+  const { nodes, links } = useMemo(
+    () => buildGraphData(filterCategory),
+    [filterCategory],
+  );
 
   // Physics simulation
   const positions = useForceSimulation(
@@ -825,6 +1407,33 @@ export default function WebOfConditions({
       }));
   }, [selectedNode, links]);
 
+  return {
+    containerRef,
+    dimensions,
+    selectedNode,
+    hoveredNode,
+    setHoveredNode,
+    selectedLink,
+    filterCategory,
+    setFilterCategory,
+    nodes,
+    links,
+    positions,
+    categories,
+    connections,
+    handleNodeClick,
+    handleLinkClick,
+  };
+}
+
+export default function WebOfConditions({
+  onClose,
+  onSelectCondition,
+  onReportBug,
+}) {
+  const { _t } = useLanguage();
+  const graph = useWebOfConditionsGraph();
+
   return (
     <>
       <ResponsiveModal
@@ -833,511 +1442,56 @@ export default function WebOfConditions({
         size="2xl"
         labelledBy="web-of-conditions-title"
         header={
-          <div className="bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-500 text-white px-6 py-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
-
-            <div className="relative flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
-                  <span className="text-3xl">🕸️</span>
-                </div>
-                <div>
-                  <h2
-                    id="web-of-conditions-title"
-                    className="text-2xl sm:text-3xl font-bold text-black"
-                  >
-                    Web of Conditions{" "}
-                    <span className="px-1.5 py-0.5 bg-amber-600 text-white text-[10px] font-bold rounded align-middle">
-                      BETA
-                    </span>
-                  </h2>
-                  <p className="text-yellow-800 text-sm sm:text-base mt-1">
-                    Interactive Secondary Condition Map
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {onReportBug && (
-                  <ReportBugLink
-                    onClick={onReportBug}
-                    variant="dark"
-                    moduleName="Web of Conditions"
-                  />
-                )}
-                <button
-                  onClick={onClose}
-                  className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
-                  aria-label="Close"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <WebOfConditionsHeader onClose={onClose} onReportBug={onReportBug} />
         }
       >
         {/* Content */}
         <div className="-mx-4 -my-4 p-6 bg-gray-900">
-          {/* Category Filters */}
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <span className="text-purple-300 text-sm mr-2">Filter:</span>
-            <button
-              onClick={() => setFilterCategory(null)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                !filterCategory
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-            >
-              All
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() =>
-                  setFilterCategory(filterCategory === cat ? null : cat)
-                }
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  filterCategory === cat
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <CategoryFilterBar
+            categories={graph.categories}
+            filterCategory={graph.filterCategory}
+            onSelectCategory={graph.setFilterCategory}
+          />
         </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
-          {/* Graph Area */}
-          <div ref={containerRef} className="flex-1 relative">
-            <svg
-              width={dimensions.width}
-              height={dimensions.height}
-              className="bg-gray-950"
-            >
-              {/* Gradient definitions */}
-              <defs>
-                <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="white" stopOpacity="0" />
-                </radialGradient>
-                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Links */}
-              {/* Links - Memoized */}
-              {useMemo(
-                () =>
-                  links.map((link, i) => {
-                    const sourcePos = positions[link.source];
-                    const targetPos = positions[link.target];
-                    if (!sourcePos || !targetPos) return null;
-
-                    const isHighlighted =
-                      selectedNode === link.source ||
-                      selectedNode === link.target ||
-                      (selectedLink?.source === link.source &&
-                        selectedLink?.target === link.target);
-
-                    return (
-                      <g key={i}>
-                        <line
-                          x1={sourcePos.x}
-                          y1={sourcePos.y}
-                          x2={targetPos.x}
-                          y2={targetPos.y}
-                          stroke={isHighlighted ? "#A78BFA" : "#4B5563"}
-                          strokeWidth={
-                            isHighlighted ? 3 : 1 + link.strength * 2
-                          }
-                          strokeOpacity={
-                            selectedNode && !isHighlighted ? 0.2 : 0.6
-                          }
-                          className="cursor-pointer transition-all duration-200"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLinkClick(link);
-                          }}
-                        />
-                        {/* Clickable wider area */}
-                        <line
-                          x1={sourcePos.x}
-                          y1={sourcePos.y}
-                          x2={targetPos.x}
-                          y2={targetPos.y}
-                          stroke="transparent"
-                          strokeWidth={15}
-                          className="cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleLinkClick(link);
-                          }}
-                        />
-                      </g>
-                    );
-                  }),
-                [links, positions, selectedNode, selectedLink, handleLinkClick],
-              )}
-
-              {/* Nodes - Memoized */}
-              {useMemo(
-                () =>
-                  nodes.map((node) => {
-                    const pos = positions[node.id];
-                    if (!pos) return null;
-
-                    const isSelected = selectedNode === node.id;
-                    const isConnected = connections.some(
-                      (c) => c.connected === node.id,
-                    );
-                    const isHovered = hoveredNode === node.id;
-                    const isDimmed =
-                      selectedNode && !isSelected && !isConnected;
-
-                    return (
-                      <g
-                        key={node.id}
-                        transform={`translate(${pos.x}, ${pos.y})`}
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleNodeClick(node);
-                        }}
-                        onMouseEnter={() => setHoveredNode(node.id)}
-                        onMouseLeave={() => setHoveredNode(null)}
-                      >
-                        {/* Glow effect */}
-                        {(isSelected || isHovered) && (
-                          <circle
-                            r={node.size + 10}
-                            fill={node.color}
-                            opacity={0.3}
-                            filter="url(#glow)"
-                          />
-                        )}
-
-                        {/* Node circle */}
-                        <circle
-                          r={isSelected ? node.size + 5 : node.size}
-                          fill={node.color}
-                          opacity={isDimmed ? 0.3 : 1}
-                          stroke={isSelected ? "white" : "transparent"}
-                          strokeWidth={2}
-                          className="transition-all duration-200"
-                        />
-
-                        {/* Node label */}
-                        <text
-                          y={node.size + 15}
-                          textAnchor="middle"
-                          fill={isDimmed ? "#6B7280" : "white"}
-                          fontSize={node.type === "primary" ? 12 : 10}
-                          fontWeight={
-                            node.type === "primary" ? "bold" : "normal"
-                          }
-                          className="pointer-events-none select-none"
-                        >
-                          {node.id.length > 20
-                            ? node.id.substring(0, 18) + "..."
-                            : node.id}
-                        </text>
-
-                        {/* Type indicator */}
-                        {node.type === "primary" && (
-                          <text
-                            y={-node.size - 5}
-                            textAnchor="middle"
-                            fill={node.color}
-                            fontSize={8}
-                            className="pointer-events-none select-none uppercase"
-                          >
-                            ★ Primary
-                          </text>
-                        )}
-                      </g>
-                    );
-                  }),
-                [
-                  nodes,
-                  positions,
-                  selectedNode,
-                  connections,
-                  hoveredNode,
-                  handleNodeClick,
-                ],
-              )}
-            </svg>
-
-            {/* Instructions overlay */}
-            {!selectedNode && !selectedLink && (
-              <div className="absolute bottom-4 left-4 bg-gray-900/80 rounded-xl p-4 max-w-sm">
-                <p className="text-purple-300 text-sm">
-                  <span className="text-lg mr-2">💡</span>
-                  Click a node to see its connections, or click a link to see
-                  the nexus logic.
-                </p>
-              </div>
-            )}
-          </div>
+          <GraphCanvas
+            containerRef={graph.containerRef}
+            dimensions={graph.dimensions}
+            nodes={graph.nodes}
+            links={graph.links}
+            positions={graph.positions}
+            selectedNode={graph.selectedNode}
+            selectedLink={graph.selectedLink}
+            hoveredNode={graph.hoveredNode}
+            connections={graph.connections}
+            onLinkClick={graph.handleLinkClick}
+            onNodeClick={graph.handleNodeClick}
+            onNodeHover={graph.setHoveredNode}
+          />
 
           {/* Details Panel */}
           <div className="w-full sm:w-80 bg-gray-900 border-t sm:border-t-0 sm:border-l border-purple-800/50 overflow-y-auto">
-            {selectedLink ? (
-              /* Link Details */
-              <div className="p-4 space-y-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🔗</span>
-                  <h3 className="font-bold text-white">Connection</h3>
-                </div>
-
-                <div className="bg-purple-900/30 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-amber-500"></span>
-                    <span className="text-white font-semibold">
-                      {selectedLink.source}
-                    </span>
-                  </div>
-                  <div className="text-center text-purple-400">↓</div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-gray-500"></span>
-                    <span className="text-white font-semibold">
-                      {selectedLink.target}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="bg-gray-800/50 rounded-xl p-4">
-                  <h4 className="text-sm text-purple-300 uppercase mb-2">
-                    Medical Nexus
-                  </h4>
-                  <p className="text-white text-sm leading-relaxed">
-                    {selectedLink.nexus}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Connection Strength:</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-purple-600 to-purple-400"
-                        style={{ width: `${selectedLink.strength * 100}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-purple-400 font-bold">
-                      {Math.round(selectedLink.strength * 100)}%
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    if (onSelectCondition) {
-                      onSelectCondition(selectedLink.target);
-                    }
-                  }}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-indigo-700 transition-all"
-                >
-                  📋 Add {selectedLink.target} to Claim
-                </button>
-              </div>
-            ) : selectedNode ? (
-              /* Node Details */
-              <div className="p-4 space-y-4">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="w-4 h-4 rounded-full"
-                    style={{
-                      backgroundColor: nodes.find((n) => n.id === selectedNode)
-                        ?.color,
-                    }}
-                  ></span>
-                  <h3 className="font-bold text-white text-lg">
-                    {selectedNode}
-                  </h3>
-                </div>
-
-                {CONDITION_WEB[selectedNode] && (
-                  <span className="inline-block px-3 py-1 bg-purple-900/50 text-purple-300 rounded-full text-sm">
-                    {CONDITION_WEB[selectedNode].category}
-                  </span>
-                )}
-
-                <div className="space-y-2">
-                  <h4 className="text-sm text-purple-300 uppercase">
-                    {CONDITION_WEB[selectedNode]
-                      ? "Secondary Conditions"
-                      : "Connected Primary Conditions"}
-                  </h4>
-
-                  {connections.map((conn, i) => (
-                    <button
-                      key={i}
-                      onClick={() =>
-                        handleLinkClick({
-                          source: conn.source,
-                          target: conn.target,
-                          nexus: conn.nexus,
-                          strength: conn.strength,
-                        })
-                      }
-                      className="w-full text-left p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-white">{conn.connected}</span>
-                        <span className="text-purple-400 text-sm">
-                          {Math.round(conn.strength * 100)}%
-                        </span>
-                      </div>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="text-xs text-gray-400">
-                          {conn.direction === "outgoing"
-                            ? "↳ Secondary"
-                            : "↰ Primary"}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {CONDITION_WEB[selectedNode] && (
-                  <div className="bg-purple-900/20 border border-purple-700/30 rounded-xl p-4">
-                    <p className="text-purple-200 text-sm">
-                      <span className="text-lg mr-2">⚡</span>
-                      This is a <strong>primary condition</strong> that can
-                      establish secondary service connection for{" "}
-                      {CONDITION_WEB[selectedNode].secondaries.length} other
-                      conditions.
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Default State */
-              <div className="p-4 space-y-4">
-                <h3 className="font-bold text-white text-lg">How to Use</h3>
-
-                <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <span className="text-2xl">🟡</span>
-                    <div>
-                      <p className="text-white font-semibold">
-                        Primary Conditions
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Large colored nodes are service-connected primaries
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <span className="text-2xl">⚪</span>
-                    <div>
-                      <p className="text-white font-semibold">
-                        Secondary Conditions
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Smaller gray nodes are potential secondaries
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <span className="text-2xl">➖</span>
-                    <div>
-                      <p className="text-white font-semibold">
-                        Connection Lines
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Thicker lines = stronger medical link
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-indigo-900/30 border border-indigo-700/50 rounded-xl p-4">
-                  <p className="text-indigo-200 text-sm">
-                    <span className="text-lg mr-2">🎯</span>
-                    Click any connection to see the{" "}
-                    <strong>medical nexus</strong> explaining the relationship.
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-gray-700">
-                  <h4 className="text-sm text-gray-400 uppercase mb-2">
-                    Legend
-                  </h4>
-                  <div className="space-y-2">
-                    {Object.entries(CONDITION_WEB)
-                      .slice(0, 5)
-                      .map(([name, data]) => (
-                        <div key={name} className="flex items-center gap-2">
-                          <span
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: data.color }}
-                          ></span>
-                          <span className="text-gray-300 text-sm">
-                            {data.category}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-
-                {/* Support CTA */}
-                <div className="pt-4 border-t border-gray-700">
-                  <div className="bg-purple-900/30 border border-purple-700/50 rounded-xl p-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src="/images/Anth.jpg"
-                        alt="Anthony"
-                        className="w-10 h-10 rounded-full object-cover border-2 border-purple-500 flex-shrink-0"
-                      />
-                      <div>
-                        <p className="text-purple-200 text-sm font-semibold">
-                          🔬 Medical research takes time
-                        </p>
-                        <p className="text-purple-300/70 text-xs mt-1">
-                          Each nexus connection is backed by real medical
-                          literature. Help fund more research.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <DetailsPanel
+              selectedLink={graph.selectedLink}
+              selectedNode={graph.selectedNode}
+              nodes={graph.nodes}
+              connections={graph.connections}
+              onSelectCondition={onSelectCondition}
+              onLinkClick={graph.handleLinkClick}
+            />
           </div>
         </div>
       </ResponsiveModal>
 
       {/* BuyMeCoffee - shows when user clicks a link/nexus */}
       <BuyMeCoffee
-        show={selectedLink !== null || selectedNode !== null}
+        show={graph.selectedLink !== null || graph.selectedNode !== null}
         trigger="web-conditions"
-        context={{ condition: selectedLink?.source || selectedNode }}
+        context={{
+          condition: graph.selectedLink?.source || graph.selectedNode,
+        }}
       />
     </>
   );

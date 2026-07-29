@@ -48,24 +48,6 @@ function App() {
 }
 
 // ============================================================================
-// STEP 3: Add login button to your header/navbar
-// ============================================================================
-
-// Header.jsx or Navigation.jsx
-import VaLoginButton from "./components/VaLoginButton";
-
-function Header() {
-  return (
-    <header className="flex justify-between items-center p-4">
-      <div>Your Logo</div>
-
-      {/* Add the VA login button */}
-      <VaLoginButton />
-    </header>
-  );
-}
-
-// ============================================================================
 // STEP 4: Protect routes that require authentication
 // ============================================================================
 
@@ -156,64 +138,6 @@ function VaClaimsPage() {
           <p>Status: {claim.status}</p>
         </div>
       ))}
-    </div>
-  );
-}
-
-// ============================================================================
-// STEP 6: Display user info anywhere in your app
-// ============================================================================
-
-// UserProfile.jsx (example)
-import { useVaAuth } from "./hooks/useVaAuth";
-
-function UserProfile() {
-  const { userInfo, isAuthenticated } = useVaAuth();
-
-  if (!isAuthenticated) {
-    return <p>Please sign in to view your profile</p>;
-  }
-
-  return (
-    <div className="user-profile">
-      <h2>Welcome, {userInfo?.name || "Veteran"}!</h2>
-      {userInfo?.email && <p>Email: {userInfo.email}</p>}
-      {userInfo?.given_name && <p>First Name: {userInfo.given_name}</p>}
-      {userInfo?.family_name && <p>Last Name: {userInfo.family_name}</p>}
-    </div>
-  );
-}
-
-// ============================================================================
-// STEP 7: Conditionally show features based on auth status
-// ============================================================================
-
-// AnyComponent.jsx
-import { useVaAuth } from "./hooks/useVaAuth";
-
-function FeatureComponent() {
-  const { isAuthenticated } = useVaAuth();
-
-  return (
-    <div>
-      {/* Always visible content */}
-      <h1>Disability Calculator</h1>
-
-      {/* Only show to authenticated users */}
-      {isAuthenticated && (
-        <div className="premium-features">
-          <h2>Your VA Data</h2>
-          <p>View your personalized claims information</p>
-        </div>
-      )}
-
-      {/* Only show to non-authenticated users */}
-      {!isAuthenticated && (
-        <div className="cta">
-          <p>Sign in with VA.gov to access personalized features</p>
-          <VaLoginButton />
-        </div>
-      )}
     </div>
   );
 }

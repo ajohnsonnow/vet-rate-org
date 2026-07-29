@@ -184,6 +184,83 @@ export const CLAIM_PHASES = {
 };
 
 /**
+ * Shared cached-fetch logic used by each of the hook's fetch* methods.
+ * `setError` is optional - only fetchDisabilities surfaces errors to state.
+ */
+async function runCachedBenefitsFetch({
+  cacheKey,
+  timestampKey,
+  endpoint,
+  apiKey,
+  isConfigured,
+  setState,
+  setLoading,
+  setError,
+  errorLabel,
+}) {
+  if (!isConfigured) {
+    if (setError) {
+      setError(
+        "VA Benefits Reference API is not configured. Add VITE_VA_BENEFITS_REF_API_KEY to .env",
+      );
+    }
+    return { success: false, error: "API not configured" };
+  }
+
+  const now = Date.now();
+  if (cache[cacheKey] && now - cache[timestampKey] < CACHE_DURATION) {
+    setState(cache[cacheKey]);
+    return { success: true, data: cache[cacheKey], cached: true };
+  }
+
+  setLoading(true);
+  if (setError) setError(null);
+
+  const { complete, fail } = startApiLog(
+    API_CATEGORIES.BENEFITS_REF,
+    endpoint,
+    "API Key",
+  );
+
+  try {
+    const data = await fetchBenefitsRef(endpoint, apiKey);
+
+    cache[cacheKey] = data.items || data;
+    cache[timestampKey] = now;
+
+    setState(cache[cacheKey]);
+    complete(data, cache[cacheKey].length);
+
+    return { success: true, data: cache[cacheKey] };
+  } catch (err) {
+    console.error(`[Benefits Ref] Error fetching ${errorLabel}:`, err);
+    if (setError) setError(err.message);
+    fail(err.message);
+    return { success: false, error: err.message };
+  } finally {
+    setLoading(false);
+  }
+}
+
+/**
+ * Get claim phase info - no hook state involved, safe to hoist out of the hook.
+ */
+function getClaimPhaseInfo(status) {
+  const upperStatus = status?.toUpperCase().replace(/ /g, "_");
+  return CLAIM_PHASES[upperStatus] || CLAIM_PHASES["CLAIM_RECEIVED"];
+}
+
+/**
+ * Get all claim phases for display - no hook state involved, safe to hoist out of the hook.
+ */
+function getAllClaimPhases() {
+  return Object.entries(CLAIM_PHASES)
+    .filter(([key]) => key !== "ERRORED")
+    .sort((a, b) => a[1].phase - b[1].phase)
+    .map(([key, value]) => ({ key, ...value }));
+}
+
+/**
  * Custom hook for VA Benefits Reference Data
  */
 export function useVaBenefitsRef() {
@@ -202,148 +279,49 @@ export function useVaBenefitsRef() {
    * Fetch disabilities list with caching
    */
   const fetchDisabilities = useCallback(async () => {
-    if (!isConfigured) {
-      setError(
-        "VA Benefits Reference API is not configured. Add VITE_VA_BENEFITS_REF_API_KEY to .env",
-      );
-      return { success: false, error: "API not configured" };
-    }
-
-    // Check cache
-    const now = Date.now();
-    if (
-      cache.disabilities &&
-      now - cache.disabilities_timestamp < CACHE_DURATION
-    ) {
-      setDisabilities(cache.disabilities);
-      return { success: true, data: cache.disabilities, cached: true };
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const { complete, fail } = startApiLog(
-      API_CATEGORIES.BENEFITS_REF,
-      "/services/benefits-reference-data/v1/disabilities",
-      "API Key",
-    );
-
-    try {
-      const data = await fetchBenefitsRef(
-        "/services/benefits-reference-data/v1/disabilities",
-        apiKey,
-      );
-
-      // Update cache
-      cache.disabilities = data.items || data;
-      cache.disabilities_timestamp = now;
-
-      setDisabilities(cache.disabilities);
-      complete(data, cache.disabilities.length);
-
-      return { success: true, data: cache.disabilities };
-    } catch (err) {
-      console.error("[Benefits Ref] Error fetching disabilities:", err);
-      setError(err.message);
-      fail(err.message);
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
+    return runCachedBenefitsFetch({
+      cacheKey: "disabilities",
+      timestampKey: "disabilities_timestamp",
+      endpoint: "/services/benefits-reference-data/v1/disabilities",
+      apiKey,
+      isConfigured,
+      setState: setDisabilities,
+      setLoading,
+      setError,
+      errorLabel: "disabilities",
+    });
   }, [apiKey, isConfigured]);
 
   /**
    * Fetch contention types with caching
    */
   const fetchContentionTypes = useCallback(async () => {
-    if (!isConfigured) {
-      return { success: false, error: "API not configured" };
-    }
-
-    const now = Date.now();
-    if (
-      cache.contention_types &&
-      now - cache.contention_types_timestamp < CACHE_DURATION
-    ) {
-      setContentionTypes(cache.contention_types);
-      return { success: true, data: cache.contention_types, cached: true };
-    }
-
-    setLoading(true);
-
-    const { complete, fail } = startApiLog(
-      API_CATEGORIES.BENEFITS_REF,
-      "/services/benefits-reference-data/v1/contention-types",
-      "API Key",
-    );
-
-    try {
-      const data = await fetchBenefitsRef(
-        "/services/benefits-reference-data/v1/contention-types",
-        apiKey,
-      );
-
-      cache.contention_types = data.items || data;
-      cache.contention_types_timestamp = now;
-
-      setContentionTypes(cache.contention_types);
-      complete(data, cache.contention_types.length);
-
-      return { success: true, data: cache.contention_types };
-    } catch (err) {
-      console.error("[Benefits Ref] Error fetching contention types:", err);
-      fail(err.message);
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
+    return runCachedBenefitsFetch({
+      cacheKey: "contention_types",
+      timestampKey: "contention_types_timestamp",
+      endpoint: "/services/benefits-reference-data/v1/contention-types",
+      apiKey,
+      isConfigured,
+      setState: setContentionTypes,
+      setLoading,
+      errorLabel: "contention types",
+    });
   }, [apiKey, isConfigured]);
 
   /**
    * Fetch service branches with caching
    */
   const fetchServiceBranches = useCallback(async () => {
-    if (!isConfigured) {
-      return { success: false, error: "API not configured" };
-    }
-
-    const now = Date.now();
-    if (
-      cache.service_branches &&
-      now - cache.service_branches_timestamp < CACHE_DURATION
-    ) {
-      setServiceBranches(cache.service_branches);
-      return { success: true, data: cache.service_branches, cached: true };
-    }
-
-    setLoading(true);
-
-    const { complete, fail } = startApiLog(
-      API_CATEGORIES.BENEFITS_REF,
-      "/services/benefits-reference-data/v1/service-branches",
-      "API Key",
-    );
-
-    try {
-      const data = await fetchBenefitsRef(
-        "/services/benefits-reference-data/v1/service-branches",
-        apiKey,
-      );
-
-      cache.service_branches = data.items || data;
-      cache.service_branches_timestamp = now;
-
-      setServiceBranches(cache.service_branches);
-      complete(data, cache.service_branches.length);
-
-      return { success: true, data: cache.service_branches };
-    } catch (err) {
-      console.error("[Benefits Ref] Error fetching service branches:", err);
-      fail(err.message);
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
+    return runCachedBenefitsFetch({
+      cacheKey: "service_branches",
+      timestampKey: "service_branches_timestamp",
+      endpoint: "/services/benefits-reference-data/v1/service-branches",
+      apiKey,
+      isConfigured,
+      setState: setServiceBranches,
+      setLoading,
+      errorLabel: "service branches",
+    });
   }, [apiKey, isConfigured]);
 
   /**
@@ -364,24 +342,6 @@ export function useVaBenefitsRef() {
     },
     [disabilities],
   );
-
-  /**
-   * Get claim phase info
-   */
-  const getClaimPhaseInfo = useCallback((status) => {
-    const upperStatus = status?.toUpperCase().replace(/ /g, "_");
-    return CLAIM_PHASES[upperStatus] || CLAIM_PHASES["CLAIM_RECEIVED"];
-  }, []);
-
-  /**
-   * Get all claim phases for display
-   */
-  const getAllClaimPhases = useCallback(() => {
-    return Object.entries(CLAIM_PHASES)
-      .filter(([key]) => key !== "ERRORED")
-      .sort((a, b) => a[1].phase - b[1].phase)
-      .map(([key, value]) => ({ key, ...value }));
-  }, []);
 
   return {
     // State

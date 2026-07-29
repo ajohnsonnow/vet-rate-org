@@ -1,0 +1,318 @@
+{
+  "state": "New York",
+  "stateCode": "NY",
+  "officialSource": "https://veterans.ny.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "ny-property_tax_exemption-alternative-veterans-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Alternative Veterans Exemption",
+      "description": "A partial property tax exemption on the residence of a veteran who served during a designated wartime period or received an expeditionary medal. The base exemption is 15% of assessed value, with an additional 10% (25% total) for veterans who served in a combat theatre or zone, plus a further exemption equal to one-half of the veteran's VA service-connected disability rating. It does not apply to special district charges, and is optional for school districts. Not automatic — the veteran must apply with the local assessor, typically by March 1.",
+      "value": "15% of assessed value (wartime); +10% (25% total) for combat service; + one-half of VA disability rating percentage for service-connected disability, each subject to state-set maximum dollar caps (localities may adopt higher or lower caps)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Served during a designated time of war, or received an expeditionary medal",
+          "Only available on residential property",
+          "Only one of the Alternative Veterans, Cold War Veterans, or Eligible Funds exemptions may be received at a time",
+          "County, city, town, or village must have adopted the exemption (offered in over 95% of jurisdictions); school district adoption is separately optional",
+          "Application deadline generally March 1 (confirm with local assessor)"
+        ]
+      },
+      "application": {
+        "agency": "NY Department of Taxation and Finance / local assessor",
+        "form": "RP-458-a",
+        "url": "https://www.tax.ny.gov/pit/property/exemption/vetexempt.htm",
+        "documentation": [
+          "DD-214 or other proof of military service",
+          "VA disability rating letter (for the additional disability exemption)"
+        ]
+      },
+      "legalCitation": "Real Property Tax Law (RPTL) Section 458-a",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.tax.ny.gov/pit/property/exemption/vetexempt.htm",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-property_tax_exemption-cold-war-veterans-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Cold War Veterans Exemption",
+      "description": "A partial property tax exemption, adopted at local option (counties, cities, towns, and villages each decide whether to offer it), for the residence of a veteran who served during the Cold War period. The base exemption is 10% or 15% of assessed value as set by the local jurisdiction, plus an additional exemption equal to one-half of the veteran's VA service-connected disability rating. Maximum dollar caps are set by each taxing jurisdiction.",
+      "value": "10% or 15% of assessed value (jurisdiction's choice) + one-half of VA disability rating percentage for service-connected disability, subject to locally-set maximum dollar caps",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Served during the Cold War period",
+          "Only available on residential property",
+          "Local jurisdiction must have opted to offer the exemption (not automatic statewide)",
+          "Only one of the Alternative Veterans, Cold War Veterans, or Eligible Funds exemptions may be received at a time"
+        ]
+      },
+      "application": {
+        "agency": "NY Department of Taxation and Finance / local assessor",
+        "form": "RP-458-b",
+        "url": "https://www.tax.ny.gov/pit/property/exemption/coldwaroverview.htm",
+        "documentation": [
+          "DD-214 or other proof of military service during the Cold War period",
+          "VA disability rating letter (for the additional disability exemption)"
+        ]
+      },
+      "legalCitation": "Real Property Tax Law (RPTL) Section 458-b",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.tax.ny.gov/pit/property/exemption/coldwaroverview.htm",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-property_tax_exemption-eligible-funds-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Eligible Funds Exemption",
+      "description": "A partial property tax exemption for veterans whose home was purchased using \"eligible funds\" — pension, bonus, or insurance monies (including dividends or refunds on such insurance) received for military service. The exemption is generally capped at $7,500 of assessed value. Veterans who instead qualify for the related Section 458(3) grant can receive a full exemption for all taxing purposes, including school taxes, in certain cases.",
+      "value": "Exemption up to $7,500 of assessed value (amount equal to eligible funds used to purchase the home, capped at $7,500)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Property must have been purchased in whole or part with eligible funds (veteran's pension, bonus, or insurance monies)",
+          "Only one of the Alternative Veterans, Cold War Veterans, or Eligible Funds exemptions may be received at a time"
+        ]
+      },
+      "application": {
+        "agency": "NY Department of Taxation and Finance / local assessor",
+        "form": "RP-458",
+        "url": "https://www.tax.ny.gov/pit/property/exemption/eligfndsexempt.htm",
+        "documentation": [
+          "DD-214 or other proof of military service",
+          "Proof that eligible funds (pension, bonus, or insurance monies) were used to purchase the property"
+        ]
+      },
+      "legalCitation": "Real Property Tax Law (RPTL) Section 458",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.tax.ny.gov/pit/property/exemption/eligfndsexempt.htm",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-state_veterans_home-new-york-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "New York State Veterans' Homes",
+      "description": "New York operates five state veterans' nursing homes (Oxford, Montrose, St. Albans, Batavia, and Long Island/Stony Brook), owned and operated by the NY Department of Health and SUNY, providing long-term nursing care. Eligible veterans must have an honorable discharge and at least 30 days of active service, and must have entered active duty from New York or been a New York resident for one year before applying. A spouse married to a qualifying veteran for at least one year may also be admitted.",
+      "value": "Long-term nursing home care at five state-run facilities statewide",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge from the U.S. Armed Forces",
+          "At least 30 days of active service",
+          "Entered active duty from New York, or NY resident for one year prior to application",
+          "Spouse of a qualifying veteran may be admitted if married at least one year prior"
+        ]
+      },
+      "application": {
+        "agency": "NY Department of Health / State University of New York (SUNY)",
+        "form": null,
+        "url": "https://apps.health.ny.gov/nysvets/web/",
+        "documentation": [
+          "DD-214 or other proof of military service",
+          "Proof of NY residency or entry to active duty from NY"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.ny.gov/new-york-state-veterans-nursing-homes",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-state_va_healthcare-va-subsidized-nursing-care-at-ny-state-veterans-",
+      "benefitType": "state_va_healthcare",
+      "category": "Healthcare",
+      "name": "VA-Subsidized Nursing Care at NY State Veterans' Homes",
+      "description": "For veterans admitted to a New York State Veterans' Home with a service-connected disability rating of 70% or greater, the U.S. Department of Veterans Affairs pays the full cost of nursing home care at the facility, per federal VA per-diem rules applied at these state-run homes. Veterans with lower or no disability ratings may still be admitted but are subject to standard cost-of-care charges.",
+      "value": "Full cost of nursing home care covered by VA per diem for veterans rated 70% or higher; partial VA subsidy offsets costs for other admitted veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 70,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must be admitted to one of the five NY State Veterans' Homes",
+          "Honorable discharge and at least 30 days of active service"
+        ]
+      },
+      "application": {
+        "agency": "NY Department of Health / U.S. Department of Veterans Affairs",
+        "form": null,
+        "url": "https://apps.health.ny.gov/nysvets/web/",
+        "documentation": [
+          "VA disability rating letter showing 70% or greater service-connected disability"
+        ]
+      },
+      "legalCitation": "38 U.S.C. §1745",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.ny.gov/new-york-state-veterans-nursing-homes",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-education_tuition-veterans-tuition-award-vta",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Veterans Tuition Award (VTA)",
+      "description": "The NY Higher Education Services Corporation (HESC) provides tuition awards for full-time or part-time study at undergraduate, graduate, or approved vocational programs to honorably discharged, NY-resident veterans who served in specified conflict eras (Vietnam-era Indochina service, Persian Gulf service on/after August 2, 1990, Afghanistan hostilities on/after September 11, 2001, or who received qualifying Armed Forces Expeditionary Medals for service after February 28, 1961). Specific dollar award amounts and maximum duration were not stated on the pages reviewed; consult HESC directly for current award figures.",
+      "value": "Tuition award for full- or part-time study; specific dollar amount not confirmed on official pages reviewed",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged veteran",
+          "NY resident",
+          "Served in a qualifying conflict era: Vietnam (Nov 1, 1955 - May 7, 1975 in Indochina), Persian Gulf (on/after Aug 2, 1990), Afghanistan hostilities (on/after Sept 11, 2001), or received a qualifying Armed Forces Expeditionary Medal for service after Feb 28, 1961",
+          "Matriculated in an undergraduate/graduate degree program or approved vocational training program"
+        ]
+      },
+      "application": {
+        "agency": "NY Higher Education Services Corporation (HESC)",
+        "form": null,
+        "url": "https://www.hesc.ny.gov/vta",
+        "documentation": ["DD-214", "Proof of NY residency"]
+      },
+      "legalCitation": "NY Education Law Section 669-a",
+      "authorityTier": "reference",
+      "sourceUrl": "https://veterans.ny.gov/state-education-scholarships",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-education_tuition-merit-scholarship",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "MERIT Scholarship",
+      "description": "The Military Enhanced Recognition Incentive and Tribute (MERIT) Scholarship, administered by HESC, covers the cost of attendance (not to exceed the average cost charged to NY resident students at a state-operated SUNY college) for children, spouses, and financial dependents of U.S. Armed Forces or state militia members who died, or became severely and permanently disabled with medical certification of inability to work, while performing military duties, provided the service member was a NY resident at the time. Duration is 2 years (associate degree), 4 years (bachelor's), or 5 years (approved five-year programs).",
+      "value": "Covers full cost of attendance up to the average SUNY resident cost, for 2-5 years depending on degree program",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applicant is a child, spouse, or financial dependent of the qualifying service member (not the veteran directly)",
+          "Service member died or became severely and permanently disabled (with medical certification of inability to work) while performing military duties",
+          "Service member was an NY resident at the time of death or disability",
+          "Applicant graduated high school, earned a GED, or passed an approved Ability to Benefit test",
+          "Enrolled full-time (minimum 12 credits/term) and in good academic standing",
+          "Must complete FAFSA and NYS TAP applications"
+        ]
+      },
+      "application": {
+        "agency": "NY Higher Education Services Corporation (HESC)",
+        "form": "MERIT Scholarship Application (web supplement) plus Total & Permanent Disability Verification Form",
+        "url": "https://hesc.ny.gov/merit",
+        "documentation": [
+          "FAFSA",
+          "TAP application",
+          "Total & Permanent Disability Verification Form (for disability-based eligibility)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://hesc.ny.gov/merit",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-hiring_preference-civil-service-veterans-credits",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Civil Service Veterans' Credits",
+      "description": "New York adds credits to passing civil service examination scores for qualified veterans (5 additional points on open-competitive exams) and additional credits for qualified disabled veterans (10 additional credits, minus credits already used for a prior appointment). Disabled veteran credits under the 2014 constitutional amendment require the candidate to have already used non-disabled veteran credits to obtain an appointment or promotion and to subsequently be determined a qualified disabled veteran by the VA. Credits apply only to passing scores and must be claimed via the online Veteran Credit Use Questionnaire before the eligible list is established.",
+      "value": "5 additional points (non-disabled veterans) or 10 additional credits (qualified disabled veterans, net of credits previously used) added to passing civil service exam scores",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Only applies to passing exam scores, not failing scores",
+          "Must submit information via the online Veteran Credit Use Questionnaire before the eligible list is established",
+          "Disabled veteran credit requires the VA to determine the candidate a qualified disabled veteran after using non-disabled veteran credits for a prior appointment"
+        ]
+      },
+      "application": {
+        "agency": "NY Department of Civil Service",
+        "form": null,
+        "url": "https://www.cs.ny.gov/vetcredits/",
+        "documentation": [
+          "DD-214 or other proof of military service",
+          "VA determination of disabled veteran status (for disabled veteran credits)"
+        ]
+      },
+      "legalCitation": "New York State Constitution, Article V, Section 6; NY Civil Service Law",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.cs.ny.gov/vetcredits/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "ny-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "New York offers a Disabled Veteran custom license plate, ordered by mail using Form CP-30 with a copy of the veteran's DD-214 or Certification of Military Service. The official DMV page reviewed did not state a minimum VA disability-rating percentage; it requires that the applicant already hold a plate bearing the Universal Symbol of Access. The initial plate fee is $28.75 with no additional annual renewal fee, though standard vehicle registration renewal fees still apply. The plate cannot be personalized, and orders take approximately 8-10 weeks.",
+      "value": "Disabled Veteran specialty plate; $28.75 one-time fee, no annual renewal surcharge",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Must already hold a plate with the Universal Symbol of Access (a separate DMV accessible-parking determination)",
+          "Copy of DD-214 or Certification of Military Service (NA Form 13038) required",
+          "Cannot be ordered online, by phone, or in a DMV office — mail order only"
+        ]
+      },
+      "application": {
+        "agency": "NY Department of Motor Vehicles",
+        "form": "CP-30",
+        "url": "https://dmv.ny.gov/plates/disabled-veteran",
+        "documentation": [
+          "DD-214 or Certification of Military Service (NA Form 13038)",
+          "Existing plate with Universal Symbol of Access"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dmv.ny.gov/plates/disabled-veteran",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

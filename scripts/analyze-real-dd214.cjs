@@ -5,7 +5,6 @@
 
 const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 const fs = require('fs');
-const path = require('path');
 
 // The actual PDF file path
 const PDF_PATH = 'E:/VS_Studio/Johnson_C-FIle/Johnson Service Records DD214 ALL.pdf';

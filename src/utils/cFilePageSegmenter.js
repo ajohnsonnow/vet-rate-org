@@ -38,6 +38,7 @@ const HIGH_PRIORITY_THRESHOLD = 85;
 
 // Signals compiled once at module load
 const PAGE_ONE_OF_N = /\bpage\s+1\s+of\s+\d+\b/i;
+// eslint-disable-next-line sonarjs/slow-regex -- each \s* run is bounded by a disjoint literal/digit char (1, /, \d) that \s cannot match, so there is no ambiguous overlap between quantifiers and backtracking stays linear
 const PAGE_SLASH_N = /^\s*1\s*\/\s*\d{1,4}\s*$/m;
 const LETTERHEAD_REFER_TO = /In\s+Reply\s+Refer\s+To/i;
 const CLAIM_NUMBER = /\bC[-\s]?\d{7,9}\b/;

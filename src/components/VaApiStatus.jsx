@@ -25,6 +25,33 @@ const sanitizeVaShortlink = (url) =>
 // VA API STATUS BANNER - Shows when there are issues
 // ============================================================================
 
+// Color schemes based on severity
+const BANNER_SEVERITY_COLORS = {
+  major_outage: "bg-red-600 border-red-700",
+  partial_outage: "bg-orange-500 border-orange-600",
+  degraded_performance: "bg-yellow-500 border-yellow-600 text-yellow-900",
+  under_maintenance: "bg-blue-500 border-blue-600",
+  info: "bg-blue-400 border-blue-500",
+};
+
+function BannerCloseIcon() {
+  return (
+    <svg
+      className="w-4 h-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  );
+}
+
 /**
  * Banner that appears at the top of the page when VA APIs have issues
  * Only shows when there are actual problems
@@ -58,17 +85,8 @@ export function VaApiStatusBanner({ onDismiss }) {
     onDismiss?.();
   };
 
-  // Color schemes based on severity
-  const severityColors = {
-    major_outage: "bg-red-600 border-red-700",
-    partial_outage: "bg-orange-500 border-orange-600",
-    degraded_performance: "bg-yellow-500 border-yellow-600 text-yellow-900",
-    under_maintenance: "bg-blue-500 border-blue-600",
-    info: "bg-blue-400 border-blue-500",
-  };
-
   const bgColor =
-    severityColors[summary?.severity] || "bg-gray-500 border-gray-600";
+    BANNER_SEVERITY_COLORS[summary?.severity] || "bg-gray-500 border-gray-600";
   const textColor =
     summary?.severity === "degraded_performance"
       ? "text-yellow-900"
@@ -114,19 +132,7 @@ export function VaApiStatusBanner({ onDismiss }) {
                 className="p-2 hover:bg-white/20 rounded-full transition-colors"
                 aria-label="Dismiss notification"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <BannerCloseIcon />
               </button>
             </Tooltip>
           )}
@@ -210,6 +216,18 @@ export function VaApiStatusIndicator({ showLabel = true, size = "md" }) {
 // FEATURE-SPECIFIC STATUS BADGE
 // ============================================================================
 
+const BADGE_STATUS_COLORS = {
+  operational:
+    "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  degraded_performance:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  partial_outage:
+    "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+  major_outage: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  under_maintenance:
+    "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+};
+
 /**
  * Badge showing status for a specific VA API feature
  * Use near features that depend on VA APIs
@@ -235,24 +253,11 @@ export function VaFeatureStatusBadge({ feature, showDetails = false }) {
     return null;
   }
 
-  const badgeColors = {
-    operational:
-      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    degraded_performance:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-    partial_outage:
-      "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-    major_outage:
-      "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-    under_maintenance:
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  };
-
   return (
     <div className="relative inline-block">
       {/* deepcode ignore OpenRedirect: statusPageUrl is a hardcoded constant from getStatusPageUrl() */}
       <button
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${badgeColors[status] || badgeColors.operational}`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${BADGE_STATUS_COLORS[status] || BADGE_STATUS_COLORS.operational}`}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         onClick={() => {
@@ -311,6 +316,251 @@ export function VaFeatureStatusBadge({ feature, showDetails = false }) {
 // FULL STATUS PANEL - For settings/dashboard
 // ============================================================================
 
+function VaApiStatusPanelHeader({
+  statusPageUrl,
+  onRefresh,
+  isRefreshing,
+  loading,
+}) {
+  return (
+    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🏛️</span>
+          <div>
+            <h2 className="font-bold text-gray-900 dark:text-white">
+              VA API Status
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Real-time status from VA Lighthouse
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Tooltip content="Refresh status" placement="bottom">
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing || loading}
+              className="p-2 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+              aria-label="Refresh status"
+            >
+              <svg
+                className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? "animate-spin" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </button>
+          </Tooltip>
+
+          <a
+            href={sanitizeUrl(statusPageUrl)} // deepcode ignore javascript/DOMXSS: sanitizeUrl validates URL protocol
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Full Status Page ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VaOverallStatus({ hasIssues, status, lastUpdated }) {
+  return (
+    <div
+      className={`p-4 rounded-lg mb-6 ${
+        hasIssues
+          ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
+          : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">{hasIssues ? "⚠️" : "✅"}</span>
+        <div>
+          <h3
+            className={`font-bold ${hasIssues ? "text-amber-800 dark:text-amber-200" : "text-green-800 dark:text-green-200"}`}
+          >
+            {status?.overallDescription || "All Systems Operational"}
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Last checked: {lastUpdated?.toLocaleTimeString() || "Never"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VaActiveIncidents({ incidents }) {
+  if (!incidents?.length) {
+    return null;
+  }
+
+  return (
+    <div className="mb-6">
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+        <span className="text-red-500">🔴</span> Active Incidents
+      </h3>
+      <div className="space-y-3">
+        {incidents.map((incident) => (
+          <div
+            key={incident.id}
+            className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+          >
+            <a
+              href={sanitizeVaShortlink(incident.shortlink)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-red-800 dark:text-red-200 hover:underline"
+            >
+              {incident.name}
+            </a>
+            <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+              {incident.updates?.[0]?.body?.slice(0, 150) ||
+                "No details available"}
+              {incident.updates?.[0]?.body?.length > 150 ? "..." : ""}
+            </p>
+            <div className="text-xs text-red-600 dark:text-red-400 mt-2">
+              Affected:{" "}
+              {incident.affectedComponents?.join(", ") || "Multiple services"}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VaScheduledMaintenance({ maintenance }) {
+  if (!maintenance?.length) {
+    return null;
+  }
+
+  return (
+    <div className="mb-6">
+      <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+        <span className="text-blue-500">🔧</span> Scheduled Maintenance
+      </h3>
+      <div className="space-y-3">
+        {maintenance.map((maint) => (
+          <div
+            key={maint.id}
+            className={`p-3 rounded-lg border ${
+              maint.status === "in_progress"
+                ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
+                : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
+            }`}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <a
+                  href={sanitizeVaShortlink(maint.shortlink)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-gray-900 dark:text-white hover:underline"
+                >
+                  {maint.name}
+                </a>
+                {maint.status === "in_progress" && (
+                  <span className="ml-2 px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                    In Progress
+                  </span>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {new Date(maint.scheduledFor).toLocaleString()} -{" "}
+              {new Date(maint.scheduledUntil).toLocaleString()}
+            </p>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Affected:{" "}
+              {maint.affectedComponents?.join(", ") || "Multiple services"}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function VaInfoBox() {
+  return (
+    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+      <div className="flex items-start gap-3">
+        <span className="text-xl">ℹ️</span>
+        <div className="text-sm">
+          <p className="text-blue-800 dark:text-blue-200 font-medium">
+            Why does this matter?
+          </p>
+          <p className="text-blue-700 dark:text-blue-300 mt-1">
+            Vet-Rate.org uses official VA APIs for some features. When the
+            VA&apos;s systems are down or under maintenance, those features may
+            not work - but{" "}
+            <strong>it&apos;s not a problem with Vet-Rate.org</strong>. This
+            status page helps you know when VA APIs are experiencing issues.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VaApiStatusPanelBody({
+  loading,
+  status,
+  error,
+  hasIssues,
+  lastUpdated,
+}) {
+  if (loading && !status) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400">
+          Checking VA API status...
+        </p>
+      </div>
+    );
+  }
+
+  if (error && !status) {
+    return (
+      <div className="text-center py-8">
+        <span className="text-4xl">❓</span>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">
+          Unable to fetch VA status
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          {sanitizeErrorMessage(error)}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <VaOverallStatus
+        hasIssues={hasIssues}
+        status={status}
+        lastUpdated={lastUpdated}
+      />
+      <VaActiveIncidents incidents={status?.activeIncidents} />
+      <VaScheduledMaintenance maintenance={status?.scheduledMaintenance} />
+      <VaInfoBox />
+    </>
+  );
+}
+
 /**
  * Full status panel showing all VA API statuses
  * Good for settings pages or dedicated status views
@@ -332,207 +582,22 @@ export function VaApiStatusPanel() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🏛️</span>
-            <div>
-              <h2 className="font-bold text-gray-900 dark:text-white">
-                VA API Status
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Real-time status from VA Lighthouse
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Tooltip content="Refresh status" placement="bottom">
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing || loading}
-                className="p-2 hover:bg-white/50 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-                aria-label="Refresh status"
-              >
-                <svg
-                  className={`w-5 h-5 text-gray-600 dark:text-gray-300 ${isRefreshing ? "animate-spin" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              </button>
-            </Tooltip>
-
-            <a
-              href={sanitizeUrl(statusPageUrl)} // deepcode ignore javascript/DOMXSS: sanitizeUrl validates URL protocol
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Full Status Page ↗
-            </a>
-          </div>
-        </div>
-      </div>
+      <VaApiStatusPanelHeader
+        statusPageUrl={statusPageUrl}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
+        loading={loading}
+      />
 
       {/* Content */}
       <div className="p-6">
-        {loading && !status ? (
-          <div className="text-center py-8">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-3" />
-            <p className="text-gray-500 dark:text-gray-400">
-              Checking VA API status...
-            </p>
-          </div>
-        ) : error && !status ? (
-          <div className="text-center py-8">
-            <span className="text-4xl">❓</span>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              Unable to fetch VA status
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              {sanitizeErrorMessage(error)}
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Overall Status */}
-            <div
-              className={`p-4 rounded-lg mb-6 ${
-                hasIssues
-                  ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
-                  : "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{hasIssues ? "⚠️" : "✅"}</span>
-                <div>
-                  <h3
-                    className={`font-bold ${hasIssues ? "text-amber-800 dark:text-amber-200" : "text-green-800 dark:text-green-200"}`}
-                  >
-                    {status?.overallDescription || "All Systems Operational"}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Last checked: {lastUpdated?.toLocaleTimeString() || "Never"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Active Incidents */}
-            {status?.activeIncidents?.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <span className="text-red-500">🔴</span> Active Incidents
-                </h3>
-                <div className="space-y-3">
-                  {status.activeIncidents.map((incident) => (
-                    <div
-                      key={incident.id}
-                      className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-                    >
-                      <a
-                        href={sanitizeVaShortlink(incident.shortlink)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-red-800 dark:text-red-200 hover:underline"
-                      >
-                        {incident.name}
-                      </a>
-                      <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                        {incident.updates?.[0]?.body?.slice(0, 150) ||
-                          "No details available"}
-                        {incident.updates?.[0]?.body?.length > 150 ? "..." : ""}
-                      </p>
-                      <div className="text-xs text-red-600 dark:text-red-400 mt-2">
-                        Affected:{" "}
-                        {incident.affectedComponents?.join(", ") ||
-                          "Multiple services"}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Scheduled Maintenance */}
-            {status?.scheduledMaintenance?.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <span className="text-blue-500">🔧</span> Scheduled
-                  Maintenance
-                </h3>
-                <div className="space-y-3">
-                  {status.scheduledMaintenance.map((maint) => (
-                    <div
-                      key={maint.id}
-                      className={`p-3 rounded-lg border ${
-                        maint.status === "in_progress"
-                          ? "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
-                          : "bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <a
-                            href={sanitizeVaShortlink(maint.shortlink)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-gray-900 dark:text-white hover:underline"
-                          >
-                            {maint.name}
-                          </a>
-                          {maint.status === "in_progress" && (
-                            <span className="ml-2 px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
-                              In Progress
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {new Date(maint.scheduledFor).toLocaleString()} -{" "}
-                        {new Date(maint.scheduledUntil).toLocaleString()}
-                      </p>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                        Affected:{" "}
-                        {maint.affectedComponents?.join(", ") ||
-                          "Multiple services"}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Info Box */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-              <div className="flex items-start gap-3">
-                <span className="text-xl">ℹ️</span>
-                <div className="text-sm">
-                  <p className="text-blue-800 dark:text-blue-200 font-medium">
-                    Why does this matter?
-                  </p>
-                  <p className="text-blue-700 dark:text-blue-300 mt-1">
-                    Vet-Rate.org uses official VA APIs for some features. When
-                    the VA&apos;s systems are down or under maintenance, those
-                    features may not work - but{" "}
-                    <strong>it&apos;s not a problem with Vet-Rate.org</strong>.
-                    This status page helps you know when VA APIs are
-                    experiencing issues.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        <VaApiStatusPanelBody
+          loading={loading}
+          status={status}
+          error={error}
+          hasIssues={hasIssues}
+          lastUpdated={lastUpdated}
+        />
       </div>
     </div>
   );

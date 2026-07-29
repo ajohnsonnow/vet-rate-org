@@ -246,6 +246,9 @@ const MIGRATED_MODALS = [
   // footer-CTA-in-viewport contract.
   { label: "Bug Squasher", event: "openBugSquasher" },
   { label: "Feature Request", event: "openFeatureRequest" },
+  // S23: Ask the Regs — built on the shell from day one (size="lg", sticky
+  // footer "Ask" CTA), never a legacy modal to migrate.
+  { label: "Ask the Regs", event: "openAskTheRegs" },
 ];
 
 /** Horizontal overflow of the document, in px (<= 1 is clean). */
@@ -419,6 +422,7 @@ for (const vp of VIEWPORTS) {
         localStorage.setItem("vet-rate-tos-accepted", "true");
         localStorage.setItem("vet_rate_last_seen_version", appVersion);
         localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       }, APP_VERSION);
       await page.goto("/");
       await dismissDisclaimer(page);
@@ -521,6 +525,7 @@ for (const vp of VIEWPORTS) {
         localStorage.setItem("vet-rate-tos-accepted", "true");
         localStorage.setItem("vet_rate_last_seen_version", "0.0.0");
         localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       });
       await page.goto("/");
       await dismissDisclaimer(page);
@@ -556,6 +561,7 @@ for (const vp of VIEWPORTS) {
         localStorage.setItem("vet-rate-tos-accepted", "true");
         localStorage.setItem("vet_rate_last_seen_version", appVersion);
         localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
       }, APP_VERSION);
       await page.goto("/");
       await dismissDisclaimer(page);

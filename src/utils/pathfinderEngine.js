@@ -112,7 +112,10 @@ export async function analyzeStrategy(
 
   // Format current ratings for the prompt
   const ratingsText = currentRatings
-    .map((r) => `- ${r.condition}${r.rating ? ` (${r.rating}%)` : ""}`)
+    .map((r) => {
+      const ratingSuffix = r.rating ? ` (${r.rating}%)` : "";
+      return `- ${r.condition}${ratingSuffix}`;
+    })
     .join("\n");
 
   const userPrompt = `${PATHFINDER_SYSTEM_PROMPT}

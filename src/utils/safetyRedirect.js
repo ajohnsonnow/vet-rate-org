@@ -165,6 +165,7 @@ const incrementSafetyUseCount = () => {
     localStorage.setItem(SAFETY_USE_KEY, String(count + 1));
   } catch (e) {
     // Silently fail - this is just UX analytics
+    console.warn("Failed to update safety usage counter:", e);
   }
 };
 
@@ -176,6 +177,7 @@ export const getSafetyUseCount = () => {
   try {
     return parseInt(localStorage.getItem(SAFETY_USE_KEY) || "0", 10);
   } catch (e) {
+    console.warn("Failed to read safety usage counter:", e);
     return 0;
   }
 };

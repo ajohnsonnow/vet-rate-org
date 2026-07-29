@@ -1,0 +1,233 @@
+{
+  "state": "Colorado",
+  "stateCode": "CO",
+  "officialSource": "https://vets.colorado.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "co-property_tax_exemption-disabled-veteran-property-tax-exemption",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Disabled Veteran Property Tax Exemption",
+      "description": "Veterans rated 100% permanently and totally disabled by the VA are eligible for a property tax exemption of 50 percent of the first $200,000 of actual value of their owner-occupied primary residence. Colorado voters approved a 2024 constitutional amendment (Amendment G / HCR23-1002) to extend this exemption to veterans with Individual Unemployability status beginning in 2025; that expansion could not be independently confirmed against a readable official source in this session (only the pre-2024 legislative referral text was accessible), so it is noted here for awareness rather than treated as confirmed current law.",
+      "value": "50% exemption of the first $200,000 of actual home value",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged",
+          "Property must be owner-occupied primary residence",
+          "Must file an exemption application (surviving spouses of qualifying veterans may also be eligible)"
+        ]
+      },
+      "application": {
+        "agency": "Colorado Division of Property Taxation / County Assessors",
+        "form": null,
+        "url": "https://cdola.colorado.gov/property-tax-exemptions",
+        "documentation": [
+          "VA disability rating letter confirming 100% permanent and total disability",
+          "DD-214 or other proof of honorable discharge"
+        ]
+      },
+      "legalCitation": "C.R.S. § 39-3-203; Colo. Const. art. X, § 3.5",
+      "authorityTier": "reference",
+      "sourceUrl": "https://content.leg.colorado.gov/sites/default/files/state_and_federal_military_benefits_4252017.pdf",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "co-state_veterans_home-colorado-veterans-community-living-centers",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Colorado Veterans Community Living Centers",
+      "description": "Colorado operates five state veterans nursing homes, in Aurora (Fitzsimons), Florence, Monte Vista (Homelake), Rifle, and Walsenburg, offering short-term rehabilitation and long-term skilled nursing care for veterans and spouses who meet medical admission criteria. The Homelake center also offers domiciliary cottages similar to assisted living. Rates are generally lower than private nursing homes because the VA subsidizes a portion of the cost.",
+      "value": "Skilled nursing and long-term care at rates subsidized by VA per-diem payments",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorable discharge",
+          "Meets medical admission criteria",
+          "Also open to spouses/widows and Gold Star parents"
+        ]
+      },
+      "application": {
+        "agency": "Colorado Department of Human Services",
+        "form": null,
+        "url": "https://cdhs.colorado.gov/VCLCs",
+        "documentation": [
+          "DD-214 or other proof of military service",
+          "Medical records for admission review"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://content.leg.colorado.gov/sites/default/files/state_and_federal_military_benefits_4252017.pdf",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "co-education_tuition-in-state-tuition-for-veterans-and-dependents",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "In-State Tuition for Veterans and Dependents",
+      "description": "All honorably discharged veterans and their dependents residing in Colorado are eligible for in-state tuition status at Colorado public colleges and universities, eliminating the 12-month residency requirement usually needed to claim in-state tuition. Veterans or dependents using Post-9/11 GI Bill benefits then have their full tuition covered at the in-state rate.",
+      "value": "In-state tuition rate regardless of length of Colorado residency; full tuition coverage when combined with Post-9/11 GI Bill benefits",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged veteran, or qualifying spouse/dependent",
+          "Enrollment at a Colorado public institution of higher education"
+        ]
+      },
+      "application": {
+        "agency": "Colorado Department of Higher Education",
+        "form": null,
+        "url": "https://cdhe.colorado.gov/military-personnel",
+        "documentation": ["DD-214", "Proof of Colorado domicile"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://content.leg.colorado.gov/sites/default/files/state_and_federal_military_benefits_4252017.pdf",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "co-hiring_preference-state-employment-veteran-s-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veteran's Preference",
+      "description": "Veterans applying for jobs in Colorado's state personnel system receive 5 additional points added to their competitive examination score; veterans with a service-connected disability receive 10 additional points.",
+      "value": "5 points added to exam score for veterans; 10 points for disabled veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge under conditions specified by the state personnel system",
+          "Does not apply to promotional opportunities"
+        ]
+      },
+      "application": {
+        "agency": "Colorado Department of Personnel & Administration",
+        "form": null,
+        "url": "https://careers.colorado.gov/veterans-preference",
+        "documentation": [
+          "DD-214",
+          "VA disability rating letter (for the 10-point disabled-veteran preference)"
+        ]
+      },
+      "legalCitation": "Colo. Const. art. XII, § 15",
+      "authorityTier": "reference",
+      "sourceUrl": "https://content.leg.colorado.gov/sites/default/files/state_and_federal_military_benefits_4252017.pdf",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "co-license_plate-disabled-veteran-license-plate-fee-waived",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate (Fee-Waived)",
+      "description": "Colorado offers a Disabled Veteran license plate at no additional fee, one of 11 military-related plates issued free to disabled veterans and recipients of certain service medals. Multiple secondary sources indicate eligibility requires VA or service-branch documentation of a 50% or greater service-connected disability, but that specific percentage threshold could not be confirmed against a directly-read official page in this session because dmv.colorado.gov blocked automated access; it is presented as unconfirmed rather than fact.",
+      "value": "License plate fee waived for qualifying disabled veterans",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Registration in Colorado",
+          "Documentation of service-connected disability required by DMV (exact minimum percentage not independently confirmed this session)"
+        ]
+      },
+      "application": {
+        "agency": "Colorado Department of Revenue, Division of Motor Vehicles",
+        "form": null,
+        "url": "https://dmv.colorado.gov/license-plates-military",
+        "documentation": [
+          "Letter from VA or branch of service documenting service-connected disability"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://content.leg.colorado.gov/sites/default/files/state_and_federal_military_benefits_4252017.pdf",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "co-vehicle_registration-specific-ownership-tax-exemption-for-disabled-ve",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Specific Ownership Tax Exemption for Disabled Veterans",
+      "description": "Veterans with at least a 50 percent VA service-connected disability rating, and recipients of certain service medals, are exempt from Colorado's annual specific ownership tax on motor vehicles.",
+      "value": "Exemption from annual specific ownership tax on motor vehicles",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "VA service-connected disability rating of at least 50%, or recipient of certain qualifying service medals"
+        ]
+      },
+      "application": {
+        "agency": "Colorado Department of Revenue, Division of Motor Vehicles",
+        "form": null,
+        "url": "https://dmv.colorado.gov/license-plates-military",
+        "documentation": ["VA disability rating letter"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://content.leg.colorado.gov/sites/default/files/state_and_federal_military_benefits_4252017.pdf",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "co-recreation-disabled-veteran-combination-hunting-fishing-lic",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Combination Hunting & Fishing License",
+      "description": "Colorado Parks and Wildlife issues a free lifetime combination small-game hunting and fishing license to Colorado-resident veterans with a VA service-connected disability rating of 50% or more, and to Purple Heart recipients regardless of rating percentage. License holders are also exempt from the annual Habitat Stamp purchase requirement.",
+      "value": "Free lifetime combination small-game hunting and fishing license; exempt from annual Habitat Stamp fee",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 50,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Colorado residency",
+          "Purple Heart recipients eligible regardless of disability percentage"
+        ]
+      },
+      "application": {
+        "agency": "Colorado Parks and Wildlife",
+        "form": null,
+        "url": "https://cpw.state.co.us/activities/hunting/hunters-military",
+        "documentation": [
+          "VA disability rating letter (50%+), or Purple Heart documentation"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://cpw.state.co.us/activities/hunting/hunters-military",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

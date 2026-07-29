@@ -91,7 +91,7 @@ function main() {
       console.log("✅ ALL BUILDS COMPLETE!");
       console.log("=".repeat(60));
       console.log("\nOutput directories:");
-      for (const [key, brand] of Object.entries(BRANDS)) {
+      for (const [_key, brand] of Object.entries(BRANDS)) {
         console.log(`  • ${brand.description}: ${brand.outDir}/`);
       }
     } else {

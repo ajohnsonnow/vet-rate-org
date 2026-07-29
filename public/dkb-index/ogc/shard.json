@@ -1,0 +1,23 @@
+{
+  "id": "ogc",
+  "layout": "shard",
+  "authority_tier": "policy",
+  "tier_rank": 5,
+  "embedding_model": "Xenova/bge-small-en-v1.5",
+  "embedding_dim": 384,
+  "entry_count": 893,
+  "source_entry_count": 893,
+  "skipped": {
+    "empty_content": 0,
+    "missing_url": 0
+  },
+  "built_at": "2026-01-27T08:23:12.249441",
+  "parts": [
+    {
+      "chunks": "chunks.part0.jsonl",
+      "vectors": "vectors.part0.bin",
+      "count": 893,
+      "bytes": 342912
+    }
+  ]
+}

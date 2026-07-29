@@ -55,8 +55,7 @@ const MONITORED_STORAGE_KEYS = [
 let backupTimer = null;
 let backupInProgress = false;
 let backupListeners = [];
-// eslint-disable-next-line no-unused-vars
-let lastBackupTime = null;
+let _lastBackupTime = null;
 
 // ============================================================================
 // INDEXEDDB SETUP
@@ -108,7 +107,7 @@ const gatherAllData = () => {
   MONITORED_STORAGE_KEYS.forEach((key) => {
     try {
       const value = localStorage.getItem(key);
-      if (value) {
+      if (value && value !== "undefined") {
         backup.data[key] = JSON.parse(value);
       }
     } catch (error) {
@@ -218,7 +217,7 @@ export const performBackup = async (type = "auto") => {
     await cleanupOldBackups();
 
     // Update last backup time
-    lastBackupTime = backup.timestamp;
+    _lastBackupTime = backup.timestamp;
     localStorage.setItem(CONFIG.LAST_BACKUP_KEY, backup.timestamp);
 
     // Notify listeners
@@ -321,6 +320,7 @@ export const restoreFromBackup = async (backupId) => {
         try {
           // Restore all data to localStorage
           Object.entries(backup.data.data).forEach(([key, value]) => {
+            if (value === undefined) return;
             localStorage.setItem(key, JSON.stringify(value));
           });
 
@@ -366,6 +366,7 @@ export const importBackupFile = async (file) => {
 
         // Restore data
         Object.entries(backup.data).forEach(([key, value]) => {
+          if (value === undefined) return;
           localStorage.setItem(key, JSON.stringify(value));
         });
 
@@ -574,7 +575,7 @@ export const initAutoBackup = async () => {
     // Load last backup time
     const lastBackup = localStorage.getItem(CONFIG.LAST_BACKUP_KEY);
     if (lastBackup) {
-      lastBackupTime = lastBackup;
+      _lastBackupTime = lastBackup;
     }
 
     // Perform initial backup if none exists

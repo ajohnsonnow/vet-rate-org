@@ -157,6 +157,57 @@ const PublicationCard = ({ publication, onViewDetails }) => {
 };
 
 /**
+ * Publication Details Modal - header banner
+ */
+const PublicationDetailsHeader = ({ publication, onClose }) => (
+  <div className={`px-6 py-4 ${BRANCH_COLORS[publication.branch]}`}>
+    <div className="flex items-center justify-between">
+      <div>
+        <span className="text-lg">{BRANCH_ICONS[publication.branch]}</span>
+        <span className="ml-2 font-bold">{publication.branch}</span>
+      </div>
+      <button
+        onClick={onClose}
+        className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+        aria-label="Close"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    </div>
+  </div>
+);
+
+/**
+ * Publication Details Modal - download/official source links
+ */
+const PublicationLinks = ({ publication }) => (
+  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+    <div className="flex gap-3">
+      {publication.filename && (
+        <a
+          href={`/pubs/${publication.filename}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+        >
+          <Download className="w-5 h-5" />
+          Download PDF
+        </a>
+      )}
+      <a
+        href={publication.externalUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+      >
+        <ExternalLink className="w-5 h-5" />
+        Official Source
+      </a>
+    </div>
+  </div>
+);
+
+/**
  * Publication Details Modal
  */
 const PublicationDetailsModal = ({ publication, onClose }) => {
@@ -170,23 +221,7 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
       zIndex={70}
       labelledBy="publication-details-title"
       header={
-        <div className={`px-6 py-4 ${BRANCH_COLORS[publication.branch]}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-lg">
-                {BRANCH_ICONS[publication.branch]}
-              </span>
-              <span className="ml-2 font-bold">{publication.branch}</span>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+        <PublicationDetailsHeader publication={publication} onClose={onClose} />
       }
     >
       <h2
@@ -229,55 +264,20 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
           </div>
         </div>
 
-        {/* Links */}
-        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex gap-3">
-            {publication.filename && (
-              <a
-                href={`/pubs/${publication.filename}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-              >
-                <Download className="w-5 h-5" />
-                Download PDF
-              </a>
-            )}
-            <a
-              href={publication.externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              <ExternalLink className="w-5 h-5" />
-              Official Source
-            </a>
-          </div>
-        </div>
+        <PublicationLinks publication={publication} />
       </div>
     </ResponsiveModal>
   );
 };
 
 /**
- * Main Publications Library Component
+ * Loads the publications index from the static pubs directory
  */
-export default function PublicationsLibrary() {
-  const { _t } = useLanguage();
+const usePublicationsIndex = () => {
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filters
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Details modal
-  const [selectedPublication, setSelectedPublication] = useState(null);
-
-  // Load publications index
   useEffect(() => {
     async function loadPublications() {
       try {
@@ -295,7 +295,18 @@ export default function PublicationsLibrary() {
     loadPublications();
   }, []);
 
-  // Get unique branches and categories
+  return { publications, loading, error };
+};
+
+/**
+ * Search query, branch/category filters, and their derived/filtered results
+ */
+const usePublicationFilters = (publications) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+
   const branches = useMemo(() => {
     const unique = [...new Set(publications.map((p) => p.branch))];
     return unique.sort();
@@ -306,7 +317,6 @@ export default function PublicationsLibrary() {
     return unique.sort();
   }, [publications]);
 
-  // Filter publications
   const filteredPublications = useMemo(() => {
     return publications.filter((pub) => {
       // Search filter
@@ -346,6 +356,283 @@ export default function PublicationsLibrary() {
     return groups;
   }, [filteredPublications]);
 
+  return {
+    searchQuery,
+    setSearchQuery,
+    selectedBranch,
+    setSelectedBranch,
+    selectedCategory,
+    setSelectedCategory,
+    showFilters,
+    setShowFilters,
+    branches,
+    categories,
+    filteredPublications,
+    groupedPublications,
+  };
+};
+
+/**
+ * Library title banner
+ */
+const LibraryHeader = () => (
+  <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl p-6 text-white">
+    <div className="flex items-center gap-3 mb-2">
+      <BookOpen className="w-8 h-8" />
+      <h1 className="text-2xl font-bold">
+        Publications Library{" "}
+        <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+          BETA
+        </span>
+      </h1>
+    </div>
+    <p className="text-blue-100">
+      Official military and VA regulations essential for understanding
+      disability claims. Know your regs, know your rights.
+    </p>
+  </div>
+);
+
+/**
+ * Branch and category filter selects, shown when filters are expanded
+ */
+const FilterOptions = ({
+  selectedBranch,
+  setSelectedBranch,
+  selectedCategory,
+  setSelectedCategory,
+  branches,
+  categories,
+}) => (
+  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* Branch Filter */}
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Branch
+      </label>
+      <select
+        value={selectedBranch}
+        onChange={(e) => setSelectedBranch(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        <option value="all">All Branches</option>
+        {branches.map((branch) => (
+          <option key={branch} value={branch}>
+            {BRANCH_ICONS[branch]} {branch}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Category Filter */}
+    <div>
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Category
+      </label>
+      <select
+        value={selectedCategory}
+        onChange={(e) => setSelectedCategory(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      >
+        <option value="all">All Categories</option>
+        {categories.map((cat) => (
+          <option key={cat} value={cat}>
+            {CATEGORY_ICONS[cat]} {CATEGORY_NAMES[cat]}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+);
+
+/**
+ * Search box, filter toggle, and branch/category filter selects
+ */
+const SearchAndFilters = ({
+  searchQuery,
+  setSearchQuery,
+  showFilters,
+  setShowFilters,
+  selectedBranch,
+  setSelectedBranch,
+  selectedCategory,
+  setSelectedCategory,
+  branches,
+  categories,
+}) => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    {/* Search */}
+    <div className="relative mb-4">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search publications (e.g., 'hearing loss', 'MEB', 'awards')..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+      />
+    </div>
+
+    {/* Filter Toggle */}
+    <button
+      onClick={() => setShowFilters(!showFilters)}
+      className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+    >
+      <Filter className="w-4 h-4" />
+      Filters
+      {showFilters ? (
+        <ChevronUp className="w-4 h-4" />
+      ) : (
+        <ChevronDown className="w-4 h-4" />
+      )}
+    </button>
+
+    {showFilters && (
+      <FilterOptions
+        selectedBranch={selectedBranch}
+        setSelectedBranch={setSelectedBranch}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        branches={branches}
+        categories={categories}
+      />
+    )}
+  </div>
+);
+
+/**
+ * Publications grouped by category, or an empty state
+ */
+const PublicationsGrid = ({ groupedPublications, onViewDetails }) => {
+  if (Object.keys(groupedPublications).length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+        <p>No publications match your search</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {Object.entries(groupedPublications).map(([category, pubs]) => (
+        <div key={category}>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <span className="text-2xl">{CATEGORY_ICONS[category]}</span>
+            {CATEGORY_NAMES[category]}
+            <span className="text-sm font-normal text-gray-500">
+              ({pubs.length})
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pubs.map((pub) => (
+              <PublicationCard
+                key={pub.id}
+                publication={pub}
+                onViewDetails={onViewDetails}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * Static links to official VA/CFR resources
+ */
+const VAOnlineResources = () => (
+  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
+    <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
+      <Shield className="w-5 h-5" />
+      VA Online Resources
+    </h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+      <a
+        href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
+      >
+        <ExternalLink className="w-4 h-4" />
+        38 CFR Part 4 - Rating Schedule (eCFR)
+      </a>
+      <a
+        href="https://www.ecfr.gov/current/title-38/chapter-I/part-3"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
+      >
+        <ExternalLink className="w-4 h-4" />
+        38 CFR Part 3 - Service Connection Rules
+      </a>
+      <a
+        href="https://www.knowva.ebenefits.va.gov/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
+      >
+        <ExternalLink className="w-4 h-4" />
+        M21-1 Adjudication Manual
+      </a>
+      <a
+        href="https://www.index.va.gov/search/va/bva.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
+      >
+        <ExternalLink className="w-4 h-4" />
+        BVA Decisions Search
+      </a>
+      <a
+        href="https://www.va.gov/resources/the-pact-act-and-your-va-benefits/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
+      >
+        <ExternalLink className="w-4 h-4" />
+        PACT Act Information
+      </a>
+      <a
+        href="https://www.uscourts.cavc.gov/decisions.php"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
+      >
+        <ExternalLink className="w-4 h-4" />
+        Court of Appeals Decisions
+      </a>
+    </div>
+  </div>
+);
+
+/**
+ * Main Publications Library Component
+ */
+export default function PublicationsLibrary() {
+  const { _t } = useLanguage();
+  const { publications, loading, error } = usePublicationsIndex();
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedBranch,
+    setSelectedBranch,
+    selectedCategory,
+    setSelectedCategory,
+    showFilters,
+    setShowFilters,
+    branches,
+    categories,
+    filteredPublications,
+    groupedPublications,
+  } = usePublicationFilters(publications);
+
+  // Details modal
+  const [selectedPublication, setSelectedPublication] = useState(null);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -365,96 +652,20 @@ export default function PublicationsLibrary() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl p-6 text-white">
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="w-8 h-8" />
-          <h1 className="text-2xl font-bold">
-            Publications Library{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h1>
-        </div>
-        <p className="text-blue-100">
-          Official military and VA regulations essential for understanding
-          disability claims. Know your regs, know your rights.
-        </p>
-      </div>
+      <LibraryHeader />
 
-      {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search publications (e.g., 'hearing loss', 'MEB', 'awards')..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          />
-        </div>
-
-        {/* Filter Toggle */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-        >
-          <Filter className="w-4 h-4" />
-          Filters
-          {showFilters ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </button>
-
-        {/* Filter Options */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Branch Filter */}
-            <div>
-              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Branch
-              </label>
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="all">All Branches</option>
-                {branches.map((branch) => (
-                  <option key={branch} value={branch}>
-                    {BRANCH_ICONS[branch]} {branch}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Category
-              </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {CATEGORY_ICONS[cat]} {CATEGORY_NAMES[cat]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
+      <SearchAndFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        selectedBranch={selectedBranch}
+        setSelectedBranch={setSelectedBranch}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        branches={branches}
+        categories={categories}
+      />
 
       {/* Results Count */}
       <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -462,100 +673,12 @@ export default function PublicationsLibrary() {
         publications
       </div>
 
-      {/* Publications Grid */}
-      {Object.keys(groupedPublications).length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No publications match your search</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {Object.entries(groupedPublications).map(([category, pubs]) => (
-            <div key={category}>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span className="text-2xl">{CATEGORY_ICONS[category]}</span>
-                {CATEGORY_NAMES[category]}
-                <span className="text-sm font-normal text-gray-500">
-                  ({pubs.length})
-                </span>
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {pubs.map((pub) => (
-                  <PublicationCard
-                    key={pub.id}
-                    publication={pub}
-                    onViewDetails={setSelectedPublication}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <PublicationsGrid
+        groupedPublications={groupedPublications}
+        onViewDetails={setSelectedPublication}
+      />
 
-      {/* VA Online Resources */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-        <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
-          <Shield className="w-5 h-5" />
-          VA Online Resources
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <a
-            href="https://www.ecfr.gov/current/title-38/chapter-I/part-4"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            38 CFR Part 4 - Rating Schedule (eCFR)
-          </a>
-          <a
-            href="https://www.ecfr.gov/current/title-38/chapter-I/part-3"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            38 CFR Part 3 - Service Connection Rules
-          </a>
-          <a
-            href="https://www.knowva.ebenefits.va.gov/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            M21-1 Adjudication Manual
-          </a>
-          <a
-            href="https://www.index.va.gov/search/va/bva.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            BVA Decisions Search
-          </a>
-          <a
-            href="https://www.va.gov/resources/the-pact-act-and-your-va-benefits/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            PACT Act Information
-          </a>
-          <a
-            href="https://www.uscourts.cavc.gov/decisions.php"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-700 dark:text-blue-400 hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Court of Appeals Decisions
-          </a>
-        </div>
-      </div>
+      <VAOnlineResources />
 
       {/* Details Modal */}
       {selectedPublication && (

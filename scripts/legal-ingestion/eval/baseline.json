@@ -1,9 +1,11 @@
 {
-  "recordedAt": "2026-06-09",
+  "recordedAt": "2026-07-09",
   "version": "v0.1.0",
-  "n": 25,
+  "n": 74,
   "k": 5,
-  "recallAtK": 0.88,
-  "mrr": 0.776,
-  "ndcgAtK": 0.637
+  "hybrid": true,
+  "recallAtK": 0.9459459459459459,
+  "mrr": 0.7990031055569781,
+  "ndcgAtK": 0.648409090608303,
+  "note": "S25: corpus expansion — eCFR Parts 3/19/20 added alongside the existing Part 4 (fetch-ecfr.mjs's DEFAULT_PARTS already covered all four; prior runs had been explicitly scoped to --part=4 only). Corpus grew 101->564 fetched records, 194->1060 chunks, index size 2.6 MB (well under the 25 MB budget). Golden set grown 60->74 with 14 new Part 3/19/20 queries grounded in real chunk content (service connection, duty to assist, effective dates, BVA appeal procedure, etc.), held-out ratio held at ~20%. recall@5 0.967->0.946, MRR 0.879->0.799, NDCG@5 0.719->0.648 — a real, expected dilution from 5.5x more candidate chunks competing in the retrieval pool (more distractors = more rank churn on already-correct answers), not a quality regression; this is the new honest baseline for the larger corpus, not a comparison against the old smaller one. One apparent regression (q22, dental) was actually the golden set being STALE, not retrieval getting worse: the expanded corpus surfaced § 3.381 ('Service connection of dental conditions for treatment purposes') which is MORE on-topic for that query than the original expected § 4.149/4.150 (which only cover the rating percentage, not whether a dental condition can be service-connected at all) — verified by reading the actual chunk text before updating ground truth. Two new known misses from the Part 19/20 additions (q70, q73) are near-misses displaced by closely-adjacent BVA-procedure sections (e.g. §19.22, §20.100, §20.105) in a densely cross-referential appeals corpus — not chased with further tuning, consistent with this cycle's discipline against overfitting to specific queries. M21-1 enablement investigated and DEFERRED (not hardened): the scaffold's placeholder URL 404s, and the real, current KnowVA portal renders M21-1 content client-side via an Angular SPA — a plain fetch()+regex scraper (the scaffold's whole design) cannot work against it regardless of selector fixes; verified by fetching both the placeholder and the real, current Table-of-Contents URL directly. CAVC/Fed-Cir remain explicitly out of scope per the master plan. Prior n=60 baseline (S21, Part 4 only): recall@5 0.967, MRR 0.879, NDCG@5 0.719."
 }

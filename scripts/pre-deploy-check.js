@@ -41,47 +41,6 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Configuration
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const CONFIG = {
-  // Files to check for em-dash/en-dash
-  textFiles: [
-    'src/**/*.jsx',
-    'src/**/*.js',
-    'public/*.html',
-    'docs/**/*.md',
-    'README.md'
-  ],
-  
-  // Files that should reference dynamic stats
-  statsFiles: [
-    'src/components/AboutUs.jsx',
-    'src/components/DisclaimerSplash.jsx',
-    'src/components/BootCampTour.jsx',
-    'src/components/UserManual.jsx',
-    'public/faq.html',
-    'public/support.html'
-  ],
-  
-  // Patterns that indicate hardcoded stats (bad)
-  hardcodedPatterns: [
-    /\b40\+?\s*tools/gi,
-    /\b750\+?\s*conditions/gi,
-    /\b7[0-4]0\s*conditions/gi  // 700-740 hardcoded
-  ],
-  
-  // Archive candidates (unused/old files)
-  archiveCandidates: [
-    '**/*_old.*',
-    '**/*_backup.*',
-    '**/*.bak',
-    '**/unused_*',
-    '**/deprecated_*'
-  ]
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // Utilities
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -116,10 +75,6 @@ function logResult(check, passed, details = '') {
 
 function logWarning(msg) {
   log(`⚠️  ${msg}`, 'yellow');
-}
-
-function fileExists(relativePath) {
-  return fs.existsSync(path.join(rootDir, relativePath));
 }
 
 function readFile(relativePath) {
@@ -311,8 +266,13 @@ function checkTextQuality() {
   }
   
   const noSpecialDashes = issues.length === 0;
-  logResult(`No em-dash/en-dash characters`, noSpecialDashes || autoFixes.length > 0, 
-           autoFixes.length > 0 ? `${issues.length} found and auto-fixed` : (issues.length > 0 ? `${issues.length} found` : ''));
+  let dashDetails = '';
+  if (autoFixes.length > 0) {
+    dashDetails = `${issues.length} found and auto-fixed`;
+  } else if (issues.length > 0) {
+    dashDetails = `${issues.length} found`;
+  }
+  logResult(`No em-dash/en-dash characters`, noSpecialDashes || autoFixes.length > 0, dashDetails);
   
   checks.add('Text quality', true); // Always pass after auto-fix
 }
@@ -332,6 +292,7 @@ function checkLegalPages() {
     logResult(`Legal pages REGENERATED from JSX`, true);
   } catch (error) {
     logWarning('Auto-generation had issues - checking files manually');
+    console.error(error.message);
   }
   
   // Check Terms of Service
@@ -601,7 +562,7 @@ function checkArchiveCandidates() {
     const versionPattern = /v\d+\.\d+|_v\d+|version_?\d/i;
     
     // 3. Content indicators: heading with "complete", "status: complete", "## Summary", dated completion
-    const contentPatterns = /^#.*complete|status.*complete|implementation complete|task complete/im;
+    const contentPatterns = /(?:^#.*complete)|status.*complete|implementation complete|task complete/im;
     
     // 4. One-time documentation (Reddit posts, social media, analysis docs)
     const oneTimePatterns = /reddit|social_media|analysis|preview|penetration/i;
@@ -726,13 +687,94 @@ function checkUserManualSync() {
     // Script will output warnings but won't fail
     logResult(`User Manual sync completed`, true);
     checks.add('User Manual sync', true);
+    console.error(error.message);
+  }
+}
+
+function scanLinesForPattern(lines, relativePath, contract, pattern) {
+  const violations = [];
+  if (relativePath.includes('.test.') || relativePath.includes('.spec.')) return violations;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Skip comments
+    if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
+
+    if (line.includes(pattern)) {
+      violations.push({
+        contract: contract.id,
+        name: contract.name,
+        file: relativePath,
+        line: i + 1,
+        severity: contract.severity
+      });
+    }
+  }
+  return violations;
+}
+
+function scanFileForContracts(file, contracts) {
+  const content = fs.readFileSync(file, 'utf8');
+  const relativePath = path.relative(rootDir, file);
+  const lines = content.split('\n');
+  const violations = [];
+
+  for (const contract of contracts) {
+    if (contract.fileFilter && !contract.fileFilter.test(file)) continue;
+
+    for (const pattern of contract.patterns) {
+      violations.push(...scanLinesForPattern(lines, relativePath, contract, pattern));
+    }
+  }
+
+  return violations;
+}
+
+function scanFilesForContracts(srcFiles, contracts) {
+  let totalViolations = 0;
+  let criticalViolations = 0;
+  const violationDetails = [];
+
+  for (const file of srcFiles) {
+    if (!file.endsWith('.js') && !file.endsWith('.jsx') && !file.endsWith('.json')) continue;
+
+    for (const violation of scanFileForContracts(file, contracts)) {
+      totalViolations++;
+      if (violation.severity === 'error') criticalViolations++;
+      violationDetails.push(violation);
+    }
+  }
+
+  return { totalViolations, criticalViolations, violationDetails };
+}
+
+function reportContractViolations(violationDetails) {
+  if (violationDetails.length === 0) return;
+
+  const errors = violationDetails.filter(v => v.severity === 'error');
+  const warnings = violationDetails.filter(v => v.severity === 'warning');
+
+  if (errors.length > 0) {
+    log(`\n   CRITICAL violations (${errors.length}):`, 'red');
+    errors.slice(0, 10).forEach(v => {
+      log(`      [${v.contract}] ${v.name} - ${v.file}:${v.line}`, 'red');
+    });
+    if (errors.length > 10) log(`      ... and ${errors.length - 10} more`, 'red');
+  }
+
+  if (warnings.length > 0) {
+    log(`\n   Warnings (${warnings.length}):`, 'yellow');
+    warnings.slice(0, 5).forEach(v => {
+      log(`      [${v.contract}] ${v.name} - ${v.file}:${v.line}`, 'yellow');
+    });
+    if (warnings.length > 5) log(`      ... and ${warnings.length - 5} more`, 'yellow');
   }
 }
 
 // 16. Contract Enforcement (.arc/CONTRACTS.md)
 function checkContractEnforcement() {
   logSection('16. Contract Enforcement (.arc/CONTRACTS.md)');
-  
+
   // Built-in banned patterns from claude-toolkit contracts
   const contracts = [
     { id: 'CTK-002', name: 'No eval()', patterns: ['eval('], severity: 'error', fileFilter: /\.(js|jsx)$/ },
@@ -741,77 +783,83 @@ function checkContractEnforcement() {
     { id: 'VA-003', name: 'No PII in fetch calls', patterns: ['body.*ssn', 'body.*social_security'], severity: 'error', fileFilter: /\.(js|jsx)$/ },
     { id: 'VA-006', name: 'No inline styles in components', patterns: ['style={{'], severity: 'warning', fileFilter: /\.jsx$/ },
   ];
-  
-  const srcDir = path.join(rootDir, 'src');
+
   const srcFiles = globFiles('src/');
-  let totalViolations = 0;
-  let criticalViolations = 0;
-  const violationDetails = [];
-  
-  for (const file of srcFiles) {
-    if (!file.endsWith('.js') && !file.endsWith('.jsx') && !file.endsWith('.json')) continue;
-    
-    const content = fs.readFileSync(file, 'utf8');
-    const relativePath = path.relative(rootDir, file);
-    const lines = content.split('\n');
-    
-    for (const contract of contracts) {
-      if (contract.fileFilter && !contract.fileFilter.test(file)) continue;
-      
-      for (const pattern of contract.patterns) {
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          // Skip comments and test files
-          if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
-          if (relativePath.includes('.test.') || relativePath.includes('.spec.')) continue;
-          
-          if (line.includes(pattern)) {
-            totalViolations++;
-            if (contract.severity === 'error') criticalViolations++;
-            violationDetails.push({
-              contract: contract.id,
-              name: contract.name,
-              file: relativePath,
-              line: i + 1,
-              severity: contract.severity
-            });
-          }
-        }
-      }
-    }
-  }
-  
-  // Report violations
-  if (violationDetails.length > 0) {
-    const errors = violationDetails.filter(v => v.severity === 'error');
-    const warnings = violationDetails.filter(v => v.severity === 'warning');
-    
-    if (errors.length > 0) {
-      log(`\n   CRITICAL violations (${errors.length}):`, 'red');
-      errors.slice(0, 10).forEach(v => {
-        log(`      [${v.contract}] ${v.name} - ${v.file}:${v.line}`, 'red');
-      });
-      if (errors.length > 10) log(`      ... and ${errors.length - 10} more`, 'red');
-    }
-    
-    if (warnings.length > 0) {
-      log(`\n   Warnings (${warnings.length}):`, 'yellow');
-      warnings.slice(0, 5).forEach(v => {
-        log(`      [${v.contract}] ${v.name} - ${v.file}:${v.line}`, 'yellow');
-      });
-      if (warnings.length > 5) log(`      ... and ${warnings.length - 5} more`, 'yellow');
-    }
-  }
-  
+  const { totalViolations, criticalViolations, violationDetails } = scanFilesForContracts(srcFiles, contracts);
+
+  reportContractViolations(violationDetails);
+
   const contractsPassed = criticalViolations === 0;
   logResult(`Contract enforcement (${totalViolations} violation(s), ${criticalViolations} critical)`, contractsPassed);
   checks.add('Contracts', contractsPassed, criticalViolations > 0 ? `${criticalViolations} critical violation(s)` : '');
 }
 
+function scanContentForPattern(content, relativePath, check, pattern) {
+  const issues = [];
+  // Reset regex lastIndex for global patterns
+  pattern.lastIndex = 0;
+  let match;
+  while ((match = pattern.exec(content)) !== null) {
+    const lineNumber = content.slice(0, match.index).split('\n').length;
+    const line = content.split('\n')[lineNumber - 1] || '';
+
+    // Skip matches in comments
+    if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
+
+    issues.push({
+      id: check.id,
+      name: check.name,
+      file: relativePath,
+      line: lineNumber,
+      severity: check.severity
+    });
+  }
+  return issues;
+}
+
+function scanFileForSecurityIssues(file, securityChecks) {
+  const content = fs.readFileSync(file, 'utf8');
+  const relativePath = path.relative(rootDir, file);
+
+  // Skip test files
+  if (relativePath.includes('.test.') || relativePath.includes('.spec.')) return [];
+
+  const issues = [];
+  for (const check of securityChecks) {
+    if (check.fileFilter && !check.fileFilter.test(file)) continue;
+
+    for (const pattern of check.patterns) {
+      issues.push(...scanContentForPattern(content, relativePath, check, pattern));
+    }
+  }
+  return issues;
+}
+
+function reportSecurityIssues(securityIssues) {
+  if (securityIssues.length === 0) return;
+
+  const critical = securityIssues.filter(i => i.severity === 'critical');
+  const high = securityIssues.filter(i => i.severity === 'high');
+
+  if (critical.length > 0) {
+    log(`\n   CRITICAL security issues (${critical.length}):`, 'red');
+    critical.slice(0, 10).forEach(i => {
+      log(`      [${i.id}] ${i.name} - ${i.file}:${i.line}`, 'red');
+    });
+  }
+
+  if (high.length > 0) {
+    log(`\n   HIGH severity issues (${high.length}):`, 'yellow');
+    high.slice(0, 5).forEach(i => {
+      log(`      [${i.id}] ${i.name} - ${i.file}:${i.line}`, 'yellow');
+    });
+  }
+}
+
 // 17. Security Scanner (OWASP Top 10 patterns from claude-toolkit Phase 4)
 function checkSecurityPatterns() {
   logSection('17. Security Scanner (OWASP Top 10)');
-  
+
   const securityChecks = [
     { id: 'SEC-001', name: 'Hardcoded credentials', severity: 'critical',
       patterns: [/password\s*=\s*['"][^'"]{4,}/gi, /api_key\s*=\s*['"][^'"]{8,}/gi, /secret\s*=\s*['"][^'"]{8,}/gi],
@@ -832,68 +880,24 @@ function checkSecurityPatterns() {
       patterns: [/readFile.*req\.(params|query|body)/g],
       fileFilter: /\.(js|jsx)$/ },
   ];
-  
+
   const srcFiles = globFiles('src/');
   let totalIssues = 0;
   let criticalIssues = 0;
   const securityIssues = [];
-  
+
   for (const file of srcFiles) {
     if (!file.endsWith('.js') && !file.endsWith('.jsx')) continue;
-    
-    const content = fs.readFileSync(file, 'utf8');
-    const relativePath = path.relative(rootDir, file);
-    
-    // Skip test files
-    if (relativePath.includes('.test.') || relativePath.includes('.spec.')) continue;
-    
-    for (const check of securityChecks) {
-      if (check.fileFilter && !check.fileFilter.test(file)) continue;
-      
-      for (const pattern of check.patterns) {
-        // Reset regex lastIndex for global patterns
-        pattern.lastIndex = 0;
-        let match;
-        while ((match = pattern.exec(content)) !== null) {
-          const lineNumber = content.slice(0, match.index).split('\n').length;
-          const line = content.split('\n')[lineNumber - 1] || '';
-          
-          // Skip matches in comments
-          if (line.trim().startsWith('//') || line.trim().startsWith('*')) continue;
-          
-          totalIssues++;
-          if (check.severity === 'critical') criticalIssues++;
-          securityIssues.push({
-            id: check.id,
-            name: check.name,
-            file: relativePath,
-            line: lineNumber,
-            severity: check.severity
-          });
-        }
-      }
+
+    for (const issue of scanFileForSecurityIssues(file, securityChecks)) {
+      totalIssues++;
+      if (issue.severity === 'critical') criticalIssues++;
+      securityIssues.push(issue);
     }
   }
-  
-  if (securityIssues.length > 0) {
-    const critical = securityIssues.filter(i => i.severity === 'critical');
-    const high = securityIssues.filter(i => i.severity === 'high');
-    
-    if (critical.length > 0) {
-      log(`\n   CRITICAL security issues (${critical.length}):`, 'red');
-      critical.slice(0, 10).forEach(i => {
-        log(`      [${i.id}] ${i.name} - ${i.file}:${i.line}`, 'red');
-      });
-    }
-    
-    if (high.length > 0) {
-      log(`\n   HIGH severity issues (${high.length}):`, 'yellow');
-      high.slice(0, 5).forEach(i => {
-        log(`      [${i.id}] ${i.name} - ${i.file}:${i.line}`, 'yellow');
-      });
-    }
-  }
-  
+
+  reportSecurityIssues(securityIssues);
+
   const securityPassed = criticalIssues === 0;
   logResult(`Security scan (${totalIssues} finding(s), ${criticalIssues} critical)`, securityPassed);
   checks.add('Security scan', securityPassed, criticalIssues > 0 ? `${criticalIssues} critical issue(s)` : '');
@@ -973,25 +977,13 @@ function checkAccessibility() {
 // Main
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function main() {
-  const args = process.argv.slice(2);
-  const skipBuild = args.includes('--skip-build');
-  const generateReport = args.includes('--report');
-  
-  console.log('═══════════════════════════════════════════════════════════════');
-  console.log('        🚀 PRE-DEPLOYMENT VALIDATION');
-  console.log('        Vet-Rate.org Comprehensive Check (18 checks)');
-  console.log('═══════════════════════════════════════════════════════════════');
-  console.log(`\n📅 Date: ${new Date().toISOString().split('T')[0]}`);
-  console.log(`📁 Project: ${rootDir}`);
-  
-  // Run all checks
+async function runAllChecks(skipBuild) {
   if (!skipBuild) {
     await checkBuild();
   } else {
     log('\n⏭️  Skipping build check (--skip-build)', 'yellow');
   }
-  
+
   checkVersions();
   checkStats();
   checkTextQuality();
@@ -1009,26 +1001,27 @@ async function main() {
   checkContractEnforcement();   // CTK: Enforce .arc/CONTRACTS.md banned patterns
   checkSecurityPatterns();      // CTK: OWASP Top 10 security scanner
   checkAccessibility();         // CTK: ARIA + keyboard navigation audit
-  
-  // Summary
+}
+
+function printValidationSummary() {
   logSection('📊 VALIDATION SUMMARY');
-  
+
   const passed = checks.results.filter(r => r.passed).length;
   const total = checks.results.length;
   const percentage = Math.round((passed / total) * 100);
-  
+
   console.log(`\n   Checks Passed: ${passed}/${total} (${percentage}%)`);
-  
+
   if (checks.errors.length > 0) {
     log(`\n   ❌ ERRORS (${checks.errors.length}):`, 'red');
     checks.errors.forEach(e => log(`      - ${e.name}: ${e.details}`, 'red'));
   }
-  
+
   if (checks.warnings.length > 0) {
     log(`\n   ⚠️  WARNINGS (${checks.warnings.length}):`, 'yellow');
     checks.warnings.forEach(w => log(`      - ${w}`, 'yellow'));
   }
-  
+
   // Final verdict
   console.log('\n' + '═'.repeat(65));
   if (checks.errors.length === 0) {
@@ -1037,60 +1030,86 @@ async function main() {
     log('  ❌ SOME CHECKS FAILED - REVIEW BEFORE DEPLOYMENT', 'red');
   }
   console.log('═'.repeat(65));
-  
-  // Generate report file if requested
-  if (generateReport) {
-    const report = {
-      date: new Date().toISOString(),
-      summary: { passed, total, percentage },
-      checks: checks.results,
-      errors: checks.errors,
-      warnings: checks.warnings
-    };
-    
-    const reportPath = path.join(rootDir, 'pre-deploy-report.json');
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-    log(`\n📄 Report saved to: pre-deploy-report.json`, 'blue');
-  }
-  
+
+  return { passed, total, percentage };
+}
+
+function writeReportFile(passed, total, percentage) {
+  const report = {
+    date: new Date().toISOString(),
+    summary: { passed, total, percentage },
+    checks: checks.results,
+    errors: checks.errors,
+    warnings: checks.warnings
+  };
+
+  const reportPath = path.join(rootDir, 'pre-deploy-report.json');
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  log(`\n📄 Report saved to: pre-deploy-report.json`, 'blue');
+}
+
+function printManualChecksReminder() {
   console.log('\n📋 MANUAL CHECKS STILL NEEDED (see DEPLOYMENT.md for full list):');
   console.log('─'.repeat(60));
-  
+
   console.log('\n   🖥️  VISUAL REVIEW:');
   console.log('   • npm run dev - review in browser');
   console.log('   • Mobile responsive (Chrome DevTools)');
   console.log('   • Dark mode + Accessibility menu');
-  
+
   console.log('\n   🔍 CORE FEATURES (39 tools):');
   console.log('   • Search, Secondary Scout, C&P Simulator, Pathfinder');
   console.log('   • Tactical Calculator, Million Dollar Dashboard, What-If Sandbox');
   console.log('   • C-File Analyzer, Blue Button X-Ray, Nexus Builder');
   console.log('   • Red Team, The Tribunal, Consistency Engine');
   console.log('   • The Bunker, Cloud Sync, VA.gov Integration');
-  
+
   console.log('\n   🤖 AI FEATURES (Faraday Cage Protocol):');
   console.log('   • Local AI loads without ModelNotLoadedError');
   console.log('   • Cloud AI (Gemini) generates statements');
   console.log('   • AI Mode Selector toggles correctly');
   console.log('   • Device-aware UI shows Cloud AI on legacy devices');
-  
+
   console.log('\n   📱 CROSS-DEVICE:');
   console.log('   • Android (especially 10/11), iOS Safari');
   console.log('   • WebGPU detection shows correct status');
   console.log('   • PWA install prompt on mobile');
-  
+
   console.log('\n   💰 INTEGRATIONS:');
   console.log('   • What\'s New modal matches deployed features');
   console.log('   • BuyMeCoffee messaging on-brand');
   console.log('   • VA API connections (if enabled)');
   console.log('   • Crisis Modal (988) triggers on keywords');
-  
+
   console.log('\n   🎨 COLOR SCHEMA (tool cards/modals match category):');
   console.log('   • Blue: Calculators | Teal: Discovery | Violet: Evidence');
   console.log('   • Rose: QC | Amber: Maximize | Sky: Support');
-  
+
   console.log('\n   📝 Full checklist: DEPLOYMENT.md (67 items)');
-  
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const skipBuild = args.includes('--skip-build');
+  const generateReport = args.includes('--report');
+
+  console.log('═══════════════════════════════════════════════════════════════');
+  console.log('        🚀 PRE-DEPLOYMENT VALIDATION');
+  console.log('        Vet-Rate.org Comprehensive Check (18 checks)');
+  console.log('═══════════════════════════════════════════════════════════════');
+  console.log(`\n📅 Date: ${new Date().toISOString().split('T')[0]}`);
+  console.log(`📁 Project: ${rootDir}`);
+
+  await runAllChecks(skipBuild);
+
+  const { passed, total, percentage } = printValidationSummary();
+
+  if (generateReport) {
+    writeReportFile(passed, total, percentage);
+  }
+
+  printManualChecksReminder();
+
   // Exit with error code if checks failed
   process.exit(checks.errors.length > 0 ? 1 : 0);
 }

@@ -33,6 +33,7 @@ import {
   getSwarmStatus,
   generateWithSwarm,
   initializeSwarm,
+  reloadSwarmEngine,
   switchAgent,
   unloadSwarm,
 } from "./diamondSwarm";
@@ -41,6 +42,7 @@ import {
 import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
+import { calculateVARating } from "./vaCalculator";
 
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
@@ -49,6 +51,22 @@ const getAISystemPrompts = async () => {
     aiSystemPromptsModule = await import("./aiSystemPrompts");
   }
   return aiSystemPromptsModule;
+};
+
+// Some engine rejections aren't Error instances (e.g. an OpenAI-style
+// {error:{message}} payload from the WebLLM engine) — `.message` on those
+// is undefined and silently swallows the real failure reason in our
+// wrapped error text. Normalize before interpolating.
+const _describeThrown = (err) => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  if (typeof err?.message === "string") return err.message;
+  if (typeof err?.error?.message === "string") return err.error.message;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
 };
 
 // Storage keys
@@ -68,8 +86,6 @@ let swarmEngine = null;
 let swarmReady = false;
 let swarmGenerating = false;
 let swarmInitializingState = false;
-// eslint-disable-next-line no-unused-vars
-let swarmCurrentAgent = null;
 
 // 🌐 Wllama state (browser WASM inference)
 let wllamaReady = false;
@@ -244,7 +260,7 @@ export const checkWebGPUSupport = async () => {
     } catch (err) {
       webGPUSupported = {
         supported: false,
-        reason: `WebGPU initialization failed: ${err.message}. Try using Chrome or Edge.`,
+        reason: `WebGPU initialization failed: ${_describeThrown(err)}. Try using Chrome or Edge.`,
       };
       return webGPUSupported;
     }
@@ -305,7 +321,6 @@ export const registerSwarmEngine = (
   swarmEngine = engine;
   swarmReady = ready;
   swarmInitializingState = initializing;
-  swarmCurrentAgent = agentId;
   // eslint-disable-next-line no-console
   console.log(
     `🎖️ Warrant Council registered: agent=${agentId}, ready=${ready}`,
@@ -320,6 +335,13 @@ export const registerSwarmEngine = (
  * @param {string} modelId - The ID of the loaded model
  * @param {boolean} isVisionModel - Whether the model supports vision/image input
  */
+const mapModelIdToAgent = (modelId) => {
+  const lowerModelId = modelId.toLowerCase();
+  if (lowerModelId.includes("writer")) return "writer";
+  if (lowerModelId.includes("rater")) return "rater";
+  return "auditor";
+};
+
 export const registerLocalAIEngine = (
   engine,
   ready,
@@ -350,11 +372,7 @@ export const registerLocalAIEngine = (
     );
 
     // Map legacy model to closest Diamond Swarm agent
-    const agentId = modelId.toLowerCase().includes("writer")
-      ? "writer"
-      : modelId.toLowerCase().includes("rater")
-        ? "rater"
-        : "auditor";
+    const agentId = mapModelIdToAgent(modelId);
     registerSwarmEngine(engine, ready, initializing, agentId);
   } else if (!ready && !initializing) {
     // Only broadcast "not ready" if the swarm isn't already covering inference.
@@ -558,19 +576,28 @@ export const initializeWllama = async (
     // eslint-disable-next-line no-console
     console.log(`🌐 Initializing Wllama with ${modelName}...`);
 
-    const result = await wllamaService.initializeWllama(modelName, onProgress);
+    // wllamaService.initializeWllama resolves a plain boolean (true on
+    // success, false only when already initializing) and throws on real
+    // failure — it never resolves a {success, error} object. Reading
+    // result.success here always evaluated to undefined regardless of the
+    // actual outcome, so this branch never ran and wllamaReady could never
+    // become true even when the model loaded correctly.
+    const success = await wllamaService.initializeWllama(modelName, {
+      onProgress,
+    });
 
-    if (result.success) {
+    if (success) {
       wllamaReady = true;
       wllamaCurrentModel = modelName;
       // eslint-disable-next-line no-console
       console.log(`🌐 Wllama ready with ${modelName}`);
     } else {
-      console.error("🌐 Wllama init failed:", result.error);
+      // eslint-disable-next-line no-console
+      console.log(`🌐 Wllama init returned false for ${modelName}`);
     }
 
     wllamaInitializing = false;
-    return result.success;
+    return success;
   } catch (err) {
     console.error("🌐 Wllama init error:", err);
     wllamaInitializing = false;
@@ -631,73 +658,81 @@ export const isAnyAIAvailable = () => {
   );
 };
 
+// Backend readiness checks, keyed by AI_MODES value. Used by
+// resolveFirstAvailableMode() to walk a priority-ordered fallback chain
+// without repeating the same five checks in every branch.
+const AI_BACKEND_READY_CHECKS = {
+  [AI_MODES.SWARM]: isDiamondSwarmReady,
+  [AI_MODES.WLLAMA]: isWllamaAvailable,
+  [AI_MODES.LOCAL_SERVER]: isLocalServerAvailable,
+  [AI_MODES.LOCAL]: isLocalAIReady,
+  [AI_MODES.CLOUD]: isCloudAIAvailable,
+};
+
+/**
+ * Return the first mode in priorityOrder whose backend is currently ready,
+ * or null if none are.
+ */
+const resolveFirstAvailableMode = (priorityOrder) => {
+  for (const mode of priorityOrder) {
+    if (AI_BACKEND_READY_CHECKS[mode]()) return mode;
+  }
+  return null;
+};
+
 /**
  * Get the effective AI mode based on availability
  * Priority: SWARM (WebGPU) → WLLAMA (WASM) → LOCAL_SERVER (llama.cpp) → LOCAL (legacy) → CLOUD
  */
 export const getEffectiveAIMode = () => {
   const preferredMode = getAIMode();
+  const { SWARM, WLLAMA, LOCAL_SERVER, LOCAL, CLOUD } = AI_MODES;
 
   // Warrant Council mode (preferred - WebGPU)
-  if (preferredMode === AI_MODES.SWARM) {
-    if (isDiamondSwarmReady()) return AI_MODES.SWARM;
-    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
-    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
-    if (isLocalAIReady()) return AI_MODES.LOCAL;
-    if (isCloudAIAvailable()) return AI_MODES.CLOUD;
-    return null;
+  if (preferredMode === SWARM) {
+    return resolveFirstAvailableMode([
+      SWARM,
+      WLLAMA,
+      LOCAL_SERVER,
+      LOCAL,
+      CLOUD,
+    ]);
   }
 
   // Wllama mode (browser WASM - works everywhere)
-  if (preferredMode === AI_MODES.WLLAMA) {
-    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
-    if (isDiamondSwarmReady()) return AI_MODES.SWARM;
-    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
-    if (isCloudAIAvailable()) return AI_MODES.CLOUD;
-    return null;
+  if (preferredMode === WLLAMA) {
+    return resolveFirstAvailableMode([WLLAMA, SWARM, LOCAL_SERVER, CLOUD]);
   }
 
   // Local Server mode (llama.cpp server)
-  if (preferredMode === AI_MODES.LOCAL_SERVER) {
-    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
-    if (isDiamondSwarmReady()) return AI_MODES.SWARM;
-    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
-    if (isCloudAIAvailable()) return AI_MODES.CLOUD;
-    return null;
+  if (preferredMode === LOCAL_SERVER) {
+    return resolveFirstAvailableMode([LOCAL_SERVER, SWARM, WLLAMA, CLOUD]);
   }
 
-  if (preferredMode === AI_MODES.LOCAL) {
-    if (isDiamondSwarmReady()) return AI_MODES.SWARM; // Upgrade to swarm
-    if (isWllamaAvailable()) return AI_MODES.WLLAMA;
-    if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
-    return isLocalAIReady()
-      ? AI_MODES.LOCAL
-      : isCloudAIAvailable()
-        ? AI_MODES.CLOUD
-        : null;
+  if (preferredMode === LOCAL) {
+    // SWARM is checked first even though preferredMode is LOCAL — an
+    // intentional upgrade to the newer backend when it's available.
+    return resolveFirstAvailableMode([
+      SWARM,
+      WLLAMA,
+      LOCAL_SERVER,
+      LOCAL,
+      CLOUD,
+    ]);
   }
 
-  if (preferredMode === AI_MODES.CLOUD) {
-    return isCloudAIAvailable()
-      ? AI_MODES.CLOUD
-      : isDiamondSwarmReady()
-        ? AI_MODES.SWARM
-        : isWllamaAvailable()
-          ? AI_MODES.WLLAMA
-          : isLocalServerAvailable()
-            ? AI_MODES.LOCAL_SERVER
-            : isLocalAIReady()
-              ? AI_MODES.LOCAL
-              : null;
+  if (preferredMode === CLOUD) {
+    return resolveFirstAvailableMode([
+      CLOUD,
+      SWARM,
+      WLLAMA,
+      LOCAL_SERVER,
+      LOCAL,
+    ]);
   }
 
   // AUTO mode: prefer swarm → wllama → local_server → local → cloud
-  if (isDiamondSwarmReady()) return AI_MODES.SWARM;
-  if (isWllamaAvailable()) return AI_MODES.WLLAMA;
-  if (isLocalServerAvailable()) return AI_MODES.LOCAL_SERVER;
-  if (isLocalAIReady()) return AI_MODES.LOCAL;
-  if (isCloudAIAvailable()) return AI_MODES.CLOUD;
-  return null;
+  return resolveFirstAvailableMode([SWARM, WLLAMA, LOCAL_SERVER, LOCAL, CLOUD]);
 };
 
 /**
@@ -711,20 +746,13 @@ const getGeminiApiKey = () => {
 };
 
 /**
- * Generate text using Cloud AI (Gemini)
- * 💎 Now enhanced with DKB (Diamond Knowledge Base) context injection
+ * Build the Cloud AI system prompt, including DKB (Diamond Knowledge Base)
+ * context injection based on the user's prompt.
  */
-const generateWithCloudAI = async (prompt, options = {}) => {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    throw new Error("Gemini API key not configured");
-  }
-
-  // 💎 Build comprehensive system prompt with DKB context injection
+const buildCloudSystemPrompt = async (prompt, options) => {
   const { _buildSystemPromptWithDKB, buildSystemPrompt, buildDKBContext } =
     await getAISystemPrompts();
 
-  // Get base system prompt
   let defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || "general",
     toolContext: options.toolContext,
@@ -756,6 +784,15 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     }
   }
 
+  return defaultSystemPrompt;
+};
+
+/**
+ * Resolve the effective Cloud AI generation config (systemPrompt/timeout/
+ * temperature/topK/topP/maxTokens), applying an AI_PRESETS override when
+ * requested.
+ */
+const resolveCloudGenerationConfig = (options, defaultSystemPrompt) => {
   const {
     systemPrompt = defaultSystemPrompt,
     maxTokens = getUserTokenLimit(), // Use user-configured limit or default
@@ -767,7 +804,6 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     preset = null, // Optional: Use AI_PRESETS (e.g., 'LEGAL', 'CREATIVE')
   } = options;
 
-  // Apply preset if specified
   let finalConfig = { temperature, topK, topP, maxTokens };
   if (preset && AI_PRESETS[preset]) {
     const presetConfig = AI_PRESETS[preset];
@@ -779,41 +815,52 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     };
   }
 
-  let fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+  return { systemPrompt, finalConfig, timeout, scrubPIIEnabled };
+};
 
-  // PII Scrubbing (Client-Side Privacy Firewall)
-  if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(fullPrompt);
+/**
+ * Scrub PII from the full Cloud AI prompt (Client-Side Privacy Firewall),
+ * warning when non-Latin scripts limit scrubbing coverage.
+ */
+const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
+  if (!scrubPIIEnabled) return fullPrompt;
 
-    if (piiAnalysis.hasPII) {
-      console.warn(`⚠️ PII Detected before AI call:`, piiAnalysis.types);
+  let scrubbed = fullPrompt;
+  const piiAnalysis = analyzePII(scrubbed);
 
-      // Scrub the PII
-      const { scrubbedText, details } = scrubPII(fullPrompt, {
-        aggressive: true, // Also scrub DOB and addresses
-        preservePartial: false, // Full redaction for safety
-      });
+  if (piiAnalysis.hasPII) {
+    console.warn(`⚠️ PII Detected before AI call:`, piiAnalysis.types);
 
-      fullPrompt = scrubbedText;
+    const { scrubbedText, details } = scrubPII(scrubbed, {
+      aggressive: true, // Also scrub DOB and addresses
+      preservePartial: false, // Full redaction for safety
+    });
 
-      // Log what was scrubbed (for transparency)
-      console.info(`🛡️ PII Scrubbed:`, details);
-    }
-
-    // RT3-4: the PII patterns are US/English-centric and cannot reliably find PII in
-    // non-Latin (CJK/Arabic/Korean/Cyrillic) narratives, so a non-English document may
-    // carry unredacted PII to the cloud. Flag it (conservative handling) rather than
-    // over-redacting, which would corrupt the analysis. Prefer local AI for these.
-    if (containsSignificantNonLatin(fullPrompt)) {
-      console.warn(
-        "⚠️ Non-Latin script detected: PII scrubbing has limited coverage for " +
-          "non-English text; this cloud request may contain unredacted PII. " +
-          "Consider local AI for sensitive non-English documents.",
-      );
-    }
+    scrubbed = scrubbedText;
+    // eslint-disable-next-line no-console
+    console.info(`🛡️ PII Scrubbed:`, details);
   }
 
-  const requestBody = JSON.stringify({
+  // RT3-4: the PII patterns are US/English-centric and cannot reliably find PII in
+  // non-Latin (CJK/Arabic/Korean/Cyrillic) narratives, so a non-English document may
+  // carry unredacted PII to the cloud. Flag it (conservative handling) rather than
+  // over-redacting, which would corrupt the analysis. Prefer local AI for these.
+  if (containsSignificantNonLatin(scrubbed)) {
+    console.warn(
+      "⚠️ Non-Latin script detected: PII scrubbing has limited coverage for " +
+        "non-English text; this cloud request may contain unredacted PII. " +
+        "Consider local AI for sensitive non-English documents.",
+    );
+  }
+
+  return scrubbed;
+};
+
+/**
+ * Build the Gemini generateContent request body.
+ */
+const buildGeminiRequestBody = (fullPrompt, finalConfig) =>
+  JSON.stringify({
     contents: [{ parts: [{ text: fullPrompt }] }],
     generationConfig: {
       temperature: finalConfig.temperature,
@@ -841,7 +888,11 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     ],
   });
 
-  // Each attempt gets its own abort controller + timeout
+/**
+ * Fetch the Gemini API with a per-attempt abort timeout, retrying once on
+ * timeout (transient backend slowness).
+ */
+const fetchGeminiWithRetry = async (requestBody, apiKey, timeout) => {
   const fetchWithTimeout = async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -876,9 +927,8 @@ const generateWithCloudAI = async (prompt, options = {}) => {
     );
   };
 
-  let response;
   try {
-    response = await fetchWithTimeout();
+    return await fetchWithTimeout();
   } catch (fetchError) {
     if (fetchError.name !== "AbortError") {
       throw toFriendlyFetchError(fetchError);
@@ -888,73 +938,209 @@ const generateWithCloudAI = async (prompt, options = {}) => {
       `⏱️ Cloud AI request timed out after ${timeout / 1000}s — retrying once...`,
     );
     try {
-      response = await fetchWithTimeout();
+      return await fetchWithTimeout();
     } catch (retryError) {
       throw toFriendlyFetchError(retryError);
     }
   }
+};
+
+/**
+ * Translate a non-ok Gemini response into a user-friendly error and throw it.
+ */
+const handleGeminiErrorResponse = async (response) => {
+  const errorData = await response.json().catch(() => ({}));
+  const errorMessage = errorData.error?.message || "";
+
+  // Handle specific HTTP status codes with user-friendly messages
+  switch (response.status) {
+    case 400:
+      if (errorMessage.includes("API key")) {
+        throw new Error(
+          "Invalid API key. Please check your Gemini API key in Settings.",
+        );
+      }
+      throw new Error(
+        "Bad request. The AI could not process your input. Please try rephrasing.",
+      );
+
+    case 401:
+    case 403:
+      throw new Error(
+        "API key unauthorized. Your Gemini API key may be invalid or expired. Please check Settings.",
+      );
+
+    case 404:
+      throw new Error(
+        "AI model endpoint not found. Please refresh the page and try again. If this persists, the API endpoint may have changed.",
+      );
+
+    case 429:
+      throw new Error(
+        "Rate limit reached. Too many requests - please wait a minute before trying again, or consider switching to Local AI.",
+      );
+
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      throw new Error(
+        "Google's AI servers are temporarily unavailable. Please try again in a few minutes, or switch to Local AI.",
+      );
+
+    default:
+      // Check for region/access blocks
+      if (
+        errorMessage.includes("not available") ||
+        errorMessage.includes("region") ||
+        errorMessage.includes("country")
+      ) {
+        throw new Error(
+          "Gemini API may not be available in your region. Consider using Local AI for 100% private, offline processing.",
+        );
+      }
+      throw new Error(
+        errorMessage ||
+          `Cloud AI error (${response.status}). Please try again or switch to Local AI.`,
+      );
+  }
+};
+
+/**
+ * Generate text using Cloud AI (Gemini)
+ * 💎 Now enhanced with DKB (Diamond Knowledge Base) context injection
+ */
+const generateWithCloudAI = async (prompt, options = {}) => {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    throw new Error("Gemini API key not configured");
+  }
+
+  const defaultSystemPrompt = await buildCloudSystemPrompt(prompt, options);
+  const { systemPrompt, finalConfig, timeout, scrubPIIEnabled } =
+    resolveCloudGenerationConfig(options, defaultSystemPrompt);
+
+  let fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+  fullPrompt = scrubCloudPromptPII(fullPrompt, scrubPIIEnabled);
+
+  const requestBody = buildGeminiRequestBody(fullPrompt, finalConfig);
+  const response = await fetchGeminiWithRetry(requestBody, apiKey, timeout);
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.error?.message || "";
-
-    // Handle specific HTTP status codes with user-friendly messages
-    switch (response.status) {
-      case 400:
-        if (errorMessage.includes("API key")) {
-          throw new Error(
-            "Invalid API key. Please check your Gemini API key in Settings.",
-          );
-        }
-        throw new Error(
-          "Bad request. The AI could not process your input. Please try rephrasing.",
-        );
-
-      case 401:
-      case 403:
-        throw new Error(
-          "API key unauthorized. Your Gemini API key may be invalid or expired. Please check Settings.",
-        );
-
-      case 404:
-        throw new Error(
-          "AI model endpoint not found. Please refresh the page and try again. If this persists, the API endpoint may have changed.",
-        );
-
-      case 429:
-        throw new Error(
-          "Rate limit reached. Too many requests - please wait a minute before trying again, or consider switching to Local AI.",
-        );
-
-      case 500:
-      case 502:
-      case 503:
-      case 504:
-        throw new Error(
-          "Google's AI servers are temporarily unavailable. Please try again in a few minutes, or switch to Local AI.",
-        );
-
-      default:
-        // Check for region/access blocks
-        if (
-          errorMessage.includes("not available") ||
-          errorMessage.includes("region") ||
-          errorMessage.includes("country")
-        ) {
-          throw new Error(
-            "Gemini API may not be available in your region. Consider using Local AI for 100% private, offline processing.",
-          );
-        }
-        throw new Error(
-          errorMessage ||
-            `Cloud AI error (${response.status}). Please try again or switch to Local AI.`,
-        );
-    }
+    await handleGeminiErrorResponse(response);
   }
 
   const data = await response.json();
   // C-H05: surface safety blocks / truncation rather than "No response generated".
   return interpretGeminiResponse(data);
+};
+
+/**
+ * Scrub PII from a Warrant Council prompt (Client-Side Privacy Firewall).
+ */
+const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
+  if (!scrubPIIEnabled) return prompt;
+  const piiAnalysis = analyzePII(prompt);
+  if (!piiAnalysis.hasPII) return prompt;
+
+  console.warn(
+    `⚠️ PII Detected before Warrant Council call:`,
+    piiAnalysis.types,
+  );
+  const { scrubbedText, details } = scrubPII(prompt, {
+    aggressive: true,
+    preservePartial: false,
+  });
+  // eslint-disable-next-line no-console
+  console.info(`🛡️ PII Scrubbed (Warrant Council):`, details);
+  return scrubbedText;
+};
+
+/**
+ * 💎 Inject DKB context for Warrant Council (makes specialized agents VA-smart!)
+ */
+const injectDKBForWarrantCouncil = async (prompt, options, useDKB) => {
+  if (!useDKB) return prompt;
+  try {
+    const { buildDKBContext } = await getAISystemPrompts();
+    const dkbContext = await buildDKBContext(prompt, {
+      maxEntries: options.maxDKBEntries || 6, // Smaller for fine-tuned models (they know more already)
+      maxChars: options.maxDKBChars || 4000,
+    });
+    if (dkbContext) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "[WarrantCouncil] 💎 DKB context injected - agents have live knowledge base access",
+      );
+      return prompt + dkbContext;
+    }
+  } catch (dkbError) {
+    console.warn(
+      "[WarrantCouncil] DKB context injection failed:",
+      dkbError.message,
+    );
+  }
+  return prompt;
+};
+
+/**
+ * Ground a Rater-agent prompt in the deterministic combined-rating calculator
+ * (38 CFR § 4.25/4.26 — vaCalculator.js) instead of letting the LLM freehand
+ * the bilateral-factor arithmetic, which is the confirmed root cause of the
+ * swarm's bilateral-pairing hallucinations. Only activates when the caller
+ * supplies structured `options.conditions` ({name, rating, side, bodyPart}[]);
+ * free-text-only prompts pass through unchanged — there's no reliable parse
+ * step from prose to structured conditions, and a wrong parse would be worse
+ * than no injection at all.
+ */
+export const injectCalculatorForRater = (prompt, options) => {
+  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
+    return prompt;
+  }
+
+  const result = calculateVARating(options.conditions);
+  const pairSummary = result.bilateralConditions.length
+    ? result.bilateralConditions
+        .map((c) => `${c.name} (${c.side}, ${c.rating}%)`)
+        .join(", ")
+    : "none";
+
+  return (
+    prompt +
+    `\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 — already calculated, do not recompute) ===
+Bilateral pair: ${pairSummary}
+Bilateral group rating: ${result.bilateralGroupRating || "n/a"}
+Combined rating: ${result.combinedRating}%
+Restate and explain this result. Do not perform your own bilateral-factor arithmetic or invent a different pairing.
+=== END COMPUTED RESULT ===\n`
+  );
+};
+
+/**
+ * Determine the right Warrant Council agent based on tool or task type.
+ */
+const resolveWarrantCouncilAgent = (toolId, taskType) => {
+  if (toolId) {
+    return TOOL_AGENT_MAP[toolId] || "auditor";
+  }
+  if (taskType) {
+    const taskToAgent = {
+      cfile: "auditor",
+      nexus: "writer",
+      statement: "writer",
+      "personal-statement": "writer",
+      rating: "rater",
+      calculator: "rater",
+      tdiu: "rater",
+      legal: "auditor",
+      analysis: "auditor",
+      document: "auditor",
+      writing: "writer",
+      general: "auditor",
+    };
+    return taskToAgent[taskType] || "auditor";
+  }
+  return "auditor";
 };
 
 /**
@@ -970,72 +1156,21 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
     temperature = 0.7,
     scrubPIIEnabled = true,
     useDKB = true, // Enable DKB by default
+    timeout = null,
   } = options;
 
-  // PII Scrubbing (Client-Side Privacy Firewall)
-  let scrubbedPrompt = prompt;
-  if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(prompt);
-    if (piiAnalysis.hasPII) {
-      console.warn(
-        `⚠️ PII Detected before Warrant Council call:`,
-        piiAnalysis.types,
-      );
-      const { scrubbedText, details } = scrubPII(prompt, {
-        aggressive: true,
-        preservePartial: false,
-      });
-      scrubbedPrompt = scrubbedText;
-      console.info(`🛡️ PII Scrubbed (Warrant Council):`, details);
-    }
-  }
+  const scrubbedPrompt = scrubPromptForWarrantCouncil(prompt, scrubPIIEnabled);
+  const dkbEnhancedPrompt = await injectDKBForWarrantCouncil(
+    scrubbedPrompt,
+    options,
+    useDKB,
+  );
 
-  // 💎 Inject DKB context for Warrant Council (makes specialized agents VA-smart!)
-  let enhancedPrompt = scrubbedPrompt;
-  if (useDKB) {
-    try {
-      const { buildDKBContext } = await getAISystemPrompts();
-      const dkbContext = await buildDKBContext(scrubbedPrompt, {
-        maxEntries: options.maxDKBEntries || 6, // Smaller for fine-tuned models (they know more already)
-        maxChars: options.maxDKBChars || 4000,
-      });
-      if (dkbContext) {
-        enhancedPrompt = scrubbedPrompt + dkbContext;
-        // eslint-disable-next-line no-console
-        console.log(
-          "[WarrantCouncil] 💎 DKB context injected - agents have live knowledge base access",
-        );
-      }
-    } catch (dkbError) {
-      console.warn(
-        "[WarrantCouncil] DKB context injection failed:",
-        dkbError.message,
-      );
-    }
-  }
-
-  // Determine the right agent based on task or tool
-  let agentId = "auditor"; // Default
-  if (toolId) {
-    agentId = TOOL_AGENT_MAP[toolId] || "auditor";
-  } else if (taskType) {
-    // Map task types to agents
-    const taskToAgent = {
-      cfile: "auditor",
-      nexus: "writer",
-      statement: "writer",
-      "personal-statement": "writer",
-      rating: "rater",
-      calculator: "rater",
-      tdiu: "rater",
-      legal: "auditor",
-      analysis: "auditor",
-      document: "auditor",
-      writing: "writer",
-      general: "auditor",
-    };
-    agentId = taskToAgent[taskType] || "auditor";
-  }
+  const agentId = resolveWarrantCouncilAgent(toolId, taskType);
+  const enhancedPrompt =
+    agentId === "rater"
+      ? injectCalculatorForRater(dkbEnhancedPrompt, options)
+      : dkbEnhancedPrompt;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1046,7 +1181,7 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
     swarmGenerating = true;
 
     // 💎 Use enhanced prompt with DKB context
-    const result = await generateWithSwarm(enhancedPrompt, {
+    const inferencePromise = generateWithSwarm(enhancedPrompt, {
       agentId,
       toolId,
       maxTokens,
@@ -1060,11 +1195,33 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
         : {}),
     });
 
+    // Guard against GPU-level hangs (WebGPU compute never signals completion).
+    // Without this, a hung engine.chat.completions.create() blocks indefinitely
+    // because JavaScript Promises wrapping GPU fence waits cannot be cancelled.
+    const result = timeout
+      ? await Promise.race([
+          inferencePromise,
+          new Promise((_, reject) =>
+            setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    `WebGPU inference timed out after ${timeout / 1000}s`,
+                  ),
+                ),
+              timeout,
+            ),
+          ),
+        ])
+      : await inferencePromise;
+
     swarmGenerating = false;
     return result.text;
   } catch (err) {
     swarmGenerating = false;
-    throw new Error(`Warrant Council error (${agentId}): ${err.message}`);
+    throw new Error(
+      `Warrant Council error (${agentId}): ${_describeThrown(err)}`,
+    );
   }
 };
 
@@ -1093,12 +1250,18 @@ const generateWithWllama = async (prompt, options = {}) => {
         preservePartial: false,
       });
       scrubbedPrompt = scrubbedText;
+      // eslint-disable-next-line no-console
       console.info(`🛡️ PII Scrubbed (Wllama):`, details);
     }
   }
 
+  // Ground the Rater model in the deterministic calculator before the LLM
+  // ever sees the prompt — see injectCalculatorForRater for why.
+  let enhancedPrompt = wllamaCurrentModel?.startsWith("rater")
+    ? injectCalculatorForRater(scrubbedPrompt, options)
+    : scrubbedPrompt;
+
   // 💎 Inject DKB context for Wllama
-  let enhancedPrompt = scrubbedPrompt;
   if (useDKB) {
     try {
       const { buildDKBContext } = await getAISystemPrompts();
@@ -1107,7 +1270,7 @@ const generateWithWllama = async (prompt, options = {}) => {
         maxChars: options.maxDKBChars || 4000,
       });
       if (dkbContext) {
-        enhancedPrompt = scrubbedPrompt + dkbContext;
+        enhancedPrompt = enhancedPrompt + dkbContext;
         // eslint-disable-next-line no-console
         console.log("[Wllama] 💎 DKB context injected");
       }
@@ -1134,7 +1297,7 @@ const generateWithWllama = async (prompt, options = {}) => {
 
     return result.text;
   } catch (err) {
-    throw new Error(`Wllama error: ${err.message}`);
+    throw new Error(`Wllama error: ${_describeThrown(err)}`);
   }
 };
 
@@ -1166,6 +1329,7 @@ const generateWithLocalServer = async (prompt, options = {}) => {
         preservePartial: false,
       });
       scrubbedPrompt = scrubbedText;
+      // eslint-disable-next-line no-console
       console.info(`🛡️ PII Scrubbed (Local Server):`, details);
     }
   }
@@ -1209,24 +1373,14 @@ const generateWithLocalServer = async (prompt, options = {}) => {
 
     return result.text;
   } catch (err) {
-    throw new Error(`Local Server error: ${err.message}`);
+    throw new Error(`Local Server error: ${_describeThrown(err)}`);
   }
 };
 
 /**
- * Generate text using Local AI (Legacy WebLLM - fallback only)
+ * Throw a helpful error if the legacy Local AI engine isn't ready to generate.
  */
-const generateWithLocalAI = async (prompt, options = {}) => {
-  // First try Warrant Council if available
-  if (isDiamondSwarmReady()) {
-    // eslint-disable-next-line no-console
-    console.log(
-      "🎖️ Routing to Warrant Council (upgraded from legacy local AI)",
-    );
-    return generateWithWarrantCouncil(prompt, options);
-  }
-
-  // Check for various initialization states and provide helpful error messages
+const assertLocalAIReady = () => {
   if (localAIInitializing) {
     throw new Error(
       "Local AI is still warming up. Please wait for the model to finish loading before sending messages.",
@@ -1242,24 +1396,12 @@ const generateWithLocalAI = async (prompt, options = {}) => {
       "Local AI engine exists but is not ready. This may indicate a failed initialization - please try reloading the model.",
     );
   }
+};
 
-  // Acquire generation lock - this ensures only one generation at a time
-  // and properly serializes concurrent requests
-  const releaseLock = await acquireGenerationLock();
-
-  // Double-check we're not already generating (belt and suspenders)
-  if (localAIGenerating) {
-    releaseLock();
-    console.warn(
-      "⚠️ localAIGenerating flag still set despite lock - possible state bug",
-    );
-    throw new Error(
-      "Another AI generation is in progress. Please wait for it to complete.",
-    );
-  }
-
-  // Build comprehensive system prompt if not provided (lazy load)
-  // 💎 Now also injects DKB context for enhanced VA knowledge (same as cloud AI)
+/**
+ * Build the Local AI system prompt, including DKB context injection.
+ */
+const buildLocalAISystemPrompt = async (prompt, options) => {
   const { buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
   let defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || "general",
@@ -1292,6 +1434,14 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     }
   }
 
+  return defaultSystemPrompt;
+};
+
+/**
+ * Resolve the effective Local AI generation config, applying an AI_PRESETS
+ * override when requested.
+ */
+const resolveLocalAIConfig = (options, defaultSystemPrompt) => {
   const {
     systemPrompt = defaultSystemPrompt,
     maxTokens = getUserTokenLimit(), // Use user-configured limit or default
@@ -1303,7 +1453,6 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     onStream,
   } = options;
 
-  // Apply preset if specified
   let finalConfig = { temperature, topK, topP, maxTokens };
   if (preset && AI_PRESETS[preset]) {
     const presetConfig = AI_PRESETS[preset];
@@ -1315,96 +1464,254 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     };
   }
 
-  // PII Scrubbing (Client-Side Privacy Firewall)
-  let scrubbedPrompt = prompt;
-  if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(prompt);
+  return { systemPrompt, finalConfig, scrubPIIEnabled, onStream };
+};
 
-    if (piiAnalysis.hasPII) {
-      console.warn(`⚠️ PII Detected before Local AI call:`, piiAnalysis.types);
+/**
+ * Scrub PII from a Local AI prompt (Client-Side Privacy Firewall).
+ */
+const scrubPromptForLocalAI = (prompt, scrubPIIEnabled) => {
+  if (!scrubPIIEnabled) return prompt;
+  const piiAnalysis = analyzePII(prompt);
+  if (!piiAnalysis.hasPII) return prompt;
 
-      // Scrub the PII
-      const { scrubbedText, details } = scrubPII(prompt, {
-        aggressive: true,
-        preservePartial: false,
-      });
+  console.warn(`⚠️ PII Detected before Local AI call:`, piiAnalysis.types);
+  const { scrubbedText, details } = scrubPII(prompt, {
+    aggressive: true,
+    preservePartial: false,
+  });
+  // eslint-disable-next-line no-console
+  console.info(`🛡️ PII Scrubbed (Local AI):`, details);
+  return scrubbedText;
+};
 
-      scrubbedPrompt = scrubbedText;
+/**
+ * Clean a Local AI response - remove thinking tags and detect degenerate
+ * output. Handles DeepSeek R1 and other reasoning models that output
+ * <think> tags.
+ */
+const cleanLocalAIResponse = (text) => {
+  if (!text) return "";
 
-      // Log what was scrubbed
-      console.info(`🛡️ PII Scrubbed (Local AI):`, details);
+  // Remove <think>...</think> blocks (DeepSeek R1, QwQ, and other reasoning models)
+  let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+
+  // Remove unclosed <think> tags (model may have been interrupted mid-thought)
+  cleaned = cleaned.replace(/<think>[\s\S]*/gi, "").trim();
+
+  // Remove orphaned </think> tags (sometimes R1 outputs these without opening tag)
+  cleaned = cleaned.replace(/<\/think>/gi, "").trim();
+
+  // Remove any remaining think-like patterns (</think>'ve, </think>", etc.)
+  cleaned = cleaned.replace(/<\/think>[^\s]*/gi, "").trim();
+
+  // Detect degenerate/repetitive output (same 2-10 char pattern repeated 8+ times)
+  const repetitionPattern = /(.{2,10})\1{8,}/;
+  if (repetitionPattern.test(cleaned)) {
+    console.warn("⚠️ Detected degenerate output (repetition collapse)");
+    const match = cleaned.match(repetitionPattern);
+    if (match) {
+      const repetitiveSection = match[0];
+      cleaned = cleaned.replace(
+        repetitiveSection,
+        "[Output truncated due to repetition]",
+      );
     }
   }
 
-  /**
-   * Clean AI response - remove thinking tags and detect degenerate output
-   * Handles DeepSeek R1 and other reasoning models that output <think> tags
-   */
-  const cleanResponse = (text) => {
-    if (!text) return "";
+  // Detect R1-style gibberish (multiple quotes/ellipsis/fragments indicating confused output)
+  const gibberishPatterns = [
+    /(\.{3,}\s*){5,}/, // Multiple ellipsis sequences
+    /("\s*){5,}/, // Multiple quote sequences
+    /(Hmm|Ok|Wait|But|Hence|Thus|Therefore)[\s\S]{0,20}\1[\s\S]{0,20}\1/gi, // Repeated filler words
+    /\b(think|thinking|thought)\b[\s\S]{0,50}\b\1\b[\s\S]{0,50}\b\1\b/gi, // Repeated "think"
+  ];
 
-    // Remove <think>...</think> blocks (DeepSeek R1, QwQ, and other reasoning models)
-    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
-
-    // Remove unclosed <think> tags (model may have been interrupted mid-thought)
-    cleaned = cleaned.replace(/<think>[\s\S]*/gi, "").trim();
-
-    // Remove orphaned </think> tags (sometimes R1 outputs these without opening tag)
-    cleaned = cleaned.replace(/<\/think>/gi, "").trim();
-
-    // Remove any remaining think-like patterns (</think>'ve, </think>", etc.)
-    cleaned = cleaned.replace(/<\/think>[^\s]*/gi, "").trim();
-
-    // Detect degenerate/repetitive output (same 2-10 char pattern repeated 8+ times)
-    const repetitionPattern = /(.{2,10})\1{8,}/;
-    if (repetitionPattern.test(cleaned)) {
-      console.warn("⚠️ Detected degenerate output (repetition collapse)");
-      const match = cleaned.match(repetitionPattern);
-      if (match) {
-        const repetitiveSection = match[0];
-        cleaned = cleaned.replace(
-          repetitiveSection,
-          "[Output truncated due to repetition]",
+  for (const pattern of gibberishPatterns) {
+    if (pattern.test(cleaned)) {
+      console.warn("⚠️ Detected R1-style confused output");
+      // Try to extract any meaningful content before the gibberish
+      const lines = cleaned.split("\n").filter((l) => l.trim());
+      const meaningfulLines = lines.filter((line) => {
+        const lower = line.toLowerCase();
+        return (
+          !lower.includes("hmm") &&
+          !lower.includes("wait") &&
+          !lower.includes("confuse") &&
+          !lower.includes("unclear") &&
+          line.length > 20 &&
+          !/^[\s"'.\\,!?]+$/.test(line)
         );
+      });
+      if (meaningfulLines.length > 0) {
+        cleaned = meaningfulLines.join("\n");
+      } else {
+        cleaned =
+          "I apologize, but I'm having trouble generating a clear response. Please try rephrasing your question or using a different AI model.";
       }
+      break;
     }
+  }
 
-    // Detect R1-style gibberish (multiple quotes/ellipsis/fragments indicating confused output)
-    const gibberishPatterns = [
-      /(\.{3,}\s*){5,}/, // Multiple ellipsis sequences
-      /([""]\s*){5,}/, // Multiple quote sequences
-      /(Hmm|Ok|Wait|But|Hence|Thus|Therefore)[\s\S]{0,20}\1[\s\S]{0,20}\1/gi, // Repeated filler words
-      /\b(think|thinking|thought)\b[\s\S]{0,50}\b\1\b[\s\S]{0,50}\b\1\b/gi, // Repeated "think"
-    ];
+  return cleaned;
+};
 
-    for (const pattern of gibberishPatterns) {
-      if (pattern.test(cleaned)) {
-        console.warn("⚠️ Detected R1-style confused output");
-        // Try to extract any meaningful content before the gibberish
-        const lines = cleaned.split("\n").filter((l) => l.trim());
-        const meaningfulLines = lines.filter((line) => {
-          const lower = line.toLowerCase();
-          return (
-            !lower.includes("hmm") &&
-            !lower.includes("wait") &&
-            !lower.includes("confuse") &&
-            !lower.includes("unclear") &&
-            line.length > 20 &&
-            !/^[\s"'.\\,!?]+$/.test(line)
-          );
-        });
-        if (meaningfulLines.length > 0) {
-          cleaned = meaningfulLines.join("\n");
-        } else {
-          cleaned =
-            "I apologize, but I'm having trouble generating a clear response. Please try rephrasing your question or using a different AI model.";
+/**
+ * Run a streaming Local AI generation, aborting early if degenerate
+ * (repetition-collapsed) output is detected.
+ */
+const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
+  let fullResponse = "";
+  const chunks = await localAIEngine.chat.completions.create({
+    ...generationConfig,
+    stream: true,
+  });
+
+  for await (const chunk of chunks) {
+    const delta = chunk.choices[0]?.delta?.content || "";
+    fullResponse += delta;
+
+    // Clean and send the streamed response
+    const cleanedResponse = cleanLocalAIResponse(fullResponse);
+    onStream(delta, cleanedResponse);
+
+    // Early abort if we detect degenerate output during streaming
+    if (fullResponse.length > 200) {
+      const last200 = fullResponse.slice(-200);
+      const repetitionPattern = /(.{2,10})\1{8,}/;
+      if (repetitionPattern.test(last200)) {
+        console.warn(
+          "⚠️ Aborting due to degenerate output detected during streaming",
+        );
+        try {
+          await localAIEngine.interruptGenerate?.();
+        } catch (e) {
+          console.warn("Failed to interrupt generation:", e);
         }
         break;
       }
     }
+  }
 
-    return cleaned;
-  };
+  localAIGenerating = false;
+  releaseLock();
+  return cleanLocalAIResponse(fullResponse);
+};
+
+/**
+ * Run a non-streaming Local AI generation.
+ */
+const runLocalAINonStreaming = async (generationConfig, releaseLock) => {
+  // eslint-disable-next-line no-console
+  console.log(
+    "🔧 Local AI generation config:",
+    JSON.stringify(generationConfig, null, 2).substring(0, 500),
+  );
+  const response =
+    await localAIEngine.chat.completions.create(generationConfig);
+  // eslint-disable-next-line no-console
+  console.log(
+    "🔧 Local AI raw response:",
+    JSON.stringify(response, null, 2).substring(0, 1000),
+  );
+
+  localAIGenerating = false;
+
+  // Check for aborted response (WebLLM returns empty content when aborted)
+  const finishReason = response.choices[0]?.finish_reason;
+  const rawContent = response.choices[0]?.message?.content || "";
+
+  if (finishReason === "abort" && !rawContent) {
+    console.warn(
+      "⚠️ Generation was aborted (possibly concurrent request conflict)",
+    );
+    releaseLock();
+    throw new Error(
+      "AI generation was interrupted. Please try again. If this keeps happening, refresh the page.",
+    );
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(
+    "🔧 Local AI rawContent:",
+    rawContent.substring(0, 500) || "(empty)",
+  );
+  releaseLock();
+  return cleanLocalAIResponse(rawContent);
+};
+
+/**
+ * Map a raw Local AI generation error to a user-friendly message.
+ */
+const mapLocalAIError = (err) => {
+  const errorMsg = err.message || "";
+
+  // WebLLM specific errors
+  if (
+    errorMsg.includes("ModelNotLoadedError") ||
+    errorMsg.includes("not loaded")
+  ) {
+    return new Error(
+      "Local AI model not loaded. Please wait for the model to finish loading, or try reloading.",
+    );
+  }
+  if (errorMsg.includes("WebGPU") || errorMsg.includes("GPU")) {
+    return new Error(
+      "GPU error. Your device may not fully support Local AI. Try refreshing the page, or switch to Cloud AI.",
+    );
+  }
+  if (errorMsg.includes("out of memory") || errorMsg.includes("OOM")) {
+    return new Error(
+      "GPU out of memory. Try a smaller model (like Llama 3.2 1B), close other browser tabs, or switch to Cloud AI.",
+    );
+  }
+  if (errorMsg.includes("aborted") || errorMsg.includes("cancelled")) {
+    return new Error("Generation was cancelled.");
+  }
+
+  // Re-throw with context
+  return new Error(
+    `Local AI error: ${errorMsg}. If this persists, try reloading the model or switching to Cloud AI.`,
+  );
+};
+
+/**
+ * Generate text using Local AI (Legacy WebLLM - fallback only)
+ */
+const generateWithLocalAI = async (prompt, options = {}) => {
+  // First try Warrant Council if available
+  if (isDiamondSwarmReady()) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "🎖️ Routing to Warrant Council (upgraded from legacy local AI)",
+    );
+    return generateWithWarrantCouncil(prompt, options);
+  }
+
+  assertLocalAIReady();
+
+  // Acquire generation lock - this ensures only one generation at a time
+  // and properly serializes concurrent requests
+  const releaseLock = await acquireGenerationLock();
+
+  // Double-check we're not already generating (belt and suspenders)
+  if (localAIGenerating) {
+    releaseLock();
+    console.warn(
+      "⚠️ localAIGenerating flag still set despite lock - possible state bug",
+    );
+    throw new Error(
+      "Another AI generation is in progress. Please wait for it to complete.",
+    );
+  }
+
+  // Build comprehensive system prompt if not provided (lazy load)
+  // 💎 Now also injects DKB context for enhanced VA knowledge (same as cloud AI)
+  const defaultSystemPrompt = await buildLocalAISystemPrompt(prompt, options);
+  const { systemPrompt, finalConfig, scrubPIIEnabled, onStream } =
+    resolveLocalAIConfig(options, defaultSystemPrompt);
+
+  const scrubbedPrompt = scrubPromptForLocalAI(prompt, scrubPIIEnabled);
 
   try {
     localAIGenerating = true;
@@ -1429,115 +1736,13 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     };
 
     if (onStream) {
-      // Streaming response
-      let fullResponse = "";
-      const chunks = await localAIEngine.chat.completions.create({
-        ...generationConfig,
-        stream: true,
-      });
-
-      for await (const chunk of chunks) {
-        const delta = chunk.choices[0]?.delta?.content || "";
-        fullResponse += delta;
-
-        // Clean and send the streamed response
-        const cleanedResponse = cleanResponse(fullResponse);
-        onStream(delta, cleanedResponse);
-
-        // Early abort if we detect degenerate output during streaming
-        if (fullResponse.length > 200) {
-          const last200 = fullResponse.slice(-200);
-          const repetitionPattern = /(.{2,10})\1{8,}/;
-          if (repetitionPattern.test(last200)) {
-            console.warn(
-              "⚠️ Aborting due to degenerate output detected during streaming",
-            );
-            try {
-              await localAIEngine.interruptGenerate?.();
-            } catch (e) {
-              // Ignore interrupt errors
-            }
-            break;
-          }
-        }
-      }
-
-      localAIGenerating = false;
-      releaseLock();
-      return cleanResponse(fullResponse);
-    } else {
-      // Non-streaming response
-      // eslint-disable-next-line no-console
-      console.log(
-        "🔧 Local AI generation config:",
-        JSON.stringify(generationConfig, null, 2).substring(0, 500),
-      );
-      const response =
-        await localAIEngine.chat.completions.create(generationConfig);
-      // eslint-disable-next-line no-console
-      console.log(
-        "🔧 Local AI raw response:",
-        JSON.stringify(response, null, 2).substring(0, 1000),
-      );
-
-      localAIGenerating = false;
-
-      // Check for aborted response (WebLLM returns empty content when aborted)
-      const finishReason = response.choices[0]?.finish_reason;
-      const rawContent = response.choices[0]?.message?.content || "";
-
-      if (finishReason === "abort" && !rawContent) {
-        console.warn(
-          "⚠️ Generation was aborted (possibly concurrent request conflict)",
-        );
-        releaseLock();
-        throw new Error(
-          "AI generation was interrupted. Please try again. If this keeps happening, refresh the page.",
-        );
-      }
-
-      // eslint-disable-next-line no-console
-      console.log(
-        "🔧 Local AI rawContent:",
-        rawContent.substring(0, 500) || "(empty)",
-      );
-      releaseLock();
-      return cleanResponse(rawContent);
+      return await runLocalAIStreaming(generationConfig, onStream, releaseLock);
     }
+    return await runLocalAINonStreaming(generationConfig, releaseLock);
   } catch (err) {
     localAIGenerating = false;
     releaseLock();
-
-    // Provide user-friendly error messages for common Local AI failures
-    const errorMsg = err.message || "";
-
-    // WebLLM specific errors
-    if (
-      errorMsg.includes("ModelNotLoadedError") ||
-      errorMsg.includes("not loaded")
-    ) {
-      throw new Error(
-        "Local AI model not loaded. Please wait for the model to finish loading, or try reloading.",
-      );
-    }
-    if (errorMsg.includes("WebGPU") || errorMsg.includes("GPU")) {
-      throw new Error(
-        "GPU error. Your device may not fully support Local AI. Try refreshing the page, or switch to Cloud AI.",
-      );
-    }
-    if (errorMsg.includes("out of memory") || errorMsg.includes("OOM")) {
-      throw new Error(
-        "GPU out of memory. Try a smaller model (like Llama 3.2 1B), close other browser tabs, or switch to Cloud AI.",
-      );
-    }
-    if (errorMsg.includes("aborted") || errorMsg.includes("cancelled")) {
-      throw new Error("Generation was cancelled.");
-    }
-
-    // Re-throw with context
-    throw new Error(
-      `Local AI error: ${errorMsg}. If this persists, try reloading the model or switching to Cloud AI.`,
-    );
+    throw mapLocalAIError(err);
   }
 };
 
@@ -1557,6 +1762,101 @@ const getUserPreset = () => {
 };
 
 /**
+ * Throw a helpful error if the legacy Local AI engine can't run vision input.
+ */
+const assertVisionModelReady = () => {
+  if (!localAIIsVisionModel) {
+    throw new Error(
+      "Vision model not loaded. Please load a vision model (like Vet-Rate Vision Phi) to analyze images directly.",
+    );
+  }
+  if (!localAIEngine) {
+    throw new Error(
+      "Local AI engine not initialized. Please wait for model to load.",
+    );
+  }
+  if (!localAIReady) {
+    throw new Error(
+      "Local AI not ready. Please wait for model to finish loading.",
+    );
+  }
+};
+
+/**
+ * Normalize imageUrls to an array and validate each is a base64 data URL.
+ */
+const normalizeVisionImages = (imageUrls) => {
+  const images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+  for (const url of images) {
+    if (!url.startsWith("data:image")) {
+      throw new Error(
+        "Image must be a base64 data URL (data:image/...). Use renderPDFToImages or convert images first.",
+      );
+    }
+  }
+  return images;
+};
+
+/**
+ * Build the multimodal (OpenAI vision format) messages array for a vision
+ * model request.
+ */
+const buildVisionMessages = (prompt, images, systemPrompt) => {
+  // Build multimodal message content (OpenAI vision format)
+  // WebLLM follows OpenAI's chat completion API for vision models
+  const contentParts = [{ type: "text", text: prompt }];
+  for (const imageUrl of images) {
+    contentParts.push({ type: "image_url", image_url: { url: imageUrl } });
+  }
+
+  const messages = [];
+  if (systemPrompt) {
+    messages.push({ role: "system", content: systemPrompt });
+  }
+  messages.push({ role: "user", content: contentParts });
+
+  // eslint-disable-next-line no-console
+  console.log(
+    "🖼️ Vision request - messages structure:",
+    JSON.stringify(
+      messages.map((m) => ({
+        role: m.role,
+        contentType: Array.isArray(m.content)
+          ? `array[${m.content.length}]`
+          : typeof m.content,
+        contentParts: Array.isArray(m.content)
+          ? m.content.map((p) => p.type)
+          : null,
+      })),
+      null,
+      2,
+    ),
+  );
+
+  return messages;
+};
+
+/**
+ * Map a raw vision-model generation error to a user-friendly message.
+ */
+const mapVisionError = (err) => {
+  const errorMsg = err.message || "";
+
+  if (errorMsg.includes("not of type ModelType.VLM")) {
+    return new Error(
+      "The loaded model does not support image input. Please load a vision model like Vet-Rate Vision Phi.",
+    );
+  }
+  if (errorMsg.includes("image_url")) {
+    return new Error(
+      "Image format error. Please ensure images are valid base64 data URLs.",
+    );
+  }
+
+  return new Error(`Vision model error: ${errorMsg}`);
+};
+
+/**
  * Generate AI response with image input (for vision models)
  * This function sends actual images to the vision model instead of OCR text.
  *
@@ -1569,36 +1869,9 @@ const getUserPreset = () => {
  * @returns {Promise<{text: string, mode: string}>} Generated text and mode used
  */
 export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
-  // Validate vision model is loaded
-  if (!localAIIsVisionModel) {
-    throw new Error(
-      "Vision model not loaded. Please load a vision model (like Vet-Rate Vision Phi) to analyze images directly.",
-    );
-  }
+  assertVisionModelReady();
 
-  if (!localAIEngine) {
-    throw new Error(
-      "Local AI engine not initialized. Please wait for model to load.",
-    );
-  }
-
-  if (!localAIReady) {
-    throw new Error(
-      "Local AI not ready. Please wait for model to finish loading.",
-    );
-  }
-
-  // Normalize imageUrls to array
-  const images = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
-
-  // Validate images
-  for (const url of images) {
-    if (!url.startsWith("data:image")) {
-      throw new Error(
-        "Image must be a base64 data URL (data:image/...). Use renderPDFToImages or convert images first.",
-      );
-    }
-  }
+  const images = normalizeVisionImages(imageUrls);
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1614,60 +1887,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
   localAIGenerating = true;
 
   try {
-    // Build multimodal message content (OpenAI vision format)
-    // WebLLM follows OpenAI's chat completion API for vision models
-    const contentParts = [];
-
-    // Add text prompt first
-    contentParts.push({
-      type: "text",
-      text: prompt,
-    });
-
-    // Add images
-    for (const imageUrl of images) {
-      contentParts.push({
-        type: "image_url",
-        image_url: {
-          url: imageUrl,
-        },
-      });
-    }
-
-    // Build messages array
-    const messages = [];
-
-    // Add system prompt if provided
-    if (systemPrompt) {
-      messages.push({
-        role: "system",
-        content: systemPrompt,
-      });
-    }
-
-    // Add user message with image(s)
-    messages.push({
-      role: "user",
-      content: contentParts,
-    });
-
-    // eslint-disable-next-line no-console
-    console.log(
-      "🖼️ Vision request - messages structure:",
-      JSON.stringify(
-        messages.map((m) => ({
-          role: m.role,
-          contentType: Array.isArray(m.content)
-            ? `array[${m.content.length}]`
-            : typeof m.content,
-          contentParts: Array.isArray(m.content)
-            ? m.content.map((p) => p.type)
-            : null,
-        })),
-        null,
-        2,
-      ),
-    );
+    const messages = buildVisionMessages(prompt, images, systemPrompt);
 
     const generationConfig = {
       messages,
@@ -1708,21 +1928,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
   } catch (err) {
     localAIGenerating = false;
     console.error("Vision model error:", err);
-
-    const errorMsg = err.message || "";
-
-    if (errorMsg.includes("not of type ModelType.VLM")) {
-      throw new Error(
-        "The loaded model does not support image input. Please load a vision model like Vet-Rate Vision Phi.",
-      );
-    }
-    if (errorMsg.includes("image_url")) {
-      throw new Error(
-        "Image format error. Please ensure images are valid base64 data URLs.",
-      );
-    }
-
-    throw new Error(`Vision model error: ${errorMsg}`);
+    throw mapVisionError(err);
   }
 };
 
@@ -1759,6 +1965,48 @@ export const resetAICircuitBreaker = () => {
   consecutiveGenerationFailures = 0;
   circuitBreakerOpenedAt = 0;
 };
+
+function _recordGenerationFailure(err) {
+  // Crisis interception is a safety block, not an engine failure
+  if (err.message !== "CRISIS_DETECTED") {
+    consecutiveGenerationFailures++;
+    if (consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD) {
+      circuitBreakerOpenedAt = Date.now();
+    }
+  }
+}
+
+// C-H06: record every production AI call in the tamper-evident, hash-chained
+// audit log (SHA-256 digests only — never raw prompt/output PII). Fire-and-
+// forget so a logging failure can never break the AI response.
+function _logAiCallAudit(prompt, result, options, startedAt) {
+  const auditOutput =
+    typeof result === "string" ? result : (result?.text ?? "");
+  logModelCallWithDigests({
+    tag: options.toolId || options.taskType || "generateAI",
+    model: options.forceMode || "auto",
+    prompt: typeof prompt === "string" ? prompt : JSON.stringify(prompt ?? ""),
+    output: auditOutput,
+    durationMs: Date.now() - startedAt,
+    meta: { expectJSON: !!options.expectJSON },
+  }).catch(() => {});
+}
+
+// PI-01: last-mile exfil filter — strip non-allow-listed URLs from model output
+// that reaches the DOM (a malicious PDF / OCR / retrieved chunk can social-engineer
+// the model into surfacing an attacker URL). Opt out for JSON-only / internal calls,
+// whose output is parsed not rendered as free text and would be corrupted. Gov links
+// survive (see sanitize.LLM_OUTPUT_URL_ALLOWLIST).
+function _stripUrlsFromResult(result, options) {
+  if (options.expectJSON || options.skipUrlStrip) return result;
+  if (typeof result === "string") {
+    return stripUntrustedUrls(result);
+  }
+  if (result && typeof result.text === "string") {
+    result.text = stripUntrustedUrls(result.text);
+  }
+  return result;
+}
 
 export const generateAI = async (prompt, options = {}) => {
   if (
@@ -1797,46 +2045,14 @@ export const generateAI = async (prompt, options = {}) => {
     clearTimeout(timeoutId);
     resetAICircuitBreaker();
 
-    // C-H06: record every production AI call in the tamper-evident, hash-chained
-    // audit log (SHA-256 digests only — never raw prompt/output PII). Fire-and-
-    // forget so a logging failure can never break the AI response.
-    const auditOutput =
-      typeof result === "string" ? result : (result?.text ?? "");
-    logModelCallWithDigests({
-      tag: options.toolId || options.taskType || "generateAI",
-      model: options.forceMode || "auto",
-      prompt:
-        typeof prompt === "string" ? prompt : JSON.stringify(prompt ?? ""),
-      output: auditOutput,
-      durationMs: Date.now() - startedAt,
-      meta: { expectJSON: !!options.expectJSON },
-    }).catch(() => {});
+    _logAiCallAudit(prompt, result, options, startedAt);
 
-    // PI-01: last-mile exfil filter — strip non-allow-listed URLs from model output
-    // that reaches the DOM (a malicious PDF / OCR / retrieved chunk can social-engineer
-    // the model into surfacing an attacker URL). Opt out for JSON-only / internal calls,
-    // whose output is parsed not rendered as free text and would be corrupted. Gov links
-    // survive (see sanitize.LLM_OUTPUT_URL_ALLOWLIST).
-    if (!options.expectJSON && !options.skipUrlStrip) {
-      if (typeof result === "string") {
-        return stripUntrustedUrls(result);
-      }
-      if (result && typeof result.text === "string") {
-        result.text = stripUntrustedUrls(result.text);
-      }
-    }
-    return result;
+    return _stripUrlsFromResult(result, options);
   } catch (err) {
     // Clear timeout on error
     if (timeoutId) clearTimeout(timeoutId);
 
-    // Crisis interception is a safety block, not an engine failure
-    if (err.message !== "CRISIS_DETECTED") {
-      consecutiveGenerationFailures++;
-      if (consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD) {
-        circuitBreakerOpenedAt = Date.now();
-      }
-    }
+    _recordGenerationFailure(err);
 
     // Enhance timeout errors with helpful message
     if (err.message && err.message.includes("AI_TIMEOUT")) {
@@ -1851,54 +2067,44 @@ export const generateAI = async (prompt, options = {}) => {
   }
 };
 
-/**
- * Internal generateAI implementation (wrapped by timeout in public API)
- */
-const generateAIInternal = async (prompt, options = {}) => {
-  // Feature flag check (unless explicitly skipped)
-  if (!options.skipFeatureCheck) {
-    const aiEnabled = await isFeatureEnabled("ai_enabled");
-    if (!aiEnabled) {
-      throw new Error(
-        "AI features are temporarily disabled. Please try again later.",
-      );
-    }
+async function _checkAiFeatureFlags(options) {
+  if (options.skipFeatureCheck) return;
 
-    // Check mode-specific flags
-    const effectiveMode = getEffectiveAIMode();
-    if (effectiveMode === AI_MODES.LOCAL) {
-      const localEnabled = await isFeatureEnabled("local_ai");
-      if (!localEnabled) {
-        throw new Error(
-          "Local AI is temporarily disabled. Please use Cloud AI or try again later.",
-        );
-      }
-    } else if (effectiveMode === AI_MODES.CLOUD) {
-      const cloudEnabled = await isFeatureEnabled("cloud_ai");
-      if (!cloudEnabled) {
-        throw new Error(
-          "Cloud AI is temporarily disabled. Please use Local AI or try again later.",
-        );
-      }
-    }
-  }
-
-  // Crisis safety check (unless explicitly skipped)
-  if (!options.skipCrisisCheck) {
-    const crisisResult = await interceptBeforeAICall(prompt);
-    if (crisisResult.shouldBlock) {
-      throw new Error("CRISIS_DETECTED");
-    }
-  }
-
-  const effectiveMode = getEffectiveAIMode();
-
-  if (!effectiveMode) {
+  const aiEnabled = await isFeatureEnabled("ai_enabled");
+  if (!aiEnabled) {
     throw new Error(
-      "No AI available. Please configure a Gemini API key or initialize Local AI.",
+      "AI features are temporarily disabled. Please try again later.",
     );
   }
 
+  // Check mode-specific flags
+  const effectiveMode = getEffectiveAIMode();
+  if (effectiveMode === AI_MODES.LOCAL) {
+    const localEnabled = await isFeatureEnabled("local_ai");
+    if (!localEnabled) {
+      throw new Error(
+        "Local AI is temporarily disabled. Please use Cloud AI or try again later.",
+      );
+    }
+  } else if (effectiveMode === AI_MODES.CLOUD) {
+    const cloudEnabled = await isFeatureEnabled("cloud_ai");
+    if (!cloudEnabled) {
+      throw new Error(
+        "Cloud AI is temporarily disabled. Please use Local AI or try again later.",
+      );
+    }
+  }
+}
+
+async function _checkCrisisSafety(prompt, options) {
+  if (options.skipCrisisCheck) return;
+  const crisisResult = await interceptBeforeAICall(prompt);
+  if (crisisResult.shouldBlock) {
+    throw new Error("CRISIS_DETECTED");
+  }
+}
+
+async function _buildFullPrompt(prompt, options) {
   // Build system prompt with anti-hallucination guardrails (unless overridden)
   const { buildSystemPrompt } = await getAISystemPrompts();
   const systemPrompt =
@@ -1925,246 +2131,423 @@ const generateAIInternal = async (prompt, options = {}) => {
     ? `${systemPrompt}\n\n---\n\nUser Request:\n${prompt}`
     : prompt;
 
+  return { fullPrompt, enhancedOptions };
+}
+
+async function _dispatchAiGeneration(
+  effectiveMode,
+  fullPrompt,
+  enhancedOptions,
+  options,
+) {
+  // Dispatch follows getEffectiveAIMode() — never implicitly upgrade to a
+  // backend the user didn't choose. getEffectiveAIMode() already handles the
+  // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD).
+  const useSwarm = effectiveMode === AI_MODES.SWARM;
+  const useWllama = effectiveMode === AI_MODES.WLLAMA;
+  const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
+  const useCloud =
+    effectiveMode === AI_MODES.CLOUD ||
+    (options.preferCloud === true && isCloudAIAvailable());
+  const useLocal = effectiveMode === AI_MODES.LOCAL;
+
+  if (useSwarm && isDiamondSwarmReady()) {
+    // 🎖️ Warrant Council - Primary AI Engine (WebGPU)
+    const text = await generateWithWarrantCouncil(fullPrompt, enhancedOptions);
+    const agentUsed = getCurrentAgent() || "auditor";
+    // eslint-disable-next-line no-console
+    console.log(
+      `🎖️ Generated with Warrant Council (${agentUsed.toUpperCase()} agent)`,
+    );
+    return { text, usedMode: AI_MODES.SWARM, agentUsed };
+  }
+  if (useWllama && isWllamaAvailable()) {
+    // 🌐 Wllama - Browser WASM inference
+    const text = await generateWithWllama(fullPrompt, enhancedOptions);
+    const agentUsed = wllamaCurrentModel || "auditor";
+    // eslint-disable-next-line no-console
+    console.log(`🌐 Generated with Wllama (${agentUsed.toUpperCase()} model)`);
+    return { text, usedMode: AI_MODES.WLLAMA, agentUsed };
+  }
+  if (useLocalServer && isLocalServerAvailable()) {
+    // 🖥️ Local Server - llama.cpp API
+    const text = await generateWithLocalServer(fullPrompt, enhancedOptions);
+    // eslint-disable-next-line no-console
+    console.log("🖥️ Generated with local llama.cpp server");
+    return { text, usedMode: AI_MODES.LOCAL_SERVER, agentUsed: null };
+  }
+  if (useLocal && isLocalAIReady()) {
+    // Legacy local AI (fallback)
+    const text = await generateWithLocalAI(fullPrompt, enhancedOptions);
+    // eslint-disable-next-line no-console
+    console.log("💻 Generated with legacy local AI");
+    return { text, usedMode: AI_MODES.LOCAL, agentUsed: null };
+  }
+  if (useCloud || isCloudAIAvailable()) {
+    // Cloud AI (Gemini - fallback)
+    const text = await generateWithCloudAI(fullPrompt, enhancedOptions);
+    return { text, usedMode: AI_MODES.CLOUD, agentUsed: null };
+  }
+  if (isWllamaAvailable()) {
+    // Fallback: Wllama
+    const text = await generateWithWllama(fullPrompt, enhancedOptions);
+    return { text, usedMode: AI_MODES.WLLAMA, agentUsed: null };
+  }
+  if (isLocalServerAvailable()) {
+    // Fallback: Local Server
+    const text = await generateWithLocalServer(fullPrompt, enhancedOptions);
+    return { text, usedMode: AI_MODES.LOCAL_SERVER, agentUsed: null };
+  }
+  if (isLocalAIReady()) {
+    // Final fallback: try legacy local
+    const text = await generateWithLocalAI(fullPrompt, enhancedOptions);
+    return { text, usedMode: AI_MODES.LOCAL, agentUsed: null };
+  }
+  throw new Error(
+    "No AI available. Please initialize Warrant Council, start the local server, or configure a Gemini API key.",
+  );
+}
+
+// Hallucination Trap: Filter invalid diagnostic codes (unless explicitly skipped)
+function _applyHallucinationFilter(text, options) {
+  let hallucinationReport = null;
+  if (options.skipHallucinationCheck) {
+    return { text, hallucinationReport };
+  }
+
   try {
-    let text;
-    let usedMode;
-    let agentUsed = null;
+    const validation = validateHallucinations(text);
 
-    // Dispatch follows getEffectiveAIMode() — never implicitly upgrade to a
-    // backend the user didn't choose. getEffectiveAIMode() already handles the
-    // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD).
-    const useSwarm = effectiveMode === AI_MODES.SWARM;
-    const useWllama = effectiveMode === AI_MODES.WLLAMA;
-    const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
-    const useCloud =
-      effectiveMode === AI_MODES.CLOUD ||
-      (options.preferCloud === true && isCloudAIAvailable());
-    const useLocal = effectiveMode === AI_MODES.LOCAL;
+    // Only process if validation actually found diagnostic codes to check
+    // (skipped=true means response didn't contain diagnostic codes)
+    if (
+      !validation.skipped &&
+      validation.rejected &&
+      validation.rejected.length > 0
+    ) {
+      console.warn("🚫 Hallucination Trap triggered:", validation.rejected);
+      hallucinationReport = {
+        filtered: validation.rejected,
+        valid: validation.safeData,
+        stats: validation.stats,
+      };
 
-    if (useSwarm && isDiamondSwarmReady()) {
-      // 🎖️ Warrant Council - Primary AI Engine (WebGPU)
-      text = await generateWithWarrantCouncil(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.SWARM;
-      agentUsed = getCurrentAgent() || "auditor";
-      // eslint-disable-next-line no-console
-      console.log(
-        `🎖️ Generated with Warrant Council (${agentUsed.toUpperCase()} agent)`,
-      );
-    } else if (useWllama && isWllamaAvailable()) {
-      // 🌐 Wllama - Browser WASM inference
-      text = await generateWithWllama(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.WLLAMA;
-      agentUsed = wllamaCurrentModel || "auditor";
-      // eslint-disable-next-line no-console
-      console.log(
-        `🌐 Generated with Wllama (${agentUsed.toUpperCase()} model)`,
-      );
-    } else if (useLocalServer && isLocalServerAvailable()) {
-      // 🖥️ Local Server - llama.cpp API
-      text = await generateWithLocalServer(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.LOCAL_SERVER;
-      // eslint-disable-next-line no-console
-      console.log("🖥️ Generated with local llama.cpp server");
-    } else if (useLocal && isLocalAIReady()) {
-      // Legacy local AI (fallback)
-      text = await generateWithLocalAI(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.LOCAL;
-    } else if (useCloud || isCloudAIAvailable()) {
-      // Cloud AI (Gemini - fallback)
-      text = await generateWithCloudAI(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.CLOUD;
-    } else if (isWllamaAvailable()) {
-      // Fallback: Wllama
-      text = await generateWithWllama(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.WLLAMA;
-    } else if (isLocalServerAvailable()) {
-      // Fallback: Local Server
-      text = await generateWithLocalServer(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.LOCAL_SERVER;
-    } else if (isLocalAIReady()) {
-      // Final fallback: try legacy local
-      text = await generateWithLocalAI(fullPrompt, enhancedOptions);
-      usedMode = AI_MODES.LOCAL;
-    } else {
-      throw new Error(
-        "No AI available. Please initialize Warrant Council, start the local server, or configure a Gemini API key.",
-      );
-    }
-
-    // Hallucination Trap: Filter invalid diagnostic codes (unless explicitly skipped)
-    let hallucinationReport = null;
-    if (!options.skipHallucinationCheck) {
-      try {
-        const validation = validateHallucinations(text);
-
-        // Only process if validation actually found diagnostic codes to check
-        // (skipped=true means response didn't contain diagnostic codes)
-        if (
-          !validation.skipped &&
-          validation.rejected &&
-          validation.rejected.length > 0
-        ) {
-          console.warn("🚫 Hallucination Trap triggered:", validation.rejected);
-          hallucinationReport = {
-            filtered: validation.rejected,
-            valid: validation.safeData,
-            stats: validation.stats,
-          };
-
-          // If the response had structured data that was filtered, optionally reconstruct
-          if (validation.success && validation.safeData) {
-            // For JSON responses, we can return the filtered version
-            if (options.expectJSON) {
-              text = JSON.stringify(validation.safeData, null, 2);
-              console.info(
-                "✅ Reconstructed AI response with valid codes only",
-              );
-            }
-          }
+      // If the response had structured data that was filtered, optionally reconstruct
+      if (validation.success && validation.safeData) {
+        // For JSON responses, we can return the filtered version
+        if (options.expectJSON) {
+          text = JSON.stringify(validation.safeData, null, 2);
+          // eslint-disable-next-line no-console
+          console.info("✅ Reconstructed AI response with valid codes only");
         }
-      } catch (hallucinationErr) {
-        // Don't fail the entire request if hallucination check fails
-        console.warn("Hallucination check failed:", hallucinationErr);
       }
     }
+  } catch (hallucinationErr) {
+    // Don't fail the entire request if hallucination check fails
+    console.warn("Hallucination check failed:", hallucinationErr);
+  }
 
-    // Validate the AI response for forbidden medical/legal roleplay, ungrounded
-    // CFR citations, missing disclaimers, invented stats, and over-certain claim
-    // language. Runs unless explicitly skipped.
-    //
-    // AIS-01: this was effectively dead in production. The guard required
-    // `options.taskType` (so calls without one skipped validation entirely), and
-    // it passed `options.taskType` — a STRING — as the `context` argument, so the
-    // validator's `context.loadedRegulations` was always undefined. Run it on every
-    // non-skipped response and pass a real context object.
-    if (!options.skipValidation) {
-      const { validateAIResponse } = await getAISystemPrompts();
-      const validation = validateAIResponse(text, {
-        taskType: options.taskType,
-        loadedRegulations: options.loadedRegulations,
-        hasStatistics: options.hasStatistics,
+  return { text, hallucinationReport };
+}
+
+// Validate the AI response for forbidden medical/legal roleplay, ungrounded
+// CFR citations, missing disclaimers, invented stats, and over-certain claim
+// language. Runs unless explicitly skipped.
+//
+// AIS-01: this was effectively dead in production. The guard required
+// `options.taskType` (so calls without one skipped validation entirely), and
+// it passed `options.taskType` — a STRING — as the `context` argument, so the
+// validator's `context.loadedRegulations` was always undefined. Run it on every
+// non-skipped response and pass a real context object.
+async function _buildValidatedResult(
+  text,
+  usedMode,
+  agentUsed,
+  hallucinationReport,
+  options,
+) {
+  if (!options.skipValidation) {
+    const { validateAIResponse } = await getAISystemPrompts();
+    const validation = validateAIResponse(text, {
+      taskType: options.taskType,
+      loadedRegulations: options.loadedRegulations,
+      hasStatistics: options.hasStatistics,
+    });
+    if (!validation.isValid) {
+      console.warn(
+        "⚠️ AI response validation failed:",
+        validation.errors,
+        validation.warnings,
+      );
+      return {
+        text,
+        mode: usedMode,
+        validationErrors: validation.errors,
+        validationWarnings: validation.warnings,
+        hallucinationReport,
+      };
+    }
+  }
+
+  return {
+    text,
+    mode: usedMode,
+    ...(agentUsed && { agent: agentUsed }),
+    ...(hallucinationReport && { hallucinationReport }),
+  };
+}
+
+async function _handleContextOverflowFallback(
+  err,
+  fullPrompt,
+  enhancedOptions,
+  options,
+) {
+  const errorMsg = err.message || "";
+
+  // 🔥 CONTEXT WINDOW OVERFLOW HANDLING
+  // When Local AI (4096 tokens) can't handle large input, auto-fallback to Cloud AI (1M tokens)
+  const isContextOverflow =
+    errorMsg.includes("ContextWindowSizeExceeded") ||
+    errorMsg.includes("context window") ||
+    errorMsg.includes("prompt tokens exceed");
+
+  if (!isContextOverflow) return null;
+
+  console.warn(
+    "📏 Context window overflow detected - document too large for Local AI",
+  );
+
+  // Try Cloud AI (Gemini has 1M token context window)
+  if (isCloudAIAvailable() && !options.noFallback) {
+    // eslint-disable-next-line no-console
+    console.log("☁️ Auto-falling back to Cloud AI for large document...");
+    try {
+      const text = await generateWithCloudAI(fullPrompt, {
+        ...enhancedOptions,
+        // Use minimal system prompt for large documents to save tokens
+        systemPrompt: options.systemPrompt || null,
       });
-      if (!validation.isValid) {
-        console.warn(
-          "⚠️ AI response validation failed:",
-          validation.errors,
-          validation.warnings,
-        );
+      return {
+        text,
+        mode: AI_MODES.CLOUD,
+        fallback: true,
+        fallbackReason: "context_overflow",
+        note: "Document was too large for Local AI (4096 tokens). Processed with Cloud AI instead.",
+      };
+    } catch (cloudErr) {
+      console.error("☁️ Cloud AI fallback also failed:", cloudErr.message);
+      throw new Error(
+        `Document is too large for Local AI (4096 token limit) and Cloud AI also failed. ` +
+          `Please try with a shorter document, or paste only the most important sections of your decision letter.`,
+      );
+    }
+  }
+
+  // No Cloud AI available - give helpful error
+  throw new Error(
+    `📏 Document is too large for Local AI (4096 token limit). ` +
+      `Options: 1) Configure a Gemini API key in Settings to enable Cloud AI fallback for large documents, ` +
+      `2) Paste only the key sections of your decision letter (look for "Reasons for Decision" or "Denial" sections), ` +
+      `3) Try uploading fewer pages at once.`,
+  );
+}
+
+async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
+  // If preferred mode fails, try fallback chain: Swarm -> Local -> Cloud
+  let fallbackMode = null;
+  let canFallback = false;
+
+  if (effectiveMode === AI_MODES.SWARM) {
+    fallbackMode = isLocalAIReady() ? AI_MODES.LOCAL : AI_MODES.CLOUD;
+    canFallback =
+      fallbackMode === AI_MODES.LOCAL ? isLocalAIReady() : isCloudAIAvailable();
+  } else if (effectiveMode === AI_MODES.LOCAL) {
+    fallbackMode = AI_MODES.CLOUD;
+    canFallback = isCloudAIAvailable();
+  } else {
+    fallbackMode = isDiamondSwarmReady() ? AI_MODES.SWARM : AI_MODES.LOCAL;
+    canFallback = isDiamondSwarmReady() || isLocalAIReady();
+  }
+
+  if (canFallback && !options.noFallback) {
+    console.warn(
+      `💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`,
+      err.message,
+    );
+    try {
+      if (fallbackMode === AI_MODES.SWARM) {
+        const text = await generateWithWarrantCouncil(fullPrompt, options);
         return {
           text,
-          mode: usedMode,
-          validationErrors: validation.errors,
-          validationWarnings: validation.warnings,
-          hallucinationReport,
+          mode: AI_MODES.SWARM,
+          agent: getCurrentAgent(),
+          fallback: true,
         };
-      }
-    }
-
-    return {
-      text,
-      mode: usedMode,
-      ...(agentUsed && { agent: agentUsed }),
-      ...(hallucinationReport && { hallucinationReport }),
-    };
-  } catch (err) {
-    const errorMsg = err.message || "";
-
-    // 🔥 CONTEXT WINDOW OVERFLOW HANDLING
-    // When Local AI (4096 tokens) can't handle large input, auto-fallback to Cloud AI (1M tokens)
-    const isContextOverflow =
-      errorMsg.includes("ContextWindowSizeExceeded") ||
-      errorMsg.includes("context window") ||
-      errorMsg.includes("prompt tokens exceed");
-
-    if (isContextOverflow) {
-      console.warn(
-        "📏 Context window overflow detected - document too large for Local AI",
-      );
-
-      // Try Cloud AI (Gemini has 1M token context window)
-      if (isCloudAIAvailable() && !options.noFallback) {
-        // eslint-disable-next-line no-console
-        console.log("☁️ Auto-falling back to Cloud AI for large document...");
-        try {
-          const text = await generateWithCloudAI(fullPrompt, {
-            ...enhancedOptions,
-            // Use minimal system prompt for large documents to save tokens
-            systemPrompt: options.systemPrompt || null,
-          });
-          return {
-            text,
-            mode: AI_MODES.CLOUD,
-            fallback: true,
-            fallbackReason: "context_overflow",
-            note: "Document was too large for Local AI (4096 tokens). Processed with Cloud AI instead.",
-          };
-        } catch (cloudErr) {
-          console.error("☁️ Cloud AI fallback also failed:", cloudErr.message);
-          throw new Error(
-            `Document is too large for Local AI (4096 token limit) and Cloud AI also failed. ` +
-              `Please try with a shorter document, or paste only the most important sections of your decision letter.`,
-          );
-        }
+      } else if (fallbackMode === AI_MODES.LOCAL) {
+        const text = await generateWithLocalAI(fullPrompt, options);
+        return { text, mode: AI_MODES.LOCAL, fallback: true };
       } else {
-        // No Cloud AI available - give helpful error
-        throw new Error(
-          `📏 Document is too large for Local AI (4096 token limit). ` +
-            `Options: 1) Configure a Gemini API key in Settings to enable Cloud AI fallback for large documents, ` +
-            `2) Paste only the key sections of your decision letter (look for "Reasons for Decision" or "Denial" sections), ` +
-            `3) Try uploading fewer pages at once.`,
-        );
+        const text = await generateWithCloudAI(fullPrompt, options);
+        return { text, mode: AI_MODES.CLOUD, fallback: true };
       }
-    }
-
-    // If preferred mode fails, try fallback chain: Swarm -> Local -> Cloud
-    let fallbackMode = null;
-    let canFallback = false;
-
-    if (effectiveMode === AI_MODES.SWARM) {
-      fallbackMode = isLocalAIReady() ? AI_MODES.LOCAL : AI_MODES.CLOUD;
-      canFallback =
-        fallbackMode === AI_MODES.LOCAL
-          ? isLocalAIReady()
-          : isCloudAIAvailable();
-    } else if (effectiveMode === AI_MODES.LOCAL) {
-      fallbackMode = AI_MODES.CLOUD;
-      canFallback = isCloudAIAvailable();
-    } else {
-      fallbackMode = isDiamondSwarmReady() ? AI_MODES.SWARM : AI_MODES.LOCAL;
-      canFallback = isDiamondSwarmReady() || isLocalAIReady();
-    }
-
-    if (canFallback && !options.noFallback) {
-      console.warn(
-        `💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`,
-        err.message,
+    } catch (fallbackErr) {
+      throw new Error(
+        `All AI modes failed. Primary: ${_describeThrown(err)}. Fallback: ${_describeThrown(fallbackErr)}`,
       );
-      try {
-        if (fallbackMode === AI_MODES.SWARM) {
-          const text = await generateWithWarrantCouncil(fullPrompt, options);
-          return {
-            text,
-            mode: AI_MODES.SWARM,
-            agent: getCurrentAgent(),
-            fallback: true,
-          };
-        } else if (fallbackMode === AI_MODES.LOCAL) {
-          const text = await generateWithLocalAI(fullPrompt, options);
-          return { text, mode: AI_MODES.LOCAL, fallback: true };
-        } else {
-          const text = await generateWithCloudAI(fullPrompt, options);
-          return { text, mode: AI_MODES.CLOUD, fallback: true };
-        }
-      } catch (fallbackErr) {
-        throw new Error(
-          `All AI modes failed. Primary: ${err.message}. Fallback: ${fallbackErr.message}`,
-        );
-      }
     }
+  }
 
-    throw err;
+  throw err;
+}
+
+/**
+ * Internal generateAI implementation (wrapped by timeout in public API)
+ */
+const generateAIInternal = async (prompt, options = {}) => {
+  // Feature flag check (unless explicitly skipped)
+  await _checkAiFeatureFlags(options);
+
+  // Crisis safety check (unless explicitly skipped)
+  await _checkCrisisSafety(prompt, options);
+
+  const effectiveMode = getEffectiveAIMode();
+
+  if (!effectiveMode) {
+    throw new Error(
+      "No AI available. Please configure a Gemini API key or initialize Local AI.",
+    );
+  }
+
+  const { fullPrompt, enhancedOptions } = await _buildFullPrompt(
+    prompt,
+    options,
+  );
+
+  try {
+    const {
+      text: dispatchedText,
+      usedMode,
+      agentUsed,
+    } = await _dispatchAiGeneration(
+      effectiveMode,
+      fullPrompt,
+      enhancedOptions,
+      options,
+    );
+
+    const { text, hallucinationReport } = _applyHallucinationFilter(
+      dispatchedText,
+      options,
+    );
+
+    return await _buildValidatedResult(
+      text,
+      usedMode,
+      agentUsed,
+      hallucinationReport,
+      options,
+    );
+  } catch (err) {
+    const overflowResult = await _handleContextOverflowFallback(
+      err,
+      fullPrompt,
+      enhancedOptions,
+      options,
+    );
+    if (overflowResult) return overflowResult;
+
+    return await _handleGeneralFallback(
+      err,
+      effectiveMode,
+      fullPrompt,
+      options,
+    );
   }
 };
+
+// Ordered [substring, friendly name] pairs — first match wins, so more
+// specific patterns (e.g. a particular size/variant) must precede their
+// generic family fallback (e.g. plain "Llama").
+const LOCAL_MODEL_NAME_PATTERNS = [
+  // Warrant Council agents (fine-tuned VetRate models)
+  ["vetrate-auditor", "🎖️ CW5 Auditor"],
+  ["vetrate-writer", "🎖️ CW4 Writer"],
+  ["vetrate-rater", "🎖️ CW3 Rater"],
+
+  // DeepSeek R1 Reasoning Models
+  ["DeepSeek-R1-Distill-Qwen-7B", "DeepSeek R1 7B"],
+  ["DeepSeek-R1-Distill-Llama-8B", "DeepSeek R1 8B"],
+  ["DeepSeek", "DeepSeek R1"],
+
+  // Qwen 3 Series (Latest)
+  ["Qwen3-0.6B", "Qwen 3 0.6B"],
+  ["Qwen3-1.7B", "Qwen 3 1.7B"],
+  ["Qwen3-4B", "Qwen 3 4B"],
+  ["Qwen3-8B", "Qwen 3 8B"],
+
+  // Qwen 2.5 Series
+  ["Qwen2.5-0.5B", "Qwen 2.5 0.5B"],
+  ["Qwen2.5-1.5B", "Qwen 2.5 1.5B"],
+  ["Qwen2.5-3B", "Qwen 2.5 3B"],
+  ["Qwen2.5-7B", "Qwen 2.5 7B"],
+  ["Qwen", "Qwen"],
+
+  // SmolLM2 Series (Tiny models)
+  ["SmolLM2-135M", "SmolLM2 135M"],
+  ["SmolLM2-360M", "SmolLM2 360M"],
+  ["SmolLM2-1.7B", "SmolLM2 1.7B"],
+  ["SmolLM2", "SmolLM2"],
+
+  // Hermes Series (Function Calling)
+  ["Hermes-3-Llama-3.2-3B", "Hermes 3 3B"],
+  ["Hermes-3-Llama-3.1-8B", "Hermes 3 8B"],
+  ["Hermes-2-Pro", "Hermes 2 Pro"],
+  ["Hermes", "Hermes"],
+
+  // Llama Series
+  ["Llama-3.2-1B", "Llama 3.2 1B"],
+  ["Llama-3.2-3B", "Llama 3.2 3B"],
+  ["Llama-3.1-8B", "Llama 3.1 8B"],
+  ["Llama", "Llama"],
+
+  // Phi Series (Microsoft) & Custom Vision Models
+  ["Vet-Rate-Vision-Phi-Float32", "Vet-Rate Vision Phi"],
+  ["Vet-Rate-Vision-Phi", "Vet-Rate Vision Phi (Legacy)"],
+  ["Phi-3.5-vision", "Phi 3.5 Vision"],
+  ["Phi-3.5", "Phi 3.5 Mini"],
+  ["Phi", "Phi"],
+
+  // Mistral Series
+  ["Mistral-7B", "Mistral 7B"],
+  ["Mistral", "Mistral"],
+
+  // Gemma Series (Google) — specific sizes only match lowercase IDs;
+  // the capitalized/generic case is handled separately below.
+  ["gemma-2-9b", "Gemma 2 9B"],
+  ["gemma-2-2b", "Gemma 2 2B"],
+];
+
+function _lookupLocalModelName(modelId) {
+  const found = LOCAL_MODEL_NAME_PATTERNS.find(([pattern]) =>
+    modelId.includes(pattern),
+  );
+  if (found) return found[1];
+
+  if (modelId.includes("Gemma") || modelId.includes("gemma")) return "Gemma";
+
+  // Fallback: try to extract a readable name from the model ID
+  // e.g., "Some-Model-Name-q4f32_1-MLC" -> "Some Model Name"
+  const cleanName = modelId
+    // eslint-disable-next-line sonarjs/slow-regex -- runs on short, internal model-ID strings, not user input
+    .replace(/-q\d+f\d+.*$/, "") // Remove quantization suffix
+    .replace(/-MLC$/, "") // Remove MLC suffix
+    .replace(/-Instruct$/, "") // Remove Instruct suffix
+    .replace(/-/g, " ") // Replace dashes with spaces
+    .trim();
+
+  return cleanName || "Local AI";
+}
 
 /**
  * Get the currently loaded AI model name
@@ -2184,76 +2567,7 @@ export const getLocalModelName = () => {
   const modelId = localStorage.getItem("vet_rate_local_ai_model");
   if (!modelId) return "Local AI"; // Generic name when no specific model selected
 
-  // Warrant Council agents (fine-tuned VetRate models)
-  if (modelId.includes("vetrate-auditor")) return "🎖️ CW5 Auditor";
-  if (modelId.includes("vetrate-writer")) return "🎖️ CW4 Writer";
-  if (modelId.includes("vetrate-rater")) return "🎖️ CW3 Rater";
-
-  // Extract friendly name from model ID
-  // DeepSeek R1 Reasoning Models
-  if (modelId.includes("DeepSeek-R1-Distill-Qwen-7B")) return "DeepSeek R1 7B";
-  if (modelId.includes("DeepSeek-R1-Distill-Llama-8B")) return "DeepSeek R1 8B";
-  if (modelId.includes("DeepSeek")) return "DeepSeek R1";
-
-  // Qwen 3 Series (Latest)
-  if (modelId.includes("Qwen3-0.6B")) return "Qwen 3 0.6B";
-  if (modelId.includes("Qwen3-1.7B")) return "Qwen 3 1.7B";
-  if (modelId.includes("Qwen3-4B")) return "Qwen 3 4B";
-  if (modelId.includes("Qwen3-8B")) return "Qwen 3 8B";
-
-  // Qwen 2.5 Series
-  if (modelId.includes("Qwen2.5-0.5B")) return "Qwen 2.5 0.5B";
-  if (modelId.includes("Qwen2.5-1.5B")) return "Qwen 2.5 1.5B";
-  if (modelId.includes("Qwen2.5-3B")) return "Qwen 2.5 3B";
-  if (modelId.includes("Qwen2.5-7B")) return "Qwen 2.5 7B";
-  if (modelId.includes("Qwen")) return "Qwen";
-
-  // SmolLM2 Series (Tiny models)
-  if (modelId.includes("SmolLM2-135M")) return "SmolLM2 135M";
-  if (modelId.includes("SmolLM2-360M")) return "SmolLM2 360M";
-  if (modelId.includes("SmolLM2-1.7B")) return "SmolLM2 1.7B";
-  if (modelId.includes("SmolLM2")) return "SmolLM2";
-
-  // Hermes Series (Function Calling)
-  if (modelId.includes("Hermes-3-Llama-3.2-3B")) return "Hermes 3 3B";
-  if (modelId.includes("Hermes-3-Llama-3.1-8B")) return "Hermes 3 8B";
-  if (modelId.includes("Hermes-2-Pro")) return "Hermes 2 Pro";
-  if (modelId.includes("Hermes")) return "Hermes";
-
-  // Llama Series
-  if (modelId.includes("Llama-3.2-1B")) return "Llama 3.2 1B";
-  if (modelId.includes("Llama-3.2-3B")) return "Llama 3.2 3B";
-  if (modelId.includes("Llama-3.1-8B")) return "Llama 3.1 8B";
-  if (modelId.includes("Llama")) return "Llama";
-
-  // Phi Series (Microsoft) & Custom Vision Models
-  if (modelId.includes("Vet-Rate-Vision-Phi-Float32"))
-    return "Vet-Rate Vision Phi";
-  if (modelId.includes("Vet-Rate-Vision-Phi"))
-    return "Vet-Rate Vision Phi (Legacy)";
-  if (modelId.includes("Phi-3.5-vision")) return "Phi 3.5 Vision";
-  if (modelId.includes("Phi-3.5")) return "Phi 3.5 Mini";
-  if (modelId.includes("Phi")) return "Phi";
-
-  // Mistral Series
-  if (modelId.includes("Mistral-7B")) return "Mistral 7B";
-  if (modelId.includes("Mistral")) return "Mistral";
-
-  // Gemma Series (Google)
-  if (modelId.includes("gemma-2-9b")) return "Gemma 2 9B";
-  if (modelId.includes("gemma-2-2b")) return "Gemma 2 2B";
-  if (modelId.includes("Gemma") || modelId.includes("gemma")) return "Gemma";
-
-  // Fallback: try to extract a readable name from the model ID
-  // e.g., "Some-Model-Name-q4f32_1-MLC" -> "Some Model Name"
-  const cleanName = modelId
-    .replace(/-q\d+f\d+.*$/, "") // Remove quantization suffix
-    .replace(/-MLC$/, "") // Remove MLC suffix
-    .replace(/-Instruct$/, "") // Remove Instruct suffix
-    .replace(/-/g, " ") // Replace dashes with spaces
-    .trim();
-
-  return cleanName || "Local AI";
+  return _lookupLocalModelName(modelId);
 };
 
 /**
@@ -2407,6 +2721,7 @@ export {
   getCurrentAgent,
   getSwarmStatus,
   initializeSwarm,
+  reloadSwarmEngine,
   switchAgent,
   unloadSwarm,
 } from "./diamondSwarm";
@@ -2449,6 +2764,7 @@ export default {
   getCurrentAgent,
   getSwarmStatus,
   initializeSwarm,
+  reloadSwarmEngine,
   switchAgent,
   unloadSwarm,
 };

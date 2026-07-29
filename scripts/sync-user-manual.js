@@ -45,7 +45,6 @@ const log = {
 // Read toolkit data
 const toolkitDataPath = path.join(rootDir, 'src/data/toolkitData.js');
 const userManualPath = path.join(rootDir, 'src/components/UserManual.jsx');
-const unifiedAIServicePath = path.join(rootDir, 'src/utils/unifiedAIService.js');
 
 // Category mapping for tool categories
 const CATEGORY_MAP = {
@@ -80,28 +79,6 @@ const OUTDATED_AI_REFERENCES = [
   { pattern: /6 GB VRAM[^]*?- Phi 3\.5 Vision/gmi, replacement: '', context: 'vram' },
   { pattern: /8\+ GB VRAM[^]*?- Mistral 7B/gmi, replacement: '', context: 'vram' },
 ];
-
-// Knowledge Base source attribution requirements
-const KB_SOURCE_REQUIREMENTS = {
-  'DKB': {
-    fullName: 'Diamond Knowledge Base',
-    sources: '38 CFR (eCFR Official), BVA Decisions, OGC Precedent Opinions, PACT Act, M21-1',
-    attribution: 'Official VA sources - validated for AI training',
-    icon: '💎'
-  },
-  'VKB': {
-    fullName: 'Veteran Knowledge Base (Your Personal Records)',
-    sources: 'YOUR uploaded documents: DD214, C-File, medical records, Blue Button data',
-    attribution: 'Your own official records - your lived experience as documented by VA',
-    icon: '🎖️'
-  },
-  'CKB': {
-    fullName: 'Community Knowledge Base',
-    sources: 'Community-provided tips, VSO insights, attorney guidance',
-    attribution: 'Community contributions - NOT for AI training',
-    icon: '👥'
-  }
-};
 
 log.header('═══════════════════════════════════════════════════════════════');
 log.header('        📖 USER MANUAL AUTO-SYNC');

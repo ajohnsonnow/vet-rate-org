@@ -89,6 +89,40 @@ export const getModelInfo = async (config = getServerConfig()) => {
 };
 
 /**
+ * Read a streaming completion response, invoking onToken per chunk.
+ */
+const readStreamingCompletion = async (response, onToken) => {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let result = "";
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    const lines = chunk.split("\n");
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        try {
+          const data = JSON.parse(line.slice(6));
+          if (data.content) {
+            result += data.content;
+            onToken(data.content);
+          }
+        } catch {
+          /* ignored */
+        }
+      }
+    }
+  }
+
+  return result;
+};
+
+/**
  * Generate completion via local server
  */
 export const generateCompletion = async (prompt, options = {}) => {
@@ -125,34 +159,7 @@ export const generateCompletion = async (prompt, options = {}) => {
 
     // Handle streaming response
     if (onToken && response.body) {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let result = "";
-
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.content) {
-                result += data.content;
-                onToken(data.content);
-              }
-            } catch {
-              /* ignored */
-            }
-          }
-        }
-      }
-
-      return result;
+      return await readStreamingCompletion(response, onToken);
     }
 
     // Non-streaming response

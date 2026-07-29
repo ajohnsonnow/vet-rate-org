@@ -245,7 +245,7 @@ function httpGet(url, headers = {}) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
             resolve(JSON.parse(data));
-          } catch (e) {
+          } catch (_e) {
             resolve(data); // Return raw if not JSON
           }
         } else {

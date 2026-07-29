@@ -25,7 +25,7 @@ export const generateId = () => {
 export const getSavedClaims = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    return saved && saved !== "undefined" ? JSON.parse(saved) : [];
   } catch (error) {
     console.error("Error reading saved claims:", error);
     return [];

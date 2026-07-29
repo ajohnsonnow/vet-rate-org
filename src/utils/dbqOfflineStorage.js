@@ -95,15 +95,6 @@ async function dbGetAll(storeName) {
   return promisifyRequest(store.getAll());
 }
 
-// Helper to get all keys from a store
-// eslint-disable-next-line no-unused-vars
-async function dbGetAllKeys(storeName) {
-  const db = await getDB();
-  const tx = db.transaction(storeName, "readonly");
-  const store = tx.objectStore(storeName);
-  return promisifyRequest(store.getAllKeys());
-}
-
 // Helper to clear a store
 async function dbClear(storeName) {
   const db = await getDB();

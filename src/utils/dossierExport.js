@@ -410,31 +410,8 @@ function generateFormsSection(forms) {
   `;
 }
 
-/**
- * Generate the complete dossier HTML document
- * @returns {string} Complete HTML document
- */
-export function generateDossierHTML() {
-  const exportDate = new Date().toISOString();
-  const formattedDate = formatDate(exportDate);
-
-  // Gather all data
-  const profile = safeGetData(DATA_SOURCES.profile);
-  const claims = safeGetData(DATA_SOURCES.claims);
-  const statements = safeGetData(DATA_SOURCES.statements);
-  const ratings = safeGetData(DATA_SOURCES.ratings);
-  const forms = safeGetData(DATA_SOURCES.forms);
-
-  // Get the full backup for raw data reference
-  const fullBackup = exportData();
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VA Claims Dossier - Exported from Vet-Rate.org</title>
-  <style>
+function getResetHeaderDisclaimerStyles() {
+  return `
     /* Reset and Base Styles */
     *, *::before, *::after {
       box-sizing: border-box;
@@ -506,6 +483,11 @@ export function generateDossierHTML() {
       font-size: 14px;
     }
     
+  `;
+}
+
+function getSectionsProfileStyles() {
+  return `
     /* Sections */
     .section {
       background: white;
@@ -562,6 +544,11 @@ export function generateDossierHTML() {
       font-size: 16px;
     }
     
+  `;
+}
+
+function getClaimsGridStyles() {
+  return `
     /* Claims Grid */
     .claims-grid {
       display: grid;
@@ -620,6 +607,11 @@ export function generateDossierHTML() {
       margin-top: 12px;
     }
     
+  `;
+}
+
+function getStatementsStyles() {
+  return `
     /* Statements */
     .statement-card {
       margin-bottom: 24px;
@@ -671,6 +663,11 @@ export function generateDossierHTML() {
       margin: 24px 0;
     }
     
+  `;
+}
+
+function getRatingsFormsStyles() {
+  return `
     /* Ratings Table */
     .ratings-table {
       width: 100%;
@@ -732,6 +729,11 @@ export function generateDossierHTML() {
       margin-top: 8px;
     }
     
+  `;
+}
+
+function getFooterRawDataStyles() {
+  return `
     /* Footer */
     .dossier-footer {
       text-align: center;
@@ -771,6 +773,11 @@ export function generateDossierHTML() {
       overflow-y: auto;
     }
     
+  `;
+}
+
+function getPrintResponsiveStyles() {
+  return `
     /* Print Styles */
     @media print {
       body {
@@ -828,7 +835,38 @@ export function generateDossierHTML() {
         gap: 8px;
       }
     }
-  </style>
+  `;
+}
+
+function getDossierStyles() {
+  return `${getResetHeaderDisclaimerStyles()}${getSectionsProfileStyles()}${getClaimsGridStyles()}${getStatementsStyles()}${getRatingsFormsStyles()}${getFooterRawDataStyles()}${getPrintResponsiveStyles()}`;
+}
+
+/**
+ * Generate the complete dossier HTML document
+ * @returns {string} Complete HTML document
+ */
+export function generateDossierHTML() {
+  const exportDate = new Date().toISOString();
+  const formattedDate = formatDate(exportDate);
+
+  // Gather all data
+  const profile = safeGetData(DATA_SOURCES.profile);
+  const claims = safeGetData(DATA_SOURCES.claims);
+  const statements = safeGetData(DATA_SOURCES.statements);
+  const ratings = safeGetData(DATA_SOURCES.ratings);
+  const forms = safeGetData(DATA_SOURCES.forms);
+
+  // Get the full backup for raw data reference
+  const fullBackup = exportData();
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VA Claims Dossier - Exported from Vet-Rate.org</title>
+  <style>${getDossierStyles()}</style>
 </head>
 <body>
   <header class="dossier-header">

@@ -56,6 +56,44 @@ function simulateWorkerError(message = "worker crashed") {
   }
 }
 
+async function setupSmolVLMModule() {
+  vi.resetModules();
+  vi.stubGlobal("navigator", { ...navigator, gpu: {} });
+  Object.assign(mockWorkerInstance, {
+    postMessage: vi.fn(),
+    terminate: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    onmessage: null,
+    onerror: null,
+  });
+  vi.stubGlobal(
+    "Worker",
+    vi.fn(function () {
+      return mockWorkerInstance;
+    }),
+  );
+  return import("../../utils/smolVLMService.js");
+}
+
+async function setupReadySmolVLMModule() {
+  const service = await setupSmolVLMModule();
+  const initPromise = service.initialize();
+  simulateWorkerMessage({ status: "ready" });
+  await initPromise;
+  return service;
+}
+
+function mockWorkerReply(...messages) {
+  mockWorkerInstance.addEventListener.mockImplementation((evt, handler) => {
+    if (evt === "message") {
+      setTimeout(() => {
+        messages.forEach((data) => handler({ data }));
+      }, 0);
+    }
+  });
+}
+
 // ── State reset + re-import between tests ─────────────────────────────────────
 let svc;
 
@@ -153,23 +191,7 @@ describe("initialize — without WebGPU", () => {
 describe("initialize — with WebGPU", () => {
   /** initialize() with WebGPU present should send LOAD to worker and resolve */
   beforeEach(async () => {
-    vi.resetModules();
-    vi.stubGlobal("navigator", { ...navigator, gpu: {} });
-    Object.assign(mockWorkerInstance, {
-      postMessage: vi.fn(),
-      terminate: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      onmessage: null,
-      onerror: null,
-    });
-    vi.stubGlobal(
-      "Worker",
-      vi.fn(function () {
-        return mockWorkerInstance;
-      }),
-    );
-    svc = await import("../../utils/smolVLMService.js");
+    svc = await setupSmolVLMModule();
   });
 
   it("creates a Worker and sends LOAD message", async () => {
@@ -286,27 +308,7 @@ describe("event listeners", () => {
 describe("analyzeImage", () => {
   /** analyzeImage() validates file type, sends ANALYZE to worker, handles streaming */
   beforeEach(async () => {
-    vi.resetModules();
-    vi.stubGlobal("navigator", { ...navigator, gpu: {} });
-    Object.assign(mockWorkerInstance, {
-      postMessage: vi.fn(),
-      terminate: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      onmessage: null,
-      onerror: null,
-    });
-    vi.stubGlobal(
-      "Worker",
-      vi.fn(function () {
-        return mockWorkerInstance;
-      }),
-    );
-    svc = await import("../../utils/smolVLMService.js");
-
-    const initPromise = svc.initialize();
-    simulateWorkerMessage({ status: "ready" });
-    await initPromise;
+    svc = await setupReadySmolVLMModule();
   });
 
   it("rejects unsupported file types", async () => {
@@ -321,14 +323,7 @@ describe("analyzeImage", () => {
   it("sends ANALYZE message with imageBlob and prompt for image files", async () => {
     const file = makeImageFile();
 
-    mockWorkerInstance.addEventListener.mockImplementation((evt, handler) => {
-      if (evt === "message") {
-        setTimeout(
-          () => handler({ data: { status: "complete", text: "result" } }),
-          0,
-        );
-      }
-    });
+    mockWorkerReply({ status: "complete", text: "result" });
 
     await svc.analyzeImage(file, { prompt: "Extract text" });
 
@@ -346,14 +341,7 @@ describe("analyzeImage", () => {
   it("sends ANALYZE message for PDF files", async () => {
     const file = makePdfFile();
 
-    mockWorkerInstance.addEventListener.mockImplementation((evt, handler) => {
-      if (evt === "message") {
-        setTimeout(
-          () => handler({ data: { status: "complete", text: "pdf text" } }),
-          0,
-        );
-      }
-    });
+    mockWorkerReply({ status: "complete", text: "pdf text" });
 
     await svc.analyzeImage(file, { prompt: "Describe document" });
 
@@ -365,17 +353,7 @@ describe("analyzeImage", () => {
   it("resolves with text from worker complete message", async () => {
     const file = makeImageFile();
 
-    mockWorkerInstance.addEventListener.mockImplementation((evt, handler) => {
-      if (evt === "message") {
-        setTimeout(
-          () =>
-            handler({
-              data: { status: "complete", text: "Extracted content" },
-            }),
-          0,
-        );
-      }
-    });
+    mockWorkerReply({ status: "complete", text: "Extracted content" });
 
     const result = await svc.analyzeImage(file);
     expect(result.text).toBe("Extracted content");
@@ -384,17 +362,7 @@ describe("analyzeImage", () => {
   it("rejects when worker sends error status", async () => {
     const file = makeImageFile();
 
-    mockWorkerInstance.addEventListener.mockImplementation((evt, handler) => {
-      if (evt === "message") {
-        setTimeout(
-          () =>
-            handler({
-              data: { status: "error", error: "Model inference failed" },
-            }),
-          0,
-        );
-      }
-    });
+    mockWorkerReply({ status: "error", error: "Model inference failed" });
 
     await expect(svc.analyzeImage(file)).rejects.toThrow(
       "Model inference failed",
@@ -405,15 +373,11 @@ describe("analyzeImage", () => {
     const file = makeImageFile();
     const onToken = vi.fn();
 
-    mockWorkerInstance.addEventListener.mockImplementation((evt, handler) => {
-      if (evt === "message") {
-        setTimeout(() => {
-          handler({ data: { status: "streaming", token: "Hello" } });
-          handler({ data: { status: "streaming", token: " world" } });
-          handler({ data: { status: "complete", text: "Hello world" } });
-        }, 0);
-      }
-    });
+    mockWorkerReply(
+      { status: "streaming", token: "Hello" },
+      { status: "streaming", token: " world" },
+      { status: "complete", text: "Hello world" },
+    );
 
     await svc.analyzeImage(file, { onToken });
     expect(onToken).toHaveBeenCalledWith("Hello");
@@ -425,14 +389,10 @@ describe("analyzeImage", () => {
     const file = makeImageFile();
 
     // Should not throw even if streaming messages arrive without onToken
-    mockWorkerInstance.addEventListener.mockImplementation((evt, handler) => {
-      if (evt === "message") {
-        setTimeout(() => {
-          handler({ data: { status: "streaming", token: "tok" } });
-          handler({ data: { status: "complete", text: "tok" } });
-        }, 0);
-      }
-    });
+    mockWorkerReply(
+      { status: "streaming", token: "tok" },
+      { status: "complete", text: "tok" },
+    );
 
     const result = await svc.analyzeImage(file);
     expect(result.text).toBe("tok");
@@ -443,27 +403,7 @@ describe("analyzeImage", () => {
 describe("processMultiplePages", () => {
   /** processMultiplePages() iterates PDF pages and joins results */
   beforeEach(async () => {
-    vi.resetModules();
-    vi.stubGlobal("navigator", { ...navigator, gpu: {} });
-    Object.assign(mockWorkerInstance, {
-      postMessage: vi.fn(),
-      terminate: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      onmessage: null,
-      onerror: null,
-    });
-    vi.stubGlobal(
-      "Worker",
-      vi.fn(function () {
-        return mockWorkerInstance;
-      }),
-    );
-    svc = await import("../../utils/smolVLMService.js");
-
-    const initPromise = svc.initialize();
-    simulateWorkerMessage({ status: "ready" });
-    await initPromise;
+    svc = await setupReadySmolVLMModule();
 
     // Auto-reply per addEventListener call
     let callCount = 0;

@@ -1,0 +1,161 @@
+{
+  "category": "oconus_filing",
+  "displayName": "OCONUS Claims Filing",
+  "officialSource": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "provisions": [
+    {
+      "id": "oconus_filing-va-regional-benefit-office-at-u-s-embassy-in-man",
+      "category": "oconus_filing",
+      "displayCategory": "OCONUS Claims Filing",
+      "name": "VA Regional Benefit Office at U.S. Embassy in Manila, Philippines",
+      "description": "VA operates a Regional Benefit Office located at the U.S. Embassy in Manila that helps Veterans, service members, and their families in the Philippines access VA benefits and services. Appointments are required; walk-ins are not accommodated.",
+      "keyPoints": [
+        "Located at the U.S. Embassy: 1501 Roxas Boulevard, Pasay City, PH 01302",
+        "Serves Veterans, service members, and their families in the Philippines",
+        "Office hours Monday through Friday, 7:30 a.m. to 3:00 p.m., closed weekends",
+        "Appointments scheduled through the Visitor Engagement Reporting Application (VERA); walk-ins not accommodated"
+      ],
+      "eligibility": "Veterans, service members, and their families located in the Philippines seeking VA benefits assistance.",
+      "application": {
+        "howToFile": "Schedule an appointment (in-person, telephone, or virtual) through VA's Visitor Engagement Reporting Application (VERA); walk-ins are not accommodated.",
+        "agency": "Veterans Benefits Administration (VBA) - Manila Regional Office",
+        "form": null,
+        "url": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/va-regional-benefit-office-at-us-embassy-in-manila/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "oconus_filing-filing-a-va-disability-claim-online-from-abroad-",
+      "category": "oconus_filing",
+      "displayCategory": "OCONUS Claims Filing",
+      "name": "Filing a VA disability claim online from abroad via VA.gov",
+      "description": "Veterans living overseas can manage and apply for VA benefits online at VA.gov the same as veterans in the U.S. When registering, VA advises using your last recorded United States address rather than an APO address.",
+      "keyPoints": [
+        "Online filing at VA.gov works internationally for Veterans living abroad",
+        "Use your last recorded United States address for registration instead of an APO address",
+        "Overseas Veterans retain eligibility for disability compensation and most other VA benefits regardless of residence"
+      ],
+      "eligibility": "U.S. Veterans living outside the continental United States who are otherwise eligible for VA benefits.",
+      "application": {
+        "howToFile": "Create or sign in to an account at VA.gov and apply online; when registering, use your last recorded United States address rather than an APO address.",
+        "agency": "Veterans Benefits Administration (VBA)",
+        "form": "21-526EZ",
+        "url": "https://www.va.gov/disability/how-to-file-claim/",
+        "phone": "(412) 395-6272"
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "oconus_filing-federal-benefits-units-at-u-s-embassies-and-cons",
+      "category": "oconus_filing",
+      "displayCategory": "OCONUS Claims Filing",
+      "name": "Federal Benefits Units at U.S. embassies and consulates",
+      "description": "U.S. embassies and consulates host Federal Benefits Units staffed by specially trained personnel who provide a full range of VA benefits assistance, including help submitting claims, to Veterans living abroad.",
+      "keyPoints": [
+        "Federal Benefits Units are located at American embassies and consulates",
+        "Staff can provide a full range of VA benefits assistance, including claim submissions",
+        "An option for Veterans abroad who need in-person or local benefits help"
+      ],
+      "eligibility": "Veterans living abroad who need benefits assistance from a U.S. diplomatic post.",
+      "application": {
+        "howToFile": "Contact the Federal Benefits Unit at the nearest American embassy or consulate to receive benefits assistance and submit claims.",
+        "agency": "U.S. Department of State Federal Benefits Units (in coordination with VA)",
+        "form": null,
+        "url": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "oconus_filing-filing-a-va-disability-claim-by-mail-to-the-clai",
+      "category": "oconus_filing",
+      "displayCategory": "OCONUS Claims Filing",
+      "name": "Filing a VA disability claim by mail to the Claims Intake Center",
+      "description": "Veterans, including those overseas, can file a disability compensation claim by mailing VA Form 21-526EZ to the VA Claims Intake Center in Janesville, Wisconsin. Claims may also be filed online, in person at a regional office, or with help from an accredited representative.",
+      "keyPoints": [
+        "Mailing address: Department of Veterans Affairs, Claims Intake Center, PO Box 4444, Janesville, WI 53547-4444",
+        "Use VA Form 21-526EZ to file for disability compensation by mail",
+        "Claims can also be filed online, in person, or with an accredited attorney, claims agent, or VSO representative"
+      ],
+      "eligibility": "Veterans filing an original or supplemental disability compensation claim, including those living abroad.",
+      "application": {
+        "howToFile": "Complete VA Form 21-526EZ and mail it to the Department of Veterans Affairs, Claims Intake Center, PO Box 4444, Janesville, WI 53547-4444.",
+        "agency": "Veterans Benefits Administration (VBA) - Claims Intake Center",
+        "form": "21-526EZ",
+        "url": "https://www.va.gov/disability/how-to-file-claim/",
+        "phone": null
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.va.gov/disability/how-to-file-claim/",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "oconus_filing-receiving-va-payments-abroad-via-international-d",
+      "category": "oconus_filing",
+      "displayCategory": "OCONUS Claims Filing",
+      "name": "Receiving VA payments abroad via international direct deposit",
+      "description": "VA benefit payments to Veterans abroad are sent from the United States, with arrival time depending on the foreign financial institution's processing time. VA provides a dedicated line and email for international direct deposit assistance.",
+      "keyPoints": [
+        "International direct deposit arrival depends on the foreign financial institution's processing time",
+        "International direct deposit help line: (918) 781-7550, 9 a.m. to 5:30 p.m. Eastern, Monday through Friday",
+        "Direct deposit assistance email: DIRECTD.VBAMUS@VA.GOV"
+      ],
+      "eligibility": "Veterans living abroad who receive VA monetary benefits and want them paid via direct deposit.",
+      "application": {
+        "howToFile": "Contact VA's international direct deposit line at (918) 781-7550 or email DIRECTD.VBAMUS@VA.GOV to set up or resolve issues with international direct deposit.",
+        "agency": "Veterans Benefits Administration (VBA)",
+        "form": null,
+        "url": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+        "phone": "(918) 781-7550"
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "oconus_filing-general-assistance-line-and-physical-address-req",
+      "category": "oconus_filing",
+      "displayCategory": "OCONUS Claims Filing",
+      "name": "General assistance line and physical-address requirement for overseas Veterans",
+      "description": "VA provides a phone line for general benefits assistance to Veterans living abroad and stresses that overseas claimants must provide their physical address even when using a separate mailing address, submitting it on VA Form 21-4138 if needed.",
+      "keyPoints": [
+        "General assistance: call (412) 395-6272, 8 a.m. to 9 p.m. Eastern, Monday through Friday",
+        "Education benefit questions: call (918) 781-5678, 8 a.m. to 7 p.m. Eastern, Monday through Friday",
+        "Overseas Veterans must provide their physical address even if they use a separate mailing address",
+        "VA Form 21-4138 (Statement in Support of Claim) can be used to provide the physical address"
+      ],
+      "eligibility": "Veterans living abroad who need general VA benefits assistance or must report a physical address.",
+      "application": {
+        "howToFile": "Call (412) 395-6272 for general assistance; provide your physical address (using VA Form 21-4138 if needed) even if you use a separate mailing address.",
+        "agency": "Veterans Benefits Administration (VBA)",
+        "form": "21-4138",
+        "url": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+        "phone": "(412) 395-6272"
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.benefits.va.gov/persona/veteran-abroad.asp",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

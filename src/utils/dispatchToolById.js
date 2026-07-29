@@ -28,10 +28,10 @@ const TOOL_EVENT_MAP = {
   "evidence-gap": "openEvidenceGapVisualizer",
   "cfile-analyzer": "openCFileAnalyzer",
   "foia-generator": "openFOIAGenerator",
-  "retro-pay-hunter": "openRetroPayHunter",
+  "retro-pay": "openRetroPayHunter",
   "tdiu-builder": "openTDIUBuilder",
   pathfinder: "openPathfinder",
-  "million-dollar-dashboard": "openMillionDollarDashboard",
+  "million-dollar": "openMillionDollarDashboard",
   "vso-finder": "openVSOFinder",
   "witness-bench": "openWitnessBench",
   "claim-navigator": "openClaimNavigator",
@@ -41,6 +41,10 @@ const TOOL_EVENT_MAP = {
   "remand-checker": "openRemandRiskChecker",
   "appeals-advisor": "openAppealsLaneAdvisor",
   "bdd-builder": "openBDDBuilder",
+  "the-tribunal": "openTheTribunal",
+  "denial-decoder": "openDenialDecoder",
+  "pact-act": "openPACTActNavigator",
+  "symptom-logger": "openSymptomLogger",
 };
 
 export function dispatchToolById(toolId) {

@@ -12,8 +12,8 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 | Metric          | Traditional Development                 | Agentic Development             | Advantage                |
 | --------------- | --------------------------------------- | ------------------------------- | ------------------------ |
-| **Timeline**    | 15.0 years (solo) / 18-24 months (team) | 20 days                         | **190x faster**          |
-| **Cost**        | $4,223,880                              | $63,000                         | **98.0% savings**        |
+| **Timeline**    | 17.4 years (solo) / 18-24 months (team) | 20 days                         | **190x faster**          |
+| **Cost**        | $4,893,210                              | $63,000                         | **98.0% savings**        |
 | **Hourly Rate** | $135/hr (blended)                       | $420/hr                         | Higher rate, lower total |
 | **LOC/Hour**    | 9.77 (team average)                     | 1,292                           | **132x more productive** |
 | **Risk**        | High (scope creep, turnover)            | Low (single point of expertise) | Reduced complexity       |
@@ -26,10 +26,10 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 | Category                  | Count     | Description                     |
 | ------------------------- | --------- | ------------------------------- |
-| **Lines of Code**         | 256,697   | Production React/JavaScript     |
-| **Total Files**           | 3,630     | Organized codebase              |
-| **React Components**      | 169       | 44 major tools + 125 supporting |
-| **Utility Modules**       | 112       | Reusable helper functions       |
+| **Lines of Code**         | 298,818   | Production React/JavaScript     |
+| **Total Files**           | 4,515     | Organized codebase              |
+| **React Components**      | 179       | 44 major tools + 135 supporting |
+| **Utility Modules**       | 121       | Reusable helper functions       |
 | **Disabilities Database** | 748       | Validated against 38 CFR        |
 | **Secondary Conditions**  | 410       | Cross-referenced relationships  |
 | **VA Forms Supported**    | 94        | Integrated form library         |
@@ -117,7 +117,7 @@ _Unrealistic for most projects due to timeline._
 | **Billable Hours**     | 150 hours      |
 | **Hourly Rate**        | $420/hr        |
 | **Total Cost**         | $63,000        |
-| **Lines of Code**      | 256,697        |
+| **Lines of Code**      | 298,818        |
 | **Effective LOC/Hour** | 1,292          |
 | **Commits**            | 241            |
 | **Commits per Day**    | 11 average     |

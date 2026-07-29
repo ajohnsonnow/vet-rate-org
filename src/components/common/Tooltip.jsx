@@ -10,20 +10,11 @@ import {
 const SHOW_DELAY_MS = 200;
 const HIDE_DELAY_MS = 80;
 
-export function Tooltip({
-  content,
-  children,
-  placement = "top",
-  delay = SHOW_DELAY_MS,
-  className = "",
-}) {
-  const id = useId();
+function useTooltipVisibility(delay) {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const showTimer = useRef(null);
   const hideTimer = useRef(null);
-  const wrapperRef = useRef(null);
-  const tooltipRef = useRef(null);
 
   const clearTimers = () => {
     if (showTimer.current) {
@@ -68,6 +59,22 @@ export function Tooltip({
 
   useEffect(() => () => clearTimers(), []);
 
+  return { open, pinned, setPinned, show, hide, hideImmediate, clearTimers };
+}
+
+export function Tooltip({
+  content,
+  children,
+  placement = "top",
+  delay = SHOW_DELAY_MS,
+  className = "",
+}) {
+  const id = useId();
+  const wrapperRef = useRef(null);
+  const tooltipRef = useRef(null);
+  const { open, setPinned, show, hide, hideImmediate, clearTimers } =
+    useTooltipVisibility(delay);
+
   const placementClasses = {
     top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
     bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
@@ -100,6 +107,7 @@ export function Tooltip({
     <span ref={wrapperRef} className="relative inline-flex">
       {trigger}
       {open && (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- mouse-only hover-pin so the bubble stays open while the pointer is over it; keyboard users already get show/hide via the trigger's onFocus/onBlur and Escape (hideImmediate above)
         <span
           ref={tooltipRef}
           id={id}

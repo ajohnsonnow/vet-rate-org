@@ -12,6 +12,24 @@ function Thrower() {
   throw new Error("kaboom");
 }
 
+function renderThrower(props = {}) {
+  return render(
+    <ErrorBoundary {...props}>
+      <Thrower />
+    </ErrorBoundary>,
+  );
+}
+
+function renderThrowerWithToast(toast, props = {}) {
+  return render(
+    <ToastContext.Provider value={toast}>
+      <ErrorBoundary {...props}>
+        <Thrower />
+      </ErrorBoundary>
+    </ToastContext.Provider>,
+  );
+}
+
 let consoleErrorSpy;
 
 beforeEach(() => {
@@ -37,11 +55,7 @@ describe("ErrorBoundary", () => {
   });
 
   it("shows the cluster fallback (Try again) when a child throws", () => {
-    render(
-      <ErrorBoundary name="Test Cluster">
-        <Thrower />
-      </ErrorBoundary>,
-    );
+    renderThrower({ name: "Test Cluster" });
     expect(screen.getByTestId("error-boundary-fallback")).toBeInTheDocument();
     expect(screen.getByText("Test Cluster hit a snag")).toBeInTheDocument();
     expect(
@@ -53,11 +67,7 @@ describe("ErrorBoundary", () => {
   });
 
   it("shows the app-level fallback (Reload app) when level=app", () => {
-    render(
-      <ErrorBoundary level="app" name="Vet-Rate.org">
-        <Thrower />
-      </ErrorBoundary>,
-    );
+    renderThrower({ level: "app", name: "Vet-Rate.org" });
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Reload app" }),
@@ -66,13 +76,7 @@ describe("ErrorBoundary", () => {
 
   it("persists a sanitized crash report and toasts on one-tap report", async () => {
     const toast = { success: vi.fn(), error: vi.fn() };
-    render(
-      <ToastContext.Provider value={toast}>
-        <ErrorBoundary name="Test Cluster">
-          <Thrower />
-        </ErrorBoundary>
-      </ToastContext.Provider>,
-    );
+    renderThrowerWithToast(toast, { name: "Test Cluster" });
 
     fireEvent.click(
       screen.getByRole("button", { name: "Report this problem" }),
@@ -98,13 +102,7 @@ describe("ErrorBoundary", () => {
   it("toasts an error when the report fails to save", async () => {
     saveBugReport.mockRejectedValueOnce(new Error("db down"));
     const toast = { success: vi.fn(), error: vi.fn() };
-    render(
-      <ToastContext.Provider value={toast}>
-        <ErrorBoundary name="Test Cluster">
-          <Thrower />
-        </ErrorBoundary>
-      </ToastContext.Provider>,
-    );
+    renderThrowerWithToast(toast, { name: "Test Cluster" });
 
     fireEvent.click(
       screen.getByRole("button", { name: "Report this problem" }),

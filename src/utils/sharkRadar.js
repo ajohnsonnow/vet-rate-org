@@ -74,7 +74,7 @@ const SHARK_PATTERNS = [
       /we charge.*initial claim/i,
       /upfront fee/i,
       /pay.*before.*decision/i,
-      /\$\d{3,}.*before/i,
+      /\$\d{3,}.{0,200}before/i,
       /non-refundable.*fee/i,
       /consultation fee/i,
     ],
@@ -202,11 +202,8 @@ const POSITIVE_PATTERNS = [
   },
 ];
 
-function patternMatchContract(text) {
+function _matchContractFlags(text) {
   const flags = [];
-  const positives = [];
-  const lower = text.toLowerCase();
-
   for (const category of SHARK_PATTERNS) {
     for (const pattern of category.patterns) {
       const match = text.match(pattern);
@@ -222,39 +219,58 @@ function patternMatchContract(text) {
       }
     }
   }
+  return flags;
+}
 
+function _matchPositiveSigns(lower) {
+  const positives = [];
   for (const { pattern, sign } of POSITIVE_PATTERNS) {
     if (pattern.test(lower)) positives.push(sign);
   }
+  return positives;
+}
+
+function _riskLevelForScore(score) {
+  if (score >= 50) return "PREDATORY";
+  if (score >= 25) return "CAUTION";
+  return "SAFE";
+}
+
+function _recommendationForScore(score) {
+  if (score >= 75) return "RUN";
+  if (score >= 50) return "DO_NOT_SIGN";
+  if (score >= 25) return "SEEK_SECOND_OPINION";
+  return "PROCEED_WITH_CAUTION";
+}
+
+function _verdictSummary(flags, highCount) {
+  if (flags.length === 0) {
+    return "No obvious red-flag phrases detected. This does not guarantee the agreement is legitimate — load the Warrant Council AI for a thorough analysis.";
+  }
+  const flagWord = flags.length > 1 ? "s" : "";
+  const highWord = highCount > 1 ? "s" : "";
+  const highNote =
+    highCount > 0 ? `${highCount} HIGH-severity issue${highWord} found.` : "";
+  return `Detected ${flags.length} red flag${flagWord} using keyword analysis. ${highNote} Load the Warrant Council AI for a complete, clause-level review.`;
+}
+
+function patternMatchContract(text) {
+  const flags = _matchContractFlags(text);
+  const positives = _matchPositiveSigns(text.toLowerCase());
 
   const highCount = flags.filter((f) => f.severity === "HIGH").length;
   const score = Math.min(
     100,
     highCount * 25 + flags.filter((f) => f.severity === "MEDIUM").length * 10,
   );
-  const risk_level =
-    score >= 50 ? "PREDATORY" : score >= 25 ? "CAUTION" : "SAFE";
-  const recommendation =
-    score >= 75
-      ? "RUN"
-      : score >= 50
-        ? "DO_NOT_SIGN"
-        : score >= 25
-          ? "SEEK_SECOND_OPINION"
-          : "PROCEED_WITH_CAUTION";
-
-  const verdict_summary =
-    flags.length === 0
-      ? "No obvious red-flag phrases detected. This does not guarantee the agreement is legitimate — load the Warrant Council AI for a thorough analysis."
-      : `Detected ${flags.length} red flag${flags.length > 1 ? "s" : ""} using keyword analysis. ${highCount > 0 ? `${highCount} HIGH-severity issue${highCount > 1 ? "s" : ""} found.` : ""} Load the Warrant Council AI for a complete, clause-level review.`;
 
   return {
-    risk_level,
+    risk_level: _riskLevelForScore(score),
     score,
     flags,
     positive_signs: positives,
-    verdict_summary,
-    recommendation,
+    verdict_summary: _verdictSummary(flags, highCount),
+    recommendation: _recommendationForScore(score),
     _usedFallback: true,
     _fallbackNote:
       "AI is not loaded. This analysis uses keyword pattern matching — results may miss subtle violations. Load the Warrant Council AI for a full review.",

@@ -33,11 +33,12 @@ const VALID_FORMS_LOWER = new Set([...VALID_FORMS].map((f) => f.toLowerCase()));
  */
 const FORM_PATTERNS = [
   // Standard VA form pattern: 2 digits + hyphen + 3-5 alphanumerics
-  /\b(\d{2}-\d{3,5}[a-zA-Z0-9-]*)\b/gi,
+  // (case-insensitive /i flag already covers A-Z via a-z, so only one case is listed)
+  /\b(\d{2}-\d{3,5}[a-z0-9-]*)\b/gi,
   // SF forms: SF-180, SF-15
   /\b(SF-\d{2,4})\b/gi,
   // Explicit "VA Form" references
-  /VA\s+Form\s+(\d{2}-?\d{3,5}[a-zA-Z0-9-]*)/gi,
+  /VA\s+Form\s+(\d{2}-?\d{3,5}[a-z0-9-]*)/gi,
   // SGLV insurance forms
   /\b(SGLV-\d{4})\b/gi,
 ];

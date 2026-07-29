@@ -122,11 +122,14 @@ export const isMobileDevice = () => {
  */
 export const getOrientationInfo = () => {
   const isLandscape = window.innerWidth > window.innerHeight;
-  const screenType = isTabletDevice()
-    ? "tablet"
-    : isMobilePhone()
-      ? "phone"
-      : "desktop";
+  let screenType;
+  if (isTabletDevice()) {
+    screenType = "tablet";
+  } else if (isMobilePhone()) {
+    screenType = "phone";
+  } else {
+    screenType = "desktop";
+  }
 
   return {
     isLandscape,
@@ -537,16 +540,16 @@ export async function manualSave(forceDownload = false) {
  * This is the "hook" that saves before screen transitions
  */
 export async function saveOnStepComplete() {
-  if (!hasUnsavedChanges && !packetData) return true;
+  if (hasUnsavedChanges || packetData) {
+    const data = await gatherPacketData();
 
-  const data = await gatherPacketData();
+    // Always save to IndexedDB as backup
+    await saveToIndexedDB(data);
 
-  // Always save to IndexedDB as backup
-  await saveToIndexedDB(data);
-
-  // Desktop: Also save to file if handle exists
-  if (supportsFileSystemAccess() && activeFileHandle) {
-    await writeToFileHandle(data);
+    // Desktop: Also save to file if handle exists
+    if (supportsFileSystemAccess() && activeFileHandle) {
+      await writeToFileHandle(data);
+    }
   }
 
   return true;
@@ -597,7 +600,8 @@ export async function gatherPacketData() {
     const claims = localStorage.getItem("vet_rate_saved_claims");
     if (claims) gathered.claims = JSON.parse(claims);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the base/default claims if the stored copy is corrupt.
+    console.warn("Could not parse saved claims from localStorage", e);
   }
 
   // Pull statements
@@ -605,7 +609,8 @@ export async function gatherPacketData() {
     const statements = localStorage.getItem("vet_rate_statements");
     if (statements) gathered.statements = JSON.parse(statements);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the base/default statements if the stored copy is corrupt.
+    console.warn("Could not parse saved statements from localStorage", e);
   }
 
   // Pull veteran profile
@@ -613,7 +618,8 @@ export async function gatherPacketData() {
     const profile = localStorage.getItem("vet_rate_veteran_profile");
     if (profile) gathered.veteranProfile = JSON.parse(profile);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the base/default profile if the stored copy is corrupt.
+    console.warn("Could not parse veteran profile from localStorage", e);
   }
 
   // Pull saved forms
@@ -621,7 +627,8 @@ export async function gatherPacketData() {
     const forms = localStorage.getItem("vet_rate_saved_forms");
     if (forms) gathered.savedForms = JSON.parse(forms);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the base/default saved forms if the stored copy is corrupt.
+    console.warn("Could not parse saved forms from localStorage", e);
   }
 
   // Pull ratings
@@ -629,7 +636,8 @@ export async function gatherPacketData() {
     const ratings = localStorage.getItem("vet_rate_my_ratings");
     if (ratings) gathered.myRatings = JSON.parse(ratings);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the base/default ratings if the stored copy is corrupt.
+    console.warn("Could not parse saved ratings from localStorage", e);
   }
 
   // Pull service history
@@ -637,7 +645,8 @@ export async function gatherPacketData() {
     const history = localStorage.getItem("vet_rate_service_history");
     if (history) gathered.serviceHistory = JSON.parse(history);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the base/default service history if the stored copy is corrupt.
+    console.warn("Could not parse service history from localStorage", e);
   }
 
   // Pull gap analyses
@@ -645,7 +654,8 @@ export async function gatherPacketData() {
     const gaps = localStorage.getItem("vet_rate_gap_analyses");
     if (gaps) gathered.gapAnalyses = JSON.parse(gaps);
   } catch (e) {
-    /* ignore */
+    // Non-fatal: keep the base/default gap analyses if the stored copy is corrupt.
+    console.warn("Could not parse gap analyses from localStorage", e);
   }
 
   packetData = gathered;

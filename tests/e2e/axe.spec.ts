@@ -198,6 +198,38 @@ test("Disclaimer splash dialog (first visit)", async ({ page }) => {
   throw lastError;
 });
 
+/**
+ * B-M03: AffiliationPickerPrompt — first-visit optional onboarding step shown
+ * after DisclaimerSplash is acknowledged but before the BootCamp tour. Previously
+ * absent from CI gating; a real palette/contrast regression could ship unseen.
+ */
+test("AffiliationPickerPrompt dialog (first-visit onboarding)", async ({
+  page,
+}) => {
+  await page.addInitScript((appVersion) => {
+    localStorage.setItem("vet-rate-tos-accepted", "true");
+    localStorage.setItem("vet_rate_last_seen_version", appVersion);
+    localStorage.setItem("vetrate-tour-completed", "true");
+    // Disclaimer done → prompt becomes the next surface. Do NOT set
+    // vetrate_affiliation-prompt-seen so the prompt actually renders.
+    localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+  }, APP_VERSION);
+
+  await page.goto("/");
+  const affiliationSel =
+    '[role="dialog"][aria-labelledby="affiliation-prompt-title"]';
+  await page.locator(affiliationSel).waitFor({ state: "visible" });
+
+  const results = await new AxeBuilder({ page })
+    .include(affiliationSel)
+    .withTags(WCAG_TAGS)
+    .analyze();
+  const blocking = results.violations.filter((v) =>
+    BLOCKING_IMPACTS.has(v.impact ?? ""),
+  );
+  expect(blocking, summarize(blocking)).toEqual([]);
+});
+
 test.describe("axe: WCAG 2.2 AA — serious/critical", () => {
   test.beforeEach(async ({ page }) => {
     await bootReturningUser(page);

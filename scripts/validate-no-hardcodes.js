@@ -23,7 +23,7 @@ const ACTUAL_DISABILITY_COUNT = disabilityData.disabilities ? disabilityData.dis
 // Patterns that indicate hardcoded counts that should be dynamic
 const SUSPICIOUS_PATTERNS = [
   {
-    pattern: /\b(74[0-9]|75[0-9])\s+(condition|disability|disabilities)/gi,
+    pattern: /\b(74\d|75\d)\s+(condition|disability|disabilities)/gi,
     name: 'Disability Count',
     actual: ACTUAL_DISABILITY_COUNT,
     exemptions: [
@@ -37,7 +37,7 @@ const SUSPICIOUS_PATTERNS = [
     ]
   },
   {
-    pattern: /\b(3[0-9]|4[0-9])\s+(tool|professional tool)/gi,
+    pattern: /\b(3\d|4\d)\s+(tool|professional tool)/gi,
     name: 'Tool Count',
     actual: 'DYNAMIC (getTotalToolCount())',
     exemptions: [
@@ -61,7 +61,7 @@ const SUSPICIOUS_PATTERNS = [
     ]
   },
   {
-    pattern: /\b(4[0-9]{2}|5[0-9]{2})\s+secondary/gi,
+    pattern: /\b(4\d{2}|5\d{2})\s+secondary/gi,
     name: 'Secondary Conditions Count',
     actual: 'DYNAMIC (should use getSecondaryCount())',
     exemptions: [

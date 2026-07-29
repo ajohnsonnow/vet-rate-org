@@ -18,59 +18,17 @@ import { STORAGE_KEYS } from "../config/vaAuth";
 const VaAuthContext = createContext(null);
 
 /**
- * VA Auth Provider Component
- * Wrap your app with this to provide authentication state
+ * Listen for OAuth popup completion messages and apply the resulting
+ * auth state. Extracted so VaAuthProvider stays within line limits.
  */
-export function VaAuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accessToken, setAccessToken] = useState(null);
-  const [refreshToken, setRefreshToken] = useState(null);
-  const [tokenExpiry, setTokenExpiry] = useState(null);
-  const [userInfo, setUserInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  /**
-   * Initialize authentication state from sessionStorage on mount
-   */
-  useEffect(() => {
-    try {
-      const storedAccessToken = sessionStorage.getItem(
-        STORAGE_KEYS.ACCESS_TOKEN,
-      );
-      const storedRefreshToken = sessionStorage.getItem(
-        STORAGE_KEYS.REFRESH_TOKEN,
-      );
-      const storedExpiry = sessionStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
-      const storedUserInfo = sessionStorage.getItem(STORAGE_KEYS.USER_INFO);
-
-      if (storedAccessToken) {
-        setAccessToken(storedAccessToken);
-        setRefreshToken(storedRefreshToken);
-        setTokenExpiry(storedExpiry ? parseInt(storedExpiry, 10) : null);
-        setUserInfo(storedUserInfo ? JSON.parse(storedUserInfo) : null);
-
-        // Check if token is expired
-        const now = Date.now();
-        if (storedExpiry && parseInt(storedExpiry, 10) > now) {
-          setIsAuthenticated(true);
-        } else {
-          // Token expired, clear it
-          clearAuth();
-        }
-      }
-    } catch (err) {
-      console.error("[VA Auth] Error loading auth state:", err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  /**
-   * Listen for OAuth popup completion messages
-   */
+function useOAuthPopupListener({
+  setAccessToken,
+  setRefreshToken,
+  setTokenExpiry,
+  setUserInfo,
+  setIsAuthenticated,
+  setError,
+}) {
   useEffect(() => {
     const handleMessage = (event) => {
       // Only accept messages from same origin
@@ -137,43 +95,165 @@ export function VaAuthProvider({ children }) {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [
+    setAccessToken,
+    setRefreshToken,
+    setTokenExpiry,
+    setUserInfo,
+    setIsAuthenticated,
+    setError,
+  ]);
+}
 
-  /**
-   * Store authentication tokens
-   */
-  const setAuth = useCallback((tokens, user = null) => {
+/**
+ * Initialize authentication state from sessionStorage on mount.
+ * Extracted so VaAuthProvider stays within line limits.
+ */
+function useAuthInitFromStorage({
+  setAccessToken,
+  setRefreshToken,
+  setTokenExpiry,
+  setUserInfo,
+  setIsAuthenticated,
+  setIsLoading,
+  setError,
+  clearAuth,
+}) {
+  useEffect(() => {
     try {
-      const { access_token, refresh_token, expires_in } = tokens;
+      const storedAccessToken = sessionStorage.getItem(
+        STORAGE_KEYS.ACCESS_TOKEN,
+      );
+      const storedRefreshToken = sessionStorage.getItem(
+        STORAGE_KEYS.REFRESH_TOKEN,
+      );
+      const storedExpiry = sessionStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
+      const storedUserInfo = sessionStorage.getItem(STORAGE_KEYS.USER_INFO);
 
-      // Calculate expiry time (current time + expires_in seconds)
-      const expiryTime = Date.now() + expires_in * 1000;
+      if (storedAccessToken) {
+        setAccessToken(storedAccessToken);
+        setRefreshToken(storedRefreshToken);
+        setTokenExpiry(storedExpiry ? parseInt(storedExpiry, 10) : null);
+        setUserInfo(storedUserInfo ? JSON.parse(storedUserInfo) : null);
 
-      // Store in state
-      setAccessToken(access_token);
-      setRefreshToken(refresh_token);
-      setTokenExpiry(expiryTime);
-      setUserInfo(user);
-      setIsAuthenticated(true);
-      setError(null);
-
-      // Persist to sessionStorage
-      sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access_token);
-      if (refresh_token) {
-        sessionStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
+        // Check if token is expired
+        const now = Date.now();
+        if (storedExpiry && parseInt(storedExpiry, 10) > now) {
+          setIsAuthenticated(true);
+        } else {
+          // Token expired, clear it
+          clearAuth();
+        }
       }
-      sessionStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiryTime.toString());
-      if (user) {
-        sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
-      }
-
-      // eslint-disable-next-line no-console
-      console.log("[VA Auth] Authentication successful");
     } catch (err) {
-      console.error("[VA Auth] Error storing auth:", err);
+      console.error("[VA Auth] Error loading auth state:", err);
       setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [
+    setAccessToken,
+    setRefreshToken,
+    setTokenExpiry,
+    setUserInfo,
+    setIsAuthenticated,
+    setIsLoading,
+    setError,
+    clearAuth,
+  ]);
+}
+
+/**
+ * Store authentication tokens in state and sessionStorage.
+ * Extracted so VaAuthProvider stays within line limits.
+ */
+function performSetAuth(
+  tokens,
+  user,
+  {
+    setAccessToken,
+    setRefreshToken,
+    setTokenExpiry,
+    setUserInfo,
+    setIsAuthenticated,
+    setError,
+  },
+) {
+  try {
+    const { access_token, refresh_token, expires_in } = tokens;
+
+    // Calculate expiry time (current time + expires_in seconds)
+    const expiryTime = Date.now() + expires_in * 1000;
+
+    // Store in state
+    setAccessToken(access_token);
+    setRefreshToken(refresh_token);
+    setTokenExpiry(expiryTime);
+    setUserInfo(user);
+    setIsAuthenticated(true);
+    setError(null);
+
+    // Persist to sessionStorage
+    sessionStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, access_token);
+    if (refresh_token) {
+      sessionStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refresh_token);
+    }
+    sessionStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, expiryTime.toString());
+    if (user) {
+      sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
+    }
+
+    // eslint-disable-next-line no-console
+    console.log("[VA Auth] Authentication successful");
+  } catch (err) {
+    console.error("[VA Auth] Error storing auth:", err);
+    setError(err.message);
+  }
+}
+
+function buildVaAuthContextValue({
+  isAuthenticated,
+  accessToken,
+  refreshToken,
+  tokenExpiry,
+  userInfo,
+  isLoading,
+  error,
+  setAuth,
+  clearAuth,
+  isTokenExpired,
+  setAuthError,
+}) {
+  return {
+    // State
+    isAuthenticated,
+    accessToken,
+    refreshToken,
+    tokenExpiry,
+    userInfo,
+    isLoading,
+    error,
+
+    // Methods
+    setAuth,
+    clearAuth,
+    isTokenExpired,
+    setError: setAuthError,
+  };
+}
+
+/**
+ * VA Auth Provider Component
+ * Wrap your app with this to provide authentication state
+ */
+export function VaAuthProvider({ children }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(null);
+  const [tokenExpiry, setTokenExpiry] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   /**
    * Clear authentication state
@@ -196,6 +276,42 @@ export function VaAuthProvider({ children }) {
     console.log("[VA Auth] Authentication cleared");
   }, []);
 
+  useAuthInitFromStorage({
+    setAccessToken,
+    setRefreshToken,
+    setTokenExpiry,
+    setUserInfo,
+    setIsAuthenticated,
+    setIsLoading,
+    setError,
+    clearAuth,
+  });
+
+  useOAuthPopupListener({
+    setAccessToken,
+    setRefreshToken,
+    setTokenExpiry,
+    setUserInfo,
+    setIsAuthenticated,
+    setError,
+  });
+
+  /**
+   * Store authentication tokens
+   */
+  const setAuth = useCallback(
+    (tokens, user = null) =>
+      performSetAuth(tokens, user, {
+        setAccessToken,
+        setRefreshToken,
+        setTokenExpiry,
+        setUserInfo,
+        setIsAuthenticated,
+        setError,
+      }),
+    [],
+  );
+
   /**
    * Check if the access token is expired
    */
@@ -215,8 +331,7 @@ export function VaAuthProvider({ children }) {
   }, []);
 
   // Context value
-  const value = {
-    // State
+  const value = buildVaAuthContextValue({
     isAuthenticated,
     accessToken,
     refreshToken,
@@ -224,13 +339,11 @@ export function VaAuthProvider({ children }) {
     userInfo,
     isLoading,
     error,
-
-    // Methods
     setAuth,
     clearAuth,
     isTokenExpired,
-    setError: setAuthError,
-  };
+    setAuthError,
+  });
 
   return (
     <VaAuthContext.Provider value={value}>{children}</VaAuthContext.Provider>

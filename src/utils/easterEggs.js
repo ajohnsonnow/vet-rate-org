@@ -39,6 +39,47 @@ export const CHEAT_CODES = {
  *
  * @returns {Object} { isActive, deactivate, activationCount }
  */
+function _playActivationBeep() {
+  try {
+    const audioContext = new (
+      window.AudioContext || window.webkitAudioContext
+    )();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.frequency.value = 800; // 800Hz beep
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioContext.currentTime + 0.2,
+    );
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+    // eslint-disable-next-line sonarjs/no-ignored-exceptions -- decorative beep on an easter egg; WebAudio unsupported/blocked is expected on some browsers and not worth surfacing
+  } catch {
+    // No sound, no problem
+  }
+}
+
+function _processIddqdKeydown(prev, key, setIsActive, setActivationCount) {
+  const newBuffer = (prev + key.toLowerCase()).slice(-5);
+
+  if (newBuffer === CHEAT_CODES.IDDQD) {
+    // eslint-disable-next-line no-console
+    console.log("🔫 IDDQD ACTIVATED - Stress Relief Division Online");
+    setIsActive(true);
+    setActivationCount((c) => c + 1);
+    _playActivationBeep();
+    return "";
+  }
+
+  return newBuffer;
+}
+
 export const useIDDQD = () => {
   const [isActive, setIsActive] = useState(false);
   const [activationCount, setActivationCount] = useState(0);
@@ -48,44 +89,9 @@ export const useIDDQD = () => {
     const handleKeydown = (e) => {
       // Only process single character keys
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        setInputBuffer((prev) => {
-          const newBuffer = (prev + e.key.toLowerCase()).slice(-5);
-
-          if (newBuffer === CHEAT_CODES.IDDQD) {
-            // eslint-disable-next-line no-console
-            console.log("🔫 IDDQD ACTIVATED - Stress Relief Division Online");
-            setIsActive(true);
-            setActivationCount((c) => c + 1);
-
-            // Play simple activation beep (no external file needed)
-            try {
-              const audioContext = new (
-                window.AudioContext || window.webkitAudioContext
-              )();
-              const oscillator = audioContext.createOscillator();
-              const gainNode = audioContext.createGain();
-
-              oscillator.connect(gainNode);
-              gainNode.connect(audioContext.destination);
-
-              oscillator.frequency.value = 800; // 800Hz beep
-              gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-              gainNode.gain.exponentialRampToValueAtTime(
-                0.01,
-                audioContext.currentTime + 0.2,
-              );
-
-              oscillator.start(audioContext.currentTime);
-              oscillator.stop(audioContext.currentTime + 0.2);
-            } catch (e) {
-              // No sound, no problem
-            }
-
-            return "";
-          }
-
-          return newBuffer;
-        });
+        setInputBuffer((prev) =>
+          _processIddqdKeydown(prev, e.key, setIsActive, setActivationCount),
+        );
       }
     };
 

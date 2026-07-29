@@ -141,12 +141,12 @@ export async function detectConflicts(newData, documentType, filename) {
   const profile = getVeteranProfile();
   const vkbDocs = await getAllDocumentsFromVKB();
 
-  // Flatten VKB data for comparison
+  // Flatten VKB data for comparison. A reduce that spreads the accumulator
+  // (`{...acc, ...doc.extractedData}`) copies the whole accumulated object
+  // on every iteration — O(n^2) in field count over a large batch. Mutating
+  // one accumulator via Object.assign is O(total fields).
   const vkbData = vkbDocs.reduce(
-    (acc, doc) => ({
-      ...acc,
-      ...doc.extractedData,
-    }),
+    (acc, doc) => Object.assign(acc, doc.extractedData),
     {},
   );
 

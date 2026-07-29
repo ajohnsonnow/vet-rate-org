@@ -1,0 +1,301 @@
+{
+  "state": "Washington",
+  "stateCode": "WA",
+  "officialSource": "https://dva.wa.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-15",
+  "benefits": [
+    {
+      "id": "wa-property_tax_exemption-property-tax-exemption-for-seniors-people-with-d",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Property Tax Exemption for Seniors, People with Disabilities, and Veterans with Disabilities",
+      "description": "Washington reduces property taxes on the primary residence of a disabled veteran who is rated at least 80% service-connected disabled, or who receives VA compensation at the 100% rate for a service-connected disability. The reduction amount depends on the applicant's combined disposable income (VA disability and dependency/indemnity compensation are excluded from that income calculation), the home's value, and local levy rates, and income thresholds vary by county.",
+      "value": "Reduction of property taxes owed; exact dollar reduction depends on income, home value, and county levy rates (not a fixed statewide dollar figure)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 80,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Own and occupy the residence as a primary residence in Washington",
+          "Combined disposable income within the county's qualifying threshold"
+        ]
+      },
+      "application": {
+        "agency": "Washington State Department of Revenue / County Assessor",
+        "form": null,
+        "url": "https://dor.wa.gov/taxes-rates/property-tax/property-tax-exemption-seniors-people-retired-due-disability-and-veterans-disabilities",
+        "documentation": [
+          "VA disability rating letter (80% or 100% compensation rate)",
+          "Proof of income"
+        ]
+      },
+      "legalCitation": "RCW 84.36.381",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dor.wa.gov/taxes-rates/property-tax/property-tax-exemption-seniors-people-retired-due-disability-and-veterans-disabilities",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-state_veterans_home-washington-state-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Washington State Veterans Homes",
+      "description": "Washington operates four state veterans homes providing 24-hour nursing care: Washington Soldiers Home in Orting, the Washington Veterans Home (Retsil) in Port Orchard, Spokane Veterans Home, and Walla Walla Veterans Home. Eligible residents include veterans who served honorably (or qualify for federal VA benefits) and reside in Washington, along with spouses, widows, and Gold Star Parents; veterans with a 70%-100% service-connected disability rating may qualify for federal VA funding toward the cost of care.",
+      "value": "24-hour nursing home care at four state facilities; cost offset by Medicare, Medicaid, private pay, and VA per diem funding for qualifying disability ratings",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Served in any branch of the U.S. Armed Forces or National Guard",
+          "Honorable discharge, federal VA benefit eligibility, or discharge due to sexual orientation/gender identity",
+          "Washington State residency"
+        ]
+      },
+      "application": {
+        "agency": "Washington State Department of Veterans Affairs (WDVA)",
+        "form": null,
+        "url": "https://dva.wa.gov/veterans-their-families/veterans-homes",
+        "documentation": [
+          "DD-214 or proof of military service",
+          "VA disability rating letter (for federal funding eligibility)"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dva.wa.gov/veterans-their-families/veterans-homes",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-education_tuition-tuition-waiver-for-dependents-and-spouses-of-dis",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Tuition Waiver for Dependents and Spouses of Disabled or Deceased Veterans",
+      "description": "Washington public community colleges, colleges, and universities must waive all tuition and fees for the children and the spouse/domestic partner or surviving spouse/domestic partner of a Washington-domiciliary veteran or national guard member who became totally (100%) disabled from active federal military service, was determined a POW/MIA, or lost their life in active federal military service. Total credits used under the waiver cannot exceed 250 quarter credits (or equivalent semester credits); eligible children must be ages 17-26 and surviving spouses have 10 years to use the benefit.",
+      "value": "Full waiver of tuition and fees, plus a book stipend, up to 250 quarter credits (or equivalent semester credits)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Veteran/national guard member is a Washington domiciliary",
+          "Veteran rated 100% totally disabled by VA, determined POW/MIA, or deceased from active federal service",
+          "Dependent child ages 17-26, or surviving spouse/domestic partner who has not remarried",
+          "Qualifying discharge under RCW 73.04.005"
+        ]
+      },
+      "application": {
+        "agency": "Washington Student Achievement Council (WSAC) / individual public colleges and universities",
+        "form": null,
+        "url": "https://wsac.wa.gov/tuition-waiver-veterans-dependents",
+        "documentation": [
+          "VA disability rating letter (100%) or POW/MIA determination, or veteran's death record",
+          "Proof of relationship to the veteran",
+          "Proof of Washington domicile"
+        ]
+      },
+      "legalCitation": "RCW 28B.15.621",
+      "authorityTier": "reference",
+      "sourceUrl": "https://app.leg.wa.gov/rcw/default.aspx?cite=28B.15.621",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-hiring_preference-veterans-scoring-criteria-preference-in-state-ci",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "Veterans' Scoring Criteria / Preference in State Civil Service Examinations",
+      "description": "Washington adds preference points to competitive civil-service examination scores for qualifying veterans: 10% for veterans who served during a period of war or armed conflict and do not receive military retirement, and 5% for veterans who served outside such a period or who receive military retirement (an additional 5% applies only to promotional exams for veterans called to active duty from state employment). Spouses or domestic partners of veterans with a service-connected permanent and total disability may also receive referral priority in non-competitive hiring.",
+      "value": "5% or 10% added to passing examination score, applied until the veteran's first appointment (not applicable to most promotional exams)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Qualifying discharge under RCW 73.04.005 or a U.S. Department of Defense discharge document",
+          "Preference generally applies only until the veteran's first appointment to a position"
+        ]
+      },
+      "application": {
+        "agency": "Washington State Human Resources / individual state agencies",
+        "form": null,
+        "url": "https://careers.wa.gov/veteranspreferences.html",
+        "documentation": ["DD-214 or qualifying discharge document"]
+      },
+      "legalCitation": "RCW 41.04.010",
+      "authorityTier": "reference",
+      "sourceUrl": "https://app.leg.wa.gov/rcw/default.aspx?cite=41.04.010",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-license_plate-disabled-american-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled American Veteran License Plate",
+      "description": "Washington veterans who are rated 100% service-connected disabled and expected to remain so for more than one year can obtain a Disabled American Veteran license plate that is exempt from license fees on one vehicle per year for the veteran's lifetime. The exemption applies to motorcycles, motor homes, passenger vehicles, and personal-use trucks, but the plate cannot be personalized and does not by itself confer disabled parking privileges.",
+      "value": "Exemption from license fees on one qualifying vehicle per year, for life",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": null,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Qualifying discharge under RCW 41.04.005 Section 4(1)",
+          "Rated by the VA or military service at 100% service-connected compensation expected to last more than 1 year",
+          "Vehicle registered for personal use only, not commercial or business use"
+        ]
+      },
+      "application": {
+        "agency": "Washington State Department of Licensing (DOL)",
+        "form": "Military Services and Veterans License Plate Application",
+        "url": "https://dol.wa.gov/vehicles-and-boats/license-plates/get-custom-plates/special-design-plates/disabled-american-veteran",
+        "documentation": [
+          "Letter of eligibility from the VA verifying 100% service-connected disability"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dol.wa.gov/vehicles-and-boats/license-plates/get-custom-plates/special-design-plates/disabled-american-veteran",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-recreation-lifetime-disabled-veteran-pass-state-parks",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Lifetime Disabled Veteran Pass (State Parks)",
+      "description": "Washington State Parks issues a free Lifetime Disabled Veteran Pass to Washington resident veterans with a 30% or greater combined service-connected disability rating. The pass provides free day-use parking (no Discover Pass required), boat launch and trailer dump, and free camping or moorage at state parks, plus free day-use parking and other Discover Pass privileges on Department of Fish and Wildlife and Department of Natural Resources lands.",
+      "value": "Free lifetime pass covering day-use parking, boat launch/trailer dump, and free camping or moorage at WA state parks",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 30,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Washington state residency",
+          "VA award letter showing 30%+ combined service-connected disability rating, addressed to a Washington address"
+        ]
+      },
+      "application": {
+        "agency": "Washington State Parks and Recreation Commission",
+        "form": "A-072-V (Lifetime Disabled Veteran Pass Application)",
+        "url": "https://parks.wa.gov/passes-permits/get-park-pass/lifetime-disabled-veteran-pass",
+        "documentation": [
+          "VA award letter showing 30%+ combined service-connected disability rating",
+          "Proof of Washington residency"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://parks.wa.gov/passes-permits/get-park-pass/lifetime-disabled-veteran-pass",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-recreation-veterans-reduced-fee-hunting-and-fishing-license",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Veterans' Reduced-Fee Hunting and Fishing License",
+      "description": "The Washington Department of Fish and Wildlife offers reduced-fee hunting and fishing licenses to resident veterans with at least a 30% service-connected disability (verified by VA letter), or to resident veterans age 65 or older with a service-connected disability. The exact discounted price could not be confirmed on the official eligibility page and is not stated here rather than guessed.",
+      "value": "Reduced-fee license; specific discounted price not confirmed on the official eligibility page",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 30,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "VA letter verifying at least 30% service-connected disability, or age 65+ with a service-connected disability",
+          "Non-resident veterans with the same disability criteria also qualify for a reduced non-resident rate"
+        ]
+      },
+      "application": {
+        "agency": "Washington Department of Fish and Wildlife (WDFW)",
+        "form": null,
+        "url": "https://wdfw.wa.gov/accessibility/eligibility-requirements-veterans-reduced-fees",
+        "documentation": ["One-page VA Disability Percentage Rating letter"]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://wdfw.wa.gov/accessibility/eligibility-requirements-veterans-reduced-fees",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-state_va_healthcare-wdva-counseling-and-wellness-program",
+      "benefitType": "state_va_healthcare",
+      "category": "Healthcare",
+      "name": "WDVA Counseling and Wellness Program",
+      "description": "The Washington Department of Veterans Affairs operates a state-funded confidential counseling program for Washington veterans and their families, covering needs such as PTSD, traumatic brain injury, and suicide prevention through a network of community-based counselors. This is a supplemental state counseling program, not a replacement for VA medical care; the page did not state a specific income or disability-rating eligibility gate.",
+      "value": "Confidential, community-based mental health counseling for veterans and family members",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": ["Washington State veteran or family member"]
+      },
+      "application": {
+        "agency": "Washington State Department of Veterans Affairs (WDVA)",
+        "form": null,
+        "url": "https://dva.wa.gov/counseling",
+        "documentation": []
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dva.wa.gov/counseling",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "wa-other-veterans-innovations-program-vip",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Veterans Innovations Program (VIP)",
+      "description": "The Veterans Innovations Program provides emergency financial assistance and employment/education support to Washington resident veterans who served on or after September 11, 2001 and are experiencing financial hardship where income is not sufficient to meet basic needs. Awards are grant-funded and not guaranteed; the official page does not list specific dollar amounts or award limits, so none are stated here.",
+      "value": "Grant-funded financial assistance for hardship needs (housing, utilities, transportation, employment/education transition); no fixed dollar amount published",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Served on or after September 11, 2001",
+          "Honorable discharge, federal VA benefit eligibility, or discharge due to sexual orientation/gender identity",
+          "Financial hardship where income is not sufficient to meet basic needs",
+          "Request within available grant funding"
+        ]
+      },
+      "application": {
+        "agency": "Washington State Department of Veterans Affairs (WDVA)",
+        "form": null,
+        "url": "https://dva.wa.gov/node/1383/veterans-innovations-program-vip",
+        "documentation": [
+          "Proof of Washington residency",
+          "Proof of military service/discharge",
+          "Documentation of financial hardship"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dva.wa.gov/node/1383/veterans-innovations-program-vip",
+      "lastVerified": "2026-07-15",
+      "verificationStatus": "verified"
+    }
+  ]
+}

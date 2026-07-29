@@ -1,0 +1,287 @@
+{
+  "state": "Missouri",
+  "stateCode": "MO",
+  "officialSource": "https://mvc.dps.mo.gov/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-18",
+  "benefits": [
+    {
+      "id": "mo-property_tax_exemption-property-tax-credit-for-100-disabled-veterans-ci",
+      "benefitType": "property_tax_exemption",
+      "category": "Property Tax",
+      "name": "Property Tax Credit for 100% Disabled Veterans (\"Circuit Breaker\") and POW Full Homestead Exemption",
+      "description": "Missouri does not offer a broad property tax exemption for disabled veterans generally. Two distinct, narrower benefits are confirmed: (1) the Missouri Property Tax Credit (\"circuit breaker\") gives eligible resident veterans with a 100% VA service-connected disability rating a credit of up to $1,100/year for homeowners or $750/year for renters against real estate taxes or rent paid, subject to household income limits ($30,000 single / $34,000 married filing combined for full-year homeowners; $27,200 single / $29,200 married for renters and part-year owners); VA disability payments are excluded from the income calculation specifically for claimants who are 100% disabled as a result of military service. (2) A full homestead property tax exemption exists only for former Prisoners of War who also have a total (100%) service-connected disability, under Article X, Section 6 of the Missouri Constitution. A broader constitutional amendment that would have created a tiered/full property tax exemption for disabled veterans generally (proportional to VA rating, full exemption at higher ratings) has repeatedly failed to pass the Missouri legislature as of mid-2026 (reported by local news as failing for an 8th consecutive year in the 2026 session) and could not be confirmed as enacted law against any official source in this session; claims on non-official veteran-benefit aggregator sites that this expansion took effect January 1, 2026 are NOT confirmed and are presented here as unverified/likely inaccurate.",
+      "value": "Up to $1,100/year credit (homeowners) or $750/year credit (renters) for 100% disabled veterans within income limits; full homestead exemption only for former POWs with total service-connected disability",
+      "estimatedAnnualValue": 1100,
+      "requirements": {
+        "minRating": 100,
+        "maxRating": 100,
+        "isPermanentTotal": true,
+        "residencyRequired": true,
+        "otherReqs": [
+          "100% VA service-connected disability rating (for the Property Tax Credit)",
+          "Household income within program limits",
+          "For the POW exemption: former Prisoner of War status AND 100% service-connected disability AND owner-occupied primary residence"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Department of Revenue (Property Tax Credit); County Assessor (POW homestead exemption)",
+        "form": "Form MO-PTC",
+        "url": "https://dor.mo.gov/taxation/individual/tax-types/property-tax-credit/",
+        "documentation": [
+          "VA letter confirming 100% service-connected disability rating",
+          "Proof of household income",
+          "For POW exemption: DD-214 showing POW status or letter from Military Personnel Records Center/VA, plus VA letter confirming total service-connected disability"
+        ]
+      },
+      "legalCitation": "Mo. Const. art. X, § 6 (POW homestead exemption); Property Tax Credit program administered under Chapter 135, RSMo",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dor.mo.gov/faq/personal/ptc.php",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mo-state_veterans_home-missouri-veterans-homes",
+      "benefitType": "state_veterans_home",
+      "category": "Housing",
+      "name": "Missouri Veterans Homes",
+      "description": "Missouri operates seven state veterans homes (Cameron, Cape Girardeau, Mexico, Mt. Vernon, St. James, St. Louis, and Warrensburg) managing a combined 1,238 beds for long-term skilled nursing care. Eligibility requires valid veteran status per VA standards, a need for 24-hour skilled nursing care, Missouri residency of 180 consecutive days prior to application, no sex-offender registry listing, and no Class A or B felony convictions. The 2026 monthly rate is $2,773, covering medical care, 24-hour nursing, physician oversight, therapies, medication management, meals, and recreational activities.",
+      "value": "Skilled nursing and long-term care; 2026 monthly rate of $2,773",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Valid veteran status per VA standards",
+          "Requires 24-hour skilled nursing care",
+          "180 consecutive days of Missouri residency prior to application",
+          "No sex offender registry listing",
+          "No Class A or B felony convictions in any state"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Veterans Commission",
+        "form": null,
+        "url": "https://mvc.dps.mo.gov/homes/",
+        "documentation": [
+          "DD-214",
+          "Durable Power of Attorney paperwork (if applicable)",
+          "Proof of Missouri residency",
+          "Medical information/records"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://mvc.dps.mo.gov/homes/",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mo-education_tuition-missouri-returning-heroes-education-act",
+      "benefitType": "education_tuition",
+      "category": "Education",
+      "name": "Missouri Returning Heroes' Education Act",
+      "description": "Combat veterans (those who served in an armed combat zone since September 11, 2001, honorably discharged, and a Missouri resident/registered voter) attending Missouri public institutions of higher education have tuition capped at $50 per credit hour for undergraduate certificate, associate, or baccalaureate programs, provided they maintain a cumulative GPA of at least 2.5 on a 4.0 scale. For graduate degree programs (master's and doctorate; professional degrees like law, medicine, and veterinary medicine are excluded), tuition is capped at no more than 30% of the cost of tuition and fees. Undergraduate eligibility lasts 10 years from the veteran's last discharge; graduate eligibility lasts 20 years.",
+      "value": "$50/credit hour tuition cap (undergraduate); tuition capped at 30% of cost (graduate)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Served in an armed combat zone since September 11, 2001, documented via DD-214, combat service medals, or imminent danger/hostile fire pay",
+          "Honorably discharged",
+          "Missouri resident or registered/eligible Missouri voter",
+          "Maintain 2.5 CGPA (undergraduate)",
+          "Enrolled in a Missouri public institution",
+          "Professional degree programs (law, medicine, veterinary) excluded from the graduate rate cap"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Department of Higher Education & Workforce Development",
+        "form": null,
+        "url": "https://dhewd.mo.gov/ppc/grants-scholarships/returning-heroes-act",
+        "documentation": [
+          "DD-214 or other documentation of combat service",
+          "Proof of honorable discharge",
+          "Proof of Missouri residency/voter registration"
+        ]
+      },
+      "legalCitation": "§ 173.900, RSMo",
+      "authorityTier": "reference",
+      "sourceUrl": "https://revisor.mo.gov/main/OneSection.aspx?section=173.900",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mo-hiring_preference-state-employment-veterans-preference",
+      "benefitType": "hiring_preference",
+      "category": "Employment",
+      "name": "State Employment Veterans Preference",
+      "description": "Under Missouri's Merit System law, veterans, disabled veterans, surviving spouses of veterans, and spouses of disabled veterans are given preference in state employment: preference in appointment over other eligibles when relevant job-related factors are otherwise equal, and appropriate credit toward competitive examinations for related military training or experience. The statute as directly read this session (RSMo 36.220) describes a qualitative \"preference when equally qualified\" and experience-credit mechanism rather than a specific numeric point system. Several non-official veteran benefit sites describe this as a 5-point preference for veterans and 10-point preference for disabled veterans, but that specific point allocation could not be confirmed against the official statute text or any Missouri Office of Administration page reached in this session, so it is not presented as confirmed fact.",
+      "value": "Preference in state hiring for veterans, disabled veterans, and qualifying spouses when candidates are otherwise equally qualified; credit for related military training/experience in exams",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorable discharge",
+          "Also extends to surviving spouses of veterans and spouses of disabled veterans"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Office of Administration, Division of Personnel",
+        "form": null,
+        "url": "https://mocareers.mo.gov/",
+        "documentation": [
+          "DD-214",
+          "VA disability rating letter (for disabled veteran preference)"
+        ]
+      },
+      "legalCitation": "§ 36.220, RSMo",
+      "authorityTier": "reference",
+      "sourceUrl": "https://revisor.mo.gov/main/OneSection.aspx?section=36.220",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mo-license_plate-disabled-veteran-license-plate",
+      "benefitType": "license_plate",
+      "category": "Vehicle",
+      "name": "Disabled Veteran License Plate",
+      "description": "Missouri residents honorably discharged from the U.S. Armed Forces with any VA-documented service-connected disability (no minimum percentage specified) may obtain one set of Disabled Veteran license plates at no cost, including no specialty plate, transfer, processing, or replacement fees, and no personalization fee if a personalized configuration is chosen. Standard Disabled Veteran plates do not confer disabled-parking privileges unless the plate also displays the wheelchair accessibility symbol, which requires an additional physician's statement (Form DOR-1776) confirming a permanent disability.",
+      "value": "One set of Disabled Veteran license plates free of charge (no specialty, transfer, processing, replacement, or personalization fees)",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Honorably discharged from the U.S. Armed Forces",
+          "VA statement (no more than one year old) confirming a service-connected disability, issued directly by the VA (not a hospital or clinic)",
+          "Wheelchair accessibility symbol (for disabled parking privileges) requires a separate physician's statement confirming permanent disability"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Department of Revenue, Motor Vehicle Bureau",
+        "form": "Form 4601",
+        "url": "https://dor.mo.gov/motor-vehicle/plates/disabled-veteran.html",
+        "documentation": [
+          "Form 4601 (Application for Missouri Military Personalized License Plates)",
+          "VA statement confirming service-connected disability, issued within the last year",
+          "Form DOR-1776 (Physician's Statement) if requesting the wheelchair accessibility symbol"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dor.mo.gov/motor-vehicle/plates/disabled-veteran.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mo-vehicle_registration-sales-tax-exemption-for-vehicle-modification-ada",
+      "benefitType": "vehicle_registration",
+      "category": "Vehicle",
+      "name": "Sales Tax Exemption for Vehicle Modification/Adaptive Equipment",
+      "description": "Missouri exempts from state and local sales/use tax items used solely to modify a motor vehicle to permit its use by an individual with a disability (e.g., hand controls, wheelchair lifts, ramps, modified accelerator/brake systems), under RSMo 144.030.2(18). This applies to disabled individuals generally, including disabled veterans, rather than being a veteran-exclusive benefit. Multiple non-official veteran benefit sites also claim Missouri exempts 100% disabled veterans from sales tax on an entire motor vehicle purchase once every three years; this broader vehicle-purchase exemption could not be confirmed against the Missouri Department of Revenue's official sales/use tax exemption list or statute 144.030 in this session, and is not included here as a confirmed benefit.",
+      "value": "Sales/use tax exemption on items used solely to modify a vehicle for use by a person with a disability",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Modification items must be used solely to permit vehicle use by an individual with a disability",
+          "Documentation showing vehicle and equipment priced separately"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Department of Revenue",
+        "form": "Form 149",
+        "url": "https://dor.mo.gov/business/sales/exemption-list.php",
+        "documentation": [
+          "Invoice or documentation showing vehicle and adaptive equipment priced separately"
+        ]
+      },
+      "legalCitation": "§ 144.030.2(18), RSMo",
+      "authorityTier": "reference",
+      "sourceUrl": "https://dor.mo.gov/business/sales/exemption-list.php",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mo-recreation-disabled-veteran-hunting-and-fishing-permit-exem",
+      "benefitType": "recreation",
+      "category": "Recreation",
+      "name": "Disabled Veteran Hunting and Fishing Permit Exemption",
+      "description": "Honorably discharged Missouri resident or nonresident veterans with a service-related disability of 60% or greater (or former prisoners of war) may hunt without a permit (excluding black bears, deer, elk, and turkeys, and trapping is not covered) and fish without a permit (a trout permit/trout park tag is still required), provided they carry a certified statement of eligibility from the VA. Waterfowl, snipe, doves, woodcock, and rails still require a Missouri Migratory Bird Hunting Permit, and a Federal Duck Stamp is still required for waterfowl.",
+      "value": "Free hunting (excluding black bear/deer/elk/turkey, no trapping) and fishing (excluding trout permit) without a state permit",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 60,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": false,
+        "otherReqs": [
+          "Honorably discharged",
+          "60%+ service-related disability, or former POW status",
+          "Must carry a certified statement of eligibility from the VA while hunting/fishing",
+          "Deer, turkey, elk, black bear, and migratory birds still require separate permits/stamps"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Department of Conservation",
+        "form": null,
+        "url": "https://mdc.mo.gov/permits/veteran-benefits",
+        "documentation": [
+          "Certified statement of eligibility from the U.S. Department of Veterans Affairs noting the 60%+ service-connected rating"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://mdc.mo.gov/permits/veteran-benefits",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    },
+    {
+      "id": "mo-other-military-retirement-pay-income-tax-exemption",
+      "benefitType": "other",
+      "category": "Other",
+      "name": "Military Retirement Pay Income Tax Exemption",
+      "description": "Missouri fully exempts military retirement/retired pay from state income tax. Veterans subtract their total military retirement benefits (as reported on federal Form 1040/1040-SR, Line 5b) from Missouri adjusted gross income, entered on Form MO-A, Part 1, Line 10, and included in total subtractions on Form MO-1040. This full subtraction applies to tax years 2021 and forward (prior years used a phased exemption claimed on Form MO-A, Part 3, Section D). Note: Survivor Benefit Plan (SBP) annuity payments do not qualify for this specific military pension subtraction, though they may qualify for Missouri's separate public pension exemption. This benefit is distinct from VA disability compensation, which is already exempt from both federal and Missouri income tax as a matter of federal law.",
+      "value": "Full exemption of military retirement/retired pay from Missouri state income tax",
+      "estimatedAnnualValue": null,
+      "requirements": {
+        "minRating": 0,
+        "maxRating": null,
+        "isPermanentTotal": false,
+        "residencyRequired": true,
+        "otherReqs": [
+          "Applies to military retired pay reported on federal Form 1040/1040-SR Line 5b",
+          "Claimed via Form MO-A, Part 1, Line 10 for tax years 2021 and later",
+          "Survivor Benefit Plan (SBP) annuity payments do not qualify under this subtraction (may qualify under the general public pension exemption instead)"
+        ]
+      },
+      "application": {
+        "agency": "Missouri Department of Revenue",
+        "form": "Form MO-A",
+        "url": "https://dor.mo.gov/faq/taxation/individual/pension.html",
+        "documentation": [
+          "Federal Form 1040 or 1040-SR showing military retirement benefits on Line 5b"
+        ]
+      },
+      "legalCitation": null,
+      "authorityTier": "reference",
+      "sourceUrl": "https://dor.mo.gov/faq/taxation/individual/pension.html",
+      "lastVerified": "2026-07-18",
+      "verificationStatus": "verified"
+    }
+  ]
+}

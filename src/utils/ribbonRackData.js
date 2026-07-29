@@ -764,7 +764,8 @@ export function parseDD214Text(rawText, branch = "Army") {
   let cleanedText = rawText;
 
   // STEP 1: Remove ALL parenthetical content (instructions/examples)
-  cleanedText = cleanedText.replace(/\([^)]*\)/g, " ");
+  // eslint-disable-next-line sonarjs/slow-regex -- {0,300} bounds backtracking to O(300n); measured 9.1s -> 55ms at 100k unmatched "(" (the "linear-time" claim this replaced was wrong -- unanchored /g matching retries the full backtrack at every start position when ")" never appears)
+  cleanedText = cleanedText.replace(/\([^)]{0,300}\)/g, " ");
 
   // STEP 2: Remove instructional patterns
   const INSTRUCTIONAL_PATTERNS = [
@@ -846,6 +847,49 @@ export function parseDD214Text(rawText, branch = "Army") {
 /**
  * Detect devices attached to an award
  */
+function _addOakLeafClusters(devices, context) {
+  // eslint-disable-next-line sonarjs/slow-regex -- simple digit+alternation, no overlapping ambiguity; context is a short extracted snippet, not attacker-controlled
+  const olcMatch = context.match(/(\d+)\s*(OLC|OAK\s*LEAF)/);
+  if (olcMatch) {
+    const count = parseInt(olcMatch[1], 10);
+    const silverOLC = Math.floor(count / 5);
+    const bronzeOLC = count % 5;
+
+    for (let i = 0; i < silverOLC; i++) {
+      devices.push({ type: "silver_olc", position: i });
+    }
+    for (let i = 0; i < bronzeOLC; i++) {
+      devices.push({ type: "bronze_olc", position: silverOLC + i });
+    }
+  } else if (/OLC|OAK\s*LEAF/.test(context)) {
+    devices.push({ type: "bronze_olc", position: 0 });
+  }
+}
+
+function _addServiceStars(devices, context) {
+  // eslint-disable-next-line sonarjs/slow-regex -- simple digit+alternation, no overlapping ambiguity; context is a short extracted snippet, not attacker-controlled
+  const starMatch = context.match(/(\d+)\s*(STAR|STR|\*)/);
+  if (!starMatch) return;
+
+  const count = parseInt(starMatch[1], 10);
+  const goldStars = Math.floor(count / 25);
+  const silverStars = Math.floor((count % 25) / 5);
+  const bronzeStars = count % 5;
+
+  for (let i = 0; i < goldStars; i++) {
+    devices.push({ type: "gold_star", position: i });
+  }
+  for (let i = 0; i < silverStars; i++) {
+    devices.push({ type: "silver_star", position: goldStars + i });
+  }
+  for (let i = 0; i < bronzeStars; i++) {
+    devices.push({
+      type: "bronze_star",
+      position: goldStars + silverStars + i,
+    });
+  }
+}
+
 function detectDevices(text, awardMatch, branch) {
   const devices = [];
   const context = extractContext(text, awardMatch, 50);
@@ -867,45 +911,12 @@ function detectDevices(text, awardMatch, branch) {
 
   // Oak Leaf Clusters (Army/Air Force)
   if (branch === "Army" || branch === "Air Force" || branch === "Space Force") {
-    const olcMatch = context.match(/(\d+)\s*(OLC|OAK\s*LEAF)/);
-    if (olcMatch) {
-      const count = parseInt(olcMatch[1], 10);
-      const silverOLC = Math.floor(count / 5);
-      const bronzeOLC = count % 5;
-
-      for (let i = 0; i < silverOLC; i++) {
-        devices.push({ type: "silver_olc", position: i });
-      }
-      for (let i = 0; i < bronzeOLC; i++) {
-        devices.push({ type: "bronze_olc", position: silverOLC + i });
-      }
-    } else if (/OLC|OAK\s*LEAF/.test(context)) {
-      devices.push({ type: "bronze_olc", position: 0 });
-    }
+    _addOakLeafClusters(devices, context);
   }
 
   // Service Stars (Navy/Marines/Coast Guard)
   if (branch === "Navy" || branch === "Marines" || branch === "Coast Guard") {
-    const starMatch = context.match(/(\d+)\s*(STAR|STR|\*)/);
-    if (starMatch) {
-      const count = parseInt(starMatch[1], 10);
-      const goldStars = Math.floor(count / 25);
-      const silverStars = Math.floor((count % 25) / 5);
-      const bronzeStars = count % 5;
-
-      for (let i = 0; i < goldStars; i++) {
-        devices.push({ type: "gold_star", position: i });
-      }
-      for (let i = 0; i < silverStars; i++) {
-        devices.push({ type: "silver_star", position: goldStars + i });
-      }
-      for (let i = 0; i < bronzeStars; i++) {
-        devices.push({
-          type: "bronze_star",
-          position: goldStars + silverStars + i,
-        });
-      }
-    }
+    _addServiceStars(devices, context);
   }
 
   // Arrowhead device
@@ -935,6 +946,7 @@ function detectQuantity(text, awardMatch) {
   const context = extractContext(text, awardMatch, 30);
 
   // Look for patterns like "(2)", "x2", "2nd", etc.
+  // eslint-disable-next-line sonarjs/slow-regex -- simple single-quantifier patterns, no overlapping ambiguity
   const patterns = [/\((\d+)\)/, /x(\d+)/i, /(\d+)(?:ST|ND|RD|TH)\s*AWARD/i];
 
   for (const pattern of patterns) {
