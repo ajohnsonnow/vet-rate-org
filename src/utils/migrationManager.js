@@ -25,6 +25,11 @@ import {
   VERSION_STORAGE_KEY,
   SCHEMA_STORAGE_KEY,
 } from "./version";
+import {
+  getServiceHistory,
+  saveServiceHistory,
+  getVeteranProfile,
+} from "./veteranProfile";
 
 /**
  * Compare semantic versions
@@ -63,6 +68,121 @@ export const CURRENT_PACKET_VERSION = "2.0.0";
  * - scope: "packet": pure, idempotent transforms applied in memory to an
  *   imported packet backup by migratePacket(); migrate(packet) => packet.
  */
+// C1: dedup key for a service period — same as
+// veteranProfile.js's _servicePeriodKey, duplicated here (not imported —
+// that helper is unexported/private) so this migration only relies on
+// veteranProfile's public read/write API.
+const _periodDedupKey = (p) => `${p.serviceStartDate || ""}|${p.serviceEndDate || ""}`;
+
+/**
+ * C1 migration: consolidate the two disconnected legacy service-period
+ * sources — serviceHistory.dd214Data (ingest's old write target) and
+ * profile.servicePeriods (the Profile tab's manual editor) — into the
+ * canonical serviceHistory.servicePeriods[] array. Both legacy sources are
+ * left in place, unread, per the dual-read pattern. Idempotent: re-running
+ * synthesizes the same dedup key, so a second run adds nothing new.
+ */
+// Step 1: synthesize one period from the legacy dd214Data blob.
+function _migrateDD214DataIntoPeriods(history, periods, existingKeys) {
+  const dd = history.dd214Data;
+  if (!dd || !(dd.entryDate || dd.separationDate)) return;
+
+  const synthesized = {
+    serviceStartDate: dd.entryDate || null,
+    serviceEndDate: dd.separationDate || null,
+    branch: dd.branch || "",
+    component: dd.component || "",
+  };
+  const key = _periodDedupKey(synthesized);
+  if (existingKeys.has(key)) return;
+
+  periods.push({
+    id: `period_migrated_dd214_${Date.now()}`,
+    ...synthesized,
+    formType: "DD214",
+    rank: dd.rank || "",
+    payGrade: dd.payGrade || "",
+    mos: dd.mos || "",
+    mosTitle: dd.mosTitle || "",
+    unit: "",
+    characterOfService: dd.characterOfService || "",
+    separationType: dd.separationType || "",
+    separationAuthority: dd.separationAuthority || "",
+    separationCode: dd.separationCode || "",
+    reentryCode: dd.reentryCode || "",
+    narrativeReason: dd.narrativeReason || "",
+    netActiveService: "",
+    yearsService: dd.yearsService || null,
+    monthsService: dd.monthsService || null,
+    daysService: null,
+    foreignService: !!dd.foreignService,
+    militaryEducation: dd.militaryEducation || "",
+    sourceDocument: "Migrated (legacy serviceHistory.dd214Data)",
+    confidence: 0.5,
+    userEdited: false,
+    incomplete: !(dd.entryDate && dd.separationDate),
+    notes: "",
+  });
+  existingKeys.add(key);
+}
+
+// Step 2: fold in the Profile tab's manual servicePeriods entries, marked
+// userEdited so ingest never overwrites them.
+function _migrateProfilePeriodsIntoPeriods(periods, existingKeys) {
+  const profile = getVeteranProfile();
+  if (!Array.isArray(profile.servicePeriods)) return;
+
+  profile.servicePeriods.forEach((p, idx) => {
+    const key = _periodDedupKey(p);
+    if (existingKeys.has(key)) return;
+    periods.push({
+      id: p.id || `period_migrated_profile_${Date.now()}_${idx}`,
+      serviceStartDate: p.serviceStartDate || null,
+      serviceEndDate: p.serviceEndDate || null,
+      branch: p.branch || "",
+      component: p.component || "",
+      formType: p.formType || "",
+      rank: "",
+      payGrade: "",
+      mos: p.mos || "",
+      mosTitle: "",
+      unit: "",
+      characterOfService: p.characterOfService || "",
+      separationType: "",
+      separationAuthority: "",
+      separationCode: "",
+      reentryCode: "",
+      narrativeReason: "",
+      netActiveService: "",
+      yearsService: null,
+      monthsService: null,
+      daysService: null,
+      foreignService: false,
+      militaryEducation: "",
+      sourceDocument: "Migrated (manual profile entry)",
+      confidence: 1,
+      userEdited: true,
+      incomplete: !(p.serviceStartDate && p.serviceEndDate),
+      notes: p.notes || "",
+    });
+    existingKeys.add(key);
+  });
+}
+
+function _migrateServicePeriods() {
+  const history = getServiceHistory();
+  const periods = Array.isArray(history.servicePeriods)
+    ? [...history.servicePeriods]
+    : [];
+  const existingKeys = new Set(periods.map(_periodDedupKey));
+
+  _migrateDD214DataIntoPeriods(history, periods, existingKeys);
+  _migrateProfilePeriodsIntoPeriods(periods, existingKeys);
+
+  history.servicePeriods = periods;
+  saveServiceHistory(history);
+}
+
 const MIGRATIONS = [
   {
     scope: "packet",
@@ -85,6 +205,13 @@ const MIGRATIONS = [
             : {},
       },
     }),
+  },
+  {
+    fromVersion: "1.1.0",
+    toVersion: "1.2.0",
+    description:
+      "Consolidate legacy DD214 data + manual profile service periods into serviceHistory.servicePeriods[] (C1 multi-period model)",
+    migrate: _migrateServicePeriods,
   },
 ];
 

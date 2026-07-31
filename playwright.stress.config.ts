@@ -25,7 +25,10 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: "http://localhost:5197",
+    // 5198, not 5197: playwright.config.ts (e2e) owns 5197 with
+    // reuseExistingServer:false, so a concurrent e2e run and this run cannot
+    // share it. See vite.stress.config.js for the HMR side of the isolation.
+    baseURL: "http://localhost:5198",
     // Trace/video over a 30-minute multi-GB-heap AI run produces unusable
     // artifacts; telemetry comes from the CDP sampler in tests/stress/helpers.ts.
     trace: "off",
@@ -73,8 +76,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run dev -- --port 5197",
-    url: "http://localhost:5197",
+    // Dedicated HMR-disabled dev server so a concurrent editing session in the
+    // same checkout cannot hot-reload this run's browser mid-analysis.
+    command: "npx vite --config vite.stress.config.js",
+    url: "http://localhost:5198",
     // Allow reusing a manually-started Vite dev server (e.g. started via
     // scripts/launch-chrome-dev.ps1 or nohup npm run dev); the test code
     // validates the server is serving the expected app via page.goto assertions.

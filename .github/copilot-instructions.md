@@ -55,11 +55,12 @@ Can't test → say so. Guessing → say "I'm guessing." Never fabricate file pat
 
 | Use case | Model ID |
 |---|---|
-| Complex engineering, architecture | `claude-opus-4-8` |
-| Daily coding, code review | `claude-sonnet-4-6` |
-| Classification, extraction, routing | `claude-haiku-4-5-20251001` |
+| Hardest reasoning, long-horizon agentic | `claude-fable-5` |
+| Complex engineering, architecture | `claude-opus-5` |
+| Daily coding, code review | `claude-sonnet-5` |
+| Classification, extraction, routing | `claude-haiku-4-5` |
 
-Opus 4.8 (`claude-opus-4-8`, 2026-05-28) is the current flagship; `claude-opus-4-7` is now legacy. Sunsets: Haiku 3 → 2026-04-19; Sonnet 4 / Opus 4 → 2026-06-15.
+IDs are complete as written — never append a date suffix. Opus 5 (`claude-opus-5`) is the current flagship at $5/$25 per MTok, 1M context; thinking is on by default and `thinking:{type:"disabled"}` 400s above `high` effort. Sonnet 5 is intro-priced $2/$10 through 2026-08-31 and uses a new tokenizer (~30% more tokens than Sonnet 4.6). Legacy but active: Opus 4.8/4.7/4.6, Sonnet 4.6. Retired (404): Opus 3, Sonnet 3.7, Haiku 3.5, Haiku 3, Sonnet 4 / Opus 4 `*-20250514`. Opus 4.1 retires 2026-08-05.
 
 ## Output style
 

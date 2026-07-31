@@ -28,6 +28,7 @@ const DEVICE_COLORS = {
   v_device: "#CD7F32",
   c_device: "#CD7F32",
   r_device: "#CD7F32",
+  m_device: "#CD7F32",
   arrowhead: "#CD7F32",
 };
 
@@ -198,6 +199,19 @@ function renderDevice(device, index, deviceSize) {
         color,
         "R",
         "R Device (Remote)",
+      );
+
+    // FIX-4: detectDevices (ribbonRackData.js) extracts m_device
+    // (Mobilization, e.g. AFRM / Oregon NG OR-FSR) but no case existed to
+    // render it, so it silently never appeared on the ribbon.
+    case "m_device":
+      return renderLetterDevice(
+        device,
+        index,
+        deviceSize,
+        color,
+        "M",
+        "M Device (Mobilization)",
       );
 
     case "arrowhead":

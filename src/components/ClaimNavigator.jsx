@@ -18,6 +18,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { formatLocalDate } from "../utils/dateUtils";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
 import {
@@ -1872,7 +1873,7 @@ const DateCardDisplay = ({
   return (
     <>
       <p className={`font-medium ${getDateTextClass(isPassed, isUrgent)}`}>
-        {new Date(date).toLocaleDateString()}
+        {formatLocalDate(date).toLocaleDateString()}
       </p>
       {isDeadline && daysLeft !== null && (
         <p className={`text-xs ${getDaysLeftTextClass(isPassed, isUrgent)}`}>

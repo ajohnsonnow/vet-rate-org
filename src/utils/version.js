@@ -35,7 +35,7 @@ export const APP_VERSION = packageJson.version;
 
 // Data schema version for localStorage migration
 // Increment when making changes to how data is stored
-export const SCHEMA_VERSION = "1.1.0";
+export const SCHEMA_VERSION = "1.2.0";
 
 // Last update date (for changelog display)
 const _LAST_UPDATE_DATE = "2026-02-13";

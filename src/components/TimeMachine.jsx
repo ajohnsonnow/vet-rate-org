@@ -20,6 +20,7 @@ import {
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { formatLocalDate } from "../utils/dateUtils";
 
 const ITF_STORAGE_KEY = "vet_rate_itf_date";
 const ESTIMATED_RATING_KEY = "vet_rate_estimated_rating";
@@ -355,7 +356,7 @@ function TimeMachineTimeline({ countdown, itfDate }) {
         <div className="flex justify-between items-center">
           <span className="text-gray-600 dark:text-gray-300">ITF Filed:</span>
           <span className="font-semibold text-gray-800 dark:text-white">
-            {new Date(itfDate).toLocaleDateString()}
+            {formatLocalDate(itfDate).toLocaleDateString()}
           </span>
         </div>
         <div className="flex justify-between items-center">

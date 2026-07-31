@@ -12,6 +12,7 @@ import { getTimelineEvents, saveTimelineEvents } from "../utils/veteranProfile";
 import { loadVKB } from "../utils/veteranKnowledgeBase";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { formatLocalDate } from "../utils/dateUtils";
 
 // Event categories with their visual styles
 const EVENT_TYPES = {
@@ -493,7 +494,7 @@ function TimelineEventList({ events, onRemove }) {
                     {event.category}
                   </span>
                   <span className="text-gray-400 text-xs">
-                    {new Date(event.date).toLocaleDateString()}
+                    {formatLocalDate(event.date).toLocaleDateString()}
                   </span>
                 </div>
                 <p className="text-white text-sm">{event.description}</p>
@@ -676,7 +677,7 @@ function ExportTimelineButton({ events }) {
           .sort((a, b) => new Date(a.date) - new Date(b.date))
           .map(
             (e) =>
-              `${new Date(e.date).toLocaleDateString()} - ${e.category}: ${e.description}`,
+              `${formatLocalDate(e.date).toLocaleDateString()} - ${e.category}: ${e.description}`,
           )
           .join("\n");
 

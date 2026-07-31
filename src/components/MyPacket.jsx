@@ -40,6 +40,7 @@ import {
   getSavedForms,
   deleteSavedForm,
   getVeteranProfile,
+  saveVeteranProfile,
   getMyRatings,
   removeRating,
   updateRating,
@@ -52,6 +53,13 @@ import {
   removeAward,
   saveDD214Data,
   clearDD214Data,
+  getServicePeriods,
+  upsertServicePeriod,
+  addServicePeriod,
+  updateServicePeriod,
+  removeServicePeriod,
+  clearServicePeriods,
+  summarizeServicePeriods,
   getTimelineEvents,
   clearTimelineEvents,
   getPainMaps,
@@ -65,6 +73,7 @@ import {
 import {
   loadVKB,
   getAllDocumentsByCategory,
+  raceVkb,
 } from "../utils/veteranKnowledgeBase";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { triggerBlobDownload } from "../utils/sanitize";
@@ -74,10 +83,12 @@ import {
   getClaims as fetchVAClaims,
   getAppealableIssues as fetchVAAppealableIssues,
   getAppealsStatus as fetchVAAppealsStatus,
+  getDisabilityRating as fetchVADisabilityRating,
   formatServiceHistory,
   formatClaims,
   formatAppealableIssues,
   formatAppealsStatus,
+  formatDisabilityRating,
 } from "../api/va";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
@@ -87,7 +98,16 @@ import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
 import ClaimProgress from "./ClaimProgress";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { RibbonRackDisplay } from "./VisualRibbon";
+import { enrichAwardForDisplay } from "../utils/ribbonRackData";
 import VADataCenter from "./VADataCenter";
+import ClaimEvidenceUpload from "./ClaimEvidenceUpload";
+import {
+  combineMultipleRatings,
+  roundToNearest10,
+} from "../utils/vaCalculator";
+import { formatLocalDate } from "../utils/dateUtils";
+import { formatFileSize } from "../utils/documentAnalyzer";
+import { parseServiceRecord } from "../utils/musterCallProcessor";
 
 function getRatingBadgeClass(rating) {
   if (rating >= 70)
@@ -97,6 +117,27 @@ function getRatingBadgeClass(rating) {
   if (rating >= 30)
     return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300";
   return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300";
+}
+
+// Data-provenance badges, reusing the app's existing pill visual language
+// (text-xs px-1.5 py-0.5 rounded-full — same classes as the tab-nav count
+// badges above and ClaimEvidenceUpload's "recommended" chip) so VA-API data
+// and veteran-entered data are never visually ambiguous, especially in a
+// reviewer demo.
+function VaSourceBadge() {
+  return (
+    <span className="inline-flex items-center text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300">
+      VA.gov
+    </span>
+  );
+}
+
+function ManualSourceBadge() {
+  return (
+    <span className="inline-flex items-center text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+      Added by you
+    </span>
+  );
 }
 
 function getTimelineDotClass(type) {
@@ -140,10 +181,12 @@ async function _fetchAllVaData(vaAccessToken, setVaImportStatus) {
   const fetchedData = {
     claims: [],
     serviceHistory: null,
+    disabilityRating: null,
     appeals: [],
     appealableIssues: [],
     rawClaims: null,
     rawServiceHistory: null,
+    rawDisabilityRating: null,
     rawAppeals: null,
     rawAppealableIssues: null,
   };
@@ -164,6 +207,20 @@ async function _fetchAllVaData(vaAccessToken, setVaImportStatus) {
   } catch (err) {
     console.error("[VA Import] Service history error:", err);
     errors.push("Service History: " + err.message);
+  }
+
+  // Fetch Disability Rating
+  try {
+    setVaImportStatus((prev) => ({
+      ...prev,
+      message: "Fetching disability rating...",
+    }));
+    const rawDisabilityRating = await fetchVADisabilityRating(vaAccessToken);
+    fetchedData.rawDisabilityRating = rawDisabilityRating;
+    fetchedData.disabilityRating = formatDisabilityRating(rawDisabilityRating);
+  } catch (err) {
+    console.error("[VA Import] Disability rating error:", err);
+    errors.push("Disability Rating: " + err.message);
   }
 
   // Fetch Claims
@@ -214,13 +271,15 @@ function _buildVaImportStatusMessage(fetchedData, errors) {
     appeals: fetchedData.appeals?.length || 0,
     appealableIssues: fetchedData.appealableIssues?.length || 0,
     serviceHistory: fetchedData.serviceHistory ? 1 : 0,
+    disabilityRating: fetchedData.disabilityRating ? 1 : 0,
   };
 
   const totalImported =
     counts.claims +
     counts.appeals +
     counts.appealableIssues +
-    counts.serviceHistory;
+    counts.serviceHistory +
+    counts.disabilityRating;
 
   if (totalImported > 0) {
     return {
@@ -247,7 +306,12 @@ function _buildVaImportStatusMessage(fetchedData, errors) {
 }
 
 async function _importVaData(vaAccessToken, ctx) {
-  const { setVaImportStatus, loadVARecordsData, loadClaims } = ctx;
+  const {
+    setVaImportStatus,
+    loadVARecordsData,
+    loadClaims,
+    loadVkbEnrichment,
+  } = ctx;
 
   if (!vaAccessToken) {
     setVaImportStatus({
@@ -282,6 +346,7 @@ async function _importVaData(vaAccessToken, ctx) {
   // Reload the VA records display
   loadVARecordsData();
   loadClaims(); // Reload claims tab too since we may have added claims
+  loadVkbEnrichment(); // Refresh Ratings/Service sections too
 
   setVaImportStatus(_buildVaImportStatusMessage(fetchedData, errors));
 }
@@ -729,6 +794,7 @@ function MyPacketTabNavPrimary({
   myRatings,
   serviceHistory,
   timelineEvents,
+  vkbTimeline = [],
   t,
 }) {
   return (
@@ -795,7 +861,7 @@ function MyPacketTabNavPrimary({
           {t("myPacketSection.timeline")}
         </span>
         <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300 text-xs px-1.5 py-0.5 rounded-full">
-          {timelineEvents.length}
+          {timelineEvents.length + vkbTimeline.length}
         </span>
       </button>
     </>
@@ -934,6 +1000,7 @@ function MyPacketTabNav({
   myRatings,
   serviceHistory,
   timelineEvents,
+  vkbTimeline,
   painMaps,
   veteranProfile,
   savedForms,
@@ -954,6 +1021,7 @@ function MyPacketTabNav({
           myRatings={myRatings}
           serviceHistory={serviceHistory}
           timelineEvents={timelineEvents}
+          vkbTimeline={vkbTimeline}
           t={t}
         />
         <MyPacketTabNavSecondary
@@ -1087,7 +1155,7 @@ function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
         {rating.effectiveDate && (
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {t("myPacketSection.effective")}:{" "}
-            {new Date(rating.effectiveDate).toLocaleDateString()}
+            {formatLocalDate(rating.effectiveDate).toLocaleDateString()}
           </p>
         )}
       </div>
@@ -1139,6 +1207,73 @@ function MyRatingEntry({
   );
 }
 
+// Read-only, VA-sourced ratings merged into vkb.vaClaimsHistory.ratings by
+// saveDisabilityRatingToVKB. Same precedent as VkbTimelineSection: display
+// only, never counted in myRatings or the clear-all action.
+function VkbDisabilityRatingSection({ ratings }) {
+  return (
+    <section className="mt-6 border-t dark:border-gray-700 pt-4">
+      <h3 className="font-bold text-teal-800 dark:text-teal-200 mb-1 flex items-center gap-2 flex-wrap">
+        🎖️ VA-Verified Disability Rating ({ratings.length})
+        <VaSourceBadge />
+      </h3>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+        Read-only rating data synced from your VA.gov account.
+      </p>
+      <ul className="space-y-1">
+        {ratings.map((rating, i) => (
+          <li
+            key={`${rating.condition}-${i}`}
+            className="text-sm text-gray-700 dark:text-gray-300 flex flex-wrap items-center gap-2"
+          >
+            <span className="font-medium">{rating.condition}</span>
+            {rating.percentage != null && <span>{rating.percentage}%</span>}
+            {rating.combinedRating != null && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                (Combined: {rating.combinedRating}%)
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function VkbEnrichmentLoadingState({ label }) {
+  return (
+    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+      <div className="animate-spin w-8 h-8 mx-auto mb-3 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+      <p>Checking your VA.gov account for saved {label}…</p>
+    </div>
+  );
+}
+
+// FIX-1: combined rating via vaCalculator.js (the tested implementation),
+// not a third combined-rating implementation. Shows both raw and rounded
+// (e.g. "72% raw → 70%"). Bilateral grouping is out of scope for this
+// display — combines the flat list of saved ratings as-is.
+function CombinedRatingSummary({ myRatings, t }) {
+  const ratingValues = myRatings
+    .map((r) => r.rating)
+    .filter((r) => typeof r === "number" && r > 0);
+  if (ratingValues.length < 2) return null;
+
+  const raw = combineMultipleRatings(ratingValues);
+  const rounded = roundToNearest10(raw);
+
+  return (
+    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
+      <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
+        {t("myPacketSection.combinedRating") || "Combined Rating"}
+      </p>
+      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+        {raw}% raw → {rounded}%
+      </p>
+    </div>
+  );
+}
+
 function RatingsTab({
   myRatings,
   editingRating,
@@ -1147,37 +1282,53 @@ function RatingsTab({
   handleRemoveRating,
   handleClearAllRatings,
   setShowVAGovPaster,
+  vkbDisabilityRatings = [],
+  vkbEnrichmentLoading,
   t,
 }) {
-  if (myRatings.length === 0) {
+  const hasRatings = myRatings.length > 0;
+  const hasVkbRatings = vkbDisabilityRatings.length > 0;
+  if (!hasRatings && !hasVkbRatings) {
+    if (vkbEnrichmentLoading) {
+      return <VkbEnrichmentLoadingState label="ratings" />;
+    }
     return <RatingsEmptyState setShowVAGovPaster={setShowVAGovPaster} t={t} />;
   }
   return (
     <>
-      <div className="mb-4 flex justify-between items-center">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {myRatings.length} {t("myPacketSection.ratingsSaved")}
-        </p>
-        <button
-          onClick={handleClearAllRatings}
-          className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-        >
-          {t("myPacketSection.clearAll")}
-        </button>
-      </div>
-      <div className="space-y-3">
-        {myRatings.map((rating) => (
-          <MyRatingEntry
-            key={rating.id}
-            rating={rating}
-            editingRating={editingRating}
-            setEditingRating={setEditingRating}
-            handleUpdateRating={handleUpdateRating}
-            handleRemoveRating={handleRemoveRating}
-            t={t}
-          />
-        ))}
-      </div>
+      {hasRatings && (
+        <>
+          <CombinedRatingSummary myRatings={myRatings} t={t} />
+          <div className="mb-4 flex justify-between items-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {myRatings.length} {t("myPacketSection.ratingsSaved")}
+            </p>
+            <button
+              onClick={handleClearAllRatings}
+              className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+            >
+              {t("myPacketSection.clearAll")}
+            </button>
+          </div>
+          <div className="space-y-3">
+            {myRatings.map((rating) => (
+              <MyRatingEntry
+                key={rating.id}
+                rating={rating}
+                editingRating={editingRating}
+                setEditingRating={setEditingRating}
+                handleUpdateRating={handleUpdateRating}
+                handleRemoveRating={handleRemoveRating}
+                t={t}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      {hasVkbRatings && (
+        <VkbDisabilityRatingSection ratings={vkbDisabilityRatings} />
+      )}
     </>
   );
 }
@@ -1496,6 +1647,11 @@ function ContactInfoSection({ veteranProfile, setVeteranProfile, t }) {
   );
 }
 
+// Q4: the Profile tab's manual editor writes through to the SAME canonical
+// serviceHistory.servicePeriods[] array the Service tab reads — every
+// period in veteranProfile.servicePeriods always has a real canonical id
+// (see ServicePeriodsSection's add handler), so every edit here is an
+// immediate updateServicePeriod call, not a batched "Save Profile" write.
 function _updateServicePeriodField(
   veteranProfile,
   setVeteranProfile,
@@ -1504,8 +1660,12 @@ function _updateServicePeriodField(
   value,
 ) {
   const newPeriods = [...veteranProfile.servicePeriods];
-  newPeriods[idx] = { ...newPeriods[idx], [field]: value };
+  const updated = { ...newPeriods[idx], [field]: value };
+  newPeriods[idx] = updated;
   setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
+  if (updated.id) {
+    updateServicePeriod(updated.id, { [field]: value });
+  }
 }
 
 function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
@@ -1516,6 +1676,8 @@ function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
       </h5>
       <button
         onClick={() => {
+          const period = veteranProfile.servicePeriods[idx];
+          if (period?.id) removeServicePeriod(period.id);
           const newPeriods = veteranProfile.servicePeriods.filter(
             (_, i) => i !== idx,
           );
@@ -1709,25 +1871,22 @@ function ServicePeriodsSection({ veteranProfile, setVeteranProfile, t }) {
         </h4>
         <button
           onClick={() => {
-            const newPeriod = {
-              id: `temp-${Date.now()}`,
+            // Q4: create the period in the canonical store immediately —
+            // every entry in veteranProfile.servicePeriods must have a
+            // real id so subsequent field edits write through correctly.
+            addServicePeriod({
               branch: "",
               component: "Active",
               serviceStartDate: "",
               serviceEndDate: "",
               characterOfService: "",
               mos: "",
-              rankAtDischarge: "",
               formType: "DD214",
               notes: "",
-              isNew: true,
-            };
+            });
             setVeteranProfile({
               ...veteranProfile,
-              servicePeriods: [
-                ...(veteranProfile.servicePeriods || []),
-                newPeriod,
-              ],
+              servicePeriods: getServicePeriods(),
             });
           }}
           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2"
@@ -1790,11 +1949,53 @@ function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
         <div className="flex justify-end gap-3">
           <button
             onClick={() => {
-              localStorage.setItem(
-                "vet_rate_veteran_profile",
-                JSON.stringify(veteranProfile),
-              );
-              alert(`✅ ${t("myPacketSection.profileSaved")}`);
+              // FIX-10 (SECURITY): route through saveVeteranProfile()'s
+              // whitelist + sanitizeString + markAsModified() instead of a
+              // raw localStorage.setItem that bypassed all of it. Branch
+              // the alert on the actual return value — it returns false on
+              // quota exhaustion, which the old code always claimed as
+              // success.
+              //
+              // FIX-9: an explicit Save Profile click is the user
+              // confirming these field values — mark every currently
+              // non-empty field "user"-sourced so a later document import
+              // never silently overwrites it (autoPopulateProfile treats
+              // profileFieldSources[field] === "user" as never-overwrite).
+              const EXCLUDED_FROM_SOURCE_TRACKING = new Set([
+                "profileFieldSources",
+                "servicePeriods",
+                "lastUpdated",
+                "profileVersion",
+              ]);
+              const fieldSources = {
+                ...(veteranProfile.profileFieldSources || {}),
+              };
+              Object.keys(veteranProfile).forEach((field) => {
+                if (
+                  !EXCLUDED_FROM_SOURCE_TRACKING.has(field) &&
+                  veteranProfile[field] !== undefined &&
+                  veteranProfile[field] !== ""
+                ) {
+                  fieldSources[field] = "user";
+                }
+              });
+
+              const success = saveVeteranProfile({
+                ...veteranProfile,
+                profileFieldSources: fieldSources,
+              });
+
+              if (success) {
+                // Re-read from storage so the UI reflects what was
+                // actually persisted post-sanitization, not the raw
+                // pre-sanitized local state.
+                setVeteranProfile(getVeteranProfile());
+                alert(`✅ ${t("myPacketSection.profileSaved")}`);
+              } else {
+                alert(
+                  "⚠️ Profile could not be saved — your device storage may be full. Export a backup and free up space, then try again.",
+                );
+              }
             }}
             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
           >
@@ -1963,6 +2164,21 @@ function DD214DropZone({
   );
 }
 
+function DD214ExtractButtonLabel({ isProcessingDD214, aiAvailable, t }) {
+  if (isProcessingDD214) {
+    return (
+      <>
+        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+        {t("myPacketSection.processing")}
+      </>
+    );
+  }
+  if (aiAvailable) {
+    return <>🤖 {t("myPacketSection.extractWithAI")}</>;
+  }
+  return <>📝 Extract (no AI)</>;
+}
+
 function DD214PasteProcessor({
   dd214Text,
   setDD214Text,
@@ -1993,17 +2209,14 @@ function DD214PasteProcessor({
       <div className="flex flex-wrap gap-2">
         <button
           onClick={handleProcessDD214}
-          disabled={isProcessingDD214 || !aiStatus.available}
+          disabled={isProcessingDD214}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
         >
-          {isProcessingDD214 ? (
-            <>
-              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-              {t("myPacketSection.processing")}
-            </>
-          ) : (
-            <>🤖 {t("myPacketSection.extractWithAI")}</>
-          )}
+          <DD214ExtractButtonLabel
+            isProcessingDD214={isProcessingDD214}
+            aiAvailable={aiStatus.available}
+            t={t}
+          />
         </button>
         <button
           disabled
@@ -2038,85 +2251,144 @@ function DD214PasteProcessor({
   );
 }
 
-function DD214DataGridA({ d, t }) {
+// C3: summary view computed from the canonical servicePeriods[] array
+// (Q2 — Total time in service headline + Service span context, shown
+// separately since they answer different questions for a veteran with a
+// break in service).
+function DD214PeriodsSummary({ summary, t }) {
   return (
-    <>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("myPacketSection.branch")}
-        </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.branch || "N/A"}
-        </p>
-      </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("myPacketSection.mos")}
-        </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.mos || "N/A"}
-        </p>
-      </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("myPacketSection.mosTitle")}
-        </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-          {d.mosTitle || "N/A"}
-        </p>
-      </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("myPacketSection.entryDate")}
-        </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.entryDate || "N/A"}
-        </p>
-      </div>
-    </>
-  );
-}
-
-function DD214DataGridB({ d, t }) {
-  return (
-    <>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("myPacketSection.separationDate")}
-        </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.separationDate || "N/A"}
-        </p>
-      </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+    <div className="space-y-3">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {t("myPacketSection.timeInService")}
         </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.yearsService
-            ? `${d.yearsService}y ${d.monthsService || 0}m`
+        <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          {summary.totalTimeInService
+            ? `Total time in service: ${summary.totalTimeInService}`
             : "N/A"}
         </p>
+        {summary.serviceSpan && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Service span: {summary.serviceSpan.start || "?"} –{" "}
+            {summary.serviceSpan.end || "?"}
+          </p>
+        )}
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("myPacketSection.characterOfService")}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t("myPacketSection.branch")}
+          </p>
+          <p className="font-semibold text-gray-900 dark:text-gray-100">
+            {summary.branches.length > 0 ? summary.branches.join(", ") : "N/A"}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Highest Pay Grade
+          </p>
+          <p className="font-semibold text-gray-900 dark:text-gray-100">
+            {summary.highestPayGrade || "N/A"}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Most Recent Rank
+          </p>
+          <p className="font-semibold text-gray-900 dark:text-gray-100">
+            {summary.mostRecentRank || "N/A"}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {t("myPacketSection.characterOfService")}
+          </p>
+          <p className="font-semibold text-gray-900 dark:text-gray-100">
+            {summary.characterOfService || "N/A"}
+          </p>
+          {summary.characterOfServiceDisagrees && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+              ⚠️ Periods disagree — see details below
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// C3: detail view — one card per period, most recent first.
+function DD214PeriodDetailCard({ period, t }) {
+  return (
+    <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-white dark:bg-gray-800">
+      <div className="flex items-center justify-between mb-2">
+        <h5 className="font-semibold text-gray-900 dark:text-gray-100">
+          {period.serviceStartDate || "?"} –{" "}
+          {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
+        </h5>
+        {period.incomplete && (
+          <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+            Incomplete
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">
+            {t("myPacketSection.branch")}:{" "}
+          </span>
+          {period.branch || "N/A"}
+          {period.component ? ` (${period.component})` : ""}
         </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.characterOfService || "N/A"}
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Rank: </span>
+          {period.rank || "N/A"}
+          {period.payGrade ? ` (${period.payGrade})` : ""}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">
+            {t("myPacketSection.mos")}:{" "}
+          </span>
+          {period.mos || "N/A"}
+          {period.mosTitle ? ` — ${period.mosTitle}` : ""}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">
+            {t("myPacketSection.characterOfService")}:{" "}
+          </span>
+          {period.characterOfService || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">
+            Separation Reason:{" "}
+          </span>
+          {period.narrativeReason || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Source: </span>
+          {period.sourceDocument || "N/A"}
         </p>
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t("myPacketSection.foreignService")}
-        </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">
-          {d.foreignService
-            ? t("myPacketSection.yes")
-            : t("myPacketSection.no")}
-        </p>
-      </div>
-    </>
+    </div>
+  );
+}
+
+function DD214PeriodsDetail({ periods, t }) {
+  const sorted = [...periods].sort((a, b) => {
+    const aKey = a.serviceEndDate || a.serviceStartDate || "";
+    const bKey = b.serviceEndDate || b.serviceStartDate || "";
+    return bKey.localeCompare(aKey);
+  });
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+        Service Periods ({periods.length})
+      </h4>
+      {sorted.map((period) => (
+        <DD214PeriodDetailCard key={period.id} period={period} t={t} />
+      ))}
+    </div>
   );
 }
 
@@ -2152,13 +2424,12 @@ function DD214ExtractedDataDisplay({
   handleClearDD214,
   t,
 }) {
-  const d = serviceHistory.dd214Data;
+  const periods = serviceHistory.servicePeriods || [];
+  const summary = summarizeServicePeriods(periods);
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <DD214DataGridA d={d} t={t} />
-        <DD214DataGridB d={d} t={t} />
-      </div>
+      <DD214PeriodsSummary summary={summary} t={t} />
+      {periods.length > 0 && <DD214PeriodsDetail periods={periods} t={t} />}
       <DD214DataActions
         setShowDD214Processor={setShowDD214Processor}
         handleClearDD214={handleClearDD214}
@@ -2185,7 +2456,7 @@ function DD214SectionHeader({
           </span>
         )}
       </h3>
-      {!showDD214Processor && !serviceHistory.dd214Data && (
+      {!showDD214Processor && !serviceHistory.servicePeriods?.length && (
         <div className="flex gap-2">
           <button
             onClick={() => setShowDD214Processor(true)}
@@ -2235,7 +2506,7 @@ function DD214Section({
         t={t}
       />
 
-      {!serviceHistory.dd214Data && !showDD214Processor && (
+      {!serviceHistory.servicePeriods?.length && !showDD214Processor && (
         <DD214DropZone
           dd214FileInputRef={dd214FileInputRef}
           handleDD214DragOver={handleDD214DragOver}
@@ -2261,7 +2532,7 @@ function DD214Section({
         />
       )}
 
-      {serviceHistory.dd214Data && !showDD214Processor && (
+      {serviceHistory.servicePeriods?.length > 0 && !showDD214Processor && (
         <DD214ExtractedDataDisplay
           serviceHistory={serviceHistory}
           setShowDD214Processor={setShowDD214Processor}
@@ -2784,7 +3055,11 @@ function RibbonRackSection({
       {showRibbonRack && (
         <div className="flex justify-center p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
           <RibbonRackDisplay
-            awards={serviceHistory.awards}
+            awards={serviceHistory.awards.map((award) => ({
+              awardId: award.id,
+              award: enrichAwardForDisplay(award),
+              devices: award.devices || [],
+            }))}
             ribbonsPerRow={3}
             size="md"
             showNames={true}
@@ -2795,14 +3070,72 @@ function RibbonRackSection({
   );
 }
 
+// Read-only, straight from the last VA-returned service history response
+// (vaRecords.serviceHistory, cached untouched by saveVARecordsRaw — see
+// vaDataPersistence.js). Deliberately NOT sourced from vkb.serviceHistory:
+// that object is fill-if-empty merged with DD214 data by saveServiceHistoryToVKB,
+// so a veteran with DD214 data loaded first would see DD214 field values
+// displayed under this VA-Verified badge. This section must only ever show
+// what VA actually returned, even when it differs from the merged profile.
+function VkbServiceHistorySection({ serviceHistory }) {
+  return (
+    <section className="border-t dark:border-gray-700 pt-4">
+      <h3 className="font-bold text-teal-800 dark:text-teal-200 mb-1 flex items-center gap-2 flex-wrap">
+        🎖️ VA-Verified Service Record
+        <VaSourceBadge />
+      </h3>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+        Read-only data exactly as returned by your VA.gov service history
+        record.
+      </p>
+      <div className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+        {serviceHistory.branch && (
+          <p>
+            <span className="font-medium">Branch:</span> {serviceHistory.branch}
+          </p>
+        )}
+        {(serviceHistory.startDate || serviceHistory.endDate) && (
+          <p>
+            <span className="font-medium">Service Dates:</span>{" "}
+            {serviceHistory.startDate || "—"} to {serviceHistory.endDate || "—"}
+          </p>
+        )}
+        {serviceHistory.dischargeStatus && (
+          <p>
+            <span className="font-medium">Character of Service:</span>{" "}
+            {serviceHistory.dischargeStatus}
+          </p>
+        )}
+        {serviceHistory.payGrade && (
+          <p>
+            <span className="font-medium">Rank at Discharge:</span>{" "}
+            {serviceHistory.payGrade}
+          </p>
+        )}
+        {serviceHistory.deployments?.length > 0 && (
+          <p>
+            <span className="font-medium">Deployments:</span>{" "}
+            {serviceHistory.deployments.length}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function ServiceTab(props) {
-  const { t } = props;
+  const { t, vaRecords } = props;
+  const vaServiceHistory = vaRecords?.serviceHistory;
   return (
     <div className="space-y-6">
       <DD214Section {...props} />
       <DeploymentsSection {...props} />
       <AwardsSection {...props} />
       <RibbonRackSection {...props} />
+
+      {vaServiceHistory && (
+        <VkbServiceHistorySection serviceHistory={vaServiceHistory} />
+      )}
 
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -2916,11 +3249,12 @@ function ClaimActionButtons({
   handleViewStatement,
   showDownloadMenu,
   setShowDownloadMenu,
-  isCertified,
+  certifiedClaimIds,
   handleDownloadStatement,
   handleRemove,
   t,
 }) {
+  const isCertified = certifiedClaimIds.has(claim.id);
   return (
     <>
       {claim.status === "Drafting" ? (
@@ -2993,9 +3327,12 @@ function ClaimEntry({
   claim,
   getStatusColor,
   handleStatusChange,
+  vaAccessToken,
+  onUploadEvidence,
   t,
   ...actionProps
 }) {
+  const canUploadEvidence = !!(claim.vaClaimId && vaAccessToken);
   return (
     <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:border-indigo-300 dark:hover:border-indigo-500 transition-all overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -3009,6 +3346,11 @@ function ClaimEntry({
             >
               {claim.status}
             </span>
+            {claim.vaClaimId || claim.vaAppealId ? (
+              <VaSourceBadge />
+            ) : (
+              <ManualSourceBadge />
+            )}
           </div>
 
           {claim.parentCondition && (
@@ -3046,6 +3388,15 @@ function ClaimEntry({
             </option>
             <option value="Filed">{t("myPacketSection.filed")}</option>
           </select>
+
+          {canUploadEvidence && (
+            <button
+              onClick={() => onUploadEvidence(claim)}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg font-semibold hover:bg-indigo-200 dark:hover:bg-indigo-800/50 transition-colors text-xs sm:text-sm col-span-2 sm:col-span-1"
+            >
+              Upload Evidence to VA
+            </button>
+          )}
 
           <ClaimActionButtons claim={claim} t={t} {...actionProps} />
         </div>
@@ -3103,13 +3454,15 @@ function ClaimsTab({
   handleStatusChange,
   showDownloadMenu,
   setShowDownloadMenu,
-  isCertified,
+  certifiedClaimIds,
   handleDownloadStatement,
   handleRemove,
   handleClearAll,
   getStatusColor,
+  vaAccessToken,
   t,
 }) {
+  const [evidenceUploadClaim, setEvidenceUploadClaim] = useState(null);
   const hasClaims = claims.length > 0;
   const hasSuggestions = cfileConditions.length > 0;
   if (!hasClaims && !hasSuggestions) {
@@ -3129,9 +3482,11 @@ function ClaimsTab({
               handleViewStatement={handleViewStatement}
               showDownloadMenu={showDownloadMenu}
               setShowDownloadMenu={setShowDownloadMenu}
-              isCertified={isCertified}
+              certifiedClaimIds={certifiedClaimIds}
               handleDownloadStatement={handleDownloadStatement}
               handleRemove={handleRemove}
+              vaAccessToken={vaAccessToken}
+              onUploadEvidence={setEvidenceUploadClaim}
               t={t}
             />
           ))}
@@ -3151,6 +3506,15 @@ function ClaimsTab({
             {t("myPacketSection.clearAllClaims")}
           </button>
         </div>
+      )}
+
+      {evidenceUploadClaim && (
+        <ClaimEvidenceUpload
+          claimId={evidenceUploadClaim.vaClaimId}
+          accessToken={vaAccessToken}
+          claimDetails={{ type: evidenceUploadClaim.conditionName }}
+          onClose={() => setEvidenceUploadClaim(null)}
+        />
       )}
     </>
   );
@@ -3219,7 +3583,7 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
                   "Event"}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                {new Date(event.date).toLocaleDateString("en-US", {
+                {formatLocalDate(event.date).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
@@ -3274,9 +3638,15 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
 // Read-only VKB evidence-timeline events, merged into the DISPLAY only (never
 // the store) so handleClearTimelineEvents keeps clearing user events alone.
 function VkbTimelineSection({ events }) {
-  const sorted = [...events].sort(
-    (a, b) => new Date(b.date) - new Date(a.date),
-  );
+  // FIX-5: entries with no real extracted/filename date carry
+  // dateIsProcessingDate: true and date: null instead of a fabricated
+  // "today" date — sort those last and label them honestly rather than
+  // rendering a fake date.
+  const sorted = [...events].sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return new Date(b.date) - new Date(a.date);
+  });
   return (
     <section className="mt-6 border-t dark:border-gray-700 pt-4">
       <h3 className="font-bold text-teal-800 dark:text-teal-200 mb-1">
@@ -3289,11 +3659,13 @@ function VkbTimelineSection({ events }) {
       <ul className="space-y-2">
         {sorted.map((e, i) => (
           <li
-            key={`${e.date}-${i}`}
+            key={`${e.date || "unknown"}-${i}`}
             className="text-sm text-gray-700 dark:text-gray-300 flex flex-wrap gap-2"
           >
             <span className="font-mono text-gray-500 dark:text-gray-400">
-              {e.date || "—"}
+              {e.dateIsProcessingDate
+                ? `date unknown — imported ${e.importedDate || ""}`
+                : e.date || "—"}
             </span>
             <span>{e.description}</span>
             {e.source && (
@@ -3560,6 +3932,7 @@ function PainMapDetailHeader({ viewingPainMap, setViewingPainMap, t }) {
       <button
         onClick={() => setViewingPainMap(null)}
         className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+        aria-label={t("common.close") || "Close"}
       >
         <svg
           className="w-6 h-6"
@@ -3722,6 +4095,7 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
             <button
               onClick={() => setViewingForm(null)}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              aria-label={t("common.close") || "Close"}
             >
               <svg
                 className="w-6 h-6"
@@ -3805,6 +4179,7 @@ function StatementViewerHeader({
             setViewingClaimId(null);
           }}
           className="text-white hover:text-gray-200"
+          aria-label={t("common.close") || "Close"}
         >
           <svg
             className="w-6 h-6"
@@ -3827,11 +4202,12 @@ function StatementViewerHeader({
 
 function StatementViewerModal({
   viewingStatement,
+  viewingClaimId,
   setViewingStatement,
   setViewingClaimId,
   handleEditStatement,
-  isCertified,
-  setIsCertified,
+  certifiedClaimIds,
+  setCertifiedClaimIds,
   t,
 }) {
   return (
@@ -3840,6 +4216,15 @@ function StatementViewerModal({
       onClose={() => {
         setViewingStatement(null);
         setViewingClaimId(null);
+        // D-10: reset this claim's certification when the viewer closes
+        // — certifying a statement is a deliberate "I attest this is
+        // true" action meant to happen right before download, not a
+        // persistent setting that should silently carry over.
+        setCertifiedClaimIds((prev) => {
+          const next = new Set(prev);
+          next.delete(viewingClaimId);
+          return next;
+        });
       }}
       size="xl"
       zIndex={70}
@@ -3881,8 +4266,18 @@ function StatementViewerModal({
         {/* Certification Checkbox before download */}
         <div className="border-t pt-4">
           <CertificationCheckbox
-            checked={isCertified}
-            onChange={setIsCertified}
+            checked={certifiedClaimIds.has(viewingClaimId)}
+            onChange={(checked) =>
+              setCertifiedClaimIds((prev) => {
+                const next = new Set(prev);
+                if (checked) {
+                  next.add(viewingClaimId);
+                } else {
+                  next.delete(viewingClaimId);
+                }
+                return next;
+              })
+            }
           />
         </div>
       </div>
@@ -4185,10 +4580,10 @@ function downloadAsPdf(statement, fileName, claim) {
 function _loadVeteranProfile(ctx) {
   const { setVeteranProfile } = ctx;
   const profile = getVeteranProfile();
-  // Initialize servicePeriods array if it doesn't exist
-  if (!Array.isArray(profile.servicePeriods)) {
-    profile.servicePeriods = [];
-  }
+  // Q4: the Profile tab's manual editor reads/writes the SAME canonical
+  // array as the Service tab (serviceHistory.servicePeriods[]), not the
+  // legacy profile.servicePeriods field.
+  profile.servicePeriods = getServicePeriods();
   setVeteranProfile(profile || {});
 }
 
@@ -4241,28 +4636,29 @@ function _loadClaimsData(ctx) {
   setStats(getClaimStats());
 }
 
-// An IndexedDB open blocked by another connection's pending upgrade never
-// settles; race it so a slow/unavailable VKB never blocks the modal — the
-// document tabs just render empty. Same 3s guard as getLoadableConditions.
-const _raceVkb = (promise) =>
-  Promise.race([
-    promise,
-    new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
-  ]);
-
 async function _loadVkbDocuments(ctx) {
   const { setDocuments } = ctx;
   try {
-    setDocuments(await _raceVkb(getAllDocumentsByCategory()));
+    setDocuments(await raceVkb(getAllDocumentsByCategory()));
   } catch {
     setDocuments(null);
   }
 }
 
 async function _loadVkbEnrichment(ctx) {
-  const { setCfileConditions, setVkbTimeline } = ctx;
+  const {
+    setCfileConditions,
+    setVkbTimeline,
+    setVkbDisabilityRatings,
+    setVkbEnrichmentLoading,
+  } = ctx;
+  setVkbEnrichmentLoading(true);
   try {
-    const vkb = await _raceVkb(loadVKB());
+    // A blocked IndexedDB upgrade can time out the first race; one retry
+    // covers that transient case instead of leaving the tab looking empty
+    // for the rest of the session.
+    let vkb = await raceVkb(loadVKB());
+    if (!vkb) vkb = await raceVkb(loadVKB());
     if (!vkb) return;
     const current = Array.isArray(vkb.medicalConditions?.current)
       ? vkb.medicalConditions.current
@@ -4271,8 +4667,14 @@ async function _loadVkbEnrichment(ctx) {
     setVkbTimeline(
       Array.isArray(vkb.evidenceTimeline) ? vkb.evidenceTimeline : [],
     );
+    const ratings = Array.isArray(vkb.vaClaimsHistory?.ratings)
+      ? vkb.vaClaimsHistory.ratings
+      : [];
+    setVkbDisabilityRatings(ratings.filter((r) => r?.source === "VA.gov API"));
   } catch {
     // Best-effort read-only enrichment — leave defaults on failure.
+  } finally {
+    setVkbEnrichmentLoading(false);
   }
 }
 
@@ -4380,6 +4782,7 @@ function _clearDD214AndReload(ctx) {
   const { loadServiceHistory } = ctx;
   if (window.confirm("Clear all DD214 extracted data?")) {
     clearDD214Data();
+    clearServicePeriods();
     loadServiceHistory();
   }
 }
@@ -4478,10 +4881,11 @@ function _dd214DropFile(e, ctx) {
   );
 
   if (pdfFile) {
-    // Open DD214 Analyzer with the dropped file
-    // Store the file temporarily and open analyzer
+    // FIX-2: carry the dropped file through — onOpenDD214Analyzer() used
+    // to be called with no arguments, discarding it, so the analyzer
+    // opened empty and the veteran had to re-select the file.
     if (onOpenDD214Analyzer) {
-      onOpenDD214Analyzer();
+      onOpenDD214Analyzer(pdfFile);
     }
   } else {
     alert("Please drop a PDF file (DD214 document).");
@@ -4496,9 +4900,9 @@ function _dd214FileSelected(e, ctx) {
       file.type === "application/pdf" ||
       file.name.toLowerCase().endsWith(".pdf")
     ) {
-      // Open DD214 Analyzer
+      // FIX-2: carry the selected file through (see _dd214DropFile).
       if (onOpenDD214Analyzer) {
-        onOpenDD214Analyzer();
+        onOpenDD214Analyzer(file);
       }
     } else {
       alert("Please select a PDF file.");
@@ -4562,6 +4966,77 @@ function _parseDD214AiResponse(contentStr) {
   }
 }
 
+function _toIsoDate(dateStr) {
+  if (!dateStr) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return dateStr;
+  const [, month, day, year] = match;
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+// Q5: when AI is unavailable, fall back to parseServiceRecord (the same
+// regex extractor Muster Call already uses) instead of hard-disabling the
+// paste button. Less reliable than AI extraction, so it's tagged with a
+// low confidence and the veteran is told to double-check the result.
+async function _processDD214TextWithoutAI(dd214Text, ctx) {
+  const {
+    setIsProcessingDD214,
+    loadServiceHistory,
+    setDD214Text,
+    setShowDD214Processor,
+  } = ctx;
+  setIsProcessingDD214(true);
+  try {
+    const parsed = await parseServiceRecord(dd214Text);
+    saveDD214Data({
+      fullName: parsed.veteranName,
+      lastName: parsed.lastName,
+      firstName: parsed.firstName,
+      middleName: parsed.middleName,
+      dateOfBirth: parsed.dateOfBirth,
+      extractedText: dd214Text.substring(0, 5000),
+      confidence: 0.4,
+    });
+    upsertServicePeriod(
+      {
+        serviceStartDate: _toIsoDate(parsed.serviceStartDate),
+        serviceEndDate: _toIsoDate(parsed.serviceEndDate),
+        branch: parsed.branch || "",
+        rank: parsed.rank || "",
+        payGrade: parsed.payGrade || "",
+        mos: parsed.mos || "",
+        mosTitle: parsed.mosTitle || "",
+        characterOfService: parsed.dischargeType || "",
+        separationType: parsed.separationType || "",
+        separationAuthority: parsed.separationAuthority || "",
+        separationCode: parsed.spdCode || "",
+        reentryCode: parsed.reentryCode || "",
+        narrativeReason: parsed.narrativeReason || "",
+        foreignService: !!parsed.foreignService,
+        formType: parsed.formType || "DD214",
+      },
+      { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },
+    );
+    (parsed.awards || []).forEach((item) => {
+      const name = item.award?.name || item.matchedText;
+      if (!name) return;
+      addAward({ name, devices: item.devices || [] });
+    });
+    loadServiceHistory();
+    setDD214Text("");
+    setShowDD214Processor(false);
+    alert(
+      "DD214 information extracted using text pattern matching (no AI configured). Review the Service tab and correct anything that looks wrong.",
+    );
+  } catch (error) {
+    console.error("Error processing DD214 without AI:", error);
+    alert("Error processing DD214. Please try again.");
+  } finally {
+    setIsProcessingDD214(false);
+  }
+}
+
 async function _processDD214Text(dd214Text, aiStatus, ctx) {
   const {
     setIsProcessingDD214,
@@ -4575,9 +5050,7 @@ async function _processDD214Text(dd214Text, aiStatus, ctx) {
   }
 
   if (!aiStatus.available) {
-    alert(
-      "AI is not configured. Please set up AI in settings to process DD214 automatically.",
-    );
+    await _processDD214TextWithoutAI(dd214Text, ctx);
     return;
   }
 
@@ -4797,7 +5270,9 @@ function CFileDocumentCard({ doc }) {
           📋 {doc.fileName}
         </h4>
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Analyzed {(doc.uploadDate || "").split("T")[0]} · read-only
+          Analyzed {(doc.uploadDate || "").split("T")[0]}
+          {doc.pageCount ? ` · ${doc.pageCount} page${doc.pageCount === 1 ? "" : "s"}` : ""}
+          {doc.fileSize ? ` · ${formatFileSize(doc.fileSize)}` : ""} · read-only
         </p>
       </div>
       {data.summary && (
@@ -4909,7 +5384,10 @@ function useMyPacketCoreState() {
   const [importStatus, setImportStatus] = useState(null);
   const [showImportConfirm, setShowImportConfirm] = useState(null);
   const [backupCreated, setBackupCreated] = useState(false);
-  const [isCertified, setIsCertified] = useState(false); // Certification for downloads
+  // D-10: keyed by claim id, not a single shared boolean — certifying one
+  // claim's statement previously silently "certified" every other claim's
+  // download button too.
+  const [certifiedClaimIds, setCertifiedClaimIds] = useState(() => new Set());
   const [showBackupGuide, setShowBackupGuide] = useState(false); // Ground Guide - first-time backup guidance
   const [_hasExternalBackup, setHasExternalBackup] = useState(false); // Track if user has downloaded backup
   // VKB-derived, READ-ONLY document-flow state (Wave 2a). Additive: these never
@@ -4918,6 +5396,8 @@ function useMyPacketCoreState() {
   const [documents, setDocuments] = useState(null);
   const [cfileConditions, setCfileConditions] = useState([]);
   const [vkbTimeline, setVkbTimeline] = useState([]);
+  const [vkbDisabilityRatings, setVkbDisabilityRatings] = useState([]);
+  const [vkbEnrichmentLoading, setVkbEnrichmentLoading] = useState(true);
   const fileInputRef = useRef(null);
   const packetContentRef = useRef(null);
 
@@ -4932,6 +5412,10 @@ function useMyPacketCoreState() {
     setCfileConditions,
     vkbTimeline,
     setVkbTimeline,
+    vkbDisabilityRatings,
+    setVkbDisabilityRatings,
+    vkbEnrichmentLoading,
+    setVkbEnrichmentLoading,
     viewingStatement,
     setViewingStatement,
     viewingClaimId,
@@ -4944,8 +5428,8 @@ function useMyPacketCoreState() {
     setShowImportConfirm,
     backupCreated,
     setBackupCreated,
-    isCertified,
-    setIsCertified,
+    certifiedClaimIds,
+    setCertifiedClaimIds,
     showBackupGuide,
     setShowBackupGuide,
     setHasExternalBackup,
@@ -5097,6 +5581,8 @@ function _buildPacketLoaders(state) {
     setDocuments,
     setCfileConditions,
     setVkbTimeline,
+    setVkbDisabilityRatings,
+    setVkbEnrichmentLoading,
   } = state;
 
   const loadVeteranProfile = () => _loadVeteranProfile({ setVeteranProfile });
@@ -5112,7 +5598,12 @@ function _buildPacketLoaders(state) {
   const loadClaims = () => _loadClaimsData({ setClaims, setStats });
   const loadDocuments = () => _loadVkbDocuments({ setDocuments });
   const loadVkbEnrichment = () =>
-    _loadVkbEnrichment({ setCfileConditions, setVkbTimeline });
+    _loadVkbEnrichment({
+      setCfileConditions,
+      setVkbTimeline,
+      setVkbDisabilityRatings,
+      setVkbEnrichmentLoading,
+    });
 
   return {
     loadVeteranProfile,
@@ -5173,6 +5664,7 @@ function _buildPacketVaHandlers(ctx) {
   const {
     loadVARecordsData,
     loadClaims,
+    loadVkbEnrichment,
     vaAccessToken,
     setVaImportStatus,
     vaLogout,
@@ -5185,6 +5677,7 @@ function _buildPacketVaHandlers(ctx) {
       setVaImportStatus,
       loadVARecordsData,
       loadClaims,
+      loadVkbEnrichment,
     });
   };
   const _handleVaDisconnect = () =>
@@ -5367,6 +5860,8 @@ function _runPacketInitLoadEffect(setters) {
     setDocuments,
     setCfileConditions,
     setVkbTimeline,
+    setVkbDisabilityRatings,
+    setVkbEnrichmentLoading,
   } = setters;
   _loadClaimsData({ setClaims, setStats });
   _loadSavedForms({ setSavedForms });
@@ -5379,7 +5874,12 @@ function _runPacketInitLoadEffect(setters) {
   _checkAIStatus({ setAIStatus });
   // Read-only VKB document flow (best-effort, never blocks the modal).
   _loadVkbDocuments({ setDocuments });
-  _loadVkbEnrichment({ setCfileConditions, setVkbTimeline });
+  _loadVkbEnrichment({
+    setCfileConditions,
+    setVkbTimeline,
+    setVkbDisabilityRatings,
+    setVkbEnrichmentLoading,
+  });
 }
 
 // Auto-import VA records after fresh OAuth connection
@@ -5441,10 +5941,11 @@ function _runPacketBackupGuideEffect(
 function MyPacketExtraModals({ state, handlers }) {
   const {
     viewingStatement,
+    viewingClaimId,
     setViewingStatement,
     setViewingClaimId,
-    isCertified,
-    setIsCertified,
+    certifiedClaimIds,
+    setCertifiedClaimIds,
     showImportConfirm,
     setShowImportConfirm,
     claims,
@@ -5463,11 +5964,12 @@ function MyPacketExtraModals({ state, handlers }) {
       {viewingStatement && (
         <StatementViewerModal
           viewingStatement={viewingStatement}
+          viewingClaimId={viewingClaimId}
           setViewingStatement={setViewingStatement}
           setViewingClaimId={setViewingClaimId}
           handleEditStatement={handleEditStatement}
-          isCertified={isCertified}
-          setIsCertified={setIsCertified}
+          certifiedClaimIds={certifiedClaimIds}
+          setCertifiedClaimIds={setCertifiedClaimIds}
           t={t}
         />
       )}
@@ -5555,6 +6057,7 @@ function MyPacketView({ state, handlers }) {
     myRatings,
     serviceHistory,
     timelineEvents,
+    vkbTimeline,
     painMaps,
     veteranProfile,
     savedForms,
@@ -5592,6 +6095,7 @@ function MyPacketView({ state, handlers }) {
             myRatings={myRatings}
             serviceHistory={serviceHistory}
             timelineEvents={timelineEvents}
+            vkbTimeline={vkbTimeline}
             painMaps={painMaps}
             veteranProfile={veteranProfile}
             savedForms={savedForms}
@@ -5614,14 +6118,27 @@ function MyPacketView({ state, handlers }) {
 }
 
 // All MyPacket lifecycle effects, extracted so the component stays legible.
-function _useMyPacketEffects({
+// VADataCenter's embedded "Save Selected" button saves via saveVADataWithConsent
+// directly, bypassing _importVaData — without this, Ratings/Service stay stale
+// until the modal is closed and reopened. Same window-CustomEvent pattern as
+// the existing openMyPacket signal.
+function _runPacketVaDataSavedEffect(loaders) {
+  const handler = () => {
+    loaders.loadVARecordsData();
+    loaders.loadClaims();
+    loaders.loadVkbEnrichment();
+  };
+  window.addEventListener("vetrate:va-data-saved", handler);
+  return () => window.removeEventListener("vetrate:va-data-saved", handler);
+}
+
+function _useInitLoadEffect({
   coreState,
   tabsState,
   serviceHistoryState,
   timelinePainState,
   vaState,
   setVeteranProfile,
-  handleVaDataImport,
 }) {
   useEffect(
     () =>
@@ -5639,6 +6156,8 @@ function _useMyPacketEffects({
         setDocuments: coreState.setDocuments,
         setCfileConditions: coreState.setCfileConditions,
         setVkbTimeline: coreState.setVkbTimeline,
+        setVkbDisabilityRatings: coreState.setVkbDisabilityRatings,
+        setVkbEnrichmentLoading: coreState.setVkbEnrichmentLoading,
       }),
     [
       coreState.setClaims,
@@ -5653,9 +6172,31 @@ function _useMyPacketEffects({
       coreState.setDocuments,
       coreState.setCfileConditions,
       coreState.setVkbTimeline,
+      coreState.setVkbDisabilityRatings,
+      coreState.setVkbEnrichmentLoading,
       setVeteranProfile,
     ],
   );
+}
+
+function _useMyPacketEffects({
+  coreState,
+  tabsState,
+  serviceHistoryState,
+  timelinePainState,
+  vaState,
+  setVeteranProfile,
+  handleVaDataImport,
+  loaders,
+}) {
+  _useInitLoadEffect({
+    coreState,
+    tabsState,
+    serviceHistoryState,
+    timelinePainState,
+    vaState,
+    setVeteranProfile,
+  });
 
   useEffect(
     () =>
@@ -5690,6 +6231,12 @@ function _useMyPacketEffects({
       coreState.setHasExternalBackup,
       coreState.setShowBackupGuide,
     ],
+  );
+
+  useEffect(
+    () => _runPacketVaDataSavedEffect(loaders),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   );
 }
 
@@ -5750,6 +6297,7 @@ const MyPacket = ({
     vaState,
     setVeteranProfile,
     handleVaDataImport: handlers.handleVaDataImport,
+    loaders,
   });
 
   return <MyPacketView state={state} handlers={handlers} />;

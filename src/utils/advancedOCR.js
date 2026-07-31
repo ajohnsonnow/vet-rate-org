@@ -162,6 +162,7 @@ export async function advancedPDFAnalysis(
         method: "standard",
         confidence: 100,
         processingTime: Date.now() - standardText.startTime,
+        ocrUsed: false,
       };
     }
 
@@ -560,6 +561,11 @@ function buildOCRResult(
     processingTime: Date.now() - startTime,
     pagesProcessed: pagesToProcess,
     totalCharsExtracted: totalChars,
+    // D-12: this result IS OCR — the vision-fallback guard in
+    // musterCallProcessor's _applyVisionFallbackIfNeeded checks this flag
+    // (deliberately kept, not removed) to decide whether a low-confidence
+    // OCR result is even eligible for the Florence-2 fallback.
+    ocrUsed: true,
   };
 }
 

@@ -853,26 +853,82 @@ function estimateProcessingTime(textLength, chunkCount, aiMode) {
  * @param {Array<Object>} chunkResults - Array of analysis results from each chunk
  * @returns {Object} - Merged analysis result
  */
+// The model sees one chunk at a time, so these four fields arrive from
+// DIFFERENT chunks and used to be accepted independently, with no cross-field
+// check. Observed on a real C-File: branch "Blue Cross Blue Shield" (an insurer
+// named on a medical record) and a separationDate three years BEFORE the
+// entryDate. Model output is untrusted input — validate at this boundary.
+const MILITARY_BRANCH_TOKENS = [
+  "army",
+  "navy",
+  "air force",
+  "marine",
+  "coast guard",
+  "space force",
+  "national guard",
+  "reserve",
+  "merchant marine",
+];
+
+const _isPlausibleBranch = (branch) =>
+  MILITARY_BRANCH_TOKENS.some((token) =>
+    String(branch).toLowerCase().includes(token),
+  );
+
+// Dates here are free-form by design ("Circa 2003", "Approx Date"), so only
+// enforce ordering when BOTH sides parse to a real date.
+const _isChronological = (entryDate, separationDate) => {
+  const entry = Date.parse(entryDate);
+  const separation = Date.parse(separationDate);
+  if (Number.isNaN(entry) || Number.isNaN(separation)) return true;
+  return separation >= entry;
+};
+
 function _mergeServicePeriod(merged, chunkResults) {
   // Merge service period (take non-empty values from any chunk)
   for (const result of chunkResults) {
-    if (result.servicePeriod) {
-      if (!merged.servicePeriod.branch && result.servicePeriod.branch) {
-        merged.servicePeriod.branch = result.servicePeriod.branch;
+    const candidate = result.servicePeriod;
+    if (!candidate) continue;
+
+    if (!merged.servicePeriod.branch && candidate.branch) {
+      if (_isPlausibleBranch(candidate.branch)) {
+        merged.servicePeriod.branch = candidate.branch;
+      } else {
+        console.warn(
+          `⚠️ Rejected implausible service branch from C-File chunk: "${candidate.branch}"`,
+        );
       }
-      if (!merged.servicePeriod.entryDate && result.servicePeriod.entryDate) {
-        merged.servicePeriod.entryDate = result.servicePeriod.entryDate;
-      }
+    }
+    if (!merged.servicePeriod.entryDate && candidate.entryDate) {
       if (
-        !merged.servicePeriod.separationDate &&
-        result.servicePeriod.separationDate
+        _isChronological(
+          candidate.entryDate,
+          merged.servicePeriod.separationDate,
+        )
       ) {
-        merged.servicePeriod.separationDate =
-          result.servicePeriod.separationDate;
+        merged.servicePeriod.entryDate = candidate.entryDate;
+      } else {
+        console.warn(
+          `⚠️ Rejected entry date "${candidate.entryDate}" — later than accepted separation date "${merged.servicePeriod.separationDate}"`,
+        );
       }
-      if (!merged.servicePeriod.mos && result.servicePeriod.mos) {
-        merged.servicePeriod.mos = result.servicePeriod.mos;
+    }
+    if (!merged.servicePeriod.separationDate && candidate.separationDate) {
+      if (
+        _isChronological(
+          merged.servicePeriod.entryDate,
+          candidate.separationDate,
+        )
+      ) {
+        merged.servicePeriod.separationDate = candidate.separationDate;
+      } else {
+        console.warn(
+          `⚠️ Rejected separation date "${candidate.separationDate}" — earlier than accepted entry date "${merged.servicePeriod.entryDate}"`,
+        );
       }
+    }
+    if (!merged.servicePeriod.mos && candidate.mos) {
+      merged.servicePeriod.mos = candidate.mos;
     }
   }
 }

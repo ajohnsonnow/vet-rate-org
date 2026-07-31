@@ -43,8 +43,16 @@ const APP_VERSION: string = JSON.parse(
   readFileSync("package.json", "utf-8"),
 ).version;
 
-const CORPUS_DIR = join(process.cwd(), "docs", "test-data");
+// Overridable so the same spec can be pointed at a real, entirely-outside-
+// the-repo veteran document corpus (e.g. CORPUS_DIR=E:\Williams_C-FIle) while
+// still defaulting to the committed docs/test-data fixture for anyone else
+// who runs this test.
+const CORPUS_DIR =
+  process.env.CORPUS_DIR || join(process.cwd(), "docs", "test-data");
+// Must stay outside the repo: screenshots and the report capture real personal
+// document content. Overridable so each run can write to its own scratchpad.
 const OUTPUT_DIR =
+  process.env.REPORT_OUT_DIR ||
   "C:\\Users\\antho\\AppData\\Local\\Temp\\claude\\e--VS-Studio-vet-rate-org-official\\06c99292-1d1a-4e2f-99b3-bd4c7a19d0d9\\scratchpad\\doc-ingestion-report";
 const REPORT_PATH = join(OUTPUT_DIR, "report.json");
 const TALLY_PATH = join(OUTPUT_DIR, "vkb-tally.json");
@@ -238,10 +246,7 @@ async function processOneFile(
         const res = await Promise.race([
           mods.musterMod.processFormationDocument(file),
           new Promise((_, reject) =>
-            setTimeout(
-              () => reject(new Error(`exceeded ${ms}ms budget`)),
-              ms,
-            ),
+            setTimeout(() => reject(new Error(`exceeded ${ms}ms budget`)), ms),
           ),
         ]);
         return {
@@ -316,6 +321,17 @@ async function readVkbTally(page: Page): Promise<VkbTally> {
 interface ServiceAndTimelineState {
   dd214DataPopulatedFields: string[];
   evidenceTimelineLength: number;
+  // history.awards (veteranProfile.js localStorage) — feeds the Ribbon Rack
+  // (RibbonRackSection in MyPacket.jsx). Deduped via addAward().
+  awardsCount: number;
+  awardNames: string[];
+  // vkb.serviceHistory.awards (IndexedDB VKB) — feeds every AI tool via
+  // getVeteranAIContext()/generateLLMContext(). Deduped separately via
+  // mergeDD214Awards' own fuzzy match inside mergeDD214IntoVKB. A different
+  // array in a different store than awardsCount/awardNames above — both are
+  // reported so a real duplicate in either store is independently visible.
+  vkbAwardsCount: number;
+  vkbAwardNames: string[];
 }
 
 // Fields that are non-empty regardless of whether real DD214 field parsing
@@ -362,7 +378,20 @@ async function readServiceAndTimelineState(
       const evidenceTimelineLength = Array.isArray(vkb.evidenceTimeline)
         ? vkb.evidenceTimeline.length
         : 0;
-      return { dd214DataPopulatedFields, evidenceTimelineLength };
+      const awards = Array.isArray(serviceHistory?.awards)
+        ? serviceHistory.awards
+        : [];
+      const vkbAwards = Array.isArray(vkb.serviceHistory?.awards)
+        ? vkb.serviceHistory.awards
+        : [];
+      return {
+        dd214DataPopulatedFields,
+        evidenceTimelineLength,
+        awardsCount: awards.length,
+        awardNames: awards.map((a: { name?: string }) => a.name ?? ""),
+        vkbAwardsCount: vkbAwards.length,
+        vkbAwardNames: vkbAwards.map((a: { name?: string }) => a.name ?? ""),
+      };
     },
     { alwaysDefaultedFields: [...DD214_ALWAYS_DEFAULTED_FIELDS] },
   );
@@ -394,6 +423,15 @@ async function screenshotMyPacketTabs(page: Page): Promise<string[]> {
       .replace(/[^\w-]/g, "");
     await btn.click().catch(() => {});
     await page.waitForTimeout(700);
+    if (/service/i.test(label)) {
+      const ribbonRackToggle = dialog.getByRole("button", {
+        name: /view ribbon rack/i,
+      });
+      if (await ribbonRackToggle.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await ribbonRackToggle.click().catch(() => {});
+        await page.waitForTimeout(700);
+      }
+    }
     const screenshotPath = join(OUTPUT_DIR, `mypacket-${i}-${label}.png`);
     await page.screenshot({ path: screenshotPath, fullPage: true });
     paths.push(screenshotPath);
@@ -490,6 +528,14 @@ test.describe("Real document corpus ingestion report", () => {
       serviceAndTimeline.evidenceTimelineLength,
       "Timeline tab (vkb.evidenceTimeline) should have one entry per completed document",
     ).toBeGreaterThanOrEqual(completedBeforeAssertions);
+    expect(
+      new Set(serviceAndTimeline.awardNames).size,
+      "Ribbon Rack (history.awards) should not contain the same award name twice, even when multiple source documents describe the same career",
+    ).toBe(serviceAndTimeline.awardNames.length);
+    expect(
+      new Set(serviceAndTimeline.vkbAwardNames).size,
+      "VKB (vkb.serviceHistory.awards) should not contain the same award name twice either — a separate store from history.awards with its own dedup",
+    ).toBe(serviceAndTimeline.vkbAwardNames.length);
 
     const screenshotPaths = await screenshotMyPacketTabs(page);
     writeFileSync(

@@ -36,9 +36,11 @@ alwaysApply: true
 
 ## Claude models (if applicable)
 
-- Complex engineering: `claude-opus-4-8` (current flagship; `claude-opus-4-7` is now legacy)
-- Daily coding: `claude-sonnet-4-6`
-- Classification: `claude-haiku-4-5-20251001`
+- Hardest reasoning / long-horizon agentic: `claude-fable-5`
+- Complex engineering: `claude-opus-5` (current flagship; Opus 4.8/4.7/4.6 are legacy but active)
+- Daily coding: `claude-sonnet-5`
+- Classification: `claude-haiku-4-5`
+- IDs are complete as written — never append a date suffix. Retired (404): Opus 3, Sonnet 3.7, Haiku 3.5, Haiku 3, Sonnet 4 / Opus 4 `*-20250514`. Opus 4.1 retires 2026-08-05.
 
 ## Output style
 

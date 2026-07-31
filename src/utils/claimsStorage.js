@@ -32,17 +32,31 @@ export const getSavedClaims = () => {
   }
 };
 
+// VA-imported claims/appeals carry a stable external ID (vaClaimId or
+// vaAppealId) — match on that first so re-importing the same VA record
+// updates itself instead of colliding with an unrelated claim that happens
+// to share a condition name, and so it can never overwrite a
+// manually-tracked claim (which has neither ID) purely by name match.
+// Manually-tracked claims keep the original name-based dedup.
+function findExistingClaimIndex(claims, claim) {
+  if (claim.vaClaimId) {
+    return claims.findIndex((c) => c.vaClaimId === claim.vaClaimId);
+  }
+  if (claim.vaAppealId) {
+    return claims.findIndex((c) => c.vaAppealId === claim.vaAppealId);
+  }
+  return claims.findIndex(
+    (c) =>
+      c.conditionName === claim.conditionName &&
+      c.parentCondition === claim.parentCondition,
+  );
+}
+
 // Save a new claim
 export const saveClaim = (claim) => {
   try {
     const claims = getSavedClaims();
-
-    // Check if already saved
-    const existingIndex = claims.findIndex(
-      (c) =>
-        c.conditionName === claim.conditionName &&
-        c.parentCondition === claim.parentCondition,
-    );
+    const existingIndex = findExistingClaimIndex(claims, claim);
 
     if (existingIndex >= 0) {
       // Update existing claim

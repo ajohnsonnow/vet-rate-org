@@ -19,6 +19,8 @@
  * "Tinnitus - 10%"
  */
 
+import { formatLocalDate } from "./dateUtils";
+
 /**
  * Parse a block of text from VA.gov ratings page
  * @param {string} text - Raw text pasted from VA.gov (full page or partial)
@@ -313,7 +315,7 @@ export function formatParsedRatings(parseResult) {
         text += ` - (No rating found, please set manually)`;
       }
       if (r.effectiveDate) {
-        text += ` (Effective: ${new Date(r.effectiveDate).toLocaleDateString()})`;
+        text += ` (Effective: ${formatLocalDate(r.effectiveDate).toLocaleDateString()})`;
       }
       text += "\n";
     });
@@ -345,7 +347,7 @@ export function formatParsedRatings(parseResult) {
         text += ` - ${r.rating}%`;
       }
       if (r.effectiveDate) {
-        text += ` (Effective: ${new Date(r.effectiveDate).toLocaleDateString()})`;
+        text += ` (Effective: ${formatLocalDate(r.effectiveDate).toLocaleDateString()})`;
       }
       text += "\n";
     });

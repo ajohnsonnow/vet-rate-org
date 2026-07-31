@@ -249,6 +249,12 @@ export function segmentCFile(text, options = {}) {
     // The holy grail - Code Sheet data
     codeSheet: null,
 
+    // Always present: STEP 5 below overwrites this, but it runs inside the try
+    // and a throw there used to leave `summary` undefined on an otherwise
+    // returned object, so callers reading `.summary.documentBreakdown` crashed
+    // on a failure they had no way to see (the error is only on `.error`).
+    summary: null,
+
     // Categorized segments
     segments: [],
 
@@ -460,8 +466,19 @@ export function quickScanCFile(text) {
  * Build a document inventory from C-File
  * Returns a table of contents for navigation
  */
-export function buildDocumentInventory(cFileText) {
-  const segments = segmentCFile(cFileText, { parseDocuments: false });
+// Build the inventory from an ALREADY-COMPUTED segmentation. Callers that have
+// just segmented the text must use this rather than buildDocumentInventory(),
+// which re-segments from scratch — a second full pass over what can be several
+// million characters.
+export function buildInventoryFromSegmentation(segments) {
+  if (!segments.success || !segments.summary) {
+    return {
+      totalDocuments: 0,
+      inventory: [],
+      categories: {},
+      error: segments.error || "segmentation produced no summary",
+    };
+  }
 
   return {
     totalDocuments: segments.segmentCount,
@@ -475,6 +492,12 @@ export function buildDocumentInventory(cFileText) {
     })),
     categories: segments.summary.documentBreakdown,
   };
+}
+
+export function buildDocumentInventory(cFileText) {
+  return buildInventoryFromSegmentation(
+    segmentCFile(cFileText, { parseDocuments: false }),
+  );
 }
 
 export default {
