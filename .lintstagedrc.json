@@ -1,6 +1,6 @@
 {
   "*.{ts,tsx,mts,cts,js,mjs,cjs}": [
-    "eslint --fix --max-warnings 0",
+    "eslint --fix --max-warnings 0 --no-warn-ignored",
     "prettier --write"
   ],
   "*.{json}": ["prettier --write"],
@@ -8,7 +8,7 @@
   "*.md": ["markdownlint-cli2 --fix", "prettier --write"],
   "*.{css,scss}": ["prettier --write"],
   "*.vue": [
-    "eslint --fix --max-warnings 0",
+    "eslint --fix --max-warnings 0 --no-warn-ignored",
     "stylelint --fix",
     "prettier --write"
   ]

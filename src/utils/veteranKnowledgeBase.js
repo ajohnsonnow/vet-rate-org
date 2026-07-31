@@ -861,50 +861,50 @@ export const removeDocumentFromVKB = async (documentId) => {
   return { success: false, error: "Document not found" };
 };
 
+const hasServicePeriods = (vkb) => vkb.serviceHistory.servicePeriods?.length > 0;
+
+// Completeness rubric: [points, predicate], grouped only for readability —
+// maxScore is the sum of every entry, so adding a criterion here is the whole
+// change. C1: a multi-period veteran whose top-level entryDate/separationDate
+// aggregate happens to be unset (e.g. every period only has one extractable
+// date) still has real service dates recorded per-period — credit that instead
+// of scoring them as incomplete.
+const COMPLETENESS_CRITERIA = [
+  [5, (v) => v.personal.fullName],
+  [5, (v) => v.personal.dateOfBirth],
+  [5, (v) => v.personal.address.state],
+  [5, (v) => v.personal.email || v.personal.phone],
+
+  [5, (v) => v.serviceHistory.branch],
+  [5, (v) => v.serviceHistory.entryDate || hasServicePeriods(v)],
+  [5, (v) => v.serviceHistory.separationDate || hasServicePeriods(v)],
+  [5, (v) => v.serviceHistory.mos.length > 0],
+  [5, (v) => v.serviceHistory.characterOfService],
+
+  [15, (v) => v.medicalConditions.current.length > 0],
+  [10, (v) => v.medicalConditions.secondary.length > 0],
+  [5, (v) => v.medications.current.length > 0],
+
+  [5, (v) => v.documentation.dd214s.length > 0],
+  [5, (v) => v.documentation.blueButtonReports.length > 0],
+  [5, (v) => v.evidenceTimeline.length > 0],
+
+  [5, (v) => v.vaClaimsHistory.claims.length > 0],
+  [5, (v) => v.vaClaimsHistory.ratings.length > 0],
+];
+
 /**
  * Calculate VKB completeness score (0-100)
  */
 export const calculateCompleteness = (vkb) => {
-  let score = 0;
-  let maxScore = 0;
-
-  // Personal info (20 points)
-  maxScore += 20;
-  if (vkb.personal.fullName) score += 5;
-  if (vkb.personal.dateOfBirth) score += 5;
-  if (vkb.personal.address.state) score += 5;
-  if (vkb.personal.email || vkb.personal.phone) score += 5;
-
-  // Service history (25 points)
-  // C1: a multi-period veteran whose top-level entryDate/separationDate
-  // aggregate happens to be unset (e.g. every period only has one
-  // extractable date) still has real service dates recorded per-period —
-  // credit that instead of scoring them as incomplete.
-  maxScore += 25;
-  const hasServicePeriods = vkb.serviceHistory.servicePeriods?.length > 0;
-  if (vkb.serviceHistory.branch) score += 5;
-  if (vkb.serviceHistory.entryDate || hasServicePeriods) score += 5;
-  if (vkb.serviceHistory.separationDate || hasServicePeriods) score += 5;
-  if (vkb.serviceHistory.mos.length > 0) score += 5;
-  if (vkb.serviceHistory.characterOfService) score += 5;
-
-  // Medical conditions (30 points)
-  maxScore += 30;
-  if (vkb.medicalConditions.current.length > 0) score += 15;
-  if (vkb.medicalConditions.secondary.length > 0) score += 10;
-  if (vkb.medications.current.length > 0) score += 5;
-
-  // Evidence (15 points)
-  maxScore += 15;
-  if (vkb.documentation.dd214s.length > 0) score += 5;
-  if (vkb.documentation.blueButtonReports.length > 0) score += 5;
-  if (vkb.evidenceTimeline.length > 0) score += 5;
-
-  // Claims history (10 points)
-  maxScore += 10;
-  if (vkb.vaClaimsHistory.claims.length > 0) score += 5;
-  if (vkb.vaClaimsHistory.ratings.length > 0) score += 5;
-
+  const maxScore = COMPLETENESS_CRITERIA.reduce(
+    (sum, [points]) => sum + points,
+    0,
+  );
+  const score = COMPLETENESS_CRITERIA.reduce(
+    (sum, [points, isMet]) => (isMet(vkb) ? sum + points : sum),
+    0,
+  );
   return Math.round((score / maxScore) * 100);
 };
 
