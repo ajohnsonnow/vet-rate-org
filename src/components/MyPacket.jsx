@@ -73,8 +73,10 @@ import {
 import {
   loadVKB,
   getAllDocumentsByCategory,
+  groupDocumentationByCategory,
   raceVkb,
 } from "../utils/veteranKnowledgeBase";
+import { buildPacketSummary } from "../utils/packetSummary";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { triggerBlobDownload } from "../utils/sanitize";
 import { useVaAuth } from "../hooks/useVaAuth";
@@ -566,6 +568,109 @@ function MyPacketStatsDashboard({ stats, t }) {
         </div>
       </div>
     </div>
+  );
+}
+
+const TLDR_STAT_FIELDS = [
+  { key: "documents", label: "documents" },
+  { key: "pages", label: "pages" },
+  { key: "conditions", label: "conditions" },
+  { key: "corroborated", label: "in 2+ records" },
+  { key: "potentialClaims", label: "potential claims" },
+  { key: "timelineEvents", label: "timeline events" },
+];
+
+function PacketTldrStats({ stats }) {
+  const shown = TLDR_STAT_FIELDS.filter(({ key }) => stats[key] > 0);
+  if (shown.length === 0) return null;
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+      {shown.map(({ key, label }) => (
+        <div key={key} className="min-w-0 text-center">
+          <div className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+            {stats[key].toLocaleString()}
+          </div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 break-words">
+            {label}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PacketTldrGaps({ gaps }) {
+  if (gaps.length === 0) return null;
+  return (
+    <div className="mt-4 pt-3 border-t border-indigo-200 dark:border-indigo-800">
+      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 mb-1">
+        Worth a look
+      </p>
+      <ul className="space-y-1">
+        {gaps.map((gap) => (
+          <li
+            key={gap}
+            className="text-sm text-gray-700 dark:text-gray-300 flex gap-2"
+          >
+            <span aria-hidden="true">⚠️</span>
+            <span className="min-w-0">{gap}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/**
+ * At-a-glance panel above the tabs. Every figure is counted from records
+ * already stored in the VKB — nothing here is model-generated, so it can be
+ * handed to a VSO without a "verify this first" caveat.
+ */
+function PacketTldrPanel({ summary, loading }) {
+  if (loading && !summary) {
+    return <VkbEnrichmentLoadingState label="Summarizing your packet…" />;
+  }
+  if (!summary || summary.tldr.isEmpty) return null;
+
+  const { headline, stats, bullets, gaps } = summary.tldr;
+  return (
+    <section
+      aria-labelledby="packet-tldr-heading"
+      className="p-4 sm:p-6 bg-indigo-50 dark:bg-indigo-950/40 border-b border-indigo-200 dark:border-indigo-800"
+    >
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
+        <h3
+          id="packet-tldr-heading"
+          className="text-base font-bold text-gray-900 dark:text-gray-100"
+        >
+          📌 TL;DR
+        </h3>
+        <p className="text-sm text-indigo-800 dark:text-indigo-300 min-w-0">
+          {headline}
+        </p>
+      </div>
+
+      <PacketTldrStats stats={stats} />
+
+      <ul className="space-y-1.5">
+        {bullets.map((bullet) => (
+          <li
+            key={bullet.text}
+            className="text-sm text-gray-700 dark:text-gray-300 flex gap-2"
+          >
+            <span aria-hidden="true">{bullet.icon}</span>
+            <span className="min-w-0">{bullet.text}</span>
+          </li>
+        ))}
+      </ul>
+
+      <PacketTldrGaps gaps={gaps} />
+
+      <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+        Counted directly from your saved documents and knowledge base — not
+        AI-generated.
+      </p>
+    </section>
   );
 }
 
@@ -4651,6 +4756,7 @@ async function _loadVkbEnrichment(ctx) {
     setVkbTimeline,
     setVkbDisabilityRatings,
     setVkbEnrichmentLoading,
+    setPacketSummary,
   } = ctx;
   setVkbEnrichmentLoading(true);
   try {
@@ -4671,6 +4777,11 @@ async function _loadVkbEnrichment(ctx) {
       ? vkb.vaClaimsHistory.ratings
       : [];
     setVkbDisabilityRatings(ratings.filter((r) => r?.source === "VA.gov API"));
+    // Derived from the VKB already in hand — groupDocumentationByCategory is
+    // pure, so this costs no extra IndexedDB read.
+    setPacketSummary(
+      buildPacketSummary(vkb, groupDocumentationByCategory(vkb)),
+    );
   } catch {
     // Best-effort read-only enrichment — leave defaults on failure.
   } finally {
@@ -5257,40 +5368,165 @@ function DocumentsEmptyState({ onClose, t }) {
   );
 }
 
-function CFileDocumentCard({ doc }) {
-  const data = doc.extractedData || {};
-  const claims = Array.isArray(data.potential_claims)
-    ? data.potential_claims
-    : [];
-  const timeline = Array.isArray(data.timeline) ? data.timeline : [];
+function DocumentFindingScalars({ scalars }) {
+  if (scalars.length === 0) return null;
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      <div className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-          📋 {doc.fileName}
-        </h4>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Analyzed {(doc.uploadDate || "").split("T")[0]}
-          {doc.pageCount ? ` · ${doc.pageCount} page${doc.pageCount === 1 ? "" : "s"}` : ""}
-          {doc.fileSize ? ` · ${formatFileSize(doc.fileSize)}` : ""} · read-only
-        </p>
-      </div>
-      {data.summary && (
-        <p className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-          {data.summary}
-        </p>
-      )}
-      {claims.length > 0 && <CFileClaimsCards claims={claims} />}
-      {timeline.length > 0 && <CFileTimeline events={timeline} />}
+    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-sm">
+      {scalars.map(({ label, value }) => (
+        <div key={label} className="flex flex-wrap gap-x-2 min-w-0">
+          <dt className="text-gray-500 dark:text-gray-400">{label}:</dt>
+          <dd className="font-medium text-gray-900 dark:text-gray-100 min-w-0 break-words">
+            {value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function DocumentChipRow({ label, values }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-2">
+      <span className="text-xs text-gray-500 dark:text-gray-400">{label}:</span>
+      {values.map((value) => (
+        <span
+          key={value}
+          className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 break-words"
+        >
+          {value}
+        </span>
+      ))}
     </div>
   );
 }
 
+function DocumentFindingLists({ findings }) {
+  const rows = [
+    ...findings.lists,
+    ...(findings.conditions.length > 0
+      ? [{ label: "Conditions named", values: findings.conditions }]
+      : []),
+  ];
+  if (rows.length === 0) return null;
+  return (
+    <div className="px-4 pb-3 space-y-2">
+      {rows.map((row) => (
+        <DocumentChipRow key={row.label} {...row} />
+      ))}
+    </div>
+  );
+}
+
+function DocumentCardHeader({ findings }) {
+  const meta = [
+    findings.analyzedOn && `Analyzed ${findings.analyzedOn}`,
+    findings.pageCount &&
+      `${findings.pageCount.toLocaleString()} page${findings.pageCount === 1 ? "" : "s"}`,
+    findings.fileSize && formatFileSize(findings.fileSize),
+    findings.segmentCount > 0 &&
+      `${findings.segmentCount.toLocaleString()} documents inside`,
+    findings.ocrUsed && "OCR",
+  ].filter(Boolean);
+
+  return (
+    <div className="bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <h4 className="font-semibold text-gray-900 dark:text-gray-100 break-words">
+        {findings.icon} {findings.fileName}
+      </h4>
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        {[...meta, "read-only"].join(" · ")}
+      </p>
+    </div>
+  );
+}
+
+// One card per stored document, for every category — not just C-Files. The
+// previous version rendered the cFiles bucket only, so DD-214s, Blue Button
+// exports and private records showed up as a bare count with none of the
+// fields the ingestion pipeline had already extracted from them.
+function DocumentFindingsCard({ findings }) {
+  return (
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <DocumentCardHeader findings={findings} />
+
+      {findings.summary && (
+        <p className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+          {findings.summary}
+        </p>
+      )}
+
+      {findings.parseError && (
+        <p className="px-4 py-2 text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40">
+          Raw text stored, but structured fields could not be read from this
+          document ({findings.parseError}).
+        </p>
+      )}
+
+      <DocumentFindingScalars scalars={findings.scalars} />
+      <DocumentFindingLists findings={findings} />
+
+      {findings.claimObjects.length > 0 && (
+        <CFileClaimsCards claims={findings.claimObjects} />
+      )}
+      {findings.timeline.length > 0 && (
+        <CFileTimeline events={findings.timeline} />
+      )}
+    </div>
+  );
+}
+
+function ConditionSynthesisSection({ conditions }) {
+  const mentioned = conditions.filter((c) => c.documentCount > 0);
+  if (mentioned.length === 0) return null;
+  return (
+    <section>
+      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+        🔗 Conditions across your records ({mentioned.length})
+      </h3>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Which of your documents mention each condition. A condition in more than
+        one record is corroborated by more than one source.
+      </p>
+      <ul className="space-y-2">
+        {mentioned.map((condition) => (
+          <li
+            key={condition.key}
+            className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-medium text-gray-900 dark:text-gray-100 min-w-0 break-words">
+                {condition.name}
+              </span>
+              {Number.isFinite(condition.ratedPercentage) && (
+                <span className="text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                  {condition.ratedPercentage}%
+                </span>
+              )}
+              {condition.serviceConnected && (
+                <span className="text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                  service connected
+                </span>
+              )}
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {condition.documentCount === 1
+                  ? "1 document"
+                  : `${condition.documentCount} documents`}
+              </span>
+            </div>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5 break-words">
+              {condition.documents.join(", ")}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 // Read-only view of the VKB document archive. `documents` is the
-// getAllDocumentsByCategory() shape (null until loaded / on slow VKB). C-Files
-// render their extracted findings via the same cards the analyzer uses.
-function DocumentsTab({ documents, onClose, t }) {
-  const cFileDocs = documents?.cFiles?.documents || [];
+// getAllDocumentsByCategory() shape (null until loaded / on slow VKB);
+// `packetSummary` carries the derived per-document findings.
+function DocumentsTab({ documents, packetSummary, onClose, t }) {
   const totalDocs = documents
     ? Object.values(documents).reduce((sum, cat) => sum + (cat?.count || 0), 0)
     : 0;
@@ -5299,16 +5535,23 @@ function DocumentsTab({ documents, onClose, t }) {
     return <DocumentsEmptyState onClose={onClose} t={t} />;
   }
 
+  const findings = packetSummary?.documents || [];
+
   return (
     <div className="space-y-6">
-      {cFileDocs.length > 0 && (
+      <ConditionSynthesisSection conditions={packetSummary?.conditions || []} />
+
+      {findings.length > 0 && (
         <section>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3">
-            📋 C-Files &amp; VA Decisions ({cFileDocs.length})
+            📚 Findings by document ({findings.length})
           </h3>
           <div className="space-y-4">
-            {cFileDocs.map((doc) => (
-              <CFileDocumentCard key={doc.id} doc={doc} />
+            {findings.map((doc) => (
+              <DocumentFindingsCard
+                key={doc.id || doc.fileName}
+                findings={doc}
+              />
             ))}
           </div>
         </section>
@@ -5398,6 +5641,7 @@ function useMyPacketCoreState() {
   const [vkbTimeline, setVkbTimeline] = useState([]);
   const [vkbDisabilityRatings, setVkbDisabilityRatings] = useState([]);
   const [vkbEnrichmentLoading, setVkbEnrichmentLoading] = useState(true);
+  const [packetSummary, setPacketSummary] = useState(null);
   const fileInputRef = useRef(null);
   const packetContentRef = useRef(null);
 
@@ -5416,6 +5660,8 @@ function useMyPacketCoreState() {
     setVkbDisabilityRatings,
     vkbEnrichmentLoading,
     setVkbEnrichmentLoading,
+    packetSummary,
+    setPacketSummary,
     viewingStatement,
     setViewingStatement,
     viewingClaimId,
@@ -5603,6 +5849,7 @@ function _buildPacketLoaders(state) {
       setVkbTimeline,
       setVkbDisabilityRatings,
       setVkbEnrichmentLoading,
+      setPacketSummary,
     });
 
   return {
@@ -5862,6 +6109,7 @@ function _runPacketInitLoadEffect(setters) {
     setVkbTimeline,
     setVkbDisabilityRatings,
     setVkbEnrichmentLoading,
+    setPacketSummary,
   } = setters;
   _loadClaimsData({ setClaims, setStats });
   _loadSavedForms({ setSavedForms });
@@ -5879,6 +6127,7 @@ function _runPacketInitLoadEffect(setters) {
     setVkbTimeline,
     setVkbDisabilityRatings,
     setVkbEnrichmentLoading,
+    setPacketSummary,
   });
 }
 
@@ -6063,6 +6312,8 @@ function MyPacketView({ state, handlers }) {
     savedForms,
     vaRecords,
     documents,
+    packetSummary,
+    vkbEnrichmentLoading,
   } = state;
 
   return (
@@ -6082,6 +6333,11 @@ function MyPacketView({ state, handlers }) {
         }
       >
         <div ref={packetContentRef}>
+          <PacketTldrPanel
+            summary={packetSummary}
+            loading={vkbEnrichmentLoading}
+          />
+
           <MyPacketStatsDashboard stats={stats} t={t} />
 
           <MyPacketBackupSection state={state} handlers={handlers} />
@@ -6158,6 +6414,7 @@ function _useInitLoadEffect({
         setVkbTimeline: coreState.setVkbTimeline,
         setVkbDisabilityRatings: coreState.setVkbDisabilityRatings,
         setVkbEnrichmentLoading: coreState.setVkbEnrichmentLoading,
+        setPacketSummary: coreState.setPacketSummary,
       }),
     [
       coreState.setClaims,
@@ -6174,6 +6431,7 @@ function _useInitLoadEffect({
       coreState.setVkbTimeline,
       coreState.setVkbDisabilityRatings,
       coreState.setVkbEnrichmentLoading,
+      coreState.setPacketSummary,
       setVeteranProfile,
     ],
   );

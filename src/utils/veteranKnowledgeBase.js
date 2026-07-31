@@ -708,55 +708,32 @@ export const getAllDocumentsFromVKB = async () => {
   ];
 };
 
-/**
- * Get all documents grouped by category with metadata
- * Useful for timeline/overview displays
- */
-export const getAllDocumentsByCategory = async () => {
-  const vkb = await loadVKB();
-  return {
-    dd214s: {
-      label: "DD-214 Service Records",
-      icon: "🎖️",
-      documents: vkb.documentation.dd214s.sort(
-        (a, b) => (b.version || 0) - (a.version || 0),
-      ),
-      count: vkb.documentation.dd214s.length,
-    },
-    blueButtonReports: {
-      label: "Blue Button Medical Records",
-      icon: "🏥",
-      documents: vkb.documentation.blueButtonReports.sort(
-        (a, b) => (b.version || 0) - (a.version || 0),
-      ),
-      count: vkb.documentation.blueButtonReports.length,
-    },
-    cFiles: {
-      label: "VA Claims & Decisions",
-      icon: "📋",
-      documents: vkb.documentation.cFiles.sort(
-        (a, b) => (b.version || 0) - (a.version || 0),
-      ),
-      count: vkb.documentation.cFiles.length,
-    },
-    privateRecords: {
-      label: "Private Medical Records",
-      icon: "🩺",
-      documents: vkb.documentation.privateRecords.sort(
-        (a, b) => (b.version || 0) - (a.version || 0),
-      ),
-      count: vkb.documentation.privateRecords.length,
-    },
-    otherEvidence: {
-      label: "Other Evidence",
-      icon: "📄",
-      documents: vkb.documentation.otherEvidence.sort(
-        (a, b) => (b.version || 0) - (a.version || 0),
-      ),
-      count: vkb.documentation.otherEvidence.length,
-    },
-  };
+const DOCUMENT_CATEGORY_META = {
+  dd214s: { label: "DD-214 Service Records", icon: "🎖️" },
+  blueButtonReports: { label: "Blue Button Medical Records", icon: "🏥" },
+  cFiles: { label: "VA Claims & Decisions", icon: "📋" },
+  privateRecords: { label: "Private Medical Records", icon: "🩺" },
+  otherEvidence: { label: "Other Evidence", icon: "📄" },
 };
+
+/**
+ * Group the VKB's stored documents by category with display metadata.
+ * Pure so a caller that already holds a loaded VKB can derive this without a
+ * second IndexedDB round trip. Copies before sorting — the previous in-place
+ * sort reordered the caller's own vkb.documentation arrays as a side effect.
+ */
+export const groupDocumentationByCategory = (vkb) =>
+  Object.fromEntries(
+    Object.entries(DOCUMENT_CATEGORY_META).map(([key, meta]) => {
+      const documents = [...(vkb?.documentation?.[key] || [])].sort(
+        (a, b) => (b.version || 0) - (a.version || 0),
+      );
+      return [key, { ...meta, documents, count: documents.length }];
+    }),
+  );
+
+export const getAllDocumentsByCategory = async () =>
+  groupDocumentationByCategory(await loadVKB());
 
 /**
  * Get specific document by ID
