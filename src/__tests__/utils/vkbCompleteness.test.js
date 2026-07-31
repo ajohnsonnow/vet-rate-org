@@ -11,6 +11,10 @@ import {
   initializeVKB,
 } from "../../utils/veteranKnowledgeBase";
 
+// Carries the complexity of 21 that prompted the rewrite — necessarily, since
+// an oracle simplified to satisfy the linter would no longer be the thing it
+// is checking against.
+// eslint-disable-next-line complexity
 const originalCalculateCompleteness = (vkb) => {
   let score = 0;
   let maxScore = 0;
