@@ -35,6 +35,7 @@ import {
   checkBilateralFactorCompliance,
   CUE_PATTERNS,
 } from "../data/vaPayRatesHistorical";
+import { formatLocalDate } from "../utils/dateUtils";
 
 const STORAGE_KEY = "vet_rate_retro_pay_history";
 
@@ -46,7 +47,7 @@ const formatRatingHistoryLine = (p) => {
   const childrenNote = p.dependents?.childrenUnder18
     ? `${p.dependents.childrenUnder18} children`
     : "";
-  return `• ${new Date(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
+  return `• ${formatLocalDate(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
 };
 
 const formatCueIssuesBlock = (alerts) => {
@@ -686,11 +687,14 @@ function RatingTimelineEntry({ period, onRemove }) {
       <div className="flex-1 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
         <div className="flex items-center justify-between mb-2">
           <span className="text-gray-400 text-sm">
-            {new Date(period.effectiveDate).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {formatLocalDate(period.effectiveDate).toLocaleDateString(
+              "en-US",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              },
+            )}
           </span>
           <button
             onClick={() => onRemove(period.id)}

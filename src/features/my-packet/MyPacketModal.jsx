@@ -54,9 +54,14 @@ export default function MyPacketModal() {
         onOpenAISettings={() =>
           window.dispatchEvent(new CustomEvent("openAISettings"))
         }
-        onOpenDD214Analyzer={() => {
+        onOpenDD214Analyzer={(file) => {
           setOpen(false);
-          window.dispatchEvent(new CustomEvent("openDD214Analyzer"));
+          // FIX-2: carry the file through as the CustomEvent detail so
+          // the analyzer opens pre-loaded with what the veteran already
+          // dropped/selected, instead of discarding it.
+          window.dispatchEvent(
+            new CustomEvent("openDD214Analyzer", { detail: file }),
+          );
         }}
       />
     </Suspense>

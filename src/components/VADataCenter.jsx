@@ -20,6 +20,7 @@ import useFocusTrap from "../hooks/useFocusTrap";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import {
   isVaIntegrationConfigured,
+  isVaApiEnabled,
   getVaConfigStatus,
   VA_FACILITIES_API_KEY,
   VA_FORMS_API_KEY,
@@ -32,6 +33,7 @@ import {
 } from "../utils/vaDataPersistence";
 import {
   getServiceHistory,
+  getDisabilityRating,
   getClaims,
   getAppealableIssues,
   getAppealsStatus,
@@ -39,6 +41,7 @@ import {
   searchForms,
   getBenefitsReferenceDisabilities,
   formatServiceHistory,
+  formatDisabilityRating,
   formatClaims,
   formatAppealableIssues,
   formatAppealsStatus,
@@ -76,6 +79,7 @@ import {
   User,
   AlertCircle,
   Check,
+  Percent,
 } from "lucide-react";
 
 // ============================================================================
@@ -100,6 +104,22 @@ const VA_API_CATALOG = {
         "Character of Service",
       ],
       scope: "service_history.read",
+    },
+    {
+      id: "disabilityRating",
+      name: "Disability Rating",
+      icon: Percent,
+      description:
+        "Your combined VA disability rating and individually rated conditions.",
+      useCase:
+        "See your current combined rating and which conditions are already service-connected and rated.",
+      dataPoints: [
+        "Combined Rating",
+        "Individual Ratings",
+        "Effective Dates",
+        "Diagnostic Codes",
+      ],
+      scope: "disability_rating.read",
     },
     {
       id: "claims",
@@ -133,7 +153,7 @@ const VA_API_CATALOG = {
         "Events Timeline",
         "Hearing Info",
       ],
-      scope: "appeals.read",
+      scope: "appeals_status.read",
     },
     {
       id: "appealableIssues",
@@ -148,7 +168,7 @@ const VA_API_CATALOG = {
         "Rating Decision ID",
         "Appeal Deadline",
       ],
-      scope: "appeals.read",
+      scope: "appealable_issues.read",
     },
   ],
   // API Key APIs (open data, no authentication required)
@@ -236,6 +256,10 @@ function buildVaSaveSelectionPayload(selectedApis, apiData) {
       selectedApis.serviceHistory && apiData.serviceHistory?.formatted?.[0]
         ? apiData.serviceHistory.formatted[0]
         : null,
+    disabilityRating:
+      selectedApis.disabilityRating && apiData.disabilityRating?.formatted
+        ? apiData.disabilityRating.formatted
+        : null,
     claims:
       selectedApis.claims && apiData.claims?.formatted
         ? apiData.claims.formatted
@@ -251,6 +275,9 @@ function buildVaSaveSelectionPayload(selectedApis, apiData) {
     rawServiceHistory: selectedApis.serviceHistory
       ? apiData.serviceHistory?.raw
       : null,
+    rawDisabilityRating: selectedApis.disabilityRating
+      ? apiData.disabilityRating?.raw
+      : null,
     rawClaims: selectedApis.claims ? apiData.claims?.raw : null,
     rawAppeals: selectedApis.appealsStatus ? apiData.appealsStatus?.raw : null,
     rawAppealableIssues: selectedApis.appealableIssues
@@ -264,6 +291,10 @@ async function fetchVaApiData(apiId, accessToken, searchInputs) {
     case "serviceHistory": {
       const data = await getServiceHistory(accessToken);
       return { data, formatted: formatServiceHistory(data) };
+    }
+    case "disabilityRating": {
+      const data = await getDisabilityRating(accessToken);
+      return { data, formatted: formatDisabilityRating(data) };
     }
     case "claims": {
       const data = await getClaims(accessToken);
@@ -328,6 +359,42 @@ function ServiceHistoryPreviewList({ data }) {
   ));
 }
 
+function DisabilityRatingPreview({ data }) {
+  if (!data) {
+    return <p className="text-sm text-gray-500">No data available</p>;
+  }
+  return (
+    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="font-medium text-gray-900 dark:text-white">
+        Combined Rating: {data.combinedRating ?? "—"}%
+      </div>
+      {data.effectiveDate && (
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          Effective: {data.effectiveDate}
+        </div>
+      )}
+      {data.individualRatings.length > 0 && (
+        <ul className="mt-2 space-y-1">
+          {data.individualRatings.map((rating, idx) => (
+            <li
+              key={idx}
+              className="text-sm text-gray-700 dark:text-gray-300 flex justify-between"
+            >
+              <span>
+                {rating.diagnosticTypeName || rating.diagnosticText}
+                {rating.diagnosticCode && (
+                  <span className="text-gray-500"> (DC {rating.diagnosticCode})</span>
+                )}
+              </span>
+              <span className="font-medium">{rating.ratingPercentage}%</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function ClaimsPreviewList({ data }) {
   return data.slice(0, 5).map((claim, idx) => (
     <div
@@ -356,24 +423,32 @@ function ClaimsPreviewList({ data }) {
 }
 
 function AppealsStatusPreviewList({ data }) {
-  return data.slice(0, 5).map((appeal, idx) => (
-    <div
-      key={idx}
-      className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-    >
-      <div className="font-medium text-gray-900 dark:text-white">
-        {appeal.type}
-      </div>
-      <div className="text-sm text-gray-600 dark:text-gray-400">
-        Status: {appeal.status}
-      </div>
-      {appeal.docketNumber && (
-        <div className="text-xs text-gray-500">
-          Docket: {appeal.docketNumber}
+  return data.slice(0, 5).map((appeal, idx) => {
+    // The Appeals Status API's status.details shape varies by status type —
+    // sometimes a plain string, sometimes a nested object. Only render it
+    // when it's actually a string, so this never prints "[object Object]".
+    const statusDetails =
+      typeof appeal.status?.details === "string" ? appeal.status.details : null;
+    return (
+      <div
+        key={idx}
+        className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+      >
+        <div className="font-medium text-gray-900 dark:text-white">
+          {appeal.type}
         </div>
-      )}
-    </div>
-  ));
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          Status: {appeal.status?.type}
+          {statusDetails && ` — ${statusDetails}`}
+        </div>
+        {appeal.docketNumber && (
+          <div className="text-xs text-gray-500">
+            Docket: {appeal.docketNumber}
+          </div>
+        )}
+      </div>
+    );
+  });
 }
 
 function AppealableIssuesPreviewList({ data }) {
@@ -402,7 +477,9 @@ function FacilitiesPreviewList({ data }) {
         {facility.name}
       </div>
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        {facility.address}
+        {[facility.address?.street, facility.address?.city, facility.address?.state, facility.address?.zip]
+          .filter(Boolean)
+          .join(", ")}
       </div>
       {facility.phone && (
         <div className="text-sm text-blue-600 dark:text-blue-400">
@@ -457,6 +534,7 @@ function DisabilitiesPreviewList({ data }) {
 
 const PREVIEW_LIST_COMPONENTS = {
   serviceHistory: ServiceHistoryPreviewList,
+  disabilityRating: DisabilityRatingPreview,
   claims: ClaimsPreviewList,
   appealsStatus: AppealsStatusPreviewList,
   appealableIssues: AppealableIssuesPreviewList,
@@ -494,6 +572,7 @@ function useVaDataCenterAuth() {
 
   const configStatus = getVaConfigStatus();
   const isConfigured = isVaIntegrationConfigured();
+  const vaApiEnabled = isVaApiEnabled();
 
   return {
     isAuthenticated,
@@ -505,6 +584,7 @@ function useVaDataCenterAuth() {
     authError,
     configStatus,
     isConfigured,
+    vaApiEnabled,
   };
 }
 
@@ -536,6 +616,7 @@ function useVaSavedRecordsAndRateLimit() {
 function useVaSelectionState() {
   const [selectedApis, setSelectedApis] = useState({
     serviceHistory: true,
+    disabilityRating: true,
     claims: true,
     appealsStatus: true,
     appealableIssues: true,
@@ -568,6 +649,7 @@ function useVaSelectionState() {
 function useVaApiFetchState(accessToken, selectedApis, updateRateLimitStatus) {
   const [apiData, setApiData] = useState({
     serviceHistory: null,
+    disabilityRating: null,
     claims: null,
     appealsStatus: null,
     appealableIssues: null,
@@ -578,6 +660,7 @@ function useVaApiFetchState(accessToken, selectedApis, updateRateLimitStatus) {
 
   const [loading, setLoading] = useState({
     serviceHistory: false,
+    disabilityRating: false,
     claims: false,
     appealsStatus: false,
     appealableIssues: false,
@@ -645,24 +728,47 @@ function useVaSaveActions({ apiData, selectedApis, loadSavedRecords }) {
     try {
       const dataToSave = buildVaSaveSelectionPayload(selectedApis, apiData);
 
-      await saveVADataWithConsent(dataToSave, {
+      const result = await saveVADataWithConsent(dataToSave, {
         saveToPacket: true,
         saveToVKB: true,
       });
       loadSavedRecords();
 
-      const counts = {
-        claims: dataToSave.claims.length,
-        appeals: dataToSave.appeals.length,
-        appealableIssues: dataToSave.appealableIssues.length,
-        serviceHistory: dataToSave.serviceHistory ? 1 : 0,
-      };
+      const attemptedPacket = dataToSave.claims.length > 0 || dataToSave.appeals.length > 0;
+      const attemptedVkb = Boolean(
+        dataToSave.serviceHistory ||
+          dataToSave.disabilityRating ||
+          dataToSave.appealableIssues.length > 0,
+      );
+      const packetFailed = attemptedPacket && result.packet.saved === false;
+      const vkbFailed = attemptedVkb && result.vkb.saved === false;
 
-      setSaveStatus({
-        loading: false,
-        success: true,
-        message: `Saved: ${counts.serviceHistory} service record, ${counts.claims} claims, ${counts.appeals} appeals, ${counts.appealableIssues} appealable issues`,
-      });
+      if (packetFailed || vkbFailed || result.errors.length > 0) {
+        setSaveStatus({
+          loading: false,
+          success: false,
+          message:
+            result.errors.length > 0
+              ? `Save completed with errors: ${result.errors.join("; ")}`
+              : "Save failed. Please try again.",
+        });
+      } else {
+        const counts = {
+          claims: dataToSave.claims.length,
+          appeals: dataToSave.appeals.length,
+          appealableIssues: dataToSave.appealableIssues.length,
+          serviceHistory: dataToSave.serviceHistory ? 1 : 0,
+          disabilityRating: dataToSave.disabilityRating ? 1 : 0,
+        };
+
+        setSaveStatus({
+          loading: false,
+          success: true,
+          message: `Saved: ${counts.serviceHistory} service record, ${counts.disabilityRating} disability rating, ${counts.claims} claims, ${counts.appeals} appeals, ${counts.appealableIssues} appealable issues`,
+        });
+
+        window.dispatchEvent(new CustomEvent("vetrate:va-data-saved"));
+      }
 
       setTimeout(() => setSaveStatus(null), 5000);
     } catch (error) {
@@ -697,8 +803,15 @@ function useVaSaveActions({ apiData, selectedApis, loadSavedRecords }) {
 // ============================================================================
 // CONFIG WARNING BANNER
 // ============================================================================
-function ConfigWarningBanner({ isConfigured, configStatus }) {
+function ConfigWarningBanner({ isConfigured, configStatus, vaApiEnabled }) {
   if (isConfigured) return null;
+
+  // Checkmarks must respect the master switch too — otherwise they can show
+  // green (keys present) while the banner says "not configured" (switch off).
+  const oauthOk = vaApiEnabled && configStatus.oauthConfigured;
+  const facilitiesOk = vaApiEnabled && configStatus.facilitiesConfigured;
+  const formsOk = vaApiEnabled && configStatus.formsConfigured;
+  const benefitsOk = vaApiEnabled && configStatus.benefitsConfigured;
 
   return (
     <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mb-6">
@@ -706,15 +819,18 @@ function ConfigWarningBanner({ isConfigured, configStatus }) {
         <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
         <div>
           <h3 className="font-semibold text-amber-800 dark:text-amber-200">
-            VA Integration Not Configured
+            {vaApiEnabled
+              ? "VA Integration Not Configured"
+              : "VA Integration Disabled"}
           </h3>
           <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-            API keys need to be set in environment variables. Contact your
-            administrator.
+            {vaApiEnabled
+              ? "API keys need to be set in environment variables. Contact your administrator."
+              : "The VA API integration is turned off via a feature flag. Set VITE_VA_API_ENABLED=true in your environment to enable it."}
           </p>
           <div className="mt-2 text-xs space-y-1 text-amber-600 dark:text-amber-400">
             <div className="flex items-center gap-2">
-              {configStatus.oauthConfigured ? (
+              {oauthOk ? (
                 <Check className="w-3 h-3 text-green-500" />
               ) : (
                 <XCircle className="w-3 h-3" />
@@ -722,7 +838,7 @@ function ConfigWarningBanner({ isConfigured, configStatus }) {
               <span>OAuth (VA.gov Sign-In)</span>
             </div>
             <div className="flex items-center gap-2">
-              {configStatus.facilitiesConfigured ? (
+              {facilitiesOk ? (
                 <Check className="w-3 h-3 text-green-500" />
               ) : (
                 <XCircle className="w-3 h-3" />
@@ -730,7 +846,7 @@ function ConfigWarningBanner({ isConfigured, configStatus }) {
               <span>Facilities API</span>
             </div>
             <div className="flex items-center gap-2">
-              {configStatus.formsConfigured ? (
+              {formsOk ? (
                 <Check className="w-3 h-3 text-green-500" />
               ) : (
                 <XCircle className="w-3 h-3" />
@@ -738,7 +854,7 @@ function ConfigWarningBanner({ isConfigured, configStatus }) {
               <span>Forms API</span>
             </div>
             <div className="flex items-center gap-2">
-              {configStatus.benefitsConfigured ? (
+              {benefitsOk ? (
                 <Check className="w-3 h-3 text-green-500" />
               ) : (
                 <XCircle className="w-3 h-3" />
@@ -937,7 +1053,7 @@ function DataCenterTabs({
           Your VA Records
           {isAuthenticated && (
             <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-2 py-0.5 rounded-full">
-              4 APIs
+              {VA_API_CATALOG.oauth.length} APIs
             </span>
           )}
         </div>
@@ -1681,6 +1797,7 @@ function VaDataCenterBody({
           <ConfigWarningBanner
             isConfigured={auth.isConfigured}
             configStatus={auth.configStatus}
+            vaApiEnabled={auth.vaApiEnabled}
           />
           <ConnectionStatusHeader
             auth={auth}

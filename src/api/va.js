@@ -210,8 +210,32 @@ export async function getServiceHistory(accessToken) {
 
 /**
  * Get veteran's disability rating
+ *
  * @param {string} accessToken - OAuth access token
  * @returns {Promise<Object>} Disability rating data
+ *
+ * Example response:
+ * {
+ *   "data": {
+ *     "id": "...",
+ *     "type": "ratings",
+ *     "attributes": {
+ *       "combined_disability_rating": 30,
+ *       "combined_effective_date": "2018-03-24",
+ *       "legal_effective_date": "2018-03-24",
+ *       "individual_ratings": [
+ *         {
+ *           "decision": "Service Connected",
+ *           "effective_date": "2018-03-24",
+ *           "rating_percentage": 10,
+ *           "diagnostic_text": "Tinnitus",
+ *           "diagnostic_type_name": "Tinnitus",
+ *           "diagnostic_code": 6260
+ *         }
+ *       ]
+ *     }
+ *   }
+ * }
  */
 export async function getDisabilityRating(accessToken) {
   const endpoint = "/services/veteran_verification/v2/disability_rating";
@@ -254,6 +278,7 @@ export async function getDisabilityRating(accessToken) {
  *         "claimType": "Compensation",
  *         "closeDate": null,
  *         "status": "INITIAL_REVIEW",
+ *         "contentionList": ["Tinnitus", "PTSD (post traumatic stress disorder)"],
  *         "supportingDocuments": [...]
  *       }
  *     }
@@ -879,6 +904,28 @@ export function formatServiceHistory(data) {
 }
 
 /**
+ * Format disability rating for display
+ */
+export function formatDisabilityRating(data) {
+  const attrs = data?.data?.attributes;
+  if (!attrs) return null;
+
+  return {
+    combinedRating: attrs.combined_disability_rating ?? null,
+    effectiveDate: attrs.combined_effective_date,
+    legalEffectiveDate: attrs.legal_effective_date,
+    individualRatings: (attrs.individual_ratings || []).map((rating) => ({
+      diagnosticText: rating.diagnostic_text,
+      diagnosticTypeName: rating.diagnostic_type_name,
+      diagnosticCode: rating.diagnostic_code,
+      ratingPercentage: rating.rating_percentage,
+      effectiveDate: rating.effective_date,
+      decision: rating.decision,
+    })),
+  };
+}
+
+/**
  * Format claims data for display
  */
 export function formatClaims(data) {
@@ -899,6 +946,7 @@ export function formatClaims(data) {
     endProductCode: claim.attributes?.endProductCode,
     evidenceWaiverSubmitted5103: claim.attributes?.evidenceWaiverSubmitted5103,
     lighthouseId: claim.attributes?.lighthouseId,
+    contentionList: claim.attributes?.contentionList || [],
     supportingDocuments: claim.attributes?.supportingDocuments || [],
   }));
 }
@@ -1063,6 +1111,7 @@ export default {
 
   // Formatters
   formatServiceHistory,
+  formatDisabilityRating,
   formatClaims,
   formatAppealableIssues,
   formatAppealsStatus,

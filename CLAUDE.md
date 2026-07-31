@@ -112,21 +112,28 @@ Design for the whole screen continuum (~320px phones → 4K/32" monitors), not t
 
 ## 3. Claude model selection
 
-| Use case | Model | ID |
-|---|---|---|
-| Complex engineering, architecture, long agentic runs | **Opus 4.8** | `claude-opus-4-8` |
-| Daily coding, code review, most agent work | **Sonnet 4.6** | `claude-sonnet-4-6` |
-| Classification, extraction, high-volume routing | **Haiku 4.5** | `claude-haiku-4-5-20251001` |
+| Use case | Model | ID | $/MTok | Context | Max out |
+|---|---|---|---|---|---|
+| Hardest reasoning, long-horizon agentic tasks | **Fable 5** | `claude-fable-5` | $10 / $50 | 1M | 128K |
+| Complex engineering, architecture, long agentic runs | **Opus 5** | `claude-opus-5` | $5 / $25 | 1M | 128K |
+| Daily coding, code review, most agent work | **Sonnet 5** | `claude-sonnet-5` | $3 / $15 | 1M | 128K |
+| Classification, extraction, high-volume routing | **Haiku 4.5** | `claude-haiku-4-5` | $1 / $5 | 200K | 64K |
 
-**Opus 4.8** (`claude-opus-4-8`, released 2026-05-28) is the current flagship — $5/$25 per MTok, 1M context, adaptive thinking. **Opus 4.7 (`claude-opus-4-7`) is now legacy** — still available, not retired; default new work to 4.8.
+Model IDs are complete as written — **never append a date suffix**. Haiku 4.5 is the lone exception with a dated full ID (`claude-haiku-4-5-20251001`); prefer the bare alias.
 
-**Sunsets:** Haiku 3 retired 2026-04-19; Sonnet 4 / Opus 4 retire 2026-06-15.
+**Opus 5** (`claude-opus-5`) is the current flagship at Opus 4.8's price. Two migration gotchas: **thinking is on by default** (omitting `thinking` runs adaptive, so `max_tokens` now caps thinking *plus* answer and tight budgets truncate), and `thinking: {type: "disabled"}` **400s above `high` effort**. Prompt-cache minimum drops to 512 tokens. Handle `stop_reason: "refusal"` before reading `content`; prefer `fallbacks: "default"` over pinning a fallback model.
 
-**Tokenizer:** the ~35% token premium was a one-time change at the 4.6 → 4.7 boundary; **Opus 4.7 and 4.8 tokenize identically**, so 4.7 → 4.8 adds no further premium. Budget the ceiling once when leaving a pre-4.7 model.
+**Fable 5** (`claude-fable-5`) is the top capability tier at 2× Opus 5. Thinking always on — omit the param (`{type:"disabled"}` → 400). No temperature/top_p/top_k, no assistant prefill. Requires 30-day data retention (ZDR org → 400 on every request).
 
-**Prompt caching** (1-hour TTL) cuts Claude API spend ~90% for repeated context. Always cache stable system prompts and large reference docs. See [claude-code-best-practices.md §5](../best-practices-toolkit/docs/best-practices/claude-code-best-practices.md).
+**Sonnet 5** (`claude-sonnet-5`) is near-Opus on coding/agentic. **Intro $2/$10 per MTok through 2026-08-31.** New tokenizer — **~30% more tokens than Sonnet 4.6** for the same text; re-baseline `count_tokens`, `max_tokens`, and cost dashboards.
 
-**Effort levels (Claude Code `/effort`):** `low` for trivial edits, `medium` default, `high` for architecture/security/multi-step refactors, `xhigh` for the hardest coding/agentic runs.
+**Legacy but active:** Opus 4.8/4.7/4.6, Sonnet 4.6, Opus 4.5, Sonnet 4.5. **Retired (404):** Opus 3, Sonnet 3.7, Haiku 3.5, Haiku 3, Sonnet 4 / Opus 4 `*-20250514`. **Opus 4.1 retires 2026-08-05** → move to `claude-opus-5`.
+
+**Tokenizer:** the ~35% premium was one-time at the 4.6 → 4.7 boundary; Opus 4.7/4.8/5 and Fable 5 tokenize identically. Sonnet 5 is its own re-baseline. Never estimate Claude tokens with `tiktoken` — use `messages.count_tokens` against the exact model.
+
+**Prompt caching** (1-hour TTL) cuts Claude API spend ~90% for repeated context. Minimum cacheable prefix is **not monotonic**: 512 tokens (Opus 5, Fable 5), 1,024 (Opus 4.8, Sonnet 5/4.6), 2,048 (Opus 4.7), 4,096 (Opus 4.6, Haiku 4.5). See [claude-code-best-practices.md §5](../best-practices-toolkit/docs/best-practices/claude-code-best-practices.md).
+
+**Effort levels (Claude Code `/effort`, API `output_config.effort`):** `low` → `medium` → `high` → `xhigh` → `max`; API default `high`. `xhigh` for coding/agentic, min `high` for intelligence-sensitive work — then sweep *down*, since Opus 5's `low`/`medium` are unusually strong and are the main cost/latency lever. At `xhigh`/`max`, set `max_tokens` ≥ 64K.
 
 ---
 

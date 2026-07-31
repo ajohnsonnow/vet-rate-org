@@ -110,6 +110,14 @@ const VALID_PROFILE_FIELDS = [
   // === Metadata ===
   "lastUpdated",
   "profileVersion",
+  // FIX-9: per-field provenance ({fieldName: "user"|"document"}) so
+  // auto-populate from a newly-imported document can tell a manually
+  // corrected field apart from one it filled in itself, and never
+  // silently overwrite the former.
+  "profileFieldSources",
+
+  // === Display Preferences ===
+  "showStateAwards",
 ];
 
 // Max lengths for security
@@ -249,6 +257,26 @@ export const getFullName = () => {
     profile.suffix,
   ].filter(Boolean);
   return parts.join(" ");
+};
+
+/**
+ * Whether state-scoped National Guard awards should render in the ribbon
+ * rack. Defaults to true (opt-out setting) -- `?? true` (not `|| true`) so
+ * an explicitly persisted `false` is never coerced back to true.
+ * @returns {boolean}
+ */
+export const getShowStateAwards = () => {
+  const profile = getVeteranProfile();
+  return profile.showStateAwards ?? true;
+};
+
+/**
+ * Persist the veteran's state-awards display preference.
+ * @param {boolean} value
+ * @returns {boolean} Success status
+ */
+export const setShowStateAwards = (value) => {
+  return updateVeteranProfile({ showStateAwards: !!value });
 };
 
 // ============================================================================
@@ -761,15 +789,23 @@ const VALID_THEATERS = [
 export const getServiceHistory = () => {
   try {
     const saved = localStorage.getItem(SERVICE_HISTORY_KEY);
-    return saved
-      ? JSON.parse(saved)
-      : {
-          deployments: [],
-          awards: [],
-          dd214Data: null,
-          serviceInfo: null,
-          dateUpdated: null,
-        };
+    if (!saved) {
+      return {
+        deployments: [],
+        awards: [],
+        dd214Data: null,
+        serviceInfo: null,
+        servicePeriods: [],
+        dateUpdated: null,
+      };
+    }
+    const parsed = JSON.parse(saved);
+    // Data saved before servicePeriods[] existed won't have the key —
+    // normalize so every caller can rely on it being an array.
+    parsed.servicePeriods = Array.isArray(parsed.servicePeriods)
+      ? parsed.servicePeriods
+      : [];
+    return parsed;
   } catch (error) {
     console.error("Error reading service history:", error);
     return {
@@ -777,6 +813,7 @@ export const getServiceHistory = () => {
       awards: [],
       dd214Data: null,
       serviceInfo: null,
+      servicePeriods: [],
       dateUpdated: null,
     };
   }
@@ -800,7 +837,33 @@ function _sanitizeDeployments(deployments) {
     hazardous: !!d.hazardous,
     combat: !!d.combat,
     dateAdded: d.dateAdded || new Date().toISOString(),
+    // Reference (not nesting) into servicePeriods[] — null means
+    // career-level/unassigned. Hook for a future locations-timeline
+    // feature; no such feature is built this pass.
+    periodId: d.periodId || null,
   }));
+}
+
+/**
+ * Sanitize a device object attached to an award. FIX-4: devices must stay
+ * structured {type, position} objects end-to-end — VisualRibbon switches
+ * on device.type, so flattening to a display-name string breaks rendering.
+ */
+function _sanitizeDevice(device) {
+  if (!device || typeof device !== "object") return null;
+  if (!device.type) return null;
+  return {
+    type: sanitizeString(String(device.type), 50),
+    position:
+      typeof device.position === "number"
+        ? device.position
+        : sanitizeString(String(device.position ?? ""), 20),
+  };
+}
+
+function _sanitizeDeviceList(devices) {
+  if (!Array.isArray(devices)) return [];
+  return devices.map(_sanitizeDevice).filter(Boolean);
 }
 
 function _sanitizeAwards(awards) {
@@ -813,6 +876,9 @@ function _sanitizeAwards(awards) {
     dateReceived: a.dateReceived || null,
     notes: sanitizeString(a.notes || "", 500),
     isCombat: !!a.isCombat,
+    // FIX-4: structured {type, position} objects, NOT flattened display
+    // name strings.
+    devices: _sanitizeDeviceList(a.devices),
     dateAdded: a.dateAdded || new Date().toISOString(),
   }));
 }
@@ -835,6 +901,22 @@ function _sanitizeDd214Data(dd214Data) {
     dateProcessed: dd214Data.dateProcessed || new Date().toISOString(),
     confidence:
       typeof dd214Data.confidence === "number" ? dd214Data.confidence : 0,
+    // Q1 whitelist expansion (2026-07-30, Anth-authorized): exactly these 9
+    // fields, no more. ssnFull and serviceNumber are DELIBERATELY excluded
+    // — do not add them here without explicit re-authorization.
+    fullName: sanitizeString(dd214Data.fullName || "", 200),
+    rank: sanitizeString(dd214Data.rank || "", 100),
+    payGrade: sanitizeString(dd214Data.payGrade || "", 10),
+    dateOfBirth: dd214Data.dateOfBirth || null,
+    separationAuthority: sanitizeString(dd214Data.separationAuthority || "", 200),
+    separationCode: sanitizeString(dd214Data.separationCode || "", 50),
+    reentryCode: sanitizeString(dd214Data.reentryCode || "", 50),
+    narrativeReason: sanitizeString(dd214Data.narrativeReason || "", 500),
+    militaryEducation: Array.isArray(dd214Data.militaryEducation)
+      ? dd214Data.militaryEducation
+          .map((m) => sanitizeString(String(m), 200))
+          .slice(0, 20)
+      : sanitizeString(dd214Data.militaryEducation || "", 500),
   };
 }
 
@@ -848,6 +930,382 @@ function _sanitizeServiceInfo(serviceInfo) {
   };
 }
 
+// ============================================================================
+// SERVICE PERIODS — canonical multi-period service history model.
+//
+// One entry per DD214/NGB22 (period-scoped fields, never merged across
+// periods). Identity key is (serviceStartDate, serviceEndDate) — NOT
+// filename — so a re-scan of the same document merges by confidence, but
+// two genuinely different enlistment periods never collide.
+//
+// This is the canonical store: the Profile tab's manual editor and the
+// Service tab's document-derived display both read/write this same array
+// (Q4, 2026-07-30). `profile.servicePeriods` and `serviceHistory.dd214Data`
+// remain in place, unread going forward, per the dual-read migration
+// pattern.
+// ============================================================================
+
+const SERVICE_PERIOD_MERGE_FIELDS = [
+  "branch",
+  "component",
+  "formType",
+  "rank",
+  "payGrade",
+  "mos",
+  "mosTitle",
+  "unit",
+  "characterOfService",
+  "separationType",
+  "separationAuthority",
+  "separationCode",
+  "reentryCode",
+  "narrativeReason",
+  "netActiveService",
+  "yearsService",
+  "monthsService",
+  "daysService",
+  "foreignService",
+  "militaryEducation",
+  "sourceDocument",
+  "notes",
+];
+
+function _sanitizeServicePeriodIdentity(p) {
+  return {
+    id:
+      p.id ||
+      `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    serviceStartDate: p.serviceStartDate || null,
+    serviceEndDate: p.serviceEndDate || null,
+    branch: sanitizeString(p.branch || "", 100),
+    component: sanitizeString(p.component || "", 50),
+    formType: sanitizeString(p.formType || "", 20),
+    rank: sanitizeString(p.rank || "", 100),
+    payGrade: sanitizeString(p.payGrade || "", 10),
+    mos: sanitizeString(p.mos || "", 200),
+    mosTitle: sanitizeString(p.mosTitle || "", 200),
+    unit: sanitizeString(p.unit || "", 300),
+  };
+}
+
+function _sanitizeServicePeriodSeparationAndTime(p) {
+  return {
+    characterOfService: sanitizeString(p.characterOfService || "", 100),
+    separationType: sanitizeString(p.separationType || "", 100),
+    separationAuthority: sanitizeString(p.separationAuthority || "", 200),
+    separationCode: sanitizeString(p.separationCode || "", 50),
+    reentryCode: sanitizeString(p.reentryCode || "", 50),
+    narrativeReason: sanitizeString(p.narrativeReason || "", 500),
+    netActiveService: sanitizeString(p.netActiveService || "", 100),
+    yearsService: typeof p.yearsService === "number" ? p.yearsService : null,
+    monthsService:
+      typeof p.monthsService === "number" ? p.monthsService : null,
+    daysService: typeof p.daysService === "number" ? p.daysService : null,
+    foreignService: !!p.foreignService,
+    militaryEducation: Array.isArray(p.militaryEducation)
+      ? p.militaryEducation
+          .map((m) => sanitizeString(String(m), 200))
+          .slice(0, 20)
+      : sanitizeString(p.militaryEducation || "", 500),
+  };
+}
+
+function _sanitizeServicePeriodMetadata(p) {
+  return {
+    sourceDocument: sanitizeString(p.sourceDocument || "", 300),
+    confidence: typeof p.confidence === "number" ? p.confidence : null,
+    userEdited: !!p.userEdited,
+    incomplete: !!p.incomplete,
+    notes: sanitizeString(p.notes || "", 1000),
+  };
+}
+
+function _sanitizeServicePeriod(p) {
+  if (!p || typeof p !== "object") return null;
+  return {
+    ..._sanitizeServicePeriodIdentity(p),
+    ..._sanitizeServicePeriodSeparationAndTime(p),
+    ..._sanitizeServicePeriodMetadata(p),
+  };
+}
+
+function _sanitizeServicePeriods(periods) {
+  if (!Array.isArray(periods)) return [];
+  return periods.map(_sanitizeServicePeriod).filter(Boolean);
+}
+
+/**
+ * Identity key for a service period: (serviceStartDate, serviceEndDate)
+ * when both are known. If only one date was extractable, key on that date
+ * plus sourceDocument so an incomplete period from one document never
+ * collides with an incomplete period from a different document.
+ */
+function _servicePeriodKey(p) {
+  if (p.serviceStartDate && p.serviceEndDate) {
+    return `${p.serviceStartDate}|${p.serviceEndDate}`;
+  }
+  const singleDate = p.serviceStartDate || p.serviceEndDate || "";
+  return `incomplete|${singleDate}|${p.sourceDocument || ""}`;
+}
+
+export const getServicePeriods = () => getServiceHistory().servicePeriods;
+
+/**
+ * Ingest-side upsert: merge a document-derived period into the canonical
+ * array by (serviceStartDate, serviceEndDate) identity. Never overwrites a
+ * period the user has manually edited (userEdited: true). When the period
+ * already exists and isn't user-edited, period-scoped fields merge by a
+ * confidence high-water-mark (same rule _mergeDD214Record already used).
+ * @returns {string|null} The period's id, or null on error.
+ */
+export const upsertServicePeriod = (periodData, options = {}) => {
+  try {
+    const history = getServiceHistory();
+    const periods = history.servicePeriods;
+
+    const incoming = {
+      ...periodData,
+      sourceDocument:
+        options.sourceDocument || periodData.sourceDocument || "",
+      confidence:
+        typeof options.confidence === "number"
+          ? options.confidence
+          : (periodData.confidence ?? null),
+      incomplete: !(periodData.serviceStartDate && periodData.serviceEndDate),
+    };
+    const incomingKey = _servicePeriodKey(incoming);
+    const existingIndex = periods.findIndex(
+      (p) => _servicePeriodKey(p) === incomingKey,
+    );
+
+    if (existingIndex === -1) {
+      const newPeriod = {
+        id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userEdited: false,
+        ...incoming,
+      };
+      periods.push(newPeriod);
+      history.servicePeriods = periods;
+      saveServiceHistory(history);
+      return newPeriod.id;
+    }
+
+    const existing = periods[existingIndex];
+    if (existing.userEdited) {
+      // Never overwrite a period the user has manually edited.
+      return existing.id;
+    }
+
+    const incomingConfidence = incoming.confidence ?? 0;
+    const existingConfidence = existing.confidence ?? 0;
+    const merged = { ...existing };
+    SERVICE_PERIOD_MERGE_FIELDS.forEach((field) => {
+      if (incomingConfidence >= existingConfidence && incoming[field]) {
+        merged[field] = incoming[field];
+      }
+    });
+    merged.confidence = Math.max(incomingConfidence, existingConfidence);
+    merged.incomplete = incoming.incomplete && existing.incomplete;
+    periods[existingIndex] = merged;
+    history.servicePeriods = periods;
+    saveServiceHistory(history);
+    return existing.id;
+  } catch (error) {
+    console.error("Error upserting service period:", error);
+    return null;
+  }
+};
+
+/**
+ * Manually add a service period (Profile tab editor). Always userEdited.
+ */
+export const addServicePeriod = (period) => {
+  try {
+    const history = getServiceHistory();
+    const newPeriod = {
+      id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userEdited: true,
+      ...period,
+    };
+    history.servicePeriods.push(newPeriod);
+    saveServiceHistory(history);
+    return newPeriod.id;
+  } catch (error) {
+    console.error("Error adding service period:", error);
+    return null;
+  }
+};
+
+/**
+ * Manually update a service period (Profile tab editor). Marks it
+ * userEdited so ingest never overwrites it again.
+ */
+export const updateServicePeriod = (periodId, updates) => {
+  try {
+    const history = getServiceHistory();
+    const index = history.servicePeriods.findIndex((p) => p.id === periodId);
+    if (index === -1) return false;
+
+    history.servicePeriods[index] = {
+      ...history.servicePeriods[index],
+      ...updates,
+      userEdited: true,
+    };
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error("Error updating service period:", error);
+    return false;
+  }
+};
+
+export const removeServicePeriod = (periodId) => {
+  try {
+    const history = getServiceHistory();
+    history.servicePeriods = history.servicePeriods.filter(
+      (p) => p.id !== periodId,
+    );
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error("Error removing service period:", error);
+    return false;
+  }
+};
+
+export const clearServicePeriods = () => {
+  try {
+    const history = getServiceHistory();
+    history.servicePeriods = [];
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error("Error clearing service periods:", error);
+    return false;
+  }
+};
+
+const PAY_GRADE_CATEGORY_BASE = { E: 0, W: 100, O: 200 };
+
+function _payGradeRank(payGrade) {
+  if (!payGrade) return -1;
+  const match = String(payGrade).match(/([EOW])-?(\d+)/i);
+  if (!match) return -1;
+  const category = match[1].toUpperCase();
+  const level = parseInt(match[2], 10);
+  return (PAY_GRADE_CATEGORY_BASE[category] ?? 0) + level;
+}
+
+function _sumPeriodDurationDays(period) {
+  if (period.serviceStartDate && period.serviceEndDate) {
+    const start = new Date(`${period.serviceStartDate}T00:00:00`);
+    const end = new Date(`${period.serviceEndDate}T00:00:00`);
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      const days = (end - start) / (1000 * 60 * 60 * 24);
+      if (days > 0) return days;
+    }
+  }
+  if (
+    typeof period.yearsService === "number" ||
+    typeof period.monthsService === "number" ||
+    typeof period.daysService === "number"
+  ) {
+    return (
+      (period.yearsService || 0) * 365.25 +
+      (period.monthsService || 0) * 30.44 +
+      (period.daysService || 0)
+    );
+  }
+  return 0;
+}
+
+function _formatDurationFromDays(totalDays) {
+  const years = Math.floor(totalDays / 365.25);
+  const remainderDays = totalDays - years * 365.25;
+  const months = Math.floor(remainderDays / 30.44);
+  const days = Math.round(remainderDays - months * 30.44);
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years === 1 ? "" : "s"}`);
+  if (months > 0) parts.push(`${months} month${months === 1 ? "" : "s"}`);
+  if (days > 0 || parts.length === 0) {
+    parts.push(`${days} day${days === 1 ? "" : "s"}`);
+  }
+  return parts.join(", ");
+}
+
+/**
+ * Summary view computed from the canonical servicePeriods[] array (Q2):
+ * branches served (deduped), Total time in service (SUM of each period's
+ * own duration) AND Service span (earliest entry → latest separation),
+ * shown separately since they answer different questions for a
+ * multi-period veteran with a break in service. Also surfaces highest
+ * pay grade, most recent rank, and character of service from the most
+ * recent period (flagged if periods disagree).
+ */
+export const summarizeServicePeriods = (periods) => {
+  const list = Array.isArray(periods) ? periods : [];
+  if (list.length === 0) {
+    return {
+      branches: [],
+      totalTimeInService: null,
+      serviceSpan: null,
+      highestPayGrade: null,
+      mostRecentRank: null,
+      characterOfService: null,
+      characterOfServiceDisagrees: false,
+    };
+  }
+
+  const branches = [...new Set(list.map((p) => p.branch).filter(Boolean))];
+
+  const totalDays = list.reduce(
+    (sum, p) => sum + _sumPeriodDurationDays(p),
+    0,
+  );
+  const totalTimeInService =
+    totalDays > 0 ? _formatDurationFromDays(totalDays) : null;
+
+  const startDates = list.map((p) => p.serviceStartDate).filter(Boolean);
+  const endDates = list.map((p) => p.serviceEndDate).filter(Boolean);
+  const serviceSpan =
+    startDates.length > 0 || endDates.length > 0
+      ? {
+          start: startDates.sort()[0] || null,
+          end: endDates.sort().slice(-1)[0] || null,
+        }
+      : null;
+
+  const highestPayGrade = list.reduce((best, p) => {
+    if (!p.payGrade) return best;
+    if (!best) return p.payGrade;
+    return _payGradeRank(p.payGrade) > _payGradeRank(best) ? p.payGrade : best;
+  }, null);
+
+  // Most recent = latest serviceEndDate (fall back to latest
+  // serviceStartDate for an open/incomplete final period).
+  const sortedMostRecentFirst = [...list].sort((a, b) => {
+    const aKey = a.serviceEndDate || a.serviceStartDate || "";
+    const bKey = b.serviceEndDate || b.serviceStartDate || "";
+    return bKey.localeCompare(aKey);
+  });
+  const mostRecentRank =
+    sortedMostRecentFirst.find((p) => p.rank)?.rank || null;
+
+  const charactersOfService = [
+    ...new Set(list.map((p) => p.characterOfService).filter(Boolean)),
+  ];
+  const characterOfService =
+    sortedMostRecentFirst.find((p) => p.characterOfService)
+      ?.characterOfService || null;
+
+  return {
+    branches,
+    totalTimeInService,
+    serviceSpan,
+    highestPayGrade,
+    mostRecentRank,
+    characterOfService,
+    characterOfServiceDisagrees: charactersOfService.length > 1,
+  };
+};
+
 export const saveServiceHistory = (history) => {
   try {
     const sanitized = {
@@ -855,6 +1313,7 @@ export const saveServiceHistory = (history) => {
       awards: _sanitizeAwards(history.awards),
       dd214Data: _sanitizeDd214Data(history.dd214Data),
       serviceInfo: _sanitizeServiceInfo(history.serviceInfo),
+      servicePeriods: _sanitizeServicePeriods(history.servicePeriods),
       dateUpdated: new Date().toISOString(),
     };
 
@@ -887,6 +1346,7 @@ export const addDeployment = (deployment) => {
       hazardous: !!deployment.hazardous,
       combat: !!deployment.combat,
       dateAdded: new Date().toISOString(),
+      periodId: deployment.periodId || null,
     };
 
     history.deployments.push(newDeployment);
@@ -949,6 +1409,41 @@ export const removeDeployment = (deploymentId) => {
 export const addAward = (award) => {
   try {
     const history = getServiceHistory();
+    const normalizedName = (award.name || "").trim().toLowerCase();
+    // Multiple source documents (e.g. several DD214 copies of the same
+    // career) commonly describe the same award — dedupe by normalized name
+    // instead of pushing a new entry every call, merging in whichever
+    // fields the new call fills in that the existing entry was missing.
+    const existing = history.awards.find(
+      (a) => (a.name || "").trim().toLowerCase() === normalizedName,
+    );
+
+    if (existing) {
+      existing.dateReceived =
+        existing.dateReceived || award.dateReceived || null;
+      existing.notes = existing.notes || sanitizeString(award.notes || "", 500);
+      existing.isCombat = existing.isCombat || !!award.isCombat;
+      // FIX-4: merge in any new structured devices, deduped by
+      // type+position so multiple devices of the same type at different
+      // positions (e.g. two bronze oak leaf clusters) aren't collapsed.
+      if (Array.isArray(award.devices) && award.devices.length > 0) {
+        const sanitizedNew = _sanitizeDeviceList(award.devices);
+        const existingDevices = new Set(
+          (existing.devices || []).map((d) => `${d.type}|${d.position}`),
+        );
+        sanitizedNew.forEach((d) => {
+          const key = `${d.type}|${d.position}`;
+          if (!existingDevices.has(key)) {
+            existing.devices = existing.devices || [];
+            existing.devices.push(d);
+            existingDevices.add(key);
+          }
+        });
+      }
+      saveServiceHistory(history);
+      return existing.id;
+    }
+
     const newAward = {
       id: `award_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: sanitizeString(award.name || "", 200),
@@ -956,6 +1451,9 @@ export const addAward = (award) => {
       dateReceived: award.dateReceived || null,
       notes: sanitizeString(award.notes || "", 500),
       isCombat: !!award.isCombat,
+      // FIX-4: structured {type, position} objects, NOT flattened display
+      // name strings — VisualRibbon switches on device.type.
+      devices: _sanitizeDeviceList(award.devices),
       dateAdded: new Date().toISOString(),
     };
 
@@ -1177,6 +1675,7 @@ export const saveTimelineEvents = (events) => {
       id: e.id || Date.now(),
       type: sanitizeString(e.type || "service", 50),
       date: e.date || null,
+      title: sanitizeString(e.title || "", 200),
       description: sanitizeString(e.description || "", 1000),
       category: sanitizeString(e.category || "Event", 100),
       dateAdded: e.dateAdded || new Date().toISOString(),
@@ -1202,6 +1701,7 @@ export const addTimelineEvent = (event) => {
       id: Date.now(),
       type: sanitizeString(event.type || "service", 50),
       date: event.date || null,
+      title: sanitizeString(event.title || "", 200),
       description: sanitizeString(event.description || "", 1000),
       category: sanitizeString(event.category || "Event", 100),
       dateAdded: new Date().toISOString(),
@@ -1272,6 +1772,18 @@ export const getPainMaps = () => {
  * @param {Object} painMap - Pain map data
  * @returns {string|null} New map ID or null on error
  */
+const MAX_PAIN_MAP_THUMBNAIL_CHARS = 500 * 1024; // ~500KB base64 data URL
+
+function _sanitizePainMapThumbnail(thumbnail) {
+  if (typeof thumbnail !== "string" || !thumbnail.startsWith("data:image/")) {
+    return null;
+  }
+  // Truncating a base64 image mid-stream corrupts it — drop an oversized
+  // thumbnail entirely rather than store an unusable partial image.
+  if (thumbnail.length > MAX_PAIN_MAP_THUMBNAIL_CHARS) return null;
+  return thumbnail;
+}
+
 export const savePainMap = (painMap) => {
   try {
     const maps = getPainMaps();
@@ -1281,8 +1793,22 @@ export const savePainMap = (painMap) => {
       painPoints: painMap.painPoints || {},
       modelConfig: painMap.modelConfig || {},
       notes: sanitizeString(painMap.notes || "", 2000),
+      // FIX-8: accept both the legacy field names already used by
+      // previously-saved maps (screenshot, detectedNexus) AND the field
+      // names PainPainter.jsx actually produces (thumbnail, conditions,
+      // nexusLanguage, view, savedAt) — the whitelist previously silently
+      // dropped all five of the latter.
       detectedNexus: painMap.detectedNexus || [],
-      screenshot: painMap.screenshot || null, // Base64 image
+      screenshot: painMap.screenshot || null, // Base64 image (legacy)
+      thumbnail: _sanitizePainMapThumbnail(painMap.thumbnail),
+      conditions: Array.isArray(painMap.conditions)
+        ? painMap.conditions
+            .map((c) => sanitizeString(String(c), 200))
+            .slice(0, 50)
+        : [],
+      view: sanitizeString(painMap.view || "", 20),
+      nexusLanguage: sanitizeString(painMap.nexusLanguage || "", 5000),
+      savedAt: painMap.savedAt || new Date().toISOString(),
       dateSaved: new Date().toISOString(),
       dateUpdated: new Date().toISOString(),
     };
@@ -1291,7 +1817,13 @@ export const savePainMap = (painMap) => {
     localStorage.setItem(PAIN_MAPS_KEY, JSON.stringify(maps));
     return newMap.id;
   } catch (error) {
-    console.error("Error saving pain map:", error);
+    if (error?.name === "QuotaExceededError") {
+      console.error(
+        "Pain map NOT saved — browser storage is full. Export a backup and free up space, then try again.",
+      );
+    } else {
+      console.error("Error saving pain map:", error);
+    }
     return null;
   }
 };
@@ -1362,6 +1894,8 @@ export default {
   clearVeteranProfile,
   hasVeteranProfile,
   getFullName,
+  getShowStateAwards,
+  setShowStateAwards,
   // Form functions
   getSavedForms,
   saveForm,
@@ -1394,6 +1928,14 @@ export default {
   saveDD214Data,
   clearDD214Data,
   hasServiceHistory,
+  // Service Periods functions (canonical multi-period model)
+  getServicePeriods,
+  upsertServicePeriod,
+  addServicePeriod,
+  updateServicePeriod,
+  removeServicePeriod,
+  clearServicePeriods,
+  summarizeServicePeriods,
   // Timeline Events functions
   getTimelineEvents,
   saveTimelineEvents,

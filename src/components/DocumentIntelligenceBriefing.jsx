@@ -19,6 +19,7 @@ import {
 } from "../utils/collectionRules";
 import { RibbonRackDisplay } from "./VisualRibbon";
 import { sortRibbonsByPrecedence } from "../utils/ribbonRackData";
+import { getShowStateAwards, setShowStateAwards } from "../utils/veteranProfile";
 import { BadgeDisplay, CombatIndicatorSummary } from "./BadgeDisplay";
 import { parseDD214Badges } from "../data/badgeData";
 
@@ -1340,7 +1341,15 @@ function formatArrayItem(item) {
 }
 
 // Derive visual ribbon/badge display data for an awards array field
-function getAwardsDisplayData(fieldKey, value, filteredData) {
+// Exported for direct unit testing of the state-awards toggle filter (see
+// src/__tests__/components/DocumentIntelligenceBriefing.test.jsx) without
+// needing to render/introspect the ribbon rack's un-labeled DOM.
+export function getAwardsDisplayData(
+  fieldKey,
+  value,
+  filteredData,
+  showStateAwards = true,
+) {
   // Check if this is an awards array with award objects
   const isAwardsArray =
     fieldKey.toLowerCase() === "awards" &&
@@ -1350,6 +1359,7 @@ function getAwardsDisplayData(fieldKey, value, filteredData) {
   const visualAwards = isAwardsArray
     ? value
         .filter((item) => item?.award || item?.awardId)
+        .filter((item) => showStateAwards || item.award?.scope !== "state")
         .map((item) => ({
           awardId: item.awardId || item.award?.id,
           award: item.award || { id: item.awardId, name: item.matchedText },
@@ -1461,7 +1471,23 @@ function ArrayValueField({
   checked,
   onCheckChange,
 }) {
-  const awardsDisplay = getAwardsDisplayData(fieldKey, value, filteredData);
+  const [showStateAwards, setShowStateAwardsState] = useState(() =>
+    getShowStateAwards(),
+  );
+  const hasStateAwards =
+    fieldKey.toLowerCase() === "awards" &&
+    value.some((item) => item?.award?.scope === "state");
+  const awardsDisplay = getAwardsDisplayData(
+    fieldKey,
+    value,
+    filteredData,
+    showStateAwards,
+  );
+
+  const handleToggleStateAwards = (next) => {
+    setShowStateAwardsState(next);
+    setShowStateAwards(next);
+  };
 
   return (
     <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -1484,6 +1510,18 @@ function ArrayValueField({
             </span>
           )}
         </label>
+
+        {hasStateAwards && (
+          <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-2">
+            <input
+              type="checkbox"
+              checked={showStateAwards}
+              onChange={(e) => handleToggleStateAwards(e.target.checked)}
+              className="w-3.5 h-3.5"
+            />
+            Show state awards
+          </label>
+        )}
 
         <ArrayValueVisuals {...awardsDisplay} value={value} />
         <ArrayValueList

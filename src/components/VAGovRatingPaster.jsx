@@ -11,6 +11,7 @@ import {
   EXAMPLE_VA_GOV_TEXT,
 } from "../utils/vaGovRatingParser";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { formatLocalDate } from "../utils/dateUtils";
 
 const RatingPasterHeader = ({ onClose }) => (
   <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
@@ -230,7 +231,8 @@ const ServiceConnectedRatingList = ({ ratings }) => (
           </div>
           {rating.effectiveDate && (
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Effective: {new Date(rating.effectiveDate).toLocaleDateString()}
+              Effective:{" "}
+              {formatLocalDate(rating.effectiveDate).toLocaleDateString()}
             </div>
           )}
         </div>

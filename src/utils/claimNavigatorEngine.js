@@ -22,6 +22,7 @@ import {
   daysUntilDeadline,
   calculateEvidenceCompleteness,
 } from "../data/claimNavigatorSchema";
+import { formatLocalDate } from "./dateUtils";
 
 // ============================================
 // NEXT STEP ACTION TYPES
@@ -143,7 +144,7 @@ const checkItfDeadlineWarnings = (criticalDates) => {
       type: "ITF_EXPIRING",
       urgency: URGENCY_LEVELS.CRITICAL.code,
       title: "Intent to File Expiring SOON",
-      message: `Your Intent to File expires in ${daysLeft} days! Submit your claim before ${new Date(criticalDates.itfExpirationDate).toLocaleDateString()} to protect your backpay date.`,
+      message: `Your Intent to File expires in ${daysLeft} days! Submit your claim before ${formatLocalDate(criticalDates.itfExpirationDate).toLocaleDateString()} to protect your backpay date.`,
       daysRemaining: daysLeft,
     });
   } else if (daysLeft !== null && daysLeft <= 60) {
@@ -222,7 +223,7 @@ const checkExamDateWarnings = (criticalDates) => {
       type: "CP_EXAM_SOON",
       urgency: URGENCY_LEVELS.HIGH.code,
       title: "C&P Exam in " + daysUntil + " Days",
-      message: `Your C&P exam is on ${new Date(criticalDates.cpExamDate).toLocaleDateString()}. Prepare: review your symptoms, bring documentation, and do NOT downplay anything.`,
+      message: `Your C&P exam is on ${formatLocalDate(criticalDates.cpExamDate).toLocaleDateString()}. Prepare: review your symptoms, bring documentation, and do NOT downplay anything.`,
       daysRemaining: daysUntil,
     });
   }

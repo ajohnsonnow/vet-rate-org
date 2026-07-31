@@ -741,14 +741,26 @@ function _saveDd214ToProfile(analysisResult, combinedText, selectedFields) {
     specialQualifications: analysisResult.specialQualifications,
   });
 
-  // Save awards to profile
+  // Save awards to profile.
+  // FIX-4: `award.devices?.join(", ")` produced "[object Object]" garbage
+  // whenever devices were already structured {type, position} objects,
+  // and — critically — never passed devices through to addAward's
+  // `devices` key at all, so they could never reach VisualRibbon. Pass
+  // devices through as structured data; addAward's sanitizer accepts
+  // {type, position} objects and safely drops anything else (e.g. a
+  // plain display-name string from a different extractor).
   if (analysisResult.awards && Array.isArray(analysisResult.awards)) {
     analysisResult.awards.forEach((award) => {
+      const deviceLabels = (award.devices || [])
+        .map((d) => (typeof d === "string" ? d : d?.type || ""))
+        .filter(Boolean);
       addAward({
         name: award.name,
         abbreviation: award.abbreviation,
         dateReceived: null,
-        notes: award.devices?.join(", ") || "",
+        notes:
+          deviceLabels.length > 0 ? `Devices: ${deviceLabels.join(", ")}` : "",
+        devices: award.devices || [],
         isCombat: award.isCombat || false,
         sourceDD214: award.sourceDD214,
       });
@@ -764,8 +776,6 @@ function _saveDd214ToProfile(analysisResult, combinedText, selectedFields) {
 async function _saveDd214ToVkb(analysisResult, combinedText, extractedTexts) {
   // This makes ALL extracted DD214 data available to every AI tool
   try {
-    const vkb = await loadVKB();
-
     // Build comprehensive data object for VKB merge
     const vkbData = {
       fullName:
@@ -813,13 +823,10 @@ async function _saveDd214ToVkb(analysisResult, combinedText, extractedTexts) {
         ? extractedTexts.map((et) => et.filename).join(", ")
         : "Pasted DD214 Text";
 
-    mergeDD214IntoVKB(vkb, vkbData, { fileName: sourceFileName });
-    await saveVKB(vkb);
-    // eslint-disable-next-line no-console
-    console.log("✅ DD214 data merged into VKB");
-
-    // Also register the document in VKB documentation
-    await addDocumentToVKB({
+    // FIX-6: register the document FIRST so mergeDD214IntoVKB below can
+    // enrich that same doc_ entry (matched via vkbDocumentId) instead of
+    // pushing a second dd214-... record for the same file.
+    const docResult = await addDocumentToVKB({
       fileName: sourceFileName,
       classification: "DD214",
       fileSize: combinedText.length,
@@ -830,6 +837,15 @@ async function _saveDd214ToVkb(analysisResult, combinedText, extractedTexts) {
       ocrUsed: extractedTexts.some((et) => et.ocrUsed),
       method: extractedTexts[0]?.method || "paste",
     });
+
+    const vkb = await loadVKB();
+    mergeDD214IntoVKB(vkb, vkbData, {
+      fileName: sourceFileName,
+      vkbDocumentId: docResult.documentId,
+    });
+    await saveVKB(vkb);
+    // eslint-disable-next-line no-console
+    console.log("✅ DD214 data merged into VKB");
   } catch (vkbErr) {
     console.error("VKB save failed (non-fatal):", vkbErr);
     // Don't block the save — profile data is still saved
@@ -2768,6 +2784,7 @@ const DD214Analyzer = ({
   onOpenAISettings,
   onSaveResults,
   onOpenMusterCall,
+  initialFile,
 }) => {
   const { t } = useLanguage();
 
@@ -2847,6 +2864,20 @@ const DD214Analyzer = ({
     ..._buildDd214AnalysisHandlers(state),
     ..._buildDd214SaveHandlers(state),
   };
+
+  // FIX-2: auto-process the file carried through from MyPacket's
+  // drag-drop/file-select (openDD214Analyzer CustomEvent detail) instead
+  // of opening empty and making the veteran re-select it. Guarded by a
+  // ref so re-renders (or the same File object reference persisting
+  // across parent re-renders) don't reprocess it repeatedly.
+  const processedInitialFileRef = useRef(false);
+  useEffect(() => {
+    if (!initialFile || processedInitialFileRef.current) return;
+    processedInitialFileRef.current = true;
+    setInputMethod("upload");
+    handlers.processFiles([initialFile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
 
   return <DD214AnalyzerView state={state} handlers={handlers} />;
 };

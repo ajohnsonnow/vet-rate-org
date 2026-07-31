@@ -7,7 +7,7 @@
  * unblock it, silently trapping the user (or the automated test) on this
  * screen indefinitely.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   render,
   screen,
@@ -15,8 +15,16 @@ import {
   waitFor,
   act,
 } from "@testing-library/react";
-import DocumentIntelligenceBriefing from "../../components/DocumentIntelligenceBriefing.jsx";
+import DocumentIntelligenceBriefing, {
+  getAwardsDisplayData,
+} from "../../components/DocumentIntelligenceBriefing.jsx";
 import { detectConflicts } from "../../utils/conflictDetector";
+import { parseDD214Text } from "../../utils/ribbonRackData";
+import {
+  getShowStateAwards,
+  clearVeteranProfile,
+} from "../../utils/veteranProfile";
+import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
 
 vi.mock("../../utils/conflictDetector", () => ({
   detectConflicts: vi.fn().mockResolvedValue([]),
@@ -46,6 +54,33 @@ function renderBriefing(extractedData) {
       onSkip={vi.fn()}
       onClose={vi.fn()}
     />,
+  );
+}
+
+// Only needed when extractedData.awards carries real .award objects (as
+// opposed to the plain strings the other describe blocks in this file use):
+// VisualRibbon (rendered by the ribbon rack) reads useLanguage(), which
+// throws outside a LanguageProvider.
+function renderBriefingWithLanguage(extractedData) {
+  return render(
+    <LanguageProvider>
+      <DocumentIntelligenceBriefing
+        conflicts={[]}
+        extractionResult={{
+          filename: "dd214.pdf",
+          size: 1024,
+          classification: { type: "dd214", confidence: 90 },
+          extractedData,
+          pageCount: 1,
+          method: "vision",
+          visionUsed: true,
+          confidence: 90,
+        }}
+        onVerify={vi.fn()}
+        onSkip={vi.fn()}
+        onClose={vi.fn()}
+      />
+    </LanguageProvider>,
   );
 }
 
@@ -267,5 +302,84 @@ describe("DocumentIntelligenceBriefing — empty-array field verification", () =
     }
 
     await waitFor(() => expect(saveBtn).toBeEnabled());
+  });
+});
+
+describe("DocumentIntelligenceBriefing — state awards toggle", () => {
+  afterEach(() => {
+    clearVeteranProfile();
+  });
+
+  // Real production-shaped award objects, produced the same way
+  // musterCallProcessor.js's parseServiceRecord builds `data.awards`.
+  const federalOnly = parseDD214Text(
+    "13. DECORATIONS: NATIONAL DEFENSE SERVICE MEDAL",
+    "Army",
+  );
+  const mixed = parseDD214Text(
+    "13. DECORATIONS: NATIONAL DEFENSE SERVICE MEDAL STATE OF HAWAII MEDAL OF VALOR",
+    "Army",
+    "HI",
+  );
+
+  it("getAwardsDisplayData includes state awards when showStateAwards is true", () => {
+    const { sortedVisualAwards } = getAwardsDisplayData(
+      "awards",
+      mixed,
+      { branch: "Army" },
+      true,
+    );
+    expect(sortedVisualAwards.some((a) => a.award?.scope === "state")).toBe(
+      true,
+    );
+    expect(sortedVisualAwards).toHaveLength(mixed.length);
+  });
+
+  it("getAwardsDisplayData hides state awards when showStateAwards is false", () => {
+    const { sortedVisualAwards } = getAwardsDisplayData(
+      "awards",
+      mixed,
+      { branch: "Army" },
+      false,
+    );
+    expect(sortedVisualAwards.some((a) => a.award?.scope === "state")).toBe(
+      false,
+    );
+    expect(sortedVisualAwards).toHaveLength(
+      mixed.filter((a) => a.award?.scope !== "state").length,
+    );
+  });
+
+  it("renders a 'Show state awards' toggle only when a state award is present", async () => {
+    const withState = renderBriefingWithLanguage({
+      firstName: "John",
+      awards: mixed,
+    });
+    await waitFor(() => {
+      expect(screen.getByText(/Show state awards/i)).toBeInTheDocument();
+    });
+    withState.unmount();
+
+    renderBriefingWithLanguage({
+      firstName: "John",
+      awards: federalOnly,
+    });
+    await waitFor(() => {
+      expect(screen.getAllByRole("checkbox").length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByText(/Show state awards/i)).not.toBeInTheDocument();
+  });
+
+  it("defaults to checked (showStateAwards true) and persists false when toggled off", async () => {
+    renderBriefingWithLanguage({ firstName: "John", awards: mixed });
+
+    const toggle = await screen.findByLabelText(/Show state awards/i);
+    expect(toggle.checked).toBe(true);
+    expect(getShowStateAwards()).toBe(true);
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(toggle.checked).toBe(false));
+    expect(getShowStateAwards()).toBe(false);
   });
 });

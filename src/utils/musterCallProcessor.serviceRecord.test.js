@@ -71,6 +71,37 @@ describe("musterCallProcessor: parseServiceRecord (DD214 parser)", () => {
   });
 });
 
+describe("FIX-13: Box 12a/12b service dates no longer come back null on real formatting", () => {
+  it("extracts serviceStartDate/serviceEndDate from '12.a.'/'12.b.' (dot before the sub-box letter)", async () => {
+    // Real DD214 text renders the sub-box label with a dot BEFORE the
+    // letter too ("12.a.", not just "12a."), and the date value itself is a
+    // plain whitespace-separated "YYYY MM DD" triplet with no punctuation
+    // at all — neither of which the original "12a\.?" + slash/dash-only
+    // value regex ever matched.
+    const text = `
+1. NAME (Last, First, Middle): SMITH, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+12.a. DATE ENTERED AD THIS PERIOD  2002 05 06
+12.b. SEPARATION DATE THIS PERIOD  2007 06 29
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.serviceStartDate).toBe("05/06/2002");
+    expect(result.serviceEndDate).toBe("06/29/2007");
+  });
+
+  it("still extracts serviceStartDate/serviceEndDate from the original '12a.'/'12b.' slash-delimited format (no regression)", async () => {
+    const text = `
+12a. DATE ENTERED AD THIS PERIOD: 06/01/2010
+12b. DATE OF SEPARATION: 05/30/2015
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.serviceStartDate).toBe("06/01/2010");
+    expect(result.serviceEndDate).toBe("05/30/2015");
+  });
+});
+
 describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () => {
   it("does not hang on a long run of letters with no field markers (regression: ReDoS)", async () => {
     const pathological = "A".repeat(100000);

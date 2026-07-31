@@ -97,6 +97,7 @@ export const VA_SCOPES = [
   "disability_rating.read", // VA disability ratings + effective dates
   "service_history.read", // Military service history + deployments
   "veteran_status.read", // Confirm Veteran status
+  "claim.read", // Benefits Claims API (getClaims/getClaimById/uploadClaimDocument)
   // 'enrolled_benefits.read',     // Uncomment if approved - enrolled VA benefits
   // 'flashes.read',               // Uncomment if approved - claimant-specific indicators
 ].join(" ");
@@ -175,12 +176,16 @@ export function getVaConfigStatus() {
     issues,
     environment: VA_AUTH_CONFIG.environment,
     // Primary property names (used by VADataCenter)
-    oauthConfigured: !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
+    // Gated on the master switch too — a truthy clientId/redirectUri alone
+    // must not enable the "Sign in with VA.gov" CTA while VITE_VA_API_ENABLED
+    // is off, same as isVaIntegrationConfigured() above.
+    oauthConfigured:
+      VA_API_ENABLED && !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
     facilitiesConfigured: !!VA_FACILITIES_API_KEY,
     formsConfigured: !!VA_FORMS_API_KEY,
     benefitsConfigured: !!VA_BENEFITS_REF_API_KEY,
     // Legacy aliases (backwards compat)
-    hasOAuth: !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
+    hasOAuth: VA_API_ENABLED && !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
     hasApiKey: !!VA_FACILITIES_API_KEY,
     hasFormsApiKey: !!VA_FORMS_API_KEY,
     hasBenefitsApiKey: !!VA_BENEFITS_REF_API_KEY,

@@ -593,13 +593,80 @@ function logClassificationResult(
   }
 }
 
+// A consolidated C-File opens with an ordinary VA cover letter, so sampling
+// only the head scores it as CLAIM_LETTER and routes it to parseClaimLetter —
+// four regexes over millions of characters — instead of the C-File
+// segmentation pipeline. Documents past the head-only budget contribute a
+// middle and tail slice too, so the body actually influences the score.
+const HEAD_SAMPLE_CHARS = 10000;
+const LARGE_DOC_CHARS = 200000;
+
+function buildClassificationSample(text) {
+  if (text.length <= LARGE_DOC_CHARS)
+    return text.substring(0, HEAD_SAMPLE_CHARS);
+  const mid = Math.floor(text.length / 2);
+  return [
+    text.substring(0, HEAD_SAMPLE_CHARS),
+    text.substring(mid, mid + HEAD_SAMPLE_CHARS),
+    text.substring(text.length - HEAD_SAMPLE_CHARS),
+  ].join("\n");
+}
+
+// Document types that are, by definition, a single piece of correspondence.
+// A several-hundred-page PDF is not one of these no matter what its cover
+// page says — it is the consolidated claims folder.
+const SINGLE_LETTER_TYPES = new Set([
+  DOCUMENT_TYPES.CLAIM_LETTER,
+  DOCUMENT_TYPES.RATING_DECISION,
+  DOCUMENT_TYPES.VA_CORRESPONDENCE,
+  DOCUMENT_TYPES.NEXUS_LETTER,
+  DOCUMENT_TYPES.PERSONAL_STATEMENT,
+]);
+const CONSOLIDATED_FILE_MIN_PAGES = 100;
+
+function applyConsolidatedFileOverride(
+  best,
+  matches,
+  filenameHints,
+  pageCount,
+) {
+  const confidence = computeConfidence(
+    best.bestType,
+    best.bestScore,
+    matches,
+    filenameHints,
+  );
+  const isConsolidatedFile =
+    pageCount >= CONSOLIDATED_FILE_MIN_PAGES &&
+    SINGLE_LETTER_TYPES.has(best.bestType);
+  if (!isConsolidatedFile) return { ...best, confidence };
+  // Log the reclassification explicitly: the downstream winner/runner-up debug
+  // lines are computed from the pattern scores, so without this the override
+  // looks like the pattern matcher chose C_FILE_MEDICAL with the claim-letter
+  // score, and the winner shows up as its own runner-up.
+  // eslint-disable-next-line no-console
+  console.log(
+    `📄 [CLASSIFIER] ${pageCount}-page document reclassified ${best.bestType} → C_FILE_MEDICAL (consolidated file; pattern score ${best.bestScore} was for ${best.bestType})`,
+  );
+  const cFileConfig = CLASSIFICATION_PATTERNS[DOCUMENT_TYPES.C_FILE_MEDICAL];
+  return {
+    ...best,
+    bestType: DOCUMENT_TYPES.C_FILE_MEDICAL,
+    bestCategory: cFileConfig.category,
+    bestPriority: cFileConfig.priority,
+    confidence: Math.max(confidence, 70),
+  };
+}
+
 /**
  * Classify a document based on its text content
  * @param {string} text - The document text
  * @param {string} filename - Optional filename for additional hints
+ * @param {Object} options - Optional signals not derivable from text
+ * @param {number} options.pageCount - Extracted page count, when known
  * @returns {Object} Classification result with type, confidence, and metadata
  */
-export const classifyDocument = (text, filename = "") => {
+export const classifyDocument = (text, filename = "", options = {}) => {
   // Enable debug mode for classification troubleshooting
   const DEBUG_CLASSIFICATION = true;
 
@@ -614,7 +681,7 @@ export const classifyDocument = (text, filename = "") => {
   }
 
   // Normalize text for analysis - INCREASED to 10KB to catch more content
-  const normalizedText = text.substring(0, 10000);
+  const normalizedText = buildClassificationSample(text);
   const filenameHints = filename.toLowerCase();
 
   if (DEBUG_CLASSIFICATION) {
@@ -662,15 +729,13 @@ export const classifyDocument = (text, filename = "") => {
   }
 
   // Find best match
-  const { bestType, bestScore, bestCategory, bestPriority } =
-    findBestMatch(scores);
-
-  const confidence = computeConfidence(
-    bestType,
-    bestScore,
-    matches,
-    filenameHints,
-  );
+  const { bestType, bestScore, bestCategory, bestPriority, confidence } =
+    applyConsolidatedFileOverride(
+      findBestMatch(scores),
+      matches,
+      filenameHints,
+      options.pageCount,
+    );
 
   // Final debug output showing the winner
   if (DEBUG_CLASSIFICATION) {

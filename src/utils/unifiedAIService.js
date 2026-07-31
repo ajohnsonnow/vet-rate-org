@@ -1047,8 +1047,20 @@ const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
     `⚠️ PII Detected before Warrant Council call:`,
     piiAnalysis.types,
   );
+  // NOT aggressive: the Warrant Council is on-device WebLLM inference in a Web
+  // Worker — no third-party send, so the egress-boundary setting documented on
+  // scrubText() does not apply. Aggressive mode redacts every bare MM/DD/YYYY
+  // as a DOB (PII_PATTERNS.dob) and every "<digits> … Way/Place/Ct" run as an
+  // address (PII_PATTERNS.address), which strips the service, exam, and
+  // treatment dates a C-File analysis exists to extract. A model cannot report
+  // a date it never saw. Canonical SSN, phone, email, EDIPI, "C"-prefixed VA
+  // file numbers, and LABELED dates of birth are still redacted below.
+  //
+  // Note: chunk-parse failures log via scrubText(), which forces aggressive
+  // mode for DISPLAY only — [REDACTED_*] in those log lines says nothing about
+  // what the model actually received. Don't use them to assess this setting.
   const { scrubbedText, details } = scrubPII(prompt, {
-    aggressive: true,
+    aggressive: false,
     preservePartial: false,
   });
   // eslint-disable-next-line no-console
@@ -1245,8 +1257,11 @@ const generateWithWllama = async (prompt, options = {}) => {
     const piiAnalysis = analyzePII(prompt);
     if (piiAnalysis.hasPII) {
       console.warn(`⚠️ PII Detected before Wllama call:`, piiAnalysis.types);
+      // Not aggressive — wllama is in-page WASM inference, not an egress
+      // boundary. See scrubPromptForWarrantCouncil for why aggressive mode
+      // destroys the dates a C-File analysis depends on.
       const { scrubbedText, details } = scrubPII(prompt, {
-        aggressive: true,
+        aggressive: false,
         preservePartial: false,
       });
       scrubbedPrompt = scrubbedText;
@@ -1476,8 +1491,11 @@ const scrubPromptForLocalAI = (prompt, scrubPIIEnabled) => {
   if (!piiAnalysis.hasPII) return prompt;
 
   console.warn(`⚠️ PII Detected before Local AI call:`, piiAnalysis.types);
+  // Not aggressive — in-page WebLLM inference, not an egress boundary. See
+  // scrubPromptForWarrantCouncil for why aggressive mode destroys the dates a
+  // C-File analysis depends on.
   const { scrubbedText, details } = scrubPII(prompt, {
-    aggressive: true,
+    aggressive: false,
     preservePartial: false,
   });
   // eslint-disable-next-line no-console

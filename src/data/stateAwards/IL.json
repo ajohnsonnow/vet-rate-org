@@ -1,0 +1,168 @@
+{
+  "state": "Illinois",
+  "stateCode": "IL",
+  "officialSource": "https://il.ng.mil/",
+  "verificationStatus": "verified",
+  "lastVerified": "2026-07-29",
+  "researchNote": "il.ng.mil could not be reached directly from this environment. The order-of-precedence list below (citing NGIL 600-8-22, 3 Sept 2010) is confirmed identically by two independent secondary sources (Wikipedia's dedicated 'Awards and decorations of the Illinois National Guard' article and armywriter.com), so it is treated as reference-tier verified rather than a direct regulation read. 'Illinois Cross Medal (pending)' was omitted as not yet an issued award per both sources; original source numbering (with the resulting gap at #4) is preserved rather than renumbered.",
+  "awards": [
+    {
+      "id": "il-military-medal-for-valor",
+      "name": "Illinois Military Medal for Valor",
+      "abbreviation": null,
+      "aliases": [
+        "Illinois Military Medal of Valor"
+      ],
+      "category": "valor",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 1,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-military-distinguished-service-medal",
+      "name": "Illinois Military Distinguished Service Medal",
+      "abbreviation": null,
+      "aliases": [],
+      "category": "achievement",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 2,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-military-medal-for-merit",
+      "name": "Illinois Military Medal for Merit",
+      "abbreviation": null,
+      "aliases": [
+        "Illinois Military Medal of Merit"
+      ],
+      "category": "achievement",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 3,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-abraham-lincoln-medal-of-freedom",
+      "name": "Abraham Lincoln Medal of Freedom",
+      "abbreviation": null,
+      "aliases": [],
+      "category": "achievement",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 5,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-long-and-honorable-military-service-medal",
+      "name": "Illinois Long and Honorable Military Service Medal",
+      "abbreviation": null,
+      "aliases": [
+        "Illinois Military Long and Honorable Service Medal"
+      ],
+      "category": "service",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 6,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-recruiting-ribbon",
+      "name": "Illinois Recruiting Ribbon",
+      "abbreviation": null,
+      "aliases": [],
+      "category": "service",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 7,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-military-attendance-ribbon",
+      "name": "Illinois Military Attendance Ribbon",
+      "abbreviation": null,
+      "aliases": [],
+      "category": "service",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 8,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-state-active-duty-ribbon",
+      "name": "Illinois State Active Duty Ribbon",
+      "abbreviation": null,
+      "aliases": [
+        "Illinois State Active Duty Service Ribbon"
+      ],
+      "category": "service",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 9,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-outstanding-service-award",
+      "name": "Illinois Outstanding Service Award",
+      "abbreviation": null,
+      "aliases": [],
+      "category": "achievement",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 10,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    },
+    {
+      "id": "il-distinguished-service-award",
+      "name": "Illinois Distinguished Service Award",
+      "abbreviation": null,
+      "aliases": [],
+      "category": "achievement",
+      "scope": "state",
+      "stateCode": "IL",
+      "inStatePrecedence": 11,
+      "hasKnownInsignia": true,
+      "legalCitation": "NGIL 600-8-22 (3 Sept 2010)",
+      "authorityTier": "reference",
+      "sourceUrl": "https://www.armywriter.com/illinois-ribbon-racks.htm",
+      "verificationStatus": "needs-source"
+    }
+  ]
+}

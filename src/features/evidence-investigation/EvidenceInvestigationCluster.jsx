@@ -25,12 +25,19 @@ export default function EvidenceInvestigationCluster() {
   const [showCFileAnalyzer, setShowCFileAnalyzer] = useState(false);
   const [showWitnessBench, setShowWitnessBench] = useState(false);
   const [showDD214Analyzer, setShowDD214Analyzer] = useState(false);
+  // FIX-2: the file dropped/selected on MyPacket's DD214 drop zone is
+  // carried through as the openDD214Analyzer CustomEvent's detail —
+  // previously discarded, forcing the veteran to re-select it here.
+  const [initialDD214File, setInitialDD214File] = useState(null);
 
   useEffect(() => {
     const openForms = () => setShowFormsHelper(true);
     const openCFile = () => setShowCFileAnalyzer(true);
     const openWitness = () => setShowWitnessBench(true);
-    const openDD214 = () => setShowDD214Analyzer(true);
+    const openDD214 = (event) => {
+      setInitialDD214File(event?.detail || null);
+      setShowDD214Analyzer(true);
+    };
     window.addEventListener("openFormsHelper", openForms);
     window.addEventListener("openCFileAnalyzer", openCFile);
     window.addEventListener("openWitnessBench", openWitness);
@@ -74,13 +81,17 @@ export default function EvidenceInvestigationCluster() {
       )}
       {showDD214Analyzer && (
         <DD214Analyzer
-          onClose={() => setShowDD214Analyzer(false)}
+          onClose={() => {
+            setShowDD214Analyzer(false);
+            setInitialDD214File(null);
+          }}
           onReportBug={reportBug(setShowDD214Analyzer)}
           onOpenAISettings={openAISettings}
           onOpenMusterCall={() => {
             setShowDD214Analyzer(false);
             window.dispatchEvent(new CustomEvent("openMusterCall"));
           }}
+          initialFile={initialDD214File}
         />
       )}
     </Suspense>

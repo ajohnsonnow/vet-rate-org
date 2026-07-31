@@ -276,40 +276,73 @@ function _migrateLegacyEvidence(item, timeline, existing) {
  *
  * @returns {{ vkb: object, changed: boolean }}
  */
+/**
+ * C1: add serviceStartDate/serviceEndDate to every legacy
+ * vkb.serviceHistory.servicePeriods[] entry that only has
+ * entryDate/separationDate. entryDate/separationDate are left in place
+ * (dual-read) — nothing is deleted.
+ */
+function _renameServicePeriodFields(vkb) {
+  const periods = vkb.serviceHistory?.servicePeriods;
+  if (!Array.isArray(periods) || periods.length === 0) return false;
+  let changed = false;
+  periods.forEach((p) => {
+    if (!p || typeof p !== "object") return;
+    if (p.serviceStartDate === undefined && p.entryDate !== undefined) {
+      p.serviceStartDate = p.entryDate;
+      changed = true;
+    }
+    if (p.serviceEndDate === undefined && p.separationDate !== undefined) {
+      p.serviceEndDate = p.separationDate;
+      changed = true;
+    }
+  });
+  return changed;
+}
+
 export const migrateOffSchemaVKB = (vkb) => {
   if (!vkb || typeof vkb !== "object") return { vkb, changed: false };
   vkb.metadata = vkb.metadata || {};
-  if (vkb.metadata.migratedOffSchema) return { vkb, changed: false };
 
   let changed = false;
 
-  if (Array.isArray(vkb.claims) && vkb.claims.length > 0) {
-    vkb.medicalConditions = vkb.medicalConditions || {};
-    vkb.medicalConditions.current = vkb.medicalConditions.current || [];
-    const current = vkb.medicalConditions.current;
-    const existing = new Set(
-      current.map((c) => normalizeConditionName(c.name || c.condition)),
-    );
-    vkb.claims.forEach((claim) => {
-      if (_migrateLegacyClaim(claim, current, existing)) changed = true;
-    });
+  if (!vkb.metadata.migratedOffSchema) {
+    if (Array.isArray(vkb.claims) && vkb.claims.length > 0) {
+      vkb.medicalConditions = vkb.medicalConditions || {};
+      vkb.medicalConditions.current = vkb.medicalConditions.current || [];
+      const current = vkb.medicalConditions.current;
+      const existing = new Set(
+        current.map((c) => normalizeConditionName(c.name || c.condition)),
+      );
+      vkb.claims.forEach((claim) => {
+        if (_migrateLegacyClaim(claim, current, existing)) changed = true;
+      });
+    }
+
+    if (Array.isArray(vkb.evidence) && vkb.evidence.length > 0) {
+      vkb.evidenceTimeline = vkb.evidenceTimeline || [];
+      const timeline = vkb.evidenceTimeline;
+      const existing = new Set(
+        timeline.map(
+          (e) =>
+            `${e.date || ""}|${(e.eventType || e.type || "").toLowerCase()}|${normalizeConditionName(e.description || e.text || "")}`,
+        ),
+      );
+      vkb.evidence.forEach((item) => {
+        if (_migrateLegacyEvidence(item, timeline, existing)) changed = true;
+      });
+    }
+
+    vkb.metadata.migratedOffSchema = true;
   }
 
-  if (Array.isArray(vkb.evidence) && vkb.evidence.length > 0) {
-    vkb.evidenceTimeline = vkb.evidenceTimeline || [];
-    const timeline = vkb.evidenceTimeline;
-    const existing = new Set(
-      timeline.map(
-        (e) =>
-          `${e.date || ""}|${(e.eventType || e.type || "").toLowerCase()}|${normalizeConditionName(e.description || e.text || "")}`,
-      ),
-    );
-    vkb.evidence.forEach((item) => {
-      if (_migrateLegacyEvidence(item, timeline, existing)) changed = true;
-    });
+  // C1: separate guard flag so this step also runs for VKBs that already
+  // completed the (older) claims/evidence migration above.
+  if (!vkb.metadata.migratedServicePeriodFieldNames) {
+    if (_renameServicePeriodFields(vkb)) changed = true;
+    vkb.metadata.migratedServicePeriodFieldNames = true;
   }
 
-  vkb.metadata.migratedOffSchema = true;
   return { vkb, changed };
 };
 
@@ -320,7 +353,12 @@ export const migrateOffSchemaVKB = (vkb) => {
  * and, being idempotent, is safe to re-run if a reload beats the write.
  */
 async function _migrateAndPersist(vkb) {
-  if (vkb?.metadata?.migratedOffSchema) return vkb;
+  if (
+    vkb?.metadata?.migratedOffSchema &&
+    vkb?.metadata?.migratedServicePeriodFieldNames
+  ) {
+    return vkb;
+  }
   try {
     migrateOffSchemaVKB(vkb);
   } catch (err) {
@@ -334,6 +372,15 @@ async function _migrateAndPersist(vkb) {
   );
   return vkb;
 }
+
+// An IndexedDB open blocked by another connection's pending upgrade never
+// settles; race any VKB read/write promise so a slow/unavailable IndexedDB
+// never hangs a caller forever — resolves to null on timeout instead.
+export const raceVkb = (promise, timeoutMs = 3000) =>
+  Promise.race([
+    promise,
+    new Promise((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+  ]);
 
 /**
  * Load VKB from IndexedDB (primary) or localStorage (legacy fallback)
@@ -563,9 +610,45 @@ export const addDocumentToVKB = async (documentInfo) => {
 
   // Determine document category
   const category = categorizeDocument(documentInfo.classification);
+  const existingDocs = vkb.documentation[category] || [];
+
+  // FIX-6: idempotent across re-imports of the same file — re-uploading an
+  // unchanged file previously appended a duplicate entry and silently
+  // inflated the document count. Same (fileName, fileSize) updates the
+  // existing entry in place instead.
+  const duplicate = existingDocs.find(
+    (doc) =>
+      doc.fileName === documentInfo.fileName &&
+      doc.fileSize === documentInfo.fileSize,
+  );
+
+  if (duplicate) {
+    duplicate.uploadDate = new Date().toISOString();
+    duplicate.pageCount = documentInfo.pageCount || duplicate.pageCount || 1;
+    duplicate.classification =
+      documentInfo.classification || duplicate.classification;
+    duplicate.extractedText =
+      documentInfo.extractedText || duplicate.extractedText;
+    duplicate.extractedData =
+      documentInfo.extractedData || duplicate.extractedData;
+    duplicate.ocrUsed = documentInfo.ocrUsed ?? duplicate.ocrUsed;
+    duplicate.method = documentInfo.method || duplicate.method;
+    existingDocs.forEach((doc) => {
+      doc.mostRecent = doc.id === duplicate.id;
+    });
+
+    const saveResult = await saveVKB(vkb);
+    return {
+      success: saveResult.success,
+      documentId: duplicate.id,
+      vkb,
+      size: saveResult.size,
+      ...(saveResult.quotaWarning && { quotaWarning: saveResult.quotaWarning }),
+      ...(saveResult.error && { error: saveResult.error }),
+    };
+  }
 
   // Calculate version number (count existing documents of this type + 1)
-  const existingDocs = vkb.documentation[category] || [];
   const versionNumber = existingDocs.length + 1;
 
   // Mark all previous documents as NOT most recent
@@ -816,10 +899,15 @@ export const calculateCompleteness = (vkb) => {
   if (vkb.personal.email || vkb.personal.phone) score += 5;
 
   // Service history (25 points)
+  // C1: a multi-period veteran whose top-level entryDate/separationDate
+  // aggregate happens to be unset (e.g. every period only has one
+  // extractable date) still has real service dates recorded per-period —
+  // credit that instead of scoring them as incomplete.
   maxScore += 25;
+  const hasServicePeriods = vkb.serviceHistory.servicePeriods?.length > 0;
   if (vkb.serviceHistory.branch) score += 5;
-  if (vkb.serviceHistory.entryDate) score += 5;
-  if (vkb.serviceHistory.separationDate) score += 5;
+  if (vkb.serviceHistory.entryDate || hasServicePeriods) score += 5;
+  if (vkb.serviceHistory.separationDate || hasServicePeriods) score += 5;
   if (vkb.serviceHistory.mos.length > 0) score += 5;
   if (vkb.serviceHistory.characterOfService) score += 5;
 
@@ -1100,14 +1188,21 @@ function mergeDD214Awards(vkb, dd214Data, options) {
           source: options.fileName || "DD-214",
         });
       } else if (typeof award === "object" && award.devices?.length) {
-        // Merge new devices into existing award
+        // FIX-4: devices are structured {type, position} objects, not
+        // strings — `.toLowerCase()` on the object itself threw a
+        // TypeError. Key the dedup on type+position (not the whole
+        // object) so multiple devices of the same type at different
+        // positions (e.g. two bronze oak leaf clusters) aren't collapsed
+        // into one.
         const existingDevices = new Set(
-          existingAward.devices?.map((d) => d.toLowerCase()) || [],
+          (existingAward.devices || []).map((d) => `${d.type}|${d.position}`),
         );
         award.devices.forEach((d) => {
-          if (!existingDevices.has(d.toLowerCase())) {
+          const key = `${d.type}|${d.position}`;
+          if (!existingDevices.has(key)) {
             existingAward.devices = existingAward.devices || [];
             existingAward.devices.push(d);
+            existingDevices.add(key);
           }
         });
       }
@@ -1262,37 +1357,58 @@ function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
 
 function mergeDD214ServicePeriodTracking(vkb, dd214Data, options) {
   // ─── SERVICE PERIOD TRACKING (for multi-DD214 sets) ───
+  // Field names here are serviceStartDate/serviceEndDate (the naming
+  // convention used everywhere else going forward — matches the parser
+  // and profile/UI). Legacy vkb.serviceHistory.servicePeriods[] entries
+  // written under entryDate/separationDate are renamed by
+  // migrateOffSchemaVKB, not here.
   const { mosCode, mosTitle } = deriveDD214MOS(dd214Data);
   if (!vkb.serviceHistory.servicePeriods)
     vkb.serviceHistory.servicePeriods = [];
-  if (dd214Data.entryDate && dd214Data.separationDate) {
-    const isDuplicate = vkb.serviceHistory.servicePeriods.some(
-      (p) =>
-        p.entryDate === dd214Data.entryDate &&
-        p.separationDate === dd214Data.separationDate,
-    );
-    if (!isDuplicate) {
-      vkb.serviceHistory.servicePeriods.push({
-        entryDate: dd214Data.entryDate,
-        separationDate: dd214Data.separationDate,
-        branch: dd214Data.branch || vkb.serviceHistory.branch,
-        component: dd214Data.component || "",
-        rank: dd214Data.rank || "",
-        payGrade: dd214Data.payGrade || "",
-        mos: mosCode || "",
-        mosTitle: mosTitle || "",
-        characterOfService: dd214Data.characterOfService || "",
-        source: options.fileName || "DD-214",
-      });
-    }
+
+  // C1 bug fix: previously required BOTH dates, silently dropping any
+  // period where only one date was extractable. Key on whichever date(s)
+  // are available and flag incomplete when only one is present.
+  if (!dd214Data.entryDate && !dd214Data.separationDate) return;
+
+  const isDuplicate = vkb.serviceHistory.servicePeriods.some(
+    (p) =>
+      p.serviceStartDate === (dd214Data.entryDate || null) &&
+      p.serviceEndDate === (dd214Data.separationDate || null),
+  );
+  if (!isDuplicate) {
+    vkb.serviceHistory.servicePeriods.push({
+      serviceStartDate: dd214Data.entryDate || null,
+      serviceEndDate: dd214Data.separationDate || null,
+      branch: dd214Data.branch || vkb.serviceHistory.branch,
+      component: dd214Data.component || "",
+      rank: dd214Data.rank || "",
+      payGrade: dd214Data.payGrade || "",
+      mos: mosCode || "",
+      mosTitle: mosTitle || "",
+      characterOfService: dd214Data.characterOfService || "",
+      incomplete: !(dd214Data.entryDate && dd214Data.separationDate),
+      source: options.fileName || "DD-214",
+    });
   }
 }
 
 function mergeDD214Documentation(vkb, dd214Data, options) {
   // ─── DOCUMENTATION ───
+  // Muster Call already filed this document via addDocumentToVKB() ->
+  // routeDocumentToVKB(), which lands DD214/NGB22/DD256/DD257 in this same
+  // array. Without this guard every service record is counted twice, and a
+  // re-upload adds two more each time — inflating metadata.documentCount, the
+  // My Packet Documents badge, and the "DD-214s: N" line in generateLLMContext.
+  const fileName = options.fileName || "DD-214";
+  const alreadyFiled = vkb.documentation.dd214s.some(
+    (doc) => doc.fileName === fileName,
+  );
+  if (alreadyFiled) return;
+
   vkb.documentation.dd214s.push({
     id: `dd214-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-    fileName: options.fileName || "DD-214",
+    fileName,
     uploadDate: new Date().toISOString(),
     pageCount: dd214Data.pageCount || 1,
     extracted: true,
@@ -1497,7 +1613,7 @@ function buildServicePeriodsAndSeparationContext(vkb) {
   if (vkb.serviceHistory.servicePeriods?.length > 1) {
     context += "\nService Periods:\n";
     vkb.serviceHistory.servicePeriods.forEach((p, i) => {
-      context += `  Period ${i + 1}: ${p.entryDate} to ${p.separationDate} - ${p.branch || ""} ${p.rank || ""} (${p.mos || ""})\n`;
+      context += `  Period ${i + 1}: ${p.serviceStartDate} to ${p.serviceEndDate} - ${p.branch || ""} ${p.rank || ""} (${p.mos || ""})\n`;
     });
   }
 
