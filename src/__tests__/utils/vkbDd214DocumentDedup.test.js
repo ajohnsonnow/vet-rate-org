@@ -102,5 +102,9 @@ describe("FIX-6: addDocumentToVKB idempotency guard (unit-level, no IndexedDB)",
   // isn't available in this test environment — its (fileName, fileSize)
   // duplicate-detection logic is verified by code review only. See the
   // final report for this gap.
+  // Intentionally empty: this records a coverage gap, not a test. A placeholder
+  // assertion added purely to satisfy the rule would assert nothing while
+  // reading as real coverage.
+  // eslint-disable-next-line sonarjs/assertions-in-tests
   it.skip("re-uploading the same (fileName, fileSize) updates the existing entry instead of duplicating", () => {});
 });
