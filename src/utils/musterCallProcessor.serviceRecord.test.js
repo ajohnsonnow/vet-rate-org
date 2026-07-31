@@ -102,6 +102,81 @@ describe("FIX-13: Box 12a/12b service dates no longer come back null on real for
   });
 });
 
+describe("FIX-16: Box 1 name extraction survives OCR reading-order scrambling", () => {
+  it("extracts the name when '2. DEPARTMENT' (and other boxes) appear BEFORE '1. NAME' in the linearized text", async () => {
+    // Real DD214 scans read the form in column/field order, not printed
+    // reading order: "2. DEPARTMENT" through "7." routinely appear in the
+    // OCR text stream before "1. NAME" does. The old fix required a literal
+    // "2. DEPARTMENT"/"2. DEPT" to follow "1. NAME"; when it came first
+    // instead, no name was ever extracted even though the text was present.
+    const text = `
+2. DEPARTMENT, COMPONENT AND BRANCH               3. SOCIAL SECURITY NO.
+ARNGUS/ORARNG                                                544-23-5706
+4.h PAY GRADE                             5. DATE OF BIRTH (YYYYMMDD)
+E4                          19780419
+7.a HOME OF RECORD AT TIME OF ENTRY
+1127 SE 28TH AVE
+
+1. NAME (Last, First, Middle)
+SMITH; JOHN ROBERT
+4a GRADE, RATE, OR RANK
+SPC
+7.a. PLACE OF ENTRY INTO ACTIVE DUTY
+PORTLAND, OR
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.lastName).toBe("SMITH");
+    expect(result.firstName).toBe("JOHN");
+    expect(result.middleName).toBe("ROBERT");
+  });
+
+  it("stops Box 1 at whichever field boundary comes next, not specifically '2.'", async () => {
+    const text = `
+1. NAME (Last, First, Middle)
+DAVIS; MARIA ELENA
+9. COMMAND TO WHICH TRANSFERRED
+SOME UNIT
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.lastName).toBe("DAVIS");
+    expect(result.firstName).toBe("MARIA");
+    expect(result.middleName).toBe("ELENA");
+  });
+
+  it("still does not fabricate a name from NGB22 boilerplate when Box 2 precedes Box 1 (no regression)", async () => {
+    const text = `
+FOR USE OF THIS FORM, SEE NGR (AR 600-200)
+2. DEPARTMENT, COMPONENT AND BRANCH
+ARNGUS
+1. NAME
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.lastName).toBeNull();
+    expect(result.firstName).toBeNull();
+  });
+
+  it("does not hang when '1. NAME' is followed by a long run of text with no field boundary (regression: ReDoS)", async () => {
+    const pathological = "1. NAME\n" + "A".repeat(100000);
+    const start = Date.now();
+    const result = await parseServiceRecord(pathological);
+    const elapsed = Date.now() - start;
+    expect(result.error).toBeUndefined();
+    expect(elapsed).toBeLessThan(1000);
+  });
+
+  it("does not hang on near-miss field-boundary text after '1. NAME' (regression: ReDoS)", async () => {
+    const pathological = "1. NAME\n" + "4a ".repeat(50000);
+    const start = Date.now();
+    const result = await parseServiceRecord(pathological);
+    const elapsed = Date.now() - start;
+    expect(result.error).toBeUndefined();
+    expect(elapsed).toBeLessThan(1000);
+  });
+});
+
 describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () => {
   it("does not hang on a long run of letters with no field markers (regression: ReDoS)", async () => {
     const pathological = "A".repeat(100000);

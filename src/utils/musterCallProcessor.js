@@ -2291,26 +2291,38 @@ function _extractNameField(ctx) {
   // CRITICAL: Only extract name from Box 1 area, NOT from addresses (Box 7, 8)
   // Box 1 is always near the top of the document, before "2. DEPARTMENT"
 
-  // First, try to isolate Box 1 content (everything between "1. NAME" and "2. DEPARTMENT")
-  // FIX-14: bounded by a REAL "2." immediately followed by DEPARTMENT/DEPT,
-  // not "any 2" — the previous [^2]*? bridge refused to cross ANY literal
-  // "2" character (zip codes, unit numbers, dates all contain one), so a
-  // single stray "2" anywhere before the real Box 2 anchor made the whole
-  // match fail and no name was ever extracted, even on well-formed real
-  // DD214s. .*? (with the existing /s dotAll flag) is bounded by the same
-  // literal lookahead and stops at the first real "2. DEPARTMENT"/"2. DEPT"
-  // it finds, same as this file's other lazy label-to-label extractions —
-  // verified via adversarial timing test (a 100k-char run with no "2."
-  // anywhere resolves in <5ms; O(n) linear scan, no nested quantifiers).
-  const box1Match = cleanedText.match(
-    /1\.\s*NAME.*?(?=2\.\s*(?:DEPARTMENT|DEPT))/is,
-  );
-  // FIX-3b: the DD214 Box 1→2 anchor always fails on NGB22 (different box
-  // structure), which used to fall back to the first 500 chars of the
-  // document — that fallback matched NGB22 boilerplate ("FOR USE OF THIS
-  // FORM, SEE NGR ...") as a name. No box anchor = no name extraction;
+  // First, try to isolate Box 1 content (everything between "1. NAME" and
+  // whatever field boundary comes next).
+  // FIX-16: anchor forward from "1. NAME" to the NEXT field-number boundary
+  // that appears after it, whatever box that happens to be — not
+  // specifically "2. DEPARTMENT". A real DD214 scan's linearized OCR text
+  // reads the form in column/field order, not printed reading order: "2.
+  // DEPARTMENT" (and 3.-7.) routinely appear BEFORE "1. NAME" in the
+  // extracted text stream, so the previous fixed "2. DEPARTMENT"/"2. DEPT"
+  // lookahead never found one AFTER "1. NAME" and Box 1 extraction failed
+  // on every real document sampled, even when the name text was sitting
+  // right there in plain sight.
+  const nameAnchorMatch = cleanedText.match(/1\.\s*NAME/i);
+  // FIX-3b: the DD214 Box 1 anchor always fails on NGB22 (different box
+  // structure/label text), which used to fall back to the first 500 chars
+  // of the document — that fallback matched NGB22 boilerplate ("FOR USE OF
+  // THIS FORM, SEE NGR ...") as a name. No box anchor = no name extraction;
   // returning nothing is far cheaper than returning a wrong name.
-  if (!box1Match) return;
+  if (!nameAnchorMatch) return;
+  const afterAnchor = cleanedText.slice(
+    nameAnchorMatch.index + nameAnchorMatch[0].length,
+  );
+  // A real field boundary looks like "4a GRADE" / "7.a PLACE" / "13.
+  // DECORATIONS": 1-2 digits, an optional sub-box letter, an optional dot,
+  // then an ALL-CAPS label word. \d{1,2} fails immediately (no match, no
+  // backtracking) at every position with no digit, so an adversarial run
+  // with no digit at all (or digits never followed by whitespace, as in a
+  // real name like "J0HNS0N") resolves in <5ms at 100k+ chars — verified
+  // via adversarial timing test.
+  const nextBoundaryMatch = afterAnchor.match(/\d{1,2}[a-z]?\.?\s+[A-Z]{3,}/);
+  const box1Body = nextBoundaryMatch
+    ? afterAnchor.slice(0, nextBoundaryMatch.index)
+    : afterAnchor.slice(0, 300);
   // FIX-14: Box 1 is name-only (SSN is Box 3) and never legitimately
   // contains a numeric "0", so a real scan's digit-for-letter OCR
   // corruption ("J0HNS0N") can be corrected unconditionally here. The
@@ -2320,7 +2332,7 @@ function _extractNameField(ctx) {
   // ("J0HNS0N") has no boundary between the letters after the first zero
   // and the second zero (both are \w chars), so the whole word is silently
   // skipped. This narrow, name-only substring has no such ambiguity.
-  const box1Text = box1Match[0].replace(/0/g, "O");
+  const box1Text = `1. NAME${box1Body}`.replace(/0/g, "O");
 
   const namePatterns = [
     // "JOHNSON, ANTHONY DANIEL" or "JOHNSON; ANTHONY DANIEL" - explicitly after "1. NAME"
