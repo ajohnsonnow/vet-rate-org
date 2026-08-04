@@ -110,6 +110,7 @@ import {
 import { formatLocalDate } from "../utils/dateUtils";
 import { formatFileSize } from "../utils/documentAnalyzer";
 import { parseServiceRecord } from "../utils/musterCallProcessor";
+import { getDocumentTypeLabel } from "../utils/documentClassifier";
 
 function getRatingBadgeClass(rating) {
   if (rating >= 70)
@@ -2370,7 +2371,10 @@ function DD214PeriodsSummary({ summary, dd214Data, t }) {
             {dd214Data.fullName}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Source: DD-214, Block 1
+            Source:{" "}
+            {dd214Data.fullNameSourceForm
+              ? getDocumentTypeLabel(dd214Data.fullNameSourceForm)
+              : "your service record"}
           </p>
         </div>
       )}

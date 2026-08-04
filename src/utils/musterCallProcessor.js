@@ -791,6 +791,15 @@ const _parseServiceTimeString = (str) => {
 function _buildDD214IdentityFields(d) {
   return {
     fullName: d.veteranName || null,
+    // FIX-19: which form type actually supplied fullName — the merged
+    // record could come from a DD214, NGB22, DD256, or DD257, and the
+    // Service tab's Name card used to hardcode "DD-214, Block 1" regardless
+    // of which one actually won the confidence merge. Only set when this
+    // extraction actually found a name, so it merges through
+    // _mergeDD214Record's existing per-field confidence/emptiness rules in
+    // lockstep with fullName itself (same empty/non-empty state on every
+    // merge event) rather than needing its own bespoke tracking.
+    fullNameSourceForm: d.veteranName ? d.formType || null : null,
     lastName: d.lastName || null,
     firstName: d.firstName || null,
     middleName: d.middleName || null,
