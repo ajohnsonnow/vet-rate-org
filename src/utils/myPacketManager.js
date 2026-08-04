@@ -157,6 +157,28 @@ export const PACKET_DOC_ICONS = {
 // ============================================================
 
 /**
+ * FIX-6 (packet store): find an existing packet document that represents
+ * the same underlying file as an incoming save, so re-importing an
+ * unchanged file updates that record in place instead of appending a
+ * duplicate. Same (fileName, fileSize) pairing as addDocumentToVKB's
+ * idempotency guard in veteranKnowledgeBase.js. Pure function — no
+ * IndexedDB — so it's directly unit-testable.
+ */
+export const findDuplicatePacketDocument = (
+  existingDocs,
+  fileName,
+  fileSize,
+) => {
+  if (!Array.isArray(existingDocs)) return null;
+  return (
+    existingDocs.find(
+      (doc) =>
+        doc.fileName === fileName && (doc.metadata?.fileSize || 0) === fileSize,
+    ) || null
+  );
+};
+
+/**
  * Save a document to My Packet.
  * This is the main function — call it whenever a document is processed.
  *
@@ -172,51 +194,84 @@ export const PACKET_DOC_ICONS = {
  * @param {Object} doc.aiAnalysis - AI analysis results (if available)
  * @returns {Promise<{success: boolean, documentId: string}>}
  */
+// Pure object-literal builder split out of saveDocumentToPacket purely to
+// keep that function's cyclomatic complexity under the repo's lint ceiling
+// — every branch here is just a field default, no new behavior.
+function _buildPacketDocumentRecord({
+  doc,
+  id,
+  duplicate,
+  sanitizedFileName,
+  incomingFileSize,
+}) {
+  return {
+    id,
+    fileName: sanitizedFileName,
+    classification: doc.classification || PACKET_DOC_TYPES.OTHER,
+    uploadDate: duplicate ? duplicate.uploadDate : new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+
+    // The raw text — this is what AI tools can re-read at any time
+    rawText: doc.rawText || "",
+
+    // Structured extracted data — differs by document type
+    extractedData: doc.extractedData || {},
+
+    // AI analysis results
+    aiAnalysis: doc.aiAnalysis || null,
+
+    // Document metadata
+    metadata: {
+      pageCount: doc.pageCount || 1,
+      fileSize: incomingFileSize,
+      ocrMethod: doc.ocrMethod || "unknown",
+      ocrConfidence: doc.ocrConfidence || 0,
+      fileType: doc.fileType || "pdf",
+      processingTime: doc.processingTime || 0,
+    },
+
+    // Version tracking (for re-processing the same document)
+    version: duplicate ? (duplicate.version || 1) + 1 : 1,
+    supersedes: null, // ID of previous version if re-processed
+
+    // Tags for organization
+    tags: doc.tags || [],
+    notes: sanitize(doc.notes || "", 5000),
+  };
+}
+
 export const saveDocumentToPacket = async (doc) => {
   try {
     const db = await openPacketDB();
-    const id = `pkt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sanitizedFileName = sanitize(doc.fileName || "Unknown Document", 500);
+    const incomingFileSize = doc.fileSize || 0;
 
-    const document = {
+    const existingDocs = await getAllPacketDocuments();
+    const duplicate = findDuplicatePacketDocument(
+      existingDocs,
+      sanitizedFileName,
+      incomingFileSize,
+    );
+
+    const id = duplicate
+      ? duplicate.id
+      : `pkt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const document = _buildPacketDocumentRecord({
+      doc,
       id,
-      fileName: sanitize(doc.fileName || "Unknown Document", 500),
-      classification: doc.classification || PACKET_DOC_TYPES.OTHER,
-      uploadDate: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-
-      // The raw text — this is what AI tools can re-read at any time
-      rawText: doc.rawText || "",
-
-      // Structured extracted data — differs by document type
-      extractedData: doc.extractedData || {},
-
-      // AI analysis results
-      aiAnalysis: doc.aiAnalysis || null,
-
-      // Document metadata
-      metadata: {
-        pageCount: doc.pageCount || 1,
-        fileSize: doc.fileSize || 0,
-        ocrMethod: doc.ocrMethod || "unknown",
-        ocrConfidence: doc.ocrConfidence || 0,
-        fileType: doc.fileType || "pdf",
-        processingTime: doc.processingTime || 0,
-      },
-
-      // Version tracking (for re-processing the same document)
-      version: 1,
-      supersedes: null, // ID of previous version if re-processed
-
-      // Tags for organization
-      tags: doc.tags || [],
-      notes: sanitize(doc.notes || "", 5000),
-    };
+      duplicate,
+      sanitizedFileName,
+      incomingFileSize,
+    });
 
     // Pre-flight quota check — still attempt the write either way, but
     // attach a warning the caller can surface to the veteran
     const quota = await ensureQuota(JSON.stringify(document).length);
 
-    // Save the full document to IndexedDB
+    // Save the full document to IndexedDB. put() with the same id
+    // (re-used from the duplicate above) replaces the existing row instead
+    // of adding a new one.
     await new Promise((resolve, reject) => {
       const tx = db.transaction(
         [PACKET_STORE_NAME, PACKET_INDEX_STORE],
@@ -1008,6 +1063,7 @@ function sanitize(str, maxLength = 500) {
 
 export default {
   saveDocumentToPacket,
+  findDuplicatePacketDocument,
   getPacketDocument,
   getPacketIndex,
   getPacketDocumentsByType,
