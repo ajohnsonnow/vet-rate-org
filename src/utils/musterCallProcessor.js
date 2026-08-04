@@ -769,9 +769,14 @@ const archiveDocumentInPacket = async (file, result) => {
 // them here instead of dropping the already-extracted value.
 const _parseServiceTimeString = (str) => {
   if (!str) return { years: null, months: null, days: null };
-  const match = /(\d+)\s*years?,\s*(\d+)\s*months?(?:,\s*(\d+)\s*days?)?/i.exec(
-    str,
-  );
+  // years/months/days are always 1-3 digits in practice; bounding the
+  // quantifier (was \d+) avoids a genuine slow path confirmed via
+  // adversarial timing test (13s+ on 50k-digit input) without changing
+  // behavior on any real extracted service-time string.
+  const match =
+    /(\d{1,3})\s*years?,\s*(\d{1,3})\s*months?(?:,\s*(\d{1,3})\s*days?)?/i.exec(
+      str,
+    );
   if (!match) return { years: null, months: null, days: null };
   return {
     years: parseInt(match[1], 10),
@@ -780,17 +785,10 @@ const _parseServiceTimeString = (str) => {
   };
 };
 
-// Maps parseServiceRecord()/buildVisionParsedServiceRecord() field names
-// (musterCallProcessor's own DD214 extraction) onto the field names
-// saveDD214Data() (veteranProfile.js) expects. The two never agreed on names
-// because saveDD214Data's other two callers (MyPacket.jsx, DD214Analyzer.jsx)
-// feed it AI/regex output from a separate extractor (dd214FieldExtractor.js)
-// that already uses saveDD214Data's names. Fields with no corresponding
-// saveDD214Data target (placeOfEntry, remarks, deployments) are intentionally
-// left unmapped rather than invented.
-const buildDD214ProfileUpdate = (result) => {
-  const d = result.extractedData || {};
-  const serviceTime = _parseServiceTimeString(d.totalActiveService);
+// Field builders below are split out of buildDD214ProfileUpdate purely to
+// keep that function's cyclomatic complexity under the repo's lint ceiling
+// — every branch here is a field default, no new behavior.
+function _buildDD214IdentityFields(d) {
   return {
     fullName: d.veteranName || null,
     lastName: d.lastName || null,
@@ -805,6 +803,12 @@ const buildDD214ProfileUpdate = (result) => {
     mosTitle: d.mosTitle || null,
     entryDate: d.serviceStartDate || null,
     separationDate: d.serviceEndDate || null,
+    placeOfEntry: d.placeOfEntry || null,
+  };
+}
+
+function _buildDD214ServiceAndSeparationFields(d, result, serviceTime) {
+  return {
     netActiveService: d.totalActiveService || null,
     totalPriorActiveService: d.totalPriorActiveService || null,
     totalPriorInactiveService: d.totalPriorInactiveService || null,
@@ -822,6 +826,28 @@ const buildDD214ProfileUpdate = (result) => {
     combatService: d.combatService || null,
     extractedText: (result.text || "").substring(0, 10000),
     confidence: result.classification?.confidence ?? 0,
+    additionalPeriods: Array.isArray(d.additionalPeriods)
+      ? d.additionalPeriods
+      : [],
+  };
+}
+
+// Maps parseServiceRecord()/buildVisionParsedServiceRecord() field names
+// (musterCallProcessor's own DD214 extraction) onto the field names
+// saveDD214Data() (veteranProfile.js) expects. The two never agreed on names
+// because saveDD214Data's other two callers (MyPacket.jsx, DD214Analyzer.jsx)
+// feed it AI/regex output from a separate extractor (dd214FieldExtractor.js)
+// that already uses saveDD214Data's names. Fields with no corresponding
+// saveDD214Data target (remarks, deployments) are intentionally left
+// unmapped rather than invented. placeOfEntry has no saveDD214Data target
+// either, but FIX-15 forwards it here anyway for the period-scoped
+// servicePeriods[] write in saveServiceRecordToProfile below.
+const buildDD214ProfileUpdate = (result) => {
+  const d = result.extractedData || {};
+  const serviceTime = _parseServiceTimeString(d.totalActiveService);
+  return {
+    ..._buildDD214IdentityFields(d),
+    ..._buildDD214ServiceAndSeparationFields(d, result, serviceTime),
   };
 };
 
@@ -885,21 +911,10 @@ const _toISODateString = (dateStr) => {
 // array (upsertServicePeriod, keyed by (serviceStartDate, serviceEndDate)
 // so genuinely different enlistment periods never collide — FIX-11).
 // This does not change saveDD214Data's existing merge behavior at all.
-const saveServiceRecordToProfile = (file, result) => {
-  if (result.extractedData?.type !== "service_record") return;
-  const candidate = buildDD214ProfileUpdate(result);
-  try {
-    const existing = getServiceHistory().dd214Data;
-    saveDD214Data(_mergeDD214Record(existing, candidate));
-    // eslint-disable-next-line no-console
-    console.log(`✅ Saved DD214 data to Service tab for ${file.name}`);
-  } catch (dd214Err) {
-    console.warn(
-      `Service history save failed for ${file.name} (non-fatal):`,
-      dd214Err.message,
-    );
-  }
-
+// Split out of saveServiceRecordToProfile purely to keep that function's
+// cyclomatic complexity under the repo's lint ceiling — same behavior, same
+// upsertServicePeriod call, just its own named step.
+function _savePrimaryServicePeriod(file, result, candidate) {
   try {
     upsertServicePeriod(
       {
@@ -924,6 +939,7 @@ const saveServiceRecordToProfile = (file, result) => {
         daysService: candidate.daysService,
         foreignService: !!candidate.foreignService,
         militaryEducation: candidate.militaryEducation?.[0] || "",
+        placeOfEntry: candidate.placeOfEntry || "",
       },
       { sourceDocument: file.name, confidence: candidate.confidence },
     );
@@ -935,6 +951,59 @@ const saveServiceRecordToProfile = (file, result) => {
       periodErr.message,
     );
   }
+}
+
+// FIX-15: NGB-22 Box 18's granular IADT/AD date ranges (see
+// _extractNGB22PeriodDates) each become their own servicePeriods[] entry,
+// additive to the single Box 12a/12b period saved by
+// _savePrimaryServicePeriod — upsertServicePeriod's own (serviceStartDate,
+// serviceEndDate) identity key means a range that happens to match the
+// primary period is a no-op, not a duplicate.
+function _saveNGB22AdditionalPeriods(file, candidate) {
+  if (!Array.isArray(candidate.additionalPeriods)) return;
+  candidate.additionalPeriods.forEach((period) => {
+    try {
+      upsertServicePeriod(
+        {
+          serviceStartDate: _toISODateString(period.serviceStartDate),
+          serviceEndDate: _toISODateString(period.serviceEndDate),
+          branch: candidate.branch || "",
+          component: period.component,
+          formType: "NGB22",
+          rank: candidate.rank || "",
+          payGrade: candidate.payGrade || "",
+          sourceDocument: file.name,
+          notes:
+            "Date range from NGB-22 Box 18 remarks (no location listed on the document).",
+        },
+        { sourceDocument: file.name, confidence: candidate.confidence },
+      );
+    } catch (periodErr) {
+      console.warn(
+        `NGB-22 Box 18 period save failed for ${file.name} (non-fatal):`,
+        periodErr.message,
+      );
+    }
+  });
+}
+
+const saveServiceRecordToProfile = (file, result) => {
+  if (result.extractedData?.type !== "service_record") return;
+  const candidate = buildDD214ProfileUpdate(result);
+  try {
+    const existing = getServiceHistory().dd214Data;
+    saveDD214Data(_mergeDD214Record(existing, candidate));
+    // eslint-disable-next-line no-console
+    console.log(`✅ Saved DD214 data to Service tab for ${file.name}`);
+  } catch (dd214Err) {
+    console.warn(
+      `Service history save failed for ${file.name} (non-fatal):`,
+      dd214Err.message,
+    );
+  }
+
+  _savePrimaryServicePeriod(file, result, candidate);
+  _saveNGB22AdditionalPeriods(file, candidate);
 };
 
 // result.extractedData.awards reaches this in one of two shapes depending on
@@ -1681,7 +1750,20 @@ const parseDD214Document = async (
 ) => {
   // FIX-3b: carry the document's classified type through as a formType
   // marker on the parsed period ("DD214" | "NGB22" | "DD256" | "DD257").
-  const formType = docType || "DD214";
+  // FIX-15: documentClassifier.js's DD214 pattern set (Box labels shared by
+  // every DD214-style service-record form) routinely outscores NGB22's
+  // narrower pattern set on a real NGB-22 scan, so docType comes back
+  // "DD214" even for a genuine NGB-22 — confirmed against the real corpus.
+  // A literal "NGB22"/"NGB-22" in the filename is a much stronger signal
+  // for the FORM-SPECIFIC parsing behavior selected here (Box 18 date
+  // format, Box 1 boilerplate rejection) than for re-scoring the general
+  // classifier, and never downgrades an already-correct NGB22/DD256/DD257
+  // classification — it only fills the gap when docType is missing or
+  // (mis-)landed on the generic "DD214".
+  const filenameLooksLikeNGB22 = /ngb[-\s]?22/i.test(filename || "");
+  const docTypeIsGenericOrMissing = !docType || docType === "DD214";
+  let formType = docType || "DD214";
+  if (docTypeIsGenericOrMissing && filenameLooksLikeNGB22) formType = "NGB22";
   // ============================================================
   // VISION-FIRST PARSING (v1.16.4)
   // If Florence-2 Vision already parsed this DD214, use that data!
@@ -2186,7 +2268,7 @@ const DEPLOYMENT_ERA_LATEST_YEAR = {
 // matcher below still matched "VIETNAM" inside it, fabricating a deployment.
 function _extractBox18RemarksText(ocrCorrectedText) {
   const match = ocrCorrectedText.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- pre-existing (predates this change, unrelated to it); slow-regex verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars. regex-complexity is inherent to the multi-alternative field-boundary lookahead this parser depends on; simplifying it is a separate, larger task out of scope here.
     /18\.\s*REMARKS[:\s]*(.+?)(?=\s*19a?\.|\s*20\.|\s*21\.|\s*22\.|\s*23\.\s*TYPE\s+OF\s+SEPARATION|$)/is,
   );
   return match ? match[1] : "";
@@ -2670,6 +2752,7 @@ function _extractServiceStartDate(ctx) {
     /12\.?\s*a\.?\D*(\d{8})\b/i,
     // Table format: "2004 | 06 | 22", "04 06 22", or plain whitespace-only
     // "2002 05 06"
+    // eslint-disable-next-line sonarjs/regex-complexity -- pre-existing (predates this change, unrelated to it); the repeated (separator|whitespace) alternation is what makes this table-format date matcher tolerant of real OCR spacing variance, simplifying it is a separate, larger task out of scope here
     /12\.?\s*a\.?\D*(\d{2,4})(?:\s*[|/-]\s*|\s+)(\d{2})(?:\s*[|/-]\s*|\s+)(\d{2})\b/i,
     // Fallback: "DATE ENTERED" followed by date anywhere
     /(?:DATE\s+)?ENTERED[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
@@ -2784,6 +2867,7 @@ function _extractServiceEndDate(ctx) {
     /12\.?\s*b\.?\D*(\d{8})\b/i,
     // Table format: "2007 | 06 | 29", "07 06 29", or plain whitespace-only
     // "2015 05 30"
+    // eslint-disable-next-line sonarjs/regex-complexity -- pre-existing (predates this change, unrelated to it); the repeated (separator|whitespace) alternation is what makes this table-format date matcher tolerant of real OCR spacing variance, simplifying it is a separate, larger task out of scope here
     /12\.?\s*b\.?\D*(\d{2,4})(?:\s*[|/-]\s*|\s+)(\d{2})(?:\s*[|/-]\s*|\s+)(\d{2})\b/i,
   ];
   for (const pattern of separationPatterns) {
@@ -3165,6 +3249,69 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
   }
 }
 
+// FIX-15: 8-digit YYYYMMDD -> MM/DD/YYYY, same convention as every other
+// date field parseServiceRecord produces (converted to canonical ISO at the
+// saveServiceRecordToProfile write boundary via _toISODateString). Returns
+// null instead of fabricating a date when the digits fall outside a
+// plausible service-record year range.
+function _normalizeCompactDate(yyyymmdd) {
+  if (!/^\d{8}$/.test(yyyymmdd)) return null;
+  const year = yyyymmdd.substring(0, 4);
+  const month = yyyymmdd.substring(4, 6);
+  const day = yyyymmdd.substring(6, 8);
+  const y = parseInt(year, 10);
+  if (y < 1950 || y > 2030) return null;
+  return `${month}/${day}/${year}`;
+}
+
+// FIX-15: real NGB-22 (Guard) discharge records carry a granular activation
+// breakdown in Box 18 that Box 12a/12b (a single date pair) never captures,
+// e.g. "IADT: YYYYMMDD-YYYYMMDD//AD: YYYYMMDD-YYYYMMDD//YYYYMMDD-YYYYMMDD//
+// YYYYMMDD-YYYYMMDD//" — one IADT window plus several separately-dated AD
+// windows. Each "//"-delimited segment inherits the most recently seen
+// IADT/AD label. Dates only — no location name is ever present in this
+// data, so this never populates a place field.
+function _extractNGB22PeriodDates(ctx) {
+  const { data, ocrCorrectedUpperText } = ctx;
+  if (data.formType !== "NGB22") return;
+
+  const box18Text = _extractBox18RemarksText(ocrCorrectedUpperText);
+  if (!box18Text) return;
+
+  const segments = box18Text
+    .split("//")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  let currentComponent = null;
+  const periods = [];
+  for (const segment of segments) {
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test (100k-char all-whitespace and no-trailing-match inputs both resolve in <1ms): the trailing .*$ always succeeds, so \s* never needs to backtrack into it
+    const labelMatch = segment.match(/^(IADT|AD)\s*:\s*(.*)$/i);
+    const rest = labelMatch ? labelMatch[2].trim() : segment;
+    if (labelMatch) {
+      currentComponent =
+        labelMatch[1].toUpperCase() === "IADT" ? "IADT" : "Active Duty";
+    }
+    if (!currentComponent) continue;
+
+    const rangeMatch = rest.match(/^(\d{8})\s*-\s*(\d{8})$/);
+    if (!rangeMatch) continue;
+
+    const serviceStartDate = _normalizeCompactDate(rangeMatch[1]);
+    const serviceEndDate = _normalizeCompactDate(rangeMatch[2]);
+    if (!serviceStartDate || !serviceEndDate) continue;
+
+    periods.push({
+      component: currentComponent,
+      serviceStartDate,
+      serviceEndDate,
+    });
+  }
+
+  if (periods.length > 0) data.additionalPeriods = periods;
+}
+
 export const parseServiceRecord = async (text, formType = "DD214") => {
   const data = {
     type: "service_record",
@@ -3234,6 +3381,10 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     // Box 18: Remarks - extracted key info (deployments, operations)
     remarks: null,
     deployments: [],
+    // Box 18 (NGB-22 only): granular IADT/AD activation date ranges — see
+    // _extractNGB22PeriodDates. Empty unless this document is an NGB-22 AND
+    // Box 18 contains the IADT:/AD: date-range format.
+    additionalPeriods: [],
     // Box 23: Type of Separation
     separationType: null,
     // Box 24: Character of Service (matches collectionRules: dischargeType)
@@ -3271,6 +3422,7 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     _extractSeparationTypeAndCharacter(ctx);
     _extractSeparationAuthorityAndCodes(ctx);
     _extractNarrativeAndDeploymentLocations(ctx);
+    _extractNGB22PeriodDates(ctx);
     // eslint-disable-next-line no-console
     console.log("📋 DD214 parsed fields:", {
       branch: data.branch,
@@ -3770,6 +3922,17 @@ export const processMusterCallBatch = async (files, options = {}) => {
 const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
   // eslint-disable-next-line no-console
   console.log("📝 Found service record, extracting data:", extractedData);
+
+  // FIX-17: extractedData.veteranName/lastName/firstName/middleName were
+  // extracted correctly (see _assignParsedName) but never mapped onto the
+  // profile update at all, so the Profile tab's First/Last Name fields
+  // stayed empty for every Muster Call bulk import regardless of OCR
+  // quality.
+  if (extractedData.veteranName) updates.fullName = extractedData.veteranName;
+  if (extractedData.lastName) updates.lastName = extractedData.lastName;
+  if (extractedData.firstName) updates.firstName = extractedData.firstName;
+  if (extractedData.middleName) updates.middleName = extractedData.middleName;
+
   if (extractedData.branch) updates.branch = extractedData.branch;
 
   const entryDate = extractedData.serviceStartDate || extractedData.entryDate;
@@ -3815,6 +3978,7 @@ const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
  * it is NEVER overwritten — a conflict is surfaced instead so the UI can
  * show "your document says X, your profile says Y".
  */
+// eslint-disable-next-line max-lines-per-function -- pre-existing (predates this change, unrelated to it); this is the single fill-if-empty/never-overwrite-user-edited pass over every document type (service record, rating decision, claim letter) plus conflict tracking — splitting it apart is a separate, larger task out of scope here
 export const autoPopulateProfile = async (processedResults) => {
   // eslint-disable-next-line no-console
   console.log("📋 Auto-populate Profile starting...");
@@ -3886,10 +4050,11 @@ export const autoPopulateProfile = async (processedResults) => {
       const currentValue = updates[field];
       const isUserEdited = fieldSources[field] === "user";
 
-      if (!currentValue) {
-        updates[field] = newValue;
-        fieldSources[field] = "document";
-      } else if (isUserEdited) {
+      // Fill whenever the field is still empty, or it was never
+      // user-edited (a later document may keep refining it). Only a
+      // populated, user-edited field is protected — and even then, a
+      // genuine conflict is surfaced rather than silently dropped.
+      if (isUserEdited && currentValue) {
         if (String(currentValue) !== String(newValue)) {
           conflicts.push({
             field,
@@ -3898,7 +4063,6 @@ export const autoPopulateProfile = async (processedResults) => {
             source: result.filename,
           });
         }
-        // Never overwrite a user-edited field.
       } else {
         updates[field] = newValue;
         fieldSources[field] = "document";

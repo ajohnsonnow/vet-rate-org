@@ -22,6 +22,7 @@ const VALID_PROFILE_FIELDS = [
   // === Personal Identification ===
   "firstName",
   "middleInitial",
+  "middleName",
   "lastName",
   "suffix",
   "fullName",
@@ -883,8 +884,7 @@ function _sanitizeAwards(awards) {
   }));
 }
 
-function _sanitizeDd214Data(dd214Data) {
-  if (!dd214Data) return null;
+function _sanitizeDd214DataCore(dd214Data) {
   return {
     branch: sanitizeString(dd214Data.branch || "", 100),
     mos: sanitizeString(dd214Data.mos || "", 200),
@@ -901,14 +901,33 @@ function _sanitizeDd214Data(dd214Data) {
     dateProcessed: dd214Data.dateProcessed || new Date().toISOString(),
     confidence:
       typeof dd214Data.confidence === "number" ? dd214Data.confidence : 0,
-    // Q1 whitelist expansion (2026-07-30, Anth-authorized): exactly these 9
-    // fields, no more. ssnFull and serviceNumber are DELIBERATELY excluded
-    // — do not add them here without explicit re-authorization.
+  };
+}
+
+// Q1 whitelist expansion (2026-07-30, Anth-authorized): exactly these 9
+// fields, no more. ssnFull and serviceNumber are DELIBERATELY excluded —
+// do not add them here without explicit re-authorization.
+// FIX-17 (2026-08-03, Anth-authorized): lastName/firstName/middleName added
+// to the same whitelist. Same privacy posture as the Q1 expansion above
+// (name is already displayed elsewhere in the app, unlike
+// ssnFull/serviceNumber which stay excluded) — buildDD214ProfileUpdate
+// already supplied these fields, but this whitelist silently dropped them
+// on every write. Split into its own function (alongside
+// _sanitizeDd214DataCore) purely to keep cyclomatic complexity under the
+// repo's lint ceiling — every branch here is a field default.
+function _sanitizeDd214DataWhitelisted(dd214Data) {
+  return {
     fullName: sanitizeString(dd214Data.fullName || "", 200),
+    lastName: sanitizeString(dd214Data.lastName || "", 100),
+    firstName: sanitizeString(dd214Data.firstName || "", 100),
+    middleName: sanitizeString(dd214Data.middleName || "", 100),
     rank: sanitizeString(dd214Data.rank || "", 100),
     payGrade: sanitizeString(dd214Data.payGrade || "", 10),
     dateOfBirth: dd214Data.dateOfBirth || null,
-    separationAuthority: sanitizeString(dd214Data.separationAuthority || "", 200),
+    separationAuthority: sanitizeString(
+      dd214Data.separationAuthority || "",
+      200,
+    ),
     separationCode: sanitizeString(dd214Data.separationCode || "", 50),
     reentryCode: sanitizeString(dd214Data.reentryCode || "", 50),
     narrativeReason: sanitizeString(dd214Data.narrativeReason || "", 500),
@@ -917,6 +936,14 @@ function _sanitizeDd214Data(dd214Data) {
           .map((m) => sanitizeString(String(m), 200))
           .slice(0, 20)
       : sanitizeString(dd214Data.militaryEducation || "", 500),
+  };
+}
+
+function _sanitizeDd214Data(dd214Data) {
+  if (!dd214Data) return null;
+  return {
+    ..._sanitizeDd214DataCore(dd214Data),
+    ..._sanitizeDd214DataWhitelisted(dd214Data),
   };
 }
 
@@ -968,13 +995,16 @@ const SERVICE_PERIOD_MERGE_FIELDS = [
   "militaryEducation",
   "sourceDocument",
   "notes",
+  // FIX-15: Box 7a/8 place-of-entry-or-home-of-record — real, extractable
+  // duty/home location data, period-scoped (not identity-scoped) since it
+  // isn't part of the (serviceStartDate, serviceEndDate) merge key.
+  "placeOfEntry",
 ];
 
 function _sanitizeServicePeriodIdentity(p) {
   return {
     id:
-      p.id ||
-      `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      p.id || `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     serviceStartDate: p.serviceStartDate || null,
     serviceEndDate: p.serviceEndDate || null,
     branch: sanitizeString(p.branch || "", 100),
@@ -985,6 +1015,7 @@ function _sanitizeServicePeriodIdentity(p) {
     mos: sanitizeString(p.mos || "", 200),
     mosTitle: sanitizeString(p.mosTitle || "", 200),
     unit: sanitizeString(p.unit || "", 300),
+    placeOfEntry: sanitizeString(p.placeOfEntry || "", 300),
   };
 }
 
@@ -998,8 +1029,7 @@ function _sanitizeServicePeriodSeparationAndTime(p) {
     narrativeReason: sanitizeString(p.narrativeReason || "", 500),
     netActiveService: sanitizeString(p.netActiveService || "", 100),
     yearsService: typeof p.yearsService === "number" ? p.yearsService : null,
-    monthsService:
-      typeof p.monthsService === "number" ? p.monthsService : null,
+    monthsService: typeof p.monthsService === "number" ? p.monthsService : null,
     daysService: typeof p.daysService === "number" ? p.daysService : null,
     foreignService: !!p.foreignService,
     militaryEducation: Array.isArray(p.militaryEducation)
@@ -1065,8 +1095,7 @@ export const upsertServicePeriod = (periodData, options = {}) => {
 
     const incoming = {
       ...periodData,
-      sourceDocument:
-        options.sourceDocument || periodData.sourceDocument || "",
+      sourceDocument: options.sourceDocument || periodData.sourceDocument || "",
       confidence:
         typeof options.confidence === "number"
           ? options.confidence
@@ -1255,10 +1284,7 @@ export const summarizeServicePeriods = (periods) => {
 
   const branches = [...new Set(list.map((p) => p.branch).filter(Boolean))];
 
-  const totalDays = list.reduce(
-    (sum, p) => sum + _sumPeriodDurationDays(p),
-    0,
-  );
+  const totalDays = list.reduce((sum, p) => sum + _sumPeriodDurationDays(p), 0);
   const totalTimeInService =
     totalDays > 0 ? _formatDurationFromDays(totalDays) : null;
 
