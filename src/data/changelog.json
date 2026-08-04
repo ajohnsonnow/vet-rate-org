@@ -4,6 +4,68 @@
   "note": "DEPLOYMENT UPDATE PROCESS: 1) Update this file with new features, 2) Update APP_VERSION in src/utils/version.js, 3) Deploy. The What's New modal will automatically show.",
   "updates": [
     {
+      "version": "1.25.2",
+      "date": "2026-08-04",
+      "isFirstRelease": false,
+      "releaseTitle": "DD214/NGB-22 Parsing Fixes & Ribbon Rack National Guard Awards",
+      "changelog": [
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "DD214/NGB-22 name extraction survives OCR reading-order scrambling",
+          "description": "Box 1 name isolation no longer requires \"2. DEPARTMENT\" to appear after \"1. NAME\" in the OCR text stream; real scans routinely read in column order, not printed order"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "recover NGB-22 Box 18 label OCR misses and fix Box 7a place-of-entry numbering",
+          "description": "label normalization (e.g. \"1A DT\" -> \"IADT\") recovers activation-window date ranges that were previously dropped entirely"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "extracted name now reaches the Profile and Service tabs",
+          "description": "whitelist and profile-mapping gaps were silently dropping a correctly-extracted DD214/NGB-22 name; the Service tab now also cites the real source form instead of a hardcoded \"DD-214, Block 1\""
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "multi-period service history model gains NGB-22 activation windows",
+          "description": "Box 18 IADT/AD date ranges now feed servicePeriods[] as additional periods alongside the primary DD214 period"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "C-File ingestion actually extracts, stores, and surfaces findings for large consolidated files",
+          "description": "documentClassifier was scoring only the first 10,000 characters of a file, misclassifying 2,000+ page consolidated C-Files and leaving the entire medical-segmentation path dead"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "Ribbon Rack: 780 state/territory National Guard awards across all 54 jurisdictions",
+          "description": "award and ribbon matching now covers 50 states + DC/PR/GU/VI on top of the existing 89 federal awards"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "dedupe re-imported documents in My Packet",
+          "description": "re-importing the same DD214/document no longer appends a duplicate row; existing entries are updated in place"
+        },
+        {
+          "type": "feature",
+          "category": "Other",
+          "title": "derived TL;DR and per-document findings in My Packet",
+          "description": "surfaces AI-derived summary findings per ingested document"
+        },
+        {
+          "type": "fix",
+          "category": "Other",
+          "title": "Tools menu: add Appeals Lane Advisor, Remand Risk Checker, and Knowledge Base",
+          "description": "both were live features reachable only by direct event dispatch or the mobile menu; the desktop Tools menu now lists all 45 tools, matching the tools registry"
+        }
+      ]
+    },
+    {
       "version": "1.25.1",
       "date": "2026-07-29",
       "isFirstRelease": false,
