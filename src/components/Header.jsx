@@ -561,7 +561,7 @@ const DiscoverButtonsC = ({
       className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-teal-100 dark:hover:bg-teal-800/40"
     >
       <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
-        🎖️ BDD Builder
+        🎖️ {t("tools", "bddBuilder")}
         <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
           NEW
         </span>
@@ -984,6 +984,7 @@ const MaximizeButtonsA = ({
   setShowToolsMenu,
   onTDIUBuilderClick,
   onStateBenefitHunterClick,
+  onAppealsLaneAdvisorClick,
 }) => (
   <>
     <button
@@ -1023,6 +1024,23 @@ const MaximizeButtonsA = ({
         {t("tools", "stateBenefitHunterDesc")}
       </p>
     </button>
+    <button
+      onClick={() => {
+        setShowToolsMenu(false);
+        onAppealsLaneAdvisorClick?.();
+      }}
+      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
+    >
+      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        🧭 {t("tools", "appealsLaneAdvisor")}
+        <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+          NEW
+        </span>
+      </span>
+      <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+        {t("tools", "appealsLaneAdvisorDesc")}
+      </p>
+    </button>
   </>
 );
 
@@ -1030,6 +1048,7 @@ const MaximizeButtonsB = ({
   t,
   setShowToolsMenu,
   onTheTribunalClick,
+  onRemandRiskCheckerClick,
   onLegislativeWatchdogClick,
 }) => (
   <>
@@ -1048,6 +1067,23 @@ const MaximizeButtonsB = ({
       </span>
       <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
         {t("tools", "theTribunalDesc")}
+      </p>
+    </button>
+    <button
+      onClick={() => {
+        setShowToolsMenu(false);
+        onRemandRiskCheckerClick?.();
+      }}
+      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-amber-100 dark:hover:bg-amber-800/40"
+    >
+      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        🛡️ {t("tools", "remandRiskChecker")}
+        <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+          NEW
+        </span>
+      </span>
+      <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+        {t("tools", "remandRiskCheckerDesc")}
       </p>
     </button>
     <button
@@ -1153,9 +1189,27 @@ const SupportResourcesButtonsB = ({
   t,
   setShowToolsMenu,
   onVaIntegrationDemoClick,
+  onKnowledgeBaseClick,
   onUserManualClick,
 }) => (
   <>
+    <button
+      onClick={() => {
+        setShowToolsMenu(false);
+        onKnowledgeBaseClick?.();
+      }}
+      className="w-full text-left block px-3 py-2 rounded-md transition-colors hover:bg-sky-100 dark:hover:bg-sky-800/40"
+    >
+      <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+        📚 {t("tools", "knowledgeBase")}
+        <span className="px-1.5 py-0.5 bg-sky-500 text-white text-[10px] font-bold rounded">
+          {t("common", "new").toUpperCase()}
+        </span>
+      </span>
+      <p className="text-xs mt-0.5 text-gray-600 dark:text-gray-400">
+        {t("tools", "knowledgeBaseDesc")}
+      </p>
+    </button>
     <button
       onClick={() => {
         setShowToolsMenu(false);
@@ -1607,7 +1661,7 @@ const MobileMenuCoreNav = ({
       className="w-full text-left px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors flex items-center gap-3 min-h-[44px]"
     >
       <span className="text-xl">📚</span>
-      <span className="font-medium">Knowledge Base</span>
+      <span className="font-medium">{t("tools", "knowledgeBase")}</span>
       <span className="ml-auto px-2 py-0.5 bg-va-gold text-gray-900 text-[10px] font-bold rounded">
         NEW
       </span>
