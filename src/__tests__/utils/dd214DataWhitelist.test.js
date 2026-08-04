@@ -57,3 +57,47 @@ describe("Q1: DD214 data whitelist", () => {
     expect(JSON.stringify(dd214Data)).not.toContain("US12345678");
   });
 });
+
+/**
+ * FIX-17 (2026-08-03, Anth-authorized): lastName/firstName/middleName
+ * added to the same whitelist as the Q1 expansion above. buildDD214ProfileUpdate
+ * (musterCallProcessor.js) already supplied these fields on every DD214
+ * import — this whitelist gap silently dropped them before they ever
+ * reached serviceHistory.dd214Data, so the Service tab's DD214
+ * Information panel had no name to display.
+ */
+describe("FIX-17: DD214 name fields whitelist", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("persists lastName/firstName/middleName alongside fullName", () => {
+    saveDD214Data({
+      fullName: "WILLIAMS, ROBERT LEE",
+      lastName: "JOHNSON",
+      firstName: "ANTHONY",
+      middleName: "DANIEL",
+    });
+
+    const { dd214Data } = getServiceHistory();
+    expect(dd214Data.fullName).toBe("WILLIAMS, ROBERT LEE");
+    expect(dd214Data.lastName).toBe("JOHNSON");
+    expect(dd214Data.firstName).toBe("ANTHONY");
+    expect(dd214Data.middleName).toBe("DANIEL");
+  });
+
+  it("still excludes ssnFull/serviceNumber when name fields are also present", () => {
+    saveDD214Data({
+      lastName: "JOHNSON",
+      firstName: "ANTHONY",
+      ssnFull: "123-45-6789",
+      serviceNumber: "US12345678",
+    });
+
+    const { dd214Data } = getServiceHistory();
+    expect(dd214Data.lastName).toBe("JOHNSON");
+    expect(dd214Data.firstName).toBe("ANTHONY");
+    expect(dd214Data.ssnFull).toBeUndefined();
+    expect(dd214Data.serviceNumber).toBeUndefined();
+  });
+});

@@ -2360,9 +2360,20 @@ function DD214PasteProcessor({
 // (Q2 — Total time in service headline + Service span context, shown
 // separately since they answer different questions for a veteran with a
 // break in service).
-function DD214PeriodsSummary({ summary, t }) {
+function DD214PeriodsSummary({ summary, dd214Data, t }) {
   return (
     <div className="space-y-3">
+      {dd214Data?.fullName && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Name</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            {dd214Data.fullName}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Source: DD-214, Block 1
+          </p>
+        </div>
+      )}
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {t("myPacketSection.timeInService")}
@@ -2471,8 +2482,15 @@ function DD214PeriodDetailCard({ period, t }) {
           {period.narrativeReason || "N/A"}
         </p>
         <p>
+          <span className="text-gray-500 dark:text-gray-400">
+            Place of entry:{" "}
+          </span>
+          {period.placeOfEntry || "Not listed on this document"}
+        </p>
+        <p>
           <span className="text-gray-500 dark:text-gray-400">Source: </span>
           {period.sourceDocument || "N/A"}
+          {period.formType ? ` (${period.formType})` : ""}
         </p>
       </div>
     </div>
@@ -2490,6 +2508,11 @@ function DD214PeriodsDetail({ periods, t }) {
       <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
         Service Periods ({periods.length})
       </h4>
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        Dates and place of entry are only shown when your documents actually
+        list them — location data is limited by document quality, so some
+        periods below may show dates only, or neither.
+      </p>
       {sorted.map((period) => (
         <DD214PeriodDetailCard key={period.id} period={period} t={t} />
       ))}
@@ -2533,7 +2556,11 @@ function DD214ExtractedDataDisplay({
   const summary = summarizeServicePeriods(periods);
   return (
     <div className="space-y-4">
-      <DD214PeriodsSummary summary={summary} t={t} />
+      <DD214PeriodsSummary
+        summary={summary}
+        dd214Data={serviceHistory.dd214Data}
+        t={t}
+      />
       {periods.length > 0 && <DD214PeriodsDetail periods={periods} t={t} />}
       <DD214DataActions
         setShowDD214Processor={setShowDD214Processor}

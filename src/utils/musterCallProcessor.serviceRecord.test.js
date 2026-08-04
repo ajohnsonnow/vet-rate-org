@@ -40,9 +40,9 @@ describe("musterCallProcessor: parseServiceRecord (DD214 parser)", () => {
     expect(result.error).toBeUndefined();
     expect(result.type).toBe("service_record");
 
-    expect(result.lastName).toBe("JOHNSON");
-    expect(result.firstName).toBe("ANTHONY");
-    expect(result.middleName).toBe("DANIEL");
+    expect(result.lastName).toBe("WILLIAMS");
+    expect(result.firstName).toBe("ROBERT");
+    expect(result.middleName).toBe("LEE");
 
     expect(result.branch).toBe("Army");
     expect(result.rank).toBe("SGT");
@@ -81,13 +81,13 @@ describe("FIX-13: Box 12a/12b service dates no longer come back null on real for
     const text = `
 1. NAME (Last, First, Middle): SMITH, JOHN ROBERT
 2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
-12.a. DATE ENTERED AD THIS PERIOD  2002 05 06
-12.b. SEPARATION DATE THIS PERIOD  2007 06 29
+12.a. DATE ENTERED AD THIS PERIOD  1999 06 01
+12.b. SEPARATION DATE THIS PERIOD  2004 12 15
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.serviceStartDate).toBe("05/06/2002");
-    expect(result.serviceEndDate).toBe("06/29/2007");
+    expect(result.serviceStartDate).toBe("06/01/1999");
+    expect(result.serviceEndDate).toBe("12/15/2004");
   });
 
   it("still extracts serviceStartDate/serviceEndDate from the original '12a.'/'12b.' slash-delimited format (no regression)", async () => {
@@ -111,7 +111,7 @@ describe("FIX-16: Box 1 name extraction survives OCR reading-order scrambling", 
     // instead, no name was ever extracted even though the text was present.
     const text = `
 2. DEPARTMENT, COMPONENT AND BRANCH               3. SOCIAL SECURITY NO.
-ARNGUS/ORARNG                                                123-45-6789
+ARNGUS/TXARNG                                                123-45-6789
 4.h PAY GRADE                             5. DATE OF BIRTH (YYYYMMDD)
 E4                          19850615
 7.a HOME OF RECORD AT TIME OF ENTRY
@@ -122,7 +122,7 @@ SMITH; JOHN ROBERT
 4a GRADE, RATE, OR RANK
 SPC
 7.a. PLACE OF ENTRY INTO ACTIVE DUTY
-PORTLAND, OR
+AUSTIN, TX
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
@@ -174,6 +174,76 @@ ARNGUS
     const elapsed = Date.now() - start;
     expect(result.error).toBeUndefined();
     expect(elapsed).toBeLessThan(1000);
+  });
+});
+
+describe("FIX-15: NGB-22 Box 18 IADT/AD period date ranges", () => {
+  it("parses one IADT window and multiple AD windows from a real Box 18 format", async () => {
+    const text = `
+1. NAME (Last, First, Middle): WILLIAMS, ROBERT LEE
+2. DEPARTMENT, COMPONENT AND BRANCH: ARNGUS
+18. REMARKS: IADT: 19940115-19940620//AD: 19990920-20000512//20081115-20090630//20110301-20120815//
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+`;
+    const result = await parseServiceRecord(text, "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.additionalPeriods).toEqual([
+      {
+        component: "IADT",
+        serviceStartDate: "01/15/1994",
+        serviceEndDate: "06/20/1994",
+      },
+      {
+        component: "Active Duty",
+        serviceStartDate: "09/20/1999",
+        serviceEndDate: "05/12/2000",
+      },
+      {
+        component: "Active Duty",
+        serviceStartDate: "11/15/2008",
+        serviceEndDate: "06/30/2009",
+      },
+      {
+        component: "Active Duty",
+        serviceStartDate: "03/01/2011",
+        serviceEndDate: "08/15/2012",
+      },
+    ]);
+  });
+
+  it("never runs on a DD214 (formType defaults to DD214) even with the same Box 18 shape", async () => {
+    const text = `
+18. REMARKS: IADT: 19940115-19940620//AD: 19990920-20000512//
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.additionalPeriods).toEqual([]);
+  });
+
+  it("returns an empty array (no fabrication) when Box 18 can't be isolated", async () => {
+    const result = await parseServiceRecord("RANDOM GARBLED TEXT", "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.additionalPeriods).toEqual([]);
+  });
+
+  it("skips a segment whose date range is malformed instead of guessing", async () => {
+    const text = `
+18. REMARKS: IADT: 19940115-19940620//AD: NOT-A-DATE//20081115-20090630//
+`;
+    const result = await parseServiceRecord(text, "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.additionalPeriods).toEqual([
+      {
+        component: "IADT",
+        serviceStartDate: "01/15/1994",
+        serviceEndDate: "06/20/1994",
+      },
+      {
+        component: "Active Duty",
+        serviceStartDate: "11/15/2008",
+        serviceEndDate: "06/30/2009",
+      },
+    ]);
   });
 });
 

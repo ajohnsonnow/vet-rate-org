@@ -16,9 +16,8 @@ globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
 const { autoPopulateProfile } = await import("../../utils/musterCallProcessor");
-const { getVeteranProfile, saveVeteranProfile } = await import(
-  "../../utils/veteranProfile"
-);
+const { getVeteranProfile, saveVeteranProfile } =
+  await import("../../utils/veteranProfile");
 
 const serviceRecordResult = (overrides = {}) => ({
   filename: "dd214.pdf",
@@ -72,6 +71,52 @@ describe("FIX-9: autoPopulateProfile field-name mismatch fix", () => {
   });
 });
 
+describe("FIX-17: autoPopulateProfile maps extracted name fields onto the profile", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills firstName/lastName/middleName/fullName from veteranName/lastName/firstName/middleName", async () => {
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        veteranName: "WILLIAMS, ROBERT LEE",
+        lastName: "JOHNSON",
+        firstName: "ANTHONY",
+        middleName: "DANIEL",
+      }),
+    ]);
+    expect(result.success).toBe(true);
+
+    const profile = getVeteranProfile();
+    expect(profile.fullName).toBe("WILLIAMS, ROBERT LEE");
+    expect(profile.firstName).toBe("ANTHONY");
+    expect(profile.lastName).toBe("JOHNSON");
+    expect(profile.middleName).toBe("DANIEL");
+  });
+
+  it("never overwrites a manually-entered name, and surfaces a conflict instead", async () => {
+    saveVeteranProfile({
+      firstName: "Anthony",
+      lastName: "Johnson",
+      profileFieldSources: { firstName: "user", lastName: "user" },
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        lastName: "SMITH",
+        firstName: "JOHN",
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.firstName).toBe("Anthony");
+    expect(profile.lastName).toBe("Johnson");
+    expect(result.conflicts.map((c) => c.field)).toEqual(
+      expect.arrayContaining(["firstName", "lastName"]),
+    );
+  });
+});
+
 describe("FIX-9: overwrite semantics — never clobber a user-edited field", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -85,7 +130,9 @@ describe("FIX-9: overwrite semantics — never clobber a user-edited field", () 
 
   it("lets a later document refine a field that was only ever document-sourced", async () => {
     await autoPopulateProfile([serviceRecordResult({ branch: "Army" })]);
-    await autoPopulateProfile([serviceRecordResult({ branch: "Army National Guard" })]);
+    await autoPopulateProfile([
+      serviceRecordResult({ branch: "Army National Guard" }),
+    ]);
 
     const profile = getVeteranProfile();
     expect(profile.branch).toBe("Army National Guard");
