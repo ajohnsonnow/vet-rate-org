@@ -918,6 +918,12 @@ function _sanitizeDd214DataCore(dd214Data) {
 function _sanitizeDd214DataWhitelisted(dd214Data) {
   return {
     fullName: sanitizeString(dd214Data.fullName || "", 200),
+    // FIX-19 (2026-08-04): which form type (DD214/NGB22/DD256/DD257)
+    // actually supplied fullName — not a document filename or any other
+    // identifying detail, just the form-type marker musterCallProcessor.js
+    // already carries on every extraction. Lets the Service tab's Name card
+    // show a real source instead of a hardcoded "DD-214, Block 1" claim.
+    fullNameSourceForm: sanitizeString(dd214Data.fullNameSourceForm || "", 20),
     lastName: sanitizeString(dd214Data.lastName || "", 100),
     firstName: sanitizeString(dd214Data.firstName || "", 100),
     middleName: sanitizeString(dd214Data.middleName || "", 100),
@@ -1519,6 +1525,12 @@ function _dd214PersonalFields(d) {
   // === Personal Identification (SENSITIVE) ===
   return {
     fullName: sanitizeString(d.fullName || "", 200),
+    // FIX-19 (2026-08-04): which form type (DD214/NGB22/DD256/DD257)
+    // actually supplied fullName — see _sanitizeDd214DataWhitelisted's
+    // matching field below (saveDD214Data's write path passes through
+    // BOTH whitelists: this one via saveDD214Data itself, then
+    // _sanitizeDd214Data again inside saveServiceHistory).
+    fullNameSourceForm: sanitizeString(d.fullNameSourceForm || "", 20),
     lastName: sanitizeString(d.lastName || "", 100),
     firstName: sanitizeString(d.firstName || "", 100),
     middleName: sanitizeString(d.middleName || "", 100),

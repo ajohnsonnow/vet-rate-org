@@ -101,3 +101,31 @@ describe("FIX-17: DD214 name fields whitelist", () => {
     expect(dd214Data.serviceNumber).toBeUndefined();
   });
 });
+
+/**
+ * FIX-19 (2026-08-04): fullNameSourceForm added to the same whitelist —
+ * saveDD214Data's write path passes dd214Data through TWO separate
+ * whitelists (_dd214PersonalFields inside saveDD214Data itself, then
+ * _sanitizeDd214Data again inside saveServiceHistory), so a field missing
+ * from EITHER one is silently dropped before it ever reaches localStorage.
+ * Tracks which form type (DD214/NGB22/DD256/DD257) actually supplied
+ * fullName, so the Service tab's Name card can show a real source instead
+ * of a hardcoded "DD-214, Block 1" claim regardless of which form type
+ * actually won the confidence merge.
+ */
+describe("FIX-19: fullNameSourceForm whitelist", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("persists fullNameSourceForm alongside fullName", () => {
+    saveDD214Data({
+      fullName: "WILLIAMS, ROBERT LEE",
+      fullNameSourceForm: "NGB22",
+    });
+
+    const { dd214Data } = getServiceHistory();
+    expect(dd214Data.fullName).toBe("WILLIAMS, ROBERT LEE");
+    expect(dd214Data.fullNameSourceForm).toBe("NGB22");
+  });
+});
