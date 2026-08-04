@@ -10,9 +10,7 @@
       "id": "il-military-medal-for-valor",
       "name": "Illinois Military Medal for Valor",
       "abbreviation": null,
-      "aliases": [
-        "Illinois Military Medal of Valor"
-      ],
+      "aliases": ["Illinois Military Medal of Valor"],
       "category": "valor",
       "scope": "state",
       "stateCode": "IL",
@@ -42,9 +40,7 @@
       "id": "il-military-medal-for-merit",
       "name": "Illinois Military Medal for Merit",
       "abbreviation": null,
-      "aliases": [
-        "Illinois Military Medal of Merit"
-      ],
+      "aliases": ["Illinois Military Medal of Merit"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "IL",
@@ -74,9 +70,7 @@
       "id": "il-long-and-honorable-military-service-medal",
       "name": "Illinois Long and Honorable Military Service Medal",
       "abbreviation": null,
-      "aliases": [
-        "Illinois Military Long and Honorable Service Medal"
-      ],
+      "aliases": ["Illinois Military Long and Honorable Service Medal"],
       "category": "service",
       "scope": "state",
       "stateCode": "IL",
@@ -121,9 +115,7 @@
       "id": "il-state-active-duty-ribbon",
       "name": "Illinois State Active Duty Ribbon",
       "abbreviation": null,
-      "aliases": [
-        "Illinois State Active Duty Service Ribbon"
-      ],
+      "aliases": ["Illinois State Active Duty Service Ribbon"],
       "category": "service",
       "scope": "state",
       "stateCode": "IL",

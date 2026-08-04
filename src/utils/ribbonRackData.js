@@ -72,20 +72,60 @@ import stateAwards_WV from "../data/stateAwards/WV.json";
 import stateAwards_WY from "../data/stateAwards/WY.json";
 
 const STATE_AWARD_FILES = [
-  stateAwards_AK, stateAwards_AL, stateAwards_AR, stateAwards_AZ,
-  stateAwards_CA, stateAwards_CO, stateAwards_CT, stateAwards_DC,
-  stateAwards_DE, stateAwards_FL, stateAwards_GA, stateAwards_GU,
-  stateAwards_HI, stateAwards_IA, stateAwards_ID, stateAwards_IL,
-  stateAwards_IN, stateAwards_KS, stateAwards_KY, stateAwards_LA,
-  stateAwards_MA, stateAwards_MD, stateAwards_ME, stateAwards_MI,
-  stateAwards_MN, stateAwards_MO, stateAwards_MS, stateAwards_MT,
-  stateAwards_NC, stateAwards_ND, stateAwards_NE, stateAwards_NH,
-  stateAwards_NJ, stateAwards_NM, stateAwards_NV, stateAwards_NY,
-  stateAwards_OH, stateAwards_OK, stateAwards_OR, stateAwards_PA,
-  stateAwards_PR, stateAwards_RI, stateAwards_SC, stateAwards_SD,
-  stateAwards_TN, stateAwards_TX, stateAwards_UT, stateAwards_VA,
-  stateAwards_VI, stateAwards_VT, stateAwards_WA, stateAwards_WI,
-  stateAwards_WV, stateAwards_WY,
+  stateAwards_AK,
+  stateAwards_AL,
+  stateAwards_AR,
+  stateAwards_AZ,
+  stateAwards_CA,
+  stateAwards_CO,
+  stateAwards_CT,
+  stateAwards_DC,
+  stateAwards_DE,
+  stateAwards_FL,
+  stateAwards_GA,
+  stateAwards_GU,
+  stateAwards_HI,
+  stateAwards_IA,
+  stateAwards_ID,
+  stateAwards_IL,
+  stateAwards_IN,
+  stateAwards_KS,
+  stateAwards_KY,
+  stateAwards_LA,
+  stateAwards_MA,
+  stateAwards_MD,
+  stateAwards_ME,
+  stateAwards_MI,
+  stateAwards_MN,
+  stateAwards_MO,
+  stateAwards_MS,
+  stateAwards_MT,
+  stateAwards_NC,
+  stateAwards_ND,
+  stateAwards_NE,
+  stateAwards_NH,
+  stateAwards_NJ,
+  stateAwards_NM,
+  stateAwards_NV,
+  stateAwards_NY,
+  stateAwards_OH,
+  stateAwards_OK,
+  stateAwards_OR,
+  stateAwards_PA,
+  stateAwards_PR,
+  stateAwards_RI,
+  stateAwards_SC,
+  stateAwards_SD,
+  stateAwards_TN,
+  stateAwards_TX,
+  stateAwards_UT,
+  stateAwards_VA,
+  stateAwards_VI,
+  stateAwards_VT,
+  stateAwards_WA,
+  stateAwards_WI,
+  stateAwards_WV,
+  stateAwards_WY,
 ];
 
 // stateCode set + state-name-to-code lookup, both derived from the files
@@ -182,7 +222,10 @@ const STATE_AWARD_ENTRIES = STATE_AWARD_FILES.flatMap((file) =>
     // the same way manifest aliases do. MIN_ALIAS_LENGTH below still filters
     // out 2-char abbreviations as OCR-noise-prone, same as federal awards.
     aliases: Array.from(
-      new Set([...(award.aliases || []), ...(award.abbreviation ? [award.abbreviation] : [])]),
+      new Set([
+        ...(award.aliases || []),
+        ...(award.abbreviation ? [award.abbreviation] : []),
+      ]),
     ),
     assetFilename: null,
   })),
@@ -1400,7 +1443,9 @@ export function getAwardsForBranch(branch, stateCode = null) {
     a.scope === "state"
       ? !!stateCode && a.stateCode === stateCode
       : a.branch.includes(branch),
-  ).sort((a, b) => _precedenceSortValue(a, branch) - _precedenceSortValue(b, branch));
+  ).sort(
+    (a, b) => _precedenceSortValue(a, branch) - _precedenceSortValue(b, branch),
+  );
 }
 
 // ============================================================================

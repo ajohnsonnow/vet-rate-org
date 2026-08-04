@@ -10,9 +10,7 @@
       "id": "id-idaho-cross",
       "name": "Idaho Cross",
       "abbreviation": null,
-      "aliases": [
-        "Idaho National Guard Cross"
-      ],
+      "aliases": ["Idaho National Guard Cross"],
       "category": "valor",
       "scope": "state",
       "stateCode": "ID",
@@ -27,9 +25,7 @@
       "id": "id-idaho-distinguished-service-medal",
       "name": "Idaho Distinguished Service Medal",
       "abbreviation": null,
-      "aliases": [
-        "Idaho National Guard Distinguished Service Medal"
-      ],
+      "aliases": ["Idaho National Guard Distinguished Service Medal"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "ID",
@@ -149,9 +145,7 @@
       "id": "id-idaho-governors-outstanding-unit-citation",
       "name": "Idaho Governor's Outstanding Unit Citation",
       "abbreviation": null,
-      "aliases": [
-        "Idaho Outstanding Unit Citation"
-      ],
+      "aliases": ["Idaho Outstanding Unit Citation"],
       "category": "unit",
       "scope": "state",
       "stateCode": "ID",

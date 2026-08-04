@@ -7,9 +7,7 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { parseServiceRecord } = await import(
-  "../../utils/musterCallProcessor"
-);
+const { parseServiceRecord } = await import("../../utils/musterCallProcessor");
 
 describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
   it("does not fabricate a Vietnam deployment from the preprinted POST-VIETNAM ERA education boilerplate", async () => {

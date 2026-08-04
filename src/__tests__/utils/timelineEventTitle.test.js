@@ -16,13 +16,22 @@ describe("D-9: timeline event title", () => {
 
   it("saveTimelineEvents persists title", () => {
     saveTimelineEvents([
-      { type: "service", date: "2010-06-01", title: "Deployed to Iraq", description: "..." },
+      {
+        type: "service",
+        date: "2010-06-01",
+        title: "Deployed to Iraq",
+        description: "...",
+      },
     ]);
     expect(getTimelineEvents()[0].title).toBe("Deployed to Iraq");
   });
 
   it("addTimelineEvent persists title", () => {
-    addTimelineEvent({ type: "medical", date: "2012-01-01", title: "Diagnosed with PTSD" });
+    addTimelineEvent({
+      type: "medical",
+      date: "2012-01-01",
+      title: "Diagnosed with PTSD",
+    });
     expect(getTimelineEvents()[0].title).toBe("Diagnosed with PTSD");
   });
 });

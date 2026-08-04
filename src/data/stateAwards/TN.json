@@ -10,9 +10,7 @@
       "id": "tennessee_national_guard_distinguished_service_medal",
       "name": "Tennessee National Guard Distinguished Service Medal",
       "abbreviation": "TNGDSM",
-      "aliases": [
-        "TN Distinguished Service Medal"
-      ],
+      "aliases": ["TN Distinguished Service Medal"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "TN",
@@ -27,9 +25,7 @@
       "id": "tennessee_adjutant_generals_ribbon_for_valor",
       "name": "Adjutant General's Ribbon for Valor",
       "abbreviation": "TAGRFV",
-      "aliases": [
-        "Tennessee Ribbon for Valor"
-      ],
+      "aliases": ["Tennessee Ribbon for Valor"],
       "category": "valor",
       "scope": "state",
       "stateCode": "TN",
@@ -44,9 +40,7 @@
       "id": "tennessee_adjutant_generals_distinguished_patriot_medal",
       "name": "Adjutant General's Distinguished Patriot Medal",
       "abbreviation": "TAGDPM",
-      "aliases": [
-        "Tennessee Distinguished Patriot Medal"
-      ],
+      "aliases": ["Tennessee Distinguished Patriot Medal"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "TN",

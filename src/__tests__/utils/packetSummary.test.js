@@ -44,23 +44,47 @@ const cFileDoc = {
 };
 
 const documentsByCategory = {
-  dd214s: { label: "DD-214 Service Records", icon: "🎖️", documents: [dd214Doc], count: 1 },
-  cFiles: { label: "VA Claims & Decisions", icon: "📋", documents: [cFileDoc], count: 1 },
-  blueButtonReports: { label: "Blue Button", icon: "🏥", documents: [], count: 0 },
+  dd214s: {
+    label: "DD-214 Service Records",
+    icon: "🎖️",
+    documents: [dd214Doc],
+    count: 1,
+  },
+  cFiles: {
+    label: "VA Claims & Decisions",
+    icon: "📋",
+    documents: [cFileDoc],
+    count: 1,
+  },
+  blueButtonReports: {
+    label: "Blue Button",
+    icon: "🏥",
+    documents: [],
+    count: 0,
+  },
 };
 
 const vkb = {
   serviceHistory: { separationDate: "2015-05-30" },
   medicalConditions: {
     current: [
-      { name: "Tinnitus", ratedPercentage: 10, serviceConnected: true, source: "C-File Analysis" },
+      {
+        name: "Tinnitus",
+        ratedPercentage: 10,
+        serviceConnected: true,
+        source: "C-File Analysis",
+      },
       { name: "Lumbar strain", ratedPercentage: 20, serviceConnected: true },
       { name: "Migraine", source: "Manual entry" },
     ],
   },
   evidenceTimeline: [
     { date: "2016-02-02", eventType: "exam", description: "C&P exam" },
-    { date: "2017-01-01", eventType: "decision", description: "Rating decision" },
+    {
+      date: "2017-01-01",
+      eventType: "decision",
+      description: "Rating decision",
+    },
   ],
 };
 
@@ -84,7 +108,9 @@ describe("buildDocumentFindings", () => {
 
   it("renders object-shaped and string-shaped list items alike, deduped", () => {
     const findings = buildDocumentFindings(dd214Doc);
-    const lists = Object.fromEntries(findings.lists.map((l) => [l.label, l.values]));
+    const lists = Object.fromEntries(
+      findings.lists.map((l) => [l.label, l.values]),
+    );
 
     expect(lists.MOS).toEqual(["11B — Infantryman"]);
     expect(lists.Awards).toEqual(["Army Commendation Medal"]);
@@ -170,7 +196,9 @@ describe("buildConditionSynthesis", () => {
 
   it("sorts most-corroborated first", () => {
     const docs = buildAllDocumentFindings(documentsByCategory);
-    const counts = buildConditionSynthesis(vkb, docs).map((c) => c.documentCount);
+    const counts = buildConditionSynthesis(vkb, docs).map(
+      (c) => c.documentCount,
+    );
     expect(counts).toEqual([...counts].sort((a, b) => b - a));
   });
 });

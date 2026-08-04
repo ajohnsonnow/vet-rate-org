@@ -93,9 +93,7 @@ describe("C1: service periods — identity and merge", () => {
       branch: "Army",
       rank: "MANUALLY CORRECTED RANK",
     });
-    expect(getServicePeriods().find((p) => p.id === id).userEdited).toBe(
-      true,
-    );
+    expect(getServicePeriods().find((p) => p.id === id).userEdited).toBe(true);
 
     upsertServicePeriod(
       {

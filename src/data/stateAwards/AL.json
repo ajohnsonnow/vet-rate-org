@@ -24,9 +24,7 @@
       "id": "al-alabama-distinguished-service-medal",
       "name": "Alabama Distinguished Service Medal",
       "abbreviation": null,
-      "aliases": [
-        "Alabama Distinguished Service Ribbon"
-      ],
+      "aliases": ["Alabama Distinguished Service Ribbon"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "AL",

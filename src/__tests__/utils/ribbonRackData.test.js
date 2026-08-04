@@ -61,7 +61,9 @@ describe("federal-only parsing (no stateCode passed)", () => {
     const names = parseDD214Text(withStateAlias, "Army").map(
       (a) => a.award.name,
     );
-    expect(names).not.toContain("Oregon National Guard Faithful Service Ribbon");
+    expect(names).not.toContain(
+      "Oregon National Guard Faithful Service Ribbon",
+    );
   });
 
   it("sorts federal awards by branch precedence (Purple Heart before NDSM)", () => {
@@ -116,9 +118,7 @@ describe("negative case: a state veteran never matches another state's awards", 
     const text =
       "13. DECORATIONS: NDSM ASR OR-FSR ORNG FSR OREGON FAITHFUL SERVICE";
     const names = parseDD214Text(text, "Army", "TX").map((a) => a.award.name);
-    expect(names.filter((n) => n.toLowerCase().includes("oregon"))).toEqual(
-      [],
-    );
+    expect(names.filter((n) => n.toLowerCase().includes("oregon"))).toEqual([]);
   });
 
   it("an Oregon veteran's DD214 text matches zero Texas awards", () => {

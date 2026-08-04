@@ -115,7 +115,12 @@
       "id": "oregon_national_guard_faithful_service_ribbon",
       "name": "Oregon National Guard Faithful Service Ribbon",
       "abbreviation": null,
-      "aliases": ["OR-FSR", "ORNG FSR", "OREGON FAITHFUL SERVICE", "Oregon Faithful Service Medal"],
+      "aliases": [
+        "OR-FSR",
+        "ORNG FSR",
+        "OREGON FAITHFUL SERVICE",
+        "Oregon Faithful Service Medal"
+      ],
       "category": "service",
       "scope": "state",
       "stateCode": "OR",

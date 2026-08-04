@@ -18,9 +18,21 @@ describe("summarizeServicePeriods", () => {
 
   it("dedups branches served across periods", () => {
     const summary = summarizeServicePeriods([
-      { branch: "Army", serviceStartDate: "2004-01-01", serviceEndDate: "2008-01-01" },
-      { branch: "Army National Guard", serviceStartDate: "2008-01-01", serviceEndDate: "2012-01-01" },
-      { branch: "Army", serviceStartDate: "2012-01-01", serviceEndDate: "2016-01-01" },
+      {
+        branch: "Army",
+        serviceStartDate: "2004-01-01",
+        serviceEndDate: "2008-01-01",
+      },
+      {
+        branch: "Army National Guard",
+        serviceStartDate: "2008-01-01",
+        serviceEndDate: "2012-01-01",
+      },
+      {
+        branch: "Army",
+        serviceStartDate: "2012-01-01",
+        serviceEndDate: "2016-01-01",
+      },
     ]);
     expect(summary.branches).toEqual(["Army", "Army National Guard"]);
   });
@@ -67,7 +79,10 @@ describe("summarizeServicePeriods", () => {
 
   it("uses the most recent period's character of service and flags disagreement", () => {
     const summary = summarizeServicePeriods([
-      { characterOfService: "General Under Honorable Conditions", serviceEndDate: "2008-01-01" },
+      {
+        characterOfService: "General Under Honorable Conditions",
+        serviceEndDate: "2008-01-01",
+      },
       { characterOfService: "Honorable", serviceEndDate: "2016-01-01" },
     ]);
     expect(summary.characterOfService).toBe("Honorable");

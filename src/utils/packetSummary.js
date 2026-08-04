@@ -114,7 +114,8 @@ const collectFromKeys = (data, keys) =>
 const collectCodeSheetConditions = (data) =>
   uniqueLabels(asArray(data?.codeSheet?.conditions));
 
-const documentDate = (doc) => cleanString(doc?.uploadDate)?.split("T")[0] || null;
+const documentDate = (doc) =>
+  cleanString(doc?.uploadDate)?.split("T")[0] || null;
 
 /**
  * Flatten one stored VKB document into everything worth showing about it.
@@ -215,7 +216,9 @@ const indexStoredConditions = (index, vkb) => {
       ...(Number.isFinite(rating) && { ratedPercentage: rating }),
       ...(condition?.serviceConnected && { serviceConnected: true }),
     });
-    addProvenance(entry, { source: condition?.source || "Veteran Knowledge Base" });
+    addProvenance(entry, {
+      source: condition?.source || "Veteran Knowledge Base",
+    });
   }
 };
 

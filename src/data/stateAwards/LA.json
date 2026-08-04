@@ -25,9 +25,7 @@
       "id": "la-distinguished-service-cross",
       "name": "Louisiana National Guard Distinguished Service Cross",
       "abbreviation": null,
-      "aliases": [
-        "LANG Distinguished Service Cross"
-      ],
+      "aliases": ["LANG Distinguished Service Cross"],
       "category": "valor",
       "scope": "state",
       "stateCode": "LA",
@@ -87,9 +85,7 @@
       "id": "la-war-cross-medal",
       "name": "Louisiana National Guard War Cross Medal",
       "abbreviation": null,
-      "aliases": [
-        "Louisiana War Cross"
-      ],
+      "aliases": ["Louisiana War Cross"],
       "category": "service",
       "scope": "state",
       "stateCode": "LA",
@@ -164,9 +160,7 @@
       "id": "la-emergency-service-ribbon",
       "name": "Louisiana National Guard Emergency Service Ribbon",
       "abbreviation": null,
-      "aliases": [
-        "Louisiana National Guard Emergency Duty Ribbon"
-      ],
+      "aliases": ["Louisiana National Guard Emergency Duty Ribbon"],
       "category": "service",
       "scope": "state",
       "stateCode": "LA",

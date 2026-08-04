@@ -9,9 +9,8 @@ globalThis.ImageData ??= class ImageData {};
 
 const { parseServiceRecord } = await import("../../utils/musterCallProcessor");
 const { parseDD214Text } = await import("../../utils/ribbonRackData");
-const { saveVeteranProfile, clearVeteranProfile } = await import(
-  "../../utils/veteranProfile"
-);
+const { saveVeteranProfile, clearVeteranProfile } =
+  await import("../../utils/veteranProfile");
 
 // Verbatim OCR text (minus surrounding page noise) from a real NGB22 Report
 // of Separation, captured via Playwright instrumentation against the actual
