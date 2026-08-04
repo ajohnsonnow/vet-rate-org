@@ -247,6 +247,116 @@ describe("FIX-15: NGB-22 Box 18 IADT/AD period date ranges", () => {
   });
 });
 
+describe("FIX-18: NGB-22 Box 18 label recognition survives digit-for-letter OCR corruption", () => {
+  it("recovers a mangled IADT label ('1A DT' instead of 'IADT') without dropping its date range", async () => {
+    const text = `
+18. REMARKS: 1A DT: 19940115-19940620//AD: 19990920-20000512//
+`;
+    const result = await parseServiceRecord(text, "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.additionalPeriods).toEqual([
+      {
+        component: "IADT",
+        serviceStartDate: "01/15/1994",
+        serviceEndDate: "06/20/1994",
+      },
+      {
+        component: "Active Duty",
+        serviceStartDate: "09/20/1999",
+        serviceEndDate: "05/12/2000",
+      },
+    ]);
+  });
+
+  it("keeps a segment's date range when its label doesn't resolve to a known one, marking the component unknown instead of dropping the segment", async () => {
+    const text = `
+18. REMARKS: IADT: 19940115-19940620//XQ7: 19990920-20000512//20081115-20090630//
+`;
+    const result = await parseServiceRecord(text, "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.additionalPeriods).toEqual([
+      {
+        component: "IADT",
+        serviceStartDate: "01/15/1994",
+        serviceEndDate: "06/20/1994",
+      },
+      {
+        component: null,
+        serviceStartDate: "09/20/1999",
+        serviceEndDate: "05/12/2000",
+      },
+      {
+        component: null,
+        serviceStartDate: "11/15/2008",
+        serviceEndDate: "06/30/2009",
+      },
+    ]);
+  });
+
+  it("does not silently inherit the previous segment's component when a LATER label is the one that's unrecognized (symmetric to the IADT case)", async () => {
+    const text = `
+18. REMARKS: IADT: 19940115-19940620//MD: 19990920-20000512//
+`;
+    const result = await parseServiceRecord(text, "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.additionalPeriods[1]).toEqual({
+      component: null,
+      serviceStartDate: "09/20/1999",
+      serviceEndDate: "05/12/2000",
+    });
+  });
+});
+
+describe("FIX-20: Box 7a place-of-entry extraction", () => {
+  it("extracts Place of Entry from Box 7a, not Box 8 (Last Duty Assignment)", async () => {
+    const text = `
+1. NAME (Last, First, Middle): WILLIAMS, ROBERT LEE
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+SPRINGFIELD, IL
+8.a LAST DUTY ASSIGNMENT AND MAJOR COMMAND
+SOME UNIT, FORT BENNING, GA
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("SPRINGFIELD, IL");
+  });
+
+  it("picks Box 7a's own value over Box 7b's (Home of Record) boilerplate text when both are read ahead of it (real scans interleave the two columns)", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY                       7.b HOME OF RECORD AT TIME OF ENTRY (City and State, or complete
+address if known)
+100 MAIN ST
+
+RIVERTON, WY                                              CASPER, WY 82601
+8.a LAST DUTY ASSIGNMENT
+SOME UNIT
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("RIVERTON, WY");
+  });
+
+  it("recovers a candidate with digit-for-letter OCR corruption in the city/state text", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+SPR1NGFIELD, 1L
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("SPRINGFIELD, IL");
+  });
+
+  it("does not fabricate a value when no City, ST candidate follows the label (genuine OCR-quality ceiling)", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+UNREADABLE GARBLED TEXT WITH NO COMMA ANYWHERE NEARBY
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBeNull();
+  });
+});
+
 describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () => {
   it("does not hang on a long run of letters with no field markers (regression: ReDoS)", async () => {
     const pathological = "A".repeat(100000);

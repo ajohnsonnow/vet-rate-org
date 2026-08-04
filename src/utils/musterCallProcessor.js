@@ -2796,16 +2796,103 @@ function _normalizeDateMatch(match) {
   return dateStr;
 }
 
+// FIX-20: Box 7a is "Place of Entry into Active Duty" — Box 8a/8b are "Last
+// Duty Assignment"/"Station Where Separated", a different field entirely.
+// The old anchor literally required "8." before the label, so it never
+// matched on any real DD214 (confirmed against all 39 real-corpus docs:
+// placeOfEntry was empty on every one). Words that only ever appear in this
+// box's own instructional boilerplate ("(City and State, or complete
+// address if known)") or the neighboring Box 7b (Home of Record) label —
+// used to reject a "City, ST"-shaped regex match that's actually boilerplate
+// text, not a real place name. Deliberately excludes state abbreviations
+// (e.g. "OR" for Oregon) from this list: "OR" is both a real, correct
+// two-letter answer AND the boilerplate's own connector word, so only the
+// city half of a match is ever checked against it.
+const BOX7_PLACE_OF_ENTRY_NOISE_WORDS = new Set([
+  "CITY",
+  "AND",
+  "STATE",
+  "AT",
+  "TIME",
+  "OF",
+  "ENTRY",
+  "HOME",
+  "RECORD",
+  "COMPLETE",
+  "ADDRESS",
+  "IF",
+  "KNOWN",
+]);
+
+// Same reasoning FIX-16 already applies to the Box 1 name field: this box's
+// value is a city/state name, which never legitimately contains a digit, so
+// a real scan's digit-for-letter OCR corruption can be corrected
+// unconditionally on a candidate match. Box 7b's own "(City and State, or
+// complete address if known)" boilerplate is instructional (mixed-case in
+// the printed form) rather than a real field label, so it sits OUTSIDE the
+// general ocrFixPatterns pass (that pass requires already-uppercase context
+// on both sides of a digit to fire) and reaches this function with its
+// digit-corruption intact — confirmed against the real corpus, where this
+// boilerplate OCR's as "0R C0MPLETE ... ADDRESS IF KN0WN".
+function _normalizeOcrLetterDigits(str) {
+  return str
+    .replace(/0/g, "O")
+    .replace(/1/g, "I")
+    .replace(/3/g, "E")
+    .replace(/4/g, "A")
+    .replace(/5/g, "S")
+    .replace(/8/g, "B");
+}
+
+// Real DD214 scans read the two-column Box 7a/7b layout in scrambled order
+// (same root cause as FIX-16's Box 1 name fix) — Box 7a's own label and
+// value aren't reliably adjacent, and Box 7b's "(City and State, or complete
+// address if known)" boilerplate is sometimes OCR'd with Box 7a's real value
+// landing INSIDE what looks like that parenthetical, so this deliberately
+// scans ocrCorrectedUpperText (OCR-digit-fixed, uppercased, NOT
+// parenthetical-stripped — see _extractBox18RemarksText for why stripping
+// parens here would be destructive) for the label, then walks forward
+// through every "City, ST"-shaped candidate in a bounded window and takes
+// the first one that isn't boilerplate/label text. The character classes
+// below admit digits (real scans mix stray digit-for-letter OCR into both
+// halves of a candidate, including the state abbreviation itself, e.g.
+// "0REG0N") — _normalizeOcrLetterDigits repairs a candidate before it's
+// checked against the boilerplate word list or accepted.
+function _extractPlaceOfEntry(ctx) {
+  const { data, ocrCorrectedUpperText } = ctx;
+  const anchorMatch = ocrCorrectedUpperText.match(/PLACE\s+OF\s+ENTRY/);
+  if (!anchorMatch) return;
+  const windowStart = anchorMatch.index + anchorMatch[0].length;
+  const windowText = ocrCorrectedUpperText.slice(
+    windowStart,
+    windowStart + 300,
+  );
+
+  // The city portion is bounded to a single line (a space-only character
+  // class, not \s) — real scans routinely place the anchor's trailing
+  // words ("INTO ACTIVE DUTY") and the actual value on separate lines, and
+  // an \s-based class would lazily cross that newline to fuse them into one
+  // bogus multi-word "city".
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test (100k-char no-comma input resolves in <5ms): bounded {1,30} lazy quantifier prevents backtracking blowup
+  const cityStatePattern = /\b([A-Z][A-Z0-9 ]{1,30}?),[ \t]*([A-Z0-9]{2,12})\b/g;
+  let match;
+  while ((match = cityStatePattern.exec(windowText)) !== null) {
+    const city = _normalizeOcrLetterDigits(match[1].trim());
+    const state = _normalizeOcrLetterDigits(match[2].trim());
+    const cityWords = city.split(/\s+/);
+    const isBoilerplate = cityWords.every((word) =>
+      BOX7_PLACE_OF_ENTRY_NOISE_WORDS.has(word),
+    );
+    if (!isBoilerplate) {
+      data.placeOfEntry = `${city}, ${state}`;
+      break;
+    }
+  }
+}
+
 function _extractPlaceOfEntryAndMOS(ctx) {
   const { data, cleanedText } = ctx;
-  // Box 8: Place of Entry
-  const placeMatch = cleanedText.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /8\.\s*(?:HOME\s+OF\s+RECORD|PLACE\s+OF\s+ENTRY)[:\s]+([A-Z][A-Z\s,]+?)(?:\s+9\.|$)/i,
-  );
-  if (placeMatch) {
-    data.placeOfEntry = placeMatch[1]?.trim();
-  }
+  _extractPlaceOfEntry(ctx);
 
   // Box 11: Primary MOS/Specialty (mos) - Handle various formats
   // Examples: "92Y10 UNIT SUPPLY SP", "11B INFANTRY", "0311 RIFLEMAN"
@@ -3271,6 +3358,25 @@ function _normalizeCompactDate(yyyymmdd) {
 // windows. Each "//"-delimited segment inherits the most recently seen
 // IADT/AD label. Dates only — no location name is ever present in this
 // data, so this never populates a place field.
+//
+// FIX-18: a real scan OCR's "IADT" as "1A DT" (digit-for-letter plus a
+// spurious space) — confirmed against the real corpus, where this exact
+// corruption dropped the whole segment (dates included, not just the
+// label) because the label match failed and the pre-fix code required a
+// resolved component before it would even look at the date range. Every
+// segment's label prefix (if it has one — a bare continuation range never
+// does, see above) is now run through the same digit-for-letter
+// normalization the Box 1 name field and Box 7a place-of-entry field
+// already use (labels here never legitimately contain digits either), so
+// "1A DT" normalizes to "IADT" and is recognized like any other IADT label.
+// A label prefix that STILL doesn't normalize to a known IADT/AD label is
+// treated as unknown (component: null) rather than dropped, and rather
+// than silently inheriting whatever component the previous segment
+// resolved to — symmetric with the IADT case: if "AD" were the one that
+// OCR'd unrecognizably instead, silently inheriting a stale "IADT" would
+// mislabel real Active Duty service as training. A segment with no colon
+// at all (a genuine bare continuation, not a label attempt) still inherits
+// the most recently resolved component, same as before this fix.
 function _extractNGB22PeriodDates(ctx) {
   const { data, ocrCorrectedUpperText } = ctx;
   if (data.formType !== "NGB22") return;
@@ -3286,14 +3392,24 @@ function _extractNGB22PeriodDates(ctx) {
   let currentComponent = null;
   const periods = [];
   for (const segment of segments) {
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test (100k-char all-whitespace and no-trailing-match inputs both resolve in <1ms): the trailing .*$ always succeeds, so \s* never needs to backtrack into it
-    const labelMatch = segment.match(/^(IADT|AD)\s*:\s*(.*)$/i);
-    const rest = labelMatch ? labelMatch[2].trim() : segment;
-    if (labelMatch) {
-      currentComponent =
-        labelMatch[1].toUpperCase() === "IADT" ? "IADT" : "Active Duty";
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test (100k-char no-colon input resolves in <1ms): the bounded {1,15} quantifier prevents backtracking blowup
+    const labelPrefixMatch = segment.match(/^([^:]{1,15}):\s*(.*)$/);
+    let rest;
+    if (labelPrefixMatch) {
+      const normalizedLabel = _normalizeOcrLetterDigits(labelPrefixMatch[1])
+        .replace(/\s+/g, "")
+        .toUpperCase();
+      if (normalizedLabel === "AD") {
+        currentComponent = "Active Duty";
+      } else if (normalizedLabel === "IADT") {
+        currentComponent = "IADT";
+      } else {
+        currentComponent = null;
+      }
+      rest = labelPrefixMatch[2].trim();
+    } else {
+      rest = segment;
     }
-    if (!currentComponent) continue;
 
     const rangeMatch = rest.match(/^(\d{8})\s*-\s*(\d{8})$/);
     if (!rangeMatch) continue;
