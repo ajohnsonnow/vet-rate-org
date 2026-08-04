@@ -8,7 +8,7 @@
 
 ## Welcome, Fellow Veteran 🎖️
 
-**Vet-Rate.org** is your complete VA claims arsenal - 44 professional-grade tools built by a fellow service-disabled veteran to help you navigate the VA disability claims process from initial research through appeals. This comprehensive manual covers every feature, setting, and tool available on the platform.
+**Vet-Rate.org** is your complete VA claims arsenal - 45 professional-grade tools built by a fellow service-disabled veteran to help you navigate the VA disability claims process from initial research through appeals. This comprehensive manual covers every feature, setting, and tool available on the platform.
 
 <div class="feature-card">
 <h3>🛡️ Your Claims Command Center</h3>

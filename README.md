@@ -20,7 +20,7 @@ A comprehensive, production-ready web application for veterans to research VA di
 
 ## 💎 What Makes Vet-Rate.org Different
 
-While other platforms charge $500+ per feature or take 30% of your backpay, Vet-Rate.org provides **41 professional-grade tools completely free**:
+While other platforms charge $500+ per feature or take 30% of your backpay, Vet-Rate.org provides **45 professional-grade tools completely free**:
 
 | What Others Charge                 | Vet-Rate.org                                             |
 | ---------------------------------- | -------------------------------------------------------- |
@@ -66,12 +66,13 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 
 - **C-File AI Analyzer**: 🔬 Upload your Claims File PDF-AI finds evidence in thousands of pages ($500+ value)
 - **Blue Button X-Ray**: 💙 Parse VA health records for claim-relevant diagnoses
-- **PDF Evidence Finder**: 🔍 🆕 Search 2,000+ page STRs for keywords ("The Needle")
+- **Record Search**: 🔍 🆕 Search 2,000+ page STRs for keywords ("The Needle")
 - **Witness Bench**: 👥 AI-assisted buddy statement generator with smart interview questions
 - **Nexus Builder**: �- Generate medical nexus statements with optional AI enhancement
 - **Forms Helper**: ✏️ Guided assistance for 16+ VA forms with Auto-Scribe PDF filling
 - **Symptom Logger**: 📝 Track daily symptoms with body map selector for evidence documentation
 - **Evidence Timeline**: 📊 🆕 Visual continuity tracker with automatic gap detection
+- **Ribbon Rack**: 🎖️ 🆕 Award/ribbon identification from your DD-214/NGB-22, matching against 780 state and territory National Guard awards across all 54 jurisdictions (50 states + DC/PR/GU/VI) plus 89 federal awards
 
 ### 🎯 Quality Control Tools
 
@@ -102,15 +103,15 @@ While other platforms charge $500+ per feature or take 30% of your backpay, Vet-
 
 ---
 
-## 🏆 The Complete Arsenal: 44 Professional Tools
+## 🏆 The Complete Arsenal: 45 Professional Tools
 
-Vet-Rate.org isn't just a calculator - it's a complete VA claims command center with **44 specialized tools** across 6 categories:
+Vet-Rate.org isn't just a calculator - it's a complete VA claims command center with **45 specialized tools** across 6 categories:
 
 - **📊 Calculate Your Rating** (5 tools): Tactical Calculator, Million Dollar Dashboard, What-If Sandbox, Retro Pay Hunter, Time Machine
-- **🔍 Discover Your Claims** (6 tools): Secondary Scout, C&P Simulator, Pathfinder, MOS Hazard Matcher, PACT Act Navigator, Web of Conditions
-- **📋 Build Your Evidence** (10 tools): C-File Analyzer, Blue Button X-Ray, PDF Evidence Finder, Witness Bench, Nexus Builder, Forms Helper, Symptom Logger, Somatic Target, Evidence Timeline, FOIA Keysmith
+- **🔍 Discover Your Claims** (8 tools): BDD Builder, Claim Navigator, Secondary Scout, C&P Simulator, Pathfinder, MOS Hazard Matcher, PACT Act Navigator, Web of Conditions
+- **📋 Build Your Evidence** (10 tools): C-File Analyzer, Blue Button X-Ray, Record Search, Witness Bench, Nexus Builder, Forms Helper, Symptom Logger, Somatic Target, Evidence Timeline, FOIA Keysmith
 - **✅ Quality Control** (8 tools): Red Team, War Game, Decision Decoder, Denials Decoder, Shark Radar, Consistency Engine, Evidence Gap Finder, Risk Assessment
-- **💰 Maximize Your Rating** (4 tools): TDIU Builder, State Benefit Hunter, The Tribunal, Legislative Watchdog
+- **💰 Maximize Your Rating** (6 tools): TDIU Builder, State Benefit Hunter, The Tribunal, Appeals Lane Advisor, Remand Risk Checker, Legislative Watchdog
 - **🤝 Support & Resources** (8 tools): VSO Finder, The Bunker, Cloud Sync, VA.gov Integration, My Packet, Knowledge Base, VA Resources Hub, Field Manual
 
 **What others charge $10K+ for in services, we provide free forever.**
@@ -278,14 +279,14 @@ This comprehensive platform represents significant development effort to create 
 ### Overall Project
 
 - **Professional Team Value**: $2,089,580 (senior-heavy) to $2,592,745 (balanced team)
-- **Traditional Solo Development**: 36,521 hours (17.6 years full-time) @ $135/hr = $4,930,335
-- **Actual AI-Assisted Development**: 150 hours over 60 days = $63,000
-- **Productivity Multiplier**: 243x (AI-assisted development vs. traditional)
-- **Lines of Code**: 301,150 lines (src directory)
-- **Total Files**: 4,642 project files
-- **App Size**: 632.95 MB
-- **Components**: 179 React components (44 major tools + 135 supporting)
-- **Utilities**: 121 helper modules
+- **Traditional Solo Development**: 37,109 hours (17.8 years full-time) @ $135/hr = $5,009,715
+- **Actual AI-Assisted Development**: 150 hours over 63 days = $63,000
+- **Productivity Multiplier**: 247x (AI-assisted development vs. traditional)
+- **Lines of Code**: 306,156 lines (src directory)
+- **Total Files**: 5,230 project files
+- **App Size**: 633.14 MB
+- **Components**: 179 React components (45 major tools + 134 supporting)
+- **Utilities**: 123 helper modules
 - **Data Validation**: 748 disabilities verified against 38 CFR (250 hours validation work)
 - **VA Glossary**: 150+ VA terms and definitions
 
@@ -312,8 +313,8 @@ This comprehensive platform represents significant development effort to create 
 
 **Option C: Solo Senior Developer** (Traditional)
 
-- 1 Senior Developer: $4,930,335
-- **Total: $4,930,335** | Timeline: 17.6 years (unrealistic)
+- 1 Senior Developer: $5,009,715
+- **Total: $5,009,715** | Timeline: 17.8 years (unrealistic)
 
 **Option D: AI-Assisted Development** (Actual) ✅
 
@@ -347,7 +348,7 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 - **200 hrs** - Documentation & field manual
 - **150 hrs** - Research (38 CFR regulations)
 - **73 hrs** - Deployment & optimization
-- **Total: 36,521 hours** (17.6 years solo, 12-24 months with team)
+- **Total: 37,109 hours** (17.8 years solo, 12-24 months with team)
 
 ### Actual Development Timeline
 
@@ -368,14 +369,14 @@ Based on 2025 industry benchmarks (QSM, COCOMO II parameters):
 
 **AI-Assisted Reality**: **55 hours** using Claude 4.5 Opus/Sonnet/Haiku in VS Code, combined with modern frameworks (React 18, Vite, Tailwind CSS) = **$7,425 total cost**.
 
-**This 243x productivity multiplier** is why we can offer professional-grade tools worth $2.5M that others charge $500+ per use or 30% of backpay ($15K-50K average) - completely free to veterans forever.
+**This 247x productivity multiplier** is why we can offer professional-grade tools worth $2.5M that others charge $500+ per use or 30% of backpay ($15K-50K average) - completely free to veterans forever.
 
 **Cost Breakdown by Developer Level** (industry standard rates):
 
 - **Balanced Team** (1 Principal, 2 Senior, 3 Mid, 2 Junior): $2,592,745 over 18-24 months
 - **Senior-Heavy Team** (1 Principal, 4 Senior, 1 Mid): $2,089,580 over 12-15 months
 - **Solo Senior Developer** (traditional): $2,081,700 over 7.4 years
-- **Actual AI-Assisted** (2026): **$63,000 over 60 days** ✅
+- **Actual AI-Assisted** (2026): **$63,000 over 63 days** ✅
 
 _See [DEVELOPMENT_ANALYSIS.md](./DEVELOPMENT_ANALYSIS.md) for detailed production rate calculations._
 
