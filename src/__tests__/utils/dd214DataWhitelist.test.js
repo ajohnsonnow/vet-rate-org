@@ -74,29 +74,29 @@ describe("FIX-17: DD214 name fields whitelist", () => {
   it("persists lastName/firstName/middleName alongside fullName", () => {
     saveDD214Data({
       fullName: "WILLIAMS, ROBERT LEE",
-      lastName: "JOHNSON",
-      firstName: "ANTHONY",
-      middleName: "DANIEL",
+      lastName: "WILLIAMS",
+      firstName: "ROBERT",
+      middleName: "LEE",
     });
 
     const { dd214Data } = getServiceHistory();
     expect(dd214Data.fullName).toBe("WILLIAMS, ROBERT LEE");
-    expect(dd214Data.lastName).toBe("JOHNSON");
-    expect(dd214Data.firstName).toBe("ANTHONY");
-    expect(dd214Data.middleName).toBe("DANIEL");
+    expect(dd214Data.lastName).toBe("WILLIAMS");
+    expect(dd214Data.firstName).toBe("ROBERT");
+    expect(dd214Data.middleName).toBe("LEE");
   });
 
   it("still excludes ssnFull/serviceNumber when name fields are also present", () => {
     saveDD214Data({
-      lastName: "JOHNSON",
-      firstName: "ANTHONY",
+      lastName: "WILLIAMS",
+      firstName: "ROBERT",
       ssnFull: "123-45-6789",
       serviceNumber: "US12345678",
     });
 
     const { dd214Data } = getServiceHistory();
-    expect(dd214Data.lastName).toBe("JOHNSON");
-    expect(dd214Data.firstName).toBe("ANTHONY");
+    expect(dd214Data.lastName).toBe("WILLIAMS");
+    expect(dd214Data.firstName).toBe("ROBERT");
     expect(dd214Data.ssnFull).toBeUndefined();
     expect(dd214Data.serviceNumber).toBeUndefined();
   });
