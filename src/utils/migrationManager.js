@@ -72,7 +72,8 @@ export const CURRENT_PACKET_VERSION = "2.0.0";
 // veteranProfile.js's _servicePeriodKey, duplicated here (not imported —
 // that helper is unexported/private) so this migration only relies on
 // veteranProfile's public read/write API.
-const _periodDedupKey = (p) => `${p.serviceStartDate || ""}|${p.serviceEndDate || ""}`;
+const _periodDedupKey = (p) =>
+  `${p.serviceStartDate || ""}|${p.serviceEndDate || ""}`;
 
 /**
  * C1 migration: consolidate the two disconnected legacy service-period

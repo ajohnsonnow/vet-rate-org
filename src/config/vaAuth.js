@@ -180,12 +180,15 @@ export function getVaConfigStatus() {
     // must not enable the "Sign in with VA.gov" CTA while VITE_VA_API_ENABLED
     // is off, same as isVaIntegrationConfigured() above.
     oauthConfigured:
-      VA_API_ENABLED && !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
+      VA_API_ENABLED &&
+      !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
     facilitiesConfigured: !!VA_FACILITIES_API_KEY,
     formsConfigured: !!VA_FORMS_API_KEY,
     benefitsConfigured: !!VA_BENEFITS_REF_API_KEY,
     // Legacy aliases (backwards compat)
-    hasOAuth: VA_API_ENABLED && !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
+    hasOAuth:
+      VA_API_ENABLED &&
+      !!(VA_AUTH_CONFIG.clientId && VA_AUTH_CONFIG.redirectUri),
     hasApiKey: !!VA_FACILITIES_API_KEY,
     hasFormsApiKey: !!VA_FORMS_API_KEY,
     hasBenefitsApiKey: !!VA_BENEFITS_REF_API_KEY,

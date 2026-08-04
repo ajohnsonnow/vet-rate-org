@@ -10,9 +10,7 @@
       "id": "ga-medal-for-valor",
       "name": "Georgia Medal for Valor",
       "abbreviation": "GA MV",
-      "aliases": [
-        "GA MV"
-      ],
+      "aliases": ["GA MV"],
       "category": "valor",
       "scope": "state",
       "stateCode": "GA",
@@ -27,9 +25,7 @@
       "id": "ga-oglethorpe-distinguished-service-medal",
       "name": "Oglethorpe Distinguished Service Medal",
       "abbreviation": "Ogle DSM",
-      "aliases": [
-        "Ogle DSM"
-      ],
+      "aliases": ["Ogle DSM"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "GA",
@@ -44,9 +40,7 @@
       "id": "ga-meritorious-service-medal",
       "name": "Georgia Meritorious Service Medal",
       "abbreviation": "GA MSM",
-      "aliases": [
-        "GA MSM"
-      ],
+      "aliases": ["GA MSM"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "GA",
@@ -61,9 +55,7 @@
       "id": "ga-commendation-medal",
       "name": "Georgia Commendation Medal",
       "abbreviation": "GA COM",
-      "aliases": [
-        "GA COM"
-      ],
+      "aliases": ["GA COM"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "GA",
@@ -183,9 +175,7 @@
       "id": "ga-active-duty-ribbon",
       "name": "Georgia State Active Duty Ribbon",
       "abbreviation": null,
-      "aliases": [
-        "Georgia Active Duty Ribbon"
-      ],
+      "aliases": ["Georgia Active Duty Ribbon"],
       "category": "service",
       "scope": "state",
       "stateCode": "GA",

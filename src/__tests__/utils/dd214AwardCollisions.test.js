@@ -23,15 +23,69 @@ const PAD = "13. DECORATIONS MEDALS BADGES CITATIONS: ";
 // [label, stateCode, state award name as it appears in text, state award
 //  canonical name, federal award canonical name]
 const GROUPS = [
-  ["MSM/AK", "AK", "ALASKA MERITORIOUS SERVICE MEDAL", "Alaska Meritorious Service Medal", "Meritorious Service Medal"],
-  ["LoM/CA", "CA", "CALIFORNIA LEGION OF MERIT", "California Legion of Merit", "Legion of Merit"],
-  ["MoH/TX", "TX", "TEXAS MEDAL OF HONOR", "Texas Legislative Medal of Honor", "Medal of Honor"],
-  ["MoH/AR", "AR", "ARKANSAS MEDAL OF HONOR", "Arkansas Medal of Honor", "Medal of Honor"],
-  ["DSM/TX", "TX", "TEXAS DISTINGUISHED SERVICE MEDAL", "Lone Star Distinguished Service Medal", "Army Distinguished Service Medal"],
-  ["DSC/IN", "IN", "INDIANA DISTINGUISHED SERVICE CROSS", "Indiana Distinguished Service Cross", "Distinguished Service Cross"],
-  ["GCM/NM", "NM", "NEW MEXICO GOOD CONDUCT MEDAL", "New Mexico Good Conduct Medal", "Good Conduct Medal (Army)"],
-  ["PH/TX", "TX", "TEXAS PURPLE HEART MEDAL", "Texas Purple Heart Medal", "Purple Heart"],
-  ["HSM/AK", "AK", "ALASKA HUMANITARIAN SERVICE MEDAL", "Alaska Humanitarian Service Medal", "Humanitarian Service Medal"],
+  [
+    "MSM/AK",
+    "AK",
+    "ALASKA MERITORIOUS SERVICE MEDAL",
+    "Alaska Meritorious Service Medal",
+    "Meritorious Service Medal",
+  ],
+  [
+    "LoM/CA",
+    "CA",
+    "CALIFORNIA LEGION OF MERIT",
+    "California Legion of Merit",
+    "Legion of Merit",
+  ],
+  [
+    "MoH/TX",
+    "TX",
+    "TEXAS MEDAL OF HONOR",
+    "Texas Legislative Medal of Honor",
+    "Medal of Honor",
+  ],
+  [
+    "MoH/AR",
+    "AR",
+    "ARKANSAS MEDAL OF HONOR",
+    "Arkansas Medal of Honor",
+    "Medal of Honor",
+  ],
+  [
+    "DSM/TX",
+    "TX",
+    "TEXAS DISTINGUISHED SERVICE MEDAL",
+    "Lone Star Distinguished Service Medal",
+    "Army Distinguished Service Medal",
+  ],
+  [
+    "DSC/IN",
+    "IN",
+    "INDIANA DISTINGUISHED SERVICE CROSS",
+    "Indiana Distinguished Service Cross",
+    "Distinguished Service Cross",
+  ],
+  [
+    "GCM/NM",
+    "NM",
+    "NEW MEXICO GOOD CONDUCT MEDAL",
+    "New Mexico Good Conduct Medal",
+    "Good Conduct Medal (Army)",
+  ],
+  [
+    "PH/TX",
+    "TX",
+    "TEXAS PURPLE HEART MEDAL",
+    "Texas Purple Heart Medal",
+    "Purple Heart",
+  ],
+  [
+    "HSM/AK",
+    "AK",
+    "ALASKA HUMANITARIAN SERVICE MEDAL",
+    "Alaska Humanitarian Service Medal",
+    "Humanitarian Service Medal",
+  ],
 ];
 
 describe("A. collision groups: no stateCode must not fabricate the federal award", () => {
@@ -95,13 +149,21 @@ describe("C. HSM exact-span abbreviation tie", () => {
 
 describe("D. DOUBLE OCCURRENCE: federal name appears nested AND standalone", () => {
   it("D1 federal-first order: MEDAL OF HONOR ... TEXAS MEDAL OF HONOR (TX vet gets both)", () => {
-    const out = names(`${PAD}MEDAL OF HONOR // TEXAS MEDAL OF HONOR`, "Army", "TX");
+    const out = names(
+      `${PAD}MEDAL OF HONOR // TEXAS MEDAL OF HONOR`,
+      "Army",
+      "TX",
+    );
     expect(out).toContain("Medal of Honor");
     expect(out).toContain("Texas Legislative Medal of Honor");
   });
 
   it("D2 state-first order: TEXAS MEDAL OF HONOR ... MEDAL OF HONOR (TX vet must still get both)", () => {
-    const out = names(`${PAD}TEXAS MEDAL OF HONOR // MEDAL OF HONOR`, "Army", "TX");
+    const out = names(
+      `${PAD}TEXAS MEDAL OF HONOR // MEDAL OF HONOR`,
+      "Army",
+      "TX",
+    );
     expect(out).toContain("Texas Legislative Medal of Honor");
     expect(out).toContain("Medal of Honor");
   });
@@ -168,7 +230,11 @@ describe("E. non-colliding controls still behave (no new suppression)", () => {
   });
 
   it("plain non-colliding STATE awards still match with their stateCode", () => {
-    const out = names(`${PAD}OREGON NATIONAL GUARD FAITHFUL SERVICE RIBBON`, "Army", "OR");
+    const out = names(
+      `${PAD}OREGON NATIONAL GUARD FAITHFUL SERVICE RIBBON`,
+      "Army",
+      "OR",
+    );
     expect(out).toContain("Oregon National Guard Faithful Service Ribbon");
   });
 
@@ -206,7 +272,10 @@ describe("F. the two widest collision groups (39- and 44-state)", () => {
   });
 
   it("Navy Recruiting Service Ribbon still matches its own standalone text", () => {
-    const out = names(`${PAD}NAVY RECRUITING SERVICE RIBBON // GOOD CONDUCT MEDAL`, "Navy");
+    const out = names(
+      `${PAD}NAVY RECRUITING SERVICE RIBBON // GOOD CONDUCT MEDAL`,
+      "Navy",
+    );
     expect(out).toContain("Navy Recruiting Service Ribbon");
   });
 });

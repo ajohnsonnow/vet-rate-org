@@ -687,14 +687,11 @@ function RatingTimelineEntry({ period, onRemove }) {
       <div className="flex-1 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
         <div className="flex items-center justify-between mb-2">
           <span className="text-gray-400 text-sm">
-            {formatLocalDate(period.effectiveDate).toLocaleDateString(
-              "en-US",
-              {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              },
-            )}
+            {formatLocalDate(period.effectiveDate).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </span>
           <button
             onClick={() => onRemove(period.id)}

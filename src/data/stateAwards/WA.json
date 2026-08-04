@@ -130,9 +130,7 @@
       "id": "wa-strength-management-ribbon",
       "name": "Washington Strength Management Ribbon",
       "abbreviation": "WSSMR",
-      "aliases": [
-        "Washington State Distinguished Recruiting Ribbon"
-      ],
+      "aliases": ["Washington State Distinguished Recruiting Ribbon"],
       "category": "service",
       "scope": "state",
       "stateCode": "WA",
@@ -162,9 +160,7 @@
       "id": "wa-emergency-service-ribbon",
       "name": "Washington Emergency Service Ribbon",
       "abbreviation": "WSESR",
-      "aliases": [
-        "Washington State Disaster Relief Ribbon"
-      ],
+      "aliases": ["Washington State Disaster Relief Ribbon"],
       "category": "service",
       "scope": "state",
       "stateCode": "WA",

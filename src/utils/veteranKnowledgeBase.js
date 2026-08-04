@@ -861,7 +861,8 @@ export const removeDocumentFromVKB = async (documentId) => {
   return { success: false, error: "Document not found" };
 };
 
-const hasServicePeriods = (vkb) => vkb.serviceHistory.servicePeriods?.length > 0;
+const hasServicePeriods = (vkb) =>
+  vkb.serviceHistory.servicePeriods?.length > 0;
 
 // Completeness rubric: [points, predicate], grouped only for readability —
 // maxScore is the sum of every entry, so adding a criterion here is the whole

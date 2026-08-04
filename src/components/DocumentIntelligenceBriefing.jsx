@@ -19,7 +19,10 @@ import {
 } from "../utils/collectionRules";
 import { RibbonRackDisplay } from "./VisualRibbon";
 import { sortRibbonsByPrecedence } from "../utils/ribbonRackData";
-import { getShowStateAwards, setShowStateAwards } from "../utils/veteranProfile";
+import {
+  getShowStateAwards,
+  setShowStateAwards,
+} from "../utils/veteranProfile";
 import { BadgeDisplay, CombatIndicatorSummary } from "./BadgeDisplay";
 import { parseDD214Badges } from "../data/badgeData";
 

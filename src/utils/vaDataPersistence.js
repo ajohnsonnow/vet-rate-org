@@ -26,17 +26,21 @@ export async function saveVAClaimsToPacket(claims, rawData = null) {
         claim.contentions ||
         claim.attributes?.contentions ||
         [];
-      const claimType = claim.type || claim.attributes?.claim_type || "VA Claim";
+      const claimType =
+        claim.type || claim.attributes?.claim_type || "VA Claim";
       const firstContention = contentions[0];
       const contentionName =
-        typeof firstContention === "string" ? firstContention : firstContention?.name;
+        typeof firstContention === "string"
+          ? firstContention
+          : firstContention?.name;
       const dateFiled = claim.dateFiled || claim.attributes?.claim_date;
 
       const claimData = {
         id: `va_claim_${claim.id || generateId()}`,
         name: claimType,
         conditionName:
-          contentionName || (dateFiled ? `${claimType} (filed ${dateFiled})` : claimType),
+          contentionName ||
+          (dateFiled ? `${claimType} (filed ${dateFiled})` : claimType),
         // Lighthouse Claims API v2 doesn't return a diagnostic/DC code on the
         // claim list — that only exists once the Disability Rating API has a
         // rated decision — so this stays a clearly-marked placeholder.
@@ -114,7 +118,8 @@ export async function saveServiceHistoryToVKB(serviceHistory, rawData = null) {
     // Fill-if-empty only: a veteran's DD214 may cover a different
     // branch/era than this VA API episode — never let an unconditional
     // overwrite here produce a chimera record mixing the two sources.
-    sh.branch = sh.branch || serviceHistory.branch || serviceHistory.branch_of_service;
+    sh.branch =
+      sh.branch || serviceHistory.branch || serviceHistory.branch_of_service;
     sh.entryDate =
       sh.entryDate ||
       serviceHistory.startDate ||
@@ -162,7 +167,10 @@ export async function saveServiceHistoryToVKB(serviceHistory, rawData = null) {
  * decision-document extraction elsewhere) — merge into it instead of creating
  * a colliding parallel `disabilityRating` field on the VKB object.
  */
-export async function saveDisabilityRatingToVKB(disabilityRating, rawData = null) {
+export async function saveDisabilityRatingToVKB(
+  disabilityRating,
+  rawData = null,
+) {
   if (!disabilityRating) return { success: false };
 
   try {
@@ -216,8 +224,7 @@ export async function saveAppealsToPacket(appeals, rawData = null) {
 
   const savedCount = appeals.reduce((count, appeal) => {
     try {
-      const issues =
-        appeal.issues || appeal.attributes?.issues || [];
+      const issues = appeal.issues || appeal.attributes?.issues || [];
       const firstIssue = issues[0];
       const issueDescription =
         typeof firstIssue === "string" ? firstIssue : firstIssue?.description;

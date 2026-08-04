@@ -295,9 +295,7 @@
       "id": "mo-missouri-outstanding-sgt-hood-award",
       "name": "Missouri Outstanding SGT Hood Award",
       "abbreviation": null,
-      "aliases": [
-        "Ourstanding SGT Hood Award"
-      ],
+      "aliases": ["Ourstanding SGT Hood Award"],
       "category": "achievement",
       "scope": "state",
       "stateCode": "MO",

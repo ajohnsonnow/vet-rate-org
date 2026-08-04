@@ -383,7 +383,10 @@ function DisabilityRatingPreview({ data }) {
               <span>
                 {rating.diagnosticTypeName || rating.diagnosticText}
                 {rating.diagnosticCode && (
-                  <span className="text-gray-500"> (DC {rating.diagnosticCode})</span>
+                  <span className="text-gray-500">
+                    {" "}
+                    (DC {rating.diagnosticCode})
+                  </span>
                 )}
               </span>
               <span className="font-medium">{rating.ratingPercentage}%</span>
@@ -477,7 +480,12 @@ function FacilitiesPreviewList({ data }) {
         {facility.name}
       </div>
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        {[facility.address?.street, facility.address?.city, facility.address?.state, facility.address?.zip]
+        {[
+          facility.address?.street,
+          facility.address?.city,
+          facility.address?.state,
+          facility.address?.zip,
+        ]
           .filter(Boolean)
           .join(", ")}
       </div>
@@ -734,11 +742,12 @@ function useVaSaveActions({ apiData, selectedApis, loadSavedRecords }) {
       });
       loadSavedRecords();
 
-      const attemptedPacket = dataToSave.claims.length > 0 || dataToSave.appeals.length > 0;
+      const attemptedPacket =
+        dataToSave.claims.length > 0 || dataToSave.appeals.length > 0;
       const attemptedVkb = Boolean(
         dataToSave.serviceHistory ||
-          dataToSave.disabilityRating ||
-          dataToSave.appealableIssues.length > 0,
+        dataToSave.disabilityRating ||
+        dataToSave.appealableIssues.length > 0,
       );
       const packetFailed = attemptedPacket && result.packet.saved === false;
       const vkbFailed = attemptedVkb && result.vkb.saved === false;

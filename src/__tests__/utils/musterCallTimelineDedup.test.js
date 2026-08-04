@@ -20,9 +20,8 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { findDuplicateTimelineEntry } = await import(
-  "../../utils/musterCallProcessor"
-);
+const { findDuplicateTimelineEntry } =
+  await import("../../utils/musterCallProcessor");
 
 const importEntry = (overrides = {}) => ({
   date: "05/30/2015",
@@ -88,12 +87,7 @@ describe("FIX-12: findDuplicateTimelineEntry", () => {
   });
 
   it("re-importing 4 documents twice each still resolves to 4 stable identities, not 8", () => {
-    const files = [
-      "dd214_1.pdf",
-      "dd214_2.pdf",
-      "dd214_3.pdf",
-      "dd214_4.pdf",
-    ];
+    const files = ["dd214_1.pdf", "dd214_2.pdf", "dd214_3.pdf", "dd214_4.pdf"];
     const timeline = [];
     for (let pass = 1; pass <= 2; pass += 1) {
       for (const fileName of files) {
