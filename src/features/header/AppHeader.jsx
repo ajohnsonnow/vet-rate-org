@@ -60,6 +60,8 @@ export default function AppHeader() {
       onTDIUBuilderClick={dispatch("openTDIUBuilder")}
       onStateBenefitHunterClick={dispatch("openStateBenefitHunter")}
       onTheTribunalClick={dispatch("openTheTribunal")}
+      onAppealsLaneAdvisorClick={dispatch("openAppealsLaneAdvisor")}
+      onRemandRiskCheckerClick={dispatch("openRemandRiskChecker")}
       onLegislativeWatchdogClick={dispatch("openLegislativeWatchdog")}
       // Support & Resources
       onVSOFinderClick={dispatch("openVSOFinder")}

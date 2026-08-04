@@ -62,6 +62,12 @@ export const TOOLKIT_CATEGORIES = [
         isNew: true,
       },
       {
+        name: "Claim Navigator",
+        description:
+          "Mission Control: track claims, deadlines, and next steps in one dashboard",
+        isNew: true,
+      },
+      {
         name: "Secondary Scout",
         description:
           "Discover 65+ medically-recognized secondary conditions with probability ratings",
@@ -109,7 +115,7 @@ export const TOOLKIT_CATEGORIES = [
         description: "Parse VA health records for claim-relevant diagnoses",
       },
       {
-        name: "PDF Evidence Finder",
+        name: "Record Search",
         description: 'Search 2,000+ page STRs for keywords ("The Needle")',
         isNew: true,
       },
