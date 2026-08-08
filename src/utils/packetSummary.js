@@ -58,6 +58,25 @@ const uniqueLabels = (items) => {
   return out;
 };
 
+// OCR occasionally drops the space between two words entirely (e.g.
+// "agoraphobiaand depressive disorder" alongside a clean "agoraphobia and
+// depressive disorder" from a different page/document), so a normal
+// whitespace-collapse can't unify them -- there's no run of whitespace to
+// collapse, just a missing single space. Stripping ALL whitespace before
+// comparing is a targeted, conditions-only dedup key (kept local to this
+// module rather than changing the shared normalizeConditionName, which the
+// VKB write/read paths also depend on).
+const CONDITION_LENGTH_RANGE = [3, 120];
+
+const looksLikeCondition = (label) => {
+  if (!label) return false;
+  const [min, max] = CONDITION_LENGTH_RANGE;
+  if (label.length < min || label.length > max) return false;
+  // Reject fragments with no letters at all -- page numbers, punctuation
+  // runs, and other OCR noise occasionally land in a condition list.
+  return /[a-z]/i.test(label);
+};
+
 // Scalar fields worth surfacing, in display order. Parsers disagree on casing
 // and naming across document types, so each entry lists every alias seen.
 const SCALAR_FINDINGS = [
@@ -129,7 +148,7 @@ export function buildDocumentFindings(doc, categoryMeta = {}) {
   const conditions = uniqueLabels([
     ...collectFromKeys(data, CONDITION_KEYS),
     ...collectCodeSheetConditions(data),
-  ]);
+  ]).filter(looksLikeCondition);
   const potentialClaims = collectFromKeys(data, CLAIM_KEYS);
   const timeline = asArray(data.timeline);
   const segments = asArray(data.segments);
@@ -184,7 +203,7 @@ export function buildAllDocumentFindings(documentsByCategory) {
 }
 
 const upsertCondition = (index, name, patch) => {
-  const key = normalizeConditionName(name);
+  const key = normalizeConditionName(name).replace(/\s+/g, "");
   if (!key) return null;
   const existing = index.get(key);
   if (existing) return Object.assign(existing, patch);
