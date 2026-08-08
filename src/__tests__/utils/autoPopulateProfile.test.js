@@ -80,24 +80,24 @@ describe("FIX-17: autoPopulateProfile maps extracted name fields onto the profil
     const result = await autoPopulateProfile([
       serviceRecordResult({
         veteranName: "WILLIAMS, ROBERT LEE",
-        lastName: "JOHNSON",
-        firstName: "ANTHONY",
-        middleName: "DANIEL",
+        lastName: "WILLIAMS",
+        firstName: "ROBERT",
+        middleName: "LEE",
       }),
     ]);
     expect(result.success).toBe(true);
 
     const profile = getVeteranProfile();
     expect(profile.fullName).toBe("WILLIAMS, ROBERT LEE");
-    expect(profile.firstName).toBe("ANTHONY");
-    expect(profile.lastName).toBe("JOHNSON");
-    expect(profile.middleName).toBe("DANIEL");
+    expect(profile.firstName).toBe("ROBERT");
+    expect(profile.lastName).toBe("WILLIAMS");
+    expect(profile.middleName).toBe("LEE");
   });
 
   it("never overwrites a manually-entered name, and surfaces a conflict instead", async () => {
     saveVeteranProfile({
-      firstName: "Anthony",
-      lastName: "Johnson",
+      firstName: "Robert",
+      lastName: "Williams",
       profileFieldSources: { firstName: "user", lastName: "user" },
     });
 
@@ -109,8 +109,8 @@ describe("FIX-17: autoPopulateProfile maps extracted name fields onto the profil
     ]);
 
     const profile = getVeteranProfile();
-    expect(profile.firstName).toBe("Anthony");
-    expect(profile.lastName).toBe("Johnson");
+    expect(profile.firstName).toBe("Robert");
+    expect(profile.lastName).toBe("Williams");
     expect(result.conflicts.map((c) => c.field)).toEqual(
       expect.arrayContaining(["firstName", "lastName"]),
     );
