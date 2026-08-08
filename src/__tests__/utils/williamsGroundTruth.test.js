@@ -1,5 +1,5 @@
 /**
- * Johnson 80% ground-truth test — Sprint S10 C-File Audit
+ * Williams 80% ground-truth test — Sprint S10 C-File Audit
  *
  * Condition names, diagnostic codes, and ratings are NOT PII and are safe
  * to commit. All personal identifiers (name, SSN, file#, DOB) remain in
@@ -36,7 +36,7 @@ const WILLIAMS_CONDITIONS = [
   { name: "Tinnitus", rating: 10 },
 ];
 
-describe("Johnson 80% — ratingCalculator.js (38 CFR § 4.25)", () => {
+describe("Williams 80% — ratingCalculator.js (38 CFR § 4.25)", () => {
   it("calculateCombinedRating → 80%", () => {
     expect(calculateCombinedRating(WILLIAMS_RATINGS)).toBe(80);
   });
@@ -53,7 +53,7 @@ describe("Johnson 80% — ratingCalculator.js (38 CFR § 4.25)", () => {
   });
 });
 
-describe("Johnson 80% — vaCalculator.js (38 CFR § 4.25)", () => {
+describe("Williams 80% — vaCalculator.js (38 CFR § 4.25)", () => {
   it("combineMultipleRatings → 83 (intermediate-rounded integer)", () => {
     expect(combineMultipleRatings(WILLIAMS_RATINGS)).toBe(83);
   });
@@ -71,8 +71,8 @@ describe("Johnson 80% — vaCalculator.js (38 CFR § 4.25)", () => {
   });
 });
 
-describe("Johnson bilateral detection — checkBilateralFactor (38 CFR § 4.26)", () => {
-  it("detects bilateral hip pair in full Johnson condition set", () => {
+describe("Williams bilateral detection — checkBilateralFactor (38 CFR § 4.26)", () => {
+  it("detects bilateral hip pair in full Williams condition set", () => {
     expect(checkBilateralFactor(WILLIAMS_CONDITIONS)).toBe(true);
   });
 
