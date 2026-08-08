@@ -144,6 +144,16 @@ describe("buildDocumentFindings", () => {
     });
     expect(findings.parseError).toBe("parseCFileDocument threw");
   });
+
+  it("rejects non-condition OCR fragments (page numbers, punctuation runs, stray letters, run-on sentences) from the conditions list", () => {
+    const findings = buildDocumentFindings({
+      fileName: "noisy.pdf",
+      extractedData: {
+        conditions: ["Tinnitus", "13.", "----", "N", "A".repeat(150)],
+      },
+    });
+    expect(findings.conditions).toEqual(["Tinnitus"]);
+  });
 });
 
 describe("buildAllDocumentFindings", () => {
@@ -200,6 +210,30 @@ describe("buildConditionSynthesis", () => {
       (c) => c.documentCount,
     );
     expect(counts).toEqual([...counts].sort((a, b) => b - a));
+  });
+
+  it("dedupes an OCR-dropped-space variant onto the same clean-spaced condition", () => {
+    // A missing space isn't a whitespace RUN, so a plain collapse-whitespace
+    // pass can't unify these -- both read letter-for-letter identical once
+    // spaces are stripped entirely.
+    const conditions = buildConditionSynthesis(vkb, [
+      {
+        fileName: "a.pdf",
+        conditions: ["Agoraphobia and depressive disorder"],
+        categoryLabel: "C-File",
+      },
+      {
+        fileName: "b.pdf",
+        conditions: ["Agoraphobiaand depressive disorder"],
+        categoryLabel: "C-File",
+      },
+    ]);
+    const matches = conditions.filter(
+      (c) => c.key === "agoraphobiaanddepressivedisorder",
+    );
+
+    expect(matches).toHaveLength(1);
+    expect(matches[0].documentCount).toBe(2);
   });
 });
 
