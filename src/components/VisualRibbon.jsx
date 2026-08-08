@@ -250,28 +250,52 @@ const VisualRibbon = ({
     deviceSize,
   );
 
+  // Badges (e.g. Combat Action Badge, CIB) have no ribbon artwork -- the
+  // manifest carries category:"badge" with assetFilename:null for these.
+  // Rendering them through the ribbon gradient path produces an unlabeled
+  // gray rectangle that reads as a broken image, not a badge. Give them a
+  // distinct chip treatment instead of an empty ribbon slot.
+  const isBadge = award?.category === "badge";
+  const badgeLabel = award?.aliases?.[0] || award?.name || "BADGE";
+
   return (
     <div className={`inline-block ${className}`}>
       {/* Ribbon container */}
       <div
-        className="relative rounded-sm shadow-md border border-gray-400"
+        className={
+          isBadge
+            ? "relative rounded-full shadow-md border-2 border-dashed border-amber-500 bg-slate-700 flex items-center justify-center"
+            : "relative rounded-sm shadow-md border border-gray-400"
+        }
         style={{ width, height }}
       >
-        {/* Ribbon background - using gradients if no image */}
-        <div
-          className={`absolute inset-0 rounded-sm ${award?.ribbonColor || "bg-gray-400"}`}
-          style={{
-            backgroundImage: award?.assetFilename
-              ? `url(/images/ribbons/${award.assetFilename})`
-              : undefined,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
+        {isBadge ? (
+          <span
+            className="text-[9px] font-bold text-amber-300 leading-none text-center px-1 truncate"
+            style={{ maxWidth: width - 8 }}
+            aria-label={`${award?.name || "Badge"} (badge, no ribbon artwork available)`}
+          >
+            {badgeLabel}
+          </span>
+        ) : (
+          <>
+            {/* Ribbon background - using gradients if no image */}
+            <div
+              className={`absolute inset-0 rounded-sm ${award?.ribbonColor || "bg-gray-400"}`}
+              style={{
+                backgroundImage: award?.assetFilename
+                  ? `url(/images/ribbons/${award.assetFilename})`
+                  : undefined,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
 
-        {/* Device overlay layer */}
-        {positionedDevices.map((device, index) =>
-          renderDevice(device, index, deviceSize),
+            {/* Device overlay layer */}
+            {positionedDevices.map((device, index) =>
+              renderDevice(device, index, deviceSize),
+            )}
+          </>
         )}
       </div>
 
