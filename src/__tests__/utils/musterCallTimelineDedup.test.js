@@ -27,7 +27,7 @@ const importEntry = (overrides = {}) => ({
   date: "05/30/2015",
   dateIsProcessingDate: false,
   eventType: "document_import",
-  description: "DD214 (Service Record): johnson_dd214.pdf",
+  description: "DD214 (Service Record): williams_dd214.pdf",
   source: "Muster Call",
   significance: "",
   ...overrides,
@@ -38,7 +38,7 @@ describe("FIX-12: findDuplicateTimelineEntry", () => {
     const timeline = [importEntry()];
     const found = findDuplicateTimelineEntry(
       timeline,
-      "DD214 (Service Record): johnson_dd214.pdf",
+      "DD214 (Service Record): williams_dd214.pdf",
     );
     expect(found).toBe(timeline[0]);
   });
@@ -47,7 +47,7 @@ describe("FIX-12: findDuplicateTimelineEntry", () => {
     const timeline = [];
     const found = findDuplicateTimelineEntry(
       timeline,
-      "DD214 (Service Record): johnson_dd214.pdf",
+      "DD214 (Service Record): williams_dd214.pdf",
     );
     expect(found).toBeUndefined();
   });
@@ -65,23 +65,23 @@ describe("FIX-12: findDuplicateTimelineEntry", () => {
     const timeline = [
       importEntry({
         eventType: "service_entry",
-        description: "DD214 (Service Record): johnson_dd214.pdf",
+        description: "DD214 (Service Record): williams_dd214.pdf",
       }),
     ];
     const found = findDuplicateTimelineEntry(
       timeline,
-      "DD214 (Service Record): johnson_dd214.pdf",
+      "DD214 (Service Record): williams_dd214.pdf",
     );
     expect(found).toBeUndefined();
   });
 
   it("does not match an entry from a different source (e.g. the DD214Analyzer review-screen merge path)", () => {
     const timeline = [
-      importEntry({ source: "johnson_dd214.pdf" }), // mergeDD214EvidenceTimeline uses options.fileName as source
+      importEntry({ source: "williams_dd214.pdf" }), // mergeDD214EvidenceTimeline uses options.fileName as source
     ];
     const found = findDuplicateTimelineEntry(
       timeline,
-      "DD214 (Service Record): johnson_dd214.pdf",
+      "DD214 (Service Record): williams_dd214.pdf",
     );
     expect(found).toBeUndefined();
   });
