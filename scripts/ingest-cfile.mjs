@@ -1,7 +1,7 @@
 /**
  * C-File Ingestion Script - vet-rate.org
  * ========================================
- * Processes all documents in E:\Johnson_C-FIle using the same
+ * Processes all documents in E:\Williams_C-FIle using the same
  * pdfjs + document parsing pipeline as the browser app.
  *
  * Outputs a complete v2.0 My Packet JSON file with:
@@ -21,7 +21,7 @@ import { join, extname, resolve } from 'path';
 const workerPath = resolve('node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
 GlobalWorkerOptions.workerSrc = new URL(`file:///${workerPath.replace(/\\/g, '/')}`).href;
 
-const CFILE_DIR = 'E:\\Johnson_C-FIle';
+const CFILE_DIR = 'E:\\Williams_C-FIle';
 const runDate = new Date().toISOString().slice(0, 10);
 const OUTPUT_PATH = `${CFILE_DIR}\\vet-rate-packet-${runDate}.json`;
 
@@ -276,19 +276,19 @@ function extractDD214Data(text, _filename) {
 function buildVeteranProfile(_allExtractions) {
   // Known ground truth from C-file
   return {
-    firstName: 'Anthony',
-    middleInitial: 'D',
-    lastName: 'Johnson',
-    fullName: 'Anthony Daniel Johnson',
-    dob: '1978-04-19',
-    ssnLast4: '5706',
-    vaFileNumber: '544235706',
-    email: 'anthony.johnson.now@gmail.com',
-    street: '1450 N Prescott St',
+    firstName: 'Robert',
+    middleInitial: 'L',
+    lastName: 'Williams',
+    fullName: 'Robert Lee Williams',
+    dob: '1985-06-15',
+    ssnLast4: '6789',
+    vaFileNumber: '123456789',
+    email: 'robert.williams.synthetic@example.com',
+    street: '300 Elm St',
     apt: 'Apt 306',
-    city: 'Portland',
-    state: 'OR',
-    zip: '97217',
+    city: 'Austin',
+    state: 'TX',
+    zip: '78701',
     branch: 'Army',
     component: 'ARNG',
     rankAtDischarge: 'SGT',
@@ -297,13 +297,13 @@ function buildVeteranProfile(_allExtractions) {
     characterOfService: 'General Under Honorable Conditions',
     currentCombinedRating: '80',
     effectiveDate: '2023-09-15',
-    vaRepresentative: 'Anthony Johnson',
+    vaRepresentative: 'Robert Williams',
     vsoOrganization: 'Veterans of Foreign Wars of the US (VFW)',
     servicePeriods: [
-      { id: 'sp1', period: 'Basic Training', branch: 'Army ARNG', rank: 'PV1/E-1', startDate: '1997-07-30', endDate: '1997-10-15', activationType: 'Initial Entry Training', location: 'Fort Benning, GA' },
-      { id: 'sp2', period: 'Egypt MFO', branch: 'Army ARNG', rank: 'SPC/E-4', startDate: '2002-05-06', endDate: '2003-04-30', activationType: 'Title 10 - MFO', location: 'Sinai Peninsula, Egypt' },
-      { id: 'sp3', period: 'Afghanistan TF Phoenix III', branch: 'Army ARNG', rank: 'SGT/E-5', startDate: '2004-06-22', endDate: '2005-06-27', activationType: 'Title 10 - OEF', location: 'Afghanistan' },
-      { id: 'sp4', period: 'Afghanistan TF Phoenix V', branch: 'Army ARNG', rank: 'SGT/E-5', startDate: '2006-02-16', endDate: '2007-06-29', activationType: 'Title 10 - OEF', location: 'Afghanistan' },
+      { id: 'sp1', period: 'Basic Training', branch: 'Army ARNG', rank: 'PV1/E-1', startDate: '1994-07-30', endDate: '1994-10-15', activationType: 'Initial Entry Training', location: 'Fort Benning, GA' },
+      { id: 'sp2', period: 'Egypt MFO', branch: 'Army ARNG', rank: 'SPC/E-4', startDate: '1999-05-06', endDate: '2000-04-30', activationType: 'Title 10 - MFO', location: 'Sinai Peninsula, Egypt' },
+      { id: 'sp3', period: 'Afghanistan TF Phoenix III', branch: 'Army ARNG', rank: 'SGT/E-5', startDate: '2001-06-22', endDate: '2002-06-27', activationType: 'Title 10 - OEF', location: 'Afghanistan' },
+      { id: 'sp4', period: 'Afghanistan TF Phoenix V', branch: 'Army ARNG', rank: 'SGT/E-5', startDate: '2003-02-16', endDate: '2004-06-29', activationType: 'Title 10 - OEF', location: 'Afghanistan' },
     ],
     lastUpdated: new Date().toISOString(),
     profileVersion: '2.0',
@@ -407,23 +407,23 @@ function buildClaims(allRatingData, importedFiles) {
 function buildServiceHistory(_dd214Extractions) {
   return {
     deployments: [
-      { id: 'dep1', location: 'Sinai Peninsula, Egypt', country: 'Egypt', operation: 'Multinational Force and Observers (MFO)', startDate: '2002-05-06', endDate: '2003-04-30', branch: 'Army ARNG', rank: 'SPC/E-4', notes: 'TF Sinai' },
-      { id: 'dep2', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom - TF Phoenix III', startDate: '2004-06-22', endDate: '2005-06-27', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
-      { id: 'dep3', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom - TF Phoenix V', startDate: '2006-02-16', endDate: '2007-06-29', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
+      { id: 'dep1', location: 'Sinai Peninsula, Egypt', country: 'Egypt', operation: 'Multinational Force and Observers (MFO)', startDate: '1999-05-06', endDate: '2000-04-30', branch: 'Army ARNG', rank: 'SPC/E-4', notes: 'TF Sinai' },
+      { id: 'dep2', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom - TF Phoenix III', startDate: '2001-06-22', endDate: '2002-06-27', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
+      { id: 'dep3', location: 'Afghanistan', country: 'Afghanistan', operation: 'Operation Enduring Freedom - TF Phoenix V', startDate: '2003-02-16', endDate: '2004-06-29', branch: 'Army ARNG', rank: 'SGT/E-5', notes: 'Train Afghan National Army' },
     ],
     awards: [
-      { id: 'aw1', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2005-06-27', isCombat: true, notes: '1st award - TF Phoenix III, Afghanistan' },
-      { id: 'aw2', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2007-06-29', isCombat: true, notes: '2nd award - TF Phoenix V, Afghanistan' },
+      { id: 'aw1', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2002-06-27', isCombat: true, notes: '1st award - TF Phoenix III, Afghanistan' },
+      { id: 'aw2', name: 'Combat Action Badge', abbreviation: 'CAB', dateReceived: '2004-06-29', isCombat: true, notes: '2nd award - TF Phoenix V, Afghanistan' },
       { id: 'aw3', name: 'Army Commendation Medal', abbreviation: 'ARCOM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw4', name: 'Army Achievement Medal', abbreviation: 'AAM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw5', name: 'National Defense Service Medal', abbreviation: 'NDSM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw6', name: 'Afghanistan Campaign Medal', abbreviation: 'ACM', dateReceived: null, isCombat: false, notes: 'w/2 Campaign Stars' },
-      { id: 'aw7', name: 'Multinational Force and Observers Medal', abbreviation: 'MFO', dateReceived: '2003-04-30', isCombat: false, notes: 'Egypt deployment' },
+      { id: 'aw7', name: 'Multinational Force and Observers Medal', abbreviation: 'MFO', dateReceived: '2000-04-30', isCombat: false, notes: 'Egypt deployment' },
       { id: 'aw8', name: 'Global War on Terrorism Service Medal', abbreviation: 'GWOTSM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw9', name: 'Global War on Terrorism Expeditionary Medal', abbreviation: 'GWOTEM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw10', name: 'Army Service Ribbon', abbreviation: 'ASR', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw11', name: 'Army Reserve Components Achievement Medal', abbreviation: 'RCAM', dateReceived: null, isCombat: false, notes: '' },
-      { id: 'aw12', name: 'Oregon Commendation Medal', abbreviation: 'OCM', dateReceived: null, isCombat: false, notes: '' },
+      { id: 'aw12', name: 'Texas Commendation Medal', abbreviation: 'TCM', dateReceived: null, isCombat: false, notes: '' },
       { id: 'aw13', name: 'Expert Infantryman Badge', abbreviation: 'EIB', dateReceived: null, isCombat: false, notes: '' },
     ],
     dd214Data: {
@@ -433,8 +433,8 @@ function buildServiceHistory(_dd214Extractions) {
       mos: '11B - Infantryman',
       characterOfService: 'General Under Honorable Conditions',
       totalServiceYears: 15,
-      separationDate: '2012-07-29',
-      narrative: 'Four service periods spanning 1997-2012 including 3 combat/peacekeeping deployments.',
+      separationDate: '2009-07-29',
+      narrative: 'Four service periods spanning 1994-2009 including 3 combat/peacekeeping deployments.',
     },
   };
 }
@@ -691,9 +691,9 @@ function buildPacket(allRatingData, importedFiles, allDD214Data, allRawText) {
       totalFilesWithText: importedFiles.filter(f => f.hasText).length,
       totalFilesSkipped: importedFiles.filter(f => f.extractionMethod === 'scanned-needs-browser-ocr').length,
       processingNotes: [
-        'JOHNSON 5706 .pdf (313MB C-file) skipped - requires OCR tooling for full extraction',
-        'DD214_Johnson [1-4].pdf are scanned image-only PDFs - 0 text chars/page. Full OCR requires browser Tesseract via Muster Call.',
-        'DD214_Johnson_All.csv intentionally skipped - using PDF sources only per project decision.',
+        'WILLIAMS 6789 .pdf (313MB C-file) skipped - requires OCR tooling for full extraction',
+        'DD214_Williams [1-4].pdf are scanned image-only PDFs - 0 text chars/page. Full OCR requires browser Tesseract via Muster Call.',
+        'DD214_Williams_All.csv intentionally skipped - using PDF sources only per project decision.',
         'All claim letters processed using pdfjs-dist legacy Node.js build',
         'Structured data extracted using vaDocumentParser.js pattern matching',
         'Claims list seeded from ground truth (2024-05-08 rating letter) + cross-validated against all letters',
