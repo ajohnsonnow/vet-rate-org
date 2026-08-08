@@ -288,7 +288,7 @@ function normalizeOcrText(text) {
  * Extract name from DD214 text
  */
 function extractName(text) {
-  // Pattern: "NAME (Last, First, Middle): JOHNSON, JOHN WILLIAM"
+  // Pattern: "NAME (Last, First, Middle): WILLIAMS, JOHN ROBERT"
   // Also handle Florence-2 output which may have different formatting
   const patterns = [
     // Standard DD214 format
@@ -299,7 +299,7 @@ function extractName(text) {
     // Name followed by SSN or digits
     // eslint-disable-next-line sonarjs/slow-regex -- three chained unbounded quantifiers gated by a trailing lookahead; rewriting the backtracking shape risks changing which text is captured as last/first/middle without a DD214 sample corpus to validate against
     /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*(?:\d|ssn|social))/i,
-    // Florence-2 may output: "JOHNSON JOHN WILLIAM" or "LAST: JOHNSON FIRST: JOHN"
+    // Florence-2 may output: "WILLIAMS JOHN ROBERT" or "LAST: WILLIAMS FIRST: JOHN"
     // eslint-disable-next-line sonarjs/slow-regex -- unbounded name-character quantifier followed by a literal "first" check; greedy-to-lazy or other backtracking rewrites can shift the matched name boundary and aren't safe to guess without a document corpus
     /last\s*name?\s*[:-]?\s*([A-Z][a-z\-']+)\s+first\s*name?\s*[:-]?\s*([a-z\-']+)/i,
     // Just look for LASTNAME, FIRSTNAME pattern anywhere
