@@ -427,7 +427,9 @@ async function screenshotMyPacketTabs(page: Page): Promise<string[]> {
       const ribbonRackToggle = dialog.getByRole("button", {
         name: /view ribbon rack/i,
       });
-      if (await ribbonRackToggle.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      if (
+        await ribbonRackToggle.isVisible({ timeout: 3_000 }).catch(() => false)
+      ) {
         await ribbonRackToggle.click().catch(() => {});
         await page.waitForTimeout(700);
       }
