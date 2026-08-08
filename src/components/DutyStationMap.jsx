@@ -270,7 +270,7 @@ export default function DutyStationMap({
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={t("myPacketSection.mapAriaLabel", { count: plottedCount })}
-        className="w-full h-auto max-h-[420px] rounded-lg border border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-slate-900 cursor-crosshair"
+        className="w-full h-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-slate-900 cursor-crosshair"
         onClick={handleMapClick}
       >
         <WorldMapLayers features={features} path={path} />

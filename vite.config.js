@@ -360,6 +360,18 @@ export default defineConfig({
             return "calculators";
           }
 
+          // 20. Duty stations equal-area world map — d3-geo/topojson-client
+          // + the vendored boundary data, only ever reached via
+          // DutyStationMap.jsx's lazy import().
+          if (
+            id.includes("node_modules/d3-geo") ||
+            id.includes("node_modules/d3-array") ||
+            id.includes("node_modules/topojson-client") ||
+            id.includes("src/data/geo")
+          ) {
+            return "geo";
+          }
+
           // Default: let Vite decide (remaining app code goes in index chunk)
         },
       },
