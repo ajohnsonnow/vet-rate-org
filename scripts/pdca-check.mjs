@@ -365,7 +365,7 @@ ${knownOpenItems.map((i) => `- ${i}`).join("\n")}
   Test manually: open app in Chrome, load auditor model, run C-File Analyzer with redacted fixture.
 - **Wllama (browser WASM)**: requires model download on first use. Test manually in Chrome/Firefox.
 - **Real C-File processing**: PII constraint — only the redacted synthetic fixture may be used in CI.
-  Manual path: use \`E:\\Johnson_C-FIle\` docs with DevTools open, confirm no PII in network requests.
+  Manual path: use \`E:\\Williams_C-FIle\` docs with DevTools open, confirm no PII in network requests.
 - **Gemini API round-trip**: FAKE_GEMINI_KEY used in tests rejects at the API level.
   Manual path: set real key, run C-File Analyzer, verify cited output with no hallucinated DOIs.
 

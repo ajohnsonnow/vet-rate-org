@@ -23,7 +23,7 @@ describe("findDuplicatePacketDocument", () => {
     const existing = [
       seedDoc({
         id: "pkt_1",
-        fileName: "johnson_dd214.pdf",
+        fileName: "williams_dd214.pdf",
         fileSize: 240_000,
       }),
       seedDoc({ id: "pkt_2", fileName: "smith_dd214.pdf", fileSize: 180_000 }),
@@ -31,7 +31,7 @@ describe("findDuplicatePacketDocument", () => {
 
     const match = findDuplicatePacketDocument(
       existing,
-      "johnson_dd214.pdf",
+      "williams_dd214.pdf",
       240_000,
     );
 
@@ -42,14 +42,14 @@ describe("findDuplicatePacketDocument", () => {
     const existing = [
       seedDoc({
         id: "pkt_1",
-        fileName: "johnson_dd214.pdf",
+        fileName: "williams_dd214.pdf",
         fileSize: 240_000,
       }),
     ];
 
     const match = findDuplicatePacketDocument(
       existing,
-      "johnson_dd214.pdf",
+      "williams_dd214.pdf",
       241_500,
     );
 
@@ -60,7 +60,7 @@ describe("findDuplicatePacketDocument", () => {
     const existing = [
       seedDoc({
         id: "pkt_1",
-        fileName: "johnson_dd214.pdf",
+        fileName: "williams_dd214.pdf",
         fileSize: 240_000,
       }),
     ];

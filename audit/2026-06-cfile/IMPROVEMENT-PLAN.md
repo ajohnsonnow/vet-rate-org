@@ -12,7 +12,7 @@
 ### IP-1.1 — TDIU ("Individual Unemployability") is uncalculated
 
 **Severity:** HIGH  
-**Veteran impact:** Johnson at 80% combined with PTSD is a textbook TDIU candidate under 38 CFR § 4.16(a) (single disability 60%+ or combined 70%+ with one 40%+). A veteran who qualifies can receive 100% compensation ($3,938/mo) but is currently shown 80% ($2,358/mo) — a $1,580/month gap. The app produces no "you may qualify for TDIU" banner, meaning veterans may not know to file.  
+**Veteran impact:** Williams at 80% combined with PTSD is a textbook TDIU candidate under 38 CFR § 4.16(a) (single disability 60%+ or combined 70%+ with one 40%+). A veteran who qualifies can receive 100% compensation ($3,938/mo) but is currently shown 80% ($2,358/mo) — a $1,580/month gap. The app produces no "you may qualify for TDIU" banner, meaning veterans may not know to file.  
 **Affected files:** `src/utils/ratingCalculator.js`, `src/components/TacticalCalculator.jsx`, `src/components/TDIUBuilder.jsx`  
 **Proposed sprint:** S-IP-1 (Compensation Completeness)  
 **Implementation:** Add a `checkTDIUEligibility(conditions)` function that tests both 38 CFR § 4.16(a) criteria. When eligible, surface a `TDIUEligibilityBanner` inside the Tactical Calculator output. The full TDIU Builder tool already exists — just link to it from the banner.
@@ -191,7 +191,7 @@
 **Severity:** LOW  
 **Affected files:** `audit/decisions/` (to be created)  
 **Proposed sprint:** S-IP-7  
-**Implementation:** Write ADR-001 documenting the `ratingCalculator.js` vs `vaCalculator.js` reconciliation decision (both kept, bilateral fix applied to `ratingCalculator`, ground-truth test pinned). This satisfies Commandment 8 ("Document decisions — not code; the *why*").
+**Implementation:** Write ADR-001 documenting the `ratingCalculator.js` vs `vaCalculator.js` reconciliation decision (both kept, bilateral fix applied to `ratingCalculator`, ground-truth test pinned). This satisfies Commandment 8 ("Document decisions — not code; the _why_").
 
 ---
 
@@ -233,30 +233,30 @@
 
 ## Best Practices to Incorporate
 
-| Practice | Commandment | Status | Action |
-|---|---|---|---|
-| ADRs for architecture decisions | #8 | Not started | Write ADR-001 (calc reconciliation) as a template; establish `docs/decisions/` |
-| Test-first for new compensation logic | #4 | Partial | Ground-truth tests added (S2); extend to TDIU, SMC, CRSC before implementation |
-| Renovate for weekly dep updates | #7 | Not configured | Add `.renovaterc.json` targeting `patch` auto-merge, `minor` PR-only |
-| WCAG 2.2 AA on all new surfaces | #9 | Partial | Axe spec covers 20/48; expand per IP-5.1 |
-| Structured logging | — | Not started | Per IP-6.2 |
-| Quarterly eCFR sync | — | Not automated | Per IP-2.1 |
+| Practice                              | Commandment | Status         | Action                                                                         |
+| ------------------------------------- | ----------- | -------------- | ------------------------------------------------------------------------------ |
+| ADRs for architecture decisions       | #8          | Not started    | Write ADR-001 (calc reconciliation) as a template; establish `docs/decisions/` |
+| Test-first for new compensation logic | #4          | Partial        | Ground-truth tests added (S2); extend to TDIU, SMC, CRSC before implementation |
+| Renovate for weekly dep updates       | #7          | Not configured | Add `.renovaterc.json` targeting `patch` auto-merge, `minor` PR-only           |
+| WCAG 2.2 AA on all new surfaces       | #9          | Partial        | Axe spec covers 20/48; expand per IP-5.1                                       |
+| Structured logging                    | —           | Not started    | Per IP-6.2                                                                     |
+| Quarterly eCFR sync                   | —           | Not automated  | Per IP-2.1                                                                     |
 
 ---
 
 ## Proposed Sprint Sequence
 
-| Sprint | Theme | Key deliverables |
-|---|---|---|
-| S-IP-1 | Compensation Completeness | TDIU banner, SMC "not supported" banner, CRSC/CRDP card |
-| S-IP-2 | Data Refresh | DC 8620 data fill, 5276/5252 eCFR verify, secondary citations, automated refresh job |
-| S-IP-3 | Data Management | Import merge/delta preview, restore point, quota guard |
-| S-IP-4 | Security Hardening | Console-log PII scrub at capture, semgrep triage, Gemini key disclosure |
-| S-IP-5 | Accessibility | Focus trap for ClaimNavigator + DenialDecoder, axe spec expansion, Firefox fix |
-| S-IP-6 | Legal & Domain | RAG corpus expansion (Parts 3/19/20 + M21-1), AI explainability |
-| S-IP-7 | Architecture | App.jsx cluster completion, structured logger, ADR-001, Renovate |
-| S-IP-8 | Offline / Resilience | AI offline fallback, packet version migration |
+| Sprint | Theme                     | Key deliverables                                                                     |
+| ------ | ------------------------- | ------------------------------------------------------------------------------------ |
+| S-IP-1 | Compensation Completeness | TDIU banner, SMC "not supported" banner, CRSC/CRDP card                              |
+| S-IP-2 | Data Refresh              | DC 8620 data fill, 5276/5252 eCFR verify, secondary citations, automated refresh job |
+| S-IP-3 | Data Management           | Import merge/delta preview, restore point, quota guard                               |
+| S-IP-4 | Security Hardening        | Console-log PII scrub at capture, semgrep triage, Gemini key disclosure              |
+| S-IP-5 | Accessibility             | Focus trap for ClaimNavigator + DenialDecoder, axe spec expansion, Firefox fix       |
+| S-IP-6 | Legal & Domain            | RAG corpus expansion (Parts 3/19/20 + M21-1), AI explainability                      |
+| S-IP-7 | Architecture              | App.jsx cluster completion, structured logger, ADR-001, Renovate                     |
+| S-IP-8 | Offline / Resilience      | AI offline fallback, packet version migration                                        |
 
 ---
 
-*Generated 2026-06-08 from C-File audit session. All items are non-PII.*
+_Generated 2026-06-08 from C-File audit session. All items are non-PII._

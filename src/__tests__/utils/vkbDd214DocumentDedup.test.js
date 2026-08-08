@@ -36,7 +36,7 @@ const seedDocEntry = (vkb, { id, fileName }) => {
 describe("FIX-6: mergeDD214IntoVKB does not double-write document records", () => {
   it("does not push a second dd214-... record when a doc_ entry for the same fileName already exists", () => {
     const vkb = initializeVKB();
-    seedDocEntry(vkb, { id: "doc_123_abc", fileName: "johnson_dd214.pdf" });
+    seedDocEntry(vkb, { id: "doc_123_abc", fileName: "williams_dd214.pdf" });
 
     mergeDD214IntoVKB(
       vkb,
@@ -46,7 +46,7 @@ describe("FIX-6: mergeDD214IntoVKB does not double-write document records", () =
         entryDate: "06/01/2010",
         separationDate: "05/30/2015",
       },
-      { fileName: "johnson_dd214.pdf" },
+      { fileName: "williams_dd214.pdf" },
     );
 
     expect(vkb.documentation.dd214s).toHaveLength(1);

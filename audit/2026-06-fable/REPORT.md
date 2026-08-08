@@ -4,28 +4,28 @@
 > **Session dates:** 2026-06-09 → 2026-06-10
 > **Executor:** Claude Fable 5 + Anthony Johnson
 > **Plan:** approved master plan (WS-0…WS-9), builds on `audit/2026-06-cfile/` (2026-06-08)
-> **PII constraint:** real veteran data stayed at `E:\Johnson_C-FIle`; only the redacted
+> **PII constraint:** real veteran data stayed at `E:\Williams_C-FIle`; only the redacted
 > fixture pattern (`JOHN Q. VETERAN`) appears in the repo. Stress results are gitignored.
 
 ---
 
 ## Commits (in order)
 
-| Commit | Workstream | Summary |
-|---|---|---|
-| `a1dc40c` | WS-0 | Pay-rate single source of truth — three rate vintages (2024/2025/2026) were live at once; all consumers now derive from `vaPayRatesHistorical.js`; drift-guard test scans for re-hardcoded tables; retro-pay date validation + day-31 month-skip fix |
-| `782938a` | WS-2/3 | Ingestion resilience: chunk retry + failedChunks manifest, AI circuit breaker, Florence-2 worker watchdog, merged-result DC validation, date-normalized dedup, quota pre-flight, OCR confidence persisted |
-| `9eb02dd` | WS-4 | TDIU (38 CFR § 4.16(a)) + SMC-S (38 U.S.C. § 1114(s)) detection banners; DC 8620 criteria filled from § 4.124a |
-| `fbd4b2a` | WS-5 | Simulator WCAG 2.2 AA: Tribunal live captions + always-usable text input + Firefox no-SpeechRecognition fix; What-If Sandbox keyboard drag-drop alternative; Body Map keyboard zones + non-color state |
-| `64c14eb` | WS-6 | ClaimNavigator/DenialDecoder focus traps + aria-modal; ResponsiveModal overflow-aware scroll tabIndex (fixes documented Firefox F6-2) |
-| `bf05720` | WS-8 | Storage quota guards, packet version unification (1.0→2.0.0 migration seeded), import restore point + confirm, profile save failures surfaced |
-| `89f1bf9` | WS-9 | DKB freshness pipeline: validate-dkb CI gate, eCFR inverse index, weekly dkb-freshness workflow, eval:rag baseline gate, Legislative Watchdog static-first (+ fixed its since-inception HTTP 400), Florence-2 model pinned |
-| `876ea98` | WS-5 fix | Axe-clean simulator dialogs (amber badges, dark-mode yellow-button contrast, focusable scroll regions) |
-| perf commit | perf | C-File analysis hours→realistic: engine-aware chunk budgets (8K swarm context honored, ~11x fewer generations), boilerplate page screen, ETA double-count fix (~100x inflation), OCR worker pool + confidence-gated ensemble |
-| `80dda1d` | UX | Elapsed-time heartbeat during C-File processing (silent phases looked like crashes) |
-| `5b973e4` | test | Atomic Wipe e2e follows the real trigger location (failed on main too) |
-| `0d5330a` | WS-7 | VKB→calculator wiring: "Load into calculator" banner, Evidence Timeline import, sourceDocumentId linkage, normalized dedup; fixed dead Consistency-Engine/WhatIfSandbox store keys; strict packet acceptance e2e (old one passed vacuously); QuickExit/close-button mobile target collision |
-| _(this)_ | WS-1 | 313MB stress harness (env-gated, dev-machine only) |
+| Commit      | Workstream | Summary                                                                                                                                                                                                                                                                                     |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `a1dc40c`   | WS-0       | Pay-rate single source of truth — three rate vintages (2024/2025/2026) were live at once; all consumers now derive from `vaPayRatesHistorical.js`; drift-guard test scans for re-hardcoded tables; retro-pay date validation + day-31 month-skip fix                                        |
+| `782938a`   | WS-2/3     | Ingestion resilience: chunk retry + failedChunks manifest, AI circuit breaker, Florence-2 worker watchdog, merged-result DC validation, date-normalized dedup, quota pre-flight, OCR confidence persisted                                                                                   |
+| `9eb02dd`   | WS-4       | TDIU (38 CFR § 4.16(a)) + SMC-S (38 U.S.C. § 1114(s)) detection banners; DC 8620 criteria filled from § 4.124a                                                                                                                                                                              |
+| `fbd4b2a`   | WS-5       | Simulator WCAG 2.2 AA: Tribunal live captions + always-usable text input + Firefox no-SpeechRecognition fix; What-If Sandbox keyboard drag-drop alternative; Body Map keyboard zones + non-color state                                                                                      |
+| `64c14eb`   | WS-6       | ClaimNavigator/DenialDecoder focus traps + aria-modal; ResponsiveModal overflow-aware scroll tabIndex (fixes documented Firefox F6-2)                                                                                                                                                       |
+| `bf05720`   | WS-8       | Storage quota guards, packet version unification (1.0→2.0.0 migration seeded), import restore point + confirm, profile save failures surfaced                                                                                                                                               |
+| `89f1bf9`   | WS-9       | DKB freshness pipeline: validate-dkb CI gate, eCFR inverse index, weekly dkb-freshness workflow, eval:rag baseline gate, Legislative Watchdog static-first (+ fixed its since-inception HTTP 400), Florence-2 model pinned                                                                  |
+| `876ea98`   | WS-5 fix   | Axe-clean simulator dialogs (amber badges, dark-mode yellow-button contrast, focusable scroll regions)                                                                                                                                                                                      |
+| perf commit | perf       | C-File analysis hours→realistic: engine-aware chunk budgets (8K swarm context honored, ~11x fewer generations), boilerplate page screen, ETA double-count fix (~100x inflation), OCR worker pool + confidence-gated ensemble                                                                |
+| `80dda1d`   | UX         | Elapsed-time heartbeat during C-File processing (silent phases looked like crashes)                                                                                                                                                                                                         |
+| `5b973e4`   | test       | Atomic Wipe e2e follows the real trigger location (failed on main too)                                                                                                                                                                                                                      |
+| `0d5330a`   | WS-7       | VKB→calculator wiring: "Load into calculator" banner, Evidence Timeline import, sourceDocumentId linkage, normalized dedup; fixed dead Consistency-Engine/WhatIfSandbox store keys; strict packet acceptance e2e (old one passed vacuously); QuickExit/close-button mobile target collision |
+| _(this)_    | WS-1       | 313MB stress harness (env-gated, dev-machine only)                                                                                                                                                                                                                                          |
 
 ## Performance investigation (user-reported "712-minute ETA")
 
@@ -70,16 +70,16 @@ exceeds 30 minutes; exact number recorded from the 3h-budget run below.
 
 ## Gate status
 
-| Gate | Status |
-|---|---|
-| Unit (vitest) | 1010/1010 PASS (was 849 pre-session) |
-| ESLint | 0 errors (2 pre-existing warnings) |
-| tsc --noEmit | PASS |
-| e2e chromium (full) | _pending final run_ |
-| e2e firefox + mobile-chrome | 569 passed; all 4 failures triaged → fixed (2 were pre-existing on main, verified) |
-| axe WCAG 2.2 AA | 24 surfaces (was 21) incl. Tribunal, What-If Sandbox, Body Map — PASS |
-| Stress harness (313MB real C-File) | _pending_ |
-| preflight:full | _pending_ |
+| Gate                               | Status                                                                             |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| Unit (vitest)                      | 1010/1010 PASS (was 849 pre-session)                                               |
+| ESLint                             | 0 errors (2 pre-existing warnings)                                                 |
+| tsc --noEmit                       | PASS                                                                               |
+| e2e chromium (full)                | _pending final run_                                                                |
+| e2e firefox + mobile-chrome        | 569 passed; all 4 failures triaged → fixed (2 were pre-existing on main, verified) |
+| axe WCAG 2.2 AA                    | 24 surfaces (was 21) incl. Tribunal, What-If Sandbox, Body Map — PASS              |
+| Stress harness (313MB real C-File) | _pending_                                                                          |
+| preflight:full                     | _pending_                                                                          |
 
 ## Open items / follow-ups
 
