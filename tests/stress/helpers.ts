@@ -10,8 +10,8 @@ import { basename, extname, join } from "node:path";
 import { test, expect, Page, BrowserContext, TestInfo } from "@playwright/test";
 import { dismissDisclaimer } from "../e2e/helpers";
 
-export const CORPUS_DIR = "E:/Johnson_C-FIle";
-export const CFILE_PDF = join(CORPUS_DIR, "JOHNSON 5706 .pdf");
+export const CORPUS_DIR = "E:/Williams_C-FIle";
+export const CFILE_PDF = join(CORPUS_DIR, "WILLIAMS 6789 .pdf");
 
 export type StressMode = "webgpu" | "wasm" | "extract";
 
