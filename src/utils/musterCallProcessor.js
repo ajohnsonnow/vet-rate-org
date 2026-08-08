@@ -1541,7 +1541,7 @@ const extractQuickName = (text) => {
     .replace(/\s+/g, " ");
 
   const namePatterns = [
-    // "1. NAME" followed by name: JOHNSON, ANTHONY
+    // "1. NAME" followed by name: WILLIAMS, ROBERT
     /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s*/i,
     // Name pattern: LASTNAME, FIRSTNAME
     /\b([A-Z]{3,})\s*[,;]\s*[A-Z]{2,}/,
@@ -1596,7 +1596,7 @@ const selectBestDD214Segment = (segments, filename) => {
   );
 
   // Extract potential names from filename
-  // "Johnson Service Records DD214 ALL.pdf" -> "JOHNSON"
+  // "Williams Service Records DD214 ALL.pdf" -> "WILLIAMS"
   // "Smith_John_DD214.pdf" -> "SMITH"
   const filenameUpper = filename.toUpperCase();
   const filenameWords = filenameUpper.replace(/[_\-.]/g, " ").split(/\s+/);
@@ -1797,7 +1797,7 @@ const parseDD214Document = async (
       `🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`,
     );
 
-    // Select the DD214 that best matches the filename (e.g., "Johnson" in filename)
+    // Select the DD214 that best matches the filename (e.g., "Williams" in filename)
     const bestSegment = selectBestDD214Segment(dd214Segments, filename);
 
     if (bestSegment) {
@@ -2433,7 +2433,7 @@ function _extractNameField(ctx) {
     /1\.\s*NAME.*?(?:Last.*?First.*?Middle.*?)?[:\s]+([A-Z]{3,})[,;]\s*([A-Z]{3,})(?:\s+([A-Z]+))?/i,
     // Name on line after "1. NAME" label
     /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s+([A-Z]{3,})(?:\s+([A-Z]+))?/i,
-    // Look for CAPS name with comma in Box 1 area: "JOHNSON, ANTHONY"
+    // Look for CAPS name with comma in Box 1 area: "WILLIAMS, ROBERT"
     /\b([A-Z]{3,})\s*[,;]\s*([A-Z]{3,})(?:\s+([A-Z]{3,}))?\b/,
   ];
 
