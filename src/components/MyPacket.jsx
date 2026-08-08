@@ -5141,6 +5141,14 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
     const parsed = await parseServiceRecord(dd214Text);
     saveDD214Data({
       fullName: parsed.veteranName,
+      // FIX: this manual paste path used to omit fullNameSourceForm, so the
+      // Name card kept citing whichever document supplied the previous
+      // name instead of this re-process. Matches musterCallProcessor.js's
+      // primary upload path (_buildDD214IdentityFields): only set when a
+      // name was actually found.
+      fullNameSourceForm: parsed.veteranName
+        ? parsed.formType || "DD214"
+        : null,
       lastName: parsed.lastName,
       firstName: parsed.firstName,
       middleName: parsed.middleName,
@@ -5243,6 +5251,11 @@ Return ONLY the JSON object, no explanation.`,
 
       saveDD214Data({
         ...data,
+        // FIX: matches the same fix on the non-AI paste path above and the
+        // primary upload path (musterCallProcessor.js
+        // _buildDD214IdentityFields) -- only set when a name was actually
+        // found, so the Name card's source attribution doesn't go stale.
+        fullNameSourceForm: data.fullName ? "DD214" : null,
         extractedText: dd214Text.substring(0, 5000), // Store first 5000 chars
       });
       loadServiceHistory();
