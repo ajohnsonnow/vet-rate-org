@@ -735,31 +735,6 @@ export const hasMyRatings = () => {
   return ratings.length > 0;
 };
 
-/**
- * Get the user's current combined VA rating (requires vaCalculator)
- * @returns {number} Combined rating percentage
- */
-export const getMyTotalRating = () => {
-  const ratings = getMyRatings();
-  if (ratings.length === 0) return 0;
-
-  // VA math: combine ratings using efficiency formula
-  // Formula: A + B(1-A) = combined, then round to nearest 10%
-  const sortedRatings = ratings.map((r) => r.rating).sort((a, b) => b - a);
-
-  let combined = 0;
-  for (const rating of sortedRatings) {
-    const ratingDecimal = rating / 100;
-    const combinedDecimal = combined / 100;
-    combined = Math.round(
-      (combinedDecimal + ratingDecimal * (1 - combinedDecimal)) * 100,
-    );
-  }
-
-  // Round to nearest 10%
-  return Math.round(combined / 10) * 10;
-};
-
 // ============================================================================
 // SERVICE HISTORY STORAGE - Deployments, Awards, DD214 data
 // ============================================================================
@@ -1967,7 +1942,6 @@ export default {
   removeRating,
   clearMyRatings,
   hasMyRatings,
-  getMyTotalRating,
   // Service History functions
   getServiceHistory,
   saveServiceHistory,
