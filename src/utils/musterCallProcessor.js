@@ -2314,7 +2314,7 @@ function _preprocessDD214Text(text) {
   // 2. INSTRUCTIONS = (parenthetic, often lowercase or mixed case)
   //    Example: "(Silver Star, Bronze Star, Air Medal, etc.)"
   // 3. ACTUAL DATA = ALL CAPS, not bold, NOT in parentheses
-  //    Example: "JOHNSON, ANTHONY DANIEL"
+  //    Example: "WILLIAMS, ROBERT LEE"
   //
   // Key insight: Remove EVERYTHING in parentheses - that's instructional!
   // Then look for ALL CAPS text that's NOT a field label.
@@ -2428,7 +2428,7 @@ function _extractNameField(ctx) {
   const box1Text = `1. NAME${box1Body}`.replace(/0/g, "O");
 
   const namePatterns = [
-    // "JOHNSON, ANTHONY DANIEL" or "JOHNSON; ANTHONY DANIEL" - explicitly after "1. NAME"
+    // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
     // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
     /1\.\s*NAME.*?(?:Last.*?First.*?Middle.*?)?[:\s]+([A-Z]{3,})[,;]\s*([A-Z]{3,})(?:\s+([A-Z]+))?/i,
     // Name on line after "1. NAME" label
