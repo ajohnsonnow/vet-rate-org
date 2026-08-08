@@ -66,7 +66,7 @@ test.describe("TacticalCalculator — combined rating math", () => {
     await expect(combinedSpan).toHaveText("60%", { timeout: 4000 });
   });
 
-  test("Johnson PTSD 50% alone shows 50% combined", async ({ page }) => {
+  test("Williams PTSD 50% alone shows 50% combined", async ({ page }) => {
     await bootReturningUser(page);
     const dialog = await openTacticalCalculator(page);
 
