@@ -423,7 +423,11 @@ export default function DutyStationsSection({
             servicePeriods={servicePeriods}
             t={t}
           />
-          <DutyStationFormActions onSave={form.save} onCancel={form.cancel} t={t} />
+          <DutyStationFormActions
+            onSave={form.save}
+            onCancel={form.cancel}
+            t={t}
+          />
         </div>
       )}
 
