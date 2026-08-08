@@ -19,6 +19,7 @@ import ShareButton from "./ShareButton";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import CFileClaimsCards from "./CFileClaimsCards";
 import CFileTimeline from "./CFileTimeline";
+import DutyStationsSection from "./DutyStationsSection";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   getSavedClaims,
@@ -950,7 +951,9 @@ function MyPacketTabNavPrimary({
         🎖️{" "}
         <span className="hidden sm:inline">{t("myPacketSection.service")}</span>
         <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded-full">
-          {serviceHistory.deployments.length + serviceHistory.awards.length}
+          {serviceHistory.deployments.length +
+            serviceHistory.awards.length +
+            serviceHistory.dutyStations.length}
         </span>
       </button>
 
@@ -3340,6 +3343,7 @@ function ServiceTab(props) {
     <div className="space-y-6">
       <DD214Section {...props} />
       <DeploymentsSection {...props} />
+      <DutyStationsSection {...props} />
       <AwardsSection {...props} />
       <RibbonRackSection {...props} />
 
@@ -5845,6 +5849,7 @@ function useMyPacketServiceHistoryState() {
   const [serviceHistory, setServiceHistory] = useState({
     deployments: [],
     awards: [],
+    dutyStations: [],
     dd214Data: null,
   });
   const [showDeploymentForm, setShowDeploymentForm] = useState(false);
