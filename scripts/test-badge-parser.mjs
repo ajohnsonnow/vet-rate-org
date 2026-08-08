@@ -2,7 +2,7 @@
  * Badge Parser Test Script
  * ========================
  * 
- * Tests the badge detection system against Johnson's DD214 data
+ * Tests the badge detection system against a synthetic veteran's DD214 data
  * Validates that Combat Action Badge and other skill badges are detected
  * 
  * Run: node scripts/test-badge-parser.mjs
@@ -150,7 +150,7 @@ function parseDD214Badges(rawText, branch = 'Army') {
 }
 
 // ============================================================================
-// TEST DATA - Johnson's Afghanistan DD214 Awards
+// TEST DATA - Williams's Afghanistan DD214 Awards
 // ============================================================================
 
 const WILLIAMS_TF3_AWARDS = `
@@ -198,12 +198,12 @@ BRONZE STAR MEDAL
 // ============================================================================
 
 console.log('╔══════════════════════════════════════════════════════════════════╗');
-console.log('║       BADGE PARSER TEST - Johnson DD214 Badge Detection          ║');
+console.log('║       BADGE PARSER TEST - Williams DD214 Badge Detection         ║');
 console.log('╚══════════════════════════════════════════════════════════════════╝\n');
 
 // Test 1: TF Phoenix III (Afghanistan)
 console.log('┌──────────────────────────────────────────────────────────────────┐');
-console.log('│ TEST 1: Johnson TF Phoenix III (Afghanistan Combat Deployment)   │');
+console.log('│ TEST 1: Williams TF Phoenix III (Afghanistan Combat Deployment)  │');
 console.log('└──────────────────────────────────────────────────────────────────┘');
 
 const tf3Results = parseDD214Badges(WILLIAMS_TF3_AWARDS, 'Army');
@@ -224,7 +224,7 @@ console.log(`\n✅ Combat Action Badge Detected: ${tf3HasCAB ? 'YES ✓' : 'NO �
 
 // Test 2: TF Phoenix V (Afghanistan)
 console.log('\n┌──────────────────────────────────────────────────────────────────┐');
-console.log('│ TEST 2: Johnson TF Phoenix V (Second Afghanistan Deployment)     │');
+console.log('│ TEST 2: Williams TF Phoenix V (Second Afghanistan Deployment)    │');
 console.log('└──────────────────────────────────────────────────────────────────┘');
 
 const tf5Results = parseDD214Badges(WILLIAMS_TF5_AWARDS, 'Army');
