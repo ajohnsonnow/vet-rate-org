@@ -92,7 +92,7 @@ TOOLS AVAILABLE IN VET-RATE.ORG (${getTotalToolCount()} tools organized by categ
 📋 BUILD YOUR EVIDENCE (Violet Category):
 - C-File AI Analyzer: Parse PDF Claims Files to find evidence
 - Blue Button X-Ray: Parse VA health records (Blue Button)
-- PDF Evidence Finder ("The Needle"): Keyword search in Service Treatment Records
+- Record Search ("The Needle"): Keyword search in Service Treatment Records
 - Nexus Builder: Generate nexus statement templates with medical research
 - Witness Bench: Buddy statement generator with interview flow
 - Forms Helper: All ${getFormsCount()}+ VA forms with Auto-Scribe PDF filling

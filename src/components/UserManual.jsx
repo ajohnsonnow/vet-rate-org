@@ -152,7 +152,7 @@ const navigationStructure = [
   },
   {
     id: "pdf-evidence-finder",
-    title: "PDF Evidence Finder",
+    title: "Record Search",
     icon: "📋",
   },
   {
@@ -546,7 +546,7 @@ This manual covers every feature and function of the Vet-Rate.org platform, desi
 | **Decision Decoder** | AI analysis of VA letters for appeal opportunities |
 | **Denial Decoder** | OCR scan denial letters to find appeal angles |
 | **Blue Button X-Ray** | Extract claim-relevant evidence from medical records |
-| **PDF Evidence Finder** | Keyword search across dropped in documents |
+| **Record Search** | Keyword search across dropped in documents |
 | **Red Team Simulator** | Simulate VA examiner review to find weaknesses |
 
 ### Battle Labs
