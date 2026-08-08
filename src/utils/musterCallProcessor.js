@@ -813,6 +813,7 @@ function _buildDD214IdentityFields(d) {
     entryDate: d.serviceStartDate || null,
     separationDate: d.serviceEndDate || null,
     placeOfEntry: d.placeOfEntry || null,
+    placeOfEntryLowConfidence: !!d.placeOfEntryLowConfidence,
   };
 }
 
@@ -949,6 +950,7 @@ function _savePrimaryServicePeriod(file, result, candidate) {
         foreignService: !!candidate.foreignService,
         militaryEducation: candidate.militaryEducation?.[0] || "",
         placeOfEntry: candidate.placeOfEntry || "",
+        placeOfEntryLowConfidence: !!candidate.placeOfEntryLowConfidence,
       },
       { sourceDocument: file.name, confidence: candidate.confidence },
     );
@@ -2867,6 +2869,155 @@ function _normalizeOcrLetterDigits(str) {
 // halves of a candidate, including the state abbreviation itself, e.g.
 // "0REG0N") — _normalizeOcrLetterDigits repairs a candidate before it's
 // checked against the boilerplate word list or accepted.
+// Real US state capitals + the largest-population US metros — used only to
+// flag a place-of-entry city as low-confidence, never to reject/replace it.
+// A single OCR letter misread can turn a real city into a different-looking
+// but still plausible one ("SORTLAND, OREGON" for "PORTLAND, OREGON"); there
+// is no way to validate an arbitrary small town against a short list like
+// this, so this deliberately only flags the narrow case of a city that is
+// exactly one edit away from a well-known city without matching one
+// outright — everything else (including real, uncommon small towns) passes
+// through unflagged rather than risk false positives.
+const PLACE_OF_ENTRY_KNOWN_CITIES = new Set([
+  "MONTGOMERY",
+  "JUNEAU",
+  "PHOENIX",
+  "LITTLE ROCK",
+  "SACRAMENTO",
+  "DENVER",
+  "HARTFORD",
+  "DOVER",
+  "TALLAHASSEE",
+  "ATLANTA",
+  "HONOLULU",
+  "BOISE",
+  "SPRINGFIELD",
+  "INDIANAPOLIS",
+  "DES MOINES",
+  "TOPEKA",
+  "FRANKFORT",
+  "BATON ROUGE",
+  "AUGUSTA",
+  "ANNAPOLIS",
+  "BOSTON",
+  "LANSING",
+  "SAINT PAUL",
+  "JACKSON",
+  "JEFFERSON CITY",
+  "HELENA",
+  "LINCOLN",
+  "CARSON CITY",
+  "CONCORD",
+  "TRENTON",
+  "SANTA FE",
+  "ALBANY",
+  "RALEIGH",
+  "BISMARCK",
+  "COLUMBUS",
+  "OKLAHOMA CITY",
+  "SALEM",
+  "HARRISBURG",
+  "PROVIDENCE",
+  "COLUMBIA",
+  "PIERRE",
+  "NASHVILLE",
+  "AUSTIN",
+  "SALT LAKE CITY",
+  "MONTPELIER",
+  "RICHMOND",
+  "OLYMPIA",
+  "CHARLESTON",
+  "MADISON",
+  "CHEYENNE",
+  "WASHINGTON",
+  "NEW YORK",
+  "LOS ANGELES",
+  "CHICAGO",
+  "HOUSTON",
+  "PHILADELPHIA",
+  "SAN ANTONIO",
+  "SAN DIEGO",
+  "DALLAS",
+  "SAN JOSE",
+  "FORT WORTH",
+  "JACKSONVILLE",
+  "CHARLOTTE",
+  "SAN FRANCISCO",
+  "SEATTLE",
+  "PORTLAND",
+  "LAS VEGAS",
+  "LOUISVILLE",
+  "BALTIMORE",
+  "MILWAUKEE",
+  "ALBUQUERQUE",
+  "TUCSON",
+  "FRESNO",
+  "MESA",
+  "KANSAS CITY",
+  "OMAHA",
+  "COLORADO SPRINGS",
+  "LONG BEACH",
+  "VIRGINIA BEACH",
+  "OAKLAND",
+  "MINNEAPOLIS",
+  "TULSA",
+  "TAMPA",
+  "ARLINGTON",
+  "NEW ORLEANS",
+  "WICHITA",
+  "CLEVELAND",
+  "ST LOUIS",
+  "PITTSBURGH",
+  "ANCHORAGE",
+  "NEWARK",
+  "ORLANDO",
+  "NORFOLK",
+  "SPOKANE",
+  "EL PASO",
+  "MEMPHIS",
+  "DETROIT",
+]);
+
+// True only when `a`/`b` differ by exactly one single-character
+// insertion/deletion/substitution (a bounded, early-exit edit-distance-1
+// check — not a full Levenshtein DP, since every candidate here is already
+// a short city name).
+function _editDistanceIsOne(a, b) {
+  if (a === b) return false;
+  const lenDiff = a.length - b.length;
+  if (lenDiff < -1 || lenDiff > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+      continue;
+    }
+    edits++;
+    if (edits > 1) return false;
+    if (lenDiff === 0) {
+      i++;
+      j++;
+    } else if (lenDiff > 0) {
+      i++;
+    } else {
+      j++;
+    }
+  }
+  edits += a.length - i + (b.length - j);
+  return edits === 1;
+}
+
+function _isPlaceOfEntryLowConfidence(city) {
+  if (PLACE_OF_ENTRY_KNOWN_CITIES.has(city)) return false;
+  for (const known of PLACE_OF_ENTRY_KNOWN_CITIES) {
+    if (_editDistanceIsOne(city, known)) return true;
+  }
+  return false;
+}
+
 function _extractPlaceOfEntry(ctx) {
   const { data, ocrCorrectedUpperText } = ctx;
   const anchorMatch = ocrCorrectedUpperText.match(/PLACE\s+OF\s+ENTRY/);
@@ -2895,6 +3046,7 @@ function _extractPlaceOfEntry(ctx) {
     );
     if (!isBoilerplate) {
       data.placeOfEntry = `${city}, ${state}`;
+      data.placeOfEntryLowConfidence = _isPlaceOfEntryLowConfidence(city);
       break;
     }
   }
@@ -3491,6 +3643,10 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     serviceStartDate: null,
     // Box 7a: Place of Entry
     placeOfEntry: null,
+    // True when placeOfEntry's city is a single-edit-distance OCR-plausible
+    // misread of a well-known city (see _isPlaceOfEntryLowConfidence) —
+    // hedges the field in the UI without blocking extraction.
+    placeOfEntryLowConfidence: false,
     // Box 11: Primary MOS/Specialty (matches collectionRules: mos)
     mos: null,
     mosTitle: null,

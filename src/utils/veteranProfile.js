@@ -1005,6 +1005,12 @@ const SERVICE_PERIOD_MERGE_FIELDS = [
   // duty/home location data, period-scoped (not identity-scoped) since it
   // isn't part of the (serviceStartDate, serviceEndDate) merge key.
   "placeOfEntry",
+  // Low-confidence hedge flag for placeOfEntry (see
+  // _isPlaceOfEntryLowConfidence, musterCallProcessor.js). Same
+  // truthy-only merge caveat as the foreignService boolean above: a later
+  // re-scan that resolves the flag to false can't clear a previously-set
+  // true.
+  "placeOfEntryLowConfidence",
 ];
 
 function _sanitizeServicePeriodIdentity(p) {
@@ -1022,6 +1028,7 @@ function _sanitizeServicePeriodIdentity(p) {
     mosTitle: sanitizeString(p.mosTitle || "", 200),
     unit: sanitizeString(p.unit || "", 300),
     placeOfEntry: sanitizeString(p.placeOfEntry || "", 300),
+    placeOfEntryLowConfidence: !!p.placeOfEntryLowConfidence,
   };
 }
 

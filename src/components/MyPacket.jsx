@@ -2490,6 +2490,14 @@ function DD214PeriodDetailCard({ period, t }) {
             Place of entry:{" "}
           </span>
           {period.placeOfEntry || "Not listed on this document"}
+          {period.placeOfEntry && period.placeOfEntryLowConfidence && (
+            <span
+              className="ml-2 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full"
+              title="This looks close to a well-known city name — double-check it against your original document in case of an OCR misread."
+            >
+              Low confidence
+            </span>
+          )}
         </p>
         <p>
           <span className="text-gray-500 dark:text-gray-400">Source: </span>

@@ -355,6 +355,39 @@ UNREADABLE GARBLED TEXT WITH NO COMMA ANYWHERE NEARBY
     expect(result.error).toBeUndefined();
     expect(result.placeOfEntry).toBeNull();
   });
+
+  it("flags a single-letter OCR misread of a well-known city as low-confidence without blocking extraction (real example: SORTLAND for PORTLAND)", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+SORTLAND, OR
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("SORTLAND, OR");
+    expect(result.placeOfEntryLowConfidence).toBe(true);
+  });
+
+  it("does not flag an exact match against a well-known city", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+PORTLAND, OR
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("PORTLAND, OR");
+    expect(result.placeOfEntryLowConfidence).toBe(false);
+  });
+
+  it("does not flag a real, uncommon small town that isn't near any well-known city", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+OSHKOSH, WI
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("OSHKOSH, WI");
+    expect(result.placeOfEntryLowConfidence).toBe(false);
+  });
 });
 
 describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () => {
