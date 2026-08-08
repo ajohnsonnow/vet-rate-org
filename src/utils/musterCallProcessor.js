@@ -3062,10 +3062,12 @@ function _extractAwardsFromBlock13(ctx) {
     let block13Text = block13Match[1];
 
     // FIX-3c: Block 13 sometimes terminates with a continuation marker
-    // ("...//CONT IN BLOCK 18") when the award list overflows into
-    // Remarks. Append the isolated Box 18 text so the continued awards
-    // still get parsed.
-    if (/\/\/\s*CONT(?:INUED)?\s+IN\s+BLOCK\s+18/i.test(block13Text)) {
+    // ("...CONT IN BLOCK 18", with or without a leading "//" delimiter --
+    // real scans vary) when the award list overflows into Remarks. Append
+    // the isolated Box 18 text so the continued awards still get parsed.
+    // Previously required a literal leading "//", which silently dropped
+    // the continuation on forms where OCR/the source form omits it.
+    if (/(?:\/\/\s*)?CONT(?:INUED)?\s+IN\s+BLOCK\s+18/i.test(block13Text)) {
       const box18Continuation = _extractBox18RemarksText(ocrCorrectedUpperText);
       if (box18Continuation) {
         block13Text = `${block13Text} ${box18Continuation}`;
