@@ -22,12 +22,14 @@
  * spec's default ±5% tolerance is not "too tight" here, so it's kept
  * as-specified rather than loosened.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { geoArea, geoPath, geoMercator } from "d3-geo";
 import {
   loadWorldFeatures,
   createWorldProjection,
 } from "../../data/geo/worldFeatures";
+
+const TOPO_JSON_PATH = "../../data/geo/world-countries-110m.topo.json";
 
 const GEO_AREA_THRESHOLD = 0.001; // steradians, per spec
 const TOLERANCE = 0.05; // ±5%, measured max deviation is ~0.48%
@@ -52,17 +54,22 @@ function medianOf(values) {
 }
 
 describe("DutyStationMap projection — equal-area verification", () => {
-  it("throws a clear error when objects.countries is missing", async () => {
-    // Guards the fail-loudly requirement without corrupting the real
-    // vendored file: re-derive the check in isolation.
-    const brokenTopo = { type: "Topology", objects: {} };
-    expect(() => {
-      if (!brokenTopo?.objects?.countries) {
-        throw new Error(
-          "World boundary data is missing objects.countries — src/data/geo/world-countries-110m.topo.json may be corrupt or out of date.",
-        );
-      }
-    }).toThrow(/objects\.countries/);
+  it("throws a clear error when objects.countries is missing from the topology", async () => {
+    // Exercises the REAL loadWorldFeatures() code path (not a re-derived
+    // copy of the check) by mocking the JSON import out from under it —
+    // both worldFeatures.js and this test resolve the same relative path
+    // to the same absolute module, so the mock applies to both.
+    vi.resetModules();
+    vi.doMock(TOPO_JSON_PATH, () => ({
+      default: { type: "Topology", objects: {} },
+    }));
+
+    const { loadWorldFeatures: brokenLoadWorldFeatures } =
+      await import("../../data/geo/worldFeatures");
+    expect(() => brokenLoadWorldFeatures()).toThrow(/objects\.countries/);
+
+    vi.doUnmock(TOPO_JSON_PATH);
+    vi.resetModules();
   });
 
   it("loads 177 bundled country features, each with a unique name", () => {
