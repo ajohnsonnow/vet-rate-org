@@ -13,8 +13,7 @@ expect.extend({ toHaveNoViolations });
 
 afterEach(cleanup);
 
-const t = (key, params) =>
-  params ? `${key} ${JSON.stringify(params)}` : key;
+const t = (key, params) => (params ? `${key} ${JSON.stringify(params)}` : key);
 
 const SERVICE_HISTORY = {
   dutyStations: [

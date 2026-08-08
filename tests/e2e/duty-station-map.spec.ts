@@ -86,8 +86,7 @@ test.describe("Duty station world map — aspect ratio + no horizontal scroll", 
         },
       );
 
-      const deviation =
-        Math.abs(renderedRatio - viewBoxRatio) / viewBoxRatio;
+      const deviation = Math.abs(renderedRatio - viewBoxRatio) / viewBoxRatio;
       expect(deviation).toBeLessThanOrEqual(0.01);
       expect(overflow).toBeLessThanOrEqual(0);
     });

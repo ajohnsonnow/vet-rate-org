@@ -21,7 +21,10 @@
  */
 import { useEffect, useMemo, useRef } from "react";
 import { geoPath, geoGraticule10, geoContains, geoCentroid } from "d3-geo";
-import { loadWorldFeatures, createWorldProjection } from "../data/geo/worldFeatures";
+import {
+  loadWorldFeatures,
+  createWorldProjection,
+} from "../data/geo/worldFeatures";
 
 function isValidCoordinate(lat, lon) {
   return (
@@ -205,7 +208,12 @@ function MapCaption({
   );
 }
 
-function useMapHandlers({ svgRef, projection, countryOptions, onPositionChange }) {
+function useMapHandlers({
+  svgRef,
+  projection,
+  countryOptions,
+  onPositionChange,
+}) {
   const handleMapClick = (e) => {
     if (!onPositionChange) return;
     const svgEl = svgRef.current;

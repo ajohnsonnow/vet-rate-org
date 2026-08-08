@@ -12,8 +12,7 @@ import DutyStationMap from "../../components/DutyStationMap.jsx";
 // enough to assert DutyStationMap actually passes the plotted count through,
 // without needing a full LanguageProvider (this component takes t as a
 // plain prop, like its DeploymentsSection/AwardsSection siblings).
-const t = (key, params) =>
-  params ? `${key} ${JSON.stringify(params)}` : key;
+const t = (key, params) => (params ? `${key} ${JSON.stringify(params)}` : key);
 
 const FIXTURE_STATIONS = [
   { id: "a", name: "Fort Bragg", latitude: 35.139, longitude: -79.006 },
