@@ -1,9 +1,9 @@
 /**
- * Johnson 80% ground-truth test — Sprint S10 C-File Audit
+ * Williams 80% ground-truth test — Sprint S10 C-File Audit
  *
  * Condition names, diagnostic codes, and ratings are NOT PII and are safe
  * to commit. All personal identifiers (name, SSN, file#, DOB) remain in
- * E:\Johnson_C-FIle, which is never committed.
+ * E:\Williams_C-FIle, which is never committed.
  *
  * Combined rating derivation (38 CFR § 4.25, whole-person efficiency):
  *   50→60→68→71→74→77→79→81→83 (each step: Math.round(prev + rating × remaining / 100))
@@ -22,9 +22,9 @@ import {
 } from "../../utils/vaCalculator";
 
 // 9-condition set; sorted descending as VA requires
-const JOHNSON_RATINGS = [50, 20, 20, 10, 10, 10, 10, 10, 10];
+const WILLIAMS_RATINGS = [50, 20, 20, 10, 10, 10, 10, 10, 10];
 
-const JOHNSON_CONDITIONS = [
+const WILLIAMS_CONDITIONS = [
   { name: "Post-Traumatic Stress Disorder (PTSD)", rating: 50 },
   { name: "Lumbosacral Strain", rating: 20 },
   { name: "Radiculopathy, Lower Extremity, Left", rating: 20 },
@@ -36,26 +36,26 @@ const JOHNSON_CONDITIONS = [
   { name: "Tinnitus", rating: 10 },
 ];
 
-describe("Johnson 80% — ratingCalculator.js (38 CFR § 4.25)", () => {
+describe("Williams 80% — ratingCalculator.js (38 CFR § 4.25)", () => {
   it("calculateCombinedRating → 80%", () => {
-    expect(calculateCombinedRating(JOHNSON_RATINGS)).toBe(80);
+    expect(calculateCombinedRating(WILLIAMS_RATINGS)).toBe(80);
   });
 
   it("calculateExactCombinedRating → ~82.99 (no final rounding)", () => {
-    const exact = calculateExactCombinedRating(JOHNSON_RATINGS);
+    const exact = calculateExactCombinedRating(WILLIAMS_RATINGS);
     expect(exact).toBeGreaterThanOrEqual(82);
     expect(exact).toBeLessThan(84);
   });
 
   it("nearest-10 rounding of exact result → 80%", () => {
-    const exact = calculateExactCombinedRating(JOHNSON_RATINGS);
+    const exact = calculateExactCombinedRating(WILLIAMS_RATINGS);
     expect(Math.round(exact / 10) * 10).toBe(80);
   });
 });
 
-describe("Johnson 80% — vaCalculator.js (38 CFR § 4.25)", () => {
+describe("Williams 80% — vaCalculator.js (38 CFR § 4.25)", () => {
   it("combineMultipleRatings → 83 (intermediate-rounded integer)", () => {
-    expect(combineMultipleRatings(JOHNSON_RATINGS)).toBe(83);
+    expect(combineMultipleRatings(WILLIAMS_RATINGS)).toBe(83);
   });
 
   it("nearest-10 rounding of 83 → 80%", () => {
@@ -63,17 +63,17 @@ describe("Johnson 80% — vaCalculator.js (38 CFR § 4.25)", () => {
   });
 
   it("both calculators agree — combined rating = 80%", () => {
-    const fromRatingCalc = calculateCombinedRating(JOHNSON_RATINGS);
+    const fromRatingCalc = calculateCombinedRating(WILLIAMS_RATINGS);
     const fromVaCalc =
-      Math.round(combineMultipleRatings(JOHNSON_RATINGS) / 10) * 10;
+      Math.round(combineMultipleRatings(WILLIAMS_RATINGS) / 10) * 10;
     expect(fromRatingCalc).toBe(80);
     expect(fromVaCalc).toBe(80);
   });
 });
 
-describe("Johnson bilateral detection — checkBilateralFactor (38 CFR § 4.26)", () => {
-  it("detects bilateral hip pair in full Johnson condition set", () => {
-    expect(checkBilateralFactor(JOHNSON_CONDITIONS)).toBe(true);
+describe("Williams bilateral detection — checkBilateralFactor (38 CFR § 4.26)", () => {
+  it("detects bilateral hip pair in full Williams condition set", () => {
+    expect(checkBilateralFactor(WILLIAMS_CONDITIONS)).toBe(true);
   });
 
   it("detects L/R radiculopathy pair ('radiculopathy' in bilateral list)", () => {
