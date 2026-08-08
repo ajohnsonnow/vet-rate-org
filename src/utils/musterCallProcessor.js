@@ -1596,7 +1596,7 @@ const selectBestDD214Segment = (segments, filename) => {
   );
 
   // Extract potential names from filename
-  // "Johnson Service Records DD214 ALL.pdf" -> "JOHNSON"
+  // "Williams Service Records DD214 ALL.pdf" -> "WILLIAMS"
   // "Smith_John_DD214.pdf" -> "SMITH"
   const filenameUpper = filename.toUpperCase();
   const filenameWords = filenameUpper.replace(/[_\-.]/g, " ").split(/\s+/);
@@ -1797,7 +1797,7 @@ const parseDD214Document = async (
       `🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`,
     );
 
-    // Select the DD214 that best matches the filename (e.g., "Johnson" in filename)
+    // Select the DD214 that best matches the filename (e.g., "Williams" in filename)
     const bestSegment = selectBestDD214Segment(dd214Segments, filename);
 
     if (bestSegment) {
