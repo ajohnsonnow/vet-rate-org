@@ -4356,6 +4356,20 @@ export const autoPopulateProfile = async (processedResults) => {
 
   updates.profileFieldSources = fieldSources;
 
+  // Persist newly-found conflicts onto the profile itself (append to
+  // whatever's already pending, capped so a veteran who never visits the
+  // Profile tab to dismiss them can't grow this unboundedly) so MyPacket's
+  // Profile tab can surface them -- this array previously had zero
+  // consumers anywhere, so a real conflict (manual edit vs. re-imported
+  // document) was silently invisible even though the underlying
+  // never-overwrite protection above was already working correctly.
+  if (conflicts.length > 0) {
+    updates.pendingProfileConflicts = [
+      ...(currentProfile.pendingProfileConflicts || []),
+      ...conflicts,
+    ].slice(-50);
+  }
+
   // eslint-disable-next-line no-console
   console.log(`📊 Auto-populate complete: ${updateCount} documents processed`);
   // eslint-disable-next-line no-console

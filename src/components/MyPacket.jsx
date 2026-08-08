@@ -2030,10 +2030,76 @@ function ServicePeriodsSection({ veteranProfile, setVeteranProfile, t }) {
   );
 }
 
+function _humanizeFieldName(field) {
+  return field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+// autoPopulateProfile (musterCallProcessor.js) never overwrites a
+// manually-edited field when a re-imported document disagrees with it --
+// that protection already works. It appends the disagreement to
+// veteranProfile.pendingProfileConflicts instead of silently dropping it,
+// but until now nothing displayed that array. This is deliberately a
+// visibility-only banner (list + dismiss-all), not a resolution workflow --
+// the veteran decides which value is right and edits the field below if
+// needed.
+function ProfileConflictsBanner({ veteranProfile, setVeteranProfile }) {
+  const conflicts = veteranProfile.pendingProfileConflicts || [];
+  if (conflicts.length === 0) return null;
+
+  const handleDismiss = () => {
+    const success = saveVeteranProfile({
+      ...veteranProfile,
+      pendingProfileConflicts: [],
+    });
+    if (success) {
+      setVeteranProfile(getVeteranProfile());
+    }
+  };
+
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/30 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-4 mb-6">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">
+            ⚠️ A re-imported document disagrees with your profile
+          </h4>
+          <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+            Your manually-entered values were kept — nothing was overwritten.
+            Double-check which one is correct:
+          </p>
+          <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200 list-disc list-inside">
+            {conflicts.map((c, i) => (
+              <li key={`${c.field}-${i}`}>
+                <span className="font-medium">
+                  {_humanizeFieldName(c.field)}:
+                </span>{" "}
+                {c.source || "your document"} says "{String(c.documentValue)}
+                ", your profile has "{String(c.profileValue)}"
+              </li>
+            ))}
+          </ul>
+        </div>
+        <button
+          onClick={handleDismiss}
+          className="shrink-0 text-sm font-medium text-amber-700 dark:text-amber-300 hover:underline"
+        >
+          Dismiss
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
   return (
     <>
       <ProfileIntroAndPrivacy t={t} />
+      <ProfileConflictsBanner
+        veteranProfile={veteranProfile}
+        setVeteranProfile={setVeteranProfile}
+      />
 
       <div className="space-y-6">
         <PersonalInfoSection

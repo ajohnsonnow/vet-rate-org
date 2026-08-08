@@ -159,3 +159,43 @@ describe("FIX-9: overwrite semantics — never clobber a user-edited field", () 
     });
   });
 });
+
+describe("a conflict is persisted onto the profile so the UI can surface it (previously had zero consumers)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("appends the conflict to profile.pendingProfileConflicts", async () => {
+    saveVeteranProfile({
+      branch: "Marine Corps",
+      profileFieldSources: { branch: "user" },
+    });
+
+    await autoPopulateProfile([serviceRecordResult({ branch: "Army" })]);
+
+    const profile = getVeteranProfile();
+    expect(profile.pendingProfileConflicts).toHaveLength(1);
+    expect(profile.pendingProfileConflicts[0]).toMatchObject({
+      field: "branch",
+      profileValue: "Marine Corps",
+      documentValue: "Army",
+      source: "dd214.pdf",
+    });
+  });
+
+  it("accumulates conflicts across separate imports rather than overwriting the pending list", async () => {
+    saveVeteranProfile({
+      branch: "Marine Corps",
+      mos: "0311",
+      profileFieldSources: { branch: "user", mos: "user" },
+    });
+
+    await autoPopulateProfile([serviceRecordResult({ branch: "Army" })]);
+    await autoPopulateProfile([serviceRecordResult({ mos: "11B" })]);
+
+    const profile = getVeteranProfile();
+    expect(profile.pendingProfileConflicts.map((c) => c.field)).toEqual(
+      expect.arrayContaining(["branch", "mos"]),
+    );
+  });
+});

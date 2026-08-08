@@ -116,6 +116,12 @@ const VALID_PROFILE_FIELDS = [
   // corrected field apart from one it filled in itself, and never
   // silently overwrite the former.
   "profileFieldSources",
+  // Array of { field, profileValue, documentValue, source } -- a
+  // re-imported document disagreed with a manually-edited field.
+  // autoPopulateProfile (musterCallProcessor.js) never overwrites the
+  // manual edit, but appends here so the Profile tab can show the veteran
+  // what disagreed instead of leaving the conflict invisible.
+  "pendingProfileConflicts",
 
   // === Display Preferences ===
   "showStateAwards",
