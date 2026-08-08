@@ -192,7 +192,7 @@ function MapCaption({
             value=""
             className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs"
           >
-            <option value=""></option>
+            <option value="">{t("myPacketSection.selectEllipsis")}</option>
             {countryOptions.map((o) => (
               <option key={o.name} value={o.name}>
                 {o.name}
