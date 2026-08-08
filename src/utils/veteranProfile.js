@@ -778,14 +778,18 @@ export const getServiceHistory = () => {
         dd214Data: null,
         serviceInfo: null,
         servicePeriods: [],
+        dutyStations: [],
         dateUpdated: null,
       };
     }
     const parsed = JSON.parse(saved);
-    // Data saved before servicePeriods[] existed won't have the key —
-    // normalize so every caller can rely on it being an array.
+    // Data saved before servicePeriods[]/dutyStations[] existed won't have
+    // the key — normalize so every caller can rely on it being an array.
     parsed.servicePeriods = Array.isArray(parsed.servicePeriods)
       ? parsed.servicePeriods
+      : [];
+    parsed.dutyStations = Array.isArray(parsed.dutyStations)
+      ? parsed.dutyStations
       : [];
     return parsed;
   } catch (error) {
@@ -796,6 +800,7 @@ export const getServiceHistory = () => {
       dd214Data: null,
       serviceInfo: null,
       servicePeriods: [],
+      dutyStations: [],
       dateUpdated: null,
     };
   }
@@ -823,6 +828,40 @@ function _sanitizeDeployments(deployments) {
     // career-level/unassigned. Hook for a future locations-timeline
     // feature; no such feature is built this pass.
     periodId: d.periodId || null,
+  }));
+}
+
+/**
+ * Sanitize a single lat/lon coordinate: must be finite and within
+ * [-limit, limit], else null (out-of-range/NaN/Infinity all collapse to
+ * "unknown", not a clamped or silently-wrong value).
+ */
+function sanitizeCoordinate(value, limit) {
+  const num = typeof value === "number" ? value : parseFloat(value);
+  if (!Number.isFinite(num) || Math.abs(num) > limit) return null;
+  return num;
+}
+
+/**
+ * Duty stations — user-entered, one-to-many by reference into
+ * servicePeriods[] via periodId (same reference pattern as deployments
+ * above, not nesting). No cascade-delete: a station whose period is later
+ * removed just becomes unassigned (periodId still points at a now-missing
+ * id, which every reader treats the same as null).
+ */
+function _sanitizeDutyStations(dutyStations) {
+  if (!Array.isArray(dutyStations)) return [];
+  return dutyStations.slice(0, 100).map((s) => ({
+    id: s.id || `duty_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    periodId: s.periodId || null,
+    name: sanitizeString(s.name || "", 200),
+    country: sanitizeString(s.country || "", 100),
+    latitude: sanitizeCoordinate(s.latitude, 90),
+    longitude: sanitizeCoordinate(s.longitude, 180),
+    startDate: s.startDate || null,
+    endDate: s.endDate || null,
+    notes: sanitizeString(s.notes || "", 1000),
+    dateAdded: s.dateAdded || new Date().toISOString(),
   }));
 }
 
@@ -1334,6 +1373,7 @@ export const saveServiceHistory = (history) => {
       dd214Data: _sanitizeDd214Data(history.dd214Data),
       serviceInfo: _sanitizeServiceInfo(history.serviceInfo),
       servicePeriods: _sanitizeServicePeriods(history.servicePeriods),
+      dutyStations: _sanitizeDutyStations(history.dutyStations),
       dateUpdated: new Date().toISOString(),
     };
 
@@ -1417,6 +1457,63 @@ export const removeDeployment = (deploymentId) => {
     return saveServiceHistory(history);
   } catch (error) {
     console.error("Error removing deployment:", error);
+    return false;
+  }
+};
+
+// ============================================================================
+// DUTY STATIONS — user-entered locations, one-to-many by reference into
+// servicePeriods[] (periodId, null = unassigned). Mirrors the servicePeriods
+// CRUD contract: fields aren't sanitized inline here, saveServiceHistory's
+// _sanitizeDutyStations does that centrally on every write. No upsert — no
+// document-ingest path writes duty stations, only the veteran does.
+// ============================================================================
+
+export const getDutyStations = () => getServiceHistory().dutyStations;
+
+export const addDutyStation = (station) => {
+  try {
+    const history = getServiceHistory();
+    const newStation = {
+      id: `duty_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      dateAdded: new Date().toISOString(),
+      ...station,
+    };
+    history.dutyStations.push(newStation);
+    saveServiceHistory(history);
+    return newStation.id;
+  } catch (error) {
+    console.error("Error adding duty station:", error);
+    return null;
+  }
+};
+
+export const updateDutyStation = (stationId, updates) => {
+  try {
+    const history = getServiceHistory();
+    const index = history.dutyStations.findIndex((s) => s.id === stationId);
+    if (index === -1) return false;
+
+    history.dutyStations[index] = {
+      ...history.dutyStations[index],
+      ...updates,
+    };
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error("Error updating duty station:", error);
+    return false;
+  }
+};
+
+export const removeDutyStation = (stationId) => {
+  try {
+    const history = getServiceHistory();
+    history.dutyStations = history.dutyStations.filter(
+      (s) => s.id !== stationId,
+    );
+    return saveServiceHistory(history);
+  } catch (error) {
+    console.error("Error removing duty station:", error);
     return false;
   }
 };
@@ -1948,6 +2045,10 @@ export default {
   addDeployment,
   updateDeployment,
   removeDeployment,
+  getDutyStations,
+  addDutyStation,
+  updateDutyStation,
+  removeDutyStation,
   addAward,
   removeAward,
   saveDD214Data,
