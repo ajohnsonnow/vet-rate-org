@@ -44,7 +44,7 @@ const APP_VERSION: string = JSON.parse(
 ).version;
 
 // Overridable so the same spec can be pointed at a real, entirely-outside-
-// the-repo veteran document corpus (e.g. CORPUS_DIR=E:\Johnson_C-FIle) while
+// the-repo veteran document corpus (e.g. CORPUS_DIR=E:\Williams_C-FIle) while
 // still defaulting to the committed docs/test-data fixture for anyone else
 // who runs this test.
 const CORPUS_DIR =
@@ -427,7 +427,9 @@ async function screenshotMyPacketTabs(page: Page): Promise<string[]> {
       const ribbonRackToggle = dialog.getByRole("button", {
         name: /view ribbon rack/i,
       });
-      if (await ribbonRackToggle.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      if (
+        await ribbonRackToggle.isVisible({ timeout: 3_000 }).catch(() => false)
+      ) {
         await ribbonRackToggle.click().catch(() => {});
         await page.waitForTimeout(700);
       }
