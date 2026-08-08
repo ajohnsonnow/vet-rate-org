@@ -1,6 +1,6 @@
 /**
  * TDIU (38 CFR § 4.16(a)) and SMC-S (38 U.S.C. § 1114(s)) detection tests.
- * Johnson ground-truth set: 9 conditions, combined 80%, highest single 50%
+ * Williams ground-truth set: 9 conditions, combined 80%, highest single 50%
  * — schedular TDIU eligible via the 70/40 prong.
  */
 
@@ -10,7 +10,7 @@ import {
   checkSMCSHousebound,
 } from "../../utils/smcDetector";
 
-const JOHNSON_CONDITIONS = [
+const WILLIAMS_CONDITIONS = [
   { name: "Post-Traumatic Stress Disorder (PTSD)", rating: 50 },
   { name: "Lumbosacral Strain", rating: 20 },
   { name: "Radiculopathy, Lower Extremity, Left", rating: 20 },
@@ -23,8 +23,8 @@ const JOHNSON_CONDITIONS = [
 ];
 
 describe("checkTDIUEligibility — 38 CFR § 4.16(a)", () => {
-  it("Johnson 9-condition set → eligible via 70/40 prong (combined 80, highest 50)", () => {
-    const result = checkTDIUEligibility(JOHNSON_CONDITIONS);
+  it("Williams 9-condition set → eligible via 70/40 prong (combined 80, highest 50)", () => {
+    const result = checkTDIUEligibility(WILLIAMS_CONDITIONS);
     expect(result.eligible).toBe(true);
     expect(result.basis).toBe("combined70");
     expect(result.combined).toBe(80);
