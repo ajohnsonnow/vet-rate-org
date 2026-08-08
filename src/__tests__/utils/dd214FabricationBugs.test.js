@@ -156,32 +156,35 @@ describe("FIX-14: Box 1 name extraction no longer breaks on a stray '2' before B
     // code, a unit number, a date — made the whole box1Match fail and no
     // name was ever extracted, even on a well-formed real document.
     const text = `
-1. NAME (Last, First, Middle): JOHNSON, ANTHONY DANIEL
-7B. HOME OF RECORD (Street, City, County, State, ZIP): PORTLAND OR 97214
+1. NAME (Last, First, Middle): WILLIAMS, ROBERT LEE
+7B. HOME OF RECORD (Street, City, County, State, ZIP): AUSTIN TX 78701
 2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.lastName).toBe("JOHNSON");
-    expect(result.firstName).toBe("ANTHONY");
-    expect(result.middleName).toBe("DANIEL");
+    expect(result.lastName).toBe("WILLIAMS");
+    expect(result.firstName).toBe("ROBERT");
+    expect(result.middleName).toBe("LEE");
   });
 
-  it("corrects 0-for-O OCR corruption in the name itself, including words with two corrupted letters", async () => {
-    // "J0HNS0N" has two embedded zeros — the document-wide OCR-fix pass's
-    // \b([A-Z]+)0([A-Z]+)\b rule only ever replaces one 0 per word (it needs
-    // a real \b word boundary on both sides of the run it corrects, and
-    // there's no such boundary between the letters after the first zero and
-    // the second zero — both are \w characters), so a double-corrupted name
-    // was silently skipped by that general pass.
+  it("corrects 0-for-O OCR corruption in the name itself", async () => {
+    // A real scan can have digit-for-letter OCR corruption ("0" for "O") in
+    // the name — the document-wide OCR-fix pass's \b([A-Z]+)0([A-Z]+)\b rule
+    // only ever replaces one 0 per word (it needs a real \b word boundary on
+    // both sides of the run it corrects, and a word with two embedded zeros
+    // has no such boundary between the letters after the first zero and the
+    // second zero — both are \w characters), so a double-corrupted word was
+    // silently skipped by that general pass. FIX-14's narrow, name-only Box 1
+    // substring instead blindly replaces every "0" with "O", with no such
+    // ambiguity.
     const text = `
-1. NAME (Last, First, Middle): J0HNS0N; ANTH0NY DANIEL
+1. NAME (Last, First, Middle): WILLIAMS; R0BERT LEE
 2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.lastName).toBe("JOHNSON");
-    expect(result.firstName).toBe("ANTHONY");
+    expect(result.lastName).toBe("WILLIAMS");
+    expect(result.firstName).toBe("ROBERT");
   });
 
   it("still does not fabricate a name from NGB22 'FOR USE OF THIS FORM' boilerplate after the bridge fix (no regression)", async () => {
