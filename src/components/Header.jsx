@@ -168,13 +168,16 @@ const CrisisLineBanner = () => (
 const HeaderBrand = ({ t }) => (
   <div className="flex items-center gap-3 md:gap-4">
     <div className="rounded-full h-14 w-14 md:h-16 md:w-16 lg:h-20 lg:w-20 flex-shrink-0 overflow-hidden shadow-md">
+      {/* Lowercase "fetchpriority" is intentional -- see the same note on
+          the logo <img> in DisclaimerSplash.jsx: react-dom 18.3.1 doesn't
+          recognize the camelCase "fetchPriority" DOM prop. */}
       <img
         src="/images/Vet-Rate-org-logo-official.png"
         alt="Vet-Rate.org Logo"
         className="h-full w-full object-cover"
         width={80}
         height={80}
-        fetchPriority="high"
+        fetchpriority="high"
         decoding="async"
       />
     </div>

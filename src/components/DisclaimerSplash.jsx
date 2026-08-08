@@ -9,13 +9,20 @@ import ResponsiveModal from "./common/ResponsiveModal";
 const SplashHeader = ({ t }) => (
   <div className="bg-gradient-to-r from-va-blue to-green-800 dark:from-gray-700 dark:to-gray-800 p-6 text-center">
     <div className="inline-flex items-center justify-center bg-white rounded-full p-1 mb-4 overflow-hidden w-24 h-24">
+      {/* Lowercase "fetchpriority" is intentional: react-dom 18.3.1 (pinned
+          in package.json) doesn't recognize the camelCase "fetchPriority"
+          DOM prop and logs a console warning for it. Only React 19 added
+          that prop to its known-attributes list; on this React version the
+          lowercase HTML attribute name is the only way to set it without
+          warning. Don't "fix" this back to camelCase without also bumping
+          react-dom. */}
       <img
         src={BRAND.logo}
         alt={`${BRAND.appName} Logo`}
         className="h-full w-full object-cover rounded-full"
         width={96}
         height={96}
-        fetchPriority="high"
+        fetchpriority="high"
         decoding="async"
       />
     </div>
