@@ -89,6 +89,7 @@
     "@huggingface/transformers": "^3.8.1",
     "@mlc-ai/web-llm": "^0.2.80",
     "@wllama/wllama": "^3.4.1",
+    "d3-geo": "^3.1.1",
     "docx": "^9.5.1",
     "dompurify": "file:packages/dompurify-noop",
     "driver.js": "^1.4.0",
@@ -104,7 +105,8 @@
     "react-dropzone": "^14.3.8",
     "react-markdown": "^10.1.0",
     "sharp": "file:packages/sharp-noop",
-    "tesseract.js": "^7.0.0"
+    "tesseract.js": "^7.0.0",
+    "topojson-client": "^3.1.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
