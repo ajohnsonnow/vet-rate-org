@@ -390,6 +390,30 @@ OSHKOSH, WI
   });
 });
 
+describe("FIX-20 regression: punctuation excluded from the city-matching character class", () => {
+  it("keeps the period-abbreviated 'ST.' prefix instead of truncating to the next word (regression: city-matching class excluded '.')", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+ST. LOUIS, MO
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("ST LOUIS, MO");
+    expect(result.placeOfEntryLowConfidence).toBe(false);
+  });
+
+  it("keeps a hyphenated city whole instead of truncating to the segment after the hyphen (regression: 'WINSTON-SALEM' extracting as just 'SALEM', which is itself a real gazetteer entry so the old bug silently reported it as high-confidence)", async () => {
+    const text = `
+7.a PLACE OF ENTRY INTO ACTIVE DUTY
+WINSTON-SALEM, NC
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.placeOfEntry).toBe("WINSTON-SALEM, NC");
+    expect(result.placeOfEntryLowConfidence).toBe(false);
+  });
+});
+
 describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () => {
   it("does not hang on a long run of letters with no field markers (regression: ReDoS)", async () => {
     const pathological = "A".repeat(100000);

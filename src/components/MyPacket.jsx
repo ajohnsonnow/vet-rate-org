@@ -5288,6 +5288,7 @@ async function _processDD214Text(dd214Text, aiStatus, ctx) {
     const response = await generateAI(
       `Extract key information from this DD214 text. Return ONLY a valid JSON object with these fields:
 {
+  "fullName": "Veteran's full name as printed on the form, or null",
   "branch": "Army/Navy/Air Force/Marines/Coast Guard/Space Force",
   "mos": "Primary MOS code",
   "mosTitle": "MOS job title",

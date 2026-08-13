@@ -3082,10 +3082,17 @@ function _extractPlaceOfEntry(ctx) {
   // bogus multi-word "city".
   // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test (100k-char no-comma input resolves in <5ms): bounded {1,30} lazy quantifier prevents backtracking blowup
   const cityStatePattern =
-    /\b([A-Z][A-Z0-9 ]{1,30}?),[ \t]*([A-Z0-9]{2,12})\b/g;
+    /\b([A-Z][A-Z0-9 .-]{1,30}?),[ \t]*([A-Z0-9]{2,12})\b/g;
   let match;
   while ((match = cityStatePattern.exec(windowText)) !== null) {
-    const city = _normalizeOcrLetterDigits(match[1].trim());
+    // Periods are stripped (not just excluded from the match) so "ST.
+    // LOUIS" normalizes to the same "ST LOUIS" form the known-cities
+    // gazetteer and low-confidence check both use; hyphens are kept
+    // since they're load-bearing in real city names ("WINSTON-SALEM").
+    const city = _normalizeOcrLetterDigits(match[1].trim())
+      .replace(/\.+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
     const state = _normalizeOcrLetterDigits(match[2].trim());
     const cityWords = city.split(/\s+/);
     const isBoilerplate = cityWords.every((word) =>
