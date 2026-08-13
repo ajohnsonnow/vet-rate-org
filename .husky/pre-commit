@@ -1,10 +1,27 @@
 #!/usr/bin/env sh
 # Universal pre-commit hook — copy to .husky/pre-commit in target project
 # Works for any project type: skips npm/node steps if no package.json present
+#
+# Each step is an explicit if/else rather than `test && tool || fallback`.
+# In that shorter form the fallback also catches the *tool's* failure, not just
+# the absence of its prerequisite — so a lint error, or a secret gitleaks
+# actually found, exits 0 and the commit sails through. Worse, the gitleaks
+# branch then prints "not installed" when it was installed and did find
+# something. Absent tooling is skipped; tooling that runs and fails stops the
+# commit.
 set -e
-# Skip lint-staged during merge commits — stash/pop is unreliable mid-merge
-[ -f ".git/MERGE_HEAD" ] && exit 0
-[ -f "package.json" ] && npx lint-staged --concurrent false || true
-command -v gitleaks >/dev/null 2>&1 && gitleaks protect --staged --no-banner --redact || \
-  echo "⚠ gitleaks not installed — secret scanning skipped. Run: brew install gitleaks"
-[ -f "scripts/precommit-fast.mjs" ] && node scripts/precommit-fast.mjs || true
+
+if [ -f "package.json" ]; then
+  npx lint-staged --concurrent false
+fi
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --no-banner --redact
+else
+  echo "⚠ gitleaks not installed — secret scanning skipped."
+  echo "  Install: https://github.com/gitleaks/gitleaks#installing"
+fi
+
+if [ -f "scripts/precommit-fast.mjs" ]; then
+  node scripts/precommit-fast.mjs
+fi

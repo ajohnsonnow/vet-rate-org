@@ -1,6 +1,17 @@
 #!/usr/bin/env sh
 # Universal commit-msg hook — validates commit message format
-[ -f "package.json" ] && [ -f "commitlint.config.mjs" ] && \
-  npx --no -- commitlint --edit "$1" || \
-  grep -qE "^(feat|fix|docs|style|refactor|test|chore|ci|perf|revert|build)(\(.+\))?!?: .{1,100}$" "$1" || \
-  (echo "❌ Commit message must follow: type(scope): description" && exit 1)
+#
+# Written as explicit if/else rather than `test && tool || fallback`: in that
+# form the fallback also catches the *tool's* failure, so a commitlint run that
+# genuinely rejected a message fell through to the subject-only grep below and
+# the commit was allowed. Every rule beyond the subject line was unenforceable.
+set -e
+
+if [ -f "package.json" ] && [ -f "commitlint.config.mjs" ]; then
+  npx --no -- commitlint --edit "$1"
+elif grep -qE "^(feat|fix|docs|style|refactor|test|chore|ci|perf|revert|build)(\(.+\))?!?: .{1,100}$" "$1"; then
+  :
+else
+  echo "❌ Commit message must follow: type(scope): description"
+  exit 1
+fi
