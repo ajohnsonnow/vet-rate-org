@@ -1533,7 +1533,6 @@ Be helpful but BLUNT. This veteran needs to hear the truth before the VA denies 
  * banned/weak phrases instead of showing a self-contradictory rewrite.
  */
 const REDTEAM_BANNED_SUGGESTION_PHRASES = [
-  "manage",
   "handle it fine",
   "effectively cope",
   "cope effectively",
@@ -1544,19 +1543,49 @@ const REDTEAM_BANNED_SUGGESTION_PHRASES = [
   "others have it worse",
 ];
 
+// Bare "manage" isn't in the flat banned-phrase list above because it's
+// ambiguous: "I manage my pain" is exactly the minimizing self-report this
+// exists to catch, but "tasks I can no longer manage" is the strong,
+// specific, functional-impact language this same prompt recommends
+// elsewhere -- a plain substring match can't tell them apart and was
+// discarding legitimate suggestions. Only flag it when nothing in the
+// preceding few words signals the negated/inability sense.
+const MANAGE_NEGATION_CUES = [
+  "no longer",
+  "cannot",
+  "can't",
+  "unable to",
+  "not able to",
+  "won't be able to",
+  "will not be able to",
+];
+
+function _usesMinimizingManage(suggestionLower) {
+  const match = suggestionLower.match(/\bmanage\w*\b/);
+  if (!match) return false;
+  // A 25-char lookback window (not just the immediately-adjacent word)
+  // catches "no longer able to manage" as well as "can no longer manage".
+  const before = suggestionLower.slice(
+    Math.max(0, match.index - 25),
+    match.index,
+  );
+  return !MANAGE_NEGATION_CUES.some((cue) => before.includes(cue));
+}
+
 const REDTEAM_FALLBACK_SUGGESTION =
   'Use specific, clinical language describing severity (e.g. a pain scale), frequency (e.g. "4-5 times weekly"), and the exact functional impact (what you can no longer do).';
 
-function sanitizeWeakSpotSuggestions(weakSpots) {
+export function sanitizeWeakSpotSuggestions(weakSpots) {
   if (!Array.isArray(weakSpots)) return weakSpots;
 
   return weakSpots.map((spot) => {
     if (typeof spot?.suggestion !== "string") return spot;
 
     const suggestionLower = spot.suggestion.toLowerCase();
-    const containsBannedPhrase = REDTEAM_BANNED_SUGGESTION_PHRASES.some(
-      (phrase) => suggestionLower.includes(phrase),
-    );
+    const containsBannedPhrase =
+      REDTEAM_BANNED_SUGGESTION_PHRASES.some((phrase) =>
+        suggestionLower.includes(phrase),
+      ) || _usesMinimizingManage(suggestionLower);
 
     if (!containsBannedPhrase) return spot;
 
