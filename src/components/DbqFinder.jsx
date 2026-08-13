@@ -263,8 +263,8 @@ function DbqInfoBanner({ onDismiss, t }) {
             // accidental translation could inject markup — and the CSP is NOT
             // a backstop here ('unsafe-inline' is set). sanitizeInlineHtml
             // escapes everything, then re-allows only attribute-less inline tags.
-            // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
             dangerouslySetInnerHTML={{
+              // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
               __html: sanitizeInlineHtml(t("dbqFinder", "dbqDescription")),
             }}
           />

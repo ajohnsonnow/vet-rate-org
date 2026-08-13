@@ -252,8 +252,8 @@ const ResultsList = ({ results, totalMatches, searchTerm }) => (
             // first, so the result is a string of escaped
             // entities plus a fixed <mark> tag injected by the
             // highlighter. No raw user/AI input reaches the DOM.
-            // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
             dangerouslySetInnerHTML={{
+              // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
               __html: highlightSearchTerm(
                 escapeHtml(result.context),
                 escapeHtml(result.matchText || searchTerm),
