@@ -204,18 +204,69 @@ const VerifiableField = ({
   );
 };
 
+// Fields that can carry personally-identifying data. The conflict diff UI is
+// local-only, but full name/address/SSN/DOB/claim number should still be
+// masked by default rather than shown in plaintext on first render.
+const SENSITIVE_CONFLICT_FIELDS = new Set([
+  "ssn",
+  "dateOfBirth",
+  "veteranName",
+  "lastName",
+  "firstName",
+  "middleName",
+  "address",
+  "mailingAddress",
+  "homeOfRecord",
+  "placeOfEntry",
+  "phone",
+  "alternatePhone",
+  "intlPhone",
+  "claimNumber",
+]);
+
+function maskSensitiveValue(field, value) {
+  const str = String(value);
+  if (!SENSITIVE_CONFLICT_FIELDS.has(field) || !str) return str;
+
+  if (str.length <= 2) return "••";
+  // Keep the first character and the last 2 (helps distinguish which value
+  // is which without exposing the full name/number/address).
+  return `${str[0]}${"•".repeat(Math.max(2, str.length - 3))}${str.slice(-2)}`;
+}
+
 /**
  * Conflict warning display
  */
 const ConflictWarning = ({ conflict, onResolve }) => {
+  const [revealed, setRevealed] = useState(false);
+  const isSensitive = SENSITIVE_CONFLICT_FIELDS.has(conflict.field);
+  const displayExisting =
+    isSensitive && !revealed
+      ? maskSensitiveValue(conflict.field, conflict.existing)
+      : String(conflict.existing);
+  const displayNewValue =
+    isSensitive && !revealed
+      ? maskSensitiveValue(conflict.field, conflict.newValue)
+      : String(conflict.newValue);
+
   return (
     <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded">
       <div className="flex items-start gap-2">
         <span className="text-xl">⚠️</span>
         <div className="flex-1">
-          <h5 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">
-            Conflict: {conflict.fieldLabel}
-          </h5>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <h5 className="font-semibold text-yellow-800 dark:text-yellow-300">
+              Conflict: {conflict.fieldLabel}
+            </h5>
+            {isSensitive && (
+              <button
+                onClick={() => setRevealed((prev) => !prev)}
+                className="text-xs text-yellow-700 dark:text-yellow-400 hover:underline shrink-0"
+              >
+                {revealed ? "🙈 Hide" : "👁️ Reveal"}
+              </button>
+            )}
+          </div>
           <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-2">
             {conflict.message}
           </p>
@@ -223,13 +274,13 @@ const ConflictWarning = ({ conflict, onResolve }) => {
             <div>
               <strong>Existing:</strong>{" "}
               <code className="bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded">
-                {String(conflict.existing)}
+                {displayExisting}
               </code>
             </div>
             <div>
               <strong>This document:</strong>{" "}
               <code className="bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded">
-                {String(conflict.newValue)}
+                {displayNewValue}
               </code>
             </div>
           </div>
@@ -769,6 +820,21 @@ function filterAndGroupFields(currentData, classification) {
       filtered[field] = value;
     }
   }
+
+  // Extraction can succeed (raw text was read) while the type-specific
+  // structured-field parser recognizes nothing — e.g. a real VA award/
+  // decision letter doesn't match the claim-intake-form regexes, so every
+  // parsed field comes back null/empty. Surface the raw text as a
+  // reviewable field instead of dead-ending into the "couldn't read this
+  // document" failure panel when text was, in fact, read successfully.
+  if (
+    Object.keys(filtered).length === 0 &&
+    typeof currentData.raw === "string" &&
+    currentData.raw.trim().length > 20
+  ) {
+    filtered.extractedText = currentData.raw;
+  }
+
   const grouped = groupFieldsByCategory(filtered, classification.type);
   return { filtered, grouped };
 }
@@ -1255,19 +1321,29 @@ function ConflictsSection({ conflicts, onResolve }) {
   );
 }
 
-function OCRFailedMessage() {
+function OCRFailedMessage({ documentType }) {
+  const isServiceRecord = [
+    "dd214",
+    "dd215",
+    "ngb22",
+    "dd256",
+    "dd257",
+  ].includes(documentType?.toLowerCase());
+
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-6 text-center mb-6">
       <div className="text-4xl mb-3">😔</div>
       <h4 className="text-lg font-bold text-amber-800 dark:text-amber-300 mb-3">
-        We&apos;re Sorry - We Couldn&apos;t Read This DD214
+        {isServiceRecord
+          ? "We're Sorry - We Couldn't Read This DD214"
+          : "We're Sorry - We Couldn't Read This Document"}
       </h4>
 
       <div className="text-sm text-amber-700 dark:text-amber-400 space-y-2 mb-4 max-w-lg mx-auto">
         <p>
-          Many older DD214s (especially those from the typewriter era or
-          documents that have been copied multiple times) are simply too faded
-          or degraded for our OCR technology to read reliably.
+          {isServiceRecord
+            ? "Many older DD214s (especially those from the typewriter era or documents that have been copied multiple times) are simply too faded or degraded for our OCR technology to read reliably."
+            : "This document was too faded, low-resolution, or unusually formatted for our text extraction to read reliably."}
         </p>
         <p className="font-medium">
           This is <strong>not your fault</strong> - it&apos;s a limitation of
@@ -1280,13 +1356,24 @@ function OCRFailedMessage() {
           <span>📝</span> What You Can Do
         </h5>
         <ul className="text-sm text-gray-600 dark:text-gray-400 text-left space-y-2 max-w-md mx-auto">
-          <li className="flex gap-2">
-            <span className="text-green-600 dark:text-green-400">✓</span>
-            <span>
-              <strong>Manual Entry:</strong> Use the &quot;Enter DD214 Fields
-              Manually&quot; panel below to enter your information by hand.
-            </span>
-          </li>
+          {isServiceRecord ? (
+            <li className="flex gap-2">
+              <span className="text-green-600 dark:text-green-400">✓</span>
+              <span>
+                <strong>Manual Entry:</strong> Use the &quot;Enter DD214 Fields
+                Manually&quot; panel below to enter your information by hand.
+              </span>
+            </li>
+          ) : (
+            <li className="flex gap-2">
+              <span className="text-green-600 dark:text-green-400">✓</span>
+              <span>
+                <strong>Skip This Document:</strong> Use the &quot;Skip This
+                Document&quot; button below and add this document&apos;s
+                details manually in My Packet later.
+              </span>
+            </li>
+          )}
           <li className="flex gap-2">
             <span className="text-green-600 dark:text-green-400">✓</span>
             <span>
@@ -1771,7 +1858,7 @@ function ExtractedInformationSection({
       </h3>
 
       {/* Show apologetic message when OCR fails */}
-      {!hasFields && <OCRFailedMessage />}
+      {!hasFields && <OCRFailedMessage documentType={classification?.type} />}
 
       {/* Show extracted fields when OCR succeeded */}
       {hasFields && (

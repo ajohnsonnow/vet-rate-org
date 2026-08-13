@@ -13,9 +13,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
+import { getMyRatings, hasMyRatings, getVeteranProfile } from "../utils/veteranProfile";
 import { calculateVARating } from "../utils/vaCalculator";
 import { checkSMCSHousebound } from "../utils/smcDetector";
+import { stateBenefits } from "../data/stateBenefits.js";
 import {
   getCurrentYearRates,
   getHistoricalRate,
@@ -136,6 +137,20 @@ const calculateMonthlyPay = (rating, hasSpouse, numChildren) => {
 };
 
 /**
+ * Looks up the real minimum combined-rating threshold for a state's property
+ * tax exemption from the shared, verified State Benefit Hunter dataset
+ * (src/data/states/*.json), instead of assuming every state requires 100%
+ * (e.g. Oregon's threshold is 40%, per ORS 307.250).
+ */
+const getPropertyTaxMinRating = (stateName) => {
+  const entries = stateBenefits.filter(
+    (b) => b.state === stateName && b.category === "Property Tax",
+  );
+  if (entries.length === 0) return 100;
+  return Math.min(...entries.map((e) => e.requirements?.minRating ?? 100));
+};
+
+/**
  * Calculate lifetime value with COLA
  */
 const calculateLifetimeValue = (
@@ -163,9 +178,13 @@ const calculateLifetimeValue = (
     currentAnnualPay *= 1 + ESTIMATED_COLA_RATE; // Apply COLA
   }
 
-  // Property Tax Exemption (100% only)
+  // Property Tax Exemption — eligibility varies by state, not universally 100%
   let propertyTaxSavings = 0;
-  if (rating === 100 && state && STATE_PROPERTY_TAX_EXEMPTIONS[state]) {
+  if (
+    state &&
+    STATE_PROPERTY_TAX_EXEMPTIONS[state] &&
+    rating >= getPropertyTaxMinRating(state)
+  ) {
     propertyTaxSavings =
       STATE_PROPERTY_TAX_EXEMPTIONS[state].annualValue * yearsRemaining;
   }
@@ -208,6 +227,34 @@ function loadRatingFromProfile(setRating) {
     return true;
   }
   return false;
+}
+
+// Load state/spouse/dependents defaults from the saved veteran profile
+// instead of always defaulting to Texas/married/2 kids regardless of what
+// the veteran actually saved in My Packet.
+function loadDependentDefaultsFromProfile({ setState, setHasSpouse, setNumChildren }) {
+  const profile = getVeteranProfile();
+
+  if (profile.state) {
+    const stateCode = String(profile.state).toUpperCase();
+    const match = stateBenefits.find((b) => b.stateCode === stateCode);
+    if (match?.state && STATE_PROPERTY_TAX_EXEMPTIONS[match.state]) {
+      setState(match.state);
+    }
+  }
+
+  if (profile.maritalStatus) {
+    setHasSpouse(/married/i.test(String(profile.maritalStatus)));
+  }
+
+  if (profile.numberOfDependents !== undefined) {
+    const count = Number(profile.numberOfDependents);
+    if (!Number.isNaN(count) && count >= 0) {
+      setNumChildren(count);
+    }
+  } else if (Array.isArray(profile.dependentChildren)) {
+    setNumChildren(profile.dependentChildren.length);
+  }
 }
 
 // Animate the big total counter up to its target value; returns the
@@ -416,25 +463,6 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
   </div>
 );
 
-// VA Rating % dropdown select
-const RatingSelectField = ({ rating, setRating }) => (
-  <div>
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm text-gray-400 mb-1">VA Rating %</label>
-    <select
-      value={rating}
-      onChange={(e) => setRating(parseInt(e.target.value))}
-      className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-center text-lg font-bold"
-    >
-      {[100, 90, 80, 70, 60, 50, 40, 30, 20, 10].map((r) => (
-        <option key={r} value={r}>
-          {r}%
-        </option>
-      ))}
-    </select>
-  </div>
-);
-
 // State dropdown select (for property tax exemption lookup)
 const StateSelectField = ({ state, setState }) => (
   <div className="col-span-2">
@@ -544,7 +572,6 @@ const ProfileInputControls = ({
         setRating={setRating}
         handleLoadMyRatings={handleLoadMyRatings}
       />
-      <RatingSelectField rating={rating} setRating={setRating} />
       <StateSelectField state={state} setState={setState} />
     </div>
 
@@ -712,43 +739,50 @@ const VAPayCard = ({ calculation }) => (
 );
 
 // Property Tax Exemption breakdown card
-const PropertyTaxCard = ({ rating, state, calculation }) => (
-  <div
-    className={`rounded-2xl p-6 border ${
-      rating === 100
-        ? "bg-gradient-to-br from-blue-900/50 to-indigo-900/30 border-blue-700/50"
-        : "bg-gray-800/30 border-gray-700/50 opacity-50"
-    }`}
-  >
-    <div className="flex items-center gap-3 mb-4">
-      <div
-        className={`rounded-full p-2 ${rating === 100 ? "bg-blue-600" : "bg-gray-600"}`}
-      >
-        <span className="text-2xl">🏠</span>
-      </div>
-      <div>
-        <h4
-          className={`font-bold ${rating === 100 ? "text-blue-300" : "text-gray-400"}`}
-        >
-          Property Tax Exemption
-        </h4>
-        <p
-          className={`text-xs ${rating === 100 ? "text-blue-400/70" : "text-gray-500"}`}
-        >
-          {state}: {STATE_PROPERTY_TAX_EXEMPTIONS[state]?.exemption || "N/A"}
-        </p>
-      </div>
-    </div>
-    <p
-      className={`text-3xl font-black ${rating === 100 ? "text-blue-400" : "text-gray-500"}`}
+const PropertyTaxCard = ({ rating, state, calculation }) => {
+  const minRating = getPropertyTaxMinRating(state);
+  const isEligible = rating >= minRating && calculation.propertyTaxSavings > 0;
+
+  return (
+    <div
+      className={`rounded-2xl p-6 border ${
+        isEligible
+          ? "bg-gradient-to-br from-blue-900/50 to-indigo-900/30 border-blue-700/50"
+          : "bg-gray-800/30 border-gray-700/50 opacity-50"
+      }`}
     >
-      {formatCurrency(calculation.propertyTaxSavings)}
-    </p>
-    {rating !== 100 && (
-      <p className="text-xs text-gray-500 mt-2">*Requires 100% rating</p>
-    )}
-  </div>
-);
+      <div className="flex items-center gap-3 mb-4">
+        <div
+          className={`rounded-full p-2 ${isEligible ? "bg-blue-600" : "bg-gray-600"}`}
+        >
+          <span className="text-2xl">🏠</span>
+        </div>
+        <div>
+          <h4
+            className={`font-bold ${isEligible ? "text-blue-300" : "text-gray-400"}`}
+          >
+            Property Tax Exemption
+          </h4>
+          <p
+            className={`text-xs ${isEligible ? "text-blue-400/70" : "text-gray-500"}`}
+          >
+            {state}: {STATE_PROPERTY_TAX_EXEMPTIONS[state]?.exemption || "N/A"}
+          </p>
+        </div>
+      </div>
+      <p
+        className={`text-3xl font-black ${isEligible ? "text-blue-400" : "text-gray-500"}`}
+      >
+        {formatCurrency(calculation.propertyTaxSavings)}
+      </p>
+      {!isEligible && (
+        <p className="text-xs text-gray-500 mt-2">
+          *Requires {minRating}%+ rating in {state}
+        </p>
+      )}
+    </div>
+  );
+};
 
 // Chapter 35 DEA Education breakdown card
 const EducationCard = ({
@@ -1012,9 +1046,10 @@ function useMillionDollarDashboardState() {
   // SMC-S statutory housebound check from saved ratings (38 U.S.C. § 1114(s))
   const [smcSCheck] = useState(() => checkSMCSHousebound(getMyRatings()));
 
-  // Auto-load rating from veteranProfile on mount
+  // Auto-load rating and dependent/state defaults from veteranProfile on mount
   useEffect(() => {
     loadRatingFromProfile(setRating);
+    loadDependentDefaultsFromProfile({ setState, setHasSpouse, setNumChildren });
   }, []);
 
   // Manual load handler

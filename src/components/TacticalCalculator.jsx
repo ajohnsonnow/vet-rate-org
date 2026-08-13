@@ -877,14 +877,19 @@ function PayResultsBreakdown({ t, results, compensation }) {
             {t("tacticalCalc", "baseRate")} ({results.combinedRating}%)
           </span>
           <span className="font-medium">
-            ${compensation.breakdown.baseRate.toLocaleString()}
+            ${compensation.breakdown.baseRate.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
           </span>
         </div>
         {compensation.breakdown.spouseAddition > 0 && (
           <div className="flex justify-between text-green-600 dark:text-green-400">
             <span>+ {t("tacticalCalc", "spouse")}</span>
             <span>
-              +${compensation.breakdown.spouseAddition.toLocaleString()}
+              +$
+              {compensation.breakdown.spouseAddition.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
             </span>
           </div>
         )}
@@ -893,7 +898,21 @@ function PayResultsBreakdown({ t, results, compensation }) {
             <span>+ {t("tacticalCalc", "spouseAA")}</span>
             <span>
               +$
-              {compensation.breakdown.spouseAidAttendanceAddition.toLocaleString()}
+              {compensation.breakdown.spouseAidAttendanceAddition.toLocaleString(
+                undefined,
+                { minimumFractionDigits: 2 },
+              )}
+            </span>
+          </div>
+        )}
+        {compensation.breakdown.firstChildAddition > 0 && (
+          <div className="flex justify-between text-green-600 dark:text-green-400">
+            <span>+ {t("tacticalCalc", "firstChild")}</span>
+            <span>
+              +$
+              {compensation.breakdown.firstChildAddition.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
             </span>
           </div>
         )}
@@ -902,7 +921,10 @@ function PayResultsBreakdown({ t, results, compensation }) {
             <span>+ {t("tacticalCalc", "childrenUnder18")}</span>
             <span>
               +$
-              {compensation.breakdown.childrenUnder18Addition.toLocaleString()}
+              {compensation.breakdown.childrenUnder18Addition.toLocaleString(
+                undefined,
+                { minimumFractionDigits: 2 },
+              )}
             </span>
           </div>
         )}
@@ -911,7 +933,10 @@ function PayResultsBreakdown({ t, results, compensation }) {
             <span>+ {t("tacticalCalc", "childrenInSchool")}</span>
             <span>
               +$
-              {compensation.breakdown.childrenSchoolAddition.toLocaleString()}
+              {compensation.breakdown.childrenSchoolAddition.toLocaleString(
+                undefined,
+                { minimumFractionDigits: 2 },
+              )}
             </span>
           </div>
         )}
@@ -919,7 +944,10 @@ function PayResultsBreakdown({ t, results, compensation }) {
           <div className="flex justify-between text-green-600 dark:text-green-400">
             <span>+ {t("tacticalCalc", "dependentParents")}</span>
             <span>
-              +${compensation.breakdown.parentsAddition.toLocaleString()}
+              +$
+              {compensation.breakdown.parentsAddition.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
             </span>
           </div>
         )}
@@ -1156,7 +1184,7 @@ function WhatIfResultsPanel({ t, whatIfRating, whatIfResults }) {
       {/* Change Summary */}
       <div
         className={`p-4 rounded-xl ${
-          whatIfResults.ratingIncrease > 0
+          whatIfResults.increase > 0
             ? "bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700"
             : "bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
         }`}
@@ -1167,13 +1195,13 @@ function WhatIfResultsPanel({ t, whatIfRating, whatIfResults }) {
           </span>
           <span
             className={`font-bold text-xl ${
-              whatIfResults.ratingIncrease > 0
+              whatIfResults.increase > 0
                 ? "text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-400"
             }`}
           >
-            {whatIfResults.ratingIncrease > 0 ? "+" : ""}
-            {whatIfResults.ratingIncrease}%
+            {whatIfResults.increase > 0 ? "+" : ""}
+            {whatIfResults.increase}%
           </span>
         </div>
       </div>
@@ -1667,27 +1695,34 @@ function MainRatingDisplay({ t, results }) {
   );
 }
 
+const PYRAMIDING_SEVERITY_STYLES = {
+  high: {
+    container: "bg-red-50 dark:bg-red-900/30 border-red-500",
+    badge: "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200",
+  },
+  info: {
+    container: "bg-blue-50 dark:bg-blue-900/30 border-blue-500",
+    badge: "bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200",
+  },
+  medium: {
+    container: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500",
+    badge: "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200",
+  },
+};
+
 function PyramidingWarningItem({ t, warning }) {
+  const styles =
+    PYRAMIDING_SEVERITY_STYLES[warning.severity] ||
+    PYRAMIDING_SEVERITY_STYLES.medium;
+
   return (
-    <div
-      className={`p-3 rounded-lg border-l-4 ${
-        warning.severity === "high"
-          ? "bg-red-50 dark:bg-red-900/30 border-red-500"
-          : "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500"
-      }`}
-    >
+    <div className={`p-3 rounded-lg border-l-4 ${styles.container}`}>
       <div className="flex items-start justify-between mb-1">
         <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
           {warning.message}
         </p>
-        <span
-          className={`text-xs px-2 py-1 rounded ${
-            warning.severity === "high"
-              ? "bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200"
-              : "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
-          }`}
-        >
-          {warning.severity.toUpperCase()}
+        <span className={`text-xs px-2 py-1 rounded ${styles.badge}`}>
+          {warning.severity === "info" ? "INFO" : warning.severity.toUpperCase()}
         </span>
       </div>
       <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
@@ -2196,16 +2231,6 @@ function SavedRatingsList({
 
       {/* Action Buttons */}
       <div className="space-y-2">
-        {/* Paste from VA.gov Button - Only show if no ratings exist */}
-        {myRatings.length === 0 && (
-          <button
-            onClick={() => setShowVAGovPaster(true)}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md"
-          >
-            <span>📋</span> {t("tacticalCalc", "pasteFromVAGov")}
-          </button>
-        )}
-
         {/* Save from Calculator Button */}
         {conditions.length > 0 && (
           <button
@@ -2257,7 +2282,7 @@ function MyRatingsGapAnalysis({ t, myRatingsResults }) {
         {t("tacticalCalc", "gapToNext")}
       </h5>
       <p className="text-sm text-purple-700 dark:text-purple-300">
-        <strong>{myRatingsResults.gapToNextTier}%</strong>{" "}
+        <strong>{myRatingsResults.gapToNext10}%</strong>{" "}
         {t("tacticalCalc", "awayFromNextTier")}
         {myRatingsResults.combinedRating < 100 &&
           myRatingsResults.combinedRating >= 90 && (
@@ -2942,13 +2967,15 @@ const ADDED_AMOUNT_ROWS = [
   { labelKey: "twoParents", rateKey: "parentTwo" },
 ];
 
+const ADDED_AMOUNT_TIERS = [30, 40, 50, 60, 70, 80, 90, 100];
+
 function AddedAmountRow({ t, labelKey, rateKey }) {
   return (
     <tr className="border-b dark:border-gray-700">
       <td className="py-2 px-3 text-gray-900 dark:text-white">
         {t("tacticalCalc", labelKey)}
       </td>
-      {[30, 50, 70, 100].map((tier) => (
+      {ADDED_AMOUNT_TIERS.map((tier) => (
         <td
           key={tier}
           className="py-2 px-3 text-right text-green-600 dark:text-green-400"
@@ -2979,18 +3006,14 @@ function AddedAmountsTable({ t }) {
               <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
                 {t("tacticalCalc", "dependentType")}
               </th>
-              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                30%
-              </th>
-              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                50%
-              </th>
-              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                70%
-              </th>
-              <th className="text-right py-2 px-3 text-gray-600 dark:text-gray-400">
-                100%
-              </th>
+              {ADDED_AMOUNT_TIERS.map((tier) => (
+                <th
+                  key={tier}
+                  className="text-right py-2 px-3 text-gray-600 dark:text-gray-400"
+                >
+                  {tier}%
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>

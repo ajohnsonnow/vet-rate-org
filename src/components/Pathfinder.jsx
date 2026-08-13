@@ -229,6 +229,67 @@ const COMMON_CONDITIONS = [
 
 const RATING_OPTIONS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
+// Maps a saved My Ratings entry ({name, bodyPart, side}) onto one of
+// Pathfinder's COMMON_CONDITIONS presets, so "Load My Ratings" doesn't leave
+// every row on "Select condition..." with only the % populated (the saved
+// rating shape uses `name`, not `condition`, and free-text labels rarely
+// match a preset string exactly).
+const CONDITION_NAME_KEYWORD_MAP = [
+  [/ptsd|post.?traumatic/i, "PTSD"],
+  [/depress/i, "Depression"],
+  [/anxiety/i, "Anxiety"],
+  [/tbi|traumatic brain/i, "TBI (Traumatic Brain Injury)"],
+  [/tinnitus/i, "Tinnitus"],
+  [/hearing loss/i, "Hearing Loss"],
+  [/migraine/i, "Migraines"],
+  [/sciatica/i, "Sciatica"],
+  [/radiculopathy/i, "Radiculopathy"],
+  [/degenerative disc/i, "Degenerative Disc Disease"],
+  [/cervical|neck/i, "Cervical Strain (Neck Pain)"],
+  [/lumbar|thoracolumbar|\bback\b/i, "Lumbar Strain (Back Pain)"],
+  [/sleep apnea/i, "Sleep Apnea"],
+  [/insomnia/i, "Insomnia"],
+  [/gerd|reflux/i, "GERD"],
+  [/ibs|irritable bowel/i, "IBS"],
+  [/hypertension/i, "Hypertension"],
+  [/diabetes/i, "Diabetes Type II"],
+  [/peripheral neuropathy/i, "Peripheral Neuropathy"],
+  [/carpal tunnel/i, "Carpal Tunnel Syndrome"],
+  [/eczema/i, "Eczema"],
+  [/psoriasis/i, "Psoriasis"],
+  [/erectile/i, "Erectile Dysfunction"],
+];
+
+const SIDED_BODY_PART_LABELS = {
+  knee: "Knee Condition",
+  ankle: "Ankle Condition",
+  hip: "Hip Condition",
+  shoulder: "Shoulder Condition",
+};
+
+function mapSavedRatingToCondition(saved) {
+  const name = (saved.name || "").trim();
+
+  const exactMatch = COMMON_CONDITIONS.find(
+    (c) => c.toLowerCase() === name.toLowerCase(),
+  );
+  if (exactMatch) return exactMatch;
+
+  const keywordMatch = CONDITION_NAME_KEYWORD_MAP.find(([pattern]) =>
+    pattern.test(name),
+  );
+  if (keywordMatch) return keywordMatch[1];
+
+  const sidedLabel = SIDED_BODY_PART_LABELS[saved.bodyPart];
+  if (sidedLabel) {
+    if (saved.side === "left") return `Left ${sidedLabel}`;
+    if (saved.side === "right") return `Right ${sidedLabel}`;
+  }
+
+  // No preset match - fall back to the raw saved name as a custom entry.
+  return name;
+}
+
 /**
  * Rating Input Row Component
  */
@@ -236,9 +297,14 @@ const RatingInput = ({ rating, index, onUpdate, onRemove, t }) => {
   // Ensure we always have defined values for controlled inputs
   const conditionValue = rating.condition || "";
   const ratingValue = rating.rating || "";
-  const [isCustom, setIsCustom] = useState(
-    !COMMON_CONDITIONS.includes(conditionValue) && conditionValue !== "",
-  );
+  // Recomputed from props on every render (not just on mount) so a parent
+  // that swaps `rating.condition` on an already-mounted row (e.g. bulk
+  // "Load My Ratings") still switches to the custom text input when the
+  // new value doesn't match a preset.
+  const [manualCustom, setManualCustom] = useState(false);
+  const isCustom =
+    manualCustom ||
+    (conditionValue !== "" && !COMMON_CONDITIONS.includes(conditionValue));
 
   return (
     <div className="flex flex-col sm:flex-row gap-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
@@ -256,7 +322,7 @@ const RatingInput = ({ rating, index, onUpdate, onRemove, t }) => {
             value={conditionValue}
             onChange={(e) => {
               if (e.target.value === "Other (type below)") {
-                setIsCustom(true);
+                setManualCustom(true);
                 onUpdate(index, "condition", "");
               } else {
                 onUpdate(index, "condition", e.target.value);
@@ -1297,7 +1363,7 @@ function usePathfinderRatingsHandlers({
     const savedRatings = getMyRatings();
     if (savedRatings && savedRatings.length > 0) {
       const formatted = savedRatings.map((r) => ({
-        condition: r.condition,
+        condition: mapSavedRatingToCondition(r),
         rating: r.rating !== null ? r.rating.toString() : "",
       }));
       setRatings(formatted);

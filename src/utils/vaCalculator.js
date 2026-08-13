@@ -275,9 +275,18 @@ function _calculateBilateralGroup(bilateralConditions, steps) {
   return { bilateralFactor, bilateralGroupRating };
 }
 
-function _calculateGapAnalysis(rawScore) {
-  const nextTier = Math.min(100, Math.ceil(rawScore / 10) * 10);
-  const gapToNext10 = nextTier - rawScore;
+// nextTier must be the tier ABOVE the veteran's current combined (rounded)
+// rating, not a ceiling of the raw score - ceil(rawScore/10)*10 collides with
+// the already-achieved combinedRating whenever rawScore isn't an exact
+// multiple of 10 (e.g. raw 78 -> combined 80 already, but ceil(78/10)*10 is
+// also 80, showing "Gap to 80%: 2% away" while already AT 80%).
+function _calculateGapAnalysis(rawScore, combinedRating) {
+  const nextTier = Math.min(100, combinedRating + 10);
+  // VA rounding is round-half-up (roundToNearest10): a raw score rounds up
+  // into `nextTier` once it reaches `nextTier - 5`.
+  const rawNeededForNextTier = nextTier - 5;
+  const gapToNext10 =
+    combinedRating >= 100 ? 0 : Math.max(0, rawNeededForNextTier - rawScore);
 
   // Using reverse VA math: If current = C, need X where C + X(1-C) >= 95 (rounds to 100)
   const currentEfficiency = 1 - rawScore / 100;
@@ -286,6 +295,29 @@ function _calculateGapAnalysis(rawScore) {
   const ratingNeededFor100 = Math.max(0, Math.min(100, neededForRoundTo100));
 
   return { nextTier, gapToNext10, currentEfficiency, ratingNeededFor100 };
+}
+
+function _buildFinalCalculationStep(
+  steps,
+  rawScore,
+  combinedRating,
+  allRatings,
+) {
+  return {
+    step: steps.length + 1,
+    description: "Final calculation",
+    rawScore: rawScore,
+    roundedTo: combinedRating,
+    method: "38 CFR § 4.25 Combined Ratings Table",
+    validation: {
+      inputValid: allRatings.every((r) => r >= 0 && r <= 100),
+      outputValid:
+        combinedRating >= 0 &&
+        combinedRating <= 100 &&
+        combinedRating % 10 === 0,
+      roundingRule: rawScore % 10 >= 5 ? "Rounded UP" : "Rounded DOWN",
+    },
+  };
 }
 
 export const calculateVARating = (conditions) => {
@@ -305,13 +337,25 @@ export const calculateVARating = (conditions) => {
 
   const steps = [];
 
-  // Separate bilateral and non-bilateral conditions
-  const bilateralConditions = conditions.filter(
+  // Separate bilateral and non-bilateral conditions.
+  // Per §4.26 the bilateral factor requires an actual PAIR of compensable
+  // paired-extremity disabilities (a "left" + "right", or a single condition
+  // already marked "bilateral"). A lone "left" or "right" condition with no
+  // opposite-side counterpart is NOT bilateral and must not get the 10% boost.
+  const candidateBilateralConditions = conditions.filter(
     (c) => c.side === "left" || c.side === "right" || c.side === "bilateral",
   );
-  const nonBilateralConditions = conditions.filter(
-    (c) => c.side === "none" || !c.side,
-  );
+  const hasQualifyingPair =
+    candidateBilateralConditions.some((c) => c.side === "bilateral") ||
+    (candidateBilateralConditions.some((c) => c.side === "left") &&
+      candidateBilateralConditions.some((c) => c.side === "right"));
+
+  const bilateralConditions = hasQualifyingPair
+    ? candidateBilateralConditions
+    : [];
+  const nonBilateralConditions = hasQualifyingPair
+    ? conditions.filter((c) => c.side === "none" || !c.side)
+    : conditions;
 
   steps.push({
     step: 1,
@@ -351,25 +395,12 @@ export const calculateVARating = (conditions) => {
   const rawScore = combineMultipleRatings(allRatings);
   const combinedRating = roundToNearest10(rawScore);
 
-  // Add detailed final step with validation
-  steps.push({
-    step: steps.length + 1,
-    description: "Final calculation",
-    rawScore: rawScore,
-    roundedTo: combinedRating,
-    method: "38 CFR § 4.25 Combined Ratings Table",
-    validation: {
-      inputValid: allRatings.every((r) => r >= 0 && r <= 100),
-      outputValid:
-        combinedRating >= 0 &&
-        combinedRating <= 100 &&
-        combinedRating % 10 === 0,
-      roundingRule: rawScore % 10 >= 5 ? "Rounded UP" : "Rounded DOWN",
-    },
-  });
+  steps.push(
+    _buildFinalCalculationStep(steps, rawScore, combinedRating, allRatings),
+  );
 
   const { nextTier, gapToNext10, currentEfficiency, ratingNeededFor100 } =
-    _calculateGapAnalysis(rawScore);
+    _calculateGapAnalysis(rawScore, combinedRating);
 
   return {
     combinedRating,
@@ -413,6 +444,7 @@ export const calculateCompensation = (rating, dependents = {}) => {
     baseRate,
     spouseAddition: 0,
     spouseAidAttendanceAddition: 0,
+    firstChildAddition: 0,
     childrenUnder18Addition: 0,
     childrenSchoolAddition: 0,
     parentsAddition: 0,
@@ -432,17 +464,33 @@ export const calculateCompensation = (rating, dependents = {}) => {
       }
     }
 
-    // Children under 18
-    if (childrenUnder18 > 0) {
+    // The VA's "veteran with child" base-rate rows already pay for 1 child
+    // (see va.gov compensation-rates page). Only the 2nd+ child gets the
+    // "each additional child" rate — applying that rate to the first child
+    // undercounts every veteran with dependents.
+    let remainingUnder18 = childrenUnder18;
+    let remainingSchool = childrenSchool;
+    if (remainingUnder18 + remainingSchool > 0) {
+      breakdown.firstChildAddition = VA_PAY_RATES_2026.firstChild[rating] || 0;
+      total += breakdown.firstChildAddition;
+      if (remainingUnder18 > 0) {
+        remainingUnder18 -= 1;
+      } else {
+        remainingSchool -= 1;
+      }
+    }
+
+    // Children under 18 (2nd and beyond)
+    if (remainingUnder18 > 0) {
       const perChild = VA_PAY_RATES_2026.childUnder18[rating] || 0;
-      breakdown.childrenUnder18Addition = perChild * childrenUnder18;
+      breakdown.childrenUnder18Addition = perChild * remainingUnder18;
       total += breakdown.childrenUnder18Addition;
     }
 
-    // Children 18-23 in school
-    if (childrenSchool > 0) {
+    // Children 18-23 in school (2nd and beyond, or 1st if no under-18 child)
+    if (remainingSchool > 0) {
       const perChild = VA_PAY_RATES_2026.childSchool[rating] || 0;
-      breakdown.childrenSchoolAddition = perChild * childrenSchool;
+      breakdown.childrenSchoolAddition = perChild * remainingSchool;
       total += breakdown.childrenSchoolAddition;
     }
 
@@ -490,6 +538,8 @@ export const calculateWhatIf = (
   return {
     currentRating: current.combinedRating,
     newRating: withNew.combinedRating,
+    currentRaw: current.rawScore,
+    newRaw: withNew.rawScore,
     increase: withNew.combinedRating - current.combinedRating,
     percentageIncrease: (
       ((withNew.combinedRating - current.combinedRating) /
@@ -526,20 +576,33 @@ function _detectBodyPartPyramiding(conditions) {
 
   // Check each body part for potential pyramiding
   Object.entries(bodyPartGroups).forEach(([bodyPart, condList]) => {
-    if (condList.length > 1) {
-      // Multiple conditions affecting same body part - potential pyramiding
-      warnings.push({
-        type: "potential_pyramiding",
-        severity: "high",
-        bodyPart,
-        conditions: condList.map((c) => c.name),
-        message: `Multiple conditions for ${bodyPart}. Verify these rate different manifestations (not the same pain/limitation twice).`,
-        regulation: "38 CFR § 4.14",
-        guidance:
-          "You cannot rate the same manifestation under different diagnostic codes. For example: cervical pain can only be rated once, not under both strain AND arthritis codes.",
-        indices: condList.map((c) => c.index),
-      });
-    }
+    // Left/right pairs of the same body part (e.g. Left Knee + Right Knee)
+    // are separately ratable per §4.25/§4.26 — NOT pyramiding. Only flag
+    // when 2+ conditions share the same side (same-joint/same-side stacking).
+    const sideGroups = {};
+    condList.forEach((c) => {
+      const side = c.side && c.side !== "none" ? c.side : "unspecified";
+      if (!sideGroups[side]) sideGroups[side] = [];
+      sideGroups[side].push(c);
+    });
+
+    Object.entries(sideGroups).forEach(([side, sideCondList]) => {
+      if (sideCondList.length > 1) {
+        const sideSuffix = side !== "unspecified" ? ` (${side})` : "";
+        warnings.push({
+          type: "potential_pyramiding",
+          severity: "high",
+          bodyPart,
+          side: side !== "unspecified" ? side : undefined,
+          conditions: sideCondList.map((c) => c.name),
+          message: `Multiple conditions for ${bodyPart}${sideSuffix}. Verify these rate different manifestations (not the same pain/limitation twice).`,
+          regulation: "38 CFR § 4.14",
+          guidance:
+            "You cannot rate the same manifestation under different diagnostic codes. For example: cervical pain can only be rated once, not under both strain AND arthritis codes.",
+          indices: sideCondList.map((c) => c.index),
+        });
+      }
+    });
   });
 
   return warnings;
@@ -556,11 +619,16 @@ function _detectNervePyramiding(conditions) {
 
   nerveConditions.forEach((nerveCondition, idx) => {
     const bodyPart = nerveCondition.bodyPart;
+    // Opposite-side conditions of the same body part (Left Hip nerve +
+    // Right Hip condition) are separately ratable, not pyramiding — only
+    // flag when the nerve condition and the other condition share a side
+    // (or side is unspecified/bilateral, where overlap can't be ruled out).
     const otherInSamePart = conditions.filter(
       (c, i) =>
         i !== idx &&
         c.bodyPart === bodyPart &&
-        !c.name?.toLowerCase().includes("nerve"),
+        !c.name?.toLowerCase().includes("nerve") &&
+        _sidesMayOverlap(nerveCondition.side, c.side),
     );
 
     if (otherInSamePart.length > 0) {
@@ -580,6 +648,16 @@ function _detectNervePyramiding(conditions) {
   });
 
   return warnings;
+}
+
+// Left+right is a genuine pair (no overlap); unspecified/bilateral sides
+// can't be ruled out, so they're conservatively treated as possibly overlapping.
+function _sidesMayOverlap(sideA, sideB) {
+  const a = sideA || "none";
+  const b = sideB || "none";
+  if (a === "none" || b === "none") return true;
+  if (a === "bilateral" || b === "bilateral") return true;
+  return a === b;
 }
 
 function _detectSpineExtremityPyramiding(conditions) {
@@ -606,7 +684,7 @@ function _detectSpineExtremityPyramiding(conditions) {
   return [
     {
       type: "spine_extremity_warning",
-      severity: "medium",
+      severity: "info",
       message:
         "You have both spine and extremity conditions. Ensure extremity issues are independent, not just manifestations of spine pathology.",
       regulation: "38 CFR § 4.14, § 4.71a",

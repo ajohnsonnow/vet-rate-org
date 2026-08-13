@@ -128,6 +128,31 @@ const FIELD_RULES = {
 };
 
 /**
+ * Per-document metadata/instance fields that must NEVER be cross-document
+ * conflict-compared. These describe THIS document (its raw text, parse
+ * status, per-claim details), not a fact about the veteran that should
+ * stay consistent across documents. Without this exclusion, e.g. a claim
+ * letter's `type: "claim_letter"` "conflicts" with a previously-saved
+ * DD214's `type: "service_record"` on every single import.
+ */
+const NON_CONFLICTING_METADATA_FIELDS = new Set([
+  "type",
+  "raw",
+  "error",
+  "parseError",
+  "parseFailedType",
+  "extractedText",
+  "sourcePages",
+  "multiDocument",
+  "documentIndex",
+  "totalDocuments",
+  "status", // per-document claim status, not a veteran-wide fact
+  "claimNumber", // identifies a specific claim, not the veteran
+  "claimDate", // per-claim filing date
+  "contentions", // conditions claimed on THIS claim, not the SC conditions list
+]);
+
+/**
  * Detect conflicts between new data and existing data
  */
 export async function detectConflicts(newData, documentType, filename) {
@@ -153,6 +178,7 @@ export async function detectConflicts(newData, documentType, filename) {
   // Compare each field in new data
   for (const [field, newValue] of Object.entries(newData)) {
     if (!newValue) continue; // Skip empty fields
+    if (NON_CONFLICTING_METADATA_FIELDS.has(field)) continue;
 
     // Get existing value (check profile first, then VKB)
     const existingValue = profile[field] || vkbData[field];

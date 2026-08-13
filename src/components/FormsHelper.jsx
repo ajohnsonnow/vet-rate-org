@@ -13,7 +13,6 @@ import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import {
   isAnyAIAvailable,
   getAIStatus,
-  AI_MODES,
 } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -4715,14 +4714,12 @@ function AIEnhancementHeader({ aiStatus, t }) {
           {t("formsHelper", "aiStatementAssistant")}
           <span
             className={`text-xs px-2 py-0.5 rounded-full ${
-              aiStatus.effectiveMode === AI_MODES.LOCAL
+              aiStatus.isPrivate
                 ? "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
                 : "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
             }`}
           >
-            {aiStatus.effectiveMode === AI_MODES.LOCAL
-              ? "🔒 Local AI"
-              : "☁️ Cloud AI"}
+            {aiStatus.isPrivate ? "🔒 Local AI" : "☁️ Cloud AI"}
           </span>
         </h3>
         <p className="text-sm text-purple-700 dark:text-purple-300">
@@ -4735,7 +4732,7 @@ function AIEnhancementHeader({ aiStatus, t }) {
             {t("formsHelper", "aiTipAllModels")}
           </span>
         </div>
-        {aiStatus.effectiveMode === AI_MODES.LOCAL && (
+        {aiStatus.isPrivate && (
           <p className="text-xs text-green-600 dark:text-green-400 mt-1">
             ✅ {t("formsHelper", "aiPrivateNotice")}
           </p>
@@ -6282,8 +6279,8 @@ Reference Worksheet for VA Forms 21-4142 & 21-4142a
 
                       *** REFERENCE DOCUMENT ***
 
-This worksheet contains the information you will need to complete the 
-official VA Form 21-4142 (Authorization to Disclose Information) and 
+This worksheet contains the information you will need to complete the
+official VA Form 21-4142 (Authorization to Disclose Information) and
 VA Form 21-4142a (General Release for Medical Provider Information).
 
 Submit the official forms online at:
@@ -6311,9 +6308,9 @@ ${_buildMedicalReleaseRecordsSection(formData)}
 
 SECTION IV - AUTHORIZATION
 
-I authorize the healthcare provider(s) listed above to release medical 
-information pertaining to the conditions listed to the Department of 
-Veterans Affairs. This information is needed to evaluate my claim for 
+I authorize the healthcare provider(s) listed above to release medical
+information pertaining to the conditions listed to the Department of
+Veterans Affairs. This information is needed to evaluate my claim for
 VA disability benefits.
 
 EXPIRATION: This authorization expires ${expirationDate}
@@ -6412,7 +6409,7 @@ ${_priorityProcessingQualifyingSection(formData)}
 
 SECTION IV - DETAILED EXPLANATION OF HARDSHIP
 
-Describe your hardship situation in detail, including specific dates, 
+Describe your hardship situation in detail, including specific dates,
 amounts, and circumstances:
 
 ${formData.hardshipExplanation || "[Provide detailed explanation of your hardship, including specific evidence such as eviction notices, medical documentation, financial statements, etc.]"}
@@ -6434,8 +6431,8 @@ ${_priorityProcessingEmergencyContactSection(formData)}
 
 CERTIFICATION AND SIGNATURE
 
-I certify under penalty of perjury that the information provided in this 
-request is true and correct. I understand that making false statements may 
+I certify under penalty of perjury that the information provided in this
+request is true and correct. I understand that making false statements may
 result in criminal penalties under 18 U.S.C. 1001 and denial of my request.
 
 
@@ -6538,8 +6535,8 @@ ${_vsoAppointmentOrgSection(formData, vsoName)}
 
 SECTION IV - AUTHORIZATION
 
-I hereby appoint the above-named organization to represent me in the 
-preparation, presentation, and prosecution of claims for benefits from 
+I hereby appoint the above-named organization to represent me in the
+preparation, presentation, and prosecution of claims for benefits from
 the Department of Veterans Affairs.
 
 Authorization Scope:
@@ -6549,7 +6546,7 @@ ${_vsoAppointmentAuthorizationSection(formData)}
 
 VETERAN CERTIFICATION
 
-I certify that I have read and understand the Privacy Act notice and 
+I certify that I have read and understand the Privacy Act notice and
 the terms of this appointment.
 
 Signature: ________________________________________
@@ -7379,7 +7376,7 @@ INSTRUCTIONS:
 
 1. The witness should review this statement for accuracy, then print and sign it.
 
-2. This statement should be submitted as an attachment to VA Form 21-10210 
+2. This statement should be submitted as an attachment to VA Form 21-10210
    (Lay/Witness Statement).
 
 3. Submit online at: https://www.va.gov/supporting-forms-for-claims/lay-witness-statement-form-21-10210/
@@ -7595,7 +7592,7 @@ Received by: _________________ Date: _________ File Number: _________________
 
 INSTRUCTIONS:
 
-1. This statement should accompany VA Form 21-0781 (Statement in Support of 
+1. This statement should accompany VA Form 21-0781 (Statement in Support of
    Claim for Service Connection for PTSD).
 
 2. For MST claims, use VA Form 21-0781a instead.
@@ -7658,8 +7655,8 @@ VA Form 21-0966 - Reference Document
 
 This document is your PLANNING WORKSHEET for filing an Intent to File.
 
-To protect your effective date, you must submit an Intent to File through 
-one of the official VA channels listed below. This worksheet is for your 
+To protect your effective date, you must submit an Intent to File through
+one of the official VA channels listed below. This worksheet is for your
 records only and does NOT constitute an official Intent to File.
 
 ================================================================================

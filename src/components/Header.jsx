@@ -182,9 +182,11 @@ const HeaderBrand = ({ t }) => (
       />
     </div>
     <div className="flex-shrink-0">
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
+      {/* Site branding, not the page's semantic h1 - each routed page owns
+          its own h1 (e.g. HomeMain's "Your VA Claims Command Center"). */}
+      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">
         Vet-Rate.org
-      </h1>
+      </h2>
       <p className="text-green-100 dark:text-gray-300 text-xs sm:text-sm md:text-base">
         {t("header", "subtitle")}
       </p>

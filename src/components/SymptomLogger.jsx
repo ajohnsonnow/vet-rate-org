@@ -291,11 +291,11 @@ const SYMPTOM_TYPES = {
 
 const buildMigrainePrompts = (contextData) => ({
   triggers: `Help a veteran document migraine triggers for VA disability evidence. Current context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}, weather: ${contextData.weather || "not specified"}, stress level: ${contextData.stressLevel}/10.
-        
+
 Generate 5-7 common migraine triggers relevant to this context. Format as a brief comma-separated list the veteran can select from or use as inspiration. Include triggers like: bright lights, loud noises, strong smells, weather changes, stress, lack of sleep, certain foods, dehydration, screen time, hormonal changes.`,
 
   activityImpact: `Help a veteran document how a migraine affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes - had to stop activities" : "No"}.
-        
+
 Generate a brief description of activities typically affected by a migraine of this severity. Focus on work impact, daily tasks, and social activities. Write 2-3 sentences that the veteran can customize.`,
 
   notes: `Help a veteran write clinical notes for a migraine episode for VA disability documentation. Context:
@@ -312,11 +312,11 @@ Write a 2-3 sentence clinical-style note describing this episode. Include sensor
 
 const buildIbsPrompts = (contextData) => ({
   triggers: `Help a veteran document IBS triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}, stress level: ${contextData.stressLevel}/10.
-        
+
 Generate 5-7 common IBS triggers. Include: specific foods (dairy, gluten, caffeine, spicy foods), stress, anxiety, lack of sleep, irregular eating schedule, medications.`,
 
   activityImpact: `Help a veteran document how an IBS episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes - prevented normal activities" : "No"}.
-        
+
 Generate a brief description of activities typically affected. Focus on work interruptions, inability to leave home/bathroom access needs, social/travel limitations. Write 2-3 sentences the veteran can customize.`,
 
   notes: `Help a veteran write clinical notes for an IBS episode for VA disability documentation. Context:
@@ -331,11 +331,11 @@ Write a 2-3 sentence clinical-style note. Include symptoms (cramping, bloating, 
 
 const buildPainPrompts = (contextData) => ({
   triggers: `Help a veteran document pain flare-up triggers for VA disability evidence. Context: pain scale ${contextData.painScale || contextData.severity}/10, location: ${contextData.bodyLocation || "not specified"}, weather: ${contextData.weather || "not specified"}.
-        
+
 Generate 5-7 common pain triggers relevant to this context. Include: physical activity, prolonged sitting/standing, weather changes, lifting, repetitive motions, stress, poor sleep.`,
 
   activityImpact: `Help a veteran document how a pain flare-up affected their daily activities for VA disability evidence. Pain: ${contextData.painScale || contextData.severity}/10, Location: ${contextData.bodyLocation || "not specified"}, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
-        
+
 Generate a description of functional limitations. Include specific activities that were difficult/impossible, mobility issues, work impact. Write 2-3 sentences.`,
 
   notes: `Help a veteran write clinical notes for a pain flare-up for VA disability documentation. Context:
@@ -351,11 +351,11 @@ Write a 2-3 sentence clinical note describing the pain quality (sharp, dull, rad
 
 const buildMentalPrompts = (contextData) => ({
   triggers: `Help a veteran document mental health episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
-        
+
 Generate 5-7 common mental health triggers. Include: specific stressors, anniversary reactions, crowds, loud noises, sleep disturbance, isolation, reminders of service, work stress, family conflict.`,
 
   activityImpact: `Help a veteran document how a mental health episode affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Unable to function normally: ${contextData.prostrating ? "Yes" : "No"}.
-        
+
 Generate a description of functional impact. Include work/social impairment, isolation, inability to complete tasks, relationship effects. Write 2-3 sentences.`,
 
   notes: `Help a veteran write clinical notes for a mental health episode for VA disability documentation. Context:
@@ -370,11 +370,11 @@ Write a 2-3 sentence clinical note describing symptoms (anxiety, depression, hyp
 
 const buildFatiguePrompts = (contextData) => ({
   triggers: `Help a veteran document fatigue episode triggers for VA disability evidence. Context: severity ${contextData.severity}/10, duration: ${contextData.duration || "not specified"}.
-        
+
 Generate 5-7 common fatigue triggers. Include: poor sleep, physical exertion, stress, medications, weather, chronic pain flares, mental health symptoms.`,
 
   activityImpact: `Help a veteran document how fatigue affected their daily activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Unable to function: ${contextData.prostrating ? "Yes" : "No"}.
-        
+
 Generate a description of functional limitations. Include inability to work, rest requirements, cognitive effects, self-care difficulties. Write 2-3 sentences.`,
 
   notes: `Help a veteran write clinical notes for a fatigue episode for VA disability documentation. Context:
@@ -387,11 +387,11 @@ Write a 2-3 sentence clinical note describing fatigue severity, physical/cogniti
 
 const buildSleepPrompts = (contextData) => ({
   triggers: `Help a veteran document sleep disorder triggers for VA disability evidence. Context: severity ${contextData.severity}/10, stress level: ${contextData.stressLevel}/10.
-        
+
 Generate 5-7 common sleep disruption triggers. Include: nightmares, pain, anxiety, medications, caffeine, irregular schedule, environmental factors, sleep apnea symptoms.`,
 
   activityImpact: `Help a veteran document how sleep problems affected their next-day activities for VA disability evidence. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Impaired next-day function: ${contextData.prostrating ? "Yes" : "No"}.
-        
+
 Generate a description of daytime impairment. Include work performance, cognitive function, safety concerns, mood effects. Write 2-3 sentences.`,
 
   notes: `Help a veteran write clinical notes for sleep disturbance for VA disability documentation. Context:
@@ -404,15 +404,15 @@ Write a 2-3 sentence clinical note describing sleep quality, disturbances (insom
 
 const buildDefaultPrompts = (contextData, config) => ({
   triggers: `Help a veteran document ${config.label.toLowerCase()} triggers for VA disability evidence. Severity: ${contextData.severity}/10.
-      
+
 Generate 5-7 potential triggers or contributing factors that the veteran can select from or customize.`,
 
   activityImpact: `Help a veteran document how ${config.label.toLowerCase()} affected their daily activities. Severity: ${contextData.severity}/10, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
-      
+
 Generate 2-3 sentences describing typical activity limitations for documentation purposes.`,
 
   notes: `Help a veteran write clinical notes for a ${config.label.toLowerCase()} episode. Severity: ${contextData.severity}/10, Duration: ${contextData.duration || "unknown"}, Prostrating: ${contextData.prostrating ? "Yes" : "No"}.
-      
+
 Write a 2-3 sentence clinical-style note suitable for VA disability documentation.`,
 });
 
@@ -596,7 +596,7 @@ const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
     <div className="flex items-center justify-between mb-3">
       <span className="font-medium">🤖 AI Assistant</span>
       <span className="text-sm text-white/70">
-        {aiStatus.available ? `Using ${aiStatus.mode}` : "Not configured"}
+        {aiStatus.anyAvailable ? aiStatus.statusText : "Not configured"}
       </span>
     </div>
     <AIModeSelector
@@ -986,7 +986,7 @@ const ActivityWeatherFields = ({
           placeholder="e.g., Couldn't work, Missed gym, Cancelled plans, Had to rest..."
           className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
         />
-        {aiStatus.available && (
+        {aiStatus.anyAvailable && (
           <button
             onClick={() => generateAISuggestion("activityImpact")}
             disabled={isAIGenerating === "activityImpact"}
@@ -1135,7 +1135,7 @@ const TriggersField = ({
         placeholder="e.g., stress, weather, certain foods, loud noise..."
         className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
       />
-      {aiStatus.available && (
+      {aiStatus.anyAvailable && (
         <button
           onClick={() => generateAISuggestion("triggers")}
           disabled={isAIGenerating === "triggers"}
@@ -1184,7 +1184,7 @@ const NotesField = ({
           }
           size="sm"
         />
-        {aiStatus.available && (
+        {aiStatus.anyAvailable && (
           <button
             onClick={() => generateAISuggestion("notes")}
             disabled={isAIGenerating === "notes"}
@@ -1896,7 +1896,7 @@ function useSymptomLoggerHandlers({
   };
 
   const generateAISuggestion = (field) => {
-    if (!aiStatus.available) {
+    if (!aiStatus.anyAvailable) {
       setAIError("Please configure AI in settings first");
       return Promise.resolve();
     }
@@ -1931,7 +1931,7 @@ function useSymptomLoggerState() {
 
   // AI State
   const [showAISettings, setShowAISettings] = useState(false);
-  const [aiStatus, setAIStatus] = useState({ available: false });
+  const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
   const [isAIGenerating, setIsAIGenerating] = useState(null); // null or field name being generated
   const [aiError, setAIError] = useState("");
 

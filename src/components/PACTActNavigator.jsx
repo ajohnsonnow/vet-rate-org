@@ -19,6 +19,8 @@ import { useState } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
+import { getMyRatings } from "../utils/veteranProfile";
+import { isConditionAlreadyRated } from "../utils/secondaryClaimsEngine";
 
 /**
  * COMPREHENSIVE PACT ACT DATA
@@ -907,7 +909,7 @@ function renderExposureProfileSummary({ results }) {
 /**
  * Render Step 4 section: Presumptive conditions list
  */
-function renderPresumptiveConditionsSection({ presumptiveConditions }) {
+function renderPresumptiveConditionsSection({ presumptiveConditions, alreadyRatedNames }) {
   return (
     <div className="bg-green-50 dark:bg-green-900/30 rounded-xl shadow-lg overflow-hidden">
       <div className="p-4 bg-green-100 dark:bg-green-900/50 border-b border-green-200 dark:border-green-700">
@@ -924,8 +926,13 @@ function renderPresumptiveConditionsSection({ presumptiveConditions }) {
           <div key={cond.name} className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-medium text-green-800 dark:text-green-200">
+                <p className="font-medium text-green-800 dark:text-green-200 flex items-center gap-2">
                   {cond.name}
+                  {alreadyRatedNames.has(cond.name) && (
+                    <span className="px-2 py-0.5 bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs rounded-full font-semibold">
+                      ✅ Already Rated
+                    </span>
+                  )}
                 </p>
                 {cond.notes && (
                   <p className="text-sm text-green-600 dark:text-green-400 mt-1">
@@ -949,7 +956,10 @@ function renderPresumptiveConditionsSection({ presumptiveConditions }) {
 /**
  * Render Step 4 section: Non-presumptive conditions list
  */
-function renderNonPresumptiveConditionsSection({ nonPresumptiveConditions }) {
+function renderNonPresumptiveConditionsSection({
+  nonPresumptiveConditions,
+  alreadyRatedNames,
+}) {
   return (
     <div className="bg-amber-50 dark:bg-amber-900/30 rounded-xl shadow-lg overflow-hidden">
       <div className="p-4 bg-amber-100 dark:bg-amber-900/50 border-b border-amber-200 dark:border-amber-700">
@@ -964,8 +974,13 @@ function renderNonPresumptiveConditionsSection({ nonPresumptiveConditions }) {
       <div className="divide-y divide-amber-200 dark:divide-amber-700">
         {nonPresumptiveConditions.map((cond) => (
           <div key={cond.name} className="p-4">
-            <p className="font-medium text-amber-800 dark:text-amber-200">
+            <p className="font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
               {cond.name}
+              {alreadyRatedNames.has(cond.name) && (
+                <span className="px-2 py-0.5 bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs rounded-full font-semibold">
+                  ✅ Already Rated
+                </span>
+              )}
             </p>
           </div>
         ))}
@@ -1010,8 +1025,7 @@ function renderNextStepsSection({ presumptiveConditions }) {
             </li>
             <li>Get a current diagnosis for each condition from your doctor</li>
             <li>
-              File your claim on VA.gov or eBenefits - select the presumptive
-              exposure
+              File your claim on VA.gov - select the presumptive exposure
             </li>
             <li>
               <strong>No nexus letter needed</strong> for presumptive
@@ -1079,14 +1093,29 @@ function renderResults({ results, onReset }) {
   );
   const pactAddedConditions = results.conditions.filter((c) => c.pactAdded);
 
+  // Cross-tool awareness: flag conditions the veteran already has rated
+  // (e.g. rhinitis) so this doesn't read as a brand-new opportunity.
+  const savedRatingNames = getMyRatings().map((r) => r.name);
+  const alreadyRatedNames = new Set(
+    results.conditions
+      .filter((c) => isConditionAlreadyRated(c.name, savedRatingNames))
+      .map((c) => c.name),
+  );
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {renderResultsBanner({ results })}
       {renderExposureProfileSummary({ results })}
       {presumptiveConditions.length > 0 &&
-        renderPresumptiveConditionsSection({ presumptiveConditions })}
+        renderPresumptiveConditionsSection({
+          presumptiveConditions,
+          alreadyRatedNames,
+        })}
       {nonPresumptiveConditions.length > 0 &&
-        renderNonPresumptiveConditionsSection({ nonPresumptiveConditions })}
+        renderNonPresumptiveConditionsSection({
+          nonPresumptiveConditions,
+          alreadyRatedNames,
+        })}
       {pactAddedConditions.length > 0 &&
         renderPactActInfoSection({ pactAddedConditions })}
       {renderNextStepsSection({ presumptiveConditions })}

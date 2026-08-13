@@ -18,7 +18,6 @@ import {
 import {
   isAnyAIAvailable,
   getAIStatus,
-  AI_MODES,
 } from "../utils/unifiedAIService";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
@@ -232,7 +231,7 @@ const AIModeSection = ({
       <div className="flex items-center gap-3">
         <AIStatusBadge showLabel={true} />
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {aiStatus.effectiveMode === AI_MODES.LOCAL
+          {aiStatus.isPrivate
             ? "100% Private - runs on your device"
             : "Cloud AI - fast & powerful"}
         </span>

@@ -500,13 +500,17 @@ export default function TheTribunal({
 
   const recognitionRef = useRef(null);
 
-  // Check AI availability on mount
+  // Check AI availability on mount, then keep polling — a model loaded
+  // (or unloaded) in another tool after this component mounted must be
+  // reflected here too, not just captured once at mount time.
   useEffect(() => {
-    const checkAI = async () => {
-      const status = await getAIStatus();
-      setAIAvailable(status.available);
+    const checkAI = () => {
+      const status = getAIStatus();
+      setAIAvailable(status.anyAvailable);
     };
     checkAI();
+    const interval = setInterval(checkAI, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // Load veteran context from VKB for realistic mock hearings

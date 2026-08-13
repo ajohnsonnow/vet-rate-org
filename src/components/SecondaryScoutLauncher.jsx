@@ -6,6 +6,8 @@ import { getMyRatings, addRating } from "../utils/veteranProfile";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import { calculateVARating } from "../utils/vaCalculator";
+import { searchDisabilityData } from "../utils/searchUtils";
+import disabilityData from "../data/disabilityData.json";
 
 /**
  * SecondaryScoutLauncher Component
@@ -1864,6 +1866,63 @@ function SavedRatingRow({ rating }) {
   );
 }
 
+// A 0%-rated condition still holds a diagnostic code — often one criterion
+// away from a compensable 10% rating. Surface the real next-tier criteria
+// from disabilityData.json rather than leaving these easy-to-miss.
+function findNextTierCriteria(conditionName) {
+  const matches = searchDisabilityData(conditionName, disabilityData);
+  const best = matches[0];
+  const nextTier = best?.ratingCriteria?.ratings?.["10"];
+  if (!nextTier) return null;
+
+  return {
+    conditionName: best.conditionName,
+    diagnosticCode: best.diagnosticCode,
+    criteria: nextTier,
+  };
+}
+
+function ZeroPercentOpportunities({ savedRatings }) {
+  const zeroPercentFindings = useMemo(() => {
+    return savedRatings
+      .filter((r) => r.rating === 0)
+      .map((r) => ({ name: r.name, next: findNextTierCriteria(r.name) }))
+      .filter((f) => f.next);
+  }, [savedRatings]);
+
+  if (zeroPercentFindings.length === 0) return null;
+
+  return (
+    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+      <h4 className="font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2 mb-2">
+        💡 0% Ratings One Step From Compensable
+      </h4>
+      <div className="space-y-2">
+        {zeroPercentFindings.map((finding) => (
+          <div
+            key={finding.name}
+            className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-blue-100 dark:border-blue-800"
+          >
+            <p className="font-medium text-blue-900 dark:text-blue-100">
+              {finding.next.conditionName}{" "}
+              <span className="text-xs text-blue-500 dark:text-blue-400">
+                (DC {finding.next.diagnosticCode})
+              </span>
+            </p>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              <strong>10% requires:</strong> {finding.next.criteria}
+            </p>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+        If your symptoms have progressed, ask your doctor to document this at
+        your next visit for a potential increase claim.
+      </p>
+    </div>
+  );
+}
+
 function MyRatingsPanel({
   savedRatings,
   calculateCombinedRating,
@@ -1875,6 +1934,8 @@ function MyRatingsPanel({
         savedRatings={savedRatings}
         calculateCombinedRating={calculateCombinedRating}
       />
+
+      <ZeroPercentOpportunities savedRatings={savedRatings} />
 
       <div className="space-y-2 max-h-[280px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
         {savedRatings.length === 0 ? (

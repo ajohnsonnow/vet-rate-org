@@ -339,6 +339,9 @@ function RiskOverviewSection({ riskLevel, financialGain }) {
           <div className="text-right">
             <p className="text-sm opacity-80">Potential Monthly Gain</p>
             <p className="text-2xl font-bold">${financialGain}</p>
+            <p className="text-xs opacity-70">
+              if rated 10% higher, no dependents
+            </p>
           </div>
         </div>
 
@@ -517,6 +520,9 @@ function SummaryCard({ rating, yearsRated, isPermanentTotal, financialGain }) {
           </p>
           <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
             ${financialGain}/mo
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            next 10% tier, no dependents
           </p>
         </div>
       </div>

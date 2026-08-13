@@ -20,9 +20,8 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import ToolCardButton from "./ToolCardButton";
 import { getMyRatings } from "../utils/veteranProfile";
-import { generateAI } from "../utils/unifiedAIService";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { isAIAvailable } from "../utils/aiStatementHelper";
-import { getAIStatus, AI_MODES } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import {
@@ -78,8 +77,21 @@ function computeTotals(analysis) {
     (sum, year) => sum + year.totalShouldPaid,
     0,
   );
+  const yearsWithActualData = yearlyBreakdown.filter(
+    (year) => year.totalActuallyReceived !== null,
+  );
+  const hasActualData = yearsWithActualData.length > 0;
+  const totalActuallyReceived = hasActualData
+    ? yearsWithActualData.reduce(
+        (sum, year) => sum + year.totalActuallyReceived,
+        0,
+      )
+    : null;
+  const totalDelta = hasActualData
+    ? yearsWithActualData.reduce((sum, year) => sum + year.totalDelta, 0)
+    : null;
 
-  return { total, yearlyBreakdown };
+  return { total, yearlyBreakdown, hasActualData, totalActuallyReceived, totalDelta };
 }
 
 function useAIStatusPolling() {
@@ -159,6 +171,12 @@ function createPeriodHandlers({
     const entry = {
       id: Date.now(),
       ...newEntry,
+      actualMonthlyReceived:
+        newEntry.actualMonthlyReceived !== "" &&
+        newEntry.actualMonthlyReceived !== undefined &&
+        !Number.isNaN(Number.parseFloat(newEntry.actualMonthlyReceived))
+          ? Number.parseFloat(newEntry.actualMonthlyReceived)
+          : null,
       dependents: {
         married: newEntry.married,
         childrenUnder18: parseInt(newEntry.childrenUnder18) || 0,
@@ -182,6 +200,7 @@ function createPeriodHandlers({
       childrenUnder18: newEntry.childrenUnder18,
       childrenSchool: newEntry.childrenSchool,
       dependentParents: newEntry.dependentParents,
+      actualMonthlyReceived: "",
     });
   };
 
@@ -235,23 +254,6 @@ function useRunAnalysisCallback({
         });
       }
 
-      // Check for effective date issues
-      ratingHistory.forEach((period) => {
-        const effectiveDate = new Date(period.effectiveDate);
-        const dayOfMonth = effectiveDate.getDate();
-
-        // If not the first of the month, might be missing days
-        // NOTE: Effective date is when entitlement began (decision date)
-        // Payment starts first of FOLLOWING month per 38 CFR § 3.400
-        if (dayOfMonth !== 1) {
-          alerts.push({
-            pattern: findCuePattern("effective_date_wrong"),
-            severity: "medium",
-            message: `Effective date (decision date) ${period.effectiveDate} is not the 1st of the month. Note: Payments begin first of FOLLOWING month per 38 CFR § 3.400. Consider if an earlier effective date was warranted.`,
-          });
-        }
-      });
-
       setCueAlerts(alerts);
       setIsAnalyzing(false);
     }, 1500);
@@ -295,8 +297,9 @@ ${contextBlock}
 
 **Analysis Summary:**
 - Total Months Analyzed: ${analysis.totalMonths}
-- Total Should Have Been Paid: $${computeTotals(analysis).total.toLocaleString()}
+- Total Should Have Been Paid: $${computeTotals(analysis).total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
 - Number of Rating Periods: ${ratingHistory.length}
+${analysis.hasCoverageGap ? `- NOTE: ${analysis.uncoveredMonths} month(s) before ${analysis.earliestAvailableYear} are NOT included above (no rate table data that far back) - the real total may be higher.` : ""}
 
 **Rating History:**
 ${ratingHistory.map(formatRatingHistoryLine).join("\n")}
@@ -422,7 +425,7 @@ function AIModeStatusBar({ aiStatus, onAISettingsClick }) {
           <LLMRecommendationBadge toolId="retro-pay-hunter" />
           <AIStatusBadge showLabel={true} onClick={onAISettingsClick} />
           <span className="text-sm text-gray-400">
-            {aiStatus.effectiveMode === AI_MODES.LOCAL
+            {aiStatus.isPrivate
               ? "🔒 100% Private - runs on your device"
               : "☁️ Cloud AI - fast & powerful"}
           </span>
@@ -605,6 +608,35 @@ function DependentsFields({ newEntry, setNewEntry }) {
   );
 }
 
+function ActualReceivedField({ newEntry, setNewEntry }) {
+  return (
+    <div className="mt-4">
+      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+      <label className="block text-sm font-semibold text-gray-300 mb-2">
+        What you actually received per month (optional)
+      </label>
+      <input
+        type="number"
+        min="0"
+        step="0.01"
+        value={newEntry.actualMonthlyReceived}
+        onChange={(e) =>
+          setNewEntry({
+            ...newEntry,
+            actualMonthlyReceived: e.target.value,
+          })
+        }
+        placeholder="e.g. 2106.01 (from your award letter)"
+        className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+      />
+      <p className="text-xs text-gray-500 mt-1">
+        Leave blank for a theoretical-entitlement estimate only. Fill this in
+        to see the actual missed-payment delta.
+      </p>
+    </div>
+  );
+}
+
 function LoadedConditionsNotice({ conditions }) {
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700 rounded-lg">
@@ -647,6 +679,7 @@ function AddRatingPeriodForm({
       </div>
 
       <DependentsFields newEntry={newEntry} setNewEntry={setNewEntry} />
+      <ActualReceivedField newEntry={newEntry} setNewEntry={setNewEntry} />
 
       <button
         onClick={handleAddPeriod}
@@ -799,7 +832,11 @@ function FoundMoneyBanner({ analysis, totals }) {
             </p>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-4">
-            <p className="text-gray-400 text-sm">Total Should Have Received</p>
+            <p className="text-gray-400 text-sm">
+              {totals.hasActualData
+                ? "Total You Should Have Received"
+                : "Total Should Have Received"}
+            </p>
             <p className="text-3xl font-bold text-green-400">
               $
               {totals.total.toLocaleString("en-US", {
@@ -808,6 +845,41 @@ function FoundMoneyBanner({ analysis, totals }) {
             </p>
           </div>
         </div>
+
+        {totals.hasActualData ? (
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="bg-gray-900/50 rounded-lg p-4">
+              <p className="text-gray-400 text-sm">Total Actually Received</p>
+              <p className="text-2xl font-bold text-white">
+                $
+                {totals.totalActuallyReceived.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+            <div className="bg-gray-900/50 rounded-lg p-4">
+              <p className="text-gray-400 text-sm">
+                {totals.totalDelta > 0
+                  ? "Potential Missed Payments"
+                  : "Difference"}
+              </p>
+              <p
+                className={`text-2xl font-bold ${totals.totalDelta > 0 ? "text-amber-400" : "text-gray-300"}`}
+              >
+                $
+                {totals.totalDelta.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-amber-300/70 text-xs mt-3">
+            This is theoretical entitlement based on your rating history —
+            enter what you actually received per period below to see a real
+            missed-payment delta.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -830,15 +902,58 @@ function YearlyBreakdown({ totals }) {
                 ({year.months} months)
               </span>
             </div>
-            <span className="text-green-400 font-bold">
-              $
-              {year.totalShouldPaid.toLocaleString("en-US", {
-                minimumFractionDigits: 2,
-              })}
-            </span>
+            <div className="text-right">
+              <span className="text-green-400 font-bold">
+                $
+                {year.totalShouldPaid.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+              {year.totalDelta !== null && (
+                <p
+                  className={`text-xs ${year.totalDelta > 0 ? "text-amber-400" : "text-gray-500"}`}
+                >
+                  {year.totalDelta > 0
+                    ? `Missing ~$${year.totalDelta.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                    : "No shortfall vs. entered actual pay"}
+                </p>
+              )}
+            </div>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function CoverageGapNotice({ analysis }) {
+  if (!analysis?.hasCoverageGap) return null;
+
+  return (
+    <div className="bg-blue-900/20 border border-blue-500/40 rounded-xl p-4">
+      <p className="text-blue-300 text-sm">
+        ℹ️ <strong>Analysis window is limited:</strong> we only have official
+        VA rate tables from {analysis.earliestAvailableYear} forward. Your
+        earliest entered effective date ({analysis.earliestRequestedDate}) is
+        before that, so {analysis.uncoveredMonths} month
+        {analysis.uncoveredMonths !== 1 ? "s" : ""} before{" "}
+        {analysis.earliestAvailableYear} are{" "}
+        <strong>NOT included</strong> in the totals below. The real total (if
+        any underpayment exists) is likely higher than shown.
+      </p>
+    </div>
+  );
+}
+
+function EffectiveDateInfoNote() {
+  return (
+    <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-4">
+      <p className="text-gray-400 text-sm">
+        ℹ️ Effective dates are rarely the 1st of the month — that's normal.
+        Payment simply starts the 1st of the month <em>following</em> the
+        effective date (38 CFR § 3.400). This alone is not evidence of an
+        error.
+      </p>
     </div>
   );
 }
@@ -929,8 +1044,10 @@ function AnalysisResults({ analysis, totals, cueAlerts, bilateralCheck }) {
   return (
     <div className="space-y-6">
       <FoundMoneyBanner analysis={analysis} totals={totals} />
+      <CoverageGapNotice analysis={analysis} />
       <YearlyBreakdown totals={totals} />
       <CueAlertsList cueAlerts={cueAlerts} />
+      <EffectiveDateInfoNote />
       <BilateralCheckCard bilateralCheck={bilateralCheck} />
     </div>
   );
@@ -1150,6 +1267,7 @@ const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
     childrenUnder18: 0,
     childrenSchool: 0,
     dependentParents: 0,
+    actualMonthlyReceived: "",
   });
 
   const [analysis, setAnalysis] = useState(null);

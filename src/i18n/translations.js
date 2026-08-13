@@ -3344,11 +3344,11 @@ export const APP_TRANSLATIONS = {
       ko: "부양 부모",
     },
     yourEstimatedPay: {
-      en: "Your Estimated Pay (2025 Rates)",
-      es: "Tu Pago Estimado (Tasas 2025)",
-      tl: "Ang Iyong Estimated Pay (2025 Rates)",
-      vi: "Lương Ước Tính Của Bạn (Tỷ Lệ 2025)",
-      ko: "예상 급여 (2025년 요율)",
+      en: "Your Estimated Pay (2026 Rates)",
+      es: "Tu Pago Estimado (Tasas 2026)",
+      tl: "Ang Iyong Estimated Pay (2026 Rates)",
+      vi: "Lương Ước Tính Của Bạn (Tỷ Lệ 2026)",
+      ko: "예상 급여 (2026년 요율)",
     },
     monthlyCompensation: {
       en: "Monthly Compensation",

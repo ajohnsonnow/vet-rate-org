@@ -232,26 +232,23 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Decision Decoder",
     category: TOOL_CATEGORIES.LEGAL_ANALYSIS,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 7B",
-      reason: "Reasoning model excels at breaking down VA decision logic",
-      badge: "🧠 Reasoning",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
+      reason:
+        "Specialized agent for breaking down VA decision logic and regulatory language",
+      badge: "🎖️ Warrant",
     },
     alternatives: [
       {
-        modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 7B",
-        reason: "Strong at identifying key decision points and rationale",
-      },
-      {
-        modelId: "Phi-3.5-mini-instruct-q4f32_1-MLC",
-        modelName: "Phi 3.5 Mini",
-        reason: "Microsoft model optimized for reasoning tasks",
+        modelId: "diamond-rater",
+        modelName: "🎖️ CW3 Rater",
+        reason:
+          "Best if the decision involves combined-rating or bilateral factor math",
       },
     ],
     tips: [
       "VA decisions follow specific regulatory frameworks",
-      "Reasoning models can trace the logic chain used by raters",
+      "🎖️ CW5 Auditor traces the logic chain used by raters",
       "Always verify cited regulations against current 38 CFR",
     ],
   },
@@ -260,26 +257,15 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "PACT Act Navigator",
     category: TOOL_CATEGORIES.LEGAL_ANALYSIS,
     primary: {
-      modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-      modelName: "Qwen 2.5 7B",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
       reason: "Precise interpretation of PACT Act eligibility rules",
       badge: "📋 Regulatory",
     },
-    alternatives: [
-      {
-        modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-        modelName: "DeepSeek R1 7B",
-        reason: "Chain-of-thought for complex eligibility determinations",
-      },
-      {
-        modelId: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-        modelName: "Llama 3.2 3B",
-        reason: "Quick lookups for basic PACT Act questions",
-      },
-    ],
+    alternatives: [],
     tips: [
       "PACT Act has specific presumptive conditions lists",
-      "Larger models better understand regulatory nuances",
+      "🎖️ CW5 Auditor is fine-tuned on official VA regulations",
       "Date-of-service windows are critical - verify AI outputs",
     ],
   },
@@ -288,27 +274,23 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "TDIU Builder",
     category: TOOL_CATEGORIES.LEGAL_ANALYSIS,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 Llama 8B",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
       reason: "Professional-grade reasoning for unemployability arguments",
       badge: "💼 Employment",
     },
     alternatives: [
       {
-        modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 7B",
-        reason: "Strong at articulating vocational limitations",
-      },
-      {
-        modelId: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 3B",
-        reason: "Balanced option for TDIU statement generation",
+        modelId: "diamond-rater",
+        modelName: "🎖️ CW3 Rater",
+        reason:
+          "Useful for the schedular §4.16(a) rating-threshold math behind TDIU",
       },
     ],
     tips: [
       'TDIU requires demonstrating "substantially gainful employment" barriers',
-      "The model needs to connect disabilities to specific job limitations",
-      "Use reasoning models for complex multi-condition TDIU claims",
+      "The agent needs to connect disabilities to specific job limitations",
+      "🎖️ CW5 Auditor handles complex multi-condition TDIU claims",
     ],
   },
 
@@ -317,27 +299,16 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "War Room",
     category: TOOL_CATEGORIES.ADVERSARIAL,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 7B",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
       reason: "Chain-of-thought reasoning for thorough claim stress-testing",
       badge: "⚔️ Battle-Tested",
     },
-    alternatives: [
-      {
-        modelId: "Qwen3-8B-q4f32_1-MLC",
-        modelName: "Qwen 3 8B",
-        reason: "Latest generation with strong analytical capabilities",
-      },
-      {
-        modelId: "Mistral-7B-Instruct-v0.3-q4f32_1-MLC",
-        modelName: "Mistral 7B",
-        reason: "Critical evaluation with good coverage",
-      },
-    ],
+    alternatives: [],
     tips: [
-      'War Room needs models that can "think like a VA rater"',
-      "Reasoning models excel at finding claim weaknesses",
-      "Use the strongest model available for adversarial analysis",
+      'War Room needs an agent that can "think like a VA rater"',
+      "🎖️ CW5 Auditor excels at finding claim weaknesses",
+      "Use the strongest agent available for adversarial analysis",
     ],
   },
 
@@ -345,27 +316,16 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Red Team Simulator",
     category: TOOL_CATEGORIES.ADVERSARIAL,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 7B",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
       reason:
         "Deliberately adversarial reasoning to find claim vulnerabilities",
       badge: "🔴 Red Team",
     },
-    alternatives: [
-      {
-        modelId: "DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC",
-        modelName: "DeepSeek R1 Llama 8B",
-        reason: "Maximum reasoning power for comprehensive red-teaming",
-      },
-      {
-        modelId: "Phi-3.5-mini-instruct-q4f32_1-MLC",
-        modelName: "Phi 3.5 Mini",
-        reason: "Fast critical analysis for quick checks",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Red teaming requires thinking like a skeptical examiner",
-      "DeepSeek R1 models are specifically trained for reasoning",
+      "🎖️ CW5 Auditor is trained on official VA regulations and procedures",
       "Use the output to strengthen weak points in your claim",
     ],
   },
@@ -374,26 +334,15 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "The Tribunal",
     category: TOOL_CATEGORIES.ADVERSARIAL,
     primary: {
-      modelId: "Qwen3-8B-q4f32_1-MLC",
-      modelName: "Qwen 3 8B",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
       reason: "Simulates BVA hearing questions with realistic complexity",
       badge: "⚖️ Hearing Prep",
     },
-    alternatives: [
-      {
-        modelId: "Mistral-7B-Instruct-v0.3-q4f32_1-MLC",
-        modelName: "Mistral 7B",
-        reason: "Natural conversational flow for mock hearings",
-      },
-      {
-        modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-        modelName: "DeepSeek R1 7B",
-        reason: "Probing follow-up questions based on your answers",
-      },
-    ],
+    alternatives: [],
     tips: [
       "BVA hearings involve both factual and procedural questions",
-      "Practice with models that can ask follow-up questions",
+      "🎖️ CW5 Auditor can ask probing follow-up questions",
       "The Tribunal helps you prepare for tough examiner queries",
     ],
   },
@@ -402,26 +351,15 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Risk Assessment",
     category: TOOL_CATEGORIES.ADVERSARIAL,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 7B",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
       reason: "Systematic evaluation of claim strengths and weaknesses",
       badge: "📊 Analysis",
     },
-    alternatives: [
-      {
-        modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 7B",
-        reason: "Comprehensive risk factor identification",
-      },
-      {
-        modelId: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 3B",
-        reason: "Quick risk overview for initial assessment",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Risk assessment needs objective, critical analysis",
-      "Reasoning models can identify non-obvious vulnerabilities",
+      "🎖️ CW5 Auditor can identify non-obvious vulnerabilities",
       "Use findings to prioritize evidence gathering",
     ],
   },
@@ -431,27 +369,17 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Secondary Scout",
     category: TOOL_CATEGORIES.QUICK_TASK,
     primary: {
-      modelId: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-      modelName: "Llama 3.2 3B",
-      reason: "Fast lookups for secondary condition connections",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
+      reason:
+        "Fast, regulation-grounded lookups for secondary condition connections",
       badge: "⚡ Fast",
     },
-    alternatives: [
-      {
-        modelId: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 3B",
-        reason: "Good medical knowledge for condition linking",
-      },
-      {
-        modelId: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 1.5B",
-        reason: "Fastest option for simple lookups",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Secondary Scout queries are typically short",
-      "Speed is more important than raw power here",
       "The database does the heavy lifting - AI just enhances results",
+      "🎖️ CW5 Auditor stays grounded in verified diagnostic codes",
     ],
   },
 
@@ -459,27 +387,15 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Smart Search",
     category: TOOL_CATEGORIES.QUICK_TASK,
     primary: {
-      modelId: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
-      modelName: "Qwen 2.5 1.5B",
-      reason: "Lightning-fast search enhancement and suggestions",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
+      reason: "Search enhancement and suggestions grounded in VA regulations",
       badge: "🔍 Search",
     },
-    alternatives: [
-      {
-        modelId: "SmolLM2-1.7B-Instruct-q4f32_1-MLC",
-        modelName: "SmolLM2 1.7B",
-        reason: "Efficient search query understanding",
-      },
-      {
-        modelId: "Llama-3.2-1B-Instruct-q4f32_1-MLC",
-        modelName: "Llama 3.2 1B",
-        reason: "Fastest possible search assistance",
-      },
-    ],
+    alternatives: [],
     tips: [
-      "Search doesn't need large models - speed is key",
-      "Smaller models respond nearly instantly",
       "AI enhances search but the database is the source of truth",
+      "🎖️ CW5 Auditor avoids hallucinating diagnostic codes",
     ],
   },
 
@@ -487,26 +403,16 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Tactical Calculator",
     category: TOOL_CATEGORIES.QUICK_TASK,
     primary: {
-      modelId: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-      modelName: "Llama 3.2 3B",
-      reason: "Quick explanations of VA math and rating combinations",
+      modelId: "diamond-rater",
+      modelName: "🎖️ CW3 Rater",
+      reason:
+        "Explains VA math and rating combinations - trained on the combined ratings table",
       badge: "🧮 Calculator",
     },
-    alternatives: [
-      {
-        modelId: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 1.5B",
-        reason: "Fast for simple rating math questions",
-      },
-      {
-        modelId: "Phi-3.5-mini-instruct-q4f32_1-MLC",
-        modelName: "Phi 3.5 Mini",
-        reason: "Microsoft model good at math reasoning",
-      },
-    ],
+    alternatives: [],
     tips: [
       "VA combined rating math follows specific formulas",
-      'AI explains the "why" behind calculations',
+      'The agent explains the "why" behind calculations',
       "Calculations are done by the app - AI just assists",
     ],
   },
@@ -532,7 +438,7 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     ],
     tips: [
       "Phi 3.5 Vision Float32 works in any modern browser with WebGPU",
-      "Text-based documents can use any model after OCR",
+      "Text-based documents can use 🎖️ CW5 Auditor after OCR",
       "Cloud AI (Gemini) also has vision capabilities",
     ],
   },
@@ -542,26 +448,16 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Denial Decoder",
     category: TOOL_CATEGORIES.LEGAL_ANALYSIS,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 7B",
-      reason: "Reasoning model translates VA legalese to plain English",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
+      reason:
+        "Translates VA legalese to plain English with regulation-grounded reasoning",
       badge: "📖 Translation",
     },
-    alternatives: [
-      {
-        modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 7B",
-        reason: "Strong at explaining regulatory language",
-      },
-      {
-        modelId: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 3B",
-        reason: "Quick translations for simple denial letters",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Denial letters use specific legal terminology",
-      'Reasoning models explain the "why" behind decisions',
+      'The agent explains the "why" behind decisions',
       "Always read the original letter alongside AI analysis",
     ],
   },
@@ -570,26 +466,15 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "VA Forms Helper",
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
-      modelId: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-      modelName: "Qwen 2.5 3B",
-      reason: "Fast, accurate guidance for filling VA forms",
+      modelId: "diamond-writer",
+      modelName: "🎖️ CW4 Writer",
+      reason:
+        "Fast, accurate guidance for filling VA forms in the veteran's own voice",
       badge: "📋 Forms",
     },
-    alternatives: [
-      {
-        modelId: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-        modelName: "Llama 3.2 3B",
-        reason: "Quick form field suggestions",
-      },
-      {
-        modelId: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 1.5B",
-        reason: "Fastest for simple form questions",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Form fields have specific length limits",
-      "Smaller models work well for concise responses",
       "Review AI suggestions for accuracy before submitting",
     ],
   },
@@ -598,26 +483,14 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Doctor's Packet Generator",
     category: TOOL_CATEGORIES.CREATIVE_WRITING,
     primary: {
-      modelId: "Qwen3-8B-q4f32_1-MLC",
-      modelName: "Qwen 3 8B",
+      modelId: "diamond-writer",
+      modelName: "🎖️ CW4 Writer",
       reason: "Creates comprehensive research packets for physicians",
       badge: "🩺 Medical",
     },
-    alternatives: [
-      {
-        modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 7B",
-        reason: "Strong medical knowledge base",
-      },
-      {
-        modelId: "Mistral-7B-Instruct-v0.3-q4f32_1-MLC",
-        modelName: "Mistral 7B",
-        reason: "Good at professional medical writing",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Doctor packets need medical accuracy",
-      "Larger models produce more thorough research",
       "Include peer-reviewed sources when possible",
     ],
   },
@@ -626,26 +499,14 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Legislative Watchdog",
     category: TOOL_CATEGORIES.LEGAL_ANALYSIS,
     primary: {
-      modelId: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-      modelName: "Qwen 2.5 3B",
-      reason: "Fast analysis of legislative updates",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
+      reason: "Regulation-grounded analysis of legislative updates",
       badge: "📰 News",
     },
-    alternatives: [
-      {
-        modelId: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-        modelName: "Llama 3.2 3B",
-        reason: "Quick summaries of rule changes",
-      },
-      {
-        modelId: "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 1.5B",
-        reason: "Fastest for simple updates",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Legislative changes are time-sensitive",
-      "Faster models help track multiple updates",
       "Always verify changes against official sources",
     ],
   },
@@ -654,26 +515,15 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "The Pathfinder",
     category: TOOL_CATEGORIES.ADVERSARIAL,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 7B",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
       reason: "Strategic analysis to find high-probability secondary claims",
       badge: "🧭 Strategy",
     },
-    alternatives: [
-      {
-        modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 7B",
-        reason: "Strong at identifying condition connections",
-      },
-      {
-        modelId: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 3B",
-        reason: "Balanced analysis speed and quality",
-      },
-    ],
+    alternatives: [],
     tips: [
       "Pathfinder needs to understand medical relationships",
-      "Reasoning models excel at finding non-obvious connections",
+      "🎖️ CW5 Auditor excels at finding non-obvious connections",
       "Use results as a starting point for deeper research",
     ],
   },
@@ -682,26 +532,22 @@ export const TOOL_LLM_RECOMMENDATIONS = {
     name: "Retro Pay Hunter",
     category: TOOL_CATEGORIES.LEGAL_ANALYSIS,
     primary: {
-      modelId: "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC",
-      modelName: "DeepSeek R1 7B",
-      reason: "Systematic analysis to find potential underpayments",
+      modelId: "diamond-rater",
+      modelName: "🎖️ CW3 Rater",
+      reason:
+        "Systematic analysis to find potential underpayments using VA pay tables",
       badge: "💰 Financial",
     },
     alternatives: [
       {
-        modelId: "Qwen2.5-7B-Instruct-q4f32_1-MLC",
-        modelName: "Qwen 2.5 7B",
-        reason: "Strong at financial calculations",
-      },
-      {
-        modelId: "Phi-3.5-mini-instruct-q4f32_1-MLC",
-        modelName: "Phi 3.5 Mini",
-        reason: "Good at math-heavy reasoning",
+        modelId: "diamond-auditor",
+        modelName: "🎖️ CW5 Auditor",
+        reason: "Better for CUE/regulatory analysis of the underlying decision",
       },
     ],
     tips: [
       "Retro pay calculations involve specific VA pay tables",
-      "Reasoning models catch errors in payment history",
+      "🎖️ CW3 Rater catches errors in payment history",
       "Always verify AI findings with official VA records",
     ],
   },
@@ -737,60 +583,51 @@ export const getModelForVRAM = (toolId, availableVRAM) => {
   const tool = TOOL_LLM_RECOMMENDATIONS[toolId];
   if (!tool) return null;
 
-  // VRAM requirements for models (approximate)
+  // VRAM requirements for models. All three Warrant Council agents (the
+  // only locally-loadable models — legacy generic WebLLM models were
+  // removed) require the same 6GB; the vision models are separate.
   const vramMap = {
-    "SmolLM2-360M-Instruct-q4f32_1-MLC": 1,
-    "Llama-3.2-1B-Instruct-q4f32_1-MLC": 2,
-    "Qwen2.5-1.5B-Instruct-q4f32_1-MLC": 2,
-    "SmolLM2-1.7B-Instruct-q4f32_1-MLC": 3,
-    "Qwen3-1.7B-q4f32_1-MLC": 3,
-    "gemma-2-2b-it-q4f32_1-MLC": 3,
-    "Llama-3.2-3B-Instruct-q4f32_1-MLC": 4,
-    "Hermes-3-Llama-3.2-3B-q4f32_1-MLC": 4,
-    "Qwen2.5-3B-Instruct-q4f32_1-MLC": 4,
-    "Phi-3.5-mini-instruct-q4f32_1-MLC": 4,
-    "Qwen3-4B-q4f32_1-MLC": 4,
-    "DeepSeek-R1-Distill-Qwen-7B-q4f32_1-MLC": 6,
-    "DeepSeek-R1-Distill-Llama-8B-q4f32_1-MLC": 6,
+    "diamond-auditor": 6,
+    "diamond-writer": 6,
+    "diamond-rater": 6,
+    "Vet-Rate-Vision-Phi-Float32": 6,
     "Vet-Rate-Vision-Phi-q4f32_1": 6,
-    "Phi-3.5-vision-instruct-q4f32_1-MLC": 6,
-    "Qwen3-8B-q4f32_1-MLC": 7,
-    "Mistral-7B-Instruct-v0.3-q4f32_1-MLC": 8,
-    "Qwen2.5-7B-Instruct-q4f32_1-MLC": 8,
   };
 
   // Check primary first (with null safety)
   if (!tool?.primary?.modelId) {
     // Tool doesn't have proper primary config, return minimal fallback
     return {
-      modelId: "SmolLM2-360M-Instruct-q4f32_1-MLC",
-      modelName: "SmolLM2 360M",
-      reason: "Default model (tool config missing)",
+      modelId: "diamond-auditor",
+      modelName: "🎖️ CW5 Auditor",
+      reason: "Default agent (tool config missing)",
       fits: true,
       isMinimal: true,
     };
   }
 
-  const primaryVRAM = vramMap[tool.primary.modelId] || 4;
+  const primaryVRAM = vramMap[tool.primary.modelId] || 6;
   if (availableVRAM >= primaryVRAM) {
     return { ...tool.primary, fits: true };
   }
 
   // Check alternatives in order
   for (const alt of tool.alternatives) {
-    const altVRAM = vramMap[alt.modelId] || 4;
+    const altVRAM = vramMap[alt.modelId] || 6;
     if (availableVRAM >= altVRAM) {
       return { ...alt, fits: true, wasFallback: true };
     }
   }
 
-  // Return smallest model as last resort
+  // No local agent fits — Cloud AI (Gemini) has no VRAM requirement.
   return {
-    modelId: "SmolLM2-360M-Instruct-q4f32_1-MLC",
-    modelName: "SmolLM2 360M",
-    reason: "Smallest model that fits your VRAM constraints",
+    modelId: null,
+    modelName: "Cloud AI (Gemini)",
+    reason:
+      "Your device doesn't have enough VRAM for a local Warrant Council agent - use Cloud AI instead.",
     fits: false,
     isMinimal: true,
+    isCloudFallback: true,
   };
 };
 

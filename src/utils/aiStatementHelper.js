@@ -1035,7 +1035,7 @@ function buildFieldSuggestionPrompts(condition, primaryCondition, currentText) {
     : "Generate a compelling first-person example.";
 
   return {
-    workImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their ability to work. 
+    workImpact: `As a VA claims specialist, help a veteran describe how their ${condition} affects their ability to work.
 ${continuationInstruction}
 
 Focus on:
@@ -1526,6 +1526,45 @@ Be helpful but BLUNT. This veteran needs to hear the truth before the VA denies 
 };
 
 /**
+ * The AI has been observed suggesting a "stronger" replacement that itself
+ * contains the same minimizing language the tool exists to flag (e.g.
+ * "I have learned to manage its effects effectively" as a suggested fix for
+ * "I manage"). Reject any suggestion containing one of the tool's own
+ * banned/weak phrases instead of showing a self-contradictory rewrite.
+ */
+const REDTEAM_BANNED_SUGGESTION_PHRASES = [
+  "manage",
+  "handle it fine",
+  "effectively cope",
+  "cope effectively",
+  "push through",
+  "not too bad",
+  "a little bit",
+  "don't like to complain",
+  "others have it worse",
+];
+
+const REDTEAM_FALLBACK_SUGGESTION =
+  'Use specific, clinical language describing severity (e.g. a pain scale), frequency (e.g. "4-5 times weekly"), and the exact functional impact (what you can no longer do).';
+
+function sanitizeWeakSpotSuggestions(weakSpots) {
+  if (!Array.isArray(weakSpots)) return weakSpots;
+
+  return weakSpots.map((spot) => {
+    if (typeof spot?.suggestion !== "string") return spot;
+
+    const suggestionLower = spot.suggestion.toLowerCase();
+    const containsBannedPhrase = REDTEAM_BANNED_SUGGESTION_PHRASES.some(
+      (phrase) => suggestionLower.includes(phrase),
+    );
+
+    if (!containsBannedPhrase) return spot;
+
+    return { ...spot, suggestion: REDTEAM_FALLBACK_SUGGESTION };
+  });
+}
+
+/**
  * Stress test a draft statement using Gemini AI
  * @param {string} statement - The draft statement to analyze
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
@@ -1574,6 +1613,11 @@ export const stressTestStatement = async (statement) => {
       }
 
       const analysisData = JSON.parse(cleanedText);
+      if (analysisData?.weak_spots) {
+        analysisData.weak_spots = sanitizeWeakSpotSuggestions(
+          analysisData.weak_spots,
+        );
+      }
       return { success: true, data: analysisData };
     } catch (parseError) {
       console.error("Failed to parse stress test JSON:", parseError, textStr);
@@ -1684,13 +1728,19 @@ YOUR GOAL:
 3. Identify what evidence the VA says is STILL MISSING (only things NOT already conceded)
 4. Provide a clear ACTION PLAN that does NOT contradict favorable findings
 
-⚠️ CRITICAL: If the VA conceded something (e.g., "stressor is conceded", "service connection is established"), 
+⚠️ CRITICAL: If the VA conceded something (e.g., "stressor is conceded", "service connection is established"),
 DO NOT list that as missing or tell the veteran to prove it again. Focus ONLY on what's actually missing.
+
+⚠️ CRITICAL: Many decisions grant or increase SOME issues while denying others in the
+same letter (e.g., "Service connection for tinnitus is granted... Service connection
+for lipoma is denied"). If ANY numbered issue is granted/increased/continued AND ANY
+other issue is denied in the same letter, decision_type MUST be "Mixed Decision" —
+NEVER "Full Denial". Only use "Full Denial" when every issue in the letter was denied.
 
 OUTPUT FORMAT:
 Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JSON):
 {
-  "decision_type": "Full Denial | Partial Denial | Reduction | Deferred | Granted",
+  "decision_type": "Full Denial | Partial Denial | Mixed Decision | Reduction | Deferred | Granted",
   "favorable_findings": [
     "List things the VA already accepted/conceded (e.g., 'Stressor conceded', 'Service connection established')",
     "These are wins - do NOT contradict these in missing_elements or action_plan"

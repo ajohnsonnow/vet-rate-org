@@ -28,7 +28,6 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
-  AI_MODES,
 } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -290,7 +289,7 @@ const UploadNotices = ({ t, aiStatus, error }) => (
           </p>
           <p className="text-green-800">
             {t("denialDecoder.ocrProcessingLocal")}{" "}
-            {aiStatus.effectiveMode === AI_MODES.LOCAL
+            {aiStatus.isPrivate
               ? t("denialDecoder.aiAnalysisLocal")
               : t("denialDecoder.onlyTextSentToAi")}
           </p>

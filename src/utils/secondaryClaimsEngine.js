@@ -10,6 +10,7 @@
  */
 
 import secondaryConditionsDB from "../data/secondary_conditions_db.json";
+import { getHistoricalSmcRate } from "../data/vaSmcRatesHistorical.js";
 import {
   normalizeCondition,
   requiresNSAIDuse,
@@ -17,6 +18,34 @@ import {
   getContralateralJoint,
   getDisplayName,
 } from "./secondaryConditionsMatcher.js";
+
+const SMC_K_CURRENT_YEAR = 2026;
+
+// SMC-K (38 U.S.C. § 1114(k)) pays a flat monthly amount ON TOP OF the
+// schedular rating for loss/loss of use of a creative organ — it applies
+// regardless of the condition's own percentage (often rated 0%), so it's
+// easy for a veteran to win the underlying rating and never learn SMC-K
+// exists. Conditions below qualify as "loss of use of a creative organ."
+const SMC_K_CREATIVE_ORGAN_CONDITIONS = ["erectile dysfunction"];
+
+function getSmcKNote(conditionName) {
+  const lower = conditionName.toLowerCase();
+  const qualifies = SMC_K_CREATIVE_ORGAN_CONDITIONS.some((c) =>
+    lower.includes(c),
+  );
+  if (!qualifies) return null;
+
+  const { matches } = getHistoricalSmcRate(SMC_K_CURRENT_YEAR, "K");
+  const rate = matches[0]?.basicRate;
+
+  return {
+    code: "SMC-K",
+    citation: "38 U.S.C. § 1114(k)",
+    message: rate
+      ? `Loss of use of a creative organ also qualifies for SMC-K (+$${rate.toFixed(2)}/mo, ${SMC_K_CURRENT_YEAR}) ON TOP OF your schedular rating — no separate rating percentage is required to receive it.`
+      : "Loss of use of a creative organ also qualifies for SMC-K, a flat monthly amount on top of your schedular rating - no separate rating percentage is required to receive it.",
+  };
+}
 
 /**
  * Main function to find potential secondary claims
@@ -70,6 +99,42 @@ function normalizeUserDisabilities(userDisabilities) {
   return normalizedDisabilities;
 }
 
+// A direct one-directional substring check ("does any disability string
+// literally contain the full secondary condition string") almost never
+// matches real data: DB entries are compound ("Radiculopathy/Sciatica") or
+// qualified ("Hip Degenerative Arthritis (Bilateral)") while the veteran's
+// actual saved conditions are plain single terms ("Sciatica", "Left Hip
+// Degenerative Arthritis"). Strip qualifiers/side words and slashes, then
+// check for overlap in either direction on each "/"-separated alternative.
+export function isConditionAlreadyRated(
+  secondaryConditionName,
+  userDisabilities,
+) {
+  const normalize = (s) =>
+    s
+      .toLowerCase()
+      // eslint-disable-next-line sonarjs/slow-regex -- negated character class `[^)]*` cannot backtrack; each char is consumed at most once
+      .replace(/\([^)]*\)/g, " ")
+      .replace(/\b(left|right|bilateral)\b/g, " ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+
+  const secondaryParts = secondaryConditionName
+    .split("/")
+    .map((part) => normalize(part))
+    .filter(Boolean);
+
+  return userDisabilities.some((disability) => {
+    const normalizedDisability = normalize(disability);
+    if (!normalizedDisability) return false;
+    return secondaryParts.some(
+      (part) =>
+        normalizedDisability.includes(part) ||
+        part.includes(normalizedDisability),
+    );
+  });
+}
+
 function addDirectLookupSuggestions(
   userDisabilities,
   normalizedDisabilities,
@@ -82,8 +147,9 @@ function addDirectLookupSuggestions(
 
       primaryData.potential_secondaries.forEach((secondary) => {
         // Check if user already has this condition
-        const hasCondition = userDisabilities.some((d) =>
-          d.toLowerCase().includes(secondary.condition.toLowerCase()),
+        const hasCondition = isConditionAlreadyRated(
+          secondary.condition,
+          userDisabilities,
         );
 
         if (!hasCondition && !alreadySuggested.has(secondary.condition)) {
@@ -102,6 +168,7 @@ function addDirectLookupSuggestions(
               secondary.evidence_type ||
               "Medical Literature (for IMO/Nexus purposes)",
             source: "direct_lookup",
+            smcNote: getSmcKNote(secondary.condition),
           });
           alreadySuggested.add(secondary.condition);
         }
@@ -159,8 +226,9 @@ function addNSAIDBridgeSuggestions(
   ];
 
   nsaidSecondaries.forEach((secondary) => {
-    const hasCondition = userDisabilities.some((d) =>
-      d.toLowerCase().includes(secondary.condition.toLowerCase()),
+    const hasCondition = isConditionAlreadyRated(
+      secondary.condition,
+      userDisabilities,
     );
 
     if (!hasCondition && !alreadySuggested.has(secondary.condition)) {

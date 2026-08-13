@@ -14,6 +14,7 @@
  */
 
 import { useMemo } from "react";
+import { VA_PAY_RATES_2026 } from "../utils/vaCalculator";
 
 /**
  * VA Protection Rules per 38 CFR
@@ -156,21 +157,12 @@ function applyFinancialGainFactor(rating, factors) {
     return 0;
   }
 
-  // Very rough estimate - actual depends on dependents
-  const baseRates = {
-    90: 2241,
-    80: 1995,
-    70: 1716,
-    60: 1361,
-    50: 1075,
-    40: 773,
-    30: 524,
-    20: 338,
-    10: 175,
-  };
-  const currentPay = baseRates[rating] || 0;
-  const nextPay = baseRates[Math.min(100, rating + 10)] || 0;
-  return nextPay - currentPay;
+  // Rough estimate for a veteran with no dependents (VA_PAY_RATES_2026 is the
+  // single source of truth, shared with the Tactical Calculator) — actual
+  // gain is higher with a spouse/children.
+  const currentPay = VA_PAY_RATES_2026.solo[rating] || 0;
+  const nextPay = VA_PAY_RATES_2026.solo[Math.min(100, rating + 10)] || 0;
+  return Math.round(nextPay - currentPay);
 }
 
 /**

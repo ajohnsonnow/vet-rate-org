@@ -27,7 +27,6 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
-  AI_MODES,
 } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -1119,7 +1118,7 @@ const AIToggleCard = ({
         </p>
         {aiAvailable && (
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            {aiStatus.mode === AI_MODES.LOCAL
+            {aiStatus.isPrivate
               ? t("witnessBench", "usingLocalAI")
               : t("witnessBench", "usingCloudAI")}
           </p>

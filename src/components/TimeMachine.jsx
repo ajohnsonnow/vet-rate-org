@@ -16,8 +16,10 @@ import { useLanguage } from "../contexts/LanguageContext";
 import {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
+  calculateVARating,
 } from "../utils/vaCalculator";
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
+import { getMyRatings } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { formatLocalDate } from "../utils/dateUtils";
@@ -67,7 +69,10 @@ function TimeMachineWidget({ countdown, onExpand }) {
                 {countdown.daysRemaining} Days
               </p>
               <p className="text-xs opacity-90">
-                ${countdown.potentialBackpay.toLocaleString()} potential backpay
+                ${countdown.potentialBackpay.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}{" "}
+                potential backpay
               </p>
             </>
           )}
@@ -275,7 +280,9 @@ function TimeMachineFinancialImpact({ countdown, estimatedRating }) {
           💰 Potential Backpay
         </h4>
         <p className="text-4xl font-bold text-green-700 dark:text-green-400 mb-2">
-          ${countdown.potentialBackpay.toLocaleString()}
+          ${countdown.potentialBackpay.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+          })}
         </p>
         <p className="text-sm text-gray-600 dark:text-gray-300">
           Based on {countdown.monthsSinceITF} months since ITF
@@ -302,7 +309,9 @@ function TimeMachineFinancialImpact({ countdown, estimatedRating }) {
             ⚠️ Backpay At Risk
           </h4>
           <p className="text-4xl font-bold text-red-700 dark:text-red-400 mb-2">
-            ${countdown.atRiskBackpay.toLocaleString()}
+            ${countdown.atRiskBackpay.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-300">
             You could lose this if ITF expires
@@ -500,6 +509,17 @@ function _loadSavedITF(ctx) {
   }
   if (savedRating) {
     ctx.setEstimatedRating(parseInt(savedRating));
+    return;
+  }
+
+  // No ITF-specific rating saved yet — use the veteran's actual saved
+  // combined rating from My Ratings instead of the hardcoded 70% default.
+  const myRatings = getMyRatings();
+  if (myRatings && myRatings.length > 0) {
+    const { combinedRating } = calculateVARating(myRatings);
+    if (combinedRating > 0) {
+      ctx.setEstimatedRating(combinedRating);
+    }
   }
 }
 

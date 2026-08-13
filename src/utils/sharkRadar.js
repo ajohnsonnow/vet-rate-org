@@ -315,12 +315,18 @@ Identify all red flags and provide your analysis.`;
 
   try {
     // Use unified AI service - automatically chooses Cloud or Local
-    const content = await generateAI(userPrompt, {
+    const rawResult = await generateAI(userPrompt, {
       temperature: 0.2,
       maxTokens: 4096,
       expectJSON: true,
       skipHallucinationCheck: true, // Contract analysis returns risk flags, not diagnostic codes
     });
+
+    // generateAI returns { text, mode } for local/swarm modes and a plain
+    // string for cloud mode - normalize to a string before parsing.
+    const aiText = rawResult?.text ?? rawResult;
+    const content =
+      typeof aiText === "string" ? aiText : JSON.stringify(aiText);
 
     if (!content) {
       throw new Error("No content received from AI");

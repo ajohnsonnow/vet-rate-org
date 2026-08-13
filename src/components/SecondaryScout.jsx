@@ -795,6 +795,15 @@ function ConditionTitleAndBadges({
           </span>
         )}
       </div>
+      {suggestion.smcNote && (
+        <div className="mt-3 p-3 bg-emerald-50 border border-emerald-300 rounded-lg text-sm text-emerald-800">
+          💰 <strong>{suggestion.smcNote.code}:</strong>{" "}
+          {suggestion.smcNote.message}{" "}
+          <span className="text-emerald-600">
+            ({suggestion.smcNote.citation})
+          </span>
+        </div>
+      )}
     </div>
   );
 }

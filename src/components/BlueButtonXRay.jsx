@@ -20,7 +20,6 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
-  AI_MODES,
 } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -778,12 +777,9 @@ function InfoBanner({ aiStatus }) {
           </p>
           <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
             🤖 <strong>AI-Powered:</strong> Uses your{" "}
-            {aiStatus.effectiveMode === AI_MODES.LOCAL
-              ? "secure Local AI"
-              : "Cloud AI"}{" "}
-            to intelligently extract diagnoses.
-            {aiStatus.effectiveMode === AI_MODES.LOCAL &&
-              " Your data never leaves your device!"}
+            {aiStatus.isPrivate ? "secure Local AI" : "Cloud AI"} to
+            intelligently extract diagnoses.
+            {aiStatus.isPrivate && " Your data never leaves your device!"}
           </p>
         </div>
       </div>

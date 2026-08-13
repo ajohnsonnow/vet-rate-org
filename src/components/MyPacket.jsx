@@ -2389,7 +2389,7 @@ function DD214PasteProcessor({
         >
           <DD214ExtractButtonLabel
             isProcessingDD214={isProcessingDD214}
-            aiAvailable={aiStatus.available}
+            aiAvailable={aiStatus.anyAvailable}
             t={t}
           />
         </button>
@@ -2417,7 +2417,7 @@ function DD214PasteProcessor({
           {t("myPacketSection.cancel")}
         </button>
       </div>
-      {!aiStatus.available && (
+      {!aiStatus.anyAvailable && (
         <p className="text-xs text-amber-600 dark:text-amber-400">
           ⚠️ {t("myPacketSection.configureAIWarning")}
         </p>
@@ -2663,7 +2663,7 @@ function DD214SectionHeader({
     <div className="flex items-center justify-between mb-4">
       <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
         📜 {t("myPacketSection.dd214Information")}
-        {aiStatus.available && (
+        {aiStatus.anyAvailable && (
           <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
             {t("myPacketSection.aiReady")}
           </span>
@@ -5277,7 +5277,7 @@ async function _processDD214Text(dd214Text, aiStatus, ctx) {
     return;
   }
 
-  if (!aiStatus.available) {
+  if (!aiStatus.anyAvailable) {
     await _processDD214TextWithoutAI(dd214Text, ctx);
     return;
   }
@@ -5875,7 +5875,7 @@ function useMyPacketServiceHistoryState() {
   });
   const [dd214Text, setDD214Text] = useState("");
   const [isProcessingDD214, setIsProcessingDD214] = useState(false);
-  const [aiStatus, setAIStatus] = useState({ available: false });
+  const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
   const [isDraggingDD214, setIsDraggingDD214] = useState(false);
   const dd214FileInputRef = useRef(null);
 

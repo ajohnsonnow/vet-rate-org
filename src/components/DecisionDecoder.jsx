@@ -255,8 +255,46 @@ const DENIAL_PATTERNS = [
   },
 ];
 
+// Counts per-issue outcome verbs ("is granted", "is increased", "is
+// continued", "is denied") so a letter with both grants and denials isn't
+// misclassified as a "Full Denial" just because one denial phrase appears
+// somewhere in the text.
+function countDecisionOutcomes(text) {
+  const granted = (text.match(/\bis (?:granted|increased|continued)\b/gi) || [])
+    .length;
+  const denied = (text.match(/\bis denied\b/gi) || []).length;
+  return { granted, denied };
+}
+
+function buildMixedDecisionResult(granted, denied) {
+  return {
+    decision_type: "Mixed Decision",
+    plain_english: `This decision is a mix of outcomes: ${granted} issue(s) granted or increased, and ${denied} issue(s) denied. Read each numbered item in your letter carefully — you don't need to appeal the parts that were already granted.`,
+    va_reasoning:
+      "The VA evaluated each claimed condition separately. Some had enough evidence to grant or increase; others did not.",
+    missing_elements: [
+      "Review the letter to identify exactly which issue(s) were denied — do not assume the whole claim was denied",
+    ],
+    action_plan: [
+      "Confirm your new combined rating and effective date for the granted/increased issues",
+      "For the denied issue(s) only, gather the specific evidence VA says is missing",
+      "File a Supplemental Claim or Higher-Level Review for just the denied issue(s) if you disagree",
+      "Contact a VSO to confirm you understand which parts of the decision are final vs. appealable",
+    ],
+    appeal_options:
+      "Only the denied issue(s) need an appeal. You can file a Supplemental Claim (new evidence) or Higher-Level Review (same evidence, new rater) for those specific issues within 1 year.",
+    deadline_warning:
+      "You have 1 year from this decision date to appeal the denied issue(s) while preserving your effective date.",
+  };
+}
+
 function patternMatchDenial(text) {
   const t = text.toLowerCase();
+
+  const { granted, denied } = countDecisionOutcomes(text);
+  if (granted > 0 && denied > 0) {
+    return buildMixedDecisionResult(granted, denied);
+  }
 
   for (const pattern of DENIAL_PATTERNS) {
     if (pattern.test(text, t)) {
@@ -1188,6 +1226,7 @@ const DecisionTypeBadge = ({ results }) => {
     >
       {results.decision_type === "Full Denial" && "❌"}
       {results.decision_type === "Partial Denial" && "⚠️"}
+      {results.decision_type === "Mixed Decision" && "🔀"}
       {results.decision_type === "Reduction" && "📉"}
       {results.decision_type === "Deferred" && "⏳"}
       {results.decision_type === "Granted" && "✅"}
@@ -1473,6 +1512,8 @@ function getDecisionTypeColor(type) {
       return "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700";
     case "partial denial":
       return "bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700";
+    case "mixed decision":
+      return "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700";
     case "reduction":
       return "bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700";
     case "deferred":

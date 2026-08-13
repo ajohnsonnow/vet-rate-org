@@ -589,6 +589,10 @@ export const analyzeRetroactivePay = (ratingHistory) => {
 
   const periods = [];
   const _totalPotentialUnderpayment = 0;
+  let uncoveredMonths = 0;
+  const availableYears = Object.keys(VA_PAY_RATES_HISTORICAL).map(Number);
+  const earliestAvailableYear = Math.min(...availableYears);
+  const earliestRequestedDate = sorted[0].effectiveDate;
 
   sorted.forEach((period, index) => {
     const startDate = new Date(period.effectiveDate);
@@ -616,13 +620,30 @@ export const analyzeRetroactivePay = (ratingHistory) => {
           period.dependents,
         );
 
+        const actualMonthlyReceived =
+          typeof period.actualMonthlyReceived === "number"
+            ? period.actualMonthlyReceived
+            : null;
+
         periods.push({
           month: currentDate.toISOString().slice(0, 7),
           rating: period.rating,
           shouldHavePaid: shouldHavePaid.monthly,
           rateYear: rateYear,
           dependents: period.dependents,
+          actualMonthlyReceived,
+          delta:
+            actualMonthlyReceived !== null
+              ? Math.round(
+                  (shouldHavePaid.monthly - actualMonthlyReceived) * 100,
+                ) / 100
+              : null,
         });
+      } else {
+        // No rate table for this year — this month's entitlement is NOT
+        // included in totalMonths/totals below. Track it so the UI can
+        // disclose the gap instead of silently under-counting.
+        uncoveredMonths += 1;
       }
 
       // Move to next month
@@ -634,6 +655,10 @@ export const analyzeRetroactivePay = (ratingHistory) => {
     periods,
     summary: generatePaySummary(periods),
     totalMonths: periods.length,
+    uncoveredMonths,
+    earliestAvailableYear,
+    earliestRequestedDate,
+    hasCoverageGap: uncoveredMonths > 0,
   };
 };
 
@@ -646,16 +671,33 @@ const generatePaySummary = (periods) => {
   periods.forEach((p) => {
     const year = p.month.slice(0, 4);
     if (!byYear[year]) {
-      byYear[year] = { months: 0, totalShouldPaid: 0 };
+      byYear[year] = {
+        months: 0,
+        totalShouldPaid: 0,
+        totalActuallyReceived: 0,
+        totalDelta: 0,
+        hasActualData: false,
+      };
     }
     byYear[year].months++;
     byYear[year].totalShouldPaid += p.shouldHavePaid;
+    if (p.actualMonthlyReceived !== null) {
+      byYear[year].hasActualData = true;
+      byYear[year].totalActuallyReceived += p.actualMonthlyReceived;
+      byYear[year].totalDelta += p.delta;
+    }
   });
 
   return Object.entries(byYear).map(([year, data]) => ({
     year,
     months: data.months,
     totalShouldPaid: Math.round(data.totalShouldPaid * 100) / 100,
+    totalActuallyReceived: data.hasActualData
+      ? Math.round(data.totalActuallyReceived * 100) / 100
+      : null,
+    totalDelta: data.hasActualData
+      ? Math.round(data.totalDelta * 100) / 100
+      : null,
   }));
 };
 
