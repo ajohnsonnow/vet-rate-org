@@ -364,6 +364,51 @@ const ensureFlorenceVisionReady = async (file, onProgress) => {
   }
 };
 
+// Common boilerplate words/phrases that appear on virtually every real DD214.
+// Used as a dictionary sanity check against Florence-2 hallucinated output.
+const DD214_EXPECTED_TERMS = [
+  "discharge",
+  "active duty",
+  "armed forces",
+  "service",
+  "separation",
+  "united states",
+  "grade",
+  "rank",
+  "military",
+  "certificate",
+];
+
+// Florence-2 can degenerate into a repetition loop on faded/old scans —
+// producing output that's long enough to pass a naive length check but is
+// garbage (e.g. "3.4 BATH ROOM 3.5BATHROOM 3.4BATH ROAD"). Detect a repeated
+// word-root appearing implausibly often relative to total word count.
+function hasRepetitionLoop(text) {
+  const words = text.toLowerCase().match(/[a-z]{4,}/g) || [];
+  if (words.length === 0) return false;
+
+  const counts = {};
+  words.forEach((w) => {
+    counts[w] = (counts[w] || 0) + 1;
+  });
+  const maxRepeats = Math.max(...Object.values(counts));
+  return maxRepeats >= 5 && maxRepeats / words.length > 0.15;
+}
+
+// Dictionary sanity check for the DD214-specific vision path: a real
+// extraction almost always contains at least one boilerplate term, so its
+// total absence (combined with a repetition loop) signals hallucinated text.
+function isGarbledVisionText(text) {
+  if (!text) return true;
+  if (hasRepetitionLoop(text)) return true;
+
+  const lower = text.toLowerCase();
+  const hasExpectedTerm = DD214_EXPECTED_TERMS.some((term) =>
+    lower.includes(term),
+  );
+  return !hasExpectedTerm;
+}
+
 const extractDD214TextViaVision = async (file, onProgress, result) => {
   onProgress?.({
     filename: file.name,
@@ -392,7 +437,8 @@ const extractDD214TextViaVision = async (file, onProgress, result) => {
 
   if (
     visionResult.combinedText &&
-    visionResult.combinedText.trim().length > 100
+    visionResult.combinedText.trim().length > 100 &&
+    !isGarbledVisionText(visionResult.combinedText)
   ) {
     // eslint-disable-next-line no-console
     console.log(
@@ -429,7 +475,7 @@ const extractDD214TextViaVision = async (file, onProgress, result) => {
   }
 
   console.warn(
-    "⚠️ Vision extraction returned minimal text, falling back to OCR",
+    "⚠️ Vision extraction returned minimal or garbled text, falling back to OCR",
   );
   return null; // Will trigger OCR fallback
 };
@@ -630,7 +676,8 @@ async function _applyVisionFallbackIfNeeded(
         if (
           visionResult.text &&
           visionResult.text.trim().length >
-            extractionResult.text.trim().length * 0.5
+            extractionResult.text.trim().length * 0.5 &&
+          !hasRepetitionLoop(visionResult.text)
         ) {
           // eslint-disable-next-line no-console
           console.log(
@@ -3785,8 +3832,8 @@ export const parseRatingDecision = async (text) => {
     // where the original's own behavior was already fragile (it could
     // swallow unrelated prose into the "condition name").
     const CONDITION_PERCENT_RE = /([A-Z][A-Z\s,]{1,100}?)[\s-]+(\d+)%/gi;
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
     const DIAGNOSTIC_CODE_BEFORE_RE =
+      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
       /DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4})\s*$/i;
     const DIAGNOSTIC_CODE_LOOKBACK_WINDOW = 200;
 
