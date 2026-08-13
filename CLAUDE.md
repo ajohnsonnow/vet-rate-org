@@ -15,7 +15,7 @@
 5. Handle errors explicitly — no silent catches; fail loudly at boundaries.
 6. Use HTTPS everywhere — including dev when possible.
 7. Keep dependencies updated — Renovate/Dependabot, weekly cadence.
-8. Document decisions (ADRs) — not code; the *why*.
+8. Document decisions (ADRs) — not code; the _why_.
 9. Make it accessible — WCAG 2.2 AA minimum.
 10. Automate the boring stuff — preflight, lint, format, deploy.
 
@@ -84,15 +84,15 @@ For plans, architecture, or claims you're about to act on, also run **Pass 2 (Ad
 
 ### 2.9 No unsolicited comments
 
-- Default to writing **no** comments. Add one only when the *why* is non-obvious.
-- Never explain *what* well-named code already does.
+- Default to writing **no** comments. Add one only when the _why_ is non-obvious.
+- Never explain _what_ well-named code already does.
 - Never reference the current task / fix / caller in comments.
 
 ### 2.10 Risky actions require confirmation
 
 Do not take destructive or hard-to-reverse actions without explicit user authorization for the specific scope:
 
-- `rm -rf`, dropping tables, killing processes, deleting branches, force-push
+- `rm -rf`, dropping tables, killing processes, deleting branches (except the post-merge cleanup in §2.13), force-push
 - `git reset --hard`, amending published commits, removing dependencies
 - Pushing code, opening/closing PRs, posting to Slack/email, modifying CI
 - Uploading content to third-party tools (it may be cached/indexed)
@@ -106,22 +106,26 @@ If you cannot test a change, say so. If you're guessing, say "I'm guessing." Nev
 
 ### 2.12 Responsive & adaptive UI (any front end)
 
-Design for the whole screen continuum (~320px phones → 4K/32" monitors), not the dev's monitor. **Fluid first** (flex/grid, `clamp()`, `min()/max()`, `%`/`fr`); breakpoints only refine. **Extend the breakpoint scale, never override it away** — keep `2xl` and add `3xl`/`4xl` (≥1920/2560) so large screens can be targeted at all. Cap prose at a reading measure (~65ch); give app shells a bounded max-width that *scales up* at large breakpoints so content doesn't strand in a 4K void. No `w-screen`/`100vw`/fixed-px wider than the smallest viewport; `min-w-0` on flex text children; media `max-width:100%`; `overflow-x:hidden` is a safety net, not a fix. Touch targets ≥44px; `viewport-fit=cover` + safe-area insets; never block zoom. **Verify at 390px and 3840px** (the two most-skipped widths) plus one mid-width, with an automated no-horizontal-scroll assertion. Full checklist: [responsive-adaptive-ui-best-practices.md](../best-practices-toolkit/docs/best-practices/responsive-adaptive-ui-best-practices.md).
+Design for the whole screen continuum (~320px phones → 4K/32" monitors), not the dev's monitor. **Fluid first** (flex/grid, `clamp()`, `min()/max()`, `%`/`fr`); breakpoints only refine. **Extend the breakpoint scale, never override it away** — keep `2xl` and add `3xl`/`4xl` (≥1920/2560) so large screens can be targeted at all. Cap prose at a reading measure (~65ch); give app shells a bounded max-width that _scales up_ at large breakpoints so content doesn't strand in a 4K void. No `w-screen`/`100vw`/fixed-px wider than the smallest viewport; `min-w-0` on flex text children; media `max-width:100%`; `overflow-x:hidden` is a safety net, not a fix. Touch targets ≥44px; `viewport-fit=cover` + safe-area insets; never block zoom. **Verify at 390px and 3840px** (the two most-skipped widths) plus one mid-width, with an automated no-horizontal-scroll assertion. Full checklist: [responsive-adaptive-ui-best-practices.md](../best-practices-toolkit/docs/best-practices/responsive-adaptive-ui-best-practices.md).
+
+### 2.13 Git branch workflow — merge to main, then delete
+
+A request to push a feature/fix branch is a request to land it, not just to back it up remotely. Once it's pushed and its work is verified (preflight/tests green — see §2.6/§2.7), merge it into `main`, then delete the branch, both locally and on the remote. This is standing authorization for the merge and branch-deletion steps that follow a completed, verified push — it does **not** authorize skipping verification gates, force-pushing, or merging unverified/failing work, and it does not extend to deleting a branch that hasn't been merged or whose merge status is uncertain (that still needs explicit confirmation per §2.10). See [client-management-best-practices.md § Branch hygiene](../best-practices-toolkit/docs/best-practices/client-management-best-practices.md#branch-hygiene-merge-and-delete).
 
 ---
 
 ## 3. Claude model selection
 
-| Use case | Model | ID | $/MTok | Context | Max out |
-|---|---|---|---|---|---|
-| Hardest reasoning, long-horizon agentic tasks | **Fable 5** | `claude-fable-5` | $10 / $50 | 1M | 128K |
-| Complex engineering, architecture, long agentic runs | **Opus 5** | `claude-opus-5` | $5 / $25 | 1M | 128K |
-| Daily coding, code review, most agent work | **Sonnet 5** | `claude-sonnet-5` | $3 / $15 | 1M | 128K |
-| Classification, extraction, high-volume routing | **Haiku 4.5** | `claude-haiku-4-5` | $1 / $5 | 200K | 64K |
+| Use case                                             | Model         | ID                 | $/MTok    | Context | Max out |
+| ---------------------------------------------------- | ------------- | ------------------ | --------- | ------- | ------- |
+| Hardest reasoning, long-horizon agentic tasks        | **Fable 5**   | `claude-fable-5`   | $10 / $50 | 1M      | 128K    |
+| Complex engineering, architecture, long agentic runs | **Opus 5**    | `claude-opus-5`    | $5 / $25  | 1M      | 128K    |
+| Daily coding, code review, most agent work           | **Sonnet 5**  | `claude-sonnet-5`  | $3 / $15  | 1M      | 128K    |
+| Classification, extraction, high-volume routing      | **Haiku 4.5** | `claude-haiku-4-5` | $1 / $5   | 200K    | 64K     |
 
 Model IDs are complete as written — **never append a date suffix**. Haiku 4.5 is the lone exception with a dated full ID (`claude-haiku-4-5-20251001`); prefer the bare alias.
 
-**Opus 5** (`claude-opus-5`) is the current flagship at Opus 4.8's price. Two migration gotchas: **thinking is on by default** (omitting `thinking` runs adaptive, so `max_tokens` now caps thinking *plus* answer and tight budgets truncate), and `thinking: {type: "disabled"}` **400s above `high` effort**. Prompt-cache minimum drops to 512 tokens. Handle `stop_reason: "refusal"` before reading `content`; prefer `fallbacks: "default"` over pinning a fallback model.
+**Opus 5** (`claude-opus-5`) is the current flagship at Opus 4.8's price. Two migration gotchas: **thinking is on by default** (omitting `thinking` runs adaptive, so `max_tokens` now caps thinking _plus_ answer and tight budgets truncate), and `thinking: {type: "disabled"}` **400s above `high` effort**. Prompt-cache minimum drops to 512 tokens. Handle `stop_reason: "refusal"` before reading `content`; prefer `fallbacks: "default"` over pinning a fallback model.
 
 **Fable 5** (`claude-fable-5`) is the top capability tier at 2× Opus 5. Thinking always on — omit the param (`{type:"disabled"}` → 400). No temperature/top_p/top_k, no assistant prefill. Requires 30-day data retention (ZDR org → 400 on every request).
 
@@ -133,20 +137,20 @@ Model IDs are complete as written — **never append a date suffix**. Haiku 4.5 
 
 **Prompt caching** (1-hour TTL) cuts Claude API spend ~90% for repeated context. Minimum cacheable prefix is **not monotonic**: 512 tokens (Opus 5, Fable 5), 1,024 (Opus 4.8, Sonnet 5/4.6), 2,048 (Opus 4.7), 4,096 (Opus 4.6, Haiku 4.5). See [claude-code-best-practices.md §5](../best-practices-toolkit/docs/best-practices/claude-code-best-practices.md).
 
-**Effort levels (Claude Code `/effort`, API `output_config.effort`):** `low` → `medium` → `high` → `xhigh` → `max`; API default `high`. `xhigh` for coding/agentic, min `high` for intelligence-sensitive work — then sweep *down*, since Opus 5's `low`/`medium` are unusually strong and are the main cost/latency lever. At `xhigh`/`max`, set `max_tokens` ≥ 64K.
+**Effort levels (Claude Code `/effort`, API `output_config.effort`):** `low` → `medium` → `high` → `xhigh` → `max`; API default `high`. `xhigh` for coding/agentic, min `high` for intelligence-sensitive work — then sweep _down_, since Opus 5's `low`/`medium` are unusually strong and are the main cost/latency lever. At `xhigh`/`max`, set `max_tokens` ≥ 64K.
 
 ---
 
 ## 4. Claude 4.x prompting
 
 - **No ALL CAPS commands.** Claude 4.x doesn't need shouting and may over-comply.
-- **Be explicit about scope and boundaries.** State what to do *and* not do.
+- **Be explicit about scope and boundaries.** State what to do _and_ not do.
 - **Guard against over-engineering** — explicitly tell Claude not to add features.
 - **Structured output when parsing** — request JSON/YAML schema with field names.
 - **No ambiguous pronouns** — name files and line numbers.
 - **Provide context, not the whole codebase.**
 - **Errors verbatim** — paste, don't paraphrase.
-- **Effort-scaling heuristic:** *"simple → 1 search; moderate → up to 5; research report → up to 15."*
+- **Effort-scaling heuristic:** _"simple → 1 search; moderate → up to 5; research report → up to 15."_
 
 See [ai-prompt-engineering-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-prompt-engineering-best-practices.md).
 
@@ -180,9 +184,9 @@ See [agentic-development-best-practices.md](../best-practices-toolkit/docs/best-
 
 ## 6. Memory hygiene (file-based memory)
 
-- **Memory is not a database.** Save *non-obvious* facts that future-you would otherwise miss.
+- **Memory is not a database.** Save _non-obvious_ facts that future-you would otherwise miss.
 - **Don't save** code patterns, file paths, git history, debugging recipes, or anything derivable from current repo state.
-- **Always include the *why*** for feedback/project memories.
+- **Always include the _why_** for feedback/project memories.
 - **Convert relative dates to absolute** when saving.
 - **Verify before recommending** from memory — paths get renamed, flags removed.
 - **Memory ≠ plan ≠ todo.**
@@ -237,19 +241,19 @@ See [ai-memory-systems-best-practices.md](../best-practices-toolkit/docs/best-pr
 
 ## 9. Quick reference — toolkit guides
 
-| When you need… | Read |
-|---|---|
-| Agent-routing index | [../best-practices-toolkit/AGENTS.md](../best-practices-toolkit/AGENTS.md) |
-| Model selection / caching / effort | [claude-code-best-practices.md](../best-practices-toolkit/docs/best-practices/claude-code-best-practices.md) |
-| Claude 4.x prompting | [ai-prompt-engineering-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-prompt-engineering-best-practices.md) |
-| Sub-agent / lethal trifecta | [agentic-development-best-practices.md](../best-practices-toolkit/docs/best-practices/agentic-development-best-practices.md) |
-| Self-critique passes | [REVIEW_PASSES.md](../best-practices-toolkit/docs/best-practices/REVIEW_PASSES.md) |
-| Memory patterns | [ai-memory-systems-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-memory-systems-best-practices.md) |
-| Agent security / prompt injection | [ai-agent-security-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-agent-security-best-practices.md) |
-| Threat-model a system | [threat-modeling-best-practices.md](../best-practices-toolkit/docs/best-practices/threat-modeling-best-practices.md) |
-| Preflight before commit | [preflight-checks-best-practices.md](../best-practices-toolkit/docs/best-practices/preflight-checks-best-practices.md) |
+| When you need…                        | Read                                                                                                                               |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Agent-routing index                   | [../best-practices-toolkit/AGENTS.md](../best-practices-toolkit/AGENTS.md)                                                         |
+| Model selection / caching / effort    | [claude-code-best-practices.md](../best-practices-toolkit/docs/best-practices/claude-code-best-practices.md)                       |
+| Claude 4.x prompting                  | [ai-prompt-engineering-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-prompt-engineering-best-practices.md)   |
+| Sub-agent / lethal trifecta           | [agentic-development-best-practices.md](../best-practices-toolkit/docs/best-practices/agentic-development-best-practices.md)       |
+| Self-critique passes                  | [REVIEW_PASSES.md](../best-practices-toolkit/docs/best-practices/REVIEW_PASSES.md)                                                 |
+| Memory patterns                       | [ai-memory-systems-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-memory-systems-best-practices.md)           |
+| Agent security / prompt injection     | [ai-agent-security-best-practices.md](../best-practices-toolkit/docs/best-practices/ai-agent-security-best-practices.md)           |
+| Threat-model a system                 | [threat-modeling-best-practices.md](../best-practices-toolkit/docs/best-practices/threat-modeling-best-practices.md)               |
+| Preflight before commit               | [preflight-checks-best-practices.md](../best-practices-toolkit/docs/best-practices/preflight-checks-best-practices.md)             |
 | Responsive / adaptive UI (phone → 4K) | [responsive-adaptive-ui-best-practices.md](../best-practices-toolkit/docs/best-practices/responsive-adaptive-ui-best-practices.md) |
 
 ---
 
-*If anything here conflicts with a more recent user instruction in conversation, the user wins. If anything here conflicts with a guide in the toolkit, the guide is the deeper source — quote it.*
+_If anything here conflicts with a more recent user instruction in conversation, the user wins. If anything here conflicts with a guide in the toolkit, the guide is the deeper source — quote it._

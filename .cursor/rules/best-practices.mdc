@@ -32,6 +32,7 @@ alwaysApply: true
 - **No over-engineering.** No features/abstractions/fallbacks beyond the task. Three similar lines > premature abstraction.
 - **No unsolicited comments.** Default zero. Add only when *why* is non-obvious.
 - **Risky actions need explicit auth.** rm -rf, force-push, reset --hard, amend, drop tables, push, PR ops, posting externally, modifying CI, --no-verify. Auth is scoped.
+- **Git branch workflow.** A push of a feature/fix branch is a request to land it: once verified, merge to `main`, then delete the branch locally + on the remote. Standing auth for that merge + delete — not for skipping gates or merging unverified work.
 - **Honesty.** Don't fabricate paths, function names, model IDs, versions, URLs.
 
 ## Claude models (if applicable)
