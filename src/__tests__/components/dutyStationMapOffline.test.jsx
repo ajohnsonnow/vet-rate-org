@@ -37,11 +37,11 @@ describe("DutyStationMap — offline (zero network requests)", () => {
 });
 
 describe("DutyStationMap — rendering", () => {
-  it("renders the sphere + graticule + all 177 bundled country paths with zero stations", () => {
+  it("renders the sphere + graticule + all 241 bundled country paths with zero stations", () => {
     const { container } = render(<DutyStationMap stations={[]} t={t} />);
     expect(container.querySelector("svg")).toBeTruthy();
-    // sphere (1) + graticule (1) + 177 countries = 179 <path> elements
-    expect(container.querySelectorAll("path").length).toBe(179);
+    // sphere (1) + graticule (1) + 241 countries = 243 <path> elements
+    expect(container.querySelectorAll("path").length).toBe(243);
   });
 
   it("plots only stations with finite, in-range coordinates (criterion 8)", () => {

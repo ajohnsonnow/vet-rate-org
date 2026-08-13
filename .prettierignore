@@ -1,0 +1,5 @@
+# Vendored third-party data — keep as obtained, not reformatted. Nobody
+# manually reads/diffs this file, and pretty-printing it roughly doubles its
+# committed size (and, before this exclusion, its gzipped shipped size) for
+# no benefit. See src/data/geo/README.md for provenance.
+src/data/geo/world-countries-50m.topo.json

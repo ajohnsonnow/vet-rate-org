@@ -2,7 +2,7 @@
  * Load-bearing test (duty-stations + world-map spec §8): the map MUST be
  * area-accurate (Equal Earth), not just visually plausible. This asserts
  * that planar area / spherical area is roughly constant across the
- * bundled 110m features — the signature property of an equal-area
+ * bundled 50m features — the signature property of an equal-area
  * projection — and that the test fails hard if geoMercator (or any other
  * non-equal-area projection) is substituted for geoEqualEarth.
  *
@@ -17,8 +17,8 @@
  * correct definition of "the shoelace sum over projected rings" as
  * literally rendered AND the one that isolates the projection choice.
  *
- * Measured on this exact 110m dataset: geoEqualEarth's max deviation from
- * the median ratio is ~0.48% (features with geoArea > 0.001 sr) — the
+ * Measured on this exact 50m dataset: geoEqualEarth's max deviation from
+ * the median ratio is ~0.012% (features with geoArea > 0.001 sr) — the
  * spec's default ±5% tolerance is not "too tight" here, so it's kept
  * as-specified rather than loosened.
  */
@@ -29,7 +29,7 @@ import {
   createWorldProjection,
 } from "../../data/geo/worldFeatures";
 
-const TOPO_JSON_PATH = "../../data/geo/world-countries-110m.topo.json";
+const TOPO_JSON_PATH = "../../data/geo/world-countries-50m.topo.json";
 
 const GEO_AREA_THRESHOLD = 0.001; // steradians, per spec
 const TOLERANCE = 0.05; // ±5%, measured max deviation is ~0.48%
@@ -72,12 +72,12 @@ describe("DutyStationMap projection — equal-area verification", () => {
     vi.resetModules();
   });
 
-  it("loads 177 bundled country features, each with a unique name", () => {
+  it("loads 241 bundled country features, each with a unique name", () => {
     const features = loadWorldFeatures();
-    expect(features.length).toBe(177);
+    expect(features.length).toBe(241);
     const names = features.map((f) => f.properties?.name);
     expect(names.every(Boolean)).toBe(true);
-    expect(new Set(names).size).toBe(177);
+    expect(new Set(names).size).toBe(241);
   });
 
   it("keeps planar-area/geoArea roughly constant across features (Equal Earth)", () => {

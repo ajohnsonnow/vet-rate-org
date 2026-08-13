@@ -14,20 +14,20 @@
  */
 import { geoEqualEarth } from "d3-geo";
 import { feature } from "topojson-client";
-import worldTopo from "./world-countries-110m.topo.json";
+import worldTopo from "./world-countries-50m.topo.json";
 
 /**
- * Parse the vendored topojson into a GeoJSON feature list. Three of the 177
- * features (disputed territories with no standard numeric country code —
- * N. Cyprus, Somaliland, Kosovo) have `id: undefined`; every feature does
- * have a unique `properties.name`, so callers must key/identify features by
- * name, not id.
+ * Parse the vendored topojson into a GeoJSON feature list. Five of the 241
+ * features (disputed/unclaimed territories with no standard numeric country
+ * code — N. Cyprus, Somaliland, Kosovo, Indian Ocean Ter., Siachen Glacier)
+ * have `id: undefined`; every feature does have a unique `properties.name`,
+ * so callers must key/identify features by name, not id.
  * @returns {Array<Object>} GeoJSON Feature[] (MultiPolygon/Polygon)
  */
 export function loadWorldFeatures() {
   if (!worldTopo?.objects?.countries) {
     throw new Error(
-      "World boundary data is missing objects.countries — src/data/geo/world-countries-110m.topo.json may be corrupt or out of date.",
+      "World boundary data is missing objects.countries — src/data/geo/world-countries-50m.topo.json may be corrupt or out of date.",
     );
   }
   return feature(worldTopo, worldTopo.objects.countries).features;

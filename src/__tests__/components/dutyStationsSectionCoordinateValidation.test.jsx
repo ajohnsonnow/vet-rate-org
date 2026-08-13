@@ -30,7 +30,10 @@ async function renderSection() {
       t={t}
     />,
   );
-  await screen.findByRole("img");
+  // Explicit timeout: the 50m boundary data means parsing + rendering 241
+  // country paths, not 177, so the default 1000ms findBy timeout can flake
+  // under full-suite parallel load.
+  await screen.findByRole("img", {}, { timeout: 5000 });
   return utils;
 }
 
