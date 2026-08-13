@@ -578,30 +578,65 @@ function _detectBodyPartPyramiding(conditions) {
   Object.entries(bodyPartGroups).forEach(([bodyPart, condList]) => {
     // Left/right pairs of the same body part (e.g. Left Knee + Right Knee)
     // are separately ratable per §4.25/§4.26 — NOT pyramiding. Only flag
-    // when 2+ conditions share the same side (same-joint/same-side stacking).
-    const sideGroups = {};
-    condList.forEach((c) => {
-      const side = c.side && c.side !== "none" ? c.side : "unspecified";
-      if (!sideGroups[side]) sideGroups[side] = [];
-      sideGroups[side].push(c);
+    // conditions whose sides can't be ruled out as the same joint, using
+    // the same _sidesMayOverlap() overlap check _detectNervePyramiding
+    // below already relies on (grouping by exact side string missed the
+    // case where one condition's side is unspecified/bilateral and so
+    // can't be ruled out as overlapping a same-body-part left/right entry).
+    // Union-find over overlapping pairs so an unspecified-side condition
+    // correctly pulls a left AND a right entry of the same body part into
+    // one warning, since it can't be ruled out as either.
+    const parent = condList.map((_, i) => i);
+    const find = (i) => {
+      while (parent[i] !== i) {
+        parent[i] = parent[parent[i]];
+        i = parent[i];
+      }
+      return i;
+    };
+    const union = (i, j) => {
+      const ri = find(i);
+      const rj = find(j);
+      if (ri !== rj) parent[ri] = rj;
+    };
+    for (let i = 0; i < condList.length; i++) {
+      for (let j = i + 1; j < condList.length; j++) {
+        if (_sidesMayOverlap(condList[i].side, condList[j].side)) {
+          union(i, j);
+        }
+      }
+    }
+
+    const components = {};
+    condList.forEach((c, i) => {
+      const root = find(i);
+      if (!components[root]) components[root] = [];
+      components[root].push(c);
     });
 
-    Object.entries(sideGroups).forEach(([side, sideCondList]) => {
-      if (sideCondList.length > 1) {
-        const sideSuffix = side !== "unspecified" ? ` (${side})` : "";
-        warnings.push({
-          type: "potential_pyramiding",
-          severity: "high",
-          bodyPart,
-          side: side !== "unspecified" ? side : undefined,
-          conditions: sideCondList.map((c) => c.name),
-          message: `Multiple conditions for ${bodyPart}${sideSuffix}. Verify these rate different manifestations (not the same pain/limitation twice).`,
-          regulation: "38 CFR § 4.14",
-          guidance:
-            "You cannot rate the same manifestation under different diagnostic codes. For example: cervical pain can only be rated once, not under both strain AND arthritis codes.",
-          indices: sideCondList.map((c) => c.index),
-        });
-      }
+    Object.values(components).forEach((group) => {
+      if (group.length <= 1) return;
+      const sides = new Set(
+        group.map((c) =>
+          c.side && c.side !== "none" ? c.side : "unspecified",
+        ),
+      );
+      const singleSide = sides.size === 1 ? [...sides][0] : undefined;
+      const side =
+        singleSide && singleSide !== "unspecified" ? singleSide : undefined;
+      const sideSuffix = side ? ` (${side})` : "";
+      warnings.push({
+        type: "potential_pyramiding",
+        severity: "high",
+        bodyPart,
+        side,
+        conditions: group.map((c) => c.name),
+        message: `Multiple conditions for ${bodyPart}${sideSuffix}. Verify these rate different manifestations (not the same pain/limitation twice).`,
+        regulation: "38 CFR § 4.14",
+        guidance:
+          "You cannot rate the same manifestation under different diagnostic codes. For example: cervical pain can only be rated once, not under both strain AND arthritis codes.",
+        indices: group.map((c) => c.index),
+      });
     });
   });
 
