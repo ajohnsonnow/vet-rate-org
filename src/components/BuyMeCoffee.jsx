@@ -23,15 +23,15 @@ const ENTRANCE_ANIMATIONS = [
   "animate-luna-fade-zoom", // Fade + zoom combo
 ];
 
-// Random position zones (avoiding corners where other UI elements live)
+// Corner/edge-anchored zones so Luna never overlaps the center content pane
+// where results typically render right as she appears. Uses right/bottom
+// distances (not left/top + translate) so the card stays anchored to a
+// corner regardless of viewport size, with safe-area-aware margins.
 const POSITION_ZONES = [
-  { top: "30%", left: "50%", transform: "translate(-50%, -50%)" }, // Center-upper
-  { top: "50%", left: "50%", transform: "translate(-50%, -50%)" }, // Dead center
-  { top: "40%", left: "30%", transform: "translate(-50%, -50%)" }, // Center-left
-  { top: "40%", left: "70%", transform: "translate(-50%, -50%)" }, // Center-right
-  { top: "35%", left: "40%", transform: "translate(-50%, -50%)" }, // Upper-left-ish
-  { top: "35%", left: "60%", transform: "translate(-50%, -50%)" }, // Upper-right-ish
-  { top: "45%", left: "45%", transform: "translate(-50%, -50%)" }, // Slightly off-center
+  { bottom: "1.5rem", right: "1.5rem" }, // Bottom-right
+  { bottom: "1.5rem", left: "1.5rem" }, // Bottom-left
+  { top: "5.5rem", right: "1.5rem" }, // Top-right (below header)
+  { top: "5.5rem", left: "1.5rem" }, // Top-left (below header)
 ];
 
 // Cat-themed emojis for extra fun
@@ -291,11 +291,7 @@ function LunaCard({ position, animation, extraEmoji, msg, onDismiss }) {
   return (
     <div
       className={`fixed z-50 ${animation} max-w-[calc(100vw-2rem)] sm:max-w-sm`}
-      style={{
-        top: position.top,
-        left: position.left,
-        transform: position.transform,
-      }}
+      style={position}
     >
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 border-2 border-purple-300 dark:border-purple-600 relative backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
         {/* Decorative cat ears on top */}
