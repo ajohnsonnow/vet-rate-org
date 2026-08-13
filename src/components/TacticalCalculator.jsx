@@ -877,7 +877,8 @@ function PayResultsBreakdown({ t, results, compensation }) {
             {t("tacticalCalc", "baseRate")} ({results.combinedRating}%)
           </span>
           <span className="font-medium">
-            ${compensation.breakdown.baseRate.toLocaleString(undefined, {
+            $
+            {compensation.breakdown.baseRate.toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}
           </span>
@@ -910,9 +911,12 @@ function PayResultsBreakdown({ t, results, compensation }) {
             <span>+ {t("tacticalCalc", "firstChild")}</span>
             <span>
               +$
-              {compensation.breakdown.firstChildAddition.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {compensation.breakdown.firstChildAddition.toLocaleString(
+                undefined,
+                {
+                  minimumFractionDigits: 2,
+                },
+              )}
             </span>
           </div>
         )}
@@ -945,9 +949,12 @@ function PayResultsBreakdown({ t, results, compensation }) {
             <span>+ {t("tacticalCalc", "dependentParents")}</span>
             <span>
               +$
-              {compensation.breakdown.parentsAddition.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+              {compensation.breakdown.parentsAddition.toLocaleString(
+                undefined,
+                {
+                  minimumFractionDigits: 2,
+                },
+              )}
             </span>
           </div>
         )}
@@ -1706,7 +1713,8 @@ const PYRAMIDING_SEVERITY_STYLES = {
   },
   medium: {
     container: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-500",
-    badge: "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200",
+    badge:
+      "bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200",
   },
 };
 
@@ -1722,7 +1730,9 @@ function PyramidingWarningItem({ t, warning }) {
           {warning.message}
         </p>
         <span className={`text-xs px-2 py-1 rounded ${styles.badge}`}>
-          {warning.severity === "info" ? "INFO" : warning.severity.toUpperCase()}
+          {warning.severity === "info"
+            ? "INFO"
+            : warning.severity.toUpperCase()}
         </span>
       </div>
       <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">

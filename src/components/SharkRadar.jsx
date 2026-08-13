@@ -15,10 +15,7 @@ import {
   getSeverityColor,
   getSharkRadarPrivacyDisclosure,
 } from "../utils/sharkRadar";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 

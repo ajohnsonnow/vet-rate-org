@@ -10,10 +10,7 @@ import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import { enhanceFormStatement } from "../utils/aiStatementHelper";
-import {
-  isAnyAIAvailable,
-  getAIStatus,
-} from "../utils/unifiedAIService";
+import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import ShareButton from "./ShareButton";

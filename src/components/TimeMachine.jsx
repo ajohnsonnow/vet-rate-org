@@ -69,7 +69,8 @@ function TimeMachineWidget({ countdown, onExpand }) {
                 {countdown.daysRemaining} Days
               </p>
               <p className="text-xs opacity-90">
-                ${countdown.potentialBackpay.toLocaleString(undefined, {
+                $
+                {countdown.potentialBackpay.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                 })}{" "}
                 potential backpay
@@ -280,7 +281,8 @@ function TimeMachineFinancialImpact({ countdown, estimatedRating }) {
           💰 Potential Backpay
         </h4>
         <p className="text-4xl font-bold text-green-700 dark:text-green-400 mb-2">
-          ${countdown.potentialBackpay.toLocaleString(undefined, {
+          $
+          {countdown.potentialBackpay.toLocaleString(undefined, {
             minimumFractionDigits: 2,
           })}
         </p>
@@ -309,7 +311,8 @@ function TimeMachineFinancialImpact({ countdown, estimatedRating }) {
             ⚠️ Backpay At Risk
           </h4>
           <p className="text-4xl font-bold text-red-700 dark:text-red-400 mb-2">
-            ${countdown.atRiskBackpay.toLocaleString(undefined, {
+            $
+            {countdown.atRiskBackpay.toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}
           </p>

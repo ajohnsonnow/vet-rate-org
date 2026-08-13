@@ -1369,8 +1369,8 @@ function OCRFailedMessage({ documentType }) {
               <span className="text-green-600 dark:text-green-400">✓</span>
               <span>
                 <strong>Skip This Document:</strong> Use the &quot;Skip This
-                Document&quot; button below and add this document&apos;s
-                details manually in My Packet later.
+                Document&quot; button below and add this document&apos;s details
+                manually in My Packet later.
               </span>
             </li>
           )}

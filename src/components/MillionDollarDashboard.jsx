@@ -13,7 +13,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { getMyRatings, hasMyRatings, getVeteranProfile } from "../utils/veteranProfile";
+import {
+  getMyRatings,
+  hasMyRatings,
+  getVeteranProfile,
+} from "../utils/veteranProfile";
 import { calculateVARating } from "../utils/vaCalculator";
 import { checkSMCSHousebound } from "../utils/smcDetector";
 import { stateBenefits } from "../data/stateBenefits.js";
@@ -232,7 +236,11 @@ function loadRatingFromProfile(setRating) {
 // Load state/spouse/dependents defaults from the saved veteran profile
 // instead of always defaulting to Texas/married/2 kids regardless of what
 // the veteran actually saved in My Packet.
-function loadDependentDefaultsFromProfile({ setState, setHasSpouse, setNumChildren }) {
+function loadDependentDefaultsFromProfile({
+  setState,
+  setHasSpouse,
+  setNumChildren,
+}) {
   const profile = getVeteranProfile();
 
   if (profile.state) {
@@ -1049,7 +1057,11 @@ function useMillionDollarDashboardState() {
   // Auto-load rating and dependent/state defaults from veteranProfile on mount
   useEffect(() => {
     loadRatingFromProfile(setRating);
-    loadDependentDefaultsFromProfile({ setState, setHasSpouse, setNumChildren });
+    loadDependentDefaultsFromProfile({
+      setState,
+      setHasSpouse,
+      setNumChildren,
+    });
   }, []);
 
   // Manual load handler

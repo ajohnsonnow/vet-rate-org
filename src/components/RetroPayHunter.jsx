@@ -91,7 +91,13 @@ function computeTotals(analysis) {
     ? yearsWithActualData.reduce((sum, year) => sum + year.totalDelta, 0)
     : null;
 
-  return { total, yearlyBreakdown, hasActualData, totalActuallyReceived, totalDelta };
+  return {
+    total,
+    yearlyBreakdown,
+    hasActualData,
+    totalActuallyReceived,
+    totalDelta,
+  };
 }
 
 function useAIStatusPolling() {
@@ -630,8 +636,8 @@ function ActualReceivedField({ newEntry, setNewEntry }) {
         className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
       />
       <p className="text-xs text-gray-500 mt-1">
-        Leave blank for a theoretical-entitlement estimate only. Fill this in
-        to see the actual missed-payment delta.
+        Leave blank for a theoretical-entitlement estimate only. Fill this in to
+        see the actual missed-payment delta.
       </p>
     </div>
   );
@@ -875,8 +881,8 @@ function FoundMoneyBanner({ analysis, totals }) {
           </div>
         ) : (
           <p className="text-amber-300/70 text-xs mt-3">
-            This is theoretical entitlement based on your rating history —
-            enter what you actually received per period below to see a real
+            This is theoretical entitlement based on your rating history — enter
+            what you actually received per period below to see a real
             missed-payment delta.
           </p>
         )}
@@ -932,14 +938,14 @@ function CoverageGapNotice({ analysis }) {
   return (
     <div className="bg-blue-900/20 border border-blue-500/40 rounded-xl p-4">
       <p className="text-blue-300 text-sm">
-        ℹ️ <strong>Analysis window is limited:</strong> we only have official
-        VA rate tables from {analysis.earliestAvailableYear} forward. Your
-        earliest entered effective date ({analysis.earliestRequestedDate}) is
-        before that, so {analysis.uncoveredMonths} month
+        ℹ️ <strong>Analysis window is limited:</strong> we only have official VA
+        rate tables from {analysis.earliestAvailableYear} forward. Your earliest
+        entered effective date ({analysis.earliestRequestedDate}) is before
+        that, so {analysis.uncoveredMonths} month
         {analysis.uncoveredMonths !== 1 ? "s" : ""} before{" "}
-        {analysis.earliestAvailableYear} are{" "}
-        <strong>NOT included</strong> in the totals below. The real total (if
-        any underpayment exists) is likely higher than shown.
+        {analysis.earliestAvailableYear} are <strong>NOT included</strong> in
+        the totals below. The real total (if any underpayment exists) is likely
+        higher than shown.
       </p>
     </div>
   );
@@ -951,8 +957,7 @@ function EffectiveDateInfoNote() {
       <p className="text-gray-400 text-sm">
         ℹ️ Effective dates are rarely the 1st of the month — that's normal.
         Payment simply starts the 1st of the month <em>following</em> the
-        effective date (38 CFR § 3.400). This alone is not evidence of an
-        error.
+        effective date (38 CFR § 3.400). This alone is not evidence of an error.
       </p>
     </div>
   );

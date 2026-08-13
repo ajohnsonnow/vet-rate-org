@@ -909,7 +909,10 @@ function renderExposureProfileSummary({ results }) {
 /**
  * Render Step 4 section: Presumptive conditions list
  */
-function renderPresumptiveConditionsSection({ presumptiveConditions, alreadyRatedNames }) {
+function renderPresumptiveConditionsSection({
+  presumptiveConditions,
+  alreadyRatedNames,
+}) {
   return (
     <div className="bg-green-50 dark:bg-green-900/30 rounded-xl shadow-lg overflow-hidden">
       <div className="p-4 bg-green-100 dark:bg-green-900/50 border-b border-green-200 dark:border-green-700">
@@ -1024,9 +1027,7 @@ function renderNextStepsSection({ presumptiveConditions }) {
               orders, personnel records)
             </li>
             <li>Get a current diagnosis for each condition from your doctor</li>
-            <li>
-              File your claim on VA.gov - select the presumptive exposure
-            </li>
+            <li>File your claim on VA.gov - select the presumptive exposure</li>
             <li>
               <strong>No nexus letter needed</strong> for presumptive
               conditions!
