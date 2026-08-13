@@ -13,7 +13,7 @@ This document presents a real-world case study comparing **Agentic Content Devel
 | Metric          | Traditional Development                 | Agentic Development             | Advantage                |
 | --------------- | --------------------------------------- | ------------------------------- | ------------------------ |
 | **Timeline**    | 18.0 years (solo) / 18-24 months (team) | 20 days                         | **190x faster**          |
-| **Cost**        | $5,055,210                              | $63,000                         | **98.0% savings**        |
+| **Cost**        | $5,062,095                              | $63,000                         | **98.0% savings**        |
 | **Hourly Rate** | $135/hr (blended)                       | $420/hr                         | Higher rate, lower total |
 | **LOC/Hour**    | 9.77 (team average)                     | 1,292                           | **132x more productive** |
 | **Risk**        | High (scope creep, turnover)            | Low (single point of expertise) | Reduced complexity       |
@@ -26,8 +26,8 @@ This document presents a real-world case study comparing **Agentic Content Devel
 
 | Category                  | Count     | Description                     |
 | ------------------------- | --------- | ------------------------------- |
-| **Lines of Code**         | 309,013   | Production React/JavaScript     |
-| **Total Files**           | 3,782     | Organized codebase              |
+| **Lines of Code**         | 309,444   | Production React/JavaScript     |
+| **Total Files**           | 3,815     | Organized codebase              |
 | **React Components**      | 181       | 45 major tools + 136 supporting |
 | **Utility Modules**       | 123       | Reusable helper functions       |
 | **Disabilities Database** | 748       | Validated against 38 CFR        |
@@ -117,7 +117,7 @@ _Unrealistic for most projects due to timeline._
 | **Billable Hours**     | 150 hours      |
 | **Hourly Rate**        | $420/hr        |
 | **Total Cost**         | $63,000        |
-| **Lines of Code**      | 309,013        |
+| **Lines of Code**      | 309,444        |
 | **Effective LOC/Hour** | 1,292          |
 | **Commits**            | 241            |
 | **Commits per Day**    | 11 average     |
