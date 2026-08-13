@@ -47,3 +47,44 @@ export const UPDATE_CHECK_INTERVAL = 15 * 60 * 1000;
 export const VERSION_STORAGE_KEY = "vet_rate_app_version";
 export const SCHEMA_STORAGE_KEY = "vet_rate_data_schema_version";
 export const LAST_SEEN_VERSION_KEY = "vet_rate_last_seen_version";
+
+// The boot sequence's maintenance-mode check and the update orchestrator's
+// version check both fetch /version.json within the same page load. Share
+// one in-flight/short-lived request instead of firing it twice. Callers get
+// back a plain object with the parsed body (or a synthetic 404/error shape)
+// rather than a raw Response, since a Response body can only be read once
+// and this promise may be awaited by more than one caller.
+const VERSION_JSON_CACHE_MS = 5000;
+let versionJsonPromise = null;
+let versionJsonFetchedAt = 0;
+
+export const fetchVersionJson = () => {
+  const now = Date.now();
+  if (
+    versionJsonPromise &&
+    now - versionJsonFetchedAt < VERSION_JSON_CACHE_MS
+  ) {
+    return versionJsonPromise;
+  }
+
+  versionJsonFetchedAt = now;
+  versionJsonPromise = fetch(`/version.json?t=${now}`, {
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+    },
+  })
+    .then(async (response) => ({
+      ok: response.ok,
+      status: response.status,
+      data: response.ok ? await response.json() : null,
+    }))
+    .catch((err) => {
+      // Don't cache a rejected promise - let the next caller retry.
+      versionJsonPromise = null;
+      throw err;
+    });
+
+  return versionJsonPromise;
+};

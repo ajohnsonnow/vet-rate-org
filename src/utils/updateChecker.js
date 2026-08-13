@@ -18,7 +18,11 @@
  * 4. User can click to hard-reload and get fresh code
  */
 
-import { APP_VERSION, UPDATE_CHECK_INTERVAL } from "./version";
+import {
+  APP_VERSION,
+  UPDATE_CHECK_INTERVAL,
+  fetchVersionJson,
+} from "./version";
 
 let checkInterval = null;
 let _lastCheckTime = null;
@@ -50,26 +54,20 @@ export const checkForUpdates = async () => {
   try {
     _lastCheckTime = Date.now();
 
-    // Fetch version.json with cache-busting
-    const response = await fetch(`/version.json?t=${Date.now()}`, {
-      cache: "no-store",
-      headers: {
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
-      },
-    });
+    // Shared with the boot sequence's maintenance-mode check so both don't
+    // fetch /version.json separately within the same page load.
+    const { ok, status, data } = await fetchVersionJson();
 
-    if (!response.ok) {
+    if (!ok) {
       // If version.json doesn't exist yet (first deployment), silently ignore
-      if (response.status === 404) {
+      if (status === 404) {
         // eslint-disable-next-line no-console
         console.log("ℹ️ version.json not found (first deployment?)");
         return { updateAvailable: false, reason: "version_file_not_found" };
       }
-      throw new Error(`HTTP ${response.status}`);
+      throw new Error(`HTTP ${status}`);
     }
 
-    const data = await response.json();
     const serverVersion = data.version;
     const currentVersion = APP_VERSION;
 

@@ -9,11 +9,14 @@ import { initAutoBackup } from "../../utils/autoBackup";
 import { initializeCompassionateVoice } from "../../utils/voiceIndex";
 import { initializeErrorCapture } from "../../utils/bugReportUtils";
 import { setupBeforeUnloadWarning } from "../../utils/dataPersistence";
+import { fetchVersionJson } from "../../utils/version";
 
 async function checkMaintenanceMode(setMaintenanceMode, setMaintenanceMessage) {
   try {
-    const response = await fetch("/version.json?t=" + Date.now());
-    const data = await response.json();
+    // Shared with the update orchestrator's version check so both don't
+    // fetch /version.json separately within the same page load.
+    const { ok, data } = await fetchVersionJson();
+    if (!ok) return false;
 
     if (data.maintenance_mode === true) {
       console.warn("🚨 MAINTENANCE MODE ACTIVE - App disabled");
