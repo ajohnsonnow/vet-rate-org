@@ -105,7 +105,15 @@ function normalizeUserDisabilities(userDisabilities) {
 // qualified ("Hip Degenerative Arthritis (Bilateral)") while the veteran's
 // actual saved conditions are plain single terms ("Sciatica", "Left Hip
 // Degenerative Arthritis"). Strip qualifiers/side words and slashes, then
-// check for overlap in either direction on each "/"-separated alternative.
+// compare each "/"-separated alternative as a token SET, not a substring:
+// bidirectional substring matching previously let a short condition name
+// swallow any longer name that happened to contain it as a word (e.g. a
+// veteran rated for "Hypertension" made "Pulmonary Hypertension" -- a
+// distinct condition -- look already-rated, since "hypertension" is a
+// literal substring of "pulmonary hypertension"). Requiring the full,
+// order-independent token set to match still tolerates the documented
+// parenthetical/side/slash variance but no longer treats an added
+// diagnostic qualifier as if it were optional.
 export function isConditionAlreadyRated(
   secondaryConditionName,
   userDisabilities,
@@ -119,19 +127,18 @@ export function isConditionAlreadyRated(
       .replace(/[^a-z0-9]+/g, " ")
       .trim();
 
-  const secondaryParts = secondaryConditionName
+  const tokenKey = (normalized) =>
+    normalized.split(" ").filter(Boolean).sort().join(" ");
+
+  const secondaryKeys = secondaryConditionName
     .split("/")
-    .map((part) => normalize(part))
+    .map((part) => tokenKey(normalize(part)))
     .filter(Boolean);
 
   return userDisabilities.some((disability) => {
     const normalizedDisability = normalize(disability);
     if (!normalizedDisability) return false;
-    return secondaryParts.some(
-      (part) =>
-        normalizedDisability.includes(part) ||
-        part.includes(normalizedDisability),
-    );
+    return secondaryKeys.includes(tokenKey(normalizedDisability));
   });
 }
 
