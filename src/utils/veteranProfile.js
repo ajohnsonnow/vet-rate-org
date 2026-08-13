@@ -849,9 +849,11 @@ function sanitizeCoordinate(value, limit) {
  * removed just becomes unassigned (periodId still points at a now-missing
  * id, which every reader treats the same as null).
  */
+const MAX_DUTY_STATIONS = 100;
+
 function _sanitizeDutyStations(dutyStations) {
   if (!Array.isArray(dutyStations)) return [];
-  return dutyStations.slice(0, 100).map((s) => ({
+  return dutyStations.slice(0, MAX_DUTY_STATIONS).map((s) => ({
     id: s.id || `duty_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     periodId: s.periodId || null,
     name: sanitizeString(s.name || "", 200),
@@ -1474,6 +1476,16 @@ export const getDutyStations = () => getServiceHistory().dutyStations;
 export const addDutyStation = (station) => {
   try {
     const history = getServiceHistory();
+    // saveServiceHistory silently truncates to MAX_DUTY_STATIONS via
+    // _sanitizeDutyStations, so a push past the cap would be discarded on
+    // save while this function still reported success. Reject up front
+    // instead.
+    if (history.dutyStations.length >= MAX_DUTY_STATIONS) {
+      console.error(
+        `Cannot add duty station: limit of ${MAX_DUTY_STATIONS} reached`,
+      );
+      return null;
+    }
     const newStation = {
       id: `duty_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       dateAdded: new Date().toISOString(),

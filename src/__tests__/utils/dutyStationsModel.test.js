@@ -168,6 +168,28 @@ describe("Duty stations — sanitizer (saveServiceHistory whitelist)", () => {
   });
 });
 
+describe("Duty stations — addDutyStation rejects at the 100-entry cap", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("returns null instead of silently discarding the 101st station", () => {
+    const dutyStations = Array.from({ length: 100 }, (_, i) => ({
+      id: `duty_${i}`,
+      name: `Station ${i}`,
+    }));
+    saveServiceHistory({ dutyStations });
+    expect(getDutyStations()).toHaveLength(100);
+
+    const id = addDutyStation({ name: "101st Station" });
+
+    expect(id).toBeNull();
+    const stations = getDutyStations();
+    expect(stations).toHaveLength(100);
+    expect(stations.some((s) => s.name === "101st Station")).toBe(false);
+  });
+});
+
 describe("Duty stations — orphaned periodId survival (no cascade-delete)", () => {
   beforeEach(() => {
     localStorage.clear();

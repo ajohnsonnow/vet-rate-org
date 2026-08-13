@@ -71,10 +71,14 @@ function MapFallback() {
 function PeriodSelect({ servicePeriods, value, onChange, t }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        htmlFor="duty-station-period"
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
         {t("myPacketSection.linkedPeriod")}
       </label>
       <select
+        id="duty-station-period"
         value={value}
         onChange={onChange}
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -103,10 +107,14 @@ function CoordinateInputs({ draft, setDraft, t }) {
   return (
     <>
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="duty-station-latitude"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("myPacketSection.latitude")}
         </label>
         <input
+          id="duty-station-latitude"
           type="number"
           step="0.0001"
           min={-90}
@@ -117,10 +125,14 @@ function CoordinateInputs({ draft, setDraft, t }) {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="duty-station-longitude"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("myPacketSection.longitude")}
         </label>
         <input
+          id="duty-station-longitude"
           type="number"
           step="0.0001"
           min={-180}
@@ -152,10 +164,14 @@ function DutyStationFormFields({ draft, setDraft, servicePeriods, t }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="duty-station-name"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("myPacketSection.stationName")} *
         </label>
         <input
+          id="duty-station-name"
           type="text"
           value={draft.name}
           onChange={(e) =>
@@ -173,10 +189,14 @@ function DutyStationFormFields({ draft, setDraft, servicePeriods, t }) {
       />
       <div />
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="duty-station-start-date"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("myPacketSection.startDate")}
         </label>
         <input
+          id="duty-station-start-date"
           type="date"
           value={draft.startDate}
           onChange={(e) =>
@@ -186,10 +206,14 @@ function DutyStationFormFields({ draft, setDraft, servicePeriods, t }) {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="duty-station-end-date"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("myPacketSection.endDate")}
         </label>
         <input
+          id="duty-station-end-date"
           type="date"
           value={draft.endDate}
           onChange={(e) =>
@@ -200,10 +224,14 @@ function DutyStationFormFields({ draft, setDraft, servicePeriods, t }) {
       </div>
       <CoordinateInputs draft={draft} setDraft={setDraft} t={t} />
       <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="duty-station-notes"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           {t("myPacketSection.notesOptional")}
         </label>
         <textarea
+          id="duty-station-notes"
           value={draft.notes}
           onChange={(e) =>
             setDraft((prev) => ({ ...prev, notes: e.target.value }))
@@ -317,6 +345,23 @@ function useDutyStationForm({ loadServiceHistory }) {
   const save = () => {
     if (!draft.name.trim()) {
       alert("Please enter a station name");
+      return;
+    }
+    // sanitizeCoordinate() in veteranProfile.js silently collapses an
+    // out-of-range or non-finite value to null on save with no signal back
+    // to the form, so a typo (e.g. latitude 500) would previously vanish
+    // from the map with no indication anything was wrong. Catch it here
+    // instead, where there's a form to show the error against.
+    const latOutOfRange =
+      draft.latitude !== null &&
+      (!Number.isFinite(draft.latitude) || Math.abs(draft.latitude) > 90);
+    const lonOutOfRange =
+      draft.longitude !== null &&
+      (!Number.isFinite(draft.longitude) || Math.abs(draft.longitude) > 180);
+    if (latOutOfRange || lonOutOfRange) {
+      alert(
+        "Latitude must be between -90 and 90, and longitude between -180 and 180.",
+      );
       return;
     }
     const payload = {

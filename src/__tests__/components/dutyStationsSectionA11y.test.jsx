@@ -4,7 +4,7 @@
  * lazy-loaded DutyStationMap once it settles.
  */
 import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { axe } from "vitest-axe";
 import { toHaveNoViolations } from "vitest-axe/matchers.js";
 import DutyStationsSection from "../../components/DutyStationsSection.jsx";
@@ -65,7 +65,13 @@ describe("DutyStationsSection — accessibility", () => {
 
   it("has no axe violations with the add/edit form open", async () => {
     const { container } = await renderSection();
-    screen.getByRole("button", { name: /addDutyStation/ }).click();
+    fireEvent.click(screen.getByRole("button", { name: /addDutyStation/ }));
+    // A plain native .click() here previously let axe scan before React's
+    // click-triggered state update committed, so this test silently
+    // re-scanned the closed view twice and never actually exercised the
+    // form's inputs. findByLabelText both waits for the form to render and
+    // asserts its fields are genuinely label-associated.
+    await screen.findByLabelText(/stationName/);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
