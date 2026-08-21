@@ -5,7 +5,7 @@ import {
   isEncryptedBackup,
 } from "../../utils/cloudEncryption";
 
-describe("cloudEncryption — VR_ENC_V3 (AAD-bound)", () => {
+describe("cloudEncryption - VR_ENC_V3 (AAD-bound)", () => {
   it("encrypts to V3 envelope and roundtrips with a passphrase", async () => {
     const data = { veteran: "redacted", evidence: ["lay-stmt", "dbq"] };
     const { encryptedPackage, keyExport } = await encryptForCloud(

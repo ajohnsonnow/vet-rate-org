@@ -8,11 +8,11 @@ Access and manage your saved forms and statements within My Packet.
 
 My Packet stores documents you generate:
 
-| Document Type | Generated From | Purpose |
-|---------------|----------------|---------|
-| **Nexus Statements** | Nexus Builder | Personal statement for claims |
-| **Doctor's Cheat Sheets** | Nexus Builder | Reference for healthcare providers |
-| **VA Forms** | Forms Helper | Completed VA form drafts |
+| Document Type             | Generated From | Purpose                            |
+| ------------------------- | -------------- | ---------------------------------- |
+| **Nexus Statements**      | Nexus Builder  | Personal statement for claims      |
+| **Doctor's Cheat Sheets** | Nexus Builder  | Reference for healthcare providers |
+| **VA Forms**              | Forms Helper   | Completed VA form drafts           |
 
 ---
 
@@ -25,159 +25,66 @@ My Packet stores documents you generate:
 Open <strong>My Packet</strong>
 </div>
 <div class="step">
-Find the condition with saved forms
+Click the <strong>"Forms"</strong> tab
 </div>
 <div class="step">
-Click <strong>"Documents"</strong> or expand the condition
-</div>
-<div class="step">
-View list of <strong>saved forms</strong>
+View the list of <strong>saved forms</strong>
 </div>
 </div>
 
-### Forms Section
+Forms appear as a flat list in the Forms tab - they aren't nested under their related condition. Each entry shows the form's title, its form number/type badge, and when it was saved.
 
-Each condition may have:
-
-```
-📁 PTSD (9411)
-├── 📄 Statement in Support of Claim (Generated 1/15/2024)
-├── 📄 Doctor's Cheat Sheet (Generated 1/15/2024)
-└── 📄 PTSD Stressor Statement (Draft)
-```
+![My Packet Forms tab](../assets/images/screenshots/my-packet/forms-tab.png)
+_The Forms tab, showing its empty state - forms saved from Forms Helper appear here._
 
 ---
 
 ## Viewing Forms
 
-### Preview
-
-Click on a form to preview:
-
-- See the full document content
-- Review what you've written
-- Check for errors or omissions
-
-### Full View
-
-Open in full view for:
-
-- Better readability
-- Easier review
-- Print preparation
+Click **"View"** on any saved form to open it in a read-only viewer showing the full generated content - useful for a final review before you download or print it (Ctrl+P / Cmd+P) for filing.
 
 ---
 
 ## Downloading Forms
 
-### Individual Download
+### From the Form Viewer
 
 <div class="step-container">
 <div class="step">
-Find the form in <strong>My Packet</strong>
+Find the form in <strong>My Packet</strong>'s Forms tab
 </div>
 <div class="step">
-Click <strong>"Download"</strong> button
+Click <strong>"View"</strong> to open it
 </div>
 <div class="step">
-Choose format (<strong>PDF</strong> recommended)
+Click <strong>"Download"</strong> in the viewer
 </div>
 <div class="step">
-<strong>Save</strong> to your device
+A <strong>.txt</strong> file saves to your device
 </div>
 </div>
 
-### Download All for Condition
+!!! info "Text Format"
+Saved forms download as plain text (.txt), not PDF. Statements built through Nexus Builder (see [Managing Claims](managing-claims.md)) download in more formats - TXT, Word, or PDF.
 
-Download all documents for a single condition:
+### Downloading Everything at Once
 
-<div class="step-container">
-<div class="step">
-Find the condition
-</div>
-<div class="step">
-Click <strong>"Download All Documents"</strong>
-</div>
-<div class="step">
-Receive <strong>ZIP file</strong> with all forms
-</div>
-</div>
+There's no per-form ZIP or bundle export. To get everything in one file, use one of the whole-packet options in [Backup & Restore](backup-restore.md):
 
-### Download Entire Packet
-
-Download everything at once:
-
-<div class="step-container">
-<div class="step">
-Open <strong>My Packet</strong>
-</div>
-<div class="step">
-Click <strong>"Export All"</strong>
-</div>
-<div class="step">
-Choose <strong>format options</strong>
-</div>
-<div class="step">
-Download <strong>complete package</strong>
-</div>
-</div>
+- **Local Backup** - a single JSON file with all your data, including saved forms
+- **Dossier (HTML)** - a human-readable report you can open in any browser
 
 ---
 
 ## Editing Forms
 
-### Re-Opening the Wizard
-
-To edit a saved form:
-
-<div class="step-container">
-<div class="step">
-Find the form
-</div>
-<div class="step">
-Click <strong>"Edit"</strong>
-</div>
-<div class="step">
-<strong>Wizard opens</strong> with saved data
-</div>
-<div class="step">
-Make your <strong>changes</strong>
-</div>
-<div class="step">
-<strong>"Save"</strong> or <strong>"Save & Generate"</strong>
-</div>
-</div>
-
-### Version Handling
-
-When you edit and regenerate:
-
-| Option | What Happens |
-|--------|--------------|
-| **Replace** | New version replaces old |
-| **Keep Both** | Both versions are saved |
+Saved forms open in a read-only viewer - there's no "Edit" button that reopens the original wizard with your answers pre-filled. To change a form, go back to Forms Helper, fill it out again, and save a new one.
 
 ---
 
 ## Form Statuses
 
-### Draft
-
-- Form started but not completed
-- Wizard can be resumed
-- Not ready for download
-
-### Generated
-
-- Form completed through wizard
-- Ready for download
-- Can still be edited
-
-### Downloaded
-
-- Form has been downloaded
-- Visual indicator shows this
-- Helps track what you've saved
+Forms appear in the list as soon as they're saved from Forms Helper - there's no separate Draft/Generated/Downloaded status tracking for them (that concept applies to **claims**, not saved forms - see [Managing Claims](managing-claims.md)).
 
 ---
 
@@ -206,51 +113,21 @@ Click <strong>"Delete"</strong>
 </div>
 
 !!! warning "Before Deleting"
-    
+
     - Download a copy first
     - Consider backup export
     - Deletion is permanent
 
 ---
 
-## Form Organization
-
-### By Condition
-
-Forms are organized under their related condition:
-
-```
-My Packet
-├── PTSD (9411)
-│   ├── Nexus Statement
-│   └── PTSD Stressor Form
-├── Sleep Apnea (6847)
-│   ├── Nexus Statement
-│   └── Doctor's Cheat Sheet
-└── Lumbar Strain (5237)
-    └── Nexus Statement (Draft)
-```
-
-### General Forms
-
-Forms not tied to a specific condition:
-
-- Intent to File
-- VSO Appointment
-- General Statements
-
-These appear in a "General" section.
-
----
-
 ## Tips for Form Management
 
 !!! tip "Best Practices"
-    
+
     1. **Download promptly** - Save copies to your device
-    2. **Name files clearly** - Use descriptive filenames
-    3. **Organize by condition** - Create folders on your device
-    4. **Backup regularly** - Export your entire packet
+    2. **Name files clearly** - Rename downloaded files by hand so they're easy to find later
+    3. **Organize by condition** - Create folders on your device, since My Packet's Forms tab doesn't group by condition
+    4. **Backup regularly** - Your saved forms are included in Local Backup and the HTML Dossier
     5. **Update before filing** - Review and refresh
     6. **Delete outdated versions** - Free up storage space
     7. **Keep submission copies** - Save final versions you submit

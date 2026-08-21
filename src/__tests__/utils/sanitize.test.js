@@ -87,7 +87,7 @@ describe("escapeHtml", () => {
   });
 });
 
-describe("safeHtml — markdown-lite allow-list", () => {
+describe("safeHtml - markdown-lite allow-list", () => {
   it("returns empty for falsy input", () => {
     expect(safeHtml("")).toBe("");
     expect(safeHtml(null)).toBe("");
@@ -151,7 +151,7 @@ describe("safeHtml — markdown-lite allow-list", () => {
   });
 });
 
-describe("isLLMOutputUrlAllowed — government allow-list", () => {
+describe("isLLMOutputUrlAllowed - government allow-list", () => {
   it("allows va.gov subdomains", () => {
     expect(isLLMOutputUrlAllowed("https://www.va.gov/claims")).toBe(true);
     expect(isLLMOutputUrlAllowed("https://benefits.va.gov/")).toBe(true);
@@ -190,7 +190,7 @@ describe("isLLMOutputUrlAllowed — government allow-list", () => {
   });
 });
 
-describe("stripUntrustedUrls — LLM output sanitizer", () => {
+describe("stripUntrustedUrls - LLM output sanitizer", () => {
   it("keeps allow-listed URLs intact", () => {
     const input = "See https://www.va.gov/claims for details.";
     expect(stripUntrustedUrls(input)).toBe(

@@ -508,10 +508,14 @@ function BugSquasherStep1Classification({ formData, onInputChange }) {
 
       {/* Module Selection */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          htmlFor="bug-squasher-module"
+          className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+        >
           Which module were you using? <span className="text-red-500">*</span>
         </label>
         <select
+          id="bug-squasher-module"
           value={formData.module}
           onChange={(e) => onInputChange("module", e.target.value)}
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-red-500 focus:border-transparent"

@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { uploadClaimDocument } from "../api/va";
 import ResponsiveModal from "./common/ResponsiveModal";
+import ClaimPrepDisclaimer from "./ClaimPrepDisclaimer";
 
 // Document types that can be uploaded
 const DOCUMENT_TYPES = [
@@ -639,6 +640,8 @@ const ClaimEvidenceUpload = ({
       }
     >
       <EvidencePrivacyNotice />
+
+      <ClaimPrepDisclaimer className="mb-6" />
 
       {uploadStatus === "success" && (
         <UploadSuccessState

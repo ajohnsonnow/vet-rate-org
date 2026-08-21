@@ -15,7 +15,7 @@ describe("filterGolden (S18 held-out slice)", () => {
   const golden = [
     { id: "a", heldOut: true },
     { id: "b", heldOut: false },
-    { id: "c" }, // no heldOut field — must behave like false
+    { id: "c" }, // no heldOut field - must behave like false
   ];
 
   it("returns everything with no options", () => {
@@ -56,7 +56,7 @@ describe("resolveCompareSpec (S18 --compare variant resolution)", () => {
     );
     expect(name).toBe("current");
     // Matches the implementation's own path.resolve semantics rather than
-    // path.join — on Windows, a POSIX-style fake root like "/repo" resolves
+    // path.join - on Windows, a POSIX-style fake root like "/repo" resolves
     // against the current drive, so we compare against the same resolver.
     expect(dir).toBe(resolve(root, "public/legal-index/v0.1.0"));
   });

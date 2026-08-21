@@ -24,7 +24,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("isFeatureEnabled — fail-open semantics", () => {
+describe("isFeatureEnabled - fail-open semantics", () => {
   it("returns true when no cache exists (fail-open)", () => {
     expect(isFeatureEnabled("ai")).toBe(true);
     expect(isFeatureEnabled("local_ai")).toBe(true);
@@ -50,7 +50,7 @@ describe("isFeatureEnabled — fail-open semantics", () => {
   });
 });
 
-describe("isFeatureEnabled — kill-switch semantics", () => {
+describe("isFeatureEnabled - kill-switch semantics", () => {
   it("blocks AI when master flag is false in fresh cache", () => {
     seedCache({
       aiEnabled: false,
@@ -106,7 +106,7 @@ describe("isFeatureEnabled — kill-switch semantics", () => {
   });
 });
 
-describe("refreshSystemStatus — fetch path", () => {
+describe("refreshSystemStatus - fetch path", () => {
   it("returns parsed status on 200 OK", async () => {
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
       ok: true,

@@ -8,7 +8,7 @@ import {
   resolveAgentForTool,
 } from "../../utils/agentBoundaries";
 
-describe("agentBoundaries — declared contract", () => {
+describe("agentBoundaries - declared contract", () => {
   it("freezes the capability tables", () => {
     expect(Object.isFrozen(AGENT_CAPABILITIES)).toBe(true);
     expect(Object.isFrozen(TOOL_REQUIRED_CAPABILITY)).toBe(true);
@@ -41,7 +41,7 @@ describe("agentBoundaries — declared contract", () => {
   });
 });
 
-describe("resolveAgentForTool — permissive (legacy)", () => {
+describe("resolveAgentForTool - permissive (legacy)", () => {
   it("returns auditor when toolId is null/undefined", () => {
     expect(resolveAgentForTool(null)).toBe("auditor");
     expect(resolveAgentForTool(undefined)).toBe("auditor");
@@ -68,7 +68,7 @@ describe("resolveAgentForTool — permissive (legacy)", () => {
   });
 });
 
-describe("resolveAgentForTool — strict", () => {
+describe("resolveAgentForTool - strict", () => {
   it("throws when toolId is missing", () => {
     expect(() => resolveAgentForTool(null, { strict: true })).toThrow(
       AgentBoundaryViolation,
@@ -98,7 +98,7 @@ describe("resolveAgentForTool — strict", () => {
   });
 });
 
-describe("enforceAgentBoundary — runtime guard", () => {
+describe("enforceAgentBoundary - runtime guard", () => {
   it("allows declared capabilities", () => {
     expect(() =>
       enforceAgentBoundary("auditor", "review-document"),

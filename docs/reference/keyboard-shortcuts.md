@@ -8,11 +8,13 @@ Navigate Vet-Rate.org efficiently using keyboard commands.
 
 These work anywhere in the application:
 
-| Shortcut | Action |
-|----------|--------|
-| **/** or **Ctrl+K** | Focus search bar |
-| **Escape** | Close modal/dropdown |
-| **?** | Show keyboard shortcuts help (if implemented) |
+| Shortcut                      | Action                                                                                   |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| **Ctrl+K** (**Cmd+K** on Mac) | Open Global Command Search - search tools, conditions, and diagnostic codes from one box |
+| **Escape**                    | Close the open modal or dropdown                                                         |
+
+!!! info "No Single-Letter Shortcuts"
+Vet-Rate.org doesn't use single-letter shortcuts like "P" for My Packet or "S" for Secondary Scout - every tool opens by clicking a header button, footer link, or a result inside Global Command Search.
 
 ---
 
@@ -20,65 +22,56 @@ These work anywhere in the application:
 
 ### Tab Navigation
 
-| Shortcut | Action |
-|----------|--------|
-| **Tab** | Move to next interactive element |
-| **Shift+Tab** | Move to previous element |
-| **Enter** | Activate focused element |
-| **Space** | Activate buttons, toggle checkboxes |
+| Shortcut      | Action                              |
+| ------------- | ----------------------------------- |
+| **Tab**       | Move to next interactive element    |
+| **Shift+Tab** | Move to previous element            |
+| **Enter**     | Activate focused element            |
+| **Space**     | Activate buttons, toggle checkboxes |
 
 ### Within Modals
 
-| Shortcut | Action |
-|----------|--------|
-| **Escape** | Close modal |
-| **Tab** | Navigate within modal |
+| Shortcut       | Action                 |
+| -------------- | ---------------------- |
+| **Escape**     | Close modal            |
+| **Tab**        | Navigate within modal  |
 | **Arrow Keys** | Navigate options/lists |
 
 ---
 
-## Search
+## Global Command Search
 
-| Shortcut | Action |
-|----------|--------|
-| **/** | Focus search bar |
-| **Enter** | Execute search / Select highlighted result |
-| **↓ / ↑** | Navigate search results |
-| **Escape** | Clear search / Close results |
+| Shortcut           | Action                     |
+| ------------------ | -------------------------- |
+| **Ctrl+K / Cmd+K** | Open Global Command Search |
+| **Enter**          | Select highlighted result  |
+| **↓ / ↑**          | Navigate results           |
+| **Escape**         | Close                      |
+
+The condition search bar on the home page has its own arrow-key/Enter navigation for its autocomplete suggestions, but no dedicated hotkey to focus it - click into it directly.
 
 ---
 
-## Modals & Panels
+## Within Wizards
 
-### Opening Features
+| Shortcut   | Action              |
+| ---------- | ------------------- |
+| **Escape** | Cancel / Close      |
+| **Tab**    | Move between fields |
 
-| Shortcut | Action |
-|----------|--------|
-| **P** | Open My Packet |
-| **S** | Open Secondary Scout |
-| **Escape** | Close any open modal |
-
-*Note: Letter shortcuts only work when not in an input field.*
-
-### Within Wizards
-
-| Shortcut | Action |
-|----------|--------|
-| **Enter** | Next step / Submit |
-| **Escape** | Cancel / Close |
-| **Tab** | Move between fields |
+Multi-step wizards (Nexus Builder, Forms Helper, etc.) are navigated with their own "Next"/"Back" buttons rather than Enter-to-advance, since many steps contain multi-line text fields where Enter should add a line break.
 
 ---
 
 ## Forms
 
-| Shortcut | Action |
-|----------|--------|
-| **Tab** | Next field |
-| **Shift+Tab** | Previous field |
-| **Enter** | Submit form (in some contexts) |
-| **Space** | Toggle checkbox |
-| **Arrow Keys** | Select radio options |
+| Shortcut       | Action                         |
+| -------------- | ------------------------------ |
+| **Tab**        | Next field                     |
+| **Shift+Tab**  | Previous field                 |
+| **Enter**      | Submit form (in some contexts) |
+| **Space**      | Toggle checkbox                |
+| **Arrow Keys** | Select radio options           |
 
 ---
 
@@ -107,15 +100,15 @@ If you've enabled reduced motion:
 
 These are browser shortcuts that help with Vet-Rate.org:
 
-| Shortcut | Action |
-|----------|--------|
-| **Ctrl+R** / **Cmd+R** | Refresh page |
-| **Ctrl+F** / **Cmd+F** | Find on page |
-| **Ctrl+P** / **Cmd+P** | Print |
-| **Ctrl++ / Ctrl+-** | Zoom in/out |
-| **Ctrl+0** | Reset zoom |
-| **F11** | Fullscreen |
-| **F12** | Developer tools |
+| Shortcut               | Action          |
+| ---------------------- | --------------- |
+| **Ctrl+R** / **Cmd+R** | Refresh page    |
+| **Ctrl+F** / **Cmd+F** | Find on page    |
+| **Ctrl+P** / **Cmd+P** | Print           |
+| **Ctrl++ / Ctrl+-**    | Zoom in/out     |
+| **Ctrl+0**             | Reset zoom      |
+| **F11**                | Fullscreen      |
+| **F12**                | Developer tools |
 
 ---
 
@@ -150,11 +143,10 @@ Currently, Vet-Rate.org doesn't support custom keyboard shortcuts. Browser exten
 
 ## Troubleshooting
 
-### Shortcuts Not Working?
+### Ctrl+K / Cmd+K Not Working?
 
-- Make sure you're not in a text input field
-- Try clicking outside any input fields first
-- Check if a modal has focus
+- Some browsers or extensions intercept this combination for their own address bar - try clicking the search icon instead, if one is visible
+- Check if a modal is already open and grabbing focus
 - Refresh the page
 
 ### Focus Not Visible?

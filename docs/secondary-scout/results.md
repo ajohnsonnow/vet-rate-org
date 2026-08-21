@@ -14,18 +14,21 @@ After launching Secondary Scout, you'll see a full-screen results view with:
 4. **Suggestion Cards** - Individual secondary condition suggestions
 5. **Disclaimer** - Important legal information
 
+![Secondary Scout results view with statistics panel and suggestion cards for Tinnitus and PTSD](../assets/images/screenshots/secondary-scout/results-overview.png)
+_The full-screen results view, showing 11 total suggestions with 8 rated High Probability._
+
 ---
 
 ## Statistics Panel
 
 The statistics panel shows four key metrics:
 
-| Stat | Description |
-|------|-------------|
-| **📊 Total Suggestions** | Total number of potential secondary conditions found |
-| **🔥 High Probability** | Count of well-established connections |
-| **💊 Medication-Related** | Conditions caused by medications |
-| **🚶 Biomechanical** | Conditions from altered gait/compensation |
+| Stat                      | Description                                          |
+| ------------------------- | ---------------------------------------------------- |
+| **📊 Total Suggestions**  | Total number of potential secondary conditions found |
+| **🔥 High Probability**   | Count of well-established connections                |
+| **💊 Medication-Related** | Conditions caused by medications                     |
+| **🚶 Biomechanical**      | Conditions from altered gait/compensation            |
 
 ---
 
@@ -66,6 +69,9 @@ Each suggestion is displayed as an expandable card.
 
 Click a card to expand and see:
 
+![An expanded suggestion card for Anxiety Disorder showing the mechanism, medical literature, and action buttons](../assets/images/screenshots/secondary-scout/results-expanded-card.png)
+_Expanding a card reveals the mechanism explanation, supporting medical literature, and three action buttons._
+
 #### Mechanism Explanation
 
 > "How [Primary Condition] leads to [Secondary Condition]"
@@ -100,11 +106,11 @@ Supporting medical literature and studies:
 
 The primary condition directly causes the secondary:
 
-| Primary | Secondary | How |
-|---------|-----------|-----|
-| PTSD | Depression | Constant trauma symptoms lead to depressive episodes |
-| Diabetes | Neuropathy | High blood sugar damages nerves |
-| Sleep Apnea | Hypertension | Oxygen deprivation stresses cardiovascular system |
+| Primary     | Secondary    | How                                                  |
+| ----------- | ------------ | ---------------------------------------------------- |
+| PTSD        | Depression   | Constant trauma symptoms lead to depressive episodes |
+| Diabetes    | Neuropathy   | High blood sugar damages nerves                      |
+| Sleep Apnea | Hypertension | Oxygen deprivation stresses cardiovascular system    |
 
 ### Medication Mechanism
 
@@ -112,11 +118,11 @@ The primary condition directly causes the secondary:
 
 Medications for the primary cause the secondary:
 
-| Medication | For | Causes |
-|------------|-----|--------|
-| NSAIDs | Pain management | GERD, stomach ulcers |
-| Steroids | Inflammation | Weight gain, diabetes |
-| Antidepressants | Mental health | Sexual dysfunction |
+| Medication      | For             | Causes                |
+| --------------- | --------------- | --------------------- |
+| NSAIDs          | Pain management | GERD, stomach ulcers  |
+| Steroids        | Inflammation    | Weight gain, diabetes |
+| Antidepressants | Mental health   | Sexual dysfunction    |
 
 ### Altered Gait Mechanism
 
@@ -124,11 +130,11 @@ Medications for the primary cause the secondary:
 
 Compensating for one condition stresses other joints:
 
-| Primary | Compensation | Secondary |
-|---------|--------------|-----------|
-| Knee injury | Limping | Hip pain |
-| Ankle injury | Walking differently | Knee problems |
-| Foot condition | Altered stride | Back pain |
+| Primary        | Compensation        | Secondary     |
+| -------------- | ------------------- | ------------- |
+| Knee injury    | Limping             | Hip pain      |
+| Ankle injury   | Walking differently | Knee problems |
+| Foot condition | Altered stride      | Back pain     |
 
 ### Other Mechanisms
 
@@ -141,24 +147,25 @@ Compensating for one condition stresses other joints:
 
 ## Action Buttons
 
-Each card includes action buttons:
+Each expanded card includes three action buttons:
 
-### Save to Packet
+### Build Statement (VA Form 21-4138)
+
+- Opens the **Nexus Builder** wizard
+- Pre-populated with the secondary condition and its primary connection
+- Generates a Statement in Support of Claim
+
+### Get Doctor's Packet (AI)
+
+- Opens the AI-powered **Doctor's Packet Generator**
+- Creates a medical research brief you can bring to your physician
+- See [Doctor's Cheat Sheet](../nexus-builder/doctor-cheat-sheet.md) for details
+
+### Save for Later
 
 - Adds the secondary condition to My Packet
 - Tracks it alongside your primary claims
-- Changes to "Saved" after clicking
-
-### Learn How to Claim
-
-- Opens the **Nexus Builder** wizard
-- Pre-populated with condition information
-- Generates supporting statement templates
-
-### View in Packet
-
-- Only appears for saved conditions
-- Quick link to My Packet
+- Button changes to **"Saved (View Packet)"** after clicking - click it again to jump straight to My Packet
 
 ---
 
@@ -219,7 +226,7 @@ These connections have:
 ## Tips for Using Results
 
 !!! tip "Maximizing Success"
-    
+
     1. **Start with High probability** - Best chances of success
     2. **Read the nexus theory** - Understand the medical connection
     3. **Check medical citations** - Research the supporting evidence

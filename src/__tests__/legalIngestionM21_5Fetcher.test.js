@@ -7,9 +7,9 @@ import {
 } from "../../scripts/legal-ingestion/fetch-m21-5.mjs";
 
 /**
- * S44 — M21-5 fetcher pure-function coverage. Same KnowVA "Self Service v11"
+ * S44 - M21-5 fetcher pure-function coverage. Same KnowVA "Self Service v11"
  * JSON content API as M21-1 (extractChildTopics/extractArticles fixtures
- * mirror the identical response shapes), but citationFor differs — M21-5
+ * mirror the identical response shapes), but citationFor differs - M21-5
  * article names use "Chapter N, Section X" (verified live against real
  * articles), not M21-1's Roman-numeral Part.Chapter.Section convention.
  * Network-touching functions are exercised by the bounded live verification,
@@ -89,7 +89,7 @@ describe("citationFor", () => {
 
   it("falls back to a truncated title when there is no Chapter/Section reference", () => {
     expect(citationFor("M21-5, Appeals and Reviews, Overview")).toBe(
-      "M21-5 — M21-5, Appeals and Reviews, Overview",
+      "M21-5 - M21-5, Appeals and Reviews, Overview",
     );
   });
 

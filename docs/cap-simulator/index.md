@@ -2,6 +2,9 @@
 
 The **C&P Exam Simulator** prepares veterans for their Compensation & Pension examination by simulating condition-specific questions based on the VA's Rating Schedule (38 CFR Part 4).
 
+![C&P Exam Simulator intro screen with Start Simulation, Exam Prep, and Learn Terminology mode buttons](../assets/images/screenshots/cap-simulator/intro-mode-select.png)
+_The simulator opens with three modes: Start Simulation, Exam Prep, and Learn Terminology._
+
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Available 24/7
 </div>
@@ -69,13 +72,13 @@ C&P exams can determine your rating for years. Being prepared helps you:
 
 Questions are tailored to each body system:
 
-| Body System | Question Focus |
-|-------------|----------------|
-| **Musculoskeletal** | Range of motion, pain, flare-ups, functional loss |
-| **Mental Health** | Occupational impairment, social function, symptoms |
-| **Respiratory** | Breathing difficulty, PFT results, activity limitation |
-| **Cardiovascular** | Exercise tolerance, METs, symptoms |
-| **Neurological** | Nerve function, paralysis, sensation |
+| Body System         | Question Focus                                         |
+| ------------------- | ------------------------------------------------------ |
+| **Musculoskeletal** | Range of motion, pain, flare-ups, functional loss      |
+| **Mental Health**   | Occupational impairment, social function, symptoms     |
+| **Respiratory**     | Breathing difficulty, PFT results, activity limitation |
+| **Cardiovascular**  | Exercise tolerance, METs, symptoms                     |
+| **Neurological**    | Nerve function, paralysis, sensation                   |
 
 ### DBQ-Aligned Scenarios
 
@@ -124,15 +127,15 @@ See what separates you from higher ratings:
 ## Important Notes
 
 !!! warning "Educational Tool Only"
-    The C&P Exam Simulator is for **educational preparation only**. It does not:
-    
+The C&P Exam Simulator is for **educational preparation only**. It does not:
+
     - Predict your actual VA rating
     - Replace professional medical evaluation
     - Constitute medical or legal advice
     - Guarantee any specific outcome
 
 !!! tip "Best Approach"
-    
+
     - **Answer honestly** - Based on your actual experience
     - **Think of your worst days** - Not your best days
     - **Consider flare-ups** - Include your worst symptom episodes

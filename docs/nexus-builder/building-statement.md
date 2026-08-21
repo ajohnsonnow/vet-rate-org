@@ -2,6 +2,9 @@
 
 Step-by-step guide through the Nexus Builder wizard to create your Statement in Support of Claim.
 
+![Nexus Builder wizard step 1, Timeline Information, asking when you first noticed symptoms](../assets/images/screenshots/nexus-builder/wizard-step1-timeline.png)
+_Step 1 of the wizard: Timeline Information. The AI Statement Assistant banner at the top is optional and only activates if you load a local model._
+
 ---
 
 ## Accessing the Wizard
@@ -30,199 +33,92 @@ Step-by-step guide through the Nexus Builder wizard to create your Statement in 
 
 ## Wizard Steps Overview
 
-The Nexus Builder guides you through **6 steps**:
+The Nexus Builder guides you through **3 steps** for a direct claim, or **4 steps** for a secondary claim (an extra "Connection" step is inserted):
 
-| Step | Title | Purpose |
-|------|-------|---------|
-| 1 | Basic Information | Your name and claim details |
-| 2 | Condition Details | What you're claiming |
-| 3 | Service Connection | How it relates to service |
-| 4 | Symptoms | Current symptom description |
-| 5 | Impact | How it affects your life |
-| 6 | Review & Generate | Final review and download |
+| Step                        | Title                                                  | Purpose                                                                |
+| --------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| 1                           | Timeline Information                                   | When you first noticed symptoms and what treatment you've had          |
+| 2 _(secondary claims only)_ | Connection (Nexus) to Your Service-Connected Condition | How your primary condition causes or aggravates this one               |
+| 2 or 3                      | Severity and Daily Impact                              | How the condition affects your work, social life, and daily activities |
+| Final step                  | Review Your Statement                                  | Preview, optionally enhance with AI, certify, and download             |
 
----
-
-## Step 1: Basic Information
-
-### Required Fields
-
-| Field | Description | Example |
-|-------|-------------|---------|
-| **Full Name** | Your legal name | John A. Smith |
-| **Service Branch** | Military branch | Army, Navy, Air Force, etc. |
-| **Service Start Date** | Entry date | January 15, 2005 |
-| **Service End Date** | Separation date | March 30, 2015 |
-| **VA File Number** | If you have one | 123-45-6789 |
-
-### Optional Fields
-
-| Field | Description |
-|-------|-------------|
-| **SSN (Last 4)** | Last four digits |
-| **MOS/Rating** | Military occupation |
-| **Duty Stations** | Where you served |
+A progress bar at the top of the wizard shows "Step X of Y" and a completion percentage.
 
 ---
 
-## Step 2: Condition Details
+## Step 1: Timeline Information
 
-### Condition Name
-
-The condition you're claiming:
-
-- Pre-filled if started from details or packet
-- Can be edited
-- Should match medical records
-
-### Type of Claim
-
-Select one:
-
-- **☐ Direct** - Condition started in service
-- **☐ Secondary** - Caused by another service-connected condition
-- **☐ Aggravation** - Pre-existing condition worsened in service
-
-### For Secondary Claims
-
-If secondary:
-
-- **Primary Condition** - What it's secondary to
-- **How Connected** - Brief explanation
-
-### Current Diagnosis
-
-- **Diagnosis Date** - When diagnosed
-- **Diagnosing Provider** - Who diagnosed you
-- **Diagnosis Method** - Exam, imaging, testing, etc.
+<div class="step-container">
+<div class="step">
+<strong>When did you first notice symptoms?</strong> - Free text, e.g. "Spring 2020" or "After deployment in 2018"
+</div>
+<div class="step">
+<strong>Have you sought medical treatment for this condition?</strong> - Choose Yes (VA), Yes (private), Both, or No formal treatment yet
+</div>
+</div>
 
 ---
 
-## Step 3: Service Connection
+## Step 2: Connection (Secondary Claims Only)
 
-### For Direct Claims
+This step only appears if you started the wizard from a **secondary** condition (for example, from Secondary Scout or a saved secondary claim in My Packet). It doesn't appear for direct claims.
 
-Describe the in-service event:
+![Nexus Builder Connection step showing the aggravation mechanism list and two explanation textareas](../assets/images/screenshots/nexus-builder/wizard-step2-connection.png)
+_"Connection (Nexus) to Your Service-Connected Condition" - select how the primary condition causes or aggravates the secondary one, then explain in your own words._
 
-| Field | Description |
-|-------|-------------|
-| **Event Description** | What happened |
-| **Event Date** | When it happened (approximate OK) |
-| **Event Location** | Where it happened |
-| **Documented?** | Whether in service records |
+<div class="step-container">
+<div class="step">
+<strong>How does your primary condition cause or aggravate this one?</strong> - Choose from a list of aggravation mechanisms
+</div>
+<div class="step">
+<strong>Explain in your own words</strong> - How the primary condition affects the secondary one
+</div>
+<div class="step">
+<strong>Describe a specific recent incident</strong> - A concrete example where the two conditions interacted
+</div>
+</div>
 
-### For Secondary Claims
-
-Describe the connection:
-
-| Field | Description |
-|-------|-------------|
-| **Primary Condition** | Your service-connected condition |
-| **How Related** | Medical connection |
-| **When Started** | When secondary began |
-| **Medical Support** | Any medical opinions |
-
-### For Aggravation Claims
-
-Describe the worsening:
-
-| Field | Description |
-|-------|-------------|
-| **Pre-Service Status** | Condition before service |
-| **In-Service Event** | What caused worsening |
-| **Current Status** | How it's worse now |
+!!! tip "Keyboard Shortcut"
+Press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> in a text field to jump to the next field instead of reaching for your mouse.
 
 ---
 
-## Step 4: Symptoms
+## Step: Severity and Daily Impact
 
-### Current Symptoms
+<div class="step-container">
+<div class="step">
+<strong>How does this condition affect your ability to work?</strong>
+</div>
+<div class="step">
+<strong>How does this condition affect your social and family life?</strong>
+</div>
+<div class="step">
+<strong>Provide specific examples of how this condition limits your daily activities</strong>
+</div>
+</div>
 
-Describe your symptoms in detail:
-
-```
-Example: "I experience constant lower back pain that radiates 
-down my left leg. The pain is sharp and shooting, especially 
-when bending or lifting. I also have numbness and tingling 
-in my left foot."
-```
-
-### Symptom Characteristics
-
-| Characteristic | How to Describe |
-|----------------|-----------------|
-| **Location** | Where on your body |
-| **Quality** | Sharp, dull, burning, aching |
-| **Intensity** | Scale of 1-10, mild/moderate/severe |
-| **Frequency** | How often, constant/intermittent |
-| **Duration** | How long episodes last |
-| **Triggers** | What makes it worse |
-| **Relief** | What helps |
-
-### Symptom History
-
-- When symptoms first appeared
-- How they've progressed
-- Changes over time
-
----
-
-## Step 5: Impact
-
-### Occupational Impact
-
-How does the condition affect your work?
+Each field includes example placeholder text to show the level of detail that's useful - for instance:
 
 ```
-Example: "I had to leave my job as a warehouse worker because 
-I can no longer lift more than 10 pounds without severe pain. 
-I've missed multiple days of work due to flare-ups."
-```
-
-| Area | Questions to Answer |
-|------|---------------------|
-| **Job Performance** | Can you do your job duties? |
-| **Missed Work** | Days missed due to condition? |
-| **Job Changes** | Had to change jobs? |
-| **Limitations** | What can't you do at work? |
-
-### Social Impact
-
-How does it affect relationships?
-
-```
-Example: "My chronic pain and irritability have strained my 
-marriage. I avoid social gatherings because sitting for long 
-periods causes severe discomfort."
-```
-
-### Daily Living Impact
-
-How does it affect daily activities?
-
-```
-Example: "I have difficulty dressing myself, especially 
-putting on socks and shoes. I can no longer mow my lawn 
-or play with my children as I used to."
+Example: I have difficulty concentrating due to fatigue from poor sleep.
+I've missed 15+ days of work in the past year. My supervisor has
+documented performance issues related to exhaustion...
 ```
 
 ---
 
-## Step 6: Review & Generate
+## Final Step: Review & Generate
 
-### Review Your Information
+![Nexus Builder review step showing the generated statement text and Doctor's Cheat Sheet preview](../assets/images/screenshots/nexus-builder/wizard-review-generate.png)
+_The final step previews your generated statement side-by-side with a Doctor's Cheat Sheet draft, ready to review before downloading._
 
-Before generating, review all sections:
+### Review Your Statement
 
-- ✅ Basic information correct
-- ✅ Condition details accurate
-- ✅ Service connection explained
-- ✅ Symptoms described completely
-- ✅ Impact fully captured
+The wizard generates your statement automatically from what you entered in the earlier steps, and shows it in a preview pane alongside a Doctor's Cheat Sheet draft.
 
 ### Edit if Needed
 
-Click **"Edit"** next to any section to make changes.
+Click **"← Back"** to return to any earlier step and change your answers - the statement preview updates automatically.
 
 ### ✨ AI Enhancement (Optional)
 
@@ -236,7 +132,7 @@ Click **"Edit"** next to any section to make changes.
 6. Edit further if needed
 
 !!! info "AI is Optional"
-    The standard template is excellent for most claims. AI enhancement is available for those who want additional polish, but it's never required.
+The standard template is excellent for most claims. AI enhancement is available for those who want additional polish, but it's never required.
 
 ### What AI Improves
 
@@ -251,40 +147,24 @@ When using AI enhancement:
 
 - ✅ Condition names and descriptions are shared
 - ❌ Your name is NOT shared
-- ❌ Your SSN is NOT shared  
+- ❌ Your SSN is NOT shared
 - ❌ Specific dates and locations are NOT shared
 - ❌ No personally identifying information is ever shared
 
 [Full AI privacy details →](../privacy/ai-assistant/)
 
-### Generate Statement
+### Certify and Download
 
-Click **"Generate Statement"** to create your document (or use the AI-enhanced version).
+Before you can download or save, check the **"Required Certification"** box confirming you've reviewed the document and it reflects your own testimony. This unlocks the **"Download Statement"** and **"Save to Packet"** buttons.
 
-### Preview
-
-Review the generated statement before downloading.
+See [Download Options](download-options.md) for the available file formats.
 
 ---
 
 ## Tips for Each Section
 
-!!! tip "Basic Information"
-    - Use your legal name as it appears on military records
-    - Double-check service dates against DD-214
+!!! tip "Timeline" - Approximate dates are fine - "Spring 2020" is better than leaving it blank - Be accurate about whether you've sought treatment; it affects what evidence you'll need
 
-!!! tip "Condition Details"
-    - Use the exact diagnosis from your medical records
-    - Include the diagnostic code if you know it
+!!! tip "Connection (Secondary Claims)" - Be specific about the medical mechanism - vague connections are the easiest to deny - The specific-incident example carries a lot of weight - use a real, recent event
 
-!!! tip "Service Connection"
-    - Be specific about dates and locations
-    - Include unit designations if relevant
-
-!!! tip "Symptoms"
-    - Describe your WORST days, not just average days
-    - Use both medical terms and plain language
-
-!!! tip "Impact"
-    - Be concrete - specific examples are better than general statements
-    - Include financial impact if relevant (lost wages, etc.)
+!!! tip "Severity and Impact" - Describe your WORST days, not just average days - Be concrete - specific examples are better than general statements - Include financial impact if relevant (lost wages, etc.)

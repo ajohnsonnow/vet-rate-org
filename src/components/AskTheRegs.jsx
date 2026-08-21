@@ -9,7 +9,7 @@ import { answer as answerLegalQuestion } from "../services/legalAnswerer";
 const MAX_QUESTION_LENGTH = 500;
 
 /**
- * unifiedAIService.generateAI resolves { text, mode }, not a plain string —
+ * unifiedAIService.generateAI resolves { text, mode }, not a plain string -
  * legalAnswerer.js's dual-LLM split expects deps.generateAI to resolve a
  * string (dualLLM.js does String(raw) on it, so an unwrapped object would
  * silently coerce to "[object Object]" and every question would refuse).
@@ -27,7 +27,7 @@ function AskTheRegsIntro() {
       <p>
         Ask a question about VA disability regulations (38 CFR Part 4). Answers
         cite the specific regulation and when it was last fetched.{" "}
-        <strong>Not legal advice</strong> — verify with an accredited VSO or
+        <strong>Not legal advice</strong> - verify with an accredited VSO or
         attorney before relying on it.
       </p>
     </div>
@@ -82,7 +82,7 @@ function AskTheRegsResult({ aiAvailable, error, result }) {
     <>
       {!aiAvailable && (
         <p className="text-sm text-amber-700 dark:text-amber-400">
-          No AI mode is configured yet — tap the status badge above to set one
+          No AI mode is configured yet - tap the status badge above to set one
           up before asking.
         </p>
       )}
@@ -117,7 +117,7 @@ function AskTheRegsResult({ aiAvailable, error, result }) {
 }
 
 /**
- * AskTheRegs — S23. Wires the security-critical dual-LLM answerer
+ * AskTheRegs - S23. Wires the security-critical dual-LLM answerer
  * (src/services/legalAnswerer.js, built + eval-gated in S18-S22) into a
  * user-facing modal for the first time. Wiring only: no changes to the
  * PII-scrub / dual-LLM / spotlighting security architecture.

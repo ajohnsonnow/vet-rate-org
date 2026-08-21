@@ -2,11 +2,14 @@
 
 Choose a condition to practice for your C&P exam preparation.
 
+![Condition selection screen listing conditions like Osteomyelitis and Rheumatoid Arthritis with diagnostic codes](../assets/images/screenshots/cap-simulator/condition-selection.png)
+_The "Select a Condition to Simulate" screen, with a search box and 748 conditions to browse._
+
 ---
 
 ## Selection Interface
 
-After choosing Simulation Mode, you'll see the condition selection screen with:
+After choosing Start Simulation mode, you'll see the condition selection screen with:
 
 1. **Your Saved Conditions** - From My Packet
 2. **Search All Conditions** - Full database search
@@ -58,13 +61,13 @@ Search the full database of 748 conditions:
 
 ### Search Examples
 
-| Search | Finds |
-|--------|-------|
-| `PTSD` | Post-Traumatic Stress Disorder |
-| `9411` | PTSD by diagnostic code |
-| `knee` | All knee conditions |
-| `spine` | All spine conditions |
-| `migraine` | Migraine Headaches |
+| Search     | Finds                          |
+| ---------- | ------------------------------ |
+| `PTSD`     | Post-Traumatic Stress Disorder |
+| `9411`     | PTSD by diagnostic code        |
+| `knee`     | All knee conditions            |
+| `spine`    | All spine conditions           |
+| `migraine` | Migraine Headaches             |
 
 ---
 
@@ -74,15 +77,15 @@ Expand categories to browse conditions:
 
 ### Available Categories
 
-| Category | Code Range | Examples |
-|----------|------------|----------|
-| **Musculoskeletal** | 5000-5999 | Arthritis, spine, joints |
-| **Mental Health** | 9200-9499 | PTSD, depression, anxiety |
-| **Respiratory** | 6500-6899 | Sleep apnea, asthma |
-| **Cardiovascular** | 7000-7199 | Heart disease, hypertension |
-| **Neurological** | 8000-8999 | Neuropathy, paralysis |
-| **Skin** | 7800-7899 | Eczema, scars |
-| **And more...** | Various | All 15 body systems |
+| Category            | Code Range | Examples                    |
+| ------------------- | ---------- | --------------------------- |
+| **Musculoskeletal** | 5000-5999  | Arthritis, spine, joints    |
+| **Mental Health**   | 9200-9499  | PTSD, depression, anxiety   |
+| **Respiratory**     | 6500-6899  | Sleep apnea, asthma         |
+| **Cardiovascular**  | 7000-7199  | Heart disease, hypertension |
+| **Neurological**    | 8000-8999  | Neuropathy, paralysis       |
+| **Skin**            | 7800-7899  | Eczema, scars               |
+| **And more...**     | Various    | All 15 body systems         |
 
 ### Expanding Categories
 
@@ -137,7 +140,7 @@ The simulator has specialized questions for:
 - Analogous-rated conditions
 
 !!! info "Generic Questions"
-    Conditions without specialized question sets still receive relevant questions about severity, frequency, and functional impact.
+Conditions without specialized question sets still receive relevant questions about severity, frequency, and functional impact.
 
 ---
 
@@ -164,9 +167,4 @@ After selecting a condition:
 
 ## Tips for Selection
 
-!!! tip "Choosing Wisely"
-    
-    - **Start with your most complex condition** - Usually your primary
-    - **Practice conditions before actual exams** - Use realistic timing
-    - **Try conditions you're unsure about** - Learn the criteria
-    - **Practice multiple times** - Different approaches may yield insights
+!!! tip "Choosing Wisely" - **Start with your most complex condition** - Usually your primary - **Practice conditions before actual exams** - Use realistic timing - **Try conditions you're unsure about** - Learn the criteria - **Practice multiple times** - Different approaches may yield insights

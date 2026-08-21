@@ -133,7 +133,7 @@ describe("buildInventoryFromSegmentation", () => {
 });
 
 describe("quickScanCFile routing fields", () => {
-  it("returns detectedTypes and estimatedPages — the fields the routing test reads", () => {
+  it("returns detectedTypes and estimatedPages - the fields the routing test reads", () => {
     const scan = quickScanCFile(CFILE_FIXTURE);
 
     expect(Array.isArray(scan.detectedTypes)).toBe(true);

@@ -85,7 +85,7 @@ const RegulationsHeader = ({ onClose, activeTab, setActiveTab }) => (
           </span>
         </h2>
         <p className="text-blue-200 text-sm">
-          Claims, Appeals & Pension Regulations — Know Your Rights
+          Claims, Appeals & Pension Regulations - Know Your Rights
         </p>
       </div>
     </div>
@@ -97,7 +97,7 @@ const RegulationsHeader = ({ onClose, activeTab, setActiveTab }) => (
     {/* Revision Info */}
     <p className="text-blue-300 text-center mt-1 text-xs">
       eCFR data current as of{" "}
-      {cfr3Regulations.revisionInfo?.displayDate || "1/15/2026"} — Last amended{" "}
+      {cfr3Regulations.revisionInfo?.displayDate || "1/15/2026"} - Last amended{" "}
       {cfr3Regulations.revisionInfo?.lastAmended || "1/09/2026"}
     </p>
 
@@ -903,7 +903,7 @@ const RegulationsFooter = () => (
       </p>
       <p className="text-xs text-gray-500 dark:text-gray-400">
         eCFR current as of{" "}
-        {cfr3Regulations.revisionInfo?.displayDate || "1/15/2026"} — Last
+        {cfr3Regulations.revisionInfo?.displayDate || "1/15/2026"} - Last
         amended {cfr3Regulations.revisionInfo?.lastAmended || "1/09/2026"}
       </p>
     </div>

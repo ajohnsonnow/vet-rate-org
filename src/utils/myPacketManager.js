@@ -14,7 +14,7 @@
  * Storage: IndexedDB (unlimited capacity, persists across sessions)
  * Fallback: localStorage (5-10MB limit, for older browsers)
  *
- * All data stays 100% on the veteran's device — never sent to servers.
+ * All data stays 100% on the veteran's device - never sent to servers.
  */
 
 import { markAsModified } from "./persistentStorage";
@@ -38,7 +38,7 @@ let packetDB = null;
 
 /**
  * Open or create the My Packet IndexedDB database.
- * IndexedDB is like a mini database inside the browser —
+ * IndexedDB is like a mini database inside the browser -
  * it can store megabytes of data without any server.
  */
 const openPacketDB = () => {
@@ -161,8 +161,8 @@ export const PACKET_DOC_ICONS = {
  * the same underlying file as an incoming save, so re-importing an
  * unchanged file updates that record in place instead of appending a
  * duplicate. Same (fileName, fileSize) pairing as addDocumentToVKB's
- * idempotency guard in veteranKnowledgeBase.js. Pure function — no
- * IndexedDB — so it's directly unit-testable.
+ * idempotency guard in veteranKnowledgeBase.js. Pure function - no
+ * IndexedDB - so it's directly unit-testable.
  */
 export const findDuplicatePacketDocument = (
   existingDocs,
@@ -180,7 +180,7 @@ export const findDuplicatePacketDocument = (
 
 /**
  * Save a document to My Packet.
- * This is the main function — call it whenever a document is processed.
+ * This is the main function - call it whenever a document is processed.
  *
  * @param {Object} doc - Document to save
  * @param {string} doc.fileName - Original filename
@@ -196,7 +196,7 @@ export const findDuplicatePacketDocument = (
  */
 // Pure object-literal builder split out of saveDocumentToPacket purely to
 // keep that function's cyclomatic complexity under the repo's lint ceiling
-// — every branch here is just a field default, no new behavior.
+// - every branch here is just a field default, no new behavior.
 function _buildPacketDocumentRecord({
   doc,
   id,
@@ -211,10 +211,10 @@ function _buildPacketDocumentRecord({
     uploadDate: duplicate ? duplicate.uploadDate : new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
 
-    // The raw text — this is what AI tools can re-read at any time
+    // The raw text - this is what AI tools can re-read at any time
     rawText: doc.rawText || "",
 
-    // Structured extracted data — differs by document type
+    // Structured extracted data - differs by document type
     extractedData: doc.extractedData || {},
 
     // AI analysis results
@@ -265,7 +265,7 @@ export const saveDocumentToPacket = async (doc) => {
       incomingFileSize,
     });
 
-    // Pre-flight quota check — still attempt the write either way, but
+    // Pre-flight quota check - still attempt the write either way, but
     // attach a warning the caller can surface to the veteran
     const quota = await ensureQuota(JSON.stringify(document).length);
 
@@ -343,7 +343,7 @@ export const getPacketDocument = async (documentId) => {
 };
 
 /**
- * Get all document index entries (lightweight — no raw text)
+ * Get all document index entries (lightweight - no raw text)
  * Use this for listing documents in the UI
  */
 export const getPacketIndex = async () => {
@@ -386,7 +386,7 @@ export const getPacketDocumentsByType = async (classification) => {
 };
 
 /**
- * Get ALL full documents (with raw text) — use carefully, can be large
+ * Get ALL full documents (with raw text) - use carefully, can be large
  */
 export const getAllPacketDocuments = async () => {
   try {
@@ -488,7 +488,7 @@ export const deletePacketDocument = async (documentId) => {
 
 /**
  * Search all documents in My Packet by text content.
- * This searches the raw OCR text — useful for finding specific
+ * This searches the raw OCR text - useful for finding specific
  * phrases, dates, or conditions mentioned anywhere in the veteran's records.
  *
  * @param {string} query - Text to search for
@@ -543,7 +543,7 @@ export const searchPacketDocuments = async (query, options = {}) => {
 };
 
 /**
- * Get the raw text for a specific document — used by AI tools
+ * Get the raw text for a specific document - used by AI tools
  * that need to re-read a document for analysis.
  */
 export const getDocumentRawText = async (documentId) => {
@@ -712,7 +712,7 @@ const updatePacketMetadata = async () => {
 };
 
 /**
- * Get packet statistics (fast — uses cached metadata)
+ * Get packet statistics (fast - uses cached metadata)
  */
 export const getPacketStats = () => {
   try {
@@ -943,10 +943,10 @@ function _formatServiceRecordSection(grouped, options) {
   return out;
 }
 
-// Structured C-File formatter — replaces the 500-char JSON blob for C-Files.
+// Structured C-File formatter - replaces the 500-char JSON blob for C-Files.
 // The extractedData is the C-File analysis object (potential_claims, timeline,
 // summary, exposures), so emit readable condition/evidence lines an AI tool can
-// actually use. Conditions are AI SUGGESTIONS (not filed claims) — labelled so.
+// actually use. Conditions are AI SUGGESTIONS (not filed claims) - labelled so.
 function _formatCFileDoc(doc) {
   const data = doc.extractedData || {};
   let out = `File: ${doc.fileName} (${(doc.uploadDate || "").split("T")[0]})\n`;
@@ -962,7 +962,7 @@ function _formatCFileDoc(doc) {
       const name = c.condition || c.name || "Unknown";
       const dc = c.diagnosticCode ? ` [DC ${c.diagnosticCode}]` : "";
       out += `    • ${name}${dc}`;
-      if (c.missing_element) out += ` — missing: ${c.missing_element}`;
+      if (c.missing_element) out += ` - missing: ${c.missing_element}`;
       out += "\n";
     });
     if (claims.length > 25) {

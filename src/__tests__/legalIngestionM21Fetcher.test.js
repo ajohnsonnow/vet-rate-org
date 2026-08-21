@@ -7,7 +7,7 @@ import {
 } from "../../scripts/legal-ingestion/fetch-m21-1.mjs";
 
 /**
- * S31 — M21-1 fetcher pure-function coverage. The fetcher drives the KnowVA
+ * S31 - M21-1 fetcher pure-function coverage. The fetcher drives the KnowVA
  * "Self Service v11" JSON content API; these fixtures mirror the exact response
  * shapes observed against the live portal (topicTree nesting, article wrapper
  * that is an array or a lone object). Network-touching functions are exercised
@@ -85,7 +85,7 @@ describe("citationFor", () => {
 
   it("falls back to a truncated title when there is no section reference", () => {
     expect(citationFor("2016-02-05 Memorandum of Changes")).toBe(
-      "M21-1 — 2016-02-05 Memorandum of Changes",
+      "M21-1 - 2016-02-05 Memorandum of Changes",
     );
   });
 

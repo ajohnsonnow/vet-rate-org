@@ -85,6 +85,36 @@ function runFileSelect(selectedFiles, ctx) {
   }
 }
 
+function addDragActiveClasses(dropZoneRef) {
+  if (dropZoneRef.current) {
+    dropZoneRef.current.classList.add(
+      "border-blue-500",
+      "bg-blue-50",
+      "dark:bg-blue-900/20",
+    );
+  }
+}
+
+function removeDragActiveClasses(dropZoneRef) {
+  if (dropZoneRef.current) {
+    dropZoneRef.current.classList.remove(
+      "border-blue-500",
+      "bg-blue-50",
+      "dark:bg-blue-900/20",
+    );
+  }
+}
+
+function runFileDrop(e, dropZoneRef, handleFileSelect) {
+  e.preventDefault();
+  e.stopPropagation();
+  removeDragActiveClasses(dropZoneRef);
+  const droppedFiles = e.dataTransfer.files;
+  if (droppedFiles.length > 0) {
+    handleFileSelect(droppedFiles);
+  }
+}
+
 /**
  * @param {object} params
  * @param {boolean} params.useSequentialMode
@@ -119,45 +149,17 @@ export const useMusterCallFileIntake = ({
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (dropZoneRef.current) {
-      dropZoneRef.current.classList.add(
-        "border-blue-500",
-        "bg-blue-50",
-        "dark:bg-blue-900/20",
-      );
-    }
+    addDragActiveClasses(dropZoneRef);
   }, []);
 
   const handleDragLeave = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (dropZoneRef.current) {
-      dropZoneRef.current.classList.remove(
-        "border-blue-500",
-        "bg-blue-50",
-        "dark:bg-blue-900/20",
-      );
-    }
+    removeDragActiveClasses(dropZoneRef);
   }, []);
 
   const handleDrop = useCallback(
-    (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (dropZoneRef.current) {
-        dropZoneRef.current.classList.remove(
-          "border-blue-500",
-          "bg-blue-50",
-          "dark:bg-blue-900/20",
-        );
-      }
-
-      const droppedFiles = e.dataTransfer.files;
-      if (droppedFiles.length > 0) {
-        handleFileSelect(droppedFiles);
-      }
-    },
+    (e) => runFileDrop(e, dropZoneRef, handleFileSelect),
     [handleFileSelect],
   );
 

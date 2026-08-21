@@ -4,8 +4,8 @@ import { join } from "node:path";
 
 /**
  * D-H06 / D-H07: a deployed RFC 9116 security.txt gives researchers a real
- * disclosure channel. The Expires field is the footgun — once it lapses the file
- * is non-compliant and scanners flag it — so this guards presence + required
+ * disclosure channel. The Expires field is the footgun - once it lapses the file
+ * is non-compliant and scanners flag it - so this guards presence + required
  * fields + a still-future expiry.
  */
 const text = readFileSync(
@@ -13,7 +13,7 @@ const text = readFileSync(
   "utf8",
 );
 
-describe("security.txt (RFC 9116) — D-H06/D-H07", () => {
+describe("security.txt (RFC 9116) - D-H06/D-H07", () => {
   it("declares at least one Contact", () => {
     expect(text).toMatch(/^Contact:\s*\S+/m);
   });

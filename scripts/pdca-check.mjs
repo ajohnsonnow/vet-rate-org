@@ -47,8 +47,8 @@ const info = (s) => `${C.cyan}→${C.reset} ${s}`;
 
 // ── Result accumulator ────────────────────────────────────────────────────────
 const results = {
-  unit: null,   // { passed, failed, skipped, duration, failures: [] }
-  e2e: null,    // { passed, failed, skipped, duration, failures: [] }
+  unit: null, // { passed, failed, skipped, duration, failures: [] }
+  e2e: null, // { passed, failed, skipped, duration, failures: [] }
   gitleaks: null, // shape: clean (bool)
   startTime: Date.now(),
 };
@@ -76,7 +76,9 @@ function parseVitestJson(jsonStr) {
   try {
     const data = JSON.parse(jsonStr);
     const failures = [];
-    let passed = 0, failed = 0, skipped = 0;
+    let passed = 0,
+      failed = 0,
+      skipped = 0;
 
     for (const suite of data.testResults ?? []) {
       for (const test of suite.assertionResults ?? []) {
@@ -100,7 +102,9 @@ function parsePlaywrightJson(jsonStr) {
   try {
     const data = JSON.parse(jsonStr);
     const failures = [];
-    let passed = 0, failed = 0, skipped = 0;
+    let passed = 0,
+      failed = 0,
+      skipped = 0;
 
     function walk(suites) {
       for (const suite of suites ?? []) {
@@ -114,7 +118,10 @@ function parsePlaywrightJson(jsonStr) {
               const err = test.results?.[0]?.error;
               failures.push({
                 name: `${spec.file} > ${spec.title}`,
-                message: (err?.message ?? err?.value ?? "no message").slice(0, 300),
+                message: (err?.message ?? err?.value ?? "no message").slice(
+                  0,
+                  300,
+                ),
               });
             } else skipped++;
           }
@@ -132,8 +139,12 @@ function parsePlaywrightJson(jsonStr) {
 // ── PLAN ──────────────────────────────────────────────────────────────────────
 console.log(`\n${C.bold}${C.cyan}PDCA Check — ${TIMESTAMP}${C.reset}`);
 console.log(info("PLAN: Define what we're testing"));
-console.log("  • Unit tests (Vitest): routing logic, security, calculators, AI safety");
-console.log("  • E2E tests (Playwright): UI pipeline, tool interactions, packet persistence");
+console.log(
+  "  • Unit tests (Vitest): routing logic, security, calculators, AI safety",
+);
+console.log(
+  "  • E2E tests (Playwright): UI pipeline, tool interactions, packet persistence",
+);
 console.log("  • Security scan: gitleaks for secrets");
 console.log("  • Success criteria: 0 unit failures, 0 e2e failures, 0 leaks\n");
 
@@ -161,11 +172,18 @@ if (!FLAG_E2E_ONLY) {
       }
     }
     // Clean up temp file
-    try { execSync(`node -e "require('fs').unlinkSync('${jsonOut}')"`, { cwd: ROOT, stdio: "pipe" }); } catch {}
+    try {
+      execSync(`node -e "require('fs').unlinkSync('${jsonOut}')"`, {
+        cwd: ROOT,
+        stdio: "pipe",
+      });
+    } catch {}
   } else {
     // Fall back to parsing stdout
     const lines = vitestResult.stdout + vitestResult.stderr;
+    // eslint-disable-next-line sonarjs/slow-regex -- trusted local vitest CLI output, never attacker-controlled length
     const passMatch = lines.match(/(\d+) passed/);
+    // eslint-disable-next-line sonarjs/slow-regex -- trusted local vitest CLI output, never attacker-controlled length
     const failMatch = lines.match(/(\d+) failed/);
     let unitFailedCount;
     if (failMatch) {
@@ -195,7 +213,11 @@ if (!FLAG_UNIT_ONLY) {
     ? `"tests/e2e/*.spec.ts" --project=chromium`
     : `"tests/e2e/*.spec.ts"`;
 
-  console.log(info(`Running Playwright E2E tests (${FLAG_FAST ? "chromium only" : "all browsers"})...`));
+  console.log(
+    info(
+      `Running Playwright E2E tests (${FLAG_FAST ? "chromium only" : "all browsers"})...`,
+    ),
+  );
   console.log(info("  Starting dev server on port 5197..."));
 
   const pwResult = run(
@@ -222,7 +244,9 @@ if (!FLAG_UNIT_ONLY) {
   } else {
     // Parse from exit code + stderr summary line
     const lines = pwResult.stdout + pwResult.stderr;
+    // eslint-disable-next-line sonarjs/slow-regex -- trusted local playwright CLI output, never attacker-controlled length
     const passMatch = lines.match(/(\d+) passed/);
+    // eslint-disable-next-line sonarjs/slow-regex -- trusted local playwright CLI output, never attacker-controlled length
     const failMatch = lines.match(/(\d+) failed/);
     let e2eFailedCount;
     if (failMatch) {
@@ -241,7 +265,7 @@ if (!FLAG_UNIT_ONLY) {
     console.log(`  ${status(fallbackSummaryLine)}`);
     // Print last 600 chars of output for diagnostics
     if (pwResult.code !== 0) {
-      const tail = (lines).slice(-600);
+      const tail = lines.slice(-600);
       console.log(`    ${C.yellow}Tail:${C.reset}\n${tail}`);
     }
   }
@@ -251,7 +275,9 @@ if (!FLAG_UNIT_ONLY) {
 console.log(info("Running gitleaks (secret scan)..."));
 const glResult = run("gitleaks detect --source . --no-banner --exit-code 1");
 results.gitleaks = { clean: glResult.code === 0 };
-console.log(`  ${results.gitleaks.clean ? ok("gitleaks: 0 secrets") : fail("gitleaks: SECRETS FOUND — see output above")}`);
+console.log(
+  `  ${results.gitleaks.clean ? ok("gitleaks: 0 secrets") : fail("gitleaks: SECRETS FOUND — see output above")}`,
+);
 
 // ── CHECK ─────────────────────────────────────────────────────────────────────
 console.log(`\n${C.bold}${C.cyan}CHECK: Evaluate results${C.reset}`);
@@ -281,7 +307,9 @@ for (const gate of gates) {
 }
 
 // ── ACT ───────────────────────────────────────────────────────────────────────
-console.log(`\n${C.bold}${C.cyan}ACT: Write report and determine next steps${C.reset}`);
+console.log(
+  `\n${C.bold}${C.cyan}ACT: Write report and determine next steps${C.reset}`,
+);
 
 // Collect known gaps for the report
 const knownOpenItems = [
@@ -305,10 +333,14 @@ const e2eSummary = results.e2e
   : "skipped";
 
 const unitFailList = results.unit?.failures?.length
-  ? results.unit.failures.map((f) => `  - \`${f.name}\`\n    ${f.message}`).join("\n")
+  ? results.unit.failures
+      .map((f) => `  - \`${f.name}\`\n    ${f.message}`)
+      .join("\n")
   : "  None";
 const e2eFailList = results.e2e?.failures?.length
-  ? results.e2e.failures.map((f) => `  - \`${f.name}\`\n    ${f.message}`).join("\n")
+  ? results.e2e.failures
+      .map((f) => `  - \`${f.name}\`\n    ${f.message}`)
+      .join("\n")
   : "  None";
 
 const overallStatus = allPassed ? "PASS" : "FAIL";

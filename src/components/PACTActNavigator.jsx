@@ -451,7 +451,7 @@ function renderExposureSelection({
 
       <div className="grid gap-4">
         {Object.entries(PACT_ACT_DATA).map(([key, data]) => (
-          <button
+          <button type="button"
             key={key}
             onClick={() => {
               setSelectedExposure(key);
@@ -503,7 +503,7 @@ function renderLocationSelection({
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
-        <button onClick={() => setStep(1)} className="hover:text-blue-500">
+        <button type="button" onClick={() => setStep(1)} className="hover:text-blue-500">
           Exposure Type
         </button>
         <span>→</span>
@@ -527,7 +527,7 @@ function renderLocationSelection({
 
         <div className="grid gap-3">
           {exposure.locations.map((loc) => (
-            <button
+            <button type="button"
               key={loc.name}
               onClick={() => {
                 setSelectedLocation(loc.name);
@@ -557,7 +557,7 @@ function renderLocationSelection({
         </div>
       </div>
 
-      <button
+      <button type="button"
         onClick={() => setStep(1)}
         className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
       >
@@ -653,7 +653,7 @@ function renderConditionsListSection({
 
       <div className="max-h-96 overflow-y-auto p-4 space-y-2">
         {filteredConditions.map((cond) => (
-          <button
+          <button type="button"
             key={cond.name}
             onClick={() => toggleCondition(cond.name)}
             className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
@@ -704,11 +704,11 @@ function renderConditionsListSection({
 function renderConditionSelectionBreadcrumb({ setStep }) {
   return (
     <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
-      <button onClick={() => setStep(1)} className="hover:text-blue-500">
+      <button type="button" onClick={() => setStep(1)} className="hover:text-blue-500">
         Exposure Type
       </button>
       <span>→</span>
-      <button onClick={() => setStep(2)} className="hover:text-blue-500">
+      <button type="button" onClick={() => setStep(2)} className="hover:text-blue-500">
         Location
       </button>
       <span>→</span>
@@ -803,13 +803,13 @@ function renderConditionSelection({
 
       {/* Navigation */}
       <div className="flex gap-4">
-        <button
+        <button type="button"
           onClick={() => setStep(2)}
           className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
           ← Back
         </button>
-        <button
+        <button type="button"
           onClick={analyzeResults}
           disabled={selectedConditions.length === 0}
           className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1073,7 +1073,7 @@ function renderLegalReferencesSection() {
  */
 function renderStartOverButton({ onReset }) {
   return (
-    <button
+    <button type="button"
       onClick={onReset}
       className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
     >
@@ -1158,7 +1158,7 @@ function renderModalHeader({ onClose, onReportBug }) {
               moduleName="PACT Act Navigator"
             />
           )}
-          <button
+          <button type="button"
             onClick={onClose}
             className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"

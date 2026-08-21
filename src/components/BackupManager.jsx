@@ -87,7 +87,7 @@ async function handleExport(setStatus) {
   }
 }
 
-// Handle file selection — validate, then ask for confirmation before importing
+// Handle file selection - validate, then ask for confirmation before importing
 async function handleFileSelect(file, setStatus, setPendingImport) {
   try {
     setStatus({ type: "info", message: "Reading backup file..." });
@@ -915,7 +915,7 @@ function ConfirmRestoreDialog({
       </h3>
       <p className="text-gray-700 dark:text-gray-300 mb-4">
         This rolls your data back to the restore point saved on{" "}
-        {new Date(restorePoint.savedAt).toLocaleString()} — right before your
+        {new Date(restorePoint.savedAt).toLocaleString()} - right before your
         last import.
       </p>
       <p className="text-gray-700 dark:text-gray-300 font-semibold">

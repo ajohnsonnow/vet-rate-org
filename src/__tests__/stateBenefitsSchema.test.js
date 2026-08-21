@@ -39,7 +39,7 @@ const VERIFIED = [...PILOT, ...S37];
 const readState = (code) =>
   JSON.parse(readFileSync(path.join(STATES_DIR, `${code}.json`), "utf8"));
 
-describe("state benefits — canonical verified files (S36/S37)", () => {
+describe("state benefits - canonical verified files (S36/S37)", () => {
   it.each(VERIFIED)("%s.json exists", (code) => {
     expect(existsSync(path.join(STATES_DIR, `${code}.json`))).toBe(true);
   });
@@ -87,7 +87,7 @@ describe("state benefits — canonical verified files (S36/S37)", () => {
   });
 });
 
-describe("state benefits — live consumer wiring (S36)", () => {
+describe("state benefits - live consumer wiring (S36)", () => {
   it("stateBenefits.js loads all 51 states without an import error", () => {
     const codes = new Set(stateBenefits.map((b) => b.stateCode));
     expect(codes.size).toBe(51);

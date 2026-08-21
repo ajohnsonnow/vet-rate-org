@@ -168,9 +168,9 @@ async function _runConsentAndProcess(file, t, ctx) {
   ctx.abortControllerRef.current = new AbortController();
 
   try {
-    // Stage 1: (processFormationDocument accepts the File directly — no pre-read needed)
+    // Stage 1: (processFormationDocument accepts the File directly - no pre-read needed)
 
-    // Stage 2: Extract text — route through MusterCall pipeline for full
+    // Stage 2: Extract text - route through MusterCall pipeline for full
     // Tesseract OCR support (handles scanned / image-only PDFs)
     ctx.setProcessingStage(t("cfileAnalyzer", "extractingText"));
     const extractionResult = await _extractTextForAnalysis(file, ctx);
@@ -260,7 +260,7 @@ function CFileDashboardWarnings({
 }) {
   return (
     <>
-      {/* Partial-analysis warning — a veteran must never mistake a partial
+      {/* Partial-analysis warning - a veteran must never mistake a partial
           analysis for a complete one */}
       {analysisResult.failedChunks?.length > 0 && (
         <div
@@ -271,7 +271,7 @@ function CFileDashboardWarnings({
             <span className="text-2xl">⚠️</span>
             <div>
               <h3 className="font-bold text-amber-800 dark:text-amber-200">
-                Partial analysis — {analysisResult.failedChunks.length} of{" "}
+                Partial analysis - {analysisResult.failedChunks.length} of{" "}
                 {analysisMetadata?.totalChunks ||
                   analysisResult.failedChunks.length}{" "}
                 sections could not be analyzed
@@ -279,7 +279,7 @@ function CFileDashboardWarnings({
               <p className="text-amber-700 dark:text-amber-300 text-sm mt-1">
                 Pages not analyzed:{" "}
                 {analysisResult.failedChunks
-                  .map((fc) => `${fc.startPage}–${fc.endPage}`)
+                  .map((fc) => `${fc.startPage}-${fc.endPage}`)
                   .join(", ")}
                 . Findings from those pages are missing, so do not treat these
                 results as complete. Try running the analysis again.
@@ -308,7 +308,7 @@ function CFileDashboardWarnings({
 }
 
 // S24: pages excluded from the AI pass by the time-budget cap. These pages
-// were NOT read by the AI, but ARE in the semantic search index — so the
+// were NOT read by the AI, but ARE in the semantic search index - so the
 // veteran can still find evidence on them. Making this visible fixes the
 // previous silent drop (console-only).
 function CFileExcludedPagesWarning({
@@ -329,7 +329,7 @@ function CFileExcludedPagesWarning({
           <p className="text-blue-700 dark:text-blue-300 text-sm mt-1">
             To finish in a reasonable time on your device, the AI reads the
             highest-relevance pages first. The pages above are still fully
-            indexed — search your entire document by meaning to make sure
+            indexed - search your entire document by meaning to make sure
             nothing was missed.
           </p>
           {analysisMetadata?.semanticIndex?.indexed !== false && (
@@ -1091,7 +1091,7 @@ function CFileProcessingState({
 
       <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
         ⏱️ Elapsed: {Math.floor(elapsedSeconds / 60)}:
-        {String(elapsedSeconds % 60).padStart(2, "0")} — still working
+        {String(elapsedSeconds % 60).padStart(2, "0")} - still working
       </p>
 
       <CFileExtractionProgressBar
@@ -1271,7 +1271,7 @@ function CFileAnalyzerHeader({ t, onOpenAISettings, onReportBug, onClose }) {
   );
 }
 
-// Privacy consent gate — nested over the main analyzer shell (zIndex 70 > the
+// Privacy consent gate - nested over the main analyzer shell (zIndex 70 > the
 // shell's 60). Dismissable: Cancel / ESC / backdrop all decline.
 function CFilePrivacyConsentModal({
   t,
@@ -1365,25 +1365,17 @@ function useCFileDropHandlers(ctx) {
   return { handleDrop, handleDragOver, handleDragLeave, handleFileSelect };
 }
 
-function useCFileAnalysisHandlers(ctx) {
+// Stop/start handlers, split out of useCFileAnalysisHandlers purely to
+// keep that hook's own line count down.
+function useCFileStopStartHandlers(ctx) {
   const {
     t,
     file,
     onOpenAISettings,
     abortControllerRef,
     setError,
-    setFile,
-    setAnalysisResult,
     setProcessingStage,
     setShowPrivacyConsent,
-    setHasConsented,
-    setIsProcessing,
-    setStorageWarning,
-    setChunkProgress,
-    setExtractionProgress,
-    setExtractedText,
-    setAnalysisMetadata,
-    setShowSemanticSearch,
   } = ctx;
 
   // Stop analysis
@@ -1403,6 +1395,31 @@ function useCFileAnalysisHandlers(ctx) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file, t]);
+
+  return { handleStopAnalysis, handleStartAnalysis };
+}
+
+// Consent/reset handlers, split out of useCFileAnalysisHandlers purely to
+// keep that hook's own line count down.
+function useCFileConsentResetHandlers(ctx) {
+  const {
+    t,
+    file,
+    setError,
+    setFile,
+    setAnalysisResult,
+    setProcessingStage,
+    setShowPrivacyConsent,
+    setHasConsented,
+    setIsProcessing,
+    setStorageWarning,
+    setChunkProgress,
+    setExtractionProgress,
+    setExtractedText,
+    setAnalysisMetadata,
+    setShowSemanticSearch,
+    abortControllerRef,
+  } = ctx;
 
   // Process the file after consent
   const handleConsentAndProcess = useCallback(async () => {
@@ -1451,6 +1468,15 @@ function useCFileAnalysisHandlers(ctx) {
     setHasConsented,
     setShowSemanticSearch,
   ]);
+
+  return { handleConsentAndProcess, handleReset };
+}
+
+function useCFileAnalysisHandlers(ctx) {
+  const { handleStopAnalysis, handleStartAnalysis } =
+    useCFileStopStartHandlers(ctx);
+  const { handleConsentAndProcess, handleReset } =
+    useCFileConsentResetHandlers(ctx);
 
   return {
     handleStopAnalysis,
@@ -1580,28 +1606,27 @@ function CFileAnalyzerView({ state }) {
   );
 }
 
-export default function CFileAnalyzer({
-  onClose,
-  onOpenAISettings,
-  onReportBug,
-}) {
-  const { t } = useLanguage();
+// AI status state (unified AI service handles API keys internally). The
+// status value itself is unused outside the polling effect.
+function useCFileAIStatusPolling() {
+  const [, setAIStatus] = useState(getAIStatus());
+  useEffect(() => _pollAIStatus(setAIStatus), []);
+}
 
-  // File drop state
+function useCFileFileDropState() {
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  // AI status state (unified AI service handles API keys internally)
-  const [_aiStatus, setAIStatus] = useState(getAIStatus());
-  useEffect(() => _pollAIStatus(setAIStatus), []);
+  return { file, setFile, isDragging, setIsDragging, fileInputRef };
+}
 
-  // Processing state
+// Heartbeat while processing: long phases (opening a 300MB document, first
+// model generation) are otherwise silent for minutes - a ticking clock
+// tells the veteran the pipeline is alive, not frozen.
+function useCFileProcessingState() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState("");
-  // Heartbeat while processing: long phases (opening a 300MB document,
-  // first model generation) are otherwise silent for minutes — a ticking
-  // clock tells the veteran the pipeline is alive, not frozen.
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   useEffect(
     () => _runElapsedSecondsTimer(isProcessing, setElapsedSeconds),
@@ -1622,27 +1647,72 @@ export default function CFileAnalyzer({
   const [storageWarning, setStorageWarning] = useState(null);
   const abortControllerRef = useRef(null);
 
-  // Analysis metadata (for showing chunks processed)
+  return {
+    isProcessing,
+    setIsProcessing,
+    processingStage,
+    setProcessingStage,
+    elapsedSeconds,
+    extractionProgress,
+    setExtractionProgress,
+    chunkProgress,
+    setChunkProgress,
+    error,
+    setError,
+    storageWarning,
+    setStorageWarning,
+    abortControllerRef,
+  };
+}
+
+// Consent gate + analysis-results state (S24: showSemanticSearch is the
+// semantic search panel over the just-analyzed document).
+function useCFileResultsAndConsentState() {
   const [analysisMetadata, setAnalysisMetadata] = useState(null);
-
-  // Consent state
   const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
-  const [_hasConsented, setHasConsented] = useState(false);
-
-  // Results state
+  const [, setHasConsented] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [extractedText, setExtractedText] = useState(null);
   const [activeTab, setActiveTab] = useState("summary");
-  // S24: semantic search panel over the just-analyzed document
   const [showSemanticSearch, setShowSemanticSearch] = useState(false);
+
+  return {
+    analysisMetadata,
+    setAnalysisMetadata,
+    showPrivacyConsent,
+    setShowPrivacyConsent,
+    setHasConsented,
+    analysisResult,
+    setAnalysisResult,
+    extractedText,
+    setExtractedText,
+    activeTab,
+    setActiveTab,
+    showSemanticSearch,
+    setShowSemanticSearch,
+  };
+}
+
+export default function CFileAnalyzer({
+  onClose,
+  onOpenAISettings,
+  onReportBug,
+}) {
+  const { t } = useLanguage();
+
+  useCFileAIStatusPolling();
+
+  const fileDropState = useCFileFileDropState();
+  const processingState = useCFileProcessingState();
+  const resultsState = useCFileResultsAndConsentState();
 
   const { handleDrop, handleDragOver, handleDragLeave, handleFileSelect } =
     useCFileDropHandlers({
       t,
-      setIsDragging,
-      setError,
-      setFile,
-      setAnalysisResult,
+      setIsDragging: fileDropState.setIsDragging,
+      setError: processingState.setError,
+      setFile: fileDropState.setFile,
+      setAnalysisResult: resultsState.setAnalysisResult,
     });
 
   const {
@@ -1652,22 +1722,22 @@ export default function CFileAnalyzer({
     handleReset,
   } = useCFileAnalysisHandlers({
     t,
-    file,
+    file: fileDropState.file,
     onOpenAISettings,
-    abortControllerRef,
-    setError,
-    setFile,
-    setAnalysisResult,
-    setProcessingStage,
-    setShowPrivacyConsent,
-    setHasConsented,
-    setIsProcessing,
-    setStorageWarning,
-    setChunkProgress,
-    setExtractionProgress,
-    setExtractedText,
-    setAnalysisMetadata,
-    setShowSemanticSearch,
+    abortControllerRef: processingState.abortControllerRef,
+    setError: processingState.setError,
+    setFile: fileDropState.setFile,
+    setAnalysisResult: resultsState.setAnalysisResult,
+    setProcessingStage: processingState.setProcessingStage,
+    setShowPrivacyConsent: resultsState.setShowPrivacyConsent,
+    setHasConsented: resultsState.setHasConsented,
+    setIsProcessing: processingState.setIsProcessing,
+    setStorageWarning: processingState.setStorageWarning,
+    setChunkProgress: processingState.setChunkProgress,
+    setExtractionProgress: processingState.setExtractionProgress,
+    setExtractedText: resultsState.setExtractedText,
+    setAnalysisMetadata: resultsState.setAnalysisMetadata,
+    setShowSemanticSearch: resultsState.setShowSemanticSearch,
   });
 
   return (
@@ -1677,33 +1747,16 @@ export default function CFileAnalyzer({
         onClose,
         onOpenAISettings,
         onReportBug,
-        isDragging,
-        file,
-        setFile,
-        error,
-        fileInputRef,
+        ...fileDropState,
+        ...processingState,
+        ...resultsState,
         handleDrop,
         handleDragOver,
         handleDragLeave,
         handleFileSelect,
         handleStartAnalysis,
-        isProcessing,
-        processingStage,
-        elapsedSeconds,
-        extractionProgress,
-        chunkProgress,
         handleStopAnalysis,
-        analysisResult,
-        extractedText,
-        analysisMetadata,
-        storageWarning,
-        activeTab,
-        setActiveTab,
-        showSemanticSearch,
-        setShowSemanticSearch,
         handleReset,
-        showPrivacyConsent,
-        setShowPrivacyConsent,
         handleConsentAndProcess,
       }}
     />

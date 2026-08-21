@@ -14,6 +14,15 @@ import {
 } from "../../utils/veteranProfile";
 import { SCHEMA_STORAGE_KEY } from "../../utils/version";
 
+function dd214Fixture(overrides = {}) {
+  return {
+    entryDate: "2010-06-01",
+    separationDate: "2015-05-30",
+    branch: "Army",
+    ...overrides,
+  };
+}
+
 describe("C1 migration: servicePeriods consolidation", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -21,14 +30,7 @@ describe("C1 migration: servicePeriods consolidation", () => {
   });
 
   it("synthesizes one period from legacy dd214Data and folds in manual profile periods", () => {
-    saveServiceHistory({
-      dd214Data: {
-        entryDate: "2010-06-01",
-        separationDate: "2015-05-30",
-        branch: "Army",
-        rank: "SGT",
-      },
-    });
+    saveServiceHistory({ dd214Data: dd214Fixture({ rank: "SGT" }) });
     saveVeteranProfile({
       firstName: "John",
       servicePeriods: [
@@ -72,11 +74,7 @@ describe("C1 migration: servicePeriods consolidation", () => {
 
   it("does not duplicate a period already present in the canonical array", () => {
     saveServiceHistory({
-      dd214Data: {
-        entryDate: "2010-06-01",
-        separationDate: "2015-05-30",
-        branch: "Army",
-      },
+      dd214Data: dd214Fixture(),
       servicePeriods: [
         {
           id: "already_here",
@@ -91,14 +89,8 @@ describe("C1 migration: servicePeriods consolidation", () => {
     expect(getServiceHistory().servicePeriods).toHaveLength(1);
   });
 
-  it("is idempotent — running the migration twice does not duplicate periods", () => {
-    saveServiceHistory({
-      dd214Data: {
-        entryDate: "2010-06-01",
-        separationDate: "2015-05-30",
-        branch: "Army",
-      },
-    });
+  it("is idempotent - running the migration twice does not duplicate periods", () => {
+    saveServiceHistory({ dd214Data: dd214Fixture() });
 
     migrateUserData();
     const afterFirst = getServiceHistory().servicePeriods.length;

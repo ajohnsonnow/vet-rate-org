@@ -2,6 +2,9 @@
 
 Secondary Scout is a powerful tool that helps you discover conditions that may be **secondarily connected** to your existing service-connected disabilities under **38 CFR § 3.310**.
 
+![Secondary Scout results showing suggested secondary conditions for Tinnitus and PTSD](../assets/images/screenshots/secondary-scout/results-overview.png)
+_Analyzing two service-connected conditions surfaces high- and medium-probability secondary claims, complete with statistics and a probability filter._
+
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Available 24/7
 </div>
@@ -26,9 +29,8 @@ These may qualify as **secondary** to your PTSD.
 
 ## Legal Basis
 
-!!! va-info "38 CFR § 3.310 - Secondary Service Connection"
-    > "Disability which is proximately due to or the result of a service-connected disease or injury shall be service connected."
-    
+!!! va-info "38 CFR § 3.310 - Secondary Service Connection" > "Disability which is proximately due to or the result of a service-connected disease or injury shall be service connected."
+
     This means if your service-connected condition **caused** or **aggravated** another condition, you may be entitled to compensation.
 
 ---
@@ -81,14 +83,14 @@ These may qualify as **secondary** to your PTSD.
 
 Secondary Scout identifies connections through various mechanisms:
 
-| Mechanism | Description | Example |
-|-----------|-------------|---------|
-| **Direct** | Primary condition directly causes secondary | PTSD → Depression |
-| **Medication** | Medications for primary cause secondary | NSAIDs → GERD |
-| **Altered Gait** | Compensating for injury causes new problems | Knee injury → Hip pain |
-| **Inflammation** | Chronic inflammation spreads | Rheumatoid arthritis → Heart disease |
-| **Sleep** | Sleep disruption from primary causes secondary | PTSD → Sleep apnea |
-| **Stress** | Chronic stress from primary causes secondary | PTSD → Hypertension |
+| Mechanism        | Description                                    | Example                              |
+| ---------------- | ---------------------------------------------- | ------------------------------------ |
+| **Direct**       | Primary condition directly causes secondary    | PTSD → Depression                    |
+| **Medication**   | Medications for primary cause secondary        | NSAIDs → GERD                        |
+| **Altered Gait** | Compensating for injury causes new problems    | Knee injury → Hip pain               |
+| **Inflammation** | Chronic inflammation spreads                   | Rheumatoid arthritis → Heart disease |
+| **Sleep**        | Sleep disruption from primary causes secondary | PTSD → Sleep apnea                   |
+| **Stress**       | Chronic stress from primary causes secondary   | PTSD → Hypertension                  |
 
 ---
 
@@ -96,25 +98,25 @@ Secondary Scout identifies connections through various mechanisms:
 
 Each suggestion includes a probability rating:
 
-| Rating | Meaning | What to Expect |
-|--------|---------|----------------|
-| 🔥 **High** | Well-established medical connection | Strong medical literature support |
-| ⚡ **Medium** | Recognized medical connection | May need more evidence |
+| Rating        | Meaning                             | What to Expect                    |
+| ------------- | ----------------------------------- | --------------------------------- |
+| 🔥 **High**   | Well-established medical connection | Strong medical literature support |
+| ⚡ **Medium** | Recognized medical connection       | May need more evidence            |
 
 !!! tip "Filter Your Results"
-    Use the probability filter to focus on the most promising connections first.
+Use the probability filter to focus on the most promising connections first.
 
 ---
 
 ## Important Disclaimer
 
 !!! warning "Educational Tool"
-    Secondary Scout suggestions are **educational tools** based on 38 CFR § 3.310 principles. 
-    
+Secondary Scout suggestions are **educational tools** based on 38 CFR § 3.310 principles.
+
     Before filing a secondary claim:
-    
+
     - Consult with a VA-accredited representative
     - Discuss with a medical professional
     - Obtain a **medical nexus opinion** from a qualified physician
-    
+
     A medical nexus letter is typically required to establish secondary service connection.

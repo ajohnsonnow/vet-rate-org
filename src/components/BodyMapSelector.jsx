@@ -549,7 +549,7 @@ function useZoneSelection(symptoms) {
       strokeWidth: hasSymptoms ? "5" : "2",
       tabIndex: 0,
       role: "button",
-      "aria-label": `${BODY_ZONES[zoneId].name} — select to log symptoms`,
+      "aria-label": `${BODY_ZONES[zoneId].name} - select to log symptoms`,
       "aria-pressed": hasSymptoms,
       className:
         "cursor-pointer transition hover:fill-yellow-600 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
@@ -795,7 +795,7 @@ function BodyDiagramColumn({
 
 function BodyMapLegend() {
   return (
-    // Legend — thin vs thick border mirrors the zones' stroke weight so
+    // Legend - thin vs thick border mirrors the zones' stroke weight so
     // the logged state never relies on the red fill alone
     <div className="absolute bottom-4 left-4 bg-gray-900/90 p-2 rounded text-xs">
       <div className="flex items-center gap-2 mb-1">
@@ -821,7 +821,7 @@ function QuickSelectPanel({ activeCategory, zones, activeZones, onZoneClick }) {
           <button
             key={zoneId}
             onClick={() => onZoneClick(zoneId)}
-            aria-label={`${zone.name} — select to log symptoms`}
+            aria-label={`${zone.name} - select to log symptoms`}
             aria-pressed={activeZones.has(zoneId)}
             className={`text-xs px-2 py-1.5 rounded transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
               activeZones.has(zoneId)
@@ -1103,7 +1103,7 @@ const BodyMapSelector = ({
   const handleSymptomSelect = (symptomType, medicalTerm) => {
     const newSymptom = addSymptom(selectedZone, symptomType, medicalTerm);
 
-    // The symptom panel closes on select — announce so SR users know it landed.
+    // The symptom panel closes on select - announce so SR users know it landed.
     setAnnouncement(`${symptomType} logged for ${newSymptom.zoneName}`);
     setSelectedZone(null);
   };

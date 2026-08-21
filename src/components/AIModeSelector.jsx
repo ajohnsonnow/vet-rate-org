@@ -63,17 +63,24 @@ function useAIStatusBadgeMeta(status) {
       "bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse";
   }
 
+  // DKB coverage is currently identical across every mode - Local and Cloud
+  // alike answer from the same curated ~8K-entry set (searchDKB reads the
+  // static diamond_knowledge.json regardless of AI mode). The 130K+ sharded
+  // corpus downloads to the device but isn't wired into answer generation
+  // yet, so these used to overclaim what loading a local backend actually
+  // unlocks - only privacy/offline capability changes, not DKB coverage.
   let tooltip;
   if (status.localInitializing || status.wllamaInitializing) {
     tooltip = "AI is warming up...";
   } else if (status.effectiveMode === AI_MODES.SWARM) {
-    tooltip = "Warrant Council - 100% Private - Full 130K+ DKB";
+    tooltip = "Warrant Council - 100% Private (💎 DKB 8K web-optimized*)";
   } else if (status.effectiveMode === AI_MODES.WLLAMA) {
-    tooltip = "Wllama (Browser) - 100% Private - Full 130K+ DKB";
+    tooltip = "Wllama (Browser) - 100% Private (💎 DKB 8K web-optimized*)";
   } else if (status.effectiveMode === AI_MODES.LOCAL_SERVER) {
-    tooltip = "Local Server (llama.cpp) - 100% Private - Full 130K+ DKB";
+    tooltip =
+      "Local Server (llama.cpp) - 100% Private (💎 DKB 8K web-optimized*)";
   } else if (status.effectiveMode === AI_MODES.LOCAL) {
-    tooltip = `${status.localModelName} - 100% Private - Full 130K+ DKB`;
+    tooltip = `${status.localModelName} - 100% Private (💎 DKB 8K web-optimized*)`;
   } else if (status.effectiveMode === AI_MODES.CLOUD) {
     tooltip = `${status.cloudModelName} - Cloud (💎 DKB 8K web-optimized*)`;
   } else {
@@ -131,7 +138,7 @@ function AIStatusBadgeContent({ status }) {
         <span className="text-base">{status.cloudModelName}</span>
         <span
           className="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full font-medium"
-          aria-label="Web-optimized DKB (8K entries). Load Local LLM for full 130K+ entries."
+          aria-label="Web-optimized DKB (8K entries) - the same set every AI mode currently uses. A larger 130K+ corpus downloads to your device for future use, but doesn't yet expand AI answers."
         >
           💎 DKB*
         </span>
@@ -211,8 +218,8 @@ export const AIToggle = ({
       <Tooltip
         content={
           isLocal
-            ? "Using Local AI — click to use Cloud"
-            : "Using Cloud AI — click to use Local"
+            ? "Using Local AI - click to use Cloud"
+            : "Using Cloud AI - click to use Local"
         }
         placement="bottom"
       >

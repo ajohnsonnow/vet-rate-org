@@ -2,6 +2,9 @@
 
 After searching, results are displayed in a card-based grid layout. This guide explains how to interpret and interact with search results.
 
+![Search results grid with the "Search Results (16 found)" heading for a Tinnitus search](../assets/images/screenshots/search/search-results-list.png)
+_Results render directly below the search bar, with a live count of how many conditions matched._
+
 ---
 
 ## Results Overview
@@ -15,7 +18,7 @@ When your search matches conditions, you'll see:
 Results are displayed in a responsive grid:
 
 - **Desktop:** 3 columns
-- **Tablet:** 2 columns  
+- **Tablet:** 2 columns
 - **Mobile:** 1 column
 
 ---
@@ -70,15 +73,15 @@ Conditions covered under the PACT Act show:
 
 Each body system has a distinct color tag:
 
-| Body System | Tag Color |
-|-------------|-----------|
-| Mental Disorders | Purple |
-| Musculoskeletal | Blue |
-| Neurological | Indigo |
-| Respiratory | Teal |
-| Cardiovascular | Red |
-| Digestive | Green |
-| Other Systems | Gray |
+| Body System      | Tag Color |
+| ---------------- | --------- |
+| Mental Disorders | Purple    |
+| Musculoskeletal  | Blue      |
+| Neurological     | Indigo    |
+| Respiratory      | Teal      |
+| Cardiovascular   | Red       |
+| Digestive        | Green     |
+| Other Systems    | Gray      |
 
 ---
 
@@ -106,35 +109,35 @@ Each body system has a distinct color tag:
 
 The **4-digit diagnostic code** uniquely identifies each condition in 38 CFR Part 4:
 
-| Code Range | Body System |
-|------------|-------------|
-| 5000-5999 | Musculoskeletal |
-| 6000-6099 | Eyes |
-| 6100-6299 | Ears |
-| 6300-6399 | Infectious Diseases |
-| 6500-6899 | Respiratory |
-| 7000-7199 | Cardiovascular |
-| 7200-7399 | Digestive |
-| 7500-7599 | Genitourinary |
-| 7610-7699 | Gynecological |
-| 7700-7799 | Hemic/Lymphatic |
-| 7800-7899 | Skin |
-| 7900-7999 | Endocrine |
-| 8000-8999 | Neurological |
-| 9200-9499 | Mental Health |
-| 9900-9999 | Dental |
+| Code Range | Body System         |
+| ---------- | ------------------- |
+| 5000-5999  | Musculoskeletal     |
+| 6000-6099  | Eyes                |
+| 6100-6299  | Ears                |
+| 6300-6399  | Infectious Diseases |
+| 6500-6899  | Respiratory         |
+| 7000-7199  | Cardiovascular      |
+| 7200-7399  | Digestive           |
+| 7500-7599  | Genitourinary       |
+| 7610-7699  | Gynecological       |
+| 7700-7799  | Hemic/Lymphatic     |
+| 7800-7899  | Skin                |
+| 7900-7999  | Endocrine           |
+| 8000-8999  | Neurological        |
+| 9200-9499  | Mental Health       |
+| 9900-9999  | Dental              |
 
 ### Rating Schedule Reference
 
 The CFR reference tells you which section of the regulations applies:
 
-| Reference | Covers |
-|-----------|--------|
-| 38 CFR § 4.71a | Musculoskeletal range of motion |
-| 38 CFR § 4.130 | Mental disorders rating formula |
-| 38 CFR § 4.97 | Respiratory conditions |
-| 38 CFR § 4.104 | Cardiovascular conditions |
-| 38 CFR § 4.124a | Neurological conditions |
+| Reference       | Covers                          |
+| --------------- | ------------------------------- |
+| 38 CFR § 4.71a  | Musculoskeletal range of motion |
+| 38 CFR § 4.130  | Mental disorders rating formula |
+| 38 CFR § 4.97   | Respiratory conditions          |
+| 38 CFR § 4.104  | Cardiovascular conditions       |
+| 38 CFR § 4.124a | Neurological conditions         |
 
 ### Available Ratings
 
@@ -188,21 +191,16 @@ No matching disabilities found.
 
 From any result card, you can:
 
-| Action | How |
-|--------|-----|
-| View Details | Click the card |
-| Save to Packet | Click "Save to Packet" in details |
+| Action          | How                                |
+| --------------- | ---------------------------------- |
+| View Details    | Click the card                     |
+| Save to Packet  | Click "Save to Packet" in details  |
 | Build Statement | Click "Build Statement" in details |
-| Download PDF | Click "Download PDF" in details |
-| View on eCFR | Click the eCFR link in details |
+| Download PDF    | Click "Download PDF" in details    |
+| View on eCFR    | Click the eCFR link in details     |
 
 ---
 
 ## Tips for Better Results
 
-!!! tip "Search Strategies"
-    
-    - **Search specific codes** if you already know the diagnosis
-    - **Use common names** - "PTSD" works better than "Post-Traumatic Stress Disorder"
-    - **Try multiple terms** - Different searches may reveal different conditions
-    - **Check related conditions** - Look at secondary conditions in details
+!!! tip "Search Strategies" - **Search specific codes** if you already know the diagnosis - **Use common names** - "PTSD" works better than "Post-Traumatic Stress Disorder" - **Try multiple terms** - Different searches may reveal different conditions - **Check related conditions** - Look at secondary conditions in details

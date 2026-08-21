@@ -289,7 +289,12 @@ const CLASSIFICATION_PATTERNS = {
   [DOCUMENT_TYPES.BLUE_BUTTON]: {
     patterns: [
       /VA\s+BLUE\s+BUTTON/i,
-      /BLUE\s+BUTTON\s*(?:®|\(R\))?\s+REPORT/i,
+      // Whitespace runs bounded to {0,5}/{1,5} (real documents never have
+      // more than a couple of spaces/linebreaks between these words) so the
+      // adjacent \s*/\s+ quantifiers can't combinatorially backtrack across
+      // a long non-matching whitespace run (regression: see
+      // documentClassifier.test.js's ReDoS test for this pattern).
+      /BLUE\s+BUTTON\s{0,5}(?:®|\(R\))?\s{1,5}REPORT/i,
       /THIS\s+REPORT\s+INCLUDES\s+KEY\s+INFORMATION\s+FROM\s+YOUR\s+VA\s+MEDICAL\s+RECORDS/i,
       /WHAT\s+TO\s+KNOW\s+ABOUT\s+YOUR\s+BLUE\s+BUTTON\s+REPORT/i,
       /MY\s+HEALTHEVET/i,

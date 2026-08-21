@@ -2,6 +2,9 @@
 
 The **Nexus Builder** is a guided wizard that helps you create a professional **Statement in Support of Claim** that articulates the connection between your condition and military service.
 
+![Nexus Builder wizard, step 2 of 4, showing the Connection to Your Service-Connected Condition step for Migraine Headaches secondary to Tinnitus](../assets/images/screenshots/nexus-builder/wizard-step2-connection.png)
+_A secondary-claim statement in progress - "Statement for: Migraine Headaches (Secondary to Tinnitus)."_
+
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Available 24/7
 </div>
@@ -21,6 +24,7 @@ A **nexus** is the medical and legal connection between your current condition a
 ### Direct Service Connection
 
 The condition:
+
 - Started during military service
 - Was caused by an event in service
 - Was first diagnosed in service
@@ -28,6 +32,7 @@ The condition:
 ### Secondary Service Connection
 
 The condition:
+
 - Was caused by a service-connected condition
 - Was aggravated by a service-connected condition
 - Resulted from medication for a service-connected condition
@@ -35,6 +40,7 @@ The condition:
 ### Aggravation
 
 A pre-existing condition:
+
 - Was made permanently worse by military service
 - Worsened beyond its natural progression
 
@@ -99,27 +105,20 @@ A pre-existing condition:
 
 ## How It Works
 
+The wizard is **3 steps** for a direct claim, or **4 steps** for a secondary claim:
+
 <div class="step-container">
 <div class="step">
-<strong>Enter basic information</strong> - Name, condition, service dates
+<strong>Timeline</strong> - When you first noticed symptoms and whether you've sought treatment
 </div>
 <div class="step">
-<strong>Describe your condition</strong> - Symptoms, onset, impact
+<strong>Connection (secondary claims only)</strong> - How your primary condition causes or aggravates this one
 </div>
 <div class="step">
-<strong>Explain the connection</strong> - How it relates to service
+<strong>Severity and Daily Impact</strong> - How the condition affects your work, social life, and daily activities
 </div>
 <div class="step">
-<strong>Add supporting details</strong> - Medical treatment, evidence
-</div>
-<div class="step">
-<strong>Generate statement</strong> - Professional document created
-</div>
-<div class="step">
-<strong>✨ AI Enhancement (Optional)</strong> - Let AI polish your statement
-</div>
-<div class="step">
-<strong>Download</strong> - PDF and Doctor's Cheat Sheet
+<strong>Review & Generate</strong> - Preview your statement, optionally enhance it with AI, and download
 </div>
 </div>
 
@@ -141,7 +140,7 @@ A pre-existing condition:
 ### Privacy First
 
 - **You control when AI is used** - It only runs when you click the button
-- **Explicit consent required** - You see exactly what's shared before confirming  
+- **Explicit consent required** - You see exactly what's shared before confirming
 - **No personal info sent** - Names, SSN, dates, and addresses are never shared
 - **Optional feature** - Standard templates work great without AI
 
@@ -149,21 +148,24 @@ A pre-existing condition:
 
 ### What AI Improves
 
-| Aspect | How AI Helps |
-|--------|--------------|
+| Aspect                | How AI Helps                           |
+| --------------------- | -------------------------------------- |
 | **Professional tone** | VA-appropriate language and formatting |
-| **Clear structure** | Logical flow of information |
-| **Effective wording** | Focus on functional impairment |
-| **Completeness** | Ensures all key points are covered |
+| **Clear structure**   | Logical flow of information            |
+| **Effective wording** | Focus on functional impairment         |
+| **Completeness**      | Ensures all key points are covered     |
 
 ---
 
 ## Important Note
 
 !!! warning "Supporting Document, Not Medical Evidence"
-    The Nexus Builder creates a **Statement in Support of Claim** (VA Form 21-4138 equivalent), which is your personal statement.
-    
+The Nexus Builder creates a **Statement in Support of Claim** (VA Form 21-4138 equivalent), which is your personal statement.
+
     For a **medical nexus opinion**, you need a qualified medical professional to review your case and provide their opinion. The Doctor's Cheat Sheet helps facilitate this conversation.
+
+!!! warning "No Guarantee of Outcome"
+This tool helps you organize evidence and paperwork, but **using it - including the optional AI Statement Assistant - does not guarantee any particular VA rating or claim outcome**. Ratings and decisions are made solely by the VA. Before filing, have a VSO or VA-accredited attorney review your statement. Find one at [va.gov/ogc/apps/accreditation](https://www.va.gov/ogc/apps/accreditation/).
 
 ---
 
@@ -192,24 +194,24 @@ A pre-existing condition:
 
 Your generated statement includes:
 
-| Section | Purpose |
-|---------|---------|
-| **Header** | Your identifying information |
-| **Condition** | What you're claiming |
-| **Service Dates** | Your military service period |
-| **Service Connection** | How it relates to service |
-| **Medical Nexus** | The medical theory connecting them |
-| **Symptoms** | Current symptom description |
-| **Impact** | How it affects your daily life |
-| **Treatment** | Medical care you've received |
-| **Conclusion** | Request for service connection |
+| Section                | Purpose                            |
+| ---------------------- | ---------------------------------- |
+| **Header**             | Your identifying information       |
+| **Condition**          | What you're claiming               |
+| **Service Dates**      | Your military service period       |
+| **Service Connection** | How it relates to service          |
+| **Medical Nexus**      | The medical theory connecting them |
+| **Symptoms**           | Current symptom description        |
+| **Impact**             | How it affects your daily life     |
+| **Treatment**          | Medical care you've received       |
+| **Conclusion**         | Request for service connection     |
 
 ---
 
 ## Best Practices
 
 !!! tip "Creating Effective Statements"
-    
+
     - **Be specific** - Dates, events, details matter
     - **Be honest** - Don't exaggerate, accuracy helps
     - **Include impacts** - How does it affect your work, relationships, daily life?

@@ -22,7 +22,7 @@ import {
 } from "./deviceCapabilityDetector";
 
 // Errors crossing the WebLLM worker boundary aren't guaranteed to survive as
-// real Error instances — a rejection can arrive with .message undefined,
+// real Error instances - a rejection can arrive with .message undefined,
 // silently swallowing the real failure reason (and defeating the Cache-error
 // retry check below, which also reads .message).
 const _describeThrown = (err) => {
@@ -73,10 +73,10 @@ CRITICAL RULES:
 5. Verify service connection evidence quality
 
 CALCULATION BOUNDARY:
-- Never determine which conditions are "bilaterally paired" from memory or by picking the two highest ratings — that is a common and serious error.
+- Never determine which conditions are "bilaterally paired" from memory or by picking the two highest ratings - that is a common and serious error.
 - Bilateral (38 CFR § 4.26) means the SAME body part on OPPOSITE sides (e.g., left knee + right knee). Two DIFFERENT body parts on the same side are NOT bilateral, even if both are high ratings.
-- For the final combined-rating number, direct the veteran to Vet-Rate's Rating Calculator, which computes it deterministically — do not present your own arithmetic as authoritative.
-- If a DKB context block is provided below, answer only from it and say so explicitly when it doesn't cover the question — never fill the gap from memory.
+- For the final combined-rating number, direct the veteran to Vet-Rate's Rating Calculator, which computes it deterministically - do not present your own arithmetic as authoritative.
+- If a DKB context block is provided below, answer only from it and say so explicitly when it doesn't cover the question - never fill the gap from memory.
 
 MENTAL HEALTH CLAIM PRECISION:
 - PTSD requires verified "stressor" (38 CFR § 3.304(f))
@@ -149,15 +149,15 @@ CRITICAL RULES:
 4. Explain each step of calculation
 5. Identify bilateral conditions correctly
 
-BILATERAL PAIRING — READ CAREFULLY (this is the #1 source of errors):
+BILATERAL PAIRING - READ CAREFULLY (this is the #1 source of errors):
 - "Bilateral" means the SAME body part on BOTH the left AND right side (e.g., left knee 30% + right knee 20%). Two DIFFERENT body parts on the same side are NOT bilateral, even if both are high ratings.
-- Never assume the two highest-rated conditions are the bilateral pair — check each condition's body part and side explicitly before pairing anything.
+- Never assume the two highest-rated conditions are the bilateral pair - check each condition's body part and side explicitly before pairing anything.
 - If the veteran's conditions don't clearly name matching left/right body parts, state that no bilateral pair is identifiable rather than guessing one.
 - Always show which specific conditions you paired and why (same body part, opposite sides) before applying the 10% factor.
-- If a COMPUTED RESULT block is provided below, that number is authoritative — restate and explain it, do not recompute or override it.
+- If a COMPUTED RESULT block is provided below, that number is authoritative - restate and explain it, do not recompute or override it.
 
 VA Formula: Combined = 100 - ((100-A) × (100-B) × (100-C)...) / 100^(n-1)
-Bilateral Factor: 10% bonus applied to combined bilateral limb ratings — applied to the PAIRED set identified above, never to the two highest ratings.`,
+Bilateral Factor: 10% bonus applied to combined bilateral limb ratings - applied to the PAIRED set identified above, never to the two highest ratings.`,
   },
 };
 
@@ -300,7 +300,7 @@ export const registerSwarmEngine = (
 };
 
 // WebLLM engine reference for real inference. The engine is a
-// WebWorkerMLCEngine proxy — the actual model and WebGPU device live in
+// WebWorkerMLCEngine proxy - the actual model and WebGPU device live in
 // swarmWorker, so a wedged GPU decode can never block the main thread and
 // worker.terminate() is always able to kill a hung inference.
 let webllmEngine = null;
@@ -350,15 +350,16 @@ function _resolveAgentIdAndCallbacks(agentIdOrConfig, callbacks) {
       onError: _onError,
     } = agentIdOrConfig;
 
-    // Derive agent from modelId (e.g., 'vetrate-writer-7b-v2' -> 'writer')
+    // Derive agent from modelId (e.g., 'vetrate-writer-7b-v2' -> 'writer').
+    // Every real modelId (see AICommandCenter's MODELS list) embeds one of
+    // these three role names; "auditor" is the explicit match, not just the
+    // fallback, so a future modelId that matches none of them doesn't
+    // silently masquerade as an auditor.
     let agentId;
-    if (modelId) {
-      if (modelId.includes("writer")) agentId = "writer";
-      else if (modelId.includes("rater")) agentId = "rater";
-      else agentId = "auditor"; // default
-    } else {
-      agentId = "auditor";
-    }
+    if (modelId?.includes("writer")) agentId = "writer";
+    else if (modelId?.includes("rater")) agentId = "rater";
+    else if (modelId?.includes("auditor")) agentId = "auditor";
+    else agentId = "auditor"; // no role embedded in modelId - default
 
     return {
       agentId,
@@ -615,7 +616,7 @@ export const initializeSwarm = async (
  *
  * worker.terminate() is the one teardown a wedged GPU cannot hang: the browser
  * kills the worker thread even mid-decode, destroying its WebGPU device with
- * it. No unload() handshake is attempted — a blocked worker never replies.
+ * it. No unload() handshake is attempted - a blocked worker never replies.
  */
 export const reloadSwarmEngine = async () => {
   const agentToRestore = currentAgent || "auditor";
@@ -637,7 +638,7 @@ export const reloadSwarmEngine = async () => {
   currentAgent = null;
 
   // Bounded rebuild: if even a FRESH worker cannot obtain a GPU adapter and
-  // load cached weights within 5 minutes, the GPU process itself is wedged —
+  // load cached weights within 5 minutes, the GPU process itself is wedged -
   // fail loudly instead of hanging the run (chunk callers abort on throw).
   const ok = await Promise.race([
     initializeSwarm(agentToRestore),
@@ -646,7 +647,7 @@ export const reloadSwarmEngine = async () => {
         () =>
           reject(
             new Error(
-              "Warrant Council engine rebuild stalled for 300s — the GPU process appears wedged; reload the page to recover",
+              "Warrant Council engine rebuild stalled for 300s - the GPU process appears wedged; reload the page to recover",
             ),
           ),
         300_000,
@@ -706,7 +707,7 @@ function _truncatePromptForContext(prompt, finalSystemPrompt, maxTokens) {
   const reservedForOutput = Math.min(maxTokens, 2048); // Reserve for JSON output
   const availableForInput = contextLimit - reservedForOutput;
 
-  // Not too large — nothing to do
+  // Not too large - nothing to do
   if (estimatedTotalTokens <= availableForInput) {
     return prompt;
   }
@@ -789,7 +790,7 @@ function _scanDeltaForJSONClose(delta, state, responseText, engine) {
         state.bracketDepth === 0 &&
         responseText.trimStart().startsWith("{")
       ) {
-        // Root JSON object closed — stop generation immediately.
+        // Root JSON object closed - stop generation immediately.
         _interruptGenerate(engine);
         break;
       }
@@ -800,7 +801,7 @@ function _scanDeltaForJSONClose(delta, state, responseText, engine) {
 /**
  * JSON mode: always stream internally so we can interrupt the moment
  * the root closing "}" is emitted. This saves all remaining tokens
- * once the JSON object is structurally complete — common on simple/
+ * once the JSON object is structurally complete - common on simple/
  * sparse chunks where the schema fills in well under max_tokens.
  * Caller's onStream callback still fires on each delta if provided.
  */
@@ -828,7 +829,7 @@ async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
       break;
     if (piece.choices[0]?.finish_reason) break;
     // Schema maxItems bounds valid output to ~3,300 chars. If we exceed
-    // 4,500 the JSON won't parse cleanly anyway — interrupt as safety net.
+    // 4,500 the JSON won't parse cleanly anyway - interrupt as safety net.
     if (responseText.length > 4500) {
       try {
         engine.interruptGenerate()?.catch(() => {});
@@ -893,13 +894,13 @@ async function _runSwarmInference(
     stream: !!onStream,
     // Penalize repeated tokens to break repetition loops in small quantized
     // models. XGrammar masks EOS while grammar expects more tokens, which
-    // amplifies loops — frequency_penalty 1.15 breaks them while keeping
+    // amplifies loops - frequency_penalty 1.15 breaks them while keeping
     // factual field values intact (vLLM issue #40080). top_k/top_p narrow
     // the token distribution for deterministic extraction (Qwen2.5 docs).
     frequency_penalty: responseFormat ? 1.15 : 0,
     top_p: responseFormat ? 0.8 : 1,
     top_k: responseFormat ? 20 : -1,
-    // XGrammar per-token constrained decoding — guarantees valid JSON,
+    // XGrammar per-token constrained decoding - guarantees valid JSON,
     // eliminates repair retries. Keep one constant schema per engine
     // instance (WebLLM issue #560: changing schemas disposes the matcher).
     ...(responseFormat
@@ -979,7 +980,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     temperature = 0.7,
     systemPrompt = null,
     onStream = null,
-    responseFormat = null, // JSON Schema object — enables XGrammar per-token constrained decoding
+    responseFormat = null, // JSON Schema object - enables XGrammar per-token constrained decoding
   } = options;
 
   // Resolve effective agent. When a toolId is supplied, derive the agent
@@ -996,7 +997,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
   }
 
   // Property assertion: the agent must declare the capability the tool
-  // requires. Throws AgentBoundaryViolation otherwise — surfacing
+  // requires. Throws AgentBoundaryViolation otherwise - surfacing
   // misrouting instead of silently letting the wrong agent answer.
   // Bare swarm calls (no toolId) skip this check, since the caller is
   // selecting the agent explicitly.
@@ -1026,7 +1027,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
       );
     } catch (inferenceError) {
       console.error("💎 WebLLM inference failed:", inferenceError);
-      // The engine exists and genuinely failed — rethrow so callers see the
+      // The engine exists and genuinely failed - rethrow so callers see the
       // real error (e.g. ContextWindowSizeExceededError triggers their
       // deterministic bailout). Falling through to the "still loading"
       // placeholder masked failures as a retryable loading state.

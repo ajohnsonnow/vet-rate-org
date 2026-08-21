@@ -37,7 +37,7 @@ async function renderSection() {
   return utils;
 }
 
-describe("DutyStationsSection — coordinate range validation on save", () => {
+describe("DutyStationsSection - coordinate range validation on save", () => {
   it("rejects an out-of-range latitude with an alert instead of silently nulling it", async () => {
     const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
     await renderSection();

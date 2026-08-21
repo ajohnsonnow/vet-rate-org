@@ -655,6 +655,41 @@ function resolveSectionAndKey(sectionOrPath, keyOrParams, params) {
   return { section, actualKey, interpolationParams };
 }
 
+// Resolve a section/key lookup (with dot-notation support and interpolation)
+// against APP_TRANSLATIONS for the given language. Pure/hook-free so it can
+// be extracted out of the t() useCallback body.
+function resolveTranslation(language, sectionOrPath, keyOrParams, params) {
+  const { section, actualKey, interpolationParams } = resolveSectionAndKey(
+    sectionOrPath,
+    keyOrParams,
+    params,
+  );
+
+  // Handle empty or invalid keys silently
+  if (
+    !section ||
+    !actualKey ||
+    (typeof actualKey === "string" && actualKey.trim() === "")
+  ) {
+    return actualKey || sectionOrPath || "";
+  }
+
+  const sectionData = APP_TRANSLATIONS[section];
+  if (!sectionData) {
+    console.warn(`Translation section not found: ${sectionOrPath}`);
+    return typeof actualKey === "string" ? actualKey : sectionOrPath;
+  }
+  const keyData = sectionData[actualKey];
+  if (!keyData) {
+    console.warn(`Translation key not found: ${section}.${actualKey}`);
+    return typeof actualKey === "string" ? actualKey : sectionOrPath;
+  }
+  // Get translation for current language, fallback to English
+  const result = keyData[language] || keyData.en || actualKey;
+
+  return interpolateParams(result, interpolationParams);
+}
+
 // Replace {placeholder} with values from params
 function interpolateParams(text, params) {
   if (!params || typeof params !== "object") return text;
@@ -722,37 +757,8 @@ export const LanguageProvider = ({ children }) => {
   // Supports both t('section', 'key') and t('section.key') formats
   // Also supports interpolation: t('section.key', { param: value })
   const t = useCallback(
-    (sectionOrPath, keyOrParams, params) => {
-      const { section, actualKey, interpolationParams } = resolveSectionAndKey(
-        sectionOrPath,
-        keyOrParams,
-        params,
-      );
-
-      // Handle empty or invalid keys silently
-      if (
-        !section ||
-        !actualKey ||
-        (typeof actualKey === "string" && actualKey.trim() === "")
-      ) {
-        return actualKey || sectionOrPath || "";
-      }
-
-      const sectionData = APP_TRANSLATIONS[section];
-      if (!sectionData) {
-        console.warn(`Translation section not found: ${sectionOrPath}`);
-        return typeof actualKey === "string" ? actualKey : sectionOrPath;
-      }
-      const keyData = sectionData[actualKey];
-      if (!keyData) {
-        console.warn(`Translation key not found: ${section}.${actualKey}`);
-        return typeof actualKey === "string" ? actualKey : sectionOrPath;
-      }
-      // Get translation for current language, fallback to English
-      const result = keyData[language] || keyData.en || actualKey;
-
-      return interpolateParams(result, interpolationParams);
-    },
+    (sectionOrPath, keyOrParams, params) =>
+      resolveTranslation(language, sectionOrPath, keyOrParams, params),
     [language],
   );
 

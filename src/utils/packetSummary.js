@@ -1,7 +1,7 @@
 /**
  * Derived, read-only summarization of everything already stored in the VKB.
  *
- * Deliberately deterministic — no model call anywhere in this module. My Packet
+ * Deliberately deterministic - no model call anywhere in this module. My Packet
  * is what a veteran hands to a VSO or attaches to a claim, so a summary line
  * here has to be traceable to a stored field in a named document. Narrative
  * synthesis belongs to the retrieval work, behind its own citations.
@@ -25,7 +25,7 @@ const firstValue = (source, keys) => {
 
 /**
  * Extracted lists hold either plain strings or objects; both must render.
- * Code and title are kept together — an MOS code is what drives presumptive
+ * Code and title are kept together - an MOS code is what drives presumptive
  * exposure lookups, so collapsing "11B" into "Infantryman" loses claim signal.
  */
 const labelOf = (item) => {
@@ -41,7 +41,7 @@ const labelOf = (item) => {
     "text",
   ]);
   const code = firstValue(item, ["code"]);
-  if (name && code && name !== code) return `${code} — ${name}`;
+  if (name && code && name !== code) return `${code} - ${name}`;
   return name || code;
 };
 
@@ -336,7 +336,7 @@ const buildGaps = (vkb, documentFindings, conditions, stats) => {
   const gaps = [];
   if (stats.unparsed > 0) {
     gaps.push(
-      `${plural(stats.unparsed, "document")} stored raw text only — structured fields could not be extracted.`,
+      `${plural(stats.unparsed, "document")} stored raw text only - structured fields could not be extracted.`,
     );
   }
   const unsupported = conditions.filter((c) => c.documentCount === 0);
@@ -359,7 +359,7 @@ const buildGaps = (vkb, documentFindings, conditions, stats) => {
 
 /**
  * The at-a-glance panel: counts, the few lines that matter, and what is
- * missing. Every number traces to a stored record — nothing is inferred.
+ * missing. Every number traces to a stored record - nothing is inferred.
  */
 export function buildPacketTldr(vkb, documentFindings = [], conditions = []) {
   const stats = buildStats(vkb, documentFindings, conditions);

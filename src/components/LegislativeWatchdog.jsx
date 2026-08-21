@@ -822,7 +822,7 @@ function computeAlertCounts(allUpdates) {
   };
 }
 
-const LegislativeWatchdog = ({ onClose, onReportBug }) => {
+function useLegislativeWatchdogState() {
   const { _t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
@@ -871,6 +871,40 @@ const LegislativeWatchdog = ({ onClose, onReportBug }) => {
 
   // Check for conditions that might need attention
   const { urgentCount, commentPeriodCount } = computeAlertCounts(allUpdates);
+
+  return {
+    loading,
+    error,
+    activeFilter,
+    setActiveFilter,
+    searchTerm,
+    setSearchTerm,
+    lastUpdated,
+    analyzingDoc,
+    aiAnalysis,
+    handleAIAnalysis,
+    filteredUpdates,
+    urgentCount,
+    commentPeriodCount,
+  };
+}
+
+const LegislativeWatchdog = ({ onClose, onReportBug }) => {
+  const {
+    loading,
+    error,
+    activeFilter,
+    setActiveFilter,
+    searchTerm,
+    setSearchTerm,
+    lastUpdated,
+    analyzingDoc,
+    aiAnalysis,
+    handleAIAnalysis,
+    filteredUpdates,
+    urgentCount,
+    commentPeriodCount,
+  } = useLegislativeWatchdogState();
 
   const footer = <WatchdogFooter onClose={onClose} />;
 

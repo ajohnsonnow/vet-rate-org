@@ -5,7 +5,7 @@
  * Worker message protocol (LOAD / ANALYZE), streaming token callbacks,
  * event listeners, analyzeImage, processMultiplePages, and shutdown.
  *
- * Workers and WebGPU are mocked — no real GPU or Worker threads are used.
+ * Workers and WebGPU are mocked - no real GPU or Worker threads are used.
  * Module-level singleton state is reset between tests via vi.resetModules().
  */
 
@@ -169,7 +169,7 @@ describe("getStatus", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("initialize — without WebGPU", () => {
+describe("initialize - without WebGPU", () => {
   /** initialize() must bail early and return false if WebGPU is unavailable */
   it("returns false when WebGPU is not supported", async () => {
     const result = await svc.initialize();
@@ -188,7 +188,7 @@ describe("initialize — without WebGPU", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("initialize — with WebGPU", () => {
+describe("initialize - with WebGPU", () => {
   /** initialize() with WebGPU present should send LOAD to worker and resolve */
   beforeEach(async () => {
     svc = await setupSmolVLMModule();
@@ -245,7 +245,7 @@ describe("initialize — with WebGPU", () => {
     expect(svc.getStatus().lastError).toBe("script load failed");
   });
 
-  it("is idempotent — returns true immediately if already ready", async () => {
+  it("is idempotent - returns true immediately if already ready", async () => {
     const init1 = svc.initialize();
     simulateWorkerMessage({ status: "ready" });
     await init1;

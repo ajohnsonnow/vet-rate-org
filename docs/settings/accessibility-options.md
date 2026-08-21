@@ -10,13 +10,16 @@ Vet-Rate.org supports multiple color vision deficiency modes.
 
 ### Available Modes
 
-| Mode | Color Vision Type | Affects |
-|------|-------------------|---------|
-| **Normal** | Standard vision | Default colors |
-| **Protanopia** | Red-blind | Adjusts red tones |
-| **Deuteranopia** | Green-blind | Adjusts green tones |
-| **Tritanopia** | Blue-blind | Adjusts blue tones |
-| **High Contrast** | Enhanced visibility | Maximizes contrast |
+| Mode              | Color Vision Type   | Affects             |
+| ----------------- | ------------------- | ------------------- |
+| **Normal**        | Standard vision     | Default colors      |
+| **Protanopia**    | Red-blind           | Adjusts red tones   |
+| **Deuteranopia**  | Green-blind         | Adjusts green tones |
+| **Tritanopia**    | Blue-blind          | Adjusts blue tones  |
+| **High Contrast** | Enhanced visibility | Maximizes contrast  |
+
+![Accessibility menu's Color Vision Settings section](../assets/images/screenshots/settings/accessibility-menu-light.png)
+_Color Vision Settings sits below Display Mode in the same panel._
 
 ### How to Enable
 
@@ -25,7 +28,7 @@ Vet-Rate.org supports multiple color vision deficiency modes.
 Click <strong>"♿ Accessibility"</strong> in the header
 </div>
 <div class="step">
-Find <strong>"Color Vision"</strong> section
+Find <strong>"Color Vision Settings"</strong> section
 </div>
 <div class="step">
 Select your <strong>color mode</strong>
@@ -52,12 +55,12 @@ Adjust text size for comfortable reading.
 
 ### Available Sizes
 
-| Size | Scale | Best For |
-|------|-------|----------|
-| **Small** | 85% | Dense information preference |
-| **Normal** | 100% | Default reading |
-| **Large** | 115% | Comfortable reading |
-| **X-Large** | 130% | Reduced vision |
+| Size        | Scale | Best For                     |
+| ----------- | ----- | ---------------------------- |
+| **Small**   | 85%   | Dense information preference |
+| **Normal**  | 100%  | Default reading              |
+| **Large**   | 115%  | Comfortable reading          |
+| **X-Large** | 130%  | Reduced vision               |
 
 ### How to Change
 
@@ -66,7 +69,7 @@ Adjust text size for comfortable reading.
 Click <strong>"♿ Accessibility"</strong> in the header
 </div>
 <div class="step">
-Find <strong>"Font Size"</strong> section
+Find <strong>"Text Size"</strong> section
 </div>
 <div class="step">
 Select your preferred <strong>size</strong>
@@ -112,10 +115,10 @@ When enabled:
 Click <strong>"♿ Accessibility"</strong> in the header
 </div>
 <div class="step">
-Find <strong>"Motion"</strong> section
+Scroll to the <strong>"Reduce Motion"</strong> toggle, below Text Size
 </div>
 <div class="step">
-Toggle <strong>"Reduce Motion"</strong> on
+Toggle it <strong>on</strong>
 </div>
 </div>
 
@@ -136,14 +139,14 @@ Vet-Rate.org is fully keyboard navigable.
 
 ### Key Commands
 
-| Key | Action |
-|-----|--------|
-| **Tab** | Move to next interactive element |
-| **Shift+Tab** | Move to previous element |
-| **Enter** | Activate focused element |
-| **Escape** | Close modals/dropdowns |
-| **Arrow Keys** | Navigate within menus |
-| **Space** | Toggle checkboxes, activate buttons |
+| Key            | Action                              |
+| -------------- | ----------------------------------- |
+| **Tab**        | Move to next interactive element    |
+| **Shift+Tab**  | Move to previous element            |
+| **Enter**      | Activate focused element            |
+| **Escape**     | Close modals/dropdowns              |
+| **Arrow Keys** | Navigate within menus               |
+| **Space**      | Toggle checkboxes, activate buttons |
 
 ### Focus Indicators
 
@@ -215,4 +218,4 @@ If you encounter accessibility barriers:
 4. We'll work to fix it
 
 !!! info "Commitment to Accessibility"
-    Vet-Rate.org is committed to serving all veterans, including those with disabilities. We continuously work to improve accessibility.
+Vet-Rate.org is committed to serving all veterans, including those with disabilities. We continuously work to improve accessibility.

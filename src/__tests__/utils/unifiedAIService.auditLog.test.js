@@ -58,7 +58,7 @@ const BASE_OPTS = {
   scrubPIIEnabled: false,
 };
 
-describe("generateAI — audit-log wiring (C-H06)", () => {
+describe("generateAI - audit-log wiring (C-H06)", () => {
   beforeEach(() => {
     localStorage.clear();
     registerSwarmEngine({}, true, false, "auditor");

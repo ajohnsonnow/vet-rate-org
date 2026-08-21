@@ -2,6 +2,9 @@
 
 This guide provides a complete tour of the Vet-Rate.org interface, covering every element you'll encounter.
 
+![The home page header, hero section, and search bar](../assets/images/screenshots/getting-started/home-header-hero.png)
+_The top of the home page: crisis banner, header navigation, utility bar, hero heading, and search bar._
+
 ---
 
 ## Page Layout Overview
@@ -26,7 +29,7 @@ The Vet-Rate.org interface is organized into these main sections:
 The **red banner** at the very top of every page provides immediate access to crisis support. It's always visible and links directly to the Veterans Crisis Line website.
 
 !!! crisis "Always Available"
-    The crisis line banner appears on every page and cannot be dismissed. If you or a veteran you know is in crisis, help is available 24/7.
+The crisis line banner appears on every page and cannot be dismissed. If you or a veteran you know is in crisis, help is available 24/7.
 
 ---
 
@@ -42,16 +45,24 @@ The header contains the following elements:
 
 ### Primary Navigation
 
-The header includes these navigation buttons:
+The header is organized into two rows. The top row holds the main navigation:
 
-| Button | Function |
-|--------|----------|
-| 🔍 **Secondary Scout** | Opens the Secondary Scout launcher |
-| 📋 **C&P Simulator** | Opens the C&P Exam Simulator |
-| 📁 **My Packet** | Opens your saved claims packet |
-| 📋 **Forms Helper** | Opens the VA Forms Helper |
-| 🎖️ **Vet Resources** | Dropdown menu with VA resource links |
-| ♿ **Accessibility** | Opens accessibility settings menu |
+| Button             | Function                                                                    |
+| ------------------ | --------------------------------------------------------------------------- |
+| **Light/Watch**    | Toggles the color theme                                                     |
+| **Help**           | Opens the Help menu                                                         |
+| **Missions**       | Community roadmap / feature voting                                          |
+| 📁 **My Packet**   | Opens your saved claims packet                                              |
+| 🛠️ **Tools ▾**     | Dropdown with Secondary Scout, C&P Simulator, Forms Helper, and other tools |
+| 🎖️ **Resources ▾** | Dropdown menu with VA resource links                                        |
+
+A second **utility bar** below it shows a live database-build counter, the current app version, an AI status toggle ("No AI" / model name), a caregiver-support badge, the language selector, and:
+
+| Button                 | Function                            |
+| ---------------------- | ----------------------------------- |
+| ♿ **Accessibility ▾** | Opens accessibility settings menu   |
+| **Roadmap**            | Links to the public feature roadmap |
+| **Ideas?**             | Opens the feature request form      |
 
 ### Veteran Resources Dropdown
 
@@ -97,8 +108,8 @@ The large search bar is the centerpiece of the interface:
 - **Keyboard accessible** - Full keyboard navigation support
 
 !!! tip "Search Tips"
-    The search bar accepts:
-    
+The search bar accepts:
+
     - Condition names: "PTSD", "arthritis", "migraines"
     - Diagnostic codes: "9411", "5002", "6260"
     - Synonyms: "ringing in ears", "back pain"
@@ -141,12 +152,16 @@ A streamlined way to select common conditions and launch Secondary Scout directl
 
 ## Footer Section
 
+![The site footer with About, Data Privacy, and Legal Notice columns, plus the footer links bar](../assets/images/screenshots/getting-started/home-footer.png)
+_Scroll to the bottom of any page to reach the footer._
+
 The footer is divided into three columns:
 
 ### About Vet-Rate.org
 
-- Brief description of the platform
+- Brief description of the platform ("the most comprehensive free VA claims arsenal")
 - "Learn More →" link to About Us
+- "View Live Analytics →" link
 
 ### Data Privacy
 
@@ -156,22 +171,17 @@ The footer is divided into three columns:
 ### Legal Notice
 
 - Educational purposes disclaimer
-- Recommendation to consult professionals
+- "Terms of Service →" link
 
 ### Footer Links Bar
 
-- Privacy Policy
-- About Us
-- Contact Us
-- 📋 Forms Helper
-- 🐛 Report Bug
-- 💚 **Back the Mission** (support button)
+A row of quick links including Privacy Policy, About Us, Our Promise, Workflow Guide, Contact Us, Terms of Service, Forms Helper, Field Manual, Pubs Library, and 🐛 Report Bug.
 
 ### Copyright
 
-> © 2024-2026 Vet-Rate.org - Your Complete VA Claims Toolkit
+> © 2024-2026 Anthony Johnson (Vet-Rate.org) - Your Complete VA Claims Toolkit. Data sourced from 38 CFR Part 4
 
-With a link to 38 CFR Part 4 on eCFR.
+With a link to 38 CFR Part 4 on eCFR, and a final disclaimer bar noting Vet-Rate.org is a private, veteran-built project not affiliated with the Department of Veterans Affairs or the U.S. Government.
 
 ---
 
@@ -205,6 +215,9 @@ All modals are:
 
 ## Dark Mode Indicator
 
+![The Accessibility settings dropdown open, showing Display Mode and Color Vision Settings](../assets/images/screenshots/getting-started/accessibility-menu.png)
+_Opened from the header's Accessibility button - see [Accessibility Settings](accessibility.md) for the full walkthrough._
+
 When dark mode is enabled:
 
 - Header becomes darker
@@ -219,11 +232,11 @@ When dark mode is enabled:
 
 The interface adapts to different screen sizes:
 
-| Screen Size | Behavior |
-|-------------|----------|
-| **Desktop** (1024px+) | Full navigation, multi-column layouts |
-| **Tablet** (768-1023px) | Condensed navigation, adjusted spacing |
-| **Mobile** (< 768px) | Stacked layouts, hamburger-style access |
+| Screen Size             | Behavior                                |
+| ----------------------- | --------------------------------------- |
+| **Desktop** (1024px+)   | Full navigation, multi-column layouts   |
+| **Tablet** (768-1023px) | Condensed navigation, adjusted spacing  |
+| **Mobile** (< 768px)    | Stacked layouts, hamburger-style access |
 
 ---
 

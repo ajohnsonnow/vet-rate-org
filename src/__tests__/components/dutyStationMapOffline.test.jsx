@@ -1,6 +1,6 @@
 /**
  * Duty stations + world map spec §8 / acceptance criterion 7: rendering
- * the map must issue zero network requests — boundary data is vendored
+ * the map must issue zero network requests - boundary data is vendored
  * (src/data/geo/), never fetched. Also covers criterion 8 (a station with
  * latitude: null renders in the list but not the map) at the marker level.
  */
@@ -20,7 +20,7 @@ const FIXTURE_STATIONS = [
   { id: "c", name: "No coordinates on file", latitude: null, longitude: null },
 ];
 
-describe("DutyStationMap — offline (zero network requests)", () => {
+describe("DutyStationMap - offline (zero network requests)", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -36,7 +36,7 @@ describe("DutyStationMap — offline (zero network requests)", () => {
   });
 });
 
-describe("DutyStationMap — rendering", () => {
+describe("DutyStationMap - rendering", () => {
   it("renders the sphere + graticule + all 241 bundled country paths with zero stations", () => {
     const { container } = render(<DutyStationMap stations={[]} t={t} />);
     expect(container.querySelector("svg")).toBeTruthy();

@@ -586,10 +586,10 @@ This tool is for **educational purposes only**. It is not affiliated with the VA
 
 ## Your Privacy
 
-All data stays in your browser — we don't collect, store, or transmit any personal information to servers.
+All data stays in your browser - we don't collect, store, or transmit any personal information to servers.
 
 **Storage & encryption status:**
-- Your data is stored in your browser's localStorage and IndexedDB. These are **not encrypted at rest** — anyone with physical or forensic access to your device can read them.
+- Your data is stored in your browser's localStorage and IndexedDB. These are **not encrypted at rest** - anyone with physical or forensic access to your device can read them.
 - **Bunker Backup exports** (.json files you download) are **not encrypted** unless you enable cloud sync.
 - **Cloud Sync** (Google Drive / Dropbox / OneDrive) backups **are encrypted** with your passphrase before leaving your device.
 - To protect sensitive data on shared or untrusted devices, use Cloud Sync with a strong passphrase and clear your browser storage when done.
@@ -2303,17 +2303,17 @@ Choose the right AMA decision review lane before you file an appeal.
 
 Filing in the wrong lane can cost months or years. The three AMA options are:
 
-- **Supplemental Claim** – fastest; requires new and relevant evidence
-- **Higher-Level Review (HLR)** – same evidence, de novo review by a senior adjudicator; no new evidence allowed
-- **Board of Veterans Appeals (BVA)** – longest wait but reaches a Veterans Law Judge; three docket options
+- **Supplemental Claim** - fastest; requires new and relevant evidence
+- **Higher-Level Review (HLR)** - same evidence, de novo review by a senior adjudicator; no new evidence allowed
+- **Board of Veterans Appeals (BVA)** - longest wait but reaches a Veterans Law Judge; three docket options
 
 ## BVA Docket Options
 
 | Docket | Avg. Wait | Notes |
 |--------|-----------|-------|
-| **Direct** | 12–18 months | No new evidence or hearing |
-| **Evidence** | 12–24 months | Submit new evidence without a hearing |
-| **Hearing** | 36–48 months | Testify before a VLJ (in person or by video) |
+| **Direct** | 12-18 months | No new evidence or hearing |
+| **Evidence** | 12-24 months | Submit new evidence without a hearing |
+| **Hearing** | 36-48 months | Testify before a VLJ (in person or by video) |
 
 ## How Appeals Lane Advisor Helps
 
@@ -2338,7 +2338,7 @@ Identify gaps in your claim before the BVA sends it back for more development.
 
 ## What Is a Remand?
 
-When the BVA cannot grant or deny your appeal — often because the record is incomplete — it remands (returns) the claim to the Regional Office for further development. Remands add 1–3 years to your wait.
+When the BVA cannot grant or deny your appeal - often because the record is incomplete - it remands (returns) the claim to the Regional Office for further development. Remands add 1-3 years to your wait.
 
 ## How This Tool Helps
 
@@ -2360,7 +2360,7 @@ Analyzes patterns from 18,609 BVA remand decisions to identify the most common f
 
 ## Remand vs. Denial
 
-A remand is not a denial — the BVA believes you may have a viable claim but needs a more complete record. This tool helps you provide that record before your file is reviewed.
+A remand is not a denial - the BVA believes you may have a viable claim but needs a more complete record. This tool helps you provide that record before your file is reviewed.
     `,
   },
 
@@ -3849,7 +3849,7 @@ function _createManualParserState() {
 function _renderInline(text) {
   if (!text) return text;
 
-  // RT-5: escape EVERYTHING first (safety floor) — the markdown replacements
+  // RT-5: escape EVERYTHING first (safety floor) - the markdown replacements
   // below only re-introduce a fixed allow-list of tags, so a future raw-HTML
   // edit to the manual strings is inert. The CSP is NOT a backstop here
   // (script-src 'unsafe-inline' is set).
@@ -3862,7 +3862,7 @@ function _renderInline(text) {
     /`(.+?)`/g,
     '<code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-sm">$1</code>',
   );
-  // Handle links — sanitize the href so a future contributor cannot land a
+  // Handle links - sanitize the href so a future contributor cannot land a
   // javascript: URL in the static manual content. sanitizeUrl returns '#'
   // for any non-http(s)/mailto/tel protocol.
   // eslint-disable-next-line sonarjs/slow-regex -- runs on static, developer-authored manual content, not user input
@@ -3873,7 +3873,7 @@ function _renderInline(text) {
 
   // Safe-by-construction: input is escapeHtml()'d first (above), then only a
   // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-
-  // wrapped. (Not relying on CSP — script-src 'unsafe-inline' is set.)
+  // wrapped. (Not relying on CSP - script-src 'unsafe-inline' is set.)
   // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
   return <span dangerouslySetInnerHTML={{ __html: text }} />;
 }

@@ -22,7 +22,16 @@ The AI assistant is available in:
 - 🔬 **C-File AI Analyzer** - For analyzing your entire Claims File (see dedicated section below)
 
 !!! warning "AI is Optional"
-    The AI assistant is completely optional. You can always use the standard template that processes everything locally on your device with no external data sharing.
+The AI assistant is completely optional. You can always use the standard template that processes everything locally on your device with no external data sharing.
+
+---
+
+## Checking Your AI Mode
+
+The **AI Command Center** (Support & Resources → AI Settings in the header) is where you choose and manage which AI powers these features, and it shows you the privacy trade-off for each option up front.
+
+![AI Command Center showing Local AI and Cloud AI (Gemini) options with their privacy disclosures](../assets/images/screenshots/privacy/ai-command-center.png)
+_Local AI runs 100% on your device with zero data transmission (requires a WebGPU-capable browser/GPU). Cloud AI (Gemini) is faster but sends your query to Google's servers - your API key never leaves your browser._
 
 ---
 
@@ -71,37 +80,37 @@ When you use the AI assistant, the following information is sent to Google Gemin
 
 ### Personal Statement (Nexus Builder)
 
-| Data Shared | Example |
-|-------------|---------|
-| Condition name | "Sleep Apnea" |
-| Primary condition (if secondary) | "PTSD" |
-| Symptom onset timeframe | "2019" |
-| Treatment status | "VA treatment" |
-| Connection mechanism | "Stress and anxiety from primary condition" |
-| Work impact description | "Difficulty concentrating at work" |
-| Social impact description | "Avoiding social gatherings" |
-| Daily life examples | "Need to take breaks during tasks" |
+| Data Shared                      | Example                                     |
+| -------------------------------- | ------------------------------------------- |
+| Condition name                   | "Sleep Apnea"                               |
+| Primary condition (if secondary) | "PTSD"                                      |
+| Symptom onset timeframe          | "2019"                                      |
+| Treatment status                 | "VA treatment"                              |
+| Connection mechanism             | "Stress and anxiety from primary condition" |
+| Work impact description          | "Difficulty concentrating at work"          |
+| Social impact description        | "Avoiding social gatherings"                |
+| Daily life examples              | "Need to take breaks during tasks"          |
 
 ### Buddy/Lay Statement
 
-| Data Shared | Example |
-|-------------|---------|
-| Condition name | "Back Pain" |
-| Relationship type | "Spouse" |
-| Duration known | "15 years" |
-| Observations | "Has difficulty standing" |
-| Changes noticed | "Mobility has decreased" |
+| Data Shared           | Example                      |
+| --------------------- | ---------------------------- |
+| Condition name        | "Back Pain"                  |
+| Relationship type     | "Spouse"                     |
+| Duration known        | "15 years"                   |
+| Observations          | "Has difficulty standing"    |
+| Changes noticed       | "Mobility has decreased"     |
 | Daily impact observed | "Can no longer do yard work" |
 
 ### PTSD Stressor Statement
 
-| Data Shared | Example |
-|-------------|---------|
-| Stressor type | "Combat" |
-| General event description | "Exposed to hostile fire" |
-| Emotional impact | "Felt terrified and helpless" |
-| Current symptoms | "Nightmares, hypervigilance" |
-| Daily impact | "Difficulty sleeping" |
+| Data Shared               | Example                       |
+| ------------------------- | ----------------------------- |
+| Stressor type             | "Combat"                      |
+| General event description | "Exposed to hostile fire"     |
+| Emotional impact          | "Felt terrified and helpless" |
+| Current symptoms          | "Nightmares, hypervigilance"  |
+| Daily impact              | "Difficulty sleeping"         |
 
 ---
 
@@ -109,17 +118,17 @@ When you use the AI assistant, the following information is sent to Google Gemin
 
 The AI assistant **never** sends:
 
-| Protected Data | Status |
-|----------------|--------|
-| Your name | ❌ Never sent |
-| Social Security Number | ❌ Never sent |
-| VA file number | ❌ Never sent |
-| Address or contact info | ❌ Never sent |
-| Specific dates | ❌ Never sent |
-| Specific locations | ❌ Never sent |
+| Protected Data                | Status        |
+| ----------------------------- | ------------- |
+| Your name                     | ❌ Never sent |
+| Social Security Number        | ❌ Never sent |
+| VA file number                | ❌ Never sent |
+| Address or contact info       | ❌ Never sent |
+| Specific dates                | ❌ Never sent |
+| Specific locations            | ❌ Never sent |
 | Unit names or service details | ❌ Never sent |
-| Names of others | ❌ Never sent |
-| Medical record numbers | ❌ Never sent |
+| Names of others               | ❌ Never sent |
+| Medical record numbers        | ❌ Never sent |
 
 ---
 
@@ -154,11 +163,13 @@ Before any data is sent to the AI:
 ## Security Measures
 
 ### In Transit
+
 - All API calls use **HTTPS encryption**
 - API key is not exposed to users
 - No credentials are stored in your browser
 
 ### On Your Device
+
 - AI-generated statements stay in your browser
 - Downloads save only to your device
 - No server-side storage of your statements
@@ -199,13 +210,13 @@ The C-File Analyzer is a special case that deserves its own privacy explanation 
 
 ### How C-File Analysis Differs
 
-| Aspect | Statement Assistant | C-File Analyzer |
-|--------|--------------------|--------------------|
-| Data volume | Small (few paragraphs) | Large (thousands of pages) |
-| Data source | You type it | Your PDF file |
-| Processing location | Your browser | Your browser (extraction) + Google (analysis) |
-| API model | Gemini 1.5 Flash | Gemini 1.5 Flash (1M token context) |
-| Contains PII? | Deliberately excluded | May contain full records |
+| Aspect              | Statement Assistant    | C-File Analyzer                               |
+| ------------------- | ---------------------- | --------------------------------------------- |
+| Data volume         | Small (few paragraphs) | Large (thousands of pages)                    |
+| Data source         | You type it            | Your PDF file                                 |
+| Processing location | Your browser           | Your browser (extraction) + Google (analysis) |
+| API model           | Gemini 1.5 Flash       | Gemini 1.5 Flash (1M token context)           |
+| Contains PII?       | Deliberately excluded  | May contain full records                      |
 
 ### What Happens to Your C-File
 
@@ -235,13 +246,7 @@ The C-File Analyzer is a special case that deserves its own privacy explanation 
 ### C-File Privacy Considerations
 
 !!! warning "Your C-File Contains Sensitive Data"
-    Unlike the statement assistant where we deliberately exclude PII, your C-File likely contains:
-    
-    - Your name and SSN
-    - Medical diagnoses and treatments
-    - Service history details
-    - Personal addresses
-    - Family information
+Unlike the statement assistant where we deliberately exclude PII, your C-File likely contains: - Your name and SSN - Medical diagnoses and treatments - Service history details - Personal addresses - Family information
 
 ### Protections in Place
 

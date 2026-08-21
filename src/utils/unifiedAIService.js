@@ -54,7 +54,7 @@ const getAISystemPrompts = async () => {
 };
 
 // Some engine rejections aren't Error instances (e.g. an OpenAI-style
-// {error:{message}} payload from the WebLLM engine) — `.message` on those
+// {error:{message}} payload from the WebLLM engine) - `.message` on those
 // is undefined and silently swallows the real failure reason in our
 // wrapped error text. Normalize before interpolating.
 const _describeThrown = (err) => {
@@ -366,7 +366,18 @@ export const registerLocalAIEngine = (
         detail: {
           ready: true,
           modelId,
-          fullDKBAvailable: true, // Local AI has access to full 130K+ DKB
+          // The full 130K+ sharded corpus (dkbShardedRag.js/queryCorpus) is
+          // downloaded and cached, but is not wired into AI answer
+          // generation for any mode - buildDKBContext/searchDKB (what
+          // actually feeds the AI's system prompt, for Local and Cloud
+          // alike) reads the same static ~8K-entry diamond_knowledge.json
+          // regardless. This was unconditionally `true`, which told the KB
+          // status UI to claim "complete 130K+ entry access" the moment any
+          // local backend loaded - false. Flip back to a real check once
+          // searchDKB is actually wired to query the full corpus for local
+          // modes (a deliberately separate, eval-gated integration - see
+          // knowledgeQuery.js's S30 header comment).
+          fullDKBAvailable: false,
         },
       }),
     );
@@ -385,7 +396,7 @@ export const registerLocalAIEngine = (
           detail: { ready: false, fullDKBAvailable: false },
         }),
       );
-      // Let UI layers surface the failure — without this, the fallback to
+      // Let UI layers surface the failure - without this, the fallback to
       // cloud/other backends is silent and the veteran never learns why
       window.dispatchEvent(
         new CustomEvent("vetrate:ai-engine-failed", {
@@ -519,7 +530,7 @@ const isValidApiKey = (key) => {
  * Check if cloud AI is available (API key configured)
  */
 export const isCloudAIAvailable = () => {
-  // RT1-1: BYOK only — the key comes solely from the user's localStorage entry,
+  // RT1-1: BYOK only - the key comes solely from the user's localStorage entry,
   // never from the build env. A VITE_-inlined key would ship in the public bundle.
   const storedKey = localStorage.getItem(GEMINI_KEY);
   return isValidApiKey(storedKey);
@@ -555,7 +566,7 @@ export const initializeWllama = async (
   }
 
   // RT8-3: The wllama GGUF models are ~4 GB each. Downloading that on a phone
-  // or a device without adequate GPU/RAM OOMs or crawls. Gate early — same
+  // or a device without adequate GPU/RAM OOMs or crawls. Gate early - same
   // pattern as diamondSwarm.js which checks canUseWebLLM before any WebLLM
   // download. Mobile tier always returns canUseWebLLM=false.
   const deviceProfile = await detectDeviceCapabilities();
@@ -578,7 +589,7 @@ export const initializeWllama = async (
 
     // wllamaService.initializeWllama resolves a plain boolean (true on
     // success, false only when already initializing) and throws on real
-    // failure — it never resolves a {success, error} object. Reading
+    // failure - it never resolves a {success, error} object. Reading
     // result.success here always evaluated to undefined regardless of the
     // actual outcome, so this branch never ran and wllamaReady could never
     // become true even when the model loaded correctly.
@@ -710,7 +721,7 @@ export const getEffectiveAIMode = () => {
   }
 
   if (preferredMode === LOCAL) {
-    // SWARM is checked first even though preferredMode is LOCAL — an
+    // SWARM is checked first even though preferredMode is LOCAL - an
     // intentional upgrade to the newer backend when it's available.
     return resolveFirstAvailableMode([
       SWARM,
@@ -739,7 +750,7 @@ export const getEffectiveAIMode = () => {
  * Get the Gemini API key (only returns valid keys, not placeholders)
  */
 const getGeminiApiKey = () => {
-  // RT1-1: BYOK only — never fall back to a build-env key (would bake into dist).
+  // RT1-1: BYOK only - never fall back to a build-env key (would bake into dist).
   const storedKey = localStorage.getItem(GEMINI_KEY);
   if (isValidApiKey(storedKey)) return storedKey;
   return "";
@@ -933,9 +944,9 @@ const fetchGeminiWithRetry = async (requestBody, apiKey, timeout) => {
     if (fetchError.name !== "AbortError") {
       throw toFriendlyFetchError(fetchError);
     }
-    // Timeouts are often transient backend slowness — retry once
+    // Timeouts are often transient backend slowness - retry once
     console.warn(
-      `⏱️ Cloud AI request timed out after ${timeout / 1000}s — retrying once...`,
+      `⏱️ Cloud AI request timed out after ${timeout / 1000}s - retrying once...`,
     );
     try {
       return await fetchWithTimeout();
@@ -1048,7 +1059,7 @@ const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
     piiAnalysis.types,
   );
   // NOT aggressive: the Warrant Council is on-device WebLLM inference in a Web
-  // Worker — no third-party send, so the egress-boundary setting documented on
+  // Worker - no third-party send, so the egress-boundary setting documented on
   // scrubText() does not apply. Aggressive mode redacts every bare MM/DD/YYYY
   // as a DOB (PII_PATTERNS.dob) and every "<digits> … Way/Place/Ct" run as an
   // address (PII_PATTERNS.address), which strips the service, exam, and
@@ -1057,7 +1068,7 @@ const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
   // file numbers, and LABELED dates of birth are still redacted below.
   //
   // Note: chunk-parse failures log via scrubText(), which forces aggressive
-  // mode for DISPLAY only — [REDACTED_*] in those log lines says nothing about
+  // mode for DISPLAY only - [REDACTED_*] in those log lines says nothing about
   // what the model actually received. Don't use them to assess this setting.
   const { scrubbedText, details } = scrubPII(prompt, {
     aggressive: false,
@@ -1097,11 +1108,11 @@ const injectDKBForWarrantCouncil = async (prompt, options, useDKB) => {
 
 /**
  * Ground a Rater-agent prompt in the deterministic combined-rating calculator
- * (38 CFR § 4.25/4.26 — vaCalculator.js) instead of letting the LLM freehand
+ * (38 CFR § 4.25/4.26 - vaCalculator.js) instead of letting the LLM freehand
  * the bilateral-factor arithmetic, which is the confirmed root cause of the
  * swarm's bilateral-pairing hallucinations. Only activates when the caller
  * supplies structured `options.conditions` ({name, rating, side, bodyPart}[]);
- * free-text-only prompts pass through unchanged — there's no reliable parse
+ * free-text-only prompts pass through unchanged - there's no reliable parse
  * step from prose to structured conditions, and a wrong parse would be worse
  * than no injection at all.
  */
@@ -1119,7 +1130,7 @@ export const injectCalculatorForRater = (prompt, options) => {
 
   return (
     prompt +
-    `\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 — already calculated, do not recompute) ===
+    `\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 - already calculated, do not recompute) ===
 Bilateral pair: ${pairSummary}
 Bilateral group rating: ${result.bilateralGroupRating || "n/a"}
 Combined rating: ${result.combinedRating}%
@@ -1257,7 +1268,7 @@ const generateWithWllama = async (prompt, options = {}) => {
     const piiAnalysis = analyzePII(prompt);
     if (piiAnalysis.hasPII) {
       console.warn(`⚠️ PII Detected before Wllama call:`, piiAnalysis.types);
-      // Not aggressive — wllama is in-page WASM inference, not an egress
+      // Not aggressive - wllama is in-page WASM inference, not an egress
       // boundary. See scrubPromptForWarrantCouncil for why aggressive mode
       // destroys the dates a C-File analysis depends on.
       const { scrubbedText, details } = scrubPII(prompt, {
@@ -1271,7 +1282,7 @@ const generateWithWllama = async (prompt, options = {}) => {
   }
 
   // Ground the Rater model in the deterministic calculator before the LLM
-  // ever sees the prompt — see injectCalculatorForRater for why.
+  // ever sees the prompt - see injectCalculatorForRater for why.
   let enhancedPrompt = wllamaCurrentModel?.startsWith("rater")
     ? injectCalculatorForRater(scrubbedPrompt, options)
     : scrubbedPrompt;
@@ -1491,7 +1502,7 @@ const scrubPromptForLocalAI = (prompt, scrubPIIEnabled) => {
   if (!piiAnalysis.hasPII) return prompt;
 
   console.warn(`⚠️ PII Detected before Local AI call:`, piiAnalysis.types);
-  // Not aggressive — in-page WebLLM inference, not an egress boundary. See
+  // Not aggressive - in-page WebLLM inference, not an egress boundary. See
   // scrubPromptForWarrantCouncil for why aggressive mode destroys the dates a
   // C-File analysis depends on.
   const { scrubbedText, details } = scrubPII(prompt, {
@@ -1995,7 +2006,7 @@ function _recordGenerationFailure(err) {
 }
 
 // C-H06: record every production AI call in the tamper-evident, hash-chained
-// audit log (SHA-256 digests only — never raw prompt/output PII). Fire-and-
+// audit log (SHA-256 digests only - never raw prompt/output PII). Fire-and-
 // forget so a logging failure can never break the AI response.
 function _logAiCallAudit(prompt, result, options, startedAt) {
   const auditOutput =
@@ -2010,7 +2021,7 @@ function _logAiCallAudit(prompt, result, options, startedAt) {
   }).catch(() => {});
 }
 
-// PI-01: last-mile exfil filter — strip non-allow-listed URLs from model output
+// PI-01: last-mile exfil filter - strip non-allow-listed URLs from model output
 // that reaches the DOM (a malicious PDF / OCR / retrieved chunk can social-engineer
 // the model into surfacing an attacker URL). Opt out for JSON-only / internal calls,
 // whose output is parsed not rendered as free text and would be corrupted. Gov links
@@ -2158,7 +2169,7 @@ async function _dispatchAiGeneration(
   enhancedOptions,
   options,
 ) {
-  // Dispatch follows getEffectiveAIMode() — never implicitly upgrade to a
+  // Dispatch follows getEffectiveAIMode() - never implicitly upgrade to a
   // backend the user didn't choose. getEffectiveAIMode() already handles the
   // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD).
   const useSwarm = effectiveMode === AI_MODES.SWARM;
@@ -2274,7 +2285,7 @@ function _applyHallucinationFilter(text, options) {
 //
 // AIS-01: this was effectively dead in production. The guard required
 // `options.taskType` (so calls without one skipped validation entirely), and
-// it passed `options.taskType` — a STRING — as the `context` argument, so the
+// it passed `options.taskType` - a STRING - as the `context` argument, so the
 // validator's `context.loadedRegulations` was always undefined. Run it on every
 // non-skipped response and pass a real context object.
 async function _buildValidatedResult(
@@ -2484,7 +2495,7 @@ const generateAIInternal = async (prompt, options = {}) => {
   }
 };
 
-// Ordered [substring, friendly name] pairs — first match wins, so more
+// Ordered [substring, friendly name] pairs - first match wins, so more
 // specific patterns (e.g. a particular size/variant) must precede their
 // generic family fallback (e.g. plain "Llama").
 const LOCAL_MODEL_NAME_PATTERNS = [
@@ -2540,7 +2551,7 @@ const LOCAL_MODEL_NAME_PATTERNS = [
   ["Mistral-7B", "Mistral 7B"],
   ["Mistral", "Mistral"],
 
-  // Gemma Series (Google) — specific sizes only match lowercase IDs;
+  // Gemma Series (Google) - specific sizes only match lowercase IDs;
   // the capitalized/generic case is handled separately below.
   ["gemma-2-9b", "Gemma 2 9B"],
   ["gemma-2-2b", "Gemma 2 2B"],
@@ -2668,7 +2679,12 @@ export const getAIDataDisclosure = () => {
     };
   }
 
-  if (status.effectiveMode === AI_MODES.LOCAL) {
+  // Any other on-device mode (legacy Local, Wllama, or a local llama.cpp
+  // server) is equally private - this used to check only AI_MODES.LOCAL,
+  // so a Wllama or local-server user (AI actively active) fell all the way
+  // through to the "No AI Available" branch below instead of getting an
+  // accurate privacy disclosure.
+  if (status.isPrivate) {
     return {
       title: "🔒 100% Private - Local AI Active",
       description:
@@ -2713,7 +2729,7 @@ export const getAIDataDisclosure = () => {
 };
 
 // ============================================================================
-// DUAL-LLM PATTERN — NOT wired into the document-analysis paths (A-H01)
+// DUAL-LLM PATTERN - NOT wired into the document-analysis paths (A-H01)
 // ============================================================================
 //
 // The dual-LLM (privileged-controller + sandboxed-worker) split is NOT the

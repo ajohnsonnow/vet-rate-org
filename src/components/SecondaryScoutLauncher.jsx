@@ -1141,7 +1141,7 @@ function ConditionSystemGroup({
 
   return (
     <div className="border-b border-gray-100 dark:border-gray-700 last:border-b-0">
-      <button
+      <button type="button"
         onClick={() => toggleSystem(system)}
         className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/40 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-900/50 dark:hover:to-teal-900/50 transition-colors"
       >
@@ -1202,7 +1202,7 @@ function ManualInputPanel({ manualInput, setManualInput, handleManualSubmit }) {
         value={manualInput}
         onChange={(e) => setManualInput(e.target.value)}
       />
-      <button
+      <button type="button"
         onClick={handleManualSubmit}
         disabled={manualInput.trim().length === 0}
         className="mt-4 w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
@@ -1273,7 +1273,7 @@ function PdfDropZone({
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             or{" "}
-            <button
+            <button type="button"
               onClick={() => pdfFileInputRef.current?.click()}
               className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
             >
@@ -1345,7 +1345,7 @@ function PdfFileHeader({ pdfFile, handleRemovePdf }) {
           </p>
         </div>
       </div>
-      <button
+      <button type="button"
         onClick={handleRemovePdf}
         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
         aria-label="Remove file"
@@ -1392,7 +1392,7 @@ function PdfExtractedConditionsList({
           </div>
         ))}
       </div>
-      <button
+      <button type="button"
         onClick={handlePdfConditionsSubmit}
         className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
       >
@@ -1541,7 +1541,7 @@ function ConditionSearchFilter({ searchFilter, setSearchFilter }) {
           />
         </svg>
         {searchFilter && (
-          <button
+          <button type="button"
             onClick={() => setSearchFilter("")}
             className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           >
@@ -1573,20 +1573,20 @@ function ExpandCollapseControls({
 }) {
   return (
     <div className="flex gap-2 mb-3">
-      <button
+      <button type="button"
         onClick={expandAll}
         className="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full transition-colors"
       >
         Expand All
       </button>
-      <button
+      <button type="button"
         onClick={collapseAll}
         className="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full transition-colors"
       >
         Collapse All
       </button>
       {selectedConditions.length > 0 && (
-        <button
+        <button type="button"
           onClick={() => setSelectedConditions([])}
           className="text-xs px-3 py-1 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded-full transition-colors ml-auto"
         >
@@ -1660,7 +1660,7 @@ function SelectedConditionsSummary({
           {selectedConditions.length !== 1 ? "s" : ""}
         </p>
         {selectedConditions.length > 0 && (
-          <button
+          <button type="button"
             onClick={() => setExpandedSystems(new Set())}
             className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           >
@@ -1676,7 +1676,7 @@ function SelectedConditionsSummary({
               className="inline-flex items-center px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 text-xs rounded-full"
             >
               {condition}
-              <button
+              <button type="button"
                 onClick={() => toggleCondition(condition)}
                 className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
@@ -1740,7 +1740,7 @@ function CheckboxSelectionPanel({
         toggleCondition={toggleCondition}
       />
 
-      <button
+      <button type="button"
         onClick={handleCheckboxSubmit}
         disabled={selectedConditions.length === 0}
         className="mt-4 w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
@@ -1759,7 +1759,7 @@ function ExampleProfilesPanel({ loadExampleProfile }) {
       </p>
       <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2">
         {exampleProfiles.map((profile, index) => (
-          <button
+          <button type="button"
             key={index}
             onClick={() => loadExampleProfile(profile.conditions)}
             className="w-full text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all group"
@@ -1955,7 +1955,7 @@ function MyRatingsPanel({
       </div>
 
       {savedRatings.length > 0 && (
-        <button
+        <button type="button"
           onClick={handleMyRatingsSubmit}
           className="mt-4 w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
         >
@@ -1993,7 +1993,7 @@ function SecondaryScoutHeader({ onClose, onReportBug }) {
               moduleName="Secondary Scout Launcher"
             />
           )}
-          <button
+          <button type="button"
             onClick={onClose}
             className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
@@ -2026,7 +2026,7 @@ function SecondaryScoutTabs({
 }) {
   return (
     <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6 border-b border-gray-200 dark:border-gray-700">
-      <button
+      <button type="button"
         onClick={() => setInputMethod("manual")}
         className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
           inputMethod === "manual"
@@ -2036,7 +2036,7 @@ function SecondaryScoutTabs({
       >
         <span className="hidden sm:inline">Type </span>Conditions
       </button>
-      <button
+      <button type="button"
         onClick={() => setInputMethod("pdf")}
         className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
           inputMethod === "pdf"
@@ -2046,13 +2046,13 @@ function SecondaryScoutTabs({
       >
         📄 <span className="hidden sm:inline">Drop-In </span>PDF
       </button>
-      <button
+      <button type="button"
         onClick={() => setShowVAGovPaster(true)}
         className="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 border-b-2 border-transparent hover:border-green-600 dark:hover:border-green-400"
       >
         📋 Paste from VA
       </button>
-      <button
+      <button type="button"
         onClick={() => setInputMethod("checkbox")}
         className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
           inputMethod === "checkbox"
@@ -2062,7 +2062,7 @@ function SecondaryScoutTabs({
       >
         <span className="hidden sm:inline">Select from </span>List
       </button>
-      <button
+      <button type="button"
         onClick={() => setInputMethod("examples")}
         className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
           inputMethod === "examples"
@@ -2074,7 +2074,7 @@ function SecondaryScoutTabs({
       </button>
       {/* My Ratings Tab - shows only if user has saved ratings */}
       {savedRatings.length > 0 && (
-        <button
+        <button type="button"
           onClick={() => setInputMethod("myratings")}
           className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-semibold transition-colors ${
             inputMethod === "myratings"

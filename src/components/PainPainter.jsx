@@ -2223,102 +2223,36 @@ const PainPainterSaveModal = ({
     </ResponsiveModal>
   );
 
+// usePainPainterEffects/Interactions/Export each destructure only the keys
+// they need, so passing the full painState object through (instead of
+// re-listing every field at each call site) is behaviorally identical to
+// the previous explicit destructure-and-relist.
 function usePainPainterOrchestration() {
-  const {
-    view,
-    setView,
-    mode,
-    setMode,
-    selectedPainType,
-    setSelectedPainType,
-    activeTab,
-    setActiveTab,
-    painPoints,
-    setPainPoints,
-    selectedRegion,
-    setSelectedRegion,
-    hoveredRegion,
-    setHoveredRegion,
-    bodyType,
-    setBodyType,
-    bodyScale,
-    setBodyScale,
-    zoom,
-    setZoom,
-    showPhantomLimbs,
-    setShowPhantomLimbs,
-    showSaveModal,
-    setShowSaveModal,
-    saveName,
-    setSaveName,
-    saveSuccess,
-    setSaveSuccess,
-    detectedNexus,
-    setDetectedNexus,
-  } = usePainPainterState();
+  const painState = usePainPainterState();
 
   // Export ref
   const bodyMapRef = useRef(null);
   const { captureScreenshot, downloadScreenshot } = useScreenshot();
 
-  usePainPainterEffects({ setView, painPoints, setDetectedNexus });
+  usePainPainterEffects(painState);
 
   const { applyBodyPreset, handleRegionClick, getRegionStyle } =
-    usePainPainterInteractions({
-      mode,
-      selectedPainType,
-      setPainPoints,
-      setSelectedRegion,
-      painPoints,
-      hoveredRegion,
-      selectedRegion,
-      setBodyType,
-      setBodyScale,
-    });
+    usePainPainterInteractions(painState);
 
   const { handleExport, handleSaveToPacket } = usePainPainterExport({
+    ...painState,
     bodyMapRef,
-    painPoints,
-    view,
-    detectedNexus,
-    saveName,
-    setSaveSuccess,
-    setShowSaveModal,
-    setSaveName,
     captureScreenshot,
     downloadScreenshot,
   });
 
+  // setDetectedNexus is internal to usePainPainterEffects; the original
+  // orchestration return never exposed it to callers.
+  const { setDetectedNexus: _setDetectedNexus, ...publicPainState } =
+    painState;
+
   return {
-    view,
-    setView,
-    mode,
-    setMode,
-    selectedPainType,
-    setSelectedPainType,
-    activeTab,
-    setActiveTab,
-    painPoints,
-    setPainPoints,
-    selectedRegion,
-    setSelectedRegion,
-    hoveredRegion,
-    setHoveredRegion,
-    bodyType,
-    setBodyType,
-    bodyScale,
-    setBodyScale,
-    zoom,
-    setZoom,
-    showPhantomLimbs,
-    setShowPhantomLimbs,
-    showSaveModal,
-    setShowSaveModal,
-    saveName,
-    setSaveName,
-    saveSuccess,
-    setSaveSuccess,
-    detectedNexus,
+    ...publicPainState,
     bodyMapRef,
     applyBodyPreset,
     handleRegionClick,
@@ -2415,101 +2349,96 @@ const PainPainterProTip = () => (
   </div>
 );
 
+const PainPainterMainModal = ({
+  onClose,
+  onReportBug,
+  activeTab,
+  setActiveTab,
+  bodyType,
+  applyBodyPreset,
+  bodyScale,
+  setBodyScale,
+  showPhantomLimbs,
+  setShowPhantomLimbs,
+  zoom,
+  setZoom,
+  view,
+  setView,
+  mode,
+  setMode,
+  selectedPainType,
+  setSelectedPainType,
+  painPoints,
+  setPainPoints,
+  hoveredRegion,
+  setHoveredRegion,
+  selectedRegion,
+  getRegionStyle,
+  handleRegionClick,
+  bodyMapRef,
+  detectedNexus,
+  setShowSaveModal,
+  handleExport,
+}) => (
+  <ResponsiveModal
+    isOpen
+    onClose={onClose}
+    size="2xl"
+    className="border border-gray-700 bg-gradient-to-b from-gray-900 to-gray-950"
+    labelledBy="pain-painter-title"
+    header={<PainPainterHeader onClose={onClose} onReportBug={onReportBug} />}
+  >
+    <PainPainterTabNav activeTab={activeTab} setActiveTab={setActiveTab} />
+
+    <PainPainterTabContent
+      activeTab={activeTab}
+      bodyType={bodyType}
+      applyBodyPreset={applyBodyPreset}
+      bodyScale={bodyScale}
+      setBodyScale={setBodyScale}
+      showPhantomLimbs={showPhantomLimbs}
+      setShowPhantomLimbs={setShowPhantomLimbs}
+      zoom={zoom}
+      setZoom={setZoom}
+      view={view}
+      setView={setView}
+      mode={mode}
+      setMode={setMode}
+      selectedPainType={selectedPainType}
+      setSelectedPainType={setSelectedPainType}
+      painPoints={painPoints}
+      setPainPoints={setPainPoints}
+      hoveredRegion={hoveredRegion}
+      setHoveredRegion={setHoveredRegion}
+      selectedRegion={selectedRegion}
+      getRegionStyle={getRegionStyle}
+      handleRegionClick={handleRegionClick}
+      bodyMapRef={bodyMapRef}
+      detectedNexus={detectedNexus}
+      setShowSaveModal={setShowSaveModal}
+      handleExport={handleExport}
+    />
+
+    <PainPainterProTip />
+  </ResponsiveModal>
+);
+
+// PainPainterMainModal/PainPainterSaveModal each destructure only the props
+// they need, and every one of those names matches a key on the state object
+// returned by usePainPainterOrchestration, so spreading it through is
+// behaviorally identical to the previous explicit prop-by-prop passing.
 const PainPainter = ({ onClose, _onExport, onReportBug }) => {
   const { _t } = useLanguage();
-
-  const {
-    view,
-    setView,
-    mode,
-    setMode,
-    selectedPainType,
-    setSelectedPainType,
-    activeTab,
-    setActiveTab,
-    painPoints,
-    setPainPoints,
-    selectedRegion,
-    hoveredRegion,
-    setHoveredRegion,
-    bodyType,
-    bodyScale,
-    setBodyScale,
-    zoom,
-    setZoom,
-    showPhantomLimbs,
-    setShowPhantomLimbs,
-    showSaveModal,
-    setShowSaveModal,
-    saveName,
-    setSaveName,
-    saveSuccess,
-    detectedNexus,
-    bodyMapRef,
-    applyBodyPreset,
-    handleRegionClick,
-    getRegionStyle,
-    handleExport,
-    handleSaveToPacket,
-  } = usePainPainterOrchestration();
+  const painPainterState = usePainPainterOrchestration();
 
   return (
     <>
-      <ResponsiveModal
-        isOpen
+      <PainPainterMainModal
         onClose={onClose}
-        size="2xl"
-        className="border border-gray-700 bg-gradient-to-b from-gray-900 to-gray-950"
-        labelledBy="pain-painter-title"
-        header={
-          <PainPainterHeader onClose={onClose} onReportBug={onReportBug} />
-        }
-      >
-        <PainPainterTabNav activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        <PainPainterTabContent
-          activeTab={activeTab}
-          bodyType={bodyType}
-          applyBodyPreset={applyBodyPreset}
-          bodyScale={bodyScale}
-          setBodyScale={setBodyScale}
-          showPhantomLimbs={showPhantomLimbs}
-          setShowPhantomLimbs={setShowPhantomLimbs}
-          zoom={zoom}
-          setZoom={setZoom}
-          view={view}
-          setView={setView}
-          mode={mode}
-          setMode={setMode}
-          selectedPainType={selectedPainType}
-          setSelectedPainType={setSelectedPainType}
-          painPoints={painPoints}
-          setPainPoints={setPainPoints}
-          hoveredRegion={hoveredRegion}
-          setHoveredRegion={setHoveredRegion}
-          selectedRegion={selectedRegion}
-          getRegionStyle={getRegionStyle}
-          handleRegionClick={handleRegionClick}
-          bodyMapRef={bodyMapRef}
-          detectedNexus={detectedNexus}
-          setShowSaveModal={setShowSaveModal}
-          handleExport={handleExport}
-        />
-
-        <PainPainterProTip />
-      </ResponsiveModal>
-
-      <PainPainterSaveModal
-        showSaveModal={showSaveModal}
-        setShowSaveModal={setShowSaveModal}
-        saveSuccess={saveSuccess}
-        saveName={saveName}
-        setSaveName={setSaveName}
-        painPoints={painPoints}
-        view={view}
-        detectedNexus={detectedNexus}
-        handleSaveToPacket={handleSaveToPacket}
+        onReportBug={onReportBug}
+        {...painPainterState}
       />
+      <PainPainterSaveModal {...painPainterState} />
     </>
   );
 };

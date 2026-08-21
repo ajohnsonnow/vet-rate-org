@@ -366,7 +366,7 @@ function DisabilityRatingPreview({ data }) {
   return (
     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="font-medium text-gray-900 dark:text-white">
-        Combined Rating: {data.combinedRating ?? "—"}%
+        Combined Rating: {data.combinedRating ?? "-"}%
       </div>
       {data.effectiveDate && (
         <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -427,7 +427,7 @@ function ClaimsPreviewList({ data }) {
 
 function AppealsStatusPreviewList({ data }) {
   return data.slice(0, 5).map((appeal, idx) => {
-    // The Appeals Status API's status.details shape varies by status type —
+    // The Appeals Status API's status.details shape varies by status type -
     // sometimes a plain string, sometimes a nested object. Only render it
     // when it's actually a string, so this never prints "[object Object]".
     const statusDetails =
@@ -442,7 +442,7 @@ function AppealsStatusPreviewList({ data }) {
         </div>
         <div className="text-sm text-gray-600 dark:text-gray-400">
           Status: {appeal.status?.type}
-          {statusDetails && ` — ${statusDetails}`}
+          {statusDetails && ` - ${statusDetails}`}
         </div>
         {appeal.docketNumber && (
           <div className="text-xs text-gray-500">
@@ -815,7 +815,7 @@ function useVaSaveActions({ apiData, selectedApis, loadSavedRecords }) {
 function ConfigWarningBanner({ isConfigured, configStatus, vaApiEnabled }) {
   if (isConfigured) return null;
 
-  // Checkmarks must respect the master switch too — otherwise they can show
+  // Checkmarks must respect the master switch too - otherwise they can show
   // green (keys present) while the banner says "not configured" (switch off).
   const oauthOk = vaApiEnabled && configStatus.oauthConfigured;
   const facilitiesOk = vaApiEnabled && configStatus.facilitiesConfigured;
@@ -1857,7 +1857,7 @@ function VaDataCenterBody({
 const VADataCenter = ({ onClose, embeddedMode = false }) => {
   const auth = useVaDataCenterAuth();
 
-  // Dialog focus management — only when shown as a modal (embeddedMode renders
+  // Dialog focus management - only when shown as a modal (embeddedMode renders
   // inline inside another shell, so it must not trap focus or handle ESC).
   const dialogRef = useRef(null);
   useFocusTrap(dialogRef, { active: !embeddedMode, onEscape: onClose });

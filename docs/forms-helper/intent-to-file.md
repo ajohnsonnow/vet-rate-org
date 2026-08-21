@@ -2,6 +2,9 @@
 
 Establish your claim date to protect your effective date using VA Form 21-0966.
 
+![Intent to File guided builder, step 1: Your Information, with legal name, SSN, date of birth, and VA file number fields](../assets/images/screenshots/forms-helper/intent-to-file-form.png)
+_The guided builder's first step collects your basic identifying information._
+
 ---
 
 ## What is Intent to File?
@@ -21,23 +24,23 @@ Establish your claim date to protect your effective date using VA Form 21-0966.
 
 Your **effective date** determines when benefits begin. Without an Intent to File:
 
-| Scenario | Effective Date |
-|----------|----------------|
-| No Intent to File | Date of actual claim submission |
+| Scenario            | Effective Date                    |
+| ------------------- | --------------------------------- |
+| No Intent to File   | Date of actual claim submission   |
 | With Intent to File | Date of Intent to File submission |
 
 ### Real Dollar Impact
 
 Example: You file an Intent to File on **January 1**, then submit your claim on **October 1**.
 
-| With Intent to File | Without |
-|---------------------|---------|
-| Effective date: January 1 | Effective date: October 1 |
-| 9 extra months of back pay | No back pay |
-| At 30%: ~$4,000+ extra | $0 extra |
+| With Intent to File        | Without                   |
+| -------------------------- | ------------------------- |
+| Effective date: January 1  | Effective date: October 1 |
+| 9 extra months of back pay | No back pay               |
+| At 30%: ~$4,000+ extra     | $0 extra                  |
 
 !!! tip "File Immediately"
-    If you're considering a VA claim, file an Intent to File **today**. It costs nothing and protects your effective date.
+If you're considering a VA claim, file an Intent to File **today**. It costs nothing and protects your effective date.
 
 ---
 
@@ -50,7 +53,7 @@ Example: You file an Intent to File on **January 1**, then submit your claim on 
 Open <strong>Forms Helper</strong>
 </div>
 <div class="step">
-Select <strong>"Intent to File (VA 21-0966)"</strong>
+Select <strong>"Intent to File"</strong>, then click <strong>"Start Guided Builder"</strong>
 </div>
 <div class="step">
 Enter your <strong>basic information</strong>
@@ -67,15 +70,15 @@ Select the <strong>type of claim</strong>
 
 #### Your Information
 
-| Field | Description |
-|-------|-------------|
-| **Full Name** | Your legal name |
-| **SSN** | Social Security Number |
-| **Date of Birth** | Your birth date |
-| **VA File Number** | If you have one |
-| **Address** | Current mailing address |
-| **Phone** | Contact number |
-| **Email** | Contact email |
+| Field              | Description             |
+| ------------------ | ----------------------- |
+| **Full Name**      | Your legal name         |
+| **SSN**            | Social Security Number  |
+| **Date of Birth**  | Your birth date         |
+| **VA File Number** | If you have one         |
+| **Address**        | Current mailing address |
+| **Phone**          | Contact number          |
+| **Email**          | Contact email           |
 
 #### Claim Type
 
@@ -134,10 +137,10 @@ You'll receive confirmation:
 
 You have **1 year** to submit your complete claim:
 
-| If You File Within 1 Year | If You Don't |
-|---------------------------|--------------|
-| Effective date = Intent to File date | Intent to File expires |
-| Potentially more back pay | Must file new Intent to File |
+| If You File Within 1 Year            | If You Don't                 |
+| ------------------------------------ | ---------------------------- |
+| Effective date = Intent to File date | Intent to File expires       |
+| Potentially more back pay            | Must file new Intent to File |
 
 ### During the Window
 
@@ -208,7 +211,7 @@ If you need more time for some conditions:
 ## Tips for Success
 
 !!! tip "Intent to File Best Practices"
-    
+
     1. **File immediately** - As soon as you consider a claim
     2. **Document the date** - Save your confirmation
     3. **Set a reminder** - Calendar reminder before 1-year deadline

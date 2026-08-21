@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 
 // Injects a crash exactly when phase 2 tries to swap in the new KEK
-// descriptor — temp slots are already promoted, marker still present.
+// descriptor - temp slots are already promoted, marker still present.
 function installKekWriteCrashSpy() {
   const originalSetItem = localStorage.setItem;
   return vi.spyOn(localStorage, "setItem").mockImplementation((k, v) => {
@@ -131,7 +131,7 @@ function registerKeystoreRotationTests() {
     await storeLocalKey("a", dek);
 
     // Inject a crash exactly when phase 2 tries to swap in the new KEK
-    // descriptor — temp slots are already promoted, marker still present.
+    // descriptor - temp slots are already promoted, marker still present.
     const spy = installKekWriteCrashSpy();
 
     await expect(rotateDevicePassphrase("new")).rejects.toThrow(
@@ -173,7 +173,7 @@ function registerKeystoreRotationTests() {
   });
 }
 
-describe("cloudEncryption — device keystore (S16 commit F)", () => {
+describe("cloudEncryption - device keystore (S16 commit F)", () => {
   registerKeystoreCoreTests();
   registerKeystoreRotationTests();
 });
@@ -262,7 +262,7 @@ function registerRotationIntegrityTests() {
       .mockImplementation((...args) => {
         wrapCalls += 1;
         // Call 1 is makeVerifier (before the phase-1 snapshot). Inject on call 2
-        // — the first DEK being staged — to model a sibling tab storing a key
+        // - the first DEK being staged - to model a sibling tab storing a key
         // after the snapshot would have been taken in the pre-fix code.
         const inject =
           wrapCalls === 2
@@ -288,7 +288,7 @@ function registerRotationIntegrityTests() {
     const metaBefore = localStorage.getItem(META);
     const verifierBefore = localStorage.getItem(VERIFIER);
 
-    // Passes the structural shape check — 16-byte salt, 40-byte verifier — but the
+    // Passes the structural shape check - 16-byte salt, 40-byte verifier - but the
     // verifier is garbage: no derivable KEK unwraps it. The pre-fix shape-only
     // check would have committed this over the intact old META/VERIFIER, deriving
     // a wrong KEK forever after → a permanent brick even for the correct old
@@ -302,7 +302,7 @@ function registerRotationIntegrityTests() {
     );
 
     await expect(unlockDeviceKeystore("old")).resolves.toBe(true);
-    // Old material untouched — the unconfirmed marker was never committed. (The
+    // Old material untouched - the unconfirmed marker was never committed. (The
     // shape-valid marker legitimately lingers for a forward completion that can
     // never come; it does no harm because it is never committed.)
     expect(localStorage.getItem(META)).toBe(metaBefore);
@@ -328,7 +328,7 @@ function registerPhase2CrashRecoveryTests() {
     lockDeviceKeystore();
 
     // The OLD passphrase verifies the intact old descriptor, but the live key is
-    // under the NEW KEK — unlock must NOT return a misleading success that serves
+    // under the NEW KEK - unlock must NOT return a misleading success that serves
     // a keystore it cannot read. It steers the user to the new passphrase and
     // leaves the marker for forward completion.
     await expect(unlockDeviceKeystore("old")).rejects.toThrow(
@@ -362,7 +362,7 @@ function registerUnlockSelfHealTests() {
     await enableDevicePassphrase("pw");
     lockDeviceKeystore();
     // The verifier bytes are valid length/format but the stored tag no longer
-    // matches them — simulates accidental storage corruption of one but not
+    // matches them - simulates accidental storage corruption of one but not
     // the other (e.g. a partial write during a browser crash).
     localStorage.setItem(
       VERIFIER_TAG,
@@ -402,14 +402,14 @@ function registerUnlockSelfHealTests() {
   });
 }
 
-describe("cloudEncryption — keystore hardening (S16 commit F/G review)", () => {
+describe("cloudEncryption - keystore hardening (S16 commit F/G review)", () => {
   registerVerifierAndMetaCorruptionTests();
   registerRotationIntegrityTests();
   registerPhase2CrashRecoveryTests();
   registerUnlockSelfHealTests();
 });
 
-describe("cloudEncryption — Web Locks rotation serialization (S16 deferred)", () => {
+describe("cloudEncryption - Web Locks rotation serialization (S16 deferred)", () => {
   it("routes operations through navigator.locks.request when available", async () => {
     const mockRequest = vi.fn((_name, fn) => fn());
     const origDescriptor = Object.getOwnPropertyDescriptor(navigator, "locks");
@@ -453,7 +453,7 @@ describe("cloudEncryption — Web Locks rotation serialization (S16 deferred)", 
   });
 });
 
-describe("cloudEncryption — recovery bundle + lock state (S16 commit G)", () => {
+describe("cloudEncryption - recovery bundle + lock state (S16 commit G)", () => {
   it("isDeviceKeystoreLocked is true only when enabled AND locked", async () => {
     expect(isDeviceKeystoreLocked()).toBe(false); // not enabled
     await enableDevicePassphrase("pw");

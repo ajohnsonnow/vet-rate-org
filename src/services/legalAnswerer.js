@@ -1,10 +1,10 @@
 /**
- * legalAnswerer — turn a user question into a cited answer grounded in
+ * legalAnswerer - turn a user question into a cited answer grounded in
  * the static legal index.
  *
  * Pipeline:
- *   1. scrubPII(query)               — never embed PII for retrieval.
- *   2. legalRag.query(cleanQuery)    — top-K chunks by cosine sim.
+ *   1. scrubPII(query)               - never embed PII for retrieval.
+ *   2. legalRag.query(cleanQuery)    - top-K chunks by cosine sim.
  *   3. createDualLLM(generateAI):
  *        a. extractor reads each chunk as untrusted text → JSON facts.
  *        b. synthesizer reads only structured JSON facts → user answer.
@@ -17,7 +17,7 @@
  * JSON output isolates that risk.
  *
  * If retrieval returns nothing above the cosine threshold, we refuse
- * to answer rather than hallucinate — per the Sprint 7 DoD requirement
+ * to answer rather than hallucinate - per the Sprint 7 DoD requirement
  * "say 'I don't have a current citation'".
  */
 
@@ -28,7 +28,7 @@ import { query as ragQuery, getChunksByCitation } from "./legalRag.js";
 // Parent-child expansion budget (S21). A retrieved chunk is one paragraph/table
 // fragment of a §-section; the extractor grounds better when it also sees the
 // rest of that section. ~3.4 chars/token matches the cfileAnalyzer budgeting
-// precedent. This is a fixed conservative per-block cap — no device-tier
+// precedent. This is a fixed conservative per-block cap - no device-tier
 // detection is wired to this code path yet (S24 owns device-tiering), so we
 // keep the packed context small enough for a low-end local LLM regardless of
 // device. The originally-retrieved chunk is ALWAYS kept whole (it is what
@@ -40,11 +40,11 @@ const PARENT_EXPANSION_CHAR_BUDGET = Math.round(
 ); // ~2040 chars per retrieved chunk's expanded block
 
 const EXTRACTOR_SCHEMA = {
-  applicable: "boolean — does this chunk address the user's question?",
+  applicable: "boolean - does this chunk address the user's question?",
   rule_summary:
-    "string ≤ 280 chars — the rule this chunk states, in plain English",
+    "string ≤ 280 chars - the rule this chunk states, in plain English",
   supporting_quote:
-    "string ≤ 200 chars — verbatim sentence from the chunk that grounds rule_summary",
+    "string ≤ 200 chars - verbatim sentence from the chunk that grounds rule_summary",
 };
 
 const SYNTHESIZER_INSTRUCTIONS = `You are a VA legal-research assistant. Synthesize a concise answer (≤ 4 sentences) to the user's question using ONLY the facts in EXTRACTED FIELDS below.
@@ -54,7 +54,7 @@ Rules:
 - Cite by citation string in parentheses immediately after each claim, e.g. "(38 CFR § 4.71a)".
 - Never invent rules. If two facts conflict, surface the conflict.
 - Plain English, no legalese unless quoting.
-- No URLs in your answer — the UI renders citation links separately.`;
+- No URLs in your answer - the UI renders citation links separately.`;
 
 /**
  * Format retrieved chunks as a single untrusted-content blob the dual-LLM
@@ -64,7 +64,7 @@ Rules:
 function packChunksForExtractor(chunks) {
   return chunks
     .map((c, i) => {
-      const head = `[#${i}] ${c.citation} — ${c.title}`;
+      const head = `[#${i}] ${c.citation} - ${c.title}`;
       return `${head}\n${c.text}`;
     })
     .join("\n\n---\n\n");
@@ -74,19 +74,19 @@ function packChunksForExtractor(chunks) {
  * Parent-child expansion (S21). Each retrieved chunk is expanded IN PLACE with
  * sibling chunks from the same § section (same `citation`) so the extractor
  * sees fuller section context. Returns a NEW array 1:1 with `chunks` (same
- * length, same order) — only each block's `text` grows. Keeping the 1:1
+ * length, same order) - only each block's `text` grows. Keeping the 1:1
  * mapping is load-bearing: `answer()` still attributes extractor facts via
  * `chunks[f._chunkIndex]`, and every sibling shares the retrieved chunk's
  * citation/title/source_url by definition, so citation attribution stays
  * correct (guards Ab-H03) and the expanded text is confined to the extractor's
- * input — it never reaches the synthesizer.
+ * input - it never reaches the synthesizer.
  *
  * Budget: the retrieved chunk's own text is always kept whole; siblings are
  * added nearest-first (by position in the section) until `budgetChars` is
  * reached. A sibling too large for the remaining budget is skipped, not a hard
  * stop, so the block fills with the most-adjacent siblings that fit.
  *
- * @param {Array<Object>} chunks — retrieved chunks (each has id, citation, text)
+ * @param {Array<Object>} chunks - retrieved chunks (each has id, citation, text)
  * @param {(citation: string) => Array<Object>} getSiblings
  * @param {number} budgetChars
  * @returns {Array<Object>}
@@ -98,7 +98,7 @@ function expandChunksWithSiblings(chunks, getSiblings, budgetChars) {
   return chunks.map((chunk) => {
     const family = getSiblings(chunk.citation) || [];
     const selfPos = family.findIndex((s) => s.id === chunk.id);
-    if (selfPos === -1) return chunk; // chunk not found in its own family — skip
+    if (selfPos === -1) return chunk; // chunk not found in its own family - skip
     const candidates = family
       .map((s, pos) => ({ s, pos }))
       .filter(({ s }) => s.id !== chunk.id && !retrievedIds.has(s.id))
@@ -128,7 +128,7 @@ function expandChunksWithSiblings(chunks, getSiblings, budgetChars) {
  * Normalize the extractor's raw output into a flat facts array, then filter to
  * only entries the extractor marked applicable=true. Pairs each fact with its
  * ORIGINAL chunk index before filtering, so an applicable fact is attributed
- * to the chunk it was extracted from — not the Nth chunk (guards Ab-H03; see
+ * to the chunk it was extracted from - not the Nth chunk (guards Ab-H03; see
  * answer() below for the full history of that bug).
  */
 function extractApplicableFacts(extractedRaw) {
@@ -148,7 +148,7 @@ function extractApplicableFacts(extractedRaw) {
 
 /**
  * Build the synthesizer's structured facts payload, synthesize the answer
- * text, and build the citation list — all from the same applicable facts so
+ * text, and build the citation list - all from the same applicable facts so
  * citations stay attributed to the chunk each fact was extracted from.
  */
 async function synthesizeAnswer(dual, cleanQuery, applicable, chunks) {
@@ -191,7 +191,7 @@ async function synthesizeAnswer(dual, cleanQuery, applicable, chunks) {
  * @param {Object} [opts]
  * @param {number} [opts.topK=4]
  * @param {number} [opts.threshold=0.35]
- * @param {boolean} [opts.expandContext=true] — expand each retrieved chunk with
+ * @param {boolean} [opts.expandContext=true] - expand each retrieved chunk with
  *   sibling chunks from the same § section for the extractor (never the synthesizer)
  * @param {number} [opts.expansionCharBudget=PARENT_EXPANSION_CHAR_BUDGET]
  * @returns {Promise<{
@@ -262,7 +262,7 @@ export async function answer(question, deps, opts = {}) {
   }
 
   // Pairs each fact with its ORIGINAL chunk index before filtering, so an
-  // applicable fact is attributed to the chunk it was extracted from — not the
+  // applicable fact is attributed to the chunk it was extracted from - not the
   // Nth chunk. Previously a filtered index read the unfiltered chunks array, so a
   // non-applicable chunk #0 mis-attributed its citation to the first hit (Ab-H03).
   const applicable = extractApplicableFacts(extractedRaw);

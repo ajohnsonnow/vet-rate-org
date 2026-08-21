@@ -185,9 +185,9 @@ function createPeriodHandlers({
           : null,
       dependents: {
         married: newEntry.married,
-        childrenUnder18: parseInt(newEntry.childrenUnder18) || 0,
-        childrenSchool: parseInt(newEntry.childrenSchool) || 0,
-        dependentParents: parseInt(newEntry.dependentParents) || 0,
+        childrenUnder18: Number.parseInt(newEntry.childrenUnder18) || 0,
+        childrenSchool: Number.parseInt(newEntry.childrenSchool) || 0,
+        dependentParents: Number.parseInt(newEntry.dependentParents) || 0,
       },
     };
 
@@ -398,7 +398,7 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
               moduleName="Retroactive Pay Hunter"
             />
           )}
-          <button
+          <button type="button"
             onClick={onClose}
             className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
@@ -474,7 +474,7 @@ function EffectiveDateField({ newEntry, setNewEntry }) {
   return (
     <div>
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+      <label className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
         Effective Date *
         <span className="group relative">
           <span className="text-blue-400 cursor-help text-xs">ℹ️</span>
@@ -525,7 +525,7 @@ function RatingSelectField({ newEntry, setNewEntry }) {
         onChange={(e) =>
           setNewEntry({
             ...newEntry,
-            rating: parseInt(e.target.value),
+            rating: Number.parseInt(e.target.value),
           })
         }
         className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
@@ -687,7 +687,7 @@ function AddRatingPeriodForm({
       <DependentsFields newEntry={newEntry} setNewEntry={setNewEntry} />
       <ActualReceivedField newEntry={newEntry} setNewEntry={setNewEntry} />
 
-      <button
+      <button type="button"
         onClick={handleAddPeriod}
         className="mt-4 w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
       >
@@ -732,7 +732,7 @@ function RatingTimelineEntry({ period, onRemove }) {
               day: "numeric",
             })}
           </span>
-          <button
+          <button type="button"
             onClick={() => onRemove(period.id)}
             className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
           >
@@ -881,7 +881,7 @@ function FoundMoneyBanner({ analysis, totals }) {
           </div>
         ) : (
           <p className="text-amber-300/70 text-xs mt-3">
-            This is theoretical entitlement based on your rating history — enter
+            This is theoretical entitlement based on your rating history - enter
             what you actually received per period below to see a real
             missed-payment delta.
           </p>
@@ -955,7 +955,7 @@ function EffectiveDateInfoNote() {
   return (
     <div className="bg-gray-800/30 border border-gray-700 rounded-xl p-4">
       <p className="text-gray-400 text-sm">
-        ℹ️ Effective dates are rarely the 1st of the month — that's normal.
+        ℹ️ Effective dates are rarely the 1st of the month - that's normal.
         Payment simply starts the 1st of the month <em>following</em> the
         effective date (38 CFR § 3.400). This alone is not evidence of an error.
       </p>
@@ -1074,7 +1074,7 @@ function AIAnalysisSection({
           </h3>
         </div>
         {!showAIAnalysis && (
-          <button
+          <button type="button"
             onClick={handleAIAnalysis}
             disabled={isAIThinking}
             className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -1142,7 +1142,7 @@ function CuePatternItem({ pattern }) {
 function CuePatternsReference({ showCuePatterns, setShowCuePatterns }) {
   return (
     <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700">
-      <button
+      <button type="button"
         onClick={() => setShowCuePatterns(!showCuePatterns)}
         className="flex items-center justify-between w-full"
       >
@@ -1261,7 +1261,7 @@ function RetroPayHunterBody({
   );
 }
 
-const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
+function useRetroPayHunterState({ onAISettingsClick }) {
   const { _t } = useLanguage();
 
   const [ratingHistory, setRatingHistory] = useState([]);
@@ -1320,7 +1320,7 @@ const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
     setShowAIAnalysis,
   });
 
-  const bodyProps = {
+  return {
     aiStatus,
     onAISettingsClick,
     newEntry,
@@ -1342,6 +1342,10 @@ const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
     showCuePatterns,
     setShowCuePatterns,
   };
+}
+
+const RetroPayHunter = ({ onClose, onReportBug, onAISettingsClick }) => {
+  const bodyProps = useRetroPayHunterState({ onAISettingsClick });
 
   return (
     <ResponsiveModal

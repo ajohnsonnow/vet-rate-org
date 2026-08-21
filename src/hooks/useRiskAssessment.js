@@ -325,8 +325,8 @@ export function useRiskAssessment(
 ) {
   return useMemo(() => {
     const yearsRated = calculateYearsFromDate(ratingDate);
-    const age = calculateAge(parseInt(birthYear));
-    const rating = parseInt(currentRating) || 0;
+    const age = calculateAge(Number.parseInt(birthYear));
+    const rating = Number.parseInt(currentRating) || 0;
 
     const protections = [];
     const warnings = [];

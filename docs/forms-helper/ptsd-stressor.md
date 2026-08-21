@@ -2,6 +2,9 @@
 
 Document traumatic events that caused or contributed to your PTSD using VA Form 21-0781.
 
+![PTSD Stressor Statement intro screen with Tips for Success and Start Guided Builder button](../assets/images/screenshots/forms-helper/ptsd-stressor-form.png)
+_Selecting PTSD Stressor Statement from the forms list opens this intro screen before the guided builder._
+
 ---
 
 ## What is a PTSD Stressor Statement?
@@ -17,13 +20,13 @@ The **PTSD Stressor Statement** is a required form for PTSD claims that:
 
 ## Which Form Do I Need?
 
-| Form | Use When |
-|------|----------|
-| **VA 21-0781** | Combat, accidents, witnessing death/injury, other trauma |
-| **VA 21-0781a** | Military Sexual Trauma (MST), personal assault |
+| Form            | Use When                                                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **VA 21-0781**  | Combat, accidents, witnessing death/injury, other trauma - **built into Forms Helper**                                               |
+| **VA 21-0781a** | Military Sexual Trauma (MST), personal assault - download directly from [va.gov](https://www.va.gov/find-forms/about-form-21-0781a/) |
 
 !!! info "Different Evidence Standards"
-    The VA applies different evidence standards for different types of stressors. MST claims have special provisions recognizing the difficulty of documenting personal assault.
+The VA applies different evidence standards for different types of stressors. MST claims have special provisions recognizing the difficulty of documenting personal assault. Forms Helper's guided builder currently covers the general VA 21-0781 form only - if your claim involves MST or personal assault, use the official 21-0781a and consider working with a VSO experienced in MST claims.
 
 ---
 
@@ -44,14 +47,14 @@ Use this form for stressors including:
 
 #### Event Details
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| **Date** | When it occurred | "June 15, 2010" or "Summer 2010" |
-| **Location** | Where it occurred | "FOB Shank, Afghanistan" |
-| **Description** | What happened | Detailed account of event |
-| **Your Role** | What you were doing | "On patrol", "Guard duty" |
-| **Unit** | Your unit assignment | "B Company, 2nd Battalion, 82nd ABN" |
-| **Others Involved** | Names if known | "SGT Smith, SPC Jones" |
+| Field               | Description          | Example                              |
+| ------------------- | -------------------- | ------------------------------------ |
+| **Date**            | When it occurred     | "June 15, 2010" or "Summer 2010"     |
+| **Location**        | Where it occurred    | "FOB Shank, Afghanistan"             |
+| **Description**     | What happened        | Detailed account of event            |
+| **Your Role**       | What you were doing  | "On patrol", "Guard duty"            |
+| **Unit**            | Your unit assignment | "B Company, 2nd Battalion, 82nd ABN" |
+| **Others Involved** | Names if known       | "SGT Smith, SPC Jones"               |
 
 #### Current Symptoms
 
@@ -66,18 +69,21 @@ After completing the PTSD stressor statement wizard, you can optionally enhance 
 1. Click **"✨ Enhance with AI"** button
 2. Review what data will be shared (no PII is ever sent)
 3. The AI uses the "Three Pillars" approach:
-    - **Pillar 1:** The traumatic event type
-    - **Pillar 2:** Current PTSD symptoms
-    - **Pillar 3:** How it affects your life now
+   - **Pillar 1:** The traumatic event type
+   - **Pillar 2:** Current PTSD symptoms
+   - **Pillar 3:** How it affects your life now
 4. Toggle between AI-enhanced and original versions
 5. Download your preferred version
 
 !!! warning "Sensitive Content"
-    The AI is designed to handle PTSD statements sensitively. Only general categories (e.g., "combat exposure") are shared-never specific details that could identify you or others.
+The AI is designed to handle PTSD statements sensitively. Only general categories (e.g., "combat exposure") are shared-never specific details that could identify you or others.
 
 ---
 
 ## Form 21-0781a: Personal Assault/MST
+
+!!! info "Not Built Into Forms Helper"
+Forms Helper's guided builder covers VA 21-0781 only. For 21-0781a, [download the official PDF from va.gov](https://www.va.gov/find-forms/about-form-21-0781a/) and consider working with a VSO experienced in MST claims - the alternative-evidence guidance below still applies.
 
 ### When to Use
 
@@ -100,14 +106,14 @@ The VA recognizes that:
 
 The VA accepts behavioral markers including:
 
-| Marker | Examples |
-|--------|----------|
-| **Behavioral changes** | Substance abuse, discipline problems |
-| **Mental health** | Depression, anxiety, panic attacks |
-| **Performance** | Drop in work performance |
-| **Physical** | Unexplained injuries, STIs, pregnancy |
-| **Social** | Request for transfer, relationship changes |
-| **Documentation** | Contemporaneous notes, diary entries |
+| Marker                 | Examples                                   |
+| ---------------------- | ------------------------------------------ |
+| **Behavioral changes** | Substance abuse, discipline problems       |
+| **Mental health**      | Depression, anxiety, panic attacks         |
+| **Performance**        | Drop in work performance                   |
+| **Physical**           | Unexplained injuries, STIs, pregnancy      |
+| **Social**             | Request for transfer, relationship changes |
+| **Documentation**      | Contemporaneous notes, diary entries       |
 
 ---
 
@@ -120,10 +126,7 @@ The VA accepts behavioral markers including:
 Open <strong>Forms Helper</strong>
 </div>
 <div class="step">
-Select <strong>"PTSD Stressor Statement"</strong>
-</div>
-<div class="step">
-Choose <strong>21-0781 or 21-0781a</strong>
+Select <strong>"PTSD Stressor Statement"</strong>, then click <strong>"Start Guided Builder"</strong>
 </div>
 <div class="step">
 Complete the <strong>guided sections</strong>
@@ -148,7 +151,7 @@ Basic identifying information:
 The most critical section:
 
 !!! tip "Writing Your Statement"
-    
+
     - **Be specific** - Details help verify the event
     - **Be honest** - Accuracy matters more than drama
     - **Include sensory details** - What you saw, heard, smelled
@@ -157,18 +160,16 @@ The most critical section:
 
 Example structure:
 
-```
-On or about [date], while stationed at [location] with 
-[unit], I was [doing what]. 
+    On or about [date], while stationed at [location] with
+    [unit], I was [doing what].
 
-[Describe what happened in detail. Include who was involved, 
-what you saw/heard/experienced, and the outcome.]
+    [Describe what happened in detail. Include who was involved,
+    what you saw/heard/experienced, and the outcome.]
 
-During this event, I felt [fear, helplessness, horror]. 
-Afterward, I experienced [immediate symptoms].
+    During this event, I felt [fear, helplessness, horror].
+    Afterward, I experienced [immediate symptoms].
 
-Since this event, I have [ongoing symptoms and effects].
-```
+    Since this event, I have [ongoing symptoms and effects].
 
 #### Unit Information
 
@@ -205,7 +206,7 @@ If you experienced multiple traumatic events:
 ## Tips for Strong Statements
 
 !!! tip "PTSD Stressor Statement Best Practices"
-    
+
     1. **Focus on verifiable details** - Dates, locations, unit
     2. **Be consistent** - Match your other statements and records
     3. **Include witnesses** - Even if just unit members who may remember
@@ -248,12 +249,12 @@ If you experienced multiple traumatic events:
 ## Emotional Considerations
 
 !!! warning "Take Care of Yourself"
-    
+
     Writing about trauma can be emotionally difficult. Please:
-    
+
     - Take breaks when needed
     - Have support available
     - Consider working with a therapist
     - Use the Veterans Crisis Line if needed: **988, Press 1**
-    
+
     Your mental health matters more than completing this form quickly.

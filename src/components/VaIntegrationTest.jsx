@@ -658,6 +658,52 @@ function ServiceHistoryCard({
   );
 }
 
+function ClaimEntryDetails({ claim }) {
+  return (
+    <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span className="text-gray-500 dark:text-gray-400">Claim ID:</span>
+          <span className="ml-2 text-gray-900 dark:text-white font-mono text-xs">
+            {claim.id}
+          </span>
+        </div>
+        {claim.closeDate && (
+          <div>
+            <span className="text-gray-500 dark:text-gray-400">Closed:</span>
+            <span className="ml-2 text-gray-900 dark:text-white">
+              {formatDate(claim.closeDate)}
+            </span>
+          </div>
+        )}
+        {claim.documentsNeeded && (
+          <div className="col-span-2">
+            <span className="text-orange-600 dark:text-orange-400 font-medium">
+              ⚠️ Documents Needed
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mt-4">
+        <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <span>Progress</span>
+          <span>Phase {claim.phase?.number || 0} of 8</span>
+        </div>
+        <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all"
+            style={{
+              width: `${((claim.phase?.number || 0) / 8) * 100}%`,
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClaimEntry({ claim, isExpanded, onToggleExpand }) {
   const statusBadge = getClaimStatusBadge(claim.phase);
   const StatusIcon = statusBadge.icon;
@@ -694,53 +740,7 @@ function ClaimEntry({ claim, isExpanded, onToggleExpand }) {
         </div>
       </button>
 
-      {isExpanded && (
-        <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-700 pt-3">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <span className="text-gray-500 dark:text-gray-400">
-                Claim ID:
-              </span>
-              <span className="ml-2 text-gray-900 dark:text-white font-mono text-xs">
-                {claim.id}
-              </span>
-            </div>
-            {claim.closeDate && (
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">
-                  Closed:
-                </span>
-                <span className="ml-2 text-gray-900 dark:text-white">
-                  {formatDate(claim.closeDate)}
-                </span>
-              </div>
-            )}
-            {claim.documentsNeeded && (
-              <div className="col-span-2">
-                <span className="text-orange-600 dark:text-orange-400 font-medium">
-                  ⚠️ Documents Needed
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mt-4">
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>Progress</span>
-              <span>Phase {claim.phase?.number || 0} of 8</span>
-            </div>
-            <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all"
-                style={{
-                  width: `${((claim.phase?.number || 0) / 8) * 100}%`,
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {isExpanded && <ClaimEntryDetails claim={claim} />}
     </div>
   );
 }
@@ -1130,7 +1130,7 @@ function VaIntegrationTestModals({
   );
 }
 
-const VaIntegrationTest = ({ onClose }) => {
+function useVaIntegrationTestState() {
   const { t: _t } = useLanguage();
 
   // State for sandbox test modal
@@ -1216,6 +1216,28 @@ const VaIntegrationTest = ({ onClose }) => {
     setExpandedClaim,
   };
   const handlers = _buildVaIntegrationHandlers(accessToken, dataState, auth);
+
+  return {
+    auth,
+    isAuthenticated,
+    showSandboxTest,
+    setShowSandboxTest,
+    dataState,
+    handlers,
+    fetchAllData,
+  };
+}
+
+const VaIntegrationTest = ({ onClose }) => {
+  const {
+    auth,
+    isAuthenticated,
+    showSandboxTest,
+    setShowSandboxTest,
+    dataState,
+    handlers,
+    fetchAllData,
+  } = useVaIntegrationTestState();
 
   return (
     <VaIntegrationTestModals

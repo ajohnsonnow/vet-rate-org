@@ -27,26 +27,29 @@ Saving secondary conditions to My Packet helps you:
 <strong>Expand the card</strong> - Click to see details
 </div>
 <div class="step">
-<strong>Click "Save to Packet"</strong> - Button in the card actions
+<strong>Click "Save for Later"</strong> - Button in the card actions
 </div>
 <div class="step">
-<strong>Confirmation</strong> - Button changes to "Saved ✓"
+<strong>Confirmation</strong> - Button changes to "Saved (View Packet)"
 </div>
 </div>
+
+![An expanded suggestion card with the Save for Later button among the card actions](../assets/images/screenshots/secondary-scout/results-expanded-card.png)
+_Every expanded card has Build Statement, Get Doctor's Packet, and Save for Later actions._
 
 ### What Gets Saved
 
 When you save a secondary condition, the following information is stored:
 
-| Data | Description |
-|------|-------------|
-| **Condition Name** | The secondary condition |
-| **Parent Condition** | The primary it's linked to |
-| **Probability** | High or Medium |
-| **Mechanism** | Type of connection |
-| **Nexus Theory** | Medical explanation |
-| **Medical Citations** | Supporting references |
-| **Status** | "Drafting" (default) |
+| Data                  | Description                |
+| --------------------- | -------------------------- |
+| **Condition Name**    | The secondary condition    |
+| **Parent Condition**  | The primary it's linked to |
+| **Probability**       | High or Medium             |
+| **Mechanism**         | Type of connection         |
+| **Nexus Theory**      | Medical explanation        |
+| **Medical Citations** | Supporting references      |
+| **Status**            | "Drafting" (default)       |
 
 ---
 
@@ -92,10 +95,12 @@ When conditions are selected:
 
 For conditions already in your packet:
 
-- **"Save to Packet"** button is disabled
-- Shows **"Saved ✓"** instead
+![Secondary Scout results with the Migraine Headaches card showing a green "Saved" badge](../assets/images/screenshots/secondary-scout/save-to-packet-confirmation.png)
+_Already-saved conditions show a green checkmark and "Saved" badge in place of the selection checkbox._
+
+- The card header shows a green checkmark and **"Saved"** badge instead of a selection checkbox
+- The action button reads **"Saved (View Packet)"** and links straight to My Packet when clicked
 - Checkbox is disabled in bulk selection
-- Card may show "Already saved" indicator
 
 ---
 
@@ -135,11 +140,11 @@ For each saved condition:
 
 Track your progress:
 
-| Status | Meaning |
-|--------|---------|
-| **Drafting** | Initial research stage |
+| Status                  | Meaning                 |
+| ----------------------- | ----------------------- |
+| **Drafting**            | Initial research stage  |
 | **Statement Generated** | Nexus statement created |
-| **Filed** | Claim submitted to VA |
+| **Filed**               | Claim submitted to VA   |
 
 ### 3. Gather Evidence
 
@@ -163,20 +168,13 @@ If you decide not to pursue a secondary condition:
 4. Confirm deletion
 
 !!! warning "Permanent Action"
-    Removing a claim also deletes any associated statements. Consider exporting your packet backup first.
+Removing a claim also deletes any associated statements. Consider exporting your packet backup first.
 
 ---
 
 ## Best Practices
 
-!!! tip "Recommended Workflow"
-    
-    1. **Start with High probability** - Focus on strongest connections
-    2. **Research each one** - Read the nexus theory and citations
-    3. **Prioritize** - You can't file everything at once
-    4. **Build evidence** - Use Nexus Builder for each
-    5. **Consult professionals** - Talk to VSO before filing
-    6. **File strategically** - Consider filing in batches
+!!! tip "Recommended Workflow" 1. **Start with High probability** - Focus on strongest connections 2. **Research each one** - Read the nexus theory and citations 3. **Prioritize** - You can't file everything at once 4. **Build evidence** - Use Nexus Builder for each 5. **Consult professionals** - Talk to VSO before filing 6. **File strategically** - Consider filing in batches
 
 ---
 
@@ -192,4 +190,4 @@ Secondary conditions saved to My Packet are:
 - ❌ Not accessible on other browsers
 
 !!! tip "Regular Backups"
-    Use My Packet's backup feature regularly to export your saved claims. Store the backup file securely on your device or cloud storage.
+Use My Packet's backup feature regularly to export your saved claims. Store the backup file securely on your device or cloud storage.

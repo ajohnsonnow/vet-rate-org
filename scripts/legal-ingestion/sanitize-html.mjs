@@ -19,8 +19,16 @@
 const SCRIPT_RE = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
 const STYLE_RE = /<style\b[^>]*>[\s\S]*?<\/style\s*>/gi;
 const IFRAME_RE = /<iframe\b[^>]*>[\s\S]*?<\/iframe\s*>/gi;
-const ON_HANDLER_RE = /\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
-const TAG_RE = /<[^>]+>/g;
+// Bounded (fuzz-verified): unbounded `\s+`/`[a-z]+`/quoted-value spans hit real
+// O(n^2) backtracking on fetched HTML with a long run of whitespace or an
+// unterminated attribute quote (2.7s at 100k adversarial chars -> 10ms bounded).
+// Bounds are generous for real handler syntax (names/values are never this long).
+const ON_HANDLER_RE =
+  /\s{1,50}on[a-z]{1,20}\s{0,50}=\s{0,50}(?:"[^"]{0,5000}"|'[^']{0,5000}'|[^\s>]{1,5000})/gi;
+// Bounded to 2000 chars/tag (fuzz-verified): unbounded `[^>]+` on fetched HTML
+// with many unmatched `<` hits real O(n^2) backtracking (14.9s at 100k
+// adversarial chars -> 0.6s bounded); no real HTML tag is anywhere near 2000 chars.
+const TAG_RE = /<[^>]{1,2000}>/g;
 
 // Table allow-list (S19). One table at a time; non-greedy so sibling tables
 // don't merge. CFR tables are never nested.
@@ -28,7 +36,7 @@ const TABLE_RE = /<table\b[^>]*>[\s\S]*?<\/table\s*>/gi;
 const CAPTION_RE = /<caption\b[^>]*>([\s\S]*?)<\/caption\s*>/i;
 const ROW_RE = /<tr\b[^>]*>([\s\S]*?)<\/tr\s*>/gi;
 const CELL_RE = /<t[hd]\b[^>]*>([\s\S]*?)<\/t[hd]\s*>/gi;
-const INNER_TAG_RE = /<[^>]+>/g;
+const INNER_TAG_RE = /<[^>]{1,2000}>/g;
 // Block-level boundaries become newlines so the structural chunker (chunk.mjs)
 // can split prose on paragraph/sub-paragraph edges instead of mid-sentence.
 const BLOCK_BOUNDARY_RE =
@@ -163,11 +171,14 @@ function tablesToMarkdown(html) {
  * boundaries.
  */
 function collapseWhitespace(text) {
-  return text
-    .replace(/[^\S\n]+/g, " ") // horizontal whitespace -> single space
-    .replace(/ *\n */g, "\n") // trim around newlines
-    .replace(/\n{3,}/g, "\n\n") // >1 blank line -> single blank line
-    .trim();
+  return (
+    text
+      .replace(/[^\S\n]+/g, " ") // horizontal whitespace -> single space
+      // eslint-disable-next-line sonarjs/slow-regex -- the line above already collapsed every horizontal-whitespace run to a single space, so `*` here can only ever match 0-1 chars; fuzz-verified 23ms on 600k adversarial chars end-to-end
+      .replace(/ *\n */g, "\n") // trim around newlines
+      .replace(/\n{3,}/g, "\n\n") // >1 blank line -> single blank line
+      .trim()
+  );
 }
 
 /**
@@ -234,7 +245,12 @@ export function sanitizeLegalHtml(html) {
  */
 export async function contentHash(text) {
   const { createHash } = await import("node:crypto");
-  return "sha256:" + createHash("sha256").update(text ?? "").digest("hex");
+  return (
+    "sha256:" +
+    createHash("sha256")
+      .update(text ?? "")
+      .digest("hex")
+  );
 }
 
 /**

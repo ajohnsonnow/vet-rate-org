@@ -106,6 +106,135 @@ function seoFilesPlugin() {
   };
 }
 
+// === AGGRESSIVE CODE SPLITTING STRATEGY ===
+// Goal: Keep each chunk under 1MB for optimal loading.
+// Rules in priority order — first matching marker set wins, mirroring the
+// original if/else-chain evaluation order exactly.
+const MANUAL_CHUNK_RULES = [
+  // 1. Core React framework (tiny, needed everywhere)
+  [["node_modules/react/", "node_modules/react-dom/"], "vendor"],
+  // 2. Router and core routing (if using react-router)
+  [["node_modules/react-router"], "vendor"],
+  // 3. UI Libraries (medium size, frequently used)
+  [
+    [
+      "node_modules/lucide-react",
+      "node_modules/@headlessui",
+      "node_modules/framer-motion",
+    ],
+    "ui-libs",
+  ],
+  // 4. PDF.js (very heavy, separate chunk)
+  [["node_modules/pdfjs-dist"], "pdfjs"],
+  // 5. PDF generation (jspdf, html2canvas, pdf-lib)
+  [
+    ["node_modules/jspdf", "node_modules/html2canvas", "node_modules/pdf-lib"],
+    "pdf",
+  ],
+  // 6. AI/ML WebLLM (extremely heavy - 5MB+, lazy loaded)
+  [["node_modules/@mlc-ai/web-llm"], "ai-webllm"],
+  // 7. OCR - Tesseract ONLY (transformers goes elsewhere)
+  [["node_modules/tesseract.js"], "ocr"],
+  // 8. Transformers/Vision models (separate from OCR)
+  [["node_modules/@huggingface/transformers"], "vision"],
+  // 9. Document processing - keep together to avoid circular deps
+  [["node_modules/docx", "node_modules/mammoth", "node_modules/jszip"], "docs"],
+  // 10. Storage utilities (tiny)
+  [["node_modules/idb-keyval"], "storage"],
+  // 11. Utility libraries (lodash, date-fns, etc)
+  [
+    ["node_modules/lodash", "node_modules/date-fns", "node_modules/clsx"],
+    "utils",
+  ],
+  // 12. Markdown/Rich Text
+  [["node_modules/marked", "node_modules/dompurify"], "markdown"],
+  // 13. Large data files - medical
+  [
+    [
+      "src/data/diagnosticCodes",
+      "src/data/mosDatabase",
+      "src/data/secondaryConditions",
+    ],
+    "data-medical",
+  ],
+  // 14. Large data files - resources
+  [["src/data/stateBenefits", "src/data/vsoDirectory"], "data-resources"],
+  // 15. Large data files - legal/forms
+  [["src/data/vaForms", "src/data/legalDocuments"], "data-legal"],
+  // 16. AI utilities (separate from WebLLM engine)
+  [
+    [
+      "src/utils/unifiedAIService",
+      "src/utils/aiStatementHelper",
+      "src/utils/diamondSwarm",
+    ],
+    "ai-utils",
+  ],
+  // 17. Heavy analysis tools
+  [
+    [
+      "src/utils/cfileAnalyzer",
+      "src/utils/documentAnalyzer",
+      "src/utils/advancedOCR",
+    ],
+    "analysis-tools",
+  ],
+  // 18. VA calculations and core logic
+  [
+    [
+      "src/utils/vaCalculations",
+      "src/utils/secondaryFinder",
+      "src/utils/nexusLogic",
+    ],
+    "va-core",
+  ],
+  // 19. Heavy UI components - Calculator, AI tools, etc
+  [
+    [
+      "src/components/Calculator",
+      "src/components/TacticalCalculator",
+      "src/components/WhatIfSandbox",
+    ],
+    "calculators",
+  ],
+  [
+    [
+      "src/components/DecisionDecoder",
+      "src/components/DenialDecoder",
+      "src/components/CFileAnalyzer",
+    ],
+    "analysis-tools",
+  ],
+  [
+    [
+      "src/components/NexusBuilder",
+      "src/components/WitnessBench",
+      "src/components/StatementAnalyzer",
+    ],
+    "calculators",
+  ],
+  // 20. Duty stations equal-area world map — d3-geo/topojson-client
+  // + the vendored boundary data, only ever reached via
+  // DutyStationMap.jsx's lazy import().
+  [
+    [
+      "node_modules/d3-geo",
+      "node_modules/d3-array",
+      "node_modules/topojson-client",
+      "src/data/geo",
+    ],
+    "geo",
+  ],
+];
+
+// Default: let Vite decide (remaining app code goes in index chunk)
+function resolveManualChunk(id) {
+  const rule = MANUAL_CHUNK_RULES.find(([markers]) =>
+    markers.some((marker) => id.includes(marker)),
+  );
+  return rule ? rule[1] : undefined;
+}
+
 export default defineConfig({
   plugins: [
     react(),
@@ -165,7 +294,7 @@ export default defineConfig({
         secure: true,
         configure: (proxy, options) => {
           // Log proxy requests for debugging
-          proxy.on("proxyReq", (proxyReq, req, res) => {
+          proxy.on("proxyReq", (proxyReq, req, _res) => {
             console.log(
               "[Proxy]",
               req.method,
@@ -174,10 +303,10 @@ export default defineConfig({
               options.target + proxyReq.path,
             );
           });
-          proxy.on("proxyRes", (proxyRes, req, res) => {
+          proxy.on("proxyRes", (proxyRes, req, _res) => {
             console.log("[Proxy Response]", proxyRes.statusCode, req.url);
           });
-          proxy.on("error", (err, req, res) => {
+          proxy.on("error", (err, _req, _res) => {
             console.error("[Proxy Error]", err.message);
           });
         },
@@ -197,183 +326,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 7000, // Suppress for WebLLM (6MB), main bundle, PDF libs - all optimally chunked
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // === AGGRESSIVE CODE SPLITTING STRATEGY ===
-          // Goal: Keep each chunk under 1MB for optimal loading
-
-          // 1. Core React framework (tiny, needed everywhere)
-          if (
-            id.includes("node_modules/react/") ||
-            id.includes("node_modules/react-dom/")
-          ) {
-            return "vendor";
-          }
-
-          // 2. Router and core routing (if using react-router)
-          if (id.includes("node_modules/react-router")) {
-            return "vendor";
-          }
-
-          // 3. UI Libraries (medium size, frequently used)
-          if (
-            id.includes("node_modules/lucide-react") ||
-            id.includes("node_modules/@headlessui") ||
-            id.includes("node_modules/framer-motion")
-          ) {
-            return "ui-libs";
-          }
-
-          // 4. PDF.js (very heavy, separate chunk)
-          if (id.includes("node_modules/pdfjs-dist")) {
-            return "pdfjs";
-          }
-
-          // 5. PDF generation (jspdf, html2canvas, pdf-lib)
-          if (
-            id.includes("node_modules/jspdf") ||
-            id.includes("node_modules/html2canvas") ||
-            id.includes("node_modules/pdf-lib")
-          ) {
-            return "pdf";
-          }
-
-          // 6. AI/ML WebLLM (extremely heavy - 5MB+, lazy loaded)
-          if (id.includes("node_modules/@mlc-ai/web-llm")) {
-            return "ai-webllm";
-          }
-
-          // 7. OCR - Tesseract ONLY (transformers goes elsewhere)
-          if (id.includes("node_modules/tesseract.js")) {
-            return "ocr";
-          }
-
-          // 8. Transformers/Vision models (separate from OCR)
-          if (id.includes("node_modules/@huggingface/transformers")) {
-            return "vision";
-          }
-
-          // 9. Document processing - keep together to avoid circular deps
-          if (
-            id.includes("node_modules/docx") ||
-            id.includes("node_modules/mammoth") ||
-            id.includes("node_modules/jszip")
-          ) {
-            return "docs";
-          }
-
-          // 10. Storage utilities (tiny)
-          if (id.includes("node_modules/idb-keyval")) {
-            return "storage";
-          }
-
-          // 11. Utility libraries (lodash, date-fns, etc)
-          if (
-            id.includes("node_modules/lodash") ||
-            id.includes("node_modules/date-fns") ||
-            id.includes("node_modules/clsx")
-          ) {
-            return "utils";
-          }
-
-          // 12. Markdown/Rich Text
-          if (
-            id.includes("node_modules/marked") ||
-            id.includes("node_modules/dompurify")
-          ) {
-            return "markdown";
-          }
-
-          // 13. Large data files - medical
-          if (
-            id.includes("src/data/diagnosticCodes") ||
-            id.includes("src/data/mosDatabase") ||
-            id.includes("src/data/secondaryConditions")
-          ) {
-            return "data-medical";
-          }
-
-          // 14. Large data files - resources
-          if (
-            id.includes("src/data/stateBenefits") ||
-            id.includes("src/data/vsoDirectory")
-          ) {
-            return "data-resources";
-          }
-
-          // 15. Large data files - legal/forms
-          if (
-            id.includes("src/data/vaForms") ||
-            id.includes("src/data/legalDocuments")
-          ) {
-            return "data-legal";
-          }
-
-          // 16. AI utilities (separate from WebLLM engine)
-          if (
-            id.includes("src/utils/unifiedAIService") ||
-            id.includes("src/utils/aiStatementHelper") ||
-            id.includes("src/utils/diamondSwarm")
-          ) {
-            return "ai-utils";
-          }
-
-          // 17. Heavy analysis tools
-          if (
-            id.includes("src/utils/cfileAnalyzer") ||
-            id.includes("src/utils/documentAnalyzer") ||
-            id.includes("src/utils/advancedOCR")
-          ) {
-            return "analysis-tools";
-          }
-
-          // 18. VA calculations and core logic
-          if (
-            id.includes("src/utils/vaCalculations") ||
-            id.includes("src/utils/secondaryFinder") ||
-            id.includes("src/utils/nexusLogic")
-          ) {
-            return "va-core";
-          }
-
-          // 19. Heavy UI components - Calculator, AI tools, etc
-          if (
-            id.includes("src/components/Calculator") ||
-            id.includes("src/components/TacticalCalculator") ||
-            id.includes("src/components/WhatIfSandbox")
-          ) {
-            return "calculators";
-          }
-
-          if (
-            id.includes("src/components/DecisionDecoder") ||
-            id.includes("src/components/DenialDecoder") ||
-            id.includes("src/components/CFileAnalyzer")
-          ) {
-            return "analysis-tools";
-          }
-
-          if (
-            id.includes("src/components/NexusBuilder") ||
-            id.includes("src/components/WitnessBench") ||
-            id.includes("src/components/StatementAnalyzer")
-          ) {
-            return "calculators";
-          }
-
-          // 20. Duty stations equal-area world map — d3-geo/topojson-client
-          // + the vendored boundary data, only ever reached via
-          // DutyStationMap.jsx's lazy import().
-          if (
-            id.includes("node_modules/d3-geo") ||
-            id.includes("node_modules/d3-array") ||
-            id.includes("node_modules/topojson-client") ||
-            id.includes("src/data/geo")
-          ) {
-            return "geo";
-          }
-
-          // Default: let Vite decide (remaining app code goes in index chunk)
-        },
+        manualChunks: resolveManualChunk,
       },
     },
   },

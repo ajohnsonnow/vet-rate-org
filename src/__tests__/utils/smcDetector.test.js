@@ -1,7 +1,7 @@
 /**
  * TDIU (38 CFR § 4.16(a)) and SMC-S (38 U.S.C. § 1114(s)) detection tests.
  * Williams ground-truth set: 9 conditions, combined 80%, highest single 50%
- * — schedular TDIU eligible via the 70/40 prong.
+ * - schedular TDIU eligible via the 70/40 prong.
  */
 
 import { describe, it, expect } from "vitest";
@@ -22,7 +22,7 @@ const WILLIAMS_CONDITIONS = [
   { name: "Tinnitus", rating: 10 },
 ];
 
-describe("checkTDIUEligibility — 38 CFR § 4.16(a)", () => {
+describe("checkTDIUEligibility - 38 CFR § 4.16(a)", () => {
   it("Williams 9-condition set → eligible via 70/40 prong (combined 80, highest 50)", () => {
     const result = checkTDIUEligibility(WILLIAMS_CONDITIONS);
     expect(result.eligible).toBe(true);
@@ -73,7 +73,7 @@ describe("checkTDIUEligibility — 38 CFR § 4.16(a)", () => {
   });
 });
 
-describe("checkSMCSHousebound — 38 U.S.C. § 1114(s)", () => {
+describe("checkSMCSHousebound - 38 U.S.C. § 1114(s)", () => {
   it("100% plus separate 60% → potentially eligible", () => {
     const result = checkSMCSHousebound([{ rating: 100 }, { rating: 60 }]);
     expect(result.potentiallyEligible).toBe(true);

@@ -2,6 +2,12 @@
 
 Essential VA phone numbers and hotlines for veterans.
 
+!!! tip "Where to Find This In-App"
+Many of the numbers below also appear directly inside the **VA Resources Hub** (🎖️ Resources → 🌐 VA Resources Hub), attached to the relevant category - for example, the Veterans Crisis Line and Women Veterans Hotline are under "Mental Health & PTSD" and "Specialized Veteran Programs."
+
+![VA Resources Hub with the Mental Health & PTSD category expanded, showing the Veterans Crisis Line](../assets/images/screenshots/va-resources/phone-numbers.png)
+_Crisis and support phone numbers surface alongside the relevant category, not in one master phone list._
+
 ---
 
 ## Emergency Numbers
@@ -12,12 +18,12 @@ Essential VA phone numbers and hotlines for veterans.
 
 ### Veterans Crisis Line
 
-| Method | Contact |
-|--------|---------|
-| **Phone** | 988 (then Press 1) |
-| **Text** | 838255 |
-| **Chat** | VeteransCrisisLine.net |
-| **TTY** | 1-800-799-4889 |
+| Method    | Contact                |
+| --------- | ---------------------- |
+| **Phone** | 988 (then Press 1)     |
+| **Text**  | 838255                 |
+| **Chat**  | VeteransCrisisLine.net |
+| **TTY**   | 1-800-799-4889         |
 
 **Available:** 24 hours a day, 7 days a week
 
@@ -36,12 +42,12 @@ For veterans in crisis or supporting someone in crisis. Confidential support fro
 
 **1-800-827-1000**
 
-| Topic | Support |
-|-------|---------|
-| **Claims** | Filing, status, questions |
+| Topic        | Support                      |
+| ------------ | ---------------------------- |
+| **Claims**   | Filing, status, questions    |
 | **Benefits** | General benefits information |
-| **Appeals** | Appeal process questions |
-| **Records** | Records requests |
+| **Appeals**  | Appeal process questions     |
+| **Records**  | Records requests             |
 
 **Hours:** Monday-Friday, 8:00 AM - 9:00 PM ET
 
@@ -49,12 +55,12 @@ For veterans in crisis or supporting someone in crisis. Confidential support fro
 
 **1-877-222-8387** (VETS)
 
-| Topic | Support |
-|-------|---------|
-| **Enrollment** | Health care enrollment |
-| **Appointments** | Scheduling help |
-| **Prescriptions** | Pharmacy questions |
-| **General** | Healthcare questions |
+| Topic             | Support                |
+| ----------------- | ---------------------- |
+| **Enrollment**    | Health care enrollment |
+| **Appointments**  | Scheduling help        |
+| **Prescriptions** | Pharmacy questions     |
+| **General**       | Healthcare questions   |
 
 **Hours:** Monday-Friday, 8:00 AM - 8:00 PM ET
 
@@ -187,7 +193,7 @@ Readjustment counseling services.
 ## Tips for Calling VA
 
 !!! tip "Getting Through to the VA"
-    
+
     1. **Call early** - Shorter wait times early morning
     2. **Have info ready** - SSN, VA file number, claim number
     3. **Be patient** - Hold times can be long
@@ -202,21 +208,19 @@ Readjustment counseling services.
 
 Keep these numbers accessible:
 
-```
-EMERGENCY:
-  Veterans Crisis Line: 988 (Press 1)
-  Crisis Text: 838255
-  
-PRIMARY:
-  VA Benefits: 1-800-827-1000
-  VA Health: 1-877-222-8387
-  
-SPECIALIZED:
-  Women Veterans: 1-855-829-6636
-  GI Bill: 1-888-442-4551
-  Debt: 1-800-827-0648
-  
-APPEAL/COMPLAINT:
-  BVA: 1-800-923-8387
-  White House Hotline: 1-855-948-2311
-```
+    EMERGENCY:
+      Veterans Crisis Line: 988 (Press 1)
+      Crisis Text: 838255
+
+    PRIMARY:
+      VA Benefits: 1-800-827-1000
+      VA Health: 1-877-222-8387
+
+    SPECIALIZED:
+      Women Veterans: 1-855-829-6636
+      GI Bill: 1-888-442-4551
+      Debt: 1-800-827-0648
+
+    APPEAL/COMPLAINT:
+      BVA: 1-800-923-8387
+      White House Hotline: 1-855-948-2311

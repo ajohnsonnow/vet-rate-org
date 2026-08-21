@@ -20,6 +20,9 @@ On the main page, click **"🎯 Launch C&P Simulator"** in the amber/yellow feat
 
 When you open the simulator, you'll see the introduction screen with:
 
+![C&P Exam Simulator intro screen with Start Simulation, Exam Prep, and Learn Terminology buttons](../assets/images/screenshots/cap-simulator/intro-mode-select.png)
+_"Turn the 'Black Box' of the C&P Exam into an Open-Book Test" - the intro screen explains what the simulator does before you pick a mode._
+
 ### Overview
 
 - **What the simulator does** - Prepares you for your C&P exam
@@ -28,16 +31,17 @@ When you open the simulator, you'll see the introduction screen with:
 
 ### Mode Selection
 
-Two main modes are available:
+Three modes are available:
 
-| Mode | Description |
-|------|-------------|
-| **🎯 Simulation Mode** | Full exam practice with questions and results |
-| **📚 Flashcard Mode** | Learn medical terminology and rating criteria |
+| Mode                     | Description                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| **🎯 Start Simulation**  | Full exam practice with questions and a predicted-rating result                  |
+| **📄 Exam Prep**         | Browse the actual DBQ questions examiners use, without running a full simulation |
+| **📚 Learn Terminology** | A searchable glossary of VA claims and rating terms, organized by category       |
 
 ---
 
-## Simulation Mode
+## Start Simulation Mode
 
 The primary practice experience:
 
@@ -68,20 +72,19 @@ Questions are designed around actual C&P exam criteria:
 
 ---
 
-## Flashcard Mode
+## Learn Terminology Mode
 
-Educational mode for learning terminology:
+Educational mode for learning terminology, titled "VA Claims Terminology" once open:
 
-- **Medical terms** - Definitions and explanations
-- **Rating criteria** - What each level means
-- **DBQ concepts** - What examiners evaluate
+- **88 essential terms** organized into 7 categories (Rating & Exam Fundamentals, Service Connection, Medical & Exam Terminology, Mental Health Terms, Legal Standards & Evidence, Claims & Appeals, Specific Rating Criteria)
+- **Searchable** - A search box filters terms as you type
+- **Expand All / Collapse All** - Quickly browse every category or drill into one
 
 ### Flashcard Features
 
-- Click to flip cards
-- Swipe through terms
-- Save difficult terms
-- Review progress
+- Click a category to expand it and reveal its terms
+- Click a term to flip it and see the definition
+- Search across all categories at once
 
 ---
 
@@ -89,27 +92,15 @@ Educational mode for learning terminology:
 
 ### New to VA Claims?
 
-!!! tip "Recommended Path"
-    1. Start with **Flashcard Mode** to learn terminology
-    2. Then try **Simulation Mode** with your primary condition
-    3. Practice until you understand the criteria
+!!! tip "Recommended Path" 1. Start with **Learn Terminology** to learn terminology 2. Then try **Start Simulation** with your primary condition 3. Practice until you understand the criteria
 
 ### Preparing for Upcoming Exam?
 
-!!! tip "Recommended Path"
-    1. Go directly to **Simulation Mode**
-    2. Select your specific condition
-    3. Answer based on your actual experience
-    4. Review the gap analysis carefully
-    5. Practice multiple times before your exam
+!!! tip "Recommended Path" 1. Go directly to **Start Simulation** 2. Select your specific condition 3. Answer based on your actual experience 4. Review the gap analysis carefully 5. Practice multiple times before your exam
 
 ### Already Know the Basics?
 
-!!! tip "Recommended Path"
-    1. Jump into **Simulation Mode**
-    2. Focus on tipping point questions
-    3. Study the gap analysis
-    4. Use results to prepare documentation
+!!! tip "Recommended Path" 1. Jump into **Start Simulation** 2. Focus on tipping point questions 3. Study the gap analysis 4. Use results to prepare documentation
 
 ---
 
@@ -126,11 +117,11 @@ Question 3 of 8
 
 ### Navigation Buttons
 
-| Button | Function |
-|--------|----------|
-| **← Back** | Return to previous question |
-| **Next →** | Proceed to next question |
-| **Skip** | Skip current question (if optional) |
+| Button     | Function                            |
+| ---------- | ----------------------------------- |
+| **← Back** | Return to previous question         |
+| **Next →** | Proceed to next question            |
+| **Skip**   | Skip current question (if optional) |
 
 ### Question Cards
 
@@ -145,14 +136,7 @@ Each question shows:
 
 ## Tips Before Starting
 
-!!! tip "Preparation Checklist"
-    
-    - ✅ Know your diagnosed conditions
-    - ✅ Recall your worst symptom days
-    - ✅ Think about how symptoms affect work
-    - ✅ Consider how symptoms affect relationships
-    - ✅ Remember your flare-ups
-    - ✅ Think about functional limitations
+!!! tip "Preparation Checklist" - ✅ Know your diagnosed conditions - ✅ Recall your worst symptom days - ✅ Think about how symptoms affect work - ✅ Consider how symptoms affect relationships - ✅ Remember your flare-ups - ✅ Think about functional limitations
 
 ---
 
@@ -167,11 +151,11 @@ Each question shows:
 
 ### Time Investment
 
-| Simulation Type | Estimated Time |
-|-----------------|----------------|
-| Full condition simulation | 10-15 minutes |
-| Quick practice | 5 minutes |
-| Flashcard review | 5-10 minutes |
+| Simulation Type           | Estimated Time |
+| ------------------------- | -------------- |
+| Full condition simulation | 10-15 minutes  |
+| Quick practice            | 5 minutes      |
+| Flashcard review          | 5-10 minutes   |
 
 ### Replayability
 

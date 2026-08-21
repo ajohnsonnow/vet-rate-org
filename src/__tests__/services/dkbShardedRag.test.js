@@ -36,6 +36,20 @@ function mkBin(q8s) {
 function toUnitFloat32(q8) {
   return Float32Array.from(q8, (v) => v / 127);
 }
+function mockEmbedderPipeline(data) {
+  vi.doMock("@huggingface/transformers", () => ({
+    pipeline: async () => async () => ({ data }),
+  }));
+}
+function mockShardFetch({ registry = REGISTRY, ecfrQ8s, presumptiveQ8s }) {
+  const fetchMock = mockFetch({
+    registry,
+    ecfrBin: mkBin(ecfrQ8s),
+    presumptiveBin: mkBin(presumptiveQ8s),
+  });
+  globalThis.fetch = fetchMock;
+  return fetchMock;
+}
 
 // ── pure-function units ──────────────────────────────────────────────────────
 describe("dkbAuthorityTiers", () => {
@@ -64,7 +78,7 @@ describe("dkbAuthorityTiers", () => {
   });
 });
 
-describe("dkbShardRegistry — device gating", () => {
+describe("dkbShardRegistry - device gating", () => {
   it("deviceMeets compares the tier ladder", () => {
     expect(deviceMeets("desktop-high", "mobile")).toBe(true);
     expect(deviceMeets("mobile", "desktop-mid")).toBe(false);
@@ -135,7 +149,7 @@ describe("dkbShardRegistry — device gating", () => {
   });
 });
 
-describe("dkbShardedRag — tierPrior", () => {
+describe("dkbShardedRag - tierPrior", () => {
   it("is largest for statutory (rank 1) and ~0 for the lowest tier", () => {
     expect(tierPrior(1)).toBeCloseTo(TIER_PRIOR_WEIGHT, 10);
     expect(tierPrior(8)).toBe(0);
@@ -266,7 +280,7 @@ const REGISTRY = {
   ],
 };
 
-describe("dkbShardedRag — queryShards integration", () => {
+describe("dkbShardedRag - queryShards integration", () => {
   let originalFetch;
   beforeEach(() => {
     originalFetch = globalThis.fetch;
@@ -277,9 +291,7 @@ describe("dkbShardedRag — queryShards integration", () => {
   });
 
   it("empty query returns no shards or chunks (no fetch, no embed)", async () => {
-    vi.doMock("@huggingface/transformers", () => ({
-      pipeline: async () => async () => ({ data: new Float32Array(EMBED_DIM) }),
-    }));
+    mockEmbedderPipeline(new Float32Array(EMBED_DIM));
     const { queryShards } = await import("../../services/dkbShardedRag.js");
     const res = await queryShards("   ");
     expect(res.chunks).toEqual([]);
@@ -290,16 +302,10 @@ describe("dkbShardedRag — queryShards integration", () => {
     const eA = unitVecQ8(10),
       eB = unitVecQ8(11),
       pA = unitVecQ8(12);
-    globalThis.fetch = mockFetch({
-      registry: REGISTRY,
-      ecfrBin: mkBin([eA.q8, eB.q8]),
-      presumptiveBin: mkBin([pA.q8]),
-    });
+    mockShardFetch({ ecfrQ8s: [eA.q8, eB.q8], presumptiveQ8s: [pA.q8] });
     // Embedder returns the ecfr chunk-A vector, so ecfr DKB-1 is the dense top;
     // the presumptive chunk is also present (lexical "agent orange"/低 cosine).
-    vi.doMock("@huggingface/transformers", () => ({
-      pipeline: async () => async () => ({ data: toUnitFloat32(eA.q8) }),
-    }));
+    mockEmbedderPipeline(toUnitFloat32(eA.q8));
     const { queryShards, _resetForTesting } =
       await import("../../services/dkbShardedRag.js");
     _resetForTesting();
@@ -333,15 +339,12 @@ describe("dkbShardedRag — queryShards integration", () => {
         s.id === "presumptive" ? { ...s, min_device_tier: "desktop-mid" } : s,
       ),
     };
-    const fetchMock = mockFetch({
+    const fetchMock = mockShardFetch({
       registry: gatedRegistry,
-      ecfrBin: mkBin([eA.q8, eB.q8]),
-      presumptiveBin: mkBin([pA.q8]),
+      ecfrQ8s: [eA.q8, eB.q8],
+      presumptiveQ8s: [pA.q8],
     });
-    globalThis.fetch = fetchMock;
-    vi.doMock("@huggingface/transformers", () => ({
-      pipeline: async () => async () => ({ data: toUnitFloat32(eA.q8) }),
-    }));
+    mockEmbedderPipeline(toUnitFloat32(eA.q8));
     const { queryShards } = await import("../../services/dkbShardedRag.js");
     const res = await queryShards("anything", {
       topK: 5,
@@ -357,7 +360,7 @@ describe("dkbShardedRag — queryShards integration", () => {
   });
 });
 
-describe("dkbShardedRag — eCFR regression parity with legalRag.query()", () => {
+describe("dkbShardedRag - eCFR regression parity with legalRag.query()", () => {
   let originalFetch;
   beforeEach(() => {
     originalFetch = globalThis.fetch;
@@ -392,7 +395,7 @@ describe("dkbShardedRag — eCFR regression parity with legalRag.query()", () =>
       ignoreDeviceGate: true,
     });
 
-    // Same citations, same order — the single-part eCFR shard runs the identical
+    // Same citations, same order - the single-part eCFR shard runs the identical
     // hybridFuse+MMR pipeline over the identical chunk set.
     expect(viaShards.chunks.map((c) => c.citation)).toEqual(
       viaLegalRag.chunks.map((c) => c.citation),
@@ -406,7 +409,30 @@ describe("dkbShardedRag — eCFR regression parity with legalRag.query()", () =>
 });
 
 // ── build-shard unit tests (node script, pure functions) ─────────────────────
-describe("build-shard — entryToChunk + part splitting", () => {
+function fiveBvaEntriesWithOneUrlLess() {
+  const entries = Array.from({ length: 5 }, (_, i) => ({
+    dkb_id: `DKB-${i}`,
+    id: `bva_${i}`,
+    source: "bva",
+    content: `decision text number ${i} with enough length to pass the floor`,
+    url: `https://va.gov/vetapp/${i}.txt`,
+    citation: `BVA-${i}`,
+    title: `t${i}`,
+  }));
+  // one url-less entry must be skipped, not silently dropped
+  entries.push({
+    dkb_id: "DKB-x",
+    id: "bva_x",
+    source: "bva",
+    content: "x".repeat(60),
+    url: "",
+    citation: "c",
+    title: "t",
+  });
+  return entries;
+}
+
+describe("build-shard - entryToChunk + part splitting", () => {
   it("skips empty content and url-less entries, keeps valid ones (S28 discipline)", async () => {
     const { entryToChunk } =
       await import("../../../scripts/dkb-sharding/build-shard.mjs");
@@ -447,25 +473,7 @@ describe("build-shard — entryToChunk + part splitting", () => {
     const path = await import("node:path");
     const dir = mkdtempSync(path.join(os.tmpdir(), "dkb-shard-test-"));
     try {
-      const entries = Array.from({ length: 5 }, (_, i) => ({
-        dkb_id: `DKB-${i}`,
-        id: `bva_${i}`,
-        source: "bva",
-        content: `decision text number ${i} with enough length to pass the floor`,
-        url: `https://va.gov/vetapp/${i}.txt`,
-        citation: `BVA-${i}`,
-        title: `t${i}`,
-      }));
-      // one url-less entry must be skipped, not silently dropped
-      entries.push({
-        dkb_id: "DKB-x",
-        id: "bva_x",
-        source: "bva",
-        content: "x".repeat(60),
-        url: "",
-        citation: "c",
-        title: "t",
-      });
+      const entries = fiveBvaEntriesWithOneUrlLess();
 
       const meta = await buildShard({
         source: "bva",

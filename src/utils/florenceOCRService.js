@@ -47,7 +47,7 @@ let isInitializing = false;
 let isReady = false;
 let lastError = null;
 
-// Watchdog for worker requests — a hung WebGPU worker never replies, so
+// Watchdog for worker requests - a hung WebGPU worker never replies, so
 // without this the whole ingestion pipeline stalls silently
 const WORKER_WATCHDOG_MS = 120000;
 
@@ -251,7 +251,7 @@ export async function processDocument(file, options = {}) {
       }
       reject(
         new Error(
-          `FLORENCE_WORKER_TIMEOUT: Vision OCR did not respond within ${WORKER_WATCHDOG_MS / 1000}s. The vision worker was restarted — retry, or processing will fall back to standard OCR.`,
+          `FLORENCE_WORKER_TIMEOUT: Vision OCR did not respond within ${WORKER_WATCHDOG_MS / 1000}s. The vision worker was restarted - retry, or processing will fall back to standard OCR.`,
         ),
       );
     }, WORKER_WATCHDOG_MS);

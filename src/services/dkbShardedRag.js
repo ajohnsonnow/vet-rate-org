@@ -1,8 +1,8 @@
 /**
- * dkbShardedRag — cross-shard retrieval over the Diamond Knowledge Base (S29).
+ * dkbShardedRag - cross-shard retrieval over the Diamond Knowledge Base (S29).
  *
  * This is the additive, full-corpus counterpart to legalRag.js. Where
- * legalRag.query() serves the single eCFR legal-index (and stays untouched —
+ * legalRag.query() serves the single eCFR legal-index (and stays untouched -
  * "Ask the Regs" and the eval gate depend on its exact behavior), queryShards()
  * fans a query out across MANY independently-lazy-loaded shards
  * (public/dkb-index/, per dkbShardRegistry.js), fuses their results with the
@@ -10,21 +10,21 @@
  * the two paths), applies a gentle authority-tier prior, MMR-diversifies, and
  * returns cited chunks each carrying its `authority_tier`.
  *
- * Memory model — "per-shard-loaded ≤25 MB" (S29 DoD): shards stream one PART at
+ * Memory model - "per-shard-loaded ≤25 MB" (S29 DoD): shards stream one PART at
  * a time. Each part (≤25 MB by build-time invariant) is loaded, scored, and
- * fused in isolation; only that part's top `poolSize` candidates survive — and
+ * fused in isolation; only that part's top `poolSize` candidates survive - and
  * for each survivor we copy out its 384-byte vector before the part's full
  * arrays are released. Peak resident vectors are therefore one part plus a tiny
  * candidate pool, regardless of a shard's total size. The 45 MB BVA shard is
  * queried without ever holding 45 MB at once.
  *
  * Regression-free eCFR: a single-part shard (all current shards except BVA)
- * runs exactly one hybridFuse over its whole chunk set — identical math to
- * legalRag.query() over one source — so queryShards({only:['ecfr']}) returns
+ * runs exactly one hybridFuse over its whole chunk set - identical math to
+ * legalRag.query() over one source - so queryShards({only:['ecfr']}) returns
  * the same chunks in the same order as legalRag.query() (asserted by test).
  *
  * Untrusted at runtime: like legalRag, chunk text is post-sanitization but
- * still untrusted — callers route it through legalAnswerer.js's dual-LLM split,
+ * still untrusted - callers route it through legalAnswerer.js's dual-LLM split,
  * unchanged.
  */
 
@@ -51,13 +51,13 @@ import {
 import { rankForTier } from "./dkbAuthorityTiers.js";
 
 // The tier prior is a SMALL additive bonus on the fused score, scaled so it can
-// only reorder near-ties — never lift a weak match from an authoritative shard
+// only reorder near-ties - never lift a weak match from an authoritative shard
 // over a strong match from a lesser one. tier_rank 1 (statutory) gets the full
 // bonus; each rank down gets proportionally less; the lowest tier gets ~0.
 // TIER_PRIOR_WEIGHT is deliberately an order of magnitude below a typical RRF
 // fused-score gap so semantic/lexical relevance dominates. Tunable in one place.
 export const TIER_PRIOR_WEIGHT = 0.0015;
-const MAX_TIER_RANK = 8; // community, the lowest — see dkbAuthorityTiers
+const MAX_TIER_RANK = 8; // community, the lowest - see dkbAuthorityTiers
 
 /**
  * Additive tier prior for a shard rank. rank 1 → TIER_PRIOR_WEIGHT; rank 8 → 0.
@@ -100,7 +100,7 @@ export async function loadPart(shard, part) {
     throw new Error(
       `dkbShardedRag: shard ${shard.id} part ${urls.vectors} is ` +
         `${vectors.length} bytes, over the ${PER_PART_BYTE_BUDGET}-byte per-part ` +
-        `budget — rebuild with smaller parts (build-shard.mjs)`,
+        `budget - rebuild with smaller parts (build-shard.mjs)`,
     );
   }
   const chunks = chunksText
@@ -225,7 +225,7 @@ export async function queryShards(text, opts = {}) {
         poolSize,
       });
       for (const c of partPool) pool.push(c);
-      // `chunks` + `vectors` fall out of scope here — only partPool (≤poolSize,
+      // `chunks` + `vectors` fall out of scope here - only partPool (≤poolSize,
       // each with a 384-float retained vector) survives.
     }
   }
@@ -276,7 +276,7 @@ export async function queryShards(text, opts = {}) {
   return { query: text, shards: shards.map((s) => s.id), chunks };
 }
 
-/** Test/diagnostic — no persistent cache today (parts stream); present for API parity. */
+/** Test/diagnostic - no persistent cache today (parts stream); present for API parity. */
 export function _resetForTesting() {
   // Intentionally empty: parts are not cached. Kept so tests can call it
   // symmetrically with legalRag._resetForTesting without special-casing.

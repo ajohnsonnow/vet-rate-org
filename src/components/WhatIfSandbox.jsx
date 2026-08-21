@@ -195,15 +195,29 @@ const loadCurrentClaims = (setCurrentConditions) => {
   }
 };
 
+// hasMatchingConditionPair below detects a bilateral pair by looking for
+// "Left"/"Right" inside the condition name (matching how commonConditions
+// above names its own entries, e.g. "Knee (Left)"). Saved ratings track side
+// as a separate field instead, so it has to be folded into the name here or
+// a real bilateral pair loaded via "Load My Ratings" would never trigger the
+// bonus indicator.
+const nameWithSide = (condition, side) => {
+  if (side === "left") return `${condition} (Left)`;
+  if (side === "right") return `${condition} (Right)`;
+  return condition;
+};
+
 const loadMyRatings = (pendingAnnounceRef, setCurrentConditions) => {
   const savedRatings = getMyRatings();
   if (savedRatings && savedRatings.length > 0) {
-    const formatted = savedRatings.map((r) => ({
-      id: `${r.condition}-${r.rating}-${Date.now()}-${Math.random()}`,
-      name: r.condition,
-      rating: r.rating,
-      category: "user",
-    }));
+    const formatted = savedRatings
+      .filter((r) => r.condition && typeof r.rating === "number")
+      .map((r) => ({
+        id: `${r.condition}-${r.rating}-${Date.now()}-${Math.random()}`,
+        name: nameWithSide(r.condition, r.side),
+        rating: r.rating,
+        category: "user",
+      }));
     pendingAnnounceRef.current = `${formatted.length} saved conditions loaded.`;
     setCurrentConditions(formatted);
   } else {

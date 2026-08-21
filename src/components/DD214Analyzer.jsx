@@ -463,7 +463,7 @@ function truncateForContext(text, maxTokens = 2000) {
 }
 
 async function _runVisionAnalysis(originalPDFFiles, setOcrProgress) {
-  // ========== VISION MODEL PATH — SmolVLM (transformers.js v3 + WebGPU) ==========
+  // ========== VISION MODEL PATH - SmolVLM (transformers.js v3 + WebGPU) ==========
   // Processes PDF pages as images directly through SmolVLM-256M-Instruct.
   // Replaces the broken MLC WebLLM Phi-3.5-vision path.
   // eslint-disable-next-line no-console
@@ -479,11 +479,11 @@ async function _runVisionAnalysis(originalPDFFiles, setOcrProgress) {
   const visionReady = await smolVLMService.initialize();
   if (!visionReady) {
     throw new Error(
-      "SmolVLM failed to initialize. Falling back — please run OCR first.",
+      "SmolVLM failed to initialize. Falling back - please run OCR first.",
     );
   }
 
-  // Process each PDF — up to 2 pages per file (DD214 is typically 1-2 pages)
+  // Process each PDF - up to 2 pages per file (DD214 is typically 1-2 pages)
   const visionPrompt =
     "Analyze this DD214 military discharge document and extract all information. " +
     "Return your analysis as JSON following the format specified in the system prompt.";
@@ -513,7 +513,7 @@ async function _runVisionAnalysis(originalPDFFiles, setOcrProgress) {
 
   setOcrProgress(null);
 
-  // SmolVLM already generated structured output — use it directly as response
+  // SmolVLM already generated structured output - use it directly as response
   return {
     content: allPageTexts.join("\n\n---\n\n"),
     isVisionResponse: true,
@@ -707,7 +707,7 @@ function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
       "Regex field extraction failed (non-fatal):",
       regexErr.message,
     );
-    // AI-only results are still valid — this is just the safety net
+    // AI-only results are still valid - this is just the safety net
   }
 }
 
@@ -744,7 +744,7 @@ function _saveDd214ToProfile(analysisResult, combinedText, selectedFields) {
   // Save awards to profile.
   // FIX-4: `award.devices?.join(", ")` produced "[object Object]" garbage
   // whenever devices were already structured {type, position} objects,
-  // and — critically — never passed devices through to addAward's
+  // and - critically - never passed devices through to addAward's
   // `devices` key at all, so they could never reach VisualRibbon. Pass
   // devices through as structured data; addAward's sanitizer accepts
   // {type, position} objects and safely drops anything else (e.g. a
@@ -848,7 +848,7 @@ async function _saveDd214ToVkb(analysisResult, combinedText, extractedTexts) {
     console.log("✅ DD214 data merged into VKB");
   } catch (vkbErr) {
     console.error("VKB save failed (non-fatal):", vkbErr);
-    // Don't block the save — profile data is still saved
+    // Don't block the save - profile data is still saved
   }
 }
 
@@ -1952,14 +1952,69 @@ function _processDroppedFiles(files, ctx) {
   }, 100);
 }
 
+async function _processSingleFileForOcr(file, ctx) {
+  const { setOcrProgress, setExtractedTexts, setError } = ctx;
+
+  if (!isFileSupported(file)) {
+    console.warn(`⚠️ ${file.name} is not a supported format`);
+    return;
+  }
+
+  setOcrProgress({
+    state: OCR_STATES.LOADING,
+    progress: 0,
+    message: `Processing ${file.name}...`,
+  });
+
+  try {
+    // eslint-disable-next-line no-console
+    console.log(
+      `🔍 Starting OCR analysis of ${file.name} via MusterCall pipeline...`,
+    );
+    // Route through MusterCall → Florence-2 vision first, Tesseract OCR fallback
+    const musterResult = await processFormationDocument(file, (progress) => {
+      // Map MusterCall progress → OCR progress bar state
+      const mapped = {
+        state: _mapMusterCallStateToOcrState(progress.state),
+        progress: progress.progress || 0,
+        message: progress.message || `Processing ${file.name}...`,
+        currentPage: progress.currentPage,
+        totalPages: progress.totalPages,
+      };
+      setOcrProgress(mapped);
+    });
+    const result = {
+      text: musterResult.text || "",
+      pageCount: musterResult.pageCount || 1,
+      method: musterResult.method || "ocr",
+      fileType: musterResult.fileType || "pdf",
+      ocrUsed: musterResult.ocrUsed ?? true,
+      ocrConfidence: musterResult.confidence || 0,
+    };
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ MusterCall OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`,
+    );
+
+    setExtractedTexts((prev) => [
+      ...prev,
+      {
+        filename: file.name,
+        text: result.text,
+        pageCount: result.pageCount,
+        method: result.method,
+        fileType: result.fileType,
+        ocrUsed: result.ocrUsed,
+      },
+    ]);
+  } catch (err) {
+    console.error("File processing error:", err);
+    setError(`Failed to process ${file.name}: ${err.message}`);
+  }
+}
+
 async function _runOcrOnFiles(filesToProcess, ctx) {
-  const {
-    extractedTexts,
-    setIsProcessing,
-    setError,
-    setOcrProgress,
-    setExtractedTexts,
-  } = ctx;
+  const { extractedTexts, setIsProcessing, setError, setOcrProgress } = ctx;
 
   if (!filesToProcess || filesToProcess.length === 0) {
     // eslint-disable-next-line no-console
@@ -1983,65 +2038,7 @@ async function _runOcrOnFiles(filesToProcess, ctx) {
 
   try {
     for (const file of unprocessedFiles) {
-      if (!isFileSupported(file)) {
-        console.warn(`⚠️ ${file.name} is not a supported format`);
-        continue;
-      }
-
-      setOcrProgress({
-        state: OCR_STATES.LOADING,
-        progress: 0,
-        message: `Processing ${file.name}...`,
-      });
-
-      try {
-        // eslint-disable-next-line no-console
-        console.log(
-          `🔍 Starting OCR analysis of ${file.name} via MusterCall pipeline...`,
-        );
-        // Route through MusterCall → Florence-2 vision first, Tesseract OCR fallback
-        const musterResult = await processFormationDocument(
-          file,
-          (progress) => {
-            // Map MusterCall progress → OCR progress bar state
-            const mapped = {
-              state: _mapMusterCallStateToOcrState(progress.state),
-              progress: progress.progress || 0,
-              message: progress.message || `Processing ${file.name}...`,
-              currentPage: progress.currentPage,
-              totalPages: progress.totalPages,
-            };
-            setOcrProgress(mapped);
-          },
-        );
-        const result = {
-          text: musterResult.text || "",
-          pageCount: musterResult.pageCount || 1,
-          method: musterResult.method || "ocr",
-          fileType: musterResult.fileType || "pdf",
-          ocrUsed: musterResult.ocrUsed ?? true,
-          ocrConfidence: musterResult.confidence || 0,
-        };
-        // eslint-disable-next-line no-console
-        console.log(
-          `✅ MusterCall OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`,
-        );
-
-        setExtractedTexts((prev) => [
-          ...prev,
-          {
-            filename: file.name,
-            text: result.text,
-            pageCount: result.pageCount,
-            method: result.method,
-            fileType: result.fileType,
-            ocrUsed: result.ocrUsed,
-          },
-        ]);
-      } catch (err) {
-        console.error("File processing error:", err);
-        setError(`Failed to process ${file.name}: ${err.message}`);
-      }
+      await _processSingleFileForOcr(file, ctx);
     }
   } catch (err) {
     console.error("OCR batch processing error:", err);
@@ -2428,7 +2425,7 @@ function _buildDd214AnalysisHandlers(state) {
     //   - WebGPU is available in this browser
     //   - User has PDF files loaded (needs images to analyze)
     //   - No text has been extracted yet (avoids double-processing)
-    // NOTE: The original MLC WebLLM Phi-3.5-vision path is disabled — it crashes with
+    // NOTE: The original MLC WebLLM Phi-3.5-vision path is disabled - it crashes with
     //   "Cannot find parameter in cache: vision_embed_tokens..." (WebLLM v0.2.80 bug).
     //   SmolVLM replaces it via the same transformers.js v3 runtime used by Florence-2.
     const useVisionAnalysis =
@@ -2533,9 +2530,9 @@ function _buildDd214SaveHandlers(state) {
   /**
    * Confirm and save profile data after user review
    * DIAMOND STANDARD: Saves to THREE places:
-   *   1. Veteran Profile (localStorage) — for forms and calculator
-   *   2. Veteran Knowledge Base (IndexedDB) — for AI tools
-   *   3. My Packet (IndexedDB) — permanent document archive
+   *   1. Veteran Profile (localStorage) - for forms and calculator
+   *   2. Veteran Knowledge Base (IndexedDB) - for AI tools
+   *   3. My Packet (IndexedDB) - permanent document archive
    */
   const handleConfirmProfileImport = async (selectedFields) => {
     try {
@@ -2691,7 +2688,7 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
 
   return (
     <>
-      {/* Profile import confirmation — already portaled to document.body */}
+      {/* Profile import confirmation - already portaled to document.body */}
       {showProfileImportModal &&
         extractedProfileData &&
         createPortal(
@@ -2704,7 +2701,7 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
           document.body,
         )}
 
-      {/* DD214 Form Builder — fixed z-[9999] portal, renders above the shell */}
+      {/* DD214 Form Builder - fixed z-[9999] portal, renders above the shell */}
       {showFormBuilder && (
         <DD214FormBuilder
           onClose={() => setShowFormBuilder(false)}
@@ -2778,40 +2775,10 @@ function DD214AnalyzerView({ state, handlers }) {
   );
 }
 
-const DD214Analyzer = ({
-  onClose,
-  onReportBug,
-  onOpenAISettings,
-  onSaveResults,
-  onOpenMusterCall,
-  initialFile,
-}) => {
-  const { t } = useLanguage();
-
-  // State
+// Check AI status on mount and periodically.
+function useDD214AIStatus() {
   const [aiStatus, setAIStatus] = useState({ anyAvailable: false });
-  const [inputMethod, setInputMethod] = useState("paste"); // 'paste' | 'upload' | 'manual'
-  const [pastedText, setPastedText] = useState("");
-  const [droppedFiles, setDroppedFiles] = useState([]);
-  const [extractedTexts, setExtractedTexts] = useState([]);
-  const [originalPDFFiles, setOriginalPDFFiles] = useState([]); // Keep original PDF files for vision model
-  const [ocrProgress, setOcrProgress] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
 
-  // Profile import confirmation modal
-  const [showProfileImportModal, setShowProfileImportModal] = useState(false);
-  const [extractedProfileData, setExtractedProfileData] = useState(null);
-
-  // Manual form builder
-  const [showFormBuilder, setShowFormBuilder] = useState(false);
-
-  const fileInputRef = useRef(null);
-
-  // Check AI status on mount and periodically
   useEffect(() => {
     /** @type {() => void} */
     const checkStatus = () => setAIStatus(getAIStatus());
@@ -2820,19 +2787,19 @@ const DD214Analyzer = ({
     return () => clearInterval(intervalId);
   }, []);
 
-  const state = {
-    t,
-    onClose,
-    onReportBug,
-    onOpenAISettings,
-    onSaveResults,
-    onOpenMusterCall,
-    aiStatus,
-    setAIStatus,
-    inputMethod,
-    setInputMethod,
-    pastedText,
-    setPastedText,
+  return { aiStatus, setAIStatus };
+}
+
+function useDD214FileUploadState() {
+  const [droppedFiles, setDroppedFiles] = useState([]);
+  const [extractedTexts, setExtractedTexts] = useState([]);
+  const [originalPDFFiles, setOriginalPDFFiles] = useState([]); // Keep original PDF files for vision model
+  const [ocrProgress, setOcrProgress] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
+  return {
     droppedFiles,
     setDroppedFiles,
     extractedTexts,
@@ -2843,21 +2810,75 @@ const DD214Analyzer = ({
     setOcrProgress,
     isProcessing,
     setIsProcessing,
+    isDragging,
+    setIsDragging,
+    fileInputRef,
+  };
+}
+
+function useDD214ResultState() {
+  const [inputMethod, setInputMethod] = useState("paste"); // 'paste' | 'upload' | 'manual'
+  const [pastedText, setPastedText] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  return {
+    inputMethod,
+    setInputMethod,
+    pastedText,
+    setPastedText,
     isGenerating,
     setIsGenerating,
     analysisResult,
     setAnalysisResult,
     error,
     setError,
-    isDragging,
-    setIsDragging,
+  };
+}
+
+// Profile import confirmation modal + manual form builder state.
+function useDD214ImportModalsState() {
+  const [showProfileImportModal, setShowProfileImportModal] = useState(false);
+  const [extractedProfileData, setExtractedProfileData] = useState(null);
+  const [showFormBuilder, setShowFormBuilder] = useState(false);
+
+  return {
     showProfileImportModal,
     setShowProfileImportModal,
     extractedProfileData,
     setExtractedProfileData,
     showFormBuilder,
     setShowFormBuilder,
-    fileInputRef,
+  };
+}
+
+const DD214Analyzer = ({
+  onClose,
+  onReportBug,
+  onOpenAISettings,
+  onSaveResults,
+  onOpenMusterCall,
+  initialFile,
+}) => {
+  const { t } = useLanguage();
+
+  const aiStatusState = useDD214AIStatus();
+  const fileUploadState = useDD214FileUploadState();
+  const resultState = useDD214ResultState();
+  const importModalsState = useDD214ImportModalsState();
+
+  const state = {
+    t,
+    onClose,
+    onReportBug,
+    onOpenAISettings,
+    onSaveResults,
+    onOpenMusterCall,
+    ...aiStatusState,
+    ...fileUploadState,
+    ...resultState,
+    ...importModalsState,
   };
   const handlers = {
     ..._buildDd214FileHandlers(state),
@@ -2874,7 +2895,7 @@ const DD214Analyzer = ({
   useEffect(() => {
     if (!initialFile || processedInitialFileRef.current) return;
     processedInitialFileRef.current = true;
-    setInputMethod("upload");
+    resultState.setInputMethod("upload");
     handlers.processFiles([initialFile]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFile]);

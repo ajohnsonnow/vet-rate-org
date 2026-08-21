@@ -113,12 +113,14 @@ Only if you explicitly consent. When you click "Enhance with AI":
 The **Faraday Cage** is an advanced feature that allows you to run AI models entirely on your computer using WebGPU technology. Your data **never leaves your device** - not even to cloud AI services.
 
 **Key Features:**
+
 - ✅ **100% Offline** - Works even without internet
 - ✅ **Zero Data Transmission** - All processing on your GPU
 - ✅ **Multiple Models** - From 360MB to 8GB models
 - ✅ **Full Privacy** - Perfect for sensitive medical data
 
 **Requirements:**
+
 - WebGPU-compatible browser (Chrome 113+, Edge 113+)
 - Modern GPU (NVIDIA RTX 20/30/40 series, AMD RDNA2+, Intel Arc, or Apple M1/M2/M3)
 - 2-8GB VRAM depending on model size
@@ -126,11 +128,13 @@ The **Faraday Cage** is an advanced feature that allows you to run AI models ent
 ### How do I enable Local AI (Faraday Cage)?
 
 **Step 1: Check WebGPU Compatibility**
-1. Click "Faraday Cage Protocol" in the Support section
+
+1. Click the AI status indicator in the header (or **"AI Settings"** in the mobile menu) to open the **AI Command Center**
 2. Look for the green checkmark next to "WebGPU Available"
 3. If red ❌, your browser/GPU doesn't support WebGPU yet
 
 **Step 2: Enable Experimental Mode (Important!)**
+
 1. In the Faraday Cage panel, find "Experimental WebGPU Mode"
 2. Check the box to enable experimental features
 3. Confirm the warning about experimental features
@@ -140,21 +144,25 @@ The **Faraday Cage** is an advanced feature that allows you to run AI models ent
 For best results, launch Chrome with experimental WebGPU features:
 
 **Windows:**
+
 ```
 chrome.exe --enable-dawn-features=allow_unsafe_apis
 ```
 
 **Mac:**
+
 ```
 open -a "Google Chrome" --args --enable-dawn-features=allow_unsafe_apis
 ```
 
 **Linux:**
+
 ```
 google-chrome --enable-dawn-features=allow_unsafe_apis
 ```
 
 **Step 4: Select and Load a Model**
+
 1. Choose a model based on your VRAM:
    - **360MB-1.7GB models**: 2GB VRAM minimum
    - **3GB models**: 4GB VRAM recommended
@@ -178,12 +186,14 @@ If errors persist after following all steps, your GPU may not support the requir
 ### Cloud AI vs Local AI - Which should I use?
 
 **Use Cloud AI (Google Gemini) if:**
+
 - ✅ You want the fastest processing
 - ✅ You have a good internet connection
 - ✅ You're comfortable with Google's privacy policies
 - ✅ Your GPU doesn't support WebGPU
 
 **Use Local AI (Faraday Cage) if:**
+
 - ✅ Maximum privacy is essential (PTSD, MST, sensitive medical data)
 - ✅ You want to work completely offline
 - ✅ You have a compatible GPU with sufficient VRAM

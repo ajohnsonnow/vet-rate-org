@@ -8,6 +8,9 @@ Learn all the ways to search Vet-Rate.org's comprehensive disability database.
 
 The search bar is located prominently in the center of the main page.
 
+![Search bar showing auto-suggestions dropdown for "tinn"](../assets/images/screenshots/search/autocomplete-suggestions.png)
+_Auto-suggestions appear the moment you type 2+ characters - click one to jump straight to results._
+
 ### Basic Search
 
 <div class="step-container">
@@ -33,40 +36,40 @@ The search bar is located prominently in the center of the main page.
 
 Type the medical or common name of a condition:
 
-| Input | Finds |
-|-------|-------|
-| `PTSD` | Post-Traumatic Stress Disorder |
-| `Arthritis` | Various arthritis conditions |
-| `Migraines` | Migraine Headaches |
-| `Tinnitus` | Tinnitus |
-| `Sleep Apnea` | Sleep Apnea Syndromes |
-| `Depression` | Major Depressive Disorder |
+| Input         | Finds                          |
+| ------------- | ------------------------------ |
+| `PTSD`        | Post-Traumatic Stress Disorder |
+| `Arthritis`   | Various arthritis conditions   |
+| `Migraines`   | Migraine Headaches             |
+| `Tinnitus`    | Tinnitus                       |
+| `Sleep Apnea` | Sleep Apnea Syndromes          |
+| `Depression`  | Major Depressive Disorder      |
 
 ### By Diagnostic Code
 
 Enter the 4-digit diagnostic code:
 
-| Code | Condition |
-|------|-----------|
-| `9411` | PTSD |
-| `5002` | Rheumatoid Arthritis |
-| `6260` | Tinnitus |
-| `8100` | Migraine Headaches |
-| `6847` | Sleep Apnea Syndromes |
+| Code   | Condition                      |
+| ------ | ------------------------------ |
+| `9411` | PTSD                           |
+| `5002` | Rheumatoid Arthritis           |
+| `6260` | Tinnitus                       |
+| `8100` | Migraine Headaches             |
+| `6847` | Sleep Apnea Syndromes          |
 | `5237` | Lumbosacral or Cervical Strain |
 
 ### By Synonym or Keyword
 
 Search using common terms or symptoms:
 
-| Keyword | Finds |
-|---------|-------|
-| `ringing in ears` | Tinnitus |
-| `back pain` | Spine conditions |
-| `anxiety attacks` | Panic Disorder, Anxiety |
-| `posttraumatic stress` | PTSD |
-| `knee pain` | Knee conditions |
-| `numbness` | Neuropathy conditions |
+| Keyword                | Finds                   |
+| ---------------------- | ----------------------- |
+| `ringing in ears`      | Tinnitus                |
+| `back pain`            | Spine conditions        |
+| `anxiety attacks`      | Panic Disorder, Anxiety |
+| `posttraumatic stress` | PTSD                    |
+| `knee pain`            | Knee conditions         |
+| `numbness`             | Neuropathy conditions   |
 
 ---
 
@@ -112,17 +115,17 @@ When cleared:
 
 The search bar validates input for security:
 
-| Allowed | Not Allowed |
-|---------|-------------|
-| Letters (a-z, A-Z) | Special characters (except - /) |
-| Numbers (0-9) | HTML tags |
-| Spaces | Scripts |
-| Hyphens (-) | Excessive length |
-| Forward slashes (/) | |
+| Allowed             | Not Allowed                     |
+| ------------------- | ------------------------------- |
+| Letters (a-z, A-Z)  | Special characters (except - /) |
+| Numbers (0-9)       | HTML tags                       |
+| Spaces              | Scripts                         |
+| Hyphens (-)         | Excessive length                |
+| Forward slashes (/) |                                 |
 
 !!! info "Invalid Search Message"
-    If you enter invalid characters, you'll see:
-    
+If you enter invalid characters, you'll see:
+
     > "Invalid search term. Please use only letters, numbers, spaces, hyphens, or slashes."
 
 ---
@@ -151,11 +154,9 @@ Each result card shows:
 
 If your search returns no matches:
 
-```
-No disabilities found for "[your search]". 
-Try searching by condition name (e.g., "PTSD", "arthritis") 
-or diagnostic code (e.g., "9411", "5002").
-```
+    No disabilities found for "[your search]".
+    Try searching by condition name (e.g., "PTSD", "arthritis")
+    or diagnostic code (e.g., "9411", "5002").
 
 **What to try:**
 
@@ -170,47 +171,37 @@ or diagnostic code (e.g., "9411", "5002").
 
 ### Musculoskeletal
 
-```
-back pain, spine, lumbar, knee, arthritis, 
-degenerative disc, 5237, 5242, 5003
-```
+    back pain, spine, lumbar, knee, arthritis,
+    degenerative disc, 5237, 5242, 5003
 
 ### Mental Health
 
-```
-PTSD, anxiety, depression, bipolar, 
-panic disorder, 9411, 9413, 9434
-```
+    PTSD, anxiety, depression, bipolar,
+    panic disorder, 9411, 9413, 9434
 
 ### Neurological
 
-```
-neuropathy, nerve damage, radiculopathy,
-paralysis, 8520, 8515, sciatic
-```
+    neuropathy, nerve damage, radiculopathy,
+    paralysis, 8520, 8515, sciatic
 
 ### Respiratory
 
-```
-sleep apnea, asthma, COPD, bronchitis,
-6847, 6602, breathing
-```
+    sleep apnea, asthma, COPD, bronchitis,
+    6847, 6602, breathing
 
 ### Cardiovascular
 
-```
-heart disease, hypertension, coronary artery,
-7005, 7101, heart attack
-```
+    heart disease, hypertension, coronary artery,
+    7005, 7101, heart attack
 
 ---
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| <kbd>Tab</kbd> to search bar | Focus the search input |
-| <kbd>Enter</kbd> | Execute search |
-| <kbd>Escape</kbd> | Close suggestions dropdown |
-| <kbd>↑</kbd> <kbd>↓</kbd> | Navigate suggestions |
-| <kbd>Tab</kbd> | Move to next result card |
+| Shortcut                     | Action                     |
+| ---------------------------- | -------------------------- |
+| <kbd>Tab</kbd> to search bar | Focus the search input     |
+| <kbd>Enter</kbd>             | Execute search             |
+| <kbd>Escape</kbd>            | Close suggestions dropdown |
+| <kbd>↑</kbd> <kbd>↓</kbd>    | Navigate suggestions       |
+| <kbd>Tab</kbd>               | Move to next result card   |

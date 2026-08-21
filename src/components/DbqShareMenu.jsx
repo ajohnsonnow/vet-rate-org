@@ -7,7 +7,7 @@
  * DbqShareMenu Component
  * "Document Exchange" - Three-tab sharing interface
  * Tab 1: Direct Download (Standard)
- * Tab 2: Email Bundle (.zip — NOT encrypted)
+ * Tab 2: Email Bundle (.zip - NOT encrypted)
  * Tab 3: Mobile Handoff (AirDrop/Share)
  */
 
@@ -42,7 +42,7 @@ async function downloadDirectDbq(formId, formData, deps) {
   setStatus({ type: "info", message: "Generating draft DBQ..." });
 
   try {
-    // deepcode ignore javascript/DOMXSS: downloadPdfBlob delegates to triggerBlobDownload which reconstructs the blob URL from UUID regex — a.href is literal 'blob:' + origin + '/' + UUID, never raw blob content
+    // deepcode ignore javascript/DOMXSS: downloadPdfBlob delegates to triggerBlobDownload which reconstructs the blob URL from UUID regex - a.href is literal 'blob:' + origin + '/' + UUID, never raw blob content
     const pdfBlob = await generateDraftDbq(formId, formData, {
       includeWatermark: true,
       includeBanner: true,
@@ -62,7 +62,7 @@ async function downloadDirectDbq(formId, formData, deps) {
   }
 }
 
-// Tab 2: Email Bundle (.zip — NOT encrypted)
+// Tab 2: Email Bundle (.zip - NOT encrypted)
 async function downloadZipBundle(formId, formData, deps) {
   const { setIsGenerating, setStatus } = deps;
   setIsGenerating(true);
@@ -93,7 +93,7 @@ async function downloadZipBundle(formId, formData, deps) {
     setStatus({
       type: "success",
       message:
-        "✅ ZIP bundle downloaded. It is not encrypted — send it over a secure channel (VA portal / in person), not ordinary email.",
+        "✅ ZIP bundle downloaded. It is not encrypted - send it over a secure channel (VA portal / in person), not ordinary email.",
     });
   } catch (error) {
     setStatus({ type: "error", message: `❌ Error: ${error.message}` });
@@ -279,7 +279,7 @@ function EmailZipTabContent({ isGenerating, onDownload }) {
         </h4>
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Bundle the draft DBQ into a single .zip with a short README for your
-          doctor — handy as an email attachment.
+          doctor - handy as an email attachment.
         </p>
         <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
           <li>✓ One file: the DBQ PDF + instructions for your doctor</li>
@@ -475,7 +475,7 @@ export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
             />
           )}
 
-          {/* Tab 2: Email Bundle (.zip — NOT encrypted) */}
+          {/* Tab 2: Email Bundle (.zip - NOT encrypted) */}
           {activeTab === "encrypt" && (
             <EmailZipTabContent
               isGenerating={isGenerating}

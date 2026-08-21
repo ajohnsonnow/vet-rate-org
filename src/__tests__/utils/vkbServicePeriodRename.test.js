@@ -33,7 +33,7 @@ describe("C1: VKB servicePeriods field rename migration", () => {
     expect(period.separationDate).toBe("2015-05-30");
   });
 
-  it("is idempotent — running twice does not re-flag changed or corrupt data", () => {
+  it("is idempotent - running twice does not re-flag changed or corrupt data", () => {
     const vkb = initializeVKB();
     vkb.serviceHistory.servicePeriods = [
       { entryDate: "2010-06-01", separationDate: "2015-05-30" },

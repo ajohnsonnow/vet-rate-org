@@ -163,11 +163,9 @@ function analyzeVersionBump() {
 
 function bumpVersion(ver, type) {
   const [M, m, p] = ver.split(".").map(Number);
-  return type === "major"
-    ? `${M + 1}.0.0`
-    : type === "minor"
-      ? `${M}.${m + 1}.0`
-      : `${M}.${m}.${p + 1}`;
+  if (type === "major") return `${M + 1}.0.0`;
+  if (type === "minor") return `${M}.${m + 1}.0`;
+  return `${M}.${m}.${p + 1}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -204,6 +202,84 @@ async function phaseFix() {
 // Phase 2 — PREPARE
 // ─────────────────────────────────────────────────────────────────────────────
 
+function resolveBumpType() {
+  if (FORCE_MAJOR) return { type: "major", reason: "Forced major bump" };
+  if (FORCE_MINOR) return { type: "minor", reason: "Forced minor bump" };
+  if (FORCE_PATCH) return { type: "patch", reason: "Forced patch bump" };
+  return analyzeVersionBump();
+}
+
+async function confirmVersionBump(proposedVersion) {
+  if (AUTO_YES) return proposedVersion;
+
+  const ok = await ask(`\n  Proceed with v${proposedVersion}?`);
+  if (ok) return proposedVersion;
+
+  const custom = await askString(
+    "  Enter custom version (X.Y.Z) or leave blank to abort",
+  );
+  if (custom && /^\d+\.\d+\.\d+$/.test(custom)) return custom;
+
+  console.log(c("red", "\n❌ Aborted."));
+  process.exit(1);
+}
+
+async function bumpVersionStep(currentVersion) {
+  const { type: bumpType, reason } = resolveBumpType();
+  let newVersion = bumpVersion(currentVersion, bumpType);
+
+  console.log(`\n  ${c("dim", "Current:")} ${c("yellow", currentVersion)}`);
+  console.log(
+    `  ${c("dim", "Bump:")}    ${c("cyan", bumpType.toUpperCase())} — ${reason}`,
+  );
+  console.log(`  ${c("dim", "New:")}     ${c("green", newVersion)}`);
+
+  newVersion = await confirmVersionBump(newVersion);
+
+  run(`npm version ${newVersion} --no-git-tag-version`, { stdio: "pipe" });
+  console.log(c("green", `✅ Version bumped → v${newVersion}`));
+  return newVersion;
+}
+
+function syncChangelogVersion(newVersion) {
+  const changelogPath = path.join(ROOT, "src", "data", "changelog.json");
+  if (!fs.existsSync(changelogPath)) return;
+  try {
+    const cl = readJSON("src/data/changelog.json");
+    cl.version = newVersion;
+    cl.lastUpdated = new Date().toISOString().split("T")[0];
+    if (cl.updates?.length && cl.updates[0].version !== newVersion) {
+      cl.updates[0].version = newVersion;
+      cl.updates[0].date = cl.lastUpdated;
+    }
+    writeJSON("src/data/changelog.json", cl);
+    console.log(c("green", `✅ Changelog synced → v${newVersion}`));
+  } catch (e) {
+    console.log(c("yellow", `⚠️  Changelog sync warning: ${e.message}`));
+  }
+}
+
+function runOptionalNpmStep(scriptName, label, okWord = "done") {
+  if (!scriptExists(scriptName)) return;
+  process.stdout.write(`  ${label}... `);
+  const r = tryRun(`npm run ${scriptName}`);
+  console.log(r.ok ? c("green", okWord) : c("yellow", "warnings"));
+}
+
+function runVaDataPipeline() {
+  const pythonExe = path.join(ROOT, ".venv", "Scripts", "python.exe");
+  const pipelineScript = path.join(
+    ROOT,
+    "scripts",
+    "scrapers",
+    "va_data_pipeline.py",
+  );
+  if (!fs.existsSync(pythonExe) || !fs.existsSync(pipelineScript)) return;
+  process.stdout.write("  🏛️  VA data pipeline... ");
+  const r = tryRun(`"${pythonExe}" "${pipelineScript}" --generate-frontend`);
+  console.log(r.ok ? c("green", "done") : c("yellow", "skipped (error)"));
+}
+
 async function phasePrep() {
   console.log(`\n${c("bold", c("cyan", "━━━ Phase 2: Prepare Release ━━━"))}`);
 
@@ -212,103 +288,18 @@ async function phasePrep() {
   let newVersion = currentVersion;
 
   if (!NO_BUMP) {
-    let bumpType, reason;
-    if (FORCE_MAJOR) {
-      bumpType = "major";
-      reason = "Forced major bump";
-    } else if (FORCE_MINOR) {
-      bumpType = "minor";
-      reason = "Forced minor bump";
-    } else if (FORCE_PATCH) {
-      bumpType = "patch";
-      reason = "Forced patch bump";
-    } else {
-      ({ type: bumpType, reason } = analyzeVersionBump());
-    }
-
-    newVersion = bumpVersion(currentVersion, bumpType);
-
-    console.log(`\n  ${c("dim", "Current:")} ${c("yellow", currentVersion)}`);
-    console.log(
-      `  ${c("dim", "Bump:")}    ${c("cyan", bumpType.toUpperCase())} — ${reason}`,
-    );
-    console.log(`  ${c("dim", "New:")}     ${c("green", newVersion)}`);
-
-    if (!AUTO_YES) {
-      const ok = await ask(`\n  Proceed with v${newVersion}?`);
-      if (!ok) {
-        const custom = await askString(
-          "  Enter custom version (X.Y.Z) or leave blank to abort",
-        );
-        if (custom && /^\d+\.\d+\.\d+$/.test(custom)) {
-          newVersion = custom;
-        } else {
-          console.log(c("red", "\n❌ Aborted."));
-          process.exit(1);
-        }
-      }
-    }
-
-    run(`npm version ${newVersion} --no-git-tag-version`, { stdio: "pipe" });
-    console.log(c("green", `✅ Version bumped → v${newVersion}`));
+    newVersion = await bumpVersionStep(currentVersion);
   } else {
     console.log(
       c("dim", `  Version bump skipped — keeping v${currentVersion}`),
     );
   }
 
-  // sync-version
-  if (scriptExists("sync-version")) {
-    process.stdout.write("  🔄 Syncing version... ");
-    const r = tryRun("npm run sync-version");
-    console.log(r.ok ? c("green", "done") : c("yellow", "warnings"));
-  }
-
-  // update-stats
-  if (scriptExists("update-stats")) {
-    process.stdout.write("  📊 Updating stats... ");
-    const r = tryRun("npm run update-stats");
-    console.log(r.ok ? c("green", "done") : c("yellow", "warnings"));
-  }
-
-  // Sync changelog
-  const changelogPath = path.join(ROOT, "src", "data", "changelog.json");
-  if (fs.existsSync(changelogPath)) {
-    try {
-      const cl = readJSON("src/data/changelog.json");
-      cl.version = newVersion;
-      cl.lastUpdated = new Date().toISOString().split("T")[0];
-      if (cl.updates?.length && cl.updates[0].version !== newVersion) {
-        cl.updates[0].version = newVersion;
-        cl.updates[0].date = cl.lastUpdated;
-      }
-      writeJSON("src/data/changelog.json", cl);
-      console.log(c("green", `✅ Changelog synced → v${newVersion}`));
-    } catch (e) {
-      console.log(c("yellow", `⚠️  Changelog sync warning: ${e.message}`));
-    }
-  }
-
-  // check-legal-pages
-  if (scriptExists("check-legal-pages")) {
-    process.stdout.write("  ⚖️  Legal pages... ");
-    const r = tryRun("npm run check-legal-pages");
-    console.log(r.ok ? c("green", "ok") : c("yellow", "warnings"));
-  }
-
-  // VA data pipeline (optional, slow)
-  const pythonExe = path.join(ROOT, ".venv", "Scripts", "python.exe");
-  const pipelineScript = path.join(
-    ROOT,
-    "scripts",
-    "scrapers",
-    "va_data_pipeline.py",
-  );
-  if (fs.existsSync(pythonExe) && fs.existsSync(pipelineScript)) {
-    process.stdout.write("  🏛️  VA data pipeline... ");
-    const r = tryRun(`"${pythonExe}" "${pipelineScript}" --generate-frontend`);
-    console.log(r.ok ? c("green", "done") : c("yellow", "skipped (error)"));
-  }
+  runOptionalNpmStep("sync-version", "🔄 Syncing version");
+  runOptionalNpmStep("update-stats", "📊 Updating stats");
+  syncChangelogVersion(newVersion);
+  runOptionalNpmStep("check-legal-pages", "⚖️  Legal pages", "ok");
+  runVaDataPipeline();
 
   return newVersion;
 }
@@ -322,284 +313,289 @@ function scriptExists(name) {
 // Phase 3 — VALIDATE
 // ─────────────────────────────────────────────────────────────────────────────
 
+async function check(results, label, fn, skip = false) {
+  if (skip) {
+    results.push({ label, skipped: true });
+    console.log(`  ${c("dim", "⏭  " + label + " (skipped)")}`);
+    return;
+  }
+  process.stdout.write(`  ⏳ ${label}...`);
+  const start = Date.now();
+  try {
+    const result = await fn();
+    const dur = ((Date.now() - start) / 1000).toFixed(1);
+    const note = result?.note ? c("dim", "  " + result.note) : "";
+    console.log(
+      `\r  ${c("green", "✅")} ${label.padEnd(42)} ${c("dim", dur + "s")}${note}`,
+    );
+    results.push({ label, ok: true, duration: dur, note: result?.note });
+  } catch (e) {
+    const dur = ((Date.now() - start) / 1000).toFixed(1);
+    console.log(
+      `\r  ${c("red", "❌")} ${label.padEnd(42)} ${c("dim", dur + "s")}`,
+    );
+    if (VERBOSE) console.log(c("red", "     " + e.message));
+    results.push({ label, ok: false, duration: dur, error: e.message });
+  }
+}
+
+function checkEslint() {
+  const r = tryRun("npx eslint src");
+  if (!r.ok) throw new Error("Lint errors found");
+  return {};
+}
+
+function checkUnitTests() {
+  run("npm run test:coverage", { stdio: VERBOSE ? "inherit" : "pipe" });
+  return {};
+}
+
+async function checkE2E() {
+  run("npx playwright test --project=chromium", {
+    stdio: VERBOSE ? "inherit" : "pipe",
+  });
+  return {};
+}
+
+function checkProductionBuild() {
+  run("npx vite build", { stdio: VERBOSE ? "inherit" : "pipe" });
+  return {};
+}
+
+function checkSecurityScan() {
+  const critical = [];
+  const warnings = [];
+  const critPatterns = [
+    { id: "CTK-002", name: "eval()", pattern: "eval(" },
+    { id: "CTK-005", name: "Hardcoded cert", pattern: "-----BEGIN" },
+    { id: "CTK-005", name: "Hardcoded key", pattern: "sk-ant-" },
+    { id: "SEC-007", name: "new Function()", pattern: "new Function(" },
+  ];
+  const warnPatterns = [
+    {
+      id: "SEC-004",
+      name: "XSS (dangerouslySetInnerHTML)",
+      pattern: "dangerouslySetInnerHTML",
+    },
+  ];
+  const srcDir = path.join(ROOT, "src");
+  function scan(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fp = path.join(dir, entry.name);
+      if (entry.isDirectory() && !entry.name.startsWith(".")) {
+        scan(fp);
+        continue;
+      }
+      if (!entry.isFile() || !/\.(js|jsx)$/.test(entry.name)) continue;
+      if (/\.(test|spec)\.|preflight/.test(entry.name)) continue;
+      const lines = fs.readFileSync(fp, "utf8").split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (/^\s*(\/\/|\*)/.test(line)) continue;
+        const rel = path.relative(ROOT, fp).replace(/\\/g, "/");
+        critPatterns.forEach((p) => {
+          if (line.includes(p.pattern))
+            critical.push(`[${p.id}] ${p.name} — ${rel}:${i + 1}`);
+        });
+        warnPatterns.forEach((p) => {
+          if (line.includes(p.pattern))
+            warnings.push(`[${p.id}] WARN ${p.name} — ${rel}:${i + 1}`);
+        });
+      }
+    }
+  }
+  if (fs.existsSync(srcDir)) scan(srcDir);
+  warnings.forEach((w) => console.log(`\n     ${c("yellow", w)}`));
+  if (critical.length > 0) {
+    critical.forEach((v) => console.log(`\n     ${c("red", v)}`));
+    throw new Error(`${critical.length} critical security violation(s)`);
+  }
+  return { note: `0 critical, ${warnings.length} warning(s)` };
+}
+
+// Secret scan (gitleaks). Catches committed API keys, tokens, private
+// keys, etc. across the whole git history. Config: .gitleaks.toml.
+// Gracefully skips when gitleaks isn't installed locally.
+function checkSecretScan() {
+  const probe = tryRun("gitleaks version");
+  if (!probe.ok) {
+    return {
+      note: "gitleaks not installed — `go install github.com/gitleaks/gitleaks/v8@latest` or download from github.com/gitleaks/gitleaks",
+    };
+  }
+  const reportPath = path.join(ROOT, ".gitleaks-preflight-report.json");
+  const r = tryRun(
+    `gitleaks detect --no-banner --redact --config .gitleaks.toml --report-format json --report-path "${reportPath}"`,
+  );
+  let findings = 0;
+  if (fs.existsSync(reportPath)) {
+    try {
+      findings = JSON.parse(fs.readFileSync(reportPath, "utf8")).length;
+    } catch {}
+    fs.unlinkSync(reportPath);
+  }
+  if (findings > 0) {
+    throw new Error(`${findings} secret(s) detected — see gitleaks output`);
+  }
+  if (!r.ok && !/no leaks found/i.test(r.out)) {
+    // gitleaks exits 1 on findings, 0 otherwise. A non-zero exit with no
+    // parsed findings means a scan-level failure (e.g., corrupt repo state).
+    throw new Error("gitleaks scan failed — see verbose output");
+  }
+  return { note: "0 secrets" };
+}
+
+// SAST (semgrep). Pulls 5 registry rule packs + project-local custom
+// rules. Skips when semgrep isn't installed. Driver: scripts/sast-check.mjs.
+//
+// Findings are informational during Sprint 1–2: ~44 pre-existing baseline
+// hits are tracked in docs/AUDIT_FINDINGS.md and closed in Sprint 3. After
+// S3 lands, flip STRICT_SAST=true in CI to make this block again.
+function checkSast() {
+  const STRICT_SAST = process.env.STRICT_SAST === "true";
+  const r = tryRun("node scripts/sast-check.mjs");
+  if (/not installed/i.test(r.out)) {
+    return {
+      note: "semgrep not installed — `pip install semgrep`",
+    };
+  }
+  // eslint-disable-next-line sonarjs/slow-regex -- trusted local semgrep CLI output, never attacker-controlled length
+  const blockerMatch = /FAILED \((\d+) blocking finding/.exec(r.out);
+  // eslint-disable-next-line sonarjs/slow-regex -- trusted local semgrep CLI output, never attacker-controlled length
+  const findingMatch = /(\d+) finding/.exec(r.out);
+  if (!r.ok && STRICT_SAST) {
+    throw new Error(
+      blockerMatch
+        ? `${blockerMatch[1]} blocking SAST finding(s) — see audit output`
+        : "semgrep scan failed",
+    );
+  }
+  if (blockerMatch) {
+    return {
+      note: `${blockerMatch[1]} pre-existing finding(s) — tracked in AUDIT_FINDINGS.md, fix in S3`,
+    };
+  }
+  return {
+    note: findingMatch ? `${findingMatch[1]} info finding(s)` : "0 findings",
+  };
+}
+
+// Bundle budget (Sprint 5). Non-blocking until App.jsx feature-region
+// split (S4.5) brings the initial chunk under 300 KB gz. Flip
+// STRICT_BUNDLE=true in CI after that lands.
+function checkBundleBudget() {
+  const distExists = fs.existsSync(path.join(ROOT, "dist"));
+  if (!distExists) {
+    return { note: "dist/ missing — skipped (run after build)" };
+  }
+  const r = tryRun("node scripts/check-bundle-budget.mjs");
+  // eslint-disable-next-line sonarjs/slow-regex -- trusted local budget-check CLI output, never attacker-controlled length
+  const breachMatch = /(\d+) budget breach/.exec(r.out);
+  if (breachMatch && breachMatch[1] !== "0") {
+    return {
+      note: `${breachMatch[1]} pre-existing breach(es) — tracked, fix in S4.5/S5`,
+    };
+  }
+  return { note: "all budgets met" };
+}
+
+// Contract enforcement (blocking as of S8)
+//
+// S8 closed the protobufjs/xmldom advisories via npm `overrides`. This step
+// is now blocking on high+ production advisories. Opt-out via
+// STRICT_AUDIT=false only when diagnosing a newly-published CVE that the
+// dependency tree hasn't caught up to yet.
+function checkContractEnforcement() {
+  const STRICT_AUDIT = process.env.STRICT_AUDIT !== "false";
+  const audit = tryRun("npm audit --omit=dev --audit-level=high");
+  if (!audit.ok) {
+    // eslint-disable-next-line sonarjs/slow-regex -- trusted local npm-audit CLI output, never attacker-controlled length
+    const critMatch = /(\d+) critical/.exec(audit.out);
+    // eslint-disable-next-line sonarjs/slow-regex -- trusted local npm-audit CLI output, never attacker-controlled length
+    const highMatch = /(\d+) high/.exec(audit.out);
+    const summary = `${critMatch?.[1] ?? "0"} critical, ${highMatch?.[1] ?? "0"} high`;
+    if (STRICT_AUDIT) {
+      throw new Error(`npm audit (prod): ${summary}`);
+    }
+    return { note: `non-strict mode: ${summary}` };
+  }
+  return { note: "0 high+ in production deps" };
+}
+
+function checkAccessibility() {
+  const compDir = path.join(ROOT, "src", "components");
+  if (!fs.existsSync(compDir)) return { note: "no components dir" };
+  let total = 0,
+    covered = 0;
+  function scanA11y(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fp = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanA11y(fp);
+        continue;
+      }
+      if (!/\.jsx?$/.test(entry.name) || /\.(test|spec)\./.test(entry.name))
+        continue;
+      total++;
+      const src = fs.readFileSync(fp, "utf8");
+      if (
+        /aria-|role=|<(button|input|label|nav|main|header|footer|section|article|aside|h[1-6])/i.test(
+          src,
+        )
+      )
+        covered++;
+    }
+  }
+  scanA11y(compDir);
+  const pct = total ? Math.round((covered / total) * 100) : 0;
+  return { note: `${covered}/${total} components (${pct}%)` };
+}
+
+function checkVersionConsistency() {
+  const pkg = readJSON("package.json");
+  const ver = pkg.version;
+  const checks = [
+    ["public/version.json", (d) => d.version === ver],
+    ["src/data/changelog.json", (d) => d.version === ver],
+  ];
+  for (const [rel, test] of checks) {
+    const p = path.join(ROOT, rel);
+    if (fs.existsSync(p)) {
+      const data = JSON.parse(fs.readFileSync(p, "utf8"));
+      if (!test(data)) throw new Error(`Version mismatch in ${rel}`);
+    }
+  }
+  return { note: `v${ver}` };
+}
+
+function checkDocumentation() {
+  const required = ["README.md", "SECURITY.md", "CONTRIBUTING.md"];
+  const missing = required.filter((f) => !fs.existsSync(path.join(ROOT, f)));
+  if (missing.length) throw new Error(`Missing: ${missing.join(", ")}`);
+  return { note: required.join(" + ") + " ✓" };
+}
+
 async function phaseValidate() {
   console.log(`\n${c("bold", c("cyan", "━━━ Phase 3: Validate ━━━"))}`);
 
   const results = [];
-  const t0 = Date.now();
 
-  async function check(label, fn, skip = false) {
-    if (skip) {
-      results.push({ label, skipped: true });
-      console.log(`  ${c("dim", "⏭  " + label + " (skipped)")}`);
-      return;
-    }
-    process.stdout.write(`  ⏳ ${label}...`);
-    const start = Date.now();
-    try {
-      const result = await fn();
-      const dur = ((Date.now() - start) / 1000).toFixed(1);
-      const note = result?.note ? c("dim", "  " + result.note) : "";
-      console.log(
-        `\r  ${c("green", "✅")} ${label.padEnd(42)} ${c("dim", dur + "s")}${note}`,
-      );
-      results.push({ label, ok: true, duration: dur, note: result?.note });
-    } catch (e) {
-      const dur = ((Date.now() - start) / 1000).toFixed(1);
-      console.log(
-        `\r  ${c("red", "❌")} ${label.padEnd(42)} ${c("dim", dur + "s")}`,
-      );
-      if (VERBOSE) console.log(c("red", "     " + e.message));
-      results.push({ label, ok: false, duration: dur, error: e.message });
-    }
-  }
-
-  // 1. Lint
-  await check("ESLint", () => {
-    const r = tryRun("npx eslint src");
-    if (!r.ok) throw new Error("Lint errors found");
-    return {};
-  });
-
-  // 2. Unit tests + coverage
-  await check("Unit tests + coverage", () => {
-    run("npm run test:coverage", { stdio: VERBOSE ? "inherit" : "pipe" });
-    return {};
-  });
-
-  // 3. E2E
+  await check(results, "ESLint", checkEslint);
+  await check(results, "Unit tests + coverage", checkUnitTests);
+  await check(results, "E2E (Playwright — chromium)", checkE2E, SKIP_E2E);
+  await check(results, "Production build", checkProductionBuild, SKIP_BUILD);
+  await check(results, "Security scan (OWASP)", checkSecurityScan);
+  await check(results, "Secret scan (gitleaks)", checkSecretScan);
+  await check(results, "SAST (semgrep)", checkSast);
+  await check(results, "Bundle budget", checkBundleBudget);
   await check(
-    "E2E (Playwright — chromium)",
-    async () => {
-      run("npx playwright test --project=chromium", {
-        stdio: VERBOSE ? "inherit" : "pipe",
-      });
-      return {};
-    },
-    SKIP_E2E,
+    results,
+    "Contract enforcement (prod audit)",
+    checkContractEnforcement,
   );
-
-  // 4. Production build
-  await check(
-    "Production build",
-    () => {
-      run("npx vite build", { stdio: VERBOSE ? "inherit" : "pipe" });
-      return {};
-    },
-    SKIP_BUILD,
-  );
-
-  // 5. Security scan
-  await check("Security scan (OWASP)", () => {
-    const critical = [];
-    const warnings = [];
-    const critPatterns = [
-      { id: "CTK-002", name: "eval()", pattern: "eval(" },
-      { id: "CTK-005", name: "Hardcoded cert", pattern: "-----BEGIN" },
-      { id: "CTK-005", name: "Hardcoded key", pattern: "sk-ant-" },
-      { id: "SEC-007", name: "new Function()", pattern: "new Function(" },
-    ];
-    const warnPatterns = [
-      {
-        id: "SEC-004",
-        name: "XSS (dangerouslySetInnerHTML)",
-        pattern: "dangerouslySetInnerHTML",
-      },
-    ];
-    const srcDir = path.join(ROOT, "src");
-    function scan(dir) {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const fp = path.join(dir, entry.name);
-        if (entry.isDirectory() && !entry.name.startsWith(".")) {
-          scan(fp);
-          continue;
-        }
-        if (!entry.isFile() || !/\.(js|jsx)$/.test(entry.name)) continue;
-        if (/\.(test|spec)\.|preflight/.test(entry.name)) continue;
-        const lines = fs.readFileSync(fp, "utf8").split("\n");
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          if (/^\s*(\/\/|\*)/.test(line)) continue;
-          const rel = path.relative(ROOT, fp).replace(/\\/g, "/");
-          critPatterns.forEach((p) => {
-            if (line.includes(p.pattern))
-              critical.push(`[${p.id}] ${p.name} — ${rel}:${i + 1}`);
-          });
-          warnPatterns.forEach((p) => {
-            if (line.includes(p.pattern))
-              warnings.push(`[${p.id}] WARN ${p.name} — ${rel}:${i + 1}`);
-          });
-        }
-      }
-    }
-    if (fs.existsSync(srcDir)) scan(srcDir);
-    warnings.forEach((w) => console.log(`\n     ${c("yellow", w)}`));
-    if (critical.length > 0) {
-      critical.forEach((v) => console.log(`\n     ${c("red", v)}`));
-      throw new Error(`${critical.length} critical security violation(s)`);
-    }
-    return { note: `0 critical, ${warnings.length} warning(s)` };
-  });
-
-  // 5a. Secret scan (gitleaks). Catches committed API keys, tokens, private
-  // keys, etc. across the whole git history. Config: .gitleaks.toml.
-  // Gracefully skips when gitleaks isn't installed locally.
-  await check("Secret scan (gitleaks)", () => {
-    const probe = tryRun("gitleaks version");
-    if (!probe.ok) {
-      return {
-        note: "gitleaks not installed — `go install github.com/gitleaks/gitleaks/v8@latest` or download from github.com/gitleaks/gitleaks",
-      };
-    }
-    const reportPath = path.join(ROOT, ".gitleaks-preflight-report.json");
-    const r = tryRun(
-      `gitleaks detect --no-banner --redact --config .gitleaks.toml --report-format json --report-path "${reportPath}"`,
-    );
-    let findings = 0;
-    if (fs.existsSync(reportPath)) {
-      try {
-        findings = JSON.parse(fs.readFileSync(reportPath, "utf8")).length;
-      } catch {}
-      fs.unlinkSync(reportPath);
-    }
-    if (findings > 0) {
-      throw new Error(`${findings} secret(s) detected — see gitleaks output`);
-    }
-    if (!r.ok && !/no leaks found/i.test(r.out)) {
-      // gitleaks exits 1 on findings, 0 otherwise. A non-zero exit with no
-      // parsed findings means a scan-level failure (e.g., corrupt repo state).
-      throw new Error("gitleaks scan failed — see verbose output");
-    }
-    return { note: "0 secrets" };
-  });
-
-  // 5b. SAST (semgrep). Pulls 5 registry rule packs + project-local custom
-  // rules. Skips when semgrep isn't installed. Driver: scripts/sast-check.mjs.
-  //
-  // Findings are informational during Sprint 1–2: ~44 pre-existing baseline
-  // hits are tracked in docs/AUDIT_FINDINGS.md and closed in Sprint 3. After
-  // S3 lands, flip STRICT_SAST=true in CI to make this block again.
-  await check("SAST (semgrep)", () => {
-    const STRICT_SAST = process.env.STRICT_SAST === "true";
-    const r = tryRun("node scripts/sast-check.mjs");
-    if (/not installed/i.test(r.out)) {
-      return {
-        note: "semgrep not installed — `pip install semgrep`",
-      };
-    }
-    const blockerMatch = /FAILED \((\d+) blocking finding/.exec(r.out);
-    const findingMatch = /(\d+) finding/.exec(r.out);
-    if (!r.ok && STRICT_SAST) {
-      throw new Error(
-        blockerMatch
-          ? `${blockerMatch[1]} blocking SAST finding(s) — see audit output`
-          : "semgrep scan failed",
-      );
-    }
-    if (blockerMatch) {
-      return {
-        note: `${blockerMatch[1]} pre-existing finding(s) — tracked in AUDIT_FINDINGS.md, fix in S3`,
-      };
-    }
-    return {
-      note: findingMatch ? `${findingMatch[1]} info finding(s)` : "0 findings",
-    };
-  });
-
-  // 5c. Bundle budget (Sprint 5). Non-blocking until App.jsx feature-region
-  // split (S4.5) brings the initial chunk under 300 KB gz. Flip
-  // STRICT_BUNDLE=true in CI after that lands.
-  await check("Bundle budget", () => {
-    const distExists = fs.existsSync(path.join(ROOT, "dist"));
-    if (!distExists) {
-      return { note: "dist/ missing — skipped (run after build)" };
-    }
-    const r = tryRun("node scripts/check-bundle-budget.mjs");
-    const breachMatch = /(\d+) budget breach/.exec(r.out);
-    if (breachMatch && breachMatch[1] !== "0") {
-      return {
-        note: `${breachMatch[1]} pre-existing breach(es) — tracked, fix in S4.5/S5`,
-      };
-    }
-    return { note: "all budgets met" };
-  });
-
-  // 6. Contract enforcement (blocking as of S8)
-  //
-  // S8 closed the protobufjs/xmldom advisories via npm `overrides`. This step
-  // is now blocking on high+ production advisories. Opt-out via
-  // STRICT_AUDIT=false only when diagnosing a newly-published CVE that the
-  // dependency tree hasn't caught up to yet.
-  await check("Contract enforcement (prod audit)", () => {
-    const STRICT_AUDIT = process.env.STRICT_AUDIT !== "false";
-    const audit = tryRun("npm audit --omit=dev --audit-level=high");
-    if (!audit.ok) {
-      const critMatch = /(\d+) critical/.exec(audit.out);
-      const highMatch = /(\d+) high/.exec(audit.out);
-      const summary = `${critMatch?.[1] ?? "0"} critical, ${highMatch?.[1] ?? "0"} high`;
-      if (STRICT_AUDIT) {
-        throw new Error(`npm audit (prod): ${summary}`);
-      }
-      return { note: `non-strict mode: ${summary}` };
-    }
-    return { note: "0 high+ in production deps" };
-  });
-
-  // 7. Accessibility audit
-  await check("Accessibility audit (ARIA)", () => {
-    const compDir = path.join(ROOT, "src", "components");
-    if (!fs.existsSync(compDir)) return { note: "no components dir" };
-    let total = 0,
-      covered = 0;
-    function scanA11y(dir) {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const fp = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          scanA11y(fp);
-          continue;
-        }
-        if (!/\.jsx?$/.test(entry.name) || /\.(test|spec)\./.test(entry.name))
-          continue;
-        total++;
-        const src = fs.readFileSync(fp, "utf8");
-        if (
-          /aria-|role=|<(button|input|label|nav|main|header|footer|section|article|aside|h[1-6])/i.test(
-            src,
-          )
-        )
-          covered++;
-      }
-    }
-    scanA11y(compDir);
-    const pct = total ? Math.round((covered / total) * 100) : 0;
-    return { note: `${covered}/${total} components (${pct}%)` };
-  });
-
-  // 8. Version consistency
-  await check("Version consistency", () => {
-    const pkg = readJSON("package.json");
-    const ver = pkg.version;
-    const checks = [
-      ["public/version.json", (d) => d.version === ver],
-      ["src/data/changelog.json", (d) => d.version === ver],
-    ];
-    for (const [rel, test] of checks) {
-      const p = path.join(ROOT, rel);
-      if (fs.existsSync(p)) {
-        const data = JSON.parse(fs.readFileSync(p, "utf8"));
-        if (!test(data)) throw new Error(`Version mismatch in ${rel}`);
-      }
-    }
-    return { note: `v${ver}` };
-  });
-
-  // 9. Docs check
-  await check("Documentation check", () => {
-    const required = ["README.md", "SECURITY.md", "CONTRIBUTING.md"];
-    const missing = required.filter((f) => !fs.existsSync(path.join(ROOT, f)));
-    if (missing.length) throw new Error(`Missing: ${missing.join(", ")}`);
-    return { note: required.join(" + ") + " ✓" };
-  });
+  await check(results, "Accessibility audit (ARIA)", checkAccessibility);
+  await check(results, "Version consistency", checkVersionConsistency);
+  await check(results, "Documentation check", checkDocumentation);
 
   return results;
 }

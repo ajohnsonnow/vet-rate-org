@@ -283,7 +283,7 @@ function MissionEmbedded({
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse" />
             )}
           </div>
-          {/* Percentage label inside bar — dark pill backing guarantees ≥4.5:1
+          {/* Percentage label inside bar - dark pill backing guarantees ≥4.5:1
              for the white text at any fill level (at low % the bar centre is over
              the light track; a drop-shadow alone isn't counted by contrast tools). */}
           <div className="absolute inset-0 flex items-center justify-center">

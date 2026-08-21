@@ -25,7 +25,7 @@ const ENCRYPTION_VERSION = "VR_ENC_V3";
 const PBKDF2_ITERATIONS = 600_000;
 const PBKDF2_LEGACY_ITERATIONS = 100_000;
 
-// AAD binds ciphertext to its envelope context — a V3 ciphertext cannot be
+// AAD binds ciphertext to its envelope context - a V3 ciphertext cannot be
 // repurposed against a V3-cloud-sync envelope (different AAD) or vice versa.
 const AAD_V3 = new TextEncoder().encode("vetrate.cloud-encryption.v3");
 
@@ -227,7 +227,7 @@ export const decryptFromCloud = async (
     );
   }
 
-  // Decrypt — V3 envelopes are bound to AAD; V1/V2 envelopes have none.
+  // Decrypt - V3 envelopes are bound to AAD; V1/V2 envelopes have none.
   try {
     const aad = aadForVersion(encryptedPackage.version);
     const params = { name: "AES-GCM", iv: iv };
@@ -274,21 +274,21 @@ export const isEncryptedBackup = (data) => {
  *
  * A passphrase-less backup generates a random per-backup DEK (data encryption
  * key) that must persist on-device so the backup can be restored. Historically
- * that DEK sat UNWRAPPED in plaintext localStorage (`vet_rate_backup_key_*`) —
+ * that DEK sat UNWRAPPED in plaintext localStorage (`vet_rate_backup_key_*`) -
  * readable by any XSS, a shared-device user, or the one-click debug dump.
  *
  * The optional device-passphrase keystore wraps each DEK under a
  * passphrase-anchored KEK (PBKDF2-SHA256 → AES-KW), so the at-rest material is
  * useless without the passphrase. AES-KW (RFC 3394) carries an integrity check,
- * so an unwrap under the wrong KEK throws — which is also how we verify the
+ * so an unwrap under the wrong KEK throws - which is also how we verify the
  * passphrase on unlock (the `*_verifier` blob).
  *
- * Custody only — the cloud wire format (VR_ENC_V3 / VS3) is untouched. On
+ * Custody only - the cloud wire format (VR_ENC_V3 / VS3) is untouched. On
  * restore, getLocalKey unwraps and re-exports the DEK to base64 to feed the
  * unchanged decryptFromCloud raw-key branch; wrapping protects the key at REST,
  * not against in-session XSS while a decrypt is live.
  *
- * NOTE: storeLocalKey/getLocalKey are now async — Web Crypto unwrap is
+ * NOTE: storeLocalKey/getLocalKey are now async - Web Crypto unwrap is
  * inherently async, so the wrapped path cannot stay synchronous. All call sites
  * were already inside async functions. See docs/CRYPTO_AUDIT.md §7 and
  * docs/audit/S16_ROTATION_DEAUTH_DESIGN.md.
@@ -307,7 +307,7 @@ const withKeystoreLock = (fn) =>
     ? navigator.locks.request(KEYSTORE_LOCK_NAME, fn)
     : fn();
 
-// Unlocked KEK for this tab session only — never persisted.
+// Unlocked KEK for this tab session only - never persisted.
 let sessionKEK = null;
 
 /**
@@ -377,8 +377,8 @@ const makeVerifier = async (kek) => {
 };
 
 // AES-KW wrap of a 256-bit key is exactly 40 bytes (RFC 3394: n+1 64-bit blocks
-// = 4 + 1). A stored verifier/wrapped blob that decodes to any other length — or
-// is not valid base64 — is corrupt, NOT a wrong-passphrase case. Distinguishing
+// = 4 + 1). A stored verifier/wrapped blob that decodes to any other length - or
+// is not valid base64 - is corrupt, NOT a wrong-passphrase case. Distinguishing
 // the two lets unlock report corruption honestly instead of telling the user
 // their (correct) passphrase is wrong.
 const WRAPPED_BLOB_BYTES = 40;
@@ -404,7 +404,7 @@ const readWrappedBlob = (base64) => {
 
 // PBKDF2 iteration counts must be a positive 32-bit integer or Web Crypto's
 // deriveKey throws a raw, unhandled TypeError. A descriptor carrying a truthy-but-
-// invalid value (negative, non-numeric, out of range) falls back to the default —
+// invalid value (negative, non-numeric, out of range) falls back to the default -
 // which self-heals, since every descriptor this code writes uses PBKDF2_ITERATIONS.
 const validIterations = (n) =>
   Number.isInteger(n) && n > 0 && n <= 0xffffffff ? n : PBKDF2_ITERATIONS;
@@ -450,7 +450,7 @@ export const isDevicePassphraseEnabled = () =>
 export const isKeystoreUnlocked = () => sessionKEK !== null;
 
 /**
- * Whether the keystore exists but is locked this session — the state the restore
+ * Whether the keystore exists but is locked this session - the state the restore
  * UI branches on to prompt for the device passphrase. Distinct from "no
  * passphrase set": a disabled keystore is not "locked", it is simply absent.
  */
@@ -473,7 +473,7 @@ export const listBackupKeyIds = () => {
   return Array.from(ids);
 };
 
-// Wrap a still-plaintext DEK, verify the roundtrip, THEN delete the plaintext —
+// Wrap a still-plaintext DEK, verify the roundtrip, THEN delete the plaintext -
 // never the reverse, so an interrupted migration can't strand a key.
 const migratePlaintextKey = async (backupId) => {
   const plaintext = localStorage.getItem(KEY_STORAGE_PREFIX + backupId);
@@ -488,7 +488,7 @@ const migratePlaintextKey = async (backupId) => {
 
 // Sweep every still-plaintext DEK into the wrapped store under the session KEK.
 // Per-key isolation: one un-wrappable key (e.g. a truncated crash-left blob)
-// is skipped so the others still heal — without it a single bad key would abort
+// is skipped so the others still heal - without it a single bad key would abort
 // the whole sweep and strand every later key in plaintext.
 const migrateAllPlaintextKeys = async () => {
   for (const id of listBackupKeyIds()) {
@@ -512,14 +512,14 @@ const purgeRotatingTemp = () => {
 /**
  * Idempotent, forward-only completion of an interrupted passphrase rotation:
  * move any remaining temp→live, swap the KEK descriptor, clear the marker. Pure
- * localStorage moves — it derives no KEK and is passphrase-free by design.
+ * localStorage moves - it derives no KEK and is passphrase-free by design.
  *
- * Because it is passphrase-free it does NOT cryptographically verify the marker —
+ * Because it is passphrase-free it does NOT cryptographically verify the marker -
  * it trusts the marker's descriptor + verifier and overwrites the live META/
  * VERIFIER with them. It is therefore NOT safe to call on an unverified or
  * injected marker before a passphrase is known: a shape-valid-but-garbage marker
  * would commit an unconfirmed KEK over the only intact old material and brick the
- * keystore. Callers must confirm the new KEK first — `unlockDeviceKeystore` gates
+ * keystore. Callers must confirm the new KEK first - `unlockDeviceKeystore` gates
  * this behind `unwrapsUnder`, and `rotateDevicePassphrase` writes a freshly
  * derived marker immediately before calling it. Only a *structurally* broken
  * marker (unparseable / wrong shape) is rolled back here; a shape-valid marker is
@@ -548,7 +548,7 @@ export const completePendingRotation = () => {
     // Corrupt commit marker: the new KEK it described was never confirmed, so
     // the temp slots wrapped under it are unrecoverable. Roll back to the still
     // intact old META/VERIFIER (the old passphrase keeps working) and discard
-    // the debris rather than throwing — an unguarded parse here would brick
+    // the debris rather than throwing - an unguarded parse here would brick
     // every future unlock.
     purgeRotatingTemp();
     localStorage.removeItem(KEK_ROTATING_KEY);
@@ -614,7 +614,7 @@ const _enableDevicePassphrase = async (passphrase) => {
 };
 
 // Read + structurally validate the rotation commit marker, returning the new
-// KEK descriptor (salt, iterations) and the decoded verifier bytes — or null if
+// KEK descriptor (salt, iterations) and the decoded verifier bytes - or null if
 // there is no marker, or it is unparseable / wrong-shape / wrong-length. A
 // non-null result is only "shape valid": unlock still confirms the new KEK
 // cryptographically (unwrapsUnder) BEFORE committing, so a shape-valid marker
@@ -658,7 +658,7 @@ const readPendingRotation = () => {
 
 // True iff `verifierBytes` (an AES-KW blob) unwraps under `kek`. RFC 3394's
 // integrity check makes a wrong-KEK unwrap throw, so a success confirms the KEK
-// is the one the verifier was made under — i.e. the passphrase is correct.
+// is the one the verifier was made under - i.e. the passphrase is correct.
 const unwrapsUnder = async (verifierBytes, kek) => {
   try {
     await window.crypto.subtle.unwrapKey(
@@ -679,7 +679,7 @@ const unwrapsUnder = async (verifierBytes, kek) => {
 // Whether every live wrapped DEK opens under `kek` (true when there are none).
 // Detects a phase-2 rotation crash: a confirmable marker is present and the OLD
 // passphrase verifies the still-intact old descriptor, but the live keys were
-// already promoted under the NEW KEK — so an old-passphrase unlock would report
+// already promoted under the NEW KEK - so an old-passphrase unlock would report
 // success yet serve a keystore it cannot read. The unwrap attempts are pure reads.
 const wrappedKeysReadableUnder = async (kek) => {
   for (let i = 0; i < localStorage.length; i++) {
@@ -696,7 +696,7 @@ const wrappedKeysReadableUnder = async (kek) => {
 
 // Best-effort heal of any plaintext DEK once the session KEK is set. A single
 // un-wrappable key is skipped (migrateAllPlaintextKeys is per-key resilient) and
-// any larger failure is swallowed — the unlock has already succeeded; the
+// any larger failure is swallowed - the unlock has already succeeded; the
 // plaintext stays for the next unlock to retry.
 const sweepPlaintextKeys = async () => {
   try {
@@ -716,7 +716,7 @@ const _unlockDeviceKeystore = async (passphrase) => {
   // Verify-before-commit: if a rotation is mid-flight, finish it ONLY once the
   // passphrase is proven to derive the marker's NEW KEK (its verifier unwraps
   // under it). A shape-valid marker carrying a garbage verifier is never
-  // committed, so the intact old META/VERIFIER survive for the old passphrase —
+  // committed, so the intact old META/VERIFIER survive for the old passphrase -
   // the C1 brick (committing an unconfirmed KEK over the only good material)
   // cannot happen.
   const pending = readPendingRotation();
@@ -757,8 +757,8 @@ const _unlockDeviceKeystore = async (passphrase) => {
   }
   // A confirmable rotation marker is present but this passphrase derived only the
   // OLD KEK (it verified the still-intact old descriptor, not the marker's new
-  // KEK). If the live keys were already promoted under the new KEK — a phase-2
-  // crash, the state pinned by the mid-phase-2 recovery test — the old KEK cannot
+  // KEK). If the live keys were already promoted under the new KEK - a phase-2
+  // crash, the state pinned by the mid-phase-2 recovery test - the old KEK cannot
   // read them, so don't report a false success. Steer the user to the new
   // passphrase, which completes the rotation forward. A still-readable keystore
   // (phase-1 interruption, keys untouched) unlocks normally and leaves the marker.
@@ -816,7 +816,7 @@ const _rotateDevicePassphrase = async (newPassphrase) => {
   );
 
   // Phase 1 (abortable): re-wrap every DEK under the new KEK into temp slots.
-  // Throwing here leaves live keys untouched — no marker means no commit.
+  // Throwing here leaves live keys untouched - no marker means no commit.
   // Re-scan and fold until the id set stops growing, so a key a sibling tab
   // stores mid-rotation is still captured (C3); each id is staged at most once.
   const staged = new Set();
@@ -842,7 +842,7 @@ const _rotateDevicePassphrase = async (newPassphrase) => {
     lastCount = staged.size;
     for (const id of listBackupKeyIds()) await stageId(id);
   }
-  // Commit point — the marker carries the new descriptor + verifier + tag.
+  // Commit point - the marker carries the new descriptor + verifier + tag.
   localStorage.setItem(
     KEK_ROTATING_KEY,
     JSON.stringify({
@@ -898,7 +898,7 @@ export const wipeLocalKeystore = () => {
 const RECOVERY_BUNDLE_FORMAT = "vetrate.keystore-recovery";
 
 /**
- * Export the at-rest keystore — KEK descriptor + verifier + every wrapped DEK —
+ * Export the at-rest keystore - KEK descriptor + verifier + every wrapped DEK -
  * as a portable bundle the USER downloads and keeps (Q-RECOVERY). Every byte is
  * already wrapped under the passphrase-anchored KEK, so the bundle is useless
  * without the device passphrase; this is NOT escrow and we never hold a copy.
@@ -939,11 +939,11 @@ const _exportRecoveryBundle = async () => {
 
 /**
  * Restore a recovery bundle onto a device that has NO keystore (fresh or freshly
- * deauthorized). Refuses to overwrite a live keystore — an import would clobber
+ * deauthorized). Refuses to overwrite a live keystore - an import would clobber
  * its KEK descriptor and orphan every DEK wrapped under it. After import the
  * keystore is present but LOCKED; the user unlocks with the same passphrase the
  * bundle was made under (a wrong passphrase or a tampered bundle simply fails
- * that unlock — there is no pre-existing material to brick). Returns the count
+ * that unlock - there is no pre-existing material to brick). Returns the count
  * of wrapped keys written.
  */
 const _importRecoveryBundle = async (bundle) => {
@@ -975,7 +975,7 @@ const _importRecoveryBundle = async (bundle) => {
       count += 1;
     }
   }
-  sessionKEK = null; // imported locked — the user unlocks with the passphrase
+  sessionKEK = null; // imported locked - the user unlocks with the passphrase
   return count;
 };
 
@@ -1012,7 +1012,7 @@ const _getLocalKey = async (backupId) => {
   if (wrapped !== null) {
     if (sessionKEK === null) {
       // Bare sentinel (not a sentence) so the restore UI can branch on it and
-      // render its own unlock prompt — mirrors the PASSPHRASE_REQUIRED sentinel
+      // render its own unlock prompt - mirrors the PASSPHRASE_REQUIRED sentinel
       // the restore flow already keys on.
       throw new Error("KEYSTORE_LOCKED");
     }

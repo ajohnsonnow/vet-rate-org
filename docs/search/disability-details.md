@@ -2,6 +2,9 @@
 
 When you click a search result card, a comprehensive details panel opens showing all information about the selected condition.
 
+![Expanded disability details panel for Tinnitus showing action buttons and rating schedule](../assets/images/screenshots/search/disability-details-expanded.png)
+_The details panel opens directly below the search results, with Save to Packet, Build Statement, Download PDF, and View on eCFR actions._
+
 ---
 
 ## Details Panel Overview
@@ -28,14 +31,14 @@ The details panel expands below the search results and contains:
 
 ### Action Buttons
 
-| Button | Function |
-|--------|----------|
-| **Save to Packet** | Add condition to My Packet for tracking |
-| **Build Statement** | Open Nexus Builder to create supporting statement |
-| **Download PDF** | Generate comprehensive PDF report |
-| **View on eCFR** | Open official regulation on eCFR.gov |
-| **💚 Back the Mission** | Support Vet-Rate.org development |
-| **Close (X)** | Close the details panel |
+| Button                  | Function                                          |
+| ----------------------- | ------------------------------------------------- |
+| **Save to Packet**      | Add condition to My Packet for tracking           |
+| **Build Statement**     | Open Nexus Builder to create supporting statement |
+| **Download PDF**        | Generate comprehensive PDF report                 |
+| **View on eCFR**        | Open official regulation on eCFR.gov              |
+| **💚 Back the Mission** | Support Vet-Rate.org development                  |
+| **Close (X)**           | Close the details panel                           |
 
 ---
 
@@ -77,41 +80,41 @@ This expandable section contains the **official VA rating criteria** for the con
 
 Click the **"📊 Rating Schedules & Criteria"** header to expand.
 
+![Expanded rating criteria section for Tinnitus showing the percentage table and important notes](../assets/images/screenshots/search/disability-details-criteria-open.png)
+_Expanding the section reveals the rating type, percentage table, and any special notes - all sourced from 38 CFR Part 4._
+
 ### Rating Type Badge
 
 At the top, you'll see the rating type:
 
-| Type | Meaning |
-|------|---------|
+| Type                 | Meaning                     |
+| -------------------- | --------------------------- |
 | **percentage-based** | Standard percentage ratings |
-| **formula-based** | Uses a specific calculation |
-| **analogous** | Rated under another code |
-| **range-of-motion** | Based on joint movement |
+| **formula-based**    | Uses a specific calculation |
+| **analogous**        | Rated under another code    |
+| **range-of-motion**  | Based on joint movement     |
 
 ### Rating Instructions
 
 Some conditions have special instructions:
 
 !!! warning "Rating Instructions"
-    Some conditions are "rated as" another condition or have specific evaluation rules. Always read these instructions carefully.
+Some conditions are "rated as" another condition or have specific evaluation rules. Always read these instructions carefully.
 
 ### Percentage Table
 
 The main rating table shows:
 
-| Rating % | Criteria |
-|----------|----------|
+| Rating % | Criteria                                   |
+| -------- | ------------------------------------------ |
 | **100%** | Most severe symptoms meeting 100% criteria |
-| **70%** | Symptoms meeting 70% criteria |
-| **50%** | Symptoms meeting 50% criteria |
-| **30%** | Symptoms meeting 30% criteria |
-| **10%** | Symptoms meeting 10% criteria |
-| **0%** | Service-connected, minimal symptoms |
+| **70%**  | Symptoms meeting 70% criteria              |
+| **50%**  | Symptoms meeting 50% criteria              |
+| **30%**  | Symptoms meeting 30% criteria              |
+| **10%**  | Symptoms meeting 10% criteria              |
+| **0%**   | Service-connected, minimal symptoms        |
 
-!!! tip "Reading the Criteria"
-    - Criteria are listed from **highest to lowest** percentage
-    - Each row describes **exactly** what symptoms/impairment qualify for that rating
-    - You qualify for a rating if you meet **all** the criteria for that level
+!!! tip "Reading the Criteria" - Criteria are listed from **highest to lowest** percentage - Each row describes **exactly** what symptoms/impairment qualify for that rating - You qualify for a rating if you meet **all** the criteria for that level
 
 ### Special Notes
 
@@ -164,9 +167,9 @@ Quick links to relevant VA resources:
 
 ### Emergency Resources
 
-| Resource | Contact |
-|----------|---------|
-| **Veterans Crisis Line** | 988, Press 1 |
+| Resource                 | Contact        |
+| ------------------------ | -------------- |
+| **Veterans Crisis Line** | 988, Press 1   |
 | **Homeless Vet Hotline** | 1-877-4AID-VET |
 
 ### Essential Links

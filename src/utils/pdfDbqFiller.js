@@ -301,7 +301,7 @@ export function downloadPdfBlob(blob, filename) {
 
 /**
  * Bundle the PDF + a doctor README into a standard (unencrypted) .zip.
- * This is a convenience bundle, NOT an encrypted container — JSZip cannot
+ * This is a convenience bundle, NOT an encrypted container - JSZip cannot
  * encrypt, so the contents are plaintext. Callers must not present this as
  * password-protected or "safe to email"; treat email as an insecure channel.
  * @param {Blob} pdfBlob - The PDF blob
@@ -331,8 +331,8 @@ CONTENTS:
 NOT ENCRYPTED:
 This .zip is a plain (unencrypted) bundle. It is NOT password-protected.
 Anyone who obtains the file can open it. For sensitive medical records,
-share it over a secure channel — your VA patient portal / secure messaging,
-or hand it off in person — rather than ordinary email.
+share it over a secure channel - your VA patient portal / secure messaging,
+or hand it off in person - rather than ordinary email.
 
 ABOUT THIS DOCUMENT:
 This is a DRAFT for physician review. The veteran has pre-filled subjective

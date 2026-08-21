@@ -208,7 +208,7 @@ export const saveVeteranProfile = (profile) => {
   } catch (error) {
     if (error?.name === "QuotaExceededError") {
       console.error(
-        "Veteran profile NOT saved — browser storage is full. Export a backup and free up space, then try again.",
+        "Veteran profile NOT saved - browser storage is full. Export a backup and free up space, then try again.",
       );
     } else {
       console.error("Error saving veteran profile:", error);
@@ -493,7 +493,7 @@ function _importProfile(data, mode) {
     return {
       success: false,
       message:
-        "Your profile could not be saved — your device storage may be full. Free up space and try the import again.",
+        "Your profile could not be saved - your device storage may be full. Free up space and try the import again.",
     };
   }
   return null;
@@ -784,7 +784,7 @@ export const getServiceHistory = () => {
     }
     const parsed = JSON.parse(saved);
     // Data saved before servicePeriods[]/dutyStations[] existed won't have
-    // the key — normalize so every caller can rely on it being an array.
+    // the key - normalize so every caller can rely on it being an array.
     parsed.servicePeriods = Array.isArray(parsed.servicePeriods)
       ? parsed.servicePeriods
       : [];
@@ -824,7 +824,7 @@ function _sanitizeDeployments(deployments) {
     hazardous: !!d.hazardous,
     combat: !!d.combat,
     dateAdded: d.dateAdded || new Date().toISOString(),
-    // Reference (not nesting) into servicePeriods[] — null means
+    // Reference (not nesting) into servicePeriods[] - null means
     // career-level/unassigned. Hook for a future locations-timeline
     // feature; no such feature is built this pass.
     periodId: d.periodId || null,
@@ -843,7 +843,7 @@ function sanitizeCoordinate(value, limit) {
 }
 
 /**
- * Duty stations — user-entered, one-to-many by reference into
+ * Duty stations - user-entered, one-to-many by reference into
  * servicePeriods[] via periodId (same reference pattern as deployments
  * above, not nesting). No cascade-delete: a station whose period is later
  * removed just becomes unassigned (periodId still points at a now-missing
@@ -869,7 +869,7 @@ function _sanitizeDutyStations(dutyStations) {
 
 /**
  * Sanitize a device object attached to an award. FIX-4: devices must stay
- * structured {type, position} objects end-to-end — VisualRibbon switches
+ * structured {type, position} objects end-to-end - VisualRibbon switches
  * on device.type, so flattening to a display-name string breaks rendering.
  */
 function _sanitizeDevice(device) {
@@ -927,21 +927,21 @@ function _sanitizeDd214DataCore(dd214Data) {
 }
 
 // Q1 whitelist expansion (2026-07-30, Anth-authorized): exactly these 9
-// fields, no more. ssnFull and serviceNumber are DELIBERATELY excluded —
+// fields, no more. ssnFull and serviceNumber are DELIBERATELY excluded -
 // do not add them here without explicit re-authorization.
 // FIX-17 (2026-08-03, Anth-authorized): lastName/firstName/middleName added
 // to the same whitelist. Same privacy posture as the Q1 expansion above
 // (name is already displayed elsewhere in the app, unlike
-// ssnFull/serviceNumber which stay excluded) — buildDD214ProfileUpdate
+// ssnFull/serviceNumber which stay excluded) - buildDD214ProfileUpdate
 // already supplied these fields, but this whitelist silently dropped them
 // on every write. Split into its own function (alongside
 // _sanitizeDd214DataCore) purely to keep cyclomatic complexity under the
-// repo's lint ceiling — every branch here is a field default.
+// repo's lint ceiling - every branch here is a field default.
 function _sanitizeDd214DataWhitelisted(dd214Data) {
   return {
     fullName: sanitizeString(dd214Data.fullName || "", 200),
     // FIX-19 (2026-08-04): which form type (DD214/NGB22/DD256/DD257)
-    // actually supplied fullName — not a document filename or any other
+    // actually supplied fullName - not a document filename or any other
     // identifying detail, just the form-type marker musterCallProcessor.js
     // already carries on every extraction. Lets the Service tab's Name card
     // show a real source instead of a hardcoded "DD-214, Block 1" claim.
@@ -986,11 +986,11 @@ function _sanitizeServiceInfo(serviceInfo) {
 }
 
 // ============================================================================
-// SERVICE PERIODS — canonical multi-period service history model.
+// SERVICE PERIODS - canonical multi-period service history model.
 //
 // One entry per DD214/NGB22 (period-scoped fields, never merged across
-// periods). Identity key is (serviceStartDate, serviceEndDate) — NOT
-// filename — so a re-scan of the same document merges by confidence, but
+// periods). Identity key is (serviceStartDate, serviceEndDate) - NOT
+// filename - so a re-scan of the same document merges by confidence, but
 // two genuinely different enlistment periods never collide.
 //
 // This is the canonical store: the Profile tab's manual editor and the
@@ -1023,7 +1023,7 @@ const SERVICE_PERIOD_MERGE_FIELDS = [
   "militaryEducation",
   "sourceDocument",
   "notes",
-  // FIX-15: Box 7a/8 place-of-entry-or-home-of-record — real, extractable
+  // FIX-15: Box 7a/8 place-of-entry-or-home-of-record - real, extractable
   // duty/home location data, period-scoped (not identity-scoped) since it
   // isn't part of the (serviceStartDate, serviceEndDate) merge key.
   "placeOfEntry",
@@ -1464,10 +1464,10 @@ export const removeDeployment = (deploymentId) => {
 };
 
 // ============================================================================
-// DUTY STATIONS — user-entered locations, one-to-many by reference into
+// DUTY STATIONS - user-entered locations, one-to-many by reference into
 // servicePeriods[] (periodId, null = unassigned). Mirrors the servicePeriods
 // CRUD contract: fields aren't sanitized inline here, saveServiceHistory's
-// _sanitizeDutyStations does that centrally on every write. No upsert — no
+// _sanitizeDutyStations does that centrally on every write. No upsert - no
 // document-ingest path writes duty stations, only the veteran does.
 // ============================================================================
 
@@ -1540,7 +1540,7 @@ export const addAward = (award) => {
     const history = getServiceHistory();
     const normalizedName = (award.name || "").trim().toLowerCase();
     // Multiple source documents (e.g. several DD214 copies of the same
-    // career) commonly describe the same award — dedupe by normalized name
+    // career) commonly describe the same award - dedupe by normalized name
     // instead of pushing a new entry every call, merging in whichever
     // fields the new call fills in that the existing entry was missing.
     const existing = history.awards.find(
@@ -1581,7 +1581,7 @@ export const addAward = (award) => {
       notes: sanitizeString(award.notes || "", 500),
       isCombat: !!award.isCombat,
       // FIX-4: structured {type, position} objects, NOT flattened display
-      // name strings — VisualRibbon switches on device.type.
+      // name strings - VisualRibbon switches on device.type.
       devices: _sanitizeDeviceList(award.devices),
       dateAdded: new Date().toISOString(),
     };
@@ -1623,7 +1623,7 @@ function _dd214PersonalFields(d) {
   return {
     fullName: sanitizeString(d.fullName || "", 200),
     // FIX-19 (2026-08-04): which form type (DD214/NGB22/DD256/DD257)
-    // actually supplied fullName — see _sanitizeDd214DataWhitelisted's
+    // actually supplied fullName - see _sanitizeDd214DataWhitelisted's
     // matching field below (saveDD214Data's write path passes through
     // BOTH whitelists: this one via saveDD214Data itself, then
     // _sanitizeDd214Data again inside saveServiceHistory).
@@ -1913,7 +1913,7 @@ function _sanitizePainMapThumbnail(thumbnail) {
   if (typeof thumbnail !== "string" || !thumbnail.startsWith("data:image/")) {
     return null;
   }
-  // Truncating a base64 image mid-stream corrupts it — drop an oversized
+  // Truncating a base64 image mid-stream corrupts it - drop an oversized
   // thumbnail entirely rather than store an unusable partial image.
   if (thumbnail.length > MAX_PAIN_MAP_THUMBNAIL_CHARS) return null;
   return thumbnail;
@@ -1931,7 +1931,7 @@ export const savePainMap = (painMap) => {
       // FIX-8: accept both the legacy field names already used by
       // previously-saved maps (screenshot, detectedNexus) AND the field
       // names PainPainter.jsx actually produces (thumbnail, conditions,
-      // nexusLanguage, view, savedAt) — the whitelist previously silently
+      // nexusLanguage, view, savedAt) - the whitelist previously silently
       // dropped all five of the latter.
       detectedNexus: painMap.detectedNexus || [],
       screenshot: painMap.screenshot || null, // Base64 image (legacy)
@@ -1954,7 +1954,7 @@ export const savePainMap = (painMap) => {
   } catch (error) {
     if (error?.name === "QuotaExceededError") {
       console.error(
-        "Pain map NOT saved — browser storage is full. Export a backup and free up space, then try again.",
+        "Pain map NOT saved - browser storage is full. Export a backup and free up space, then try again.",
       );
     } else {
       console.error("Error saving pain map:", error);

@@ -13,7 +13,7 @@ import {
  */
 function friendlyGpuName(desc) {
   if (!desc) return null;
-  // Apple Silicon: bare "Apple M1" / "Apple M2 Pro" — no ANGLE wrapper
+  // Apple Silicon: bare "Apple M1" / "Apple M2 Pro" - no ANGLE wrapper
   if (/^Apple M\d/i.test(desc)) return desc.trim().slice(0, 50);
   // Windows/Linux: "ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 SUPER Direct3D11...)"
   const angleMatch = desc.match(
@@ -34,14 +34,15 @@ function friendlyGpuName(desc) {
  * Inline system requirements and timing notice for any AI-powered tool.
  *
  * Props:
- *   compact    — single-line variant (default false = full card)
- *   fileSizeMB — if provided, shows a file-specific time estimate
- *   toolName   — short label shown in blocked states ("C-File Analyzer", etc.)
+ *   compact    - single-line variant (default false = full card)
+ *   fileSizeMB - if provided, shows a file-specific time estimate
+ *   toolName   - short label shown in blocked states ("C-File Analyzer", etc.)
  */
 export default function SystemRequirementsNotice({
   compact = false,
   fileSizeMB = null,
   toolName = "this tool",
+  supportsExtractionOnly = true,
 }) {
   const [profile, setProfile] = useState(null);
   const [showWhy, setShowWhy] = useState(false);
@@ -85,7 +86,13 @@ export default function SystemRequirementsNotice({
 
   // Blocked: mobile / tablet / no WebGPU
   if (blocked) {
-    return <BlockedNotice profile={profile} toolName={toolName} />;
+    return (
+      <BlockedNotice
+        profile={profile}
+        toolName={toolName}
+        supportsExtractionOnly={supportsExtractionOnly}
+      />
+    );
   }
 
   // Warning: laptop / integrated GPU
@@ -146,7 +153,7 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName, warmup }) {
       <div className="flex items-center gap-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-300">
         <span aria-hidden="true">⚠</span>
         <span>
-          Limited GPU capacity — processing uses CPU fallback (WASM). Large
+          Limited GPU capacity - processing uses CPU fallback (WASM). Large
           files will be slow.
         </span>
       </div>
@@ -156,17 +163,17 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName, warmup }) {
     <div className="flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-3 py-2 text-sm text-green-700 dark:text-green-300">
       <span aria-hidden="true">✓</span>
       <span>
-        {gpuName ? `Compatible — ${gpuName}` : "Compatible GPU detected"}
-        {" · "}First run: {warmup.minMin}–{warmup.maxMin} min browser setup
+        {gpuName ? `Compatible - ${gpuName}` : "Compatible GPU detected"}
+        {" · "}First run: {warmup.minMin}-{warmup.maxMin} min browser setup
       </span>
     </div>
   );
 }
 
-function BlockedNotice({ profile, toolName }) {
+function BlockedNotice({ profile, toolName, supportsExtractionOnly }) {
   const reason =
     profile.isMobile || profile.isTablet
-      ? "Phone and tablet detected — on-device AI requires a desktop or laptop computer with a dedicated GPU."
+      ? "Phone and tablet detected - on-device AI requires a desktop or laptop computer with a dedicated GPU."
       : "Your browser does not expose a WebGPU adapter. On-device AI requires Chrome 113+ or Edge 113+.";
 
   return (
@@ -183,10 +190,21 @@ function BlockedNotice({ profile, toolName }) {
             {reason}
           </p>
           <p className="text-red-700 dark:text-red-300 text-xs mt-2">
-            {toolName} still works in <strong>extraction-only mode</strong> (no
-            AI, text and fields extracted directly from your PDF) or with a{" "}
-            <strong>cloud API key</strong> (Gemini). Switch modes using the AI
-            selector at the top of the page.
+            {supportsExtractionOnly ? (
+              <>
+                {toolName} still works in <strong>extraction-only mode</strong>{" "}
+                (no AI, text and fields extracted directly from your PDF) or
+                with a <strong>cloud API key</strong> (Gemini). Switch modes
+                using the AI selector at the top of the page.
+              </>
+            ) : (
+              <>
+                {toolName} requires a loaded AI model to run. You can still use
+                it with a <strong>cloud API key</strong> (Gemini) instead of
+                on-device AI — switch modes using the AI selector at the top of
+                the page.
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -213,7 +231,7 @@ function LimitedNotice({
         </span>
         <div className="flex-1">
           <p className="font-semibold text-yellow-800 dark:text-yellow-200 text-sm">
-            Limited GPU — WASM fallback mode
+            Limited GPU - WASM fallback mode
             {gpuName && (
               <span className="font-normal ml-2 text-yellow-700 dark:text-yellow-400">
                 ({gpuName})
@@ -222,10 +240,10 @@ function LimitedNotice({
           </p>
           <p className="text-yellow-700 dark:text-yellow-300 text-xs mt-1">
             Your integrated or low-end GPU doesn't meet the 6 GB VRAM minimum
-            for on-device inference. Processing will run on your CPU —
+            for on-device inference. Processing will run on your CPU -
             significantly slower. Large C-Files (300 MB+) may take
             {tierRate
-              ? ` ${Math.round(tierRate.p50 / 60)}–${Math.round(tierRate.p90 / 60)} min per section`
+              ? ` ${Math.round(tierRate.p50 / 60)}-${Math.round(tierRate.p90 / 60)} min per section`
               : " many hours"}
             .
           </p>
@@ -274,7 +292,7 @@ function CompatibleNotice({
         </span>
         <div className="flex-1">
           <p className="font-semibold text-green-800 dark:text-green-200 text-sm">
-            Compatible{isHigh ? " — high-performance GPU" : " — mid-range GPU"}
+            Compatible{isHigh ? " - high-performance GPU" : " - mid-range GPU"}
             {gpuName && (
               <span className="font-normal ml-2 text-green-700 dark:text-green-400">
                 ({gpuName})
@@ -285,10 +303,10 @@ function CompatibleNotice({
             On-device AI is supported. No data leaves your device.
           </p>
           <p className="text-green-700 dark:text-green-300 text-xs mt-1">
-            <strong>First run:</strong> allow {warmup.minMin}–{warmup.maxMin}{" "}
+            <strong>First run:</strong> allow {warmup.minMin}-{warmup.maxMin}{" "}
             minutes for one-time browser setup (compiling GPU programs +
             downloading the {AI_REQUIREMENTS.model.sizeGB} GB AI model).{" "}
-            <strong>After that:</strong> {AI_WARMUP.subsequentRun.minMin}–
+            <strong>After that:</strong> {AI_WARMUP.subsequentRun.minMin}-
             {AI_WARMUP.subsequentRun.maxMin} min to start each session.
           </p>
           {timeEstimate && (
@@ -349,7 +367,7 @@ function ExpandSection({ label, open, onToggle, children }) {
 function WarnKeepTabOpen() {
   return (
     <p className="text-xs mt-2 opacity-70">
-      Keep this browser tab open and active throughout processing — closing or
+      Keep this browser tab open and active throughout processing - closing or
       minimizing may pause the GPU.
     </p>
   );
@@ -360,18 +378,18 @@ function WhyExplanation({ warmup }) {
     <div className="space-y-2">
       <p>
         WebLLM runs a {AI_REQUIREMENTS.model.sizeGB} GB AI model entirely inside
-        your browser using your GPU — your documents never leave your device.
+        your browser using your GPU - your documents never leave your device.
       </p>
       <p>
         <strong>
-          First-run setup ({warmup.minMin}–{warmup.maxMin} min, one time only):
+          First-run setup ({warmup.minMin}-{warmup.maxMin} min, one time only):
         </strong>{" "}
         {warmup.reason} After this, subsequent sessions skip compilation
         entirely.
       </p>
       <p>
         <strong>
-          Per-session load ({AI_WARMUP.subsequentRun.minMin}–
+          Per-session load ({AI_WARMUP.subsequentRun.minMin}-
           {AI_WARMUP.subsequentRun.maxMin} min):
         </strong>{" "}
         {AI_WARMUP.subsequentRun.reason}
@@ -379,7 +397,7 @@ function WhyExplanation({ warmup }) {
       <p>
         Large C-Files are split into sections (chunks) and analyzed one at a
         time. Each section takes{" "}
-        {Math.round(AI_CHUNK_RATE["desktop-high"].p50 / 60)}–
+        {Math.round(AI_CHUNK_RATE["desktop-high"].p50 / 60)}-
         {Math.round(AI_CHUNK_RATE["desktop-high"].p90 / 60)} minutes on a
         high-end GPU. A 300 MB C-File has roughly 300 sections.
       </p>
@@ -411,7 +429,7 @@ function RequirementsList() {
       </li>
       <li>
         <strong>First-time download:</strong> {AI_REQUIREMENTS.model.sizeGB} GB
-        — {AI_REQUIREMENTS.model.note}
+        - {AI_REQUIREMENTS.model.note}
       </li>
     </ul>
   );

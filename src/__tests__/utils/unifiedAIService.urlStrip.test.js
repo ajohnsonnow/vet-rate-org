@@ -6,7 +6,7 @@
  *
  * Drives the real generateAI → Warrant Council (swarm) path with the engine mocked
  * to emit an attacker URL, and asserts the URL is replaced with [link removed] while
- * an allow-listed gov link survives — and that JSON-only calls opt out.
+ * an allow-listed gov link survives - and that JSON-only calls opt out.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
@@ -57,7 +57,7 @@ const BASE_OPTS = {
   scrubPIIEnabled: false,
 };
 
-describe("generateAI — PI-01 URL stripping", () => {
+describe("generateAI - PI-01 URL stripping", () => {
   beforeEach(() => {
     localStorage.clear();
     registerSwarmEngine({}, true, false, "auditor");

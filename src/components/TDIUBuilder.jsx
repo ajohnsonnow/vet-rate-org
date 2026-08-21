@@ -1105,7 +1105,7 @@ function SchedularEligibilityBanner({ savedRatingsTdiu }) {
           single {savedRatingsTdiu.highest}%) meet the schedular requirement of
           38 CFR § 4.16(a). If your service-connected conditions prevent you
           from maintaining substantially gainful employment, you may qualify for
-          TDIU — speak with a VSO before filing.
+          TDIU - speak with a VSO before filing.
         </p>
       </div>
     );
@@ -1120,7 +1120,7 @@ function SchedularEligibilityBanner({ savedRatingsTdiu }) {
         single {savedRatingsTdiu.highest}%) do not meet the schedular
         requirement of 38 CFR § 4.16(a) (one rating of 60%+, or 70%+ combined
         with one rating of 40%+). You may still qualify for extraschedular TDIU
-        under § 4.16(b) if you cannot work — speak with a VSO.
+        under § 4.16(b) if you cannot work - speak with a VSO.
       </p>
     </div>
   );

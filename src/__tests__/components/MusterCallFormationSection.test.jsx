@@ -1,11 +1,11 @@
 /**
- * Regression: MusterCallFormationSection passed `conflicts={[]}` — a fresh
- * array literal — to DocumentIntelligenceBriefing on every render. That prop
+ * Regression: MusterCallFormationSection passed `conflicts={[]}` - a fresh
+ * array literal - to DocumentIntelligenceBriefing on every render. That prop
  * feeds a dependency array inside DocumentIntelligenceBriefing's per-document
  * effect, so a reference change (with no actual document change) refired the
  * effect and silently reset all in-progress field verification. This
  * component re-renders on every AI progress tick while the briefing modal is
- * open, so the reset could land mid-verification — this is what produced the
+ * open, so the reset could land mid-verification - this is what produced the
  * "Verify & Save stuck disabled on one field" symptom in the Muster Call
  * stress spec. The `conflicts` prop must be a referentially stable array
  * across re-renders that don't change the active document.
@@ -55,13 +55,13 @@ function buildProps(progress) {
   };
 }
 
-describe("MusterCallFormationSection — conflicts prop stability", () => {
+describe("MusterCallFormationSection - conflicts prop stability", () => {
   it("passes the same conflicts array reference across re-renders that don't change the active document", () => {
     capturedConflicts = [];
     const { rerender } = render(
       <MusterCallFormationSection {...buildProps(10)} />,
     );
-    // Simulate an AI progress tick — the kind of update that happens
+    // Simulate an AI progress tick - the kind of update that happens
     // continuously while the briefing modal is open, unrelated to the
     // document or its conflicts.
     rerender(<MusterCallFormationSection {...buildProps(50)} />);

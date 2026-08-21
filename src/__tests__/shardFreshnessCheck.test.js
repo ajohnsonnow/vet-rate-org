@@ -4,7 +4,7 @@ import { computeStaleness } from "../../scripts/dkb-sharding/check-shard-freshne
 // Fixed reference date for deterministic testing across every describe below.
 const referenceDate = new Date("2026-08-15");
 
-describe("computeStaleness — weekly cadence (21-day threshold)", () => {
+describe("computeStaleness - weekly cadence (21-day threshold)", () => {
   it("returns ok for recent date (1 day old)", () => {
     expect(computeStaleness("2026-08-14", "weekly", referenceDate)).toBe("ok");
   });
@@ -20,7 +20,7 @@ describe("computeStaleness — weekly cadence (21-day threshold)", () => {
   });
 });
 
-describe("computeStaleness — monthly cadence (45-day threshold)", () => {
+describe("computeStaleness - monthly cadence (45-day threshold)", () => {
   it("returns ok for recent date (30 days old)", () => {
     expect(computeStaleness("2026-07-16", "monthly", referenceDate)).toBe("ok");
   });
@@ -36,7 +36,7 @@ describe("computeStaleness — monthly cadence (45-day threshold)", () => {
   });
 });
 
-describe("computeStaleness — quarterly cadence (120-day threshold)", () => {
+describe("computeStaleness - quarterly cadence (120-day threshold)", () => {
   it("returns ok for recent date (60 days old)", () => {
     expect(computeStaleness("2026-06-16", "quarterly", referenceDate)).toBe(
       "ok",
@@ -56,7 +56,7 @@ describe("computeStaleness — quarterly cadence (120-day threshold)", () => {
   });
 });
 
-describe("computeStaleness — annual cadence (400-day threshold)", () => {
+describe("computeStaleness - annual cadence (400-day threshold)", () => {
   it("returns ok for recent date (200 days old)", () => {
     expect(computeStaleness("2026-02-04", "annual", referenceDate)).toBe("ok");
   });
@@ -72,7 +72,7 @@ describe("computeStaleness — annual cadence (400-day threshold)", () => {
   });
 });
 
-describe("computeStaleness — error handling", () => {
+describe("computeStaleness - error handling", () => {
   it("returns error for invalid date string", () => {
     expect(computeStaleness("not-a-date", "weekly", referenceDate)).toBe(
       "error",

@@ -50,45 +50,47 @@ Not exactly bugs, but welcome:
 
 Click **"🐛 Bug Squasher"** in the website footer.
 
-### What to Include
+Bug Squasher is a 3-step wizard: **Classification** → **Description** → **Review & Submit**.
+
+![Bug Squasher's Classification step, with module, diagnostic code, severity, and category fields](../assets/images/screenshots/support/bug-squasher.png)
+_Step 1 asks which module you were using, an optional diagnostic code, severity, and category._
+
+### Step 1: Classification
 
 <div class="step-container">
 <div class="step">
-<strong>Description</strong> - What happened?
+Select the <strong>module</strong> you were using when the bug happened - Bug Squasher pre-fills this automatically if it can detect what was open
 </div>
 <div class="step">
-<strong>Expected</strong> - What should have happened?
+Optionally enter a <strong>diagnostic code</strong> you were viewing
 </div>
 <div class="step">
-<strong>Steps</strong> - How to reproduce the issue
+Pick a <strong>severity</strong>: Critical, High, Medium, or Low
 </div>
 <div class="step">
-<strong>Browser</strong> - What browser are you using?
-</div>
-<div class="step">
-<strong>Device</strong> - Computer or mobile?
+Pick a <strong>category</strong>
 </div>
 </div>
 
-### Example Bug Report
+### Step 2: Description
+
+Describe what happened in your own words (minimum 10 characters). Browser, device, and other technical details are **captured automatically** - you don't need to type your browser version or OS yourself.
+
+### Step 3: Review & Submit
+
+Review the generated report, then submit it.
+
+### Example Description
 
 ```
-WHAT HAPPENED:
-When I click "Save to Packet" on the Sleep Apnea condition, 
+When I click "Save to Packet" on the Sleep Apnea condition,
 nothing happens. The button doesn't respond.
 
-EXPECTED:
-The condition should be saved and the button should change 
-to "Saved".
+Expected: the condition should be saved and the button should
+change to "Saved".
 
-STEPS TO REPRODUCE:
-1. Search for "Sleep Apnea"
-2. Click on the result to view details
-3. Click "Save to Packet"
-4. Nothing happens
-
-BROWSER: Chrome 120
-DEVICE: Windows 10 desktop
+Steps: Search for "Sleep Apnea" -> open the details panel ->
+click "Save to Packet" -> nothing happens.
 ```
 
 ---
@@ -97,11 +99,11 @@ DEVICE: Windows 10 desktop
 
 ### Be Specific
 
-| Less Helpful | More Helpful |
-|--------------|--------------|
-| "It doesn't work" | "The Save button doesn't respond" |
-| "Page is broken" | "The search results show error message X" |
-| "It's slow" | "Search takes 10+ seconds to return results" |
+| Less Helpful      | More Helpful                                 |
+| ----------------- | -------------------------------------------- |
+| "It doesn't work" | "The Save button doesn't respond"            |
+| "Page is broken"  | "The search results show error message X"    |
+| "It's slow"       | "Search takes 10+ seconds to return results" |
 
 ### Include Context
 
@@ -153,12 +155,12 @@ Before reporting:
 
 ### Priority Levels
 
-| Priority | Type | Timeline |
-|----------|------|----------|
-| **Critical** | Security issues, data loss | ASAP |
-| **High** | Major features broken | Days |
-| **Medium** | Features impaired | Weeks |
-| **Low** | Minor issues, cosmetic | As available |
+| Priority     | Type                       | Timeline     |
+| ------------ | -------------------------- | ------------ |
+| **Critical** | Security issues, data loss | ASAP         |
+| **High**     | Major features broken      | Days         |
+| **Medium**   | Features impaired          | Weeks        |
+| **Low**      | Minor issues, cosmetic     | As available |
 
 ---
 

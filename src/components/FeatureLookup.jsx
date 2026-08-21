@@ -1265,34 +1265,38 @@ const FeatureLookupStatsBar = ({ statistics }) => {
   );
 };
 
-export default function FeatureLookup({ onClose }) {
+// createFeatureLookupHandlers and useFeatureLookupInit each destructure only
+// the specific keys they need, so passing the full formState/handlers
+// objects through (instead of re-listing every field at each call site) is
+// behaviorally identical to the previous explicit destructure-and-relist.
+function useFeatureLookupPage() {
   useLanguage();
 
+  const formState = useFeatureLookupState();
+  const handlers = createFeatureLookupHandlers(formState);
+
+  useFeatureLookupInit({ ...formState, ...handlers });
+
+  return { ...formState, ...handlers };
+}
+
+export default function FeatureLookup({ onClose }) {
   const {
     searchQuery,
     setSearchQuery,
     selectedRequest,
-    setSelectedRequest,
     requests,
-    setRequests,
     statistics,
-    setStatistics,
     auditLog,
-    setAuditLog,
     loading,
-    setLoading,
     error,
-    setError,
     view,
-    setView,
     filters,
     setFilters,
     showFilters,
     setShowFilters,
     copied,
-    setCopied,
     updating,
-    setUpdating,
     newStatus,
     setNewStatus,
     reviewNotes,
@@ -1300,45 +1304,14 @@ export default function FeatureLookup({ onClose }) {
     showStatusModal,
     setShowStatusModal,
     storageAvailable,
-    setStorageAvailable,
-  } = useFeatureLookupState();
-
-  const {
     loadRequests,
-    loadStatistics,
     handleSearch,
     handleViewRequest,
     handleUpdateStatus,
     handleDelete,
     handleExport,
     handleCopyRequest,
-  } = createFeatureLookupHandlers({
-    filters,
-    searchQuery,
-    selectedRequest,
-    newStatus,
-    reviewNotes,
-    setLoading,
-    setError,
-    setRequests,
-    setStatistics,
-    setSelectedRequest,
-    setView,
-    setAuditLog,
-    setUpdating,
-    setShowStatusModal,
-    setNewStatus,
-    setReviewNotes,
-    setCopied,
-  });
-
-  useFeatureLookupInit({
-    setStorageAvailable,
-    setRequests,
-    setLoading,
-    loadRequests,
-    loadStatistics,
-  });
+  } = useFeatureLookupPage();
 
   return (
     <FeatureLookupModals

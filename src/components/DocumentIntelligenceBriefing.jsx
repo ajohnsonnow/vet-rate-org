@@ -49,13 +49,13 @@ function FieldEditControls({ editValue, onChange, onSave, onCancel }) {
         autoFocus
       />
       <div className="flex gap-2">
-        <button
+        <button type="button"
           onClick={onSave}
           className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm"
         >
           Save
         </button>
-        <button
+        <button type="button"
           onClick={onCancel}
           className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm"
         >
@@ -79,14 +79,14 @@ function FieldValueDisplay({
       <span className="text-sm text-gray-900 dark:text-white font-mono">
         {value}
       </span>
-      <button
+      <button type="button"
         onClick={onEdit}
         className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
       >
         [Edit]
       </button>
       {onDelete && (
-        <button
+        <button type="button"
           onClick={onDeleteClick}
           className={`text-xs ${
             showDeleteConfirm
@@ -103,7 +103,7 @@ function FieldValueDisplay({
         </button>
       )}
       {showDeleteConfirm && (
-        <button
+        <button type="button"
           onClick={onCancelDelete}
           className="text-xs text-gray-500 hover:text-gray-700"
         >
@@ -259,7 +259,7 @@ const ConflictWarning = ({ conflict, onResolve }) => {
               Conflict: {conflict.fieldLabel}
             </h5>
             {isSensitive && (
-              <button
+              <button type="button"
                 onClick={() => setRevealed((prev) => !prev)}
                 className="text-xs text-yellow-700 dark:text-yellow-400 hover:underline shrink-0"
               >
@@ -285,13 +285,13 @@ const ConflictWarning = ({ conflict, onResolve }) => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button
+            <button type="button"
               onClick={() => onResolve(conflict.field, "existing")}
               className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
             >
               Keep Existing
             </button>
-            <button
+            <button type="button"
               onClick={() => onResolve(conflict.field, "new")}
               className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
             >
@@ -610,7 +610,7 @@ function MissingFieldsSection({
               placeholder={field.example}
               className="flex-1 px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-sm"
             />
-            <button
+            <button type="button"
               onClick={() => onAddField(field.key)}
               disabled={!fieldValues[field.key]?.trim()}
               className="px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded text-sm"
@@ -645,7 +645,7 @@ function MissingFieldsExpandedPanel({
           field.
         </p>
         {filledCount > 0 && (
-          <button
+          <button type="button"
             onClick={onAddAllFilledFields}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
           >
@@ -757,7 +757,7 @@ const AddMissingFieldPanel = ({
     <div
       className={`mt-6 pt-4 ${ocrFailed ? "" : "border-t border-gray-200 dark:border-gray-700"}`}
     >
-      <button
+      <button type="button"
         onClick={() => setIsExpanded(!isExpanded)}
         className={`flex items-center gap-2 font-semibold hover:text-blue-700 ${
           ocrFailed
@@ -1094,7 +1094,7 @@ function DocumentBriefingHeader({
             </p>
           </div>
         </div>
-        <button
+        <button type="button"
           onClick={onClose}
           aria-label="Close dialog"
           className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl text-white transition-colors hover:bg-white/20"
@@ -1106,7 +1106,7 @@ function DocumentBriefingHeader({
       {/* Multiple Document Navigator */}
       {isMultiDocument && (
         <div className="mt-4 flex items-center justify-between gap-2 bg-white/10 rounded-lg p-3">
-          <button
+          <button type="button"
             onClick={onPrev}
             disabled={currentDocIndex === 0}
             className="px-3 py-1 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
@@ -1124,7 +1124,7 @@ function DocumentBriefingHeader({
               </span>
             )}
           </div>
-          <button
+          <button type="button"
             onClick={onNext}
             disabled={currentDocIndex === totalDocuments - 1}
             className="px-3 py-1 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium transition-colors"
@@ -1148,7 +1148,7 @@ function DocumentBriefingFooter({
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <button
+      <button type="button"
         onClick={onSkip}
         className="w-full px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors sm:w-auto"
       >
@@ -1156,14 +1156,14 @@ function DocumentBriefingFooter({
       </button>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-        <button
+        <button type="button"
           onClick={onClose}
           className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-semibold transition-colors sm:w-auto"
         >
           ← Back to Formation
         </button>
 
-        <button
+        <button type="button"
           onClick={onVerifyAndSave}
           disabled={!canSave}
           className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 sm:w-auto ${
@@ -1209,7 +1209,7 @@ function DocumentClassificationRow({ classification, onOpenDD214Analyzer }) {
 
         {/* Open in DD214 Analyzer button for service records */}
         {isServiceRecordType && onOpenDD214Analyzer && (
-          <button
+          <button type="button"
             onClick={onOpenDD214Analyzer}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg"
             aria-label="Open this DD214 in the specialized DD214 Analyzer for advanced AI extraction and detailed analysis"
@@ -1321,6 +1321,58 @@ function ConflictsSection({ conflicts, onResolve }) {
   );
 }
 
+function OCRFailedMessageTips({ isServiceRecord }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4 border border-amber-200 dark:border-amber-800">
+      <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center justify-center gap-2">
+        <span>📝</span> What You Can Do
+      </h5>
+      <ul className="text-sm text-gray-600 dark:text-gray-400 text-left space-y-2 max-w-md mx-auto">
+        {isServiceRecord ? (
+          <li className="flex gap-2">
+            <span className="text-green-600 dark:text-green-400">✓</span>
+            <span>
+              <strong>Manual Entry:</strong> Use the &quot;Enter DD214 Fields
+              Manually&quot; panel below to enter your information by hand.
+            </span>
+          </li>
+        ) : (
+          <li className="flex gap-2">
+            <span className="text-green-600 dark:text-green-400">✓</span>
+            <span>
+              <strong>Skip This Document:</strong> Use the &quot;Skip This
+              Document&quot; button below and add this document&apos;s details
+              manually in My Packet later.
+            </span>
+          </li>
+        )}
+        <li className="flex gap-2">
+          <span className="text-green-600 dark:text-green-400">✓</span>
+          <span>
+            <strong>Request Replacement:</strong> Contact the{" "}
+            <a
+              href="https://www.archives.gov/veterans/military-service-records"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              National Archives
+            </a>{" "}
+            for a certified copy of your DD214.
+          </span>
+        </li>
+        <li className="flex gap-2">
+          <span className="text-green-600 dark:text-green-400">✓</span>
+          <span>
+            <strong>Better Scan:</strong> If possible, try scanning your
+            original at 300+ DPI in grayscale.
+          </span>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 function OCRFailedMessage({ documentType }) {
   const isServiceRecord = [
     "dd214",
@@ -1351,53 +1403,7 @@ function OCRFailedMessage({ documentType }) {
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4 border border-amber-200 dark:border-amber-800">
-        <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center justify-center gap-2">
-          <span>📝</span> What You Can Do
-        </h5>
-        <ul className="text-sm text-gray-600 dark:text-gray-400 text-left space-y-2 max-w-md mx-auto">
-          {isServiceRecord ? (
-            <li className="flex gap-2">
-              <span className="text-green-600 dark:text-green-400">✓</span>
-              <span>
-                <strong>Manual Entry:</strong> Use the &quot;Enter DD214 Fields
-                Manually&quot; panel below to enter your information by hand.
-              </span>
-            </li>
-          ) : (
-            <li className="flex gap-2">
-              <span className="text-green-600 dark:text-green-400">✓</span>
-              <span>
-                <strong>Skip This Document:</strong> Use the &quot;Skip This
-                Document&quot; button below and add this document&apos;s details
-                manually in My Packet later.
-              </span>
-            </li>
-          )}
-          <li className="flex gap-2">
-            <span className="text-green-600 dark:text-green-400">✓</span>
-            <span>
-              <strong>Request Replacement:</strong> Contact the{" "}
-              <a
-                href="https://www.archives.gov/veterans/military-service-records"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                National Archives
-              </a>{" "}
-              for a certified copy of your DD214.
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-green-600 dark:text-green-400">✓</span>
-            <span>
-              <strong>Better Scan:</strong> If possible, try scanning your
-              original at 300+ DPI in grayscale.
-            </span>
-          </li>
-        </ul>
-      </div>
+      <OCRFailedMessageTips isServiceRecord={isServiceRecord} />
 
       <p className="text-xs text-gray-500 dark:text-gray-500 mt-4 italic">
         💾 The raw text (whatever we could capture) has been saved to your
@@ -1539,7 +1545,7 @@ function ArrayValueList({ fieldKey, value, onArrayItemDelete }) {
           className="flex items-center justify-between group text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 -mx-2"
         >
           <span>• {formatArrayItem(item)}</span>
-          <button
+          <button type="button"
             onClick={() => onArrayItemDelete(fieldKey, idx)}
             className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-2"
             aria-label="Remove this item (OCR error?)"

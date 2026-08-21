@@ -41,7 +41,7 @@ const FIELD_RULES = {
   ssn: {
     severity: CONFLICT_SEVERITY.CRITICAL,
     strategy: RESOLUTION_STRATEGIES.ASK_USER,
-    normalize: (val) => val?.replace(/\D/g, ""), // Remove non-digits
+    normalize: (val) => val?.replaceAll(/\D/g, ""), // Remove non-digits
     message: "⚠️ CRITICAL: Different SSNs detected. Verify carefully.",
   },
 
@@ -56,7 +56,7 @@ const FIELD_RULES = {
   serviceStartDate: {
     severity: CONFLICT_SEVERITY.HIGH,
     strategy: RESOLUTION_STRATEGIES.USE_MOST_RECENT,
-    normalize: (val) => val?.replace(/\//g, "-"),
+    normalize: (val) => val?.replaceAll(/\//g, "-"),
     message:
       "Service start dates differ. Most recent document usually more accurate.",
   },
@@ -64,7 +64,7 @@ const FIELD_RULES = {
   serviceEndDate: {
     severity: CONFLICT_SEVERITY.HIGH,
     strategy: RESOLUTION_STRATEGIES.USE_MOST_RECENT,
-    normalize: (val) => val?.replace(/\//g, "-"),
+    normalize: (val) => val?.replaceAll(/\//g, "-"),
     message:
       "Service end dates differ. Most recent document usually more accurate.",
   },
@@ -99,7 +99,8 @@ const FIELD_RULES = {
   rating: {
     severity: CONFLICT_SEVERITY.MEDIUM,
     strategy: RESOLUTION_STRATEGIES.USE_MOST_RECENT,
-    normalize: (val) => parseInt(val?.toString().replace(/\D/g, ""), 10),
+    normalize: (val) =>
+      Number.parseInt(val?.toString().replaceAll(/\D/g, ""), 10),
     message:
       "Rating percentage changed. Using most recent value (ratings can increase over time).",
   },
@@ -115,7 +116,7 @@ const FIELD_RULES = {
   phone: {
     severity: CONFLICT_SEVERITY.LOW,
     strategy: RESOLUTION_STRATEGIES.USE_MOST_RECENT,
-    normalize: (val) => val?.replace(/\D/g, ""),
+    normalize: (val) => val?.replaceAll(/\D/g, ""),
     message: "Phone number differs. Using most recent.",
   },
 
@@ -148,8 +149,11 @@ const NON_CONFLICTING_METADATA_FIELDS = new Set([
   "totalDocuments",
   "status", // per-document claim status, not a veteran-wide fact
   "claimNumber", // identifies a specific claim, not the veteran
-  "claimDate", // per-claim filing date
-  "contentions", // conditions claimed on THIS claim, not the SC conditions list
+  "claimDate", // per-claim filing/received date
+  "letterDate", // date THIS letter was issued
+  "decisions", // per-issue grant/deny outcomes on THIS letter
+  "evidenceNeeded", // evidence requested on THIS letter
+  "responseDeadlineDays", // response window for THIS letter
 ]);
 
 /**
@@ -253,7 +257,7 @@ function valuesMatch(val1, val2) {
 function formatFieldLabel(field) {
   // Convert camelCase to Title Case
   return field
-    .replace(/([A-Z])/g, " $1")
+    .replaceAll(/([A-Z])/g, " $1")
     .replace(/^./, (str) => str.toUpperCase())
     .trim();
 }

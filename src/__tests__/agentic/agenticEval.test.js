@@ -1,7 +1,7 @@
 /**
  * Agentic regression harness for the Diamond Swarm (Auditor / Writer /
  * Rater). The full 7B GGUF models cannot run in CI, so this harness
- * tests the *deterministic contract* of each agentic call — not the
+ * tests the *deterministic contract* of each agentic call - not the
  * output text quality. Specifically it snapshots:
  *
  *   1. Routing: every golden case must resolve to the expected agent.
@@ -39,7 +39,7 @@ function sha256Hex(s) {
   return createHash("sha256").update(s, "utf8").digest("hex");
 }
 
-describe("Agentic harness — golden set integrity", () => {
+describe("Agentic harness - golden set integrity", () => {
   it("loaded at least 30 cases", () => {
     expect(GOLDEN.length).toBeGreaterThanOrEqual(30);
   });
@@ -70,7 +70,7 @@ describe("Agentic harness — golden set integrity", () => {
   });
 });
 
-describe("Agentic harness — routing contract", () => {
+describe("Agentic harness - routing contract", () => {
   it.each(GOLDEN)(
     "$id ($toolId) routes to $expectedAgent",
     ({ toolId, expectedAgent }) => {
@@ -86,7 +86,7 @@ describe("Agentic harness — routing contract", () => {
   );
 });
 
-describe("Agentic harness — capability boundary", () => {
+describe("Agentic harness - capability boundary", () => {
   it.each(GOLDEN)(
     "$id enforceAgentBoundary($expectedAgent, $expectedCapability) does not throw",
     ({ expectedAgent, expectedCapability }) => {
@@ -110,15 +110,18 @@ describe("Agentic harness — capability boundary", () => {
   });
 });
 
-describe("Agentic harness — system-prompt fingerprints", () => {
+describe("Agentic harness - system-prompt fingerprints", () => {
   // Pin the SHA-256 of each agent's static system prompt. Editing the
   // prompt flips the fingerprint and the diff is the review trigger.
   // To intentionally rotate: run the suite, copy the actual hash from
   // the failure message, and update the table below.
   const EXPECTED = {
-    auditor: "6e18353607757605a3b77be1150313f71aff78d516be4dbf45c0898b645cccdc",
+    // Rotated for S41's bilateral-calculator-grounding hardening (see
+    // CALCULATION BOUNDARY / BILATERAL PAIRING clauses in diamondSwarm.js) -
+    // auditor and rater prompts changed, writer did not.
+    auditor: "7b899235c5148520cc5007464f37d26d3533eed132dfff959b850357f2dc708f",
     writer: "97c52df9d11a554fa2e754c93f65c9083a6017cbcacb2e5b75057e5f257c633a",
-    rater: "7a9bd47dbac60a5efd4583b70900bd87fd61ec3b4e5f8e9f6ae9d95ac27d899c",
+    rater: "8e4d2b2326677b4d4ae8f68055fe7d5a9c126ff0d48dbebb4bd25dbd77dbf785",
   };
 
   it("auditor prompt fingerprint is stable", () => {
@@ -143,7 +146,7 @@ describe("Agentic harness — system-prompt fingerprints", () => {
   });
 });
 
-describe("Agentic harness — contract clauses present in prompts", () => {
+describe("Agentic harness - contract clauses present in prompts", () => {
   // Each agent's system prompt must carry its contract-critical clauses
   // verbatim, even if the prompt is rewritten otherwise. These are the
   // promises the rest of the system relies on.

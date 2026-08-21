@@ -19,7 +19,7 @@ describe("generated legal pages have no unresolved i18n calls (A-H10/D-H04)", ()
       const leaked = html.match(/\{\s*t\(/g) || [];
       expect(
         leaked.length,
-        `found ${leaked.length} unresolved t() call(s) in ${page} — run "npm run sync-legal-pages"`,
+        `found ${leaked.length} unresolved t() call(s) in ${page} - run "npm run sync-legal-pages"`,
       ).toBe(0);
     });
   }

@@ -321,7 +321,7 @@ const useBackupActions = ({
 
       setStatus(
         result.weakKey
-          ? `✅ Backup saved: ${result.fileName} — ⚠️ protected by an email-derived key (not a secret passphrase). Anyone who knows your email and obtains the file could decrypt it. Set a passphrase for stronger encryption.`
+          ? `✅ Backup saved: ${result.fileName} - ⚠️ protected by an email-derived key (not a secret passphrase). Anyone who knows your email and obtains the file could decrypt it. Set a passphrase for stronger encryption.`
           : `✅ Backup saved: ${result.fileName}`,
       );
 

@@ -15,7 +15,7 @@ const seededVkb = () => {
   const vkb = initializeVKB();
   vkb.claims = [
     { condition: "Tinnitus", ratingPercent: 10, diagnosticCode: "6260" },
-    { condition: "PTSD" }, // no rating — suggestion-like legacy entry
+    { condition: "PTSD" }, // no rating - suggestion-like legacy entry
   ];
   vkb.evidence = [
     {

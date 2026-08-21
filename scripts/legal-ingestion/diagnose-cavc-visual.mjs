@@ -25,6 +25,7 @@
 
 import { chromium } from "@playwright/test";
 
+// eslint-disable-next-line sonarjs/no-clear-text-protocols -- search.uscourts.cavc.gov has no working HTTPS listener (verified; see fetch-cavc-historical.mjs's CAVC_HIST_BASE doc comment), not a choice this script can make
 const BASE = "http://search.uscourts.cavc.gov";
 const USER_AGENT =
   "vet-rate-org legal-ingestion/1.0 (anthony.johnson.now@gmail.com)";
@@ -42,6 +43,42 @@ function log(msg) {
   console.log(`[diagnose-cavc-visual] ${new Date().toISOString()} — ${msg}`);
 }
 
+async function establishSession(context, database) {
+  log(
+    `step 1/4 — submitting the search form (IW_DATABASE=${database}) via the browser context…`,
+  );
+  const t0 = Date.now();
+  let searchRes;
+  try {
+    searchRes = await context.request.post(`${BASE}/search/`, {
+      form: { IW_FIELD_WEB_STYLE: "*", IW_DATABASE: database },
+      timeout: 30_000,
+    });
+  } catch (e) {
+    log(
+      `FAILED at step 1 (search POST) after ${Date.now() - t0}ms: ${e.message}`,
+    );
+    log(
+      `This means the server is not responding to a real browser's request either — a genuine server-side outage, not something specific to the fetch script.`,
+    );
+    log(
+      `Leaving the browser window open — you can navigate to ${BASE}/search/ manually to see for yourself.`,
+    );
+    return null; // deliberately don't close browser/context — see file header
+  }
+  const html = await searchRes.text();
+  log(`step 1/4 — done in ${Date.now() - t0}ms, HTTP ${searchRes.status()}`);
+  const guidMatch = /\/isysquery\/([0-9a-f-]{36})\//i.exec(html);
+  if (!guidMatch) {
+    log(
+      `FAILED — no session guid found in the response. First 500 chars of body:`,
+    );
+    log(html.slice(0, 500));
+    return null;
+  }
+  return guidMatch[1];
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const [start, end] = args.range.split("-");
@@ -51,56 +88,55 @@ async function main() {
   const context = await browser.newContext({ userAgent: USER_AGENT });
   const page = await context.newPage();
 
-  log(`step 1/4 — submitting the search form (IW_DATABASE=${args.database}) via the browser context…`);
-  const t0 = Date.now();
-  let searchRes;
-  try {
-    searchRes = await context.request.post(`${BASE}/search/`, {
-      form: { IW_FIELD_WEB_STYLE: "*", IW_DATABASE: args.database },
-      timeout: 30_000,
-    });
-  } catch (e) {
-    log(`FAILED at step 1 (search POST) after ${Date.now() - t0}ms: ${e.message}`);
-    log(`This means the server is not responding to a real browser's request either — a genuine server-side outage, not something specific to the fetch script.`);
-    log(`Leaving the browser window open — you can navigate to ${BASE}/search/ manually to see for yourself.`);
-    return; // deliberately don't close browser/context — see file header
-  }
-  const html = await searchRes.text();
-  log(`step 1/4 — done in ${Date.now() - t0}ms, HTTP ${searchRes.status()}`);
-  const guidMatch = /\/isysquery\/([0-9a-f-]{36})\//i.exec(html);
-  if (!guidMatch) {
-    log(`FAILED — no session guid found in the response. First 500 chars of body:`);
-    log(html.slice(0, 500));
-    return;
-  }
-  const guid = guidMatch[1];
+  const guid = await establishSession(context, args.database);
+  if (!guid) return;
   log(`session guid: ${guid}`);
 
-  log(`step 2/4 — navigating the VISIBLE page to the date-sort URL (watch the window)…`);
+  log(
+    `step 2/4 — navigating the VISIBLE page to the date-sort URL (watch the window)…`,
+  );
   const t1 = Date.now();
   try {
-    await page.goto(`${BASE}/isysquery/${guid}/-datetime/sort/`, { timeout: 30_000 });
+    await page.goto(`${BASE}/isysquery/${guid}/-datetime/sort/`, {
+      timeout: 30_000,
+    });
     log(`step 2/4 — done in ${Date.now() - t1}ms`);
   } catch (e) {
-    log(`FAILED at step 2 (sort navigation) after ${Date.now() - t1}ms: ${e.message}`);
+    log(
+      `FAILED at step 2 (sort navigation) after ${Date.now() - t1}ms: ${e.message}`,
+    );
     log(`Leaving the browser window open on this state for inspection.`);
     return;
   }
 
-  log(`step 3/4 — navigating the VISIBLE page to list range ${start}-${end} (this is the request type that hung/timed out in the real fetch job)…`);
+  log(
+    `step 3/4 — navigating the VISIBLE page to list range ${start}-${end} (this is the request type that hung/timed out in the real fetch job)…`,
+  );
   const t2 = Date.now();
   try {
-    await page.goto(`${BASE}/isysquery/${guid}/${start}-${end}/list/`, { timeout: 30_000 });
-    log(`step 3/4 — done in ${Date.now() - t2}ms — SUCCESS, the server responded normally to this range in a real browser`);
+    await page.goto(`${BASE}/isysquery/${guid}/${start}-${end}/list/`, {
+      timeout: 30_000,
+    });
+    log(
+      `step 3/4 — done in ${Date.now() - t2}ms — SUCCESS, the server responded normally to this range in a real browser`,
+    );
   } catch (e) {
-    log(`FAILED at step 3 (list page ${start}-${end}) after ${Date.now() - t2}ms: ${e.message}`);
-    log(`This confirms the server itself is hanging/refusing on this exact request even from a real browser — not an artifact of the raw fetch() approach.`);
+    log(
+      `FAILED at step 3 (list page ${start}-${end}) after ${Date.now() - t2}ms: ${e.message}`,
+    );
+    log(
+      `This confirms the server itself is hanging/refusing on this exact request even from a real browser — not an artifact of the raw fetch() approach.`,
+    );
     log(`Leaving the browser window open on this state for inspection.`);
     return;
   }
 
-  log(`step 4/4 — all steps succeeded. The window is showing the live results page for range ${start}-${end}.`);
-  log(`Server appears healthy right now for this request. Leaving the browser open — look around, or close it yourself when done.`);
+  log(
+    `step 4/4 — all steps succeeded. The window is showing the live results page for range ${start}-${end}.`,
+  );
+  log(
+    `Server appears healthy right now for this request. Leaving the browser open — look around, or close it yourself when done.`,
+  );
 }
 
 main().catch((e) => {

@@ -80,75 +80,135 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started:
-    - getting-started/index.md
-    - First Visit: getting-started/first-visit.md
-    - Understanding the Interface: getting-started/interface-overview.md
-    - Accessibility Settings: getting-started/accessibility.md
+      - getting-started/index.md
+      - First Visit: getting-started/first-visit.md
+      - Understanding the Interface: getting-started/interface-overview.md
+      - Accessibility Settings: getting-started/accessibility.md
   - Search & Explore:
-    - search/index.md
-    - How to Search: search/how-to-search.md
-    - Search Results: search/search-results.md
-    - Disability Details: search/disability-details.md
-    - Rating Criteria: search/rating-criteria.md
+      - search/index.md
+      - How to Search: search/how-to-search.md
+      - Search Results: search/search-results.md
+      - Disability Details: search/disability-details.md
+      - Rating Criteria: search/rating-criteria.md
   - Secondary Scout:
-    - secondary-scout/index.md
-    - Launching Secondary Scout: secondary-scout/launching.md
-    - Understanding Results: secondary-scout/results.md
-    - Adding to My Packet: secondary-scout/add-to-packet.md
+      - secondary-scout/index.md
+      - Launching Secondary Scout: secondary-scout/launching.md
+      - Understanding Results: secondary-scout/results.md
+      - Adding to My Packet: secondary-scout/add-to-packet.md
+  - Discovery Tools:
+      - discovery-tools/index.md
+      - The Pathfinder: discovery-tools/pathfinder.md
+      - BDD Builder: discovery-tools/bdd-builder.md
+      - Claim Navigator: discovery-tools/claim-navigator.md
+      - Web of Conditions: discovery-tools/web-of-conditions.md
+      - What-If Sandbox: discovery-tools/what-if-sandbox.md
+      - Tactical Calculator: discovery-tools/tactical-calculator.md
+      - TDIU Builder: discovery-tools/tdiu-builder.md
+      - Million Dollar Dashboard: discovery-tools/million-dollar-dashboard.md
+      - MOS Hazard Matcher: discovery-tools/mos-hazard-matcher.md
   - C&P Exam Simulator:
-    - cap-simulator/index.md
-    - Getting Started: cap-simulator/getting-started.md
-    - Condition Selection: cap-simulator/condition-selection.md
-    - Taking the Simulation: cap-simulator/taking-simulation.md
-    - Understanding Results: cap-simulator/results.md
-    - Flashcard Mode: cap-simulator/flashcards.md
+      - cap-simulator/index.md
+      - Getting Started: cap-simulator/getting-started.md
+      - Condition Selection: cap-simulator/condition-selection.md
+      - Taking the Simulation: cap-simulator/taking-simulation.md
+      - Understanding Results: cap-simulator/results.md
+      - Flashcard Mode: cap-simulator/flashcards.md
   - Nexus Builder:
-    - nexus-builder/index.md
-    - What is a Nexus: nexus-builder/what-is-nexus.md
-    - Building Your Statement: nexus-builder/building-statement.md
-    - Doctor's Cheat Sheet: nexus-builder/doctor-cheat-sheet.md
-    - Download Options: nexus-builder/download-options.md
+      - nexus-builder/index.md
+      - What is a Nexus: nexus-builder/what-is-nexus.md
+      - Building Your Statement: nexus-builder/building-statement.md
+      - Doctor's Cheat Sheet: nexus-builder/doctor-cheat-sheet.md
+      - Download Options: nexus-builder/download-options.md
   - Forms Helper:
-    - forms-helper/index.md
-    - Available Forms: forms-helper/available-forms.md
-    - Buddy Statements: forms-helper/buddy-statements.md
-    - Intent to File: forms-helper/intent-to-file.md
-    - PTSD Stressor: forms-helper/ptsd-stressor.md
-    - Veteran Profile: forms-helper/veteran-profile.md
+      - forms-helper/index.md
+      - Available Forms: forms-helper/available-forms.md
+      - Buddy Statements: forms-helper/buddy-statements.md
+      - Intent to File: forms-helper/intent-to-file.md
+      - PTSD Stressor: forms-helper/ptsd-stressor.md
+      - Veteran Profile: forms-helper/veteran-profile.md
+  - Evidence Tools:
+      - evidence-tools/index.md
+      - Muster Call: evidence-tools/muster-call.md
+      - C-File AI Analyzer: evidence-tools/cfile-analyzer.md
+      - Blue Button X-Ray: evidence-tools/blue-button-xray.md
+      - Witness Bench: evidence-tools/witness-bench.md
+      - DD214 Analyzer & Form Builder: evidence-tools/dd214-analyzer.md
+      - Duty Stations: evidence-tools/duty-stations.md
+      - Claim Evidence Upload: evidence-tools/claim-evidence-upload.md
+      - Record Search: evidence-tools/record-search.md
+      - Vision Simulator: evidence-tools/vision-simulator.md
   - My Packet:
-    - my-packet/index.md
-    - Managing Claims: my-packet/managing-claims.md
-    - Saved Forms: my-packet/saved-forms.md
-    - Backup & Restore: my-packet/backup-restore.md
-    - Exporting Data: my-packet/exporting-data.md
+      - my-packet/index.md
+      - Managing Claims: my-packet/managing-claims.md
+      - Saved Forms: my-packet/saved-forms.md
+      - Backup & Restore: my-packet/backup-restore.md
+      - Exporting Data: my-packet/exporting-data.md
+  - Quality Control:
+      - quality-control/index.md
+      - Red Team: quality-control/red-team.md
+      - Decision Decoder: quality-control/decision-decoder.md
+      - Denial Decoder: quality-control/denial-decoder.md
+      - Consistency Engine: quality-control/consistency-engine.md
+      - Time Machine: quality-control/time-machine.md
+      - Evidence Gap Visualizer: quality-control/evidence-gap-visualizer.md
+      - Remand Risk Checker: quality-control/remand-risk-checker.md
+      - Nexus Quality Analyzer: quality-control/nexus-quality-analyzer.md
+      - Appeals Lane Advisor: quality-control/appeals-lane-advisor.md
+  - Rating Tools:
+      - rating-tools/index.md
+      - Risk Assessment: rating-tools/risk-assessment.md
+      - Symptom Logger: rating-tools/symptom-logger.md
+      - PACT Act Navigator: rating-tools/pact-act-navigator.md
+      - FOIA Generator: rating-tools/foia-generator.md
+      - Pain Painter: rating-tools/pain-painter.md
+      - Claim Stress Test: rating-tools/claim-stress-test.md
+      - Evidence Timeline: rating-tools/evidence-timeline.md
+      - The Tribunal: rating-tools/the-tribunal.md
+      - Retro Pay Hunter: rating-tools/retro-pay-hunter.md
   - VA Resources:
-    - va-resources/index.md
-    - Online Portals: va-resources/online-portals.md
-    - Phone Numbers: va-resources/phone-numbers.md
-    - External Resources: va-resources/external-resources.md
+      - va-resources/index.md
+      - Online Portals: va-resources/online-portals.md
+      - Phone Numbers: va-resources/phone-numbers.md
+      - External Resources: va-resources/external-resources.md
+  - Resources & Tools:
+      - resources-tools/index.md
+      - VSO Finder: resources-tools/vso-finder.md
+      - State Benefit Hunter: resources-tools/state-benefit-hunter.md
+      - Legislative Watchdog: resources-tools/legislative-watchdog.md
+      - VA AI Transparency Hub: resources-tools/va-ai-transparency.md
+      - AI Command Center: resources-tools/ai-command-center.md
+      - Ask the Regs: resources-tools/ask-the-regs.md
+      - AI Assistant (The Navigator): resources-tools/ai-assistant.md
+      - Backup Manager: resources-tools/backup-manager.md
+      - Cloud Sync Manager: resources-tools/cloud-sync-manager.md
+      - Atomic Wipe: resources-tools/atomic-wipe.md
+      - VKB Timeline: resources-tools/vkb-timeline.md
+      - VKB Viewer: resources-tools/vkb-viewer.md
+      - Mission Protocol: resources-tools/mission-protocol.md
+      - Publications Library: resources-tools/publications-library.md
   - Settings:
-    - settings/index.md
-    - Display Mode: settings/display-mode.md
-    - Accessibility Options: settings/accessibility-options.md
-    - Data Management: settings/data-management.md
+      - settings/index.md
+      - Display Mode: settings/display-mode.md
+      - Accessibility Options: settings/accessibility-options.md
+      - Data Management: settings/data-management.md
   - Privacy & Security:
-    - privacy/index.md
-    - Data Privacy: privacy/data-privacy.md
-    - Local Processing: privacy/local-processing.md
-    - Security Practices: privacy/security-practices.md
-    - AI Assistant Privacy: privacy/ai-assistant.md
+      - privacy/index.md
+      - Data Privacy: privacy/data-privacy.md
+      - Local Processing: privacy/local-processing.md
+      - Security Practices: privacy/security-practices.md
+      - AI Assistant Privacy: privacy/ai-assistant.md
   - Support:
-    - support/index.md
-    - Reporting Bugs: support/reporting-bugs.md
-    - FAQ: support/faq.md
-    - Contact Us: support/contact.md
+      - support/index.md
+      - Reporting Bugs: support/reporting-bugs.md
+      - FAQ: support/faq.md
+      - Contact Us: support/contact.md
   - Reference:
-    - reference/index.md
-    - Glossary: reference/glossary.md
-    - CFR Reference: reference/cfr-reference.md
-    - Keyboard Shortcuts: reference/keyboard-shortcuts.md
+      - reference/index.md
+      - Glossary: reference/glossary.md
+      - CFR Reference: reference/cfr-reference.md
+      - Keyboard Shortcuts: reference/keyboard-shortcuts.md
   - Legal:
-    - legal/index.md
-    - Terms of Service: legal/terms-of-service.md
-    - Privacy Policy: legal/privacy-policy.md
-    - Disclaimers: legal/disclaimers.md
+      - legal/index.md
+      - Terms of Service: legal/terms-of-service.md
+      - Privacy Policy: legal/privacy-policy.md
+      - Disclaimers: legal/disclaimers.md

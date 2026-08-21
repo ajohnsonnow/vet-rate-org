@@ -14,6 +14,10 @@ import {
   clearAllClaims,
   getSavedClaims,
 } from "../utils/claimsStorage";
+import {
+  saveTimelineEvents,
+  clearTimelineEvents,
+} from "../utils/veteranProfile";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -265,11 +269,10 @@ export const loadDemoData = () => {
       });
     }
 
-    // Save timeline events
-    localStorage.setItem(
-      "vetrate_evidence_timeline",
-      JSON.stringify(DEMO_VETERAN_DATA.timeline),
-    );
+    // Save timeline events — goes through the real saveTimelineEvents() so
+    // it lands under the key Evidence Timeline actually reads
+    // (vet_rate_timeline_events) instead of the unread "vetrate_evidence_timeline".
+    saveTimelineEvents(DEMO_VETERAN_DATA.timeline);
 
     // Save symptom log
     localStorage.setItem(
@@ -277,9 +280,12 @@ export const loadDemoData = () => {
       JSON.stringify(DEMO_VETERAN_DATA.symptomLog),
     );
 
-    // Save veteran profile
+    // Save veteran profile — key must match veteranProfile.js's PROFILE_KEY
+    // ("vet_rate_veteran_profile"), not "vetrate_veteran_profile", or none of
+    // the app's real profile consumers (My Packet, AI context, TDIU/rating
+    // tools) ever see this data.
     localStorage.setItem(
-      "vetrate_veteran_profile",
+      "vet_rate_veteran_profile",
       JSON.stringify(DEMO_VETERAN_DATA.profile),
     );
 
@@ -296,7 +302,7 @@ export const loadDemoData = () => {
  * Check if demo data is currently loaded
  */
 export const isDemoDataLoaded = () => {
-  const profile = localStorage.getItem("vetrate_veteran_profile");
+  const profile = localStorage.getItem("vet_rate_veteran_profile");
   if (profile) {
     try {
       const parsed = JSON.parse(profile);
@@ -313,9 +319,9 @@ export const isDemoDataLoaded = () => {
  */
 export const clearDemoData = () => {
   clearAllClaims();
-  localStorage.removeItem("vetrate_evidence_timeline");
+  clearTimelineEvents();
   localStorage.removeItem("vetrate_symptom_log");
-  localStorage.removeItem("vetrate_veteran_profile");
+  localStorage.removeItem("vet_rate_veteran_profile");
 };
 
 /**

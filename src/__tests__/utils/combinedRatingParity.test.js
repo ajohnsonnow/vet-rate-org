@@ -9,7 +9,7 @@ import { calculateCombinedRating } from "../../utils/ratingCalculator";
 
 // RT7-2 / PARSE-004: vaCalculator is the single source of truth for combined
 // ratings. The bilateral 10% factor (38 CFR § 4.26) must apply to the actual
-// paired (left/right) set — NOT to the two highest ratings. These tests pin the
+// paired (left/right) set - NOT to the two highest ratings. These tests pin the
 // side-aware math and guard parity with the legacy flat engine at the VA-rounded
 // level (38 CFR § 4.25).
 
@@ -19,7 +19,7 @@ const FIFTY_PLUS_BILATERAL_30 = [
   { name: "Knee, Right", rating: 30, side: "right" },
 ];
 
-describe("RT7-2 — bilateral factor applies to the paired set, not the top two", () => {
+describe("RT7-2 - bilateral factor applies to the paired set, not the top two", () => {
   it("calculateBilateralFactor([30,30]) → 56 (51 combined, +10% = 56.1 → 56)", () => {
     expect(calculateBilateralFactor([30, 30])).toBe(56);
   });
@@ -40,7 +40,7 @@ describe("RT7-2 — bilateral factor applies to the paired set, not the top two"
   });
 });
 
-describe("RT7-2 — engine parity at the VA-rounded level (non-bilateral)", () => {
+describe("RT7-2 - engine parity at the VA-rounded level (non-bilateral)", () => {
   const cases = [
     [60, 40, 20],
     [70, 50, 30],

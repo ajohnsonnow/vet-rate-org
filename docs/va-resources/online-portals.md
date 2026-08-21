@@ -2,6 +2,12 @@
 
 Essential VA websites and online portals for managing your benefits.
 
+!!! tip "Where to Find This In-App"
+Open the **VA Resources Hub** (🎖️ Resources → 🌐 VA Resources Hub in the header) and expand the **"Health Care & Eligibility"** or **"Benefits & Support"** categories for direct links to the portals below.
+
+![VA Resources Hub with the Health Care & Eligibility category expanded](../assets/images/screenshots/va-resources/online-portals.png)
+_Each category expands into key-information bullets plus clickable resource cards that open the official VA.gov page._
+
 ---
 
 ## Primary VA Portals
@@ -12,12 +18,12 @@ Essential VA websites and online portals for managing your benefits.
 
 The central hub for all VA services:
 
-| Feature | Description |
-|---------|-------------|
-| **Claims** | File and track claims |
-| **Health** | Manage healthcare |
-| **Education** | GI Bill information |
-| **Records** | Access records |
+| Feature       | Description           |
+| ------------- | --------------------- |
+| **Claims**    | File and track claims |
+| **Health**    | Manage healthcare     |
+| **Education** | GI Bill information   |
+| **Records**   | Access records        |
 
 **URL:** [va.gov](https://www.va.gov)
 
@@ -37,17 +43,17 @@ The central hub for all VA services:
 
 For managing specific benefits:
 
-| Feature | Description |
-|---------|-------------|
-| **Rating Letters** | Download official letters |
-| **Dependent Management** | Add/remove dependents |
-| **Vocational Rehab** | VR&E applications |
-| **Records** | Service records access |
+| Feature                  | Description               |
+| ------------------------ | ------------------------- |
+| **Rating Letters**       | Download official letters |
+| **Dependent Management** | Add/remove dependents     |
+| **Vocational Rehab**     | VR&E applications         |
+| **Records**              | Service records access    |
 
 **URL:** [ebenefits.va.gov](https://www.ebenefits.va.gov)
 
 !!! info "Transitioning to VA.gov"
-    Many eBenefits functions are moving to VA.gov. Check both portals if you can't find what you need.
+Many eBenefits functions are moving to VA.gov. Check both portals if you can't find what you need.
 
 ---
 
@@ -57,13 +63,13 @@ For managing specific benefits:
 
 Manage your VA healthcare:
 
-| Feature | Description |
-|---------|-------------|
-| **Appointments** | Schedule and manage |
-| **Prescriptions** | Refill medications |
-| **Messaging** | Secure messages to providers |
-| **Records** | Blue Button health records |
-| **Labs** | View test results |
+| Feature           | Description                  |
+| ----------------- | ---------------------------- |
+| **Appointments**  | Schedule and manage          |
+| **Prescriptions** | Refill medications           |
+| **Messaging**     | Secure messages to providers |
+| **Records**       | Blue Button health records   |
+| **Labs**          | View test results            |
 
 **URL:** [myhealth.va.gov](https://www.va.gov/health-care/manage-health/)
 
@@ -81,11 +87,11 @@ Manage your VA healthcare:
 
 Single sign-on for VA applications:
 
-| Feature | Description |
-|---------|-------------|
-| **VBMS** | Veterans Benefits Management System |
-| **SEP** | Stakeholder Enterprise Portal |
-| **Various Apps** | Multiple VA applications |
+| Feature          | Description                         |
+| ---------------- | ----------------------------------- |
+| **VBMS**         | Veterans Benefits Management System |
+| **SEP**          | Stakeholder Enterprise Portal       |
+| **Various Apps** | Multiple VA applications            |
 
 **URL:** [access.va.gov](https://access.va.gov)
 
@@ -228,9 +234,9 @@ View medical images:
 ## Bookmarks to Save
 
 !!! tip "Essential Bookmarks"
-    
+
     Save these for quick access:
-    
+
     - VA.gov Claim Status: va.gov/claim-or-appeal-status
     - My HealtheVet: va.gov/health-care/manage-health/
     - VA Forms: va.gov/find-forms

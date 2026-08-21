@@ -1799,6 +1799,13 @@ const LocalAIPanelContent = ({
   </div>
 );
 
+const LocalAIPanelFooter = () => (
+  <div className="flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+    <span>🔒</span>
+    <span>Military-grade privacy: Your data never leaves your device</span>
+  </div>
+);
+
 const LocalAIPanel = ({ onClose, onReportBug }) => {
   const {
     webGPUStatus,
@@ -1844,14 +1851,7 @@ const LocalAIPanel = ({ onClose, onReportBug }) => {
       }
       labelledBy="local-ai-panel-title"
       size="lg"
-      footer={
-        <div className="flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-          <span>🔒</span>
-          <span>
-            Military-grade privacy: Your data never leaves your device
-          </span>
-        </div>
-      }
+      footer={<LocalAIPanelFooter />}
       className="border border-gray-200 dark:border-gray-700"
     >
       <LocalAIPanelContent

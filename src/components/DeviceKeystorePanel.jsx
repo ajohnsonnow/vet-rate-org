@@ -3,7 +3,7 @@
  * Copyright (c) 2024-2026 Anthony Johnson
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * "THE KEY VAULT" — opt-in device-passphrase custody for the encryption keys
+ * "THE KEY VAULT" - opt-in device-passphrase custody for the encryption keys
  * this browser stores for passphrase-less cloud backups (S16, commit G).
  *
  * Honest scope (see docs/audit/S16_ROTATION_DEAUTH_DESIGN.md §2-3):
@@ -186,7 +186,7 @@ function createRotateExportActions({
     run(async () => {
       const bundle = await exportRecoveryBundle();
       downloadJson(`vetrate-keystore-recovery-${stamp()}.json`, bundle);
-      return "Recovery bundle downloaded. Keep it safe — it is protected by your device passphrase, and we never hold a copy.";
+      return "Recovery bundle downloaded. Keep it safe - it is protected by your device passphrase, and we never hold a copy.";
     });
 
   const handleImportFile = (e) => {
@@ -314,7 +314,7 @@ const KeystoreEnableSection = ({
       />
       <p className="text-xs text-amber-700 dark:text-amber-300">
         ⚠️ If you forget this passphrase, the keys it protects cannot be
-        recovered. There is no reset — by design, we never see it.
+        recovered. There is no reset - by design, we never see it.
       </p>
       <button
         type="button"
@@ -540,7 +540,7 @@ const KeystoreDeauthSection = ({
     <p className="text-sm text-gray-700 dark:text-gray-300">
       Erases every encryption key this browser holds and signs out your
       connected cloud providers. This is enforced on{" "}
-      <strong>this device only</strong> — it cannot delete files already in your
+      <strong>this device only</strong> - it cannot delete files already in your
       cloud or recall backups that were already synced.
     </p>
     {keyIds.length > 0 && (

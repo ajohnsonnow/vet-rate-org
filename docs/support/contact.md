@@ -12,7 +12,13 @@ The easiest way to reach us:
 
 1. Click **"Contact Us"** in the website footer
 2. Fill out the form
-3. Submit
+3. Click **"Send Message"**
+
+![Contact Us form with Name, Email, Subject, and Message fields](../assets/images/screenshots/support/contact-us.png)
+_The form opens your default email client with your message pre-filled, addressed to the team._
+
+!!! info "It Opens Your Email Client"
+"Send Message" doesn't submit to a server - it opens a `mailto:` link in your default email app with your name, email, and message already filled in, so you send it from your own inbox. If you don't have a default email app configured, email directly instead.
 
 ### Bug Squasher
 
@@ -112,10 +118,9 @@ Contact the VA directly:
 
 ## Privacy in Communications
 
-### What We Keep
+### How This Form Handles Your Message
 
-- Your message content
-- Date received
+Since "Send Message" opens your own email client rather than submitting to a server, Vet-Rate.org doesn't receive or store anything until you actually send that email - it's a normal email from that point on, subject to your own email provider's retention, not the app's.
 
 ### What We Don't Need
 

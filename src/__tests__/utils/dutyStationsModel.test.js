@@ -1,5 +1,5 @@
 /**
- * Duty stations — user-entered locations, one-to-many by reference into
+ * Duty stations - user-entered locations, one-to-many by reference into
  * servicePeriods[] (periodId, null = unassigned). Same reference pattern as
  * deployments[].periodId, sanitizer contract modeled after
  * servicePeriodsModel.test.js / dd214DataWhitelist.test.js in this
@@ -18,7 +18,7 @@ import {
   removeServicePeriod,
 } from "../../utils/veteranProfile";
 
-describe("Duty stations — three-path normalization", () => {
+describe("Duty stations - three-path normalization", () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -48,7 +48,7 @@ describe("Duty stations — three-path normalization", () => {
   });
 });
 
-describe("Duty stations — CRUD round-trip", () => {
+describe("Duty stations - CRUD round-trip", () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -96,7 +96,7 @@ describe("Duty stations — CRUD round-trip", () => {
   });
 });
 
-describe("Duty stations — sanitizer (saveServiceHistory whitelist)", () => {
+describe("Duty stations - sanitizer (saveServiceHistory whitelist)", () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -168,7 +168,7 @@ describe("Duty stations — sanitizer (saveServiceHistory whitelist)", () => {
   });
 });
 
-describe("Duty stations — addDutyStation rejects at the 100-entry cap", () => {
+describe("Duty stations - addDutyStation rejects at the 100-entry cap", () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -190,7 +190,7 @@ describe("Duty stations — addDutyStation rejects at the 100-entry cap", () => 
   });
 });
 
-describe("Duty stations — orphaned periodId survival (no cascade-delete)", () => {
+describe("Duty stations - orphaned periodId survival (no cascade-delete)", () => {
   beforeEach(() => {
     localStorage.clear();
   });

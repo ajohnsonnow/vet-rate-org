@@ -239,6 +239,115 @@ function clearFormationImpl(setFormation, setCurrentEntry, setStats) {
 }
 
 /**
+ * Formation queue action creators. Split out of useFormationQueue as its own
+ * custom hook (still calls useCallback internally) so the parent hook body
+ * stays under the line budget without breaking rules-of-hooks.
+ */
+function useFormationActions({ formation, setFormation, currentEntry }) {
+  const initializeFormation = useCallback(
+    (files) => initializeFormationImpl(files, setFormation),
+    [setFormation],
+  );
+
+  const addToFormation = useCallback(
+    (files) => addFilesToFormation(formation, setFormation, files),
+    [formation, setFormation],
+  );
+
+  const updateEntry = useCallback(
+    (entryId, updates) =>
+      setFormation((prev) => updateFormationEntry(prev, entryId, updates)),
+    [setFormation],
+  );
+
+  const updateCurrentStatus = useCallback(
+    (status, additionalData = {}) =>
+      applyCurrentStatusUpdate(
+        currentEntry,
+        updateEntry,
+        status,
+        additionalData,
+      ),
+    [currentEntry, updateEntry],
+  );
+
+  const completeCurrentAndNext = useCallback(
+    (result) =>
+      completeCurrentAndNextImpl(currentEntry, formation, updateEntry, result),
+    [currentEntry, formation, updateEntry],
+  );
+
+  const skipCurrentAndNext = useCallback(
+    (reason = "User skipped") =>
+      skipCurrentAndNextImpl(currentEntry, formation, updateEntry, reason),
+    [currentEntry, formation, updateEntry],
+  );
+
+  const errorCurrentAndNext = useCallback(
+    (error) =>
+      errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error),
+    [currentEntry, formation, updateEntry],
+  );
+
+  const startFormation = useCallback(
+    () => startFormationImpl(formation, updateEntry),
+    [formation, updateEntry],
+  );
+
+  const reorderDocuments = useCallback(
+    (fromIndex, toIndex) =>
+      reorderFormationDocuments(formation, setFormation, fromIndex, toIndex),
+    [formation, setFormation],
+  );
+
+  const removeDocument = useCallback(
+    (entryId) => removeFormationDocument(formation, setFormation, entryId),
+    [formation, setFormation],
+  );
+
+  return {
+    initializeFormation,
+    addToFormation,
+    updateEntry,
+    updateCurrentStatus,
+    completeCurrentAndNext,
+    skipCurrentAndNext,
+    errorCurrentAndNext,
+    startFormation,
+    reorderDocuments,
+    removeDocument,
+  };
+}
+
+/**
+ * The remaining formation queue actions - split from useFormationActions
+ * purely to keep both hooks under the line budget.
+ */
+function useFormationStatus({
+  formation,
+  setFormation,
+  setCurrentEntry,
+  setStats,
+}) {
+  const clearFormation = useCallback(
+    () => clearFormationImpl(setFormation, setCurrentEntry, setStats),
+    [setFormation, setCurrentEntry, setStats],
+  );
+
+  const isComplete = useCallback(
+    () => isFormationComplete(formation),
+    [formation],
+  );
+
+  const getProgress = useCallback(
+    () => getFormationProgress(formation),
+    [formation],
+  );
+
+  return { clearFormation, isComplete, getProgress };
+}
+
+/**
  * Hook for managing formation queue
  */
 export const useFormationQueue = () => {
@@ -256,120 +365,29 @@ export const useFormationQueue = () => {
     syncFormationStats(formation, setStats, setCurrentEntry);
   }, [formation]);
 
-  /**
-   * Initialize formation from files
-   */
-  const initializeFormation = useCallback(
-    (files) => initializeFormationImpl(files, setFormation),
-    [],
-  );
+  const {
+    initializeFormation,
+    addToFormation,
+    updateEntry,
+    updateCurrentStatus,
+    completeCurrentAndNext,
+    skipCurrentAndNext,
+    errorCurrentAndNext,
+    startFormation,
+    reorderDocuments,
+    removeDocument,
+  } = useFormationActions({
+    formation,
+    setFormation,
+    currentEntry,
+  });
 
-  /**
-   * Add files to existing formation
-   */
-  const addToFormation = useCallback(
-    (files) => addFilesToFormation(formation, setFormation, files),
-    [formation],
-  );
-
-  /**
-   * Update a document entry
-   */
-  const updateEntry = useCallback(
-    (entryId, updates) =>
-      setFormation((prev) => updateFormationEntry(prev, entryId, updates)),
-    [],
-  );
-
-  /**
-   * Update current entry status
-   */
-  const updateCurrentStatus = useCallback(
-    (status, additionalData = {}) =>
-      applyCurrentStatusUpdate(
-        currentEntry,
-        updateEntry,
-        status,
-        additionalData,
-      ),
-    [currentEntry, updateEntry],
-  );
-
-  /**
-   * Mark current document as complete and move to next
-   */
-  const completeCurrentAndNext = useCallback(
-    (result) =>
-      completeCurrentAndNextImpl(currentEntry, formation, updateEntry, result),
-    [currentEntry, formation, updateEntry],
-  );
-
-  /**
-   * Skip current document and move to next
-   */
-  const skipCurrentAndNext = useCallback(
-    (reason = "User skipped") =>
-      skipCurrentAndNextImpl(currentEntry, formation, updateEntry, reason),
-    [currentEntry, formation, updateEntry],
-  );
-
-  /**
-   * Mark current as error and move to next
-   */
-  const errorCurrentAndNext = useCallback(
-    (error) =>
-      errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error),
-    [currentEntry, formation, updateEntry],
-  );
-
-  /**
-   * Start processing formation
-   */
-  const startFormation = useCallback(
-    () => startFormationImpl(formation, updateEntry),
-    [formation, updateEntry],
-  );
-
-  /**
-   * Reorder documents (drag and drop)
-   */
-  const reorderDocuments = useCallback(
-    (fromIndex, toIndex) =>
-      reorderFormationDocuments(formation, setFormation, fromIndex, toIndex),
-    [formation],
-  );
-
-  /**
-   * Remove document from formation
-   */
-  const removeDocument = useCallback(
-    (entryId) => removeFormationDocument(formation, setFormation, entryId),
-    [formation],
-  );
-
-  /**
-   * Clear entire formation
-   */
-  const clearFormation = useCallback(
-    () => clearFormationImpl(setFormation, setCurrentEntry, setStats),
-    [],
-  );
-
-  /**
-   * Check if formation is complete
-   */
-  const isComplete = useCallback(
-    () => isFormationComplete(formation),
-    [formation],
-  );
-
-  /**
-   * Get progress percentage
-   */
-  const getProgress = useCallback(
-    () => getFormationProgress(formation),
-    [formation],
-  );
+  const { clearFormation, isComplete, getProgress } = useFormationStatus({
+    formation,
+    setFormation,
+    setCurrentEntry,
+    setStats,
+  });
 
   return {
     // State

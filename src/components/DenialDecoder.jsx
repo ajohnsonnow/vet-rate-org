@@ -252,7 +252,7 @@ const DenialDecoderHeader = ({ t, onClose, onOpenAISettings }) => (
         <LLMRecommendationBadge toolId="denial-decoder" />
         <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         {onClose && (
-          <button
+          <button type="button"
             onClick={onClose}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             aria-label={t("common.close")}
@@ -336,7 +336,7 @@ const UploadDropZone = ({
 }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     {/* Camera Button */}
-    <button
+    <button type="button"
       onClick={() => cameraInputRef.current?.click()}
       className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
     >
@@ -352,7 +352,7 @@ const UploadDropZone = ({
     </button>
 
     {/* File Drop In Button */}
-    <button
+    <button type="button"
       onClick={() => fileInputRef.current?.click()}
       className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
     >
@@ -494,7 +494,7 @@ const ResultsRawTextToggle = ({
   extractedText,
 }) => (
   <div className="text-center">
-    <button
+    <button type="button"
       onClick={() => setShowRawText(!showRawText)}
       className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-2 mx-auto"
     >
@@ -556,14 +556,14 @@ const ResultsStep = ({
 
     {/* Actions */}
     <div className="flex gap-3">
-      <button
+      <button type="button"
         onClick={handleReset}
         className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
       >
         {t("denialDecoder.scanAnotherLetter")}
       </button>
       {onClose && (
-        <button
+        <button type="button"
           onClick={onClose}
           className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >

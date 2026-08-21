@@ -15,7 +15,7 @@ import {
   __resetForTests,
 } from "../../utils/logger";
 
-describe("logger — ring buffer + levels", () => {
+describe("logger - ring buffer + levels", () => {
   beforeEach(() => {
     __resetForTests();
     setConsolePassthrough(false);
@@ -39,7 +39,7 @@ describe("logger — ring buffer + levels", () => {
     expect(getLogs().map((e) => e.level)).toEqual(["warn"]);
   });
 
-  it("default level is info — debug is silent unless opted in", () => {
+  it("default level is info - debug is silent unless opted in", () => {
     expect(getLevel()).toBe("info");
     logger.debug("hidden");
     expect(getLogs()).toHaveLength(0);
@@ -89,7 +89,7 @@ describe("logger — ring buffer + levels", () => {
   });
 });
 
-describe("logger — export shape", () => {
+describe("logger - export shape", () => {
   beforeEach(() => {
     __resetForTests();
     setConsolePassthrough(false);
@@ -110,7 +110,7 @@ describe("logger — export shape", () => {
   });
 });
 
-describe("logger — console passthrough", () => {
+describe("logger - console passthrough", () => {
   beforeEach(() => {
     __resetForTests();
   });
@@ -135,7 +135,7 @@ describe("logger — console passthrough", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("routes by level — error goes to console.error", () => {
+  it("routes by level - error goes to console.error", () => {
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     setConsolePassthrough(true);
@@ -146,7 +146,7 @@ describe("logger — console passthrough", () => {
   });
 });
 
-describe("logger — persistence opt-in", () => {
+describe("logger - persistence opt-in", () => {
   beforeEach(() => {
     __resetForTests();
     setConsolePassthrough(false);

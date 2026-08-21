@@ -77,7 +77,7 @@ export const PREPROCESS_STRATEGIES = {
 /**
  * RT8-4: advancedPDFAnalysis loads the whole file into one ArrayBuffer, then
  * renders each page to a high-res canvas for Tesseract. A 300MB+ PDF can
- * easily consume 2–4 GB of JS heap on the render path. Gate before we start.
+ * easily consume 2-4 GB of JS heap on the render path. Gate before we start.
  *
  * Thresholds are deliberately conservative:
  *   - 200 MB + low-memory device  → abort (recommend C-File Analyzer which streams)
@@ -95,7 +95,7 @@ function enforceOCRSizeLimits(file, config) {
   if (file.size > OCR_HARD_LIMIT_BYTES && (isMobileDevice || isLowMemory)) {
     throw new Error(
       `This PDF (${Math.round(file.size / (1024 * 1024))} MB) is too large for OCR on your device. ` +
-        "Use the C-File Analyzer tool instead — it streams pages one at a time and handles files of any size.",
+        "Use the C-File Analyzer tool instead - it streams pages one at a time and handles files of any size.",
     );
   }
   if (file.size > OCR_WARN_LIMIT_BYTES) {
@@ -103,7 +103,7 @@ function enforceOCRSizeLimits(file, config) {
     config.MAX_OCR_PAGES = Math.min(config.MAX_OCR_PAGES, 10);
     // eslint-disable-next-line no-console
     console.warn(
-      `[advancedOCR] Large file (${Math.round(file.size / (1024 * 1024))} MB) — capping OCR at ${config.MAX_OCR_PAGES} pages to prevent OOM.`,
+      `[advancedOCR] Large file (${Math.round(file.size / (1024 * 1024))} MB) - capping OCR at ${config.MAX_OCR_PAGES} pages to prevent OOM.`,
     );
   }
 }
@@ -346,7 +346,7 @@ function analyzeImageQuality(imageData) {
  * Determine ensemble scale set and worker pool size for a run.
  *
  * Worker pool: a single Tesseract worker processed pages strictly
- * sequentially while the rest of the CPU sat idle — the dominant cost on
+ * sequentially while the rest of the CPU sat idle - the dominant cost on
  * multi-page scans. Pool size adapts to device tier (deviceCapabilityDetector):
  * desktop-high→8, desktop-mid→6, laptop→4, tablet→2, mobile→1.
  * Falls back to hardwareConcurrency - 2 when the device profile is not yet cached.
@@ -413,7 +413,7 @@ function createPageRecognizer(scheduler) {
 /**
  * Text-layer fast path: digitally-generated pages (VA forms, typed medical
  * records, decision letters) already have a UTF-8 text layer embedded in
- * the PDF — reusing it is both faster and more accurate than rendering to
+ * the PDF - reusing it is both faster and more accurate than rendering to
  * a canvas and running Tesseract. We consider the layer "sufficient" when
  * it has > 20 text items AND > 100 characters (blank/stamp pages have few
  * items; cover sheets may have 1-5 lines). Scanned pages return items=0.
@@ -430,7 +430,7 @@ async function tryTextLayerText(page) {
       return layerText;
     }
   } catch {
-    // getTextContent can fail on corrupt pages — fall through to OCR
+    // getTextContent can fail on corrupt pages - fall through to OCR
   }
   return null;
 }
@@ -447,7 +447,7 @@ async function recognizePageWithEnsemble(
   config,
 ) {
   // Image-only page: one pass at the highest base scale. The full multi-scale
-  // ensemble only runs when that pass reads poorly — most pages of a
+  // ensemble only runs when that pass reads poorly - most pages of a
   // typical scan are legible and don't need 3x the OCR work.
   const primary = await recognize(
     page,
@@ -561,7 +561,7 @@ function buildOCRResult(
     processingTime: Date.now() - startTime,
     pagesProcessed: pagesToProcess,
     totalCharsExtracted: totalChars,
-    // D-12: this result IS OCR — the vision-fallback guard in
+    // D-12: this result IS OCR - the vision-fallback guard in
     // musterCallProcessor's _applyVisionFallbackIfNeeded checks this flag
     // (deliberately kept, not removed) to decide whether a low-confidence
     // OCR result is even eligible for the Florence-2 fallback.

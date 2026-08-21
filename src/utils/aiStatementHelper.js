@@ -39,7 +39,7 @@ export const isAIAvailable = () => {
  * @deprecated Use unified AI service instead
  */
 const _getApiKey = () => {
-  // RT1-1: BYOK only — key comes from the user's localStorage entry, never the
+  // RT1-1: BYOK only - key comes from the user's localStorage entry, never the
   // build env. A VITE_-inlined key would ship in the public bundle.
   const storedKey = localStorage.getItem(STORAGE_KEY);
   if (storedKey && storedKey.length > 0) return storedKey;
@@ -1014,8 +1014,15 @@ const CLOUD_AI_DATA_DISCLOSURE_BY_TYPE = {
 export const getAIDataDisclosure = (statementType) => {
   const status = getAIStatus();
 
-  // If using Local AI, show privacy-first message
-  if (status.effectiveMode === AI_MODES.LOCAL) {
+  // If using any private/on-device mode (Local, Warrant Council/Swarm,
+  // Wllama, or a local llama.cpp server), show the privacy-first message.
+  // Was checking only AI_MODES.LOCAL - a legacy value getAIMode() actively
+  // migrates users away from to AI_MODES.SWARM - so every Swarm/Wllama/
+  // local-server user (i.e. nearly everyone using "Local AI") was shown the
+  // Cloud data-sharing consent for statement generation instead. isPrivate
+  // already reflects the correct set of on-device modes (see
+  // unifiedAIService.getAIStatus).
+  if (status.isPrivate) {
     return LOCAL_AI_DATA_DISCLOSURE;
   }
 
@@ -1277,7 +1284,7 @@ export const searchStateBenefits = async (state, rating) => {
     // Convert rating string to number if needed
     const ratingNum =
       typeof rating === "string"
-        ? parseInt(rating.replace(/[^\d]/g, "")) || 0
+        ? Number.parseInt(rating.replace(/[^\d]/g, "")) || 0
         : rating;
 
     // Search the database
@@ -1763,7 +1770,7 @@ DO NOT list that as missing or tell the veteran to prove it again. Focus ONLY on
 ⚠️ CRITICAL: Many decisions grant or increase SOME issues while denying others in the
 same letter (e.g., "Service connection for tinnitus is granted... Service connection
 for lipoma is denied"). If ANY numbered issue is granted/increased/continued AND ANY
-other issue is denied in the same letter, decision_type MUST be "Mixed Decision" —
+other issue is denied in the same letter, decision_type MUST be "Mixed Decision" -
 NEVER "Full Denial". Only use "Full Denial" when every issue in the letter was denied.
 
 OUTPUT FORMAT:

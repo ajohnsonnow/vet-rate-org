@@ -9,7 +9,7 @@
  * exercised separately in integration tests; they start at false here.
  *
  * Companion regression: generateAI() bug fixed in commit that ships
- * these tests — the old `useSwarm = … || isDiamondSwarmReady()` flag
+ * these tests - the old `useSwarm = … || isDiamondSwarmReady()` flag
  * caused swarm to hijack CLOUD-mode dispatches when a model was loaded.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -188,7 +188,7 @@ describe("isCloudAIAvailable", () => {
 
   // NOTE: "null" as a 4-char string fails isValidApiKey (length < 10) in
   // localStorage, but isCloudAIAvailable() also falls back to
-  // import.meta.env.VITE_GEMINI_API_KEY — so the overall return value is
+  // import.meta.env.VITE_GEMINI_API_KEY - so the overall return value is
   // environment-dependent when a local .env key is present. No hard assertion.
 });
 
@@ -210,7 +210,7 @@ describe("isDiamondSwarmReady", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("getEffectiveAIMode — routing contract", () => {
+describe("getEffectiveAIMode - routing contract", () => {
   it("returns null when nothing is available", () => {
     // mode=SWARM (default), swarm=not ready, cloud=not configured
     expect(getEffectiveAIMode()).toBeNull();
@@ -245,7 +245,7 @@ describe("getEffectiveAIMode — routing contract", () => {
   // Regression: the old generateAI() dispatch used
   //   `const useSwarm = effectiveMode === SWARM || isDiamondSwarmReady()`
   // which hijacked CLOUD-mode dispatches whenever a swarm model happened
-  // to be loaded. getEffectiveAIMode() itself was always correct — the bug
+  // to be loaded. getEffectiveAIMode() itself was always correct - the bug
   // was purely in the dispatch flags. This test pins getEffectiveAIMode().
   it("CLOUD mode + cloud available + swarm also ready → still CLOUD (preference honoured)", () => {
     setAIMode(AI_MODES.CLOUD);
@@ -283,13 +283,13 @@ describe("getEffectiveAIMode — routing contract", () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Regression: initializeWllama() called wllamaService.initializeWllama(model,
-// onProgress) — a raw callback (or null, with no caller-supplied progress
-// handler) — positionally, where wllamaService destructures its second arg
+// onProgress) - a raw callback (or null, with no caller-supplied progress
+// handler) - positionally, where wllamaService destructures its second arg
 // as an options object ({ onProgress, useCache } = options). A null/function
 // second arg made every no-progress-callback init throw
 // "Cannot destructure property 'onProgress' of 'options' as it is null",
 // silently keeping wasm-mode permanently unavailable.
-describe("initializeWllama — wllamaService call shape", () => {
+describe("initializeWllama - wllamaService call shape", () => {
   it("passes onProgress wrapped in an options object, not positionally", async () => {
     wllamaServiceInitialize.mockResolvedValueOnce(true);
     await initializeWllama("auditor");
@@ -310,9 +310,9 @@ describe("initializeWllama — wllamaService call shape", () => {
 
 // Regression: wllamaService.initializeWllama resolves a plain boolean (or
 // throws), never a { success, error } object. initializeWllama() here read
-// result.success, which is undefined on a boolean — always falsy — so
+// result.success, which is undefined on a boolean - always falsy - so
 // success was never detected even when the model loaded correctly.
-describe("initializeWllama — return value shape", () => {
+describe("initializeWllama - return value shape", () => {
   it("returns true when wllamaService resolves true", async () => {
     wllamaServiceInitialize.mockResolvedValueOnce(true);
     await expect(initializeWllama("auditor")).resolves.toBe(true);

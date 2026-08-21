@@ -27,7 +27,7 @@ const DATA_DIR = path.resolve(__dirname, "..", "data", "multinational");
 const readCategory = (category) =>
   JSON.parse(readFileSync(path.join(DATA_DIR, `${category}.json`), "utf8"));
 
-describe("multinational content — canonical verified files (S38)", () => {
+describe("multinational content - canonical verified files (S38)", () => {
   it.each(CATEGORIES)("%s.json exists", (category) => {
     expect(existsSync(path.join(DATA_DIR, `${category}.json`))).toBe(true);
   });
@@ -85,7 +85,7 @@ describe("multinational content — canonical verified files (S38)", () => {
   );
 });
 
-describe("multinational content — live consumer wiring (S38)", () => {
+describe("multinational content - live consumer wiring (S38)", () => {
   it("multinationalContent.js flattens all four categories without an import error", () => {
     const categories = new Set(multinationalProvisions.map((p) => p.category));
     expect(categories).toEqual(new Set(CATEGORIES));

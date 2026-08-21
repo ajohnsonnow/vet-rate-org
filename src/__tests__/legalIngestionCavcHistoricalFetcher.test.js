@@ -7,16 +7,16 @@ import {
 } from "../../scripts/legal-ingestion/fetch-cavc-historical.mjs";
 
 /**
- * S43 — regression coverage for the garbled-encoding fix: classifyDocFormat(docid)
+ * S43 - regression coverage for the garbled-encoding fix: classifyDocFormat(docid)
  * is only a filename-based GUESS ("no extension" legacy files are NOT reliably
  * plain text); sniffDocFormat(bytes) is the real classifier, checked against
  * the archive's actual magic numbers. A WordPerfect binary served under a
  * non-.wpd filename must be sniffed as "wpd" and skipped, never latin1-decoded.
  */
-describe("sniffDocFormat — magic-byte ground truth", () => {
+describe("sniffDocFormat - magic-byte ground truth", () => {
   it("recognizes a WordPerfect binary by its \\xFFWPC signature, regardless of filename", () => {
     // Real bytes observed from a 1992 PanelDecisions hit whose docid had no
-    // extension — classifyDocFormat(docid) alone would have called this "text".
+    // extension - classifyDocFormat(docid) alone would have called this "text".
     const wpBytes = new Uint8Array([
       0xff, 0x57, 0x50, 0x43, 0x37, 0x2a, 0x00, 0x00,
     ]);
@@ -43,7 +43,7 @@ describe("sniffDocFormat — magic-byte ground truth", () => {
   });
 });
 
-describe("classifyDocFormat — filename fast-skip only", () => {
+describe("classifyDocFormat - filename fast-skip only", () => {
   it("still fast-skips an explicit .wpd extension without a download", () => {
     expect(classifyDocFormat("SANDINE.wpd")).toBe("wpd");
   });
@@ -57,7 +57,7 @@ describe("classifyDocFormat — filename fast-skip only", () => {
   });
 });
 
-describe("docketFromText / citationForHit — unchanged pure helpers", () => {
+describe("docketFromText / citationForHit - unchanged pure helpers", () => {
   it("pulls the docket number from letter-spaced PDF-extracted text", () => {
     expect(docketFromText("N O . 23-7995 UNITED STATES COURT OF APPEALS")).toBe(
       "23-7995",

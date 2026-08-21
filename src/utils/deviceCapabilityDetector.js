@@ -6,11 +6,11 @@
  * Called once at app start; result is cached for the session.
  *
  * Tiers and their implications:
- *   mobile       — phone or no GPU; WebLLM skipped, cloud or skip
- *   tablet       — iPad / Android tablet; WebLLM 1.5B if WebGPU present
- *   laptop       — integrated / low-end discrete GPU; WebLLM 1.5B q4f16
- *   desktop-mid  — mid discrete GPU (~8GB VRAM); WebLLM 3B q4f16
- *   desktop-high — high-end GPU (≥16GB, RTX 3000+); WebLLM 3B q4f16 (extraction primary), 28K chunks
+ *   mobile       - phone or no GPU; WebLLM skipped, cloud or skip
+ *   tablet       - iPad / Android tablet; WebLLM 1.5B if WebGPU present
+ *   laptop       - integrated / low-end discrete GPU; WebLLM 1.5B q4f16
+ *   desktop-mid  - mid discrete GPU (~8GB VRAM); WebLLM 3B q4f16
+ *   desktop-high - high-end GPU (≥16GB, RTX 3000+); WebLLM 3B q4f16 (extraction primary), 28K chunks
  */
 
 // WebGPU maxBufferSize thresholds correlate with GPU memory tier.
@@ -76,12 +76,12 @@ function _deviceTierFor({
   } else if (gpuTier === "high" && systemRAM >= 8) {
     // Desktop-high: large GPU buffer + plenty of RAM.
     // MacBook Air M1/M2 13" reports screenW 1280 CSS px (2× HiDPI) but has full
-    // Metal PSO caching — treat as desktop-high regardless of screen width.
+    // Metal PSO caching - treat as desktop-high regardless of screen width.
     return screenW < 1400 && !isAppleSilicon ? "desktop-mid" : "desktop-high";
   } else if (gpuTier === "mid" || (hasWebGPU && cpuCores >= 8)) {
     return "laptop";
   }
-  return "mobile"; // no GPU, unknown — fallback to the most conservative path
+  return "mobile"; // no GPU, unknown - fallback to the most conservative path
 }
 
 /**
@@ -109,7 +109,7 @@ export async function detectDeviceCapabilities() {
 
   const gpuTier = _gpuTierFor(hasWebGPU, gpuMaxBufferSize);
 
-  // Apple Silicon M-series GPU description is bare "Apple M1" / "Apple M2 Pro" —
+  // Apple Silicon M-series GPU description is bare "Apple M1" / "Apple M2 Pro" -
   // no ANGLE wrapper. Detected here so the profile can expose it and the tier
   // logic can use it without a second regex pass.
   const isAppleSilicon = /Apple M\d/i.test(gpuDescription || "");
@@ -157,9 +157,9 @@ function _configForTier(tier) {
     case "desktop-high":
       return {
         recommendedModels: [
-          "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7 GB — proven ~55 s/chunk on 4080 SUPER (stream:false)
-          "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0 GB — f32 fallback
-          "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8 GB — alternative architecture
+          "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7 GB - proven ~55 s/chunk on 4080 SUPER (stream:false)
+          "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0 GB - f32 fallback
+          "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8 GB - alternative architecture
         ],
         contextWindowSize: 12288, // 28K-char chunk (~8235 tokens) + system prompt (~600) + 2048 output = ~10883; needs KV cache > 10883
         maxChunkChars: 28000,

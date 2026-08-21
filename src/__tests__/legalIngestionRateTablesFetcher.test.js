@@ -14,43 +14,110 @@ import {
  * covers parsing mechanics, not source-data trustworthiness).
  */
 
+function veteranAndVSpouseRows() {
+  return [
+    ["Dep Code", "Dep Status", "10%", "20%", "30%", "Dep Code", "Dep Status"],
+    [
+      "0",
+      "Veteran",
+      "180.42",
+      "356.66",
+      "552.47",
+      "795.84",
+      "1132.90",
+      "1435.02",
+      "1808.45",
+      "2102.15",
+      "2362.30",
+      "3938.58",
+      "0",
+      "Veteran",
+    ],
+    [
+      "10",
+      "V-S",
+      "",
+      "",
+      "617.47",
+      "882.84",
+      "1241.90",
+      "1566.02",
+      "1961.45",
+      "2277.15",
+      "2559.30",
+      "4158.17",
+      "10",
+      "V-S",
+    ],
+  ];
+}
+
+function childLadderRows() {
+  return [
+    [
+      "Each additional child",
+      "",
+      "",
+      "32",
+      "43",
+      "54",
+      "65",
+      "76",
+      "87",
+      "98",
+      "109.11",
+      "Each additional child",
+    ],
+    [
+      "Each additional schoolchild (see footnote a)",
+      "",
+      "",
+      "105",
+      "140",
+      "176",
+      "211",
+      "246",
+      "281",
+      "317",
+      "352.45",
+      "Each additional schoolchild (see footnote a)",
+    ],
+  ];
+}
+
+function wholeDollarV1PRow() {
+  return [
+    [
+      "50/60",
+      "V-1P",
+      "",
+      "",
+      "604.47",
+      "865.84",
+      "1220.90",
+      "1540.02",
+      "1931.45",
+      "2242.15",
+      "2520.30",
+      "4114.82",
+      "50/60",
+      "V-1P",
+    ],
+  ];
+}
+
+function footnoteHeaderMalformedRows() {
+  return [
+    ["FOOTNOTES: a. Rates for each school child are shown separately."],
+    ["Entitlement Codes 01, 11, 21, 31, 41, 51, 61, 71, and 91"],
+    ["Additional for A/A spouse (see footnote b)", "61", "81"],
+    [""],
+  ];
+}
+
 describe("parseBasicRatesRows", () => {
   it("extracts the Veteran, V-S, V-1P and V-2P rows by dep-status text", () => {
-    const rows = [
-      ["Dep Code", "Dep Status", "10%", "20%", "30%", "Dep Code", "Dep Status"],
-      [
-        "0",
-        "Veteran",
-        "180.42",
-        "356.66",
-        "552.47",
-        "795.84",
-        "1132.90",
-        "1435.02",
-        "1808.45",
-        "2102.15",
-        "2362.30",
-        "3938.58",
-        "0",
-        "Veteran",
-      ],
-      [
-        "10",
-        "V-S",
-        "",
-        "",
-        "617.47",
-        "882.84",
-        "1241.90",
-        "1566.02",
-        "1961.45",
-        "2277.15",
-        "2559.30",
-        "4158.17",
-        "10",
-        "V-S",
-      ],
-    ];
+    const rows = veteranAndVSpouseRows();
     const { byStatus, skipped } = parseBasicRatesRows(rows);
     expect(byStatus.get("Veteran")).toEqual({
       10: 180.42,
@@ -73,36 +140,7 @@ describe("parseBasicRatesRows", () => {
   });
 
   it("parses 'each additional child' and schoolchild rows into the 30-100% ladder", () => {
-    const rows = [
-      [
-        "Each additional child",
-        "",
-        "",
-        "32",
-        "43",
-        "54",
-        "65",
-        "76",
-        "87",
-        "98",
-        "109.11",
-        "Each additional child",
-      ],
-      [
-        "Each additional schoolchild (see footnote a)",
-        "",
-        "",
-        "105",
-        "140",
-        "176",
-        "211",
-        "246",
-        "281",
-        "317",
-        "352.45",
-        "Each additional schoolchild (see footnote a)",
-      ],
-    ];
+    const rows = childLadderRows();
     const { childUnder18, childSchool } = parseBasicRatesRows(rows);
     expect(childUnder18).toEqual({
       30: 32,
@@ -120,35 +158,13 @@ describe("parseBasicRatesRows", () => {
   it("handles whole-dollar values without decimals (not just cents-formatted)", () => {
     // Regression: an earlier value-scanning approach only recognized
     // "\d+.\d{2}" cells and silently dropped whole-dollar rate columns.
-    const rows = [
-      [
-        "50/60",
-        "V-1P",
-        "",
-        "",
-        "604.47",
-        "865.84",
-        "1220.90",
-        "1540.02",
-        "1931.45",
-        "2242.15",
-        "2520.30",
-        "4114.82",
-        "50/60",
-        "V-1P",
-      ],
-    ];
+    const rows = wholeDollarV1PRow();
     const { byStatus } = parseBasicRatesRows(rows);
     expect(byStatus.get("V-1P")[30]).toBe(604.47);
   });
 
   it("skips footnote, header, and malformed rows without throwing", () => {
-    const rows = [
-      ["FOOTNOTES: a. Rates for each school child are shown separately."],
-      ["Entitlement Codes 01, 11, 21, 31, 41, 51, 61, 71, and 91"],
-      ["Additional for A/A spouse (see footnote b)", "61", "81"],
-      [""],
-    ];
+    const rows = footnoteHeaderMalformedRows();
     const { byStatus, childUnder18, childSchool, skipped } =
       parseBasicRatesRows(rows);
     expect(byStatus.size).toBe(0);

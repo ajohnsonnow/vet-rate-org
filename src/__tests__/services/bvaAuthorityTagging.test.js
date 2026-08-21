@@ -10,8 +10,8 @@ import {
 } from "../../services/bvaAuthorityTagging.js";
 
 /**
- * S32 — BVA authority tagging. The load-bearing guarantee is that EVERY BVA
- * entry is tagged non-precedential / non-binding (38 CFR § 20.1303) — asserted
+ * S32 - BVA authority tagging. The load-bearing guarantee is that EVERY BVA
+ * entry is tagged non-precedential / non-binding (38 CFR § 20.1303) - asserted
  * over a representative spread of dispositions/years so no code path can emit a
  * BVA tag that reads as binding authority.
  */
@@ -26,7 +26,7 @@ const entry = (over = {}) => ({
   ...over,
 });
 
-describe("BVA tagging — the never-binding guarantee", () => {
+describe("BVA tagging - the never-binding guarantee", () => {
   it("marks every entry non-precedential and non-binding, whatever the disposition", () => {
     const samples = [
       entry(),

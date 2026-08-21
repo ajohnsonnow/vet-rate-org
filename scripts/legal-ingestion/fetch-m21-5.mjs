@@ -116,7 +116,7 @@ export function citationFor(name) {
   const s = String(name || "").trim();
   const m = /Chapter\s+(\d+),?\s+Section\s+([A-Z])/i.exec(s);
   if (m) return `M21-5 Ch. ${m[1]}, Sec. ${m[2].toUpperCase()}`;
-  return s ? `M21-5 — ${s.slice(0, 80)}` : "M21-5";
+  return s ? `M21-5 - ${s.slice(0, 80)}` : "M21-5";
 }
 
 /**
@@ -155,7 +155,10 @@ async function fetchArticles(topicId) {
     const page = extractArticles(json);
     out.push(...page);
     const total = Number(json?.pagingInfo?.maxRange ?? 0);
-    if (page.length < ARTICLE_PAGE_SIZE || (total && start + page.length >= total))
+    if (
+      page.length < ARTICLE_PAGE_SIZE ||
+      (total && start + page.length >= total)
+    )
       break;
     await sleep(THROTTLE_MS);
   }
@@ -171,7 +174,11 @@ function classifyChildren(children, { visited, queue, leaves }) {
   for (const t of children) {
     if (!t?.id) continue;
     if (Number(t.articleCount) > 0) {
-      leaves.push({ id: t.id, name: t.name, articleCount: Number(t.articleCount) });
+      leaves.push({
+        id: t.id,
+        name: t.name,
+        articleCount: Number(t.articleCount),
+      });
     }
     if (Number(t.childCount) > 0 && !visited.has(t.id)) queue.push(t.id);
   }

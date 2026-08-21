@@ -2,17 +2,31 @@
 
 Generate a reference document to help your healthcare provider write a medical nexus opinion.
 
+![Doctor's Packet Generator consent screen listing what it includes and important notes before generating](../assets/images/screenshots/nexus-builder/doctors-cheat-sheet.png)
+_The "ready to generate" screen - review what's included, then click "I Understand, Continue" to have AI draft the packet._
+
+!!! warning "No Guarantee of Outcome"
+This tool helps you organize evidence and paperwork, but **using it does not guarantee any particular outcome** on your VA claim - ratings and decisions are made solely by the VA. Before filing, have a VSO or VA-accredited attorney review your claim. Find one at [va.gov/ogc/apps/accreditation](https://www.va.gov/ogc/apps/accreditation/).
+
 ---
 
 ## What is the Doctor's Cheat Sheet?
 
-The **Doctor's Cheat Sheet** is a one-page reference document that:
+Inside Nexus Builder, this feature is labeled the **"Doctor's Packet Generator (AI)"**. It's an AI-powered tool that:
 
-- Explains what a nexus letter is
-- Outlines what the doctor needs to address
-- Provides the VA's legal standard
-- Lists helpful language and phrases
-- Saves your doctor time
+- Researches the **medical mechanism** linking your service-connected condition to the claimed secondary condition
+- Generates a comprehensive **research brief** you can bring to your physician
+- Only appears for **secondary condition** claims, on the wizard's final Review step
+
+### What It Includes
+
+- Medical mechanism explanation
+- Pathophysiological pathways
+- Literature/study references
+- A physician template letter
+
+!!! warning "Research Starting Point, Not Established Fact"
+AI-generated literature references and study types are research starting points only. They have **not** been independently verified and **must not be cited to the VA as established medical fact** without physician confirmation. Never present AI output verbatim in a VA claim or medical record.
 
 ---
 
@@ -44,18 +58,18 @@ Rather than explaining everything verbally:
 
 Explains to the doctor:
 
-> "A nexus letter is a medical opinion stating whether the 
-> patient's current condition is connected to their military 
-> service. The VA requires this medical opinion to grant 
+> "A nexus letter is a medical opinion stating whether the
+> patient's current condition is connected to their military
+> service. The VA requires this medical opinion to grant
 > service connection."
 
 ### Section 2: Legal Standard
 
 The required standard:
 
-> "The VA uses the 'at least as likely as not' standard, 
-> meaning 50% or greater probability. The opinion should 
-> state whether it is 'at least as likely as not' that 
+> "The VA uses the 'at least as likely as not' standard,
+> meaning 50% or greater probability. The opinion should
+> state whether it is 'at least as likely as not' that
 > the condition is related to military service."
 
 ### Section 3: Key Elements to Include
@@ -74,12 +88,12 @@ Checklist for the doctor:
 
 Pre-filled with your case details:
 
-| Item | Your Information |
-|------|------------------|
-| **Condition** | [Your condition] |
-| **Service Dates** | [Your dates] |
-| **In-Service Event** | [What happened] |
-| **Current Symptoms** | [Your symptoms] |
+| Item                  | Your Information    |
+| --------------------- | ------------------- |
+| **Condition**         | [Your condition]    |
+| **Service Dates**     | [Your dates]        |
+| **In-Service Event**  | [What happened]     |
+| **Current Symptoms**  | [Your symptoms]     |
 | **Connection Theory** | [Medical reasoning] |
 
 ### Section 5: Suggested Language
@@ -87,32 +101,36 @@ Pre-filled with your case details:
 Helpful phrases for the doctor:
 
 **For Positive Opinion:**
-> "It is my medical opinion that [condition] is at least 
-> as likely as not related to [veteran]'s military service, 
-> specifically [event/exposure/injury] that occurred during 
+
+> "It is my medical opinion that [condition] is at least
+> as likely as not related to [veteran]'s military service,
+> specifically [event/exposure/injury] that occurred during
 > their service from [dates]."
 
 **For Secondary Connection:**
-> "It is my medical opinion that [secondary condition] was 
-> at least as likely as not caused or aggravated by the 
+
+> "It is my medical opinion that [secondary condition] was
+> at least as likely as not caused or aggravated by the
 > service-connected [primary condition]."
 
 ---
 
 ## Generating the Cheat Sheet
 
+There are two ways to reach the Doctor's Packet Generator:
+
 <div class="step-container">
 <div class="step">
-Complete the <strong>Nexus Builder wizard</strong>
+<strong>From Secondary Scout results</strong> - expand a suggestion card and click <strong>"Get Doctor's Packet (AI)"</strong>
 </div>
 <div class="step">
-On the final step, click <strong>"Generate Statement"</strong>
+<strong>From Nexus Builder</strong> - on a secondary claim's final Review step, click <strong>"Generate Doctor's Packet"</strong>
 </div>
 <div class="step">
-In the downloads section, click <strong>"Doctor's Cheat Sheet"</strong>
+Review the consent screen, then click <strong>"I Understand, Continue"</strong>
 </div>
 <div class="step">
-Save or print the <strong>PDF document</strong>
+The AI generates the research brief - download it as text, Word, or PDF
 </div>
 </div>
 
@@ -145,15 +163,15 @@ Save or print the <strong>PDF document</strong>
 
 ### Must Include
 
-| Element | Why It Matters |
-|---------|----------------|
-| **Doctor's credentials** | Establishes qualification |
-| **Review of records** | Shows informed opinion |
-| **Current diagnosis** | Confirms you have condition |
-| **In-service event** | What caused/contributed |
-| **Medical reasoning** | WHY they're connected |
-| **Standard language** | "At least as likely as not" |
-| **Signature/date** | Authenticates document |
+| Element                  | Why It Matters              |
+| ------------------------ | --------------------------- |
+| **Doctor's credentials** | Establishes qualification   |
+| **Review of records**    | Shows informed opinion      |
+| **Current diagnosis**    | Confirms you have condition |
+| **In-service event**     | What caused/contributed     |
+| **Medical reasoning**    | WHY they're connected       |
+| **Standard language**    | "At least as likely as not" |
+| **Signature/date**       | Authenticates document      |
 
 ### Stronger Letters Include
 
@@ -168,7 +186,7 @@ Save or print the <strong>PDF document</strong>
 ## Tips for Success
 
 !!! tip "Getting a Good Nexus Letter"
-    
+
     1. **Choose the right provider** - Primary care, specialist, or IMO doctor
     2. **Bring documentation** - Medical records, service records
     3. **Give them time** - Don't rush the process
@@ -221,8 +239,8 @@ If your regular doctor can't help, consider an **IMO provider**:
 - Review records remotely
 
 !!! warning "Research IMO Providers"
-    If using an IMO provider, research their:
-    
+If using an IMO provider, research their:
+
     - Credentials and specialty
     - Experience with VA claims
     - Reviews from other veterans

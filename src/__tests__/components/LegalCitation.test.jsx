@@ -8,7 +8,7 @@ import {
 
 const FIXTURE = {
   citation: "38 CFR § 4.71a",
-  title: "Schedule of ratings—musculoskeletal",
+  title: "Schedule of ratings-musculoskeletal",
   source_url:
     "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.71a",
   fetched_at: "2026-05-15T07:17:18.982Z",

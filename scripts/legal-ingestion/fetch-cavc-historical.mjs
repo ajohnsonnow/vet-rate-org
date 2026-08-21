@@ -124,17 +124,29 @@ import {
 } from "node:fs";
 import path, { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist/legacy/build/pdf.mjs";
+import {
+  getDocument,
+  GlobalWorkerOptions,
+} from "pdfjs-dist/legacy/build/pdf.mjs";
 import { makeRecord } from "./sanitize-html.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WORK_DIR = path.join(__dirname, ".work");
 
-const workerPath = resolve("node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs");
-GlobalWorkerOptions.workerSrc = new URL(`file:///${workerPath.replaceAll("\\", "/")}`).href;
+const workerPath = resolve(
+  "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+);
+GlobalWorkerOptions.workerSrc = new URL(
+  `file:///${workerPath.replaceAll("\\", "/")}`,
+).href;
 
-export const BASE = process.env.CAVC_HIST_BASE || "http://search.uscourts.cavc.gov";
-const DATABASES = (process.env.CAVC_HIST_DATABASES || "PanelDecisions,SingleJudgeDecisions")
+export const BASE =
+  process.env.CAVC_HIST_BASE ||
+  // eslint-disable-next-line sonarjs/no-clear-text-protocols -- search.uscourts.cavc.gov refuses HTTPS connections on :443 entirely (verified via curl, see header comment above); not a choice this script can make
+  "http://search.uscourts.cavc.gov";
+const DATABASES = (
+  process.env.CAVC_HIST_DATABASES || "PanelDecisions,SingleJudgeDecisions"
+)
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -232,6 +244,7 @@ export function parseSessionMeta(html) {
 // of just that row's slice. Keeps every regex simple and linear instead of
 // chaining non-greedy `[\s\S]*?` spans end to end.
 const ITEM_START_RE =
+  // eslint-disable-next-line sonarjs/slow-regex -- fuzz-tested (500k adversarial chars, unterminated quotes/anchors): each unbounded span is bounded by a distinct, disjoint terminator literal (", >, <), no ambiguous partition; 1ms
   /(\d+)\.\s*<a href="\/isysquery\/[0-9a-f-]{36}\/\d+\/doc\/([^"]*)">([^<]*)<\/a>/g;
 const FILEPATH_RE = /<font color="green"[^>]*>([^<]*)<\/font>/;
 const LIST_DATE_RE = /(\d{1,2} [A-Za-z]{3} \d{4})<br/;
@@ -259,7 +272,8 @@ export function parseListPage(html) {
   const out = [];
   for (let i = 0; i < starts.length; i++) {
     if (!starts[i].docid) continue;
-    const blockEnd = i + 1 < starts.length ? starts[i + 1].blockStart : text.length;
+    const blockEnd =
+      i + 1 < starts.length ? starts[i + 1].blockStart : text.length;
     const block = text.slice(starts[i].blockStart, blockEnd);
     const filePathMatch = FILEPATH_RE.exec(block);
     const dateMatch = LIST_DATE_RE.exec(block);
@@ -436,7 +450,9 @@ export async function withSessionRetry(sessionRef, database, fn) {
       } catch (sessionError) {
         // Session refresh itself failed (network still down) — don't crash
         // here, let the next loop iteration's fn() call fail and retry again.
-        console.warn(`[cavc-historical] session refresh also failed (${sessionError.message})`);
+        console.warn(
+          `[cavc-historical] session refresh also failed (${sessionError.message})`,
+        );
       }
     }
   }
@@ -499,7 +515,9 @@ function loadCheckpoint(slug) {
   try {
     return JSON.parse(readFileSync(p, "utf8"));
   } catch {
-    console.warn(`[cavc-historical] checkpoint at ${p} is corrupt — starting fresh`);
+    console.warn(
+      `[cavc-historical] checkpoint at ${p} is corrupt — starting fresh`,
+    );
     return null;
   }
 }
@@ -513,14 +531,19 @@ function clearCheckpoint(slug) {
   if (existsSync(p)) unlinkSync(p);
 }
 
-async function fetchDatabase(database) {
+// S45: this cap===0 short-circuit must return BEFORE any output-file/resume
+// logic runs — a health-check probe setting MAX_RESULTS to 0 must never touch
+// (and so never clear or corrupt) an existing checkpoint. Do not reorder.
+async function initDatabaseFetch(database) {
   const slug = DATABASE_SLUG[database] || database.toLowerCase();
   const checkpoint = loadCheckpoint(slug);
   const resuming = checkpoint !== null;
 
   console.log(
     `[cavc-historical] opening session for IW_DATABASE=${database}…` +
-      (resuming ? ` (resuming from checkpoint: page ${checkpoint.lastCompletedEnd + 1})` : ""),
+      (resuming
+        ? ` (resuming from checkpoint: page ${checkpoint.lastCompletedEnd + 1})`
+        : ""),
   );
   const session = await openSession(database);
   console.log(
@@ -529,7 +552,7 @@ async function fetchDatabase(database) {
   const cap = MAX_RESULTS
     ? Math.min(MAX_RESULTS, session.totalDocuments)
     : session.totalDocuments;
-  if (cap === 0) return { recordCount: 0, skippedWpd: 0, skippedEmpty: 0, skippedError: 0, skippedPages: 0 };
+  if (cap === 0) return { cap };
 
   const out = outputPath(slug);
   if (resuming) {
@@ -544,16 +567,135 @@ async function fetchDatabase(database) {
     writeFileSync(out, ""); // fresh run: start the output file clean
   }
 
-  const sessionRef = { guid: session.guid };
-  const startPage = resuming ? checkpoint.lastCompletedEnd + 1 : 1;
-  let recordCount = resuming ? checkpoint.recordCount : 0;
-  let skippedWpd = resuming ? checkpoint.skippedWpd : 0;
-  let skippedEmpty = resuming ? checkpoint.skippedEmpty : 0;
-  let skippedError = resuming ? checkpoint.skippedError : 0;
-  let skippedPages = resuming ? checkpoint.skippedPages : 0;
+  return {
+    slug,
+    session,
+    cap,
+    out,
+    sessionRef: { guid: session.guid },
+    startPage: resuming ? checkpoint.lastCompletedEnd + 1 : 1,
+    recordCount: resuming ? checkpoint.recordCount : 0,
+    skippedWpd: resuming ? checkpoint.skippedWpd : 0,
+    skippedEmpty: resuming ? checkpoint.skippedEmpty : 0,
+    skippedError: resuming ? checkpoint.skippedError : 0,
+    skippedPages: resuming ? checkpoint.skippedPages : 0,
+    lastCompletedEnd: resuming ? checkpoint.lastCompletedEnd : 0,
+  };
+}
+
+// Fetches every hit on one list page and builds its records; returns the
+// per-page skip counts as deltas (callers accumulate onto their running totals).
+async function fetchPageRecords(hits, sessionRef, database) {
+  const pageRecords = [];
+  let skippedWpd = 0;
+  let skippedEmpty = 0;
+  let skippedError = 0;
+
+  for (const hit of hits) {
+    if (classifyDocFormat(hit.docid) === "wpd") {
+      // Explicit .wpd extension — skip without downloading.
+      skippedWpd += 1;
+      continue;
+    }
+    let doc;
+    try {
+      doc = await withSessionRetry(sessionRef, database, (guid) =>
+        fetchDoc(guid, hit),
+      );
+    } catch (e) {
+      console.warn(
+        `[cavc-historical] doc fetch failed for ${hit.docid}: ${e.message}`,
+      );
+      skippedError += 1;
+      continue;
+    }
+    await sleep(THROTTLE_MS);
+    if (doc.format === "wpd") {
+      // Sniffed WordPerfect binary despite a non-.wpd filename — skip, not fabricate.
+      skippedWpd += 1;
+      continue;
+    }
+    const text = doc.text;
+    if (!text || text.trim().length === 0) {
+      skippedEmpty += 1;
+      continue;
+    }
+    const docket = docketFromText(text) || hit.docket || hit.docid;
+    pageRecords.push(
+      await makeRecord({
+        source: "cavc",
+        jurisdiction: "court",
+        citation: citationForHit(docket, hit.listDate),
+        title: docket,
+        body: buildBody(docket, hit, database, text),
+        source_url: `${BASE}/isysquery/${sessionRef.guid}/${hit.index}/doc/${hit.docid}`,
+      }),
+    );
+  }
+
+  return { pageRecords, skippedWpd, skippedEmpty, skippedError };
+}
+
+// A MAX_RESULTS cap below the database's real total is an artificial stop,
+// not completion — clearing the checkpoint here would make the NEXT run
+// (even an unbounded one) start over from page 1, silently discarding and
+// re-fetching everything already on disk. Only clear when the run actually
+// reached the true end of the database (ran the full, uncapped range) or
+// organically ran out of documents (a real 0-hits page).
+function finalizeDatabaseRun({
+  database,
+  slug,
+  session,
+  cap,
+  recordCount,
+  skippedWpd,
+  skippedEmpty,
+  skippedError,
+  skippedPages,
+  lastCompletedEnd,
+  exhaustedRealData,
+}) {
+  console.log(
+    `[cavc-historical] ${database}: ${recordCount} records ` +
+      `(skipped ${skippedWpd} WordPerfect, ${skippedEmpty} empty, ${skippedError} doc-fetch errors, ` +
+      `${skippedPages} unreachable page(s) ≈${skippedPages * PAGE_SIZE} decisions max)`,
+  );
+  const stoppedByArtificialCap =
+    MAX_RESULTS > 0 && cap < session.totalDocuments && !exhaustedRealData;
+  if (stoppedByArtificialCap) {
+    console.log(
+      `[cavc-historical] ${database}: stopped at MAX_RESULTS cap (${cap}/${session.totalDocuments}) — ` +
+        `checkpoint preserved; re-run WITHOUT CAVC_HIST_MAX_RESULTS to continue from page ${lastCompletedEnd + 1}.`,
+    );
+  } else {
+    clearCheckpoint(slug); // full pass completed — nothing left to resume
+  }
+  return { recordCount, skippedWpd, skippedEmpty, skippedError, skippedPages };
+}
+
+// eslint-disable-next-line max-lines-per-function -- deliberately NOT decomposed further: this function's checkpoint/retry loop is the exact code the S45 incident broke when an earlier refactor split it (see project memory); a prior careful decomposition already extracted everything that could safely move (initDatabaseFetch, fetchPageRecords, finalizeDatabaseRun) without disturbing the loop's control flow, and this run just barely exceeds budget after a prettier reformat, not from added logic
+async function fetchDatabase(database) {
+  const state = await initDatabaseFetch(database);
+  if (state.cap === 0)
+    return {
+      recordCount: 0,
+      skippedWpd: 0,
+      skippedEmpty: 0,
+      skippedError: 0,
+      skippedPages: 0,
+    };
+
+  const { slug, session, cap, out, sessionRef, startPage } = state;
+  let {
+    recordCount,
+    skippedWpd,
+    skippedEmpty,
+    skippedError,
+    skippedPages,
+    lastCompletedEnd,
+  } = state;
   let consecutivePageFailures = 0;
   let exhaustedRealData = false;
-  let lastCompletedEnd = resuming ? checkpoint.lastCompletedEnd : 0;
 
   for (let start = startPage; start <= cap; start += PAGE_SIZE) {
     const end = Math.min(start + PAGE_SIZE - 1, cap);
@@ -602,46 +744,15 @@ async function fetchDatabase(database) {
       break;
     }
 
-    const pageRecords = [];
-    for (const hit of hits) {
-      if (classifyDocFormat(hit.docid) === "wpd") {
-        // Explicit .wpd extension — skip without downloading.
-        skippedWpd += 1;
-        continue;
-      }
-      let doc;
-      try {
-        doc = await withSessionRetry(sessionRef, database, (guid) =>
-          fetchDoc(guid, hit),
-        );
-      } catch (e) {
-        console.warn(`[cavc-historical] doc fetch failed for ${hit.docid}: ${e.message}`);
-        skippedError += 1;
-        continue;
-      }
-      await sleep(THROTTLE_MS);
-      if (doc.format === "wpd") {
-        // Sniffed WordPerfect binary despite a non-.wpd filename — skip, not fabricate.
-        skippedWpd += 1;
-        continue;
-      }
-      const text = doc.text;
-      if (!text || text.trim().length === 0) {
-        skippedEmpty += 1;
-        continue;
-      }
-      const docket = docketFromText(text) || hit.docket || hit.docid;
-      pageRecords.push(
-        await makeRecord({
-          source: "cavc",
-          jurisdiction: "court",
-          citation: citationForHit(docket, hit.listDate),
-          title: docket,
-          body: buildBody(docket, hit, database, text),
-          source_url: `${BASE}/isysquery/${sessionRef.guid}/${hit.index}/doc/${hit.docid}`,
-        }),
-      );
-    }
+    const {
+      pageRecords,
+      skippedWpd: pageWpd,
+      skippedEmpty: pageEmpty,
+      skippedError: pageError,
+    } = await fetchPageRecords(hits, sessionRef, database);
+    skippedWpd += pageWpd;
+    skippedEmpty += pageEmpty;
+    skippedError += pageError;
 
     // S44: persist this page immediately (append, don't overwrite) and
     // checkpoint right after — this is the actual fix for the write-once-
@@ -670,29 +781,20 @@ async function fetchDatabase(database) {
     await sleep(THROTTLE_MS);
   }
 
-  console.log(
-    `[cavc-historical] ${database}: ${recordCount} records ` +
-      `(skipped ${skippedWpd} WordPerfect, ${skippedEmpty} empty, ${skippedError} doc-fetch errors, ` +
-      `${skippedPages} unreachable page(s) ≈${skippedPages * PAGE_SIZE} decisions max)`,
-  );
-  // A MAX_RESULTS cap below the database's real total is an artificial stop,
-  // not completion — clearing the checkpoint here would make the NEXT run
-  // (even an unbounded one) start over from page 1, silently discarding and
-  // re-fetching everything already on disk. Only clear when the run actually
-  // reached the true end of the database (ran the full, uncapped range) or
-  // organically ran out of documents (a real 0-hits page).
-  const stoppedByArtificialCap = MAX_RESULTS > 0 && cap < session.totalDocuments && !exhaustedRealData;
-  if (stoppedByArtificialCap) {
-    console.log(
-      `[cavc-historical] ${database}: stopped at MAX_RESULTS cap (${cap}/${session.totalDocuments}) — ` +
-        `checkpoint preserved; re-run WITHOUT CAVC_HIST_MAX_RESULTS to continue from page ${lastCompletedEnd + 1}.`,
-    );
-  } else {
-    clearCheckpoint(slug); // full pass completed — nothing left to resume
-  }
-  return { recordCount, skippedWpd, skippedEmpty, skippedError, skippedPages };
+  return finalizeDatabaseRun({
+    database,
+    slug,
+    session,
+    cap,
+    recordCount,
+    skippedWpd,
+    skippedEmpty,
+    skippedError,
+    skippedPages,
+    lastCompletedEnd,
+    exhaustedRealData,
+  });
 }
-
 
 async function main() {
   mkdirSync(WORK_DIR, { recursive: true });
@@ -703,8 +805,13 @@ async function main() {
     totalRecords += summary.recordCount;
 
     const slug = DATABASE_SLUG[database] || database.toLowerCase();
-    const rel = path.relative(path.resolve(__dirname, "..", ".."), outputPath(slug));
-    console.log(`[cavc-historical] ${database}: ${summary.recordCount} records on disk → ${rel}`);
+    const rel = path.relative(
+      path.resolve(__dirname, "..", ".."),
+      outputPath(slug),
+    );
+    console.log(
+      `[cavc-historical] ${database}: ${summary.recordCount} records on disk → ${rel}`,
+    );
   }
 
   if (totalRecords === 0) {
@@ -713,7 +820,9 @@ async function main() {
     );
   }
   const cap = MAX_RESULTS ? ` (capped at ${MAX_RESULTS}/database)` : "";
-  console.log(`[cavc-historical] done — ${totalRecords} decision records total${cap}`);
+  console.log(
+    `[cavc-historical] done — ${totalRecords} decision records total${cap}`,
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

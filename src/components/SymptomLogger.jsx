@@ -620,7 +620,7 @@ const SymptomLoggerHeaderActions = ({
   onClose,
 }) => (
   <div className="flex items-center gap-2">
-    <button
+    <button type="button"
       onClick={() => setShowAISettings(!showAISettings)}
       className={`p-2 rounded-lg transition-colors ${
         showAISettings
@@ -643,7 +643,7 @@ const SymptomLoggerHeaderActions = ({
         moduleName="Symptom Logger"
       />
     )}
-    <button
+    <button type="button"
       onClick={onClose}
       className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
       aria-label="Close"
@@ -721,7 +721,7 @@ const SymptomLoggerHeader = ({
 const SymptomLoggerFooter = ({ logs, onClose }) => (
   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
     <BuyMeCoffee show={logs.length > 0} trigger="symptom-logger" />
-    <button
+    <button type="button"
       onClick={onClose}
       className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
     >
@@ -746,7 +746,7 @@ const SymptomTypeSelector = ({ symptomType, setSymptomType }) => (
           general: "bg-slate-600",
         };
         return (
-          <button
+          <button type="button"
             key={key}
             onClick={() => setSymptomType(key)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
@@ -782,7 +782,7 @@ const TabNavigation = ({
         },
         { id: "export", label: "📊 Stats & Export", icon: "📊" },
       ].map((tab) => (
-        <button
+        <button type="button"
           key={tab.id}
           onClick={() => setActiveTab(tab.id)}
           className={`px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
@@ -867,7 +867,7 @@ const SeverityDurationFields = ({ newLog, setNewLog, colors, config }) => (
         onChange={(e) =>
           setNewLog((prev) => ({
             ...prev,
-            severity: parseInt(e.target.value),
+            severity: Number.parseInt(e.target.value),
           }))
         }
         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
@@ -887,7 +887,7 @@ const SeverityDurationFields = ({ newLog, setNewLog, colors, config }) => (
       </label>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {config.durationOptions.map((option) => (
-          <button
+          <button type="button"
             key={option}
             onClick={() => setNewLog((prev) => ({ ...prev, duration: option }))}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -944,7 +944,7 @@ const BodyLocationPainScaleFields = ({ newLog, setNewLog, symptomType }) => (
           onChange={(e) =>
             setNewLog((prev) => ({
               ...prev,
-              painScale: parseInt(e.target.value),
+              painScale: Number.parseInt(e.target.value),
             }))
           }
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
@@ -987,7 +987,7 @@ const ActivityWeatherFields = ({
           className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
         />
         {aiStatus.anyAvailable && (
-          <button
+          <button type="button"
             onClick={() => generateAISuggestion("activityImpact")}
             disabled={isAIGenerating === "activityImpact"}
             className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
@@ -1046,7 +1046,7 @@ const StressProstratingMedicationFields = ({ newLog, setNewLog, config }) => (
         onChange={(e) =>
           setNewLog((prev) => ({
             ...prev,
-            stressLevel: parseInt(e.target.value),
+            stressLevel: Number.parseInt(e.target.value),
           }))
         }
         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
@@ -1136,7 +1136,7 @@ const TriggersField = ({
         className="w-full px-4 py-3 pr-24 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
       />
       {aiStatus.anyAvailable && (
-        <button
+        <button type="button"
           onClick={() => generateAISuggestion("triggers")}
           disabled={isAIGenerating === "triggers"}
           className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
@@ -1185,7 +1185,7 @@ const NotesField = ({
           size="sm"
         />
         {aiStatus.anyAvailable && (
-          <button
+          <button type="button"
             onClick={() => generateAISuggestion("notes")}
             disabled={isAIGenerating === "notes"}
             className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors disabled:opacity-50"
@@ -1279,7 +1279,7 @@ const LogAttackTab = ({
       />
     </div>
 
-    <button
+    <button type="button"
       onClick={handleAddLog}
       className={`w-full py-4 ${colors.bg} text-white rounded-lg font-bold text-lg hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2`}
     >
@@ -1297,7 +1297,7 @@ const EmptyHistoryState = ({ config, colors, setActiveTab }) => (
       Start logging your {config.label.toLowerCase()} attacks to build evidence
       for your claim.
     </p>
-    <button
+    <button type="button"
       onClick={() => setActiveTab("log")}
       className={`mt-4 px-6 py-2 ${colors.bg} text-white rounded-lg font-medium`}
     >
@@ -1377,13 +1377,13 @@ const LogEntryDeleteConfirm = ({
       Delete this entry?
     </span>
     <div className="flex gap-2">
-      <button
+      <button type="button"
         onClick={() => handleDeleteLog(log.id)}
         className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
       >
         Delete
       </button>
-      <button
+      <button type="button"
         onClick={() => setShowDeleteConfirm(null)}
         className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded hover:bg-gray-300 dark:hover:bg-gray-600"
       >
@@ -1403,7 +1403,7 @@ const LogEntryCard = ({
   <div className={`p-4 ${colors.bgLight} ${colors.border} border rounded-lg`}>
     <div className="flex items-start justify-between">
       <LogEntryDetails log={log} colors={colors} />
-      <button
+      <button type="button"
         onClick={() => setShowDeleteConfirm(log.id)}
         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
         aria-label="Delete entry"
@@ -1559,7 +1559,7 @@ const RatingCriteriaSection = ({ stats, colors, config }) => (
 const ExportPDFButtonSection = ({ logs, symptomType, handleExportPDF }) => (
   <>
     {/* Export Button */}
-    <button
+    <button type="button"
       onClick={handleExportPDF}
       disabled={logs.filter((l) => l.type === symptomType).length === 0}
       className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"

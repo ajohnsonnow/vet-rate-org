@@ -6,11 +6,11 @@ import {
 } from "../../services/cavcAuthorityTagging.js";
 
 /**
- * S43 — CAVC authority tagging. The load-bearing guarantee is that a
+ * S43 - CAVC authority tagging. The load-bearing guarantee is that a
  * single-judge memorandum decision can never be tagged precedential, and a
- * panel decision always is — the IW_DATABASE split is the ground truth.
+ * panel decision always is - the IW_DATABASE split is the ground truth.
  */
-describe("CAVC tagging — panel vs single-judge", () => {
+describe("CAVC tagging - panel vs single-judge", () => {
   it("tags a panel decision precedential with full citation weight", () => {
     const tag = tagCavcEntry("panel");
     expect(tag.decision_type).toBe("panel");

@@ -1,5 +1,5 @@
 /**
- * FIX-9: profile never auto-populated. Two root causes —
+ * FIX-9: profile never auto-populated. Two root causes -
  * (1) applyServiceRecordToProfileUpdates read entryDate/separationDate/
  *     characterOfService while parseServiceRecord emits serviceStartDate/
  *     serviceEndDate/dischargeType, so every conditional was false.
@@ -7,7 +7,7 @@
  *     autoPopulateProfile at all.
  * Also covers the "don't clobber the user" overwrite semantics:
  * fill-if-empty, document may keep refining, but a user-edited field is
- * never silently overwritten — a conflict is surfaced instead.
+ * never silently overwritten - a conflict is surfaced instead.
  */
 import { describe, it, expect, beforeEach } from "vitest";
 
@@ -117,7 +117,7 @@ describe("FIX-17: autoPopulateProfile maps extracted name fields onto the profil
   });
 });
 
-describe("FIX-9: overwrite semantics — never clobber a user-edited field", () => {
+describe("FIX-9: overwrite semantics - never clobber a user-edited field", () => {
   beforeEach(() => {
     localStorage.clear();
   });

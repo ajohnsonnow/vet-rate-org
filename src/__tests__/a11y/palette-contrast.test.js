@@ -1,5 +1,5 @@
 /**
- * Palette Contrast Test — Sprint 5 gate
+ * Palette Contrast Test - Sprint 5 gate
  *
  * Enforces WCAG AA contrast thresholds for affiliation palette accents:
  * - va-blue (anchor): ≥ 4.5:1 vs surface
@@ -139,7 +139,7 @@ function buildContrastMatrixCases() {
   });
 }
 
-// Relative luminance from space-separated RGB channels (0–255).
+// Relative luminance from space-separated RGB channels (0-255).
 function luminanceFromChannels([r, g, b]) {
   const toLinear = (c) => {
     const s = c / 255;
@@ -177,7 +177,7 @@ const brandCases = Object.keys(palettes).flatMap((id) => [
   { id, step: 700 },
 ]);
 
-describe("Affiliation Palette Contrast — WCAG AA verification", () => {
+describe("Affiliation Palette Contrast - WCAG AA verification", () => {
   describe("Contrast matrix: all 16 palettes", () => {
     const cases = buildContrastMatrixCases();
 
@@ -237,7 +237,7 @@ describe("Affiliation Palette Contrast — WCAG AA verification", () => {
   describe("Precedence: real ThemeProvider suppresses palette under colorblind", () => {
     // Drives the ACTUAL ThemeContext effect (not a re-implementation) and asserts the
     // class it applies to <html>. The rule (ThemeContext.jsx): palette-<id> is added only
-    // when palette !== "default" AND no colorblind mode is active — so colorblind/AAA
+    // when palette !== "default" AND no colorblind mode is active - so colorblind/AAA
     // accent overrides are never weakened by branding. See docs/AFFILIATION_PALETTES.md §2.
 
     afterEach(() => {

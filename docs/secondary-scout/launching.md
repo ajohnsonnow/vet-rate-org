@@ -26,42 +26,43 @@ Use the Quick Condition Picker below the feature cards for streamlined access.
 
 When you open Secondary Scout, you'll see the **Launcher Modal**:
 
+![Secondary Scout launcher modal with five tabs and a "Type one condition per line" textarea](../assets/images/screenshots/secondary-scout/launcher-modal.png)
+_The launcher opens on the "Type Conditions" tab by default._
+
+The launcher has **five tabs** across the top, each a different way to enter your conditions:
+
+| Tab                  | How It Works                                                                    |
+| -------------------- | ------------------------------------------------------------------------------- |
+| **Type Conditions**  | Default tab - a textarea where you type one condition per line                  |
+| **Drop-In PDF**      | Drag and drop a VA rating decision PDF to extract conditions automatically      |
+| **Paste from VA**    | Paste text copied directly from your VA.gov rating decision                     |
+| **Select from List** | Browse and check conditions organized by body system (38 CFR Part 4, Subpart B) |
+| **Examples**         | Pre-built example condition sets to try the tool quickly                        |
+
 ### Entering Your Conditions
 
 <div class="step-container">
 <div class="step">
-<strong>Enter a condition</strong> - Type your service-connected disability
+<strong>Open the launcher</strong> - Defaults to the "Type Conditions" tab
 </div>
 <div class="step">
-<strong>Select from suggestions</strong> - Choose from the autocomplete dropdown
+<strong>Type your conditions</strong> - One service-connected condition per line
 </div>
 <div class="step">
-<strong>Add to list</strong> - Click "Add" or press Enter
+<strong>Or switch tabs</strong> - Use Drop-In PDF, Paste from VA, or Select from List instead
 </div>
 <div class="step">
-<strong>Repeat</strong> - Add all your service-connected conditions
-</div>
-<div class="step">
-<strong>Launch</strong> - Click "Scout Secondary Conditions"
+<strong>Launch</strong> - Click "Analyze My Conditions"
 </div>
 </div>
 
-### Condition Input Field
+### Type Conditions Tab
 
-The input field includes:
+The default tab is a large textarea:
 
-- **Text input** - Type condition names
-- **Autocomplete** - Suggestions appear as you type
-- **Add button** - Adds condition to your list
-- **Enter key** - Also adds condition
-
-### Your Conditions List
-
-Below the input, you'll see your added conditions:
-
-- Each condition appears as a **tag/chip**
-- **X button** - Remove a condition
-- **Clear all** - Remove all conditions
+- **One condition per line** - e.g. "PTSD", "Tinnitus", "Right Knee Arthritis"
+- **Plain text** - No autocomplete required, though condition names are matched against the database when you launch
+- **PDF processed locally** - If you use Drop-In PDF instead, the file never leaves your browser
 
 ---
 
@@ -71,25 +72,25 @@ Below the input, you'll see your added conditions:
 
 Enter conditions exactly as they appear on your **VA rating decision letter**:
 
-| Enter | Example |
-|-------|---------|
-| Medical names | "Post-Traumatic Stress Disorder" |
-| Common names | "PTSD" |
-| Diagnostic codes | "9411" |
-| Body part + issue | "lumbar spine" |
+| Enter             | Example                          |
+| ----------------- | -------------------------------- |
+| Medical names     | "Post-Traumatic Stress Disorder" |
+| Common names      | "PTSD"                           |
+| Diagnostic codes  | "9411"                           |
+| Body part + issue | "lumbar spine"                   |
 
 ### Common Service-Connected Conditions
 
-| Condition | Also Known As |
-|-----------|---------------|
-| PTSD | Post-Traumatic Stress Disorder, 9411 |
-| Tinnitus | Ringing in ears, 6260 |
-| Hearing Loss | Bilateral hearing loss |
-| Lumbar Strain | Low back pain, DDD |
-| Knee Conditions | Patellofemoral syndrome |
-| Radiculopathy | Sciatica, nerve pain |
-| Sleep Apnea | Obstructive sleep apnea |
-| Migraine | Migraine headaches |
+| Condition       | Also Known As                        |
+| --------------- | ------------------------------------ |
+| PTSD            | Post-Traumatic Stress Disorder, 9411 |
+| Tinnitus        | Ringing in ears, 6260                |
+| Hearing Loss    | Bilateral hearing loss               |
+| Lumbar Strain   | Low back pain, DDD                   |
+| Knee Conditions | Patellofemoral syndrome              |
+| Radiculopathy   | Sciatica, nerve pain                 |
+| Sleep Apnea     | Obstructive sleep apnea              |
+| Migraine        | Migraine headaches                   |
 
 ---
 
@@ -125,7 +126,7 @@ For faster access, the **Quick Condition Picker** on the main page lets you:
 
 ## What Happens After Launch
 
-After clicking "Scout Secondary Conditions":
+After clicking "Analyze My Conditions":
 
 1. **Launcher closes** - Modal disappears
 2. **Analysis begins** - System searches nexus database
@@ -154,4 +155,4 @@ If you close the results:
 - Refreshing the page will reset
 
 !!! tip "Save Your Findings"
-    To preserve your secondary condition discoveries, **add them to My Packet** before closing.
+To preserve your secondary condition discoveries, **add them to My Packet** before closing.

@@ -109,77 +109,101 @@ function countToken(file, token) {
   });
 }
 
+function validateDiagnosticCode(label, dc, dcSet) {
+  if (!DC_RE.test(dc)) {
+    failures.push(
+      `${label}: diagnosticCode "${dc}" does not match NNNN or NNNN-NNNN`,
+    );
+  } else if (dcSet.has(dc)) {
+    failures.push(`${label}: duplicate diagnosticCode ${dc}`);
+  } else {
+    dcSet.add(dc);
+  }
+}
+
+function validateConditionName(e, label) {
+  if (typeof e.conditionName !== "string" || !e.conditionName.trim()) {
+    failures.push(`${label}: missing conditionName`);
+  }
+}
+
+function validateEcfrUrl(e, label) {
+  if (e.ecfrUrl != null && !ECFR_URL_RE.test(e.ecfrUrl)) {
+    failures.push(
+      `${label}: ecfrUrl "${e.ecfrUrl}" is not an ecfr.gov title-38 URL`,
+    );
+  }
+}
+
+function validateLastVerifiedDate(e, label) {
+  const lvd = e.lastVerifiedDate;
+  if (
+    typeof lvd !== "string" ||
+    !ISO_DATE_RE.test(lvd) ||
+    Number.isNaN(Date.parse(lvd))
+  ) {
+    failures.push(
+      `${label}: lastVerifiedDate "${lvd}" is not a parseable YYYY-MM-DD date`,
+    );
+  }
+}
+
+function validateRatingsObject(ratings, label) {
+  for (const [pct, text] of Object.entries(ratings)) {
+    const n = Number(pct);
+    if (!Number.isInteger(n) || n < 0 || n > 100) {
+      failures.push(
+        `${label}: rating key "${pct}" is not an integer percentage 0-100`,
+      );
+    }
+    if (typeof text !== "string" || !text.trim()) {
+      failures.push(`${label}: rating ${pct}% has an empty criteria string`);
+    }
+  }
+}
+
+function validateRatingCriteria(e, label, dc, noCriteria, emptyRatings) {
+  const rc = e.ratingCriteria;
+  if (rc == null) {
+    noCriteria.push(dc);
+    return;
+  }
+  if (!RATING_TYPES.has(rc.type)) {
+    failures.push(
+      `${label}: ratingCriteria.type "${rc.type}" not in {${[...RATING_TYPES].join(", ")}}`,
+    );
+  }
+  const ratings = rc.ratings;
+  if (ratings == null || Object.keys(ratings).length === 0) {
+    emptyRatings.push(dc);
+    return;
+  }
+  if (typeof ratings !== "object" || Array.isArray(ratings)) {
+    failures.push(`${label}: ratingCriteria.ratings is not an object`);
+    return;
+  }
+  validateRatingsObject(ratings, label);
+}
+
+function validateOneDisabilityEntry(e, idx, dcSet, noCriteria, emptyRatings) {
+  const label = `disabilityData[${idx}] (DC ${e.diagnosticCode ?? "?"}, "${String(e.conditionName ?? "").slice(0, 40)}")`;
+  const dc = String(e.diagnosticCode ?? "");
+
+  validateDiagnosticCode(label, dc, dcSet);
+  validateConditionName(e, label);
+  validateEcfrUrl(e, label);
+  validateLastVerifiedDate(e, label);
+  validateRatingCriteria(e, label, dc, noCriteria, emptyRatings);
+}
+
 function validateDisabilityData(disabilities) {
   const dcSet = new Set();
   const emptyRatings = [];
   const noCriteria = [];
 
-  disabilities.forEach((e, idx) => {
-    const label = `disabilityData[${idx}] (DC ${e.diagnosticCode ?? "?"}, "${String(e.conditionName ?? "").slice(0, 40)}")`;
-
-    const dc = String(e.diagnosticCode ?? "");
-    if (!DC_RE.test(dc)) {
-      failures.push(
-        `${label}: diagnosticCode "${dc}" does not match NNNN or NNNN-NNNN`,
-      );
-    } else if (dcSet.has(dc)) {
-      failures.push(`${label}: duplicate diagnosticCode ${dc}`);
-    } else {
-      dcSet.add(dc);
-    }
-
-    if (typeof e.conditionName !== "string" || !e.conditionName.trim()) {
-      failures.push(`${label}: missing conditionName`);
-    }
-
-    if (e.ecfrUrl != null && !ECFR_URL_RE.test(e.ecfrUrl)) {
-      failures.push(
-        `${label}: ecfrUrl "${e.ecfrUrl}" is not an ecfr.gov title-38 URL`,
-      );
-    }
-
-    const lvd = e.lastVerifiedDate;
-    if (
-      typeof lvd !== "string" ||
-      !ISO_DATE_RE.test(lvd) ||
-      Number.isNaN(Date.parse(lvd))
-    ) {
-      failures.push(
-        `${label}: lastVerifiedDate "${lvd}" is not a parseable YYYY-MM-DD date`,
-      );
-    }
-
-    const rc = e.ratingCriteria;
-    if (rc == null) {
-      noCriteria.push(dc);
-      return;
-    }
-    if (!RATING_TYPES.has(rc.type)) {
-      failures.push(
-        `${label}: ratingCriteria.type "${rc.type}" not in {${[...RATING_TYPES].join(", ")}}`,
-      );
-    }
-    const ratings = rc.ratings;
-    if (ratings == null || Object.keys(ratings).length === 0) {
-      emptyRatings.push(dc);
-      return;
-    }
-    if (typeof ratings !== "object" || Array.isArray(ratings)) {
-      failures.push(`${label}: ratingCriteria.ratings is not an object`);
-      return;
-    }
-    for (const [pct, text] of Object.entries(ratings)) {
-      const n = Number(pct);
-      if (!Number.isInteger(n) || n < 0 || n > 100) {
-        failures.push(
-          `${label}: rating key "${pct}" is not an integer percentage 0-100`,
-        );
-      }
-      if (typeof text !== "string" || !text.trim()) {
-        failures.push(`${label}: rating ${pct}% has an empty criteria string`);
-      }
-    }
-  });
+  disabilities.forEach((e, idx) =>
+    validateOneDisabilityEntry(e, idx, dcSet, noCriteria, emptyRatings),
+  );
 
   if (noCriteria.length) {
     warnings.push(

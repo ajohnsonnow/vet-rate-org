@@ -4,14 +4,14 @@ import { CRISIS_RESOURCES } from "../../utils/crisisInterceptor";
 
 /**
  * Safety-critical crisis interception surface. Mounts globally and listens for:
- *  - `vetrate:crisis` — opens the BLOCKING <CrisisModal> (live user input that
+ *  - `vetrate:crisis` - opens the BLOCKING <CrisisModal> (live user input that
  *    indicates the user themselves may be in crisis); and
- *  - `vetrate:crisis-resources` (AIS-05) — shows a PASSIVE, dismissible
+ *  - `vetrate:crisis-resources` (AIS-05) - shows a PASSIVE, dismissible
  *    crisis-resources banner when crisis language is found in an UPLOADED document
  *    (e.g. ideation history in a C-file). Non-blocking: document analysis continues.
  *
  * Extracted from App.jsx (audit #35, B25) to keep the safety-critical surface
- * self-contained — its state, listeners, and render are colocated so a reviewer
+ * self-contained - its state, listeners, and render are colocated so a reviewer
  * can audit the whole crisis path in one file.
  */
 export default function CrisisListener() {
@@ -48,7 +48,7 @@ export default function CrisisListener() {
           <div className="max-w-3xl mx-auto flex items-start gap-3 text-sm">
             <span className="flex-1">
               <strong>You are not alone.</strong> If you or someone in these
-              records is in crisis, the Veterans Crisis Line is here 24/7 —{" "}
+              records is in crisis, the Veterans Crisis Line is here 24/7 -{" "}
               <a
                 href={CRISIS_RESOURCES.phone.tel}
                 className="underline font-semibold"

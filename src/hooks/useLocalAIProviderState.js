@@ -1564,6 +1564,87 @@ function buildLocalAIProviderApi(deps) {
 }
 
 /**
+ * Engine lifecycle: loading/generation state plus initialize/generate/
+ * interrupt/switch actions and unload-on-unmount cleanup. Split out of
+ * useLocalAIProviderState as its own custom hook (still calls useState/
+ * useCallback/useEffect internally) so the parent hook body stays under
+ * the line budget without breaking rules-of-hooks.
+ */
+function useLocalAIEngine(selectedModel, setError, setInstalledModels) {
+  const [engine, setEngine] = useState(null);
+  const [loadedModelId, setLoadedModelId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState({ progress: 0, text: "" });
+  const [isReady, setIsReady] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const initializeEngine = useCallback(
+    (modelId = selectedModel.id) =>
+      runInitializeEngine(modelId, {
+        selectedModel,
+        setIsLoading,
+        setError,
+        setLoadProgress,
+        setIsReady,
+        setEngine,
+        setLoadedModelId,
+        setInstalledModels,
+        setIsGenerating,
+      }),
+    [selectedModel, setError, setInstalledModels],
+  );
+
+  const generate = useCallback(
+    (prompt, options = {}) =>
+      runGenerateCompletion(prompt, options, {
+        selectedModel,
+        loadedModelId,
+        engine,
+        isReady,
+        setIsGenerating,
+      }),
+    [engine, isReady, selectedModel, loadedModelId],
+  );
+
+  const interruptGeneration = useCallback(
+    () => runInterruptGeneration({ engine, setIsGenerating }),
+    [engine],
+  );
+
+  const switchModel = useCallback(
+    (newModelId) =>
+      runSwitchModel(newModelId, {
+        engine,
+        setEngine,
+        setLoadedModelId,
+        setIsReady,
+        initializeEngine,
+      }),
+    [engine, initializeEngine],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (engine) {
+        engine.unload?.();
+      }
+    };
+  }, [engine]);
+
+  return {
+    isLoading,
+    loadProgress,
+    isReady,
+    isGenerating,
+    loadedModelId,
+    initializeEngine,
+    generate,
+    interruptGeneration,
+    switchModel,
+  };
+}
+
+/**
  * useLocalAIProviderState - all Local AI provider state and actions.
  * Extracted verbatim from LocalAIProvider's component body so that
  * component stays a thin `useLocalAIProviderState() -> <Context.Provider>`
@@ -1578,17 +1659,7 @@ export const useLocalAIProviderState = () => {
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[1]); // Default to balanced
   const [installedModels, setInstalledModels] = useState(new Set());
   const [gpuPreference, setGpuPreferenceState] = useState(getGPUPreference());
-
-  // Engine state
-  const [engine, setEngine] = useState(null);
-  const [loadedModelId, setLoadedModelId] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadProgress, setLoadProgress] = useState({ progress: 0, text: "" });
-  const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState(null);
-
-  // Chat state
-  const [isGenerating, setIsGenerating] = useState(false);
 
   // Experimental features state
   const [experimentalMode, setExperimentalMode] = useState(() => {
@@ -1623,63 +1694,17 @@ export const useLocalAIProviderState = () => {
     }
   }, [experimentalMode, webGPUStatus.supported, webGPUStatus.checked]);
 
-  // Initialize the LLM engine (supports Diamond Swarm and legacy WebLLM)
-  const initializeEngine = useCallback(
-    (modelId = selectedModel.id) =>
-      runInitializeEngine(modelId, {
-        selectedModel,
-        setIsLoading,
-        setError,
-        setLoadProgress,
-        setIsReady,
-        setEngine,
-        setLoadedModelId,
-        setInstalledModels,
-        setIsGenerating,
-      }),
-    [selectedModel],
-  );
-
-  // Generate completion
-  const generate = useCallback(
-    (prompt, options = {}) =>
-      runGenerateCompletion(prompt, options, {
-        selectedModel,
-        loadedModelId,
-        engine,
-        isReady,
-        setIsGenerating,
-      }),
-    [engine, isReady, selectedModel, loadedModelId],
-  );
-
-  // Interrupt generation - only interrupts if there's actually a global generation in progress
-  const interruptGeneration = useCallback(
-    () => runInterruptGeneration({ engine, setIsGenerating }),
-    [engine],
-  );
-
-  // Switch to a different model
-  const switchModel = useCallback(
-    (newModelId) =>
-      runSwitchModel(newModelId, {
-        engine,
-        setEngine,
-        setLoadedModelId,
-        setIsReady,
-        initializeEngine,
-      }),
-    [engine, initializeEngine],
-  );
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (engine) {
-        engine.unload?.();
-      }
-    };
-  }, [engine]);
+  const {
+    isLoading,
+    loadProgress,
+    isReady,
+    isGenerating,
+    loadedModelId,
+    initializeEngine,
+    generate,
+    interruptGeneration,
+    switchModel,
+  } = useLocalAIEngine(selectedModel, setError, setInstalledModels);
 
   return buildLocalAIProviderApi({
     webGPUStatus,

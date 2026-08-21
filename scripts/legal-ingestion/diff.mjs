@@ -29,7 +29,9 @@ function loadChunks(version) {
   const chunksDir = path.join(INDEX_ROOT, version, "chunks");
   if (!existsSync(chunksDir)) return [];
   const out = [];
-  for (const file of readdirSync(chunksDir).filter((f) => f.endsWith(".jsonl"))) {
+  for (const file of readdirSync(chunksDir).filter((f) =>
+    f.endsWith(".jsonl"),
+  )) {
     const lines = readFileSync(path.join(chunksDir, file), "utf8")
       .split("\n")
       .filter(Boolean);
@@ -64,43 +66,23 @@ function parseArgs(argv) {
   return out;
 }
 
-function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const versions = listVersions();
-  if (versions.length === 0) {
-    console.error("[diff] no legal-index versions found");
-    process.exit(1);
-  }
-  const to = args.to || versions[versions.length - 1];
-  const from = args.from || (versions.length > 1 ? versions[versions.length - 2] : versions[0]);
-
-  if (from === to) {
-    console.log(`No diff: from=${from}, to=${to} are the same version.`);
-    return;
-  }
-
-  const fromChunks = loadChunks(from);
-  const toChunks = loadChunks(to);
-  const fromIdx = indexById(fromChunks);
-  const toIdx = indexById(toChunks);
-
+function computeDiff(fromIdx, toIdx) {
   const added = [];
   const removed = [];
   const changed = [];
 
   for (const [id, chunk] of toIdx) {
     if (!fromIdx.has(id)) added.push(chunk);
-    else if (fromIdx.get(id).content_hash !== chunk.content_hash) changed.push(chunk);
+    else if (fromIdx.get(id).content_hash !== chunk.content_hash)
+      changed.push(chunk);
   }
   for (const [id, chunk] of fromIdx) {
     if (!toIdx.has(id)) removed.push(chunk);
   }
+  return { added, removed, changed };
+}
 
-  console.log(`# Legal-index diff: ${from} → ${to}\n`);
-  console.log(`- **Added**:   ${added.length} chunk(s)`);
-  console.log(`- **Removed**: ${removed.length} chunk(s)`);
-  console.log(`- **Changed**: ${changed.length} chunk(s) (content_hash mismatch)\n`);
-
+function printPerSourceTotals(from, to, fromChunks, toChunks) {
   console.log(`## Per-source totals\n`);
   console.log(`| source | ${from} | ${to} | delta |`);
   console.log(`|---|---|---|---|`);
@@ -114,30 +96,57 @@ function main() {
     console.log(`| ${src} | ${f} | ${t} | ${sign}${t - f} |`);
   }
   console.log("");
+}
 
-  if (added.length > 0) {
-    console.log(`## Added (first 25)\n`);
-    for (const c of added.slice(0, 25)) {
-      console.log(`- \`${c.citation || c.id}\` — ${c.title || "(no title)"}`);
-    }
-    console.log("");
+function printChangeList(label, chunks, { trailingBlank = true } = {}) {
+  if (chunks.length === 0) return;
+  console.log(`## ${label} (first 25)\n`);
+  for (const c of chunks.slice(0, 25)) {
+    console.log(`- \`${c.citation || c.id}\` — ${c.title || "(no title)"}`);
   }
-  if (changed.length > 0) {
-    console.log(`## Changed (first 25)\n`);
-    for (const c of changed.slice(0, 25)) {
-      console.log(`- \`${c.citation || c.id}\` — ${c.title || "(no title)"}`);
-    }
-    console.log("");
+  if (trailingBlank) console.log("");
+}
+
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const versions = listVersions();
+  if (versions.length === 0) {
+    console.error("[diff] no legal-index versions found");
+    process.exit(1);
   }
-  if (removed.length > 0) {
-    console.log(`## Removed (first 25)\n`);
-    for (const c of removed.slice(0, 25)) {
-      console.log(`- \`${c.citation || c.id}\` — ${c.title || "(no title)"}`);
-    }
+  const to = args.to || versions[versions.length - 1];
+  const from =
+    args.from ||
+    (versions.length > 1 ? versions[versions.length - 2] : versions[0]);
+
+  if (from === to) {
+    console.log(`No diff: from=${from}, to=${to} are the same version.`);
+    return;
   }
+
+  const fromChunks = loadChunks(from);
+  const toChunks = loadChunks(to);
+  const fromIdx = indexById(fromChunks);
+  const toIdx = indexById(toChunks);
+
+  const { added, removed, changed } = computeDiff(fromIdx, toIdx);
+
+  console.log(`# Legal-index diff: ${from} → ${to}\n`);
+  console.log(`- **Added**:   ${added.length} chunk(s)`);
+  console.log(`- **Removed**: ${removed.length} chunk(s)`);
+  console.log(
+    `- **Changed**: ${changed.length} chunk(s) (content_hash mismatch)\n`,
+  );
+
+  printPerSourceTotals(from, to, fromChunks, toChunks);
+
+  printChangeList("Added", added);
+  printChangeList("Changed", changed);
+  printChangeList("Removed", removed, { trailingBlank: false });
 
   // Exit code = 0 if no change, 2 if changes detected, 1 on error.
-  const noop = added.length === 0 && removed.length === 0 && changed.length === 0;
+  const noop =
+    added.length === 0 && removed.length === 0 && changed.length === 0;
   process.exit(noop ? 0 : 2);
 }
 

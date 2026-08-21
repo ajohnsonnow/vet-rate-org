@@ -70,7 +70,7 @@ describe("migratePacket", () => {
     expect(migrated.data).not.toHaveProperty("veteranProfile");
   });
 
-  it("is idempotent — migrating a 2.0.0 packet is a no-op", () => {
+  it("is idempotent - migrating a 2.0.0 packet is a no-op", () => {
     const once = migratePacket(makeV1Packet());
     const twice = migratePacket(once);
 
@@ -93,7 +93,7 @@ describe("migratePacket", () => {
     expect(migratePacket(v2)).toBe(v2);
   });
 
-  it("is pure — does not mutate the input packet", () => {
+  it("is pure - does not mutate the input packet", () => {
     const input = makeV1Packet();
     const snapshot = JSON.parse(JSON.stringify(input));
 
@@ -158,7 +158,7 @@ describe("ensureQuota", () => {
     expect(result.message).toMatch(/backup/i);
   });
 
-  it("never throws — resolves ok when estimate fails", async () => {
+  it("never throws - resolves ok when estimate fails", async () => {
     vi.stubGlobal("navigator", {
       storage: {
         estimate: async () => {

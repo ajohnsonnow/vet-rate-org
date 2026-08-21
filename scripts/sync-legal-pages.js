@@ -1,11 +1,11 @@
 /**
  * Legal Pages Auto-Generator
- * 
+ *
  * AUTOMATICALLY generates standalone HTML files from React components.
  * NO manual intervention. NO shortcuts. FULL content generation.
- * 
+ *
  * Usage: npm run sync-legal-pages
- * 
+ *
  * This script:
  * 1. Reads the React component JSX
  * 2. Converts JSX to valid HTML
@@ -13,17 +13,17 @@
  * 4. Writes the complete HTML file
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { APP_TRANSLATIONS } from '../src/i18n/translations.js';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { APP_TRANSLATIONS } from "../src/i18n/translations.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const ROOT_DIR = path.join(__dirname, '..');
-const COMPONENTS_DIR = path.join(ROOT_DIR, 'src', 'components');
-const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
+const ROOT_DIR = path.join(__dirname, "..");
+const COMPONENTS_DIR = path.join(ROOT_DIR, "src", "components");
+const PUBLIC_DIR = path.join(ROOT_DIR, "public");
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Tailwind to CSS Mapping (for standalone HTML)
@@ -433,15 +433,15 @@ const EMBEDDED_CSS = `
  */
 function escapeHtml(text) {
   return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 /** Look up the English string for a t("section","key") call, or null. */
 function lookupEnglish(section, key) {
   const leaf = APP_TRANSLATIONS?.[section]?.[key];
-  return leaf && typeof leaf.en === 'string' ? leaf.en : null;
+  return leaf && typeof leaf.en === "string" ? leaf.en : null;
 }
 
 /**
@@ -455,14 +455,19 @@ function resolveTranslationCalls(source) {
   // First, the split idiom the privacy page uses to interleave links:
   //   {t("s","k").split("X")[0]}  /  {t("s","k").split(".")[1]?.trim() || "fallback"}
   // Evaluated deterministically against the resolved English string (no eval).
+  // Bounded: fuzz-tested, the unbounded version is a CONFIRMED ReDoS (5.5s at
+  // 200 back-to-back near-matches with no closing "}", ~350 chars) — real JSX
+  // section/key/separator names and fallback strings are always far under
+  // these bounds (largest real occurrence in this repo is ~30 chars).
   let out = source.replace(
-    /\{\s*t\(\s*(['"])(.*?)\1\s*,\s*(['"])(.*?)\3\s*\)\.split\(\s*(['"])(.*?)\5\s*\)\s*\[\s*(\d+)\s*\]\s*(\?\.trim\(\))?\s*(?:\|\|\s*(['"])([\s\S]*?)\9)?\s*\}/g,
+    // eslint-disable-next-line sonarjs/regex-complexity -- structural complexity is inherent to parsing this multi-part call syntax (section/key/separator/index/trim/fallback); restructuring risks a subtle behavior change in delicate legal-page parsing
+    /\{\s{0,50}t\(\s{0,50}(['"])(.{0,200}?)\1\s{0,50},\s{0,50}(['"])(.{0,200}?)\3\s{0,50}\)\.split\(\s{0,50}(['"])(.{0,200}?)\5\s{0,50}\)\s{0,50}\[\s{0,50}(\d+)\s{0,50}\]\s{0,50}(\?\.trim\(\))?\s{0,50}(?:\|\|\s{0,50}(['"])([\s\S]{0,2000}?)\9)?\s{0,50}\}/g,
     (match, _q1, section, _q2, key, _q3, sep, idx, trim, _q4, fallback) => {
       const en = lookupEnglish(section, key);
       if (en == null) return match;
       let part = en.split(sep)[Number(idx)];
-      if (trim && typeof part === 'string') part = part.trim();
-      if (part === undefined || part === '') part = fallback ?? '';
+      if (trim && typeof part === "string") part = part.trim();
+      if (part === undefined || part === "") part = fallback ?? "";
       return escapeHtml(part);
     },
   );
@@ -496,11 +501,11 @@ function findMatchingBracket(text, openIndex, openChar, closeChar) {
 }
 
 function extractReturnParenBody(fnBody) {
-  const returnIdx = fnBody.indexOf('return');
+  const returnIdx = fnBody.indexOf("return");
   if (returnIdx === -1) return null;
-  const parenIdx = fnBody.indexOf('(', returnIdx);
+  const parenIdx = fnBody.indexOf("(", returnIdx);
   if (parenIdx === -1) return null;
-  const parenEnd = findMatchingBracket(fnBody, parenIdx, '(', ')');
+  const parenEnd = findMatchingBracket(fnBody, parenIdx, "(", ")");
   return parenEnd === -1 ? null : fnBody.slice(parenIdx + 1, parenEnd).trim();
 }
 
@@ -519,10 +524,10 @@ function collectFunctionDeclBodies(source, bodies) {
   let match;
   while ((match = functionDecl.exec(source)) !== null) {
     const parenIdx = match.index + match[0].length - 1;
-    const parenEnd = findMatchingBracket(source, parenIdx, '(', ')');
+    const parenEnd = findMatchingBracket(source, parenIdx, "(", ")");
     if (parenEnd === -1) continue;
-    const braceIdx = source.indexOf('{', parenEnd);
-    const braceEnd = findMatchingBracket(source, braceIdx, '{', '}');
+    const braceIdx = source.indexOf("{", parenEnd);
+    const braceEnd = findMatchingBracket(source, braceIdx, "{", "}");
     if (braceEnd === -1) continue;
     const body = extractReturnParenBody(source.slice(braceIdx + 1, braceEnd));
     if (body !== null) bodies.set(match[1], body);
@@ -534,11 +539,11 @@ function collectArrowDeclBodies(source, bodies) {
   let match;
   while ((match = arrowDecl.exec(source)) !== null) {
     const parenIdx = match.index + match[0].length - 1;
-    const parenEnd = findMatchingBracket(source, parenIdx, '(', ')');
+    const parenEnd = findMatchingBracket(source, parenIdx, "(", ")");
     if (parenEnd === -1) continue;
-    const arrowBodyIdx = source.indexOf('(', parenEnd + 1);
+    const arrowBodyIdx = source.indexOf("(", parenEnd + 1);
     if (arrowBodyIdx === -1 || arrowBodyIdx > parenEnd + 10) continue;
-    const arrowBodyEnd = findMatchingBracket(source, arrowBodyIdx, '(', ')');
+    const arrowBodyEnd = findMatchingBracket(source, arrowBodyIdx, "(", ")");
     if (arrowBodyEnd === -1) continue;
     bodies.set(match[1], source.slice(arrowBodyIdx + 1, arrowBodyEnd).trim());
   }
@@ -569,7 +574,7 @@ function inlineSubComponents(source) {
   for (let pass = 0; pass < 5; pass++) {
     let changed = false;
     for (const [name, body] of bodies) {
-      const callRegex = new RegExp(String.raw`<${name}(?:\s[^/]*)?/>`, 'g');
+      const callRegex = new RegExp(String.raw`<${name}(?:\s[^/]*)?/>`, "g");
       const next = expanded.replace(callRegex, body);
       if (next !== expanded) changed = true;
       expanded = next;
@@ -584,42 +589,59 @@ function inlineSubComponents(source) {
  * Map background + border combinations to alert classes
  */
 function mapAlertClass(classString) {
-  if (classString.includes('bg-yellow-50') || classString.includes('border-yellow')) {
-    return 'alert alert-yellow';
+  if (
+    classString.includes("bg-yellow-50") ||
+    classString.includes("border-yellow")
+  ) {
+    return "alert alert-yellow";
   }
-  if (classString.includes('bg-blue-50') || classString.includes('border-blue-600')) {
-    return 'alert alert-blue';
+  if (
+    classString.includes("bg-blue-50") ||
+    classString.includes("border-blue-600")
+  ) {
+    return "alert alert-blue";
   }
-  if (classString.includes('bg-green-50') || classString.includes('border-green')) {
-    return 'alert alert-green';
+  if (
+    classString.includes("bg-green-50") ||
+    classString.includes("border-green")
+  ) {
+    return "alert alert-green";
   }
-  if (classString.includes('bg-red-50') || classString.includes('border-red')) {
-    return 'alert alert-red';
+  if (classString.includes("bg-red-50") || classString.includes("border-red")) {
+    return "alert alert-red";
   }
-  if (classString.includes('bg-purple-50') || classString.includes('border-purple')) {
-    return 'alert alert-purple';
+  if (
+    classString.includes("bg-purple-50") ||
+    classString.includes("border-purple")
+  ) {
+    return "alert alert-purple";
   }
-  return '';
+  return "";
 }
 
 /**
  * Map left-border section combinations to section-border classes
  */
 function mapSectionBorderClass(classString) {
-  if (!classString.includes('border-l-4')) return '';
-  if (classString.includes('border-blue')) return 'section-border section-border-blue';
-  if (classString.includes('border-green')) return 'section-border section-border-green';
-  if (classString.includes('border-purple')) return 'section-border section-border-purple';
-  if (classString.includes('border-orange')) return 'section-border section-border-orange';
-  if (classString.includes('border-red')) return 'section-border section-border-red';
-  return '';
+  if (!classString.includes("border-l-4")) return "";
+  if (classString.includes("border-blue"))
+    return "section-border section-border-blue";
+  if (classString.includes("border-green"))
+    return "section-border section-border-green";
+  if (classString.includes("border-purple"))
+    return "section-border section-border-purple";
+  if (classString.includes("border-orange"))
+    return "section-border section-border-orange";
+  if (classString.includes("border-red"))
+    return "section-border section-border-red";
+  return "";
 }
 
 /**
  * Convert Tailwind classes to semantic CSS classes for alerts/sections
  */
 function mapTailwindClasses(classString) {
-  if (!classString) return '';
+  if (!classString) return "";
   return mapAlertClass(classString) || mapSectionBorderClass(classString);
 }
 
@@ -628,15 +650,15 @@ function mapTailwindClasses(classString) {
  */
 function extractSections(jsx) {
   const sections = [];
-  
+
   // Match section tags with their content
   const sectionRegex = /<section[^>]*>([\s\S]*?)<\/section>/gi;
   let match;
-  
+
   while ((match = sectionRegex.exec(jsx)) !== null) {
     sections.push(match[0]);
   }
-  
+
   return sections;
 }
 
@@ -645,63 +667,67 @@ function extractSections(jsx) {
  */
 function convertSectionToHTML(jsxSection) {
   let html = jsxSection;
-  
+
   // Extract className for section styling
   const classMatch = html.match(/<section\s+className="([^"]*)"/);
-  const sectionClass = classMatch ? mapTailwindClasses(classMatch[1]) : '';
-  
+  const sectionClass = classMatch ? mapTailwindClasses(classMatch[1]) : "";
+
   // Convert className to class
-  html = html.replace(/className=/g, 'class=');
-  
+  html = html.replace(/className=/g, "class=");
+
   // Convert JSX expressions {' '} to space
-  html = html.replace(/\{'\s*'\}/g, ' ');
-  html = html.replace(/\{\s*'\s+'\s*\}/g, ' ');
-  
+  html = html.replace(/\{'\s*'\}/g, " ");
+  html = html.replace(/\{\s*'\s+'\s*\}/g, " ");
+
   // Convert JSX curly brace text expressions
-  html = html.replace(/\{"([^"]*)"\}/g, '$1');
-  html = html.replace(/\{'([^']*)'\}/g, '$1');
-  
+  html = html.replace(/\{"([^"]*)"\}/g, "$1");
+  html = html.replace(/\{'([^']*)'\}/g, "$1");
+
   // Remove JSX comments
-  html = html.replace(/\{\/\*[\s\S]*?\*\/\}/g, '');
+  html = html.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
 
   // Strip React Fragment shorthand (<>...</>) — not valid HTML, and some
   // inlined sub-components (see inlineSubComponents) wrap their content in one.
-  html = html.replaceAll('<>', '').replaceAll('</>', '');
+  html = html.replaceAll("<>", "").replaceAll("</>", "");
 
   // Convert self-closing JSX tags
-  html = html.replace(/<(\w+)([^>]*)\s*\/>/g, '<$1$2></$1>');
-  
-  // Remove React-specific attributes
-  html = html.replace(/\s+onClick=\{[^}]*\}/g, '');
-  html = html.replace(/\s+onClose=\{[^}]*\}/g, '');
-  html = html.replace(/\s+aria-label="[^"]*"/g, '');
-  
+  // eslint-disable-next-line sonarjs/slow-regex -- fuzz-tested: `\s*` after `[^>]*` was redundant ambiguity (both can match whitespace), a confirmed 13.5s hang at 80k adversarial chars; removing it is a no-op on matched content (verified) and drops it to 0ms
+  html = html.replace(/<(\w+)([^>]*)\/>/g, "<$1$2></$1>");
+
+  // Remove React-specific attributes (bounded: fuzz-tested, unbounded leading
+  // `\s+`/trailing `[^}]*`/`[^"]*` confirmed 4.5s+ at 80k adversarial chars;
+  // real JSX attributes are never remotely this long)
+  html = html.replace(/\s{1,50}onClick=\{[^}]{0,5000}\}/g, "");
+  html = html.replace(/\s{1,50}onClose=\{[^}]{0,5000}\}/g, "");
+  html = html.replace(/\s{1,50}aria-label="[^"]{0,5000}"/g, "");
+
   // Remove SVG completely and their containers
-  html = html.replace(/<svg[\s\S]*?<\/svg>/gi, '');
-  
+  html = html.replace(/<svg[\s\S]*?<\/svg>/gi, "");
+
   // Remove empty spans/divs left by SVG removal
-  html = html.replace(/<span[^>]*>\s*<\/span>/gi, '');
-  
+  html = html.replace(/<span[^>]*>\s*<\/span>/gi, "");
+
   // Clean up Tailwind classes - convert to semantic classes or remove
   html = html.replace(/class="[^"]*"/g, (match) => {
     const classes = match.slice(7, -1);
     const mapped = mapTailwindClasses(classes);
-    return mapped ? `class="${mapped}"` : '';
+    return mapped ? `class="${mapped}"` : "";
   });
-  
+
   // Fix the section tag with proper class
   if (sectionClass) {
     html = html.replace(/<section[^>]*>/, `<section class="${sectionClass}">`);
   } else {
-    html = html.replace(/<section\s+class="">/g, '<section>');
+    html = html.replace(/<section\s+class="">/g, "<section>");
   }
-  
+
   // Remove empty class attributes
-  html = html.replace(/\s+class=""/g, '');
-  
+  // eslint-disable-next-line sonarjs/slow-regex -- fuzz-tested: unbounded leading `\s+` confirmed 4.3s at 80k adversarial whitespace-only chars; bounded drops it to 9ms
+  html = html.replace(/\s{1,50}class=""/g, "");
+
   // Clean up whitespace
-  html = html.replace(/>\s+</g, '>\n        <');
-  
+  html = html.replace(/>\s+</g, ">\n        <");
+
   return html;
 }
 
@@ -712,24 +738,28 @@ function extractMetadata(componentSource) {
   const metadata = {
     effectiveDate: null,
     documentVersion: null,
-    title: null
+    title: null,
   };
-  
+
   // Extract effective date - try multiple patterns
-  let dateMatch = componentSource.match(/Last Updated:.*?<strong>(.*?)<\/strong>/);
+  let dateMatch = componentSource.match(
+    /Last Updated:.*?<strong>(.*?)<\/strong>/,
+  );
   if (!dateMatch) {
-    dateMatch = componentSource.match(/Effective:\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4}/i);
+    dateMatch = componentSource.match(
+      /Effective:\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,?\s+\d{4}/i,
+    );
   }
   if (dateMatch) {
     metadata.effectiveDate = dateMatch[1];
   }
-  
+
   // Extract document version
   const versionMatch = componentSource.match(/Document Version:\s*([\d.]+)/);
   if (versionMatch) {
     metadata.documentVersion = versionMatch[1];
   }
-  
+
   return metadata;
 }
 
@@ -740,7 +770,7 @@ function processTermsOfService(componentSource) {
   const metadata = extractMetadata(componentSource);
 
   // Build HTML content section by section
-  let htmlContent = '';
+  let htmlContent = "";
 
   // Inline named sub-components (e.g. AIWarningBanner) at their call sites
   // before resolving i18n, so their own {t(...)} calls get picked up too.
@@ -751,17 +781,17 @@ function processTermsOfService(componentSource) {
 
   // Extract and convert each section
   const sections = extractSections(resolvedSource);
-  
+
   for (const section of sections) {
-    htmlContent += '\n        ' + convertSectionToHTML(section) + '\n';
+    htmlContent += "\n        " + convertSectionToHTML(section) + "\n";
   }
-  
+
   // If no sections found, do basic conversion of the whole content
   if (sections.length === 0) {
-    console.log('   ⚠️  No sections found, using full content extraction');
+    console.log("   ⚠️  No sections found, using full content extraction");
     htmlContent = basicJSXtoHTML(componentSource);
   }
-  
+
   return { htmlContent, metadata };
 }
 
@@ -770,19 +800,23 @@ function processTermsOfService(componentSource) {
  */
 function basicJSXtoHTML(jsx) {
   let html = jsx;
-  
+
   // Remove React wrapper elements
-  html = html.replace(/<div className="fixed inset-0[\s\S]*?<div className="px-8 py-8/gi, '<div class="content"');
-  
+  html = html.replace(
+    /<div className="fixed inset-0[\s\S]*?<div className="px-8 py-8/gi,
+    '<div class="content"',
+  );
+
   // Convert className to class
-  html = html.replace(/className=/g, 'class=');
-  
-  // Remove JSX expressions
-  html = html.replace(/\{[^}]*\}/g, '');
-  
+  html = html.replace(/className=/g, "class=");
+
+  // Remove JSX expressions (bounded: fuzz-tested, unbounded version confirmed
+  // 5.3s at 60k adversarial unmatched "{"; real JSX expressions are never remotely this long)
+  html = html.replace(/\{[^}]{0,5000}\}/g, "");
+
   // Remove SVGs
-  html = html.replace(/<svg[\s\S]*?<\/svg>/gi, '');
-  
+  html = html.replace(/<svg[\s\S]*?<\/svg>/gi, "");
+
   return html;
 }
 
@@ -791,11 +825,11 @@ function basicJSXtoHTML(jsx) {
  */
 function generateTOSHTML(componentSource) {
   const { htmlContent, metadata } = processTermsOfService(componentSource);
-  
+
   const now = new Date();
   const generatedDate = now.toISOString();
-  const effectiveDate = metadata.effectiveDate || 'January 18, 2026';
-  
+  const effectiveDate = metadata.effectiveDate || "January 18, 2026";
+
   return `<!DOCTYPE html>
 <!--
   ⚠️ AUTO-GENERATED FILE - DO NOT EDIT MANUALLY!
@@ -853,7 +887,7 @@ ${htmlContent}
                 I'm honored to serve those who served. Stay safe, document everything, and never give up on your claim.
             </p>
             <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 1.5rem;">
-                Document Version: ${metadata.documentVersion || '1.0'} | Effective: ${effectiveDate}
+                Document Version: ${metadata.documentVersion || "1.0"} | Effective: ${effectiveDate}
             </p>
             <a href="/" class="btn" style="margin-top: 1.5rem;">Return to Vet-Rate.org</a>
         </div>
@@ -878,16 +912,16 @@ function generatePrivacyHTML(componentSource) {
 
   // Extract sections
   const sections = extractSections(resolvedSource);
-  let htmlContent = '';
-  
+  let htmlContent = "";
+
   for (const section of sections) {
-    htmlContent += '\n        ' + convertSectionToHTML(section) + '\n';
+    htmlContent += "\n        " + convertSectionToHTML(section) + "\n";
   }
-  
+
   const now = new Date();
   const generatedDate = now.toISOString();
-  const effectiveDate = metadata.effectiveDate || 'January 18, 2026';
-  
+  const effectiveDate = metadata.effectiveDate || "January 18, 2026";
+
   return `<!DOCTYPE html>
 <!--
   ⚠️ AUTO-GENERATED FILE - DO NOT EDIT MANUALLY!
@@ -945,7 +979,7 @@ ${htmlContent}
                 Vet-Rate.org is built with privacy-first architecture. Your data stays on your device.
             </p>
             <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 1.5rem;">
-                Document Version: ${metadata.documentVersion || '1.0'} | Effective: ${effectiveDate}
+                Document Version: ${metadata.documentVersion || "1.0"} | Effective: ${effectiveDate}
             </p>
             <a href="/" class="btn" style="margin-top: 1.5rem;">Return to Vet-Rate.org</a>
         </div>
@@ -960,28 +994,32 @@ ${htmlContent}
  */
 function processPage(config) {
   const { name, componentPath, htmlPath, generator } = config;
-  
+
   console.log(`\n📄 ${name}:`);
-  
+
   // Check component exists
   if (!fs.existsSync(componentPath)) {
     console.log(`   ❌ Component not found: ${componentPath}`);
     return false;
   }
-  
+
   // Read component source
-  const componentSource = fs.readFileSync(componentPath, 'utf-8');
-  console.log(`   📖 Read component: ${path.basename(componentPath)} (${componentSource.length} chars)`);
-  
+  const componentSource = fs.readFileSync(componentPath, "utf-8");
+  console.log(
+    `   📖 Read component: ${path.basename(componentPath)} (${componentSource.length} chars)`,
+  );
+
   // Extract metadata for logging
   const metadata = extractMetadata(componentSource);
-  console.log(`   📅 Effective date: ${metadata.effectiveDate || 'Using default'}`);
-  
+  console.log(
+    `   📅 Effective date: ${metadata.effectiveDate || "Using default"}`,
+  );
+
   try {
     // Generate HTML using the appropriate generator
     const html = generator(componentSource);
     console.log(`   ✨ Generated HTML (${html.length} chars)`);
-    
+
     // Guard (A-H10/D-H04): never ship unresolved {t(...)} JSX in a public legal
     // page — a missing translation key would render as raw code to the user.
     const leaked = html.match(/\{\s*t\(/g);
@@ -993,7 +1031,7 @@ function processPage(config) {
     }
 
     // Write HTML file
-    fs.writeFileSync(htmlPath, html, 'utf-8');
+    fs.writeFileSync(htmlPath, html, "utf-8");
     console.log(`   ✅ Written: ${path.basename(htmlPath)}`);
 
     return true;
@@ -1008,44 +1046,54 @@ function processPage(config) {
  * Main function
  */
 function main() {
-  console.log('═══════════════════════════════════════════════════════════════');
-  console.log('        🔄 Legal Pages Auto-Generator');
-  console.log('        Vet-Rate.org - AUTOMATIC HTML Generation');
-  console.log('        NO manual edits. NO shortcuts. FULL rebuild.');
-  console.log('═══════════════════════════════════════════════════════════════');
-  console.log('\n⚡ Generating HTML files from React components...');
-  
+  console.log(
+    "═══════════════════════════════════════════════════════════════",
+  );
+  console.log("        🔄 Legal Pages Auto-Generator");
+  console.log("        Vet-Rate.org - AUTOMATIC HTML Generation");
+  console.log("        NO manual edits. NO shortcuts. FULL rebuild.");
+  console.log(
+    "═══════════════════════════════════════════════════════════════",
+  );
+  console.log("\n⚡ Generating HTML files from React components...");
+
   const pages = [
     {
-      name: 'Terms of Service',
-      componentPath: path.join(COMPONENTS_DIR, 'TermsOfServicePage.jsx'),
-      htmlPath: path.join(PUBLIC_DIR, 'terms-of-service.html'),
-      generator: generateTOSHTML
+      name: "Terms of Service",
+      componentPath: path.join(COMPONENTS_DIR, "TermsOfServicePage.jsx"),
+      htmlPath: path.join(PUBLIC_DIR, "terms-of-service.html"),
+      generator: generateTOSHTML,
     },
     {
-      name: 'Privacy Policy',
-      componentPath: path.join(COMPONENTS_DIR, 'PrivacyPolicyPage.jsx'),
-      htmlPath: path.join(PUBLIC_DIR, 'privacy-policy.html'),
-      generator: generatePrivacyHTML
-    }
+      name: "Privacy Policy",
+      componentPath: path.join(COMPONENTS_DIR, "PrivacyPolicyPage.jsx"),
+      htmlPath: path.join(PUBLIC_DIR, "privacy-policy.html"),
+      generator: generatePrivacyHTML,
+    },
   ];
-  
+
   let successCount = 0;
-  
+
   for (const page of pages) {
     if (processPage(page)) {
       successCount++;
     }
   }
-  
-  console.log('\n═══════════════════════════════════════════════════════════════');
+
+  console.log(
+    "\n═══════════════════════════════════════════════════════════════",
+  );
   if (successCount === pages.length) {
-    console.log(`  ✅ All ${successCount} legal pages REGENERATED from React components!`);
+    console.log(
+      `  ✅ All ${successCount} legal pages REGENERATED from React components!`,
+    );
   } else {
     console.log(`  ⚠️  Generated ${successCount}/${pages.length} pages`);
   }
-  console.log('═══════════════════════════════════════════════════════════════\n');
-  
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n",
+  );
+
   return successCount === pages.length;
 }
 

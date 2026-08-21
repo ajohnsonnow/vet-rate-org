@@ -1,7 +1,7 @@
 /**
  * Single source of truth for AI performance expectations and system requirements.
  *
- * BENCHMARK LOG — update this after every stress run, not the components.
+ * BENCHMARK LOG - update this after every stress run, not the components.
  * Components import from here so one edit propagates everywhere.
  *
  * 2026-06-12 (run blxi74t2m): desktop-high RTX 4080 SUPER, 28K-char chunks,
@@ -37,7 +37,7 @@ export const AI_WARMUP = {
     minMin: 5,
     maxMin: 15,
     reason:
-      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders in 5–15 min (vs 20–45 min on Windows/NVIDIA). 1.7 GB model weight load is the same.",
+      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders in 5-15 min (vs 20-45 min on Windows/NVIDIA). 1.7 GB model weight load is the same.",
   },
   subsequentRun: {
     minMin: 3,
@@ -85,7 +85,7 @@ export const AI_REQUIREMENTS = {
   },
   ram: { minGB: 8, recGB: 16 },
   formFactor:
-    "Desktop or laptop — phones and tablets are not supported for on-device AI.",
+    "Desktop or laptop - phones and tablets are not supported for on-device AI.",
   model: {
     sizeGB: 1.7,
     cachedAfterFirstDownload: true,
@@ -94,7 +94,7 @@ export const AI_REQUIREMENTS = {
 };
 
 // ---------------------------------------------------------------------------
-// Helpers — consumed by SystemRequirementsNotice and estimateProcessingTime()
+// Helpers - consumed by SystemRequirementsNotice and estimateProcessingTime()
 // ---------------------------------------------------------------------------
 
 /**

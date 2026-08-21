@@ -207,7 +207,7 @@ function useEditModalAndRecordsState() {
   });
 
   // Rated conditions found in the veteran's records (saved claims + C-File
-  // analyzer output in the VKB) that aren't in My Ratings yet — offered via
+  // analyzer output in the VKB) that aren't in My Ratings yet - offered via
   // a one-click load banner instead of silent auto-import.
   const [recordCandidates, setRecordCandidates] = useState([]);
   const [recordsAnnouncement, setRecordsAnnouncement] = useState("");
@@ -685,7 +685,7 @@ function ChildrenUnder18Field({ t, dependents, setDependents, results }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -699,7 +699,7 @@ function ChildrenUnder18Field({ t, dependents, setDependents, results }) {
           <span className="w-8 text-center font-bold">
             {dependents.childrenUnder18}
           </span>
-          <button
+          <button type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -730,7 +730,7 @@ function ChildrenInSchoolField({ t, dependents, setDependents, results }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -744,7 +744,7 @@ function ChildrenInSchoolField({ t, dependents, setDependents, results }) {
           <span className="w-8 text-center font-bold">
             {dependents.childrenSchool}
           </span>
-          <button
+          <button type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -796,7 +796,7 @@ function ParentsField({ t, dependents, setDependents, results }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -810,7 +810,7 @@ function ParentsField({ t, dependents, setDependents, results }) {
           <span className="w-8 text-center font-bold">
             {dependents.dependentParents}
           </span>
-          <button
+          <button type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -865,7 +865,23 @@ function DependentsInput({ t, dependents, setDependents, results }) {
   );
 }
 
+function BreakdownAdditionLine({ amount, label }) {
+  if (amount > 0) {
+    return (
+      <div className="flex justify-between text-green-600 dark:text-green-400">
+        <span>+ {label}</span>
+        <span>
+          +$
+          {amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+        </span>
+      </div>
+    );
+  }
+  return null;
+}
+
 function PayResultsBreakdown({ t, results, compensation }) {
+  const { breakdown } = compensation;
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
       <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
@@ -878,86 +894,35 @@ function PayResultsBreakdown({ t, results, compensation }) {
           </span>
           <span className="font-medium">
             $
-            {compensation.breakdown.baseRate.toLocaleString(undefined, {
+            {breakdown.baseRate.toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}
           </span>
         </div>
-        {compensation.breakdown.spouseAddition > 0 && (
-          <div className="flex justify-between text-green-600 dark:text-green-400">
-            <span>+ {t("tacticalCalc", "spouse")}</span>
-            <span>
-              +$
-              {compensation.breakdown.spouseAddition.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-        )}
-        {compensation.breakdown.spouseAidAttendanceAddition > 0 && (
-          <div className="flex justify-between text-green-600 dark:text-green-400">
-            <span>+ {t("tacticalCalc", "spouseAA")}</span>
-            <span>
-              +$
-              {compensation.breakdown.spouseAidAttendanceAddition.toLocaleString(
-                undefined,
-                { minimumFractionDigits: 2 },
-              )}
-            </span>
-          </div>
-        )}
-        {compensation.breakdown.firstChildAddition > 0 && (
-          <div className="flex justify-between text-green-600 dark:text-green-400">
-            <span>+ {t("tacticalCalc", "firstChild")}</span>
-            <span>
-              +$
-              {compensation.breakdown.firstChildAddition.toLocaleString(
-                undefined,
-                {
-                  minimumFractionDigits: 2,
-                },
-              )}
-            </span>
-          </div>
-        )}
-        {compensation.breakdown.childrenUnder18Addition > 0 && (
-          <div className="flex justify-between text-green-600 dark:text-green-400">
-            <span>+ {t("tacticalCalc", "childrenUnder18")}</span>
-            <span>
-              +$
-              {compensation.breakdown.childrenUnder18Addition.toLocaleString(
-                undefined,
-                { minimumFractionDigits: 2 },
-              )}
-            </span>
-          </div>
-        )}
-        {compensation.breakdown.childrenSchoolAddition > 0 && (
-          <div className="flex justify-between text-green-600 dark:text-green-400">
-            <span>+ {t("tacticalCalc", "childrenInSchool")}</span>
-            <span>
-              +$
-              {compensation.breakdown.childrenSchoolAddition.toLocaleString(
-                undefined,
-                { minimumFractionDigits: 2 },
-              )}
-            </span>
-          </div>
-        )}
-        {compensation.breakdown.parentsAddition > 0 && (
-          <div className="flex justify-between text-green-600 dark:text-green-400">
-            <span>+ {t("tacticalCalc", "dependentParents")}</span>
-            <span>
-              +$
-              {compensation.breakdown.parentsAddition.toLocaleString(
-                undefined,
-                {
-                  minimumFractionDigits: 2,
-                },
-              )}
-            </span>
-          </div>
-        )}
+        <BreakdownAdditionLine
+          amount={breakdown.spouseAddition}
+          label={t("tacticalCalc", "spouse")}
+        />
+        <BreakdownAdditionLine
+          amount={breakdown.spouseAidAttendanceAddition}
+          label={t("tacticalCalc", "spouseAA")}
+        />
+        <BreakdownAdditionLine
+          amount={breakdown.firstChildAddition}
+          label={t("tacticalCalc", "firstChild")}
+        />
+        <BreakdownAdditionLine
+          amount={breakdown.childrenUnder18Addition}
+          label={t("tacticalCalc", "childrenUnder18")}
+        />
+        <BreakdownAdditionLine
+          amount={breakdown.childrenSchoolAddition}
+          label={t("tacticalCalc", "childrenInSchool")}
+        />
+        <BreakdownAdditionLine
+          amount={breakdown.parentsAddition}
+          label={t("tacticalCalc", "dependentParents")}
+        />
         <div className="border-t dark:border-gray-700 pt-2 flex justify-between font-bold">
           <span>{t("tacticalCalc", "total")}</span>
           <span>
@@ -1059,7 +1024,7 @@ function WhatIfScenarioInput({
             {ratingOptions
               .filter((r) => r > 0)
               .map((r) => (
-                <button
+                <button type="button"
                   key={r}
                   onClick={() => setWhatIfRating(r)}
                   className={`px-3 py-2 rounded-lg font-medium transition-colors ${
@@ -1264,7 +1229,7 @@ function QuickLoadRatingsBanner({
       <span className="text-sm text-amber-700 dark:text-amber-300">
         ⭐ {t("tacticalCalc", "youHaveSavedRatings")} ({myRatings.length})
       </span>
-      <button
+      <button type="button"
         onClick={handleLoadMyRatings}
         className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
       >
@@ -1357,7 +1322,7 @@ function RatingSelectField({ t, newCondition, setNewCondition }) {
         onChange={(e) =>
           setNewCondition((prev) => ({
             ...prev,
-            rating: parseInt(e.target.value),
+            rating: Number.parseInt(e.target.value),
           }))
         }
         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -1438,7 +1403,7 @@ function AddConditionForm({
         />
       </div>
 
-      <button
+      <button type="button"
         onClick={handleAddCondition}
         disabled={!newCondition.bodyPart}
         className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1458,7 +1423,7 @@ function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
         {recordCandidates.length === 1 ? "" : "s"} found in your records (saved
         claims &amp; analyzed documents).
       </p>
-      <button
+      <button type="button"
         onClick={handleLoadFromRecords}
         className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       >
@@ -1497,7 +1462,7 @@ function ConditionRow({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button
+        <button type="button"
           onClick={() => handleEditCondition(condition)}
           className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
           aria-label="Edit"
@@ -1516,7 +1481,7 @@ function ConditionRow({
             />
           </svg>
         </button>
-        <button
+        <button type="button"
           onClick={() => handleRemoveCondition(condition.id)}
           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
           aria-label="Remove"
@@ -1554,7 +1519,7 @@ function ConditionsListSection({
           📋 {t("tacticalCalc", "yourRatedConditions")} ({conditions.length})
         </span>
         {conditions.length > 0 && (
-          <button
+          <button type="button"
             onClick={() => setConditions([])}
             className="text-xs text-red-600 hover:text-red-700"
           >
@@ -1784,7 +1749,7 @@ function TdiuAdvisorySection({ tdiu }) {
         If your service-connected conditions prevent you from maintaining
         substantially gainful employment, TDIU pays at the 100% rate even below
         a 100% schedular rating. The TDIU Work Impact Builder tool can help you
-        prepare VA Form 21-8940 — and speak with a VSO before filing.
+        prepare VA Form 21-8940 - and speak with a VSO before filing.
       </p>
     </div>
   );
@@ -1873,7 +1838,7 @@ function QuickPayPreview({ t, results, setActiveTab }) {
               "0"}
           </p>
         </div>
-        <button
+        <button type="button"
           onClick={() => setActiveTab("paycheck")}
           className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
         >
@@ -1949,7 +1914,7 @@ function CalculationStepDetail({ step }) {
 function CalculationStepsSection({ t, showSteps, setShowSteps, results }) {
   return (
     <>
-      <button
+      <button type="button"
         onClick={() => setShowSteps(!showSteps)}
         className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-center gap-2"
       >
@@ -2141,7 +2106,7 @@ function MyRatingRow({ rating, allBodyParts, handleRemoveFromMyRatings }) {
           )}
         </div>
       </div>
-      <button
+      <button type="button"
         onClick={() => handleRemoveFromMyRatings(rating.id)}
         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
         aria-label="Remove"
@@ -2175,14 +2140,14 @@ function SavedRatingsEmptyState({ t, setShowVAGovPaster, setActiveTab }) {
         {t("tacticalCalc", "pasteRatingsDesc")}
       </p>
       <div className="space-y-2">
-        <button
+        <button type="button"
           onClick={() => setShowVAGovPaster(true)}
           className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center justify-center gap-2"
         >
           <span className="text-lg">📋</span>{" "}
           {t("tacticalCalc", "pasteFromVAGov")}
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab("calculator")}
           className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
         >
@@ -2211,7 +2176,7 @@ function SavedRatingsList({
           {t("tacticalCalc", "savedRatings")}
         </h4>
         {myRatings.length > 0 && (
-          <button
+          <button type="button"
             onClick={handleLoadMyRatings}
             className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
           >
@@ -2243,7 +2208,7 @@ function SavedRatingsList({
       <div className="space-y-2">
         {/* Save from Calculator Button */}
         {conditions.length > 0 && (
-          <button
+          <button type="button"
             onClick={handleSaveAsMyRatings}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
           >
@@ -2503,7 +2468,7 @@ function CapResultsHeaderInfo({
             {t("tacticalCalc", "capSimulatorDesc")}
           </p>
         </div>
-        <button
+        <button type="button"
           onClick={() => {
             setCapResults([]);
             if (onClearCapResults) onClearCapResults();
@@ -2552,7 +2517,7 @@ function CapResultCard({
       </div>
 
       <div className="flex gap-2">
-        <button
+        <button type="button"
           onClick={() => {
             // Add to current calculator conditions
             const condition = {
@@ -2572,7 +2537,7 @@ function CapResultCard({
         >
           <span>🧮</span> {t("tacticalCalc", "addToCalculator")}
         </button>
-        <button
+        <button type="button"
           onClick={() => {
             // Add directly to My Ratings
             const rating = {
@@ -2672,7 +2637,7 @@ function CapResultsAddAllButton({
   setActiveTab,
 }) {
   return (
-    <button
+    <button type="button"
       onClick={() => {
         // Add all C&P results to conditions
         const newConditions = capResults.map((r, i) => ({
@@ -3169,7 +3134,7 @@ function TacticalCalculatorHeader({
               moduleName="Tactical Calculator"
             />
           )}
-          <button
+          <button type="button"
             onClick={onClose}
             className="p-2 sm:p-3 text-white hover:bg-white/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Close"
@@ -3242,7 +3207,7 @@ function getTacticalCalculatorTabs(t, capResults) {
 
 function TacticalCalculatorTabButton({ tab, activeTab, setActiveTab }) {
   return (
-    <button
+    <button type="button"
       onClick={() => setActiveTab(tab.id)}
       className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
     >
@@ -3326,7 +3291,7 @@ function TacticalCalculatorFooter({ t, conditions, onClose }) {
             trigger="tactical-calculator"
             componentKey="tactical-calculator"
           />
-          <button
+          <button type="button"
             onClick={onClose}
             className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
@@ -3399,7 +3364,7 @@ function EditConditionRatingField({ t, editForm, setEditForm }) {
         onChange={(e) =>
           setEditForm({
             ...editForm,
-            rating: parseInt(e.target.value),
+            rating: Number.parseInt(e.target.value),
           })
         }
         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -3562,13 +3527,13 @@ function EditConditionModal({
       }
       footer={
         <div className="flex justify-end gap-3">
-          <button
+          <button type="button"
             onClick={handleCancelEdit}
             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             {t("tacticalCalc", "cancel")}
           </button>
-          <button
+          <button type="button"
             onClick={handleSaveEdit}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >

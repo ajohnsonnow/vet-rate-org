@@ -2,17 +2,21 @@
 
 Export your Statement in Support of Claim and related documents.
 
+![Nexus Builder review step with the Download Statement dropdown open, showing Text, Word, and PDF options](../assets/images/screenshots/nexus-builder/download-options-menu.png)
+_Check the Required Certification box first - it unlocks the Download Statement and Save to Packet buttons._
+
 ---
 
 ## Available Downloads
 
-After completing the Nexus Builder wizard, you can download:
+After completing the Nexus Builder wizard, check the **Required Certification** box, then click **"Download Statement"** to see the format menu:
 
-| Document | Format | Purpose |
-|----------|--------|---------|
-| **Statement in Support of Claim** | PDF | Submit to VA |
-| **Doctor's Cheat Sheet** | PDF | Give to your doctor |
-| **Plain Text Version** | TXT | For copying/editing |
+| Document                          | Format                                   | Purpose                                                   |
+| --------------------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| **Statement in Support of Claim** | Text (.txt), Word (.docx), or PDF (.pdf) | Submit to VA                                              |
+| **Doctor's Packet**               | Text (.txt), Word (.docx), or PDF (.pdf) | Give to your doctor (secondary claims only, AI-generated) |
+
+You can also click **"Save to Packet"** to store the statement in My Packet without downloading it immediately.
 
 ---
 
@@ -36,13 +40,13 @@ Your complete personal statement including:
 Complete the Nexus Builder wizard
 </div>
 <div class="step">
-Review the generated statement
+Review the generated statement on the final step
 </div>
 <div class="step">
-Click <strong>"Download PDF"</strong>
+Check the <strong>Required Certification</strong> box
 </div>
 <div class="step">
-Save to your device
+Click <strong>"Download Statement"</strong> and choose Text, Word, or PDF
 </div>
 </div>
 
@@ -55,50 +59,38 @@ Save to your device
 
 ---
 
-## Doctor's Cheat Sheet
+## Doctor's Packet
 
 ### What It Contains
 
-One-page reference for your healthcare provider:
+An AI-generated research brief for your healthcare provider (secondary claims only):
 
-- What a nexus letter is
-- VA's legal standard
-- Required elements checklist
-- Your specific case information
-- Suggested language templates
+- Medical mechanism explanation
+- Pathophysiological pathways
+- Literature/study references
+- A physician template letter
+
+See [Doctor's Cheat Sheet](doctor-cheat-sheet.md) for the full walkthrough, including the required AI-content disclaimer.
 
 ### Download Steps
 
 <div class="step-container">
 <div class="step">
-Complete the Nexus Builder wizard
+On a secondary claim's final Review step, click <strong>"Generate Doctor's Packet"</strong>
 </div>
 <div class="step">
-Click <strong>"Doctor's Cheat Sheet"</strong> button
+Accept the consent screen ("I Understand, Continue")
 </div>
 <div class="step">
-Save or print the PDF
+Download the generated packet as Text, Word, or PDF
 </div>
 </div>
 
----
+### Choosing a Format
 
-## Plain Text Version
-
-### What It Contains
-
-Your statement in plain text format:
-
-- Same content as PDF
-- No formatting
-- Easy to copy/paste
-- Editable in any text editor
-
-### When to Use
-
-- You want to make edits before submitting
-- You need to copy into an online form
-- You want to combine with other documents
+- **Text (.txt)** - Easiest to copy/paste or edit before printing
+- **Word (.docx)** - Editable in any word processor
+- **PDF (.pdf)** - Print-ready, professional appearance
 
 ---
 
@@ -161,12 +153,12 @@ Your statement needs your signature:
 
 Submit your statement:
 
-| Method | How |
-|--------|-----|
-| **Online** | Upload to VA.gov / eBenefits |
-| **Mail** | Send to your VA Regional Office |
-| **In Person** | Bring to VA appointment |
-| **Through VSO** | Give to your representative |
+| Method          | How                             |
+| --------------- | ------------------------------- |
+| **Online**      | Upload to VA.gov / eBenefits    |
+| **Mail**        | Send to your VA Regional Office |
+| **In Person**   | Bring to VA appointment         |
+| **Through VSO** | Give to your representative     |
 
 ---
 

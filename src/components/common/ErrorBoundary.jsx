@@ -2,25 +2,25 @@
  * Vet-Rate.org - Copyright (c) 2024-2026 Anthony Johnson
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * ErrorBoundary — catches render/lifecycle crashes in a subtree and shows a
+ * ErrorBoundary - catches render/lifecycle crashes in a subtree and shows a
  * mobile-first, offline-safe fallback instead of a blank white screen.
  *
  * Two levels:
  *   level="app"      full-screen fallback with "Reload app" (a top-level crash
  *                    means the whole tree is gone, so re-mounting won't help).
  *   level="cluster"  inline card with "Try again" (resets the boundary so the
- *                    cluster re-mounts) — the default; siblings stay interactive.
+ *                    cluster re-mounts) - the default; siblings stay interactive.
  *
  * On catch it lands the error in the bug-report console log (so the BugSquasher
  * picks it up) and offers a one-tap "Report this problem" that persists a full
  * sanitized crash report to IndexedDB via saveBugReport, surfacing a Toast.
  *
- * Error boundaries must be class components — getDerivedStateFromError /
+ * Error boundaries must be class components - getDerivedStateFromError /
  * componentDidCatch have no hook equivalent. Toast is read through
  * `static contextType` (the single context this class needs); it is null-safe
  * so the component still renders outside a ToastProvider (e.g. in unit tests).
  *
- * Part of the S9–S17 cycle (docs/SPRINT_PLAN_S9-S17.md, S11).
+ * Part of the S9-S17 cycle (docs/SPRINT_PLAN_S9-S17.md, S11).
  */
 
 import { Component } from "react";
@@ -92,12 +92,12 @@ export default class ErrorBoundary extends Component {
       toast?.success?.(
         `Problem reported${
           saved?.report_id ? ` (${saved.report_id})` : ""
-        }. Thank you — this helps us fix it.`,
+        }. Thank you - this helps us fix it.`,
       );
     } catch {
       this.setState({ reportState: "failed" });
       toast?.error?.(
-        "Couldn't save the report. Your data is safe on this device — please try again.",
+        "Couldn't save the report. Your data is safe on this device - please try again.",
       );
     }
   };

@@ -10,10 +10,14 @@ Customize Vet-Rate.org to match your needs with accessibility options, display p
 
 Click the **"♿ Accessibility"** button in the header to access:
 
-- Display Mode (Light/Dark)
-- Color Blind Modes
-- Font Size
-- Motion Settings
+- Display Mode (Light / Dark / TBI Comfort / AAA High Contrast)
+- Color Vision Settings
+- Text Size
+- Reduced Motion
+- AI Features (Gemini API key) and your affiliation color palette
+
+![Accessibility Settings dropdown](../assets/images/screenshots/settings/accessibility-menu-light.png)
+_The Accessibility panel opens from the header on every page._
 
 ### In-App Settings
 
@@ -51,28 +55,28 @@ Various features have settings within their modals:
 
 ### Display
 
-| Setting | Options | Default |
-|---------|---------|---------|
-| **Theme** | Light / Dark | System preference |
-| **Font Size** | Small / Normal / Large / X-Large | Normal |
-| **Reduced Motion** | On / Off | Off |
+| Setting            | Options                                        | Default           |
+| ------------------ | ---------------------------------------------- | ----------------- |
+| **Theme**          | Light / Dark / TBI Comfort / AAA High Contrast | System preference |
+| **Font Size**      | Small / Normal / Large / X-Large               | Normal            |
+| **Reduced Motion** | On / Off                                       | Off               |
 
 ### Color Blind Modes
 
-| Mode | Helps With |
-|------|------------|
-| **Protanopia** | Red-blind |
-| **Deuteranopia** | Green-blind |
-| **Tritanopia** | Blue-blind |
+| Mode              | Helps With         |
+| ----------------- | ------------------ |
+| **Protanopia**    | Red-blind          |
+| **Deuteranopia**  | Green-blind        |
+| **Tritanopia**    | Blue-blind         |
 | **High Contrast** | General visibility |
 
 ### Data
 
-| Setting | Description |
-|---------|-------------|
-| **Local Storage** | Your data stored in browser |
+| Setting            | Description                 |
+| ------------------ | --------------------------- |
+| **Local Storage**  | Your data stored in browser |
 | **Backup/Restore** | Export and import your data |
-| **Clear Data** | Remove all stored data |
+| **Clear Data**     | Remove all stored data      |
 
 ---
 
@@ -100,4 +104,4 @@ Or:
 2. Refresh the page
 
 !!! warning "Clearing Data"
-    Resetting settings by clearing site data will also remove your My Packet data. Backup first!
+Resetting settings by clearing site data will also remove your My Packet data. Backup first!

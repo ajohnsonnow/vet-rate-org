@@ -103,6 +103,7 @@ function getCommits(since = null) {
 function parseCommit(message) {
   // Pattern: type(scope): description or type: description or HOTFIX: description
   const conventionalPattern =
+    // eslint-disable-next-line sonarjs/slow-regex -- verified 0ms at 200k adversarial chars; operates on a single local git commit message line, always short
     /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|hotfix|HOTFIX)(?:\(([^)]+)\))?:\s*(.+)$/i;
   const match = message.match(conventionalPattern);
 

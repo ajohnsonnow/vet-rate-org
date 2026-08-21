@@ -169,7 +169,8 @@ async function main() {
 
   for (;;) {
     const result = await fetchPage(page);
-    if (!result || !Array.isArray(result.json) || result.json.length === 0) break;
+    if (!result || !Array.isArray(result.json) || result.json.length === 0)
+      break;
     const { json, totalPosts: t, totalPages: tp } = result;
     if (page === 1) {
       totalPosts = t;
@@ -189,8 +190,9 @@ async function main() {
     const veteransCases = parsed.filter((p) => isVeteransOrigin(p.origin));
     postsScanned += json.length;
     veteransScanned += veteransCases.length;
+    const totalPagesSuffix = totalPages ? `/${totalPages}` : "";
     console.log(
-      `[fedcir-historical] page ${page}${totalPages ? `/${totalPages}` : ""}: ` +
+      `[fedcir-historical] page ${page}${totalPagesSuffix}: ` +
         `${json.length} posts, ${veteransCases.length} veterans-origin`,
     );
 
@@ -222,7 +224,9 @@ async function main() {
   writeFileSync(outPath, out);
   const rel = path.relative(path.resolve(__dirname, "..", ".."), outPath);
   const cap = MAX_PAGES ? ` (capped at ${MAX_PAGES} pages)` : "";
-  console.log(`[fedcir-historical] wrote ${records.length} veterans-case records → ${rel}${cap}`);
+  console.log(
+    `[fedcir-historical] wrote ${records.length} veterans-case records → ${rel}${cap}`,
+  );
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

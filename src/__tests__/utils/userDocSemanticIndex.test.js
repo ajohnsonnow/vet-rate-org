@@ -1,16 +1,16 @@
 /**
- * S24 — User-document semantic index tests.
+ * S24 - User-document semantic index tests.
  *
  * Covers, WITHOUT the real ~30 MB bge-small embedder or a browser IndexedDB
  * (neither runs in vitest): a deterministic in-memory store implementing the
  * same shape the production IDB store exposes, and a deterministic "concept"
  * embed injected in place of bge-small. This isolates and proves the parts that
- * are ours to get right — streaming/memory discipline, quantization, cosine
+ * are ours to get right - streaming/memory discipline, quantization, cosine
  * ranking, per-page aggregation, and the privacy (no-egress) invariant.
  *
  * The concept embed maps synonyms to shared axes (e.g. "ringing"/"ears" and
  * "tinnitus" → the same hearing axis), so the mini golden set genuinely
- * exercises SEMANTIC (non-lexical) matching through the whole pipeline — a
+ * exercises SEMANTIC (non-lexical) matching through the whole pipeline - a
  * query with zero words in common with its target page still retrieves it. The
  * real model's semantic quality is separately eval-gated in the legal-RAG
  * harness (recall@5 0.967 on the same bge-small embedding space).
@@ -249,7 +249,7 @@ const GOLDEN_QUERIES = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("semantic search — mini golden set (recall)", () => {
+describe("semantic search - mini golden set (recall)", () => {
   it("retrieves the correct page by meaning (recall@1 = recall@3 = 1.0)", async () => {
     const store = makeMemStore();
     await indexDocumentPages({
@@ -327,7 +327,7 @@ describe("semantic search — mini golden set (recall)", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("privacy invariant — vectors never leave the device", () => {
+describe("privacy invariant - vectors never leave the device", () => {
   it("makes ZERO network calls (fetch / XHR) while indexing and searching", async () => {
     const fetchSpy = vi.fn(() =>
       Promise.reject(new Error("network blocked in test")),
@@ -368,7 +368,7 @@ describe("privacy invariant — vectors never leave the device", () => {
       store,
     });
 
-    // My indexing/search code paths make no network calls at all — the strongest
+    // My indexing/search code paths make no network calls at all - the strongest
     // form of "document text and vectors never leave the device." (The real
     // embedder's ONE-TIME model-weights download is a separate concern and
     // carries no user data; it is deliberately not exercised here.)

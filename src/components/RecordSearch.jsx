@@ -469,6 +469,59 @@ const doQuickSearch = async (fileData, category, setters) => {
   }
 };
 
+function createRecordSearchHandlers({
+  fileData,
+  searchTerm,
+  caseSensitive,
+  wholeWord,
+  searchSetters,
+  setFile,
+  setFileData,
+  setResults,
+  setError,
+}) {
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      doLoadFile(selectedFile, { setError, setFile, setResults, setFileData });
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!fileData || !searchTerm.trim()) return;
+    await doKeywordSearch(
+      fileData,
+      searchTerm,
+      { caseSensitive, wholeWord },
+      searchSetters,
+    );
+  };
+
+  const handleQuickSearch = async (category) => {
+    await doQuickSearch(fileData, category, searchSetters);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    setFileData(null);
+    setResults([]);
+  };
+
+  return {
+    handleFileSelect,
+    handleSearch,
+    handleQuickSearch,
+    handleKeyPress,
+    handleRemoveFile,
+  };
+}
+
 const useRecordSearchState = () => {
   // File state
   const [file, setFile] = useState(null);
@@ -511,39 +564,23 @@ const useRecordSearchState = () => {
     }
   }, []);
 
-  const handleFileSelect = (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      doLoadFile(selectedFile, { setError, setFile, setResults, setFileData });
-    }
-  };
-
-  // Search execution
-  const handleSearch = async () => {
-    if (!fileData || !searchTerm.trim()) return;
-    await doKeywordSearch(
-      fileData,
-      searchTerm,
-      { caseSensitive, wholeWord },
-      searchSetters,
-    );
-  };
-
-  const handleQuickSearch = async (category) => {
-    await doQuickSearch(fileData, category, searchSetters);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setFile(null);
-    setFileData(null);
-    setResults([]);
-  };
+  const {
+    handleFileSelect,
+    handleSearch,
+    handleQuickSearch,
+    handleKeyPress,
+    handleRemoveFile,
+  } = createRecordSearchHandlers({
+    fileData,
+    searchTerm,
+    caseSensitive,
+    wholeWord,
+    searchSetters,
+    setFile,
+    setFileData,
+    setResults,
+    setError,
+  });
 
   return {
     file,

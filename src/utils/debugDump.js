@@ -17,7 +17,7 @@ import { APP_VERSION, SCHEMA_VERSION } from "./version";
 import { triggerBlobDownload } from "./sanitize";
 
 // CRYPTO-04: a debug dump must NOT exfiltrate the veteran's data. Invert the old
-// crypto-only denylist to a non-PII ALLOWLIST — only config/diagnostic keys reveal
+// crypto-only denylist to a non-PII ALLOWLIST - only config/diagnostic keys reveal
 // their VALUE; everything else (veteran profile, ratings, service history,
 // medical/pain data, packets, claims, AND all crypto material: DEKs, wrapped keys,
 // KEK, Gemini key) is redacted, keeping the key NAME + size for diagnostics. This
@@ -79,9 +79,9 @@ export const createDebugDump = () => {
 
       debugData.localStorage[key] = isSafeToShowValue(key)
         ? value
-        : `[REDACTED — ${(value?.length || 0) * 2} bytes]`;
+        : `[REDACTED - ${(value?.length || 0) * 2} bytes]`;
 
-      // Calculate size (rough estimate) — on the real value, not the redaction
+      // Calculate size (rough estimate) - on the real value, not the redaction
       const size = (key.length + value.length) * 2; // 2 bytes per char
       totalSize += size;
 
@@ -127,7 +127,7 @@ export const downloadDebugDump = () => {
     const filename = `vet-rate-debug-dump-${timestamp}.json`;
 
     const json = JSON.stringify(debugData, null, 2);
-    // deepcode ignore javascript/DOMXSS: triggerBlobDownload uses reconstructBlobUrl which extracts only the UUID via regex — a.href is built exclusively from literal 'blob:' + origin + '/' + UUID
+    // deepcode ignore javascript/DOMXSS: triggerBlobDownload uses reconstructBlobUrl which extracts only the UUID via regex - a.href is built exclusively from literal 'blob:' + origin + '/' + UUID
     const blob = new Blob([json], { type: "application/json" });
     triggerBlobDownload(blob, String(filename).replace(/[<>"']/g, ""));
 

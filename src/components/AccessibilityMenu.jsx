@@ -859,7 +859,7 @@ export default function AccessibilityMenu() {
         />
       )}
 
-      {/* Affiliation picker modal — rendered outside the dropdown so it
+      {/* Affiliation picker modal - rendered outside the dropdown so it
           stacks correctly and the dropdown doesn't need to stay open. */}
       <AffiliationPickerModal
         isOpen={affiliationOpen}

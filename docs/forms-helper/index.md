@@ -2,6 +2,9 @@
 
 The **Forms Helper** is a comprehensive forms assistant that guides you through completing essential VA claims forms with step-by-step instructions and pre-filled templates.
 
+![VA Forms Helper form selection screen listing 16 available forms with Set Up Profile, Backup All Data, and Restore from Backup buttons](../assets/images/screenshots/forms-helper/forms-list.png)
+_Forms Helper opens with a list of 16 forms - select one to see its details and start the guided builder._
+
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Available 24/7
 </div>
@@ -20,7 +23,7 @@ Forms Helper simplifies the process of completing VA forms by:
 - ✨ **AI Enhancement** - Optional AI-powered statement improvement
 
 !!! tip "AI Statement Assistant"
-    After generating a statement, you can optionally enhance it with AI using the "Three Pillars" approach. This helps create more professional and compelling statements while keeping your personal information private. [Learn more about AI privacy →](../privacy/ai-assistant/)
+After generating a statement, you can optionally enhance it with AI using the "Three Pillars" approach. This helps create more professional and compelling statements while keeping your personal information private. [Learn more about AI privacy →](../privacy/ai-assistant/)
 
 ---
 
@@ -62,25 +65,28 @@ Forms Helper simplifies the process of completing VA forms by:
 
 ### From the Header
 
-Click **"📄 Forms"** in the navigation header.
+Open the **Tools ▾** menu and select Forms Helper.
 
 ### From the Main Page
 
-Click the **"📄 Forms Helper"** feature card.
+Click **"📝 Open Forms Helper"** on the purple Forms Helper feature card.
 
 ---
 
 ## Supported Forms
 
-| Form | Name | Purpose |
-|------|------|---------|
-| **VA 21-4138** | Statement in Support of Claim | Personal statement |
-| **VA 21-10210** | Lay/Witness Statement | Buddy statements |
-| **VA 21-0966** | Intent to File | Protect effective date |
-| **VA 21-0781** | PTSD Stressor Statement | Document trauma |
-| **VA 21-0781a** | PTSD Secondary Sources | Additional PTSD details |
-| **VA 21-22** | VSO Appointment | Appoint representative |
-| **VA 10-5345** | Medical Records Release | Authorize record access |
+Forms Helper covers **16 forms** in total. The most commonly used ones:
+
+| Form                 | Name                          | Purpose                            |
+| -------------------- | ----------------------------- | ---------------------------------- |
+| **VA 21-4138**       | Statement in Support of Claim | Personal statement                 |
+| **VA 21-10210**      | Buddy / Lay Statement         | Buddy statements                   |
+| **VA 21-0966**       | Intent to File                | Protect effective date             |
+| **VA 21-0781**       | PTSD Stressor Statement       | Document trauma                    |
+| **VA 21-4142/4142a** | Medical Records Release       | Authorize record access            |
+| **VA 20-10207**      | Priority Processing Request   | Expedite for hardship/urgent cases |
+
+See [Available Forms](available-forms.md) for the full list.
 
 ---
 
@@ -91,16 +97,19 @@ Click the **"📄 Forms Helper"** feature card.
 <strong>Select a form</strong> - Choose from the available forms list
 </div>
 <div class="step">
-<strong>Enter your information</strong> - Follow the guided wizard
+<strong>Review the form's intro screen</strong> - Purpose, tips for success, and a link to the official VA form
 </div>
 <div class="step">
-<strong>Review field-by-field</strong> - Check each entry
+<strong>Click "Start Guided Builder"</strong> - Opens the step-by-step wizard
+</div>
+<div class="step">
+<strong>Enter your information</strong> - Follow the guided wizard, one step at a time
 </div>
 <div class="step">
 <strong>Preview the form</strong> - See the completed version
 </div>
 <div class="step">
-<strong>Download</strong> - Export as PDF or save to packet
+<strong>Download</strong> - Export as PDF, Word, or plain text
 </div>
 </div>
 
@@ -166,15 +175,18 @@ For claim management:
 
 ## Important Notes
 
+!!! warning "No Guarantee of Outcome"
+Forms Helper - including the optional AI Statement Assistant - helps you organize evidence and paperwork, but **using it does not guarantee any particular VA rating or claim outcome**. Ratings and decisions are made solely by the VA. Before filing, have a VSO or VA-accredited attorney review your forms. Find one at [va.gov/ogc/apps/accreditation](https://www.va.gov/ogc/apps/accreditation/).
+
 !!! warning "Forms Helper Limitations"
-    
+
     - Forms Helper **assists** with completing forms
     - It does **not** submit forms to the VA
     - You must still **print, sign, and submit** or upload through VA.gov
     - Always **verify** information before submission
 
 !!! tip "Best Practice"
-    
+
     1. Complete the form in Forms Helper
     2. Download the PDF
     3. Review carefully
@@ -187,11 +199,11 @@ For claim management:
 
 After completing your form:
 
-| Method | Description |
-|--------|-------------|
-| **VA.gov** | Upload through your VA.gov account |
-| **eBenefits** | Upload through eBenefits portal |
-| **Mail** | Mail to your VA Regional Office |
-| **Fax** | Fax to appropriate VA number |
-| **In Person** | Submit at VA office |
-| **Through VSO** | Give to your representative |
+| Method          | Description                        |
+| --------------- | ---------------------------------- |
+| **VA.gov**      | Upload through your VA.gov account |
+| **eBenefits**   | Upload through eBenefits portal    |
+| **Mail**        | Mail to your VA Regional Office    |
+| **Fax**         | Fax to appropriate VA number       |
+| **In Person**   | Submit at VA office                |
+| **Through VSO** | Give to your representative        |

@@ -13,6 +13,8 @@
 import { useState } from "react";
 import {
   processFormationDocument,
+  persistFormationDocument,
+  autoPopulateProfile,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
 
@@ -146,7 +148,7 @@ async function runDocumentProcessing(entry, ctx) {
   }
 }
 
-async function runVerifyAndSave(verifiedData, ctx) {
+async function runVerifyAndSave(verifyPayload, ctx) {
   const {
     formation,
     extractionResult,
@@ -159,13 +161,47 @@ async function runVerifyAndSave(verifiedData, ctx) {
     setActiveEntry,
   } = ctx;
 
+  const {
+    verifiedData: correctedFields = {},
+    saveToVKB = true,
+    updateProfile = true,
+  } = verifyPayload || {};
+
   // eslint-disable-next-line no-console
-  console.log("✅ User verified data:", verifiedData);
+  console.log("✅ User verified data:", verifyPayload);
 
   try {
+    // The briefing screen's checked/edited fields never reached VKB/My
+    // Packet/the veteran profile before this — only this hook's own local
+    // formation-queue state got them, so a veteran's corrections silently
+    // vanished from everywhere every AI tool actually reads. Re-run the
+    // same persist sequence the initial extraction used, with the
+    // corrected fields merged in; every write it touches is dedup-safe for
+    // re-processing the same document (see persistFormationDocument).
+    if (saveToVKB || updateProfile) {
+      const correctedResult = {
+        ...extractionResult,
+        extractedData: {
+          ...extractionResult.extractedData,
+          ...correctedFields,
+        },
+      };
+      const pseudoFile = {
+        name: extractionResult.filename,
+        size: extractionResult.size,
+      };
+
+      if (saveToVKB) {
+        await persistFormationDocument(pseudoFile, correctedResult);
+      }
+      if (updateProfile) {
+        await autoPopulateProfile([correctedResult]);
+      }
+    }
+
     const nextEntry = completeCurrentAndNext({
       ...extractionResult,
-      verifiedData,
+      verifiedData: verifyPayload,
     });
 
     toast.success(
@@ -281,8 +317,8 @@ export const useSequentialFormationFlow = ({
   };
 
   const processDocumentEntry = (entry) => runDocumentProcessing(entry, ctx);
-  const handleVerifyAndSave = (verifiedData) =>
-    runVerifyAndSave(verifiedData, ctx);
+  const handleVerifyAndSave = (verifyPayload) =>
+    runVerifyAndSave(verifyPayload, ctx);
   const handleSkipDocument = () => runSkipDocument(ctx);
   const startSequentialProcessing = () => runStartSequentialProcessing(ctx);
 

@@ -2,7 +2,7 @@
  * Regression: the Muster Call stress spec got stuck forever on any document
  * whose extracted data included an array field (DD214 awards/decorations).
  * ArrayValueField rendered no verification checkbox at all, so
- * allFieldsVerified — which requires every filteredData key to be verified —
+ * allFieldsVerified - which requires every filteredData key to be verified -
  * could never become true. "Verify & Save" stayed disabled with no way to
  * unblock it, silently trapping the user (or the automated test) on this
  * screen indefinitely.
@@ -30,7 +30,7 @@ vi.mock("../../utils/conflictDetector", () => ({
   detectConflicts: vi.fn().mockResolvedValue([]),
 }));
 
-// Pulls in pdfjs-dist (needs DOMMatrix, unavailable in jsdom) transitively —
+// Pulls in pdfjs-dist (needs DOMMatrix, unavailable in jsdom) transitively -
 // only formatFileSize is used by the component under test.
 vi.mock("../../utils/ocr", () => ({
   formatFileSize: (bytes) => `${bytes} bytes`,
@@ -84,7 +84,7 @@ function renderBriefingWithLanguage(extractedData) {
   );
 }
 
-describe("DocumentIntelligenceBriefing — array-field verification", () => {
+describe("DocumentIntelligenceBriefing - array-field verification", () => {
   it("renders a checkbox for an array-valued extracted field", async () => {
     renderBriefing({
       firstName: "John",
@@ -96,7 +96,7 @@ describe("DocumentIntelligenceBriefing — array-field verification", () => {
     });
   });
 
-  it("enables Verify & Save once every field — including array fields — is checked", async () => {
+  it("enables Verify & Save once every field - including array fields - is checked", async () => {
     renderBriefing({
       firstName: "John",
       awards: ["Purple Heart", "Army Commendation Medal"],
@@ -124,7 +124,7 @@ describe("DocumentIntelligenceBriefing — array-field verification", () => {
   });
 });
 
-describe("DocumentIntelligenceBriefing — object-field verification", () => {
+describe("DocumentIntelligenceBriefing - object-field verification", () => {
   it("renders a readable summary for an object-valued field instead of [object Object]", async () => {
     renderBriefing({
       firstName: "John",
@@ -169,7 +169,7 @@ describe("DocumentIntelligenceBriefing — object-field verification", () => {
   });
 });
 
-describe("DocumentIntelligenceBriefing — falsy primitive field verification", () => {
+describe("DocumentIntelligenceBriefing - falsy primitive field verification", () => {
   it("renders a checkbox for a false/0-valued field and lets it be verified", async () => {
     renderBriefing({
       firstName: "John",
@@ -196,7 +196,7 @@ describe("DocumentIntelligenceBriefing — falsy primitive field verification", 
   });
 });
 
-describe("DocumentIntelligenceBriefing — stale async detectConflicts race", () => {
+describe("DocumentIntelligenceBriefing - stale async detectConflicts race", () => {
   it("does not let a slow-resolving detectConflicts from document N clobber document N+1's state", async () => {
     let resolveDoc1 = null;
     detectConflicts.mockImplementation((data, type, filename) => {
@@ -263,7 +263,7 @@ describe("DocumentIntelligenceBriefing — stale async detectConflicts race", ()
     await waitFor(() => expect(saveBtn).toBeEnabled());
 
     // NOW doc1's stale detectConflicts resolves, AFTER doc2 was already
-    // fully checked off and Verify & Save was enabled — this is the race:
+    // fully checked off and Verify & Save was enabled - this is the race:
     // does it clobber doc2's state with doc1's stale field set?
     await act(async () => {
       resolveDoc1();
@@ -271,7 +271,7 @@ describe("DocumentIntelligenceBriefing — stale async detectConflicts race", ()
       await Promise.resolve();
     });
 
-    // Exact match — a static OCR-hint panel elsewhere always renders
+    // Exact match - a static OCR-hint panel elsewhere always renders
     // "Box 1: First Name Only", which is unrelated to whether doc1's
     // firstName field itself got reintroduced into doc2's field list.
     expect(screen.queryByText("First Name")).not.toBeInTheDocument();
@@ -279,11 +279,11 @@ describe("DocumentIntelligenceBriefing — stale async detectConflicts race", ()
   });
 });
 
-describe("DocumentIntelligenceBriefing — empty-array field verification", () => {
+describe("DocumentIntelligenceBriefing - empty-array field verification", () => {
   it("enables Verify & Save when a field's value is an empty array", async () => {
     renderBriefing({
       firstName: "John",
-      // DD214 vision extraction defaults this to [] when nothing is found —
+      // DD214 vision extraction defaults this to [] when nothing is found -
       // it must never enter filteredData if it renders no checkbox to match.
       foreignServiceLocations: [],
     });
@@ -305,7 +305,7 @@ describe("DocumentIntelligenceBriefing — empty-array field verification", () =
   });
 });
 
-describe("DocumentIntelligenceBriefing — state awards toggle", () => {
+describe("DocumentIntelligenceBriefing - state awards toggle", () => {
   afterEach(() => {
     clearVeteranProfile();
   });

@@ -9,12 +9,7 @@
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import {
-  generateAI,
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "./unifiedAIService";
+import { generateAI, isAnyAIAvailable, getAIStatus } from "./unifiedAIService";
 
 // The specialized system prompt for generating nexus research
 const NEXUS_LOGIC_SYSTEM_PROMPT = `You are a Medical Research Assistant specializing in pathophysiology and VA Disability Law. Your task is to generate a "Medical Nexus Research Brief" for a veteran to present to their private physician.
@@ -179,16 +174,16 @@ export function formatDoctorLetter(
     day: "numeric",
   });
 
-  // AIS-02: this is a RESEARCH BRIEF for the veteran's physician to evaluate — NOT a
+  // AIS-02: this is a RESEARCH BRIEF for the veteran's physician to evaluate - NOT a
   // signature-ready medical opinion. The old format ("MEDICAL NEXUS OPINION" + a blank
   // physician signature / license block) manufactured a document a doctor could simply
   // sign, putting their name on an AI-drafted clinical opinion they did not author.
   // Retitled, prefixed with an AI-generated warning, the draft language framed as
   // discussion points to verify, and the pre-printed signature block removed.
-  return `MEDICAL NEXUS RESEARCH BRIEF — FOR YOUR PHYSICIAN'S INDEPENDENT REVIEW
+  return `MEDICAL NEXUS RESEARCH BRIEF - FOR YOUR PHYSICIAN'S INDEPENDENT REVIEW
 Date: ${currentDate}
 
-⚠️ AI-GENERATED RESEARCH — NOT A MEDICAL OPINION, NOT TO BE SIGNED AS-IS.
+⚠️ AI-GENERATED RESEARCH - NOT A MEDICAL OPINION, NOT TO BE SIGNED AS-IS.
 This brief summarizes general medical literature to help a physician consider a
 possible connection between two conditions. It is not a diagnosis and not a medical
 opinion. Your physician must independently review your records, reach their own
@@ -196,7 +191,7 @@ clinical judgment, and author any nexus opinion in their OWN words on their OWN
 letterhead. Presenting AI-drafted text as a physician's signed opinion can be a
 false statement.
 
-RE: Possible link — ${secondaryCondition} secondary to ${primaryCondition}
+RE: Possible link - ${secondaryCondition} secondary to ${primaryCondition}
 
 BACKGROUND FOR THE PHYSICIAN:
 ${doctor_template.opening}
@@ -218,7 +213,7 @@ REFERENCE ICD-10 CODES (confirm independently):
 NOTE FOR THE PHYSICIAN:
 ${doctor_template.conclusion}
 
-— End of research brief —
+- End of research brief -
 Any medical nexus opinion must be composed independently by the physician, on their
 own letterhead, reflecting their own examination and clinical judgment.`;
 }
@@ -226,11 +221,17 @@ own letterhead, reflecting their own examination and clinical judgment.`;
 /**
  * Get the privacy disclosure for the Nexus Logic Generator
  * Now AI-mode aware - shows different info for Cloud vs Local
+ *
+ * Was checking only AI_MODES.LOCAL - a legacy value getAIMode() actively
+ * migrates users away from to AI_MODES.SWARM ("Warrant Council", the
+ * default local-AI experience) - so every Swarm/Wllama/local-server user
+ * saw the Cloud disclosure. isPrivate reflects the correct set of on-device
+ * modes (see unifiedAIService.getAIStatus).
  */
 export function getNexusLogicPrivacyDisclosure() {
   const status = getAIStatus();
 
-  if (status.effectiveMode === AI_MODES.LOCAL) {
+  if (status.isPrivate) {
     return `🔒 LOCAL AI MODE - 100% PRIVATE
 
 When you generate a Doctor's Packet:

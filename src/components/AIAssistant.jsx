@@ -95,6 +95,32 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
   return basePrompt;
 }
 
+// Map a failed AI request into the localized error message to display
+function mapAssistantErrorMessage(error, t) {
+  const errMsg = error?.message ?? "";
+  console.error("Navigator AI error:", errMsg || error);
+  let errorMessage = t("aiAssistant", "errorGeneric");
+
+  if (errMsg === "CRISIS_DETECTED") {
+    errorMessage = t("aiAssistant", "errorCrisis");
+  } else if (errMsg.includes("No AI available")) {
+    errorMessage = t("aiAssistant", "errorNoAI");
+  } else if (errMsg.includes("temporarily disabled")) {
+    errorMessage = t("aiAssistant", "errorDisabled");
+  } else if (errMsg.includes("empty response")) {
+    errorMessage = t("aiAssistant", "errorEmptyResponse");
+  } else if (
+    errMsg.includes("not initialized") ||
+    errMsg.includes("not loaded")
+  ) {
+    errorMessage = t("aiAssistant", "errorNotReady");
+  } else if (errMsg) {
+    errorMessage = `⚠️ ${errMsg}`;
+  }
+
+  return errorMessage;
+}
+
 // Handle sending a message
 async function sendMessage({
   input,
@@ -155,26 +181,7 @@ async function sendMessage({
 
     setMessages((prev) => [...prev, assistantMessage]);
   } catch (error) {
-    const errMsg = error?.message ?? "";
-    console.error("Navigator AI error:", errMsg || error);
-    let errorMessage = t("aiAssistant", "errorGeneric");
-
-    if (errMsg === "CRISIS_DETECTED") {
-      errorMessage = t("aiAssistant", "errorCrisis");
-    } else if (errMsg.includes("No AI available")) {
-      errorMessage = t("aiAssistant", "errorNoAI");
-    } else if (errMsg.includes("temporarily disabled")) {
-      errorMessage = t("aiAssistant", "errorDisabled");
-    } else if (errMsg.includes("empty response")) {
-      errorMessage = t("aiAssistant", "errorEmptyResponse");
-    } else if (
-      errMsg.includes("not initialized") ||
-      errMsg.includes("not loaded")
-    ) {
-      errorMessage = t("aiAssistant", "errorNotReady");
-    } else if (errMsg) {
-      errorMessage = `⚠️ ${errMsg}`;
-    }
+    const errorMessage = mapAssistantErrorMessage(error, t);
 
     setMessages((prev) => [
       ...prev,
@@ -1391,54 +1398,40 @@ const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
     );
   }
 
+  const sharedViewProps = {
+    t,
+    currentTool,
+    isHelperMode,
+    onClose,
+    onOpenAISettings,
+    messages,
+    input,
+    setInput,
+    isLoading,
+    handleSend,
+    handleKeyDown,
+    copiedMessageIdx,
+    summaryStates,
+    handleCopyMessage,
+    handleSummarize,
+    messagesEndRef,
+  };
+
   // Expanded full-screen modal view
   if (isExpanded) {
     return (
-      <ExpandedView
-        t={t}
-        currentTool={currentTool}
-        isHelperMode={isHelperMode}
-        onClose={onClose}
-        onOpenAISettings={onOpenAISettings}
-        onShrink={() => setIsExpanded(false)}
-        messages={messages}
-        input={input}
-        setInput={setInput}
-        isLoading={isLoading}
-        handleSend={handleSend}
-        handleKeyDown={handleKeyDown}
-        copiedMessageIdx={copiedMessageIdx}
-        summaryStates={summaryStates}
-        handleCopyMessage={handleCopyMessage}
-        handleSummarize={handleSummarize}
-        messagesEndRef={messagesEndRef}
-      />
+      <ExpandedView {...sharedViewProps} onShrink={() => setIsExpanded(false)} />
     );
   }
 
   return (
     <DockedView
-      t={t}
-      currentTool={currentTool}
-      isHelperMode={isHelperMode}
-      onClose={onClose}
-      onOpenAISettings={onOpenAISettings}
+      {...sharedViewProps}
       onExpand={() => setIsExpanded(true)}
       onMinimize={() => setIsMinimized(true)}
       position={position}
       containerRef={containerRef}
       handleMouseDown={handleMouseDown}
-      messages={messages}
-      input={input}
-      setInput={setInput}
-      isLoading={isLoading}
-      handleSend={handleSend}
-      handleKeyDown={handleKeyDown}
-      copiedMessageIdx={copiedMessageIdx}
-      summaryStates={summaryStates}
-      handleCopyMessage={handleCopyMessage}
-      handleSummarize={handleSummarize}
-      messagesEndRef={messagesEndRef}
     />
   );
 };

@@ -290,7 +290,7 @@ function SecondaryScoutFilterControls({
             {t("secondaryScoutSection.filterByProbability")}:
           </label>
           <div className="flex gap-2">
-            <button
+            <button type="button"
               onClick={() => setProbabilityFilter("High")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 probabilityFilter === "High"
@@ -300,7 +300,7 @@ function SecondaryScoutFilterControls({
             >
               {t("secondaryScoutSection.highOnly")}
             </button>
-            <button
+            <button type="button"
               onClick={() => setProbabilityFilter("Medium")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 probabilityFilter === "Medium"
@@ -313,14 +313,14 @@ function SecondaryScoutFilterControls({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={selectAllFiltered}
             className="px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
           >
             {t("secondaryScoutSection.selectAll")}
           </button>
           {selectedForPacket.size > 0 && (
-            <button
+            <button type="button"
               onClick={clearSelection}
               className="px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
             >
@@ -377,7 +377,7 @@ function FloatingActionBarButtons({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <button
+      <button type="button"
         onClick={addSelectedToPacket}
         disabled={getUnsavedSelectedCount() === 0}
         className="flex-1 sm:flex-none bg-white text-blue-600 px-3 sm:px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
@@ -397,7 +397,7 @@ function FloatingActionBarButtons({
         </svg>
         {t("secondaryScoutSection.addToPacket")}
       </button>
-      <button
+      <button type="button"
         onClick={clearSelection}
         className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
         aria-label={t("secondaryScoutSection.clearSelection")}
@@ -573,12 +573,7 @@ function SecondaryScoutDisclaimer({ t }) {
  * Main UI for the Secondary Conditions Scout module
  * Displays potential secondary claims based on user's service-connected disabilities
  */
-const SecondaryScout = ({
-  userDisabilities = [],
-  onLearnHow,
-  onViewPacket,
-  onOpenAISettings,
-}) => {
+function useSecondaryScoutState({ userDisabilities, onLearnHow }) {
   const { t } = useLanguage();
   const [selectedCondition, setSelectedCondition] = useState(null);
   const [probabilityFilter, setProbabilityFilter] = useState("Medium"); // 'High' or 'Medium'
@@ -620,47 +615,68 @@ const SecondaryScout = ({
     setSelectedForPacket,
   });
 
+  return {
+    t,
+    selectedCondition,
+    setSelectedCondition,
+    probabilityFilter,
+    setProbabilityFilter,
+    selectedForPacket,
+    showDoctorsPacket,
+    setShowDoctorsPacket,
+    packetPrimary,
+    setPacketPrimary,
+    packetSecondary,
+    setPacketSecondary,
+    suggestions,
+    filteredSuggestions,
+    summary,
+    handleSaveClaim,
+    handleLearnHow,
+    isClaimAlreadySaved,
+    toggleSelectForPacket,
+    isSelectedForPacket,
+    selectAllFiltered,
+    clearSelection,
+    getUnsavedSelectedCount,
+    addSelectedToPacket,
+  };
+}
+
+// SecondaryScoutFilterControls/SecondaryClaimsGrid/FloatingActionBar each
+// destructure only the specific props they need, and every one of those
+// names matches a key on the state object returned by
+// useSecondaryScoutState, so spreading it through is behaviorally identical
+// to building a separate prop bag per component.
+const SecondaryScout = ({
+  userDisabilities = [],
+  onLearnHow,
+  onViewPacket,
+  onOpenAISettings,
+}) => {
+  const scoutState = useSecondaryScoutState({ userDisabilities, onLearnHow });
+  const {
+    t,
+    suggestions,
+    filteredSuggestions,
+    summary,
+    showDoctorsPacket,
+    setShowDoctorsPacket,
+    packetPrimary,
+    packetSecondary,
+  } = scoutState;
+
   if (!userDisabilities || userDisabilities.length === 0) {
     return <EmptyDisabilitiesNotice t={t} />;
   }
-
-  const filterControlsProps = {
-    probabilityFilter,
-    setProbabilityFilter,
-    selectAllFiltered,
-    clearSelection,
-    selectedForPacket,
-    t,
-  };
-  const gridProps = {
-    filteredSuggestions,
-    selectedCondition,
-    setSelectedCondition,
-    handleLearnHow,
-    handleSaveClaim,
-    isClaimAlreadySaved,
-    onViewPacket,
-    isSelectedForPacket,
-    toggleSelectForPacket,
-    setPacketPrimary,
-    setPacketSecondary,
-    setShowDoctorsPacket,
-  };
-  const floatingBarProps = {
-    selectedForPacket,
-    getUnsavedSelectedCount,
-    addSelectedToPacket,
-    clearSelection,
-    t,
-  };
 
   return (
     <div className="max-w-7xl mx-auto p-6">
       <SecondaryScoutHeader t={t} />
       <SecondaryScoutSummary summary={summary} t={t} />
-      <SecondaryScoutFilterControls {...filterControlsProps} />
-      <SecondaryClaimsGrid {...gridProps} />
-      <FloatingActionBar {...floatingBarProps} />
+      <SecondaryScoutFilterControls {...scoutState} />
+      <SecondaryClaimsGrid {...scoutState} onViewPacket={onViewPacket} />
+      <FloatingActionBar {...scoutState} />
 
       {filteredSuggestions.length === 0 && suggestions.length > 0 && (
         <div className="text-center py-8 text-gray-500">
@@ -835,7 +851,7 @@ function CardHeader({
           getProbabilityBadgeColor={getProbabilityBadgeColor}
           t={t}
         />
-        <button className="ml-4 text-gray-400 hover:text-gray-600">
+        <button type="button" className="ml-4 text-gray-400 hover:text-gray-600">
           <svg
             className={`w-6 h-6 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
             fill="none"
@@ -947,7 +963,7 @@ function MedicalEvidenceSection({ evidenceList, evidenceType, t }) {
 
 function BuildStatementButton({ onLearnHow, t }) {
   return (
-    <button
+    <button type="button"
       onClick={(e) => {
         e.stopPropagation();
         onLearnHow();
@@ -974,7 +990,7 @@ function BuildStatementButton({ onLearnHow, t }) {
 
 function DoctorsPacketButton({ onGetDoctorsPacket, t }) {
   return (
-    <button
+    <button type="button"
       onClick={(e) => {
         e.stopPropagation();
         onGetDoctorsPacket();
@@ -1001,7 +1017,7 @@ function DoctorsPacketButton({ onGetDoctorsPacket, t }) {
 
 function SaveOrViewButton({ isSaved, onSave, onViewPacket, t }) {
   return (
-    <button
+    <button type="button"
       onClick={(e) => {
         e.stopPropagation();
         if (isSaved && onViewPacket) {

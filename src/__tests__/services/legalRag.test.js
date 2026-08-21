@@ -45,7 +45,7 @@ function toUnitFloat32(q8) {
   return Float32Array.from(q8, (v) => v / 127);
 }
 
-describe("legalRag — cosineQ8", () => {
+describe("legalRag - cosineQ8", () => {
   it("identical normalized vectors score ~1.0", () => {
     const { f32, q8 } = unitVecQ8(1);
     const bin = mkBin([Array.from(q8)]);
@@ -79,7 +79,7 @@ function buildEcfrChunksJsonl() {
       id: "ecfr/4.71a/0",
       source: "ecfr",
       citation: "38 CFR § 4.71a",
-      title: "Schedule of ratings—musculoskeletal",
+      title: "Schedule of ratings-musculoskeletal",
       text: "musculoskeletal text",
       source_url: "https://www.ecfr.gov/section-4.71a",
       fetched_at: "2026-05-15T00:00:00Z",
@@ -90,7 +90,7 @@ function buildEcfrChunksJsonl() {
       id: "ecfr/4.71a/1",
       source: "ecfr",
       citation: "38 CFR § 4.71a",
-      title: "Schedule of ratings—musculoskeletal",
+      title: "Schedule of ratings-musculoskeletal",
       text: "more knee text",
       source_url: "https://www.ecfr.gov/section-4.71a",
       fetched_at: "2026-05-15T00:00:00Z",
@@ -128,7 +128,7 @@ function mockEcfrFetch({ manifest, chunksJsonl, bin }) {
   });
 }
 
-describe("legalRag — query() integration with mocked fetch + embedder", () => {
+describe("legalRag - query() integration with mocked fetch + embedder", () => {
   let originalFetch;
 
   beforeEach(() => {
@@ -166,7 +166,7 @@ describe("legalRag — query() integration with mocked fetch + embedder", () => 
 
     const { query } = await import("../../services/legalRag.js");
     // Query "musculoskeletal" so BM25's lexical top hit is chunk #0 (the only
-    // chunk whose text contains that term) — the same chunk the mocked embedder
+    // chunk whose text contains that term) - the same chunk the mocked embedder
     // makes dense rank #1. Both rankers agree, so the fused top result is
     // deterministic. ("knee pain rating" would let BM25 pull chunk #1's "knee".)
     const res = await query("musculoskeletal", { topK: 2, threshold: 0.3 });
@@ -212,7 +212,7 @@ describe("legalRag — query() integration with mocked fetch + embedder", () => 
   });
 });
 
-describe("legalRag — tokenize", () => {
+describe("legalRag - tokenize", () => {
   it("lowercases and splits on non-alphanumeric runs", () => {
     expect(tokenize("The § 4.14 Pyramiding!")).toEqual([
       "the",
@@ -229,12 +229,12 @@ describe("legalRag — tokenize", () => {
   });
 });
 
-describe("legalRag — BM25 scoring", () => {
+describe("legalRag - BM25 scoring", () => {
   const corpus = [
     "the cat sat on the mat", // 0
     "the dog sat", // 1
     "birds fly high in the sky", // 2
-    "cat cat cat rare rare", // 3 — high tf of a rare term
+    "cat cat cat rare rare", // 3 - high tf of a rare term
   ];
   const index = buildBM25Index(corpus);
 
@@ -246,7 +246,7 @@ describe("legalRag — BM25 scoring", () => {
   });
 
   it("ranks a rarer term higher than a common one (IDF)", () => {
-    // "cat" appears in 2/4 docs; "sat" appears in 2/4 too — pick terms with
+    // "cat" appears in 2/4 docs; "sat" appears in 2/4 too - pick terms with
     // different document frequency: "mat" (1/4) vs "the" (3/4).
     const rare = bm25ScoreAll(index, tokenize("mat"));
     const common = bm25ScoreAll(index, tokenize("the"));
@@ -269,10 +269,10 @@ describe("legalRag — BM25 scoring", () => {
   });
 });
 
-describe("legalRag — hybridFuse (RRF)", () => {
+describe("legalRag - hybridFuse (RRF)", () => {
   it("rescues a below-threshold chunk that BM25 ranks #1", () => {
     // doc4 is below the dense threshold (even negative cosine) but is the only
-    // lexical match — it must be pulled into the pool and, with the tuned
+    // lexical match - it must be pulled into the pool and, with the tuned
     // weights, outrank the dense #1.
     const cosine = [0.9, 0.8, 0.7, 0.6, -0.5];
     const bm25 = [0, 0, 0, 0, 5];
@@ -319,7 +319,7 @@ describe("legalRag — hybridFuse (RRF)", () => {
   });
 });
 
-describe("legalRag — dequantizeQ8 / cosineF32", () => {
+describe("legalRag - dequantizeQ8 / cosineF32", () => {
   it("round-trips a Q8 vector back to ~unit-cosine with itself", () => {
     const a = unitVecQ8(1);
     const bin = mkBin([Array.from(a.q8)]);
@@ -335,7 +335,7 @@ describe("legalRag — dequantizeQ8 / cosineF32", () => {
   });
 });
 
-describe("legalRag — mmrRerank (S22 diversity reranking)", () => {
+describe("legalRag - mmrRerank (S22 diversity reranking)", () => {
   // Two "chunks" whose vectors are near-identical (simulating overlapping/
   // redundant content) plus one clearly distinct chunk.
   const near = unitVecQ8(5).f32;
@@ -389,7 +389,7 @@ describe("legalRag — mmrRerank (S22 diversity reranking)", () => {
       calls.push(i);
       return vectors[i];
     };
-    // pool.length (4) must exceed topK (3) — otherwise mmrRerank takes the
+    // pool.length (4) must exceed topK (3) - otherwise mmrRerank takes the
     // trivial "pool already fits" passthrough and never calls getVector.
     const pool = [
       { index: 0, cosine: 0.9 },
@@ -409,7 +409,7 @@ describe("legalRag — mmrRerank (S22 diversity reranking)", () => {
   });
 });
 
-describe("legalRag — getChunksByCitation", () => {
+describe("legalRag - getChunksByCitation", () => {
   afterEach(() => {
     _resetForTesting();
     vi.resetModules();
@@ -479,7 +479,7 @@ describe("legalRag — getChunksByCitation", () => {
       }),
     }));
     // Destructure getChunksByCitation from the SAME fresh dynamic import as
-    // query() — vi.resetModules() (this block's afterEach) means the dynamic
+    // query() - vi.resetModules() (this block's afterEach) means the dynamic
     // import is a different module instance than the static top-of-file
     // import, with its own separate `state`; reading via the static binding
     // here would see an empty, never-populated cache.
@@ -495,7 +495,7 @@ describe("legalRag — getChunksByCitation", () => {
 });
 
 // Two exactly-orthogonal directions by construction (disjoint support),
-// not approximate sine-wave orthogonality — deterministic, no seed luck.
+// not approximate sine-wave orthogonality - deterministic, no seed luck.
 function halfVec(firstHalf) {
   const f = new Float32Array(EMBED_DIM);
   const start = firstHalf ? 0 : EMBED_DIM / 2;
@@ -641,7 +641,7 @@ async function hybridRescueDenseOnlyModeTest() {
 
 async function hybridRescueMmrDiversityTest() {
   const u = halfVec(true); // first-half direction
-  const w = halfVec(false); // second-half direction — exactly orthogonal to u
+  const w = halfVec(false); // second-half direction - exactly orthogonal to u
   const query = blend(u, w, 0.8, 0.6); // query leans toward u but has some w
   const e0 = u; // top relevance to query (cosine ≈ 0.8), pure u
   const e1 = blend(u, w, 0.99, 0.02); // near-duplicate of e0 (still ~pure u), similar relevance
@@ -703,7 +703,7 @@ async function hybridRescueMmrDiversityTest() {
   expect(withoutMmr.chunks.map((c) => c.id)).toEqual(["e0", "e1"]);
 }
 
-describe("legalRag — query() hybrid rescue path", () => {
+describe("legalRag - query() hybrid rescue path", () => {
   let originalFetch;
   beforeEach(() => {
     originalFetch = globalThis.fetch;

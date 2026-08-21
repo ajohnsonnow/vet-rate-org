@@ -1,5 +1,5 @@
 /**
- * Diamond Swarm — TOOL_AGENT_MAP completeness tests
+ * Diamond Swarm - TOOL_AGENT_MAP completeness tests
  *
  * Verifies that:
  *   1. Every entry in TOOL_AGENT_MAP points to a valid agent in SWARM_AGENTS.
@@ -10,7 +10,7 @@
  *
  * The 48 AI-using tool IDs below are derived from the canonical tool list
  * in tests/e2e/tool-launch-matrix.spec.ts cross-referenced with TOOL_AGENT_MAP.
- * Tools not explicitly in the map fall back to 'auditor' — that fallback is
+ * Tools not explicitly in the map fall back to 'auditor' - that fallback is
  * also validated here.
  */
 import { describe, it, expect } from "vitest";
@@ -64,7 +64,7 @@ const KNOWN_AI_TOOL_IDS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("SWARM_AGENTS — agent definitions", () => {
+describe("SWARM_AGENTS - agent definitions", () => {
   it("exports exactly 3 agents: AUDITOR, WRITER, RATER", () => {
     const keys = Object.keys(SWARM_AGENTS);
     expect(keys).toHaveLength(3);
@@ -101,7 +101,7 @@ describe("SWARM_AGENTS — agent definitions", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("SWARM_MODELS — model configurations", () => {
+describe("SWARM_MODELS - model configurations", () => {
   for (const agentId of VALID_AGENT_IDS) {
     it(`${agentId} has a modelPath`, () => {
       expect(
@@ -117,7 +117,7 @@ describe("SWARM_MODELS — model configurations", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("TOOL_AGENT_MAP — every explicit entry is valid", () => {
+describe("TOOL_AGENT_MAP - every explicit entry is valid", () => {
   for (const [toolId, agentId] of Object.entries(TOOL_AGENT_MAP)) {
     it(`${toolId} → ${agentId} is a valid agent id`, () => {
       expect(VALID_AGENT_IDS, `${agentId} is not a known agent`).toContain(
@@ -135,7 +135,7 @@ describe("TOOL_AGENT_MAP — every explicit entry is valid", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("getAgentForTool() — never returns undefined", () => {
+describe("getAgentForTool() - never returns undefined", () => {
   it.each(KNOWN_AI_TOOL_IDS)(
     "getAgentForTool('%s') returns a defined agent",
     (toolId) => {

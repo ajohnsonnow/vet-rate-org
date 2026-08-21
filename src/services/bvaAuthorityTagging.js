@@ -1,24 +1,24 @@
 /**
- * bvaAuthorityTagging — authority metadata for Board of Veterans' Appeals (BVA)
+ * bvaAuthorityTagging - authority metadata for Board of Veterans' Appeals (BVA)
  * decisions (S32).
  *
  * LEGAL FOUNDATION (the whole reason this module exists):
- * Under 38 CFR § 20.1303, Board decisions are **non-precedential** — "binding
+ * Under 38 CFR § 20.1303, Board decisions are **non-precedential** - "binding
  * only with regard to the specific case decided." Prior Board decisions "may be
  * considered … to the extent that they reasonably relate," but each appeal is
  * decided on its own facts. There is therefore NO "precedential BVA decision"
  * category to infer: every one of the 116,209 BVA entries is non-precedential
  * as a matter of law. Guessing a precedential/non-precedential split (as if it
- * were a per-decision property) would be legally wrong and dangerous — it could
+ * were a per-decision property) would be legally wrong and dangerous - it could
  * present a single-judge, fact-bound decision as binding authority.
  *
  * So this module does two things, both defensible:
  *   1. Affirms non-precedential status UNIFORMLY (precedential:false,
  *      binding:false, confidence 1.0) with the regulation as the citable basis.
  *      This IS the S32 guarantee "never let a non-precedential entry render as
- *      binding authority" — enforced in the data, unit-asserted, not left to
+ *      binding authority" - enforced in the data, unit-asserted, not left to
  *      the model.
- *   2. Computes a `citation_weight` ∈ [0,1] — a PERSUASIVE-value ranking signal,
+ *   2. Computes a `citation_weight` ∈ [0,1] - a PERSUASIVE-value ranking signal,
  *      NOT authority. A high weight still never makes a BVA decision binding; it
  *      only means "rank this persuasive example above that one." Signals: how
  *      recent the decision is (current-law decisions are more reliable), whether
@@ -28,7 +28,7 @@
  * Every retrieved BVA chunk carries BVA_CAVEAT so the answerer/UI can surface
  * the non-binding nature at citation time.
  *
- * Pure functions, no deps — build-time (build-bva-shard.mjs bakes these fields
+ * Pure functions, no deps - build-time (build-bva-shard.mjs bakes these fields
  * into each shard chunk) and runtime importable, and fully unit-testable.
  */
 
@@ -37,12 +37,12 @@ export const BVA_AUTHORITY_BASIS = "38 CFR § 20.1303";
 
 /** Caveat surfaced wherever a BVA decision is cited. */
 export const BVA_CAVEAT =
-  "Board of Veterans' Appeals decisions are non-precedential (38 CFR § 20.1303) — " +
+  "Board of Veterans' Appeals decisions are non-precedential (38 CFR § 20.1303) - " +
   "persuasive only, binding solely in the specific case decided, never binding authority in another claim.";
 
 // Recency is scored relative to the span of BVA's online record (from 1992,
 // when vetapp postings begin, to a fixed reference year). A constant reference
-// year keeps citation_weight deterministic and test-stable — it is NOT wall
+// year keeps citation_weight deterministic and test-stable - it is NOT wall
 // clock; bump it deliberately when re-baselining, don't wire it to Date.now().
 export const BVA_ONLINE_START_YEAR = 1992;
 export const BVA_REFERENCE_YEAR = 2026;
@@ -51,8 +51,8 @@ const clamp01 = (n) => Math.min(1, Math.max(0, n));
 
 /**
  * Decision year from the va.gov vetapp URL (most reliable), e.g.
- * ".../vetapp25/Files1/19167246.txt" → 2025. vetapp92–99 map to 1992–1999,
- * vetapp00–91 map to 2000–2091. Returns null if no vetapp segment is present.
+ * ".../vetapp25/Files1/19167246.txt" → 2025. vetapp92-99 map to 1992-1999,
+ * vetapp00-91 map to 2000-2091. Returns null if no vetapp segment is present.
  * @param {string} url
  * @returns {number|null}
  */
@@ -91,7 +91,7 @@ export function parseDisposition(title, content) {
 /**
  * Whether the decision grounds itself in BINDING authority (statute, regulation,
  * or a court of record). A BVA decision that reasons from binding authority is
- * more persuasive than a bare fact-application. Not authority itself — a signal.
+ * more persuasive than a bare fact-application. Not authority itself - a signal.
  * @param {string} content
  * @returns {boolean}
  */
@@ -108,7 +108,7 @@ export function citesBindingAuthority(content) {
 
 /**
  * Persuasive-value weight ∈ [0,1] for ranking BVA examples against one another.
- * Deterministic and documented — NOT authority. Weights: recency 0.30, grounded
+ * Deterministic and documented - NOT authority. Weights: recency 0.30, grounded
  * -in-binding-authority 0.20, disposition up to 0.10, substance 0.05, base 0.35.
  * @param {{year:(number|null), citesBinding:boolean, disposition:string, contentLength:number}} p
  * @returns {number}
@@ -136,7 +136,7 @@ export function citationWeight({
  * INVARIANT (never inferred): every BVA decision is non-precedential and
  * non-binding per 38 CFR § 20.1303. Only citation_weight and the descriptive
  * fields vary per entry.
- * @param {Object} entry — corpus BVA entry ({title, content, url, ...})
+ * @param {Object} entry - corpus BVA entry ({title, content, url, ...})
  * @returns {Object} authority tag to bake into the shard chunk
  */
 export function tagBvaEntry(entry) {
@@ -145,7 +145,7 @@ export function tagBvaEntry(entry) {
   const disposition = parseDisposition(entry?.title, content);
   const citesBinding = citesBindingAuthority(content);
   return {
-    // Invariant authority facts (the guarantee) — identical for every BVA entry.
+    // Invariant authority facts (the guarantee) - identical for every BVA entry.
     precedential: false,
     binding: false,
     precedential_confidence: 1.0,

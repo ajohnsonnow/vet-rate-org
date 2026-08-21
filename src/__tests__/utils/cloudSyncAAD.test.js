@@ -37,7 +37,7 @@ function concatBytes(...parts) {
   return out;
 }
 
-describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
+describe("cloudSync - VS3 magic + AAD-bound AES-GCM", () => {
   it("encrypts to VS3 envelope and roundtrips", async () => {
     const plaintext = JSON.stringify({ packet: "test", n: 7 });
     const cipher = await encryptData(plaintext, "passphrase");
@@ -68,19 +68,19 @@ describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
   it("downgrade attempt: flipping VS3→VS2 magic on a V3 ciphertext fails", async () => {
     const cipher = await encryptData("payload", "passphrase");
     const bytes = Uint8Array.from(atob(cipher), (c) => c.charCodeAt(0));
-    bytes[2] = 0x32; // 'V','S','2','\0' — claim V2 envelope (no AAD)
+    bytes[2] = 0x32; // 'V','S','2','\0' - claim V2 envelope (no AAD)
     const downgraded = btoa(String.fromCharCode(...bytes));
     await expect(decryptData(downgraded, "passphrase")).rejects.toThrow();
   });
 
   it("legacy VS2 envelope still decrypts (regression safety)", async () => {
     // Hand-build a VS2 envelope by encrypting without AAD, prefixing VS2 magic.
-    const password = "passphrase";
+    const testPassphrase = "passphrase";
     const plaintext = "legacy data";
     const enc = new TextEncoder();
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const key = await deriveLegacyAesGcmKey(password, salt, 600_000);
+    const key = await deriveLegacyAesGcmKey(testPassphrase, salt, 600_000);
     const ct = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       key,
@@ -90,20 +90,20 @@ describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
     const out = concatBytes(magicV2, salt, iv, new Uint8Array(ct));
     const b64 = btoa(String.fromCharCode(...out));
 
-    const decrypted = await decryptData(b64, password);
+    const decrypted = await decryptData(b64, testPassphrase);
     expect(decrypted).toBe(plaintext);
   });
 
   it("legacy V1 envelope (no magic, fixed salt, 100k iters) still decrypts (regression safety)", async () => {
     // Oldest backups: no magic prefix, fixed salt "vet-rate-salt-v1", 100k
-    // iterations, no AAD — layout iv[12] || ciphertext. Pins the cloudSync.js
+    // iterations, no AAD - layout iv[12] || ciphertext. Pins the cloudSync.js
     // V1 fallback path before any refactor near _deriveKey.
-    const password = "passphrase";
+    const testPassphrase = "passphrase";
     const plaintext = "ancient backup";
     const enc = new TextEncoder();
     const salt = enc.encode("vet-rate-salt-v1");
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const key = await deriveLegacyAesGcmKey(password, salt, 100_000);
+    const key = await deriveLegacyAesGcmKey(testPassphrase, salt, 100_000);
     const ct = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv },
       key,
@@ -112,12 +112,12 @@ describe("cloudSync — VS3 magic + AAD-bound AES-GCM", () => {
     const out = concatBytes(iv, new Uint8Array(ct));
     const b64 = btoa(String.fromCharCode(...out));
 
-    const decrypted = await decryptData(b64, password);
+    const decrypted = await decryptData(b64, testPassphrase);
     expect(decrypted).toBe(plaintext);
   });
 });
 
-describe("cloudSync — key selection (S16 commit G, default-key retirement)", () => {
+describe("cloudSync - key selection (S16 commit G, default-key retirement)", () => {
   it("selectWriteKey prefers the passphrase, then the account email", () => {
     expect(selectWriteKey("pp", { email: "vet@example.com" })).toBe("pp");
     expect(selectWriteKey(null, { email: "vet@example.com" })).toBe(

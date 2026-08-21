@@ -115,7 +115,7 @@ function TimeMachineHeader({ countdown, onReportBug, onClose }) {
             />
           )}
           {onClose && (
-            <button
+            <button type="button"
               onClick={onClose}
               className="text-white hover:text-gray-200 text-2xl font-bold"
               aria-label="Close"
@@ -168,7 +168,7 @@ function TimeMachineInputSection({
           </label>
           <select
             value={estimatedRating}
-            onChange={(e) => setEstimatedRating(parseInt(e.target.value))}
+            onChange={(e) => setEstimatedRating(Number.parseInt(e.target.value))}
             className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white text-lg"
           >
             {Object.keys(VA_MONTHLY_RATES).map((rating) => (
@@ -183,7 +183,7 @@ function TimeMachineInputSection({
         </div>
 
         <div className="flex gap-4">
-          <button
+          <button type="button"
             onClick={handleSaveITF}
             disabled={!itfDate}
             className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
@@ -191,7 +191,7 @@ function TimeMachineInputSection({
             Start Countdown
           </button>
           {countdown && (
-            <button
+            <button type="button"
               onClick={() => setIsEditing(false)}
               className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-semibold transition-colors"
             >
@@ -434,13 +434,13 @@ function TimeMachineTimeline({ countdown, itfDate }) {
 function TimeMachineActions({ setIsEditing, handleClearITF }) {
   return (
     <div className="flex gap-4">
-      <button
+      <button type="button"
         onClick={() => setIsEditing(true)}
         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
       >
         Edit ITF Date
       </button>
-      <button
+      <button type="button"
         onClick={handleClearITF}
         className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-semibold transition-colors"
       >
@@ -511,7 +511,7 @@ function _loadSavedITF(ctx) {
     ctx.setItfDate(savedITF);
   }
   if (savedRating) {
-    ctx.setEstimatedRating(parseInt(savedRating));
+    ctx.setEstimatedRating(Number.parseInt(savedRating));
     return;
   }
 

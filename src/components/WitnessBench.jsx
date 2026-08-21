@@ -403,7 +403,7 @@ INSTRUCTIONS:
 5. Include specific examples when provided
 6. Do NOT include names, addresses, or dates (use [Veteran], [Date], etc.)
 7. Format as 3-4 coherent paragraphs
-8. Do NOT write any "I certify..." or "true and correct" attestation. End the narrative without a signature or certification line — the witness must add and sign their own attestation only after personally verifying every statement is true.
+8. Do NOT write any "I certify..." or "true and correct" attestation. End the narrative without a signature or certification line - the witness must add and sign their own attestation only after personally verifying every statement is true.
 
 Write the complete buddy statement now:`;
 
@@ -460,11 +460,11 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
   }
 
   // AIS-03 / LEGAL-03: do not pre-assert "I certify ... true and correct" above a
-  // blank signature line — that presents AI-drafted testimony as already attested.
+  // blank signature line - that presents AI-drafted testimony as already attested.
   // Make the attestation contingent on the witness reading, verifying, and signing,
   // and warn about the federal false-statement statute the witness signs under.
   statement += `--- WITNESS ATTESTATION (read before you sign) ---\n`;
-  statement += `This statement was drafted with AI assistance. Before signing, read every sentence and confirm it describes something YOU personally witnessed and know to be true. A buddy/lay statement is submitted to the VA under penalty of law (18 U.S.C. § 1001) — a knowingly false statement is a federal crime. Edit anything that is not accurate.\n\n`;
+  statement += `This statement was drafted with AI assistance. Before signing, read every sentence and confirm it describes something YOU personally witnessed and know to be true. A buddy/lay statement is submitted to the VA under penalty of law (18 U.S.C. § 1001) - a knowingly false statement is a federal crime. Edit anything that is not accurate.\n\n`;
   statement += `By signing below, I attest that I have read the statement above, that it reflects my own personal knowledge, and that it is true and correct to the best of my knowledge and belief:\n\n`;
   statement += `Respectfully submitted,\n\n`;
   statement += `_______________________________\n`;
@@ -540,7 +540,7 @@ const saveWitnessStatementToPacket = (
  */
 const downloadWitnessPDF = (generatedStatement, condition) => {
   const doc = new jsPDF();
-  // RT2-5: honest provenance metadata — never a misleading "official"/physician author.
+  // RT2-5: honest provenance metadata - never a misleading "official"/physician author.
   doc.setProperties({
     title: "Lay/Witness Statement (VA Form 21-10210)",
     subject: "AI-assisted draft lay/witness statement",
@@ -556,7 +556,7 @@ const downloadWitnessPDF = (generatedStatement, condition) => {
   doc.text("Lay/Witness Statement (VA Form 21-10210)", margin, 20);
 
   // RT2-5: prominent page-1 banner so the AI-draft + false-statement warning
-  // travels with the exported file, not just the on-screen UI. ASCII-only —
+  // travels with the exported file, not just the on-screen UI. ASCII-only -
   // jsPDF's standard helvetica does not render the section sign or em dash.
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
@@ -593,7 +593,7 @@ const downloadWitnessPDF = (generatedStatement, condition) => {
  */
 const downloadWitnessDOCX = async (generatedStatement, condition) => {
   const doc = new Document({
-    // RT2-5: honest provenance metadata — never a misleading "official"/physician author.
+    // RT2-5: honest provenance metadata - never a misleading "official"/physician author.
     creator: "Vet-Rate.org (AI-assisted draft)",
     title: "Lay/Witness Statement (VA Form 21-10210)",
     description: "AI-assisted draft lay/witness statement",
@@ -617,7 +617,7 @@ const downloadWitnessDOCX = async (generatedStatement, condition) => {
           new Paragraph({
             children: [
               new TextRun({
-                text: "AI-ASSISTED DRAFT — not a sworn statement. The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of 18 U.S.C. § 1001 (knowingly false statements are a federal crime).",
+                text: "AI-ASSISTED DRAFT - not a sworn statement. The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of 18 U.S.C. § 1001 (knowingly false statements are a federal crime).",
                 italics: true,
                 size: 16,
               }),
@@ -670,7 +670,7 @@ function useWizardStepState() {
   const [step, setStep] = useState(1);
   const [relationship, setRelationship] = useState("");
   const [condition, setCondition] = useState("");
-  const [_conditionCategory, setConditionCategory] = useState("");
+  const [, setConditionCategory] = useState("");
   const [witnessName, setWitnessName] = useState("");
 
   return {
@@ -979,7 +979,7 @@ const WitnessBenchHeader = ({
             moduleName="The Witness Bench"
           />
         )}
-        <button
+        <button type="button"
           onClick={onClose}
           className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
@@ -1042,7 +1042,7 @@ const RelationshipPicker = ({ t, relationship, onSelect }) => (
     </h3>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {RELATIONSHIP_TYPES.map((type) => (
-        <button
+        <button type="button"
           key={type.value}
           onClick={() => onSelect(type.value)}
           className={`p-4 rounded-xl border-2 transition-all text-center ${
@@ -1125,7 +1125,7 @@ const AIToggleCard = ({
         )}
       </div>
       {aiAvailable ? (
-        <button
+        <button type="button"
           onClick={onToggleAI}
           className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
             useAI ? "bg-purple-600" : "bg-gray-300 dark:bg-gray-600"
@@ -1138,7 +1138,7 @@ const AIToggleCard = ({
           />
         </button>
       ) : (
-        <button
+        <button type="button"
           onClick={onOpenAISettings}
           className="px-3 py-2 text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800/40 transition-colors"
         >
@@ -1206,7 +1206,7 @@ const SetupStep = ({
     )}
 
     {/* Start Button */}
-    <button
+    <button type="button"
       onClick={onStartInterview}
       disabled={
         !relationship || !condition || !witnessName || isLoadingQuestions
@@ -1315,7 +1315,7 @@ const InterviewNavButtons = ({
   isGeneratingStatement,
 }) => (
   <div className="flex gap-3">
-    <button
+    <button type="button"
       onClick={onPrevious}
       disabled={currentQuestionIndex === 0}
       className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1324,14 +1324,14 @@ const InterviewNavButtons = ({
     </button>
 
     {currentQuestionIndex < totalQuestions - 1 ? (
-      <button
+      <button type="button"
         onClick={onNext}
         className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
       >
         {t("witnessBench", "next")}
       </button>
     ) : (
-      <button
+      <button type="button"
         onClick={onGenerateStatement}
         disabled={answeredCount < 3 || isGeneratingStatement}
         className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -1365,7 +1365,7 @@ const QuestionJumpNav = ({
     </p>
     <div className="flex flex-wrap gap-2">
       {questions.map((q, index) => (
-        <button
+        <button type="button"
           key={q.id}
           onClick={() => onJump(index)}
           className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${getQuestionNavButtonClass(index === currentQuestionIndex, answers[q.id])}`}
@@ -1473,7 +1473,7 @@ const DownloadMenu = ({
   onCloseMenu,
 }) => (
   <div className="relative">
-    <button
+    <button type="button"
       onClick={onToggle}
       className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
     >
@@ -1495,7 +1495,7 @@ const DownloadMenu = ({
 
     {showDownloadMenu && (
       <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-10">
-        <button
+        <button type="button"
           onClick={() => {
             onSaveToMyPacket();
             onCloseMenu();
@@ -1510,7 +1510,7 @@ const DownloadMenu = ({
             ? `✅ ${t("witnessBench", "savedToMyPacket")}`
             : `📁 ${t("witnessBench", "saveToMyPacket")}`}
         </button>
-        <button
+        <button type="button"
           onClick={() => {
             onDownloadPDF();
             onCloseMenu();
@@ -1519,7 +1519,7 @@ const DownloadMenu = ({
         >
           📑 {t("witnessBench", "downloadAsPDF")}
         </button>
-        <button
+        <button type="button"
           onClick={() => {
             onDownloadDOCX();
             onCloseMenu();
@@ -1552,7 +1552,7 @@ const StatementPreviewPanel = ({
         📄 {t("witnessBench", "yourBuddyStatement")}
       </h3>
       <div className="flex gap-2">
-        <button
+        <button type="button"
           onClick={onCopyToClipboard}
           className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
         >
@@ -1635,7 +1635,7 @@ const OutputStep = ({
     <NextStepsPanel t={t} />
 
     {/* Start Over Button */}
-    <button
+    <button type="button"
       onClick={onStartOver}
       className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
     >

@@ -361,7 +361,7 @@ export async function processLargePDF(file, options = {}) {
   try {
     const loadingTask = pdfjsLib.getDocument({
       url: objectUrl,
-      rangeChunkSize: 65536, // 64 KB per HTTP range chunk — enables streaming
+      rangeChunkSize: 65536, // 64 KB per HTTP range chunk - enables streaming
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
       disableAutoFetch: false,
       disableStream: false,

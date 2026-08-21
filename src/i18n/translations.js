@@ -5439,10 +5439,10 @@ export const APP_TRANSLATIONS = {
       ko: "복무지",
     },
     dutyStationsDescription: {
-      en: "Add where you served. Your locations are never sent anywhere — they stay on this device.",
+      en: "Add where you served. Your locations are never sent anywhere - they stay on this device.",
       es: "Agrega dónde serviste. Tus ubicaciones nunca se envían a ningún lado, permanecen en este dispositivo.",
-      tl: "Idagdag kung saan ka naglingkod. Ang iyong mga lokasyon ay hindi kailanman ipinapadala kahit saan — nananatili ito sa device na ito.",
-      vi: "Thêm nơi bạn đã phục vụ. Vị trí của bạn không bao giờ được gửi đi đâu cả — chúng chỉ lưu trên thiết bị này.",
+      tl: "Idagdag kung saan ka naglingkod. Ang iyong mga lokasyon ay hindi kailanman ipinapadala kahit saan - nananatili ito sa device na ito.",
+      vi: "Thêm nơi bạn đã phục vụ. Vị trí của bạn không bao giờ được gửi đi đâu cả - chúng chỉ lưu trên thiết bị này.",
       ko: "복무했던 장소를 추가하세요. 위치 정보는 어디로도 전송되지 않으며 이 기기에만 저장됩니다.",
     },
     addDutyStation: {
@@ -12210,7 +12210,7 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "{total}개 청크를 최종 보고서로 병합 중...",
     },
     largeFileDetected: {
-      en: "Large file detected! Processing in {total} chunks. On-device AI takes ~2 min per section — see the time estimate above. Please keep this tab open.",
+      en: "Large file detected! Processing in {total} chunks. On-device AI takes ~2 min per section - see the time estimate above. Please keep this tab open.",
       es: "¡Archivo grande detectado! Procesando en {total} fragmentos. La IA local toma ~2 min por sección. Por favor mantén esta pestaña abierta.",
       tl: "Malaking file ang na-detect! Pinoproseso sa {total} chunks. Ang on-device AI ay tumatagal ng ~2 min bawat seksyon. Mangyaring panatilihing bukas ang tab na ito.",
       vi: "Phát hiện tệp lớn! Đang xử lý trong {total} phần. AI trên thiết bị mất ~2 phút mỗi phần. Vui lòng giữ tab này mở.",

@@ -1,10 +1,10 @@
 /**
- * affiliations.js — shared registry for service branches and affiliation palettes.
+ * affiliations.js - shared registry for service branches and affiliation palettes.
  *
  * This is a pure data/config module (no React). Consumed by:
  *   - BDDBuilder.jsx (SERVICE_BRANCHES for the branch selector)
  *   - ThemeContext.jsx (PALETTES / VALID_PALETTES for palette state + class wiring)
- *   - AffiliationPicker.jsx (Sprint 4 — reads PALETTES for the UI)
+ *   - AffiliationPicker.jsx (Sprint 4 - reads PALETTES for the UI)
  *
  * Palette ids MUST match the spec in docs/AFFILIATION_PALETTES.md exactly (kebab-case).
  */
@@ -38,7 +38,7 @@ export const PALETTES = [
     group: "Default",
     icon: "🎨",
     description:
-      "The original Vet-Rate green and gold — no branch affiliation.",
+      "The original Vet-Rate green and gold - no branch affiliation.",
   },
 
   // ── Branch ───────────────────────────────────────────────
@@ -47,14 +47,14 @@ export const PALETTES = [
     label: "U.S. Army",
     group: "Branch",
     icon: "🪖",
-    description: "Army black and gold — honoring soldiers of the U.S. Army.",
+    description: "Army black and gold - honoring soldiers of the U.S. Army.",
   },
   {
     id: "navy",
     label: "U.S. Navy",
     group: "Branch",
     icon: "⚓",
-    description: "Navy blue and gold — honoring sailors of the U.S. Navy.",
+    description: "Navy blue and gold - honoring sailors of the U.S. Navy.",
   },
   {
     id: "air-force",
@@ -62,7 +62,7 @@ export const PALETTES = [
     group: "Branch",
     icon: "🛩️",
     description:
-      "Air Force blue and silver — honoring airmen of the U.S. Air Force.",
+      "Air Force blue and silver - honoring airmen of the U.S. Air Force.",
   },
   {
     id: "marines",
@@ -70,7 +70,7 @@ export const PALETTES = [
     group: "Branch",
     icon: "🦅",
     description:
-      "Scarlet and gold — honoring Marines of the U.S. Marine Corps.",
+      "Scarlet and gold - honoring Marines of the U.S. Marine Corps.",
   },
   {
     id: "coast-guard",
@@ -78,7 +78,7 @@ export const PALETTES = [
     group: "Branch",
     icon: "🛟",
     description:
-      "Coast Guard blue and orange — honoring those who guard our coasts.",
+      "Coast Guard blue and orange - honoring those who guard our coasts.",
   },
   {
     id: "space-force",
@@ -86,7 +86,7 @@ export const PALETTES = [
     group: "Branch",
     icon: "🚀",
     description:
-      "Space Force midnight blue and silver — honoring Guardians of the newest branch.",
+      "Space Force midnight blue and silver - honoring Guardians of the newest branch.",
   },
   {
     id: "national-guard",
@@ -94,7 +94,7 @@ export const PALETTES = [
     group: "Branch",
     icon: "🏛️",
     description:
-      "Guard navy and gold — honoring the men and women of the National Guard.",
+      "Guard navy and gold - honoring the men and women of the National Guard.",
   },
   {
     id: "reserves",
@@ -102,7 +102,7 @@ export const PALETTES = [
     group: "Branch",
     icon: "🎖️",
     description:
-      "Reserves green and gold — honoring the service of all Reserve component members.",
+      "Reserves green and gold - honoring the service of all Reserve component members.",
   },
 
   // ── Inclusive ────────────────────────────────────────────
@@ -112,7 +112,7 @@ export const PALETTES = [
     group: "Inclusive",
     icon: "🏳️‍🌈",
     description:
-      "Intersex-Inclusive Progress Pride colors — honoring LGBTQ+ veterans who served with distinction.",
+      "Intersex-Inclusive Progress Pride colors - honoring LGBTQ+ veterans who served with distinction.",
   },
   {
     id: "flag",
@@ -120,7 +120,7 @@ export const PALETTES = [
     group: "Inclusive",
     icon: "🇺🇸",
     description:
-      "Old Glory red, white, and blue — a universal expression of service and country.",
+      "Old Glory red, white, and blue - a universal expression of service and country.",
   },
 
   // ── Remembrance ──────────────────────────────────────────
@@ -130,7 +130,7 @@ export const PALETTES = [
     group: "Remembrance",
     icon: "🖤",
     description:
-      "Black and grayscale — a somber tribute to prisoners of war and those still missing in action. You Are Not Forgotten.",
+      "Black and grayscale - a somber tribute to prisoners of war and those still missing in action. You Are Not Forgotten.",
   },
   {
     id: "gold-star",
@@ -138,7 +138,7 @@ export const PALETTES = [
     group: "Remembrance",
     icon: "⭐",
     description:
-      "Honoring Gold Star families — those who have lost a loved one in service to the nation.",
+      "Honoring Gold Star families - those who have lost a loved one in service to the nation.",
   },
   {
     id: "purple-heart",
@@ -146,7 +146,7 @@ export const PALETTES = [
     group: "Remembrance",
     icon: "💜",
     description:
-      "Purple and gold — honoring service members wounded or killed in action.",
+      "Purple and gold - honoring service members wounded or killed in action.",
   },
   {
     id: "women-veterans",
@@ -154,7 +154,7 @@ export const PALETTES = [
     group: "Remembrance",
     icon: "♀️",
     description:
-      "Plum and teal — honoring the generations of women who have served in the U.S. military.",
+      "Plum and teal - honoring the generations of women who have served in the U.S. military.",
   },
   {
     id: "juneteenth",
@@ -162,7 +162,7 @@ export const PALETTES = [
     group: "Remembrance",
     icon: "🕊️",
     description:
-      "Drawn from the Juneteenth flag — celebrating freedom and honoring Black veterans' contributions to American liberty.",
+      "Drawn from the Juneteenth flag - celebrating freedom and honoring Black veterans' contributions to American liberty.",
   },
   {
     id: "native-code-talker",
@@ -170,11 +170,11 @@ export const PALETTES = [
     group: "Remembrance",
     icon: "🪶",
     description:
-      "Earth-tone red and ochre — honoring Native American Code Talkers whose unbreakable language helped secure Allied victory.",
+      "Earth-tone red and ochre - honoring Native American Code Talkers whose unbreakable language helped secure Allied victory.",
   },
 ];
 
 // ─────────────────────────────────────────────────────────────
-// VALID PALETTE IDS — for fast validation in ThemeContext
+// VALID PALETTE IDS - for fast validation in ThemeContext
 // ─────────────────────────────────────────────────────────────
 export const VALID_PALETTES = new Set(PALETTES.map((p) => p.id));

@@ -123,6 +123,36 @@ function useSystemReducedMotionSync(setReducedMotion) {
   }, [setReducedMotion]);
 }
 
+function buildToggleTheme(setTheme) {
+  return () => {
+    setTheme((prev) =>
+      prev === THEME_MODES.LIGHT ? THEME_MODES.DARK : THEME_MODES.LIGHT,
+    );
+  };
+}
+
+function buildCycleTheme(theme, setTheme) {
+  return () => {
+    const modes = [
+      THEME_MODES.LIGHT,
+      THEME_MODES.DARK,
+      THEME_MODES.TBI_COMFORT,
+      THEME_MODES.AAA_CONTRAST,
+    ];
+    const currentIndex = modes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setTheme(modes[nextIndex]);
+  };
+}
+
+function buildSetPalette(setPaletteState) {
+  return (id) => {
+    if (VALID_PALETTES.has(id)) {
+      setPaletteState(id);
+    }
+  };
+}
+
 function buildThemeContextValue({
   theme,
   setTheme,
@@ -221,30 +251,10 @@ export function ThemeProvider({ children }) {
   useSystemThemeSync(setTheme);
   useSystemReducedMotionSync(setReducedMotion);
 
-  const toggleTheme = () => {
-    setTheme((prev) =>
-      prev === THEME_MODES.LIGHT ? THEME_MODES.DARK : THEME_MODES.LIGHT,
-    );
-  };
-
+  const toggleTheme = buildToggleTheme(setTheme);
   // Cycle through all theme modes
-  const cycleTheme = () => {
-    const modes = [
-      THEME_MODES.LIGHT,
-      THEME_MODES.DARK,
-      THEME_MODES.TBI_COMFORT,
-      THEME_MODES.AAA_CONTRAST,
-    ];
-    const currentIndex = modes.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % modes.length;
-    setTheme(modes[nextIndex]);
-  };
-
-  const setPalette = (id) => {
-    if (VALID_PALETTES.has(id)) {
-      setPaletteState(id);
-    }
-  };
+  const cycleTheme = buildCycleTheme(theme, setTheme);
+  const setPalette = buildSetPalette(setPaletteState);
 
   const isDark =
     theme === THEME_MODES.DARK ||

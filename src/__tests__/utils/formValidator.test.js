@@ -7,7 +7,7 @@ import formValidator, {
   searchForms,
 } from "../../utils/formValidator";
 
-describe("validateVAForms — happy path", () => {
+describe("validateVAForms - happy path", () => {
   it("returns isValid=true on text with no form references", () => {
     const result = validateVAForms("PTSD is rated at 70 percent.");
     expect(result.isValid).toBe(true);
@@ -35,7 +35,7 @@ describe("validateVAForms — happy path", () => {
   });
 });
 
-describe("validateVAForms — hallucination blocking", () => {
+describe("validateVAForms - hallucination blocking", () => {
   it("flags a fabricated form number", () => {
     const result = validateVAForms("Submit VA Form 99-99999X.");
     expect(result.isValid).toBe(false);
@@ -60,7 +60,7 @@ describe("validateVAForms — hallucination blocking", () => {
   });
 });
 
-describe("safeFormResponse — wrapper behavior", () => {
+describe("safeFormResponse - wrapper behavior", () => {
   it("passes through valid responses unchanged", () => {
     const text = "File VA Form 21-526EZ.";
     const result = safeFormResponse(text);

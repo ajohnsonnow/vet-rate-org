@@ -284,6 +284,114 @@ function normalizeOcrText(text) {
   );
 }
 
+// DD214/NGB22 field-label and boilerplate vocabulary that can never be a
+// real surname/first/middle name component. Real-world Florence-2 OCR of a
+// scanned (not clean digital-text) DD214 frequently fails to preserve the
+// "NAME (Last, First, Middle):" header intact — either the label garbles or
+// the vision model's reading order interleaves blocks — so the first four
+// (context-anchored) patterns below miss, and extraction falls through to
+// the unanchored "any CAPS, CAPS pair" fallback. Without this check that
+// fallback happily grabs the *next* comma-separated capitalized phrase it
+// finds, which on a real form is usually another block's own label — e.g.
+// "DEPARTMENT, COMPONENT AND BRANCH" (Block 2) captured as the veteran's
+// name. Confirmed live on 4/4 real scanned DD214/NGB22 documents. A
+// rejected match (name stays null, confidence 0) is the safe failure mode:
+// an empty name field is obviously wrong to a reviewing veteran, whereas a
+// plausible-looking wrong name is not.
+const DD214_NAME_STOPWORDS = new Set([
+  "NAME",
+  "LAST",
+  "FIRST",
+  "MIDDLE",
+  "DEPARTMENT",
+  "COMPONENT",
+  "BRANCH",
+  "SOCIAL",
+  "SECURITY",
+  "NUMBER",
+  "GRADE",
+  "RATE",
+  "RANK",
+  "PAY",
+  "DATE",
+  "BIRTH",
+  "TERM",
+  "TERMINATION",
+  "OBLIGATION",
+  "RESERVE",
+  "PLACE",
+  "ENTRY",
+  "DUTY",
+  "ACTIVE",
+  "ASSIGNMENT",
+  "COMMAND",
+  "MAJOR",
+  "SPECIALTY",
+  "TITLE",
+  "RELATED",
+  "CIVILIAN",
+  "OCCUPATION",
+  "DECORATIONS",
+  "MEDALS",
+  "BADGES",
+  "CITATIONS",
+  "CAMPAIGN",
+  "SERVICE",
+  "AWARDS",
+  "MILITARY",
+  "EDUCATION",
+  "FOREIGN",
+  "MEMBER",
+  "SIGNATURE",
+  "REMARKS",
+  "MAILING",
+  "ADDRESS",
+  "SEPARATION",
+  "ZIP",
+  "CODE",
+  "NEAREST",
+  "RELATIVE",
+  "CHARACTER",
+  "DISCHARGE",
+  "TYPE",
+  "AUTHORITY",
+  "REENTRY",
+  "NARRATIVE",
+  "REASON",
+  "FORM",
+  "APPROVED",
+  "BUDGET",
+  "BUREAU",
+  "EDITION",
+  "OBSOLETE",
+  "PREVIOUS",
+  "USABLE",
+  "PRESCRIBED",
+  "CERTIFICATE",
+  "RELEASE",
+  "NATIONAL",
+  "GUARD",
+  "BLOCK",
+  "AND",
+  "OR",
+  "THE",
+  "OF",
+  "FOR",
+  "NOT",
+  "TO",
+  "IS",
+  "ARE",
+  "THIS",
+  "THAT",
+  "FROM",
+  "WITH",
+]);
+
+function isPlausibleNamePart(part) {
+  if (!part) return true; // absent (e.g. no middle name) is fine
+  return !DD214_NAME_STOPWORDS.has(part.trim().toUpperCase());
+}
+
 /**
  * Extract name from DD214 text
  */
@@ -310,8 +418,32 @@ function extractName(text) {
 
   for (let i = 0; i < patterns.length; i++) {
     const pattern = patterns[i];
-    const match = text.match(pattern);
-    if (match) {
+    // Global so a rejected candidate (matched field-label text, not a real
+    // name — see DD214_NAME_STOPWORDS) doesn't stop this pattern from
+    // trying its next occurrence further down the document.
+    const globalPattern = new RegExp(
+      pattern.source,
+      pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`,
+    );
+
+    for (const match of text.matchAll(globalPattern)) {
+      const lastName = match[1]?.trim() || null;
+      const firstName = match[2]?.trim() || null;
+      const middleName = match[3]?.trim() || null;
+
+      if (
+        !isPlausibleNamePart(lastName) ||
+        !isPlausibleNamePart(firstName) ||
+        !isPlausibleNamePart(middleName)
+      ) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `🔍 [DD214Parser:Name] Pattern ${i} match rejected (field-label text, not a name):`,
+          match[0].substring(0, 100),
+        );
+        continue;
+      }
+
       // eslint-disable-next-line no-console
       console.log(
         `🔍 [DD214Parser:Name] Pattern ${i} matched:`,
@@ -322,9 +454,9 @@ function extractName(text) {
           .replace(/name[^:]*:\s*/i, "")
           .replace(/^(last|first|member|veteran)[\s:]+/i, "")
           .trim(),
-        lastName: match[1]?.trim() || null,
-        firstName: match[2]?.trim() || null,
-        middleName: match[3]?.trim() || null,
+        lastName,
+        firstName,
+        middleName,
         confidence: 85,
       };
     }

@@ -112,7 +112,7 @@ describe("buildDocumentFindings", () => {
       findings.lists.map((l) => [l.label, l.values]),
     );
 
-    expect(lists.MOS).toEqual(["11B — Infantryman"]);
+    expect(lists.MOS).toEqual(["11B - Infantryman"]);
     expect(lists.Awards).toEqual(["Army Commendation Medal"]);
   });
 

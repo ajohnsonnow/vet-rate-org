@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createDualLLM } from "../../utils/dualLLM";
 
-describe("createDualLLM — constructor", () => {
+describe("createDualLLM - constructor", () => {
   it("requires a generateAI function", () => {
     expect(() => createDualLLM(null)).toThrow(TypeError);
     expect(() => createDualLLM(undefined)).toThrow(TypeError);
@@ -221,7 +221,7 @@ describe("dual-LLM runDualLLM (orchestration)", () => {
       synthesizerInstructions: "Summarize.",
     });
 
-    // First call (extractor) DOES contain the injection (that's the whole point —
+    // First call (extractor) DOES contain the injection (that's the whole point -
     // it's wrapped in spotlight delimiters and processed safely).
     // Second call (synthesizer) MUST NOT contain it.
     const [, secondCallPrompt] = generateAI.mock.calls.map((c) => c[0]);

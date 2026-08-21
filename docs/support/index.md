@@ -19,16 +19,17 @@ You're in the right place! Use the search and navigation to find answers.
 Found an issue? Use the **Bug Squasher** tool:
 
 1. Click **"🐛 Bug Squasher"** in the footer
-2. Describe the issue
-3. Submit
+2. Classify it, describe it, then review and submit
+
+![Bug Squasher's Classification step](../assets/images/screenshots/support/bug-squasher.png)
+_Bug Squasher walks through Classification, Description, and Review & Submit._
 
 ### Contact Us
 
 For other questions:
 
 1. Click **"Contact Us"** in the footer
-2. Fill out the form
-3. We'll respond as soon as possible
+2. Fill out the form and click **"Send Message"** - it opens your email client with the message pre-filled
 
 ---
 
@@ -58,27 +59,27 @@ For other questions:
 
 ### Data Issues
 
-| Problem | Solution |
-|---------|----------|
-| Data disappeared | Restore from backup |
-| Can't save data | Check localStorage is enabled |
-| Storage full | Delete old conditions/forms |
+| Problem          | Solution                      |
+| ---------------- | ----------------------------- |
+| Data disappeared | Restore from backup           |
+| Can't save data  | Check localStorage is enabled |
+| Storage full     | Delete old conditions/forms   |
 
 ### Display Issues
 
-| Problem | Solution |
-|---------|----------|
-| Colors wrong | Check color blind mode settings |
-| Text too small/large | Adjust font size in Accessibility |
-| Dark mode not working | Check display mode setting |
+| Problem               | Solution                          |
+| --------------------- | --------------------------------- |
+| Colors wrong          | Check color blind mode settings   |
+| Text too small/large  | Adjust font size in Accessibility |
+| Dark mode not working | Check display mode setting        |
 
 ### Feature Issues
 
-| Problem | Solution |
-|---------|----------|
-| Search not working | Refresh the page |
-| PDF won't download | Check popup blocker |
-| Modal won't close | Press Escape or click outside |
+| Problem            | Solution                      |
+| ------------------ | ----------------------------- |
+| Search not working | Refresh the page              |
+| PDF won't download | Check popup blocker           |
+| Modal won't close  | Press Escape or click outside |
 
 ---
 
@@ -106,11 +107,11 @@ For other questions:
 ## Important Reminder
 
 !!! va-info "Not VA Affiliated"
-    
+
     Vet-Rate.org is an independent educational tool. For official VA support:
-    
+
     - **VA Benefits:** 1-800-827-1000
     - **VA Health:** 1-877-222-8387
     - **Veterans Crisis Line:** 988 (Press 1)
-    
+
     See [VA Resources](../va-resources/) for more official contacts.

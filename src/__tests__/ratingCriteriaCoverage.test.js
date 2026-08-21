@@ -17,7 +17,7 @@ describe("disabilityData rating-criteria coverage (S35)", () => {
     expect(missing).toEqual([]);
   });
 
-  it("every ratingCriteria is structured — a type plus ratings, ratedUnder, or formula", () => {
+  it("every ratingCriteria is structured - a type plus ratings, ratedUnder, or formula", () => {
     const unstructured = disabilities
       .filter((e) => {
         const rc = e.ratingCriteria;

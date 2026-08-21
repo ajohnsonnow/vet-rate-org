@@ -7,10 +7,10 @@ import {
 } from "../../scripts/legal-ingestion/fetch-m21-4.mjs";
 
 /**
- * S44 follow-up — M21-4 fetcher pure-function coverage. Same KnowVA "Self
+ * S44 follow-up - M21-4 fetcher pure-function coverage. Same KnowVA "Self
  * Service v11" JSON content API as M21-1/M21-5 (extractChildTopics/
  * extractArticles fixtures mirror the identical response shapes), but
- * citationFor differs — M21-4 uses flat "Chapter N. Title" / "Appendix X.
+ * citationFor differs - M21-4 uses flat "Chapter N. Title" / "Appendix X.
  * Title" naming (verified live against all 15 real articles), not M21-1's
  * Roman-numeral or M21-5's "Chapter N, Section X" conventions.
  * Network-touching functions are exercised by the bounded live verification,
@@ -104,7 +104,7 @@ describe("citationFor", () => {
 
   it("falls back to a truncated title when there is no Chapter/Appendix prefix", () => {
     expect(citationFor("M21-4 Manual Overview Page")).toBe(
-      "M21-4 — M21-4 Manual Overview Page",
+      "M21-4 - M21-4 Manual Overview Page",
     );
   });
 

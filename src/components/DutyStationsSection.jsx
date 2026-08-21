@@ -6,8 +6,8 @@
  *
  * Service tab section for user-entered duty station locations, rendered
  * between DeploymentsSection and AwardsSection in MyPacket.jsx. Extracted
- * to its own file (unlike its inline MyPacket.jsx siblings) so it — and
- * the lazy-loaded world map it always renders — can be unit/a11y-tested
+ * to its own file (unlike its inline MyPacket.jsx siblings) so it - and
+ * the lazy-loaded world map it always renders - can be unit/a11y-tested
  * without pulling in the rest of the 6,000+ line MyPacket module.
  *
  * The map (DutyStationMap.jsx) is the sole owner of geoContains-based
@@ -15,7 +15,7 @@
  * state (name/periodId/dates/notes/lat/lon/country) and receives the
  * derived country back via a callback, whether the position came from a
  * map click, the "pick country" dropdown, or the keyboard lat/lon inputs
- * below (all three funnel through the same derivation — criterion 9).
+ * below (all three funnel through the same derivation - criterion 9).
  */
 import { lazy, Suspense, useCallback, useState } from "react";
 import {
@@ -37,7 +37,7 @@ const EMPTY_DRAFT = {
   notes: "",
 };
 
-// placeOfEntry is stored as extracted, e.g. "FORT BRAGG, NC" — title-case
+// placeOfEntry is stored as extracted, e.g. "FORT BRAGG, NC" - title-case
 // it for display, but keep a trailing 2-letter segment (a state code)
 // uppercase rather than "Nc".
 function titleCasePlaceOfEntry(value) {
@@ -56,7 +56,7 @@ function formatPeriodLabel(period, t) {
   const branch = period.branch || t("myPacketSection.service");
   const start = period.serviceStartDate || "?";
   const end = period.serviceEndDate || t("myPacketSection.present");
-  return `${branch} (${start} – ${end})`;
+  return `${branch} (${start} - ${end})`;
 }
 
 function MapFallback() {
@@ -223,23 +223,29 @@ function DutyStationFormFields({ draft, setDraft, servicePeriods, t }) {
         />
       </div>
       <CoordinateInputs draft={draft} setDraft={setDraft} t={t} />
-      <div className="md:col-span-2">
-        <label
-          htmlFor="duty-station-notes"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          {t("myPacketSection.notesOptional")}
-        </label>
-        <textarea
-          id="duty-station-notes"
-          value={draft.notes}
-          onChange={(e) =>
-            setDraft((prev) => ({ ...prev, notes: e.target.value }))
-          }
-          rows={2}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-        />
-      </div>
+      <DutyStationNotesInput draft={draft} setDraft={setDraft} t={t} />
+    </div>
+  );
+}
+
+function DutyStationNotesInput({ draft, setDraft, t }) {
+  return (
+    <div className="md:col-span-2">
+      <label
+        htmlFor="duty-station-notes"
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+      >
+        {t("myPacketSection.notesOptional")}
+      </label>
+      <textarea
+        id="duty-station-notes"
+        value={draft.notes}
+        onChange={(e) =>
+          setDraft((prev) => ({ ...prev, notes: e.target.value }))
+        }
+        rows={2}
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+      />
     </div>
   );
 }
@@ -281,7 +287,7 @@ function DutyStationEntry({ station, servicePeriods, onEdit, onRemove, t }) {
         </p>
         {(station.startDate || station.endDate) && (
           <p className="text-xs text-gray-500 dark:text-gray-500">
-            {station.startDate || "?"} –{" "}
+            {station.startDate || "?"} -{" "}
             {station.endDate || t("myPacketSection.present")}
           </p>
         )}
@@ -308,6 +314,37 @@ function DutyStationEntry({ station, servicePeriods, onEdit, onRemove, t }) {
       </div>
     </div>
   );
+}
+
+// sanitizeCoordinate() in veteranProfile.js silently collapses an
+// out-of-range or non-finite value to null on save with no signal back
+// to the form, so a typo (e.g. latitude 500) would previously vanish
+// from the map with no indication anything was wrong. Catch it here
+// instead, where there's a form to show the error against.
+function getDutyStationCoordinateError(draft) {
+  const latOutOfRange =
+    draft.latitude !== null &&
+    (!Number.isFinite(draft.latitude) || Math.abs(draft.latitude) > 90);
+  const lonOutOfRange =
+    draft.longitude !== null &&
+    (!Number.isFinite(draft.longitude) || Math.abs(draft.longitude) > 180);
+  if (latOutOfRange || lonOutOfRange) {
+    return "Latitude must be between -90 and 90, and longitude between -180 and 180.";
+  }
+  return null;
+}
+
+function buildDutyStationPayload(draft) {
+  return {
+    periodId: draft.periodId || null,
+    name: draft.name.trim(),
+    country: draft.country || "",
+    latitude: draft.latitude,
+    longitude: draft.longitude,
+    startDate: draft.startDate || null,
+    endDate: draft.endDate || null,
+    notes: draft.notes || "",
+  };
 }
 
 function useDutyStationForm({ loadServiceHistory }) {
@@ -347,33 +384,12 @@ function useDutyStationForm({ loadServiceHistory }) {
       alert("Please enter a station name");
       return;
     }
-    // sanitizeCoordinate() in veteranProfile.js silently collapses an
-    // out-of-range or non-finite value to null on save with no signal back
-    // to the form, so a typo (e.g. latitude 500) would previously vanish
-    // from the map with no indication anything was wrong. Catch it here
-    // instead, where there's a form to show the error against.
-    const latOutOfRange =
-      draft.latitude !== null &&
-      (!Number.isFinite(draft.latitude) || Math.abs(draft.latitude) > 90);
-    const lonOutOfRange =
-      draft.longitude !== null &&
-      (!Number.isFinite(draft.longitude) || Math.abs(draft.longitude) > 180);
-    if (latOutOfRange || lonOutOfRange) {
-      alert(
-        "Latitude must be between -90 and 90, and longitude between -180 and 180.",
-      );
+    const coordinateError = getDutyStationCoordinateError(draft);
+    if (coordinateError) {
+      alert(coordinateError);
       return;
     }
-    const payload = {
-      periodId: draft.periodId || null,
-      name: draft.name.trim(),
-      country: draft.country || "",
-      latitude: draft.latitude,
-      longitude: draft.longitude,
-      startDate: draft.startDate || null,
-      endDate: draft.endDate || null,
-      notes: draft.notes || "",
-    };
+    const payload = buildDutyStationPayload(draft);
     if (editingId) {
       updateDutyStation(editingId, payload);
     } else {
@@ -388,7 +404,7 @@ function useDutyStationForm({ loadServiceHistory }) {
     loadServiceHistory();
   };
 
-  // Stable across renders (setDraft is a useState setter) — DutyStationMap
+  // Stable across renders (setDraft is a useState setter) - DutyStationMap
   // re-derives country in a useEffect keyed on this callback's identity, so
   // an unstable reference here re-fires that effect every render and
   // deadlocks React into "Maximum update depth exceeded".

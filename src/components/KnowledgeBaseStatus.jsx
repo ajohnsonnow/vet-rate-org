@@ -659,7 +659,7 @@ function CompactBadgeLabel({ kbStatus }) {
       {kbStatus.isWebOptimized && !kbStatus.loading && (
         <span
           className="text-amber-500 dark:text-amber-400 ml-1"
-          aria-label={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). Load Local LLM for full database.`}
+          aria-label={`Web version (${kbStatus.dkbEntries.toLocaleString()} of ${kbStatus.fullDatabaseCount.toLocaleString()} entries). The larger database downloads to your device for future use, but AI answers currently use this same ${kbStatus.dkbEntries.toLocaleString()}-entry set regardless of AI mode.`}
         >
           *
         </span>
@@ -751,10 +751,10 @@ function CompactWebOptimizedNotice({
           {/* Desktop notice */}
           {!isMobile && !isDownloading && (
             <div className="text-xs text-amber-600 dark:text-amber-500 mt-2 flex items-center gap-1">
-              <span>🧠</span>
+              <span>🚧</span>
               <span>
-                Load <strong>Local LLM</strong> (Diamond Swarm) for complete
-                knowledge access.
+                The full database downloads for future use, but AI answers -
+                Local and Cloud alike - currently use this same curated set.
               </span>
             </div>
           )}
@@ -1078,19 +1078,21 @@ function FullKnowledgeBaseWebNotice({ kbStatus }) {
                 </div>
               </div>
               <div className="text-center">
-                <span className="text-2xl">🧠</span>
+                <span className="text-2xl">🚧</span>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  Available with
+                  Cached locally,
                 </div>
                 <div className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-                  Local LLM
+                  not yet in use
                 </div>
               </div>
             </div>
           </div>
           <div className="text-xs text-amber-600 dark:text-amber-500 mt-2">
-            💡 Load <strong>Diamond Swarm</strong> (Local AI) for complete 130K+
-            entry access with offline capability.
+            💡 The full 130K+ entry corpus downloads to your device for future
+            use, but AI answers - Local and Cloud alike - currently draw from
+            this same curated {kbStatus.dkbEntries.toLocaleString()}-entry
+            set. Loading Local AI does not currently expand it.
           </div>
         </div>
       </div>

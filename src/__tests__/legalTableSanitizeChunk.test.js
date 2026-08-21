@@ -7,7 +7,7 @@ import {
 } from "../../scripts/legal-ingestion/chunk.mjs";
 
 /**
- * S19 — table-aware sanitization + structural chunking.
+ * S19 - table-aware sanitization + structural chunking.
  *
  * sanitize-html.mjs had zero dedicated tests. This suite covers (a) the
  * pre-S19 baseline security behavior as regression protection, (b) the new
@@ -39,9 +39,9 @@ const hasAnyPipeLine = (text) => text.split("\n").some(isPipe);
 const words = (text) => text.match(/\S+/g) || [];
 
 // ─────────────────────────────────────────────────────────────────────────
-// (a) Pre-S19 baseline security behavior — regression protection.
+// (a) Pre-S19 baseline security behavior - regression protection.
 // ─────────────────────────────────────────────────────────────────────────
-describe("sanitizeLegalHtml — baseline security (regression)", () => {
+describe("sanitizeLegalHtml - baseline security (regression)", () => {
   it("returns empty string for non-string / empty input", () => {
     expect(sanitizeLegalHtml("")).toBe("");
     expect(sanitizeLegalHtml(null)).toBe("");
@@ -94,7 +94,7 @@ describe("sanitizeLegalHtml — baseline security (regression)", () => {
 // ─────────────────────────────────────────────────────────────────────────
 // (b) New table -> Markdown conversion.
 // ─────────────────────────────────────────────────────────────────────────
-describe("sanitizeLegalHtml — table -> Markdown", () => {
+describe("sanitizeLegalHtml - table -> Markdown", () => {
   it("converts a simple table to pipe rows with a header separator", () => {
     const out = sanitizeLegalHtml(
       "<table><thead><tr><th>Code</th><th>Rating</th></tr></thead>" +
@@ -108,10 +108,10 @@ describe("sanitizeLegalHtml — table -> Markdown", () => {
 
   it("preserves the caption as a leading table row (stays atomic)", () => {
     const out = sanitizeLegalHtml(
-      "<table><caption>Table I—Combined Ratings</caption>" +
+      "<table><caption>Table I-Combined Ratings</caption>" +
         "<tr><td>a</td><td>b</td></tr></table>",
     );
-    expect(out.split("\n")[0]).toBe("| Table I—Combined Ratings |");
+    expect(out.split("\n")[0]).toBe("| Table I-Combined Ratings |");
     expect(isTableChunk(out)).toBe(true);
   });
 
@@ -141,7 +141,7 @@ describe("sanitizeLegalHtml — table -> Markdown", () => {
 // (c) Adversarial: a table cell is a new injection-carrier surface. Every
 //     control that applied to prose must still apply inside <td>/<th>.
 // ─────────────────────────────────────────────────────────────────────────
-describe("sanitizeLegalHtml — adversarial table cells", () => {
+describe("sanitizeLegalHtml - adversarial table cells", () => {
   const clean = (s) =>
     !/script|onclick|onerror|alert\(|evil\.com|<style/i.test(s);
 
@@ -211,11 +211,11 @@ describe("sanitizeLegalHtml — adversarial table cells", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// (d) Structural chunker — atomic tables.
+// (d) Structural chunker - atomic tables.
 // ─────────────────────────────────────────────────────────────────────────
-describe("chunkRecord — tables are atomic (never split)", () => {
+describe("chunkRecord - tables are atomic (never split)", () => {
   it("keeps a large rating table as exactly ONE unsplit chunk", async () => {
-    // 60-row schedule — far larger than the ~393-word prose budget, so a
+    // 60-row schedule - far larger than the ~393-word prose budget, so a
     // naive word-window WOULD split it. It must not.
     const rows = Array.from(
       { length: 60 },
@@ -293,9 +293,9 @@ describe("chunkRecord — tables are atomic (never split)", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// (d) Structural chunker — prose splitting + oversized-paragraph fallback.
+// (d) Structural chunker - prose splitting + oversized-paragraph fallback.
 // ─────────────────────────────────────────────────────────────────────────
-describe("chunkRecord / packProse — prose splits on paragraph boundaries", () => {
+describe("chunkRecord / packProse - prose splits on paragraph boundaries", () => {
   it("packs small paragraphs without splitting a sentence", () => {
     const p1 = "First paragraph with several words in it here.";
     const p2 = "Second distinct paragraph, also short and whole.";
@@ -356,9 +356,9 @@ describe("chunkRecord / packProse — prose splits on paragraph boundaries", () 
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// segmentBody — block classification.
+// segmentBody - block classification.
 // ─────────────────────────────────────────────────────────────────────────
-describe("segmentBody — table vs prose classification", () => {
+describe("segmentBody - table vs prose classification", () => {
   it("splits a body into ordered table and prose blocks", () => {
     const body =
       "Intro prose.\n\n| a | b |\n| --- | --- |\n| 1 | 2 |\n\nMore prose.";

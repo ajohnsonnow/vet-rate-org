@@ -1,6 +1,6 @@
 /**
  * WS-7: VKB/claims → calculator bridge.
- * buildConditionCandidates is the pure core behind "Load from My Records" —
+ * buildConditionCandidates is the pure core behind "Load from My Records" -
  * it must dedup across sources, exclude what's already in My Ratings, and
  * never emit an unusable rating.
  */
@@ -144,7 +144,7 @@ const CFILE_ANALYSIS_FIXTURE = {
   actionItems: ["File tinnitus claim"],
 };
 
-describe("buildVkbMergeFromCFile — C-File → canonical VKB merge shape", () => {
+describe("buildVkbMergeFromCFile - C-File → canonical VKB merge shape", () => {
   const analysis = CFILE_ANALYSIS_FIXTURE;
   const merge = buildVkbMergeFromCFile(analysis, {
     method: "text",
@@ -219,7 +219,7 @@ describe("buildVkbMergeFromCFile — C-File → canonical VKB merge shape", () =
   });
 
   it("never routes suggestions into vaClaimsHistory.claims (that field is untouched)", () => {
-    // The mapper emits no vaClaimsHistory key at all — filed-claim store is
+    // The mapper emits no vaClaimsHistory key at all - filed-claim store is
     // reserved for decision/denial letters, not C-File suggestions.
     expect(merge).not.toHaveProperty("vaClaimsHistory");
   });

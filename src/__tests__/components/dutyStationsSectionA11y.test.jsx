@@ -59,7 +59,7 @@ async function renderSection() {
   return utils;
 }
 
-describe("DutyStationsSection — accessibility", () => {
+describe("DutyStationsSection - accessibility", () => {
   it("has no axe violations in the default (list) view", async () => {
     const { container } = await renderSection();
     const results = await axe(container);

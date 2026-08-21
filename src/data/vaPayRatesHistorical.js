@@ -1,14 +1,159 @@
 /**
- * Historical VA Disability Pay Rates (2020-2026)
+ * Historical VA Disability Pay Rates (2018-2026)
  * "The Time Machine" - Retroactive Pay Hunter Data
  *
  * This data enables detection of underpayments and calculation of potential back pay.
  * Rates effective December 1 of preceding year (e.g., 2024 rates effective Dec 1, 2023)
  *
- * Source: VA.gov historical compensation rate tables
+ * Source: VA.gov historical compensation rate tables. 2018-2019 rates verified
+ * directly against VA.gov's live past-rates-2018/past-rates-2019 pages, which
+ * are the earliest years still hosted at that URL pattern (2017 and earlier
+ * return 404 - VA.gov's site redesign did not carry those archives forward,
+ * so this table cannot honestly be extended further back without fabricating
+ * figures).
  */
 
 export const VA_PAY_RATES_HISTORICAL = {
+  // ============ 2018 RATES (Effective Dec 1, 2017 - 2.0% COLA) ============
+  // Verified directly against VA.gov's live "past-rates-2018" page (2026-08-17).
+  2018: {
+    colaIncrease: 2.0,
+    effectiveDate: "2017-12-01",
+    solo: {
+      0: 0,
+      10: 136.24,
+      20: 269.3,
+      30: 417.15,
+      40: 600.9,
+      50: 855.41,
+      60: 1083.52,
+      70: 1365.48,
+      80: 1587.25,
+      90: 1783.68,
+      100: 2973.86,
+    },
+    spouse: {
+      30: 49.0,
+      40: 66.0,
+      50: 82.0,
+      60: 99.0,
+      70: 116.0,
+      80: 132.0,
+      90: 149.0,
+      100: 165.81,
+    },
+    childUnder18: {
+      30: 24.0,
+      40: 32.0,
+      50: 41.0,
+      60: 49.0,
+      70: 57.0,
+      80: 65.0,
+      90: 74.0,
+      100: 82.38,
+    },
+    childSchool: {
+      30: 79.0,
+      40: 106.0,
+      50: 133.0,
+      60: 159.0,
+      70: 186.0,
+      80: 212.0,
+      90: 239.0,
+      100: 266.13,
+    },
+    parentOne: {
+      30: 39.0,
+      40: 53.0,
+      50: 66.0,
+      60: 79.0,
+      70: 93.0,
+      80: 106.0,
+      90: 119.0,
+      100: 133.06,
+    },
+    parentTwo: {
+      30: 78.0,
+      40: 106.0,
+      50: 132.0,
+      60: 158.0,
+      70: 186.0,
+      80: 212.0,
+      90: 238.0,
+      100: 266.12,
+    },
+  },
+
+  // ============ 2019 RATES (Effective Dec 1, 2018 - 2.8% COLA) ============
+  // Verified directly against VA.gov's live "past-rates-2019" page (2026-08-17).
+  2019: {
+    colaIncrease: 2.8,
+    effectiveDate: "2018-12-01",
+    solo: {
+      0: 0,
+      10: 140.05,
+      20: 276.84,
+      30: 428.83,
+      40: 617.73,
+      50: 879.36,
+      60: 1113.86,
+      70: 1403.71,
+      80: 1631.69,
+      90: 1833.62,
+      100: 3057.13,
+    },
+    spouse: {
+      30: 51.0,
+      40: 68.0,
+      50: 85.0,
+      60: 102.0,
+      70: 119.0,
+      80: 136.0,
+      90: 153.0,
+      100: 170.45,
+    },
+    childUnder18: {
+      30: 25.0,
+      40: 33.0,
+      50: 42.0,
+      60: 50.0,
+      70: 59.0,
+      80: 67.0,
+      90: 76.0,
+      100: 84.69,
+    },
+    childSchool: {
+      30: 82.0,
+      40: 109.0,
+      50: 136.0,
+      60: 164.0,
+      70: 191.0,
+      80: 218.0,
+      90: 246.0,
+      100: 273.58,
+    },
+    parentOne: {
+      30: 41.0,
+      40: 54.0,
+      50: 68.0,
+      60: 82.0,
+      70: 95.0,
+      80: 109.0,
+      90: 123.0,
+      100: 136.79,
+    },
+    parentTwo: {
+      30: 82.0,
+      40: 108.0,
+      50: 136.0,
+      60: 164.0,
+      70: 190.0,
+      80: 218.0,
+      90: 246.0,
+      100: 273.58,
+    },
+  },
+
   // ============ 2020 RATES (Effective Dec 1, 2019 - 1.6% COLA) ============
   2020: {
     colaIncrease: 1.6,

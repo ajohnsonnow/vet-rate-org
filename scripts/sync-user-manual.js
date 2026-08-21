@@ -1,40 +1,41 @@
 /**
  * User Manual Auto-Sync Script
- * 
+ *
  * AUTO-GENERATES documentation for any tools in toolkitData.js that are
  * missing from UserManual.jsx navigation structure.
- * 
+ *
  * VALIDATES AND UPDATES existing content to match current codebase:
  * - Checks for outdated AI/LLM references
  * - Updates to current Diamond Swarm architecture
  * - Removes deprecated model references
  * - Ensures technical accuracy
- * 
+ *
  * Runs automatically during pre-deploy to ensure User Manual stays up-to-date.
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
+const rootDir = path.resolve(__dirname, "..");
 
 // ANSI color codes
 const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
-  gray: '\x1b[90m',
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  cyan: "\x1b[36m",
+  gray: "\x1b[90m",
 };
 
 const log = {
-  header: (msg) => console.log(`\n${colors.bright}${colors.cyan}${msg}${colors.reset}`),
+  header: (msg) =>
+    console.log(`\n${colors.bright}${colors.cyan}${msg}${colors.reset}`),
   success: (msg) => console.log(`${colors.green}✅ ${msg}${colors.reset}`),
   warning: (msg) => console.log(`${colors.yellow}⚠️  ${msg}${colors.reset}`),
   error: (msg) => console.log(`${colors.red}❌ ${msg}${colors.reset}`),
@@ -43,111 +44,185 @@ const log = {
 };
 
 // Read toolkit data
-const toolkitDataPath = path.join(rootDir, 'src/data/toolkitData.js');
-const userManualPath = path.join(rootDir, 'src/components/UserManual.jsx');
+const toolkitDataPath = path.join(rootDir, "src/data/toolkitData.js");
+const userManualPath = path.join(rootDir, "src/components/UserManual.jsx");
 
 // Category mapping for tool categories
 const CATEGORY_MAP = {
-  'ratingCalculators': { icon: '🧮', title: 'Calculate', key: 'category-calculate' },
-  'discoveryResearch': { icon: '🔍', title: 'Discover', key: 'category-discover' },
-  'evidenceBuilding': { icon: '📋', title: 'Evidence', key: 'category-evidence' },
-  'qualityControl': { icon: '✅', title: 'QC', key: 'category-qc' },
-  'maximizeStrategy': { icon: '💰', title: 'Strategy', key: 'category-advanced' },
-  'supportResources': { icon: '🤝', title: 'Support', key: 'category-support' },
+  ratingCalculators: {
+    icon: "🧮",
+    title: "Calculate",
+    key: "category-calculate",
+  },
+  discoveryResearch: {
+    icon: "🔍",
+    title: "Discover",
+    key: "category-discover",
+  },
+  evidenceBuilding: { icon: "📋", title: "Evidence", key: "category-evidence" },
+  qualityControl: { icon: "✅", title: "QC", key: "category-qc" },
+  maximizeStrategy: { icon: "💰", title: "Strategy", key: "category-advanced" },
+  supportResources: { icon: "🤝", title: "Support", key: "category-support" },
 };
 
 // Deprecated AI references that should be removed/updated
 const OUTDATED_AI_REFERENCES = [
   // Old model names
-  { pattern: /SmolLM2 360M/gi, replacement: 'VetRate models', context: 'model-name' },
-  { pattern: /DeepSeek R1 7B/gi, replacement: 'VetRate Auditor', context: 'model-name' },
-  { pattern: /Qwen 2\.5 7B/gi, replacement: 'VetRate Writer', context: 'model-name' },
-  { pattern: /Qwen 3 8B/gi, replacement: 'VetRate Writer', context: 'model-name' },
-  { pattern: /Mistral 7B/gi, replacement: 'VetRate Writer', context: 'model-name' },
-  { pattern: /Llama 3\.2 3B/gi, replacement: 'VetRate models', context: 'model-name' },
-  { pattern: /Llama 3\.2 1B/gi, replacement: 'VetRate models', context: 'model-name' },
-  { pattern: /Phi 3\.5 Mini/gi, replacement: 'VetRate models', context: 'model-name' },
-  { pattern: /Phi 3\.5 Vision/gi, replacement: 'VetRate Vision Phi', context: 'model-name' },
-  
+  {
+    pattern: /SmolLM2 360M/gi,
+    replacement: "VetRate models",
+    context: "model-name",
+  },
+  {
+    pattern: /DeepSeek R1 7B/gi,
+    replacement: "VetRate Auditor",
+    context: "model-name",
+  },
+  {
+    pattern: /Qwen 2\.5 7B/gi,
+    replacement: "VetRate Writer",
+    context: "model-name",
+  },
+  {
+    pattern: /Qwen 3 8B/gi,
+    replacement: "VetRate Writer",
+    context: "model-name",
+  },
+  {
+    pattern: /Mistral 7B/gi,
+    replacement: "VetRate Writer",
+    context: "model-name",
+  },
+  {
+    pattern: /Llama 3\.2 3B/gi,
+    replacement: "VetRate models",
+    context: "model-name",
+  },
+  {
+    pattern: /Llama 3\.2 1B/gi,
+    replacement: "VetRate models",
+    context: "model-name",
+  },
+  {
+    pattern: /Phi 3\.5 Mini/gi,
+    replacement: "VetRate models",
+    context: "model-name",
+  },
+  {
+    pattern: /Phi 3\.5 Vision/gi,
+    replacement: "VetRate Vision Phi",
+    context: "model-name",
+  },
+
   // Old architecture references
-  { pattern: /17 models from 0\.3 GB to 4\.8 GB/gi, replacement: '3 specialized fine-tuned models plus fallback options', context: 'architecture' },
-  { pattern: /WebLLM technology/gi, replacement: 'Diamond Swarm architecture with custom fine-tuned models', context: 'architecture' },
-  
+  {
+    pattern: /17 models from 0\.3 GB to 4\.8 GB/gi,
+    replacement: "3 specialized fine-tuned models plus fallback options",
+    context: "architecture",
+  },
+  {
+    pattern: /WebLLM technology/gi,
+    replacement: "Diamond Swarm architecture with custom fine-tuned models",
+    context: "architecture",
+  },
+
   // Outdated VRAM recommendations
-  { pattern: /2 GB VRAM \(Integrated Graphics\)[^]*?- Llama 3\.2 1B/gmi, replacement: '', context: 'vram' },
-  { pattern: /4 GB VRAM[^]*?- Phi 3\.5 Mini/gmi, replacement: '', context: 'vram' },
-  { pattern: /6 GB VRAM[^]*?- Phi 3\.5 Vision/gmi, replacement: '', context: 'vram' },
-  { pattern: /8\+ GB VRAM[^]*?- Mistral 7B/gmi, replacement: '', context: 'vram' },
+  {
+    pattern: /2 GB VRAM \(Integrated Graphics\)[^]*?- Llama 3\.2 1B/gim,
+    replacement: "",
+    context: "vram",
+  },
+  {
+    pattern: /4 GB VRAM[^]*?- Phi 3\.5 Mini/gim,
+    replacement: "",
+    context: "vram",
+  },
+  {
+    pattern: /6 GB VRAM[^]*?- Phi 3\.5 Vision/gim,
+    replacement: "",
+    context: "vram",
+  },
+  {
+    pattern: /8\+ GB VRAM[^]*?- Mistral 7B/gim,
+    replacement: "",
+    context: "vram",
+  },
 ];
 
-log.header('═══════════════════════════════════════════════════════════════');
-log.header('        📖 USER MANUAL AUTO-SYNC');
-log.header('        Auto-generating missing documentation');
-log.header('═══════════════════════════════════════════════════════════════');
+log.header("═══════════════════════════════════════════════════════════════");
+log.header("        📖 USER MANUAL AUTO-SYNC");
+log.header("        Auto-generating missing documentation");
+log.header("═══════════════════════════════════════════════════════════════");
 
 // Parse toolkitData.js to extract all tools with their categories
 function getToolsFromToolkitData() {
-  const content = fs.readFileSync(toolkitDataPath, 'utf8');
+  const content = fs.readFileSync(toolkitDataPath, "utf8");
   const tools = [];
-  
+
   // Extract the TOOLKIT_CATEGORIES export
-  const categoriesMatch = content.match(/export const TOOLKIT_CATEGORIES = \[([\s\S]*?)\];/);
+  const categoriesMatch = content.match(
+    /export const TOOLKIT_CATEGORIES = \[([\s\S]*?)\];/,
+  );
   if (!categoriesMatch) {
-    throw new Error('Could not find TOOLKIT_CATEGORIES in toolkitData.js');
+    throw new Error("Could not find TOOLKIT_CATEGORIES in toolkitData.js");
   }
-  
+
   // Parse categories and their tools
   const categoriesStr = categoriesMatch[1];
-  const categoryRegex = /{\s*id:\s*['"]([^'"]+)['"],[\s\S]*?tools:\s*\[([\s\S]*?)\]\s*}/g;
-  
+  const categoryRegex =
+    /{\s*id:\s*['"]([^'"]+)['"],[\s\S]*?tools:\s*\[([\s\S]*?)\]\s*}/g;
+
   let catMatch;
   while ((catMatch = categoryRegex.exec(categoriesStr)) !== null) {
     const categoryId = catMatch[1];
     const toolsStr = catMatch[2];
-    
+
     // Extract tool names from this category
     const toolRegex = /name:\s*['"]([^'"]+)['"]/g;
     let toolMatch;
     while ((toolMatch = toolRegex.exec(toolsStr)) !== null) {
       tools.push({
         name: toolMatch[1],
-        category: categoryId
+        category: categoryId,
       });
     }
   }
-  
+
   return tools;
 }
 
 // Parse UserManual.jsx to extract documented sections
 function getDocumentedSections() {
-  const content = fs.readFileSync(userManualPath, 'utf8');
+  const content = fs.readFileSync(userManualPath, "utf8");
   const sections = [];
-  
+
   // Extract navigation IDs (simplified - matches id: 'tool-name')
   const idRegex = /id:\s*['"]([^'"]+)['"]/g;
   let match;
   while ((match = idRegex.exec(content)) !== null) {
     sections.push(match[1]);
   }
-  
+
   return sections;
 }
 
 // Normalize tool names to ID format (e.g., "C&P Exam Simulator" -> "cap-simulator")
 function normalizeToolName(name) {
-  return name
-    .toLowerCase()
-    .replace(/c&p/g, 'cap')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+  return (
+    name
+      .toLowerCase()
+      .replace(/c&p/g, "cap")
+      .replace(/[^a-z0-9]+/g, "-")
+      // eslint-disable-next-line sonarjs/slow-regex -- both alternation branches are anchored (^/$), no ambiguity possible; verified 0ms at 400k chars; operates on short internal tool-name strings
+      .replace(/^-+|-+$/g, "")
+  );
 }
 
 // Generate documentation section for a tool
 function generateToolSection(tool, categoryInfo) {
   const normalizedId = normalizeToolName(tool.name);
   const icon = categoryInfo.icon;
-  
+
   return `  {
     id: '${normalizedId}',
     title: '${tool.name}',
@@ -156,12 +231,12 @@ function generateToolSection(tool, categoryInfo) {
 }
 
 // Validate and update existing content for accuracy
-function validateAndUpdateContent(content) {
+// Check for outdated AI model references
+function applyOutdatedAiReferenceUpdates(content) {
   let updatedContent = content;
   let updateCount = 0;
   const updates = [];
-  
-  // Check for outdated AI model references
+
   OUTDATED_AI_REFERENCES.forEach(({ pattern, replacement, context }) => {
     if (pattern.test(updatedContent)) {
       updatedContent = updatedContent.replace(pattern, replacement);
@@ -169,26 +244,52 @@ function validateAndUpdateContent(content) {
       updates.push(`Updated ${context}: ${pattern.source}`);
     }
   });
-  
-  // Validate Knowledge Base source attribution
-  const kbRefs = ['DKB', 'VKB', 'CKB', 'Knowledge Base', 'Diamond Knowledge'];
-  kbRefs.forEach(kbRef => {
-    const pattern = new RegExp(`${kbRef}(?!.*source)(?!.*38 CFR)(?!.*Veteran.*provided)`, 'gi');
-    if (pattern.test(updatedContent)) {
+
+  return { content: updatedContent, updateCount, updates };
+}
+
+// Validate Knowledge Base source attribution
+function checkKbSourceAttribution(content) {
+  const kbRefs = ["DKB", "VKB", "CKB", "Knowledge Base", "Diamond Knowledge"];
+  let updateCount = 0;
+  const updates = [];
+
+  kbRefs.forEach((kbRef) => {
+    const pattern = new RegExp(
+      `${kbRef}(?!.*source)(?!.*38 CFR)(?!.*Veteran.*provided)`,
+      "gi",
+    );
+    if (pattern.test(content)) {
       // KB mentioned without source attribution - needs update
       updateCount++;
       updates.push(`Added source attribution for ${kbRef}`);
     }
   });
-  
-  // Update Knowledge Base section with proper source attribution
-  if (updatedContent.includes('knowledge-base') || updatedContent.includes('Knowledge Base')) {
-    const kbSection = updatedContent.match(/'knowledge-base':\s*{[^}]*}/);
-    if (kbSection && !kbSection[0].includes('DKB') && !kbSection[0].includes('source')) {
-      // Add KB documentation with proper attribution
-      updatedContent = updatedContent.replace(
-        /'knowledge-base':\s*{[^}]*}/,
-        `'knowledge-base': {
+
+  return { updateCount, updates };
+}
+
+// Update Knowledge Base section with proper source attribution
+function applyKbSectionUpdate(content) {
+  if (
+    !content.includes("knowledge-base") &&
+    !content.includes("Knowledge Base")
+  ) {
+    return { content, updateCount: 0, updates: [] };
+  }
+  const kbSection = content.match(/'knowledge-base':\s*{[^}]*}/);
+  if (
+    !kbSection ||
+    kbSection[0].includes("DKB") ||
+    kbSection[0].includes("source")
+  ) {
+    return { content, updateCount: 0, updates: [] };
+  }
+
+  // Add KB documentation with proper attribution
+  const updatedContent = content.replace(
+    /'knowledge-base':\s*{[^}]*}/,
+    `'knowledge-base': {
     title: 'Knowledge Base',
     content: \`
 Vet-Rate.org uses three separate knowledge bases with different sources and purposes.
@@ -257,19 +358,29 @@ Vet-Rate.org uses three separate knowledge bases with different sources and purp
 - **VKB**: YOUR data NEVER leaves your device without explicit consent
 - **CKB**: Community tips - no personal information
 \`,
-  },`
-      );
-      updateCount++;
-      updates.push('Added comprehensive KB source documentation');
-    }
+  },`,
+  );
+
+  return {
+    content: updatedContent,
+    updateCount: 1,
+    updates: ["Added comprehensive KB source documentation"],
+  };
+}
+
+// Update AI architecture descriptions
+function applyAiArchitectureUpdate(content) {
+  if (
+    !content.includes("17 models") &&
+    !content.includes("WebLLM technology")
+  ) {
+    return { content, updateCount: 0, updates: [] };
   }
-  
-  // Update AI architecture descriptions
-  if (updatedContent.includes('17 models') || updatedContent.includes('WebLLM technology')) {
-    // Replace outdated architecture description
-    updatedContent = updatedContent.replace(
-      /Vet-Rate\.org uses \*\*WebLLM\*\* technology to run AI models directly in your browser:[^]*?(?=##)/gm,
-      `Vet-Rate.org uses the **Diamond Swarm** - 3 custom fine-tuned models specialized for VA claims:
+
+  // Replace outdated architecture description
+  const updatedContent = content.replace(
+    /Vet-Rate\.org uses \*\*WebLLM\*\* technology to run AI models directly in your browser:[^]*?(?=##)/gm,
+    `Vet-Rate.org uses the **Diamond Swarm** - 3 custom fine-tuned models specialized for VA claims:
 
 1. **VetRate Auditor**: Reviews claims for accuracy and compliance
 2. **VetRate Writer**: Generates compelling statements and nexus letters
@@ -279,17 +390,25 @@ Plus fallback options: Wllama (browser WASM) and Local Server (llama.cpp).
 
 All models run 100% locally - your data NEVER leaves your device.
 
-`
-    );
-    updateCount++;
-    updates.push('Updated AI architecture description');
+`,
+  );
+
+  return {
+    content: updatedContent,
+    updateCount: 1,
+    updates: ["Updated AI architecture description"],
+  };
+}
+
+// Update model selection guidance
+function applyModelGuidanceUpdate(content) {
+  if (!content.includes("Each AI model has strengths")) {
+    return { content, updateCount: 0, updates: [] };
   }
-  
-  // Update model selection guidance
-  if (updatedContent.includes('Each AI model has strengths')) {
-    updatedContent = updatedContent.replace(
-      /Each AI model has strengths\. Here's what to use for each task:[^]*?(?=##)/gm,
-      `The Diamond Swarm automatically selects the best model for each task:
+
+  const updatedContent = content.replace(
+    /Each AI model has strengths\. Here's what to use for each task:[^]*?(?=##)/gm,
+    `The Diamond Swarm automatically selects the best model for each task:
 
 ## 💎 Diamond Swarm Models
 
@@ -308,160 +427,212 @@ If Diamond Swarm is unavailable:
 - **Local Server**: Connect to llama.cpp server (advanced users)
 - **Cloud AI**: Google Gemini (requires API key)
 
-`
-    );
-    updateCount++;
-    updates.push('Updated model selection guidance');
+`,
+  );
+
+  return {
+    content: updatedContent,
+    updateCount: 1,
+    updates: ["Updated model selection guidance"],
+  };
+}
+
+const CONTENT_VALIDATION_STEPS = [
+  applyOutdatedAiReferenceUpdates,
+  checkKbSourceAttribution,
+  applyKbSectionUpdate,
+  applyAiArchitectureUpdate,
+  applyModelGuidanceUpdate,
+];
+
+// Validate and update existing content for accuracy
+function validateAndUpdateContent(content) {
+  let updatedContent = content;
+  let updateCount = 0;
+  const updates = [];
+
+  for (const step of CONTENT_VALIDATION_STEPS) {
+    const result = step(updatedContent);
+    if (result.content !== undefined) updatedContent = result.content;
+    updateCount += result.updateCount;
+    updates.push(...result.updates);
   }
-  
+
   return { content: updatedContent, updateCount, updates };
+}
+
+// STEP 3 helper: generate + insert manual sections for undocumented tools,
+// grouped under each tool's category marker. Returns the updated content.
+function insertMissingSections(content, undocumented) {
+  log.info(`Auto-generating ${undocumented.length} missing sections...`);
+
+  // Find insertion points for each category
+  const categoryInsertions = {};
+
+  undocumented.forEach((tool) => {
+    const categoryInfo = CATEGORY_MAP[tool.category] || {
+      icon: "🔧",
+      title: "Support",
+      key: "category-support",
+    };
+
+    // Find the category marker in the file
+    const categoryPattern = new RegExp(
+      `id:\\s*'${categoryInfo.key}',[\\s\\S]*?isCategory:\\s*true[\\s\\S]*?},`,
+      "m",
+    );
+    const categoryMatch = content.match(categoryPattern);
+
+    if (categoryMatch) {
+      const insertAfterCategory = categoryMatch.index + categoryMatch[0].length;
+
+      if (!categoryInsertions[tool.category]) {
+        categoryInsertions[tool.category] = {
+          position: insertAfterCategory,
+          tools: [],
+        };
+      }
+      categoryInsertions[tool.category].tools.push(tool);
+    }
+  });
+
+  // Insert sections (in reverse order to maintain positions)
+  const categories = Object.keys(categoryInsertions).sort(
+    (a, b) => categoryInsertions[b].position - categoryInsertions[a].position,
+  );
+
+  categories.forEach((catKey) => {
+    const { position, tools } = categoryInsertions[catKey];
+    const categoryInfo = CATEGORY_MAP[catKey] || { icon: "🔧" };
+
+    const newSections = tools
+      .map((tool) => generateToolSection(tool, categoryInfo))
+      .join("\n");
+    const insertion = `\n${newSections}`;
+
+    content = content.slice(0, position) + insertion + content.slice(position);
+
+    log.detail(
+      `Added ${tools.length} sections under ${categoryInfo.title} category`,
+    );
+  });
+
+  log.success(`Auto-generated ${undocumented.length} documentation sections!`);
+  return content;
 }
 
 // Check for undocumented tools and auto-add them
 function checkAndUpdateDocumentation() {
-  log.info('Scanning toolkitData.js for all tools...');
+  log.info("Scanning toolkitData.js for all tools...");
   const allTools = getToolsFromToolkitData();
   log.detail(`Found ${allTools.length} tools in toolkit`);
-  
-  log.info('Scanning UserManual.jsx for documented sections...');
-  let content = fs.readFileSync(userManualPath, 'utf8');
+
+  log.info("Scanning UserManual.jsx for documented sections...");
+  let content = fs.readFileSync(userManualPath, "utf8");
   const documentedIds = getDocumentedSections();
   log.detail(`Found ${documentedIds.length} sections in User Manual`);
-  
+
   // STEP 1: Validate and update existing content
-  log.info('Validating existing content against codebase...');
+  log.info("Validating existing content against codebase...");
   const validation = validateAndUpdateContent(content);
   content = validation.content;
-  
+
   if (validation.updateCount > 0) {
     log.success(`Updated ${validation.updateCount} outdated references`);
-    validation.updates.forEach(update => log.detail(update));
+    validation.updates.forEach((update) => log.detail(update));
   } else {
-    log.detail('No outdated content found');
+    log.detail("No outdated content found");
   }
-  
+
   // STEP 2: Check for missing tool documentation
   const undocumented = [];
   const documented = [];
-  
-  allTools.forEach(tool => {
+
+  allTools.forEach((tool) => {
     const normalizedId = normalizeToolName(tool.name);
-    const isDocumented = documentedIds.some(id => {
+    const isDocumented = documentedIds.some((id) => {
       // Match exact or close match
-      return id === normalizedId || 
-             id.includes(normalizedId) || 
-             normalizedId.includes(id);
+      return (
+        id === normalizedId ||
+        id.includes(normalizedId) ||
+        normalizedId.includes(id)
+      );
     });
-    
+
     if (isDocumented) {
       documented.push(tool);
     } else {
       undocumented.push(tool);
     }
   });
-  
+
   // STEP 3: Auto-generate sections for undocumented tools
   if (undocumented.length > 0) {
-    log.info(`Auto-generating ${undocumented.length} missing sections...`);
-    
-    // Find insertion points for each category
-    const categoryInsertions = {};
-    
-    undocumented.forEach(tool => {
-      const categoryInfo = CATEGORY_MAP[tool.category] || { icon: '🔧', title: 'Support', key: 'category-support' };
-      const normalizedId = normalizeToolName(tool.name);
-      
-      // Find the category marker in the file
-      const categoryPattern = new RegExp(`id:\\s*'${categoryInfo.key}',[\\s\\S]*?isCategory:\\s*true[\\s\\S]*?},`, 'm');
-      const categoryMatch = content.match(categoryPattern);
-      
-      if (categoryMatch) {
-        const insertAfterCategory = categoryMatch.index + categoryMatch[0].length;
-        
-        if (!categoryInsertions[tool.category]) {
-          categoryInsertions[tool.category] = {
-            position: insertAfterCategory,
-            tools: []
-          };
-        }
-        categoryInsertions[tool.category].tools.push(tool);
-      }
-    });
-    
-    // Insert sections (in reverse order to maintain positions)
-    const categories = Object.keys(categoryInsertions).sort((a, b) => 
-      categoryInsertions[b].position - categoryInsertions[a].position
-    );
-    
-    categories.forEach(catKey => {
-      const { position, tools } = categoryInsertions[catKey];
-      const categoryInfo = CATEGORY_MAP[catKey] || { icon: '🔧' };
-      
-      const newSections = tools.map(tool => generateToolSection(tool, categoryInfo)).join('\n');
-      const insertion = `\n${newSections}`;
-      
-      content = content.slice(0, position) + insertion + content.slice(position);
-      
-      log.detail(`Added ${tools.length} sections under ${categoryInfo.title} category`);
-    });
-    
-    log.success(`Auto-generated ${undocumented.length} documentation sections!`);
+    content = insertMissingSections(content, undocumented);
   }
-  
+
   // Write updated content
-  fs.writeFileSync(userManualPath, content, 'utf8');
-  
-  return { 
-    allTools, 
-    documented, 
-    undocumented, 
+  fs.writeFileSync(userManualPath, content, "utf8");
+
+  return {
+    allTools,
+    documented,
+    undocumented,
     contentUpdated: validation.updateCount > 0,
     sectionsAdded: undocumented.length > 0,
-    updates: validation.updates
+    updates: validation.updates,
   };
 }
 
 // Main execution
 try {
-  const { allTools, documented, undocumented, contentUpdated, sectionsAdded, updates } = checkAndUpdateDocumentation();
-  
-  console.log('\n' + '─'.repeat(60));
+  const {
+    allTools,
+    documented,
+    undocumented,
+    contentUpdated,
+    sectionsAdded,
+    updates,
+  } = checkAndUpdateDocumentation();
+
+  console.log("\n" + "─".repeat(60));
   console.log(`${colors.bright}📊 DOCUMENTATION STATUS${colors.reset}`);
-  console.log('─'.repeat(60));
-  
+  console.log("─".repeat(60));
+
   const newDocCount = documented.length + undocumented.length;
   const coveragePercent = ((newDocCount / allTools.length) * 100).toFixed(1);
-  
-  log.success(`${newDocCount}/${allTools.length} tools documented (${coveragePercent}%)`);
-  
+
+  log.success(
+    `${newDocCount}/${allTools.length} tools documented (${coveragePercent}%)`,
+  );
+
   if (contentUpdated) {
-    console.log('\n' + '─'.repeat(60));
+    console.log("\n" + "─".repeat(60));
     console.log(`${colors.cyan}🔄 CONTENT UPDATES${colors.reset}`);
-    console.log('─'.repeat(60));
+    console.log("─".repeat(60));
     updates.forEach((update, i) => {
       console.log(`   ${i + 1}. ${update}`);
     });
-    log.success('Content updated to match current codebase');
+    log.success("Content updated to match current codebase");
   }
-  
+
   if (sectionsAdded) {
-    console.log('\n' + '─'.repeat(60));
+    console.log("\n" + "─".repeat(60));
     console.log(`${colors.cyan}📝 ADDED SECTIONS${colors.reset}`);
-    console.log('─'.repeat(60));
+    console.log("─".repeat(60));
     undocumented.forEach((tool, i) => {
       console.log(`   ${i + 1}. ${tool.name}`);
     });
     log.success(`Auto-added ${undocumented.length} missing tool sections`);
   }
-  
+
   if (!contentUpdated && !sectionsAdded) {
-    log.success('Documentation is up-to-date and accurate! 🎉');
+    log.success("Documentation is up-to-date and accurate! 🎉");
   }
-  
-  console.log('\n' + '═'.repeat(60));
-  log.success('USER MANUAL SYNC COMPLETE');
-  console.log('═'.repeat(60) + '\n');
-  
+
+  console.log("\n" + "═".repeat(60));
+  log.success("USER MANUAL SYNC COMPLETE");
+  console.log("═".repeat(60) + "\n");
 } catch (error) {
   log.error(`Failed to sync User Manual: ${error.message}`);
   console.error(error);

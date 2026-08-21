@@ -5,14 +5,14 @@ import {
 } from "../../scripts/legal-ingestion/contextualize.mjs";
 
 /**
- * S20 — contextual retrieval. The embedding-time prefix is templated (no
+ * S20 - contextual retrieval. The embedding-time prefix is templated (no
  * LLM call) from metadata already on the chunk; the persisted `text` field
  * must never be touched by this module.
  */
 describe("partHeading", () => {
   it("resolves the known Part 4 title", () => {
     expect(partHeading("38 CFR § 4.71a")).toBe(
-      "38 CFR Part 4 — Schedule for Rating Disabilities",
+      "38 CFR Part 4 - Schedule for Rating Disabilities",
     );
   });
 
@@ -31,7 +31,7 @@ describe("partHeading", () => {
 describe("contextualizeText", () => {
   const chunk = (text, over = {}) => ({
     citation: "38 CFR § 4.71a",
-    title: "§ 4.71a Schedule of ratings—musculoskeletal system",
+    title: "§ 4.71a Schedule of ratings-musculoskeletal system",
     text,
     ...over,
   });
@@ -39,14 +39,14 @@ describe("contextualizeText", () => {
   it("prepends the section title before the original text, separated by a blank line", () => {
     const out = contextualizeText(chunk("Original prose content."));
     expect(out).toBe(
-      "§ 4.71a Schedule of ratings—musculoskeletal system\n\nOriginal prose content.",
+      "§ 4.71a Schedule of ratings-musculoskeletal system\n\nOriginal prose content.",
     );
   });
 
   it("deliberately omits the corpus-wide part heading (non-discriminative today)", () => {
-    // See contextualize.mjs's comment: the shared "38 CFR Part 4 — Schedule
+    // See contextualize.mjs's comment: the shared "38 CFR Part 4 - Schedule
     // for Rating Disabilities" constant regressed 2 queries in an A/B test
-    // for a smaller gain elsewhere — net loss, so it's excluded on purpose.
+    // for a smaller gain elsewhere - net loss, so it's excluded on purpose.
     const out = contextualizeText(chunk("x"));
     expect(out).not.toContain("Schedule for Rating Disabilities");
   });

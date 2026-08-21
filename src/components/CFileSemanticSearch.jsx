@@ -5,7 +5,7 @@
  *
  * Meaning-based search over the veteran's OWN just-analyzed document. Unlike
  * the literal keyword search (pdfSearchEngine.js / RecordSearch.jsx), this
- * finds pages by concept — a veteran searching "ringing in my ears" surfaces
+ * finds pages by concept - a veteran searching "ringing in my ears" surfaces
  * the page that says "tinnitus" even with no shared words. Runs 100% on-device
  * against the IndexedDB vector index built during analysis; nothing leaves the
  * device.
@@ -51,7 +51,7 @@ const SemanticSearchBar = ({
 
 const SemanticSearchIntro = ({ excludedPageCount }) => (
   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-    Search your full document by meaning, not exact words — for example “ringing
+    Search your full document by meaning, not exact words - for example “ringing
     in my ears” will find pages that say “tinnitus.”
     {excludedPageCount > 0 && (
       <>

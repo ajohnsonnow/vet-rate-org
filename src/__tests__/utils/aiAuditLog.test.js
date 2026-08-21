@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// In-memory idb-keyval stub — keeps tests deterministic and isolated.
+// In-memory idb-keyval stub - keeps tests deterministic and isolated.
 const store = new Map();
 vi.mock("idb-keyval", () => ({
   get: vi.fn(async (k) => store.get(k)),
@@ -30,7 +30,7 @@ beforeEach(() => {
   store.clear();
 });
 
-describe("logModelCall — basic append", () => {
+describe("logModelCall - basic append", () => {
   it("returns seq=1 and a hash for the first entry", async () => {
     const { seq, hash } = await logModelCall({
       tag: "test",
@@ -49,7 +49,7 @@ describe("logModelCall — basic append", () => {
     expect(c.seq).toBe(3);
   });
 
-  it("chains hashes — prevHash of entry n+1 equals hash of entry n", async () => {
+  it("chains hashes - prevHash of entry n+1 equals hash of entry n", async () => {
     await logModelCall({ tag: "a", model: "x" });
     await logModelCall({ tag: "b", model: "x" });
     const [latest, prior] = await getRecentLogs(2);
@@ -105,7 +105,7 @@ describe("logModelCallWithDigests", () => {
   });
 });
 
-describe("getRecentLogs — ordering", () => {
+describe("getRecentLogs - ordering", () => {
   it("returns newest first", async () => {
     await logModelCall({ tag: "first", model: "x" });
     await logModelCall({ tag: "second", model: "x" });
@@ -129,7 +129,7 @@ describe("getRecentLogs — ordering", () => {
   });
 });
 
-describe("verifyLogChain — tamper detection", () => {
+describe("verifyLogChain - tamper detection", () => {
   it("returns ok=true for a clean chain", async () => {
     await logModelCall({ tag: "a", model: "x" });
     await logModelCall({ tag: "b", model: "x" });
@@ -215,7 +215,7 @@ describe("clearLogs", () => {
     expect(entry.tag).toBe("audit:cleared");
   });
 
-  it("resets the chain — new genesis prevHash is zeros", async () => {
+  it("resets the chain - new genesis prevHash is zeros", async () => {
     await logModelCall({ tag: "a", model: "x" });
     await clearLogs();
     const [entry] = await getRecentLogs(1);

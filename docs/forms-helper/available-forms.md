@@ -1,6 +1,9 @@
-﻿# Available Forms
+# Available Forms
 
 Overview of all VA forms supported by the Forms Helper.
+
+![Forms Helper form selection screen showing Buddy / Lay Statement, Intent to File, Medical Records Release, and Statement in Support of Claim cards](../assets/images/screenshots/forms-helper/forms-list.png)
+_Forms Helper supports 16 forms in total, each with its own guided builder._
 
 ---
 
@@ -10,11 +13,11 @@ Overview of all VA forms supported by the Forms Helper.
 
 **Purpose:** Submit a personal written statement supporting your claim.
 
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | Adding evidence or explanation to any claim |
-| **Who Completes** | You (the veteran) |
-| **Submission** | Upload to VA.gov or mail |
+| Detail            | Information                                 |
+| ----------------- | ------------------------------------------- |
+| **When to Use**   | Adding evidence or explanation to any claim |
+| **Who Completes** | You (the veteran)                           |
+| **Submission**    | Upload to VA.gov or mail                    |
 
 **Use For:**
 
@@ -23,15 +26,15 @@ Overview of all VA forms supported by the Forms Helper.
 - Providing context not in medical records
 - Responding to VA requests for information
 
-### VA 21-10210: Lay/Witness Statement
+### VA 21-10210: Buddy / Lay Statement
 
 **Purpose:** Statement from someone who witnessed your condition or its effects.
 
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | Getting supporting statements from others |
-| **Who Completes** | Buddy, family member, coworker, etc. |
-| **Submission** | Submit with your claim |
+| Detail            | Information                               |
+| ----------------- | ----------------------------------------- |
+| **When to Use**   | Getting supporting statements from others |
+| **Who Completes** | Buddy, family member, coworker, etc.      |
+| **Submission**    | Submit with your claim                    |
 
 **Use For:**
 
@@ -48,11 +51,11 @@ Overview of all VA forms supported by the Forms Helper.
 
 **Purpose:** Establish an effective date for your claim up to one year in advance.
 
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | Before you're ready to file a complete claim |
-| **Who Completes** | You (the veteran) |
-| **Valid For** | 1 year from submission |
+| Detail            | Information                                  |
+| ----------------- | -------------------------------------------- |
+| **When to Use**   | Before you're ready to file a complete claim |
+| **Who Completes** | You (the veteran)                            |
+| **Valid For**     | 1 year from submission                       |
 
 **Benefits:**
 
@@ -61,21 +64,21 @@ Overview of all VA forms supported by the Forms Helper.
 - **No commitment** - Doesn't obligate you to file
 
 !!! tip "File Early"
-    Submit an Intent to File as soon as you're considering a claim. It costs nothing and could mean months of additional back pay.
+Submit an Intent to File as soon as you're considering a claim. It costs nothing and could mean months of additional back pay.
 
 ---
 
 ## PTSD Forms
 
-### VA 21-0781: Statement in Support of Claim for PTSD
+### VA 21-0781: PTSD Stressor Statement
 
 **Purpose:** Document traumatic events (stressors) that caused or contributed to PTSD.
 
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | Filing a PTSD claim |
-| **Who Completes** | You (the veteran) |
-| **Required For** | All PTSD claims |
+| Detail            | Information         |
+| ----------------- | ------------------- |
+| **When to Use**   | Filing a PTSD claim |
+| **Who Completes** | You (the veteran)   |
+| **Required For**  | PTSD claims         |
 
 **What to Include:**
 
@@ -85,63 +88,41 @@ Overview of all VA forms supported by the Forms Helper.
 - Names of others involved (if known)
 - How the event affected you
 
-### VA 21-0781a: Statement in Support of Claim for PTSD Secondary to Personal Assault
-
-**Purpose:** Document PTSD from military sexual trauma (MST) or personal assault.
-
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | PTSD from personal assault/MST |
-| **Who Completes** | You (the veteran) |
-| **Special Considerations** | Different evidence standards apply |
-
-**What to Include:**
-
-- Description of assault/trauma
-- Behavioral changes after event
-- Alternative evidence sources (see form instructions)
+!!! info "MST and Personal Assault Claims"
+Forms Helper's builder currently covers the general VA 21-0781 stressor form. If your PTSD stems from military sexual trauma (MST) or personal assault, the official **VA Form 21-0781a** applies different, more flexible evidence standards - download it directly from [va.gov](https://www.va.gov/find-forms/about-form-21-0781a/) and consider working with a VSO who has MST claims experience.
 
 ---
 
-## Administrative Forms
+## Records & Representation Forms
 
-### VA 21-22: Appointment of Veterans Service Organization
+| Form                 | Name                                      | Purpose                                                        |
+| -------------------- | ----------------------------------------- | -------------------------------------------------------------- |
+| **VA 21-4142/4142a** | Medical Records Release                   | Authorize the VA to obtain your private medical records        |
+| **VA 20-10206**      | Freedom of Information Act (FOIA) Request | Request your C-file, medical records, or other VA documents    |
+| **VA 21-22**         | VSO Appointment                           | Appoint a Veterans Service Organization to represent you, free |
+| **VA 21-22a**        | Individual Representative                 | Appoint an attorney or claims agent (fees may apply)           |
+| **VA 21-0845**       | Third Party Authorization                 | Let a family member or caregiver receive info about your claim |
+| **VA 21-0972**       | Alternate Signer Certification            | Authorize someone to sign VA forms if you're unable to         |
 
-**Purpose:** Appoint a VSO to represent you in your claim.
+---
 
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | Getting help from a VSO |
-| **Who Completes** | You (the veteran) |
-| **Effect** | Grants access to your records |
+## Urgent & Special Situations
 
-**Common VSOs:**
+| Form            | Name                        | Purpose                                                                                  |
+| --------------- | --------------------------- | ---------------------------------------------------------------------------------------- |
+| **VA 20-10207** | Priority Processing Request | Expedite processing for terminal illness, financial hardship, homelessness, ALS, age 85+ |
+| **VA 21-0779**  | Nursing Home Information    | Required for Aid & Attendance claims when residing in a nursing facility                 |
+| **VA 21P-0847** | Request for Substitution    | Continue a deceased veteran's pending claim as an eligible survivor                      |
 
-- American Legion
-- Veterans of Foreign Wars (VFW)
-- Disabled American Veterans (DAV)
-- AMVETS
-- County/State Veterans Services
+---
 
-### VA 21-22a: Appointment of Individual
+## Pension & TDIU Forms
 
-**Purpose:** Appoint an attorney or claims agent (vs. a VSO).
-
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | Hiring an attorney or claims agent |
-| **Who Completes** | You and the representative |
-| **Fees** | Attorney fees may apply |
-
-### VA 10-5345: Request for and Authorization to Release Health Information
-
-**Purpose:** Authorize release of your medical records.
-
-| Detail | Information |
-|--------|-------------|
-| **When to Use** | Getting private medical records for VA |
-| **Who Completes** | You (the veteran) |
-| **Purpose** | Authorize healthcare provider to send records to VA |
+| Form            | Name                               | Purpose                                                                             |
+| --------------- | ---------------------------------- | ----------------------------------------------------------------------------------- |
+| **VA 21P-0969** | Income & Asset Statement           | Report income/assets for VA pension eligibility                                     |
+| **VA 21P-8416** | Medical Expense Report             | Report unreimbursed medical expenses to reduce countable income for pension         |
+| **VA 21-4192**  | Request for Employment Information | Employer verification for TDIU (Total Disability Individual Unemployability) claims |
 
 ---
 
@@ -149,27 +130,34 @@ Overview of all VA forms supported by the Forms Helper.
 
 ### First Time Filing?
 
-| Goal | Start With |
-|------|------------|
+| Goal                       | Start With                  |
+| -------------------------- | --------------------------- |
 | **Protect effective date** | VA 21-0966 (Intent to File) |
-| **Get VSO help** | VA 21-22 (VSO Appointment) |
-| **Add personal statement** | VA 21-4138 (Statement) |
+| **Get VSO help**           | VA 21-22 (VSO Appointment)  |
+| **Add personal statement** | VA 21-4138 (Statement)      |
 
 ### PTSD Claim?
 
-| Situation | Forms Needed |
-|-----------|--------------|
-| **Combat-related PTSD** | VA 21-0781 |
-| **MST/Personal assault** | VA 21-0781a |
-| **Both** | Both forms |
+| Situation                | Forms Needed                       |
+| ------------------------ | ---------------------------------- |
+| **Combat-related PTSD**  | VA 21-0781 (in Forms Helper)       |
+| **MST/Personal assault** | VA 21-0781a (download from va.gov) |
 
 ### Need Supporting Evidence?
 
-| Type | Form |
-|------|------|
-| **Your statement** | VA 21-4138 |
-| **Buddy statement** | VA 21-10210 |
-| **Medical records** | VA 10-5345 |
+| Type                | Form             |
+| ------------------- | ---------------- |
+| **Your statement**  | VA 21-4138       |
+| **Buddy statement** | VA 21-10210      |
+| **Medical records** | VA 21-4142/4142a |
+
+### Pursuing TDIU or Pension?
+
+| Goal                        | Form        |
+| --------------------------- | ----------- |
+| **Prove unemployability**   | VA 21-4192  |
+| **Pension eligibility**     | VA 21P-0969 |
+| **Reduce countable income** | VA 21P-8416 |
 
 ---
 
@@ -177,11 +165,12 @@ Overview of all VA forms supported by the Forms Helper.
 
 Some forms are not included in Forms Helper:
 
-| Form | Reason | Where to Get |
-|------|--------|--------------|
-| **VA 21-526EZ** | Complex, best done online | VA.gov |
-| **VA 21-686c** | Dependent claim | VA.gov |
-| **VA 21-534EZ** | Survivor claim | VA.gov |
+| Form            | Reason                                  | Where to Get                                                 |
+| --------------- | --------------------------------------- | ------------------------------------------------------------ |
+| **VA 21-526EZ** | Complex, best done online               | VA.gov                                                       |
+| **VA 21-686c**  | Dependent claim                         | VA.gov                                                       |
+| **VA 21-534EZ** | Survivor claim                          | VA.gov                                                       |
+| **VA 21-0781a** | MST/personal assault stressor statement | [va.gov](https://www.va.gov/find-forms/about-form-21-0781a/) |
 
 !!! info "Full Claims Applications"
-    For complete claims applications (like VA 21-526EZ), use VA.gov directly for the best experience with validation and direct submission.
+For complete claims applications (like VA 21-526EZ), use VA.gov directly for the best experience with validation and direct submission.

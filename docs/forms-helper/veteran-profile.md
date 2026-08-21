@@ -2,6 +2,9 @@
 
 Save your information for faster form completion across all Forms Helper tools.
 
+![Your Information (Enter Once, Use Everywhere) profile form with First Name, Last Name, SSN, and address fields](../assets/images/screenshots/forms-helper/veteran-profile-form.png)
+_Opened from the "Set Up Profile (Enter Info Once!)" button at the top of Forms Helper._
+
 ---
 
 ## What is Veteran Profile?
@@ -39,7 +42,7 @@ The **Veteran Profile** is a secure, locally-stored profile containing your basi
 Open <strong>Forms Helper</strong>
 </div>
 <div class="step">
-Click <strong>"Veteran Profile"</strong> button (usually at top or in settings)
+Click <strong>"Set Up Profile (Enter Info Once!)"</strong> at the top of the form list
 </div>
 <div class="step">
 Complete your <strong>profile information</strong>
@@ -55,35 +58,35 @@ Click <strong>"Save Profile"</strong>
 
 ### Personal Information
 
-| Field | Description |
-|-------|-------------|
-| **Full Legal Name** | As it appears on military records |
-| **Date of Birth** | Your birth date |
-| **SSN** | Social Security Number |
-| **VA File Number** | If you have one (may be same as SSN) |
-| **Gender** | Male/Female/Other |
+| Field               | Description                          |
+| ------------------- | ------------------------------------ |
+| **Full Legal Name** | As it appears on military records    |
+| **Date of Birth**   | Your birth date                      |
+| **SSN**             | Social Security Number               |
+| **VA File Number**  | If you have one (may be same as SSN) |
+| **Gender**          | Male/Female/Other                    |
 
 ### Contact Information
 
-| Field | Description |
-|-------|-------------|
-| **Address** | Street address |
-| **City** | City |
-| **State** | State |
-| **ZIP Code** | ZIP code |
-| **Phone** | Primary phone number |
-| **Email** | Email address |
+| Field        | Description          |
+| ------------ | -------------------- |
+| **Address**  | Street address       |
+| **City**     | City                 |
+| **State**    | State                |
+| **ZIP Code** | ZIP code             |
+| **Phone**    | Primary phone number |
+| **Email**    | Email address        |
 
 ### Military Service
 
-| Field | Description |
-|-------|-------------|
-| **Branch** | Army, Navy, Air Force, Marines, Coast Guard, Space Force |
-| **Service Start Date** | Date you entered active duty |
-| **Service End Date** | Date you separated |
-| **Rank at Separation** | Your final rank |
-| **MOS/Rating** | Military occupational specialty |
-| **Character of Discharge** | Honorable, General, etc. |
+| Field                      | Description                                              |
+| -------------------------- | -------------------------------------------------------- |
+| **Branch**                 | Army, Navy, Air Force, Marines, Coast Guard, Space Force |
+| **Service Start Date**     | Date you entered active duty                             |
+| **Service End Date**       | Date you separated                                       |
+| **Rank at Separation**     | Your final rank                                          |
+| **MOS/Rating**             | Military occupational specialty                          |
+| **Character of Discharge** | Honorable, General, etc.                                 |
 
 ### Additional Service Periods
 
@@ -99,9 +102,9 @@ For veterans with multiple service periods:
 ### Local Storage Only
 
 !!! va-info "Your Data Stays Local"
-    
+
     Your Veteran Profile is stored **only in your browser's local storage**. It is:
-    
+
     - ✅ Never sent to any server
     - ✅ Never transmitted over the internet
     - ✅ Never shared with third parties
@@ -140,9 +143,9 @@ Forms Helper automatically fills:
 ### Review Before Submission
 
 !!! warning "Always Review"
-    
+
     Even with pre-fill, **always review** each form before submission:
-    
+
     - Verify information is current
     - Check for any needed updates
     - Ensure accuracy
@@ -228,7 +231,7 @@ If using a shared computer:
 ## Tips for Your Profile
 
 !!! tip "Profile Best Practices"
-    
+
     1. **Complete all fields** - More data = more convenience
     2. **Keep it current** - Update when information changes
     3. **Verify accuracy** - Match your official records

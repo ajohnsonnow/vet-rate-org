@@ -83,24 +83,11 @@ const _periodDedupKey = (p) =>
  * left in place, unread, per the dual-read pattern. Idempotent: re-running
  * synthesizes the same dedup key, so a second run adds nothing new.
  */
-// Step 1: synthesize one period from the legacy dd214Data blob.
-function _migrateDD214DataIntoPeriods(history, periods, existingKeys) {
-  const dd = history.dd214Data;
-  if (!dd || !(dd.entryDate || dd.separationDate)) return;
-
-  const synthesized = {
-    serviceStartDate: dd.entryDate || null,
-    serviceEndDate: dd.separationDate || null,
-    branch: dd.branch || "",
-    component: dd.component || "",
-  };
-  const key = _periodDedupKey(synthesized);
-  if (existingKeys.has(key)) return;
-
-  periods.push({
-    id: `period_migrated_dd214_${Date.now()}`,
-    ...synthesized,
-    formType: "DD214",
+// Step 1a: the legacy-only fields carried over from dd214Data, split out
+// from _migrateDD214DataIntoPeriods purely to keep that function's own
+// cyclomatic complexity under the repo's limit.
+function _buildDD214LegacyFields(dd) {
+  return {
     rank: dd.rank || "",
     payGrade: dd.payGrade || "",
     mos: dd.mos || "",
@@ -123,6 +110,28 @@ function _migrateDD214DataIntoPeriods(history, periods, existingKeys) {
     userEdited: false,
     incomplete: !(dd.entryDate && dd.separationDate),
     notes: "",
+  };
+}
+
+// Step 1: synthesize one period from the legacy dd214Data blob.
+function _migrateDD214DataIntoPeriods(history, periods, existingKeys) {
+  const dd = history.dd214Data;
+  if (!dd || !(dd.entryDate || dd.separationDate)) return;
+
+  const synthesized = {
+    serviceStartDate: dd.entryDate || null,
+    serviceEndDate: dd.separationDate || null,
+    branch: dd.branch || "",
+    component: dd.component || "",
+  };
+  const key = _periodDedupKey(synthesized);
+  if (existingKeys.has(key)) return;
+
+  periods.push({
+    id: `period_migrated_dd214_${Date.now()}`,
+    ...synthesized,
+    formType: "DD214",
+    ..._buildDD214LegacyFields(dd),
   });
   existingKeys.add(key);
 }

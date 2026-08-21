@@ -13,21 +13,26 @@ To access accessibility settings:
 
 The accessibility menu opens as a dropdown panel.
 
+![The Accessibility settings dropdown, showing Display Mode and Color Vision Settings options](../assets/images/screenshots/getting-started/accessibility-menu.png)
+_Display Mode and Color Vision Settings are the first two sections in the dropdown._
+
 ---
 
 ## Available Settings
 
-### Dark Mode Toggle
+### Display Mode
 
 <div class="feature-card">
 <h4>🌙 Dark Mode / ☀️ Light Mode</h4>
 <p>Reduce eye strain by switching between light and dark themes.</p>
 </div>
 
-| Setting | Description |
-|---------|-------------|
-| **Light Mode** | Default theme with warm, muted colors |
-| **Dark Mode** | Dark background with light text |
+| Setting               | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| **Light Mode**        | Default theme with warm, muted colors                              |
+| **Dark Mode**         | Dark background with light text                                    |
+| **TBI Comfort**       | Reduced-stimulation palette for traumatic brain injury sensitivity |
+| **AAA High Contrast** | Maximum-contrast display mode (WCAG AAA)                           |
 
 **Benefits of Dark Mode:**
 
@@ -37,7 +42,7 @@ The accessibility menu opens as a dropdown panel.
 
 **How to toggle:**
 
-- Click the toggle switch next to "Dark Mode" or "Light Mode"
+- Click any of the four Display Mode buttons
 - The change takes effect immediately
 
 ---
@@ -46,13 +51,13 @@ The accessibility menu opens as a dropdown panel.
 
 Vet-Rate.org supports multiple color blind modes to ensure all users can distinguish important information.
 
-| Mode | Description | Best For |
-|------|-------------|----------|
-| **Default Colors** | Standard color palette | Most users |
-| **Protanopia** | Blue/Yellow spectrum | Red-blind users |
-| **Deuteranopia** | Blue/Yellow spectrum | Green-blind users |
-| **Tritanopia** | Modified palette | Blue-blind users |
-| **High Contrast** | Maximum visibility | Low vision users |
+| Mode               | Description            | Best For          |
+| ------------------ | ---------------------- | ----------------- |
+| **Default Colors** | Standard color palette | Most users        |
+| **Protanopia**     | Blue/Yellow spectrum   | Red-blind users   |
+| **Deuteranopia**   | Blue/Yellow spectrum   | Green-blind users |
+| **Tritanopia**     | Modified palette       | Blue-blind users  |
+| **High Contrast**  | Maximum visibility     | Low vision users  |
 
 **How to change:**
 
@@ -62,7 +67,7 @@ Vet-Rate.org supports multiple color blind modes to ensure all users can disting
 4. Changes apply immediately
 
 !!! tip "Testing Color Modes"
-    Try different modes to find what works best for you. All important information uses shapes, icons, and text labels in addition to color, ensuring nothing is lost when colors change.
+Try different modes to find what works best for you. All important information uses shapes, icons, and text labels in addition to color, ensuring nothing is lost when colors change.
 
 ---
 
@@ -70,12 +75,12 @@ Vet-Rate.org supports multiple color blind modes to ensure all users can disting
 
 Adjust the base font size for better readability:
 
-| Size | Base Font | Description |
-|------|-----------|-------------|
-| **Small** | 14px | Compact layout |
-| **Normal** | 16px | Default setting |
-| **Large** | 18px | Easier reading |
-| **Extra Large** | 20px | Maximum readability |
+| Size            | Base Font | Description         |
+| --------------- | --------- | ------------------- |
+| **Small**       | 14px      | Compact layout      |
+| **Normal**      | 16px      | Default setting     |
+| **Large**       | 18px      | Easier reading      |
+| **Extra Large** | 20px      | Maximum readability |
 
 **How to change:**
 
@@ -114,7 +119,7 @@ When enabled:
 3. Click to enable (toggle turns colored)
 
 !!! info "System Preference Detection"
-    Vet-Rate.org respects your operating system's "Reduce Motion" preference. If enabled at the system level, the website will automatically minimize animations.
+Vet-Rate.org respects your operating system's "Reduce Motion" preference. If enabled at the system level, the website will automatically minimize animations.
 
 ---
 
@@ -122,14 +127,14 @@ When enabled:
 
 All of Vet-Rate.org is fully navigable via keyboard:
 
-| Key | Action |
-|-----|--------|
-| `Tab` | Move forward through interactive elements |
-| `Shift + Tab` | Move backward through elements |
-| `Enter` | Activate buttons and links |
-| `Space` | Toggle checkboxes and buttons |
-| `Escape` | Close modals and dropdowns |
-| `Arrow Keys` | Navigate within menus and lists |
+| Key           | Action                                    |
+| ------------- | ----------------------------------------- |
+| `Tab`         | Move forward through interactive elements |
+| `Shift + Tab` | Move backward through elements            |
+| `Enter`       | Activate buttons and links                |
+| `Space`       | Toggle checkboxes and buttons             |
+| `Escape`      | Close modals and dropdowns                |
+| `Arrow Keys`  | Navigate within menus and lists           |
 
 ### Skip Link
 
@@ -149,12 +154,12 @@ Vet-Rate.org is optimized for screen readers:
 
 ### Tested Screen Readers
 
-| Screen Reader | Browser | Status |
-|--------------|---------|--------|
-| NVDA | Chrome, Firefox | ✅ Supported |
-| JAWS | Chrome, Edge | ✅ Supported |
-| VoiceOver | Safari, Chrome | ✅ Supported |
-| Narrator | Edge | ✅ Supported |
+| Screen Reader | Browser         | Status       |
+| ------------- | --------------- | ------------ |
+| NVDA          | Chrome, Firefox | ✅ Supported |
+| JAWS          | Chrome, Edge    | ✅ Supported |
+| VoiceOver     | Safari, Chrome  | ✅ Supported |
+| Narrator      | Edge            | ✅ Supported |
 
 ---
 
@@ -192,7 +197,7 @@ If you encounter an accessibility barrier:
 4. Include details about your assistive technology
 
 !!! tip "Feedback Welcome"
-    We're committed to accessibility. If something doesn't work with your assistive technology, please report it so we can improve.
+We're committed to accessibility. If something doesn't work with your assistive technology, please report it so we can improve.
 
 ---
 

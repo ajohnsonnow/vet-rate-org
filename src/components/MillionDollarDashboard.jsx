@@ -182,7 +182,7 @@ const calculateLifetimeValue = (
     currentAnnualPay *= 1 + ESTIMATED_COLA_RATE; // Apply COLA
   }
 
-  // Property Tax Exemption — eligibility varies by state, not universally 100%
+  // Property Tax Exemption - eligibility varies by state, not universally 100%
   let propertyTaxSavings = 0;
   if (
     state &&
@@ -365,7 +365,7 @@ const DashboardHeader = ({ onClose, onReportBug }) => (
             moduleName="Million Dollar Dashboard"
           />
         )}
-        <button
+        <button type="button"
           onClick={onClose}
           className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
           aria-label="Close"
@@ -418,14 +418,14 @@ const AgeInputField = ({ ageInputValue, setAgeInputValue, setCurrentAge }) => (
       value={ageInputValue}
       onChange={(e) => {
         setAgeInputValue(e.target.value);
-        const val = parseInt(e.target.value);
-        if (!isNaN(val) && val >= 18 && val <= 80) {
+        const val = Number.parseInt(e.target.value);
+        if (!Number.isNaN(val) && val >= 18 && val <= 80) {
           setCurrentAge(val);
         }
       }}
       onBlur={(e) => {
-        const val = parseInt(e.target.value);
-        if (isNaN(val) || val < 18 || val > 80) {
+        const val = Number.parseInt(e.target.value);
+        if (Number.isNaN(val) || val < 18 || val > 80) {
           setAgeInputValue("40");
           setCurrentAge(40);
         } else {
@@ -447,7 +447,7 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="block text-sm text-gray-400">VA Rating %</label>
       {hasMyRatings() && (
-        <button
+        <button type="button"
           onClick={handleLoadMyRatings}
           className="text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
           aria-label="Calculate from your saved ratings"
@@ -462,7 +462,7 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
       max="100"
       step="10"
       value={rating}
-      onChange={(e) => setRating(parseInt(e.target.value))}
+      onChange={(e) => setRating(Number.parseInt(e.target.value))}
       className="w-full"
     />
     <div className="text-center text-2xl font-bold text-white mt-2">
@@ -499,7 +499,7 @@ const SpouseToggleField = ({ hasSpouse, setHasSpouse }) => (
   <div>
     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
     <label className="block text-sm text-gray-400 mb-1">Spouse?</label>
-    <button
+    <button type="button"
       onClick={() => setHasSpouse(!hasSpouse)}
       className={`w-full p-3 rounded-xl font-bold transition-all ${
         hasSpouse
@@ -521,7 +521,7 @@ const ChildrenInputField = ({ numChildren, setNumChildren }) => (
       type="number"
       value={numChildren}
       onChange={(e) =>
-        setNumChildren(Math.max(0, Math.min(10, parseInt(e.target.value) || 0)))
+        setNumChildren(Math.max(0, Math.min(10, Number.parseInt(e.target.value) || 0)))
       }
       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-center text-lg font-bold"
     />
@@ -536,7 +536,7 @@ const PermanentTotalToggleField = ({
   <div>
     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
     <label className="block text-sm text-gray-400 mb-1">P&T?</label>
-    <button
+    <button type="button"
       onClick={() => setIsPermanentTotal(!isPermanentTotal)}
       className={`w-full p-3 rounded-xl font-bold transition-all ${
         isPermanentTotal
@@ -943,14 +943,14 @@ const SMCNotIncludedNotice = ({ smcSCheck }) => (
       (CRSC), and Concurrent Retirement and Disability Pay (CRDP) are not
       calculated in this projection. If you are a military retiree or have
       severe disabilities (housebound, aid and attendance, loss of use), your
-      actual benefits may differ — speak with a VSO about your specific
+      actual benefits may differ - speak with a VSO about your specific
       situation.
     </p>
     {smcSCheck.potentiallyEligible && (
       <p className="text-sm text-amber-300 mt-3">
         Your saved ratings show a single 100% disability plus additional
         separate ratings that combine to 60% or more. You may qualify for SMC-S
-        (statutory housebound, 38 U.S.C. § 1114(s)) — ask a VSO to review your
+        (statutory housebound, 38 U.S.C. § 1114(s)) - ask a VSO to review your
         ratings.
       </p>
     )}

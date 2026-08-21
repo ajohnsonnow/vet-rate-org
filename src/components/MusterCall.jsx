@@ -93,9 +93,11 @@ export default function MusterCall({
     >
       <MusterCallAIStatusBanner ai={ai} />
 
-      {/* System requirements + timing notice */}
       <div className="mb-4">
-        <SystemRequirementsNotice toolName="Muster Call" />
+        <SystemRequirementsNotice
+          toolName="Muster Call"
+          supportsExtractionOnly={false}
+        />
       </div>
 
       <MusterCallDropZone

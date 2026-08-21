@@ -3,7 +3,7 @@ import ResponsiveModal from "../../components/common/ResponsiveModal";
 import AffiliationPicker from "../../components/AffiliationPicker";
 
 /**
- * AffiliationPickerPrompt — one-time optional onboarding step (Sprint 4).
+ * AffiliationPickerPrompt - one-time optional onboarding step (Sprint 4).
  *
  * Shown once to first-time visitors after the DisclaimerSplash is acknowledged,
  * before the BootCampTour starts. Fully skippable: "Skip" and "Done" both call
@@ -34,7 +34,7 @@ export default function AffiliationPickerPrompt({ onDone }) {
             Make it yours 🎖️
           </h2>
           <p className="text-blue-100 dark:text-gray-300 text-sm">
-            Choose an affiliation palette — or skip and stick with the default.
+            Choose an affiliation palette - or skip and stick with the default.
           </p>
         </div>
       }
@@ -62,7 +62,7 @@ export default function AffiliationPickerPrompt({ onDone }) {
       <div data-testid="affiliation-prompt" className="space-y-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Personalize your accent colors to reflect your branch or service. This
-          only changes accent colors — all accessibility settings still apply on
+          only changes accent colors - all accessibility settings still apply on
           top. You can change this anytime in{" "}
           <span className="font-medium text-gray-800 dark:text-gray-200">
             Accessibility → Affiliation

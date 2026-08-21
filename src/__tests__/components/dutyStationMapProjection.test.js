@@ -2,8 +2,8 @@
  * Load-bearing test (duty-stations + world-map spec §8): the map MUST be
  * area-accurate (Equal Earth), not just visually plausible. This asserts
  * that planar area / spherical area is roughly constant across the
- * bundled 50m features — the signature property of an equal-area
- * projection — and that the test fails hard if geoMercator (or any other
+ * bundled 50m features - the signature property of an equal-area
+ * projection - and that the test fails hard if geoMercator (or any other
  * non-equal-area projection) is substituted for geoEqualEarth.
  *
  * Planar area is computed via d3-geo's own geoPath(projection).area(),
@@ -18,7 +18,7 @@
  * literally rendered AND the one that isolates the projection choice.
  *
  * Measured on this exact 50m dataset: geoEqualEarth's max deviation from
- * the median ratio is ~0.012% (features with geoArea > 0.001 sr) — the
+ * the median ratio is ~0.012% (features with geoArea > 0.001 sr) - the
  * spec's default ±5% tolerance is not "too tight" here, so it's kept
  * as-specified rather than loosened.
  */
@@ -53,10 +53,10 @@ function medianOf(values) {
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-describe("DutyStationMap projection — equal-area verification", () => {
+describe("DutyStationMap projection - equal-area verification", () => {
   it("throws a clear error when objects.countries is missing from the topology", async () => {
     // Exercises the REAL loadWorldFeatures() code path (not a re-derived
-    // copy of the check) by mocking the JSON import out from under it —
+    // copy of the check) by mocking the JSON import out from under it -
     // both worldFeatures.js and this test resolve the same relative path
     // to the same absolute module, so the mock applies to both.
     vi.resetModules();
@@ -93,7 +93,7 @@ describe("DutyStationMap projection — equal-area verification", () => {
     expect(maxDeviation).toBeLessThanOrEqual(TOLERANCE);
   });
 
-  it("FAILS this same check for a non-equal-area projection (geoMercator) — proves the test discriminates", () => {
+  it("FAILS this same check for a non-equal-area projection (geoMercator) - proves the test discriminates", () => {
     const mercator = geoMercator().fitWidth(1000, { type: "Sphere" });
     const ratios = ratiosFor(mercator);
     const median = medianOf(ratios);
@@ -102,7 +102,7 @@ describe("DutyStationMap projection — equal-area verification", () => {
     );
 
     // Mercator wildly over-represents polar landmass relative to its true
-    // area — this must NOT satisfy the same tolerance geoEqualEarth does.
+    // area - this must NOT satisfy the same tolerance geoEqualEarth does.
     expect(maxDeviation).toBeGreaterThan(TOLERANCE);
   });
 });

@@ -1,11 +1,11 @@
 /**
- * S24 — AI-analysis exclusion accounting.
+ * S24 - AI-analysis exclusion accounting.
  *
  * Two layers:
- *  1. `computeAiExclusion` (pure) — the single source of truth for which chunks
+ *  1. `computeAiExclusion` (pure) - the single source of truth for which chunks
  *     the local-AI pass skips (score floor + top-N cap). The analysis loop
  *     consults exactly this, so testing it here tests the real skip behaviour.
- *  2. `analyzeCFile` metadata wiring — the excluded PAGE count is surfaced in
+ *  2. `analyzeCFile` metadata wiring - the excluded PAGE count is surfaced in
  *     the returned metadata (previously it was a console.log only). Heavy AI
  *     backends are mocked; the semantic index is disabled to avoid the real
  *     embedder / IndexedDB (covered by userDocSemanticIndex.test.js).
@@ -161,7 +161,7 @@ describe("computeAiExclusion", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("analyzeCFile — excluded-page metadata", () => {
+describe("analyzeCFile - excluded-page metadata", () => {
   it(
     "reports zero exclusions when every chunk clears the gates",
     { timeout: 20000 },
@@ -185,7 +185,7 @@ describe("analyzeCFile — excluded-page metadata", () => {
       expect(result.success).toBe(true);
       expect(result.metadata.pagesExcludedFromAI).toBe(0);
       expect(result.metadata.chunksExcludedFromAI).toBe(0);
-      // Semantic index disabled for this test — surfaced honestly, not omitted.
+      // Semantic index disabled for this test - surfaced honestly, not omitted.
       expect(result.metadata.semanticIndex.indexed).toBe(false);
     },
   );
@@ -201,7 +201,7 @@ describe("analyzeCFile — excluded-page metadata", () => {
       // Pages 1-4 highly relevant; pages 5-8 medically-flagged (Gate 2 passes on
       // "pain") but score 0 (no scored terms). With the relevance floor (Gate 3,
       // MIN_CLAIMS_SCORE=0) disabled for full coverage, their chunk is now
-      // ANALYZED rather than floor-excluded — no page carrying a medical signal
+      // ANALYZED rather than floor-excluded - no page carrying a medical signal
       // is dropped for a low keyword score.
       let text = "";
       for (let p = 1; p <= 4; p++) {

@@ -34,7 +34,7 @@ let tokenClient = null;
 /**
  * RT8-7: Lazy-load the Google API scripts on first cloud-sync interaction
  * instead of loading them for every page visitor via index.html <head>.
- * Both scripts are idempotent — safe to call multiple times.
+ * Both scripts are idempotent - safe to call multiple times.
  */
 let _gapiScriptLoaded = false;
 let _gisScriptLoaded = false;
@@ -332,7 +332,7 @@ async function getOrCreateBackupFolder() {
 //                 PBKDF2-SHA256 600k iterations (OWASP 2023). Per-encryption
 //                 random salt.
 //   V3 (current): identical layout to V2 but new magic "VS3\0" and AAD-bound
-//                  AES-GCM. AAD = UTF-8 "vetrate.cloud-sync.v3" — domain-
+//                  AES-GCM. AAD = UTF-8 "vetrate.cloud-sync.v3" - domain-
 //                  separates this envelope from cloud-encryption.js V3 and
 //                  prevents cross-context ciphertext reuse.
 // Decrypt sniffs the magic; V1 (no magic) and V2 path still decrypt so
@@ -437,7 +437,7 @@ export async function decryptData(encryptedBase64, password) {
     return decoder.decode(plain);
   }
 
-  // V1 legacy fallback — fixed salt + 100k iterations. New writes never take
+  // V1 legacy fallback - fixed salt + 100k iterations. New writes never take
   // this path; only existing user backups do.
   const iv = bytes.slice(0, 12);
   const ciphertext = bytes.slice(12);
@@ -462,8 +462,8 @@ export async function decryptData(encryptedBase64, password) {
 export const LEGACY_DEFAULT_KEY = "vet-rate-default-key";
 
 // Key for a NEW write: the user's passphrase, else their account email. The
-// shared default key is refused — a new backup must bind to something
-// user-specific, never the global constant — so a write with neither a
+// shared default key is refused - a new backup must bind to something
+// user-specific, never the global constant - so a write with neither a
 // passphrase nor a signed-in email throws instead of silently using it.
 export function selectWriteKey(password, user) {
   const key = password || user?.email;
@@ -481,12 +481,12 @@ export function selectRestoreKey(password, user) {
   return password || user?.email || LEGACY_DEFAULT_KEY;
 }
 
-// A passphrase-less write binds to the account email — user-specific but NOT
+// A passphrase-less write binds to the account email - user-specific but NOT
 // secret: it is low entropy and knowable by anyone, so the resulting backup is
 // only weakly protected. Callers must not present such a write as "secure";
 // surface a warning and recommend setting a passphrase. (A random DEK wrapped in
 // the device keystore would be stronger, but that is a new envelope format that
-// must coexist with V1/V2/V3 restore — deferred as a design decision.)
+// must coexist with V1/V2/V3 restore - deferred as a design decision.)
 export function isWeakWriteKey(password) {
   return !password;
 }
@@ -505,7 +505,7 @@ export async function saveBackupToGoogleDrive(data, password = null) {
     if (weakKey) {
       // eslint-disable-next-line no-console
       console.warn(
-        "⚠️ Cloud backup encrypted with an email-derived key (no passphrase set). The email is not secret — set a passphrase for stronger protection.",
+        "⚠️ Cloud backup encrypted with an email-derived key (no passphrase set). The email is not secret - set a passphrase for stronger protection.",
       );
     }
 

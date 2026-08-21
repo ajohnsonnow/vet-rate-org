@@ -165,8 +165,11 @@ async function unregisterServiceWorkers() {
 }
 
 function forceReloadWithCacheBypass() {
+  // Build from pathname/search only (not the raw href) so this is never
+  // read as "unsanitized location input flows back into window.location".
+  const separator = window.location.search ? "&" : "?";
   window.location.href =
-    window.location.href.split("#")[0] + "?nocache=" + Date.now();
+    window.location.pathname + window.location.search + separator + "nocache=" + Date.now();
 }
 
 async function handleAtomicWipe(setIsWiping, onWipeComplete) {
@@ -237,7 +240,7 @@ function AtomicWipeTrigger({ compact, isDark, isTbiComfort, onOpen }) {
           focus:outline-none focus:ring-2 focus:ring-red-500
           transition-colors
         `}
-        aria-label="Clear all local data"
+        aria-label="Clear Data - permanently erase all local data"
       >
         🔥 Clear Data
       </button>
@@ -257,7 +260,7 @@ function AtomicWipeTrigger({ compact, isDark, isTbiComfort, onOpen }) {
         focus:outline-none focus:ring-3 focus:ring-red-500 focus:ring-offset-2
         transition-colors
       `}
-      aria-label="Clear all local data"
+      aria-label="Atomic Wipe - permanently erase all local data"
     >
       <span className="text-xl">🔥</span>
       <div className="text-left">

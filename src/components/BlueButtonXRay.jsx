@@ -10,7 +10,6 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import { scanDocumentForCrisis } from "../utils/crisisInterceptor";
@@ -623,7 +622,7 @@ function ConditionListItem({ condition, onToggle, onCheckRatingCriteria }) {
         {/* Quick Actions */}
         <div className="flex gap-2 flex-shrink-0">
           {onCheckRatingCriteria && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onCheckRatingCriteria(condition.standardizedName);
@@ -727,7 +726,7 @@ function BlueButtonHeader({ onClose, onOpenAISettings, onReportBug }) {
               moduleName="Blue Button X-Ray"
             />
           )}
-          <button
+          <button type="button"
             onClick={onClose}
             className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
@@ -880,7 +879,7 @@ function Step1ActionButtons({
     <>
       <div className="flex flex-col sm:flex-row gap-3 mt-4">
         {/* Save to VKB Button - Available immediately after upload */}
-        <button
+        <button type="button"
           onClick={onSaveToVKB}
           disabled={savingToVKB || savedToVKB}
           className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${vkbStateStep1.className}`}
@@ -890,7 +889,7 @@ function Step1ActionButtons({
         </button>
 
         {/* AI Scan Button */}
-        <button
+        <button type="button"
           onClick={onProcessFile}
           disabled={isProcessing || !aiAvailable}
           className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
@@ -1058,13 +1057,13 @@ function ResultsActionButtons({
 }) {
   return (
     <div className="flex flex-wrap gap-3">
-      <button
+      <button type="button"
         onClick={onSelectAllClaimable}
         className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 transition-colors flex items-center gap-2"
       >
         <span>✅</span> Select All Claimable
       </button>
-      <button
+      <button type="button"
         onClick={onSaveToVKB}
         disabled={savingToVKB || savedToVKB}
         className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${vkbStateResults.className}`}
@@ -1072,13 +1071,13 @@ function ResultsActionButtons({
         <span>{vkbStateResults.icon}</span>
         {vkbStateResults.label}
       </button>
-      <button
+      <button type="button"
         onClick={onReset}
         className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
       >
         <span>🔄</span> Start Over
       </button>
-      <button
+      <button type="button"
         onClick={onToggleRawText}
         className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
       >
@@ -1129,7 +1128,7 @@ function AddToCalculatorPanel({ conditions, onAddToCalculator }) {
             Add to Pathfinder for strategic analysis
           </p>
         </div>
-        <button
+        <button type="button"
           onClick={() => {
             const selected = conditions.filter((c) => c.selected);
             onAddToCalculator(selected);
@@ -1513,12 +1512,7 @@ function onFileSelected(e, setError, setFile, setExtractedConditions) {
  * Read text file
  */
 function readTextFile(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
-    reader.onerror = (_e) => reject(new Error("Failed to read text file"));
-    reader.readAsText(file);
-  });
+  return file.text();
 }
 
 /**
@@ -1966,6 +1960,55 @@ async function analyzeWithAI(text, setProcessingStage) {
 }
 
 /**
+ * Read the raw text out of a Blue Button file, based on its type.
+ */
+async function extractBlueButtonFileText(file, setProcessingStage) {
+  if (file.type === "application/pdf") {
+    setProcessingStage("Extracting text from PDF...");
+    return extractTextFromPDF(file, setProcessingStage);
+  }
+  setProcessingStage("Reading text file...");
+  return readTextFile(file);
+}
+
+/**
+ * Auto-save the Blue Button document to VKB before AI analysis, if it
+ * hasn't already been saved. Failures here don't block AI analysis.
+ */
+async function autoSaveBlueButtonToVKB(
+  file,
+  text,
+  savedToVKB,
+  { setProcessingStage, setSavedToVKB },
+) {
+  if (savedToVKB) return;
+
+  setProcessingStage("Saving to My Packet...");
+  try {
+    await addDocumentToVKB({
+      fileName: file.name,
+      classification: "blue_button",
+      rawText: text,
+      extractedData: {
+        conditions: [], // Will be updated after AI analysis
+        processingDate: new Date().toISOString(),
+        source: "BlueButtonXRay",
+      },
+      documentDate: new Date().toISOString(),
+      sourceFile: file.name,
+    });
+    setSavedToVKB(true);
+    // eslint-disable-next-line no-console
+    console.log("✅ Auto-saved Blue Button to VKB before AI analysis");
+  } catch (vkbErr) {
+    console.warn(
+      "⚠️ Could not save to VKB, continuing with AI analysis:",
+      vkbErr.message,
+    );
+  }
+}
+
+/**
  * Process the dropped in file using AI
  * Auto-saves to VKB first so the document is available to other tools
  */
@@ -1998,16 +2041,7 @@ async function handleProcessFile(
   setExtractedConditions([]);
 
   try {
-    let text = "";
-
-    if (file.type === "application/pdf") {
-      setProcessingStage("Extracting text from PDF...");
-      text = await extractTextFromPDF(file, setProcessingStage);
-    } else {
-      setProcessingStage("Reading text file...");
-      text = await readTextFile(file);
-    }
-
+    const text = await extractBlueButtonFileText(file, setProcessingStage);
     setRawText(text);
 
     if (text.length < 100) {
@@ -2016,33 +2050,10 @@ async function handleProcessFile(
       );
     }
 
-    // Auto-save to VKB before AI analysis (if not already saved)
-    if (!savedToVKB) {
-      setProcessingStage("Saving to My Packet...");
-      try {
-        await addDocumentToVKB({
-          fileName: file.name,
-          classification: "blue_button",
-          rawText: text,
-          extractedData: {
-            conditions: [], // Will be updated after AI analysis
-            processingDate: new Date().toISOString(),
-            source: "BlueButtonXRay",
-          },
-          documentDate: new Date().toISOString(),
-          sourceFile: file.name,
-        });
-        setSavedToVKB(true);
-        // eslint-disable-next-line no-console
-        console.log("✅ Auto-saved Blue Button to VKB before AI analysis");
-      } catch (vkbErr) {
-        console.warn(
-          "⚠️ Could not save to VKB, continuing with AI analysis:",
-          vkbErr.message,
-        );
-        // Don't block AI analysis if VKB save fails
-      }
-    }
+    await autoSaveBlueButtonToVKB(file, text, savedToVKB, {
+      setProcessingStage,
+      setSavedToVKB,
+    });
 
     setProcessingStage(
       "AI analyzing diagnoses (this may take 30-60 seconds)...",
@@ -2140,20 +2151,20 @@ function useFileHandlers({
     );
 
   return {
-    handleSaveToVKBClick,
+    onSaveToVKB: handleSaveToVKBClick,
     handleDrop,
     handleDragOver,
     handleDragLeave,
     handleFileSelect,
-    handleProcessFileClick,
+    onProcessFile: handleProcessFileClick,
   };
 }
 
 /**
- * All state and handlers for the Blue Button X-Ray tool, bundled into one
- * hook so the component itself stays focused on composing the view.
+ * Polls the unified AI service's status on an interval, so the header
+ * badge stays in sync with local/remote AI availability.
  */
-function useBlueButtonXRay() {
+function useAIStatusPolling() {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
 
   useEffect(() => {
@@ -2161,41 +2172,50 @@ function useBlueButtonXRay() {
     return () => clearInterval(interval);
   }, []);
 
-  const [file, setFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStage, setProcessingStage] = useState("");
-  const [error, setError] = useState(null);
-  const [extractedConditions, setExtractedConditions] = useState([]);
-  const [rawText, setRawText] = useState("");
-  const [showRawText, setShowRawText] = useState(false);
-  const [savedToVKB, setSavedToVKB] = useState(false);
-  const [savingToVKB, setSavingToVKB] = useState(false);
+  return aiStatus;
+}
 
-  const {
-    handleSaveToVKBClick,
-    handleDrop,
-    handleDragOver,
-    handleDragLeave,
-    handleFileSelect,
-    handleProcessFileClick,
-  } = useFileHandlers({
-    file,
-    rawText,
-    extractedConditions,
+/**
+ * Derived (computed, not stored) state for the Blue Button X-Ray view.
+ */
+function getBlueButtonDerivedState(
+  extractedConditions,
+  isDragging,
+  file,
+  savedToVKB,
+  savingToVKB,
+) {
+  const unclaimedCount = extractedConditions.filter(
+    (c) => c.isClaimable,
+  ).length;
+  const dropZoneClass = getDropZoneClass(isDragging, !!file);
+  const vkbStateStep1 = getVkbButtonState(
     savedToVKB,
-    setError,
-    setFile,
-    setIsDragging,
-    setExtractedConditions,
-    setSavingToVKB,
-    setProcessingStage,
-    setRawText,
-    setSavedToVKB,
-    setIsProcessing,
-  });
+    savingToVKB,
+    "bg-purple-600 hover:bg-purple-700 text-white",
+  );
+  const vkbStateResults = getVkbButtonState(
+    savedToVKB,
+    savingToVKB,
+    "bg-purple-600 text-white hover:bg-purple-700",
+  );
 
+  return { unclaimedCount, dropZoneClass, vkbStateStep1, vkbStateResults };
+}
+
+/**
+ * Selection/reset actions that only call setters captured via closure -
+ * no hooks used here, so this is safe to build outside of render.
+ */
+function createBlueButtonResetActions({
+  setFile,
+  setExtractedConditions,
+  setRawText,
+  setError,
+  setShowRawText,
+  setSavedToVKB,
+  setSavingToVKB,
+}) {
   const toggleConditionSelection = (id) =>
     setExtractedConditions((prev) =>
       prev.map((c) => (c.id === id ? { ...c, selected: !c.selected } : c)),
@@ -2216,25 +2236,89 @@ function useBlueButtonXRay() {
     setSavingToVKB(false);
   };
 
-  const unclaimedCount = extractedConditions.filter(
-    (c) => c.isClaimable,
-  ).length;
-  const dropZoneClass = getDropZoneClass(isDragging, !!file);
-  const vkbStateStep1 = getVkbButtonState(
+  return {
+    onToggleCondition: toggleConditionSelection,
+    onSelectAllClaimable: selectAllClaimable,
+    onReset: handleReset,
+  };
+}
+
+/**
+ * Drag/drop + file-input state for the Blue Button X-Ray tool.
+ */
+function useBlueButtonFileDropState() {
+  const [file, setFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
+  return { file, setFile, isDragging, setIsDragging, fileInputRef };
+}
+
+/**
+ * VKB auto-save/manual-save status for the Blue Button X-Ray tool.
+ */
+function useBlueButtonVKBState() {
+  const [savedToVKB, setSavedToVKB] = useState(false);
+  const [savingToVKB, setSavingToVKB] = useState(false);
+
+  return { savedToVKB, setSavedToVKB, savingToVKB, setSavingToVKB };
+}
+
+/**
+ * All state and handlers for the Blue Button X-Ray tool, bundled into one
+ * hook so the component itself stays focused on composing the view.
+ */
+function useBlueButtonXRay() {
+  const aiStatus = useAIStatusPolling();
+  const { file, setFile, isDragging, setIsDragging, fileInputRef } =
+    useBlueButtonFileDropState();
+  const { savedToVKB, setSavedToVKB, savingToVKB, setSavingToVKB } =
+    useBlueButtonVKBState();
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStage, setProcessingStage] = useState("");
+  const [error, setError] = useState(null);
+  const [extractedConditions, setExtractedConditions] = useState([]);
+  const [rawText, setRawText] = useState("");
+  const [showRawText, setShowRawText] = useState(false);
+
+  const fileHandlers = useFileHandlers({
+    file,
+    rawText,
+    extractedConditions,
+    savedToVKB,
+    setError,
+    setFile,
+    setIsDragging,
+    setExtractedConditions,
+    setSavingToVKB,
+    setProcessingStage,
+    setRawText,
+    setSavedToVKB,
+    setIsProcessing,
+  });
+
+  const resetActions = createBlueButtonResetActions({
+    setFile,
+    setExtractedConditions,
+    setRawText,
+    setError,
+    setShowRawText,
+    setSavedToVKB,
+    setSavingToVKB,
+  });
+
+  const derivedState = getBlueButtonDerivedState(
+    extractedConditions,
+    isDragging,
+    file,
     savedToVKB,
     savingToVKB,
-    "bg-purple-600 hover:bg-purple-700 text-white",
-  );
-  const vkbStateResults = getVkbButtonState(
-    savedToVKB,
-    savingToVKB,
-    "bg-purple-600 text-white hover:bg-purple-700",
   );
 
   return {
     aiStatus,
     file,
-    isDragging,
     fileInputRef,
     isProcessing,
     processingStage,
@@ -2244,20 +2328,10 @@ function useBlueButtonXRay() {
     showRawText,
     savedToVKB,
     savingToVKB,
-    setShowRawText,
-    handleSaveToVKBClick,
-    handleDrop,
-    handleDragOver,
-    handleDragLeave,
-    handleFileSelect,
-    handleProcessFileClick,
-    toggleConditionSelection,
-    selectAllClaimable,
-    handleReset,
-    unclaimedCount,
-    dropZoneClass,
-    vkbStateStep1,
-    vkbStateResults,
+    onToggleRawText: () => setShowRawText(!showRawText),
+    ...fileHandlers,
+    ...resetActions,
+    ...derivedState,
   };
 }
 
@@ -2268,34 +2342,14 @@ export default function BlueButtonXRay({
   onOpenAISettings,
   onReportBug,
 }) {
-  const { _t } = useLanguage();
-  const {
-    aiStatus,
-    file,
-    fileInputRef,
-    isProcessing,
-    processingStage,
-    error,
-    extractedConditions,
-    rawText,
-    showRawText,
-    savedToVKB,
-    savingToVKB,
-    setShowRawText,
-    handleSaveToVKBClick,
-    handleDrop,
-    handleDragOver,
-    handleDragLeave,
-    handleFileSelect,
-    handleProcessFileClick,
-    toggleConditionSelection,
-    selectAllClaimable,
-    handleReset,
-    unclaimedCount,
-    dropZoneClass,
-    vkbStateStep1,
-    vkbStateResults,
-  } = useBlueButtonXRay();
+  const blueButtonState = useBlueButtonXRay();
+  const { extractedConditions } = blueButtonState;
+
+  const mainContentProps = {
+    ...blueButtonState,
+    onCheckRatingCriteria,
+    onAddToCalculator,
+  };
 
   return (
     <>
@@ -2313,35 +2367,7 @@ export default function BlueButtonXRay({
         }
       >
         {/* Main Content */}
-        <BlueButtonMainContent
-          aiStatus={aiStatus}
-          extractedConditions={extractedConditions}
-          dropZoneClass={dropZoneClass}
-          handleDrop={handleDrop}
-          handleDragOver={handleDragOver}
-          handleDragLeave={handleDragLeave}
-          fileInputRef={fileInputRef}
-          handleFileSelect={handleFileSelect}
-          file={file}
-          savingToVKB={savingToVKB}
-          savedToVKB={savedToVKB}
-          vkbStateStep1={vkbStateStep1}
-          vkbStateResults={vkbStateResults}
-          onSaveToVKB={handleSaveToVKBClick}
-          isProcessing={isProcessing}
-          processingStage={processingStage}
-          onProcessFile={handleProcessFileClick}
-          error={error}
-          onSelectAllClaimable={selectAllClaimable}
-          onReset={handleReset}
-          showRawText={showRawText}
-          onToggleRawText={() => setShowRawText(!showRawText)}
-          onToggleCondition={toggleConditionSelection}
-          onCheckRatingCriteria={onCheckRatingCriteria}
-          onAddToCalculator={onAddToCalculator}
-          rawText={rawText}
-          unclaimedCount={unclaimedCount}
-        />
+        <BlueButtonMainContent {...mainContentProps} />
       </ResponsiveModal>
 
       {/* BuyMeCoffee - shows after successful extraction */}

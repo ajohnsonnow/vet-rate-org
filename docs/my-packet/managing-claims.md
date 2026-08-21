@@ -51,25 +51,8 @@ Or use <strong>bulk selection</strong> to add multiple
 </div>
 </div>
 
-### Manual Entry
-
-<div class="step-container">
-<div class="step">
-Open <strong>My Packet</strong>
-</div>
-<div class="step">
-Click <strong>"Add Condition"</strong> button
-</div>
-<div class="step">
-Enter the <strong>condition name</strong>
-</div>
-<div class="step">
-Select <strong>claim type</strong> (Primary/Secondary)
-</div>
-<div class="step">
-Click <strong>"Add"</strong>
-</div>
-</div>
+!!! info "No Manual Entry"
+My Packet doesn't have a blank "Add Condition" form. Every condition arrives from somewhere - a search result, the details panel, Secondary Scout, or a suggestion surfaced by the C-File Analyzer - so it always starts linked to real context about that condition.
 
 ---
 
@@ -79,30 +62,30 @@ Each saved condition displays as a card with:
 
 ### Header Section
 
-| Element | Description |
-|---------|-------------|
-| **Condition Name** | The disability name |
-| **Diagnostic Code** | 4-digit VA code (if applicable) |
-| **Claim Type Badge** | Primary, Secondary, or Aggravation |
-| **Status Badge** | Current claim status |
+| Element            | Description                                                           |
+| ------------------ | --------------------------------------------------------------------- |
+| **Condition Name** | The disability name                                                   |
+| **Status Badge**   | Current claim status (Drafting, Statement Generated, or Filed)        |
+| **Source Badge**   | Whether it came from your VA.gov claims/appeals or was added manually |
+| **Secondary To**   | If applicable, which primary condition it's linked to                 |
 
 ### Details Section
 
-| Element | Description |
-|---------|-------------|
-| **Rating Range** | Possible rating percentages |
-| **Body System** | Category (Mental Health, Musculoskeletal, etc.) |
-| **Date Added** | When you saved it |
-| **Notes** | Your personal notes |
+| Element                  | Description                                                      |
+| ------------------------ | ---------------------------------------------------------------- |
+| **Readiness Gauge**      | Visual check for the "Big 3": diagnosis, in-service event, nexus |
+| **Date Saved / Updated** | When you added the condition and when it last changed            |
 
 ### Action Buttons
 
-| Button | Function |
-|--------|----------|
-| **View Details** | Open full disability details |
-| **Build Statement** | Open Nexus Builder |
-| **Edit** | Modify condition information |
-| **Remove** | Delete from packet |
+Each card also shows a **Readiness Gauge** - a quick check for the "Big 3" of a strong claim: current diagnosis, in-service event, and a nexus connecting them.
+
+| Button                                                               | Function                                                                                        |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Build Statement** (Drafting) / **View Statement** (once generated) | Open the Nexus Builder wizard for this condition                                                |
+| **Download**                                                         | Download the statement as TXT, Word, or PDF - only enabled after you certify you've reviewed it |
+| **Upload Evidence to VA**                                            | Appears only for conditions linked to a real VA.gov claim ID, with VA sign-in connected         |
+| **Remove**                                                           | Delete from packet                                                                              |
 
 ---
 
@@ -135,19 +118,11 @@ When adding a secondary condition, specify:
 
 ### Available Statuses
 
-| Status | When to Use |
-|--------|-------------|
-| **Researching** | Learning about the condition and requirements |
-| **Drafting** | Working on statement and evidence |
-| **Evidence Gathering** | Collecting medical records, buddy statements, etc. |
-| **Ready to File** | Everything prepared, ready to submit |
-| **Filed** | Claim submitted to VA |
-| **Pending** | Waiting for VA decision |
-| **C&P Scheduled** | Exam appointment scheduled |
-| **C&P Complete** | Exam completed |
-| **Decision Pending** | Final decision in progress |
-| **Approved** | Claim granted |
-| **Denied** | Claim denied (may appeal) |
+| Status                  | When to Use                                         |
+| ----------------------- | --------------------------------------------------- |
+| **Drafting**            | Still working on the statement and evidence         |
+| **Statement Generated** | A nexus statement has been built for this condition |
+| **Filed**               | You've submitted this claim to the VA               |
 
 ### Updating Status
 
@@ -156,7 +131,7 @@ When adding a secondary condition, specify:
 Find the condition in <strong>My Packet</strong>
 </div>
 <div class="step">
-Click the <strong>status badge</strong> or Edit button
+Use the <strong>status dropdown</strong> on the condition's card
 </div>
 <div class="step">
 Select the <strong>new status</strong>
@@ -166,64 +141,22 @@ Status updates <strong>immediately</strong>
 </div>
 </div>
 
+!!! info "Automatic Status Change"
+Generating a nexus statement through the wizard automatically moves a condition from **Drafting** to **Statement Generated** - you don't have to set that one yourself.
+
 ---
 
-## Organizing Conditions
+## Finding Conditions
 
-### Sorting Options
-
-Sort your conditions by:
-
-- **Date Added** - Newest or oldest first
-- **Name** - Alphabetically
-- **Status** - By claim progress
-- **Type** - Primary vs. Secondary
-
-### Filtering
-
-Filter to show:
-
-- **All** - Every condition
-- **Primary Only** - Direct service connection
-- **Secondary Only** - Secondary service connection
-- **By Status** - Specific status only
-
-### Searching
-
-Use the search box to find specific conditions by name.
+My Packet lists conditions in a single scrollable feed - there's no separate sort, filter, or search control within the Claims tab. With more than a handful of conditions, use your browser's find-on-page (Ctrl+F / Cmd+F) to jump to one by name.
 
 ---
 
 ## Editing Conditions
 
-### What You Can Edit
+Once a condition is saved, the only field you can change directly is its **status**, using the dropdown on its card. There's no separate "Edit" form for the condition name, diagnostic code, or claim type.
 
-| Field | Editable? |
-|-------|-----------|
-| Condition Name | ✅ Yes |
-| Claim Type | ✅ Yes |
-| Status | ✅ Yes |
-| Notes | ✅ Yes |
-| Primary Link | ✅ Yes (for secondary) |
-| Date Added | ❌ No |
-| Diagnostic Code | ❌ No (from database) |
-
-### How to Edit
-
-<div class="step-container">
-<div class="step">
-Find the condition
-</div>
-<div class="step">
-Click <strong>"Edit"</strong> button
-</div>
-<div class="step">
-Make your changes
-</div>
-<div class="step">
-Click <strong>"Save"</strong>
-</div>
-</div>
+To correct a mistake (wrong condition, wrong diagnostic code), remove the card and re-save the correct one from search results, details, or Secondary Scout.
 
 ---
 
@@ -243,67 +176,29 @@ Click <strong>"Remove"</strong> button
 </div>
 </div>
 
-### What Gets Deleted
+### What Gets Removed
 
-!!! warning "Permanent Deletion"
-    
-    Removing a condition also deletes:
-    
-    - ❌ Associated nexus statements
-    - ❌ Doctor's cheat sheets
-    - ❌ Notes for that condition
-    
-    **Backup first** if you want to preserve these.
+!!! warning "Removal Is Immediate"
+
+    Clicking "Remove" (after confirming) takes the condition card out of My Packet right away.
+
+    Any nexus statement you already generated for it stays in browser storage but is no longer linked to a visible claim - it won't reappear if you re-save the same condition later.
+
+    **Backup first** if there's any chance you'll want that statement again.
 
 ---
 
-## Adding Notes
-
-### Why Use Notes
-
-Notes help you:
-
-- Track research findings
-- Remember important details
-- Note evidence you need
-- Record questions for your VSO
-
-### Adding Notes
-
-<div class="step-container">
-<div class="step">
-Find the condition
-</div>
-<div class="step">
-Click in the <strong>Notes</strong> field
-</div>
-<div class="step">
-<strong>Type</strong> your notes
-</div>
-<div class="step">
-Notes <strong>save automatically</strong>
-</div>
-</div>
-
-### Example Notes
-
-```
-- Need to get buddy statement from John (served together 2010-2012)
-- Dr. Smith willing to write nexus letter
-- Found relevant study: Journal of Veterans Health 2019
-- Remember to mention flare-ups during C&P exam
-- Scheduled IMO consultation for next Tuesday
-```
+![My Packet claims dashboard with the backup toolbar and Ground Guide banner](../assets/images/screenshots/my-packet/claims-tab.png)
+_The Claims tab: stats at the top, the Local Backup / Restore / Google Drive toolbar, and condition cards below._
 
 ---
 
 ## Best Practices
 
 !!! tip "Managing Claims Effectively"
-    
+
     1. **Add conditions early** - As soon as you're researching
     2. **Update statuses regularly** - Know where each claim stands
-    3. **Use notes liberally** - Document everything
-    4. **Build statements before filing** - Be prepared
-    5. **Link secondary to primary** - Keep connections clear
-    6. **Backup before removing** - Protect your work
+    3. **Build statements before filing** - Be prepared
+    4. **Link secondary to primary** - Keep connections clear
+    5. **Backup before removing** - Protect your work

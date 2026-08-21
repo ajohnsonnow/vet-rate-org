@@ -22,7 +22,7 @@ import {
 const SMC_K_CURRENT_YEAR = 2026;
 
 // SMC-K (38 U.S.C. § 1114(k)) pays a flat monthly amount ON TOP OF the
-// schedular rating for loss/loss of use of a creative organ — it applies
+// schedular rating for loss/loss of use of a creative organ - it applies
 // regardless of the condition's own percentage (often rated 0%), so it's
 // easy for a veteran to win the underlying rating and never learn SMC-K
 // exists. Conditions below qualify as "loss of use of a creative organ."
@@ -42,7 +42,7 @@ function getSmcKNote(conditionName) {
     code: "SMC-K",
     citation: "38 U.S.C. § 1114(k)",
     message: rate
-      ? `Loss of use of a creative organ also qualifies for SMC-K (+$${rate.toFixed(2)}/mo, ${SMC_K_CURRENT_YEAR}) ON TOP OF your schedular rating — no separate rating percentage is required to receive it.`
+      ? `Loss of use of a creative organ also qualifies for SMC-K (+$${rate.toFixed(2)}/mo, ${SMC_K_CURRENT_YEAR}) ON TOP OF your schedular rating - no separate rating percentage is required to receive it.`
       : "Loss of use of a creative organ also qualifies for SMC-K, a flat monthly amount on top of your schedular rating - no separate rating percentage is required to receive it.",
   };
 }

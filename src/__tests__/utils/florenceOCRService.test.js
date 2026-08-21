@@ -5,7 +5,7 @@
  * Worker message protocol (LOAD / ANALYZE / DOC_VQA), event listeners,
  * processDocument, askQuestion, processMultiplePages, and shutdown.
  *
- * Workers and WebGPU are mocked — no real GPU or Worker threads are used.
+ * Workers and WebGPU are mocked - no real GPU or Worker threads are used.
  * Module-level singleton state is reset between tests via vi.resetModules().
  */
 
@@ -135,7 +135,7 @@ describe("getStatus", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("initialize — without WebGPU", () => {
+describe("initialize - without WebGPU", () => {
   /** initialize() must bail early and return false if WebGPU is unavailable */
   it("returns false when WebGPU is not supported", async () => {
     // navigator.gpu is absent by default in jsdom
@@ -155,7 +155,7 @@ describe("initialize — without WebGPU", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("initialize — with WebGPU", () => {
+describe("initialize - with WebGPU", () => {
   /** initialize() with WebGPU present should send LOAD to worker and resolve */
   beforeEach(async () => {
     vi.resetModules();
@@ -221,7 +221,7 @@ describe("initialize — with WebGPU", () => {
     expect(result).toBe(false);
   });
 
-  it("is idempotent — returns true immediately if already ready", async () => {
+  it("is idempotent - returns true immediately if already ready", async () => {
     const init1 = svc.initialize();
     simulateWorkerMessage({ status: "ready" });
     await init1;
@@ -620,7 +620,7 @@ describe("shutdown", () => {
 
   it("is safe to call when no worker exists", () => {
     svc.shutdown(); // first call
-    expect(() => svc.shutdown()).not.toThrow(); // second call — no worker
+    expect(() => svc.shutdown()).not.toThrow(); // second call - no worker
   });
 });
 

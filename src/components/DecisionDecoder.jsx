@@ -80,7 +80,7 @@ function UploadedFileRow({ fileEntry, onRemove }) {
             </p>
           </div>
         </div>
-        <button
+        <button type="button"
           onClick={() => onRemove(fileEntry.id)}
           className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
           aria-label="Remove file"
@@ -140,7 +140,7 @@ const DENIAL_PATTERNS = [
     plain_english:
       "The VA denied your claim because there is no documented medical link (nexus) between your current condition and your military service.",
     va_reasoning:
-      "VA policy requires a 'nexus' — a medical opinion that explicitly links your current diagnosis to a specific event, injury, or illness during service.",
+      "VA policy requires a 'nexus' - a medical opinion that explicitly links your current diagnosis to a specific event, injury, or illness during service.",
     missing_elements: [
       "A Nexus Letter from a licensed physician stating your condition is 'at least as likely as not' related to service",
       "Medical records documenting in-service treatment or incident",
@@ -154,7 +154,7 @@ const DENIAL_PATTERNS = [
     appeal_options:
       "File a Supplemental Claim (new evidence), request a Higher-Level Review (same evidence, new rater), or appeal to the Board of Veterans' Appeals.",
     deadline_warning:
-      "You have 1 year from this decision date to file an appeal. Gather your nexus evidence immediately — do not wait.",
+      "You have 1 year from this decision date to file an appeal. Gather your nexus evidence immediately - do not wait.",
   },
   {
     test: (text) =>
@@ -216,12 +216,12 @@ const DENIAL_PATTERNS = [
       ) && !/denied|not.*service.connected/i.test(t),
     decision_type: "Granted",
     plain_english:
-      "Congratulations — the VA approved at least part of your claim!",
+      "Congratulations - the VA approved at least part of your claim!",
     va_reasoning:
       "The VA found sufficient evidence to establish service connection and assigned a disability rating.",
     missing_elements: [],
     action_plan: [
-      "Review your rating decision carefully — ensure each condition is rated correctly",
+      "Review your rating decision carefully - ensure each condition is rated correctly",
       "If you believe the rating percentage is too low, file a Supplemental Claim or Higher-Level Review",
       "Consider secondary conditions that may be caused or aggravated by your service-connected condition",
       "File an Intent to File immediately if you plan to claim additional conditions",
@@ -235,7 +235,7 @@ const DENIAL_PATTERNS = [
       /deferred pending|claim deferred|examination.*scheduled/i.test(text),
     decision_type: "Deferred",
     plain_english:
-      "The VA has not yet made a final decision on your claim — it is waiting for additional information or a C&P exam.",
+      "The VA has not yet made a final decision on your claim - it is waiting for additional information or a C&P exam.",
     va_reasoning:
       "VA defers claims when it needs additional evidence, such as a Compensation & Pension (C&P) exam or more medical records.",
     missing_elements: [
@@ -243,13 +243,13 @@ const DENIAL_PATTERNS = [
       "Additional medical records requested by VA",
     ],
     action_plan: [
-      "Attend any scheduled C&P exam — missing it can result in denial",
+      "Attend any scheduled C&P exam - missing it can result in denial",
       "Prepare for your C&P exam using the C&P Simulator in Vet-Rate",
       "Submit any outstanding evidence as soon as possible",
       "Contact VA or your VSO to confirm the status of your deferred claim",
     ],
     appeal_options:
-      "No appeal action needed yet — wait for the final decision. Once issued, you have 1 year to appeal.",
+      "No appeal action needed yet - wait for the final decision. Once issued, you have 1 year to appeal.",
     deadline_warning:
       "If a C&P exam is scheduled, attend it. Missing a C&P exam without good cause may result in a denial.",
   },
@@ -269,11 +269,11 @@ function countDecisionOutcomes(text) {
 function buildMixedDecisionResult(granted, denied) {
   return {
     decision_type: "Mixed Decision",
-    plain_english: `This decision is a mix of outcomes: ${granted} issue(s) granted or increased, and ${denied} issue(s) denied. Read each numbered item in your letter carefully — you don't need to appeal the parts that were already granted.`,
+    plain_english: `This decision is a mix of outcomes: ${granted} issue(s) granted or increased, and ${denied} issue(s) denied. Read each numbered item in your letter carefully - you don't need to appeal the parts that were already granted.`,
     va_reasoning:
       "The VA evaluated each claimed condition separately. Some had enough evidence to grant or increase; others did not.",
     missing_elements: [
-      "Review the letter to identify exactly which issue(s) were denied — do not assume the whole claim was denied",
+      "Review the letter to identify exactly which issue(s) were denied - do not assume the whole claim was denied",
     ],
     action_plan: [
       "Confirm your new combined rating and effective date for the granted/increased issues",
@@ -314,7 +314,7 @@ function patternMatchDenial(text) {
       va_reasoning:
         "Pattern matching identified a denial but could not determine the specific reason. AI analysis will provide more detail.",
       missing_elements: [
-        "Specific denial reason not detected — load AI for full analysis",
+        "Specific denial reason not detected - load AI for full analysis",
       ],
       action_plan: [
         "Load the Warrant Council AI (button above) for a full plain-English translation",
@@ -367,7 +367,7 @@ function applyPatternMatchFallback(denialText, setResults, setError) {
     _usedFallback: true,
     _fallbackReason: "pattern_match",
     _fallbackNote:
-      "AI is not loaded. This analysis uses keyword pattern matching — load the Warrant Council AI for a complete, personalized translation.",
+      "AI is not loaded. This analysis uses keyword pattern matching - load the Warrant Council AI for a complete, personalized translation.",
   });
 }
 
@@ -504,6 +504,32 @@ function updateCombinedText({ setUploadedFiles, setDenialText }) {
   });
 }
 
+async function extractFileTextAndPreview(file, fileType, setOcrProgress) {
+  if (fileType === "pdf") {
+    const result = await analyzePDF(file, (progress) => {
+      setOcrProgress(progress);
+    });
+    return { extractedText: result.text || "", preview: null, error: null };
+  }
+
+  // Create preview for images
+  const preview = await new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+
+  const result = await analyzeImage(file, (progress) => {
+    setOcrProgress(progress);
+  });
+  const extractedText = result.success ? result.text || "" : "";
+  const error = result.success
+    ? null
+    : result.error || "Failed to extract text";
+
+  return { extractedText, preview, error };
+}
+
 async function processFile(
   file,
   {
@@ -544,29 +570,13 @@ async function processFile(
   setCurrentProcessingFile(file.name);
 
   try {
-    let extractedText = "";
-    let preview = null;
-
-    if (fileType === "pdf") {
-      const result = await analyzePDF(file, (progress) => {
-        setOcrProgress(progress);
-      });
-      extractedText = result.text || "";
-    } else {
-      // Create preview for images
-      preview = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      });
-
-      const result = await analyzeImage(file, (progress) => {
-        setOcrProgress(progress);
-      });
-      extractedText = result.success ? result.text || "" : "";
-      if (!result.success) {
-        newFileEntry.error = result.error || "Failed to extract text";
-      }
+    const { extractedText, preview, error } = await extractFileTextAndPreview(
+      file,
+      fileType,
+      setOcrProgress,
+    );
+    if (error) {
+      newFileEntry.error = error;
     }
 
     // Update file entry with results
@@ -763,7 +773,7 @@ function FileDropZone({ fileDropIn }) {
         <div>
           <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
             Drop files here or{" "}
-            <button
+            <button type="button"
               onClick={() => fileInputRef.current?.click()}
               className="text-purple-600 dark:text-purple-400 hover:underline"
             >
@@ -845,7 +855,7 @@ const UploadedFilesSummary = ({
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           📁 Uploaded Files ({uploadedFiles.length})
         </span>
-        <button
+        <button type="button"
           onClick={handleClearAllFiles}
           className="text-xs text-red-600 dark:text-red-400 hover:underline"
         >
@@ -921,7 +931,7 @@ function FileDropInPanel({ fileDropIn, denialText }) {
 const DecisionDecoderFooter = ({ onClose, results }) => (
   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
     <BuyMeCoffee show={results !== null} trigger="decision-decoder" />
-    <button
+    <button type="button"
       onClick={onClose}
       className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
     >
@@ -967,7 +977,7 @@ const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
             moduleName="Decision Decoder"
           />
         )}
-        <button
+        <button type="button"
           onClick={onClose}
           className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
@@ -993,7 +1003,7 @@ const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
 
 const InputMethodTabs = ({ inputMethod, setInputMethod }) => (
   <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700">
-    <button
+    <button type="button"
       onClick={() => setInputMethod("paste")}
       className={`px-4 py-2 text-sm font-semibold transition-colors ${
         inputMethod === "paste"
@@ -1003,7 +1013,7 @@ const InputMethodTabs = ({ inputMethod, setInputMethod }) => (
     >
       📋 Paste Text
     </button>
-    <button
+    <button type="button"
       onClick={() => setInputMethod("file")}
       className={`px-4 py-2 text-sm font-semibold transition-colors ${
         inputMethod === "file"
@@ -1035,7 +1045,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
       <span className="text-xs text-gray-500 dark:text-gray-400">
         {denialText.length} characters
       </span>
-      <button
+      <button type="button"
         onClick={() => setDenialText("")}
         className="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
       >
@@ -1046,7 +1056,7 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
 );
 
 const DecodeButton = ({ isLoading, denialText, handleDecode }) => (
-  <button
+  <button type="button"
     onClick={() => handleDecode(denialText)}
     disabled={isLoading || !denialText.trim()}
     className="w-full mt-4 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
@@ -1587,7 +1597,7 @@ const PhaseTimeline = ({ phases, selectedPhase, setSelectedPhase }) => (
     <div className="absolute top-4 left-0 right-0 h-1 bg-teal-200 dark:bg-teal-800 rounded"></div>
     <div className="flex justify-between relative">
       {phases.map((phase) => (
-        <button
+        <button type="button"
           key={phase.key}
           onClick={() =>
             setSelectedPhase(selectedPhase?.key === phase.key ? null : phase)
@@ -1673,7 +1683,7 @@ const ClaimPhaseExplainer = ({
   getAllClaimPhases,
 }) => (
   <div className="mt-6 p-4 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-xl border border-teal-200 dark:border-teal-700">
-    <button
+    <button type="button"
       onClick={() => setShowPhaseExplainer(!showPhaseExplainer)}
       className="w-full flex items-center justify-between"
     >

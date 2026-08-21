@@ -2,6 +2,9 @@
 
 Welcome to Vet-Rate.org! This section will help you get familiar with the platform and make the most of all available features.
 
+![The Vet-Rate.org home page header, hero section, and search bar](../assets/images/screenshots/getting-started/home-header-hero.png)
+_The home page is your command center - search bar front and center, with tools and resources one click away._
+
 <div class="crisis-banner">
 🆘 <strong>Veterans Crisis Line:</strong> Call 988, Press 1 | Text 838255 | Available 24/7
 </div>
@@ -45,11 +48,7 @@ Vet-Rate.org is a **free, comprehensive VA claims toolkit** designed specificall
 
 ## Quick Tips for New Users
 
-!!! tip "Start Here"
-    1. **Use the Search Bar** - It's front and center on the home page
-    2. **Try Common Searches** - "PTSD", "tinnitus", "back pain", or diagnostic codes like "9411"
-    3. **Click Results** - Each card expands to show full rating criteria
-    4. **Save to Packet** - Build your evidence collection over time
+!!! tip "Start Here" 1. **Use the Search Bar** - It's front and center on the home page 2. **Try Common Searches** - "PTSD", "tinnitus", "back pain", or diagnostic codes like "9411" 3. **Click Results** - Each card expands to show full rating criteria 4. **Save to Packet** - Build your evidence collection over time
 
 ---
 
@@ -58,14 +57,14 @@ Vet-Rate.org is a **free, comprehensive VA claims toolkit** designed specificall
 Vet-Rate.org works in any modern web browser:
 
 | Browser | Minimum Version |
-|---------|-----------------|
-| Chrome | 90+ |
-| Firefox | 88+ |
-| Safari | 14+ |
-| Edge | 90+ |
+| ------- | --------------- |
+| Chrome  | 90+             |
+| Firefox | 88+             |
+| Safari  | 14+             |
+| Edge    | 90+             |
 
 !!! info "No Installation Required"
-    Vet-Rate.org is a web application - simply visit [vet-rate.org](https://vet-rate.org) in your browser. No downloads, plugins, or account creation needed.
+Vet-Rate.org is a web application - simply visit [vet-rate.org](https://vet-rate.org) in your browser. No downloads, plugins, or account creation needed.
 
 ---
 

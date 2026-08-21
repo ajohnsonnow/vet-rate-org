@@ -9,12 +9,7 @@
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import {
-  generateAI,
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "./unifiedAIService";
+import { generateAI, isAnyAIAvailable, getAIStatus } from "./unifiedAIService";
 
 // The specialized system prompt for contract analysis
 const SHARK_RADAR_SYSTEM_PROMPT = `You are a VA Compliance Auditor and Legal Contract Analyst. Your job is to scan text (contracts, emails, or marketing copy) for predatory practices targeting veterans.
@@ -111,7 +106,7 @@ const SHARK_PATTERNS = [
     severity: "HIGH",
     legal_reference: "38 CFR § 14.636(g)",
     advice:
-      "No representative can guarantee a specific rating or outcome — such claims are deceptive.",
+      "No representative can guarantee a specific rating or outcome - such claims are deceptive.",
   },
   {
     patterns: [
@@ -143,7 +138,7 @@ const SHARK_PATTERNS = [
     severity: "HIGH",
     legal_reference: "38 CFR § 14.636(h)",
     advice:
-      "Fees exceeding 20–33% of back-pay or large flat fees are typically unreasonable.",
+      "Fees exceeding 20-33% of back-pay or large flat fees are typically unreasonable.",
   },
   {
     patterns: [
@@ -245,7 +240,7 @@ function _recommendationForScore(score) {
 
 function _verdictSummary(flags, highCount) {
   if (flags.length === 0) {
-    return "No obvious red-flag phrases detected. This does not guarantee the agreement is legitimate — load the Warrant Council AI for a thorough analysis.";
+    return "No obvious red-flag phrases detected. This does not guarantee the agreement is legitimate - load the Warrant Council AI for a thorough analysis.";
   }
   const flagWord = flags.length > 1 ? "s" : "";
   const highWord = highCount > 1 ? "s" : "";
@@ -273,7 +268,7 @@ function patternMatchContract(text) {
     recommendation: _recommendationForScore(score),
     _usedFallback: true,
     _fallbackNote:
-      "AI is not loaded. This analysis uses keyword pattern matching — results may miss subtle violations. Load the Warrant Council AI for a full review.",
+      "AI is not loaded. This analysis uses keyword pattern matching - results may miss subtle violations. Load the Warrant Council AI for a full review.",
   };
 }
 
@@ -425,11 +420,17 @@ export function getSeverityColor(severity) {
 /**
  * Get the privacy disclosure for Shark Radar
  * Now AI-mode aware - shows different info for Cloud vs Local
+ *
+ * Was checking only AI_MODES.LOCAL - a legacy value getAIMode() actively
+ * migrates users away from to AI_MODES.SWARM ("Warrant Council", the
+ * default local-AI experience) - so every Swarm/Wllama/local-server user
+ * saw the Cloud disclosure. isPrivate reflects the correct set of on-device
+ * modes (see unifiedAIService.getAIStatus).
  */
 export function getSharkRadarPrivacyDisclosure() {
   const status = getAIStatus();
 
-  if (status.effectiveMode === AI_MODES.LOCAL) {
+  if (status.isPrivate) {
     return `🔒 LOCAL AI MODE - 100% PRIVATE
 
 When you scan a contract or email:

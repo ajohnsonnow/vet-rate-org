@@ -8,11 +8,11 @@ import {
 /**
  * A-H07: MillionDollarDashboard combines saved ratings through calculateVARating
  * (which applies the 38 CFR § 4.26 bilateral factor), but Secondary Scout used to
- * combine the bare rating numbers and DROP the bilateral factor — so the same
+ * combine the bare rating numbers and DROP the bilateral factor - so the same
  * saved profile showed a lower combined rating in Scout than on the Dashboard.
  * Both now route through calculateVARating; this locks in the parity.
  */
-describe("combined-rating parity — Scout vs Dashboard (A-H07)", () => {
+describe("combined-rating parity - Scout vs Dashboard (A-H07)", () => {
   // Paired upper-extremity conditions (bilateral) + one non-bilateral condition.
   const profile = [
     { name: "Left arm limitation", rating: 40, side: "left" },

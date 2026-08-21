@@ -1,10 +1,10 @@
 # Display Mode
 
-Switch between light and dark themes for comfortable viewing.
+Switch between four display modes for comfortable viewing, including two built specifically for veterans with light sensitivity or low vision.
 
 ---
 
-## Light Mode vs. Dark Mode
+## The Four Modes
 
 ### Light Mode (Default)
 
@@ -20,6 +20,19 @@ Switch between light and dark themes for comfortable viewing.
 - Reduced eye strain in low light
 - Saves battery on OLED screens
 
+### TBI Comfort
+
+- Warm amber tones instead of stark white or black
+- Designed to reduce visual stress for veterans with light sensitivity or **traumatic brain injury (TBI)**
+
+### AAA High Contrast
+
+- Maximum 7:1 contrast ratio - exceeds the standard WCAG 2.2 AA requirement
+- For veterans with low vision who need the strongest possible contrast
+
+![Accessibility menu with the four Display Mode options and Color Vision Settings](../assets/images/screenshots/settings/accessibility-menu-light.png)
+_Light Mode selected. Dark Mode, TBI Comfort, and AAA High Contrast sit alongside it._
+
 ---
 
 ## Changing Display Mode
@@ -34,7 +47,7 @@ Click <strong>"♿ Accessibility"</strong> in the header
 Find <strong>"Display Mode"</strong> section
 </div>
 <div class="step">
-Click <strong>"Light"</strong> or <strong>"Dark"</strong>
+Click <strong>Light Mode</strong>, <strong>Dark Mode</strong>, <strong>TBI Comfort</strong>, or <strong>AAA High Contrast</strong>
 </div>
 <div class="step">
 Mode changes <strong>immediately</strong>
@@ -84,30 +97,33 @@ To return to system preference:
 
 ### Light Mode Colors
 
-| Element | Color |
-|---------|-------|
-| Background | White (#ffffff) |
-| Text | Dark gray (#1a1a1a) |
-| Primary | VA Green (#2d5016) |
-| Accent | VA Gold (#88b04b) |
-| Cards | Light gray (#f8f9fa) |
+| Element    | Color                |
+| ---------- | -------------------- |
+| Background | White (#ffffff)      |
+| Text       | Dark gray (#1a1a1a)  |
+| Primary    | VA Green (#2d5016)   |
+| Accent     | VA Gold (#88b04b)    |
+| Cards      | Light gray (#f8f9fa) |
 
 ### Dark Mode Colors
 
-| Element | Color |
-|---------|-------|
-| Background | Dark gray (#1a1a1a) |
-| Text | Light gray (#e5e5e5) |
-| Primary | VA Green (#88b04b) |
-| Accent | Muted gold |
-| Cards | Darker gray (#2d2d2d) |
+| Element    | Color                 |
+| ---------- | --------------------- |
+| Background | Dark gray (#1a1a1a)   |
+| Text       | Light gray (#e5e5e5)  |
+| Primary    | VA Green (#88b04b)    |
+| Accent     | Muted gold            |
+| Cards      | Darker gray (#2d2d2d) |
+
+![Accessibility menu in Dark Mode](../assets/images/screenshots/settings/accessibility-menu-dark.png)
+_The same panel with Dark Mode selected._
 
 ---
 
 ## Tips for Display Mode
 
 !!! tip "Choosing the Right Mode"
-    
+
     - **Bright environment:** Light mode reduces glare
     - **Dark environment:** Dark mode reduces eye strain
     - **Reading lots of text:** Light mode may be easier

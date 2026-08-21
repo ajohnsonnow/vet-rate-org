@@ -47,7 +47,7 @@ export const WLLAMA_MODELS = {
     contextSize: 4096,
     // This QLoRA was trained with axolotl's `type: alpaca` dataset strategy,
     // which renders "### Instruction:\n...\n\n### Response:\n" plain text and
-    // silently drops any custom system-prompt field — the model never saw
+    // silently drops any custom system-prompt field - the model never saw
     // this systemPrompt during training. Serving it through a chat-template
     // format (real or invented tags) feeds tokens the model never trained on
     // and resurfaces the base model's own behavior (JSON tool-call habit,
@@ -70,7 +70,7 @@ export const WLLAMA_MODELS = {
 Your role is to analyze disability claims for accuracy, completeness, and 38 CFR compliance.
 Always cite specific CFR sections. Never fabricate regulatory information.
 Be thorough but compassionate - veterans deserve accurate guidance.
-Never determine bilateral pairing (38 CFR § 4.26) from memory or by picking the two highest ratings — bilateral means the SAME body part on OPPOSITE sides only. If a DKB context block is provided, answer only from it and say so explicitly when it doesn't cover the question.`,
+Never determine bilateral pairing (38 CFR § 4.26) from memory or by picking the two highest ratings - bilateral means the SAME body part on OPPOSITE sides only. If a DKB context block is provided, answer only from it and say so explicitly when it doesn't cover the question.`,
   },
   // Test-only entry: 3B QLoRA candidate for wasm-mode's smaller-model fix.
   // Single 1.9GB file, no sharding needed (under wllama's 2GB/file cap).
@@ -81,7 +81,7 @@ Never determine bilateral pairing (38 CFR § 4.26) from memory or by picking the
     url: "/models/vetrate-writer-3b-v1-Q4_K_M.gguf",
     fallbackUrl: "/models/vetrate-writer-3b-v1-Q4_K_M.gguf",
     contextSize: 4096,
-    // See auditor3b's promptFormat comment — same axolotl alpaca training.
+    // See auditor3b's promptFormat comment - same axolotl alpaca training.
     systemPrompt: `You are VetRate-Writer. Write in a persuasive, empathetic, veteran-centric tone. You help veterans articulate their service-connected disabilities clearly and compellingly for VA claims. Focus on the human impact of conditions while maintaining factual accuracy. Use clear, accessible language. Never exaggerate symptoms, but advocate strongly for veteran rights and fair ratings. Help veterans tell their story effectively.`,
     promptFormat: "alpaca",
   },
@@ -108,7 +108,7 @@ Use medical terminology correctly. Balance emotional resonance with factual accu
 Calculate combined ratings using the official VA bilateral factor formula.
 Explain rating criteria for specific conditions. Identify potential rating increases.
 Always show your work and cite 38 CFR Part 4 rating criteria.
-BILATERAL PAIRING: "Bilateral" means the SAME body part on BOTH left AND right sides. Never assume the two highest-rated conditions are the pair — check each condition's body part and side explicitly. If conditions don't clearly name matching left/right body parts, say no bilateral pair is identifiable rather than guessing one. If a COMPUTED RESULT block is provided, that number is authoritative — explain it, do not recompute it.`,
+BILATERAL PAIRING: "Bilateral" means the SAME body part on BOTH left AND right sides. Never assume the two highest-rated conditions are the pair - check each condition's body part and side explicitly. If conditions don't clearly name matching left/right body parts, say no bilateral pair is identifiable rather than guessing one. If a COMPUTED RESULT block is provided, that number is authoritative - explain it, do not recompute it.`,
   },
   // Test-only entry: 3B QLoRA candidate for wasm-mode's smaller-model fix.
   // Single 1.9GB file, no sharding needed (under wllama's 2GB/file cap).
@@ -119,7 +119,7 @@ BILATERAL PAIRING: "Bilateral" means the SAME body part on BOTH left AND right s
     url: "/models/vetrate-rater-3b-v1-Q4_K_M.gguf",
     fallbackUrl: "/models/vetrate-rater-3b-v1-Q4_K_M.gguf",
     contextSize: 4096,
-    // See auditor3b's promptFormat comment — same axolotl alpaca training.
+    // See auditor3b's promptFormat comment - same axolotl alpaca training.
     systemPrompt: `You are VetRate-Rater. You are an expert in VA disability rating calculations and assessment criteria. You accurately calculate combined disability ratings using VA's bilateral factor and whole-person formula. You assess conditions against specific diagnostic codes and rating schedules in 38 CFR Part 4. Provide step-by-step mathematical reasoning for all calculations. Explain which diagnostic codes apply and why.`,
     promptFormat: "alpaca",
   },
@@ -210,7 +210,7 @@ export const initializeWllama = async (modelId = "auditor", options = {}) => {
     }
 
     // wllama's internal download worker is spawned from a blob: URL, whose
-    // base isn't the page origin — a path-relative modelUrl (the local/
+    // base isn't the page origin - a path-relative modelUrl (the local/
     // self-hosted case) fails to parse inside it ("Failed to parse URL from
     // /models/..."). Resolve to an absolute URL before crossing into the
     // worker; already-absolute fallbackUrls pass through unchanged.
@@ -319,7 +319,7 @@ export const generateCompletion = async (prompt, options = {}) => {
 /**
  * Single-turn chat completion. Takes the caller's fully-assembled prompt
  * text (unifiedAIService builds this, including any DKB context) and returns
- * {success, text} / {success: false, error} — matching how the one real
+ * {success, text} / {success: false, error} - matching how the one real
  * caller (generateWithWllama in unifiedAIService.js) actually consumes it.
  */
 export const chatCompletion = async (userContent, options = {}) => {

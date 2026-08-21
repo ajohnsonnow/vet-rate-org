@@ -5,7 +5,7 @@
  * must match zero Oregon awards, and vice versa).
  *
  * The 5 tests in dd214AwardParsingBugs.test.js target 4 specific already-shipped
- * OCR/regex bug fixes and are intentionally left untouched — this file is the
+ * OCR/regex bug fixes and are intentionally left untouched - this file is the
  * general baseline that never existed before.
  */
 import { describe, it, expect } from "vitest";
@@ -82,7 +82,7 @@ describe("federal-only parsing (no stateCode passed)", () => {
   });
 });
 
-describe("state-scoped parsing (Hawaii, Texas, Kansas — verified entries)", () => {
+describe("state-scoped parsing (Hawaii, Texas, Kansas - verified entries)", () => {
   it("Hawaii: matches State of Hawaii Medal of Valor only with stateCode HI", () => {
     const text = "13. DECORATIONS: STATE OF HAWAII MEDAL OF VALOR";
     expect(

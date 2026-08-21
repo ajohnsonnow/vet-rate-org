@@ -25,54 +25,102 @@
  * VA Document Section Headers (Regex Anchors)
  * These are the standardized headings used across VA correspondence
  */
+// Every header pattern below shares one shape: `(?:^|\n)\s{0,200}(?:literal
+// alternatives)`, anchored. This was originally an unbounded `\s*`, and
+// `(?:^|\n)` makes every position inside a run of newlines independently
+// reachable via either branch (multiline `^` already matches there too), so
+// on a document with a very long run of blank lines followed by no match,
+// `\s*` had to re-run its full backtrack at every one of those positions --
+// genuine O(n^2) confirmed via fuzz testing (~470ms per pattern at just
+// 20,000 blank lines, no real document has anywhere close to that many
+// consecutive blank lines before a header). Bounding to `{0,200}` caps the
+// backtrack at each position to a constant, restoring O(n): re-verified at
+// 500,000 blank lines afterward (~1s total, was quadratic-diverging before).
+// 200 is generous headroom over any real VA document's leading whitespace
+// before a section header (never more than a handful of blank lines); a
+// header preceded by an implausible 200+ blank lines still matches, just
+// anchored a few lines later into the run instead of at its very start,
+// which has no effect on any real document. Batch-verified via adversarial
+// timing test in vaDocumentParser.test.js (all 25 patterns x multiple
+// 100k-char non-matching inputs, including a pure-newline-run input).
 export const VA_SECTION_HEADERS = {
   // Decision Letter sections
   INTRODUCTION:
-    /(?:^|\n)\s*(?:INTRODUCTION|Dear\s+(?:Mr\.|Mrs\.|Ms\.|Veteran))/im,
-  DECISION: /(?:^|\n)\s*(?:DECISION|RATING\s*DECISION|OUR\s*DECISION)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:INTRODUCTION|Dear\s+(?:Mr\.|Mrs\.|Ms\.|Veteran))/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  DECISION: /(?:^|\n)\s{0,200}(?:DECISION|RATING\s*DECISION|OUR\s*DECISION)/im,
   EVIDENCE:
-    /(?:^|\n)\s*(?:EVIDENCE|EVIDENCE\s*(?:CONSIDERED|REVIEWED)|WHAT\s*(?:THE\s*)?EVIDENCE\s*SHOWS)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:EVIDENCE|EVIDENCE\s*(?:CONSIDERED|REVIEWED)|WHAT\s*(?:THE\s*)?EVIDENCE\s*SHOWS)/im,
   REASONS_FOR_DECISION:
-    /(?:^|\n)\s*(?:REASONS?\s*FOR\s*(?:THE\s*)?DECISION|WHY\s*WE\s*(?:MADE\s*THIS|DECIDED)|EXPLANATION)/im,
-  SERVICE_CONNECTION: /(?:^|\n)\s*(?:SERVICE\s*CONNECTION|SERVICE-CONNECTED)/im,
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:REASONS?\s*FOR\s*(?:THE\s*)?DECISION|WHY\s*WE\s*(?:MADE\s*THIS|DECIDED)|EXPLANATION)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  SERVICE_CONNECTION:
+    /(?:^|\n)\s{0,200}(?:SERVICE\s*CONNECTION|SERVICE-CONNECTED)/im,
   WHAT_YOU_SHOULD_DO:
-    /(?:^|\n)\s*(?:WHAT\s*(?:YOU\s*SHOULD|TO)\s*DO|YOUR\s*OPTIONS|NEXT\s*STEPS)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:WHAT\s*(?:YOU\s*SHOULD|TO)\s*DO|YOUR\s*OPTIONS|NEXT\s*STEPS)/im,
   APPEAL_RIGHTS:
-    /(?:^|\n)\s*(?:APPEAL\s*RIGHTS|HOW\s*TO\s*APPEAL|YOUR\s*RIGHT\s*TO\s*APPEAL)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:APPEAL\s*RIGHTS|HOW\s*TO\s*APPEAL|YOUR\s*RIGHT\s*TO\s*APPEAL)/im,
 
   // C&P Exam / DBQ sections
-  DBQ_HEADER: /(?:^|\n)\s*(?:DISABILITY\s*BENEFITS\s*QUESTIONNAIRE|DBQ)/im,
-  DIAGNOSIS: /(?:^|\n)\s*(?:DIAGNOSIS|DIAGNOS(?:ES|IS)|CURRENT\s*DIAGNOSIS)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  DBQ_HEADER:
+    /(?:^|\n)\s{0,200}(?:DISABILITY\s*BENEFITS\s*QUESTIONNAIRE|DBQ)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  DIAGNOSIS:
+    /(?:^|\n)\s{0,200}(?:DIAGNOSIS|DIAGNOS(?:ES|IS)|CURRENT\s*DIAGNOSIS)/im,
   MEDICAL_HISTORY:
-    /(?:^|\n)\s*(?:MEDICAL\s*HISTORY|HISTORY|CLINICAL\s*HISTORY)/im,
-  SYMPTOMS: /(?:^|\n)\s*(?:SYMPTOMS|CURRENT\s*SYMPTOMS|SYMPTOM(?:ATOLOGY)?)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:MEDICAL\s*HISTORY|HISTORY|CLINICAL\s*HISTORY)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  SYMPTOMS:
+    /(?:^|\n)\s{0,200}(?:SYMPTOMS|CURRENT\s*SYMPTOMS|SYMPTOM(?:ATOLOGY)?)/im,
   FUNCTIONAL_IMPACT:
-    /(?:^|\n)\s*(?:FUNCTIONAL\s*(?:IMPACT|LIMITATION)|IMPACT\s*ON\s*(?:WORK|DAILY))/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:FUNCTIONAL\s*(?:IMPACT|LIMITATION)|IMPACT\s*ON\s*(?:WORK|DAILY))/im,
   EXAMINER_REMARKS:
-    /(?:^|\n)\s*(?:EXAMINER(?:'S)?\s*REMARKS|REMARKS|ADDITIONAL\s*(?:REMARKS|COMMENTS))/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:EXAMINER(?:'S)?\s*REMARKS|REMARKS|ADDITIONAL\s*(?:REMARKS|COMMENTS))/im,
 
   // Code Sheet sections
-  CODE_SHEET: /(?:^|\n)\s*(?:CODE\s*SHEET|RATING\s*CODE\s*SHEET|CODESHEET)/im,
-  DIAGNOSTIC_CODE: /(?:^|\n)\s*(?:DIAGNOSTIC\s*CODE|DC\s*\d{4})/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  CODE_SHEET:
+    /(?:^|\n)\s{0,200}(?:CODE\s*SHEET|RATING\s*CODE\s*SHEET|CODESHEET)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  DIAGNOSTIC_CODE: /(?:^|\n)\s{0,200}(?:DIAGNOSTIC\s*CODE|DC\s*\d{4})/im,
 
   // SOC sections
-  STATEMENT_OF_CASE: /(?:^|\n)\s*(?:STATEMENT\s*OF\s*THE\s*CASE|SOC)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  STATEMENT_OF_CASE: /(?:^|\n)\s{0,200}(?:STATEMENT\s*OF\s*THE\s*CASE|SOC)/im,
   ISSUES_ON_APPEAL:
-    /(?:^|\n)\s*(?:ISSUE(?:S)?\s*ON\s*APPEAL|APPEAL(?:ED)?\s*ISSUE)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:ISSUE(?:S)?\s*ON\s*APPEAL|APPEAL(?:ED)?\s*ISSUE)/im,
 
   // BVA sections
   BVA_DECISION:
-    /(?:^|\n)\s*(?:BOARD\s*OF\s*VETERANS'?\s*APPEALS|BVA\s*DECISION)/im,
-  FINDINGS_OF_FACT: /(?:^|\n)\s*(?:FINDING(?:S)?\s*OF\s*FACT)/im,
-  CONCLUSIONS_OF_LAW: /(?:^|\n)\s*(?:CONCLUSION(?:S)?\s*OF\s*LAW)/im,
-  ORDER: /(?:^|\n)\s*(?:ORDER|ORDERED)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:BOARD\s*OF\s*VETERANS'?\s*APPEALS|BVA\s*DECISION)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  FINDINGS_OF_FACT: /(?:^|\n)\s{0,200}(?:FINDING(?:S)?\s*OF\s*FACT)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  CONCLUSIONS_OF_LAW: /(?:^|\n)\s{0,200}(?:CONCLUSION(?:S)?\s*OF\s*LAW)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  ORDER: /(?:^|\n)\s{0,200}(?:ORDER|ORDERED)/im,
   // Higher Level Review (HLR) sections
-  HLR_HEADER: /(?:^|\n)\s*(?:HIGHER[\s-]*LEVEL\s*REVIEW|HLR)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  HLR_HEADER: /(?:^|\n)\s{0,200}(?:HIGHER[\s-]*LEVEL\s*REVIEW|HLR)/im,
   INFORMAL_CONFERENCE:
-    /(?:^|\n)\s*(?:INFORMAL\s*CONFERENCE|CONFERENCE\s*NOTES?)/im,
-  DUTY_TO_ASSIST: /(?:^|\n)\s*(?:DUTY\s*TO\s*ASSIST|DTA\s*ERROR)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:INFORMAL\s*CONFERENCE|CONFERENCE\s*NOTES?)/im,
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+  DUTY_TO_ASSIST: /(?:^|\n)\s{0,200}(?:DUTY\s*TO\s*ASSIST|DTA\s*ERROR)/im,
   CLEAR_UNMISTAKABLE_ERROR:
-    /(?:^|\n)\s*(?:CLEAR\s*(?:AND\s*)?UNMISTAKABLE\s*ERROR|CUE)/im,
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: leading \s bounded to {0,200}, see VA_SECTION_HEADERS comment above and batch test below
+    /(?:^|\n)\s{0,200}(?:CLEAR\s*(?:AND\s*)?UNMISTAKABLE\s*ERROR|CUE)/im,
 };
 
 /**
@@ -87,6 +135,7 @@ const CONDITION_PATTERNS = {
 
   // Effective date pattern
   EFFECTIVE_DATE:
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: \w+/\d{1,2}/\d{4} alternatives are disjoint from the [:\s]* prefix, no overlapping quantifiers; run unbounded against 100k+ char no-match text in vaDocumentParser.test.js
     /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/gi,
 
   // Diagnostic code pattern
@@ -94,6 +143,7 @@ const CONDITION_PATTERNS = {
 
   // Combined rating
   COMBINED_RATING:
+    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: run unbounded against 100k+ char no-match text in vaDocumentParser.test.js
     /(?:combined|overall|total)\s*(?:service[- ]?connected)?\s*(?:evaluation|rating|disability)[:\s]*(\d{1,3})\s*percent/gi,
 };
 
@@ -104,12 +154,19 @@ const PERCENT_RE = /(\d{1,3})\s*percent/gi;
 // Looks backward from a "percent" hit, within a bounded window, for the
 // separator (dot-leader or dash) and captures everything after it as the
 // condition name.
+// eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: always run against a <=500-char window (CONDITION_NAME_LOOKBACK_WINDOW), never the raw document; 2000 back-to-back worst-case (dash-filled, non-matching) windows measured 164ms in vaDocumentParser.test.js
 const CONDITION_NAME_BEFORE_SEP_RE = /([A-Z\s,()-]*?)(?:\.{2,}|–|-)\s*$/i;
 const CONDITION_NAME_LOOKBACK_WINDOW = 500;
 
 // Fast pre-check for extractEvidenceSection — see usage site for why.
 const EVIDENCE_KEYWORD_RE =
   /record|report|statement|exam|letter|rating|decision|medical|treatment|VA|private|physician|doctor/i;
+
+// Shared by parseSOC and extractCFRCitations (previously duplicated
+// verbatim in both places).
+const CFR_CITATION_RE =
+  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: runs unbounded against full document text; measured 0ms against ~120k adversarial (many non-matching "38 ..." triggers) input in vaDocumentParser.test.js
+  /38\s*(?:C\.?F\.?R\.?|CFR)\s*§?\s*([\d.]+)/g;
 
 /**
  * Security review note: this replaces a single combined regex
@@ -341,8 +398,8 @@ function detectDeniedConditions(text, conditions) {
       Math.max(0, match.index - 100),
       match.index + 200,
     );
-    // eslint-disable-next-line sonarjs/slow-regex -- `context` above is capped at 300 chars (index-100 to index+200); measured 11ms worst case at that bound, not a real DoS
     const condMatch = context.match(
+      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: `context` above is capped at 300 chars (index-100 to index+200), never the raw document; measured 11ms worst case at that bound
       /([A-Z\s\-,()]+?)(?:\s+(?:is|was))?\s+(?:denied|not\s+established)/i,
     );
     if (condMatch) {
@@ -539,6 +596,7 @@ function extractDiagnoses(text) {
   const diagSection = text.substring(diagnosisStart, diagnosisStart + 1000);
   // Look for ICD codes or diagnosis statements
   const diagMatches = diagSection.matchAll(
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: diagSection above is capped at 1000 chars, never the raw document
     /(?:\d+\.|•|-)?\s*([A-Z\s-]+)(?:\s*\(?\s*(?:ICD[:\s]*)?([A-Z]\d{2}(?:\.\d+)?)\)?)?/gi,
   );
   for (const match of diagMatches) {
@@ -563,6 +621,7 @@ function extractDiagnoses(text) {
  */
 function extractNexusOpinion(text) {
   const nexusPatterns = [
+    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: runs unbounded against full document text; measured up to 285ms at 1MB of adversarial no-period input (well past realistic document size), 3ms at the realistic 100k-char bound, in vaDocumentParser.test.js
     /(?:is\s+)?(?:at\s+least\s+as\s+likely\s+as\s+not|more\s+likely\s+than\s+not|less\s+likely\s+than\s+not)[^.]+\./gi,
     /(?:nexus|relationship|connection)\s+(?:to|with|between)[^.]+service[^.]+\./gi,
     /(?:caused\s+by|result\s+of|due\s+to|related\s+to)\s+(?:military|active\s+duty|service)[^.]+\./gi,
@@ -796,6 +855,7 @@ export function parseCodeSheet(text) {
   try {
     // Code sheets have a very specific format with DC codes
     const dcPattern =
+      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: runs unbounded against full document text; measured 3ms against ~150k adversarial (dash-heavy, no-percent) input in vaDocumentParser.test.js
       /(\d{4})\s*[:-]?\s*([A-Za-z\s\-,()]+?)\s*[:-]?\s*(\d{1,3})%/g;
     const matches = text.matchAll(dcPattern);
 
@@ -848,6 +908,7 @@ export function parseBVADecision(text) {
   try {
     // Extract docket number
     const docketMatch = text.match(
+      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: runs unbounded against full document text; measured 0ms against ~90k adversarial (many non-matching "docket"/"citation" triggers) input in vaDocumentParser.test.js
       /(?:docket|citation)\s*(?:no\.?|number)?[:\s]*(\d{2}-\d{2}\s*\d{3}|\d{7})/i,
     );
     if (docketMatch) result.docketNumber = docketMatch[1];
@@ -859,7 +920,10 @@ export function parseBVADecision(text) {
 
     if (factStart !== -1 && lawStart !== -1) {
       const factSection = text.substring(factStart, lawStart);
-      const factMatches = factSection.matchAll(/(?:\d+\.|•)\s*([^.]+\.)/g);
+      const factMatches = factSection.matchAll(
+        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: bullet-anchored (?:\d+\.|•) prefix keeps match attempts non-overlapping; measured 9ms against a ~6MB adversarial (bullets, no period anywhere) section in vaDocumentParser.test.js, far past any real BVA decision's FINDINGS OF FACT section
+        /(?:\d+\.|•)\s*([^.]+\.)/g,
+      );
       for (const match of factMatches) {
         result.findingsOfFact.push(match[1].trim());
       }
@@ -910,6 +974,7 @@ export function parseSOC(text) {
     if (issueStart !== -1) {
       const issueSection = text.substring(issueStart, issueStart + 2000);
       const issueMatches = issueSection.matchAll(
+        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: issueSection above is capped at 2000 chars, never the raw document
         /(?:\d+\.|•|-)?\s*((?:Entitlement|Service\s*connection|Increased)[^.\n]+)/gi,
       );
       for (const match of issueMatches) {
@@ -918,9 +983,7 @@ export function parseSOC(text) {
     }
 
     // Extract CFR citations
-    const cfrMatches = text.matchAll(
-      /38\s*(?:C\.?F\.?R\.?|CFR)\s*§?\s*([\d.]+)/g,
-    );
+    const cfrMatches = text.matchAll(CFR_CITATION_RE);
     for (const match of cfrMatches) {
       if (!result.legalCitations.includes(match[1])) {
         result.legalCitations.push(`38 CFR § ${match[1]}`);
@@ -950,6 +1013,7 @@ function detectInformalConference(text) {
 
     // Try to extract conference date
     const confDateMatch = text.match(
+      // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: runs unbounded against full document text; measured 0ms against ~90k adversarial (many non-matching "conference"/"meeting" triggers) input in vaDocumentParser.test.js
       /(?:conference|meeting)\s*(?:held\s*)?(?:on\s*)?(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
     );
     if (confDateMatch) {
@@ -1021,9 +1085,7 @@ function extractCUEClaims(text) {
  */
 function extractCFRCitations(text) {
   const legalCitations = [];
-  const cfrMatches = text.matchAll(
-    /38\s*(?:C\.?F\.?R\.?|CFR)\s*§?\s*([\d.]+)/g,
-  );
+  const cfrMatches = text.matchAll(CFR_CITATION_RE);
   for (const match of cfrMatches) {
     if (!legalCitations.includes(match[1])) {
       legalCitations.push(`38 CFR § ${match[1]}`);
@@ -1079,6 +1141,7 @@ export function parseHLR(text) {
 
     // Extract effective date
     const effectiveDateMatch = text.match(
+      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: runs unbounded against full document text; measured 0ms against ~100k adversarial (many non-matching "effective" triggers) input in vaDocumentParser.test.js
       /effective\s*(?:date)?[:\s]*(\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
     );
     if (effectiveDateMatch) {

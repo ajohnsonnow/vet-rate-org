@@ -27,7 +27,7 @@ const PART_TITLES = {
 };
 
 /**
- * Extract "38 CFR Part {n} — {title}" from a citation like "38 CFR § 4.71a".
+ * Extract "38 CFR Part {n} - {title}" from a citation like "38 CFR § 4.71a".
  * Falls back gracefully if the citation doesn't match the expected shape.
  */
 export function partHeading(citation) {
@@ -35,7 +35,7 @@ export function partHeading(citation) {
   if (!m) return "38 CFR";
   const partNum = m[1];
   const title = PART_TITLES[partNum];
-  return title ? `38 CFR Part ${partNum} — ${title}` : `38 CFR Part ${partNum}`;
+  return title ? `38 CFR Part ${partNum} - ${title}` : `38 CFR Part ${partNum}`;
 }
 
 function isTableChunkText(text) {
@@ -65,7 +65,7 @@ function typeDescriptor(text, { index, total }) {
  */
 export function contextualizeText(chunk, { index = 0, total = 1 } = {}) {
   // Deliberately NOT prefixed with partHeading()'s corpus-wide constant
-  // ("38 CFR Part 4 — Schedule for Rating Disabilities") — every chunk in
+  // ("38 CFR Part 4 - Schedule for Rating Disabilities") — every chunk in
   // today's single-part corpus shares it verbatim, so it adds no
   // discriminative signal while diluting each embedding's specific content.
   // An A/B against the shipped index (S18 harness) showed the full heading

@@ -18,6 +18,9 @@ My Packet serves as your:
 - **Evidence Manager** - Organize your documentation
 - **Backup System** - Export and restore your work
 
+![My Packet claims tab showing several tracked conditions with status badges and readiness gauges](../assets/images/screenshots/my-packet/claims-tab.png)
+_My Packet's Claims tab, with the always-visible Local Backup / Restore / Google Drive toolbar at the top._
+
 ---
 
 ## In This Section
@@ -54,23 +57,27 @@ My Packet serves as your:
 
 Click **"📁 My Packet"** in the navigation header.
 
-### Keyboard Shortcut
+### Global Command Search
 
-Press **`P`** (when not in an input field) to open My Packet.
+Press **Ctrl+K** (**Cmd+K** on Mac) and search for "My Packet."
 
 ---
 
 ## What's Stored in My Packet
 
-| Item | Description |
-|------|-------------|
-| **Primary Conditions** | Disabilities you're claiming as direct/aggravation |
-| **Secondary Conditions** | Disabilities linked to service-connected conditions |
-| **Nexus Statements** | Generated Statements in Support of Claim |
-| **Doctor Cheat Sheets** | Reference documents for your providers |
-| **Forms** | Completed VA forms from Forms Helper |
-| **Notes** | Personal notes on each condition |
-| **Status** | Tracking status for each claim |
+| Item                     | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| **Primary Conditions**   | Disabilities you're claiming as direct/aggravation                    |
+| **Secondary Conditions** | Disabilities linked to service-connected conditions                   |
+| **Nexus Statements**     | Generated Statements in Support of Claim                              |
+| **Doctor Cheat Sheets**  | Reference documents for your providers                                |
+| **Forms**                | Completed VA forms from Forms Helper                                  |
+| **Status**               | Tracking status for each claim (Drafting, Statement Generated, Filed) |
+
+My Packet also has tabs for **Ratings**, **Service History** (deployments, duty stations, awards, and DD-214 data), **Timeline**, **Pain Maps**, **Profile**, and **Forms** - all part of the same locally-stored packet.
+
+![My Packet Service History tab, including the Duty Stations section](../assets/images/screenshots/my-packet/service-tab.png)
+_The Service tab covers deployments, duty stations, and awards alongside your claims._
 
 ---
 
@@ -78,23 +85,20 @@ Press **`P`** (when not in an input field) to open My Packet.
 
 ### Claim Organization
 
-- Categorize by Primary vs. Secondary
-- Sort by status, date added, or name
-- Filter to find specific conditions
+- Each condition shows as its own card, with secondary conditions linked to the primary they're connected to
+- Cards are listed in the order they were added, newest additions included in your VA Records/C-File suggestions section if applicable
 
 ### Progress Tracking
 
-Track each claim's status:
+Track each claim's status with the dropdown on its card:
 
-| Status | Meaning |
-|--------|---------|
-| **Researching** | Gathering information |
-| **Drafting** | Building your case |
-| **Evidence Gathering** | Collecting supporting documents |
-| **Ready to File** | Claim is prepared |
-| **Filed** | Submitted to VA |
-| **Pending** | Awaiting VA decision |
-| **Decided** | VA made a decision |
+| Status                  | Meaning                                             |
+| ----------------------- | --------------------------------------------------- |
+| **Drafting**            | Still building your statement and evidence          |
+| **Statement Generated** | A nexus statement has been built for this condition |
+| **Filed**               | You've submitted this claim to the VA               |
+
+Each condition card also shows a **Readiness Gauge** - a quick visual check for the "Big 3" of a strong claim: current diagnosis, an in-service event, and a nexus connecting them.
 
 ### Document Generation
 
@@ -103,14 +107,14 @@ From My Packet, you can:
 - Generate nexus statements
 - Create doctor's cheat sheets
 - Build supporting forms
-- Download everything as PDF
+- Download individual statements as TXT, Word, or PDF (after certifying you've reviewed them)
 
 ### Data Security
 
 !!! va-info "Privacy Protected"
-    
+
     Your packet data is stored **locally in your browser**:
-    
+
     - ✅ Never leaves your device
     - ✅ Never transmitted to any server
     - ✅ Complete privacy
@@ -147,7 +151,7 @@ Add conditions from:
 - **Search Results** - Click "Save to Packet" on any condition
 - **Disability Details** - Click "Save to Packet" in details panel
 - **Secondary Scout** - Add suggested secondary conditions
-- **Manual Entry** - Add conditions directly in My Packet
+- **C-File Analyzer** - Review conditions the AI identified in your uploaded records and file the ones that apply
 
 ---
 
@@ -173,24 +177,30 @@ Your packet will be cleared if you:
 ### Backup Recommendation
 
 !!! warning "Regular Backups"
-    
+
     Since data is stored locally, **regularly export backups**:
-    
+
     1. Open My Packet
-    2. Click "Export Backup"
+    2. Click "Local Backup" in the toolbar (or "Google Drive" to sync to your own Drive)
     3. Save the file to a safe location
-    4. Consider cloud storage for extra protection
+    4. See [Backup & Restore](backup-restore.md) for the full options
+
+---
+
+!!! warning "No Guarantee of Outcome"
+My Packet helps you organize evidence and paperwork, but **using it does not guarantee any particular outcome** on your VA claim - ratings and decisions are made solely by the VA.
+
+    For personalized guidance, seek help from an accredited **Veterans Service Officer (VSO)** - free, no fees allowed - and/or a VA-accredited attorney or claims agent. Find one at [va.gov/ogc/apps/accreditation](https://www.va.gov/ogc/apps/accreditation/).
 
 ---
 
 ## Best Practices
 
 !!! tip "My Packet Tips"
-    
+
     1. **Start with Intent to File** - Protect your effective date
     2. **Add conditions as you discover them** - Don't lose track
     3. **Build statements for each** - Be prepared
     4. **Update statuses** - Know where you are
     5. **Backup regularly** - Protect your work
     6. **Export before filing** - Have records of everything
-    7. **Keep notes** - Document your research and decisions

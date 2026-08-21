@@ -379,7 +379,7 @@ const DD214_EXPECTED_TERMS = [
   "certificate",
 ];
 
-// Florence-2 can degenerate into a repetition loop on faded/old scans —
+// Florence-2 can degenerate into a repetition loop on faded/old scans -
 // producing output that's long enough to pass a naive length check but is
 // garbage (e.g. "3.4 BATH ROOM 3.5BATHROOM 3.4BATH ROAD"). Detect a repeated
 // word-root appearing implausibly often relative to total word count.
@@ -560,7 +560,7 @@ async function _extractDocumentText(file, onProgress) {
   if (isLargePDF) {
     // eslint-disable-next-line no-console
     console.log(
-      `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) — using streaming extraction...`,
+      `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) - using streaming extraction...`,
     );
     const etaTracker = createEtaTracker();
     const largeResult = await processLargePDF(file, {
@@ -586,7 +586,7 @@ async function _extractDocumentText(file, onProgress) {
           state: PROCESSING_STATES.EXTRACTING,
           progress: 25 + batch.pct * 0.4,
           stage: "platoon_sergeant",
-          message: `Pages ${batch.startPage}–${batch.endPage} of ${batch.totalPages} extracted`,
+          message: `Pages ${batch.startPage}-${batch.endPage} of ${batch.totalPages} extracted`,
           currentPage: batch.processedSoFar,
           totalPages: batch.totalPages,
           etaSeconds: etaTracker.etaSeconds(
@@ -747,7 +747,7 @@ const storeDocumentInVKB = async (file, result) => {
 
 // classifyDocument() (documentClassifier.js) always returns one of the
 // uppercase DOCUMENT_TYPES enum values, never the lowercase/snake_case labels
-// below — those are dead keys kept only because some other caller may still
+// below - those are dead keys kept only because some other caller may still
 // pass them directly. Without the DOCUMENT_TYPES-keyed entries, every
 // classification except the DD214 family (whose enum values happen to equal
 // their own uppercase strings) fell through to PACKET_DOC_TYPES.OTHER.
@@ -826,19 +826,19 @@ const _parseServiceTimeString = (str) => {
     );
   if (!match) return { years: null, months: null, days: null };
   return {
-    years: parseInt(match[1], 10),
-    months: parseInt(match[2], 10),
-    days: match[3] ? parseInt(match[3], 10) : null,
+    years: Number.parseInt(match[1], 10),
+    months: Number.parseInt(match[2], 10),
+    days: match[3] ? Number.parseInt(match[3], 10) : null,
   };
 };
 
 // Field builders below are split out of buildDD214ProfileUpdate purely to
 // keep that function's cyclomatic complexity under the repo's lint ceiling
-// — every branch here is a field default, no new behavior.
+// - every branch here is a field default, no new behavior.
 function _buildDD214IdentityFields(d) {
   return {
     fullName: d.veteranName || null,
-    // FIX-19: which form type actually supplied fullName — the merged
+    // FIX-19: which form type actually supplied fullName - the merged
     // record could come from a DD214, NGB22, DD256, or DD257, and the
     // Service tab's Name card used to hardcode "DD-214, Block 1" regardless
     // of which one actually won the confidence merge. Only set when this
@@ -919,7 +919,7 @@ const _isEmptyDD214Value = (value) => {
 // the Service tab. Confidence is tracked at the record level (a single
 // high-water mark via Math.max below, not per field): a field is only
 // overwritten when the incoming extraction's confidence is >= the stored
-// record's overall confidence, or when the existing field is empty — so a
+// record's overall confidence, or when the existing field is empty - so a
 // low-confidence re-scan can fill gaps but can't blank out or replace data
 // from a higher-confidence scan. A field gap-filled by a low-confidence scan
 // is thereafter protected by the record's higher watermark. `existing`/
@@ -948,7 +948,7 @@ const _mergeDD214Record = (existing, candidate) => {
 
 // The canonical service period shape (C1 multi-period model) mandates
 // "YYYY-MM-DD" dates, but parseServiceRecord's own box extractors
-// (_normalizeDateMatch) emit MM/DD/YYYY — normalize at this write boundary
+// (_normalizeDateMatch) emit MM/DD/YYYY - normalize at this write boundary
 // rather than touching the parser. Leaves anything unrecognized as-is
 // rather than fabricating a date.
 const _toISODateString = (dateStr) => {
@@ -961,15 +961,15 @@ const _toISODateString = (dateStr) => {
 };
 
 // Writes extracted DD214 fields to the Service tab's storage key
-// (SERVICE_HISTORY_KEY via saveDD214Data) — kept as-is, still the write
+// (SERVICE_HISTORY_KEY via saveDD214Data) - kept as-is, still the write
 // target for person-scoped fields and everything currently displayed from
 // dd214Data. C1: ADDITIVELY also writes the period-scoped subset of the
 // same extraction into the canonical serviceHistory.servicePeriods[]
 // array (upsertServicePeriod, keyed by (serviceStartDate, serviceEndDate)
-// so genuinely different enlistment periods never collide — FIX-11).
+// so genuinely different enlistment periods never collide - FIX-11).
 // This does not change saveDD214Data's existing merge behavior at all.
 // Split out of saveServiceRecordToProfile purely to keep that function's
-// cyclomatic complexity under the repo's lint ceiling — same behavior, same
+// cyclomatic complexity under the repo's lint ceiling - same behavior, same
 // upsertServicePeriod call, just its own named step.
 function _savePrimaryServicePeriod(file, result, candidate) {
   try {
@@ -1014,7 +1014,7 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 // FIX-15: NGB-22 Box 18's granular IADT/AD date ranges (see
 // _extractNGB22PeriodDates) each become their own servicePeriods[] entry,
 // additive to the single Box 12a/12b period saved by
-// _savePrimaryServicePeriod — upsertServicePeriod's own (serviceStartDate,
+// _savePrimaryServicePeriod - upsertServicePeriod's own (serviceStartDate,
 // serviceEndDate) identity key means a range that happens to match the
 // primary period is a no-op, not a duplicate.
 function _saveNGB22AdditionalPeriods(file, candidate) {
@@ -1067,14 +1067,14 @@ const saveServiceRecordToProfile = (file, result) => {
 // result.extractedData.awards reaches this in one of two shapes depending on
 // which extraction path produced it: ribbonRackData.parseDD214Text() output
 // (regex path, via _extractAwardsFromBlock13/_extractAwardsFallback inside
-// parseServiceRecord below — { award, matchedText, devices, quantity }), or
+// parseServiceRecord below - { award, matchedText, devices, quantity }), or
 // dd214VisionParser.extractAwards() output (Florence vision path, via
-// buildVisionParsedServiceRecord above — { name, abbreviation, isCombat,
+// buildVisionParsedServiceRecord above - { name, abbreviation, isCombat,
 // count }). They never share a shape because the vision path's own parser
 // runs before ribbonRackData.parseDD214Text ever sees the vision-extracted
 // text. Both get normalized to addAward()'s input shape here.
 // FIX-4: devices must stay structured {type, position} objects end-to-end
-// — VisualRibbon.jsx switches on device.type and can't render a flattened
+// - VisualRibbon.jsx switches on device.type and can't render a flattened
 // display-name string. This previously flattened via DEVICES[d.type]?.name
 // right here, which is why devices extracted correctly by
 // ribbonRackData.detectDevices() never actually rendered on the Ribbon
@@ -1123,7 +1123,7 @@ const saveAwardsToProfile = (file, result) => {
     awards.forEach((item) => {
       const normalized = _normalizeExtractedAward(item);
       if (!normalized.name) return;
-      // Human-readable device summary for `notes` — devices themselves go
+      // Human-readable device summary for `notes` - devices themselves go
       // through as structured data via the `devices` key below.
       const deviceLabels = normalized.devices.map(
         (d) => DEVICES[d.type]?.name || d.type,
@@ -1188,12 +1188,12 @@ const buildVKBDD214Data = (result) => {
 // generateLLMContext()) from the same batch-processed DD214/NGB22 data that
 // saveServiceRecordToProfile writes to the Service tab above. Without this,
 // documents ingested via Muster Call never reached vkb.serviceHistory at all
-// — only the manual DD214Analyzer.jsx upload (mergeDD214IntoVKB) and
+// - only the manual DD214Analyzer.jsx upload (mergeDD214IntoVKB) and
 // IntelligenceBriefing.jsx review screen (mergeMusterCallIntoVKB) did.
 // mergeDD214IntoVKB's own mergeDD214Awards has a separate fuzzy-match dedup
-// against vkb.serviceHistory.awards — a different array in a different store
+// against vkb.serviceHistory.awards - a different array in a different store
 // (IndexedDB VKB) than addAward()'s history.awards (veteranProfile.js
-// localStorage) — so both need to independently end up deduped; neither
+// localStorage) - so both need to independently end up deduped; neither
 // dedup is aware of the other. This reuses the same loadVKB()/saveVKB()
 // lost-update race already disclosed on appendMusterCallTimelineEntry below,
 // not a new one.
@@ -1220,7 +1220,7 @@ const mergeServiceRecordIntoVKB = async (file, result) => {
 // VA correspondence dates its letterhead in prose ("November 28, 2008"), not
 // the "CLAIM DATE: 11/28/2008" literal parseClaimLetter looks for, so a real
 // claim-letter corpus yields no extracted date at all and every entry collapses
-// onto the import date — a timeline that can't show continuity of symptoms.
+// onto the import date - a timeline that can't show continuity of symptoms.
 // Exports commonly carry the real date in the filename (ClaimLetter-2008-11-28)
 // so it is used ahead of the processing-date fallback.
 const _filenameDate = (fileName) => {
@@ -1234,7 +1234,7 @@ const _filenameDate = (fileName) => {
 // FIX-5: picks the most relevant date already surfaced by this document's
 // own extraction/classification, then the filename, and only as an
 // absolute last resort reports no real date at all instead of fabricating
-// "today". Returns { date, dateIsProcessingDate } — date is null when
+// "today". Returns { date, dateIsProcessingDate } - date is null when
 // nothing real was found.
 const _resolveTimelineDate = (result, fileName) => {
   const d = result.extractedData || {};
@@ -1258,14 +1258,14 @@ const _resolveTimelineDate = (result, fileName) => {
 // pair addDocumentToVKB already uses. Batch processing (processMusterCallBatch)
 // runs up to maxConcurrent documents in parallel, and loadVKB() returns a
 // deep copy per call, so concurrent calls to this function race on the same
-// lost-update pattern addDocumentToVKB already has — this doesn't add a new
+// lost-update pattern addDocumentToVKB already has - this doesn't add a new
 // kind of race, just a second call site exposed to the pre-existing one.
 // FIX-5: uses the same 5-field shape mergeDD214EvidenceTimeline
-// (veteranKnowledgeBase.js) already uses — {date, eventType, description,
-// source, significance} — instead of a different 3-field shape.
+// (veteranKnowledgeBase.js) already uses - {date, eventType, description,
+// source, significance} - instead of a different 3-field shape.
 // FIX-12: pure identity check, factored out so it's unit-testable without
 // IndexedDB (appendMusterCallTimelineEntry itself requires loadVKB/saveVKB,
-// which aren't available under jsdom — see musterCallProcessor timeline
+// which aren't available under jsdom - see musterCallProcessor timeline
 // dedup tests). Same spirit as addDocumentToVKB's FIX-6 (fileName+fileSize
 // identity), but the "document_import" timeline shape has no fileName/
 // fileSize fields of its own; description is built deterministically from
@@ -1358,7 +1358,7 @@ const classifyAndParseDocument = async (
 
   // Parsing is enrichment on top of a successful extraction, and it runs
   // BEFORE storeDocumentInVKB/archiveDocumentInPacket in processSingleDocument.
-  // Letting a parser throw therefore loses the whole document — the veteran's
+  // Letting a parser throw therefore loses the whole document - the veteran's
   // file never reaches the VKB or My Packet at all. Observed on a real 2,018-page
   // C-File once page-count classification correctly routed it to
   // parseCFileDocument, which threw where parseClaimLetter had not. Degrade to
@@ -1382,6 +1382,23 @@ const classifyAndParseDocument = async (
       parseFailedType: result.classification.type,
     };
   }
+};
+
+// Every write here is keyed by (fileName, fileSize) or an equivalent
+// identity (addDocumentToVKB, saveDocumentToPacket, findDuplicateTimelineEntry,
+// mergeDD214IntoVKB's per-fileName guard, addAward's own dedup) and updates
+// the existing record in place rather than duplicating it. That makes this
+// safe to call twice for the same document: once on initial extraction, and
+// again from the verification screen's "Verify & Save" with corrected
+// field values, so a veteran's corrections actually reach the stores every
+// AI tool reads from instead of being silently discarded.
+export const persistFormationDocument = async (file, result) => {
+  await storeDocumentInVKB(file, result);
+  await archiveDocumentInPacket(file, result);
+  saveServiceRecordToProfile(file, result);
+  saveAwardsToProfile(file, result);
+  await appendMusterCallTimelineEntry(file, result);
+  await mergeServiceRecordIntoVKB(file, result);
 };
 
 const processSingleDocument = async (file, onProgress) => {
@@ -1431,18 +1448,9 @@ const processSingleDocument = async (file, onProgress) => {
 
     await classifyAndParseDocument(file, onProgress, result, extractionResult);
 
-    // Step 4: Store document in VKB (keeps data separate per document)
-    await storeDocumentInVKB(file, result);
-
-    // Step 5: Also save to My Packet (permanent document archive)
-    await archiveDocumentInPacket(file, result);
-
-    // Step 6: Populate the Service tab (DD214s only) and Timeline tab (all
-    // documents) — additive to the VKB/My Packet archiving above.
-    saveServiceRecordToProfile(file, result);
-    saveAwardsToProfile(file, result);
-    await appendMusterCallTimelineEntry(file, result);
-    await mergeServiceRecordIntoVKB(file, result);
+    // Steps 4-6: store to VKB, My Packet, Service tab, Ribbon Rack, and the
+    // evidence timeline.
+    await persistFormationDocument(file, result);
 
     result.status = "complete";
     onProgress?.({
@@ -1486,7 +1494,7 @@ export const processFormationDocument = async (file, onProgress) => {
   const result = await processSingleDocument(file, onProgress);
 
   // FIX-9 (root cause 2): this single-document path never called
-  // autoPopulateProfile at all — only the Muster Call batch path
+  // autoPopulateProfile at all - only the Muster Call batch path
   // (useLegacyBatchProcessing.js) did. Profile auto-fill must work here
   // too.
   let profilePopulateResult = null;
@@ -1535,7 +1543,7 @@ const splitMultipleDD214s = (text) => {
   let segmentPageStart = 1;
 
   for (let i = 0; i < pageMatches.length; i++) {
-    const pageNum = parseInt(pageMatches[i][1]);
+    const pageNum = Number.parseInt(pageMatches[i][1]);
     const pageStart = pageMatches[i].index;
     const pageEnd = pageMatches[i + 1]?.index || text.length;
     const pageText = text.substring(pageStart, pageEnd);
@@ -1811,12 +1819,12 @@ const parseDD214Document = async (
   // FIX-15: documentClassifier.js's DD214 pattern set (Box labels shared by
   // every DD214-style service-record form) routinely outscores NGB22's
   // narrower pattern set on a real NGB-22 scan, so docType comes back
-  // "DD214" even for a genuine NGB-22 — confirmed against the real corpus.
+  // "DD214" even for a genuine NGB-22 - confirmed against the real corpus.
   // A literal "NGB22"/"NGB-22" in the filename is a much stronger signal
   // for the FORM-SPECIFIC parsing behavior selected here (Box 18 date
   // format, Box 1 boilerplate rejection) than for re-scoring the general
   // classifier, and never downgrades an already-correct NGB22/DD256/DD257
-  // classification — it only fills the gap when docType is missing or
+  // classification - it only fills the gap when docType is missing or
   // (mis-)landed on the generic "DD214".
   const filenameLooksLikeNGB22 = /ngb[-\s]?22/i.test(filename || "");
   const docTypeIsGenericOrMissing = !docType || docType === "DD214";
@@ -1933,9 +1941,9 @@ const parseDBQDocument = async (text) => {
 const buildSegmentedCFileResult = async (text, cFileSummary) => {
   // Full segmentation for large files. No maxSegments override: this passed 100,
   // an order of magnitude below segmentCFile's own 1000 default, while a real
-  // 2,018-page C-File segments into 332 document groups — the cap silently
+  // 2,018-page C-File segments into 332 document groups - the cap silently
   // discarded roughly two thirds of the file's structure.
-  // parseDocuments:false — the mapped return below reads only type/startPage/
+  // parseDocuments:false - the mapped return below reads only type/startPage/
   // endPage/confidence/snippet, and the inventory needs no parsed bodies, so
   // the default (true) was parsing all ~332 segments of a real C-File into full
   // VA document objects and discarding every one. That waste is a prime suspect
@@ -1945,7 +1953,7 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
   console.log(`✅ Segmented C-File into ${segments.segments.length} documents`);
 
   // Build inventory from the segmentation just computed. This used to call
-  // buildDocumentInventory(text), which re-segments from scratch — a second
+  // buildDocumentInventory(text), which re-segments from scratch - a second
   // full pass over a text that is ~3.9M characters for a real C-File.
   const inventory = buildInventoryFromSegmentation(segments);
 
@@ -1969,7 +1977,7 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
     type: "c_file",
     summary: cFileSummary,
     // segmentCFile emits {id, type, category, position, length, preview,
-    // confidence, rawText, parsed} — there is no `text`, and no startPage/
+    // confidence, rawText, parsed} - there is no `text`, and no startPage/
     // endPage has ever existed on a segment. This read `s.text.substring()`
     // (TypeError) and emitted two permanently-undefined page fields; it never
     // surfaced because nothing reached this function until page-count
@@ -1989,11 +1997,11 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
   };
 };
 
-// quickScanCFile() reports detected document TYPES and a page estimate — it has
+// quickScanCFile() reports detected document TYPES and a page estimate - it has
 // never returned a document count. This function previously read
 // `.estimatedDocCount` and `.categories`, neither of which exists on that
 // object, so the log line threw on `.join()` of undefined and the routing test
-// was `undefined > 5` — always false. The segmented path was unreachable for the
+// was `undefined > 5` - always false. The segmented path was unreachable for the
 // life of the code; it only surfaced once page-count classification started
 // routing real C-Files here instead of to parseClaimLetter. A consolidated
 // C-File is distinguished by carrying several distinct document types, or by
@@ -2142,7 +2150,7 @@ const ocrFixPatterns = [
   [/\b0([A-Z]{2,})\b/g, "O$1"],
   [/\b([A-Z]{2,})0\b/g, "$1O"],
   // Same 0→O fix as above, but for a single-letter run (e.g. NGB22 Block 15
-  // "0R-FSR" — the Oregon National Guard Faithful Service Ribbon's "OR"
+  // "0R-FSR" - the Oregon National Guard Faithful Service Ribbon's "OR"
   // state prefix OCR'd as "0R"). The {2,} patterns above only fire on 2+
   // letter runs, so a lone letter immediately after/before the 0 needs its
   // own boundary-anchored rule to avoid also matching numeric-only tokens.
@@ -2302,7 +2310,7 @@ const DEPLOYMENT_BOILERPLATE_PATTERNS = [
   /EDUCATIONAL\s+ASSISTANCE\s+PROGRAM/gi,
 ];
 
-// Last plausible year a veteran could have served in each named era —
+// Last plausible year a veteran could have served in each named era -
 // sanity guard against fabricating a deployment that predates the
 // veteran's own birth (or is otherwise chronologically impossible).
 const DEPLOYMENT_ERA_LATEST_YEAR = {
@@ -2312,13 +2320,13 @@ const DEPLOYMENT_ERA_LATEST_YEAR = {
 
 /**
  * Isolate Box 18 (Remarks) text so deployment/narrative extraction never
- * scans the entire document — the whole-document scan is what let
+ * scans the entire document - the whole-document scan is what let
  * preprinted boilerplate ("POST-VIETNAM ERA VETERAN'S EDUCATIONAL
  * ASSISTANCE PROGRAM") get matched as a real Vietnam deployment.
- * Returns "" (not the full text) if the box can't be reliably isolated —
+ * Returns "" (not the full text) if the box can't be reliably isolated -
  * a missed deployment is far cheaper than a fabricated one.
  */
-// FIX-12: callers must pass ocrCorrectedUpperText, not raw text — see
+// FIX-12: callers must pass ocrCorrectedUpperText, not raw text - see
 // _extractStateCode for the same requirement. A real DD214 scan renders
 // "POST-VIETNAM ERA" as "P0ST-VIETNAM ERA", and DEPLOYMENT_BOILERPLATE_PATTERNS
 // is letter-only, so stripping boilerplate against the raw text left the
@@ -2347,7 +2355,7 @@ function _stripDeploymentBoilerplate(box18Text) {
 function _parseYearFromDate(dateStr) {
   if (!dateStr) return null;
   const match = String(dateStr).match(/(\d{4})/);
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 }
 
 function _preprocessDD214Text(text) {
@@ -2393,7 +2401,7 @@ function _preprocessDD214Text(text) {
 
   // STEP 1: Remove ALL parenthetical content (instructions/examples)
   // This catches "(Silver Star, Bronze Star...)", "(Last, First, Middle)", etc.
-  // Excludes "/" from the character class — see ribbonRackData.js's
+  // Excludes "/" from the character class - see ribbonRackData.js's
   // parseDD214Text STEP 1 for why: real DD214/NGB22 award data is always
   // "//"-delimited, and an unclosed instructional paren (some real NGB22
   // OCR scans have one right before Block 15's award list) must not be
@@ -2434,7 +2442,7 @@ function _extractNameField(ctx) {
   // First, try to isolate Box 1 content (everything between "1. NAME" and
   // whatever field boundary comes next).
   // FIX-16: anchor forward from "1. NAME" to the NEXT field-number boundary
-  // that appears after it, whatever box that happens to be — not
+  // that appears after it, whatever box that happens to be - not
   // specifically "2. DEPARTMENT". A real DD214 scan's linearized OCR text
   // reads the form in column/field order, not printed reading order: "2.
   // DEPARTMENT" (and 3.-7.) routinely appear BEFORE "1. NAME" in the
@@ -2445,7 +2453,7 @@ function _extractNameField(ctx) {
   const nameAnchorMatch = cleanedText.match(/1\.\s*NAME/i);
   // FIX-3b: the DD214 Box 1 anchor always fails on NGB22 (different box
   // structure/label text), which used to fall back to the first 500 chars
-  // of the document — that fallback matched NGB22 boilerplate ("FOR USE OF
+  // of the document - that fallback matched NGB22 boilerplate ("FOR USE OF
   // THIS FORM, SEE NGR ...") as a name. No box anchor = no name extraction;
   // returning nothing is far cheaper than returning a wrong name.
   if (!nameAnchorMatch) return;
@@ -2457,7 +2465,7 @@ function _extractNameField(ctx) {
   // then an ALL-CAPS label word. \d{1,2} fails immediately (no match, no
   // backtracking) at every position with no digit, so an adversarial run
   // with no digit at all (or digits never followed by whitespace, as in a
-  // real name like "WILLI0AMS") resolves in <5ms at 100k+ chars — verified
+  // real name like "WILLI0AMS") resolves in <5ms at 100k+ chars - verified
   // via adversarial timing test.
   const nextBoundaryMatch = afterAnchor.match(/\d{1,2}[a-z]?\.?\s+[A-Z]{3,}/);
   const box1Body = nextBoundaryMatch
@@ -2468,11 +2476,11 @@ function _extractNameField(ctx) {
   // corruption ("WILLI0AMS") can be corrected unconditionally here. The
   // document-wide ocrFixPatterns pass already tries this, but its general
   // \b([A-Z]+)0([A-Z]+)\b rule fires once per word and needs a real word
-  // boundary on both sides of the run it replaces — a word with two zeros
+  // boundary on both sides of the run it replaces - a word with two zeros
   // ("WILLI0AMS") has no boundary between the letters after the first zero
   // and the second zero (both are \w chars), so the whole word is silently
   // skipped. This narrow, name-only substring has no such ambiguity.
-  const box1Text = `1. NAME${box1Body}`.replace(/0/g, "O");
+  const box1Text = `1. NAME${box1Body}`.replaceAll(/0/g, "O");
 
   const namePatterns = [
     // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
@@ -2769,14 +2777,17 @@ function _extractDateOfBirth(ctx) {
         const month = dob.substring(4, 6);
         const day = dob.substring(6, 8);
         // Validate it's a reasonable DOB (year 1940-2010)
-        if (parseInt(year) >= 1940 && parseInt(year) <= 2010) {
+        if (Number.parseInt(year) >= 1940 && Number.parseInt(year) <= 2010) {
           dob = `${month}/${day}/${year}`;
         } else {
           // Might be MMDDYYYY format instead
           const altYear = dob.substring(4, 8);
           const altMonth = dob.substring(0, 2);
           const altDay = dob.substring(2, 4);
-          if (parseInt(altYear) >= 1940 && parseInt(altYear) <= 2010) {
+          if (
+            Number.parseInt(altYear) >= 1940 &&
+            Number.parseInt(altYear) <= 2010
+          ) {
             dob = `${altMonth}/${altDay}/${altYear}`;
           }
         }
@@ -2798,7 +2809,7 @@ function _extractServiceStartDate(ctx) {
   // FIX-13: the "12a" anchor never matched a real PDF text layer's "12.a."
   // rendering (dot before the sub-box letter, not just after), and the
   // table-format value pattern required a "|", "/", or "-" separator between
-  // the year/month/day groups — a real DD214 renders that box as plain
+  // the year/month/day groups - a real DD214 renders that box as plain
   // whitespace-separated "2002 05 06" with no punctuation at all, so neither
   // ever matched and serviceStartDate came back null even on clean input.
   const entryPatterns = [
@@ -2837,7 +2848,7 @@ function _normalizeDateMatch(match) {
     const month = match[2];
     const day = match[3];
     if (year.length === 2) {
-      year = parseInt(year) > 50 ? `19${year}` : `20${year}`;
+      year = Number.parseInt(year) > 50 ? `19${year}` : `20${year}`;
     }
     return `${month}/${day}/${year}`;
   }
@@ -2847,20 +2858,20 @@ function _normalizeDateMatch(match) {
     const year = dateStr.substring(0, 4);
     const month = dateStr.substring(4, 6);
     const day = dateStr.substring(6, 8);
-    if (parseInt(year) >= 1950 && parseInt(year) <= 2030) {
+    if (Number.parseInt(year) >= 1950 && Number.parseInt(year) <= 2030) {
       dateStr = `${month}/${day}/${year}`;
     }
   }
   return dateStr;
 }
 
-// FIX-20: Box 7a is "Place of Entry into Active Duty" — Box 8a/8b are "Last
+// FIX-20: Box 7a is "Place of Entry into Active Duty" - Box 8a/8b are "Last
 // Duty Assignment"/"Station Where Separated", a different field entirely.
 // The old anchor literally required "8." before the label, so it never
 // matched on any real DD214 (confirmed against all 39 real-corpus docs:
 // placeOfEntry was empty on every one). Words that only ever appear in this
 // box's own instructional boilerplate ("(City and State, or complete
-// address if known)") or the neighboring Box 7b (Home of Record) label —
+// address if known)") or the neighboring Box 7b (Home of Record) label -
 // used to reject a "City, ST"-shaped regex match that's actually boilerplate
 // text, not a real place name. Deliberately excludes state abbreviations
 // (e.g. "OR" for Oregon) from this list: "OR" is both a real, correct
@@ -2890,40 +2901,40 @@ const BOX7_PLACE_OF_ENTRY_NOISE_WORDS = new Set([
 // the printed form) rather than a real field label, so it sits OUTSIDE the
 // general ocrFixPatterns pass (that pass requires already-uppercase context
 // on both sides of a digit to fire) and reaches this function with its
-// digit-corruption intact — confirmed against the real corpus, where this
+// digit-corruption intact - confirmed against the real corpus, where this
 // boilerplate OCR's as "0R C0MPLETE ... ADDRESS IF KN0WN".
 function _normalizeOcrLetterDigits(str) {
   return str
-    .replace(/0/g, "O")
-    .replace(/1/g, "I")
-    .replace(/3/g, "E")
-    .replace(/4/g, "A")
-    .replace(/5/g, "S")
-    .replace(/8/g, "B");
+    .replaceAll(/0/g, "O")
+    .replaceAll(/1/g, "I")
+    .replaceAll(/3/g, "E")
+    .replaceAll(/4/g, "A")
+    .replaceAll(/5/g, "S")
+    .replaceAll(/8/g, "B");
 }
 
 // Real DD214 scans read the two-column Box 7a/7b layout in scrambled order
-// (same root cause as FIX-16's Box 1 name fix) — Box 7a's own label and
+// (same root cause as FIX-16's Box 1 name fix) - Box 7a's own label and
 // value aren't reliably adjacent, and Box 7b's "(City and State, or complete
 // address if known)" boilerplate is sometimes OCR'd with Box 7a's real value
 // landing INSIDE what looks like that parenthetical, so this deliberately
 // scans ocrCorrectedUpperText (OCR-digit-fixed, uppercased, NOT
-// parenthetical-stripped — see _extractBox18RemarksText for why stripping
+// parenthetical-stripped - see _extractBox18RemarksText for why stripping
 // parens here would be destructive) for the label, then walks forward
 // through every "City, ST"-shaped candidate in a bounded window and takes
 // the first one that isn't boilerplate/label text. The character classes
 // below admit digits (real scans mix stray digit-for-letter OCR into both
 // halves of a candidate, including the state abbreviation itself, e.g.
-// "0REG0N") — _normalizeOcrLetterDigits repairs a candidate before it's
+// "0REG0N") - _normalizeOcrLetterDigits repairs a candidate before it's
 // checked against the boilerplate word list or accepted.
-// Real US state capitals + the largest-population US metros — used only to
+// Real US state capitals + the largest-population US metros - used only to
 // flag a place-of-entry city as low-confidence, never to reject/replace it.
 // A single OCR letter misread can turn a real city into a different-looking
 // but still plausible one ("SORTLAND, OREGON" for "PORTLAND, OREGON"); there
 // is no way to validate an arbitrary small town against a short list like
 // this, so this deliberately only flags the narrow case of a city that is
 // exactly one edit away from a well-known city without matching one
-// outright — everything else (including real, uncommon small towns) passes
+// outright - everything else (including real, uncommon small towns) passes
 // through unflagged rather than risk false positives.
 const PLACE_OF_ENTRY_KNOWN_CITIES = new Set([
   "MONTGOMERY",
@@ -3027,7 +3038,7 @@ const PLACE_OF_ENTRY_KNOWN_CITIES = new Set([
 
 // True only when `a`/`b` differ by exactly one single-character
 // insertion/deletion/substitution (a bounded, early-exit edit-distance-1
-// check — not a full Levenshtein DP, since every candidate here is already
+// check - not a full Levenshtein DP, since every candidate here is already
 // a short city name).
 function _editDistanceIsOne(a, b) {
   if (a === b) return false;
@@ -3076,7 +3087,7 @@ function _extractPlaceOfEntry(ctx) {
   );
 
   // The city portion is bounded to a single line (a space-only character
-  // class, not \s) — real scans routinely place the anchor's trailing
+  // class, not \s) - real scans routinely place the anchor's trailing
   // words ("INTO ACTIVE DUTY") and the actual value on separate lines, and
   // an \s-based class would lazily cross that newline to fuse them into one
   // bogus multi-word "city".
@@ -3158,7 +3169,7 @@ function _extractServiceEndDate(ctx) {
   // Common formats: YYYYMMDD (compact), YY | MM | DD (table format)
   // ============================================================
   // FIX-13: same "12b." vs "12.b." anchor and punctuation-only-separator
-  // bugs as _extractServiceStartDate's Box 12a — see that function's
+  // bugs as _extractServiceStartDate's Box 12a - see that function's
   // comment for the real-document repro that motivated this.
   const separationPatterns = [
     // Explicit Box 12b reference
@@ -3207,9 +3218,9 @@ function _extractServiceTime(ctx) {
   for (const pattern of netActivePatterns) {
     const match = cleanedText.match(pattern);
     if (match) {
-      const years = parseInt(match[1]) || 0;
-      const months = parseInt(match[2]) || 0;
-      const days = parseInt(match[3]) || 0;
+      const years = Number.parseInt(match[1]) || 0;
+      const months = Number.parseInt(match[2]) || 0;
+      const days = Number.parseInt(match[3]) || 0;
       // Sanity check: active duty period should be reasonable (< 40 years)
       if (years < 40 && months <= 12) {
         data.totalActiveService =
@@ -3227,8 +3238,8 @@ function _extractServiceTime(ctx) {
     /12c\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
   );
   if (priorActiveMatch) {
-    const years = parseInt(priorActiveMatch[1]) || 0;
-    const months = parseInt(priorActiveMatch[2]) || 0;
+    const years = Number.parseInt(priorActiveMatch[1]) || 0;
+    const months = Number.parseInt(priorActiveMatch[2]) || 0;
     if (years > 0 || months > 0) {
       data.totalPriorActiveService = `${years} years, ${months} months`;
     }
@@ -3240,8 +3251,8 @@ function _extractServiceTime(ctx) {
     /12d\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
   );
   if (priorInactiveMatch) {
-    const years = parseInt(priorInactiveMatch[1]) || 0;
-    const months = parseInt(priorInactiveMatch[2]) || 0;
+    const years = Number.parseInt(priorInactiveMatch[1]) || 0;
+    const months = Number.parseInt(priorInactiveMatch[2]) || 0;
     if (years > 0 || months > 0) {
       data.totalPriorInactiveService = `${years} years, ${months} months`;
     }
@@ -3522,7 +3533,7 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
   // ERA VETERAN'S EDUCATIONAL ASSISTANCE PROGRAM") and fabricated a
   // Vietnam deployment. If Box 18 can't be reliably isolated, extract
   // nothing rather than risk a fabrication.
-  // FIX-12: isolate against ocrCorrectedUpperText, not raw text — see
+  // FIX-12: isolate against ocrCorrectedUpperText, not raw text - see
   // _extractBox18RemarksText for why (boilerplate stripper and the
   // deployment-country matcher must see the same OCR-corrected text, or a
   // corrupted "P0ST-VIETNAM ERA" slips past the boilerplate strip while the
@@ -3564,7 +3575,7 @@ function _normalizeCompactDate(yyyymmdd) {
   const year = yyyymmdd.substring(0, 4);
   const month = yyyymmdd.substring(4, 6);
   const day = yyyymmdd.substring(6, 8);
-  const y = parseInt(year, 10);
+  const y = Number.parseInt(year, 10);
   if (y < 1950 || y > 2030) return null;
   return `${month}/${day}/${year}`;
 }
@@ -3572,17 +3583,17 @@ function _normalizeCompactDate(yyyymmdd) {
 // FIX-15: real NGB-22 (Guard) discharge records carry a granular activation
 // breakdown in Box 18 that Box 12a/12b (a single date pair) never captures,
 // e.g. "IADT: YYYYMMDD-YYYYMMDD//AD: YYYYMMDD-YYYYMMDD//YYYYMMDD-YYYYMMDD//
-// YYYYMMDD-YYYYMMDD//" — one IADT window plus several separately-dated AD
+// YYYYMMDD-YYYYMMDD//" - one IADT window plus several separately-dated AD
 // windows. Each "//"-delimited segment inherits the most recently seen
-// IADT/AD label. Dates only — no location name is ever present in this
+// IADT/AD label. Dates only - no location name is ever present in this
 // data, so this never populates a place field.
 //
 // FIX-18: a real scan OCR's "IADT" as "1A DT" (digit-for-letter plus a
-// spurious space) — confirmed against the real corpus, where this exact
+// spurious space) - confirmed against the real corpus, where this exact
 // corruption dropped the whole segment (dates included, not just the
 // label) because the label match failed and the pre-fix code required a
 // resolved component before it would even look at the date range. Every
-// segment's label prefix (if it has one — a bare continuation range never
+// segment's label prefix (if it has one - a bare continuation range never
 // does, see above) is now run through the same digit-for-letter
 // normalization the Box 1 name field and Box 7a place-of-entry field
 // already use (labels here never legitimately contain digits either), so
@@ -3590,7 +3601,7 @@ function _normalizeCompactDate(yyyymmdd) {
 // A label prefix that STILL doesn't normalize to a known IADT/AD label is
 // treated as unknown (component: null) rather than dropped, and rather
 // than silently inheriting whatever component the previous segment
-// resolved to — symmetric with the IADT case: if "AD" were the one that
+// resolved to - symmetric with the IADT case: if "AD" were the one that
 // OCR'd unrecognizably instead, silently inheriting a stale "IADT" would
 // mislabel real Active Duty service as training. A segment with no colon
 // at all (a genuine bare continuation, not a label attempt) still inherits
@@ -3698,7 +3709,7 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     // Box 7a: Place of Entry
     placeOfEntry: null,
     // True when placeOfEntry's city is a single-edit-distance OCR-plausible
-    // misread of a well-known city (see _isPlaceOfEntryLowConfidence) —
+    // misread of a well-known city (see _isPlaceOfEntryLowConfidence) -
     // hedges the field in the UI without blocking extraction.
     placeOfEntryLowConfidence: false,
     // Box 11: Primary MOS/Specialty (matches collectionRules: mos)
@@ -3719,7 +3730,7 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     // Box 18: Remarks - extracted key info (deployments, operations)
     remarks: null,
     deployments: [],
-    // Box 18 (NGB-22 only): granular IADT/AD activation date ranges — see
+    // Box 18 (NGB-22 only): granular IADT/AD activation date ranges - see
     // _extractNGB22PeriodDates. Empty unless this document is an NGB-22 AND
     // Box 18 contains the IADT:/AD: date-range format.
     additionalPeriods: [],
@@ -3798,7 +3809,7 @@ export const parseRatingDecision = async (text) => {
     // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
     const combinedMatch = text.match(/COMBINED\s+RATING\s*[:=]?\s*(\d+)%?/i);
     if (combinedMatch) {
-      data.combinedRating = parseInt(combinedMatch[1]);
+      data.combinedRating = Number.parseInt(combinedMatch[1]);
     }
 
     // Extract effective date
@@ -3860,7 +3871,7 @@ export const parseRatingDecision = async (text) => {
 
       data.conditions.push({
         name: match[1].trim(),
-        rating: parseInt(match[2]),
+        rating: Number.parseInt(match[2]),
         diagnosticCode: dcMatch ? dcMatch[1] : null,
         serviceConnected: true,
       });
@@ -3875,55 +3886,156 @@ export const parseRatingDecision = async (text) => {
 };
 
 /**
- * Parse VA Claim Letter
+ * Extracts per-issue outcome lines from a real VA letter, e.g.:
+ * "1. Service connection for tinnitus is granted with an evaluation of
+ * 10 percent effective November 1, 2025." / "Evaluation of lumbosacral
+ * strain, currently 20 percent disabling, is continued."
+ * Reuses the same "is granted/increased/continued/denied" verb convention
+ * DecisionDecoder.jsx already validates against real letter phrasing.
+ * Processes line-by-line with a bounded, anchored lazy quantifier so a
+ * pathological single huge line cannot cause backtracking blowup.
  */
-const parseClaimLetter = async (text) => {
+function extractPerIssueDecisions(text) {
+  const outcomeRe =
+    /^(.{3,120}?)\s+is\s+(granted|denied|continued|increased)\b/i;
+  const decisions = [];
+
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.replace(/^\s*\d+[.)]\s*/, "").trim();
+    if (!line) continue;
+
+    const match = line.match(outcomeRe);
+    if (!match) continue;
+
+    const condition = match[1]
+      .replace(/^service connection for\s+/i, "")
+      .replace(/^entitlement to\s+/i, "")
+      .replace(/^evaluation of\s+/i, "")
+      // eslint-disable-next-line sonarjs/slow-regex -- runs on already-bounded (<=120 char) capture group, not raw text
+      .replace(/,?\s*currently\s+\d{1,3}\s*percent\s+disabling,?\s*$/i, "")
+      .trim();
+
+    const ratingMatch = line.match(/(\d{1,3})\s*percent/i);
+    const dateMatch = line.match(
+      // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test (musterCallProcessor.parseClaimLetter.test.js): both alternation branches use non-overlapping character classes (letters vs digits), so there is no ambiguous backtracking, only a complexity-score count over the alternation/group structure
+      /effective\s+([A-Z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/i,
+    );
+
+    decisions.push({
+      condition,
+      outcome: match[2].toLowerCase(),
+      rating: ratingMatch ? Number(ratingMatch[1]) : null,
+      effectiveDate: dateMatch ? dateMatch[1] : null,
+    });
+  }
+
+  return decisions;
+}
+
+/**
+ * Parse VA Claim Letter - covers the real, broad CLAIM_LETTER category
+ * (documentClassifier.js): development/evidence-request letters, Intent to
+ * File acknowledgments, exam-scheduling notices, and decision/award letters
+ * that don't hit the stricter RATING_DECISION triggers. Real letters use
+ * prose ("We received your claim... on [date]", "What we need from you",
+ * "You have 30 days to respond") rather than the "CLAIM NUMBER:"/
+ * "CONTENTIONS:" intake-form labels the previous version looked for.
+ */
+export const parseClaimLetter = async (text) => {
   const data = {
     type: "claim_letter",
     claimNumber: null,
     claimDate: null,
-    contentions: [],
+    letterDate: null,
+    decisions: [],
+    evidenceNeeded: [],
+    responseDeadlineDays: null,
     status: null,
     raw: text.substring(0, 500),
   };
 
   try {
-    // Extract claim number
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    const claimNumMatch = text.match(/CLAIM\s+NUMBER\s*[:=]?\s*(\d{8,})/i);
-    if (claimNumMatch) {
-      data.claimNumber = claimNumMatch[1];
-    }
-
-    // Extract claim date
-    const claimDateMatch = text.match(
+    // VA file/claim number - real letters use several equivalent labels
+    const fileNumMatch = text.match(
       // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /(?:DATE\s+OF\s+CLAIM|CLAIM\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /(?:VA\s+FILE\s+NUMBER|C-FILE\s+NUMBER|FILE\s+NUMBER|CLAIM\s+NUMBER)\s*[:#]?\s*(\d[\d-]{6,14})/i,
     );
-    if (claimDateMatch) {
-      data.claimDate = claimDateMatch[1];
+    if (fileNumMatch) {
+      data.claimNumber = fileNumMatch[1];
     }
 
-    // Extract contentions (claimed conditions)
-    const contentionMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /CONTENTIONS?\s*[:=]?\s*([\s\S]{0,500}?)(?:\n\n|\r\n\r\n)/i,
+    // Claim-received date ("We received your claim ... on November 1, 2025")
+    const receivedMatch = text.match(
+      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: bounded filler ({0,80}) between anchors prevents backtracking blowup; both date-alternation branches use non-overlapping character classes
+      /RECEIVED\s+YOUR\s+CLAIM[^.\n]{0,80}?\bON\s+([A-Z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/i,
     );
-    if (contentionMatch) {
-      const contentions = contentionMatch[1]
-        .split(/[\n\r]+/)
-        .map((line) => line.trim())
-        .filter((line) => line.length > 3 && /^[A-Z]/.test(line));
-      data.contentions = contentions;
+    if (receivedMatch) {
+      data.claimDate = receivedMatch[1];
+    } else {
+      // Fall back to the old intake-form label for backward compatibility
+      const claimDateMatch = text.match(
+        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
+        /(?:DATE\s+OF\s+CLAIM|CLAIM\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      );
+      if (claimDateMatch) {
+        data.claimDate = claimDateMatch[1];
+      }
     }
 
-    // Extract status
-    if (/PENDING/i.test(text)) {
-      data.status = "pending";
-    } else if (/APPROVED/i.test(text)) {
-      data.status = "approved";
-    } else if (/DENIED/i.test(text)) {
+    // Letter's own issue date (only trust an explicit "Date:" label to avoid
+    // false-positives on unrelated dates elsewhere in the letter)
+    const letterDateMatch = text.match(
+      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: anchored to start-of-line (^ with /m) with a literal "Date" prefix; both date-alternation branches use non-overlapping character classes
+      /^\s*Date\s*[:.]?\s*([A-Z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/im,
+    );
+    if (letterDateMatch) {
+      data.letterDate = letterDateMatch[1];
+    }
+
+    // Per-issue grant/deny/continue outcomes (decision-bearing letters)
+    data.decisions = extractPerIssueDecisions(text);
+
+    // Evidence-request section (development letters)
+    const evidenceSectionMatch = text.match(
+      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: bounded body ({0,800}) lazily matched up to a blank line or end
+      /(?:WHAT\s+WE\s+NEED\s+FROM\s+YOU|EVIDENCE\s+(?:WE\s+)?NEED(?:ED)?|WE\s+NEED\s+THE\s+FOLLOWING)\s*[:.]?\s*([\s\S]{0,800}?)(?:\n\s*\n|\r\n\s*\r\n|$)/i,
+    );
+    if (evidenceSectionMatch) {
+      data.evidenceNeeded = evidenceSectionMatch[1]
+        .split(/\r?\n/)
+        .map((line) => line.replace(/^[\s•\-*]+/, "").trim())
+        .filter((line) => line.length > 3 && !line.endsWith(":"));
+    }
+
+    // Response deadline ("you have 30 days", "respond within 60 days")
+    const deadlineMatch = text.match(
+      /(?:you\s+have|within|respond(?:\s+by)?)\s+(\d{1,3})\s+days/i,
+    );
+    if (deadlineMatch) {
+      data.responseDeadlineDays = Number(deadlineMatch[1]);
+    }
+
+    // Overall status derived from the real signals above, not a bare
+    // PENDING/APPROVED/DENIED keyword scan (those words rarely appear
+    // standalone in real letters).
+    const grantedCount = data.decisions.filter((d) =>
+      ["granted", "increased", "continued"].includes(d.outcome),
+    ).length;
+    const deniedCount = data.decisions.filter(
+      (d) => d.outcome === "denied",
+    ).length;
+
+    if (grantedCount > 0 && deniedCount > 0) {
+      data.status = "mixed";
+    } else if (grantedCount > 0) {
+      data.status = "granted";
+    } else if (deniedCount > 0) {
       data.status = "denied";
+    } else if (
+      data.evidenceNeeded.length > 0 ||
+      /PENDING|IN\s+PROGRESS|UNDER\s+REVIEW/i.test(text)
+    ) {
+      data.status = "pending";
     }
   } catch (error) {
     console.error("Claim letter parsing error:", error);
@@ -4015,7 +4127,7 @@ const parseMedicalRecord = async (text) => {
     // Extract diagnoses (ICD codes)
     const icdPattern =
       // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /(?:ICD-?\d{1,2}\s*[:=]?\s*)?([A-Z]\d{2}(?:\.\d{1,2})?)\s+[–-]\s+([A-Za-z\s,]+)/g;
+      /(?:ICD-?\d{1,2}\s*[:=]?\s*)?([A-Z]\d{2}(?:\.\d{1,2})?)\s+[-–—]\s+([A-Za-z\s,]+)/g;
     let match;
     while ((match = icdPattern.exec(text)) !== null) {
       data.diagnoses.push({
@@ -4255,7 +4367,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
 // entryDate/separationDate/characterOfService for the same concepts.
 // applyServiceRecordToProfileUpdates previously only read the second set,
 // so every conditional was false whenever the data came from
-// parseServiceRecord — the profile silently never got auto-populated.
+// parseServiceRecord - the profile silently never got auto-populated.
 // Accept both naming conventions.
 const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
   // eslint-disable-next-line no-console
@@ -4313,10 +4425,10 @@ const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
  * FIX-9 overwrite semantics: fill-if-empty; if a field is non-empty and
  * was never user-edited (profileFieldSources[field] !== "user"), document
  * data may keep refining it; if the veteran has manually edited a field,
- * it is NEVER overwritten — a conflict is surfaced instead so the UI can
+ * it is NEVER overwritten - a conflict is surfaced instead so the UI can
  * show "your document says X, your profile says Y".
  */
-// eslint-disable-next-line max-lines-per-function -- pre-existing (predates this change, unrelated to it); this is the single fill-if-empty/never-overwrite-user-edited pass over every document type (service record, rating decision, claim letter) plus conflict tracking — splitting it apart is a separate, larger task out of scope here
+// eslint-disable-next-line max-lines-per-function -- pre-existing (predates this change, unrelated to it); this is the single fill-if-empty/never-overwrite-user-edited pass over every document type (service record, rating decision, claim letter) plus conflict tracking - splitting it apart is a separate, larger task out of scope here
 export const autoPopulateProfile = async (processedResults) => {
   // eslint-disable-next-line no-console
   console.log("📋 Auto-populate Profile starting...");
@@ -4390,7 +4502,7 @@ export const autoPopulateProfile = async (processedResults) => {
 
       // Fill whenever the field is still empty, or it was never
       // user-edited (a later document may keep refining it). Only a
-      // populated, user-edited field is protected — and even then, a
+      // populated, user-edited field is protected - and even then, a
       // genuine conflict is surfaced rather than silently dropped.
       if (isUserEdited && currentValue) {
         if (String(currentValue) !== String(newValue)) {
@@ -4449,7 +4561,7 @@ const applyServiceRecordToBriefing = (briefingData, serviceData) => {
   if (serviceData[0]) {
     // Data is in numbered keys
     Object.keys(serviceData).forEach((key) => {
-      if (!isNaN(key) && serviceData[key]) {
+      if (!Number.isNaN(Number(key)) && serviceData[key]) {
         const entry = serviceData[key];
         if (entry.branch) briefingData.branch = entry.branch;
         if (entry.entryDate) briefingData.serviceStart = entry.entryDate;

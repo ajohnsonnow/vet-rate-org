@@ -44,7 +44,14 @@
  *   CAVC_WPD_FORCE_FRESH    set to "1" to ignore any checkpoint and restart
  */
 
-import { writeFileSync, appendFileSync, mkdirSync, existsSync, readFileSync, unlinkSync } from "node:fs";
+import {
+  writeFileSync,
+  appendFileSync,
+  mkdirSync,
+  existsSync,
+  readFileSync,
+  unlinkSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
@@ -103,7 +110,7 @@ function safeName(docid) {
   return docid.replace(/[^a-z0-9._-]/gi, "_");
 }
 
-async function recoverDatabase(database) {
+async function initRecoverFetch(database) {
   const slug = DATABASE_SLUG[database] || database.toLowerCase();
   mkdirSync(rawDir(slug), { recursive: true });
 
@@ -114,19 +121,112 @@ async function recoverDatabase(database) {
 
   console.log(
     `[cavc-wpd-recover] opening session for IW_DATABASE=${database}…` +
-      (resuming ? ` (resuming from checkpoint: page ${checkpoint.lastCompletedEnd + 1})` : ""),
+      (resuming
+        ? ` (resuming from checkpoint: page ${checkpoint.lastCompletedEnd + 1})`
+        : ""),
   );
   const session = await openSession(database);
-  console.log(`[cavc-wpd-recover] ${database}: ${session.totalDocuments} documents available (date-desc)`);
+  console.log(
+    `[cavc-wpd-recover] ${database}: ${session.totalDocuments} documents available (date-desc)`,
+  );
 
-  const cap = MAX_RESULTS ? Math.min(MAX_RESULTS, session.totalDocuments) : session.totalDocuments;
-  if (cap === 0) return { recovered: 0, scanned: 0 };
+  const cap = MAX_RESULTS
+    ? Math.min(MAX_RESULTS, session.totalDocuments)
+    : session.totalDocuments;
+  if (cap === 0) return { cap };
 
-  const sessionRef = { guid: session.guid };
-  const startPage = resuming ? checkpoint.lastCompletedEnd + 1 : 1;
-  let recovered = resuming ? checkpoint.recovered : 0;
-  let scanned = resuming ? checkpoint.scanned : 0;
-  let lastCompletedEnd = resuming ? checkpoint.lastCompletedEnd : 0;
+  return {
+    slug,
+    session,
+    cap,
+    manifest,
+    sessionRef: { guid: session.guid },
+    startPage: resuming ? checkpoint.lastCompletedEnd + 1 : 1,
+    recovered: resuming ? checkpoint.recovered : 0,
+    scanned: resuming ? checkpoint.scanned : 0,
+    lastCompletedEnd: resuming ? checkpoint.lastCompletedEnd : 0,
+  };
+}
+
+// Downloads and sniffs every hit on one list page, saving any WordPerfect
+// binary found; returns the per-page {recovered, scanned} deltas.
+async function fetchWpdPage(hits, sessionRef, database, slug, manifest) {
+  let recovered = 0;
+  let scanned = 0;
+
+  for (const hit of hits) {
+    scanned++;
+    // Fast pre-download skip is only possible for explicit .wpd filenames;
+    // everything else must be downloaded and sniffed (see header comment).
+    const preClassified = classifyDocFormat(hit.docid);
+    let bytes;
+    try {
+      bytes = await withSessionRetry(sessionRef, database, (guid) =>
+        getBytes(`${BASE}/isysquery/${guid}/${hit.index}/doc/${hit.docid}`),
+      );
+    } catch (e) {
+      console.warn(
+        `[cavc-wpd-recover] doc fetch failed for ${hit.docid}: ${e.message}`,
+      );
+      continue;
+    }
+    const format = preClassified === "wpd" ? "wpd" : sniffDocFormat(bytes);
+    if (format === "wpd") {
+      writeFileSync(
+        path.join(rawDir(slug), `${safeName(hit.docid)}.wpd`),
+        Buffer.from(bytes),
+      );
+      appendFileSync(
+        manifest,
+        JSON.stringify({
+          docid: hit.docid,
+          index: hit.index,
+          docket: hit.docket,
+          listDate: hit.listDate,
+          database,
+        }) + "\n",
+      );
+      recovered++;
+    }
+    await sleep(THROTTLE_MS);
+  }
+
+  return { recovered, scanned };
+}
+
+function finalizeRecoverRun({
+  database,
+  slug,
+  session,
+  cap,
+  recovered,
+  scanned,
+  lastCompletedEnd,
+  exhaustedRealData,
+}) {
+  console.log(
+    `[cavc-wpd-recover] ${database}: ${recovered} WPD binaries recovered out of ${scanned} scanned`,
+  );
+
+  const stoppedByArtificialCap =
+    MAX_RESULTS > 0 && cap < session.totalDocuments && !exhaustedRealData;
+  if (stoppedByArtificialCap) {
+    console.log(
+      `[cavc-wpd-recover] ${database}: stopped at MAX_RESULTS cap (${cap}/${session.totalDocuments}) — ` +
+        `checkpoint preserved; re-run WITHOUT CAVC_WPD_MAX_RESULTS to continue from page ${lastCompletedEnd + 1}.`,
+    );
+  } else {
+    clearCheckpoint(slug);
+  }
+  return { recovered, scanned };
+}
+
+async function recoverDatabase(database) {
+  const state = await initRecoverFetch(database);
+  if (state.cap === 0) return { recovered: 0, scanned: 0 };
+
+  const { slug, session, cap, manifest, sessionRef, startPage } = state;
+  let { recovered, scanned, lastCompletedEnd } = state;
   let exhaustedRealData = false;
   let consecutivePageFailures = 0;
 
@@ -135,7 +235,9 @@ async function recoverDatabase(database) {
     let listHtml;
     try {
       listHtml = await withSessionRetry(sessionRef, database, (guid) =>
-        getBytes(`${BASE}/isysquery/${guid}/${start}-${end}/list/`).then((b) => Buffer.from(b).toString("utf8")),
+        getBytes(`${BASE}/isysquery/${guid}/${start}-${end}/list/`).then((b) =>
+          Buffer.from(b).toString("utf8"),
+        ),
       );
       consecutivePageFailures = 0;
     } catch (e) {
@@ -158,42 +260,17 @@ async function recoverDatabase(database) {
     }
     const hits = parseListPage(listHtml);
     if (hits.length === 0) {
-      console.warn(`[cavc-wpd-recover] ${database}: list page ${start}-${end} returned 0 hits — stopping early`);
+      console.warn(
+        `[cavc-wpd-recover] ${database}: list page ${start}-${end} returned 0 hits — stopping early`,
+      );
       exhaustedRealData = true;
       break;
     }
 
-    for (const hit of hits) {
-      scanned++;
-      // Fast pre-download skip is only possible for explicit .wpd filenames;
-      // everything else must be downloaded and sniffed (see header comment).
-      const preClassified = classifyDocFormat(hit.docid);
-      let bytes;
-      try {
-        bytes = await withSessionRetry(sessionRef, database, (guid) =>
-          getBytes(`${BASE}/isysquery/${guid}/${hit.index}/doc/${hit.docid}`),
-        );
-      } catch (e) {
-        console.warn(`[cavc-wpd-recover] doc fetch failed for ${hit.docid}: ${e.message}`);
-        continue;
-      }
-      const format = preClassified === "wpd" ? "wpd" : sniffDocFormat(bytes);
-      if (format === "wpd") {
-        writeFileSync(path.join(rawDir(slug), `${safeName(hit.docid)}.wpd`), Buffer.from(bytes));
-        appendFileSync(
-          manifest,
-          JSON.stringify({
-            docid: hit.docid,
-            index: hit.index,
-            docket: hit.docket,
-            listDate: hit.listDate,
-            database,
-          }) + "\n",
-        );
-        recovered++;
-      }
-      await sleep(THROTTLE_MS);
-    }
+    const { recovered: pageRecovered, scanned: pageScanned } =
+      await fetchWpdPage(hits, sessionRef, database, slug, manifest);
+    recovered += pageRecovered;
+    scanned += pageScanned;
 
     lastCompletedEnd = end;
     saveCheckpoint(slug, { lastCompletedEnd, recovered, scanned });
@@ -203,25 +280,25 @@ async function recoverDatabase(database) {
     await sleep(THROTTLE_MS);
   }
 
-  console.log(`[cavc-wpd-recover] ${database}: ${recovered} WPD binaries recovered out of ${scanned} scanned`);
-
-  const stoppedByArtificialCap = MAX_RESULTS > 0 && cap < session.totalDocuments && !exhaustedRealData;
-  if (stoppedByArtificialCap) {
-    console.log(
-      `[cavc-wpd-recover] ${database}: stopped at MAX_RESULTS cap (${cap}/${session.totalDocuments}) — ` +
-        `checkpoint preserved; re-run WITHOUT CAVC_WPD_MAX_RESULTS to continue from page ${lastCompletedEnd + 1}.`,
-    );
-  } else {
-    clearCheckpoint(slug);
-  }
-  return { recovered, scanned };
+  return finalizeRecoverRun({
+    database,
+    slug,
+    session,
+    cap,
+    recovered,
+    scanned,
+    lastCompletedEnd,
+    exhaustedRealData,
+  });
 }
 
 async function main() {
   mkdirSync(WORK_DIR, { recursive: true });
   for (const database of DATABASES) {
     const summary = await recoverDatabase(database);
-    console.log(`[cavc-wpd-recover] ${database}: done — ${summary.recovered}/${summary.scanned}`);
+    console.log(
+      `[cavc-wpd-recover] ${database}: done — ${summary.recovered}/${summary.scanned}`,
+    );
   }
 }
 

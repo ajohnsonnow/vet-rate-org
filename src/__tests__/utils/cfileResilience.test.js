@@ -8,7 +8,7 @@
  *  - timeline dedup merges equivalent date formats (cfileAnalyzer)
  *  - hallucinated diagnostic codes stripped from the merged result
  *
- * Heavy AI backends are mocked — no WebGPU/WASM/network in tests.
+ * Heavy AI backends are mocked - no WebGPU/WASM/network in tests.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
@@ -151,7 +151,7 @@ function chunkAnalysisJSON(chunkNum) {
 
 /**
  * Register a fake legacy engine. registerLocalAIEngine(ready=true) also
- * auto-registers the Warrant Council — undo that so the legacy LOCAL path
+ * auto-registers the Warrant Council - undo that so the legacy LOCAL path
  * (not the swarm) is exercised.
  */
 function registerLegacyEngine(engine) {
@@ -193,7 +193,7 @@ afterEach(() => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("analyzeCFile — chunk retry and failedChunks manifest", () => {
+describe("analyzeCFile - chunk retry and failedChunks manifest", () => {
   it(
     "retries a transient chunk failure and completes with no failedChunks",
     { timeout: 20000 },
@@ -285,7 +285,7 @@ describe("analyzeCFile — chunk retry and failedChunks manifest", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("generateAI — circuit breaker", () => {
+describe("generateAI - circuit breaker", () => {
   function cloudOptions() {
     return {
       skipCrisisCheck: true,
@@ -309,7 +309,7 @@ describe("generateAI — circuit breaker", () => {
     }
     expect(fetch).toHaveBeenCalledTimes(3);
 
-    // 4th call: breaker is open — no backend attempt, clear settings error
+    // 4th call: breaker is open - no backend attempt, clear settings error
     await expect(generateAI("hello", cloudOptions())).rejects.toThrow(
       /AI_CIRCUIT_OPEN.*check your AI settings/s,
     );
@@ -351,7 +351,7 @@ describe("generateAI — circuit breaker", () => {
     const result = await generateAI("hello", cloudOptions());
     expect(result.text).toBe("ok");
 
-    // Two more failures — breaker must NOT be open yet (counter was reset)
+    // Two more failures - breaker must NOT be open yet (counter was reset)
     await expect(generateAI("hello", cloudOptions())).rejects.toThrow(
       /Network error/,
     );
@@ -363,7 +363,7 @@ describe("generateAI — circuit breaker", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("generateAI — cloud timeout retry", () => {
+describe("generateAI - cloud timeout retry", () => {
   it("retries once after an AbortError timeout and succeeds", async () => {
     setAIMode(AI_MODES.CLOUD);
     localStorage.setItem(GEMINI_KEY, VALID_GEMINI_KEY);
@@ -391,7 +391,7 @@ describe("generateAI — cloud timeout retry", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("deduplicateTimeline — date normalization", () => {
+describe("deduplicateTimeline - date normalization", () => {
   it('merges "Jan 2005" / "January 2005" / "2005-01" into one event', () => {
     const events = [
       {
@@ -470,7 +470,7 @@ describe("enforceValidDiagnosticCodes", () => {
   });
 });
 
-describe("surfaceDocumentedConditions — grounded recall floor", () => {
+describe("surfaceDocumentedConditions - grounded recall floor", () => {
   const withPesPlanus =
     "--- PAGE 42 ---\n35. FEET (Continued)\nMild Moderate\nPes Planus\nDD FORM 2808, JAN 2003\n";
 
@@ -483,7 +483,7 @@ describe("surfaceDocumentedConditions — grounded recall floor", () => {
       (c) => c.condition === "Pes Planus",
     );
     expect(pes).toBeTruthy();
-    // Canonical 38 CFR §4.71a flatfoot code — must survive the hallucination
+    // Canonical 38 CFR §4.71a flatfoot code - must survive the hallucination
     // gate so the DC badge actually renders (spec:173 requires ≥1 DC badge).
     expect(pes.diagnosticCode).toBe("5276");
     expect(enforceValidDiagnosticCodes(merged)).toEqual([]);
@@ -513,7 +513,7 @@ describe("surfaceDocumentedConditions — grounded recall floor", () => {
   });
 });
 
-describe("enrichClaimsWithDiagnosticCodes — grounded name→DC", () => {
+describe("enrichClaimsWithDiagnosticCodes - grounded name→DC", () => {
   it("enriches a code-less claim whose name exactly matches the schedule", () => {
     // "Tinnitus" (6260) is an exact single-word schedule conditionName.
     const analysis = { potential_claims: [{ condition: "Tinnitus" }] };

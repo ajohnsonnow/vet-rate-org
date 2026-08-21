@@ -44,8 +44,8 @@ const MODELS = [
     name: '🎖️ CWO3 "HAWKEYE" - 350F All Source Intel',
     description:
       "Fuses all claim intel: service records, medical evidence, 38 CFR regs, and BVA precedent",
-    size: "4.4 GB",
-    vramRequired: "6 GB",
+    size: "~1-2 GB",
+    vramRequired: "~4 GB",
     recommended: true,
     bestFor: "Deep claim audits, evidence correlation, multi-source analysis",
     tier: "full",
@@ -57,8 +57,8 @@ const MODELS = [
     name: '🎖️ CWO4 "PHANTOM" - 270A Legal Admin',
     description:
       "JAG-trained documentation expert: personal statements, nexus letters, and appeal briefs",
-    size: "4.4 GB",
-    vramRequired: "6 GB",
+    size: "~1-2 GB",
+    vramRequired: "~4 GB",
     bestFor: "Legal documents, NODs, HLR scripts, formal correspondence",
     tier: "full",
     callSign: "PHANTOM",
@@ -69,8 +69,8 @@ const MODELS = [
     name: '🎖️ CWO5 "ORACLE" - 352N SIGINT Analyst',
     description:
       "Muster Call SigInt specialist: deciphers rating patterns, bilateral math, SMC codes, and TDIU thresholds",
-    size: "4.4 GB",
-    vramRequired: "6 GB",
+    size: "~1-2 GB",
+    vramRequired: "~4 GB",
     bestFor: "Complex calculations, pattern analysis, SMC/TDIU strategy",
     tier: "full",
     callSign: "ORACLE",
@@ -85,8 +85,8 @@ const MODELS = [
     name: '📱 WO1 "SCOUT" - 350F Field Intel',
     description:
       "Quick intel sweep: spots red flags, gathers initial HUMINT, preps for Senior analysis",
-    size: "0.8 GB",
-    vramRequired: "2 GB",
+    size: "~1-2 GB",
+    vramRequired: "~2 GB",
     bestFor: "Fast claim triage, evidence spotting, mobile recon",
     tier: "mobile",
     mobileOptimized: true,
@@ -98,8 +98,8 @@ const MODELS = [
     name: '📱 CWO2 "SCRIBE" - 270A Field Admin',
     description:
       "Rapid field documentation: captures testimony, outlines statements, secures the narrative",
-    size: "0.8 GB",
-    vramRequired: "2 GB",
+    size: "~1-2 GB",
+    vramRequired: "~2 GB",
     bestFor: "Quick statement drafts, bullet capture, field notes",
     tier: "mobile",
     mobileOptimized: true,
@@ -111,8 +111,8 @@ const MODELS = [
     name: '📱 CWO2 "CIPHER" - 352N Field SIGINT',
     description:
       "Tactical signal decoding: quick rating reads, basic pattern recognition on-the-move",
-    size: "0.8 GB",
-    vramRequired: "2 GB",
+    size: "~1-2 GB",
+    vramRequired: "~2 GB",
     bestFor: "Fast rating estimates, quick math checks, field calculations",
     tier: "mobile",
     mobileOptimized: true,
@@ -580,6 +580,11 @@ function ModelSelectionPanel({
       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
         Select AI Model:
       </p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+        The specialties below share one underlying engine today - the app
+        automatically downloads whichever build (~1-2 GB) fits your device.
+        Specialty-tuned models are in testing and aren't live yet.
+      </p>
       <div className="grid gap-2">
         {MODELS.map((model) => (
           <ModelPickerButton
@@ -991,7 +996,7 @@ function QuickTipsCard() {
           <strong className="text-blue-600 dark:text-blue-400">Cloud AI</strong>{" "}
           = faster but sends data to Google
         </li>
-        <li>• Both use the same Diamond Knowledge Base (130K+ VA entries)</li>
+        <li>• Both use the same Diamond Knowledge Base (~8K curated VA entries)</li>
       </ul>
     </div>
   );
@@ -1153,8 +1158,8 @@ function AdvancedTab({
               Diamond Knowledge Base
             </h4>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Both Local and Cloud AI use our 130,000+ entry database of VA
-              regulations, 38 CFR, BVA decisions, and CAVC rulings.
+              Both Local and Cloud AI use our ~8,000-entry curated database of
+              VA regulations, 38 CFR, BVA decisions, and CAVC rulings.
             </p>
             <p className="mt-2 text-xs text-purple-600 dark:text-purple-400/80">
               Local AI: 6-8 entries per query (optimized for GPU memory)

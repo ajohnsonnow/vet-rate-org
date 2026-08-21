@@ -59,12 +59,12 @@ const TOKEN_LIMITS = {
 const CHARS_PER_TOKEN = 3.4;
 
 // Pre-flight scoring passes ALL medically-relevant chunks to the LLM. The 10k
-// value is a safety valve against pathological documents only — in practice a
+// value is a safety valve against pathological documents only - in practice a
 // 313 MB C-File produces ~284 chunks.
 // MIN_CLAIMS_SCORE = 0 disables the relevance floor (Gate 3): every chunk that
 // clears the blank-page (Gate 1) and any-medical-signal (Gate 2) pre-filters is
 // sent to the AI, so no page carrying potential claim evidence is skipped for a
-// low keyword score. This is the "no missing data" full-coverage policy — it
+// low keyword score. This is the "no missing data" full-coverage policy - it
 // trades longer runtime on large files for completeness. Gates 1/2 still drop
 // genuinely blank / zero-signal pages, which carry nothing to lose.
 const MAX_WEBGPU_AI_CHUNKS = 10_000;
@@ -77,14 +77,14 @@ const MIN_CLAIMS_SCORE = 0;
  * (no drift between a helper and the loop).
  *
  * Two independent exclusion gates, mirroring the loop:
- *   - floor (Gate 3): score < `minClaimsScore` — admin-heavy chunks that cleared
+ *   - floor (Gate 3): score < `minClaimsScore` - admin-heavy chunks that cleared
  *     the coarser medical pre-filter on a single generic term.
  *   - cap   (Gate 4): only the top `maxAiChunks` chunks by score run the slow
- *     pass; the rest are excluded (soft on ties — matches `scoreThreshold`).
+ *     pass; the rest are excluded (soft on ties - matches `scoreThreshold`).
  * A chunk excluded by the floor is not also counted under the cap.
  *
  * These caps protect a real per-chunk time budget on low-end devices and are
- * NOT removed — S24 makes their effect visible (and decouples the semantic
+ * NOT removed - S24 makes their effect visible (and decouples the semantic
  * index from them) rather than eliminating them.
  *
  * @param {number[]} chunkScores
@@ -146,7 +146,7 @@ const MIN_PAGES_PER_CHUNK = 5; // Reduced from 10 to handle smaller chunks bette
 // (3 consecutive generation failures) so a chunk's retries never trip the
 // breaker mid-recovery and incur its 30s cooldown. Recovery of a chunk that
 // truncated its JSON is driven instead by the per-attempt output-token
-// escalation in _requestChunkAnalysis (2048→4096→6144) — a chunk that still
+// escalation in _requestChunkAnalysis (2048→4096→6144) - a chunk that still
 // can't parse after all 3 attempts fails loudly (never a silent drop).
 const MAX_CHUNK_RETRIES = 2;
 const CHUNK_RETRY_BACKOFF_MS = 1000;
@@ -155,7 +155,7 @@ const CHUNK_RETRY_BACKOFF_MS = 1000;
 // the run aborts. Generous because each recovery reloads a fresh WebGPU adapter
 // and the model weights (~1-3 min), which clears the "adapter consumed" /
 // hung-compute state that causes the freeze. If the GPU is physically dead this
-// still terminates instead of looping forever — but it never silently drops the
+// still terminates instead of looping forever - but it never silently drops the
 // chunk, because missing medical evidence is unacceptable for a VA claim.
 const MAX_GPU_RECOVERIES = 5;
 
@@ -450,15 +450,15 @@ function _repairRegexFieldExtraction(content) {
 
   // Nothing recoverable from this malformed response. Return null (NOT an empty
   // template) so _parseChunkAiResponse re-throws, _runChunkWithRetries requests
-  // a fresh response, and — only if the chunk stays unrecoverable across every
-  // retry — it lands in failedChunks and fires the Partial-analysis banner.
+  // a fresh response, and - only if the chunk stays unrecoverable across every
+  // retry - it lands in failedChunks and fires the Partial-analysis banner.
   // Emitting an empty template here would silently drop the chunk's pages with
   // no signal, the one failure this pipeline must never hide. A genuinely empty
   // administrative page returns VALID empty JSON that parses without ever
   // reaching this last-resort strategy, so this cannot suppress real empties.
   // eslint-disable-next-line no-console
   console.warn(
-    `📝 Regex fallback: no structured data extractable — signalling failure so the chunk retries instead of dropping`,
+    `📝 Regex fallback: no structured data extractable - signalling failure so the chunk retries instead of dropping`,
   );
   return null;
 }
@@ -466,9 +466,9 @@ function _repairRegexFieldExtraction(content) {
 function _repairTruncateBeforeOpenString(content) {
   // Walk the content with proper escape/string-boundary tracking to find the
   // last structural separator (comma or closing bracket) that is OUTSIDE any
-  // open string. When the model runs out of tokens mid-value — especially
+  // open string. When the model runs out of tokens mid-value - especially
   // values that contain embedded escaped quotes, which defeat the simpler
-  // [^"]* regex in _repairCloseOpenBrackets — we end up inside an unclosed
+  // [^"]* regex in _repairCloseOpenBrackets - we end up inside an unclosed
   // string. Truncate at the last safe structural position, remove any trailing
   // comma, then close remaining open brackets with a count-based pass.
   let inStr = false;
@@ -494,7 +494,7 @@ function _repairTruncateBeforeOpenString(content) {
     }
   }
 
-  // Only valuable when we end inside an unclosed string — other strategies
+  // Only valuable when we end inside an unclosed string - other strategies
   // already handle content that ends outside a string.
   if (!inStr || lastStructuralPos === -1) return null;
 
@@ -541,13 +541,13 @@ function attemptJSONRepair(jsonStr) {
     _repairInsertMissingCommas,
     // Strategy 1c: Strip text preamble before the first '{', then close brackets.
     // Model sometimes outputs explanatory prose before the JSON object, e.g.
-    // "Based on the records: {..." — all prior strategies fail because the
+    // "Based on the records: {..." - all prior strategies fail because the
     // non-JSON prefix makes the string unparseable from position 0.
     _repairStripPreamble,
     // Strategy 1d: Truncate at the last structural separator outside any open
     // string, then close remaining brackets. Handles the case where the model
     // runs out of tokens mid-string-value when the value contains embedded
-    // escaped quotes — the simple [^"]* regex in Strategy 1 cannot find the
+    // escaped quotes - the simple [^"]* regex in Strategy 1 cannot find the
     // match in that case, but a proper escape-aware scan can.
     _repairTruncateBeforeOpenString,
     // Strategy 2: Find last complete object at top level
@@ -562,7 +562,7 @@ function attemptJSONRepair(jsonStr) {
     // Applies the substitution only at structural positions ({, or ,) to avoid
     // touching identifier-like text inside string values.
     _repairUnquotedPropertyNames,
-    // Strategy 4: Regex field extraction — last-resort for badly truncated output.
+    // Strategy 4: Regex field extraction - last-resort for badly truncated output.
     // Extracts individual condition names and servicePeriod fields even when the
     // surrounding JSON structure is unrecoverable. Works with the slim 3-field
     // schema (no summary field) unlike the previous summary-only fallback.
@@ -754,7 +754,7 @@ const PAGE_RELEVANCE_PATTERN = new RegExp(
 /**
  * Drop boilerplate pages before local-AI chunking. Returns the screened
  * text (page markers preserved so page references stay accurate) plus
- * counts for the metadata/UI. Never screens below a safety floor — if the
+ * counts for the metadata/UI. Never screens below a safety floor - if the
  * filter would discard nearly everything, the original text is returned.
  */
 export function screenRelevantPages(fullText) {
@@ -782,7 +782,7 @@ export function screenRelevantPages(fullText) {
   }
 
   if (kept.length < markers.length * 0.1) {
-    // Filter looks wrong for this document — analyze everything instead.
+    // Filter looks wrong for this document - analyze everything instead.
     const allPages = markers.map((m, i) => ({
       pageNum: parseInt(m[1], 10),
       text: fullText.slice(
@@ -807,12 +807,12 @@ export function screenRelevantPages(fullText) {
 
 /**
  * Estimate how long processing will take based on chunk count.
- * Chunk count already scales with document size — the old extra
+ * Chunk count already scales with document size - the old extra
  * textLength multiplier double-counted size and inflated a large
  * C-File's estimate by two orders of magnitude (~12 hours shown).
  */
 function estimateProcessingTime(textLength, chunkCount, aiMode) {
-  // Per-chunk rates come from aiPerformanceProfile.js — update that file after
+  // Per-chunk rates come from aiPerformanceProfile.js - update that file after
   // each stress run and this estimate updates automatically.
   const aiChunks =
     aiMode === AI_MODES.SWARM || aiMode === AI_MODES.LOCAL
@@ -857,7 +857,7 @@ function estimateProcessingTime(textLength, chunkCount, aiMode) {
 // DIFFERENT chunks and used to be accepted independently, with no cross-field
 // check. Observed on a real C-File: branch "Blue Cross Blue Shield" (an insurer
 // named on a medical record) and a separationDate three years BEFORE the
-// entryDate. Model output is untrusted input — validate at this boundary.
+// entryDate. Model output is untrusted input - validate at this boundary.
 const MILITARY_BRANCH_TOKENS = [
   "army",
   "navy",
@@ -884,49 +884,58 @@ const _isChronological = (entryDate, separationDate) => {
   return separation >= entry;
 };
 
+// Split out of _mergeServicePeriod purely to keep that function's own
+// cognitive complexity under the repo's limit - each handles one field's
+// take-first-plausible-value merge rule, preserving the original logic.
+function _mergeServicePeriodBranch(merged, candidate) {
+  if (merged.servicePeriod.branch || !candidate.branch) return;
+
+  if (_isPlausibleBranch(candidate.branch)) {
+    merged.servicePeriod.branch = candidate.branch;
+  } else {
+    console.warn(
+      `⚠️ Rejected implausible service branch from C-File chunk: "${candidate.branch}"`,
+    );
+  }
+}
+
+function _mergeServicePeriodEntryDate(merged, candidate) {
+  if (merged.servicePeriod.entryDate || !candidate.entryDate) return;
+
+  if (
+    _isChronological(candidate.entryDate, merged.servicePeriod.separationDate)
+  ) {
+    merged.servicePeriod.entryDate = candidate.entryDate;
+  } else {
+    console.warn(
+      `⚠️ Rejected entry date "${candidate.entryDate}" - later than accepted separation date "${merged.servicePeriod.separationDate}"`,
+    );
+  }
+}
+
+function _mergeServicePeriodSeparationDate(merged, candidate) {
+  if (merged.servicePeriod.separationDate || !candidate.separationDate) return;
+
+  if (
+    _isChronological(merged.servicePeriod.entryDate, candidate.separationDate)
+  ) {
+    merged.servicePeriod.separationDate = candidate.separationDate;
+  } else {
+    console.warn(
+      `⚠️ Rejected separation date "${candidate.separationDate}" - earlier than accepted entry date "${merged.servicePeriod.entryDate}"`,
+    );
+  }
+}
+
 function _mergeServicePeriod(merged, chunkResults) {
   // Merge service period (take non-empty values from any chunk)
   for (const result of chunkResults) {
     const candidate = result.servicePeriod;
     if (!candidate) continue;
 
-    if (!merged.servicePeriod.branch && candidate.branch) {
-      if (_isPlausibleBranch(candidate.branch)) {
-        merged.servicePeriod.branch = candidate.branch;
-      } else {
-        console.warn(
-          `⚠️ Rejected implausible service branch from C-File chunk: "${candidate.branch}"`,
-        );
-      }
-    }
-    if (!merged.servicePeriod.entryDate && candidate.entryDate) {
-      if (
-        _isChronological(
-          candidate.entryDate,
-          merged.servicePeriod.separationDate,
-        )
-      ) {
-        merged.servicePeriod.entryDate = candidate.entryDate;
-      } else {
-        console.warn(
-          `⚠️ Rejected entry date "${candidate.entryDate}" — later than accepted separation date "${merged.servicePeriod.separationDate}"`,
-        );
-      }
-    }
-    if (!merged.servicePeriod.separationDate && candidate.separationDate) {
-      if (
-        _isChronological(
-          merged.servicePeriod.entryDate,
-          candidate.separationDate,
-        )
-      ) {
-        merged.servicePeriod.separationDate = candidate.separationDate;
-      } else {
-        console.warn(
-          `⚠️ Rejected separation date "${candidate.separationDate}" — earlier than accepted entry date "${merged.servicePeriod.entryDate}"`,
-        );
-      }
-    }
+    _mergeServicePeriodBranch(merged, candidate);
+    _mergeServicePeriodEntryDate(merged, candidate);
+    _mergeServicePeriodSeparationDate(merged, candidate);
     if (!merged.servicePeriod.mos && candidate.mos) {
       merged.servicePeriod.mos = candidate.mos;
     }
@@ -1116,7 +1125,7 @@ function createMetaSummary(summaries) {
 /**
  * Normalize a date string to a "year-month-day" key so equivalent formats
  * ("Jan 2005", "January 2005", "2005-01") produce the same dedup key.
- * Avoids Date.parse for keying — it mixes local/UTC interpretation across formats.
+ * Avoids Date.parse for keying - it mixes local/UTC interpretation across formats.
  */
 function _findMonthNameMatch(str, monthNames) {
   for (let i = 0; i < monthNames.length; i++) {
@@ -1376,7 +1385,7 @@ function parseApproxDate(dateStr) {
 
 /**
  * Strip hallucinated diagnostic codes from a final (merged) analysis result.
- * Claims keep their condition text — only the invalid code is removed, so a
+ * Claims keep their condition text - only the invalid code is removed, so a
  * real condition is never dropped because the AI guessed a wrong DC.
  * @param {Object} analysis - Merged analysis result (mutated in place)
  * @returns {Array<{condition: string, diagnosticCode: string, reason: string}>} rejected codes
@@ -1411,17 +1420,17 @@ export function enforceValidDiagnosticCodes(analysis) {
 // ============================================================================
 
 // A handful of explicit, unambiguous ratable diagnoses that are frequently
-// documented exactly ONCE — as a single checkbox line on a dense full-body
-// exam form (e.g. the FEET section of a DD Form 2808) — and therefore lose to
+// documented exactly ONCE - as a single checkbox line on a dense full-body
+// exam form (e.g. the FEET section of a DD Form 2808) - and therefore lose to
 // louder findings under the compact chunk prompt's "max 3 claims per chunk"
 // cap. Each entry pairs the canonical condition name with a tight regex that
 // matches the literal clinical term (with minimal OCR/spelling tolerance).
 //
 // This is grounded extraction, NOT fabrication: a condition is surfaced only
 // when its exact name is literally present in the veteran's own records. Each
-// carries its CANONICAL 38 CFR Part 4 diagnostic code — a deterministic
+// carries its CANONICAL 38 CFR Part 4 diagnostic code - a deterministic
 // condition→code mapping verified against disabilityData.json, not a model
-// guess — so enforceValidDiagnosticCodes accepts it and the veteran sees a
+// guess - so enforceValidDiagnosticCodes accepts it and the veteran sees a
 // real, correct DC. The nearest preceding page marker is attached as evidence
 // so the finding is auditable. `dc` MUST exist in disabilityData.json or the
 // hallucination gate would null it (defeating the badge); verified by the
@@ -1477,7 +1486,7 @@ export function surfaceDocumentedConditions(merged, fullText) {
       currentDiagnosis: "unclear",
       nexusStrength: "unclear",
       missing_element:
-        "Auto-surfaced from an explicit mention in your records — confirm the diagnosis and its service connection.",
+        "Auto-surfaced from an explicit mention in your records - confirm the diagnosis and its service connection.",
       evidence_pages: pageNum ? [pageNum] : [],
       recommendation: `"${name}" is named in your records${pageCite}. Verify it against your exam findings and file if applicable.`,
       source: "documented-term-scan",
@@ -1499,7 +1508,7 @@ export function surfaceDocumentedConditions(merged, fullText) {
  * diagnosticCode field to save decode tokens, so every LLM claim is code-less
  * and renders no DC badge. This restores a code ONLY via a grounded,
  * normalized-exact name match against the 38 CFR Part 4 schedule
- * (lookupDiagnosticCodeByName) — never a fuzzy guess: a claim with no confident
+ * (lookupDiagnosticCodeByName) - never a fuzzy guess: a claim with no confident
  * match, or a multi-condition free-text list, keeps its null code.
  * enforceValidDiagnosticCodes still runs afterward as the final gate, so even a
  * theoretically bad code cannot reach the veteran. Mutates in place; returns
@@ -1578,9 +1587,9 @@ async function _determineAiModeAndChunks(fullText, onProgress) {
 
   onProgress("Analyzing document size...", { phase: "prepare" });
 
-  // Local engines generate sequentially — skip boilerplate pages before AI.
+  // Local engines generate sequentially - skip boilerplate pages before AI.
   // Cloud mode reads everything (1M context, few calls).
-  // NOTE: _analyzePageByPage exists but is NOT used yet — WebLLM's ~14 s fixed
+  // NOTE: _analyzePageByPage exists but is NOT used yet - WebLLM's ~14 s fixed
   // overhead per call × 1755 page calls = 12+ hours vs chunk-based ~260 min.
   // The right future path is page-level parsing + small-batch AI (3-5 pages).
   const isLocalAIMode = [
@@ -1692,7 +1701,7 @@ function _buildMultiChunkState(
     : null;
   // S24: compute cap (Gate 4) + floor (Gate 3) exclusions up front. This is the
   // single source of truth both for the loop's skip decisions and for the
-  // user-visible "N pages excluded from AI analysis" count — the two can't drift.
+  // user-visible "N pages excluded from AI analysis" count - the two can't drift.
   const { floorIndices, capIndices } =
     isLocalAIMode && chunkScores
       ? computeAiExclusion(chunkScores, {
@@ -1718,7 +1727,7 @@ function _buildMultiChunkState(
     skippedLowScore: 0,
     // S24: which real pages the AI actually read vs. were excluded by the score
     // cap/floor, so the results UI can surface how much of the document the slow
-    // AI pass skipped — while the semantic index (below) still covers all of it.
+    // AI pass skipped - while the semantic index (below) still covers all of it.
     aiAnalyzedPages: new Set(),
     aiExcludedPages: new Set(),
     chunksExcludedFromAI: 0,
@@ -1734,7 +1743,7 @@ function _buildMultiChunkState(
 function _evaluatePreflightGates(chunk, i, chunkNum, ctx) {
   // --- Gate 1: low-content skip ---
   // Near-blank pages: cover sheets, index separators, blank pages.
-  // Conservative thresholds — both conditions must hold.
+  // Conservative thresholds - both conditions must hold.
   const alphaCount = (chunk.text.match(/[a-zA-Z]/g) || []).length;
   if (chunk.text.trim().length < 250 || alphaCount < 120) {
     // eslint-disable-next-line no-console
@@ -1777,7 +1786,7 @@ function _evaluatePreflightGates(chunk, i, chunkNum, ctx) {
   // --- Gate 4: priority-ordered chunk cap ---
   // Only the top MAX_WEBGPU_AI_CHUNKS chunks by score are processed. Skipped
   // chunks push createEmptyChunkResult() (not failedChunks) so no "Partial Analysis"
-  // banner fires — these are intentional skips, not errors. The excluded pages
+  // banner fires - these are intentional skips, not errors. The excluded pages
   // are still fully covered by the semantic index built below.
   if (ctx.isLocalAIMode && ctx.capIndices.has(i)) {
     ctx.chunksExcludedFromAI++;
@@ -1786,7 +1795,7 @@ function _evaluatePreflightGates(chunk, i, chunkNum, ctx) {
     return true;
   }
 
-  // This chunk clears every gate — the AI actually reads these pages.
+  // This chunk clears every gate - the AI actually reads these pages.
   ctx.recordPages(ctx.aiAnalyzedPages, chunk);
   return false;
 }
@@ -1794,11 +1803,11 @@ function _evaluatePreflightGates(chunk, i, chunkNum, ctx) {
 // Classify a chunk-analysis failure and perform its recovery side effects.
 // Returns a directive the retry loop acts on, keeping _runChunkWithRetries
 // under the cognitive-complexity limit:
-//   "retry-free" — recovered (circuit cooldown or GPU rebuild); retry the SAME
+//   "retry-free" - recovered (circuit cooldown or GPU rebuild); retry the SAME
 //                  chunk WITHOUT consuming a content retry
-//   "empty"      — deterministic context-window overflow; record an empty
+//   "empty"      - deterministic context-window overflow; record an empty
 //                  result (not a failedChunk) and stop retrying
-//   "retry"      — ordinary malformed-output error; let the loop consume a retry
+//   "retry"      - ordinary malformed-output error; let the loop consume a retry
 // Throws to abort the whole run (GPU recovery exhausted, or user cancellation).
 async function _handleChunkFailure(error, chunk, chunkNum, ctx, state) {
   // Message inlined in the string: the console capture wrapper only records the
@@ -1810,7 +1819,7 @@ async function _handleChunkFailure(error, chunk, chunkNum, ctx, state) {
   if (error.message?.includes("AI_CIRCUIT_OPEN") && state.circuitWaits < 3) {
     state.circuitWaits++;
     ctx.onProgress(
-      `AI engine paused after repeated failures — waiting 30s before resuming chunk ${chunkNum}/${ctx.totalChunks}...`,
+      `AI engine paused after repeated failures - waiting 30s before resuming chunk ${chunkNum}/${ctx.totalChunks}...`,
       { phase: "circuit-wait", current: chunkNum, total: ctx.totalChunks },
     );
     await new Promise((resolve) => setTimeout(resolve, 31000));
@@ -1818,7 +1827,7 @@ async function _handleChunkFailure(error, chunk, chunkNum, ctx, state) {
     return "retry-free";
   }
 
-  // Context window errors are deterministic — retrying cannot help.
+  // Context window errors are deterministic - retrying cannot help.
   // unifiedAIService transforms the raw ContextWindowSizeExceededError into
   // "📏 Document is too large for Local AI" before it reaches this catch, so
   // the check covers both forms. Use an empty result (not a failedChunks entry)
@@ -1835,7 +1844,7 @@ async function _handleChunkFailure(error, chunk, chunkNum, ctx, state) {
   // GPU-level hang: the WebGPU compute pipeline stopped signalling completion
   // and the Promise.race timeout fired. The engine's GPU device is now in a
   // degraded state, so every subsequent chunk would hang the same way. We MUST
-  // NOT skip this chunk — its pages may hold claim-critical evidence. Rebuild
+  // NOT skip this chunk - its pages may hold claim-critical evidence. Rebuild
   // the engine on a fresh GPU adapter, then retry the SAME chunk without
   // consuming a normal retry. Bounded so a physically dead GPU still aborts
   // loudly (a false "analysis complete" on missing data is worse than a hard
@@ -1844,7 +1853,7 @@ async function _handleChunkFailure(error, chunk, chunkNum, ctx, state) {
     if (state.gpuRecoveries < MAX_GPU_RECOVERIES) {
       state.gpuRecoveries++;
       ctx.onProgress(
-        `GPU stalled on chunk ${chunkNum}/${ctx.totalChunks} — rebuilding the AI engine and retrying (recovery ${state.gpuRecoveries}/${MAX_GPU_RECOVERIES})…`,
+        `GPU stalled on chunk ${chunkNum}/${ctx.totalChunks} - rebuilding the AI engine and retrying (recovery ${state.gpuRecoveries}/${MAX_GPU_RECOVERIES})…`,
         { phase: "gpu-recovery", current: chunkNum, total: ctx.totalChunks },
       );
       await reloadSwarmEngine();
@@ -1866,7 +1875,7 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
   let result = null;
   let lastError = null;
   // circuitWaits: the circuit breaker protects interactive callers, but this
-  // batch loop is the legitimate retry owner — wait out the cooldown and resume
+  // batch loop is the legitimate retry owner - wait out the cooldown and resume
   // instead of failing every remaining chunk. gpuRecoveries: a stalled GPU is
   // an environmental fault, tracked apart from content retries so recovering it
   // never burns the retries reserved for genuinely malformed model output.
@@ -1964,7 +1973,7 @@ async function _processOneChunk(chunk, i, ctx, abortController) {
     });
   } else {
     // Record the failure so the final result can show what's missing,
-    // then continue — one bad chunk must not abort the run
+    // then continue - one bad chunk must not abort the run
     ctx.failedChunks.push({
       chunkIndex: i,
       startPage: chunk.startPage,
@@ -1972,11 +1981,11 @@ async function _processOneChunk(chunk, i, ctx, abortController) {
       error: lastError?.message || "Unknown error",
     });
 
-    // Page range + error type only (never document content) — pairs with
+    // Page range + error type only (never document content) - pairs with
     // the "failedChunk" console filter in tests/stress/cfile-313mb.spec.ts
     // eslint-disable-next-line no-console -- forensic
     console.log(
-      `failedChunk: pages ${chunk.startPage}-${chunk.endPage} (chunk ${chunkNum}/${ctx.totalChunks}) — ${lastError?.message || "Unknown error"}`,
+      `failedChunk: pages ${chunk.startPage}-${chunk.endPage} (chunk ${chunkNum}/${ctx.totalChunks}) - ${lastError?.message || "Unknown error"}`,
     );
 
     ctx.onProgress(
@@ -2019,11 +2028,11 @@ async function _finalizeMultiChunkResult(
 
   // Recall floor: re-surface explicit diagnoses the model under-recalled (a
   // faint, single-mention finding on a dense exam form loses to the compact
-  // prompt's 3-claims-per-chunk cap). Grounded — only names literally present
-  // in the text, with null DC — so it runs BEFORE the hallucination gate.
+  // prompt's 3-claims-per-chunk cap). Grounded - only names literally present
+  // in the text, with null DC - so it runs BEFORE the hallucination gate.
   surfaceDocumentedConditions(mergedResult, fullText);
 
-  // Restore diagnostic codes the compact chunk prompt strips from LLM claims —
+  // Restore diagnostic codes the compact chunk prompt strips from LLM claims -
   // grounded, normalized-exact schedule matches only (no guessing).
   enrichClaimsWithDiagnosticCodes(mergedResult);
 
@@ -2127,14 +2136,14 @@ export async function analyzeCFile(
 
 // Slim system prompt for local AI (3 fields: servicePeriod, potential_claims, timeline).
 // Secondary fields (summary, exposures, combatIndicators, mentalHealth, redFlags,
-// actionItems) are intentionally omitted — analyzeChunk sanitization and
+// actionItems) are intentionally omitted - analyzeChunk sanitization and
 // mergeChunkResults handle absent fields gracefully as empty arrays/strings.
 // Omitting 6 fields reduces decode from ~800-1500 to ~150-500 tokens/chunk.
 // potential_claims before timeline preserves priority within the 1024-token budget.
 const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File medical records. Output ONLY valid JSON: {"servicePeriod":{"branch":"","entryDate":"","separationDate":"","mos":""},"potential_claims":[{"condition":"","likelihood":"high|medium|low","inServiceEvent":"","currentDiagnosis":"yes|no|unclear","missing_element":""}],"timeline":[{"date":"","page_number":0,"category":"","description":"","significance":"high|medium|low"}]}. Rules: every string MUST be quoted; no newlines in values; values under 8 words; max 3 items in potential_claims array; max 1 item in timeline array; ALWAYS put a comma between array elements; omit fields where nothing found; only report findings present in the text.`;
 
 // Last-retry SALVAGE prompt. A chunk only reaches this after its normal-prompt
-// attempts truncated their JSON — the model transcribing garbled OCR into the
+// attempts truncated their JSON - the model transcribing garbled OCR into the
 // timeline `description` field until it exhausts the token budget. This schema
 // has NO timeline and NO free-text field, so there is nowhere to put a runaway
 // transcription: the model can only emit short condition names, which cannot
@@ -2143,7 +2152,7 @@ const CFILE_SYSTEM_PROMPT_COMPACT = `You are a VA Claims Auditor. Analyze C-File
 const CFILE_SYSTEM_PROMPT_SALVAGE = `You are a VA Claims Auditor. From the C-File text, output ONLY valid JSON: {"potential_claims":[{"condition":"","likelihood":"high|medium|low"}]}. Rules: list only medical CONDITION NAMES actually present in the text (2 to 5 words each); NO descriptions, NO dates, NO timeline, NEVER transcribe or quote the document text; every string quoted; put a comma between array elements; if no conditions are found output {"potential_claims":[]}.`;
 
 // Per-page prompt for the page-by-page local-AI path.
-// ~200 tokens vs ~600 for CFILE_SYSTEM_PROMPT_COMPACT — saves 400 tokens × every
+// ~200 tokens vs ~600 for CFILE_SYSTEM_PROMPT_COMPACT - saves 400 tokens × every
 // page call (1,200 calls × 400 = 480K fewer prefill tokens per full C-File run).
 // Schema differs from chunk schema: "conditions" array maps to potential_claims in
 // analyzePage(); servicePeriod uses short field names (entry/sep) to save tokens.
@@ -2153,7 +2162,7 @@ const PAGE_SYSTEM_PROMPT = `VA C-File page analyzer. Output ONLY valid JSON: {"c
 // MUST be a factory, not a shared singleton: the aggregation step mutates result
 // arrays in place, so a reused object would bleed one C-File's findings into the
 // next veteran's analysis in the same session (Ab-H01). A shallow spread is not
-// enough — the nested arrays/objects must be fresh per call.
+// enough - the nested arrays/objects must be fresh per call.
 export const createEmptyChunkResult = () => ({
   summary: "",
   servicePeriod: {},
@@ -2170,7 +2179,7 @@ export const createEmptyChunkResult = () => ({
 // ANY single match → send to LLM. Zero matches → administrative page, skip.
 // Conservative: single patterns cover dates, clinical terms, VA language, body parts.
 // Security review note: these are relevance-filtering word lists (skip vs. send-to-LLM),
-// not PII extraction — a false negative just means a page gets sent to the LLM anyway
+// not PII extraction - a false negative just means a page gets sent to the LLM anyway
 // (conservative fallback), so mechanical complexity-reduction is lower-risk here than in
 // the field-extraction parsers, but splitting ~20-word alternations into equivalent
 // smaller regexes still deserves fixture testing rather than a same-session rewrite.
@@ -2191,7 +2200,7 @@ function chunkHasMedicalContent(text) {
   return MEDICAL_SIGNAL_PATTERNS.some((p) => p.test(text));
 }
 
-// Returns a claims-relevance score for a chunk of text (0–N, higher = more relevant).
+// Returns a claims-relevance score for a chunk of text (0-N, higher = more relevant).
 // Runs in <1 ms per chunk; used for priority-ordering before the AI cap is applied.
 const CHUNK_SCORE_HIGH_TERMS = [
   "ptsd",
@@ -2284,11 +2293,11 @@ function scoreChunkRelevance(text) {
   const t = text.toLowerCase();
   let score = 0;
 
-  // ICD-10 codes (A00–Z99 with optional decimal) are a definitive clinical signal —
+  // ICD-10 codes (A00-Z99 with optional decimal) are a definitive clinical signal -
   // any page with one is a medical record regardless of condition name.
   if (/\b[A-Z]\d{2}\.?\d{0,4}\b/.test(text)) score += 3;
 
-  // Clinical note structure headers (SOAP, radiology, pathology) — present in every
+  // Clinical note structure headers (SOAP, radiology, pathology) - present in every
   // encounter note even when the condition name is rare or unlisted below.
   if (/\b(assessment|impression|findings|diagnosis|plan)\s*:/i.test(text))
     score += 2;
@@ -2316,7 +2325,7 @@ async function _requestChunkAnalysis(
   attempt = 0,
 ) {
   // Detect if we're using local AI (smaller context). effectiveMode is the
-  // resolved routing target — the raw stored mode can disagree with it
+  // resolved routing target - the raw stored mode can disagree with it
   // (e.g. "auto"), which silently gave local generations the short cloud
   // timeout and the full-size prompt.
   const status = getAIStatus();
@@ -2329,7 +2338,7 @@ async function _requestChunkAnalysis(
 
   // Use compact prompt for local AI to maximize document space. On the final
   // retry (a chunk whose earlier attempts truncated their JSON), drop to the
-  // salvage schema — conditions only, no timeline/free-text — so there is no
+  // salvage schema - conditions only, no timeline/free-text - so there is no
   // long field left for the model to run away transcribing.
   const isSalvage = isLocalAI && attempt >= MAX_CHUNK_RETRIES;
   let systemPrompt = CFILE_SYSTEM_PROMPT;
@@ -2380,7 +2389,7 @@ async function _requestChunkAnalysis(
         }, 30000)
       : null;
 
-  // AIS-05: non-blocking crisis scan over this C-file chunk's raw text — surfaces a
+  // AIS-05: non-blocking crisis scan over this C-file chunk's raw text - surfaces a
   // passive resources banner if the records contain ideation history, never blocks.
   scanDocumentForCrisis(chunk?.text);
   let response;
@@ -2466,14 +2475,14 @@ function _parseChunkAiResponse(contentStr) {
       return repaired;
     }
     if (!cleanContent.includes("{")) {
-      // Model returned plain text with no JSON structure at all — it found nothing
+      // Model returned plain text with no JSON structure at all - it found nothing
       // to report (e.g. "This page contains administrative records."). Treat as an
       // empty-but-successful chunk so it never lands in failedChunks. Returning {}
       // here is equivalent to createEmptyChunkResult(): every field below defaults
       // the same way whether analysisResult is {} or genuinely absent.
       // eslint-disable-next-line no-console
       console.warn(
-        `⚠️ Non-JSON model response (no '{' found) — treating as empty chunk: "${cleanContent.substring(0, 80)}"`,
+        `⚠️ Non-JSON model response (no '{' found) - treating as empty chunk: "${cleanContent.substring(0, 80)}"`,
       );
       return {};
     }
@@ -2502,7 +2511,7 @@ async function analyzeChunk(
   );
   const analysisResult = _parseChunkAiResponse(contentStr);
 
-  // Sanitize result — use Array.isArray for array fields so a repaired object
+  // Sanitize result - use Array.isArray for array fields so a repaired object
   // (e.g. timeline:{} instead of timeline:[]) doesn't slip through as truthy.
   return {
     summary: analysisResult.summary || "",
@@ -2543,12 +2552,12 @@ async function analyzeChunk(
 }
 
 // ============================================================================
-// PAGE-BY-PAGE PIPELINE (local AI — replaces chunk-based for SWARM/LOCAL/WLLAMA)
+// PAGE-BY-PAGE PIPELINE (local AI - replaces chunk-based for SWARM/LOCAL/WLLAMA)
 // ============================================================================
 
 /**
  * Split fullText (with --- PAGE N --- markers) into an array of {pageNum, text}.
- * No overlap, no size limits — each page is its own entry.
+ * No overlap, no size limits - each page is its own entry.
  */
 function parseAllPages(fullText) {
   // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
@@ -2576,7 +2585,7 @@ function parseAllPages(fullText) {
 
 /**
  * Returns 'skip' for admin-only pages, 'medical' for pages worth sending to AI.
- * Reuses the (now keyword-only) PAGE_RELEVANCE_PATTERN — no separate logic needed.
+ * Reuses the (now keyword-only) PAGE_RELEVANCE_PATTERN - no separate logic needed.
  */
 function classifyPage(text) {
   if (!text || text.trim().length < 50) return "skip";
@@ -2601,7 +2610,7 @@ async function _requestPageAnalysis(pageText, pageNum, totalPages, onProgress) {
   const pageLabel = `C-FILE PAGE ${pageNum}`;
   const userPrompt = `${untrustedSection(pageLabel, pageText)}\n\nExtract findings from this page only. Return ONLY the JSON object.`;
 
-  // 256 output tokens per page is generous — a single VA record page rarely has
+  // 256 output tokens per page is generous - a single VA record page rarely has
   // more than 5-6 conditions + a few timeline entries.
   const maxOutputTokens = 256;
 
@@ -2786,7 +2795,7 @@ async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
       if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
         circuitWaits++;
         ctx.onProgress(
-          `AI engine paused — waiting 30s before page ${pageNum}…`,
+          `AI engine paused - waiting 30s before page ${pageNum}…`,
           {
             phase: "circuit-wait",
             current: i + 1,
@@ -2893,7 +2902,7 @@ function _finalizePageByPageResult(ctx, fullText, aiMode, skippedPages) {
 /**
  * Page-by-page orchestrator for local AI modes.
  * Replaces screenRelevantPages + splitIntoChunks + chunk loop for LOCAL/SWARM/WLLAMA.
- * Each page is analyzed individually — smaller prefill, better focus, no overlap waste.
+ * Each page is analyzed individually - smaller prefill, better focus, no overlap waste.
  */
 async function _analyzePageByPage(
   fullText,
@@ -2981,10 +2990,10 @@ export function getContextWindowInfo() {
 export function getCFilePrivacyDisclosure() {
   const status = getAIStatus();
 
-  if (
-    status.effectiveMode === AI_MODES.LOCAL ||
-    status.effectiveMode === AI_MODES.SWARM
-  ) {
+  // Was checking only LOCAL || SWARM - missed Wllama and a local llama.cpp
+  // server, both equally on-device. isPrivate already reflects the full,
+  // correct set of on-device modes (see unifiedAIService.getAIStatus).
+  if (status.isPrivate) {
     return `🔒 LOCAL AI MODE - MAXIMUM PRIVACY
 
 When you use the C-File Analyzer:

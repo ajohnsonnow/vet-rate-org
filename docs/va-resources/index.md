@@ -12,11 +12,14 @@ Quick access to essential VA resources, portals, phone numbers, and helpful link
 
 ### From the Header
 
-Click **"🔗 Vet Resources"** dropdown in the navigation header.
+Click the **"🎖️ Resources"** dropdown in the navigation header, then click **"🌐 VA Resources Hub"** (highlighted in green at the top of the dropdown).
 
 ### Direct Links Available
 
-Quick access to the most commonly needed VA resources.
+The same dropdown also lists a handful of official VA.gov links you can open directly, without going into the full Resources Hub.
+
+![VA Resources Hub, showing the PACT Act banner and category accordion](../assets/images/screenshots/va-resources/overview.png)
+_The VA Resources Hub opens as a full-width panel with expandable categories._
 
 ---
 
@@ -46,30 +49,30 @@ Quick access to the most commonly needed VA resources.
 
 ### Emergency Resources
 
-| Resource | Contact |
-|----------|---------|
-| **Veterans Crisis Line** | 988, Press 1 |
-| **Crisis Text Line** | Text 838255 |
-| **Crisis Chat** | VeteransCrisisLine.net |
-| **Emergency** | 911 |
+| Resource                 | Contact                |
+| ------------------------ | ---------------------- |
+| **Veterans Crisis Line** | 988, Press 1           |
+| **Crisis Text Line**     | Text 838255            |
+| **Crisis Chat**          | VeteransCrisisLine.net |
+| **Emergency**            | 911                    |
 
 ### Primary VA Portals
 
-| Portal | Purpose | URL |
-|--------|---------|-----|
-| **VA.gov** | Main VA portal | va.gov |
-| **eBenefits** | Benefits management | ebenefits.va.gov |
-| **My HealtheVet** | Health records | va.gov/health-care/manage-health/ |
-| **AccessVA** | VA applications | access.va.gov |
+| Portal            | Purpose             | URL                               |
+| ----------------- | ------------------- | --------------------------------- |
+| **VA.gov**        | Main VA portal      | va.gov                            |
+| **eBenefits**     | Benefits management | ebenefits.va.gov                  |
+| **My HealtheVet** | Health records      | va.gov/health-care/manage-health/ |
+| **AccessVA**      | VA applications     | access.va.gov                     |
 
 ### Key Phone Numbers
 
-| Service | Phone Number |
-|---------|--------------|
+| Service                 | Phone Number   |
+| ----------------------- | -------------- |
 | **VA Benefits Hotline** | 1-800-827-1000 |
-| **Health Care** | 1-877-222-8387 |
-| **Women Veterans** | 1-855-829-6636 |
-| **GI Bill** | 1-888-442-4551 |
+| **Health Care**         | 1-877-222-8387 |
+| **Women Veterans**      | 1-855-829-6636 |
+| **GI Bill**             | 1-888-442-4551 |
 
 ---
 
@@ -157,7 +160,7 @@ Free claims assistance:
 ## Using Resources Effectively
 
 !!! tip "Getting the Most from VA Resources"
-    
+
     1. **Create accounts** - Register on VA.gov and My HealtheVet
     2. **Verify identity** - Complete identity verification for full access
     3. **Keep records** - Document all interactions

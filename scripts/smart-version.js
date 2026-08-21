@@ -103,7 +103,7 @@ function execGit(command) {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
     }).trim();
-  } catch (_err) {
+  } catch {
     // Command failed (e.g. no matching tags yet) - treat as no result
     return "";
   }

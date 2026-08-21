@@ -1,6 +1,6 @@
 /**
  * getSavedClaims() must survive localStorage holding the literal string
- * "undefined" — which happens when a write path does
+ * "undefined" - which happens when a write path does
  * localStorage.setItem(key, undefined), since the Web Storage API coerces
  * the value via ToString before JSON.parse ever gets a chance to fail loudly.
  * Two such write paths existed in autoBackup.js's restoreFromBackup/
@@ -11,7 +11,7 @@ import { getSavedClaims } from "../../utils/claimsStorage";
 
 const STORAGE_KEY = "vet_rate_saved_claims";
 
-describe("getSavedClaims — corrupted localStorage state", () => {
+describe("getSavedClaims - corrupted localStorage state", () => {
   beforeEach(() => {
     localStorage.clear();
   });

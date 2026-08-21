@@ -13,7 +13,7 @@ const fakeFile = ({
   size = 1,
 }) => ({ name, type, size });
 
-describe("isPdfFile — C-file ingest validator (RT7-3 / PARSE-003)", () => {
+describe("isPdfFile - C-file ingest validator (RT7-3 / PARSE-003)", () => {
   it("accepts a normal application/pdf", () => {
     expect(isPdfFile(fakeFile({ type: "application/pdf" }))).toBe(true);
   });
@@ -50,7 +50,7 @@ describe("isPdfFile — C-file ingest validator (RT7-3 / PARSE-003)", () => {
   });
 });
 
-describe("describePdfPasswordError — encrypted-PDF copy (RT7-1 / PARSE-001)", () => {
+describe("describePdfPasswordError - encrypted-PDF copy (RT7-1 / PARSE-001)", () => {
   it("maps a pdf.js PasswordException to specific, tagged copy", () => {
     const err = describePdfPasswordError({ name: "PasswordException" });
     expect(err).toBeInstanceOf(Error);

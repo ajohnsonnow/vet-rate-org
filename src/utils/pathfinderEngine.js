@@ -9,12 +9,7 @@
  * Updated: Now uses Unified AI Service for seamless Cloud/Local AI switching
  */
 
-import {
-  generateAI,
-  isAnyAIAvailable,
-  getAIStatus,
-  AI_MODES,
-} from "./unifiedAIService";
+import { generateAI, isAnyAIAvailable, getAIStatus } from "./unifiedAIService";
 
 // The specialized system prompt for strategy analysis
 const PATHFINDER_SYSTEM_PROMPT = `You are a Senior VA Claims Strategist. Your goal is to analyze a veteran's current disability profile and suggest "High Probability" secondary claims based on established medical connections.
@@ -247,11 +242,23 @@ export function getConnectionTypeColors(type) {
 /**
  * Get the privacy disclosure for Pathfinder
  * Now AI-mode aware - shows different info for Cloud vs Local
+ *
+ * BUG (found in live QA): this used to check
+ * `status.effectiveMode === AI_MODES.LOCAL` — but AI_MODES.LOCAL is a
+ * legacy value getAIMode() actively migrates users away from to
+ * AI_MODES.SWARM ("Warrant Council", the actual default local-AI
+ * experience). That made this always fall through to the Cloud disclosure
+ * for every Swarm/Wllama/local-server user, telling them their data was
+ * going to Google when analyzeStrategy() below (via the shared
+ * generateAI()) was actually keeping it local the whole time. isPrivate
+ * already reflects the correct set of local-equivalent modes elsewhere in
+ * the app (unifiedAIService.getAIStatus) — reuse it instead of
+ * re-deriving a narrower, staler check here.
  */
 export function getPathfinderPrivacyDisclosure() {
   const status = getAIStatus();
 
-  if (status.effectiveMode === AI_MODES.LOCAL) {
+  if (status.isPrivate) {
     return `🔒 LOCAL AI MODE - 100% PRIVATE
 
 When you analyze your strategy:

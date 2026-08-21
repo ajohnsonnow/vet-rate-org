@@ -26,7 +26,7 @@ import { query as legalRagQuery } from "../../services/legalRag.js";
 import { queryShards } from "../../services/dkbShardedRag.js";
 import * as kb from "../../services/knowledgeQuery.js";
 
-describe("knowledgeQuery — conditions", () => {
+describe("knowledgeQuery - conditions", () => {
   it("count matches the raw dataset length", () => {
     expect(kb.getConditionCount()).toBe(disabilityData.disabilities.length);
   });
@@ -68,7 +68,7 @@ describe("knowledgeQuery — conditions", () => {
   });
 });
 
-describe("knowledgeQuery — secondary conditions", () => {
+describe("knowledgeQuery - secondary conditions", () => {
   it("delegates to the 38 CFR 3.310 engine", () => {
     const input = ["PTSD", "Tinnitus"];
     expect(kb.findSecondaryConditions(input)).toEqual(
@@ -77,7 +77,7 @@ describe("knowledgeQuery — secondary conditions", () => {
   });
 });
 
-describe("knowledgeQuery — DBQ logic", () => {
+describe("knowledgeQuery - DBQ logic", () => {
   it("returns an entry by its map key", () => {
     const key = Object.keys(dbqLogicMap)[0];
     expect(kb.getDbqLogic(key)).toBe(dbqLogicMap[key]);
@@ -95,7 +95,7 @@ describe("knowledgeQuery — DBQ logic", () => {
   });
 });
 
-describe("knowledgeQuery — PACT Act", () => {
+describe("knowledgeQuery - PACT Act", () => {
   it("returns the whole dataset and a per-code mapping", () => {
     expect(kb.getPactActData()).toBe(pactActData);
     const codes = Object.keys(pactActData.diagnosticCodePactMapping || {});
@@ -108,7 +108,7 @@ describe("knowledgeQuery — PACT Act", () => {
   });
 });
 
-describe("knowledgeQuery — multinational / OCONUS", () => {
+describe("knowledgeQuery - multinational / OCONUS", () => {
   it("returns the four category files, per-category provisions, and search hits", () => {
     const categories = kb.getMultinationalContent();
     expect(categories.map((c) => c.category)).toEqual([
@@ -127,7 +127,7 @@ describe("knowledgeQuery — multinational / OCONUS", () => {
   });
 });
 
-describe("knowledgeQuery — regulations", () => {
+describe("knowledgeQuery - regulations", () => {
   it("returns both reference documents", () => {
     const regs = kb.getRegulations();
     expect(regs.cfr3).toBe(kb.getCfr3Regulations());
@@ -135,7 +135,7 @@ describe("knowledgeQuery — regulations", () => {
   });
 });
 
-describe("knowledgeQuery — semantic retrieval delegation", () => {
+describe("knowledgeQuery - semantic retrieval delegation", () => {
   it("queryLegal delegates to legalRag.query", async () => {
     const out = await kb.queryLegal("38 CFR 4.71a", { topK: 3 });
     expect(legalRagQuery).toHaveBeenCalledWith("38 CFR 4.71a", { topK: 3 });

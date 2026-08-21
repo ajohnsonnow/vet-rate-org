@@ -8,7 +8,7 @@ const fixtureChunks = [
     id: "ecfr/4.71a/0",
     source: "ecfr",
     citation: "38 CFR § 4.71a",
-    title: "Schedule of ratings—musculoskeletal",
+    title: "Schedule of ratings-musculoskeletal",
     text: "Limitation of flexion of the leg to 30 degrees warrants a 20 percent evaluation.",
     source_url: "https://www.ecfr.gov/section-4.71a",
     fetched_at: "2026-05-15T00:00:00Z",
@@ -20,7 +20,7 @@ function fakeRetrieve(chunks) {
   return async () => ({ chunks });
 }
 
-describe("legalAnswerer — refusal paths", () => {
+describe("legalAnswerer - refusal paths", () => {
   it("refuses when retrieval returns zero chunks", async () => {
     const generateAI = vi.fn();
     const r = await answer("any question", {
@@ -71,7 +71,7 @@ describe("legalAnswerer — refusal paths", () => {
   });
 });
 
-describe("legalAnswerer — happy path", () => {
+describe("legalAnswerer - happy path", () => {
   it("synthesizes a cited answer when ≥1 fact is applicable", async () => {
     const generateAI = vi
       .fn()
@@ -135,9 +135,9 @@ describe("legalAnswerer — happy path", () => {
   });
 });
 
-describe("legalAnswerer — citation attribution (Ab-H03)", () => {
+describe("legalAnswerer - citation attribution (Ab-H03)", () => {
   it("attributes the applicable fact to its own chunk, not the Nth chunk", async () => {
-    // chunk #0 is NOT applicable, chunk #1 IS — the buggy filtered-index mapping
+    // chunk #0 is NOT applicable, chunk #1 IS - the buggy filtered-index mapping
     // attributed chunk #0's citation to the first applicable fact.
     const twoChunks = [
       {
@@ -188,7 +188,7 @@ describe("legalAnswerer — citation attribution (Ab-H03)", () => {
   });
 });
 
-describe("legalAnswerer — argument validation", () => {
+describe("legalAnswerer - argument validation", () => {
   it("throws when generateAI is not provided", async () => {
     await expect(answer("q", {})).rejects.toThrow(TypeError);
     await expect(answer("q", { generateAI: "not-a-fn" })).rejects.toThrow(
@@ -197,7 +197,7 @@ describe("legalAnswerer — argument validation", () => {
   });
 });
 
-describe("legalAnswerer — parent-child expansion (expandChunksWithSiblings)", () => {
+describe("legalAnswerer - parent-child expansion (expandChunksWithSiblings)", () => {
   const family = [
     { id: "X0", citation: "X", title: "t", text: "AAAA" }, // pos 0
     { id: "X1", citation: "X", title: "t", text: "BBBB" }, // pos 1 (retrieved)
@@ -246,7 +246,7 @@ describe("legalAnswerer — parent-child expansion (expandChunksWithSiblings)", 
   it("returns the chunk unchanged when the section has no other chunks", () => {
     const solo = { id: "Z0", citation: "Z", title: "t", text: "only" };
     const out = expandChunksWithSiblings([solo], () => [solo], 1000);
-    expect(out[0]).toBe(solo); // same object reference — no expansion
+    expect(out[0]).toBe(solo); // same object reference - no expansion
   });
 
   it("is a no-op when the budget is 0 or non-finite", () => {
@@ -341,7 +341,7 @@ async function expansionWiringExpandsSiblingTextTest() {
   expect(extractorPrompt).toContain("[#0]");
   expect(extractorPrompt).toContain("primary A");
 
-  // Synthesizer saw ONLY structured facts — no raw blob, no expanded text.
+  // Synthesizer saw ONLY structured facts - no raw blob, no expanded text.
   expect(synthPrompt).not.toContain("SIBLING-A-DETAIL");
   expect(synthPrompt).not.toContain("SIBLING-B-DETAIL");
   expect(synthPrompt).not.toContain("primary A");
@@ -383,7 +383,7 @@ async function expansionWiringNoExpandWhenDisabledTest() {
 async function expansionWiringNonAdjacentAttributionTest() {
   const retrieved = expansionWiringRetrieved;
   const getSiblings = getExpansionWiringSiblings;
-  // block #0 not applicable, block #1 IS — the fact must attribute to b0's
+  // block #0 not applicable, block #1 IS - the fact must attribute to b0's
   // citation, not a0's, even though both blocks were sibling-expanded.
   const generateAI = vi
     .fn()
@@ -408,7 +408,7 @@ async function expansionWiringNonAdjacentAttributionTest() {
   expect(r.citations[0].source_url).toBe("urlB");
 }
 
-describe("legalAnswerer — expansion wiring + security invariant", () => {
+describe("legalAnswerer - expansion wiring + security invariant", () => {
   it(
     "expands sibling text into the extractor only; attributes facts to the right citation",
     expansionWiringExpandsSiblingTextTest,

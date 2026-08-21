@@ -1123,12 +1123,7 @@ function MilestoneDetails({ milestone: m, onNavigateToTool }) {
   );
 }
 
-function MilestoneItem({
-  milestone: m,
-  isExpanded,
-  onToggle,
-  onNavigateToTool,
-}) {
+function getMilestoneItemStyles(m) {
   let dotClass;
   if (m.isPast) {
     dotClass = "bg-green-500 border-green-500";
@@ -1160,6 +1155,55 @@ function MilestoneItem({
     daysLabel = `${Math.abs(m.daysBeforeSep)}d after`;
   }
 
+  return { dotClass, cardBorderClass, daysLabel };
+}
+
+function MilestoneCardHeader({ m, isExpanded, daysLabel }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">{m.icon}</span>
+        <div>
+          <span className="font-semibold text-gray-900 dark:text-white text-sm">
+            {m.title}
+          </span>
+          {m.critical && (
+            <span className="ml-2 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-[10px] font-bold rounded">
+              CRITICAL
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {daysLabel}
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function MilestoneItem({
+  milestone: m,
+  isExpanded,
+  onToggle,
+  onNavigateToTool,
+}) {
+  const { dotClass, cardBorderClass, daysLabel } = getMilestoneItemStyles(m);
+
   return (
     <div className="relative pl-14">
       {/* Timeline dot */}
@@ -1171,39 +1215,7 @@ function MilestoneItem({
         onClick={onToggle}
         className={`w-full text-left rounded-lg border-2 p-4 transition-all hover:shadow-md ${cardBorderClass} ${m.critical ? "ring-2 ring-red-200 dark:ring-red-900" : ""}`}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{m.icon}</span>
-            <div>
-              <span className="font-semibold text-gray-900 dark:text-white text-sm">
-                {m.title}
-              </span>
-              {m.critical && (
-                <span className="ml-2 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-[10px] font-bold rounded">
-                  CRITICAL
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {daysLabel}
-            </span>
-            <svg
-              className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </div>
-        </div>
+        <MilestoneCardHeader m={m} isExpanded={isExpanded} daysLabel={daysLabel} />
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           {m.description}
         </p>

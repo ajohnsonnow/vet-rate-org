@@ -1,6 +1,9 @@
 ﻿# C&P Simulator - Understanding Results
 
-After completing the simulation, you'll receive an estimated rating and detailed gap analysis.
+After completing the simulation, you'll receive a predicted rating and detailed gap analysis.
+
+![C&P Exam Simulation Results for Tinnitus showing a Predicted Rating of 10% and action items](../assets/images/screenshots/cap-simulator/results-screen.png)
+_The results screen for a single-tier condition (Tinnitus) shows the Predicted Rating, critical information, and specific action items for your exam._
 
 ---
 
@@ -8,22 +11,22 @@ After completing the simulation, you'll receive an estimated rating and detailed
 
 The results screen contains:
 
-1. **Estimated Rating** - Percentage based on your answers
-2. **Rating Breakdown** - How your answers mapped to criteria
-3. **Gap Analysis** - What separates you from higher ratings
-4. **Recommendations** - Preparation tips for your actual exam
+1. **Predicted Rating** - Percentage based on your answers
+2. **Critical Information** - Condition-specific notes (e.g. whether a higher rating is even possible)
+3. **Action Items for Your C&P Exam** - Specific preparation steps
+4. **Gap Analysis** - What separates you from higher ratings (multi-tier conditions)
 5. **Action Buttons** - Next steps you can take
 
 ---
 
-## Estimated Rating
+## Predicted Rating
 
-Your estimated rating is displayed prominently:
+Your predicted rating is displayed prominently at the top of the results:
 
 ```
 ╔══════════════════════════════════════════╗
 ║                                          ║
-║         Estimated Rating: 50%            ║
+║         Predicted Rating: 50%            ║
 ║                                          ║
 ║   Based on your responses, your          ║
 ║   symptoms align with the 50%            ║
@@ -35,12 +38,7 @@ Your estimated rating is displayed prominently:
 ### What This Means
 
 !!! warning "Important Disclaimer"
-    This is an **educational estimate only**. Your actual VA rating may differ based on:
-    
-    - C&P examiner's evaluation
-    - Medical evidence
-    - Specific details of your case
-    - VA rater interpretation
+This is an **educational estimate only**. Your actual VA rating may differ based on: - C&P examiner's evaluation - Medical evidence - Specific details of your case - VA rater interpretation
 
 ---
 
@@ -50,12 +48,12 @@ See how each answer contributed:
 
 ### Answer Summary Table
 
-| Question | Your Answer | Impact |
-|----------|-------------|--------|
-| Occupational Impact | Severe | +++ |
-| Social Impact | Moderate | ++ |
-| Symptoms | Moderate | ++ |
-| Functioning | Serious | +++ |
+| Question            | Your Answer | Impact |
+| ------------------- | ----------- | ------ |
+| Occupational Impact | Severe      | +++    |
+| Social Impact       | Moderate    | ++     |
+| Symptoms            | Moderate    | ++     |
+| Functioning         | Serious     | +++    |
 
 ### Criteria Mapping
 
@@ -106,12 +104,7 @@ The gap analysis shows what would be needed for higher ratings:
 4. **Prepare to discuss** - Know how to articulate these during your exam
 
 !!! tip "Documentation is Key"
-    The gap analysis shows what you'd need to document to potentially qualify for higher ratings. If you genuinely experience these symptoms:
-    
-    - Document them in medical records
-    - Keep a symptom journal
-    - Get buddy statements
-    - Discuss with your doctor
+The gap analysis shows what you'd need to document to potentially qualify for higher ratings. If you genuinely experience these symptoms: - Document them in medical records - Keep a symptom journal - Get buddy statements - Discuss with your doctor
 
 ---
 
@@ -174,38 +167,30 @@ Based on your results, you'll receive personalized recommendations:
 
 ### Mental Health (Example)
 
-| Rating | Key Indicators |
-|--------|----------------|
+| Rating   | Key Indicators                           |
+| -------- | ---------------------------------------- |
 | **100%** | Total occupational and social impairment |
-| **70%** | Deficiencies in most areas |
-| **50%** | Reduced reliability and productivity |
-| **30%** | Occasional decrease in efficiency |
-| **10%** | Mild or transient symptoms |
-| **0%** | Diagnosed, no significant symptoms |
+| **70%**  | Deficiencies in most areas               |
+| **50%**  | Reduced reliability and productivity     |
+| **30%**  | Occasional decrease in efficiency        |
+| **10%**  | Mild or transient symptoms               |
+| **0%**   | Diagnosed, no significant symptoms       |
 
 ### Musculoskeletal (Example - Spine)
 
-| Rating | Key Indicators |
-|--------|----------------|
-| **100%** | Unfavorable ankylosis, entire spine |
-| **50%** | Unfavorable ankylosis, thoracolumbar |
-| **40%** | Forward flexion 30° or less |
-| **20%** | Forward flexion 30-60° |
-| **10%** | Forward flexion 60-85° |
+| Rating   | Key Indicators                       |
+| -------- | ------------------------------------ |
+| **100%** | Unfavorable ankylosis, entire spine  |
+| **50%**  | Unfavorable ankylosis, thoracolumbar |
+| **40%**  | Forward flexion 30° or less          |
+| **20%**  | Forward flexion 30-60°               |
+| **10%**  | Forward flexion 60-85°               |
 
 ---
 
 ## Tips for Using Results
 
-!!! tip "Maximize Your Preparation"
-    
-    1. **Compare to your records** - Do your medical records reflect your answers?
-    2. **Identify gaps** - What's not documented that should be?
-    3. **Practice articulation** - Can you explain your symptoms clearly?
-    4. **Review gap analysis** - Understand what higher ratings need
-    5. **Don't exaggerate** - Be accurate about your actual experience
-    6. **Don't minimize** - Also don't understate your symptoms
-    7. **Take multiple times** - Practice builds confidence
+!!! tip "Maximize Your Preparation" 1. **Compare to your records** - Do your medical records reflect your answers? 2. **Identify gaps** - What's not documented that should be? 3. **Practice articulation** - Can you explain your symptoms clearly? 4. **Review gap analysis** - Understand what higher ratings need 5. **Don't exaggerate** - Be accurate about your actual experience 6. **Don't minimize** - Also don't understate your symptoms 7. **Take multiple times** - Practice builds confidence
 
 ---
 

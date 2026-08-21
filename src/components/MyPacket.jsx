@@ -98,6 +98,7 @@ import ReportBugLink from "./ReportBugLink";
 import DraftWatermark from "./DraftWatermark";
 import CertificationCheckbox from "./CertificationCheckbox";
 import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
+import ClaimPrepDisclaimer from "./ClaimPrepDisclaimer";
 import ClaimProgress from "./ClaimProgress";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { RibbonRackDisplay } from "./VisualRibbon";
@@ -124,7 +125,7 @@ function getRatingBadgeClass(rating) {
 }
 
 // Data-provenance badges, reusing the app's existing pill visual language
-// (text-xs px-1.5 py-0.5 rounded-full — same classes as the tab-nav count
+// (text-xs px-1.5 py-0.5 rounded-full - same classes as the tab-nav count
 // badges above and ClaimEvidenceUpload's "recommended" chip) so VA-API data
 // and veteran-entered data are never visually ambiguous, especially in a
 // reviewer demo.
@@ -509,7 +510,7 @@ function MyPacketHeader({ onClose, onReportBug, packetContentRef, t }) {
               moduleName="My Claim Packet"
             />
           )}
-          <button
+          <button type="button"
             onClick={onClose}
             className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
@@ -625,7 +626,7 @@ function PacketTldrGaps({ gaps }) {
 
 /**
  * At-a-glance panel above the tabs. Every figure is counted from records
- * already stored in the VKB — nothing here is model-generated, so it can be
+ * already stored in the VKB - nothing here is model-generated, so it can be
  * handed to a VSO without a "verify this first" caveat.
  */
 function PacketTldrPanel({ summary, loading }) {
@@ -669,7 +670,7 @@ function PacketTldrPanel({ summary, loading }) {
       <PacketTldrGaps gaps={gaps} />
 
       <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-        Counted directly from your saved documents and knowledge base — not
+        Counted directly from your saved documents and knowledge base - not
         AI-generated.
       </p>
     </section>
@@ -698,7 +699,7 @@ function MyPacketBackupGuideBanner({
             {t("myPacketSection.backupGuideMessage")}
           </p>
           <div className="flex flex-wrap gap-2">
-            <button
+            <button type="button"
               onClick={handleBackupPacket}
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-sm shadow-md"
             >
@@ -718,7 +719,7 @@ function MyPacketBackupGuideBanner({
               {t("myPacketSection.backupGuideDownload")}
             </button>
             {onOpenGoogleDriveSync && (
-              <button
+              <button type="button"
                 onClick={() => {
                   dismissBackupGuide(false);
                   onOpenGoogleDriveSync();
@@ -735,13 +736,13 @@ function MyPacketBackupGuideBanner({
                 {t("myPacketSection.backupGuideGoogleDrive")}
               </button>
             )}
-            <button
+            <button type="button"
               onClick={() => dismissBackupGuide(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
             >
               {t("myPacketSection.backupGuideRemindLater")}
             </button>
-            <button
+            <button type="button"
               onClick={() => dismissBackupGuide(false)}
               className="inline-flex items-center gap-2 px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs"
             >
@@ -762,7 +763,7 @@ function BackupRestoreButtons({
 }) {
   return (
     <>
-      <button
+      <button type="button"
         onClick={handleBackupPacket}
         disabled={claims.length === 0}
         className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
@@ -782,7 +783,7 @@ function BackupRestoreButtons({
         </svg>
         {t("myPacketSection.localBackup")}
       </button>
-      <button
+      <button type="button"
         onClick={handleRestoreClick}
         className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
       >
@@ -825,7 +826,7 @@ function MyPacketBackupRestoreControls({
           t={t}
         />
         {onOpenGoogleDriveSync && (
-          <button
+          <button type="button"
             onClick={onOpenGoogleDriveSync}
             className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-xs sm:text-sm"
           >
@@ -836,7 +837,7 @@ function MyPacketBackupRestoreControls({
           </button>
         )}
         {onAnalyzeStrategy && (
-          <button
+          <button type="button"
             onClick={onAnalyzeStrategy}
             className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
           >
@@ -907,7 +908,7 @@ function MyPacketTabNavPrimary({
   return (
     <>
       {/* Primary Data */}
-      <button
+      <button type="button"
         onClick={() => setActiveTab("claims")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "claims"
@@ -922,7 +923,7 @@ function MyPacketTabNavPrimary({
         </span>
       </button>
 
-      <button
+      <button type="button"
         onClick={() => setActiveTab("ratings")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "ratings"
@@ -940,7 +941,7 @@ function MyPacketTabNavPrimary({
       <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
 
       {/* Service & History */}
-      <button
+      <button type="button"
         onClick={() => setActiveTab("service")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "service"
@@ -957,7 +958,7 @@ function MyPacketTabNavPrimary({
         </span>
       </button>
 
-      <button
+      <button type="button"
         onClick={() => setActiveTab("timeline")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "timeline"
@@ -979,7 +980,7 @@ function MyPacketTabNavPrimary({
 
 function VaRecordsTabButton({ activeTab, setActiveTab, vaRecords }) {
   return (
-    <button
+    <button type="button"
       onClick={() => setActiveTab("varecords")}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "varecords"
@@ -1005,7 +1006,7 @@ function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
     ? Object.values(documents).reduce((sum, cat) => sum + (cat?.count || 0), 0)
     : 0;
   return (
-    <button
+    <button type="button"
       onClick={() => setActiveTab("documents")}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "documents"
@@ -1038,7 +1039,7 @@ function MyPacketTabNavSecondary({
       <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
 
       {/* Evidence & Docs */}
-      <button
+      <button type="button"
         onClick={() => setActiveTab("painmaps")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "painmaps"
@@ -1055,7 +1056,7 @@ function MyPacketTabNavSecondary({
         </span>
       </button>
 
-      <button
+      <button type="button"
         onClick={() => setActiveTab("profile")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "profile"
@@ -1072,7 +1073,7 @@ function MyPacketTabNavSecondary({
         )}
       </button>
 
-      <button
+      <button type="button"
         onClick={() => setActiveTab("forms")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "forms"
@@ -1170,7 +1171,7 @@ function RatingsEmptyState({ setShowVAGovPaster, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4">
         {t("myPacketSection.importRatingsDescription")}
       </p>
-      <button
+      <button type="button"
         onClick={() => setShowVAGovPaster(true)}
         className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
       >
@@ -1220,12 +1221,12 @@ function MyRatingEditForm({
           onChange={(e) =>
             setEditingRating({
               ...editingRating,
-              rating: parseInt(e.target.value) || 0,
+              rating: Number.parseInt(e.target.value) || 0,
             })
           }
           className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
-        <button
+        <button type="button"
           onClick={() =>
             handleUpdateRating(editingRating.id, {
               name: editingRating.name,
@@ -1236,7 +1237,7 @@ function MyRatingEditForm({
         >
           {t("myPacketSection.save")}
         </button>
-        <button
+        <button type="button"
           onClick={() => setEditingRating(null)}
           className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
         >
@@ -1269,13 +1270,13 @@ function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
         )}
       </div>
       <div className="flex gap-2">
-        <button
+        <button type="button"
           onClick={() => setEditingRating({ ...rating })}
           className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
         >
           {t("myPacketSection.edit")}
         </button>
-        <button
+        <button type="button"
           onClick={() => handleRemoveRating(rating.id)}
           className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
         >
@@ -1361,7 +1362,7 @@ function VkbEnrichmentLoadingState({ label }) {
 // FIX-1: combined rating via vaCalculator.js (the tested implementation),
 // not a third combined-rating implementation. Shows both raw and rounded
 // (e.g. "72% raw → 70%"). Bilateral grouping is out of scope for this
-// display — combines the flat list of saved ratings as-is.
+// display - combines the flat list of saved ratings as-is.
 function CombinedRatingSummary({ myRatings, t }) {
   const ratingValues = myRatings
     .map((r) => r.rating)
@@ -1412,7 +1413,7 @@ function RatingsTab({
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {myRatings.length} {t("myPacketSection.ratingsSaved")}
             </p>
-            <button
+            <button type="button"
               onClick={handleClearAllRatings}
               className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
             >
@@ -1757,7 +1758,7 @@ function ContactInfoSection({ veteranProfile, setVeteranProfile, t }) {
 }
 
 // Q4: the Profile tab's manual editor writes through to the SAME canonical
-// serviceHistory.servicePeriods[] array the Service tab reads — every
+// serviceHistory.servicePeriods[] array the Service tab reads - every
 // period in veteranProfile.servicePeriods always has a real canonical id
 // (see ServicePeriodsSection's add handler), so every edit here is an
 // immediate updateServicePeriod call, not a batched "Save Profile" write.
@@ -1783,7 +1784,7 @@ function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
       <h5 className="font-semibold text-gray-900 dark:text-gray-100">
         {t("myPacketSection.period")} #{idx + 1}
       </h5>
-      <button
+      <button type="button"
         onClick={() => {
           const period = veteranProfile.servicePeriods[idx];
           if (period?.id) removeServicePeriod(period.id);
@@ -1978,9 +1979,9 @@ function ServicePeriodsSection({ veteranProfile, setVeteranProfile, t }) {
         <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           🎖️ {t("myPacketSection.servicePeriods")}
         </h4>
-        <button
+        <button type="button"
           onClick={() => {
-            // Q4: create the period in the canonical store immediately —
+            // Q4: create the period in the canonical store immediately -
             // every entry in veteranProfile.servicePeriods must have a
             // real id so subsequent field edits write through correctly.
             addServicePeriod({
@@ -2069,7 +2070,7 @@ function ProfileConflictsBanner({ veteranProfile, setVeteranProfile }) {
             ⚠️ A re-imported document disagrees with your profile
           </h4>
           <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-            Your manually-entered values were kept — nothing was overwritten.
+            Your manually-entered values were kept - nothing was overwritten.
             Double-check which one is correct:
           </p>
           <ul className="space-y-1 text-sm text-amber-800 dark:text-amber-200 list-disc list-inside">
@@ -2084,7 +2085,7 @@ function ProfileConflictsBanner({ veteranProfile, setVeteranProfile }) {
             ))}
           </ul>
         </div>
-        <button
+        <button type="button"
           onClick={handleDismiss}
           className="shrink-0 text-sm font-medium text-amber-700 dark:text-amber-300 hover:underline"
         >
@@ -2122,17 +2123,17 @@ function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
         />
 
         <div className="flex justify-end gap-3">
-          <button
+          <button type="button"
             onClick={() => {
               // FIX-10 (SECURITY): route through saveVeteranProfile()'s
               // whitelist + sanitizeString + markAsModified() instead of a
               // raw localStorage.setItem that bypassed all of it. Branch
-              // the alert on the actual return value — it returns false on
+              // the alert on the actual return value - it returns false on
               // quota exhaustion, which the old code always claimed as
               // success.
               //
               // FIX-9: an explicit Save Profile click is the user
-              // confirming these field values — mark every currently
+              // confirming these field values - mark every currently
               // non-empty field "user"-sourced so a later document import
               // never silently overwrites it (autoPopulateProfile treats
               // profileFieldSources[field] === "user" as never-overwrite).
@@ -2168,7 +2169,7 @@ function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
                 alert(`✅ ${t("myPacketSection.profileSaved")}`);
               } else {
                 alert(
-                  "⚠️ Profile could not be saved — your device storage may be full. Export a backup and free up space, then try again.",
+                  "⚠️ Profile could not be saved - your device storage may be full. Export a backup and free up space, then try again.",
                 );
               }
             }}
@@ -2209,13 +2210,13 @@ function SavedFormEntry({ form, setViewingForm, handleRemoveForm, t }) {
         </div>
 
         <div className="flex gap-2">
-          <button
+          <button type="button"
             onClick={() => setViewingForm(form)}
             className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
           >
             {t("myPacketSection.view")}
           </button>
-          <button
+          <button type="button"
             onClick={() => handleRemoveForm(form.id)}
             className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
           >
@@ -2382,7 +2383,7 @@ function DD214PasteProcessor({
         className="w-full px-4 py-3 border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
       />
       <div className="flex flex-wrap gap-2">
-        <button
+        <button type="button"
           onClick={handleProcessDD214}
           disabled={isProcessingDD214}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
@@ -2393,21 +2394,21 @@ function DD214PasteProcessor({
             t={t}
           />
         </button>
-        <button
+        <button type="button"
           disabled
           className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
           aria-label="DD214 Analyzer - Coming Soon"
         >
           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
         </button>
-        <button
+        <button type="button"
           onClick={onOpenAISettings}
           className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
           aria-label="Open Faraday Cage - AI Settings"
         >
           ⚙️ {t("myPacketSection.aiSettings")}
         </button>
-        <button
+        <button type="button"
           onClick={() => {
             setShowDD214Processor(false);
             setDD214Text2("");
@@ -2427,7 +2428,7 @@ function DD214PasteProcessor({
 }
 
 // C3: summary view computed from the canonical servicePeriods[] array
-// (Q2 — Total time in service headline + Service span context, shown
+// (Q2 - Total time in service headline + Service span context, shown
 // separately since they answer different questions for a veteran with a
 // break in service).
 function DD214PeriodsSummary({ summary, dd214Data, t }) {
@@ -2458,7 +2459,7 @@ function DD214PeriodsSummary({ summary, dd214Data, t }) {
         </p>
         {summary.serviceSpan && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Service span: {summary.serviceSpan.start || "?"} –{" "}
+            Service span: {summary.serviceSpan.start || "?"} -{" "}
             {summary.serviceSpan.end || "?"}
           </p>
         )}
@@ -2498,7 +2499,7 @@ function DD214PeriodsSummary({ summary, dd214Data, t }) {
           </p>
           {summary.characterOfServiceDisagrees && (
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-              ⚠️ Periods disagree — see details below
+              ⚠️ Periods disagree - see details below
             </p>
           )}
         </div>
@@ -2507,13 +2508,13 @@ function DD214PeriodsSummary({ summary, dd214Data, t }) {
   );
 }
 
-// C3: detail view — one card per period, most recent first.
+// C3: detail view - one card per period, most recent first.
 function DD214PeriodDetailCard({ period, t }) {
   return (
     <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between mb-2">
         <h5 className="font-semibold text-gray-900 dark:text-gray-100">
-          {period.serviceStartDate || "?"} –{" "}
+          {period.serviceStartDate || "?"} -{" "}
           {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
         </h5>
         {period.incomplete && (
@@ -2540,7 +2541,7 @@ function DD214PeriodDetailCard({ period, t }) {
             {t("myPacketSection.mos")}:{" "}
           </span>
           {period.mos || "N/A"}
-          {period.mosTitle ? ` — ${period.mosTitle}` : ""}
+          {period.mosTitle ? ` - ${period.mosTitle}` : ""}
         </p>
         <p>
           <span className="text-gray-500 dark:text-gray-400">
@@ -2562,7 +2563,7 @@ function DD214PeriodDetailCard({ period, t }) {
           {period.placeOfEntry && period.placeOfEntryLowConfidence && (
             <span
               className="ml-2 text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full"
-              title="This looks close to a well-known city name — double-check it against your original document in case of an OCR misread."
+              title="This looks close to a well-known city name - double-check it against your original document in case of an OCR misread."
             >
               Low confidence
             </span>
@@ -2591,7 +2592,7 @@ function DD214PeriodsDetail({ periods, t }) {
       </h4>
       <p className="text-xs text-gray-500 dark:text-gray-400">
         Dates and place of entry are only shown when your documents actually
-        list them — location data is limited by document quality, so some
+        list them - location data is limited by document quality, so some
         periods below may show dates only, or neither.
       </p>
       {sorted.map((period) => (
@@ -2604,20 +2605,20 @@ function DD214PeriodsDetail({ periods, t }) {
 function DD214DataActions({ setShowDD214Processor, handleClearDD214, t }) {
   return (
     <div className="flex flex-wrap gap-2 pt-2">
-      <button
+      <button type="button"
         onClick={() => setShowDD214Processor(true)}
         className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
       >
         🔄 {t("myPacketSection.reprocessDD214")}
       </button>
-      <button
+      <button type="button"
         disabled
         className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
         aria-label="Coming Soon"
       >
         📄 {t("myPacketSection.fullAnalyzerComingSoon")}
       </button>
-      <button
+      <button type="button"
         onClick={handleClearDD214}
         className="text-sm text-red-600 dark:text-red-400 hover:underline"
       >
@@ -2671,13 +2672,13 @@ function DD214SectionHeader({
       </h3>
       {!showDD214Processor && !serviceHistory.servicePeriods?.length && (
         <div className="flex gap-2">
-          <button
+          <button type="button"
             onClick={() => setShowDD214Processor(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
           >
             📝 {t("myPacketSection.pasteText")}
           </button>
-          <button
+          <button type="button"
             disabled
             className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
             aria-label="DD214 Analyzer - Coming Soon"
@@ -2900,13 +2901,13 @@ function DeploymentFormActions({
         </label>
       </div>
       <div className="flex gap-2">
-        <button
+        <button type="button"
           onClick={handleAddDeployment}
           className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
         >
           {t("myPacketSection.saveDeployment")}
         </button>
-        <button
+        <button type="button"
           onClick={() => {
             setShowDeploymentForm(false);
             setNewDeployment({
@@ -2986,7 +2987,7 @@ function DeploymentEntry({ dep, handleRemoveDeployment, t }) {
           <p className="text-xs text-gray-500 dark:text-gray-500">{dep.unit}</p>
         )}
       </div>
-      <button
+      <button type="button"
         onClick={() => handleRemoveDeployment(dep.id)}
         className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
       >
@@ -3013,7 +3014,7 @@ function DeploymentsSection({
           🌍 {t("myPacketSection.deployments")}
         </h3>
         {!showDeploymentForm && (
-          <button
+          <button type="button"
             onClick={() => setShowDeploymentForm(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
           >
@@ -3123,13 +3124,13 @@ function AwardFormActions({
 }) {
   return (
     <div className="flex gap-2">
-      <button
+      <button type="button"
         onClick={handleAddAward}
         className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
       >
         {t("myPacketSection.saveAward")}
       </button>
-      <button
+      <button type="button"
         onClick={() => {
           setShowAwardForm(false);
           setNewAward({
@@ -3179,7 +3180,7 @@ function AwardChip({ award, handleRemoveAward, t }) {
           {t("myPacketSection.combat")}
         </span>
       )}
-      <button
+      <button type="button"
         onClick={() => handleRemoveAward(award.id)}
         className="text-red-400 hover:text-red-600 text-sm"
         aria-label={`Remove ${award.name}`}
@@ -3207,7 +3208,7 @@ function AwardsSection({
           🎖️ {t("myPacketSection.awardsDecorations")}
         </h3>
         {!showAwardForm && (
-          <button
+          <button type="button"
             onClick={() => setShowAwardForm(true)}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
           >
@@ -3258,7 +3259,7 @@ function RibbonRackSection({
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
           🎗️ Ribbon Rack
         </h3>
-        <button
+        <button type="button"
           onClick={() => setShowRibbonRack(!showRibbonRack)}
           className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
         >
@@ -3284,7 +3285,7 @@ function RibbonRackSection({
 }
 
 // Read-only, straight from the last VA-returned service history response
-// (vaRecords.serviceHistory, cached untouched by saveVARecordsRaw — see
+// (vaRecords.serviceHistory, cached untouched by saveVARecordsRaw - see
 // vaDataPersistence.js). Deliberately NOT sourced from vkb.serviceHistory:
 // that object is fill-if-empty merged with DD214 data by saveServiceHistoryToVKB,
 // so a veteran with DD214 data loaded first would see DD214 field values
@@ -3310,7 +3311,7 @@ function VkbServiceHistorySection({ serviceHistory }) {
         {(serviceHistory.startDate || serviceHistory.endDate) && (
           <p>
             <span className="font-medium">Service Dates:</span>{" "}
-            {serviceHistory.startDate || "—"} to {serviceHistory.endDate || "—"}
+            {serviceHistory.startDate || "-"} to {serviceHistory.endDate || "-"}
           </p>
         )}
         {serviceHistory.dischargeStatus && (
@@ -3383,7 +3384,7 @@ function ClaimsEmptyState({ onClose, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4">
         {t("myPacketSection.claimsDescription")}
       </p>
-      <button
+      <button type="button"
         onClick={onClose}
         className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
       >
@@ -3396,7 +3397,7 @@ function ClaimsEmptyState({ onClose, t }) {
 function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
   return (
     <div className="absolute top-full mt-1 right-0 sm:left-0 sm:right-auto bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px]">
-      <button
+      <button type="button"
         onClick={() => handleDownloadStatement(claim, "txt")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
       >
@@ -3415,7 +3416,7 @@ function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
         </svg>
         {t("myPacketSection.textTxt")}
       </button>
-      <button
+      <button type="button"
         onClick={() => handleDownloadStatement(claim, "docx")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
       >
@@ -3434,7 +3435,7 @@ function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
         </svg>
         {t("myPacketSection.wordDocx")}
       </button>
-      <button
+      <button type="button"
         onClick={() => handleDownloadStatement(claim, "pdf")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 rounded-b-lg flex items-center gap-2"
       >
@@ -3472,14 +3473,14 @@ function ClaimActionButtons({
   return (
     <>
       {claim.status === "Drafting" ? (
-        <button
+        <button type="button"
           onClick={() => onResume(claim)}
           className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors text-xs sm:text-sm"
         >
           {t("myPacketSection.buildStatement")}
         </button>
       ) : (
-        <button
+        <button type="button"
           onClick={() => handleViewStatement(claim.id)}
           className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-xs sm:text-sm"
         >
@@ -3489,7 +3490,7 @@ function ClaimActionButtons({
 
       {claim.status !== "Drafting" && (
         <div className="relative w-full sm:w-auto">
-          <button
+          <button type="button"
             onClick={() =>
               setShowDownloadMenu(
                 showDownloadMenu === claim.id ? null : claim.id,
@@ -3527,7 +3528,7 @@ function ClaimActionButtons({
         </div>
       )}
 
-      <button
+      <button type="button"
         onClick={() => handleRemove(claim.id)}
         className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-red-600 text-red-600 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-xs sm:text-sm"
       >
@@ -3604,7 +3605,7 @@ function ClaimEntry({
           </select>
 
           {canUploadEvidence && (
-            <button
+            <button type="button"
               onClick={() => onUploadEvidence(claim)}
               className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg font-semibold hover:bg-indigo-200 dark:hover:bg-indigo-800/50 transition-colors text-xs sm:text-sm col-span-2 sm:col-span-1"
             >
@@ -3630,7 +3631,7 @@ function CFileSuggestionsSection({ conditions }) {
       </h3>
       <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
         AI suggestions from your analyzed records. These are NOT filed claims
-        and are not counted in the totals above — review and file the ones that
+        and are not counted in the totals above - review and file the ones that
         apply.
       </p>
       <ul className="space-y-2">
@@ -3713,7 +3714,7 @@ function ClaimsTab({
 
       {hasClaims && (
         <div className="flex justify-center pt-4 border-t dark:border-gray-700">
-          <button
+          <button type="button"
             onClick={handleClearAll}
             className="px-6 py-3 border-2 border-red-500 text-red-500 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
           >
@@ -3756,7 +3757,7 @@ function TimelineEmptyState({ onClose, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
         {t("myPacketSection.timelineDescription")}
       </p>
-      <button
+      <button type="button"
         onClick={onClose}
         className="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
       >
@@ -3818,7 +3819,7 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
               </p>
             )}
           </div>
-          <button
+          <button type="button"
             onClick={() => {
               const updated = timelineEvents.filter((e) => e.id !== event.id);
               setTimelineEvents(updated);
@@ -3854,7 +3855,7 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
 function VkbTimelineSection({ events }) {
   // FIX-5: entries with no real extracted/filename date carry
   // dateIsProcessingDate: true and date: null instead of a fabricated
-  // "today" date — sort those last and label them honestly rather than
+  // "today" date - sort those last and label them honestly rather than
   // rendering a fake date.
   const sorted = [...events].sort((a, b) => {
     if (!a.date) return 1;
@@ -3878,8 +3879,8 @@ function VkbTimelineSection({ events }) {
           >
             <span className="font-mono text-gray-500 dark:text-gray-400">
               {e.dateIsProcessingDate
-                ? `date unknown — imported ${e.importedDate || ""}`
-                : e.date || "—"}
+                ? `date unknown - imported ${e.importedDate || ""}`
+                : e.date || "-"}
             </span>
             <span>{e.description}</span>
             {e.source && (
@@ -3921,7 +3922,7 @@ function TimelineTab({
                 ? t("myPacketSection.eventsTracked")
                 : t("myPacketSection.eventTracked")}
             </p>
-            <button
+            <button type="button"
               onClick={handleClearTimelineEvents}
               className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
             >
@@ -3981,7 +3982,7 @@ function PainMapsEmptyState({ onClose, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
         {t("myPacketSection.painMapsDescription")}
       </p>
-      <button
+      <button type="button"
         onClick={onClose}
         className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors inline-flex items-center gap-2"
       >
@@ -4060,7 +4061,7 @@ function PainMapCard({ map, setViewingPainMap, handleDeletePainMap, t }) {
       </div>
 
       <div className="px-3 pb-3">
-        <button
+        <button type="button"
           onClick={(e) => {
             e.stopPropagation();
             handleDeletePainMap(map.id);
@@ -4094,7 +4095,7 @@ function PainMapsTab({
             ? t("myPacketSection.painMapsSaved")
             : t("myPacketSection.painMapSaved")}
         </p>
-        <button
+        <button type="button"
           onClick={() => {
             if (window.confirm(t("myPacketSection.confirmClearPainMaps"))) {
               setPainMaps([]);
@@ -4143,7 +4144,7 @@ function PainMapDetailHeader({ viewingPainMap, setViewingPainMap, t }) {
           ).toLocaleString()}
         </p>
       </div>
-      <button
+      <button type="button"
         onClick={() => setViewingPainMap(null)}
         className="p-2 hover:bg-white/20 rounded-lg transition-colors"
         aria-label={t("common.close") || "Close"}
@@ -4269,7 +4270,7 @@ function PainMapDetailModal({
       </div>
 
       <div className="flex justify-end gap-3 mt-6">
-        <button
+        <button type="button"
           onClick={() => {
             handleDeletePainMap(viewingPainMap.id);
             setViewingPainMap(null);
@@ -4278,7 +4279,7 @@ function PainMapDetailModal({
         >
           {t("myPacketSection.deleteMap")}
         </button>
-        <button
+        <button type="button"
           onClick={() => setViewingPainMap(null)}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
@@ -4306,7 +4307,7 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
             <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <button type="button"
               onClick={() => setViewingForm(null)}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               aria-label={t("common.close") || "Close"}
@@ -4338,7 +4339,7 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
       )}
 
       <div className="flex justify-end gap-3 mt-4">
-        <button
+        <button type="button"
           onClick={() => {
             const blob = new Blob([viewingForm.generatedContent], {
               type: "text/plain",
@@ -4351,14 +4352,14 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
             a.download = `${viewingForm.formNumber || "form"}-${viewingForm.title || "draft"}.txt`;
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
+            a.remove();
             URL.revokeObjectURL(url);
           }}
           className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
         >
           {t("myPacketSection.downloadTxt")}
         </button>
-        <button
+        <button type="button"
           onClick={() => setViewingForm(null)}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
@@ -4381,13 +4382,13 @@ function StatementViewerHeader({
         {t("myPacketSection.generatedStatement")}
       </h3>
       <div className="flex items-center gap-3">
-        <button
+        <button type="button"
           onClick={handleEditStatement}
           className="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm"
         >
           {t("myPacketSection.editStatement")}
         </button>
-        <button
+        <button type="button"
           onClick={() => {
             setViewingStatement(null);
             setViewingClaimId(null);
@@ -4431,7 +4432,7 @@ function StatementViewerModal({
         setViewingStatement(null);
         setViewingClaimId(null);
         // D-10: reset this claim's certification when the viewer closes
-        // — certifying a statement is a deliberate "I attest this is
+        // - certifying a statement is a deliberate "I attest this is
         // true" action meant to happen right before download, not a
         // persistent setting that should silently carry over.
         setCertifiedClaimIds((prev) => {
@@ -4506,7 +4507,7 @@ function ImportConfirmActionButtons({
 }) {
   return (
     <div className="space-y-3">
-      <button
+      <button type="button"
         onClick={() => handleConfirmImport("replace")}
         className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
       >
@@ -4525,7 +4526,7 @@ function ImportConfirmActionButtons({
         </svg>
         {t("myPacketSection.replaceAllFreshStart")}
       </button>
-      <button
+      <button type="button"
         onClick={() => handleConfirmImport("merge")}
         className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
       >
@@ -4544,7 +4545,7 @@ function ImportConfirmActionButtons({
         </svg>
         {t("myPacketSection.mergeAddNewOnly")}
       </button>
-      <button
+      <button type="button"
         onClick={() => setShowImportConfirm(null)}
         className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
@@ -4664,7 +4665,7 @@ function downloadAsTxt(statement, fileName) {
     statement.statement +
     "\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n" +
     statement.doctorNote;
-  // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
+  // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only - a.href is literal 'blob:' + origin + '/' + UUID
   const blob = new Blob([content], { type: "text/plain" });
   triggerBlobDownload(blob, `${fileName}.txt`);
 }
@@ -4715,7 +4716,7 @@ async function downloadAsDocx(statement, fileName, claim) {
       ],
     });
 
-    // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only — a.href is literal 'blob:' + origin + '/' + UUID
+    // deepcode ignore javascript/DOMXSS: triggerBlobDownload reconstructs URL from UUID regex only - a.href is literal 'blob:' + origin + '/' + UUID
     const blob = await Packer.toBlob(doc);
     triggerBlobDownload(blob, `${fileName}.docx`);
   } catch (error) {
@@ -4886,13 +4887,13 @@ async function _loadVkbEnrichment(ctx) {
       ? vkb.vaClaimsHistory.ratings
       : [];
     setVkbDisabilityRatings(ratings.filter((r) => r?.source === "VA.gov API"));
-    // Derived from the VKB already in hand — groupDocumentationByCategory is
+    // Derived from the VKB already in hand - groupDocumentationByCategory is
     // pure, so this costs no extra IndexedDB read.
     setPacketSummary(
       buildPacketSummary(vkb, groupDocumentationByCategory(vkb)),
     );
   } catch {
-    // Best-effort read-only enrichment — leave defaults on failure.
+    // Best-effort read-only enrichment - leave defaults on failure.
   } finally {
     setVkbEnrichmentLoading(false);
   }
@@ -5101,7 +5102,7 @@ function _dd214DropFile(e, ctx) {
   );
 
   if (pdfFile) {
-    // FIX-2: carry the dropped file through — onOpenDD214Analyzer() used
+    // FIX-2: carry the dropped file through - onOpenDD214Analyzer() used
     // to be called with no arguments, discarding it, so the analyzer
     // opened empty and the veteran had to re-select the file.
     if (onOpenDD214Analyzer) {
@@ -5403,28 +5404,26 @@ function _handleBackupFileSelect(event, ctx) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    // Use complete import to handle profile and forms too
-    const result = importCompletePacket(e.target.result);
+  file
+    .text()
+    .then((text) => {
+      // Use complete import to handle profile and forms too
+      const result = importCompletePacket(text);
 
-    if (!result.success) {
-      setImportStatus({ type: "error", message: result.error });
-      return;
-    }
+      if (!result.success) {
+        setImportStatus({ type: "error", message: result.error });
+        return;
+      }
 
-    // Show confirmation dialog with preview
-    setShowImportConfirm({
-      data: result.data,
-      meta: result.meta,
+      // Show confirmation dialog with preview
+      setShowImportConfirm({
+        data: result.data,
+        meta: result.meta,
+      });
+    })
+    .catch(() => {
+      setImportStatus({ type: "error", message: "Failed to read file." });
     });
-  };
-
-  reader.onerror = () => {
-    setImportStatus({ type: "error", message: "Failed to read file." });
-  };
-
-  reader.readAsText(file);
 
   // Reset input so same file can be selected again
   event.target.value = "";
@@ -5481,7 +5480,7 @@ function DocumentsEmptyState({ onClose, t }) {
         When you analyze a C-File or other record, its findings are saved here
         for reference.
       </p>
-      <button
+      <button type="button"
         onClick={onClose}
         className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
       >
@@ -5563,7 +5562,7 @@ function DocumentCardHeader({ findings }) {
   );
 }
 
-// One card per stored document, for every category — not just C-Files. The
+// One card per stored document, for every category - not just C-Files. The
 // previous version rendered the cFiles bucket only, so DD-214s, Blue Button
 // exports and private records showed up as a bare count with none of the
 // fields the ingestion pipeline had already extracted from them.
@@ -5750,7 +5749,7 @@ function useMyPacketCoreState() {
   const [importStatus, setImportStatus] = useState(null);
   const [showImportConfirm, setShowImportConfirm] = useState(null);
   const [backupCreated, setBackupCreated] = useState(false);
-  // D-10: keyed by claim id, not a single shared boolean — certifying one
+  // D-10: keyed by claim id, not a single shared boolean - certifying one
   // claim's statement previously silently "certified" every other claim's
   // download button too.
   const [certifiedClaimIds, setCertifiedClaimIds] = useState(() => new Set());
@@ -5758,7 +5757,7 @@ function useMyPacketCoreState() {
   const [_hasExternalBackup, setHasExternalBackup] = useState(false); // Track if user has downloaded backup
   // VKB-derived, READ-ONLY document-flow state (Wave 2a). Additive: these never
   // feed getClaimStats or the counters. `documents` is null until the async VKB
-  // read resolves (or stays null if VKB is slow/unavailable — tabs render empty).
+  // read resolves (or stays null if VKB is slow/unavailable - tabs render empty).
   const [documents, setDocuments] = useState(null);
   const [cfileConditions, setCfileConditions] = useState([]);
   const [vkbTimeline, setVkbTimeline] = useState([]);
@@ -6457,6 +6456,8 @@ function MyPacketView({ state, handlers }) {
         }
       >
         <div ref={packetContentRef}>
+          <ClaimPrepDisclaimer className="m-4 sm:m-6 mb-0" />
+
           <PacketTldrPanel
             summary={packetSummary}
             loading={vkbEnrichmentLoading}
@@ -6499,7 +6500,7 @@ function MyPacketView({ state, handlers }) {
 
 // All MyPacket lifecycle effects, extracted so the component stays legible.
 // VADataCenter's embedded "Save Selected" button saves via saveVADataWithConsent
-// directly, bypassing _importVaData — without this, Ratings/Service stay stale
+// directly, bypassing _importVaData - without this, Ratings/Service stay stale
 // until the modal is closed and reopened. Same window-CustomEvent pattern as
 // the existing openMyPacket signal.
 function _runPacketVaDataSavedEffect(loaders) {

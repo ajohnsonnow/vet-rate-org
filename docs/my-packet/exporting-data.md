@@ -6,180 +6,112 @@ Download your packet data in various formats for submission, records, or sharing
 
 ## Export Options
 
-My Packet supports multiple export formats:
+My Packet supports a few different export paths, depending on what you need:
 
-| Format | Best For | Contains |
-|--------|----------|----------|
-| **PDF Bundle** | VA submission | All documents formatted for print |
-| **JSON Backup** | Data preservation | Complete data, machine-readable |
-| **Summary PDF** | Quick reference | Overview of all conditions |
-| **Individual PDFs** | Specific documents | One document at a time |
+| Format                  | Best For                                | Contains                                                 |
+| ----------------------- | --------------------------------------- | -------------------------------------------------------- |
+| **Statement Download**  | A single condition's paperwork          | One nexus statement, as TXT / Word / PDF                 |
+| **Local Backup (JSON)** | Data preservation, transferring devices | Everything - claims, statements, forms, profile, ratings |
+| **Dossier (HTML)**      | Human-readable full report              | Everything, formatted as a readable, printable page      |
+| **Saved Form Download** | A single Forms Helper document          | One form, as plain text                                  |
+
+![Backup Manager's Export Your Data and Dossier sections](../assets/images/screenshots/my-packet/backup-export.png)
+_The Local Backup (JSON) and Dossier (HTML) exports both live in the Backup Manager, alongside Google Drive Sync._
 
 ---
 
-## PDF Bundle Export
+## Statement Download (Per Condition)
 
 ### What's Included
 
-The PDF bundle contains:
-
-- Cover page with your information
-- Table of contents
-- Each condition with:
-    - Details and rating criteria
-    - Nexus statement
-    - Doctor's cheat sheet
-- All completed forms
+Downloading a statement gives you that condition's generated nexus statement, in your choice of format.
 
 ### How to Export
 
 <div class="step-container">
 <div class="step">
-Open <strong>My Packet</strong>
+Open <strong>My Packet</strong> and find the condition
 </div>
 <div class="step">
-Click <strong>"Export"</strong>
+Click <strong>"View Statement"</strong> and check the <strong>certification checkbox</strong> confirming you've reviewed it
 </div>
 <div class="step">
-Select <strong>"PDF Bundle"</strong>
+Back on the card, click <strong>"Download"</strong>
 </div>
 <div class="step">
-Choose <strong>which conditions</strong> to include
-</div>
-<div class="step">
-Click <strong>"Generate PDF"</strong>
-</div>
-<div class="step">
-<strong>Download</strong> the file
+Choose <strong>TXT, Word (.docx), or PDF</strong>
 </div>
 </div>
 
-### Output
-
-You'll receive a single PDF file:
-
-```
-MyPacket_Export_2024-01-15.pdf
-```
+!!! info "Certification Required"
+The Download button stays disabled until you've opened the statement and checked the certification box - a safeguard to make sure you actually reviewed AI-assisted or template content before it leaves the app.
 
 ---
 
-## JSON Backup Export
+## Local Backup (JSON)
 
 ### What's Included
 
-Complete data export:
+A complete, machine-readable export of your whole packet:
 
 - All conditions with metadata
 - All statements (raw text)
-- All forms (field data)
+- All saved forms
 - Veteran profile
-- Application settings
-- Notes and statuses
+- Service history, ratings, timeline events, pain maps
 
 ### How to Export
 
-See [Backup & Restore](backup-restore.md) for detailed instructions.
+See [Backup & Restore](backup-restore.md) for detailed instructions - click **"Local Backup"** in My Packet's toolbar, or **"Download Backup"** in the fuller Backup Manager.
 
 ### Output
 
 ```
-vetrate_backup_2024-01-15.json
+vet-rate-complete-backup-2026-08-20.json
 ```
 
 ---
 
-## Summary PDF
+## Dossier (HTML)
 
 ### What's Included
 
-A concise overview:
-
-- List of all conditions
-- Claim types (Primary/Secondary)
-- Current statuses
-- Key dates
-- One-page format
+A single, human-readable HTML report covering everything in your packet - conditions, statements, forms - formatted to read cleanly and print directly from any browser, with no app required to open it.
 
 ### How to Export
 
 <div class="step-container">
 <div class="step">
-Open <strong>My Packet</strong>
+Open the <strong>Backup Manager</strong> (Support & Resources → Backup Manager, or from within My Packet)
 </div>
 <div class="step">
-Click <strong>"Export"</strong>
-</div>
-<div class="step">
-Select <strong>"Summary PDF"</strong>
-</div>
-<div class="step">
-<strong>Download</strong> the file
+Click <strong>"Preview"</strong> to check it first, or <strong>"Download Dossier"</strong> to save it
 </div>
 </div>
 
 ### Use Cases
 
-- Quick reference for VSO meetings
-- Personal tracking
-- Appointment preparation
+- Sharing your whole packet with a VSO who doesn't use Vet-Rate
+- A durable, app-independent copy of your work
+- Printing a full reference copy
 
 ---
 
-## Individual Document Export
-
-### Export Single Document
+## Saved Form Download
 
 <div class="step-container">
 <div class="step">
-Find the <strong>specific document</strong> in My Packet
+Open <strong>My Packet</strong> → <strong>Forms</strong> tab
 </div>
 <div class="step">
-Click <strong>"Download"</strong> on that document
+Click <strong>"View"</strong> on the form
 </div>
 <div class="step">
-Choose format (<strong>PDF</strong>)
-</div>
-<div class="step">
-<strong>Save</strong> to device
+Click <strong>"Download"</strong> in the viewer
 </div>
 </div>
 
-### Available Documents
-
-- Statement in Support of Claim
-- Doctor's Cheat Sheet
-- Completed VA forms
-- Condition summary sheets
-
----
-
-## Selective Export
-
-### Choose What to Include
-
-When exporting PDF Bundle:
-
-#### Conditions
-
-- ☑️ Include all conditions
-- ☑️ Select specific conditions
-- ☑️ Filter by status
-
-#### Documents
-
-- ☑️ Nexus Statements
-- ☑️ Doctor's Cheat Sheets
-- ☑️ VA Forms
-- ☑️ Rating Criteria
-- ☑️ Notes
-
-#### Formatting
-
-- ☑️ Include cover page
-- ☑️ Include table of contents
-- ☑️ Include page numbers
-- ☑️ Include export date
+Saved forms download as plain text (.txt) only - see [Saved Forms](saved-forms.md) for details.
 
 ---
 
@@ -189,11 +121,11 @@ When exporting PDF Bundle:
 
 When submitting to the VA, export:
 
-| Document | Purpose |
-|----------|---------|
-| **Statement in Support** | Your personal statement |
-| **VA Forms** | Official forms (21-0966, etc.) |
-| **Evidence list** | What you're submitting |
+| Document                 | Purpose                        |
+| ------------------------ | ------------------------------ |
+| **Statement in Support** | Your personal statement        |
+| **VA Forms**             | Official forms (21-0966, etc.) |
+| **Evidence list**        | What you're submitting         |
 
 ### Don't Include
 
@@ -207,7 +139,7 @@ For VA submission, you typically don't need:
 
 Before submitting:
 
-- ☐ All documents reviewed
+- ☐ Statement reviewed and certified before downloading
 - ☐ No draft watermarks
 - ☐ Signatures added (if required)
 - ☐ Dates correct
@@ -221,15 +153,13 @@ Before submitting:
 
 ```
 VA_Claims/
-├── Exports/
-│   ├── MyPacket_Export_2024-01-15.pdf
-│   └── vetrate_backup_2024-01-15.json
+├── Backups/
+│   └── vet-rate-complete-backup-2026-08-20.json
 ├── Statements/
 │   ├── PTSD_Statement.pdf
-│   └── BackPain_Statement.pdf
+│   └── BackPain_Statement.docx
 ├── Forms/
-│   ├── Intent_to_File.pdf
-│   └── Buddy_Statement_John.pdf
+│   └── PTSD_Stressor_Statement.txt
 ├── Medical_Records/
 │   └── [your records]
 └── Submissions/
@@ -238,15 +168,15 @@ VA_Claims/
 
 ### Naming Conventions
 
-Use clear, consistent names:
+The app names downloaded files for you; if you rename them, keep it consistent:
 
 ```
-[ConditionName]_[DocumentType]_[Date].pdf
+[ConditionName]_[DocumentType]_[Date].[ext]
 
 Examples:
-PTSD_NexusStatement_2024-01-15.pdf
-BackPain_DoctorCheatSheet_2024-01-15.pdf
-IntentToFile_2024-01-15.pdf
+PTSD_NexusStatement_2026-08-20.pdf
+BackPain_Statement_2026-08-20.docx
+IntentToFile_2026-08-20.txt
 ```
 
 ---
@@ -255,25 +185,21 @@ IntentToFile_2024-01-15.pdf
 
 ### With VSO
 
-Export a PDF Bundle or Summary to share:
-
-- Email the PDF
-- Print for in-person meetings
-- Upload to VSO portal if available
+- Download individual statements as PDF or Word and email them
+- Or export the full **Dossier (HTML)** for a single file covering your whole packet
+- Print either for in-person meetings
 
 ### With Healthcare Providers
 
-Share Doctor's Cheat Sheets:
+Share Doctor's Cheat Sheets generated in Nexus Builder:
 
-- Print for appointments
+- Download as PDF and print for appointments
 - Email if they accept electronic documents
 
 ### With Legal Representatives
 
-Export complete documentation:
-
-- PDF Bundle for review
-- JSON Backup for complete data
+- **Dossier (HTML)** for a readable overview of everything
+- **Local Backup (JSON)** if they need the complete, structured data
 
 ---
 
@@ -285,14 +211,17 @@ Export complete documentation:
 - Try a different browser
 - Ensure sufficient storage space
 
-### PDF Won't Open
+### Download Button Is Disabled
 
-- Ensure you have a PDF reader
+- You need to open the statement and check the certification checkbox first - see [Statement Download](#statement-download-per-condition) above
+
+### PDF or Word File Won't Open
+
+- Ensure you have a PDF reader or word processor installed
 - Try downloading again
 - Check file size (very large files may have issues)
 
 ### Missing Data in Export
 
-- Verify data exists in My Packet
-- Check export settings/filters
-- Try exporting again
+- Verify the data exists in My Packet
+- A Local Backup or Dossier only includes what's currently saved - try exporting again after saving
