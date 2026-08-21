@@ -63,7 +63,9 @@ describe("WhatIfSandbox - Load My Ratings", () => {
 
     // Modal survives, and only the valid entry was loaded.
     await waitFor(() =>
-      expect(screen.getByText(/current scenario \(1 condition/i)).toBeInTheDocument(),
+      expect(
+        screen.getByText(/current scenario \(1 condition/i),
+      ).toBeInTheDocument(),
     );
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });

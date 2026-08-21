@@ -569,7 +569,7 @@ for (const vp of VIEWPORTS) {
 
     test("Atomic Wipe confirm keeps its CTA in view", async ({ page }) => {
       const trigger = page.getByRole("button", {
-        name: "Clear all local data",
+        name: "Clear Data - permanently erase all local data",
       });
       // BackupManager is React.lazy — first load in CI (dev server, JIT compile)
       // can exceed 6 s; 15 s matches the webServer startup budget.

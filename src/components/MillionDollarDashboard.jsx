@@ -365,7 +365,8 @@ const DashboardHeader = ({ onClose, onReportBug }) => (
             moduleName="Million Dollar Dashboard"
           />
         )}
-        <button type="button"
+        <button
+          type="button"
           onClick={onClose}
           className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
           aria-label="Close"
@@ -447,7 +448,8 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="block text-sm text-gray-400">VA Rating %</label>
       {hasMyRatings() && (
-        <button type="button"
+        <button
+          type="button"
           onClick={handleLoadMyRatings}
           className="text-xs px-2 py-0.5 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
           aria-label="Calculate from your saved ratings"
@@ -499,7 +501,8 @@ const SpouseToggleField = ({ hasSpouse, setHasSpouse }) => (
   <div>
     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
     <label className="block text-sm text-gray-400 mb-1">Spouse?</label>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setHasSpouse(!hasSpouse)}
       className={`w-full p-3 rounded-xl font-bold transition-all ${
         hasSpouse
@@ -521,7 +524,9 @@ const ChildrenInputField = ({ numChildren, setNumChildren }) => (
       type="number"
       value={numChildren}
       onChange={(e) =>
-        setNumChildren(Math.max(0, Math.min(10, Number.parseInt(e.target.value) || 0)))
+        setNumChildren(
+          Math.max(0, Math.min(10, Number.parseInt(e.target.value) || 0)),
+        )
       }
       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white text-center text-lg font-bold"
     />
@@ -536,7 +541,8 @@ const PermanentTotalToggleField = ({
   <div>
     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
     <label className="block text-sm text-gray-400 mb-1">P&T?</label>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setIsPermanentTotal(!isPermanentTotal)}
       className={`w-full p-3 rounded-xl font-bold transition-all ${
         isPermanentTotal

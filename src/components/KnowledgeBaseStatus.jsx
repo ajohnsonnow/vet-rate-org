@@ -1091,8 +1091,8 @@ function FullKnowledgeBaseWebNotice({ kbStatus }) {
           <div className="text-xs text-amber-600 dark:text-amber-500 mt-2">
             💡 The full 130K+ entry corpus downloads to your device for future
             use, but AI answers - Local and Cloud alike - currently draw from
-            this same curated {kbStatus.dkbEntries.toLocaleString()}-entry
-            set. Loading Local AI does not currently expand it.
+            this same curated {kbStatus.dkbEntries.toLocaleString()}-entry set.
+            Loading Local AI does not currently expand it.
           </div>
         </div>
       </div>

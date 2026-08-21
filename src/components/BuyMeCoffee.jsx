@@ -299,7 +299,8 @@ function LunaCard({ position, animation, extraEmoji, msg, onDismiss }) {
         <div className="absolute -top-3 right-6 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[16px] border-l-transparent border-r-transparent border-b-purple-300 dark:border-b-purple-600" />
 
         {/* Close button */}
-        <button type="button"
+        <button
+          type="button"
           onClick={onDismiss}
           className="absolute -top-2 -right-2 bg-purple-100 dark:bg-purple-700 rounded-full p-1.5 text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-600 transition shadow-md hover:scale-110"
           aria-label="Dismiss Luna"

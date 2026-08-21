@@ -169,7 +169,11 @@ function forceReloadWithCacheBypass() {
   // read as "unsanitized location input flows back into window.location".
   const separator = window.location.search ? "&" : "?";
   window.location.href =
-    window.location.pathname + window.location.search + separator + "nocache=" + Date.now();
+    window.location.pathname +
+    window.location.search +
+    separator +
+    "nocache=" +
+    Date.now();
 }
 
 async function handleAtomicWipe(setIsWiping, onWipeComplete) {

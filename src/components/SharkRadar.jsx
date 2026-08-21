@@ -207,7 +207,8 @@ const ConsentGate = ({ onConsent }) => (
     </div>
 
     <div className="flex gap-3">
-      <button type="button"
+      <button
+        type="button"
         onClick={onConsent}
         className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl font-semibold hover:from-red-600 hover:to-orange-600 transition-all flex items-center justify-center gap-2"
       >
@@ -233,7 +234,8 @@ const AIModeSection = ({
             : "Cloud AI - fast & powerful"}
         </span>
       </div>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowAISettings(!showAISettings)}
         className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
       >
@@ -259,7 +261,8 @@ const AIModeSection = ({
 );
 
 const ScanButton = ({ onClick, disabled, isAnalyzing }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={onClick}
     disabled={disabled}
     className="px-6 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg font-semibold hover:from-red-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -332,7 +335,8 @@ Example red flags to look for:
         {textInput.length} characters
       </span>
       <div className="flex gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={handleClear}
           disabled={!textInput && !results}
           className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
@@ -587,7 +591,8 @@ const KnowYourRightsSection = () => (
 
 const PrivacyToggle = ({ showPrivacy, setShowPrivacy }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setShowPrivacy(!showPrivacy)}
       className="mt-4 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-2"
     >

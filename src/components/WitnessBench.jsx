@@ -979,7 +979,8 @@ const WitnessBenchHeader = ({
             moduleName="The Witness Bench"
           />
         )}
-        <button type="button"
+        <button
+          type="button"
           onClick={onClose}
           className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
@@ -1042,7 +1043,8 @@ const RelationshipPicker = ({ t, relationship, onSelect }) => (
     </h3>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {RELATIONSHIP_TYPES.map((type) => (
-        <button type="button"
+        <button
+          type="button"
           key={type.value}
           onClick={() => onSelect(type.value)}
           className={`p-4 rounded-xl border-2 transition-all text-center ${
@@ -1125,7 +1127,8 @@ const AIToggleCard = ({
         )}
       </div>
       {aiAvailable ? (
-        <button type="button"
+        <button
+          type="button"
           onClick={onToggleAI}
           className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
             useAI ? "bg-purple-600" : "bg-gray-300 dark:bg-gray-600"
@@ -1138,7 +1141,8 @@ const AIToggleCard = ({
           />
         </button>
       ) : (
-        <button type="button"
+        <button
+          type="button"
           onClick={onOpenAISettings}
           className="px-3 py-2 text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-800/40 transition-colors"
         >
@@ -1206,7 +1210,8 @@ const SetupStep = ({
     )}
 
     {/* Start Button */}
-    <button type="button"
+    <button
+      type="button"
       onClick={onStartInterview}
       disabled={
         !relationship || !condition || !witnessName || isLoadingQuestions
@@ -1315,7 +1320,8 @@ const InterviewNavButtons = ({
   isGeneratingStatement,
 }) => (
   <div className="flex gap-3">
-    <button type="button"
+    <button
+      type="button"
       onClick={onPrevious}
       disabled={currentQuestionIndex === 0}
       className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1324,14 +1330,16 @@ const InterviewNavButtons = ({
     </button>
 
     {currentQuestionIndex < totalQuestions - 1 ? (
-      <button type="button"
+      <button
+        type="button"
         onClick={onNext}
         className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
       >
         {t("witnessBench", "next")}
       </button>
     ) : (
-      <button type="button"
+      <button
+        type="button"
         onClick={onGenerateStatement}
         disabled={answeredCount < 3 || isGeneratingStatement}
         className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -1365,7 +1373,8 @@ const QuestionJumpNav = ({
     </p>
     <div className="flex flex-wrap gap-2">
       {questions.map((q, index) => (
-        <button type="button"
+        <button
+          type="button"
           key={q.id}
           onClick={() => onJump(index)}
           className={`w-8 h-8 rounded-full text-sm font-medium transition-all ${getQuestionNavButtonClass(index === currentQuestionIndex, answers[q.id])}`}
@@ -1473,7 +1482,8 @@ const DownloadMenu = ({
   onCloseMenu,
 }) => (
   <div className="relative">
-    <button type="button"
+    <button
+      type="button"
       onClick={onToggle}
       className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
     >
@@ -1495,7 +1505,8 @@ const DownloadMenu = ({
 
     {showDownloadMenu && (
       <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-10">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             onSaveToMyPacket();
             onCloseMenu();
@@ -1510,7 +1521,8 @@ const DownloadMenu = ({
             ? `✅ ${t("witnessBench", "savedToMyPacket")}`
             : `📁 ${t("witnessBench", "saveToMyPacket")}`}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             onDownloadPDF();
             onCloseMenu();
@@ -1519,7 +1531,8 @@ const DownloadMenu = ({
         >
           📑 {t("witnessBench", "downloadAsPDF")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             onDownloadDOCX();
             onCloseMenu();
@@ -1552,7 +1565,8 @@ const StatementPreviewPanel = ({
         📄 {t("witnessBench", "yourBuddyStatement")}
       </h3>
       <div className="flex gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={onCopyToClipboard}
           className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
         >
@@ -1635,7 +1649,8 @@ const OutputStep = ({
     <NextStepsPanel t={t} />
 
     {/* Start Over Button */}
-    <button type="button"
+    <button
+      type="button"
       onClick={onStartOver}
       className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
     >

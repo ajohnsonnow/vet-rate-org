@@ -14,7 +14,9 @@ const APP_VERSION: string = JSON.parse(
 
 declare global {
   interface Window {
-    __packetMods: { vkbMod: typeof import("../../src/utils/veteranKnowledgeBase") };
+    __packetMods: {
+      vkbMod: typeof import("../../src/utils/veteranKnowledgeBase");
+    };
   }
 }
 
@@ -156,7 +158,7 @@ test.describe("My Packet — derived TL;DR and per-document findings", () => {
     // the tab listed the bucket count only.
     await expect(dialog).toContainText("seed_dd214.pdf");
     await expect(dialog).toContainText("Honorable");
-    await expect(dialog).toContainText("11B — Infantryman");
+    await expect(dialog).toContainText("11B - Infantryman");
 
     await expect(dialog).toContainText("seed_cfile.pdf");
     await expect(dialog).toContainText("Consolidated claims file");

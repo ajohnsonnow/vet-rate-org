@@ -22,9 +22,7 @@ describe("loadDemoData", () => {
     loadDemoData();
 
     expect(localStorage.getItem("vetrate_veteran_profile")).toBeNull();
-    const stored = JSON.parse(
-      localStorage.getItem("vet_rate_veteran_profile"),
-    );
+    const stored = JSON.parse(localStorage.getItem("vet_rate_veteran_profile"));
     expect(stored.branch).toBe("Army");
   });
 

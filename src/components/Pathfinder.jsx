@@ -352,7 +352,8 @@ const RatingInput = ({ rating, index, onUpdate, onRemove, t }) => {
             </option>
           ))}
         </select>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => onRemove(index)}
           className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
         >
@@ -426,13 +427,15 @@ const OpportunityCard = ({ opportunity, onBuildNexus, onPracticeExam, t }) => {
       )}
 
       <div className="flex flex-wrap gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => onBuildNexus(opportunity)}
           className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
         >
           {t("pathfinder", "buildNexus")} <ArrowRightIcon />
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => onPracticeExam(opportunity)}
           className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-sm"
         >
@@ -464,7 +467,8 @@ const PathfinderConsentGate = ({ handleConsent, t }) => (
       {getPathfinderPrivacyDisclosure()}
     </div>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={handleConsent}
       className="w-full px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
     >
@@ -506,26 +510,30 @@ const PathfinderInputToolbar = ({
 }) => (
   <div className="flex items-center gap-2">
     {hasMyRatings() && (
-      <button type="button"
+      <button
+        type="button"
         onClick={handleLoadMyRatings}
         className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
       >
         📊 {t("pathfinder", "loadMyRatings")}
       </button>
     )}
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setShowVAGovPaster(true)}
       className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
     >
       📋 {t("pathfinder", "pasteFromVaGov")}
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setShowDropInModal(true)}
       className="text-sm px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-1.5"
     >
       📄 {t("pathfinder", "dropInFile")}
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={loadFromPacket}
       className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
     >
@@ -540,7 +548,8 @@ const PathfinderAnalyzeButton = ({
   handleAnalyze,
   t,
 }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={handleAnalyze}
     disabled={
       isAnalyzing ||
@@ -597,7 +606,8 @@ const PathfinderRatingsList = ({
       ))}
     </div>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={addRating}
       className="w-full px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-teal-400 hover:text-teal-600 dark:hover:border-teal-500 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2"
     >
@@ -668,7 +678,8 @@ const PathfinderInputSection = ({
 
     {/* Actions */}
     <div className="flex gap-3 mt-6">
-      <button type="button"
+      <button
+        type="button"
         onClick={handleClear}
         className="px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
       >
@@ -855,7 +866,8 @@ const PathfinderResultsSection = ({
 
       {/* Analyze Again */}
       <div className="text-center">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setResults(null)}
           className="px-6 py-3 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors font-medium"
         >
@@ -878,7 +890,8 @@ const PathfinderDropInModalHeader = ({ onDismiss, t }) => (
         Files stay in your browser - never uploaded to any server
       </p>
     </div>
-    <button type="button"
+    <button
+      type="button"
       onClick={onDismiss}
       aria-label="Close"
       className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -944,7 +957,8 @@ const PathfinderSelectedFileInfo = ({
           </p>
         </div>
       </div>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => {
           setUploadedFile(null);
           setFileProgress(null);
@@ -1009,7 +1023,8 @@ const PathfinderUploadedFilePanel = ({
     </div>
 
     {/* Process Button */}
-    <button type="button"
+    <button
+      type="button"
       onClick={handleProcessFile}
       disabled={isProcessingFile}
       className="w-full px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -1641,7 +1656,8 @@ const PathfinderErrorDisplay = ({ error }) =>
 
 const PathfinderPrivacyToggle = ({ showPrivacy, setShowPrivacy, t }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setShowPrivacy(!showPrivacy)}
       className="mt-6 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-2"
     >

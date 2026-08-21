@@ -80,7 +80,8 @@ function UploadedFileRow({ fileEntry, onRemove }) {
             </p>
           </div>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => onRemove(fileEntry.id)}
           className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
           aria-label="Remove file"
@@ -773,7 +774,8 @@ function FileDropZone({ fileDropIn }) {
         <div>
           <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
             Drop files here or{" "}
-            <button type="button"
+            <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               className="text-purple-600 dark:text-purple-400 hover:underline"
             >
@@ -855,7 +857,8 @@ const UploadedFilesSummary = ({
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           📁 Uploaded Files ({uploadedFiles.length})
         </span>
-        <button type="button"
+        <button
+          type="button"
           onClick={handleClearAllFiles}
           className="text-xs text-red-600 dark:text-red-400 hover:underline"
         >
@@ -931,7 +934,8 @@ function FileDropInPanel({ fileDropIn, denialText }) {
 const DecisionDecoderFooter = ({ onClose, results }) => (
   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
     <BuyMeCoffee show={results !== null} trigger="decision-decoder" />
-    <button type="button"
+    <button
+      type="button"
       onClick={onClose}
       className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
     >
@@ -977,7 +981,8 @@ const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
             moduleName="Decision Decoder"
           />
         )}
-        <button type="button"
+        <button
+          type="button"
           onClick={onClose}
           className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
@@ -1003,7 +1008,8 @@ const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
 
 const InputMethodTabs = ({ inputMethod, setInputMethod }) => (
   <div className="flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700">
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setInputMethod("paste")}
       className={`px-4 py-2 text-sm font-semibold transition-colors ${
         inputMethod === "paste"
@@ -1013,7 +1019,8 @@ const InputMethodTabs = ({ inputMethod, setInputMethod }) => (
     >
       📋 Paste Text
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setInputMethod("file")}
       className={`px-4 py-2 text-sm font-semibold transition-colors ${
         inputMethod === "file"
@@ -1045,7 +1052,8 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
       <span className="text-xs text-gray-500 dark:text-gray-400">
         {denialText.length} characters
       </span>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setDenialText("")}
         className="text-xs text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
       >
@@ -1056,7 +1064,8 @@ Example: "The evidence does not establish a nexus between your current lumbar sp
 );
 
 const DecodeButton = ({ isLoading, denialText, handleDecode }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={() => handleDecode(denialText)}
     disabled={isLoading || !denialText.trim()}
     className="w-full mt-4 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold text-lg hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
@@ -1597,7 +1606,8 @@ const PhaseTimeline = ({ phases, selectedPhase, setSelectedPhase }) => (
     <div className="absolute top-4 left-0 right-0 h-1 bg-teal-200 dark:bg-teal-800 rounded"></div>
     <div className="flex justify-between relative">
       {phases.map((phase) => (
-        <button type="button"
+        <button
+          type="button"
           key={phase.key}
           onClick={() =>
             setSelectedPhase(selectedPhase?.key === phase.key ? null : phase)
@@ -1683,7 +1693,8 @@ const ClaimPhaseExplainer = ({
   getAllClaimPhases,
 }) => (
   <div className="mt-6 p-4 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-xl border border-teal-200 dark:border-teal-700">
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setShowPhaseExplainer(!showPhaseExplainer)}
       className="w-full flex items-center justify-between"
     >

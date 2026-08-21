@@ -100,7 +100,7 @@ test.describe("simulator accessibility (WS-5)", () => {
     // The SVG zone carries an explicit role="button" attribute; the
     // quick-select <button> elements do not, so this matches only the zone.
     const zone = dialog.locator(
-      '[role="button"][aria-label="Head/Skull — select to log symptoms"]',
+      '[role="button"][aria-label="Head/Skull - select to log symptoms"]',
     );
     await zone.waitFor({ state: "visible" });
 

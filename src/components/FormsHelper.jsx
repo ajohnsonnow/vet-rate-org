@@ -4324,7 +4324,8 @@ function FormInfoActionButtons({ selectedForm, hasWizard, setCurrentStep, t }) {
   return (
     <div className="flex flex-wrap gap-3">
       {hasWizard ? (
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setCurrentStep(1)}
           className="flex-1 px-6 py-3 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
         >
@@ -4428,7 +4429,8 @@ function FormInfoPanel({ selectedForm, setCurrentStep, setSelectedForm, t }) {
         t={t}
       />
 
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setSelectedForm(null)}
         className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-1"
       >
@@ -4468,7 +4470,8 @@ function WizardStepNavigation({
 }) {
   return (
     <div className="flex justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => {
           if (currentStep === 1) {
             setCurrentStep(0);
@@ -4482,7 +4485,8 @@ function WizardStepNavigation({
       </button>
 
       {isLastStep ? (
-        <button type="button"
+        <button
+          type="button"
           onClick={handleFinishWizard}
           className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2"
         >
@@ -4502,7 +4506,8 @@ function WizardStepNavigation({
           </svg>
         </button>
       ) : (
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setCurrentStep((prev) => prev + 1)}
           className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
         >
@@ -4601,7 +4606,8 @@ function AIUnavailableNotice({ onOpenAISettings, t }) {
             </p>
           </div>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={onOpenAISettings}
           className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold whitespace-nowrap transition-colors"
         >
@@ -4670,7 +4676,8 @@ function AIEnhanceControls({
 }) {
   if (!aiEnhancedContent) {
     return (
-      <button type="button"
+      <button
+        type="button"
         onClick={handleAIEnhanceClick}
         disabled={isEnhancingWithAI}
         className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
@@ -4682,7 +4689,8 @@ function AIEnhanceControls({
 
   return (
     <div className="flex gap-2">
-      <button type="button"
+      <button
+        type="button"
         onClick={toggleAIVersion}
         className={`px-4 py-2 rounded-lg font-medium transition-all ${
           showAIVersion
@@ -4692,7 +4700,8 @@ function AIEnhanceControls({
       >
         ✨ {t("formsHelper", "aiVersion")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={toggleAIVersion}
         className={`px-4 py-2 rounded-lg font-medium transition-all ${
           !showAIVersion
@@ -4817,7 +4826,8 @@ function DownloadOptionsCard({
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Primary: Official PDF */}
-        <button type="button"
+        <button
+          type="button"
           onClick={() => handleDownloadOfficialPdf()}
           className="flex items-center gap-3 p-4 bg-gradient-to-r from-va-blue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
         >
@@ -4834,7 +4844,8 @@ function DownloadOptionsCard({
 
         {/* Secondary options */}
         <div className="flex gap-2">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => handleDownload("txt")}
             className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
           >
@@ -4843,7 +4854,8 @@ function DownloadOptionsCard({
               .TXT
             </span>
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => handleDownload("docx")}
             className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
           >
@@ -4852,7 +4864,8 @@ function DownloadOptionsCard({
               .DOCX
             </span>
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => handleDownload("pdf")}
             className="flex-1 flex flex-col items-center justify-center p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-all"
           >
@@ -4882,7 +4895,8 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
             </p>
           </div>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={handleSaveToPacket}
           className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
         >
@@ -5035,7 +5049,8 @@ function ReviewActionButtons({
 }) {
   return (
     <div className="flex flex-wrap gap-3">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => {
           setCurrentStep(1);
           setGeneratedContent(null);
@@ -5046,7 +5061,8 @@ function ReviewActionButtons({
       >
         ← {t("formsHelper", "editAnswers")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => {
           setSelectedForm(null);
           setFormData({});
@@ -5112,7 +5128,8 @@ function BackupRestoreProfileButtons({
 }) {
   return (
     <div className="flex flex-wrap gap-3 justify-center mb-6">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowProfileSetup(!showProfileSetup)}
         className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${
           showProfileSetup
@@ -5137,7 +5154,8 @@ function BackupRestoreProfileButtons({
           ? t("formsHelper", "editYourProfile")
           : t("formsHelper", "setUpProfile")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleBackup}
         className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
       >
@@ -5156,7 +5174,8 @@ function BackupRestoreProfileButtons({
         </svg>
         {t("formsHelper", "backupAllData")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleRestoreClick}
         className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
       >
@@ -5743,7 +5762,8 @@ function ProfileSaveFooter({ handleSaveProfile, t }) {
       <p className="text-xs text-blue-700 dark:text-blue-400">
         🔒 {t("formsHelper", "privacyLocalStorage")}
       </p>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleSaveProfile}
         className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all"
       >
@@ -5849,7 +5869,8 @@ function ProfileSavedIndicator({ setShowProfileSetup, t }) {
           {t("formsHelper", "profileSavedMsg")}
         </span>
       </div>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowProfileSetup(true)}
         className="text-sm text-green-700 dark:text-green-300 underline hover:no-underline"
       >
@@ -5887,7 +5908,8 @@ function FormSelectionCards({
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {forms.map((form) => (
-        <button type="button"
+        <button
+          type="button"
           key={form.id}
           onClick={() => {
             setSelectedForm(form);
@@ -8468,7 +8490,8 @@ function FormsHelperHeader({
             variant="light"
             moduleName="Forms Helper"
           />
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"

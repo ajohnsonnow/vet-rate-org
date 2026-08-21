@@ -111,7 +111,8 @@ function PermanentTotalToggle({ isPermanentTotal, setIsPermanentTotal }) {
           </p>
         </div>
       </label>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setIsPermanentTotal(!isPermanentTotal)}
         className="sr-only"
       >
@@ -306,7 +307,8 @@ function RiskInputForm({
       />
 
       {/* Analyze Button */}
-      <button type="button"
+      <button
+        type="button"
         onClick={onAnalyze}
         disabled={!currentRating || !ratingDate}
         className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
@@ -621,7 +623,8 @@ function AIAnalysisResult({ analysis, onRegenerate }) {
 
       {/* Regenerate Button */}
       <div className="text-center pt-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={onRegenerate}
           className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
         >
@@ -649,7 +652,8 @@ function AIStrategicAnalysisPanel({
           🤖 AI Strategic Analysis
         </h3>
         {!analysis && !isAnalyzing && status?.available && (
-          <button type="button"
+          <button
+            type="button"
             onClick={onGenerateAI}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
           >
@@ -676,7 +680,8 @@ function AIStrategicAnalysisPanel({
       {error && (
         <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-4">
           <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
-          <button type="button"
+          <button
+            type="button"
             onClick={onGenerateAI}
             className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
           >
@@ -792,13 +797,15 @@ function RiskResultsPanel({
 
       {/* Action Buttons */}
       <div className="flex gap-4">
-        <button type="button"
+        <button
+          type="button"
           onClick={onReset}
           className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
           🔄 Start Over
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => window.print()}
           className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
         >
@@ -845,7 +852,8 @@ function RiskAssessmentHeader({ onClose, onReportBug, onOpenAISettings }) {
               moduleName="Risk Assessment (Poke the Bear)"
             />
           )}
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"

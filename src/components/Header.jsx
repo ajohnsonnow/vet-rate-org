@@ -204,7 +204,8 @@ const QuickActionsRow = ({
 }) => (
   <div className="flex flex-wrap justify-center gap-2 lg:gap-3 items-center">
     {/* Quick Dark Mode Toggle */}
-    <button type="button"
+    <button
+      type="button"
       onClick={toggleTheme}
       className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors focus:outline-none focus:ring-1 focus:ring-va-gold text-[10px] font-medium"
       aria-label={
@@ -225,7 +226,8 @@ const QuickActionsRow = ({
     </button>
 
     {/* Legislative Watchdog */}
-    <button type="button"
+    <button
+      type="button"
       onClick={onLegislativeWatchdogClick}
       className="inline-flex items-center justify-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/40 transition-colors focus:outline-none focus:ring-1 focus:ring-va-gold text-[10px] font-medium relative"
       aria-label={t("tools", "legislativeWatchdog")}
@@ -236,7 +238,8 @@ const QuickActionsRow = ({
     </button>
 
     {/* Help */}
-    <button type="button"
+    <button
+      type="button"
       id="tour-help-btn"
       onClick={onUserManualClick}
       className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm whitespace-nowrap"
@@ -246,7 +249,8 @@ const QuickActionsRow = ({
     </button>
 
     {/* Missions */}
-    <button type="button"
+    <button
+      type="button"
       id="tour-workflow-guide-btn"
       onClick={onWorkflowGuideClick}
       className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 py-0.5 text-sm flex items-center gap-1 whitespace-nowrap"
@@ -261,7 +265,8 @@ const QuickActionsRow = ({
 );
 
 const MyPacketButton = ({ t, onMyPacketClick }) => (
-  <button type="button"
+  <button
+    type="button"
     id="tour-my-packet-btn"
     onClick={onMyPacketClick}
     className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base whitespace-nowrap"
@@ -272,7 +277,8 @@ const MyPacketButton = ({ t, onMyPacketClick }) => (
 );
 
 const ToolsMenuTrigger = ({ t, showToolsMenu, setShowToolsMenu }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={() => setShowToolsMenu(!showToolsMenu)}
     className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
     aria-label={t("common", "tools")}
@@ -304,7 +310,8 @@ const CalculateButtonsA = ({
   onWhatIfSandboxClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onTacticalCalculatorClick?.();
@@ -321,7 +328,8 @@ const CalculateButtonsA = ({
         {t("tools", "tacticalCalculatorDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onMillionDollarDashboardClick?.();
@@ -338,7 +346,8 @@ const CalculateButtonsA = ({
         {t("tools", "millionDollarDashboardDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onWhatIfSandboxClick?.();
@@ -365,7 +374,8 @@ const CalculateButtonsB = ({
   onTimeMachineClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onRetroPayHunterClick?.();
@@ -385,7 +395,8 @@ const CalculateButtonsB = ({
         {t("tools", "retroPayHunterDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onTimeMachineClick?.();
@@ -424,7 +435,8 @@ const DiscoverButtonsA = ({
   onPathfinderClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onSecondaryScoutClick?.();
@@ -441,7 +453,8 @@ const DiscoverButtonsA = ({
         {t("tools", "secondaryScoutDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onCAPSimulatorClick?.();
@@ -455,7 +468,8 @@ const DiscoverButtonsA = ({
         {t("tools", "capSimulatorDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onPathfinderClick?.();
@@ -483,7 +497,8 @@ const DiscoverButtonsB = ({
   onPACTActNavigatorClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onClaimNavigatorClick?.();
@@ -500,7 +515,8 @@ const DiscoverButtonsB = ({
         {t("tools", "claimNavigatorDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onMOSHazardMatcherClick?.();
@@ -514,7 +530,8 @@ const DiscoverButtonsB = ({
         {t("tools", "mosHazardMatcherDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onPACTActNavigatorClick?.();
@@ -541,7 +558,8 @@ const DiscoverButtonsC = ({
   onBDDBuilderClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onWebOfConditionsClick?.();
@@ -558,7 +576,8 @@ const DiscoverButtonsC = ({
         {t("tools", "webOfConditionsDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onBDDBuilderClick?.();
@@ -598,7 +617,8 @@ const BuildEvidenceButtonsA = ({
   onRecordSearchClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onCFileAnalyzerClick?.();
@@ -618,7 +638,8 @@ const BuildEvidenceButtonsA = ({
         {t("tools", "cFileAnalyzerDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onBlueButtonXRayClick?.();
@@ -635,7 +656,8 @@ const BuildEvidenceButtonsA = ({
         {t("tools", "blueButtonXRayDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onRecordSearchClick?.();
@@ -663,7 +685,8 @@ const BuildEvidenceButtonsB = ({
   onFormsHelperClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onWitnessBenchClick?.();
@@ -680,7 +703,8 @@ const BuildEvidenceButtonsB = ({
         {t("tools", "witnessBenchDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onNexusBuilderClick?.();
@@ -694,7 +718,8 @@ const BuildEvidenceButtonsB = ({
         {t("tools", "nexusBuilderDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onFormsHelperClick?.();
@@ -722,7 +747,8 @@ const BuildEvidenceButtonsC = ({
   onEvidenceTimelineClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onSymptomLoggerClick?.();
@@ -736,7 +762,8 @@ const BuildEvidenceButtonsC = ({
         {t("tools", "symptomLoggerDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onPainPainterClick?.();
@@ -750,7 +777,8 @@ const BuildEvidenceButtonsC = ({
         {t("tools", "somaticTargetDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onEvidenceTimelineClick?.();
@@ -775,7 +803,8 @@ const BuildEvidenceButtonsD = ({
   setShowToolsMenu,
   onFOIAGeneratorClick,
 }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={() => {
       setShowToolsMenu(false);
       onFOIAGeneratorClick?.();
@@ -812,7 +841,8 @@ const QualityControlButtonsA = ({
   onDecisionDecoderClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onRedTeamClick?.();
@@ -829,7 +859,8 @@ const QualityControlButtonsA = ({
         {t("tools", "redTeamDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onClaimStressTestClick?.();
@@ -846,7 +877,8 @@ const QualityControlButtonsA = ({
         {t("tools", "theWarGameDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onDecisionDecoderClick?.();
@@ -874,7 +906,8 @@ const QualityControlButtonsB = ({
   onConsistencyEngineClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onDenialDecoderClick?.();
@@ -894,7 +927,8 @@ const QualityControlButtonsB = ({
         {t("tools", "denialsDecoderDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onSharkRadarClick?.();
@@ -908,7 +942,8 @@ const QualityControlButtonsB = ({
         {t("tools", "sharkRadarDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onConsistencyEngineClick?.();
@@ -935,7 +970,8 @@ const QualityControlButtonsC = ({
   onRiskAssessmentClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onEvidenceGapVisualizerClick?.();
@@ -952,7 +988,8 @@ const QualityControlButtonsC = ({
         {t("tools", "evidenceGapFinderDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onRiskAssessmentClick?.();
@@ -992,7 +1029,8 @@ const MaximizeButtonsA = ({
   onAppealsLaneAdvisorClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onTDIUBuilderClick?.();
@@ -1009,7 +1047,8 @@ const MaximizeButtonsA = ({
         {t("tools", "tdiuBuilderDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onStateBenefitHunterClick?.();
@@ -1029,7 +1068,8 @@ const MaximizeButtonsA = ({
         {t("tools", "stateBenefitHunterDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onAppealsLaneAdvisorClick?.();
@@ -1057,7 +1097,8 @@ const MaximizeButtonsB = ({
   onLegislativeWatchdogClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onTheTribunalClick?.();
@@ -1074,7 +1115,8 @@ const MaximizeButtonsB = ({
         {t("tools", "theTribunalDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onRemandRiskCheckerClick?.();
@@ -1091,7 +1133,8 @@ const MaximizeButtonsB = ({
         {t("tools", "remandRiskCheckerDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onLegislativeWatchdogClick?.();
@@ -1133,7 +1176,8 @@ const SupportResourcesButtonsA = ({
   onCloudSyncClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onVSOFinderClick?.();
@@ -1153,7 +1197,8 @@ const SupportResourcesButtonsA = ({
         {t("tools", "vsoFinderDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onBackupManagerClick?.();
@@ -1170,7 +1215,8 @@ const SupportResourcesButtonsA = ({
         {t("tools", "theBunkerDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onCloudSyncClick?.();
@@ -1198,7 +1244,8 @@ const SupportResourcesButtonsB = ({
   onUserManualClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onKnowledgeBaseClick?.();
@@ -1215,7 +1262,8 @@ const SupportResourcesButtonsB = ({
         {t("tools", "knowledgeBaseDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onVaIntegrationDemoClick?.();
@@ -1232,7 +1280,8 @@ const SupportResourcesButtonsB = ({
         {t("tools", "vaIntegrationDesc")}
       </p>
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowToolsMenu(false);
         onUserManualClick?.();
@@ -1338,7 +1387,8 @@ const VaResourcesHubButton = ({
   setShowResourcesMenu,
   onVAResourcesClick,
 }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={() => {
       setShowResourcesMenu(false);
       onVAResourcesClick();
@@ -1405,7 +1455,8 @@ const ResourcesMenuTrigger = ({
   showResourcesMenu,
   setShowResourcesMenu,
 }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={() => setShowResourcesMenu(!showResourcesMenu)}
     className="hover:text-va-gold transition duration-200 focus:outline-none focus:ring-2 focus:ring-va-gold focus:ring-offset-2 focus:ring-offset-va-blue rounded px-1.5 lg:px-2 py-1 text-sm lg:text-base flex items-center gap-1 whitespace-nowrap"
     aria-label={t("header", "veteranResources")}
@@ -1473,7 +1524,8 @@ const DesktopNav = (props) => (
 );
 
 const MobileMenuButton = ({ showMobileMenu, setShowMobileMenu }) => (
-  <button type="button"
+  <button
+    type="button"
     onClick={() => setShowMobileMenu(!showMobileMenu)}
     className="md:hidden p-2.5 rounded-lg bg-va-blue/10 dark:bg-gray-700 hover:bg-va-blue/20 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold flex-shrink-0"
     aria-label="Toggle menu"
@@ -1535,7 +1587,8 @@ const LowerHeaderRow = ({
     <AccessibilityMenu />
 
     {/* Community Roadmap Button */}
-    <button type="button"
+    <button
+      type="button"
       onClick={onCommunityRoadmapClick}
       className="inline-flex items-center justify-center gap-1 bg-indigo-600 hover:bg-indigo-700 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 text-xs whitespace-nowrap min-w-[70px]"
       aria-label="Community Roadmap"
@@ -1558,7 +1611,8 @@ const LowerHeaderRow = ({
     </button>
 
     {/* Feature Request Button */}
-    <button type="button"
+    <button
+      type="button"
       onClick={onFeatureRequestClick}
       className="inline-flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 hover:scale-105 text-white px-2 lg:px-3 py-1.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-300 text-xs whitespace-nowrap min-w-[70px]"
       aria-label={t("buttons", "featureRequest")}
@@ -1590,7 +1644,8 @@ const MobileMenuHeader = ({ setShowMobileMenu }) => (
       </h2>
       <p className="text-xs text-white/80">39 Pro Tools</p>
     </div>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setShowMobileMenu(false)}
       className="p-2 rounded-lg hover:bg-white/10 transition-colors"
       aria-label="Close menu"
@@ -1622,7 +1677,8 @@ const MobileMenuCoreNav = ({
   onVKBTimelineClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onUserManualClick?.();
@@ -1633,7 +1689,8 @@ const MobileMenuCoreNav = ({
       <span className="font-medium">{t("common", "help")}</span>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onWorkflowGuideClick?.();
@@ -1647,7 +1704,8 @@ const MobileMenuCoreNav = ({
       </span>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onMyPacketClick?.();
@@ -1658,7 +1716,8 @@ const MobileMenuCoreNav = ({
       <span className="font-medium">{t("tools", "myPacket")}</span>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onKnowledgeBaseClick?.();
@@ -1672,7 +1731,8 @@ const MobileMenuCoreNav = ({
       </span>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onVKBTimelineClick?.();
@@ -1695,7 +1755,8 @@ const MobileMenuToolsButtonsA = ({
   onMillionDollarDashboardClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onTacticalCalculatorClick?.();
@@ -1715,7 +1776,8 @@ const MobileMenuToolsButtonsA = ({
       </div>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onMillionDollarDashboardClick?.();
@@ -1744,7 +1806,8 @@ const MobileMenuToolsButtonsB = ({
   onCAPSimulatorClick,
 }) => (
   <>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onSecondaryScoutClick?.();
@@ -1764,7 +1827,8 @@ const MobileMenuToolsButtonsB = ({
       </div>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onCAPSimulatorClick?.();
@@ -1810,7 +1874,8 @@ const MobileMenuResourcesSection = ({
       📚 {t("common", "resources")}
     </p>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onVAResourcesClick?.();
@@ -1821,7 +1886,8 @@ const MobileMenuResourcesSection = ({
       <span className="font-medium">{t("resources", "vaResources")}</span>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onBackupManagerClick?.();
@@ -1832,7 +1898,8 @@ const MobileMenuResourcesSection = ({
       <span className="font-medium">{t("tools", "backupManager")}</span>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onCloudSyncClick?.();
@@ -1843,7 +1910,8 @@ const MobileMenuResourcesSection = ({
       <span className="font-medium">{t("tools", "cloudSync")}</span>
     </button>
 
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onAISettingsClick?.();
@@ -1863,7 +1931,8 @@ const MobileMenuActionButtons = ({
   onFeatureRequestClick,
 }) => (
   <div className="pt-4 space-y-2 border-t border-gray-200 dark:border-gray-700">
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onCommunityRoadmapClick?.();
@@ -1885,7 +1954,8 @@ const MobileMenuActionButtons = ({
       </svg>
       Roadmap
     </button>
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         setShowMobileMenu(false);
         onFeatureRequestClick?.();

@@ -996,7 +996,9 @@ function QuickTipsCard() {
           <strong className="text-blue-600 dark:text-blue-400">Cloud AI</strong>{" "}
           = faster but sends data to Google
         </li>
-        <li>• Both use the same Diamond Knowledge Base (~8K curated VA entries)</li>
+        <li>
+          • Both use the same Diamond Knowledge Base (~8K curated VA entries)
+        </li>
       </ul>
     </div>
   );

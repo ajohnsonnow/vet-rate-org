@@ -1420,7 +1420,10 @@ const AIAssistant = ({ currentTool = "Home", onClose, onOpenAISettings }) => {
   // Expanded full-screen modal view
   if (isExpanded) {
     return (
-      <ExpandedView {...sharedViewProps} onShrink={() => setIsExpanded(false)} />
+      <ExpandedView
+        {...sharedViewProps}
+        onShrink={() => setIsExpanded(false)}
+      />
     );
   }
 

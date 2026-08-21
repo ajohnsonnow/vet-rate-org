@@ -510,7 +510,8 @@ function MyPacketHeader({ onClose, onReportBug, packetContentRef, t }) {
               moduleName="My Claim Packet"
             />
           )}
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
@@ -699,7 +700,8 @@ function MyPacketBackupGuideBanner({
             {t("myPacketSection.backupGuideMessage")}
           </p>
           <div className="flex flex-wrap gap-2">
-            <button type="button"
+            <button
+              type="button"
               onClick={handleBackupPacket}
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-sm shadow-md"
             >
@@ -719,7 +721,8 @@ function MyPacketBackupGuideBanner({
               {t("myPacketSection.backupGuideDownload")}
             </button>
             {onOpenGoogleDriveSync && (
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => {
                   dismissBackupGuide(false);
                   onOpenGoogleDriveSync();
@@ -736,13 +739,15 @@ function MyPacketBackupGuideBanner({
                 {t("myPacketSection.backupGuideGoogleDrive")}
               </button>
             )}
-            <button type="button"
+            <button
+              type="button"
               onClick={() => dismissBackupGuide(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
             >
               {t("myPacketSection.backupGuideRemindLater")}
             </button>
-            <button type="button"
+            <button
+              type="button"
               onClick={() => dismissBackupGuide(false)}
               className="inline-flex items-center gap-2 px-3 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs"
             >
@@ -763,7 +768,8 @@ function BackupRestoreButtons({
 }) {
   return (
     <>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleBackupPacket}
         disabled={claims.length === 0}
         className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
@@ -783,7 +789,8 @@ function BackupRestoreButtons({
         </svg>
         {t("myPacketSection.localBackup")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleRestoreClick}
         className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-xs sm:text-sm"
       >
@@ -826,7 +833,8 @@ function MyPacketBackupRestoreControls({
           t={t}
         />
         {onOpenGoogleDriveSync && (
-          <button type="button"
+          <button
+            type="button"
             onClick={onOpenGoogleDriveSync}
             className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition-all text-xs sm:text-sm"
           >
@@ -837,7 +845,8 @@ function MyPacketBackupRestoreControls({
           </button>
         )}
         {onAnalyzeStrategy && (
-          <button type="button"
+          <button
+            type="button"
             onClick={onAnalyzeStrategy}
             className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-600 hover:to-indigo-700 transition-all text-xs sm:text-sm"
           >
@@ -908,7 +917,8 @@ function MyPacketTabNavPrimary({
   return (
     <>
       {/* Primary Data */}
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setActiveTab("claims")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "claims"
@@ -923,7 +933,8 @@ function MyPacketTabNavPrimary({
         </span>
       </button>
 
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setActiveTab("ratings")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "ratings"
@@ -941,7 +952,8 @@ function MyPacketTabNavPrimary({
       <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
 
       {/* Service & History */}
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setActiveTab("service")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "service"
@@ -958,7 +970,8 @@ function MyPacketTabNavPrimary({
         </span>
       </button>
 
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setActiveTab("timeline")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "timeline"
@@ -980,7 +993,8 @@ function MyPacketTabNavPrimary({
 
 function VaRecordsTabButton({ activeTab, setActiveTab, vaRecords }) {
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setActiveTab("varecords")}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "varecords"
@@ -1006,7 +1020,8 @@ function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
     ? Object.values(documents).reduce((sum, cat) => sum + (cat?.count || 0), 0)
     : 0;
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setActiveTab("documents")}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "documents"
@@ -1039,7 +1054,8 @@ function MyPacketTabNavSecondary({
       <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
 
       {/* Evidence & Docs */}
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setActiveTab("painmaps")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "painmaps"
@@ -1056,7 +1072,8 @@ function MyPacketTabNavSecondary({
         </span>
       </button>
 
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setActiveTab("profile")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "profile"
@@ -1073,7 +1090,8 @@ function MyPacketTabNavSecondary({
         )}
       </button>
 
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setActiveTab("forms")}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "forms"
@@ -1171,7 +1189,8 @@ function RatingsEmptyState({ setShowVAGovPaster, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4">
         {t("myPacketSection.importRatingsDescription")}
       </p>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowVAGovPaster(true)}
         className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
       >
@@ -1226,7 +1245,8 @@ function MyRatingEditForm({
           }
           className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
-        <button type="button"
+        <button
+          type="button"
           onClick={() =>
             handleUpdateRating(editingRating.id, {
               name: editingRating.name,
@@ -1237,7 +1257,8 @@ function MyRatingEditForm({
         >
           {t("myPacketSection.save")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setEditingRating(null)}
           className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
         >
@@ -1270,13 +1291,15 @@ function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
         )}
       </div>
       <div className="flex gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setEditingRating({ ...rating })}
           className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
         >
           {t("myPacketSection.edit")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => handleRemoveRating(rating.id)}
           className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
         >
@@ -1413,7 +1436,8 @@ function RatingsTab({
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {myRatings.length} {t("myPacketSection.ratingsSaved")}
             </p>
-            <button type="button"
+            <button
+              type="button"
               onClick={handleClearAllRatings}
               className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
             >
@@ -1784,7 +1808,8 @@ function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
       <h5 className="font-semibold text-gray-900 dark:text-gray-100">
         {t("myPacketSection.period")} #{idx + 1}
       </h5>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => {
           const period = veteranProfile.servicePeriods[idx];
           if (period?.id) removeServicePeriod(period.id);
@@ -1979,7 +2004,8 @@ function ServicePeriodsSection({ veteranProfile, setVeteranProfile, t }) {
         <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           🎖️ {t("myPacketSection.servicePeriods")}
         </h4>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             // Q4: create the period in the canonical store immediately -
             // every entry in veteranProfile.servicePeriods must have a
@@ -2085,7 +2111,8 @@ function ProfileConflictsBanner({ veteranProfile, setVeteranProfile }) {
             ))}
           </ul>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={handleDismiss}
           className="shrink-0 text-sm font-medium text-amber-700 dark:text-amber-300 hover:underline"
         >
@@ -2123,7 +2150,8 @@ function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
         />
 
         <div className="flex justify-end gap-3">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => {
               // FIX-10 (SECURITY): route through saveVeteranProfile()'s
               // whitelist + sanitizeString + markAsModified() instead of a
@@ -2210,13 +2238,15 @@ function SavedFormEntry({ form, setViewingForm, handleRemoveForm, t }) {
         </div>
 
         <div className="flex gap-2">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setViewingForm(form)}
             className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
           >
             {t("myPacketSection.view")}
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => handleRemoveForm(form.id)}
             className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
           >
@@ -2383,7 +2413,8 @@ function DD214PasteProcessor({
         className="w-full px-4 py-3 border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
       />
       <div className="flex flex-wrap gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={handleProcessDD214}
           disabled={isProcessingDD214}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
@@ -2394,21 +2425,24 @@ function DD214PasteProcessor({
             t={t}
           />
         </button>
-        <button type="button"
+        <button
+          type="button"
           disabled
           className="px-4 py-2 bg-gray-400 text-white rounded-lg font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
           aria-label="DD214 Analyzer - Coming Soon"
         >
           📄 {t("myPacketSection.fullAnalyzerComingSoon")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={onOpenAISettings}
           className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
           aria-label="Open Faraday Cage - AI Settings"
         >
           ⚙️ {t("myPacketSection.aiSettings")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             setShowDD214Processor(false);
             setDD214Text2("");
@@ -2605,20 +2639,23 @@ function DD214PeriodsDetail({ periods, t }) {
 function DD214DataActions({ setShowDD214Processor, handleClearDD214, t }) {
   return (
     <div className="flex flex-wrap gap-2 pt-2">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowDD214Processor(true)}
         className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
       >
         🔄 {t("myPacketSection.reprocessDD214")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         disabled
         className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
         aria-label="Coming Soon"
       >
         📄 {t("myPacketSection.fullAnalyzerComingSoon")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleClearDD214}
         className="text-sm text-red-600 dark:text-red-400 hover:underline"
       >
@@ -2672,13 +2709,15 @@ function DD214SectionHeader({
       </h3>
       {!showDD214Processor && !serviceHistory.servicePeriods?.length && (
         <div className="flex gap-2">
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setShowDD214Processor(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
           >
             📝 {t("myPacketSection.pasteText")}
           </button>
-          <button type="button"
+          <button
+            type="button"
             disabled
             className="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-medium cursor-not-allowed flex items-center gap-2 opacity-60"
             aria-label="DD214 Analyzer - Coming Soon"
@@ -2901,13 +2940,15 @@ function DeploymentFormActions({
         </label>
       </div>
       <div className="flex gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={handleAddDeployment}
           className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
         >
           {t("myPacketSection.saveDeployment")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             setShowDeploymentForm(false);
             setNewDeployment({
@@ -2987,7 +3028,8 @@ function DeploymentEntry({ dep, handleRemoveDeployment, t }) {
           <p className="text-xs text-gray-500 dark:text-gray-500">{dep.unit}</p>
         )}
       </div>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleRemoveDeployment(dep.id)}
         className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
       >
@@ -3014,7 +3056,8 @@ function DeploymentsSection({
           🌍 {t("myPacketSection.deployments")}
         </h3>
         {!showDeploymentForm && (
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setShowDeploymentForm(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
           >
@@ -3124,13 +3167,15 @@ function AwardFormActions({
 }) {
   return (
     <div className="flex gap-2">
-      <button type="button"
+      <button
+        type="button"
         onClick={handleAddAward}
         className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700 transition-colors"
       >
         {t("myPacketSection.saveAward")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => {
           setShowAwardForm(false);
           setNewAward({
@@ -3180,7 +3225,8 @@ function AwardChip({ award, handleRemoveAward, t }) {
           {t("myPacketSection.combat")}
         </span>
       )}
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleRemoveAward(award.id)}
         className="text-red-400 hover:text-red-600 text-sm"
         aria-label={`Remove ${award.name}`}
@@ -3208,7 +3254,8 @@ function AwardsSection({
           🎖️ {t("myPacketSection.awardsDecorations")}
         </h3>
         {!showAwardForm && (
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setShowAwardForm(true)}
             className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
           >
@@ -3259,7 +3306,8 @@ function RibbonRackSection({
         <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
           🎗️ Ribbon Rack
         </h3>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setShowRibbonRack(!showRibbonRack)}
           className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
         >
@@ -3384,7 +3432,8 @@ function ClaimsEmptyState({ onClose, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4">
         {t("myPacketSection.claimsDescription")}
       </p>
-      <button type="button"
+      <button
+        type="button"
         onClick={onClose}
         className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
       >
@@ -3397,7 +3446,8 @@ function ClaimsEmptyState({ onClose, t }) {
 function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
   return (
     <div className="absolute top-full mt-1 right-0 sm:left-0 sm:right-auto bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px]">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleDownloadStatement(claim, "txt")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
       >
@@ -3416,7 +3466,8 @@ function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
         </svg>
         {t("myPacketSection.textTxt")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleDownloadStatement(claim, "docx")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 flex items-center gap-2"
       >
@@ -3435,7 +3486,8 @@ function ClaimDownloadMenu({ claim, handleDownloadStatement, t }) {
         </svg>
         {t("myPacketSection.wordDocx")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleDownloadStatement(claim, "pdf")}
         className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 rounded-b-lg flex items-center gap-2"
       >
@@ -3473,14 +3525,16 @@ function ClaimActionButtons({
   return (
     <>
       {claim.status === "Drafting" ? (
-        <button type="button"
+        <button
+          type="button"
           onClick={() => onResume(claim)}
           className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors text-xs sm:text-sm"
         >
           {t("myPacketSection.buildStatement")}
         </button>
       ) : (
-        <button type="button"
+        <button
+          type="button"
           onClick={() => handleViewStatement(claim.id)}
           className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-xs sm:text-sm"
         >
@@ -3490,7 +3544,8 @@ function ClaimActionButtons({
 
       {claim.status !== "Drafting" && (
         <div className="relative w-full sm:w-auto">
-          <button type="button"
+          <button
+            type="button"
             onClick={() =>
               setShowDownloadMenu(
                 showDownloadMenu === claim.id ? null : claim.id,
@@ -3528,7 +3583,8 @@ function ClaimActionButtons({
         </div>
       )}
 
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleRemove(claim.id)}
         className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-red-600 text-red-600 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-xs sm:text-sm"
       >
@@ -3605,7 +3661,8 @@ function ClaimEntry({
           </select>
 
           {canUploadEvidence && (
-            <button type="button"
+            <button
+              type="button"
               onClick={() => onUploadEvidence(claim)}
               className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg font-semibold hover:bg-indigo-200 dark:hover:bg-indigo-800/50 transition-colors text-xs sm:text-sm col-span-2 sm:col-span-1"
             >
@@ -3714,7 +3771,8 @@ function ClaimsTab({
 
       {hasClaims && (
         <div className="flex justify-center pt-4 border-t dark:border-gray-700">
-          <button type="button"
+          <button
+            type="button"
             onClick={handleClearAll}
             className="px-6 py-3 border-2 border-red-500 text-red-500 dark:text-red-400 dark:border-red-500 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
           >
@@ -3757,7 +3815,8 @@ function TimelineEmptyState({ onClose, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
         {t("myPacketSection.timelineDescription")}
       </p>
-      <button type="button"
+      <button
+        type="button"
         onClick={onClose}
         className="px-6 py-3 bg-slate-600 text-white rounded-lg font-semibold hover:bg-slate-700 transition-colors inline-flex items-center gap-2"
       >
@@ -3819,7 +3878,8 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
               </p>
             )}
           </div>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => {
               const updated = timelineEvents.filter((e) => e.id !== event.id);
               setTimelineEvents(updated);
@@ -3922,7 +3982,8 @@ function TimelineTab({
                 ? t("myPacketSection.eventsTracked")
                 : t("myPacketSection.eventTracked")}
             </p>
-            <button type="button"
+            <button
+              type="button"
               onClick={handleClearTimelineEvents}
               className="px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
             >
@@ -3982,7 +4043,8 @@ function PainMapsEmptyState({ onClose, t }) {
       <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">
         {t("myPacketSection.painMapsDescription")}
       </p>
-      <button type="button"
+      <button
+        type="button"
         onClick={onClose}
         className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors inline-flex items-center gap-2"
       >
@@ -4061,7 +4123,8 @@ function PainMapCard({ map, setViewingPainMap, handleDeletePainMap, t }) {
       </div>
 
       <div className="px-3 pb-3">
-        <button type="button"
+        <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             handleDeletePainMap(map.id);
@@ -4095,7 +4158,8 @@ function PainMapsTab({
             ? t("myPacketSection.painMapsSaved")
             : t("myPacketSection.painMapSaved")}
         </p>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             if (window.confirm(t("myPacketSection.confirmClearPainMaps"))) {
               setPainMaps([]);
@@ -4144,7 +4208,8 @@ function PainMapDetailHeader({ viewingPainMap, setViewingPainMap, t }) {
           ).toLocaleString()}
         </p>
       </div>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setViewingPainMap(null)}
         className="p-2 hover:bg-white/20 rounded-lg transition-colors"
         aria-label={t("common.close") || "Close"}
@@ -4270,7 +4335,8 @@ function PainMapDetailModal({
       </div>
 
       <div className="flex justify-end gap-3 mt-6">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             handleDeletePainMap(viewingPainMap.id);
             setViewingPainMap(null);
@@ -4279,7 +4345,8 @@ function PainMapDetailModal({
         >
           {t("myPacketSection.deleteMap")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setViewingPainMap(null)}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
@@ -4307,7 +4374,8 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
             <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button"
+            <button
+              type="button"
               onClick={() => setViewingForm(null)}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               aria-label={t("common.close") || "Close"}
@@ -4339,7 +4407,8 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
       )}
 
       <div className="flex justify-end gap-3 mt-4">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             const blob = new Blob([viewingForm.generatedContent], {
               type: "text/plain",
@@ -4359,7 +4428,8 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
         >
           {t("myPacketSection.downloadTxt")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setViewingForm(null)}
           className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
@@ -4382,13 +4452,15 @@ function StatementViewerHeader({
         {t("myPacketSection.generatedStatement")}
       </h3>
       <div className="flex items-center gap-3">
-        <button type="button"
+        <button
+          type="button"
           onClick={handleEditStatement}
           className="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors text-sm"
         >
           {t("myPacketSection.editStatement")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             setViewingStatement(null);
             setViewingClaimId(null);
@@ -4507,7 +4579,8 @@ function ImportConfirmActionButtons({
 }) {
   return (
     <div className="space-y-3">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleConfirmImport("replace")}
         className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
       >
@@ -4526,7 +4599,8 @@ function ImportConfirmActionButtons({
         </svg>
         {t("myPacketSection.replaceAllFreshStart")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleConfirmImport("merge")}
         className="w-full px-4 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
       >
@@ -4545,7 +4619,8 @@ function ImportConfirmActionButtons({
         </svg>
         {t("myPacketSection.mergeAddNewOnly")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowImportConfirm(null)}
         className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
@@ -5480,7 +5555,8 @@ function DocumentsEmptyState({ onClose, t }) {
         When you analyze a C-File or other record, its findings are saved here
         for reference.
       </p>
-      <button type="button"
+      <button
+        type="button"
         onClick={onClose}
         className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
       >

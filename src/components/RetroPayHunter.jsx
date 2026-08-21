@@ -398,7 +398,8 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
               moduleName="Retroactive Pay Hunter"
             />
           )}
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
@@ -687,7 +688,8 @@ function AddRatingPeriodForm({
       <DependentsFields newEntry={newEntry} setNewEntry={setNewEntry} />
       <ActualReceivedField newEntry={newEntry} setNewEntry={setNewEntry} />
 
-      <button type="button"
+      <button
+        type="button"
         onClick={handleAddPeriod}
         className="mt-4 w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
       >
@@ -732,7 +734,8 @@ function RatingTimelineEntry({ period, onRemove }) {
               day: "numeric",
             })}
           </span>
-          <button type="button"
+          <button
+            type="button"
             onClick={() => onRemove(period.id)}
             className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
           >
@@ -1074,7 +1077,8 @@ function AIAnalysisSection({
           </h3>
         </div>
         {!showAIAnalysis && (
-          <button type="button"
+          <button
+            type="button"
             onClick={handleAIAnalysis}
             disabled={isAIThinking}
             className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -1142,7 +1146,8 @@ function CuePatternItem({ pattern }) {
 function CuePatternsReference({ showCuePatterns, setShowCuePatterns }) {
   return (
     <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700">
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowCuePatterns(!showCuePatterns)}
         className="flex items-center justify-between w-full"
       >

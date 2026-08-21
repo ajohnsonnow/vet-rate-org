@@ -685,7 +685,8 @@ function ChildrenUnder18Field({ t, dependents, setDependents, results }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button"
+          <button
+            type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -699,7 +700,8 @@ function ChildrenUnder18Field({ t, dependents, setDependents, results }) {
           <span className="w-8 text-center font-bold">
             {dependents.childrenUnder18}
           </span>
-          <button type="button"
+          <button
+            type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -730,7 +732,8 @@ function ChildrenInSchoolField({ t, dependents, setDependents, results }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button"
+          <button
+            type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -744,7 +747,8 @@ function ChildrenInSchoolField({ t, dependents, setDependents, results }) {
           <span className="w-8 text-center font-bold">
             {dependents.childrenSchool}
           </span>
-          <button type="button"
+          <button
+            type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -796,7 +800,8 @@ function ParentsField({ t, dependents, setDependents, results }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button"
+          <button
+            type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -810,7 +815,8 @@ function ParentsField({ t, dependents, setDependents, results }) {
           <span className="w-8 text-center font-bold">
             {dependents.dependentParents}
           </span>
-          <button type="button"
+          <button
+            type="button"
             onClick={() =>
               setDependents((prev) => ({
                 ...prev,
@@ -1024,7 +1030,8 @@ function WhatIfScenarioInput({
             {ratingOptions
               .filter((r) => r > 0)
               .map((r) => (
-                <button type="button"
+                <button
+                  type="button"
                   key={r}
                   onClick={() => setWhatIfRating(r)}
                   className={`px-3 py-2 rounded-lg font-medium transition-colors ${
@@ -1229,7 +1236,8 @@ function QuickLoadRatingsBanner({
       <span className="text-sm text-amber-700 dark:text-amber-300">
         ⭐ {t("tacticalCalc", "youHaveSavedRatings")} ({myRatings.length})
       </span>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleLoadMyRatings}
         className="text-sm font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200"
       >
@@ -1403,7 +1411,8 @@ function AddConditionForm({
         />
       </div>
 
-      <button type="button"
+      <button
+        type="button"
         onClick={handleAddCondition}
         disabled={!newCondition.bodyPart}
         className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1423,7 +1432,8 @@ function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
         {recordCandidates.length === 1 ? "" : "s"} found in your records (saved
         claims &amp; analyzed documents).
       </p>
-      <button type="button"
+      <button
+        type="button"
         onClick={handleLoadFromRecords}
         className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       >
@@ -1462,7 +1472,8 @@ function ConditionRow({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => handleEditCondition(condition)}
           className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
           aria-label="Edit"
@@ -1481,7 +1492,8 @@ function ConditionRow({
             />
           </svg>
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => handleRemoveCondition(condition.id)}
           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
           aria-label="Remove"
@@ -1519,7 +1531,8 @@ function ConditionsListSection({
           📋 {t("tacticalCalc", "yourRatedConditions")} ({conditions.length})
         </span>
         {conditions.length > 0 && (
-          <button type="button"
+          <button
+            type="button"
             onClick={() => setConditions([])}
             className="text-xs text-red-600 hover:text-red-700"
           >
@@ -1838,7 +1851,8 @@ function QuickPayPreview({ t, results, setActiveTab }) {
               "0"}
           </p>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setActiveTab("paycheck")}
           className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
         >
@@ -1914,7 +1928,8 @@ function CalculationStepDetail({ step }) {
 function CalculationStepsSection({ t, showSteps, setShowSteps, results }) {
   return (
     <>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => setShowSteps(!showSteps)}
         className="w-full px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 flex items-center justify-center gap-2"
       >
@@ -2106,7 +2121,8 @@ function MyRatingRow({ rating, allBodyParts, handleRemoveFromMyRatings }) {
           )}
         </div>
       </div>
-      <button type="button"
+      <button
+        type="button"
         onClick={() => handleRemoveFromMyRatings(rating.id)}
         className="p-1 text-gray-400 hover:text-red-500 transition-colors"
         aria-label="Remove"
@@ -2140,14 +2156,16 @@ function SavedRatingsEmptyState({ t, setShowVAGovPaster, setActiveTab }) {
         {t("tacticalCalc", "pasteRatingsDesc")}
       </p>
       <div className="space-y-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setShowVAGovPaster(true)}
           className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg font-semibold flex items-center justify-center gap-2"
         >
           <span className="text-lg">📋</span>{" "}
           {t("tacticalCalc", "pasteFromVAGov")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setActiveTab("calculator")}
           className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
         >
@@ -2176,7 +2194,8 @@ function SavedRatingsList({
           {t("tacticalCalc", "savedRatings")}
         </h4>
         {myRatings.length > 0 && (
-          <button type="button"
+          <button
+            type="button"
             onClick={handleLoadMyRatings}
             className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
           >
@@ -2208,7 +2227,8 @@ function SavedRatingsList({
       <div className="space-y-2">
         {/* Save from Calculator Button */}
         {conditions.length > 0 && (
-          <button type="button"
+          <button
+            type="button"
             onClick={handleSaveAsMyRatings}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
           >
@@ -2468,7 +2488,8 @@ function CapResultsHeaderInfo({
             {t("tacticalCalc", "capSimulatorDesc")}
           </p>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             setCapResults([]);
             if (onClearCapResults) onClearCapResults();
@@ -2517,7 +2538,8 @@ function CapResultCard({
       </div>
 
       <div className="flex gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             // Add to current calculator conditions
             const condition = {
@@ -2537,7 +2559,8 @@ function CapResultCard({
         >
           <span>🧮</span> {t("tacticalCalc", "addToCalculator")}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             // Add directly to My Ratings
             const rating = {
@@ -2637,7 +2660,8 @@ function CapResultsAddAllButton({
   setActiveTab,
 }) {
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={() => {
         // Add all C&P results to conditions
         const newConditions = capResults.map((r, i) => ({
@@ -3134,7 +3158,8 @@ function TacticalCalculatorHeader({
               moduleName="Tactical Calculator"
             />
           )}
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="p-2 sm:p-3 text-white hover:bg-white/20 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Close"
@@ -3207,7 +3232,8 @@ function getTacticalCalculatorTabs(t, capResults) {
 
 function TacticalCalculatorTabButton({ tab, activeTab, setActiveTab }) {
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={() => setActiveTab(tab.id)}
       className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
     >
@@ -3291,7 +3317,8 @@ function TacticalCalculatorFooter({ t, conditions, onClose }) {
             trigger="tactical-calculator"
             componentKey="tactical-calculator"
           />
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
@@ -3527,13 +3554,15 @@ function EditConditionModal({
       }
       footer={
         <div className="flex justify-end gap-3">
-          <button type="button"
+          <button
+            type="button"
             onClick={handleCancelEdit}
             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             {t("tacticalCalc", "cancel")}
           </button>
-          <button type="button"
+          <button
+            type="button"
             onClick={handleSaveEdit}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >

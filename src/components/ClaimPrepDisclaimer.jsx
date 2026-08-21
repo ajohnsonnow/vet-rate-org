@@ -24,14 +24,13 @@ const ClaimPrepDisclaimer = ({ className = "" }) => (
         </p>
         <p className="text-xs text-amber-800 dark:text-amber-300">
           This tool helps you organize evidence and paperwork, but{" "}
-          <strong>using it does not guarantee any particular outcome</strong>{" "}
-          on your VA claim - ratings and decisions are made solely by the VA.
+          <strong>using it does not guarantee any particular outcome</strong> on
+          your VA claim - ratings and decisions are made solely by the VA.
         </p>
         <p className="text-xs text-amber-800 dark:text-amber-300 mt-2">
           For personalized guidance, seek help from an accredited{" "}
           <strong>Veterans Service Officer (VSO)</strong> - free, no fees
-          allowed - and/or a VA-accredited attorney or claims agent. Find one
-          at{" "}
+          allowed - and/or a VA-accredited attorney or claims agent. Find one at{" "}
           <a
             href="https://www.va.gov/ogc/apps/accreditation/"
             target="_blank"

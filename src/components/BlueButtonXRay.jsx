@@ -622,7 +622,8 @@ function ConditionListItem({ condition, onToggle, onCheckRatingCriteria }) {
         {/* Quick Actions */}
         <div className="flex gap-2 flex-shrink-0">
           {onCheckRatingCriteria && (
-            <button type="button"
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onCheckRatingCriteria(condition.standardizedName);
@@ -726,7 +727,8 @@ function BlueButtonHeader({ onClose, onOpenAISettings, onReportBug }) {
               moduleName="Blue Button X-Ray"
             />
           )}
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
@@ -879,7 +881,8 @@ function Step1ActionButtons({
     <>
       <div className="flex flex-col sm:flex-row gap-3 mt-4">
         {/* Save to VKB Button - Available immediately after upload */}
-        <button type="button"
+        <button
+          type="button"
           onClick={onSaveToVKB}
           disabled={savingToVKB || savedToVKB}
           className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${vkbStateStep1.className}`}
@@ -889,7 +892,8 @@ function Step1ActionButtons({
         </button>
 
         {/* AI Scan Button */}
-        <button type="button"
+        <button
+          type="button"
           onClick={onProcessFile}
           disabled={isProcessing || !aiAvailable}
           className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
@@ -1057,13 +1061,15 @@ function ResultsActionButtons({
 }) {
   return (
     <div className="flex flex-wrap gap-3">
-      <button type="button"
+      <button
+        type="button"
         onClick={onSelectAllClaimable}
         className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700 transition-colors flex items-center gap-2"
       >
         <span>✅</span> Select All Claimable
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={onSaveToVKB}
         disabled={savingToVKB || savedToVKB}
         className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${vkbStateResults.className}`}
@@ -1071,13 +1077,15 @@ function ResultsActionButtons({
         <span>{vkbStateResults.icon}</span>
         {vkbStateResults.label}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={onReset}
         className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
       >
         <span>🔄</span> Start Over
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={onToggleRawText}
         className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
       >
@@ -1128,7 +1136,8 @@ function AddToCalculatorPanel({ conditions, onAddToCalculator }) {
             Add to Pathfinder for strategic analysis
           </p>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => {
             const selected = conditions.filter((c) => c.selected);
             onAddToCalculator(selected);

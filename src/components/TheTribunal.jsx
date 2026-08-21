@@ -1027,7 +1027,8 @@ function TribunalHeader({
               moduleName="The Tribunal"
             />
           )}
-          <button type="button"
+          <button
+            type="button"
             onClick={onClose}
             className="grid h-11 w-11 place-items-center rounded-lg text-2xl font-bold text-white transition-colors hover:bg-white/20"
             aria-label="Close"
@@ -1058,7 +1059,8 @@ function TribunalHeader({
  */
 function InstructionsFooter({ startHearing, acknowledgedWarning }) {
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={startHearing}
       disabled={!acknowledgedWarning}
       className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
@@ -1147,7 +1149,8 @@ function JudgeSpeakerControls({
         <span className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
           ⚖️ Judge&apos;s Voice
         </span>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setSpeechEnabled(!speechEnabled)}
           className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
             speechEnabled ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
@@ -1164,7 +1167,8 @@ function JudgeSpeakerControls({
         </button>
       </div>
       <div className="flex gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={speakLastJudgeMessage}
           disabled={
             isSpeaking ||
@@ -1177,7 +1181,8 @@ function JudgeSpeakerControls({
           </svg>
           {pendingSpeech ? "Play Opening" : "Replay"}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={stopSpeaking}
           disabled={!isSpeaking}
           className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
@@ -1216,7 +1221,8 @@ function MicrophoneControls({
         )}
       </div>
       <div className="flex gap-2">
-        <button type="button"
+        <button
+          type="button"
           onClick={startListening}
           disabled={
             !micSupported || isListening || isSpeaking || isAIProcessing
@@ -1228,7 +1234,8 @@ function MicrophoneControls({
           </svg>
           {isListening ? "Recording..." : "Start Recording"}
         </button>
-        <button type="button"
+        <button
+          type="button"
           onClick={stopListening}
           disabled={!isListening}
           className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1.5"
@@ -1284,7 +1291,8 @@ function TipsAndExit({ onExitCourtroom }) {
         💡 Tip: Cite &quot;38 CFR...&quot;, &quot;per case law...&quot;,
         &quot;medical nexus...&quot;
       </span>
-      <button type="button"
+      <button
+        type="button"
         onClick={onExitCourtroom}
         className="text-red-500 hover:text-red-600 font-medium"
       >
@@ -1401,7 +1409,8 @@ function AIModeToggle({ aiAvailable, useAI, setUseAI }) {
             </p>
           </div>
         </div>
-        <button type="button"
+        <button
+          type="button"
           onClick={() => setUseAI(!useAI)}
           disabled={!aiAvailable}
           aria-label={useAI ? "Disable AI judges" : "Enable AI judges"}
@@ -1440,7 +1449,8 @@ function PersonaSelector({ selectedPersona, setSelectedPersona }) {
       </label>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {Object.entries(JUDGE_PERSONAS).map(([key, persona]) => (
-          <button type="button"
+          <button
+            type="button"
             key={key}
             onClick={() => setSelectedPersona(key)}
             className={`p-3 rounded-lg border-2 transition-all ${

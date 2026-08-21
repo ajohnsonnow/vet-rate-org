@@ -1215,7 +1215,11 @@ function MilestoneItem({
         onClick={onToggle}
         className={`w-full text-left rounded-lg border-2 p-4 transition-all hover:shadow-md ${cardBorderClass} ${m.critical ? "ring-2 ring-red-200 dark:ring-red-900" : ""}`}
       >
-        <MilestoneCardHeader m={m} isExpanded={isExpanded} daysLabel={daysLabel} />
+        <MilestoneCardHeader
+          m={m}
+          isExpanded={isExpanded}
+          daysLabel={daysLabel}
+        />
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           {m.description}
         </p>

@@ -290,7 +290,8 @@ function SecondaryScoutFilterControls({
             {t("secondaryScoutSection.filterByProbability")}:
           </label>
           <div className="flex gap-2">
-            <button type="button"
+            <button
+              type="button"
               onClick={() => setProbabilityFilter("High")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 probabilityFilter === "High"
@@ -300,7 +301,8 @@ function SecondaryScoutFilterControls({
             >
               {t("secondaryScoutSection.highOnly")}
             </button>
-            <button type="button"
+            <button
+              type="button"
               onClick={() => setProbabilityFilter("Medium")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 probabilityFilter === "Medium"
@@ -313,14 +315,16 @@ function SecondaryScoutFilterControls({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button"
+          <button
+            type="button"
             onClick={selectAllFiltered}
             className="px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
           >
             {t("secondaryScoutSection.selectAll")}
           </button>
           {selectedForPacket.size > 0 && (
-            <button type="button"
+            <button
+              type="button"
               onClick={clearSelection}
               className="px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
             >
@@ -377,7 +381,8 @@ function FloatingActionBarButtons({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <button type="button"
+      <button
+        type="button"
         onClick={addSelectedToPacket}
         disabled={getUnsavedSelectedCount() === 0}
         className="flex-1 sm:flex-none bg-white text-blue-600 px-3 sm:px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
@@ -397,7 +402,8 @@ function FloatingActionBarButtons({
         </svg>
         {t("secondaryScoutSection.addToPacket")}
       </button>
-      <button type="button"
+      <button
+        type="button"
         onClick={clearSelection}
         className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
         aria-label={t("secondaryScoutSection.clearSelection")}
@@ -851,7 +857,10 @@ function CardHeader({
           getProbabilityBadgeColor={getProbabilityBadgeColor}
           t={t}
         />
-        <button type="button" className="ml-4 text-gray-400 hover:text-gray-600">
+        <button
+          type="button"
+          className="ml-4 text-gray-400 hover:text-gray-600"
+        >
           <svg
             className={`w-6 h-6 transition-transform ${isExpanded ? "transform rotate-180" : ""}`}
             fill="none"
@@ -963,7 +972,8 @@ function MedicalEvidenceSection({ evidenceList, evidenceType, t }) {
 
 function BuildStatementButton({ onLearnHow, t }) {
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         onLearnHow();
@@ -990,7 +1000,8 @@ function BuildStatementButton({ onLearnHow, t }) {
 
 function DoctorsPacketButton({ onGetDoctorsPacket, t }) {
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         onGetDoctorsPacket();
@@ -1017,7 +1028,8 @@ function DoctorsPacketButton({ onGetDoctorsPacket, t }) {
 
 function SaveOrViewButton({ isSaved, onSave, onViewPacket, t }) {
   return (
-    <button type="button"
+    <button
+      type="button"
       onClick={(e) => {
         e.stopPropagation();
         if (isSaved && onViewPacket) {
