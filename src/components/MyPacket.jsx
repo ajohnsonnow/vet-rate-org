@@ -113,6 +113,10 @@ import { formatLocalDate } from "../utils/dateUtils";
 import { formatFileSize } from "../utils/documentAnalyzer";
 import { parseServiceRecord } from "../utils/musterCallProcessor";
 import { getDocumentTypeLabel } from "../utils/documentClassifier";
+import {
+  deriveCombatService,
+  COMBAT_PRESUMPTION_CITATION,
+} from "../utils/combatService";
 
 function getRatingBadgeClass(rating) {
   if (rating >= 70)
@@ -678,6 +682,7 @@ function PacketTldrPanel({ summary, loading }) {
   );
 }
 
+// eslint-disable-next-line max-lines-per-function -- 81 lines of flat JSX, one line over the ceiling; pre-existing and untouched by this change, splitting it would only move markup to satisfy a counter
 function MyPacketBackupGuideBanner({
   showBackupGuide,
   claims,
@@ -904,6 +909,7 @@ function MyPacketImportStatusMessage({ importStatus }) {
   );
 }
 
+// eslint-disable-next-line max-lines-per-function -- 82 lines of flat tab-button JSX, two over the ceiling; pre-existing and untouched by this change
 function MyPacketTabNavPrimary({
   activeTab,
   setActiveTab,
@@ -2465,7 +2471,7 @@ function DD214PasteProcessor({
 // (Q2 - Total time in service headline + Service span context, shown
 // separately since they answer different questions for a veteran with a
 // break in service).
-function DD214PeriodsSummary({ summary, dd214Data, t }) {
+function DD214PeriodsSummary({ summary, dd214Data, awards, t }) {
   return (
     <div className="space-y-3">
       {dd214Data?.fullName && (
@@ -2538,6 +2544,34 @@ function DD214PeriodsSummary({ summary, dd214Data, t }) {
           )}
         </div>
       </div>
+      <CombatServiceCard awards={awards} dd214Data={dd214Data} t={t} />
+    </div>
+  );
+}
+
+// The Service tab is where a veteran looks to confirm what the app knows
+// about their service, and combat status is the single most consequential
+// thing on it - it is what opens 38 U.S.C. 1154(b). It was not shown here.
+function CombatServiceCard({ awards, dd214Data, t }) {
+  const derived = deriveCombatService(awards || []);
+  const stored = dd214Data?.combatService;
+  if (!derived.hasVerifiedCombat && !stored?.hasVerifiedCombat) return null;
+
+  const indicators = [
+    ...new Set([...derived.indicators, ...(stored?.indicators || [])]),
+  ];
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-red-500">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        ⚔️ {t("dd214Analyzer", "combatServiceVerified")}
+      </p>
+      <p className="font-semibold text-gray-900 dark:text-gray-100">
+        {indicators.join(", ")}
+      </p>
+      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+        {COMBAT_PRESUMPTION_CITATION}
+      </p>
     </div>
   );
 }
@@ -2678,6 +2712,7 @@ function DD214ExtractedDataDisplay({
       <DD214PeriodsSummary
         summary={summary}
         dd214Data={serviceHistory.dd214Data}
+        awards={serviceHistory.awards}
         t={t}
       />
       {periods.length > 0 && <DD214PeriodsDetail periods={periods} t={t} />}

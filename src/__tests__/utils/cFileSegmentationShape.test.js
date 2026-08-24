@@ -132,6 +132,46 @@ describe("buildInventoryFromSegmentation", () => {
   });
 });
 
+describe("short-acronym boundary patterns don't match ordinary prose", () => {
+  it('does not classify "...records associated with this information..." as SSOC', () => {
+    const text = filler(
+      "These records associated with this information are part of the claims file",
+    );
+    const result = segmentCFile(text, { parseDocuments: false });
+    expect(result.segments.some((s) => s.type === "SSOC")).toBe(false);
+  });
+
+  it('still classifies a real "SUPPLEMENTAL STATEMENT OF THE CASE" heading as SSOC', () => {
+    const text = [
+      "SUPPLEMENTAL STATEMENT OF THE CASE",
+      filler("Appeal narrative"),
+    ].join("\n");
+    const result = segmentCFile(text, { parseDocuments: false });
+    expect(result.segments.some((s) => s.type === "SSOC")).toBe(true);
+  });
+
+  it('does not classify appeal-rights boilerplate containing "represents" as PERFORMANCE_EVAL', () => {
+    const text = filler(
+      "This letter represents the review options available to you regarding this decision",
+    );
+    const result = segmentCFile(text, { parseDocuments: false });
+    expect(result.segments.some((s) => s.type === "PERFORMANCE_EVAL")).toBe(
+      false,
+    );
+  });
+
+  it("still classifies a real NCOER heading as PERFORMANCE_EVAL", () => {
+    const text = [
+      "NCOER EVALUATION",
+      filler("Duty performance narrative"),
+    ].join("\n");
+    const result = segmentCFile(text, { parseDocuments: false });
+    expect(result.segments.some((s) => s.type === "PERFORMANCE_EVAL")).toBe(
+      true,
+    );
+  });
+});
+
 describe("quickScanCFile routing fields", () => {
   it("returns detectedTypes and estimatedPages - the fields the routing test reads", () => {
     const scan = quickScanCFile(CFILE_FIXTURE);

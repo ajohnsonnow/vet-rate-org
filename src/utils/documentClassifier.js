@@ -629,11 +629,46 @@ const SINGLE_LETTER_TYPES = new Set([
 ]);
 const CONSOLIDATED_FILE_MIN_PAGES = 100;
 
+// A decision letter is a claim letter with the rating decision attached: its
+// cover page matches a dozen generic CLAIM_LETTER patterns ("claim number",
+// "you have 30 days", "regional office") and outscores RATING_DECISION's
+// handful of specific markers every time - confirmed on 8 of 8 real decision
+// letters, which all parsed as generic correspondence and yielded zero
+// conditions. Per-issue outcome language is the tell; when it is present
+// alongside the RATING DECISION heading the document is a rating decision
+// whatever the pattern tally says.
+const DECISION_OUTCOME_MARKER =
+  // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- literal-prefix alternation then a lazy skip bounded to 300 non-period chars; runs on the <=30KB classification sample. The complexity is the count of decision verbs VA actually uses, not nesting.
+  /\b(?:service connection for|evaluation of|entitlement to)\b[^.]{0,300}?\b(?:is|are|remains?)\s+(?:granted|denied|continued|increased|decreased|reduced)\b|service connection (?:has been|is) granted|Medical Description\s+Percent\s*\(%\)\s*Assigned/i;
+const COMBINED_RATING_MARKER =
+  /combined\s+rating\s+evaluation|(?:overall or )?combined rating is\s+\d{1,3}%/i;
+
+function applyDecisionLetterOverride(best, normalizedText) {
+  const isSingleLetter =
+    best.bestType === DOCUMENT_TYPES.CLAIM_LETTER ||
+    best.bestType === DOCUMENT_TYPES.VA_CORRESPONDENCE;
+  if (!isSingleLetter) return best;
+  const looksLikeDecision =
+    /RATING\s+DECISION/i.test(normalizedText) &&
+    (DECISION_OUTCOME_MARKER.test(normalizedText) ||
+      COMBINED_RATING_MARKER.test(normalizedText));
+  if (!looksLikeDecision) return best;
+  const config = CLASSIFICATION_PATTERNS[DOCUMENT_TYPES.RATING_DECISION];
+  return {
+    ...best,
+    bestType: DOCUMENT_TYPES.RATING_DECISION,
+    bestCategory: config.category,
+    bestPriority: config.priority,
+    confidence: Math.max(best.confidence, 75),
+  };
+}
+
 function applyConsolidatedFileOverride(
   best,
   matches,
   filenameHints,
   pageCount,
+  normalizedText = "",
 ) {
   const confidence = computeConfidence(
     best.bestType,
@@ -644,7 +679,8 @@ function applyConsolidatedFileOverride(
   const isConsolidatedFile =
     pageCount >= CONSOLIDATED_FILE_MIN_PAGES &&
     SINGLE_LETTER_TYPES.has(best.bestType);
-  if (!isConsolidatedFile) return { ...best, confidence };
+  if (!isConsolidatedFile)
+    return applyDecisionLetterOverride({ ...best, confidence }, normalizedText);
   // Log the reclassification explicitly: the downstream winner/runner-up debug
   // lines are computed from the pattern scores, so without this the override
   // looks like the pattern matcher chose C_FILE_MEDICAL with the claim-letter
@@ -672,8 +708,9 @@ function applyConsolidatedFileOverride(
  * @returns {Object} Classification result with type, confidence, and metadata
  */
 export const classifyDocument = (text, filename = "", options = {}) => {
-  // Enable debug mode for classification troubleshooting
-  const DEBUG_CLASSIFICATION = true;
+  // Per-pattern score logging plus a `_debug` payload that gets persisted
+  // with every classified document; leave off outside troubleshooting.
+  const DEBUG_CLASSIFICATION = false;
 
   if (!text || typeof text !== "string") {
     return {
@@ -740,6 +777,7 @@ export const classifyDocument = (text, filename = "", options = {}) => {
       matches,
       filenameHints,
       options.pageCount,
+      normalizedText,
     );
 
   // Final debug output showing the winner

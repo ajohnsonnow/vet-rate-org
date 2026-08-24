@@ -101,7 +101,9 @@ describe("musterCallProcessor: parseClaimLetter (real letter phrasing)", () => {
     const result = await parseClaimLetter(text);
     expect(result.status).toBe("granted");
   });
+});
 
+describe("musterCallProcessor: parseClaimLetter (ReDoS and layout regressions)", () => {
   it("does not hang on a large all-letters document (regression: ReDoS)", async () => {
     const result = await parseWithinBudget("A".repeat(100000));
     expect(result.decisions).toEqual([]);
@@ -116,9 +118,115 @@ describe("musterCallProcessor: parseClaimLetter (real letter phrasing)", () => {
     // Stresses the extractPerIssueDecisions dateMatch alternation
     // (letters-then-date vs numeric-date branches) across many lines that
     // each match the outer outcome pattern but never complete a real date.
-    const line = `1. Condition is granted effective ${"Z ".repeat(60)}\n`;
+    const line = `1. Service connection for condition is granted effective ${"Z ".repeat(60)}\n`;
     const result = await parseWithinBudget(line.repeat(2000));
-    expect(result.decisions).toHaveLength(2000);
+    // Identical (condition, outcome) pairs collapse to one decision - real
+    // letters repeat every decision on the cover page and again in the
+    // enclosed rating decision - so the count is 1, and the budget
+    // assertion inside parseWithinBudget is the regression check.
+    expect(result.decisions).toHaveLength(1);
+    expect(result.decisions[0].condition).toBe("condition");
+  });
+
+  it("treats an earlier-effective-date denial as a date issue, not a denied condition", async () => {
+    const result = await parseClaimLetter(
+      "Your Benefit Information: l Entitlement to an earlier effective date for the 50 percent evaluation of post-traumatic stress disorder is denied.",
+    );
+    expect(result.decisions).toHaveLength(1);
+    expect(result.decisions[0].issue).toBe("effective_date");
+    expect(result.decisions[0].condition).toMatch(/^an earlier effective date/);
+    expect(result.conditions).toEqual([]);
+  });
+});
+
+describe("musterCallProcessor: parseClaimLetter (historic and pdf.js layouts)", () => {
+  it("reads the pre-2015 tabular decision format and prose combined-rating history", async () => {
+    const text =
+      "What We Decided  We determined that the following conditions were related to your military service, so service connection has been granted:  " +
+      "Medical Description   Percent (%) Assigned Effective Date  Panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS) 30%   Jun 30, 2007 " +
+      "Lumbago (also claimed as back strain) 10%   Jun 30, 2008 An examination will be scheduled at a future date. " +
+      "We determined that the following conditions were not related to your military service, so service connection couldn't be granted: Medical Description  Allergies Secondary insomnia " +
+      "Your overall or combined rating is 30% effective June 30, 2007 and then 40% effective June 30, 2008. We do not add the individual percentages.";
+    const result = await parseClaimLetter(text);
+    expect(result.decisions).toEqual([
+      {
+        condition:
+          "Panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS)",
+        outcome: "granted",
+        rating: 30,
+        priorRating: null,
+        effectiveDate: "Jun 30, 2007",
+      },
+      {
+        condition: "Lumbago (also claimed as back strain)",
+        outcome: "granted",
+        rating: 10,
+        priorRating: null,
+        effectiveDate: "Jun 30, 2008",
+      },
+    ]);
+    expect(result.combinedRating).toBe(40);
+    expect(result.combinedRatingHistory).toEqual([
+      { percentage: 30, effectiveDate: "June 30, 2007" },
+      { percentage: 40, effectiveDate: "June 30, 2008" },
+    ]);
+  });
+});
+
+describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () => {
+  it("extracts every decision from a pdf.js page-line letter with wrapped bullets and a combined-rating table", async () => {
+    // Real decision letters arrive from pdf.js as ONE text line per page,
+    // bullets rendered as a stray "l", each outcome wrapped across visual
+    // lines, and the same decisions repeated in the enclosed rating
+    // decision. A line-anchored extractor found one of eleven.
+    const page1 =
+      "We made a decision on your VA benefits. Your Benefit Information: " +
+      "l   Evaluation of lumbosacral strain, degenerative disc disease (previously rated as lumbago), which is currently 10 percent disabling, is increased to 20 percent effective September 15, 2023. " +
+      "l   Service connection for left hip limited adduction is granted with an evaluation of 10 percent effective September 15, 2023. " +
+      "l   Service connection for right hip limited adduction is granted with an evaluation of 10 percent effective September 15, 2023. " +
+      "l   Evaluation of radiculopathy, right lower extremity (femoral), which is currently 10 percent disabling, is continued. " +
+      "Page 1";
+    const page2 =
+      "l   Service connection for reactive airway disease (claimed as lung condition) associated with TERA participation is granted with an evaluation of 0 percent effective September 15, 2023. " +
+      "l   Service connection for lipoma, left scalp (claimed as sebaceous cyst) is denied. " +
+      "Your combined rating evaluation is: Combined Rating Evaluation   Effective Date  30%   Jun 30, 2007  40%   Jun 30, 2008  70%   Mar 31, 2023  80%   Sep 15, 2023  How VA Combines Percentages " +
+      "File Number: 000000000  Page 2";
+    const page5 =
+      "Rating Decision INTRODUCTION ... DECISION 1. Service connection for left hip limited adduction is granted with an evaluation of 10 percent effective September 15, 2023.";
+    const result = await parseClaimLetter(
+      `--- PAGE 1 ---\n${page1}\n--- PAGE 2 ---\n${page2}\n--- PAGE 5 ---\n${page5}`,
+    );
+
+    expect(result.decisions.map((d) => d.outcome)).toEqual([
+      "increased",
+      "granted",
+      "granted",
+      "continued",
+      "granted",
+      "denied",
+    ]);
+    const lumbar = result.decisions[0];
+    expect(lumbar.condition).toMatch(/^lumbosacral strain/);
+    expect(lumbar.priorRating).toBe(10);
+    expect(lumbar.rating).toBe(20);
+    expect(lumbar.effectiveDate).toBe("September 15, 2023");
+    const radic = result.decisions[3];
+    expect(radic.rating).toBe(10);
+    const airway = result.decisions[4];
+    expect(airway.rating).toBe(0);
+    expect(result.decisions[5].rating).toBeNull();
+
+    expect(result.combinedRating).toBe(80);
+    expect(result.combinedRatingHistory).toEqual([
+      { percentage: 30, effectiveDate: "Jun 30, 2007" },
+      { percentage: 40, effectiveDate: "Jun 30, 2008" },
+      { percentage: 70, effectiveDate: "Mar 31, 2023" },
+      { percentage: 80, effectiveDate: "Sep 15, 2023" },
+    ]);
+    expect(result.conditions).toHaveLength(5);
+    expect(result.conditions.map((c) => c.rating)).toEqual([20, 10, 10, 10, 0]);
+    expect(result.claimNumber).toBe("000000000");
+    expect(result.status).toBe("mixed");
   });
 
   it("does not hang on a large claim letter where the file/date/evidence regexes almost-but-never match (regression: ReDoS)", async () => {

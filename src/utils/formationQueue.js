@@ -315,10 +315,59 @@ export const getFormationProgress = (formation) => {
   return Math.round((completed / formation.length) * 100);
 };
 
+const TEXT_FIELD_KEYS = ["text", "raw", "rawText", "extractedText"];
+
+const stripTextFields = (obj) => {
+  if (!obj || typeof obj !== "object") return obj;
+  const clean = { ...obj };
+  TEXT_FIELD_KEYS.forEach((key) => delete clean[key]);
+  return clean;
+};
+
+const summarizeExtractedData = (extractedData) => {
+  if (!extractedData || typeof extractedData !== "object") return null;
+  const summary = {};
+  if (extractedData.type) summary.type = extractedData.type;
+  if (extractedData.formType) summary.formType = extractedData.formType;
+  ["decisions", "conditions", "awards"].forEach((key) => {
+    if (Array.isArray(extractedData[key])) {
+      summary[`${key}Count`] = extractedData[key].length;
+    }
+  });
+  return summary;
+};
+
+// Nothing in src/ reads a persisted entry's `result` back - loadFormationState
+// only re-displays the queue and restored entries can't be reprocessed - so
+// this drops the document-text/full-extraction fields that were pushing the
+// resume ledger toward localStorage's quota (4.6MB observed on a 313MB C-File)
+// and keeps only what the UI redisplay actually needs.
+const slimResult = (result) => {
+  if (!result || typeof result !== "object") return result;
+  return {
+    status: result.status,
+    error: result.error,
+    classification: result.classification
+      ? {
+          type: result.classification.type,
+          confidence: result.classification.confidence,
+        }
+      : result.classification,
+    extractedData: summarizeExtractedData(result.extractedData),
+    verifiedData: result.verifiedData
+      ? stripTextFields({
+          ...result.verifiedData,
+          verifiedData: stripTextFields(result.verifiedData.verifiedData),
+        })
+      : result.verifiedData,
+  };
+};
+
 /**
  * Save formation state to localStorage
  */
 export const saveFormationState = (formation) => {
+  let payload;
   try {
     // Can't save File objects directly, so save metadata only
     const serializable = formation.map((entry) => ({
@@ -328,19 +377,25 @@ export const saveFormationState = (formation) => {
         size: entry.file.size,
         type: entry.file.type,
       },
+      result: slimResult(entry.result),
     }));
 
-    localStorage.setItem(
-      "vetrate_formation_state",
-      JSON.stringify({
-        formation: serializable,
-        savedAt: new Date().toISOString(),
-      }),
-    );
+    payload = JSON.stringify({
+      formation: serializable,
+      savedAt: new Date().toISOString(),
+    });
+
+    localStorage.setItem("vetrate_formation_state", payload);
 
     return true;
   } catch (error) {
-    console.error("Failed to save formation state:", error);
+    if (error.name === "QuotaExceededError") {
+      console.error(
+        `Formation resume ledger was not saved: localStorage quota exceeded while writing ${payload?.length ?? "unknown"} bytes`,
+      );
+    } else {
+      console.error("Failed to save formation state:", error);
+    }
     return false;
   }
 };

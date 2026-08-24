@@ -19,6 +19,8 @@
  * All processing is 100% client-side.
  */
 
+import { findCombatDecorationsInText } from "./combatService";
+
 /**
  * All DD214 block field definitions with multiple regex patterns per field.
  * Each pattern is tried in order; first match wins.
@@ -747,32 +749,28 @@ function extractDeployments(remarksText) {
  * Extract combat indicators from Block 13 + Block 18
  */
 function extractCombatIndicators(awardsText, remarksText) {
-  const indicators = [];
-  const combinedText = `${awardsText || ""} ${remarksText || ""}`;
+  // Shares combatService.js with the Muster Call extraction path so the two
+  // cannot reach opposite conclusions about the same veteran. The list this
+  // replaced counted any Bronze Star (VA requires the "V" device) and any
+  // campaign medal (not on VA's list at all) as proof of combat, while
+  // missing most of the decorations that do establish it.
+  const combined = `${awardsText || ""}//${remarksText || ""}`;
+  const decorations = findCombatDecorationsInText(combined);
 
-  const combatPatterns = [
-    { pattern: /COMBAT\s*ACTION\s*BADGE/i, name: "Combat Action Badge" },
-    {
-      pattern: /COMBAT\s*INFANTRY(?:MAN)?(?:'?S)?\s*BADGE/i,
-      name: "Combat Infantryman Badge",
-    },
-    { pattern: /COMBAT\s*MEDICAL\s*BADGE/i, name: "Combat Medical Badge" },
-    { pattern: /PURPLE\s*HEART/i, name: "Purple Heart" },
-    { pattern: /BRONZE\s*STAR/i, name: "Bronze Star Medal" },
-    { pattern: /SILVER\s*STAR/i, name: "Silver Star" },
-    { pattern: /IMMINENT\s*DANGER\s*PAY/i, name: "Imminent Danger Pay Zone" },
-    { pattern: /HOSTILE\s*FIRE\s*PAY/i, name: "Hostile Fire Pay" },
-    { pattern: /V\s*DEVICE/i, name: "V Device (Valor)" },
-    { pattern: /CAMPAIGN\s*MEDAL/i, name: "Campaign Medal" },
-  ];
-
-  for (const cp of combatPatterns) {
-    if (cp.pattern.test(combinedText)) {
-      indicators.push(cp.name);
-    }
+  // Not decorations, so not part of the 1.A.3.h presumption. VA treats them
+  // as evidence of service in an area of hostile military or terrorist
+  // activity (M21-1, Part VIII, Subpart iv, 1.A.3.i), which is a different
+  // and weaker showing - they are reported, but they do not by themselves
+  // make a veteran a combat veteran.
+  const hostileArea = [];
+  if (/IMMINENT\s{0,4}DANGER\s{0,4}PAY/i.test(combined)) {
+    hostileArea.push("Imminent Danger Pay Zone");
+  }
+  if (/HOSTILE\s{0,4}FIRE\s{0,4}PAY/i.test(combined)) {
+    hostileArea.push("Hostile Fire Pay");
   }
 
-  return indicators;
+  return { decorations, hostileArea };
 }
 
 /**
@@ -979,11 +977,16 @@ function deriveAwardsAndServiceFields(extractedFields, extractionNotes) {
     );
   }
 
-  // Extract combat indicators
-  const combatIndicators = extractCombatIndicators(awardsRaw, remarksText);
+  // Extract combat indicators. hasVerifiedCombat keys on the decorations
+  // alone - hostile-area pay shows where the veteran was, not that they
+  // engaged, and treating it as proof of combat overstates the record.
+  const { decorations, hostileArea } = extractCombatIndicators(
+    awardsRaw,
+    remarksText,
+  );
   extractedFields.combatService = {
-    hasVerifiedCombat: combatIndicators.length > 0,
-    indicators: combatIndicators,
+    hasVerifiedCombat: decorations.length > 0,
+    indicators: [...decorations, ...hostileArea],
     deployments: extractedFields.deployments.map((d) =>
       d.location
         ? `${d.location} ${d.startDate || ""}-${d.endDate || ""}`.trim()

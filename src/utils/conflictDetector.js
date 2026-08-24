@@ -87,11 +87,18 @@ const FIELD_RULES = {
       "Discharge characterization differs. Most recent is usually correct (upgrades possible).",
   },
 
-  // Conditions - Use MERGE strategy
+  // Conditions - Use MERGE strategy. A decision letter yields condition
+  // OBJECTS ({name, rating, effectiveDate, ...}); older callers pass plain
+  // strings. Compare on the name either way.
   conditions: {
     severity: CONFLICT_SEVERITY.INFO,
     strategy: RESOLUTION_STRATEGIES.MERGE,
-    normalize: (arr) => arr?.map((c) => c?.toLowerCase().trim()),
+    normalize: (arr) =>
+      arr?.map((c) =>
+        (typeof c === "string" ? c : (c?.name ?? c?.condition ?? ""))
+          .toLowerCase()
+          .trim(),
+      ),
     message: "Multiple conditions found across documents. All will be saved.",
   },
 

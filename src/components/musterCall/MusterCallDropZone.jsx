@@ -116,7 +116,7 @@ function MusterCallDropZoneTarget({
         🎯 Select Files
       </label>
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 font-mono">
-        SUPPORTED: PDF • DOCX • TXT | MAX: 500MB
+        SUPPORTED: PDF • DOCX • TXT | MAX: 2 GB per batch
       </p>
 
       {/* Document type badges */}

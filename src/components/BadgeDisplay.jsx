@@ -13,6 +13,11 @@
 
 import React from "react";
 import PropTypes from "prop-types";
+import {
+  deriveCombatService,
+  isCombatDecoration,
+  COMBAT_PRESUMPTION_CITATION,
+} from "../utils/combatService";
 import { scrubSvg } from "../utils/sanitize";
 import {
   BADGE_GROUPS,
@@ -707,54 +712,67 @@ FullUniformDisplay.propTypes = {
 // COMBAT INDICATOR SUMMARY
 // ============================================================================
 
+// Which decorations establish combat participation is VA's determination, not
+// a keyword guess: M21-1, Part VIII, Subpart iv, 1.A.3.h. The previous
+// keyword list ("CAMPAIGN", "EXPEDITIONARY", "WAR") told this veteran his
+// Global War on Terrorism Service Medal - awarded for serving in the period,
+// not for combat - was proof of combat service, while listing the Combat
+// Action Badge twice because it matched as both a badge and a ribbon.
 export const CombatIndicatorSummary = ({ badges = [], ribbonAwards = [] }) => {
-  // Extract combat indicators from badges
-  const combatBadges = badges.filter((b) => b.combatIndicator);
+  const everything = [...badges, ...ribbonAwards];
+  const { hasVerifiedCombat, indicators, supportingEvidence } =
+    deriveCombatService(everything);
 
-  // Check for combat-related ribbon awards
-  const combatRibbonKeywords = [
-    "COMBAT",
-    "CAMPAIGN",
-    "EXPEDITIONARY",
-    "WAR",
-    "OCCUPATION",
-    "BRONZE STAR",
-    "PURPLE HEART",
-    "VALOR",
-  ];
+  // Qualification badges the badge database flags as combat-related (a SEAL
+  // Trident, Combat Control) are real context but are not on VA's decoration
+  // list, so they corroborate rather than establish.
+  const badgeContext = badges
+    .filter((b) => b.combatIndicator && !isCombatDecoration(b))
+    .map((b) => b.name);
+  const supporting = [...new Set([...badgeContext, ...supportingEvidence])];
 
-  const combatRibbons = ribbonAwards.filter((award) => {
-    const name = (award.name || award).toUpperCase();
-    return combatRibbonKeywords.some((kw) => name.includes(kw));
-  });
-
-  const hasCombatIndicators =
-    combatBadges.length > 0 || combatRibbons.length > 0;
-
-  if (!hasCombatIndicators) return null;
+  if (!hasVerifiedCombat && supporting.length === 0) return null;
 
   return (
     <div
-      className="combat-indicator-summary bg-red-50 dark:bg-red-900/20 border border-red-200 
+      className="combat-indicator-summary bg-red-50 dark:bg-red-900/20 border border-red-200
                     dark:border-red-800 rounded-lg p-4 mt-4"
     >
       <h4 className="text-red-700 dark:text-red-400 font-semibold flex items-center gap-2">
         <span>⚔️</span> Combat Service Indicators
       </h4>
-      <p className="text-sm text-red-600 dark:text-red-300 mt-2">
-        This veteran has verified combat service based on:
-      </p>
-      <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-300 mt-1">
-        {combatBadges.map((badge) => (
-          <li key={badge.id}>{badge.name}</li>
-        ))}
-        {combatRibbons.slice(0, 5).map((ribbon, i) => (
-          <li key={i}>{ribbon.name || ribbon}</li>
-        ))}
-      </ul>
-      <p className="text-xs text-red-500 dark:text-red-400 mt-3">
-        💡 Combat service may qualify for presumptive conditions for VA claims.
-      </p>
+
+      {hasVerifiedCombat && (
+        <>
+          <p className="text-sm text-red-600 dark:text-red-300 mt-2">
+            VA presumes engagement in combat with the enemy based on:
+          </p>
+          <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-300 mt-1">
+            {indicators.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+          <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+            {COMBAT_PRESUMPTION_CITATION} — relaxes the evidence needed to show
+            an in-service event, and concedes a PTSD stressor under 38 CFR
+            3.304(f)(2).
+          </p>
+        </>
+      )}
+
+      {supporting.length > 0 && (
+        <>
+          <p className="text-sm text-red-600 dark:text-red-300 mt-3">
+            Supporting evidence of service in a combat theater (corroborates
+            presence, not participation):
+          </p>
+          <ul className="list-disc list-inside text-sm text-red-600 dark:text-red-300 mt-1">
+            {supporting.slice(0, 6).map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 };

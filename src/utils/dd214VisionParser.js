@@ -278,6 +278,13 @@ function normalizeOcrText(text) {
       .replace(/[ \t]+/g, " ")
       // Common OCR errors
       .replace(/[0O](?=\d{2}-\d{2}-\d{4})/g, "0") // O -> 0 before dates
+      // Tesseract reads the letter O as a zero throughout an all-caps scan
+      // ("J0NES", "S0CIAL SECURITY N0.", "NATI0NAL"), which defeats every
+      // [A-Z]+ pattern below. A zero touching a letter on either side is an
+      // O; a zero between digits (SSNs, dates, "92Y10") is left alone. Runs
+      // before the I/l rules, which would otherwise read the I in "NATI0NAL"
+      // as a 1 (digit follows) and strand the word as "NAT1ONAL".
+      .replace(/(?<=[A-Z])0|0(?=[A-Z])/g, "O")
       .replace(/l(?=\d)/g, "1") // l -> 1 before numbers
       .replace(/I(?=\d)/g, "1") // I -> 1 before numbers
       .trim()
@@ -387,9 +394,179 @@ const DD214_NAME_STOPWORDS = new Set([
   "WITH",
 ]);
 
+// Addresses are the other "CAPS, CAPS" shape on a DD214 (Boxes 7b/8b/19:
+// "PORTLAND, OR", "CAMP ATTERBURY, INDIANA", "FORT LEE, VA"). Confirmed
+// live: with the NAME header unreadable the fallback returned "UVER, WA",
+// "LEE, VA" and "RBURY, INDIANA" as the veteran's name. A first/middle
+// "name" that is a state code or state name is an address, not a person.
+const US_STATE_CODES = new Set([
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
+  "DC",
+  "PR",
+  "GU",
+  "VI",
+  "AS",
+  "MP",
+]);
+const US_STATE_NAMES = new Set([
+  "ALABAMA",
+  "ALASKA",
+  "ARIZONA",
+  "ARKANSAS",
+  "CALIFORNIA",
+  "COLORADO",
+  "CONNECTICUT",
+  "DELAWARE",
+  "FLORIDA",
+  "GEORGIA",
+  "HAWAII",
+  "IDAHO",
+  "ILLINOIS",
+  "INDIANA",
+  "IOWA",
+  "KANSAS",
+  "KENTUCKY",
+  "LOUISIANA",
+  "MAINE",
+  "MARYLAND",
+  "MASSACHUSETTS",
+  "MICHIGAN",
+  "MINNESOTA",
+  "MISSISSIPPI",
+  "MISSOURI",
+  "MONTANA",
+  "NEBRASKA",
+  "NEVADA",
+  "OHIO",
+  "OKLAHOMA",
+  "OREGON",
+  "PENNSYLVANIA",
+  "TENNESSEE",
+  "TEXAS",
+  "UTAH",
+  "VERMONT",
+  "VIRGINIA",
+  "WASHINGTON",
+  "WISCONSIN",
+  "WYOMING",
+]);
+const BRANCH_CODE_TOKENS =
+  // eslint-disable-next-line sonarjs/regex-complexity -- a flat alternation of fixed branch tokens, fully anchored; its "complexity" is the number of service abbreviations, not nesting, and splitting it into an array lookup would lose the [A-Z]{2}ARNG state-prefix case
+  /^(?:ARNGUS|[A-Z]{2}ARNG|ARNG|ANG|USAR|USAFR|USNR|USMCR|USCGR|USMC|USAF|USCG|USN|USSF|ARMY|NAVY|MARINE|MARINES|CORPS|FORCE|GUARD)$/;
+
 function isPlausibleNamePart(part) {
   if (!part) return true; // absent (e.g. no middle name) is fine
-  return !DD214_NAME_STOPWORDS.has(part.trim().toUpperCase());
+  const token = part.trim().toUpperCase();
+  if (DD214_NAME_STOPWORDS.has(token)) return false;
+  if (US_STATE_NAMES.has(token)) return false;
+  if (token.length === 2 && US_STATE_CODES.has(token)) return false;
+  if (BRANCH_CODE_TOKENS.test(token)) return false;
+  return true;
+}
+
+function isPlausibleName(lastName, firstName, middleName) {
+  return (
+    Boolean(lastName && firstName) &&
+    lastName.length >= 3 &&
+    firstName.length >= 2 &&
+    isPlausibleNamePart(lastName) &&
+    isPlausibleNamePart(firstName) &&
+    isPlausibleNamePart(middleName)
+  );
+}
+
+// Row-wise OCR of a DD214/NGB22 reads the whole label row first ("1. NAME
+// (Last, First, Middle)  2. DEPARTMENT, COMPONENT AND BRANCH  3. SOCIAL
+// SECURITY NO.") and only then the value row ("JONES; ROBERT LEE
+// ARNGUS/ORARNG 000-00-0000"), so the name sits after two other labels and
+// no "label immediately followed by value" pattern can reach it. Take the
+// stretch from the NAME label up to Box 4, strip every label phrase, branch
+// code and digit run from it, and the first two-or-three-word CAPS run that
+// survives is Block 1.
+const NAME_LABEL_RE =
+  // eslint-disable-next-line sonarjs/regex-complexity -- two literal Block 1 label spellings (DD214 and NGB22) with tolerance for OCR punctuation drift; every quantifier is bounded and none nest
+  /NAME\s?\(?LAST[,\s]*FIRST[,\s]*MIDDLE\)?|LAST\s+NAME\s*-\s*FIRST\s+NAME\s*-\s*MIDDLE\s+NAME/i;
+const NAME_ZONE_END_RE =
+  /\b4[.\sa]{0,4}(?:GRADE|RANK)|\b5[.\sa]{0,4}(?:RANK|DATE)|\bPAY\s+GRADE/i;
+const NAME_ZONE_NOISE = [
+  /DEPARTMENT[,\s]*COMPONENT\s+AND\s+BRANCH/gi,
+  /SOCIAL\s+SECURITY\s+(?:NUMBER|NO\.?)/gi,
+  /\b(?:LAST|FIRST|MIDDLE)\s+NAME\b/gi,
+  /\bNAME\b/gi,
+  /\d[\d\s\-/]*/g,
+  /[;:()/]/g,
+];
+
+function extractNameFromLabelZone(text) {
+  const label = text.match(NAME_LABEL_RE);
+  if (!label) return null;
+  const after = text.slice(label.index + label[0].length);
+  const end = after.search(NAME_ZONE_END_RE);
+  let zone = after.slice(0, end === -1 ? 260 : Math.min(end, 400));
+  for (const noise of NAME_ZONE_NOISE) zone = zone.replace(noise, " ");
+  const tokens = zone.match(/\b[A-Z][A-Z'-]+\b/g) || [];
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const lastName = tokens[i];
+    const firstName = tokens[i + 1];
+    const candidateMiddle = tokens[i + 2] || null;
+    const middleName =
+      candidateMiddle && isPlausibleNamePart(candidateMiddle)
+        ? candidateMiddle
+        : null;
+    if (isPlausibleName(lastName, firstName, middleName)) {
+      return { lastName, firstName, middleName };
+    }
+  }
+  return null;
 }
 
 /**
@@ -410,11 +587,14 @@ function extractName(text) {
     // Florence-2 may output: "WILLIAMS JOHN ROBERT" or "LAST: WILLIAMS FIRST: JOHN"
     // eslint-disable-next-line sonarjs/slow-regex -- unbounded name-character quantifier followed by a literal "first" check; greedy-to-lazy or other backtracking rewrites can shift the matched name boundary and aren't safe to guess without a document corpus
     /last\s*name?\s*[:-]?\s*([A-Z][a-z\-']+)\s+first\s*name?\s*[:-]?\s*([a-z\-']+)/i,
-    // Just look for LASTNAME, FIRSTNAME pattern anywhere
-    /\b([A-Z][A-Z]+),\s*([A-Z][A-Za-z]+)(?:\s+([A-Z][A-Za-z]*))?(?=\s|$|\d|,)/,
     // Veterans name format - flexible
     /(?:member|veteran|service\s*member)'?s?\s*name[:\s]+([A-Z][a-z\-']+),?\s*([a-z\-']+)/i,
   ];
+  // The former unanchored "any CAPS, CAPS anywhere" fallback is gone: on
+  // real scans it is the only pattern that ever fired, and what it returned
+  // was field labels, addresses ("UVER, WA", "LEE, VA") or OCR noise ("EYE,
+  // EYE", "OFBOTTEN, TENN") - never the veteran. Layout-aware extraction
+  // from the Block 1 zone (below) replaces it.
 
   for (let i = 0; i < patterns.length; i++) {
     const pattern = patterns[i];
@@ -431,11 +611,7 @@ function extractName(text) {
       const firstName = match[2]?.trim() || null;
       const middleName = match[3]?.trim() || null;
 
-      if (
-        !isPlausibleNamePart(lastName) ||
-        !isPlausibleNamePart(firstName) ||
-        !isPlausibleNamePart(middleName)
-      ) {
+      if (!isPlausibleName(lastName, firstName, middleName)) {
         // eslint-disable-next-line no-console
         console.log(
           `🔍 [DD214Parser:Name] Pattern ${i} match rejected (field-label text, not a name):`,
@@ -460,6 +636,23 @@ function extractName(text) {
         confidence: 85,
       };
     }
+  }
+
+  const zoneName = extractNameFromLabelZone(text);
+  if (zoneName) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "🔍 [DD214Parser:Name] Block 1 zone matched:",
+      zoneName.lastName,
+    );
+    const middle = zoneName.middleName ? ` ${zoneName.middleName}` : "";
+    return {
+      value: `${zoneName.lastName}, ${zoneName.firstName}${middle}`,
+      lastName: zoneName.lastName,
+      firstName: zoneName.firstName,
+      middleName: zoneName.middleName,
+      confidence: 75,
+    };
   }
 
   // eslint-disable-next-line no-console
@@ -555,20 +748,26 @@ const BRANCH_ALIASES = {
   USSF: "SPACE FORCE",
 };
 
+// Guard markers are checked first: every DD214 and NGB22 carries the word
+// RESERVE in a box label ("6. RESERVE OBLIG. TERM. DATE", "PRIOR RESERVE
+// COMPONENT SERVICE"), so a Reserve-first check labels every National Guard
+// member a reservist - confirmed live on a real NGB22. Word-bounded so that
+// "ANG" no longer fires inside RANGE/CHANGE/ORANGE.
 function determineComponent(textUpper) {
   if (
-    textUpper.includes("RESERVE") ||
-    textUpper.includes("USAR") ||
-    textUpper.includes("USNR")
-  ) {
-    return "Reserve";
-  }
-  if (
-    textUpper.includes("NATIONAL GUARD") ||
-    textUpper.includes("ARNG") ||
-    textUpper.includes("ANG")
+    /\bNATIONAL\s+GUARD\b|\bNGB\b|\b[A-Z]{2}ARNG\b|\bARNG(?:US)?\b|\bANG\b|\bAIR\s+NATIONAL\b/.test(
+      textUpper,
+    )
   ) {
     return "National Guard";
+  }
+  if (
+    // eslint-disable-next-line sonarjs/regex-complexity -- word-bounded alternation of the five reserve-component abbreviations plus their spelled-out forms; flat, no nesting, and the negative lookahead only separates "RESERVE COMPONENT" from "RESERVE COMPONENT SERVICE"
+    /\bUSAR\b|\bUSNR\b|\bUSMCR\b|\bUSAFR\b|\bUSCGR\b|\b(?:ARMY|NAVY|AIR\s+FORCE|MARINE\s+CORPS|COAST\s+GUARD)\s+RESERVE\b|\bRESERVE\s+COMPONENT\b(?!\s+SERVICE)/.test(
+      textUpper,
+    )
+  ) {
+    return "Reserve";
   }
   return "Active";
 }
@@ -959,19 +1158,19 @@ const AWARD_PATTERNS = [
     name: "Combat Infantryman Badge",
     abbrev: "CIB",
     combat: true,
-    pattern: /combat\s*infantry(?:man)?\s*badge|cib/gi,
+    pattern: /combat\s*infantry(?:man)?\s*badge|\bcib\b/gi,
   },
   {
     name: "Combat Action Badge",
     abbrev: "CAB",
     combat: true,
-    pattern: /combat\s*action\s*badge|cab/gi,
+    pattern: /combat\s*action\s*badge|\bcab\b/gi,
   },
   {
     name: "Combat Action Ribbon",
     abbrev: "CAR",
     combat: true,
-    pattern: /combat\s*action\s*ribbon|car/gi,
+    pattern: /combat\s*action\s*ribbon|\bcar\b/gi,
   },
   {
     name: "Army Commendation Medal",
@@ -1025,7 +1224,7 @@ const AWARD_PATTERNS = [
     name: "Expert Infantryman Badge",
     abbrev: "EIB",
     combat: false,
-    pattern: /expert\s*infantry(?:man)?\s*badge|eib/gi,
+    pattern: /expert\s*infantry(?:man)?\s*badge|\beib\b/gi,
   },
   {
     name: "Parachutist Badge",

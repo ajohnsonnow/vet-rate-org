@@ -232,7 +232,7 @@ async function _storeDKBEntries(entries, isFullDB, onProgress) {
   });
 }
 
-export const downloadFullDKB = async (onProgress = () => {}) => {
+async function _downloadFullDKBImpl(onProgress) {
   try {
     onProgress(5);
     // eslint-disable-next-line no-console
@@ -260,6 +260,26 @@ export const downloadFullDKB = async (onProgress = () => {}) => {
     console.error("[DKB IndexedDB] Download failed:", err);
     return { success: false, entryCount: 0, error: err.message };
   }
+}
+
+// Several components (e.g. KnowledgeBaseStatus's desktop auto-download and
+// smartLoadDKB callers) can all decide to download the full DKB on the same
+// page load before the first call's IndexedDB write lands - observed as 8
+// concurrent downloads+parses in one audit run. Single-flight: concurrent
+// callers await the same in-progress download instead of each re-fetching
+// and re-parsing the full database.
+let inFlightDownload = null;
+
+export const downloadFullDKB = (onProgress = () => {}) => {
+  if (inFlightDownload) {
+    return inFlightDownload;
+  }
+
+  inFlightDownload = _downloadFullDKBImpl(onProgress).finally(() => {
+    inFlightDownload = null;
+  });
+
+  return inFlightDownload;
 };
 
 /**

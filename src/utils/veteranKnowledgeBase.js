@@ -1165,7 +1165,12 @@ function mergeDD214Awards(vkb, dd214Data, options) {
           devices: award.devices || [],
           source: options.fileName || "DD-214",
         });
-      } else if (typeof award === "object" && award.devices?.length) {
+      } else if (typeof award === "object") {
+        // Combat status is sticky across documents: whichever DD214 spells
+        // out the decoration establishes it, and a later record that lists
+        // the same award more tersely must not retract it.
+        if (award.isCombat) existingAward.isCombat = true;
+        if (!award.devices?.length) return;
         // FIX-4: devices are structured {type, position} objects, not
         // strings — `.toLowerCase()` on the object itself threw a
         // TypeError. Key the dedup on type+position (not the whole
@@ -1493,6 +1498,180 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
   });
 
   vkb.metadata.documentCount++;
+  return vkb;
+};
+
+// "September 15, 2023" / "09/15/2023" → "2023-09-15", built from local date
+// parts so a UTC conversion can't shift the day; unparseable input is kept
+// verbatim rather than dropped.
+function _toIsoDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const RATING_OUTCOME_LABELS = {
+  increased: "Rating increased",
+  decreased: "Rating decreased",
+  reduced: "Rating reduced",
+  continued: "Rating continued",
+  "confirmed and continued": "Rating continued",
+};
+
+/**
+ * Merge a parsed rating decision (or a decision-bearing claim letter) into the
+ * VKB: rated conditions upsert into medicalConditions.current keyed by
+ * normalized name, every rating is recorded in vaClaimsHistory.ratings with a
+ * dated evidence-timeline event, denials go to vaClaimsHistory.claims, and the
+ * combined rating plus its history table land on vaClaimsHistory.
+ */
+function _ensureRatingDecisionShape(vkb) {
+  vkb.medicalConditions ??= {
+    current: [],
+    past: [],
+    secondary: [],
+    presumptive: [],
+  };
+  vkb.medicalConditions.current ??= [];
+  vkb.vaClaimsHistory ??= { claims: [], ratings: [], appeals: [] };
+  vkb.vaClaimsHistory.ratings ??= [];
+  vkb.vaClaimsHistory.claims ??= [];
+  vkb.evidenceTimeline ??= [];
+}
+
+function _normalizeRatedConditions(decisionData) {
+  const conditions = Array.isArray(decisionData.conditions)
+    ? decisionData.conditions
+    : [];
+  return conditions
+    .map((c) => {
+      const pct = Number(c.rating ?? c.ratedPercentage ?? c.percentage);
+      return {
+        name: c.name || c.condition,
+        percentage: Number.isFinite(pct) ? pct : null,
+        effectiveDate: c.effectiveDate || decisionData.effectiveDate || null,
+        diagnosticCode: c.diagnosticCode || null,
+        outcome: c.outcome || "granted",
+      };
+    })
+    .filter((c) => c.name && c.percentage !== null);
+}
+
+function _upsertRatedCondition(vkb, c, source) {
+  const key = normalizeConditionName(c.name);
+  const existing = vkb.medicalConditions.current.find(
+    (e) => normalizeConditionName(e.name) === key,
+  );
+  if (existing) {
+    existing.ratedPercentage = c.percentage;
+    existing.serviceConnected = true;
+    if (c.effectiveDate) existing.effectiveDate = c.effectiveDate;
+    if (c.diagnosticCode) existing.diagnosticCode = c.diagnosticCode;
+    existing.source ||= source;
+    return;
+  }
+  vkb.medicalConditions.current.push({
+    name: c.name,
+    diagnosisDate: null,
+    icdCode: null,
+    severity: null,
+    ratedPercentage: c.percentage,
+    serviceConnected: true,
+    effectiveDate: c.effectiveDate,
+    diagnosticCode: c.diagnosticCode,
+    source,
+  });
+}
+
+function _recordRating(vkb, c, combinedRating, source) {
+  const key = normalizeConditionName(c.name);
+  const alreadyRecorded = vkb.vaClaimsHistory.ratings.some(
+    (r) =>
+      normalizeConditionName(r.condition) === key &&
+      r.effectiveDate === c.effectiveDate &&
+      r.percentage === c.percentage,
+  );
+  if (alreadyRecorded) return;
+  vkb.vaClaimsHistory.ratings.push({
+    condition: c.name,
+    percentage: c.percentage,
+    effectiveDate: c.effectiveDate,
+    outcome: c.outcome,
+    combinedRating: combinedRating ?? null,
+    source,
+  });
+}
+
+function _pushRatingTimelineEvent(vkb, c, source) {
+  if (!c.effectiveDate) return;
+  const label =
+    RATING_OUTCOME_LABELS[c.outcome] || "Service connection granted";
+  const description = `${label}: ${c.name} (${c.percentage}%)`;
+  const date = _toIsoDate(c.effectiveDate);
+  const duplicate = vkb.evidenceTimeline.some(
+    (e) => e.description === description && e.date === date,
+  );
+  if (duplicate) return;
+  vkb.evidenceTimeline.push({
+    date,
+    eventType: "rating_decision",
+    description,
+    source,
+    significance: "rating",
+  });
+}
+
+function _recordDenials(vkb, decisionData, source) {
+  const decisions = Array.isArray(decisionData.decisions)
+    ? decisionData.decisions
+    : [];
+  const denied = decisionData.deniedConditions?.length
+    ? decisionData.deniedConditions
+    : decisions
+        .filter((d) => d.outcome === "denied" && !d.issue)
+        .map((d) => d.condition);
+  for (const name of denied) {
+    const duplicate = vkb.vaClaimsHistory.claims.some(
+      (cl) =>
+        cl.status === "denied" &&
+        cl.source === source &&
+        (cl.conditions || []).includes(name),
+    );
+    if (duplicate) continue;
+    vkb.vaClaimsHistory.claims.push({
+      claimNumber: decisionData.claimNumber || null,
+      filedDate: null,
+      status: "denied",
+      decision: "denied",
+      decisionDate: decisionData.decisionDate || null,
+      conditions: [name],
+      source,
+    });
+  }
+}
+
+export const mergeRatingDecisionIntoVKB = (vkb, decisionData, options = {}) => {
+  if (!decisionData || typeof decisionData !== "object") return vkb;
+  const source = options.fileName || "Rating Decision";
+  _ensureRatingDecisionShape(vkb);
+
+  for (const c of _normalizeRatedConditions(decisionData)) {
+    _upsertRatedCondition(vkb, c, source);
+    _recordRating(vkb, c, decisionData.combinedRating, source);
+    _pushRatingTimelineEvent(vkb, c, source);
+  }
+  _recordDenials(vkb, decisionData, source);
+
+  const combined = Number(decisionData.combinedRating);
+  if (Number.isFinite(combined)) {
+    vkb.vaClaimsHistory.currentCombinedRating = combined;
+  }
+  if (decisionData.combinedRatingHistory?.length > 0) {
+    vkb.vaClaimsHistory.combinedRatingHistory =
+      decisionData.combinedRatingHistory;
+  }
   return vkb;
 };
 

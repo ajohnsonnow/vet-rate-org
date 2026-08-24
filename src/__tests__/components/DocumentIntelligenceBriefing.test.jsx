@@ -17,6 +17,7 @@ import {
 } from "@testing-library/react";
 import DocumentIntelligenceBriefing, {
   getAwardsDisplayData,
+  formatArrayItem,
 } from "../../components/DocumentIntelligenceBriefing.jsx";
 import { detectConflicts } from "../../utils/conflictDetector";
 import { parseDD214Text } from "../../utils/ribbonRackData";
@@ -381,5 +382,95 @@ describe("DocumentIntelligenceBriefing - state awards toggle", () => {
 
     await waitFor(() => expect(toggle.checked).toBe(false));
     expect(getShowStateAwards()).toBe(false);
+  });
+});
+
+describe("formatArrayItem", () => {
+  it("formats a granted decision with a rating and effective date", () => {
+    const text = formatArrayItem({
+      condition: "left hip limited adduction",
+      outcome: "granted",
+      rating: 10,
+      effectiveDate: "September 15, 2023",
+    });
+    expect(text).toBe(
+      "left hip limited adduction — granted at 10% (effective September 15, 2023)",
+    );
+  });
+
+  it("formats an increased-rating decision as prior → new", () => {
+    const text = formatArrayItem({
+      condition: "tinnitus",
+      outcome: "increased",
+      priorRating: 10,
+      rating: 20,
+    });
+    expect(text).toBe("tinnitus — increased 10% → 20%");
+  });
+
+  it("formats a denied decision without a percentage", () => {
+    const text = formatArrayItem({
+      condition: "left knee strain",
+      outcome: "denied",
+    });
+    expect(text).toBe("left knee strain — denied");
+  });
+
+  it("formats a C-File segment with category, confidence, and a truncated snippet", () => {
+    const longSnippet = "A".repeat(100);
+    const text = formatArrayItem({
+      type: "DBQ",
+      category: "MEDICAL",
+      position: 392,
+      confidence: 0.33,
+      snippet: longSnippet,
+    });
+    expect(text).toBe(`DBQ (MEDICAL, 33% conf.): ${"A".repeat(80)}…`);
+  });
+
+  it("formats a segment without truncating a short snippet", () => {
+    const text = formatArrayItem({
+      type: "SSOC",
+      category: "APPEAL",
+      confidence: 0.5,
+      snippet: "short text",
+    });
+    expect(text).toBe("SSOC (APPEAL, 50% conf.): short text");
+  });
+
+  it("formats a service-connected condition object", () => {
+    const text = formatArrayItem({
+      name: "left hip",
+      rating: 20,
+      serviceConnected: true,
+    });
+    expect(text).toBe("left hip — 20% SC");
+  });
+
+  it("formats a condition object using ratedPercentage and not-SC", () => {
+    const text = formatArrayItem({
+      name: "tinnitus",
+      ratedPercentage: 0,
+      serviceConnected: false,
+    });
+    expect(text).toBe("tinnitus — 0% not SC");
+  });
+
+  it("still formats award objects via the existing award path", () => {
+    const text = formatArrayItem({
+      award: { name: "Purple Heart" },
+      quantity: 2,
+      devices: [{ type: "oak_leaf_cluster" }],
+    });
+    expect(text).toBe("Purple Heart (2x) w/ oak leaf_cluster");
+  });
+
+  it("falls back to JSON.stringify for an unrecognized object shape", () => {
+    const item = { foo: "bar" };
+    expect(formatArrayItem(item)).toBe(JSON.stringify(item));
+  });
+
+  it("passes plain strings through unchanged", () => {
+    expect(formatArrayItem("Hearing loss")).toBe("Hearing loss");
   });
 });

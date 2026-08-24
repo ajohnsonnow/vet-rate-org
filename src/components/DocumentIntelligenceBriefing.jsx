@@ -1431,8 +1431,65 @@ function OCRFailedMessage({ documentType }) {
   );
 }
 
+// A "granted"/"increased" decision without a rating percentage still needs a
+// readable outcome, so only "denied" fully overrides the percentage detail.
+function formatDecisionItem({
+  condition,
+  outcome,
+  rating,
+  priorRating,
+  effectiveDate,
+}) {
+  const outcomeLower = String(outcome || "").toLowerCase();
+  let outcomeText;
+  if (outcomeLower === "denied") {
+    outcomeText = "denied";
+  } else if (
+    outcomeLower === "increased" &&
+    priorRating != null &&
+    rating != null
+  ) {
+    outcomeText = `increased ${priorRating}% → ${rating}%`;
+  } else if (rating != null) {
+    outcomeText = `${outcome} at ${rating}%`;
+  } else {
+    outcomeText = outcome;
+  }
+  const effective = effectiveDate ? ` (effective ${effectiveDate})` : "";
+  return `${condition} — ${outcomeText}${effective}`;
+}
+
+function formatSegmentItem({ type, category, confidence, snippet }) {
+  const details = [
+    category,
+    typeof confidence === "number"
+      ? `${Math.round(confidence * 100)}% conf.`
+      : null,
+  ].filter(Boolean);
+  const label = details.length > 0 ? `${type} (${details.join(", ")})` : type;
+  if (!snippet) return label;
+  const truncated = snippet.substring(0, 80);
+  return `${label}: ${truncated}${snippet.length > 80 ? "…" : ""}`;
+}
+
+function formatConditionItem({
+  name,
+  rating,
+  ratedPercentage,
+  serviceConnected,
+}) {
+  const pct = rating ?? ratedPercentage;
+  let scLabel = null;
+  if (serviceConnected === true) scLabel = "SC";
+  else if (serviceConnected === false) scLabel = "not SC";
+  const details = [pct != null ? `${pct}%` : null, scLabel]
+    .filter(Boolean)
+    .join(" ");
+  return details ? `${name} — ${details}` : name;
+}
+
 // Format array items for display
-function formatArrayItem(item) {
+export function formatArrayItem(item) {
   if (typeof item === "string") return item;
   // Handle award objects from parseDD214Text
   if (item?.award?.name) {
@@ -1447,8 +1504,24 @@ function formatArrayItem(item) {
         : "";
     return `${name}${qty}${devices}`;
   }
-  // Handle other objects
-  if (typeof item === "object") {
+  if (item && typeof item === "object") {
+    if (item.condition && item.outcome) {
+      return formatDecisionItem(item);
+    }
+    if (
+      item.type &&
+      (item.category || item.snippet || typeof item.confidence === "number")
+    ) {
+      return formatSegmentItem(item);
+    }
+    if (
+      item.name &&
+      (item.rating != null ||
+        item.ratedPercentage != null ||
+        item.serviceConnected != null)
+    ) {
+      return formatConditionItem(item);
+    }
     return item.name || item.title || item.value || JSON.stringify(item);
   }
   return String(item);
@@ -1497,16 +1570,12 @@ export function getAwardsDisplayData(
   const slashIndex = rawBranch ? rawBranch.indexOf("/") : -1;
   const branchForBadges =
     (slashIndex >= 0 ? rawBranch.slice(0, slashIndex) : rawBranch) || "Army";
-  const { badges, tabs, combatIndicators } = parseDD214Badges(
-    awardsText,
-    branchForBadges,
-  );
+  const { badges, tabs } = parseDD214Badges(awardsText, branchForBadges);
 
   return {
     sortedVisualAwards,
     badges,
     tabs,
-    combatIndicators,
     branchForBadges,
   };
 }
@@ -1515,18 +1584,16 @@ function ArrayValueVisuals({
   sortedVisualAwards,
   badges,
   tabs,
-  combatIndicators,
   branchForBadges,
   value,
 }) {
   return (
     <>
-      {combatIndicators.length > 0 && (
-        <CombatIndicatorSummary
-          badges={badges.filter((b) => b.combatIndicator)}
-          ribbonAwards={value}
-        />
-      )}
+      {/* Self-gating: gating on parseDD214Badges' badge hits alone hid the
+          summary from any veteran whose combat decoration is a medal rather
+          than a badge - a Purple Heart or Silver Star produced no badge match
+          and so no combat section at all. */}
+      <CombatIndicatorSummary badges={badges} ribbonAwards={value} />
 
       {badges.length > 0 && (
         <div className="mb-4">

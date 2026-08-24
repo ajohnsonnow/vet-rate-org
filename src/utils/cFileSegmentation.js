@@ -46,7 +46,7 @@ export const DOCUMENT_SIGNATURES = {
   PERFORMANCE_EVAL: {
     patterns: [
       /(?:ENLISTED|OFFICER)\s*(?:PERFORMANCE|EVALUATION)\s*REPORT/i,
-      /(?:NCOER|OER|EPR|FITREP)/i,
+      /\b(?:NCOER|OER|EPR|FITREP)\b/i,
       /EVALUATION\s*(?:PERIOD|RATING)/i,
     ],
     priority: 80,
@@ -69,7 +69,7 @@ export const DOCUMENT_SIGNATURES = {
   DBQ: {
     patterns: [
       /DISABILITY\s*BENEFITS\s*QUESTIONNAIRE/i,
-      /DBQ\s*[-–]\s*[A-Z]/i,
+      /\bDBQ\s*[-–]\s*[A-Z]/i,
       /(?:C&P|COMPENSATION\s*(?:AND|&)\s*PENSION)\s*EXAM/i,
     ],
     priority: 95,
@@ -102,7 +102,7 @@ export const DOCUMENT_SIGNATURES = {
   BVA_DECISION: {
     patterns: [
       /BOARD\s*OF\s*VETERANS'?\s*APPEALS/i,
-      /BVA\s*DECISION/i,
+      /\bBVA\s*DECISION/i,
       /DOCKET\s*NO/i,
     ],
     priority: 90,
@@ -118,7 +118,7 @@ export const DOCUMENT_SIGNATURES = {
 
   // Supplemental SOC
   SSOC: {
-    patterns: [/SUPPLEMENTAL\s*STATEMENT\s*OF\s*THE\s*CASE/i, /SSOC/i],
+    patterns: [/SUPPLEMENTAL\s*STATEMENT\s*OF\s*THE\s*CASE/i, /\bSSOC\b/i],
     priority: 85,
     category: "APPEAL",
   },
@@ -148,7 +148,7 @@ export const DOCUMENT_SIGNATURES = {
   // Buddy/Lay Statements
   BUDDY_STATEMENT: {
     patterns: [
-      /(?:BUDDY|LAY)\s*STATEMENT/i,
+      /\b(?:BUDDY|LAY)\s*STATEMENT\b/i,
       /(?:STATEMENT\s*IN\s*SUPPORT|SUPPORTING\s*STATEMENT)/i,
       /VA\s*FORM\s*21-4138/i,
     ],
@@ -159,7 +159,7 @@ export const DOCUMENT_SIGNATURES = {
   // Nexus Letters
   NEXUS_LETTER: {
     patterns: [
-      /(?:NEXUS|IMO|INDEPENDENT\s*MEDICAL)\s*(?:LETTER|OPINION)/i,
+      /\b(?:NEXUS|IMO|INDEPENDENT\s*MEDICAL)\s*(?:LETTER|OPINION)/i,
       /(?:AT\s*LEAST\s*AS\s*LIKELY|MORE\s*LIKELY\s*THAN\s*NOT)/i,
       /(?:MEDICAL\s*)?(?:NEXUS|OPINION)/i,
     ],

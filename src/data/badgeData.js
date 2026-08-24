@@ -1007,6 +1007,26 @@ export const ALL_BADGES = [
 // BADGE PARSING FROM DD214 TEXT
 // ============================================================================
 
+// Alias matching is word-bounded, never a bare substring: the short combat
+// aliases ("CAB", "CIB", "CMB", "EIB") otherwise match inside ordinary words
+// and inside OCR garbage - a real scan run through vision OCR produced
+// "CABEENENT"/"CABRSTANTS", which fabricated a Combat Action Badge and marked
+// the veteran as having verified combat service. The award's full name is
+// matched as a phrase, where a substring test is safe.
+const isAlnum = (ch) => Boolean(ch) && /[A-Z0-9]/i.test(ch);
+
+function containsToken(text, token) {
+  let idx = text.indexOf(token);
+  while (idx !== -1) {
+    const before = idx === 0 ? "" : text[idx - 1];
+    const afterIdx = idx + token.length;
+    const after = afterIdx >= text.length ? "" : text[afterIdx];
+    if (!isAlnum(before) && !isAlnum(after)) return true;
+    idx = text.indexOf(token, idx + 1);
+  }
+  return false;
+}
+
 // Checks the badge's main name, then falls back to its aliases.
 function badgeMatchesText(cleanedText, badge) {
   if (cleanedText.includes(badge.name.toUpperCase())) {
@@ -1015,7 +1035,9 @@ function badgeMatchesText(cleanedText, badge) {
   if (!badge.aliases) {
     return false;
   }
-  return badge.aliases.some((alias) => cleanedText.includes(alias));
+  return badge.aliases.some((alias) =>
+    containsToken(cleanedText, alias.toUpperCase()),
+  );
 }
 
 // Records a matched badge into the appropriate group/indicator buckets.

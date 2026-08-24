@@ -17,6 +17,7 @@ import { getTotalToolCount } from "../data/toolkitData";
 import { getConditionCount as getDisabilityCount } from "../services/knowledgeQuery";
 import { getFormsCount } from "./formsCount";
 import { spotlight as _spotlight } from "./piiScrubber";
+import { deriveCombatService } from "./combatService";
 
 /**
  * Re-export of `spotlight()` for any caller that's already importing from this
@@ -784,16 +785,46 @@ export function gatherVeteranContext() {
  */
 function formatServiceHistorySection(serviceHistory) {
   if (!serviceHistory) return "";
-  const sh = serviceHistory;
+  // loadServiceHistory() returns the stored vet_rate_service_history object,
+  // whose shape is {dd214Data, awards, deployments, servicePeriods, ...} -
+  // branch, MOS, dates and combat status all live one level down in
+  // dd214Data. Reading them off the top level yielded an empty section
+  // header for every veteran, so no AI tool has ever been told the branch,
+  // MOS, service dates, or combat status of the person it is advising.
+  const sh = serviceHistory.dd214Data || serviceHistory;
   let section = `\nSERVICE HISTORY:\n`;
   if (sh.branch) section += `- Branch: ${sh.branch}\n`;
   if (sh.mos) section += `- MOS/Rating: ${sh.mos}\n`;
   if (sh.entryDate) section += `- Entry Date: ${sh.entryDate}\n`;
   if (sh.separationDate) section += `- Separation Date: ${sh.separationDate}\n`;
   if (sh.yearsService) section += `- Years of Service: ${sh.yearsService}\n`;
-  if (sh.combatService?.hasVerifiedCombat)
-    section += `- Combat Service: VERIFIED\n`;
+  if (sh.characterOfService)
+    section += `- Character of Service: ${sh.characterOfService}\n`;
+  section += formatCombatServiceLines(serviceHistory, sh);
   return section;
+}
+
+/**
+ * Combat is derived from the veteran's stored award list rather than read
+ * from dd214Data.combatService, because _sanitizeDd214Data (veteranProfile.js)
+ * is a strict field whitelist that combatService is not on - it is dropped on
+ * every write to localStorage. serviceHistory.awards IS persisted, carries
+ * isCombat, and is the evidence the determination rests on anyway.
+ */
+function formatCombatServiceLines(serviceHistory, dd214) {
+  const stored = dd214?.combatService;
+  const derived = deriveCombatService(serviceHistory?.awards || []);
+  const verified = stored?.hasVerifiedCombat || derived.hasVerifiedCombat;
+  if (!verified) return "";
+
+  const names = [
+    ...new Set([...(stored?.indicators || []), ...derived.indicators]),
+  ].join(", ");
+  const basis = names ? ` (${names})` : "";
+  return (
+    `- Combat Service: VERIFIED${basis}\n` +
+    `- 38 U.S.C. 1154(b) applies: accept satisfactory lay evidence of an in-service injury or disease consistent with the circumstances of combat, even without official records; a PTSD stressor related to combat is conceded under 38 CFR 3.304(f)(2).\n`
+  );
 }
 
 /**
