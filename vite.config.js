@@ -277,7 +277,11 @@ export default defineConfig({
     hmr: {
       protocol: "ws",
       host: "127.0.0.1",
-      port: 5173,
+      // No explicit port: Vite then binds HMR to whatever port the server
+      // actually got. Pinning it to 5173 meant `--port 5197` (how the
+      // Playwright webServer starts this app) still tried to bind 5173, so
+      // the whole E2E suite failed to start whenever a dev server was
+      // already running.
     },
     // Headers for SharedArrayBuffer (required for DOOM easter egg)
     // Using 'credentialless' instead of 'require-corp' to allow cross-origin resources
