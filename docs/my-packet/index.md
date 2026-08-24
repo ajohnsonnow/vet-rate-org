@@ -77,7 +77,12 @@ Press **Ctrl+K** (**Cmd+K** on Mac) and search for "My Packet."
 My Packet also has tabs for **Ratings**, **Service History** (deployments, duty stations, awards, and DD-214 data), **Timeline**, **Pain Maps**, **Profile**, and **Forms** - all part of the same locally-stored packet.
 
 ![My Packet Service History tab, including the Duty Stations section](../assets/images/screenshots/my-packet/service-tab.png)
-_The Service tab covers deployments, duty stations, and awards alongside your claims._
+_The Service tab covers deployments, duty stations, and awards alongside your claims. This is its empty state, before any service record has been read._
+
+Once a DD214 or NGB 22 has been processed, the Service tab fills in with your DD214 summary, each period of service, and - if your record carries a qualifying decoration - a **Combat Service** card:
+
+![My Packet Service tab showing the Combat Service Verified card naming a Combat Action Badge](../assets/images/screenshots/my-packet/combat-service-card.png)
+_The Combat Service card names the decoration that established the finding and cites the rule it invokes. Sample record shown. See [Combat Service Determination](../evidence-tools/combat-service.md)._
 
 ---
 

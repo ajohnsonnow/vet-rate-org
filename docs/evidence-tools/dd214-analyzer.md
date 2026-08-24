@@ -25,10 +25,13 @@ If you have your DD214 as selectable text (not a scanned image), copy and paste 
 
 ### Drop In PDF
 
-Upload a PDF or image copy of your DD214. As soon as it's added, the analyzer automatically starts extracting text - first attempting on-device vision analysis, falling back to OCR for scanned pages.
+Upload a PDF or image copy of your DD214. As soon as it's added, the analyzer automatically starts extracting text. Scanned service records go through the **on-device OCR ensemble** first, because that is what reads a real scanned DD214 most accurately - on genuine scans it reads the form reliably where the vision model produced confident-looking but invented text. The vision model is kept as a fallback for documents OCR reads poorly, and its output has to clear a field-level confidence bar before it's allowed to replace the OCR text.
 
 ![A DD214 PDF loaded and being processed via OCR/vision extraction](../assets/images/screenshots/dd214-analyzer/file-loaded-ocr.png)
-_"Loading Florence-2 Vision engine (first time only)..." - this on-device vision model runs the extraction locally. If your browser doesn't support it, the analyzer automatically falls back to OCR._
+_Extraction runs entirely on your device. Both the OCR engine and the vision fallback are local - nothing about your DD214 leaves the browser._
+
+!!! tip "Scans read letters as digits"
+OCR routinely reads the letter **O** as a zero, so `HONORABLE` arrives as `H0N0RABLE` and `COMBAT ACTION BADGE` as `C0MBAT ACTI0N BADGE`. The analyzer corrects this before matching fields, which is why an award can be recognised even when the raw text looks mangled. It's also why you should still check the extracted fields against your original.
 
 Once extraction finishes, click **"Analyze with AI"** to have a loaded AI model turn the raw extracted text into structured fields (name, branch, dates, MOS, awards, character of service, and more). Everything happens locally except any text you deliberately choose to send to a configured cloud AI provider.
 
@@ -52,9 +55,19 @@ This is the right tool when your only copy of your DD214 is a blurry photo, a fa
 
 ---
 
+## Awards and Combat Service
+
+Block 13 awards are matched against a master list of decorations, so `CAB` on one document and `COMBAT ACTION BADGE` spelled out on another are recognised as the same award and recorded once.
+
+Any decoration on VA's combat-participation list is flagged separately, because it changes the evidence VA requires from you. See **[Combat Service Determination](combat-service.md)** for the full list, what it does for your claim, and what deliberately doesn't count.
+
+---
+
 ## Multi-Document Cumulative Logic
 
 If you have more than one discharge document (for example, an original DD214 plus a later DD215 correction, or documents from multiple periods of service), the analyzer applies a "Master Record" protocol that combines them without double-counting awards or service time.
+
+Combat status is **sticky** across that set: only one page of a multi-page DD214 usually carries Block 13, so a page that lists no decorations never erases a finding another page established.
 
 ---
 

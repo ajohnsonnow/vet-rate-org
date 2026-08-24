@@ -129,6 +129,7 @@ nav:
   - Evidence Tools:
       - evidence-tools/index.md
       - Muster Call: evidence-tools/muster-call.md
+      - Combat Service Determination: evidence-tools/combat-service.md
       - C-File AI Analyzer: evidence-tools/cfile-analyzer.md
       - Blue Button X-Ray: evidence-tools/blue-button-xray.md
       - Witness Bench: evidence-tools/witness-bench.md

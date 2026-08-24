@@ -25,6 +25,12 @@ Most of these tools run **entirely in your browser**. Documents you upload are n
 </div>
 
 <div class="feature-card">
+<h3>⚔️ Combat Service Determination</h3>
+<p>How the app decides whether your record establishes combat with the enemy - which decorations count under VA's own list, which deliberately don't, and what the finding does for your claim.</p>
+<a href="combat-service/" class="doc-button">Learn More →</a>
+</div>
+
+<div class="feature-card">
 <h3>🔬 C-File AI Analyzer</h3>
 <p>Upload your full Claims File and mine it for in-service events, diagnoses, and nexus evidence across a Timeline, Potential Claims, and Semantic Search view.</p>
 <a href="cfile-analyzer/" class="doc-button">Learn More →</a>

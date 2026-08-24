@@ -45,11 +45,27 @@ Local, on-device AI requires a desktop or laptop with a WebGPU-capable browser (
 
 Once AI is loaded and Formation starts, each document is processed one at a time:
 
-1. **Extraction** - the document's text is pulled out (using its PDF text layer, or on-device OCR/vision analysis for scanned pages)
-2. **Classification and analysis** - the AI determines what kind of document it is and extracts structured fields
+1. **Extraction** - the document's text is pulled out, using its PDF text layer where it has one, or the on-device OCR ensemble for scanned pages
+2. **Classification and analysis** - the app determines what kind of document it is and extracts structured fields
 3. **Intelligence Briefing** - a per-document review modal shows every extracted field so you can verify, correct, or skip it before it's saved
 
 You can skip any document in the queue, and Muster Call tracks waiting, completed, skipped, and error counts as it works through the formation.
+
+### What Gets Pulled Out
+
+| Document type                   | What Muster Call reads                                                                                                                                                 |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DD214 / NGB 22 / DD256**      | Name, branch, component, rank, pay grade, MOS, service dates, character of service, separation codes, Block 13 awards, and any [combat decorations](combat-service.md) |
+| **Rating decision letters**     | Each condition decided, its outcome (granted, denied, continued, increased), the percentage, the effective date, and your combined rating with its history             |
+| **Development / claim letters** | VA file number, claim date, the evidence VA is asking you for, and the response deadline                                                                               |
+| **Medical records and C-Files** | Conditions, treatment dates, and document segmentation for later search                                                                                                |
+
+!!! tip "Scanned pages read letters as digits"
+OCR routinely reads the letter **O** as a zero - `HONORABLE` arrives as `H0N0RABLE`. Muster Call corrects this before matching fields, so awards and discharge types are still recognised from a mangled scan. Some scans are genuinely illegible in places, though: if a field comes back empty, the document was too damaged to read it, and you can fill it in yourself on the review screen rather than accept a guess.
+
+### Combat Service
+
+If a service record's Block 13 names a decoration on VA's combat-participation list, the review screen shows a **Combat Service Indicators** panel naming it and citing the rule it invokes. Campaign and expeditionary medals are listed separately as theater evidence, not as proof of combat. See **[Combat Service Determination](combat-service.md)**.
 
 ---
 
