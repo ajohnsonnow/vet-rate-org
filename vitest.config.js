@@ -9,6 +9,16 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/__tests__/setup.js"],
     include: ["src/**/*.test.{js,jsx}"],
+    // Vitest defaults to 5000ms, which is also what the slowest component
+    // tests give their own internal findBy() waits (DutyStationsSection
+    // parses and renders 241 country paths). An inner wait equal to the outer
+    // budget leaves nothing for the assertion, so those tests failed only
+    // under full-suite parallel load and passed in isolation. The ceiling is
+    // raised above the inner waits rather than the waits being shortened -
+    // the render really is that slow, and a genuine hang still fails, just
+    // 15s later instead of 5s.
+    testTimeout: 15000,
+    hookTimeout: 15000,
     coverage: {
       provider: "v8",
       thresholds: {

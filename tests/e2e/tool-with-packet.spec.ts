@@ -60,7 +60,7 @@ async function bootWithPacket(page: Page): Promise<void> {
 // webServer/lazy-chunk budget established in mobile.spec.ts's Atomic Wipe
 // test. isVisible() returns immediately (no wait); this loop is the wait
 // mechanism. Heavier tools (PDF generation, adversarial-testing bundle) can
-// exceed a tighter budget under the 6-parallel-worker local dev-server
+// exceed a tighter budget under the parallel-worker local dev-server
 // contention this suite runs with (CI runs workers: 1, serial, no contention).
 async function openTool(page: Page, eventName: string): Promise<boolean> {
   await page.evaluate((evt) => {
@@ -193,9 +193,7 @@ test.describe("Discover cluster — with 9-condition packet", () => {
   }) => {
     await bootWithPacket(page);
     const opened = await openTool(page, "openClaimNavigator");
-    expect(opened, "Claim Navigator should be visible after event").toBe(
-      true,
-    );
+    expect(opened, "Claim Navigator should be visible after event").toBe(true);
     await closeTool(page);
   });
 });

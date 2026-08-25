@@ -187,7 +187,7 @@ async function bootWithPacket(page: Page): Promise<void> {
 // appear (matches the budget established in tool-with-packet.spec.ts
 // and mobile.spec.ts's Atomic Wipe test). Heavier tools (My Packet,
 // Retro Pay Hunter, C&P Exam Simulator) can exceed a tighter budget
-// under the 6-parallel-worker local dev-server contention this suite
+// under the parallel-worker local dev-server contention this suite
 // runs with — a 48-step test has ~48x the exposure to that per-tool
 // risk of a single-tool test, so it needs the same generous margin.
 // Uses isVisible() snapshots rather than expect().toBeVisible() to
@@ -242,7 +242,7 @@ async function closeModal(page: Page): Promise<void> {
   }
   // Give React's unmount/cleanup effects (focus restoration, scroll-lock
   // removal) time to settle before dispatching the next tool event. Widened
-  // from 300ms: under the 6-parallel-worker local dev-server contention this
+  // from 300ms: under the parallel-worker local dev-server contention this
   // suite runs with, a shorter wait let the next tool's dispatch fire while
   // the previous tool's async cleanup was still in flight, producing a
   // delayed React error #299 that got misattributed to whichever tool

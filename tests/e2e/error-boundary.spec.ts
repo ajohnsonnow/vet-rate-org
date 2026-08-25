@@ -158,11 +158,11 @@ test.describe(`ErrorBoundary @ ${VIEWPORT.width}px (small-android)`, () => {
     });
     await reportBtn.click();
     // Widened from the default 5s: the click triggers an async IndexedDB
-    // write, which can exceed a tight budget under the 6-parallel-worker
+    // write, which can exceed a tight budget under the parallel-worker
     // local dev-server contention this suite runs with.
-    await expect(
-      page.getByRole("button", { name: "Reported ✓" }),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("button", { name: "Reported ✓" })).toBeVisible({
+      timeout: 15000,
+    });
 
     const reports = await readHomeReports(page);
     expect(reports.length).toBeGreaterThanOrEqual(1);
