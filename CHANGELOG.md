@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.1] - 2026-08-25
+
+### Fixed
+
+- 🐛 let HMR follow the dev server port so E2E can run alongside it
+- 🐛 correct document extraction and combat-service determination
+
+### Documentation
+
+- 📚 document combat-service determination; correct stale extraction claims
+
 ### Added
 
 - ✨ **Combat Service**: combat participation is now determined from VA's own decoration list (M21-1, Part VIII, Subpart iv, 1.A.3.h) in a single shared module, replacing three call sites that disagreed with each other. The finding is stored on your record, shown on the My Packet Service tab with its citation, and passed to every AI tool along with the 38 U.S.C. 1154(b) / 38 CFR 3.304(f)(2) rules it invokes
