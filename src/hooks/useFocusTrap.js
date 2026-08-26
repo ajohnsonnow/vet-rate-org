@@ -33,6 +33,18 @@ export function useFocusTrap(
   { active = true, onEscape, autoFocus = true } = {},
 ) {
   const restoreRef = useRef(null);
+  const onEscapeRef = useRef(onEscape);
+
+  // Read onEscape through a ref so it is NOT an effect dependency. Callers
+  // overwhelmingly pass an inline arrow (`onEscape={() => setOpen(false)}`),
+  // which changes identity on every parent render. As a dependency that tore
+  // the trap down and rebuilt it mid-life, and each rebuild re-captured
+  // restoreRef from the live activeElement - by then an element *inside* the
+  // dialog - so closing restored focus to a detached node and dropped it to
+  // <body>. The effect must run on open and clean up on close, nothing else.
+  useEffect(() => {
+    onEscapeRef.current = onEscape;
+  });
 
   useEffect(() => {
     const node = ref.current;
@@ -55,7 +67,7 @@ export function useFocusTrap(
 
     const onKeyDown = (e) => {
       if (e.key === "Escape") {
-        onEscape?.(e);
+        onEscapeRef.current?.(e);
         return;
       }
       if (e.key !== "Tab") return;
@@ -88,7 +100,7 @@ export function useFocusTrap(
       const opener = restoreRef.current;
       if (opener && typeof opener.focus === "function") opener.focus();
     };
-  }, [ref, active, onEscape, autoFocus]);
+  }, [ref, active, autoFocus]);
 }
 
 export default useFocusTrap;
