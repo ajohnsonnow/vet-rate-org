@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.2] - 2026-08-27
+
+### Fixed
+
+- 🐛 **Accessibility**: keyboard focus no longer jumps back to the first field of a dialog when the page updates around you. If a search finishes or a status refreshes while you are partway through a tool, your place is kept, and closing the dialog returns focus to whatever you were on when you opened it (WCAG 3.2.2). Affects every modal in the app
+- 🐛 unmask the VA data pipeline crash and stop its output churning - it had been silently skipped since 2026-03-19 while preflight still reported all checks green
+
+### Documentation
+
+- 📚 document focus behaviour inside dialogs in the accessibility guide
+- 📚 record six disproven E2E flake hypotheses, corrected measurements, and a reproducible measurement rig
+
 ## [1.30.1] - 2026-08-25
 
 ### Fixed
