@@ -140,6 +140,18 @@ All of Vet-Rate.org is fully navigable via keyboard:
 
 For screen reader users, a **"Skip to main content"** link appears when you first Tab into the page. This allows bypassing the header navigation.
 
+### Focus Inside Dialogs
+
+While a tool or dialog is open, keyboard focus stays inside it - Tab cycles
+through that dialog's own controls and never wanders onto the page behind it.
+
+Your place is kept. If something on the page updates while you are partway
+through a dialog - a search finishing, a status refreshing, a figure
+recalculating - focus stays on the field you were using rather than jumping
+back to the top. Pressing `Escape` closes the dialog and returns focus to
+whatever you were on when you opened it, so you can carry on where you left
+off without re-tabbing through the page.
+
 ---
 
 ## Screen Reader Support
