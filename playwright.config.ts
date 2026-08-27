@@ -4,36 +4,49 @@ export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  // A rotating set of 3-4 tests flakes per local run and passes on retry.
-  // Three hypotheses have been tried and measured. All three failed - do not
-  // re-run these experiments:
+  // A rotating set of tests flakes per local run and passes on retry. Six
+  // hypotheses have been measured and ALL are dead. Do not re-run these:
   //
-  //   1. The assertion budget is too tight. No: all four flakes in the
-  //      2026-08-25 run already carried explicit 15s waits, and two of them
-  //      go through tool-with-packet's hand-rolled isVisible() poll loop,
-  //      which never calls expect().toBeVisible() at all.
-  //   2. Six workers contend on one dev server. No: 6 -> 3 workers moved the
-  //      count 4 -> 3 while wall clock went 5.7m -> 8.3m, and the two runs
-  //      shared exactly one flaky test - the 3-worker run flaked on two specs
-  //      that were fine at 6.
-  //   3. The dev server compiles lazy tool chunks on demand, so a modal can
-  //      miss its budget under load. No - and this one was tested properly by
-  //      building the app up front and serving it with `vite preview`, which
-  //      removes on-demand compilation entirely. The count did not move: 4
-  //      flaky before, 4 flaky after, and every flake in that run landed on
-  //      the pre-built side where nothing is compiled. That result is what
-  //      retired the lazy-chunk explanation; earlier revisions of this
-  //      comment asserted it as fact, and it was wrong.
+  //   1. Assertion budgets too tight. No - the flakes already carried explicit
+  //      15s waits, and some go through hand-rolled isVisible() poll loops
+  //      that never call expect() at all.
+  //   2. Worker contention. No - and this is now measured properly rather than
+  //      inferred from one full-suite run. See the rig below: 4.8% at
+  //      workers=1, 9.5% at 2, 6.0% at 4, 6.6% at 6. Worker count does
+  //      nothing; the band is flat.
+  //   3. Dev server compiling lazy chunks on demand. No - building up front
+  //      and serving with `vite preview` removes on-demand compilation
+  //      entirely and the count did not move (4 flaky before, 4 after).
+  //   4. useFocusTrap corrupting the focus-restore target. No - A/B under
+  //      6-worker load passed 36/36 both with and without the bug. (The bug
+  //      was real and is fixed separately; it was not this.)
+  //   5. Animation/transition races. No - forcing `reducedMotion: "reduce"`
+  //      (src/index.css already zeroes all durations) gave 23 failures/378 vs
+  //      27/378 control. ~0.6 standard errors. Noise.
+  //   6. Chrome backgrounding/timer throttling. No - the three
+  //      --disable-*-backgrounding flags gave 7 failures/126 vs 6/126.
   //
-  // What the evidence actually supports: a set that rotates with near-zero
-  // overlap between runs and is indifferent to compilation, worker count, and
-  // timeout is machine-level noise, not a property of the app or the server.
-  // Retries are the correct mechanism for that and do not mask a regression -
-  // a real break fails all three attempts and repeats rather than rotates.
+  // What IS known: individual specs pass in isolation (duty-station-map is
+  // 15/15 alone, serially) but the same specs fail ~5% inside a mixed run,
+  // AT WORKERS=1. That rules out concurrency and points at cross-test
+  // interference - state or resource accumulation across tests sharing a
+  // browser and dev server. That is where to look next. It is not the
+  // harness, and it is not the machine (16c/32t, 72GB free).
   //
-  // If you pick this up again, the open lead is per-test: `tactical-calculator`
-  // and `dialog-contract` appeared in both pre-built runs, so start by
-  // profiling those two rather than changing the harness again.
+  // Measurement rig - reproduces a ~6% failure rate in ~3 minutes, which is
+  // far denser than the ~1% you get from a full-suite run:
+  //
+  //   npx playwright test --project=chromium   //     tests/e2e/{tool-with-packet,error-boundary,dialog-contract,  //     tactical-calculator,duty-station-map,simulators-a11y}.spec.ts   //     --repeat-each=3 --retries=0 --workers=6 --reporter=list
+  //
+  // Parse the summary with ANSI stripped. The `line` reporter prefixes it
+  // with cursor codes, so an anchored grep like `^ *[0-9]+ failed` silently
+  // matches nothing and a failing run reads as clean - that mistake produced
+  // a confident and completely wrong "0 failures" curve once already:
+  //
+  //   ... | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | grep -E "^ *[0-9]+ (failed|passed)"
+  //
+  // Retries stay as the mitigation. They do not mask a regression: a real
+  // break fails all three attempts and repeats rather than rotates.
   retries: 2,
   workers: process.env.CI ? 1 : 6,
 
