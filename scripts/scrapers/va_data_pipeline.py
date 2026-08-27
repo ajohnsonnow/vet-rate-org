@@ -17,6 +17,18 @@ Usage:
     python va_data_pipeline.py --generate-frontend
 """
 
+import sys
+
+# Windows defaults stdout to cp1252 when the process is piped (as preflight
+# does), and every log line here carries an emoji. That raised
+# UnicodeEncodeError before any work happened, and preflight's tryRun turned
+# the crash into a yellow "skipped (error)" - so the pipeline silently never
+# ran while the run still reported all checks green.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 import json
 import os
 import re
@@ -230,7 +242,7 @@ export const DATA_METADATA = {{
   lastUpdated: "{datetime.now().strftime('%Y-%m-%d')}",
   bvaDecisionsAnalyzed: {sum(s.get('sample_size', 0) for s in condition_stats.values())},
   conditionsCovered: {len(condition_stats)},
-  source: "VA Public Records (BVA decisions, VA.gov reports)"
+  source: "VA Public Records (BVA decisions, VA.gov reports)",
 }};
 
 /**
@@ -242,20 +254,23 @@ export function mergeLatestData(existingData) {{
     ...existingData,
     conditionSpecific: {{
       ...(existingData.conditionSpecific || {{}}),
-      ...BVA_CONDITION_STATS
+      ...BVA_CONDITION_STATS,
     }},
     processingTimes: {{
       ...(existingData.processingTimes || {{}}),
-      ...VA_PROCESSING_CURRENT
+      ...VA_PROCESSING_CURRENT,
     }},
-    _lastAutoUpdate: DATA_METADATA.lastUpdated
+    _lastAutoUpdate: DATA_METADATA.lastUpdated,
   }};
 }}
 '''
         
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
-        with open(output_file, 'w', encoding='utf-8') as f:
+        # newline='' keeps LF on Windows. Without it Python translates to
+        # CRLF, git normalises back to LF, and every regeneration shows up as
+        # a whole-file diff instead of the one line that actually changed.
+        with open(output_file, 'w', encoding='utf-8', newline='') as f:
             f.write(js_content)
         
         self.log(f"  ✅ Generated: {output_file}")

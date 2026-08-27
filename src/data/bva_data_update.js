@@ -1,5 +1,5 @@
 // BVA Data Update - Auto-generated
-// Generated: 2026-03-19T18:56:27.429188
+// Generated: 2026-08-26T18:07:27.370000
 // Source: VA Public Records
 // DO NOT EDIT MANUALLY - Run va_data_pipeline.py to update
 
@@ -19,7 +19,7 @@ export const VA_PROCESSING_CURRENT = {};
  * Data freshness info
  */
 export const DATA_METADATA = {
-  lastUpdated: "2026-03-19",
+  lastUpdated: "2026-08-26",
   bvaDecisionsAnalyzed: 0,
   conditionsCovered: 0,
   source: "VA Public Records (BVA decisions, VA.gov reports)",
