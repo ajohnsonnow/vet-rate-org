@@ -61,11 +61,15 @@ export default function MusterCallFormationSection({
       {showProcessingView && (
         <div className="space-y-4">
           {/* Show compact formation status */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700">
+          <div
+            role="status"
+            aria-live="polite"
+            className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-700"
+          >
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                📋 Processing {stats?.completed || 0} of {formation.length}{" "}
-                documents
+                <span aria-hidden="true">📋</span> Processing{" "}
+                {stats?.completed || 0} of {formation.length} documents
               </span>
               <span className="text-xs text-blue-600 dark:text-blue-400">
                 {stats?.waiting || 0} waiting • {stats?.skipped || 0} skipped •{" "}

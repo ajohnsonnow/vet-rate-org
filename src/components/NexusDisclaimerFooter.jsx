@@ -13,10 +13,14 @@ const NexusDisclaimerFooter = ({ className = "" }) => {
   const { _t } = useLanguage();
   return (
     <div
+      role="note"
+      aria-label="Medical professional review required"
       className={`bg-orange-50 dark:bg-orange-900/30 border-2 border-orange-300 dark:border-orange-700 rounded-lg p-4 mt-4 ${className}`}
     >
       <div className="flex items-start gap-3">
-        <span className="text-xl flex-shrink-0">⚕️</span>
+        <span aria-hidden="true" className="text-xl flex-shrink-0">
+          ⚕️
+        </span>
         <div className="flex-1">
           <p className="text-sm text-orange-900 dark:text-orange-200 font-bold mb-1">
             Medical Professional Review Required

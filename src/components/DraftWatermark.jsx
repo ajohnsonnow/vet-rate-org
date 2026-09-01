@@ -14,11 +14,12 @@ const DraftWatermark = ({ className = "", variant = "banner" }) => {
   if (variant === "banner") {
     return (
       <div
+        role="status"
         className={`bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-700 rounded-t-lg px-4 py-2 ${className}`}
       >
         <div className="flex items-center justify-center gap-2">
           <span className="text-red-600 dark:text-red-400 font-bold text-sm tracking-wider">
-            📋 DRAFT - FOR VETERAN REVIEW ONLY
+            <span aria-hidden="true">📋</span> DRAFT - FOR VETERAN REVIEW ONLY
           </span>
         </div>
       </div>

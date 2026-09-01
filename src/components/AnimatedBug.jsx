@@ -70,6 +70,7 @@ const AnimatedBug = ({ size = "sm", className = "" }) => {
 
   return (
     <span
+      aria-hidden="true"
       className={`inline-block ${sizeClasses[size]} ${className}`}
       style={{
         ...animationStyle,
