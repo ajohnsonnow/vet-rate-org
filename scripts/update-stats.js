@@ -14,6 +14,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
+import prettier from "prettier";
 import { calculateLiveStats, formatNumber } from "./calculate-live-stats.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -535,7 +536,16 @@ const outputDir = path.dirname(OUTPUT_PATH);
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
-fs.writeFileSync(OUTPUT_PATH, JSON.stringify(stats, null, 2), "utf-8");
+// Format through prettier rather than raw JSON.stringify. stringify always
+// expands arrays; prettier collapses short ones back onto a single line, so
+// lint-staged reformatted this file on every commit and the next run expanded
+// it again - a permanent diff on a generated file whether or not any stat
+// actually changed.
+const statsJson = await prettier.format(JSON.stringify(stats, null, 2), {
+  ...(await prettier.resolveConfig(OUTPUT_PATH)),
+  parser: "json",
+});
+fs.writeFileSync(OUTPUT_PATH, statsJson, "utf-8");
 
 console.log(`   ✅ Saved to: ${OUTPUT_PATH}`);
 

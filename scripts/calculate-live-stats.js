@@ -331,7 +331,10 @@ export function calculateLiveStats() {
     appSizeMB: parseFloat(appSizeMB),
 
     // Calculated timestamp
-    calculatedAt: new Date().toISOString(),
+    // Date precision, not millisecond. Nothing reads this field, and a full
+    // ISO timestamp changed on every run, so projectStats.json produced a diff
+    // on every pre-push whether or not a single stat had moved.
+    calculatedAt: new Date().toISOString().split("T")[0],
   };
 }
 

@@ -11,7 +11,7 @@
   "total_hours": "38,081",
   "coding_hours": "32,181",
   "actual_hours": "150",
-  "coding_sessions": "74",
+  "coding_sessions": "75",
   "years_dev": "18.3",
   "traditional_cost": "5,140,935",
   "actual_cost": "63,000",
@@ -31,7 +31,7 @@
   },
   "days_dev": "229",
   "productivity_multiplier": "254",
-  "total_commits": "841",
+  "total_commits": "842",
   "ai_tools": {
     "planning": "Gemini 3",
     "coding": ["Claude 4.5 Opus", "Claude 4.5 Sonnet", "Claude 4.5 Haiku"],
@@ -48,7 +48,7 @@
   "traditional_cost_numeric": 5140935,
   "actual_cost_numeric": 63000,
   "cost_savings_numeric": 5077935,
-  "coding_sessions_numeric": 74,
+  "coding_sessions_numeric": 75,
   "productivity_multiplier_numeric": 254,
   "component_hours_numeric": 11380,
   "live": {
@@ -65,6 +65,6 @@
     "vaFormsCount": 94,
     "localAIModels": 6,
     "appSizeMB": 633.06,
-    "calculatedAt": "2026-09-01T17:55:46.739Z"
+    "calculatedAt": "2026-09-01"
   }
 }
