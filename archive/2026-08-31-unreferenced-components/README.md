@@ -21,3 +21,14 @@ code but is **deliberately kept**: `docs/DYNAMIC_STATS_GUIDE.md` and
 
 To restore: `git mv` the file back to `src/components/` and add an import.
 Full history follows the file, so `git log --follow` still works.
+
+## A note on the pre-commit hook
+
+`archive/` is listed in `.gitignore`, but files already tracked stay tracked
+when moved here, and a few are added deliberately with `git add -f` (see
+`archive/documentation/`). One side effect: lint-staged runs eslint and
+prettier over staged `.jsx` here and then cannot stage the result back,
+printing a `FAILED ... paths are ignored by one of your .gitignore files`
+line. It does not block or corrupt the commit - verified by hashing the files
+on disk against the committed blobs after it happened - but it looks alarming.
+Only relevant if you commit further `.jsx` into this directory.

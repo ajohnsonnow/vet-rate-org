@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.3] - 2026-08-31
+
+### Fixed
+
+- 🐛 **Accessibility**: batch document processing now announces its progress to screen readers. "Processing 3 of 12 documents" updates as Muster Call works through a formation, and until now none of it was announced - a screen-reader user had no way to tell whether anything was happening (WCAG 4.1.3). The "not a medical diagnosis" nexus warning is now exposed as a labelled region rather than loose text, and decorative emoji are no longer read aloud mid-sentence
+- 🐛 lint-staged never ran on `.jsx` - 260 files, the entire React component layer, were committing without eslint or prettier ever running on them
+- 🐛 stop the security scan reporting the same four reviewed, sanitised call sites on every run, so a genuinely unsafe one would stand out instead of blending into familiar noise
+
+### Refactored
+
+- ♻️ drop the VA data scraper from the release gate - a network-dependent scraper does not belong in preflight, and it was regenerating a file with no importers
+
+### Chores
+
+- 🧹 archive two unreferenced components (619 lines) that had been carried by automated lint sweeps since January 2026
+
 ## [1.30.2] - 2026-08-27
 
 ### Fixed
