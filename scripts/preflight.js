@@ -4,7 +4,7 @@
  * Does everything needed before pushing to GitHub:
  *   Phase 1 — FIX:      auto-fix lint, format, clear cache
  *   Phase 2 — PREPARE:  version bump, sync version, update stats,
- *                        sync changelog, legal pages, VA data pipeline
+ *                        sync changelog, legal pages
  *   Phase 3 — VALIDATE: lint, unit tests+coverage, E2E, build,
  *                        security, contracts, a11y, docs
  *   Phase 4 — SHIP:     git commit, tag, push (or show commands)
@@ -266,20 +266,6 @@ function runOptionalNpmStep(scriptName, label, okWord = "done") {
   console.log(r.ok ? c("green", okWord) : c("yellow", "warnings"));
 }
 
-function runVaDataPipeline() {
-  const pythonExe = path.join(ROOT, ".venv", "Scripts", "python.exe");
-  const pipelineScript = path.join(
-    ROOT,
-    "scripts",
-    "scrapers",
-    "va_data_pipeline.py",
-  );
-  if (!fs.existsSync(pythonExe) || !fs.existsSync(pipelineScript)) return;
-  process.stdout.write("  🏛️  VA data pipeline... ");
-  const r = tryRun(`"${pythonExe}" "${pipelineScript}" --generate-frontend`);
-  console.log(r.ok ? c("green", "done") : c("yellow", "skipped (error)"));
-}
-
 async function phasePrep() {
   console.log(`\n${c("bold", c("cyan", "━━━ Phase 2: Prepare Release ━━━"))}`);
 
@@ -299,7 +285,6 @@ async function phasePrep() {
   runOptionalNpmStep("update-stats", "📊 Updating stats");
   syncChangelogVersion(newVersion);
   runOptionalNpmStep("check-legal-pages", "⚖️  Legal pages", "ok");
-  runVaDataPipeline();
 
   return newVersion;
 }
