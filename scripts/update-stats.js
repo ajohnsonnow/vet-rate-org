@@ -267,8 +267,21 @@ for (const { pattern, replacement } of dynamicPatterns) {
   }
 }
 
+// Generated markdown goes through prettier before it is written. The
+// substitutions above rewrite table cells without re-padding them, and
+// prettier (via lint-staged on *.md) realigns the columns afterwards - so the
+// next run un-aligned them again and these files showed a diff on every
+// pre-push with identical values. Formatting here makes the two agree.
+async function writeFormattedMarkdown(target, content) {
+  const formatted = await prettier.format(content, {
+    ...(await prettier.resolveConfig(target)),
+    parser: "markdown",
+  });
+  fs.writeFileSync(target, formatted, "utf-8");
+}
+
 // Now write updated README
-fs.writeFileSync(README_PATH, readmeContent);
+await writeFormattedMarkdown(README_PATH, readmeContent);
 console.log(`   ✅ Updated ${readmeUpdates} values in README.md`);
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -411,7 +424,7 @@ if (fs.existsSync(AGENTIC_PATH)) {
     `*Document generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}*`,
   );
 
-  fs.writeFileSync(AGENTIC_PATH, agenticContent);
+  await writeFormattedMarkdown(AGENTIC_PATH, agenticContent);
   console.log(
     `   ✅ Updated ${agenticUpdates} values in AGENTIC_VALUE_PROPOSITION.md`,
   );
