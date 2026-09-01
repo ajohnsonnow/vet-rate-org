@@ -398,8 +398,19 @@ function checkSecurityScan() {
             critical.push(`[${p.id}] ${p.name} — ${rel}:${i + 1}`);
         });
         warnPatterns.forEach((p) => {
-          if (line.includes(p.pattern))
-            warnings.push(`[${p.id}] WARN ${p.name} — ${rel}:${i + 1}`);
+          if (!line.includes(p.pattern)) return;
+          // Honour the nosemgrep marker the reviewed call sites already carry
+          // (semgrep itself reports 0 findings on all of them). Without this
+          // every run printed the same four known-sanitised occurrences, and a
+          // security section that always shows the same warnings trains people
+          // to skim it - so a genuinely unsanitised fifth one would blend in.
+          // The marker sits on the line before or after depending on how the
+          // JSX wraps, hence the window.
+          const reviewed = lines
+            .slice(Math.max(0, i - 2), i + 3)
+            .some((l) => l.includes("nosemgrep"));
+          if (reviewed) return;
+          warnings.push(`[${p.id}] WARN ${p.name} — ${rel}:${i + 1}`);
         });
       }
     }
