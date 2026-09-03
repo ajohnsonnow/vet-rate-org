@@ -26,17 +26,38 @@ export default defineConfig({
   //   6. Chrome backgrounding/timer throttling. No - the three
   //      --disable-*-backgrounding flags gave 7 failures/126 vs 6/126.
   //
-  // What IS known: individual specs pass in isolation (duty-station-map is
-  // 15/15 alone, serially) but the same specs fail ~5% inside a mixed run,
-  // AT WORKERS=1. That rules out concurrency and points at cross-test
-  // interference - state or resource accumulation across tests sharing a
-  // browser and dev server. That is where to look next. It is not the
-  // harness, and it is not the machine (16c/32t, 72GB free).
+  //   7. Cross-test interference - state or resources accumulating across
+  //      tests that share a browser and dev server. No: running each spec file
+  //      on its own, with a fresh browser AND a fresh dev server, gave exactly
+  //      the same 4 failures / 84 as the mixed run at workers=1.
+  //   8. openTool fires its CustomEvent once and cannot recover if that
+  //      dispatch does not take, unlike dialog-contract which re-dispatches
+  //      inside expect.poll. Making it re-dispatch did NOT help and actively
+  //      hurt: the count stayed at 2/69 but moved onto "Tactical Calculator
+  //      shows at least one condition from the fixture", which had been
+  //      passing and then failed 2 runs out of 3. Reverted. Do not reapply.
+  //
+  // Where it actually lives, measured per-file in isolation (repeat-each=2,
+  // retries=0, workers=1):
+  //
+  //     tool-with-packet     3 failed / 46
+  //     dialog-contract      1 failed / 12
+  //     error-boundary       0 / 8       tactical-calculator  0 / 6
+  //     duty-station-map     0 / 6       simulators-a11y      0 / 6
+  //
+  // Four of six are perfectly clean on their own, so this is not a suite-wide
+  // or environmental property - it is intrinsic to those two files. Both drive
+  // React.lazy tool modals behind <Suspense fallback={null}>, where nothing is
+  // in the DOM between the event firing and the chunk resolving. But a
+  // targeted loop opening the two implicated tools 20 times reproduced nothing
+  // (0/20), so the trigger needs the long sequence of tests in a real file
+  // run, not the tool in isolation. That is the open thread.
+  //
   //
   // Measurement rig - reproduces a ~6% failure rate in ~3 minutes, which is
   // far denser than the ~1% you get from a full-suite run:
   //
-  //   npx playwright test --project=chromium   //     tests/e2e/{tool-with-packet,error-boundary,dialog-contract,  //     tactical-calculator,duty-station-map,simulators-a11y}.spec.ts   //     --repeat-each=3 --retries=0 --workers=6 --reporter=list
+  //   npx playwright test --project=chromium --repeat-each=3 --retries=0 --workers=6 --reporter=list tests/e2e/tool-with-packet.spec.ts tests/e2e/error-boundary.spec.ts tests/e2e/dialog-contract.spec.ts tests/e2e/tactical-calculator.spec.ts tests/e2e/duty-station-map.spec.ts tests/e2e/simulators-a11y.spec.ts
   //
   // Parse the summary with ANSI stripped. The `line` reporter prefixes it
   // with cursor codes, so an anchored grep like `^ *[0-9]+ failed` silently
