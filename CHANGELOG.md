@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.4] - 2026-09-06
+
+### Fixed
+
+- 🐛 **Release notes**: the in-app "What's New" now shows the right notes under the right version. A release-tooling bug had been relabeling the previous release's notes with the new version number on every release, so returning users could be shown last release's changes as this one's. Entries for 1.30.1 through 1.30.3 are restored to their true versions and dates
+- 🐛 release tooling stamps release dates in local time; evening releases were being dated the following day (UTC)
+- 🐛 make `projectStats.json` generation idempotent - repeated runs and prettier now agree byte-for-byte, so the stats file no longer shows a diff on every push
+- 🐛 stop generated `README.md` and `AGENTIC_VALUE_PROPOSITION.md` markdown churning against prettier; archive `bva_data_update.js`, a generated data file with no importers and an empty payload
+
+### Documentation
+
+- 📚 E2E flake localised to two spec files (`tool-with-packet`, `dialog-contract`); eight hypotheses now measured and disproven, with the per-file numbers recorded in `playwright.config.ts`
+
+### Chores
+
+- 🧹 ignore the Semgrep Guardian plugin's per-machine OAuth session file so it cannot be swept into a release commit
+
 ## [1.30.3] - 2026-08-31
 
 ### Fixed
