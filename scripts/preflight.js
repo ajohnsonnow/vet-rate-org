@@ -247,11 +247,11 @@ function syncChangelogVersion(newVersion) {
   try {
     const cl = readJSON("src/data/changelog.json");
     cl.version = newVersion;
-    cl.lastUpdated = new Date().toISOString().split("T")[0];
-    if (cl.updates?.length && cl.updates[0].version !== newVersion) {
-      cl.updates[0].version = newVersion;
-      cl.updates[0].date = cl.lastUpdated;
-    }
+    // en-CA yields YYYY-MM-DD in *local* time; toISOString() is UTC and
+    // dated evening releases as the following day.
+    cl.lastUpdated = new Date().toLocaleDateString("en-CA");
+    // updates[0] is still the PREVIOUS release here - the entry for this
+    // version is prepended later by update-changelog.js on pre-push.
     writeJSON("src/data/changelog.json", cl);
     console.log(c("green", `✅ Changelog synced → v${newVersion}`));
   } catch (e) {

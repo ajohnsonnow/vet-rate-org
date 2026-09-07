@@ -303,7 +303,9 @@ function main() {
   console.log("🔍 Analyzing git commits...\n");
 
   const version = getCurrentVersion();
-  const date = new Date().toISOString().split("T")[0];
+  // Local date (en-CA => YYYY-MM-DD). toISOString() is UTC and stamped
+  // evening releases with tomorrow's date.
+  const date = new Date().toLocaleDateString("en-CA");
   const commits = getCommits(fromVersion);
 
   if (commits.length === 0) {
