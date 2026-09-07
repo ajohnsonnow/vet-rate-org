@@ -11,9 +11,9 @@
  * Updates CHANGELOG.md and changelog.json automatically
  *
  * Usage:
- *   node scripts/update-changelog.js              # Generate changelog from recent commits
- *   node scripts/update-changelog.js --from v1.4.2 # Generate from specific version
- *   node scripts/update-changelog.js --preview    # Preview without writing
+ *   node scripts/update-changelog.js                   # Commits since the previous release tag
+ *   node scripts/update-changelog.js --from=2026-09-01 # Commits since a date instead
+ *   node scripts/update-changelog.js --preview         # Preview without writing
  */
 
 import { execSync } from "child_process";
@@ -61,27 +61,36 @@ const CATEGORY_PATTERNS = {
 };
 
 /**
+ * Newest v* tag that is not the current package.json version. The current
+ * version's own tag may already sit at HEAD (preflight tags before the docs
+ * generators run), so `lastTag..HEAD` is empty exactly when it matters.
+ */
+function previousReleaseTag() {
+  const current = `v${getCurrentVersion()}`;
+  return execSync('git tag -l "v*" --sort=-version:refname', {
+    encoding: "utf-8",
+  })
+    .split("\n")
+    .map((tag) => tag.trim())
+    .find((tag) => tag && tag !== current);
+}
+
+/**
+ * Selector for `git log`: a date window when --from is given, otherwise every
+ * commit since the previous release tag.
+ */
+function resolveRange(from) {
+  if (from) return `--since="${from}"`;
+  const tag = previousReleaseTag();
+  return tag ? `${tag}..HEAD` : '--since="7 days ago"';
+}
+
+/**
  * Get git commits since a specific version or date
  */
 function getCommits(since = null) {
   try {
-    // Default: commits since last version tag, not a fixed time window (avoids duplication)
-    let sinceArg;
-    if (since) {
-      sinceArg = `--since="${since}"`;
-    } else {
-      try {
-        const lastTag = execSync('git tag -l "v*" --sort=-version:refname', {
-          encoding: "utf-8",
-        })
-          .trim()
-          .split("\n")[0];
-        sinceArg = lastTag ? `${lastTag}..HEAD` : '--since="7 days ago"';
-      } catch {
-        sinceArg = '--since="7 days ago"';
-      }
-    }
-    const command = `git log ${sinceArg} --pretty=format:"%H|%s|%ad|%an" --date=short`;
+    const command = `git log ${resolveRange(since)} --pretty=format:"%H|%s|%ad|%an" --date=short`;
     const output = execSync(command, { encoding: "utf-8" }); // nosemgrep: local.detect-child-process-strict,javascript.lang.security.detect-child-process.detect-child-process
 
     return output
@@ -281,6 +290,13 @@ function updateJsonChangelog(newEntry) {
     "changelog.json",
   );
   const changelog = JSON.parse(fs.readFileSync(changelogPath, "utf-8"));
+
+  if (changelog.updates.some((entry) => entry.version === newEntry.version)) {
+    console.log(
+      `ℹ️  changelog.json already has a ${newEntry.version} entry — skipping insert.`,
+    );
+    return;
+  }
 
   // Update version and lastUpdated
   changelog.version = newEntry.version;
