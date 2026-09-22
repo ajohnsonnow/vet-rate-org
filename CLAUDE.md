@@ -1,5 +1,7 @@
 # CLAUDE.md — Universal AI Agent Rules
 
+<!-- propagate-ai-rules: keep (project-specific rules; the toolkit propagator skips files carrying this marker) -->
+
 > Auto-loaded by Claude Code (CLI, app, VS Code extension). Mirror copies live at [.github/copilot-instructions.md](.github/copilot-instructions.md), [.cursor/rules/best-practices.mdc](.cursor/rules/best-practices.mdc), [.windsurfrules](.windsurfrules), and [.continuerules](.continuerules) so the same rules apply across **every** AI surface (Copilot Chat, Cursor, Windsurf, Continue, Codex, etc.). When you change one, change all.
 >
 > Canonical source for these rules: **[../best-practices-toolkit/CLAUDE.md](../best-practices-toolkit/CLAUDE.md)**. Topical guides referenced below live under [../best-practices-toolkit/docs/best-practices/](../best-practices-toolkit/docs/best-practices/). If anything here goes stale, the toolkit is authoritative.
