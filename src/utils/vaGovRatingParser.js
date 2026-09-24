@@ -40,8 +40,8 @@ function _parseServiceConnectedSection(text) {
 
   // Find all rating patterns: "X% rating for [condition]"
   // Improved regex to handle newlines and effective dates better
-  // eslint-disable-next-line sonarjs/slow-regex -- input is user-pasted VA.gov text (bounded), and the lookahead prevents runaway matches
-  const ratingPattern = /(\d+)%\s+rating\s+for\s+([^\n\r]+?)(?=\s*\n|$)/gi;
+  const ratingPattern =
+    /(\d{1,3})%\s{1,5}rating\s{1,5}for\s{1,5}([^\n\r]{1,300}?)(?=\s{0,5}\n|$)/gi;
   let match;
 
   while ((match = ratingPattern.exec(serviceConnectedText)) !== null) {
@@ -50,8 +50,7 @@ function _parseServiceConnectedSection(text) {
 
     // Clean up condition name - remove any trailing punctuation or dates
     condition = condition
-      // eslint-disable-next-line sonarjs/slow-regex -- input is a single already-extracted condition line (a few dozen chars), not attacker-controlled length
-      .replace(/\s*Effective\s+date:.*$/i, "") // Remove effective date if captured
+      .replace(/\s{0,5}Effective\s{1,5}date:.{0,300}$/i, "") // Remove effective date if captured
       .replace(/\(previously rated as .+?\)/gi, "") // Remove "previously rated as" text
       .replace(/\(claimed as .+?\)/gi, "") // Remove "claimed as" text
       .trim();
@@ -293,6 +292,35 @@ export function validateParsedRatings(ratings) {
 }
 
 /**
+ * Format the legacy flat-array rating format (pre-dates the
+ * combinedRating/serviceConnected/notServiceConnected object shape).
+ * @param {Array} ratings
+ * @returns {string}
+ */
+function formatLegacyRatingsList(ratings) {
+  if (ratings.length === 0) {
+    return "No ratings found in pasted text.";
+  }
+
+  let text = `Found ${ratings.length} rating${ratings.length === 1 ? "" : "s"}:\n\n`;
+
+  ratings.forEach((r, i) => {
+    text += `${i + 1}. ${r.condition}`;
+    if (r.rating !== null) {
+      text += ` - ${r.rating}%`;
+    } else {
+      text += ` - (No rating found, please set manually)`;
+    }
+    if (r.effectiveDate) {
+      text += ` (Effective: ${formatLocalDate(r.effectiveDate).toLocaleDateString()})`;
+    }
+    text += "\n";
+  });
+
+  return text;
+}
+
+/**
  * Format parsed ratings for display
  * @param {Object} parseResult - Result from parseVAGovRatings with combinedRating, serviceConnected, notServiceConnected
  * @returns {string} Formatted text summary
@@ -300,27 +328,7 @@ export function validateParsedRatings(ratings) {
 export function formatParsedRatings(parseResult) {
   // Handle legacy array format for backwards compatibility
   if (Array.isArray(parseResult)) {
-    const ratings = parseResult;
-    if (ratings.length === 0) {
-      return "No ratings found in pasted text.";
-    }
-
-    let text = `Found ${ratings.length} rating${ratings.length === 1 ? "" : "s"}:\n\n`;
-
-    ratings.forEach((r, i) => {
-      text += `${i + 1}. ${r.condition}`;
-      if (r.rating !== null) {
-        text += ` - ${r.rating}%`;
-      } else {
-        text += ` - (No rating found, please set manually)`;
-      }
-      if (r.effectiveDate) {
-        text += ` (Effective: ${formatLocalDate(r.effectiveDate).toLocaleDateString()})`;
-      }
-      text += "\n";
-    });
-
-    return text;
+    return formatLegacyRatingsList(parseResult);
   }
 
   // New object format

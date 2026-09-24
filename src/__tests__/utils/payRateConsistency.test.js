@@ -76,9 +76,8 @@ describe("Python LLM tool stays in sync with the SSOT", () => {
     );
     const block = source.match(/VA_COMPENSATION_RATES = \{([\s\S]*?)\}/);
     expect(block).not.toBeNull();
-    // eslint-disable-next-line sonarjs/slow-regex -- disjoint char classes (\d, ':', \s, [\d.]) per segment; no ambiguous backtracking, and input is this repo's own vaCalculatorTool.py, not attacker-controlled
-    const entries = [...block[1].matchAll(/(\d+):\s*([\d.]+)/g)];
-    expect(entries.length).toBe(10);
+    const entries = [...block[1].matchAll(/(\d{1,3}):\s{0,10}([\d.]{1,20})/g)];
+    expect(entries).toHaveLength(10);
     for (const [, rating, value] of entries) {
       expect(Number(value)).toBe(HISTORICAL_2026.solo[Number(rating)]);
     }
@@ -144,7 +143,7 @@ describe("analyzeRetroactivePay input validation", () => {
     ]);
 
     const firstSegment = result.periods.filter((p) => p.month < "2025-01");
-    expect(firstSegment.length).toBe(83); // 2018-02 .. 2024-12 inclusive
+    expect(firstSegment).toHaveLength(83); // 2018-02 .. 2024-12 inclusive
     expect(firstSegment[0].month).toBe("2018-02");
     expect(firstSegment.at(-1).month).toBe("2024-12");
 

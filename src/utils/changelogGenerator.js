@@ -76,8 +76,8 @@ export function parseReadmeForChangelog(readmeContent) {
       const sectionContent = match[1];
 
       // Extract bullet points with ** bold titles **
-      // eslint-disable-next-line sonarjs/slow-regex -- [:\s]* partially overlaps the following .+? (both can match space/tab), which is the classic slow-regex shape; a string-op rewrite would require re-deriving this multi-match while-loop's extraction logic, risking behavior drift, and the input is this repo's own static README.md, not attacker-controlled
-      const featureRegex = /-\s*\*\*([^*]+)\*\*[:\s]*(.+?)(?=\n-|\n\n|$)/g;
+      const featureRegex =
+        /-\s{0,10}\*\*([^*]{1,200})\*\*[:\s]{0,10}(.{1,2000}?)(?=\n-|\n\n|$)/g;
       let featureMatch;
 
       while ((featureMatch = featureRegex.exec(sectionContent)) !== null) {
