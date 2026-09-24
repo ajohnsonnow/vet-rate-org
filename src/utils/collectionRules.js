@@ -95,7 +95,7 @@ const DD214_RULES = {
     category: FIELD_CATEGORIES.IDENTITY,
     tooltip:
       "Box 5: Date of Birth. Needed for age-related presumptive conditions (PACT Act, Agent Orange).",
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   // ============================================================
@@ -228,7 +228,7 @@ const DD214_RULES = {
     category: FIELD_CATEGORIES.SERVICE,
     tooltip:
       "Box 12a: Date entered active duty this period. Proves active duty status for service-connection.",
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   serviceEndDate: {
@@ -236,7 +236,7 @@ const DD214_RULES = {
     category: FIELD_CATEGORIES.SERVICE,
     tooltip:
       'Box 12b: Separation date. Establishes end of active duty for "within one year" conditions.',
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   // ============================================================
@@ -504,7 +504,7 @@ const RATING_DECISION_RULES = {
     category: FIELD_CATEGORIES.ADMINISTRATIVE,
     tooltip:
       "Establishes effective date for back pay. Must be within one year for appeals.",
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   combinedRating: {
@@ -528,7 +528,7 @@ const RATING_DECISION_RULES = {
     category: FIELD_CATEGORIES.BENEFITS,
     tooltip:
       "Date benefits begin. Determines retroactive pay amount. Can be backdated if Intent to File was submitted.",
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   deniedConditions: {
@@ -572,7 +572,7 @@ const CP_EXAM_RULES = {
     category: FIELD_CATEGORIES.ADMINISTRATIVE,
     tooltip:
       "Date of examination. Used to match with rating decision timeline.",
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   examType: {
@@ -639,7 +639,7 @@ const MEDICAL_RECORDS_RULES = {
     category: FIELD_CATEGORIES.MEDICAL,
     tooltip:
       "Date of medical treatment. Establishes continuity of treatment for chronic conditions.",
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   diagnosis: {
@@ -704,7 +704,7 @@ const VA_CLAIM_FORM_RULES = {
     importance: FIELD_IMPORTANCE.REQUIRED,
     category: FIELD_CATEGORIES.ADMINISTRATIVE,
     tooltip: "Date claim was filed. Determines effective date for back pay.",
-    validation: (val) => val && !isNaN(Date.parse(val)),
+    validation: (val) => val && !Number.isNaN(Date.parse(val)),
   },
 
   claimedConditions: {

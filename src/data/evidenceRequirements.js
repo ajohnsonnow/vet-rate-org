@@ -5541,7 +5541,7 @@ export const getAvailableConditions = () => {
     diagnosticCode: data.diagnosticCode,
     category: data.category,
     cfr: data.cfr,
-    availableRatings: Object.keys(data.ratings).map((r) => parseInt(r)),
+    availableRatings: Object.keys(data.ratings).map((r) => Number.parseInt(r)),
   }));
 };
 

@@ -20,7 +20,7 @@ function getAvailableRatingsForCondition(conditionId) {
   const data = conditionId ? EVIDENCE_REQUIREMENTS[conditionId] : null;
   return data
     ? Object.keys(data.ratings)
-        .map((r) => parseInt(r))
+        .map((r) => Number.parseInt(r))
         .sort((a, b) => a - b)
     : [];
 }
@@ -30,7 +30,7 @@ function computeDefaultRating(conditionId) {
   if (!condition) return null;
   // Set default to highest rating that isn't 100
   const ratings = Object.keys(condition.ratings)
-    .map((r) => parseInt(r))
+    .map((r) => Number.parseInt(r))
     .sort((a, b) => b - a);
   return ratings.find((r) => r < 100 && r >= 30) || ratings[0];
 }
@@ -200,7 +200,7 @@ const ConditionRatingSelectors = ({
       </label>
       <select
         value={targetRating}
-        onChange={(e) => setTargetRating(parseInt(e.target.value))}
+        onChange={(e) => setTargetRating(Number.parseInt(e.target.value))}
         disabled={!selectedCondition}
         className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all disabled:opacity-50"
       >

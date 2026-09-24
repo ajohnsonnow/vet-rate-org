@@ -78,8 +78,8 @@ const useConditionCatalog = () => {
     // Sort conditions within each system by diagnostic code
     Object.keys(systemMap).forEach((system) => {
       systemMap[system].sort((a, b) => {
-        const codeA = parseInt(a.diagnosticCode) || 0;
-        const codeB = parseInt(b.diagnosticCode) || 0;
+        const codeA = Number.parseInt(a.diagnosticCode) || 0;
+        const codeB = Number.parseInt(b.diagnosticCode) || 0;
         return codeA - codeB;
       });
     });

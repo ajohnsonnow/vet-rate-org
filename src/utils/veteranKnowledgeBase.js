@@ -994,7 +994,7 @@ function mergeDD214ServiceDates(vkb, dd214Data) {
     const entry = new Date(vkb.serviceHistory.entryDate);
     const sep = new Date(vkb.serviceHistory.separationDate);
     const years = ((sep - entry) / (365.25 * 24 * 60 * 60 * 1000)).toFixed(1);
-    vkb.serviceHistory.yearsOfService = parseFloat(years);
+    vkb.serviceHistory.yearsOfService = Number.parseFloat(years);
   } else {
     vkb.serviceHistory.yearsOfService =
       dd214Data.yearsService ||
@@ -1440,7 +1440,7 @@ function parsePayGrade(pg) {
   const match = pg.match(/([EOW])-?(\d+)/i);
   if (!match) return 0;
   const category = match[1].toUpperCase();
-  const level = parseInt(match[2], 10);
+  const level = Number.parseInt(match[2], 10);
   let base;
   if (category === "E") {
     base = 0;

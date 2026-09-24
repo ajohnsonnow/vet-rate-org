@@ -1503,7 +1503,7 @@ const PainPainterBodyScaling = ({ bodyScale, setBodyScale }) => (
             onChange={(e) =>
               setBodyScale((prev) => ({
                 ...prev,
-                [part]: parseFloat(e.target.value),
+                [part]: Number.parseFloat(e.target.value),
               }))
             }
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
@@ -1637,7 +1637,7 @@ const PainPainterViewControls = ({ zoom, setZoom, view, setView }) => (
             max="2"
             step="0.1"
             value={zoom}
-            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            onChange={(e) => setZoom(Number.parseFloat(e.target.value))}
             className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
           />
           <button

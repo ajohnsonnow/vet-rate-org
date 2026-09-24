@@ -33,7 +33,7 @@ export const DEVICE_TIERS = {
  */
 const parseAndroidVersion = (userAgent) => {
   const match = userAgent.match(/Android\s+(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 };
 
 /**
@@ -43,7 +43,7 @@ const parseAndroidVersion = (userAgent) => {
 const parseIOSVersion = (userAgent) => {
   // iOS UA: "iPhone OS 18_7" or "CPU iPhone OS 18_7 like Mac OS X"
   const match = userAgent.match(/(?:iPhone|iPad|iPod).*?OS\s+(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 };
 
 /**

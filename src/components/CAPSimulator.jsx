@@ -146,7 +146,7 @@ const BODY_SYSTEM_RULES = [
 ];
 
 const getBodySystem = (condition) => {
-  const code = parseInt(condition.diagnosticCode);
+  const code = Number.parseInt(condition.diagnosticCode);
   const schedule = condition.ratingSchedule || "";
   const match = BODY_SYSTEM_RULES.find(
     (rule) =>
@@ -1617,15 +1617,15 @@ function _buildRatingWarnings(
 
 const calculateGenericRating = (answers, condition) => {
   const totalWeight = Object.values(answers).reduce((sum, val) => {
-    const weight = parseInt(val) || 0;
+    const weight = Number.parseInt(val) || 0;
     return sum + weight;
   }, 0);
 
   const avgWeight = totalWeight / Object.keys(answers).length;
   const ratings = condition.ratingCriteria?.ratings || {};
   const ratingKeys = Object.keys(ratings)
-    .map((k) => parseInt(k))
-    .filter((k) => !isNaN(k))
+    .map((k) => Number.parseInt(k))
+    .filter((k) => !Number.isNaN(k))
     .sort((a, b) => b - a);
   const conditionNameLower = (
     condition.conditionName ||

@@ -274,7 +274,7 @@ const RatingCriteriaTable = ({ result }) =>
         <tbody>
           {/* Sort ratings in descending order */}
           {Object.entries(result.ratingCriteria.ratings)
-            .sort(([a], [b]) => parseInt(b) - parseInt(a))
+            .sort(([a], [b]) => Number.parseInt(b) - Number.parseInt(a))
             .map(([percentage, criteria], idx) => (
               <tr
                 key={percentage}

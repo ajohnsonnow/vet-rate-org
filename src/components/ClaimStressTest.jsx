@@ -25,7 +25,7 @@ const checkTimelineGap = (text) => {
   const yearPattern = /\b(19|20)\d{2}\b/g;
   const years = text
     .match(yearPattern)
-    ?.map((y) => parseInt(y))
+    ?.map((y) => Number.parseInt(y))
     .sort();
 
   if (!years || years.length < 2) return null;

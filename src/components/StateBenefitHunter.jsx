@@ -388,7 +388,7 @@ const PermanentTotalCheckbox = ({
   const showCheckbox =
     selectedRating &&
     selectedRating !== "100-PT" &&
-    parseInt(selectedRating) >= 70;
+    Number.parseInt(selectedRating) >= 70;
 
   if (!showCheckbox) return null;
 
@@ -856,7 +856,7 @@ const fetchStateBenefits = async (selectedState, selectedRating) => {
   // Use state code directly instead of state name
   const stateCode = selectedState;
   const ratingNum =
-    selectedRating === "100-PT" ? 100 : parseInt(selectedRating);
+    selectedRating === "100-PT" ? 100 : Number.parseInt(selectedRating);
 
   const response = await searchStateBenefits(stateCode, ratingNum);
 

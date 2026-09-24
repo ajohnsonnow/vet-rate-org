@@ -15,7 +15,7 @@ import { getTotalToolCount as getToolkitToolCount } from "./toolkitData";
 const parseNumeric = (str) => {
   if (typeof str === "number") return str;
   if (!str) return 0;
-  return parseInt(String(str).replace(/,/g, ""), 10) || 0;
+  return Number.parseInt(String(str).replace(/,/g, ""), 10) || 0;
 };
 
 export const PROJECT_STATS = {
@@ -78,15 +78,15 @@ export const PROJECT_STATS = {
 
   // Development Time & Cost (from dynamic JSON)
   traditionalHours: parseNumeric(dynamicStats.total_hours) || 15420,
-  traditionalYears: parseFloat(dynamicStats.years_dev) || 7.4,
+  traditionalYears: Number.parseFloat(dynamicStats.years_dev) || 7.4,
   traditionalCost: parseNumeric(dynamicStats.traditional_cost) || 2081700,
   professionalTeamCostMin: 2089580,
   professionalTeamCostMax: 2592745,
   actualHours: dynamicStats.actual_hours || "140",
-  actualDays: parseFloat(dynamicStats.days_dev) || 14,
+  actualDays: Number.parseFloat(dynamicStats.days_dev) || 14,
   actualCost: parseNumeric(dynamicStats.actual_cost) || 7425,
   costSavings: parseNumeric(dynamicStats.cost_savings_numeric) || 2074275,
-  costSavingsPercent: parseFloat(dynamicStats.savings_percent) || 99.6,
+  costSavingsPercent: Number.parseFloat(dynamicStats.savings_percent) || 99.6,
   hourlyRate: parseNumeric(dynamicStats.hourly_rate) || 135,
   productivityMultiplier:
     parseNumeric(dynamicStats.productivity_multiplier) || 280,

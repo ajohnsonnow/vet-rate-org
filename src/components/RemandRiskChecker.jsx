@@ -204,7 +204,7 @@ function PriorDenialsInput({ priorDenials, setPriorDenials, persistenceMsg }) {
         min="0"
         max="10"
         value={priorDenials}
-        onChange={(e) => setPriorDenials(parseInt(e.target.value) || 0)}
+        onChange={(e) => setPriorDenials(Number.parseInt(e.target.value) || 0)}
         className="w-24 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
       />
       <div className="mt-2 text-sm text-blue-700 dark:text-blue-400">

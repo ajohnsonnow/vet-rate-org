@@ -405,7 +405,7 @@ function _drawPercentageTable(ctx) {
 
     // Sort ratings in descending order
     const sortedRatings = Object.entries(result.ratingCriteria.ratings).sort(
-      ([a], [b]) => parseInt(b) - parseInt(a),
+      ([a], [b]) => Number.parseInt(b) - Number.parseInt(a),
     );
 
     sortedRatings.forEach(([percentage, criteria], index) => {

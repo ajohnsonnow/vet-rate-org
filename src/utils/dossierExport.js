@@ -46,7 +46,7 @@ function formatDate(dateValue) {
   if (!dateValue) return "N/A";
   try {
     const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return String(dateValue);
+    if (Number.isNaN(date.getTime())) return String(dateValue);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",

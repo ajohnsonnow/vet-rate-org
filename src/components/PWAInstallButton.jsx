@@ -240,7 +240,7 @@ const PWAInstallButton = ({ className = "" }) => {
   const dismissedTime = localStorage.getItem("pwa_install_dismissed");
   if (dismissedTime) {
     const daysSinceDismissed =
-      (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
+      (Date.now() - Number.parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
     if (daysSinceDismissed < 7) {
       return null;
     }

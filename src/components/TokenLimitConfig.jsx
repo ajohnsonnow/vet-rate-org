@@ -321,8 +321,8 @@ const CustomInput = ({ customValue, onChange, onApply, currentModel }) => (
         onClick={onApply}
         disabled={
           !customValue ||
-          parseInt(customValue, 10) < 128 ||
-          parseInt(customValue, 10) > currentModel.absoluteMax
+          Number.parseInt(customValue, 10) < 128 ||
+          Number.parseInt(customValue, 10) > currentModel.absoluteMax
         }
         className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-400 text-white rounded-lg font-semibold text-sm transition-colors"
       >
@@ -540,7 +540,7 @@ const TokenLimitConfig = () => {
 
   // Apply custom value
   const handleCustomApply = () => {
-    const value = parseInt(customValue, 10);
+    const value = Number.parseInt(customValue, 10);
     if (value && value >= 128 && value <= currentModel.absoluteMax) {
       setTokenLimit(value);
       saveTokenLimit(value);
