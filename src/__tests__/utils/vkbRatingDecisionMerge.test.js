@@ -436,3 +436,70 @@ describe("veteranKnowledgeBase: one record per decision across letters and the c
     expect(vkb.vaClaimsHistory.claims).toHaveLength(2);
   });
 });
+
+describe("veteranKnowledgeBase: a later-processed decision never overwrites a newer rating", () => {
+  it("ignores an older decision that arrives after the current one is already on file", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(
+      vkb,
+      {
+        conditions: [
+          {
+            name: "Lumbosacral strain",
+            rating: 20,
+            effectiveDate: "2023-09-15",
+          },
+        ],
+      },
+      { fileName: "newer-letter.pdf" },
+    );
+    // A code sheet upload processed second, but describing the earlier rating.
+    mergeRatingDecisionIntoVKB(
+      vkb,
+      {
+        conditions: [
+          {
+            name: "Lumbosacral strain",
+            rating: 10,
+            effectiveDate: "2022-01-01",
+          },
+        ],
+      },
+      { fileName: "older-cfile.pdf" },
+    );
+    expect(vkb.medicalConditions.current).toHaveLength(1);
+    expect(vkb.medicalConditions.current[0].ratedPercentage).toBe(20);
+    expect(vkb.medicalConditions.current[0].effectiveDate).toBe("2023-09-15");
+  });
+});
+
+describe("veteranKnowledgeBase: a rating decision's servicePeriods merge like a code sheet's", () => {
+  it("adds the decision's active-duty periods to serviceHistory", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(
+      vkb,
+      {
+        conditions: [],
+        servicePeriods: [
+          {
+            entryDate: "2002-05-06",
+            separationDate: "2007-06-29",
+            branch: "Army",
+            characterOfDischarge: "Honorable",
+          },
+        ],
+      },
+      { fileName: "cfile.pdf" },
+    );
+    expect(vkb.serviceHistory.servicePeriods).toEqual([
+      {
+        serviceStartDate: "2002-05-06",
+        serviceEndDate: "2007-06-29",
+        branch: "Army",
+        characterOfService: "Honorable",
+        source: "cfile.pdf",
+        incomplete: false,
+      },
+    ]);
+  });
+});
