@@ -680,3 +680,60 @@ E-5 19900101
     expect(result.dateOfBirth).toBe("01/01/1990");
   });
 });
+
+describe("FIX: fabricated date of birth", () => {
+  // Regression (Vera re-verification, 2026-09-24): the compact-format Box 5
+  // fallback anchored on a bare "5." - which also matches the tail of any
+  // OTHER box number ending in 5 ("15.", "25.") - so a later box's 8-digit
+  // date got read as the veteran's date of birth.
+  it("does not fabricate a DOB from a later box's date (Box 25 also ends in '5.')", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+25. SEPARATION AUTHORITY: ORDERS DATED 20100615
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBeNull();
+  });
+
+  it("discards a DOB that would make the veteran under 17 at the entry date", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH: 01/15/2010
+12a. DATE ENTERED AD THIS PERIOD: 06/01/2010
+12b. DATE OF SEPARATION: 05/30/2015
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBeNull();
+  });
+
+  it("discards a DOB that falls after the separation date, even with no entry date extracted", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH: 06/01/2016
+12b. DATE OF SEPARATION: 05/30/2015
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBeNull();
+  });
+
+  it("keeps a plausible DOB (adult at entry, before separation)", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH: 01/15/1990
+12a. DATE ENTERED AD THIS PERIOD: 06/01/2010
+12b. DATE OF SEPARATION: 05/30/2015
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBe("01/15/1990");
+  });
+});

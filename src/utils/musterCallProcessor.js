@@ -72,6 +72,7 @@ import {
   primaryConditionKey,
 } from "./conditionName";
 import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
+import { formatLocalDate } from "./dateUtils";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
 // Import JSON repair utility for handling truncated AI responses
@@ -3018,7 +3019,12 @@ function _extractDateOfBirth(ctx) {
     // non-digit-only gap can never skip past that embedded "5" to reach
     // the real 8-digit date, so dateOfBirth came back null even though
     // the digits were right there. Still bounded to 50 chars.
-    /5\.\s{0,10}.{0,50}?(\d{8})\b/i,
+    //
+    // Anchored to the BIRTH label itself, not just a bare "5." - "5."
+    // alone matches the tail of ANY box number that ends in 5 ("15.",
+    // "25."), so this used to pick up a completely unrelated later box's
+    // 8-digit date as the veteran's date of birth.
+    /5\.\s{0,10}.{0,10}?BIRTH.{0,50}?(\d{8})\b/i,
   ];
   for (const pattern of dobPatterns) {
     const match = cleanedText.match(pattern);
@@ -3029,6 +3035,39 @@ function _extractDateOfBirth(ctx) {
   }
 
   // ============================================================
+}
+
+// Runs after serviceStartDate/serviceEndDate are extracted (see the call
+// order in parseServiceRecord below) - dateOfBirth itself is extracted
+// first, before either is known, so a bad match there (e.g. the wrong
+// box's 8-digit run) can't be caught until now. No real veteran was under
+// 17 at entry (the minimum enlistment age, with parental consent) or born
+// after their own separation date; either condition means the DOB pattern
+// landed on the wrong digits, and the fabricated value is discarded rather
+// than shown as fact.
+const MIN_ENLISTMENT_AGE_YEARS = 17;
+function _validateDateOfBirth(ctx) {
+  const { data } = ctx;
+  const dob = formatLocalDate(data.dateOfBirth);
+  if (Number.isNaN(dob.getTime())) return;
+
+  const entryDate = formatLocalDate(data.serviceStartDate);
+  if (!Number.isNaN(entryDate.getTime())) {
+    const minEntryDate = new Date(dob);
+    minEntryDate.setFullYear(dob.getFullYear() + MIN_ENLISTMENT_AGE_YEARS);
+    if (entryDate.getTime() < minEntryDate.getTime()) {
+      data.dateOfBirth = null;
+      return;
+    }
+  }
+
+  const separationDate = formatLocalDate(data.serviceEndDate);
+  if (
+    !Number.isNaN(separationDate.getTime()) &&
+    dob.getTime() > separationDate.getTime()
+  ) {
+    data.dateOfBirth = null;
+  }
 }
 
 function _extractServiceStartDate(ctx) {
@@ -4129,6 +4168,8 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     _extractServiceStartDate(ctx);
     _extractPlaceOfEntryAndMOS(ctx);
     _extractServiceEndDate(ctx);
+    // After both service dates are known - see _validateDateOfBirth.
+    _validateDateOfBirth(ctx);
     _extractServiceTime(ctx);
     _extractAwardsFromBlock13(ctx);
     _extractAwardsFallback(ctx);
