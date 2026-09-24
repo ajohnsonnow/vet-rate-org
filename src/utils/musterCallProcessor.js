@@ -1558,8 +1558,7 @@ export const processFormationDocument = async (file, onProgress) => {
  */
 const splitMultipleDD214s = (text) => {
   // Split by page markers first
-  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-  const pagePattern = /---\s*PAGE\s+(\d+).*?---/gi;
+  const pagePattern = /---\s{0,10}PAGE\s{1,10}(\d{1,6}).{0,200}?---/gi;
 
   // Find all page boundaries
   const pageMatches = [...text.matchAll(pagePattern)];
@@ -2369,8 +2368,8 @@ const DEPLOYMENT_ERA_LATEST_YEAR = {
 // matcher below still matched "VIETNAM" inside it, fabricating a deployment.
 function _extractBox18RemarksText(ocrCorrectedText) {
   const match = ocrCorrectedText.match(
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- pre-existing (predates this change, unrelated to it); slow-regex verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars. regex-complexity is inherent to the multi-alternative field-boundary lookahead this parser depends on; simplifying it is a separate, larger task out of scope here.
-    /18\.\s*REMARKS[:\s]*(.+?)(?=\s*19a?\.|\s*20\.|\s*21\.|\s*22\.|\s*23\.\s*TYPE\s+OF\s+SEPARATION|$)/is,
+    // eslint-disable-next-line sonarjs/regex-complexity -- inherent to the multi-alternative field-boundary lookahead this parser depends on; simplifying it is a separate, larger task out of scope here. Bounded below for S8786.
+    /18\.\s{0,10}REMARKS[:\s]{0,20}(.{1,5000}?)(?=\s{0,10}19a?\.|\s{0,10}20\.|\s{0,10}21\.|\s{0,10}22\.|\s{0,10}23\.\s{0,10}TYPE\s{1,10}OF\s{1,10}SEPARATION|$)/is,
   );
   return match ? match[1] : "";
 }
@@ -2529,8 +2528,8 @@ function _extractNameField(ctx) {
 
   const namePatterns = [
     // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /1\.\s*NAME.*?(?:Last.*?First.*?Middle.*?)?[:\s]+([A-Z]{3,})[,;]\s*([A-Z]{3,})(?:\s+([A-Z]+))?/i,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional Last/First/Middle-label alternation count, not backtracking; bounded for S8786 above
+    /1\.\s{0,10}NAME.{0,2000}?(?:Last.{0,200}?First.{0,200}?Middle.{0,200}?)?[:\s]{1,20}([A-Z]{3,})[,;]\s{0,10}([A-Z]{3,})(?:\s{1,10}([A-Z]{1,50}))?/i,
     // Name on line after "1. NAME" label
     /1\.\s*NAME[^\n]*\n\s*([A-Z]{3,})[,;]?\s+([A-Z]{3,})(?:\s+([A-Z]+))?/i,
     // Look for CAPS name with comma in Box 1 area: "WILLIAMS, ROBERT"
@@ -2674,8 +2673,7 @@ function _extractBranchField(ctx) {
   // === BOX 2: BRANCH/COMPONENT ===
   // Handle abbreviations like ARNGUS, ORARNG, USMC, etc.
   const branchPatterns = [
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /2\.\s*DEPARTMENT[^:]*[:\s]+([A-Z0-9/\s]+?)(?:\s+3\.|$)/i,
+    /2\.\s{0,10}DEPARTMENT[^:]{0,200}[:\s]{1,20}([A-Z0-9/\s]{1,200}?)(?:\s{1,10}3\.|$)/i,
     /COMPONENT\s+AND\s+BRANCH[:\s]+([A-Z0-9/\s]+)/i,
     // Common branch abbreviations
     /\b(ARMY|ARNGUS|ORARNG|[A-Z]{2}ARNG|USAR|USN|USNR|USMC|USMCR|USAF|USAFR|USCG|USCGR|USSF)\b/i,
@@ -2878,6 +2876,33 @@ function _extractPayGrade(ctx) {
   // ============================================================
 }
 
+/**
+ * Convert a compact YYYYMMDD (or, if the year range check fails,
+ * MMDDYYYY) date-of-birth string to MM/DD/YYYY. Validates the year falls
+ * in a reasonable DOB range (1940-2010); returns the input unchanged if
+ * it isn't 8 digits or neither format's year passes that check.
+ */
+function _normalizeCompactDob(dob) {
+  if (!/^\d{8}$/.test(dob)) return dob;
+
+  const year = dob.substring(0, 4);
+  const month = dob.substring(4, 6);
+  const day = dob.substring(6, 8);
+  if (Number.parseInt(year) >= 1940 && Number.parseInt(year) <= 2010) {
+    return `${month}/${day}/${year}`;
+  }
+
+  // Might be MMDDYYYY format instead
+  const altYear = dob.substring(4, 8);
+  const altMonth = dob.substring(0, 2);
+  const altDay = dob.substring(2, 4);
+  if (Number.parseInt(altYear) >= 1940 && Number.parseInt(altYear) <= 2010) {
+    return `${altMonth}/${altDay}/${altYear}`;
+  }
+
+  return dob;
+}
+
 function _extractDateOfBirth(ctx) {
   const { data, cleanedText } = ctx;
   // BOX 5: DATE OF BIRTH (NOT Box 6! Box 6 is Reserve Obligation)
@@ -2891,35 +2916,12 @@ function _extractDateOfBirth(ctx) {
     // DOB abbreviation
     /\bDOB[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     // Box 5 with compact YYYYMMDD format
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /5\.\s*\D*(\d{8})\b/i,
+    /5\.\s{0,10}\D{0,50}(\d{8})\b/i,
   ];
   for (const pattern of dobPatterns) {
     const match = cleanedText.match(pattern);
     if (match) {
-      let dob = match[1];
-      // Convert compact YYYYMMDD to readable format
-      if (/^\d{8}$/.test(dob)) {
-        const year = dob.substring(0, 4);
-        const month = dob.substring(4, 6);
-        const day = dob.substring(6, 8);
-        // Validate it's a reasonable DOB (year 1940-2010)
-        if (Number.parseInt(year) >= 1940 && Number.parseInt(year) <= 2010) {
-          dob = `${month}/${day}/${year}`;
-        } else {
-          // Might be MMDDYYYY format instead
-          const altYear = dob.substring(4, 8);
-          const altMonth = dob.substring(0, 2);
-          const altDay = dob.substring(2, 4);
-          if (
-            Number.parseInt(altYear) >= 1940 &&
-            Number.parseInt(altYear) <= 2010
-          ) {
-            dob = `${altMonth}/${altDay}/${altYear}`;
-          }
-        }
-      }
-      data.dateOfBirth = dob;
+      data.dateOfBirth = _normalizeCompactDob(match[1]);
       break;
     }
   }
@@ -3251,8 +3253,7 @@ function _extractPlaceOfEntryAndMOS(ctx) {
   // Box 11: Primary MOS/Specialty (mos) - Handle various formats
   // Examples: "92Y10 UNIT SUPPLY SP", "11B INFANTRY", "0311 RIFLEMAN"
   const mosPatterns = [
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /11\.\s*PRIMARY\s+SPECIALTY[:\s]+([A-Z0-9]+)[:\s-]*([A-Z\s-]+?)(?:\s+12\.|$)/i,
+    /11\.\s{0,10}PRIMARY\s{1,10}SPECIALTY[:\s]{1,20}([A-Z0-9]{1,20})[:\s-]{0,10}([A-Z\s-]{1,200}?)(?:\s{1,10}12\.|$)/i,
     // MOS followed by title: "92Y10 UNIT SUPPLY SP" or "92Y UNIT SUPPLY SPECIALIST"
     /\b(\d{2}[A-Z]\d{0,2})\s+([A-Z][A-Z\s]{5,30}(?:SPEC|SP|NCO)?)/i,
     // Marine MOS: 0311, 0341, etc.
@@ -3276,8 +3277,7 @@ function _extractPlaceOfEntryAndMOS(ctx) {
         // \s{1,50} not \s+: title is capped to 50 chars below anyway, and
         // unbounded \s+ before a digit that might never appear is O(n²)
         // on adversarial input (confirmed 3.5s+ at 80k chars).
-        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-        title = title.replace(/\s{1,50}\d+.*$/, "").trim();
+        title = title.replace(/\s{1,50}\d{1,10}.{0,200}$/, "").trim();
         if (title.length >= 5 && title.length <= 50) {
           data.mosTitle = title;
         }
@@ -3325,6 +3325,40 @@ function _extractServiceEndDate(ctx) {
   }
 }
 
+/** Box 12b: NET ACTIVE SERVICE THIS PERIOD. Mutates `data.totalActiveService`. */
+function _extractNetActiveServiceTime(data, cleanedText, netActivePatterns) {
+  for (const pattern of netActivePatterns) {
+    const match = cleanedText.match(pattern);
+    if (!match) continue;
+
+    const years = Number.parseInt(match[1]) || 0;
+    const months = Number.parseInt(match[2]) || 0;
+    const days = Number.parseInt(match[3]) || 0;
+    // Sanity check: active duty period should be reasonable (< 40 years)
+    if (years >= 40 || months > 12) continue;
+
+    data.totalActiveService =
+      days > 0
+        ? `${years} years, ${months} months, ${days} days`
+        : `${years} years, ${months} months`;
+    return;
+  }
+}
+
+/** Box 12c/12d: TOTAL PRIOR ACTIVE/INACTIVE SERVICE. Returns a formatted
+ * "N years, M months" string, or null if the pattern didn't match or both
+ * parts were zero. */
+function _extractPriorServiceTime(cleanedText, pattern) {
+  const match = cleanedText.match(pattern);
+  if (!match) return null;
+
+  const years = Number.parseInt(match[1]) || 0;
+  const months = Number.parseInt(match[2]) || 0;
+  if (years === 0 && months === 0) return null;
+
+  return `${years} years, ${months} months`;
+}
+
 function _extractServiceTime(ctx) {
   const { data, cleanedText } = ctx;
   // === BOX 12b-d: SERVICE TIME ===
@@ -3336,54 +3370,27 @@ function _extractServiceTime(ctx) {
 
   // Box 12b: NET ACTIVE SERVICE THIS PERIOD (the important one)
   const netActivePatterns = [
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /12b\.?\s*NET\s+ACTIVE\s+SERVICE\s+THIS\s+PERIOD[:\s]+(\d{1,2})\s*(?:YR|YEAR)?S?\s*(\d{1,2})\s*(?:MO|MONTH)?S?\s*(\d{1,2})?\s*(?:DAY)?S?/i,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the YR/MO/DAY optional-suffix alternation count, not backtracking; bounded for S8786 above
+    /12b\.?\s{0,10}NET\s{1,10}ACTIVE\s{1,10}SERVICE\s{1,10}THIS\s{1,10}PERIOD[:\s]{1,20}(\d{1,2})\s{0,10}(?:YR|YEAR)?S?\s{0,10}(\d{1,2})\s{0,10}(?:MO|MONTH)?S?\s{0,10}(\d{1,2})?\s{0,10}(?:DAY)?S?/i,
     /NET\s+ACTIVE\s+SERVICE[:\s]+(\d{1,2})\s*(\d{1,2})/i,
     // Look for pattern: "12b. XX YY ZZ" (years months days)
     /12b\.\s*(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})?/i,
   ];
-  for (const pattern of netActivePatterns) {
-    const match = cleanedText.match(pattern);
-    if (match) {
-      const years = Number.parseInt(match[1]) || 0;
-      const months = Number.parseInt(match[2]) || 0;
-      const days = Number.parseInt(match[3]) || 0;
-      // Sanity check: active duty period should be reasonable (< 40 years)
-      if (years < 40 && months <= 12) {
-        data.totalActiveService =
-          days > 0
-            ? `${years} years, ${months} months, ${days} days`
-            : `${years} years, ${months} months`;
-        break;
-      }
-    }
-  }
+  _extractNetActiveServiceTime(data, cleanedText, netActivePatterns);
 
   // Box 12c: TOTAL PRIOR ACTIVE SERVICE (previous enlistments)
-  const priorActiveMatch = cleanedText.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /12c\.?\s*(?:TOTAL\s+)?PRIOR\s+ACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+  const priorActive = _extractPriorServiceTime(
+    cleanedText,
+    /12c\.?\s{0,10}(?:TOTAL\s{1,10})?PRIOR\s{1,10}ACTIVE[:\s]{1,20}(\d{1,2})\s{0,10}(?:YR)?S?\s{0,10}(\d{1,2})/i,
   );
-  if (priorActiveMatch) {
-    const years = Number.parseInt(priorActiveMatch[1]) || 0;
-    const months = Number.parseInt(priorActiveMatch[2]) || 0;
-    if (years > 0 || months > 0) {
-      data.totalPriorActiveService = `${years} years, ${months} months`;
-    }
-  }
+  if (priorActive) data.totalPriorActiveService = priorActive;
 
   // Box 12d: TOTAL PRIOR INACTIVE SERVICE (reserve/guard time)
-  const priorInactiveMatch = cleanedText.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /12d\.?\s*(?:TOTAL\s+)?PRIOR\s+INACTIVE[:\s]+(\d{1,2})\s*(?:YR)?S?\s*(\d{1,2})/i,
+  const priorInactive = _extractPriorServiceTime(
+    cleanedText,
+    /12d\.?\s{0,10}(?:TOTAL\s{1,10})?PRIOR\s{1,10}INACTIVE[:\s]{1,20}(\d{1,2})\s{0,10}(?:YR)?S?\s{0,10}(\d{1,2})/i,
   );
-  if (priorInactiveMatch) {
-    const years = Number.parseInt(priorInactiveMatch[1]) || 0;
-    const months = Number.parseInt(priorInactiveMatch[2]) || 0;
-    if (years > 0 || months > 0) {
-      data.totalPriorInactiveService = `${years} years, ${months} months`;
-    }
-  }
+  if (priorInactive) data.totalPriorInactiveService = priorInactive;
 }
 
 function _extractAwardsFromBlock13(ctx) {
@@ -3398,8 +3405,8 @@ function _extractAwardsFromBlock13(ctx) {
 
   // Look specifically for Block 13 content
   const block13Match = cleanedText.match(
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /13\.?\s*DECORATIONS.*?(?:BADGES.*?CITATIONS.*?CAMPAIGN.*?)?[:\s]+(.+?)(?=\s*14\.|15\.|---|\[INSTRUCTION)/is,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the BADGES/CITATIONS/CAMPAIGN optional-group alternation count, not backtracking; bounded for S8786 above
+    /13\.?\s{0,10}DECORATIONS.{0,2000}?(?:BADGES.{0,200}?CITATIONS.{0,200}?CAMPAIGN.{0,200}?)?[:\s]{1,20}(.{1,5000}?)(?=\s{0,10}14\.|15\.|---|\[INSTRUCTION)/is,
   );
 
   if (block13Match) {
@@ -3527,64 +3534,80 @@ function _extractAwardsFallback(ctx) {
   }
 }
 
+/**
+ * Try each Box 14 pattern in turn; the first one that MATCHES wins (even
+ * if its captured text doesn't look like real education data), matching
+ * the original loop's break-on-first-match behavior.
+ */
+function _extractMilitaryEducationText(text, eduPatterns) {
+  for (const pattern of eduPatterns) {
+    const eduMatch = text.match(pattern);
+    if (!eduMatch) continue;
+
+    // Clean up: remove noise, limit length
+    const edu = eduMatch[1]?.replace(/\s+/g, " ").trim();
+    // Only keep if it looks like actual education (course names, durations)
+    const looksLikeEducation =
+      edu &&
+      edu.length > 10 &&
+      edu.length < 500 &&
+      /\d{1,10}\s{0,10}(?:WK|WEEK|MONTH)/i.test(edu);
+    if (!looksLikeEducation) return null;
+
+    // Remove trailing noise like NOTHING FOLLOWS
+    return edu
+      .replace(/\s{0,10}\/\/\s{0,10}NOTHING\s{1,10}FOLLOWS.{0,500}$/i, "")
+      .trim();
+  }
+  return null;
+}
+
+/**
+ * Extract key deployment/service info from Box 18 remarks - not the
+ * entire section, just deployment locations and OEF/OIF/OND service
+ * mentions.
+ */
+function _extractRemarksKeyInfo(box18Text) {
+  const remarksKeyInfo = [];
+  if (!box18Text) return remarksKeyInfo;
+
+  // Check for deployment info
+  const deploymentInfo = box18Text.match(
+    /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s,]+?)(?:\.|\/\/|$)/gi,
+  );
+  if (deploymentInfo) {
+    remarksKeyInfo.push(...deploymentInfo.map((d) => d.trim()));
+  }
+
+  // Check for OEF/OIF/OND service
+  if (/OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)/i.test(box18Text)) {
+    const opMatch = box18Text.match(
+      /(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i,
+    );
+    if (opMatch) remarksKeyInfo.push(opMatch[1]);
+  }
+
+  return remarksKeyInfo;
+}
+
 function _extractEducationAndRemarks(ctx) {
   const { data, text, ocrCorrectedUpperText } = ctx;
   // Box 14: Military Education - extract ONLY the structured education portion
   const eduPatterns = [
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /14\.\s*MILITARY\s+EDUCATION[^:]*:\s*(.+?)(?=\s*15\s*[.ab]|\s+HIGH\s+SCHOOL)/is,
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /MILITARY\s+EDUCATION[^:]*:\s*([A-Z\s,0-9]+?(?:WEEKS?|WK|MONTHS?)[^15]*)/is,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the "15." vs "HIGH SCHOOL" boundary alternation count, not backtracking; bounded for S8786 above
+    /14\.\s{0,10}MILITARY\s{1,10}EDUCATION[^:]{0,200}:\s{0,10}(.{1,5000}?)(?=\s{0,10}15\s{0,10}[.ab]|\s{1,10}HIGH\s{1,10}SCHOOL)/is,
+    /MILITARY\s{1,10}EDUCATION[^:]{0,200}:\s{0,10}([A-Z\s,0-9]{1,500}?(?:WEEKS?|WK|MONTHS?)[^15]{0,500})/is,
   ];
-  for (const pattern of eduPatterns) {
-    const eduMatch = text.match(pattern);
-    if (eduMatch) {
-      // Clean up: remove noise, limit length
-      let edu = eduMatch[1]?.replace(/\s+/g, " ").trim();
-      // Only keep if it looks like actual education (course names, durations)
-      if (
-        edu &&
-        edu.length > 10 &&
-        edu.length < 500 &&
-        // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 2ms worst case at that bound
-        /\d+\s*(?:WK|WEEK|MONTH)/i.test(edu)
-      ) {
-        // Remove trailing noise like NOTHING FOLLOWS
-        // eslint-disable-next-line sonarjs/slow-regex -- `edu` is already capped to <500 chars by the length check above; measured 1ms worst case at that bound
-        edu = edu.replace(/\s*\/\/\s*NOTHING\s+FOLLOWS.*$/i, "").trim();
-        data.militaryEducation = edu;
-      }
-      break;
-    }
-  }
+  const edu = _extractMilitaryEducationText(text, eduPatterns);
+  if (edu) data.militaryEducation = edu;
 
-  // Box 18: Remarks - Extract only key deployment/service info, not entire text
-  // Look for specific valuable info in remarks rather than dumping entire section
-  // FIX-3a: scoped to the isolated Box 18 substring only (not the whole
-  // document) so preprinted boilerplate elsewhere on the form can't be
-  // mistaken for a real deployment/service mention.
-  const remarksKeyInfo = [];
+  // Box 18: Remarks. FIX-3a: scoped to the isolated Box 18 substring only
+  // (not the whole document) so preprinted boilerplate elsewhere on the
+  // form can't be mistaken for a real deployment/service mention.
   const box18Text = _stripDeploymentBoilerplate(
     _extractBox18RemarksText(ocrCorrectedUpperText),
   );
-
-  if (box18Text) {
-    // Check for deployment info
-    const deploymentInfo = box18Text.match(
-      /(?:SERVED\s+IN|SERVICE\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s,]+?)(?:\.|\/\/|$)/gi,
-    );
-    if (deploymentInfo) {
-      remarksKeyInfo.push(...deploymentInfo.map((d) => d.trim()));
-    }
-
-    // Check for OEF/OIF/OND service
-    if (/OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)/i.test(box18Text)) {
-      const opMatch = box18Text.match(
-        /(OPERATION\s+(?:ENDURING|IRAQI|NEW\s+DAWN)\s+FREEDOM?)/i,
-      );
-      if (opMatch) remarksKeyInfo.push(opMatch[1]);
-    }
-  }
+  const remarksKeyInfo = _extractRemarksKeyInfo(box18Text);
 
   // Only store remarks if we found valuable info
   if (remarksKeyInfo.length > 0) {
@@ -3596,8 +3619,7 @@ function _extractSeparationTypeAndCharacter(ctx) {
   const { data, ocrCorrectedUpperText: text } = ctx;
   // Box 23: Type of Separation
   const sepTypeMatch = text.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /23\.\s*TYPE\s+OF\s+SEPARATION[:\s]+([A-Z\s]+?)(?:\s+24\.|$)/i,
+    /23\.\s{0,10}TYPE\s{1,10}OF\s{1,10}SEPARATION[:\s]{1,20}([A-Z\s]{1,200}?)(?:\s{1,10}24\.|$)/i,
   );
   if (sepTypeMatch) {
     data.separationType = sepTypeMatch[1]?.trim();
@@ -3614,8 +3636,7 @@ function _extractSeparationTypeAndCharacter(ctx) {
   // alternative would have read as a General discharge on a document that
   // never characterizes one.
   const characterPatterns = [
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /24\.\s*CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s-]+?)(?:\s+25\.|$)/i,
+    /24\.\s{0,10}CHARACTER\s{1,10}OF\s{1,10}SERVICE[:\s]{1,20}([A-Z\s-]{1,200}?)(?:\s{1,10}25\.|$)/i,
     // eslint-disable-next-line sonarjs/slow-regex -- distinctive literal prefix "CHARACTER OF SERVICE" gates the unbounded class, so the match cannot restart at arbitrary offsets; verified on the 10KB Box 23/24 slice
     /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s-]+)/i,
     // Bounded rather than \s*[-–—]?\s* — two unbounded runs either side of an
@@ -3659,8 +3680,7 @@ function _extractSeparationAuthorityAndCodes(ctx) {
   const { data, text } = ctx;
   // Box 25: Separation Authority (regulation)
   const authMatch = text.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /25\.\s*SEPARATION\s+AUTHORITY[:\s]+([A-Z0-9\s.-]+?)(?:\s+26\.|$)/i,
+    /25\.\s{0,10}SEPARATION\s{1,10}AUTHORITY[:\s]{1,20}([A-Z0-9\s.-]{1,200}?)(?:\s{1,10}26\.|$)/i,
   );
   if (authMatch) {
     data.separationAuthority = authMatch[1]?.trim();
@@ -3706,8 +3726,7 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
   const { data, text, ocrCorrectedUpperText } = ctx;
   // Box 28: Narrative Reason
   const narrativeMatch = text.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /28\.\s*NARRATIVE\s+REASON[:\s]+(.+?)(?:\s+29\.|$)/i,
+    /28\.\s{0,10}NARRATIVE\s{1,10}REASON[:\s]{1,20}(.{1,500}?)(?:\s{1,10}29\.|$)/i,
   );
   if (narrativeMatch) {
     data.narrativeReason = narrativeMatch[1]?.trim();
@@ -3792,6 +3811,43 @@ function _normalizeCompactDate(yyyymmdd) {
 // mislabel real Active Duty service as training. A segment with no colon
 // at all (a genuine bare continuation, not a label attempt) still inherits
 // the most recently resolved component, same as before this fix.
+/**
+ * Resolve one "//"-delimited NGB22 Box 18 segment's label prefix, if it
+ * has one. Returns `component: undefined` when there's no label prefix
+ * at all (a bare continuation range that should inherit whatever
+ * component the previous segment resolved to), or the resolved
+ * component (a string, or null for an unrecognized label) otherwise.
+ */
+function _resolveNGB22SegmentLabel(segment) {
+  const labelPrefixMatch = segment.match(/^([^:]{1,15}):\s{0,10}(.{0,2000})$/);
+  if (!labelPrefixMatch) return { component: undefined, rest: segment };
+
+  const normalizedLabel = _normalizeOcrLetterDigits(labelPrefixMatch[1])
+    .replace(/\s+/g, "")
+    .toUpperCase();
+  let component;
+  if (normalizedLabel === "AD") {
+    component = "Active Duty";
+  } else if (normalizedLabel === "IADT") {
+    component = "IADT";
+  } else {
+    component = null;
+  }
+  return { component, rest: labelPrefixMatch[2].trim() };
+}
+
+/** Parse a "YYYYMMDD-YYYYMMDD" date range, normalizing both dates. */
+function _parseNGB22DateRange(rest) {
+  const rangeMatch = rest.match(/^(\d{8})\s*-\s*(\d{8})$/);
+  if (!rangeMatch) return null;
+
+  const serviceStartDate = _normalizeCompactDate(rangeMatch[1]);
+  const serviceEndDate = _normalizeCompactDate(rangeMatch[2]);
+  if (!serviceStartDate || !serviceEndDate) return null;
+
+  return { serviceStartDate, serviceEndDate };
+}
+
 function _extractNGB22PeriodDates(ctx) {
   const { data, ocrCorrectedUpperText } = ctx;
   if (data.formType !== "NGB22") return;
@@ -3807,37 +3863,13 @@ function _extractNGB22PeriodDates(ctx) {
   let currentComponent = null;
   const periods = [];
   for (const segment of segments) {
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test (100k-char no-colon input resolves in <1ms): the bounded {1,15} quantifier prevents backtracking blowup
-    const labelPrefixMatch = segment.match(/^([^:]{1,15}):\s*(.*)$/);
-    let rest;
-    if (labelPrefixMatch) {
-      const normalizedLabel = _normalizeOcrLetterDigits(labelPrefixMatch[1])
-        .replace(/\s+/g, "")
-        .toUpperCase();
-      if (normalizedLabel === "AD") {
-        currentComponent = "Active Duty";
-      } else if (normalizedLabel === "IADT") {
-        currentComponent = "IADT";
-      } else {
-        currentComponent = null;
-      }
-      rest = labelPrefixMatch[2].trim();
-    } else {
-      rest = segment;
-    }
+    const { component, rest } = _resolveNGB22SegmentLabel(segment);
+    if (component !== undefined) currentComponent = component;
 
-    const rangeMatch = rest.match(/^(\d{8})\s*-\s*(\d{8})$/);
-    if (!rangeMatch) continue;
+    const dateRange = _parseNGB22DateRange(rest);
+    if (!dateRange) continue;
 
-    const serviceStartDate = _normalizeCompactDate(rangeMatch[1]);
-    const serviceEndDate = _normalizeCompactDate(rangeMatch[2]);
-    if (!serviceStartDate || !serviceEndDate) continue;
-
-    periods.push({
-      component: currentComponent,
-      serviceStartDate,
-      serviceEndDate,
-    });
+    periods.push({ component: currentComponent, ...dateRange });
   }
 
   if (periods.length > 0) data.additionalPeriods = periods;
@@ -3994,16 +4026,16 @@ export const parseRatingDecision = async (text) => {
 
   try {
     // Extract combined rating
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    const combinedMatch = text.match(/COMBINED\s+RATING\s*[:=]?\s*(\d+)%?/i);
+    const combinedMatch = text.match(
+      /COMBINED\s{1,10}RATING\s{0,10}[:=]?\s{0,10}(\d{1,3})%?/i,
+    );
     if (combinedMatch) {
       data.combinedRating = Number.parseInt(combinedMatch[1]);
     }
 
     // Extract effective date
     const effectiveDateMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /EFFECTIVE\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /EFFECTIVE\s{1,10}DATE\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     );
     if (effectiveDateMatch) {
       data.effectiveDate = effectiveDateMatch[1];
@@ -4011,8 +4043,7 @@ export const parseRatingDecision = async (text) => {
 
     // Extract decision date
     const decisionDateMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /DECISION\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /DECISION\s{1,10}DATE\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     );
     if (decisionDateMatch) {
       data.decisionDate = decisionDateMatch[1];
@@ -4039,8 +4070,7 @@ export const parseRatingDecision = async (text) => {
     // swallow unrelated prose into the "condition name").
     const CONDITION_PERCENT_RE = /([A-Z][A-Z\s,]{1,100}?)[\s-]+(\d+)%/gi;
     const DIAGNOSTIC_CODE_BEFORE_RE =
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /DIAGNOSTIC\s+CODE\s*[:=]?\s*(\d{4})\s*$/i;
+      /DIAGNOSTIC\s{1,10}CODE\s{0,10}[:=]?\s{0,10}(\d{4})\s{0,10}$/i;
     const DIAGNOSTIC_CODE_LOOKBACK_WINDOW = 200;
 
     let match;
@@ -4130,13 +4160,11 @@ function cleanDecisionCondition(head, keepWholeClause = false) {
   return head
     .slice(from)
     .replace(
-      // eslint-disable-next-line sonarjs/slow-regex -- anchored to end-of-string behind the literal "which is currently"; every quantifier bounded, runs on a <=900-char clause
-      /,?\s*which is currently\s+\d{1,3}\s*percent\s+disabling,?\s*$/i,
+      /,?\s{0,10}which is currently\s{1,10}\d{1,3}\s{0,10}percent\s{1,10}disabling,?\s{0,10}$/i,
       "",
     )
     .replace(
-      // eslint-disable-next-line sonarjs/slow-regex -- anchored to end-of-string behind the literal "currently"; every quantifier bounded, runs on a <=900-char clause
-      /,?\s*currently\s+(?:evaluated\s+(?:as|at)\s+)?\d{1,3}\s*percent\s+disabling,?\s*$/i,
+      /,?\s{0,10}currently\s{1,10}(?:evaluated\s{1,10}(?:as|at)\s{1,10})?\d{1,3}\s{0,10}percent\s{1,10}disabling,?\s{0,10}$/i,
       "",
     )
     .replace(/[,;]\s*$/, "")
@@ -4171,6 +4199,50 @@ const decisionKey = (condition, outcome) =>
     .trim()
     .slice(0, 40)}|${outcome}`;
 
+/**
+ * Parse one sentence matched by DECISION_OUTCOME_RE into a decision
+ * object, or return null if it should be skipped (no match, a "not
+ * granted/established" negation, or an unresolvable condition name).
+ */
+function _buildDecisionFromSentence(sentence) {
+  const match = sentence.match(DECISION_OUTCOME_RE);
+  if (!match) return null;
+  const [, head, rawOutcome, tail] = match;
+  const outcome = rawOutcome.toLowerCase().replace(/\s+/g, " ");
+  if (/\bnot\s+(?:granted|established)\b/i.test(head)) return null;
+
+  const isEffectiveDateIssue = EFFECTIVE_DATE_ISSUE_RE.test(head);
+  const condition = cleanDecisionCondition(head, isEffectiveDateIssue);
+  if (!condition || /^(?:it|this|that|which|the claim)$/i.test(condition))
+    return null;
+
+  const priorMatch = head.match(
+    /currently\s+(?:evaluated\s+(?:as|at)\s+)?(\d{1,3})\s*percent/i,
+  );
+  const priorRating = priorMatch ? Number(priorMatch[1]) : null;
+  const tailRating = tail.match(
+    /(?:evaluation of|to|at|as)\s+(\d{1,3})\s*percent/i,
+  );
+  let rating = tailRating ? Number(tailRating[1]) : null;
+  if (
+    rating === null &&
+    /^(?:continued|confirmed and continued)$/.test(outcome)
+  )
+    rating = priorRating;
+  if (outcome === "denied" || outcome === "deferred" || isEffectiveDateIssue)
+    rating = null;
+
+  const dateMatch = tail.match(DECISION_DATE_RE);
+  return {
+    condition,
+    outcome,
+    rating,
+    priorRating,
+    effectiveDate: dateMatch ? dateMatch[1] : null,
+    ...(isEffectiveDateIssue && { issue: "effective_date" }),
+  };
+}
+
 function extractPerIssueDecisions(text) {
   const decisions = [];
   const seen = new Set();
@@ -4182,42 +4254,8 @@ function extractPerIssueDecisions(text) {
   };
 
   for (const sentence of splitDecisionSentences(text)) {
-    const match = sentence.match(DECISION_OUTCOME_RE);
-    if (!match) continue;
-    const [, head, rawOutcome, tail] = match;
-    const outcome = rawOutcome.toLowerCase().replace(/\s+/g, " ");
-    if (/\bnot\s+(?:granted|established)\b/i.test(head)) continue;
-
-    const isEffectiveDateIssue = EFFECTIVE_DATE_ISSUE_RE.test(head);
-    const condition = cleanDecisionCondition(head, isEffectiveDateIssue);
-    if (!condition || /^(?:it|this|that|which|the claim)$/i.test(condition))
-      continue;
-
-    const priorMatch = head.match(
-      /currently\s+(?:evaluated\s+(?:as|at)\s+)?(\d{1,3})\s*percent/i,
-    );
-    const priorRating = priorMatch ? Number(priorMatch[1]) : null;
-    const tailRating = tail.match(
-      /(?:evaluation of|to|at|as)\s+(\d{1,3})\s*percent/i,
-    );
-    let rating = tailRating ? Number(tailRating[1]) : null;
-    if (
-      rating === null &&
-      /^(?:continued|confirmed and continued)$/.test(outcome)
-    )
-      rating = priorRating;
-    if (outcome === "denied" || outcome === "deferred" || isEffectiveDateIssue)
-      rating = null;
-
-    const dateMatch = tail.match(DECISION_DATE_RE);
-    push({
-      condition,
-      outcome,
-      rating,
-      priorRating,
-      effectiveDate: dateMatch ? dateMatch[1] : null,
-      ...(isEffectiveDateIssue && { issue: "effective_date" }),
-    });
+    const decision = _buildDecisionFromSentence(sentence);
+    if (decision) push(decision);
   }
 
   for (const row of extractDecisionTableRows(text)) push(row);
@@ -4304,11 +4342,11 @@ function extractCombinedRatingValue(text, history) {
   if (history.length > 0) return history[history.length - 1].percentage;
   const flat = text.replace(/\s+/g, " ");
   const explicit =
-    // eslint-disable-next-line sonarjs/slow-regex -- distinctive literal prefix "COMBINED RATING"; all quantifiers bounded
-    flat.match(/COMBINED\s+RATING\s*[:=]?\s*(\d{1,3})\s*%?/i) ||
     flat.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- distinctive literal prefix "combined ... evaluation"; all quantifiers bounded
-      /combined\s+(?:rating\s+)?evaluation\s+(?:is|of|remains)\s*:?\s*(\d{1,3})\s*(?:%|percent)/i,
+      /COMBINED\s{1,10}RATING\s{0,10}[:=]?\s{0,10}(\d{1,3})\s{0,10}%?/i,
+    ) ||
+    flat.match(
+      /combined\s{1,10}(?:rating\s{1,10})?evaluation\s{1,10}(?:is|of|remains)\s{0,10}:?\s{0,10}(\d{1,3})\s{0,10}(?:%|percent)/i,
     );
   return explicit ? Number(explicit[1]) : null;
 }
@@ -4381,8 +4419,7 @@ function attachPerIssueDecisions(data, text) {
 function _parseClaimLetterHeader(text, data) {
   // Real letters use several equivalent labels for the file/claim number.
   const fileNumMatch = text.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-    /(?:VA\s+FILE\s+NUMBER|C-FILE\s+NUMBER|FILE\s+NUMBER|CLAIM\s+NUMBER)\s*[:#]?\s*(\d[\d-]{6,14})/i,
+    /(?:VA\s{1,10}FILE\s{1,10}NUMBER|C-FILE\s{1,10}NUMBER|FILE\s{1,10}NUMBER|CLAIM\s{1,10}NUMBER)\s{0,10}[:#]?\s{0,10}(\d[\d-]{6,14})/i,
   );
   if (fileNumMatch) {
     data.claimNumber = fileNumMatch[1];
@@ -4398,8 +4435,7 @@ function _parseClaimLetterHeader(text, data) {
   } else {
     // Fall back to the old intake-form label for backward compatibility
     const claimDateMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /(?:DATE\s+OF\s+CLAIM|CLAIM\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /(?:DATE\s{1,10}OF\s{1,10}CLAIM|CLAIM\s{1,10}DATE)\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     );
     if (claimDateMatch) {
       data.claimDate = claimDateMatch[1];
@@ -4409,8 +4445,8 @@ function _parseClaimLetterHeader(text, data) {
   // Letter's own issue date (only trust an explicit "Date:" label to avoid
   // false-positives on unrelated dates elsewhere in the letter)
   const letterDateMatch = text.match(
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: anchored to start-of-line (^ with /m) with a literal "Date" prefix; both date-alternation branches use non-overlapping character classes
-    /^\s*Date\s*[:.]?\s*([A-Z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/im,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the two date-format alternatives, not backtracking; anchored to start-of-line (^ with /m) and bounded for S8786 above
+    /^\s{0,10}Date\s{0,10}[:.]?\s{0,10}([A-Z]{1,30}\s{1,10}\d{1,2},?\s{1,10}\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/im,
   );
   if (letterDateMatch) {
     data.letterDate = letterDateMatch[1];
@@ -4445,8 +4481,8 @@ export const parseClaimLetter = async (text) => {
 
     // Evidence-request section (development letters)
     const evidenceSectionMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: bounded body ({0,800}) lazily matched up to a blank line or end
-      /(?:WHAT\s+WE\s+NEED\s+FROM\s+YOU|EVIDENCE\s+(?:WE\s+)?NEED(?:ED)?|WE\s+NEED\s+THE\s+FOLLOWING)\s*[:.]?\s*([\s\S]{0,800}?)(?:\n\s*\n|\r\n\s*\r\n|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; bounded body ({0,800}) lazily matched up to a blank line or end
+      /(?:WHAT\s{1,10}WE\s{1,10}NEED\s{1,10}FROM\s{1,10}YOU|EVIDENCE\s{1,10}(?:WE\s{1,10})?NEED(?:ED)?|WE\s{1,10}NEED\s{1,10}THE\s{1,10}FOLLOWING)\s{0,10}[:.]?\s{0,10}([\s\S]{0,800}?)(?:\n\s{0,10}\n|\r\n\s{0,10}\r\n|$)/i,
     );
     if (evidenceSectionMatch) {
       data.evidenceNeeded = evidenceSectionMatch[1]
@@ -4518,8 +4554,7 @@ const parseDBQ = async (text) => {
 
     // Extract diagnosis
     const diagnosisMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /DIAGNOSIS\s*[:=]?\s*([\s\S]{0,300}?)(?:\n\n|\r\n\r\n)/i,
+      /DIAGNOSIS\s{0,10}[:=]?\s{0,10}([\s\S]{0,300}?)(?:\n\n|\r\n\r\n)/i,
     );
     if (diagnosisMatch) {
       data.diagnosis = diagnosisMatch[1].trim();
@@ -4536,8 +4571,7 @@ const parseDBQ = async (text) => {
 
     // Extract exam date
     const examDateMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /EXAMINATION\s+DATE\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /EXAMINATION\s{1,10}DATE\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     );
     if (examDateMatch) {
       data.examDate = examDateMatch[1];
@@ -4567,8 +4601,7 @@ const parseMedicalRecord = async (text) => {
   try {
     // Extract date of service
     const dateMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /(?:DATE\s+OF\s+SERVICE|VISIT\s+DATE)\s*[:=]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+      /(?:DATE\s{1,10}OF\s{1,10}SERVICE|VISIT\s{1,10}DATE)\s{0,10}[:=]?\s{0,10}(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     );
     if (dateMatch) {
       data.dateOfService = dateMatch[1];
@@ -4576,8 +4609,8 @@ const parseMedicalRecord = async (text) => {
 
     // Extract diagnoses (ICD codes)
     const icdPattern =
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /(?:ICD-?\d{1,2}\s*[:=]?\s*)?([A-Z]\d{2}(?:\.\d{1,2})?)\s+[-–—]\s+([A-Za-z\s,]+)/g;
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional ICD-code-prefix branching, not backtracking; bounded for S8786 above
+      /(?:ICD-?\d{1,2}\s{0,10}[:=]?\s{0,10})?([A-Z]\d{2}(?:\.\d{1,2})?)\s{1,10}[-–—]\s{1,10}([A-Za-z\s,]{1,300})/g;
     let match;
     while ((match = icdPattern.exec(text)) !== null) {
       data.diagnoses.push({
@@ -4616,8 +4649,7 @@ const parseNexusLetter = async (text) => {
 
     // Extract provider info
     const providerMatch = text.match(
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: distinctive literal prefix (or already-bounded quantifier) prevents unanchored-match backtracking blowup at 100k+ chars
-      /(?:Sincerely|Respectfully),?\s*\n\s*([A-Z][A-Z\s.]+,?\s+M\.?D\.?)/i,
+      /(?:Sincerely|Respectfully),?\s{0,10}\n\s{0,10}([A-Z][A-Z\s.]{1,100},?\s{1,10}M\.?D\.?)/i,
     );
     if (providerMatch) {
       data.provider = providerMatch[1].trim();
