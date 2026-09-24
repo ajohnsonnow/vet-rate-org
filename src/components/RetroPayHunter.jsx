@@ -14,7 +14,6 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -1267,8 +1266,6 @@ function RetroPayHunterBody({
 }
 
 function useRetroPayHunterState({ onAISettingsClick }) {
-  const { _t } = useLanguage();
-
   const [ratingHistory, setRatingHistory] = useState([]);
   const [newEntry, setNewEntry] = useState({
     effectiveDate: "",

@@ -11,7 +11,6 @@
  */
 
 import { useState, useEffect, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   getMyRatings,
@@ -1135,7 +1134,6 @@ function useMillionDollarDashboardState() {
 }
 
 export default function MillionDollarDashboard({ onClose, onReportBug }) {
-  const { _t } = useLanguage();
   const d = useMillionDollarDashboardState();
 
   // SVG Chart dimensions

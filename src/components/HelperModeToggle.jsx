@@ -1,6 +1,5 @@
 ﻿import { useState } from "react";
 import { useHelperMode, TERMINOLOGY } from "../contexts/HelperModeContext";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -14,7 +13,6 @@ import ResponsiveModal from "./common/ResponsiveModal";
  */
 
 const HelperModeToggle = ({ compact = false }) => {
-  const { _t } = useLanguage();
   const {
     isHelperMode,
     toggleHelperMode,

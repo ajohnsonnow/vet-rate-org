@@ -22,7 +22,6 @@ import {
   Shield,
   X,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Branch colors
@@ -613,7 +612,6 @@ const VAOnlineResources = () => (
  * Main Publications Library Component
  */
 export default function PublicationsLibrary() {
-  const { _t } = useLanguage();
   const { publications, loading, error } = usePublicationsIndex();
   const {
     searchQuery,

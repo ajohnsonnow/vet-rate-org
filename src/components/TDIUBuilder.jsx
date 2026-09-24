@@ -16,7 +16,6 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
@@ -756,8 +755,6 @@ export default function TDIUBuilder({
   onReportBug,
   onOpenAISettings,
 }) {
-  const { _t } = useLanguage();
-
   // Ref for screenshot/share functionality
   const tdiuContentRef = useRef(null);
 

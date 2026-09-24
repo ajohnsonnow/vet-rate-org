@@ -7,7 +7,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Category colors and icons
 const CATEGORY_STYLES = {
@@ -206,7 +205,6 @@ const TimelineLegend = () => (
 );
 
 export default function CFileTimeline({ events = [] }) {
-  const { _t } = useLanguage();
   const [filter, setFilter] = useState("all");
   const [expandedEvent, setExpandedEvent] = useState(null);
   const [showHighSignificanceOnly, setShowHighSignificanceOnly] =

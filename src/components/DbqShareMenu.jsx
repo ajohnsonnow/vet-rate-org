@@ -19,7 +19,6 @@ import {
   sharePdfNatively,
   copyDbqSummaryToClipboard,
 } from "../utils/pdfDbqFiller";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const STATUS_MESSAGE_CLASSES = {
@@ -423,7 +422,6 @@ function ShareMenuFooter() {
  * @param {function} props.onClose - Callback when menu is closed
  */
 export default function DbqShareMenu({ formId, formTitle, formData, onClose }) {
-  const { _t } = useLanguage();
   const [activeTab, setActiveTab] = useState("download");
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState(null);

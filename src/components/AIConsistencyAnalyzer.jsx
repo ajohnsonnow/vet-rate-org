@@ -14,7 +14,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
 import {
   CONSISTENCY_CHECK_PROMPT,
@@ -485,7 +484,6 @@ async function performConsistencyCheck(
  * AIConsistencyAnalyzer - The Cross-Examination Tool
  */
 const AIConsistencyAnalyzer = ({ onBack }) => {
-  const { _t } = useLanguage();
   const [referenceText, setReferenceText] = useState("");
   const [targetText, setTargetText] = useState("");
   const [analysis, setAnalysis] = useState(null);

@@ -24,7 +24,6 @@ import {
 } from "../api/va";
 import ResponsiveModal from "./common/ResponsiveModal";
 import VaSandboxTest from "./VaSandboxTest";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Icons from lucide-react
 import {
@@ -1131,8 +1130,6 @@ function VaIntegrationTestModals({
 }
 
 function useVaIntegrationTestState() {
-  const { t: _t } = useLanguage();
-
   // State for sandbox test modal
   const [showSandboxTest, setShowSandboxTest] = useState(false);
 

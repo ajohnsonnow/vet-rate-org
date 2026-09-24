@@ -7,7 +7,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Likelihood styles
 const LIKELIHOOD_STYLES = {
@@ -323,7 +322,6 @@ const ClaimsInfoBox = () => (
 );
 
 export default function CFileClaimsCards({ claims = [] }) {
-  const { _t } = useLanguage();
   const [filter, setFilter] = useState("all");
   const [expandedClaim, setExpandedClaim] = useState(null);
 

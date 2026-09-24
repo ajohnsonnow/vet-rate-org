@@ -11,7 +11,6 @@
 
 import { useState } from "react";
 import useClaimProgress from "../utils/useClaimProgress";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Tool navigation mapping
@@ -315,7 +314,6 @@ export default function CommandersChecklist({
   onClose = null,
   onToolSelect = null,
 }) {
-  const { _t } = useLanguage();
   const progress = useClaimProgress();
   const [showModal, setShowModal] = useState(!isWidget && !isEmbedded);
 

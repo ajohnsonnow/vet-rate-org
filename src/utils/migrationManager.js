@@ -264,7 +264,6 @@ export const migrateUserData = () => {
   try {
     // Get user's current schema version
     const userSchemaVersion = localStorage.getItem(SCHEMA_STORAGE_KEY);
-    const _userAppVersion = localStorage.getItem(VERSION_STORAGE_KEY);
 
     result.previousVersion = userSchemaVersion || "none";
 

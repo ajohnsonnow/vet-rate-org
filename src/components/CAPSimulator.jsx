@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   X,
   ClipboardList,
@@ -1361,9 +1360,6 @@ function _addGeneralFallbackQuestions(conditionName, questions) {
 
 const generateGenericQuestions = (condition) => {
   const ratings = condition.ratingCriteria?.ratings || {};
-  const _ratingKeys = Object.keys(ratings).sort(
-    (a, b) => parseInt(b) - parseInt(a),
-  );
   const bodySystem = getBodySystem(condition);
   const conditionName = condition.conditionName;
 
@@ -4111,21 +4107,20 @@ function CAPSimulatorRouter(props) {
 }
 
 const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
-  const { _t } = useLanguage();
   const [mode, setMode] = useState("intro"); // intro, select-condition, flashcard, simulation, results, exam-prep, exam-prep-detail
   const [selectedConditionKey, setSelectedConditionKey] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [simulationResult, setSimulationResult] = useState(null);
-  const [_savedPacket, setSavedPacket] = useState([]);
-  const [flashcardTerm, setFlashcardTerm] = useState(null);
+  const [, setSavedPacket] = useState([]);
+  const [flashcardTerm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [allConditions, setAllConditions] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState({});
 
   // Exam Prep mode state
-  const [_examPrepCondition, setExamPrepCondition] = useState(null);
+  const [, setExamPrepCondition] = useState(null);
   const [examPrepDBQ, setExamPrepDBQ] = useState(null);
   const [examPrepTips, setExamPrepTips] = useState([]);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
@@ -4134,11 +4129,6 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     () => _loadSavedPacketAndConditions(setSavedPacket, setAllConditions),
     [],
   );
-
-  // Show flashcard for a term
-  const _showFlashcard = (term) => {
-    setFlashcardTerm(term);
-  };
 
   return (
     <CAPSimulatorRouter

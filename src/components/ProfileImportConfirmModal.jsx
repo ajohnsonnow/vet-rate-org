@@ -8,7 +8,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Field labels for display
@@ -557,8 +556,6 @@ const ProfileImportConfirmModal = ({
   onConfirm,
   onCancel,
 }) => {
-  const { _t } = useLanguage();
-
   const { editableData, setEditableData, selectedFields, setSelectedFields } =
     useEditableProfileData(extractedData, currentProfile);
 

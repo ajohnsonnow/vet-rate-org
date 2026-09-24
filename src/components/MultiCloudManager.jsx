@@ -197,7 +197,7 @@ function createConnectHandler({
           google_drive: { ...prev.google_drive, connected: true, user },
         }));
       } else {
-        const _result = await connectProvider(providerId);
+        await connectProvider(providerId);
         const state = getProviderState(providerId);
         setProviderStates((prev) => ({
           ...prev,

@@ -295,7 +295,7 @@ const translateText = async (text, fromLang, toLang) => {
   for (const category of Object.values(QUICK_PHRASES)) {
     for (const phrase of category) {
       // Check if input matches any language version of this phrase
-      for (const [_lang, phraseText] of Object.entries(phrase.translations)) {
+      for (const [, phraseText] of Object.entries(phrase.translations)) {
         if (phraseText.toLowerCase() === text.toLowerCase()) {
           // Found it! Return the target language version
           const translated =
@@ -929,7 +929,7 @@ const TranslatorPanels = ({
 );
 
 const VeteranTranslator = ({ isOpen, onClose, onReportBug }) => {
-  const { _t, SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
+  const { SUPPORTED_LANGUAGES, language: appLanguage } = useLanguage();
   const {
     myLanguage,
     setMyLanguage,

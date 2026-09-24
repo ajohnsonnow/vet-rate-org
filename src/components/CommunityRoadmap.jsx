@@ -12,8 +12,6 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import changelogData from "../data/changelog.json";
 import { SQUASHED_BUGS } from "../data/squashedBugs";
@@ -294,8 +292,6 @@ const RoadmapCardVoteButton = ({ item, onVote, hasVoted, isSubmitting }) => (
 );
 
 const RoadmapCard = ({ item, onVote, hasVoted, isSubmitting }) => {
-  const { _isDark } = useTheme();
-
   return (
     <div
       className={`
@@ -619,7 +615,6 @@ const SubmitFormActions = ({ onCancel, onSubmit, canSubmit, submitting }) => (
 );
 
 const SubmitFeatureForm = ({ onSubmit, onCancel }) => {
-  const { _t } = useLanguage();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -1102,9 +1097,6 @@ const RoadmapKanbanBoard = ({
 );
 
 function CommunityRoadmap({ onClose }) {
-  const { _t } = useLanguage();
-  const { _isDark } = useTheme();
-
   const {
     roadmapItems,
     userVotes,

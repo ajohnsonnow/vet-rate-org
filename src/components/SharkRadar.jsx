@@ -8,7 +8,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   analyzeContract,
   getRiskLevelColors,
@@ -632,7 +631,6 @@ function useSharkRadarPersistence({ setApiKey, setHasConsented, setAIStatus }) {
  * Main Shark Radar Component
  */
 export default function SharkRadar() {
-  const { _t } = useLanguage();
   const [textInput, setTextInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
@@ -644,11 +642,6 @@ export default function SharkRadar() {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
 
   useSharkRadarPersistence({ setApiKey, setHasConsented, setAIStatus });
-
-  const _handleSaveKey = (key) => {
-    localStorage.setItem("vetrate_gemini_key", key);
-    setApiKey(key);
-  };
 
   const handleConsent = () => {
     localStorage.setItem("vetrate_ai_consent", "true");

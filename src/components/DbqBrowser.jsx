@@ -14,7 +14,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   isDbqCached,
@@ -808,8 +807,6 @@ function DbqLibraryModal({
  * @param {function} props.onClose - Callback when browser is closed
  */
 export default function DbqBrowser({ onClose }) {
-  const { _t } = useLanguage();
-
   // BuyMeCoffee state
   const [showBuyMeCoffee, setShowBuyMeCoffee] = useState(false);
   const [coffeeContext, setCoffeeContext] = useState({});

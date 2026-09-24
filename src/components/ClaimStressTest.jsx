@@ -772,7 +772,7 @@ const useStressTestState = (claimData) => {
   const [savedClaims, setSavedClaims] = useState([]);
   const [savedStatements, setSavedStatements] = useState([]);
   const [savedForms, setSavedForms] = useState([]);
-  const [_veteranProfile, setVeteranProfile] = useState({});
+  const [, setVeteranProfile] = useState({});
   const [showPacketSelector, setShowPacketSelector] = useState(false);
   const [selectedPacketItem, setSelectedPacketItem] = useState(null);
 

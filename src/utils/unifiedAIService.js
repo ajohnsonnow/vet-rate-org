@@ -761,8 +761,7 @@ const getGeminiApiKey = () => {
  * context injection based on the user's prompt.
  */
 const buildCloudSystemPrompt = async (prompt, options) => {
-  const { _buildSystemPromptWithDKB, buildSystemPrompt, buildDKBContext } =
-    await getAISystemPrompts();
+  const { buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
 
   let defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || "general",
@@ -1254,7 +1253,6 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
  */
 const generateWithWllama = async (prompt, options = {}) => {
   const {
-    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
@@ -1333,7 +1331,6 @@ const generateWithWllama = async (prompt, options = {}) => {
  */
 const generateWithLocalServer = async (prompt, options = {}) => {
   const {
-    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,

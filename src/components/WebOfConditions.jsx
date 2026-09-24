@@ -11,7 +11,6 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
@@ -1496,7 +1495,6 @@ export default function WebOfConditions({
   onSelectCondition,
   onReportBug,
 }) {
-  const { _t } = useLanguage();
   const graph = useWebOfConditionsGraph();
 
   return (

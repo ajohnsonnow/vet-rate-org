@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { getAllConditions } from "../services/knowledgeQuery";
 import { saveClaim, isClaimSaved } from "../utils/claimsStorage";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Map rating schedules to user-friendly body system names with emojis
 const systemNameMap = {
@@ -625,7 +624,6 @@ const AddToPacketButton = ({ selectedCount, onClick }) => (
  * Organized by body system per 38 CFR Part 4, Subpart B
  */
 const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {
-  const { _t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { conditionsBySystem, sortedSystemNames, totalConditions } =

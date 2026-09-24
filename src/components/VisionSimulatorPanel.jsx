@@ -10,7 +10,6 @@
 
 import { useState, useCallback, useRef } from "react";
 import { VisionSimulator } from "../utils/visionSimulator";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Validate a picked file before it becomes the selected image
 function selectImageFile(
@@ -613,7 +612,6 @@ const CapabilitiesFooter = ({ capabilities }) => (
 );
 
 const VisionSimulatorPanel = ({ onAnalysisComplete, textLLMCallback }) => {
-  const { _t } = useLanguage();
   const {
     selectedImage,
     setSelectedImage,

@@ -3,10 +3,7 @@
  * Displays a warning when experimental WebGPU features are enabled
  */
 
-import { useLanguage } from "../contexts/LanguageContext";
-
 const ExperimentalModeWarning = ({ experimentalMode }) => {
-  const { _t } = useLanguage();
   if (!experimentalMode) {
     return null;
   }

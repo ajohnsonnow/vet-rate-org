@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * LunaHelper - A calm, supportive presence celebrating user accomplishments
@@ -353,7 +352,6 @@ function LunaCard({ position, animation, extraEmoji, msg, onDismiss }) {
 }
 
 function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
-  const { _t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [sessionDismissCount, setSessionDismissCount] = useState(0);

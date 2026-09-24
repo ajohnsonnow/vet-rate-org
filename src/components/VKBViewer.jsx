@@ -9,7 +9,6 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   loadVKB,
   saveVKB,
@@ -781,8 +780,6 @@ const ViewerModal = ({
 );
 
 const VKBViewer = ({ isOpen, onClose }) => {
-  const { _t } = useLanguage();
-
   const [vkb, setVkb] = useState(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [showLLMContext, setShowLLMContext] = useState(false);

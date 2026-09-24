@@ -17,7 +17,6 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "../../contexts/LanguageContext";
 import { useVaAuth } from "../../auth/useVaAuth";
 import {
   getServiceHistory,
@@ -1509,7 +1508,6 @@ function VaSandboxDashboard({
 // ============================================================================
 
 const VaSandboxTest = () => {
-  const { _t } = useLanguage();
   const {
     isAuthenticated,
     isLoading: authLoading,

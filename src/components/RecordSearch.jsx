@@ -9,7 +9,6 @@
  */
 
 import { useState, useCallback, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   searchPdfForKeyword,
@@ -608,7 +607,6 @@ const useRecordSearchState = () => {
 };
 
 const RecordSearch = ({ onClose }) => {
-  const { _t } = useLanguage();
   const s = useRecordSearchState();
 
   return (

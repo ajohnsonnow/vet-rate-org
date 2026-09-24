@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
@@ -465,11 +464,9 @@ export default function TheTribunal({
   onReportBug,
   onOpenAISettings,
 }) {
-  const { _t } = useLanguage();
-
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [_transcript, setTranscript] = useState("");
+  const [, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedPersona, setSelectedPersona] = useState("skeptical");
@@ -484,7 +481,7 @@ export default function TheTribunal({
 
   // Speech control state
   const [micSupported, setMicSupported] = useState(true);
-  const [_hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
+  const [, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
   const {

@@ -9,7 +9,6 @@
 
 import { useState, useEffect } from "react";
 import { Download, X, Smartphone } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const IOSInstallInstructions = ({ onClose }) => (
@@ -191,7 +190,6 @@ const usePWAInstallPrompt = () => {
 };
 
 const PWAInstallButton = ({ className = "" }) => {
-  const { _t } = useLanguage();
   const {
     deferredPrompt,
     setDeferredPrompt,

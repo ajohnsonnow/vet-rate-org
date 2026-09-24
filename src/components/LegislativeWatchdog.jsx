@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -823,15 +822,12 @@ function computeAlertCounts(allUpdates) {
 }
 
 function useLegislativeWatchdogState() {
-  const { _t } = useLanguage();
-
   const [loading, setLoading] = useState(true);
   const [federalRegisterDocs, setFederalRegisterDocs] = useState([]);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all"); // 'all', 'proposed', 'active', 'urgent'
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [_showAISettings, _setShowAISettings] = useState(false);
   const [analyzingDoc, setAnalyzingDoc] = useState(null);
   const [aiAnalysis, setAIAnalysis] = useState({});
 

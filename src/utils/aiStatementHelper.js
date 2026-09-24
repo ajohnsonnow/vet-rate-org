@@ -1275,7 +1275,7 @@ function normalizeStateCode(state) {
 export const searchStateBenefits = async (state, rating) => {
   try {
     // Import the real state benefits database
-    const { searchBenefitsByRating, getStateBenefits, _getAllStateData } =
+    const { searchBenefitsByRating, getStateBenefits } =
       await import("../data/stateBenefits.js");
 
     // Convert state name to code if needed

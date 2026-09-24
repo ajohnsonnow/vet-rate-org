@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   getToolRecommendation,
   analyzeCurrentModel,
@@ -82,7 +81,6 @@ const LLMRecommendationBadgeDetails = ({ recommendation, analysis }) => (
  * Compact badge showing current model and recommendation
  */
 export const LLMRecommendationBadge = ({ toolId, className = "" }) => {
-  const { _t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [aiStatus, setAiStatus] = useState(getAIStatus());
 

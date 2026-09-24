@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import ToolCardButton from "./ToolCardButton";
 import {
@@ -515,8 +514,6 @@ const useCloudSync = () => {
 };
 
 const CloudSyncManager = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   const {
     isInitialized,
     isSignedIn,

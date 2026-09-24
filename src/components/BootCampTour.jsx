@@ -515,7 +515,7 @@ function buildTourSteps(t) {
 
 const BootCampTour = ({ forceShow = false, onComplete }) => {
   const { t } = useLanguage();
-  const [_tourDriver, setTourDriver] = useState(null);
+  const [, setTourDriver] = useState(null);
 
   useEffect(() => {
     // Inject custom styles
@@ -589,11 +589,6 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
   };
 
   useTourAutoStart(forceShow, startTour);
-
-  // Function to manually start tour (exposed via ref or context if needed)
-  const _restartTour = () => {
-    startTour();
-  };
 
   return null; // This component doesn't render anything visible
 };

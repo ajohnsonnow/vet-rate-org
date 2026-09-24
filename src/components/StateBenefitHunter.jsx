@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -1020,8 +1019,6 @@ const PrefilledFromRecordsBanner = ({ show }) => {
 };
 
 const StateBenefitHunter = ({ onClose, onReportBug }) => {
-  const { _t } = useLanguage();
-
   const [defaults] = useState(getStateBenefitDefaults);
   const wasPrefilled = Boolean(defaults.state || defaults.rating);
   const [selectedState, setSelectedState] = useState(defaults.state);
@@ -1031,7 +1028,6 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
   const [error, setError] = useState(null);
   const [isPermanentTotal, setIsPermanentTotal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
-  const [_showAIConsultation, _setShowAIConsultation] = useState(false);
   const [aiQuestion, setAIQuestion] = useState("");
   const [aiAdvice, setAIAdvice] = useState(null);
   const [isAIThinking, setIsAIThinking] = useState(false);

@@ -733,7 +733,6 @@ export const analyzeRetroactivePay = (ratingHistory) => {
   );
 
   const periods = [];
-  const _totalPotentialUnderpayment = 0;
   let uncoveredMonths = 0;
   const availableYears = Object.keys(VA_PAY_RATES_HISTORICAL).map(Number);
   const earliestAvailableYear = Math.min(...availableYears);

@@ -8,11 +8,9 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 const AnimatedBug = ({ size = "sm", className = "" }) => {
-  const { _t } = useLanguage();
-  const [_isAnimating, setIsAnimating] = useState(false);
+  const [, setIsAnimating] = useState(false);
   const [animationStyle, setAnimationStyle] = useState({});
 
   // Bug crawls randomly every 5-15 seconds

@@ -802,7 +802,6 @@ export function getFieldCategory(field, documentType) {
  * Group fields by category
  */
 export function groupFieldsByCategory(extractedData, documentType) {
-  const _rules = getCollectionRules(documentType);
   const grouped = {};
 
   for (const [field, value] of Object.entries(extractedData)) {

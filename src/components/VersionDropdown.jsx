@@ -15,7 +15,6 @@ import {
   Rocket,
 } from "lucide-react";
 import { generateWhatsNewChangelog } from "../utils/changelogGenerator";
-import { useLanguage } from "../contexts/LanguageContext";
 
 const getIcon = (type, isNew) => {
   if (isNew) return <Rocket className="w-4 h-4 text-emerald-500" />;
@@ -94,7 +93,6 @@ const ChangelogItem = ({ item }) => (
 );
 
 const VersionDropdown = () => {
-  const { _t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [changelogData, setChangelogData] = useState(null);
   const dropdownRef = useRef(null);

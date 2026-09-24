@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * VAAITransparency Component
@@ -941,8 +940,6 @@ function VAAITransparencyHeader({ activeTab, onChangeTab, onClose }) {
 }
 
 const VAAITransparency = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   const [activeTab, setActiveTab] = useState("overview");
 
   return (

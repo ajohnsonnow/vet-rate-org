@@ -1,4 +1,3 @@
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const TermsHeader = ({ onClose }) => (
@@ -882,8 +881,6 @@ const FinalStatementSection = () => (
 );
 
 const TermsOfServicePage = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   return (
     <ResponsiveModal
       isOpen

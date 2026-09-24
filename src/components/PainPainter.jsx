@@ -15,7 +15,6 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useScreenshot } from "../hooks/useScreenshot";
 import { savePainMap } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
@@ -921,10 +920,6 @@ function BodySVG({
 
   // Calculate scaled positions based on body type
   const shoulderWidth = 50 * s.shoulders;
-  const _hipWidth = 40 * s.hips;
-  const _torsoHeight = 60 * s.torso;
-  const _armLength = 100 * s.arms;
-  const _legLength = 150 * s.legs;
 
   // Get regions based on current view
   const regions = getRegionsForView(
@@ -2427,7 +2422,6 @@ const PainPainterMainModal = ({
 // returned by usePainPainterOrchestration, so spreading it through is
 // behaviorally identical to the previous explicit prop-by-prop passing.
 const PainPainter = ({ onClose, _onExport, onReportBug }) => {
-  const { _t } = useLanguage();
   const painPainterState = usePainPainterOrchestration();
 
   return (

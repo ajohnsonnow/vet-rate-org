@@ -7,10 +7,7 @@
  * Makes clear this is NOT medical diagnosis
  */
 
-import { useLanguage } from "../contexts/LanguageContext";
-
 const NexusDisclaimerFooter = ({ className = "" }) => {
-  const { _t } = useLanguage();
   return (
     <div
       role="note"

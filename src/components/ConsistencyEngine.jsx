@@ -13,7 +13,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import useConsistencyCheck, {
   getHealthStatus,
@@ -64,8 +63,6 @@ function getHealthBadgeStyle(color) {
 }
 
 export default function ConsistencyEngine({ onClose }) {
-  const { _t } = useLanguage();
-
   const [activeTab, setActiveTab] = useState("rules"); // 'rules' or 'ai'
   const {
     contradictions,
@@ -75,7 +72,6 @@ export default function ConsistencyEngine({ onClose }) {
     criticalCount,
     highCount,
     mediumCount,
-    _totalCount,
   } = useConsistencyCheck();
   const healthStatus = getHealthStatus(contradictions);
 

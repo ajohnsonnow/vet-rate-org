@@ -326,8 +326,7 @@ const LANGUAGE_TRANSLATIONS = {
 
 function useUnityPhraseLearning(targetLang) {
   const [currentPhrase, setCurrentPhrase] = useState(null);
-  const [_isListening, _setIsListening] = useState(false);
-  const [_userAttempt, setUserAttempt] = useState("");
+  const [, setUserAttempt] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [progress, setProgress] = useState({});
 

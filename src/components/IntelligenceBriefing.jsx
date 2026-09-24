@@ -12,7 +12,6 @@
  */
 
 import { useState, useEffect, useId } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   loadVKB,
@@ -48,8 +47,6 @@ export default function IntelligenceBriefing({
   onConfirm,
   onEdit,
 }) {
-  const { _t } = useLanguage();
-
   const [editableData, setEditableData] = useState(extractedData);
   const [discrepancies, setDiscrepancies] = useState([]);
   const [activeSection, setActiveSection] = useState("personal");

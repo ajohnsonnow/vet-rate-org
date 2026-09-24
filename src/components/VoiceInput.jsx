@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -455,7 +454,6 @@ const VoiceInputButton = ({
   showLabel = false,
   showPrivacyHint = true,
 }) => {
-  const { _t } = useLanguage();
   const {
     showTooltip,
     setShowTooltip,

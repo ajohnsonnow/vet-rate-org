@@ -23,7 +23,6 @@ import {
 
 const cfr3Regulations = getCfr3Regulations();
 const title38Regulations = getTitle38Regulations();
-import { useLanguage } from "../contexts/LanguageContext";
 import { sanitizeUrl } from "../utils/sanitize";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -960,8 +959,6 @@ const expandAllCategories = (setExpandedCategories) => {
  * their rights, the claims process, evidence standards, effective dates, and appeal options.
  */
 const RegulationsReference = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   const [expandedCategories, setExpandedCategories] = useState({
     "reasonable-doubt": true, // Open the most important one by default
   });

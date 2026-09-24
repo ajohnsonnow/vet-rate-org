@@ -447,7 +447,6 @@ function useLanguageSuggestionForm(currentLang, language) {
       return null;
     }
 
-    const _timestamp = new Date().toISOString();
     const regionById = Object.fromEntries(regions.map((r) => [r.id, r.name]));
 
     return buildFeatureRequestText({
@@ -503,7 +502,7 @@ function useLanguageSuggestionForm(currentLang, language) {
 }
 
 const LanguageSuggestionModal = ({ isOpen, onClose, onReportBug }) => {
-  const { _t, language, getCurrentLanguage } = useLanguage();
+  const { language, getCurrentLanguage } = useLanguage();
   const currentLang = getCurrentLanguage();
 
   const {

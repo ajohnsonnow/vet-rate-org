@@ -21,7 +21,6 @@ import {
   Stethoscope,
   Link as LinkIcon,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Integration bridge for ClaimNavigator sync
 import { getBigThreeStatus } from "../utils/claimIntegration";
@@ -314,7 +313,6 @@ const ClaimProgressHelpText = () => (
 );
 
 const ClaimProgress = ({ conditionCode, conditionName, className = "" }) => {
-  const { _t } = useLanguage();
   const [completeness, setCompleteness] = useState(0);
   const [missingItems, setMissingItems] = useState([]);
   const [checklist, setChecklist] = useState({

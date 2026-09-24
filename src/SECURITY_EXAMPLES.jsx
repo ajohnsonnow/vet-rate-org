@@ -181,10 +181,10 @@ function HeaderWithSecurity({ securityContext }) {
 // EXAMPLE 4: Use Encrypted Storage
 // ============================================
 
-import { secureSetItem, secureGetItem } from "../utils/secureStorage";
+import { secureGetItem } from "../utils/secureStorage";
 
 function _ComponentWithEncryptedStorage({ securityContext }) {
-  const [_claims, setClaims] = useState([]);
+  const [, setClaims] = useState([]);
 
   // Load encrypted data on mount
   useEffect(() => {
@@ -206,26 +206,6 @@ function _ComponentWithEncryptedStorage({ securityContext }) {
 
     loadData();
   }, [securityContext?.currentPin]);
-
-  // Save encrypted data
-  const _saveClaims = async (newClaims) => {
-    if (securityContext?.currentPin) {
-      try {
-        await secureSetItem(
-          "vet_rate_saved_claims",
-          newClaims,
-          securityContext.currentPin,
-        );
-        setClaims(newClaims);
-      } catch (error) {
-        console.error("Failed to save encrypted data:", error);
-      }
-    } else {
-      // Fallback to regular storage if vault not enabled
-      localStorage.setItem("vet_rate_saved_claims", JSON.stringify(newClaims));
-      setClaims(newClaims);
-    }
-  };
 
   return <div>{/* Your component UI */}</div>;
 }

@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import ShareButton from "./ShareButton";
-import { useLanguage } from "../contexts/LanguageContext";
 
 function buildPdfLayout(doc) {
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -625,7 +624,6 @@ const SimulatorFeedback = ({
   onClose,
   onSendToCalculator,
 }) => {
-  const { _t } = useLanguage();
   const feedbackContentRef = useRef(null);
 
   if (!result) return null;

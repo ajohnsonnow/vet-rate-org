@@ -9,7 +9,6 @@ import {
   CheckCircle,
   X,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -22,7 +21,6 @@ import ResponsiveModal from "./common/ResponsiveModal";
  * - What skeptics should check
  */
 const SecurityBadge = () => {
-  const { _t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 

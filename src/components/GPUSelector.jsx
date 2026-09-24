@@ -14,7 +14,6 @@ import {
   RefreshCw,
   ExternalLink,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * GPU discovery/selection state + scan/select handlers, extracted so the
@@ -76,7 +75,7 @@ function useGpuScanner(autoSelect, onGPUSelected) {
 
     try {
       // Wait for the manager to return the device
-      const _device = await gpuManager.selectAdapter(id);
+      await gpuManager.selectAdapter(id);
 
       // Update UI state
       setSelectedId(id);
@@ -215,7 +214,6 @@ function SingleGpuGuidance() {
 }
 
 const GPUSelector = ({ onGPUSelected, autoSelect = true }) => {
-  const { _t } = useLanguage();
   const { adapters, selectedId, loading, error, scanSystem, handleSelect } =
     useGpuScanner(autoSelect, onGPUSelected);
 

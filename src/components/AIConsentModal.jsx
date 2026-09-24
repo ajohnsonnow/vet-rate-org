@@ -6,7 +6,6 @@
  */
 
 import { useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { getAIDataDisclosure } from "../utils/aiStatementHelper";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -242,7 +241,6 @@ const AIConsentModal = ({
   onCancel,
   statementType = "personal", // 'personal', 'buddy', or 'ptsd'
 }) => {
-  const { _t } = useLanguage();
   const containerRef = useRef(null);
   useBodyScrollLock(isOpen);
 
