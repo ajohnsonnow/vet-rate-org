@@ -3013,8 +3013,14 @@ function _extractDateOfBirth(ctx) {
     /DATE\s+OF\s+BIRTH[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
     // DOB abbreviation
     /\bDOB[:\s]+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-    // Box 5 with compact YYYYMMDD format
-    /5\.\s{0,10}\D{0,50}(\d{8})\b/i,
+    // Box 5 with compact YYYYMMDD format. Lazy `.{0,50}?`, not `\D{0,50}`:
+    // a real column-scrambled scan renders the row below the Box 5 header
+    // as "E-5                        19780419" - Box 4b's pay grade value
+    // lands between the label and the actual DOB digits, and a
+    // non-digit-only gap can never skip past that embedded "5" to reach
+    // the real 8-digit date, so dateOfBirth came back null even though
+    // the digits were right there. Still bounded to 50 chars.
+    /5\.\s{0,10}.{0,50}?(\d{8})\b/i,
   ];
   for (const pattern of dobPatterns) {
     const match = cleanedText.match(pattern);
@@ -3740,12 +3746,19 @@ function _extractSeparationTypeAndCharacter(ctx) {
   // alternative would have read as a General discharge on a document that
   // never characterizes one.
   const characterPatterns = [
-    /24\.\s{0,10}CHARACTER\s{1,10}OF\s{1,10}SERVICE[:\s]{1,20}([A-Z\s-]{1,200}?)(?:\s{1,10}25\.|$)/i,
+    // [A-Z\s()-] not [A-Z\s-]: a real NGB22 prints this box as "GENERAL
+    // (UNDER HONORABLE CONDITIONS)", and a class that can't include "("
+    // stops the capture at "GENERAL" alone - a different, wrong VA
+    // characterization. _normalizeDischargeType strips the parens back out.
+    /24\.\s{0,10}CHARACTER\s{1,10}OF\s{1,10}SERVICE[:\s]{1,20}([A-Z\s()-]{1,200}?)(?:\s{1,10}25\.|$)/i,
     // eslint-disable-next-line sonarjs/slow-regex -- distinctive literal prefix "CHARACTER OF SERVICE" gates the unbounded class, so the match cannot restart at arbitrary offsets; verified on the 10KB Box 23/24 slice
-    /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s-]+)/i,
-    // Bounded rather than \s*[-–—]?\s* — two unbounded runs either side of an
-    // optional dash backtrack quadratically on a long whitespace stretch.
-    /\b(GENERAL\s{0,4}[-–—]?\s{0,4}UNDER\s+HONORABLE\s+CONDITIONS)\b/i,
+    /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s()-]+)/i,
+    // Bounded rather than \s*[-–—(]?\s* — two unbounded runs either side of
+    // an optional separator backtrack quadratically on a long whitespace
+    // stretch. The separator also accepts "(": same real-form rendering as
+    // above, for when the "CHARACTER OF SERVICE" label itself didn't
+    // survive OCR well enough for the two patterns above to anchor on.
+    /\b(GENERAL\s{0,4}[-–—(]?\s{0,4}UNDER\s+HONORABLE\s+CONDITIONS)\b/i,
     /\b(OTHER\s+THAN\s+HONORABLE|DISHONORABLE|BAD\s+CONDUCT|UNCHARACTERIZED|HONORABLE)\b/i,
   ];
   for (const pattern of characterPatterns) {
@@ -3774,7 +3787,7 @@ const DISCHARGE_TYPES = [
 function _normalizeDischargeType(raw) {
   const cleaned = String(raw ?? "")
     .toUpperCase()
-    .replace(/[-–—]/g, " ")
+    .replace(/[-–—()]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   return DISCHARGE_TYPES.find((t) => cleaned.startsWith(t)) ?? cleaned;

@@ -613,3 +613,33 @@ describe("FIX: pay grade extraction reads the real Box 4b value", () => {
     expect(result.payGrade).toBe("E-4");
   });
 });
+
+describe("FIX: NGB-22 fields the parser already targets but was missing", () => {
+  it("recognizes the parenthetical NGB22 rendering of Box 24 (GENERAL (UNDER HONORABLE CONDITIONS))", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+24. CHARACTER OF SERVICE: GENERAL (UNDER HONORABLE CONDITIONS)
+25. SEPARATION AUTHORITY: NGR 600-200
+`;
+    const result = await parseServiceRecord(text, "NGB22");
+    expect(result.error).toBeUndefined();
+    expect(result.dischargeType).toBe("GENERAL UNDER HONORABLE CONDITIONS");
+  });
+
+  it("finds the date of birth when a pay-grade value sits between the Box 5 label and the digits", async () => {
+    // A real column-scrambled scan renders the row below the Box 5 header
+    // as "<pay grade>  <DOB digits>" on one line - the old gap pattern
+    // (\D{0,50}, non-digit only) could never skip past the pay grade's own
+    // embedded digit to reach the real 8-digit date.
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+5. DATE OF BIRTH (YYYYMMDD)
+E-5 19900101
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.dateOfBirth).toBe("01/01/1990");
+  });
+});
