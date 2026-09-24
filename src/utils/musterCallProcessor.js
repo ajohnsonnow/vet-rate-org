@@ -3817,20 +3817,19 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
   }
 
   // FIX-3a (HIGHEST PRIORITY): deployment locations must be scoped to the
-  // isolated Box 18 remarks substring, NOT the entire document. Scanning
-  // the whole doc previously matched preprinted boilerplate ("POST-VIETNAM
-  // ERA VETERAN'S EDUCATIONAL ASSISTANCE PROGRAM") and fabricated a
-  // Vietnam deployment. If Box 18 can't be reliably isolated, extract
-  // nothing rather than risk a fabrication.
+  // isolated Box 18 remarks substring by default, NOT the entire document.
+  // Scanning the whole doc previously matched preprinted boilerplate
+  // ("POST-VIETNAM ERA VETERAN'S EDUCATIONAL ASSISTANCE PROGRAM") and
+  // fabricated a Vietnam deployment.
   // FIX-12: isolate against ocrCorrectedUpperText, not raw text - see
   // _extractBox18RemarksText for why (boilerplate stripper and the
   // deployment-country matcher must see the same OCR-corrected text, or a
   // corrupted "P0ST-VIETNAM ERA" slips past the boilerplate strip while the
   // digit-immune "VIETNAM" match still fires below).
   const box18Text = _extractBox18RemarksText(ocrCorrectedUpperText);
-  if (!box18Text) return;
-
-  const scanUpper = _stripDeploymentBoilerplate(box18Text).toUpperCase();
+  const box18Scan = box18Text
+    ? _stripDeploymentBoilerplate(box18Text).toUpperCase()
+    : "";
   const dobYear = _parseYearFromDate(data.dateOfBirth);
 
   // Extract deployments from remarks (Box 18) - common locations
@@ -3838,6 +3837,23 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
     /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
     /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi,
   ];
+
+  // A scrambled OCR reading order on a multi-column DD214/NGB22 layout can
+  // make a later box's heading (e.g. a stray "19a.") appear ahead of Box
+  // 18's real end in the linearized text stream, truncating the isolated
+  // substring well short of genuine remarks - confirmed against a real
+  // scan where Box 18 isolated to a few words of boilerplate and the
+  // "SERVICE IN <place> <dates>" line landed elsewhere in the document.
+  // When the isolated substring is empty or doesn't contain anything the
+  // deployment patterns recognize, fall back to the full document - still
+  // boilerplate-stripped first, so FIX-3a's fabrication guard still
+  // applies even in the fallback.
+  const scanUpper = deploymentPatterns.some(
+    (pattern) => box18Scan.match(pattern) !== null,
+  )
+    ? box18Scan
+    : _stripDeploymentBoilerplate(ocrCorrectedUpperText).toUpperCase();
+
   for (const pattern of deploymentPatterns) {
     let match;
     while ((match = pattern.exec(scanUpper)) !== null) {

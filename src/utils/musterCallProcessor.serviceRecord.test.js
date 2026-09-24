@@ -485,3 +485,47 @@ describe("musterCallProcessor: parseServiceRecord ReDoS regression guards", () =
     expect(elapsed).toBeLessThan(1000);
   });
 });
+
+describe("FIX: deployment mention outside a truncated Box 18 is still found", () => {
+  it("finds a real deployment when a stray '19a.' heading truncates Box 18 before the real remarks line", async () => {
+    // Real OCR reading-order scrambling on a multi-column form can put a
+    // later box's heading ahead of Box 18's actual end in the linearized
+    // text stream, so the lazy Box-18 isolation regex stops early - here,
+    // "19a. MAILING ADDRESS" cuts the isolated substring down to a single
+    // boilerplate sentence, and the real deployment mention lands inside
+    // what gets read as Box 28's narrative instead.
+    const text = `
+1. NAME (Last, First, Middle): SMITH, JANE MARIE
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: DATA HEREIN SUBJECT TO CHANGE.
+19a. MAILING ADDRESS AFTER SEPARATION
+100 MAIN ST
+28. NARRATIVE REASON FOR SEPARATION: SOLDIER SERVED IN KUWAIT.
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.deployments).toContain("KUWAIT");
+  });
+
+  it("still does not fabricate a deployment from boilerplate when the fallback triggers", async () => {
+    // Same truncated-Box-18 shape as above, but this time the only thing
+    // elsewhere in the document is preprinted boilerplate, not a real
+    // deployment - the fallback scan must still run the boilerplate strip
+    // before matching, same as the Box-18-scoped path.
+    const text = `
+1. NAME (Last, First, Middle): SMITH, JANE MARIE
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: DATA HEREIN SUBJECT TO CHANGE.
+19a. MAILING ADDRESS AFTER SEPARATION
+100 MAIN ST
+15a. MEMBER CONTRIBUTED TO POST-VIETNAM ERA VETERAN'S EDUCATIONAL ASSISTANCE PROGRAM
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.deployments).toEqual([]);
+  });
+});
