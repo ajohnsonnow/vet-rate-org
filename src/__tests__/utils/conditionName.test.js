@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  dropSupersededConditions,
   extractPriorConditionNames,
   findRatedConditionMatch,
   isOlderDecision,
@@ -231,5 +232,31 @@ describe("isOlderDecision", () => {
   it("is false when either date is missing", () => {
     expect(isOlderDecision(null, "2023-09-15")).toBe(false);
     expect(isOlderDecision("2023-09-15", undefined)).toBe(false);
+  });
+});
+
+describe("dropSupersededConditions", () => {
+  it("removes a rating another row says it replaced", () => {
+    const rows = [
+      { name: "Panic disorder without agoraphobia (NOS)" },
+      {
+        name: "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia (NOS))",
+      },
+      { name: "Lumbago" },
+      { name: "Lumbosacral strain (previously rated as lumbago)" },
+      { name: "Tinnitus" },
+    ];
+    expect(dropSupersededConditions(rows, byName)).toBe(2);
+    expect(rows.map((r) => r.name)).toEqual([
+      "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia (NOS))",
+      "Lumbosacral strain (previously rated as lumbago)",
+      "Tinnitus",
+    ]);
+  });
+
+  it("leaves unrelated rows alone", () => {
+    const rows = [{ name: "Tinnitus" }, { name: "Rhinitis" }];
+    expect(dropSupersededConditions(rows, byName)).toBe(0);
+    expect(rows).toHaveLength(2);
   });
 });

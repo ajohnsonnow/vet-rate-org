@@ -16,8 +16,10 @@
  * with localStorage as metadata cache only.
  */
 
+import { isSameServicePeriod } from "./dateUtils";
 import { ensureQuota } from "./storage";
 import {
+  dropSupersededConditions,
   findRatedConditionMatch,
   isOlderDecision,
   isSupersededName,
@@ -1008,12 +1010,40 @@ function mergeDD214ServiceDates(vkb, dd214Data) {
   }
 }
 
+// True when record A is later than record B: by date when both are dated,
+// by pay grade when neither is.
+function _isLaterRecord(dateA, dateB, gradeA, gradeB) {
+  if (dateA && dateB) return _calendarDay(dateA) > _calendarDay(dateB);
+  if (dateA || dateB) return Boolean(dateA);
+  return gradeA > gradeB;
+}
+
 function mergeDD214RankAndCharacter(vkb, dd214Data) {
-  // Rank - use the HIGHEST rank (latest DD214 usually has highest)
+  // Documents arrive in upload order, so the discharge rank comes from the
+  // latest separation and the entry rank from the earliest entry. Scanned
+  // forms often lose those dates; then the higher pay grade wins.
   if (dd214Data.rank) {
-    vkb.serviceHistory.rank.discharge = dd214Data.rank;
-    if (!vkb.serviceHistory.rank.entry) {
-      vkb.serviceHistory.rank.entry = dd214Data.rank; // Will be overwritten by earlier DD214
+    const rank = vkb.serviceHistory.rank;
+    const grade = parsePayGrade(dd214Data.payGrade);
+    if (
+      !rank.discharge ||
+      _isLaterRecord(
+        dd214Data.separationDate,
+        rank.dischargeAsOf,
+        grade,
+        rank.dischargeGrade ?? 0,
+      )
+    ) {
+      rank.discharge = dd214Data.rank;
+      rank.dischargeAsOf = dd214Data.separationDate || null;
+      rank.dischargeGrade = grade;
+    }
+    if (
+      !rank.entry ||
+      _isLaterRecord(rank.entryAsOf, dd214Data.entryDate, 0, 0)
+    ) {
+      rank.entry = dd214Data.rank;
+      rank.entryAsOf = dd214Data.entryDate || null;
     }
   }
   if (dd214Data.payGrade) {
@@ -1354,30 +1384,97 @@ function mergeDD214ServicePeriodTracking(vkb, dd214Data, options) {
   if (!vkb.serviceHistory.servicePeriods)
     vkb.serviceHistory.servicePeriods = [];
 
+  const shared = {
+    branch: dd214Data.branch || vkb.serviceHistory.branch,
+    rank: dd214Data.rank || "",
+    payGrade: dd214Data.payGrade || "",
+    mos: mosCode || "",
+    mosTitle: mosTitle || "",
+    source: options.fileName || "DD-214",
+  };
   // C1 bug fix: previously required BOTH dates, silently dropping any
   // period where only one date was extractable. Key on whichever date(s)
   // are available and flag incomplete when only one is present.
-  if (!dd214Data.entryDate && !dd214Data.separationDate) return;
-
-  const isDuplicate = vkb.serviceHistory.servicePeriods.some(
-    (p) =>
-      p.serviceStartDate === (dd214Data.entryDate || null) &&
-      p.serviceEndDate === (dd214Data.separationDate || null),
-  );
-  if (!isDuplicate) {
-    vkb.serviceHistory.servicePeriods.push({
+  if (dd214Data.entryDate || dd214Data.separationDate) {
+    _upsertVkbServicePeriod(vkb, {
+      ...shared,
       serviceStartDate: dd214Data.entryDate || null,
       serviceEndDate: dd214Data.separationDate || null,
-      branch: dd214Data.branch || vkb.serviceHistory.branch,
       component: dd214Data.component || "",
-      rank: dd214Data.rank || "",
-      payGrade: dd214Data.payGrade || "",
-      mos: mosCode || "",
-      mosTitle: mosTitle || "",
       characterOfService: dd214Data.characterOfService || "",
-      incomplete: !(dd214Data.entryDate && dd214Data.separationDate),
-      source: options.fileName || "DD-214",
     });
+  }
+  // A scanned form often loses Box 12's dates while its remarks (the NGB-22's
+  // Box 18 date ranges) still list every period.
+  for (const period of dd214Data.additionalPeriods || []) {
+    _upsertVkbServicePeriod(vkb, {
+      ...shared,
+      serviceStartDate: period.serviceStartDate
+        ? _calendarDay(period.serviceStartDate)
+        : null,
+      serviceEndDate: period.serviceEndDate
+        ? _calendarDay(period.serviceEndDate)
+        : null,
+      component: period.component || "",
+      characterOfService: "",
+    });
+  }
+}
+
+/**
+ * VA's code sheet lists every active-duty period with its character of
+ * discharge. Its dates win over a form's when the two describe the same
+ * period a few days apart.
+ */
+export const mergeServicePeriodsIntoVKB = (vkb, periods, options = {}) => {
+  vkb.serviceHistory ??= {};
+  vkb.serviceHistory.servicePeriods ??= [];
+  for (const p of periods || []) {
+    _upsertVkbServicePeriod(
+      vkb,
+      {
+        serviceStartDate: p.entryDate,
+        serviceEndDate: p.separationDate,
+        branch: p.branch || vkb.serviceHistory.branch || "",
+        characterOfService: p.characterOfDischarge || "",
+        source: options.fileName || "VA code sheet",
+      },
+      { authoritativeDates: true },
+    );
+  }
+  return vkb;
+};
+
+function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
+  const periods = vkb.serviceHistory.servicePeriods;
+  const complete = Boolean(period.serviceStartDate && period.serviceEndDate);
+  const existing =
+    periods.find(
+      (p) =>
+        p.serviceStartDate === period.serviceStartDate &&
+        p.serviceEndDate === period.serviceEndDate,
+    ) ||
+    (complete &&
+      periods.find((p) =>
+        isSameServicePeriod(
+          p.serviceStartDate,
+          p.serviceEndDate,
+          period.serviceStartDate,
+          period.serviceEndDate,
+        ),
+      ));
+  if (!existing) {
+    periods.push({ ...period, incomplete: !complete });
+    return;
+  }
+  for (const [field, value] of Object.entries(period)) {
+    if (value && !existing[field]) existing[field] = value;
+  }
+  if (authoritativeDates && complete) {
+    existing.serviceStartDate = period.serviceStartDate;
+    existing.serviceEndDate = period.serviceEndDate;
+    existing.incomplete = false;
+    existing.datesVerifiedBy = period.source;
   }
 }
 
@@ -1641,6 +1738,13 @@ function _pushRatingTimelineEvent(vkb, c, source) {
   });
 }
 
+function _pushTimelineEvent(vkb, entry) {
+  const duplicate = vkb.evidenceTimeline.some(
+    (e) => e.date === entry.date && e.eventType === entry.eventType,
+  );
+  if (!duplicate) vkb.evidenceTimeline.push(entry);
+}
+
 function _recordDenials(vkb, decisionData, source) {
   const decisions = Array.isArray(decisionData.decisions)
     ? decisionData.decisions
@@ -1711,12 +1815,48 @@ export const mergeRatingDecisionIntoVKB = (vkb, decisionData, options = {}) => {
   _recordDenials(vkb, decisionData, source);
 
   _recordStatedCombinedRating(vkb, decisionData, source);
-  if (decisionData.combinedRatingHistory?.length > 0) {
-    vkb.vaClaimsHistory.combinedRatingHistory =
-      decisionData.combinedRatingHistory;
+  for (const event of decisionData.recordEvents || []) {
+    _pushTimelineEvent(vkb, { ...event, source, significance: "claim" });
   }
+  if (decisionData.servicePeriods?.length > 0) {
+    mergeServicePeriodsIntoVKB(vkb, decisionData.servicePeriods, {
+      fileName: source,
+    });
+  }
+  if (decisionData.combinedRatingHistory?.length > 0) {
+    vkb.vaClaimsHistory.combinedRatingHistory = _mergeCombinedHistory(
+      vkb.vaClaimsHistory.combinedRatingHistory,
+      decisionData.combinedRatingHistory,
+    );
+  }
+  dropSupersededConditions(vkb.medicalConditions.current, (c) => c.name);
   return vkb;
 };
+
+// Each letter or code sheet prints only part of the combined-rating history
+// (the code sheet leaves out a row the letters print), so rows from every
+// source are kept, one per effective day, in date order.
+function _mergeCombinedHistory(existing, incoming) {
+  const byDay = new Map();
+  for (const row of [...(existing || []), ...incoming]) {
+    const key = _calendarDay(row.effectiveDate);
+    if (!byDay.has(key)) byDay.set(key, row);
+  }
+  return [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, row]) => row);
+}
+
+// "2007-06-30" and "Jun 30, 2007" as the same YYYY-MM-DD (Date.parse reads
+// the ISO form as UTC and the prose form as local time).
+function _calendarDay(value) {
+  const text = String(value ?? "");
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) return text;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
 /**
  * Merge data from Muster Call into VKB

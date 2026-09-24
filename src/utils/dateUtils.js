@@ -30,3 +30,22 @@ export const formatLocalDate = (dateString) => {
   }
   return new Date(`${datePart}T00:00:00`);
 };
+
+const SAME_PERIOD_TOLERANCE_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * True when two dated service periods are the same period recorded by
+ * different documents: an NGB-22 and VA's code sheet can disagree on a start
+ * date by a few days (report date vs entry date). Both periods need both
+ * dates.
+ */
+export const isSameServicePeriod = (aStart, aEnd, bStart, bEnd) => {
+  const days = [aStart, aEnd, bStart, bEnd].map((d) =>
+    formatLocalDate(d).getTime(),
+  );
+  if (days.some((t) => Number.isNaN(t))) return false;
+  return (
+    Math.abs(days[0] - days[2]) <= SAME_PERIOD_TOLERANCE_MS &&
+    Math.abs(days[1] - days[3]) <= SAME_PERIOD_TOLERANCE_MS
+  );
+};

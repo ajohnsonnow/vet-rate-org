@@ -291,3 +291,81 @@ function decisionWithPtsdAt30() {
     ],
   };
 }
+
+describe("veteranKnowledgeBase: combined history and renamed ratings across sources", () => {
+  it("keeps combined-history rows from every source, one per day, in date order", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(vkb, {
+      combinedRatingHistory: [
+        { percentage: 30, effectiveDate: "Jun 30, 2007" },
+        { percentage: 40, effectiveDate: "Aug 10, 2022" },
+        { percentage: 80, effectiveDate: "Sep 15, 2023" },
+      ],
+    });
+    mergeRatingDecisionIntoVKB(vkb, {
+      combinedRatingHistory: [
+        { percentage: 30, effectiveDate: "2007-06-30" },
+        { percentage: 70, effectiveDate: "2023-03-31" },
+        { percentage: 80, effectiveDate: "2023-09-15" },
+      ],
+    });
+    expect(
+      vkb.vaClaimsHistory.combinedRatingHistory.map((r) => r.percentage),
+    ).toEqual([30, 40, 70, 80]);
+  });
+
+  it("drops the old name once a letter says the rating was renamed", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(vkb, {
+      conditions: [
+        { name: "Lumbago", rating: 10, effectiveDate: "2008-06-30" },
+      ],
+    });
+    mergeRatingDecisionIntoVKB(vkb, {
+      conditions: [
+        {
+          name: "Iliotibial band syndrome, right hip",
+          rating: 0,
+          effectiveDate: "2023-09-15",
+        },
+        {
+          name: "Lumbosacral strain (previously rated as lumbago)",
+          rating: 20,
+          effectiveDate: "2023-09-15",
+        },
+      ],
+    });
+    expect(vkb.medicalConditions.current.map((c) => c.name)).toEqual([
+      "Lumbosacral strain (previously rated as lumbago)",
+      "Iliotibial band syndrome, right hip",
+    ]);
+  });
+});
+
+describe("veteranKnowledgeBase: dated record events from a C-File", () => {
+  it("adds each decision and claim to the timeline once", () => {
+    const vkb = initializeVKB();
+    const data = {
+      recordEvents: [
+        {
+          date: "2023-07-06",
+          eventType: "rating_decision",
+          description: "VA rating decision",
+        },
+        {
+          date: "2023-07-17",
+          eventType: "claim_received",
+          description: "Higher Level Review received by VA",
+        },
+      ],
+    };
+    mergeRatingDecisionIntoVKB(vkb, data, { fileName: "cfile.pdf" });
+    mergeRatingDecisionIntoVKB(vkb, data, { fileName: "cfile.pdf" });
+    expect(
+      vkb.evidenceTimeline.map((e) => [e.date, e.eventType, e.source]),
+    ).toEqual([
+      ["2023-07-06", "rating_decision", "cfile.pdf"],
+      ["2023-07-17", "claim_received", "cfile.pdf"],
+    ]);
+  });
+});

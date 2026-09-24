@@ -104,6 +104,23 @@ export const isSupersededName = (savedName, incomingName) =>
     normalizeConditionName(incomingName),
   );
 
+/**
+ * Remove rows another row says it replaced ("post-traumatic stress disorder
+ * (formerly evaluated as panic disorder ...)" replaces "Panic disorder ..."),
+ * so a renamed rating is never counted twice. Mutates `rows` in place and
+ * returns how many were removed.
+ */
+export const dropSupersededConditions = (rows, getName) => {
+  const superseded = rows.filter((row) =>
+    rows.some(
+      (other) =>
+        other !== row && isSupersededName(getName(other), getName(row)),
+    ),
+  );
+  for (const row of superseded) rows.splice(rows.indexOf(row), 1);
+  return superseded.length;
+};
+
 /** True when the incoming decision is dated strictly before the saved one. */
 export const isOlderDecision = (incomingDate, existingDate) => {
   const a = Date.parse(incomingDate);

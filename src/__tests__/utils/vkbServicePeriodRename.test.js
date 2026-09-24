@@ -9,6 +9,7 @@ import {
   migrateOffSchemaVKB,
   initializeVKB,
   mergeDD214IntoVKB,
+  mergeServicePeriodsIntoVKB,
 } from "../../utils/veteranKnowledgeBase";
 
 describe("C1: VKB servicePeriods field rename migration", () => {
@@ -104,5 +105,105 @@ describe("C1: mergeDD214ServicePeriodTracking single-date bug fix", () => {
     );
 
     expect(vkb.serviceHistory.servicePeriods[0].incomplete).toBe(false);
+  });
+});
+
+describe("VKB service periods from scanned forms and VA's code sheet", () => {
+  it("records the NGB-22's remark periods when Box 12 lost its dates", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(
+      vkb,
+      {
+        branch: "Army",
+        additionalPeriods: [
+          {
+            component: "IADT",
+            serviceStartDate: "1997-09-29",
+            serviceEndDate: "1998-02-27",
+          },
+          {
+            component: "AD",
+            serviceStartDate: "2006-02-13",
+            serviceEndDate: "2007-06-29",
+          },
+        ],
+      },
+      { fileName: "ngb22.pdf" },
+    );
+    expect(
+      vkb.serviceHistory.servicePeriods.map((p) => [
+        p.serviceStartDate,
+        p.serviceEndDate,
+        p.component,
+      ]),
+    ).toEqual([
+      ["1997-09-29", "1998-02-27", "IADT"],
+      ["2006-02-13", "2007-06-29", "AD"],
+    ]);
+  });
+
+  it("lets the code sheet's dates settle a period the NGB-22 dated three days off", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(
+      vkb,
+      {
+        additionalPeriods: [
+          { serviceStartDate: "2006-02-13", serviceEndDate: "2007-06-29" },
+        ],
+      },
+      { fileName: "ngb22.pdf" },
+    );
+    mergeServicePeriodsIntoVKB(
+      vkb,
+      [
+        {
+          entryDate: "2006-02-16",
+          separationDate: "2007-06-29",
+          branch: "Army",
+          characterOfDischarge: "Honorable",
+        },
+        {
+          entryDate: "2002-05-06",
+          separationDate: "2003-04-30",
+          branch: "Army",
+          characterOfDischarge: "Honorable",
+        },
+      ],
+      { fileName: "cfile.pdf" },
+    );
+    const periods = vkb.serviceHistory.servicePeriods;
+    expect(periods).toHaveLength(2);
+    expect(periods[0]).toMatchObject({
+      serviceStartDate: "2006-02-16",
+      characterOfService: "Honorable",
+      datesVerifiedBy: "cfile.pdf",
+    });
+  });
+});
+
+describe("VKB rank at discharge follows the latest service, not upload order", () => {
+  it("keeps the later separation's rank when an older DD214 is processed last", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(vkb, {
+      rank: "SGT",
+      payGrade: "E-5",
+      entryDate: "2006-02-16",
+      separationDate: "2007-06-29",
+    });
+    mergeDD214IntoVKB(vkb, {
+      rank: "SPC",
+      payGrade: "E-4",
+      entryDate: "2002-05-06",
+      separationDate: "2003-04-30",
+    });
+    expect(vkb.serviceHistory.rank.discharge).toBe("SGT");
+    expect(vkb.serviceHistory.rank.entry).toBe("SPC");
+  });
+
+  it("falls back to the higher pay grade when the forms lost their dates", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(vkb, { rank: "SGT", payGrade: "E-5" });
+    mergeDD214IntoVKB(vkb, { rank: "SPC", payGrade: "E-4" });
+    expect(vkb.serviceHistory.rank.discharge).toBe("SGT");
   });
 });

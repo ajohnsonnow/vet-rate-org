@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { parseRatingCodeSheets, latestRatingCodeSheet } from "./vaCodeSheet";
+import {
+  codeSheetRecordEvents,
+  latestRatingCodeSheet,
+  parseRatingCodeSheets,
+} from "./vaCodeSheet";
 
 // Shaped like the real 2024 layout after pdf.js extraction: page footers with
 // the decision date land in the middle of entries, names carry VA's [tags],
@@ -142,5 +146,27 @@ describe("latestRatingCodeSheet", () => {
     expect(
       latestRatingCodeSheet(`${NEW_LAYOUT}\n${OLD_LAYOUT}`).sheetDate,
     ).toBe("2024-05-06");
+  });
+});
+
+describe("codeSheetRecordEvents", () => {
+  it("dates every rating decision and the claim each one answered", () => {
+    expect(codeSheetRecordEvents(`${OLD_LAYOUT}\n${NEW_LAYOUT}`)).toEqual([
+      {
+        date: "2008-11-26",
+        eventType: "rating_decision",
+        description: "VA rating decision",
+      },
+      {
+        date: "2023-09-15",
+        eventType: "claim_received",
+        description: "New Claim received by VA",
+      },
+      {
+        date: "2024-05-06",
+        eventType: "rating_decision",
+        description: "VA rating decision",
+      },
+    ]);
   });
 });

@@ -132,3 +132,40 @@ describe("C1: service periods - incomplete periods and edits", () => {
     expect(periods.find((p) => p.id === idA)).toBeUndefined();
   });
 });
+
+describe("service periods - the same period from two documents", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("treats dates a few days apart as one period and lets VA's dates win", () => {
+    upsertServicePeriod(
+      period("2006-02-13", "2007-06-29", { branch: "Army" }),
+      meta("ngb22.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2006-02-16", "2007-06-29", {
+        characterOfService: "Honorable",
+      }),
+      {
+        sourceDocument: "cfile.pdf",
+        confidence: 100,
+        authoritativeDates: true,
+      },
+    );
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0]).toMatchObject({
+      serviceStartDate: "2006-02-16",
+      serviceEndDate: "2007-06-29",
+      branch: "Army",
+      characterOfService: "Honorable",
+    });
+  });
+
+  it("keeps genuinely different periods apart", () => {
+    upsertServicePeriod(period("2002-05-06", "2003-04-30"), meta("a.pdf", 60));
+    upsertServicePeriod(period("2004-06-22", "2005-08-27"), meta("b.pdf", 60));
+    expect(getServicePeriods()).toHaveLength(2);
+  });
+});

@@ -140,6 +140,18 @@ function parseActiveDuty(preamble) {
   }));
 }
 
+// "JURISDICTION: Claim for Increase Received 03/31/2023": what this decision
+// answered and when VA received it (or dated the exam that prompted it).
+const JURISDICTION =
+  /JURISDICTION: ?([A-Za-z][A-Za-z -]{2,60}?) (Received|Dated) (\d{2}\/\d{2}\/\d{4})/;
+
+function parseJurisdiction(preamble) {
+  const m = JURISDICTION.exec(preamble);
+  return m
+    ? { action: m[1], verb: m[2].toLowerCase(), date: toIsoDay(m[3]) }
+    : null;
+}
+
 function sheetDate(flat, headerIndex, sheetText) {
   const before = flat.slice(
     Math.max(0, headerIndex - DATE_LOOKBACK_CHARS),
@@ -202,6 +214,7 @@ function parseOneSheet(flat, headerIndex, headerLength, nextHeaderIndex) {
     notServiceConnected:
       nscAt >= 0 ? parseNotServiceConnected(sheet.slice(nscAt)) : [],
     servicePeriods: parseActiveDuty(preamble),
+    jurisdiction: parseJurisdiction(preamble),
   };
 }
 
@@ -227,4 +240,29 @@ export function latestRatingCodeSheet(text) {
   return sheets.reduce((best, s) =>
     (s.sheetDate || "") > (best.sheetDate || "") ? s : best,
   );
+}
+
+/**
+ * Dated events every code sheet in a C-File records: each rating decision,
+ * and the claim (or review exam) it answered. One event per date and kind.
+ */
+export function codeSheetRecordEvents(text) {
+  const events = new Map();
+  const add = (date, eventType, description) => {
+    if (date && !events.has(`${date}|${eventType}`)) {
+      events.set(`${date}|${eventType}`, { date, eventType, description });
+    }
+  };
+  for (const sheet of parseRatingCodeSheets(text)) {
+    add(sheet.sheetDate, "rating_decision", "VA rating decision");
+    const j = sheet.jurisdiction;
+    if (j) {
+      add(
+        j.date,
+        j.verb === "received" ? "claim_received" : "exam",
+        j.verb === "received" ? `${j.action} received by VA` : j.action,
+      );
+    }
+  }
+  return [...events.values()].sort((a, b) => a.date.localeCompare(b.date));
 }

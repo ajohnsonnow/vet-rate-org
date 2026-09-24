@@ -64,6 +64,7 @@ import {
   mergeRatingDecisionIntoVKB,
 } from "./veteranKnowledgeBase";
 import {
+  dropSupersededConditions,
   findRatedConditionMatch,
   isOlderDecision,
   isSupersededName,
@@ -94,7 +95,7 @@ import {
   parseCodeSheet,
   extractBigThree,
 } from "./vaDocumentParser";
-import { latestRatingCodeSheet } from "./vaCodeSheet";
+import { codeSheetRecordEvents, latestRatingCodeSheet } from "./vaCodeSheet";
 import {
   segmentCFile,
   quickScanCFile,
@@ -1383,6 +1384,7 @@ const saveRatingDecisionToProfile = (file, result) => {
         changed = true;
       }
     }
+    if (dropSupersededConditions(ratings, (r) => r.name) > 0) changed = true;
     if (changed) saveMyRatings(ratings);
     // eslint-disable-next-line no-console
     console.log(
@@ -1392,6 +1394,26 @@ const saveRatingDecisionToProfile = (file, result) => {
     console.warn(
       `Ratings save failed for ${file.name} (non-fatal):`,
       ratingErr.message,
+    );
+  }
+};
+
+// VA's code sheet is the one record of every active-duty period with its
+// character of discharge, and its dates settle what a scanned form's OCR
+// could not read.
+const saveCodeSheetServicePeriodsToProfile = (file, result) => {
+  const periods = result.extractedData?.servicePeriods;
+  if (result.extractedData?.ratingSource !== "code_sheet") return;
+  for (const p of periods || []) {
+    upsertServicePeriod(
+      {
+        serviceStartDate: p.entryDate,
+        serviceEndDate: p.separationDate,
+        branch: p.branch,
+        characterOfService: p.characterOfDischarge,
+        sourceDocument: file.name,
+      },
+      { sourceDocument: file.name, confidence: 100, authoritativeDates: true },
     );
   }
 };
@@ -1428,6 +1450,7 @@ export const persistFormationDocument = async (file, result) => {
   saveServiceRecordToProfile(file, result);
   saveAwardsToProfile(file, result);
   saveRatingDecisionToProfile(file, result);
+  saveCodeSheetServicePeriodsToProfile(file, result);
   await appendMusterCallTimelineEntry(file, result);
   await mergeServiceRecordIntoVKB(file, result);
   await mergeRatingDecisionIntoVKBForFile(file, result);
@@ -2041,6 +2064,7 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
     inventory,
     codeSheet: codeSheet.success ? codeSheet : null,
     ...(ratingSheet ? _ratingFieldsFromCodeSheet(ratingSheet) : {}),
+    recordEvents: codeSheetRecordEvents(text),
     aiAnalysis, // Include AI-enhanced analysis if available
     parserVersion: "v1.18.3-enhanced",
   };
@@ -4538,12 +4562,15 @@ function attachPerIssueDecisions(data, text, letterheadText) {
 // VA file number, claim-received date and the letter's own issue date. Split
 // out of parseClaimLetter to keep that function under the repo's line ceiling.
 function _parseClaimLetterHeader(text, data, letterheadText) {
-  // Real letters use several equivalent labels for the file/claim number.
-  const fileNumMatch = text.match(
-    /(?:VA\s{1,10}FILE\s{1,10}NUMBER|C-FILE\s{1,10}NUMBER|FILE\s{1,10}NUMBER|CLAIM\s{1,10}NUMBER)\s{0,10}[:#]?\s{0,10}(\d[\d-]{6,14})/i,
+  // A VA file number identifies the veteran (and is often their SSN); a
+  // claim number identifies one claim. Keep them apart so the file number is
+  // never shown or shared as a claim number.
+  const idMatch = text.match(
+    /(VA\s{1,10}FILE|C-FILE|FILE|CLAIM)\s{1,10}NUMBER\s{0,10}[:#]?\s{0,10}(\d[\d-]{6,14})/i,
   );
-  if (fileNumMatch) {
-    data.claimNumber = fileNumMatch[1];
+  if (idMatch) {
+    if (/^CLAIM/i.test(idMatch[1])) data.claimNumber = idMatch[2];
+    else data.vaFileNumber = idMatch[2];
   }
 
   // Claim-received date ("We received your claim ... on November 1, 2025")
@@ -4608,6 +4635,7 @@ export const parseClaimLetter = async (text, { letterheadText } = {}) => {
   const data = {
     type: "claim_letter",
     claimNumber: null,
+    vaFileNumber: null,
     claimDate: null,
     letterDate: null,
     decisionDate: null,
@@ -5056,6 +5084,8 @@ const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
   console.log("📬 Found claim letter, extracting data:", extractedData);
   if (extractedData.claimNumber)
     updates.claimNumber = extractedData.claimNumber;
+  if (extractedData.vaFileNumber)
+    updates.vaFileNumber = extractedData.vaFileNumber;
 };
 
 /**

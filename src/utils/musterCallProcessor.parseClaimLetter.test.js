@@ -49,7 +49,8 @@ describe("musterCallProcessor: parseClaimLetter (real letter phrasing)", () => {
   it("extracts per-issue grant/deny/continue outcomes from a real decision letter", async () => {
     const result = await parseClaimLetter(realDecisionLetterText());
 
-    expect(result.claimNumber).toBe("123456789");
+    expect(result.vaFileNumber).toBe("123456789");
+    expect(result.claimNumber).toBeNull();
     expect(result.letterDate).toBe("November 15, 2025");
     expect(result.decisionDate).toBe("November 15, 2025");
     expect(result.decisions).toHaveLength(3);
@@ -230,7 +231,7 @@ describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () =
     expect(result.decisionDate).toBe("September 15, 2023");
     expect(result.conditions).toHaveLength(5);
     expect(result.conditions.map((c) => c.rating)).toEqual([20, 10, 10, 10, 0]);
-    expect(result.claimNumber).toBe("000000000");
+    expect(result.vaFileNumber).toBe("000000000");
     expect(result.status).toBe("mixed");
   });
 

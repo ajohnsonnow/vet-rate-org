@@ -11,6 +11,7 @@
  * Now integrates with persistentStorage for crash-proof auto-saving
  */
 
+import { isSameServicePeriod } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
 
 const PROFILE_KEY = "vet_rate_veteran_profile";
@@ -1145,9 +1146,19 @@ export const upsertServicePeriod = (periodData, options = {}) => {
       incomplete: !(periodData.serviceStartDate && periodData.serviceEndDate),
     };
     const incomingKey = _servicePeriodKey(incoming);
-    const existingIndex = periods.findIndex(
+    let existingIndex = periods.findIndex(
       (p) => _servicePeriodKey(p) === incomingKey,
     );
+    if (existingIndex === -1 && !incoming.incomplete) {
+      existingIndex = periods.findIndex((p) =>
+        isSameServicePeriod(
+          p.serviceStartDate,
+          p.serviceEndDate,
+          incoming.serviceStartDate,
+          incoming.serviceEndDate,
+        ),
+      );
+    }
 
     if (existingIndex === -1) {
       const newPeriod = {
@@ -1175,6 +1186,12 @@ export const upsertServicePeriod = (periodData, options = {}) => {
         merged[field] = incoming[field];
       }
     });
+    // VA's own record (the code sheet) settles which of two near-identical
+    // dates is right.
+    if (options.authoritativeDates && !incoming.incomplete) {
+      merged.serviceStartDate = incoming.serviceStartDate;
+      merged.serviceEndDate = incoming.serviceEndDate;
+    }
     merged.confidence = Math.max(incomingConfidence, existingConfidence);
     merged.incomplete = incoming.incomplete && existing.incomplete;
     periods[existingIndex] = merged;
