@@ -83,7 +83,7 @@ describe("logger - ring buffer + levels", () => {
     // We don't expose RING_SIZE; just push enough to force a wrap.
     for (let i = 1; i <= 510; i++) logger.info(`m${i}`);
     const logs = getLogs();
-    expect(logs.length).toBe(500);
+    expect(logs).toHaveLength(500);
     expect(logs[0].msg).toBe("m11"); // oldest 10 evicted
     expect(logs[logs.length - 1].msg).toBe("m510");
   });

@@ -101,8 +101,8 @@ describe("validateConditions", () => {
       { diagnosticCode: "99999", name: "Fake" },
     ]);
     expect(result.success).toBe(true);
-    expect(result.safeData.length).toBe(1);
-    expect(result.rejected.length).toBe(1);
+    expect(result.safeData).toHaveLength(1);
+    expect(result.rejected).toHaveLength(1);
     expect(result.stats.total).toBe(2);
     expect(result.stats.valid).toBe(1);
     expect(result.stats.invalid).toBe(1);
@@ -113,7 +113,7 @@ describe("validateConditions", () => {
     const result = validateConditions([
       { diagnosticCode: KNOWN_CODE, name: "Wrong name from AI" },
     ]);
-    expect(result.warnings.length).toBe(1);
+    expect(result.warnings).toHaveLength(1);
     expect(result.warnings[0].type).toBe("name_mismatch");
   });
 
@@ -158,7 +158,7 @@ describe("validateAIResponse", () => {
     const ai = '```json\n[{"diagnosticCode":"' + KNOWN_CODE + '"}]\n```';
     const result = validateAIResponse(ai);
     expect(result.success).toBe(true);
-    expect(result.safeData.length).toBe(1);
+    expect(result.safeData).toHaveLength(1);
   });
 
   it("returns parse error on invalid JSON string", () => {
@@ -172,7 +172,7 @@ describe("validateAIResponse", () => {
       conditions: [{ diagnosticCode: KNOWN_CODE }],
     });
     expect(result.success).toBe(true);
-    expect(result.safeData.length).toBe(1);
+    expect(result.safeData).toHaveLength(1);
   });
 
   it("handles nested .results wrapper", () => {
@@ -209,7 +209,7 @@ describe("validateAIResponse", () => {
   it("wraps a single condition-shaped object as array", () => {
     const result = validateAIResponse({ diagnosticCode: KNOWN_CODE });
     expect(result.success).toBe(true);
-    expect(result.safeData.length).toBe(1);
+    expect(result.safeData).toHaveLength(1);
   });
 
   it("rejects unrecognized non-object input", () => {
@@ -258,6 +258,6 @@ describe("default export shape", () => {
     expect(typeof hallucinationTrap.validateAIResponse).toBe("function");
     expect(typeof hallucinationTrap.getDatabaseStats).toBe("function");
     expect(typeof hallucinationTrap.searchConditions).toBe("function");
-    expect(hallucinationTrap.VALID_CODES instanceof Set).toBe(true);
+    expect(hallucinationTrap.VALID_CODES).toBeInstanceOf(Set);
   });
 });

@@ -22,8 +22,8 @@ describe("MASTER_AWARDS merge", () => {
   it("includes all 89 federal awards plus all 780 state/territory awards", () => {
     const federal = MASTER_AWARDS.filter((a) => a.scope !== "state");
     const state = MASTER_AWARDS.filter((a) => a.scope === "state");
-    expect(federal.length).toBe(89);
-    expect(state.length).toBe(780);
+    expect(federal).toHaveLength(89);
+    expect(state).toHaveLength(780);
   });
 
   it("covers all 54 states/territories in STATE_AWARD_CODES", () => {

@@ -84,7 +84,9 @@ describe("Pathfinder auto-seed from records", () => {
     expect(screen.getAllByRole("combobox")[0]).toHaveValue("");
     expect(screen.queryByDisplayValue("Sleep Apnea")).not.toBeInTheDocument();
   });
+});
 
+describe("Pathfinder auto-seed from records - edge cases", () => {
   it("leaves the form at its blank default when no records are on file", async () => {
     localStorage.setItem("vetrate_ai_consent", "true");
 

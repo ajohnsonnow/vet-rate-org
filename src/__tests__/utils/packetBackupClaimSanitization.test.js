@@ -10,7 +10,7 @@ import { exportPacketData } from "../../utils/packetBackup";
 
 const exportOneClaim = (claim) => exportPacketData([claim], {}).data.claims[0];
 
-describe("packetBackup: sanitizeClaimField (via exportPacketData)", () => {
+describe("packetBackup: sanitizeClaimField - id/conditionName/status/date", () => {
   it("id: sanitizes and truncates like any other string field", () => {
     const claim = {
       id: "claim<script>alert(1)</script>_1",
@@ -58,7 +58,9 @@ describe("packetBackup: sanitizeClaimField (via exportPacketData)", () => {
     });
     expect(result.dateSaved).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
+});
 
+describe("packetBackup: sanitizeClaimField - integer/notes/unlisted fields", () => {
   it("diagnosticCode/selectedRating: parsed as an in-range integer", () => {
     const result = exportOneClaim({
       conditionName: "PTSD",

@@ -44,6 +44,6 @@ describe("muster-call comprehensive report spotlights untrusted evidence (A-H03)
     // The delimiter injected via the filename is neutralized, so there is exactly
     // one real closing fence (the section's), not an attacker-controlled early one.
     expect(prompt).toContain("[untrusted_content]");
-    expect((prompt.match(/<\/untrusted_content>/g) || []).length).toBe(1);
+    expect(prompt.match(/<\/untrusted_content>/g) || []).toHaveLength(1);
   });
 });
