@@ -3798,14 +3798,27 @@ function _extractSeparationTypeAndCharacter(ctx) {
   // REMARKS" in Box 18, either of which the previous unanchored `GENERAL`
   // alternative would have read as a General discharge on a document that
   // never characterizes one.
+  // The printed form label itself is "24. CHARACTER OF SERVICE (Include
+  // upgrades)" - that parenthetical is instructional boilerplate, not part
+  // of the value, but it's made of the same [A-Z\s()-] characters the value
+  // is, so the two label-anchored patterns below skip over it (when
+  // present) before starting the real capture. Optional: a real NGB22 never
+  // has it at all.
+  const includeUpgradesLabel = String.raw`(?:\(\s{0,5}INCLUDE\s{1,10}UPGRADES?\s{0,5}\)[:\s]{0,20})?`;
   const characterPatterns = [
     // [A-Z\s()-] not [A-Z\s-]: a real NGB22 prints this box as "GENERAL
     // (UNDER HONORABLE CONDITIONS)", and a class that can't include "("
     // stops the capture at "GENERAL" alone - a different, wrong VA
     // characterization. _normalizeDischargeType strips the parens back out.
-    /24\.\s{0,10}CHARACTER\s{1,10}OF\s{1,10}SERVICE[:\s]{1,20}([A-Z\s()-]{1,200}?)(?:\s{1,10}25\.|$)/i,
+    new RegExp(
+      String.raw`24\.\s{0,10}CHARACTER\s{1,10}OF\s{1,10}SERVICE[:\s]{1,20}${includeUpgradesLabel}([A-Z\s()-]{1,200}?)(?:\s{1,10}25\.|$)`,
+      "i",
+    ),
     // eslint-disable-next-line sonarjs/slow-regex -- distinctive literal prefix "CHARACTER OF SERVICE" gates the unbounded class, so the match cannot restart at arbitrary offsets; verified on the 10KB Box 23/24 slice
-    /CHARACTER\s+OF\s+SERVICE[:\s]+([A-Z\s()-]+)/i,
+    new RegExp(
+      String.raw`CHARACTER\s+OF\s+SERVICE[:\s]+${includeUpgradesLabel}([A-Z\s()-]+)`,
+      "i",
+    ),
     // Bounded rather than \s*[-–—(]?\s* — two unbounded runs either side of
     // an optional separator backtrack quadratically on a long whitespace
     // stretch. The separator also accepts "(": same real-form rendering as
@@ -3816,8 +3829,15 @@ function _extractSeparationTypeAndCharacter(ctx) {
   ];
   for (const pattern of characterPatterns) {
     const match = text.match(pattern);
-    if (match) {
-      data.dischargeType = _normalizeDischargeType(match[1]);
+    // A real NGB22 can render Box 24's label with the real value on a
+    // later OCR line, well past this pattern's bounded gap to "25." - the
+    // label-anchored pattern still matches, but group 1 is nothing but the
+    // whitespace between the two labels. Treat that the same as no match
+    // (instead of breaking here) so a later, narrower pattern still gets a
+    // chance to find the real value elsewhere in the text.
+    const captured = match?.[1];
+    if (captured && captured.replace(/[\s()-]/g, "").length > 0) {
+      data.dischargeType = _normalizeDischargeType(captured);
       break;
     }
   }
