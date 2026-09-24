@@ -161,6 +161,19 @@ export const getVeteranProfile = () => {
   }
 };
 
+// Sanitize a single profile field value based on its runtime type.
+// Arrays/objects/booleans/numbers are stored as-is (already validated on
+// write); everything else is coerced to a sanitized string.
+function _sanitizeProfileFieldValue(value) {
+  if (Array.isArray(value) || (typeof value === "object" && value !== null)) {
+    return value;
+  }
+  if (typeof value === "boolean" || typeof value === "number") {
+    return value;
+  }
+  return sanitizeString(String(value));
+}
+
 /**
  * Save/update the veteran profile
  * @param {Object} profile - The profile data to save
@@ -181,19 +194,7 @@ export const saveVeteranProfile = (profile) => {
         profile[field] !== undefined &&
         profile[field] !== ""
       ) {
-        if (
-          Array.isArray(profile[field]) ||
-          (typeof profile[field] === "object" && profile[field] !== null)
-        ) {
-          // Arrays and objects: store as-is (already validated on write)
-          sanitizedProfile[field] = profile[field];
-        } else if (typeof profile[field] === "boolean") {
-          sanitizedProfile[field] = profile[field];
-        } else if (typeof profile[field] === "number") {
-          sanitizedProfile[field] = profile[field];
-        } else {
-          sanitizedProfile[field] = sanitizeString(String(profile[field]));
-        }
+        sanitizedProfile[field] = _sanitizeProfileFieldValue(profile[field]);
       }
     }
 
