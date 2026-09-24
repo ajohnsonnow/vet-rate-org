@@ -644,7 +644,7 @@ export const copyToClipboard = async (text) => {
       textArea.focus();
       textArea.select();
       document.execCommand("copy");
-      document.body.removeChild(textArea);
+      textArea.remove();
       return { success: true };
     } catch (fallbackError) {
       return { success: false, error: fallbackError.message };

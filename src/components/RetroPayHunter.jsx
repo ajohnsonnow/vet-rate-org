@@ -654,10 +654,10 @@ function LoadedConditionsNotice({ conditions }) {
         {conditions.length} condition
         {conditions.length !== 1 ? "s" : ""} detected for bilateral factor
         analysis.
-        {conditions.filter(
+        {conditions.some(
           (c) =>
             c.side === "bilateral" || c.side === "left" || c.side === "right",
-        ).length > 0 && (
+        ) && (
           <span className="block mt-1 text-purple-400">
             ⚠️ Paired body parts found - bilateral factor may apply!
           </span>

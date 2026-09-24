@@ -1351,7 +1351,7 @@ function _addGeneralFallbackQuestions(conditionName, questions) {
     ];
 
     generalQuestions.forEach((gq) => {
-      if (!questions.find((q) => q.id === gq.id)) {
+      if (!questions.some((q) => q.id === gq.id)) {
         questions.push(gq);
       }
     });
@@ -2134,10 +2134,9 @@ function CAPSelectConditionHeader({
 }
 
 function CAPSelectConditionCard({ condition, onSelect }) {
-  const dbqKey = Object.keys(dbqLogicMap).find(
+  const isPremium = Object.keys(dbqLogicMap).some(
     (key) => dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
   );
-  const isPremium = !!dbqKey;
 
   return (
     <button

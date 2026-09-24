@@ -2642,7 +2642,7 @@ export async function fillAndDownloadForm(formType, data) {
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 
   return { success: true, fileName };

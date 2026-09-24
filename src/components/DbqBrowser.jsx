@@ -239,7 +239,7 @@ async function exportCacheZip(deps) {
     a.download = `vet-rate-dbq-backup-${new Date().toISOString().split("T")[0]}.zip`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
 
     setStatus({ type: "success", message: "✅ DBQ backup downloaded!" });

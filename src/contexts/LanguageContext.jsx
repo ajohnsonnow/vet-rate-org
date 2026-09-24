@@ -696,7 +696,7 @@ function interpolateParams(text, params) {
   let result = text;
   for (const [paramKey, paramValue] of Object.entries(params)) {
     result = result.replace(
-      new RegExp(`\\{${paramKey}\\}`, "g"),
+      new RegExp(String.raw`\{${paramKey}\}`, "g"),
       String(paramValue),
     );
   }

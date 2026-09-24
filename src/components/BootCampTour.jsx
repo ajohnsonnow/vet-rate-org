@@ -524,7 +524,7 @@ const BootCampTour = ({ forceShow = false, onComplete }) => {
     document.head.appendChild(styleSheet);
 
     return () => {
-      document.head.removeChild(styleSheet);
+      styleSheet.remove();
     };
   }, []);
 

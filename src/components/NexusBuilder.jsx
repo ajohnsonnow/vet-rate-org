@@ -167,7 +167,7 @@ function downloadAsTxt(statement, doctorNote, fileName) {
   a.download = `${fileName}.txt`;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 }
 
@@ -226,7 +226,7 @@ async function downloadAsDocx(statement, doctorNote, fileName) {
     a.download = `${fileName}.docx`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Error generating DOCX:", error);

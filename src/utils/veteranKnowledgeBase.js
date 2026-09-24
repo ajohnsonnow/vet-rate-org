@@ -1097,7 +1097,7 @@ function mergeDD214MOS(vkb, dd214Data) {
   // ─── MOS (Block 14) ───
   const { mosCode, mosTitle } = deriveDD214MOS(dd214Data);
   if (mosCode) {
-    const existingMOS = vkb.serviceHistory.mos.find((m) => m.code === mosCode);
+    const existingMOS = vkb.serviceHistory.mos.some((m) => m.code === mosCode);
     if (!existingMOS) {
       vkb.serviceHistory.mos.push({
         code: mosCode,
@@ -1114,7 +1114,7 @@ function mergeDD214MOS(vkb, dd214Data) {
   if (dd214Data.additionalMOS && Array.isArray(dd214Data.additionalMOS)) {
     dd214Data.additionalMOS.forEach((addMos) => {
       const code = typeof addMos === "string" ? addMos : addMos.code;
-      if (code && !vkb.serviceHistory.mos.find((m) => m.code === code)) {
+      if (code && !vkb.serviceHistory.mos.some((m) => m.code === code)) {
         vkb.serviceHistory.mos.push({
           code,
           title: addMos.title || "",
@@ -1459,7 +1459,7 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
   // Medical conditions
   if (blueButtonData.conditions && Array.isArray(blueButtonData.conditions)) {
     blueButtonData.conditions.forEach((condition) => {
-      const existingCondition = vkb.medicalConditions.current.find(
+      const existingCondition = vkb.medicalConditions.current.some(
         (c) =>
           c.name.toLowerCase() === condition.standardizedName.toLowerCase(),
       );

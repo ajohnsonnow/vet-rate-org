@@ -96,7 +96,7 @@ function useVKBTimelineData(onDocumentClick) {
   };
 
   const handleSelectForComparison = (doc) => {
-    if (selectedDocs.find((d) => d.id === doc.id)) {
+    if (selectedDocs.some((d) => d.id === doc.id)) {
       setSelectedDocs(selectedDocs.filter((d) => d.id !== doc.id));
     } else if (selectedDocs.length < 2) {
       setSelectedDocs([...selectedDocs, doc]);

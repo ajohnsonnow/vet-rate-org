@@ -95,7 +95,7 @@ const fieldLabels = {
   reenlisted: "Re-enlisted",
 };
 
-const PERSONAL_FIELDS = [
+const PERSONAL_FIELDS = new Set([
   "firstName",
   "middleInitial",
   "middleName",
@@ -109,9 +109,9 @@ const PERSONAL_FIELDS = [
   "vaFileNumber",
   "placeOfBirth",
   "homeOfRecord",
-];
+]);
 
-const SERVICE_FIELDS = [
+const SERVICE_FIELDS = new Set([
   "branch",
   "component",
   "componentFull",
@@ -153,9 +153,9 @@ const SERVICE_FIELDS = [
   "specialQualifications",
   "securityClearance",
   "reenlisted",
-];
+]);
 
-const CONTACT_FIELDS = [
+const CONTACT_FIELDS = new Set([
   "homeAddress",
   "email",
   "phone",
@@ -164,7 +164,7 @@ const CONTACT_FIELDS = [
   "city",
   "state",
   "zip",
-];
+]);
 
 const CATEGORY_SECTIONS = [
   { key: "personal", icon: "👤", title: "Personal Information" },
@@ -215,11 +215,11 @@ const categorizeFields = (editableData) => {
   };
 
   Object.keys(editableData).forEach((field) => {
-    if (PERSONAL_FIELDS.includes(field)) {
+    if (PERSONAL_FIELDS.has(field)) {
       categories.personal.push(field);
-    } else if (SERVICE_FIELDS.includes(field)) {
+    } else if (SERVICE_FIELDS.has(field)) {
       categories.service.push(field);
-    } else if (CONTACT_FIELDS.includes(field)) {
+    } else if (CONTACT_FIELDS.has(field)) {
       categories.contact.push(field);
     } else {
       categories.other.push(field);

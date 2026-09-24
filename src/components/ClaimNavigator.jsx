@@ -313,28 +313,25 @@ const useClaimImportExport = (loadClaims) => {
     }
   };
 
-  const handleImport = (event) => {
+  const handleImport = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const result = importClaimsData(e.target.result, true);
-        if (result.success) {
-          loadClaims();
-          alert(
-            `Imported ${result.imported} claim(s). ${result.skipped} skipped (duplicates).`,
-          );
-        } else {
-          alert("Import failed: " + result.error);
-        }
-      } catch (error) {
-        console.error("Import failed:", error);
-        alert("Import failed: Invalid file format");
+    try {
+      const text = await file.text();
+      const result = importClaimsData(text, true);
+      if (result.success) {
+        loadClaims();
+        alert(
+          `Imported ${result.imported} claim(s). ${result.skipped} skipped (duplicates).`,
+        );
+      } else {
+        alert("Import failed: " + result.error);
       }
-    };
-    reader.readAsText(file);
+    } catch (error) {
+      console.error("Import failed:", error);
+      alert("Import failed: Invalid file format");
+    }
   };
 
   return { handleExport, handleImport };

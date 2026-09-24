@@ -89,7 +89,7 @@ export const downloadBackup = (backupData, filename = null) => {
     a.download = finalFilename;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
 
     return true;
@@ -271,31 +271,22 @@ export const restoreFromRestorePoint = async () => {
  * @param {File} file - The uploaded file
  * @returns {Promise<Object>} The parsed backup object
  */
-export const parseBackupFile = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+export const parseBackupFile = async (file) => {
+  let text;
+  try {
+    text = await file.text();
+  } catch {
+    throw new Error("Failed to read backup file.");
+  }
 
-    reader.onload = (e) => {
-      try {
-        const text = e.target.result;
-        const backup = JSON.parse(text);
-        resolve(backup);
-      } catch (error) {
-        console.error("Failed to parse backup file:", error);
-        reject(
-          new Error(
-            "Failed to parse backup file. Please ensure it is a valid JSON file.",
-          ),
-        );
-      }
-    };
-
-    reader.onerror = () => {
-      reject(new Error("Failed to read backup file."));
-    };
-
-    reader.readAsText(file);
-  });
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Failed to parse backup file:", error);
+    throw new Error(
+      "Failed to parse backup file. Please ensure it is a valid JSON file.",
+    );
+  }
 };
 
 /**

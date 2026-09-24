@@ -126,12 +126,7 @@ export async function ripTextFromPdf(
  * @returns {Promise<ArrayBuffer>}
  */
 export function readFileAsArrayBuffer(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsArrayBuffer(file);
-  });
+  return file.arrayBuffer();
 }
 
 /**

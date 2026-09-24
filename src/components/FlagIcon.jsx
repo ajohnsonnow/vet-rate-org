@@ -172,7 +172,7 @@ export const isFlagIconsLoaded = () => {
   document.body.appendChild(testEl);
 
   const hasStyles = getComputedStyle(testEl).backgroundImage !== "none";
-  document.body.removeChild(testEl);
+  testEl.remove();
 
   return hasStyles;
 };

@@ -205,7 +205,7 @@ function renderEvidenceTimelineCanvas(
   );
 
   const firstDate = new Date(sorted[0].date);
-  const lastDate = new Date(sorted[sorted.length - 1].date);
+  const lastDate = new Date(sorted.at(-1).date);
 
   // Draw main timeline line
   const lineY = height / 2;
