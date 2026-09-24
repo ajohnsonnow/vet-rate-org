@@ -21,7 +21,8 @@ Nothing leaves the machine: the server listens on `127.0.0.1` only.
 4. Connect the editor: in the SonarQube for IDE panel, choose
    **Add SonarQube Server Connection**, use connection ID `vetrate-local`,
    server `http://127.0.0.1:9000`, and paste the token. The project binding
-   (`vet-rate-org`) is already in `.vscode/settings.json`.
+   (`vet-rate-org`) is shared in `.sonarlint/connectedMode.json`, so the
+   extension offers to bind automatically.
 
 ## Running a scan
 
