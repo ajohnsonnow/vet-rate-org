@@ -96,6 +96,15 @@ describe("parseRatingCodeSheets", () => {
       },
     ]);
   });
+});
+
+describe("parseRatingCodeSheets: header fields", () => {
+  it("names the power of attorney, and none when the field is empty", () => {
+    expect(parseRatingCodeSheets(NEW_LAYOUT)[0].representative).toBe(
+      "Some Org",
+    );
+    expect(parseRatingCodeSheets(OLD_LAYOUT)[0].representative).toBeNull();
+  });
 
   it("reads the active-duty periods", () => {
     const [sheet] = parseRatingCodeSheets(NEW_LAYOUT);

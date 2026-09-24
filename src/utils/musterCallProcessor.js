@@ -2104,6 +2104,7 @@ const _ratingFieldsFromCodeSheet = (sheet) => ({
   decisionDateKind: "letter",
   ratingSource: "code_sheet",
   servicePeriods: sheet.servicePeriods,
+  representative: sheet.representative,
 });
 
 // quickScanCFile() reports detected document TYPES and a page estimate - it has
@@ -5038,7 +5039,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
 // Accept both naming conventions.
 const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
   // eslint-disable-next-line no-console
-  console.log("📝 Found service record, extracting data:", extractedData);
+  console.log("📝 Found service record");
 
   // FIX-17: extractedData.veteranName/lastName/firstName/middleName were
   // extracted correctly (see _assignParsedName) but never mapped onto the
@@ -5072,7 +5073,7 @@ const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
 
 const applyRatingDecisionToProfileUpdates = (updates, extractedData) => {
   // eslint-disable-next-line no-console
-  console.log("📊 Found rating decision, extracting data:", extractedData);
+  console.log("📊 Found rating decision");
   if (extractedData.combinedRating)
     updates.currentCombinedRating = extractedData.combinedRating;
   if (extractedData.effectiveDate)
@@ -5081,11 +5082,20 @@ const applyRatingDecisionToProfileUpdates = (updates, extractedData) => {
 
 const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
   // eslint-disable-next-line no-console
-  console.log("📬 Found claim letter, extracting data:", extractedData);
+  console.log("📬 Found claim letter");
   if (extractedData.claimNumber)
     updates.claimNumber = extractedData.claimNumber;
   if (extractedData.vaFileNumber)
     updates.vaFileNumber = extractedData.vaFileNumber;
+};
+
+// Only a C-File's newest code sheet speaks for the veteran's current record.
+const applyCFileToProfileUpdates = (updates, extractedData) => {
+  if (extractedData.ratingSource !== "code_sheet") return;
+  if (extractedData.combinedRating != null)
+    updates.currentCombinedRating = extractedData.combinedRating;
+  if (extractedData.representative)
+    updates.vsoOrganization = extractedData.representative;
 };
 
 /**
@@ -5152,6 +5162,11 @@ export const autoPopulateProfile = async (processedResults) => {
 
       case "claim_letter":
         applyClaimLetterToProfileUpdates(documentUpdates, result.extractedData);
+        updateCount++;
+        break;
+
+      case "c_file":
+        applyCFileToProfileUpdates(documentUpdates, result.extractedData);
         updateCount++;
         break;
 
@@ -5258,7 +5273,7 @@ const applyServiceRecordToBriefing = (briefingData, serviceData) => {
 
 const applyRatingDecisionToBriefing = (briefingData, extractedData) => {
   // eslint-disable-next-line no-console
-  console.log("📊 Extracting rating decision:", extractedData);
+  console.log("📊 Extracting rating decision");
   if (extractedData.combinedRating) {
     briefingData.currentCombinedRating = extractedData.combinedRating;
   }
@@ -5283,7 +5298,7 @@ const applyRatingDecisionToBriefing = (briefingData, extractedData) => {
 
 const applyClaimLetterToBriefing = (briefingData, extractedData) => {
   // eslint-disable-next-line no-console
-  console.log("📬 Extracting claim letter:", extractedData);
+  console.log("📬 Extracting claim letter");
   if (
     extractedData.claimNumber &&
     !briefingData.claimNumbers.includes(extractedData.claimNumber)

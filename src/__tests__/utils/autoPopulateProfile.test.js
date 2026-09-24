@@ -199,3 +199,39 @@ describe("a conflict is persisted onto the profile so the UI can surface it (pre
     );
   });
 });
+
+describe("autoPopulateProfile: a C-File's code sheet", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the combined rating and the veteran's representative", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "cfile.pdf",
+        status: "complete",
+        extractedData: {
+          type: "c_file",
+          ratingSource: "code_sheet",
+          combinedRating: 80,
+          representative: "Veterans of Foreign Wars of the US",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      currentCombinedRating: 80,
+      vsoOrganization: "Veterans of Foreign Wars of the US",
+    });
+  });
+
+  it("ignores a C-File without a code sheet", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "cfile.pdf",
+        status: "complete",
+        extractedData: { type: "c_file", combinedRating: 30 },
+      },
+    ]);
+    expect(getVeteranProfile().currentCombinedRating).not.toBe(30);
+  });
+});

@@ -873,9 +873,7 @@ function useDocumentBriefingData({
   // Debug logging to trace data flow
   useEffect(() => {
     // eslint-disable-next-line no-console
-    console.log("🛡️ SigInt Briefing received extractedData:", extractedData);
-    // eslint-disable-next-line no-console
-    console.log("🛡️ SigInt Briefing classification:", classification);
+    console.log("🛡️ SigInt Briefing classification:", classification?.type);
     if (isMultiDocument) {
       // eslint-disable-next-line no-console
       console.log(`🛡️ Multiple documents detected: ${totalDocuments} DD214(s)`);

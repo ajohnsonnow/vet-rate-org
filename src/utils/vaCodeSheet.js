@@ -152,6 +152,28 @@ function parseJurisdiction(preamble) {
     : null;
 }
 
+// The sheet's header or page-1 footer names the veteran's power of attorney:
+// "POA VETERANS OF FOREIGN WARS OF THE US COPY TO". An empty "POA COPY TO"
+// means none.
+const REPRESENTATIVE = /\bPOA ([A-Z][A-Z .,'&-]{2,80}?) COPY TO\b/;
+
+const ORG_SMALL_WORDS = new Set(["of", "the", "and", "for", "in"]);
+
+function parseRepresentative(text) {
+  const m = REPRESENTATIVE.exec(text);
+  if (!m) return null;
+  return m[1]
+    .trim()
+    .toLowerCase()
+    .split(" ")
+    .map((word, i) => {
+      if (word === "us") return "US";
+      if (i > 0 && ORG_SMALL_WORDS.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
+
 function sheetDate(flat, headerIndex, sheetText) {
   const before = flat.slice(
     Math.max(0, headerIndex - DATE_LOOKBACK_CHARS),
@@ -183,6 +205,9 @@ function parseOneSheet(flat, headerIndex, headerLength, nextHeaderIndex) {
   );
   const raw = flat.slice(bodyStart, limit);
   const date = sheetDate(flat, headerIndex, raw);
+  const representative = parseRepresentative(
+    flat.slice(Math.max(0, headerIndex - DATE_LOOKBACK_CHARS), bodyStart) + raw,
+  );
   const endMatch = SHEET_END.exec(raw.slice(1));
   const sheet = stripNoise(endMatch ? raw.slice(0, endMatch.index + 1) : raw);
 
@@ -215,6 +240,7 @@ function parseOneSheet(flat, headerIndex, headerLength, nextHeaderIndex) {
       nscAt >= 0 ? parseNotServiceConnected(sheet.slice(nscAt)) : [],
     servicePeriods: parseActiveDuty(preamble),
     jurisdiction: parseJurisdiction(preamble),
+    representative,
   };
 }
 
