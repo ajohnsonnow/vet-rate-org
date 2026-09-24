@@ -11,7 +11,7 @@
  * on it.
  */
 import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import WhatIfSandbox from "./WhatIfSandbox";
 
@@ -38,13 +38,13 @@ describe("WhatIfSandbox - Load My Ratings", () => {
     );
 
     renderSandbox();
-    await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /load my ratings/i }));
 
-    await waitFor(() =>
-      expect(screen.getByText(/bilateral factor applied/i)).toBeInTheDocument(),
-    );
+    expect(
+      await screen.findByText(/bilateral factor applied/i),
+    ).toBeInTheDocument();
   });
 
   it("does not crash on a malformed saved rating with no condition name", async () => {
@@ -57,16 +57,14 @@ describe("WhatIfSandbox - Load My Ratings", () => {
     );
 
     renderSandbox();
-    await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /load my ratings/i }));
 
     // Modal survives, and only the valid entry was loaded.
-    await waitFor(() =>
-      expect(
-        screen.getByText(/current scenario \(1 condition/i),
-      ).toBeInTheDocument(),
-    );
+    expect(
+      await screen.findByText(/current scenario \(1 condition/i),
+    ).toBeInTheDocument();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });
