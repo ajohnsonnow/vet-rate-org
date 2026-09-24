@@ -5,6 +5,7 @@ import {
   buildConditionSynthesis,
   buildPacketTldr,
   buildPacketSummary,
+  getStatedCombinedRating,
 } from "../../utils/packetSummary";
 
 const dd214Doc = {
@@ -320,5 +321,24 @@ describe("buildPacketSummary", () => {
     expect(summary.documents).toEqual([]);
     expect(summary.conditions).toEqual([]);
     expect(summary.tldr.isEmpty).toBe(true);
+  });
+});
+
+describe("getStatedCombinedRating", () => {
+  it("returns the newest letter's stated rating with its date and source", () => {
+    expect(
+      getStatedCombinedRating({
+        vaClaimsHistory: {
+          currentCombinedRating: 80,
+          currentCombinedRatingDate: "May 8, 2024",
+          currentCombinedRatingSource: "letter.pdf",
+        },
+      }),
+    ).toEqual({ rating: 80, date: "May 8, 2024", source: "letter.pdf" });
+  });
+
+  it("returns null when no letter stated a combined rating", () => {
+    expect(getStatedCombinedRating({ vaClaimsHistory: {} })).toBeNull();
+    expect(getStatedCombinedRating(null)).toBeNull();
   });
 });

@@ -143,3 +143,35 @@ describe("veteranKnowledgeBase: mergeRatingDecisionIntoVKB", () => {
     ).toEqual([]);
   });
 });
+
+describe("veteranKnowledgeBase: stated combined rating follows the newest letter", () => {
+  const letter = (combinedRating, decisionDate) => ({
+    combinedRating,
+    decisionDate,
+    conditions: [],
+  });
+
+  it("keeps the newer letter's combined rating when an older letter is processed after it", () => {
+    const vkb = mergeRatingDecisionIntoVKB(
+      initializeVKB(),
+      letter(80, "May 8, 2024"),
+      { fileName: "newer.pdf" },
+    );
+    mergeRatingDecisionIntoVKB(vkb, letter(30, "November 28, 2008"), {
+      fileName: "older.pdf",
+    });
+    expect(vkb.vaClaimsHistory.currentCombinedRating).toBe(80);
+    expect(vkb.vaClaimsHistory.currentCombinedRatingSource).toBe("newer.pdf");
+  });
+
+  it("lets a newer letter replace an older one, and never lets an undated one replace a dated one", () => {
+    const vkb = mergeRatingDecisionIntoVKB(
+      initializeVKB(),
+      letter(70, "March 31, 2023"),
+    );
+    mergeRatingDecisionIntoVKB(vkb, letter(80, "May 8, 2024"));
+    mergeRatingDecisionIntoVKB(vkb, letter(40, null));
+    expect(vkb.vaClaimsHistory.currentCombinedRating).toBe(80);
+    expect(vkb.vaClaimsHistory.currentCombinedRatingDate).toBe("May 8, 2024");
+  });
+});

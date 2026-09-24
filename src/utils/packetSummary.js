@@ -391,6 +391,18 @@ export function buildPacketTldr(vkb, documentFindings = [], conditions = []) {
   };
 }
 
+/** The combined rating the newest decision letter states, if any. */
+export function getStatedCombinedRating(vkb) {
+  const history = vkb?.vaClaimsHistory;
+  const rating = Number(history?.currentCombinedRating);
+  if (!Number.isFinite(rating)) return null;
+  return {
+    rating,
+    date: history.currentCombinedRatingDate || null,
+    source: history.currentCombinedRatingSource || null,
+  };
+}
+
 /** One call for the My Packet view: findings, synthesis, and TL;DR together. */
 export function buildPacketSummary(vkb, documentsByCategory) {
   const documents = buildAllDocumentFindings(documentsByCategory);
@@ -399,5 +411,6 @@ export function buildPacketSummary(vkb, documentsByCategory) {
     documents,
     conditions,
     tldr: buildPacketTldr(vkb, documents, conditions),
+    statedCombinedRating: getStatedCombinedRating(vkb),
   };
 }

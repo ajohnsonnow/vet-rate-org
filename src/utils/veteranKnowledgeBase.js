@@ -1669,6 +1669,26 @@ function _recordDenials(vkb, decisionData, source) {
   }
 }
 
+// Letters are processed in upload order, not date order, so the newest
+// letter's stated combined rating must not be overwritten by an older one.
+// An undated letter never replaces a dated one.
+function _recordStatedCombinedRating(vkb, decisionData, source) {
+  const combined = Number(decisionData.combinedRating);
+  if (!Number.isFinite(combined)) return;
+  const history = vkb.vaClaimsHistory;
+  const incomingDate = decisionData.decisionDate || null;
+  const savedDate = history.currentCombinedRatingDate || null;
+  if (
+    savedDate &&
+    (!incomingDate || isOlderDecision(incomingDate, savedDate))
+  ) {
+    return;
+  }
+  history.currentCombinedRating = combined;
+  history.currentCombinedRatingDate = incomingDate;
+  history.currentCombinedRatingSource = source;
+}
+
 export const mergeRatingDecisionIntoVKB = (vkb, decisionData, options = {}) => {
   if (!decisionData || typeof decisionData !== "object") return vkb;
   const source = options.fileName || "Rating Decision";
@@ -1681,10 +1701,7 @@ export const mergeRatingDecisionIntoVKB = (vkb, decisionData, options = {}) => {
   }
   _recordDenials(vkb, decisionData, source);
 
-  const combined = Number(decisionData.combinedRating);
-  if (Number.isFinite(combined)) {
-    vkb.vaClaimsHistory.currentCombinedRating = combined;
-  }
+  _recordStatedCombinedRating(vkb, decisionData, source);
   if (decisionData.combinedRatingHistory?.length > 0) {
     vkb.vaClaimsHistory.combinedRatingHistory =
       decisionData.combinedRatingHistory;

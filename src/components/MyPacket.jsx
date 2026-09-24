@@ -1399,7 +1399,7 @@ function VkbEnrichmentLoadingState({ label }) {
 // so left+right paired-extremity ratings get the §4.26 bilateral factor
 // instead of being combined as if unrelated. Shows both raw and rounded
 // (e.g. "72% raw → 70%").
-function CombinedRatingSummary({ myRatings, t }) {
+function CombinedRatingSummary({ myRatings, stated, t }) {
   const nonZeroCount = myRatings.filter(
     (r) => typeof r.rating === "number" && r.rating > 0,
   ).length;
@@ -1416,6 +1416,29 @@ function CombinedRatingSummary({ myRatings, t }) {
       <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
         {raw}% raw → {rounded}%
       </p>
+      {stated && stated.rating !== rounded && (
+        <StatedRatingMismatch stated={stated} calculated={rounded} />
+      )}
+    </div>
+  );
+}
+
+// A mismatch almost always means a decision letter is missing from the
+// packet (e.g. the one that raised a rating), not that VA's math is wrong.
+function StatedRatingMismatch({ stated, calculated }) {
+  const from = stated.date ? ` (decided ${stated.date})` : "";
+  const headline = `Your newest VA letter${from} says your combined rating is ${stated.rating}%. From the ratings on file we calculate ${calculated}%.`;
+  return (
+    <div
+      role="status"
+      className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg text-sm text-amber-900 dark:text-amber-100"
+    >
+      <p className="font-semibold">{headline}</p>
+      <p className="mt-1">
+        That usually means a decision letter is missing from your packet, such
+        as one that increased a rating. Upload it and this number will update.
+        Your VA letter is the official figure.
+      </p>
     </div>
   );
 }
@@ -1430,6 +1453,7 @@ function RatingsTab({
   setShowVAGovPaster,
   vkbDisabilityRatings = [],
   vkbEnrichmentLoading,
+  packetSummary,
   t,
 }) {
   const hasRatings = myRatings.length > 0;
@@ -1444,7 +1468,11 @@ function RatingsTab({
     <>
       {hasRatings && (
         <>
-          <CombinedRatingSummary myRatings={myRatings} t={t} />
+          <CombinedRatingSummary
+            myRatings={myRatings}
+            stated={packetSummary?.statedCombinedRating}
+            t={t}
+          />
           <div className="mb-4 flex justify-between items-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {myRatings.length} {t("myPacketSection.ratingsSaved")}
