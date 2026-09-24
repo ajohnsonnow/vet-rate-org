@@ -4545,6 +4545,17 @@ function WizardStepPanel({
   t,
 }) {
   const steps = _getFormStepsForForm(selectedForm);
+  const stepHeadingRef = useRef(null);
+
+  // "Start Guided Builder" (setCurrentStep(1)) and every Next/Back removes
+  // the button that had focus from the DOM - the step content it belonged
+  // to unmounts - stranding focus on <body>, outside the dialog's
+  // useFocusTrap keydown listener, so Tab/Escape stop working. Move focus
+  // to the new step's own heading so it stays inside the dialog.
+  useEffect(() => {
+    if (currentStep >= 1) stepHeadingRef.current?.focus();
+  }, [currentStep]);
+
   if (currentStep === 0 || currentStep > steps.length) return null;
 
   const step = steps[currentStep - 1];
@@ -4561,7 +4572,11 @@ function WizardStepPanel({
 
       {/* Step content */}
       <div>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h3
+          ref={stepHeadingRef}
+          tabIndex={-1}
+          className="text-xl font-bold text-gray-900 dark:text-white mb-2 focus-visible:ring-2 focus-visible:ring-va-blue rounded"
+        >
           {step.title}
         </h3>
         {step.subtitle && (

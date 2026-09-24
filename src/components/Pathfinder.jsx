@@ -666,8 +666,39 @@ const PathfinderRatingsList = ({
   </>
 );
 
+// Split out of PathfinderInputSection to keep it under the repo's
+// line-count ceiling.
+const PathfinderInputSectionHeader = ({
+  t,
+  headingRef,
+  hasMyRatings,
+  handleLoadMyRatings,
+  setShowVAGovPaster,
+  setShowDropInModal,
+  loadFromPacket,
+}) => (
+  <div className="flex items-center justify-between mb-4">
+    <h2
+      ref={headingRef}
+      tabIndex={-1}
+      className="text-lg font-semibold text-gray-900 dark:text-white focus-visible:ring-2 focus-visible:ring-teal-500 rounded"
+    >
+      {t("pathfinder", "currentRatingsTitle")}
+    </h2>
+    <PathfinderInputToolbar
+      t={t}
+      hasMyRatings={hasMyRatings}
+      handleLoadMyRatings={handleLoadMyRatings}
+      setShowVAGovPaster={setShowVAGovPaster}
+      setShowDropInModal={setShowDropInModal}
+      loadFromPacket={loadFromPacket}
+    />
+  </div>
+);
+
 const PathfinderInputSection = ({
   t,
+  headingRef,
   hasMyRatings,
   handleLoadMyRatings,
   setShowVAGovPaster,
@@ -686,19 +717,15 @@ const PathfinderInputSection = ({
   isAnalyzing,
 }) => (
   <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-        {t("pathfinder", "currentRatingsTitle")}
-      </h2>
-      <PathfinderInputToolbar
-        t={t}
-        hasMyRatings={hasMyRatings}
-        handleLoadMyRatings={handleLoadMyRatings}
-        setShowVAGovPaster={setShowVAGovPaster}
-        setShowDropInModal={setShowDropInModal}
-        loadFromPacket={loadFromPacket}
-      />
-    </div>
+    <PathfinderInputSectionHeader
+      t={t}
+      headingRef={headingRef}
+      hasMyRatings={hasMyRatings}
+      handleLoadMyRatings={handleLoadMyRatings}
+      setShowVAGovPaster={setShowVAGovPaster}
+      setShowDropInModal={setShowDropInModal}
+      loadFromPacket={loadFromPacket}
+    />
 
     {loadedFromPacket && (
       <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
@@ -1669,6 +1696,12 @@ function usePathfinderCoreState() {
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [fileProgress, setFileProgress] = useState(null);
   const fileInputRef = useRef(null);
+  // Passing consent unmounts PathfinderConsentGate's button (the element
+  // that had focus), stranding focus on <body> - outside the dialog, so
+  // useFocusTrap's keydown listener (attached to the dialog element) stops
+  // seeing Tab/Escape. Focused onto the authenticated view's own heading
+  // once consent is granted, see the effect in usePathfinderState.
+  const authHeadingRef = useRef(null);
 
   return {
     ratings,
@@ -1703,6 +1736,7 @@ function usePathfinderCoreState() {
     fileProgress,
     setFileProgress,
     fileInputRef,
+    authHeadingRef,
   };
 }
 
@@ -1749,6 +1783,11 @@ function usePathfinderState({
     setFileProgress: s.setFileProgress,
   });
 
+  useEffect(() => {
+    if (s.hasConsented) s.authHeadingRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.hasConsented]);
+
   return {
     t,
     ratings: s.ratings,
@@ -1773,6 +1812,7 @@ function usePathfinderState({
     fileProgress: s.fileProgress,
     setFileProgress: s.setFileProgress,
     fileInputRef: s.fileInputRef,
+    authHeadingRef: s.authHeadingRef,
     ...handlers,
   };
 }
@@ -1848,12 +1888,14 @@ const PathfinderAuthenticatedContent = ({
   handlePracticeExam,
   showPrivacy,
   setShowPrivacy,
+  authHeadingRef,
 }) => (
   <>
     <PathfinderAIBanner t={t} />
 
     <PathfinderInputSection
       t={t}
+      headingRef={authHeadingRef}
       hasMyRatings={hasMyRatings}
       handleLoadMyRatings={handleLoadMyRatings}
       setShowVAGovPaster={setShowVAGovPaster}

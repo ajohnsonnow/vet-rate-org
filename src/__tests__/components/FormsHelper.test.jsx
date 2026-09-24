@@ -121,6 +121,14 @@ describe("FormsHelper prefill from records", () => {
     );
   });
 
+  it("moves focus onto the step heading after Start Guided Builder, not off the dialog (regression D10)", async () => {
+    renderFormsHelper();
+    openPersonalStatementWizard();
+
+    const heading = await screen.findByRole("heading", { level: 3 });
+    expect(heading).toHaveFocus();
+  });
+
   it("re-seeds the prefill fresh on reselecting a form, not the previous session's typed answer", () => {
     saveMyRatings([
       { name: "PTSD", bodyPart: "mental", rating: 70, side: "none" },

@@ -8,7 +8,7 @@
  * store must leave the form at its normal blank default.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import Pathfinder from "../../components/Pathfinder.jsx";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
 import { saveMyRatings } from "../../utils/veteranProfile.js";
@@ -181,5 +181,21 @@ describe("Pathfinder auto-seed from records - edge cases", () => {
     ).toBeInTheDocument();
     expect(screen.getByDisplayValue("20%")).toBeInTheDocument();
     expect(screen.getByDisplayValue("10%")).toBeInTheDocument();
+  });
+});
+
+describe("Pathfinder consent screen: focus management", () => {
+  it("moves focus onto the ratings heading after consent, not off the dialog (regression D10)", async () => {
+    renderPathfinder();
+
+    const consentButton = screen.getByRole("button", {
+      name: /understand.*continue/i,
+    });
+    fireEvent.click(consentButton);
+
+    const heading = await screen.findByRole("heading", {
+      name: /current.*ratings/i,
+    });
+    expect(heading).toHaveFocus();
   });
 });
