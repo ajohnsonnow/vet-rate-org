@@ -105,10 +105,7 @@ import { RibbonRackDisplay } from "./VisualRibbon";
 import { enrichAwardForDisplay } from "../utils/ribbonRackData";
 import VADataCenter from "./VADataCenter";
 import ClaimEvidenceUpload from "./ClaimEvidenceUpload";
-import {
-  combineMultipleRatings,
-  roundToNearest10,
-} from "../utils/vaCalculator";
+import { calculateVARating } from "../utils/vaCalculator";
 import { formatLocalDate } from "../utils/dateUtils";
 import { formatFileSize } from "../utils/documentAnalyzer";
 import { parseServiceRecord } from "../utils/musterCallProcessor";
@@ -1395,18 +1392,21 @@ function VkbEnrichmentLoadingState({ label }) {
   );
 }
 
-// FIX-1: combined rating via vaCalculator.js (the tested implementation),
-// not a third combined-rating implementation. Shows both raw and rounded
-// (e.g. "72% raw → 70%"). Bilateral grouping is out of scope for this
-// display - combines the flat list of saved ratings as-is.
+// FIX-1: combined rating via vaCalculator.js's calculateVARating (the
+// tested, bilateral-aware implementation), not a flat combine over the raw
+// rating values. Each saved rating already carries the `side` that
+// saveRatingDecisionToProfile/saveMyRatings derives from the condition name,
+// so left+right paired-extremity ratings get the §4.26 bilateral factor
+// instead of being combined as if unrelated. Shows both raw and rounded
+// (e.g. "72% raw → 70%").
 function CombinedRatingSummary({ myRatings, t }) {
-  const ratingValues = myRatings
-    .map((r) => r.rating)
-    .filter((r) => typeof r === "number" && r > 0);
-  if (ratingValues.length < 2) return null;
+  const nonZeroCount = myRatings.filter(
+    (r) => typeof r.rating === "number" && r.rating > 0,
+  ).length;
+  if (nonZeroCount < 2) return null;
 
-  const raw = combineMultipleRatings(ratingValues);
-  const rounded = roundToNearest10(raw);
+  const { rawScore: raw, combinedRating: rounded } =
+    calculateVARating(myRatings);
 
   return (
     <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
