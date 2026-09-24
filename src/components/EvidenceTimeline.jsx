@@ -131,16 +131,48 @@ function drawTimelineGapWarnings(
   });
 }
 
+function eventX(eventDate, { firstDate, lastDate, padding, lineWidth }) {
+  return (
+    padding + ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth
+  );
+}
+
+// Year labels alternate between an "above" row (even index) and a "below"
+// row (odd index). Events sorted date-ascending give a non-decreasing x per
+// row, so several events landing within MIN_YEAR_LABEL_GAP_PX of each other
+// on the same row would otherwise paint their year text on top of each
+// other (e.g. "2020" over "2020" garbling into unreadable digits). Exported
+// for unit testing.
+const MIN_YEAR_LABEL_GAP_PX = 36;
+
+export function selectYearLabelIndices(sortedEvents, geometry) {
+  const lastX = { above: -Infinity, below: -Infinity };
+  return sortedEvents.map((event, index) => {
+    const row = index % 2 === 0 ? "above" : "below";
+    const x = eventX(new Date(event.date), geometry);
+    const gap = x - lastX[row];
+    // An invalid event.date produces a NaN gap; Number.isNaN guards it
+    // explicitly since every direct comparison against NaN is false,
+    // including `< MIN_YEAR_LABEL_GAP_PX` (which would otherwise fall
+    // through to the "show it" branch below instead of skipping it).
+    if (Number.isNaN(gap) || gap < MIN_YEAR_LABEL_GAP_PX) return false;
+    lastX[row] = x;
+    return true;
+  });
+}
+
 function drawTimelineEventMarkers(
   ctx,
   sortedEvents,
   { firstDate, lastDate, lineY, padding, lineWidth },
 ) {
+  const geometry = { firstDate, lastDate, padding, lineWidth };
+  const showYearLabel = selectYearLabelIndices(sortedEvents, geometry);
+
   // Draw events
   sortedEvents.forEach((event, index) => {
     const eventDate = new Date(event.date);
-    const x =
-      padding + ((eventDate - firstDate) / (lastDate - firstDate)) * lineWidth;
+    const x = eventX(eventDate, geometry);
 
     // Draw event marker
     const eventColor = EVENT_TYPES[event.type]?.color || "#6b7280";
@@ -165,7 +197,9 @@ function drawTimelineEventMarkers(
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Draw year label
+    // Draw year label (skipped when it would collide with the previous
+    // label on the same row - see selectYearLabelIndices)
+    if (!showYearLabel[index]) return;
     ctx.fillStyle = "#e5e7eb";
     ctx.font = "bold 12px sans-serif";
     ctx.textAlign = "center";

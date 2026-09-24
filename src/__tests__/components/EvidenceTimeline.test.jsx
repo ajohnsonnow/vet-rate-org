@@ -7,7 +7,9 @@
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import EvidenceTimeline from "../../components/EvidenceTimeline.jsx";
+import EvidenceTimeline, {
+  selectYearLabelIndices,
+} from "../../components/EvidenceTimeline.jsx";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
 import { saveTimelineEvents } from "../../utils/veteranProfile.js";
 
@@ -43,6 +45,69 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
     stubCanvasContext(),
   );
+});
+
+describe("selectYearLabelIndices (timeline year-label de-duplication)", () => {
+  // 10-day span mapped to a 700px-wide line (matching the real canvas'
+  // padding=50/width=800 geometry, just with padding stripped so x==0 lines
+  // up with day 0) gives an easy 70px-per-day scale to reason about.
+  const geometry = {
+    firstDate: new Date("2020-01-01T00:00:00Z"),
+    lastDate: new Date("2020-01-11T00:00:00Z"),
+    padding: 0,
+    lineWidth: 700,
+  };
+
+  it("returns an empty array for no events", () => {
+    expect(selectYearLabelIndices([], geometry)).toEqual([]);
+  });
+
+  it("always shows a single event's label", () => {
+    expect(
+      selectYearLabelIndices([{ date: "2020-01-01" }], geometry),
+    ).toEqual([true]);
+  });
+
+  it("skips a same-row label that lands within the collision gap, but keeps labels on the other row and once enough distance has passed", () => {
+    const events = [
+      { date: "2020-01-01T00:00:00Z" }, // index 0, above, x=0
+      { date: "2020-01-01T04:48:00Z" }, // index 1, below, x=14
+      { date: "2020-01-01T12:00:00Z" }, // index 2, above, x=35 (<36 from index 0 → collides)
+      { date: "2020-01-04T00:00:00Z" }, // index 3, below, x=210 (far from index 1 → clear)
+      { date: "2020-01-06T00:00:00Z" }, // index 4, above, x=350 (far from index 0 → clear)
+    ];
+
+    expect(selectYearLabelIndices(events, geometry)).toEqual([
+      true,
+      true,
+      false,
+      true,
+      true,
+    ]);
+  });
+
+  it("shows both labels once the gap reaches the threshold", () => {
+    // A 1-day span over a 36px line puts the second "above" event at
+    // exactly x=36 - the collision-gap boundary - so this exercises the
+    // >= comparison directly instead of an approximate gap.
+    const oneDayGeometry = {
+      firstDate: new Date("2020-01-01T00:00:00Z"),
+      lastDate: new Date("2020-01-02T00:00:00Z"),
+      padding: 0,
+      lineWidth: 36,
+    };
+    const events = [
+      { date: "2020-01-01T00:00:00Z" }, // index 0, above, x=0
+      { date: "2020-01-01T12:00:00Z" }, // index 1, below, unrelated row
+      { date: "2020-01-02T00:00:00Z" }, // index 2, above, x=36 (== threshold)
+    ];
+
+    expect(selectYearLabelIndices(events, oneDayGeometry)).toEqual([
+      true,
+      true,
+      true,
+    ]);
+  });
 });
 
 describe("EvidenceTimeline auto-import from records", () => {
