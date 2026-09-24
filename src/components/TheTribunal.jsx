@@ -466,7 +466,6 @@ export default function TheTribunal({
 }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedPersona, setSelectedPersona] = useState("skeptical");
@@ -481,7 +480,6 @@ export default function TheTribunal({
 
   // Speech control state
   const [micSupported, setMicSupported] = useState(true);
-  const [, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
   const {
@@ -600,7 +598,6 @@ export default function TheTribunal({
 
     recognition.onresult = (event) => {
       const text = event.results[0][0].transcript;
-      setTranscript(text);
       handleUserResponse(text);
     };
 
@@ -651,7 +648,6 @@ export default function TheTribunal({
   // Start the hearing (enters courtroom but doesn't auto-start speech)
   const startHearing = () => {
     setShowInstructions(false);
-    setHearingStarted(true);
     const judge = JUDGE_PERSONAS[selectedPersona];
 
     const opening = `Good morning. I am ${judge.name}, and I will be conducting your hearing today. I have reviewed your file. Let's begin with your primary contentions. Please state your main argument clearly and concisely.`;
@@ -907,7 +903,6 @@ export default function TheTribunal({
     stopSpeaking();
     stopListening();
     setShowInstructions(true);
-    setHearingStarted(false);
     setConversation([]);
     setSessionScore({ correct: 0, total: 0 });
     setCurrentQuestion(null);

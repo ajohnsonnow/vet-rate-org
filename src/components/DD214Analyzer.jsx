@@ -644,7 +644,7 @@ function _parseDd214Json(content, t) {
     if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
 
     // Try to find JSON object in the response if it's mixed with other text
-    const jsonMatch = cleanContent.match(/\{[\s\S]{0,100000}\}/);
+    const jsonMatch = /\{[\s\S]{0,100000}\}/.exec(cleanContent);
     if (jsonMatch) {
       cleanContent = jsonMatch[0];
     }

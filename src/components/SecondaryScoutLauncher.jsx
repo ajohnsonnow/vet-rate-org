@@ -834,7 +834,7 @@ const exampleProfiles = [
   },
 ];
 
-const CONDITION_SKIP_WORDS = [
+const CONDITION_SKIP_WORDS = new Set([
   "the",
   "and",
   "for",
@@ -850,7 +850,7 @@ const CONDITION_SKIP_WORDS = [
   "records",
   "medical",
   "examination",
-];
+]);
 
 function _cleanConditionName(rawCondition) {
   return (
@@ -871,7 +871,7 @@ function _registerCondition(rawCondition, conditions, seenConditions) {
 
   // Skip if too short, too long, or common non-condition text
   if (condition.length < 3 || condition.length > 100) return;
-  if (CONDITION_SKIP_WORDS.includes(condition.toLowerCase())) return;
+  if (CONDITION_SKIP_WORDS.has(condition.toLowerCase())) return;
 
   // Normalize for deduplication
   const normalized = condition.toLowerCase().replace(/[^a-z0-9]/g, "");

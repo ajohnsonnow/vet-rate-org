@@ -1429,9 +1429,9 @@ function StatedRatingMismatch({ stated, calculated }) {
   const from = stated.date ? ` (decided ${stated.date})` : "";
   const headline = `Your newest VA letter${from} says your combined rating is ${stated.rating}%. From the ratings on file we calculate ${calculated}%.`;
   return (
-    <div
-      role="status"
-      className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg text-sm text-amber-900 dark:text-amber-100"
+    <output
+      aria-live="polite"
+      className="block mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg text-sm text-amber-900 dark:text-amber-100"
     >
       <p className="font-semibold">{headline}</p>
       <p className="mt-1">
@@ -1439,7 +1439,7 @@ function StatedRatingMismatch({ stated, calculated }) {
         as one that increased a rating. Upload it and this number will update.
         Your VA letter is the official figure.
       </p>
-    </div>
+    </output>
   );
 }
 

@@ -897,7 +897,7 @@ function runFieldPatterns(text) {
   for (const [fieldName, fieldDef] of Object.entries(DD214_FIELD_PATTERNS)) {
     for (const pattern of fieldDef.patterns) {
       const match = text.match(pattern);
-      if (!match || !match[1]) continue;
+      if (!match?.[1]) continue;
 
       const value = _processFieldMatch(fieldDef, match[1]);
       if (value === null) continue; // Skip invalid matches
@@ -1223,11 +1223,6 @@ export function mergeAIAndRegexResults(aiResult, regexResult) {
  */
 export function detectDD214Documents(text) {
   const documents = [];
-
-  // Split by page markers
-  const _pages = text.split(
-    /---\s{0,10}PAGE\s{1,10}(\d{1,6})\s{0,10}(?:\([^)]{0,200}\))?\s{0,10}---/i,
-  );
 
   // Look for form identifiers
   const formPatterns = [

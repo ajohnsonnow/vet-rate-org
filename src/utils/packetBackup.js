@@ -75,14 +75,16 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
 // input doesn't parse as a real date.
 function _sanitizeDateField(value) {
   const date = new Date(value);
-  return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  return Number.isNaN(date.getTime())
+    ? new Date().toISOString()
+    : date.toISOString();
 }
 
 // Validate/normalize an integer-shaped field (diagnostic code, rating).
 // Returns undefined (field dropped) when out of the valid 0-99999 range.
 function _sanitizeIntegerField(value) {
-  const num = parseInt(value, 10);
-  return !isNaN(num) && num >= 0 && num <= 99999 ? num : undefined;
+  const num = Number.parseInt(value, 10);
+  return !Number.isNaN(num) && num >= 0 && num <= 99999 ? num : undefined;
 }
 
 /**
@@ -176,7 +178,7 @@ const validateStatement = (statement) => {
 
       if (field === "savedDate") {
         const date = new Date(value);
-        sanitizedStatement[field] = isNaN(date.getTime())
+        sanitizedStatement[field] = Number.isNaN(date.getTime())
           ? new Date().toISOString()
           : date.toISOString();
       } else if (typeof value === "string") {

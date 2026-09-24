@@ -2031,7 +2031,6 @@ function CAPExamPrepListView({
   setMode,
   searchTerm,
   setSearchTerm,
-  setExamPrepCondition,
   setExamPrepDBQ,
   setExamPrepTips,
 }) {
@@ -2050,7 +2049,6 @@ function CAPExamPrepListView({
 
   const handleExamPrepConditionSelect = (conditionKey) => {
     const dbq = dbqLogicMap[conditionKey];
-    setExamPrepCondition(conditionKey);
     setExamPrepDBQ(dbq);
 
     // Determine relevant tips based on condition type
@@ -3827,18 +3825,7 @@ function CAPResultsView({
   );
 }
 
-function _loadSavedPacketAndConditions(setSavedPacket, setAllConditions) {
-  const stored = localStorage.getItem("vet_rate_saved_claims");
-  if (stored && stored !== "undefined") {
-    try {
-      const parsed = JSON.parse(stored);
-      setSavedPacket(parsed);
-    } catch (e) {
-      console.error("Error loading saved packet:", e);
-    }
-  }
-
-  // Load all conditions from disabilityData
+function _loadAllConditions(setAllConditions) {
   if (disabilityDataFile?.disabilities) {
     setAllConditions(disabilityDataFile.disabilities);
   }
@@ -3985,7 +3972,6 @@ const CAP_MODE_ROUTES = [
         setMode={s.setMode}
         searchTerm={s.searchTerm}
         setSearchTerm={s.setSearchTerm}
-        setExamPrepCondition={s.setExamPrepCondition}
         setExamPrepDBQ={s.setExamPrepDBQ}
         setExamPrepTips={s.setExamPrepTips}
       />
@@ -4094,22 +4080,17 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [simulationResult, setSimulationResult] = useState(null);
-  const [, setSavedPacket] = useState([]);
   const [flashcardTerm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [allConditions, setAllConditions] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState({});
 
   // Exam Prep mode state
-  const [, setExamPrepCondition] = useState(null);
   const [examPrepDBQ, setExamPrepDBQ] = useState(null);
   const [examPrepTips, setExamPrepTips] = useState([]);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
 
-  useEffect(
-    () => _loadSavedPacketAndConditions(setSavedPacket, setAllConditions),
-    [],
-  );
+  useEffect(() => _loadAllConditions(setAllConditions), []);
 
   return (
     <CAPSimulatorRouter
@@ -4134,7 +4115,6 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
       allConditions={allConditions}
       expandedCategories={expandedCategories}
       setExpandedCategories={setExpandedCategories}
-      setExamPrepCondition={setExamPrepCondition}
       examPrepDBQ={examPrepDBQ}
       setExamPrepDBQ={setExamPrepDBQ}
       examPrepTips={examPrepTips}

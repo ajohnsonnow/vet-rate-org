@@ -1330,7 +1330,7 @@ export const summarizeServicePeriods = (periods) => {
     startDates.length > 0 || endDates.length > 0
       ? {
           start: startDates.sort((a, b) => a.localeCompare(b))[0] || null,
-          end: endDates.sort((a, b) => a.localeCompare(b)).slice(-1)[0] || null,
+          end: endDates.toSorted((a, b) => a.localeCompare(b)).at(-1) || null,
         }
       : null;
 
