@@ -766,7 +766,9 @@ function _buildDD214ServiceAndSeparationFields(d, result, serviceTime) {
     separationCode: d.spdCode || null,
     reentryCode: d.reentryCode || null,
     narrativeReason: d.narrativeReason || null,
-    foreignService: !!d.foreignService,
+    // Tri-state: true/false when actually known, null when not extracted -
+    // `!!` used to coerce "not extracted" into a definite "no".
+    foreignService: d.foreignService ?? null,
     combatService: d.combatService || null,
     extractedText: (result.text || "").substring(0, 10000),
     confidence: result.classification?.confidence ?? 0,
@@ -786,7 +788,7 @@ function _buildDD214ServiceAndSeparationFields(d, result, serviceTime) {
 // unmapped rather than invented. placeOfEntry has no saveDD214Data target
 // either, but FIX-15 forwards it here anyway for the period-scoped
 // servicePeriods[] write in saveServiceRecordToProfile below.
-const buildDD214ProfileUpdate = (result) => {
+export const buildDD214ProfileUpdate = (result) => {
   const d = result.extractedData || {};
   const serviceTime = _parseServiceTimeString(d.totalActiveService);
   return {
@@ -890,7 +892,7 @@ function _savePrimaryServicePeriod(file, result, candidate) {
         yearsService: candidate.yearsService,
         monthsService: candidate.monthsService,
         daysService: candidate.daysService,
-        foreignService: !!candidate.foreignService,
+        foreignService: candidate.foreignService ?? null,
         militaryEducation: candidate.militaryEducation?.[0] || "",
         placeOfEntry: candidate.placeOfEntry || "",
         placeOfEntryLowConfidence: !!candidate.placeOfEntryLowConfidence,
@@ -1843,7 +1845,9 @@ function _visionServiceFields(vf) {
     reentryCode: vf.reentryCode || null,
     narrativeReason: vf.narrativeReason || null,
     combatService: vf.combatService || null,
-    foreignService: vf.foreignService || null,
+    // ?? not || : an explicit "false" (known no foreign service) must
+    // survive, not collapse into "unknown" the way `||` would.
+    foreignService: vf.foreignService ?? null,
     foreignServiceLocations: vf.foreignServiceLocations || [],
   };
 }

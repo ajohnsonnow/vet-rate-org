@@ -5408,7 +5408,7 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
         separationCode: parsed.spdCode || "",
         reentryCode: parsed.reentryCode || "",
         narrativeReason: parsed.narrativeReason || "",
-        foreignService: !!parsed.foreignService,
+        foreignService: parsed.foreignService ?? null,
         formType: parsed.formType || "DD214",
       },
       { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },

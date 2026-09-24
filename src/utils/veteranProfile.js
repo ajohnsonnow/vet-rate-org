@@ -926,7 +926,12 @@ function _sanitizeDd214DataCore(dd214Data) {
     separationType: sanitizeString(dd214Data.separationType || "", 100),
     characterOfService: sanitizeString(dd214Data.characterOfService || "", 100),
     reenlisted: !!dd214Data.reenlisted,
-    foreignService: !!dd214Data.foreignService,
+    // Tri-state: keep "not extracted" (null) distinct from a confirmed
+    // "no" (false) instead of coercing both to false.
+    foreignService:
+      typeof dd214Data.foreignService === "boolean"
+        ? dd214Data.foreignService
+        : null,
     extractedText: sanitizeString(dd214Data.extractedText || "", 10000),
     dateProcessed: dd214Data.dateProcessed || new Date().toISOString(),
     confidence:
@@ -1074,7 +1079,10 @@ function _sanitizeServicePeriodSeparationAndTime(p) {
     yearsService: typeof p.yearsService === "number" ? p.yearsService : null,
     monthsService: typeof p.monthsService === "number" ? p.monthsService : null,
     daysService: typeof p.daysService === "number" ? p.daysService : null,
-    foreignService: !!p.foreignService,
+    // Tri-state: keep "not extracted" (null) distinct from a confirmed
+    // "no" (false) instead of coercing both to false.
+    foreignService:
+      typeof p.foreignService === "boolean" ? p.foreignService : null,
     militaryEducation: Array.isArray(p.militaryEducation)
       ? p.militaryEducation
           .map((m) => sanitizeString(String(m), 200))
@@ -1703,7 +1711,9 @@ function _dd214BenefitsFields(d) {
     giBlStatus: sanitizeString(d.giBlStatus || "", 100),
     reserveObligationDate: d.reserveObligationDate || null,
     daysLost: d.daysLost || null,
-    foreignService: !!d.foreignService,
+    // Tri-state: keep "not extracted" (null) distinct from a confirmed
+    // "no" (false) instead of coercing both to false.
+    foreignService: d.foreignService ?? null,
     foreignServiceDetails: sanitizeString(d.foreignServiceDetails || "", 500),
     seaService: d.seaService || null,
   };

@@ -7,7 +7,9 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { parseServiceRecord } = await import("./musterCallProcessor");
+const { parseServiceRecord, buildDD214ProfileUpdate } = await import(
+  "./musterCallProcessor"
+);
 
 const REALISTIC_DD214 = `
 1. NAME (Last, First, Middle): WILLIAMS, ROBERT LEE
@@ -527,5 +529,31 @@ describe("FIX: deployment mention outside a truncated Box 18 is still found", ()
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
     expect(result.deployments).toEqual([]);
+  });
+});
+
+describe("FIX: foreignService stays null (unknown) instead of becoming a fabricated false", () => {
+  it("parseServiceRecord never sets foreignService itself (stays null - not currently extracted)", async () => {
+    const result = await parseServiceRecord(REALISTIC_DD214);
+    expect(result.foreignService).toBeNull();
+  });
+
+  it("buildDD214ProfileUpdate preserves an explicit false instead of coercing it", () => {
+    const candidate = buildDD214ProfileUpdate({
+      extractedData: { foreignService: false },
+    });
+    expect(candidate.foreignService).toBe(false);
+  });
+
+  it("buildDD214ProfileUpdate preserves an explicit true instead of dropping it", () => {
+    const candidate = buildDD214ProfileUpdate({
+      extractedData: { foreignService: true },
+    });
+    expect(candidate.foreignService).toBe(true);
+  });
+
+  it("buildDD214ProfileUpdate reports null, not false, when foreignService was never extracted", () => {
+    const candidate = buildDD214ProfileUpdate({ extractedData: {} });
+    expect(candidate.foreignService).toBeNull();
   });
 });

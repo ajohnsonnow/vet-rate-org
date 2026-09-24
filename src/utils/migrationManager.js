@@ -103,7 +103,10 @@ function _buildDD214LegacyFields(dd) {
     yearsService: dd.yearsService || null,
     monthsService: dd.monthsService || null,
     daysService: null,
-    foreignService: !!dd.foreignService,
+    // Tri-state: keep "not extracted" (null) distinct from a confirmed
+    // "no" (false) - legacy pre-fix data was always boolean here, but data
+    // written after the fix can legitimately be null.
+    foreignService: dd.foreignService ?? null,
     militaryEducation: dd.militaryEducation || "",
     sourceDocument: "Migrated (legacy serviceHistory.dd214Data)",
     confidence: 0.5,

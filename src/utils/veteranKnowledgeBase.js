@@ -150,7 +150,7 @@ export const VKB_SCHEMA = {
     characterOfService: null, // Honorable, General, etc.
     deployments: [], // [{location, startDate, endDate, combatZone, operation}]
     awards: [], // [{name, date, isCombat, devices}]
-    foreignService: false,
+    foreignService: null, // true/false once known; null means not yet extracted
     reenlisted: false,
   },
 
@@ -1062,8 +1062,11 @@ function mergeDD214RankAndCharacter(vkb, dd214Data) {
     dd214Data.characterOfService || vkb.serviceHistory.characterOfService;
   vkb.serviceHistory.reenlisted =
     dd214Data.reenlisted || vkb.serviceHistory.reenlisted;
+  // ?? not || : a newly-known "false" (no foreign service) must overwrite
+  // the existing value; only an actual null/undefined (not yet known on
+  // this document) should fall back to whatever was already stored.
   vkb.serviceHistory.foreignService =
-    dd214Data.foreignService || vkb.serviceHistory.foreignService;
+    dd214Data.foreignService ?? vkb.serviceHistory.foreignService;
 }
 
 function mergeDD214ServiceHistoryCore(vkb, dd214Data) {
