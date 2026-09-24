@@ -68,8 +68,7 @@ const ParseFooter = ({ pasteText, setPasteText, isParsing, handleParse }) => (
         </>
       ) : (
         <>
-          <span className="text-lg">🔍</span>
-          Parse Ratings
+          <span className="text-lg">🔍</span> Parse Ratings
         </>
       )}
     </button>
@@ -138,8 +137,7 @@ const ConfirmFooter = ({
 const RatingPasterInstructions = ({ onHide }) => (
   <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg">
     <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
-      <span className="text-xl">💡</span>
-      How to Copy Your Ratings
+      <span className="text-xl">💡</span> How to Copy Your Ratings
     </h3>
     <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-2 ml-6 list-decimal">
       <li>

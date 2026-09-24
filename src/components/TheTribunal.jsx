@@ -1002,7 +1002,7 @@ function TribunalHeader({
               id="the-tribunal-title"
               className="flex items-center gap-2 text-xl font-bold sm:text-3xl"
             >
-              ⚖️ The Tribunal
+              ⚖️ The Tribunal{" "}
               <span className="rounded bg-gray-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 AI
               </span>

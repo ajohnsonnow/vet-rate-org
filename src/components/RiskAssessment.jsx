@@ -830,7 +830,7 @@ function RiskAssessmentHeader({ onClose, onReportBug, onOpenAISettings }) {
               id="risk-assessment-title"
               className="text-xl font-bold text-white flex items-center gap-2"
             >
-              Poke the Bear Calculator
+              Poke the Bear Calculator{" "}
               <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">
                 AI
               </span>

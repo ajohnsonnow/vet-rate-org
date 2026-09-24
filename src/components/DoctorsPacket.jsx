@@ -322,7 +322,7 @@ const DoctorsPacketHeader = ({ onClose, onOpenAISettings }) => (
           id="doctors-packet-title"
           className="flex items-center gap-2 text-xl font-bold text-white"
         >
-          Doctor&apos;s Packet Generator
+          Doctor&apos;s Packet Generator{" "}
           <span className="rounded bg-violet-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
             AI
           </span>
@@ -393,19 +393,19 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Medical mechanism explanation
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Pathophysiological pathways
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Literature/study references
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Physician template letter
         </li>
       </ul>
@@ -417,20 +417,20 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           This is <strong>research</strong>, not a diagnosis
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           Doctor must review and sign
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           Uses your free Gemini API key
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
-          No personal data is sent
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span> No
+          personal data is sent
         </li>
       </ul>
     </div>

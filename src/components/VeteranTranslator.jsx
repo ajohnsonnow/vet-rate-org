@@ -585,7 +585,7 @@ const TranslatorFooter = ({ isSpeaking }) => (
     <div className="flex items-center gap-2">
       {isSpeaking && (
         <span className="flex items-center gap-1 text-amber-500">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>
+          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500"></span>{" "}
           Speaking...
         </span>
       )}

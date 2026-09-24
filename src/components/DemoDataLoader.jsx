@@ -353,13 +353,11 @@ const DemoCardVariant = ({
           >
             {loading ? (
               <>
-                <span className="animate-spin">⏳</span>
-                Loading...
+                <span className="animate-spin">⏳</span> Loading...
               </>
             ) : (
               <>
-                <span>📥</span>
-                Load Example Packet
+                <span>📥</span> Load Example Packet
               </>
             )}
           </button>

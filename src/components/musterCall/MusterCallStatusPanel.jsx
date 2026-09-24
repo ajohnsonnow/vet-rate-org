@@ -177,8 +177,7 @@ function MusterCallResults({ batch }) {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <span className="text-2xl">🤖</span>
-              AI Analysis & Recommendations
+              <span className="text-2xl">🤖</span> AI Analysis & Recommendations
             </h3>
             <div className="flex items-center gap-3">
               <ReportBugLink context="muster-call-report" />

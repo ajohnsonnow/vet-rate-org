@@ -165,7 +165,7 @@ const SearchBox = ({
           checked={caseSensitive}
           onChange={(e) => setCaseSensitive(e.target.checked)}
           className="rounded"
-        />
+        />{" "}
         Case Sensitive
       </label>
       <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
@@ -174,7 +174,7 @@ const SearchBox = ({
           checked={wholeWord}
           onChange={(e) => setWholeWord(e.target.checked)}
           className="rounded"
-        />
+        />{" "}
         Whole Word Only
       </label>
     </div>

@@ -163,7 +163,7 @@ function FooterLinksSecondary() {
         onClick={() => window.dispatchEvent(new CustomEvent("openBugSquasher"))}
         className="text-gray-400 hover:text-red-400 text-sm transition-colors flex items-center gap-1 group"
       >
-        🐛 Report Bug
+        🐛 Report Bug{" "}
         <span
           className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full group-hover:bg-green-500 transition-colors"
           aria-label={`${getSquashedBugCount()} bugs squashed`}

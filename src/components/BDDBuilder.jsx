@@ -214,7 +214,7 @@ function BDDBuilderTitleRow({ onClose, onReportBug }) {
             id="bdd-builder-title"
             className="text-xl font-bold text-white flex items-center gap-2"
           >
-            BDD Builder
+            BDD Builder{" "}
             <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
               NEW
             </span>

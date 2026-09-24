@@ -88,8 +88,7 @@ const StaleDataIndicator = ({
                 : "text-yellow-700 dark:text-yellow-400"
             }`}
           >
-            <span>📧</span>
-            Report Outdated Info
+            <span>📧</span> Report Outdated Info
           </a>
         </div>
       </div>

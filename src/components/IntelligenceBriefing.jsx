@@ -209,7 +209,7 @@ function BriefingHeader({ onRequestDiscard }) {
             id="intel-briefing-title"
             className="flex items-center gap-2 text-lg font-bold text-white sm:text-2xl"
           >
-            Intelligence Briefing
+            Intelligence Briefing{" "}
             <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-bold uppercase text-white">
               CLASSIFIED
             </span>

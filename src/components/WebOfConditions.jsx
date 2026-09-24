@@ -950,9 +950,8 @@ const GraphDefs = () => (
 const GraphInstructionsOverlay = () => (
   <div className="absolute bottom-4 left-4 bg-gray-900/80 rounded-xl p-4 max-w-sm">
     <p className="text-purple-300 text-sm">
-      <span className="text-lg mr-2">💡</span>
-      Click a node to see its connections, or click a link to see the nexus
-      logic.
+      <span className="text-lg mr-2">💡</span> Click a node to see its
+      connections, or click a link to see the nexus logic.
     </p>
   </div>
 );
@@ -1224,9 +1223,9 @@ const NodeDetailsPanel = ({
     {CONDITION_WEB[selectedNode] && (
       <div className="bg-purple-900/20 border border-purple-700/30 rounded-xl p-4">
         <p className="text-purple-200 text-sm">
-          <span className="text-lg mr-2">⚡</span>
-          This is a <strong>primary condition</strong> that can establish
-          secondary service connection for{" "}
+          <span className="text-lg mr-2">⚡</span> This is a{" "}
+          <strong>primary condition</strong> that can establish secondary
+          service connection for{" "}
           {CONDITION_WEB[selectedNode].secondaries.length} other conditions.
         </p>
       </div>
@@ -1272,9 +1271,8 @@ const HowToUseGuide = () => (
 
     <div className="bg-indigo-900/30 border border-indigo-700/50 rounded-xl p-4">
       <p className="text-indigo-200 text-sm">
-        <span className="text-lg mr-2">🎯</span>
-        Click any connection to see the <strong>medical nexus</strong>{" "}
-        explaining the relationship.
+        <span className="text-lg mr-2">🎯</span> Click any connection to see the{" "}
+        <strong>medical nexus</strong> explaining the relationship.
       </p>
     </div>
   </>
@@ -1482,9 +1480,9 @@ const SeedFromRecordsBanner = ({ show, conditionName }) => {
   return (
     <div className="mb-4 bg-purple-900/30 border border-purple-700/50 rounded-xl p-3">
       <p className="text-purple-200 text-sm">
-        <span className="text-lg mr-2">📋</span>
-        We started you off with <strong>{conditionName}</strong> from your saved
-        ratings — explore its connections, or pick a different condition below.
+        <span className="text-lg mr-2">📋</span> We started you off with{" "}
+        <strong>{conditionName}</strong> from your saved ratings — explore its
+        connections, or pick a different condition below.
       </p>
     </div>
   );

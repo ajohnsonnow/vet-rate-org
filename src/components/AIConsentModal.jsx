@@ -177,18 +177,16 @@ const PrivacyInfoSection = ({ provider }) => (
     </h3>
     <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
       <li className="flex items-start gap-2">
-        <span className="text-blue-500 mt-0.5">•</span>
-        Provider: <strong>{provider}</strong> (Google&apos;s AI service)
+        <span className="text-blue-500 mt-0.5">•</span> Provider:{" "}
+        <strong>{provider}</strong> (Google&apos;s AI service)
       </li>
       <li className="flex items-start gap-2">
-        <span className="text-blue-500 mt-0.5">•</span>
-        Google&apos;s free API tier does not use your prompts to train their
-        models
+        <span className="text-blue-500 mt-0.5">•</span> Google&apos;s free API
+        tier does not use your prompts to train their models
       </li>
       <li className="flex items-start gap-2">
-        <span className="text-blue-500 mt-0.5">•</span>
-        This feature is optional - you can always use the standard template
-        instead
+        <span className="text-blue-500 mt-0.5">•</span> This feature is optional
+        - you can always use the standard template instead
       </li>
       <li className="flex items-start gap-2">
         <span className="text-blue-500 mt-0.5">•</span>

@@ -271,7 +271,7 @@ const PickerHeader = ({ totalConditions }) => (
     <div className="flex items-center gap-2 mb-3">
       <span className="text-2xl">📋</span>
       <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-        Quick Condition Picker
+        Quick Condition Picker{" "}
         <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
           NEW
         </span>

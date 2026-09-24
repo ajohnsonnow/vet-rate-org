@@ -27,7 +27,7 @@ function SharkRadarHeader({ onClose, onReportBug }) {
               id="shark-radar-title"
               className="text-xl font-bold text-white flex items-center gap-2"
             >
-              Shark Radar
+              Shark Radar{" "}
               <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
                 AI
               </span>

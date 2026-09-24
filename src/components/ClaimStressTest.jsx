@@ -298,7 +298,7 @@ const StressTestHeader = ({ onClose, onReportBug }) => (
         id="claim-stress-title"
         className="mb-2 flex items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
       >
-        ⚔️ The War Game - Red Team Simulator
+        ⚔️ The War Game - Red Team Simulator{" "}
         <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
           AI
         </span>
@@ -435,7 +435,7 @@ const LoadFromPacketSection = ({
       onClick={() => setShowPacketSelector(!showPacketSelector)}
       className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition flex items-center justify-center gap-2"
     >
-      📁 Load from My Packet
+      📁 Load from My Packet{" "}
       <span className="text-blue-200 text-sm">
         ({savedClaims.length} claims, {savedForms.length} forms)
       </span>

@@ -376,7 +376,7 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
               id="retro-pay-hunter-title"
               className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
             >
-              Retroactive Pay Hunter
+              Retroactive Pay Hunter{" "}
               <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
                 AI
               </span>
@@ -475,7 +475,7 @@ function EffectiveDateField({ newEntry, setNewEntry }) {
     <div>
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-        Effective Date *
+        Effective Date *{" "}
         <span className="group relative">
           <span className="text-blue-400 cursor-help text-xs">ℹ️</span>
           <span className="invisible group-hover:visible absolute z-10 w-72 p-3 text-xs bg-gray-900 border border-gray-700 rounded-lg shadow-xl -left-16 top-6">
@@ -555,7 +555,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
               setNewEntry({ ...newEntry, married: e.target.checked })
             }
             className="w-4 h-4 text-amber-500 rounded bg-gray-700 border-gray-600"
-          />
+          />{" "}
           Married
         </label>
 

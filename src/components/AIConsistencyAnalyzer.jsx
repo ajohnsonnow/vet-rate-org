@@ -76,8 +76,7 @@ function AnalyzerHeader({ onBack }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <span className="text-4xl">🔍</span>
-            AI Cross-Examination
+            <span className="text-4xl">🔍</span> AI Cross-Examination
             <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded">
               AI BETA
             </span>
@@ -123,7 +122,7 @@ function ModeToggle({ mode, onSelectMode }) {
             : "bg-gray-700 text-gray-300 hover:bg-gray-600"
         }`}
       >
-        📋 Compare Mode
+        📋 Compare Mode{" "}
         <span className="block text-xs font-normal opacity-75">
           Evidence vs Statement
         </span>
@@ -136,7 +135,7 @@ function ModeToggle({ mode, onSelectMode }) {
             : "bg-gray-700 text-gray-300 hover:bg-gray-600"
         }`}
       >
-        📝 Solo Mode
+        📝 Solo Mode{" "}
         <span className="block text-xs font-normal opacity-75">
           Statement Only
         </span>
@@ -216,8 +215,8 @@ function AnalyzeButton({
       >
         {loading ? (
           <span className="flex items-center gap-2">
-            <span className="animate-spin">⚙️</span>
-            Running Cross-Examination...
+            <span className="animate-spin">⚙️</span> Running
+            Cross-Examination...
           </span>
         ) : (
           "🔍 Analyze Consistency"

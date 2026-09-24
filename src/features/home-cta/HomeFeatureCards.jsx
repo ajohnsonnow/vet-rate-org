@@ -25,8 +25,8 @@ function TacticalCalculatorCta() {
           <p className="text-green-100 max-w-xl">
             <strong>Calculate your REAL rating</strong> using official VA math
             (38 CFR § 4.25). Includes <strong>Bilateral Factor</strong>, gap
-            analysis to reach 100%, and
-            <strong> 2026 pay estimates</strong> with dependents.
+            analysis to reach 100%, and <strong>2026 pay estimates</strong> with
+            dependents.
           </p>
         </div>
 
@@ -206,8 +206,8 @@ function PathfinderCta() {
           </div>
           <p className="text-teal-100 max-w-2xl">
             <strong>Your personal claims strategist.</strong> Enter your current
-            ratings and let AI analyze your profile to suggest
-            <strong> high-probability secondary claims</strong> you may be
+            ratings and let AI analyze your profile to suggest{" "}
+            <strong>high-probability secondary claims</strong> you may be
             missing, with direct links to build your case. Like having a VSO in
             your pocket.
           </p>
@@ -242,7 +242,7 @@ function MusterCallCta() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
-              Muster Call
+              Muster Call{" "}
               <span className="px-2 py-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full">
                 NEW
               </span>
@@ -287,7 +287,7 @@ function CFileAnalyzerCta() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap">
-              C-File AI Analyzer
+              C-File AI Analyzer{" "}
               <span className="px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
                 AI
               </span>
@@ -297,11 +297,8 @@ function CFileAnalyzerCta() {
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
               <strong>What competitors charge $500+ for.</strong> Drop in your
-              C-File (Claims File) and let AI analyze thousands of pages to find
-              <strong>
-                {" "}
-                in-service events, diagnoses, and nexus evidence
-              </strong>{" "}
+              C-File (Claims File) and let AI analyze thousands of pages to find{" "}
+              <strong>in-service events, diagnoses, and nexus evidence</strong>{" "}
               - all processed locally in your browser for maximum privacy.
             </p>
           </div>
@@ -361,7 +358,7 @@ function WitnessBenchCta() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
-            Witness Bench
+            Witness Bench{" "}
             <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full">
               NEW
             </span>
@@ -410,7 +407,7 @@ function FormsHelperCta() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              📋 Forms Helper
+              📋 Forms Helper{" "}
               <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
                 {getFormsCount()} FORMS
               </span>
@@ -550,8 +547,8 @@ function SharkRadarCta() {
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
         <strong>Before you sign ANYTHING!</strong> Paste contract or email text
-        from &quot;VA consultants&quot; to scan for
-        <strong> illegal fees, predatory practices, and scams</strong> based on
+        from &quot;VA consultants&quot; to scan for{" "}
+        <strong>illegal fees, predatory practices, and scams</strong> based on
         38 CFR § 14.636.
       </p>
       <button
@@ -784,7 +781,7 @@ function FOIAKeysmithCta() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
-            The Keysmith
+            The Keysmith{" "}
             <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">
               NEW
             </span>
@@ -983,7 +980,7 @@ function StateBenefitHunterCta() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
-            State Benefit Hunter
+            State Benefit Hunter{" "}
             <span className="px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full animate-pulse">
               $$$
             </span>
@@ -992,9 +989,8 @@ function StateBenefitHunterCta() {
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 flex-1 leading-relaxed">
         <strong>Money on the Table!</strong> Discover state-specific benefits
-        many veterans miss:
+        many veterans miss:{" "}
         <strong>
-          {" "}
           property tax exemptions, free vehicle registration, education grants,
         </strong>{" "}
         and more.
@@ -1091,7 +1087,7 @@ function MillionDollarDashboardCta() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
-            Million Dollar Dashboard
+            Million Dollar Dashboard{" "}
             <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold rounded-full animate-pulse">
               WOW
             </span>
@@ -1126,7 +1122,7 @@ function MOSHazardMatcherCta() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
-            MOS Hazard Matcher
+            MOS Hazard Matcher{" "}
             <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold rounded-full">
               JOB→INJURY
             </span>
@@ -1161,7 +1157,7 @@ function WebOfConditionsCta() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
-            Web of Conditions
+            Web of Conditions{" "}
             <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold rounded-full">
               INTERACTIVE
             </span>
@@ -1196,7 +1192,7 @@ function RetroPayHunterCta() {
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
-            Retro Pay Hunter
+            Retro Pay Hunter{" "}
             <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold rounded-full animate-pulse">
               💰 MONEY
             </span>

@@ -20,9 +20,8 @@ const AIWarningBanner = ({ className = "" }) => {
           </h4>
           <p className="text-xs text-yellow-800 dark:text-yellow-300">
             AI models can occasionally generate incorrect case law or regulation
-            citations.
-            <strong> Always verify specific legal references</strong> before
-            submitting to the VA.
+            citations. <strong>Always verify specific legal references</strong>{" "}
+            before submitting to the VA.
           </p>
         </div>
       </div>

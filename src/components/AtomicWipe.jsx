@@ -353,20 +353,18 @@ function AtomicWipeBody() {
 
       <ul className="text-sm text-slate-600 dark:text-gray-400 space-y-2 mb-6">
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          All saved conditions and claims data
+          <span className="text-red-500">✗</span> All saved conditions and
+          claims data
         </li>
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          Local AI models and vector databases
+          <span className="text-red-500">✗</span> Local AI models and vector
+          databases
         </li>
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          All preferences and settings
+          <span className="text-red-500">✗</span> All preferences and settings
         </li>
         <li className="flex items-center gap-2">
-          <span className="text-red-500">✗</span>
-          Cached files and offline data
+          <span className="text-red-500">✗</span> Cached files and offline data
         </li>
       </ul>
 

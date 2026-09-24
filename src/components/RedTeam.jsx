@@ -235,7 +235,7 @@ const RedTeamHeader = ({ onClose, onOpenAISettings, onReportBug }) => (
             id="red-team-title"
             className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
           >
-            The Red Team
+            The Red Team{" "}
             <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
               AI
             </span>
