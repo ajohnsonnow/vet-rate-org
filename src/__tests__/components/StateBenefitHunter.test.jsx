@@ -89,4 +89,37 @@ describe("StateBenefitHunter prefill from records", () => {
 
     expect(screen.getByLabelText("Your State")).toHaveValue("");
   });
+
+  it("says only 'rating' when a state isn't on file but a rating is (regression D8)", () => {
+    saveMyRatings([
+      {
+        name: "lumbosacral strain, degenerative disc disease (previously rated as lumbago) (claimed as low back condition)",
+        bodyPart: "other",
+        rating: 20,
+        side: "none",
+      },
+    ]);
+
+    renderHunter();
+
+    expect(
+      screen.getByText(/we filled in your rating from your saved records/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/we filled in your state and rating/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says only 'state' when a rating isn't on file but a state is (regression D8)", () => {
+    updateVeteranProfile({ state: "TX" });
+
+    renderHunter();
+
+    expect(
+      screen.getByText(/we filled in your state from your saved records/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/we filled in your state and rating/i),
+    ).not.toBeInTheDocument();
+  });
 });

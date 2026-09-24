@@ -1008,12 +1008,15 @@ function getStateBenefitDefaults() {
   };
 }
 
-const PrefilledFromRecordsBanner = ({ show }) => {
-  if (!show) return null;
+const PrefilledFromRecordsBanner = ({ hasState, hasRating }) => {
+  if (!hasState && !hasRating) return null;
+  let filledLabel = "rating";
+  if (hasState && hasRating) filledLabel = "state and rating";
+  else if (hasState) filledLabel = "state";
 
   return (
     <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-sm text-blue-800 dark:text-blue-200">
-      📋 We filled in your state and rating from your saved records — change
+      📋 We filled in your {filledLabel} from your saved records — change
       anything that&apos;s wrong.
     </div>
   );
@@ -1021,7 +1024,8 @@ const PrefilledFromRecordsBanner = ({ show }) => {
 
 const StateBenefitHunter = ({ onClose, onReportBug }) => {
   const [defaults] = useState(getStateBenefitDefaults);
-  const wasPrefilled = Boolean(defaults.state || defaults.rating);
+  const hasStateDefault = Boolean(defaults.state);
+  const hasRatingDefault = Boolean(defaults.rating);
   const [selectedState, setSelectedState] = useState(defaults.state);
   const [selectedRating, setSelectedRating] = useState(defaults.rating);
   const [results, setResults] = useState(null);
@@ -1064,7 +1068,10 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
       {/* Content */}
       <div>
         <InfoBanner />
-        <PrefilledFromRecordsBanner show={wasPrefilled} />
+        <PrefilledFromRecordsBanner
+          hasState={hasStateDefault}
+          hasRating={hasRatingDefault}
+        />
 
         <SelectionForm
           selectedState={selectedState}
