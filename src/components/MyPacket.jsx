@@ -1282,13 +1282,13 @@ function MyRatingEditForm({
 function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
   return (
     <div className="flex justify-between items-center">
-      <div className="flex-1">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 min-w-0 break-words">
             {rating.name || rating.condition}
           </h3>
           <span
-            className={`px-3 py-1 rounded-full text-sm font-bold ${getRatingBadgeClass(rating.rating)}`}
+            className={`px-3 py-1 rounded-full text-sm font-bold flex-shrink-0 ${getRatingBadgeClass(rating.rating)}`}
           >
             {rating.rating}%
           </span>
@@ -1300,7 +1300,7 @@ function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
           </p>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-shrink-0">
         <button
           type="button"
           onClick={() => setEditingRating({ ...rating })}
