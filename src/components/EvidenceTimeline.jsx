@@ -374,9 +374,9 @@ function TimelineModalHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-slate-600 to-gray-700 p-4 shadow-lg">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="text-3xl">🧵</span>
-          <div>
+          <div className="min-w-0">
             <h2
               id="evidence-timeline-title"
               className="text-xl font-bold text-white"
@@ -391,7 +391,7 @@ function TimelineModalHeader({ onClose, onReportBug }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-x-3">
           {onReportBug && (
             <ReportBugLink
               onClick={onReportBug}
@@ -402,7 +402,7 @@ function TimelineModalHeader({ onClose, onReportBug }) {
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+              className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
               aria-label="Close"
             >
               <svg

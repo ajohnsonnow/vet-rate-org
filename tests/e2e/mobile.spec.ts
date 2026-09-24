@@ -315,6 +315,48 @@ async function overlayOverflow(
 }
 
 /**
+ * Bounding box of a tool header's close button, measured against the real
+ * viewport with no `containsX` exemption. `overlayOverflow` above
+ * deliberately ignores bleed contained by an ancestor's `overflow: hidden`
+ * (a decorative flourish clipped by a header is not a defect) — but the
+ * `.modal-content` panel *itself* has `overflow-hidden`, so that same
+ * exemption also swallows a functionally-broken clipped close button,
+ * which is why it never caught the S9 audit's "close button clipped at
+ * 390px" bug. This checks the button directly instead.
+ */
+async function closeButtonBox(
+  page: Page,
+  titleId: string,
+  ariaLabel: string,
+): Promise<{
+  found: boolean;
+  width: number;
+  height: number;
+  fullyVisible: boolean;
+}> {
+  return page.evaluate(
+    ({ titleId, ariaLabel }) => {
+      const dialog = document.querySelector(
+        `[role="dialog"][aria-labelledby="${titleId}"]`,
+      );
+      const btn = dialog?.querySelector(
+        `button[aria-label="${ariaLabel}"]`,
+      ) as HTMLElement | null;
+      if (!btn) return { found: false, width: 0, height: 0, fullyVisible: false };
+      const r = btn.getBoundingClientRect();
+      const vw = window.innerWidth;
+      return {
+        found: true,
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+        fullyVisible: r.right <= vw + 0.5 && r.left >= -0.5,
+      };
+    },
+    { titleId, ariaLabel },
+  );
+}
+
+/**
  * Inspect the open ResponsiveModal, located by its unique `.modal-footer`. Returns
  * the panel's worst right-edge overflow plus the sticky-footer contract: a button
  * exists and its bottom stays within the viewport (no scroll-to-submit on mobile).
@@ -600,5 +642,66 @@ for (const vp of VIEWPORTS) {
       expect(m.ctaInViewport).toBe(true);
       expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
     });
+  });
+
+  // Tool header close buttons (QA audit fix): Pathfinder, State Benefit
+  // Hunter, Web of Conditions, Evidence Timeline, Evidence Gap Visualizer
+  // and BDD Builder all share the same bug — a shared mobile-only rule
+  // (`.modal-content .flex.gap-2 > button, .modal-content .flex.gap-3 >
+  // button { flex: 1; min-width: 120px }`, meant for footer action-button
+  // pairs) also matched each header's ReportBugLink+Close wrapper, and the
+  // title's flex item had no `min-w-0` to absorb the resulting width, so
+  // the close button was pushed off past the header's own edge and clipped
+  // by the panel's `overflow-hidden`. `overlayOverflow` doesn't catch it
+  // (see `closeButtonBox` above), so this checks the button directly.
+  const TOOL_HEADERS = [
+    { label: "Pathfinder", event: "openPathfinder", titleId: "pathfinder-modal-title", ariaLabel: "Close" },
+    { label: "State Benefit Hunter", event: "openStateBenefitHunter", titleId: "state-benefit-hunter-title", ariaLabel: "Close" },
+    { label: "Web of Conditions", event: "openWebOfConditions", titleId: "web-of-conditions-title", ariaLabel: "Close" },
+    { label: "Evidence Timeline", event: "openEvidenceTimeline", titleId: "evidence-timeline-title", ariaLabel: "Close" },
+    { label: "Evidence Gap Visualizer", event: "openEvidenceGapVisualizer", titleId: "evidence-gap-title", ariaLabel: "Close" },
+    { label: "BDD Builder", event: "openBDDBuilder", titleId: "bdd-builder-title", ariaLabel: "Close BDD Builder" },
+  ];
+
+  test.describe(`Tool header close buttons @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const tool of TOOL_HEADERS) {
+      test(`${tool.label} close button stays fully visible at >=44x44px`, async ({
+        page,
+      }) => {
+        await openModalByEvent(page, tool.event, () =>
+          closeButtonBox(page, tool.titleId, tool.ariaLabel),
+        );
+
+        // toBeVisible() auto-retries (unlike a single evaluate() snapshot),
+        // riding out the dev-mode React.StrictMode mount→unmount→remount
+        // cycle the same way the What's New modal test above does. 15s
+        // matches the Backup Manager test's budget for the same
+        // first-load-in-a-fresh-worker dev-server JIT compile variance.
+        const closeButton = page.locator(
+          `[role="dialog"][aria-labelledby="${tool.titleId}"] button[aria-label="${tool.ariaLabel}"]`,
+        );
+        await expect(closeButton).toBeVisible({ timeout: 15_000 });
+        await expect(closeButton).toBeInViewport();
+
+        const box = await closeButtonBox(page, tool.titleId, tool.ariaLabel);
+        expect(box.found).toBe(true);
+        expect(box.fullyVisible).toBe(true);
+        expect(box.width).toBeGreaterThanOrEqual(44);
+        expect(box.height).toBeGreaterThanOrEqual(44);
+      });
+    }
   });
 }

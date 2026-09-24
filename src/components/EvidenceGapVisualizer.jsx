@@ -207,12 +207,12 @@ const EvidenceGapHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+    <div className="relative flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
           <span className="text-4xl">🔬</span>
         </div>
-        <div>
+        <div className="min-w-0">
           <h2
             id="evidence-gap-title"
             className="text-2xl sm:text-3xl font-bold"
@@ -227,7 +227,7 @@ const EvidenceGapHeader = ({ onClose, onReportBug }) => (
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-x-2">
         {onReportBug && (
           <ReportBugLink
             onClick={onReportBug}
@@ -237,7 +237,7 @@ const EvidenceGapHeader = ({ onClose, onReportBug }) => (
         )}
         <button
           onClick={onClose}
-          className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
