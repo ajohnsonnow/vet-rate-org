@@ -426,7 +426,7 @@ def main():
                 result = swarm.quick_calculate(ratings)
                 print(f"\n📊 Quick Calculate: {result}")
                 continue
-            except:
+            except ValueError:
                 print("Usage: calc 70 30 10")
                 continue
         
