@@ -7833,17 +7833,36 @@ function getFormsHelperConditionsDefault() {
 // selected (FormSelectionCards' onClick), so the prefill survives the
 // fresh-start reset instead of only ever applying once at mount and then
 // being wiped the moment a form is picked.
+// The Profile Setup tab collects a bare middleInitial field, but a DD214
+// import only ever populates the full middleName (dd214FieldExtractor.js) -
+// a veteran who set up their profile from a scan has middleName but no
+// middleInitial, so forms that expect just the initial got nothing, and
+// building the full name from an empty middleInitial part left a double
+// space ("Jane  Veteran").
+function _resolveMiddleInitial(profile) {
+  if (profile.middleInitial) return profile.middleInitial;
+  return profile.middleName ? profile.middleName.trim().charAt(0) : "";
+}
+
+// Joins only the parts that are actually present, so a missing middle name/
+// initial never leaves a double space in the guessed full name.
+function _buildVeteranFullNameGuess(profile, middleInitial) {
+  return [profile.firstName, middleInitial, profile.lastName]
+    .filter((part) => part && String(part).trim())
+    .join(" ");
+}
+
 function buildFormsHelperPrefillDefaults() {
   const profile = getVeteranProfile();
   const conditionsDefault = getFormsHelperConditionsDefault();
-  const fullNameGuess =
-    `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim();
+  const middleInitial = _resolveMiddleInitial(profile);
+  const fullNameGuess = _buildVeteranFullNameGuess(profile, middleInitial);
 
   return {
     // Name fields
     veteranName: fullNameGuess,
     veteranFirstName: profile.firstName,
-    veteranMiddleInitial: profile.middleInitial,
+    veteranMiddleInitial: middleInitial,
     veteranLastName: profile.lastName,
     fullName: profile.fullName || fullNameGuess,
 
@@ -7913,13 +7932,13 @@ function _buildFormsHelperProfileEditHandlers(ctx) {
     const success = saveVeteranProfile(veteranProfile);
     if (success) {
       setProfileSaved(true);
+      const middleInitial = _resolveMiddleInitial(veteranProfile);
       // Update formData with new profile
       setFormData((prev) => ({
         ...prev,
-        veteranName:
-          `${veteranProfile.firstName || ""} ${veteranProfile.middleInitial || ""} ${veteranProfile.lastName || ""}`.trim(),
+        veteranName: _buildVeteranFullNameGuess(veteranProfile, middleInitial),
         veteranFirstName: veteranProfile.firstName,
-        veteranMiddleInitial: veteranProfile.middleInitial,
+        veteranMiddleInitial: middleInitial,
         veteranLastName: veteranProfile.lastName,
         ssn: veteranProfile.ssn,
         dob: veteranProfile.dob,

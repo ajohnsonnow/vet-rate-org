@@ -91,7 +91,33 @@ describe("FormsHelper prefill from records", () => {
     openPersonalStatementWizard();
 
     expect(screen.getByPlaceholderText("Jane M. Veteran")).toHaveValue(
-      "Jane  Veteran",
+      "Jane Veteran",
+    );
+  });
+
+  it("builds the full name without a double space when there is no middle name/initial on file (regression D9)", () => {
+    updateVeteranProfile({ firstName: "Anthony", lastName: "Johnson" });
+
+    renderFormsHelper();
+    openPersonalStatementWizard();
+
+    expect(screen.getByPlaceholderText("Jane M. Veteran")).toHaveValue(
+      "Anthony Johnson",
+    );
+  });
+
+  it("falls back to the DD214-derived middleName's first letter when the profile has no bare middleInitial (regression D9)", () => {
+    updateVeteranProfile({
+      firstName: "Anthony",
+      middleName: "Michael",
+      lastName: "Johnson",
+    });
+
+    renderFormsHelper();
+    openPersonalStatementWizard();
+
+    expect(screen.getByPlaceholderText("Jane M. Veteran")).toHaveValue(
+      "Anthony M Johnson",
     );
   });
 
