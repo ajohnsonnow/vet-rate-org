@@ -23,7 +23,10 @@ import {
   saveForm,
   exportAllVeteranData,
   importVeteranData,
+  getMyRatings,
 } from "../utils/veteranProfile";
+import { getSavedClaims } from "../utils/claimsStorage";
+import { normalizeConditionName } from "../utils/conditionName";
 
 const forms = [
   {
@@ -5913,7 +5916,11 @@ function FormSelectionCards({
           key={form.id}
           onClick={() => {
             setSelectedForm(form);
-            setFormData({});
+            // Fresh start for the new form's own answers, re-seeded from
+            // the veteran's records rather than wiped blank - otherwise
+            // the profile/conditions prefill from mount never survives
+            // past the form-selection grid.
+            setFormData(buildFormsHelperPrefillDefaults());
             setCurrentStep(0);
             setGeneratedContent(null);
           }}
@@ -7796,58 +7803,100 @@ function useFormsHelperAIState() {
   };
 }
 
+// Every condition name the veteran already has on file (My Ratings + saved
+// claims), deduped the same way NexusBuilder/Pathfinder do. `first` seeds a
+// single-condition field (e.g. 21-4138's conditionName); `list` seeds a
+// multi-condition field (e.g. 21-0966's conditions, FOIA's
+// specificConditions).
+function getFormsHelperConditionsDefault() {
+  const seen = new Set();
+  const names = [];
+  getMyRatings().forEach((r) => {
+    const key = normalizeConditionName(r.name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(r.name);
+  });
+  getSavedClaims().forEach((c) => {
+    const key = normalizeConditionName(c.conditionName);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(c.conditionName);
+  });
+  return { first: names[0] || "", list: names.join(", ") };
+}
+
+// Every field FormsHelper can pre-fill from the veteran's own records: name/
+// address/service from the profile (kept current by DD214 import + the
+// Profile Setup tab), plus condition(s)-claimed fields from My Ratings and
+// saved claims. Used both on first open and whenever a new form is
+// selected (FormSelectionCards' onClick), so the prefill survives the
+// fresh-start reset instead of only ever applying once at mount and then
+// being wiped the moment a form is picked.
+function buildFormsHelperPrefillDefaults() {
+  const profile = getVeteranProfile();
+  const conditionsDefault = getFormsHelperConditionsDefault();
+  const fullNameGuess =
+    `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim();
+
+  return {
+    // Name fields
+    veteranName: fullNameGuess,
+    veteranFirstName: profile.firstName,
+    veteranMiddleInitial: profile.middleInitial,
+    veteranLastName: profile.lastName,
+    fullName: profile.fullName || fullNameGuess,
+
+    // Identification
+    ssn: profile.ssn,
+    ssnLast4: profile.ssnLast4 || profile.ssn,
+    ssnFull: profile.ssnFull,
+    vaFileNumber: profile.vaFileNumber,
+    serviceNumber: profile.serviceNumber,
+    dob: profile.dob,
+    placeOfBirth: profile.placeOfBirth,
+
+    // Contact
+    email: profile.email,
+    phone: profile.phone,
+    alternatePhone: profile.alternatePhone,
+
+    // Address
+    street: profile.street,
+    apt: profile.apt,
+    city: profile.city,
+    state: profile.state,
+    zip: profile.zip,
+    country: profile.country || "United States",
+    homeOfRecord: profile.homeOfRecord,
+
+    // Military Service
+    veteranBranch: profile.branch,
+    branch: profile.branch,
+    rankAtDischarge: profile.rankAtDischarge,
+    payGrade: profile.payGrade,
+    mos: profile.mos,
+    mosTitle: profile.mosTitle,
+    serviceStartDate: profile.serviceStartDate,
+    serviceEndDate: profile.serviceEndDate,
+    characterOfService: profile.characterOfService,
+    separationType: profile.separationType,
+
+    // Conditions claimed (21-4138/21-0966/FOIA-style condition fields)
+    conditionName: conditionsDefault.first,
+    conditions: conditionsDefault.list,
+    specificConditions: conditionsDefault.list,
+  };
+}
+
 function _runFormsHelperProfilePrefillEffect(setVeteranProfile, setFormData) {
   const profile = getVeteranProfile();
   setVeteranProfile(profile);
-  // Pre-fill formData with profile data
-  if (profile && Object.keys(profile).length > 0) {
-    setFormData((prev) => ({
-      ...prev,
-      // Name fields
-      veteranName:
-        `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
-      veteranFirstName: profile.firstName,
-      veteranMiddleInitial: profile.middleInitial,
-      veteranLastName: profile.lastName,
-      fullName:
-        profile.fullName ||
-        `${profile.firstName || ""} ${profile.middleInitial || ""} ${profile.lastName || ""}`.trim(),
-
-      // Identification
-      ssn: profile.ssn,
-      ssnLast4: profile.ssnLast4 || profile.ssn,
-      ssnFull: profile.ssnFull,
-      vaFileNumber: profile.vaFileNumber,
-      serviceNumber: profile.serviceNumber,
-      dob: profile.dob,
-      placeOfBirth: profile.placeOfBirth,
-
-      // Contact
-      email: profile.email,
-      phone: profile.phone,
-      alternatePhone: profile.alternatePhone,
-
-      // Address
-      street: profile.street,
-      apt: profile.apt,
-      city: profile.city,
-      state: profile.state,
-      zip: profile.zip,
-      country: profile.country || "United States",
-      homeOfRecord: profile.homeOfRecord,
-
-      // Military Service
-      veteranBranch: profile.branch,
-      branch: profile.branch,
-      rankAtDischarge: profile.rankAtDischarge,
-      payGrade: profile.payGrade,
-      mos: profile.mos,
-      mosTitle: profile.mosTitle,
-      serviceStartDate: profile.serviceStartDate,
-      serviceEndDate: profile.serviceEndDate,
-      characterOfService: profile.characterOfService,
-      separationType: profile.separationType,
-    }));
+  const defaults = buildFormsHelperPrefillDefaults();
+  // Pre-fill formData with profile/records data, unless nothing at all is
+  // on file (every value would just be "").
+  if (Object.values(defaults).some(Boolean)) {
+    setFormData((prev) => ({ ...prev, ...defaults }));
   }
 }
 
