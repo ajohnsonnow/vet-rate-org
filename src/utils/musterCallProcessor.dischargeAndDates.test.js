@@ -56,14 +56,13 @@ describe("parseServiceRecord: character of service", () => {
 });
 
 describe("saved rating effective dates render as real dates", () => {
-  it("formatLocalDate rejects a prose date but accepts the stored ISO day", () => {
-    expect(Number.isNaN(formatLocalDate("September 15, 2023").getTime())).toBe(
-      true,
-    );
-    const stored = formatLocalDate("2023-09-15");
-    expect(Number.isNaN(stored.getTime())).toBe(false);
-    expect(stored.getFullYear()).toBe(2023);
-    expect(stored.getMonth()).toBe(8);
-    expect(stored.getDate()).toBe(15);
-  });
+  it.each([["September 15, 2023"], ["2023-09-15"]])(
+    "formatLocalDate reads %s as the same calendar day",
+    (value) => {
+      const stored = formatLocalDate(value);
+      expect(stored.getFullYear()).toBe(2023);
+      expect(stored.getMonth()).toBe(8);
+      expect(stored.getDate()).toBe(15);
+    },
+  );
 });
