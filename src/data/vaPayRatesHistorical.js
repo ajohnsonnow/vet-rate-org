@@ -748,8 +748,11 @@ export const analyzeRetroactivePay = (ratingHistory) => {
 
     // Calculate months covered. Iterate from the 1st of the starting month —
     // setMonth() on day 29-31 can skip a month (Jan 31 → Mar 3).
-    const currentDate = new Date(startDate);
-    currentDate.setDate(1);
+    let currentDate = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      1,
+    );
     while (currentDate < endDate) {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -792,7 +795,7 @@ export const analyzeRetroactivePay = (ratingHistory) => {
       }
 
       // Move to next month
-      currentDate.setMonth(currentDate.getMonth() + 1);
+      currentDate = new Date(year, month + 1, 1);
     }
   });
 

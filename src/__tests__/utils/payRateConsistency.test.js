@@ -133,4 +133,25 @@ describe("analyzeRetroactivePay input validation", () => {
     const months = result.periods.map((p) => p.month);
     expect(months).toContain("2025-02");
   });
+
+  it("terminates for a multi-year range and covers every bounded month (S2189)", () => {
+    // Regression test for the month-advance loop in analyzeRetroactivePay:
+    // it must reassign currentDate every iteration (not just mutate it via
+    // setMonth) so the loop is provably finite, not just finite in practice.
+    const result = analyzeRetroactivePay([
+      { effectiveDate: "2018-02-15", rating: 50, dependents: {} },
+      { effectiveDate: "2025-01-20", rating: 30, dependents: {} },
+    ]);
+
+    const firstSegment = result.periods.filter((p) => p.month < "2025-01");
+    expect(firstSegment.length).toBe(83); // 2018-02 .. 2024-12 inclusive
+    expect(firstSegment[0].month).toBe("2018-02");
+    expect(firstSegment.at(-1).month).toBe("2024-12");
+
+    // The final entry's segment runs to "now" (open-ended) — still must
+    // terminate and stay within a sane bound, not run away indefinitely.
+    const finalSegment = result.periods.filter((p) => p.month >= "2025-01");
+    expect(finalSegment.length).toBeGreaterThan(0);
+    expect(finalSegment.length).toBeLessThan(240);
+  });
 });
