@@ -7,7 +7,7 @@
  * records default.
  */
 import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import BDDBuilder from "../../components/BDDBuilder.jsx";
 import {
   updateVeteranProfile,
@@ -71,6 +71,47 @@ describe("BDDBuilder prefill from records", () => {
   it("never overwrites an already-saved BDD separation date with the records default", async () => {
     saveBDDProgress({ separationDate: "2027-06-15", branch: "navy" });
     updateVeteranProfile({ serviceEndDate: futureDate(100), branch: "Army" });
+
+    renderBDDBuilder();
+
+    await screen.findByText(/days until separation/i);
+    expect(
+      screen.queryByText(/we filled in your separation date/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the records banner across a re-open, not just the first render (regression D7)", async () => {
+    updateVeteranProfile({ serviceEndDate: futureDate(100), branch: "Army" });
+
+    const first = renderBDDBuilder();
+    await screen.findByText(/we filled in your separation date/i);
+    // Let the autosave effect (which used to drop the provenance flag) run,
+    // the way a real re-open would see it.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    first.unmount();
+
+    renderBDDBuilder();
+
+    expect(
+      await screen.findByText(/we filled in your separation date/i),
+    ).toBeInTheDocument();
+  });
+
+  it("stops showing the records banner once the veteran edits the separation date (regression D7)", async () => {
+    updateVeteranProfile({ serviceEndDate: futureDate(100), branch: "Army" });
+
+    const first = renderBDDBuilder();
+    await screen.findByText(/we filled in your separation date/i);
+
+    fireEvent.click(screen.getByRole("button", { name: /change date/i }));
+    fireEvent.change(screen.getByLabelText(/separation or ets date/i), {
+      target: { value: futureDate(120) },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /launch bdd builder/i }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    first.unmount();
 
     renderBDDBuilder();
 

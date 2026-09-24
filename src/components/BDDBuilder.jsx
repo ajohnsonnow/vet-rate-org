@@ -120,14 +120,21 @@ function getDateNDaysFromNow(n) {
 // ─────────────────────────────────────────────────────────────
 // Combines any already-saved BDD progress with a one-time records default
 // (profile/service-period separation date+branch) - the saved value always
-// wins, so this never overwrites an existing answer.
+// wins, so this never overwrites an existing answer. Whether the current
+// separation date came from records (not typed by the veteran) is itself
+// persisted in savedData.prefilledFromRecords, once set below - otherwise
+// the very first autosave (which fires as soon as the records default makes
+// separationDate non-empty) would make every later open look exactly like
+// a veteran-typed date, and the "filled in from your service record" notice
+// would only ever show once.
 function useBDDBuilderInitialState() {
   const [savedData] = useState(() => loadBDDProgress());
   const [recordsDefault] = useState(() =>
     savedData.separationDate ? null : getVeteranSeparationDefault(),
   );
   return {
-    prefilledFromRecords: Boolean(recordsDefault?.separationDate),
+    prefilledFromRecords:
+      savedData.prefilledFromRecords ?? Boolean(recordsDefault?.separationDate),
     initialSeparationDate:
       savedData.separationDate || recordsDefault?.separationDate || "",
     initialBranch: savedData.branch || recordsDefault?.branch || "",
@@ -135,14 +142,70 @@ function useBDDBuilderInitialState() {
   };
 }
 
+// The only setter ever exposed for separationDate - always a genuine
+// veteran edit (SetupView's Save/"Launch BDD Builder" button), never an
+// internal sync - so this is also the only place the provenance flag needs
+// to clear. Split out of useBDDBuilderClaimState to keep it under the
+// repo's line-count ceiling.
+function useBDDSeparationDateWithProvenance(
+  initialSeparationDate,
+  initialPrefilledFromRecords,
+) {
+  const [separationDate, setSeparationDateRaw] = useState(
+    initialSeparationDate,
+  );
+  const [prefilledFromRecords, setPrefilledFromRecords] = useState(
+    initialPrefilledFromRecords,
+  );
+
+  const setSeparationDate = (value) => {
+    setPrefilledFromRecords(false);
+    setSeparationDateRaw(value);
+  };
+
+  return { separationDate, setSeparationDate, prefilledFromRecords };
+}
+
+// Split out of useBDDBuilderClaimState to keep it under the repo's
+// line-count ceiling. Same behavior: autosave whenever anything meaningful
+// is on the form, carrying the provenance flag along with it.
+function useBDDAutosaveEffect({
+  separationDate,
+  branch,
+  checkedItems,
+  conditions,
+  prefilledFromRecords,
+}) {
+  useEffect(() => {
+    if (
+      separationDate ||
+      branch ||
+      checkedItems.size > 0 ||
+      conditions.length > 0
+    ) {
+      saveBDDProgress({
+        separationDate,
+        branch,
+        checkedItems: [...checkedItems],
+        conditions,
+        prefilledFromRecords,
+      });
+    }
+  }, [separationDate, branch, checkedItems, conditions, prefilledFromRecords]);
+}
+
 function useBDDBuilderClaimState() {
   const {
-    prefilledFromRecords,
+    prefilledFromRecords: initialPrefilledFromRecords,
     initialSeparationDate,
     initialBranch,
     savedData,
   } = useBDDBuilderInitialState();
-  const [separationDate, setSeparationDate] = useState(initialSeparationDate);
+  const { separationDate, setSeparationDate, prefilledFromRecords } =
+    useBDDSeparationDateWithProvenance(
+      initialSeparationDate,
+      initialPrefilledFromRecords,
+    );
   const [branch, setBranch] = useState(initialBranch);
   const [checkedItems, setCheckedItems] = useState(
     new Set(savedData.checkedItems || []),
@@ -168,21 +231,13 @@ function useBDDBuilderClaimState() {
     [checkedItems],
   );
 
-  useEffect(() => {
-    if (
-      separationDate ||
-      branch ||
-      checkedItems.size > 0 ||
-      conditions.length > 0
-    ) {
-      saveBDDProgress({
-        separationDate,
-        branch,
-        checkedItems: [...checkedItems],
-        conditions,
-      });
-    }
-  }, [separationDate, branch, checkedItems, conditions]);
+  useBDDAutosaveEffect({
+    separationDate,
+    branch,
+    checkedItems,
+    conditions,
+    prefilledFromRecords,
+  });
 
   const toggleCheckItem = (id) => {
     setCheckedItems((prev) => {
