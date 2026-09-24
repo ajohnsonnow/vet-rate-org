@@ -277,7 +277,11 @@ function useDkbInitialCacheCheck({
         );
         setKbStatus((prev) => ({
           ...prev,
-          isWebOptimized: false,
+          // dkbIndexedDB only ever downloads the web-optimized set now (see
+          // docs/adr/ADR-003-dkb-web-file-only.md); this stays accurate for
+          // the one edge case where isFullDKBCached() is true because a
+          // build from before that fix already cached the real full set.
+          isWebOptimized: entryCount < FULL_DATABASE_COUNT,
           dkbEntries: entryCount || FULL_DATABASE_COUNT,
           totalEntries: entryCount || FULL_DATABASE_COUNT,
           fullSources: sourceCounts,
@@ -304,7 +308,7 @@ function useDkbInitialCacheCheck({
           // Update state instead of reloading - smoother UX
           setKbStatus((prev) => ({
             ...prev,
-            isWebOptimized: false,
+            isWebOptimized: result.entryCount < FULL_DATABASE_COUNT,
             dkbEntries: result.entryCount,
             totalEntries: result.entryCount,
             fullSources: sourceCounts,
@@ -505,7 +509,7 @@ function useDkbManualDownload({
         setIsFullCached(true);
         setKbStatus((prev) => ({
           ...prev,
-          isWebOptimized: !result.isFullDB,
+          isWebOptimized: result.entryCount < FULL_DATABASE_COUNT,
           dkbEntries: result.entryCount,
           totalEntries: result.entryCount,
         }));
