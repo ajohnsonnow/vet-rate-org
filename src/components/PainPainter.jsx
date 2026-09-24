@@ -2243,7 +2243,8 @@ function usePainPainterOrchestration() {
 
   // setDetectedNexus is internal to usePainPainterEffects; the original
   // orchestration return never exposed it to callers.
-  const { setDetectedNexus: _setDetectedNexus, ...publicPainState } = painState;
+  const publicPainState = { ...painState };
+  delete publicPainState.setDetectedNexus;
 
   return {
     ...publicPainState,

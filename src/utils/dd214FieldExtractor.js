@@ -1186,15 +1186,6 @@ export function mergeAIAndRegexResults(aiResult, regexResult) {
     "seaServiceTime",
   ];
 
-  // Fields where AI is more reliable (requires interpretation)
-  const _aiPreferred = [
-    "awards",
-    "combatService",
-    "specialQualifications",
-    "narrativeReason",
-    "militaryEducation",
-  ];
-
   fillMissingFieldsFromRegex(merged, regexFields, regexPreferred, mergeNotes);
 
   // Merge deployment arrays (union)

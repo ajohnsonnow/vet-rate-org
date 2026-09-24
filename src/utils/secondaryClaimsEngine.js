@@ -368,7 +368,6 @@ function addMentalHealthTinnitusSuggestions(
   suggestions,
   alreadySuggested,
 ) {
-  const _hasPTSD = normalizedDisabilities.some((d) => d.slug === "ptsd");
   const hasTinnitus = normalizedDisabilities.some((d) => d.slug === "tinnitus");
   const hasMigraines = userDisabilities.some(
     (d) =>

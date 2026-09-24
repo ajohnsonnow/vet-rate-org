@@ -6055,12 +6055,8 @@ function useMyPacketVaState() {
   const [vaRecords, setVaRecords] = useState(null);
   const {
     isAuthenticated: isVaAuthenticated,
-    isLoading: _vaAuthLoading,
-    userInfo: _vaUserInfo,
-    login: _vaLogin,
     logout: vaLogout,
     accessToken: vaAccessToken,
-    error: _vaAuthError,
   } = useVaAuth();
   const [vaImportStatus, setVaImportStatus] = useState({
     loading: false,

@@ -12,7 +12,7 @@
  * @see https://doomwiki.org/wiki/IDDQD
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 /**
  * Classic cheat codes that trigger easter eggs
@@ -83,14 +83,17 @@ function _processIddqdKeydown(prev, key, setIsActive, setActivationCount) {
 export const useIDDQD = () => {
   const [isActive, setIsActive] = useState(false);
   const [activationCount, setActivationCount] = useState(0);
-  const [_inputBuffer, setInputBuffer] = useState("");
+  const inputBufferRef = useRef("");
 
   useEffect(() => {
     const handleKeydown = (e) => {
       // Only process single character keys
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        setInputBuffer((prev) =>
-          _processIddqdKeydown(prev, e.key, setIsActive, setActivationCount),
+        inputBufferRef.current = _processIddqdKeydown(
+          inputBufferRef.current,
+          e.key,
+          setIsActive,
+          setActivationCount,
         );
       }
     };
@@ -101,7 +104,7 @@ export const useIDDQD = () => {
 
   const deactivate = useCallback(() => {
     setIsActive(false);
-    setInputBuffer("");
+    inputBufferRef.current = "";
   }, []);
 
   return { isActive, deactivate, activationCount };
@@ -115,22 +118,20 @@ export const useIDDQD = () => {
  */
 export const useKonamiCode = () => {
   const [isTriggered, setIsTriggered] = useState(false);
-  const [_sequence, setSequence] = useState([]);
+  const sequenceRef = useRef([]);
 
   useEffect(() => {
     const handleKeydown = (e) => {
-      setSequence((prev) => {
-        const newSeq = [...prev, e.key].slice(-10);
+      const newSeq = [...sequenceRef.current, e.key].slice(-10);
 
-        if (JSON.stringify(newSeq) === JSON.stringify(CHEAT_CODES.KONAMI)) {
-          // eslint-disable-next-line no-console
-          console.log("🎮 KONAMI CODE ACTIVATED");
-          setIsTriggered(true);
-          return [];
-        }
-
-        return newSeq;
-      });
+      if (JSON.stringify(newSeq) === JSON.stringify(CHEAT_CODES.KONAMI)) {
+        // eslint-disable-next-line no-console
+        console.log("🎮 KONAMI CODE ACTIVATED");
+        setIsTriggered(true);
+        sequenceRef.current = [];
+      } else {
+        sequenceRef.current = newSeq;
+      }
     };
 
     window.addEventListener("keydown", handleKeydown);
@@ -139,7 +140,7 @@ export const useKonamiCode = () => {
 
   const reset = useCallback(() => {
     setIsTriggered(false);
-    setSequence([]);
+    sequenceRef.current = [];
   }, []);
 
   return { isTriggered, reset };

@@ -3,7 +3,7 @@ import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
-import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -1744,7 +1744,6 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
 
   const [denialText, setDenialText] = useState("");
   const { results, isLoading, error, handleDecode } = useDecisionDecode();
-  const [_aiStatus, setAIStatus] = useState(getAIStatus());
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'file'
@@ -1753,14 +1752,6 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
 
   // Benefits Reference hook for claim phase explanations
   const { getAllClaimPhases } = useVaBenefitsRef();
-
-  // Monitor AI status changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAIStatus(getAIStatus());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const footer = <DecisionDecoderFooter onClose={onClose} results={results} />;
 

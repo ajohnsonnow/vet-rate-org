@@ -1467,8 +1467,7 @@ export function calculateRackLayout(sortedAwards, ribbonsPerRow = 3) {
   const rows = [];
   const totalRibbons = sortedAwards.length;
 
-  // Calculate how many full rows and remainder
-  const _fullRows = Math.floor(totalRibbons / ribbonsPerRow);
+  // Calculate the remainder for a partial top row
   const remainder = totalRibbons % ribbonsPerRow;
 
   let index = 0;
