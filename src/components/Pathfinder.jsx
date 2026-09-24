@@ -268,13 +268,32 @@ const SIDED_BODY_PART_LABELS = {
   shoulder: "Shoulder Condition",
 };
 
+// Left/right/bilateral qualifier for a mapped condition label that doesn't
+// already carry one (SIDED_BODY_PART_LABELS' "Left Hip Condition" etc.
+// already does). Real letters rate left and right radiculopathy separately
+// ("radiculopathy, left lower extremity (femoral)" 20% / "... right lower
+// extremity (femoral)" 10%), but mapSavedRatingToCondition's keyword match
+// collapses both onto the same generic "Radiculopathy" label - without a
+// side-qualified label, normalizeConditionName-only dedup below treats them
+// as the same row and silently drops the second rating.
+const SIDE_QUALIFIER = { left: "Left", right: "Right", bilateral: "Bilateral" };
+
+function qualifyConditionLabelWithSide(name, side) {
+  const qualifier = SIDE_QUALIFIER[side];
+  if (!qualifier) return name;
+  if (new RegExp(`\\b${qualifier}\\b`, "i").test(name)) return name;
+  return `${name} (${qualifier})`;
+}
+
 // Seeds the auto-fill effect below from getMyRatings() only - actual
 // service-connected ratings. Saved claims are pending, not-yet-decided
 // claims; they don't belong under "Your Current Service-Connected Ratings"
 // (that's what the separate "Reload from My Packet" button is for), so this
-// deliberately never reads getSavedClaims(). Deduped by condition name via
-// the shared normalizer so a rating already covered by a preset/keyword
-// match doesn't also seed its raw name as a second row.
+// deliberately never reads getSavedClaims(). Deduped by condition name AND
+// side (getMyRatings() always returns a sanitized side of
+// left/right/bilateral/none) so a rating already covered by a preset/keyword
+// match doesn't also seed its raw name as a second row, while left and right
+// ratings of the same condition both survive as distinct rows.
 function buildSeedRatingsFromMyRatings() {
   const seen = new Set();
   const seeded = [];
@@ -282,12 +301,16 @@ function buildSeedRatingsFromMyRatings() {
   getMyRatings().forEach((r) => {
     const name = mapSavedRatingToCondition(r);
     const key = normalizeConditionName(name);
-    if (!key || seen.has(key)) return;
-    seen.add(key);
+    if (!key) return;
+    const side = r.side || "none";
+    const dedupeKey = `${key}|${side}`;
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
     seeded.push({
-      condition: name,
+      condition: qualifyConditionLabelWithSide(name, side),
       rating:
         r.rating !== null && r.rating !== undefined ? String(r.rating) : "",
+      side,
     });
   });
 

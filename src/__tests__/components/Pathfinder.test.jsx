@@ -150,4 +150,36 @@ describe("Pathfinder auto-seed from records - edge cases", () => {
     // dropdown is a combobox.
     expect(screen.getAllByRole("combobox")).toHaveLength(1);
   });
+
+  it("keeps left and right radiculopathy as separate rows instead of dropping one (regression D3)", async () => {
+    localStorage.setItem("vetrate_ai_consent", "true");
+    // Both fall through mapSavedRatingToCondition's keyword match to the
+    // same generic "Radiculopathy" label - only the side (from the saved
+    // rating's own `side` field) tells them apart.
+    saveMyRatings([
+      {
+        name: "radiculopathy, left lower extremity (femoral)",
+        bodyPart: "other",
+        rating: 20,
+        side: "left",
+      },
+      {
+        name: "radiculopathy, right lower extremity (femoral)",
+        bodyPart: "other",
+        rating: 10,
+        side: "right",
+      },
+    ]);
+
+    renderPathfinder();
+
+    expect(
+      await screen.findByDisplayValue("Radiculopathy (Left)"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue("Radiculopathy (Right)"),
+    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue("20%")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("10%")).toBeInTheDocument();
+  });
 });
