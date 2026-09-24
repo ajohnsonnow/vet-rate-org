@@ -34,6 +34,29 @@ describe("MOSHazardMatcher prefill from records", () => {
     expect(screen.getByText("Infantryman")).toBeInTheDocument();
   });
 
+  it("auto-selects from a real DD214 code with the skill-level digits and job title attached (regression D5)", async () => {
+    updateVeteranProfile({ mos: "11B10 Infantryman", branch: "Army" });
+
+    renderMatcher();
+
+    expect(
+      await screen.findByText(/we filled this in from your service record/i),
+    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue("11B")).toBeInTheDocument();
+    expect(screen.getByText("Infantryman")).toBeInTheDocument();
+  });
+
+  it("auto-selects from a real DD214 code with an OCR O-for-0 skill-level digit (regression D5)", async () => {
+    updateVeteranProfile({ mos: "11B1O", branch: "Army" });
+
+    renderMatcher();
+
+    expect(
+      await screen.findByText(/we filled this in from your service record/i),
+    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue("11B")).toBeInTheDocument();
+  });
+
   it("falls back to the most recent service period's MOS when the profile has none", async () => {
     addServicePeriod({
       serviceStartDate: "2010-01-01",

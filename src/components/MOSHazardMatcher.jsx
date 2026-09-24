@@ -1219,8 +1219,43 @@ function getVeteranMOSDefault() {
   return { mos: latest.mos, branch: latest.branch || "" };
 }
 
+// DD214 Box 11 stores the code plus 1-3 skill-level digits, sometimes with
+// the job title trailing it ("11B10 Infantryman"), and a real scan
+// occasionally misreads a skill-level digit as the letter O ("11B1O" for
+// "11B10"). normalizeOcrText (dd214VisionParser.js) already corrects the
+// opposite confusion (a 0 that should be a letter O) using the same kind of
+// position rule; this corrects an O sitting where a digit belongs - right
+// after another digit - the one position real MOS skill-level digits occupy.
+function normalizeMOSQuery(raw) {
+  return raw
+    .trim()
+    .toUpperCase()
+    .replace(/(?<=\d)O(?=\d|$)/g, "0");
+}
+
+// MOSHazardMatcher's database keys on the base code only ("11B"), never the
+// full code+skill-level+title string a real service record carries, so an
+// exact string match against the veteran's raw saved value almost never
+// fires. The base code is always a prefix of that raw value in real DD214
+// data (skill level and title both come after it, never before), so this
+// looks for the longest candidate code - among what searchMOS already
+// considers relevant - that prefixes the normalized query.
+function findExactMOSCode(results, rawMos) {
+  const query = normalizeMOSQuery(rawMos);
+  let best = null;
+  for (const r of results) {
+    const code = r.code.toUpperCase();
+    if (query === code) return r;
+    if (query.startsWith(code) && (!best || code.length > best.code.length)) {
+      best = r;
+    }
+  }
+  return best;
+}
+
 // Auto-selects the veteran's own MOS on first open, the same way clicking a
-// "Popular searches" code does - but only on an exact code match. A fuzzy
+// "Popular searches" code does - but only on an exact code match (base code
+// prefixing the saved value, OCR digit confusion normalized). A fuzzy
 // title-only match risks picking the wrong job code, so an unrecognized
 // saved MOS is treated as "nothing on file" (search stays blank) rather
 // than guessing.
@@ -1240,9 +1275,7 @@ function useMOSRecordsPrefill(
     const { mos, branch } = getVeteranMOSDefault();
     if (!mos) return;
     const results = searchMOS(mos);
-    const exact = results.find(
-      (r) => r.code.toLowerCase() === mos.toLowerCase(),
-    );
+    const exact = findExactMOSCode(results, mos);
     if (!exact) return;
     setSelectedMOS(exact);
     setSearchQuery(exact.code);
