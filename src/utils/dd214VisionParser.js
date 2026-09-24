@@ -582,11 +582,9 @@ function extractName(text) {
     // Numbered block format
     /1\.\s*name[:\s]+([A-Z][A-Z\-']+),\s*([A-Z][A-Z\-']+)(?:\s+([A-Z][A-Z\-']*))?/i,
     // Name followed by SSN or digits
-    // eslint-disable-next-line sonarjs/slow-regex -- three chained unbounded quantifiers gated by a trailing lookahead; rewriting the backtracking shape risks changing which text is captured as last/first/middle without a DD214 sample corpus to validate against
-    /([A-Z]{2,}),\s+([A-Z]{2,})(?:\s+([A-Z]{2,}))?(?=\s*(?:\d|ssn|social))/i,
+    /([A-Z]{2,50}),\s{1,10}([A-Z]{2,50})(?:\s{1,10}([A-Z]{2,50}))?(?=\s{0,10}(?:\d|ssn|social))/i,
     // Florence-2 may output: "WILLIAMS JOHN ROBERT" or "LAST: WILLIAMS FIRST: JOHN"
-    // eslint-disable-next-line sonarjs/slow-regex -- unbounded name-character quantifier followed by a literal "first" check; greedy-to-lazy or other backtracking rewrites can shift the matched name boundary and aren't safe to guess without a document corpus
-    /last\s*name?\s*[:-]?\s*([A-Z][a-z\-']+)\s+first\s*name?\s*[:-]?\s*([a-z\-']+)/i,
+    /last\s{0,10}name?\s{0,10}[:-]?\s{0,10}([A-Z][a-z\-']{1,50})\s{1,10}first\s{0,10}name?\s{0,10}[:-]?\s{0,10}([a-z\-']{1,50})/i,
     // Veterans name format - flexible
     /(?:member|veteran|service\s*member)'?s?\s*name[:\s]+([A-Z][a-z\-']+),?\s*([a-z\-']+)/i,
   ];
@@ -1123,8 +1121,7 @@ function extractReentryCode(text) {
  */
 function extractNarrativeReason(text) {
   const pattern =
-    // eslint-disable-next-line sonarjs/slow-regex -- input is OCR text from a user's own DD214, bounded to a few KB, not attacker-controlled; a mechanical rewrite of the [:\s]+/[a-z\s,]+ overlap risks changing which narrative text gets captured
-    /(?:narrative\s*reason|reason\s*for\s*separation)[:\s]+([a-z\s,]+)(?=\s*(?:\d|29|block))/i;
+    /(?:narrative\s{0,10}reason|reason\s{0,10}for\s{0,10}separation)[:\s]{1,20}([a-z\s,]{1,300})(?=\s{0,10}(?:\d|29|block))/i;
   const match = text.match(pattern);
 
   if (match) {

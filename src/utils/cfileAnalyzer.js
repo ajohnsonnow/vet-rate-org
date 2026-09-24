@@ -279,8 +279,7 @@ function _repairNormalizeControlChars(content) {
 
 function _repairMissingOpeningQuote(content) {
   const fixed = content.replace(
-    // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
-    /(:\s*)(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]+?)("\s*[,\n}\]])/g,
+    /(:\s{0,20})(?!")(?!true\b|false\b|null\b|[\d[{-])([^"\n]{1,2000}?)("\s{0,20}[,\n}\]])/g,
     (_, colon, value, closingPart) => `${colon}"${value.trim()}${closingPart}`,
   );
   return JSON.parse(fixed);
@@ -312,8 +311,7 @@ function _repairCloseOpenBrackets(content) {
 }
 
 function _repairInsertMissingCommas(content) {
-  // eslint-disable-next-line sonarjs/slow-regex -- best-effort JSON repair on AI output; on ReDoS-slow input this strategy simply fails and the next fallback strategy runs
-  const fixed = content.replace(/\}\s*\n(\s*)\{/g, "},\n$1{");
+  const fixed = content.replace(/\}\s{0,20}\n(\s{0,20})\{/g, "},\n$1{");
   return JSON.parse(fixed);
 }
 
@@ -758,8 +756,7 @@ const PAGE_RELEVANCE_PATTERN = new RegExp(
  * filter would discard nearly everything, the original text is returned.
  */
 export function screenRelevantPages(fullText) {
-  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
-  const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
+  const pageRegex = /--- PAGE (\d{1,6})[^\n]{0,200}---/g;
   const markers = [...fullText.matchAll(pageRegex)];
   if (markers.length < 10) {
     return { text: fullText, totalPages: markers.length, skippedPages: 0 };
@@ -2560,8 +2557,7 @@ async function analyzeChunk(
  * No overlap, no size limits - each page is its own entry.
  */
 function parseAllPages(fullText) {
-  // eslint-disable-next-line sonarjs/slow-regex -- bounded [^\n]* between literal markers we generate ourselves, not exponential backtracking
-  const pageRegex = /--- PAGE (\d+)[^\n]*---/g;
+  const pageRegex = /--- PAGE (\d{1,6})[^\n]{0,200}---/g;
   const pages = [];
   let prev = null;
   let match;
@@ -2768,6 +2764,47 @@ function _prepareMedicalPages(fullText, onProgress) {
   return { medicalPages, skippedPages };
 }
 
+/** Back off before a retry attempt; a no-op on the first (attempt === 0) try. */
+async function _waitForRetryBackoff(attempt) {
+  if (attempt > 0) {
+    await new Promise((r) => setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt));
+  }
+}
+
+/** Wait out an open AI circuit breaker before the caller retries the page. */
+async function _waitForCircuitBreaker(pageNum, i, ctx) {
+  ctx.onProgress(`AI engine paused - waiting 30s before page ${pageNum}…`, {
+    phase: "circuit-wait",
+    current: i + 1,
+    total: ctx.totalPages,
+  });
+  await new Promise((r) => setTimeout(r, 31000));
+  resetAICircuitBreaker();
+}
+
+/**
+ * Decide how `_runPageWithRetries` should respond to one page-analysis
+ * failure: retry (after waiting out an open circuit breaker), give up on
+ * this page with an empty result, propagate a user cancellation, or fall
+ * through to the loop's normal next-attempt behavior.
+ */
+async function _resolvePageRetryAction(error, pageNum, i, ctx, circuitWaits) {
+  if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+    await _waitForCircuitBreaker(pageNum, i, ctx);
+    return "retry";
+  }
+  if (
+    error.message?.includes("context window") ||
+    error.message?.includes("too large for Local AI")
+  ) {
+    return "giveUp";
+  }
+  if (error.message === "Analysis cancelled by user") {
+    return "cancelled";
+  }
+  return "none";
+}
+
 async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
   let result = null;
   let lastError = null;
@@ -2778,11 +2815,7 @@ async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
       throw new Error("Analysis cancelled by user");
     }
     try {
-      if (attempt > 0) {
-        await new Promise((r) =>
-          setTimeout(r, CHUNK_RETRY_BACKOFF_MS * attempt),
-        );
-      }
+      await _waitForRetryBackoff(attempt);
       result = await analyzePage(text, pageNum, ctx.totalPages, ctx.onProgress);
       lastError = null;
       break;
@@ -2792,31 +2825,23 @@ async function _runPageWithRetries(text, pageNum, i, ctx, abortController) {
         `Error on page ${pageNum} (attempt ${attempt + 1}): ${error?.message}`,
       );
 
-      if (error.message?.includes("AI_CIRCUIT_OPEN") && circuitWaits < 3) {
+      const action = await _resolvePageRetryAction(
+        error,
+        pageNum,
+        i,
+        ctx,
+        circuitWaits,
+      );
+      if (action === "retry") {
         circuitWaits++;
-        ctx.onProgress(
-          `AI engine paused - waiting 30s before page ${pageNum}…`,
-          {
-            phase: "circuit-wait",
-            current: i + 1,
-            total: ctx.totalPages,
-          },
-        );
-        await new Promise((r) => setTimeout(r, 31000));
-        resetAICircuitBreaker();
         attempt--;
         continue;
       }
-
-      if (
-        error.message?.includes("context window") ||
-        error.message?.includes("too large for Local AI")
-      ) {
+      if (action === "giveUp") {
         result = createEmptyChunkResult();
         break;
       }
-
-      if (error.message === "Analysis cancelled by user") throw error;
+      if (action === "cancelled") throw error;
     }
   }
 
