@@ -30,6 +30,16 @@ describe("D-8: formatLocalDate", () => {
     expect(Number.isNaN(formatLocalDate("").getTime())).toBe(true);
   });
 
+  it.each([["July 31, 2015"], ["07/31/2015"]])(
+    "reads the calendar day from a saved non-ISO date (%s)",
+    (value) => {
+      const date = formatLocalDate(value);
+      expect(date.getFullYear()).toBe(2015);
+      expect(date.getMonth()).toBe(6);
+      expect(date.getDate()).toBe(31);
+    },
+  );
+
   it("also handles a full ISO string derived from a date-only input (ClaimNavigator's DateCard pattern)", () => {
     const date = formatLocalDate("2026-03-15T00:00:00.000Z");
     expect(date.getFullYear()).toBe(2026);

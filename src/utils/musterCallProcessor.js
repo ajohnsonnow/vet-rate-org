@@ -1132,7 +1132,7 @@ const _filenameDate = (fileName) => {
 // absolute last resort reports no real date at all instead of fabricating
 // "today". Returns { date, dateIsProcessingDate } - date is null when
 // nothing real was found.
-const _resolveTimelineDate = (result, fileName) => {
+export const resolveTimelineDate = (result, fileName) => {
   const d = result.extractedData || {};
   const extracted =
     d.serviceEndDate ||
@@ -1144,7 +1144,14 @@ const _resolveTimelineDate = (result, fileName) => {
     d.dateOfService ||
     _filenameDate(fileName) ||
     null;
-  if (extracted) return { date: extracted, dateIsProcessingDate: false };
+  // EvidenceTimeline renders through formatLocalDate, which only reads
+  // YYYY-MM-DD; letters and DD214s give "July 31, 2015" or "05/30/2015".
+  if (extracted) {
+    return {
+      date: _toIsoDay(extracted) ?? extracted,
+      dateIsProcessingDate: false,
+    };
+  }
   return { date: null, dateIsProcessingDate: true };
 };
 
@@ -1186,7 +1193,7 @@ const appendMusterCallTimelineEntry = async (file, result) => {
       result.classification?.type ||
       "Document";
     const description = `${label}: ${file.name}`;
-    const { date, dateIsProcessingDate } = _resolveTimelineDate(
+    const { date, dateIsProcessingDate } = resolveTimelineDate(
       result,
       file.name,
     );

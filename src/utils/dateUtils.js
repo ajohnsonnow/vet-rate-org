@@ -23,5 +23,10 @@ export const formatLocalDate = (dateString) => {
   // — the intent is still a calendar day, not a real instant, so only the
   // YYYY-MM-DD portion is meaningful here.
   const datePart = String(dateString).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    // Prose ("July 31, 2015") and US ("05/30/2015") dates saved from letters
+    // and DD214s already parse at local midnight.
+    return new Date(dateString);
+  }
   return new Date(`${datePart}T00:00:00`);
 };

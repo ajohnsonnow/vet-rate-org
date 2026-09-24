@@ -20,7 +20,7 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { findDuplicateTimelineEntry } =
+const { findDuplicateTimelineEntry, resolveTimelineDate } =
   await import("../../utils/musterCallProcessor");
 
 const importEntry = (overrides = {}) => ({
@@ -99,5 +99,20 @@ describe("FIX-12: findDuplicateTimelineEntry", () => {
       }
     }
     expect(timeline).toHaveLength(4);
+  });
+});
+
+describe("resolveTimelineDate", () => {
+  it.each([
+    ["July 31, 2015", "2015-07-31"],
+    ["4/20/2023", "2023-04-20"],
+    ["2024-05-08", "2024-05-08"],
+  ])("stores the letter date %s as %s", (decisionDate, expected) => {
+    const { date, dateIsProcessingDate } = resolveTimelineDate(
+      { extractedData: { decisionDate } },
+      "ClaimLetter-2010-1-1.pdf",
+    );
+    expect(date).toBe(expected);
+    expect(dateIsProcessingDate).toBe(false);
   });
 });
