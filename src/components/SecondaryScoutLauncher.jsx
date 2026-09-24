@@ -834,6 +834,54 @@ const exampleProfiles = [
   },
 ];
 
+const CONDITION_SKIP_WORDS = [
+  "the",
+  "and",
+  "for",
+  "your",
+  "this",
+  "that",
+  "with",
+  "from",
+  "have",
+  "been",
+  "will",
+  "evidence",
+  "records",
+  "medical",
+  "examination",
+];
+
+function _cleanConditionName(rawCondition) {
+  return (
+    rawCondition
+      .replace(/\s+/g, " ")
+      .replace(/^\d+%?\s*/, "")
+      // \s{0,20} not \s*: same load-bearing bound as above -- confirmed
+      // 3s+ at 80k chars unbounded, 0-12ms bounded.
+      .replace(/\s{0,20}[-–—:]\s{0,20}\d{1,3}%?\s*$/, "")
+      .replace(/^\s*for\s+/i, "")
+      .trim()
+  );
+}
+
+/** Clean, validate, dedupe, and (if novel) register one extracted condition. */
+function _registerCondition(rawCondition, conditions, seenConditions) {
+  const condition = _cleanConditionName(rawCondition);
+
+  // Skip if too short, too long, or common non-condition text
+  if (condition.length < 3 || condition.length > 100) return;
+  if (CONDITION_SKIP_WORDS.includes(condition.toLowerCase())) return;
+
+  // Normalize for deduplication
+  const normalized = condition.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (seenConditions.has(normalized) || normalized.length <= 2) return;
+
+  seenConditions.add(normalized);
+  // Capitalize first letter of each word
+  conditions.push(condition.replace(/\b\w/g, (c) => c.toUpperCase()));
+}
+
 export function parseConditionsFromText(text) {
   const conditions = [];
   const seenConditions = new Set();
@@ -850,14 +898,11 @@ export function parseConditionsFromText(text) {
   // equivalent on realistic fixtures, 0-40ms even at 200k chars.
   const patterns = [
     // "XX% rating for [condition]" format
-    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
-    /(\d{1,3})%?\s+(?:rating|disability|service.connected)?\s*(?:for|:)?\s*([^,\n]{1,150})/gi,
+    /(\d{1,3})%?\s{1,10}(?:rating|disability|service.connected)?\s{0,10}(?:for|:)?\s{0,10}([^,\n]{1,150})/gi,
     // "Service connection for [condition] is granted/continued"
-    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
-    /service\s+connection\s+(?:for\s+)?([^,\n.]{1,150}?)(?:\s+is|\s+has been|\s+granted|\s+continued)/gi,
+    /service\s{1,10}connection\s{1,10}(?:for\s{1,10})?([^,\n.]{1,150}?)(?:\s{1,10}is|\s{1,10}has been|\s{1,10}granted|\s{1,10}continued)/gi,
     // "Your [condition] is rated at XX%"
-    // eslint-disable-next-line sonarjs/slow-regex -- capture bounded to {1,150}; measured 0-1ms at 200k chars (worst-case shape), not a real DoS
-    /your\s+([^,\n]{1,150}?)\s+is\s+rated\s+at\s+(\d+)%/gi,
+    /your\s{1,10}([^,\n]{1,150}?)\s{1,10}is\s{1,10}rated\s{1,10}at\s{1,10}(\d{1,3})%/gi,
     // Diagnostic Code patterns: "[Condition], Diagnostic Code XXXX"
     // eslint-disable-next-line sonarjs/slow-regex -- all quantifiers bounded ({1,80}/{1,40}/{0,5}); measured 93ms at 500k chars (worst-case shape), not a real DoS
     /([A-Z][a-z\s]{1,80}(?:,\s*[a-z]{1,40}){0,5}),?\s+(?:DC|Diagnostic Code)\s*\d{4}/gi,
@@ -870,47 +915,9 @@ export function parseConditionsFromText(text) {
   for (const pattern of patterns) {
     let match;
     while ((match = pattern.exec(text)) !== null) {
-      let condition = match[1]?.trim() || match[2]?.trim();
-      if (condition) {
-        // Clean up the condition name
-        condition = condition
-          .replace(/\s+/g, " ")
-          .replace(/^\d+%?\s*/, "")
-          // \s{0,20} not \s*: same load-bearing bound as above -- confirmed
-          // 3s+ at 80k chars unbounded, 0-12ms bounded.
-          .replace(/\s{0,20}[-–—:]\s{0,20}\d{1,3}%?\s*$/, "")
-          .replace(/^\s*for\s+/i, "")
-          .trim();
-
-        // Skip if too short, too long, or common non-condition text
-        if (condition.length < 3 || condition.length > 100) continue;
-        const skipWords = [
-          "the",
-          "and",
-          "for",
-          "your",
-          "this",
-          "that",
-          "with",
-          "from",
-          "have",
-          "been",
-          "will",
-          "evidence",
-          "records",
-          "medical",
-          "examination",
-        ];
-        if (skipWords.some((w) => condition.toLowerCase() === w)) continue;
-
-        // Normalize for deduplication
-        const normalized = condition.toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (!seenConditions.has(normalized) && normalized.length > 2) {
-          seenConditions.add(normalized);
-          // Capitalize first letter of each word
-          condition = condition.replace(/\b\w/g, (c) => c.toUpperCase());
-          conditions.push(condition);
-        }
+      const rawCondition = match[1]?.trim() || match[2]?.trim();
+      if (rawCondition) {
+        _registerCondition(rawCondition, conditions, seenConditions);
       }
     }
   }
@@ -1050,8 +1057,7 @@ function _extractDisplayCondition(condition, getDCCode) {
   // Extract DC code from condition name if present
   // Matches: (DC 7542), (DC 7542, 7543), (rated under DC 5024), (DC 5003, 5201)
   const dcMatch = condition.match(
-    // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-    /\s*\((?:rated under |rated analogously under )?DC\s*([\d,\s-]+)\)/i,
+    /\s{0,10}\((?:rated under |rated analogously under )?DC\s{0,10}([\d,\s-]{1,50})\)/i,
   );
   let displayDCCode = null;
   let displayCondition = condition;
@@ -1067,10 +1073,8 @@ function _extractDisplayCondition(condition, getDCCode) {
   ) {
     // Has a "rated under" clause but no specific DC - don't look up, just clean the display
     displayCondition = condition
-      // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-      .replace(/\s*\(rated under [^)]+\)/gi, "")
-      // eslint-disable-next-line sonarjs/slow-regex -- runs on already-extracted, short display strings
-      .replace(/\s*\(rated analogously[^)]*\)/gi, "")
+      .replace(/\s{0,10}\(rated under [^)]{1,200}\)/gi, "")
+      .replace(/\s{0,10}\(rated analogously[^)]{0,200}\)/gi, "")
       .trim();
   } else {
     // Try to look up DC code from disabilityData
@@ -2154,8 +2158,9 @@ function _parseManualConditions(manualInput) {
   return lines
     .map((line) => {
       // Check if line matches VA.gov format: "XX% rating for [condition]"
-      // eslint-disable-next-line sonarjs/slow-regex -- single-line, non-nested quantifiers
-      const vaFormatMatch = line.match(/^\d+%\s+rating\s+for\s+(.+)$/i);
+      const vaFormatMatch = line.match(
+        /^\d{1,3}%\s{1,10}rating\s{1,10}for\s{1,10}(.{1,500})$/i,
+      );
       if (vaFormatMatch) {
         // Extract just the condition name, capitalize properly
         let condition = vaFormatMatch[1].trim();

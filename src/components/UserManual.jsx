@@ -3865,11 +3865,13 @@ function _renderInline(text) {
   // Handle links - sanitize the href so a future contributor cannot land a
   // javascript: URL in the static manual content. sanitizeUrl returns '#'
   // for any non-http(s)/mailto/tel protocol.
-  // eslint-disable-next-line sonarjs/slow-regex -- runs on static, developer-authored manual content, not user input
-  text = text.replace(/\[(.+?)\]\((.+?)\)/g, (_match, label, url) => {
-    const safeUrl = sanitizeUrl(url);
-    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
-  });
+  text = text.replace(
+    /\[(.{1,2000}?)\]\((.{1,2000}?)\)/g,
+    (_match, label, url) => {
+      const safeUrl = sanitizeUrl(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-va-blue dark:text-va-gold hover:underline">${label}</a>`;
+    },
+  );
 
   // Safe-by-construction: input is escapeHtml()'d first (above), then only a
   // fixed allow-list of tags is re-introduced and link hrefs are sanitizeUrl()-

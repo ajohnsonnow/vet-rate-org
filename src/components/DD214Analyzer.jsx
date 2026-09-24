@@ -644,8 +644,7 @@ function _parseDd214Json(content, t) {
     if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
 
     // Try to find JSON object in the response if it's mixed with other text
-    // eslint-disable-next-line sonarjs/slow-regex -- runs on our own AI's response text, not adversarial input
-    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+    const jsonMatch = cleanContent.match(/\{[\s\S]{0,100000}\}/);
     if (jsonMatch) {
       cleanContent = jsonMatch[0];
     }

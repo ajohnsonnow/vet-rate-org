@@ -1126,13 +1126,11 @@ const PathfinderDropInModal = ({
   );
 };
 
-function _extractRatingsFromText(text) {
+export function _extractRatingsFromText(text) {
   // Look for patterns like "PTSD - 70%" or "Condition: PTSD, Rating: 70%"
   const ratingPatterns = [
-    // eslint-disable-next-line sonarjs/slow-regex -- nested quantifier already removed; empirically verified O(n^2) via .exec() loop restarts, not exponential (see PR notes)
-    /([A-Z][a-z\s]+)\s*[-:]\s*(\d+)%?/gi, // "PTSD - 70%" or "PTSD: 70"
-    // eslint-disable-next-line sonarjs/slow-regex -- same as above; single quantifier, no nesting, no catastrophic backtracking
-    /(\d+)%?\s+for\s+([A-Z][a-z\s]+)/gi, // "70% for PTSD"
+    /([A-Z][a-z\s]{1,100})\s{0,10}[-:]\s{0,10}(\d{1,3})%?/gi, // "PTSD - 70%" or "PTSD: 70"
+    /(\d{1,3})%?\s{1,10}for\s{1,10}([A-Z][a-z\s]{1,100})/gi, // "70% for PTSD"
   ];
 
   const extractedRatings = [];

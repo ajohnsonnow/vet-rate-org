@@ -11,20 +11,19 @@ import {
  * Strips ANGLE/driver wrapper from WebGPU adapter description strings.
  * "ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 SUPER Direct3D11 ...)" → "NVIDIA GeForce RTX 4080 SUPER"
  */
-function friendlyGpuName(desc) {
+export function friendlyGpuName(desc) {
   if (!desc) return null;
   // Apple Silicon: bare "Apple M1" / "Apple M2 Pro" - no ANGLE wrapper
   if (/^Apple M\d/i.test(desc)) return desc.trim().slice(0, 50);
   // Windows/Linux: "ANGLE (NVIDIA, NVIDIA GeForce RTX 4080 SUPER Direct3D11...)"
   const angleMatch = desc.match(
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- character classes ([^,]) and stop-alternatives don't overlap, so backtracking is bounded; rewriting risks mis-parsing real-world GPU description strings
-    /ANGLE\s*\([^,]+,\s*([^,]+?)(?:\s+Direct3D|\s+Metal|\s+Vulkan|\s+vs_|\s*Direct|\s*,)/i,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the count of stop-alternatives (5 GPU-API suffixes), not backtracking; bounded below for S8786
+    /ANGLE\s{0,10}\([^,]{1,200},\s{0,10}([^,]{1,200}?)(?:\s{1,10}Direct3D|\s{1,10}Metal|\s{1,10}Vulkan|\s{1,10}vs_|\s{0,10}Direct|\s{0,10},)/i,
   );
   if (angleMatch) return angleMatch[1].trim();
   return (
     desc
-      // eslint-disable-next-line sonarjs/slow-regex -- \s and \S are disjoint character classes with no overlap, so this cannot backtrack catastrophically
-      .replace(/\s*(Direct3D|Metal|Vulkan|OpenGL)\S*/gi, "")
+      .replace(/\s{0,10}(Direct3D|Metal|Vulkan|OpenGL)\S{0,50}/gi, "")
       .trim()
       .slice(0, 50) || null
   );

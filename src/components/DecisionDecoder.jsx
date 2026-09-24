@@ -211,8 +211,7 @@ const DENIAL_PATTERNS = [
   },
   {
     test: (text, t) =>
-      // eslint-disable-next-line sonarjs/slow-regex -- keyword-alternation heuristic over short pasted denial text (local textarea input, not attacker-controlled); a mechanical rewrite risks silently breaking "Granted" detection for real VA letter phrasings
-      /granted|service.connected.*at.*%|assigned.*rating.*%|%.*(combined|combined rating)/i.test(
+      /granted|service.connected.{0,200}at.{0,200}%|assigned.{0,200}rating.{0,200}%|%.{0,200}(combined|combined rating)/i.test(
         text,
       ) && !/denied|not.*service.connected/i.test(t),
     decision_type: "Granted",
