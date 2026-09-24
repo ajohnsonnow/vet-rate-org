@@ -581,7 +581,7 @@ const PathfinderAnalyzeButton = ({
     disabled={
       isAnalyzing ||
       !isAnyAIAvailable() ||
-      ratings.filter((r) => r.condition && r.condition.trim()).length === 0
+      ratings.filter((r) => r.condition?.trim()).length === 0
     }
     className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
   >
@@ -876,8 +876,7 @@ const PathfinderResultsSection = ({
   handlePracticeExam,
   setResults,
 }) =>
-  results &&
-  results.success && (
+  results?.success && (
     <div className="space-y-6">
       <PathfinderStrategyOverview results={results} t={t} />
 

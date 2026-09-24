@@ -251,7 +251,7 @@ class GPUDiscoveryEngine {
 
     // 2. The "Filter" - Deduplicate adapters based on vendor/architecture signature
     for (const result of results) {
-      if (!result || !result.adapter) continue;
+      if (!result?.adapter) continue;
       this._registerAdapterResult(result);
     }
 
@@ -692,7 +692,7 @@ class GPUDiscoveryEngine {
       if (!adapterEntry) return "Unknown";
 
       // First, try WebGL info if available
-      if (adapterEntry.webglInfo && adapterEntry.webglInfo.vram) {
+      if (adapterEntry.webglInfo?.vram) {
         return `${adapterEntry.webglInfo.vram} GB`;
       }
 

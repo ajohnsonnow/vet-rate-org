@@ -1792,7 +1792,7 @@ async function _attemptChunkExtraction(
   const parsed = parseAIResponse(aiResponse);
 
   // Success! Return results
-  if (parsed && parsed.conditions && Array.isArray(parsed.conditions)) {
+  if (parsed?.conditions && Array.isArray(parsed.conditions)) {
     // eslint-disable-next-line no-console
     console.log(
       `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,

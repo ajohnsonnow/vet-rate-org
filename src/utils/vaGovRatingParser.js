@@ -33,8 +33,7 @@ function _parseServiceConnectedSection(text) {
   );
 
   const serviceConnected = [];
-  if (!serviceConnectedMatch || !serviceConnectedMatch[1])
-    return serviceConnected;
+  if (!serviceConnectedMatch?.[1]) return serviceConnected;
 
   const serviceConnectedText = serviceConnectedMatch[1];
 
@@ -88,8 +87,7 @@ function _parseNotServiceConnectedSection(text) {
   );
 
   const notServiceConnected = [];
-  if (!notServiceConnectedMatch || !notServiceConnectedMatch[1])
-    return notServiceConnected;
+  if (!notServiceConnectedMatch?.[1]) return notServiceConnected;
 
   const lines = notServiceConnectedMatch[1]
     .split("\n")

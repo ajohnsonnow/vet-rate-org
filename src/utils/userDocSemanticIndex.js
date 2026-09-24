@@ -380,7 +380,7 @@ export async function semanticSearchDocument({
   embed = embedText,
   store,
 }) {
-  if (!sessionKey || !queryText || !queryText.trim()) return [];
+  if (!sessionKey || !queryText?.trim()) return [];
   const queryVec = await embed(queryText);
   const ownStore = !store;
   const vecStore = store || (await createIdbStore());

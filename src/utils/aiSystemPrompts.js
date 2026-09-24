@@ -885,7 +885,7 @@ function formatStatementsSection(statements) {
  * Build the veteran's data context prompt
  */
 function buildVeteranDataPrompt(veteranContext) {
-  if (!veteranContext || !veteranContext.hasData) {
+  if (!veteranContext?.hasData) {
     return "";
   }
 
@@ -1458,7 +1458,7 @@ function scoreDKBEntry(entry, query, queryTerms, isDCQuery, intent) {
  */
 export async function searchDKB(query, topK = 10) {
   const dkb = await loadDKB();
-  if (!dkb || !dkb.entries) return [];
+  if (!dkb?.entries) return [];
 
   const queryTerms = query
     .toLowerCase()

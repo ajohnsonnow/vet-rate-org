@@ -362,8 +362,7 @@ function computeOCRPoolConfig(strategy, config, pagesToProcess) {
     : config.CANVAS_SCALES;
 
   const deviceOCRWorkers =
-    (typeof getCachedDeviceProfile !== "undefined" &&
-      getCachedDeviceProfile?.()?.ocrWorkers) ||
+    getCachedDeviceProfile?.()?.ocrWorkers ||
     Math.max(2, (navigator.hardwareConcurrency || 4) - 2);
   const poolSize = Math.min(deviceOCRWorkers, 8, pagesToProcess);
 

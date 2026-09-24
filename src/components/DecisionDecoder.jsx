@@ -333,7 +333,7 @@ function patternMatchDenial(text) {
 }
 
 function getDecodeErrorMessage(err) {
-  if (err.message && err.message.includes("TIMEOUT")) {
+  if (err.message?.includes("TIMEOUT")) {
     return (
       "⏱️ The AI request timed out after 90 seconds. This usually means:\n\n" +
       "• The AI model is still loading (wait a few more seconds and try again)\n" +

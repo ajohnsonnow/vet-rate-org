@@ -1118,7 +1118,7 @@ export function calculateOverseasBars(foreignServiceMonths, isWartime = false) {
 
 export function calculateServiceStripes(totalYearsService, branch = "Army") {
   const config = SERVICE_STRIPES[branch];
-  if (!config || !config.yearsPerStripe) {
+  if (!config?.yearsPerStripe) {
     return { count: 0, note: "Uses ribbon instead of stripes" };
   }
 

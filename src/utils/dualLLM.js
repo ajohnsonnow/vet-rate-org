@@ -137,7 +137,7 @@ async function _runDualLLM(
     { contentLabel, generateAIOptions: extractOptions },
   );
 
-  const injectionAttempt = !!(fields && fields._injection_attempt === true);
+  const injectionAttempt = fields?._injection_attempt === true;
 
   if (injectionAttempt) {
     return {

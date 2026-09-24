@@ -1392,7 +1392,7 @@ function parseApproxDate(dateStr) {
  */
 export function enforceValidDiagnosticCodes(analysis) {
   const rejected = [];
-  if (!analysis || !Array.isArray(analysis.potential_claims)) {
+  if (!Array.isArray(analysis?.potential_claims)) {
     return rejected;
   }
 

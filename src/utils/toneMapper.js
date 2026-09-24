@@ -229,7 +229,7 @@ export const getClosingPhrase = (model) => {
  */
 export const translateTerm = (term, langCode = "en") => {
   const langData = multilingualTone.languages[langCode];
-  if (!langData || !langData.terms) return term;
+  if (!langData?.terms) return term;
 
   const termKey = term.toLowerCase().replace(/[^a-z_]/g, "_");
   return langData.terms[termKey] || term;
@@ -243,7 +243,7 @@ export const translateTerm = (term, langCode = "en") => {
  */
 export const getSupportPhrase = (phraseKey, langCode = "en") => {
   const langData = multilingualTone.languages[langCode];
-  if (!langData || !langData.support_phrases) {
+  if (!langData?.support_phrases) {
     return multilingualTone.languages.en.support_phrases[phraseKey] || "";
   }
   return langData.support_phrases[phraseKey] || "";

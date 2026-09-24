@@ -1286,7 +1286,7 @@ function detectCombatService(text, awards) {
   const indicators = [];
 
   // Combat awards
-  if (awards && awards.some((a) => a.isCombat)) {
+  if (awards?.some((a) => a.isCombat)) {
     indicators.push("Combat Awards Present");
   }
 

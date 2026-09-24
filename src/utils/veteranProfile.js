@@ -326,7 +326,7 @@ export const getSavedForms = () => {
  */
 export const saveForm = (form) => {
   try {
-    if (!form || !form.formType || !VALID_FORM_TYPES.includes(form.formType)) {
+    if (!form?.formType || !VALID_FORM_TYPES.includes(form.formType)) {
       console.error("Invalid form type:", form?.formType);
       return null;
     }

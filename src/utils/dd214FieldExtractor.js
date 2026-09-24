@@ -36,7 +36,7 @@ const DD214_FIELD_PATTERNS = {
       /NAME[:\s]*(?:LAST,?\s*FIRST,?\s*(?:AND\s*)?MIDDLE)[:\s.]*([A-Z][A-Z,.\s'-]+)/i,
       /(?:^|\n)\s{0,20}([A-Z]{2,}(?:\s*,\s*[A-Z]{2,}){1,2})\s{0,20}(?:\n|$)/m,
     ],
-    validate: (val) => val && val.includes(",") && val.length > 4,
+    validate: (val) => val?.includes(",") && val.length > 4,
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
   },
 
@@ -729,9 +729,7 @@ function extractDeployments(remarksText) {
   for (const pattern of opPatterns) {
     let match;
     while ((match = pattern.exec(remarksText)) !== null) {
-      const existing = deployments.find(
-        (d) => d.raw && d.raw.includes(match[0]),
-      );
+      const existing = deployments.find((d) => d.raw?.includes(match[0]));
       if (!existing) {
         deployments.push({
           operation: match[1] || match[0],
