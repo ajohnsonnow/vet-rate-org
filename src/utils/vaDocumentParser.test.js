@@ -314,3 +314,30 @@ describe("vaDocumentParser: parseHLR (ReDoS regression)", () => {
     expect(elapsed).toBeLessThan(1000);
   });
 });
+
+describe("vaDocumentParser: parseCodeSheet on a real code sheet layout", () => {
+  it("reads VA's SUBJECT TO COMPENSATION sheet instead of the loose DC list", () => {
+    const result = parseCodeSheet(
+      "Rating Decision Department of Veterans Affairs Page 1 of 2 05/06/2024 NAME OF VETERAN X COPY TO ACTIVE DUTY " +
+        "SUBJECT TO COMPENSATION (1.SC) 9411 POST-TRAUMATIC STRESS DISORDER [PTSD - Combat/Combat Medal] Service Connected, Gulf War, Incurred 30% from 06/30/2007 50% from 03/31/2023 " +
+        "6260 TINNITUS Service Connected, Gulf War, Incurred 10% from 03/31/2023 " +
+        "COMBINED EVALUATION FOR COMPENSATION : 30% from 06/30/2007 60% from 03/31/2023",
+    );
+    expect(result.combinedRating).toBe(60);
+    expect(result.conditions).toEqual([
+      {
+        diagnosticCode: "9411",
+        name: "Post-traumatic stress disorder",
+        percent: 50,
+      },
+      { diagnosticCode: "6260", name: "Tinnitus", percent: 10 },
+    ]);
+  });
+
+  it("does not read years or page numbers as diagnostic codes", () => {
+    const result = parseCodeSheet(
+      "Effective 2007 ) 30% and 2023 40% on page 1234 - total 70%",
+    );
+    expect(result.conditions).toEqual([]);
+  });
+});

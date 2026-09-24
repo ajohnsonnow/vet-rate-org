@@ -21,6 +21,8 @@
  * The "fluff" is predictable, so we can skip it programmatically.
  */
 
+import { latestRatingCodeSheet } from "./vaCodeSheet.js";
+
 /**
  * VA Document Section Headers (Regex Anchors)
  * These are the standardized headings used across VA correspondence
@@ -847,11 +849,28 @@ export function parseCodeSheet(text) {
     confidence: 0,
   };
 
+  const sheet = latestRatingCodeSheet(text);
+  if (sheet) {
+    return {
+      ...result,
+      sheetDate: sheet.sheetDate,
+      combinedRating: sheet.combinedRating,
+      conditions: sheet.conditions.map((c) => ({
+        diagnosticCode: c.diagnosticCode,
+        name: c.name,
+        percent: c.rating,
+      })),
+      ratingHistory: sheet.combinedRatingHistory,
+      confidence: 95,
+    };
+  }
+
   try {
-    // Code sheets have a very specific format with DC codes. Re-characterized
+    // Simple "DC - name NN%" lists. Diagnostic codes run 5000-9999 (38 CFR
+    // Part 4), which keeps years and page numbers out. Re-characterized
     // conditions ("... (previously rated as ...)") run past 370 characters.
     const dcPattern =
-      /(\d{4})\s{0,10}[:-]?\s{0,10}([A-Za-z\s\-,()]{1,1000}?)\s{0,10}[:-]?\s{0,10}(\d{1,3})%/g;
+      /\b([5-9]\d{3})\s{0,10}[:-]?\s{0,10}([A-Za-z][A-Za-z\s\-,()]{0,999}?)\s{0,10}[:-]?\s{0,10}(\d{1,3})%/g;
     const matches = text.matchAll(dcPattern);
 
     for (const match of matches) {
