@@ -83,8 +83,11 @@ export default tseslint.config(
     rules: {
       // Complexity — raised to 20 to match realistic JS/JSX thresholds
       complexity: ["warn", 20],
-      "sonarjs/cognitive-complexity": ["warn", 20],
-      "max-lines-per-function": ["warn", { max: 80, skipBlankLines: true, skipComments: true }],
+      "sonarjs/cognitive-complexity": ["warn", 15],
+      "max-lines-per-function": [
+        "warn",
+        { max: 80, skipBlankLines: true, skipComments: true },
+      ],
 
       // Empty catch blocks are an intentional "best-effort, ignore failure" idiom
       "no-empty": ["error", { allowEmptyCatch: true }],
@@ -92,12 +95,15 @@ export default tseslint.config(
       // Turn off base rule; @typescript-eslint/no-unused-vars supersedes it
       "no-unused-vars": "off",
       // Honor _underscore-prefix convention for intentionally unused variables
-      "@typescript-eslint/no-unused-vars": ["warn", {
-        argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_",
-        caughtErrorsIgnorePattern: "^_",
-        destructuredArrayIgnorePattern: "^_",
-      }],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
 
       // Redundant with @typescript-eslint/no-unused-vars
       "sonarjs/no-unused-vars": "off",
@@ -107,6 +113,14 @@ export default tseslint.config(
 
       // Pattern/regex rules: informational only — not build-blocking
       "sonarjs/slow-regex": "warn",
+      // Added as errors in eslint-plugin-sonarjs 4.2; existing findings are
+      // tracked in docs/SONARQUBE.md and fixed as files are touched
+      // (lint-staged runs --max-warnings 0).
+      "sonarjs/super-linear-regex": "warn",
+      "sonarjs/no-floating-point-equality": "warn",
+      "sonarjs/prefer-specific-assertions": "warn",
+      "sonarjs/parameterized-tests": "warn",
+      "sonarjs/no-trivial-assertions": "warn",
       "sonarjs/regex-complexity": "warn",
       "sonarjs/no-nested-conditional": "warn",
 
@@ -150,7 +164,6 @@ export default tseslint.config(
 
       // http:// in test data is intentional for sanitization tests
       "sonarjs/no-clear-text-protocols": "warn",
-
     },
   },
   // Test / e2e specs (Playwright .ts, Vitest .js) and root-level *.config.ts
