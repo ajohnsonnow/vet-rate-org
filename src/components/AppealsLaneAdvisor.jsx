@@ -7,12 +7,117 @@
  * Data from 2025 VA analysis and BVA decision patterns.
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   APPEALS_LANE_DATA,
   EFFECTIVE_DATE_RULES,
 } from "../data/bvaSuccessData";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { getMyRatings } from "../utils/veteranProfile";
+import { getSavedClaims } from "../utils/claimsStorage";
+import { normalizeConditionName } from "../utils/conditionName";
+import { loadVKB } from "../utils/veteranKnowledgeBase";
+import { formatLocalDate } from "../utils/dateUtils";
+
+const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+
+// Every condition name the veteran already has on file (My Ratings + saved
+// claims), deduped the same way NexusBuilder/Pathfinder do - used only as
+// grounding context in the fallback banner below, never to answer a
+// case-fact question on its own (we have no denial/outcome data for these).
+function getTrackedConditionNames() {
+  const seen = new Set();
+  const names = [];
+  getMyRatings().forEach((r) => {
+    const key = normalizeConditionName(r.name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(r.name);
+  });
+  getSavedClaims().forEach((c) => {
+    const key = normalizeConditionName(c.conditionName);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(c.conditionName);
+  });
+  return names;
+}
+
+// Most recent dated denial in the VKB's parsed decision history, or null.
+// Each denied claim entry carries exactly one condition name (see
+// _recordDenials, veteranKnowledgeBase.js) - undated entries are skipped
+// since there's nothing to compute "time since denial" from.
+function findLatestDenial(vkb) {
+  const claims = Array.isArray(vkb?.vaClaimsHistory?.claims)
+    ? vkb.vaClaimsHistory.claims
+    : [];
+  const dated = claims.filter((c) => c.status === "denied" && c.decisionDate);
+  if (dated.length === 0) return null;
+  return dated.reduce((latest, c) =>
+    c.decisionDate > latest.decisionDate ? c : latest,
+  );
+}
+
+function computeTimeSinceDenial(decisionDate) {
+  const deniedAt = new Date(decisionDate).getTime();
+  if (Number.isNaN(deniedAt)) return null;
+  return Date.now() - deniedAt < ONE_YEAR_MS ? "under1year" : "over1year";
+}
+
+// Seeds `answers.timeSinceDenial` from the veteran's actual latest denial on
+// file (if the VKB has one), so question 3 opens pre-answered instead of
+// asking them to redo the under/over-a-year math themselves. Runs once per
+// mount; never overwrites an already-set answer.
+function useAppealsLaneRecordsPrefill(setAnswers) {
+  const [latestDenial, setLatestDenial] = useState(null);
+  const [prefilled, setPrefilled] = useState(false);
+  const [trackedConditions] = useState(getTrackedConditionNames);
+  const ranRef = useRef(false);
+
+  useEffect(() => {
+    if (ranRef.current) return;
+    ranRef.current = true;
+    loadVKB().then((vkb) => {
+      const denial = findLatestDenial(vkb);
+      if (!denial) return;
+      const defaultAnswer = computeTimeSinceDenial(denial.decisionDate);
+      if (!defaultAnswer) return;
+      setLatestDenial(denial);
+      setPrefilled(true);
+      setAnswers((prev) =>
+        prev.timeSinceDenial === null
+          ? { ...prev, timeSinceDenial: defaultAnswer }
+          : prev,
+      );
+    });
+  }, [setAnswers]);
+
+  return { latestDenial, prefilled, trackedConditions };
+}
+
+function RecordsPrefillBanner({ latestDenial, prefilled, trackedConditions }) {
+  if (latestDenial && prefilled) {
+    return (
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
+        📋 We filled this in from your records — your{" "}
+        {latestDenial.conditions?.join(", ") || "condition"} denial on{" "}
+        {formatLocalDate(latestDenial.decisionDate).toLocaleDateString()} —
+        change anything that&apos;s wrong.
+      </div>
+    );
+  }
+
+  if (trackedConditions.length > 0) {
+    return (
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
+        📋 We found {trackedConditions.join(", ")} in your saved records — pick
+        the answers below that match what happened.
+      </div>
+    );
+  }
+
+  return null;
+}
 
 // Visual styling per recommended lane. Any lane not listed (e.g.
 // "gatherEvidence") falls back to DEFAULT_LANE_STYLE.
@@ -602,6 +707,7 @@ const AppealsLaneAdvisor = ({ onClose }) => {
   });
   const [showTimelines, setShowTimelines] = useState(false);
   const [showEffectiveDate, setShowEffectiveDate] = useState(false);
+  const recordsPrefill = useAppealsLaneRecordsPrefill(setAnswers);
 
   const recommendation = useMemo(
     () => computeRecommendation(answers),
@@ -623,6 +729,8 @@ const AppealsLaneAdvisor = ({ onClose }) => {
       <div className="space-y-6">
         {/* 2025 Stats Banner */}
         <StatsBanner />
+
+        <RecordsPrefillBanner {...recordsPrefill} />
 
         {/* Question Flow */}
         <QuestionFlow answers={answers} setAnswers={setAnswers} />
