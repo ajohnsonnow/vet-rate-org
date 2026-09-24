@@ -21,6 +21,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from "react";
 
 // ============================================
@@ -353,6 +354,67 @@ function useAdminPanelActions(
 }
 
 /**
+ * Memoize the context value so consumers don't re-render on every
+ * AdminAuthProvider render when nothing they depend on actually changed.
+ */
+function useAdminAuthContextValue(fields) {
+  const {
+    isAuthenticated,
+    currentAdmin,
+    sessionExpiry,
+    showAdminLogin,
+    showAdminPanel,
+    lockoutInfo,
+    authenticate,
+    logout,
+    openAdminLogin,
+    closeAdminLogin,
+    openAdminPanel,
+    closeAdminPanel,
+    extendSession,
+  } = fields;
+
+  return useMemo(
+    () => ({
+      // State
+      isAuthenticated,
+      currentAdmin,
+      sessionExpiry,
+      showAdminLogin,
+      showAdminPanel,
+      lockoutInfo,
+
+      // Actions
+      authenticate,
+      logout,
+      openAdminLogin,
+      closeAdminLogin,
+      openAdminPanel,
+      closeAdminPanel,
+      extendSession,
+
+      // Config (for display)
+      sessionTimeout: SECURITY_CONFIG.SESSION_TIMEOUT,
+    }),
+    [
+      isAuthenticated,
+      currentAdmin,
+      sessionExpiry,
+      showAdminLogin,
+      showAdminPanel,
+      lockoutInfo,
+      authenticate,
+      logout,
+      openAdminLogin,
+      closeAdminLogin,
+      openAdminPanel,
+      closeAdminPanel,
+      extendSession,
+    ],
+  );
+}
+
+/**
  * Attempt to authenticate with PIN
  * @param {string} pin - The PIN to authenticate with
  * @param {Object} setters - State setters from AdminAuthProvider
@@ -482,14 +544,17 @@ export function AdminAuthProvider({ children }) {
    * @param {string} pin - The PIN to authenticate with
    * @returns {Promise<Object>} - { success, error }
    */
-  const authenticate = (pin) =>
-    performAuthenticate(pin, {
-      setIsAuthenticated,
-      setCurrentAdmin,
-      setSessionExpiry,
-      setShowAdminLogin,
-      setLockoutInfo,
-    });
+  const authenticate = useCallback(
+    (pin) =>
+      performAuthenticate(pin, {
+        setIsAuthenticated,
+        setCurrentAdmin,
+        setSessionExpiry,
+        setShowAdminLogin,
+        setLockoutInfo,
+      }),
+    [],
+  );
 
   const { openAdminLogin, closeAdminLogin, openAdminPanel, closeAdminPanel } =
     useAdminPanelActions(
@@ -508,16 +573,13 @@ export function AdminAuthProvider({ children }) {
     setShowAdminPanel,
   );
 
-  const value = {
-    // State
+  const value = useAdminAuthContextValue({
     isAuthenticated,
     currentAdmin,
     sessionExpiry,
     showAdminLogin,
     showAdminPanel,
     lockoutInfo,
-
-    // Actions
     authenticate,
     logout,
     openAdminLogin,
@@ -525,10 +587,7 @@ export function AdminAuthProvider({ children }) {
     openAdminPanel,
     closeAdminPanel,
     extendSession,
-
-    // Config (for display)
-    sessionTimeout: SECURITY_CONFIG.SESSION_TIMEOUT,
-  };
+  });
 
   return (
     <AdminAuthContext.Provider value={value}>

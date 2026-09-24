@@ -12,7 +12,13 @@
  * - Accessible (screen reader support)
  */
 
-import { createContext, useContext, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 
 export const ToastContext = createContext();
 
@@ -75,10 +81,13 @@ export const ToastProvider = ({ children }) => {
     [addToast],
   );
 
+  const value = useMemo(
+    () => ({ success, error, warning, info, removeToast }),
+    [success, error, warning, info, removeToast],
+  );
+
   return (
-    <ToastContext.Provider
-      value={{ success, error, warning, info, removeToast }}
-    >
+    <ToastContext.Provider value={value}>
       {children}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>

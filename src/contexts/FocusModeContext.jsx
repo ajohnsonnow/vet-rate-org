@@ -9,7 +9,14 @@
  * This context provides a Focus Mode that dims everything except the current input field.
  */
 
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 
 const FocusModeContext = createContext();
 
@@ -58,7 +65,7 @@ export function FocusModeProvider({ children }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [focusMode]);
 
-  const toggleFocusMode = () => {
+  const toggleFocusMode = useCallback(() => {
     // eslint-disable-next-line no-console
     console.log(
       "🎯 Toggle clicked, current:",
@@ -67,26 +74,29 @@ export function FocusModeProvider({ children }) {
       !focusMode,
     );
     setFocusMode((prev) => !prev);
-  };
+  }, [focusMode]);
 
-  const setFocus = (elementId) => {
+  const setFocus = useCallback((elementId) => {
     setFocusedElement(elementId);
-  };
+  }, []);
 
-  const clearFocus = () => {
+  const clearFocus = useCallback(() => {
     setFocusedElement(null);
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      focusMode,
+      toggleFocusMode,
+      focusedElement,
+      setFocus,
+      clearFocus,
+    }),
+    [focusMode, toggleFocusMode, focusedElement, setFocus, clearFocus],
+  );
 
   return (
-    <FocusModeContext.Provider
-      value={{
-        focusMode,
-        toggleFocusMode,
-        focusedElement,
-        setFocus,
-        clearFocus,
-      }}
-    >
+    <FocusModeContext.Provider value={value}>
       {children}
     </FocusModeContext.Provider>
   );

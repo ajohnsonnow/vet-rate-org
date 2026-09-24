@@ -14,6 +14,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from "react";
 
 // Storage key for language preference
@@ -797,16 +798,27 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.dir = SUPPORTED_LANGUAGES[language].direction;
   }, [language]);
 
-  const value = {
-    language,
-    setLanguage,
-    t,
-    getSection,
-    getCurrentLanguage,
-    getAvailableLanguages,
-    isEnglish,
-    SUPPORTED_LANGUAGES,
-  };
+  const value = useMemo(
+    () => ({
+      language,
+      setLanguage,
+      t,
+      getSection,
+      getCurrentLanguage,
+      getAvailableLanguages,
+      isEnglish,
+      SUPPORTED_LANGUAGES,
+    }),
+    [
+      language,
+      setLanguage,
+      t,
+      getSection,
+      getCurrentLanguage,
+      getAvailableLanguages,
+      isEnglish,
+    ],
+  );
 
   return (
     <LanguageContext.Provider value={value}>
