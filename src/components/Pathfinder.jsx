@@ -300,7 +300,9 @@ function buildSeedRatingsFromMyRatings() {
 
   getMyRatings().forEach((r) => {
     const name = mapSavedRatingToCondition(r);
-    const key = normalizeConditionName(name);
+    // Keyed on the saved rating's own name, not the preset it maps to: two
+    // different ratings can map to one preset and must both survive.
+    const key = normalizeConditionName(r.name || name);
     if (!key) return;
     const side = r.side || "none";
     const dedupeKey = `${key}|${side}`;
@@ -325,8 +327,12 @@ function mapSavedRatingToCondition(saved) {
   );
   if (exactMatch) return exactMatch;
 
+  // Match only the diagnosis itself: VA notes like "(claimed as ... post
+  // traumatic ...)" on a spine rating must not map it to PTSD.
+  const open = name.indexOf("(");
+  const diagnosis = open === -1 ? name : name.slice(0, open);
   const keywordMatch = CONDITION_NAME_KEYWORD_MAP.find(([pattern]) =>
-    pattern.test(name),
+    pattern.test(diagnosis),
   );
   if (keywordMatch) return keywordMatch[1];
 

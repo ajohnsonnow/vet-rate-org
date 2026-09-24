@@ -184,6 +184,31 @@ describe("Pathfinder auto-seed from records - edge cases", () => {
   });
 });
 
+describe("Pathfinder auto-seed with real VA condition wording", () => {
+  it("keeps a spine rating whose claimed-as note mentions 'post traumatic' next to PTSD", async () => {
+    localStorage.setItem("vetrate_ai_consent", "true");
+    saveMyRatings([
+      {
+        name: "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia)",
+        bodyPart: "other",
+        rating: 30,
+        side: "none",
+      },
+      {
+        name: "lumbosacral strain, degenerative disc disease (previously rated as lumbago) (claimed as osteoarthritis, post traumatic, mid lower back thoracolumbar spine)",
+        bodyPart: "other",
+        rating: 20,
+        side: "none",
+      },
+    ]);
+
+    renderPathfinder();
+
+    expect(await screen.findByDisplayValue("30%")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("20%")).toBeInTheDocument();
+  });
+});
+
 describe("Pathfinder consent screen: focus management", () => {
   it("moves focus onto the ratings heading after consent, not off the dialog (regression D10)", async () => {
     renderPathfinder();
