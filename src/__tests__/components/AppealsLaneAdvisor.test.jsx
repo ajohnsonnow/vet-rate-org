@@ -138,3 +138,29 @@ describe("AppealsLaneAdvisor prefill from records - never overwrites", () => {
     expect(overButton.className).toMatch(/bg-orange-600/);
   });
 });
+
+describe("AppealsLaneAdvisor denial date", () => {
+  it("shows a date-only denial on its own day west of UTC", async () => {
+    const originalTZ = process.env.TZ;
+    process.env.TZ = "America/Los_Angeles";
+    try {
+      mockLoadVKB.mockResolvedValue({
+        vaClaimsHistory: {
+          claims: [
+            {
+              status: "denied",
+              decisionDate: "2023-09-15",
+              conditions: ["Tinnitus"],
+            },
+          ],
+        },
+      });
+
+      renderAdvisor();
+
+      expect(await screen.findByText(/September 15, 2023/)).toBeInTheDocument();
+    } finally {
+      process.env.TZ = originalTZ;
+    }
+  });
+});

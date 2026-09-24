@@ -61,11 +61,15 @@ function findLatestDenial(vkb) {
   );
 }
 
+// Date.parse reads "2023-09-15" as UTC midnight, which is the previous day
+// anywhere west of UTC, so a date-only value is formatted in UTC.
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 const formatDenialDate = (value) =>
   new Date(Date.parse(value)).toLocaleDateString(undefined, {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: ISO_DAY.test(value) ? "UTC" : undefined,
   });
 
 function computeTimeSinceDenial(decisionDate) {
