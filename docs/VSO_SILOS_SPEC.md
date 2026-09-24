@@ -301,6 +301,14 @@ Record A's full storage state as a hash per storage area.
 - **Q8, help page:** The zero-code help page ("one browser profile per veteran") ships now as S0, independent of the flag.
 - **Q3 and Q5, legal:** These stay open for counsel. The product safeguards that ship whatever counsel decides are the authorization-acknowledgement checkbox and the optional retention reminder. **Neither may auto-delete anything.**
 
+**Follow-up decisions (orchestrator, applying Anth's best-practice standing instruction, 2026-09-24; Anth can overrule):**
+
+- **FROZEN-1:** approved. Add the additive `deleteLocalKey(id)` export under the keystore lock. It is safer than reusing the internal lock name from outside, and it triggers the CRYPTO_AUDIT re-audit.
+- **Panic wipe:** stays passphrase-free. It is a safety feature for coercion and crisis situations. In VSO mode its confirmation text must say it destroys every veteran on the device.
+- **Encrypted exports:** yes. Explicit exports in VSO mode use the existing `VR_ENC_V3` format with a passphrase, and import accepts it (new sprint B6, after B4).
+- **Single-user encryption:** yes, as a follow-on once V2 passes, reusing brief B's modules (closes the storage.js security debt).
+- **B5, data-key rotation:** stays deferred. Passphrase rotation already re-wraps every key; B5 only helps against an attacker who has already unwrapped a key.
+
 **Legal questions still open (to answer before any public announcement; not code gates):**
 
 - **Q3:** Does a VSO's Terms of Service acceptance cover the veterans they enter data for? Is written veteran consent (e.g. VA Form 21-22/21-22a) required, and does the app need to show a notice? The ToS keys are currently device-level.
