@@ -216,9 +216,14 @@ test.describe("Evidence cluster — with 9-condition packet", () => {
 
   test("Nexus Builder opens (basic render)", async ({ page }) => {
     await bootWithPacket(page);
-    const opened = await openTool(page, "openNexusBuilder");
-    // Accept opened OR not-yet-fixed NexusBuilder (logged above, not hard-fail)
-    await page.locator("body").isVisible();
+    await openTool(page, "openNexusBuilder");
+    // Accept opened OR not-yet-fixed NexusBuilder (see the stricter Sprint 3
+    // gap test above) — this one only asserts the app itself didn't crash.
+    const bodyVisible = await page.locator("body").isVisible();
+    expect(
+      bodyVisible,
+      "App should still be up after opening Nexus Builder",
+    ).toBe(true);
     await closeTool(page);
   });
 
