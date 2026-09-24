@@ -534,7 +534,7 @@ const PredatoryWarningActions = ({ riskLevel }) => {
 };
 
 const ScanResults = ({ results }) => {
-  if (!results || !results.success) return null;
+  if (!results?.success) return null;
 
   const { data } = results;
 

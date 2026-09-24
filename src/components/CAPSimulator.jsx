@@ -3858,7 +3858,7 @@ function _loadSavedPacketAndConditions(setSavedPacket, setAllConditions) {
   }
 
   // Load all conditions from disabilityData
-  if (disabilityDataFile && disabilityDataFile.disabilities) {
+  if (disabilityDataFile?.disabilities) {
     setAllConditions(disabilityDataFile.disabilities);
   }
 }

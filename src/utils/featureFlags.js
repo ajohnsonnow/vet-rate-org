@@ -103,7 +103,7 @@ const getCachedStatus = () => {
  * Check if cached status is still valid
  */
 const isCacheValid = (cached) => {
-  if (!cached || !cached.timestamp) return false;
+  if (!cached?.timestamp) return false;
   const age = Date.now() - cached.timestamp;
   return age < CACHE_DURATION;
 };

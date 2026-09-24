@@ -384,7 +384,7 @@ const compileStatementWithAI = async (relationship, condition, answers) => {
 
   // Format answers for the prompt
   const answersText = Object.entries(answers)
-    .filter(([_, value]) => value && value.trim())
+    .filter(([_, value]) => value?.trim())
     .map(([key, value]) => `${key}: ${value}`)
     .join("\n\n");
 
@@ -447,7 +447,7 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
   const observationParts = [];
 
   Object.entries(answers).forEach(([key, value]) => {
-    if (value && value.trim() && key !== "relationship_context") {
+    if (value?.trim() && key !== "relationship_context") {
       observationParts.push(value.trim());
     }
   });
@@ -1397,9 +1397,7 @@ const InterviewStep = ({
   onGenerateStatement,
 }) => {
   const currentQuestion = questions[currentQuestionIndex];
-  const answeredCount = Object.values(answers).filter(
-    (a) => a && a.trim(),
-  ).length;
+  const answeredCount = Object.values(answers).filter((a) => a?.trim()).length;
 
   const handleAnswerChange = (value) =>
     onUpdateAnswer(currentQuestion.id, value);

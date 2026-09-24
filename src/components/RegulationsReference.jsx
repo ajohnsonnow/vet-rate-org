@@ -986,8 +986,7 @@ const RegulationsReference = ({ onClose }) => {
     reg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     reg.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
     reg.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (reg.veteranTip &&
-      reg.veteranTip.toLowerCase().includes(searchTerm.toLowerCase()));
+    reg.veteranTip?.toLowerCase().includes(searchTerm.toLowerCase());
 
   return (
     <ResponsiveModal

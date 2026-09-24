@@ -391,7 +391,7 @@ async function checkNativeShareSupport(setCanNativeShare) {
     type: "application/pdf",
   });
 
-  if (navigator.canShare && navigator.canShare({ files: [testFile] })) {
+  if (navigator.canShare?.({ files: [testFile] })) {
     setCanNativeShare(true);
   }
 }

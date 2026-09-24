@@ -143,7 +143,7 @@ function extractApplicableFacts(extractedRaw) {
 
   return facts
     .map((f, idx) => (f ? { ...f, _chunkIndex: idx } : f))
-    .filter((f) => f && f.applicable);
+    .filter((f) => f?.applicable);
 }
 
 /**
@@ -246,9 +246,7 @@ export async function answer(question, deps, opts = {}) {
     { contentLabel: "RETRIEVED LEGAL CHUNKS" },
   );
 
-  const injectionAttempt = !!(
-    extractedRaw && extractedRaw._injection_attempt === true
-  );
+  const injectionAttempt = extractedRaw?._injection_attempt === true;
 
   if (injectionAttempt) {
     return {

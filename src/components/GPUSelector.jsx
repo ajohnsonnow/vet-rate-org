@@ -48,7 +48,7 @@ function useGpuScanner(autoSelect, onGPUSelected) {
 
       // Validate adapter data before setting state
       const validAdapters = (found || []).filter((adapter) => {
-        return adapter && adapter.id && adapter.info;
+        return adapter?.id && adapter?.info;
       });
 
       setAdapters(validAdapters);

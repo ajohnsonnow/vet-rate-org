@@ -1542,7 +1542,7 @@ const useGPUSelectionHandlers = ({
       console.log("✅ GPU selection updated:", result.device);
     } catch (err) {
       console.error("❌ Failed to change GPU:", err);
-      if (err && err.message) {
+      if (err?.message) {
         alert(`Failed to change GPU: ${err.message}`);
       }
     } finally {

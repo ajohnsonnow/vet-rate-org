@@ -452,9 +452,7 @@ function ChecklistStatusBanner({ status, percentage }) {
 function MilestoneCard({ milestone, isCompleted, onMilestoneClick }) {
   return (
     <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-      onClick={() =>
-        !isCompleted && onMilestoneClick && onMilestoneClick(milestone)
-      }
+      onClick={() => !isCompleted && onMilestoneClick?.(milestone)}
       className={`border-2 rounded-lg p-4 transition-all ${
         isCompleted
           ? "border-green-500 bg-green-50 dark:bg-green-900/20"
@@ -501,7 +499,7 @@ function MilestoneCard({ milestone, isCompleted, onMilestoneClick }) {
 
           {!isCompleted && (
             <button
-              onClick={() => onMilestoneClick && onMilestoneClick(milestone)}
+              onClick={() => onMilestoneClick?.(milestone)}
               className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold"
             >
               Start this objective →

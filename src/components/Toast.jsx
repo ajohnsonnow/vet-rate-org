@@ -171,9 +171,7 @@ export const ToastContainer = ({ toasts, onClose, onAction }) => {
             key={toast.id}
             {...toast}
             onClose={onClose}
-            onAction={() =>
-              onAction && onAction(toast.id, toast.action?.callback)
-            }
+            onAction={() => onAction?.(toast.id, toast.action?.callback)}
           />
         ))}
       </div>

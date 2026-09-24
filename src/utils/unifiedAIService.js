@@ -2081,7 +2081,7 @@ export const generateAI = async (prompt, options = {}) => {
     _recordGenerationFailure(err);
 
     // Enhance timeout errors with helpful message
-    if (err.message && err.message.includes("AI_TIMEOUT")) {
+    if (err.message?.includes("AI_TIMEOUT")) {
       throw new Error(
         `AI request timed out after ${TIMEOUT_MS / 1000} seconds. ` +
           `This usually means the AI model is still loading, your document is too large, or there are network issues. ` +

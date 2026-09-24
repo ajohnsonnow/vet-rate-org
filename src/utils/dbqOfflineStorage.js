@@ -130,7 +130,7 @@ export async function isDbqCached(formId) {
 export async function getCachedDbq(formId) {
   try {
     const record = await dbGet(STORE_PDF, formId);
-    if (record && record.pdfBlob) {
+    if (record?.pdfBlob) {
       return record.pdfBlob;
     }
     return null;
@@ -338,7 +338,7 @@ export async function downloadAllDbqs(onProgress = null, signal = null) {
 
     for (let i = 0; i < forms.length; i++) {
       // Check for abort
-      if (signal && signal.aborted) {
+      if (signal?.aborted) {
         results.success = false;
         break;
       }

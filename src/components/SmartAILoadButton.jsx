@@ -156,7 +156,7 @@ const SmartAILoadButton = ({
   if (!check) return null;
 
   // Safety check: ensure recommendedModel exists
-  if (!check.recommendedModel || !check.recommendedModel.name) {
+  if (!check.recommendedModel?.name) {
     console.error(
       "❌ SmartAILoadButton: Invalid recommendedModel for tool:",
       toolId,

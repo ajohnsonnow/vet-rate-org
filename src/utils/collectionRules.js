@@ -786,7 +786,7 @@ export function getFieldTooltip(field, documentType) {
 export function shouldCollectField(field, documentType) {
   const rules = getCollectionRules(documentType);
   const rule = rules[field];
-  return !rule || rule.importance !== FIELD_IMPORTANCE.IGNORE;
+  return rule?.importance !== FIELD_IMPORTANCE.IGNORE;
 }
 
 /**

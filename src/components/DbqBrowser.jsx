@@ -105,7 +105,7 @@ function filterDbqForms(forms, selectedCategory, searchQuery) {
       (f) =>
         f.title.toLowerCase().includes(query) ||
         f.id.toLowerCase().includes(query) ||
-        (f.category && f.category.toLowerCase().includes(query)),
+        f.category?.toLowerCase().includes(query),
     );
   }
 
@@ -876,7 +876,7 @@ function PreFillModal({ form, formData, onDataChange, onClose, onComplete }) {
     onDataChange((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const hasAnyData = Object.values(formData).some((v) => v && v.trim());
+  const hasAnyData = Object.values(formData).some((v) => v?.trim());
 
   return (
     <ResponsiveModal

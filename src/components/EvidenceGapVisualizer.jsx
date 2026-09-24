@@ -413,7 +413,7 @@ const CriticalGapsSummary = ({ analysis, targetRating }) => {
 
 // Render tips section
 const TipsSection = ({ analysis, showTips, setShowTips }) => {
-  if (!analysis || !analysis.tips) return null;
+  if (!analysis?.tips) return null;
 
   return (
     <div className="bg-blue-900/30 border-2 border-blue-500/50 rounded-xl p-6 mb-6">

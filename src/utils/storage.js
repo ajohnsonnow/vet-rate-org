@@ -324,7 +324,7 @@ export async function exportAllData() {
  */
 export async function importAllData(exportedData) {
   try {
-    if (!exportedData || !exportedData.data) {
+    if (!exportedData?.data) {
       throw new Error("Invalid export data format");
     }
 
@@ -395,7 +395,7 @@ export async function getStorageStats() {
 
   // Try to get quota information
   let quota = { usage: 0, quota: 0 };
-  if (navigator.storage && navigator.storage.estimate) {
+  if (navigator.storage?.estimate) {
     try {
       quota = await navigator.storage.estimate();
     } catch (e) {

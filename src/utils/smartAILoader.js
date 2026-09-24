@@ -37,7 +37,7 @@ export const getRecommendedModelForDevice = (toolId) => {
 
   // Use primary recommendation (structure is toolRec.primary, not mobile/desktop)
   const primaryModel = toolRec.primary;
-  if (!primaryModel || !primaryModel.modelId) {
+  if (!primaryModel?.modelId) {
     // Fallback if primary doesn't have modelId
     return {
       id: "Qwen2.5-3B-Instruct-q4f32_1-MLC",

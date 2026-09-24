@@ -122,7 +122,7 @@ function dropImageFile(e, handleFileSelect) {
   e.stopPropagation();
 
   const file = e.dataTransfer?.files?.[0];
-  if (file && file.type.startsWith("image/")) {
+  if (file?.type.startsWith("image/")) {
     const event = { target: { files: [file] } };
     handleFileSelect(event);
   }

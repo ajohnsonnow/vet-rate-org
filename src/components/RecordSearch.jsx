@@ -556,7 +556,7 @@ const useRecordSearchState = () => {
     setIsDragging(false);
 
     const droppedFile = e.dataTransfer?.files?.[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
+    if (droppedFile?.type === "application/pdf") {
       doLoadFile(droppedFile, { setError, setFile, setResults, setFileData });
     } else {
       setError("Please drop in a PDF file.");

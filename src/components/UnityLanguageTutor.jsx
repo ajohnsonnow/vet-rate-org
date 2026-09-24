@@ -333,7 +333,7 @@ function useUnityPhraseLearning(targetLang) {
   // Get phrase translation
   const getPhraseTranslation = (phraseKey) => {
     const langData = LANGUAGE_TRANSLATIONS[targetLang];
-    if (!langData || !langData.phrases[phraseKey]) return null;
+    if (!langData?.phrases[phraseKey]) return null;
     return langData.phrases[phraseKey];
   };
 

@@ -644,7 +644,7 @@ export const analyzeCurrentModel = (toolId, currentModelId) => {
   }
 
   // Null safety: ensure tool.primary exists
-  if (!tool.primary || !tool.primary.modelId) {
+  if (!tool.primary?.modelId) {
     return { isOptimal: true, suggestion: null };
   }
 
