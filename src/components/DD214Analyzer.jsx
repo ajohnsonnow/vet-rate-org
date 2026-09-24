@@ -401,7 +401,7 @@ function validateDate(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return null;
 
   // Try to parse the date
-  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
   if (!match) return dateStr; // Return as-is if not in expected format
 
   const [, year, month, day] = match;

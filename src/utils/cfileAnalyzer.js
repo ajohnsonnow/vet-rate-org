@@ -1156,7 +1156,7 @@ function normalizeDateKey(dateStr) {
   if (!dateStr) return "";
   const str = String(dateStr).toLowerCase().trim();
 
-  const yearMatch = str.match(/\b(\d{4})\b/);
+  const yearMatch = /\b(\d{4})\b/.exec(str);
   if (!yearMatch) return str;
   const year = yearMatch[1];
 
@@ -1179,7 +1179,7 @@ function normalizeDateKey(dateStr) {
   let day = 0;
 
   if (month) {
-    const dayMatch = str.match(/\b(\d{1,2})\b/);
+    const dayMatch = /\b(\d{1,2})\b/.exec(str);
     if (dayMatch) day = Number.parseInt(dayMatch[1], 10);
   } else {
     const numeric = _extractNumericMonthDay(str);

@@ -771,8 +771,8 @@ export function parseVADocument(text) {
 
   // Decision Letter indicators
   if (
-    textSample.match(
-      /rating\s*decision|service\s*connection|combined.*evaluation|percent.*disab/i,
+    /rating\s*decision|service\s*connection|combined.*evaluation|percent.*disab/i.exec(
+      textSample,
     )
   ) {
     return parseDecisionLetter(text);
@@ -780,8 +780,8 @@ export function parseVADocument(text) {
 
   // DBQ indicators
   if (
-    textSample.match(
-      /disability\s*benefits\s*questionnaire|dbq|c&p\s*exam|compensation.*pension/i,
+    /disability\s*benefits\s*questionnaire|dbq|c&p\s*exam|compensation.*pension/i.exec(
+      textSample,
     )
   ) {
     return parseDBQReport(text);
@@ -789,17 +789,15 @@ export function parseVADocument(text) {
 
   // Code Sheet indicators
   if (
-    textSample.match(
-      /code\s*sheet|rating.*code.*sheet|diagnostic.*code.*\d{4}/i,
-    )
+    /code\s*sheet|rating.*code.*sheet|diagnostic.*code.*\d{4}/i.exec(textSample)
   ) {
     return parseCodeSheet(text);
   }
 
   // BVA Decision
   if (
-    textSample.match(
-      /board\s*of\s*veterans|bva|findings\s*of\s*fact|conclusions\s*of\s*law/i,
+    /board\s*of\s*veterans|bva|findings\s*of\s*fact|conclusions\s*of\s*law/i.exec(
+      textSample,
     )
   ) {
     return parseBVADecision(text);
@@ -807,15 +805,15 @@ export function parseVADocument(text) {
 
   // Statement of the Case
   if (
-    textSample.match(/statement\s*of\s*the\s*case|soc|issues?\s*on\s*appeal/i)
+    /statement\s*of\s*the\s*case|soc|issues?\s*on\s*appeal/i.exec(textSample)
   ) {
     return parseSOC(text);
   }
 
   // Higher Level Review (HLR)
   if (
-    textSample.match(
-      /higher[\s-]*level\s*review|hlr\s*decision|informal\s*conference|duty\s*to\s*assist\s*error/i,
+    /higher[\s-]*level\s*review|hlr\s*decision|informal\s*conference|duty\s*to\s*assist\s*error/i.exec(
+      textSample,
     )
   ) {
     return parseHLR(text);

@@ -2388,7 +2388,7 @@ function _stripDeploymentBoilerplate(box18Text) {
 
 function _parseYearFromDate(dateStr) {
   if (!dateStr) return null;
-  const match = String(dateStr).match(/(\d{4})/);
+  const match = /(\d{4})/.exec(String(dateStr));
   return match ? Number.parseInt(match[1], 10) : null;
 }
 
@@ -2538,7 +2538,7 @@ function _extractNameField(ctx) {
 
   // Search ONLY in Box 1 area to avoid address contamination (like "LINN COUNTY")
   for (const pattern of namePatterns) {
-    const match = box1Text.match(pattern);
+    const match = pattern.exec(box1Text);
     if (match) {
       const potentialLastName = match[1]?.trim().toUpperCase();
       const potentialFirstName = match[2]?.trim().toUpperCase();

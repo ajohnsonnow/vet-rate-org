@@ -27,10 +27,11 @@ import { formatLocalDate } from "./dateUtils";
  * @returns {Object} Object with combinedRating, serviceConnected, notServiceConnected arrays
  */
 function _parseServiceConnectedSection(text) {
-  const serviceConnectedMatch = text.match(
+  const serviceConnectedMatch =
     // eslint-disable-next-line sonarjs/regex-complexity -- input is text the user pasted from their own VA.gov page (bounded, not attacker-controlled); a rewrite of this section-boundary matcher risks silently changing what counts as the "service-connected" block
-    /Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is,
-  );
+    /Service-connected\s+ratings?(.*?)(?:Conditions?\s+VA\s+determined\s+aren't\s+service-connected|Learn\s+about\s+VA\s+disability|Need\s+help\?|$)/is.exec(
+      text,
+    );
 
   const serviceConnected = [];
   if (!serviceConnectedMatch?.[1]) return serviceConnected;
@@ -60,12 +61,12 @@ function _parseServiceConnectedSection(text) {
     }
 
     // Try to find effective date on the next line
-    const effectiveDateMatch = serviceConnectedText
-      .substring(
+    const effectiveDateMatch = /Effective\s+date:\s*([^\n]+)/i.exec(
+      serviceConnectedText.substring(
         match.index + match[0].length,
         match.index + match[0].length + 200,
-      )
-      .match(/Effective\s+date:\s*([^\n]+)/i);
+      ),
+    );
     const effectiveDate = effectiveDateMatch
       ? parseDate(effectiveDateMatch[1].trim())
       : null;
@@ -151,8 +152,8 @@ export function parseVAGovRatings(text) {
  * @returns {number|null} Combined rating percentage or null
  */
 function extractCombinedRating(text) {
-  const match = text.match(
-    /Your\s+combined\s+disability\s+rating\s+is\s+(\d+)%/i,
+  const match = /Your\s+combined\s+disability\s+rating\s+is\s+(\d+)%/i.exec(
+    text,
   );
   return match ? Number.parseInt(match[1], 10) : null;
 }

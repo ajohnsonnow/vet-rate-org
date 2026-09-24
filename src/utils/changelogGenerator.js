@@ -71,7 +71,7 @@ export function parseReadmeForChangelog(readmeContent) {
 
   // Extract features from each section
   sectionPatterns.forEach(({ regex, type, category }) => {
-    const match = readmeContent.match(regex);
+    const match = regex.exec(readmeContent);
     if (match) {
       const sectionContent = match[1];
 

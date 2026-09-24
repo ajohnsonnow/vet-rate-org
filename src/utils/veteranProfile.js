@@ -1251,7 +1251,7 @@ const PAY_GRADE_CATEGORY_BASE = { E: 0, W: 100, O: 200 };
 
 function _payGradeRank(payGrade) {
   if (!payGrade) return -1;
-  const match = String(payGrade).match(/([EOW])-?(\d+)/i);
+  const match = /([EOW])-?(\d+)/i.exec(String(payGrade));
   if (!match) return -1;
   const category = match[1].toUpperCase();
   const level = Number.parseInt(match[2], 10);
