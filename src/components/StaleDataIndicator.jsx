@@ -78,7 +78,7 @@ const StaleDataIndicator = ({
             >
               38 CFR Part 4
             </a>
-            .
+            {"."}
           </p>
           <a
             href={generateReportOutdatedLink(disability)}

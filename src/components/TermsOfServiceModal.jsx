@@ -121,7 +121,7 @@ const TosClauseNotMedicalAdvice = () => (
         <span className="font-semibold underline">
           NOT medical diagnostic instruments
         </span>
-        .
+        {"."}
       </p>
       <p className="mt-2">
         <strong>Critical Understanding:</strong>

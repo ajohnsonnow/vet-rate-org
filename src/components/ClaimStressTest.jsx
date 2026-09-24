@@ -859,8 +859,8 @@ const StressTestMissionBrief = () => (
       <span className="font-bold text-red-600 dark:text-red-400">
         Skeptical VA Rater
       </span>
-      . It will identify logical gaps, timeline issues, and missing evidence in
-      your claim.
+      {"."} It will identify logical gaps, timeline issues, and missing evidence
+      in your claim.
     </p>
     <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
       Better to panic now in the safety of this app than freeze up in the exam

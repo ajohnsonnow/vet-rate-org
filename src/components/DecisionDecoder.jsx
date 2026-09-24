@@ -957,7 +957,7 @@ const DecisionDecoderHeader = ({ onClose, onReportBug, onOpenAISettings }) => (
             id="decoder-title"
             className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
           >
-            Decision Decoder
+            Decision Decoder{""}
             <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
               AI
             </span>
@@ -1698,7 +1698,7 @@ const ClaimPhaseExplainer = ({
       className="w-full flex items-center justify-between"
     >
       <h4 className="font-semibold text-teal-800 dark:text-teal-200 flex items-center gap-2">
-        <span>📊</span> Claim Status Phase Explainer
+        <span>📊</span> Claim Status Phase Explainer{""}
         <span className="text-xs bg-teal-200 dark:bg-teal-800 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full">
           VA Reference Data
         </span>

@@ -1711,7 +1711,7 @@ function ArrayValueField({
               onChange={(e) => handleToggleStateAwards(e.target.checked)}
               className="w-3.5 h-3.5"
             />
-            Show state awards
+            {""}Show state awards
           </label>
         )}
 

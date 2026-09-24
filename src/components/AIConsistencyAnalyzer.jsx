@@ -76,7 +76,7 @@ function AnalyzerHeader({ onBack }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <span className="text-4xl">🔍</span> AI Cross-Examination
+            <span className="text-4xl">🔍</span> AI Cross-Examination{""}
             <span className="px-2 py-0.5 bg-purple-600 text-white text-xs font-bold rounded">
               AI BETA
             </span>

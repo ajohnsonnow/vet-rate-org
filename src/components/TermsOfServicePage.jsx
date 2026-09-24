@@ -161,7 +161,7 @@ const NonAccreditationResponsibility = () => (
         <span className="font-bold underline">
           You remain solely responsible for
         </span>
-        : filing your own claims, verifying the accuracy of all information,
+        {":"} filing your own claims, verifying the accuracy of all information,
         making legal decisions, and ensuring compliance with VA regulations.
         Vet-Rate.org does not file claims on your behalf, represent you before
         the VA, or make legal determinations about your eligibility.

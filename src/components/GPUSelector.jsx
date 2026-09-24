@@ -157,7 +157,7 @@ function SingleGpuGuidance() {
         Only seeing one GPU?
       </p>
       <p className="mb-3">
-        Due to browser privacy protections (
+        Due to browser privacy protections ({""}
         <a
           href="https://issues.chromium.org/issues/369219127"
           target="_blank"
@@ -167,7 +167,7 @@ function SingleGpuGuidance() {
           Chromium Issue #369219127
           <ExternalLink className="w-3 h-3" />
         </a>
-        ) , Chrome often hides secondary GPUs. Windows also ignores GPU
+        {""}) , Chrome often hides secondary GPUs. Windows also ignores GPU
         preference settings.
       </p>
       <div className="bg-slate-800/50 dark:bg-slate-700/50 p-3 rounded">
@@ -201,7 +201,7 @@ function SingleGpuGuidance() {
             <code className="px-1.5 py-0.5 bg-slate-700 rounded text-yellow-300 font-mono text-xs">
               ms-settings:display
             </code>
-            , then scroll to Graphics Settings
+            {""}, then scroll to Graphics Settings
           </p>
         </div>
       </div>

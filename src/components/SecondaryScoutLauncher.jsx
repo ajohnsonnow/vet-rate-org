@@ -2107,7 +2107,7 @@ function SecondaryScoutTabs({
               : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           }`}
         >
-          ⭐ My Ratings
+          ⭐ My Ratings{""}
           <span className="ml-1 px-1.5 py-0.5 text-xs bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-300 rounded-full">
             {savedRatings.length}
           </span>

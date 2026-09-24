@@ -732,7 +732,7 @@ function BlueButtonHeader({ onClose, onOpenAISettings, onReportBug }) {
               id="blue-button-xray-title"
               className="text-xl font-bold text-white flex items-center gap-2"
             >
-              Blue Button X-Ray
+              Blue Button X-Ray{""}
               <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
                 AI
               </span>
@@ -1173,7 +1173,7 @@ function AddToCalculatorPanel({ conditions, onAddToCalculator }) {
           className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center gap-2"
         >
           <span>🧭</span>
-          Add to Pathfinder
+          {""}Add to Pathfinder
         </button>
       </div>
     </div>

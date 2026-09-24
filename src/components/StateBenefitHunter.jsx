@@ -656,7 +656,7 @@ const BenefitsGrid = ({ benefits }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="text-xl">📋</span> Your Eligible Benefits
+        <span className="text-xl">📋</span> Your Eligible Benefits{""}
         <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 text-sm rounded-full">
           {benefits.length} found
         </span>

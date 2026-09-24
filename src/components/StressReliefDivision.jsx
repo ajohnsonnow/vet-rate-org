@@ -170,7 +170,7 @@ const DoomLauncher = ({
           {/* Header */}
           <div className="text-green-500 text-xl mb-4 animate-pulse flex items-center gap-2">
             <span className="text-red-500">█</span> VET-RATE STRESS RELIEF
-            DIVISION
+            DIVISION{""}
             <span className="text-red-500">█</span>
           </div>
 
