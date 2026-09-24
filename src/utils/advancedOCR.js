@@ -880,6 +880,22 @@ function resolveDigitConfusion(char) {
 }
 
 /**
+ * Recognize token shapes that are Army/AFSC-style codes or officer/warrant
+ * pay grades rather than genuine numbers, so the correction below leaves
+ * them alone: Army/AF MOS codes render as 2 digits + letter + a 2-digit
+ * skill-level suffix, or no suffix at all ("11B10", "13B20", "12B" - never
+ * a 1-digit suffix, which is how a real corrupted year like "19B5" is told
+ * apart from a real MOS code below), and officer/warrant pay grades are a
+ * single confusable letter followed by 1-2 digits ("O3", "O12"). Both
+ * shapes are only reachable here because B/I/O are also digit-confusable
+ * letters - any other MOS/rank letter (92Y, E5, W2) never enters the
+ * [\dOIB]-only token match in the first place.
+ */
+function isMilitaryCodeShape(token) {
+  return /^\d{2}[OIB](?:\d{2})?$/.test(token) || /^[OIB]\d{1,2}$/.test(token);
+}
+
+/**
  * Correct OCR letter/digit confusion (O/I/B misread for 0/1/8) inside
  * tokens that are otherwise all-digit, e.g. a date "20O40808" ->
  * "20040808" or a year "19B5" -> "1985". A whole-text global "O" -> "0"
@@ -887,11 +903,19 @@ function resolveDigitConfusion(char) {
  * O in the document ("FROM"/"TO" became "FR0M"/"T0") - this only touches a
  * character surrounded by (or forming a maximal run with) real digits, so
  * a normal word like "FROM" or "TO" never matches at all.
+ *
+ * A later regression: matching "otherwise all-digit" by character class
+ * alone also corrupted real Army MOS codes ("11B10" -> "11810", "12B" ->
+ * "128") and officer pay grades ("O3" -> "03"), because a 2-digit MOS
+ * suffix looks exactly as "surrounded by digits" as a real numeric token
+ * does. isMilitaryCodeShape excludes those shapes before any correction is
+ * considered - "B" in particular should almost never become "8".
  */
 function correctDigitConfusionInNumberTokens(text) {
-  return text.replace(/\b[\dOIB]+\b/g, (token) =>
-    /\d/.test(token) ? token.replace(/[OIB]/g, resolveDigitConfusion) : token,
-  );
+  return text.replace(/\b[\dOIB]+\b/g, (token) => {
+    if (!/\d/.test(token) || isMilitaryCodeShape(token)) return token;
+    return token.replace(/[OIB]/g, resolveDigitConfusion);
+  });
 }
 
 /**

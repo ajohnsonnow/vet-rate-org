@@ -45,4 +45,46 @@ describe("advancedOCR: applyVATerminologyCorrection", () => {
       "CERTIFICATE DD-214",
     );
   });
+
+  // Regression (Vera re-verification, 2026-09-24): correctDigitConfusionInNumberTokens
+  // rewrote any [0-9OIB]-only token that contained a digit, so real Army MOS
+  // codes (digit-digit-LETTER, with a letter that happens to be B/I/O) got
+  // silently corrupted right alongside genuine numeric OCR noise.
+  it.each([
+    ["11B10", "MOS 11B10 INFANTRYMAN"],
+    ["13B20", "MOS 13B20 CANNON CREWMEMBER"],
+    ["12B", "PRIMARY SPECIALTY 12B COMBAT ENGINEER"],
+  ])(
+    "leaves the Army MOS code %s alone (does not read B as 8)",
+    (mos, input) => {
+      expect(applyVATerminologyCorrection(input)).toBe(input);
+    },
+  );
+
+  it("leaves a Y-lettered MOS code (92Y20) alone", () => {
+    const input = "MOS 92Y20 UNIT SUPPLY SPECIALIST";
+    expect(applyVATerminologyCorrection(input)).toBe(input);
+  });
+
+  it.each([["O-3"], ["O3"]])(
+    "leaves the officer pay grade %s alone (does not read O as 0)",
+    (grade) => {
+      const input = `4b PAY GRADE ${grade}`;
+      expect(applyVATerminologyCorrection(input)).toBe(input);
+    },
+  );
+
+  it("still repairs an 8-digit date with two O-for-zero confusions (2OO4O8O8 -> 20040808)", () => {
+    const input = "SERVICE IN AFGHANISTAN FROM 2OO4O8O8 TO 20050727";
+    expect(applyVATerminologyCorrection(input)).toBe(
+      "SERVICE IN AFGHANISTAN FROM 20040808 TO 20050727",
+    );
+  });
+
+  it("still repairs an O-for-zero confusion next to a percent sign (1O% -> 10%)", () => {
+    const input = "DISABILITY RATING 1O% SERVICE CONNECTED";
+    expect(applyVATerminologyCorrection(input)).toBe(
+      "DISABILITY RATING 10% SERVICE CONNECTED",
+    );
+  });
 });
