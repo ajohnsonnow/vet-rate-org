@@ -17,7 +17,12 @@
  */
 
 import { ensureQuota } from "./storage";
-import { normalizeConditionName } from "./conditionName";
+import {
+  findRatedConditionMatch,
+  isOlderDecision,
+  isSupersededName,
+  normalizeConditionName,
+} from "./conditionName";
 import { DOCUMENT_TYPES } from "./documentClassifier";
 
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
@@ -1560,11 +1565,23 @@ function _normalizeRatedConditions(decisionData) {
 }
 
 function _upsertRatedCondition(vkb, c, source) {
-  const key = normalizeConditionName(c.name);
-  const existing = vkb.medicalConditions.current.find(
-    (e) => normalizeConditionName(e.name) === key,
+  const existing = findRatedConditionMatch(
+    vkb.medicalConditions.current,
+    c.name,
+    (e) => e.name,
   );
   if (existing) {
+    if (
+      isOlderDecision(c.effectiveDate, existing.effectiveDate) ||
+      isSupersededName(existing.name, c.name)
+    ) {
+      return;
+    }
+    if (
+      normalizeConditionName(existing.name) !== normalizeConditionName(c.name)
+    ) {
+      existing.name = c.name;
+    }
     existing.ratedPercentage = c.percentage;
     existing.serviceConnected = true;
     if (c.effectiveDate) existing.effectiveDate = c.effectiveDate;

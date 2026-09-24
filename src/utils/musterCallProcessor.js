@@ -63,7 +63,12 @@ import {
   mergeDD214IntoVKB,
   mergeRatingDecisionIntoVKB,
 } from "./veteranKnowledgeBase";
-import { normalizeConditionName } from "./conditionName";
+import {
+  findRatedConditionMatch,
+  isOlderDecision,
+  isSupersededName,
+  normalizeConditionName,
+} from "./conditionName";
 import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
@@ -1307,6 +1312,32 @@ const _toIsoDay = (value) => {
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
 };
 
+// Returns true when the saved row changed. An older letter never overwrites
+// a newer decision, and a renamed condition takes the newer name.
+const _applyNewerRating = (row, name, pct, effectiveDate) => {
+  if (
+    isOlderDecision(effectiveDate, row.effectiveDate) ||
+    isSupersededName(row.name, name)
+  ) {
+    return false;
+  }
+  let changed = false;
+  if (normalizeConditionName(row.name) !== normalizeConditionName(name)) {
+    row.name = name;
+    row.side = _sideFromConditionName(name);
+    changed = true;
+  }
+  if (row.rating !== pct) {
+    row.rating = pct;
+    changed = true;
+  }
+  if (effectiveDate && row.effectiveDate !== effectiveDate) {
+    row.effectiveDate = effectiveDate;
+    changed = true;
+  }
+  return changed;
+};
+
 // Rated conditions from a decision letter become the veteran's saved ratings
 // - getMyRatings() is what the My Packet Ratings tab, Pathfinder, Secondary
 // Scout and the calculators all read. Upsert by normalized condition name so
@@ -1325,20 +1356,11 @@ const saveRatingDecisionToProfile = (file, result) => {
       const name = c.name || c.condition;
       const pct = Number(c.rating ?? c.ratedPercentage);
       if (!name || !Number.isFinite(pct)) continue;
-      const key = normalizeConditionName(name);
       const effectiveDate = _toIsoDay(c.effectiveDate);
-      const existing = ratings.find(
-        (r) => normalizeConditionName(r.name) === key,
-      );
+      const existing = findRatedConditionMatch(ratings, name, (r) => r.name);
       if (existing) {
-        if (existing.rating !== pct) {
-          existing.rating = pct;
-          changed = true;
-        }
-        if (effectiveDate && existing.effectiveDate !== effectiveDate) {
-          existing.effectiveDate = effectiveDate;
-          changed = true;
-        }
+        changed =
+          _applyNewerRating(existing, name, pct, effectiveDate) || changed;
       } else {
         ratings.push({
           name,
