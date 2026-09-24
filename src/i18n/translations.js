@@ -3935,6 +3935,13 @@ export const APP_TRANSLATIONS = {
       vi: "Xếp Hạng",
       ko: "등급",
     },
+    combinedRating: {
+      en: "Combined Rating",
+      es: "Rating Combinado",
+      tl: "Combined Rating",
+      vi: "Đánh Giá Kết Hợp",
+      ko: "통합 등급",
+    },
     serviceHistory: {
       en: "Service History",
       es: "Historial de Servicio",
