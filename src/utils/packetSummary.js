@@ -67,11 +67,21 @@ const uniqueLabels = (items) => {
 // module rather than changing the shared normalizeConditionName, which the
 // VKB write/read paths also depend on).
 const CONDITION_LENGTH_RANGE = [3, 120];
+// VA letters name re-characterized conditions in full, e.g. "lumbosacral
+// strain, degenerative disc disease ... (previously rated as lumbago)",
+// past 370 characters. A label that long is only a condition when it carries
+// that parenthetical and no sentence break; otherwise it is run-on OCR text.
+const LONG_VA_CONDITION_MAX = 400;
+const isLongVaCondition = (label) =>
+  label.length <= LONG_VA_CONDITION_MAX &&
+  label.includes("(") &&
+  !/[.!?] [A-Z]/.test(label);
 
 const looksLikeCondition = (label) => {
   if (!label) return false;
   const [min, max] = CONDITION_LENGTH_RANGE;
-  if (label.length < min || label.length > max) return false;
+  if (label.length < min) return false;
+  if (label.length > max && !isLongVaCondition(label)) return false;
   // Reject fragments with no letters at all -- page numbers, punctuation
   // runs, and other OCR noise occasionally land in a condition list.
   return /[a-z]/i.test(label);

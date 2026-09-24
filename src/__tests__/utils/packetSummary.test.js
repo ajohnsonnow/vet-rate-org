@@ -154,6 +154,17 @@ describe("buildDocumentFindings", () => {
     });
     expect(findings.conditions).toEqual(["Tinnitus"]);
   });
+
+  it("keeps a long re-characterized VA condition name but not long run-on text", () => {
+    const longVaName =
+      "lumbosacral strain, degenerative disc disease other than intervertebral disc syndrome, intervertebral disc syndrome, thoracic degenerative arthritis, lumbar and thoracic spine scoliosis (previously rated as lumbago) (claimed as osteoarthritis, post traumatic, mid lower back thoracolumbar spine)";
+    const runOn = `Evidence reviewed (VA exam). ${"The examiner noted pain. ".repeat(8)}`;
+    const findings = buildDocumentFindings({
+      fileName: "letter.pdf",
+      extractedData: { conditions: [longVaName, runOn] },
+    });
+    expect(findings.conditions).toEqual([longVaName]);
+  });
 });
 
 describe("buildAllDocumentFindings", () => {

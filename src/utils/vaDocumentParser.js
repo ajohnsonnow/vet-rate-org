@@ -850,9 +850,10 @@ export function parseCodeSheet(text) {
   };
 
   try {
-    // Code sheets have a very specific format with DC codes
+    // Code sheets have a very specific format with DC codes. Re-characterized
+    // conditions ("... (previously rated as ...)") run past 370 characters.
     const dcPattern =
-      /(\d{4})\s{0,10}[:-]?\s{0,10}([A-Za-z\s\-,()]{1,300}?)\s{0,10}[:-]?\s{0,10}(\d{1,3})%/g;
+      /(\d{4})\s{0,10}[:-]?\s{0,10}([A-Za-z\s\-,()]{1,1000}?)\s{0,10}[:-]?\s{0,10}(\d{1,3})%/g;
     const matches = text.matchAll(dcPattern);
 
     for (const match of matches) {

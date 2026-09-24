@@ -224,6 +224,19 @@ describe("vaDocumentParser: parseDBQReport (ReDoS regression)", () => {
   });
 });
 
+describe("vaDocumentParser: parseCodeSheet long condition names", () => {
+  it("keeps a Code Sheet row whose condition name runs past 300 characters", () => {
+    const name =
+      "lumbosacral strain, degenerative disc disease other than intervertebral disc syndrome, intervertebral disc syndrome, thoracic degenerative arthritis, lumbar and thoracic spine scoliosis (previously rated as lumbago) (claimed as osteoarthritis, post traumatic, mid lower back thoracolumbar spine, low back strain, straightening lordotic curve)";
+    expect(name.length).toBeGreaterThan(300);
+    const result = parseCodeSheet(`5242 - ${name} 20%\n6260 - tinnitus 10%`);
+    expect(result.conditions).toEqual([
+      { diagnosticCode: "5242", name, percent: 20 },
+      { diagnosticCode: "6260", name: "tinnitus", percent: 10 },
+    ]);
+  });
+});
+
 describe("vaDocumentParser: parseCodeSheet (ReDoS regression)", () => {
   it("does not hang on a huge document with digit-prefixed dash-heavy text and no percent sign", () => {
     const pathological = ("1234" + "-".repeat(200) + " ").repeat(1000);
