@@ -13,7 +13,7 @@ function PDFButton({ result, searchTerm }) {
     setIsLoading(true);
     setError(null);
     try {
-      await generatePDF(result, searchTerm);
+      generatePDF(result, searchTerm);
       setPdfGenerated(true);
     } catch (err) {
       setError(err.message || "Failed to generate PDF. Please try again.");

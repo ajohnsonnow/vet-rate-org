@@ -81,11 +81,9 @@ function deleteDatabaseFallback(dbName) {
 
 async function clearIndexedDbModern() {
   const databases = await window.indexedDB.databases();
-  const deletePromises = databases.map((db) => {
-    if (db.name) {
-      return deleteDatabaseModern(db.name);
-    }
-  });
+  const deletePromises = databases
+    .filter((db) => db.name)
+    .map((db) => deleteDatabaseModern(db.name));
   await Promise.all(deletePromises);
 }
 
@@ -108,7 +106,7 @@ async function clearIndexedDbFallback() {
   await Promise.all(deletePromises);
 }
 
-async function clearIndexedDb() {
+export async function clearIndexedDb() {
   // 4. Clear IndexedDB (Vector Store, AI Models, etc.)
   // eslint-disable-next-line no-console
   console.log("🔥 Clearing IndexedDB...");

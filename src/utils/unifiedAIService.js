@@ -2099,7 +2099,7 @@ export const generateAI = async (prompt, options = {}) => {
 async function _checkAiFeatureFlags(options) {
   if (options.skipFeatureCheck) return;
 
-  const aiEnabled = await isFeatureEnabled("ai_enabled");
+  const aiEnabled = isFeatureEnabled("ai_enabled");
   if (!aiEnabled) {
     throw new Error(
       "AI features are temporarily disabled. Please try again later.",
@@ -2109,14 +2109,14 @@ async function _checkAiFeatureFlags(options) {
   // Check mode-specific flags
   const effectiveMode = getEffectiveAIMode();
   if (effectiveMode === AI_MODES.LOCAL) {
-    const localEnabled = await isFeatureEnabled("local_ai");
+    const localEnabled = isFeatureEnabled("local_ai");
     if (!localEnabled) {
       throw new Error(
         "Local AI is temporarily disabled. Please use Cloud AI or try again later.",
       );
     }
   } else if (effectiveMode === AI_MODES.CLOUD) {
-    const cloudEnabled = await isFeatureEnabled("cloud_ai");
+    const cloudEnabled = isFeatureEnabled("cloud_ai");
     if (!cloudEnabled) {
       throw new Error(
         "Cloud AI is temporarily disabled. Please use Local AI or try again later.",
@@ -2127,7 +2127,7 @@ async function _checkAiFeatureFlags(options) {
 
 async function _checkCrisisSafety(prompt, options) {
   if (options.skipCrisisCheck) return;
-  const crisisResult = await interceptBeforeAICall(prompt);
+  const crisisResult = interceptBeforeAICall(prompt);
   if (crisisResult.shouldBlock) {
     throw new Error("CRISIS_DETECTED");
   }

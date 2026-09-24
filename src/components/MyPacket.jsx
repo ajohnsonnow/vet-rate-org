@@ -4912,10 +4912,9 @@ function _loadVeteranProfile(ctx) {
   setVeteranProfile(profile || {});
 }
 
-async function _checkAIStatus(ctx) {
+function _checkAIStatus(ctx) {
   const { setAIStatus } = ctx;
-  const status = await getAIStatus();
-  setAIStatus(status);
+  setAIStatus(getAIStatus());
 }
 
 function _loadServiceHistory(ctx) {
@@ -6066,9 +6065,7 @@ function _buildPacketLoaders(state) {
   } = state;
 
   const loadVeteranProfile = () => _loadVeteranProfile({ setVeteranProfile });
-  const checkAIStatus = async () => {
-    await _checkAIStatus({ setAIStatus });
-  };
+  const checkAIStatus = () => _checkAIStatus({ setAIStatus });
   const loadServiceHistory = () => _loadServiceHistory({ setServiceHistory });
   const loadTimelineEvents = () => _loadTimelineEvents({ setTimelineEvents });
   const loadPainMaps = () => _loadPainMaps({ setPainMaps });

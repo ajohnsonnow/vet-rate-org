@@ -600,9 +600,8 @@ const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
       </span>
     </div>
     <AIModeSelector
-      onModeChange={async () => {
-        const status = await getAIStatus();
-        setAIStatus(status);
+      onModeChange={() => {
+        setAIStatus(getAIStatus());
       }}
     />
     <p className="text-xs text-white/70 mt-2">
@@ -1733,11 +1732,7 @@ function useSymptomLoggerInitEffects({
   setAIStatus,
 }) {
   useEffect(() => {
-    const checkAI = async () => {
-      const status = await getAIStatus();
-      setAIStatus(status);
-    };
-    checkAI();
+    setAIStatus(getAIStatus());
   }, [setAIStatus]);
 
   useEffect(() => {
