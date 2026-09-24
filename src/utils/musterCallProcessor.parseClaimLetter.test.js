@@ -50,6 +50,7 @@ describe("musterCallProcessor: parseClaimLetter (real letter phrasing)", () => {
 
     expect(result.claimNumber).toBe("123456789");
     expect(result.letterDate).toBe("November 15, 2025");
+    expect(result.decisionDate).toBe("November 15, 2025");
     expect(result.decisions).toHaveLength(3);
 
     const tinnitus = result.decisions.find((d) =>
@@ -223,6 +224,9 @@ describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () =
       { percentage: 70, effectiveDate: "Mar 31, 2023" },
       { percentage: 80, effectiveDate: "Sep 15, 2023" },
     ]);
+    // No "Date:" letterhead line anywhere in this letter - decisionDate
+    // falls back to the newest effective date it actually states.
+    expect(result.decisionDate).toBe("September 15, 2023");
     expect(result.conditions).toHaveLength(5);
     expect(result.conditions.map((c) => c.rating)).toEqual([20, 10, 10, 10, 0]);
     expect(result.claimNumber).toBe("000000000");

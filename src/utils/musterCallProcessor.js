@@ -4389,6 +4389,33 @@ function decisionsToConditions(decisions) {
     }));
 }
 
+// Real decision/notification letters rarely carry an explicit
+// "DECISION DATE:" label (that only matches an old intake-form shape) - the
+// best fallback signal for "when was this decision made" is the newest
+// effective date the letter actually states, either a per-issue decision's
+// or the combined-rating history's last row. Returns the original date
+// string (whatever prose/numeric form the letter used), not a normalized
+// one, since callers store it as-is.
+function _latestEffectiveDate(decisions, combinedRatingHistory) {
+  const candidates = [
+    ...(Array.isArray(decisions) ? decisions : []).map((d) => d.effectiveDate),
+    ...(Array.isArray(combinedRatingHistory) ? combinedRatingHistory : []).map(
+      (h) => h.effectiveDate,
+    ),
+  ].filter(Boolean);
+  let best = null;
+  let bestIso = null;
+  for (const candidate of candidates) {
+    const iso = _toIsoDay(candidate);
+    if (!iso) continue;
+    if (!bestIso || iso > bestIso) {
+      bestIso = iso;
+      best = candidate;
+    }
+  }
+  return best;
+}
+
 function attachPerIssueDecisions(data, text) {
   const decisions = extractPerIssueDecisions(text);
   const history = extractCombinedRatingHistory(text);
@@ -4407,6 +4434,10 @@ function attachPerIssueDecisions(data, text) {
   if (history.length > 0) data.combinedRatingHistory = history;
   if (data.combinedRating === null || data.combinedRating === undefined) {
     data.combinedRating = extractCombinedRatingValue(text, history);
+  }
+  if (!data.decisionDate) {
+    data.decisionDate =
+      data.letterDate || _latestEffectiveDate(decisions, history);
   }
   return data;
 }
@@ -4465,6 +4496,7 @@ export const parseClaimLetter = async (text) => {
     claimNumber: null,
     claimDate: null,
     letterDate: null,
+    decisionDate: null,
     decisions: [],
     conditions: [],
     combinedRating: null,
@@ -4484,6 +4516,12 @@ export const parseClaimLetter = async (text) => {
     if (history.length > 0) data.combinedRatingHistory = history;
     data.combinedRating = extractCombinedRatingValue(text, history);
     data.conditions = decisionsToConditions(data.decisions);
+    // The letter's own issue date ("Date: November 15, 2025" near the
+    // letterhead) is the best signal for when a decision was made; real
+    // letters that skip that header (notification-format, pdf.js page-line
+    // layouts) still state effective dates, so fall back to the newest one.
+    data.decisionDate =
+      data.letterDate || _latestEffectiveDate(data.decisions, history);
 
     // Evidence-request section (development letters)
     const evidenceSectionMatch = text.match(

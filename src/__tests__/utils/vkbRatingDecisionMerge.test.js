@@ -4,6 +4,13 @@ import {
   mergeRatingDecisionIntoVKB,
 } from "../../utils/veteranKnowledgeBase";
 
+// musterCallProcessor transitively imports pdfjs, which references canvas
+// globals jsdom doesn't provide (same pattern as
+// musterCallProcessor.parseClaimLetter.test.js).
+globalThis.DOMMatrix ??= class DOMMatrix {};
+globalThis.Path2D ??= class Path2D {};
+globalThis.ImageData ??= class ImageData {};
+
 const decision2024 = {
   type: "rating_decision",
   claimNumber: "000000000",
@@ -173,5 +180,35 @@ describe("veteranKnowledgeBase: stated combined rating follows the newest letter
     mergeRatingDecisionIntoVKB(vkb, letter(40, null));
     expect(vkb.vaClaimsHistory.currentCombinedRating).toBe(80);
     expect(vkb.vaClaimsHistory.currentCombinedRatingDate).toBe("May 8, 2024");
+  });
+});
+
+describe("musterCallProcessor + veteranKnowledgeBase: a real letter's decisionDate reaches a denial's timeline (D2)", () => {
+  it("lets the Appeals Lane Advisor find a denial's date from a realistically-worded letter, not just a 'DECISION DATE:' label", async () => {
+    const { parseClaimLetter } =
+      await import("../../utils/musterCallProcessor");
+    const letterText = `Department of Veterans Affairs
+Date: May 8, 2024
+VA File Number: 123456789
+
+We made a decision on your VA benefits claim.
+
+1. Service connection for tinnitus is denied.
+2. Service connection for post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS)) is granted with an evaluation of 50 percent effective March 1, 2024.
+`;
+    const decisionData = await parseClaimLetter(letterText);
+    expect(decisionData.decisionDate).toBe("May 8, 2024");
+
+    const vkb = mergeRatingDecisionIntoVKB(initializeVKB(), decisionData, {
+      fileName: "Denial-2024-5-8.pdf",
+    });
+
+    expect(vkb.vaClaimsHistory.claims).toEqual([
+      expect.objectContaining({
+        status: "denied",
+        decisionDate: "May 8, 2024",
+        conditions: ["tinnitus"],
+      }),
+    ]);
   });
 });
