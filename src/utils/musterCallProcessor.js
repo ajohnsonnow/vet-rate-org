@@ -4191,13 +4191,19 @@ const EFFECTIVE_DATE_ISSUE_RE =
 
 // The cover page and the enclosed rating decision state every decision
 // twice, with small parenthetical differences; the first 40 characters of the
-// condition plus the outcome identify the pair.
+// condition plus the outcome identify the pair. A genuine bilateral pair
+// (e.g. "Iliotibial band syndrome ... left hip" / "... right hip") can share
+// that entire 40-character prefix when the distinguishing "left"/"right"
+// token sits past it, which collapsed two real, differently-sided
+// conditions into one and silently dropped the second. Fold in the side so
+// same-prefix left/right/bilateral conditions stay distinct while true
+// cover-page/decision-enclosure repeats (identical side) still collapse.
 const decisionKey = (condition, outcome) =>
   `${condition
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
-    .slice(0, 40)}|${outcome}`;
+    .slice(0, 40)}|${outcome}|${_sideFromConditionName(condition)}`;
 
 /**
  * Parse one sentence matched by DECISION_OUTCOME_RE into a decision

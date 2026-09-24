@@ -229,6 +229,23 @@ describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () =
     expect(result.status).toBe("mixed");
   });
 
+  it("keeps a bilateral pair distinct when both conditions share a >40-char name prefix (regression)", async () => {
+    // Real letters grant paired-extremity conditions as two full sentences
+    // that differ only in "left hip" / "right hip" at the very end. When
+    // that shared prefix is 40+ characters, decisionKey's front-truncated
+    // dedup key collapsed the second sentence into the first and dropped a
+    // real, separately-rated condition.
+    const text =
+      "Service connection for Iliotibial band syndrome Greater trochanteric pain syndrome (not bursitis), left hip is granted with an evaluation of 0 percent effective September 15, 2023. " +
+      "Service connection for Iliotibial band syndrome Greater trochanteric pain syndrome (not bursitis), right hip is granted with an evaluation of 0 percent effective September 15, 2023.";
+    const result = await parseClaimLetter(text);
+
+    expect(result.decisions).toHaveLength(2);
+    expect(result.decisions[0].condition).toMatch(/left hip$/);
+    expect(result.decisions[1].condition).toMatch(/right hip$/);
+    expect(result.conditions).toHaveLength(2);
+  });
+
   it("does not hang on a large claim letter where the file/date/evidence regexes almost-but-never match (regression: ReDoS)", async () => {
     // Stresses fileNumMatch, receivedMatch (bounded {0,80} filler),
     // claimDateMatch fallback, letterDateMatch, and evidenceSectionMatch
