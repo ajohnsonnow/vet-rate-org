@@ -60,19 +60,37 @@ export const extractPriorConditionNames = (name) => {
   return priors;
 };
 
+const SECONDARY_LINK = / (?:associated with|secondary to) /;
+
+/**
+ * The condition itself without the "associated with <primary>" or
+ * "secondary to <primary>" link VA adds for secondary conditions. The code
+ * sheet always spells the link out ("radiculopathy, left lower extremity
+ * (femoral) associated with lumbosacral strain, ...") while decision letters
+ * often don't, and both name the same rating.
+ */
+export const primaryConditionKey = (name) => {
+  const key = normalizeConditionName(name);
+  const link = SECONDARY_LINK.exec(key);
+  return link ? key.slice(0, link.index) : key;
+};
+
 /**
  * Find the saved row a newly decided condition should update: same name,
  * a row the new name says it replaces, or a row that already records this
- * name as its former name (an older letter processed after a newer one).
+ * name as its former name (an older letter processed after a newer one), or
+ * the same condition written with or without its secondary link.
  */
 export const findRatedConditionMatch = (rows, name, getName) => {
   const key = normalizeConditionName(name);
   if (!key) return null;
   const priors = extractPriorConditionNames(name);
+  const base = primaryConditionKey(name);
   return (
     rows.find((r) => normalizeConditionName(getName(r)) === key) ||
     rows.find((r) => priors.includes(normalizeConditionName(getName(r)))) ||
     rows.find((r) => extractPriorConditionNames(getName(r)).includes(key)) ||
+    rows.find((r) => primaryConditionKey(getName(r)) === base) ||
     null
   );
 };

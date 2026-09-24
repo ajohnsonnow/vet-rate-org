@@ -212,3 +212,82 @@ We made a decision on your VA benefits claim.
     ]);
   });
 });
+
+describe("veteranKnowledgeBase: a C-File code sheet feeds the rating record", () => {
+  const codeSheetData = {
+    type: "c_file",
+    ratingSource: "code_sheet",
+    combinedRating: 80,
+    decisionDate: "2024-05-06",
+    decisionDateKind: "letter",
+    conditions: [
+      {
+        name: "Post-traumatic stress disorder",
+        rating: 50,
+        effectiveDate: "2023-03-31",
+        diagnosticCode: "9411",
+        outcome: "code_sheet",
+      },
+      {
+        name: "Tinnitus",
+        rating: 10,
+        effectiveDate: "2023-03-31",
+        diagnosticCode: "6260",
+        outcome: "code_sheet",
+      },
+    ],
+    deniedConditions: [
+      { name: "Sinusitis", decisionDate: "2023-07-06" },
+      { name: "Sleep disorder", decisionDate: "2008-11-26" },
+    ],
+  };
+
+  it("raises a renamed rating and adds a condition only the code sheet lists", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(vkb, decisionWithPtsdAt30(), {
+      fileName: "letter.pdf",
+    });
+    mergeRatingDecisionIntoVKB(vkb, codeSheetData, { fileName: "cfile.pdf" });
+
+    const current = vkb.medicalConditions.current;
+    expect(current).toHaveLength(2);
+    expect(current.find((c) => /stress/i.test(c.name)).ratedPercentage).toBe(
+      50,
+    );
+    expect(current.find((c) => c.name === "Tinnitus").diagnosticCode).toBe(
+      "6260",
+    );
+    expect(
+      vkb.evidenceTimeline.some((e) =>
+        e.description.startsWith("Rating on VA code sheet: Tinnitus"),
+      ),
+    ).toBe(true);
+  });
+
+  it("dates each denial with its own original denial date", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(vkb, codeSheetData, { fileName: "cfile.pdf" });
+    const denials = Object.fromEntries(
+      vkb.vaClaimsHistory.claims.map((c) => [c.conditions[0], c.decisionDate]),
+    );
+    expect(denials).toEqual({
+      Sinusitis: "2023-07-06",
+      "Sleep disorder": "2008-11-26",
+    });
+  });
+});
+
+function decisionWithPtsdAt30() {
+  return {
+    type: "rating_decision",
+    decisionDate: "May 8, 2024",
+    decisions: [],
+    conditions: [
+      {
+        name: "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia)",
+        rating: 30,
+        effectiveDate: "June 30, 2007",
+      },
+    ],
+  };
+}

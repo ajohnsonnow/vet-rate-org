@@ -68,6 +68,7 @@ import {
   isOlderDecision,
   isSupersededName,
   normalizeConditionName,
+  primaryConditionKey,
 } from "./conditionName";
 import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 // ============================================================
@@ -93,6 +94,7 @@ import {
   parseCodeSheet,
   extractBigThree,
 } from "./vaDocumentParser";
+import { latestRatingCodeSheet } from "./vaCodeSheet";
 import {
   segmentCFile,
   quickScanCFile,
@@ -1295,6 +1297,7 @@ const hasRatingDecisions = (result) => {
   const d = result.extractedData;
   return (
     d?.type === "rating_decision" ||
+    d?.ratingSource === "code_sheet" ||
     (Array.isArray(d?.decisions) && d.decisions.length > 0)
   );
 };
@@ -2000,8 +2003,10 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
   // full pass over a text that is ~3.9M characters for a real C-File.
   const inventory = buildInventoryFromSegmentation(segments);
 
-  // Extract Code Sheet (at END) for current ratings
-  const codeSheet = parseCodeSheet(text);
+  const ratingSheet = latestRatingCodeSheet(text);
+  const codeSheet = ratingSheet
+    ? _codeSheetSummary(ratingSheet)
+    : parseCodeSheet(text);
 
   // Attempt AI-enhanced analysis for potential claims (if AI available)
   let aiAnalysis = null;
@@ -2035,10 +2040,47 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
     })),
     inventory,
     codeSheet: codeSheet.success ? codeSheet : null,
+    ...(ratingSheet ? _ratingFieldsFromCodeSheet(ratingSheet) : {}),
     aiAnalysis, // Include AI-enhanced analysis if available
     parserVersion: "v1.18.3-enhanced",
   };
 };
+
+const _codeSheetSummary = (sheet) => ({
+  documentType: "CODE_SHEET",
+  success: true,
+  sheetDate: sheet.sheetDate,
+  combinedRating: sheet.combinedRating,
+  conditions: sheet.conditions.map((c) => ({
+    diagnosticCode: c.diagnosticCode,
+    name: c.name,
+    percent: c.rating,
+  })),
+});
+
+// The newest code sheet in a C-File is VA's complete current rating list, so
+// it feeds the same rating pipeline a decision letter does. Each denial keeps
+// its own original denial date rather than the sheet's date.
+const _ratingFieldsFromCodeSheet = (sheet) => ({
+  conditions: sheet.conditions.map((c) => ({
+    name: c.name,
+    rating: c.rating,
+    effectiveDate: c.effectiveDate,
+    diagnosticCode: c.diagnosticCode,
+    serviceConnected: true,
+    outcome: "code_sheet",
+  })),
+  combinedRating: sheet.combinedRating,
+  combinedRatingHistory: sheet.combinedRatingHistory,
+  deniedConditions: sheet.notServiceConnected.map((c) => ({
+    name: c.name,
+    decisionDate: c.originalDenialDate,
+  })),
+  decisionDate: sheet.sheetDate,
+  decisionDateKind: "letter",
+  ratingSource: "code_sheet",
+  servicePeriods: sheet.servicePeriods,
+});
 
 // quickScanCFile() reports detected document TYPES and a page estimate - it has
 // never returned a document count. This function previously read
@@ -4077,8 +4119,10 @@ export const parseRatingDecision = async (text, { letterheadText } = {}) => {
     // the original only on adversarial/unrealistic input (100+ char gaps
     // between code and name) that doesn't occur in real decision letters,
     // where the original's own behavior was already fragile (it could
-    // swallow unrelated prose into the "condition name").
-    const CONDITION_PERCENT_RE = /([A-Z][A-Z\s,]{1,100}?)[\s-]+(\d+)%/gi;
+    // swallow unrelated prose into the "condition name"). The dash is
+    // required: without it every "...rating is 30%" or "Original award, 30%"
+    // in a letter's prose became a rated condition.
+    const CONDITION_PERCENT_RE = /([A-Z][A-Z\s,]{1,100}?) {0,3}- {0,3}(\d+)%/gi;
     const DIAGNOSTIC_CODE_BEFORE_RE =
       /DIAGNOSTIC\s{1,10}CODE\s{0,10}[:=]?\s{0,10}(\d{4})\s{0,10}$/i;
     const DIAGNOSTIC_CODE_LOOKBACK_WINDOW = 200;
@@ -4276,7 +4320,35 @@ function extractPerIssueDecisions(text) {
 
   for (const row of extractDecisionTableRows(text)) push(row);
 
+  const rated = new Set(
+    decisions
+      .filter((d) => d.rating !== null && !d.issue)
+      .map((d) => primaryConditionKey(d.condition)),
+  );
+  for (const assigned of extractAssignedEvaluations(text)) {
+    if (!rated.has(primaryConditionKey(assigned.condition))) push(assigned);
+  }
+
   return decisions;
+}
+
+// A Higher-Level Review that only decides an effective date still restates
+// the rating in its reasons: "We have assigned a 50 percent evaluation for
+// your post-traumatic stress disorder (formerly evaluated as ...) based on:".
+// That is the letter's only statement of the current percentage, so it counts
+// as a continued rating unless the letter already decided that condition.
+const ASSIGNED_EVALUATION_RE =
+  /We have assigned an? (\d{1,3}) percent evaluation for your (.{3,400}?) based on\b/gi;
+
+function extractAssignedEvaluations(text) {
+  const flat = text.replace(/\s+/g, " ");
+  return [...flat.matchAll(ASSIGNED_EVALUATION_RE)].map((m) => ({
+    condition: m[2].trim(),
+    outcome: "continued",
+    rating: Number(m[1]),
+    priorRating: Number(m[1]),
+    effectiveDate: null,
+  }));
 }
 
 // Pre-2015 decision letters tabulate outcomes instead of writing sentences:

@@ -316,3 +316,45 @@ describe("musterCallProcessor: parseClaimLetter letterhead date", () => {
     expect(result.decisionDateKind).toBe("effective");
   });
 });
+
+describe("musterCallProcessor: ratings a letter restates rather than decides", () => {
+  it("reads the rating a Higher-Level Review restates when it only decides an effective date", async () => {
+    const result = await parseClaimLetter(
+      "DECISION Entitlement to an earlier effective date for the 50 percent evaluation of post-traumatic stress disorder is denied. " +
+        "REASONS FOR DECISION The claim for increase was received on March 31, 2023. " +
+        "We have assigned a 50 percent evaluation for your post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS)) based on: Anxiety",
+    );
+    expect(result.conditions).toEqual([
+      expect.objectContaining({
+        name: "post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+        rating: 50,
+        outcome: "continued",
+      }),
+    ]);
+    expect(
+      result.decisions.filter((d) => d.outcome === "denied" && !d.issue),
+    ).toEqual([]);
+  });
+
+  it("keeps the decided rating when the reasons restate it", async () => {
+    const result = await parseClaimLetter(
+      "1. Evaluation of tinnitus, which is currently 0 percent disabling, is increased to 10 percent effective March 31, 2023. " +
+        "We have assigned a 10 percent evaluation for your tinnitus based on: recurrent tinnitus",
+    );
+    expect(result.conditions).toHaveLength(1);
+    expect(result.conditions[0]).toMatchObject({
+      rating: 10,
+      outcome: "increased",
+    });
+  });
+
+  it("does not turn payment-table prose into rated conditions", async () => {
+    const result = await parseRatingDecision(
+      "$420.00 Jul 1, 2007 Original award, 30% Jul 1, 2008 Compensation rating adjusted to 40% Your overall or combined rating is 30% effective June 30, 2007",
+    );
+    expect(result.conditions.map((c) => c.name)).not.toContain(
+      "Original award,",
+    );
+    expect(result.conditions).toEqual([]);
+  });
+});

@@ -6,6 +6,7 @@ import {
   isSupersededName,
   matchConditionToKnownKey,
   normalizeConditionName,
+  primaryConditionKey,
 } from "../../utils/conditionName";
 
 const byName = (r) => r.name;
@@ -90,6 +91,47 @@ describe("findRatedConditionMatch", () => {
 
   it("returns null for an unrelated condition", () => {
     expect(findRatedConditionMatch(rows, "rhinitis", byName)).toBeNull();
+  });
+
+  it("matches a code sheet name that spells out the secondary link", () => {
+    const saved = [
+      { name: "radiculopathy, left lower extremity (femoral)" },
+      { name: "radiculopathy, right lower extremity (femoral)" },
+    ];
+    expect(
+      findRatedConditionMatch(
+        saved,
+        "Radiculopathy, right lower extremity (femoral) associated with lumbosacral strain, degenerative disc disease",
+        byName,
+      ),
+    ).toBe(saved[1]);
+  });
+
+  it("keeps sides apart when only the secondary link differs", () => {
+    const saved = [{ name: "Right hip limited adduction" }];
+    expect(
+      findRatedConditionMatch(
+        saved,
+        "Left hip limited adduction associated with lumbosacral strain",
+        byName,
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("primaryConditionKey", () => {
+  it("drops an 'associated with' or 'secondary to' link", () => {
+    expect(
+      primaryConditionKey(
+        "Tinnitus secondary to bilateral hearing loss (claimed as ringing)",
+      ),
+    ).toBe("tinnitus");
+    expect(
+      primaryConditionKey(
+        "Right hip limited extension associated with lumbosacral strain",
+      ),
+    ).toBe("right hip limited extension");
+    expect(primaryConditionKey("Rhinitis")).toBe("rhinitis");
   });
 });
 

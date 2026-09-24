@@ -1523,6 +1523,7 @@ const RATING_OUTCOME_LABELS = {
   reduced: "Rating reduced",
   continued: "Rating continued",
   "confirmed and continued": "Rating continued",
+  code_sheet: "Rating on VA code sheet",
 };
 
 /**
@@ -1649,7 +1650,14 @@ function _recordDenials(vkb, decisionData, source) {
     : decisions
         .filter((d) => d.outcome === "denied" && !d.issue)
         .map((d) => d.condition);
-  for (const name of denied) {
+  // A code sheet lists each denial with its own original denial date.
+  for (const entry of denied) {
+    const name = typeof entry === "string" ? entry : entry?.name;
+    if (!name) continue;
+    const decisionDate =
+      (typeof entry === "string" ? null : entry.decisionDate) ||
+      decisionData.decisionDate ||
+      null;
     const duplicate = vkb.vaClaimsHistory.claims.some(
       (cl) =>
         cl.status === "denied" &&
@@ -1662,7 +1670,7 @@ function _recordDenials(vkb, decisionData, source) {
       filedDate: null,
       status: "denied",
       decision: "denied",
-      decisionDate: decisionData.decisionDate || null,
+      decisionDate,
       conditions: [name],
       source,
     });
