@@ -551,7 +551,7 @@ export const importVeteranData = (data, mode = "replace") => {
 /**
  * Valid body parts for ratings
  */
-const VALID_BODY_PARTS = [
+const VALID_BODY_PARTS = new Set([
   "shoulder",
   "arm",
   "elbow",
@@ -586,7 +586,7 @@ const VALID_BODY_PARTS = [
   "diabetes",
   "migraines",
   "other",
-];
+]);
 
 /**
  * Get all saved ratings
@@ -617,7 +617,7 @@ export const saveMyRatings = (ratings) => {
         r.id ||
         `rating_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: sanitizeString(r.name || "", 200),
-      bodyPart: VALID_BODY_PARTS.includes(r.bodyPart) ? r.bodyPart : "other",
+      bodyPart: VALID_BODY_PARTS.has(r.bodyPart) ? r.bodyPart : "other",
       rating: Math.max(0, Math.min(100, Number.parseInt(r.rating) || 0)),
       side: ["left", "right", "bilateral", "none"].includes(r.side)
         ? r.side
@@ -647,7 +647,7 @@ export const addRating = (rating) => {
     const newRating = {
       id: `rating_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: sanitizeString(rating.name || "", 200),
-      bodyPart: VALID_BODY_PARTS.includes(rating.bodyPart)
+      bodyPart: VALID_BODY_PARTS.has(rating.bodyPart)
         ? rating.bodyPart
         : "other",
       rating: Math.max(0, Math.min(100, Number.parseInt(rating.rating) || 0)),
@@ -745,7 +745,7 @@ const SERVICE_HISTORY_KEY = "vet_rate_service_history";
 /**
  * Valid deployment locations/theaters
  */
-const VALID_THEATERS = [
+const VALID_THEATERS = new Set([
   "OIF",
   "OEF",
   "OND",
@@ -763,7 +763,7 @@ const VALID_THEATERS = [
   "Europe",
   "Pacific",
   "Other",
-];
+]);
 
 /**
  * Get service history data
@@ -816,7 +816,7 @@ function _sanitizeDeployments(deployments) {
   if (!Array.isArray(deployments)) return [];
   return deployments.map((d) => ({
     id: d.id || `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    theater: VALID_THEATERS.includes(d.theater) ? d.theater : "Other",
+    theater: VALID_THEATERS.has(d.theater) ? d.theater : "Other",
     location: sanitizeString(d.location || "", 200),
     startDate: d.startDate || null,
     endDate: d.endDate || null,
@@ -1398,7 +1398,7 @@ export const addDeployment = (deployment) => {
     const history = getServiceHistory();
     const newDeployment = {
       id: `dep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      theater: VALID_THEATERS.includes(deployment.theater)
+      theater: VALID_THEATERS.has(deployment.theater)
         ? deployment.theater
         : "Other",
       location: sanitizeString(deployment.location || "", 200),

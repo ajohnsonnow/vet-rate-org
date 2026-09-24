@@ -27,7 +27,7 @@ import { BadgeDisplay, CombatIndicatorSummary } from "./BadgeDisplay";
 import { parseDD214Badges } from "../data/badgeData";
 
 // Internal/metadata fields skipped when filtering extracted data for display
-const EXCLUDED_METADATA_FIELDS = [
+const EXCLUDED_METADATA_FIELDS = new Set([
   "type",
   "raw",
   "error",
@@ -35,7 +35,7 @@ const EXCLUDED_METADATA_FIELDS = [
   "multiDocument",
   "documentIndex",
   "totalDocuments",
-];
+]);
 
 function FieldEditControls({ editValue, onChange, onSave, onCancel }) {
   return (
@@ -824,7 +824,7 @@ function useDocumentNavigation(totalDocuments) {
 function filterAndGroupFields(currentData, classification) {
   const filtered = {};
   for (const [field, value] of Object.entries(currentData)) {
-    if (EXCLUDED_METADATA_FIELDS.includes(field)) continue;
+    if (EXCLUDED_METADATA_FIELDS.has(field)) continue;
     if (value === null || value === undefined || value === "") continue;
     if (Array.isArray(value) && value.length === 0) continue;
     if (shouldCollectField(field, classification.type)) {

@@ -129,15 +129,17 @@ export function isConditionAlreadyRated(
   const tokenKey = (normalized) =>
     normalized.split(" ").filter(Boolean).sort().join(" ");
 
-  const secondaryKeys = secondaryConditionName
-    .split("/")
-    .map((part) => tokenKey(normalize(part)))
-    .filter(Boolean);
+  const secondaryKeys = new Set(
+    secondaryConditionName
+      .split("/")
+      .map((part) => tokenKey(normalize(part)))
+      .filter(Boolean),
+  );
 
   return userDisabilities.some((disability) => {
     const normalizedDisability = normalize(disability);
     if (!normalizedDisability) return false;
-    return secondaryKeys.includes(tokenKey(normalizedDisability));
+    return secondaryKeys.has(tokenKey(normalizedDisability));
   });
 }
 

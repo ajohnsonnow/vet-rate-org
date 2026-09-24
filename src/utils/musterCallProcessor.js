@@ -1688,7 +1688,7 @@ const selectBestDD214Segment = (segments, filename) => {
   const filenameWords = filenameUpper.replace(/[_\-.]/g, " ").split(/\s+/);
 
   // Common words to ignore in filename
-  const IGNORE_WORDS = [
+  const IGNORE_WORDS = new Set([
     "SERVICE",
     "RECORDS",
     "DD214",
@@ -1702,10 +1702,10 @@ const selectBestDD214Segment = (segments, filename) => {
     "MEMBER",
     "SCAN",
     "FILE",
-  ];
+  ]);
   const potentialNames = filenameWords.filter(
     (word) =>
-      word.length >= 3 && !IGNORE_WORDS.includes(word) && /^[A-Z]+$/.test(word),
+      word.length >= 3 && !IGNORE_WORDS.has(word) && /^[A-Z]+$/.test(word),
   );
 
   // eslint-disable-next-line no-console

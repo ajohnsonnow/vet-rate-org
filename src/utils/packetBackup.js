@@ -36,7 +36,7 @@ const VALID_STATEMENT_FIELDS = [
 ];
 
 // Valid status values
-const VALID_STATUSES = ["Drafting", "Statement Generated", "Filed"];
+const VALID_STATUSES = new Set(["Drafting", "Statement Generated", "Filed"]);
 
 // Max string lengths for security
 const MAX_STRING_LENGTH = 50000;
@@ -102,7 +102,7 @@ const sanitizeClaimField = (field, value) => {
   }
   if (field === "status") {
     // Validate status is a valid value
-    return VALID_STATUSES.includes(value) ? value : "Drafting";
+    return VALID_STATUSES.has(value) ? value : "Drafting";
   }
   if (field === "dateSaved" || field === "dateUpdated") {
     return _sanitizeDateField(value);
