@@ -342,7 +342,7 @@ const buildGaps = (vkb, documentFindings, conditions, stats) => {
   const unsupported = conditions.filter((c) => c.documentCount === 0);
   if (unsupported.length > 0) {
     gaps.push(
-      `${plural(unsupported.length, "condition")} has no supporting document in this packet: ${unsupported
+      `${plural(unsupported.length, "condition")} ${unsupported.length === 1 ? "has" : "have"} no supporting document in this packet: ${unsupported
         .slice(0, 5)
         .map((c) => c.name)
         .join(", ")}.`,
