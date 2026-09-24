@@ -114,26 +114,25 @@ export const getCachedEntryCount = async () => {
  * @param {function} onProgress - Progress callback (0-100)
  * @returns {Promise<{success: boolean, entryCount: number}>}
  */
+// Render serves an un-fetched Git LFS pointer for the full database with a
+// 200, so a bad status is not the only way the full file can be unusable -
+// any failure to download or parse it falls back to the web-optimized file.
 async function _fetchDKBEntries(onProgress) {
-  // First try to fetch the full database
-  let response;
-  let isFullDB = true;
-
   try {
-    response = await fetch(FULL_DKB_URL);
-    if (!response.ok) {
-      console.warn(
-        "[DKB] Full database not available, using web-optimized version",
-      );
-      response = await fetch(WEB_DKB_URL);
-      isFullDB = false;
-    }
-  } catch (fetchError) {
-    console.warn("[DKB] Fetch error, trying web-optimized:", fetchError);
-    response = await fetch(WEB_DKB_URL);
-    isFullDB = false;
+    const entries = await _downloadDKBEntries(FULL_DKB_URL, onProgress);
+    return { entries, isFullDB: true };
+  } catch (err) {
+    console.warn(
+      "[DKB] Full database unavailable, using web-optimized version:",
+      err.message,
+    );
+    const entries = await _downloadDKBEntries(WEB_DKB_URL, onProgress);
+    return { entries, isFullDB: false };
   }
+}
 
+async function _downloadDKBEntries(url, onProgress) {
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch DKB: ${response.status}`);
   }
@@ -173,16 +172,12 @@ async function _fetchDKBEntries(onProgress) {
   }
 
   onProgress(75);
-  const jsonString = new TextDecoder().decode(allChunks);
-  const data = JSON.parse(jsonString);
+  const data = JSON.parse(new TextDecoder().decode(allChunks));
 
   const entries = data.entries || data || [];
   // eslint-disable-next-line no-console
-  console.log(
-    `[DKB] Parsed ${entries.length} entries (${isFullDB ? "FULL" : "web-optimized"})`,
-  );
-
-  return { entries, isFullDB };
+  console.log(`[DKB] Parsed ${entries.length} entries from ${url}`);
+  return entries;
 }
 
 async function _storeDKBEntries(entries, isFullDB, onProgress) {

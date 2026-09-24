@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 function makeFakeResponse(data) {
-  const bytes = new TextEncoder().encode(JSON.stringify(data));
+  const text = typeof data === "string" ? data : JSON.stringify(data);
+  const bytes = new TextEncoder().encode(text);
   let alreadyRead = false;
   return {
     ok: true,
@@ -83,7 +84,7 @@ describe("downloadFullDKB - single-flight", () => {
     store = new Map();
     fetchSpy = vi
       .fn()
-      .mockResolvedValue(
+      .mockImplementation(async () =>
         makeFakeResponse({ entries: [{ id: "a" }, { id: "b" }] }),
       );
     vi.stubGlobal("fetch", fetchSpy);
@@ -116,5 +117,22 @@ describe("downloadFullDKB - single-flight", () => {
     await downloadFullDKB();
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back to the web file when the full file is a Git LFS pointer", async () => {
+    fetchSpy.mockImplementation(async (url) =>
+      url.includes("_full")
+        ? makeFakeResponse(
+            "version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 135766414\n",
+          )
+        : makeFakeResponse({ entries: [{ id: "w" }] }),
+    );
+    const { downloadFullDKB } = await import("../../utils/dkbIndexedDB");
+
+    const result = await downloadFullDKB();
+
+    expect(result.success).toBe(true);
+    expect(result.isFullDB).toBe(false);
+    expect(result.entryCount).toBe(1);
   });
 });
