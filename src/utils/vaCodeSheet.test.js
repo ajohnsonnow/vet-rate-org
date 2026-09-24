@@ -29,6 +29,13 @@ NOT SERVICE CONNECTED/NOT SUBJECT TO COMPENSATION (8.NSCPeacetime, Gulf War)
 ______ eSign: certified by
 `;
 
+// A diagnostic-code-shaped fragment ("5301 Prior Muscle Injury Reference")
+// sits inside 7101's continuation text before its own "Service Connected"
+// phrase appears, so it looks like a new entry start with no status of its
+// own. It must fold back into the preceding entry instead of becoming a
+// phantom condition.
+const SPURIOUS_CODE_FRAGMENT = `SUBJECT TO COMPENSATION (1.SC) 7101 HYPERTENSION Service Connected, Gulf War, Incurred 10% from 01/01/2020 5301 Prior Muscle Injury Reference 5237 LUMBOSACRAL STRAIN Service Connected, Gulf War, Incurred 20% from 01/01/2020`;
+
 // Older layout: the dated page header sits above ACTIVE DUTY.
 const OLD_LAYOUT = `--- PAGE 1605 ---
 Rating Decision Department of Veterans Affairs Regional Office Page 1 11/26/2008 NAME OF VETERAN J. VA FILE NUMBER 000000000 POA COPY TO ACTIVE DUTY EOD RAD BRANCH CHARACTER OF DISCHARGE 02/16/2006 06/29/2007 Army Honorable
@@ -136,6 +143,16 @@ describe("parseRatingCodeSheets: older layout and edge cases", () => {
     expect(sheet.combinedRating).toBe(40);
     expect(sheet.notServiceConnected[0].name).toBe("Sleep disorder");
     expect(sheet.notServiceConnected[0].originalDenialDate).toBeNull();
+  });
+
+  it("folds a diagnostic-code-shaped fragment inside an entry's continuation into that entry instead of a phantom condition", () => {
+    const [sheet] = parseRatingCodeSheets(SPURIOUS_CODE_FRAGMENT);
+    expect(sheet.conditions.map((c) => c.diagnosticCode)).toEqual([
+      "7101",
+      "5237",
+    ]);
+    expect(sheet.conditions[1].name).toBe("Lumbosacral strain");
+    expect(sheet.conditions[0].rating).toBe(10);
   });
 
   it("returns nothing for text without a code sheet", () => {
