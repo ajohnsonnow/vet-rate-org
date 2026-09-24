@@ -56,7 +56,7 @@ const FIELD_RULES = {
   serviceStartDate: {
     severity: CONFLICT_SEVERITY.HIGH,
     strategy: RESOLUTION_STRATEGIES.USE_MOST_RECENT,
-    normalize: (val) => val?.replaceAll(/\//g, "-"),
+    normalize: (val) => val?.replaceAll("/", "-"),
     message:
       "Service start dates differ. Most recent document usually more accurate.",
   },
@@ -64,7 +64,7 @@ const FIELD_RULES = {
   serviceEndDate: {
     severity: CONFLICT_SEVERITY.HIGH,
     strategy: RESOLUTION_STRATEGIES.USE_MOST_RECENT,
-    normalize: (val) => val?.replaceAll(/\//g, "-"),
+    normalize: (val) => val?.replaceAll("/", "-"),
     message:
       "Service end dates differ. Most recent document usually more accurate.",
   },

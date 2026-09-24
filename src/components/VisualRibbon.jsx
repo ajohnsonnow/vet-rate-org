@@ -41,7 +41,7 @@ function renderStarDevice(device, index, deviceSize, color) {
         width: deviceSize,
         height: deviceSize,
       }}
-      aria-label={device.type.replace(/_/g, " ")}
+      aria-label={device.type.replaceAll("_", " ")}
     >
       <span
         style={{

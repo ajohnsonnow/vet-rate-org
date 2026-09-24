@@ -15,7 +15,7 @@ import { getTotalToolCount as getToolkitToolCount } from "./toolkitData";
 const parseNumeric = (str) => {
   if (typeof str === "number") return str;
   if (!str) return 0;
-  return Number.parseInt(String(str).replace(/,/g, ""), 10) || 0;
+  return Number.parseInt(String(str).replaceAll(",", ""), 10) || 0;
 };
 
 export const PROJECT_STATS = {

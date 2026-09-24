@@ -309,10 +309,10 @@ export function highlightSearchTerm(
 ) {
   // Sanitize context to prevent XSS via dangerouslySetInnerHTML
   const sanitized = context
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 
   const flags = caseSensitive ? "g" : "gi";
   const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

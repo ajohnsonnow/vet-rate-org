@@ -246,7 +246,7 @@ async function runCachedBenefitsFetch({
  * Get claim phase info - no hook state involved, safe to hoist out of the hook.
  */
 function getClaimPhaseInfo(status) {
-  const upperStatus = status?.toUpperCase().replace(/ /g, "_");
+  const upperStatus = status?.toUpperCase().replaceAll(" ", "_");
   return CLAIM_PHASES[upperStatus] || CLAIM_PHASES["CLAIM_RECEIVED"];
 }
 

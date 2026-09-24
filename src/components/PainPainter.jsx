@@ -978,7 +978,7 @@ function BodySVG({
           fontWeight="bold"
         >
           {(hoveredRegion || selectedRegion)
-            .replace(/_/g, " ")
+            .replaceAll("_", " ")
             .replace(/\b\w/g, (l) => l.toUpperCase())}
         </text>
       )}
@@ -1001,7 +1001,7 @@ function DiagnosticCodesPanel({ selectedRegion }) {
 
   const codes = DIAGNOSTIC_CODES[selectedRegion] || [];
   const regionName = selectedRegion
-    .replace(/_/g, " ")
+    .replaceAll("_", " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
   return (
@@ -1311,7 +1311,7 @@ function usePainPainterExport({
     // Build pain points array with details
     const painPointsArray = Object.entries(painPoints).map(
       ([region, data]) => ({
-        region: region.replace(/_/g, " "),
+        region: region.replaceAll("_", " "),
         bodyPart: region,
         type: PAIN_TYPES[data.type]?.name || data.type,
         severity: getSeverityLabel(data.intensity),
@@ -1884,7 +1884,7 @@ const PainPainterPainLegend = ({ painPoints }) => (
             color: PAIN_TYPES[pain.type].color,
           }}
         >
-          {PAIN_TYPES[pain.type].emoji} {region.replace(/_/g, " ")}
+          {PAIN_TYPES[pain.type].emoji} {region.replaceAll("_", " ")}
         </span>
       ))}
     </div>

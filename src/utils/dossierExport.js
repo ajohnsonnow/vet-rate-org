@@ -249,7 +249,7 @@ function generateStatementsSection(statements) {
       <div class="statement-content">
         <h4>Statement Text:</h4>
         <div class="statement-text">
-          ${escapeHtml(stmt.statement || stmt.content || "No content").replace(/\n/g, "<br>")}
+          ${escapeHtml(stmt.statement || stmt.content || "No content").replaceAll("\n", "<br>")}
         </div>
       </div>
       ${

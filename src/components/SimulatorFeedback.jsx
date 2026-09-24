@@ -243,7 +243,7 @@ function pdfAddGapLine(doc, layout, pos, gap) {
   if (gap.startsWith("**")) {
     // Sub-header within gaps - also needs word wrapping
     doc.setFont("helvetica", "bold");
-    const cleanGap = gap.replace(/\*\*/g, "");
+    const cleanGap = gap.replaceAll("**", "");
     const headerLines = doc.splitTextToSize(cleanGap, layout.contentWidth - 5);
     headerLines.forEach((line) => {
       pdfCheckPageBreak(doc, layout, pos, 7);
@@ -387,7 +387,7 @@ const GapItem = ({ gap }) => {
   if (gap.startsWith("**")) {
     return (
       <p className="font-bold text-lg text-purple-800 dark:text-purple-100 mt-4 mb-2">
-        {gap.replace(/\*\*/g, "")}
+        {gap.replaceAll("**", "")}
       </p>
     );
   }

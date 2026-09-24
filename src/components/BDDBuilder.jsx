@@ -1113,7 +1113,7 @@ function MilestoneDetails({ milestone: m, onNavigateToTool }) {
             >
               Open{" "}
               {toolId
-                .replace(/-/g, " ")
+                .replaceAll("-", " ")
                 .replace(/\b\w/g, (c) => c.toUpperCase())}
             </button>
           ))}

@@ -2568,7 +2568,7 @@ function _lookupLocalModelName(modelId) {
   const cleanName = (quantAt === -1 ? modelId : modelId.slice(0, quantAt))
     .replace(/-MLC$/, "") // Remove MLC suffix
     .replace(/-Instruct$/, "") // Remove Instruct suffix
-    .replace(/-/g, " ") // Replace dashes with spaces
+    .replaceAll("-", " ") // Replace dashes with spaces
     .trim();
 
   return cleanName || "Local AI";

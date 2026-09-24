@@ -218,7 +218,7 @@ const RatingCriteriaBadges = ({ result }) => (
     {/* Type Badge */}
     <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
       <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
-        Rating Type: {result.ratingCriteria.type.replace(/-/g, " ")}
+        Rating Type: {result.ratingCriteria.type.replaceAll("-", " ")}
       </span>
     </div>
 

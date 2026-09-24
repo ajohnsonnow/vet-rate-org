@@ -258,9 +258,9 @@ async function analyzeRTFDocument(file, onProgress) {
       .replace(/\\[a-z]+-?\d* ?/g, "") // Remove RTF commands
       .replace(/[{}]/g, "") // Remove braces
       .replace(/\\'[0-9a-f]{2}/g, " ") // Remove escaped chars
-      .replace(/\\\*/g, "") // Remove escaped asterisks
-      .replace(/\\~/g, " ") // Non-breaking spaces
-      .replace(/\\_/g, "-") // Non-breaking hyphens
+      .replaceAll("\\*", "") // Remove escaped asterisks
+      .replaceAll("\\~", " ") // Non-breaking spaces
+      .replaceAll("\\_", "-") // Non-breaking hyphens
       .replace(/\n{3,}/g, "\n\n") // Normalize line breaks
       .trim();
 

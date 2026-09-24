@@ -297,7 +297,7 @@ function _drawRatingTypeAndInstructions(ctx) {
   doc.setFont(undefined, "bold");
   doc.setTextColor(75, 85, 99);
   doc.text(
-    `RATING TYPE: ${result.ratingCriteria.type.replace(/-/g, " ").toUpperCase()}`,
+    `RATING TYPE: ${result.ratingCriteria.type.replaceAll("-", " ").toUpperCase()}`,
     margin,
     pos.y,
   );

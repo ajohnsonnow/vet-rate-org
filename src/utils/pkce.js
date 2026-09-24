@@ -58,7 +58,7 @@ function base64UrlEncode(buffer) {
   // Replace + with - (minus)
   // Replace / with _ (underscore)
   // Remove trailing = padding
-  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  return base64.replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
 }
 
 /**

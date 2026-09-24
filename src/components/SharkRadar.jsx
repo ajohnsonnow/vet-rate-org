@@ -411,7 +411,7 @@ const RiskLevelCard = ({ data }) => (
                 : "text-yellow-600 dark:text-yellow-400"
             }`}
           >
-            Recommendation: {data.recommendation.replaceAll(/_/g, " ")}
+            Recommendation: {data.recommendation.replaceAll("_", " ")}
           </p>
         )}
       </div>

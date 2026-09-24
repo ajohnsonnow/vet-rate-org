@@ -1237,7 +1237,7 @@ function createAIConsentHandler({
 
       if (result.success) {
         setAiEnhancedStatement(
-          result.content.replace(/\[Date\]/g, new Date().toLocaleDateString()),
+          result.content.replaceAll("[Date]", new Date().toLocaleDateString()),
         );
         setUseAIVersion(true);
       } else {
