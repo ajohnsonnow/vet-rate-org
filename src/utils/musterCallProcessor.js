@@ -4435,9 +4435,11 @@ function attachPerIssueDecisions(data, text) {
   if (data.combinedRating === null || data.combinedRating === undefined) {
     data.combinedRating = extractCombinedRatingValue(text, history);
   }
-  if (!data.decisionDate) {
-    data.decisionDate =
-      data.letterDate || _latestEffectiveDate(decisions, history);
+  if (data.decisionDate) {
+    data.decisionDateKind ||= "letter";
+  } else {
+    data.letterDate ||= _letterheadDate(text);
+    _setDecisionDate(data, decisions, history);
   }
   return data;
 }
@@ -4487,7 +4489,35 @@ function _parseClaimLetterHeader(text, data) {
   );
   if (letterDateMatch) {
     data.letterDate = letterDateMatch[1];
+  } else {
+    data.letterDate = _letterheadDate(text);
   }
+}
+
+const LETTERHEAD_DATE =
+  /^(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4}$/;
+
+// Real VA letters carry no "Date:" label: the issue date sits alone on a line
+// in the letterhead ("May 8, 2024"). Only the first 40 lines are searched so
+// a dated sentence in the body is never mistaken for it.
+function _letterheadDate(text) {
+  for (const line of text.split("\n", 40)) {
+    const trimmed = line.trim().replace(/\s+/g, " ");
+    if (LETTERHEAD_DATE.test(trimmed)) return trimmed;
+  }
+  return null;
+}
+
+// Which kind of date decisionDate holds, so the UI can say "dated" for the
+// letter's issue date and "effective" for the fallback.
+function _setDecisionDate(data, decisions, history) {
+  if (data.letterDate) {
+    data.decisionDate = data.letterDate;
+    data.decisionDateKind = "letter";
+    return;
+  }
+  data.decisionDate = _latestEffectiveDate(decisions, history);
+  data.decisionDateKind = data.decisionDate ? "effective" : null;
 }
 
 export const parseClaimLetter = async (text) => {
@@ -4520,8 +4550,7 @@ export const parseClaimLetter = async (text) => {
     // letterhead) is the best signal for when a decision was made; real
     // letters that skip that header (notification-format, pdf.js page-line
     // layouts) still state effective dates, so fall back to the newest one.
-    data.decisionDate =
-      data.letterDate || _latestEffectiveDate(data.decisions, history);
+    _setDecisionDate(data, data.decisions, history);
 
     // Evidence-request section (development letters)
     const evidenceSectionMatch = text.match(

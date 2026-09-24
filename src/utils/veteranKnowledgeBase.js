@@ -1686,6 +1686,7 @@ function _recordStatedCombinedRating(vkb, decisionData, source) {
   }
   history.currentCombinedRating = combined;
   history.currentCombinedRatingDate = incomingDate;
+  history.currentCombinedRatingDateKind = decisionData.decisionDateKind || null;
   history.currentCombinedRatingSource = source;
 }
 

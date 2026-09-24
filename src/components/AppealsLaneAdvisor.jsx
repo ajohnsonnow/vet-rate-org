@@ -17,7 +17,6 @@ import { getMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { normalizeConditionName } from "../utils/conditionName";
 import { loadVKB } from "../utils/veteranKnowledgeBase";
-import { formatLocalDate } from "../utils/dateUtils";
 
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
@@ -51,12 +50,23 @@ function findLatestDenial(vkb) {
   const claims = Array.isArray(vkb?.vaClaimsHistory?.claims)
     ? vkb.vaClaimsHistory.claims
     : [];
-  const dated = claims.filter((c) => c.status === "denied" && c.decisionDate);
+  // Letters store dates as prose ("September 15, 2023"), so compare parsed
+  // times, not strings.
+  const dated = claims.filter(
+    (c) => c.status === "denied" && Number.isFinite(Date.parse(c.decisionDate)),
+  );
   if (dated.length === 0) return null;
   return dated.reduce((latest, c) =>
-    c.decisionDate > latest.decisionDate ? c : latest,
+    Date.parse(c.decisionDate) > Date.parse(latest.decisionDate) ? c : latest,
   );
 }
+
+const formatDenialDate = (value) =>
+  new Date(Date.parse(value)).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
 function computeTimeSinceDenial(decisionDate) {
   const deniedAt = new Date(decisionDate).getTime();
@@ -101,8 +111,8 @@ function RecordsPrefillBanner({ latestDenial, prefilled, trackedConditions }) {
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
         📋 We filled this in from your records — your{" "}
         {latestDenial.conditions?.join(", ") || "condition"} denial on{" "}
-        {formatLocalDate(latestDenial.decisionDate).toLocaleDateString()} —
-        change anything that&apos;s wrong.
+        {formatDenialDate(latestDenial.decisionDate)} — change anything
+        that&apos;s wrong.
       </div>
     );
   }

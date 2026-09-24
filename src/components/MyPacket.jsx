@@ -1426,7 +1426,8 @@ function CombinedRatingSummary({ myRatings, stated, t }) {
 // A mismatch almost always means a decision letter is missing from the
 // packet (e.g. the one that raised a rating), not that VA's math is wrong.
 function StatedRatingMismatch({ stated, calculated }) {
-  const from = stated.date ? ` (decided ${stated.date})` : "";
+  const dateWord = stated.dateKind === "effective" ? "effective" : "dated";
+  const from = stated.date ? ` (${dateWord} ${stated.date})` : "";
   const headline = `Your newest VA letter${from} says your combined rating is ${stated.rating}%. From the ratings on file we calculate ${calculated}%.`;
   return (
     <output
@@ -5004,6 +5005,24 @@ async function _loadVkbDocuments(ctx) {
   }
 }
 
+// DD214 imports save service dates to the veteran profile, not always the
+// VKB, so the summary's "separation date missing" check must see both - the
+// same sources BDD Builder reads.
+function _withProfileServicePeriods(vkb) {
+  const profile = getVeteranProfile();
+  const periods = [
+    ...(vkb.serviceHistory?.servicePeriods || []),
+    ...getServicePeriods(),
+    ...(profile.serviceEndDate
+      ? [{ serviceEndDate: profile.serviceEndDate }]
+      : []),
+  ];
+  return {
+    ...vkb,
+    serviceHistory: { ...vkb.serviceHistory, servicePeriods: periods },
+  };
+}
+
 async function _loadVkbEnrichment(ctx) {
   const {
     setCfileConditions,
@@ -5034,7 +5053,10 @@ async function _loadVkbEnrichment(ctx) {
     // Derived from the VKB already in hand - groupDocumentationByCategory is
     // pure, so this costs no extra IndexedDB read.
     setPacketSummary(
-      buildPacketSummary(vkb, groupDocumentationByCategory(vkb)),
+      buildPacketSummary(
+        _withProfileServicePeriods(vkb),
+        groupDocumentationByCategory(vkb),
+      ),
     );
   } catch {
     // Best-effort read-only enrichment - leave defaults on failure.

@@ -352,10 +352,16 @@ describe("getStatedCombinedRating", () => {
         vaClaimsHistory: {
           currentCombinedRating: 80,
           currentCombinedRatingDate: "May 8, 2024",
+          currentCombinedRatingDateKind: "letter",
           currentCombinedRatingSource: "letter.pdf",
         },
       }),
-    ).toEqual({ rating: 80, date: "May 8, 2024", source: "letter.pdf" });
+    ).toEqual({
+      rating: 80,
+      date: "May 8, 2024",
+      dateKind: "letter",
+      source: "letter.pdf",
+    });
   });
 
   it("returns null when no letter stated a combined rating", () => {

@@ -264,3 +264,29 @@ describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () =
     expect(result).toBeDefined();
   });
 });
+
+describe("musterCallProcessor: parseClaimLetter letterhead date", () => {
+  it("reads the letter's own date from its letterhead line, not an effective date", async () => {
+    const text = [
+      "DEPARTMENT OF VETERANS AFFAIRS",
+      "Veterans Benefits Administration",
+      "",
+      "May 8, 2024",
+      "",
+      "VETERAN NAME",
+      "We made a decision on your VA benefits claim",
+      "Evaluation of lumbosacral strain, which is currently 10 percent disabling, is increased to 20 percent effective September 15, 2023.",
+    ].join("\n");
+    const result = await parseClaimLetter(text);
+    expect(result.decisionDate).toBe("May 8, 2024");
+    expect(result.decisionDateKind).toBe("letter");
+  });
+
+  it("falls back to the newest effective date and says so when there is no letterhead date", async () => {
+    const text =
+      "We made a decision on your VA benefits claim\nEvaluation of lumbosacral strain, which is currently 10 percent disabling, is increased to 20 percent effective September 15, 2023.";
+    const result = await parseClaimLetter(text);
+    expect(result.decisionDate).toBe("September 15, 2023");
+    expect(result.decisionDateKind).toBe("effective");
+  });
+});

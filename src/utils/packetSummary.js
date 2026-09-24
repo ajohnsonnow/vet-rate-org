@@ -411,6 +411,7 @@ export function getStatedCombinedRating(vkb) {
   return {
     rating,
     date: history.currentCombinedRatingDate || null,
+    dateKind: history.currentCombinedRatingDateKind || null,
     source: history.currentCombinedRatingSource || null,
   };
 }
