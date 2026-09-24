@@ -298,7 +298,7 @@ export function scrubSvg(svg) {
 export function sanitizeMapsUrl(lat, lng) {
   const numLat = Number(lat);
   const numLng = Number(lng);
-  if (isNaN(numLat) || isNaN(numLng)) return "#";
+  if (Number.isNaN(numLat) || Number.isNaN(numLng)) return "#";
   if (numLat < -90 || numLat > 90 || numLng < -180 || numLng > 180) return "#";
   return `https://www.google.com/maps/dir/?api=1&destination=${numLat},${numLng}`;
 }

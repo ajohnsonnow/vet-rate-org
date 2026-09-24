@@ -1231,7 +1231,7 @@ export function parseDD214Text(rawText, branch = "Army", stateCode = null) {
 function _addOakLeafClusters(devices, context) {
   const olcMatch = context.match(/(\d{1,3})\s{0,10}(OLC|OAK\s{0,10}LEAF)/);
   if (olcMatch) {
-    const count = parseInt(olcMatch[1], 10);
+    const count = Number.parseInt(olcMatch[1], 10);
     const silverOLC = Math.floor(count / 5);
     const bronzeOLC = count % 5;
 
@@ -1250,7 +1250,7 @@ function _addServiceStars(devices, context) {
   const starMatch = context.match(/(\d{1,3})\s{0,10}(STAR|STR|\*)/);
   if (!starMatch) return;
 
-  const count = parseInt(starMatch[1], 10);
+  const count = Number.parseInt(starMatch[1], 10);
   const goldStars = Math.floor(count / 25);
   const silverStars = Math.floor((count % 25) / 5);
   const bronzeStars = count % 5;
@@ -1362,7 +1362,7 @@ function detectQuantity(text, awardMatch) {
   for (const pattern of patterns) {
     const match = context.match(pattern);
     if (match) {
-      return parseInt(match[1], 10);
+      return Number.parseInt(match[1], 10);
     }
   }
 

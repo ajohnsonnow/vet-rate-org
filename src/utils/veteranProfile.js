@@ -618,7 +618,7 @@ export const saveMyRatings = (ratings) => {
         `rating_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: sanitizeString(r.name || "", 200),
       bodyPart: VALID_BODY_PARTS.includes(r.bodyPart) ? r.bodyPart : "other",
-      rating: Math.max(0, Math.min(100, parseInt(r.rating) || 0)),
+      rating: Math.max(0, Math.min(100, Number.parseInt(r.rating) || 0)),
       side: ["left", "right", "bilateral", "none"].includes(r.side)
         ? r.side
         : "none",
@@ -650,7 +650,7 @@ export const addRating = (rating) => {
       bodyPart: VALID_BODY_PARTS.includes(rating.bodyPart)
         ? rating.bodyPart
         : "other",
-      rating: Math.max(0, Math.min(100, parseInt(rating.rating) || 0)),
+      rating: Math.max(0, Math.min(100, Number.parseInt(rating.rating) || 0)),
       side: ["left", "right", "bilateral", "none"].includes(rating.side)
         ? rating.side
         : "none",
@@ -838,7 +838,7 @@ function _sanitizeDeployments(deployments) {
  * "unknown", not a clamped or silently-wrong value).
  */
 function sanitizeCoordinate(value, limit) {
-  const num = typeof value === "number" ? value : parseFloat(value);
+  const num = typeof value === "number" ? value : Number.parseFloat(value);
   if (!Number.isFinite(num) || Math.abs(num) > limit) return null;
   return num;
 }
@@ -1254,7 +1254,7 @@ function _payGradeRank(payGrade) {
   const match = String(payGrade).match(/([EOW])-?(\d+)/i);
   if (!match) return -1;
   const category = match[1].toUpperCase();
-  const level = parseInt(match[2], 10);
+  const level = Number.parseInt(match[2], 10);
   return (PAY_GRADE_CATEGORY_BASE[category] ?? 0) + level;
 }
 

@@ -91,7 +91,7 @@ export function parsePages(fullText) {
     const start = markers[i].index + markers[i][0].length;
     const end = i + 1 < markers.length ? markers[i + 1].index : src.length;
     pages.push({
-      pageNumber: parseInt(markers[i][1], 10),
+      pageNumber: Number.parseInt(markers[i][1], 10),
       text: src.slice(start, end).trim(),
     });
   }

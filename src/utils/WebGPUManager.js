@@ -54,7 +54,7 @@ function getWebGLGPUInfo() {
     let vram = null;
     const vramMatch = renderer.match(/(\d{1,6})\s{0,10}(GB|MB)/i);
     if (vramMatch) {
-      const amount = parseInt(vramMatch[1]);
+      const amount = Number.parseInt(vramMatch[1]);
       const unit = vramMatch[2].toUpperCase();
       vram = unit === "GB" ? amount : Math.round(amount / 1024);
     }

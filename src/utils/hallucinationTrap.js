@@ -125,14 +125,14 @@ export const validateDiagnosticCode = (code) => {
  */
 const findSimilarCodes = (code) => {
   const codeStr = String(code);
-  const codeNum = parseInt(codeStr, 10);
+  const codeNum = Number.parseInt(codeStr, 10);
 
-  if (isNaN(codeNum)) return [];
+  if (Number.isNaN(codeNum)) return [];
 
   // Find codes within ±10
   const similar = disabilityData
     .filter((d) => {
-      const dCode = parseInt(d.diagnosticCode, 10);
+      const dCode = Number.parseInt(d.diagnosticCode, 10);
       return Math.abs(dCode - codeNum) <= 10;
     })
     .slice(0, 3)
@@ -421,10 +421,10 @@ export const getDatabaseStats = () => {
     bodySystems: [...new Set(disabilityData.map((d) => d.bodySystem))].length,
     codeRange: {
       min: Math.min(
-        ...disabilityData.map((d) => parseInt(d.diagnosticCode, 10)),
+        ...disabilityData.map((d) => Number.parseInt(d.diagnosticCode, 10)),
       ),
       max: Math.max(
-        ...disabilityData.map((d) => parseInt(d.diagnosticCode, 10)),
+        ...disabilityData.map((d) => Number.parseInt(d.diagnosticCode, 10)),
       ),
     },
   };

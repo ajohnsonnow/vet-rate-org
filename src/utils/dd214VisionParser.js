@@ -957,7 +957,7 @@ function extractDate(text, context) {
 
     // Handle 2-digit year
     if (year.length === 2) {
-      year = parseInt(year) > 50 ? `19${year}` : `20${year}`;
+      year = Number.parseInt(year) > 50 ? `19${year}` : `20${year}`;
     }
 
     // Handle month names
@@ -999,7 +999,7 @@ function calculateServiceLength(entryDate, separationDate) {
   const start = new Date(entryDate);
   const end = new Date(separationDate);
 
-  if (isNaN(start) || isNaN(end)) {
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
     return { years: null, months: null, days: null, totalMonths: null };
   }
 

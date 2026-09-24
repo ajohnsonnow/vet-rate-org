@@ -97,7 +97,7 @@ function getStoredTokens() {
   const accessToken = sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
   const refreshToken = sessionStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
   const expiryStr = sessionStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
-  const expiry = expiryStr ? parseInt(expiryStr, 10) : null;
+  const expiry = expiryStr ? Number.parseInt(expiryStr, 10) : null;
 
   return { accessToken, refreshToken, expiry };
 }

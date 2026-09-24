@@ -45,7 +45,7 @@ function _parseServiceConnectedSection(text) {
   let match;
 
   while ((match = ratingPattern.exec(serviceConnectedText)) !== null) {
-    const rating = parseInt(match[1], 10);
+    const rating = Number.parseInt(match[1], 10);
     let condition = match[2].trim();
 
     // Clean up condition name - remove any trailing punctuation or dates
@@ -156,7 +156,7 @@ function extractCombinedRating(text) {
   const match = text.match(
     /Your\s+combined\s+disability\s+rating\s+is\s+(\d+)%/i,
   );
-  return match ? parseInt(match[1], 10) : null;
+  return match ? Number.parseInt(match[1], 10) : null;
 }
 
 /**
@@ -250,7 +250,7 @@ function isNavigationOrChrome(line) {
 function parseDate(dateStr) {
   try {
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return null;
     }
     return date.toISOString().split("T")[0]; // Return YYYY-MM-DD format

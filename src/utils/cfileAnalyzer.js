@@ -603,7 +603,7 @@ function _parsePageMarkers(fullText) {
       pages[pages.length - 1].endIndex = match.index;
     }
     pages.push({
-      pageNum: parseInt(match[1], 10),
+      pageNum: Number.parseInt(match[1], 10),
       startIndex: match.index,
       endIndex: fullText.length, // Will be updated on next iteration
     });
@@ -772,7 +772,10 @@ export function screenRelevantPages(fullText) {
     const body = block.slice(markers[i][0].length);
     if (PAGE_RELEVANCE_PATTERN.test(body)) {
       kept.push(block);
-      keptPages.push({ pageNum: parseInt(markers[i][1], 10), text: block });
+      keptPages.push({
+        pageNum: Number.parseInt(markers[i][1], 10),
+        text: block,
+      });
     } else {
       skippedPages++;
     }
@@ -781,7 +784,7 @@ export function screenRelevantPages(fullText) {
   if (kept.length < markers.length * 0.1) {
     // Filter looks wrong for this document - analyze everything instead.
     const allPages = markers.map((m, i) => ({
-      pageNum: parseInt(m[1], 10),
+      pageNum: Number.parseInt(m[1], 10),
       text: fullText.slice(
         m.index,
         i + 1 < markers.length ? markers[i + 1].index : fullText.length,
@@ -1135,15 +1138,15 @@ function _extractNumericMonthDay(str) {
   const ymd = str.match(/\b\d{4}-(\d{1,2})(?:-(\d{1,2}))?/);
   if (ymd) {
     return {
-      month: parseInt(ymd[1], 10),
-      day: ymd[2] ? parseInt(ymd[2], 10) : 0,
+      month: Number.parseInt(ymd[1], 10),
+      day: ymd[2] ? Number.parseInt(ymd[2], 10) : 0,
     };
   }
   const mdy = str.match(/\b(\d{1,2})\/(?:(\d{1,2})\/)?\d{4}/);
   if (mdy) {
     return {
-      month: parseInt(mdy[1], 10),
-      day: mdy[2] ? parseInt(mdy[2], 10) : 0,
+      month: Number.parseInt(mdy[1], 10),
+      day: mdy[2] ? Number.parseInt(mdy[2], 10) : 0,
     };
   }
   return { month: 0, day: 0 };
@@ -1177,7 +1180,7 @@ function normalizeDateKey(dateStr) {
 
   if (month) {
     const dayMatch = str.match(/\b(\d{1,2})\b/);
-    if (dayMatch) day = parseInt(dayMatch[1], 10);
+    if (dayMatch) day = Number.parseInt(dayMatch[1], 10);
   } else {
     const numeric = _extractNumericMonthDay(str);
     month = numeric.month;
@@ -1339,14 +1342,14 @@ function parseApproxDate(dateStr) {
 
   // Try standard date format first
   const standardDate = new Date(dateStr);
-  if (!isNaN(standardDate)) {
+  if (!Number.isNaN(standardDate.getTime())) {
     return standardDate.getTime();
   }
 
   // Extract year
   const yearMatch = dateStr.match(/\d{4}/);
   if (yearMatch) {
-    const year = parseInt(yearMatch[0], 10);
+    const year = Number.parseInt(yearMatch[0], 10);
 
     // Try to extract month
     const monthNames = [
@@ -2564,7 +2567,7 @@ function parseAllPages(fullText) {
   while ((match = pageRegex.exec(fullText)) !== null) {
     if (prev) {
       pages.push({
-        pageNum: parseInt(prev[1], 10),
+        pageNum: Number.parseInt(prev[1], 10),
         text: fullText.slice(prev.index + prev[0].length, match.index).trim(),
       });
     }
@@ -2572,7 +2575,7 @@ function parseAllPages(fullText) {
   }
   if (prev) {
     pages.push({
-      pageNum: parseInt(prev[1], 10),
+      pageNum: Number.parseInt(prev[1], 10),
       text: fullText.slice(prev.index + prev[0].length).trim(),
     });
   }

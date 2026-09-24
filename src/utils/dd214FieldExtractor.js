@@ -478,9 +478,9 @@ function normalizeDate(val) {
     const m = cleaned.substring(4, 6);
     const d = cleaned.substring(6, 8);
     // Validate
-    const year = parseInt(y);
-    const month = parseInt(m);
-    const day = parseInt(d);
+    const year = Number.parseInt(y);
+    const month = Number.parseInt(m);
+    const day = Number.parseInt(d);
     if (
       year >= 1900 &&
       year <= 2100 &&
@@ -513,9 +513,9 @@ function normalizeServiceTime(val) {
   if (cleaned.length >= 6 && /^\d+$/.test(cleaned)) {
     // Pad to 8 digits
     const padded = cleaned.padStart(8, "0");
-    const years = parseInt(padded.substring(0, 4));
-    const months = parseInt(padded.substring(4, 6));
-    const days = parseInt(padded.substring(6, 8));
+    const years = Number.parseInt(padded.substring(0, 4));
+    const months = Number.parseInt(padded.substring(4, 6));
+    const days = Number.parseInt(padded.substring(6, 8));
     return { years, months, days };
   }
   return null;
@@ -611,13 +611,13 @@ function parseSingleAward(raw) {
     const match = raw.match(dp.pattern);
     if (match) {
       if (dp.type === "award_count" || dp.type === "award_count_dash") {
-        award.deviceCount = parseInt(match[1]);
+        award.deviceCount = Number.parseInt(match[1]);
         award.name = raw.replace(match[0], "").trim();
       } else if (dp.type === "M Device" || dp.type === "V Device") {
         award.devices.push(dp.type);
         award.name = raw.replace(match[0], "").trim();
       } else {
-        const count = parseInt(match[1]) || 1;
+        const count = Number.parseInt(match[1]) || 1;
         for (let i = 0; i < count; i++) {
           award.devices.push(dp.type);
         }

@@ -405,9 +405,9 @@ function validateDate(dateStr) {
   if (!match) return dateStr; // Return as-is if not in expected format
 
   const [, year, month, day] = match;
-  const y = parseInt(year, 10);
-  const m = parseInt(month, 10);
-  const d = parseInt(day, 10);
+  const y = Number.parseInt(year, 10);
+  const m = Number.parseInt(month, 10);
+  const d = Number.parseInt(day, 10);
 
   // Validate ranges
   if (m < 1 || m > 12) return null;

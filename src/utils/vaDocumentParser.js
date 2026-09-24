@@ -239,7 +239,7 @@ function extractCombinedRating(text) {
   const combinedMatch = text.match(CONDITION_PATTERNS.COMBINED_RATING);
   if (combinedMatch) {
     const percentMatch = combinedMatch[0].match(/(\d{1,3})\s*percent/i);
-    if (percentMatch) return parseInt(percentMatch[1]);
+    if (percentMatch) return Number.parseInt(percentMatch[1]);
   }
   return null;
 }
@@ -267,7 +267,7 @@ function extractDecisionSection(
   const conditionMatches = findConditionsWithPercent(sectionText);
   for (const match of conditionMatches) {
     const conditionName = match.name;
-    const percent = parseInt(match.percent);
+    const percent = Number.parseInt(match.percent);
 
     // Extract diagnostic code if present nearby
     const codeMatch = sectionText.match(
@@ -860,14 +860,14 @@ export function parseCodeSheet(text) {
       result.conditions.push({
         diagnosticCode: match[1],
         name: match[2].trim(),
-        percent: parseInt(match[3]),
+        percent: Number.parseInt(match[3]),
       });
     }
 
     // Extract combined rating
     const combinedMatch = text.match(/(?:combined|total)[:\s]*(\d{1,3})%/i);
     if (combinedMatch) {
-      result.combinedRating = parseInt(combinedMatch[1]);
+      result.combinedRating = Number.parseInt(combinedMatch[1]);
     }
 
     result.confidence = result.conditions.length > 0 ? 85 : 20;
@@ -1148,7 +1148,7 @@ export function parseHLR(text) {
       /(?:increased|changed|revised)\s*(?:to\s*)?(\d{1,3})\s*percent/i,
     );
     if (ratingMatch) {
-      result.newRating = parseInt(ratingMatch[1]);
+      result.newRating = Number.parseInt(ratingMatch[1]);
     }
 
     // Extract CFR citations
@@ -1225,7 +1225,7 @@ export function extractBigThree(text) {
 
     results.push({
       condition: nameMatch[1].trim(),
-      percent: parseInt(match[1]),
+      percent: Number.parseInt(match[1]),
       effectiveDate: dateMatch[1],
     });
   }
