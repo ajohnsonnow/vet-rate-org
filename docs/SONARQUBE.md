@@ -17,7 +17,7 @@ Nothing leaves the machine: the server listens on `127.0.0.1` only.
    First boot takes about a minute; <http://127.0.0.1:9000> shows "UP" when ready.
 2. Log in as `admin` / `admin` and set a new password when prompted.
 3. Create a token: **My Account → Security → Generate Token**, type
-   **Global Analysis Token**. Keep it in your password manager.
+   **User Token**. Keep it in your password manager. (A Global Analysis token can upload a scan but cannot read the results back, so `sonar:scan` needs a User token.)
 4. Connect the editor: in the SonarQube for IDE panel, choose
    **Add SonarQube Server Connection**, use connection ID `vetrate-local`,
    server `http://127.0.0.1:9000`, and paste the token. The project binding
@@ -31,7 +31,7 @@ $env:SONAR_TOKEN = "<your token>"
 npm run sonar:scan
 ```
 
-It prints the quality-gate result, open issues by quality and severity, and
+It runs `npm run test:coverage` first (SonarQube scores new code with no coverage report as 0% and fails the gate; set `SKIP_COVERAGE=1` to reuse the last report), then prints the quality-gate result, open issues by quality and severity, and
 the dashboard link. `npm run sonar:down` stops the server; results persist in
 Docker volumes.
 

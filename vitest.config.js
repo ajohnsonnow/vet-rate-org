@@ -21,6 +21,8 @@ export default defineConfig({
     hookTimeout: 15000,
     coverage: {
       provider: "v8",
+      // lcov feeds SonarQube (sonar.javascript.lcov.reportPaths).
+      reporter: ["text", "html", "json", "lcov"],
       thresholds: {
         // Thresholds reflect testable logic (calculators, utils, security-critical code).
         // The "raise to 70%" target from AUDIT_FINDINGS #30 is not the right

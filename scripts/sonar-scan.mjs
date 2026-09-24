@@ -17,10 +17,24 @@ const REPO = resolve(fileURLToPath(new URL("..", import.meta.url)));
 
 if (!TOKEN) {
   console.error(
-    "SONAR_TOKEN is not set. Create a Global Analysis token at " +
+    "SONAR_TOKEN is not set. Create a User token at " +
       `${HOST}/account/security and export it first (see docs/SONARQUBE.md).`,
   );
   process.exit(2);
+}
+
+// Without a fresh lcov report SonarQube scores new code at 0% coverage and
+// fails the quality gate. SKIP_COVERAGE=1 reuses the last report.
+if (process.env.SKIP_COVERAGE !== "1") {
+  const coverage = spawnSync("npm", ["run", "test:coverage"], {
+    stdio: "inherit",
+    shell: true,
+  });
+  if (coverage.status !== 0) {
+    console.warn(
+      "Coverage run did not pass cleanly; scanning with whatever report it wrote.",
+    );
+  }
 }
 
 const scan = spawnSync(
