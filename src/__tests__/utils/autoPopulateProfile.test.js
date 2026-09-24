@@ -235,3 +235,51 @@ describe("autoPopulateProfile: a C-File's code sheet", () => {
     expect(getVeteranProfile().currentCombinedRating).not.toBe(30);
   });
 });
+
+describe("autoPopulateProfile: a rating decision letter", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the combined rating and effective date", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "ClaimLetter-2024-5-8.pdf",
+        status: "complete",
+        extractedData: {
+          type: "rating_decision",
+          combinedRating: 70,
+          effectiveDate: "2023-09-15",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      currentCombinedRating: 70,
+      effectiveDate: "2023-09-15",
+    });
+  });
+});
+
+describe("autoPopulateProfile: a claim letter", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills the claim number and VA file number", async () => {
+    await autoPopulateProfile([
+      {
+        filename: "ClaimLetter.pdf",
+        status: "complete",
+        extractedData: {
+          type: "claim_letter",
+          claimNumber: "600123456",
+          vaFileNumber: "000000000",
+        },
+      },
+    ]);
+    expect(getVeteranProfile()).toMatchObject({
+      claimNumber: "600123456",
+      vaFileNumber: "000000000",
+    });
+  });
+});
