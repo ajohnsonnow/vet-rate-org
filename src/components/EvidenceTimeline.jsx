@@ -436,9 +436,9 @@ function GapWarningsList({ gaps }) {
       <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
         ⚠️ Evidence Gaps Detected: {gaps.length}
       </h3>
-      {gaps.map((gap, idx) => (
+      {gaps.map((gap) => (
         <div
-          key={idx}
+          key={`${gap.start.date}-${gap.end.date}`}
           className={`border-l-4 p-4 rounded ${
             gap.severity === "CRITICAL"
               ? "border-red-500 bg-red-900/20"

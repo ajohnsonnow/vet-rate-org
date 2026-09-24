@@ -1409,9 +1409,9 @@ function MOSHazardsCard({ hazards }) {
         ⚠️ Job Hazards
       </h4>
       <div className="flex flex-wrap gap-2">
-        {(hazards || []).map((hazard, i) => (
+        {(hazards || []).map((hazard) => (
           <span
-            key={i}
+            key={hazard}
             className="px-3 py-2 bg-red-900/30 border border-red-700/50 rounded-lg text-red-200 text-sm"
           >
             {hazard}
@@ -1438,9 +1438,9 @@ function MOSCommonInjuriesCard({
         </p>
       </div>
       <div className="divide-y divide-slate-700">
-        {injuries.map((injury, i) => (
+        {injuries.map((injury) => (
           <button
-            key={i}
+            key={injury.condition}
             onClick={() => toggleCondition(injury.condition)}
             className={`w-full p-4 text-left transition-colors ${
               selectedConditions.includes(injury.condition)

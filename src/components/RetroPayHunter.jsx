@@ -1010,8 +1010,11 @@ function CueAlertsList({ cueAlerts }) {
       </div>
 
       <div className="space-y-3">
-        {cueAlerts.map((alert, index) => (
-          <CueAlertItem key={index} alert={alert} />
+        {cueAlerts.map((alert) => (
+          <CueAlertItem
+            key={`${alert.pattern?.name}-${alert.message}`}
+            alert={alert}
+          />
         ))}
       </div>
     </div>

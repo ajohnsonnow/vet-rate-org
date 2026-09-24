@@ -4409,9 +4409,9 @@ function FormInfoPanel({ selectedForm, setCurrentStep, setSelectedForm, t }) {
           💡 {t("formsHelper", "tipsForSuccess")}
         </h3>
         <ul className="space-y-1">
-          {selectedForm.tips.map((tip, i) => (
+          {selectedForm.tips.map((tip) => (
             <li
-              key={i}
+              key={tip}
               className="text-sm text-green-800 dark:text-green-300 flex items-start gap-2"
             >
               <span className="text-green-600">✓</span>

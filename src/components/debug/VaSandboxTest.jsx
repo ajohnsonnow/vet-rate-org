@@ -820,8 +820,11 @@ function FacilitiesCard({ facilities, testFacilities, showRaw, onToggleRaw }) {
           <p className="text-green-600 dark:text-green-400 font-medium">
             ✓ Found {facilities.data.length} facilities
           </p>
-          {facilities.data.slice(0, 2).map((f, i) => (
-            <p key={i} className="text-gray-600 dark:text-gray-400 truncate">
+          {facilities.data.slice(0, 2).map((f) => (
+            <p
+              key={f.name}
+              className="text-gray-600 dark:text-gray-400 truncate"
+            >
               • {f.name}
             </p>
           ))}
@@ -895,8 +898,11 @@ function DisabilitiesCard({
           <p className="text-green-600 dark:text-green-400 font-medium">
             ✓ Loaded {disabilities.data.length} disabilities
           </p>
-          {disabilities.data.slice(0, 3).map((d, i) => (
-            <p key={i} className="text-gray-600 dark:text-gray-400 truncate">
+          {disabilities.data.slice(0, 3).map((d) => (
+            <p
+              key={d.name}
+              className="text-gray-600 dark:text-gray-400 truncate"
+            >
               • {d.name}
             </p>
           ))}
@@ -1095,9 +1101,9 @@ function ServiceHistoryContent({ serviceHistory, formatDate: formatDateFn }) {
   if (serviceHistory.data && serviceHistory.data.length > 0) {
     return (
       <div className="space-y-2">
-        {serviceHistory.data.map((s, i) => (
+        {serviceHistory.data.map((s) => (
           <div
-            key={i}
+            key={s.startDate}
             className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
           >
             <p className="font-semibold text-gray-900 dark:text-white">
@@ -1145,9 +1151,9 @@ function ClaimsContent({ claims, formatDate: formatDateFn }) {
   if (claims.data && claims.data.length > 0) {
     return (
       <div className="space-y-2">
-        {claims.data.slice(0, 3).map((c, i) => (
+        {claims.data.slice(0, 3).map((c) => (
           <div
-            key={i}
+            key={c.dateFiled}
             className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
           >
             <p className="font-semibold text-gray-900 dark:text-white capitalize">
@@ -1200,9 +1206,9 @@ function AppealableIssuesContent({
   if (appealableIssues.data && appealableIssues.data.length > 0) {
     return (
       <div className="space-y-2">
-        {appealableIssues.data.slice(0, 3).map((issue, i) => (
+        {appealableIssues.data.slice(0, 3).map((issue) => (
           <div
-            key={i}
+            key={issue.description}
             className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
           >
             <p className="font-semibold text-gray-900 dark:text-white">
@@ -1256,9 +1262,9 @@ function AppealsStatusContent({ appealsStatus }) {
   if (appealsStatus.data && appealsStatus.data.length > 0) {
     return (
       <div className="space-y-2">
-        {appealsStatus.data.slice(0, 3).map((appeal, i) => (
+        {appealsStatus.data.slice(0, 3).map((appeal) => (
           <div
-            key={i}
+            key={`${appeal.type}-${appeal.programArea}`}
             className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm"
           >
             <p className="font-semibold text-gray-900 dark:text-white capitalize">

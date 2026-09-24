@@ -432,8 +432,8 @@ const TipsSection = ({ analysis, showTips, setShowTips }) => {
 
       {showTips && (
         <ul className="mt-4 space-y-2">
-          {analysis.tips.map((tip, index) => (
-            <li key={index} className="flex items-start gap-2 text-blue-200">
+          {analysis.tips.map((tip) => (
+            <li key={tip} className="flex items-start gap-2 text-blue-200">
               <span className="text-blue-400 flex-shrink-0">→</span>
               <span>{tip}</span>
             </li>

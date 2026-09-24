@@ -111,8 +111,8 @@ function ChangelogPanel({ version, changelog }) {
 
       {/* Changelog Items */}
       <div className="p-3 space-y-3">
-        {changelog.map((item, index) => (
-          <ChangelogItem key={index} item={item} />
+        {changelog.map((item) => (
+          <ChangelogItem key={item.title} item={item} />
         ))}
       </div>
 
@@ -328,8 +328,8 @@ function ClaimsArsenalSection() {
               {category.emoji} {category.title} ({category.tools.length} tools)
             </h4>
             <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 ml-4 space-y-1">
-              {category.tools.map((tool, index) => (
-                <li key={index}>
+              {category.tools.map((tool) => (
+                <li key={tool.name}>
                   <strong>{tool.name}:</strong> {tool.description}
                   {tool.isNew && (
                     <span className="ml-1 px-1.5 py-0.5 bg-green-500 text-white text-xs rounded">

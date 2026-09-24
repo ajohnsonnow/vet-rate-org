@@ -445,8 +445,8 @@ const WarningsSection = ({ warnings }) => {
             Critical Information
           </h3>
           <div className="space-y-2">
-            {warnings.map((warning, index) => (
-              <div key={index} className="text-yellow-800">
+            {warnings.map((warning) => (
+              <div key={warning} className="text-yellow-800">
                 <p className="whitespace-pre-wrap">{warning}</p>
               </div>
             ))}
@@ -476,8 +476,8 @@ const GapAnalysisSection = ({ gaps }) => {
       </div>
 
       <div className="space-y-2 pl-9">
-        {gaps.map((gap, index) => (
-          <div key={index} className="text-gray-700 dark:text-gray-300">
+        {gaps.map((gap) => (
+          <div key={gap} className="text-gray-700 dark:text-gray-300">
             <GapItem gap={gap} />
           </div>
         ))}
@@ -505,8 +505,8 @@ const ActionItemsSection = ({ actionItems }) => {
       </div>
 
       <div className="space-y-3 pl-9">
-        {actionItems.map((item, index) => (
-          <div key={index} className="flex items-start gap-3">
+        {actionItems.map((item) => (
+          <div key={item} className="flex items-start gap-3">
             <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
             <p className="text-gray-700 whitespace-pre-wrap">{item}</p>
           </div>

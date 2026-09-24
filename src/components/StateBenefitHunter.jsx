@@ -230,7 +230,7 @@ const _groupBenefitsByCategory = (benefits) => {
   return grouped;
 };
 
-const BenefitCard = ({ benefit, index }) => {
+const BenefitCard = ({ benefit }) => {
   const config = getCategoryConfig(benefit.category);
 
   // The scraped-data path (searchStateBenefits) maps benefits to name /
@@ -245,7 +245,6 @@ const BenefitCard = ({ benefit, index }) => {
 
   return (
     <div
-      key={index}
       className={`${config.bgLight} ${config.borderColor} border rounded-xl p-4 transition-all hover:shadow-lg hover:-translate-y-0.5`}
     >
       <div className="flex items-start gap-3">
@@ -664,8 +663,11 @@ const BenefitsGrid = ({ benefits }) => {
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {benefits.map((benefit, index) => (
-          <BenefitCard key={index} benefit={benefit} index={index} />
+        {benefits.map((benefit) => (
+          <BenefitCard
+            key={benefit.name || benefit.benefit_name}
+            benefit={benefit}
+          />
         ))}
       </div>
     </div>

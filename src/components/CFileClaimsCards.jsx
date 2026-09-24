@@ -191,9 +191,9 @@ const ClaimEvidencePages = ({ pages }) => {
         📄 Evidence Found On:
       </p>
       <div className="flex flex-wrap gap-2">
-        {pages.map((page, i) => (
+        {pages.map((page) => (
           <span
-            key={i}
+            key={page}
             className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded text-sm font-mono"
           >
             Page {page}
@@ -366,7 +366,7 @@ export default function CFileClaimsCards({ claims = [] }) {
         <div className="grid gap-4 md:grid-cols-2">
           {filteredClaims.map((claim, idx) => (
             <ClaimCard
-              key={idx}
+              key={claim.condition}
               claim={claim}
               idx={idx}
               isExpanded={expandedClaim === idx}

@@ -341,9 +341,9 @@ async function fetchVaApiData(apiId, accessToken, searchInputs) {
 // FORMATTED PREVIEW RENDERERS
 // ============================================================================
 function ServiceHistoryPreviewList({ data }) {
-  return data.map((service, idx) => (
+  return data.map((service) => (
     <div
-      key={idx}
+      key={service.startDate}
       className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
     >
       <div className="font-medium text-gray-900 dark:text-white">
@@ -375,9 +375,9 @@ function DisabilityRatingPreview({ data }) {
       )}
       {data.individualRatings.length > 0 && (
         <ul className="mt-2 space-y-1">
-          {data.individualRatings.map((rating, idx) => (
+          {data.individualRatings.map((rating) => (
             <li
-              key={idx}
+              key={rating.diagnosticTypeName || rating.diagnosticText}
               className="text-sm text-gray-700 dark:text-gray-300 flex justify-between"
             >
               <span>
@@ -399,9 +399,9 @@ function DisabilityRatingPreview({ data }) {
 }
 
 function ClaimsPreviewList({ data }) {
-  return data.slice(0, 5).map((claim, idx) => (
+  return data.slice(0, 5).map((claim) => (
     <div
-      key={idx}
+      key={`${claim.claimType}-${claim.claimDate}`}
       className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
     >
       <div className="flex justify-between items-start">
@@ -426,7 +426,7 @@ function ClaimsPreviewList({ data }) {
 }
 
 function AppealsStatusPreviewList({ data }) {
-  return data.slice(0, 5).map((appeal, idx) => {
+  return data.slice(0, 5).map((appeal) => {
     // The Appeals Status API's status.details shape varies by status type -
     // sometimes a plain string, sometimes a nested object. Only render it
     // when it's actually a string, so this never prints "[object Object]".
@@ -434,7 +434,7 @@ function AppealsStatusPreviewList({ data }) {
       typeof appeal.status?.details === "string" ? appeal.status.details : null;
     return (
       <div
-        key={idx}
+        key={`${appeal.type}-${appeal.docketNumber || appeal.status?.type}`}
         className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
       >
         <div className="font-medium text-gray-900 dark:text-white">
@@ -455,9 +455,9 @@ function AppealsStatusPreviewList({ data }) {
 }
 
 function AppealableIssuesPreviewList({ data }) {
-  return data.slice(0, 5).map((issue, idx) => (
+  return data.slice(0, 5).map((issue) => (
     <div
-      key={idx}
+      key={issue.description}
       className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
     >
       <div className="font-medium text-gray-900 dark:text-white">
@@ -471,9 +471,9 @@ function AppealableIssuesPreviewList({ data }) {
 }
 
 function FacilitiesPreviewList({ data }) {
-  return data.slice(0, 5).map((facility, idx) => (
+  return data.slice(0, 5).map((facility) => (
     <div
-      key={idx}
+      key={facility.name}
       className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
     >
       <div className="font-medium text-gray-900 dark:text-white">
@@ -499,9 +499,9 @@ function FacilitiesPreviewList({ data }) {
 }
 
 function FormsPreviewList({ data }) {
-  return data.slice(0, 5).map((form, idx) => (
+  return data.slice(0, 5).map((form) => (
     <div
-      key={idx}
+      key={form.formName}
       className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700"
     >
       <div className="font-semibold text-gray-900 dark:text-white">
@@ -525,9 +525,9 @@ function FormsPreviewList({ data }) {
 }
 
 function DisabilitiesPreviewList({ data }) {
-  return data.slice(0, 10).map((disability, idx) => (
+  return data.slice(0, 10).map((disability) => (
     <div
-      key={idx}
+      key={disability.diagnosticCode || disability.name}
       className="bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700 text-sm"
     >
       <span className="font-medium">{disability.name}</span>
@@ -1289,9 +1289,9 @@ function OAuthApiCard({ api, apiState, selectionState, isAuthenticated }) {
             Use Case: {api.useCase}
           </p>
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {api.dataPoints.map((point, idx) => (
+            {api.dataPoints.map((point) => (
               <span
-                key={idx}
+                key={point}
                 className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded"
               >
                 {point}

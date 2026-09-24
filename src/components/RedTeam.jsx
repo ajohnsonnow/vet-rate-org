@@ -739,7 +739,7 @@ const WeakSpotsList = ({ weakSpots }) => {
       <div className="space-y-3 max-h-80 overflow-y-auto">
         {weakSpots.map((spot, index) => (
           <div
-            key={index}
+            key={spot.issue || spot.quote}
             className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border-l-4 border-red-500"
           >
             <div className="flex items-start gap-3">

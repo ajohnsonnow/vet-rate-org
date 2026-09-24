@@ -808,7 +808,7 @@ const renderGraphLinks = (
   selectedLink,
   onLinkClick,
 ) =>
-  links.map((link, i) => {
+  links.map((link) => {
     const sourcePos = positions[link.source];
     const targetPos = positions[link.target];
     if (!sourcePos || !targetPos) return null;
@@ -820,7 +820,7 @@ const renderGraphLinks = (
         selectedLink?.target === link.target);
 
     return (
-      <g key={i}>
+      <g key={`${link.source}-${link.target}`}>
         <line
           x1={sourcePos.x}
           y1={sourcePos.y}
@@ -1192,9 +1192,9 @@ const NodeDetailsPanel = ({
           : "Connected Primary Conditions"}
       </h4>
 
-      {connections.map((conn, i) => (
+      {connections.map((conn) => (
         <button
-          key={i}
+          key={`${conn.source}-${conn.target}`}
           onClick={() =>
             onLinkClick({
               source: conn.source,

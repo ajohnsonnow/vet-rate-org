@@ -364,9 +364,9 @@ const UpdateCardAffectedConditions = ({ affectedConditions }) => (
       🎯 Conditions Affected:
     </p>
     <div className="flex flex-wrap gap-1">
-      {affectedConditions.map((condition, idx) => (
+      {affectedConditions.map((condition) => (
         <span
-          key={idx}
+          key={condition}
           className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs rounded-full"
         >
           {condition}

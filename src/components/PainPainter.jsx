@@ -1048,8 +1048,8 @@ function NexusSuggestions({ detectedNexus }) {
         <h4 className="font-bold text-purple-400">Nexus Pattern Detected!</h4>
       </div>
 
-      {detectedNexus.map((nexus, index) => (
-        <div key={index} className="p-3 bg-gray-800/50 rounded-lg mb-2">
+      {detectedNexus.map((nexus) => (
+        <div key={nexus.name} className="p-3 bg-gray-800/50 rounded-lg mb-2">
           <p className="font-semibold text-white">{nexus.name}</p>
           <p className="text-gray-400 text-sm mt-1">{nexus.description}</p>
           <div className="flex flex-wrap gap-1 mt-2">

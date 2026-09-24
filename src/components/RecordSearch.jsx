@@ -229,9 +229,9 @@ const ResultsList = ({ results, totalMatches, searchTerm }) => (
       {results.length} locations
     </h3>
     <div className="space-y-3 max-h-96 overflow-y-auto">
-      {results.map((result, index) => (
+      {results.map((result) => (
         <div
-          key={index}
+          key={`${result.page}-${result.context}`}
           className="bg-gray-900 border border-gray-700 rounded-lg p-4"
         >
           <div className="flex items-start justify-between mb-2">

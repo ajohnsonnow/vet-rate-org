@@ -193,9 +193,9 @@ const AnalysisResults = ({ analysis }) => (
           🎯 To Strengthen Your Nexus Opinion:
         </h4>
         <ul className="space-y-2">
-          {analysis.recommendations.map((rec, idx) => (
+          {analysis.recommendations.map((rec) => (
             <li
-              key={idx}
+              key={rec}
               className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-200"
             >
               <span className="text-amber-500">→</span>
@@ -224,9 +224,9 @@ const JudgeQuotesSection = ({ showJudgeQuotes, onToggle }) => (
           <h5 className="font-semibold text-green-700 dark:text-green-300 mb-2">
             ✓ Winning Language
           </h5>
-          {BVA_JUDGE_QUOTES.privateOpinionWins.map((quote, idx) => (
+          {BVA_JUDGE_QUOTES.privateOpinionWins.map((quote) => (
             <p
-              key={idx}
+              key={quote}
               className="text-sm text-green-600 dark:text-green-400 italic mb-2"
             >
               {quote}
@@ -237,9 +237,9 @@ const JudgeQuotesSection = ({ showJudgeQuotes, onToggle }) => (
           <h5 className="font-semibold text-red-700 dark:text-red-300 mb-2">
             ✗ Why Opinions Get Rejected
           </h5>
-          {BVA_JUDGE_QUOTES.inadequateExam.map((quote, idx) => (
+          {BVA_JUDGE_QUOTES.inadequateExam.map((quote) => (
             <p
-              key={idx}
+              key={quote}
               className="text-sm text-red-600 dark:text-red-400 italic mb-2"
             >
               {quote}

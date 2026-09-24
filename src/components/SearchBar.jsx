@@ -63,7 +63,7 @@ function SuggestionsDropdown({
         // <button>); selection is tracked via aria-activedescendant on the
         // input, so options are not individual tab stops (B-H04).
         <div
-          key={index}
+          key={suggestion}
           id={`search-option-${index}`}
           role="option"
           aria-selected={index === activeIndex}

@@ -761,8 +761,8 @@ const RecordRow = ({ record, isSelected, onToggle }) => (
               Why this matters:
             </p>
             <ul className="text-xs text-green-700 dark:text-green-300 space-y-0.5">
-              {record.tips.slice(0, 2).map((tip, i) => (
-                <li key={i}>• {tip}</li>
+              {record.tips.slice(0, 2).map((tip) => (
+                <li key={tip}>• {tip}</li>
               ))}
             </ul>
           </div>

@@ -473,8 +473,8 @@ const ComparisonModalDifferences = ({ comparisonResult }) =>
         {comparisonResult.differenceCount !== 1 ? "s" : ""} found:
       </p>
       <div className="space-y-3">
-        {comparisonResult.differences.map((diff, idx) => (
-          <ComparisonDifferenceRow key={idx} diff={diff} />
+        {comparisonResult.differences.map((diff) => (
+          <ComparisonDifferenceRow key={diff.field} diff={diff} />
         ))}
       </div>
     </div>

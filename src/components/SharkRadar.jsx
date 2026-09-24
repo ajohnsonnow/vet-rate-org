@@ -468,8 +468,8 @@ const RedFlagsList = ({ flags }) => {
         {flags.length})
       </h3>
       <div className="space-y-4">
-        {flags.map((flag, index) => (
-          <RedFlagCard key={index} flag={flag} />
+        {flags.map((flag) => (
+          <RedFlagCard key={flag.violation} flag={flag} />
         ))}
       </div>
     </div>
@@ -485,9 +485,9 @@ const PositiveSignsList = ({ signs }) => {
         <CheckIcon /> Positive Signs
       </h3>
       <ul className="space-y-2">
-        {signs.map((sign, index) => (
+        {signs.map((sign) => (
           <li
-            key={index}
+            key={sign}
             className="flex items-start gap-2 text-green-700 dark:text-green-300"
           >
             <span className="text-green-500 mt-0.5">✓</span>

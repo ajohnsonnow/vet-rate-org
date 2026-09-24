@@ -592,8 +592,8 @@ const CapabilitiesFooter = ({ capabilities }) => (
           ✅ Capabilities
         </p>
         <ul className="text-gray-600 dark:text-gray-400 space-y-1 mt-1">
-          {capabilities.capabilities.map((cap, i) => (
-            <li key={i}>{cap.replace("✅ ", "")}</li>
+          {capabilities.capabilities.map((cap) => (
+            <li key={cap}>{cap.replace("✅ ", "")}</li>
           ))}
         </ul>
       </div>
@@ -602,8 +602,8 @@ const CapabilitiesFooter = ({ capabilities }) => (
           ⚠️ Limitations
         </p>
         <ul className="text-gray-600 dark:text-gray-400 space-y-1 mt-1">
-          {capabilities.limitations.map((lim, i) => (
-            <li key={i}>{lim.replace("⚠️ ", "")}</li>
+          {capabilities.limitations.map((lim) => (
+            <li key={lim}>{lim.replace("⚠️ ", "")}</li>
           ))}
         </ul>
       </div>

@@ -18,9 +18,9 @@ export const AboutUsExample = () => {
           {aboutUs.theCodebase.heading}
         </h2>
         <div className="space-y-4">
-          {aboutUs.theCodebase.paragraphs.map((paragraph, index) => (
+          {aboutUs.theCodebase.paragraphs.map((paragraph) => (
             <p
-              key={index}
+              key={paragraph}
               className="text-lg leading-relaxed text-gray-700 dark:text-gray-300"
             >
               {paragraph}
@@ -85,8 +85,8 @@ export const BuyMeACoffeeExample = () => {
 
       {/* Body with line breaks preserved */}
       <div className="space-y-3 mb-6">
-        {coffee.longForm.body.split("\n\n").map((paragraph, index) => (
-          <p key={index} className="text-gray-700 dark:text-gray-300">
+        {coffee.longForm.body.split("\n\n").map((paragraph) => (
+          <p key={paragraph} className="text-gray-700 dark:text-gray-300">
             {paragraph}
           </p>
         ))}

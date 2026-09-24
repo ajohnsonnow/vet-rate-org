@@ -389,8 +389,11 @@ function ContradictionsList({
           <div className="space-y-3">
             {contradictions
               .filter((c) => c.severity === "critical")
-              .map((contradiction, index) => (
-                <ContradictionCard key={index} contradiction={contradiction} />
+              .map((contradiction) => (
+                <ContradictionCard
+                  key={contradiction.issue}
+                  contradiction={contradiction}
+                />
               ))}
           </div>
         </div>
@@ -405,8 +408,11 @@ function ContradictionsList({
           <div className="space-y-3">
             {contradictions
               .filter((c) => c.severity === "high")
-              .map((contradiction, index) => (
-                <ContradictionCard key={index} contradiction={contradiction} />
+              .map((contradiction) => (
+                <ContradictionCard
+                  key={contradiction.issue}
+                  contradiction={contradiction}
+                />
               ))}
           </div>
         </div>
@@ -421,8 +427,11 @@ function ContradictionsList({
           <div className="space-y-3">
             {contradictions
               .filter((c) => c.severity === "medium")
-              .map((contradiction, index) => (
-                <ContradictionCard key={index} contradiction={contradiction} />
+              .map((contradiction) => (
+                <ContradictionCard
+                  key={contradiction.issue}
+                  contradiction={contradiction}
+                />
               ))}
           </div>
         </div>

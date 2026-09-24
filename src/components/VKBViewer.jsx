@@ -248,8 +248,11 @@ const ServiceHistoryMOSList = ({ mosList }) => (
       </p>
     ) : (
       <div className="space-y-2">
-        {mosList.map((mos, idx) => (
-          <div key={idx} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        {mosList.map((mos) => (
+          <div
+            key={mos.code}
+            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
             <div className="font-semibold">
               {mos.code} - {mos.title}
             </div>
@@ -276,8 +279,11 @@ const ServiceHistoryAwardsList = ({ awards }) => (
       </p>
     ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {awards.map((award, idx) => (
-          <div key={idx} className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+        {awards.map((award) => (
+          <div
+            key={award.name}
+            className="p-2 bg-gray-50 dark:bg-gray-800 rounded"
+          >
             <span className="font-medium">{award.name}</span>
             {award.isCombat && (
               <span className="ml-2 text-red-600 dark:text-red-400">
@@ -311,9 +317,9 @@ const ConditionsSection = ({ vkb }) => (
         </p>
       ) : (
         <div className="space-y-3">
-          {vkb.medicalConditions.current.map((condition, idx) => (
+          {vkb.medicalConditions.current.map((condition) => (
             <div
-              key={idx}
+              key={condition.name}
               className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
             >
               <div className="flex items-start justify-between">
@@ -354,9 +360,9 @@ const ConditionsSection = ({ vkb }) => (
         </p>
       ) : (
         <div className="space-y-2">
-          {vkb.medicalConditions.secondary.map((sec, idx) => (
+          {vkb.medicalConditions.secondary.map((sec) => (
             <div
-              key={idx}
+              key={sec.condition}
               className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
             >
               <div className="font-medium">{sec.condition}</div>
@@ -396,9 +402,9 @@ const DocumentationSection = ({ vkb }) => {
             DD-214s ({vkb.documentation.dd214s.length})
           </h4>
           <div className="space-y-2">
-            {vkb.documentation.dd214s.map((doc, idx) => (
+            {vkb.documentation.dd214s.map((doc) => (
               <div
-                key={idx}
+                key={`${doc.fileName}-${doc.uploadDate}`}
                 className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
               >
                 <div className="flex items-center justify-between">
@@ -419,9 +425,9 @@ const DocumentationSection = ({ vkb }) => {
             Blue Button Reports ({vkb.documentation.blueButtonReports.length})
           </h4>
           <div className="space-y-2">
-            {vkb.documentation.blueButtonReports.map((doc, idx) => (
+            {vkb.documentation.blueButtonReports.map((doc) => (
               <div
-                key={idx}
+                key={doc.uploadDate}
                 className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
               >
                 <div className="flex items-center justify-between">
@@ -447,9 +453,9 @@ const InsightsStrengths = ({ strengths }) => (
       ✅ Strengths of Your Claim
     </h4>
     <div className="space-y-2">
-      {strengths.map((strength, idx) => (
+      {strengths.map((strength) => (
         <div
-          key={idx}
+          key={strength.condition}
           className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
         >
           <div className="font-semibold">{strength.condition}</div>
@@ -468,9 +474,9 @@ const InsightsMissingEvidence = ({ missingEvidence }) => (
       ⚠️ Missing Evidence
     </h4>
     <div className="space-y-2">
-      {missingEvidence.map((missing, idx) => (
+      {missingEvidence.map((missing) => (
         <div
-          key={idx}
+          key={missing.condition}
           className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg"
         >
           <div className="font-semibold">{missing.condition}</div>
@@ -494,9 +500,9 @@ const InsightsSuggestedSecondaries = ({ suggestions }) => (
       💡 Suggested Secondary Conditions
     </h4>
     <div className="space-y-2">
-      {suggestions.map((suggestion, idx) => (
+      {suggestions.map((suggestion) => (
         <div
-          key={idx}
+          key={`${suggestion.secondaryCondition}-${suggestion.primaryCondition}`}
           className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg"
         >
           <div className="font-semibold">{suggestion.secondaryCondition}</div>

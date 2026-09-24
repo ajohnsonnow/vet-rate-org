@@ -1612,9 +1612,9 @@ function PreHearingInstructions({
 function ConversationLog({ conversation, selectedPersona, isAIProcessing }) {
   return (
     <div className="-m-4 space-y-4 bg-gray-50 p-4 dark:bg-gray-900 sm:p-6">
-      {conversation.map((message, index) => (
+      {conversation.map((message) => (
         <div
-          key={index}
+          key={message.timestamp}
           className={`flex ${message.speaker === "user" ? "justify-end" : "justify-start"}`}
         >
           <div

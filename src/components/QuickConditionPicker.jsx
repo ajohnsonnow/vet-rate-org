@@ -511,9 +511,9 @@ const SelectedSummary = ({
         </button>
       </div>
       <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-        {selectedConditions.map((condition, idx) => (
+        {selectedConditions.map((condition) => (
           <span
-            key={idx}
+            key={condition}
             className="inline-flex items-center px-1.5 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-100 text-xs rounded-full"
           >
             {condition.length > 25

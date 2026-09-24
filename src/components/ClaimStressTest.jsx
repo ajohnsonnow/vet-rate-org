@@ -551,9 +551,9 @@ const WeaknessesPanel = ({ weaknesses, getSeverityColor }) => (
       🚨 Weaknesses Detected: {weaknesses.length}
     </h3>
     <div className="space-y-3">
-      {weaknesses.map((weakness, idx) => (
+      {weaknesses.map((weakness) => (
         <div
-          key={idx}
+          key={weakness.description}
           className={`border-l-4 ${getSeverityColor(weakness.severity)} rounded bg-gray-100 p-4 dark:bg-gray-800`}
         >
           <div className="flex items-center justify-between mb-2">
@@ -594,7 +594,7 @@ const PracticeQuestionsPanel = ({
     <div className="space-y-4">
       {questions.map((q, idx) => (
         <div
-          key={idx}
+          key={q.question}
           className="rounded border border-gray-200 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800"
         >
           {/* Question */}

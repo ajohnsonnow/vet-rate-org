@@ -253,7 +253,7 @@ export default function CFileTimeline({ events = [] }) {
           <div className="space-y-4">
             {filteredEvents.map((event, idx) => (
               <TimelineEventCard
-                key={idx}
+                key={`${event.date}-${event.description}`}
                 event={event}
                 isExpanded={expandedEvent === idx}
                 onToggle={() =>

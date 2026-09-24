@@ -249,8 +249,8 @@ function PACTActServiceRequirement({ expKey, expData, details }) {
             Qualifying Locations:
           </span>
           <ul className="text-sm text-gray-600 ml-4 mt-1 list-disc">
-            {expData.serviceRequirements.locations.slice(0, 5).map((loc, i) => (
-              <li key={i}>{loc}</li>
+            {expData.serviceRequirements.locations.slice(0, 5).map((loc) => (
+              <li key={loc}>{loc}</li>
             ))}
             {expData.serviceRequirements.locations.length > 5 && (
               <li className="text-gray-500">...and more</li>
@@ -277,8 +277,8 @@ function PACTActServiceRequirement({ expKey, expData, details }) {
             Types of Airborne Hazards:
           </span>
           <ul className="text-sm text-gray-600 ml-4 mt-1 list-disc">
-            {expData.airborneHazards.map((hazard, i) => (
-              <li key={i}>{hazard}</li>
+            {expData.airborneHazards.map((hazard) => (
+              <li key={hazard}>{hazard}</li>
             ))}
           </ul>
         </div>

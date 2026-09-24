@@ -353,8 +353,8 @@ function RecentActivityPanel({ auditLog }) {
         ) : (
           auditLog
             .slice(0, 10)
-            .map((entry, idx) => (
-              <RecentActivityEntry key={idx} entry={entry} />
+            .map((entry) => (
+              <RecentActivityEntry key={entry.timestamp} entry={entry} />
             ))
         )}
       </div>
@@ -463,8 +463,8 @@ function AuditLogView({ auditLog, onBack }) {
               No audit events recorded
             </p>
           ) : (
-            auditLog.map((entry, idx) => (
-              <AuditLogEntryRow key={idx} entry={entry} />
+            auditLog.map((entry) => (
+              <AuditLogEntryRow key={entry.timestamp} entry={entry} />
             ))
           )}
         </div>

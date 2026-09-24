@@ -300,7 +300,11 @@ function IssuesPanel({ analysis }) {
           <NoIssuesFound />
         ) : (
           issues.map((issue, idx) => (
-            <IssueCard key={idx} issue={issue} index={idx} />
+            <IssueCard
+              key={issue.quote_target || issue.explanation}
+              issue={issue}
+              index={idx}
+            />
           ))
         )}
       </div>
@@ -323,9 +327,9 @@ function StrengthsSection({ mode, analysis }) {
         <span>💪</span> Strengths
       </h3>
       <ul className="space-y-2">
-        {analysis.strengths.map((strength, idx) => (
+        {analysis.strengths.map((strength) => (
           <li
-            key={idx}
+            key={strength}
             className="flex items-start gap-2 text-green-300 text-sm"
           >
             <span>✓</span>

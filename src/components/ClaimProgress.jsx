@@ -233,9 +233,9 @@ const MissingItemsChecklist = ({ missingItems }) => {
       <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">
         ⚠️ Still Needed:
       </h4>
-      {missingItems.map((item, index) => (
+      {missingItems.map((item) => (
         <div
-          key={index}
+          key={item.label}
           className="flex items-start gap-3 p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
         >
           <item.icon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />

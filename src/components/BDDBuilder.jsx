@@ -1079,9 +1079,9 @@ function MilestoneDetails({ milestone: m, onNavigateToTool }) {
     <div className="mt-2 ml-2 p-4 bg-gray-50 dark:bg-gray-750 rounded-lg border border-gray-200 dark:border-gray-600">
       {m.details && (
         <ul className="space-y-1.5 mb-3">
-          {m.details.map((d, i) => (
+          {m.details.map((d) => (
             <li
-              key={i}
+              key={d}
               className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
             >
               <span className="text-emerald-500 mt-0.5 flex-shrink-0">

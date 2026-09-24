@@ -154,8 +154,8 @@ const VersionDropdown = () => {
 
           {/* Changelog Items */}
           <div className="p-3 space-y-3">
-            {changelog.map((item, index) => (
-              <ChangelogItem key={index} item={item} />
+            {changelog.map((item) => (
+              <ChangelogItem key={item.title} item={item} />
             ))}
           </div>
 

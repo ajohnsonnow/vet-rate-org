@@ -672,8 +672,8 @@ const CriticalAlertsPanel = ({ criticalActions }) => {
         URGENT ACTIONS REQUIRED
       </h2>
       <div className="space-y-2">
-        {criticalActions.map((action, idx) => (
-          <div key={idx} className="bg-red-900/40 rounded-lg p-3">
+        {criticalActions.map((action) => (
+          <div key={action.title} className="bg-red-900/40 rounded-lg p-3">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-white font-semibold">{action.title}</p>
@@ -1558,11 +1558,11 @@ const ClaimWarningsList = ({ warnings }) => {
   if (!warnings?.length) return null;
   return (
     <div className="space-y-2">
-      {warnings.map((warning, idx) => {
+      {warnings.map((warning) => {
         const UrgencyIcon = UrgencyIcons[warning.urgency] || AlertCircle;
         return (
           <div
-            key={idx}
+            key={warning.title}
             className={`rounded-lg p-4 ${URGENCY_LEVELS[warning.urgency]?.bgColor || "bg-slate-800"} border ${URGENCY_LEVELS[warning.urgency]?.borderColor || "border-slate-700"}`}
           >
             <div className="flex items-start gap-3">
@@ -1598,11 +1598,11 @@ const ClaimNextStepsList = ({ actions }) => (
       </h2>
     </div>
     <div className="divide-y divide-slate-700">
-      {actions?.map((action, idx) => {
+      {actions?.map((action) => {
         const UrgencyIcon = UrgencyIcons[action.urgency] || Circle;
         return (
           <div
-            key={idx}
+            key={action.title}
             className="p-4 hover:bg-slate-700/30 transition-colors"
           >
             <div className="flex items-start gap-3">

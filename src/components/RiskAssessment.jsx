@@ -417,8 +417,8 @@ function ProtectionsSection({ protections }) {
         </h3>
       </div>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        {protections.map((protection, i) => (
-          <div key={i} className="p-4">
+        {protections.map((protection) => (
+          <div key={protection.rule.cfr} className="p-4">
             <div className="flex items-start gap-3">
               <span
                 className={`px-2 py-1 text-xs font-bold rounded ${
@@ -462,7 +462,7 @@ function FactorsSection({ factors }) {
         📌 Additional Considerations
       </h3>
       <div className="space-y-3">
-        {factors.map((factor, i) => {
+        {factors.map((factor) => {
           let factorClassName =
             "bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300";
           if (factor.type === "critical") {
@@ -474,7 +474,10 @@ function FactorsSection({ factors }) {
           }
 
           return (
-            <div key={i} className={`p-3 rounded-lg ${factorClassName}`}>
+            <div
+              key={factor.text}
+              className={`p-3 rounded-lg ${factorClassName}`}
+            >
               <p>{factor.text}</p>
             </div>
           );
@@ -547,9 +550,9 @@ function AIBulletList({ title, items, bulletChar, bulletClassName }) {
         {title}
       </h4>
       <ul className="space-y-2">
-        {items.map((item, i) => (
+        {items.map((item) => (
           <li
-            key={i}
+            key={item}
             className="flex items-start gap-2 text-gray-600 dark:text-gray-300"
           >
             <span className={`${bulletClassName} mt-1`}>{bulletChar}</span>
@@ -760,14 +763,18 @@ function RiskResultsPanel({
 
       {warnings
         .filter((w) => w.severity === "critical")
-        .map((warning, i) => (
-          <WarningCard key={i} warning={warning} tone="critical" />
+        .map((warning) => (
+          <WarningCard
+            key={warning.message}
+            warning={warning}
+            tone="critical"
+          />
         ))}
 
       {warnings
         .filter((w) => w.severity === "high")
-        .map((warning, i) => (
-          <WarningCard key={i} warning={warning} tone="high" />
+        .map((warning) => (
+          <WarningCard key={warning.message} warning={warning} tone="high" />
         ))}
 
       <ProtectionsSection protections={protections} />
@@ -939,9 +946,9 @@ function RiskAssessmentNotices({ showResults, savedRatings }) {
                 been auto-populated below.
               </p>
               <div className="flex flex-wrap gap-2 mt-2">
-                {savedRatings.slice(0, 5).map((r, i) => (
+                {savedRatings.slice(0, 5).map((r) => (
                   <span
-                    key={i}
+                    key={`${r.name || r.bodyPart}-${r.rating}`}
                     className="px-2 py-1 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 text-xs rounded"
                   >
                     {r.name || r.bodyPart} {r.rating}%

@@ -700,8 +700,8 @@ const GPUTechnicalDetails = ({ gpus }) => (
                 Features ({gpu.features.length})
               </summary>
               <div className="mt-1 pl-2 text-gray-600 dark:text-gray-500">
-                {gpu.features.slice(0, 10).map((feat, i) => (
-                  <div key={i}>• {feat}</div>
+                {gpu.features.slice(0, 10).map((feat) => (
+                  <div key={feat}>• {feat}</div>
                 ))}
                 {gpu.features.length > 10 && (
                   <div>• ... and {gpu.features.length - 10} more</div>

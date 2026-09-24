@@ -2967,8 +2967,8 @@ function CAPExamPrepQuestionDetail({ q }) {
             ✅ Possible Answers:
           </h4>
           <div className="space-y-2">
-            {q.options.map((opt, i) => (
-              <CAPExamPrepAnswerOption key={i} opt={opt} />
+            {q.options.map((opt) => (
+              <CAPExamPrepAnswerOption key={opt} opt={opt} />
             ))}
           </div>
         </div>
@@ -3300,9 +3300,9 @@ function CAPTermCategoryCard({ category, isExpanded, onToggle }) {
 
       {isExpanded && (
         <div className="p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
-          {category.terms.map((item, index) => (
+          {category.terms.map((item) => (
             <div
-              key={index}
+              key={item.term}
               className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5"
             >
               <h3 className="text-lg font-bold text-teal-700 dark:text-teal-300 mb-3 flex items-center gap-2">

@@ -847,9 +847,9 @@ function QuickQuestions({ variant, questions, onSelect, t }) {
           {t("aiAssistant", "quickQuestions")}
         </p>
         <div className="flex flex-wrap gap-2">
-          {questions.map((q, idx) => (
+          {questions.map((q) => (
             <button
-              key={idx}
+              key={q}
               onClick={() => onSelect(q)}
               className="text-xs px-3 py-2 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full border border-gray-200 dark:border-gray-700 transition-colors"
             >
@@ -867,9 +867,9 @@ function QuickQuestions({ variant, questions, onSelect, t }) {
         {t("aiAssistant", "quickQuestions")}
       </p>
       <div className="space-y-1">
-        {questions.map((q, idx) => (
+        {questions.map((q) => (
           <button
-            key={idx}
+            key={q}
             onClick={() => onSelect(q)}
             className="w-full text-left text-xs px-2 py-1.5 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded border border-gray-200 dark:border-gray-700 transition-colors"
           >

@@ -1442,8 +1442,8 @@ const ResourcesMenuPanel = (props) => (
 
       <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
-      {VETERAN_RESOURCES.map((resource, index) => (
-        <VeteranResourceLink key={index} resource={resource} />
+      {VETERAN_RESOURCES.map((resource) => (
+        <VeteranResourceLink key={resource.name} resource={resource} />
       ))}
     </div>
   </div>

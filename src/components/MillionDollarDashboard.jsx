@@ -605,9 +605,9 @@ const ProfileInputControls = ({
 // Faint dashed reference grid lines behind the value growth line
 const ChartGridLines = ({ chartWidth, chartHeight, padding }) => (
   <>
-    {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
+    {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
       <line
-        key={i}
+        key={pct}
         x1={padding}
         y1={chartHeight - padding - pct * (chartHeight - padding * 2)}
         x2={chartWidth - padding}
@@ -622,7 +622,7 @@ const ChartGridLines = ({ chartWidth, chartHeight, padding }) => (
 // Age-labeled data point markers along the value growth line
 const ChartDataPoints = ({ chartData, chartWidth, chartHeight, padding }) => (
   <>
-    {chartData.map((d, i) => {
+    {chartData.map((d) => {
       const maxValue = Math.max(...chartData.map((p) => p.value));
       const minAge = chartData[0].age;
       const maxAge = chartData[chartData.length - 1].age;
@@ -635,7 +635,7 @@ const ChartDataPoints = ({ chartData, chartWidth, chartHeight, padding }) => (
         (d.value / maxValue) * (chartHeight - padding * 2);
 
       return (
-        <g key={i}>
+        <g key={d.age}>
           <circle cx={x} cy={y} r="4" fill="#fbbf24" />
           <text
             x={x}

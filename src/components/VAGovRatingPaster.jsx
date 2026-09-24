@@ -218,9 +218,9 @@ const SupportedFormatsList = () => (
 
 const ServiceConnectedRatingList = ({ ratings }) => (
   <div className="space-y-2 max-h-64 overflow-y-auto">
-    {ratings.map((rating, index) => (
+    {ratings.map((rating) => (
       <div
-        key={index}
+        key={rating.condition}
         className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
       >
         <div className="flex-1">
@@ -258,8 +258,8 @@ const NotServiceConnectedWarning = ({ notServiceConnected }) => (
       {notServiceConnected.length === 1 ? "" : "s"} that will NOT be imported:
     </p>
     <ul className="text-xs text-yellow-700 dark:text-yellow-400 ml-4 space-y-1">
-      {notServiceConnected.slice(0, 5).map((condition, index) => (
-        <li key={index}>• {condition.condition}</li>
+      {notServiceConnected.slice(0, 5).map((condition) => (
+        <li key={condition.condition}>• {condition.condition}</li>
       ))}
       {notServiceConnected.length > 5 && (
         <li>• ...and {notServiceConnected.length - 5} more</li>

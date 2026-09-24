@@ -731,7 +731,7 @@ const ResultPathwaysAndLiterature = ({ packetData }) => (
         <ul className="space-y-3">
           {packetData.data.key_pathways.map((pathway, i) => (
             <li
-              key={i}
+              key={pathway}
               className="flex items-start gap-3 text-gray-700 dark:text-gray-300 print:text-black"
             >
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 print:bg-gray-200 print:text-black">
@@ -750,9 +750,9 @@ const ResultPathwaysAndLiterature = ({ packetData }) => (
           Supporting Medical Literature
         </h3>
         <ul className="space-y-2">
-          {packetData.data.literature_topics.map((topic, i) => (
+          {packetData.data.literature_topics.map((topic) => (
             <li
-              key={i}
+              key={topic}
               className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
             >
               <DocumentIcon />
@@ -772,9 +772,9 @@ const ResultRiskFactors = ({ packetData }) =>
         Relevant Risk Factors
       </h3>
       <ul className="space-y-2">
-        {packetData.data.risk_factors.map((factor, i) => (
+        {packetData.data.risk_factors.map((factor) => (
           <li
-            key={i}
+            key={factor}
             className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
           >
             <span className="text-amber-600 dark:text-amber-400 print:text-black">

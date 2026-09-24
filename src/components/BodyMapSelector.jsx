@@ -896,7 +896,7 @@ function LoggedSymptomsList({ symptoms, onRemove }) {
     <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
       {symptoms.map((symptom, index) => (
         <LoggedSymptomRow
-          key={index}
+          key={`${symptom.zoneName}-${symptom.userDescription}`}
           symptom={symptom}
           index={index}
           onRemove={onRemove}

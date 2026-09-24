@@ -132,9 +132,9 @@ const NewFeaturesSection = ({ newFeatures, t }) => {
         </h3>
       </div>
       <div className="space-y-3">
-        {newFeatures.map((item, index) => (
+        {newFeatures.map((item) => (
           <div
-            key={`new-${index}`}
+            key={item.title}
             className="flex gap-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 border border-emerald-200 dark:border-emerald-800 rounded-xl hover:shadow-md transition-all"
           >
             <div className="flex-shrink-0 mt-0.5">
@@ -177,9 +177,9 @@ const ExistingFeaturesSection = ({ existingFeatures, hasNewFeatures, t }) => {
         </div>
       )}
       <div className="space-y-3">
-        {existingFeatures.map((item, index) => (
+        {existingFeatures.map((item) => (
           <div
-            key={`existing-${index}`}
+            key={item.title}
             className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <div className="flex-shrink-0 mt-0.5">
@@ -225,9 +225,9 @@ const BugFixesSection = ({ bugFixes, totalBugsSquashed, t }) => {
         </span>
       </div>
       <div className="space-y-2">
-        {bugFixes.map((bug, index) => (
+        {bugFixes.map((bug) => (
           <div
-            key={`bug-${index}`}
+            key={bug.title}
             className="flex gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
           >
             <div className="flex-shrink-0 mt-0.5">
