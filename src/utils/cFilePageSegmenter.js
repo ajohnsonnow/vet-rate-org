@@ -193,14 +193,14 @@ function splitOversizedSegment(seg, maxChars) {
       oversizedChunks.push({
         text: pageBuffer.map((p) => p.text).join(""),
         startPage: pageBuffer[0].pageNum,
-        endPage: pageBuffer[pageBuffer.length - 1].pageNum,
+        endPage: pageBuffer.at(-1).pageNum,
         chunkIndex: oversizedChunks.length,
         pageNums: pageBuffer.map((p) => p.pageNum),
         docType: seg.docType,
         segmentIds: [seg.id],
       });
       // 1-page overlap within the same document
-      const overlap = pageBuffer[pageBuffer.length - 1];
+      const overlap = pageBuffer.at(-1);
       pageBuffer = [overlap];
       bufSz = overlap.text.length;
     }
@@ -211,7 +211,7 @@ function splitOversizedSegment(seg, maxChars) {
     oversizedChunks.push({
       text: pageBuffer.map((p) => p.text).join(""),
       startPage: pageBuffer[0].pageNum,
-      endPage: pageBuffer[pageBuffer.length - 1].pageNum,
+      endPage: pageBuffer.at(-1).pageNum,
       chunkIndex: oversizedChunks.length,
       pageNums: pageBuffer.map((p) => p.pageNum),
       docType: seg.docType,
@@ -233,7 +233,7 @@ export function chunkBySegment(segments, maxChars) {
     chunks.push({
       text: bufPages.map((p) => p.text).join(""),
       startPage: bufPages[0].pageNum,
-      endPage: bufPages[bufPages.length - 1].pageNum,
+      endPage: bufPages.at(-1).pageNum,
       chunkIndex: chunks.length,
       pageNums: bufPages.map((p) => p.pageNum),
       docType: bufDocType,

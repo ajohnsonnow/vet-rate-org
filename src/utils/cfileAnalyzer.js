@@ -600,7 +600,7 @@ function _parsePageMarkers(fullText) {
 
   while ((match = pageMarkerRegex.exec(fullText)) !== null) {
     if (pages.length > 0) {
-      pages[pages.length - 1].endIndex = match.index;
+      pages.at(-1).endIndex = match.index;
     }
     pages.push({
       pageNum: Number.parseInt(match[1], 10),
@@ -702,7 +702,7 @@ function splitIntoChunks(fullText, aiMode) {
       {
         text: fullText,
         startPage: pages[0].pageNum,
-        endPage: pages[pages.length - 1].pageNum,
+        endPage: pages.at(-1).pageNum,
         chunkIndex: 0,
       },
     ];

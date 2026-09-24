@@ -350,7 +350,7 @@ function _collectPatternBoundaries(typeName, signature, text) {
 function _filterCloseBoundaries(boundaries) {
   const filtered = [];
   for (const boundary of boundaries) {
-    const lastBoundary = filtered[filtered.length - 1];
+    const lastBoundary = filtered.at(-1);
     if (!lastBoundary || boundary.position - lastBoundary.position > 500) {
       filtered.push(boundary);
     } else if (boundary.priority > lastBoundary.priority) {
