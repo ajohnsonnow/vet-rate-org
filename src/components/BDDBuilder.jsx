@@ -23,6 +23,48 @@ import {
   getChecklistCompletion,
 } from "../utils/bddData.js";
 import { SERVICE_BRANCHES } from "../config/affiliations.js";
+import { getVeteranProfile, getServicePeriods } from "../utils/veteranProfile";
+
+// Free-text branch names (profile.branch, servicePeriod.branch) -> the
+// kebab-case ids BranchSelector/SERVICE_BRANCHES use.
+const BRANCH_NAME_TO_ID = {
+  army: "army",
+  navy: "navy",
+  "air force": "air-force",
+  "marine corps": "marines",
+  marines: "marines",
+  "coast guard": "coast-guard",
+  "space force": "space-force",
+  "national guard": "national-guard",
+  reserves: "reserves",
+};
+
+function normalizeBranchId(branch) {
+  if (!branch) return "";
+  return BRANCH_NAME_TO_ID[String(branch).trim().toLowerCase()] || "";
+}
+
+// The veteran's own separation date + branch: the profile's top-level
+// serviceEndDate/branch fields (kept current by DD214 import) win, falling
+// back to the most recently-ended service period on file.
+function getVeteranSeparationDefault() {
+  const profile = getVeteranProfile();
+  if (profile.serviceEndDate) {
+    return {
+      separationDate: profile.serviceEndDate,
+      branch: normalizeBranchId(profile.branch),
+    };
+  }
+  const withEndDate = getServicePeriods().filter((p) => p.serviceEndDate);
+  if (withEndDate.length === 0) return { separationDate: "", branch: "" };
+  const latest = withEndDate.reduce((a, b) =>
+    b.serviceEndDate > a.serviceEndDate ? b : a,
+  );
+  return {
+    separationDate: latest.serviceEndDate,
+    branch: normalizeBranchId(latest.branch),
+  };
+}
 
 // ─────────────────────────────────────────────────────────────
 // TABS
@@ -76,12 +118,32 @@ function getDateNDaysFromNow(n) {
 // ─────────────────────────────────────────────────────────────
 // STATE HOOK
 // ─────────────────────────────────────────────────────────────
-function useBDDBuilderClaimState() {
+// Combines any already-saved BDD progress with a one-time records default
+// (profile/service-period separation date+branch) - the saved value always
+// wins, so this never overwrites an existing answer.
+function useBDDBuilderInitialState() {
   const [savedData] = useState(() => loadBDDProgress());
-  const [separationDate, setSeparationDate] = useState(
-    savedData.separationDate || "",
+  const [recordsDefault] = useState(() =>
+    savedData.separationDate ? null : getVeteranSeparationDefault(),
   );
-  const [branch, setBranch] = useState(savedData.branch || "");
+  return {
+    prefilledFromRecords: Boolean(recordsDefault?.separationDate),
+    initialSeparationDate:
+      savedData.separationDate || recordsDefault?.separationDate || "",
+    initialBranch: savedData.branch || recordsDefault?.branch || "",
+    savedData,
+  };
+}
+
+function useBDDBuilderClaimState() {
+  const {
+    prefilledFromRecords,
+    initialSeparationDate,
+    initialBranch,
+    savedData,
+  } = useBDDBuilderInitialState();
+  const [separationDate, setSeparationDate] = useState(initialSeparationDate);
+  const [branch, setBranch] = useState(initialBranch);
   const [checkedItems, setCheckedItems] = useState(
     new Set(savedData.checkedItems || []),
   );
@@ -158,6 +220,7 @@ function useBDDBuilderClaimState() {
     toggleCheckItem,
     addCondition,
     removeCondition,
+    prefilledFromRecords,
   };
 }
 
@@ -197,6 +260,7 @@ function useBDDBuilderState() {
     toggleCheckItem: claim.toggleCheckItem,
     addCondition: claim.addCondition,
     removeCondition: claim.removeCondition,
+    prefilledFromRecords: claim.prefilledFromRecords,
   };
 }
 
@@ -358,6 +422,7 @@ function ActiveTabContent({
   onToggleItem,
   expandedMistake,
   onToggleMistake,
+  prefilledFromRecords,
 }) {
   if (activeTab === "dashboard") {
     return (
@@ -375,6 +440,7 @@ function ActiveTabContent({
         onChangeDate={onChangeDate}
         separationDate={separationDate}
         branch={branch}
+        prefilledFromRecords={prefilledFromRecords}
       />
     );
   }
@@ -474,6 +540,7 @@ function BDDBuilderModal({ state, onClose, onReportBug, onNavigateToTool }) {
     toggleCheckItem,
     addCondition,
     removeCondition,
+    prefilledFromRecords,
   } = state;
 
   return (
@@ -513,6 +580,7 @@ function BDDBuilderModal({ state, onClose, onReportBug, onNavigateToTool }) {
         onRemoveCondition={removeCondition}
         onNavigateToTool={onNavigateToTool}
         onChangeDate={() => setShowSetup(true)}
+        prefilledFromRecords={prefilledFromRecords}
         expandedMilestone={expandedMilestone}
         onToggleMilestone={(id) =>
           setExpandedMilestone(expandedMilestone === id ? null : id)
@@ -1018,6 +1086,17 @@ function KeyDatesCard({ eligibility, separationDate }) {
   );
 }
 
+function RecordsPrefillNotice({ show }) {
+  if (!show) return null;
+
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">
+      📋 We filled in your separation date from your service record — use
+      &quot;Change Date&quot; below if it&apos;s wrong.
+    </div>
+  );
+}
+
 const DashboardTab = ({
   eligibility,
   milestones,
@@ -1032,6 +1111,7 @@ const DashboardTab = ({
   onChangeDate,
   separationDate,
   _branch,
+  prefilledFromRecords,
 }) => {
   // Find the next actionable milestone
   const nextMilestone =
@@ -1039,6 +1119,8 @@ const DashboardTab = ({
 
   return (
     <div className="space-y-6">
+      <RecordsPrefillNotice show={prefilledFromRecords} />
+
       <EligibilityStatusCard
         eligibility={eligibility}
         checklistCompletion={checklistCompletion}
