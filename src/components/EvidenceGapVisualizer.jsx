@@ -13,8 +13,20 @@ import {
   getAvailableConditions,
   analyzeEvidenceGaps,
 } from "../data/evidenceRequirements";
-import { saveClaim } from "../utils/claimsStorage";
+import { saveClaim, getSavedClaims } from "../utils/claimsStorage";
+import { getMyRatings } from "../utils/veteranProfile";
+import { normalizeConditionName } from "../utils/conditionName";
 import ReportBugLink from "./ReportBugLink";
+
+// Normalized condition name -> EVIDENCE_REQUIREMENTS key, built once at
+// module load (the requirements schema itself is static).
+const EVIDENCE_CONDITION_INDEX = (() => {
+  const index = new Map();
+  Object.entries(EVIDENCE_REQUIREMENTS).forEach(([id, data]) => {
+    index.set(normalizeConditionName(data.name), id);
+  });
+  return index;
+})();
 
 function getAvailableRatingsForCondition(conditionId) {
   const data = conditionId ? EVIDENCE_REQUIREMENTS[conditionId] : null;
@@ -33,6 +45,80 @@ function computeDefaultRating(conditionId) {
     .map((r) => Number.parseInt(r))
     .sort((a, b) => b - a);
   return ratings.find((r) => r < 100 && r >= 30) || ratings[0];
+}
+
+// Smallest available rating tier above the veteran's current rating, or the
+// highest tier if they're already at (or above) the top of the scale.
+function computeSuggestedTarget(conditionId, currentRating) {
+  const ratings = getAvailableRatingsForCondition(conditionId);
+  if (currentRating === null) return computeDefaultRating(conditionId);
+  const nextTier = ratings.find((r) => r > currentRating);
+  return nextTier ?? ratings.at(-1);
+}
+
+// One-click quick-picks for conditions the veteran already has on file (My
+// Ratings, then saved claims) that this tool has evidence requirements for.
+// Ratings carry a known current percentage, so the suggested target is the
+// next tier up; saved claims have no rating on file yet, so the target
+// falls back to the same default a manual condition pick would get.
+function getRecordsQuickPicks() {
+  const seen = new Set();
+  const picks = [];
+
+  getMyRatings().forEach((r) => {
+    const key = normalizeConditionName(r.name);
+    if (!key || seen.has(key) || !EVIDENCE_CONDITION_INDEX.has(key)) return;
+    seen.add(key);
+    const conditionId = EVIDENCE_CONDITION_INDEX.get(key);
+    const currentRating = typeof r.rating === "number" ? r.rating : null;
+    picks.push({
+      conditionId,
+      name: EVIDENCE_REQUIREMENTS[conditionId].name,
+      currentRating,
+      targetRating: computeSuggestedTarget(conditionId, currentRating),
+    });
+  });
+
+  getSavedClaims().forEach((c) => {
+    const key = normalizeConditionName(c.conditionName);
+    if (!key || seen.has(key) || !EVIDENCE_CONDITION_INDEX.has(key)) return;
+    seen.add(key);
+    const conditionId = EVIDENCE_CONDITION_INDEX.get(key);
+    picks.push({
+      conditionId,
+      name: EVIDENCE_REQUIREMENTS[conditionId].name,
+      currentRating: null,
+      targetRating: computeDefaultRating(conditionId),
+    });
+  });
+
+  return picks;
+}
+
+function RecordsQuickPicks({ picks, onPick }) {
+  if (picks.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <p className="text-sm text-gray-400 mb-2">
+        📋 From your records — one click to load:
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {picks.map((pick) => (
+          <button
+            key={pick.conditionId}
+            type="button"
+            onClick={() => onPick(pick)}
+            className="min-h-[44px] px-4 py-2 bg-gray-800 border-2 border-gray-700 rounded-lg text-sm text-white hover:border-purple-500 focus-visible:ring-2 focus-visible:ring-purple-500 transition-colors"
+          >
+            {pick.currentRating !== null
+              ? `${pick.name} (${pick.currentRating}% → try ${pick.targetRating}%)`
+              : `${pick.name} → target ${pick.targetRating}%`}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function saveGapAnalysis({
@@ -681,6 +767,8 @@ const EvidenceGapBody = ({
   targetRating,
   handleConditionChange,
   setTargetRating,
+  quickPicks,
+  handleQuickPick,
   analysis,
   showTips,
   setShowTips,
@@ -691,6 +779,8 @@ const EvidenceGapBody = ({
   <div className="-mx-4 -my-4">
     {/* Content */}
     <div className="p-6">
+      <RecordsQuickPicks picks={quickPicks} onPick={handleQuickPick} />
+
       {/* Condition & Rating Selection */}
       <ConditionRatingSelectors
         availableConditions={availableConditions}
@@ -777,6 +867,7 @@ const EvidenceGapVisualizer = ({
   const [showTips, setShowTips] = useState(false);
   const [savedGapAnalyses, setSavedGapAnalyses] = useState([]);
   const [saveStatus, setSaveStatus] = useState(null); // 'success' | 'error' | null
+  const [quickPicks] = useState(getRecordsQuickPicks);
 
   // Get available conditions and ratings
   const availableConditions = getAvailableConditions();
@@ -796,6 +887,13 @@ const EvidenceGapVisualizer = ({
     setUserEvidence([]);
     const defaultRating = computeDefaultRating(conditionId);
     if (defaultRating !== null) setTargetRating(defaultRating);
+  };
+
+  // One-click load from a records quick-pick (My Ratings / saved claims)
+  const handleQuickPick = (pick) => {
+    setSelectedCondition(pick.conditionId);
+    setUserEvidence([]);
+    setTargetRating(pick.targetRating);
   };
 
   // Toggle evidence item
@@ -833,6 +931,8 @@ const EvidenceGapVisualizer = ({
         targetRating={targetRating}
         handleConditionChange={handleConditionChange}
         setTargetRating={setTargetRating}
+        quickPicks={quickPicks}
+        handleQuickPick={handleQuickPick}
         analysis={analysis}
         showTips={showTips}
         setShowTips={setShowTips}
