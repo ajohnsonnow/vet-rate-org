@@ -181,6 +181,55 @@ async function refreshTokenAndPersist(
   return tokenResponse;
 }
 
+async function _restoreValidToken(
+  storedToken,
+  { setAccessToken, setIsAuthenticated, setUserInfo },
+) {
+  // eslint-disable-next-line no-console
+  console.log("[VA Auth] Found valid token");
+  setAccessToken(storedToken);
+  setIsAuthenticated(true);
+
+  // Try to load cached user info
+  const cachedUserInfo = sessionStorage.getItem(STORAGE_KEYS.USER_INFO);
+  if (cachedUserInfo) {
+    try {
+      setUserInfo(JSON.parse(cachedUserInfo));
+    } catch (err) {
+      console.warn("[VA Auth] Failed to parse cached user info:", err.message);
+    }
+  }
+
+  // Fetch fresh user info
+  try {
+    const info = await fetchUserInfo(storedToken);
+    setUserInfo(info);
+    sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(info));
+  } catch (err) {
+    console.warn("[VA Auth] Failed to fetch user info:", err.message);
+  }
+}
+
+async function _refreshExpiredToken({ setAccessToken, setIsAuthenticated }) {
+  // eslint-disable-next-line no-console
+  console.log("[VA Auth] Token expired, attempting refresh...");
+  const { refreshToken } = getStoredTokens();
+  if (!refreshToken) {
+    clearTokens();
+    return;
+  }
+  try {
+    await refreshTokenAndPersist(
+      refreshToken,
+      setAccessToken,
+      setIsAuthenticated,
+    );
+  } catch (err) {
+    console.warn("[VA Auth] Refresh failed:", err.message);
+    clearTokens();
+  }
+}
+
 async function checkExistingAuth({
   setAccessToken,
   setIsAuthenticated,
@@ -193,50 +242,13 @@ async function checkExistingAuth({
   const { accessToken: storedToken, expiry } = getStoredTokens();
 
   if (storedToken && !isTokenExpired(expiry)) {
-    // eslint-disable-next-line no-console
-    console.log("[VA Auth] Found valid token");
-    setAccessToken(storedToken);
-    setIsAuthenticated(true);
-
-    // Try to load cached user info
-    const cachedUserInfo = sessionStorage.getItem(STORAGE_KEYS.USER_INFO);
-    if (cachedUserInfo) {
-      try {
-        setUserInfo(JSON.parse(cachedUserInfo));
-      } catch (err) {
-        console.warn(
-          "[VA Auth] Failed to parse cached user info:",
-          err.message,
-        );
-      }
-    }
-
-    // Fetch fresh user info
-    try {
-      const info = await fetchUserInfo(storedToken);
-      setUserInfo(info);
-      sessionStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(info));
-    } catch (err) {
-      console.warn("[VA Auth] Failed to fetch user info:", err.message);
-    }
+    await _restoreValidToken(storedToken, {
+      setAccessToken,
+      setIsAuthenticated,
+      setUserInfo,
+    });
   } else if (storedToken && isTokenExpired(expiry)) {
-    // eslint-disable-next-line no-console
-    console.log("[VA Auth] Token expired, attempting refresh...");
-    const { refreshToken } = getStoredTokens();
-    if (refreshToken) {
-      try {
-        await refreshTokenAndPersist(
-          refreshToken,
-          setAccessToken,
-          setIsAuthenticated,
-        );
-      } catch (err) {
-        console.warn("[VA Auth] Refresh failed:", err.message);
-        clearTokens();
-      }
-    } else {
-      clearTokens();
-    }
+    await _refreshExpiredToken({ setAccessToken, setIsAuthenticated });
   } else {
     // eslint-disable-next-line no-console
     console.log("[VA Auth] No valid authentication found");

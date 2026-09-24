@@ -1488,41 +1488,51 @@ function formatConditionItem({
   return details ? `${name} — ${details}` : name;
 }
 
+// Format an award object from parseDD214Text.
+function formatAwardArrayItem(item) {
+  const name = item.award.name;
+  let qty = "";
+  if (item.quantity > 1) {
+    qty = ` (${item.quantity}x)`;
+  }
+  const devices =
+    item.devices?.length > 0
+      ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
+      : "";
+  return `${name}${qty}${devices}`;
+}
+
+// Dispatch a plain object item to the formatter matching its shape.
+function formatObjectArrayItem(item) {
+  if (item.condition && item.outcome) {
+    return formatDecisionItem(item);
+  }
+  if (
+    item.type &&
+    (item.category || item.snippet || typeof item.confidence === "number")
+  ) {
+    return formatSegmentItem(item);
+  }
+  if (
+    item.name &&
+    (item.rating != null ||
+      item.ratedPercentage != null ||
+      item.serviceConnected != null)
+  ) {
+    return formatConditionItem(item);
+  }
+  return item.name || item.title || item.value || JSON.stringify(item);
+}
+
 // Format array items for display
 export function formatArrayItem(item) {
   if (typeof item === "string") return item;
   // Handle award objects from parseDD214Text
   if (item?.award?.name) {
-    const name = item.award.name;
-    let qty = "";
-    if (item.quantity > 1) {
-      qty = ` (${item.quantity}x)`;
-    }
-    const devices =
-      item.devices?.length > 0
-        ? ` w/ ${item.devices.map((d) => d.type.replace("_", " ")).join(", ")}`
-        : "";
-    return `${name}${qty}${devices}`;
+    return formatAwardArrayItem(item);
   }
   if (item && typeof item === "object") {
-    if (item.condition && item.outcome) {
-      return formatDecisionItem(item);
-    }
-    if (
-      item.type &&
-      (item.category || item.snippet || typeof item.confidence === "number")
-    ) {
-      return formatSegmentItem(item);
-    }
-    if (
-      item.name &&
-      (item.rating != null ||
-        item.ratedPercentage != null ||
-        item.serviceConnected != null)
-    ) {
-      return formatConditionItem(item);
-    }
-    return item.name || item.title || item.value || JSON.stringify(item);
+    return formatObjectArrayItem(item);
   }
   return String(item);
 }
