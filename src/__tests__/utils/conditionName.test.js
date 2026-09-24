@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calendarDay,
   dropSupersededConditions,
   extractPriorConditionNames,
   findRatedConditionMatch,
@@ -258,5 +259,20 @@ describe("dropSupersededConditions", () => {
     const rows = [{ name: "Tinnitus" }, { name: "Rhinitis" }];
     expect(dropSupersededConditions(rows, byName)).toBe(0);
     expect(rows).toHaveLength(2);
+  });
+});
+
+describe("calendarDay and same-day decisions", () => {
+  it("reads ISO and prose dates as the same calendar day", () => {
+    expect(calendarDay("2023-09-15")).toBe("2023-09-15");
+    expect(calendarDay("September 15, 2023")).toBe("2023-09-15");
+    expect(calendarDay("09/15/2023")).toBe("2023-09-15");
+    expect(calendarDay("not a date")).toBeNull();
+    expect(calendarDay(null)).toBeNull();
+  });
+
+  it("does not call the same day in another format older", () => {
+    expect(isOlderDecision("2023-09-15", "September 15, 2023")).toBe(false);
+    expect(isOlderDecision("September 15, 2023", "2023-09-15")).toBe(false);
   });
 });

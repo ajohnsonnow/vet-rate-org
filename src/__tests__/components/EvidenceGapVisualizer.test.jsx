@@ -91,6 +91,20 @@ describe("EvidenceGapVisualizer quick-picks from records", () => {
       screen.getByRole("button", { name: /Lumbar Strain/i }),
     ).toBeInTheDocument();
   });
+});
+
+describe("EvidenceGapVisualizer quick-picks: what is left out", () => {
+  it("leaves out a condition already at its maximum rating", () => {
+    saveMyRatings([
+      { name: "Tinnitus", bodyPart: "other", rating: 10, side: "none" },
+    ]);
+
+    renderVisualizer();
+
+    expect(
+      screen.queryByText(/from your records — one click to load/i),
+    ).not.toBeInTheDocument();
+  });
 
   it("shows no quick-picks when nothing on file matches the evidence schema", () => {
     saveMyRatings([

@@ -322,6 +322,7 @@ const buildBullets = (stats, conditions) => {
   if (stats.rated > 0) {
     const top = conditions
       .filter((c) => Number.isFinite(c.ratedPercentage))
+      .toSorted((a, b) => b.ratedPercentage - a.ratedPercentage)
       .slice(0, 3)
       .map((c) => `${c.name} (${c.ratedPercentage}%)`)
       .join(", ");

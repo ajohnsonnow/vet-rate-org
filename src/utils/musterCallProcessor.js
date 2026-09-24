@@ -926,8 +926,6 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
           branch: candidate.branch || "",
           component: period.component,
           formType: "NGB22",
-          rank: candidate.rank || "",
-          payGrade: candidate.payGrade || "",
           sourceDocument: file.name,
           notes:
             "Date range from NGB-22 Box 18 remarks (no location listed on the document).",

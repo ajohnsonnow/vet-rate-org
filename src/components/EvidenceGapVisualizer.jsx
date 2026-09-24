@@ -71,13 +71,17 @@ function getRecordsQuickPicks() {
       EVIDENCE_CONDITIONS_LIST,
     );
     if (!conditionId || seen.has(conditionId)) return;
-    seen.add(conditionId);
     const currentRating = typeof r.rating === "number" ? r.rating : null;
+    const targetRating = computeSuggestedTarget(conditionId, currentRating);
+    // Already at the condition's maximum (tinnitus caps at 10%): no increase
+    // to gather evidence for.
+    if (currentRating !== null && targetRating <= currentRating) return;
+    seen.add(conditionId);
     picks.push({
       conditionId,
       name: EVIDENCE_REQUIREMENTS[conditionId].name,
       currentRating,
-      targetRating: computeSuggestedTarget(conditionId, currentRating),
+      targetRating,
     });
   });
 

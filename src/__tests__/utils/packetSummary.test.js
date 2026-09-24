@@ -369,3 +369,19 @@ describe("getStatedCombinedRating", () => {
     expect(getStatedCombinedRating(null)).toBeNull();
   });
 });
+
+describe("buildPacketTldr: rated conditions", () => {
+  it("lists the highest-rated conditions first", () => {
+    const rated = [
+      { name: "Rhinitis", ratedPercentage: 0 },
+      { name: "Tinnitus", ratedPercentage: 10 },
+      { name: "PTSD", ratedPercentage: 50 },
+      { name: "Spine", ratedPercentage: 20 },
+    ];
+    const tldr = buildPacketTldr({}, [], rated);
+    const bullet = tldr.bullets.find((b) => b.icon === "📊");
+    expect(bullet.text).toBe(
+      "Rated conditions on file: PTSD (50%), Spine (20%), Tinnitus (10%).",
+    );
+  });
+});

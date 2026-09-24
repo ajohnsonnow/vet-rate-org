@@ -207,3 +207,17 @@ describe("VKB rank at discharge follows the latest service, not upload order", (
     expect(vkb.serviceHistory.rank.discharge).toBe("SGT");
   });
 });
+
+describe("VKB remark periods don't inherit the form's final rank", () => {
+  it("leaves rank off the earlier periods an NGB-22 lists", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(vkb, {
+      rank: "SGT",
+      payGrade: "E-5",
+      additionalPeriods: [
+        { serviceStartDate: "1997-09-29", serviceEndDate: "1998-02-27" },
+      ],
+    });
+    expect(vkb.serviceHistory.servicePeriods[0].rank).toBeUndefined();
+  });
+});

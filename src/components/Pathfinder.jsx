@@ -328,9 +328,13 @@ function mapSavedRatingToCondition(saved) {
   if (exactMatch) return exactMatch;
 
   // Match only the diagnosis itself: VA notes like "(claimed as ... post
-  // traumatic ...)" on a spine rating must not map it to PTSD.
+  // traumatic ...)" on a spine rating must not map it to PTSD, and a hip
+  // rating "associated with lumbosacral strain, degenerative disc disease"
+  // must not map to the spine.
   const open = name.indexOf("(");
-  const diagnosis = open === -1 ? name : name.slice(0, open);
+  const diagnosis = (open === -1 ? name : name.slice(0, open)).split(
+    / (?:associated with|secondary to) /i,
+  )[0];
   const keywordMatch = CONDITION_NAME_KEYWORD_MAP.find(([pattern]) =>
     pattern.test(diagnosis),
   );

@@ -19,11 +19,13 @@
 import { isSameServicePeriod } from "./dateUtils";
 import { ensureQuota } from "./storage";
 import {
+  calendarDay,
   dropSupersededConditions,
   findRatedConditionMatch,
   isOlderDecision,
   isSupersededName,
   normalizeConditionName,
+  primaryConditionKey,
 } from "./conditionName";
 import { DOCUMENT_TYPES } from "./documentClassifier";
 
@@ -1409,9 +1411,12 @@ function mergeDD214ServicePeriodTracking(vkb, dd214Data, options) {
   }
   // A scanned form often loses Box 12's dates while its remarks (the NGB-22's
   // Box 18 date ranges) still list every period.
+  // Rank, grade and MOS on the form belong to its final period, not to the
+  // earlier ones its remarks list.
   for (const period of dd214Data.additionalPeriods || []) {
     _upsertVkbServicePeriod(vkb, {
-      ...shared,
+      branch: shared.branch,
+      source: shared.source,
       serviceStartDate: period.serviceStartDate
         ? _calendarDay(period.serviceStartDate)
         : null,
@@ -1606,15 +1611,11 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
   return vkb;
 };
 
-// "September 15, 2023" / "09/15/2023" → "2023-09-15", built from local date
-// parts so a UTC conversion can't shift the day; unparseable input is kept
-// verbatim rather than dropped.
+// "September 15, 2023" / "2023-09-15" → "2023-09-15" whatever the time zone;
+// unparseable input is kept verbatim rather than dropped.
 function _toIsoDate(value) {
   if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return String(value);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return calendarDay(value) ?? String(value);
 }
 
 const RATING_OUTCOME_LABELS = {
@@ -1722,22 +1723,41 @@ function _recordRating(vkb, c, combinedRating, source) {
   });
 }
 
+// A code sheet restates ratings the letters already announced. Its event is
+// kept only when no letter recorded that condition's rating on that day, and
+// a letter's event replaces the code sheet's.
 function _pushRatingTimelineEvent(vkb, c, source) {
   if (!c.effectiveDate) return;
   const label =
     RATING_OUTCOME_LABELS[c.outcome] || "Service connection granted";
   const description = `${label}: ${c.name} (${c.percentage}%)`;
   const date = _toIsoDate(c.effectiveDate);
-  const duplicate = vkb.evidenceTimeline.some(
-    (e) => e.description === description && e.date === date,
-  );
-  if (duplicate) return;
+  const conditionKey = primaryConditionKey(c.name);
+  const sameDay = (e) =>
+    e.eventType === "rating_decision" &&
+    e.date === date &&
+    e.conditionKey === conditionKey;
+  if (
+    vkb.evidenceTimeline.some(
+      (e) => e.description === description && e.date === date,
+    )
+  ) {
+    return;
+  }
+  if (c.outcome === "code_sheet" && vkb.evidenceTimeline.some(sameDay)) return;
+  if (c.outcome !== "code_sheet") {
+    vkb.evidenceTimeline = vkb.evidenceTimeline.filter(
+      (e) => !(sameDay(e) && e.fromCodeSheet),
+    );
+  }
   vkb.evidenceTimeline.push({
     date,
     eventType: "rating_decision",
     description,
     source,
     significance: "rating",
+    conditionKey,
+    ...(c.outcome === "code_sheet" && { fromCodeSheet: true }),
   });
 }
 
@@ -1746,6 +1766,26 @@ function _pushTimelineEvent(vkb, entry) {
     (e) => e.date === entry.date && e.eventType === entry.eventType,
   );
   if (!duplicate) vkb.evidenceTimeline.push(entry);
+}
+
+const SAME_DECISION_DAYS = 14;
+
+// The same denial reaches the VKB from its letter (dated when mailed) and
+// from the code sheet (dated when decided), a few days apart. A denial of the
+// same condition years later is a separate decision and is kept.
+function _isKnownDenial(vkb, name, decisionDate, source) {
+  const key = normalizeConditionName(name);
+  const day = Date.parse(calendarDay(decisionDate) ?? "");
+  return vkb.vaClaimsHistory.claims.some((cl) => {
+    if (cl.status !== "denied") return false;
+    if (!(cl.conditions || []).some((n) => normalizeConditionName(n) === key)) {
+      return false;
+    }
+    if (cl.source === source) return true;
+    const other = Date.parse(calendarDay(cl.decisionDate) ?? "");
+    if (!Number.isFinite(day) || !Number.isFinite(other)) return false;
+    return Math.abs(day - other) <= SAME_DECISION_DAYS * 86400000;
+  });
 }
 
 function _recordDenials(vkb, decisionData, source) {
@@ -1765,13 +1805,7 @@ function _recordDenials(vkb, decisionData, source) {
       (typeof entry === "string" ? null : entry.decisionDate) ||
       decisionData.decisionDate ||
       null;
-    const duplicate = vkb.vaClaimsHistory.claims.some(
-      (cl) =>
-        cl.status === "denied" &&
-        cl.source === source &&
-        (cl.conditions || []).includes(name),
-    );
-    if (duplicate) continue;
+    if (_isKnownDenial(vkb, name, decisionDate, source)) continue;
     vkb.vaClaimsHistory.claims.push({
       claimNumber: decisionData.claimNumber || null,
       filedDate: null,
@@ -1850,15 +1884,8 @@ function _mergeCombinedHistory(existing, incoming) {
     .map(([, row]) => row);
 }
 
-// "2007-06-30" and "Jun 30, 2007" as the same YYYY-MM-DD (Date.parse reads
-// the ISO form as UTC and the prose form as local time).
 function _calendarDay(value) {
-  const text = String(value ?? "");
-  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
-  const date = new Date(text);
-  if (Number.isNaN(date.getTime())) return text;
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return calendarDay(value) ?? String(value ?? "");
 }
 
 /**

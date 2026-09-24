@@ -207,6 +207,25 @@ describe("Pathfinder auto-seed with real VA condition wording", () => {
     expect(await screen.findByDisplayValue("30%")).toBeInTheDocument();
     expect(screen.getByDisplayValue("20%")).toBeInTheDocument();
   });
+
+  it("keeps a hip rating 'associated with' the spine as its own condition", async () => {
+    localStorage.setItem("vetrate_ai_consent", "true");
+    saveMyRatings([
+      {
+        name: "Left hip limited adduction associated with lumbosacral strain, degenerative disc disease other than intervertebral disc syndrome",
+        bodyPart: "other",
+        rating: 10,
+        side: "left",
+      },
+    ]);
+
+    renderPathfinder();
+
+    expect(await screen.findByDisplayValue("10%")).toBeInTheDocument();
+    expect(
+      screen.queryByDisplayValue(/degenerative disc disease \(left\)/i),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("Pathfinder consent screen: focus management", () => {

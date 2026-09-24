@@ -121,11 +121,25 @@ export const dropSupersededConditions = (rows, getName) => {
   return superseded.length;
 };
 
-/** True when the incoming decision is dated strictly before the saved one. */
+/**
+ * "2023-09-15" and "September 15, 2023" as the same YYYY-MM-DD, or null.
+ * Date.parse reads the ISO form as UTC midnight and the prose form as local
+ * midnight, which west of UTC makes the same day compare as two.
+ */
+export const calendarDay = (value) => {
+  const text = String(value ?? "");
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+  const date = new Date(text);
+  if (!text || Number.isNaN(date.getTime())) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
+/** True when the incoming decision is dated on a strictly earlier day. */
 export const isOlderDecision = (incomingDate, existingDate) => {
-  const a = Date.parse(incomingDate);
-  const b = Date.parse(existingDate);
-  return Number.isFinite(a) && Number.isFinite(b) && a < b;
+  const a = calendarDay(incomingDate);
+  const b = calendarDay(existingDate);
+  return Boolean(a && b) && a < b;
 };
 
 // Real VA letters spell out condition names in full, with renames, sided

@@ -369,3 +369,70 @@ describe("veteranKnowledgeBase: dated record events from a C-File", () => {
     ]);
   });
 });
+
+describe("veteranKnowledgeBase: one record per decision across letters and the code sheet", () => {
+  const letter = {
+    decisionDate: "May 8, 2024",
+    conditions: [
+      {
+        name: "left hip limited adduction",
+        rating: 10,
+        effectiveDate: "September 15, 2023",
+        outcome: "granted",
+      },
+    ],
+    deniedConditions: ["Lipoma, left scalp"],
+  };
+  const sheet = {
+    decisionDate: "2024-05-06",
+    conditions: [
+      {
+        name: "Left hip limited adduction associated with lumbosacral strain",
+        rating: 10,
+        effectiveDate: "2023-09-15",
+        diagnosticCode: "5253",
+        outcome: "code_sheet",
+      },
+    ],
+    deniedConditions: [
+      { name: "Lipoma, left scalp", decisionDate: "2024-05-06" },
+    ],
+  };
+
+  it("keeps the letter's rating event and adds the code sheet's diagnostic code", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(vkb, sheet, { fileName: "cfile.pdf" });
+    mergeRatingDecisionIntoVKB(vkb, letter, { fileName: "letter.pdf" });
+    const events = vkb.evidenceTimeline.filter(
+      (e) => e.eventType === "rating_decision",
+    );
+    expect(events.map((e) => [e.date, e.source])).toEqual([
+      ["2023-09-15", "letter.pdf"],
+    ]);
+    expect(vkb.medicalConditions.current[0].diagnosticCode).toBe("5253");
+  });
+
+  it("records a denial once when its letter and the code sheet both list it", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(vkb, letter, { fileName: "letter.pdf" });
+    mergeRatingDecisionIntoVKB(vkb, sheet, { fileName: "cfile.pdf" });
+    expect(
+      vkb.vaClaimsHistory.claims.filter((c) => c.status === "denied"),
+    ).toHaveLength(1);
+  });
+
+  it("keeps a denial of the same condition years later", () => {
+    const vkb = initializeVKB();
+    mergeRatingDecisionIntoVKB(
+      vkb,
+      { deniedConditions: [{ name: "Sinusitis", decisionDate: "2008-11-26" }] },
+      { fileName: "a.pdf" },
+    );
+    mergeRatingDecisionIntoVKB(
+      vkb,
+      { deniedConditions: [{ name: "Sinusitis", decisionDate: "2023-07-06" }] },
+      { fileName: "b.pdf" },
+    );
+    expect(vkb.vaClaimsHistory.claims).toHaveLength(2);
+  });
+});
