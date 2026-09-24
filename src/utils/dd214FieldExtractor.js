@@ -45,8 +45,8 @@ const DD214_FIELD_PATTERNS = {
     block: 2,
     label: "Department/Component/Branch",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /(?:BLOCK\s*2|BOX\s*2|2\.\s*DEPARTMENT)[:\s.]*([A-Z/\s]+(?:ARMY|NAVY|AIR\s*FORCE|MARINE|COAST\s*GUARD|SPACE\s*FORCE)[A-Z/\s]*)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the branch/label alternation count, not backtracking; bounded for S8786 above
+      /(?:BLOCK\s{0,10}2|BOX\s{0,10}2|2\.\s{0,10}DEPARTMENT)[:\s.]{0,20}([A-Z/\s]{1,60}(?:ARMY|NAVY|AIR\s{0,10}FORCE|MARINE|COAST\s{0,10}GUARD|SPACE\s{0,10}FORCE)[A-Z/\s]{0,60})/i,
       /DEPARTMENT[,\s]*COMPONENT[,\s]*(?:AND\s*)?BRANCH[:\s.]*([A-Z][A-Z/\s]*)/i,
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /((?:ARMY|NAVY|AIR\s*FORCE|MARINES?|COAST\s*GUARD|SPACE\s*FORCE)\s*\/\s*(?:ACTIVE|ARNG|USAR|RESERVE|NATIONAL\s*GUARD|RA|USN|USAF|USMC|USCG))/i,
@@ -123,8 +123,8 @@ const DD214_FIELD_PATTERNS = {
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /(?:BLOCK\s*6|BOX\s*6|6\.\s*RESERVE\s*OBLIG)[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /RESERVE\s*(?:OBLIG(?:ATION)?|IBLIGATION)\s*(?:TERM(?:INATION)?\.?\s*DATE)?[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the OCR-typo alternation count, not backtracking; bounded for S8786 above
+      /RESERVE\s{0,10}(?:OBLIG(?:ATION)?|IBLIGATION)\s{0,10}(?:TERM(?:INATION)?\.?\s{0,10}DATE)?[:\s.]{0,20}(\d{4}[\s|]{0,10}\d{2}[\s|]{0,10}\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeDate(val),
   },
@@ -136,8 +136,7 @@ const DD214_FIELD_PATTERNS = {
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /(?:BLOCK\s*7\s*A|BOX\s*7\s*A|7\s*A\.?\s*PLACE\s*OF\s*ENTRY)[:\s.]*([A-Z][A-Z,.\s]+(?:,\s*[A-Z]{2}))/i,
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /PLACE\s*OF\s*ENTRY\s*(?:INTO\s*(?:ACTIVE\s*)?DUTY)?[:\s.]*([A-Z][A-Z,.\s]+(?:,\s*[A-Z]{2,}))/i,
+      /PLACE\s{0,10}OF\s{0,10}ENTRY\s{0,10}(?:INTO\s{0,10}(?:ACTIVE\s{0,10})?DUTY)?[:\s.]{0,20}([A-Z][A-Z,.\s]{1,100}(?:,\s{0,10}[A-Z]{2,10}))/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
   },
@@ -147,10 +146,9 @@ const DD214_FIELD_PATTERNS = {
     block: "7b",
     label: "Home of Record at Time of Entry",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: bounded {10,100} lazy capture stays linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /(?:BLOCK\s*7\s*B|BOX\s*7\s*B|7\s*B\.?\s*HOME\s*OF\s*RECORD)[:\s.]*([\s\S]{10,100}?)(?=\n\s*(?:BLOCK|BOX|8\s*A|\d+\.))/i,
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: bounded {10,100} lazy capture stays linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /HOME\s*OF\s*RECORD[:\s.]*([\s\S]{10,100}?)(?=\n\s*(?:BLOCK|BOX|8|\d+\.))/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; bounded {10,100} capture for S8786 above
+      /(?:BLOCK\s{0,10}7\s{0,10}B|BOX\s{0,10}7\s{0,10}B|7\s{0,10}B\.?\s{0,10}HOME\s{0,10}OF\s{0,10}RECORD)[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8\s{0,10}A|\d+\.))/i,
+      /HOME\s{0,10}OF\s{0,10}RECORD[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8|\d+\.))/i,
     ],
     normalize: (val) => val.replace(/\n/g, ", ").replace(/\s+/g, " ").trim(),
   },
@@ -195,10 +193,9 @@ const DD214_FIELD_PATTERNS = {
     block: 10,
     label: "SGLI Coverage Amount",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /(?:BLOCK\s*10|BOX\s*10|10\.\s*SGLI?\s*COVERAGE)[:\s.]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /SGLI?\s*(?:COVERAGE)?[:\s.]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; bounded for S8786 above
+      /(?:BLOCK\s{0,10}10|BOX\s{0,10}10|10\.\s{0,10}SGLI?\s{0,10}COVERAGE)[:\s.]{0,20}\$?\s{0,10}([\d,]{1,20}(?:\.\d{2})?)/i,
+      /SGLI?\s{0,10}(?:COVERAGE)?[:\s.]{0,20}\$?\s{0,10}([\d,]{1,20}(?:\.\d{2})?)/i,
     ],
     normalize: (val) => val.replace(/\s/g, ""),
   },
@@ -208,9 +205,9 @@ const DD214_FIELD_PATTERNS = {
     block: 11,
     label: "Primary Specialty (MOS/AFSC/Rating)",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /(?:BLOCK\s*11|BOX\s*11|11\.\s*PRIMARY\s*SPECIALTY)[:\s.]*([A-Z0-9][A-Z0-9\s/,.-]+?)(?=\/\/|NOTHING\s*FOLLOWS|\n\s*(?:BLOCK|BOX|12))/i,
-      /PRIMARY\s*SPECIALTY[:\s.]*([A-Z0-9][A-Z0-9\s/,.-]+?)(?=\/\/|NOTHING\s*FOLLOWS|\n)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; bounded for S8786 above
+      /(?:BLOCK\s{0,10}11|BOX\s{0,10}11|11\.\s{0,10}PRIMARY\s{0,10}SPECIALTY)[:\s.]{0,20}([A-Z0-9][A-Z0-9\s/,.-]{1,100000}?)(?=\/\/|NOTHING\s{0,10}FOLLOWS|\n\s{0,10}(?:BLOCK|BOX|12))/i,
+      /PRIMARY\s{0,10}SPECIALTY[:\s.]{0,20}([A-Z0-9][A-Z0-9\s/,.-]{1,100000}?)(?=\/\/|NOTHING\s{0,10}FOLLOWS|\n)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
     extractMOS: (val) => {
@@ -228,8 +225,7 @@ const DD214_FIELD_PATTERNS = {
         // unbounded worst case.
         .replace(/\d{1,3}\s*(?:YRS?|MOS?)[\s-]*/gi, "")
         .replace(/\b\d{2}\b/g, "")
-        // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: linear scan for absent '//' delimiter (see 'ReDoS regression — MOS title cleanup')
-        .replace(/\/\/.*$/i, "")
+        .replace(/\/\/.{0,200}$/i, "")
         .replace(/NOTHING\s*FOLLOWS.*/i, "")
         .replace(/[-–—]+/g, "")
         .trim();
@@ -244,8 +240,8 @@ const DD214_FIELD_PATTERNS = {
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /(?:BLOCK\s*12\s*A|BOX\s*12\s*A|12\s*A\.?\s*DATE\s*ENTERED)[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /DATE\s*ENTERED\s*(?:AD|ACTIVE\s*DUTY)\s*(?:THIS\s*PERIOD)?[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional-group alternation count, not backtracking; bounded for S8786 above
+      /DATE\s{0,10}ENTERED\s{0,10}(?:AD|ACTIVE\s{0,10}DUTY)\s{0,10}(?:THIS\s{0,10}PERIOD)?[:\s.]{0,20}(\d{4}[\s|]{0,10}\d{2}[\s|]{0,10}\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeDate(val),
   },
@@ -257,8 +253,8 @@ const DD214_FIELD_PATTERNS = {
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /(?:BLOCK\s*12\s*B|BOX\s*12\s*B|12\s*B\.?\s*SEPARATION\s*DATE)[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /SEPARATION\s*DATE\s*(?:THIS\s*PERIOD)?[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional-group alternation count, not backtracking; bounded for S8786 above
+      /SEPARATION\s{0,10}DATE\s{0,10}(?:THIS\s{0,10}PERIOD)?[:\s.]{0,20}(\d{4}[\s|]{0,10}\d{2}[\s|]{0,10}\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeDate(val),
   },
@@ -270,8 +266,8 @@ const DD214_FIELD_PATTERNS = {
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /(?:BLOCK\s*12\s*C|BOX\s*12\s*C|12\s*C\.?\s*NET\s*ACTIVE)[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /NET\s*ACTIVE\s*SERVICE\s*(?:THIS\s*PERIOD)?[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional-group alternation count, not backtracking; bounded for S8786 above
+      /NET\s{0,10}ACTIVE\s{0,10}SERVICE\s{0,10}(?:THIS\s{0,10}PERIOD)?[:\s.]{0,20}(\d{4}[\s|]{0,10}\d{2}[\s|]{0,10}\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeServiceTime(val),
   },
@@ -307,8 +303,8 @@ const DD214_FIELD_PATTERNS = {
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /(?:BLOCK\s*12\s*F|BOX\s*12\s*F|12\s*F\.?\s*FOREIGN\s*SERVICE)[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /FOREIGN\s*SERVICE[,\s]*(?:SEA)?[:\s.]*(\d{4}[\s|]*\d{2}[\s|]*\d{2}|\d{8})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional-group alternation count, not backtracking; bounded for S8786 above
+      /FOREIGN\s{0,10}SERVICE[,\s]{0,10}(?:SEA)?[:\s.]{0,20}(\d{4}[\s|]{0,10}\d{2}[\s|]{0,10}\d{2}|\d{8})/i,
     ],
     normalize: (val) => normalizeServiceTime(val),
   },
@@ -343,10 +339,10 @@ const DD214_FIELD_PATTERNS = {
     block: 13,
     label: "Decorations, Medals, Badges, Citations",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /(?:BLOCK\s*13|BOX\s*13|13\.\s*DECORATIONS)[:\s.]*([\s\S]+?)(?=(?:\n\s*(?:BLOCK\s*14|BOX\s*14|14\.|MILITARY\s*EDUCATION))|$)/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /DECORATIONS[,\s]*MEDALS[,\s]*BADGES[,\s]*(?:CITATIONS)?[:\s.]*([\s\S]+?)(?=(?:\n\s*(?:BLOCK\s*14|BOX\s*14|14\.|MILITARY\s*EDUCATION))|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
+      /(?:BLOCK\s{0,10}13|BOX\s{0,10}13|13\.\s{0,10}DECORATIONS)[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}14|BOX\s{0,10}14|14\.|MILITARY\s{0,10}EDUCATION))|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
+      /DECORATIONS[,\s]{0,10}MEDALS[,\s]{0,10}BADGES[,\s]{0,10}(?:CITATIONS)?[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}14|BOX\s{0,10}14|14\.|MILITARY\s{0,10}EDUCATION))|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
   },
@@ -356,10 +352,10 @@ const DD214_FIELD_PATTERNS = {
     block: 14,
     label: "Military Education",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /(?:BLOCK\s*14|BOX\s*14|14\.\s*MILITARY\s*EDUCATION)[:\s.]*([\s\S]+?)(?=(?:\n\s*(?:BLOCK\s*15|BOX\s*15|15\.))|$)/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /MILITARY\s*EDUCATION[:\s.]*([\s\S]+?)(?=(?:\n\s*(?:BLOCK\s*15|BOX\s*15|15\.))|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
+      /(?:BLOCK\s{0,10}14|BOX\s{0,10}14|14\.\s{0,10}MILITARY\s{0,10}EDUCATION)[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}15|BOX\s{0,10}15|15\.))|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
+      /MILITARY\s{0,10}EDUCATION[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}15|BOX\s{0,10}15|15\.))|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
   },
@@ -369,10 +365,10 @@ const DD214_FIELD_PATTERNS = {
     block: 18,
     label: "Remarks",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /(?:BLOCK\s*18|BOX\s*18|18\.\s*REMARKS)[:\s.]*([\s\S]+?)(?=(?:\n\s*(?:BLOCK\s*19|BOX\s*19|19\.|MAILING))|$)/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /REMARKS[:\s.]*([\s\S]+?)(?=(?:\n\s*(?:BLOCK\s*19|BOX\s*19|19\.|MAILING))|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
+      /(?:BLOCK\s{0,10}18|BOX\s{0,10}18|18\.\s{0,10}REMARKS)[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}19|BOX\s{0,10}19|19\.|MAILING))|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
+      /REMARKS[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}19|BOX\s{0,10}19|19\.|MAILING))|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
   },
@@ -382,10 +378,10 @@ const DD214_FIELD_PATTERNS = {
     block: 19,
     label: "Mailing Address After Separation",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: bounded {10,150} lazy capture stays linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /(?:BLOCK\s*19|BOX\s*19|19\.?\s*MAILING\s*ADDRESS)[:\s.]*([\s\S]{10,150}?)(?=\n\s*(?:19\s*B|BLOCK\s*20|BOX\s*20|20\.))/i,
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: bounded {10,150} lazy capture stays linear on long non-terminating values (see 'ReDoS regression — free-text block fields')
-      /MAILING\s*ADDRESS\s*(?:AFTER\s*SEPARATION)?[:\s.]*([\s\S]{10,150}?)(?=\n\s*(?:19\s*B|BLOCK\s*20|BOX\s*20|20\.))/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above
+      /(?:BLOCK\s{0,10}19|BOX\s{0,10}19|19\.?\s{0,10}MAILING\s{0,10}ADDRESS)[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|20\.))/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above
+      /MAILING\s{0,10}ADDRESS\s{0,10}(?:AFTER\s{0,10}SEPARATION)?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|20\.))/i,
     ],
     normalize: (val) => val.replace(/\n/g, ", ").replace(/\s+/g, " ").trim(),
   },
@@ -442,8 +438,7 @@ const DD214_FIELD_PATTERNS = {
     label: "Reentry Code (RE Code)",
     patterns: [
       /(?:BLOCK\s*27|BOX\s*27|27\.\s*REENTRY\s*CODE)[:\s.]*(RE?-?\d|N\/?A|NA)/i,
-      // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: linear on long non-matching values (see 'ReDoS regression — discharge/code fields')
-      /(?:REENTRY|RE-ENTRY|RE)\s*(?:CODE)?[:\s.]*(RE?-?\d|N\/?A|NA)/i,
+      /(?:REENTRY|RE-ENTRY|RE)\s{0,10}(?:CODE)?[:\s.]{0,20}(RE?-?\d|N\/?A|NA)/i,
     ],
     normalize: (val) => val.trim().toUpperCase(),
   },
@@ -464,8 +459,8 @@ const DD214_FIELD_PATTERNS = {
     block: 29,
     label: "Dates of Time Lost",
     patterns: [
-      // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-matching values (see 'ReDoS regression — discharge/code fields')
-      /(?:BLOCK\s*29|BOX\s*29|29\.\s*DATES?\s*(?:OF\s*)?TIME\s*LOST)[:\s.]*(NONE|\d+(?:\s*DAYS?)?|[\s\S]+?)(?=\n\s*(?:BLOCK\s*30|BOX\s*30|30\.))/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/value alternation count, not backtracking; bounded for S8786 above
+      /(?:BLOCK\s{0,10}29|BOX\s{0,10}29|29\.\s{0,10}DATES?\s{0,10}(?:OF\s{0,10})?TIME\s{0,10}LOST)[:\s.]{0,20}(NONE|\d{1,5}(?:\s{0,10}DAYS?)?|[\s\S]{0,500}?)(?=\n\s{0,10}(?:BLOCK\s{0,10}30|BOX\s{0,10}30|30\.))/i,
       /TIME\s*LOST[:\s.]*(NONE|\d+)/i,
     ],
     normalize: (val) => val.trim(),
@@ -527,6 +522,25 @@ function normalizeServiceTime(val) {
 }
 
 /**
+ * Extract the continuation text from remarks, trying a strict "CONT FROM
+ * BLOCK 13/ITEM 13" match first, then falling back to a broader "just
+ * listed" match. Returns the continuation text, or null if neither
+ * strategy found anything.
+ */
+function _extractAwardsContinuationText(remarksText) {
+  const contMatch = remarksText.match(
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; bounded {0,5000} capture for S8786 above
+    /(?:CONT(?:INUED?)?(?:\s{0,10}FROM)?\s{0,10}(?:BLOCK\s{0,10}13|ITEM\s{0,10}13)[:\s]{0,20})([\s\S]{0,5000}?)(?=\/\/\s{0,10}(?:NOTHING\s{0,10}FOLLOWS|$))/i,
+  );
+  if (contMatch) return contMatch[1];
+
+  const broadMatch = remarksText.match(
+    /(?:CONT\s{0,10}(?:FROM|IN)\s{0,10}(?:BLOCK\s{0,10}13))[:\s]{0,20}([\s\S]{0,5000}?)(?=\/\/\s{0,10}NOTHING|$)/i,
+  );
+  return broadMatch ? broadMatch[1] : null;
+}
+
+/**
  * Resolve the full awards text, appending any "CONT IN BLOCK 18"-style
  * continuation found in the remarks text.
  */
@@ -544,22 +558,9 @@ function resolveAwardsContinuationText(awardsRaw, remarksText) {
   if (remarksText) {
     for (const pat of contPatterns) {
       if (pat.test(awardsRaw) || pat.test(remarksText)) {
-        // Extract the continuation text from remarks
-        const contMatch = remarksText.match(
-          // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity -- verified via adversarial timing test: single-occurrence trigger keeps the full-string lazy scan linear (see 'ReDoS regression — awards continuation text resolution')
-          /(?:CONT(?:INUED?)?(?:\s*FROM)?\s*(?:BLOCK\s*13|ITEM\s*13)[:\s]*)([\s\S]+?)(?=\/\/\s*(?:NOTHING\s*FOLLOWS|$))/i,
-        );
-        if (contMatch) {
-          fullAwardsText += "//" + contMatch[1];
-        } else {
-          // Try broader match — sometimes the continuation is just listed
-          const broadMatch = remarksText.match(
-            // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: single-occurrence trigger keeps the full-string lazy scan linear (see 'ReDoS regression — awards continuation text resolution')
-            /(?:CONT\s*(?:FROM|IN)\s*(?:BLOCK\s*13))[:\s]*([\s\S]+?)(?=\/\/\s*NOTHING|$)/i,
-          );
-          if (broadMatch) {
-            fullAwardsText += "//" + broadMatch[1];
-          }
+        const continuation = _extractAwardsContinuationText(remarksText);
+        if (continuation !== null) {
+          fullAwardsText += "//" + continuation;
         }
         break;
       }
@@ -627,8 +628,7 @@ function parseSingleAward(raw) {
 
   // Clean up name
   award.name = award.name
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: linear on a huge trailing-dash run (see 'ReDoS regression — award name cleanup')
-    .replace(/[-–—]+\s*$/, "")
+    .replace(/[-–—]{1,500}\s{0,20}$/, "")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -700,8 +700,7 @@ function extractDeployments(remarksText) {
     // unanchored regex retries the lazy expansion-to-end-of-string at
     // every "SERVICE IN" occurrence. Verified match-identical to the
     // unbounded version for realistic location text.
-    // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: {1,60} bound fixed a real O(n^2) blowup, now linear at 200k+ chars (see 'ReDoS regression — deployment extraction')
-    /SERVICE\s*IN\s+([A-Z\s]{1,60}?)\s+(\d{8})\s*-\s*(\d{8})/gi,
+    /SERVICE\s{0,10}IN\s{1,10}([A-Z\s]{1,60}?)\s{1,10}(\d{8})\s{0,10}-\s{0,10}(\d{8})/gi,
   ];
 
   for (const pattern of deployPatterns) {
@@ -870,6 +869,24 @@ function parseName(fullName) {
 // ============================================================
 
 /**
+ * Trim, normalize, and validate one field's matched raw value.
+ * Returns the processed value, or null if it failed validation.
+ */
+function _processFieldMatch(fieldDef, rawValue) {
+  let value = rawValue.trim();
+
+  if (fieldDef.normalize) {
+    value = fieldDef.normalize(value);
+  }
+
+  if (fieldDef.validate && !fieldDef.validate(value)) {
+    return null;
+  }
+
+  return value;
+}
+
+/**
  * Run every DD214_FIELD_PATTERNS entry against the given text, returning
  * the extracted field values and a per-field confidence map.
  */
@@ -880,27 +897,61 @@ function runFieldPatterns(text) {
   for (const [fieldName, fieldDef] of Object.entries(DD214_FIELD_PATTERNS)) {
     for (const pattern of fieldDef.patterns) {
       const match = text.match(pattern);
-      if (match && match[1]) {
-        let value = match[1].trim();
+      if (!match || !match[1]) continue;
 
-        // Apply normalization if defined
-        if (fieldDef.normalize) {
-          value = fieldDef.normalize(value);
-        }
+      const value = _processFieldMatch(fieldDef, match[1]);
+      if (value === null) continue; // Skip invalid matches
 
-        // Apply validation if defined
-        if (fieldDef.validate && !fieldDef.validate(value)) {
-          continue; // Skip invalid matches
-        }
-
-        extractedFields[fieldName] = value;
-        fieldConfidence[fieldName] = "regex_match";
-        break; // First match wins
-      }
+      extractedFields[fieldName] = value;
+      fieldConfidence[fieldName] = "regex_match";
+      break; // First match wins
     }
   }
 
   return { extractedFields, fieldConfidence };
+}
+
+function _deriveNameFields(extractedFields) {
+  if (!extractedFields.fullName) return;
+  const nameParts = parseName(extractedFields.fullName);
+  if (!extractedFields.lastName) extractedFields.lastName = nameParts.lastName;
+  if (!extractedFields.firstName)
+    extractedFields.firstName = nameParts.firstName;
+  if (!extractedFields.middleName)
+    extractedFields.middleName = nameParts.middleName;
+}
+
+function _deriveBranchFields(extractedFields) {
+  if (!extractedFields.departmentComponentBranch) return;
+  const branchInfo = parseBranchComponent(
+    extractedFields.departmentComponentBranch,
+  );
+  extractedFields.branch = branchInfo.branch;
+  extractedFields.component = branchInfo.component;
+  extractedFields.componentFull = branchInfo.componentFull;
+}
+
+function _deriveSsnLast4Field(extractedFields, options) {
+  if (!extractedFields.ssn) return;
+  extractedFields.ssnLast4 = DD214_FIELD_PATTERNS.ssn.extractLast4(
+    extractedFields.ssn,
+  );
+  // Remove full SSN for security — we only keep last 4
+  if (!options.keepFullSSN) {
+    delete extractedFields.ssn;
+  }
+}
+
+function _deriveMosFields(extractedFields) {
+  if (!extractedFields.primarySpecialty) return;
+  const mosCode = DD214_FIELD_PATTERNS.primarySpecialty.extractMOS(
+    extractedFields.primarySpecialty,
+  );
+  const mosTitle = DD214_FIELD_PATTERNS.primarySpecialty.extractTitle(
+    extractedFields.primarySpecialty,
+  );
+  if (mosCode) extractedFields.mos = mosCode;
+  if (mosTitle) extractedFields.mosTitle = mosTitle;
 }
 
 /**
@@ -908,49 +959,10 @@ function runFieldPatterns(text) {
  * regex-extracted values. Mutates `extractedFields` in place.
  */
 function derivePersonAndSpecialtyFields(extractedFields, options) {
-  // Parse name components
-  if (extractedFields.fullName) {
-    const nameParts = parseName(extractedFields.fullName);
-    if (!extractedFields.lastName)
-      extractedFields.lastName = nameParts.lastName;
-    if (!extractedFields.firstName)
-      extractedFields.firstName = nameParts.firstName;
-    if (!extractedFields.middleName)
-      extractedFields.middleName = nameParts.middleName;
-  }
-
-  // Parse branch/component
-  if (extractedFields.departmentComponentBranch) {
-    const branchInfo = parseBranchComponent(
-      extractedFields.departmentComponentBranch,
-    );
-    extractedFields.branch = branchInfo.branch;
-    extractedFields.component = branchInfo.component;
-    extractedFields.componentFull = branchInfo.componentFull;
-  }
-
-  // Extract SSN last 4
-  if (extractedFields.ssn) {
-    extractedFields.ssnLast4 = DD214_FIELD_PATTERNS.ssn.extractLast4(
-      extractedFields.ssn,
-    );
-    // Remove full SSN for security — we only keep last 4
-    if (!options.keepFullSSN) {
-      delete extractedFields.ssn;
-    }
-  }
-
-  // Parse MOS from primary specialty
-  if (extractedFields.primarySpecialty) {
-    const mosCode = DD214_FIELD_PATTERNS.primarySpecialty.extractMOS(
-      extractedFields.primarySpecialty,
-    );
-    const mosTitle = DD214_FIELD_PATTERNS.primarySpecialty.extractTitle(
-      extractedFields.primarySpecialty,
-    );
-    if (mosCode) extractedFields.mos = mosCode;
-    if (mosTitle) extractedFields.mosTitle = mosTitle;
-  }
+  _deriveNameFields(extractedFields);
+  _deriveBranchFields(extractedFields);
+  _deriveSsnLast4Field(extractedFields, options);
+  _deriveMosFields(extractedFields);
 }
 
 /**
@@ -1213,8 +1225,9 @@ export function detectDD214Documents(text) {
   const documents = [];
 
   // Split by page markers
-  // eslint-disable-next-line sonarjs/slow-regex -- verified via adversarial timing test: linear on many near-miss '---PAGE' markers (see detectDD214Documents ReDoS regression tests)
-  const _pages = text.split(/---\s*PAGE\s+(\d+)\s*(?:\([^)]*\))?\s*---/i);
+  const _pages = text.split(
+    /---\s{0,10}PAGE\s{1,10}(\d{1,6})\s{0,10}(?:\([^)]{0,200}\))?\s{0,10}---/i,
+  );
 
   // Look for form identifiers
   const formPatterns = [
