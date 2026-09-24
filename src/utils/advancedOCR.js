@@ -983,7 +983,7 @@ function _localMean(data, x, y, width, height, radius) {
   return sum / count;
 }
 
-function adaptiveThreshold(imageData, blockSize = 11) {
+export function adaptiveThreshold(imageData, blockSize = 11) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
