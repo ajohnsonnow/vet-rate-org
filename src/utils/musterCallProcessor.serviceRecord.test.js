@@ -557,3 +557,36 @@ describe("FIX: foreignService stays null (unknown) instead of becoming a fabrica
     expect(candidate.foreignService).toBeNull();
   });
 });
+
+describe("FIX: Navy-rate MOS fallback no longer fires on an Army form", () => {
+  it("does not fabricate an MOS from OCR noise shaped like a Navy rate code", async () => {
+    // The Navy-rate pattern ([A-Z]{2,4} + a digit) used to run
+    // unconditionally and could match OCR noise anywhere in the document,
+    // not just a real Box 11 value - a synthetic stand-in for the real
+    // corpus repro (Tesseract read "THIS IS" as "THI3 1S" on an Army
+    // DD214's boilerplate header, fabricating MOS "THI3").
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: ANNEX4 SEE ATTACHED SHEET FOR DETAILS
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBeFalsy();
+  });
+
+  it("still extracts a real Navy rate code when the branch actually is Navy", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: NAVY
+18. REMARKS: BM2 BOATSWAIN MATE SECOND CLASS
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBe("BM2");
+  });
+});

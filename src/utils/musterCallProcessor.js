@@ -3348,8 +3348,14 @@ function _extractPlaceOfEntryAndMOS(ctx) {
     /\b(0[1-9]\d{2})\s+([A-Z][A-Z\s]+)/i,
     // Air Force AFSC: 2A3X1, etc.
     /\b(\d[A-Z]\d[A-Z]\d[A-Z]?)\s+([A-Z][A-Z\s]+)?/i,
-    // Navy Rate: BM2, IT1, etc.
-    /\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i,
+    // Navy Rate: BM2, IT1, etc. Gated to Navy/Coast Guard (the only
+    // branches that use "rate" terminology): this 2-4-letters-plus-digit
+    // shape also matches OCR noise anywhere else in the document - a real
+    // Army DD214's boilerplate header ("THIS IS AN IMPORTANT RECORD")
+    // OCR'd as "THI3 1S" matched this pattern and fabricated MOS "THI3".
+    ...(data.branch === "Navy" || data.branch === "Coast Guard"
+      ? [/\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i]
+      : []),
     // Generic fallback
     /(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})[:\s-]*([A-Z\s-]*)/i,
     /PRIMARY\s+(?:MOS|SPECIALTY)[:\s]+([A-Z0-9]+)/i,
