@@ -18,6 +18,7 @@ import {
 } from "../utils/pathfinderEngine";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
+import { normalizeConditionName } from "../utils/conditionName";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -267,6 +268,32 @@ const SIDED_BODY_PART_LABELS = {
   shoulder: "Shoulder Condition",
 };
 
+// Seeds the auto-fill effect below from getMyRatings() only - actual
+// service-connected ratings. Saved claims are pending, not-yet-decided
+// claims; they don't belong under "Your Current Service-Connected Ratings"
+// (that's what the separate "Reload from My Packet" button is for), so this
+// deliberately never reads getSavedClaims(). Deduped by condition name via
+// the shared normalizer so a rating already covered by a preset/keyword
+// match doesn't also seed its raw name as a second row.
+function buildSeedRatingsFromMyRatings() {
+  const seen = new Set();
+  const seeded = [];
+
+  getMyRatings().forEach((r) => {
+    const name = mapSavedRatingToCondition(r);
+    const key = normalizeConditionName(name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    seeded.push({
+      condition: name,
+      rating:
+        r.rating !== null && r.rating !== undefined ? String(r.rating) : "",
+    });
+  });
+
+  return seeded;
+}
+
 function mapSavedRatingToCondition(saved) {
   const name = (saved.name || "").trim();
 
@@ -515,7 +542,7 @@ const PathfinderInputToolbar = ({
         onClick={handleLoadMyRatings}
         className="text-sm px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
       >
-        📊 {t("pathfinder", "loadMyRatings")}
+        📊 {t("pathfinder", "reloadMyRatings")}
       </button>
     )}
     <button
@@ -537,7 +564,7 @@ const PathfinderInputToolbar = ({
       onClick={loadFromPacket}
       className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 flex items-center gap-1"
     >
-      {t("pathfinder", "loadFromPacket")}
+      {t("pathfinder", "reloadFromPacket")}
     </button>
   </div>
 );
@@ -624,6 +651,7 @@ const PathfinderInputSection = ({
   setShowDropInModal,
   loadFromPacket,
   loadedFromPacket,
+  autoSeededFromRatings,
   ratings,
   updateRating,
   removeRating,
@@ -652,6 +680,12 @@ const PathfinderInputSection = ({
     {loadedFromPacket && (
       <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
         ✓ {t("pathfinder", "loadedFromPacket")}
+      </div>
+    )}
+
+    {autoSeededFromRatings && !loadedFromPacket && (
+      <div className="bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 text-sm p-2 rounded-lg mb-4">
+        ✓ {t("pathfinder", "autoSeededFromRatings")}
       </div>
     )}
 
@@ -1121,10 +1155,13 @@ function _extractRatingsFromText(text) {
 function usePathfinderInitEffects({
   initialConditions,
   setApiKey,
+  hasConsented,
   setHasConsented,
   setAIStatus,
+  ratings,
   setRatings,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
 }) {
   // Load API key, check consent, and monitor AI status
   useEffect(() => {
@@ -1166,6 +1203,38 @@ function usePathfinderInitEffects({
       setLoadedFromPacket(true); // Show indicator that conditions were loaded
     }
   }, [initialConditions, setRatings, setLoadedFromPacket]);
+
+  // Auto-seed from My Ratings only once the consent screen is passed, so the
+  // veteran never has to click "Reload My Ratings" just to see data the app
+  // already has. Runs once per mount, only when nothing else (BlueButtonXRay
+  // conditions above, a paste, a file drop) has already populated the form.
+  const autoSeededRef = useRef(false);
+  useEffect(() => {
+    if (autoSeededRef.current) return;
+    if (!hasConsented) return;
+    if (initialConditions && initialConditions.length > 0) {
+      autoSeededRef.current = true;
+      return;
+    }
+    const isPristine =
+      ratings.length === 1 && !ratings[0].condition && !ratings[0].rating;
+    if (!isPristine) {
+      autoSeededRef.current = true;
+      return;
+    }
+    autoSeededRef.current = true;
+    const seeded = buildSeedRatingsFromMyRatings();
+    if (seeded.length > 0) {
+      setRatings(seeded);
+      setAutoSeededFromRatings(true);
+    }
+  }, [
+    hasConsented,
+    initialConditions,
+    ratings,
+    setRatings,
+    setAutoSeededFromRatings,
+  ]);
 }
 
 async function _processUploadedFile({
@@ -1214,12 +1283,14 @@ function _clearPathfinder({
   setResults,
   setError,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
 }) {
   setRatings([{ condition: "", rating: "" }]);
   setAdditionalContext("");
   setResults(null);
   setError(null);
   setLoadedFromPacket(false);
+  setAutoSeededFromRatings(false);
 }
 
 function _selectDroppedFile({
@@ -1448,6 +1519,7 @@ function createPathfinderActionHandlers({
   setRatings,
   setAdditionalContext,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
 }) {
   return {
     handleAnalyze: () =>
@@ -1470,6 +1542,7 @@ function createPathfinderActionHandlers({
         setResults,
         setError,
         setLoadedFromPacket,
+        setAutoSeededFromRatings,
       }),
   };
 }
@@ -1489,6 +1562,7 @@ function usePathfinderHandlers({
   setError,
   setHasConsented,
   setLoadedFromPacket,
+  setAutoSeededFromRatings,
   setShowVAGovPaster,
   setShowDropInModal,
   setUploadedFile,
@@ -1528,6 +1602,7 @@ function usePathfinderHandlers({
     setRatings,
     setAdditionalContext,
     setLoadedFromPacket,
+    setAutoSeededFromRatings,
   });
 
   return {
@@ -1543,15 +1618,12 @@ function _consentToAI(setHasConsented) {
   setHasConsented(true);
 }
 
-function usePathfinderState({
-  onNavigate,
-  onOpenAISettings,
-  initialConditions,
-}) {
-  const { t } = useLanguage();
-
+// Owns all of Pathfinder's plain useState declarations (ratings, packet/AI
+// consent, modal toggles, file-drop state). Split out of usePathfinderState
+// purely to keep its function body under the line-count/complexity limits.
+// Same logic, same order of operations, same initial values.
+function usePathfinderCoreState() {
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
-
   const [ratings, setRatings] = useState([{ condition: "", rating: "" }]);
   const [additionalContext, setAdditionalContext] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -1561,6 +1633,7 @@ function usePathfinderState({
   const [apiKey, setApiKey] = useState("");
   const [hasConsented, setHasConsented] = useState(false);
   const [loadedFromPacket, setLoadedFromPacket] = useState(false);
+  const [autoSeededFromRatings, setAutoSeededFromRatings] = useState(false);
   const [, setAIStatus] = useState(getAIStatus());
   const [showVAGovPaster, setShowVAGovPaster] = useState(false);
 
@@ -1571,50 +1644,28 @@ function usePathfinderState({
   const [fileProgress, setFileProgress] = useState(null);
   const fileInputRef = useRef(null);
 
-  usePathfinderInitEffects({
-    initialConditions,
-    setApiKey,
-    setHasConsented,
-    setAIStatus,
-    setRatings,
-    setLoadedFromPacket,
-  });
-
-  const handlers = usePathfinderHandlers({
-    t,
-    onNavigate,
-    onOpenAISettings,
-    ratings,
-    apiKey,
-    additionalContext,
-    uploadedFile,
-    setRatings,
-    setAdditionalContext,
-    setIsAnalyzing,
-    setResults,
-    setError,
-    setHasConsented,
-    setLoadedFromPacket,
-    setShowVAGovPaster,
-    setShowDropInModal,
-    setUploadedFile,
-    setIsProcessingFile,
-    setFileProgress,
-  });
-
   return {
-    t,
     ratings,
+    setRatings,
     additionalContext,
     setAdditionalContext,
     isAnalyzing,
+    setIsAnalyzing,
     results,
     setResults,
     error,
+    setError,
     showPrivacy,
     setShowPrivacy,
+    apiKey,
+    setApiKey,
     hasConsented,
+    setHasConsented,
     loadedFromPacket,
+    setLoadedFromPacket,
+    autoSeededFromRatings,
+    setAutoSeededFromRatings,
+    setAIStatus,
     showVAGovPaster,
     setShowVAGovPaster,
     showDropInModal,
@@ -1622,9 +1673,80 @@ function usePathfinderState({
     uploadedFile,
     setUploadedFile,
     isProcessingFile,
+    setIsProcessingFile,
     fileProgress,
     setFileProgress,
     fileInputRef,
+  };
+}
+
+function usePathfinderState({
+  onNavigate,
+  onOpenAISettings,
+  initialConditions,
+}) {
+  const { t } = useLanguage();
+  const s = usePathfinderCoreState();
+
+  usePathfinderInitEffects({
+    initialConditions,
+    setApiKey: s.setApiKey,
+    hasConsented: s.hasConsented,
+    setHasConsented: s.setHasConsented,
+    setAIStatus: s.setAIStatus,
+    ratings: s.ratings,
+    setRatings: s.setRatings,
+    setLoadedFromPacket: s.setLoadedFromPacket,
+    setAutoSeededFromRatings: s.setAutoSeededFromRatings,
+  });
+
+  const handlers = usePathfinderHandlers({
+    t,
+    onNavigate,
+    onOpenAISettings,
+    ratings: s.ratings,
+    apiKey: s.apiKey,
+    additionalContext: s.additionalContext,
+    uploadedFile: s.uploadedFile,
+    setRatings: s.setRatings,
+    setAdditionalContext: s.setAdditionalContext,
+    setIsAnalyzing: s.setIsAnalyzing,
+    setResults: s.setResults,
+    setError: s.setError,
+    setHasConsented: s.setHasConsented,
+    setLoadedFromPacket: s.setLoadedFromPacket,
+    setAutoSeededFromRatings: s.setAutoSeededFromRatings,
+    setShowVAGovPaster: s.setShowVAGovPaster,
+    setShowDropInModal: s.setShowDropInModal,
+    setUploadedFile: s.setUploadedFile,
+    setIsProcessingFile: s.setIsProcessingFile,
+    setFileProgress: s.setFileProgress,
+  });
+
+  return {
+    t,
+    ratings: s.ratings,
+    additionalContext: s.additionalContext,
+    setAdditionalContext: s.setAdditionalContext,
+    isAnalyzing: s.isAnalyzing,
+    results: s.results,
+    setResults: s.setResults,
+    error: s.error,
+    showPrivacy: s.showPrivacy,
+    setShowPrivacy: s.setShowPrivacy,
+    hasConsented: s.hasConsented,
+    loadedFromPacket: s.loadedFromPacket,
+    autoSeededFromRatings: s.autoSeededFromRatings,
+    showVAGovPaster: s.showVAGovPaster,
+    setShowVAGovPaster: s.setShowVAGovPaster,
+    showDropInModal: s.showDropInModal,
+    setShowDropInModal: s.setShowDropInModal,
+    uploadedFile: s.uploadedFile,
+    setUploadedFile: s.setUploadedFile,
+    isProcessingFile: s.isProcessingFile,
+    fileProgress: s.fileProgress,
+    setFileProgress: s.setFileProgress,
+    fileInputRef: s.fileInputRef,
     ...handlers,
   };
 }
@@ -1683,6 +1805,7 @@ const PathfinderAuthenticatedContent = ({
   setShowDropInModal,
   loadFromPacket,
   loadedFromPacket,
+  autoSeededFromRatings,
   ratings,
   updateRating,
   removeRating,
@@ -1711,6 +1834,7 @@ const PathfinderAuthenticatedContent = ({
       setShowDropInModal={setShowDropInModal}
       loadFromPacket={loadFromPacket}
       loadedFromPacket={loadedFromPacket}
+      autoSeededFromRatings={autoSeededFromRatings}
       ratings={ratings}
       updateRating={updateRating}
       removeRating={removeRating}

@@ -7,6 +7,8 @@ import { searchStateBenefits, isAIAvailable } from "../utils/aiStatementHelper";
 import { generateAI } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
+import { getVeteranProfile, getMyRatings } from "../utils/veteranProfile";
+import { calculateVARating } from "../utils/vaCalculator";
 
 /**
  * StateBenefitHunter Component
@@ -984,11 +986,46 @@ const consultAI = async ({
   }
 };
 
+// Reads the veteran's saved state + combined rating once at mount, using
+// the same calculateVARating util the Tactical Calculator uses so the
+// default here always matches what "My Ratings" would produce. Null/""
+// fields mean nothing was on file - the form falls back to its normal
+// blank state.
+function getStateBenefitDefaults() {
+  const profile = getVeteranProfile();
+  const profileStateCode = profile.state
+    ? String(profile.state).toUpperCase()
+    : "";
+  const state = US_STATES.some((s) => s.value === profileStateCode)
+    ? profileStateCode
+    : "";
+  const ratings = getMyRatings();
+  const combinedRating =
+    ratings.length > 0 ? calculateVARating(ratings).combinedRating : null;
+  return {
+    state,
+    rating: combinedRating !== null ? String(combinedRating) : "",
+  };
+}
+
+const PrefilledFromRecordsBanner = ({ show }) => {
+  if (!show) return null;
+
+  return (
+    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-sm text-blue-800 dark:text-blue-200">
+      📋 We filled in your state and rating from your saved records — change
+      anything that&apos;s wrong.
+    </div>
+  );
+};
+
 const StateBenefitHunter = ({ onClose, onReportBug }) => {
   const { _t } = useLanguage();
 
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedRating, setSelectedRating] = useState("");
+  const [defaults] = useState(getStateBenefitDefaults);
+  const wasPrefilled = Boolean(defaults.state || defaults.rating);
+  const [selectedState, setSelectedState] = useState(defaults.state);
+  const [selectedRating, setSelectedRating] = useState(defaults.rating);
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1030,6 +1067,7 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
       {/* Content */}
       <div>
         <InfoBanner />
+        <PrefilledFromRecordsBanner show={wasPrefilled} />
 
         <SelectionForm
           selectedState={selectedState}

@@ -219,12 +219,41 @@ function renderEvidenceTimelineCanvas(
   drawTimelineStartEndLabels(ctx, geometry);
 }
 
+function normalizeTimelineText(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function timelineEventKey(e) {
+  return `${e.date}|${normalizeTimelineText(e.description)}`;
+}
+
+// Drops duplicate date+description entries, keeping the first occurrence -
+// used both to re-dedupe the merged list against whatever the timeline's
+// real current state turns out to be (see the functional setTimelineEvents
+// call below) and, indirectly, within a single incoming batch.
+function dedupeTimelineEvents(events) {
+  const seen = new Set();
+  return events.filter((e) => {
+    const key = timelineEventKey(e);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 // Pull dated events the C-File analyzer filed into the VKB
 // (evidenceTimeline entries + dated evidence items) into this timeline.
+// `auto` (first-open auto-import) skips the confirm/alert dialogs a manual
+// button click still shows, and reports back how many events were added so
+// the caller can show its own inline notice instead.
 async function performImportFromRecords({
   timelineEvents,
   setTimelineEvents,
   onEventsUpdate,
+  auto = false,
 }) {
   try {
     const vkb = await loadVKB();
@@ -233,48 +262,54 @@ async function performImportFromRecords({
       ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
     ].filter((e) => e?.date && (e.description || e.text));
 
-    const normalize = (s) =>
-      String(s || "")
-        .toLowerCase()
-        .replace(/\s+/g, " ")
-        .trim();
-    const existing = new Set(
-      timelineEvents.map((e) => `${e.date}|${normalize(e.description)}`),
-    );
-    const fresh = vkbEvents
-      .filter(
-        (e) => !existing.has(`${e.date}|${normalize(e.description || e.text)}`),
-      )
-      .map((e, i) => ({
+    // Dedupe against existing timeline events AND, as items are accepted,
+    // against each other - migrateOffSchemaVKB copies legacy evidence[]
+    // entries into evidenceTimeline[], so the same item can otherwise show
+    // up in both vkbEvents halves and get added twice.
+    const existing = new Set(timelineEvents.map(timelineEventKey));
+    const fresh = [];
+    vkbEvents.forEach((e, i) => {
+      const description = e.description || e.text;
+      const key = timelineEventKey({ date: e.date, description });
+      if (existing.has(key)) return;
+      existing.add(key);
+      fresh.push({
         id: `vkb_${Date.now()}_${i}`,
         type: "records",
         date: e.date,
-        description: e.description || e.text,
-        title: String(e.description || e.text).substring(0, 50),
+        description,
+        title: String(description).substring(0, 50),
         category: "Medical Records",
         sourceDocumentId: e.sourceDocumentId || null,
-      }));
+      });
+    });
 
     if (fresh.length === 0) {
-      alert("No new dated events found in your records.");
-      return;
+      if (!auto) alert("No new dated events found in your records.");
+      return [];
     }
     if (
+      !auto &&
       !window.confirm(
         `Add ${fresh.length} event(s) from your analyzed records to the timeline?`,
       )
     ) {
-      return;
+      return [];
     }
-    const updated = [...timelineEvents, ...fresh];
-    setTimelineEvents(updated);
+    let updated = fresh;
+    setTimelineEvents((prev) => {
+      updated = dedupeTimelineEvents([...prev, ...fresh]);
+      return updated;
+    });
     saveTimelineEvents(updated);
     if (onEventsUpdate) {
       onEventsUpdate(updated);
     }
+    return fresh;
   } catch (e) {
     console.error("Failed to import events from records:", e);
-    alert("Could not read your records. Please try again.");
+    if (!auto) alert("Could not read your records. Please try again.");
+    return [];
   }
 }
 
@@ -691,6 +726,82 @@ function ExportTimelineButton({ events }) {
   );
 }
 
+function AutoImportedNotice({ count }) {
+  if (!count) return null;
+
+  return (
+    <div className="mb-6 bg-cyan-900/20 border border-cyan-500/30 rounded p-3">
+      <p className="text-cyan-200 text-sm">
+        📂 We filled in {count} event{count === 1 ? "" : "s"} from your saved
+        records — review below and remove anything that&apos;s wrong.
+      </p>
+    </div>
+  );
+}
+
+// First open with no events at all (nothing persisted, nothing passed in):
+// silently try the same "Import from My Records" the button runs, so the
+// veteran isn't staring at a blank timeline the app could have filled in.
+// The existing date+description dedupe means a later reopen (events.length
+// > 0 by then) never re-runs this or duplicates entries. Split out of
+// EvidenceTimeline purely to keep its function body under the line-count
+// limit. Same logic, same order of operations.
+function useEvidenceTimelineAutoImport({
+  timelineEvents,
+  setTimelineEvents,
+  onEventsUpdate,
+}) {
+  const [autoImportedCount, setAutoImportedCount] = useState(0);
+  const autoImportedRef = useRef(false);
+
+  useEffect(() => {
+    if (autoImportedRef.current) return;
+    autoImportedRef.current = true;
+    if (timelineEvents.length === 0) {
+      performImportFromRecords({
+        timelineEvents: [],
+        setTimelineEvents,
+        onEventsUpdate,
+        auto: true,
+      }).then((fresh) => {
+        if (fresh.length > 0) setAutoImportedCount(fresh.length);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return autoImportedCount;
+}
+
+// Owns the gap-detection state and canvas redraw for the timeline. Split
+// out of EvidenceTimeline purely to keep its function body under the
+// line-count limit. Same logic, same order of operations.
+function useEvidenceTimelineGaps({ timelineEvents, canvasRef }) {
+  const [gaps, setGaps] = useState([]);
+
+  const drawTimeline = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || timelineEvents.length === 0) return;
+    renderEvidenceTimelineCanvas(
+      canvas.getContext("2d"),
+      canvas.width,
+      canvas.height,
+      timelineEvents,
+      gaps,
+    );
+  };
+
+  useEffect(() => {
+    if (timelineEvents.length > 0) {
+      setGaps(detectTimelineGaps(timelineEvents));
+      drawTimeline();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timelineEvents]);
+
+  return gaps;
+}
+
 function TimelineModalBody({
   onClose,
   onReportBug,
@@ -704,6 +815,7 @@ function TimelineModalBody({
   onAddEvent,
   onRemoveEvent,
   onImportFromRecords,
+  autoImportedCount,
 }) {
   return (
     <ResponsiveModal
@@ -722,6 +834,8 @@ function TimelineModalBody({
           Visualize your nexus. Spot evidence gaps that could sink your claim.
         </p>
       </div>
+
+      <AutoImportedNotice count={autoImportedCount} />
 
       {/* Canvas Timeline */}
       {timelineEvents.length > 0 && (
@@ -775,28 +889,13 @@ const EvidenceTimeline = ({
     description: "",
     category: "Service Event",
   });
-  const [gaps, setGaps] = useState([]);
   const canvasRef = useRef(null);
-
-  const drawTimeline = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || timelineEvents.length === 0) return;
-    renderEvidenceTimelineCanvas(
-      canvas.getContext("2d"),
-      canvas.width,
-      canvas.height,
-      timelineEvents,
-      gaps,
-    );
-  };
-
-  useEffect(() => {
-    if (timelineEvents.length > 0) {
-      setGaps(detectTimelineGaps(timelineEvents));
-      drawTimeline();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timelineEvents]);
+  const gaps = useEvidenceTimelineGaps({ timelineEvents, canvasRef });
+  const autoImportedCount = useEvidenceTimelineAutoImport({
+    timelineEvents,
+    setTimelineEvents,
+    onEventsUpdate,
+  });
 
   const importFromRecords = () =>
     performImportFromRecords({
@@ -837,6 +936,7 @@ const EvidenceTimeline = ({
       onAddEvent={addEvent}
       onRemoveEvent={removeEvent}
       onImportFromRecords={importFromRecords}
+      autoImportedCount={autoImportedCount}
     />
   );
 };

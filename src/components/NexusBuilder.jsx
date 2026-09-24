@@ -29,6 +29,9 @@ import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import SmartAILoadButton from "./SmartAILoadButton";
+import { getMyRatings } from "../utils/veteranProfile";
+import { getSavedClaims, getStatement } from "../utils/claimsStorage";
+import { normalizeConditionName } from "../utils/conditionName";
 
 const AGGRAVATION_OPTIONS = [
   {
@@ -1801,23 +1804,212 @@ const NexusBuilderView = ({
   </>
 );
 
-/**
- * NexusBuilder Component
- * Dynamic wizard that generates a Statement in Support of Claim (VA Form 21-4138)
- * Customizes questions based on whether the claim is primary or secondary
- * Now with optional AI enhancement powered by Google Gemini
- */
-const NexusBuilder = ({
+// Merges the veteran's rated conditions (My Ratings) and saved claims into
+// one deduped list of one-click choices for the cold-open condition picker
+// below. Read once on mount (localStorage, synchronous) - not re-read on
+// every render. My Ratings choices are always a direct claim (no
+// primaryCondition/existingStatement - mirrors the old DiscoverCluster
+// fallback's `first ? {...} : {condition:"", primaryCondition:null,
+// existingStatement:null}` only ever applying to saved claims). Saved-claim
+// choices carry parentCondition + the previously-generated statement (if
+// any) the same way that removed fallback did, so picking one still opens
+// the correct secondary vs. primary wizard length and resumes any draft.
+function useNexusConditionChoices() {
+  const [choices] = useState(() => {
+    const seen = new Set();
+    const list = [];
+    getMyRatings().forEach((r) => {
+      const key = normalizeConditionName(r.name);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      list.push({
+        key,
+        name: r.name,
+        rating: r.rating,
+        source: "rating",
+        parentCondition: null,
+        existingStatement: null,
+      });
+    });
+    getSavedClaims().forEach((c) => {
+      const key = normalizeConditionName(c.conditionName);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      list.push({
+        key,
+        name: c.conditionName,
+        rating: c.selectedRating ?? c.ratingPercent ?? null,
+        source: "claim",
+        parentCondition: c.parentCondition ?? null,
+        existingStatement: getStatement(c.id),
+      });
+    });
+    return list;
+  });
+  return choices;
+}
+
+// Shown instead of the wizard when NexusBuilder is opened cold (no
+// `condition` prop supplied - e.g. from the header nav, not from a specific
+// condition's card). Offers the veteran's rated conditions + saved claims as
+// one-click choices, or a manual text entry, and reports the pick back via
+// onSelect so NexusBuilder can proceed with the wizard.
+const NexusConditionPickerHeader = ({ onClose, onReportBug, t }) => (
+  <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
+    <div className="flex items-center justify-between gap-3">
+      <h2
+        id="nexus-builder-picker-title"
+        className="text-xl sm:text-2xl font-bold"
+      >
+        📝 {t("nexusBuilder.pickerTitle")}
+      </h2>
+      <div className="flex items-center gap-2">
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Nexus Builder"
+          />
+        )}
+        <button
+          onClick={onClose}
+          className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label={t("nexusBuilder.close")}
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const NexusConditionChoiceList = ({ choices, onSelect, t }) =>
+  choices.length > 0 ? (
+    <>
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        {t("nexusBuilder.pickerHintChoices")}
+      </p>
+      <div className="flex flex-col gap-2">
+        {choices.map((choice) => (
+          <button
+            key={choice.key}
+            type="button"
+            onClick={() => onSelect(choice)}
+            className="w-full min-h-[44px] text-left px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 flex items-center justify-between gap-3"
+          >
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {choice.name}
+            </span>
+            {choice.rating !== null && choice.rating !== undefined && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {choice.rating}%
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  ) : (
+    <p className="text-sm text-gray-600 dark:text-gray-400">
+      {t("nexusBuilder.pickerHintEmpty")}
+    </p>
+  );
+
+const NexusManualConditionForm = ({ onSelect, t }) => {
+  const [manualCondition, setManualCondition] = useState("");
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (manualCondition.trim()) onSelect(manualCondition.trim());
+      }}
+      className="flex flex-col gap-2 pt-2 border-t border-gray-200 dark:border-gray-700"
+    >
+      <label
+        htmlFor="nexus-manual-condition"
+        className="text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t("nexusBuilder.pickerManualLabel")}
+      </label>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <input
+          id="nexus-manual-condition"
+          type="text"
+          value={manualCondition}
+          onChange={(e) => setManualCondition(e.target.value)}
+          placeholder={t("nexusBuilder.pickerManualPlaceholder")}
+          className="flex-1 min-h-[44px] px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+        />
+        <button
+          type="submit"
+          disabled={!manualCondition.trim()}
+          className="min-h-[44px] px-6 py-2 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {t("nexusBuilder.pickerContinue")}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const NexusConditionPicker = ({ onClose, onReportBug, onSelect }) => {
+  const { t } = useLanguage();
+  const choices = useNexusConditionChoices();
+
+  return (
+    <ResponsiveModal
+      isOpen
+      onClose={onClose}
+      size="md"
+      labelledBy="nexus-builder-picker-title"
+      header={
+        <NexusConditionPickerHeader
+          onClose={onClose}
+          onReportBug={onReportBug}
+          t={t}
+        />
+      }
+    >
+      <div className="space-y-4">
+        <NexusConditionChoiceList choices={choices} onSelect={onSelect} t={t} />
+        <NexusManualConditionForm onSelect={onSelect} t={t} />
+      </div>
+    </ResponsiveModal>
+  );
+};
+
+// Owns the wizard's derived hook state (answers, AI enhancement, document
+// output) for a fully-resolved condition/primaryCondition/existingStatement.
+// Split out of NexusBuilder purely so it only ever mounts (and seeds
+// useNexusAnswers's initial `answers` from existingStatement) once those
+// values are final - a cold-open pick updates NexusBuilder's own state
+// first, so this component's first render already has the right
+// primaryCondition/existingStatement instead of the empty ones NexusBuilder
+// itself was called with. Same logic, same order of operations as the
+// wizard body this replaces.
+const NexusBuilderWizard = ({
   condition,
   primaryCondition,
+  existingStatement,
   onClose,
   onSave,
-  existingStatement = null,
   onReportBug,
   onOpenAISettings,
 }) => {
   const { t } = useLanguage();
-
   const isSecondary = Boolean(primaryCondition);
   const totalSteps = isSecondary ? 4 : 3;
 
@@ -1856,6 +2048,62 @@ const NexusBuilder = ({
       ai={ai}
       output={output}
       t={t}
+    />
+  );
+};
+
+// A picker choice (object, from getMyRatings()/getSavedClaims()) carries its
+// own parentCondition/existingStatement; a manually-typed condition (plain
+// string, from NexusManualConditionForm) is always a direct/primary claim.
+function resolvePickedCondition(selection) {
+  if (typeof selection === "string") {
+    return { name: selection, parentCondition: null, existingStatement: null };
+  }
+  return selection;
+}
+
+/**
+ * NexusBuilder Component
+ * Dynamic wizard that generates a Statement in Support of Claim (VA Form 21-4138)
+ * Customizes questions based on whether the claim is primary or secondary
+ * Now with optional AI enhancement powered by Google Gemini
+ */
+const NexusBuilder = ({
+  condition,
+  primaryCondition,
+  onClose,
+  onSave,
+  existingStatement = null,
+  onReportBug,
+  onOpenAISettings,
+}) => {
+  const [picked, setPicked] = useState(null);
+
+  const effectiveCondition = condition || picked?.name || "";
+  const effectivePrimaryCondition =
+    primaryCondition ?? picked?.parentCondition ?? null;
+  const effectiveExistingStatement =
+    existingStatement ?? picked?.existingStatement ?? null;
+
+  if (!effectiveCondition) {
+    return (
+      <NexusConditionPicker
+        onClose={onClose}
+        onReportBug={onReportBug}
+        onSelect={(selection) => setPicked(resolvePickedCondition(selection))}
+      />
+    );
+  }
+
+  return (
+    <NexusBuilderWizard
+      condition={effectiveCondition}
+      primaryCondition={effectivePrimaryCondition}
+      existingStatement={effectiveExistingStatement}
+      onClose={onClose}
+      onSave={onSave}
+      onReportBug={onReportBug}
+      onOpenAISettings={onOpenAISettings}
     />
   );
 };

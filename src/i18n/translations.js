@@ -8930,6 +8930,29 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại hoặc sử dụng mẫu tiêu chuẩn.",
       ko: "예기치 않은 오류가 발생했습니다. 다시 시도하거나 표준 템플릿을 사용하세요.",
     },
+
+    // Cold-open condition picker. English-only: no verified es/tl/vi/ko
+    // translation yet - falls back to en via the t() lookup's
+    // `keyData[language] || keyData.en` chain (LanguageContext.jsx
+    // resolveTranslation).
+    pickerTitle: {
+      en: "Which condition is this statement for?",
+    },
+    pickerHintChoices: {
+      en: "We filled this in from your records — pick one, or type your own below.",
+    },
+    pickerHintEmpty: {
+      en: "We didn't find any saved ratings or claims yet. Type the condition below to get started.",
+    },
+    pickerManualLabel: {
+      en: "Or type a condition name",
+    },
+    pickerManualPlaceholder: {
+      en: "e.g. Tinnitus",
+    },
+    pickerContinue: {
+      en: "Continue",
+    },
   },
 
   // VSO Finder Component
@@ -10319,6 +10342,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Tải Xếp Hạng Của Tôi",
       ko: "내 등급 불러오기",
     },
+    // English-only: no verified es/tl/vi/ko translation for this exact
+    // "Reload" (vs. "Load") nuance yet. Falls back to en via the t()
+    // lookup's `keyData[language] || keyData.en` chain - see
+    // LanguageContext.jsx resolveTranslation.
+    reloadMyRatings: {
+      en: "Reload My Ratings",
+    },
     pasteFromVaGov: {
       en: "Paste from VA.gov",
       es: "Pegar desde VA.gov",
@@ -10339,6 +10369,14 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       tl: "I-load mula sa My Packet",
       vi: "Tải từ Hồ Sơ Của Tôi",
       ko: "내 패킷에서 불러오기",
+    },
+    // English-only - see reloadMyRatings above for why.
+    reloadFromPacket: {
+      en: "Reload from My Packet",
+    },
+    // English-only - see reloadMyRatings above for why.
+    autoSeededFromRatings: {
+      en: "We filled this in from your ratings on file. Add anything that's missing.",
     },
     loadedFromPacket: {
       en: "Loaded conditions from your saved packet. Add rating percentages if known.",

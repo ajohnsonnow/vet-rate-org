@@ -15,6 +15,8 @@ import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
+import { getMyRatings } from "../utils/veteranProfile";
+import { normalizeConditionName } from "../utils/conditionName";
 
 /**
  * Secondary Condition Relationships Database
@@ -513,6 +515,37 @@ const CONDITION_WEB = {
       },
     ],
   },
+};
+
+// Normalized condition name -> canonical CONDITION_WEB node id, built once
+// at module load (the web itself is static). Used to seed the graph with
+// whichever of the veteran's rated conditions (if any) has an entry here.
+const CONDITION_WEB_NODE_INDEX = (() => {
+  const index = new Map();
+  Object.keys(CONDITION_WEB).forEach((primary) => {
+    index.set(normalizeConditionName(primary), primary);
+    CONDITION_WEB[primary].secondaries.forEach((s) => {
+      const key = normalizeConditionName(s.condition);
+      if (!index.has(key)) index.set(key, s.condition);
+    });
+  });
+  return index;
+})();
+
+/**
+ * First of the veteran's rated conditions (getMyRatings) that has a node in
+ * the static CONDITION_WEB knowledge map, or null if none match / no
+ * ratings are saved.
+ */
+const findSeedNodeFromMyRatings = () => {
+  const ratings = getMyRatings();
+  for (const rating of ratings) {
+    const key = normalizeConditionName(rating.name);
+    if (CONDITION_WEB_NODE_INDEX.has(key)) {
+      return CONDITION_WEB_NODE_INDEX.get(key);
+    }
+  }
+  return null;
 };
 
 /**
@@ -1329,15 +1362,12 @@ const DetailsPanel = ({
   return <DefaultDetailsPanel />;
 };
 
-function useWebOfConditionsGraph() {
-  const containerRef = useRef(null);
+// Tracks the graph container's size, recomputing on window resize. Split
+// out of useWebOfConditionsGraph purely to keep its function body under the
+// line-count limit. Same logic, same order of operations.
+function useContainerDimensions(containerRef) {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [hoveredNode, setHoveredNode] = useState(null);
-  const [selectedLink, setSelectedLink] = useState(null);
-  const [filterCategory, setFilterCategory] = useState(null);
 
-  // Update dimensions on resize
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -1352,7 +1382,27 @@ function useWebOfConditionsGraph() {
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
     return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
+  }, [containerRef]);
+
+  return dimensions;
+}
+
+function useWebOfConditionsGraph() {
+  const containerRef = useRef(null);
+  const dimensions = useContainerDimensions(containerRef);
+  // Seed the graph open on one of the veteran's rated conditions (if any
+  // matches the knowledge map) instead of the blank "how to use" screen.
+  // Read once via lazy useState init (not useRef(expr), which would
+  // silently re-run this localStorage read on every re-render - including
+  // the frequent ones from hoveredNode changing on every node hover).
+  // seedNode remembers the seeded id so the notice banner only shows while
+  // that seed is still the active selection.
+  const [seedNode] = useState(() => findSeedNodeFromMyRatings());
+  const [selectedNode, setSelectedNode] = useState(() => seedNode);
+  const [hoveredNode, setHoveredNode] = useState(null);
+  const [selectedLink, setSelectedLink] = useState(null);
+  const [filterCategory, setFilterCategory] = useState(null);
+  const seededFromRecords = seedNode !== null && selectedNode === seedNode;
 
   // Build nodes and links
   const { nodes, links } = useMemo(
@@ -1423,8 +1473,23 @@ function useWebOfConditionsGraph() {
     connections,
     handleNodeClick,
     handleLinkClick,
+    seededFromRecords,
   };
 }
+
+const SeedFromRecordsBanner = ({ show, conditionName }) => {
+  if (!show) return null;
+
+  return (
+    <div className="mb-4 bg-purple-900/30 border border-purple-700/50 rounded-xl p-3">
+      <p className="text-purple-200 text-sm">
+        <span className="text-lg mr-2">📋</span>
+        We started you off with <strong>{conditionName}</strong> from your saved
+        ratings — explore its connections, or pick a different condition below.
+      </p>
+    </div>
+  );
+};
 
 export default function WebOfConditions({
   onClose,
@@ -1453,6 +1518,11 @@ export default function WebOfConditions({
             onSelectCategory={graph.setFilterCategory}
           />
         </div>
+
+        <SeedFromRecordsBanner
+          show={graph.seededFromRecords}
+          conditionName={graph.selectedNode}
+        />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">

@@ -44,25 +44,17 @@ function useDiscoverEventListeners(
   useEffect(() => {
     const openLauncher = () => setShowSecondaryScoutLauncher(true);
     const openNexus = (e) => {
-      if (e?.detail) {
-        setNexusBuilderData(e.detail);
-      } else {
-        const saved = getSavedClaims();
-        const first = saved[0];
-        setNexusBuilderData(
-          first
-            ? {
-                condition: first.conditionName,
-                primaryCondition: first.parentCondition ?? null,
-                existingStatement: getStatement(first.id),
-              }
-            : {
-                condition: "",
-                primaryCondition: null,
-                existingStatement: null,
-              },
-        );
-      }
+      // No detail = a cold open (e.g. header nav, not a specific condition's
+      // card). NexusBuilder itself now offers the veteran's rated
+      // conditions + saved claims as one-click choices instead of us
+      // silently guessing the first saved claim here.
+      setNexusBuilderData(
+        e?.detail || {
+          condition: "",
+          primaryCondition: null,
+          existingStatement: null,
+        },
+      );
       setShowNexusBuilder(true);
     };
     const resumeFromPacket = (e) => {
