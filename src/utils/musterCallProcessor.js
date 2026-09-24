@@ -2524,7 +2524,7 @@ function _extractNameField(ctx) {
   // ("WILLI0AMS") has no boundary between the letters after the first zero
   // and the second zero (both are \w chars), so the whole word is silently
   // skipped. This narrow, name-only substring has no such ambiguity.
-  const box1Text = `1. NAME${box1Body}`.replaceAll(/0/g, "O");
+  const box1Text = `1. NAME${box1Body}`.replaceAll("0", "O");
 
   const namePatterns = [
     // "WILLIAMS, ROBERT LEE" or "WILLIAMS; ROBERT LEE" - explicitly after "1. NAME"
@@ -3034,12 +3034,12 @@ const BOX7_PLACE_OF_ENTRY_NOISE_WORDS = new Set([
 // boilerplate OCR's as "0R C0MPLETE ... ADDRESS IF KN0WN".
 function _normalizeOcrLetterDigits(str) {
   return str
-    .replaceAll(/0/g, "O")
-    .replaceAll(/1/g, "I")
-    .replaceAll(/3/g, "E")
-    .replaceAll(/4/g, "A")
-    .replaceAll(/5/g, "S")
-    .replaceAll(/8/g, "B");
+    .replaceAll("0", "O")
+    .replaceAll("1", "I")
+    .replaceAll("3", "E")
+    .replaceAll("4", "A")
+    .replaceAll("5", "S")
+    .replaceAll("8", "B");
 }
 
 // Real DD214 scans read the two-column Box 7a/7b layout in scrambled order

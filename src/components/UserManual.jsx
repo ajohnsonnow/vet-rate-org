@@ -4083,8 +4083,8 @@ const renderContent = (content, onClose) => {
 
   // Resolve template variables embedded in markdown content strings
   const resolved = content
-    .replace(/\{getTotalToolCount\(\)\}/g, String(getTotalToolCount()))
-    .replace(/\{getDisabilityCount\(\)\}/g, String(getDisabilityCount()));
+    .replaceAll("{getTotalToolCount()}", String(getTotalToolCount()))
+    .replaceAll("{getDisabilityCount()}", String(getDisabilityCount()));
 
   const lines = resolved.trim().split("\n");
   const state = _createManualParserState();

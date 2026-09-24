@@ -378,7 +378,7 @@ function _repairFindLastCompleteObject(content) {
 }
 
 function _repairSingleQuotes(content) {
-  return JSON.parse(content.replace(/'/g, '"'));
+  return JSON.parse(content.replaceAll("'", '"'));
 }
 
 function _repairUnquotedPropertyNames(content) {

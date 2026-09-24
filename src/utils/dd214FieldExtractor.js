@@ -150,7 +150,7 @@ const DD214_FIELD_PATTERNS = {
       /(?:BLOCK\s{0,10}7\s{0,10}B|BOX\s{0,10}7\s{0,10}B|7\s{0,10}B\.?\s{0,10}HOME\s{0,10}OF\s{0,10}RECORD)[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8\s{0,10}A|\d+\.))/i,
       /HOME\s{0,10}OF\s{0,10}RECORD[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8|\d+\.))/i,
     ],
-    normalize: (val) => val.replace(/\n/g, ", ").replace(/\s+/g, " ").trim(),
+    normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
   },
 
   // ===== BLOCK 8a: Last Duty Assignment =====
@@ -383,7 +383,7 @@ const DD214_FIELD_PATTERNS = {
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above
       /MAILING\s{0,10}ADDRESS\s{0,10}(?:AFTER\s{0,10}SEPARATION)?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|20\.))/i,
     ],
-    normalize: (val) => val.replace(/\n/g, ", ").replace(/\s+/g, " ").trim(),
+    normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
   },
 
   // ===== BLOCK 23: Type of Separation =====

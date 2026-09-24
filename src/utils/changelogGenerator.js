@@ -84,7 +84,7 @@ export function parseReadmeForChangelog(readmeContent) {
         const title = featureMatch[1].trim();
         const description = featureMatch[2]
           .trim()
-          .replace(/\*\*/g, "") // Remove remaining bold markers
+          .replaceAll("**", "") // Remove remaining bold markers
           .replace(/\s+/g, " "); // Normalize whitespace
 
         // Check for NEW tag
@@ -92,8 +92,8 @@ export function parseReadmeForChangelog(readmeContent) {
 
         changelog.push({
           type: isNew ? "feature" : type,
-          title: title.replace(/🆕/g, "").trim(),
-          description: description.replace(/🆕/g, "").trim(),
+          title: title.replaceAll("🆕", "").trim(),
+          description: description.replaceAll("🆕", "").trim(),
           category,
           isNew,
         });

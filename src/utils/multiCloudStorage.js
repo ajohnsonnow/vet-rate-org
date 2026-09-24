@@ -131,8 +131,8 @@ const generatePKCE = async () => {
   const hash = await window.crypto.subtle.digest("SHA-256", data);
 
   const challenge = btoa(String.fromCharCode(...new Uint8Array(hash)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
     .replace(/={0,4}$/, "");
 
   return { verifier: verifierStr, challenge };

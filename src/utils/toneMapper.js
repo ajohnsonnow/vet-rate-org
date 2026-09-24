@@ -149,8 +149,8 @@ const cleanSymbolsForSpeech = (text) => {
   cleaned = cleaned.replace(/\s+/g, " ");
 
   // Remove markdown-style formatting
-  cleaned = cleaned.replace(/\*\*/g, "");
-  cleaned = cleaned.replace(/\*/g, "");
+  cleaned = cleaned.replaceAll("**", "");
+  cleaned = cleaned.replaceAll("*", "");
   cleaned = cleaned.replace(/#{1,10} /g, "");
 
   return cleaned.trim();
