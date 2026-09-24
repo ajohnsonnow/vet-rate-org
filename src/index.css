@@ -50,15 +50,13 @@ input[type="submit"] {
 /* Safe area insets for notched devices (iPhone X+) */
 @supports (padding: env(safe-area-inset-top)) {
   body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 }
 
 /* Smooth scrolling handled by scroll-behavior: smooth */
-@media (max-width: 767px) {
+@media (width <= 767px) {
   * {
     scroll-behavior: smooth;
   }
@@ -66,15 +64,13 @@ input[type="submit"] {
 
 /* Better mobile tap highlighting */
 * {
-  -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+  -webkit-tap-highlight-color: rgb(59 130 246 / 10%);
 }
 
 /* Remove default mobile input styling */
 input,
 textarea,
 select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
 }
 
@@ -88,8 +84,8 @@ html {
 
 body {
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -101,7 +97,7 @@ body {
    ============================================ */
 
 /* Large screens (768px+): Fixed header with scrolling body+footer */
-@media (min-width: 768px) {
+@media (width >= 768px) {
   html,
   body {
     height: 100%;
@@ -153,8 +149,7 @@ body {
 
   /* Apply overflow to the app container, make header sticky */
   body > div#root > div.flex-col {
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
   }
 
   /* Sticky header within scrolling container */
@@ -167,13 +162,12 @@ body {
 }
 
 /* Small screens (below 768px): Natural page scrolling */
-@media (max-width: 767px) {
+@media (width <= 767px) {
   html,
   body {
     height: auto;
     min-height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden auto;
   }
 
   body > div#root {
@@ -209,6 +203,7 @@ body header[role="banner"] {
   background-color: var(--va-blue) !important;
   background-image: none !important;
 }
+
 /* Dark mode: keep the bar very dark (var(--va-blue) lightens to ~#3d6b1f in dark,
    too light for the gray-300 subtitle). A deep green matches the dark theme and
    clears 4.5:1 for white + gray-300 + green-100 header text. */
@@ -232,7 +227,7 @@ html.dark body header[role="banner"] {
   --text-secondary: #3d453d; /* Darker olive gray for better contrast */
   --text-muted: #5a625a; /* Softer muted text */
   --border-color: #c8cdc4; /* Soft sage border */
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --shadow-color: rgb(0 0 0 / 10%);
 }
 
 /* Dark Mode */
@@ -246,7 +241,7 @@ html.dark {
   --text-secondary: #d1d5db;
   --text-muted: #9ca3af;
   --border-color: #374151;
-  --shadow-color: rgba(0, 0, 0, 0.5);
+  --shadow-color: rgb(0 0 0 / 50%);
 }
 
 /* ============================================
@@ -262,7 +257,7 @@ html.tbi-comfort {
   --text-secondary: #c9b896; /* Muted amber */
   --text-muted: #a89a78; /* Warm gray */
   --border-color: #3d3a30; /* Warm dark border */
-  --shadow-color: rgba(0, 0, 0, 0.6);
+  --shadow-color: rgb(0 0 0 / 60%);
   --accent-primary: #c5a059; /* Service Gold accent */
   --focus-ring: #e8d5b5; /* Warm focus indicator */
 }
@@ -270,6 +265,7 @@ html.tbi-comfort {
 html.tbi-comfort body {
   background-color: #1a1a16 !important;
   color: #e8d5b5 !important;
+
   /* Apply amber filter to reduce blue light */
   filter: sepia(10%) saturate(90%);
 }
@@ -306,26 +302,26 @@ html.tbi-comfort .bg-blue-700 {
    For users with severe visual impairments
    ============================================ */
 html.aaa-high-contrast {
-  --bg-primary: #000000;
+  --bg-primary: #000;
   --bg-secondary: #0a0a0a;
   --bg-tertiary: #141414;
-  --text-primary: #ffffff;
-  --text-secondary: #ffffff;
+  --text-primary: #fff;
+  --text-secondary: #fff;
   --text-muted: #e0e0e0;
-  --border-color: #ffffff;
+  --border-color: #fff;
   --shadow-color: none;
-  --accent-primary: #ffff00;
-  --focus-ring: #00ffff;
+  --accent-primary: #ff0;
+  --focus-ring: #0ff;
 }
 
 html.aaa-high-contrast body {
-  background-color: #000000 !important;
-  color: #ffffff !important;
+  background-color: #000 !important;
+  color: #fff !important;
 }
 
 html.aaa-high-contrast * {
   border-width: 2px !important;
-  border-color: #ffffff !important;
+  border-color: #fff !important;
 }
 
 html.aaa-high-contrast a,
@@ -338,7 +334,7 @@ html.aaa-high-contrast a:focus,
 html.aaa-high-contrast input:focus,
 html.aaa-high-contrast select:focus,
 html.aaa-high-contrast textarea:focus {
-  outline: 3px solid #00ffff !important;
+  outline: 3px solid #0ff !important;
   outline-offset: 2px !important;
 }
 
@@ -346,8 +342,8 @@ html.aaa-high-contrast .bg-blue-600,
 html.aaa-high-contrast .bg-blue-700,
 html.aaa-high-contrast .bg-green-600,
 html.aaa-high-contrast .bg-green-700 {
-  background-color: #ffff00 !important;
-  color: #000000 !important;
+  background-color: #ff0 !important;
+  color: #000 !important;
 }
 
 /* Apply theme variables to Tailwind dark mode */
@@ -450,7 +446,7 @@ html:not(.dark) .bg-indigo-50 {
   filter: none !important;
   position: relative;
   z-index: 1000;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 50%);
 }
 
 /* Focused containers get enhanced visibility */
@@ -459,7 +455,7 @@ html:not(.dark) .bg-indigo-50 {
 .focus-mode .focus-container:has(select:focus) {
   opacity: 1 !important;
   filter: none !important;
-  background-color: rgba(59, 130, 246, 0.05);
+  background-color: rgb(59 130 246 / 5%);
 }
 
 /* Toast notifications and modals stay visible */
@@ -504,14 +500,14 @@ html:not(.dark) .border-blue-200 {
 /* Shadows - softer */
 html:not(.dark) .shadow-lg {
   box-shadow:
-    0 10px 15px -3px rgba(45, 80, 22, 0.06),
-    0 4px 6px -4px rgba(45, 80, 22, 0.04) !important;
+    0 10px 15px -3px rgb(45 80 22 / 6%),
+    0 4px 6px -4px rgb(45 80 22 / 4%) !important;
 }
 
 html:not(.dark) .shadow-md {
   box-shadow:
-    0 4px 6px -1px rgba(45, 80, 22, 0.05),
-    0 2px 4px -2px rgba(45, 80, 22, 0.03) !important;
+    0 4px 6px -1px rgb(45 80 22 / 5%),
+    0 2px 4px -2px rgb(45 80 22 / 3%) !important;
 }
 
 /* Feature card gradients - warmer tones in light mode */
@@ -574,8 +570,8 @@ html:not(.dark) .to-blue-50 {
 
 /* Protanopia (Red-blind) - Uses Blue/Yellow spectrum */
 html.cb-protanopia {
-  --va-blue: #0066cc;
-  --va-gold: #ffcc00;
+  --va-blue: #06c;
+  --va-gold: #fc0;
   --success-color: #0077b6;
   --warning-color: #f4a261;
   --error-color: #9d4edd;
@@ -674,53 +670,53 @@ html.cb-tritanopia .border-blue-500 {
 /* High Contrast Mode - Light */
 html.cb-high-contrast {
   --va-blue: #000080;
-  --va-gold: #cc9900;
-  --bg-primary: #ffffff;
-  --bg-secondary: #ffffff;
+  --va-gold: #c90;
+  --bg-primary: #fff;
+  --bg-secondary: #fff;
   --bg-tertiary: #f0f0f0;
-  --text-primary: #000000;
+  --text-primary: #000;
   --text-secondary: #1a1a1a;
-  --border-color: #000000;
+  --border-color: #000;
 }
 
 html.cb-high-contrast body {
-  background-color: #ffffff !important;
-  color: #000000 !important;
+  background-color: #fff !important;
+  color: #000 !important;
 }
 
 html.cb-high-contrast .bg-white,
 html.cb-high-contrast .bg-gray-50,
 html.cb-high-contrast .bg-gray-100 {
-  background-color: #ffffff !important;
+  background-color: #fff !important;
 }
 
 html.cb-high-contrast .text-gray-600,
 html.cb-high-contrast .text-gray-500,
 html.cb-high-contrast .text-gray-400 {
-  color: #333333 !important;
+  color: #333 !important;
 }
 
 html.cb-high-contrast .text-gray-700,
 html.cb-high-contrast .text-gray-800,
 html.cb-high-contrast .text-gray-900 {
-  color: #000000 !important;
+  color: #000 !important;
 }
 
 /* High Contrast Mode - Dark */
 html.cb-high-contrast.dark {
   --va-blue: #66b3ff;
-  --va-gold: #ffff00;
-  --bg-primary: #000000;
-  --bg-secondary: #000000;
+  --va-gold: #ff0;
+  --bg-primary: #000;
+  --bg-secondary: #000;
   --bg-tertiary: #1a1a1a;
-  --text-primary: #ffffff;
+  --text-primary: #fff;
   --text-secondary: #f0f0f0;
-  --border-color: #ffffff;
+  --border-color: #fff;
 }
 
 html.cb-high-contrast.dark body {
-  background-color: #000000 !important;
-  color: #ffffff !important;
+  background-color: #000 !important;
+  color: #fff !important;
 }
 
 html.cb-high-contrast.dark .bg-white,
@@ -728,7 +724,7 @@ html.cb-high-contrast.dark .bg-gray-50,
 html.cb-high-contrast.dark .bg-gray-100,
 html.cb-high-contrast.dark .bg-gray-800,
 html.cb-high-contrast.dark .bg-gray-900 {
-  background-color: #000000 !important;
+  background-color: #000 !important;
 }
 
 html.cb-high-contrast.dark .text-gray-300,
@@ -739,7 +735,7 @@ html.cb-high-contrast.dark .text-gray-400 {
 html.cb-high-contrast.dark .text-gray-100,
 html.cb-high-contrast.dark .text-gray-200,
 html.cb-high-contrast.dark .text-white {
-  color: #ffffff !important;
+  color: #fff !important;
 }
 
 /* High Contrast - Universal Styles */
@@ -749,9 +745,13 @@ html.cb-high-contrast * {
 
 html.cb-high-contrast a,
 html.cb-high-contrast
-  button:not(.bg-emerald-600):not(.bg-amber-600):not(.bg-blue-600):not(
-    .bg-green-600
-  ):not(.bg-red-600) {
+  button:not(
+    .bg-emerald-600,
+    .bg-amber-600,
+    .bg-blue-600,
+    .bg-green-600,
+    .bg-red-600
+  ) {
   text-decoration: underline !important;
   text-underline-offset: 2px !important;
 }
@@ -760,14 +760,14 @@ html.cb-high-contrast button.bg-emerald-600,
 html.cb-high-contrast button.bg-amber-600,
 html.cb-high-contrast button.bg-blue-600,
 html.cb-high-contrast button.bg-green-600 {
-  border: 3px solid #000000 !important;
+  border: 3px solid #000 !important;
 }
 
 html.cb-high-contrast.dark button.bg-emerald-600,
 html.cb-high-contrast.dark button.bg-amber-600,
 html.cb-high-contrast.dark button.bg-blue-600,
 html.cb-high-contrast.dark button.bg-green-600 {
-  border: 3px solid #ffffff !important;
+  border: 3px solid #fff !important;
 }
 
 html.cb-high-contrast .bg-gradient-to-r,
@@ -778,13 +778,13 @@ html.cb-high-contrast .bg-gradient-to-br {
 html.cb-high-contrast:not(.dark) .bg-gradient-to-r,
 html.cb-high-contrast:not(.dark) .bg-gradient-to-br {
   background-color: #f0f0f0 !important;
-  border: 2px solid #000000 !important;
+  border: 2px solid #000 !important;
 }
 
 html.cb-high-contrast.dark .bg-gradient-to-r,
 html.cb-high-contrast.dark .bg-gradient-to-br {
   background-color: #1a1a1a !important;
-  border: 2px solid #ffffff !important;
+  border: 2px solid #fff !important;
 }
 
 /* ============================================
@@ -843,7 +843,8 @@ html.dark :focus-visible {
   background-color: var(
     --va-blue
   ); /* brand green; was federal #003f87 (RT15-1) */
-  color: #ffffff;
+
+  color: #fff;
   padding: 0.5rem 1rem;
   z-index: 100;
   transition: all 0.15s ease;
@@ -861,7 +862,7 @@ html.dark :focus-visible {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -882,7 +883,7 @@ html.dark .bg-gray-100 {
   background-color: #1a3d2e !important; /* forest green-800 */
 }
 
-html.dark .text-gray-900:not(.dark\:text-gray-900):not(.bg-va-gold) {
+html.dark .text-gray-900:not(.dark\:text-gray-900, .bg-va-gold) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -908,14 +909,14 @@ html.dark .border-gray-300 {
 
 html.dark .shadow-lg {
   box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.5),
-    0 4px 6px -2px rgba(0, 0, 0, 0.4);
+    0 10px 15px -3px rgb(0 0 0 / 50%),
+    0 4px 6px -2px rgb(0 0 0 / 40%);
 }
 
 html.dark .shadow-xl {
   box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.5),
-    0 10px 10px -5px rgba(0, 0, 0, 0.4);
+    0 20px 25px -5px rgb(0 0 0 / 50%),
+    0 10px 10px -5px rgb(0 0 0 / 40%);
 }
 
 /* Dark mode for specific components */
@@ -972,8 +973,8 @@ html.dark .bg-gradient-to-br.from-emerald-50.to-teal-50,
 html.dark .bg-gradient-to-r.from-emerald-50.to-teal-50 {
   background-image: linear-gradient(
     to bottom right,
-    rgba(6, 78, 59, 0.4),
-    rgba(19, 78, 74, 0.4)
+    rgb(6 78 59 / 40%),
+    rgb(19 78 74 / 40%)
   ) !important;
 }
 
@@ -982,8 +983,8 @@ html.dark .bg-gradient-to-br.from-amber-50.to-yellow-50,
 html.dark .bg-gradient-to-r.from-amber-50.to-yellow-50 {
   background-image: linear-gradient(
     to bottom right,
-    rgba(120, 53, 15, 0.4),
-    rgba(113, 63, 18, 0.4)
+    rgb(120 53 15 / 40%),
+    rgb(113 63 18 / 40%)
   ) !important;
 }
 
@@ -992,8 +993,8 @@ html.dark .bg-gradient-to-br.from-blue-50.to-indigo-50,
 html.dark .bg-gradient-to-r.from-blue-50.to-indigo-50 {
   background-image: linear-gradient(
     to bottom right,
-    rgba(30, 58, 138, 0.4),
-    rgba(49, 46, 129, 0.4)
+    rgb(30 58 138 / 40%),
+    rgb(49 46 129 / 40%)
   ) !important;
 }
 
@@ -1002,8 +1003,8 @@ html.dark .bg-gradient-to-br.from-green-50.to-emerald-50,
 html.dark .bg-gradient-to-r.from-green-50.to-emerald-50 {
   background-image: linear-gradient(
     to bottom right,
-    rgba(20, 83, 45, 0.4),
-    rgba(6, 78, 59, 0.4)
+    rgb(20 83 45 / 40%),
+    rgb(6 78 59 / 40%)
   ) !important;
 }
 
@@ -1012,8 +1013,8 @@ html.dark .bg-gradient-to-br.from-slate-50.to-gray-50,
 html.dark .bg-gradient-to-r.from-slate-50.to-gray-50 {
   background-image: linear-gradient(
     to bottom right,
-    rgba(51, 65, 85, 0.4),
-    rgba(55, 65, 81, 0.4)
+    rgb(51 65 85 / 40%),
+    rgb(55 65 81 / 40%)
   ) !important;
 }
 
@@ -1022,8 +1023,8 @@ html.dark .bg-gradient-to-br.from-red-50.to-rose-50,
 html.dark .bg-gradient-to-r.from-red-50.to-rose-50 {
   background-image: linear-gradient(
     to bottom right,
-    rgba(127, 29, 29, 0.4),
-    rgba(136, 19, 55, 0.4)
+    rgb(127 29 29 / 40%),
+    rgb(136 19 55 / 40%)
   ) !important;
 }
 
@@ -1032,8 +1033,8 @@ html.dark .bg-gradient-to-br.from-orange-50.to-amber-50,
 html.dark .bg-gradient-to-r.from-orange-50.to-amber-50 {
   background-image: linear-gradient(
     to bottom right,
-    rgba(124, 45, 18, 0.4),
-    rgba(120, 53, 15, 0.4)
+    rgb(124 45 18 / 40%),
+    rgb(120 53 15 / 40%)
   ) !important;
 }
 
@@ -1268,7 +1269,7 @@ html.dark select option {
 }
 
 /* Input fields */
-html.dark input:not([type="checkbox"]):not([type="radio"]) {
+html.dark input:not([type="checkbox"], [type="radio"]) {
   background-color: #2d5936; /* forest green-700 */
   color: #f3f4f6; /* gray-100 */
   border-color: #16a34a; /* green-600 */
@@ -1362,7 +1363,7 @@ html.dark .hover\:border-indigo-300:hover {
 }
 
 /* Gray text in dark mode */
-html.dark .text-gray-900:not(.dark\:text-gray-900):not(.bg-va-gold) {
+html.dark .text-gray-900:not(.dark\:text-gray-900, .bg-va-gold) {
   color: #f3f4f6 !important; /* gray-100 */
 }
 
@@ -1384,16 +1385,26 @@ html.dark .text-gray-500 {
 
 /* Links in dark mode - ensure visibility (exclude colored funding card backgrounds) */
 html.dark
-  a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
-    .bg-green-600
-  ):not(.bg-sky-600):not(.bg-amber-700) {
+  a:not(
+    .bg-va-gold,
+    .bg-yellow-400,
+    .bg-blue-600,
+    .bg-green-600,
+    .bg-sky-600,
+    .bg-amber-700
+  ) {
   color: #93c5fd;
 }
 
 html.dark
-  a:not(.bg-va-gold):not(.bg-yellow-400):not(.bg-blue-600):not(
-    .bg-green-600
-  ):not(.bg-sky-600):not(.bg-amber-700):hover {
+  a:not(
+    .bg-va-gold,
+    .bg-yellow-400,
+    .bg-blue-600,
+    .bg-green-600,
+    .bg-sky-600,
+    .bg-amber-700
+  ):hover {
   color: #bfdbfe;
 }
 
@@ -1476,6 +1487,7 @@ body.modal-open-with-position {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1487,6 +1499,7 @@ body.modal-open-with-position {
     opacity: 0;
     transform: translateX(100px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -1500,6 +1513,7 @@ body.modal-open-with-position {
     opacity: 0;
     transform: scale(0) rotate(0deg);
   }
+
   50% {
     opacity: 1;
     transform: scale(1) rotate(180deg);
@@ -1513,6 +1527,7 @@ body.modal-open-with-position {
     opacity: 0.3;
     transform: scale(1);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.2);
@@ -1523,8 +1538,9 @@ body.modal-open-with-position {
 @keyframes gentle-float {
   0%,
   100% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
+
   50% {
     transform: translateY(-3px);
   }
@@ -1535,6 +1551,7 @@ body.modal-open-with-position {
   0% {
     background-position: -200% center;
   }
+
   100% {
     background-position: 200% center;
   }
@@ -1546,12 +1563,15 @@ body.modal-open-with-position {
   100% {
     transform: scale(1);
   }
+
   25% {
     transform: scale(1.1);
   }
+
   35% {
     transform: scale(0.9);
   }
+
   45% {
     transform: scale(1.05);
   }
@@ -1581,7 +1601,7 @@ body.modal-open-with-position {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.3),
+    rgb(255 255 255 / 30%),
     transparent
   );
   background-size: 200% 100%;
@@ -1597,13 +1617,14 @@ body.modal-open-with-position {
   0%,
   100% {
     box-shadow:
-      0 4px 6px -1px rgb(0 0 0 / 0.1),
-      0 2px 4px -2px rgb(0 0 0 / 0.1);
+      0 4px 6px -1px rgb(0 0 0 / 10%),
+      0 2px 4px -2px rgb(0 0 0 / 10%);
   }
+
   50% {
     box-shadow:
-      0 10px 15px -3px rgb(253 185 19 / 0.3),
-      0 4px 6px -4px rgb(253 185 19 / 0.2);
+      0 10px 15px -3px rgb(253 185 19 / 30%),
+      0 4px 6px -4px rgb(253 185 19 / 20%);
   }
 }
 
@@ -1615,10 +1636,11 @@ body.modal-open-with-position {
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+    box-shadow: 0 0 0 0 rgb(251 191 36 / 0%);
   }
+
   50% {
-    box-shadow: 0 0 20px 3px rgba(251, 191, 36, 0.6);
+    box-shadow: 0 0 20px 3px rgb(251 191 36 / 60%);
   }
 }
 
@@ -1634,10 +1656,7 @@ body.modal-open-with-position {
 /* VA term styling - dotted underline to indicate tooltip */
 .va-term {
   position: relative;
-  text-decoration-line: underline;
-  text-decoration-style: dotted;
-  text-decoration-color: theme("colors.blue.500");
-  text-decoration-thickness: 1px;
+  text-decoration: underline dotted theme("colors.blue.500") 1px;
   text-underline-offset: 3px;
   cursor: help;
   transition: all 0.2s ease;
@@ -1675,7 +1694,7 @@ body.modal-open-with-position {
   width: 280px;
   max-width: 90vw;
   z-index: 9999;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px rgb(0 0 0 / 30%);
   pointer-events: none;
   animation: tooltip-fade-in 0.15s ease-out;
 }
@@ -1756,6 +1775,7 @@ body.modal-open-with-position {
     opacity: 0;
     transform: translateX(-50%) translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(-8px);
@@ -1767,8 +1787,11 @@ body.modal-open-with-position {
   display: block;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
+/* High contrast mode support. "more" is the only spec value for an
+   increased-contrast preference (no-preference | less | more | custom) —
+   "high" is not a value stylelint's media-feature-name-value-no-unknown
+   recognizes and never matches in any browser, so this block was dead. */
+@media (prefers-contrast: more) {
   .va-term {
     text-decoration-thickness: 2px;
   }
@@ -1793,6 +1816,7 @@ button:not(:disabled):hover {
 }
 
 /* Utility Classes */
+
 /* RT15-1 (D2 fix): the va-blue/va-gold utilities hardcoded federal #003f87 /
    #fdb913, so the same brand token rendered TWO different colors and ignored
    dark mode + every colorblind palette. Bind them to the theme CSS variables
@@ -1836,13 +1860,15 @@ a {
 }
 
 /* Responsive Typography */
-@media (max-width: 640px) {
+@media (width <= 640px) {
   h1 {
     @apply text-2xl;
   }
+
   h2 {
     @apply text-xl;
   }
+
   h3 {
     @apply text-lg;
   }
@@ -1855,7 +1881,7 @@ a {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Tablet Portrait Mode (768px - 1024px) */
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+@media (width >= 768px) and (width <= 1024px) and (orientation: portrait) {
   /* Optimal 2-column grid for tablet portrait */
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3,
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
@@ -1891,7 +1917,7 @@ a {
 }
 
 /* Tablet Landscape Mode (1024px - 1366px) - iPad Pro, Surface, etc. */
-@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+@media (width >= 1024px) and (width <= 1366px) and (orientation: landscape) {
   /* 3-column grid for tablet landscape */
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
     grid-template-columns: repeat(3, 1fr) !important;
@@ -1917,7 +1943,7 @@ a {
 }
 
 /* iPad/Tablet Touch Optimization */
-@media (hover: none) and (pointer: coarse) and (min-width: 768px) {
+@media (hover: none) and (pointer: coarse) and (width >= 768px) {
   /* Larger touch targets on tablets */
   button:not(.icon-button),
   a:not(.icon-link),
@@ -1956,7 +1982,7 @@ a {
 
 /* iPad-specific fixes (iPadOS 13+ reports as Mac) */
 @supports (-webkit-touch-callout: none) {
-  @media (min-width: 768px) {
+  @media (width >= 768px) {
     /* Fix for iPad viewport height issues */
     .min-h-screen {
       min-height: -webkit-fill-available;
@@ -1982,7 +2008,7 @@ a {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Touch-Optimized Interactions */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   /* Minimum touch target size: 48x48px (WCAG AAA) */
   button,
   a,
@@ -2059,12 +2085,12 @@ a {
 }
 
 /* Mobile-Optimized Cards */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .tool-card,
   .card {
     margin-bottom: 16px;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
   }
 
   /* Stack elements vertically on mobile */
@@ -2090,7 +2116,7 @@ body {
 }
 
 /* Mobile-Friendly Focus States */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   *:focus {
     outline: 3px solid var(--va-gold);
     outline-offset: 2px;
@@ -2114,7 +2140,7 @@ body {
 }
 
 /* Optimize Grid Layouts for Mobile */
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .grid {
     grid-template-columns: 1fr !important;
     gap: 16px;
@@ -2129,7 +2155,7 @@ body {
 }
 
 /* Mobile Typography Enhancements */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   /* Optimize reading width */
   p {
     max-width: 100%;
@@ -2147,7 +2173,7 @@ body {
 }
 
 /* Mobile Loading States */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .loading-spinner {
     width: 48px;
     height: 48px;
@@ -2157,12 +2183,11 @@ body {
 /* Swipe Gestures Helper */
 .swipeable {
   touch-action: pan-y;
-  -webkit-user-select: none;
   user-select: none;
 }
 
 /* Mobile-Optimized Modals */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .modal-overlay {
     align-items: flex-end;
   }
@@ -2181,13 +2206,12 @@ body {
     top: 0;
     z-index: 10;
     background: inherit;
-    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
   }
 }
 
 /* Pull-to-Refresh Indicator Area */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   body::before {
     content: "";
     display: block;
@@ -2216,7 +2240,7 @@ body {
 }
 
 /* Tab Navigation - Mobile Optimized */
-@media (max-width: 640px) {
+@media (width <= 640px) {
   /* Tab buttons in modals */
   nav button[role="tab"],
   nav button:has(span) {
@@ -2238,8 +2262,8 @@ body {
 }
 
 /* Modal Content Padding - More breathing room on mobile */
-@media (max-width: 768px) {
-  .modal-content > div:not(.modal-header):not(.modal-footer) {
+@media (width <= 768px) {
+  .modal-content > div:not(.modal-header, .modal-footer) {
     padding: 16px;
   }
 
@@ -2257,7 +2281,7 @@ body {
 }
 
 /* Form Elements in Modals - Mobile Friendly */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   /* Dropdowns and selects */
   .modal-content select {
     font-size: 16px;
@@ -2280,7 +2304,7 @@ body {
 }
 
 /* Tab Badges - Better visibility on mobile */
-@media (max-width: 640px) {
+@media (width <= 640px) {
   nav button span:last-child:not(:only-child) {
     font-size: 0.625rem;
     padding: 2px 6px;
@@ -2289,14 +2313,14 @@ body {
 }
 
 /* Stat Cards in Modals - Stack nicely on mobile */
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .grid.grid-cols-4 {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px;
   }
 
   /* Very small screens - single column for clarity */
-  @media (max-width: 360px) {
+  @media (width <= 360px) {
     .grid.grid-cols-4,
     .grid.grid-cols-3 {
       grid-template-columns: 1fr !important;
@@ -2305,7 +2329,7 @@ body {
 }
 
 /* Action Buttons in Modals - Full width stack on mobile */
-@media (max-width: 640px) {
+@media (width <= 640px) {
   .modal-content .flex.gap-2 > button,
   .modal-content .flex.gap-3 > button {
     flex: 1;
@@ -2325,7 +2349,7 @@ body {
 }
 
 /* Table Responsiveness in Modals */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .modal-content table {
     font-size: 0.875rem;
   }
@@ -2345,7 +2369,7 @@ body {
 }
 
 /* List Items in Modals - Better spacing */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .modal-content ul > li,
   .modal-content ol > li {
     padding: 8px 0;
@@ -2354,7 +2378,7 @@ body {
 }
 
 /* Progress Bars and Meters - Full width on mobile */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .modal-content .w-32,
   .modal-content .w-40,
   .modal-content .w-48 {
@@ -2363,7 +2387,7 @@ body {
 }
 
 /* Icon Sizes in Tabs - Consistent on mobile */
-@media (max-width: 640px) {
+@media (width <= 640px) {
   nav button svg,
   nav button [class*="icon"] {
     width: 16px;
@@ -2388,15 +2412,19 @@ body {
 .max-h-\[60vh\] {
   max-height: 60dvh;
 }
+
 .max-h-\[70vh\] {
   max-height: 70dvh;
 }
+
 .max-h-\[80vh\] {
   max-height: 80dvh;
 }
+
 .max-h-\[90vh\] {
   max-height: 90dvh;
 }
+
 .max-h-\[95vh\] {
   max-height: 95dvh;
 }
@@ -2405,10 +2433,11 @@ body {
    (`md:hidden`, so phones only) plus the iOS home-indicator safe area. Two
    tiers keep the AI bubble (lower) and the bug button (upper) from stacking on
    top of each other. */
-@media (max-width: 767px) {
+@media (width <= 767px) {
   .above-mobile-nav {
     bottom: calc(70px + env(safe-area-inset-bottom) + 1rem) !important;
   }
+
   .above-mobile-nav-stacked {
     bottom: calc(70px + env(safe-area-inset-bottom) + 5.5rem) !important;
   }
@@ -2419,7 +2448,7 @@ body {
    visibility:hidden achieves that without JS and prevents axe target-size
    violations caused by the AI Navigator / Quick Exit buttons overlapping
    dialog footer Close targets at the same viewport-bottom coordinates. */
-@media (max-width: 767px) {
+@media (width <= 767px) {
   body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav,
   body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav-stacked {
     visibility: hidden;
@@ -2428,6 +2457,7 @@ body {
 }
 
 /* Print Styles */
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PRINT OPTIMIZATION - "The Paper General"
    Makes generated documents print like professional legal submissions
@@ -2456,7 +2486,8 @@ body {
   /* Force professional document styling */
   body {
     @apply bg-white !important;
-    color: #000000 !important;
+
+    color: #000 !important;
     font-family: "Times New Roman", Times, serif !important;
     font-size: 12pt !important;
     line-height: 1.5 !important; /* Double spacing */
@@ -2465,7 +2496,7 @@ body {
 
   /* Print-friendly typography */
   * {
-    color: #000000 !important;
+    color: #000 !important;
     background: transparent !important;
     box-shadow: none !important;
     text-shadow: none !important;
@@ -2480,7 +2511,7 @@ body {
     font-family: "Times New Roman", Times, serif !important;
     font-size: 12pt !important;
     line-height: 1.5 !important;
-    color: #000000 !important;
+    color: #000 !important;
   }
 
   /* Headers in documents */
@@ -2491,17 +2522,19 @@ body {
   h5,
   h6 {
     font-family: "Times New Roman", Times, serif !important;
-    color: #000000 !important;
+    color: #000 !important;
     font-weight: bold !important;
-    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   h1 {
     font-size: 16pt !important;
   }
+
   h2 {
     font-size: 14pt !important;
   }
+
   h3,
   h4,
   h5,
@@ -2515,7 +2548,7 @@ body {
     font-size: 12pt !important;
     line-height: 1.5 !important;
     white-space: pre-wrap !important;
-    color: #000000 !important;
+    color: #000 !important;
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
@@ -2526,19 +2559,19 @@ body {
   blockquote,
   ul,
   ol {
-    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* Keep critical sections together */
   .statement-section,
   .nexus-letter,
   .doctor-note {
-    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* Signature blocks should stay together */
   .signature-block {
-    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     margin-top: 2em !important;
   }
 
@@ -2549,11 +2582,11 @@ body {
 
   /* Links should look normal on paper */
   a {
-    color: #000000 !important;
+    color: #000 !important;
     text-decoration: underline !important;
   }
 
-  a[href]:after {
+  a[href]::after {
     content: none !important; /* Don't print URLs */
   }
 }
