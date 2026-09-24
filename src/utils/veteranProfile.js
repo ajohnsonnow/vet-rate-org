@@ -129,6 +129,12 @@ const VALID_PROFILE_FIELDS = [
 
 // Max lengths for security
 const MAX_STRING_LENGTH = 500;
+// Real VA letters name re-characterized conditions in full, with a rename
+// and a "(claimed as ...)" qualifier both in play ("lumbosacral strain,
+// degenerative disc disease ... (previously rated as lumbago) (claimed as
+// ...)"); 200 truncated real names mid-word. packetSummary.js's own
+// LONG_VA_CONDITION_MAX (400) is the same real-name-length ceiling.
+const RATING_NAME_MAX_LENGTH = 400;
 
 /**
  * Sanitize string input
@@ -616,7 +622,7 @@ export const saveMyRatings = (ratings) => {
       id:
         r.id ||
         `rating_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: sanitizeString(r.name || "", 200),
+      name: sanitizeString(r.name || "", RATING_NAME_MAX_LENGTH),
       bodyPart: VALID_BODY_PARTS.has(r.bodyPart) ? r.bodyPart : "other",
       rating: Math.max(0, Math.min(100, Number.parseInt(r.rating) || 0)),
       side: ["left", "right", "bilateral", "none"].includes(r.side)
@@ -646,7 +652,7 @@ export const addRating = (rating) => {
 
     const newRating = {
       id: `rating_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: sanitizeString(rating.name || "", 200),
+      name: sanitizeString(rating.name || "", RATING_NAME_MAX_LENGTH),
       bodyPart: VALID_BODY_PARTS.has(rating.bodyPart)
         ? rating.bodyPart
         : "other",
