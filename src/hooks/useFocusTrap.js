@@ -80,7 +80,7 @@ export function useFocusTrap(
       }
 
       const first = items[0];
-      const last = items[items.length - 1];
+      const last = items.at(-1);
       const current = document.activeElement;
 
       if (e.shiftKey) {

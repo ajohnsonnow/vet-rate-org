@@ -32,8 +32,6 @@ function _migraineNotProstrating(result, q1) {
   );
   result.actionItems.push(
     "During the exam, clearly describe that when a migraine hits, you cannot continue working or functioning.",
-  );
-  result.actionItems.push(
     'Use the specific word "prostrating" when describing your attacks.',
   );
   return result;
@@ -56,14 +54,8 @@ function _migraine50Percent(result, q1, q2, q3, q4) {
     "Your answers align with the 50% rating criteria: very frequent (2+ per month), completely prostrating, prolonged attacks that are productive of severe economic inadaptability (missing work/losing job opportunities).";
   result.actionItems.push(
     "Bring sick leave records showing missed work days due to migraines.",
-  );
-  result.actionItems.push(
     "Bring a letter from your employer documenting impact on work.",
-  );
-  result.actionItems.push(
     "Bring your headache diary showing frequency over the last 6-12 months.",
-  );
-  result.actionItems.push(
     "If you have lost jobs due to migraines, document this.",
   );
   return result;
@@ -86,8 +78,8 @@ function _migraine30Percent(result, q2, q3, q4) {
     );
     result.actionItems.push(
       "Document any missed work days, lost wages, or job losses due to migraines.",
+      "Bring sick leave records to the exam.",
     );
-    result.actionItems.push("Bring sick leave records to the exam.");
   }
 
   if (q4 !== "days" && q4 !== "many_hours") {
@@ -110,8 +102,6 @@ function _migraine30Percent(result, q2, q3, q4) {
 
   result.actionItems.push(
     "Bring a headache diary covering the last 6-12 months.",
-  );
-  result.actionItems.push(
     "Mention all associated symptoms: nausea, vomiting, photophobia, phonophobia.",
   );
 
@@ -127,25 +117,25 @@ function _migraine10Percent(result, q2) {
     "Your answers align with the 10% rating criteria: characteristic prostrating attacks averaging one in 2 months over the last several months.";
 
   // Analyze gap to 30%
-  result.gaps.push("**Gap to 30% Rating:**");
   result.gaps.push(
+    "**Gap to 30% Rating:**",
     "• The 30% rating requires prostrating attacks to occur on average once a month (not every 2 months).",
   );
   result.actionItems.push(
     "Keep a detailed headache diary. If your frequency increases to monthly, this would support a 30% rating.",
-  );
-  result.actionItems.push(
     "During flare-ups or high-stress periods, document if frequency increases.",
   );
 
   // Analyze gap to 50%
-  result.gaps.push("**Gap to 50% Rating:**");
   result.gaps.push(
+    "**Gap to 50% Rating:**",
     "• Would require very frequent attacks (2+ per month), economic inadaptability, and prolonged duration.",
   );
 
-  result.actionItems.push("Bring your headache diary to the exam.");
-  result.actionItems.push("Mention all associated symptoms and severity.");
+  result.actionItems.push(
+    "Bring your headache diary to the exam.",
+    "Mention all associated symptoms and severity.",
+  );
 
   return result;
 }
@@ -159,8 +149,8 @@ function _migraine0PercentFallback(result) {
   );
   result.actionItems.push(
     "Keep a detailed headache diary for the next 6-12 months to document frequency.",
+    "If your condition worsens, file for an increase.",
   );
-  result.actionItems.push("If your condition worsens, file for an increase.");
 
   return result;
 }
@@ -221,8 +211,6 @@ function _addSuicidalIdeationWarning(result, q4) {
   );
   result.actionItems.push(
     "Tell the examiner about suicidal thoughts - frequency, triggers, whether you have a plan.",
-  );
-  result.actionItems.push(
     "If you are in crisis, call 988 (Suicide & Crisis Lifeline) immediately.",
   );
 }
@@ -232,11 +220,9 @@ function _applyPtsd70Or100(result, q2, q3) {
     result.predictedRating = 100;
     result.ratingRationale =
       "Your answers indicate total occupational and social impairment - inability to work and maintain any relationships. This aligns with a 100% rating.";
-    result.actionItems.push("Document inability to maintain employment.");
     result.actionItems.push(
+      "Document inability to maintain employment.",
       "Bring statements from family/friends about social impairment.",
-    );
-    result.actionItems.push(
       "Mention any hospitalizations or crisis interventions.",
     );
     return;
@@ -246,8 +232,8 @@ function _applyPtsd70Or100(result, q2, q3) {
   result.ratingRationale =
     "Your answers indicate occupational and social impairment with deficiencies in most areas. This aligns with a 70% rating. Symptoms include near-continuous symptoms, severe occupational or social impairment, or frequent suicidal ideation.";
 
-  result.gaps.push("**Gap to 100% Rating:**");
   result.gaps.push(
+    "**Gap to 100% Rating:**",
     "• The 100% rating requires TOTAL occupational and social impairment - complete inability to work and maintain any relationships.",
   );
   if (q2 !== "severe") {
@@ -267,21 +253,15 @@ function _applyPtsd50(result) {
   result.ratingRationale =
     "Your answers indicate occupational and social impairment with reduced reliability and productivity. This aligns with a 50% rating. This means you work but miss days, have poor performance, or struggle significantly with relationships.";
 
-  result.gaps.push("**Gap to 70% Rating:**");
   result.gaps.push(
+    "**Gap to 70% Rating:**",
     '• The 70% rating requires "deficiencies in most areas" - near-continuous symptoms affecting work, relationships, self-care, judgment, thinking, and mood.',
-  );
-  result.gaps.push(
     "• Specific symptoms for 70% include: suicidal ideation, obsessional rituals interfering with routine, speech abnormalities, neglect of personal hygiene, inability to maintain relationships.",
   );
 
   result.actionItems.push(
     "Document missed work days, poor performance reviews, or disciplinary actions.",
-  );
-  result.actionItems.push(
     "Bring buddy statements from coworkers, family, or friends.",
-  );
-  result.actionItems.push(
     "Mention any ER visits, hospitalizations, or crisis hotline calls.",
   );
 }
@@ -291,21 +271,15 @@ function _applyPtsd30(result) {
   result.ratingRationale =
     "Your answers indicate occupational and social impairment with occasional decrease in work efficiency and intermittent periods of inability to perform occupational tasks. This aligns with a 30% rating.";
 
-  result.gaps.push("**Gap to 50% Rating:**");
   result.gaps.push(
+    "**Gap to 50% Rating:**",
     '• The 50% rating requires "reduced reliability and productivity" - meaning you frequently miss work, have poor performance, or have difficulty maintaining employment.',
-  );
-  result.gaps.push(
     "• Specific symptoms for 50% include: flattened affect, panic attacks (weekly or more), difficulty understanding complex commands, impairment of short/long-term memory, impaired judgment, disturbances of motivation and mood.",
   );
 
   result.actionItems.push(
     "Keep a symptom diary documenting frequency and severity.",
-  );
-  result.actionItems.push(
     "If you miss work or have reduced productivity, document this.",
-  );
-  result.actionItems.push(
     "Mention all symptoms: nightmares, flashbacks, hypervigilance, avoidance, panic attacks.",
   );
 }
@@ -315,19 +289,15 @@ function _applyPtsd10(result) {
   result.ratingRationale =
     "Your answers indicate occupational and social impairment due to mild or occasional symptoms. This aligns with a 10% rating.";
 
-  result.gaps.push("**Gap to 30% Rating:**");
   result.gaps.push(
+    "**Gap to 30% Rating:**",
     '• The 30% rating requires "occasional decrease in work efficiency" and "intermittent periods of inability to perform occupational tasks."',
-  );
-  result.gaps.push(
     "• This means symptoms regularly interfere with work (not just mild impact).",
   );
 
   result.actionItems.push(
     "Be completely honest about symptom severity - do not minimize.",
-  );
-  result.actionItems.push("Describe your worst days, not your best days.");
-  result.actionItems.push(
+    "Describe your worst days, not your best days.",
     'Mention all PTSD symptoms, even if you think they are "normal."',
   );
 }
@@ -389,12 +359,8 @@ export function calculatePTSDRating(answers) {
   // General action items for all PTSD claims
   result.actionItems.push(
     "Bring buddy statements from people who witness your symptoms.",
-  );
-  result.actionItems.push(
     "Bring treatment records showing frequency of therapy/psychiatry visits.",
-  );
-  result.actionItems.push("Mention all medications and side effects.");
-  result.actionItems.push(
+    "Mention all medications and side effects.",
     "Describe how PTSD affects sleep, relationships, work, and daily life.",
   );
 
@@ -415,11 +381,9 @@ function _backPainRomRating(result, q1) {
     result.ratingRationale =
       "Forward flexion limited to 30-60 degrees qualifies for a 20% rating under the General Rating Formula for Diseases of the Spine (38 CFR § 4.71a).";
 
-    result.gaps.push("**Gap to 40% Rating:**");
     result.gaps.push(
+      "**Gap to 40% Rating:**",
       "• The 40% rating requires forward flexion limited to 30 degrees or less.",
-    );
-    result.gaps.push(
       "• During the C&P exam, stop bending at the point where pain starts - do NOT push through the pain.",
     );
     result.warnings.push(
@@ -432,11 +396,9 @@ function _backPainRomRating(result, q1) {
     result.ratingRationale =
       'Forward flexion limited to 60-90 degrees, or evidence of "painful motion," qualifies for a 10% rating under 38 CFR § 4.59 (Painful Motion).';
 
-    result.gaps.push("**Gap to 20% Rating:**");
     result.gaps.push(
+      "**Gap to 20% Rating:**",
       "• The 20% rating requires forward flexion limited to greater than 30 degrees but not greater than 60 degrees.",
-    );
-    result.gaps.push(
       "• If your ROM is worse on bad days or after activity, tell the examiner this.",
     );
     return 10;
@@ -445,11 +407,9 @@ function _backPainRomRating(result, q1) {
   result.ratingRationale =
     "Normal ROM but with pain qualifies for at least 10% under 38 CFR § 4.59 (Painful Motion). If there is no pain, the rating may be 0%.";
 
-  result.gaps.push("**Why the rating is low:**");
   result.gaps.push(
+    "**Why the rating is low:**",
     "• The VA rates spine conditions primarily on Range of Motion (ROM). If you can bend normally (90 degrees forward flexion), the maximum rating for ROM limitation is 10%.",
-  );
-  result.gaps.push(
     "• However, you may qualify for additional ratings for intervertebral disc syndrome (IVDS), radiculopathy, or muscle spasm.",
   );
   return 10; // Painful motion
@@ -462,8 +422,6 @@ function _backPainIvdsCheck(result, q2) {
     );
     result.actionItems.push(
       "Bring documentation of incapacitating episodes: sick leave records, ER visits, bed rest periods.",
-    );
-    result.actionItems.push(
       'The VA defines "incapacitating" as requiring bed rest prescribed by a physician.',
     );
   } else if (q2 === "yes_some_episodes") {
@@ -484,11 +442,7 @@ function _backPainRadiculopathyCheck(result, q3) {
   );
   result.actionItems.push(
     "Bring EMG/NCS (nerve conduction study) results if available.",
-  );
-  result.actionItems.push(
     "Describe the nerve symptoms: where the pain radiates, numbness, tingling, weakness.",
-  );
-  result.actionItems.push(
     "If you have weakness or loss of reflexes, make sure the examiner tests this.",
   );
 
@@ -505,8 +459,8 @@ function _backPainGaitCheck(result, q4) {
   result.warnings.push(
     "⚠️ IMPORTANT: You use assistive devices. This indicates significant functional impairment that should be documented in the exam.",
   );
-  result.actionItems.push("Bring the assistive device to the exam.");
   result.actionItems.push(
+    "Bring the assistive device to the exam.",
     "Explain why you need it (instability, pain, weakness).",
   );
 }
@@ -535,17 +489,9 @@ export function calculateBackPainRating(answers) {
   // General action items
   result.actionItems.push(
     "Bring all imaging reports (MRI, CT, X-ray) to the exam.",
-  );
-  result.actionItems.push(
     "Bring a list of all treatments tried: physical therapy, injections, surgery, medications.",
-  );
-  result.actionItems.push(
     "Describe morning stiffness - how long until you can move normally.",
-  );
-  result.actionItems.push(
     'If today is a "good day," tell the examiner this and describe your typical bad days.',
-  );
-  result.actionItems.push(
     "Mention any work modifications (unable to lift, stand, sit for long periods).",
   );
 
@@ -578,18 +524,12 @@ export function calculateTinnitusRating(answers) {
 
     result.actionItems.push(
       "The VA does not require objective evidence of tinnitus - your report of the symptom is sufficient.",
-    );
-    result.actionItems.push(
       "Describe how tinnitus affects you: sleep problems, concentration difficulties, need for white noise.",
-    );
-    result.actionItems.push(
       "If you also have hearing loss, that is rated separately under different diagnostic codes (6100-6130).",
     );
 
     result.warnings.push(
       "ℹ️ NOTE: Tinnitus has only one rating level (10%). You cannot get a higher rating for more severe tinnitus.",
-    );
-    result.warnings.push(
       "ℹ️ However, if tinnitus is caused by or causes mental health issues (anxiety, depression, sleep disorders), those can be claimed separately.",
     );
   } else {
@@ -622,8 +562,8 @@ function _kneeFlexionRating(result, q1) {
     result.ratingRationale =
       "Knee flexion limited to between 45-90 degrees qualifies for a 20% rating under DC 5260.";
 
-    result.gaps.push("**Gap to 30% Rating:**");
     result.gaps.push(
+      "**Gap to 30% Rating:**",
       "• The 30% rating requires flexion limited to 45 degrees or less.",
     );
     return 20;
@@ -633,8 +573,8 @@ function _kneeFlexionRating(result, q1) {
     result.ratingRationale =
       "Knee flexion limited to between 90-110 degrees qualifies for a 10% rating under DC 5260.";
 
-    result.gaps.push("**Gap to 20% Rating:**");
     result.gaps.push(
+      "**Gap to 20% Rating:**",
       "• The 20% rating requires flexion limited to not more than 90 degrees.",
     );
     return 10;
@@ -643,11 +583,9 @@ function _kneeFlexionRating(result, q1) {
   result.ratingRationale =
     "Normal or near-normal knee flexion (110+ degrees) does not qualify for a rating based on ROM limitation alone.";
 
-  result.gaps.push("**Why ROM rating is 0%:**");
   result.gaps.push(
+    "**Why ROM rating is 0%:**",
     "• The VA rates knee conditions primarily on Range of Motion. Normal flexion is 140 degrees.",
-  );
-  result.gaps.push(
     "• However, you may qualify for ratings based on instability, arthritis, or other factors.",
   );
   return 0;
@@ -660,11 +598,7 @@ function _kneeInstabilityCheck(result, q2) {
     );
     result.actionItems.push(
       "Bring your knee brace to the exam and explain when/why you wear it.",
-    );
-    result.actionItems.push(
       "Describe specific incidents when your knee gave out (when, where, what happened).",
-    );
-    result.actionItems.push(
       "If you have ligament damage (ACL, MCL, PCL, LCL), mention this - it supports the instability rating.",
     );
   } else if (q2 === "moderate" || q2 === "mild") {
@@ -682,8 +616,8 @@ function _kneeSwellingCheck(result, q3) {
     result.warnings.push(
       "⚠️ IMPORTANT: Persistent swelling can add an additional 10% to your knee rating under the notes for DC 5260.",
     );
-    result.actionItems.push("Point out the swelling during the exam.");
     result.actionItems.push(
+      "Point out the swelling during the exam.",
       "Mention if swelling limits your ability to bend the knee or causes pain.",
     );
   } else if (q3 === "recurrent") {
@@ -715,17 +649,9 @@ export function calculateKneePainRating(answers) {
   // General action items
   result.actionItems.push(
     "Bring imaging reports (MRI showing meniscus tears, cartilage damage, ligament tears).",
-  );
-  result.actionItems.push(
     "Bring documentation of any knee surgeries (meniscectomy, ACL repair, etc.).",
-  );
-  result.actionItems.push(
     "The examiner will use a goniometer to measure your knee flexion - stop when it hurts, don't push through pain.",
-  );
-  result.actionItems.push(
     "You may qualify for MULTIPLE separate ratings: flexion limitation + instability + arthritis.",
-  );
-  result.actionItems.push(
     "If you have the opposite knee also service-connected, mention bilateral factor (can increase rating).",
   );
 

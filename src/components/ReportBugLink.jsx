@@ -6,7 +6,6 @@
  */
 
 import AnimatedBug from "./AnimatedBug";
-import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * ReportBugLink - A standardized, small bug report button for module headers
@@ -19,7 +18,6 @@ import { useLanguage } from "../contexts/LanguageContext";
  * @param {string} moduleName - Optional module name to pre-fill in bug report
  */
 function ReportBugLink({ onClick, variant = "light", moduleName = "" }) {
-  const { _t } = useLanguage();
   const handleClick = (e) => {
     e.stopPropagation();
     // Store the module name in sessionStorage for the bug report

@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   X,
   ClipboardList,
@@ -147,7 +146,7 @@ const BODY_SYSTEM_RULES = [
 ];
 
 const getBodySystem = (condition) => {
-  const code = parseInt(condition.diagnosticCode);
+  const code = Number.parseInt(condition.diagnosticCode);
   const schedule = condition.ratingSchedule || "";
   const match = BODY_SYSTEM_RULES.find(
     (rule) =>
@@ -1352,7 +1351,7 @@ function _addGeneralFallbackQuestions(conditionName, questions) {
     ];
 
     generalQuestions.forEach((gq) => {
-      if (!questions.find((q) => q.id === gq.id)) {
+      if (!questions.some((q) => q.id === gq.id)) {
         questions.push(gq);
       }
     });
@@ -1361,9 +1360,6 @@ function _addGeneralFallbackQuestions(conditionName, questions) {
 
 const generateGenericQuestions = (condition) => {
   const ratings = condition.ratingCriteria?.ratings || {};
-  const _ratingKeys = Object.keys(ratings).sort(
-    (a, b) => parseInt(b) - parseInt(a),
-  );
   const bodySystem = getBodySystem(condition);
   const conditionName = condition.conditionName;
 
@@ -1449,72 +1445,54 @@ function _buildRatingGaps(predictedRating, ratingKeys, ratings) {
   const higherRatings = ratingKeys.filter((r) => r > predictedRating);
 
   if (higherRatings.length > 0) {
-    gaps.push("**Understanding the Gap to Higher Ratings:**");
     gaps.push(
+      "**Understanding the Gap to Higher Ratings:**",
       "Your current answers suggest symptom severity at the " +
         predictedRating +
         "% level. To qualify for a higher rating, the VA requires documented evidence of more severe impairment.",
+      "",
     );
-    gaps.push("");
 
     // Only show next 1-2 higher ratings (most actionable)
     const relevantHigherRatings = higherRatings.slice(-2).reverse();
 
     relevantHigherRatings.forEach((higherRating) => {
       const higherCriteria = ratings[higherRating] || "";
-      gaps.push(`**What ${higherRating}% Requires:**`);
-      gaps.push(higherCriteria);
-      gaps.push("");
+      gaps.push(`**What ${higherRating}% Requires:**`, higherCriteria, "");
 
       // Add specific actionable guidance based on the rating difference
       if (higherRating >= 70) {
         gaps.push(
           "• This rating level typically requires evidence of severe occupational impairment - document any job losses, demotions, or inability to work",
-        );
-        gaps.push(
           "• Gather statements from employers, coworkers, or supervisors about work limitations",
-        );
-        gaps.push(
           "• Document any hospitalizations, emergency visits, or intensive treatments",
         );
       } else if (higherRating >= 50) {
         gaps.push(
           "• This rating level requires more than occasional symptoms - document frequency and duration of flare-ups",
-        );
-        gaps.push(
           "• Track days missed from work or activities you can no longer perform",
-        );
-        gaps.push(
           "• Bring treatment records showing regular/ongoing medical care",
         );
       } else if (higherRating >= 30) {
         gaps.push(
           "• This rating level requires regular impairment - keep a symptom diary showing daily or weekly impact",
-        );
-        gaps.push(
           "• Document how the condition affects routine daily activities",
-        );
-        gaps.push(
           "• Note any assistive devices, medications, or accommodations you need",
         );
       }
       gaps.push("");
     });
 
-    gaps.push("**Key Questions to Ask Yourself:**");
     gaps.push(
+      "**Key Questions to Ask Yourself:**",
       '• Are my symptoms worse on "bad days" than what I described? If so, describe your WORST days to the examiner',
-    );
-    gaps.push(
       "• Do I have additional symptoms I didn't mention? List ALL symptoms, even ones you think are minor",
-    );
-    gaps.push(
       "• Is my condition getting worse over time? Document any progression of symptoms",
     );
   } else {
     // At max rating
-    gaps.push("**You are at the maximum rating for this condition.**");
     gaps.push(
+      "**You are at the maximum rating for this condition.**",
       "Your answers align with the highest available rating. Focus on maintaining documentation of your condition's severity and any secondary conditions that may have developed.",
     );
   }
@@ -1621,15 +1599,15 @@ function _buildRatingWarnings(
 
 const calculateGenericRating = (answers, condition) => {
   const totalWeight = Object.values(answers).reduce((sum, val) => {
-    const weight = parseInt(val) || 0;
+    const weight = Number.parseInt(val) || 0;
     return sum + weight;
   }, 0);
 
   const avgWeight = totalWeight / Object.keys(answers).length;
   const ratings = condition.ratingCriteria?.ratings || {};
   const ratingKeys = Object.keys(ratings)
-    .map((k) => parseInt(k))
-    .filter((k) => !isNaN(k))
+    .map((k) => Number.parseInt(k))
+    .filter((k) => !Number.isNaN(k))
     .sort((a, b) => b - a);
   const conditionNameLower = (
     condition.conditionName ||
@@ -1973,7 +1951,7 @@ function CAPExamPrepIntroBox() {
             <span className="font-bold text-white">
               Disability Benefits Questionnaire (DBQ)
             </span>
-            .
+            {"."}
           </p>
           <p className="text-gray-300">
             This tool shows you the{" "}
@@ -2156,10 +2134,9 @@ function CAPSelectConditionHeader({
 }
 
 function CAPSelectConditionCard({ condition, onSelect }) {
-  const dbqKey = Object.keys(dbqLogicMap).find(
+  const isPremium = Object.keys(dbqLogicMap).some(
     (key) => dbqLogicMap[key].diagnostic_code === condition.diagnosticCode,
   );
-  const isPremium = !!dbqKey;
 
   return (
     <button
@@ -2990,8 +2967,8 @@ function CAPExamPrepQuestionDetail({ q }) {
             ✅ Possible Answers:
           </h4>
           <div className="space-y-2">
-            {q.options.map((opt, i) => (
-              <CAPExamPrepAnswerOption key={i} opt={opt} />
+            {q.options.map((opt) => (
+              <CAPExamPrepAnswerOption key={opt} opt={opt} />
             ))}
           </div>
         </div>
@@ -3323,9 +3300,9 @@ function CAPTermCategoryCard({ category, isExpanded, onToggle }) {
 
       {isExpanded && (
         <div className="p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
-          {category.terms.map((item, index) => (
+          {category.terms.map((item) => (
             <div
-              key={index}
+              key={item.term}
               className="bg-white dark:bg-gray-800 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-5"
             >
               <h3 className="text-lg font-bold text-teal-700 dark:text-teal-300 mb-3 flex items-center gap-2">
@@ -3862,7 +3839,7 @@ function _loadSavedPacketAndConditions(setSavedPacket, setAllConditions) {
   }
 
   // Load all conditions from disabilityData
-  if (disabilityDataFile && disabilityDataFile.disabilities) {
+  if (disabilityDataFile?.disabilities) {
     setAllConditions(disabilityDataFile.disabilities);
   }
 }
@@ -4111,21 +4088,20 @@ function CAPSimulatorRouter(props) {
 }
 
 const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
-  const { _t } = useLanguage();
   const [mode, setMode] = useState("intro"); // intro, select-condition, flashcard, simulation, results, exam-prep, exam-prep-detail
   const [selectedConditionKey, setSelectedConditionKey] = useState(null);
   const [selectedCondition, setSelectedCondition] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [simulationResult, setSimulationResult] = useState(null);
-  const [_savedPacket, setSavedPacket] = useState([]);
-  const [flashcardTerm, setFlashcardTerm] = useState(null);
+  const [, setSavedPacket] = useState([]);
+  const [flashcardTerm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [allConditions, setAllConditions] = useState([]);
   const [expandedCategories, setExpandedCategories] = useState({});
 
   // Exam Prep mode state
-  const [_examPrepCondition, setExamPrepCondition] = useState(null);
+  const [, setExamPrepCondition] = useState(null);
   const [examPrepDBQ, setExamPrepDBQ] = useState(null);
   const [examPrepTips, setExamPrepTips] = useState([]);
   const [expandedQuestion, setExpandedQuestion] = useState(null);
@@ -4134,11 +4110,6 @@ const CAPSimulator = ({ onClose, onReportBug, onSendToCalculator }) => {
     () => _loadSavedPacketAndConditions(setSavedPacket, setAllConditions),
     [],
   );
-
-  // Show flashcard for a term
-  const _showFlashcard = (term) => {
-    setFlashcardTerm(term);
-  };
 
   return (
     <CAPSimulatorRouter

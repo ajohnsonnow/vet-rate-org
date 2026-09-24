@@ -119,7 +119,7 @@ const useGoogleDriveInit = (setProviderStates) => {
   useEffect(() => {
     const initGDrive = async () => {
       try {
-        if (typeof window.gapi !== "undefined") {
+        if (window.gapi !== undefined) {
           await initializeGoogleDrive();
           const signedIn = isSignedInToGoogleDrive();
           setProviderStates((prev) => ({
@@ -197,7 +197,7 @@ function createConnectHandler({
           google_drive: { ...prev.google_drive, connected: true, user },
         }));
       } else {
-        const _result = await connectProvider(providerId);
+        await connectProvider(providerId);
         const state = getProviderState(providerId);
         setProviderStates((prev) => ({
           ...prev,

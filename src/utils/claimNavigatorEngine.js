@@ -564,20 +564,22 @@ const determineDecisionActions = (claim) => {
 
   switch (decisionInfo.outcome) {
     case DECISION_OUTCOMES.GRANTED.code:
-      actions.push({
-        type: ACTION_TYPES.CELEBRATE,
-        title: "🎉 Claim Granted!",
-        description: `Congratulations! You were rated at ${decisionInfo.ratingPercentage || "?"}%. Verify: 1) The rating matches your symptoms, 2) The effective date matches your ITF.`,
-        urgency: URGENCY_LEVELS.LOW.code,
-      });
-      // Check if rating seems low
-      actions.push({
-        type: ACTION_TYPES.REVIEW_DECISION,
-        title: "Verify Your Rating",
-        description:
-          "Compare your rating to 38 CFR criteria. If your symptoms warrant a higher rating, consider filing for an increase.",
-        urgency: URGENCY_LEVELS.MEDIUM.code,
-      });
+      actions.push(
+        {
+          type: ACTION_TYPES.CELEBRATE,
+          title: "🎉 Claim Granted!",
+          description: `Congratulations! You were rated at ${decisionInfo.ratingPercentage || "?"}%. Verify: 1) The rating matches your symptoms, 2) The effective date matches your ITF.`,
+          urgency: URGENCY_LEVELS.LOW.code,
+        },
+        // Check if rating seems low
+        {
+          type: ACTION_TYPES.REVIEW_DECISION,
+          title: "Verify Your Rating",
+          description:
+            "Compare your rating to 38 CFR criteria. If your symptoms warrant a higher rating, consider filing for an increase.",
+          urgency: URGENCY_LEVELS.MEDIUM.code,
+        },
+      );
       break;
 
     case DECISION_OUTCOMES.GRANTED_LOW.code:

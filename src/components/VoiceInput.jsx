@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -278,7 +277,7 @@ const VoicePrivacyTooltip = () => (
 const VoiceListeningTooltip = () => (
   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg shadow-lg whitespace-nowrap z-10">
     <span className="flex items-center gap-1.5">
-      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>{" "}
       Listening... Click again when done
     </span>
     <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-red-600"></div>
@@ -334,9 +333,8 @@ const VoiceSafetyPromptBody = () => (
     </div>
 
     <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-      You&apos;re about to speak aloud about your health conditions.
+      You&apos;re about to speak aloud about your health conditions.{" "}
       <strong className="text-gray-800 dark:text-white">
-        {" "}
         Are you in a private place
       </strong>{" "}
       where you feel safe discussing personal medical information?
@@ -455,7 +453,6 @@ const VoiceInputButton = ({
   showLabel = false,
   showPrivacyHint = true,
 }) => {
-  const { _t } = useLanguage();
   const {
     showTooltip,
     setShowTooltip,

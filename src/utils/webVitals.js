@@ -64,7 +64,7 @@ function observeLCP() {
   try {
     const po = new PerformanceObserver((list) => {
       const entries = list.getEntries();
-      last = entries[entries.length - 1].startTime;
+      last = entries.at(-1).startTime;
     });
     po.observe({ type: "largest-contentful-paint", buffered: true });
     const finalize = () => {
@@ -87,7 +87,7 @@ function observeCLS() {
       for (const entry of list.getEntries()) {
         if (entry.hadRecentInput) continue;
         const first = sessionEntries[0];
-        const last = sessionEntries[sessionEntries.length - 1];
+        const last = sessionEntries.at(-1);
         if (
           sessionEntries.length &&
           (entry.startTime - last.startTime > 1000 ||

@@ -60,7 +60,7 @@ function AnalyticsDisclosureBox({ t }) {
           {t("privacyPolicy", "analyticsGDPR").split(".")[1]?.trim() ||
             "Read their privacy policy"}
         </a>
-        .
+        {"."}
       </p>
     </div>
   );

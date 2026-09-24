@@ -33,7 +33,7 @@ const CONFIG = {
 };
 
 // Storage keys to monitor for changes
-const MONITORED_STORAGE_KEYS = [
+const MONITORED_STORAGE_KEYS = new Set([
   "vet_rate_veteran_profile",
   "vet_rate_my_ratings",
   "vet_rate_saved_claims",
@@ -46,7 +46,7 @@ const MONITORED_STORAGE_KEYS = [
   "vet_rate_evidence_timeline",
   "vet_rate_gap_analyses",
   "vet_rate_nexus_letters",
-];
+]);
 
 // ============================================================================
 // INTERNAL STATE
@@ -279,7 +279,7 @@ const downloadBackup = async (backup) => {
     a.download = `VetRate-Backup-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    a.remove();
     URL.revokeObjectURL(url);
 
     // Update last download time
@@ -351,44 +351,32 @@ export const restoreFromBackup = async (backupId) => {
  * @returns {Promise<Object>} Import result
  */
 export const importBackupFile = async (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+  const backup = JSON.parse(await file.text());
 
-    reader.onload = async (e) => {
-      try {
-        const backup = JSON.parse(e.target.result);
+  // Validate backup format
+  if (!backup.version || !backup.data || !backup.timestamp) {
+    throw new Error("Invalid backup file format");
+  }
 
-        // Validate backup format
-        if (!backup.version || !backup.data || !backup.timestamp) {
-          reject(new Error("Invalid backup file format"));
-          return;
-        }
-
-        // Restore data
-        Object.entries(backup.data).forEach(([key, value]) => {
-          if (value === undefined) return;
-          localStorage.setItem(key, JSON.stringify(value));
-        });
-
-        // Save to IndexedDB for history
-        await saveBackupToIndexedDB(backup);
-
-        resolve({
-          success: true,
-          timestamp: backup.timestamp,
-          message: "Backup imported successfully",
-        });
-
-        // Reload page
-        setTimeout(() => window.location.reload(), 1000);
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    reader.onerror = () => reject(reader.error);
-    reader.readAsText(file);
+  // Restore data
+  Object.entries(backup.data).forEach(([key, value]) => {
+    if (value === undefined) return;
+    localStorage.setItem(key, JSON.stringify(value));
   });
+
+  // Save to IndexedDB for history
+  await saveBackupToIndexedDB(backup);
+
+  const result = {
+    success: true,
+    timestamp: backup.timestamp,
+    message: "Backup imported successfully",
+  };
+
+  // Reload page
+  setTimeout(() => window.location.reload(), 1000);
+
+  return result;
 };
 
 /**
@@ -453,7 +441,7 @@ export const startAutoBackup = () => {
     originalSetItem.call(localStorage, key, value);
 
     // Trigger backup if it's a monitored key
-    if (MONITORED_STORAGE_KEYS.includes(key)) {
+    if (MONITORED_STORAGE_KEYS.has(key)) {
       triggerBackup();
     }
   };
@@ -497,8 +485,7 @@ export const getBackupStats = async () => {
     totalBackups: backups.length,
     totalSizeBytes: totalSize,
     totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-    oldestBackup:
-      backups.length > 0 ? backups[backups.length - 1].timestamp : null,
+    oldestBackup: backups.length > 0 ? backups.at(-1).timestamp : null,
     newestBackup: backups.length > 0 ? backups[0].timestamp : null,
   };
 };

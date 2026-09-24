@@ -19,7 +19,7 @@ function PathfinderModalHeader({ onClose, onReportBug }) {
               id="pathfinder-modal-title"
               className="text-xl font-bold text-white flex items-center gap-2"
             >
-              The Pathfinder
+              The Pathfinder{" "}
               <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
                 AI
               </span>

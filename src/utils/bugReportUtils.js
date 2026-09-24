@@ -152,13 +152,7 @@ export const getAppState = (appState = {}) => {
     searchTerm = "",
     results = [],
     selectedResult = null,
-    _hasSearched = false,
-    _showSecondaryScout = false,
-    _showSecondaryScoutLauncher = false,
     showNexusBuilder = false,
-    _showMyPacket = false,
-    _showCAPSimulator = false,
-    _showVAResources = false,
     userConditions = [],
     nexusBuilderData = null,
     error = null,
@@ -650,7 +644,7 @@ export const copyToClipboard = async (text) => {
       textArea.focus();
       textArea.select();
       document.execCommand("copy");
-      document.body.removeChild(textArea);
+      textArea.remove();
       return { success: true };
     } catch (fallbackError) {
       return { success: false, error: fallbackError.message };

@@ -204,7 +204,7 @@ function PriorDenialsInput({ priorDenials, setPriorDenials, persistenceMsg }) {
         min="0"
         max="10"
         value={priorDenials}
-        onChange={(e) => setPriorDenials(parseInt(e.target.value) || 0)}
+        onChange={(e) => setPriorDenials(Number.parseInt(e.target.value) || 0)}
         className="w-24 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
       />
       <div className="mt-2 text-sm text-blue-700 dark:text-blue-400">
@@ -289,7 +289,7 @@ function IdentifiedGaps({ gaps }) {
       <ul className="space-y-3">
         {gaps
           .sort((a, b) => b.weight - a.weight)
-          .map((gap, idx) => {
+          .map((gap) => {
             let badgeClassName = "bg-yellow-200 text-yellow-800";
             let badgeLabel = "MEDIUM";
             if (gap.weight >= 4) {
@@ -301,7 +301,7 @@ function IdentifiedGaps({ gaps }) {
             }
 
             return (
-              <li key={idx} className="flex items-start gap-2">
+              <li key={gap.risk} className="flex items-start gap-2">
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-bold ${badgeClassName}`}
                 >
@@ -384,8 +384,11 @@ function RemandReasonsReference({ showDetails, setShowDetails }) {
             <h5 className="font-semibold text-yellow-700 dark:text-yellow-300 mb-2">
               Top Remand Reasons
             </h5>
-            {TOP_REMAND_REASONS.slice(0, 5).map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm mb-1">
+            {TOP_REMAND_REASONS.slice(0, 5).map((item) => (
+              <div
+                key={item.reason}
+                className="flex justify-between text-sm mb-1"
+              >
                 <span className="text-yellow-600 dark:text-yellow-400">
                   {item.reason}
                 </span>
@@ -399,8 +402,11 @@ function RemandReasonsReference({ showDetails, setShowDetails }) {
             <h5 className="font-semibold text-red-700 dark:text-red-300 mb-2">
               Top Denial Reasons
             </h5>
-            {TOP_DENIAL_REASONS.slice(0, 5).map((item, idx) => (
-              <div key={idx} className="flex justify-between text-sm mb-1">
+            {TOP_DENIAL_REASONS.slice(0, 5).map((item) => (
+              <div
+                key={item.reason}
+                className="flex justify-between text-sm mb-1"
+              >
                 <span className="text-red-600 dark:text-red-400">
                   {item.reason}
                 </span>

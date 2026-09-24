@@ -51,13 +51,13 @@ export default function MusterCallFooter({
       <div className="text-sm text-gray-600 dark:text-gray-400">
         {useSequentialMode ? (
           <span className="flex items-center gap-2">
-            <span className="text-green-600 dark:text-green-400">●</span>
+            <span className="text-green-600 dark:text-green-400">●</span>{" "}
             Formation Mode (Sequential)
           </span>
         ) : (
           <span className="flex items-center gap-2">
-            <span className="text-blue-600 dark:text-blue-400">●</span>
-            Batch Mode
+            <span className="text-blue-600 dark:text-blue-400">●</span> Batch
+            Mode
           </span>
         )}
       </div>

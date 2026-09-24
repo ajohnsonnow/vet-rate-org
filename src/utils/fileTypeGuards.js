@@ -13,7 +13,7 @@
  * @returns {string}
  */
 export const getFileExtension = (filename) => {
-  const match = String(filename || "").match(/\.[^.]+$/);
+  const match = /\.[^.]+$/.exec(String(filename || ""));
   return match ? match[0].toLowerCase() : "";
 };
 

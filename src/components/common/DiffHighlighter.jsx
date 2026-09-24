@@ -10,8 +10,6 @@
  * @version 1.0.0
  */
 
-import { useLanguage } from "../../contexts/LanguageContext";
-
 /**
  * Issue types and their corresponding colors
  */
@@ -67,16 +65,6 @@ const renderBuffer = (buffer, issue, key) => {
 
   // Get color scheme for this issue type
   const colors = ISSUE_COLORS[issue.type] || ISSUE_COLORS.default;
-
-  // Build tooltip text
-  const _tooltipText = [
-    `${colors.icon} ${issue.type}`,
-    issue.severity ? `Severity: ${issue.severity}` : null,
-    issue.explanation || null,
-    issue.fix_suggestion ? `💡 Fix: ${issue.fix_suggestion}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
 
   return (
     <span
@@ -169,8 +157,6 @@ const IssueLegend = () => (
 );
 
 const DiffHighlighter = ({ text, issues = [], className = "" }) => {
-  const { _t } = useLanguage();
-
   // If no text, return nothing
   if (!text) return null;
 
@@ -208,7 +194,6 @@ const getSeverityBadgeClass = (severity) => {
  * Standalone issue card for detailed view
  */
 export const IssueCard = ({ issue, _index }) => {
-  const { _t } = useLanguage();
   const colors = ISSUE_COLORS[issue.type] || ISSUE_COLORS.default;
 
   return (

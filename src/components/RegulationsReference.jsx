@@ -23,7 +23,6 @@ import {
 
 const cfr3Regulations = getCfr3Regulations();
 const title38Regulations = getTitle38Regulations();
-import { useLanguage } from "../contexts/LanguageContext";
 import { sanitizeUrl } from "../utils/sanitize";
 import ResponsiveModal from "./common/ResponsiveModal";
 
@@ -218,9 +217,9 @@ const RegulationCategoryCard = ({
             View official text at eCFR.gov
           </a>
 
-          {category.regulations.map((reg, index) =>
+          {category.regulations.map((reg) =>
             !matchesSearch(reg) ? null : (
-              <RegulationItem key={index} reg={reg} />
+              <RegulationItem key={reg.section} reg={reg} />
             ),
           )}
         </div>
@@ -331,9 +330,9 @@ const AppealRegulationItem = ({ reg }) => (
         <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           Docket Options:
         </h5>
-        {reg.docketDetails.map((docket, i) => (
+        {reg.docketDetails.map((docket) => (
           <div
-            key={i}
+            key={docket.name}
             className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded p-3"
           >
             <h6 className="font-bold text-gray-800 dark:text-gray-100">
@@ -430,9 +429,9 @@ const AppealCategoryCard = ({
             </a>
           )}
 
-          {category.regulations.map((reg, index) =>
+          {category.regulations.map((reg) =>
             !matchesSearch(reg) ? null : (
-              <AppealRegulationItem key={index} reg={reg} />
+              <AppealRegulationItem key={reg.section} reg={reg} />
             ),
           )}
         </div>
@@ -449,27 +448,25 @@ const AppealTimelines = () => {
         ? Appeal Deadlines
       </h3>
       <div className="space-y-3">
-        {title38Regulations.bvaAppeals.appealTimelines.map(
-          (timeline, index) => (
-            <div
-              key={index}
-              className="p-3 border-2 border-red-100 dark:border-red-900 bg-red-50/50 dark:bg-red-900/20 rounded-lg"
-            >
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-red-600 dark:text-red-400" />
-                <span className="font-bold text-red-800 dark:text-red-200">
-                  {timeline.deadline}
-                </span>
-              </div>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                {timeline.description}
-              </p>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                ?? {timeline.consequence}
-              </p>
+        {title38Regulations.bvaAppeals.appealTimelines.map((timeline) => (
+          <div
+            key={timeline.deadline}
+            className="p-3 border-2 border-red-100 dark:border-red-900 bg-red-50/50 dark:bg-red-900/20 rounded-lg"
+          >
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <span className="font-bold text-red-800 dark:text-red-200">
+                {timeline.deadline}
+              </span>
             </div>
-          ),
-        )}
+            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+              {timeline.description}
+            </p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+              ?? {timeline.consequence}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -483,9 +480,9 @@ const AppealForms = () => {
         ?? Appeal Forms
       </h3>
       <div className="grid gap-3 sm:grid-cols-2">
-        {title38Regulations.bvaAppeals.keyForms.map((form, index) => (
+        {title38Regulations.bvaAppeals.keyForms.map((form) => (
           <a
-            key={index}
+            key={form.url}
             href={form.url}
             target="_blank"
             rel="noopener noreferrer"
@@ -588,22 +585,20 @@ const PensionComparisonTable = () => {
       <table className="w-full text-sm border-collapse">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-700">
-            {title38Regulations.pension.comparisonChart.columns.map(
-              (col, i) => (
-                <th
-                  key={i}
-                  className="p-2 text-left border border-gray-300 dark:border-gray-600 font-bold"
-                >
-                  {col}
-                </th>
-              ),
-            )}
+            {title38Regulations.pension.comparisonChart.columns.map((col) => (
+              <th
+                key={col}
+                className="p-2 text-left border border-gray-300 dark:border-gray-600 font-bold"
+              >
+                {col}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {title38Regulations.pension.comparisonChart.rows.map((row, i) => (
             <tr
-              key={i}
+              key={row[0]}
               className={
                 i % 2 === 0
                   ? "bg-white dark:bg-gray-800"
@@ -717,9 +712,9 @@ const PensionCategoryCard = ({
             </a>
           )}
 
-          {category.regulations.map((reg, index) =>
+          {category.regulations.map((reg) =>
             !matchesSearch(reg) ? null : (
-              <PensionRegulationItem key={index} reg={reg} />
+              <PensionRegulationItem key={reg.section} reg={reg} />
             ),
           )}
         </div>
@@ -775,9 +770,9 @@ const FormsTab = () => (
     </p>
 
     <div className="grid gap-4 sm:grid-cols-2">
-      {cfr3Regulations.keyForms.map((form, index) => (
+      {cfr3Regulations.keyForms.map((form) => (
         <a
-          key={index}
+          key={form.url}
           href={form.url}
           target="_blank"
           rel="noopener noreferrer"
@@ -817,9 +812,9 @@ const DeadlinesTab = () => (
     </p>
 
     <div className="space-y-4">
-      {cfr3Regulations.criticalTimelines.map((timeline, index) => (
+      {cfr3Regulations.criticalTimelines.map((timeline) => (
         <div
-          key={index}
+          key={timeline.deadline}
           className="p-4 border-2 border-red-100 dark:border-red-900 bg-red-50/50 dark:bg-red-900/20 rounded-lg"
         >
           <div className="flex items-start gap-3">
@@ -857,9 +852,9 @@ const MistakesTab = () => (
     </p>
 
     <div className="space-y-4">
-      {cfr3Regulations.commonMistakes.map((mistake, index) => (
+      {cfr3Regulations.commonMistakes.map((mistake) => (
         <div
-          key={index}
+          key={mistake.mistake}
           className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
         >
           <div className="flex items-start gap-3">
@@ -960,8 +955,6 @@ const expandAllCategories = (setExpandedCategories) => {
  * their rights, the claims process, evidence standards, effective dates, and appeal options.
  */
 const RegulationsReference = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   const [expandedCategories, setExpandedCategories] = useState({
     "reasonable-doubt": true, // Open the most important one by default
   });
@@ -989,8 +982,7 @@ const RegulationsReference = ({ onClose }) => {
     reg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     reg.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
     reg.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (reg.veteranTip &&
-      reg.veteranTip.toLowerCase().includes(searchTerm.toLowerCase()));
+    reg.veteranTip?.toLowerCase().includes(searchTerm.toLowerCase());
 
   return (
     <ResponsiveModal

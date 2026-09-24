@@ -10,7 +10,6 @@
 import React, { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getServiceHistory } from "../utils/veteranProfile";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // DD214 Block field definitions with tooltips
 const DD214_FIELDS = {
@@ -556,8 +555,6 @@ function DD214FormSection({ currentSection, formData, onFieldChange }) {
  * DD214 Form Builder Component
  */
 const DD214FormBuilder = ({ onClose, onSave }) => {
-  const { _t } = useLanguage();
-
   const [formData, setFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

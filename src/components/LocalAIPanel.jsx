@@ -183,7 +183,7 @@ const ModelBadgeRow = ({ model, isInstalled, isCurrentlyLoaded }) => (
     )}
     {isCurrentlyLoaded && !model.disabled && (
       <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-500/30 dark:text-blue-300">
-        <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+        <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>{" "}
         ACTIVE
       </span>
     )}
@@ -602,7 +602,7 @@ const ExperimentalFeaturesSection = ({
       <div className="flex-1 space-y-3">
         <div>
           <h3 className="font-bold text-amber-400 flex items-center gap-2">
-            Experimental WebGPU Mode
+            Experimental WebGPU Mode{" "}
             <span className="text-xs px-2 py-0.5 bg-amber-500/30 text-amber-200 rounded-full">
               Advanced
             </span>
@@ -700,8 +700,8 @@ const GPUTechnicalDetails = ({ gpus }) => (
                 Features ({gpu.features.length})
               </summary>
               <div className="mt-1 pl-2 text-gray-600 dark:text-gray-500">
-                {gpu.features.slice(0, 10).map((feat, i) => (
-                  <div key={i}>• {feat}</div>
+                {gpu.features.slice(0, 10).map((feat) => (
+                  <div key={feat}>• {feat}</div>
                 ))}
                 {gpu.features.length > 10 && (
                   <div>• ... and {gpu.features.length - 10} more</div>
@@ -1135,8 +1135,7 @@ const TestGenerateControls = ({
           disabled={!testPrompt.trim()}
           className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          <span>⚡</span>
-          Generate (100% Local)
+          <span>⚡</span> Generate (100% Local)
         </button>
       ) : (
         <button
@@ -1542,7 +1541,7 @@ const useGPUSelectionHandlers = ({
       console.log("✅ GPU selection updated:", result.device);
     } catch (err) {
       console.error("❌ Failed to change GPU:", err);
-      if (err && err.message) {
+      if (err?.message) {
         alert(`Failed to change GPU: ${err.message}`);
       }
     } finally {

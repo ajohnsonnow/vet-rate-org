@@ -1737,8 +1737,12 @@ function PyramidingWarningsSection({ t, pyramiding }) {
         {pyramiding.summary}
       </p>
       <div className="space-y-2">
-        {pyramiding.warnings.map((warning, idx) => (
-          <PyramidingWarningItem key={idx} t={t} warning={warning} />
+        {pyramiding.warnings.map((warning) => (
+          <PyramidingWarningItem
+            key={warning.message}
+            t={t}
+            warning={warning}
+          />
         ))}
       </div>
       <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 italic">
@@ -2251,9 +2255,9 @@ function MyRatingsPyramidingWarning({ t, myRatingsPyramiding }) {
         {myRatingsPyramiding.summary}
       </p>
       <div className="space-y-2 max-h-48 overflow-y-auto">
-        {myRatingsPyramiding.warnings.map((warning, idx) => (
+        {myRatingsPyramiding.warnings.map((warning) => (
           <div
-            key={idx}
+            key={warning.message}
             className="text-xs p-2 bg-white dark:bg-gray-800 rounded border-l-2 border-yellow-500"
           >
             <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">

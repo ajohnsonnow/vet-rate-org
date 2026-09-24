@@ -46,7 +46,7 @@ function formatDate(dateValue) {
   if (!dateValue) return "N/A";
   try {
     const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return String(dateValue);
+    if (Number.isNaN(date.getTime())) return String(dateValue);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -249,7 +249,7 @@ function generateStatementsSection(statements) {
       <div class="statement-content">
         <h4>Statement Text:</h4>
         <div class="statement-text">
-          ${escapeHtml(stmt.statement || stmt.content || "No content").replace(/\n/g, "<br>")}
+          ${escapeHtml(stmt.statement || stmt.content || "No content").replaceAll("\n", "<br>")}
         </div>
       </div>
       ${

@@ -7,7 +7,6 @@ import VersionDropdown from "./VersionDropdown";
 // ConsistencyBadge removed from header - accessed via Tools menu
 import { AIStatusBadge } from "./AIModeSelector";
 import { useTheme } from "../contexts/ThemeContext";
-import { useHelperMode } from "../contexts/HelperModeContext";
 import { hasUnsavedChanges } from "../utils/dataPersistence";
 import { useColorSchemas } from "../hooks/useColorSchemas";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -1443,8 +1442,8 @@ const ResourcesMenuPanel = (props) => (
 
       <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
-      {VETERAN_RESOURCES.map((resource, index) => (
-        <VeteranResourceLink key={index} resource={resource} />
+      {VETERAN_RESOURCES.map((resource) => (
+        <VeteranResourceLink key={resource.name} resource={resource} />
       ))}
     </div>
   </div>
@@ -2015,9 +2014,8 @@ const MobileMenuDrawer = (props) => {
 
 function Header(props) {
   const { isDark, toggleTheme } = useTheme();
-  const { _isHelperMode } = useHelperMode();
-  const { getDropdownClasses, _getColorClass, _colors } = useColorSchemas();
-  const { t, _language } = useLanguage(); // Include language to force re-render on change
+  const { getDropdownClasses } = useColorSchemas();
+  const { t } = useLanguage();
   const dropdownClasses = getDropdownClasses();
 
   const [showResourcesMenu, setShowResourcesMenu] = useState(false);

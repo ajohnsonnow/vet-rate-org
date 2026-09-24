@@ -761,8 +761,7 @@ const getGeminiApiKey = () => {
  * context injection based on the user's prompt.
  */
 const buildCloudSystemPrompt = async (prompt, options) => {
-  const { _buildSystemPromptWithDKB, buildSystemPrompt, buildDKBContext } =
-    await getAISystemPrompts();
+  const { buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
 
   let defaultSystemPrompt = buildSystemPrompt({
     task: options.taskType || "general",
@@ -1254,7 +1253,6 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
  */
 const generateWithWllama = async (prompt, options = {}) => {
   const {
-    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
@@ -1333,7 +1331,6 @@ const generateWithWllama = async (prompt, options = {}) => {
  */
 const generateWithLocalServer = async (prompt, options = {}) => {
   const {
-    _taskType = "general",
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
@@ -2084,7 +2081,7 @@ export const generateAI = async (prompt, options = {}) => {
     _recordGenerationFailure(err);
 
     // Enhance timeout errors with helpful message
-    if (err.message && err.message.includes("AI_TIMEOUT")) {
+    if (err.message?.includes("AI_TIMEOUT")) {
       throw new Error(
         `AI request timed out after ${TIMEOUT_MS / 1000} seconds. ` +
           `This usually means the AI model is still loading, your document is too large, or there are network issues. ` +
@@ -2571,7 +2568,7 @@ function _lookupLocalModelName(modelId) {
   const cleanName = (quantAt === -1 ? modelId : modelId.slice(0, quantAt))
     .replace(/-MLC$/, "") // Remove MLC suffix
     .replace(/-Instruct$/, "") // Remove Instruct suffix
-    .replace(/-/g, " ") // Replace dashes with spaces
+    .replaceAll("-", " ") // Replace dashes with spaces
     .trim();
 
   return cleanName || "Local AI";

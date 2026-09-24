@@ -22,12 +22,7 @@ import {
   addDocumentToVKB,
   saveVKB,
 } from "./veteranKnowledgeBase";
-import {
-  saveDocumentToPacket,
-  generatePacketContext,
-  PACKET_DOC_TYPES,
-  PACKET_DOC_LABELS,
-} from "./myPacketManager";
+import { saveDocumentToPacket, generatePacketContext } from "./myPacketManager";
 import { getSavedClaims } from "./claimsStorage";
 import { getMyRatings } from "./veteranProfile";
 import { normalizeConditionName } from "./conditionName";
@@ -619,4 +614,4 @@ export const saveAnalysisResults = async ({
 };
 
 // Re-export commonly-used constants so tools only need ONE import line
-export { PACKET_DOC_TYPES, PACKET_DOC_LABELS };
+export { PACKET_DOC_TYPES, PACKET_DOC_LABELS } from "./myPacketManager";

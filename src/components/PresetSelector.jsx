@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { AI_PRESETS } from "../utils/unifiedAIService";
 
 const CurrentPresetDetails = ({
@@ -137,7 +136,6 @@ const PresetExplanations = () => (
 );
 
 const PresetSelector = ({ value, onChange, className = "" }) => {
-  const { _t } = useLanguage();
   const [selectedPreset, setSelectedPreset] = useState(value || "BALANCED");
   const [showDetails, setShowDetails] = useState(false);
 

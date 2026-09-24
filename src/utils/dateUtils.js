@@ -17,7 +17,7 @@
  * @returns {Date} A Date constructed at local midnight for that calendar day
  */
 export const formatLocalDate = (dateString) => {
-  if (!dateString) return new Date(NaN);
+  if (!dateString) return new Date(Number.NaN);
   // Defensive: some call sites store a spurious full-ISO string derived
   // from a date-only <input type="date"> value (new Date(v).toISOString())
   // — the intent is still a calendar day, not a real instant, so only the

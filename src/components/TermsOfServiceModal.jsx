@@ -117,9 +117,8 @@ const TosClauseNotMedicalAdvice = () => (
       <p>
         The &quot;Nexus Letter Builder,&quot; &quot;Symptom Database,&quot;
         &quot;Secondary Conditions Scout,&quot; and all other medical-related
-        features are <strong>organizational tools only</strong>-they are
+        features are <strong>organizational tools only</strong>-they are{" "}
         <span className="font-semibold underline">
-          {" "}
           NOT medical diagnostic instruments
         </span>
         .
@@ -142,9 +141,8 @@ const TosClauseNotMedicalAdvice = () => (
       <p className="mt-3 bg-gray-100 p-3 rounded">
         <strong>What We Do:</strong> We help you articulate symptoms in
         medically-recognized terminology and identify potential connections
-        based on VA medical literature.
-        <strong> What We Don&apos;t Do:</strong> Provide medical opinions,
-        diagnoses, or treatment advice.
+        based on VA medical literature. <strong>What We Don&apos;t Do:</strong>{" "}
+        Provide medical opinions, diagnoses, or treatment advice.
       </p>
     </div>
   </section>
@@ -219,14 +217,12 @@ const TosClauseDataVolatility = () => (
         </strong>
         <br />
         If you clear your browser cache, uninstall your browser, or use
-        incognito/private mode,
+        incognito/private mode,{" "}
         <span className="font-bold underline">
-          {" "}
           your data WILL BE PERMANENTLY DELETED
         </span>
-        . Vet-Rate.org has no way to recover lost data.
+        . Vet-Rate.org has no way to recover lost data.{" "}
         <strong>
-          {" "}
           You must regularly export and back up your work using the built-in
           export features.
         </strong>
@@ -267,8 +263,8 @@ const TosClauseNoGuarantees = () => (
       <p className="mt-3 bg-gray-100 p-3 rounded">
         <strong>What We Can Help With:</strong> Organizing your argument,
         identifying relevant medical research, articulating your case clearly,
-        and understanding VA rating criteria.
-        <strong> What We Cannot Control:</strong> How the VA adjudicates your
+        and understanding VA rating criteria.{" "}
+        <strong>What We Cannot Control:</strong> How the VA adjudicates your
         specific claim.
       </p>
     </div>

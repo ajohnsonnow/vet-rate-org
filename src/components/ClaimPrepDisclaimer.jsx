@@ -39,7 +39,7 @@ const ClaimPrepDisclaimer = ({ className = "" }) => (
           >
             va.gov/ogc/apps/accreditation
           </a>
-          .
+          {"."}
         </p>
       </div>
     </div>

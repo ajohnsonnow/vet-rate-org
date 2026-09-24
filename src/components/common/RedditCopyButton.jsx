@@ -12,7 +12,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../../contexts/LanguageContext";
 import { useRedditClipboard } from "../../hooks/useRedditClipboard";
 
 // Reddit brand orange
@@ -82,7 +81,6 @@ const RedditCopyButton = ({
   variant = "default",
   glow = false,
 }) => {
-  const { _t } = useLanguage();
   const { isCopied, copyToClipboard } = useRedditClipboard();
   const [localSanitize, setLocalSanitize] = useState(sanitize);
   const [localLinkCitations, setLocalLinkCitations] = useState(linkCitations);

@@ -1,4 +1,3 @@
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const TermsHeader = ({ onClose }) => (
@@ -443,9 +442,9 @@ const DataStorageIntro = () => (
       </p>
       <p className="text-gray-800">
         Vet-Rate.org is intentionally designed as a{" "}
-        <strong>serverless, browser-based application</strong>
-        to protect your privacy. Vet-Rate.org does not store your data on any
-        servers, in cloud databases, or in any remote location.
+        <strong>serverless, browser-based application</strong> to protect your
+        privacy. Vet-Rate.org does not store your data on any servers, in cloud
+        databases, or in any remote location.
       </p>
     </div>
 
@@ -574,9 +573,9 @@ const NoGuaranteesList = () => (
       </p>
       <p className="text-gray-800">
         Use of Vet-Rate.org, completion of any tools or forms, or implementation
-        of any suggestions does
-        <strong> NOT guarantee, promise, or predict</strong> any specific
-        outcome from the Department of Veterans Affairs.
+        of any suggestions does{" "}
+        <strong>NOT guarantee, promise, or predict</strong> any specific outcome
+        from the Department of Veterans Affairs.
       </p>
     </div>
 
@@ -882,8 +881,6 @@ const FinalStatementSection = () => (
 );
 
 const TermsOfServicePage = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   return (
     <ResponsiveModal
       isOpen

@@ -410,7 +410,7 @@ export default function useConsistencyCheck() {
         // Rules expect a {conditionName: percent} map; My Ratings stores an array
         ratings: Object.fromEntries(
           safeParse("vet_rate_my_ratings", "[]")
-            .filter((r) => r && r.name)
+            .filter((r) => r?.name)
             .map((r) => [r.name, r.rating]),
         ),
         symptomLogs: safeParse("vetrate_symptom_logs", "[]"),

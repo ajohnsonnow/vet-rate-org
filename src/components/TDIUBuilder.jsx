@@ -16,7 +16,6 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
@@ -756,8 +755,6 @@ export default function TDIUBuilder({
   onReportBug,
   onOpenAISettings,
 }) {
-  const { _t } = useLanguage();
-
   // Ref for screenshot/share functionality
   const tdiuContentRef = useRef(null);
 
@@ -815,7 +812,7 @@ function TDIUBuilderHeader({
               id="tdiu-builder-title"
               className="text-xl font-bold text-white flex items-center gap-2"
             >
-              TDIU Work Impact Builder
+              TDIU Work Impact Builder{" "}
               <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
                 AI
               </span>
@@ -1136,7 +1133,7 @@ function AddedDisabilitiesList({ disabilities, removeDisability }) {
       <div className="space-y-3">
         {disabilities.map((d, i) => (
           <div
-            key={i}
+            key={d.condition}
             className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 relative"
           >
             <button
@@ -1689,8 +1686,8 @@ function DetailedLimitations({ vocationalAnalysis }) {
         </h3>
       </div>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        {vocationalAnalysis?.limitations?.map((lim, i) => (
-          <div key={i} className="p-4">
+        {vocationalAnalysis?.limitations?.map((lim) => (
+          <div key={`${lim.condition}-${lim.symptom}`} className="p-4">
             <div className="flex items-start gap-3">
               <span className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-bold rounded">
                 {lim.condition}

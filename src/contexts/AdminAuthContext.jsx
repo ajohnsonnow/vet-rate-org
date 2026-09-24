@@ -96,7 +96,7 @@ const verifyPin = async (pin, hash) => {
   if (pinHash.length !== hash.length) return false;
   let result = 0;
   for (let i = 0; i < pinHash.length; i++) {
-    result |= pinHash.charCodeAt(i) ^ hash.charCodeAt(i);
+    result |= pinHash.codePointAt(i) ^ hash.codePointAt(i);
   }
   return result === 0;
 };

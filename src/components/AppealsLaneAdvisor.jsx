@@ -352,9 +352,9 @@ function RecommendationHeader({ recommendation, laneData, laneStyle }) {
 function RecommendationReasoning({ reasoning }) {
   return (
     <div className="space-y-2 mb-4">
-      {reasoning.map((reason, idx) => (
+      {reasoning.map((reason) => (
         <div
-          key={idx}
+          key={reason}
           className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
         >
           <span className="text-gray-400">→</span>

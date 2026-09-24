@@ -9,7 +9,6 @@
  */
 
 import { useState, useCallback, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   searchPdfForKeyword,
@@ -166,7 +165,7 @@ const SearchBox = ({
           checked={caseSensitive}
           onChange={(e) => setCaseSensitive(e.target.checked)}
           className="rounded"
-        />
+        />{" "}
         Case Sensitive
       </label>
       <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
@@ -175,7 +174,7 @@ const SearchBox = ({
           checked={wholeWord}
           onChange={(e) => setWholeWord(e.target.checked)}
           className="rounded"
-        />
+        />{" "}
         Whole Word Only
       </label>
     </div>
@@ -230,9 +229,9 @@ const ResultsList = ({ results, totalMatches, searchTerm }) => (
       {results.length} locations
     </h3>
     <div className="space-y-3 max-h-96 overflow-y-auto">
-      {results.map((result, index) => (
+      {results.map((result) => (
         <div
-          key={index}
+          key={`${result.page}-${result.context}`}
           className="bg-gray-900 border border-gray-700 rounded-lg p-4"
         >
           <div className="flex items-start justify-between mb-2">
@@ -557,7 +556,7 @@ const useRecordSearchState = () => {
     setIsDragging(false);
 
     const droppedFile = e.dataTransfer?.files?.[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
+    if (droppedFile?.type === "application/pdf") {
       doLoadFile(droppedFile, { setError, setFile, setResults, setFileData });
     } else {
       setError("Please drop in a PDF file.");
@@ -608,7 +607,6 @@ const useRecordSearchState = () => {
 };
 
 const RecordSearch = ({ onClose }) => {
-  const { _t } = useLanguage();
   const s = useRecordSearchState();
 
   return (

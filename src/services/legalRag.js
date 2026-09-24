@@ -151,7 +151,7 @@ export async function embedQuery(text) {
   const out = await e(text, { pooling: "mean", normalize: false });
   const v = new Float32Array(out.data);
   let sum = 0;
-  for (let i = 0; i < v.length; i++) sum += v[i] * v[i];
+  for (const val of v) sum += val * val;
   const norm = Math.sqrt(sum) || 1;
   for (let i = 0; i < v.length; i++) v[i] = v[i] / norm;
   return v;

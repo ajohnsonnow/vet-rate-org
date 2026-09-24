@@ -41,7 +41,7 @@ function aadForVersion(version) {
  * Check if Web Crypto API is available
  */
 export const isCryptoAvailable = () => {
-  return !!(window.crypto && window.crypto.subtle);
+  return !!window.crypto?.subtle;
 };
 
 /**
@@ -94,8 +94,8 @@ const deriveKeyFromPassphrase = async (
 const arrayBufferToBase64 = (buffer) => {
   const bytes = new Uint8Array(buffer);
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (const byte of bytes) {
+    binary += String.fromCodePoint(byte);
   }
   return btoa(binary);
 };
@@ -114,7 +114,7 @@ const base64ToArrayBuffer = (base64) => {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+    bytes[i] = binary.codePointAt(i);
   }
   return bytes.buffer;
 };
@@ -264,9 +264,7 @@ const RECOGNIZED_VERSIONS = new Set(["VR_ENC_V1", "VR_ENC_V2", "VR_ENC_V3"]);
  * Check if a backup is encrypted
  */
 export const isEncryptedBackup = (data) => {
-  return (
-    data && data.encrypted === true && RECOGNIZED_VERSIONS.has(data.version)
-  );
+  return data?.encrypted === true && RECOGNIZED_VERSIONS.has(data.version);
 };
 
 /**
@@ -464,9 +462,9 @@ export const listBackupKeyIds = () => {
   const ids = new Set();
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(KEY_STORAGE_PREFIX)) {
+    if (k?.startsWith(KEY_STORAGE_PREFIX)) {
       ids.add(k.slice(KEY_STORAGE_PREFIX.length));
-    } else if (k && k.startsWith(WRAPPED_KEY_PREFIX)) {
+    } else if (k?.startsWith(WRAPPED_KEY_PREFIX)) {
       ids.add(k.slice(WRAPPED_KEY_PREFIX.length));
     }
   }
@@ -504,7 +502,7 @@ const purgeRotatingTemp = () => {
   const stale = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(ROTATING_KEY_PREFIX)) stale.push(k);
+    if (k?.startsWith(ROTATING_KEY_PREFIX)) stale.push(k);
   }
   stale.forEach((k) => localStorage.removeItem(k));
 };
@@ -540,8 +538,7 @@ export const completePendingRotation = () => {
     marker = null;
   }
   if (
-    !marker ||
-    !marker.meta ||
+    !marker?.meta ||
     typeof marker.meta.salt !== "string" ||
     typeof marker.verifier !== "string"
   ) {
@@ -557,7 +554,7 @@ export const completePendingRotation = () => {
   const tempIds = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(ROTATING_KEY_PREFIX)) {
+    if (k?.startsWith(ROTATING_KEY_PREFIX)) {
       tempIds.push(k.slice(ROTATING_KEY_PREFIX.length));
     }
   }
@@ -629,8 +626,7 @@ const readPendingRotation = () => {
     return null;
   }
   if (
-    !marker ||
-    !marker.meta ||
+    !marker?.meta ||
     typeof marker.meta.salt !== "string" ||
     typeof marker.verifier !== "string"
   ) {
@@ -684,7 +680,7 @@ const unwrapsUnder = async (verifierBytes, kek) => {
 const wrappedKeysReadableUnder = async (kek) => {
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (!k || !k.startsWith(WRAPPED_KEY_PREFIX)) continue;
+    if (!k?.startsWith(WRAPPED_KEY_PREFIX)) continue;
     try {
       await unwrapDEK(localStorage.getItem(k), kek);
     } catch {
@@ -922,7 +918,7 @@ const _exportRecoveryBundle = async () => {
   const wrappedKeys = {};
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(WRAPPED_KEY_PREFIX)) {
+    if (k?.startsWith(WRAPPED_KEY_PREFIX)) {
       wrappedKeys[k.slice(WRAPPED_KEY_PREFIX.length)] = localStorage.getItem(k);
     }
   }
@@ -953,8 +949,7 @@ const _importRecoveryBundle = async (bundle) => {
     );
   }
   if (
-    !bundle ||
-    bundle.format !== RECOVERY_BUNDLE_FORMAT ||
+    bundle?.format !== RECOVERY_BUNDLE_FORMAT ||
     !bundle.meta ||
     typeof bundle.meta.salt !== "string" ||
     typeof bundle.verifier !== "string" ||

@@ -12,7 +12,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
@@ -597,8 +596,6 @@ export default function TimeMachine({
   onClose = null,
   onReportBug,
 }) {
-  const { _t } = useLanguage();
-
   const [itfDate, setItfDate] = useState("");
   const [estimatedRating, setEstimatedRating] = useState(70);
   const [countdown, setCountdown] = useState(null);

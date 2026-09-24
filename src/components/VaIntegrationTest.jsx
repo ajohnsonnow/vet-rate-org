@@ -24,7 +24,6 @@ import {
 } from "../api/va";
 import ResponsiveModal from "./common/ResponsiveModal";
 import VaSandboxTest from "./VaSandboxTest";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Icons from lucide-react
 import {
@@ -555,9 +554,9 @@ function ServiceHistoryEntry({ service }) {
             Deployments:
           </p>
           <div className="flex flex-wrap gap-2">
-            {service.deployments.map((dep, depIdx) => (
+            {service.deployments.map((dep) => (
               <span
-                key={depIdx}
+                key={`${dep.location || dep.country || "Deployment"}-${dep.startDate}`}
                 className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded"
               >
                 {dep.location || dep.country || "Deployment"} (
@@ -1131,8 +1130,6 @@ function VaIntegrationTestModals({
 }
 
 function useVaIntegrationTestState() {
-  const { t: _t } = useLanguage();
-
   // State for sandbox test modal
   const [showSandboxTest, setShowSandboxTest] = useState(false);
 

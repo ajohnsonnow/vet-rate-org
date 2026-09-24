@@ -322,7 +322,7 @@ const DoctorsPacketHeader = ({ onClose, onOpenAISettings }) => (
           id="doctors-packet-title"
           className="flex items-center gap-2 text-xl font-bold text-white"
         >
-          Doctor&apos;s Packet Generator
+          Doctor&apos;s Packet Generator{" "}
           <span className="rounded bg-violet-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
             AI
           </span>
@@ -393,19 +393,19 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Medical mechanism explanation
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Pathophysiological pathways
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Literature/study references
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-green-600 dark:text-green-400">•</span>
+          <span className="mt-1 text-green-600 dark:text-green-400">•</span>{" "}
           Physician template letter
         </li>
       </ul>
@@ -417,20 +417,20 @@ const ConsentFeatureGrid = () => (
       </h4>
       <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           This is <strong>research</strong>, not a diagnosis
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           Doctor must review and sign
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>{" "}
           Uses your free Gemini API key
         </li>
         <li className="flex items-start gap-2">
-          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span>
-          No personal data is sent
+          <span className="mt-1 text-amber-600 dark:text-amber-400">•</span> No
+          personal data is sent
         </li>
       </ul>
     </div>
@@ -731,7 +731,7 @@ const ResultPathwaysAndLiterature = ({ packetData }) => (
         <ul className="space-y-3">
           {packetData.data.key_pathways.map((pathway, i) => (
             <li
-              key={i}
+              key={pathway}
               className="flex items-start gap-3 text-gray-700 dark:text-gray-300 print:text-black"
             >
               <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 print:bg-gray-200 print:text-black">
@@ -750,9 +750,9 @@ const ResultPathwaysAndLiterature = ({ packetData }) => (
           Supporting Medical Literature
         </h3>
         <ul className="space-y-2">
-          {packetData.data.literature_topics.map((topic, i) => (
+          {packetData.data.literature_topics.map((topic) => (
             <li
-              key={i}
+              key={topic}
               className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
             >
               <DocumentIcon />
@@ -772,9 +772,9 @@ const ResultRiskFactors = ({ packetData }) =>
         Relevant Risk Factors
       </h3>
       <ul className="space-y-2">
-        {packetData.data.risk_factors.map((factor, i) => (
+        {packetData.data.risk_factors.map((factor) => (
           <li
-            key={i}
+            key={factor}
             className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300 print:text-black"
           >
             <span className="text-amber-600 dark:text-amber-400 print:text-black">

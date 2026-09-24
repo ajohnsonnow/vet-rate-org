@@ -448,9 +448,9 @@ function FacilitiesApiCard({
           <p className="text-green-600 dark:text-green-400 font-medium">
             ✓ Found {facilities.length} facilities
           </p>
-          {facilities.slice(0, 2).map((f, i) => (
+          {facilities.slice(0, 2).map((f) => (
             <p
-              key={i}
+              key={f.name}
               className="text-xs text-gray-600 dark:text-gray-400 truncate mt-1"
             >
               • {f.name}
@@ -585,9 +585,9 @@ function BenefitsReferenceCard({
           <p className="text-green-600 dark:text-green-400 font-medium">
             ✓ Found {disabilities.length} disabilities
           </p>
-          {disabilities.slice(0, 3).map((d, i) => (
+          {disabilities.slice(0, 3).map((d) => (
             <p
-              key={i}
+              key={d.name}
               className="text-xs text-gray-600 dark:text-gray-400 truncate mt-1"
             >
               • {d.name}
@@ -830,9 +830,9 @@ function ServiceHistoryCard({
     if (serviceHistory && serviceHistory.length > 0) {
       return (
         <div className="space-y-2">
-          {serviceHistory.map((s, i) => (
+          {serviceHistory.map((s) => (
             <div
-              key={i}
+              key={s.startDate}
               className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
             >
               <p className="font-medium text-gray-900 dark:text-white">
@@ -894,9 +894,9 @@ function ClaimsCard({
     if (claims && claims.length > 0) {
       return (
         <div className="space-y-2">
-          {claims.slice(0, 3).map((c, i) => (
+          {claims.slice(0, 3).map((c) => (
             <div
-              key={i}
+              key={c.dateFiled}
               className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
             >
               <p className="font-medium text-gray-900 dark:text-white">
@@ -963,9 +963,9 @@ function AppealableIssuesCard({
     if (appealableIssues && appealableIssues.length > 0) {
       return (
         <div className="space-y-2">
-          {appealableIssues.slice(0, 3).map((issue, i) => (
+          {appealableIssues.slice(0, 3).map((issue) => (
             <div
-              key={i}
+              key={issue.subject}
               className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
             >
               <p className="font-medium text-gray-900 dark:text-white">
@@ -1033,9 +1033,9 @@ function AppealsStatusCard({
     if (appealsStatus && appealsStatus.length > 0) {
       return (
         <div className="space-y-2">
-          {appealsStatus.slice(0, 3).map((appeal, i) => (
+          {appealsStatus.slice(0, 3).map((appeal) => (
             <div
-              key={i}
+              key={`${appeal.type}-${appeal.programArea}`}
               className="bg-white dark:bg-gray-800 rounded-lg p-3 text-sm"
             >
               <p className="font-medium text-gray-900 dark:text-white capitalize">

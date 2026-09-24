@@ -1032,7 +1032,7 @@ function SetupTab({
         <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/20 text-sm font-bold text-cyan-600 dark:text-cyan-400">
             1
-          </span>
+          </span>{" "}
           Choose Your AI
         </h3>
 

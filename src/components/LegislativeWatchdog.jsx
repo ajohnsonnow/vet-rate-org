@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -365,9 +364,9 @@ const UpdateCardAffectedConditions = ({ affectedConditions }) => (
       🎯 Conditions Affected:
     </p>
     <div className="flex flex-wrap gap-1">
-      {affectedConditions.map((condition, idx) => (
+      {affectedConditions.map((condition) => (
         <span
-          key={idx}
+          key={condition}
           className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs rounded-full"
         >
           {condition}
@@ -607,7 +606,7 @@ const WhyTrackRuleChanges = () => (
           When the VA <strong>proposes changes to rating criteria</strong> (like
           Tinnitus or Sleep Apnea), veterans who file{" "}
           <strong>BEFORE the change</strong> often keep their current rating.
-          Don&apos;t get caught off guard-
+          Don&apos;t get caught off guard-{" "}
           <strong>file early if you see changes coming</strong>.
         </p>
       </div>
@@ -823,15 +822,12 @@ function computeAlertCounts(allUpdates) {
 }
 
 function useLegislativeWatchdogState() {
-  const { _t } = useLanguage();
-
   const [loading, setLoading] = useState(true);
   const [federalRegisterDocs, setFederalRegisterDocs] = useState([]);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all"); // 'all', 'proposed', 'active', 'urgent'
   const [searchTerm, setSearchTerm] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [_showAISettings, _setShowAISettings] = useState(false);
   const [analyzingDoc, setAnalyzingDoc] = useState(null);
   const [aiAnalysis, setAIAnalysis] = useState({});
 

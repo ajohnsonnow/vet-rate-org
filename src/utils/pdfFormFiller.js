@@ -1098,7 +1098,7 @@ async function createBuddyStatementPdf(data) {
   const lineHeight = 14;
 
   const page = pdfDoc.addPage([612, 792]);
-  const { _width, height } = page.getSize();
+  const { height } = page.getSize();
   let y = height - 50;
   const adjustY = (delta) => {
     y += delta;
@@ -1139,7 +1139,7 @@ async function createBuddyStatementPdf(data) {
 
   // Check if we need a second page
   if (y < 200) {
-    const _page2 = pdfDoc.addPage([612, 792]);
+    pdfDoc.addPage([612, 792]);
     y = height - 50;
   }
 
@@ -1316,7 +1316,7 @@ async function createPersonalStatementPdf(data) {
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   let currentPage = pdfDoc.addPage([612, 792]);
-  const { _width, height } = currentPage.getSize();
+  const { height } = currentPage.getSize();
   let y = height - 50;
   const adjustY = (delta) => {
     y += delta;
@@ -2642,7 +2642,7 @@ export async function fillAndDownloadForm(formType, data) {
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 
   return { success: true, fileName };

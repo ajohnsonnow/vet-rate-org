@@ -13,7 +13,6 @@ import {
   WifiOff,
   RefreshCw,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * Toast severity levels
@@ -75,7 +74,6 @@ const Toast = ({
   onClose,
   onAction,
 }) => {
-  const { _t } = useLanguage();
   const [isExiting, setIsExiting] = useState(false);
 
   // Errors, warnings, and network drops interrupt (assertive); success/info
@@ -173,9 +171,7 @@ export const ToastContainer = ({ toasts, onClose, onAction }) => {
             key={toast.id}
             {...toast}
             onClose={onClose}
-            onAction={() =>
-              onAction && onAction(toast.id, toast.action?.callback)
-            }
+            onAction={() => onAction?.(toast.id, toast.action?.callback)}
           />
         ))}
       </div>

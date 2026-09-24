@@ -22,7 +22,6 @@ import {
   Shield,
   X,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Branch colors
@@ -106,9 +105,9 @@ const PublicationCard = ({ publication, onViewDetails }) => {
 
         {/* Use For Tags */}
         <div className="flex flex-wrap gap-1 mb-3">
-          {publication.useFor?.slice(0, 3).map((use, idx) => (
+          {publication.useFor?.slice(0, 3).map((use) => (
             <span
-              key={idx}
+              key={use}
               className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-300 rounded-full"
             >
               {use}
@@ -253,9 +252,9 @@ const PublicationDetailsModal = ({ publication, onClose }) => {
             Useful For
           </h4>
           <div className="flex flex-wrap gap-2">
-            {publication.useFor?.map((use, idx) => (
+            {publication.useFor?.map((use) => (
               <span
-                key={idx}
+                key={use}
                 className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm"
               >
                 {use}
@@ -613,7 +612,6 @@ const VAOnlineResources = () => (
  * Main Publications Library Component
  */
 export default function PublicationsLibrary() {
-  const { _t } = useLanguage();
   const { publications, loading, error } = usePublicationsIndex();
   const {
     searchQuery,

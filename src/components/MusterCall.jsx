@@ -22,7 +22,6 @@
  */
 
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useToast } from "../contexts/ToastContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import useMusterCallOrchestration from "../hooks/useMusterCallOrchestration";
@@ -43,11 +42,10 @@ export default function MusterCall({
   onProcessComplete,
   onOpenDD214Analyzer,
 }) {
-  const { t: _t } = useLanguage();
   const toast = useToast();
   // NOTE: toggle between Formation (sequential) and legacy batch mode is
   // currently locked to sequential; see FormationLineup for the UI path.
-  const [useSequentialMode, _setUseSequentialMode] = useState(true);
+  const [useSequentialMode] = useState(true);
 
   const {
     formationQueue,

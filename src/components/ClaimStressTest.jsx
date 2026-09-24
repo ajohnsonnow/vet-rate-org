@@ -25,7 +25,7 @@ const checkTimelineGap = (text) => {
   const yearPattern = /\b(19|20)\d{2}\b/g;
   const years = text
     .match(yearPattern)
-    ?.map((y) => parseInt(y))
+    ?.map((y) => Number.parseInt(y))
     .sort();
 
   if (!years || years.length < 2) return null;
@@ -298,7 +298,7 @@ const StressTestHeader = ({ onClose, onReportBug }) => (
         id="claim-stress-title"
         className="mb-2 flex items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
       >
-        ⚔️ The War Game - Red Team Simulator
+        ⚔️ The War Game - Red Team Simulator{" "}
         <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
           AI
         </span>
@@ -435,7 +435,7 @@ const LoadFromPacketSection = ({
       onClick={() => setShowPacketSelector(!showPacketSelector)}
       className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition flex items-center justify-center gap-2"
     >
-      📁 Load from My Packet
+      📁 Load from My Packet{" "}
       <span className="text-blue-200 text-sm">
         ({savedClaims.length} claims, {savedForms.length} forms)
       </span>
@@ -551,9 +551,9 @@ const WeaknessesPanel = ({ weaknesses, getSeverityColor }) => (
       🚨 Weaknesses Detected: {weaknesses.length}
     </h3>
     <div className="space-y-3">
-      {weaknesses.map((weakness, idx) => (
+      {weaknesses.map((weakness) => (
         <div
-          key={idx}
+          key={weakness.description}
           className={`border-l-4 ${getSeverityColor(weakness.severity)} rounded bg-gray-100 p-4 dark:bg-gray-800`}
         >
           <div className="flex items-center justify-between mb-2">
@@ -594,7 +594,7 @@ const PracticeQuestionsPanel = ({
     <div className="space-y-4">
       {questions.map((q, idx) => (
         <div
-          key={idx}
+          key={q.question}
           className="rounded border border-gray-200 bg-gray-100 p-4 dark:border-gray-700 dark:bg-gray-800"
         >
           {/* Question */}
@@ -772,7 +772,7 @@ const useStressTestState = (claimData) => {
   const [savedClaims, setSavedClaims] = useState([]);
   const [savedStatements, setSavedStatements] = useState([]);
   const [savedForms, setSavedForms] = useState([]);
-  const [_veteranProfile, setVeteranProfile] = useState({});
+  const [, setVeteranProfile] = useState({});
   const [showPacketSelector, setShowPacketSelector] = useState(false);
   const [selectedPacketItem, setSelectedPacketItem] = useState(null);
 

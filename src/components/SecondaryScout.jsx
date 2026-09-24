@@ -521,7 +521,7 @@ function SecondaryClaimsGrid({
     <div className="grid grid-cols-1 gap-4">
       {filteredSuggestions.map((suggestion, index) => (
         <SecondaryConditionCard
-          key={index}
+          key={`${suggestion.secondaryCondition}-${suggestion.primaryCondition}`}
           suggestion={suggestion}
           isExpanded={selectedCondition === index}
           onToggle={() =>
@@ -949,8 +949,8 @@ function MedicalEvidenceSection({ evidenceList, evidenceType, t }) {
         <p className="text-xs text-gray-500 mb-2 italic">{evidenceType}</p>
       )}
       <ul className="space-y-2">
-        {evidenceList.map((citation, idx) => (
-          <li key={idx} className="flex items-start text-sm text-gray-700">
+        {evidenceList.map((citation) => (
+          <li key={citation} className="flex items-start text-sm text-gray-700">
             <svg
               className="w-4 h-4 mr-2 mt-0.5 text-green-600 flex-shrink-0"
               fill="currentColor"

@@ -540,7 +540,7 @@ const ResultsStep = ({
       </div>
       <ol className="space-y-3">
         {analysis.nextSteps.map((step, index) => (
-          <li key={index} className="flex gap-3">
+          <li key={step} className="flex gap-3">
             <span className="font-bold text-blue-600 flex-shrink-0">
               {index + 1}.
             </span>

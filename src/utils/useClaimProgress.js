@@ -136,7 +136,7 @@ const MILESTONES = [
     alternateKeys: ["medical_records_reviewed", "str_reviewed", "pmr_reviewed"],
     checkCompleted: (data, altData) => {
       if (data === "true" || data === "reviewed") return true;
-      if (altData?.some((d) => d === "true")) return true;
+      if (altData?.includes("true")) return true;
       try {
         const parsed = JSON.parse(data);
         return !!(parsed?.reviewed || parsed?.str || parsed?.pmr);
@@ -206,7 +206,7 @@ const MILESTONES = [
     alternateKeys: ["buddy_statements", "lay_statements", "witness_statements"],
     checkCompleted: (data, altData) => {
       if (data === "true") return true;
-      if (altData?.some((d) => d === "true")) return true;
+      if (altData?.includes("true")) return true;
       try {
         const parsed = JSON.parse(data || altData?.[0]);
         if (Array.isArray(parsed)) return parsed.length > 0;
@@ -279,7 +279,7 @@ const MILESTONES = [
     alternateKeys: ["cp_exam_prepared", "exam_prep_reviewed"],
     checkCompleted: (data, altData) => {
       if (data === "true") return true;
-      if (altData?.some((d) => d === "true")) return true;
+      if (altData?.includes("true")) return true;
       try {
         const parsed = JSON.parse(data);
         return !!(parsed?.completed || parsed?.reviewed);
@@ -354,7 +354,7 @@ const MILESTONES = [
         const parsed = JSON.parse(data || altData?.[0]);
         return !!(parsed?.created || parsed?.active);
       } catch {
-        return data === "true" || altData?.some((d) => d === "true");
+        return data === "true" || altData?.includes("true");
       }
     },
     icon: "🗺️",

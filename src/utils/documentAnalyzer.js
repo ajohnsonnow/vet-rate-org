@@ -13,16 +13,12 @@
  */
 
 import mammoth from "mammoth";
-import {
-  analyzePDF,
-  OCR_STATES,
-  getProgressStyling as getOCRProgressStyling,
-} from "./ocr";
+import { analyzePDF, OCR_STATES } from "./ocr";
 import { describePdfPasswordError } from "./fileTypeGuards";
 
 // Re-export for convenience
 export { OCR_STATES };
-export const getProgressStyling = getOCRProgressStyling;
+export { getProgressStyling } from "./ocr";
 
 /**
  * Supported file types and their MIME types
@@ -112,26 +108,12 @@ export const getAcceptString = () => {
 /**
  * Read file as ArrayBuffer
  */
-const readFileAsArrayBuffer = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsArrayBuffer(file);
-  });
-};
+const readFileAsArrayBuffer = (file) => file.arrayBuffer();
 
 /**
  * Read file as text
  */
-const readFileAsText = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsText(file);
-  });
-};
+const readFileAsText = (file) => file.text();
 
 /**
  * Analyze PDF file
@@ -258,9 +240,9 @@ async function analyzeRTFDocument(file, onProgress) {
       .replace(/\\[a-z]+-?\d* ?/g, "") // Remove RTF commands
       .replace(/[{}]/g, "") // Remove braces
       .replace(/\\'[0-9a-f]{2}/g, " ") // Remove escaped chars
-      .replace(/\\\*/g, "") // Remove escaped asterisks
-      .replace(/\\~/g, " ") // Non-breaking spaces
-      .replace(/\\_/g, "-") // Non-breaking hyphens
+      .replaceAll("\\*", "") // Remove escaped asterisks
+      .replaceAll("\\~", " ") // Non-breaking spaces
+      .replaceAll("\\_", "-") // Non-breaking hyphens
       .replace(/\n{3,}/g, "\n\n") // Normalize line breaks
       .trim();
 

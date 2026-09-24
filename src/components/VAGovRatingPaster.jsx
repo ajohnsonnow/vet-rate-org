@@ -68,8 +68,7 @@ const ParseFooter = ({ pasteText, setPasteText, isParsing, handleParse }) => (
         </>
       ) : (
         <>
-          <span className="text-lg">🔍</span>
-          Parse Ratings
+          <span className="text-lg">🔍</span> Parse Ratings
         </>
       )}
     </button>
@@ -138,8 +137,7 @@ const ConfirmFooter = ({
 const RatingPasterInstructions = ({ onHide }) => (
   <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg">
     <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
-      <span className="text-xl">💡</span>
-      How to Copy Your Ratings
+      <span className="text-xl">💡</span> How to Copy Your Ratings
     </h3>
     <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-2 ml-6 list-decimal">
       <li>
@@ -220,9 +218,9 @@ const SupportedFormatsList = () => (
 
 const ServiceConnectedRatingList = ({ ratings }) => (
   <div className="space-y-2 max-h-64 overflow-y-auto">
-    {ratings.map((rating, index) => (
+    {ratings.map((rating) => (
       <div
-        key={index}
+        key={rating.condition}
         className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
       >
         <div className="flex-1">
@@ -260,8 +258,8 @@ const NotServiceConnectedWarning = ({ notServiceConnected }) => (
       {notServiceConnected.length === 1 ? "" : "s"} that will NOT be imported:
     </p>
     <ul className="text-xs text-yellow-700 dark:text-yellow-400 ml-4 space-y-1">
-      {notServiceConnected.slice(0, 5).map((condition, index) => (
-        <li key={index}>• {condition.condition}</li>
+      {notServiceConnected.slice(0, 5).map((condition) => (
+        <li key={condition.condition}>• {condition.condition}</li>
       ))}
       {notServiceConnected.length > 5 && (
         <li>• ...and {notServiceConnected.length - 5} more</li>

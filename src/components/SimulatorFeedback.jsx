@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import jsPDF from "jspdf";
 import ShareButton from "./ShareButton";
-import { useLanguage } from "../contexts/LanguageContext";
 
 function buildPdfLayout(doc) {
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -244,7 +243,7 @@ function pdfAddGapLine(doc, layout, pos, gap) {
   if (gap.startsWith("**")) {
     // Sub-header within gaps - also needs word wrapping
     doc.setFont("helvetica", "bold");
-    const cleanGap = gap.replace(/\*\*/g, "");
+    const cleanGap = gap.replaceAll("**", "");
     const headerLines = doc.splitTextToSize(cleanGap, layout.contentWidth - 5);
     headerLines.forEach((line) => {
       pdfCheckPageBreak(doc, layout, pos, 7);
@@ -388,7 +387,7 @@ const GapItem = ({ gap }) => {
   if (gap.startsWith("**")) {
     return (
       <p className="font-bold text-lg text-purple-800 dark:text-purple-100 mt-4 mb-2">
-        {gap.replace(/\*\*/g, "")}
+        {gap.replaceAll("**", "")}
       </p>
     );
   }
@@ -446,8 +445,8 @@ const WarningsSection = ({ warnings }) => {
             Critical Information
           </h3>
           <div className="space-y-2">
-            {warnings.map((warning, index) => (
-              <div key={index} className="text-yellow-800">
+            {warnings.map((warning) => (
+              <div key={warning} className="text-yellow-800">
                 <p className="whitespace-pre-wrap">{warning}</p>
               </div>
             ))}
@@ -477,8 +476,8 @@ const GapAnalysisSection = ({ gaps }) => {
       </div>
 
       <div className="space-y-2 pl-9">
-        {gaps.map((gap, index) => (
-          <div key={index} className="text-gray-700 dark:text-gray-300">
+        {gaps.map((gap) => (
+          <div key={gap} className="text-gray-700 dark:text-gray-300">
             <GapItem gap={gap} />
           </div>
         ))}
@@ -506,8 +505,8 @@ const ActionItemsSection = ({ actionItems }) => {
       </div>
 
       <div className="space-y-3 pl-9">
-        {actionItems.map((item, index) => (
-          <div key={index} className="flex items-start gap-3">
+        {actionItems.map((item) => (
+          <div key={item} className="flex items-start gap-3">
             <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
             <p className="text-gray-700 whitespace-pre-wrap">{item}</p>
           </div>
@@ -625,7 +624,6 @@ const SimulatorFeedback = ({
   onClose,
   onSendToCalculator,
 }) => {
-  const { _t } = useLanguage();
   const feedbackContentRef = useRef(null);
 
   if (!result) return null;

@@ -130,8 +130,7 @@ function SecondaryScoutHeader({
             onClick={onChangeConditions}
             className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm sm:text-base"
           >
-            <span className="hidden sm:inline">Change </span>
-            Conditions
+            <span className="hidden sm:inline">Change </span>Conditions
           </button>
           <button
             onClick={onClose}

@@ -12,7 +12,6 @@
  */
 
 import { useState, useEffect, useId } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import {
   loadVKB,
@@ -48,8 +47,6 @@ export default function IntelligenceBriefing({
   onConfirm,
   onEdit,
 }) {
-  const { _t } = useLanguage();
-
   const [editableData, setEditableData] = useState(extractedData);
   const [discrepancies, setDiscrepancies] = useState([]);
   const [activeSection, setActiveSection] = useState("personal");
@@ -212,7 +209,7 @@ function BriefingHeader({ onRequestDiscard }) {
             id="intel-briefing-title"
             className="flex items-center gap-2 text-lg font-bold text-white sm:text-2xl"
           >
-            Intelligence Briefing
+            Intelligence Briefing{" "}
             <span className="rounded bg-red-500 px-2 py-0.5 text-xs font-bold uppercase text-white">
               CLASSIFIED
             </span>
@@ -348,18 +345,18 @@ function DiscrepancyResolver({ discrepancies, onResolve }) {
       <h3 className="mb-3 text-lg font-bold text-red-700 dark:text-red-200">
         🚨 Resolve Discrepancies First
       </h3>
-      {discrepancies.map((disc, idx) => (
+      {discrepancies.map((disc) => (
         <div
-          key={idx}
+          key={disc.message}
           className="mb-4 rounded-lg bg-gray-100 p-3 dark:bg-slate-800/50"
         >
           <p className="mb-2 text-sm font-bold text-gray-900 dark:text-white">
             {disc.message}
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {disc.values.map((value, vIdx) => (
+            {disc.values.map((value) => (
               <button
-                key={vIdx}
+                key={value}
                 onClick={() => onResolve(disc, value)}
                 className="rounded-lg bg-gray-200 p-3 text-left text-gray-900 transition-all hover:bg-amber-500 hover:text-white dark:bg-slate-700 dark:text-white"
               >
@@ -487,9 +484,9 @@ function ConditionsSection({ editableData }) {
       </h3>
       {editableData.conditions && editableData.conditions.length > 0 ? (
         <div className="space-y-3">
-          {editableData.conditions.map((condition, idx) => (
+          {editableData.conditions.map((condition) => (
             <div
-              key={idx}
+              key={condition.name}
               className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/50"
             >
               <div className="mb-2 flex items-start justify-between">

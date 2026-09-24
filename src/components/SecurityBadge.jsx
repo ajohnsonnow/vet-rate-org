@@ -9,7 +9,6 @@ import {
   CheckCircle,
   X,
 } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 /**
@@ -22,7 +21,6 @@ import ResponsiveModal from "./common/ResponsiveModal";
  * - What skeptics should check
  */
 const SecurityBadge = () => {
-  const { _t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -182,8 +180,8 @@ const OverviewTab = () => (
           "Your rating calculations",
           "Your saved packets",
           "Everything you type or create",
-        ].map((item, i) => (
-          <li key={i} className="flex items-start gap-2 dark:text-gray-200">
+        ].map((item) => (
+          <li key={item} className="flex items-start gap-2 dark:text-gray-200">
             <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
             <span>{item}</span>
           </li>
@@ -790,7 +788,7 @@ const VerificationStep = ({ number, title, steps }) => (
     </h4>
     <ul className="space-y-1 text-sm dark:text-gray-300">
       {steps.map((step, i) => (
-        <li key={i} className="flex items-start gap-2">
+        <li key={step} className="flex items-start gap-2">
           <span className="text-blue-600 dark:text-blue-400 font-bold flex-shrink-0">
             {i + 1}.
           </span>

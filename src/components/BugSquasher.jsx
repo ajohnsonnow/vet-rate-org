@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   APP_MODULES,
   BUG_SEVERITY,
@@ -1106,8 +1105,6 @@ function BugSquasherStep3Review({
 }
 
 function BugSquasher({ onClose, appState = {}, onOpenRoadmap }) {
-  const { t: _t } = useLanguage();
-
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [submitting, setSubmitting] = useState(false);

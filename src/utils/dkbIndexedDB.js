@@ -141,7 +141,7 @@ async function _downloadDKBEntries(url, onProgress) {
 
   // Get total size for progress tracking
   const contentLength = response.headers.get("content-length");
-  const totalSize = contentLength ? parseInt(contentLength, 10) : 0;
+  const totalSize = contentLength ? Number.parseInt(contentLength, 10) : 0;
 
   // Read response as stream for progress
   const reader = response.body.getReader();

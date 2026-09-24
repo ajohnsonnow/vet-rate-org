@@ -64,7 +64,7 @@ export default function CrisisListener() {
               >
                 chat online
               </a>
-              .
+              {"."}
             </span>
             <button
               type="button"

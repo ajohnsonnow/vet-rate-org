@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import ToolCardButton from "./ToolCardButton";
 import {
@@ -419,7 +418,7 @@ const useGoogleDriveInit = ({
 
     const tryInitialize = async () => {
       // Wait for gapi to be available
-      if (typeof window.gapi === "undefined") {
+      if (window.gapi === undefined) {
         if (retryCount < maxRetries) {
           retryCount++;
           setStatus(`Waiting for Google API... (${retryCount}/${maxRetries})`);
@@ -515,8 +514,6 @@ const useCloudSync = () => {
 };
 
 const CloudSyncManager = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   const {
     isInitialized,
     isSignedIn,

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -231,7 +230,7 @@ const _groupBenefitsByCategory = (benefits) => {
   return grouped;
 };
 
-const BenefitCard = ({ benefit, index }) => {
+const BenefitCard = ({ benefit }) => {
   const config = getCategoryConfig(benefit.category);
 
   // The scraped-data path (searchStateBenefits) maps benefits to name /
@@ -246,7 +245,6 @@ const BenefitCard = ({ benefit, index }) => {
 
   return (
     <div
-      key={index}
       className={`${config.bgLight} ${config.borderColor} border rounded-xl p-4 transition-all hover:shadow-lg hover:-translate-y-0.5`}
     >
       <div className="flex items-start gap-3">
@@ -389,7 +387,7 @@ const PermanentTotalCheckbox = ({
   const showCheckbox =
     selectedRating &&
     selectedRating !== "100-PT" &&
-    parseInt(selectedRating) >= 70;
+    Number.parseInt(selectedRating) >= 70;
 
   if (!showCheckbox) return null;
 
@@ -658,16 +656,18 @@ const BenefitsGrid = ({ benefits }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-        <span className="text-xl">📋</span>
-        Your Eligible Benefits
+        <span className="text-xl">📋</span> Your Eligible Benefits
         <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-200 text-sm rounded-full">
           {benefits.length} found
         </span>
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {benefits.map((benefit, index) => (
-          <BenefitCard key={index} benefit={benefit} index={index} />
+        {benefits.map((benefit) => (
+          <BenefitCard
+            key={benefit.name || benefit.benefit_name}
+            benefit={benefit}
+          />
         ))}
       </div>
     </div>
@@ -857,7 +857,7 @@ const fetchStateBenefits = async (selectedState, selectedRating) => {
   // Use state code directly instead of state name
   const stateCode = selectedState;
   const ratingNum =
-    selectedRating === "100-PT" ? 100 : parseInt(selectedRating);
+    selectedRating === "100-PT" ? 100 : Number.parseInt(selectedRating);
 
   const response = await searchStateBenefits(stateCode, ratingNum);
 
@@ -1020,8 +1020,6 @@ const PrefilledFromRecordsBanner = ({ show }) => {
 };
 
 const StateBenefitHunter = ({ onClose, onReportBug }) => {
-  const { _t } = useLanguage();
-
   const [defaults] = useState(getStateBenefitDefaults);
   const wasPrefilled = Boolean(defaults.state || defaults.rating);
   const [selectedState, setSelectedState] = useState(defaults.state);
@@ -1031,7 +1029,6 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
   const [error, setError] = useState(null);
   const [isPermanentTotal, setIsPermanentTotal] = useState(false);
   const [showAISettings, setShowAISettings] = useState(false);
-  const [_showAIConsultation, _setShowAIConsultation] = useState(false);
   const [aiQuestion, setAIQuestion] = useState("");
   const [aiAdvice, setAIAdvice] = useState(null);
   const [isAIThinking, setIsAIThinking] = useState(false);

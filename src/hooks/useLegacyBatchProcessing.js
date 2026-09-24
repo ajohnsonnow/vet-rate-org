@@ -91,7 +91,7 @@ async function runBatchOnComplete(completeData, ctx) {
   setProcessingState(PROCESSING_STATES.COMPLETE);
 
   // Trigger Intelligence Briefing if callback provided
-  if (onProcessComplete && completeData && completeData.results) {
+  if (onProcessComplete && completeData?.results) {
     const briefingData = extractIntelligenceBriefingData(completeData.results);
     onProcessComplete(briefingData);
   }

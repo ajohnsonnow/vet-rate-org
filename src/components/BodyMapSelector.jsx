@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 // Comprehensive Body zones with their medical translations - ALL body systems
@@ -897,7 +896,7 @@ function LoggedSymptomsList({ symptoms, onRemove }) {
     <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
       {symptoms.map((symptom, index) => (
         <LoggedSymptomRow
-          key={index}
+          key={`${symptom.zoneName}-${symptom.userDescription}`}
           symptom={symptom}
           index={index}
           onRemove={onRemove}
@@ -1083,7 +1082,6 @@ const BodyMapSelector = ({
   onLogToSymptomLogger,
   onClose,
 }) => {
-  const { _t } = useLanguage();
   const [view, setView] = useState("front"); // 'front' or 'back'
   const [activeCategory, setActiveCategory] = useState("musculoskeletal"); // Category filter
   const { symptoms, addSymptom, removeSymptom, exportToText } = useSymptomLog(

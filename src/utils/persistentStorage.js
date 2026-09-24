@@ -429,7 +429,7 @@ export function downloadPacketFile(data, filename = null) {
   a.download = downloadName;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
+  a.remove();
   URL.revokeObjectURL(url);
 
   // Mark as saved

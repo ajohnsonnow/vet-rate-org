@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { getAllConditions } from "../services/knowledgeQuery";
 import { saveClaim, isClaimSaved } from "../utils/claimsStorage";
-import { useLanguage } from "../contexts/LanguageContext";
 
 // Map rating schedules to user-friendly body system names with emojis
 const systemNameMap = {
@@ -79,8 +78,8 @@ const useConditionCatalog = () => {
     // Sort conditions within each system by diagnostic code
     Object.keys(systemMap).forEach((system) => {
       systemMap[system].sort((a, b) => {
-        const codeA = parseInt(a.diagnosticCode) || 0;
-        const codeB = parseInt(b.diagnosticCode) || 0;
+        const codeA = Number.parseInt(a.diagnosticCode) || 0;
+        const codeB = Number.parseInt(b.diagnosticCode) || 0;
         return codeA - codeB;
       });
     });
@@ -272,7 +271,7 @@ const PickerHeader = ({ totalConditions }) => (
     <div className="flex items-center gap-2 mb-3">
       <span className="text-2xl">📋</span>
       <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-        Quick Condition Picker
+        Quick Condition Picker{" "}
         <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
           NEW
         </span>
@@ -512,9 +511,9 @@ const SelectedSummary = ({
         </button>
       </div>
       <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-        {selectedConditions.map((condition, idx) => (
+        {selectedConditions.map((condition) => (
           <span
-            key={idx}
+            key={condition}
             className="inline-flex items-center px-1.5 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-100 text-xs rounded-full"
           >
             {condition.length > 25
@@ -625,7 +624,6 @@ const AddToPacketButton = ({ selectedCount, onClick }) => (
  * Organized by body system per 38 CFR Part 4, Subpart B
  */
 const QuickConditionPicker = ({ onAddToPacket, onViewPacket }) => {
-  const { _t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { conditionsBySystem, sortedSystemNames, totalConditions } =

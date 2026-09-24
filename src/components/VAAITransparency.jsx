@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
-import { useLanguage } from "../contexts/LanguageContext";
 
 /**
  * VAAITransparency Component
@@ -345,9 +344,9 @@ function AISystemCard({
 function WorkflowList({ workflows, iconClass }) {
   return (
     <ul className="space-y-2">
-      {workflows.map((workflow, idx) => (
+      {workflows.map((workflow) => (
         <li
-          key={idx}
+          key={workflow}
           className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300"
         >
           <CheckCircle
@@ -377,9 +376,9 @@ function HealthcareAITab() {
         <div className="space-y-4">
           {HIGH_IMPACT_AI_SYSTEMS.filter(
             (sys) => sys.category === "Healthcare",
-          ).map((system, idx) => (
+          ).map((system) => (
             <AISystemCard
-              key={idx}
+              key={system.name}
               system={system}
               accentClass="border-teal-200 dark:border-teal-800"
               impactBoxClass="bg-teal-100 dark:bg-teal-900/30"
@@ -457,9 +456,9 @@ function BenefitsAITab() {
         <div className="space-y-4">
           {HIGH_IMPACT_AI_SYSTEMS.filter(
             (sys) => sys.category === "Benefits",
-          ).map((system, idx) => (
+          ).map((system) => (
             <AISystemCard
-              key={idx}
+              key={system.name}
               system={system}
               accentClass="border-blue-200 dark:border-blue-800"
               impactBoxClass="bg-blue-100 dark:bg-blue-900/30"
@@ -593,9 +592,9 @@ function PrivacyTab() {
         </p>
 
         <div className="space-y-4">
-          {GOVERNANCE_PROTECTIONS.map((protection, idx) => (
+          {GOVERNANCE_PROTECTIONS.map((protection) => (
             <div
-              key={idx}
+              key={protection.title}
               className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900"
             >
               <div className="flex items-start gap-3">
@@ -941,8 +940,6 @@ function VAAITransparencyHeader({ activeTab, onChangeTab, onClose }) {
 }
 
 const VAAITransparency = ({ onClose }) => {
-  const { _t } = useLanguage();
-
   const [activeTab, setActiveTab] = useState("overview");
 
   return (

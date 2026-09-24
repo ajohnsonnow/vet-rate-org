@@ -96,7 +96,7 @@ function useVKBTimelineData(onDocumentClick) {
   };
 
   const handleSelectForComparison = (doc) => {
-    if (selectedDocs.find((d) => d.id === doc.id)) {
+    if (selectedDocs.some((d) => d.id === doc.id)) {
       setSelectedDocs(selectedDocs.filter((d) => d.id !== doc.id));
     } else if (selectedDocs.length < 2) {
       setSelectedDocs([...selectedDocs, doc]);
@@ -473,8 +473,8 @@ const ComparisonModalDifferences = ({ comparisonResult }) =>
         {comparisonResult.differenceCount !== 1 ? "s" : ""} found:
       </p>
       <div className="space-y-3">
-        {comparisonResult.differences.map((diff, idx) => (
-          <ComparisonDifferenceRow key={idx} diff={diff} />
+        {comparisonResult.differences.map((diff) => (
+          <ComparisonDifferenceRow key={diff.field} diff={diff} />
         ))}
       </div>
     </div>

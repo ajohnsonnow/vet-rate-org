@@ -526,9 +526,9 @@ function CFileExposuresTab({ t, exposures }) {
                     {t("cfileAnalyzer", "presumptiveConditions")}
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {exposure.presumptive_conditions.map((condition, i) => (
+                    {exposure.presumptive_conditions.map((condition) => (
                       <span
-                        key={i}
+                        key={condition}
                         className="text-xs bg-orange-100 dark:bg-orange-800/50 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded"
                       >
                         {condition}
@@ -563,9 +563,9 @@ function CFileMentalHealthTab({ t, mentalHealth }) {
                 {t("cfileAnalyzer", "diagnosesFound")}
               </h4>
               <div className="flex flex-wrap gap-2">
-                {mentalHealth.diagnoses.map((dx, i) => (
+                {mentalHealth.diagnoses.map((dx) => (
                   <span
-                    key={i}
+                    key={dx}
                     className="bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm"
                   >
                     {dx}
@@ -581,8 +581,8 @@ function CFileMentalHealthTab({ t, mentalHealth }) {
                 {t("cfileAnalyzer", "indicators")}
               </h4>
               <ul className="list-disc list-inside text-blue-700 dark:text-blue-300 text-sm space-y-1">
-                {mentalHealth.indicators.map((indicator, i) => (
-                  <li key={i}>{indicator}</li>
+                {mentalHealth.indicators.map((indicator) => (
+                  <li key={indicator}>{indicator}</li>
                 ))}
               </ul>
             </div>
@@ -594,8 +594,8 @@ function CFileMentalHealthTab({ t, mentalHealth }) {
                 {t("cfileAnalyzer", "documentedStressors")}
               </h4>
               <ul className="list-disc list-inside text-amber-700 dark:text-amber-300 text-sm space-y-1">
-                {mentalHealth.stressors.map((stressor, i) => (
-                  <li key={i}>{stressor}</li>
+                {mentalHealth.stressors.map((stressor) => (
+                  <li key={stressor}>{stressor}</li>
                 ))}
               </ul>
             </div>
@@ -630,7 +630,7 @@ function CFileActionItemsTab({ t, actionItems }) {
         <div className="space-y-3">
           {actionItems.map((action, idx) => (
             <div
-              key={idx}
+              key={action}
               className="flex items-start gap-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4"
             >
               <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-green-500 text-white rounded-full font-bold text-sm">
@@ -657,9 +657,9 @@ function CFileRedFlagsSection({ t, redFlags }) {
         🚨 {t("cfileAnalyzer", "attentionNeeded")}
       </h3>
       <div className="space-y-3">
-        {redFlags.map((flag, idx) => (
+        {redFlags.map((flag) => (
           <div
-            key={idx}
+            key={flag.issue}
             className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-red-200 dark:border-red-700"
           >
             <div className="flex items-start justify-between">
@@ -692,9 +692,9 @@ function CFileCombatIndicatorsSection({ t, combatIndicators }) {
         🎖️ {t("cfileAnalyzer", "combatIndicatorsFound")}
       </h3>
       <div className="space-y-3">
-        {combatIndicators.map((indicator, idx) => (
+        {combatIndicators.map((indicator) => (
           <div
-            key={idx}
+            key={indicator.indicator}
             className="flex items-start justify-between bg-white dark:bg-gray-800 rounded-lg p-4 border border-indigo-200 dark:border-indigo-700"
           >
             <div>

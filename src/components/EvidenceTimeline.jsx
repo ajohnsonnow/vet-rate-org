@@ -205,7 +205,7 @@ function renderEvidenceTimelineCanvas(
   );
 
   const firstDate = new Date(sorted[0].date);
-  const lastDate = new Date(sorted[sorted.length - 1].date);
+  const lastDate = new Date(sorted.at(-1).date);
 
   // Draw main timeline line
   const lineY = height / 2;
@@ -436,9 +436,9 @@ function GapWarningsList({ gaps }) {
       <h3 className="text-xl font-bold text-red-400 flex items-center gap-2">
         ⚠️ Evidence Gaps Detected: {gaps.length}
       </h3>
-      {gaps.map((gap, idx) => (
+      {gaps.map((gap) => (
         <div
-          key={idx}
+          key={`${gap.start.date}-${gap.end.date}`}
           className={`border-l-4 p-4 rounded ${
             gap.severity === "CRITICAL"
               ? "border-red-500 bg-red-900/20"

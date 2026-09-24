@@ -67,13 +67,13 @@ const fuzzyMatch = (searchTerm, candidateTerm, threshold = 0.7) => {
  * Main search function with multiple strategies
  */
 export const searchDisabilityData = (searchTerm, data) => {
-  if (!searchTerm || !searchTerm.trim()) return [];
+  if (!searchTerm?.trim()) return [];
 
   const normalizedSearchTerm = normalizeSearchTerm(searchTerm);
   const results = [];
   const seen = new Set();
 
-  if (!data || !data.disabilities) {
+  if (!data?.disabilities) {
     console.warn("Invalid disability data structure");
     return [];
   }
@@ -191,7 +191,7 @@ export const getSearchSuggestions = (searchTerm, data, limit = 10) => {
   const normalized = normalizeSearchTerm(searchTerm);
   const suggestionsMap = new Map(); // Use Map to track lowercase -> display form
 
-  if (!data || !data.disabilities) return [];
+  if (!data?.disabilities) return [];
 
   // Helper to add suggestion while deduplicating (prefer Title Case version)
   const addSuggestion = (text) => {

@@ -9,7 +9,6 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
@@ -711,7 +710,6 @@ function useScenarioSandbox() {
 }
 
 export default function WhatIfSandbox({ onClose }) {
-  const { _t } = useLanguage();
   const {
     currentConditions,
     setCurrentConditions,

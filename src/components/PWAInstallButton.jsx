@@ -9,7 +9,6 @@
 
 import { useState, useEffect } from "react";
 import { Download, X, Smartphone } from "lucide-react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 
 const IOSInstallInstructions = ({ onClose }) => (
@@ -191,7 +190,6 @@ const usePWAInstallPrompt = () => {
 };
 
 const PWAInstallButton = ({ className = "" }) => {
-  const { _t } = useLanguage();
   const {
     deferredPrompt,
     setDeferredPrompt,
@@ -242,7 +240,7 @@ const PWAInstallButton = ({ className = "" }) => {
   const dismissedTime = localStorage.getItem("pwa_install_dismissed");
   if (dismissedTime) {
     const daysSinceDismissed =
-      (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
+      (Date.now() - Number.parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
     if (daysSinceDismissed < 7) {
       return null;
     }

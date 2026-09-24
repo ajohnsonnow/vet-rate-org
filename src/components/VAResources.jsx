@@ -619,9 +619,9 @@ const ResourceCategorySection = ({
               {t("vaResources.keyInformation")}
             </h4>
             <ul className="space-y-1">
-              {category.keyInfo.map((info, idx) => (
+              {category.keyInfo.map((info) => (
                 <li
-                  key={idx}
+                  key={info}
                   className="text-sm text-blue-800 dark:text-blue-200 flex items-start gap-2"
                 >
                   <span className="text-blue-500 mt-1">•</span>
@@ -634,9 +634,9 @@ const ResourceCategorySection = ({
 
         {/* Resources Grid */}
         <div className="grid md:grid-cols-2 gap-3">
-          {category.resources.map((resource, idx) => (
+          {category.resources.map((resource) => (
             <ResourceLinkCard
-              key={idx}
+              key={resource.name}
               resource={resource}
               onInternalClick={onInternalClick}
             />
@@ -667,7 +667,7 @@ const VAResourcesFooterInfo = ({ t }) => (
       >
         {t("vaResources.findVSOHelp")}
       </a>
-      .
+      {"."}
     </p>
   </div>
 );

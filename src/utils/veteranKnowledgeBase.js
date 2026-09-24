@@ -994,7 +994,7 @@ function mergeDD214ServiceDates(vkb, dd214Data) {
     const entry = new Date(vkb.serviceHistory.entryDate);
     const sep = new Date(vkb.serviceHistory.separationDate);
     const years = ((sep - entry) / (365.25 * 24 * 60 * 60 * 1000)).toFixed(1);
-    vkb.serviceHistory.yearsOfService = parseFloat(years);
+    vkb.serviceHistory.yearsOfService = Number.parseFloat(years);
   } else {
     vkb.serviceHistory.yearsOfService =
       dd214Data.yearsService ||
@@ -1097,7 +1097,7 @@ function mergeDD214MOS(vkb, dd214Data) {
   // ─── MOS (Block 14) ───
   const { mosCode, mosTitle } = deriveDD214MOS(dd214Data);
   if (mosCode) {
-    const existingMOS = vkb.serviceHistory.mos.find((m) => m.code === mosCode);
+    const existingMOS = vkb.serviceHistory.mos.some((m) => m.code === mosCode);
     if (!existingMOS) {
       vkb.serviceHistory.mos.push({
         code: mosCode,
@@ -1114,7 +1114,7 @@ function mergeDD214MOS(vkb, dd214Data) {
   if (dd214Data.additionalMOS && Array.isArray(dd214Data.additionalMOS)) {
     dd214Data.additionalMOS.forEach((addMos) => {
       const code = typeof addMos === "string" ? addMos : addMos.code;
-      if (code && !vkb.serviceHistory.mos.find((m) => m.code === code)) {
+      if (code && !vkb.serviceHistory.mos.some((m) => m.code === code)) {
         vkb.serviceHistory.mos.push({
           code,
           title: addMos.title || "",
@@ -1440,7 +1440,7 @@ function parsePayGrade(pg) {
   const match = pg.match(/([EOW])-?(\d+)/i);
   if (!match) return 0;
   const category = match[1].toUpperCase();
-  const level = parseInt(match[2], 10);
+  const level = Number.parseInt(match[2], 10);
   let base;
   if (category === "E") {
     base = 0;
@@ -1459,7 +1459,7 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
   // Medical conditions
   if (blueButtonData.conditions && Array.isArray(blueButtonData.conditions)) {
     blueButtonData.conditions.forEach((condition) => {
-      const existingCondition = vkb.medicalConditions.current.find(
+      const existingCondition = vkb.medicalConditions.current.some(
         (c) =>
           c.name.toLowerCase() === condition.standardizedName.toLowerCase(),
       );

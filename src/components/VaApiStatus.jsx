@@ -12,7 +12,6 @@ import { useState, useEffect } from "react";
 import { useVaApiStatus, useVaFeatureStatus } from "../hooks/useVaApiStatus";
 import { Tooltip } from "./common/Tooltip";
 import { getStatusPageUrl } from "../utils/vaApiStatus";
-import { useLanguage } from "../contexts/LanguageContext";
 import { sanitizeUrl, sanitizeErrorMessage } from "../utils/sanitize";
 
 // VA StatusPage shortlinks follow a consistent pattern — validate before use in href
@@ -57,7 +56,6 @@ function BannerCloseIcon() {
  * Only shows when there are actual problems
  */
 export function VaApiStatusBanner({ onDismiss }) {
-  const { _t } = useLanguage();
   const { summary, loading, hasIssues } = useVaApiStatus({
     autoFetch: true,
     enablePolling: true,
@@ -151,7 +149,6 @@ export function VaApiStatusBanner({ onDismiss }) {
  * Good for headers, footers, or toolbars
  */
 export function VaApiStatusIndicator({ showLabel = true, size = "md" }) {
-  const { _t } = useLanguage();
   const { summary, loading, hasIssues, status } = useVaApiStatus();
   // Call getStatusPageUrl() directly so Snyk can confirm this is a static constant
   const statusPageUrl = getStatusPageUrl();
@@ -233,7 +230,6 @@ const BADGE_STATUS_COLORS = {
  * Use near features that depend on VA APIs
  */
 export function VaFeatureStatusBadge({ feature, showDetails = false }) {
-  const { _t } = useLanguage();
   const {
     status,
     statusInfo,
@@ -566,7 +562,6 @@ function VaApiStatusPanelBody({
  * Good for settings pages or dedicated status views
  */
 export function VaApiStatusPanel() {
-  const { _t } = useLanguage();
   const { status, loading, error, lastUpdated, forceRefresh, hasIssues } =
     useVaApiStatus();
   // Use getStatusPageUrl() directly — static constant, breaks taint chain from hook error state
@@ -612,7 +607,6 @@ export function VaApiStatusPanel() {
  * Helps users understand if it's a VA issue
  */
 export function VaApiErrorMessage({ feature, error, onRetry }) {
-  const { _t } = useLanguage();
   const featureStatus = useVaFeatureStatus(feature);
   const isVaIssue = featureStatus.hasIssues;
 

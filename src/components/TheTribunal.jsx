@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
@@ -465,11 +464,9 @@ export default function TheTribunal({
   onReportBug,
   onOpenAISettings,
 }) {
-  const { _t } = useLanguage();
-
   const [isInitialized, setIsInitialized] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [_transcript, setTranscript] = useState("");
+  const [, setTranscript] = useState("");
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedPersona, setSelectedPersona] = useState("skeptical");
@@ -484,7 +481,7 @@ export default function TheTribunal({
 
   // Speech control state
   const [micSupported, setMicSupported] = useState(true);
-  const [_hearingStarted, setHearingStarted] = useState(false); // Whether to auto-play speech
+  const [, setHearingStarted] = useState(false); // Whether to auto-play speech
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
   const {
@@ -1005,7 +1002,7 @@ function TribunalHeader({
               id="the-tribunal-title"
               className="flex items-center gap-2 text-xl font-bold sm:text-3xl"
             >
-              ⚖️ The Tribunal
+              ⚖️ The Tribunal{" "}
               <span className="rounded bg-gray-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 AI
               </span>
@@ -1615,9 +1612,9 @@ function PreHearingInstructions({
 function ConversationLog({ conversation, selectedPersona, isAIProcessing }) {
   return (
     <div className="-m-4 space-y-4 bg-gray-50 p-4 dark:bg-gray-900 sm:p-6">
-      {conversation.map((message, index) => (
+      {conversation.map((message) => (
         <div
-          key={index}
+          key={message.timestamp}
           className={`flex ${message.speaker === "user" ? "justify-end" : "justify-start"}`}
         >
           <div

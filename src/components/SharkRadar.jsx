@@ -8,7 +8,6 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import {
   analyzeContract,
   getRiskLevelColors,
@@ -412,7 +411,7 @@ const RiskLevelCard = ({ data }) => (
                 : "text-yellow-600 dark:text-yellow-400"
             }`}
           >
-            Recommendation: {data.recommendation.replaceAll(/_/g, " ")}
+            Recommendation: {data.recommendation.replaceAll("_", " ")}
           </p>
         )}
       </div>
@@ -469,8 +468,8 @@ const RedFlagsList = ({ flags }) => {
         {flags.length})
       </h3>
       <div className="space-y-4">
-        {flags.map((flag, index) => (
-          <RedFlagCard key={index} flag={flag} />
+        {flags.map((flag) => (
+          <RedFlagCard key={flag.violation} flag={flag} />
         ))}
       </div>
     </div>
@@ -486,9 +485,9 @@ const PositiveSignsList = ({ signs }) => {
         <CheckIcon /> Positive Signs
       </h3>
       <ul className="space-y-2">
-        {signs.map((sign, index) => (
+        {signs.map((sign) => (
           <li
-            key={index}
+            key={sign}
             className="flex items-start gap-2 text-green-700 dark:text-green-300"
           >
             <span className="text-green-500 mt-0.5">✓</span>
@@ -535,7 +534,7 @@ const PredatoryWarningActions = ({ riskLevel }) => {
 };
 
 const ScanResults = ({ results }) => {
-  if (!results || !results.success) return null;
+  if (!results?.success) return null;
 
   const { data } = results;
 
@@ -632,7 +631,6 @@ function useSharkRadarPersistence({ setApiKey, setHasConsented, setAIStatus }) {
  * Main Shark Radar Component
  */
 export default function SharkRadar() {
-  const { _t } = useLanguage();
   const [textInput, setTextInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
@@ -644,11 +642,6 @@ export default function SharkRadar() {
   const [aiStatus, setAIStatus] = useState(getAIStatus());
 
   useSharkRadarPersistence({ setApiKey, setHasConsented, setAIStatus });
-
-  const _handleSaveKey = (key) => {
-    localStorage.setItem("vetrate_gemini_key", key);
-    setApiKey(key);
-  };
 
   const handleConsent = () => {
     localStorage.setItem("vetrate_ai_consent", "true");
