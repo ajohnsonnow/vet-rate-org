@@ -361,10 +361,22 @@ const buildGaps = (vkb, documentFindings, conditions, stats) => {
   if (!documentFindings.some((doc) => doc.categoryKey === "dd214s")) {
     gaps.push("No DD-214 or service record on file.");
   }
-  if (!cleanString(vkb?.serviceHistory?.separationDate)) {
+  if (!hasSeparationDate(vkb)) {
     gaps.push("Separation date is not recorded in your service history.");
   }
   return gaps;
+};
+
+// Same source BDDBuilder's getVeteranSeparationDefault falls back to: the
+// top-level separationDate field, or - when that's empty - any service
+// period on file with an end date. Without this fallback the summary
+// flagged a missing separation date even when BDDBuilder had already found
+// one from the veteran's service periods.
+const hasSeparationDate = (vkb) => {
+  if (cleanString(vkb?.serviceHistory?.separationDate)) return true;
+  return asArray(vkb?.serviceHistory?.servicePeriods).some((p) =>
+    cleanString(p?.serviceEndDate),
+  );
 };
 
 /**

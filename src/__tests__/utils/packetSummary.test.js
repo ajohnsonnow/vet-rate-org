@@ -285,6 +285,27 @@ describe("buildPacketTldr", () => {
     );
   });
 
+  it("does not flag a missing separation date when a service period on file has an end date, the same source BDDBuilder uses (regression D13)", () => {
+    const tldr = buildPacketTldr(
+      {
+        serviceHistory: {
+          servicePeriods: [
+            {
+              serviceStartDate: "2010-01-01",
+              serviceEndDate: "2014-01-01",
+              branch: "Army",
+            },
+          ],
+        },
+      },
+      [],
+      [],
+    );
+    expect(tldr.gaps).not.toContain(
+      "Separation date is not recorded in your service history.",
+    );
+  });
+
   it("does not flag a missing DD-214 when one is on file", () => {
     const docs = buildAllDocumentFindings(documentsByCategory);
     const tldr = buildPacketTldr(vkb, docs, []);
