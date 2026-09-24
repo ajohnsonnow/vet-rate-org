@@ -53,7 +53,7 @@ async function generateCodeChallenge(verifier) {
  * Standard base64 with URL-safe characters
  */
 function base64URLEncode(buffer) {
-  const base64 = btoa(String.fromCharCode(...buffer));
+  const base64 = btoa(String.fromCodePoint(...buffer));
   const urlSafe = base64.replaceAll("+", "-").replaceAll("/", "_");
   let end = urlSafe.length;
   while (end > 0 && urlSafe[end - 1] === "=") end--;
