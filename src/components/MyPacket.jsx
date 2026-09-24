@@ -360,6 +360,38 @@ async function _importVaData(vaAccessToken, ctx) {
   setVaImportStatus(_buildVaImportStatusMessage(fetchedData, errors));
 }
 
+// Import saved forms if present, merging with existing forms (by id) when
+// `mergeMode === "merge"`, otherwise overwriting.
+function _importSavedForms(data, mergeMode, loadSavedForms) {
+  if (
+    !data.savedForms ||
+    !Array.isArray(data.savedForms) ||
+    data.savedForms.length === 0
+  ) {
+    return;
+  }
+
+  try {
+    if (mergeMode === "merge") {
+      const existingForms = getSavedForms();
+      const existingIds = new Set(existingForms.map((f) => f.id));
+      const newForms = data.savedForms.filter((f) => !existingIds.has(f.id));
+      localStorage.setItem(
+        "vet_rate_saved_forms",
+        JSON.stringify([...existingForms, ...newForms]),
+      );
+    } else {
+      localStorage.setItem(
+        "vet_rate_saved_forms",
+        JSON.stringify(data.savedForms),
+      );
+    }
+    loadSavedForms();
+  } catch (e) {
+    console.error("Error importing forms:", e);
+  }
+}
+
 function _importAllPacketData(data, mergeMode, ctx) {
   const {
     loadSavedForms,
@@ -379,32 +411,7 @@ function _importAllPacketData(data, mergeMode, ctx) {
     );
   }
 
-  // Import saved forms if present
-  if (
-    data.savedForms &&
-    Array.isArray(data.savedForms) &&
-    data.savedForms.length > 0
-  ) {
-    try {
-      if (mergeMode === "merge") {
-        const existingForms = getSavedForms();
-        const existingIds = new Set(existingForms.map((f) => f.id));
-        const newForms = data.savedForms.filter((f) => !existingIds.has(f.id));
-        localStorage.setItem(
-          "vet_rate_saved_forms",
-          JSON.stringify([...existingForms, ...newForms]),
-        );
-      } else {
-        localStorage.setItem(
-          "vet_rate_saved_forms",
-          JSON.stringify(data.savedForms),
-        );
-      }
-      loadSavedForms();
-    } catch (e) {
-      console.error("Error importing forms:", e);
-    }
-  }
+  _importSavedForms(data, mergeMode, loadSavedForms);
 
   // Import service history
   if (data.serviceHistory) {

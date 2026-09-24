@@ -18,35 +18,34 @@ describe("cfileAnalyzer: attemptJSONRepair", () => {
     expect(result.summary).toBe("line one line two");
   });
 
-  it("closes unclosed braces and brackets (strategy 1)", () => {
-    const result = attemptJSONRepair('{"summary": "ok", "timeline": [1, 2');
-    expect(result.summary).toBe("ok");
-  });
-
   it("inserts a missing comma between adjacent objects (strategy 1b)", () => {
     const result = attemptJSONRepair('{"a": [{"x": 1}\n{"y": 2}]}');
     expect(result.a).toEqual([{ x: 1 }, { y: 2 }]);
   });
 
-  it("strips a text preamble before the first brace (strategy 1c)", () => {
-    const result = attemptJSONRepair('Based on the records: {"summary": "ok"}');
-    expect(result.summary).toBe("ok");
-  });
-
-  it("finds the last complete top-level object when the tail is garbage (strategy 2)", () => {
-    const result = attemptJSONRepair(
+  it.each([
+    [
+      "closes unclosed braces and brackets (strategy 1)",
+      '{"summary": "ok", "timeline": [1, 2',
+    ],
+    [
+      "strips a text preamble before the first brace (strategy 1c)",
+      'Based on the records: {"summary": "ok"}',
+    ],
+    [
+      "finds the last complete top-level object when the tail is garbage (strategy 2)",
       '{"summary": "ok"} some trailing garbage {not json',
-    );
-    expect(result.summary).toBe("ok");
-  });
-
-  it("normalizes single-quoted JS-style objects (strategy 2b)", () => {
-    const result = attemptJSONRepair("{'summary': 'ok'}");
-    expect(result.summary).toBe("ok");
-  });
-
-  it("quotes unquoted property names (strategy 3)", () => {
-    const result = attemptJSONRepair('{summary: "ok", timeline: []}');
+    ],
+    [
+      "normalizes single-quoted JS-style objects (strategy 2b)",
+      "{'summary': 'ok'}",
+    ],
+    [
+      "quotes unquoted property names (strategy 3)",
+      '{summary: "ok", timeline: []}',
+    ],
+  ])("%s", (_label, input) => {
+    const result = attemptJSONRepair(input);
     expect(result.summary).toBe("ok");
   });
 

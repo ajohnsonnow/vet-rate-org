@@ -18,11 +18,11 @@ describe("render.yaml security headers (D-H08/D-H13/D-M15/D-M16)", () => {
   const yaml = read("render.yaml");
 
   it("delivers a Content-Security-Policy header on both service blocks", () => {
-    expect((yaml.match(/name: Content-Security-Policy/g) || []).length).toBe(2);
+    expect(yaml.match(/name: Content-Security-Policy/g) || []).toHaveLength(2);
   });
 
   it("delivers HSTS on both blocks (D-M15)", () => {
-    expect((yaml.match(/name: Strict-Transport-Security/g) || []).length).toBe(
+    expect(yaml.match(/name: Strict-Transport-Security/g) || []).toHaveLength(
       2,
     );
     expect(yaml).toMatch(/max-age=\d{7,}/);
@@ -34,7 +34,7 @@ describe("render.yaml security headers (D-H08/D-H13/D-M15/D-M16)", () => {
   });
 
   it("CSP sets frame-ancestors for clickjacking protection (D-H13)", () => {
-    expect((yaml.match(/frame-ancestors 'self'/g) || []).length).toBe(2);
+    expect(yaml.match(/frame-ancestors 'self'/g) || []).toHaveLength(2);
   });
 
   it("CSP connect-src includes the cloud backup origins (D-H11)", () => {

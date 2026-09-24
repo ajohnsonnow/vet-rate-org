@@ -404,17 +404,8 @@ function repairTruncatedJson(cleanResponse, jsonErr) {
   }
 }
 
-/**
- * Classify why AI response parsing failed and either throw a user-facing
- * error, or return a plain-text-fallback result. Always throws or returns -
- * never both. Pure function - no component state involved.
- */
-function classifyAndReportParseFailure(aiResponse, parseError) {
-  console.error(
-    "Failed to parse AI response:",
-    parseError.message || parseError,
-  );
-  // Safely log raw response (limit to 500 chars for readability)
+// Safely log the raw AI response (limit to 500 chars for readability).
+function _logRawAIResponse(aiResponse) {
   try {
     let rawForLog;
     if (typeof aiResponse === "string") {
@@ -431,10 +422,11 @@ function classifyAndReportParseFailure(aiResponse, parseError) {
   } catch (logError) {
     console.error("Could not log raw response:", logError.message);
   }
+}
 
-  // Check for specific error messages that indicate recoverable situations
-  const rawText =
-    typeof aiResponse === "string" ? aiResponse : aiResponse?.text || "";
+// Throw a user-facing error for known transient failure messages
+// (model still loading, context window exceeded).
+function _throwIfKnownTransientError(rawText) {
   if (
     rawText.includes("model is still loading") ||
     rawText.includes("still loading")
@@ -451,44 +443,80 @@ function classifyAndReportParseFailure(aiResponse, parseError) {
       "Document is too large for local AI. Try using Cloud AI or upload a smaller file.",
     );
   }
-  if (rawText.includes("[Warrant Council") || rawText.includes("CW5 Auditor")) {
-    // AI returned a helpful message but not JSON - extract and return as error.
-    // Uses indexOf/slice instead of a regex here because the equivalent
-    // /will help with[:\s]*(.+?)(?:Your question|$)/s pattern has adjacent
-    // overlapping quantifiers ([:\s]* next to .+?) that are vulnerable to
-    // super-linear backtracking (sonarjs/slow-regex).
-    const helpIdx = rawText.indexOf("will help with");
-    if (helpIdx !== -1) {
-      const afterHelp = rawText.slice(helpIdx + "will help with".length);
-      const stopIdx = afterHelp.indexOf("Your question");
-      const captured = stopIdx !== -1 ? afterHelp.slice(0, stopIdx) : afterHelp;
-      const message = captured.replace(/^[:\s]+/, "");
-      throw new Error("AI is initializing. " + message.trim().split("\n")[0]);
-    }
+}
+
+// AI returned a helpful "still initializing" message but not JSON - extract
+// and throw it as an error. Uses indexOf/slice instead of a regex here
+// because the equivalent /will help with[:\s]*(.+?)(?:Your question|$)/s
+// pattern has adjacent overlapping quantifiers ([:\s]* next to .+?) that
+// are vulnerable to super-linear backtracking (sonarjs/slow-regex).
+function _throwIfInitializingMessage(rawText) {
+  if (
+    !(rawText.includes("[Warrant Council") || rawText.includes("CW5 Auditor"))
+  ) {
+    return;
   }
 
-  // FALLBACK: Try to extract conditions from plain text response
-  // The AI may have returned useful info in a non-JSON format
+  const helpIdx = rawText.indexOf("will help with");
+  if (helpIdx === -1) return;
+
+  const afterHelp = rawText.slice(helpIdx + "will help with".length);
+  const stopIdx = afterHelp.indexOf("Your question");
+  const captured = stopIdx !== -1 ? afterHelp.slice(0, stopIdx) : afterHelp;
+  const message = captured.replace(/^[:\s]+/, "");
+  throw new Error("AI is initializing. " + message.trim().split("\n")[0]);
+}
+
+// FALLBACK: try to extract conditions from a plain-text (non-JSON) AI
+// response. Returns null when the text doesn't look extractable.
+function _tryTextFallbackExtraction(rawText) {
   if (
-    rawText.length > 50 &&
-    !rawText.includes("error") &&
-    !rawText.includes("Error")
+    !(
+      rawText.length > 50 &&
+      !rawText.includes("error") &&
+      !rawText.includes("Error")
+    )
   ) {
-    // eslint-disable-next-line no-console
-    console.log("💡 Attempting text fallback extraction...");
-    const extractedConditions = extractConditionsFromText(rawText);
-    if (extractedConditions.length > 0) {
-      // eslint-disable-next-line no-console
-      console.log(
-        `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
-      );
-      return {
-        conditions: extractedConditions,
-        summary: "Extracted from AI text response (non-JSON fallback)",
-        wasFallback: true,
-      };
-    }
+    return null;
   }
+
+  // eslint-disable-next-line no-console
+  console.log("💡 Attempting text fallback extraction...");
+  const extractedConditions = extractConditionsFromText(rawText);
+  if (extractedConditions.length === 0) return null;
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
+  );
+  return {
+    conditions: extractedConditions,
+    summary: "Extracted from AI text response (non-JSON fallback)",
+    wasFallback: true,
+  };
+}
+
+/**
+ * Classify why AI response parsing failed and either throw a user-facing
+ * error, or return a plain-text-fallback result. Always throws or returns -
+ * never both. Pure function - no component state involved.
+ */
+function classifyAndReportParseFailure(aiResponse, parseError) {
+  console.error(
+    "Failed to parse AI response:",
+    parseError.message || parseError,
+  );
+  _logRawAIResponse(aiResponse);
+
+  // Check for specific error messages that indicate recoverable situations
+  const rawText =
+    typeof aiResponse === "string" ? aiResponse : aiResponse?.text || "";
+
+  _throwIfKnownTransientError(rawText);
+  _throwIfInitializingMessage(rawText);
+
+  const fallback = _tryTextFallbackExtraction(rawText);
+  if (fallback) return fallback;
 
   throw new Error("AI returned invalid format. Please try again.");
 }
@@ -1731,6 +1759,71 @@ function chunkText(text, maxTokensPerChunk = 2500) {
   return chunks;
 }
 
+// Run one extraction attempt against a chunk with the given strategy.
+// Returns the parsed result, or null if the AI didn't return usable
+// conditions (caller decides whether that's worth retrying).
+async function _attemptChunkExtraction(
+  chunkText,
+  chunkIndex,
+  totalChunks,
+  strategy,
+  setProcessingStage,
+) {
+  setProcessingStage(
+    `Processing section ${chunkIndex + 1} of ${totalChunks}... (${strategy.name})`,
+  );
+
+  const chunkPrompt =
+    BLUE_BUTTON_AI_PROMPT_HEADER + chunkText + BLUE_BUTTON_AI_PROMPT_FOOTER;
+
+  // AIS-05: non-blocking crisis scan over this raw record chunk.
+  scanDocumentForCrisis(chunkText);
+
+  const aiResponse = await generateAI(chunkPrompt, {
+    temperature: strategy.temp,
+    maxTokens: strategy.maxTokens,
+    expectJSON: true,
+    skipHallucinationCheck: true,
+    skipCrisisCheck: true,
+    useDKB: false,
+    systemPrompt: "",
+  });
+
+  const parsed = parseAIResponse(aiResponse);
+
+  // Success! Return results
+  if (parsed && parsed.conditions && Array.isArray(parsed.conditions)) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
+    );
+    return parsed;
+  }
+  return null;
+}
+
+// Last-resort regex extraction for a chunk after every AI strategy has
+// failed. Returns the fallback result, or null if it found nothing either.
+function _tryRegexFallbackForChunk(chunkText, chunkIndex) {
+  // eslint-disable-next-line no-console
+  console.log(
+    `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
+  );
+  const fallbackConditions = extractConditionsFromText(chunkText);
+
+  if (fallbackConditions.length === 0) return null;
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
+  );
+  return {
+    conditions: fallbackConditions,
+    summary: `Extracted via fallback (section ${chunkIndex + 1})`,
+    wasFallback: true,
+  };
+}
+
 /**
  * Process a single chunk with retry logic and multiple fallback strategies
  * NO FAILED SECTIONS ALLOWED - we try everything possible
@@ -1750,37 +1843,14 @@ async function processChunkWithRetry(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const strategy = strategies[attempt];
-      setProcessingStage(
-        `Processing section ${chunkIndex + 1} of ${totalChunks}... (${strategy.name})`,
+      const parsed = await _attemptChunkExtraction(
+        chunkText,
+        chunkIndex,
+        totalChunks,
+        strategies[attempt],
+        setProcessingStage,
       );
-
-      const chunkPrompt =
-        BLUE_BUTTON_AI_PROMPT_HEADER + chunkText + BLUE_BUTTON_AI_PROMPT_FOOTER;
-
-      // AIS-05: non-blocking crisis scan over this raw record chunk.
-      scanDocumentForCrisis(chunkText);
-
-      const aiResponse = await generateAI(chunkPrompt, {
-        temperature: strategy.temp,
-        maxTokens: strategy.maxTokens,
-        expectJSON: true,
-        skipHallucinationCheck: true,
-        skipCrisisCheck: true,
-        useDKB: false,
-        systemPrompt: "",
-      });
-
-      const parsed = parseAIResponse(aiResponse);
-
-      // Success! Return results
-      if (parsed && parsed.conditions && Array.isArray(parsed.conditions)) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `✅ Section ${chunkIndex + 1} succeeded on ${strategy.name} strategy (${parsed.conditions.length} conditions)`,
-        );
-        return parsed;
-      }
+      if (parsed) return parsed;
     } catch (error) {
       console.warn(
         `⚠️ Section ${chunkIndex + 1} attempt ${attempt + 1}/${MAX_RETRIES} failed:`,
@@ -1789,23 +1859,8 @@ async function processChunkWithRetry(
 
       // If this was the last attempt, try regex fallback
       if (attempt === MAX_RETRIES - 1) {
-        // eslint-disable-next-line no-console
-        console.log(
-          `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
-        );
-        const fallbackConditions = extractConditionsFromText(chunkText);
-
-        if (fallbackConditions.length > 0) {
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
-          );
-          return {
-            conditions: fallbackConditions,
-            summary: `Extracted via fallback (section ${chunkIndex + 1})`,
-            wasFallback: true,
-          };
-        }
+        const fallbackResult = _tryRegexFallbackForChunk(chunkText, chunkIndex);
+        if (fallbackResult) return fallbackResult;
       }
 
       // Wait before retry (exponential backoff)

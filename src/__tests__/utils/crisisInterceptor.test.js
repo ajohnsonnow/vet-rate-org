@@ -14,22 +14,18 @@ function describeDetectCrisisLanguage() {
       expect(result.severity).toBeNull();
     });
 
-    it("detects critical self-harm language", () => {
-      const result = detectCrisisLanguage("I want to end my life");
+    it.each([
+      ["critical self-harm language", "I want to end my life", "critical"],
+      [
+        "high severity suicidal ideation",
+        "I have been thinking about suicide",
+        "high",
+      ],
+      ["medium severity distress", "I feel worthless", "medium"],
+    ])("detects %s", (_label, text, severity) => {
+      const result = detectCrisisLanguage(text);
       expect(result.isCrisis).toBe(true);
-      expect(result.severity).toBe("critical");
-    });
-
-    it("detects high severity suicidal ideation", () => {
-      const result = detectCrisisLanguage("I have been thinking about suicide");
-      expect(result.isCrisis).toBe(true);
-      expect(result.severity).toBe("high");
-    });
-
-    it("detects medium severity distress", () => {
-      const result = detectCrisisLanguage("I feel worthless");
-      expect(result.isCrisis).toBe(true);
-      expect(result.severity).toBe("medium");
+      expect(result.severity).toBe(severity);
     });
 
     it("handles null/undefined input safely", () => {

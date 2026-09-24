@@ -505,6 +505,64 @@ export const clearAllNavigatorData = () => {
 // STATISTICS
 // ============================================
 
+function _tallyClaimByType(claim, stats) {
+  if (claim.claimType && stats.byType[claim.claimType] !== undefined) {
+    stats.byType[claim.claimType]++;
+  }
+}
+
+function _tallyClaimByStatus(claim, stats) {
+  if (
+    claim.currentPhase === "TRIAGE" ||
+    claim.currentPhase === "GATHERING_EVIDENCE"
+  ) {
+    stats.byStatus.drafting++;
+  } else if (
+    claim.currentPhase === "CLAIM_SUBMITTED" ||
+    claim.currentPhase === "INITIAL_REVIEW"
+  ) {
+    stats.byStatus.submitted++;
+  } else if (
+    [
+      "EVIDENCE_GATHERING",
+      "CP_EXAM_SCHEDULED",
+      "PREPARATION_FOR_DECISION",
+    ].includes(claim.currentPhase)
+  ) {
+    stats.byStatus.pending++;
+  } else if (claim.decisionInfo?.outcome === "GRANTED") {
+    stats.byStatus.granted++;
+  } else if (claim.decisionInfo?.outcome === "DENIED") {
+    stats.byStatus.denied++;
+  } else if (claim.currentPhase === "APPEAL") {
+    stats.byStatus.appealing++;
+  }
+}
+
+// Number of the claim's tracked deadlines (appeal, ITF expiration) that
+// fall within the next 30 days.
+function _countApproachingDeadlines(claim) {
+  let count = 0;
+  if (claim.criticalDates?.appealDeadline) {
+    const days = daysUntil(claim.criticalDates.appealDeadline);
+    if (days > 0 && days <= 30) count++;
+  }
+  if (claim.criticalDates?.itfExpirationDate) {
+    const days = daysUntil(claim.criticalDates.itfExpirationDate);
+    if (days > 0 && days <= 30) count++;
+  }
+  return count;
+}
+
+// Percentage of the claim's evidence checklist marked complete, or 0 if it
+// has no checklist.
+function _claimCompletenessPercent(claim) {
+  if (!claim.evidenceChecklist) return 0;
+  const items = Object.values(claim.evidenceChecklist);
+  const complete = items.filter((v) => v === true).length;
+  return (complete / items.length) * 100;
+}
+
 /**
  * Get claim statistics for dashboard
  * @returns {Object} Statistics object
@@ -537,58 +595,10 @@ export const getClaimStatistics = () => {
   let totalCompleteness = 0;
 
   claims.forEach((claim) => {
-    // Count by type
-    if (claim.claimType && stats.byType[claim.claimType] !== undefined) {
-      stats.byType[claim.claimType]++;
-    }
-
-    // Count by status/phase
-    if (
-      claim.currentPhase === "TRIAGE" ||
-      claim.currentPhase === "GATHERING_EVIDENCE"
-    ) {
-      stats.byStatus.drafting++;
-    } else if (
-      claim.currentPhase === "CLAIM_SUBMITTED" ||
-      claim.currentPhase === "INITIAL_REVIEW"
-    ) {
-      stats.byStatus.submitted++;
-    } else if (
-      [
-        "EVIDENCE_GATHERING",
-        "CP_EXAM_SCHEDULED",
-        "PREPARATION_FOR_DECISION",
-      ].includes(claim.currentPhase)
-    ) {
-      stats.byStatus.pending++;
-    } else if (claim.decisionInfo?.outcome === "GRANTED") {
-      stats.byStatus.granted++;
-    } else if (claim.decisionInfo?.outcome === "DENIED") {
-      stats.byStatus.denied++;
-    } else if (claim.currentPhase === "APPEAL") {
-      stats.byStatus.appealing++;
-    }
-
-    // Check deadlines
-    if (claim.criticalDates?.appealDeadline) {
-      const days = daysUntil(claim.criticalDates.appealDeadline);
-      if (days > 0 && days <= 30) {
-        stats.deadlinesApproaching++;
-      }
-    }
-    if (claim.criticalDates?.itfExpirationDate) {
-      const days = daysUntil(claim.criticalDates.itfExpirationDate);
-      if (days > 0 && days <= 30) {
-        stats.deadlinesApproaching++;
-      }
-    }
-
-    // Calculate completeness
-    if (claim.evidenceChecklist) {
-      const items = Object.values(claim.evidenceChecklist);
-      const complete = items.filter((v) => v === true).length;
-      totalCompleteness += (complete / items.length) * 100;
-    }
+    _tallyClaimByType(claim, stats);
+    _tallyClaimByStatus(claim, stats);
+    stats.deadlinesApproaching += _countApproachingDeadlines(claim);
+    totalCompleteness += _claimCompletenessPercent(claim);
   });
 
   stats.averageCompleteness =

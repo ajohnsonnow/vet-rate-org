@@ -889,16 +889,8 @@ function _formatDeployment(d) {
   return `${place} ${dates}`;
 }
 
-function _formatServiceRecordDoc(doc, options) {
-  const data = doc.extractedData || {};
-  if (Object.keys(data).length === 0) {
-    if (options.includeRawText && doc.rawText) {
-      return `[Raw text from ${doc.fileName}]\n${doc.rawText.substring(0, 2000)}\n\n`;
-    }
-    return "";
-  }
-
-  let out = `File: ${doc.fileName}\n`;
+function _formatServiceRecordBasics(data) {
+  let out = "";
   if (data.fullName) out += `  Name: ${data.fullName}\n`;
   if (data.branch) out += `  Branch: ${data.branch}\n`;
   if (data.component) out += `  Component: ${data.component}\n`;
@@ -908,6 +900,11 @@ function _formatServiceRecordDoc(doc, options) {
   if (data.separationDate) out += `  Separation: ${data.separationDate}\n`;
   if (data.characterOfService)
     out += `  Character: ${data.characterOfService}\n`;
+  return out;
+}
+
+function _formatServiceRecordHighlights(data) {
+  let out = "";
   if (data.awards?.length) {
     out += `  Awards: ${data.awards.map((a) => a.name || a).join("; ")}\n`;
   }
@@ -920,6 +917,21 @@ function _formatServiceRecordDoc(doc, options) {
   if (data.specialQualifications?.length) {
     out += `  Qualifications: ${data.specialQualifications.join(", ")}\n`;
   }
+  return out;
+}
+
+function _formatServiceRecordDoc(doc, options) {
+  const data = doc.extractedData || {};
+  if (Object.keys(data).length === 0) {
+    if (options.includeRawText && doc.rawText) {
+      return `[Raw text from ${doc.fileName}]\n${doc.rawText.substring(0, 2000)}\n\n`;
+    }
+    return "";
+  }
+
+  let out = `File: ${doc.fileName}\n`;
+  out += _formatServiceRecordBasics(data);
+  out += _formatServiceRecordHighlights(data);
   out += "\n";
   return out;
 }

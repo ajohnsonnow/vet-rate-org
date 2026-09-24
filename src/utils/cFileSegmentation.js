@@ -308,48 +308,46 @@ export function segmentCFile(text, options = {}) {
   return result;
 }
 
-/**
- * Find document boundaries using signature patterns
- */
-function findDocumentBoundaries(text) {
-  const boundaries = [];
+// Find every boundary match for one document-signature's patterns.
+// Dedupes matches of the *same* type within 500 chars of each other.
+function _collectPatternBoundaries(typeName, signature, text) {
+  const found = [];
 
-  for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
-    for (const pattern of signature.patterns) {
-      let match;
-      const globalPattern = new RegExp(
-        pattern.source,
-        pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g",
+  for (const pattern of signature.patterns) {
+    let match;
+    const globalPattern = new RegExp(
+      pattern.source,
+      pattern.flags.includes("g") ? pattern.flags : pattern.flags + "g",
+    );
+
+    while ((match = globalPattern.exec(text)) !== null) {
+      // Check for duplicates within 500 chars
+      const isDuplicate = found.some(
+        (b) => Math.abs(b.position - match.index) < 500 && b.type === typeName,
       );
 
-      while ((match = globalPattern.exec(text)) !== null) {
-        // Check for duplicates within 500 chars
-        const isDuplicate = boundaries.some(
-          (b) =>
-            Math.abs(b.position - match.index) < 500 && b.type === typeName,
-        );
-
-        if (!isDuplicate) {
-          boundaries.push({
-            type: typeName,
-            position: match.index,
-            matchedText: match[0],
-            priority: signature.priority,
-            confidence: calculateMatchConfidence(
-              text,
-              match.index,
-              signature.patterns,
-            ),
-          });
-        }
+      if (!isDuplicate) {
+        found.push({
+          type: typeName,
+          position: match.index,
+          matchedText: match[0],
+          priority: signature.priority,
+          confidence: calculateMatchConfidence(
+            text,
+            match.index,
+            signature.patterns,
+          ),
+        });
       }
     }
   }
 
-  // Sort by position
-  boundaries.sort((a, b) => a.position - b.position);
+  return found;
+}
 
-  // Remove boundaries that are too close together
+// Remove boundaries that are too close together, keeping the
+// higher-priority match when two candidates collide.
+function _filterCloseBoundaries(boundaries) {
   const filtered = [];
   for (const boundary of boundaries) {
     const lastBoundary = filtered[filtered.length - 1];
@@ -360,8 +358,25 @@ function findDocumentBoundaries(text) {
       filtered[filtered.length - 1] = boundary;
     }
   }
-
   return filtered;
+}
+
+/**
+ * Find document boundaries using signature patterns
+ */
+function findDocumentBoundaries(text) {
+  let boundaries = [];
+
+  for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
+    boundaries = boundaries.concat(
+      _collectPatternBoundaries(typeName, signature, text),
+    );
+  }
+
+  // Sort by position
+  boundaries.sort((a, b) => a.position - b.position);
+
+  return _filterCloseBoundaries(boundaries);
 }
 
 /**

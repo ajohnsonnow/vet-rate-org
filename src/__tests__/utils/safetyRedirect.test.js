@@ -1,22 +1,44 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
+import {
+  getSafetyUseCount,
+  hasUsedPanicFeature,
+  createQuickExitButton,
+  removeQuickExitButton,
+} from "../../utils/safetyRedirect";
 
 // Test safetyRedirect utility
 describe("Safety Redirect", () => {
-  it("crisis hotline number is correct", () => {
-    const CRISIS_HOTLINE = "988";
-    expect(CRISIS_HOTLINE).toBe("988");
+  afterEach(() => {
+    localStorage.removeItem("vetrate_safety_use_count");
+    removeQuickExitButton();
   });
 
-  it("VA crisis line is 988 press 1", () => {
-    const VA_CRISIS = "988";
-    const VA_PRESS = 1;
-    expect(VA_CRISIS).toBe("988");
-    expect(VA_PRESS).toBe(1);
+  it("reports zero uses and hasUsedPanicFeature=false before the panic key is ever triggered", () => {
+    expect(getSafetyUseCount()).toBe(0);
+    expect(hasUsedPanicFeature()).toBe(false);
   });
 
-  it("crisis text line is correct", () => {
-    const TEXT_LINE = "838255";
-    expect(TEXT_LINE).toBe("838255");
+  it("hasUsedPanicFeature is true once the usage counter is non-zero", () => {
+    localStorage.setItem("vetrate_safety_use_count", "1");
+    expect(getSafetyUseCount()).toBe(1);
+    expect(hasUsedPanicFeature()).toBe(true);
+  });
+
+  it("createQuickExitButton adds an accessible, single-use exit button", () => {
+    const button = createQuickExitButton(document.body);
+    expect(button.id).toBe("vetrate-quick-exit");
+    expect(button.getAttribute("aria-label")).toMatch(/quick exit/i);
+    expect(document.getElementById("vetrate-quick-exit")).toBe(button);
+
+    // Calling it again returns the existing button, not a duplicate.
+    const again = createQuickExitButton(document.body);
+    expect(again).toBe(button);
+  });
+
+  it("removeQuickExitButton removes the button from the DOM", () => {
+    createQuickExitButton(document.body);
+    removeQuickExitButton();
+    expect(document.getElementById("vetrate-quick-exit")).toBeNull();
   });
 });
 

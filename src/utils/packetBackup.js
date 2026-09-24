@@ -71,6 +71,20 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
   return sanitized;
 };
 
+// Validate/normalize a date-shaped field, defaulting to "now" when the
+// input doesn't parse as a real date.
+function _sanitizeDateField(value) {
+  const date = new Date(value);
+  return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+}
+
+// Validate/normalize an integer-shaped field (diagnostic code, rating).
+// Returns undefined (field dropped) when out of the valid 0-99999 range.
+function _sanitizeIntegerField(value) {
+  const num = parseInt(value, 10);
+  return !isNaN(num) && num >= 0 && num <= 99999 ? num : undefined;
+}
+
 /**
  * Sanitize a single claim field value based on its expected type/format.
  * @param {string} field - The claim field name
@@ -89,16 +103,10 @@ const sanitizeClaimField = (field, value) => {
     return VALID_STATUSES.includes(value) ? value : "Drafting";
   }
   if (field === "dateSaved" || field === "dateUpdated") {
-    // Validate date format
-    const date = new Date(value);
-    return isNaN(date.getTime())
-      ? new Date().toISOString()
-      : date.toISOString();
+    return _sanitizeDateField(value);
   }
   if (field === "diagnosticCode" || field === "selectedRating") {
-    // Numbers only
-    const num = parseInt(value, 10);
-    return !isNaN(num) && num >= 0 && num <= 99999 ? num : undefined;
+    return _sanitizeIntegerField(value);
   }
   if (field === "notes") {
     return sanitizeString(String(value || ""), MAX_STRING_LENGTH);

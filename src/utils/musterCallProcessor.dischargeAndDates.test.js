@@ -17,21 +17,26 @@ globalThis.ImageData ??= class ImageData {};
 const { parseServiceRecord } = await import("./musterCallProcessor");
 
 describe("parseServiceRecord: character of service", () => {
-  it("reads the real NGB22 rendering and normalizes it", async () => {
-    const result = await parseServiceRecord(
+  it.each([
+    [
+      "the real NGB22 rendering",
       "24. CHARACTER OF SERVICE GENERAL - UNDER HONORABLE CONDITIONS 25. SEPARATION AUTHORITY NGR 600-200",
-      "NGB22",
-    );
-    expect(result.dischargeType).toBe("GENERAL UNDER HONORABLE CONDITIONS");
-  });
-
-  it("reads it through the zero-for-O OCR corruption a real scan produces", async () => {
-    const result = await parseServiceRecord(
+    ],
+    [
+      "the zero-for-O OCR corruption a real scan produces",
       "GENERAL - UNDER H0N0RABLE C0NDITI0NS       NGB F0RM 56",
-      "NGB22",
-    );
-    expect(result.dischargeType).toBe("GENERAL UNDER HONORABLE CONDITIONS");
-  });
+    ],
+    [
+      "the full phrase even with a bare HONORABLE also present",
+      "MEMBER SERVED. GENERAL - UNDER HONORABLE CONDITIONS. NGB FORM 56",
+    ],
+  ])(
+    "normalizes %s to GENERAL UNDER HONORABLE CONDITIONS",
+    async (_label, text) => {
+      const result = await parseServiceRecord(text, "NGB22");
+      expect(result.dischargeType).toBe("GENERAL UNDER HONORABLE CONDITIONS");
+    },
+  );
 
   it("does not read the Adjutant General's signature block as a General discharge", async () => {
     const result = await parseServiceRecord(
@@ -47,14 +52,6 @@ describe("parseServiceRecord: character of service", () => {
       "DD214",
     );
     expect(result.dischargeType).toBe("HONORABLE");
-  });
-
-  it("prefers the full phrase over the bare HONORABLE inside it", async () => {
-    const result = await parseServiceRecord(
-      "MEMBER SERVED. GENERAL - UNDER HONORABLE CONDITIONS. NGB FORM 56",
-      "NGB22",
-    );
-    expect(result.dischargeType).toBe("GENERAL UNDER HONORABLE CONDITIONS");
   });
 });
 

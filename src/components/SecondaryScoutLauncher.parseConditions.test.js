@@ -63,32 +63,21 @@ describe("SecondaryScoutLauncher: parseConditionsFromText", () => {
     expect(parseConditionsFromText("just some unrelated text")).toEqual([]);
   });
 
-  it("does not hang on a large all-letters document (regression: ReDoS)", () => {
-    const pathological = "A".repeat(150000);
-    const start = Date.now();
-    const conditions = parseConditionsFromText(pathological);
-    const elapsed = Date.now() - start;
-    expect(Array.isArray(conditions)).toBe(true);
-    expect(elapsed).toBeLessThan(1000);
-  });
-
-  it("does not hang on a large all-whitespace document (regression: ReDoS)", () => {
-    const pathological = " ".repeat(150000);
-    const start = Date.now();
-    const conditions = parseConditionsFromText(pathological);
-    const elapsed = Date.now() - start;
-    expect(Array.isArray(conditions)).toBe(true);
-    expect(elapsed).toBeLessThan(1000);
-  });
-
-  it("does not hang on a large all-newlines document (regression: ReDoS)", () => {
-    const pathological = "\n".repeat(150000);
-    const start = Date.now();
-    const conditions = parseConditionsFromText(pathological);
-    const elapsed = Date.now() - start;
-    expect(Array.isArray(conditions)).toBe(true);
-    expect(elapsed).toBeLessThan(1000);
-  });
+  it.each([
+    ["all-letters", "A"],
+    ["all-whitespace", " "],
+    ["all-newlines", "\n"],
+  ])(
+    "does not hang on a large %s document (regression: ReDoS)",
+    (_label, char) => {
+      const pathological = char.repeat(150000);
+      const start = Date.now();
+      const conditions = parseConditionsFromText(pathological);
+      const elapsed = Date.now() - start;
+      expect(Array.isArray(conditions)).toBe(true);
+      expect(elapsed).toBeLessThan(1000);
+    },
+  );
 
   it("extracts many conditions from a large realistic document quickly", () => {
     const lines = [];

@@ -74,7 +74,7 @@ describe("DD214/NGB22 award parser regression: unclosed-paren + OCR 0/O + E.G./I
   it("Bug 3 regression guard: MIN_ALIAS_LENGTH still blocks 2-char noise aliases from a garbled OCR field label", () => {
     const garbled =
       "A -- TM TLE 0 107A  0R'GKINAZTRTE SERVCE CAE LL 1 . EE -- . SM -Y --- 13. DEC0RATI0NS. RIBB0NS AWAR LM ST DAS. RACGES. CITATI0NS ANC CAMPAIGN. 14 WIL. TARY FCUCATICN";
-    expect(parseDD214Text(garbled, "Army").length).toBe(0);
+    expect(parseDD214Text(garbled, "Army")).toHaveLength(0);
   });
 
   it("Bug 4: Block 13 award list terminating in 'CONT IN BLOCK 18' (no '//' prefix) still pulls in the Block 18 continuation", async () => {

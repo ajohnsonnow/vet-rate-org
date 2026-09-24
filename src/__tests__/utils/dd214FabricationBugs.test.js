@@ -24,7 +24,7 @@ describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
     expect(result.deployments).not.toContain("VIETNAM");
-    expect(result.deployments.length).toBe(0);
+    expect(result.deployments).toHaveLength(0);
   });
 
   it("still extracts a real deployment mentioned in Box 18 remarks", async () => {
@@ -70,7 +70,7 @@ NO REMARKS BOX PRESENT ON THIS SYNTHETIC DOCUMENT. SERVED IN GERMANY.
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments.length).toBe(0);
+    expect(result.deployments).toHaveLength(0);
   });
 });
 

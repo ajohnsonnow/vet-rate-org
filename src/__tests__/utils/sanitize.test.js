@@ -226,8 +226,8 @@ describe("stripUntrustedUrls - LLM output sanitizer", () => {
 
   it("handles empty / non-string input", () => {
     expect(stripUntrustedUrls("")).toBe("");
-    expect(stripUntrustedUrls(null)).toBe(null);
-    expect(stripUntrustedUrls(undefined)).toBe(undefined);
+    expect(stripUntrustedUrls(null)).toBeNull();
+    expect(stripUntrustedUrls(undefined)).toBeUndefined();
   });
 
   it("survives adversarial LLM output (prompt-injection-leaked URL)", () => {

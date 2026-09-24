@@ -920,34 +920,39 @@ function enhanceContrast(imageData, factor) {
   return imageData;
 }
 
+// Mean pixel value (channel 0) within `radius` of (x, y), clamped to the
+// image bounds.
+function _localMean(data, x, y, width, height, radius) {
+  let sum = 0;
+  let count = 0;
+
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const ny = y + dy;
+      const nx = x + dx;
+      if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+        const nIdx = (ny * width + nx) * 4;
+        sum += data[nIdx];
+        count++;
+      }
+    }
+  }
+
+  return sum / count;
+}
+
 function adaptiveThreshold(imageData, blockSize = 11) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
   const output = new Uint8ClampedArray(data);
+  const radius = Math.floor(blockSize / 2);
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const idx = (y * width + x) * 4;
 
-      // Calculate local mean
-      let sum = 0;
-      let count = 0;
-      const radius = Math.floor(blockSize / 2);
-
-      for (let dy = -radius; dy <= radius; dy++) {
-        for (let dx = -radius; dx <= radius; dx++) {
-          const ny = y + dy;
-          const nx = x + dx;
-          if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
-            const nIdx = (ny * width + nx) * 4;
-            sum += data[nIdx];
-            count++;
-          }
-        }
-      }
-
-      const mean = sum / count;
+      const mean = _localMean(data, x, y, width, height, radius);
       const threshold = mean * 0.95; // Slightly below mean
       const value = data[idx] > threshold ? 255 : 0;
 

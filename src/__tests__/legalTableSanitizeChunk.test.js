@@ -145,36 +145,31 @@ describe("sanitizeLegalHtml - adversarial table cells", () => {
   const clean = (s) =>
     !/script|onclick|onerror|alert\(|evil\.com|<style/i.test(s);
 
-  it("neutralizes a <script> inside a table cell, keeping the safe text", () => {
-    const out = sanitizeLegalHtml(
-      "<table><tr><td><script>alert(1)</script>cellA</td></tr></table>",
-    );
+  it.each([
+    {
+      label: "a <script> inside a table cell",
+      html: "<table><tr><td><script>alert(1)</script>cellA</td></tr></table>",
+      keep: "cellA",
+    },
+    {
+      label: "an event handler on a <td>",
+      html: '<table><tr><td onclick="evil()">cellB</td></tr></table>',
+      keep: "cellB",
+    },
+    {
+      label: "an <img onerror> inside a cell",
+      html: "<table><tr><td><img src=x onerror=alert(1)>txt</td></tr></table>",
+      keep: "txt",
+    },
+    {
+      label: "a <style> inside a cell",
+      html: "<table><tr><td><style>.x{}</style>keep</td></tr></table>",
+      keep: "keep",
+    },
+  ])("neutralizes $label, keeping the safe text", ({ html, keep }) => {
+    const out = sanitizeLegalHtml(html);
     expect(clean(out)).toBe(true);
-    expect(out).toContain("cellA");
-  });
-
-  it("strips an event handler on a <td>", () => {
-    const out = sanitizeLegalHtml(
-      '<table><tr><td onclick="evil()">cellB</td></tr></table>',
-    );
-    expect(clean(out)).toBe(true);
-    expect(out).toContain("cellB");
-  });
-
-  it("neutralizes an <img onerror> inside a cell", () => {
-    const out = sanitizeLegalHtml(
-      "<table><tr><td><img src=x onerror=alert(1)>txt</td></tr></table>",
-    );
-    expect(clean(out)).toBe(true);
-    expect(out).toContain("txt");
-  });
-
-  it("strips a <style> inside a cell", () => {
-    const out = sanitizeLegalHtml(
-      "<table><tr><td><style>.x{}</style>keep</td></tr></table>",
-    );
-    expect(clean(out)).toBe(true);
-    expect(out).toContain("keep");
+    expect(out).toContain(keep);
   });
 
   it("replaces a non-gov URL inside a cell, preserves a gov URL", () => {
@@ -205,7 +200,7 @@ describe("sanitizeLegalHtml - adversarial table cells", () => {
     // The header row is the first data row; it must have exactly two cells
     // (three pipes), not three cells, despite the injected pipe.
     const dataRow = out.split("\n").find((l) => l.includes("a"));
-    expect((dataRow.match(/(?<!\\)\|/g) || []).length).toBe(3);
+    expect(dataRow.match(/(?<!\\)\|/g) || []).toHaveLength(3);
     expect(dataRow).toContain("a\\|b");
   });
 });
@@ -328,7 +323,7 @@ describe("chunkRecord / packProse - prose splits on paragraph boundaries", () =>
     const chunks = packProse(para);
 
     expect(chunks.length).toBeGreaterThan(1);
-    expect(words(chunks[0]).length).toBe(WORDS_PER_CHUNK);
+    expect(words(chunks[0])).toHaveLength(WORDS_PER_CHUNK);
 
     // Adjacent windows overlap by exactly OVERLAP_WORDS.
     const w0 = words(chunks[0]);
@@ -351,7 +346,7 @@ describe("chunkRecord / packProse - prose splits on paragraph boundaries", () =>
     const chunks = await chunkRecord(rec(body));
     const tableChunks = chunks.filter((c) => isTableChunk(c.text));
     expect(tableChunks).toHaveLength(1);
-    expect((tableChunks[0].text.match(/\| r\d+ \|/g) || []).length).toBe(500);
+    expect(tableChunks[0].text.match(/\| r\d+ \|/g) || []).toHaveLength(500);
   });
 });
 

@@ -47,7 +47,7 @@ describe("checkTDIUEligibility - 38 CFR § 4.16(a)", () => {
     expect(result.combined).toBe(60);
     expect(result.highest).toBe(30);
     expect(result.eligible).toBe(false);
-    expect(result.basis).toBe(null);
+    expect(result.basis).toBeNull();
   });
 
   it("accepts a plain ratings array", () => {

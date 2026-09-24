@@ -145,6 +145,68 @@ export const useKonamiCode = () => {
   return { isTriggered, reset };
 };
 
+const GAMEPAD_BUTTON_MAP = {
+  0: " ", // A/X → Space (Use/Shoot)
+  1: "Escape", // B/O → Escape (Menu)
+  2: "Tab", // X/□ → Tab (Map)
+  3: "Enter", // Y/△ → Enter
+  4: "q", // LB → Previous weapon
+  5: "e", // RB → Next weapon
+  6: "Shift", // LT → Run
+  7: "Control", // RT → Fire (alternate)
+  12: "ArrowUp", // D-pad Up
+  13: "ArrowDown", // D-pad Down
+  14: "ArrowLeft", // D-pad Left
+  15: "ArrowRight", // D-pad Right
+};
+
+function _dispatchGamepadKey(key, type) {
+  window.dispatchEvent(
+    new KeyboardEvent(type, {
+      key,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+}
+
+function _handleGamepadButtons(gp, lastButtonState) {
+  gp.buttons.forEach((button, index) => {
+    const key = GAMEPAD_BUTTON_MAP[index];
+    if (!key) return;
+
+    const wasPressed = lastButtonState[index];
+    const isPressed = button.pressed;
+
+    if (isPressed && !wasPressed) {
+      _dispatchGamepadKey(key, "keydown");
+    } else if (!isPressed && wasPressed) {
+      _dispatchGamepadKey(key, "keyup");
+    }
+
+    lastButtonState[index] = isPressed;
+  });
+}
+
+function _handleGamepadStick(gp) {
+  // Handle left stick for movement (with deadzone)
+  const DEADZONE = 0.3;
+  const leftX = gp.axes[0];
+  const leftY = gp.axes[1];
+
+  if (leftY < -DEADZONE) _dispatchGamepadKey("ArrowUp", "keydown");
+  else _dispatchGamepadKey("ArrowUp", "keyup");
+
+  if (leftY > DEADZONE) _dispatchGamepadKey("ArrowDown", "keydown");
+  else _dispatchGamepadKey("ArrowDown", "keyup");
+
+  if (leftX < -DEADZONE) _dispatchGamepadKey("ArrowLeft", "keydown");
+  else _dispatchGamepadKey("ArrowLeft", "keyup");
+
+  if (leftX > DEADZONE) _dispatchGamepadKey("ArrowRight", "keydown");
+  else _dispatchGamepadKey("ArrowRight", "keyup");
+}
+
 /**
  * Hook for Xbox/PlayStation controller support via Gamepad API
  * Maps controller inputs to keyboard events for WASM compatibility
@@ -162,31 +224,6 @@ export const useGamepadBridge = (isActive) => {
     let animationId;
     const lastButtonState = {};
 
-    const BUTTON_MAP = {
-      0: " ", // A/X → Space (Use/Shoot)
-      1: "Escape", // B/O → Escape (Menu)
-      2: "Tab", // X/□ → Tab (Map)
-      3: "Enter", // Y/△ → Enter
-      4: "q", // LB → Previous weapon
-      5: "e", // RB → Next weapon
-      6: "Shift", // LT → Run
-      7: "Control", // RT → Fire (alternate)
-      12: "ArrowUp", // D-pad Up
-      13: "ArrowDown", // D-pad Down
-      14: "ArrowLeft", // D-pad Left
-      15: "ArrowRight", // D-pad Right
-    };
-
-    const dispatchKey = (key, type) => {
-      window.dispatchEvent(
-        new KeyboardEvent(type, {
-          key,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-    };
-
     const pollGamepad = () => {
       const gamepads = navigator.getGamepads();
       const gp = gamepads[0] || gamepads[1] || gamepads[2] || gamepads[3];
@@ -199,39 +236,8 @@ export const useGamepadBridge = (isActive) => {
           console.log("🎮 Controller connected:", gp.id);
         }
 
-        // Handle buttons
-        gp.buttons.forEach((button, index) => {
-          const key = BUTTON_MAP[index];
-          if (!key) return;
-
-          const wasPressed = lastButtonState[index];
-          const isPressed = button.pressed;
-
-          if (isPressed && !wasPressed) {
-            dispatchKey(key, "keydown");
-          } else if (!isPressed && wasPressed) {
-            dispatchKey(key, "keyup");
-          }
-
-          lastButtonState[index] = isPressed;
-        });
-
-        // Handle left stick for movement (with deadzone)
-        const DEADZONE = 0.3;
-        const leftX = gp.axes[0];
-        const leftY = gp.axes[1];
-
-        if (leftY < -DEADZONE) dispatchKey("ArrowUp", "keydown");
-        else dispatchKey("ArrowUp", "keyup");
-
-        if (leftY > DEADZONE) dispatchKey("ArrowDown", "keydown");
-        else dispatchKey("ArrowDown", "keyup");
-
-        if (leftX < -DEADZONE) dispatchKey("ArrowLeft", "keydown");
-        else dispatchKey("ArrowLeft", "keyup");
-
-        if (leftX > DEADZONE) dispatchKey("ArrowRight", "keydown");
-        else dispatchKey("ArrowRight", "keyup");
+        _handleGamepadButtons(gp, lastButtonState);
+        _handleGamepadStick(gp);
       } else if (isConnected) {
         setIsConnected(false);
         setControllerName("");

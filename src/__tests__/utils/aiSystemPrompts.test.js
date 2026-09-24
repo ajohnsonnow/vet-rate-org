@@ -199,24 +199,18 @@ describe("validateAIResponse - FORBIDDEN_PHRASES (blocking)", () => {
     expect(result.errors.some((e) => /guarantee outcomes/i.test(e))).toBe(true);
   });
 
-  it("blocks probability claims", () => {
-    const result = validateAIResponse(
+  it.each([
+    [
+      "probability claims",
       "You have a 75% chance of approval based on similar cases.",
-    );
-    expect(result.isValid).toBe(false);
-  });
-
-  it("blocks rater roleplay", () => {
-    const result = validateAIResponse(
-      "As a VA rater, I would rate this claim at 30%.",
-    );
-    expect(result.isValid).toBe(false);
-  });
-
-  it("blocks nexus impersonation", () => {
-    const result = validateAIResponse(
+    ],
+    ["rater roleplay", "As a VA rater, I would rate this claim at 30%."],
+    [
+      "nexus impersonation",
       "In my medical opinion, it is more likely than not that...",
-    );
+    ],
+  ])("blocks %s", (_label, text) => {
+    const result = validateAIResponse(text);
     expect(result.isValid).toBe(false);
   });
 });

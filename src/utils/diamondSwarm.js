@@ -760,6 +760,35 @@ function _interruptGenerate(engine) {
   }
 }
 
+// Process one character of a streamed JSON delta, tracking escape/string
+// state and bracket depth. Mutates `state` in place. Returns true once
+// this character closes the root JSON object (bracketDepth back to 0).
+function _processJsonScanChar(ch, state, responseText) {
+  if (state.escape) {
+    state.escape = false;
+    return false;
+  }
+  if (ch === "\\" && state.inString) {
+    state.escape = true;
+    return false;
+  }
+  if (ch === '"') {
+    state.inString = !state.inString;
+    return false;
+  }
+  if (state.inString) return false;
+
+  if (ch === "{") {
+    state.bracketDepth++;
+  } else if (ch === "}") {
+    state.bracketDepth--;
+    if (state.bracketDepth === 0 && responseText.trimStart().startsWith("{")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Track bracket depth across one streamed delta to detect JSON root
  * completion. Handles escaped chars and string literals so inner braces
@@ -769,31 +798,10 @@ function _interruptGenerate(engine) {
  */
 function _scanDeltaForJSONClose(delta, state, responseText, engine) {
   for (const ch of delta) {
-    if (state.escape) {
-      state.escape = false;
-      continue;
-    }
-    if (ch === "\\" && state.inString) {
-      state.escape = true;
-      continue;
-    }
-    if (ch === '"') {
-      state.inString = !state.inString;
-      continue;
-    }
-    if (state.inString) continue;
-    if (ch === "{") {
-      state.bracketDepth++;
-    } else if (ch === "}") {
-      state.bracketDepth--;
-      if (
-        state.bracketDepth === 0 &&
-        responseText.trimStart().startsWith("{")
-      ) {
-        // Root JSON object closed - stop generation immediately.
-        _interruptGenerate(engine);
-        break;
-      }
+    if (_processJsonScanChar(ch, state, responseText)) {
+      // Root JSON object closed - stop generation immediately.
+      _interruptGenerate(engine);
+      break;
     }
   }
 }

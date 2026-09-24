@@ -297,6 +297,17 @@ export const getBugReport = async (reportId, accessor = "admin") => {
   });
 };
 
+// Check a bug report against the optional resolved/severity/category/module
+// filters. A filter field that's absent from `filters` matches everything.
+function _matchesBugReportFilters(report, filters) {
+  if (filters.resolved !== undefined && report.resolved !== filters.resolved)
+    return false;
+  if (filters.severity && report.severity !== filters.severity) return false;
+  if (filters.category && report.category !== filters.category) return false;
+  if (filters.module && report.module !== filters.module) return false;
+  return true;
+}
+
 /**
  * Get all bug reports with optional filters
  * @param {Object} filters - { resolved, severity, category, module, limit }
@@ -320,20 +331,7 @@ export const getAllBugReports = async (filters = {}) => {
       if (cursor && reports.length < limit) {
         const report = cursor.value;
 
-        // Apply filters
-        let include = true;
-        if (
-          filters.resolved !== undefined &&
-          report.resolved !== filters.resolved
-        )
-          include = false;
-        if (filters.severity && report.severity !== filters.severity)
-          include = false;
-        if (filters.category && report.category !== filters.category)
-          include = false;
-        if (filters.module && report.module !== filters.module) include = false;
-
-        if (include) {
+        if (_matchesBugReportFilters(report, filters)) {
           reports.push(report);
         }
 

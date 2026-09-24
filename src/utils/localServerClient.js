@@ -88,6 +88,23 @@ export const getModelInfo = async (config = getServerConfig()) => {
   }
 };
 
+// Parse one SSE line from the streaming completion response. Fires
+// `onToken` and returns the token's content when the line carries any,
+// otherwise returns an empty string.
+function _extractStreamedContent(line, onToken) {
+  if (!line.startsWith("data: ")) return "";
+  try {
+    const data = JSON.parse(line.slice(6));
+    if (data.content) {
+      onToken(data.content);
+      return data.content;
+    }
+  } catch {
+    /* ignored */
+  }
+  return "";
+}
+
 /**
  * Read a streaming completion response, invoking onToken per chunk.
  */
@@ -105,17 +122,7 @@ const readStreamingCompletion = async (response, onToken) => {
     const lines = chunk.split("\n");
 
     for (const line of lines) {
-      if (line.startsWith("data: ")) {
-        try {
-          const data = JSON.parse(line.slice(6));
-          if (data.content) {
-            result += data.content;
-            onToken(data.content);
-          }
-        } catch {
-          /* ignored */
-        }
-      }
+      result += _extractStreamedContent(line, onToken);
     }
   }
 

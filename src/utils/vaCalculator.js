@@ -417,6 +417,81 @@ export const calculateVARating = (conditions) => {
   };
 };
 
+// Spouse base addition, plus Aid & Attendance if applicable. Mutates
+// `breakdown` in place and returns the total amount added.
+function _applySpouseAdditions(
+  breakdown,
+  rating,
+  married,
+  spouseAidAttendance,
+) {
+  if (!married) return 0;
+
+  breakdown.spouseAddition = VA_PAY_RATES_2026.spouse[rating] || 0;
+  let added = breakdown.spouseAddition;
+
+  if (spouseAidAttendance) {
+    breakdown.spouseAidAttendanceAddition =
+      VA_PAY_RATES_2026.spouseAidAttendance[rating] || 0;
+    added += breakdown.spouseAidAttendanceAddition;
+  }
+
+  return added;
+}
+
+// The VA's "veteran with child" base-rate rows already pay for 1 child
+// (see va.gov compensation-rates page). Only the 2nd+ child gets the
+// "each additional child" rate — applying that rate to the first child
+// undercounts every veteran with dependents. Mutates `breakdown` in place
+// and returns the total amount added.
+function _applyChildAdditions(
+  breakdown,
+  rating,
+  childrenUnder18,
+  childrenSchool,
+) {
+  let remainingUnder18 = childrenUnder18;
+  let remainingSchool = childrenSchool;
+  let added = 0;
+
+  if (remainingUnder18 + remainingSchool > 0) {
+    breakdown.firstChildAddition = VA_PAY_RATES_2026.firstChild[rating] || 0;
+    added += breakdown.firstChildAddition;
+    if (remainingUnder18 > 0) {
+      remainingUnder18 -= 1;
+    } else {
+      remainingSchool -= 1;
+    }
+  }
+
+  // Children under 18 (2nd and beyond)
+  if (remainingUnder18 > 0) {
+    const perChild = VA_PAY_RATES_2026.childUnder18[rating] || 0;
+    breakdown.childrenUnder18Addition = perChild * remainingUnder18;
+    added += breakdown.childrenUnder18Addition;
+  }
+
+  // Children 18-23 in school (2nd and beyond, or 1st if no under-18 child)
+  if (remainingSchool > 0) {
+    const perChild = VA_PAY_RATES_2026.childSchool[rating] || 0;
+    breakdown.childrenSchoolAddition = perChild * remainingSchool;
+    added += breakdown.childrenSchoolAddition;
+  }
+
+  return added;
+}
+
+// Dependent-parent addition. Mutates `breakdown` in place and returns the
+// amount added.
+function _applyParentAdditions(breakdown, rating, dependentParents) {
+  if (dependentParents === 1) {
+    breakdown.parentsAddition = VA_PAY_RATES_2026.parentOne[rating] || 0;
+  } else if (dependentParents >= 2) {
+    breakdown.parentsAddition = VA_PAY_RATES_2026.parentTwo[rating] || 0;
+  }
+  return breakdown.parentsAddition;
+}
+
 /**
  * Calculate monthly compensation based on rating and dependents
  *
@@ -451,57 +526,19 @@ export const calculateCompensation = (rating, dependents = {}) => {
   };
 
   if (qualifiesForDependents) {
-    // Spouse
-    if (married) {
-      breakdown.spouseAddition = VA_PAY_RATES_2026.spouse[rating] || 0;
-      total += breakdown.spouseAddition;
-
-      // Spouse Aid & Attendance
-      if (spouseAidAttendance) {
-        breakdown.spouseAidAttendanceAddition =
-          VA_PAY_RATES_2026.spouseAidAttendance[rating] || 0;
-        total += breakdown.spouseAidAttendanceAddition;
-      }
-    }
-
-    // The VA's "veteran with child" base-rate rows already pay for 1 child
-    // (see va.gov compensation-rates page). Only the 2nd+ child gets the
-    // "each additional child" rate — applying that rate to the first child
-    // undercounts every veteran with dependents.
-    let remainingUnder18 = childrenUnder18;
-    let remainingSchool = childrenSchool;
-    if (remainingUnder18 + remainingSchool > 0) {
-      breakdown.firstChildAddition = VA_PAY_RATES_2026.firstChild[rating] || 0;
-      total += breakdown.firstChildAddition;
-      if (remainingUnder18 > 0) {
-        remainingUnder18 -= 1;
-      } else {
-        remainingSchool -= 1;
-      }
-    }
-
-    // Children under 18 (2nd and beyond)
-    if (remainingUnder18 > 0) {
-      const perChild = VA_PAY_RATES_2026.childUnder18[rating] || 0;
-      breakdown.childrenUnder18Addition = perChild * remainingUnder18;
-      total += breakdown.childrenUnder18Addition;
-    }
-
-    // Children 18-23 in school (2nd and beyond, or 1st if no under-18 child)
-    if (remainingSchool > 0) {
-      const perChild = VA_PAY_RATES_2026.childSchool[rating] || 0;
-      breakdown.childrenSchoolAddition = perChild * remainingSchool;
-      total += breakdown.childrenSchoolAddition;
-    }
-
-    // Dependent parents
-    if (dependentParents === 1) {
-      breakdown.parentsAddition = VA_PAY_RATES_2026.parentOne[rating] || 0;
-      total += breakdown.parentsAddition;
-    } else if (dependentParents >= 2) {
-      breakdown.parentsAddition = VA_PAY_RATES_2026.parentTwo[rating] || 0;
-      total += breakdown.parentsAddition;
-    }
+    total += _applySpouseAdditions(
+      breakdown,
+      rating,
+      married,
+      spouseAidAttendance,
+    );
+    total += _applyChildAdditions(
+      breakdown,
+      rating,
+      childrenUnder18,
+      childrenSchool,
+    );
+    total += _applyParentAdditions(breakdown, rating, dependentParents);
   }
 
   return {
