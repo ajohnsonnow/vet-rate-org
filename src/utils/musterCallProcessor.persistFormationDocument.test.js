@@ -11,6 +11,14 @@ const { persistFormationDocument } = await import("./musterCallProcessor");
 const { getMyRatings } = await import("./veteranProfile");
 const { getServicePeriods } = await import("./veteranProfile");
 
+const letterFile = (name) => ({ name, size: 2048 });
+const letterResult = (conditions) => ({
+  pageCount: 1,
+  text: "",
+  classification: { type: "rating_decision", confidence: 90 },
+  extractedData: { type: "rating_decision", conditions },
+});
+
 // persistFormationDocument() is the exported seam processSingleDocument uses
 // once a document's already been classified and parsed - it's also called a
 // second time from the verification screen's "Verify & Save", so it has to
@@ -18,14 +26,6 @@ const { getServicePeriods } = await import("./veteranProfile");
 describe("musterCallProcessor: persistFormationDocument saves rated conditions to My Ratings", () => {
   beforeEach(() => {
     localStorage.clear();
-  });
-
-  const letterFile = (name) => ({ name, size: 2048 });
-  const letterResult = (conditions) => ({
-    pageCount: 1,
-    text: "",
-    classification: { type: "rating_decision", confidence: 90 },
-    extractedData: { type: "rating_decision", conditions },
   });
 
   it("adds a new rated condition to My Ratings", async () => {
