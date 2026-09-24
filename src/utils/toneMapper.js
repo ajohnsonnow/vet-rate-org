@@ -33,7 +33,7 @@ export const applyCompassionateTone = (
   // 1. Replace technical terms with spoken replacements
   toneMap.mappings.forEach((mapping) => {
     const regex = new RegExp(
-      `\\b${escapeRegex(mapping.technical_term)}\\b`,
+      String.raw`\b${escapeRegex(mapping.technical_term)}\b`,
       "gi",
     );
     processedText = processedText.replace(regex, mapping.spoken_replacement);
@@ -64,7 +64,7 @@ export const applyCompassionateTone = (
  * @returns {string}
  */
 const escapeRegex = (str) => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return str.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 };
 
 /**
@@ -124,7 +124,7 @@ const expandAbbreviationsForSpeech = (text) => {
   let processed = text;
 
   Object.entries(abbreviations).forEach(([abbr, expansion]) => {
-    const regex = new RegExp(`\\b${abbr}\\b`, "g");
+    const regex = new RegExp(String.raw`\b${abbr}\b`, "g");
     processed = processed.replace(regex, expansion);
   });
 

@@ -878,7 +878,7 @@ function applyVATerminologyCorrection(text) {
   let corrected = text;
   for (const [wrong, right] of Object.entries(VA_TERMINOLOGY_CORRECTIONS)) {
     corrected = corrected.replace(
-      new RegExp(wrong.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"),
+      new RegExp(wrong.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), "gi"),
       right,
     );
   }

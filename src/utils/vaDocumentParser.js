@@ -272,7 +272,7 @@ function extractDecisionSection(
     // Extract diagnostic code if present nearby
     const codeMatch = sectionText.match(
       new RegExp(
-        `${conditionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^]*?DC[:\\s#]*(\\d{4})`,
+        String.raw`${conditionName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^]*?DC[:\s#]*(\d{4})`,
         "i",
       ),
     );

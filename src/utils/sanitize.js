@@ -258,7 +258,7 @@ export function sanitizeInlineHtml(html) {
   if (!html || typeof html !== "string") return "";
   const escaped = escapeHtml(html);
   return escaped.replace(
-    new RegExp(`&lt;(/?(?:${INLINE_TAG_ALLOWLIST}))\\s*/?&gt;`, "gi"),
+    new RegExp(String.raw`&lt;(/?(?:${INLINE_TAG_ALLOWLIST}))\s*/?&gt;`, "gi"),
     "<$1>",
   );
 }

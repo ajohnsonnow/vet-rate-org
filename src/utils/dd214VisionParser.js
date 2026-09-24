@@ -885,7 +885,7 @@ function extractRank(text) {
   const payMatch = text.match(payGradePattern);
 
   const rankPattern = new RegExp(
-    `(?:rank|grade|rate)[:\\s]*(${ALL_RANKS.join("|")})`,
+    String.raw`(?:rank|grade|rate)[:\s]*(${ALL_RANKS.join("|")})`,
     "i",
   );
   const rankMatch = text.match(rankPattern);
@@ -945,7 +945,7 @@ function extractMOS(text) {
  */
 function extractDate(text, context) {
   const contextPattern = new RegExp(
-    `(${context})[^\\d]*(\\d{1,2})[\\s\\-\\/](\\d{1,2}|[A-Z]{3})[\\s\\-\\/](\\d{2,4})`,
+    String.raw`(${context})[^\d]*(\d{1,2})[\s\-\/](\d{1,2}|[A-Z]{3})[\s\-\/](\d{2,4})`,
     "i",
   );
   const match = text.match(contextPattern);
