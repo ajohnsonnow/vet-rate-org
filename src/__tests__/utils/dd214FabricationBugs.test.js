@@ -23,7 +23,7 @@ describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).not.toContain("VIETNAM");
+    expect(result.deployments.map((d) => d.location)).not.toContain("VIETNAM");
     expect(result.deployments).toHaveLength(0);
   });
 
@@ -40,7 +40,7 @@ describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).toContain("IRAQ");
+    expect(result.deployments.map((d) => d.location)).toContain("IRAQ");
   });
 
   it("rejects a deployment whose era predates the veteran's date of birth", async () => {
@@ -56,7 +56,7 @@ describe("FIX-3a: no fabricated deployments from DD214 boilerplate", () => {
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).not.toContain("VIETNAM");
+    expect(result.deployments.map((d) => d.location)).not.toContain("VIETNAM");
   });
 
   it("still finds a real deployment mention when Box 18 cannot be isolated (full-document fallback)", async () => {
@@ -77,7 +77,7 @@ NO REMARKS BOX PRESENT ON THIS SYNTHETIC DOCUMENT. SERVED IN GERMANY.
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).toContain("GERMANY");
+    expect(result.deployments.map((d) => d.location)).toContain("GERMANY");
   });
 });
 
@@ -101,7 +101,7 @@ VETERAN'S EDUCATI0NAL ASSISTANCE PR0GRAM
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).not.toContain("VIETNAM");
+    expect(result.deployments.map((d) => d.location)).not.toContain("VIETNAM");
     expect(result.deployments).toHaveLength(0);
   });
 
@@ -118,7 +118,7 @@ VETERAN'S EDUCATI0NAL ASSISTANCE PR0GRAM
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).toContain("IRAQ");
+    expect(result.deployments.map((d) => d.location)).toContain("IRAQ");
   });
 });
 

@@ -507,7 +507,7 @@ describe("FIX: deployment mention outside a truncated Box 18 is still found", ()
 `;
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
-    expect(result.deployments).toContain("KUWAIT");
+    expect(result.deployments.map((d) => d.location)).toContain("KUWAIT");
   });
 
   it("still does not fabricate a deployment from boilerplate when the fallback triggers", async () => {

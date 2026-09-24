@@ -46,6 +46,7 @@ import {
   getServiceHistory,
   saveDD214Data,
   addAward,
+  addDeployment,
   upsertServicePeriod,
   getMyRatings,
   saveMyRatings,
@@ -784,11 +785,14 @@ function _buildDD214ServiceAndSeparationFields(d, result, serviceTime) {
 // saveDD214Data() (veteranProfile.js) expects. The two never agreed on names
 // because saveDD214Data's other two callers (MyPacket.jsx, DD214Analyzer.jsx)
 // feed it AI/regex output from a separate extractor (dd214FieldExtractor.js)
-// that already uses saveDD214Data's names. Fields with no corresponding
-// saveDD214Data target (remarks, deployments) are intentionally left
-// unmapped rather than invented. placeOfEntry has no saveDD214Data target
-// either, but FIX-15 forwards it here anyway for the period-scoped
-// servicePeriods[] write in saveServiceRecordToProfile below.
+// that already uses saveDD214Data's names. remarks has no saveDD214Data
+// target and is intentionally left unmapped rather than invented.
+// deployments likewise has no saveDD214Data target - it's written by its
+// own saveDeploymentsToProfile (addDeployment), the same store the
+// Service tab's own deployments list reads, not through this record.
+// placeOfEntry has no saveDD214Data target either, but FIX-15 forwards it
+// here anyway for the period-scoped servicePeriods[] write in
+// saveServiceRecordToProfile below.
 export const buildDD214ProfileUpdate = (result) => {
   const d = result.extractedData || {};
   const serviceTime = _parseServiceTimeString(d.totalActiveService);
@@ -1049,6 +1053,56 @@ const saveAwardsToProfile = (file, result) => {
   }
 };
 
+// "AFGHANISTAN" -> "Afghanistan": veteranProfile.js's addDeployment stores
+// theater/location as free text rendered as-is by the Service tab, and
+// every other theater already on record there (Vietnam, Korea, Gulf War...)
+// is Title Case, not shouting-case straight from the OCR-corrected text.
+const _toTitleCase = (str) =>
+  str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+// buildDD214ProfileUpdate has no saveDD214Data target for deployments (see
+// that comment) because a deployment isn't a single-record field like the
+// rest of dd214Data - it's its own list, exactly like awards. Without this,
+// _extractNarrativeAndDeploymentLocations's own result never reached
+// localStorage at all, so the Service tab's Deployments card stayed on "No
+// deployments added yet" no matter how many documents Muster Call ingested.
+// addDeployment is the same write target the Service tab's own manual "Add
+// Deployment" form uses, so a document-ingested deployment now shows up
+// identically to one the veteran typed in by hand.
+export const saveDeploymentsToProfile = (file, result) => {
+  const deployments = result.extractedData?.deployments;
+  if (!Array.isArray(deployments) || deployments.length === 0) return;
+  try {
+    const existing = getServiceHistory().deployments || [];
+    deployments.forEach((dep) => {
+      if (!dep.location) return;
+      const alreadySaved = existing.some(
+        (d) =>
+          (d.location || "").toUpperCase() === dep.location.toUpperCase() &&
+          (d.startDate || null) === _toISODateString(dep.startDate),
+      );
+      if (alreadySaved) return;
+      const theater = _toTitleCase(dep.location);
+      addDeployment({
+        theater,
+        location: theater,
+        startDate: _toISODateString(dep.startDate),
+        endDate: _toISODateString(dep.endDate),
+        combat: !!dep.combatZone,
+      });
+    });
+    // eslint-disable-next-line no-console
+    console.log(
+      `✅ Saved ${deployments.length} deployment(s) to Service tab for ${file.name}`,
+    );
+  } catch (deploymentErr) {
+    console.warn(
+      `Deployment save failed for ${file.name} (non-fatal):`,
+      deploymentErr.message,
+    );
+  }
+};
+
 // Adapts musterCallProcessor's own extractedData field names
 // (buildDD214ProfileUpdate above) onto the dd214Data shape
 // veteranKnowledgeBase.mergeDD214IntoVKB expects, which differs in a couple
@@ -1068,9 +1122,10 @@ const buildVKBDD214Data = (result) => {
       devices: normalized.devices,
     };
   });
-  const deployments = (Array.isArray(d.deployments) ? d.deployments : []).map(
-    (location) => ({ location }),
-  );
+  // d.deployments is already { location, startDate, endDate, combatZone }
+  // (see _pushDeployment) - the same shape mergeDD214Deployments expects,
+  // so no remapping needed here.
+  const deployments = Array.isArray(d.deployments) ? d.deployments : [];
 
   return {
     ...candidate,
@@ -1450,6 +1505,7 @@ export const persistFormationDocument = async (file, result) => {
   await archiveDocumentInPacket(file, result);
   saveServiceRecordToProfile(file, result);
   saveAwardsToProfile(file, result);
+  saveDeploymentsToProfile(file, result);
   saveRatingDecisionToProfile(file, result);
   saveCodeSheetServicePeriodsToProfile(file, result);
   await appendMusterCallTimelineEntry(file, result);
@@ -2431,6 +2487,33 @@ const DEPLOYMENT_ERA_LATEST_YEAR = {
   VIETNAM: 1975,
   KOREA: 1953,
 };
+
+// A bare "MFO" (Multinational Force & Observers - the Sinai peacekeeping
+// mission) mention is recorded as a Sinai deployment.
+const DEPLOYMENT_LOCATION_ALIASES = {
+  MFO: "SINAI",
+};
+
+// IRS-designated combat zones under 26 U.S.C. §112 (Executive Orders 12744,
+// 13119, 13239 - see irs.gov/individuals/military/combat-zones), the same
+// list VA ties combat-pay/hazardous-duty determinations to: Afghanistan,
+// the Arabian Peninsula area (Iraq, Kuwait, Saudi Arabia, Bahrain, Qatar,
+// UAE, Oman, plus Syria since DoD's 2018 certification), the Sinai
+// Peninsula (Multinational Force & Observers service, Pub. L. 114-23,
+// 2015), and the Kosovo area.
+const DESIGNATED_COMBAT_ZONES = new Set([
+  "AFGHANISTAN",
+  "IRAQ",
+  "KUWAIT",
+  "SAUDI ARABIA",
+  "BAHRAIN",
+  "QATAR",
+  "UAE",
+  "OMAN",
+  "SYRIA",
+  "SINAI",
+  "KOSOVO",
+]);
 
 /**
  * Isolate Box 18 (Remarks) text so deployment/narrative extraction never
@@ -3938,10 +4021,21 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
     : "";
   const dobYear = _parseYearFromDate(data.dateOfBirth);
 
-  // Extract deployments from remarks (Box 18) - common locations
+  // Extract deployments from remarks (Box 18) - common locations, with or
+  // without an explicit "FROM YYYYMMDD TO YYYYMMDD" date range. The dated
+  // patterns run first so a bare-location match for the same place (below)
+  // is a no-op merge instead of overwriting real dates with nothing - see
+  // _pushDeployment.
   const deploymentPatterns = [
+    // {1,60} not unbounded +: real multi-word deployment locations are a
+    // few words, never remotely close to 60 chars - unbounded [A-Z\s]+?
+    // immediately followed by \s+ is the same ambiguous-adjacent-quantifier
+    // shape fixed elsewhere in this file (see parseRatingDecision's
+    // CONDITION_PERCENT_RE), which sonarjs/super-linear-regex flags.
+    /(?:SERVICE|SERVED)\s+IN\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
+    /DEPLOYED\s+TO\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
     /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
-    /(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN)/gi,
+    /\b(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN|SINAI|MFO)\b/gi,
   ];
 
   // A scrambled OCR reading order on a multi-column DD214/NGB22 layout can
@@ -3963,17 +4057,42 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
   for (const pattern of deploymentPatterns) {
     let match;
     while ((match = pattern.exec(scanUpper)) !== null) {
-      const deployment = match[1]?.trim();
-      if (!deployment || data.deployments.includes(deployment)) continue;
-
-      // Sanity guard: reject a deployment whose era ended before the
-      // veteran was even born.
-      const eraEndYear = DEPLOYMENT_ERA_LATEST_YEAR[deployment];
-      if (eraEndYear && dobYear && dobYear >= eraEndYear) continue;
-
-      data.deployments.push(deployment);
+      const location = match[1]?.trim();
+      if (!location) continue;
+      _pushDeployment(
+        data,
+        dobYear,
+        location,
+        _normalizeCompactDate(match[2]),
+        _normalizeCompactDate(match[3]),
+      );
     }
   }
+}
+
+// _normalizeCompactDate is declared further down (function declarations
+// hoist) - see FIX-15 there for the YYYYMMDD -> MM/DD/YYYY convention.
+// startDate/endDate are null for a bare location mention with no date range.
+function _pushDeployment(data, dobYear, rawLocation, startDate, endDate) {
+  const location = DEPLOYMENT_LOCATION_ALIASES[rawLocation] || rawLocation;
+  const existing = data.deployments.find((d) => d.location === location);
+  if (existing) {
+    if (!existing.startDate && startDate) existing.startDate = startDate;
+    if (!existing.endDate && endDate) existing.endDate = endDate;
+    return;
+  }
+
+  // Sanity guard: reject a deployment whose era ended before the veteran
+  // was even born.
+  const eraEndYear = DEPLOYMENT_ERA_LATEST_YEAR[location];
+  if (eraEndYear && dobYear && dobYear >= eraEndYear) return;
+
+  data.deployments.push({
+    location,
+    startDate: startDate || null,
+    endDate: endDate || null,
+    combatZone: DESIGNATED_COMBAT_ZONES.has(location),
+  });
 }
 
 // FIX-15: 8-digit YYYYMMDD -> MM/DD/YYYY, same convention as every other

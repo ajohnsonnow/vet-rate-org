@@ -769,6 +769,21 @@ const VALID_THEATERS = new Set([
   "CONUS",
   "Europe",
   "Pacific",
+  // Country-name theaters musterCallProcessor.js's DD214 Box 18 deployment
+  // extraction can now produce directly (its own DESIGNATED_COMBAT_ZONES
+  // list, sourced from the IRS combat-zone designations) - without these, a
+  // document-ingested deployment to any of them collapsed to "Other" here
+  // and lost the real location entirely.
+  "Afghanistan",
+  "Iraq",
+  "Kuwait",
+  "Saudi Arabia",
+  "Bahrain",
+  "Qatar",
+  "UAE",
+  "Oman",
+  "Syria",
+  "Sinai",
   "Other",
 ]);
 
