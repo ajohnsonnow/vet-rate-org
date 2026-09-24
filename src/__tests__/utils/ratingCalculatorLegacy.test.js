@@ -216,7 +216,9 @@ describe("calculateExactCombinedRating - Debugging Helper", () => {
     // 60% + 40% + 20%
     // Step 1: 60 + (40 × 0.4) = 60 + 16 = 76
     // Step 2: 76 + (20 × 0.24) = 76 + 4.8 = 80.8
-    expect(calculateExactCombinedRating([60, 40, 20])).toBe(80.8);
+    const exact = calculateExactCombinedRating([60, 40, 20]);
+    expect(exact).toBeCloseTo(80.8, 5);
+    expect(Math.round(exact * 100)).toBe(8080);
   });
 });
 

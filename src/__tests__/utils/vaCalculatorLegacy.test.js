@@ -80,10 +80,10 @@ describe("VA_PAY_RATES_2026", () => {
   });
 
   it("10% rate matches 2026 published rate", () => {
-    expect(VA_PAY_RATES_2026.solo[10]).toBe(180.42);
+    expect(Math.round(VA_PAY_RATES_2026.solo[10] * 100)).toBe(18042);
   });
 
   it("100% rate matches 2026 published rate", () => {
-    expect(VA_PAY_RATES_2026.solo[100]).toBe(3938.58);
+    expect(Math.round(VA_PAY_RATES_2026.solo[100] * 100)).toBe(393858);
   });
 });

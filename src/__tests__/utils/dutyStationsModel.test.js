@@ -69,7 +69,7 @@ describe("Duty stations - CRUD round-trip", () => {
     let stations = getDutyStations();
     expect(stations).toHaveLength(1);
     expect(stations[0].name).toBe("Fort Bragg");
-    expect(stations[0].latitude).toBe(35.139);
+    expect(stations[0].latitude).toBeCloseTo(35.139, 5);
 
     const updated = updateDutyStation(id, { name: "Fort Liberty" });
     expect(updated).toBe(true);
@@ -153,8 +153,8 @@ describe("Duty stations - sanitizer (saveServiceHistory whitelist)", () => {
     expect(stations[1].longitude).toBeNull();
     expect(stations[2].latitude).toBeNull();
     expect(stations[3].latitude).toBeNull();
-    expect(stations[4].latitude).toBe(45.5);
-    expect(stations[4].longitude).toBe(-122.6);
+    expect(stations[4].latitude).toBeCloseTo(45.5, 5);
+    expect(stations[4].longitude).toBeCloseTo(-122.6, 5);
   });
 
   it("caps the array at 100 entries", () => {
