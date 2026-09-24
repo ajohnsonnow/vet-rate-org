@@ -1327,9 +1327,9 @@ function ConflictsSection({ conflicts, onResolve }) {
         Detected
       </h3>
       <div className="space-y-3">
-        {conflicts.map((conflict, index) => (
+        {conflicts.map((conflict) => (
           <ConflictWarning
-            key={index}
+            key={conflict.field}
             conflict={conflict}
             onResolve={onResolve}
           />

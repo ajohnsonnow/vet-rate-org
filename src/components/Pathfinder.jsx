@@ -786,9 +786,9 @@ const PathfinderOpportunities = ({
         {results.data.opportunities.length})
       </h3>
       <div className="grid md:grid-cols-2 gap-4">
-        {results.data.opportunities.map((opp, index) => (
+        {results.data.opportunities.map((opp) => (
           <OpportunityCard
-            key={index}
+            key={`${opp.proposed_condition}-${opp.primary_source}`}
             opportunity={opp}
             onBuildNexus={handleBuildNexus}
             onPracticeExam={handlePracticeExam}
@@ -807,8 +807,11 @@ const PathfinderMissingDiagnoses = ({ results, t }) =>
         <LightbulbIcon /> {t("pathfinder", "potentialUndiagnosedConditions")}
       </h3>
       <div className="space-y-4">
-        {results.data.missing_diagnoses.map((item, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+        {results.data.missing_diagnoses.map((item) => (
+          <div
+            key={item.condition}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4"
+          >
             <div className="font-semibold text-gray-900 dark:text-white mb-1">
               {item.condition}
             </div>
@@ -837,8 +840,11 @@ const PathfinderIncreaseOpportunities = ({ results, t }) =>
         <TrendingUpIcon /> {t("pathfinder", "potentialRatingIncreases")}
       </h3>
       <div className="space-y-4">
-        {results.data.increase_opportunities.map((item, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4">
+        {results.data.increase_opportunities.map((item) => (
+          <div
+            key={item.current_condition}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4"
+          >
             <div className="flex items-center justify-between mb-2">
               <div className="font-semibold text-gray-900 dark:text-white">
                 {item.current_condition}

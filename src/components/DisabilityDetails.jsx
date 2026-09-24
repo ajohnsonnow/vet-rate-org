@@ -381,9 +381,9 @@ const DocumentationSection = ({
         </p>
         <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
           {result.documentationRequirements.split("\n").map(
-            (line, idx) =>
+            (line) =>
               line.trim() && (
-                <p key={idx} className="mb-2">
+                <p key={line} className="mb-2">
                   • {line.trim()}
                 </p>
               ),

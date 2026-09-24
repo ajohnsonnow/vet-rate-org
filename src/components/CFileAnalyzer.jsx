@@ -493,9 +493,9 @@ function CFileExposuresTab({ t, exposures }) {
       </h3>
       {exposures?.length > 0 ? (
         <div className="space-y-4">
-          {exposures.map((exposure, idx) => (
+          {exposures.map((exposure) => (
             <div
-              key={idx}
+              key={exposure.type}
               className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg p-4"
             >
               <div className="flex items-start justify-between">

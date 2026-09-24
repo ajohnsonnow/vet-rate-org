@@ -4175,9 +4175,9 @@ function PainMapCard({ map, setViewingPainMap, handleDeletePainMap, t }) {
         </p>
         {map.conditions && map.conditions.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {map.conditions.slice(0, 2).map((cond, idx) => (
+            {map.conditions.slice(0, 2).map((cond) => (
               <span
-                key={idx}
+                key={cond}
                 className="text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded"
               >
                 {cond}
@@ -4311,9 +4311,9 @@ function PainPointsPane({ viewingPainMap, t }) {
       </h4>
       {viewingPainMap.painPoints && viewingPainMap.painPoints.length > 0 ? (
         <div className="space-y-2 max-h-[300px] overflow-y-auto">
-          {viewingPainMap.painPoints.map((point, idx) => (
+          {viewingPainMap.painPoints.map((point) => (
             <div
-              key={idx}
+              key={point.bodyPart}
               className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
             >
               <div className="flex items-center gap-2">

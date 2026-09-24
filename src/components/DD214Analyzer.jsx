@@ -1349,7 +1349,7 @@ function DD214LoadedFilesList({
       {/* Use droppedFiles if available, fall back to originalPDFFiles for backwards compat */}
       {files.map((file, idx) => (
         <DD214FileRow
-          key={idx}
+          key={file.name}
           file={file}
           idx={idx}
           extractedTexts={extractedTexts}
@@ -1793,8 +1793,8 @@ function DD214EducationSection({ analysisResult }) {
         🎓 Military Education ({analysisResult.militaryEducation.length})
       </h4>
       <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-        {analysisResult.militaryEducation.map((course, idx) => (
-          <li key={idx}>• {course}</li>
+        {analysisResult.militaryEducation.map((course) => (
+          <li key={course}>• {course}</li>
         ))}
       </ul>
     </div>
@@ -1809,9 +1809,9 @@ function DD214CombatServiceSection({ analysisResult, t }) {
         ⚔️ {t("dd214Analyzer", "combatServiceVerified")}
       </h4>
       <div className="flex flex-wrap gap-2">
-        {analysisResult.combatService.indicators?.map((indicator, idx) => (
+        {analysisResult.combatService.indicators?.map((indicator) => (
           <span
-            key={idx}
+            key={indicator}
             className="px-2 py-1 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-sm rounded-full"
           >
             {indicator}
@@ -1831,9 +1831,9 @@ function DD214AwardsSection({ analysisResult, t }) {
         {analysisResult.awards.length})
       </h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-        {analysisResult.awards.map((award, idx) => (
+        {analysisResult.awards.map((award) => (
           <div
-            key={idx}
+            key={award.name}
             className={`p-3 rounded-lg text-sm ${
               award.isCombat
                 ? "bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800"
@@ -1869,8 +1869,8 @@ function DD214ExtractionNotesSection({ analysisResult, t }) {
         📝 {t("dd214Analyzer", "notes")}
       </h4>
       <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-        {analysisResult.extractionNotes.map((note, idx) => (
-          <li key={idx}>• {note}</li>
+        {analysisResult.extractionNotes.map((note) => (
+          <li key={note}>• {note}</li>
         ))}
       </ul>
     </div>

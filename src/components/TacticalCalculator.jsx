@@ -1949,8 +1949,8 @@ function CalculationStepsSection({ t, showSteps, setShowSteps, results }) {
             <span>📋</span>
             <span>{t("tacticalCalc", "officialVAMethod")}</span>
           </div>
-          {results.calculationSteps.map((step, idx) => (
-            <CalculationStepDetail key={idx} step={step} />
+          {results.calculationSteps.map((step) => (
+            <CalculationStepDetail key={step.step} step={step} />
           ))}
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
             <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">

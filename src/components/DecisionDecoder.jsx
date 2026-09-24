@@ -1298,8 +1298,8 @@ const FavorableFindingsSection = ({ results }) => {
         again!
       </p>
       <ul className="space-y-2">
-        {results.favorable_findings.map((finding, index) => (
-          <li key={index} className="flex items-start gap-2">
+        {results.favorable_findings.map((finding) => (
+          <li key={finding} className="flex items-start gap-2">
             <span className="text-emerald-500 mt-0.5">✓</span>
             <span className="text-sm text-emerald-700 dark:text-emerald-300">
               {finding}
@@ -1322,8 +1322,8 @@ const MissingElementsSection = ({ results }) => {
         <span>🚨</span> What&apos;s Missing From Your Claim
       </h4>
       <ul className="space-y-2">
-        {results.missing_elements.map((element, index) => (
-          <li key={index} className="flex items-start gap-2">
+        {results.missing_elements.map((element) => (
+          <li key={element} className="flex items-start gap-2">
             <span className="text-red-500 mt-0.5">•</span>
             <span className="text-sm text-red-700 dark:text-red-300">
               {element}
@@ -1345,7 +1345,7 @@ const ActionPlanSection = ({ results }) => {
       </h4>
       <ol className="space-y-3">
         {results.action_plan.map((step, index) => (
-          <li key={index} className="flex items-start gap-3">
+          <li key={step} className="flex items-start gap-3">
             <span className="flex-shrink-0 w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
               {index + 1}
             </span>
@@ -1371,9 +1371,9 @@ const AppealOptionsSection = ({ results }) => {
         {typeof results.appeal_options === "string" ? (
           <p>{results.appeal_options}</p>
         ) : (
-          results.appeal_options.map((option, index) => (
+          results.appeal_options.map((option) => (
             <div
-              key={index}
+              key={option}
               className="p-2 bg-white dark:bg-gray-800 rounded-lg"
             >
               {option}
@@ -1669,9 +1669,9 @@ const SelectedPhaseDetails = ({ selectedPhase }) => {
             💡 Pro Tips
           </h6>
           <ul className="space-y-1">
-            {selectedPhase.tips.map((tip, i) => (
+            {selectedPhase.tips.map((tip) => (
               <li
-                key={i}
+                key={tip}
                 className="text-amber-700 dark:text-amber-300 text-xs flex items-start gap-2"
               >
                 <span>•</span> {tip}

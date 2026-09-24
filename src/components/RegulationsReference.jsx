@@ -141,8 +141,8 @@ const RegulationItem = ({ reg }) => (
           Key Points:
         </h5>
         <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-          {reg.keyPoints.map((point, i) => (
-            <li key={i} className="flex items-start gap-2">
+          {reg.keyPoints.map((point) => (
+            <li key={point} className="flex items-start gap-2">
               <span className="text-blue-500 mt-1">→</span>
               <span>{point}</span>
             </li>
@@ -314,8 +314,8 @@ const AppealRegulationItem = ({ reg }) => (
           Key Points:
         </h5>
         <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-          {reg.keyPoints.map((point, i) => (
-            <li key={i} className="flex items-start gap-2">
+          {reg.keyPoints.map((point) => (
+            <li key={point} className="flex items-start gap-2">
               <span className="text-purple-500 mt-1">→</span>
               <span>{point}</span>
             </li>
@@ -635,8 +635,8 @@ const PensionRegulationItem = ({ reg }) => (
           Key Points:
         </h5>
         <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-          {reg.keyPoints.map((point, i) => (
-            <li key={i} className="flex items-start gap-2">
+          {reg.keyPoints.map((point) => (
+            <li key={point} className="flex items-start gap-2">
               <span className="text-amber-500 mt-1">→</span>
               <span>{point}</span>
             </li>

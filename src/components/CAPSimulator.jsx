@@ -3464,9 +3464,9 @@ function CAPFlashcardView({
             </div>
           )}
 
-          {filteredCategories.map((category, catIndex) => (
+          {filteredCategories.map((category) => (
             <CAPTermCategoryCard
-              key={catIndex}
+              key={category.category}
               category={category}
               isExpanded={isCategoryExpanded(category.category)}
               onToggle={() => toggleCategory(category.category)}

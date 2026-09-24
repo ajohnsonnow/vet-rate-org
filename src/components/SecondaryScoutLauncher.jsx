@@ -1388,9 +1388,9 @@ function PdfExtractedConditionsList({
         {extractedPdfConditions.length !== 1 ? "s" : ""}
       </h4>
       <div className="max-h-48 overflow-y-auto space-y-2 mb-4">
-        {extractedPdfConditions.map((condition, index) => (
+        {extractedPdfConditions.map((condition) => (
           <div
-            key={index}
+            key={condition}
             className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg"
           >
             <span className="text-green-600 dark:text-green-400">•</span>
@@ -1684,9 +1684,9 @@ function SelectedConditionsSummary({
       </div>
       {selectedConditions.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-          {selectedConditions.map((condition, idx) => (
+          {selectedConditions.map((condition) => (
             <span
-              key={idx}
+              key={condition}
               className="inline-flex items-center px-2 py-0.5 bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 text-xs rounded-full"
             >
               {condition}
@@ -1774,10 +1774,10 @@ function ExampleProfilesPanel({ loadExampleProfile }) {
         Choose a sample veteran profile to see how Secondary Scout works:
       </p>
       <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2">
-        {exampleProfiles.map((profile, index) => (
+        {exampleProfiles.map((profile) => (
           <button
             type="button"
-            key={index}
+            key={profile.name}
             onClick={() => loadExampleProfile(profile.conditions)}
             className="w-full text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all group"
           >
@@ -1788,9 +1788,9 @@ function ExampleProfilesPanel({ loadExampleProfile }) {
               {profile.description}
             </p>
             <div className="flex flex-wrap gap-2">
-              {profile.conditions.slice(0, 5).map((condition, idx) => (
+              {profile.conditions.slice(0, 5).map((condition) => (
                 <span
-                  key={idx}
+                  key={condition}
                   className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full"
                 >
                   {condition}
