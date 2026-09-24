@@ -266,6 +266,7 @@ export function segmentCFile(text, options = {}) {
       APPEAL: [],
       CORRESPONDENCE: [],
       EVIDENCE: [],
+      SUMMARY: [],
       UNKNOWN: [],
     },
 

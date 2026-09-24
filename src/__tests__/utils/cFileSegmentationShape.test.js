@@ -191,3 +191,19 @@ describe("quickScanCFile routing fields", () => {
     expect(scan.estimatedDocCount).toBeUndefined();
   });
 });
+
+describe("segmentCFile: a code sheet segment", () => {
+  it("files a code sheet under SUMMARY instead of throwing mid-file", () => {
+    const text = [
+      CFILE_FIXTURE,
+      "",
+      "RATING CODE SHEET",
+      "SUBJECT TO COMPENSATION (1.SC) 6260 TINNITUS Service Connected 10% from 03/31/2023",
+      filler("Code sheet"),
+    ].join("\n");
+    const result = segmentCFile(text, { parseDocuments: false });
+    expect(result.error).toBeUndefined();
+    expect(result.byCategory.SUMMARY).toHaveLength(1);
+    expect(result.segments.at(-1).category).toBe("SUMMARY");
+  });
+});
