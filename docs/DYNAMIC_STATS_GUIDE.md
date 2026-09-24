@@ -47,7 +47,7 @@ The build script runs `update-stats` first, ensuring production always has fresh
 ### 3. Use in React Components
 
 ```jsx
-import { useDynamicCopy } from '../hooks/useDynamicCopy';
+import { useDynamicCopy } from "../hooks/useDynamicCopy";
 
 function MyComponent() {
   const { copy, stats, replace } = useDynamicCopy();
@@ -74,18 +74,21 @@ function MyComponent() {
 After running `npm run update-stats`, the following variables are available:
 
 ### Core Metrics
+
 - `{{total_hours}}` - Total development time (e.g., "7,200")
 - `{{actual_hours}}` - Actual time with AI (e.g., "50-55")
 - `{{years_dev}}` - Full-time equivalent years (e.g., "3.5")
 - `{{loc_count}}` - Lines of code (e.g., "111,440")
 
 ### Research & Validation
+
 - `{{research_hours}}` - Hours reading 38 CFR (e.g., "150")
 - `{{validation_hours}}` - Hours validating data (e.g., "250")
 - `{{validation_count}}` - Number of validated conditions (e.g., "751")
 - `{{validation_lines}}` - Lines of data validated (e.g., "15,000")
 
 ### Project Metrics
+
 - `{{total_files}}` - Total files (e.g., "1,135")
 - `{{total_commits}}` - Git commits (e.g., "52")
 - `{{component_count}}` - React components (e.g., "111")
@@ -95,14 +98,17 @@ After running `npm run update-stats`, the following variables are available:
 - `{{productivity_multiplier}}` - AI speedup (e.g., "131")
 
 ### Features
+
 - `{{secondary_conditions}}` - Secondary conditions (e.g., "500")
 - `{{forms_supported}}` - VA forms supported (e.g., "16")
 
 ### Financial
+
 - `{{market_value}}` - Estimated value (e.g., "$360K")
 - `{{competitor_price}}` - Competitor pricing (e.g., "500")
 
 ### Dates
+
 - `{{first_commit}}` - First commit date
 - `{{last_updated}}` - Last stats update (YYYY-MM-DD)
 - `{{version}}` - Version number (YYYYMMDD)
@@ -116,11 +122,11 @@ The system includes ready-to-use content in `src/data/dynamicCopy.json`:
 ### About Us Section
 
 ```jsx
-import { useAboutUsContent } from '../hooks/useDynamicCopy';
+import { useAboutUsContent } from "../hooks/useDynamicCopy";
 
 function AboutUs() {
   const aboutUs = useAboutUsContent();
-  
+
   return (
     <div>
       <h2>{aboutUs.theCodebase.heading}</h2>
@@ -133,6 +139,7 @@ function AboutUs() {
 ```
 
 **Includes:**
+
 - `theCodebase` - The main "About Us" narrative
 - `whyFree` - Explanation of free model
 - `theRealCost` - Market value discussion
@@ -140,14 +147,15 @@ function AboutUs() {
 ### Buy Me a Coffee Content
 
 ```jsx
-import { useBuyMeACoffeeContent } from '../hooks/useDynamicCopy';
+import { useBuyMeACoffeeContent } from "../hooks/useDynamicCopy";
 
 function CoffeeCTA() {
   const coffee = useBuyMeACoffeeContent();
-  
+
   // 10 pre-written captions
-  const randomCaption = coffee.captions[Math.floor(Math.random() * coffee.captions.length)];
-  
+  const randomCaption =
+    coffee.captions[Math.floor(Math.random() * coffee.captions.length)];
+
   return (
     <div>
       <h3>{coffee.longForm.header}</h3>
@@ -160,25 +168,27 @@ function CoffeeCTA() {
 ```
 
 **Includes:**
+
 - `captions` - 10 punchy one-liners
 - `longForm` - Full coffee donation pitch
 
 ### UI Messages
 
 ```jsx
-import { useUIMessages } from '../hooks/useDynamicCopy';
+import { useUIMessages } from "../hooks/useDynamicCopy";
 
 function LoadingScreen() {
   const ui = useUIMessages();
-  
+
   // 10 different loading messages
   const message = ui.loadingScreens[Math.floor(Math.random() * 10)];
-  
+
   return <div>{message}</div>;
 }
 ```
 
 **Includes:**
+
 - `loadingScreens` - 10 loading message variations
 - `welcomeModal` - Welcome screen content
 - `footerMicroCopy` - Footer text variations
@@ -189,11 +199,11 @@ function LoadingScreen() {
 ### Social Proof
 
 ```jsx
-import { useSocialProof } from '../hooks/useDynamicCopy';
+import { useSocialProof } from "../hooks/useDynamicCopy";
 
 function StatsGrid() {
   const social = useSocialProof();
-  
+
   return (
     <div className="grid">
       {social.stats.map((stat, i) => (
@@ -205,6 +215,7 @@ function StatsGrid() {
 ```
 
 **Includes:**
+
 - `stats` - Short stat callouts
 - `comparisons` - Competitive comparisons
 
@@ -245,7 +256,7 @@ npm run update-stats
 # ✅ Project stats updated successfully!
 # 📊 Stats extracted from: README.md
 # 💾 Stats saved to: src/data/projectStats.json
-# 
+#
 # Current Statistics:
 #   • Total Development: 8,000 hours (3.8 years FTE)
 #   • Lines of Code: 111,440
@@ -280,8 +291,8 @@ const myContent = {
   title: "About {{total_hours}} Hours",
   sections: [
     "We validated {{validation_count}} conditions",
-    "Over {{years_dev}} years of work"
-  ]
+    "Over {{years_dev}} years of work",
+  ],
 };
 
 const populated = replaceDeep(myContent);
@@ -312,9 +323,9 @@ Edit `scripts/update-stats.js` to extract new values:
 ```javascript
 const stats = {
   // ... existing stats
-  
+
   // Add your custom stat
-  my_new_stat: extractFirstNumber(/My Pattern.*?(\d+)/i, 'default_value')
+  my_new_stat: extractFirstNumber(/My Pattern.*?(\d+)/i, "default_value"),
 };
 ```
 
@@ -341,7 +352,7 @@ Use it:
 
 ```jsx
 const { copy } = useDynamicCopy();
-<p>{copy.myNewSection.content}</p>
+<p>{copy.myNewSection.content}</p>;
 ```
 
 ---
@@ -370,6 +381,7 @@ node scripts/update-stats.js
 ### Placeholders not replacing?
 
 Check that:
+
 1. Your placeholder uses double curly braces: `{{variable}}`
 2. The variable exists in `projectStats.json`
 3. You're using the `replace()` or `replaceDeep()` function
@@ -380,10 +392,10 @@ Edit the regex patterns in `scripts/update-stats.js`:
 
 ```javascript
 // Current pattern
-total_hours: extractFirstNumber(/Total Development Time.*?~?([\d,]+)\s*hours/i)
+total_hours: extractFirstNumber(/Total Development Time.*?~?([\d,]+)\s*hours/i);
 
 // Change to match your README format
-total_hours: extractFirstNumber(/Your Custom Pattern.*?(\d+)/i)
+total_hours: extractFirstNumber(/Your Custom Pattern.*?(\d+)/i);
 ```
 
 ---
@@ -396,10 +408,10 @@ total_hours: extractFirstNumber(/Your Custom Pattern.*?(\d+)/i)
 function LoadingScreen() {
   const { copy } = useDynamicCopy();
   const [msgIndex, setMsgIndex] = useState(0);
-  
+
   useEffect(() => {
     const timer = setInterval(() => {
-      setMsgIndex(i => (i + 1) % copy.uiMessages.loadingScreens.length);
+      setMsgIndex((i) => (i + 1) % copy.uiMessages.loadingScreens.length);
     }, 2000);
     return () => clearInterval(timer);
   }, []);
@@ -418,11 +430,13 @@ function LoadingScreen() {
 ```jsx
 function Footer() {
   const { stats, copy } = useDynamicCopy();
-  
+
   return (
     <footer>
       <p>{copy.uiMessages.footerMicroCopy[0]}</p>
-      <small>v{stats.version} • Updated {stats.last_updated}</small>
+      <small>
+        v{stats.version} • Updated {stats.last_updated}
+      </small>
     </footer>
   );
 }
@@ -433,19 +447,19 @@ function Footer() {
 ```jsx
 function AboutPage() {
   const aboutUs = useAboutUsContent();
-  
+
   return (
     <div className="about">
       <h1>{aboutUs.theCodebase.heading}</h1>
       {aboutUs.theCodebase.paragraphs.map((p, i) => (
         <p key={i}>{p}</p>
       ))}
-      
+
       <div className="callout">
         <h2>{aboutUs.whyFree.heading}</h2>
         <p>{aboutUs.whyFree.content}</p>
       </div>
-      
+
       <div className="callout">
         <h2>{aboutUs.theRealCost.heading}</h2>
         <p>{aboutUs.theRealCost.content}</p>

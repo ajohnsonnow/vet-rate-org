@@ -39,11 +39,11 @@ src/
 
 Veterans deserve to know what powers their AI. Our Diamond Swarm agents show:
 
-| Agent | Base Model | Specialization |
-|-------|------------|----------------|
-| 💎 Diamond Auditor | Qwen2.5-7B-Instruct | VA regulations, 38 CFR, evidence analysis |
-| 🎖️ CW4 Writer | Qwen2.5-7B-Instruct | Veteran-voice writing, empathetic statements |
-| 🎖️ CW3 Rater | Qwen2.5-7B-Instruct | VA math, bilateral factor, combined ratings |
+| Agent              | Base Model          | Specialization                               |
+| ------------------ | ------------------- | -------------------------------------------- |
+| 💎 Diamond Auditor | Qwen2.5-7B-Instruct | VA regulations, 38 CFR, evidence analysis    |
+| 🎖️ CW4 Writer      | Qwen2.5-7B-Instruct | Veteran-voice writing, empathetic statements |
+| 🎖️ CW3 Rater       | Qwen2.5-7B-Instruct | VA math, bilateral factor, combined ratings  |
 
 All models are fine-tuned from **Alibaba's Qwen 2.5** (7 billion parameters) - an open-source, privacy-respecting foundation model.
 
@@ -67,15 +67,16 @@ All models are fine-tuned from **Alibaba's Qwen 2.5** (7 billion parameters) - a
 
 ### Model-Specific Behaviors
 
-| Model | Role | Opening Example |
-|-------|------|-----------------|
-| VetRate-Auditor | Evidence review | "I've audited the evidence. Let's look at what we might be missing..." |
-| VetRate-Scribe | Statement writing | "I've drafted your statement for you. Here's how it sounds..." |
-| VetRate-Rater | VA math | "I've run the numbers using VA math. Your combined rating comes to..." |
+| Model           | Role              | Opening Example                                                        |
+| --------------- | ----------------- | ---------------------------------------------------------------------- |
+| VetRate-Auditor | Evidence review   | "I've audited the evidence. Let's look at what we might be missing..." |
+| VetRate-Scribe  | Statement writing | "I've drafted your statement for you. Here's how it sounds..."         |
+| VetRate-Rater   | VA math           | "I've run the numbers using VA math. Your combined rating comes to..." |
 
 ## 🌐 Multilingual Support
 
 ### Supported Languages
+
 - 🇺🇸 English (en)
 - 🇲🇽 Spanish (es)
 - 🇵🇭 Tagalog (tl)
@@ -83,7 +84,9 @@ All models are fine-tuned from **Alibaba's Qwen 2.5** (7 billion parameters) - a
 - 🇰🇷 Korean (ko)
 
 ### Voice-to-Form Translation
+
 Veterans can speak in their native language, and the system will:
+
 1. Transcribe in native language
 2. Translate to professional English for VA forms
 3. Display both versions for verification
@@ -94,30 +97,33 @@ Veterans can speak in their native language, and the system will:
 The entire app can be switched to the veteran's native language:
 
 ### How It Works
+
 1. Click the language selector in the header (shows current flag + language code)
 2. Choose your preferred language
 3. The entire UI switches to that language
 4. VA forms are **still generated in English** (VA requirement)
 
 ### Implementation
+
 ```jsx
 // In any component
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from "../contexts/LanguageContext";
 
 function MyComponent() {
   const { t, language, setLanguage } = useLanguage();
-  
+
   return (
     <div>
-      <h1>{t('header', 'title')}</h1>  {/* Translated */}
-      <p>{t('calculator', 'combinedRating')}</p>
-      <button onClick={() => setLanguage('es')}>Español</button>
+      <h1>{t("header", "title")}</h1> {/* Translated */}
+      <p>{t("calculator", "combinedRating")}</p>
+      <button onClick={() => setLanguage("es")}>Español</button>
     </div>
   );
 }
 ```
 
 ### Translation Coverage
+
 - Navigation & common UI elements
 - Crisis intervention messages
 - Calculator labels
@@ -129,18 +135,22 @@ function MyComponent() {
 ## 🛡️ Safety Features
 
 ### Crisis Interceptor Integration
+
 - Real-time monitoring for distress keywords in all 5 languages
 - Immediate voice override with crisis resources
 - 988 Veterans Crisis Line information in native language
 
 ### Panic Key ("Quick Exit")
+
 - Triple-tap `Escape` key for instant redirect
 - Silences all audio
 - Clears session data
 - Redirects to neutral site (weather.com)
 
 ### Safe Space Verification
+
 Before enabling voice features, veterans confirm:
+
 - ✓ Private location
 - ✓ Emotionally ready
 - ✓ Aware of exit options
@@ -148,16 +158,19 @@ Before enabling voice features, veterans confirm:
 ## 📱 Accessibility Features
 
 ### TBI/PTSD-Friendly Audio
+
 - Default slower speech rate (0.88x)
 - Lower pitch for calming effect
 - Adjustable settings per veteran preference
 
 ### Visual Accessibility
+
 - High-contrast captioning
 - Real-time word highlighting
 - Bilingual display (native + English)
 
 ### Disability Accommodations
+
 - Large touch targets (48x48px minimum)
 - Haptic feedback for confirmations
 - Shake-to-exit on mobile
@@ -165,6 +178,7 @@ Before enabling voice features, veterans confirm:
 ## 🎓 Unity Language Tutor
 
 Learn the languages of fellow veterans:
+
 - Phonetic approximations
 - Spaced repetition technique
 - Branch-specific greetings
@@ -173,37 +187,39 @@ Learn the languages of fellow veterans:
 ## 📋 Usage Guide
 
 ### Quick Start
+
 ```javascript
-import { initializeCompassionateVoice } from './utils/voiceIndex';
-import { getVoiceOrchestrator } from './services/VoiceOrchestrator';
+import { initializeCompassionateVoice } from "./utils/voiceIndex";
+import { getVoiceOrchestrator } from "./services/VoiceOrchestrator";
 
 // Initialize on app load
 initializeCompassionateVoice();
 
 // Enable voice for a session
 const orchestrator = getVoiceOrchestrator();
-orchestrator.setLanguage('es');
-orchestrator.setBranch('Marine');
+orchestrator.setLanguage("es");
+orchestrator.setBranch("Marine");
 orchestrator.enable();
 
 // Announce LLM output
 orchestrator.announce({
   text: "Your combined rating is 80%",
-  sourceModel: 'RATER'
+  sourceModel: "RATER",
 });
 ```
 
 ### Component Usage
+
 ```jsx
-import InclusiveVoiceSetup from './components/InclusiveVoiceSetup';
-import QuickExitButton from './components/QuickExitButton';
+import InclusiveVoiceSetup from "./components/InclusiveVoiceSetup";
+import QuickExitButton from "./components/QuickExitButton";
 
 function App() {
   return (
     <>
       <QuickExitButton position="top-right" variant="subtle" />
-      <InclusiveVoiceSetup 
-        onComplete={(settings) => console.log('Voice enabled:', settings)}
+      <InclusiveVoiceSetup
+        onComplete={(settings) => console.log("Voice enabled:", settings)}
         showSafetyCheck={true}
       />
     </>
@@ -241,5 +257,5 @@ function App() {
 
 ---
 
-*Built with the Diamond Standard for Vet-Rate.org*
-*"Your Story. Your Privacy. Our Honor."*
+_Built with the Diamond Standard for Vet-Rate.org_
+_"Your Story. Your Privacy. Our Honor."_

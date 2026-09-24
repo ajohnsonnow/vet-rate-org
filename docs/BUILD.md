@@ -10,11 +10,13 @@ This documentation is built with MkDocs and the Material theme.
 ## Installation
 
 1. Navigate to the docs directory:
+
    ```bash
    cd docs
    ```
 
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -27,7 +29,7 @@ Run the local development server:
 mkdocs serve
 ```
 
-Then open http://127.0.0.1:8000 in your browser.
+Then open <http://127.0.0.1:8000> in your browser.
 
 ## Building Static Site
 
@@ -59,6 +61,7 @@ Note: PDF generation requires a headless Chrome/Chromium installation.
 ## Logo Assets
 
 Place logo images in `assets/images/`:
+
 - `logo.png` - Main logo (recommended: 256x256 or larger)
 - `favicon.png` - Browser favicon (recommended: 32x32)
 

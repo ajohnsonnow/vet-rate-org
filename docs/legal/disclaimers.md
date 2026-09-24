@@ -18,13 +18,13 @@ Vet-Rate.org is an **educational resource** provided for informational purposes 
 ## Not Legal Advice
 
 !!! warning "Legal Disclaimer"
-    
+
     **Nothing on Vet-Rate.org constitutes legal advice.**
-    
+
     The information provided is for educational purposes only and should not be relied upon as legal advice for any individual case or situation.
-    
+
     For legal matters related to VA claims:
-    
+
     - Consult a VA-accredited attorney
     - Contact a Veterans Service Organization (VSO)
     - Seek qualified legal counsel
@@ -34,13 +34,13 @@ Vet-Rate.org is an **educational resource** provided for informational purposes 
 ## Not Medical Advice
 
 !!! warning "Medical Disclaimer"
-    
+
     **Nothing on Vet-Rate.org constitutes medical advice.**
-    
+
     The information provided is for educational purposes only and should not be used to diagnose, treat, or evaluate any medical condition.
-    
+
     For medical matters:
-    
+
     - Consult your healthcare provider
     - Seek qualified medical opinions
     - Contact VA healthcare for veteran-specific care
@@ -50,14 +50,14 @@ Vet-Rate.org is an **educational resource** provided for informational purposes 
 ## Not VA Affiliated
 
 !!! warning "Affiliation Disclaimer"
-    
+
     **Vet-Rate.org is NOT affiliated with the Department of Veterans Affairs.**
-    
+
     - We are not endorsed by the VA
     - We are not an official VA resource
     - We do not represent the VA
     - We cannot make decisions on behalf of the VA
-    
+
     For official VA services, visit [VA.gov](https://www.va.gov).
 
 ---
@@ -65,14 +65,14 @@ Vet-Rate.org is an **educational resource** provided for informational purposes 
 ## No Guarantee of Results
 
 !!! warning "Results Disclaimer"
-    
+
     **Using Vet-Rate.org does not guarantee any specific outcome.**
-    
+
     - C&P Simulator estimates are educational only
     - Secondary Scout suggestions require additional evidence
     - Rating criteria interpretation may vary
     - Claim success depends on many factors
-    
+
     Actual VA decisions are made by VA employees based on your complete file.
 
 ---

@@ -22,6 +22,7 @@
 **A: Not here.** That business model requires collecting your data to sell or monetize. We can't sell what we don't collect.
 
 **Why this is free:**
+
 - **No servers to pay for** - Static hosting costs ~$0/month (Render free tier)
 - **No employees** - Built by one veteran (me, AJ Johnson) volunteering time
 - **No infrastructure** - No databases, no APIs, no backend processing
@@ -33,9 +34,10 @@
 
 ### Q: "How do you make money then?"
 
-**A: I don't.** 
+**A: I don't.**
 
 There's an optional donation link if people want to support hosting/development, but:
+
 - ✅ Zero features are paywalled
 - ✅ No subscriptions
 - ✅ No premium tiers
@@ -51,12 +53,14 @@ There's an optional donation link if people want to support hosting/development,
 **A: The catch is it's limited to what can run in a browser.**
 
 **Trade-offs of this architecture:**
+
 - ❌ No sync across devices (must manually backup/restore)
 - ❌ No collaborative features (can't share packets with VSO)
 - ❌ No cloud backups (must export yourself)
 - ❌ Limited to browser capabilities
 
 **Benefits:**
+
 - ✅ Complete privacy
 - ✅ No data breaches possible
 - ✅ No account to manage
@@ -72,6 +76,7 @@ There's an optional donation link if people want to support hosting/development,
 Don't trust my service record, my promises, or my privacy policy.
 
 **Verify instead:**
+
 1. Use browser DevTools to watch network traffic
 2. Read the source code on GitHub
 3. Check localStorage to see where data lives
@@ -89,6 +94,7 @@ Don't trust my service record, my promises, or my privacy policy.
 **A: We don't train any models.**
 
 **Here's how AI features work:**
+
 1. **You provide your own API key** (Google Gemini - free tier available)
 2. **Only condition names/symptoms sent** (no names, SSN, dates, etc.)
 3. **Sent directly from YOUR browser to Google** (we never see it)
@@ -104,6 +110,7 @@ Don't trust my service record, my promises, or my privacy policy.
 **A: Good catch! Yes, regulations change. No, we don't need servers for that.**
 
 **How updates work:**
+
 1. Disability data compiled from public CFR sources (ecfr.gov)
 2. Data stored as static JSON files bundled with the app
 3. When regulations change, we update JSON files
@@ -118,19 +125,20 @@ Don't trust my service record, my promises, or my privacy policy.
 
 **A: Zero personal data.**
 
-| Data Type | Collected? | Stored Where? |
-|-----------|------------|---------------|
-| Name | ❌ No | Your browser only |
-| Email | ❌ No | N/A |
-| SSN | ❌ No | Your browser only |
-| Service dates | ❌ No | Your browser only |
-| Medical conditions | ❌ No | Your browser only |
-| Search queries | ❌ No | Browser memory (cleared on refresh) |
-| Usage analytics | ❌ No | N/A |
-| IP addresses | ❌ No | N/A |
-| Cookies | ✅ Yes | Session management only |
+| Data Type          | Collected? | Stored Where?                       |
+| ------------------ | ---------- | ----------------------------------- |
+| Name               | ❌ No      | Your browser only                   |
+| Email              | ❌ No      | N/A                                 |
+| SSN                | ❌ No      | Your browser only                   |
+| Service dates      | ❌ No      | Your browser only                   |
+| Medical conditions | ❌ No      | Your browser only                   |
+| Search queries     | ❌ No      | Browser memory (cleared on refresh) |
+| Usage analytics    | ❌ No      | N/A                                 |
+| IP addresses       | ❌ No      | N/A                                 |
+| Cookies            | ✅ Yes     | Session management only             |
 
 **What we see:**
+
 - Number of site visits (hosting provider analytics - no personal info)
 - That's it
 
@@ -141,24 +149,27 @@ Don't trust my service record, my promises, or my privacy policy.
 **A: Let's break down what you should see:**
 
 **Normal Requests:**
-| Domain | Purpose | Your Data Sent? |
-|--------|---------|-----------------|
-| `vet-rate.org/assets/*` | App files (HTML/CSS/JS) | ❌ No |
-| `fonts.googleapis.com` | Font files | ❌ No |
-| `ecfr.gov` | External regulation links | ❌ No |
+
+| Domain                  | Purpose                   | Your Data Sent? |
+| ----------------------- | ------------------------- | --------------- |
+| `vet-rate.org/assets/*` | App files (HTML/CSS/JS)   | ❌ No           |
+| `fonts.googleapis.com`  | Font files                | ❌ No           |
+| `ecfr.gov`              | External regulation links | ❌ No           |
 
 **Optional AI Requests:**
-| Domain | Purpose | Your Data Sent? |
-|--------|---------|-----------------|
+
+| Domain                              | Purpose           | Your Data Sent?           |
+| ----------------------------------- | ----------------- | ------------------------- |
 | `generativelanguage.googleapis.com` | Google Gemini API | ⚠️ Symptoms only (no PII) |
 
 **🚨 RED FLAG - Report these:**
-| Domain | Reason |
-|--------|--------|
+
+| Domain                 | Reason                       |
+| ---------------------- | ---------------------------- |
 | `analytics.google.com` | Tracking (we don't use this) |
-| `facebook.com` | Tracking pixel |
-| Any tracking domain | Compromise |
-| `vet-rate.org/api/*` | We have no API |
+| `facebook.com`         | Tracking pixel               |
+| Any tracking domain    | Compromise                   |
+| `vet-rate.org/api/*`   | We have no API               |
 
 ---
 
@@ -169,18 +180,23 @@ Don't trust my service record, my promises, or my privacy policy.
 **A: Single Page Application (SPA) architecture.**
 
 **Traditional Web App:**
+
 ```
 Browser → Internet → Server → Database → Processing → Response
 ```
+
 Your data travels to servers.
 
 **Vet-Rate.org:**
+
 ```
 Browser → Static Files → Local Processing → Browser Storage
 ```
+
 Everything stays on your device.
 
 **What we serve:**
+
 - HTML/CSS/JavaScript files (React app)
 - JSON data files (disability ratings from public sources)
 - That's it
@@ -194,12 +210,14 @@ Everything stays on your device.
 **A: Browser localStorage on YOUR device.**
 
 **Verify it yourself:**
+
 1. Open DevTools (F12)
 2. Go to Application → Local Storage
 3. Click `vet-rate.org`
 4. See your data
 
 **Test:**
+
 - Clear site data → data disappears
 - Proves it was never on our servers
 
@@ -210,6 +228,7 @@ Everything stays on your device.
 **A: No. localStorage is device-specific.**
 
 **Why we can't access it:**
+
 - No backend to receive transmissions
 - Browser security model prevents cross-origin access
 - We'd need malicious JavaScript (which you can audit on GitHub)
@@ -228,6 +247,7 @@ Everything stays on your device.
 **Example: Nexus Builder**
 
 **Sent to AI:**
+
 ```json
 {
   "primary_condition": "PTSD",
@@ -237,18 +257,20 @@ Everything stays on your device.
 ```
 
 **NOT sent:**
+
 ```json
 {
-  "name": "John Doe",           // ❌ Never sent
-  "ssn": "123-45-6789",         // ❌ Never sent
-  "dob": "1980-01-01",          // ❌ Never sent
-  "service_dates": "...",       // ❌ Never sent
-  "address": "...",             // ❌ Never sent
-  "medical_records": "..."      // ❌ Never sent
+  "name": "John Doe", // ❌ Never sent
+  "ssn": "123-45-6789", // ❌ Never sent
+  "dob": "1980-01-01", // ❌ Never sent
+  "service_dates": "...", // ❌ Never sent
+  "address": "...", // ❌ Never sent
+  "medical_records": "..." // ❌ Never sent
 }
 ```
 
 **Where it goes:**
+
 - Directly from YOUR browser to Google's servers
 - Using YOUR API key
 - We never see the request or response
@@ -260,6 +282,7 @@ Everything stays on your device.
 **A: Yes. 100% of features work without AI.**
 
 **AI is enhancement, not requirement:**
+
 - **Nexus Builder:** Manual mode available
 - **Forms Helper:** Template-based without AI
 - **C-File Analyzer:** Local PDF parsing (no AI needed)
@@ -272,10 +295,12 @@ Everything stays on your device.
 ### Q: "What's Google doing with my data?"
 
 **A: See Google's privacy policy:**
+
 - [Google AI API Privacy Policy](https://policies.google.com/privacy)
 - [Gemini API Terms](https://ai.google.dev/terms)
 
 **Our understanding:**
+
 - Used to improve models (per Google's TOS)
 - Not tied to your Google account (API key is anonymous)
 - Ephemeral by default (not stored long-term per Google)
@@ -288,16 +313,16 @@ Everything stays on your device.
 
 ### Q: "How is this different from other VA tools?"
 
-| Feature | Typical VA Tools | Vet-Rate.org |
-|---------|------------------|---------------|
-| **Account Required** | ✅ Yes | ❌ No |
-| **Email Collection** | ✅ Yes | ❌ No |
-| **Server Storage** | ✅ Yes | ❌ No |
-| **Open Source** | ❌ No | ✅ Yes (GitHub) |
-| **Verifiable** | ❌ No | ✅ Yes (DevTools) |
-| **Analytics** | ✅ Yes | ❌ No |
-| **Tracking Pixels** | ✅ Often | ❌ Never |
-| **Premium Tiers** | ✅ Often | ❌ Never |
+| Feature              | Typical VA Tools | Vet-Rate.org      |
+| -------------------- | ---------------- | ----------------- |
+| **Account Required** | ✅ Yes           | ❌ No             |
+| **Email Collection** | ✅ Yes           | ❌ No             |
+| **Server Storage**   | ✅ Yes           | ❌ No             |
+| **Open Source**      | ❌ No            | ✅ Yes (GitHub)   |
+| **Verifiable**       | ❌ No            | ✅ Yes (DevTools) |
+| **Analytics**        | ✅ Yes           | ❌ No             |
+| **Tracking Pixels**  | ✅ Often         | ❌ Never          |
+| **Premium Tiers**    | ✅ Often         | ❌ Never          |
 
 ---
 
@@ -306,11 +331,13 @@ Everything stays on your device.
 **A: Verification.**
 
 **Most tools:**
+
 - "We protect your data" (trust-based)
 - Closed source (can't verify)
 - Privacy policy says they collect data
 
 **Vet-Rate.org:**
+
 - "Verify we don't collect data" (proof-based)
 - Open source (audit the code)
 - Architecture makes collection impossible
@@ -326,6 +353,7 @@ Everything stays on your device.
 **A: Multiple methods:**
 
 #### Method 1: Network Monitor (Easy)
+
 1. Open DevTools (F12) → Network tab
 2. Use the site normally
 3. Watch for suspicious requests
@@ -334,12 +362,14 @@ Everything stays on your device.
 **Expected:** Only asset loading (HTML/CSS/JS)
 
 #### Method 2: Local Storage Inspection (Easy)
+
 1. Open DevTools (F12) → Application tab
 2. Check Local Storage → vet-rate.org
 3. See your data stored locally
 4. Clear it → proves it was never on our servers
 
 #### Method 3: Source Code Audit (Advanced)
+
 1. Visit: `github.com/ajohnsonnow/vet-rate-org`
 2. Search for `fetch`, `axios`, API calls
 3. Verify they only call Google Gemini (optional) or eCFR (external)
@@ -354,12 +384,14 @@ Everything stays on your device.
 **A: You'd see it immediately.**
 
 **How:**
+
 - Network tab would show new requests
 - Source code would show new tracking scripts
 - GitHub commit history would show the addition
 - Community can monitor for changes
 
 **Our promise:** Any tracking addition would be:
+
 1. Announced publicly
 2. Opt-in only
 3. Documented in privacy policy
@@ -372,12 +404,14 @@ Everything stays on your device.
 **A: Yes. It's open source.**
 
 **How:**
+
 1. Fork the repo: `github.com/ajohnsonnow/vet-rate-org`
 2. Build it: `npm run build`
 3. Host the `dist/` folder anywhere
 4. You control everything
 
 **Use cases:**
+
 - Total privacy (self-hosted)
 - Verify the code matches the live site
 - Customize for your needs
@@ -392,6 +426,7 @@ Everything stays on your device.
 **A: Open source + DevTools make that impossible to hide.**
 
 **If we tried:**
+
 - GitHub commit would show code changes
 - Network tab would show new requests
 - Community would catch it instantly
@@ -406,11 +441,13 @@ Everything stays on your device.
 **A: Can't breach what doesn't exist.**
 
 **Traditional breach:**
+
 1. Hackers compromise server
 2. Steal user database
 3. Your data is leaked
 
 **Vet-Rate.org breach scenario:**
+
 1. Hackers compromise... nothing (no servers with data)
 2. Steal... static HTML files (public anyway)
 3. Your data... never left your device
@@ -424,6 +461,7 @@ Everything stays on your device.
 **A: Good. You shouldn't blindly trust anyone.**
 
 **Options:**
+
 1. **Use with caution** - Don't enter real data, use fake info to test
 2. **Verify first** - Follow the verification guide before entering real info
 3. **Self-host** - Fork the repo and run it yourself

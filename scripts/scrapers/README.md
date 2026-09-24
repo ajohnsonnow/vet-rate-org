@@ -4,12 +4,12 @@ Automated tools for collecting and analyzing public VA data to power the Diamond
 
 ## Data Sources
 
-| Source | URL | Data |
-|--------|-----|------|
-| BVA Decisions | https://www.index.va.gov/search/va/bva.jsp | Full text of appeals decisions |
-| Workload Reports | https://www.benefits.va.gov/REPORTS/mmwr/index.asp | Processing times, backlog |
-| VA Open Data | https://www.data.va.gov/ | Statistics, demographics |
-| AMA Reports | https://www.va.gov/decision-reviews/ | Appeals lane data |
+| Source           | URL                                                  | Data                           |
+| ---------------- | ---------------------------------------------------- | ------------------------------ |
+| BVA Decisions    | <https://www.index.va.gov/search/va/bva.jsp>         | Full text of appeals decisions |
+| Workload Reports | <https://www.benefits.va.gov/REPORTS/mmwr/index.asp> | Processing times, backlog      |
+| VA Open Data     | <https://www.data.va.gov/>                           | Statistics, demographics       |
+| AMA Reports      | <https://www.va.gov/decision-reviews/>               | Appeals lane data              |
 
 All sources are **public records** - no special access required.
 
@@ -35,6 +35,7 @@ python va_data_pipeline.py --list-sources
 ## Scripts
 
 ### `bva_decision_scraper.py`
+
 Scrapes and analyzes Board of Veterans' Appeals decisions.
 
 ```bash
@@ -46,10 +47,12 @@ python bva_decision_scraper.py --condition "PTSD" --count 100 --fetch-full
 ```
 
 **Outputs:**
+
 - `src/data/bva_decisions/` - Raw decision data (JSON)
 - `src/data/bva_analysis/` - Analysis reports (JSON)
 
 ### `va_workload_scraper.py`
+
 Fetches VA workload reports and processing times.
 
 ```bash
@@ -64,10 +67,12 @@ python va_workload_scraper.py --historical --months 6
 ```
 
 **Outputs:**
+
 - `src/data/va_workload/raw/` - Downloaded Excel files
 - `src/data/va_workload/` - Parsed JSON data
 
 ### `va_data_pipeline.py`
+
 Master controller that orchestrates all scrapers.
 
 ```bash
@@ -79,6 +84,7 @@ python va_data_pipeline.py --generate-frontend
 ```
 
 **Outputs:**
+
 - `src/data/bva_data_update.js` - Frontend-ready JavaScript
 
 ## Data Flow
@@ -120,6 +126,7 @@ VA Public Sources
 ## Respectful Scraping
 
 All scrapers follow best practices:
+
 - **Rate limiting**: 2-5 second delays between requests
 - **User-Agent**: Identifies as VetRateResearch
 - **Public data only**: No authentication required
@@ -128,6 +135,7 @@ All scrapers follow best practices:
 ## Condition Priority List
 
 High-value conditions tracked by default:
+
 1. Sleep Apnea (high secondary potential)
 2. PTSD (common, complex)
 3. Tinnitus (most claimed)
@@ -145,12 +153,12 @@ After running the pipeline:
 
 ```javascript
 // In bvaSuccessData.js
-import { BVA_CONDITION_STATS, mergeLatestData } from './bva_data_update';
+import { BVA_CONDITION_STATS, mergeLatestData } from "./bva_data_update";
 
 // Use merged data
 export const CONDITION_DATA = {
   ...existingData,
-  ...BVA_CONDITION_STATS
+  ...BVA_CONDITION_STATS,
 };
 ```
 
@@ -166,6 +174,7 @@ For automatic updates, add a cron job or GitHub Action:
 ## Legal Note
 
 All data comes from public VA sources:
+
 - BVA decisions are public records under FOIA
 - Workload reports are published by VA for transparency
 - VA Open Data is explicitly public

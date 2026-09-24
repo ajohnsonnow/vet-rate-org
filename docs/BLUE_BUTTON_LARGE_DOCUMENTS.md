@@ -5,7 +5,7 @@
 Users with large Blue Button health records (VA medical records) were encountering errors when using smaller AI models like Phi 3.5 Mini:
 
 ```
-Error: Prompt tokens exceed context window size: 
+Error: Prompt tokens exceed context window size:
 number of prompt tokens: 12404; context window size: 4096
 ```
 
@@ -29,35 +29,43 @@ The Blue Button X-Ray component now includes intelligent document chunking that 
 We added clear, non-technical guidance throughout the app:
 
 **In the Local AI Panel:**
+
 - Info box explaining model choices in plain language
 - Added "Best for" recommendations for each model
 - Clarified that ALL models can handle large files (automatic chunking)
 
 **In the Blue Button X-Ray:**
+
 - "Large Files? No Problem!" info box
 - Reassures veterans they don't need to do anything special
 - Explains the system handles chunking automatically
 
 **In the Cloud AI Settings:**
+
 - Tip about Gemini's large context window (1M tokens)
 - Explains it can process up to 2,000 pages in one pass
 
 ## Technical Details
 
 ### Token Budget
+
 - **Context Window**: 4,096 tokens (Phi 3.5 Mini)
 - **AI Prompt Overhead**: ~500 tokens
 - **Output Tokens**: ~1,000 tokens
 - **Available for Input**: ~2,500 tokens per chunk
 
 ### Chunking Strategy
+
 The system attempts to split at natural boundaries:
+
 1. Double newlines (paragraph breaks)
 2. Single newlines (line breaks)
 3. Character limits as fallback
 
 ### Problem List Priority
+
 The algorithm first attempts to extract just the "Problem List" section using patterns:
+
 - `Problem List`
 - `Active Problems`
 - `VA Diagnoses`
@@ -77,21 +85,23 @@ If this section fits within the token limit, only it is processed (saving time a
 
 ## Model Recommendations
 
-| Model | Context Window | Document Support | Best For |
-|-------|---------------|------------------|----------|
-| Phi 3.5 Mini | 4,096 tokens | ✅ Auto-chunked | Detailed analysis of smaller files |
-| Llama 3.2 3B | 8,192 tokens | ✅ Auto-chunked | Most tasks, medium files |
-| Gemini 1.5 Flash | 1M tokens | ✅ Single pass | Large files, fastest processing |
+| Model            | Context Window | Document Support | Best For                           |
+| ---------------- | -------------- | ---------------- | ---------------------------------- |
+| Phi 3.5 Mini     | 4,096 tokens   | ✅ Auto-chunked  | Detailed analysis of smaller files |
+| Llama 3.2 3B     | 8,192 tokens   | ✅ Auto-chunked  | Most tasks, medium files           |
+| Gemini 1.5 Flash | 1M tokens      | ✅ Single pass   | Large files, fastest processing    |
 
 ## User Experience Improvements
 
 ### Before
+
 - Error messages with technical jargon ("context window", "tokens")
 - Users had to manually split files
 - Confusion about which model to use
 - No guidance on file size limitations
 
 ### After
+
 - Clear, friendly messaging: "Large Files? No Problem!"
 - Automatic handling - users don't need to do anything
 - Simple model recommendations: "Best for: Most tasks"
@@ -100,12 +110,14 @@ If this section fits within the token limit, only it is processed (saving time a
 ## Testing
 
 To test with a large document:
+
 1. Upload a Blue Button .txt file larger than 50KB
 2. Select any AI model (Local AI or Cloud)
 3. Click "Process with AI"
 4. Observe helpful info messages and chunking process
 
 The system will automatically:
+
 - Detect the large document
 - Split it appropriately
 - Process each section

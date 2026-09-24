@@ -3,6 +3,7 @@
 ## Overview
 
 We now have a **fully automated changelog tracking system** that:
+
 - ✅ Captures all changes from git commits
 - ✅ Maintains both CHANGELOG.md (developer view) and changelog.json (user-facing)
 - ✅ Automatically categorizes changes by type and feature area
@@ -13,12 +14,14 @@ We now have a **fully automated changelog tracking system** that:
 ## Quick Commands
 
 ### View Current Changelog
+
 ```bash
 cat CHANGELOG.md                    # Full markdown changelog
 cat src/data/changelog.json         # JSON for What's New modal
 ```
 
 ### Update Changelog Manually
+
 ```bash
 npm run update-changelog            # Generate from recent git commits
 npm run changelog-preview           # Preview without writing files
@@ -27,6 +30,7 @@ npm run changelog-preview           # Preview without writing files
 ### Release New Version
 
 **Patch Release (Bug fixes: 1.4.2 → 1.4.3)**
+
 ```bash
 npm run release
 # OR
@@ -35,11 +39,13 @@ npm run release                     # Execute
 ```
 
 **Minor Release (New features: 1.4.2 → 1.5.0)**
+
 ```bash
 npm run release:minor
 ```
 
 **Major Release (Breaking changes: 1.4.2 → 2.0.0)**
+
 ```bash
 npm run release:major
 ```
@@ -87,17 +93,17 @@ git commit -m "chore: Update dependencies"
 
 ### Commit Types
 
-| Type | Changelog Section | Description |
-|------|------------------|-------------|
-| `feat` | Added | New features |
-| `fix` | Fixed | Bug fixes |
-| `hotfix` | Fixed | Critical production fixes |
-| `docs` | Documentation | Documentation changes |
-| `perf` | Performance | Performance improvements |
-| `refactor` | Refactored | Code refactoring |
-| `test` | Tests | Test additions/changes |
-| `style` | Style | Code style changes |
-| `chore` | Chore | Maintenance tasks |
+| Type       | Changelog Section | Description               |
+| ---------- | ----------------- | ------------------------- |
+| `feat`     | Added             | New features              |
+| `fix`      | Fixed             | Bug fixes                 |
+| `hotfix`   | Fixed             | Critical production fixes |
+| `docs`     | Documentation     | Documentation changes     |
+| `perf`     | Performance       | Performance improvements  |
+| `refactor` | Refactored        | Code refactoring          |
+| `test`     | Tests             | Test additions/changes    |
+| `style`    | Style             | Code style changes        |
+| `chore`    | Chore             | Maintenance tasks         |
 
 ## Current Version History
 
@@ -151,23 +157,29 @@ git push origin --tags
 ## Tips
 
 ### Preview Before Release
+
 Always preview first to see what will change:
+
 ```bash
 npm run release:preview
 ```
 
 ### Skip Prompts (CI/CD)
+
 For automated deployments:
+
 ```bash
 npm run release -- -y
 ```
 
 ### Generate Changelog from Specific Version
+
 ```bash
 node scripts/update-changelog.js --from=v1.4.0
 ```
 
 ### Check Current Version
+
 ```bash
 npm run version-preview          # Preview next version
 node -p "require('./package.json').version"
@@ -176,6 +188,7 @@ node -p "require('./package.json').version"
 ## What's New Modal
 
 The `changelog.json` file powers the "What's New" modal that users see when they first load a new version. It automatically:
+
 - Shows on first visit after version update
 - Highlights new features with 🆕 badges
 - Groups changes by category
@@ -185,6 +198,7 @@ The `changelog.json` file powers the "What's New" modal that users see when they
 ## Troubleshooting
 
 ### Changelog not updating?
+
 ```bash
 # Check git log
 git log --oneline -10
@@ -197,6 +211,7 @@ npm run changelog-preview
 ```
 
 ### Version mismatch?
+
 ```bash
 # Sync all version references
 npm run sync-version
@@ -206,6 +221,7 @@ grep -r "1.4.2" package.json src/utils/version.js
 ```
 
 ### Release script failed?
+
 - Check for uncommitted changes: `git status`
 - Ensure you're on main branch: `git branch`
 - Verify remote is configured: `git remote -v`
@@ -229,7 +245,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -250,6 +266,7 @@ jobs:
 Every commit → Captured in changelog → Visible to users in What's New modal
 
 **Next time you want to release:**
+
 ```bash
 npm run release:preview    # Check what will happen
 npm run release            # Do it!
