@@ -2501,10 +2501,17 @@ function _preprocessDD214Text(text) {
 
   // Fix common OCR substitutions in DD214 field labels and keywords
 
-  // Tesseract reads the letter O as a zero across an all-caps scan
-  // ("J0NES", "NATI0NAL GUARD", "C0MP0NENT"): a zero adjacent to a letter
-  // is an O, a zero between digits (SSN, dates, "92Y10") is a real zero.
-  // Applied before the label-specific fixes below so those see whole words.
+  // Most of the "0-for-O" noise in a real scanned corpus turned out to be
+  // self-inflicted: advancedOCR.js's post-processor used to run a
+  // context-free, whole-document "O" -> "0" substitution on every OCR
+  // pass, corrupting words like "FROM"/"TO" into "FR0M"/"T0" - fixed at
+  // the source there. Raw Tesseract can still independently misread the
+  // letter O as a zero on a genuinely low-quality all-caps scan
+  // ("J0NES", "NATI0NAL GUARD", "C0MP0NENT") since the two glyphs are
+  // visually near-identical, so this narrower backstop stays: a zero
+  // adjacent to a letter is treated as an O, a zero between digits (SSN,
+  // dates, "92Y10") is left as a real zero. Applied before the
+  // label-specific fixes below so those see whole words.
   const zeroToLetterO = (value) =>
     value.replace(/(?<=[A-Za-z])0|0(?=[A-Za-z])/g, "O");
   cleanedText = zeroToLetterO(cleanedText);

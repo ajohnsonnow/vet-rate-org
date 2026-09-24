@@ -867,13 +867,12 @@ const VA_TERMINOLOGY_CORRECTIONS = {
 
   // Numbers commonly misread
   l9: "19", // lowercase L to 1
-  O: "0", // Will be applied only in specific number contexts
-  "|": "1", // Pipe to 1
 };
 
 /**
- * Resolve a single OCR-confused digit character (used when fixing
- * 4-digit years like 19B5 -> 1985, 200I -> 2001).
+ * Resolve a single OCR-confused digit character (used when fixing numeric
+ * tokens like years or 8-digit dates: 19B5 -> 1985, 200I -> 2001,
+ * 20O40808 -> 20040808).
  */
 function resolveDigitConfusion(char) {
   const DIGIT_CONFUSIONS = { B: "8", O: "0", I: "1" };
@@ -881,9 +880,24 @@ function resolveDigitConfusion(char) {
 }
 
 /**
+ * Correct OCR letter/digit confusion (O/I/B misread for 0/1/8) inside
+ * tokens that are otherwise all-digit, e.g. a date "20O40808" ->
+ * "20040808" or a year "19B5" -> "1985". A whole-text global "O" -> "0"
+ * substitution used to live here instead and corrupted every real letter
+ * O in the document ("FROM"/"TO" became "FR0M"/"T0") - this only touches a
+ * character surrounded by (or forming a maximal run with) real digits, so
+ * a normal word like "FROM" or "TO" never matches at all.
+ */
+function correctDigitConfusionInNumberTokens(text) {
+  return text.replace(/\b[\dOIB]+\b/g, (token) =>
+    /\d/.test(token) ? token.replace(/[OIB]/g, resolveDigitConfusion) : token,
+  );
+}
+
+/**
  * VA terminology correction - EXPANDED for DD214 documents
  */
-function applyVATerminologyCorrection(text) {
+export function applyVATerminologyCorrection(text) {
   let corrected = text;
   for (const [wrong, right] of Object.entries(VA_TERMINOLOGY_CORRECTIONS)) {
     corrected = corrected.replace(
@@ -892,13 +906,9 @@ function applyVATerminologyCorrection(text) {
     );
   }
 
-  // Fix common number/letter confusions in dates (YYYYMMDD format)
-  // Match patterns like 19B5 -> 1985, 200I -> 2001
-  corrected = corrected.replace(
-    /\b(19|20)([0-9BOI])([0-9BOI])\b/g,
-    (match, century, d1, d2) =>
-      century + resolveDigitConfusion(d1) + resolveDigitConfusion(d2),
-  );
+  // Fix common number/letter confusions inside otherwise-numeric tokens
+  // (years like 19B5 -> 1985, 8-digit dates like 20O40808 -> 20040808).
+  corrected = correctDigitConfusionInNumberTokens(corrected);
 
   return corrected;
 }
