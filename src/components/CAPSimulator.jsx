@@ -1445,72 +1445,54 @@ function _buildRatingGaps(predictedRating, ratingKeys, ratings) {
   const higherRatings = ratingKeys.filter((r) => r > predictedRating);
 
   if (higherRatings.length > 0) {
-    gaps.push("**Understanding the Gap to Higher Ratings:**");
     gaps.push(
+      "**Understanding the Gap to Higher Ratings:**",
       "Your current answers suggest symptom severity at the " +
         predictedRating +
         "% level. To qualify for a higher rating, the VA requires documented evidence of more severe impairment.",
+      "",
     );
-    gaps.push("");
 
     // Only show next 1-2 higher ratings (most actionable)
     const relevantHigherRatings = higherRatings.slice(-2).reverse();
 
     relevantHigherRatings.forEach((higherRating) => {
       const higherCriteria = ratings[higherRating] || "";
-      gaps.push(`**What ${higherRating}% Requires:**`);
-      gaps.push(higherCriteria);
-      gaps.push("");
+      gaps.push(`**What ${higherRating}% Requires:**`, higherCriteria, "");
 
       // Add specific actionable guidance based on the rating difference
       if (higherRating >= 70) {
         gaps.push(
           "• This rating level typically requires evidence of severe occupational impairment - document any job losses, demotions, or inability to work",
-        );
-        gaps.push(
           "• Gather statements from employers, coworkers, or supervisors about work limitations",
-        );
-        gaps.push(
           "• Document any hospitalizations, emergency visits, or intensive treatments",
         );
       } else if (higherRating >= 50) {
         gaps.push(
           "• This rating level requires more than occasional symptoms - document frequency and duration of flare-ups",
-        );
-        gaps.push(
           "• Track days missed from work or activities you can no longer perform",
-        );
-        gaps.push(
           "• Bring treatment records showing regular/ongoing medical care",
         );
       } else if (higherRating >= 30) {
         gaps.push(
           "• This rating level requires regular impairment - keep a symptom diary showing daily or weekly impact",
-        );
-        gaps.push(
           "• Document how the condition affects routine daily activities",
-        );
-        gaps.push(
           "• Note any assistive devices, medications, or accommodations you need",
         );
       }
       gaps.push("");
     });
 
-    gaps.push("**Key Questions to Ask Yourself:**");
     gaps.push(
+      "**Key Questions to Ask Yourself:**",
       '• Are my symptoms worse on "bad days" than what I described? If so, describe your WORST days to the examiner',
-    );
-    gaps.push(
       "• Do I have additional symptoms I didn't mention? List ALL symptoms, even ones you think are minor",
-    );
-    gaps.push(
       "• Is my condition getting worse over time? Document any progression of symptoms",
     );
   } else {
     // At max rating
-    gaps.push("**You are at the maximum rating for this condition.**");
     gaps.push(
+      "**You are at the maximum rating for this condition.**",
       "Your answers align with the highest available rating. Focus on maintaining documentation of your condition's severity and any secondary conditions that may have developed.",
     );
   }

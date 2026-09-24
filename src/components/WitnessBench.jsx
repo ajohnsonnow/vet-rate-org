@@ -124,24 +124,26 @@ const buildMentalHealthQuestions = (relationship) => {
   const questions = [];
 
   if (["spouse", "parent", "child", "sibling"].includes(relationship)) {
-    questions.push({
-      id: "sleep_behavior",
-      question: `Describe the veteran's sleep behavior. Do they have nightmares? Do they talk or scream in their sleep? Do they sleep separately from others?`,
-      placeholder:
-        'Example: "He often wakes up drenched in sweat, yelling. I sleep in a separate room now because he once struck out in his sleep."',
-    });
-    questions.push({
-      id: "social_withdrawal",
-      question: `Tell me about a time you had to cancel plans or leave a social event because of the veteran's condition. Does the veteran avoid crowds or public places?`,
-      placeholder:
-        'Example: "We haven\'t been to a restaurant in 3 years. Last time we tried, he became agitated when seated with his back to the door."',
-    });
-    questions.push({
-      id: "emotional_changes",
-      question: `How has the veteran's personality changed since their service? Are there hobbies or activities they used to enjoy but stopped doing?`,
-      placeholder:
-        "Example: \"He used to love coaching our kids' baseball team. Now he won't go near the field because he says the loud noises trigger him.\"",
-    });
+    questions.push(
+      {
+        id: "sleep_behavior",
+        question: `Describe the veteran's sleep behavior. Do they have nightmares? Do they talk or scream in their sleep? Do they sleep separately from others?`,
+        placeholder:
+          'Example: "He often wakes up drenched in sweat, yelling. I sleep in a separate room now because he once struck out in his sleep."',
+      },
+      {
+        id: "social_withdrawal",
+        question: `Tell me about a time you had to cancel plans or leave a social event because of the veteran's condition. Does the veteran avoid crowds or public places?`,
+        placeholder:
+          'Example: "We haven\'t been to a restaurant in 3 years. Last time we tried, he became agitated when seated with his back to the door."',
+      },
+      {
+        id: "emotional_changes",
+        question: `How has the veteran's personality changed since their service? Are there hobbies or activities they used to enjoy but stopped doing?`,
+        placeholder:
+          "Example: \"He used to love coaching our kids' baseball team. Now he won't go near the field because he says the loud noises trigger him.\"",
+      },
+    );
   }
 
   if (relationship === "buddy") {
