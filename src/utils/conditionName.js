@@ -18,8 +18,7 @@
  */
 export const normalizeConditionName = (name) => {
   if (typeof name !== "string") return "";
-  // eslint-disable-next-line sonarjs/slow-regex -- single negated character class, standard linear-time pattern
-  const closedRemoved = name.toLowerCase().replace(/\([^)]*\)/g, " ");
+  const closedRemoved = name.toLowerCase().replace(/\([^)]{0,300}\)/g, " ");
   // Any "(" left is unclosed: a letter's condition text cut off mid-parenthetical.
   const open = closedRemoved.indexOf("(");
   return (open === -1 ? closedRemoved : closedRemoved.slice(0, open))

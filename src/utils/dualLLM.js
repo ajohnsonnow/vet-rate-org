@@ -93,10 +93,8 @@ ${untrustedContent ?? ""}
   // Strip markdown fences if a model added one.
   // Regexes below are bounded LLM output (the extractor's own response), not attacker-controlled length.
   const cleaned = String(raw)
-    // eslint-disable-next-line sonarjs/slow-regex
-    .replace(/^\s*```(?:json)?\s*/i, "")
-    // eslint-disable-next-line sonarjs/slow-regex
-    .replace(/\s*```\s*$/i, "")
+    .replace(/^\s{0,20}```(?:json)?\s{0,20}/i, "")
+    .replace(/\s{0,20}```\s{0,20}$/i, "")
     .trim();
 
   try {

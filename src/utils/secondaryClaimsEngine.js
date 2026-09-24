@@ -121,8 +121,7 @@ export function isConditionAlreadyRated(
   const normalize = (s) =>
     s
       .toLowerCase()
-      // eslint-disable-next-line sonarjs/slow-regex -- negated character class `[^)]*` cannot backtrack; each char is consumed at most once
-      .replace(/\([^)]*\)/g, " ")
+      .replace(/\([^)]{0,300}\)/g, " ")
       .replace(/\b(left|right|bilateral)\b/g, " ")
       .replace(/[^a-z0-9]+/g, " ")
       .trim();

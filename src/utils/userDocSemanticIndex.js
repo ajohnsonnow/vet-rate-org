@@ -80,8 +80,7 @@ const SNIPPET_CHARS = 240;
  */
 export function parsePages(fullText) {
   const src = String(fullText || "");
-  // eslint-disable-next-line sonarjs/slow-regex -- input is the user's own uploaded document text, not attacker-controlled
-  const markerRe = /--- PAGE (\d+)[^\n]*---/g;
+  const markerRe = /--- PAGE (\d{1,6})[^\n]{0,200}---/g;
   const markers = [...src.matchAll(markerRe)];
   if (markers.length === 0) {
     const t = src.trim();

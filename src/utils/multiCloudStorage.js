@@ -133,8 +133,7 @@ const generatePKCE = async () => {
   const challenge = btoa(String.fromCharCode(...new Uint8Array(hash)))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
-    // eslint-disable-next-line sonarjs/slow-regex -- fixed-length base64 hash output (~43 chars), not attacker-controlled length
-    .replace(/=+$/, "");
+    .replace(/={0,4}$/, "");
 
   return { verifier: verifierStr, challenge };
 };

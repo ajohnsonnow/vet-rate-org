@@ -1229,8 +1229,7 @@ export function parseDD214Text(rawText, branch = "Army", stateCode = null) {
  * Detect devices attached to an award
  */
 function _addOakLeafClusters(devices, context) {
-  // eslint-disable-next-line sonarjs/slow-regex -- simple digit+alternation, no overlapping ambiguity; context is a short extracted snippet, not attacker-controlled
-  const olcMatch = context.match(/(\d+)\s*(OLC|OAK\s*LEAF)/);
+  const olcMatch = context.match(/(\d{1,3})\s{0,10}(OLC|OAK\s{0,10}LEAF)/);
   if (olcMatch) {
     const count = parseInt(olcMatch[1], 10);
     const silverOLC = Math.floor(count / 5);
@@ -1248,8 +1247,7 @@ function _addOakLeafClusters(devices, context) {
 }
 
 function _addServiceStars(devices, context) {
-  // eslint-disable-next-line sonarjs/slow-regex -- simple digit+alternation, no overlapping ambiguity; context is a short extracted snippet, not attacker-controlled
-  const starMatch = context.match(/(\d+)\s*(STAR|STR|\*)/);
+  const starMatch = context.match(/(\d{1,3})\s{0,10}(STAR|STR|\*)/);
   if (!starMatch) return;
 
   const count = parseInt(starMatch[1], 10);
@@ -1355,8 +1353,11 @@ function detectQuantity(text, awardMatch) {
   const context = extractContext(text, awardMatch, 30);
 
   // Look for patterns like "(2)", "x2", "2nd", etc.
-  // eslint-disable-next-line sonarjs/slow-regex -- simple single-quantifier patterns, no overlapping ambiguity
-  const patterns = [/\((\d+)\)/, /x(\d+)/i, /(\d+)(?:ST|ND|RD|TH)\s*AWARD/i];
+  const patterns = [
+    /\((\d{1,3})\)/,
+    /x(\d{1,3})/i,
+    /(\d{1,3})(?:ST|ND|RD|TH)\s{0,10}AWARD/i,
+  ];
 
   for (const pattern of patterns) {
     const match = context.match(pattern);
