@@ -315,6 +315,27 @@ async function overlayOverflow(
 }
 
 /**
+ * Internal horizontal overflow of the open ResponsiveModal's own scroll
+ * body (the `.flex-1.overflow-y-auto` region), independent of the viewport
+ * check above. A flex row inside the body (e.g. an `<input class="flex-1">`
+ * with no `min-w-0`) can push the body's own `scrollWidth` past its
+ * `clientWidth` without any descendant's `getBoundingClientRect().right`
+ * crossing the viewport edge, since the excess gets absorbed by the body's
+ * own right padding before it would register there — so this is the
+ * mechanism `overlayOverflow` above cannot catch. Matches the measurement
+ * QA's audit tooling uses (bodySW/bodyCW).
+ */
+async function modalBodyOverflow(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const body = document.querySelector(
+      '[role="dialog"] .flex-1.overflow-y-auto.overscroll-contain',
+    );
+    if (!body) return 0;
+    return Math.round(body.scrollWidth - body.clientWidth);
+  });
+}
+
+/**
  * Bounding box of a tool header's close button, measured against the real
  * viewport with no `containsX` exemption. `overlayOverflow` above
  * deliberately ignores bleed contained by an ancestor's `overflow: hidden`
@@ -640,6 +661,57 @@ for (const vp of VIEWPORTS) {
       expect(m.overflow).toBeLessThanOrEqual(1);
       expect(m.hasButton).toBe(true);
       expect(m.ctaInViewport).toBe(true);
+      expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+    });
+  });
+
+  // BDD Builder (QA audit fix): the "Add condition" input in the Dashboard
+  // tab's Conditions Tracker card used `flex-1` with no `min-w-0`, so it
+  // refused to shrink below its native min-content width inside the `flex
+  // gap-2` row, overflowing the row and bleeding into the modal body's own
+  // scroll region (measured at 390px: body scrollWidth > clientWidth).
+  // `overlayOverflow`/`pageOverflow` don't catch this class of bug (the
+  // excess never crosses the viewport edge), so this asserts the body's own
+  // internal overflow directly via `modalBodyOverflow`.
+  test.describe(`BDD Builder body overflow @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+        // Seeds a separation date so BDD Builder opens straight to the
+        // Dashboard tab (with the Conditions Tracker's "Add condition"
+        // input) instead of the setup screen.
+        localStorage.setItem(
+          "vetrate_bdd_data",
+          JSON.stringify({
+            separationDate: "2007-06-29",
+            branch: "army",
+            checkedItems: [],
+            conditions: [],
+            notes: "",
+            lastUpdated: new Date().toISOString(),
+            prefilledFromRecords: true,
+          }),
+        );
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    test("Add-condition input row fits the Dashboard tab without internal overflow", async ({
+      page,
+    }) => {
+      await openModalByEvent(page, "openBDDBuilder", async (p) => ({
+        found: await p
+          .locator('[role="dialog"][aria-labelledby="bdd-builder-title"]')
+          .isVisible(),
+      }));
+
+      expect(await modalBodyOverflow(page)).toBeLessThanOrEqual(1);
       expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
     });
   });
