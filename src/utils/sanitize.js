@@ -119,8 +119,7 @@ export function sanitizeErrorMessage(error, maxLength = 500) {
   }
 
   // Strip HTML tags to prevent XSS
-  // eslint-disable-next-line sonarjs/slow-regex -- single negated character class, no adjacent overlapping quantifiers; standard linear-time tag-strip pattern
-  message = message.replace(/<[^>]*>/g, "");
+  message = message.replace(/<[^>]{0,50000}>/g, "");
   // Strip control characters
   // eslint-disable-next-line no-control-regex
   message = message.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
@@ -221,11 +220,13 @@ export function safeHtml(markdownLite) {
   // 2. Re-introduce links with sanitized hrefs. `escapeHtml` already turned
   //    `<` / `>` into entities, so the markdown brackets `[ ]` and `( )` are
   //    untouched and the link replacement is safe.
-  // eslint-disable-next-line sonarjs/slow-regex -- two disjoint negated character classes ([^\]]/[^)]) separated by literal text, no overlap; standard linear-time markdown-link pattern
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, url) => {
-    const safeUrl = sanitizeUrl(url);
-    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-  });
+  html = html.replace(
+    /\[([^\]]{1,20000})\]\(([^)]{1,20000})\)/g,
+    (_match, label, url) => {
+      const safeUrl = sanitizeUrl(url);
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    },
+  );
 
   // 3. Re-introduce inline formatting. Inputs were already escaped, so the
   //    replacement bodies contain entity-safe characters only.
@@ -281,8 +282,7 @@ export function scrubSvg(svg) {
     .replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, "")
     .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
     .replace(
-      // eslint-disable-next-line sonarjs/slow-regex -- FIXME(security-review): flagged on attacker-reachable SVG sanitization; the optional-empty alternation `("|'|)` adjacent to `\s*` is a plausible ReDoS shape and deserves a dedicated review + fuzz test rather than a same-session rewrite
-      /(href|xlink:href)\s*=\s*("|'|)\s*javascript:[^"'>\s]*/gi,
+      /(href|xlink:href)\s{0,20}=\s{0,20}("|'|)\s{0,20}javascript:[^"'>\s]{0,50000}/gi,
       "$1=$2#",
     );
 }

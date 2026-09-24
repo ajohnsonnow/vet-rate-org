@@ -83,8 +83,8 @@ const PII_PATTERNS = {
   // what counts as a DOB (i.e. a PII leak). Deserves a dedicated pass with
   // fixture-based before/after matching, not a rushed simplification.
   dobLabeled:
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity
-    /\b(?:DOB|D\.O\.B\.|date\s+of\s+birth|born(?:\s+on)?)\s*:?\s*(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s+\d{2,4})\b/gi,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on alternation count (the 12 month names), not nesting; see docs/SONARQUBE.md S8786 note for the bounding rationale applied here
+    /\b(?:DOB|D\.O\.B\.|date\s{1,5}of\s{1,5}birth|born(?:\s{1,5}on)?)\s{0,5}:?\s{0,5}(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]{0,10}\.?\s{1,5}\d{1,2},?\s{1,5}\d{2,4})\b/gi,
   dob: [
     /\b(0[1-9]|1[0-2])[/-](0[1-9]|[12]\d|3[01])[/-](\d{2}|\d{4})\b/g, // MM/DD/YYYY
     /\b(0[1-9]|[12]\d|3[01])[/-](0[1-9]|1[0-2])[/-](\d{2}|\d{4})\b/g, // DD/MM/YYYY
@@ -97,8 +97,8 @@ const PII_PATTERNS = {
   // under the /i flag) is left as-is for the same reason: even that "trivial"
   // change touches the address-body match width.
   address:
-    // eslint-disable-next-line sonarjs/slow-regex, sonarjs/regex-complexity, sonarjs/duplicates-in-character-class
-    /\b\d+\s+[A-Za-z0-9\s]+\b(?:Street|St\.?|Avenue|Ave\.?|Road|Rd\.?|Boulevard|Blvd\.?|Lane|Ln\.?|Drive|Dr\.?|Court|Ct\.?|Circle|Cir\.?|Way|Plaza|Place|Pl\.?)\b/gi,
+    // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on alternation count (the street-suffix list) and the redundant A-Za-z under /i, not on backtracking; bounding below (S8786) addressed separately
+    /\b\d{1,6}\s{1,5}[A-Za-z0-9\s]{1,100}\b(?:Street|St\.?|Avenue|Ave\.?|Road|Rd\.?|Boulevard|Blvd\.?|Lane|Ln\.?|Drive|Dr\.?|Court|Ct\.?|Circle|Cir\.?|Way|Plaza|Place|Pl\.?)\b/gi,
 
   // PO Box — aggressive only.
   poBox: /\bP\.?\s*O\.?\s*Box\s+\d+\b/gi,
