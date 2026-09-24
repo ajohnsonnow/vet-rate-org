@@ -15,7 +15,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { getMyRatings } from "../utils/veteranProfile";
-import { normalizeConditionName } from "../utils/conditionName";
+import { matchConditionToKnownKey } from "../utils/conditionName";
 
 /**
  * Secondary Condition Relationships Database
@@ -516,33 +516,41 @@ const CONDITION_WEB = {
   },
 };
 
-// Normalized condition name -> canonical CONDITION_WEB node id, built once
-// at module load (the web itself is static). Used to seed the graph with
-// whichever of the veteran's rated conditions (if any) has an entry here.
-const CONDITION_WEB_NODE_INDEX = (() => {
-  const index = new Map();
+// {key, label} pairs for matchConditionToKnownKey - every primary and
+// secondary node label in the static CONDITION_WEB knowledge map (both key
+// and label are the same display string here), built once at module load.
+const CONDITION_WEB_NODES_LIST = (() => {
+  const seen = new Set();
+  const list = [];
   Object.keys(CONDITION_WEB).forEach((primary) => {
-    index.set(normalizeConditionName(primary), primary);
+    if (!seen.has(primary)) {
+      seen.add(primary);
+      list.push({ key: primary, label: primary });
+    }
     CONDITION_WEB[primary].secondaries.forEach((s) => {
-      const key = normalizeConditionName(s.condition);
-      if (!index.has(key)) index.set(key, s.condition);
+      if (seen.has(s.condition)) return;
+      seen.add(s.condition);
+      list.push({ key: s.condition, label: s.condition });
     });
   });
-  return index;
+  return list;
 })();
 
 /**
- * First of the veteran's rated conditions (getMyRatings) that has a node in
- * the static CONDITION_WEB knowledge map, or null if none match / no
- * ratings are saved.
+ * First of the veteran's rated conditions (getMyRatings) that matches a node
+ * in the static CONDITION_WEB knowledge map, or null if none match / no
+ * ratings are saved. Real VA letters spell condition names out in full, so
+ * this goes through matchConditionToKnownKey rather than an exact
+ * normalized-name lookup.
  */
 const findSeedNodeFromMyRatings = () => {
   const ratings = getMyRatings();
   for (const rating of ratings) {
-    const key = normalizeConditionName(rating.name);
-    if (CONDITION_WEB_NODE_INDEX.has(key)) {
-      return CONDITION_WEB_NODE_INDEX.get(key);
-    }
+    const match = matchConditionToKnownKey(
+      rating.name,
+      CONDITION_WEB_NODES_LIST,
+    );
+    if (match) return match;
   }
   return null;
 };

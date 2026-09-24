@@ -58,6 +58,40 @@ describe("EvidenceGapVisualizer quick-picks from records", () => {
     expect(conditionSelect).toHaveValue("tinnitus");
   });
 
+  it("matches a real, fully-worded VA letter condition name to its short evidence-schema key (regression D4)", () => {
+    saveMyRatings([
+      {
+        name: "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+        bodyPart: "mental",
+        rating: 50,
+        side: "none",
+      },
+    ]);
+
+    renderVisualizer();
+
+    expect(
+      screen.getByRole("button", { name: /PTSD \(50% → try 70%\)/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("matches a real lumbar-spine letter condition name via the back/spine alias group (regression D4)", () => {
+    saveMyRatings([
+      {
+        name: "lumbosacral strain, degenerative disc disease (previously rated as lumbago) (claimed as low back condition)",
+        bodyPart: "other",
+        rating: 20,
+        side: "none",
+      },
+    ]);
+
+    renderVisualizer();
+
+    expect(
+      screen.getByRole("button", { name: /Lumbar Strain/i }),
+    ).toBeInTheDocument();
+  });
+
   it("shows no quick-picks when nothing on file matches the evidence schema", () => {
     saveMyRatings([
       {

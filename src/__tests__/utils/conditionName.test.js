@@ -4,6 +4,7 @@ import {
   findRatedConditionMatch,
   isOlderDecision,
   isSupersededName,
+  matchConditionToKnownKey,
   normalizeConditionName,
 } from "../../utils/conditionName";
 
@@ -113,6 +114,69 @@ describe("isSupersededName", () => {
       ),
     ).toBe(true);
     expect(isSupersededName("Tinnitus", "Tinnitus")).toBe(false);
+  });
+});
+
+describe("matchConditionToKnownKey", () => {
+  const knownConditions = [
+    { key: "ptsd", label: "PTSD" },
+    { key: "lumbar_strain", label: "Lumbar Strain / Back Condition" },
+    { key: "radiculopathy", label: "Radiculopathy (Sciatic Nerve)" },
+    { key: "tinnitus", label: "Tinnitus" },
+    { key: "cervical_strain", label: "Cervical Strain / Neck Condition" },
+  ];
+
+  it("maps a fully-worded re-characterized PTSD name via the PTSD/post-traumatic-stress-disorder alias", () => {
+    expect(
+      matchConditionToKnownKey(
+        "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+        knownConditions,
+      ),
+    ).toBe("ptsd");
+  });
+
+  it("maps a lumbosacral-strain-and-DDD letter name to the back/spine key via the alias group, not cervical", () => {
+    expect(
+      matchConditionToKnownKey(
+        "lumbosacral strain, degenerative disc disease (previously rated as lumbago) (claimed as low back condition)",
+        knownConditions,
+      ),
+    ).toBe("lumbar_strain");
+  });
+
+  it("maps sided radiculopathy names by plain word overlap, no alias needed", () => {
+    expect(
+      matchConditionToKnownKey(
+        "radiculopathy, left lower extremity (femoral)",
+        knownConditions,
+      ),
+    ).toBe("radiculopathy");
+    expect(
+      matchConditionToKnownKey(
+        "radiculopathy, right lower extremity (femoral)",
+        knownConditions,
+      ),
+    ).toBe("radiculopathy");
+  });
+
+  it("maps a plain tinnitus name exactly", () => {
+    expect(matchConditionToKnownKey("Tinnitus", knownConditions)).toBe(
+      "tinnitus",
+    );
+  });
+
+  it("returns null for a real condition name the tool's data doesn't support", () => {
+    expect(
+      matchConditionToKnownKey(
+        "Iliotibial band syndrome Greater trochanteric pain syndrome (not bursitis), left hip",
+        knownConditions,
+      ),
+    ).toBeNull();
+  });
+
+  it("returns null for empty input", () => {
+    expect(matchConditionToKnownKey("", knownConditions)).toBeNull();
+    expect(matchConditionToKnownKey(null, knownConditions)).toBeNull();
   });
 });
 

@@ -15,18 +15,14 @@ import {
 } from "../data/evidenceRequirements";
 import { saveClaim, getSavedClaims } from "../utils/claimsStorage";
 import { getMyRatings } from "../utils/veteranProfile";
-import { normalizeConditionName } from "../utils/conditionName";
+import { matchConditionToKnownKey } from "../utils/conditionName";
 import ReportBugLink from "./ReportBugLink";
 
-// Normalized condition name -> EVIDENCE_REQUIREMENTS key, built once at
-// module load (the requirements schema itself is static).
-const EVIDENCE_CONDITION_INDEX = (() => {
-  const index = new Map();
-  Object.entries(EVIDENCE_REQUIREMENTS).forEach(([id, data]) => {
-    index.set(normalizeConditionName(data.name), id);
-  });
-  return index;
-})();
+// {key, label} pairs for matchConditionToKnownKey, built once at module load
+// (the requirements schema itself is static).
+const EVIDENCE_CONDITIONS_LIST = Object.entries(EVIDENCE_REQUIREMENTS).map(
+  ([id, data]) => ({ key: id, label: data.name }),
+);
 
 function getAvailableRatingsForCondition(conditionId) {
   const data = conditionId ? EVIDENCE_REQUIREMENTS[conditionId] : null;
@@ -58,18 +54,24 @@ function computeSuggestedTarget(conditionId, currentRating) {
 
 // One-click quick-picks for conditions the veteran already has on file (My
 // Ratings, then saved claims) that this tool has evidence requirements for.
-// Ratings carry a known current percentage, so the suggested target is the
-// next tier up; saved claims have no rating on file yet, so the target
-// falls back to the same default a manual condition pick would get.
+// Real VA letters spell condition names out in full ("radiculopathy, left
+// lower extremity (femoral)"), so matching against the schema's short
+// canonical names goes through matchConditionToKnownKey rather than an exact
+// normalized-name lookup. Ratings carry a known current percentage, so the
+// suggested target is the next tier up; saved claims have no rating on file
+// yet, so the target falls back to the same default a manual condition pick
+// would get.
 function getRecordsQuickPicks() {
   const seen = new Set();
   const picks = [];
 
   getMyRatings().forEach((r) => {
-    const key = normalizeConditionName(r.name);
-    if (!key || seen.has(key) || !EVIDENCE_CONDITION_INDEX.has(key)) return;
-    seen.add(key);
-    const conditionId = EVIDENCE_CONDITION_INDEX.get(key);
+    const conditionId = matchConditionToKnownKey(
+      r.name,
+      EVIDENCE_CONDITIONS_LIST,
+    );
+    if (!conditionId || seen.has(conditionId)) return;
+    seen.add(conditionId);
     const currentRating = typeof r.rating === "number" ? r.rating : null;
     picks.push({
       conditionId,
@@ -80,10 +82,12 @@ function getRecordsQuickPicks() {
   });
 
   getSavedClaims().forEach((c) => {
-    const key = normalizeConditionName(c.conditionName);
-    if (!key || seen.has(key) || !EVIDENCE_CONDITION_INDEX.has(key)) return;
-    seen.add(key);
-    const conditionId = EVIDENCE_CONDITION_INDEX.get(key);
+    const conditionId = matchConditionToKnownKey(
+      c.conditionName,
+      EVIDENCE_CONDITIONS_LIST,
+    );
+    if (!conditionId || seen.has(conditionId)) return;
+    seen.add(conditionId);
     picks.push({
       conditionId,
       name: EVIDENCE_REQUIREMENTS[conditionId].name,

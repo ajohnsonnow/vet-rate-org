@@ -92,3 +92,83 @@ export const isOlderDecision = (incomingDate, existingDate) => {
   const b = Date.parse(existingDate);
   return Number.isFinite(a) && Number.isFinite(b) && a < b;
 };
+
+// Real VA letters spell out condition names in full, with renames, sided
+// extremities and "(claimed as ...)" qualifiers ("radiculopathy, left lower
+// extremity (femoral)"), while tools like EvidenceGapVisualizer and
+// WebOfConditions key their own static knowledge maps on short canonical
+// labels ("PTSD", "Radiculopathy (Sciatic Nerve)"). These pairs bridge that
+// gap for the handful of abbreviations a long name uses but a short label's
+// words don't literally contain - each pair is VA's own acronym usage (or,
+// for the back/spine group, terms VA letters use interchangeably for the
+// same condition), not an invented clinical equivalence. Plain word overlap
+// (matchConditionToKnownKey's token-containment pass) handles everything
+// else - most real names already share literal words with the tool's label
+// ("radiculopathy" appears in both), so most conditions need no entry here.
+const CONDITION_ALIAS_GROUPS = [
+  ["ptsd", "post traumatic stress disorder"],
+  [
+    "lumbosacral",
+    "lumbar",
+    "low back",
+    "thoracolumbar",
+    "back strain",
+    "back condition",
+    "degenerative disc disease",
+    "lumbago",
+  ],
+  ["copd", "chronic obstructive pulmonary disease"],
+  ["gerd", "gastroesophageal reflux disease"],
+  ["ibs", "irritable bowel syndrome"],
+  ["tbi", "traumatic brain injury"],
+  ["cad", "coronary artery disease"],
+  ["ckd", "chronic kidney disease"],
+  ["tmj", "temporomandibular joint"],
+  ["ivds", "intervertebral disc syndrome"],
+];
+
+function _expandConditionAliases(normalized) {
+  let expanded = normalized;
+  for (const group of CONDITION_ALIAS_GROUPS) {
+    if (group.some((term) => normalized.includes(term))) {
+      expanded += ` ${group.join(" ")}`;
+    }
+  }
+  return expanded;
+}
+
+/**
+ * Map a long, real-world VA condition name onto one of a tool's own known
+ * condition keys. `knownConditions` is an array of `{key, label}` pairs
+ * drawn from the tool's own data (evidenceRequirements' `name` fields,
+ * WebOfConditions' node labels, etc.) - never an external medical
+ * vocabulary. Tries an exact normalized match first, then whether every
+ * (non-trivial) word of a known label - after the alias expansion above -
+ * appears in the long name, preferring the longest/most-specific label that
+ * qualifies. Returns the matching key, or null when nothing lines up.
+ */
+export const matchConditionToKnownKey = (longName, knownConditions) => {
+  const normalizedLong = normalizeConditionName(longName);
+  if (!normalizedLong || !Array.isArray(knownConditions)) return null;
+
+  const exact = knownConditions.find(
+    (c) => normalizeConditionName(c.label) === normalizedLong,
+  );
+  if (exact) return exact.key;
+
+  const expandedLong = _expandConditionAliases(normalizedLong);
+  let bestKey = null;
+  let bestLength = 0;
+  for (const { key, label } of knownConditions) {
+    const normalizedLabel = normalizeConditionName(label);
+    if (!normalizedLabel) continue;
+    const tokens = normalizedLabel.split(" ").filter((w) => w.length > 2);
+    if (tokens.length === 0) continue;
+    const allTokensPresent = tokens.every((t) => expandedLong.includes(t));
+    if (allTokensPresent && normalizedLabel.length > bestLength) {
+      bestKey = key;
+      bestLength = normalizedLabel.length;
+    }
+  }
+  return bestKey;
+};

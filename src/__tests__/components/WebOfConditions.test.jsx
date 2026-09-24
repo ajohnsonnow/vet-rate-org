@@ -49,6 +49,22 @@ describe("WebOfConditions seed from My Ratings", () => {
     expect(screen.getByText(/we started you off with/i)).toBeInTheDocument();
   });
 
+  it("matches a real, fully-worded VA letter condition name to its knowledge-map node (regression D4)", () => {
+    saveMyRatings([
+      {
+        name: "Post-traumatic stress disorder (formerly evaluated as panic disorder without agoraphobia and depressive disorder not otherwise specified (NOS))",
+        bodyPart: "mental",
+        rating: 50,
+        side: "none",
+      },
+    ]);
+
+    renderGraph();
+
+    expect(screen.getByText(/we started you off with/i)).toBeInTheDocument();
+    expect(screen.getAllByText("PTSD").length).toBeGreaterThan(0);
+  });
+
   it("leaves the graph at its default unselected state when no rating matches the knowledge map", () => {
     saveMyRatings([
       {
