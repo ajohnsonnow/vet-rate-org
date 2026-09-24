@@ -313,9 +313,10 @@ function NewEvidenceQuestion({ value, onAnswer }) {
         NEW means: nexus letter dated after denial, medical records dated after
         denial, buddy statements not previously submitted
       </p>
-      <div className="flex gap-3">
+      <div className="flex gap-3" role="group" aria-label="New evidence">
         <button
           onClick={() => onAnswer("yes")}
+          aria-pressed={value === "yes"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "yes"
               ? "bg-green-600 text-white"
@@ -326,6 +327,7 @@ function NewEvidenceQuestion({ value, onAnswer }) {
         </button>
         <button
           onClick={() => onAnswer("no")}
+          aria-pressed={value === "no"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "no"
               ? "bg-red-600 text-white"
@@ -345,7 +347,11 @@ function EvidenceTypeQuestion({ value, onSelect }) {
       <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
         2. What type of new evidence do you have?
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div
+        className="grid grid-cols-1 md:grid-cols-2 gap-2"
+        role="group"
+        aria-label="Type of new evidence"
+      >
         {[
           {
             id: "nexus",
@@ -363,6 +369,7 @@ function EvidenceTypeQuestion({ value, onSelect }) {
           <button
             key={opt.id}
             onClick={() => onSelect(opt.id)}
+            aria-pressed={value === opt.id}
             className={`p-3 rounded-lg text-left transition-colors ${
               value === opt.id
                 ? "bg-blue-600 text-white"
@@ -388,9 +395,10 @@ function RaterErrorQuestion({ value, onAnswer }) {
         Error means: ignored evidence IN your file, misread medical evidence,
         math error, failed duty to assist
       </p>
-      <div className="flex gap-3">
+      <div className="flex gap-3" role="group" aria-label="Rater error">
         <button
           onClick={() => onAnswer("yes")}
+          aria-pressed={value === "yes"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "yes"
               ? "bg-yellow-600 text-white"
@@ -401,6 +409,7 @@ function RaterErrorQuestion({ value, onAnswer }) {
         </button>
         <button
           onClick={() => onAnswer("no")}
+          aria-pressed={value === "no"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "no"
               ? "bg-red-600 text-white"
@@ -420,9 +429,10 @@ function TimeSinceDenialQuestion({ value, onAnswer }) {
       <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
         3. How long since your denial?
       </h3>
-      <div className="flex gap-3">
+      <div className="flex gap-3" role="group" aria-label="Time since denial">
         <button
           onClick={() => onAnswer("under1year")}
+          aria-pressed={value === "under1year"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "under1year"
               ? "bg-green-600 text-white"
@@ -433,6 +443,7 @@ function TimeSinceDenialQuestion({ value, onAnswer }) {
         </button>
         <button
           onClick={() => onAnswer("over1year")}
+          aria-pressed={value === "over1year"}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             value === "over1year"
               ? "bg-orange-600 text-white"

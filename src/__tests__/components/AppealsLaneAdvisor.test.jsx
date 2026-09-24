@@ -139,6 +139,70 @@ describe("AppealsLaneAdvisor prefill from records - never overwrites", () => {
   });
 });
 
+describe("AppealsLaneAdvisor answer selection exposed to assistive tech", () => {
+  it("toggles aria-pressed on the new-evidence question as answers change", async () => {
+    renderAdvisor();
+    await screen.findByText(/do you have new evidence/i);
+
+    const yesButton = screen.getByRole("button", {
+      name: /yes, i have new evidence/i,
+    });
+    const noButton = screen.getByRole("button", {
+      name: /no new evidence yet/i,
+    });
+    expect(yesButton).toHaveAttribute("aria-pressed", "false");
+    expect(noButton).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(yesButton);
+    expect(yesButton).toHaveAttribute("aria-pressed", "true");
+    expect(noButton).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(noButton);
+    expect(yesButton).toHaveAttribute("aria-pressed", "false");
+    expect(noButton).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("toggles aria-pressed on the Q3 time-since-denial question", async () => {
+    renderAdvisor();
+    fireEvent.click(
+      screen.getByRole("button", { name: /yes, i have new evidence/i }),
+    );
+
+    const underButton = await screen.findByRole("button", {
+      name: /under 1 year/i,
+    });
+    const overButton = screen.getByRole("button", { name: /over 1 year/i });
+    expect(underButton).toHaveAttribute("aria-pressed", "false");
+    expect(overButton).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(overButton);
+    expect(overButton).toHaveAttribute("aria-pressed", "true");
+    expect(underButton).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("marks the Q3 answer aria-pressed when prefilled from records", async () => {
+    const recentDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+    mockLoadVKB.mockResolvedValue({
+      vaClaimsHistory: {
+        claims: [
+          { status: "denied", decisionDate: recentDate, conditions: ["PTSD"] },
+        ],
+      },
+    });
+
+    renderAdvisor();
+
+    await screen.findByText(/we filled this in from your records/i);
+    fireEvent.click(
+      screen.getByRole("button", { name: /yes, i have new evidence/i }),
+    );
+    const underButton = screen.getByRole("button", { name: /under 1 year/i });
+    expect(underButton).toHaveAttribute("aria-pressed", "true");
+  });
+});
+
 describe("AppealsLaneAdvisor denial date", () => {
   it("shows a date-only denial on its own day west of UTC", async () => {
     const originalTZ = process.env.TZ;
