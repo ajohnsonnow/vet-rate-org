@@ -448,7 +448,7 @@ function useDkbStatsLoader({ setKbStatus }) {
 
         const mostRecentDate =
           lastVerifiedDates.length > 0
-            ? lastVerifiedDates.sort().reverse()[0]
+            ? lastVerifiedDates.sort((a, b) => b.localeCompare(a))[0]
             : null;
 
         setKbStatus({

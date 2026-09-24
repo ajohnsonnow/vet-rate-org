@@ -309,12 +309,12 @@ const usePublicationFilters = (publications) => {
 
   const branches = useMemo(() => {
     const unique = [...new Set(publications.map((p) => p.branch))];
-    return unique.sort();
+    return unique.sort((a, b) => a.localeCompare(b));
   }, [publications]);
 
   const categories = useMemo(() => {
     const unique = [...new Set(publications.map((p) => p.category))];
-    return unique.sort();
+    return unique.sort((a, b) => a.localeCompare(b));
   }, [publications]);
 
   const filteredPublications = useMemo(() => {

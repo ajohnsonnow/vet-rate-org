@@ -1328,8 +1328,8 @@ export const summarizeServicePeriods = (periods) => {
   const serviceSpan =
     startDates.length > 0 || endDates.length > 0
       ? {
-          start: startDates.sort()[0] || null,
-          end: endDates.sort().slice(-1)[0] || null,
+          start: startDates.sort((a, b) => a.localeCompare(b))[0] || null,
+          end: endDates.sort((a, b) => a.localeCompare(b)).slice(-1)[0] || null,
         }
       : null;
 

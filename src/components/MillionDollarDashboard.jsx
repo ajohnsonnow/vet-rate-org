@@ -486,7 +486,7 @@ const StateSelectField = ({ state, setState }) => (
       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
     >
       {Object.keys(STATE_PROPERTY_TAX_EXEMPTIONS)
-        .sort()
+        .sort((a, b) => a.localeCompare(b))
         .map((s) => (
           <option key={s} value={s}>
             {s}
