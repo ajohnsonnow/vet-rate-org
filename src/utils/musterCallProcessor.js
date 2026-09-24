@@ -1265,6 +1265,7 @@ const classifyAndParseDocument = async (
       result.classification.type,
       file.name,
       extractionResult.visionParsedData, // Pass vision-parsed data if available
+      extractionResult.letterheadText,
     );
   } catch (parseErr) {
     console.error(
@@ -1918,7 +1919,7 @@ const parseDD214Document = async (
   return await parseServiceRecord(dd214Segments[0]?.text || text, formType);
 };
 
-const parseRatingDecisionDocument = async (text) => {
+const parseRatingDecisionDocument = async (text, options = {}) => {
   // Enhanced: Use new VA Document Parser for Decision Letters
   // eslint-disable-next-line no-console
   console.log("📋 Using enhanced VA Document Parser for Rating Decision...");
@@ -1945,11 +1946,12 @@ const parseRatingDecisionDocument = async (text) => {
         parserVersion: "v1.16.0-enhanced",
       },
       text,
+      options.letterheadText,
     );
   }
   // eslint-disable-next-line no-console
   console.log("⚠️ Enhanced parser found limited data, using legacy parser");
-  return await parseRatingDecision(text);
+  return await parseRatingDecision(text, options);
 };
 
 const parseDBQDocument = async (text) => {
@@ -2078,6 +2080,7 @@ const parseDocumentByType = async (
   docType,
   filename,
   visionParsedData = null,
+  letterheadText = null,
 ) => {
   switch (docType) {
     case DOCUMENT_TYPES.DD214:
@@ -2092,10 +2095,10 @@ const parseDocumentByType = async (
       );
 
     case DOCUMENT_TYPES.RATING_DECISION:
-      return await parseRatingDecisionDocument(text);
+      return await parseRatingDecisionDocument(text, { letterheadText });
 
     case DOCUMENT_TYPES.CLAIM_LETTER:
-      return await parseClaimLetter(text);
+      return await parseClaimLetter(text, { letterheadText });
 
     case DOCUMENT_TYPES.DBQ:
       return await parseDBQDocument(text);
@@ -4014,7 +4017,7 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
 /**
  * Parse VA Rating Decision (legacy fallback -- see parseRatingDecisionDocument)
  */
-export const parseRatingDecision = async (text) => {
+export const parseRatingDecision = async (text, { letterheadText } = {}) => {
   const data = {
     type: "rating_decision",
     conditions: [],
@@ -4100,7 +4103,7 @@ export const parseRatingDecision = async (text) => {
     data.error = error.message;
   }
 
-  return attachPerIssueDecisions(data, text);
+  return attachPerIssueDecisions(data, text, letterheadText);
 };
 
 // pdf.js emits one text line per PAGE, and a real decision letter wraps every
@@ -4416,7 +4419,7 @@ function _latestEffectiveDate(decisions, combinedRatingHistory) {
   return best;
 }
 
-function attachPerIssueDecisions(data, text) {
+function attachPerIssueDecisions(data, text, letterheadText) {
   const decisions = extractPerIssueDecisions(text);
   const history = extractCombinedRatingHistory(text);
   data.decisions = decisions;
@@ -4438,7 +4441,7 @@ function attachPerIssueDecisions(data, text) {
   if (data.decisionDate) {
     data.decisionDateKind ||= "letter";
   } else {
-    data.letterDate ||= _letterheadDate(text);
+    data.letterDate ||= _letterheadDate(letterheadText || text);
     _setDecisionDate(data, decisions, history);
   }
   return data;
@@ -4455,7 +4458,7 @@ function attachPerIssueDecisions(data, text) {
  */
 // VA file number, claim-received date and the letter's own issue date. Split
 // out of parseClaimLetter to keep that function under the repo's line ceiling.
-function _parseClaimLetterHeader(text, data) {
+function _parseClaimLetterHeader(text, data, letterheadText) {
   // Real letters use several equivalent labels for the file/claim number.
   const fileNumMatch = text.match(
     /(?:VA\s{1,10}FILE\s{1,10}NUMBER|C-FILE\s{1,10}NUMBER|FILE\s{1,10}NUMBER|CLAIM\s{1,10}NUMBER)\s{0,10}[:#]?\s{0,10}(\d[\d-]{6,14})/i,
@@ -4481,17 +4484,19 @@ function _parseClaimLetterHeader(text, data) {
     }
   }
 
-  // Letter's own issue date (only trust an explicit "Date:" label to avoid
-  // false-positives on unrelated dates elsewhere in the letter)
+  data.letterDate =
+    _letterDate(text) ?? (letterheadText ? _letterDate(letterheadText) : null);
+}
+
+// The letter's own issue date: an explicit "Date:" label, else a date alone on
+// a letterhead line. Both need line breaks, which only letterheadText keeps
+// for PDFs (see extractStandardText in advancedOCR.js).
+function _letterDate(text) {
   const letterDateMatch = text.match(
     // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the two date-format alternatives, not backtracking; anchored to start-of-line (^ with /m) and bounded for S8786 above
     /^\s{0,10}Date\s{0,10}[:.]?\s{0,10}([A-Z]{1,30}\s{1,10}\d{1,2},?\s{1,10}\d{4}|\d{1,2}([-/])\d{1,2}\2\d{2,4})/im,
   );
-  if (letterDateMatch) {
-    data.letterDate = letterDateMatch[1];
-  } else {
-    data.letterDate = _letterheadDate(text);
-  }
+  return letterDateMatch ? letterDateMatch[1] : _letterheadDate(text);
 }
 
 const LETTERHEAD_DATE =
@@ -4520,7 +4525,7 @@ function _setDecisionDate(data, decisions, history) {
   data.decisionDateKind = data.decisionDate ? "effective" : null;
 }
 
-export const parseClaimLetter = async (text) => {
+export const parseClaimLetter = async (text, { letterheadText } = {}) => {
   const data = {
     type: "claim_letter",
     claimNumber: null,
@@ -4537,7 +4542,7 @@ export const parseClaimLetter = async (text) => {
   };
 
   try {
-    _parseClaimLetterHeader(text, data);
+    _parseClaimLetterHeader(text, data, letterheadText);
 
     // Per-issue grant/deny/continue outcomes (decision-bearing letters) and
     // the combined-rating table when the letter carries one

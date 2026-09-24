@@ -158,6 +158,7 @@ export async function advancedPDFAnalysis(
       });
       return {
         text: standardText.text,
+        letterheadText: standardText.letterheadText,
         pageCount: numPages,
         method: "standard",
         confidence: 100,
@@ -205,6 +206,7 @@ export async function advancedPDFAnalysis(
 async function extractStandardText(pdf, numPages, onProgress) {
   const startTime = Date.now();
   let fullText = "";
+  let letterheadText = "";
 
   for (
     let i = 1;
@@ -215,6 +217,13 @@ async function extractStandardText(pdf, numPages, onProgress) {
     const textContent = await page.getTextContent();
     const pageText = textContent.items.map((item) => item.str).join(" ");
     fullText += `--- PAGE ${i} ---\n${pageText}\n\n`;
+    // Every parser expects the space-joined page, so the line breaks a VA
+    // letter's standalone letterhead date depends on are kept separately.
+    if (i === 1) {
+      letterheadText = textContent.items
+        .map((item) => item.str + (item.hasEOL ? "\n" : " "))
+        .join("");
+    }
 
     onProgress({
       stage: "extracting",
@@ -223,7 +232,7 @@ async function extractStandardText(pdf, numPages, onProgress) {
     });
   }
 
-  return { text: fullText, startTime };
+  return { text: fullText, letterheadText, startTime };
 }
 
 /**

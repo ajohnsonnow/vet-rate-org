@@ -122,6 +122,7 @@ async function analyzePDFDocument(file, onProgress) {
   const result = await analyzePDF(file, onProgress);
   return {
     text: result.text,
+    letterheadText: result.letterheadText,
     pageCount: result.pageCount || 1,
     method: result.method,
     fileType: "PDF",

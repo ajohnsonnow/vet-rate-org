@@ -7,7 +7,8 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { parseClaimLetter } = await import("./musterCallProcessor");
+const { parseClaimLetter, parseRatingDecision } =
+  await import("./musterCallProcessor");
 
 function realDecisionLetterText() {
   return `Department of Veterans Affairs
@@ -265,19 +266,44 @@ describe("musterCallProcessor: parseClaimLetter (pdf.js page-line layout)", () =
   });
 });
 
+// pdf.js text items as extractStandardText (advancedOCR.js) sees them: the
+// parser's text joins them with spaces, letterheadText keeps the hasEOL breaks.
+const LETTERHEAD_ITEMS = [
+  { str: "DEPARTMENT OF VETERANS AFFAIRS", hasEOL: true },
+  { str: "Veterans Benefits Administration", hasEOL: true },
+  { str: "Claim received May 29, 2023", hasEOL: true },
+  { str: "May 8, 2024", hasEOL: true },
+  { str: "VETERAN NAME", hasEOL: true },
+  { str: "We made a decision on your VA benefits claim", hasEOL: true },
+  {
+    str: "Evaluation of lumbosacral strain, which is currently 10 percent disabling, is increased to 20 percent effective September 15, 2023.",
+    hasEOL: false,
+  },
+];
+const spacedLetterText = `--- PAGE 1 ---\n${LETTERHEAD_ITEMS.map((i) => i.str).join(" ")}\n\n`;
+const letterheadText = LETTERHEAD_ITEMS.map(
+  (i) => i.str + (i.hasEOL ? "\n" : " "),
+).join("");
+
 describe("musterCallProcessor: parseClaimLetter letterhead date", () => {
-  it("reads the letter's own date from its letterhead line, not an effective date", async () => {
-    const text = [
-      "DEPARTMENT OF VETERANS AFFAIRS",
-      "Veterans Benefits Administration",
-      "",
-      "May 8, 2024",
-      "",
-      "VETERAN NAME",
-      "We made a decision on your VA benefits claim",
-      "Evaluation of lumbosacral strain, which is currently 10 percent disabling, is increased to 20 percent effective September 15, 2023.",
-    ].join("\n");
-    const result = await parseClaimLetter(text);
+  it("reads the letter's own date from the extractor's letterhead lines, not an effective date", async () => {
+    const result = await parseClaimLetter(spacedLetterText, {
+      letterheadText,
+    });
+    expect(result.decisionDate).toBe("May 8, 2024");
+    expect(result.decisionDateKind).toBe("letter");
+  });
+
+  it("cannot find the letterhead date in the space-joined page text alone", async () => {
+    const result = await parseClaimLetter(spacedLetterText);
+    expect(result.decisionDate).toBe("September 15, 2023");
+    expect(result.decisionDateKind).toBe("effective");
+  });
+
+  it("reads the letterhead date for a rating decision too", async () => {
+    const result = await parseRatingDecision(spacedLetterText, {
+      letterheadText,
+    });
     expect(result.decisionDate).toBe("May 8, 2024");
     expect(result.decisionDateKind).toBe("letter");
   });
