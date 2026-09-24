@@ -3370,8 +3370,24 @@ function _extractPlaceOfEntryAndMOS(ctx) {
     ...(data.branch === "Navy" || data.branch === "Coast Guard"
       ? [/\b([A-Z]{2,4}\d)\s+([A-Z][A-Z\s]+)?/i]
       : []),
-    // Generic fallback
-    /(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})[:\s-]*([A-Z\s-]*)/i,
+    // Generic fallback: an explicit "MOS:"/"AFSC:"/"RATE:" label followed
+    // by a real code shape. [A-Z0-9]{2,6} used to accept the LABEL's own
+    // trailing words too - Box 4a's real printed label is "GRADE, RATE OR
+    // RANK", and a real scan OCR's that as "GRADE RATE QO" (or "GRADE,
+    // RATE, OR RANK") - "RATE" is itself one of this pattern's label
+    // alternatives, so "QO"/"OR", the two letters right after it, satisfied
+    // the old class and got stored as the MOS. Requiring the real MOS/AFSC
+    // shape (the Navy/Coast Guard rating shape only when the branch is
+    // actually Navy/Coast Guard, same gating as the dedicated Navy pattern
+    // above) means Box 4a's own label text can never match here again.
+    new RegExp(
+      String.raw`(?:MOS|AFSC|RATE)[:\s]+(\d{2}[A-Z]\d{0,2}|\d[A-Z]\d[A-Z]\d[A-Z]?${
+        data.branch === "Navy" || data.branch === "Coast Guard"
+          ? String.raw`|[A-Z]{2,4}\d`
+          : ""
+      })[:\s-]*([A-Z\s-]*)`,
+      "i",
+    ),
     /PRIMARY\s+(?:MOS|SPECIALTY)[:\s]+([A-Z0-9]+)/i,
   ];
   for (const pattern of mosPatterns) {

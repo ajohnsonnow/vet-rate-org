@@ -7,9 +7,8 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { parseServiceRecord, buildDD214ProfileUpdate } = await import(
-  "./musterCallProcessor"
-);
+const { parseServiceRecord, buildDD214ProfileUpdate } =
+  await import("./musterCallProcessor");
 
 const REALISTIC_DD214 = `
 1. NAME (Last, First, Middle): WILLIAMS, ROBERT LEE
@@ -588,6 +587,44 @@ describe("FIX: Navy-rate MOS fallback no longer fires on an Army form", () => {
     const result = await parseServiceRecord(text);
     expect(result.error).toBeUndefined();
     expect(result.mos).toBe("BM2");
+  });
+});
+
+describe("FIX: generic MOS fallback no longer matches Box 4a's own label", () => {
+  // Regression (Vera re-verification, 2026-09-24): the generic
+  // "(?:MOS|AFSC|RATE)[:\s]+([A-Z0-9]{2,6})..." fallback's "RATE"
+  // alternative matched Box 4a's own printed label ("GRADE, RATE OR
+  // RANK"), which a real scan OCR's as "GRADE RATE QO" - "QO", the two
+  // letters right after "RATE", satisfied the old loose class and was
+  // stored as the veteran's MOS.
+  it("does not fabricate an MOS from Box 4a's 'GRADE, RATE OR RANK' label", async () => {
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4a. GRADE RATE QO             b PAY GRADE
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBeFalsy();
+  });
+
+  it("still extracts a real MOS explicitly labeled 'MOS:' with no title following", async () => {
+    // No title text follows "11B10" here (the next token is the "23."
+    // box number, a digit) - the shape-specific pattern above this one in
+    // the list requires a 6+ letter title and would not match, so this
+    // exercises the generic MOS-shape-gated label fallback specifically.
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+18. REMARKS: MOS: 11B10
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.mos).toBe("11B10");
   });
 });
 
