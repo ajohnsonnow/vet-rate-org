@@ -590,3 +590,26 @@ describe("FIX: Navy-rate MOS fallback no longer fires on an Army form", () => {
     expect(result.mos).toBe("BM2");
   });
 });
+
+describe("FIX: pay grade extraction reads the real Box 4b value", () => {
+  it("does not fabricate a pay grade from an unrelated two-letter word elsewhere in the document", async () => {
+    // The old fallback pattern carried a stray /g flag while reading
+    // match[1]: with /g, String.match() returns an array of whole matches
+    // with no capture groups, so match[1] was actually the *second*
+    // "E"+letter occurrence found anywhere in the document, not this
+    // pattern's capture group. Here that would have been the "ES" in Box
+    // 18, discarding the real (garbled) Box 4b value "Ed" and fabricating
+    // pay grade "E-5" instead of the correct "E-4".
+    const text = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4b. PAY GRADE: Ed
+18. REMARKS: ES CANNOT BE VERIFIED AT THIS TIME
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+    const result = await parseServiceRecord(text);
+    expect(result.error).toBeUndefined();
+    expect(result.payGrade).toBe("E-4");
+  });
+});

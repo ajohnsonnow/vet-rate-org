@@ -2941,8 +2941,18 @@ function _extractPayGrade(ctx) {
     /4b?\.\s*PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
     /PAY\s+GRADE[:\s]+([EO]-?\d+)/i,
     /\b([EO]-?\d)\b/,
-    // OCR might garble E4 as "Ed" or similar
-    /\b(E[a-z])\b/gi, // Lowercase letter after E might be garbled number
+    // OCR might garble the Box 4b digit as a lowercase letter ("Ed" for
+    // "E4"): anchored to the PAY GRADE label, unlike the old bare
+    // `\b(E[a-z])\b` search, so a lowercase "e"+letter pair anywhere else
+    // in the document can't be picked up instead of the real Box 4b
+    // value. That old pattern also carried a stray /g flag while reading
+    // match[1] - with /g, String.match() returns an array of whole
+    // matches with no capture groups at all, so match[1] was actually the
+    // *second* occurrence of "E"+letter found anywhere in the document,
+    // not this pattern's capture group. Confirmed against a real scan
+    // where that silently fabricated pay grade "E5" from an unrelated
+    // "ES" elsewhere in the text.
+    /PAY\s+GRADE[:\s]+(E[a-z])\b/i,
   ];
   for (const pattern of payGradePatterns) {
     const match = cleanedText.match(pattern);
