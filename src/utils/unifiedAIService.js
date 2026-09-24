@@ -2099,7 +2099,7 @@ export const generateAI = async (prompt, options = {}) => {
 async function _checkAiFeatureFlags(options) {
   if (options.skipFeatureCheck) return;
 
-  const aiEnabled = isFeatureEnabled("ai_enabled");
+  const aiEnabled = isFeatureEnabled("ai");
   if (!aiEnabled) {
     throw new Error(
       "AI features are temporarily disabled. Please try again later.",
@@ -2382,44 +2382,44 @@ async function _handleContextOverflowFallback(
   );
 }
 
-async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
-  // If preferred mode fails, try fallback chain: Swarm -> Local -> Cloud
-  let fallbackMode = null;
-  let canFallback = false;
-
+// Fallback chain when the preferred mode fails: Swarm -> Local -> Cloud.
+function _pickFallbackMode(effectiveMode) {
   if (effectiveMode === AI_MODES.SWARM) {
-    fallbackMode = isLocalAIReady() ? AI_MODES.LOCAL : AI_MODES.CLOUD;
-    canFallback =
-      fallbackMode === AI_MODES.LOCAL ? isLocalAIReady() : isCloudAIAvailable();
-  } else if (effectiveMode === AI_MODES.LOCAL) {
-    fallbackMode = AI_MODES.CLOUD;
-    canFallback = isCloudAIAvailable();
-  } else {
-    fallbackMode = isDiamondSwarmReady() ? AI_MODES.SWARM : AI_MODES.LOCAL;
-    canFallback = isDiamondSwarmReady() || isLocalAIReady();
+    const mode = isLocalAIReady() ? AI_MODES.LOCAL : AI_MODES.CLOUD;
+    const available =
+      mode === AI_MODES.LOCAL ? isLocalAIReady() : isCloudAIAvailable();
+    return { mode, available };
   }
+  if (effectiveMode === AI_MODES.LOCAL) {
+    return { mode: AI_MODES.CLOUD, available: isCloudAIAvailable() };
+  }
+  return {
+    mode: isDiamondSwarmReady() ? AI_MODES.SWARM : AI_MODES.LOCAL,
+    available: isDiamondSwarmReady() || isLocalAIReady(),
+  };
+}
 
-  if (canFallback && !options.noFallback) {
+async function _generateFallback(mode, fullPrompt, options) {
+  if (mode === AI_MODES.SWARM) {
+    const text = await generateWithWarrantCouncil(fullPrompt, options);
+    return { text, mode, agent: getCurrentAgent(), fallback: true };
+  }
+  const generate =
+    mode === AI_MODES.LOCAL ? generateWithLocalAI : generateWithCloudAI;
+  const text = await generate(fullPrompt, options);
+  return { text, mode, fallback: true };
+}
+
+async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
+  const { mode: fallbackMode, available } = _pickFallbackMode(effectiveMode);
+
+  if (available && !options.noFallback) {
     console.warn(
       `💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`,
       err.message,
     );
     try {
-      if (fallbackMode === AI_MODES.SWARM) {
-        const text = await generateWithWarrantCouncil(fullPrompt, options);
-        return {
-          text,
-          mode: AI_MODES.SWARM,
-          agent: getCurrentAgent(),
-          fallback: true,
-        };
-      } else if (fallbackMode === AI_MODES.LOCAL) {
-        const text = await generateWithLocalAI(fullPrompt, options);
-        return { text, mode: AI_MODES.LOCAL, fallback: true };
-      } else {
-        const text = await generateWithCloudAI(fullPrompt, options);
-        return { text, mode: AI_MODES.CLOUD, fallback: true };
-      }
+      return await _generateFallback(fallbackMode, fullPrompt, options);
     } catch (fallbackErr) {
       throw new Error(
         `All AI modes failed. Primary: ${_describeThrown(err)}. Fallback: ${_describeThrown(fallbackErr)}`,
@@ -2567,9 +2567,8 @@ function _lookupLocalModelName(modelId) {
 
   // Fallback: try to extract a readable name from the model ID
   // e.g., "Some-Model-Name-q4f32_1-MLC" -> "Some Model Name"
-  const cleanName = modelId
-    // eslint-disable-next-line sonarjs/slow-regex -- runs on short, internal model-ID strings, not user input
-    .replace(/-q\d+f\d+.*$/, "") // Remove quantization suffix
+  const quantAt = modelId.search(/-q\d+f\d/);
+  const cleanName = (quantAt === -1 ? modelId : modelId.slice(0, quantAt))
     .replace(/-MLC$/, "") // Remove MLC suffix
     .replace(/-Instruct$/, "") // Remove Instruct suffix
     .replace(/-/g, " ") // Replace dashes with spaces
