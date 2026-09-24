@@ -667,7 +667,7 @@ const VAResourcesFooterInfo = ({ t }) => (
       >
         {t("vaResources.findVSOHelp")}
       </a>
-      .
+      {"."}
     </p>
   </div>
 );

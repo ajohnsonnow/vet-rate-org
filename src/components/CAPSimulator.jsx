@@ -1951,7 +1951,7 @@ function CAPExamPrepIntroBox() {
             <span className="font-bold text-white">
               Disability Benefits Questionnaire (DBQ)
             </span>
-            .
+            {"."}
           </p>
           <p className="text-gray-300">
             This tool shows you the{" "}

@@ -1048,7 +1048,7 @@ function HowThisWasBuiltSection() {
               >
                 eCFR
               </a>
-              )
+              {")"}
             </span>
           </li>
           <li className="flex items-start gap-2">
