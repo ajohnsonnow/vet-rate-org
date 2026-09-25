@@ -297,11 +297,19 @@ function buildMessages(context) {
 
 function LunaCard({ position, animation, extraEmoji, msg, onDismiss }) {
   return (
+    // luna-toast: hidden via index.css whenever a dialog is open (D7/N5 -
+    // her corner-anchored toast can land on a dialog's close button at any
+    // width, not just mobile, so she must not render at all over a dialog
+    // rather than trying to dodge it with another zone tweak).
     <div
-      className={`fixed z-50 ${animation} max-w-[calc(100vw-2rem)] sm:max-w-sm`}
+      className={`luna-toast fixed z-50 ${animation} max-w-[calc(100vw-2rem)] sm:max-w-sm`}
       style={position}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 border-2 border-purple-300 dark:border-purple-600 relative backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+      {/* max-h/overflow: N5 - on a short viewport (320x568) the full card
+          can run taller than the visible zone and push into a dialog's
+          close button; this caps her height there and lets her own content
+          scroll instead of spilling past it. */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-5 border-2 border-purple-300 dark:border-purple-600 relative backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95 max-h-[70dvh] overflow-y-auto">
         {/* Decorative cat ears on top */}
         <div className="absolute -top-3 left-6 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[16px] border-l-transparent border-r-transparent border-b-purple-300 dark:border-b-purple-600" />
         <div className="absolute -top-3 right-6 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[16px] border-l-transparent border-r-transparent border-b-purple-300 dark:border-b-purple-600" />

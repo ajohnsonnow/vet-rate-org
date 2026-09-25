@@ -2456,6 +2456,17 @@ body {
   }
 }
 
+/* Hide the Luna toast (BuyMeCoffee.jsx) whenever any dialog is open, and as
+   soon as one opens while she's showing (`:has()` re-evaluates live). D7
+   only stopped her corner zones from landing on a close button on phones;
+   QA found the bottom zones and the 1440px top-right zone still could
+   (N5), so this replaces per-zone tuning with the same "just don't render
+   over a dialog" rule as the shell buttons above - at every width, since
+   the 1440px collision means this can't be mobile-only like that rule. */
+body:has([role="dialog"], [aria-modal="true"]) .luna-toast {
+  display: none;
+}
+
 /* Print Styles */
 
 /* ═══════════════════════════════════════════════════════════════════════════
