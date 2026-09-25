@@ -8,6 +8,7 @@ import {
   formatLocalDate,
   parseExplicitDate,
   isDesignatedCombatZone,
+  subtractDuration,
 } from "../../utils/dateUtils";
 
 describe("D-8: formatLocalDate", () => {
@@ -85,6 +86,48 @@ describe("N7: parseExplicitDate only accepts explicit date formats", () => {
     ["Jun. 22 2004", "2004-06-22"],
   ])("accepts the explicit format %s", (value, expected) => {
     expect(parseExplicitDate(value)).toBe(expected);
+  });
+});
+
+// N13 (final9 QA, 2026-09-25): the numeric and compact-YYYYMMDD branches
+// built a "YYYY-MM-DD" string straight from whatever digits matched, with
+// no check that the result is a real calendar day.
+describe("N13: parseExplicitDate rejects impossible calendar dates", () => {
+  it.each([
+    ["13/01/2004"], // month 13
+    ["02/30/2004"], // February 30
+    ["20041302"], // compact, month 13
+    ["20040230"], // compact, February 30 (not a leap year)
+    ["99999999"], // not a date at all
+    ["02/29/2005"], // 2005 is not a leap year
+  ])("rejects %s instead of rolling it over to a different date", (value) => {
+    expect(parseExplicitDate(value)).toBeNull();
+  });
+
+  it("accepts a real leap day", () => {
+    expect(parseExplicitDate("02/29/2004")).toBe("2004-02-29");
+    expect(parseExplicitDate("20040229")).toBe("2004-02-29");
+  });
+
+  it.each([["1899-12-31"], ["2101-01-01"]])(
+    "rejects a year outside 1900-2100 (%s)",
+    (value) => {
+      expect(parseExplicitDate(value)).toBeNull();
+    },
+  );
+});
+
+describe("subtractDuration", () => {
+  it("subtracts a calendar Y/M/D duration from an ISO date", () => {
+    expect(subtractDuration("2008-04-04", 10, 8, 5)).toBe("1997-07-30");
+  });
+
+  it("borrows across a leap day", () => {
+    expect(subtractDuration("2001-03-01", 1, 0, 1)).toBe("2000-02-29");
+  });
+
+  it("returns null for a non-ISO input", () => {
+    expect(subtractDuration("not a date", 1, 0, 0)).toBeNull();
   });
 });
 

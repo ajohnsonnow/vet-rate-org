@@ -74,6 +74,36 @@ const _expandTwoDigitYear = (year) => {
   return Number(year) > 50 ? `19${year}` : `20${year}`;
 };
 
+const MIN_VALID_YEAR = 1900;
+const MAX_VALID_YEAR = 2100;
+
+/**
+ * N13 (final9 QA, 2026-09-25): every branch below built its "YYYY-MM-DD"
+ * candidate from whatever digits its own pattern matched, with no check
+ * that the result is a real calendar day - "13" for a month or "30" for
+ * February round-tripped straight through, and an 8-digit run like
+ * "99999999" parsed as year 9999. Round-tripping the candidate through
+ * `Date.UTC` and reading the fields back out catches both: an invalid
+ * month/day rolls over to a DIFFERENT date (e.g. Feb 30 becomes Mar 2),
+ * so the fields never match what was asked for. The year band rejects
+ * anything outside a real veteran's or claimant's plausible lifetime -
+ * this app has no dates before 1900 or after 2100.
+ */
+function _isValidCalendarDate(isoDate) {
+  const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (year < MIN_VALID_YEAR || year > MAX_VALID_YEAR) return false;
+  const roundTrip = new Date(Date.UTC(year, month - 1, day));
+  return (
+    roundTrip.getUTCFullYear() === year &&
+    roundTrip.getUTCMonth() === month - 1 &&
+    roundTrip.getUTCDate() === day
+  );
+}
+
 /**
  * N7 (final8 QA, 2026-09-24): both musterCallProcessor's own
  * `_toISODateString` and the VKB's `_toIsoDate` used to fall back to
@@ -91,23 +121,34 @@ const _expandTwoDigitYear = (year) => {
  * never guessed at via Date's own leniency.
  * @param {string} value
  * @returns {string|null} "YYYY-MM-DD", or null if `value` isn't one of the
- *   explicit accepted formats.
+ *   explicit accepted formats, or isn't a real calendar date (N13).
  */
+// Split out so each parseExplicitDate branch below can validate with a
+// plain call (not its own ternary) - keeps the N13 round-trip check from
+// adding a branch to every format's cognitive complexity.
+function _validCandidate(candidate) {
+  return _isValidCalendarDate(candidate) ? candidate : null;
+}
+
 export function parseExplicitDate(value) {
   if (!value) return null;
   const text = String(value).trim();
 
   const iso = text.match(/^(\d{4}-\d{2}-\d{2})(T.*)?$/);
-  if (iso) return iso[1];
+  if (iso) return _validCandidate(iso[1]);
 
   const numeric = text.match(/^(\d{1,2})([-/])(\d{1,2})\2(\d{2,4})$/);
   if (numeric) {
     const [, month, , day, year] = numeric;
-    return `${_expandTwoDigitYear(year)}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    return _validCandidate(
+      `${_expandTwoDigitYear(year)}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`,
+    );
   }
 
   if (/^\d{8}$/.test(text)) {
-    return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
+    return _validCandidate(
+      `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`,
+    );
   }
 
   // "06 MAY 2005" - day first, month abbreviation.
@@ -115,7 +156,9 @@ export function parseExplicitDate(value) {
   if (dayFirst) {
     const month = MONTH_ABBREVIATIONS[dayFirst[2].slice(0, 3).toUpperCase()];
     return month
-      ? `${dayFirst[3]}-${month}-${dayFirst[1].padStart(2, "0")}`
+      ? _validCandidate(
+          `${dayFirst[3]}-${month}-${dayFirst[1].padStart(2, "0")}`,
+        )
       : null;
   }
 
@@ -124,11 +167,39 @@ export function parseExplicitDate(value) {
   if (monthFirst) {
     const month = MONTH_ABBREVIATIONS[monthFirst[1].slice(0, 3).toUpperCase()];
     return month
-      ? `${monthFirst[3]}-${month}-${monthFirst[2].padStart(2, "0")}`
+      ? _validCandidate(
+          `${monthFirst[3]}-${month}-${monthFirst[2].padStart(2, "0")}`,
+        )
       : null;
   }
 
   return null;
+}
+
+/**
+ * N9c (final9 QA, 2026-09-25): a real NGB-22 (Report of Separation and
+ * Record of Service) never prints "date entered this period" directly -
+ * only Item 10's "NET SERVICE THIS PERIOD" duration (YRS|MOS|DAYS) plus
+ * the separation date it counts back from (confirmed against the real
+ * corpus). Subtracts a calendar Y/M/D duration from an ISO date, field by
+ * field (not a fixed day-count approximation), matching how that duration
+ * was itself computed so the two round-trip exactly.
+ * @param {string} isoDate - "YYYY-MM-DD"
+ * @returns {string|null} "YYYY-MM-DD", or null if `isoDate` isn't that shape.
+ */
+export function subtractDuration(isoDate, years, months, days) {
+  const match = String(isoDate).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const date = new Date(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
+  );
+  date.setUTCFullYear(date.getUTCFullYear() - years);
+  date.setUTCMonth(date.getUTCMonth() - months);
+  date.setUTCDate(date.getUTCDate() - days);
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 // IRS/DoD combat-zone tax-exclusion designations under 26 U.S.C. §112,
