@@ -807,29 +807,68 @@ function useEvidenceTimelineAutoImport({
   return autoImportedCount;
 }
 
+// The canvas' CSS height (its `width` is fluid - see setupHiDpiCanvas).
+// Falls back to the pre-HiDPI 800px width only when real layout isn't
+// available (jsdom in unit tests never computes clientWidth/getBoundingClientRect,
+// both read 0 there), so tests exercising the render path keep working.
+const CANVAS_CSS_HEIGHT = 200;
+const FALLBACK_CANVAS_CSS_WIDTH = 800;
+
+// Sizes the canvas' backing pixel buffer to its real CSS width *
+// devicePixelRatio (instead of a fixed 800 always squeezed down to fit),
+// then scales the drawing context so every coordinate `renderEvidenceTimelineCanvas`
+// uses is a real CSS pixel - a "12px" ctx.font comes out 12 CSS px tall on
+// screen instead of ~0.4x that once a narrow phone's `w-full` shrinks an
+// 800px-wide canvas down to fit (QA S46: year labels ~5px tall at 390px).
+function setupHiDpiCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth =
+    canvas.clientWidth ||
+    canvas.getBoundingClientRect().width ||
+    FALLBACK_CANVAS_CSS_WIDTH;
+
+  canvas.width = Math.max(1, Math.round(cssWidth * dpr));
+  canvas.height = Math.max(1, Math.round(CANVAS_CSS_HEIGHT * dpr));
+  canvas.style.height = `${CANVAS_CSS_HEIGHT}px`;
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, cssWidth, cssHeight: CANVAS_CSS_HEIGHT };
+}
+
 // Owns the gap-detection state and canvas redraw for the timeline. Split
 // out of EvidenceTimeline purely to keep its function body under the
 // line-count limit. Same logic, same order of operations.
 function useEvidenceTimelineGaps({ timelineEvents, canvasRef }) {
   const [gaps, setGaps] = useState([]);
 
-  const drawTimeline = () => {
+  const drawTimeline = (currentGaps) => {
     const canvas = canvasRef.current;
     if (!canvas || timelineEvents.length === 0) return;
+    const { ctx, cssWidth, cssHeight } = setupHiDpiCanvas(canvas);
     renderEvidenceTimelineCanvas(
-      canvas.getContext("2d"),
-      canvas.width,
-      canvas.height,
+      ctx,
+      cssWidth,
+      cssHeight,
       timelineEvents,
-      gaps,
+      currentGaps,
     );
   };
 
   useEffect(() => {
-    if (timelineEvents.length > 0) {
-      setGaps(detectTimelineGaps(timelineEvents));
-      drawTimeline();
-    }
+    const canvas = canvasRef.current;
+    if (!canvas || timelineEvents.length === 0) return undefined;
+
+    const currentGaps = detectTimelineGaps(timelineEvents);
+    setGaps(currentGaps);
+    drawTimeline(currentGaps);
+
+    // Redraws at the new CSS width on container resize (viewport rotation,
+    // window resize) so the HiDPI buffer never goes stale/blurry.
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(() => drawTimeline(currentGaps));
+    observer.observe(canvas);
+    return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timelineEvents]);
 

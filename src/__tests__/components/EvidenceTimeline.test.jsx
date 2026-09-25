@@ -5,7 +5,7 @@
  * they're persisted. The manual "Import from My Records" button keeps its
  * original confirm-dialog behavior.
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import EvidenceTimeline, {
   selectYearLabelIndices,
@@ -48,9 +48,12 @@ beforeEach(() => {
 });
 
 describe("selectYearLabelIndices (timeline year-label de-duplication)", () => {
-  // 10-day span mapped to a 700px-wide line (matching the real canvas'
-  // padding=50/width=800 geometry, just with padding stripped so x==0 lines
-  // up with day 0) gives an easy 70px-per-day scale to reason about.
+  // 10-day span mapped to a 700px-wide line (padding stripped so x==0 lines
+  // up with day 0) gives an easy 70px-per-day scale to reason about. The
+  // real canvas' line width is now the modal's actual CSS width minus
+  // padding (see setupHiDpiCanvas in EvidenceTimeline.jsx) rather than a
+  // fixed 800px buffer, but the pure function under test only cares about
+  // the geometry object's numbers, not where they came from.
   const geometry = {
     firstDate: new Date("2020-01-01T00:00:00Z"),
     lastDate: new Date("2020-01-11T00:00:00Z"),
@@ -63,9 +66,9 @@ describe("selectYearLabelIndices (timeline year-label de-duplication)", () => {
   });
 
   it("always shows a single event's label", () => {
-    expect(
-      selectYearLabelIndices([{ date: "2020-01-01" }], geometry),
-    ).toEqual([true]);
+    expect(selectYearLabelIndices([{ date: "2020-01-01" }], geometry)).toEqual([
+      true,
+    ]);
   });
 
   it("skips a same-row label that lands within the collision gap, but keeps labels on the other row and once enough distance has passed", () => {
@@ -107,6 +110,93 @@ describe("selectYearLabelIndices (timeline year-label de-duplication)", () => {
       true,
       true,
     ]);
+  });
+});
+
+describe("EvidenceTimeline canvas: HiDPI backing buffer", () => {
+  // The canvas used a fixed 800x200 buffer CSS-scaled to fit (`w-full`),
+  // so on a 390px phone everything drawn - including year-label text -
+  // rendered at ~0.4x its nominal size (QA S46: ~5px tall labels). The
+  // fix sizes the buffer to the canvas' real CSS width * devicePixelRatio
+  // and scales the drawing context to match, so canvas text renders at
+  // its true CSS pixel size on any screen. jsdom never computes layout
+  // (clientWidth/getBoundingClientRect always read 0), so this overrides
+  // the clientWidth getter to simulate a real narrow-phone measurement.
+  let clientWidthDescriptor;
+  let originalDpr;
+
+  beforeEach(() => {
+    clientWidthDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "clientWidth",
+    );
+    originalDpr = window.devicePixelRatio;
+  });
+
+  afterEach(() => {
+    if (clientWidthDescriptor) {
+      Object.defineProperty(
+        HTMLElement.prototype,
+        "clientWidth",
+        clientWidthDescriptor,
+      );
+    }
+    window.devicePixelRatio = originalDpr;
+  });
+
+  it("sizes the backing buffer to CSS width x devicePixelRatio instead of a fixed 800px buffer", async () => {
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+      configurable: true,
+      get: () => 340,
+    });
+    window.devicePixelRatio = 2;
+
+    renderTimeline({
+      events: [
+        {
+          id: "e1",
+          type: "service",
+          date: "2020-01-01",
+          title: "Enlistment",
+          description: "Enlistment",
+          category: "Service Event",
+        },
+      ],
+    });
+    await screen.findByText("📋 Timeline Events (1)");
+
+    const canvas = document.querySelector("canvas");
+    expect(canvas.width).toBe(680); // 340 CSS px * 2 dpr
+    expect(canvas.height).toBe(400); // 200 CSS px * 2 dpr
+    // The displayed (CSS) height stays fixed even though the backing
+    // buffer grew - only the pixel density changed, not the layout.
+    expect(canvas.style.height).toBe("200px");
+  });
+
+  it("falls back to a sane default width when the real layout can't be measured (devicePixelRatio 1)", async () => {
+    Object.defineProperty(HTMLElement.prototype, "clientWidth", {
+      configurable: true,
+      get: () => 0,
+    });
+    window.devicePixelRatio = 1;
+
+    renderTimeline({
+      events: [
+        {
+          id: "e1",
+          type: "service",
+          date: "2020-01-01",
+          title: "Enlistment",
+          description: "Enlistment",
+          category: "Service Event",
+        },
+      ],
+    });
+    await screen.findByText("📋 Timeline Events (1)");
+
+    const canvas = document.querySelector("canvas");
+    expect(canvas.width).toBe(800);
+    expect(canvas.height).toBe(200);
   });
 });
 
