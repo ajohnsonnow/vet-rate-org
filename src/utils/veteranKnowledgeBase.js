@@ -1013,8 +1013,10 @@ function mergeDD214ServiceDates(vkb, dd214Data) {
 }
 
 // True when record A is later than record B: by date when both are dated,
-// by pay grade when neither is.
-function _isLaterRecord(dateA, dateB, gradeA, gradeB) {
+// by pay grade when neither is. Exported so other merge points (e.g.
+// veteranProfile.js's service-period rank merge) can apply the same
+// recency rule instead of inventing an equivalent.
+export function _isLaterRecord(dateA, dateB, gradeA, gradeB) {
   if (dateA && dateB) return _calendarDay(dateA) > _calendarDay(dateB);
   if (dateA || dateB) return Boolean(dateA);
   return gradeA > gradeB;
@@ -1554,8 +1556,10 @@ export const mergeDD214IntoVKB = (vkb, dd214Data, options = {}) => {
 /**
  * Parse a pay grade string (e.g., "E-5", "O-3") into a numeric rank value.
  * Higher number = higher rank. Used to find the veteran's highest grade.
+ * Exported for the same reason _isLaterRecord is - a shared recency/grade
+ * tiebreak other merge points reuse rather than reimplement.
  */
-function parsePayGrade(pg) {
+export function parsePayGrade(pg) {
   if (!pg) return 0;
   const match = pg.match(/([EOW])-?(\d+)/i);
   if (!match) return 0;

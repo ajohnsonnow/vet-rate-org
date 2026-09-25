@@ -71,6 +71,58 @@ describe("saveServiceRecordToProfile: NGB-22 additional-period rank attachment",
   });
 });
 
+// D-2 (final7 QA, 2026-09-24): candidate.separationDate (Box 12b) isn't
+// always extracted from an NGB-22 - when it's missing, the original
+// condition (periodEndDate === separationDate) could never match ANY
+// additional period, so the rank never attached even when exactly one
+// Active Duty period unambiguously deserved it.
+const NGB22_NO_SEPARATION_DATE = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4a. GRADE, RATE OR RANK: SGT
+4b. PAY GRADE: E-5
+7a. PLACE OF ENTRY: PORTLAND OR
+18. REMARKS: IADT: 20040101-20040301//AD: 20040622-20050827//NOTHING FOLLOWS
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+25. SEPARATION AUTHORITY: AR 635-200
+26. SEPARATION CODE: MBK
+27. REENTRY CODE: RE-1
+28. NARRATIVE REASON: COMPLETION OF REQUIRED ACTIVE SERVICE
+`;
+
+describe("saveServiceRecordToProfile: NGB-22 rank attachment without a Box 12b date", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("still attaches rank to the sole Active Duty period when the document's own separation date wasn't extracted", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_NO_SEPARATION_DATE,
+      "NGB22",
+    );
+    expect(extractedData.serviceEndDate).toBeFalsy();
+    saveServiceRecordToProfile({ name: "ngb22_no_sep.pdf" }, { extractedData });
+
+    const periods = getServicePeriods();
+    const ad = periods.find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    const iadt = periods.find(
+      (p) =>
+        p.serviceStartDate === "2004-01-01" &&
+        p.serviceEndDate === "2004-03-01",
+    );
+
+    expect(ad).toBeDefined();
+    expect(ad.rank).toBe("SGT");
+    expect(iadt).toBeDefined();
+    expect(iadt.rank).toBe("");
+  });
+});
+
 describe("saveCodeSheetServicePeriodsToProfile: labels its own source correctly", () => {
   beforeEach(() => {
     localStorage.clear();

@@ -915,6 +915,24 @@ function _savePrimaryServicePeriod(file, result, candidate) {
   }
 }
 
+// D-2 (final7 QA, 2026-09-24): candidate.separationDate is only extracted
+// from Box 12b, which an NGB-22 (unlike a DD214) doesn't always carry -
+// when it's missing, no additionalPeriod's end date could ever equal it,
+// so the rank never attached to any of them even when exactly one
+// Active Duty period unambiguously deserved it. Falls back to "the latest
+// Active Duty period this same document describes" as the terminal-period
+// proxy in that case.
+function _latestActiveDutyEndDate(periods) {
+  return (
+    periods
+      .filter((p) => p.component === "Active Duty")
+      .map((p) => _toISODateString(p.serviceEndDate))
+      .filter(Boolean)
+      .sort()
+      .at(-1) || null
+  );
+}
+
 // FIX-15: NGB-22 Box 18's granular IADT/AD date ranges (see
 // _extractNGB22PeriodDates) each become their own servicePeriods[] entry,
 // additive to the single Box 12a/12b period saved by
@@ -924,6 +942,9 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 function _saveNGB22AdditionalPeriods(file, candidate) {
   if (!Array.isArray(candidate.additionalPeriods)) return;
   const separationDate = _toISODateString(candidate.separationDate);
+  const latestADEnd = separationDate
+    ? null
+    : _latestActiveDutyEndDate(candidate.additionalPeriods);
   candidate.additionalPeriods.forEach((period) => {
     try {
       const periodEndDate = _toISODateString(period.serviceEndDate);
@@ -932,12 +953,11 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
       // window, or an AD window that isn't the one ending on this
       // document's own separation date, may have been served at a
       // different rank, so only the matching AD period gets it.
-      const rank =
+      const isTerminalADPeriod =
         period.component === "Active Duty" &&
-        !!separationDate &&
-        periodEndDate === separationDate
-          ? candidate.rank || ""
-          : undefined;
+        !!periodEndDate &&
+        (periodEndDate === separationDate || periodEndDate === latestADEnd);
+      const rank = isTerminalADPeriod ? candidate.rank || "" : undefined;
       upsertServicePeriod(
         {
           serviceStartDate: _toISODateString(period.serviceStartDate),

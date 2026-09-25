@@ -13,6 +13,7 @@
 
 import { isSameServicePeriod, formatLocalDate } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
+import { _isLaterRecord, parsePayGrade } from "./veteranKnowledgeBase";
 
 const PROFILE_KEY = "vet_rate_veteran_profile";
 const SAVED_FORMS_KEY = "vet_rate_saved_forms";
@@ -1153,31 +1154,159 @@ function _sameCalendarDay(a, b) {
 
 /**
  * An incomplete (single-date, or no-date) period belongs to whichever
- * already-dated period it's really a partial reading of - a garbled OCR
- * pass that only recovered a separation date, or an NGB-22 activation
- * segment saved by the same call that already saved the primary dated
- * period for that form. Two signals identify that: the same source
- * document (same form), or the one known date landing on either boundary
- * of an existing dated period (most often the separation date). Only a
- * DATED period is ever a merge target - two incomplete periods never merge
- * into each other here. Returns the indices of every dated period that
- * matches; the caller only merges when exactly one does, so an ambiguous
- * match never silently picks the wrong period.
+ * already-saved period - dated, or itself still incomplete - it's really a
+ * partial reading of: a garbled OCR pass that only recovered a separation
+ * date, an NGB-22 activation segment saved by the same call that already
+ * saved the primary period for that form, or a second scan of the same
+ * DD214 that recovered different fields than the first pass. Three
+ * independent signals identify that:
+ *  - the same source document (same physical form),
+ *  - the one known date landing on either boundary of an existing DATED
+ *    period (most often the separation date) - meaningless against another
+ *    incomplete period, which by definition has no boundary to land on,
+ *  - a shared military identity: both sides name the same non-empty branch
+ *    AND the same non-empty component (the "AD vs Guard/Reserve" axis).
+ *    Branch alone is deliberately not enough - every period in a
+ *    single-branch career shares it, so it can't discriminate anything.
+ *    Rank, pay grade and character of service are deliberately NOT part of
+ *    this identity check: a real re-scan of the very same period can
+ *    legitimately disagree on them (a mid-tour promotion, an OCR-garbled
+ *    discharge characterization on one scan) - requiring them all to agree
+ *    would re-fragment exactly the rows this is trying to consolidate.
+ * Returns the indices of every period that matches; the caller only merges
+ * when exactly one does, so an ambiguous match never silently picks the
+ * wrong period - and never merges two genuinely distinct dated periods,
+ * since a dated period is only ever a match *target*, never itself
+ * re-matched here.
  */
 function _matchIncompletePeriod(periods, incoming) {
   const singleDate = incoming.serviceStartDate || incoming.serviceEndDate;
+  const incomingBranch = (incoming.branch || "").trim().toLowerCase();
+  const incomingComponent = (incoming.component || "").trim().toLowerCase();
   const matches = [];
   periods.forEach((p, index) => {
-    if (p.incomplete) return;
     const sameForm =
       !!incoming.sourceDocument && p.sourceDocument === incoming.sourceDocument;
+    // Only a fully-dated period has a real boundary to land on - an
+    // incomplete p can carry its OWN single known date, and that date
+    // coincidentally equalling incoming's is not evidence they're the same
+    // period (see "does not collide two different incomplete periods...").
     const dateMatch =
+      !p.incomplete &&
       !!singleDate &&
       (_sameCalendarDay(p.serviceStartDate, singleDate) ||
         _sameCalendarDay(p.serviceEndDate, singleDate));
-    if (sameForm || dateMatch) matches.push(index);
+    const identityMatch =
+      !!incomingBranch &&
+      !!incomingComponent &&
+      incomingBranch === (p.branch || "").trim().toLowerCase() &&
+      incomingComponent === (p.component || "").trim().toLowerCase();
+    if (sameForm || dateMatch || identityMatch) matches.push(index);
   });
   return matches;
+}
+
+// Fields that make an incomplete row worth keeping as its own entry - every
+// SERVICE_PERIOD_MERGE_FIELDS field except the three that are either always
+// present regardless of extraction success (formType, sourceDocument - a
+// document with nothing else recovered still gets a formType label) or
+// generated boilerplate rather than extracted content (notes).
+const INCOMPLETE_PERIOD_CONTENT_FIELDS = SERVICE_PERIOD_MERGE_FIELDS.filter(
+  (field) => !["formType", "sourceDocument", "notes"].includes(field),
+);
+
+/**
+ * A zero-signal incomplete row (no date, and nothing else recognizable
+ * either - a scan that recovered nothing identifiable at all) has nothing
+ * for a future document to ever match against, so letting it become its
+ * own permanent "? - ?" row only inflates the period count. Its underlying
+ * document still updates dd214Data via saveServiceRecordToProfile's
+ * separate merge step - this only withholds it from becoming its own
+ * servicePeriods[] entry.
+ */
+function _incompletePeriodHasContent(incoming) {
+  if (incoming.serviceStartDate || incoming.serviceEndDate) return true;
+  return INCOMPLETE_PERIOD_CONTENT_FIELDS.some((field) => incoming[field]);
+}
+
+/**
+ * Locates the existing period (if any) `incoming` should upsert onto: exact
+ * (serviceStartDate, serviceEndDate) key match, a dated period within
+ * isSameServicePeriod's tolerance, or - for an incomplete incoming row -
+ * whatever _matchIncompletePeriod resolves to. `shouldDrop: true` means the
+ * caller must return null without creating or merging anything (an
+ * ambiguous match, or a zero-signal row with nothing to attach to).
+ * Split out of upsertServicePeriod purely to keep that function's line
+ * count/complexity under the repo's lint ceiling - same behavior.
+ */
+function _findExistingServicePeriodIndex(periods, incoming) {
+  const incomingKey = _servicePeriodKey(incoming);
+  let index = periods.findIndex((p) => _servicePeriodKey(p) === incomingKey);
+  if (index === -1 && !incoming.incomplete) {
+    index = periods.findIndex((p) =>
+      isSameServicePeriod(
+        p.serviceStartDate,
+        p.serviceEndDate,
+        incoming.serviceStartDate,
+        incoming.serviceEndDate,
+      ),
+    );
+  }
+  if (index !== -1 || !incoming.incomplete) return { index };
+
+  const matches = _matchIncompletePeriod(periods, incoming);
+  if (matches.length === 1) return { index: matches[0] };
+  if (matches.length > 1 || !_incompletePeriodHasContent(incoming)) {
+    return { index: -1, shouldDrop: true };
+  }
+  return { index: -1 };
+}
+
+/**
+ * Merges `incoming` onto an already-saved, non-userEdited `existing`
+ * period: most fields by a confidence high-water-mark, rank by recency
+ * (see upsertServicePeriod's own comment), and the code sheet's dates when
+ * options.authoritativeDates says so. Split out for the same line-count/
+ * complexity reason as _findExistingServicePeriodIndex above.
+ */
+function _mergeExistingServicePeriod(existing, incoming, options) {
+  const incomingConfidence = incoming.confidence ?? 0;
+  const existingConfidence = existing.confidence ?? 0;
+  const merged = { ...existing };
+  SERVICE_PERIOD_MERGE_FIELDS.forEach((field) => {
+    // Rank has its own recency-based tiebreak just below - OCR confidence
+    // says nothing about which document's rank is more CURRENT (a clean
+    // scan of an early enlistment isn't "later" than a garbled scan of the
+    // discharge that followed it).
+    if (field === "rank") return;
+    if (incomingConfidence >= existingConfidence && incoming[field]) {
+      merged[field] = incoming[field];
+    }
+  });
+  // A later record's rank wins - "later" by the period's own end date when
+  // both sides have one, else by pay grade (same rule
+  // veteranKnowledgeBase.js's mergeDD214RankAndCharacter already uses for
+  // the Service tab's single discharge-rank field).
+  if (incoming.rank) {
+    const incomingIsLater = _isLaterRecord(
+      incoming.serviceEndDate,
+      existing.serviceEndDate,
+      parsePayGrade(incoming.payGrade),
+      parsePayGrade(existing.payGrade),
+    );
+    if (!existing.rank || incomingIsLater) {
+      merged.rank = incoming.rank;
+    }
+  }
+  // VA's own record (the code sheet) settles which of two near-identical
+  // dates is right.
+  if (options.authoritativeDates && !incoming.incomplete) {
+    merged.serviceStartDate = incoming.serviceStartDate;
+    merged.serviceEndDate = incoming.serviceEndDate;
+  }
+  merged.confidence = Math.max(incomingConfidence, existingConfidence);
+  merged.incomplete = incoming.incomplete && existing.incomplete;
+  return merged;
 }
 
 export const getServicePeriods = () => getServiceHistory().servicePeriods;
@@ -1204,34 +1333,10 @@ export const upsertServicePeriod = (periodData, options = {}) => {
           : (periodData.confidence ?? null),
       incomplete: !(periodData.serviceStartDate && periodData.serviceEndDate),
     };
-    const incomingKey = _servicePeriodKey(incoming);
-    let existingIndex = periods.findIndex(
-      (p) => _servicePeriodKey(p) === incomingKey,
-    );
-    if (existingIndex === -1 && !incoming.incomplete) {
-      existingIndex = periods.findIndex((p) =>
-        isSameServicePeriod(
-          p.serviceStartDate,
-          p.serviceEndDate,
-          incoming.serviceStartDate,
-          incoming.serviceEndDate,
-        ),
-      );
-    }
 
-    // An incomplete period that clearly belongs to an already-dated one
-    // (same form, or its one known date landing on that period's start or
-    // end) joins it instead of becoming its own orphan "? - ?" row. An
-    // ambiguous match (more than one dated period fits) is dropped rather
-    // than guessed at.
-    if (existingIndex === -1 && incoming.incomplete) {
-      const matches = _matchIncompletePeriod(periods, incoming);
-      if (matches.length === 1) {
-        existingIndex = matches[0];
-      } else if (matches.length > 1) {
-        return null;
-      }
-    }
+    const { index: existingIndex, shouldDrop } =
+      _findExistingServicePeriodIndex(periods, incoming);
+    if (shouldDrop) return null;
 
     if (existingIndex === -1) {
       const newPeriod = {
@@ -1251,23 +1356,11 @@ export const upsertServicePeriod = (periodData, options = {}) => {
       return existing.id;
     }
 
-    const incomingConfidence = incoming.confidence ?? 0;
-    const existingConfidence = existing.confidence ?? 0;
-    const merged = { ...existing };
-    SERVICE_PERIOD_MERGE_FIELDS.forEach((field) => {
-      if (incomingConfidence >= existingConfidence && incoming[field]) {
-        merged[field] = incoming[field];
-      }
-    });
-    // VA's own record (the code sheet) settles which of two near-identical
-    // dates is right.
-    if (options.authoritativeDates && !incoming.incomplete) {
-      merged.serviceStartDate = incoming.serviceStartDate;
-      merged.serviceEndDate = incoming.serviceEndDate;
-    }
-    merged.confidence = Math.max(incomingConfidence, existingConfidence);
-    merged.incomplete = incoming.incomplete && existing.incomplete;
-    periods[existingIndex] = merged;
+    periods[existingIndex] = _mergeExistingServicePeriod(
+      existing,
+      incoming,
+      options,
+    );
     history.servicePeriods = periods;
     saveServiceHistory(history);
     return existing.id;
