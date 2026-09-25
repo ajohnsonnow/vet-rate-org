@@ -11,7 +11,7 @@
  * Now integrates with persistentStorage for crash-proof auto-saving
  */
 
-import { isSameServicePeriod } from "./dateUtils";
+import { isSameServicePeriod, formatLocalDate } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
 
 const PROFILE_KEY = "vet_rate_veteran_profile";
@@ -1144,6 +1144,42 @@ function _servicePeriodKey(p) {
   return `incomplete|${singleDate}|${p.sourceDocument || ""}`;
 }
 
+function _sameCalendarDay(a, b) {
+  if (!a || !b) return false;
+  const ta = formatLocalDate(a).getTime();
+  const tb = formatLocalDate(b).getTime();
+  return !Number.isNaN(ta) && !Number.isNaN(tb) && ta === tb;
+}
+
+/**
+ * An incomplete (single-date, or no-date) period belongs to whichever
+ * already-dated period it's really a partial reading of - a garbled OCR
+ * pass that only recovered a separation date, or an NGB-22 activation
+ * segment saved by the same call that already saved the primary dated
+ * period for that form. Two signals identify that: the same source
+ * document (same form), or the one known date landing on either boundary
+ * of an existing dated period (most often the separation date). Only a
+ * DATED period is ever a merge target - two incomplete periods never merge
+ * into each other here. Returns the indices of every dated period that
+ * matches; the caller only merges when exactly one does, so an ambiguous
+ * match never silently picks the wrong period.
+ */
+function _matchIncompletePeriod(periods, incoming) {
+  const singleDate = incoming.serviceStartDate || incoming.serviceEndDate;
+  const matches = [];
+  periods.forEach((p, index) => {
+    if (p.incomplete) return;
+    const sameForm =
+      !!incoming.sourceDocument && p.sourceDocument === incoming.sourceDocument;
+    const dateMatch =
+      !!singleDate &&
+      (_sameCalendarDay(p.serviceStartDate, singleDate) ||
+        _sameCalendarDay(p.serviceEndDate, singleDate));
+    if (sameForm || dateMatch) matches.push(index);
+  });
+  return matches;
+}
+
 export const getServicePeriods = () => getServiceHistory().servicePeriods;
 
 /**
@@ -1181,6 +1217,20 @@ export const upsertServicePeriod = (periodData, options = {}) => {
           incoming.serviceEndDate,
         ),
       );
+    }
+
+    // An incomplete period that clearly belongs to an already-dated one
+    // (same form, or its one known date landing on that period's start or
+    // end) joins it instead of becoming its own orphan "? - ?" row. An
+    // ambiguous match (more than one dated period fits) is dropped rather
+    // than guessed at.
+    if (existingIndex === -1 && incoming.incomplete) {
+      const matches = _matchIncompletePeriod(periods, incoming);
+      if (matches.length === 1) {
+        existingIndex = matches[0];
+      } else if (matches.length > 1) {
+        return null;
+      }
     }
 
     if (existingIndex === -1) {

@@ -133,6 +133,62 @@ describe("C1: service periods - incomplete periods and edits", () => {
   });
 });
 
+// S46 QA follow-up, item 5 (2026-09-24): an undated period from a form
+// should join the dated period it belongs to (same source document, or
+// its one known date landing on that period's start/end) instead of
+// always becoming its own orphan "? - ?" row.
+describe("C1: service periods - an incomplete period joins the dated period it belongs to", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("merges into the dated period from the same source document", () => {
+    upsertServicePeriod(
+      period("2004-06-22", "2005-08-27", { branch: "Army" }),
+      meta("ngb22.pdf", 60),
+    );
+    upsertServicePeriod(
+      period(null, null, { rank: "SGT" }),
+      meta("ngb22.pdf", 60),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0].rank).toBe("SGT");
+  });
+
+  it("merges into the dated period whose separation date matches the incomplete period's one known date", () => {
+    upsertServicePeriod(
+      period("2002-05-06", "2003-04-30", { branch: "Army" }),
+      meta("ngb22_clean.pdf", 60),
+    );
+    upsertServicePeriod(
+      period(null, "2003-04-30", { rank: "SGT" }),
+      meta("ngb22_garbled_box12a.pdf", 60),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0]).toMatchObject({
+      serviceStartDate: "2002-05-06",
+      rank: "SGT",
+    });
+  });
+
+  it("does not guess when the one known date matches more than one existing period", () => {
+    upsertServicePeriod(period("2002-05-06", "2003-04-30"), meta("a.pdf", 60));
+    upsertServicePeriod(period("2003-04-30", "2004-01-01"), meta("b.pdf", 60));
+    upsertServicePeriod(
+      period(null, "2003-04-30", { rank: "AMBIGUOUS" }),
+      meta("c.pdf", 40),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(2);
+    expect(periods.some((p) => p.rank === "AMBIGUOUS")).toBe(false);
+  });
+});
+
 describe("service periods - the same period from two documents", () => {
   beforeEach(() => {
     localStorage.clear();
