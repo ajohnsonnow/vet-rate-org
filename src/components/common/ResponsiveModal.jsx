@@ -135,7 +135,21 @@ export default function ResponsiveModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title || labelledBy ? titleId : undefined}
-        className={`modal-content relative flex w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90dvh] sm:rounded-2xl ${
+        // `mt-20`/`h-[calc(100dvh-5rem)]` below `sm` reserve a gutter above
+        // every dialog (default title bar AND custom `header` bars alike) for
+        // the fixed top-left Quick Exit button (see QuickExitButton.jsx),
+        // whose box is top-3/left-3 at ~48px tall. A title-bar-only fix can't
+        // work here: Quick Exit's screen-fixed position collides with
+        // whichever header content a given tool happens to render there
+        // (title text starting at the left edge, a leading icon, etc.), and
+        // that varies per tool. Reserving the vertical space in this one
+        // shared shell clears every dialog's header uniformly regardless of
+        // its content, instead of hand-patching each header's padding.
+        // `!mt-20` needs the important-modifier (same pattern as
+        // ModalHeader's `!p-0` above) because a same-specificity legacy
+        // `@media (width<=768px) { .modal-content { margin: 0 } }` rule in
+        // index.css otherwise wins on source order and zeroes it out.
+        className={`modal-content relative !mt-20 flex w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] sm:!mt-0 sm:h-auto sm:max-h-[90dvh] sm:rounded-2xl ${
           SIZE[size] || SIZE.lg
         } ${className}`}
       >
