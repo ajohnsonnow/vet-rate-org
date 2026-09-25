@@ -1090,7 +1090,7 @@ const SERVICE_PERIOD_MERGE_FIELDS = [
   // true.
   "placeOfEntryLowConfidence",
   // The start date was calculated (separation date minus net service), not
-  // printed on the form; net service excludes lost time, so it can be early.
+  // printed on the form; net service excludes lost time, so it can be late.
   "serviceStartDateDerived",
 ];
 
