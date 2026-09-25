@@ -363,7 +363,8 @@ async function closeButtonBox(
       const btn = dialog?.querySelector(
         `button[aria-label="${ariaLabel}"]`,
       ) as HTMLElement | null;
-      if (!btn) return { found: false, width: 0, height: 0, fullyVisible: false };
+      if (!btn)
+        return { found: false, width: 0, height: 0, fullyVisible: false };
       const r = btn.getBoundingClientRect();
       const vw = window.innerWidth;
       return {
@@ -376,6 +377,34 @@ async function closeButtonBox(
     { titleId, ariaLabel },
   );
 }
+
+/**
+ * Hit-tests an element's own center via `document.elementFromPoint`, the
+ * same lookup a real tap resolves against. `closeButtonBox` above (and
+ * `overlayOverflow`/`pageOverflow`) only check bounding-box geometry - none
+ * of them notice a same-region, higher-z-index sibling (e.g. the fixed
+ * Quick Exit button) silently intercepting the tap instead of the element
+ * actually under it, which is exactly how QA S46 found Quick Exit
+ * swallowing tool close-button taps at 390px despite each button measuring
+ * a clean, fully-visible 44-48px box on its own.
+ */
+async function centerHitsSelf(
+  page: Page,
+  selector: string,
+): Promise<{ found: boolean; hit: boolean }> {
+  return page.evaluate((sel) => {
+    const el = document.querySelector(sel) as HTMLElement | null;
+    if (!el) return { found: false, hit: false };
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const hitEl = document.elementFromPoint(cx, cy);
+    return { found: true, hit: el.contains(hitEl) };
+  }, selector);
+}
+
+const QUICK_EXIT_SELECTOR =
+  'button[aria-label="Quick exit - immediately leave this page"]';
 
 /**
  * Inspect the open ResponsiveModal, located by its unique `.modal-footer`. Returns
@@ -717,22 +746,73 @@ for (const vp of VIEWPORTS) {
   });
 
   // Tool header close buttons (QA audit fix): Pathfinder, State Benefit
-  // Hunter, Web of Conditions, Evidence Timeline, Evidence Gap Visualizer
-  // and BDD Builder all share the same bug — a shared mobile-only rule
-  // (`.modal-content .flex.gap-2 > button, .modal-content .flex.gap-3 >
-  // button { flex: 1; min-width: 120px }`, meant for footer action-button
-  // pairs) also matched each header's ReportBugLink+Close wrapper, and the
-  // title's flex item had no `min-w-0` to absorb the resulting width, so
-  // the close button was pushed off past the header's own edge and clipped
-  // by the panel's `overflow-hidden`. `overlayOverflow` doesn't catch it
-  // (see `closeButtonBox` above), so this checks the button directly.
+  // Hunter, Web of Conditions, Evidence Timeline, Evidence Gap Visualizer,
+  // MOS Hazard Matcher, Tactical Calculator and BDD Builder all share the
+  // same bug — a shared mobile-only rule (`.modal-content .flex.gap-2 >
+  // button, .modal-content .flex.gap-3 > button { flex: 1; min-width:
+  // 120px }`, meant for footer action-button pairs) also matched each
+  // header's ReportBugLink+Close wrapper, and the title's flex item had no
+  // `min-w-0` to absorb the resulting width, so the close button was pushed
+  // off past the header's own edge and clipped by the panel's
+  // `overflow-hidden`. `overlayOverflow` doesn't catch it (see
+  // `closeButtonBox` above), so this checks the button directly.
+  //
+  // QA S46: the *fully-visible, correctly-sized* close button could still
+  // be untappable — the app-level Quick Exit button (fixed top-right,
+  // z-[9999], mounted above every dialog for panic-exit safety) sat in the
+  // same corner and silently intercepted the tap on five of these seven
+  // dialogs, with a corner clip on the other two. `centerHitsSelf` below
+  // hit-tests both buttons' real centers the way a tap resolves, which a
+  // bounding-box check alone can't catch.
   const TOOL_HEADERS = [
-    { label: "Pathfinder", event: "openPathfinder", titleId: "pathfinder-modal-title", ariaLabel: "Close" },
-    { label: "State Benefit Hunter", event: "openStateBenefitHunter", titleId: "state-benefit-hunter-title", ariaLabel: "Close" },
-    { label: "Web of Conditions", event: "openWebOfConditions", titleId: "web-of-conditions-title", ariaLabel: "Close" },
-    { label: "Evidence Timeline", event: "openEvidenceTimeline", titleId: "evidence-timeline-title", ariaLabel: "Close" },
-    { label: "Evidence Gap Visualizer", event: "openEvidenceGapVisualizer", titleId: "evidence-gap-title", ariaLabel: "Close" },
-    { label: "BDD Builder", event: "openBDDBuilder", titleId: "bdd-builder-title", ariaLabel: "Close BDD Builder" },
+    {
+      label: "Pathfinder",
+      event: "openPathfinder",
+      titleId: "pathfinder-modal-title",
+      ariaLabel: "Close",
+    },
+    {
+      label: "State Benefit Hunter",
+      event: "openStateBenefitHunter",
+      titleId: "state-benefit-hunter-title",
+      ariaLabel: "Close",
+    },
+    {
+      label: "Web of Conditions",
+      event: "openWebOfConditions",
+      titleId: "web-of-conditions-title",
+      ariaLabel: "Close",
+    },
+    {
+      label: "Evidence Timeline",
+      event: "openEvidenceTimeline",
+      titleId: "evidence-timeline-title",
+      ariaLabel: "Close",
+    },
+    {
+      label: "Evidence Gap Visualizer",
+      event: "openEvidenceGapVisualizer",
+      titleId: "evidence-gap-title",
+      ariaLabel: "Close",
+    },
+    {
+      label: "MOS Hazard Matcher",
+      event: "openMOSHazardMatcher",
+      titleId: "mos-hazard-matcher-title",
+      ariaLabel: "Close",
+    },
+    {
+      label: "Tactical Calculator",
+      event: "openTacticalCalculator",
+      titleId: "calculator-title",
+      ariaLabel: "Close",
+    },
+    {
+      label: "BDD Builder",
+      event: "openBDDBuilder",
+      titleId: "bdd-builder-title",
+      ariaLabel: "Close BDD Builder",
+    },
   ];
 
   test.describe(`Tool header close buttons @ ${vp.width}px (${vp.name})`, () => {
@@ -750,7 +830,7 @@ for (const vp of VIEWPORTS) {
     });
 
     for (const tool of TOOL_HEADERS) {
-      test(`${tool.label} close button stays fully visible at >=44x44px`, async ({
+      test(`${tool.label} close button stays fully visible at >=44x44px and is not covered by Quick Exit`, async ({
         page,
       }) => {
         await openModalByEvent(page, tool.event, () =>
@@ -773,7 +853,75 @@ for (const vp of VIEWPORTS) {
         expect(box.fullyVisible).toBe(true);
         expect(box.width).toBeGreaterThanOrEqual(44);
         expect(box.height).toBeGreaterThanOrEqual(44);
+
+        // Hit-test: tapping the close button's real center must resolve to
+        // the close button itself, not a higher-z-index Quick Exit sibling
+        // sitting on top of it. expect.poll rides out the same StrictMode
+        // remount blip the box checks above already tolerate via
+        // toBeVisible()'s auto-retry - a bare single-shot evaluate() here
+        // doesn't get that for free.
+        const closeSelector = `[role="dialog"][aria-labelledby="${tool.titleId}"] button[aria-label="${tool.ariaLabel}"]`;
+        await expect
+          .poll(async () => (await centerHitsSelf(page, closeSelector)).hit, {
+            timeout: 5000,
+          })
+          .toBe(true);
+
+        // Quick Exit itself must stay reachable while this dialog is open -
+        // it's a panic-exit safety control, not a decoration.
+        await expect(page.locator(QUICK_EXIT_SELECTOR)).toBeVisible();
+        await expect
+          .poll(
+            async () => (await centerHitsSelf(page, QUICK_EXIT_SELECTOR)).hit,
+            { timeout: 5000 },
+          )
+          .toBe(true);
       });
     }
+  });
+
+  // SecurityBadge (QA audit fix, low): the floating "100% Private" badge sat
+  // at a fixed bottom-4 right-4 on every screen, directly on top of the
+  // mobile bottom nav's rightmost "Missions" item at phone widths. Same
+  // hit-test approach as the Quick Exit / close-button checks above.
+  test.describe(`SecurityBadge vs mobile bottom nav @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    test("Missions nav item stays tap-reachable and SecurityBadge stays tap-reachable", async ({
+      page,
+    }) => {
+      // Two `nav[aria-label="Main navigation"]` elements exist (desktop
+      // `hidden md:flex` sidebar + the phone-only MobileBottomNav) - `:visible`
+      // resolves the real one at this viewport. `toBeVisible()` auto-retries,
+      // riding out the same dev-mode React.StrictMode mount→unmount→remount
+      // cycle the tool-header tests above account for; a single unguarded
+      // `page.evaluate` snapshot doesn't and was flaky here.
+      const missions = page.locator(
+        'nav[aria-label="Main navigation"]:visible button[aria-label="Missions"]',
+      );
+      await expect(missions).toBeVisible();
+      const badge = page.locator('button[aria-label="View Security Proof"]');
+      await expect(badge).toBeVisible();
+
+      const hitsSelf = (el: HTMLElement) => {
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        return el.contains(document.elementFromPoint(cx, cy));
+      };
+      expect(await missions.evaluate(hitsSelf)).toBe(true);
+      expect(await badge.evaluate(hitsSelf)).toBe(true);
+    });
   });
 }
