@@ -64,6 +64,7 @@ import {
   saveVKB,
   mergeDD214IntoVKB,
   mergeDD214Deployments,
+  mergeDD214EvidenceTimeline,
   mergeRatingDecisionIntoVKB,
 } from "./veteranKnowledgeBase";
 import {
@@ -75,7 +76,12 @@ import {
   primaryConditionKey,
 } from "./conditionName";
 import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
-import { formatLocalDate, isSameDate } from "./dateUtils";
+import {
+  formatLocalDate,
+  isSameDate,
+  parseExplicitDate,
+  isDesignatedCombatZone,
+} from "./dateUtils";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
 // Import JSON repair utility for handling truncated AI responses
@@ -854,21 +860,14 @@ const _mergeDD214Record = (existing, candidate) => {
 // The canonical service period shape (C1 multi-period model) mandates
 // "YYYY-MM-DD" dates, but parseServiceRecord's own box extractors
 // (_normalizeDateMatch) emit MM/DD/YYYY - normalize at this write boundary
-// rather than touching the parser. A recognized-but-different format (a
-// prose date from a letter, "05/30/2015" already handled below) is left
-// as-is rather than fabricated into something it isn't - formatLocalDate
-// can still parse it later. A string that isn't a date at all (garbled
-// OCR) becomes null instead of being stored verbatim.
-const _toISODateString = (dateStr) => {
-  if (!dateStr) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-  const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (match) {
-    const [, month, day, year] = match;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-  return Number.isNaN(Date.parse(dateStr)) ? null : dateStr;
-};
+// rather than touching the parser.
+// N7 (final8 QA, 2026-09-24): used to fall back to `Date.parse`, which is
+// lenient enough to accept "SINAI 12" as a real (wrong) date. Delegates to
+// dateUtils.parseExplicitDate, which only accepts the explicit formats
+// this file's own parsers emit and returns null for anything else -
+// shared with the VKB's own _toIsoDate (veteranKnowledgeBase.js) so both
+// close the same gap from one implementation.
+const _toISODateString = (dateStr) => parseExplicitDate(dateStr);
 
 // Writes extracted DD214 fields to the Service tab's storage key
 // (SERVICE_HISTORY_KEY via saveDD214Data) - kept as-is, still the write
@@ -1149,7 +1148,7 @@ export const saveDeploymentsToProfile = (file, result) => {
         // later loses its sourced designation - gets corrected on
         // re-import instead of persisting forever.
         const resolvedStartDate = updates.startDate || match.startDate;
-        const recomputedCombat = _isDesignatedCombatZone(
+        const recomputedCombat = isDesignatedCombatZone(
           dep.location.toUpperCase(),
           resolvedStartDate,
         );
@@ -1271,29 +1270,34 @@ const mergeServiceRecordIntoVKB = async (file, result) => {
 // (a directly-uploaded DD214/NGB22), so a C-File's deployments reached the
 // Service tab (saveDeploymentsToProfile, which is type-agnostic) but never
 // vkb.serviceHistory.deployments or the evidence timeline. Calls
-// mergeDD214Deployments directly rather than the full mergeDD214IntoVKB
-// pipeline: the C-File is already filed as its own "c_file" document via
-// addDocumentToVKB/routeDocumentToVKB, so running mergeDD214IntoVKB's
-// mergeDD214Documentation step here as well filed it a SECOND time as a
-// fabricated DD-214 - inflating vkb.metadata.documentCount and the
-// "DD-214s: N" tally by one per C-File import (S46 QA follow-up, item 5).
+// mergeDD214Deployments AND mergeDD214EvidenceTimeline directly rather
+// than the full mergeDD214IntoVKB pipeline: the C-File is already filed
+// as its own "c_file" document via addDocumentToVKB/routeDocumentToVKB,
+// so running mergeDD214IntoVKB's mergeDD214Documentation step here as
+// well filed it a SECOND time as a fabricated DD-214 - inflating
+// vkb.metadata.documentCount and the "DD-214s: N" tally by one per C-File
+// import (S46 QA follow-up, item 5).
+// N2 (final8 QA, 2026-09-24): this used to call mergeDD214Deployments
+// alone, so a C-File-only tour reached vkb.serviceHistory.deployments but
+// never the Evidence Timeline - mergeDD214EvidenceTimeline is the only
+// other step that reads `deployments`, and it doesn't touch
+// vkb.documentation.dd214s, so adding it doesn't reintroduce the
+// double-filing bug the comment above already fixed.
 const mergeCFileDeploymentsIntoVKB = async (file, result) => {
   if (result.extractedData?.type !== "c_file") return;
   const deployments = result.extractedData?.deployments;
   if (!Array.isArray(deployments) || deployments.length === 0) return;
   try {
     const vkb = await loadVKB();
-    mergeDD214Deployments(
-      vkb,
-      {
-        deployments: deployments.map((dep) => ({
-          ...dep,
-          startDate: _toISODateString(dep.startDate),
-          endDate: _toISODateString(dep.endDate),
-        })),
-      },
-      { fileName: file.name },
-    );
+    const dd214Data = {
+      deployments: deployments.map((dep) => ({
+        ...dep,
+        startDate: _toISODateString(dep.startDate),
+        endDate: _toISODateString(dep.endDate),
+      })),
+    };
+    mergeDD214Deployments(vkb, dd214Data, { fileName: file.name });
+    mergeDD214EvidenceTimeline(vkb, dd214Data, { fileName: file.name });
     await saveVKB(vkb);
     // eslint-disable-next-line no-console
     console.log(`✅ Merged C-File deployments into VKB for ${file.name}`);
@@ -2821,38 +2825,6 @@ const DATED_DEPLOYMENT_PATTERNS = [
   // digits, or both, on every scanned copy) to read directly.
   /(?:SERVICE|SERVED)\s+IN\s+([A-Z][A-Z\s]{1,60}?)\s+(?:FROM\s+)?(\d{1,2}\/\d{1,2}\/\d{4})\s{0,5}-\s{0,5}(\d{1,2}\/\d{1,2}\/\d{4})/gi,
 ];
-
-// IRS/DoD combat-zone tax-exclusion designations under 26 U.S.C. §112,
-// dated from the Executive Order that created each one - Afghanistan (EO
-// 13239, effective 2001-09-19) and the Persian Gulf area, including Iraq
-// and Kuwait (EO 12744, effective 1991-01-17). This is a DoD/IRS tax
-// designation, NOT a VA "engaged in combat with the enemy" finding under
-// 38 U.S.C. § 1154(b) - the two are legally distinct, and this flag must
-// never be read as satisfying 1154(b) on its own.
-//
-// S46 QA (2026-09-24): the previous version of this list also carried
-// Saudi Arabia, Bahrain, Qatar, UAE, Oman, Syria, Sinai and Kosovo with no
-// dates at all, so every deployment to any of them was flagged regardless
-// of when it happened. None of those has a start date sourced anywhere
-// else in this codebase, so rather than guess one from memory they were
-// removed - a missed flag is far cheaper than a wrong one on a
-// veteran-facing legal claim.
-const COMBAT_ZONE_DESIGNATIONS = {
-  AFGHANISTAN: "2001-09-19",
-  IRAQ: "1991-01-17",
-  KUWAIT: "1991-01-17",
-};
-
-// True only when the location has a sourced designation AND the
-// deployment has a start date on or after it - an undated deployment (or
-// one to a location this file has no sourced designation for) is never
-// flagged, since there is nothing to confirm the dates against.
-function _isDesignatedCombatZone(location, startDate) {
-  const designationStart = COMBAT_ZONE_DESIGNATIONS[location];
-  if (!designationStart || !startDate) return false;
-  const deploymentStart = _toISODateString(startDate);
-  return !!deploymentStart && deploymentStart >= designationStart;
-}
 
 /**
  * Isolate Box 18 (Remarks) text so deployment/narrative extraction never
@@ -4437,7 +4409,7 @@ function _pushDeployment(data, dobYear, rawLocation, startDate, endDate) {
   if (existing) {
     if (!existing.startDate && startDate) existing.startDate = startDate;
     if (!existing.endDate && endDate) existing.endDate = endDate;
-    existing.combatZone = _isDesignatedCombatZone(location, existing.startDate);
+    existing.combatZone = isDesignatedCombatZone(location, existing.startDate);
     return;
   }
 
@@ -4450,7 +4422,7 @@ function _pushDeployment(data, dobYear, rawLocation, startDate, endDate) {
     location,
     startDate: startDate || null,
     endDate: endDate || null,
-    combatZone: _isDesignatedCombatZone(location, startDate),
+    combatZone: isDesignatedCombatZone(location, startDate),
   });
 }
 
