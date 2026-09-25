@@ -1455,6 +1455,83 @@ for (const vp of BYPASS_TEST_VIEWPORTS) {
   });
 }
 
+// N10 (QA final9): the ≤640px `.modal-content .flex.gap-2/3 > button`
+// min-width rule (index.css) could widen and push off-screen the close
+// button of *any* ResponsiveModal-based tool dialog, not just the 22 QA
+// happened to hit-test. Reuses the DOM-enumeration approach above
+// (probeOpenDialog/dispatchTrigger/triggerUntilDialogFound) against the
+// whole tool-grid dialog inventory this file already catalogues for other
+// assertions (MODALS, MIGRATED_MODALS, TOOL_HEADERS) - not a fourth
+// hand-kept list - plus three dialogs among QA's 22 that had no e2e trigger
+// yet (AI Command Center, Claim Stress Test, Denial Decoder). Deduped by
+// event: several dialogs are catalogued in more than one array above (e.g.
+// TOOL_HEADERS re-lists some MODALS entries for the Quick Exit check), and
+// each should only be opened once per width here.
+const TOOL_GRID_DIALOG_EVENTS: { label: string; event: string }[] = (() => {
+  const merged = [
+    ...MODALS,
+    ...MIGRATED_MODALS,
+    ...TOOL_HEADERS.map(({ label, event }) => ({ label, event })),
+    { label: "AI Command Center", event: "openAISettings" },
+    { label: "Claim Stress Test", event: "openClaimStressTest" },
+    { label: "Denial Decoder", event: "openDenialDecoder" },
+  ];
+  const seen = new Set<string>();
+  return merged.filter(({ event }) => {
+    if (seen.has(event)) return false;
+    seen.add(event);
+    return true;
+  });
+})();
+
+for (const vp of QUICK_EXIT_VIEWPORTS) {
+  test.describe(`Tool-grid dialog close buttons stay on-screen @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const dialog of TOOL_GRID_DIALOG_EVENTS) {
+      test(`${dialog.label}: close control fully on-screen, no page horizontal overflow`, async ({
+        page,
+      }) => {
+        await triggerUntilDialogFound(
+          page,
+          dispatchTrigger(page, dialog.event),
+        );
+
+        const probe = await probeOpenDialog(page);
+        expect(probe.found).toBe(true);
+
+        // The × must be fully inside the viewport - not clipped or pushed
+        // past the right edge by the min-width rule (N10).
+        if (probe.hasCloseControl) {
+          expect(probe.closeRect).not.toBeNull();
+          expect(probe.closeRect!.left).toBeGreaterThanOrEqual(-0.5);
+          expect(probe.closeRect!.right).toBeLessThanOrEqual(vp.width + 0.5);
+        }
+
+        // No dialog may force the page itself to scroll sideways.
+        const overflow = await page.evaluate(() => ({
+          scrollWidth: document.documentElement.scrollWidth,
+          innerWidth: window.innerWidth,
+        }));
+        expect(overflow.scrollWidth).toBeLessThanOrEqual(
+          overflow.innerWidth + 1,
+        );
+      });
+    }
+  });
+}
+
 // CrisisModal-specific content check (320x568): the panic-exit gutter fix
 // (CrisisModal.jsx) must not come at the cost of the hotline actions
 // themselves - QA's other stated requirement for N4's highest-priority
