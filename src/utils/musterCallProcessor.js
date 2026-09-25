@@ -47,6 +47,7 @@ import {
   saveDD214Data,
   addAward,
   addDeployment,
+  updateDeployment,
   upsertServicePeriod,
   getMyRatings,
   saveMyRatings,
@@ -922,16 +923,30 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 // primary period is a no-op, not a duplicate.
 function _saveNGB22AdditionalPeriods(file, candidate) {
   if (!Array.isArray(candidate.additionalPeriods)) return;
+  const separationDate = _toISODateString(candidate.separationDate);
   candidate.additionalPeriods.forEach((period) => {
     try {
+      const periodEndDate = _toISODateString(period.serviceEndDate);
+      // The DD214's own rank (Box 4a) is only known to apply at the end of
+      // the actual Active Duty stretch it was issued for - an earlier IADT
+      // window, or an AD window that isn't the one ending on this
+      // document's own separation date, may have been served at a
+      // different rank, so only the matching AD period gets it.
+      const rank =
+        period.component === "Active Duty" &&
+        !!separationDate &&
+        periodEndDate === separationDate
+          ? candidate.rank || ""
+          : undefined;
       upsertServicePeriod(
         {
           serviceStartDate: _toISODateString(period.serviceStartDate),
-          serviceEndDate: _toISODateString(period.serviceEndDate),
+          serviceEndDate: periodEndDate,
           branch: candidate.branch || "",
           component: period.component,
           formType: "NGB22",
           sourceDocument: file.name,
+          rank,
           notes:
             "Date range from NGB-22 Box 18 remarks (no location listed on the document).",
         },
@@ -946,7 +961,7 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
   });
 }
 
-const saveServiceRecordToProfile = (file, result) => {
+export const saveServiceRecordToProfile = (file, result) => {
   if (result.extractedData?.type !== "service_record") return;
   const candidate = buildDD214ProfileUpdate(result);
   try {
@@ -1069,6 +1084,15 @@ const _toTitleCase = (str) =>
 // addDeployment is the same write target the Service tab's own manual "Add
 // Deployment" form uses, so a document-ingested deployment now shows up
 // identically to one the veteran typed in by hand.
+// FIX (S46 QA, item 3): the old dedupe keyed on location + exact startDate,
+// so a bare/undated mention of a location already saved WITH dates (a
+// different document's copy that didn't carry Box 18's FROM/TO range, or a
+// C-File's repeated scans of the same DD214) never matched and was saved
+// as a second, dateless entry for the same place. A location match is now
+// enough when either side has no date - it's either a repeat of an
+// already-dated tour (nothing to add) or fills the existing entry's still-
+// missing dates - while a genuinely different startDate for the same
+// location still creates a new entry (a real second tour).
 export const saveDeploymentsToProfile = (file, result) => {
   const deployments = result.extractedData?.deployments;
   if (!Array.isArray(deployments) || deployments.length === 0) return;
@@ -1076,18 +1100,37 @@ export const saveDeploymentsToProfile = (file, result) => {
     const existing = getServiceHistory().deployments || [];
     deployments.forEach((dep) => {
       if (!dep.location) return;
-      const alreadySaved = existing.some(
+      const depStartIso = _toISODateString(dep.startDate);
+      const match = existing.find(
         (d) =>
           (d.location || "").toUpperCase() === dep.location.toUpperCase() &&
-          (d.startDate || null) === _toISODateString(dep.startDate),
+          (!d.startDate || !depStartIso || d.startDate === depStartIso),
       );
-      if (alreadySaved) return;
+      if (match) {
+        const updates = {};
+        if (!match.startDate && depStartIso) updates.startDate = depStartIso;
+        if (!match.endDate && dep.endDate) {
+          updates.endDate = _toISODateString(dep.endDate);
+        }
+        if (!match.combat && dep.combatZone) updates.combat = true;
+        if (Object.keys(updates).length > 0) {
+          updateDeployment(match.id, updates);
+          Object.assign(match, updates);
+        }
+        return;
+      }
       const theater = _toTitleCase(dep.location);
-      addDeployment({
+      const newId = addDeployment({
         theater,
         location: theater,
-        startDate: _toISODateString(dep.startDate),
+        startDate: depStartIso,
         endDate: _toISODateString(dep.endDate),
+        combat: !!dep.combatZone,
+      });
+      existing.push({
+        id: newId,
+        location: theater,
+        startDate: depStartIso,
         combat: !!dep.combatZone,
       });
     });
@@ -1124,8 +1167,19 @@ const buildVKBDD214Data = (result) => {
   });
   // d.deployments is already { location, startDate, endDate, combatZone }
   // (see _pushDeployment) - the same shape mergeDD214Deployments expects,
-  // so no remapping needed here.
-  const deployments = Array.isArray(d.deployments) ? d.deployments : [];
+  // so no remapping needed here beyond the date format: _pushDeployment's
+  // dates are MM/DD/YYYY (FIX-15's convention), but vkb.serviceHistory.
+  // deployments and the evidence timeline both expect ISO YYYY-MM-DD like
+  // every other stored date - converted here rather than at
+  // veteranKnowledgeBase.js's merge boundary alone so this producer is
+  // correct even if a future caller there forgets to normalize.
+  const deployments = Array.isArray(d.deployments)
+    ? d.deployments.map((dep) => ({
+        ...dep,
+        startDate: _toISODateString(dep.startDate),
+        endDate: _toISODateString(dep.endDate),
+      }))
+    : [];
 
   return {
     ...candidate,
@@ -1161,6 +1215,44 @@ const mergeServiceRecordIntoVKB = async (file, result) => {
     await saveVKB(vkb);
     // eslint-disable-next-line no-console
     console.log(`✅ Merged DD214 data into VKB for ${file.name}`);
+  } catch (vkbErr) {
+    console.warn(
+      `VKB merge failed for ${file.name} (non-fatal):`,
+      vkbErr.message,
+    );
+  }
+};
+
+// buildSegmentedCFileResult's own deployment extraction (see
+// _extractCFileDeployments) has no VKB merge target of its own -
+// mergeServiceRecordIntoVKB above only fires for type: "service_record"
+// (a directly-uploaded DD214/NGB22), so a C-File's deployments reached the
+// Service tab (saveDeploymentsToProfile, which is type-agnostic) but never
+// vkb.serviceHistory.deployments or the evidence timeline. dd214Data here
+// deliberately carries only `deployments` - mergeDD214IntoVKB's other
+// merge steps read DD214-only fields (branch, rank, awards, ...) a c_file
+// result doesn't have in that shape, and leaving them undefined is a no-op
+// for every one of those steps.
+const mergeCFileDeploymentsIntoVKB = async (file, result) => {
+  if (result.extractedData?.type !== "c_file") return;
+  const deployments = result.extractedData?.deployments;
+  if (!Array.isArray(deployments) || deployments.length === 0) return;
+  try {
+    const vkb = await loadVKB();
+    mergeDD214IntoVKB(
+      vkb,
+      {
+        deployments: deployments.map((dep) => ({
+          ...dep,
+          startDate: _toISODateString(dep.startDate),
+          endDate: _toISODateString(dep.endDate),
+        })),
+      },
+      { fileName: file.name },
+    );
+    await saveVKB(vkb);
+    // eslint-disable-next-line no-console
+    console.log(`✅ Merged C-File deployments into VKB for ${file.name}`);
   } catch (vkbErr) {
     console.warn(
       `VKB merge failed for ${file.name} (non-fatal):`,
@@ -1457,7 +1549,7 @@ const saveRatingDecisionToProfile = (file, result) => {
 // VA's code sheet is the one record of every active-duty period with its
 // character of discharge, and its dates settle what a scanned form's OCR
 // could not read.
-const saveCodeSheetServicePeriodsToProfile = (file, result) => {
+export const saveCodeSheetServicePeriodsToProfile = (file, result) => {
   const periods = result.extractedData?.servicePeriods;
   if (result.extractedData?.ratingSource !== "code_sheet") return;
   for (const p of periods || []) {
@@ -1467,6 +1559,14 @@ const saveCodeSheetServicePeriodsToProfile = (file, result) => {
         serviceEndDate: p.separationDate,
         branch: p.branch,
         characterOfService: p.characterOfDischarge,
+        // Explicit "Code Sheet" formType, at the same 100/authoritative
+        // confidence that already wins the date fields below: without it,
+        // upserting onto an existing NGB-22-sourced period left that
+        // period's stale formType: "NGB22" in place (SERVICE_PERIOD_MERGE_
+        // FIELDS only overwrites a field when the incoming value is
+        // truthy), so the UI kept labelling VA's own authoritative record
+        // "(NGB22)".
+        formType: "Code Sheet",
         sourceDocument: file.name,
       },
       { sourceDocument: file.name, confidence: 100, authoritativeDates: true },
@@ -1510,6 +1610,7 @@ export const persistFormationDocument = async (file, result) => {
   saveCodeSheetServicePeriodsToProfile(file, result);
   await appendMusterCallTimelineEntry(file, result);
   await mergeServiceRecordIntoVKB(file, result);
+  await mergeCFileDeploymentsIntoVKB(file, result);
   await mergeRatingDecisionIntoVKBForFile(file, result);
 };
 
@@ -2066,7 +2167,141 @@ const parseDBQDocument = async (text) => {
   return await parseDBQ(text);
 };
 
-const buildSegmentedCFileResult = async (text, cFileSummary) => {
+// A rating decision or DBQ's own restatement of the same DD214
+// ("PERTINENT RECORDS INCLUDE: DD Form 214 ... Service in Afghanistan
+// from 08/08/2004 -07/27/2005") is routinely repeated across several exam
+// reports in the same C-File and OCR'd far more cleanly than a scanned
+// form - confirmed against a real C-File where this was the only clean
+// copy of a tour whose own DD214 Box 18 OCR'd too corrupted (in the
+// location name, the digits, or both, on every scanned copy) to read
+// directly. Only DATED_DEPLOYMENT_PATTERNS run here - never an
+// undated/bare pattern - so a rating decision or DBQ's generic "Veterans
+// who were deployed to the Persian Gulf, Afghanistan..." PACT Act
+// eligibility boilerplate (no date attached to a specific person at all)
+// is never read as a record of THIS veteran's own service. Confirmed
+// against the same real C-File: without this restriction, segmentCFile's
+// own boundary detection swept exactly that boilerplate paragraph into
+// what it classified as a DD214 segment, and a bare pattern there would
+// have fabricated a Persian Gulf deployment.
+function _extractDatedDeploymentMentions(text) {
+  const found = { deployments: [] };
+  const scanText = _stripDeploymentBoilerplate(text.toUpperCase());
+  for (const pattern of DATED_DEPLOYMENT_PATTERNS) {
+    let match;
+    while ((match = pattern.exec(scanText)) !== null) {
+      const location = match[1]?.trim();
+      if (!location) continue;
+      _pushDeployment(
+        found,
+        null,
+        location,
+        _normalizeDeploymentDate(match[2]),
+        _normalizeDeploymentDate(match[3]),
+      );
+    }
+  }
+  return found.deployments;
+}
+
+// A single standalone DD214/NGB-22 PDF upload really is the form named by
+// its own DD214-signature match, so _extractNarrativeAndDeploymentLocations
+// falling back to scanning the whole document (when Box 18 can't be
+// isolated) is a reasonable last resort there. A C-File segment
+// segmentCFile classifies as "DD214" is not always that reliable -
+// confirmed against a real C-File where a segment boundary swept in a
+// neighboring DBQ's "Self-reported Deployment Data" table and its own
+// generic PACT Act exposure paragraph, neither of which is this
+// veteran's own Box 18 remarks. So there is no whole-document fallback
+// here: if Box 18 can't be isolated, this segment contributes no
+// deployments at all, on the same "a missed deployment is far cheaper
+// than a fabricated one" reasoning already documented on
+// _extractBox18RemarksText. Reuses the same OCR preprocessing, Box 18
+// isolation, boilerplate stripping, and pattern set a single DD214
+// upload's own parseServiceRecord relies on (see
+// _extractNarrativeAndDeploymentLocations) - only the fallback is
+// intentionally narrower here.
+function _extractCFileDD214Deployments(rawText) {
+  const { ocrCorrectedUpperText } = _preprocessDD214Text(rawText);
+  const box18Text = _extractBox18RemarksText(ocrCorrectedUpperText);
+  if (!box18Text) return [];
+  const scanUpper = _stripDeploymentBoilerplate(box18Text).toUpperCase();
+
+  const patterns = [
+    ...DATED_DEPLOYMENT_PATTERNS,
+    /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
+    /\b(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN|SINAI|MFO)\b/gi,
+  ];
+  const found = { deployments: [] };
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(scanUpper)) !== null) {
+      const location = match[1]?.trim();
+      if (!location) continue;
+      _pushDeployment(
+        found,
+        null,
+        location,
+        _normalizeDeploymentDate(match[2]),
+        _normalizeDeploymentDate(match[3]),
+      );
+    }
+  }
+  return found.deployments;
+}
+
+// Real C-Files hold several scanned copies of the same DD214/NGB-22 (the
+// owner's own 2,018-page file has 3+ copies covering two real
+// deployments) and, until now, nothing read deployments from the C-File
+// path at all - only a directly-uploaded single DD214/NGB22 ever
+// populated extractedData.deployments. Runs _extractCFileDD214Deployments
+// on every DD214-signature segment and _extractDatedDeploymentMentions on
+// every DD214/RATING_DECISION/DBQ-signature segment segmentCFile already
+// found, then folds every segment's results into one list with _pushDeployment's
+// own location+date merge - the same merge a single multi-page DD214
+// upload already relies on to collapse repeat mentions - so repeat copies
+// of the same tour collapse into one entry while two genuinely different
+// tours to the same country (see that function's comment) stay separate.
+function _extractCFileDeployments(segmentList) {
+  const merged = { deployments: [] };
+
+  const dd214Segments = segmentList.filter(
+    (s) => s.type === "DD214" && s.rawText,
+  );
+  for (const segment of dd214Segments) {
+    for (const dep of _extractCFileDD214Deployments(segment.rawText)) {
+      _pushDeployment(merged, null, dep.location, dep.startDate, dep.endDate);
+    }
+  }
+
+  // A segment segmentCFile classifies "DD214" is not always a real scanned
+  // form - confirmed against a real C-File where a DBQ's own "PERTINENT
+  // RECORDS INCLUDE: DD Form 214 ... Service in Afghanistan
+  // 05/15/2006-06/02/2007" citation matched the same "DD FORM 214"
+  // signature segmentCFile uses for a genuinely scanned one, so it never
+  // reaches _extractDatedDeploymentMentions below at all if this scan were
+  // limited to RATING_DECISION/DBQ-typed segments only. Those citation
+  // segments never have an isolatable Box 18 either (correctly, safely
+  // skipped by _extractCFileDD214Deployments above), so the dated-only
+  // scan also runs across every DD214-typed segment - redundant, and a
+  // safe no-op, on a segment that really is a scanned form and already
+  // got its dates from the Box 18 pass above.
+  const evidenceSegments = segmentList.filter(
+    (s) =>
+      (s.type === "RATING_DECISION" ||
+        s.type === "DBQ" ||
+        s.type === "DD214") &&
+      s.rawText,
+  );
+  for (const segment of evidenceSegments) {
+    for (const dep of _extractDatedDeploymentMentions(segment.rawText)) {
+      _pushDeployment(merged, null, dep.location, dep.startDate, dep.endDate);
+    }
+  }
+
+  return merged.deployments;
+}
+
+export const buildSegmentedCFileResult = async (text, cFileSummary) => {
   // Full segmentation for large files. No maxSegments override: this passed 100,
   // an order of magnitude below segmentCFile's own 1000 default, while a real
   // 2,018-page C-File segments into 332 document groups - the cap silently
@@ -2089,6 +2324,8 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
   const codeSheet = ratingSheet
     ? _codeSheetSummary(ratingSheet)
     : parseCodeSheet(text);
+
+  const deployments = _extractCFileDeployments(segments.segments);
 
   // Attempt AI-enhanced analysis for potential claims (if AI available)
   let aiAnalysis = null;
@@ -2124,6 +2361,7 @@ const buildSegmentedCFileResult = async (text, cFileSummary) => {
     codeSheet: codeSheet.success ? codeSheet : null,
     ...(ratingSheet ? _ratingFieldsFromCodeSheet(ratingSheet) : {}),
     recordEvents: codeSheetRecordEvents(text),
+    deployments,
     aiAnalysis, // Include AI-enhanced analysis if available
     parserVersion: "v1.18.3-enhanced",
   };
@@ -2494,26 +2732,75 @@ const DEPLOYMENT_LOCATION_ALIASES = {
   MFO: "SINAI",
 };
 
-// IRS-designated combat zones under 26 U.S.C. §112 (Executive Orders 12744,
-// 13119, 13239 - see irs.gov/individuals/military/combat-zones), the same
-// list VA ties combat-pay/hazardous-duty determinations to: Afghanistan,
-// the Arabian Peninsula area (Iraq, Kuwait, Saudi Arabia, Bahrain, Qatar,
-// UAE, Oman, plus Syria since DoD's 2018 certification), the Sinai
-// Peninsula (Multinational Force & Observers service, Pub. L. 114-23,
-// 2015), and the Kosovo area.
-const DESIGNATED_COMBAT_ZONES = new Set([
-  "AFGHANISTAN",
-  "IRAQ",
-  "KUWAIT",
-  "SAUDI ARABIA",
-  "BAHRAIN",
-  "QATAR",
-  "UAE",
-  "OMAN",
-  "SYRIA",
-  "SINAI",
-  "KOSOVO",
-]);
+// Every deployment mention that carries a real, specific date range
+// attached to its location - never a bare mention of a country on its
+// own. Shared between a single DD214/NGB-22's own Box 18 scan
+// (_extractNarrativeAndDeploymentLocations, which also runs two
+// undated/bare patterns of its own after these) and the C-File-wide scan
+// over rating-decision/DBQ segments (_extractDatedDeploymentMentions),
+// which - unlike the Box 18 scan - deliberately never runs an undated
+// pattern: a rating decision or DBQ routinely discusses a designated
+// theater in passing ("Veterans who were deployed to the Persian Gulf,
+// Afghanistan...", a PACT Act eligibility paragraph) with no date
+// attached at all, and that must never be read as a service record for
+// this veteran.
+const DATED_DEPLOYMENT_PATTERNS = [
+  // {1,60} not unbounded +: real multi-word deployment locations are a
+  // few words, never remotely close to 60 chars - unbounded [A-Z\s]+?
+  // immediately followed by \s+ is the same ambiguous-adjacent-quantifier
+  // shape fixed elsewhere in this file (see parseRatingDecision's
+  // CONDITION_PERCENT_RE), which sonarjs/super-linear-regex flags.
+  /(?:SERVICE|SERVED)\s+IN\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
+  /DEPLOYED\s+TO\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
+  // A real NGB-22's own Box 18 activation-breakdown style also states a
+  // location's dates as "<LOCATION> YYYYMMDD-YYYYMMDD" (no FROM/TO
+  // keywords at all) - confirmed against a real C-File's second tour.
+  // Anchored to the same fixed location vocabulary as the bare fallback
+  // in _extractNarrativeAndDeploymentLocations, not the free-form
+  // multi-word capture the FROM/TO patterns above use, since there's no
+  // keyword here to bound where a location name starts.
+  /\b(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN|SINAI|MFO)\s+(\d{8})-(\d{8})\b/gi,
+  // A rating decision or DBQ's own "PERTINENT RECORDS INCLUDE: DD Form
+  // 214 ... Service in Afghanistan from 08/08/2004 -07/27/2005" /
+  // "Service in Afghanistan 05/15/2006-06/02/2007" restates the same
+  // DD214 in MM/DD/YYYY rather than Box 18's compact YYYYMMDD - confirmed
+  // against a real C-File where this was the only clean copy of a tour
+  // whose own DD214 Box 18 OCR'd too corrupted (in the location name, the
+  // digits, or both, on every scanned copy) to read directly.
+  /(?:SERVICE|SERVED)\s+IN\s+([A-Z][A-Z\s]{1,60}?)\s+(?:FROM\s+)?(\d{1,2}\/\d{1,2}\/\d{4})\s{0,5}-\s{0,5}(\d{1,2}\/\d{1,2}\/\d{4})/gi,
+];
+
+// IRS/DoD combat-zone tax-exclusion designations under 26 U.S.C. §112,
+// dated from the Executive Order that created each one - Afghanistan (EO
+// 13239, effective 2001-09-19) and the Persian Gulf area, including Iraq
+// and Kuwait (EO 12744, effective 1991-01-17). This is a DoD/IRS tax
+// designation, NOT a VA "engaged in combat with the enemy" finding under
+// 38 U.S.C. § 1154(b) - the two are legally distinct, and this flag must
+// never be read as satisfying 1154(b) on its own.
+//
+// S46 QA (2026-09-24): the previous version of this list also carried
+// Saudi Arabia, Bahrain, Qatar, UAE, Oman, Syria, Sinai and Kosovo with no
+// dates at all, so every deployment to any of them was flagged regardless
+// of when it happened. None of those has a start date sourced anywhere
+// else in this codebase, so rather than guess one from memory they were
+// removed - a missed flag is far cheaper than a wrong one on a
+// veteran-facing legal claim.
+const COMBAT_ZONE_DESIGNATIONS = {
+  AFGHANISTAN: "2001-09-19",
+  IRAQ: "1991-01-17",
+  KUWAIT: "1991-01-17",
+};
+
+// True only when the location has a sourced designation AND the
+// deployment has a start date on or after it - an undated deployment (or
+// one to a location this file has no sourced designation for) is never
+// flagged, since there is nothing to confirm the dates against.
+function _isDesignatedCombatZone(location, startDate) {
+  const designationStart = COMBAT_ZONE_DESIGNATIONS[location];
+  if (!designationStart || !startDate) return false;
+  const deploymentStart = _toISODateString(startDate);
+  return !!deploymentStart && deploymentStart >= designationStart;
+}
 
 /**
  * Isolate Box 18 (Remarks) text so deployment/narrative extraction never
@@ -3132,7 +3419,12 @@ const MIN_ENLISTMENT_AGE_YEARS = 17;
 function _validateDateOfBirth(ctx) {
   const { data } = ctx;
   const dob = formatLocalDate(data.dateOfBirth);
-  if (Number.isNaN(dob.getTime())) return;
+  if (Number.isNaN(dob.getTime())) {
+    // An unparseable value is exactly as useless as a fabricated one - keeping
+    // it around just lets it surface as if it were a real date of birth.
+    data.dateOfBirth = null;
+    return;
+  }
 
   const entryDate = formatLocalDate(data.serviceStartDate);
   if (!Number.isNaN(entryDate.getTime())) {
@@ -4023,17 +4315,16 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
 
   // Extract deployments from remarks (Box 18) - common locations, with or
   // without an explicit "FROM YYYYMMDD TO YYYYMMDD" date range. The dated
-  // patterns run first so a bare-location match for the same place (below)
-  // is a no-op merge instead of overwriting real dates with nothing - see
-  // _pushDeployment.
+  // patterns (DATED_DEPLOYMENT_PATTERNS) run first so a bare-location
+  // match for the same place (below) is a no-op merge instead of
+  // overwriting real dates with nothing - see _pushDeployment.
   const deploymentPatterns = [
+    ...DATED_DEPLOYMENT_PATTERNS,
     // {1,60} not unbounded +: real multi-word deployment locations are a
     // few words, never remotely close to 60 chars - unbounded [A-Z\s]+?
     // immediately followed by \s+ is the same ambiguous-adjacent-quantifier
     // shape fixed elsewhere in this file (see parseRatingDecision's
     // CONDITION_PERCENT_RE), which sonarjs/super-linear-regex flags.
-    /(?:SERVICE|SERVED)\s+IN\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
-    /DEPLOYED\s+TO\s+([A-Z][A-Z\s]{1,60}?)\s+FROM\s+(\d{8})\s+TO\s+(\d{8})/gi,
     /(?:SERVICE\s+IN|SERVED\s+IN|DEPLOYED\s+TO)\s+([A-Z][A-Z\s]+?)(?:\.|,|$)/gi,
     /\b(IRAQ|AFGHANISTAN|KUWAIT|KOREA|VIETNAM|GERMANY|JAPAN|SINAI|MFO)\b/gi,
   ];
@@ -4063,8 +4354,8 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
         data,
         dobYear,
         location,
-        _normalizeCompactDate(match[2]),
-        _normalizeCompactDate(match[3]),
+        _normalizeDeploymentDate(match[2]),
+        _normalizeDeploymentDate(match[3]),
       );
     }
   }
@@ -4073,12 +4364,28 @@ function _extractNarrativeAndDeploymentLocations(ctx) {
 // _normalizeCompactDate is declared further down (function declarations
 // hoist) - see FIX-15 there for the YYYYMMDD -> MM/DD/YYYY convention.
 // startDate/endDate are null for a bare location mention with no date range.
+//
+// A real C-File holds several scanned copies of the same DD214/NGB-22, and
+// a veteran can genuinely have two different tours to the same country -
+// matching on location alone (as this used to) collapsed a second, later
+// tour into the first one's dates instead of recording it. The match now
+// also requires the dates to be compatible: an undated mention (no
+// startDate) merges into any existing entry for that location - it's
+// either a repeat of an already-dated tour or a still-undated one, either
+// way not new information - while a DATED mention only merges into an
+// existing entry whose startDate is either unset or the exact same date;
+// a different startDate for the same location is a second, distinct tour.
 function _pushDeployment(data, dobYear, rawLocation, startDate, endDate) {
   const location = DEPLOYMENT_LOCATION_ALIASES[rawLocation] || rawLocation;
-  const existing = data.deployments.find((d) => d.location === location);
+  const existing = data.deployments.find(
+    (d) =>
+      d.location === location &&
+      (!d.startDate || !startDate || d.startDate === startDate),
+  );
   if (existing) {
     if (!existing.startDate && startDate) existing.startDate = startDate;
     if (!existing.endDate && endDate) existing.endDate = endDate;
+    existing.combatZone = _isDesignatedCombatZone(location, existing.startDate);
     return;
   }
 
@@ -4091,7 +4398,7 @@ function _pushDeployment(data, dobYear, rawLocation, startDate, endDate) {
     location,
     startDate: startDate || null,
     endDate: endDate || null,
-    combatZone: DESIGNATED_COMBAT_ZONES.has(location),
+    combatZone: _isDesignatedCombatZone(location, startDate),
   });
 }
 
@@ -4108,6 +4415,18 @@ function _normalizeCompactDate(yyyymmdd) {
   const y = Number.parseInt(year, 10);
   if (y < 1950 || y > 2030) return null;
   return `${month}/${day}/${year}`;
+}
+
+// DATED_DEPLOYMENT_PATTERNS' slash-date variant (see its own comment)
+// captures an already-MM/DD/YYYY date - just pad, don't reinterpret it as
+// compact YYYYMMDD digits.
+function _normalizeDeploymentDate(value) {
+  if (!value) return null;
+  if (/^\d{8}$/.test(value)) return _normalizeCompactDate(value);
+  const slashMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value);
+  if (!slashMatch) return null;
+  const [, month, day, year] = slashMatch;
+  return `${month.padStart(2, "0")}/${day.padStart(2, "0")}/${year}`;
 }
 
 // FIX-15: real NGB-22 (Guard) discharge records carry a granular activation

@@ -1,0 +1,110 @@
+/**
+ * S46 QA follow-up, item 5 (2026-09-24): two gaps in how musterCallProcessor
+ * writes service periods -
+ *  - the NGB-22 Box 18 activation-breakdown periods (_saveNGB22AdditionalPeriods)
+ *    never carried the DD214's own rank, so every AD/IADT period showed no
+ *    rank at all;
+ *  - a code sheet upserting onto an already-NGB22-sourced period left that
+ *    period's stale formType: "NGB22" in place, so VA's own authoritative
+ *    record was mislabeled "(NGB22)" in the UI.
+ * Fixture values are synthetic.
+ */
+import { describe, it, expect, beforeEach } from "vitest";
+
+globalThis.DOMMatrix ??= class DOMMatrix {};
+globalThis.Path2D ??= class Path2D {};
+globalThis.ImageData ??= class ImageData {};
+
+const {
+  parseServiceRecord,
+  saveServiceRecordToProfile,
+  saveCodeSheetServicePeriodsToProfile,
+} = await import("./musterCallProcessor");
+const { getServicePeriods } = await import("./veteranProfile");
+
+const REALISTIC_NGB22 = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4a. GRADE, RATE OR RANK: SGT
+4b. PAY GRADE: E-5
+5. DATE OF BIRTH: 01/15/1980
+7a. PLACE OF ENTRY: PORTLAND OR
+11. PRIMARY SPECIALTY: 92Y UNIT SUPPLY SPECIALIST
+12a. DATE ENTERED AD THIS PERIOD: 06/22/2004
+12b. DATE OF SEPARATION: 08/27/2005
+13. DECORATIONS, MEDALS, BADGES: ARMY ACHIEVEMENT MEDAL
+14. MILITARY EDUCATION: PRIMARY LEADERSHIP DEVELOPMENT COURSE
+18. REMARKS: IADT: 20040101-20040301//AD: 20040622-20050827//NOTHING FOLLOWS
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+25. SEPARATION AUTHORITY: AR 635-200
+26. SEPARATION CODE: MBK
+27. REENTRY CODE: RE-1
+28. NARRATIVE REASON: COMPLETION OF REQUIRED ACTIVE SERVICE
+`;
+
+describe("saveServiceRecordToProfile: NGB-22 additional-period rank attachment", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("attaches the DD214's rank to the AD period matching its own separation date, not the earlier IADT period", async () => {
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    const periods = getServicePeriods();
+    const ad = periods.find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    const iadt = periods.find(
+      (p) =>
+        p.serviceStartDate === "2004-01-01" &&
+        p.serviceEndDate === "2004-03-01",
+    );
+
+    expect(ad).toBeDefined();
+    expect(ad.rank).toBe("SGT");
+    expect(iadt).toBeDefined();
+    expect(iadt.rank).toBe("");
+  });
+});
+
+describe("saveCodeSheetServicePeriodsToProfile: labels its own source correctly", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("relabels an NGB-22-sourced period as Code Sheet once VA's own record confirms it, instead of keeping the stale NGB22 label", async () => {
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+    expect(
+      getServicePeriods().find((p) => p.serviceStartDate === "2004-06-22")
+        .formType,
+    ).toBe("NGB22");
+
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      {
+        extractedData: {
+          ratingSource: "code_sheet",
+          servicePeriods: [
+            {
+              entryDate: "2004-06-22",
+              separationDate: "2005-08-27",
+              branch: "Army",
+              characterOfDischarge: "Honorable",
+            },
+          ],
+        },
+      },
+    );
+
+    const period = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2004-06-22",
+    );
+    expect(period.formType).toBe("Code Sheet");
+    expect(period.characterOfService).toBe("Honorable");
+  });
+});
