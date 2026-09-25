@@ -224,7 +224,11 @@ const CrtGlitchStyles = () => (
 );
 
 const OverlayHeader = ({ gameStarted, fps, onClose }) => (
-  <div className="absolute top-4 right-4 flex items-center gap-4">
+  // top-20 below `sm` clears the fixed top-left Quick Exit button; sm:right-28
+  // clears its top-right position at `sm:` and up, since this overlay is
+  // always full-bleed (no responsive centering to move the close button away
+  // from the true viewport corner the way ResponsiveModal's panels do).
+  <div className="absolute top-20 right-4 sm:top-4 sm:right-28 flex items-center gap-4">
     {gameStarted && (
       <span className="text-green-500 font-mono text-sm">
         {fps > 0 ? `${fps} FPS` : "LOADING..."}

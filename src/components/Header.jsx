@@ -1636,7 +1636,11 @@ const LowerHeaderRow = ({
 );
 
 const MobileMenuHeader = ({ setShowMobileMenu }) => (
-  <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-700 dark:from-gray-800 dark:to-gray-900 text-white p-4 flex justify-between items-center shadow-md z-10">
+  // pt-20 below `sm` reserves the same Quick Exit gutter as
+  // ResponsiveModal.jsx (D3, 52a1edd8): this drawer's own left edge sits
+  // close enough to the viewport's left edge at 320-360px that the fixed
+  // top-left Quick Exit button covers the "Menu" title.
+  <div className="sticky top-0 bg-gradient-to-r from-va-blue to-blue-700 dark:from-gray-800 dark:to-gray-900 text-white p-4 pt-20 sm:pt-4 flex justify-between items-center shadow-md z-10">
     <div>
       <h2 id="mobile-menu-title" className="text-lg font-bold">
         Menu

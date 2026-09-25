@@ -1782,10 +1782,12 @@ function VaDataCenterBody({
 }) {
   return (
     <div
+      // pt-20 below `sm` reserves the same Quick Exit gutter as
+      // ResponsiveModal.jsx (D3, 52a1edd8).
       className={
         embeddedMode
           ? ""
-          : "fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          : "fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 pt-20 sm:pt-4"
       }
     >
       <div

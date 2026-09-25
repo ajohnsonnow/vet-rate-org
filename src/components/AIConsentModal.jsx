@@ -253,7 +253,9 @@ const AIConsentModal = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4"
+      // pt-20 below `sm` reserves the same Quick Exit gutter as
+      // ResponsiveModal.jsx (D3, 52a1edd8).
+      className="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4 pt-20 sm:pt-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ai-consent-title"
