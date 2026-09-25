@@ -2452,27 +2452,25 @@ body {
   }
 }
 
-/* Hide floating shell buttons from the a11y tree when an aria-modal dialog is
-   open on mobile. aria-modal dialogs expect background content to be inert;
-   visibility:hidden achieves that without JS and prevents axe target-size
-   violations caused by the AI Navigator / Quick Exit buttons overlapping
-   dialog footer Close targets at the same viewport-bottom coordinates. */
-@media (width <= 767px) {
-  body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav,
-  body:has([role="dialog"][aria-modal="true"]) .above-mobile-nav-stacked {
-    visibility: hidden;
-    pointer-events: none;
-  }
-}
-
-/* Hide the Luna toast (BuyMeCoffee.jsx) whenever any dialog is open, and as
-   soon as one opens while she's showing (`:has()` re-evaluates live). D7
-   only stopped her corner zones from landing on a close button on phones;
-   QA found the bottom zones and the 1440px top-right zone still could
-   (N5), so this replaces per-zone tuning with the same "just don't render
-   over a dialog" rule as the shell buttons above - at every width, since
-   the 1440px collision means this can't be mobile-only like that rule. */
-body:has([role="dialog"], [aria-modal="true"]) .luna-toast {
+/* Hide every floating shell overlay - AI Navigator FAB (above-mobile-nav),
+   Bug Squasher (above-mobile-nav-stacked), SecurityBadge (above-mobile-nav),
+   and the Luna toast (luna-toast) - whenever a dialog or alertdialog is open,
+   at every width (`:has()` re-evaluates live, so this also catches a toast
+   that opens while a dialog is already up). aria-modal dialogs expect
+   background content to be inert; display:none achieves that without JS.
+   One selector list for every floating widget, not per-widget zone tuning:
+   the first version only matched `role="dialog"`, which CrisisModal's
+   `role="alertdialog"` skipped, and was mobile-only, which missed the FAB/
+   SecurityBadge sitting over ClaimNavigator/AboutUs at 1440px (N11, QA
+   final9). Quick Exit is deliberately not in this list - it's the panic-exit
+   safety net and stays visible/reachable while any dialog is open (see
+   QuickExitButton.jsx's own top-left reposition below `sm`). */
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .above-mobile-nav,
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .above-mobile-nav-stacked,
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .luna-toast {
   display: none;
 }
 
