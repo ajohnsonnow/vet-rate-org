@@ -60,14 +60,23 @@ const CrisisModal = ({ severity = "high", _source = "application" }) => {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] bg-red-900 flex items-center justify-center p-4 overflow-hidden"
+      // pt-20 below `sm` reserves the same Quick Exit gutter as
+      // ResponsiveModal.jsx (see D3, 52a1edd8) so the fixed top-left Quick
+      // Exit button never sits over the title glyphs. `overflow-y-auto`
+      // (was `overflow-hidden`) replaces the old clip: this is
+      // non-dismissible and has no close button, so on a short viewport
+      // (320x568) `overflow-hidden` could silently cut off the call/text/
+      // chat actions with no way to reach them - QA flagged that as the
+      // real "content not fully visible" bug. Centered content that still
+      // exceeds the viewport now scrolls instead of being clipped.
+      className="fixed inset-0 z-[9999] bg-red-900 flex items-center justify-center overflow-y-auto p-4 pt-20 sm:pt-4"
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="crisis-modal-title"
       aria-describedby="crisis-modal-description"
     >
       {/* Content Container */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full p-8 border-4 border-red-600">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full p-8 border-4 border-red-600 my-auto">
         <CrisisModalHeader t={t} />
 
         {/* Message */}
