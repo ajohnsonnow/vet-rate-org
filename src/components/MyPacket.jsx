@@ -3153,8 +3153,14 @@ function DeploymentEntry({ dep, handleRemoveDeployment, t }) {
             {dep.theater}
           </span>
           {dep.combat && (
+            // dep.combat is a DoD/IRS tax combat-zone designation (see
+            // COMBAT_ZONE_DESIGNATIONS in musterCallProcessor.js), not a VA
+            // "engaged in combat with the enemy" finding under 38 U.S.C.
+            // § 1154(b) - reuses the same "Combat Zone" label the manual
+            // Add Deployment form's own checkbox already uses (below) so
+            // this doesn't read as a bare, broader "Combat" claim.
             <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full">
-              {t("myPacketSection.combat")}
+              {t("myPacketSection.combatZone")}
             </span>
           )}
           {dep.hazardous && (
