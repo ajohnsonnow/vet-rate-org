@@ -128,8 +128,8 @@ function AIAnalyzerScreen({ activeTab, setActiveTab, onClose }) {
       className="!bg-gray-900"
       header={
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-4">
               <h2 id="consistency-engine-title" className="text-2xl font-bold">
                 🔍 The Consistency Engine
               </h2>
@@ -159,7 +159,7 @@ function AIAnalyzerScreen({ activeTab, setActiveTab, onClose }) {
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:text-gray-200 text-2xl font-bold"
+              className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
               aria-label="Close"
             >
               ×
@@ -190,9 +190,9 @@ function ConsistencyEngineHeader({
         healthStatus.color,
       )} text-white p-6`}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-4 mb-2">
+      <div className="flex flex-wrap justify-between items-start gap-2">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-4 mb-2">
             <h2 id="consistency-engine-title" className="text-3xl font-bold">
               {healthStatus.icon} The Consistency Engine{" "}
               <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
@@ -229,7 +229,7 @@ function ConsistencyEngineHeader({
         </div>
         <button
           onClick={onClose}
-          className="text-white hover:text-gray-200 text-2xl font-bold"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
           aria-label="Close"
         >
           ×

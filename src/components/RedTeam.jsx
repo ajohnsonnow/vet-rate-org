@@ -225,15 +225,15 @@ const RedTeamHeader = ({ onClose, onOpenAISettings, onReportBug }) => (
   <div className="flex-shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+    <div className="relative flex flex-wrap items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
           <span className="text-3xl">🎖️</span>
         </div>
-        <div>
+        <div className="min-w-0">
           <h2
             id="red-team-title"
-            className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
+            className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
           >
             The Red Team{" "}
             <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
@@ -248,7 +248,7 @@ const RedTeamHeader = ({ onClose, onOpenAISettings, onReportBug }) => (
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <LLMRecommendationBadge toolId="red-team" />
         <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         {onReportBug && (
@@ -260,7 +260,7 @@ const RedTeamHeader = ({ onClose, onOpenAISettings, onReportBug }) => (
         )}
         <button
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg

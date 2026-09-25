@@ -2328,22 +2328,31 @@ body {
   }
 }
 
-/* Action Buttons in Modals - Full width stack on mobile */
+/* Action Buttons in Modals - Full width stack on mobile.
+   `:not(.modal-header *)` scopes this to body/footer action rows only - the
+   bare `.modal-content .flex.gap-2 > button` descendant selector doesn't
+   distinguish a footer's Save/Cancel row from a header's title+close-X row,
+   so it was force-widening close buttons to 120px and pushing them off the
+   right edge of the viewport on 22 tool dialogs (N10, QA final9). */
 @media (width <= 640px) {
-  .modal-content .flex.gap-2 > button,
-  .modal-content .flex.gap-3 > button {
+  .modal-content .flex.gap-2 > button:not(.modal-header *),
+  .modal-content .flex.gap-3 > button:not(.modal-header *) {
     flex: 1;
     min-width: 120px;
   }
 
   /* If too many buttons, stack them */
-  .modal-content .flex.gap-2:has(> button:nth-child(3)),
-  .modal-content .flex.gap-3:has(> button:nth-child(3)) {
+  .modal-content .flex.gap-2:has(> button:nth-child(3)):not(.modal-header *),
+  .modal-content .flex.gap-3:has(> button:nth-child(3)):not(.modal-header *) {
     flex-direction: column;
   }
 
-  .modal-content .flex.gap-2:has(> button:nth-child(3)) > button,
-  .modal-content .flex.gap-3:has(> button:nth-child(3)) > button {
+  .modal-content
+    .flex.gap-2:has(> button:nth-child(3)):not(.modal-header *)
+    > button,
+  .modal-content
+    .flex.gap-3:has(> button:nth-child(3)):not(.modal-header *)
+    > button {
     width: 100%;
   }
 }

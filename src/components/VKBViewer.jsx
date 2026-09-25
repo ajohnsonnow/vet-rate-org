@@ -581,8 +581,8 @@ const ViewerHeader = ({
   onExport,
   onClose,
 }) => (
-  <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-    <div>
+  <div className="flex flex-wrap items-center justify-between gap-2 p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="min-w-0">
       <h2
         id="vkb-viewer-title"
         className="text-2xl font-bold text-gray-900 dark:text-gray-100"
@@ -594,7 +594,7 @@ const ViewerHeader = ({
         {vkb.metadata.documentCount} documents
       </p>
     </div>
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {editMode ? (
         <>
           <button
@@ -626,7 +626,7 @@ const ViewerHeader = ({
       </button>
       <button
         onClick={onClose}
-        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        className="grid h-11 w-11 shrink-0 place-items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         aria-label="Close"
       >
         <svg

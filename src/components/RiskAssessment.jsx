@@ -829,13 +829,13 @@ function RiskResultsPanel({
 function RiskAssessmentHeader({ onClose, onReportBug, onOpenAISettings }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-orange-600 to-red-600 p-4 shadow-lg rounded-t-xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🐻</span>
-          <div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl shrink-0">🐻</span>
+          <div className="min-w-0">
             <h2
               id="risk-assessment-title"
-              className="text-xl font-bold text-white flex items-center gap-2"
+              className="text-xl font-bold text-white flex flex-wrap items-center gap-2"
             >
               Poke the Bear Calculator{" "}
               <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded">
@@ -850,7 +850,7 @@ function RiskAssessmentHeader({ onClose, onReportBug, onOpenAISettings }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
           {onReportBug && (
             <ReportBugLink
@@ -862,7 +862,7 @@ function RiskAssessmentHeader({ onClose, onReportBug, onOpenAISettings }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg

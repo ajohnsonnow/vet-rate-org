@@ -19,13 +19,13 @@ const SharkRadar = lazy(() => import("../../components/SharkRadar"));
 function SharkRadarHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🦈</span>
-          <div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl shrink-0">🦈</span>
+          <div className="min-w-0">
             <h2
               id="shark-radar-title"
-              className="text-xl font-bold text-white flex items-center gap-2"
+              className="text-xl font-bold text-white flex flex-wrap items-center gap-2"
             >
               Shark Radar{" "}
               <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
@@ -40,7 +40,7 @@ function SharkRadarHeader({ onClose, onReportBug }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <ReportBugLink
             onClick={onReportBug}
             variant="light"
@@ -48,7 +48,7 @@ function SharkRadarHeader({ onClose, onReportBug }) {
           />
           <button
             onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close dialog"
           >
             <svg

@@ -227,13 +227,13 @@ async function handleImageSelect(file, ctx) {
 
 const DenialDecoderHeader = ({ t, onClose, onOpenAISettings }) => (
   <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <FileText className="w-8 h-8" />
-        <div>
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
+        <FileText className="w-8 h-8 shrink-0" />
+        <div className="min-w-0">
           <h2
             id="denial-decoder-title"
-            className="text-2xl font-bold flex items-center gap-2"
+            className="text-2xl font-bold flex flex-wrap items-center gap-2"
           >
             {t("denialDecoder.title")}
             <span className="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-bold rounded">
@@ -248,14 +248,14 @@ const DenialDecoderHeader = ({ t, onClose, onOpenAISettings }) => (
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <LLMRecommendationBadge toolId="denial-decoder" />
         <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/10 rounded-lg transition-colors"
             aria-label={t("common.close")}
           >
             <svg

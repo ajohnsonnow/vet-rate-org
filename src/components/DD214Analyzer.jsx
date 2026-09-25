@@ -946,10 +946,10 @@ function DD214ModalFooter({
 
 function DD214ModalHeader({ t, onReportBug, onClose, onOpenAISettings }) {
   return (
-    <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 flex items-center justify-between rounded-t-2xl flex-shrink-0">
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">📜</span>
-        <div>
+    <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 flex flex-wrap items-center justify-between gap-2 rounded-t-2xl flex-shrink-0">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="text-3xl shrink-0">📜</span>
+        <div className="min-w-0">
           <h2
             id="dd214-analyzer-title"
             className="text-xl font-bold text-white"
@@ -964,7 +964,7 @@ function DD214ModalHeader({ t, onReportBug, onClose, onOpenAISettings }) {
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <LLMRecommendationBadge toolId="dd214-analyzer" />
         <AIStatusBadge onClick={onOpenAISettings} />
         {onReportBug && (
@@ -976,7 +976,7 @@ function DD214ModalHeader({ t, onReportBug, onClose, onOpenAISettings }) {
         )}
         <button
           onClick={onClose}
-          className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label={t("dd214Analyzer", "close")}
         >
           <svg

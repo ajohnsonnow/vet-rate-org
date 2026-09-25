@@ -366,15 +366,15 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
       <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
       <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full" />
 
-      <div className="relative flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+      <div className="relative flex flex-wrap items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="w-16 h-16 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
             <span className="text-4xl">💸</span>
           </div>
-          <div>
+          <div className="min-w-0">
             <h2
               id="retro-pay-hunter-title"
-              className="text-2xl sm:text-3xl font-bold flex items-center gap-2"
+              className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
             >
               Retroactive Pay Hunter{" "}
               <span className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur text-white text-xs font-bold rounded-full">
@@ -389,7 +389,7 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {onReportBug && (
             <ReportBugLink
               onClick={onReportBug}
@@ -400,7 +400,7 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg

@@ -292,11 +292,11 @@ const analyzeClaimWeaknesses = (claim) => {
 };
 
 const StressTestHeader = ({ onClose, onReportBug }) => (
-  <div className="flex items-start justify-between gap-3 border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-    <div>
+  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <div className="min-w-0">
       <h2
         id="claim-stress-title"
-        className="mb-2 flex items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
+        className="mb-2 flex flex-wrap items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
       >
         ⚔️ The War Game - Red Team Simulator{" "}
         <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
@@ -311,7 +311,7 @@ const StressTestHeader = ({ onClose, onReportBug }) => (
         <span className="font-bold">before</span> the C&P examiner asks them.
       </p>
     </div>
-    <div className="flex flex-shrink-0 items-center gap-2">
+    <div className="flex shrink-0 items-center gap-2">
       {onReportBug && (
         <ReportBugLink
           onClick={onReportBug}
@@ -321,7 +321,7 @@ const StressTestHeader = ({ onClose, onReportBug }) => (
       )}
       <button
         onClick={onClose}
-        className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
         aria-label="Close dialog"
       >
         <svg

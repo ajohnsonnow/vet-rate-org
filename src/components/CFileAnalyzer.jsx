@@ -1208,13 +1208,13 @@ function _resetAnalyzerState(ctx) {
 function CFileAnalyzerHeader({ t, onOpenAISettings, onReportBug, onClose }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
-      <div className="px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🔬</span>
-          <div>
+      <div className="px-4 py-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <span className="text-3xl shrink-0">🔬</span>
+          <div className="min-w-0">
             <h1
               id="cfile-analyzer-title"
-              className="text-2xl font-bold text-white flex items-center gap-2"
+              className="text-2xl font-bold text-white flex flex-wrap items-center gap-2"
             >
               {t("cfileAnalyzer", "title")}
               <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
@@ -1235,7 +1235,7 @@ function CFileAnalyzerHeader({ t, onOpenAISettings, onReportBug, onClose }) {
             🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* AI Status & LLM Recommendation Badges */}
           <LLMRecommendationBadge toolId="cfile-analyzer" />
           <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
@@ -1248,7 +1248,7 @@ function CFileAnalyzerHeader({ t, onOpenAISettings, onReportBug, onClose }) {
           )}
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/10 rounded-lg transition-colors text-white"
             aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
           >
             <svg

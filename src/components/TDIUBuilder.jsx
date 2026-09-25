@@ -804,13 +804,13 @@ function TDIUBuilderHeader({
 }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">💼</span>
-          <div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl shrink-0">💼</span>
+          <div className="min-w-0">
             <h2
               id="tdiu-builder-title"
-              className="text-xl font-bold text-white flex items-center gap-2"
+              className="text-xl font-bold text-white flex flex-wrap items-center gap-2"
             >
               TDIU Work Impact Builder{" "}
               <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
@@ -825,7 +825,7 @@ function TDIUBuilderHeader({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <LLMRecommendationBadge toolId="tdiu-builder" />
           <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
           <ShareButton
@@ -842,7 +842,7 @@ function TDIUBuilderHeader({
           )}
           <button
             onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg

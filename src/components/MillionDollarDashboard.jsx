@@ -336,12 +336,12 @@ const DashboardHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
+    <div className="relative flex flex-wrap items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
           <span className="text-3xl">💰</span>
         </div>
-        <div>
+        <div className="min-w-0">
           <h2
             id="million-dollar-dashboard-title"
             className="text-2xl sm:text-3xl font-bold text-black"
@@ -356,7 +356,7 @@ const DashboardHeader = ({ onClose, onReportBug }) => (
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {onReportBug && (
           <ReportBugLink
             onClick={onReportBug}
@@ -367,7 +367,7 @@ const DashboardHeader = ({ onClose, onReportBug }) => (
         <button
           type="button"
           onClick={onClose}
-          className="p-2 text-black hover:bg-black/10 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-black hover:bg-black/10 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg

@@ -8548,10 +8548,10 @@ function FormsHelperHeader({
 }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">📋</span>
-          <div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-2xl shrink-0">📋</span>
+          <div className="min-w-0">
             <h2 id="forms-helper-title" className="text-xl font-bold">
               {t("formsHelper", "title")}
             </h2>
@@ -8560,7 +8560,7 @@ function FormsHelperHeader({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <LLMRecommendationBadge toolId="forms-helper" />
           <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
           <ShareButton
@@ -8576,7 +8576,7 @@ function FormsHelperHeader({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
