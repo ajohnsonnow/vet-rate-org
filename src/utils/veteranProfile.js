@@ -804,6 +804,7 @@ export const getServiceHistory = () => {
         servicePeriods: [],
         unmatchedServiceRecords: [],
         dutyStations: [],
+        documentPeriodCounts: {},
         dateUpdated: null,
       };
     }
@@ -822,6 +823,23 @@ export const getServiceHistory = () => {
     parsed.dutyStations = Array.isArray(parsed.dutyStations)
       ? parsed.dutyStations
       : [];
+    // N9b: how many periods each document has ever produced - persisted
+    // (not recomputed from current state) so a later merge that adds a
+    // second document to a period's `sources` can never retroactively
+    // change the first document's own count.
+    parsed.documentPeriodCounts =
+      parsed.documentPeriodCounts &&
+      typeof parsed.documentPeriodCounts === "object"
+        ? parsed.documentPeriodCounts
+        : {};
+    // N9a: seed `sources` on read too (not just on the next save) so
+    // _hasProvenLink sees real provenance immediately, even before
+    // anything has re-saved this data under the new shape.
+    parsed.servicePeriods = parsed.servicePeriods.map(_seedSourcesIfMissing);
+    parsed.unmatchedServiceRecords = parsed.unmatchedServiceRecords.map(
+      _seedSourcesIfMissing,
+    );
+    _repairContaminatedWindowPeriods(parsed);
     return parsed;
   } catch (error) {
     console.error("Error reading service history:", error);
@@ -833,6 +851,7 @@ export const getServiceHistory = () => {
       servicePeriods: [],
       unmatchedServiceRecords: [],
       dutyStations: [],
+      documentPeriodCounts: {},
       dateUpdated: null,
     };
   }
@@ -1072,6 +1091,110 @@ const SERVICE_PERIOD_MERGE_FIELDS = [
   "placeOfEntryLowConfidence",
 ];
 
+// N9a: lightweight seed applied on every read (getServiceHistory), ahead
+// of the full sanitize (_sanitizeSources) that only runs on the next save
+// - so a proven-link check running before anything has re-saved this
+// veteran's data still sees real provenance instead of an empty list.
+function _seedSourcesIfMissing(p) {
+  if (Array.isArray(p.sources) && p.sources.length > 0) return p;
+  if (!p.sourceDocument) return p;
+  return {
+    ...p,
+    sources: [{ sourceDocument: p.sourceDocument, formType: p.formType || "" }],
+  };
+}
+
+// N9e (final9 QA, 2026-09-25): one-time repair, applied on every read, for
+// periods saved before N9's (a)-(c) fixes below, where an NGB-22's
+// undated enlistment-level record was wrongly absorbed into one of its
+// own Box 18 training/activation windows (_absorbUnmatchedRecords, before
+// this fix). Traced by structural impossibility, never guessed: these are
+// exactly the fields _saveNGB22AdditionalPeriods's own upsert payload
+// (musterCallProcessor.js) can never set directly - only branch,
+// component, formType, rank, sourceDocument and notes are legitimately
+// its own. component/rank are deliberately left alone even on a
+// contaminated period: Box 18 legitimately sets both on some of its own
+// periods, and an already-overwritten `component` can't be safely
+// un-corrupted without guessing what it used to say - the honest fallback
+// for those two fields is simply not making them worse. Idempotent: once
+// repaired, the fingerprint (the exact Box-18 notes boilerplate plus any
+// of these fields) no longer matches.
+const NGB22_BOX18_NOTES =
+  "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
+
+const BOX18_IMPOSSIBLE_FIELD_DEFAULTS = {
+  payGrade: "",
+  mos: "",
+  mosTitle: "",
+  unit: "",
+  characterOfService: "",
+  separationType: "",
+  separationAuthority: "",
+  separationCode: "",
+  reentryCode: "",
+  narrativeReason: "",
+  netActiveService: "",
+  yearsService: null,
+  monthsService: null,
+  daysService: null,
+  foreignService: null,
+  militaryEducation: "",
+  placeOfEntry: "",
+  placeOfEntryLowConfidence: false,
+};
+
+function _isContaminatedBox18Period(p) {
+  return (
+    !p.userEdited &&
+    p.formType === "NGB22" &&
+    p.notes === NGB22_BOX18_NOTES &&
+    Object.keys(BOX18_IMPOSSIBLE_FIELD_DEFAULTS).some((field) => p[field])
+  );
+}
+
+function _recoverContaminatedFields(p) {
+  const cleaned = { ...p };
+  const recovered = {};
+  Object.entries(BOX18_IMPOSSIBLE_FIELD_DEFAULTS).forEach(
+    ([field, emptyValue]) => {
+      if (cleaned[field]) {
+        recovered[field] = cleaned[field];
+        cleaned[field] = emptyValue;
+      }
+    },
+  );
+  return { cleaned, recovered };
+}
+
+function _repairContaminatedWindowPeriods(history) {
+  const recovered = [];
+  history.servicePeriods = history.servicePeriods.map((p) => {
+    if (!_isContaminatedBox18Period(p)) return p;
+    const { cleaned, recovered: recoveredFields } =
+      _recoverContaminatedFields(p);
+    recovered.push({
+      id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userEdited: false,
+      serviceStartDate: null,
+      serviceEndDate: null,
+      incomplete: true,
+      branch: p.branch || "",
+      formType: p.formType,
+      sourceDocument: p.sourceDocument || "",
+      sources: p.sources || [],
+      confidence: p.confidence ?? null,
+      ...recoveredFields,
+    });
+    return cleaned;
+  });
+  if (recovered.length > 0) {
+    history.unmatchedServiceRecords = [
+      ...history.unmatchedServiceRecords,
+      ...recovered,
+    ];
+  }
+}
+
 function _sanitizeServicePeriodIdentity(p) {
   return {
     id:
@@ -1145,9 +1268,54 @@ function _sanitizeFieldConflicts(conflicts) {
     .slice(-MAX_FIELD_CONFLICTS);
 }
 
+const MAX_SOURCES = 20;
+
+// N9a (final9 QA, 2026-09-25): every document that ever contributed to a
+// period, additive-only - a merge (_mergeExistingServicePeriod) appends to
+// this list but never removes or overwrites an entry, unlike the single
+// `sourceDocument` field above (kept as-is for display/back-compat, and
+// still legitimately reassigned by a higher-confidence merge). Doubles as
+// the source of truth N9b's "did this document produce more than one
+// period" check reads, since sourceDocument alone can no longer answer
+// that once it's been reassigned.
+function _sanitizeSource(s) {
+  if (!s || typeof s !== "object") return null;
+  const sourceDocument = sanitizeString(s.sourceDocument || "", 300);
+  if (!sourceDocument) return null;
+  return { sourceDocument, formType: sanitizeString(s.formType || "", 20) };
+}
+
+function _sanitizeSources(p) {
+  const raw = Array.isArray(p.sources) ? p.sources : [];
+  const sanitized = raw.map(_sanitizeSource).filter(Boolean);
+  // Migration (N9a): data saved before `sources` existed only has the
+  // single legacy `sourceDocument` field - seed the list from it so older
+  // stored periods get the same provenance tracking going forward.
+  if (sanitized.length === 0 && p.sourceDocument) {
+    sanitized.push({
+      sourceDocument: sanitizeString(p.sourceDocument, 300),
+      formType: sanitizeString(p.formType || "", 20),
+    });
+  }
+  const seen = new Set();
+  return sanitized
+    .filter((s) => {
+      if (seen.has(s.sourceDocument)) return false;
+      seen.add(s.sourceDocument);
+      return true;
+    })
+    .slice(0, MAX_SOURCES);
+}
+
 function _sanitizeServicePeriodMetadata(p) {
   return {
     sourceDocument: sanitizeString(p.sourceDocument || "", 300),
+    sources: _sanitizeSources(p),
+    // N9c: "window" marks a period as a training/activation sub-period
+    // (musterCallProcessor.js's NGB-22 Box 18 extraction) rather than an
+    // enlistment-level record - see _hasProvenLink below for why that
+    // distinction has to survive storage.
+    periodScope: p.periodScope === "window" ? "window" : null,
     confidence: typeof p.confidence === "number" ? p.confidence : null,
     userEdited: !!p.userEdited,
     incomplete: !!p.incomplete,
@@ -1170,6 +1338,23 @@ function _sanitizeServicePeriods(periods) {
   return periods.map(_sanitizeServicePeriod).filter(Boolean);
 }
 
+const MAX_DOCUMENT_PERIOD_COUNT_ENTRIES = 500;
+
+// N9b: persisted ledger of how many periods each source document has ever
+// produced - see _hasProvenLink for why "same document" alone can't prove
+// a link once a document has produced more than one.
+function _sanitizeDocumentPeriodCounts(counts) {
+  if (!counts || typeof counts !== "object") return {};
+  const sanitized = {};
+  Object.entries(counts)
+    .filter(([key, value]) => key && typeof value === "number" && value > 0)
+    .slice(0, MAX_DOCUMENT_PERIOD_COUNT_ENTRIES)
+    .forEach(([key, value]) => {
+      sanitized[sanitizeString(key, 300)] = Math.floor(value);
+    });
+  return sanitized;
+}
+
 /**
  * Identity key for a service period: (serviceStartDate, serviceEndDate)
  * when both are known. If only one date was extractable, key on that date
@@ -1189,6 +1374,12 @@ function _sameCalendarDay(a, b) {
   const ta = formatLocalDate(a).getTime();
   const tb = formatLocalDate(b).getTime();
   return !Number.isNaN(ta) && !Number.isNaN(tb) && ta === tb;
+}
+
+function _periodHasSource(period, sourceDocument) {
+  return Array.isArray(period.sources)
+    ? period.sources.some((s) => s.sourceDocument === sourceDocument)
+    : period.sourceDocument === sourceDocument;
 }
 
 /**
@@ -1216,11 +1407,27 @@ function _sameCalendarDay(a, b) {
  * trying to consolidate. See _mergeExistingServicePeriod for how a
  * disagreement from a genuinely *different* source document is handled
  * once linkage is proven by one of the two rules above.
+ *
+ * N9 (final9 QA, 2026-09-25): "same document" stopped being reliable proof
+ * once a period's `sourceDocument` could be reassigned by a later,
+ * higher-confidence merge (a VA code sheet superseding an NGB-22, say) -
+ * checking `sources` instead means a document's link to a period it once
+ * contributed to is never lost that way. But a document that produced
+ * MORE than one period (an NGB-22 with several Box 18 windows) proves
+ * nothing by "same document" alone - `documentPeriodCounts` is the
+ * (persisted, never-recomputed) count of exactly how many periods that
+ * document has ever produced, and (b) only counts a same-document match
+ * as proof when that count is exactly 1. (c) independently blocks a match
+ * onto a "window" (training/activation sub-period): an enlistment-level
+ * record must never merge into one of a document's own sub-periods, even
+ * when that document happened to produce only one.
  */
-function _hasProvenLink(period, incoming) {
+function _hasProvenLink(period, incoming, documentPeriodCounts) {
+  if (period.periodScope === "window") return false;
   const sameForm =
     !!incoming.sourceDocument &&
-    period.sourceDocument === incoming.sourceDocument;
+    _periodHasSource(period, incoming.sourceDocument) &&
+    (documentPeriodCounts?.[incoming.sourceDocument] ?? 1) === 1;
   if (sameForm) return true;
   // Only a fully-dated period has a real boundary to land on - an
   // incomplete period can carry its OWN single known date, and that date
@@ -1242,10 +1449,10 @@ function _hasProvenLink(period, incoming) {
  * genuinely distinct dated periods, since a dated period is only ever a
  * match *target*, never itself re-matched here.
  */
-function _matchIncompletePeriod(periods, incoming) {
+function _matchIncompletePeriod(periods, incoming, documentPeriodCounts) {
   const matches = [];
   periods.forEach((p, index) => {
-    if (_hasProvenLink(p, incoming)) matches.push(index);
+    if (_hasProvenLink(p, incoming, documentPeriodCounts)) matches.push(index);
   });
   return matches;
 }
@@ -1287,7 +1494,11 @@ function _incompletePeriodHasContent(incoming) {
  * purely to keep that function's line count/complexity under the repo's
  * lint ceiling - same behavior.
  */
-function _findExistingServicePeriodIndex(periods, incoming) {
+function _findExistingServicePeriodIndex(
+  periods,
+  incoming,
+  documentPeriodCounts,
+) {
   const incomingKey = _servicePeriodKey(incoming);
   let index = periods.findIndex((p) => _servicePeriodKey(p) === incomingKey);
   if (index === -1 && !incoming.incomplete) {
@@ -1302,7 +1513,11 @@ function _findExistingServicePeriodIndex(periods, incoming) {
   }
   if (index !== -1 || !incoming.incomplete) return { index };
 
-  const matches = _matchIncompletePeriod(periods, incoming);
+  const matches = _matchIncompletePeriod(
+    periods,
+    incoming,
+    documentPeriodCounts,
+  );
   if (matches.length === 1) return { index: matches[0] };
   if (!_incompletePeriodHasContent(incoming)) {
     return { index: -1, shouldDrop: true };
@@ -1328,6 +1543,16 @@ const SERVICE_PERIOD_PROVENANCE_FIELDS = new Set([
 
 const _valuesConflict = (a, b) =>
   String(a).trim().toLowerCase() !== String(b).trim().toLowerCase();
+
+// N9a: append-only - a document already in the list is never duplicated,
+// and nothing already there is ever dropped or reordered.
+function _addSource(existingSources, sourceDocument, formType) {
+  const sources = Array.isArray(existingSources) ? existingSources : [];
+  if (!sourceDocument || _periodHasSource({ sources }, sourceDocument)) {
+    return sources;
+  }
+  return [...sources, { sourceDocument, formType: formType || "" }];
+}
 
 /**
  * Merges `incoming` onto an already-saved, non-userEdited `existing`
@@ -1407,6 +1632,17 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
   }
   merged.confidence = Math.max(incomingConfidence, existingConfidence);
   merged.incomplete = incoming.incomplete && existing.incomplete;
+  // N9a: additive, unlike sourceDocument above - a merge adds the
+  // incoming document to provenance, never drops an earlier contributor
+  // just because a later document became the authoritative sourceDocument.
+  merged.sources = _addSource(
+    existing.sources,
+    incoming.sourceDocument,
+    incoming.formType,
+  );
+  // N9c: once a period is a "window" (a Box 18 training/activation
+  // sub-period), it stays one - never flipped by whatever merges into it.
+  merged.periodScope = existing.periodScope ?? incoming.periodScope ?? null;
   return merged;
 }
 
@@ -1431,6 +1667,14 @@ function _upsertUnmatchedRecord(history, incoming) {
       id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       userEdited: false,
       ...incoming,
+      sources: incoming.sourceDocument
+        ? [
+            {
+              sourceDocument: incoming.sourceDocument,
+              formType: incoming.formType || "",
+            },
+          ]
+        : [],
     };
     records.push(newRecord);
     history.unmatchedServiceRecords = records;
@@ -1468,7 +1712,11 @@ function _absorbUnmatchedRecords(history) {
   if (!records || records.length === 0) return;
   const remaining = [];
   records.forEach((record) => {
-    const matches = _matchIncompletePeriod(history.servicePeriods, record);
+    const matches = _matchIncompletePeriod(
+      history.servicePeriods,
+      record,
+      history.documentPeriodCounts,
+    );
     if (matches.length === 1) {
       const index = matches[0];
       history.servicePeriods[index] = _mergeExistingServicePeriod(
@@ -1514,7 +1762,11 @@ export const upsertServicePeriod = (periodData, options = {}) => {
       index: existingIndex,
       shouldDrop,
       unmatched,
-    } = _findExistingServicePeriodIndex(periods, incoming);
+    } = _findExistingServicePeriodIndex(
+      periods,
+      incoming,
+      history.documentPeriodCounts,
+    );
     if (shouldDrop) return null;
     if (unmatched) return _upsertUnmatchedRecord(history, incoming);
 
@@ -1523,9 +1775,27 @@ export const upsertServicePeriod = (periodData, options = {}) => {
         id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         userEdited: false,
         ...incoming,
+        sources: incoming.sourceDocument
+          ? [
+              {
+                sourceDocument: incoming.sourceDocument,
+                formType: incoming.formType || "",
+              },
+            ]
+          : [],
       };
       periods.push(newPeriod);
       history.servicePeriods = periods;
+      // N9b: this document just produced a genuinely NEW period - persist
+      // that count now, at save time, rather than ever recomputing it from
+      // current state (see _hasProvenLink).
+      if (incoming.sourceDocument) {
+        history.documentPeriodCounts = {
+          ...history.documentPeriodCounts,
+          [incoming.sourceDocument]:
+            (history.documentPeriodCounts?.[incoming.sourceDocument] || 0) + 1,
+        };
+      }
       _absorbUnmatchedRecords(history);
       saveServiceHistory(history);
       return newPeriod.id;
@@ -1736,8 +2006,20 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
   const mostRecentRank =
     sortedMostRecentFirst.find((p) => p.rank)?.rank || null;
 
+  // N12 (final9 QA, 2026-09-25): two periods whose characterOfService only
+  // differs by case or incidental whitespace ("Honorable" vs "HONORABLE ",
+  // or "General  Under Honorable" with a doubled OCR space) are the same
+  // real value, not a disagreement - compared the same way
+  // _mergeExistingServicePeriod's own conflict check already treats case,
+  // plus whitespace collapse so OCR spacing noise can't manufacture a
+  // second, distinct entry in the Set below.
   const charactersOfService = [
-    ...new Set(list.map((p) => p.characterOfService).filter(Boolean)),
+    ...new Set(
+      list
+        .map((p) => p.characterOfService)
+        .filter(Boolean)
+        .map((value) => value.trim().toLowerCase().replace(/\s+/g, " ")),
+    ),
   ];
   const characterOfService =
     sortedMostRecentFirst.find((p) => p.characterOfService)
@@ -1776,6 +2058,9 @@ export const saveServiceHistory = (history) => {
         history.unmatchedServiceRecords,
       ),
       dutyStations: _sanitizeDutyStations(history.dutyStations),
+      documentPeriodCounts: _sanitizeDocumentPeriodCounts(
+        history.documentPeriodCounts,
+      ),
       dateUpdated: new Date().toISOString(),
     };
 

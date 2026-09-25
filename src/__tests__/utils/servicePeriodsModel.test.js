@@ -196,7 +196,11 @@ describe("C1: service periods - an incomplete period joins the dated period it b
     localStorage.clear();
   });
 
-  it("merges into the dated period from the same source document", () => {
+  // N9b (final9 QA, 2026-09-25): "same source document" is only proof of a
+  // link when that document produced exactly one period - true here (one
+  // document, one dated period), so this stays a valid merge. See the N9
+  // describe block below for the case where it produced more than one.
+  it("merges into the dated period from the same source document, when that document produced exactly one period", () => {
     upsertServicePeriod(
       period("2004-06-22", "2005-08-27", { branch: "Army" }),
       meta("ngb22.pdf", 60),
@@ -209,6 +213,9 @@ describe("C1: service periods - an incomplete period joins the dated period it b
     const periods = getServicePeriods();
     expect(periods).toHaveLength(1);
     expect(periods[0].rank).toBe("SGT");
+    expect(periods[0].sources).toEqual([
+      { sourceDocument: "ngb22.pdf", formType: "" },
+    ]);
   });
 
   it("merges into the dated period whose separation date matches the incomplete period's one known date", () => {
@@ -446,6 +453,298 @@ describe("N1c: an unlinked undated row is kept, but not counted as a period", ()
   });
 });
 
+// N9 (final9 QA, 2026-09-25): a multi-period form (an NGB-22 whose Box 18
+// produces several training/activation sub-periods) had its undated
+// enlistment-level row wrongly absorbed into ONE of its own sub-periods -
+// mechanism: (1) the row correctly stayed unmatched while every
+// sub-period still shared its sourceDocument (ambiguous - N9b), but (2) a
+// later, higher-confidence merge (a VA code sheet) reassigned some of
+// those sub-periods' single `sourceDocument` field, leaving exactly one
+// sub-period looking like a "same document, exactly one match" target,
+// and (3) _absorbUnmatchedRecords then merged the row into it, silently
+// overwriting that sub-period's own component/rank/character/MOS with the
+// enlistment-level record's. periodScope: "window" (set by
+// musterCallProcessor.js's real Box 18 upsert) is what actually blocks
+// this - N9b's document-produced-more-than-one-period count is a second,
+// independent guard for the same real bug. Fixture values are generic.
+describe("N9: an enlistment-level record never merges into one of its own document's sub-periods", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  function seedSubPeriods() {
+    upsertServicePeriod(
+      period("1997-09-29", "1998-02-27", {
+        branch: "Army",
+        component: "Training",
+        periodScope: "window",
+      }),
+      meta("multi_period_form.pdf", 75),
+    );
+    upsertServicePeriod(
+      period("2002-05-06", "2003-04-30", {
+        branch: "Army",
+        component: "Activation",
+        periodScope: "window",
+      }),
+      meta("multi_period_form.pdf", 75),
+    );
+  }
+
+  const enlistmentRow = () =>
+    period(null, null, {
+      branch: "Army",
+      component: "National Guard",
+      rank: "SGT",
+      mos: "92Y20",
+    });
+
+  function expectRowStaysUnmatched() {
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(2);
+    expect(periods.every((p) => !p.rank && !p.mos)).toBe(true);
+    const unmatched = getUnmatchedServiceRecords();
+    expect(unmatched).toHaveLength(1);
+    expect(unmatched[0].rank).toBe("SGT");
+  }
+
+  it("stays unmatched when the sub-periods are imported first", () => {
+    seedSubPeriods();
+    upsertServicePeriod(enlistmentRow(), meta("multi_period_form.pdf", 75));
+
+    expectRowStaysUnmatched();
+  });
+
+  it("stays unmatched when imported BEFORE its document's sub-periods", () => {
+    upsertServicePeriod(enlistmentRow(), meta("multi_period_form.pdf", 75));
+    expect(getUnmatchedServiceRecords()).toHaveLength(1);
+
+    seedSubPeriods();
+
+    expectRowStaysUnmatched();
+  });
+
+  it("stays unmatched even after a higher-confidence code sheet merges into one of the sub-periods", () => {
+    seedSubPeriods();
+    upsertServicePeriod(enlistmentRow(), meta("multi_period_form.pdf", 75));
+    expectRowStaysUnmatched();
+
+    // VA's own record confirms one sub-period's dates and becomes its
+    // authoritative sourceDocument - must not make the untouched
+    // sub-period look like the form's only remaining "same document"
+    // match.
+    upsertServicePeriod(
+      period("2002-05-06", "2003-04-30", { characterOfService: "Honorable" }),
+      { sourceDocument: "codesheet.pdf", confidence: 100 },
+    );
+
+    expectRowStaysUnmatched();
+    const untouchedWindow = getServicePeriods().find(
+      (p) => p.serviceStartDate === "1997-09-29",
+    );
+    expect(untouchedWindow.rank).toBeFalsy();
+    expect(untouchedWindow.mos).toBeFalsy();
+  });
+});
+
+// N9c is its own guard, independent of N9b's document-produced-count gate
+// above: even a document that produced only a single sub-period must
+// never have its enlistment-level row merge into it.
+describe("N9c: never merges into a sub-period, even a lone one", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("still never merges into a lone sub-period, even when that document produced only one", () => {
+    upsertServicePeriod(
+      period("1997-09-29", "1998-02-27", {
+        branch: "Army",
+        component: "Training",
+        periodScope: "window",
+      }),
+      meta("single_window_form.pdf", 75),
+    );
+    upsertServicePeriod(
+      period(null, null, { branch: "Army", rank: "SGT" }),
+      meta("single_window_form.pdf", 75),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0].rank).toBeFalsy();
+    expect(getUnmatchedServiceRecords()).toHaveLength(1);
+  });
+});
+
+describe("N9a: the provenance list (`sources`) survives merges", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("keeps every contributing document, even after a higher-confidence merge reassigns sourceDocument", () => {
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { branch: "Army" }),
+      meta("dd214.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { characterOfService: "Honorable" }),
+      { sourceDocument: "codesheet.pdf", confidence: 100 },
+    );
+
+    const [saved] = getServicePeriods();
+    expect(saved.sourceDocument).toBe("codesheet.pdf");
+    expect(saved.sources).toEqual(
+      expect.arrayContaining([
+        { sourceDocument: "dd214.pdf", formType: "" },
+        { sourceDocument: "codesheet.pdf", formType: "" },
+      ]),
+    );
+    expect(saved.sources).toHaveLength(2);
+  });
+
+  it("does not duplicate a document already in `sources` on a re-scan", () => {
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { mos: "11B" }),
+      meta("rescan.pdf", 50),
+    );
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { mos: "68W" }),
+      meta("rescan.pdf", 90),
+    );
+
+    expect(getServicePeriods()[0].sources).toHaveLength(1);
+  });
+});
+
+describe("N9a: migration seeds `sources` for data stored before it existed", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("seeds sources from the legacy sourceDocument field on read", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        deployments: [],
+        awards: [],
+        dd214Data: null,
+        serviceInfo: null,
+        servicePeriods: [
+          {
+            id: "legacy_period",
+            serviceStartDate: "2010-06-01",
+            serviceEndDate: "2015-05-30",
+            branch: "Army",
+            formType: "DD214",
+            sourceDocument: "legacy_dd214.pdf",
+          },
+        ],
+        unmatchedServiceRecords: [],
+        dateUpdated: "2026-01-01T00:00:00.000Z",
+      }),
+    );
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.sources).toEqual([
+      { sourceDocument: "legacy_dd214.pdf", formType: "DD214" },
+    ]);
+  });
+});
+
+// N9e (final9 QA, 2026-09-25): one-time repair for a period saved before
+// N9's (a)-(c) fixes, where an enlistment-level record was wrongly
+// absorbed into one of its own document's Box 18 sub-periods. Traced by
+// structural impossibility (see veteranProfile.js's
+// _isContaminatedBox18Period) - only fields that document's Box 18 upsert
+// could never have set directly. Fixture values are generic.
+describe("N9e: repairs a previously mis-merged window period", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const BOX18_NOTES =
+    "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
+
+  it("moves fields Box 18 could never have set back to an unmatched record", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        deployments: [],
+        awards: [],
+        dd214Data: null,
+        serviceInfo: null,
+        servicePeriods: [
+          {
+            id: "contaminated_window",
+            serviceStartDate: "1997-09-29",
+            serviceEndDate: "1998-02-27",
+            branch: "Army",
+            component: "National Guard",
+            formType: "NGB22",
+            rank: "SGT",
+            mos: "92Y20",
+            mosTitle: "UNIT SUPPLY SP",
+            characterOfService: "GENERAL UNDER HONORABLE CONDITIONS",
+            reentryCode: "RE-3",
+            sourceDocument: "multi_period_form.pdf",
+            notes: BOX18_NOTES,
+          },
+        ],
+        unmatchedServiceRecords: [],
+        dateUpdated: "2026-01-01T00:00:00.000Z",
+      }),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0].mos).toBe("");
+    expect(periods[0].characterOfService).toBe("");
+    expect(periods[0].reentryCode).toBe("");
+    // Legitimately Box 18's own fields are untouched.
+    expect(periods[0].serviceStartDate).toBe("1997-09-29");
+    expect(periods[0].branch).toBe("Army");
+
+    const unmatched = getUnmatchedServiceRecords();
+    expect(unmatched).toHaveLength(1);
+    expect(unmatched[0].mos).toBe("92Y20");
+    expect(unmatched[0].characterOfService).toBe(
+      "GENERAL UNDER HONORABLE CONDITIONS",
+    );
+    expect(unmatched[0].reentryCode).toBe("RE-3");
+    expect(unmatched[0].incomplete).toBe(true);
+  });
+
+  it("leaves an uncontaminated Box 18 period alone", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        deployments: [],
+        awards: [],
+        dd214Data: null,
+        serviceInfo: null,
+        servicePeriods: [
+          {
+            id: "clean_window",
+            serviceStartDate: "2004-06-22",
+            serviceEndDate: "2005-08-27",
+            branch: "Army",
+            component: "Active Duty",
+            formType: "NGB22",
+            rank: "SGT",
+            sourceDocument: "multi_period_form.pdf",
+            notes: BOX18_NOTES,
+          },
+        ],
+        unmatchedServiceRecords: [],
+        dateUpdated: "2026-01-01T00:00:00.000Z",
+      }),
+    );
+
+    expect(getServicePeriods()[0].rank).toBe("SGT");
+    expect(getUnmatchedServiceRecords()).toHaveLength(0);
+  });
+});
+
 // final7 QA follow-up, D2 (2026-09-24): rank must be resolved by which
 // record is chronologically LATER, not by which scan had higher OCR
 // confidence - a clean scan of an early enlistment isn't "later" than a
@@ -557,5 +856,56 @@ describe("C1: service periods - rank recency falls back to pay grade (D2)", () =
     );
 
     expect(getUnmatchedServiceRecords()[0].rank).toBe("SGT");
+  });
+
+  // Observation (final9 QA, 2026-09-25): two DATED periods sharing an end
+  // date used to keep whichever rank was already stored, no matter what -
+  // right for a genuine re-scan, wrong when a second, more senior record
+  // shares that end date. Falls back to pay grade, same as the undated
+  // case above.
+  it("breaks a same-end-date tie on pay grade, higher wins", () => {
+    upsertServicePeriod(
+      period("2005-01-01", "2007-06-29", {
+        branch: "Army",
+        component: "Active Duty",
+        rank: "SPC",
+        payGrade: "E-4",
+      }),
+      meta("dd214_a.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("2005-01-01", "2007-06-29", {
+        branch: "Army",
+        component: "Active Duty",
+        rank: "SGT",
+        payGrade: "E-5",
+      }),
+      meta("dd214_b.pdf", 40),
+    );
+
+    expect(getServicePeriods()[0].rank).toBe("SGT");
+  });
+
+  it("keeps the existing rank on a same-end-date tie when the incoming pay grade is not higher", () => {
+    upsertServicePeriod(
+      period("2005-01-01", "2007-06-29", {
+        branch: "Army",
+        component: "Active Duty",
+        rank: "SGT",
+        payGrade: "E-5",
+      }),
+      meta("dd214_a.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("2005-01-01", "2007-06-29", {
+        branch: "Army",
+        component: "Active Duty",
+        rank: "SPC",
+        payGrade: "E-4",
+      }),
+      meta("dd214_b.pdf", 40),
+    );
+
+    expect(getServicePeriods()[0].rank).toBe("SGT");
   });
 });

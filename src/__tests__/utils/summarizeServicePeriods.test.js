@@ -98,6 +98,32 @@ describe("summarizeServicePeriods", () => {
   });
 });
 
+// N12 (final9 QA, 2026-09-25): a difference in case or incidental
+// whitespace (a doubled OCR space) is not a real disagreement.
+describe("summarizeServicePeriods: N12 - case/whitespace-insensitive disagreement check", () => {
+  it("does not flag disagreement when periods differ only by case or whitespace", () => {
+    const summary = summarizeServicePeriods([
+      {
+        characterOfService: "General Under Honorable Conditions",
+        serviceEndDate: "2008-01-01",
+      },
+      {
+        characterOfService: "GENERAL UNDER HONORABLE CONDITIONS ",
+        serviceEndDate: "2012-01-01",
+      },
+      {
+        characterOfService: "General  Under Honorable Conditions",
+        serviceEndDate: "2016-01-01",
+      },
+      {
+        characterOfService: "general under honorable conditions",
+        serviceEndDate: "2020-01-01",
+      },
+    ]);
+    expect(summary.characterOfServiceDisagrees).toBe(false);
+  });
+});
+
 // N3 (final8 QA, 2026-09-24): a pay grade that lives on a row merged away
 // from servicePeriods[] (unmatchedServiceRecords, or only ever reached
 // dd214Data) must still surface as Highest Pay Grade instead of showing
