@@ -4791,7 +4791,12 @@ const UserManual = ({ onClose, onReportBug }) => {
         role="dialog"
         aria-modal="true"
         aria-label={t("userManual", "title")}
-        className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 rounded-none md:rounded-xl overflow-hidden"
+        // pt-20 below `sm` reserves the same Quick Exit gutter as
+        // ResponsiveModal.jsx (D3, 52a1edd8): this two-pane dialog stays
+        // hand-built (see the note above), so the mobile header's hamburger
+        // button and title need their own reserved space instead of
+        // ResponsiveModal's built-in one.
+        className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 pt-20 sm:pt-0 rounded-none md:rounded-xl overflow-hidden"
       >
         {/* Mobile header */}
         <UserManualMobileHeader

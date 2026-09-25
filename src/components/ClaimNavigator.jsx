@@ -473,7 +473,13 @@ const NavigatorHeader = ({
   onImport,
   onClose,
 }) => (
-  <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex items-center justify-between flex-shrink-0">
+  // flex-wrap: title + the view toggle + five action buttons don't all fit
+  // on one row at 320px even at their own minimum content widths, which
+  // pushed the close button off-screen (same overflow pattern as the
+  // Observation fix in MusterCallHeader.jsx/AboutUs.jsx - this instance
+  // wasn't QA-named but the DOM-enumerated e2e spec caught it too).
+  // Wrapping drops the actions onto their own row instead of overflowing.
+  <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex flex-wrap items-center justify-between gap-y-2 flex-shrink-0 sm:pr-28">
     <div className="flex items-center gap-3">
       <Map className="w-6 h-6 text-amber-500" />
       <div>
@@ -601,7 +607,15 @@ const ClaimNavigator = ({ onClose, onReportBug }) => {
   return (
     <div
       ref={dialogRef}
-      className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col"
+      // Full-bleed app screen at every width (unlike ResponsiveModal, which
+      // centers with margin at `sm:` and so never sits flush against the
+      // fixed top-left/top-right Quick Exit button). `pt-20` below `sm`
+      // reserves the same gutter ResponsiveModal.jsx uses (D3, 52a1edd8) so
+      // Quick Exit doesn't cover the title; NavigatorHeader's own
+      // `sm:pr-28` reserves matching space on the right at `sm:` and up,
+      // where Quick Exit moves to top-right and would otherwise sit over
+      // this header's close button.
+      className="fixed inset-0 bg-slate-900/95 z-50 overflow-hidden flex flex-col pt-20 sm:pt-0"
       role="dialog"
       aria-modal="true"
       aria-labelledby="claim-navigator-title"
