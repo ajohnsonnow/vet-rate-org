@@ -1014,17 +1014,20 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
   });
 }
 
-// Luna toast vs dialog close button (D7, low): the "Luna" encouragement
-// toast (BuyMeCoffee.jsx) randomizes among four corner zones, two of them
-// anchored `top: 5.5rem`. That offset assumes a header roughly that tall;
-// BDD Builder's and Forms Helper's icon-heavy headers run taller at phone
-// widths, so the top zones started inside the header and covered the
-// close-X (confirmed at 320px: a real tap there hit the toast, not the
-// button). The fix restricts phones (below the `sm` breakpoint, same as
-// ResponsiveModal's own full-bleed cutoff) to the two bottom zones, which
-// are nowhere near any dialog's header. BDD Builder needs Dashboard-tab
-// data seeded (see the BDD Builder body-overflow block above) - Luna is
-// gated off during setup.
+// Luna toast vs dialog close button (D7 fixed the top zones; N5 found the
+// *bottom* zones still covered Forms Helper's close button at 320px (8/8
+// taps missed) and the top-right zone still covered BDD Builder's close-X
+// at 1440px - a zone can always land somewhere, at some width, on some
+// dialog's controls. The N5 fix replaces zone-tuning entirely: Luna is now
+// suppressed via CSS (`body:has([role="dialog"], [aria-modal="true"])
+// .luna-toast { display: none }`, index.css) any time a dialog is open,
+// including one that opens *after* she's already showing (`:has()`
+// re-evaluates live). This block now asserts she never becomes visible
+// while a dialog she's wired into (BuyMeCoffee's `show={true}` in
+// FormsHelper/BDD Builder has no gating condition on dialog state) stays
+// open, instead of asserting she avoids a particular corner. BDD Builder
+// needs Dashboard-tab data seeded (see the BDD Builder body-overflow block
+// above) - Luna is gated off during setup.
 const LUNA_TOASTS = [
   {
     label: "BDD Builder",
@@ -1044,30 +1047,12 @@ const LUNA_TOASTS = [
 
 const LUNA_DISMISS_SELECTOR = 'button[aria-label="Dismiss Luna"]';
 
-/** Bounding rect of Luna's own card (the `.fixed` ancestor of its dismiss button). */
-async function lunaCardRect(
-  page: Page,
-): Promise<{
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-} | null> {
-  return page.evaluate((sel) => {
-    const btn = document.querySelector(sel);
-    const card = btn?.closest(".fixed");
-    if (!card) return null;
-    const r = card.getBoundingClientRect();
-    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
-  }, LUNA_DISMISS_SELECTOR);
-}
-
 for (const vp of QUICK_EXIT_VIEWPORTS) {
-  test.describe(`Luna toast vs dialog close button @ ${vp.width}px (${vp.name})`, () => {
+  test.describe(`Luna toast suppressed while a dialog is open @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     for (const tool of LUNA_TOASTS) {
-      test(`${tool.label} close button stays clear of the Luna toast and closes on tap`, async ({
+      test(`${tool.label}: Luna never becomes visible while the dialog is open, and its close button still works`, async ({
         page,
       }) => {
         await page.addInitScript(
@@ -1111,8 +1096,15 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
           timeout: 15_000,
         });
 
-        // Luna shows after a 2s delay (BuyMeCoffee.jsx) - poll for it rather
-        // than a fixed wait.
+        // BuyMeCoffee mounts under this tool with `show={true}` and no
+        // gating on dialog state, so - pre-fix - she'd become visible ~2s
+        // after mount (up to 5s if a prior dismissal in this session bumped
+        // her delay) and could land on the close button (N5). Poll for her
+        // dismiss button to *mount* (a condition, not a fixed sleep) so this
+        // genuinely waits out that window rather than checking too early and
+        // passing on a technicality; `.luna-toast` still mounts as before -
+        // only its CSS visibility changed - so this proves suppression, not
+        // that the trigger silently stopped firing.
         await expect
           .poll(
             async () =>
@@ -1123,13 +1115,10 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
             { timeout: 6000 },
           )
           .toBe(true);
+        await expect(page.locator(LUNA_DISMISS_SELECTOR)).toBeHidden();
 
-        const lunaRect = await lunaCardRect(page);
-        const closeRect = await elementRect(page, closeSelector);
-        expect(lunaRect).not.toBeNull();
-        expect(closeRect).not.toBeNull();
-        expect(rectsIntersect(lunaRect!, closeRect!)).toBe(false);
-
+        // Luna being suppressed must not regress the close button itself
+        // (D3/D7's hit-test).
         await expect
           .poll(async () => (await centerHitsSelf(page, closeSelector)).hit, {
             timeout: 5000,
@@ -1144,3 +1133,365 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
     }
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// N4 (QA final8): QA named three dialogs that don't render through
+// ResponsiveModal.jsx - ClaimNavigator, UserManual, CrisisModal - so they
+// never got D3's shared `mt-20` gutter and Quick Exit still collides with
+// them. Grepping the app for every other `role="dialog"`/`aria-modal`
+// element outside ResponsiveModal.jsx turned up five more real bypasses
+// (AboutUs, Header.jsx's mobile menu drawer, StressReliefDivision's IDDQD
+// easter egg, GlobalCommandSearch) plus MusterCall's own header, which
+// *is* inside ResponsiveModal but overflowed independently (see the
+// Observation fix in MusterCallHeader.jsx/AboutUs.jsx). AIConsentModal and
+// VADataCenter's standalone (`!embeddedMode`) mode got the same fix but
+// aren't exercised below: AIConsentModal only opens after a multi-step
+// in-tool flow with no direct trigger event, and VADataCenter's
+// non-embedded dialog path has no live call site in the app today (its one
+// usage, MyPacket.jsx, always passes `embeddedMode={true}`).
+//
+// Rather than hand-listing each dialog's title id and close-button
+// aria-label (exactly the kind of list a new bypass could slip through
+// unnoticed), `probeOpenDialog` below reads both live from whatever dialog
+// is actually open in the DOM: `aria-labelledby` (falling back to the
+// first heading) for the title, and the first button whose aria-label
+// matches /close|exit/i for the close control. Each entry in
+// BYPASS_DIALOGS only supplies a *trigger* - opening a dialog is
+// unavoidably per-component (event, click, keystroke), but nothing here
+// hardcodes which element inside it counts as the title or the close
+// button.
+
+type Rect = { left: number; top: number; right: number; bottom: number };
+
+const DESKTOP_VIEWPORT = { name: "desktop", width: 1440, height: 900 };
+const BYPASS_TEST_VIEWPORTS = [...QUICK_EXIT_VIEWPORTS, DESKTOP_VIEWPORT];
+
+type BypassDialog = {
+  label: string;
+  open: (page: Page) => Promise<void>;
+  // "button": tap the discovered close control and assert the dialog hides.
+  // "escape": press Escape and assert the dialog hides (no close button in
+  // the DOM to hit-test/tap, e.g. GlobalCommandSearch).
+  // "none": CrisisModal is intentionally non-dismissible - don't try.
+  closeMethod: "button" | "escape" | "none";
+  availableAt?: (width: number) => boolean;
+};
+
+/** True once *any* modal dialog is in the DOM. */
+async function anyDialogProbe(page: Page): Promise<{ found: boolean }> {
+  return {
+    found: await page.evaluate(
+      () =>
+        document.querySelectorAll(
+          '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+        ).length > 0,
+    ),
+  };
+}
+
+/**
+ * Repeats `action` until a dialog appears, rather than firing it once and
+ * hoping. Every action here is idempotent when repeated (dispatching an
+ * open* event / typing "iddqd" again just re-arrives at "dialog open";
+ * clicking a toggle button is guarded not to re-fire once open - see the
+ * "Header mobile menu" entry below), so this is safe against both the
+ * ordinary "dispatched before the listener attached" race `openModalByEvent`
+ * already documents *and* the dev-mode React.StrictMode mount->unmount->
+ * remount blip other tests in this file ride out with `toBeVisible()`'s
+ * auto-retry - a single evaluate() snapshot doesn't get that for free.
+ */
+async function triggerUntilDialogFound(
+  page: Page,
+  action: () => Promise<void>,
+): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        await action();
+        return (await anyDialogProbe(page)).found;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
+function dispatchTrigger(page: Page, event: string): () => Promise<void> {
+  return () =>
+    page.evaluate((evt) => window.dispatchEvent(new CustomEvent(evt)), event);
+}
+
+const BYPASS_DIALOGS: BypassDialog[] = [
+  {
+    label: "Claim Navigator",
+    open: (page) =>
+      triggerUntilDialogFound(
+        page,
+        dispatchTrigger(page, "openClaimNavigator"),
+      ),
+    closeMethod: "button",
+  },
+  {
+    label: "User Manual",
+    open: (page) =>
+      triggerUntilDialogFound(page, dispatchTrigger(page, "openUserManual")),
+    closeMethod: "button",
+    // The mobile header (title + hamburger + close) that N4 covers only
+    // renders `md:hidden`; at >=768px the two-pane desktop layout has no
+    // equivalent top bar for Quick Exit to collide with.
+    availableAt: (width) => width < 768,
+  },
+  {
+    label: "Crisis Modal",
+    // CrisisListener.jsx's `vetrate:crisis` listener carries a detail
+    // payload openModalByEvent's plain CustomEvent(event) can't express.
+    open: (page) =>
+      triggerUntilDialogFound(page, () =>
+        page.evaluate(() => {
+          window.dispatchEvent(
+            new CustomEvent("vetrate:crisis", {
+              detail: { severity: "high", source: "e2e" },
+            }),
+          );
+        }),
+      ),
+    closeMethod: "none",
+  },
+  {
+    label: "About Us",
+    open: (page) =>
+      triggerUntilDialogFound(page, dispatchTrigger(page, "openAboutUs")),
+    closeMethod: "button",
+  },
+  {
+    label: "Muster Call",
+    open: (page) =>
+      triggerUntilDialogFound(page, dispatchTrigger(page, "openMusterCall")),
+    closeMethod: "button",
+  },
+  {
+    label: "Global Command Search",
+    open: (page) =>
+      triggerUntilDialogFound(
+        page,
+        dispatchTrigger(page, "openGlobalCommandSearch"),
+      ),
+    closeMethod: "escape",
+  },
+  {
+    label: "Header mobile menu",
+    open: (page) =>
+      triggerUntilDialogFound(page, async () => {
+        const btn = page.getByRole("button", { name: "Toggle menu" });
+        // Guard against re-toggling an already-open drawer shut on a retry
+        // (this trigger is a plain onClick, not an idempotent "open" event).
+        if ((await btn.getAttribute("aria-expanded")) !== "true") {
+          await btn.click();
+        }
+      }),
+    closeMethod: "button",
+    // The hamburger trigger itself is `md:hidden`.
+    availableAt: (width) => width < 768,
+  },
+  {
+    label: "Stress Relief Division (IDDQD)",
+    open: (page) =>
+      // useIDDQD (easterEggs.js) buffers plain keydown chars app-wide - no
+      // input needs focus. Retyping the full 5-char code is safe: its
+      // rolling last-5-chars buffer ends in "iddqd" after any full retry
+      // regardless of what a half-caught previous attempt left behind.
+      triggerUntilDialogFound(page, () => page.keyboard.type("iddqd")),
+    closeMethod: "button",
+  },
+];
+
+/**
+ * Reads the currently-open dialog straight from the DOM (see the block
+ * comment above) and tags it plus its close control (if any) with a
+ * throwaway data attribute so the caller can build Playwright locators for
+ * the real-tap / visibility assertions below.
+ */
+async function probeOpenDialog(page: Page): Promise<{
+  found: boolean;
+  titleRect: Rect | null;
+  hasCloseControl: boolean;
+  closeRect: Rect | null;
+  lunaVisible: boolean;
+}> {
+  return page.evaluate(() => {
+    const dialog = document.querySelector(
+      '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+    ) as HTMLElement | null;
+    if (!dialog) {
+      return {
+        found: false,
+        titleRect: null,
+        hasCloseControl: false,
+        closeRect: null,
+        lunaVisible: false,
+      };
+    }
+    dialog.setAttribute("data-e2e-probe-dialog", "1");
+
+    const labelledBy = dialog.getAttribute("aria-labelledby");
+    const titleEl =
+      (labelledBy && document.getElementById(labelledBy)) ||
+      dialog.querySelector("h1, h2, h3");
+    let titleRect: Rect | null = null;
+    if (titleEl) {
+      const r = titleEl.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        titleRect = {
+          left: r.left,
+          top: r.top,
+          right: r.right,
+          bottom: r.bottom,
+        };
+      }
+    }
+
+    const closeBtn = Array.from(dialog.querySelectorAll("button")).find((b) =>
+      /close|exit/i.test(b.getAttribute("aria-label") || ""),
+    ) as HTMLElement | undefined;
+    let closeRect: Rect | null = null;
+    if (closeBtn) {
+      closeBtn.setAttribute("data-e2e-probe-close", "1");
+      const r = closeBtn.getBoundingClientRect();
+      closeRect = {
+        left: r.left,
+        top: r.top,
+        right: r.right,
+        bottom: r.bottom,
+      };
+    }
+
+    const luna = document.querySelector(
+      '.luna-toast, [aria-label="Dismiss Luna"]',
+    ) as HTMLElement | null;
+    const lunaVisible = !!luna && luna.offsetParent !== null;
+
+    return {
+      found: true,
+      titleRect,
+      hasCloseControl: !!closeBtn,
+      closeRect,
+      lunaVisible,
+    };
+  });
+}
+
+for (const vp of BYPASS_TEST_VIEWPORTS) {
+  test.describe(`Bypass dialogs vs Quick Exit @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const dialog of BYPASS_DIALOGS) {
+      if (dialog.availableAt && !dialog.availableAt(vp.width)) continue;
+
+      test(`${dialog.label}: title/close clear of Quick Exit, close control works, Luna absent`, async ({
+        page,
+      }) => {
+        await dialog.open(page);
+
+        const probe = await probeOpenDialog(page);
+        expect(probe.found).toBe(true);
+
+        // N5: no dialog should ever be sharing the screen with Luna.
+        expect(probe.lunaVisible).toBe(false);
+
+        const qeRect = await elementRect(page, QUICK_EXIT_SELECTOR);
+        expect(qeRect).not.toBeNull();
+
+        if (probe.titleRect) {
+          expect(rectsIntersect(qeRect!, probe.titleRect)).toBe(false);
+        }
+
+        const dialogSelector = '[data-e2e-probe-dialog="1"]';
+        const closeSelector = '[data-e2e-probe-close="1"]';
+
+        if (dialog.closeMethod === "button") {
+          expect(probe.hasCloseControl).toBe(true);
+          expect(probe.closeRect).not.toBeNull();
+          expect(rectsIntersect(qeRect!, probe.closeRect!)).toBe(false);
+
+          // The close control must lie fully inside the viewport (the
+          // Observation fix: Muster Call's and About Us's close buttons sat
+          // partly off-screen at 320-390px).
+          expect(probe.closeRect!.left).toBeGreaterThanOrEqual(-0.5);
+          expect(probe.closeRect!.right).toBeLessThanOrEqual(vp.width + 0.5);
+
+          await expect
+            .poll(async () => (await centerHitsSelf(page, closeSelector)).hit, {
+              timeout: 5000,
+            })
+            .toBe(true);
+
+          await page.locator(closeSelector).click();
+          await expect(page.locator(dialogSelector)).toBeHidden({
+            timeout: 5000,
+          });
+        } else if (dialog.closeMethod === "escape") {
+          await page.keyboard.press("Escape");
+          await expect(page.locator(dialogSelector)).toBeHidden({
+            timeout: 5000,
+          });
+        }
+        // "none" (Crisis Modal): intentionally non-dismissible, nothing to close.
+
+        // Quick Exit itself must stay reachable throughout - it's a
+        // panic-exit safety control, not a decoration.
+        await expect(page.locator(QUICK_EXIT_SELECTOR)).toBeVisible();
+      });
+    }
+  });
+}
+
+// CrisisModal-specific content check (320x568): the panic-exit gutter fix
+// (CrisisModal.jsx) must not come at the cost of the hotline actions
+// themselves - QA's other stated requirement for N4's highest-priority
+// item. Kept separate from the generic loop above since it inspects
+// CrisisModal's own content, not just its title/Quick-Exit geometry.
+test.describe("Crisis Modal content stays reachable at 320x568", () => {
+  test.use({ viewport: { width: 320, height: 568 } });
+
+  test("call/text/chat actions and the hotline number are all reachable", async ({
+    page,
+  }) => {
+    await page.addInitScript((appVersion) => {
+      localStorage.setItem("vet-rate-tos-accepted", "true");
+      localStorage.setItem("vet_rate_last_seen_version", appVersion);
+      localStorage.setItem("vetrate-tour-completed", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+    }, APP_VERSION);
+    await page.goto("/");
+    await dismissDisclaimer(page);
+
+    const crisisModal = BYPASS_DIALOGS.find((d) => d.label === "Crisis Modal");
+    await crisisModal!.open(page);
+
+    const callButton = page.getByRole("button", {
+      name: "Call Veterans Crisis Line",
+    });
+    const chatButton = page.getByRole("button", {
+      name: "Start online chat with Veterans Crisis Line",
+    });
+    await expect(callButton).toBeVisible({ timeout: 5000 });
+
+    // `overflow-hidden` (pre-fix) could clip content past the fold with no
+    // way to scroll to it; scrollIntoViewIfNeeded + toBeInViewport proves
+    // it's actually reachable now, not just present in the DOM.
+    await callButton.scrollIntoViewIfNeeded();
+    await expect(callButton).toBeInViewport();
+    await chatButton.scrollIntoViewIfNeeded();
+    await expect(chatButton).toBeInViewport();
+  });
+});
