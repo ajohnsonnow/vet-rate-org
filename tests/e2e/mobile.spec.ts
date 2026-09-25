@@ -25,6 +25,19 @@ const VIEWPORTS = [
   { name: "tablet-edge", width: 768, height: 1024 },
 ];
 
+// D3 (QA S46 follow-up): the four widths QA hit-tested for the Quick Exit
+// vs. dialog-title/close-X overlap fix. Kept separate from VIEWPORTS above -
+// that array drives every describe block in this file (overflow, CTA-in-view,
+// consent gates...), so folding 320/430 into it would double the run time of
+// ~50 unrelated tests. Only the Quick Exit / Luna hit-test blocks below need
+// this narrower, denser sweep.
+const QUICK_EXIT_VIEWPORTS = [
+  { name: "iphone-se", width: 320, height: 568 },
+  { name: "small-android", width: 360, height: 740 },
+  { name: "iphone", width: 390, height: 844 },
+  { name: "iphone-max", width: 430, height: 932 },
+];
+
 const MODALS = [
   // Cluster F5 (S10): My Packet's main shell plus its four nested viewers (Pain
   // Map Detail, Form Viewer, Statement Viewer, Import Confirm) migrated to the
@@ -407,6 +420,38 @@ const QUICK_EXIT_SELECTOR =
   'button[aria-label="Quick exit - immediately leave this page"]';
 
 /**
+ * Bounding rect of the first element matching `selector`, or `null` if
+ * absent. Used to compare Quick Exit / Luna against a dialog's title or
+ * close-X directly, rather than only hit-testing a single point (D3/D7).
+ */
+async function elementRect(
+  page: Page,
+  selector: string,
+): Promise<{
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+} | null> {
+  return page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+  }, selector);
+}
+
+/** True when two axis-aligned rects overlap (touching edges don't count). */
+function rectsIntersect(
+  a: { left: number; top: number; right: number; bottom: number },
+  b: { left: number; top: number; right: number; bottom: number },
+): boolean {
+  return (
+    a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
+  );
+}
+
+/**
  * Inspect the open ResponsiveModal, located by its unique `.modal-footer`. Returns
  * the panel's worst right-edge overflow plus the sticky-footer contract: a button
  * exists and its bottom stays within the viewport (no scroll-to-submit on mobile).
@@ -745,141 +790,6 @@ for (const vp of VIEWPORTS) {
     });
   });
 
-  // Tool header close buttons (QA audit fix): Pathfinder, State Benefit
-  // Hunter, Web of Conditions, Evidence Timeline, Evidence Gap Visualizer,
-  // MOS Hazard Matcher, Tactical Calculator and BDD Builder all share the
-  // same bug — a shared mobile-only rule (`.modal-content .flex.gap-2 >
-  // button, .modal-content .flex.gap-3 > button { flex: 1; min-width:
-  // 120px }`, meant for footer action-button pairs) also matched each
-  // header's ReportBugLink+Close wrapper, and the title's flex item had no
-  // `min-w-0` to absorb the resulting width, so the close button was pushed
-  // off past the header's own edge and clipped by the panel's
-  // `overflow-hidden`. `overlayOverflow` doesn't catch it (see
-  // `closeButtonBox` above), so this checks the button directly.
-  //
-  // QA S46: the *fully-visible, correctly-sized* close button could still
-  // be untappable — the app-level Quick Exit button (fixed top-right,
-  // z-[9999], mounted above every dialog for panic-exit safety) sat in the
-  // same corner and silently intercepted the tap on five of these seven
-  // dialogs, with a corner clip on the other two. `centerHitsSelf` below
-  // hit-tests both buttons' real centers the way a tap resolves, which a
-  // bounding-box check alone can't catch.
-  const TOOL_HEADERS = [
-    {
-      label: "Pathfinder",
-      event: "openPathfinder",
-      titleId: "pathfinder-modal-title",
-      ariaLabel: "Close",
-    },
-    {
-      label: "State Benefit Hunter",
-      event: "openStateBenefitHunter",
-      titleId: "state-benefit-hunter-title",
-      ariaLabel: "Close",
-    },
-    {
-      label: "Web of Conditions",
-      event: "openWebOfConditions",
-      titleId: "web-of-conditions-title",
-      ariaLabel: "Close",
-    },
-    {
-      label: "Evidence Timeline",
-      event: "openEvidenceTimeline",
-      titleId: "evidence-timeline-title",
-      ariaLabel: "Close",
-    },
-    {
-      label: "Evidence Gap Visualizer",
-      event: "openEvidenceGapVisualizer",
-      titleId: "evidence-gap-title",
-      ariaLabel: "Close",
-    },
-    {
-      label: "MOS Hazard Matcher",
-      event: "openMOSHazardMatcher",
-      titleId: "mos-hazard-matcher-title",
-      ariaLabel: "Close",
-    },
-    {
-      label: "Tactical Calculator",
-      event: "openTacticalCalculator",
-      titleId: "calculator-title",
-      ariaLabel: "Close",
-    },
-    {
-      label: "BDD Builder",
-      event: "openBDDBuilder",
-      titleId: "bdd-builder-title",
-      ariaLabel: "Close BDD Builder",
-    },
-  ];
-
-  test.describe(`Tool header close buttons @ ${vp.width}px (${vp.name})`, () => {
-    test.use({ viewport: { width: vp.width, height: vp.height } });
-
-    test.beforeEach(async ({ page }) => {
-      await page.addInitScript((appVersion) => {
-        localStorage.setItem("vet-rate-tos-accepted", "true");
-        localStorage.setItem("vet_rate_last_seen_version", appVersion);
-        localStorage.setItem("vetrate-tour-completed", "true");
-        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
-      }, APP_VERSION);
-      await page.goto("/");
-      await dismissDisclaimer(page);
-    });
-
-    for (const tool of TOOL_HEADERS) {
-      test(`${tool.label} close button stays fully visible at >=44x44px and is not covered by Quick Exit`, async ({
-        page,
-      }) => {
-        await openModalByEvent(page, tool.event, () =>
-          closeButtonBox(page, tool.titleId, tool.ariaLabel),
-        );
-
-        // toBeVisible() auto-retries (unlike a single evaluate() snapshot),
-        // riding out the dev-mode React.StrictMode mount→unmount→remount
-        // cycle the same way the What's New modal test above does. 15s
-        // matches the Backup Manager test's budget for the same
-        // first-load-in-a-fresh-worker dev-server JIT compile variance.
-        const closeButton = page.locator(
-          `[role="dialog"][aria-labelledby="${tool.titleId}"] button[aria-label="${tool.ariaLabel}"]`,
-        );
-        await expect(closeButton).toBeVisible({ timeout: 15_000 });
-        await expect(closeButton).toBeInViewport();
-
-        const box = await closeButtonBox(page, tool.titleId, tool.ariaLabel);
-        expect(box.found).toBe(true);
-        expect(box.fullyVisible).toBe(true);
-        expect(box.width).toBeGreaterThanOrEqual(44);
-        expect(box.height).toBeGreaterThanOrEqual(44);
-
-        // Hit-test: tapping the close button's real center must resolve to
-        // the close button itself, not a higher-z-index Quick Exit sibling
-        // sitting on top of it. expect.poll rides out the same StrictMode
-        // remount blip the box checks above already tolerate via
-        // toBeVisible()'s auto-retry - a bare single-shot evaluate() here
-        // doesn't get that for free.
-        const closeSelector = `[role="dialog"][aria-labelledby="${tool.titleId}"] button[aria-label="${tool.ariaLabel}"]`;
-        await expect
-          .poll(async () => (await centerHitsSelf(page, closeSelector)).hit, {
-            timeout: 5000,
-          })
-          .toBe(true);
-
-        // Quick Exit itself must stay reachable while this dialog is open -
-        // it's a panic-exit safety control, not a decoration.
-        await expect(page.locator(QUICK_EXIT_SELECTOR)).toBeVisible();
-        await expect
-          .poll(
-            async () => (await centerHitsSelf(page, QUICK_EXIT_SELECTOR)).hit,
-            { timeout: 5000 },
-          )
-          .toBe(true);
-      });
-    }
-  });
-
   // SecurityBadge (QA audit fix, low): the floating "100% Private" badge sat
   // at a fixed bottom-4 right-4 on every screen, directly on top of the
   // mobile bottom nav's rightmost "Missions" item at phone widths. Same
@@ -923,5 +833,314 @@ for (const vp of VIEWPORTS) {
       expect(await missions.evaluate(hitsSelf)).toBe(true);
       expect(await badge.evaluate(hitsSelf)).toBe(true);
     });
+  });
+}
+
+// Tool header close buttons (QA audit fix): Pathfinder, State Benefit
+// Hunter, Web of Conditions, Evidence Timeline, Evidence Gap Visualizer,
+// MOS Hazard Matcher, Tactical Calculator and BDD Builder all share the
+// same bug — a shared mobile-only rule (`.modal-content .flex.gap-2 >
+// button, .modal-content .flex.gap-3 > button { flex: 1; min-width:
+// 120px }`, meant for footer action-button pairs) also matched each
+// header's ReportBugLink+Close wrapper, and the title's flex item had no
+// `min-w-0` to absorb the resulting width, so the close button was pushed
+// off past the header's own edge and clipped by the panel's
+// `overflow-hidden`. `overlayOverflow` doesn't catch it (see
+// `closeButtonBox` above), so this checks the button directly.
+//
+// QA S46: the *fully-visible, correctly-sized* close button could still
+// be untappable — the app-level Quick Exit button (fixed top-right,
+// z-[9999], mounted above every dialog for panic-exit safety) sat in the
+// same corner and silently intercepted the tap on five of these seven
+// dialogs, with a corner clip on the other two. `centerHitsSelf` below
+// hit-tests both buttons' real centers the way a tap resolves, which a
+// bounding-box check alone can't catch.
+//
+// D3 follow-up: moving Quick Exit to top-left (below `sm`) to clear those
+// close-X's then covered the dialog *title* instead on 8 of 12 dialogs -
+// AppealsLaneAdvisor and MyPacket (added below) are two of the examples QA
+// named. The fix (ResponsiveModal.jsx's shared `mt-20` gutter) is structural
+// and applies to every dialog through the one shared shell, so this list
+// isn't the app's full dialog inventory - it's every dialog previously
+// implicated in a Quick Exit collision (the original close-X regression set
+// plus QA's new named title-overlap examples), run at the four widths QA
+// hit-tested (QUICK_EXIT_VIEWPORTS: 320/360/390/430).
+const TOOL_HEADERS = [
+  {
+    label: "Pathfinder",
+    event: "openPathfinder",
+    titleId: "pathfinder-modal-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "State Benefit Hunter",
+    event: "openStateBenefitHunter",
+    titleId: "state-benefit-hunter-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "Web of Conditions",
+    event: "openWebOfConditions",
+    titleId: "web-of-conditions-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "Evidence Timeline",
+    event: "openEvidenceTimeline",
+    titleId: "evidence-timeline-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "Evidence Gap Visualizer",
+    event: "openEvidenceGapVisualizer",
+    titleId: "evidence-gap-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "MOS Hazard Matcher",
+    event: "openMOSHazardMatcher",
+    titleId: "mos-hazard-matcher-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "Tactical Calculator",
+    event: "openTacticalCalculator",
+    titleId: "calculator-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "BDD Builder",
+    event: "openBDDBuilder",
+    titleId: "bdd-builder-title",
+    ariaLabel: "Close BDD Builder",
+  },
+  {
+    label: "Appeals Lane Advisor",
+    event: "openAppealsLaneAdvisor",
+    titleId: "appeals-lane-title",
+    ariaLabel: "Close",
+  },
+  {
+    label: "My Packet",
+    event: "openMyPacket",
+    titleId: "my-packet-title",
+    ariaLabel: "Close",
+  },
+];
+
+for (const vp of QUICK_EXIT_VIEWPORTS) {
+  test.describe(`Tool header close buttons @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const tool of TOOL_HEADERS) {
+      test(`${tool.label} close button stays fully visible at >=44x44px, clear of Quick Exit, and a real tap closes it`, async ({
+        page,
+      }) => {
+        await openModalByEvent(page, tool.event, () =>
+          closeButtonBox(page, tool.titleId, tool.ariaLabel),
+        );
+
+        // toBeVisible() auto-retries (unlike a single evaluate() snapshot),
+        // riding out the dev-mode React.StrictMode mount→unmount→remount
+        // cycle the same way the What's New modal test above does. 15s
+        // matches the Backup Manager test's budget for the same
+        // first-load-in-a-fresh-worker dev-server JIT compile variance.
+        const dialogSelector = `[role="dialog"][aria-labelledby="${tool.titleId}"]`;
+        const closeSelector = `${dialogSelector} button[aria-label="${tool.ariaLabel}"]`;
+        const closeButton = page.locator(closeSelector);
+        await expect(closeButton).toBeVisible({ timeout: 15_000 });
+        await expect(closeButton).toBeInViewport();
+
+        const box = await closeButtonBox(page, tool.titleId, tool.ariaLabel);
+        expect(box.found).toBe(true);
+        expect(box.fullyVisible).toBe(true);
+        expect(box.width).toBeGreaterThanOrEqual(44);
+        expect(box.height).toBeGreaterThanOrEqual(44);
+
+        // Geometry: neither the dialog's title nor its close-X may share so
+        // much as a pixel with Quick Exit's own box (D3) - a hit-test alone
+        // only proves the *center* point is clear, not the whole rect.
+        const qeRect = await elementRect(page, QUICK_EXIT_SELECTOR);
+        const titleRect = await elementRect(page, `#${tool.titleId}`);
+        const closeRect = await elementRect(page, closeSelector);
+        expect(qeRect).not.toBeNull();
+        expect(titleRect).not.toBeNull();
+        expect(closeRect).not.toBeNull();
+        expect(rectsIntersect(qeRect!, titleRect!)).toBe(false);
+        expect(rectsIntersect(qeRect!, closeRect!)).toBe(false);
+
+        // Hit-test: tapping the close button's real center must resolve to
+        // the close button itself, not a higher-z-index Quick Exit sibling
+        // sitting on top of it. expect.poll rides out the same StrictMode
+        // remount blip the box checks above already tolerate via
+        // toBeVisible()'s auto-retry - a bare single-shot evaluate() here
+        // doesn't get that for free.
+        await expect
+          .poll(async () => (await centerHitsSelf(page, closeSelector)).hit, {
+            timeout: 5000,
+          })
+          .toBe(true);
+
+        // Quick Exit itself must stay reachable while this dialog is open -
+        // it's a panic-exit safety control, not a decoration.
+        await expect(page.locator(QUICK_EXIT_SELECTOR)).toBeVisible();
+        await expect
+          .poll(
+            async () => (await centerHitsSelf(page, QUICK_EXIT_SELECTOR)).hit,
+            { timeout: 5000 },
+          )
+          .toBe(true);
+
+        // A real tap (Playwright's `.click()` dispatches actual pointer
+        // events and fails actionability if another element intercepts the
+        // target, unlike a JS-level `el.click()`) must close the dialog.
+        await closeButton.click();
+        await expect(page.locator(dialogSelector)).toBeHidden({
+          timeout: 5000,
+        });
+      });
+    }
+  });
+}
+
+// Luna toast vs dialog close button (D7, low): the "Luna" encouragement
+// toast (BuyMeCoffee.jsx) randomizes among four corner zones, two of them
+// anchored `top: 5.5rem`. That offset assumes a header roughly that tall;
+// BDD Builder's and Forms Helper's icon-heavy headers run taller at phone
+// widths, so the top zones started inside the header and covered the
+// close-X (confirmed at 320px: a real tap there hit the toast, not the
+// button). The fix restricts phones (below the `sm` breakpoint, same as
+// ResponsiveModal's own full-bleed cutoff) to the two bottom zones, which
+// are nowhere near any dialog's header. BDD Builder needs Dashboard-tab
+// data seeded (see the BDD Builder body-overflow block above) - Luna is
+// gated off during setup.
+const LUNA_TOASTS = [
+  {
+    label: "BDD Builder",
+    event: "openBDDBuilder",
+    titleId: "bdd-builder-title",
+    ariaLabel: "Close BDD Builder",
+    bddSeed: true,
+  },
+  {
+    label: "Forms Helper",
+    event: "openFormsHelper",
+    titleId: "forms-helper-title",
+    ariaLabel: "Close",
+    bddSeed: false,
+  },
+];
+
+const LUNA_DISMISS_SELECTOR = 'button[aria-label="Dismiss Luna"]';
+
+/** Bounding rect of Luna's own card (the `.fixed` ancestor of its dismiss button). */
+async function lunaCardRect(
+  page: Page,
+): Promise<{
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+} | null> {
+  return page.evaluate((sel) => {
+    const btn = document.querySelector(sel);
+    const card = btn?.closest(".fixed");
+    if (!card) return null;
+    const r = card.getBoundingClientRect();
+    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+  }, LUNA_DISMISS_SELECTOR);
+}
+
+for (const vp of QUICK_EXIT_VIEWPORTS) {
+  test.describe(`Luna toast vs dialog close button @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    for (const tool of LUNA_TOASTS) {
+      test(`${tool.label} close button stays clear of the Luna toast and closes on tap`, async ({
+        page,
+      }) => {
+        await page.addInitScript(
+          // addInitScript takes exactly one serializable `arg` (unlike
+          // page.evaluate's variadic form) - bundle appVersion + bddSeed
+          // into a single object instead of two trailing arguments, which
+          // Playwright otherwise silently drops.
+          ({ appVersion, bddSeed }) => {
+            localStorage.setItem("vet-rate-tos-accepted", "true");
+            localStorage.setItem("vet_rate_last_seen_version", appVersion);
+            localStorage.setItem("vetrate-tour-completed", "true");
+            localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+            // BDD Builder gates its Luna popup behind !state.showSetup - seed
+            // a separation date so it opens straight to the Dashboard tab.
+            if (bddSeed) {
+              localStorage.setItem(
+                "vetrate_bdd_data",
+                JSON.stringify({
+                  separationDate: "2007-06-29",
+                  branch: "army",
+                  checkedItems: [],
+                  conditions: [],
+                  notes: "",
+                  lastUpdated: new Date().toISOString(),
+                  prefilledFromRecords: true,
+                }),
+              );
+            }
+          },
+          { appVersion: APP_VERSION, bddSeed: tool.bddSeed },
+        );
+        await page.goto("/");
+        await dismissDisclaimer(page);
+
+        const dialogSelector = `[role="dialog"][aria-labelledby="${tool.titleId}"]`;
+        const closeSelector = `${dialogSelector} button[aria-label="${tool.ariaLabel}"]`;
+        await openModalByEvent(page, tool.event, async (p) => ({
+          found: await p.locator(dialogSelector).isVisible(),
+        }));
+        await expect(page.locator(closeSelector)).toBeVisible({
+          timeout: 15_000,
+        });
+
+        // Luna shows after a 2s delay (BuyMeCoffee.jsx) - poll for it rather
+        // than a fixed wait.
+        await expect
+          .poll(
+            async () =>
+              page.evaluate(
+                (sel) => !!document.querySelector(sel),
+                LUNA_DISMISS_SELECTOR,
+              ),
+            { timeout: 6000 },
+          )
+          .toBe(true);
+
+        const lunaRect = await lunaCardRect(page);
+        const closeRect = await elementRect(page, closeSelector);
+        expect(lunaRect).not.toBeNull();
+        expect(closeRect).not.toBeNull();
+        expect(rectsIntersect(lunaRect!, closeRect!)).toBe(false);
+
+        await expect
+          .poll(async () => (await centerHitsSelf(page, closeSelector)).hit, {
+            timeout: 5000,
+          })
+          .toBe(true);
+
+        await page.locator(closeSelector).click();
+        await expect(page.locator(dialogSelector)).toBeHidden({
+          timeout: 5000,
+        });
+      });
+    }
   });
 }
