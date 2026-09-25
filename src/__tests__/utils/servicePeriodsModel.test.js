@@ -14,6 +14,7 @@ import {
   updateServicePeriod,
   removeServicePeriod,
   getServicePeriods,
+  getUnmatchedServiceRecords,
 } from "../../utils/veteranProfile";
 
 function period(start, end, extra = {}) {
@@ -54,19 +55,21 @@ describe("C1: service periods - identity and merge", () => {
     expect(getServicePeriods()).toHaveLength(4);
   });
 
-  it("merges a re-scan of the same period (same date pair) instead of duplicating", () => {
+  it("merges a re-scan of the same document (same date pair, same sourceDocument) instead of duplicating", () => {
     upsertServicePeriod(
       period("2010-06-01", "2015-05-30", { branch: "Army", mos: "11B" }),
-      meta("scan1.pdf", 0.5),
+      meta("rescan.pdf", 0.5),
     );
     upsertServicePeriod(
       period("2010-06-01", "2015-05-30", { branch: "Army", mos: "68W" }),
-      meta("scan2.pdf", 0.9),
+      meta("rescan.pdf", 0.9),
     );
 
     const periods = getServicePeriods();
     expect(periods).toHaveLength(1);
-    // Higher-confidence re-scan wins for the conflicting field
+    // Higher-confidence re-scan of the SAME document wins for the field it
+    // corrected - a legitimate re-read, not a disagreement between two
+    // real documents (N1b).
     expect(periods[0].mos).toBe("68W");
   });
 
@@ -87,6 +90,57 @@ describe("C1: service periods - identity and merge", () => {
     const periods = getServicePeriods();
     expect(periods).toHaveLength(1);
     expect(periods[0].rank).toBe("MANUALLY CORRECTED RANK");
+  });
+});
+
+// N1b (final8 QA, 2026-09-24): two DIFFERENT source documents that land on
+// the same period must never have one silently overwrite the other's
+// conflicting value, regardless of confidence ordering.
+describe("N1b: a different source document's conflict is kept, not overwritten", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("keeps the existing value and records the disagreement when a different document conflicts", () => {
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { branch: "Army", mos: "11B" }),
+      meta("dd214.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { mos: "68W" }),
+      meta("codesheet.pdf", 100),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0].mos).toBe("11B");
+    expect(periods[0].fieldConflicts).toEqual([
+      expect.objectContaining({
+        field: "mos",
+        keptValue: "11B",
+        keptSourceDocument: "dd214.pdf",
+        conflictingValue: "68W",
+        conflictingSourceDocument: "codesheet.pdf",
+      }),
+    ]);
+  });
+
+  it("does not record a conflict when two documents disagree only by case", () => {
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { characterOfService: "Honorable" }),
+      meta("dd214.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { characterOfService: "HONORABLE" }),
+      meta("codesheet.pdf", 100),
+    );
+
+    const periods = getServicePeriods();
+    // Not a disagreement (same value, different case) - the normal
+    // confidence high-water-mark rule still applies and the higher-
+    // confidence document's casing wins; nothing is recorded as a conflict.
+    expect(periods[0].characterOfService).toBe("HONORABLE");
+    expect(periods[0].fieldConflicts ?? []).toEqual([]);
   });
 });
 
@@ -226,79 +280,101 @@ describe("service periods - the same period from two documents", () => {
   });
 });
 
-// final7 QA follow-up, D1 (2026-09-24): a real C-File yielded several
-// undated DD214-derived rows (different scans recovering different fields)
-// alongside dated code-sheet and NGB-22 rows. None of the undated rows
-// shared a source document or a boundary date with anything, so each
-// became its own permanent "? - ?" row instead of consolidating into the
-// one real period they all describe. Fixture values are generic, not the
-// real veteran's data.
-describe("C1: service periods - shared identity merges undated rows (D1)", () => {
+// N1 (final8 QA, 2026-09-24): 31409b97's branch+component "identity match"
+// is removed - every mobilization DD214 for a Guard member parses
+// component "National Guard" (musterCallProcessor.js's
+// _resolveComponentFromDocument), so branch+component was exactly as weak
+// a signal as branch alone, and it merged undated rows from several
+// genuinely different real periods into one, silently losing an NGB-22's
+// "General" characterization to a higher-confidence "HONORABLE" from an
+// unrelated document. Proof of linkage is now only ever the same source
+// document or a known date landing on an existing period's boundary.
+// Fixture values are generic, not any real veteran's data.
+describe("N1/N8: a Guard member's undated NGB-22 characterization only ever reaches its own period", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("merges several undated rows sharing a branch+component identity into one row", () => {
+  // period2.pdf's own undated re-scan recovers the NGB-22's General
+  // characterization a first, lower-confidence pass on that SAME file
+  // missed (proven link: same source document) - period1.pdf and
+  // period3.pdf are unrelated real periods, each already carrying its own
+  // "HONORABLE" from a different document, and must never receive it.
+  function seedDatedPeriods() {
     upsertServicePeriod(
-      period(null, null, {
+      period("2001-01-10", "2001-08-01", {
         branch: "Army",
         component: "National Guard",
-        rank: "SGT",
-        characterOfService: "GENERAL",
+        characterOfService: "HONORABLE",
       }),
-      meta("ngb22_discharge.pdf", 75),
+      meta("period1.pdf", 90),
     );
     upsertServicePeriod(
-      period(null, null, { branch: "Army", component: "National Guard" }),
-      meta("dd214_scan_a.pdf", 100),
-    );
-    upsertServicePeriod(
-      period(null, null, { branch: "Army", component: "National Guard" }),
-      meta("dd214_scan_b.pdf", 92),
-    );
-    upsertServicePeriod(
-      period(null, null, {
+      period("2004-06-22", "2005-08-27", {
         branch: "Army",
         component: "National Guard",
-        payGrade: "E-5",
       }),
-      meta("dd214_scan_c.pdf", 86),
+      meta("period2.pdf", 60),
     );
+    upsertServicePeriod(
+      period("2008-02-01", "2008-09-15", {
+        branch: "Army",
+        component: "National Guard",
+        characterOfService: "HONORABLE",
+      }),
+      meta("period3.pdf", 90),
+    );
+  }
 
+  const generalRow = () =>
+    period(null, null, {
+      branch: "Army",
+      component: "National Guard",
+      characterOfService: "General (Under Honorable Conditions)",
+    });
+
+  function expectGeneralAttachedOnlyToItsOwnPeriod() {
     const periods = getServicePeriods();
-    expect(periods).toHaveLength(1);
-    expect(periods[0].incomplete).toBe(true);
+    expect(periods).toHaveLength(3);
+    const target = periods.find((p) => p.serviceStartDate === "2004-06-22");
+    expect(target.characterOfService).toBe(
+      "General (Under Honorable Conditions)",
+    );
+    expect(
+      periods.filter((p) => p.characterOfService === "HONORABLE"),
+    ).toHaveLength(2);
+  }
+
+  it("attaches to its own period when the dated periods are imported first", () => {
+    seedDatedPeriods();
+    upsertServicePeriod(generalRow(), meta("period2.pdf", 90));
+
+    expectGeneralAttachedOnlyToItsOwnPeriod();
   });
 
-  it("drops a zero-signal scan instead of giving it its own '? - ?' row", () => {
-    upsertServicePeriod(
-      period(null, null, {
-        branch: "Army",
-        component: "National Guard",
-        rank: "SGT",
-      }),
-      meta("ngb22_discharge.pdf", 75),
-    );
-    upsertServicePeriod(
-      period(null, null, {}),
-      meta("dd214_blank_scan.pdf", 75),
-    );
+  it("N8: attaches to its own period even when imported BEFORE its dated twin", () => {
+    upsertServicePeriod(generalRow(), meta("period2.pdf", 90));
+    expect(getUnmatchedServiceRecords()).toHaveLength(1);
 
-    expect(getServicePeriods()).toHaveLength(1);
+    seedDatedPeriods();
+
+    expectGeneralAttachedOnlyToItsOwnPeriod();
+    expect(getUnmatchedServiceRecords()).toHaveLength(0);
   });
 });
 
-describe("C1: service periods - identity match stays narrow (D1)", () => {
+describe("N1c: an unlinked undated row is kept, but not counted as a period", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("never merges undated rows across a genuinely different component", () => {
+  it("never merges undated rows across a genuinely different component, and neither becomes its own period", () => {
     upsertServicePeriod(
       period(null, null, {
         branch: "Army",
         component: "National Guard",
         rank: "SGT",
+        payGrade: "E-5",
       }),
       meta("ngb22_discharge.pdf", 75),
     );
@@ -307,11 +383,18 @@ describe("C1: service periods - identity match stays narrow (D1)", () => {
         branch: "Army",
         component: "Active Duty",
         rank: "CPL",
+        payGrade: "E-4",
       }),
       meta("dd214_ad.pdf", 90),
     );
 
-    expect(getServicePeriods()).toHaveLength(2);
+    expect(getServicePeriods()).toHaveLength(0);
+    const unmatched = getUnmatchedServiceRecords();
+    expect(unmatched).toHaveLength(2);
+    // Kept in full - rank and pay grade are not lost just because the row
+    // couldn't be dated or linked.
+    expect(unmatched.map((r) => r.rank).sort()).toEqual(["CPL", "SGT"]);
+    expect(unmatched.map((r) => r.payGrade).sort()).toEqual(["E-4", "E-5"]);
   });
 
   it("does not attach an undated row when its identity matches more than one dated period", () => {
@@ -341,19 +424,10 @@ describe("C1: service periods - identity match stays narrow (D1)", () => {
     const periods = getServicePeriods();
     expect(periods).toHaveLength(2);
     expect(periods.some((p) => p.rank === "AMBIGUOUS")).toBe(false);
-  });
-});
-
-// final7 QA follow-up, D2 (2026-09-24): rank must be resolved by which
-// record is chronologically LATER, not by which scan had higher OCR
-// confidence - a clean scan of an early enlistment isn't "later" than a
-// garbled scan of the discharge that followed it.
-describe("C1: service periods - a later record's rank wins (D2)", () => {
-  beforeEach(() => {
-    localStorage.clear();
+    expect(getUnmatchedServiceRecords()).toHaveLength(1);
   });
 
-  it("keeps the earlier-set rank when neither side has an end date to compare", () => {
+  it("drops a genuinely zero-signal scan instead of giving it its own '? - ?' row", () => {
     upsertServicePeriod(
       period(null, null, {
         branch: "Army",
@@ -363,20 +437,58 @@ describe("C1: service periods - a later record's rank wins (D2)", () => {
       meta("ngb22_discharge.pdf", 75),
     );
     upsertServicePeriod(
+      period(null, null, {}),
+      meta("dd214_blank_scan.pdf", 75),
+    );
+
+    expect(getServicePeriods()).toHaveLength(0);
+    expect(getUnmatchedServiceRecords()).toHaveLength(1);
+  });
+});
+
+// final7 QA follow-up, D2 (2026-09-24): rank must be resolved by which
+// record is chronologically LATER, not by which scan had higher OCR
+// confidence - a clean scan of an early enlistment isn't "later" than a
+// garbled scan of the discharge that followed it.
+// final8 QA (2026-09-24): re-scoped off the removed branch+component
+// identity match (N1a) onto proven links instead - a re-scan of the same
+// source document, or two documents whose dates land within
+// isSameServicePeriod's tolerance of each other (the same real period,
+// same as the existing "the same period from two documents" tests above).
+describe("C1: service periods - a later record's rank wins (D2)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  // Both rows are undated (no proven date-boundary to link to any period)
+  // and land in unmatchedServiceRecords (N1c) - same rank-recency rule,
+  // same _mergeExistingServicePeriod, just merged there instead of onto a
+  // servicePeriods[] entry.
+  it("keeps the earlier-set rank when neither side has an end date to compare", () => {
+    upsertServicePeriod(
+      period(null, null, {
+        branch: "Army",
+        component: "National Guard",
+        rank: "SGT",
+      }),
+      meta("ngb22_rescan.pdf", 75),
+    );
+    upsertServicePeriod(
       period(null, null, {
         branch: "Army",
         component: "National Guard",
         rank: "SPC",
       }),
-      meta("dd214_scan.pdf", 100),
+      meta("ngb22_rescan.pdf", 100),
     );
 
-    expect(getServicePeriods()[0].rank).toBe("SGT");
+    expect(getServicePeriods()).toHaveLength(0);
+    expect(getUnmatchedServiceRecords()[0].rank).toBe("SGT");
   });
 
   it("takes the incoming rank when its end date is genuinely later, even at lower confidence", () => {
     upsertServicePeriod(
-      period(null, "2005-08-27", {
+      period("2005-01-01", "2005-08-25", {
         branch: "Army",
         component: "Active Duty",
         rank: "SPC",
@@ -384,12 +496,12 @@ describe("C1: service periods - a later record's rank wins (D2)", () => {
       meta("dd214_2005.pdf", 100),
     );
     upsertServicePeriod(
-      period(null, "2007-06-29", {
+      period("2005-01-03", "2005-08-27", {
         branch: "Army",
         component: "Active Duty",
         rank: "SGT",
       }),
-      meta("dd214_2007.pdf", 40),
+      meta("codesheet.pdf", 40),
     );
 
     expect(getServicePeriods()[0].rank).toBe("SGT");
@@ -397,7 +509,7 @@ describe("C1: service periods - a later record's rank wins (D2)", () => {
 
   it("does not let an earlier record's rank override the later one already recorded", () => {
     upsertServicePeriod(
-      period(null, "2007-06-29", {
+      period("2005-01-01", "2007-06-29", {
         branch: "Army",
         component: "Active Duty",
         rank: "SGT",
@@ -405,12 +517,12 @@ describe("C1: service periods - a later record's rank wins (D2)", () => {
       meta("dd214_2007.pdf", 100),
     );
     upsertServicePeriod(
-      period(null, "2005-08-27", {
+      period("2005-01-03", "2007-06-25", {
         branch: "Army",
         component: "Active Duty",
         rank: "SPC",
       }),
-      meta("dd214_2005.pdf", 40),
+      meta("codesheet.pdf", 40),
     );
 
     expect(getServicePeriods()[0].rank).toBe("SGT");
@@ -422,6 +534,8 @@ describe("C1: service periods - rank recency falls back to pay grade (D2)", () =
     localStorage.clear();
   });
 
+  // Both undated, same source document - lands in unmatchedServiceRecords
+  // (N1c), same rank-recency rule applied there.
   it("falls back to pay grade when neither record has a date to compare", () => {
     upsertServicePeriod(
       period(null, null, {
@@ -430,7 +544,7 @@ describe("C1: service periods - rank recency falls back to pay grade (D2)", () =
         rank: "SPC",
         payGrade: "E-4",
       }),
-      meta("dd214_early.pdf", 100),
+      meta("ngb22_rescan.pdf", 100),
     );
     upsertServicePeriod(
       period(null, null, {
@@ -439,9 +553,9 @@ describe("C1: service periods - rank recency falls back to pay grade (D2)", () =
         rank: "SGT",
         payGrade: "E-5",
       }),
-      meta("dd214_later.pdf", 40),
+      meta("ngb22_rescan.pdf", 40),
     );
 
-    expect(getServicePeriods()[0].rank).toBe("SGT");
+    expect(getUnmatchedServiceRecords()[0].rank).toBe("SGT");
   });
 });

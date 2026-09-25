@@ -97,3 +97,55 @@ describe("summarizeServicePeriods", () => {
     expect(summary.characterOfServiceDisagrees).toBe(false);
   });
 });
+
+// N3 (final8 QA, 2026-09-24): a pay grade that lives on a row merged away
+// from servicePeriods[] (unmatchedServiceRecords, or only ever reached
+// dd214Data) must still surface as Highest Pay Grade instead of showing
+// N/A.
+describe("summarizeServicePeriods: N3 - Highest Pay Grade across all stored rows", () => {
+  it("includes unmatchedRecords' pay grades", () => {
+    const summary = summarizeServicePeriods(
+      [{ payGrade: "E-4", serviceEndDate: "2008-01-01" }],
+      { unmatchedRecords: [{ payGrade: "E-7" }] },
+    );
+    expect(summary.highestPayGrade).toBe("E-7");
+  });
+
+  it("includes dd214Data's pay grade", () => {
+    const summary = summarizeServicePeriods(
+      [{ payGrade: "E-4", serviceEndDate: "2008-01-01" }],
+      { dd214Data: { payGrade: "E-6" } },
+    );
+    expect(summary.highestPayGrade).toBe("E-6");
+  });
+
+  it("computes Highest Pay Grade from unmatched/dd214Data even with zero periods", () => {
+    const summary = summarizeServicePeriods([], {
+      unmatchedRecords: [{ payGrade: "E-5" }],
+      dd214Data: { payGrade: "E-3" },
+    });
+    expect(summary.highestPayGrade).toBe("E-5");
+  });
+});
+
+// N1b: a same-row disagreement (recorded by _mergeExistingServicePeriod via
+// fieldConflicts) feeds the same "Periods disagree" flag as two different
+// periods with different characterOfService values.
+describe("summarizeServicePeriods: N1b - a row-level fieldConflicts entry also flags disagreement", () => {
+  it("flags disagreement from a row-level fieldConflicts entry, not just distinct periods", () => {
+    const summary = summarizeServicePeriods([
+      {
+        characterOfService: "Honorable",
+        serviceEndDate: "2008-01-01",
+        fieldConflicts: [
+          {
+            field: "characterOfService",
+            keptValue: "Honorable",
+            conflictingValue: "General",
+          },
+        ],
+      },
+    ]);
+    expect(summary.characterOfServiceDisagrees).toBe(true);
+  });
+});

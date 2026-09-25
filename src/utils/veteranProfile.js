@@ -802,15 +802,22 @@ export const getServiceHistory = () => {
         dd214Data: null,
         serviceInfo: null,
         servicePeriods: [],
+        unmatchedServiceRecords: [],
         dutyStations: [],
         dateUpdated: null,
       };
     }
     const parsed = JSON.parse(saved);
-    // Data saved before servicePeriods[]/dutyStations[] existed won't have
-    // the key - normalize so every caller can rely on it being an array.
+    // Data saved before servicePeriods[]/dutyStations[]/
+    // unmatchedServiceRecords[] existed won't have the key - normalize so
+    // every caller can rely on it being an array.
     parsed.servicePeriods = Array.isArray(parsed.servicePeriods)
       ? parsed.servicePeriods
+      : [];
+    parsed.unmatchedServiceRecords = Array.isArray(
+      parsed.unmatchedServiceRecords,
+    )
+      ? parsed.unmatchedServiceRecords
       : [];
     parsed.dutyStations = Array.isArray(parsed.dutyStations)
       ? parsed.dutyStations
@@ -824,6 +831,7 @@ export const getServiceHistory = () => {
       dd214Data: null,
       serviceInfo: null,
       servicePeriods: [],
+      unmatchedServiceRecords: [],
       dutyStations: [],
       dateUpdated: null,
     };
@@ -1107,6 +1115,36 @@ function _sanitizeServicePeriodSeparationAndTime(p) {
   };
 }
 
+const MAX_FIELD_CONFLICTS = 20;
+
+// N1b (final8 QA, 2026-09-24): a disagreement _mergeExistingServicePeriod
+// found between this period's kept value and a different source
+// document's conflicting one - kept (not the "existing"/"incoming" naming
+// _mergeExistingServicePeriod itself uses) so the Service tab can display
+// both sides with provenance instead of the conflict being silently lost.
+function _sanitizeFieldConflict(c) {
+  if (!c || typeof c !== "object") return null;
+  return {
+    field: sanitizeString(c.field || "", 50),
+    keptValue: sanitizeString(String(c.keptValue ?? ""), 200),
+    keptSourceDocument: sanitizeString(c.keptSourceDocument || "", 300),
+    conflictingValue: sanitizeString(String(c.conflictingValue ?? ""), 200),
+    conflictingSourceDocument: sanitizeString(
+      c.conflictingSourceDocument || "",
+      300,
+    ),
+    recordedAt: sanitizeString(c.recordedAt || "", 40),
+  };
+}
+
+function _sanitizeFieldConflicts(conflicts) {
+  if (!Array.isArray(conflicts)) return [];
+  return conflicts
+    .map(_sanitizeFieldConflict)
+    .filter(Boolean)
+    .slice(-MAX_FIELD_CONFLICTS);
+}
+
 function _sanitizeServicePeriodMetadata(p) {
   return {
     sourceDocument: sanitizeString(p.sourceDocument || "", 300),
@@ -1114,6 +1152,7 @@ function _sanitizeServicePeriodMetadata(p) {
     userEdited: !!p.userEdited,
     incomplete: !!p.incomplete,
     notes: sanitizeString(p.notes || "", 1000),
+    fieldConflicts: _sanitizeFieldConflicts(p.fieldConflicts),
   };
 }
 
@@ -1153,55 +1192,60 @@ function _sameCalendarDay(a, b) {
 }
 
 /**
- * An incomplete (single-date, or no-date) period belongs to whichever
- * already-saved period - dated, or itself still incomplete - it's really a
- * partial reading of: a garbled OCR pass that only recovered a separation
- * date, an NGB-22 activation segment saved by the same call that already
- * saved the primary period for that form, or a second scan of the same
- * DD214 that recovered different fields than the first pass. Three
- * independent signals identify that:
- *  - the same source document (same physical form),
+ * N1 (final8 QA, 2026-09-24): a shared branch+component "identity match"
+ * used to also count here. Every mobilization DD214 for a Guard member
+ * parses component "National Guard" (musterCallProcessor.js's
+ * _resolveComponentFromDocument) - branch+component is then exactly as
+ * weak a signal as branch alone, and it merged undated rows from several
+ * genuinely different real periods into one. Proof of linkage is now only
+ * ever:
+ *  - the same source document (same physical form) - a garbled OCR pass
+ *    that only recovered a separation date, an NGB-22 activation segment
+ *    saved by the same call that already saved the primary period for
+ *    that form, or a second scan of the same DD214 that recovered
+ *    different fields than the first pass, or
  *  - the one known date landing on either boundary of an existing DATED
- *    period (most often the separation date) - meaningless against another
- *    incomplete period, which by definition has no boundary to land on,
- *  - a shared military identity: both sides name the same non-empty branch
- *    AND the same non-empty component (the "AD vs Guard/Reserve" axis).
- *    Branch alone is deliberately not enough - every period in a
- *    single-branch career shares it, so it can't discriminate anything.
- *    Rank, pay grade and character of service are deliberately NOT part of
- *    this identity check: a real re-scan of the very same period can
- *    legitimately disagree on them (a mid-tour promotion, an OCR-garbled
- *    discharge characterization on one scan) - requiring them all to agree
- *    would re-fragment exactly the rows this is trying to consolidate.
- * Returns the indices of every period that matches; the caller only merges
- * when exactly one does, so an ambiguous match never silently picks the
- * wrong period - and never merges two genuinely distinct dated periods,
- * since a dated period is only ever a match *target*, never itself
- * re-matched here.
+ *    period (most often the separation date) - meaningless against
+ *    another incomplete period, which by definition has no boundary to
+ *    land on.
+ * Rank, pay grade and character of service are deliberately not part of
+ * this check either way: a real re-scan of the very same period (same
+ * source document) can legitimately disagree on them (a mid-tour
+ * promotion, an OCR-garbled discharge characterization on one scan) -
+ * requiring them all to agree would re-fragment exactly the rows this is
+ * trying to consolidate. See _mergeExistingServicePeriod for how a
+ * disagreement from a genuinely *different* source document is handled
+ * once linkage is proven by one of the two rules above.
+ */
+function _hasProvenLink(period, incoming) {
+  const sameForm =
+    !!incoming.sourceDocument &&
+    period.sourceDocument === incoming.sourceDocument;
+  if (sameForm) return true;
+  // Only a fully-dated period has a real boundary to land on - an
+  // incomplete period can carry its OWN single known date, and that date
+  // coincidentally equalling incoming's is not evidence they're the same
+  // period (see "does not collide two different incomplete periods...").
+  const singleDate = incoming.serviceStartDate || incoming.serviceEndDate;
+  return (
+    !period.incomplete &&
+    !!singleDate &&
+    (_sameCalendarDay(period.serviceStartDate, singleDate) ||
+      _sameCalendarDay(period.serviceEndDate, singleDate))
+  );
+}
+
+/**
+ * Returns the indices of every existing period `incoming` has a proven
+ * link to; the caller only merges when exactly one does, so an ambiguous
+ * match never silently picks the wrong period - and never merges two
+ * genuinely distinct dated periods, since a dated period is only ever a
+ * match *target*, never itself re-matched here.
  */
 function _matchIncompletePeriod(periods, incoming) {
-  const singleDate = incoming.serviceStartDate || incoming.serviceEndDate;
-  const incomingBranch = (incoming.branch || "").trim().toLowerCase();
-  const incomingComponent = (incoming.component || "").trim().toLowerCase();
   const matches = [];
   periods.forEach((p, index) => {
-    const sameForm =
-      !!incoming.sourceDocument && p.sourceDocument === incoming.sourceDocument;
-    // Only a fully-dated period has a real boundary to land on - an
-    // incomplete p can carry its OWN single known date, and that date
-    // coincidentally equalling incoming's is not evidence they're the same
-    // period (see "does not collide two different incomplete periods...").
-    const dateMatch =
-      !p.incomplete &&
-      !!singleDate &&
-      (_sameCalendarDay(p.serviceStartDate, singleDate) ||
-        _sameCalendarDay(p.serviceEndDate, singleDate));
-    const identityMatch =
-      !!incomingBranch &&
-      !!incomingComponent &&
-      incomingBranch === (p.branch || "").trim().toLowerCase() &&
-      incomingComponent === (p.component || "").trim().toLowerCase();
-    if (sameForm || dateMatch || identityMatch) matches.push(index);
+    if (_hasProvenLink(p, incoming)) matches.push(index);
   });
   return matches;
 }
@@ -1234,10 +1278,14 @@ function _incompletePeriodHasContent(incoming) {
  * (serviceStartDate, serviceEndDate) key match, a dated period within
  * isSameServicePeriod's tolerance, or - for an incomplete incoming row -
  * whatever _matchIncompletePeriod resolves to. `shouldDrop: true` means the
- * caller must return null without creating or merging anything (an
- * ambiguous match, or a zero-signal row with nothing to attach to).
- * Split out of upsertServicePeriod purely to keep that function's line
- * count/complexity under the repo's lint ceiling - same behavior.
+ * caller must return null without creating or merging anything (a
+ * genuinely zero-signal row with nothing to attach to and nothing worth
+ * keeping). `unmatched: true` means the row has real content but no proven
+ * link (N1c, final8 QA, 2026-09-24) - it must be kept, but never counted
+ * or displayed as a service period; the caller routes it to the separate
+ * unmatchedServiceRecords[] store instead. Split out of upsertServicePeriod
+ * purely to keep that function's line count/complexity under the repo's
+ * lint ceiling - same behavior.
  */
 function _findExistingServicePeriodIndex(periods, incoming) {
   const incomingKey = _servicePeriodKey(incoming);
@@ -1256,33 +1304,86 @@ function _findExistingServicePeriodIndex(periods, incoming) {
 
   const matches = _matchIncompletePeriod(periods, incoming);
   if (matches.length === 1) return { index: matches[0] };
-  if (matches.length > 1 || !_incompletePeriodHasContent(incoming)) {
+  if (!_incompletePeriodHasContent(incoming)) {
     return { index: -1, shouldDrop: true };
+  }
+  const hasDate = !!(incoming.serviceStartDate || incoming.serviceEndDate);
+  if (matches.length > 1 || !hasDate) {
+    return { index: -1, unmatched: true };
   }
   return { index: -1 };
 }
+
+// N1b (final8 QA, 2026-09-24): formType/sourceDocument/notes are
+// provenance/bookkeeping, not facts extracted about the veteran's service
+// (same trio INCOMPLETE_PERIOD_CONTENT_FIELDS already excludes) - a code
+// sheet legitimately re-labels which document is "authoritative" for a
+// period (saveCodeSheetServicePeriodsToProfile), which the disagreement
+// rule below must not block.
+const SERVICE_PERIOD_PROVENANCE_FIELDS = new Set([
+  "formType",
+  "sourceDocument",
+  "notes",
+]);
+
+const _valuesConflict = (a, b) =>
+  String(a).trim().toLowerCase() !== String(b).trim().toLowerCase();
 
 /**
  * Merges `incoming` onto an already-saved, non-userEdited `existing`
  * period: most fields by a confidence high-water-mark, rank by recency
  * (see upsertServicePeriod's own comment), and the code sheet's dates when
- * options.authoritativeDates says so. Split out for the same line-count/
- * complexity reason as _findExistingServicePeriodIndex above.
+ * options.authoritativeDates says so.
+ *
+ * N1b (final8 QA, 2026-09-24): a field from a genuinely *different* source
+ * document must never silently overwrite an existing non-empty value it
+ * disagrees with (case-insensitively) - regardless of which side has
+ * higher confidence. The existing value is kept and the disagreement is
+ * recorded on merged.fieldConflicts with both sides' provenance, so the
+ * Service tab can show it instead of losing it outright. A re-scan of the
+ * SAME source document is a legitimate correction, not a disagreement
+ * between two real records, so it still resolves by the confidence
+ * high-water-mark as before. Split out for the same line-count/complexity
+ * reason as _findExistingServicePeriodIndex above.
  */
 function _mergeExistingServicePeriod(existing, incoming, options) {
   const incomingConfidence = incoming.confidence ?? 0;
   const existingConfidence = existing.confidence ?? 0;
+  const sameSource =
+    !!existing.sourceDocument &&
+    existing.sourceDocument === incoming.sourceDocument;
   const merged = { ...existing };
+  const conflicts = [];
   SERVICE_PERIOD_MERGE_FIELDS.forEach((field) => {
     // Rank has its own recency-based tiebreak just below - OCR confidence
     // says nothing about which document's rank is more CURRENT (a clean
     // scan of an early enlistment isn't "later" than a garbled scan of the
     // discharge that followed it).
     if (field === "rank") return;
-    if (incomingConfidence >= existingConfidence && incoming[field]) {
+    if (!incoming[field]) return;
+    const isDisagreement =
+      !SERVICE_PERIOD_PROVENANCE_FIELDS.has(field) &&
+      !sameSource &&
+      existing[field] &&
+      _valuesConflict(existing[field], incoming[field]);
+    if (isDisagreement) {
+      conflicts.push({
+        field,
+        keptValue: existing[field],
+        keptSourceDocument: existing.sourceDocument || null,
+        conflictingValue: incoming[field],
+        conflictingSourceDocument: incoming.sourceDocument || null,
+        recordedAt: new Date().toISOString(),
+      });
+      return;
+    }
+    if (incomingConfidence >= existingConfidence) {
       merged[field] = incoming[field];
     }
   });
+  if (conflicts.length > 0) {
+    merged.fieldConflicts = [...(existing.fieldConflicts || []), ...conflicts];
+  }
   // A later record's rank wins - "later" by the period's own end date when
   // both sides have one, else by pay grade (same rule
   // veteranKnowledgeBase.js's mergeDD214RankAndCharacter already uses for
@@ -1311,12 +1412,87 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
 
 export const getServicePeriods = () => getServiceHistory().servicePeriods;
 
+// N1c (final8 QA, 2026-09-24): rows that carry real content (rank, pay
+// grade, character of service, branch, ...) but have no proven link to any
+// period. Kept in full - never dropped - but never counted or displayed as
+// a service period; MyPacket's Service tab lists these separately ("Records
+// we couldn't match to a date range").
+export const getUnmatchedServiceRecords = () =>
+  getServiceHistory().unmatchedServiceRecords;
+
+function _upsertUnmatchedRecord(history, incoming) {
+  const records = history.unmatchedServiceRecords;
+  const existingIndex = records.findIndex(
+    (r) =>
+      !!incoming.sourceDocument && r.sourceDocument === incoming.sourceDocument,
+  );
+  if (existingIndex === -1) {
+    const newRecord = {
+      id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userEdited: false,
+      ...incoming,
+    };
+    records.push(newRecord);
+    history.unmatchedServiceRecords = records;
+    saveServiceHistory(history);
+    return newRecord.id;
+  }
+  records[existingIndex] = _mergeExistingServicePeriod(
+    records[existingIndex],
+    incoming,
+    {},
+  );
+  history.unmatchedServiceRecords = records;
+  saveServiceHistory(history);
+  return records[existingIndex].id;
+}
+
+/**
+ * N8 (final8 QA, 2026-09-24): when the undated "twin" of a real period was
+ * saved first (before anything dated existed for it to link to), it landed
+ * in unmatchedServiceRecords and stayed there forever, even once the dated
+ * period it actually belongs to showed up. Called after every successful
+ * upsertServicePeriod call - re-checks every stored unmatched row against
+ * the CURRENT servicePeriods array using the exact same proven-link and
+ * ambiguity rules _findExistingServicePeriodIndex applies at ingest time
+ * (_matchIncompletePeriod): only absorbed when exactly one period proves a
+ * link. A single source document that legitimately produces more than one
+ * dated period (an NGB-22's Box 18 IADT+AD breakdown) must never have an
+ * undated row from that same document guessed onto whichever one happened
+ * to be created first - staying in unmatchedServiceRecords is the honest
+ * outcome once a second period from that document exists. Absorption
+ * applies the same never-overwrite-a-disagreement merge rules as N1b.
+ */
+function _absorbUnmatchedRecords(history) {
+  const records = history.unmatchedServiceRecords;
+  if (!records || records.length === 0) return;
+  const remaining = [];
+  records.forEach((record) => {
+    const matches = _matchIncompletePeriod(history.servicePeriods, record);
+    if (matches.length === 1) {
+      const index = matches[0];
+      history.servicePeriods[index] = _mergeExistingServicePeriod(
+        history.servicePeriods[index],
+        record,
+        {},
+      );
+    } else {
+      remaining.push(record);
+    }
+  });
+  history.unmatchedServiceRecords = remaining;
+}
+
 /**
  * Ingest-side upsert: merge a document-derived period into the canonical
  * array by (serviceStartDate, serviceEndDate) identity. Never overwrites a
  * period the user has manually edited (userEdited: true). When the period
  * already exists and isn't user-edited, period-scoped fields merge by a
  * confidence high-water-mark (same rule _mergeDD214Record already used).
+ * An undated row with no proven link is stored (with all its fields) in
+ * unmatchedServiceRecords instead of becoming its own period (N1c); a row
+ * that upserts as a fully-dated period absorbs any unmatched rows that now
+ * prove a link to it (N8).
  * @returns {string|null} The period's id, or null on error.
  */
 export const upsertServicePeriod = (periodData, options = {}) => {
@@ -1334,9 +1510,13 @@ export const upsertServicePeriod = (periodData, options = {}) => {
       incomplete: !(periodData.serviceStartDate && periodData.serviceEndDate),
     };
 
-    const { index: existingIndex, shouldDrop } =
-      _findExistingServicePeriodIndex(periods, incoming);
+    const {
+      index: existingIndex,
+      shouldDrop,
+      unmatched,
+    } = _findExistingServicePeriodIndex(periods, incoming);
     if (shouldDrop) return null;
+    if (unmatched) return _upsertUnmatchedRecord(history, incoming);
 
     if (existingIndex === -1) {
       const newPeriod = {
@@ -1346,6 +1526,7 @@ export const upsertServicePeriod = (periodData, options = {}) => {
       };
       periods.push(newPeriod);
       history.servicePeriods = periods;
+      _absorbUnmatchedRecords(history);
       saveServiceHistory(history);
       return newPeriod.id;
     }
@@ -1362,6 +1543,7 @@ export const upsertServicePeriod = (periodData, options = {}) => {
       options,
     );
     history.servicePeriods = periods;
+    _absorbUnmatchedRecords(history);
     saveServiceHistory(history);
     return existing.id;
   } catch (error) {
@@ -1484,6 +1666,13 @@ function _formatDurationFromDays(totalDays) {
   return parts.join(", ");
 }
 
+function _highestPayGradeAcross(sources) {
+  return sources.filter(Boolean).reduce((best, pg) => {
+    if (!best) return pg;
+    return _payGradeRank(pg) > _payGradeRank(best) ? pg : best;
+  }, null);
+}
+
 /**
  * Summary view computed from the canonical servicePeriods[] array (Q2):
  * branches served (deduped), Total time in service (SUM of each period's
@@ -1492,15 +1681,29 @@ function _formatDurationFromDays(totalDays) {
  * multi-period veteran with a break in service. Also surfaces highest
  * pay grade, most recent rank, and character of service from the most
  * recent period (flagged if periods disagree).
+ *
+ * N3 (final8 QA, 2026-09-24): `extra.unmatchedRecords`/`extra.dd214Data`
+ * feed Highest Pay Grade too - a pay grade that lived on a row merged away
+ * (or one that only ever reached unmatchedServiceRecords/dd214Data, never
+ * a period) must not show as N/A when it's really known.
  */
-export const summarizeServicePeriods = (periods) => {
+export const summarizeServicePeriods = (periods, extra = {}) => {
+  const { unmatchedRecords = [], dd214Data = null } = extra;
   const list = Array.isArray(periods) ? periods : [];
+  const highestPayGrade = _highestPayGradeAcross([
+    ...list.map((p) => p.payGrade),
+    ...(Array.isArray(unmatchedRecords)
+      ? unmatchedRecords.map((r) => r.payGrade)
+      : []),
+    dd214Data?.payGrade,
+  ]);
+
   if (list.length === 0) {
     return {
       branches: [],
       totalTimeInService: null,
       serviceSpan: null,
-      highestPayGrade: null,
+      highestPayGrade,
       mostRecentRank: null,
       characterOfService: null,
       characterOfServiceDisagrees: false,
@@ -1523,12 +1726,6 @@ export const summarizeServicePeriods = (periods) => {
         }
       : null;
 
-  const highestPayGrade = list.reduce((best, p) => {
-    if (!p.payGrade) return best;
-    if (!best) return p.payGrade;
-    return _payGradeRank(p.payGrade) > _payGradeRank(best) ? p.payGrade : best;
-  }, null);
-
   // Most recent = latest serviceEndDate (fall back to latest
   // serviceStartDate for an open/incomplete final period).
   const sortedMostRecentFirst = [...list].sort((a, b) => {
@@ -1545,6 +1742,12 @@ export const summarizeServicePeriods = (periods) => {
   const characterOfService =
     sortedMostRecentFirst.find((p) => p.characterOfService)
       ?.characterOfService || null;
+  // N1b: a same-row disagreement recorded by _mergeExistingServicePeriod
+  // also counts, not just two different periods each with their own
+  // characterOfService - both feed the same "Periods disagree" banner.
+  const rowLevelCharacterConflict = list.some((p) =>
+    (p.fieldConflicts || []).some((c) => c.field === "characterOfService"),
+  );
 
   return {
     branches,
@@ -1553,7 +1756,8 @@ export const summarizeServicePeriods = (periods) => {
     highestPayGrade,
     mostRecentRank,
     characterOfService,
-    characterOfServiceDisagrees: charactersOfService.length > 1,
+    characterOfServiceDisagrees:
+      charactersOfService.length > 1 || rowLevelCharacterConflict,
   };
 };
 
@@ -1565,6 +1769,12 @@ export const saveServiceHistory = (history) => {
       dd214Data: _sanitizeDd214Data(history.dd214Data),
       serviceInfo: _sanitizeServiceInfo(history.serviceInfo),
       servicePeriods: _sanitizeServicePeriods(history.servicePeriods),
+      // Same shape/sanitizer as servicePeriods[] - N1c (final8 QA,
+      // 2026-09-24) rows that carry real content but have no proven link
+      // to a period, kept in full but never counted/displayed as one.
+      unmatchedServiceRecords: _sanitizeServicePeriods(
+        history.unmatchedServiceRecords,
+      ),
       dutyStations: _sanitizeDutyStations(history.dutyStations),
       dateUpdated: new Date().toISOString(),
     };
@@ -2260,6 +2470,7 @@ export default {
   hasServiceHistory,
   // Service Periods functions (canonical multi-period model)
   getServicePeriods,
+  getUnmatchedServiceRecords,
   upsertServicePeriod,
   addServicePeriod,
   updateServicePeriod,

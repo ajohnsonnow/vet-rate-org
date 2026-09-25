@@ -1001,8 +1001,17 @@ export const saveServiceRecordToProfile = (file, result) => {
     );
   }
 
-  _savePrimaryServicePeriod(file, result, candidate);
+  // N8 (final8 QA, 2026-09-24): the Box 18 additional periods run first so
+  // that when the primary Box 12a/12b row can't be dated (a real gap on
+  // some NGB-22 scans), it upserts as the LAST call for this document -
+  // by then every dated period Box 18 produced already exists, so
+  // veteranProfile's own proven-link ambiguity check (shared with N8's
+  // retroactive absorption) correctly sees an NGB-22 with more than one
+  // dated period as ambiguous and leaves the undated row in
+  // unmatchedServiceRecords, instead of guessing it onto whichever of two
+  // real periods happened to be created first.
   _saveNGB22AdditionalPeriods(file, candidate);
+  _savePrimaryServicePeriod(file, result, candidate);
 };
 
 // result.extractedData.awards reaches this in one of two shapes depending on
