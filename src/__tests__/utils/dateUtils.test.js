@@ -4,7 +4,11 @@
  * formatLocalDate must construct the date at LOCAL midnight instead.
  */
 import { describe, it, expect } from "vitest";
-import { formatLocalDate } from "../../utils/dateUtils";
+import {
+  formatLocalDate,
+  parseExplicitDate,
+  isDesignatedCombatZone,
+} from "../../utils/dateUtils";
 
 describe("D-8: formatLocalDate", () => {
   it("renders the same calendar day it was given, regardless of local timezone offset", () => {
@@ -45,5 +49,57 @@ describe("D-8: formatLocalDate", () => {
     expect(date.getFullYear()).toBe(2026);
     expect(date.getMonth()).toBe(2);
     expect(date.getDate()).toBe(15);
+  });
+});
+
+// N7 (final8 QA, 2026-09-24): both musterCallProcessor's _toISODateString
+// and the VKB's _toIsoDate used to fall back to Date.parse/new Date(),
+// which is lenient enough to accept non-date text like "SINAI 12" as a
+// real (wrong) date. Shared by both, so this is the one place the accepted
+// format list is verified.
+describe("N7: parseExplicitDate only accepts explicit date formats", () => {
+  it.each([
+    ["SINAI 12"],
+    ["SINAI 2004"],
+    ["NGB FORM 2022"],
+    ["GENERAL 2005"],
+    ["AFGHANISTAN"],
+    ["NOT A REAL DATE"],
+    [""],
+    [null],
+    [undefined],
+  ])("rejects %s instead of guessing at a date", (value) => {
+    expect(parseExplicitDate(value)).toBeNull();
+  });
+
+  it.each([
+    ["2004-06-22", "2004-06-22"],
+    ["2004-06-22T00:00:00.000Z", "2004-06-22"],
+    ["06/22/2004", "2004-06-22"],
+    ["6/22/2004", "2004-06-22"],
+    ["06-22-2004", "2004-06-22"],
+    ["6-22-04", "2004-06-22"],
+    ["20040622", "2004-06-22"],
+    ["22 JUN 2004", "2004-06-22"],
+    ["June 22, 2004", "2004-06-22"],
+    ["Jun. 22 2004", "2004-06-22"],
+  ])("accepts the explicit format %s", (value, expected) => {
+    expect(parseExplicitDate(value)).toBe(expected);
+  });
+});
+
+describe("N6: isDesignatedCombatZone shares one date-aware rule", () => {
+  it("flags a designated location on or after its designation start date", () => {
+    expect(isDesignatedCombatZone("AFGHANISTAN", "2004-08-08")).toBe(true);
+    expect(isDesignatedCombatZone("IRAQ", "08/08/2004")).toBe(true);
+  });
+
+  it("does not flag a designated location before its designation start date", () => {
+    expect(isDesignatedCombatZone("AFGHANISTAN", "1999-01-01")).toBe(false);
+  });
+
+  it("never flags an undated deployment or an undesignated location", () => {
+    expect(isDesignatedCombatZone("AFGHANISTAN", null)).toBe(false);
+    expect(isDesignatedCombatZone("GERMANY", "2004-08-08")).toBe(false);
   });
 });

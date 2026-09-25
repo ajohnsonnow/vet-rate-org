@@ -53,3 +53,124 @@ export const isSameDate = (a, b) => {
  */
 export const isSameServicePeriod = (aStart, aEnd, bStart, bEnd) =>
   isSameDate(aStart, bStart) && isSameDate(aEnd, bEnd);
+
+const MONTH_ABBREVIATIONS = {
+  JAN: "01",
+  FEB: "02",
+  MAR: "03",
+  APR: "04",
+  MAY: "05",
+  JUN: "06",
+  JUL: "07",
+  AUG: "08",
+  SEP: "09",
+  OCT: "10",
+  NOV: "11",
+  DEC: "12",
+};
+
+const _expandTwoDigitYear = (year) => {
+  if (year.length !== 2) return year;
+  return Number(year) > 50 ? `19${year}` : `20${year}`;
+};
+
+/**
+ * N7 (final8 QA, 2026-09-24): both musterCallProcessor's own
+ * `_toISODateString` and the VKB's `_toIsoDate` used to fall back to
+ * `Date.parse`/`new Date()` for anything that didn't match their explicit
+ * patterns - V8's parser is lenient enough that garbage like "SINAI 12",
+ * "SINAI 2004" or "NGB FORM 2022" (a location/form label plus a stray
+ * number, not a date at all) all parse as a real, wrong date instead of
+ * failing. Shared by both call sites so the accepted format list only
+ * needs to be right in one place: only the explicit shapes this
+ * codebase's own parsers actually emit are ever accepted - ISO, numeric
+ * MM-DD-YYYY (slash or dash, 2-4 digit year, the same shape
+ * DECISION_DATE_RE and the DD214 box extractors capture), compact
+ * YYYYMMDD, "DD MON YYYY" (NGB-22 remarks style), and prose "Month DD,
+ * YYYY" (rating-decision "effective ..." style) - anything else is null,
+ * never guessed at via Date's own leniency.
+ * @param {string} value
+ * @returns {string|null} "YYYY-MM-DD", or null if `value` isn't one of the
+ *   explicit accepted formats.
+ */
+export function parseExplicitDate(value) {
+  if (!value) return null;
+  const text = String(value).trim();
+
+  const iso = text.match(/^(\d{4}-\d{2}-\d{2})(T.*)?$/);
+  if (iso) return iso[1];
+
+  const numeric = text.match(/^(\d{1,2})([-/])(\d{1,2})\2(\d{2,4})$/);
+  if (numeric) {
+    const [, month, , day, year] = numeric;
+    return `${_expandTwoDigitYear(year)}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  if (/^\d{8}$/.test(text)) {
+    return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)}`;
+  }
+
+  // "06 MAY 2005" - day first, month abbreviation.
+  const dayFirst = text.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})$/);
+  if (dayFirst) {
+    const month = MONTH_ABBREVIATIONS[dayFirst[2].slice(0, 3).toUpperCase()];
+    return month
+      ? `${dayFirst[3]}-${month}-${dayFirst[1].padStart(2, "0")}`
+      : null;
+  }
+
+  // "May 6, 2005" / "Sep. 15 2023" - month first, full or abbreviated name.
+  const monthFirst = text.match(/^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/);
+  if (monthFirst) {
+    const month = MONTH_ABBREVIATIONS[monthFirst[1].slice(0, 3).toUpperCase()];
+    return month
+      ? `${monthFirst[3]}-${month}-${monthFirst[2].padStart(2, "0")}`
+      : null;
+  }
+
+  return null;
+}
+
+// IRS/DoD combat-zone tax-exclusion designations under 26 U.S.C. §112,
+// dated from the Executive Order that created each one - Afghanistan (EO
+// 13239, effective 2001-09-19) and the Persian Gulf area, including Iraq
+// and Kuwait (EO 12744, effective 1991-01-17). This is a DoD/IRS tax
+// designation, NOT a VA "engaged in combat with the enemy" finding under
+// 38 U.S.C. § 1154(b) - the two are legally distinct, and this flag must
+// never be read as satisfying 1154(b) on its own.
+//
+// S46 QA (2026-09-24): the previous version of this list also carried
+// Saudi Arabia, Bahrain, Qatar, UAE, Oman, Syria, Sinai and Kosovo with no
+// dates at all, so every deployment to any of them was flagged regardless
+// of when it happened. None of those has a start date sourced anywhere
+// else in this codebase, so rather than guess one from memory they were
+// removed - a missed flag is far cheaper than a wrong one on a
+// veteran-facing legal claim.
+const COMBAT_ZONE_DESIGNATIONS = {
+  AFGHANISTAN: "2001-09-19",
+  IRAQ: "1991-01-17",
+  KUWAIT: "1991-01-17",
+};
+
+/**
+ * True only when the location has a sourced designation AND the
+ * deployment has a start date on or after it - an undated deployment (or
+ * one to a location this file has no sourced designation for) is never
+ * flagged, since there is nothing to confirm the dates against.
+ *
+ * N6 (final8 QA, 2026-09-24): shared by musterCallProcessor.js's
+ * document-parse path and veteranKnowledgeBase.js's VKB merge path so the
+ * flag is computed by one function instead of two copies that can drift -
+ * the VKB copy used to only ever OR a stale `true` forward on merge and
+ * never recompute it.
+ * @param {string} location - Upper-cased location name.
+ * @param {string} startDate - Any accepted format (see parseExplicitDate)
+ *   or an already-ISO date.
+ */
+export function isDesignatedCombatZone(location, startDate) {
+  const designationStart = COMBAT_ZONE_DESIGNATIONS[location];
+  if (!designationStart || !startDate) return false;
+  const deploymentStart = formatLocalDate(startDate).getTime();
+  const zoneStart = formatLocalDate(designationStart).getTime();
+  return !Number.isNaN(deploymentStart) && deploymentStart >= zoneStart;
+}
