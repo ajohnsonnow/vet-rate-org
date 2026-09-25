@@ -120,9 +120,25 @@ const QuickExitButton = ({
   const [isHovered, setIsHovered] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Position styles
+  // Position styles.
+  //
+  // "top-right" is mobile-aware: every tool dialog in this app renders
+  // full-bleed edge-to-edge below the `sm` breakpoint (ResponsiveModal
+  // switches from full-bleed to a centered, padded panel at `sm:`, see
+  // ResponsiveModal.jsx) and puts its own close-X in that same top-right
+  // corner. A `fixed` top-right Quick Exit sits in front of (higher
+  // z-index than) every dialog, so on phones it silently swallowed taps
+  // meant for the dialog's own close button (QA S46). Anchoring to
+  // top-left below `sm` clears every dialog close-X without touching
+  // any of their headers - the same breakpoint ResponsiveModal itself
+  // uses to stop being edge-to-edge, so the two rules line up by
+  // construction rather than by a guessed pixel offset. Quick Exit
+  // itself must never be hidden or removed while a dialog is open (it
+  // is the panic-exit safety net), so this repositions it instead of
+  // suppressing it the way the AI bubble / bug button are suppressed
+  // (see `.above-mobile-nav` in index.css).
   const positions = {
-    "top-right": "fixed top-3 right-3",
+    "top-right": "fixed top-3 left-3 sm:left-auto sm:right-3",
     "top-left": "fixed top-3 left-3",
     "bottom-right": "fixed bottom-3 right-3",
     "bottom-left": "fixed bottom-3 left-3",
