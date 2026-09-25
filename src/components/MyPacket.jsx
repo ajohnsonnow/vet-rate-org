@@ -913,6 +913,34 @@ function MyPacketImportStatusMessage({ importStatus }) {
   );
 }
 
+// WAI-ARIA Tabs pattern (APG): flat, ordered list of every tab id as they
+// appear left-to-right across the two nav rows (Primary then Secondary).
+// Drives both the tab/panel id pairing (`mypacket-tab-<id>` /
+// `mypacket-panel-<id>`) and the roving-tabindex arrow-key navigation in
+// `MyPacketTabNav`, so the two never drift apart.
+const TAB_ORDER = [
+  "claims",
+  "ratings",
+  "service",
+  "timeline",
+  "painmaps",
+  "profile",
+  "forms",
+  "varecords",
+  "documents",
+];
+
+function myPacketTabProps(id, activeTab) {
+  return {
+    id: `mypacket-tab-${id}`,
+    "data-tab-id": id,
+    role: "tab",
+    "aria-selected": activeTab === id,
+    "aria-controls": `mypacket-panel-${id}`,
+    tabIndex: activeTab === id ? 0 : -1,
+  };
+}
+
 // eslint-disable-next-line max-lines-per-function -- 82 lines of flat tab-button JSX, two over the ceiling; pre-existing and untouched by this change
 function MyPacketTabNavPrimary({
   activeTab,
@@ -930,6 +958,8 @@ function MyPacketTabNavPrimary({
       <button
         type="button"
         onClick={() => setActiveTab("claims")}
+        aria-label={t("myPacketSection.claims")}
+        {...myPacketTabProps("claims", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "claims"
             ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-t-lg"
@@ -946,6 +976,8 @@ function MyPacketTabNavPrimary({
       <button
         type="button"
         onClick={() => setActiveTab("ratings")}
+        aria-label={t("myPacketSection.ratings")}
+        {...myPacketTabProps("ratings", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "ratings"
             ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
@@ -959,12 +991,17 @@ function MyPacketTabNavPrimary({
         </span>
       </button>
 
-      <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+      <div
+        className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"
+        aria-hidden="true"
+      ></div>
 
       {/* Service & History */}
       <button
         type="button"
         onClick={() => setActiveTab("service")}
+        aria-label={t("myPacketSection.service")}
+        {...myPacketTabProps("service", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "service"
             ? "border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-t-lg"
@@ -983,6 +1020,8 @@ function MyPacketTabNavPrimary({
       <button
         type="button"
         onClick={() => setActiveTab("timeline")}
+        aria-label={t("myPacketSection.timeline")}
+        {...myPacketTabProps("timeline", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "timeline"
             ? "border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-t-lg"
@@ -1006,6 +1045,8 @@ function VaRecordsTabButton({ activeTab, setActiveTab, vaRecords }) {
     <button
       type="button"
       onClick={() => setActiveTab("varecords")}
+      aria-label="VA Records"
+      {...myPacketTabProps("varecords", activeTab)}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "varecords"
           ? "border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-t-lg"
@@ -1033,6 +1074,8 @@ function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
     <button
       type="button"
       onClick={() => setActiveTab("documents")}
+      aria-label="Documents"
+      {...myPacketTabProps("documents", activeTab)}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "documents"
           ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 rounded-t-lg"
@@ -1049,6 +1092,7 @@ function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
   );
 }
 
+// eslint-disable-next-line max-lines-per-function -- 85 lines of flat tab-button JSX, matching MyPacketTabNavPrimary above; the ARIA tab props push it 5 lines over the ceiling
 function MyPacketTabNavSecondary({
   activeTab,
   setActiveTab,
@@ -1061,12 +1105,17 @@ function MyPacketTabNavSecondary({
 }) {
   return (
     <>
-      <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"></div>
+      <div
+        className="w-px bg-gray-300 dark:bg-gray-600 mx-1 my-2"
+        aria-hidden="true"
+      ></div>
 
       {/* Evidence & Docs */}
       <button
         type="button"
         onClick={() => setActiveTab("painmaps")}
+        aria-label={t("myPacketSection.painMaps")}
+        {...myPacketTabProps("painmaps", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "painmaps"
             ? "border-red-600 text-red-600 dark:border-red-400 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-t-lg"
@@ -1085,6 +1134,8 @@ function MyPacketTabNavSecondary({
       <button
         type="button"
         onClick={() => setActiveTab("profile")}
+        aria-label={t("myPacketSection.profile")}
+        {...myPacketTabProps("profile", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "profile"
             ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-t-lg"
@@ -1103,6 +1154,8 @@ function MyPacketTabNavSecondary({
       <button
         type="button"
         onClick={() => setActiveTab("forms")}
+        aria-label={t("myPacketSection.forms")}
+        {...myPacketTabProps("forms", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "forms"
             ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
@@ -1146,11 +1199,35 @@ function MyPacketTabNav({
   documents,
   t,
 }) {
+  // WAI-ARIA Tabs pattern: roving tabindex + arrow-key navigation across the
+  // flat TAB_ORDER, regardless of which nav row (Primary/Secondary) a tab
+  // renders in. Home/End jump to the first/last tab; Left/Right wrap around.
+  const handleTabListKeyDown = (e) => {
+    if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) return;
+    const currentId = e.target?.dataset?.tabId;
+    const idx = TAB_ORDER.indexOf(currentId);
+    if (idx === -1) return;
+    e.preventDefault();
+
+    let nextIdx;
+    if (e.key === "ArrowRight") nextIdx = (idx + 1) % TAB_ORDER.length;
+    else if (e.key === "ArrowLeft")
+      nextIdx = (idx - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+    else if (e.key === "Home") nextIdx = 0;
+    else nextIdx = TAB_ORDER.length - 1;
+
+    const nextId = TAB_ORDER[nextIdx];
+    setActiveTab(nextId);
+    document.getElementById(`mypacket-tab-${nextId}`)?.focus();
+  };
+
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0">
       <nav
         className="flex gap-1 overflow-x-auto pb-px scrollbar-hide"
+        role="tablist"
         aria-label="Tabs"
+        onKeyDown={handleTabListKeyDown}
       >
         <MyPacketTabNavPrimary
           activeTab={activeTab}
@@ -5865,7 +5942,14 @@ function DocumentsTab({ documents, packetSummary, onClose, t }) {
 function MyPacketTabContent(props) {
   const { activeTab, viewingPainMap, viewingForm } = props;
   return (
-    <div className="p-6">
+    <div
+      className="p-6"
+      role="tabpanel"
+      id={`mypacket-panel-${activeTab}`}
+      aria-labelledby={`mypacket-tab-${activeTab}`}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- WAI-ARIA Tabs pattern: the active panel needs tabIndex=0 so keyboard users can Tab straight into it when it has no focusable content of its own (same rationale as ResponsiveModal's scroll-body tabIndex above)
+      tabIndex={0}
+    >
       {/* MY RATINGS TAB */}
       {activeTab === "ratings" && <RatingsTab {...props} />}
 
