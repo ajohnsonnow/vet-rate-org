@@ -1018,11 +1018,20 @@ function mergeDD214ServiceDates(vkb, dd214Data) {
 }
 
 // True when record A is later than record B: by date when both are dated,
-// by pay grade when neither is. Exported so other merge points (e.g.
-// veteranProfile.js's service-period rank merge) can apply the same
-// recency rule instead of inventing an equivalent.
+// by pay grade when neither is, and by pay grade too when both dates land
+// on the same calendar day - two records dated the same end date are
+// otherwise a tie that silently kept whichever was already stored
+// (observation, final9 QA, 2026-09-25), which is right on a re-scan of the
+// same document but wrong when a second, more senior record shares that
+// end date. Exported so other merge points (e.g. veteranProfile.js's
+// service-period rank merge) can apply the same recency rule instead of
+// inventing an equivalent.
 export function _isLaterRecord(dateA, dateB, gradeA, gradeB) {
-  if (dateA && dateB) return _calendarDay(dateA) > _calendarDay(dateB);
+  if (dateA && dateB) {
+    const dayA = _calendarDay(dateA);
+    const dayB = _calendarDay(dateB);
+    return dayA === dayB ? gradeA > gradeB : dayA > dayB;
+  }
   if (dateA || dateB) return Boolean(dateA);
   return gradeA > gradeB;
 }
