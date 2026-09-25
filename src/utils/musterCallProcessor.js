@@ -4568,13 +4568,13 @@ function _extractNGB22PeriodDates(ctx) {
 // duration (YRS|MOS|DAYS), which this form's own separation date counts
 // back from. Same tolerant Y/M/D-triple separator shape as the DD-214 Box
 // 12a/12b table-format matcher (see _extractServiceStartDate).
+// prettier-ignore
 // eslint-disable-next-line sonarjs/regex-complexity -- pre-existing pattern (see _extractServiceStartDate's own suppression above); the repeated (separator|whitespace) alternation is what makes this table-format date matcher tolerant of real OCR spacing variance, simplifying it is a separate, larger task out of scope here
-const NGB22_SEPARATION_DATE_RE =
-  /STATION\s+OR\s+INSTALLATION\s+AT\s+WHICH\s+EFFECTED[\s\S]{0,400}?DATE\s+(\d{4})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
+const NGB22_SEPARATION_DATE_RE = /STATION\s+OR\s+INSTALLATION\s+AT\s+WHICH\s+EFFECTED[\s\S]{0,400}?DATE\s+(\d{4})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
 
+// prettier-ignore
 // eslint-disable-next-line sonarjs/regex-complexity -- same tolerant-separator shape as NGB22_SEPARATION_DATE_RE above
-const NGB22_NET_SERVICE_RE =
-  /NET\s+SERVICE\s+THIS\s+PERIOD\D{0,20}?(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
+const NGB22_NET_SERVICE_RE = /NET\s+SERVICE\s+THIS\s+PERIOD\D{0,20}?(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
 
 /**
  * Derives the NGB-22's own primary (enlistment-level) period dates from
