@@ -26,10 +26,14 @@ const SecurityBadge = () => {
 
   return (
     <>
-      {/* Floating Badge */}
+      {/* Floating Badge. `above-mobile-nav` (index.css) lifts it clear of the
+          70px MobileBottomNav's rightmost "Missions" item on phones - the
+          same rule the AI bubble / bug button use - and hides it while a
+          dialog is open (it would already be obscured underneath the
+          full-screen modal on phones, same as those buttons). */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-4 right-4 z-50 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 font-semibold"
+        className="above-mobile-nav fixed bottom-4 right-4 z-50 bg-gradient-to-r from-green-500 to-blue-500 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 font-semibold"
         aria-label="View Security Proof"
       >
         <Shield className="w-5 h-5" />
