@@ -22,7 +22,7 @@ globalThis.ImageData ??= class ImageData {};
 
 const { parseServiceRecord, saveDeploymentsToProfile } =
   await import("./musterCallProcessor");
-const { getServiceHistory } = await import("./veteranProfile");
+const { getServiceHistory, addDeployment } = await import("./veteranProfile");
 
 const BOX18_AFGHANISTAN = `
 1. NAME (Last, First, Middle): DOE, JOHN ROBERT
@@ -252,5 +252,160 @@ describe("saveDeploymentsToProfile: undated mentions merge into a dated entry", 
       "2004-08-08",
       "2006-05-15",
     ]);
+  });
+});
+
+// final7 QA follow-up, Probe C (2026-09-24): the old dedupe keyed on an
+// exact startDate string, so two scans of the same tour whose extracted
+// start dates differed by a couple of days were saved as two tours.
+describe("saveDeploymentsToProfile: Probe C - a few days' difference is the same tour", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("treats a startDate 2 days off the one on file as the same tour", () => {
+    saveDeploymentsToProfile(
+      { name: "scan1.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            { location: "AFGHANISTAN", startDate: "08/08/2004", endDate: null },
+          ],
+        },
+      },
+    );
+    saveDeploymentsToProfile(
+      { name: "scan2.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            { location: "AFGHANISTAN", startDate: "08/10/2004", endDate: null },
+          ],
+        },
+      },
+    );
+
+    expect(getServiceHistory().deployments).toHaveLength(1);
+  });
+
+  it("still records a tour more than a week off as a genuinely different one", () => {
+    saveDeploymentsToProfile(
+      { name: "scan1.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            { location: "AFGHANISTAN", startDate: "08/08/2004", endDate: null },
+          ],
+        },
+      },
+    );
+    saveDeploymentsToProfile(
+      { name: "scan2.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            { location: "AFGHANISTAN", startDate: "09/01/2004", endDate: null },
+          ],
+        },
+      },
+    );
+
+    expect(getServiceHistory().deployments).toHaveLength(2);
+  });
+});
+
+// final7 QA follow-up, Probe D (2026-09-24): an unparseable deployment date
+// string (garbled OCR, not a real date) was stored verbatim.
+describe("saveDeploymentsToProfile: Probe D - an unparseable date is stored as null", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("stores null instead of the raw string for a deployment date that isn't a real date", () => {
+    saveDeploymentsToProfile(
+      { name: "garbled_scan.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            {
+              location: "GERMANY",
+              startDate: "NOT A REAL DATE",
+              endDate: null,
+            },
+          ],
+        },
+      },
+    );
+
+    expect(getServiceHistory().deployments[0].startDate).toBeNull();
+  });
+});
+
+// final7 QA follow-up, D6 (2026-09-24): the combat flag was only ever OR'd
+// to true on a merge, so a stale true set before the date-aware
+// designation table existed (or for a location that never had a sourced
+// designation) never got corrected on re-import.
+describe("saveDeploymentsToProfile: D6 - the combat flag is recomputed, not just OR'd in", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("clears a stale combat=true for a location with no sourced designation", () => {
+    const id = addDeployment({
+      theater: "Other",
+      location: "Germany",
+      startDate: "2010-01-01",
+      endDate: "2010-06-01",
+      combat: true,
+    });
+
+    saveDeploymentsToProfile(
+      { name: "rescan.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            {
+              location: "GERMANY",
+              startDate: "01/01/2010",
+              endDate: "06/01/2010",
+              combatZone: false,
+            },
+          ],
+        },
+      },
+    );
+
+    const saved = getServiceHistory().deployments.find((d) => d.id === id);
+    expect(saved.combat).toBe(false);
+  });
+
+  it("keeps a legitimately combat-flagged deployment true on re-import", () => {
+    saveDeploymentsToProfile(
+      { name: "scan1.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            {
+              location: "IRAQ",
+              startDate: "03/01/2005",
+              endDate: "09/01/2005",
+              combatZone: true,
+            },
+          ],
+        },
+      },
+    );
+    saveDeploymentsToProfile(
+      { name: "scan2.pdf" },
+      {
+        extractedData: {
+          deployments: [
+            { location: "IRAQ", startDate: "03/01/2005", endDate: null },
+          ],
+        },
+      },
+    );
+
+    expect(getServiceHistory().deployments[0].combat).toBe(true);
   });
 });

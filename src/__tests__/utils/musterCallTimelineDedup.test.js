@@ -14,13 +14,13 @@
  * proof (re-importing real DD214s twice via the browser's real IndexedDB)
  * comes from the Playwright real-document-corpus run, not this file.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 
 globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
-const { findDuplicateTimelineEntry, resolveTimelineDate } =
+const { findDuplicateTimelineEntry, resolveTimelineDate, _toIsoDay } =
   await import("../../utils/musterCallProcessor");
 
 const importEntry = (overrides = {}) => ({
@@ -114,5 +114,40 @@ describe("resolveTimelineDate", () => {
     );
     expect(date).toBe(expected);
     expect(dateIsProcessingDate).toBe(false);
+  });
+});
+
+// D-4 (final7 QA, 2026-09-24): appendMusterCallTimelineEntry's "imported"
+// fallback date used new Date().toISOString().split("T")[0] - the UTC
+// calendar day, already tomorrow for an evening import anywhere west of
+// UTC. It now uses _toIsoDay(new Date()), which reads the LOCAL calendar
+// day instead.
+describe("_toIsoDay: today's fallback date is a local calendar day, not UTC", () => {
+  const originalTZ = process.env.TZ;
+
+  afterEach(() => {
+    vi.useRealTimers();
+    process.env.TZ = originalTZ;
+  });
+
+  it("reports the previous local day for a late-evening US-Pacific instant already past UTC midnight", () => {
+    process.env.TZ = "America/Los_Angeles";
+    vi.useFakeTimers();
+    // 7:30 PM Sep 24 Pacific == 2:30 AM Sep 25 UTC.
+    vi.setSystemTime(new Date("2026-09-25T02:30:00Z"));
+
+    const now = new Date();
+    expect(now.toISOString().split("T")[0]).toBe("2026-09-25");
+    expect(_toIsoDay(now)).toBe("2026-09-24");
+  });
+
+  it("agrees with the UTC day when local and UTC calendar days coincide", () => {
+    process.env.TZ = "America/Los_Angeles";
+    vi.useFakeTimers();
+    // Midday Pacific has no UTC/local day mismatch either way.
+    vi.setSystemTime(new Date("2026-09-24T18:00:00Z"));
+
+    const now = new Date();
+    expect(_toIsoDay(now)).toBe(now.toISOString().split("T")[0]);
   });
 });

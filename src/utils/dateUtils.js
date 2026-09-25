@@ -34,18 +34,22 @@ export const formatLocalDate = (dateString) => {
 const SAME_PERIOD_TOLERANCE_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * True when two dated service periods are the same period recorded by
- * different documents: an NGB-22 and VA's code sheet can disagree on a start
- * date by a few days (report date vs entry date). Both periods need both
- * dates.
+ * True when two dates are the same real-world day within a small tolerance -
+ * different documents describing the same event (an NGB-22 and VA's code
+ * sheet, or two scans of the same deployment tour) can disagree on a date
+ * by a few days (report date vs entry date). Both dates must be present and
+ * parseable; either side missing or invalid is never treated as "same".
  */
-export const isSameServicePeriod = (aStart, aEnd, bStart, bEnd) => {
-  const days = [aStart, aEnd, bStart, bEnd].map((d) =>
-    formatLocalDate(d).getTime(),
-  );
-  if (days.some((t) => Number.isNaN(t))) return false;
-  return (
-    Math.abs(days[0] - days[2]) <= SAME_PERIOD_TOLERANCE_MS &&
-    Math.abs(days[1] - days[3]) <= SAME_PERIOD_TOLERANCE_MS
-  );
+export const isSameDate = (a, b) => {
+  const ta = formatLocalDate(a).getTime();
+  const tb = formatLocalDate(b).getTime();
+  if (Number.isNaN(ta) || Number.isNaN(tb)) return false;
+  return Math.abs(ta - tb) <= SAME_PERIOD_TOLERANCE_MS;
 };
+
+/**
+ * True when two dated service periods are the same period recorded by
+ * different documents. Both periods need both dates.
+ */
+export const isSameServicePeriod = (aStart, aEnd, bStart, bEnd) =>
+  isSameDate(aStart, bStart) && isSameDate(aEnd, bEnd);

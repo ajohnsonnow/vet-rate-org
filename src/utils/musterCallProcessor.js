@@ -63,6 +63,7 @@ import {
   loadVKB,
   saveVKB,
   mergeDD214IntoVKB,
+  mergeDD214Deployments,
   mergeRatingDecisionIntoVKB,
 } from "./veteranKnowledgeBase";
 import {
@@ -74,7 +75,7 @@ import {
   primaryConditionKey,
 } from "./conditionName";
 import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
-import { formatLocalDate } from "./dateUtils";
+import { formatLocalDate, isSameDate } from "./dateUtils";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
 // Import JSON repair utility for handling truncated AI responses
@@ -853,15 +854,20 @@ const _mergeDD214Record = (existing, candidate) => {
 // The canonical service period shape (C1 multi-period model) mandates
 // "YYYY-MM-DD" dates, but parseServiceRecord's own box extractors
 // (_normalizeDateMatch) emit MM/DD/YYYY - normalize at this write boundary
-// rather than touching the parser. Leaves anything unrecognized as-is
-// rather than fabricating a date.
+// rather than touching the parser. A recognized-but-different format (a
+// prose date from a letter, "05/30/2015" already handled below) is left
+// as-is rather than fabricated into something it isn't - formatLocalDate
+// can still parse it later. A string that isn't a date at all (garbled
+// OCR) becomes null instead of being stored verbatim.
 const _toISODateString = (dateStr) => {
   if (!dateStr) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
   const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return dateStr;
-  const [, month, day, year] = match;
-  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  if (match) {
+    const [, month, day, year] = match;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  return Number.isNaN(Date.parse(dateStr)) ? null : dateStr;
 };
 
 // Writes extracted DD214 fields to the Service tab's storage key
@@ -1121,10 +1127,16 @@ export const saveDeploymentsToProfile = (file, result) => {
     deployments.forEach((dep) => {
       if (!dep.location) return;
       const depStartIso = _toISODateString(dep.startDate);
+      // A start date a few days off the one already on file (report date
+      // vs entry date, two different scans of the same tour) is still the
+      // same tour, not a second one - same tolerance isSameServicePeriod
+      // uses for the analogous service-period case.
       const match = existing.find(
         (d) =>
           (d.location || "").toUpperCase() === dep.location.toUpperCase() &&
-          (!d.startDate || !depStartIso || d.startDate === depStartIso),
+          (!d.startDate ||
+            !depStartIso ||
+            isSameDate(d.startDate, depStartIso)),
       );
       if (match) {
         const updates = {};
@@ -1132,7 +1144,17 @@ export const saveDeploymentsToProfile = (file, result) => {
         if (!match.endDate && dep.endDate) {
           updates.endDate = _toISODateString(dep.endDate);
         }
-        if (!match.combat && dep.combatZone) updates.combat = true;
+        // Recomputed every time (not just OR'd in) so a stale `true` from
+        // before this designation table existed - or from a location that
+        // later loses its sourced designation - gets corrected on
+        // re-import instead of persisting forever.
+        const resolvedStartDate = updates.startDate || match.startDate;
+        const recomputedCombat = _isDesignatedCombatZone(
+          dep.location.toUpperCase(),
+          resolvedStartDate,
+        );
+        if (recomputedCombat !== match.combat)
+          updates.combat = recomputedCombat;
         if (Object.keys(updates).length > 0) {
           updateDeployment(match.id, updates);
           Object.assign(match, updates);
@@ -1248,18 +1270,20 @@ const mergeServiceRecordIntoVKB = async (file, result) => {
 // mergeServiceRecordIntoVKB above only fires for type: "service_record"
 // (a directly-uploaded DD214/NGB22), so a C-File's deployments reached the
 // Service tab (saveDeploymentsToProfile, which is type-agnostic) but never
-// vkb.serviceHistory.deployments or the evidence timeline. dd214Data here
-// deliberately carries only `deployments` - mergeDD214IntoVKB's other
-// merge steps read DD214-only fields (branch, rank, awards, ...) a c_file
-// result doesn't have in that shape, and leaving them undefined is a no-op
-// for every one of those steps.
+// vkb.serviceHistory.deployments or the evidence timeline. Calls
+// mergeDD214Deployments directly rather than the full mergeDD214IntoVKB
+// pipeline: the C-File is already filed as its own "c_file" document via
+// addDocumentToVKB/routeDocumentToVKB, so running mergeDD214IntoVKB's
+// mergeDD214Documentation step here as well filed it a SECOND time as a
+// fabricated DD-214 - inflating vkb.metadata.documentCount and the
+// "DD-214s: N" tally by one per C-File import (S46 QA follow-up, item 5).
 const mergeCFileDeploymentsIntoVKB = async (file, result) => {
   if (result.extractedData?.type !== "c_file") return;
   const deployments = result.extractedData?.deployments;
   if (!Array.isArray(deployments) || deployments.length === 0) return;
   try {
     const vkb = await loadVKB();
-    mergeDD214IntoVKB(
+    mergeDD214Deployments(
       vkb,
       {
         deployments: deployments.map((dep) => ({
@@ -1368,8 +1392,11 @@ const appendMusterCallTimelineEntry = async (file, result) => {
       result,
       file.name,
     );
+    // D-4: new Date().toISOString() reports the UTC calendar day, which is
+    // already tomorrow for an evening import anywhere west of UTC.
+    // _toIsoDay(new Date()) reads getFullYear/Month/Date() - local time.
     const importedDate = dateIsProcessingDate
-      ? new Date().toISOString().split("T")[0]
+      ? _toIsoDay(new Date())
       : undefined;
 
     // Without this, every re-import appended a brand-new "document_import"
@@ -1483,7 +1510,10 @@ const _sideFromConditionName = (name) => {
 // dateUtils.formatLocalDate, which takes the first 10 characters and appends
 // "T00:00:00" - so a prose date reached the Ratings tab as "Invalid Date".
 // Store the calendar day in the YYYY-MM-DD form that contract expects.
-const _toIsoDay = (value) => {
+// Exported (like resolveTimelineDate/findDuplicateTimelineEntry above) so
+// its local-vs-UTC calendar-day behavior is unit-testable without
+// IndexedDB - see D-4's "imported" fallback date fix, below.
+export const _toIsoDay = (value) => {
   if (!value) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const parsed = new Date(value);

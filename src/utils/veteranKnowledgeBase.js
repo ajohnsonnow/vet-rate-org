@@ -16,7 +16,7 @@
  * with localStorage as metadata cache only.
  */
 
-import { isSameServicePeriod } from "./dateUtils";
+import { isSameServicePeriod, isSameDate } from "./dateUtils";
 import { ensureQuota } from "./storage";
 import {
   calendarDay,
@@ -1235,7 +1235,12 @@ function mergeDD214Awards(vkb, dd214Data, options) {
   }
 }
 
-function mergeDD214Deployments(vkb, dd214Data, options) {
+// Exported so a deployments-only source (a C-File has no DD214/NGB22 fields
+// of its own to merge) can call this step directly instead of going through
+// mergeDD214IntoVKB, which also runs mergeDD214Documentation - filing a
+// non-DD214 source as one would double-count it in vkb.metadata.
+// documentCount and the "DD-214s: N" tally (S46 QA follow-up, item 5).
+export function mergeDD214Deployments(vkb, dd214Data, options) {
   // ─── DEPLOYMENTS (from Block 18 / extracted) ───
   if (dd214Data.deployments && Array.isArray(dd214Data.deployments)) {
     dd214Data.deployments.forEach((dep) => {
@@ -1249,11 +1254,13 @@ function mergeDD214Deployments(vkb, dd214Data, options) {
       // to) meant a bare re-mention of an already-dated tour was saved as
       // a second, dateless entry instead. A genuinely different startDate
       // for the same location still creates a new entry (a real second
-      // tour).
+      // tour) - but a startDate a few days off the one on file (two scans
+      // of the same tour) is still the same tour, not a second one, same
+      // tolerance isSameServicePeriod uses for service periods.
       const match = vkb.serviceHistory.deployments.find(
         (d) =>
           (d.location || "").toLowerCase() === location.toLowerCase() &&
-          (!d.startDate || !startDate || d.startDate === startDate),
+          (!d.startDate || !startDate || isSameDate(d.startDate, startDate)),
       );
       if (match) {
         if (!match.startDate && startDate) match.startDate = startDate;
@@ -1631,10 +1638,11 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
 };
 
 // "September 15, 2023" / "2023-09-15" → "2023-09-15" whatever the time zone;
-// unparseable input is kept verbatim rather than dropped.
+// input calendarDay can't parse at all (garbled OCR, not a date) becomes
+// null rather than being stored verbatim as if it were a real date.
 function _toIsoDate(value) {
   if (!value) return null;
-  return calendarDay(value) ?? String(value);
+  return calendarDay(value);
 }
 
 const RATING_OUTCOME_LABELS = {
