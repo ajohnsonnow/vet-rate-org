@@ -20,7 +20,8 @@ const {
   saveServiceRecordToProfile,
   saveCodeSheetServicePeriodsToProfile,
 } = await import("./musterCallProcessor");
-const { getServicePeriods } = await import("./veteranProfile");
+const { getServicePeriods, getUnmatchedServiceRecords } =
+  await import("./veteranProfile");
 
 const REALISTIC_NGB22 = `
 1. NAME (Last, First, Middle): DOE, JOHN ROBERT
@@ -158,5 +159,90 @@ describe("saveCodeSheetServicePeriodsToProfile: labels its own source correctly"
     );
     expect(period.formType).toBe("Code Sheet");
     expect(period.characterOfService).toBe("Honorable");
+  });
+});
+
+// N9c (final9 QA, 2026-09-25): a real NGB-22 never carries a DD-214-style
+// Box 12a/12b "date entered"/"separation date" pair - only Item 8's own
+// separation date and Item 10's "NET SERVICE THIS PERIOD" duration, which
+// that separation date counts back from. Fixture values are synthetic.
+const NGB22_WITH_NET_SERVICE = `
+1. LAST NAME - FIRST NAME - MIDDLE NAME    2. DEPARTMENT, COMPONENT AND BRANCH
+SAMPLE JORDAN TAYLOR                        ARNGUS/CAARNG
+
+5a. RANK
+SSG
+
+8a. STATION OR INSTALLATION AT WHICH EFFECTED   YR MO DA
+HHC 1-100 IN, ANYTOWN, ST 00000                 DATE 2010 | 06 | 15
+
+9. COMMAND TO WHICH TRANSFERRED    10. RECORD OF SERVICE   YRS MOS DAYS
+(a) NET SERVICE THIS PERIOD   08 | 03 | 10
+
+18. REMARKS: IADT: 20030601-20031015//AD: 20090101-20091231//NOTHING FOLLOWS
+
+24. CHARACTER OF SERVICE
+HONORABLE
+`;
+
+const NGB22_WITHOUT_NET_SERVICE = `
+1. LAST NAME - FIRST NAME - MIDDLE NAME    2. DEPARTMENT, COMPONENT AND BRANCH
+SAMPLE JORDAN TAYLOR                        ARNGUS/CAARNG
+
+5a. RANK
+SSG
+
+8a. STATION OR INSTALLATION AT WHICH EFFECTED   YR MO DA
+HHC 1-100 IN, ANYTOWN, ST 00000                 DATE 2010 | 06 | 15
+
+18. REMARKS: IADT: 20030601-20031015//AD: 20090101-20091231//NOTHING FOLLOWS
+
+24. CHARACTER OF SERVICE
+HONORABLE
+`;
+
+describe("N9c: NGB-22 primary period dates derived from Item 8 + Item 10", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("derives the entry date by counting NET SERVICE THIS PERIOD back from the separation date", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_WITH_NET_SERVICE,
+      "NGB22",
+    );
+
+    expect(extractedData.serviceStartDate).toBe("2002-03-05");
+    expect(extractedData.serviceEndDate).toBe("2010-06-15");
+  });
+
+  it("saves the derived dates as their own enlistment-level period, distinct from the Box 18 sub-periods", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_WITH_NET_SERVICE,
+      "NGB22",
+    );
+    saveServiceRecordToProfile(
+      { name: "ngb22_net_service.pdf" },
+      { extractedData },
+    );
+
+    const periods = getServicePeriods();
+    // 1 enlistment-level period + 2 Box 18 sub-periods (IADT + AD) = 3
+    expect(periods).toHaveLength(3);
+    const enlistment = periods.find((p) => p.serviceStartDate === "2002-03-05");
+    expect(enlistment).toBeDefined();
+    expect(enlistment.serviceEndDate).toBe("2010-06-15");
+    expect(enlistment.periodScope).not.toBe("window");
+    expect(getUnmatchedServiceRecords()).toHaveLength(0);
+  });
+
+  it("never guesses the entry date when NET SERVICE THIS PERIOD is missing", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_WITHOUT_NET_SERVICE,
+      "NGB22",
+    );
+
+    expect(extractedData.serviceStartDate).toBeFalsy();
+    expect(extractedData.serviceEndDate).toBeFalsy();
   });
 });

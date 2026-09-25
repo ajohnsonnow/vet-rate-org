@@ -81,6 +81,7 @@ import {
   isSameDate,
   parseExplicitDate,
   isDesignatedCombatZone,
+  subtractDuration,
 } from "./dateUtils";
 // ============================================================
 // C-FILE ANALYZER INTEGRATION (v1.18.3)
@@ -974,6 +975,12 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
           rank,
           notes:
             "Date range from NGB-22 Box 18 remarks (no location listed on the document).",
+          // N9c (final9 QA, 2026-09-25): a training/activation window, not
+          // the document's own enlistment-level record - the undated
+          // primary row this same document produces must never merge into
+          // one of its own sub-periods (see veteranProfile.js's
+          // _hasProvenLink).
+          periodScope: "window",
         },
         { sourceDocument: file.name, confidence: candidate.confidence },
       );
@@ -4552,6 +4559,54 @@ function _extractNGB22PeriodDates(ctx) {
   if (periods.length > 0) data.additionalPeriods = periods;
 }
 
+// N9c (final9 QA, 2026-09-25): a real NGB-22 (Report of Separation and
+// Record of Service) never prints "date entered this period" the way a
+// DD-214's Box 12a does - confirmed against the real corpus. Its
+// separation date lives at the "STATION OR INSTALLATION AT WHICH
+// EFFECTED" item instead (labeled "DATE", not "12b"), and there is no
+// printed entry date at all - only Item 10's "NET SERVICE THIS PERIOD"
+// duration (YRS|MOS|DAYS), which this form's own separation date counts
+// back from. Same tolerant Y/M/D-triple separator shape as the DD-214 Box
+// 12a/12b table-format matcher (see _extractServiceStartDate).
+// eslint-disable-next-line sonarjs/regex-complexity -- pre-existing pattern (see _extractServiceStartDate's own suppression above); the repeated (separator|whitespace) alternation is what makes this table-format date matcher tolerant of real OCR spacing variance, simplifying it is a separate, larger task out of scope here
+const NGB22_SEPARATION_DATE_RE =
+  /STATION\s+OR\s+INSTALLATION\s+AT\s+WHICH\s+EFFECTED[\s\S]{0,400}?DATE\s+(\d{4})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
+
+// eslint-disable-next-line sonarjs/regex-complexity -- same tolerant-separator shape as NGB22_SEPARATION_DATE_RE above
+const NGB22_NET_SERVICE_RE =
+  /NET\s+SERVICE\s+THIS\s+PERIOD\D{0,20}?(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
+
+/**
+ * Derives the NGB-22's own primary (enlistment-level) period dates from
+ * Item 8's separation date and Item 10's net-service duration - never a
+ * guess: both fields must be present, clearly labeled, and round-trip
+ * through parseExplicitDate's calendar validation (N13), or neither date
+ * is set and the primary period stays undated (upstream: unmatched, not
+ * merged onto one of this document's own Box 18 windows - see
+ * veteranProfile.js's _hasProvenLink).
+ */
+function _extractNGB22PrimaryPeriodDates(ctx) {
+  const { data, ocrCorrectedUpperText } = ctx;
+  if (data.formType !== "NGB22") return;
+  if (data.serviceStartDate || data.serviceEndDate) return;
+
+  const sepMatch = ocrCorrectedUpperText.match(NGB22_SEPARATION_DATE_RE);
+  const netMatch = ocrCorrectedUpperText.match(NGB22_NET_SERVICE_RE);
+  if (!sepMatch || !netMatch) return;
+
+  const separationDate = parseExplicitDate(
+    `${sepMatch[1]}-${sepMatch[2].padStart(2, "0")}-${sepMatch[3].padStart(2, "0")}`,
+  );
+  if (!separationDate) return;
+
+  const [years, months, days] = netMatch.slice(1, 4).map(Number);
+  const entryDate = subtractDuration(separationDate, years, months, days);
+  if (!entryDate || !parseExplicitDate(entryDate)) return;
+
+  data.serviceStartDate = entryDate;
+  data.serviceEndDate = separationDate;
+}
+
 export const parseServiceRecord = async (text, formType = "DD214") => {
   const data = {
     type: "service_record",
@@ -4659,6 +4714,9 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     _extractServiceStartDate(ctx);
     _extractPlaceOfEntryAndMOS(ctx);
     _extractServiceEndDate(ctx);
+    // N9c: NGB-22 only, and only when the DD-214-style Box 12a/12b
+    // extractors above found nothing - this form never carries that box.
+    _extractNGB22PrimaryPeriodDates(ctx);
     // After both service dates are known - see _validateDateOfBirth.
     _validateDateOfBirth(ctx);
     _extractServiceTime(ctx);
