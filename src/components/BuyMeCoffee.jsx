@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useBreakpoint, BREAKPOINTS } from "../hooks/useBreakpoint";
 
 /**
  * LunaHelper - A calm, supportive presence celebrating user accomplishments
@@ -32,6 +33,14 @@ const POSITION_ZONES = [
   { top: "5.5rem", right: "1.5rem" }, // Top-right (below header)
   { top: "5.5rem", left: "1.5rem" }, // Top-left (below header)
 ];
+
+// Below `sm`, dialogs run full-bleed and their header height varies per
+// tool (icon-heavy headers like BDD Builder's run taller than the fixed
+// "top: 5.5rem" the top zones assume), so a top zone can start above a
+// given dialog's close-X and cover it (QA D7: BDD Builder, Forms Helper at
+// 320px). Bottom zones don't have this problem - no dialog close button
+// lives down there - so phones get bottom-only placement.
+const MOBILE_POSITION_ZONES = POSITION_ZONES.filter((zone) => "bottom" in zone);
 
 // Cat-themed emojis for extra fun
 const CAT_EMOJIS = ["😺", "😸", "🐱", "😻", "😽", "🐾", "✨"];
@@ -355,12 +364,14 @@ function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [sessionDismissCount, setSessionDismissCount] = useState(0);
+  const { width } = useBreakpoint();
+  const isNarrow = width > 0 && width < BREAKPOINTS.sm;
+  const zones = isNarrow ? MOBILE_POSITION_ZONES : POSITION_ZONES;
 
   // Randomize position and animation when Luna appears
   const { position, animation, extraEmoji } = useMemo(
     () => ({
-      position:
-        POSITION_ZONES[Math.floor(Math.random() * POSITION_ZONES.length)],
+      position: zones[Math.floor(Math.random() * zones.length)],
       animation:
         ENTRANCE_ANIMATIONS[
           Math.floor(Math.random() * ENTRANCE_ANIMATIONS.length)
@@ -368,8 +379,8 @@ function BuyMeCoffee({ show, trigger = "search", context = {}, onDismiss }) {
       extraEmoji: CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)],
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [trigger],
-  ); // Re-randomize when trigger changes
+    [trigger, isNarrow],
+  ); // Re-randomize when trigger (or the mobile zone set) changes
 
   // Show with a slight delay for better UX
   useEffect(() => {
