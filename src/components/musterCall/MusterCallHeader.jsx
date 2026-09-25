@@ -12,7 +12,13 @@ import ReportBugLink from "../ReportBugLink";
 export default function MusterCallHeader({ onClose, processing }) {
   return (
     <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 p-6 text-white">
-      <div className="flex items-center justify-between">
+      {/* flex-wrap: the title (text-3xl + emoji + BETA badge) and the
+          report-bug/close actions don't both fit on one row at 320-390px
+          even at their own minimum content widths, which pushed the close
+          button off-screen (pre-existing - confirmed against 52a1edd8/
+          d78330db, neither touched this file). Wrapping drops the actions
+          onto their own row instead of overflowing. */}
+      <div className="flex flex-wrap items-center justify-between gap-y-2">
         <div>
           <h2
             id="muster-call-title"

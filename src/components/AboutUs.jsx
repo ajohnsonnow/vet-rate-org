@@ -198,8 +198,13 @@ const VersionDropUp = () => {
 function AboutUsHeader({ getColorClass, colors, onReportBug, onClose }) {
   const { t } = useLanguage();
   return (
+    // flex-wrap: the title plus the report-bug link and close button don't
+    // both fit on one row at 320-390px even at their own minimum content
+    // widths, which pushed the close button off-screen (confirmed against
+    // 52a1edd8/d78330db - neither D3 nor D7 touched this file; pre-existing).
+    // Wrapping drops the actions onto their own row instead of overflowing.
     <div
-      className={`sticky top-0 border-b px-6 py-4 flex justify-between items-center rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}
+      className={`sticky top-0 border-b px-6 py-4 flex flex-wrap justify-between items-center gap-y-2 rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}
     >
       <h2
         id="about-us-title"
@@ -1229,7 +1234,12 @@ const AboutUs = ({ onClose, onReportBug }) => {
   return (
     <div
       ref={dialogRef}
-      className={modalClasses.backdrop}
+      // pt-20 below `sm` reserves the same Quick Exit gutter as
+      // ResponsiveModal.jsx (D3, 52a1edd8), applied on the backdrop (not the
+      // `.modal-content` panel) to avoid the legacy `@media (width<=768px)
+      // { .modal-content { margin: 0 } }` rule in index.css that panel
+      // already carries.
+      className={`${modalClasses.backdrop} pt-20 sm:pt-4`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="about-us-title"
