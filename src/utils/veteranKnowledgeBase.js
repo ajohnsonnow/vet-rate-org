@@ -1239,17 +1239,32 @@ function mergeDD214Deployments(vkb, dd214Data, options) {
     dd214Data.deployments.forEach((dep) => {
       const location = dep.location || dep.theater || "";
       const operation = dep.operation || "";
-      // Avoid duplicate deployments
-      const isDuplicate = vkb.serviceHistory.deployments.some(
+      const startDate = _toIsoDate(dep.startDate);
+      // A location match is enough when either side has no date: an
+      // undated mention is either a repeat of an already-dated tour
+      // (nothing to add) or fills the existing entry's still-missing
+      // dates - matching only on an exact startDate string (as this used
+      // to) meant a bare re-mention of an already-dated tour was saved as
+      // a second, dateless entry instead. A genuinely different startDate
+      // for the same location still creates a new entry (a real second
+      // tour).
+      const match = vkb.serviceHistory.deployments.find(
         (d) =>
           (d.location || "").toLowerCase() === location.toLowerCase() &&
-          (d.startDate || "") === (dep.startDate || ""),
+          (!d.startDate || !startDate || d.startDate === startDate),
       );
-      if (!isDuplicate && (location || operation)) {
+      if (match) {
+        if (!match.startDate && startDate) match.startDate = startDate;
+        if (!match.endDate && dep.endDate) {
+          match.endDate = _toIsoDate(dep.endDate);
+        }
+        return;
+      }
+      if (location || operation) {
         vkb.serviceHistory.deployments.push({
           location,
-          startDate: dep.startDate || null,
-          endDate: dep.endDate || null,
+          startDate,
+          endDate: _toIsoDate(dep.endDate),
           combatZone: dep.combatZone || dep.isHazardous || false,
           operation,
           source: options.fileName || "DD-214",
@@ -1350,7 +1365,7 @@ function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
     dd214Data.deployments.forEach((dep) => {
       if (dep.startDate) {
         timelineEntries.push({
-          date: dep.startDate,
+          date: _toIsoDate(dep.startDate),
           eventType: "deployment",
           description: `Deployed to ${dep.location || dep.operation || "overseas"}`,
           source: options.fileName || "DD-214",
