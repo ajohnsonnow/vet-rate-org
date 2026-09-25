@@ -2689,6 +2689,31 @@ function CombatServiceCard({ awards, dd214Data, t }) {
   );
 }
 
+// N1b (final8 QA, 2026-09-24): a disagreement _mergeExistingServicePeriod
+// recorded (kept the existing value, never overwrote it) instead of
+// letting it disappear silently - split out purely to keep
+// DD214PeriodDetailCard's line count under the repo's lint ceiling.
+function ServicePeriodFieldConflicts({ conflicts }) {
+  if (!conflicts?.length) return null;
+  return (
+    <div className="mt-2 pt-2 border-t border-amber-200 dark:border-amber-800">
+      <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+        ⚠️ A different document disagreed:
+      </p>
+      <ul className="text-xs text-amber-600 dark:text-amber-400 list-disc list-inside">
+        {conflicts.map((c, i) => (
+          <li key={`${c.field}-${i}`}>
+            {_humanizeFieldName(c.field)}: kept "{c.keptValue}" (
+            {c.keptSourceDocument || "unknown source"}) -{" "}
+            {c.conflictingSourceDocument || "another document"} says "
+            {c.conflictingValue}"
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // C3: detail view - one card per period, most recent first.
 function DD214PeriodDetailCard({ period, t }) {
   return (
@@ -2756,6 +2781,7 @@ function DD214PeriodDetailCard({ period, t }) {
           {period.formType ? ` (${period.formType})` : ""}
         </p>
       </div>
+      <ServicePeriodFieldConflicts conflicts={period.fieldConflicts} />
     </div>
   );
 }
@@ -2778,6 +2804,71 @@ function DD214PeriodsDetail({ periods, t }) {
       </p>
       {sorted.map((period) => (
         <DD214PeriodDetailCard key={period.id} period={period} t={t} />
+      ))}
+    </div>
+  );
+}
+
+// N1c (final8 QA, 2026-09-24): a row that carries real content (rank, pay
+// grade, character of service, branch, ...) but has no proven link to any
+// date range - governing principle: showing an honest "we couldn't match
+// this" is better than guessing which period it belongs to. Kept in
+// storage in full; shown here, plainly separate from real periods, so the
+// veteran can still see what the record says and the period count above
+// only ever counts real, dated periods.
+function UnmatchedServiceRecordCard({ record }) {
+  return (
+    <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/60">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Form type: </span>
+          {record.formType ? getDocumentTypeLabel(record.formType) : "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Branch: </span>
+          {record.branch || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Component: </span>
+          {record.component || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Rank: </span>
+          {record.rank || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">Pay grade: </span>
+          {record.payGrade || "N/A"}
+        </p>
+        <p>
+          <span className="text-gray-500 dark:text-gray-400">
+            Character of service:{" "}
+          </span>
+          {record.characterOfService || "N/A"}
+        </p>
+      </div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        Source: {record.sourceDocument || "N/A"}
+      </p>
+    </div>
+  );
+}
+
+function UnmatchedServiceRecordsSection({ records }) {
+  if (!records || records.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+        Records we couldn't match to a date range ({records.length})
+      </h4>
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        These documents didn't have a readable date, and we couldn't confirm
+        which service period they belong to - so we're showing them separately
+        instead of guessing. Nothing here is lost; it just isn't counted as one
+        of your service periods above.
+      </p>
+      {records.map((record) => (
+        <UnmatchedServiceRecordCard key={record.id} record={record} />
       ))}
     </div>
   );
@@ -2819,7 +2910,11 @@ function DD214ExtractedDataDisplay({
   t,
 }) {
   const periods = serviceHistory.servicePeriods || [];
-  const summary = summarizeServicePeriods(periods);
+  const unmatchedRecords = serviceHistory.unmatchedServiceRecords || [];
+  const summary = summarizeServicePeriods(periods, {
+    unmatchedRecords,
+    dd214Data: serviceHistory.dd214Data,
+  });
   return (
     <div className="space-y-4">
       <DD214PeriodsSummary
@@ -2829,12 +2924,25 @@ function DD214ExtractedDataDisplay({
         t={t}
       />
       {periods.length > 0 && <DD214PeriodsDetail periods={periods} t={t} />}
+      <UnmatchedServiceRecordsSection records={unmatchedRecords} />
       <DD214DataActions
         setShowDD214Processor={setShowDD214Processor}
         handleClearDD214={handleClearDD214}
         t={t}
       />
     </div>
+  );
+}
+
+// N1c (final8 QA, 2026-09-24): a Guard member whose DD214s are all
+// undated still has real data - servicePeriods[] alone (0 entries) can no
+// longer decide "has this veteran imported anything yet" on its own, or
+// the empty-state drop zone shows instead of the unmatched-records section
+// that has their data.
+function _hasServiceData(serviceHistory) {
+  return (
+    !!serviceHistory.servicePeriods?.length ||
+    !!serviceHistory.unmatchedServiceRecords?.length
   );
 }
 
@@ -2855,7 +2963,7 @@ function DD214SectionHeader({
           </span>
         )}
       </h3>
-      {!showDD214Processor && !serviceHistory.servicePeriods?.length && (
+      {!showDD214Processor && !_hasServiceData(serviceHistory) && (
         <div className="flex gap-2">
           <button
             type="button"
@@ -2907,7 +3015,7 @@ function DD214Section({
         t={t}
       />
 
-      {!serviceHistory.servicePeriods?.length && !showDD214Processor && (
+      {!_hasServiceData(serviceHistory) && !showDD214Processor && (
         <DD214DropZone
           dd214FileInputRef={dd214FileInputRef}
           handleDD214DragOver={handleDD214DragOver}
@@ -2933,7 +3041,7 @@ function DD214Section({
         />
       )}
 
-      {serviceHistory.servicePeriods?.length > 0 && !showDD214Processor && (
+      {_hasServiceData(serviceHistory) && !showDD214Processor && (
         <DD214ExtractedDataDisplay
           serviceHistory={serviceHistory}
           setShowDD214Processor={setShowDD214Processor}
@@ -6108,6 +6216,8 @@ function useMyPacketServiceHistoryState() {
     awards: [],
     dutyStations: [],
     dd214Data: null,
+    servicePeriods: [],
+    unmatchedServiceRecords: [],
   });
   const [showDeploymentForm, setShowDeploymentForm] = useState(false);
   const [showAwardForm, setShowAwardForm] = useState(false);
