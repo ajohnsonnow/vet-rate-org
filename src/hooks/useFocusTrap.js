@@ -53,11 +53,40 @@ export function useFocusTrap(
     restoreRef.current =
       typeof document !== "undefined" ? document.activeElement : null;
 
+    // Excludes descendants the browser won't actually let focus() land on -
+    // most commonly a `hidden sm:flex` toggle that's `display:none` below
+    // the dialog's own responsive breakpoint. `display` isn't inherited, so
+    // checking only the candidate's own computed style misses the common
+    // case where the *candidate itself* has no display override but an
+    // ancestor wrapper (the `hidden sm:flex` div, not the button inside it)
+    // does - this walks from the candidate up to `node` checking each
+    // ancestor. Not `offsetParent`, which jsdom always reports as null with
+    // no real layout engine, breaking this same check under vitest;
+    // `getComputedStyle` reads the resolved style instead, so an unstyled
+    // test fixture still measures as visible. Without this, autoFocus could
+    // hand focus to `.focus()` on a non-rendered element, which browsers
+    // silently no-op on - leaving the previously-focused *opener* element
+    // focused instead. That opener sits outside `node`, so the keydown
+    // handler below - bound to `node` and relying on bubbling - never sees
+    // Escape or Tab at all (ClaimNavigator ignoring Escape below `sm:`,
+    // Observation fix).
+    const isRendered = (el) => {
+      for (let current = el; current; current = current.parentElement) {
+        const style = window.getComputedStyle(current);
+        if (style.display === "none" || style.visibility === "hidden") {
+          return false;
+        }
+        if (current === node) break;
+      }
+      return true;
+    };
+
     const focusables = () =>
       Array.from(node.querySelectorAll(FOCUSABLE)).filter(
         (el) =>
           !el.hasAttribute("disabled") &&
-          el.getAttribute("aria-hidden") !== "true",
+          el.getAttribute("aria-hidden") !== "true" &&
+          isRendered(el),
       );
 
     if (autoFocus) {

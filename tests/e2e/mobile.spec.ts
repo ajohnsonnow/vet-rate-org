@@ -1572,3 +1572,45 @@ test.describe("Crisis Modal content stays reachable at 320x568", () => {
     await expect(chatButton).toBeInViewport();
   });
 });
+
+// Observation: ClaimNavigator ignored Escape at 320-430px. Cause: below
+// `sm:`, NavigatorViewToggle (the first focusable element in DOM order,
+// `hidden sm:flex`) is `display:none`; useFocusTrap's autoFocus called
+// `.focus()` on one of its buttons anyway, which browsers silently no-op on
+// a non-rendered element, so real focus stayed on the tool-grid button that
+// opened the dialog - outside the dialog's own subtree, where the trap's
+// keydown listener (bound to the dialog container, relying on bubbling)
+// never saw the keystroke. Fixed in useFocusTrap.js's `focusables()`
+// (offsetParent !== null). BYPASS_DIALOGS above exercises ClaimNavigator's
+// close *button*, not Escape, so this is its own regression check at the
+// exact widths QA named.
+test.describe("Claim Navigator closes on Escape below sm", () => {
+  for (const vp of QUICK_EXIT_VIEWPORTS) {
+    test(`Escape closes Claim Navigator @ ${vp.width}px (${vp.name})`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+
+      const claimNavigator = BYPASS_DIALOGS.find(
+        (d) => d.label === "Claim Navigator",
+      );
+      await claimNavigator!.open(page);
+
+      const dialog = page.locator(
+        '[role="dialog"][aria-labelledby="claim-navigator-title"]',
+      );
+      await expect(dialog).toBeVisible();
+
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden({ timeout: 5000 });
+    });
+  }
+});
