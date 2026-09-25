@@ -16,7 +16,12 @@
  * with localStorage as metadata cache only.
  */
 
-import { isSameServicePeriod, isSameDate } from "./dateUtils";
+import {
+  isSameServicePeriod,
+  isSameDate,
+  isDesignatedCombatZone,
+  parseExplicitDate,
+} from "./dateUtils";
 import { ensureQuota } from "./storage";
 import {
   calendarDay,
@@ -1267,6 +1272,20 @@ export function mergeDD214Deployments(vkb, dd214Data, options) {
         if (!match.endDate && dep.endDate) {
           match.endDate = _toIsoDate(dep.endDate);
         }
+        // N6 (final8 QA, 2026-09-24): recomputed on every merge (not just
+        // OR'd in) so a stale `true` from before the designation table
+        // existed, or one that predates a later date correction, gets
+        // corrected on re-import instead of persisting forever - same
+        // date-aware rule musterCallProcessor's own saveDeploymentsToProfile
+        // uses, shared via dateUtils.isDesignatedCombatZone.
+        const recomputedCombat =
+          isDesignatedCombatZone(
+            location.toUpperCase(),
+            match.startDate || startDate,
+          ) || !!dep.isHazardous;
+        if (recomputedCombat !== match.combatZone) {
+          match.combatZone = recomputedCombat;
+        }
         return;
       }
       if (location || operation) {
@@ -1274,7 +1293,9 @@ export function mergeDD214Deployments(vkb, dd214Data, options) {
           location,
           startDate,
           endDate: _toIsoDate(dep.endDate),
-          combatZone: dep.combatZone || dep.isHazardous || false,
+          combatZone:
+            isDesignatedCombatZone(location.toUpperCase(), startDate) ||
+            !!dep.isHazardous,
           operation,
           source: options.fileName || "DD-214",
         });
@@ -1349,7 +1370,11 @@ function mergeDD214Addresses(vkb, dd214Data) {
   }
 }
 
-function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
+// Exported for the same reason mergeDD214Deployments is (N2, final8 QA,
+// 2026-09-24): a deployments-only C-File source needs the evidence-timeline
+// entries too, without running mergeDD214IntoVKB's mergeDD214Documentation
+// step, which would file the C-File a second time as a fabricated DD-214.
+export function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
   // ─── EVIDENCE TIMELINE ───
   const timelineEntries = [];
   if (dd214Data.entryDate) {
@@ -1637,12 +1662,15 @@ export const mergeBlueButtonIntoVKB = (vkb, blueButtonData) => {
   return vkb;
 };
 
-// "September 15, 2023" / "2023-09-15" → "2023-09-15" whatever the time zone;
-// input calendarDay can't parse at all (garbled OCR, not a date) becomes
-// null rather than being stored verbatim as if it were a real date.
+// "September 15, 2023" / "2023-09-15" → "2023-09-15" whatever the time zone.
+// N7 (final8 QA, 2026-09-24): used to delegate to conditionName's
+// calendarDay, whose own `new Date(text)` fallback is as lenient as
+// Date.parse - "SINAI 12" (or "SINAI 2004", "NGB FORM 2022") parsed as a
+// real, wrong date instead of failing. Delegates to
+// dateUtils.parseExplicitDate instead, shared with musterCallProcessor's
+// own _toISODateString so both close the same gap from one implementation.
 function _toIsoDate(value) {
-  if (!value) return null;
-  return calendarDay(value);
+  return parseExplicitDate(value);
 }
 
 const RATING_OUTCOME_LABELS = {

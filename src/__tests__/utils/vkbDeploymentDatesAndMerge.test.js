@@ -24,6 +24,7 @@ import {
   initializeVKB,
   mergeDD214IntoVKB,
   mergeDD214Deployments,
+  mergeDD214EvidenceTimeline,
 } from "../../utils/veteranKnowledgeBase";
 
 describe("mergeDD214Deployments: ISO date storage", () => {
@@ -245,4 +246,108 @@ describe("mergeDD214Deployments: D5 - a deployments-only merge never files a doc
     expect(vkb.documentation.dd214s).toHaveLength(1);
     expect(vkb.metadata.documentCount).toBe(1);
   });
+});
+
+// N2 (final8 QA, 2026-09-24): mergeCFileDeploymentsIntoVKB only ever ran
+// mergeDD214Deployments, so a C-File-only second tour reached
+// vkb.serviceHistory.deployments but never the Evidence Timeline. It now
+// also runs mergeDD214EvidenceTimeline - exercised directly here (both are
+// pure functions; mergeCFileDeploymentsIntoVKB itself is IndexedDB-backed
+// and not unit-testable in this environment, same gap already documented
+// for addDocumentToVKB in vkbDd214DocumentDedup.test.js) - without
+// registering a DD214 document, so the double-filing bug D5 already fixed
+// doesn't come back.
+describe("N2: a deployments-only merge also reaches the Evidence Timeline", () => {
+  it("adds a deployment entry to the Evidence Timeline without filing a DD-214 document", () => {
+    const vkb = initializeVKB();
+    const dd214Data = {
+      deployments: [
+        { location: "AFGHANISTAN", startDate: "08/08/2004", endDate: null },
+      ],
+    };
+    mergeDD214Deployments(vkb, dd214Data, { fileName: "cfile.pdf" });
+    mergeDD214EvidenceTimeline(vkb, dd214Data, { fileName: "cfile.pdf" });
+
+    const entry = vkb.evidenceTimeline.find(
+      (e) => e.eventType === "deployment",
+    );
+    expect(entry).toBeDefined();
+    expect(entry.date).toBe("2004-08-08");
+    expect(vkb.documentation.dd214s).toHaveLength(0);
+    expect(vkb.metadata.documentCount).toBe(0);
+  });
+});
+
+// N6 (final8 QA, 2026-09-24): the combat flag used to only ever be OR'd
+// true on push and never touched again on a later match - a stale value
+// (set before the designation table existed, or for a location later
+// found to have no sourced designation) persisted forever. It's now
+// recomputed from the resolved date on every merge, sharing the same
+// date-aware rule musterCallProcessor's own saveDeploymentsToProfile uses
+// (dateUtils.isDesignatedCombatZone).
+describe("N6: combatZone is recomputed (not just OR'd) on every merge", () => {
+  it("corrects a stale true when the resolved date is actually before the designation", () => {
+    const vkb = initializeVKB();
+    vkb.serviceHistory.deployments.push({
+      location: "AFGHANISTAN",
+      startDate: "1999-01-01",
+      endDate: null,
+      combatZone: true,
+      operation: "",
+      source: "old_scan.pdf",
+    });
+    mergeDD214Deployments(
+      vkb,
+      {
+        deployments: [
+          { location: "AFGHANISTAN", startDate: "1999-01-01", endDate: null },
+        ],
+      },
+      { fileName: "rescan.pdf" },
+    );
+
+    expect(vkb.serviceHistory.deployments[0].combatZone).toBe(false);
+  });
+
+  it("corrects a stale false once a real start date proves the designation applies", () => {
+    const vkb = initializeVKB();
+    vkb.serviceHistory.deployments.push({
+      location: "AFGHANISTAN",
+      startDate: null,
+      endDate: null,
+      combatZone: false,
+      operation: "",
+      source: "first_pass.pdf",
+    });
+    mergeDD214Deployments(
+      vkb,
+      {
+        deployments: [
+          { location: "AFGHANISTAN", startDate: "08/08/2004", endDate: null },
+        ],
+      },
+      { fileName: "second_pass.pdf" },
+    );
+
+    expect(vkb.serviceHistory.deployments[0].combatZone).toBe(true);
+  });
+});
+
+// N7 (final8 QA, 2026-09-24): the VKB's own _toIsoDate shared the same gap
+// as musterCallProcessor's _toISODateString - "SINAI 12" parsed as a real,
+// wrong date via Date.parse's leniency instead of failing.
+describe("N7: an unparseable-looking deployment date is stored as null, not guessed", () => {
+  it.each([["SINAI 12"], ["SINAI 2004"], ["NGB FORM 2022"]])(
+    "stores null for %s instead of a fabricated date",
+    (value) => {
+      const vkb = mergeDD214IntoVKB(
+        initializeVKB(),
+        {
+          deployments: [{ location: "SINAI", startDate: value, endDate: null }],
+        },
+        { fileName: "garbled_scan.pdf" },
+      );
+      expect(vkb.serviceHistory.deployments[0].startDate).toBeNull();
+    },
+  );
 });
