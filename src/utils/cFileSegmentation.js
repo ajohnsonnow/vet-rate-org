@@ -176,22 +176,21 @@ export const DOCUMENT_SIGNATURES = {
  * @param {Object} options - Segmentation options
  * @returns {Object} Segmented C-File with parsed documents
  */
+// The text is never trimmed at the match: a VBMS export is not ordered with the
+// code sheet last, and a stray "code sheet" mention early in a real 2,018-page
+// file used to discard everything after it (~90%) before segmentation.
 function _extractCodeSheet(text, result) {
   const codeSheetIndex = findLastOccurrence(
     text,
     DOCUMENT_SIGNATURES.CODE_SHEET.patterns,
   );
   if (codeSheetIndex !== -1) {
-    const codeSheetText = text.substring(codeSheetIndex);
-    result.codeSheet = parseCodeSheet(codeSheetText);
+    result.codeSheet = parseCodeSheet(text.substring(codeSheetIndex));
     result.notes.push(`Code Sheet found at position ${codeSheetIndex}`);
-
-    // Trim the text to exclude the code sheet from further processing
-    return text.substring(0, codeSheetIndex);
+    return;
   }
 
   result.notes.push("No Code Sheet found - this may be an incomplete C-File");
-  return text;
 }
 
 function _burstIntoSegments(text, boundaries, options, result) {
@@ -227,6 +226,12 @@ function _burstIntoSegments(text, boundaries, options, result) {
     result.segments.push(segment);
     result.byCategory[segment.category].push(segment.id);
     result.segmentCount++;
+  }
+
+  if (boundaries.length > maxSegments) {
+    result.notes.push(
+      `Stopped at ${maxSegments} segments; ${boundaries.length - maxSegments} later documents were not segmented`,
+    );
   }
 }
 
@@ -277,7 +282,7 @@ export function segmentCFile(text, options = {}) {
   try {
     // === STEP 1: BACKWARDS SEARCH FOR CODE SHEET ===
     if (prioritizeCodeSheet) {
-      text = _extractCodeSheet(text, result);
+      _extractCodeSheet(text, result);
     }
 
     // === STEP 2: IDENTIFY DOCUMENT BOUNDARIES ===

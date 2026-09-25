@@ -199,11 +199,35 @@ describe("segmentCFile: a code sheet segment", () => {
       "",
       "RATING CODE SHEET",
       "SUBJECT TO COMPENSATION (1.SC) 6260 TINNITUS Service Connected 10% from 03/31/2023",
-      filler("Code sheet"),
+      filler("Rating summary"),
     ].join("\n");
     const result = segmentCFile(text, { parseDocuments: false });
     expect(result.error).toBeUndefined();
     expect(result.byCategory.SUMMARY).toHaveLength(1);
     expect(result.segments.at(-1).category).toBe("SUMMARY");
+  });
+
+  it("keeps segmenting documents that come after an early code-sheet mention", () => {
+    const text = [
+      "RATING CODE SHEET",
+      filler("Rating summary"),
+      "",
+      CFILE_FIXTURE,
+    ].join("\n");
+    const result = segmentCFile(text, { parseDocuments: false });
+    const types = result.segments.map((s) => s.type);
+    expect(types).toContain("DD214");
+    expect(types).toContain("RATING_DECISION");
+  });
+
+  it("notes when maxSegments leaves later documents unsegmented", () => {
+    const result = segmentCFile(CFILE_FIXTURE, {
+      parseDocuments: false,
+      maxSegments: 1,
+    });
+    expect(result.segmentCount).toBe(1);
+    expect(result.notes.some((n) => /Stopped at 1 segments/.test(n))).toBe(
+      true,
+    );
   });
 });

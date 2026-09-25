@@ -2302,16 +2302,18 @@ function _extractCFileDeployments(segmentList) {
 }
 
 export const buildSegmentedCFileResult = async (text, cFileSummary) => {
-  // Full segmentation for large files. No maxSegments override: this passed 100,
-  // an order of magnitude below segmentCFile's own 1000 default, while a real
-  // 2,018-page C-File segments into 332 document groups - the cap silently
-  // discarded roughly two thirds of the file's structure.
+  // Full segmentation for large files, uncapped: a real 2,018-page C-File
+  // segments into ~1,030 documents (~170ms), past segmentCFile's 1000 default,
+  // and any cap silently drops the tail of the file.
   // parseDocuments:false - the mapped return below reads only type/startPage/
   // endPage/confidence/snippet, and the inventory needs no parsed bodies, so
   // the default (true) was parsing all ~332 segments of a real C-File into full
   // VA document objects and discarding every one. That waste is a prime suspect
   // for the renderer dying ~72 min into a 313MB run.
-  const segments = segmentCFile(text, { parseDocuments: false });
+  const segments = segmentCFile(text, {
+    parseDocuments: false,
+    maxSegments: Infinity,
+  });
   // eslint-disable-next-line no-console
   console.log(`✅ Segmented C-File into ${segments.segments.length} documents`);
 
