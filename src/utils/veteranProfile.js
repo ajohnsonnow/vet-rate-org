@@ -1089,6 +1089,9 @@ const SERVICE_PERIOD_MERGE_FIELDS = [
   // re-scan that resolves the flag to false can't clear a previously-set
   // true.
   "placeOfEntryLowConfidence",
+  // The start date was calculated (separation date minus net service), not
+  // printed on the form; net service excludes lost time, so it can be early.
+  "serviceStartDateDerived",
 ];
 
 // N9a: lightweight seed applied on every read (getServiceHistory), ahead
@@ -1141,6 +1144,7 @@ const BOX18_IMPOSSIBLE_FIELD_DEFAULTS = {
   militaryEducation: "",
   placeOfEntry: "",
   placeOfEntryLowConfidence: false,
+  serviceStartDateDerived: false,
 };
 
 function _isContaminatedBox18Period(p) {
@@ -1211,6 +1215,7 @@ function _sanitizeServicePeriodIdentity(p) {
     unit: sanitizeString(p.unit || "", 300),
     placeOfEntry: sanitizeString(p.placeOfEntry || "", 300),
     placeOfEntryLowConfidence: !!p.placeOfEntryLowConfidence,
+    serviceStartDateDerived: !!p.serviceStartDateDerived,
   };
 }
 

@@ -756,6 +756,7 @@ function _buildDD214IdentityFields(d) {
     mos: d.mos || null,
     mosTitle: d.mosTitle || null,
     entryDate: d.serviceStartDate || null,
+    entryDateDerived: !!d.serviceStartDateDerived,
     separationDate: d.serviceEndDate || null,
     placeOfEntry: d.placeOfEntry || null,
     placeOfEntryLowConfidence: !!d.placeOfEntryLowConfidence,
@@ -887,6 +888,7 @@ function _savePrimaryServicePeriod(file, result, candidate) {
       {
         serviceStartDate: _toISODateString(candidate.entryDate),
         serviceEndDate: _toISODateString(candidate.separationDate),
+        serviceStartDateDerived: !!candidate.entryDateDerived,
         branch: candidate.branch || "",
         component: candidate.component || "",
         formType: result.extractedData.formType || "DD214",
@@ -4604,6 +4606,7 @@ function _extractNGB22PrimaryPeriodDates(ctx) {
   if (!entryDate || !parseExplicitDate(entryDate)) return;
 
   data.serviceStartDate = entryDate;
+  data.serviceStartDateDerived = true;
   data.serviceEndDate = separationDate;
 }
 

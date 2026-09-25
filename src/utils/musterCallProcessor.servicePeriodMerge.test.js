@@ -214,6 +214,7 @@ describe("N9c: NGB-22 primary period dates derived from Item 8 + Item 10", () =>
 
     expect(extractedData.serviceStartDate).toBe("2002-03-05");
     expect(extractedData.serviceEndDate).toBe("2010-06-15");
+    expect(extractedData.serviceStartDateDerived).toBe(true);
   });
 
   it("saves the derived dates as their own enlistment-level period, distinct from the Box 18 sub-periods", async () => {
@@ -233,6 +234,7 @@ describe("N9c: NGB-22 primary period dates derived from Item 8 + Item 10", () =>
     expect(enlistment).toBeDefined();
     expect(enlistment.serviceEndDate).toBe("2010-06-15");
     expect(enlistment.periodScope).not.toBe("window");
+    expect(enlistment.serviceStartDateDerived).toBe(true);
     expect(getUnmatchedServiceRecords()).toHaveLength(0);
   });
 

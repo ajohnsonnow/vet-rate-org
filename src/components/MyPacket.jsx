@@ -2720,8 +2720,14 @@ function DD214PeriodDetailCard({ period, t }) {
     <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between mb-2">
         <h5 className="font-semibold text-gray-900 dark:text-gray-100">
-          {period.serviceStartDate || "?"} -{" "}
-          {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
+          {period.serviceStartDate || "?"}
+          {period.serviceStartDateDerived && (
+            <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+              {" "}
+              (calculated from net service)
+            </span>
+          )}{" "}
+          - {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
         </h5>
         {period.incomplete && (
           <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
