@@ -16,6 +16,7 @@
 import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
   Document,
@@ -1258,35 +1259,11 @@ const ReviewDownloadStep = ({
 
 const FOIAModalHeader = ({ onClose, onReportBug }) => (
   <div className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 p-4 shadow-lg rounded-t-xl z-10">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">🔑</span>
-        <div>
-          <h2
-            id="foia-generator-title"
-            className="text-xl font-bold text-white"
-          >
-            The Keysmith{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              BETA
-            </span>
-          </h2>
-          <p className="text-sm text-amber-100">
-            FOIA / C-File Request Generator
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="FOIA Keysmith"
-          />
-        )}
+    <HeaderCloseSlot
+      close={
         <button
           onClick={onClose}
-          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg
@@ -1303,8 +1280,33 @@ const FOIAModalHeader = ({ onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="text-3xl">🔑</span>
+        <div className="min-w-0">
+          <h2
+            id="foia-generator-title"
+            className="text-xl font-bold text-white"
+          >
+            The Keysmith{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              BETA
+            </span>
+          </h2>
+          <p className="text-sm text-amber-100">
+            FOIA / C-File Request Generator
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="FOIA Keysmith"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 

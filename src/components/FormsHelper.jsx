@@ -8,6 +8,7 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import AIConsentModal from "./AIConsentModal";
 import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
@@ -8580,7 +8581,30 @@ function FormsHelperHeader({
 }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-6 py-4 z-10">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-2xl shrink-0">📋</span>
           <div className="min-w-0">
@@ -8605,28 +8629,8 @@ function FormsHelperHeader({
             variant="light"
             moduleName="Forms Helper"
           />
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
