@@ -1,41 +1,53 @@
 /**
  * An NGB-22 that prints no entry date gets one calculated (separation date
- * minus net service - musterCallProcessor.js's derived-date flags,
- * carried onto vkb.serviceHistory.entryDateDerived by
- * mergeDD214IntoVKB/veteranKnowledgeBase.js). VKBViewer's own "Entry Date"
- * field must say so instead of showing the calculated value as if it were
- * printed on the form.
+ * minus net service). ADR-007: VKBViewer's "Entry Date" field is now a
+ * projection of the canonical servicePeriods[] resolver - it must mark a
+ * calculated date instead of showing it as printed, and a veteran's own
+ * edit routes through setServiceEntryDate (via: 'vkb_viewer') rather than
+ * writing the VKB's top-level field directly. Fixture values are
+ * synthetic, not any real veteran's data.
  */
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import VKBViewer from "../../components/VKBViewer.jsx";
-import { loadVKB } from "../../utils/veteranKnowledgeBase.js";
+
+let store = null;
 
 vi.mock("../../utils/veteranKnowledgeBase.js", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    loadVKB: vi.fn(),
-    saveVKB: vi.fn().mockResolvedValue({ success: true }),
+    loadVKB: vi.fn(async () =>
+      actual._applyServiceEntryProjection(
+        structuredClone(store ?? actual.initializeVKB()),
+      ),
+    ),
+    saveVKB: vi.fn(async (vkb) => {
+      await actual._applyServiceEntryProjection(vkb);
+      store = structuredClone(vkb);
+      return { success: true };
+    }),
   };
 });
 
-afterEach(cleanup);
+import VKBViewer from "../../components/VKBViewer.jsx";
+import {
+  upsertServicePeriod,
+  getServiceEntry,
+} from "../../utils/veteranProfile.js";
 
-function buildVkb(entryDateDerived) {
-  return {
-    metadata: { completeness: 10, documentCount: 1 },
-    personal: { fullName: null, dateOfBirth: null, email: null, phone: null },
-    serviceHistory: {
+const PROFILE_KEY = "vet_rate_veteran_profile";
+
+function seedPeriod(derived) {
+  return upsertServicePeriod(
+    {
+      serviceStartDate: "2012-03-14",
+      serviceStartDateDerived: derived,
+      serviceEndDate: "2020-03-14",
+      formType: "NGB22",
       branch: "Army National Guard",
-      characterOfService: "Honorable",
-      entryDate: "2012-03-14",
-      entryDateDerived,
-      separationDate: "2020-03-14",
-      mos: [],
-      awards: [],
     },
-  };
+    { sourceDocument: "ngb22-synthetic.pdf", confidence: 60 },
+  );
 }
 
 async function openServiceHistory() {
@@ -44,16 +56,34 @@ async function openServiceHistory() {
   await screen.findByText("Entry Date");
 }
 
+beforeEach(() => {
+  localStorage.clear();
+  store = null;
+  localStorage.setItem(
+    PROFILE_KEY,
+    JSON.stringify({ fullName: "Jordan Sample" }),
+  );
+});
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
 describe("VKBViewer - calculated entry date marker", () => {
-  it("shows the marker when entryDateDerived is set", async () => {
-    loadVKB.mockResolvedValue(buildVkb(true));
+  it("shows the marker when the resolved entry is calculated", async () => {
+    seedPeriod(true);
     await openServiceHistory();
 
-    expect(screen.getByText(/calculated from net service/)).toBeInTheDocument();
+    // The projection keeps the top-level field AND the linked period row
+    // showing the same marker - both are asserted to exist, never zero.
+    expect(
+      screen.getAllByText(/calculated from net service/).length,
+    ).toBeGreaterThan(0);
   });
 
-  it("shows no marker when entryDateDerived is unset", async () => {
-    loadVKB.mockResolvedValue(buildVkb(false));
+  it("shows no marker when the resolved entry is printed", async () => {
+    seedPeriod(false);
     await openServiceHistory();
 
     expect(
@@ -62,7 +92,7 @@ describe("VKBViewer - calculated entry date marker", () => {
   });
 
   it("clears the marker once the veteran edits and saves their own entry date", async () => {
-    loadVKB.mockResolvedValue(buildVkb(true));
+    const periodId = seedPeriod(true);
     await openServiceHistory();
 
     fireEvent.click(screen.getByText("✏️ Edit"));
@@ -70,17 +100,25 @@ describe("VKBViewer - calculated entry date marker", () => {
       target: { value: "2011-09-01" },
     });
 
+    // The top-level field's own marker clears immediately (component-local
+    // state) - the linked period row's marker only updates once Save
+    // actually applies the real correction and reloads.
     expect(
-      screen.queryByText(/calculated from net service/),
-    ).not.toBeInTheDocument();
+      screen.getByLabelText(/Entry Date/).labels[0].textContent,
+    ).not.toContain("calculated");
 
     fireEvent.click(screen.getByText("💾 Save"));
 
     const { saveVKB } = await import("../../utils/veteranKnowledgeBase.js");
     await vi.waitFor(() => expect(saveVKB).toHaveBeenCalled());
-    expect(saveVKB.mock.calls[0][0].serviceHistory).toMatchObject({
-      entryDate: "2011-09-01",
-      entryDateDerived: false,
+
+    expect(getServiceEntry()).toMatchObject({
+      date: "2011-09-01",
+      derived: false,
+      source: "veteran",
+      periodId,
     });
+    expect(store.serviceHistory.entryDate).toBe("2011-09-01");
+    expect(store.serviceHistory.entryDateDerived).toBe(false);
   });
 });

@@ -7,7 +7,7 @@
  * knowledge in an organized, editable format.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
@@ -17,7 +17,8 @@ import {
   exportVKB,
   clearVKB,
 } from "../utils/veteranKnowledgeBase";
-import { isSameDate } from "../utils/dateUtils";
+import { setServiceEntryDate } from "../utils/veteranProfile";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
 
 const SECTIONS = [
   { id: "personal", label: "Personal Info", icon: "👤" },
@@ -170,45 +171,13 @@ const ServiceHistoryCharacterField = ({ vkb, setVkb, editMode }) => (
   </div>
 );
 
-// D11-6: editing the top-level entry date only ever touched
-// vkb.serviceHistory.entryDate/entryDateDerived - the matching entry in
-// servicePeriods[] (what generateLLMContext's "Period 1:" line and
-// VKBViewer's own periods list actually read) kept its stale
-// serviceStartDateDerived: true, so the two disagreed after every edit.
-// Finds the period currently mirrored at the top level (its start date
-// equals the entry date BEFORE this edit) and carries the correction
-// through to it too - the reverse direction of
-// veteranKnowledgeBase.js's _applyAuthoritativeCorrection, which already
-// does the period-to-top-level sync for a code-sheet correction.
-// An exact string match is too narrow: mergeDD214ServiceDates (the
-// top-level field's own writer) and the servicePeriods[] merge are two
-// independent code paths, so a real-world veteran whose top-level entry
-// date has already been corrected by one but not the other landed here
-// with the two a few days apart, not identical - isSameDate's tolerance
-// (matching isSameServicePeriod's own) is the same "close enough to be the
-// same real event" rule already used everywhere else in this codebase.
+// ADR-007: the VKB is a PROJECTION of servicePeriods[] now, never an
+// independent editor - this only ever updates LOCAL component state (never
+// servicePeriods[] itself); the real correction is applied to the
+// canonical period by saveVkbViewerEdits (via setServiceEntryDate) on
+// Save, and the projection then re-derives every VKB field, including
+// this one, from that single source of truth.
 function _applyEntryDateEdit(vkb, newValue) {
-  const periods = vkb.serviceHistory.servicePeriods;
-  const previousEntryDate = vkb.serviceHistory.entryDate;
-  const matchIndex = Array.isArray(periods)
-    ? periods.findIndex(
-        (p) =>
-          p.serviceStartDate === previousEntryDate ||
-          isSameDate(p.serviceStartDate, previousEntryDate),
-      )
-    : -1;
-  const nextPeriods =
-    matchIndex === -1
-      ? periods
-      : periods.map((p, i) =>
-          i === matchIndex
-            ? {
-                ...p,
-                serviceStartDate: newValue,
-                serviceStartDateDerived: false,
-              }
-            : p,
-        );
   return {
     ...vkb,
     serviceHistory: {
@@ -218,7 +187,6 @@ function _applyEntryDateEdit(vkb, newValue) {
       // date - never the calculated NGB-22 guess the marker above and
       // generateLLMContext's own check of this same flag key off.
       entryDateDerived: false,
-      servicePeriods: nextPeriods,
     },
   };
 }
@@ -888,12 +856,56 @@ const ViewerModal = ({
   </ResponsiveModal>
 );
 
+const VKB_VIEWER_REASON_MESSAGES = {
+  invalid_date: "that isn't a valid date.",
+  period_not_found: "the linked service period no longer exists.",
+  no_period_for_document: "it couldn't be matched to a service period.",
+  no_document_value: "there is no document value to revert to.",
+};
+
+// ADR-007: the ONE place the VKB viewer writes anything - the entry date
+// goes through setServiceEntryDate (via: 'vkb_viewer'), applying the
+// correction to the canonical period instead of the VKB's own top-level
+// field; every other editable field is copied onto a FRESHLY loaded VKB
+// (never a stale `vkb` state object saveVKB(vkb0) would silently clobber
+// any service-entry projection written since this modal was opened).
+export async function saveVkbViewerEdits({ edited, loaded }) {
+  const loadedEntryDate = loaded?.serviceHistory?.entryDate;
+  const editedEntryDate = edited?.serviceHistory?.entryDate;
+  if (!isSameCalendarDay(editedEntryDate, loadedEntryDate)) {
+    const result = setServiceEntryDate({
+      date: editedEntryDate,
+      via: "vkb_viewer",
+      periodId: loaded?.serviceHistory?.entryPeriodId || undefined,
+    });
+    if (!result.ok) {
+      const reason =
+        VKB_VIEWER_REASON_MESSAGES[result.reason] || "please try again.";
+      alert(`Your entry date couldn't be saved: ${reason}`);
+      return { ok: false };
+    }
+  }
+
+  const fresh = await loadVKB();
+  fresh.personal.fullName = edited.personal.fullName;
+  fresh.personal.dateOfBirth = edited.personal.dateOfBirth;
+  fresh.personal.email = edited.personal.email;
+  fresh.personal.phone = edited.personal.phone;
+  fresh.serviceHistory.branch = edited.serviceHistory.branch;
+  fresh.serviceHistory.characterOfService =
+    edited.serviceHistory.characterOfService;
+  fresh.serviceHistory.separationDate = edited.serviceHistory.separationDate;
+  await saveVKB(fresh);
+  return { ok: true, vkb: fresh };
+}
+
 const VKBViewer = ({ isOpen, onClose }) => {
   const [vkb, setVkb] = useState(null);
   const [activeSection, setActiveSection] = useState("personal");
   const [showLLMContext, setShowLLMContext] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const loadedRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -901,6 +913,7 @@ const VKBViewer = ({ isOpen, onClose }) => {
       loadVKB()
         .then((loaded) => {
           setVkb(loaded);
+          loadedRef.current = loaded;
           setLoading(false);
         })
         .catch((err) => {
@@ -913,10 +926,14 @@ const VKBViewer = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   const handleSave = async () => {
-    const result = await saveVKB(vkb);
-    if (result.success) {
-      setEditMode(false);
-    }
+    const result = await saveVkbViewerEdits({
+      edited: vkb,
+      loaded: loadedRef.current,
+    });
+    if (!result.ok) return;
+    setVkb(result.vkb);
+    loadedRef.current = result.vkb;
+    setEditMode(false);
   };
 
   const handleExport = () => {
