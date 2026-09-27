@@ -14,6 +14,7 @@
 import { isSameServicePeriod, formatLocalDate } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
 import { _isLaterRecord, parsePayGrade } from "./veteranKnowledgeBase";
+import { pickServiceEntry } from "./serviceEntryDate";
 
 const PROFILE_KEY = "vet_rate_veteran_profile";
 const SAVED_FORMS_KEY = "vet_rate_saved_forms";
@@ -1724,6 +1725,15 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     // scan of an early enlistment isn't "later" than a garbled scan of the
     // discharge that followed it).
     if (field === "rank") return;
+    // serviceStartDateDerived describes serviceStartDate itself, not an
+    // independent fact (same pairing veteranKnowledgeBase.js's
+    // entryDate/entryDateDerived already uses) - it only ever changes
+    // alongside serviceStartDate, in the authoritativeDates bypass below.
+    // Treating it as an ordinary field here flagged a code sheet's real
+    // printed date (serviceStartDateDerived: false) as disagreeing with an
+    // existing calculated guess (true) instead of simply superseding it,
+    // so the calculated marker survived a code-sheet correction.
+    if (field === "serviceStartDateDerived") return;
     if (_isEmptyServicePeriodValue(incoming[field])) return;
     const existingIsEmpty = _isEmptyServicePeriodValue(existing[field]);
     const isDisagreement =
@@ -1785,6 +1795,11 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
   if (options.authoritativeDates && !incoming.incomplete) {
     merged.serviceStartDate = incoming.serviceStartDate;
     merged.serviceEndDate = incoming.serviceEndDate;
+    // The code sheet's own dates are never a calculated guess - clear any
+    // stale flag a prior DD214/NGB-22 merge left on this period so the
+    // now-authoritative date doesn't keep reading as "calculated" (mirrors
+    // veteranKnowledgeBase.js's _applyAuthoritativeCorrection).
+    merged.serviceStartDateDerived = false;
   }
   merged.confidence = Math.max(incomingConfidence, existingConfidence);
   merged.incomplete = incoming.incomplete && existing.incomplete;
@@ -1994,6 +2009,22 @@ export const upsertServicePeriod = (periodData, options = {}) => {
   }
 };
 
+// FormsHelper.jsx's prefill (buildFormsHelperPrefillDefaults) reads
+// profile.serviceStartDate/serviceStartDateDerived directly, not through
+// getServiceEntry() - keeping this flat mirror in sync with whatever
+// servicePeriods[] now says is the earliest entry means a My Packet Service
+// tab edit reaches FormsHelper without FormsHelper needing to change at
+// all. Only ever narrows/corrects the mirror when a real period date is
+// known; never clears it back to empty.
+function _syncFlatServiceStartDateMirror(servicePeriods) {
+  const entry = pickServiceEntry(servicePeriods, null);
+  if (!entry.date) return;
+  updateVeteranProfile({
+    serviceStartDate: entry.date,
+    serviceStartDateDerived: entry.derived,
+  });
+}
+
 /**
  * Manually add a service period (Profile tab editor). Always userEdited.
  */
@@ -2007,6 +2038,7 @@ export const addServicePeriod = (period) => {
     };
     history.servicePeriods.push(newPeriod);
     saveServiceHistory(history);
+    _syncFlatServiceStartDateMirror(history.servicePeriods);
     return newPeriod.id;
   } catch (error) {
     console.error("Error adding service period:", error);
@@ -2029,7 +2061,9 @@ export const updateServicePeriod = (periodId, updates) => {
       ...updates,
       userEdited: true,
     };
-    return saveServiceHistory(history);
+    const success = saveServiceHistory(history);
+    _syncFlatServiceStartDateMirror(history.servicePeriods);
+    return success;
   } catch (error) {
     console.error("Error updating service period:", error);
     return false;
@@ -2042,7 +2076,9 @@ export const removeServicePeriod = (periodId) => {
     history.servicePeriods = history.servicePeriods.filter(
       (p) => p.id !== periodId,
     );
-    return saveServiceHistory(history);
+    const success = saveServiceHistory(history);
+    _syncFlatServiceStartDateMirror(history.servicePeriods);
+    return success;
   } catch (error) {
     console.error("Error removing service period:", error);
     return false;
@@ -2192,10 +2228,25 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
 
   const startDates = list.map((p) => p.serviceStartDate).filter(Boolean);
   const endDates = list.map((p) => p.serviceEndDate).filter(Boolean);
+  // D11-2: which period actually supplied the earliest start date, not just
+  // the date string itself - so the Service tab can mark it "(calculated
+  // from net service)" the same way every other consumer of
+  // serviceStartDateDerived does, instead of presenting a guess as a
+  // printed fact.
+  const startPeriod = list
+    .filter((p) => p.serviceStartDate)
+    .reduce(
+      (earliest, p) =>
+        !earliest || p.serviceStartDate < earliest.serviceStartDate
+          ? p
+          : earliest,
+      null,
+    );
   const serviceSpan =
     startDates.length > 0 || endDates.length > 0
       ? {
-          start: startDates.sort((a, b) => a.localeCompare(b))[0] || null,
+          start: startPeriod?.serviceStartDate || null,
+          startDerived: !!startPeriod?.serviceStartDateDerived,
           end: endDates.toSorted((a, b) => a.localeCompare(b)).at(-1) || null,
         }
       : null;
@@ -2245,6 +2296,41 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
     characterOfServiceDisagrees:
       charactersOfService.length > 1 || rowLevelCharacterConflict,
   };
+};
+
+/**
+ * The single canonical source for "when did the veteran's service begin",
+ * with provenance - see serviceEntryDate.js's pickServiceEntry for the
+ * precedence rule. Reads getServiceHistory()'s canonical servicePeriods[]
+ * first (kept correct by upsertServicePeriod/updateServicePeriod's
+ * userEdited protection and _mergeExistingServicePeriod's authoritativeDates
+ * bypass), falling back to the legacy top-level dd214Data.entryDate and
+ * finally profile.serviceStartDate only when no period has ever been
+ * recorded - a veteran who has only ever used the FormsHelper/My Packet
+ * profile fields directly, with no document imported.
+ * @returns {import('./serviceEntryDate').ServiceEntry}
+ */
+export const getServiceEntry = () => {
+  const history = getServiceHistory();
+  const dd214Legacy = history.dd214Data?.entryDate
+    ? {
+        date: history.dd214Data.entryDate,
+        derived: !!history.dd214Data.entryDateDerived,
+      }
+    : null;
+  const result = pickServiceEntry(history.servicePeriods, dd214Legacy);
+  if (result.date) return result;
+
+  const profile = getVeteranProfile();
+  if (profile.serviceStartDate) {
+    return {
+      date: profile.serviceStartDate,
+      derived: !!profile.serviceStartDateDerived,
+      source: profile.serviceStartDateDerived ? "calculated" : "printed",
+      periodId: null,
+    };
+  }
+  return result;
 };
 
 export const saveServiceHistory = (history) => {
@@ -2982,6 +3068,7 @@ export default {
   removeServicePeriod,
   clearServicePeriods,
   summarizeServicePeriods,
+  getServiceEntry,
   // Timeline Events functions
   getTimelineEvents,
   saveTimelineEvents,
