@@ -2100,27 +2100,29 @@ function CAPSelectConditionHeader({
   setSearchTerm,
 }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-      <button
-        onClick={() => setMode("intro")}
-        className="absolute top-4 left-4 text-white hover:text-gray-200"
-        aria-label="Go back"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-white hover:text-gray-200"
-        aria-label="Close"
-      >
-        <X className="h-6 w-6" />
-      </button>
-      <h2
-        id="cap-condition-select-title"
-        className="text-2xl font-bold text-center mb-4"
-      >
-        Select a Condition to Simulate
-      </h2>
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={() => setMode("intro")}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <h2
+          id="cap-condition-select-title"
+          className="min-w-0 flex-1 text-center text-2xl font-bold"
+        >
+          Select a Condition to Simulate
+        </h2>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Close"
+        >
+          <X className="h-6 w-6" />
+        </button>
+      </div>
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-emerald-200" />
@@ -3222,26 +3224,31 @@ function CAPFlashcardHeader({
   onCollapseAll,
 }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-      <button
-        onClick={() => setMode("intro")}
-        className="absolute top-4 left-4 text-white hover:text-gray-200"
-        aria-label="Go back"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-white hover:text-gray-200"
-        aria-label="Close"
-      >
-        <X className="h-6 w-6" />
-      </button>
-      <div className="flex items-center gap-3 justify-center">
-        <BookOpen className="h-8 w-8" />
-        <h2 id="cap-terminology-title" className="text-2xl font-bold">
-          VA Claims Terminology
-        </h2>
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setMode("intro")}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
+          <BookOpen className="h-8 w-8 shrink-0" />
+          <h2
+            id="cap-terminology-title"
+            className="min-w-0 break-words text-2xl font-bold"
+          >
+            VA Claims Terminology
+          </h2>
+        </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Close"
+        >
+          <X className="h-6 w-6" />
+        </button>
       </div>
       <p className="text-emerald-100 text-center mt-2">
         {totalTerms} essential terms from 38 CFR Part 4 and VA claims process
@@ -3502,28 +3509,33 @@ function CAPSimulationHeader({
   getProgress,
 }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6 relative">
-      <button
-        onClick={() => setMode("select-condition")}
-        className="absolute top-4 left-4 text-white hover:text-gray-200"
-        aria-label="Go back"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-white hover:text-gray-200"
-        aria-label="Close"
-      >
-        <X className="h-6 w-6" />
-      </button>
-      <div className="text-center mb-4">
-        <h2 id="cap-question-title" className="text-2xl font-bold mb-1">
-          {conditionName}
-        </h2>
-        <p className="text-emerald-100 text-sm">
-          Question {currentQuestionIndex + 1} of {currentQuestions.length}
-        </p>
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={() => setMode("select-condition")}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <div className="min-w-0 flex-1 text-center">
+          <h2
+            id="cap-question-title"
+            className="break-words text-2xl font-bold mb-1"
+          >
+            {conditionName}
+          </h2>
+          <p className="text-emerald-100 text-sm">
+            Question {currentQuestionIndex + 1} of {currentQuestions.length}
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="shrink-0 text-white hover:text-gray-200"
+          aria-label="Close"
+        >
+          <X className="h-6 w-6" />
+        </button>
       </div>
       {/* Progress bar */}
       <div className="w-full bg-emerald-900/50 rounded-full h-2">
