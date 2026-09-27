@@ -5858,11 +5858,17 @@ function DocumentFindingScalars({ scalars }) {
   if (scalars.length === 0) return null;
   return (
     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 px-4 py-3 text-sm">
-      {scalars.map(({ label, value }) => (
+      {scalars.map(({ label, value, derived }) => (
         <div key={label} className="flex flex-wrap gap-x-2 min-w-0">
           <dt className="text-gray-500 dark:text-gray-400">{label}:</dt>
           <dd className="font-medium text-gray-900 dark:text-gray-100 min-w-0 break-words">
             {value}
+            {derived && (
+              <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+                {" "}
+                (calculated from net service)
+              </span>
+            )}
           </dd>
         </div>
       ))}
