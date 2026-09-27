@@ -19,7 +19,7 @@
  * - Redirects to neutral site (weather.com)
  */
 
-import { removeBeforeUnloadWarning } from "./dataPersistence";
+import { clearBeforeUnloadWarning } from "./beforeUnloadGuard";
 
 // Storage key to track safety feature usage (for UX analytics, no PII)
 const SAFETY_USE_KEY = "vetrate_safety_use_count";
@@ -70,7 +70,7 @@ export const triggerPanicRedirect = () => {
     // blockable, in any state (mid-migration, with unsaved changes, etc).
     // `onbeforeunload = null` is a second, independent guard for any
     // property-style (not addEventListener) registration, present or future.
-    removeBeforeUnloadWarning();
+    clearBeforeUnloadWarning();
     if (typeof window !== "undefined") {
       window.onbeforeunload = null;
     }
@@ -84,7 +84,7 @@ export const triggerPanicRedirect = () => {
     // a failsafe.
     console.error("Panic redirect error (still redirecting):", error);
     try {
-      removeBeforeUnloadWarning();
+      clearBeforeUnloadWarning();
     } catch {
       // already failing; fall through to the property-style guard below
     }

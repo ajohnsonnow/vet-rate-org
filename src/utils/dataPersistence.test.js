@@ -13,6 +13,7 @@ import {
   removeBeforeUnloadWarning,
   markBackupCreated,
 } from "./dataPersistence";
+import { clearBeforeUnloadWarning } from "./beforeUnloadGuard";
 import * as persistentStorage from "./persistentStorage";
 
 function dispatchBeforeUnload() {
@@ -95,5 +96,21 @@ describe("setupBeforeUnloadWarning / removeBeforeUnloadWarning", () => {
 
   it("removeBeforeUnloadWarning is safe to call when nothing was ever registered", () => {
     expect(() => removeBeforeUnloadWarning()).not.toThrow();
+  });
+
+  // safetyRedirect.js (the panic key) must never import this module directly
+  // - doing so once dragged in persistentStorage -> migrationManager ->
+  // version.js's bare `import packageJson from "../../package.json"`, which
+  // broke Playwright's e2e test collection entirely. It calls through
+  // beforeUnloadGuard.js's clearBeforeUnloadWarning() instead, which this
+  // module registers its remover into.
+  it("clearBeforeUnloadWarning (the leaf module the panic key imports) also stops the native prompt", () => {
+    vi.spyOn(persistentStorage, "checkHasUnsavedChanges").mockReturnValue(true);
+    setupBeforeUnloadWarning();
+    clearBeforeUnloadWarning();
+
+    const event = dispatchBeforeUnload();
+
+    expect(event.defaultPrevented).toBe(false);
   });
 });

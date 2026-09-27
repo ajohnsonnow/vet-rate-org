@@ -8,6 +8,7 @@
  */
 
 import { checkHasUnsavedChanges } from "./persistentStorage";
+import { setBeforeUnloadRemover } from "./beforeUnloadGuard";
 
 const LAST_BACKUP_KEY = "vetrate_last_backup_timestamp";
 const DATA_HASH_KEY = "vetrate_data_hash";
@@ -93,6 +94,7 @@ export function setupBeforeUnloadWarning() {
     }
   };
   window.addEventListener("beforeunload", beforeUnloadHandler);
+  setBeforeUnloadRemover(removeBeforeUnloadWarning);
 }
 
 /**
