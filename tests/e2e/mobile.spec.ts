@@ -1510,107 +1510,342 @@ for (const vp of BYPASS_TEST_VIEWPORTS) {
   });
 }
 
-// N10 (QA final9): the ≤640px `.modal-content .flex.gap-2/3 > button`
-// min-width rule (index.css) could widen and push off-screen the close
-// button of *any* ResponsiveModal-based tool dialog, not just the 22 QA
-// happened to hit-test. Reuses the DOM-enumeration approach above
-// (probeOpenDialog/dispatchTrigger/triggerUntilDialogFound) against the
-// whole tool-grid dialog inventory this file already catalogues for other
-// assertions (MODALS, MIGRATED_MODALS, TOOL_HEADERS) - not a fourth
-// hand-kept list - plus three dialogs among QA's 22 that had no e2e trigger
-// yet (AI Command Center, Claim Stress Test, Denial Decoder). Deduped by
-// event: several dialogs are catalogued in more than one array above (e.g.
-// TOOL_HEADERS re-lists some MODALS entries for the Quick Exit check), and
-// each should only be opened once per width here.
+// N15: true DOM enumeration of the tool grid, replacing the hand-kept
+// TOOL_GRID_DIALOG_EVENTS array above (which reused MODALS/MIGRATED_MODALS/
+// TOOL_HEADERS plus a handful of hand-added entries). Opens the home page -
+// the tool grid (HomeFeatureCards) and the site footer are both
+// unconditionally in the DOM there, no dropdown/drawer interaction needed -
+// enumerates every real `<button>` inside them, clicks each one for real
+// (not a synthetic `dispatchEvent`), and probes whatever dialog actually
+// appears via `probeHeaderLayout` (below). Fails loudly - never a vacuous
+// pass - when a launcher opens no dialog and isn't on the explicit
+// NO_DIALOG_LAUNCHERS allow-list, or when an opened dialog's title can't be
+// resolved. Never measures the DisclaimerSplash (excluded the same way
+// `anyDialogProbe` already excludes it elsewhere in this file).
 //
-// N12 follow-up (independent audit): a bare `openNexusBuilder` mounts the
-// condition-picker header, not NexusHeaderBar - the header this branch
-// restructured - so it needs its own entry with a `detail` payload (see the
-// "Not listed: NexusBuilder" comment above; that comment is about the
-// separate MODALS array and stays accurate for a bare open). TheTribunal,
-// CloudSyncManager and WhatIfSandbox were simply missing from every one of
-// the arrays above.
-type ToolGridDialog = { label: string; event: string; detail?: unknown };
+// Scope note (openIssues): the header's own Tools/Resources dropdown menus
+// and the mobile hamburger drawer are a separate, pre-existing nav surface
+// this sweep does not open. Most of what they list duplicates a home-grid or
+// footer launcher for the same dialog; a handful (Ask the Regs, Community
+// Roadmap, Feature Request, AI Command Center, Global Command Search, Cloud
+// Sync Manager, Backup Manager, Claim Stress Test, The Tribunal, Nexus
+// Builder, What-If Sandbox, Vision Simulator) are reachable only from there
+// and so are not covered by this sweep - flagged rather than silently
+// dropped, same spirit as the allow-lists below.
+const TOOL_GRID_SELECTOR =
+  '#main-content .mt-12.max-w-4xl.mx-auto button, footer[role="contentinfo"] button';
 
-const TOOL_GRID_DIALOG_EVENTS: ToolGridDialog[] = (() => {
-  const merged: ToolGridDialog[] = [
-    ...MODALS,
-    ...MIGRATED_MODALS,
-    ...TOOL_HEADERS.map(({ label, event }) => ({ label, event })),
-    { label: "AI Command Center", event: "openAISettings" },
-    { label: "Claim Stress Test", event: "openClaimStressTest" },
-    { label: "Denial Decoder", event: "openDenialDecoder" },
-    { label: "The Tribunal", event: "openTheTribunal" },
-    {
-      label: "Nexus Builder",
-      event: "openNexusBuilder",
-      detail: { condition: "Tinnitus" },
-    },
-    { label: "Cloud Sync Manager", event: "openCloudSyncManager" },
-    { label: "What-If Sandbox", event: "openWhatIfSandbox" },
-  ];
-  const seen = new Set<string>();
-  return merged.filter(({ event }) => {
-    if (seen.has(event)) return false;
-    seen.add(event);
-    return true;
-  });
-})();
+/**
+ * Launcher buttons `TOOL_GRID_SELECTOR` matches that legitimately open no
+ * dialog. Currently empty: every button it matches today dispatches a real
+ * `open*` event. Add a label here (with a comment explaining why) if a
+ * future launcher legitimately doesn't - anything NOT listed here that opens
+ * no dialog fails the sweep instead of silently passing.
+ */
+const NO_DIALOG_LAUNCHERS = new Set<string>([]);
+
+/**
+ * Dialogs (keyed by their own `aria-labelledby` id, not the launcher's own
+ * label - rarely the same string) that by design have no header close-X.
+ * Mission Protocol's full-width CTA + ESC/backdrop dismiss is a deliberate
+ * consent-style "trust beacon" (N13 openIssues), not a bug this sweep
+ * should fail on.
+ */
+const NO_CLOSE_BY_DESIGN = new Set<string>(["mission-protocol-title"]);
+
+const NON_SPLASH_DIALOG_SELECTOR =
+  '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]';
+
+type GridLauncher = { index: number; label: string };
+
+const GRID_INDEX_ATTR = "data-e2e-tool-grid-index";
+
+/**
+ * (Re-)tags every real launcher button currently in the tool grid + footer
+ * with a throwaway `data-e2e-tool-grid-index` attribute (same pattern as
+ * `probeOpenDialog`'s own tagging above), in DOM order. Idempotent and cheap
+ * enough to call again before every click rather than trusting a single
+ * upfront pass to survive the whole sweep - measured live: this container
+ * remounts wholesale (dev-mode React.StrictMode double-invoke, already
+ * documented elsewhere in this file) within roughly the first two seconds
+ * after boot, discarding every attribute a one-time stamp had just set.
+ */
+async function stampToolGridButtons(page: Page): Promise<void> {
+  await page.evaluate(
+    ({ sel, attr }) =>
+      Array.from(document.querySelectorAll(sel)).forEach((b, index) =>
+        b.setAttribute(attr, String(index)),
+      ),
+    { sel: TOOL_GRID_SELECTOR, attr: GRID_INDEX_ATTR },
+  );
+}
+
+/**
+ * Every real launcher button currently in the tool grid + footer, labelled.
+ * Reads the count and the labels in a single round trip and retries until
+ * that one read finds at least one button, rather than checking "any
+ * buttons exist" and reading the list as two separate round trips -
+ * measured live: the grid can go from populated to briefly empty and back
+ * within a single evaluate's own latency (dev-mode React.StrictMode
+ * mount/unmount/remount, documented elsewhere in this file, evidently
+ * isn't always the one-shot blip its other call sites see - on this home
+ * container specifically it can still be settling several seconds into
+ * boot), so a check-then-read split can observe "present" and then read
+ * an already-emptied grid moments later.
+ */
+async function enumerateToolGridButtons(page: Page): Promise<GridLauncher[]> {
+  const deadline = Date.now() + 60000;
+  while (Date.now() < deadline) {
+    const launchers = await page.evaluate((sel) => {
+      const buttons = Array.from(document.querySelectorAll(sel));
+      if (buttons.length === 0) return null;
+      return buttons.map((b, index) => ({
+        index,
+        label: (b.textContent || b.getAttribute("aria-label") || "")
+          .trim()
+          .replace(/\s+/g, " "),
+      }));
+    }, TOOL_GRID_SELECTOR);
+    if (launchers) {
+      await stampToolGridButtons(page);
+      return launchers;
+    }
+  }
+  return [];
+}
+
+/** True once no non-splash dialog remains in the DOM, polled - not slept. */
+function noDialogOpen(page: Page, timeout: number): Promise<boolean> {
+  return page
+    .waitForFunction(
+      ({ sel }) =>
+        !Array.from(document.querySelectorAll(sel)).some(
+          (d) => d.getAttribute("aria-labelledby") !== "splash-title",
+        ),
+      { sel: NON_SPLASH_DIALOG_SELECTOR },
+      { timeout },
+    )
+    .then(() => true)
+    .catch(() => false);
+}
+
+/** True once at least one non-splash dialog is in the DOM, polled - not slept. */
+function someDialogOpen(page: Page, timeout: number): Promise<boolean> {
+  return page
+    .waitForFunction(
+      ({ sel }) =>
+        Array.from(document.querySelectorAll(sel)).some(
+          (d) => d.getAttribute("aria-labelledby") !== "splash-title",
+        ),
+      { sel: NON_SPLASH_DIALOG_SELECTOR },
+      { timeout },
+    )
+    .then(() => true)
+    .catch(() => false);
+}
+
+/**
+ * Closes whatever dialog is open so the next launcher starts clean, instead
+ * of stacking dialogs (which would corrupt every probe after the first one
+ * that fails to close). Escape first - every real dialog in this app wires
+ * it via `useFocusTrap`'s `onEscape` or ResponsiveModal's `dismissable`
+ * default - then a found close/exit button as a fallback. Returns false
+ * (rather than throwing) if neither worked, so the caller can record a
+ * violation and recover via a full reload instead of aborting the sweep.
+ */
+async function closeOpenToolGridDialog(page: Page): Promise<boolean> {
+  await page.keyboard.press("Escape");
+  if (await noDialogOpen(page, 4000)) return true;
+
+  const closeBtn = page
+    .locator(
+      '[role="dialog"][aria-modal="true"] button[aria-label*="close" i], ' +
+        '[role="dialog"][aria-modal="true"] button[aria-label*="exit" i], ' +
+        '[role="alertdialog"][aria-modal="true"] button[aria-label*="close" i], ' +
+        '[role="alertdialog"][aria-modal="true"] button[aria-label*="exit" i]',
+    )
+    .first();
+  if (await closeBtn.count()) {
+    await closeBtn.click({ timeout: 4000 }).catch(() => {});
+  }
+  return noDialogOpen(page, 4000);
+}
+
+async function resetToolGridPage(page: Page): Promise<void> {
+  await page.goto("/");
+  await dismissDisclaimer(page);
+}
+
+async function seedReturningUserAndGoHome(page: Page): Promise<void> {
+  await page.addInitScript((appVersion) => {
+    localStorage.setItem("vet-rate-tos-accepted", "true");
+    localStorage.setItem("vet_rate_last_seen_version", appVersion);
+    localStorage.setItem("vetrate-tour-completed", "true");
+    localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+    localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+  }, APP_VERSION);
+  await resetToolGridPage(page);
+}
+
+type GridDialogOutcome = { label: string; probe: HeaderProbe };
+
+/**
+ * Clicks the launcher at `index` repeatedly (re-stamping fresh each time)
+ * until a non-splash dialog appears, rather than trusting a single click.
+ * Every real `open*` listener in this app attaches via a bare
+ * `useEffect(() => { window.addEventListener(...); return () =>
+ * removeEventListener(...) }, [])`, and dev-mode React.StrictMode's
+ * mount/unmount/remount blip (documented elsewhere in this file) briefly
+ * detaches that listener between the unmount and remount - a single click
+ * landing in that gap dispatches its event into the void with nothing
+ * listening, and no amount of waiting afterward recovers it. Re-clicking
+ * (like `triggerUntilDialogFound`/`openDialog` elsewhere in this suite)
+ * is safe because every launcher here is an idempotent "open" action.
+ */
+async function openLauncherUntilDialog(
+  page: Page,
+  index: number,
+): Promise<boolean> {
+  const deadline = Date.now() + 45000;
+  while (Date.now() < deadline) {
+    await stampToolGridButtons(page);
+    await page
+      .locator(`[${GRID_INDEX_ATTR}="${index}"]`)
+      .click({ timeout: 3000 })
+      .catch(() => {});
+    if (await someDialogOpen(page, 1000)) return true;
+  }
+  return false;
+}
+
+/**
+ * One launcher's full open/probe/close cycle, pushed onto `violations`
+ * rather than returned/thrown - an unexpected exception here (a genuinely
+ * broken action, not a geometry finding) becomes a violation entry plus a
+ * recovery reload instead of crashing the whole sweep and losing every
+ * launcher after it.
+ */
+async function processGridLauncher(
+  page: Page,
+  launcher: GridLauncher,
+  onDialog: (outcome: GridDialogOutcome) => Promise<string[]>,
+  violations: string[],
+): Promise<void> {
+  try {
+    if (!(await openLauncherUntilDialog(page, launcher.index))) {
+      if (!NO_DIALOG_LAUNCHERS.has(launcher.label)) {
+        violations.push(
+          `"${launcher.label}" opened no dialog and is not on NO_DIALOG_LAUNCHERS`,
+        );
+      }
+      // A full reload (not just moving on) guards against a slow dev-server
+      // lazy-chunk compile finishing after this gives up and mounting its
+      // dialog late, on top of whatever the next launcher was trying to
+      // check - a stale reference in an unloaded document is a no-op, so
+      // this is a clean slate regardless of whether that race is what
+      // actually happened here.
+      await resetToolGridPage(page).catch(() => {});
+      return;
+    }
+
+    const probe = await probeHeaderLayout(page);
+    if (!probe.found) {
+      violations.push(
+        `"${launcher.label}": dialog opened but its title/header could not be resolved`,
+      );
+    } else {
+      violations.push(...(await onDialog({ label: launcher.label, probe })));
+    }
+
+    if (!(await closeOpenToolGridDialog(page))) {
+      violations.push(
+        `"${launcher.label}": dialog did not close via Escape or its own close control`,
+      );
+      await resetToolGridPage(page);
+    }
+  } catch (err) {
+    violations.push(
+      `"${launcher.label}": unexpected error - ${err instanceof Error ? err.message : String(err)}`,
+    );
+    await resetToolGridPage(page).catch(() => {});
+  }
+}
+
+async function runToolGridSweep(
+  page: Page,
+  onDialog: (outcome: GridDialogOutcome) => Promise<string[]>,
+): Promise<string[]> {
+  const violations: string[] = [];
+  const launchers = await enumerateToolGridButtons(page);
+  expect(launchers.length).toBeGreaterThan(0);
+
+  for (const launcher of launchers) {
+    await test.step(launcher.label || `button #${launcher.index}`, () =>
+      processGridLauncher(page, launcher, onDialog, violations),
+    );
+  }
+  return violations;
+}
+
+/**
+ * The × must be fully inside the viewport - not clipped or pushed past the
+ * right edge by the ≤640px `.modal-content .flex.gap-2/3 > button` min-width
+ * rule (index.css, N10) - and no dialog may force the page itself to scroll
+ * sideways.
+ */
+async function onScreenViolations(
+  page: Page,
+  vpWidth: number,
+  outcome: GridDialogOutcome,
+): Promise<string[]> {
+  const violations: string[] = [];
+  const r = outcome.probe.closeRect;
+  if (r && (r.left < -0.5 || r.right > vpWidth + 0.5)) {
+    violations.push(
+      `"${outcome.label}": close control not fully on-screen (left=${r.left.toFixed(1)}, right=${r.right.toFixed(1)}, viewport=${vpWidth})`,
+    );
+  }
+  const overflow = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    innerWidth: window.innerWidth,
+  }));
+  if (overflow.scrollWidth > overflow.innerWidth + 1) {
+    violations.push(
+      `"${outcome.label}": page scrolls horizontally (scrollWidth=${overflow.scrollWidth}, innerWidth=${overflow.innerWidth})`,
+    );
+  }
+  return violations;
+}
 
 for (const vp of QUICK_EXIT_VIEWPORTS) {
   test.describe(`Tool-grid dialog close buttons stay on-screen @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test.beforeEach(async ({ page }) => {
-      await page.addInitScript((appVersion) => {
-        localStorage.setItem("vet-rate-tos-accepted", "true");
-        localStorage.setItem("vet_rate_last_seen_version", appVersion);
-        localStorage.setItem("vetrate-tour-completed", "true");
-        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
-        // N12 fix: acknowledge the splash up front rather than racing
-        // dismissDisclaimer's non-waiting isVisible() check against it (it
-        // can win, leaving the splash as the DOM's only open dialog when
-        // triggerUntilDialogFound below goes looking for one).
-        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
-      }, APP_VERSION);
-      await page.goto("/");
-      await dismissDisclaimer(page);
+    test("every launcher's close control stays on-screen, no page horizontal overflow", async ({
+      page,
+    }) => {
+      test.setTimeout(600_000);
+      await seedReturningUserAndGoHome(page);
+      const violations = await runToolGridSweep(page, (outcome) =>
+        onScreenViolations(page, vp.width, outcome),
+      );
+      expect(violations).toEqual([]);
     });
-
-    for (const dialog of TOOL_GRID_DIALOG_EVENTS) {
-      test(`${dialog.label}: close control fully on-screen, no page horizontal overflow`, async ({
-        page,
-      }) => {
-        const probe = await triggerAndProbe(
-          page,
-          dispatchTrigger(page, dialog.event, dialog.detail),
-          probeOpenDialog,
-        );
-        expect(probe.found).toBe(true);
-
-        // The × must be fully inside the viewport - not clipped or pushed
-        // past the right edge by the min-width rule (N10).
-        if (probe.hasCloseControl) {
-          expect(probe.closeRect).not.toBeNull();
-          expect(probe.closeRect!.left).toBeGreaterThanOrEqual(-0.5);
-          expect(probe.closeRect!.right).toBeLessThanOrEqual(vp.width + 0.5);
-        }
-
-        // No dialog may force the page itself to scroll sideways.
-        const overflow = await page.evaluate(() => ({
-          scrollWidth: document.documentElement.scrollWidth,
-          innerWidth: window.innerWidth,
-        }));
-        expect(overflow.scrollWidth).toBeLessThanOrEqual(
-          overflow.innerWidth + 1,
-        );
-      });
-    }
   });
 }
 
 type HeaderProbe = {
   found: boolean;
+  // The dialog's own `aria-labelledby` target id, when it has one - a
+  // stable identity to key a known-exception allow-list on (e.g. Mission
+  // Protocol's by-design missing close-X) instead of the launcher button's
+  // own label, which rarely matches the dialog's title text.
+  dialogId: string | null;
+  // Document reading direction at probe time - `closeTopRightViolations`
+  // measures against the header's right edge in `ltr`, left edge in `rtl`
+  // (decision (1): the close-X sits at the header's top END corner, which
+  // physically flips under RTL).
+  direction: "ltr" | "rtl";
   titleClipped: boolean;
   // One rect per wrapped line, not a single bounding box: a wide line 1 +
   // short line 2 (the badge's line) would otherwise union into an L-shaped
@@ -1662,6 +1897,8 @@ type HeaderProbe = {
  * max-lines-per-function budget of the (already long) probe below. */
 const EMPTY_HEADER_PROBE: HeaderProbe = {
   found: false,
+  dialogId: null,
+  direction: "ltr",
   titleClipped: false,
   titleTextRects: null,
   badgeRect: null,
@@ -1701,6 +1938,7 @@ type ProbeBundle = {
   titleEl: HTMLElement;
   headerRegion: HTMLElement;
   paddedSource: HTMLElement;
+  dialogId: string | null;
 } | null;
 
 /**
@@ -1741,7 +1979,7 @@ function findProbeBundle(): ProbeBundle {
     if (!next) break;
     paddedSource = next;
   }
-  return { titleEl, headerRegion, paddedSource };
+  return { titleEl, headerRegion, paddedSource, dialogId: labelledBy || null };
 }
 
 /**
@@ -1756,8 +1994,14 @@ function findProbeBundle(): ProbeBundle {
  */
 async function extractProbeData(bundle: ProbeBundle) {
   if (!bundle) return null;
-  const { titleEl, headerRegion, paddedSource } = bundle;
+  const { titleEl, headerRegion, paddedSource, dialogId } = bundle;
   const isRendered = (el: Element) => el.getClientRects().length > 0;
+  // Node.DOCUMENT_POSITION_FOLLOWING is itself a bitmask, so testing
+  // membership needs `&`, not `&&` - genuinely bitwise, not a logical-
+  // operator typo (sonarjs/bitwise-operators default assumption).
+  const nodePrecedes = (a: Node, b: Node) =>
+    // eslint-disable-next-line sonarjs/bitwise-operators
+    (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   const hasCloseCandidate = () =>
     Array.from(headerRegion.querySelectorAll("button")).some(
       (b) =>
@@ -1801,13 +2045,7 @@ async function extractProbeData(bundle: ProbeBundle) {
   const range = document.createRange();
   range.selectNodeContents(titleEl);
   if (nested.length > 0) {
-    range.setEndBefore(
-      nested.reduce((a, b) =>
-        (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-          ? a
-          : b,
-      ),
-    );
+    range.setEndBefore(nested.reduce((a, b) => (nodePrecedes(a, b) ? a : b)));
   }
   const titleTextRects = Array.from(range.getClientRects())
     .filter((r) => r.width > 0 && r.height > 0)
@@ -1821,6 +2059,10 @@ async function extractProbeData(bundle: ProbeBundle) {
   const hr = paddedSource.getBoundingClientRect();
   const hcs = getComputedStyle(paddedSource);
   return {
+    dialogId,
+    direction: getComputedStyle(document.documentElement).direction as
+      | "ltr"
+      | "rtl",
     titleClipped: titleEl.scrollWidth > titleEl.clientWidth + 1,
     titleTextRects,
     badgeRect: rectOf(parts.badgeEl),
@@ -1892,63 +2134,56 @@ function headerCollisionViolations(probe: HeaderProbe): string[] {
 }
 
 // N12 (QA final10): DOM-enumerated header-collision sweep across the whole
-// tool-grid inventory (TOOL_GRID_DIALOG_EVENTS, above) at the four widths QA
-// hit-tested for the VAResources/CAPSimulator/TacticalCalculator defects.
-// Reuses `rectsIntersect` (Quick Exit checks above) pairwise across every
-// part `headerParts` returns instead of hand-picking which pair a given
-// dialog happens to collide on.
+// tool grid at the four widths QA hit-tested for the VAResources/
+// CAPSimulator/TacticalCalculator defects. Reuses `rectsIntersect` (Quick
+// Exit checks above) pairwise across every part `headerParts` returns
+// instead of hand-picking which pair a given dialog happens to collide on.
+async function headerCollisionCallback(
+  outcome: GridDialogOutcome,
+): Promise<string[]> {
+  return headerCollisionViolations(outcome.probe).map(
+    (v) => `"${outcome.label}": ${v}`,
+  );
+}
+
 for (const vp of QUICK_EXIT_VIEWPORTS) {
   test.describe(`Tool dialog header layout @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test.beforeEach(async ({ page }) => {
-      await page.addInitScript((appVersion) => {
-        localStorage.setItem("vet-rate-tos-accepted", "true");
-        localStorage.setItem("vet_rate_last_seen_version", appVersion);
-        localStorage.setItem("vetrate-tour-completed", "true");
-        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
-        // N12 fix: see the matching comment on the close-buttons describe
-        // block above - avoids racing dismissDisclaimer against the splash.
-        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
-      }, APP_VERSION);
-      await page.goto("/");
-      await dismissDisclaimer(page);
+    test("every launcher's title/badge/bug-link/close don't collide, title isn't clipped", async ({
+      page,
+    }) => {
+      test.setTimeout(600_000);
+      await seedReturningUserAndGoHome(page);
+      const violations = await runToolGridSweep(page, headerCollisionCallback);
+      expect(violations).toEqual([]);
     });
-
-    for (const dialog of TOOL_GRID_DIALOG_EVENTS) {
-      test(`${dialog.label}: title/badge/bug-link/close don't collide, title isn't clipped`, async ({
-        page,
-      }) => {
-        const probe = await triggerAndProbe(
-          page,
-          dispatchTrigger(page, dialog.event, dialog.detail),
-          probeHeaderLayout,
-        );
-        expect(probe.found).toBe(true);
-        expect(headerCollisionViolations(probe)).toEqual([]);
-      });
-    }
   });
 }
 
 /**
- * N13: the close × must stay pinned to the header's top-right corner at
- * every width - the fix for the N12 "flex-wrap safety net" regression
- * (wrapping the whole title+cluster row let a lone-on-its-line close button
- * degrade to flex-start, i.e. left-aligned, instead of staying right-aligned
- * top-right). Fails outright (rather than skipping) when the close control
- * or the header region itself can't be found, so a dialog with no
- * discoverable close button is a reported violation, not a vacuous pass.
+ * N13: the close × must stay pinned to the header's top END corner at every
+ * width (decision (1): top-right in `ltr`, top-left in `rtl`) - the fix for
+ * the N12 "flex-wrap safety net" regression (wrapping the whole title+cluster
+ * row let a lone-on-its-line close button degrade to flex-start, i.e.
+ * left-aligned, instead of staying end-aligned). Fails outright (rather than
+ * skipping) when the close control or the header region itself can't be
+ * found, so a dialog with no discoverable close button is a reported
+ * violation, not a vacuous pass.
  */
 function closeTopRightViolations(probe: HeaderProbe): string[] {
   if (!probe.headerRect) return ["header region not found"];
   if (!probe.closeRect) return ["close control not found"];
 
   const violations: string[] = [];
-  const rightGap = Math.abs(probe.headerRect.right - probe.closeRect.right);
-  if (rightGap > 16) {
+  const isRtl = probe.direction === "rtl";
+  const endGap = Math.abs(
+    (isRtl ? probe.headerRect.left : probe.headerRect.right) -
+      (isRtl ? probe.closeRect.left : probe.closeRect.right),
+  );
+  if (endGap > 16) {
     violations.push(
-      `close right edge is ${rightGap.toFixed(1)}px from the header's right edge (max 16)`,
+      `close ${isRtl ? "left" : "right"} edge is ${endGap.toFixed(1)}px from the header's usable ${isRtl ? "left" : "right"} (end) edge (max 16)`,
     );
   }
   const topOffset = probe.closeRect.top - probe.headerRect.top;
@@ -1960,45 +2195,36 @@ function closeTopRightViolations(probe: HeaderProbe): string[] {
   return violations;
 }
 
+/**
+ * Mission Protocol is a deliberate consent-style "trust beacon" with no
+ * header close-X at all (only its full-width CTA and ESC/backdrop dismiss) -
+ * a known, pre-existing exception to "every tool has one", not a regression
+ * this sweep should fail on (NO_CLOSE_BY_DESIGN). Whether it should gain one
+ * is a product call, not an engineering one - flagged in openIssues rather
+ * than decided here.
+ */
+async function closeTopRightCallback(
+  outcome: GridDialogOutcome,
+): Promise<string[]> {
+  if (outcome.probe.dialogId && NO_CLOSE_BY_DESIGN.has(outcome.probe.dialogId))
+    return [];
+  return closeTopRightViolations(outcome.probe).map(
+    (v) => `"${outcome.label}": ${v}`,
+  );
+}
+
 for (const vp of HEADER_ALIGNMENT_VIEWPORTS) {
   test.describe(`Tool dialog close-X stays top-right @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test.beforeEach(async ({ page }) => {
-      await page.addInitScript((appVersion) => {
-        localStorage.setItem("vet-rate-tos-accepted", "true");
-        localStorage.setItem("vet_rate_last_seen_version", appVersion);
-        localStorage.setItem("vetrate-tour-completed", "true");
-        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
-        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
-      }, APP_VERSION);
-      await page.goto("/");
-      await dismissDisclaimer(page);
+    test("every launcher's close × right edge and top stay pinned to the header's top-right corner", async ({
+      page,
+    }) => {
+      test.setTimeout(600_000);
+      await seedReturningUserAndGoHome(page);
+      const violations = await runToolGridSweep(page, closeTopRightCallback);
+      expect(violations).toEqual([]);
     });
-
-    for (const dialog of TOOL_GRID_DIALOG_EVENTS) {
-      test(`${dialog.label}: close × right edge and top stay pinned to the header's top-right corner`, async ({
-        page,
-      }) => {
-        // Mission Protocol is a deliberate consent-style "trust beacon" with
-        // no header close-X at all (only its full-width CTA and ESC/backdrop
-        // dismiss) - a known, pre-existing exception to "every tool has one",
-        // not a regression this sweep should fail on. Whether it should gain
-        // one is a product call, not an engineering one - flagged in
-        // openIssues rather than decided here.
-        test.skip(
-          dialog.label === "Mission Protocol",
-          "no header close-X by design - see N13 openIssues",
-        );
-        const probe = await triggerAndProbe(
-          page,
-          dispatchTrigger(page, dialog.event, dialog.detail),
-          probeHeaderLayout,
-        );
-        expect(probe.found).toBe(true);
-        expect(closeTopRightViolations(probe)).toEqual([]);
-      });
-    }
   });
 }
 
@@ -2048,52 +2274,38 @@ function closeCentreHitsQuickExit(page: Page): Promise<boolean> {
   });
 }
 
+/**
+ * Mission Protocol has no header close-X at all by design (N13 openIssues,
+ * NO_CLOSE_BY_DESIGN) - nothing for this hit-test to check. Publications
+ * Library is no longer excluded here (fixed - see PublicationsLibraryModal's
+ * `sm:pr-28` gutter).
+ */
+async function closeCentreCallback(
+  page: Page,
+  outcome: GridDialogOutcome,
+): Promise<string[]> {
+  if (outcome.probe.dialogId && NO_CLOSE_BY_DESIGN.has(outcome.probe.dialogId))
+    return [];
+  const hit = await closeCentreHitsQuickExit(page);
+  return hit
+    ? [`"${outcome.label}": close × centre point is covered by Quick Exit`]
+    : [];
+}
+
 for (const vp of TABLET_LAPTOP_VIEWPORTS) {
   test.describe(`Tool dialog close-X isn't shadowed by Quick Exit @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
-    test.beforeEach(async ({ page }) => {
-      await page.addInitScript((appVersion) => {
-        localStorage.setItem("vet-rate-tos-accepted", "true");
-        localStorage.setItem("vet_rate_last_seen_version", appVersion);
-        localStorage.setItem("vetrate-tour-completed", "true");
-        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
-        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
-      }, APP_VERSION);
-      await page.goto("/");
-      await dismissDisclaimer(page);
+    test("every launcher's close × centre point isn't covered by Quick Exit", async ({
+      page,
+    }) => {
+      test.setTimeout(600_000);
+      await seedReturningUserAndGoHome(page);
+      const violations = await runToolGridSweep(page, (outcome) =>
+        closeCentreCallback(page, outcome),
+      );
+      expect(violations).toEqual([]);
     });
-
-    // Mission Protocol has no header close-X at all by design (N13
-    // openIssues) - nothing for this hit-test to check, so it's excluded
-    // from the dialog list up front rather than skipped per-test.
-    //
-    // Publications Library (size="2xl") is wide enough that its close-X
-    // sits in this exact spot on base (b5b9a3a0) too - verified live by
-    // swapping in base's own PublicationsLibraryModal.jsx (pre-HeaderCloseSlot,
-    // plain `items-center`) against this same dev server: identical hit,
-    // identical rect. This branch's `items-start`->`sm:items-center` fix
-    // can't touch it either way, because the collision here is horizontal
-    // (the dialog's own width vs. Quick Exit's fixed position), not
-    // vertical - out of scope per the boundaries (not ResponsiveModal.jsx
-    // sizing, not QuickExitButton.jsx), and already flagged in openIssues as
-    // the sibling fix/quick-exit-wide-vision branch's job.
-    for (const dialog of TOOL_GRID_DIALOG_EVENTS.filter(
-      (d) =>
-        d.label !== "Mission Protocol" && d.label !== "Publications Library",
-    )) {
-      test(`${dialog.label}: close × centre point isn't covered by Quick Exit`, async ({
-        page,
-      }) => {
-        const probe = await triggerAndProbe(
-          page,
-          dispatchTrigger(page, dialog.event, dialog.detail),
-          probeHeaderLayout,
-        );
-        expect(probe.found).toBe(true);
-        expect(await closeCentreHitsQuickExit(page)).toBe(false);
-      });
-    }
   });
 }
 
@@ -2184,16 +2396,14 @@ async function openCAPMode(
   );
   await page.getByText(buttonText, { exact: false }).first().click();
   if (pickCondition) {
-    await page.waitForTimeout(200);
-    await page.evaluate(() => {
-      const dialog = document.querySelector(
-        '[role="dialog"][aria-modal="true"]',
-      );
-      const btn = Array.from(dialog?.querySelectorAll("button") ?? []).find(
-        (b) => b.querySelector("h3"),
-      );
-      (btn as HTMLElement | undefined)?.click();
-    });
+    // Playwright's own `:has()` selector + `.click()` auto-wait replaces the
+    // fixed 200ms sleep this used to need for the condition-card grid to
+    // render (sonarjs/no-fixed-wait-in-tests) - it retries until a matching,
+    // actionable button exists instead of hoping 200ms was enough.
+    await page
+      .locator('[role="dialog"][aria-modal="true"] button:has(h3)')
+      .first()
+      .click();
   }
 }
 
