@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import useConsistencyCheck, {
   getHealthStatus,
 } from "../utils/useConsistencyCheck";
@@ -128,43 +129,44 @@ function AIAnalyzerScreen({ activeTab, setActiveTab, onClose }) {
       className="!bg-gray-900"
       header={
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-4">
-          <div className="flex flex-wrap justify-between items-center gap-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-4">
-              <h2 id="consistency-engine-title" className="text-2xl font-bold">
-                🔍 The Consistency Engine
-              </h2>
-              {/* Tabs */}
-              <div className="flex bg-black/20 rounded-lg p-1">
-                <button
-                  onClick={() => setActiveTab("rules")}
-                  className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                    activeTab === "rules"
-                      ? "bg-white text-purple-700"
-                      : "text-white/80 hover:text-white"
-                  }`}
-                >
-                  📋 Rules Check
-                </button>
-                <button
-                  onClick={() => setActiveTab("ai")}
-                  className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
-                    activeTab === "ai"
-                      ? "bg-white text-purple-700"
-                      : "text-white/80 hover:text-white"
-                  }`}
-                >
-                  🤖 AI Analysis
-                </button>
-              </div>
+          <HeaderCloseSlot
+            close={
+              <button
+                onClick={onClose}
+                className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            }
+          >
+            <h2 id="consistency-engine-title" className="text-2xl font-bold">
+              🔍 The Consistency Engine
+            </h2>
+            {/* Tabs */}
+            <div className="flex bg-black/20 rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab("rules")}
+                className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                  activeTab === "rules"
+                    ? "bg-white text-purple-700"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                📋 Rules Check
+              </button>
+              <button
+                onClick={() => setActiveTab("ai")}
+                className={`px-4 py-1.5 rounded text-sm font-semibold transition-colors ${
+                  activeTab === "ai"
+                    ? "bg-white text-purple-700"
+                    : "text-white/80 hover:text-white"
+                }`}
+              >
+                🤖 AI Analysis
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          </div>
+          </HeaderCloseSlot>
         </div>
       }
     >
@@ -190,7 +192,17 @@ function ConsistencyEngineHeader({
         healthStatus.color,
       )} text-white p-6`}
     >
-      <div className="flex flex-wrap justify-between items-start gap-2">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        }
+      >
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-4 mb-2">
             <h2 id="consistency-engine-title" className="text-3xl font-bold">
@@ -227,14 +239,7 @@ function ConsistencyEngineHeader({
             Automated contradiction detection across all your data
           </p>
         </div>
-        <button
-          onClick={onClose}
-          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200 text-2xl font-bold"
-          aria-label="Close"
-        >
-          ×
-        </button>
-      </div>
+      </HeaderCloseSlot>
 
       <HeaderStatusSummary
         healthStatus={healthStatus}

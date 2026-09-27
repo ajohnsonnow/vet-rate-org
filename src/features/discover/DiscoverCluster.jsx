@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import ReportBugLink from "../../components/ReportBugLink";
 import ResponsiveModal from "../../components/common/ResponsiveModal";
+import HeaderCloseSlot from "../../components/common/HeaderCloseSlot";
 import {
   saveStatement,
   getSavedClaims,
@@ -88,8 +89,30 @@ function SecondaryScoutHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-emerald-700 to-teal-700 text-white px-4 sm:px-6 py-4 rounded-t-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex-1 min-w-0">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="min-w-0">
           <h2
             id="secondary-scout-title"
             className="text-xl sm:text-3xl font-bold truncate"
@@ -132,27 +155,8 @@ function SecondaryScoutHeader({
           >
             <span className="hidden sm:inline">Change </span>Conditions
           </button>
-          <button
-            onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-5 h-5 sm:w-6 sm:h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }

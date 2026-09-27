@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import ReportBugLink from "../../components/ReportBugLink";
 import ResponsiveModal from "../../components/common/ResponsiveModal";
+import HeaderCloseSlot from "../../components/common/HeaderCloseSlot";
 
 const DecisionDecoder = lazy(() => import("../../components/DecisionDecoder"));
 const RiskAssessment = lazy(() => import("../../components/RiskAssessment"));
@@ -19,7 +20,29 @@ const SharkRadar = lazy(() => import("../../components/SharkRadar"));
 function SharkRadarHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-rose-600 via-red-600 to-rose-600 p-4 shadow-lg">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close dialog"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-3xl shrink-0">🦈</span>
           <div className="min-w-0">
@@ -40,33 +63,12 @@ function SharkRadarHeader({ onClose, onReportBug }) {
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Shark Radar"
-          />
-          <button
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close dialog"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Shark Radar"
+        />
+      </HeaderCloseSlot>
     </div>
   );
 }

@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   Document,
   Packer,
@@ -944,7 +945,30 @@ const WitnessBenchHeader = ({
   contentRef,
 }) => (
   <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 p-4 shadow-lg rounded-t-xl">
-    <div className="flex flex-wrap items-center justify-between gap-2">
+    <HeaderCloseSlot
+      close={
+        <button
+          type="button"
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
       <div className="flex min-w-0 items-center gap-3">
         <span className="text-3xl shrink-0">👥</span>
         <div className="min-w-0">
@@ -981,28 +1005,8 @@ const WitnessBenchHeader = ({
             moduleName="The Witness Bench"
           />
         )}
-        <button
-          type="button"
-          onClick={onClose}
-          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
-          aria-label="Close"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
       </div>
-    </div>
+    </HeaderCloseSlot>
   </div>
 );
 
