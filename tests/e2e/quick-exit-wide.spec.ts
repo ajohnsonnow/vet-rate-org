@@ -148,7 +148,12 @@ async function openDialog(
         await dispatch(page);
         return page.locator(DIALOG_SELECTOR).count();
       },
-      { timeout: 15000 },
+      // 30s, not the usual 15s: the very first batch of workers in a full
+      // suite run all cold-start against the same freshly-launched dev
+      // server at once, stacking the migration/DKB-download delay on top
+      // of ordinary lazy-mount timing (see the Vision Simulator (D)
+      // writeup) worse than any single spec file running alone ever hits.
+      { timeout: 30000 },
     )
     .toBeGreaterThan(0);
 }
@@ -318,6 +323,9 @@ for (const vp of WIDE_VIEWPORTS) {
     for (const trigger of TRIGGERS) {
       const title = `${trigger.label}: Quick Exit never overlaps the dialog's title/header controls`;
       const run = async ({ page }: { page: Page }) => {
+        // Default 30s test timeout can't cover openDialog's own 30s worst
+        // case plus assertQuickExitClearOfDialog's follow-up retry budget.
+        test.setTimeout(60000);
         await openDialog(page, trigger.dispatch);
         await assertQuickExitClearOfDialog(page, trigger.dispatch);
       };
