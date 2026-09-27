@@ -92,7 +92,7 @@ function generateProfileSection(profile) {
       <div class="profile-grid">
         <div class="profile-item">
           <span class="label">Name:</span>
-          <span class="value">${escapeHtml(profile.name || "Not provided")}</span>
+          <span class="value">${escapeHtml(profile.fullName || "Not provided")}</span>
         </div>
         <div class="profile-item">
           <span class="label">Branch:</span>
@@ -108,7 +108,7 @@ function generateProfileSection(profile) {
         </div>
         <div class="profile-item">
           <span class="label">Current Combined Rating:</span>
-          <span class="value">${profile.currentRating || 0}%</span>
+          <span class="value">${profile.currentCombinedRating || 0}%</span>
         </div>
         ${
           profile.mos

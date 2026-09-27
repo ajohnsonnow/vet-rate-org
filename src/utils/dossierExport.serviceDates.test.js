@@ -19,7 +19,7 @@ describe("generateDossierHTML: Service Dates reads the real profile field names"
     localStorage.setItem(
       PROFILE_KEY,
       JSON.stringify({
-        name: "Jordan Sample",
+        fullName: "Jordan Sample",
         serviceStartDate: "2002-05-06",
         serviceEndDate: "2007-06-29",
       }),
@@ -34,7 +34,7 @@ describe("generateDossierHTML: Service Dates reads the real profile field names"
   it('falls back to "?" when no profile dates are saved', () => {
     localStorage.setItem(
       PROFILE_KEY,
-      JSON.stringify({ name: "Jordan Sample" }),
+      JSON.stringify({ fullName: "Jordan Sample" }),
     );
 
     const html = generateDossierHTML();
@@ -45,7 +45,7 @@ describe("generateDossierHTML: Service Dates reads the real profile field names"
     localStorage.setItem(
       PROFILE_KEY,
       JSON.stringify({
-        name: "Jordan Sample",
+        fullName: "Jordan Sample",
         serviceStartDate: "2002-03-05",
         serviceStartDateDerived: true,
         serviceEndDate: "2010-06-15",
@@ -62,7 +62,7 @@ describe("generateDossierHTML: Service Dates reads the real profile field names"
     localStorage.setItem(
       PROFILE_KEY,
       JSON.stringify({
-        name: "Jordan Sample",
+        fullName: "Jordan Sample",
         serviceStartDate: "2002-03-05",
         serviceEndDate: "2010-06-15",
       }),
