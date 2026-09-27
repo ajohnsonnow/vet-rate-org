@@ -14,6 +14,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -946,54 +947,59 @@ function DD214ModalFooter({
 
 function DD214ModalHeader({ t, onReportBug, onClose, onOpenAISettings }) {
   return (
-    <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 flex flex-wrap items-center justify-between gap-2 rounded-t-2xl flex-shrink-0">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="text-3xl shrink-0">📜</span>
-        <div className="min-w-0">
-          <h2
-            id="dd214-analyzer-title"
-            className="text-xl font-bold text-white"
+    <div className="bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-4 rounded-t-2xl flex-shrink-0">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label={t("dd214Analyzer", "close")}
           >
-            {t("dd214Analyzer", "title")}{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              {t("dd214Analyzer", "beta")}
-            </span>
-          </h2>
-          <p className="text-sm text-blue-200">
-            {t("dd214Analyzer", "subtitle")}
-          </p>
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl shrink-0">📜</span>
+          <div className="min-w-0">
+            <h2
+              id="dd214-analyzer-title"
+              className="text-xl font-bold text-white"
+            >
+              {t("dd214Analyzer", "title")}{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                {t("dd214Analyzer", "beta")}
+              </span>
+            </h2>
+            <p className="text-sm text-blue-200">
+              {t("dd214Analyzer", "subtitle")}
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <LLMRecommendationBadge toolId="dd214-analyzer" />
-        <AIStatusBadge onClick={onOpenAISettings} />
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="DD214 Analyzer"
-          />
-        )}
-        <button
-          onClick={onClose}
-          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-          aria-label={t("dd214Analyzer", "close")}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
+        <div className="flex flex-wrap items-center gap-2">
+          <LLMRecommendationBadge toolId="dd214-analyzer" />
+          <AIStatusBadge onClick={onOpenAISettings} />
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="DD214 Analyzer"
             />
-          </svg>
-        </button>
-      </div>
+          )}
+        </div>
+      </HeaderCloseSlot>
     </div>
   );
 }

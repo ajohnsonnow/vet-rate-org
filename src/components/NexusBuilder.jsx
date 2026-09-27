@@ -20,6 +20,7 @@ import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
 import CertificationCheckbox from "./CertificationCheckbox";
 import StatementAnalyzer from "./StatementAnalyzer";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   isAIAvailable,
   enhancePersonalStatement,
@@ -641,7 +642,29 @@ const NexusHeaderBar = ({
   t,
 }) => (
   <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
-    <div className="flex flex-wrap items-start justify-between gap-3">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
+          aria-label={t("nexusBuilder.close")}
+        >
+          <svg
+            className="w-6 h-6 sm:w-8 sm:h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
       <div className="min-w-0">
         <h2
           id="nexus-builder-title"
@@ -677,27 +700,8 @@ const NexusHeaderBar = ({
             moduleName="Nexus Builder"
           />
         )}
-        <button
-          onClick={onClose}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
-          aria-label={t("nexusBuilder.close")}
-        >
-          <svg
-            className="w-6 h-6 sm:w-8 sm:h-8"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
       </div>
-    </div>
+    </HeaderCloseSlot>
   </div>
 );
 
@@ -1873,7 +1877,7 @@ const NexusConditionPickerHeader = ({ onClose, onReportBug, t }) => (
         )}
         <button
           onClick={onClose}
-          className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
           aria-label={t("nexusBuilder.close")}
         >
           <svg

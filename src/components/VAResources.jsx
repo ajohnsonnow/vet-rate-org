@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import RegulationsReference from "./RegulationsReference";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -415,7 +416,18 @@ const resourceCardClassName = (resource) => {
 const VAResourcesHeader = ({ onClose, onReportBug, t }) => (
   <>
     <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-6 flex-shrink-0">
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+      <HeaderCloseSlot
+        className="mb-2"
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/10 hover:text-gray-200 transition-colors"
+            aria-label={t("vaResources.closeVaResources")}
+          >
+            <X className="h-6 w-6" />
+          </button>
+        }
+      >
         <div className="flex min-w-0 items-center gap-3">
           <Globe className="h-8 w-8 shrink-0" />
           <h2 id="va-resources-title" className="text-3xl font-bold">
@@ -425,23 +437,14 @@ const VAResourcesHeader = ({ onClose, onReportBug, t }) => (
             </span>
           </h2>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="VA Resources Hub"
-            />
-          )}
-          <button
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/10 hover:text-gray-200 transition-colors"
-            aria-label={t("vaResources.closeVaResources")}
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="VA Resources Hub"
+          />
+        )}
+      </HeaderCloseSlot>
       <p className="text-blue-100 text-lg">{t("vaResources.subtitle")}</p>
     </div>
 

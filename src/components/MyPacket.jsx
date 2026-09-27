@@ -4481,38 +4481,43 @@ function PainMapsTab({
 
 function PainMapDetailHeader({ viewingPainMap, setViewingPainMap, t }) {
   return (
-    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 flex items-center justify-between">
-      <div>
-        <h3 id="painmap-detail-title" className="text-xl font-bold">
-          {viewingPainMap.name || t("myPacketSection.painMapDetails")}
-        </h3>
-        <p className="text-red-100 text-sm">
-          {t("myPacketSection.saved")}:{" "}
-          {new Date(
-            viewingPainMap.savedAt || viewingPainMap.createdAt,
-          ).toLocaleString()}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={() => setViewingPainMap(null)}
-        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-        aria-label={t("common.close") || "Close"}
+    <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={() => setViewingPainMap(null)}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg hover:bg-white/20 transition-colors"
+            aria-label={t("common.close") || "Close"}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
       >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
+        <div className="min-w-0">
+          <h3 id="painmap-detail-title" className="text-xl font-bold">
+            {viewingPainMap.name || t("myPacketSection.painMapDetails")}
+          </h3>
+          <p className="text-red-100 text-sm">
+            {t("myPacketSection.saved")}:{" "}
+            {new Date(
+              viewingPainMap.savedAt || viewingPainMap.createdAt,
+            ).toLocaleString()}
+          </p>
+        </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
@@ -4642,6 +4647,44 @@ function PainMapDetailModal({
   );
 }
 
+function FormViewerModalHeader({ viewingForm, setViewingForm, t }) {
+  return (
+    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={() => setViewingForm(null)}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg hover:bg-white/20 transition-colors"
+            aria-label={t("common.close") || "Close"}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="min-w-0">
+          <h3 id="form-viewer-title" className="text-xl font-bold">
+            {viewingForm.title || viewingForm.formName}
+          </h3>
+          <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
+        </div>
+      </HeaderCloseSlot>
+    </div>
+  );
+}
+
 function FormViewerModal({ viewingForm, setViewingForm, t }) {
   return (
     <ResponsiveModal
@@ -4651,36 +4694,11 @@ function FormViewerModal({ viewingForm, setViewingForm, t }) {
       zIndex={70}
       labelledBy="form-viewer-title"
       header={
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-6 py-4 flex items-center justify-between">
-          <div>
-            <h3 id="form-viewer-title" className="text-xl font-bold">
-              {viewingForm.title || viewingForm.formName}
-            </h3>
-            <p className="text-blue-100 text-sm">{viewingForm.formNumber}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setViewingForm(null)}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              aria-label={t("common.close") || "Close"}
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <FormViewerModalHeader
+          viewingForm={viewingForm}
+          setViewingForm={setViewingForm}
+          t={t}
+        />
       }
     >
       {viewingForm.generatedContent && (
@@ -4732,11 +4750,37 @@ function StatementViewerHeader({
   t,
 }) {
   return (
-    <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4 flex items-center justify-between">
-      <h3 id="statement-viewer-title" className="text-xl font-bold">
-        {t("myPacketSection.generatedStatement")}
-      </h3>
-      <div className="flex items-center gap-3">
+    <div className="bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-4">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={() => {
+              setViewingStatement(null);
+              setViewingClaimId(null);
+            }}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-gray-200"
+            aria-label={t("common.close") || "Close"}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <h3 id="statement-viewer-title" className="min-w-0 text-xl font-bold">
+          {t("myPacketSection.generatedStatement")}
+        </h3>
         <button
           type="button"
           onClick={handleEditStatement}
@@ -4744,30 +4788,7 @@ function StatementViewerHeader({
         >
           {t("myPacketSection.editStatement")}
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            setViewingStatement(null);
-            setViewingClaimId(null);
-          }}
-          className="text-white hover:text-gray-200"
-          aria-label={t("common.close") || "Close"}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }

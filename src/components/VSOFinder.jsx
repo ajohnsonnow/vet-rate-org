@@ -3,6 +3,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { searchVSOs } from "../utils/aiStatementHelper";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -125,7 +126,30 @@ const VSOFinderHeader = ({ t, onClose, onReportBug, onToggleAISettings }) => (
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex flex-wrap items-start justify-between gap-2">
+    <HeaderCloseSlot
+      className="relative"
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+          aria-label={t("vsoFinder", "close")}
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
       <div className="flex min-w-0 items-center gap-4">
         <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
           <span className="text-3xl">🤝</span>
@@ -151,27 +175,8 @@ const VSOFinderHeader = ({ t, onClose, onReportBug, onToggleAISettings }) => (
             moduleName={t("vsoFinder", "title")}
           />
         )}
-        <button
-          onClick={onClose}
-          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
-          aria-label={t("vsoFinder", "close")}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
       </div>
-    </div>
+    </HeaderCloseSlot>
   </div>
 );
 

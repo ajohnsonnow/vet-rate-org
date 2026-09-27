@@ -10,6 +10,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatFileSize } from "../utils/pdfExtractor";
 import { isPdfFile } from "../utils/fileTypeGuards";
 import SystemRequirementsNotice from "./SystemRequirementsNotice";
@@ -1208,64 +1209,69 @@ function _resetAnalyzerState(ctx) {
 function CFileAnalyzerHeader({ t, onOpenAISettings, onReportBug, onClose }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 border-b border-violet-500 shadow-sm rounded-t-xl">
-      <div className="px-4 py-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <span className="text-3xl shrink-0">🔬</span>
-          <div className="min-w-0">
-            <h1
-              id="cfile-analyzer-title"
-              className="text-2xl font-bold text-white flex flex-wrap items-center gap-2"
+      <div className="px-4 py-4">
+        <HeaderCloseSlot
+          close={
+            <button
+              onClick={onClose}
+              className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/10 rounded-lg transition-colors text-white"
+              aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
             >
-              {t("cfileAnalyzer", "title")}
-              <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
-                {t("cfileAnalyzer", "ai")}
-              </span>
-            </h1>
-            <p className="text-sm text-violet-100">
-              {t("cfileAnalyzer", "subtitle")}
-            </p>
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          }
+        >
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <span className="text-3xl shrink-0">🔬</span>
+            <div className="min-w-0">
+              <h1
+                id="cfile-analyzer-title"
+                className="text-2xl font-bold text-white flex flex-wrap items-center gap-2"
+              >
+                {t("cfileAnalyzer", "title")}
+                <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[10px] font-bold rounded">
+                  {t("cfileAnalyzer", "ai")}
+                </span>
+              </h1>
+              <p className="text-sm text-violet-100">
+                {t("cfileAnalyzer", "subtitle")}
+              </p>
+            </div>
+            <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
+              {t("cfileAnalyzer", "beta")}
+            </span>
+            <span
+              className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
+              aria-label="VA also uses AI for document classification in claims processing"
+            >
+              🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
+            </span>
           </div>
-          <span className="ml-2 px-2 py-1 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-full">
-            {t("cfileAnalyzer", "beta")}
-          </span>
-          <span
-            className="ml-1 px-2 py-1 bg-blue-500/90 text-white text-xs font-semibold rounded-full flex items-center gap-1"
-            aria-label="VA also uses AI for document classification in claims processing"
-          >
-            🤖 {t("cfileAnalyzer", "vaUsesSimilarAi")}
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* AI Status & LLM Recommendation Badges */}
-          <LLMRecommendationBadge toolId="cfile-analyzer" />
-          <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="C-File Analyzer"
-            />
-          )}
-          <button
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center hover:bg-white/10 rounded-lg transition-colors text-white"
-            aria-label={t("cfileAnalyzer", "closeCFileAnalyzer")}
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
+          <div className="flex flex-wrap items-center gap-3">
+            {/* AI Status & LLM Recommendation Badges */}
+            <LLMRecommendationBadge toolId="cfile-analyzer" />
+            <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
+            {onReportBug && (
+              <ReportBugLink
+                onClick={onReportBug}
+                variant="light"
+                moduleName="C-File Analyzer"
               />
-            </svg>
-          </button>
-        </div>
+            )}
+          </div>
+        </HeaderCloseSlot>
       </div>
     </div>
   );
