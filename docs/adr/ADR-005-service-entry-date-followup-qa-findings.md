@@ -1,6 +1,6 @@
 # ADR-005: Service entry date follow-up — closing the gaps QA found in ADR-004
 
-**Status:** Accepted
+**Status:** Accepted; superseded in part by ADR-007 (2026-09-27) — every Open Issue below is now closed or superseded; see the amendment note at the end of this document.
 **Date:** 2026-09-27
 **Context:** QA re-review of ADR-004 (`docs/adr/ADR-004-service-entry-date-single-source-of-truth.md`) found that several of its claims did not hold once the real write paths (Muster Call's Verify & Save re-persist, My Packet's manual editors, FormsHelper) were driven end to end, rather than exercised through a single mocked edit per consumer.
 
@@ -45,3 +45,17 @@ Fixed within this pass (all in files already owned by ADR-004's fix):
 - `_mergeExistingServicePeriod` now has two escape hatches from the "identity fields never merge" rule (`authoritativeDates` for a different, more-authoritative source; the new same-source bypass for that same document correcting itself) — any future change to this function must keep both, and keep them mutually exclusive in intent (authoritative-source correction vs. same-source self-correction).
 - `pickServiceEntry`'s proven-vs-calculated tie-break is now load-bearing for every shape-1 consumer; a future caller must not reintroduce a raw "earliest by date" sort over periods that mix derived and non-derived rows.
 - The schema migration establishes the pattern for any future stale-flag repair: version-gate it, make the repair function itself idempotent (check the specific stale signature, not "run once and trust it"), and run it inside `getServiceHistory`'s existing migration block.
+
+## Amendment (ADR-007, 2026-09-27)
+
+Each Open Issue above is now closed:
+
+- **Code sheets not reaching `profile.serviceStartDate`/`dd214Data.entryDate`/the evidence timeline** — closed by the projection (`saveServiceHistory`'s flat-mirror/`dd214Data` projection; `projectServiceEntryIntoVkb`'s timeline projection). A code-sheet-sourced period now reaches every consumer the same way a printed or veteran-entered one does.
+- **A My Packet "Save Profile" click writing a stale flat mirror back** — closed by the `saveVeteranProfile` chokepoint, which overwrites the payload's start-date fields with the current projection regardless of what stale component state supplied (see `MyPacket.jsx`'s `_saveProfileTab` and its `EXCLUDED_FROM_SOURCE_TRACKING` set).
+- **`ProfileImportConfirmModal.jsx` dropping an explicit `serviceStartDateDerived: false`** — closed structurally: DD214Analyzer no longer sends `serviceStartDateDerived` through the import payload at all (see ADR-004's amendment); the modal instead reports `{serviceStartDateEdited}` metadata, and `_saveDd214ToProfile` creates a canonical period with correct provenance regardless of what the modal forwards.
+- **Shape 1/shape 2 disagreement and import-order sensitivity** — closed by making shape 2's service-entry subset a projection of shape 1 (ADR-007 §2.5); there is no second independent resolver left to disagree with the first. Wren's flagged question ("does a calculated period count as proven the same way in both shapes") is resolved by construction — there is only one resolver now.
+- **The full veteran > printed > calculated precedence not implemented** — closed by `serviceStartDateSource` (§2.2 of ADR-007), a real per-period provenance field distinct from the whole-period `userEdited` lock this ADR's tie-break was limited to.
+- **`_sourceForPeriod`'s `source` field being unreliable** — closed by the same fix: `serviceStartDateSource` is written by the one function that changes a start date (`_setPeriodStart`) and is never inferred from an unrelated field's `userEdited` flag.
+- **ADR numbering collision** — already resolved in commit `89bbccb7` prior to this ADR.
+
+The cross-enlistment tie-break itself (§2.2/DR-1 of ADR-007) intentionally changes from this ADR's "proven beats calculated" two-tier rule to a chronological rule with a calculated-runs-late invariant, pending Anth's explicit sign-off — see ADR-007 §3. If that sign-off keeps the two-tier rule instead, this ADR's tie-break description remains accurate for that one comparator; everything else in this amendment stands regardless.

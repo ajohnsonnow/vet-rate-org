@@ -2,6 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-08-08
+**Amended by:** ADR-007 (2026-09-27) — the service-entry-date subset of shape 2 is now a read/write-time projection of shape 1; see the amendment note at the end of this document.
 **Context:** QA-flagged doc gap — nothing in `docs/` explained the split, risking a future fix conflating the three shapes.
 
 ---
@@ -10,11 +11,11 @@
 
 The codebase has three distinct, differently-shaped representations of a veteran's military service history. They share overlapping vocabulary (all three have a concept of "service periods" or "service history"), which makes them easy to confuse, but they are backed by three separate `localStorage` keys and serve three different purposes.
 
-| Shape                                   | Lives in                                                                   | Storage key                | Managed via                                                                                                                                         |
-| --------------------------------------- | -------------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. Canonical multi-period model**     | `src/utils/veteranProfile.js`, `serviceHistory.servicePeriods[]`           | `vet_rate_service_history` | `getServicePeriods()`, `upsertServicePeriod()`, `addServicePeriod()`, `updateServicePeriod()`, `removeServicePeriod()`, `summarizeServicePeriods()` |
-| **2. VKB flat AI-context merge target** | `src/utils/veteranKnowledgeBase.js`, `vkb.serviceHistory.servicePeriods[]` | `vetrate_knowledge_base`   | `mergeDD214ServicePeriodTracking()` (write), `buildServicePeriodsAndSeparationContext()` (read, for AI chat context)                                |
-| **3. Raw VA-API response**              | Rendered by `VkbServiceHistorySection` in `src/components/MyPacket.jsx`    | `vet_rate_va_records`      | `saveVARecordsRaw()` / `vaRecords.serviceHistory` (`src/utils/vaDataPersistence.js`)                                                                |
+| Shape                                   | Lives in                                                                   | Storage key                                              | Managed via                                                                                                                                         |
+| --------------------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. Canonical multi-period model**     | `src/utils/veteranProfile.js`, `serviceHistory.servicePeriods[]`           | `vet_rate_service_history`                               | `getServicePeriods()`, `upsertServicePeriod()`, `addServicePeriod()`, `updateServicePeriod()`, `removeServicePeriod()`, `summarizeServicePeriods()` |
+| **2. VKB flat AI-context merge target** | `src/utils/veteranKnowledgeBase.js`, `vkb.serviceHistory.servicePeriods[]` | IndexedDB `VetRateVKB`/`knowledge_base` (see note below) | `mergeDD214ServicePeriodTracking()` (write), `buildServicePeriodsAndSeparationContext()` (read, for AI chat context)                                |
+| **3. Raw VA-API response**              | Rendered by `VkbServiceHistorySection` in `src/components/MyPacket.jsx`    | `vet_rate_va_records`                                    | `saveVARecordsRaw()` / `vaRecords.serviceHistory` (`src/utils/vaDataPersistence.js`)                                                                |
 
 ### 1. Canonical multi-period model (`veteranProfile.js`)
 
@@ -22,7 +23,11 @@ The source of truth. Editable by the veteran (Profile tab), populated by DD214/N
 
 ### 2. VKB flat AI-context merge target (`veteranKnowledgeBase.js`)
 
-`mergeDD214ServicePeriodTracking()` writes to `vkb.serviceHistory.servicePeriods[]` — an array that, confusingly, uses almost the same field names (`serviceStartDate`, `serviceEndDate`, `branch`, `rank`, `mos`, ...) as shape 1. **It is not the same object and is not kept in sync with shape 1.** It exists purely so `buildServicePeriodsAndSeparationContext()` can flatten it into a text block for the AI assistant's chat context. A DD214 import writes to both shape 1 (via `musterCallProcessor.js`'s `upsertServicePeriod`) and shape 2 (via `mergeDD214IntoVKB` → `mergeDD214ServicePeriodTracking`) independently, in two separate write paths.
+`mergeDD214ServicePeriodTracking()` writes to `vkb.serviceHistory.servicePeriods[]` — an array that, confusingly, uses almost the same field names (`serviceStartDate`, `serviceEndDate`, `branch`, `rank`, `mos`, ...) as shape 1. **It is not the same object and is not kept in sync with shape 1** for most fields. It exists purely so `buildServicePeriodsAndSeparationContext()` can flatten it into a text block for the AI assistant's chat context. A DD214 import writes to both shape 1 (via `musterCallProcessor.js`'s `upsertServicePeriod`) and shape 2 (via `mergeDD214IntoVKB` → `mergeDD214ServicePeriodTracking`) independently, in two separate write paths.
+
+Shape 2 actually lives in IndexedDB (`VetRateVKB`/`knowledge_base`, via `loadVKB`/`saveVKB`), not `localStorage` — the `vetrate_knowledge_base` `localStorage` key referenced in earlier drafts of this document is a metadata cache and legacy pre-IndexedDB data only, not the live store. This correction does not change the decision below.
+
+**Amendment (ADR-007, 2026-09-27):** the service-entry-date fields specifically — `vkb.serviceHistory.entryDate`/`entryDateDerived`, the matching field on each linked `servicePeriods[]` row, and the one enlistment-level timeline event per period — are no longer independently written. They are a pure projection of shape 1's `servicePeriods[]`, applied by `projectServiceEntryIntoVkb` at both `loadVKB` and `saveVKB` time. This narrows "do not make one shape read from another at runtime" for this one subset of fields only; every other field on shape 2 (MOS, rank, branch, awards, deployments, and shape 2's own rows that never link to a canonical period) is unchanged by this amendment and still follows the original decision below.
 
 ### 3. Raw VA-API response (`MyPacket.jsx` → `VkbServiceHistorySection`)
 
@@ -44,4 +49,4 @@ Rationale:
 - If a feature needs the veteran's real, editable service history, it must read shape 1 (`veteranProfile.js`). Do not read shape 2 for that purpose, even though it looks similar — it can silently disagree with shape 1 after a manual profile edit.
 - If a feature needs to feed the AI assistant, use shape 2's existing `buildServicePeriodsAndSeparationContext()` output rather than re-flattening shape 1 yourself in a new location.
 - Never wire shape 3 into shape 1 or shape 2. If the VA API integration is ever re-enabled (`VITE_VA_API_ENABLED=true`), any reconciliation between shape 3 and the canonical model must be an explicit, veteran-visible action (e.g. an "import from VA.gov" button with a diff/confirm step) — never a silent background merge.
-- Revisit this decision if: (a) the VA API integration is re-enabled and product wants automatic reconciliation, or (b) shape 2 is refactored to derive from shape 1 at read time instead of being written independently (which would eliminate the drift risk in Consequence 3, but is a larger refactor out of scope here).
+- Revisit this decision if: (a) the VA API integration is re-enabled and product wants automatic reconciliation, or (b) shape 2 is refactored to derive from shape 1 at read time instead of being written independently (which would eliminate the drift risk in Consequence 3, but is a larger refactor out of scope here). **(b) has now happened for the service-entry-date subset only — see the ADR-007 amendment above.** The rest of shape 2 is still an independent write path.

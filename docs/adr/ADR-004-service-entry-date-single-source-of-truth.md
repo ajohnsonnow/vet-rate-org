@@ -1,6 +1,6 @@
 # ADR-004: Service entry date — one selector, with provenance, per storage shape
 
-**Status:** Accepted
+**Status:** Accepted; superseded in part by ADR-007 (2026-09-27) — see the amendment note at the end of this document.
 **Date:** 2026-09-27
 **Context:** QA final11 review — verified defects D11-1, D11-2, D11-6 plus a code-sheet/NGB-22 ordering bug.
 
@@ -48,3 +48,15 @@ Legacy fields (`dd214Data.entryDate`, `profile.serviceStartDate`) are left in pl
 - ADR-002's boundary is unchanged: shape 1 and shape 2 are still independent stores with independent write paths. This ADR does not introduce a runtime read from one into the other; VKBViewer's new period-propagation is entirely internal to shape 2.
 - `DD214Analyzer.jsx`'s profile-import prep now sends `serviceStartDate`/`serviceEndDate` (matching `VALID_PROFILE_FIELDS`), not `entryDate`/`separationDate` — a DD214Analyzer-only veteran (no Muster Call import) now gets a populated service span instead of "? - ?".
 - `dossierExport.js` now reads deployments from `getServiceHistory().deployments` (they were never on the profile object at all — `profile.deployments` was dead code) and its "Service Dates" line through `getServiceEntry()`.
+
+## Amendment (ADR-007, 2026-09-27)
+
+QA final12 found this "one selector per shape" design could not actually converge: four independent writers (Muster Call, the VKB viewer, My Packet, FormsHelper) each held their own copy with no shared write path, so a correction made through one never reached the other three. ADR-007 replaces the model this ADR describes with one authoritative store (`servicePeriods[]`, shape 1) plus a corrections layer, and a read/write-time _projection_ into shape 2, rather than a same-shaped selector applied independently to each shape. Specifically superseded:
+
+- "One selector, applied once per storage shape" — shape 2's service-entry subset is now a projection of shape 1, not an independently-applied instance of the same algorithm.
+- "The selector does not re-resolve conflicting sources itself; that remains the write-side merge's job" — precedence resolution (`_mergeIncomingStart`) is now the selector's own concern, folded into the one write API (`setServiceEntryDate`).
+- "VKB viewer... top-level Entry Date field now also updates whichever `servicePeriods[]` entry it was mirroring" — the VKB viewer no longer writes `servicePeriods[]` at all; it calls `setServiceEntryDate` and displays the projection.
+- "Legacy fields ... are left in place ... They simply stop being read directly" — `dd214Data.entryDate` and the flat profile mirror are now active projection targets, written on every `saveServiceHistory`, not static legacy mirrors.
+- "`autoPopulateProfile` already owns writing `profile.serviceStartDate` from an import" — once a period backs the entry, `autoPopulateProfile` is blocked from moving `serviceStartDate` at all (`hasPeriodBackedServiceEntry()`); the chokepoint in `saveVeteranProfile` owns the flat field from that point on.
+
+Still in force, unchanged by ADR-007: pairing `serviceStartDateDerived` with its date rather than merging it as an independent fact (now expressed as `serviceStartDateDerived = (serviceStartDateSource === 'calculated')`, computed, never merged); and excluding NGB-22 Box-18 IADT/AD training windows from entry-date candidacy.
