@@ -34,6 +34,7 @@ import {
   primaryConditionKey,
 } from "./conditionName";
 import { DOCUMENT_TYPES } from "./documentClassifier";
+import { awardDisplayName } from "./combatService";
 
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
 const VKB_VERSION = "1.0.0";
@@ -1317,10 +1318,12 @@ function mergeDD214Awards(vkb, dd214Data, options) {
   // ─── AWARDS (Block 13 + Block 18 continuation) ───
   if (dd214Data.awards && Array.isArray(dd214Data.awards)) {
     dd214Data.awards.forEach((award) => {
-      const awardName =
-        typeof award === "string"
-          ? award
-          : award.name || award.abbreviation || "";
+      // D12-5 (final12 QA, 2026-09-27): `award.name || award.abbreviation`
+      // covered only two of the four award shapes in circulation (see
+      // combatService.js's awardDisplayName) - ribbonRackData.parseDD214Text's
+      // nested {award: {name}, matchedText} resolved to "", so `!awardName`
+      // silently dropped the award instead of merging it.
+      const awardName = awardDisplayName(award);
       if (!awardName) return;
 
       // Normalize for comparison - ignore case, trim, collapse spaces
@@ -2643,6 +2646,40 @@ function buildCombatServiceContext(vkb) {
   return context;
 }
 
+// D12-5 (final12 QA, 2026-09-27): FIX-4 made devices structured {type,
+// position} objects everywhere they're stored, but buildAwardsContext still
+// joined them as if they were strings - Array.prototype.join calls
+// String(device) on each entry, printing "[object Object]" into every AI
+// context that has ever included a device. Same canonical names
+// ribbonRackData.js's DEVICES table uses for the ribbon UI, kept local here
+// (not imported) so a plain-text AI-context builder doesn't pull in that
+// module's ribbon-rendering/state-award data.
+const DEVICE_LABELS = {
+  bronze_star: "Bronze Service Star",
+  silver_star: "Silver Service Star",
+  gold_star: "Gold Service Star",
+  bronze_olc: "Bronze Oak Leaf Cluster",
+  silver_olc: "Silver Oak Leaf Cluster",
+  v_device: "V Device (Valor)",
+  c_device: "C Device (Combat)",
+  r_device: "R Device (Remote)",
+  m_device: "M Device (Mobilization)",
+  arrowhead: "Arrowhead",
+  numeral: "Numeral",
+};
+
+function _formatDevice(d) {
+  if (typeof d === "string") return d;
+  if (!d || typeof d !== "object") return "";
+  return DEVICE_LABELS[d.type] || d.type || "";
+}
+
+function _formatAwardDevices(devices) {
+  if (!devices?.length) return "";
+  const names = devices.map(_formatDevice).filter(Boolean);
+  return names.length ? ` (${names.join(", ")})` : "";
+}
+
 function buildAwardsContext(vkb) {
   // ─── AWARDS ───
   let context = "";
@@ -2654,15 +2691,11 @@ function buildAwardsContext(vkb) {
     if (combatAwards.length > 0) {
       context += "Combat Awards:\n";
       combatAwards.forEach((a) => {
-        context += `  ★ ${a.name}`;
-        if (a.devices?.length) context += ` (${a.devices.join(", ")})`;
-        context += "\n";
+        context += `  ★ ${a.name}${_formatAwardDevices(a.devices)}\n`;
       });
     }
     otherAwards.forEach((a) => {
-      context += `  • ${a.name}`;
-      if (a.devices?.length) context += ` (${a.devices.join(", ")})`;
-      context += "\n";
+      context += `  • ${a.name}${_formatAwardDevices(a.devices)}\n`;
     });
   }
   return context;

@@ -105,3 +105,32 @@ describe("FIX-4: mergeDD214Awards does not throw on structured device objects", 
     expect(award.devices).toHaveLength(2);
   });
 });
+
+// D12-5 (final12 QA, 2026-09-27): `award.name || award.abbreviation` only
+// covered two of the four award shapes in circulation (see
+// combatService.js's awardDisplayName) - ribbonRackData.parseDD214Text's
+// nested {award: {name}, matchedText} resolved to "", so the award was
+// silently dropped instead of merged into the VKB.
+describe("D12-5: mergeDD214Awards merges every award shape in circulation", () => {
+  it("merges ribbonRackData's nested {award: {name}} shape instead of dropping it", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(
+      vkb,
+      {
+        awards: [
+          {
+            award: { name: "National Defense Service Medal" },
+            matchedText: "NDSM",
+            devices: [],
+          },
+        ],
+      },
+      { fileName: "dd214.pdf" },
+    );
+
+    expect(vkb.serviceHistory.awards).toHaveLength(1);
+    expect(vkb.serviceHistory.awards[0].name).toBe(
+      "National Defense Service Medal",
+    );
+  });
+});
