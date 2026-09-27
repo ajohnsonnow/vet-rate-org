@@ -41,6 +41,24 @@ describe("Observation 2: entry rank reflects the earliest genuinely dated record
     expect(vkb.serviceHistory.rank.entry).toBe("PV1");
   });
 
+  // Obs 2 regression (final10 QA correctness re-review, 2026-09-26): the
+  // earliest-entry check used to run only `if (dd214Data.rank)`, so a
+  // genuinely earlier, dated record whose rank an OCR pass missed never
+  // got to claim "earliest" - a LATER, ranked record then wrongly stood in
+  // for the entry rank.
+  it("reports null, not a later record's rank, when the earliest dated record has no rank", () => {
+    const vkb = initializeVKB();
+    // Earliest record: dated, but Box 4a wasn't extracted.
+    mergeDD214IntoVKB(vkb, {
+      entryDate: "1997-09-29",
+      separationDate: "1998-02-27",
+    });
+    // A later record does have a rank - it must not be mistaken for entry.
+    mergeDD214IntoVKB(vkb, { rank: "SPC", entryDate: "2002-05-06" });
+
+    expect(vkb.serviceHistory.rank.entry).toBeNull();
+  });
+
   it("never lets a CALCULATED entry date claim entry rank, even when it is numerically earliest", () => {
     const vkb = initializeVKB();
     // A real, dated DD214 for the first known period.
@@ -114,11 +132,16 @@ describe("D-C: entryDateDerived propagates onto vkb.serviceHistory.entryDate", (
 });
 
 describe("D-C: evidence-timeline entry event is labeled by component and marks a calculated date", () => {
-  it("labels a National Guard enlistment instead of assuming active duty", () => {
+  it("labels an NGB-22's own enlistment instead of assuming active duty", () => {
     const vkb = initializeVKB();
     mergeDD214EvidenceTimeline(
       vkb,
-      { entryDate: "1997-07-30", branch: "Army", component: "National Guard" },
+      {
+        entryDate: "1997-07-30",
+        branch: "Army",
+        component: "National Guard",
+        formType: "NGB22",
+      },
       { fileName: "ngb22.pdf" },
     );
 
@@ -157,6 +180,32 @@ describe("D-C: evidence-timeline entry event is labeled by component and marks a
     );
 
     const event = vkb.evidenceTimeline.find((e) => e.date === "2004-06-22");
+    expect(event.eventType).toBe("service_entry");
+    expect(event.description).toBe("Entered active duty (Army)");
+    expect(event.derived).toBe(false);
+  });
+
+  // D-C regression (final10 QA correctness re-review, 2026-09-26): a real
+  // DD214 for a Guard/Reserve mobilization also carries component
+  // "National Guard"/"Reserve" (_resolveComponentFromDocument tags it from
+  // the text alone, not from which form it is), so keying eventType off
+  // component alone relabeled its real, printed active-duty entry as an
+  // enlistment and dropped it from evidence-gap detection.
+  it("labels a Guard mobilization DD214's real active-duty entry as entering active duty, not enlisting", () => {
+    const vkb = initializeVKB();
+    mergeDD214EvidenceTimeline(
+      vkb,
+      {
+        entryDate: "2003-01-15",
+        branch: "Army",
+        component: "National Guard",
+        formType: "DD214",
+        entryDateDerived: false,
+      },
+      { fileName: "dd214_mobilization.pdf" },
+    );
+
+    const event = vkb.evidenceTimeline.find((e) => e.date === "2003-01-15");
     expect(event.eventType).toBe("service_entry");
     expect(event.description).toBe("Entered active duty (Army)");
     expect(event.derived).toBe(false);

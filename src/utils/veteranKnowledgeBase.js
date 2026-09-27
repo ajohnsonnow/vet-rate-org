@@ -1062,8 +1062,8 @@ function mergeDD214RankAndCharacter(vkb, dd214Data) {
   // Documents arrive in upload order, so the discharge rank comes from the
   // latest separation and the entry rank from the earliest entry. Scanned
   // forms often lose those dates; then the higher pay grade wins.
+  const rank = vkb.serviceHistory.rank;
   if (dd214Data.rank) {
-    const rank = vkb.serviceHistory.rank;
     const grade = parsePayGrade(dd214Data.payGrade);
     if (
       !rank.discharge ||
@@ -1078,22 +1078,31 @@ function mergeDD214RankAndCharacter(vkb, dd214Data) {
       rank.dischargeAsOf = dd214Data.separationDate || null;
       rank.dischargeGrade = grade;
     }
-    // D-C: a document's own single rank field only proves the veteran's
-    // rank as of THAT field's true moment - real for a genuinely printed
-    // entry date, but not for a CALCULATED one (serviceStartDateDerived):
-    // an NGB-22's derived entry date is arithmetic on ITS OWN separation
-    // date, and its rank field is that same document's rank as of
-    // separation/report, not as of the calculated entry decades earlier.
-    // Never let a derived date claim "entry" - if no genuinely dated
-    // record ever contributes, entry correctly stays whatever it already
-    // was (null, if none ever has).
-    if (
-      !dd214Data.entryDateDerived &&
-      _isEarlierEntryCandidate(rank.entryAsOf, dd214Data.entryDate)
-    ) {
-      rank.entry = dd214Data.rank;
-      rank.entryAsOf = dd214Data.entryDate;
-    }
+  }
+  // D-C: a document's own single rank field only proves the veteran's
+  // rank as of THAT field's true moment - real for a genuinely printed
+  // entry date, but not for a CALCULATED one (serviceStartDateDerived):
+  // an NGB-22's derived entry date is arithmetic on ITS OWN separation
+  // date, and its rank field is that same document's rank as of
+  // separation/report, not as of the calculated entry decades earlier.
+  // Never let a derived date claim "entry" - if no genuinely dated
+  // record ever contributes, entry correctly stays whatever it already
+  // was (null, if none ever has).
+  //
+  // Obs 2 (final9/final10 QA; corrected in final10 QA's correctness
+  // re-review, 2026-09-26): this used to run only `if (dd214Data.rank)`,
+  // so a genuinely earlier, dated record that lacked a rank (a common OCR
+  // miss on Box 4a) never got a chance to claim "earliest" - a LATER
+  // record's rank could then wrongly stand in for the entry rank. The
+  // earliest dated (non-derived) record now always claims "entry",
+  // whether or not it has a rank - per spec, entry rank is that earliest
+  // record's rank, or null when that record's rank is unknown.
+  if (
+    !dd214Data.entryDateDerived &&
+    _isEarlierEntryCandidate(rank.entryAsOf, dd214Data.entryDate)
+  ) {
+    rank.entry = dd214Data.rank || null;
+    rank.entryAsOf = dd214Data.entryDate;
   }
   if (dd214Data.payGrade) {
     if (!vkb.serviceHistory.payGrade)
@@ -1410,23 +1419,27 @@ function mergeDD214Addresses(vkb, dd214Data) {
   }
 }
 
-// D-C (final10 QA, 2026-09-25): a National Guard/Reserve enlistment is not
+// D-C (final10 QA, 2026-09-25; corrected in final10 QA's correctness
+// re-review, 2026-09-26): a National Guard/Reserve ENLISTMENT is not
 // "entered active duty" - years without evidence between drill weekends is
 // normal for that component, not the start of a continuous-service
-// expectation the way a real active-duty entry is. Labels the timeline
-// event by component instead of assuming Active Duty, and marks a
-// calculated (serviceStartDateDerived) date as such rather than presenting
-// it as if it were printed on the form.
+// expectation the way a real active-duty entry is. Component alone can't
+// tell the two apart: _resolveComponentFromDocument tags component
+// "National Guard"/"Reserve" on ANY document for that member, including a
+// real Title-10 mobilization DD214 whose Box 12a prints a genuine
+// active-duty entry - keying on component relabeled every one of those as
+// an enlistment and dropped it from gap detection. An enlistment record is
+// the NGB-22 ITSELF (formType), or a calculated (entryDateDerived) entry
+// date - a real DD214 is neither, regardless of the veteran's component.
 function _serviceEntryTimelineEvent(dd214Data, vkb, options) {
   const branch = dd214Data.branch || vkb.serviceHistory.branch || "Military";
-  const isGuardOrReserve =
-    dd214Data.component === "National Guard" ||
-    dd214Data.component === "Reserve";
-  const eventType = isGuardOrReserve ? "guard_enlistment" : "service_entry";
-  const label = isGuardOrReserve
-    ? `Enlisted (${branch} ${dd214Data.component})`
-    : `Entered active duty (${branch})`;
   const derived = !!dd214Data.entryDateDerived;
+  const isEnlistmentRecord = dd214Data.formType === "NGB22" || derived;
+  const eventType = isEnlistmentRecord ? "guard_enlistment" : "service_entry";
+  const componentSuffix = dd214Data.component ? ` ${dd214Data.component}` : "";
+  const label = isEnlistmentRecord
+    ? `Enlisted (${branch}${componentSuffix})`
+    : `Entered active duty (${branch})`;
   return {
     date: dd214Data.entryDate,
     eventType,
