@@ -3,11 +3,13 @@
  * minus net service - musterCallProcessor.js's serviceStartDateDerived
  * flag). DutyStationsSection shows each duty station's linked service
  * period label (formatPeriodLabel) both in the "linked period" dropdown and
- * the duty station list entry - both must say "(calculated)" when the
- * linked period's start date isn't something printed on the veteran's form.
+ * the duty station list entry - both must mark it (via the translated
+ * myPacketSection.calculatedFromNetService key, not hard-coded English) when
+ * the linked period's start date isn't something printed on the veteran's
+ * form.
  */
 import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import DutyStationsSection from "../../components/DutyStationsSection.jsx";
 
 afterEach(cleanup);
@@ -62,7 +64,9 @@ describe("DutyStationsSection - calculated entry date marker", () => {
       "period_1",
     );
 
-    expect(screen.getByText(/\(calculated\)/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/\(myPacketSection\.calculatedFromNetService\)/),
+    ).toBeInTheDocument();
   });
 
   it("does not mark a printed start date as calculated", async () => {
@@ -80,6 +84,40 @@ describe("DutyStationsSection - calculated entry date marker", () => {
       "period_1",
     );
 
-    expect(screen.queryByText(/\(calculated\)/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/\(myPacketSection\.calculatedFromNetService\)/),
+    ).not.toBeInTheDocument();
+  });
+
+  // The list entry above (formatPeriodLabel via DutyStationEntry) is only
+  // one of formatPeriodLabel's two callers - the "linked period" <select>
+  // shown in the edit form (PeriodSelect) is the other, and used its own
+  // hard-coded "(calculated)" that the list entry's translated text never
+  // exercised.
+  it("marks the calculated start date inside the linked-period dropdown option too", async () => {
+    await renderSection(
+      {
+        servicePeriods: [
+          {
+            id: "period_1",
+            branch: "Army National Guard",
+            serviceStartDate: "2012-03-14",
+            serviceStartDateDerived: true,
+            serviceEndDate: "2020-03-14",
+          },
+        ],
+      },
+      "period_1",
+    );
+
+    fireEvent.click(screen.getByText("myPacketSection.edit"));
+
+    const option = document.querySelector(
+      '#duty-station-period option[value="period_1"]',
+    );
+    expect(option).not.toBeNull();
+    expect(option.textContent).toContain(
+      "(myPacketSection.calculatedFromNetService)",
+    );
   });
 });

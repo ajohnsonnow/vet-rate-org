@@ -4902,6 +4902,13 @@ export const APP_TRANSLATIONS = {
       vi: "Hiện Tại",
       ko: "현재",
     },
+    calculatedFromNetService: {
+      en: "calculated from net service",
+      es: "calculado a partir del servicio neto",
+      tl: "hinango mula sa netong serbisyo",
+      vi: "được tính từ thời gian phục vụ ròng",
+      ko: "순 복무 기간에서 계산됨",
+    },
     // Awards
     awardsDecorations: {
       en: "Awards & Decorations",

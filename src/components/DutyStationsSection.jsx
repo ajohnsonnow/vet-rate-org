@@ -58,7 +58,9 @@ function formatPeriodLabel(period, t) {
   // Guard/Reserve periods whose NGB-22 printed no entry date get one
   // calculated (separation date minus net service) - flag it here too, not
   // just on the Service tab card this dropdown is built from.
-  const startSuffix = period.serviceStartDateDerived ? " (calculated)" : "";
+  const startSuffix = period.serviceStartDateDerived
+    ? ` (${t("myPacketSection.calculatedFromNetService")})`
+    : "";
   const end = period.serviceEndDate || t("myPacketSection.present");
   return `${branch} (${start}${startSuffix} - ${end})`;
 }
