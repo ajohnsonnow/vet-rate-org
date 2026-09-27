@@ -4748,7 +4748,13 @@ function UserManualContentArea({ s }) {
         />
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+        {/* `md:pe-16` clears UserManualDesktopCloseButton (`top-16 end-3
+            h-11 w-11`, 56px of end-edge space) - at `md` specifically the
+            content pane is narrow enough (sidebar + content share a
+            768px-ish panel) that a long/wrapped title's last line reached
+            all the way to the pane's own end edge, right under the
+            floating close-X. */}
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 md:pe-16">
           {getNavTitle(currentSection, currentContent.title)}
         </h1>
 
