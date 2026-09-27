@@ -1,12 +1,20 @@
 /**
  * Observation 2 + D-C (final9/final10 QA, 2026-09-25):
- *  - the VKB's entry-rank comparator reused _isLaterRecord's "having a
- *    date beats not having one" tie-break, which is backwards for the
- *    ENTRY case (see mergeDD214RankAndCharacter's own comment) - fixed
+ *  - the VKB's first-period-rank comparator reused _isLaterRecord's
+ *    "having a date beats not having one" tie-break, which is backwards
+ *    for this case (see mergeDD214RankAndCharacter's own comment) - fixed
  *    with a dedicated MIN-by-date comparator that also never lets a
- *    CALCULATED (serviceStartDateDerived) date claim "entry rank".
+ *    CALCULATED (serviceStartDateDerived) date claim "first period".
  *  - the evidence-timeline "entered service" event assumed Active Duty
  *    regardless of component, and never marked a calculated date as such.
+ *
+ * D11-3 (final11 QA, 2026-09-27): a DD214's Box 4a / an NGB-22's rank
+ * field is that document's rank AS OF ITS OWN SEPARATION, never as of
+ * when the veteran entered that period - the field this describes was
+ * renamed from rank.entry/rank.entryAsOf to
+ * rank.firstPeriodRank/rank.firstPeriodEntryDate so the app never
+ * presents a separation rank as an entry rank. Same real values, honest
+ * name; this pipeline never extracts an actual grade-at-entry.
  * Fixture values are generic, not any real veteran's data.
  */
 import { describe, it, expect } from "vitest";
@@ -14,9 +22,10 @@ import {
   initializeVKB,
   mergeDD214IntoVKB,
   mergeDD214EvidenceTimeline,
+  migrateOffSchemaVKB,
 } from "./veteranKnowledgeBase";
 
-describe("Observation 2: entry rank reflects the earliest genuinely dated record", () => {
+describe("Observation 2: firstPeriodRank reflects the earliest genuinely dated record", () => {
   it("keeps the earliest record's rank regardless of upload order", () => {
     const vkb = initializeVKB();
     mergeDD214IntoVKB(vkb, {
@@ -30,7 +39,7 @@ describe("Observation 2: entry rank reflects the earliest genuinely dated record
       separationDate: "1998-02-27",
     });
 
-    expect(vkb.serviceHistory.rank.entry).toBe("PV1");
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("PV1");
   });
 
   it("never lets a document with no entryDate at all blank out an already-known earliest rank", () => {
@@ -38,14 +47,14 @@ describe("Observation 2: entry rank reflects the earliest genuinely dated record
     mergeDD214IntoVKB(vkb, { rank: "PV1", entryDate: "1997-09-29" });
     mergeDD214IntoVKB(vkb, { rank: "SGT" }); // no entryDate
 
-    expect(vkb.serviceHistory.rank.entry).toBe("PV1");
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("PV1");
   });
 
   // Obs 2 regression (final10 QA correctness re-review, 2026-09-26): the
   // earliest-entry check used to run only `if (dd214Data.rank)`, so a
   // genuinely earlier, dated record whose rank an OCR pass missed never
   // got to claim "earliest" - a LATER, ranked record then wrongly stood in
-  // for the entry rank.
+  // for firstPeriodRank.
   it("reports null, not a later record's rank, when the earliest dated record has no rank", () => {
     const vkb = initializeVKB();
     // Earliest record: dated, but Box 4a wasn't extracted.
@@ -53,13 +62,14 @@ describe("Observation 2: entry rank reflects the earliest genuinely dated record
       entryDate: "1997-09-29",
       separationDate: "1998-02-27",
     });
-    // A later record does have a rank - it must not be mistaken for entry.
+    // A later record does have a rank - it must not be mistaken for the
+    // first period's own rank.
     mergeDD214IntoVKB(vkb, { rank: "SPC", entryDate: "2002-05-06" });
 
-    expect(vkb.serviceHistory.rank.entry).toBeNull();
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBeNull();
   });
 
-  it("never lets a CALCULATED entry date claim entry rank, even when it is numerically earliest", () => {
+  it("never lets a CALCULATED entry date claim firstPeriodRank, even when it is numerically earliest", () => {
     const vkb = initializeVKB();
     // A real, dated DD214 for the first known period.
     mergeDD214IntoVKB(vkb, {
@@ -78,7 +88,7 @@ describe("Observation 2: entry rank reflects the earliest genuinely dated record
       separationDate: "2008-04-04",
     });
 
-    expect(vkb.serviceHistory.rank.entry).toBe("PV1");
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("PV1");
   });
 
   it("stays null when only a calculated entry date has ever been merged", () => {
@@ -90,7 +100,7 @@ describe("Observation 2: entry rank reflects the earliest genuinely dated record
       separationDate: "2008-04-04",
     });
 
-    expect(vkb.serviceHistory.rank.entry).toBeNull();
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBeNull();
   });
 
   it("updates to a genuinely earlier real record found later", () => {
@@ -98,7 +108,38 @@ describe("Observation 2: entry rank reflects the earliest genuinely dated record
     mergeDD214IntoVKB(vkb, { rank: "SPC", entryDate: "2002-05-06" });
     mergeDD214IntoVKB(vkb, { rank: "PV1", entryDate: "1997-09-29" });
 
-    expect(vkb.serviceHistory.rank.entry).toBe("PV1");
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("PV1");
+  });
+});
+
+describe("D11-3: legacy rank.entry/rank.entryAsOf migrates to its honest name", () => {
+  it("moves an existing legacy value forward and deletes the mislabeled keys", () => {
+    const vkb = initializeVKB();
+    delete vkb.serviceHistory.rank.firstPeriodRank;
+    vkb.serviceHistory.rank.entry = "SPC";
+    vkb.serviceHistory.rank.entryAsOf = "2002-05-06";
+    delete vkb.metadata.migratedEntryRankFieldName;
+
+    const { changed } = migrateOffSchemaVKB(vkb);
+
+    expect(changed).toBe(true);
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("SPC");
+    expect(vkb.serviceHistory.rank.firstPeriodEntryDate).toBe("2002-05-06");
+    expect(vkb.serviceHistory.rank.entry).toBeUndefined();
+    expect(vkb.serviceHistory.rank.entryAsOf).toBeUndefined();
+  });
+
+  it("is idempotent - running twice does not re-flag changed or clobber real data", () => {
+    const vkb = initializeVKB();
+    delete vkb.serviceHistory.rank.firstPeriodRank;
+    vkb.serviceHistory.rank.entry = "SPC";
+    delete vkb.metadata.migratedEntryRankFieldName;
+
+    migrateOffSchemaVKB(vkb);
+    const second = migrateOffSchemaVKB(vkb);
+
+    expect(second.changed).toBe(false);
+    expect(second.vkb.serviceHistory.rank.firstPeriodRank).toBe("SPC");
   });
 });
 

@@ -150,7 +150,7 @@ export const VKB_SCHEMA = {
     separationDate: null,
     yearsOfService: null,
     rank: {
-      entry: null,
+      firstPeriodRank: null,
       discharge: null,
     },
     mos: [], // [{code, title, dates, hazards}]
@@ -314,6 +314,26 @@ function _renameServicePeriodFields(vkb) {
   return changed;
 }
 
+/**
+ * D11-3 (final11 QA, 2026-09-27): rank.entry/rank.entryAsOf mislabeled a
+ * separation rank as an entry rank (see mergeDD214RankAndCharacter). Unlike
+ * the servicePeriods rename above, the OLD name itself was the bug, so this
+ * is a one-time MOVE (old keys deleted), not a permanent dual-read - a
+ * surviving rank.entry would keep presenting the same false "entry rank" to
+ * any future reader. The real, already-collected rank value moves forward
+ * under its honest name instead of being silently dropped.
+ */
+function _renameEntryRankField(vkb) {
+  const rank = vkb.serviceHistory?.rank;
+  if (!rank || typeof rank !== "object") return false;
+  if (rank.firstPeriodRank !== undefined) return false;
+  rank.firstPeriodRank = rank.entry ?? null;
+  rank.firstPeriodEntryDate = rank.entryAsOf ?? null;
+  delete rank.entry;
+  delete rank.entryAsOf;
+  return true;
+}
+
 export const migrateOffSchemaVKB = (vkb) => {
   if (!vkb || typeof vkb !== "object") return { vkb, changed: false };
   vkb.metadata = vkb.metadata || {};
@@ -357,6 +377,12 @@ export const migrateOffSchemaVKB = (vkb) => {
     vkb.metadata.migratedServicePeriodFieldNames = true;
   }
 
+  // D11-3: own guard flag, same reasoning as C1 above.
+  if (!vkb.metadata.migratedEntryRankFieldName) {
+    if (_renameEntryRankField(vkb)) changed = true;
+    vkb.metadata.migratedEntryRankFieldName = true;
+  }
+
   return { vkb, changed };
 };
 
@@ -369,7 +395,8 @@ export const migrateOffSchemaVKB = (vkb) => {
 async function _migrateAndPersist(vkb) {
   if (
     vkb?.metadata?.migratedOffSchema &&
-    vkb?.metadata?.migratedServicePeriodFieldNames
+    vkb?.metadata?.migratedServicePeriodFieldNames &&
+    vkb?.metadata?.migratedEntryRankFieldName
   ) {
     return vkb;
   }
@@ -1053,25 +1080,31 @@ export function _isLaterRecord(dateA, dateB, gradeA, gradeB) {
   return gradeA > gradeB;
 }
 
-// Observation 2 (final9/final10 QA, 2026-09-25): the entry-rank check used
-// to reuse _isLaterRecord's "having a date beats not having one" tie-break,
-// which is right for the DISCHARGE case above (prefer a dated record over
-// an undated guess) but backwards for ENTRY: an incoming document with NO
-// entryDate at all could still win and blank out a real, already-known
-// earliest date, while a document that legitimately provided a real first
-// entryDate (existing.entryAsOf still unset) could lose to it. This is a
-// dedicated MIN-by-date comparator instead: only a document that actually
-// has an entryDate can ever claim "earliest", and it only wins when there
-// is no existing dated claim or its date is genuinely earlier.
-function _isEarlierEntryCandidate(existingEntryAsOf, incomingEntryDate) {
+// Observation 2 (final9/final10 QA, 2026-09-25): the first-period-rank
+// check used to reuse _isLaterRecord's "having a date beats not having
+// one" tie-break, which is right for the DISCHARGE case below (prefer a
+// dated record over an undated guess) but backwards here: an incoming
+// document with NO entryDate at all could still win and blank out a real,
+// already-known earliest date, while a document that legitimately provided
+// a real first entryDate (existing.firstPeriodEntryDate still unset) could
+// lose to it. This is a dedicated MIN-by-date comparator instead: only a
+// document that actually has an entryDate can ever claim "earliest", and it
+// only wins when there is no existing dated claim or its date is genuinely
+// earlier.
+function _isEarlierEntryCandidate(
+  existingFirstPeriodEntryDate,
+  incomingEntryDate,
+) {
   if (!incomingEntryDate) return false;
-  if (!existingEntryAsOf) return true;
-  return _calendarDay(incomingEntryDate) < _calendarDay(existingEntryAsOf);
+  if (!existingFirstPeriodEntryDate) return true;
+  return (
+    _calendarDay(incomingEntryDate) < _calendarDay(existingFirstPeriodEntryDate)
+  );
 }
 
 function mergeDD214RankAndCharacter(vkb, dd214Data) {
   // Documents arrive in upload order, so the discharge rank comes from the
-  // latest separation and the entry rank from the earliest entry. Scanned
+  // latest separation and firstPeriodRank from the earliest entry. Scanned
   // forms often lose those dates; then the higher pay grade wins.
   const rank = vkb.serviceHistory.rank;
   if (dd214Data.rank) {
@@ -1090,30 +1123,47 @@ function mergeDD214RankAndCharacter(vkb, dd214Data) {
       rank.dischargeGrade = grade;
     }
   }
+  // D11-3 (final11 QA, 2026-09-27): a DD214's Box 4a / an NGB-22's rank
+  // field is ALWAYS that document's rank as of THAT PERIOD'S OWN
+  // SEPARATION - never the rank the veteran held when they entered that
+  // period. The old "rank.entry" field named this value as if it were an
+  // entry rank, so a veteran who, say, enlisted as a Private and made
+  // Sergeant by the end of their first hitch would have that Sergeant
+  // grade presented as their rank AT ENTRY - a fabricated fact this
+  // pipeline never actually extracts (no document here states grade at
+  // entry). Renamed to firstPeriodRank/firstPeriodEntryDate: the value is
+  // exactly the same real, dated information (the earliest known period's
+  // own rank field, real per D-C below), just labeled for what it actually
+  // is - the rank recorded for the veteran's first known period, not the
+  // rank they held when entering it. This keeps the real data (nulling it
+  // would throw away a true fact) while never presenting a separation rank
+  // as an entry rank.
+  //
   // D-C: a document's own single rank field only proves the veteran's
   // rank as of THAT field's true moment - real for a genuinely printed
   // entry date, but not for a CALCULATED one (serviceStartDateDerived):
   // an NGB-22's derived entry date is arithmetic on ITS OWN separation
   // date, and its rank field is that same document's rank as of
   // separation/report, not as of the calculated entry decades earlier.
-  // Never let a derived date claim "entry" - if no genuinely dated
-  // record ever contributes, entry correctly stays whatever it already
-  // was (null, if none ever has).
+  // Never let a derived date claim "first period" - if no genuinely dated
+  // record ever contributes, firstPeriodRank correctly stays whatever it
+  // already was (null, if none ever has).
   //
   // Obs 2 (final9/final10 QA; corrected in final10 QA's correctness
   // re-review, 2026-09-26): this used to run only `if (dd214Data.rank)`,
   // so a genuinely earlier, dated record that lacked a rank (a common OCR
   // miss on Box 4a) never got a chance to claim "earliest" - a LATER
-  // record's rank could then wrongly stand in for the entry rank. The
-  // earliest dated (non-derived) record now always claims "entry",
-  // whether or not it has a rank - per spec, entry rank is that earliest
-  // record's rank, or null when that record's rank is unknown.
+  // record's rank could then wrongly stand in for firstPeriodRank. The
+  // earliest dated (non-derived) record now always claims "first period",
+  // whether or not it has a rank - per spec, firstPeriodRank is that
+  // earliest record's own rank field, or null when that record's rank is
+  // unknown.
   if (
     !dd214Data.entryDateDerived &&
-    _isEarlierEntryCandidate(rank.entryAsOf, dd214Data.entryDate)
+    _isEarlierEntryCandidate(rank.firstPeriodEntryDate, dd214Data.entryDate)
   ) {
-    rank.entry = dd214Data.rank || null;
-    rank.entryAsOf = dd214Data.entryDate;
+    rank.firstPeriodRank = dd214Data.rank || null;
+    rank.firstPeriodEntryDate = dd214Data.entryDate;
   }
   if (dd214Data.payGrade) {
     if (!vkb.serviceHistory.payGrade)

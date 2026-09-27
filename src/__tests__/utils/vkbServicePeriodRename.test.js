@@ -197,7 +197,7 @@ describe("VKB rank at discharge follows the latest service, not upload order", (
       separationDate: "2003-04-30",
     });
     expect(vkb.serviceHistory.rank.discharge).toBe("SGT");
-    expect(vkb.serviceHistory.rank.entry).toBe("SPC");
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("SPC");
   });
 
   it("falls back to the higher pay grade when the forms lost their dates", () => {
