@@ -20,7 +20,7 @@ const {
   saveServiceRecordToProfile,
   saveCodeSheetServicePeriodsToProfile,
 } = await import("./musterCallProcessor");
-const { getServicePeriods, getUnmatchedServiceRecords } =
+const { getServicePeriods, getUnmatchedServiceRecords, getServiceHistory } =
   await import("./veteranProfile");
 
 const REALISTIC_NGB22 = `
@@ -124,13 +124,19 @@ describe("saveServiceRecordToProfile: NGB-22 rank attachment without a Box 12b d
   });
 });
 
-// Observation 1 (final10 QA, 2026-09-25): the terminal-AD rank rule
-// stopped matching once the NGB-22 gained a separation date that does NOT
-// equal the terminal AD window's own end date - a real scenario for a
-// Guard member whose overall discharge (Box 12b, the Guard's own final
-// separation) post-dates their last individual activation by years of
-// ordinary drilling. Same REMARKS windows as REALISTIC_NGB22 above; only
-// Box 12b's date changes to one that post-dates the AD window's own end.
+// Observation 1 (final10 QA, 2026-09-25) computed the terminal-AD rank
+// fallback unconditionally so a separation date that does NOT equal the
+// terminal AD window's own end date (routine for a Guard member, whose
+// overall discharge post-dates their last individual activation by years
+// of ordinary drilling) would still attach the NGB-22's own rank to
+// whichever AD window happened to be chronologically last. Reverted in
+// final10 QA's correctness re-review (2026-09-26): that stamps the rank
+// AS OF THE 2007 SEPARATION onto a window that ended in 2005, with
+// nothing on the document proving the veteran held that rank two years
+// earlier - the standing data rule ("never guess a link") means no rank
+// on that window is the honest result until a real DD214 for it supplies
+// one. Same REMARKS windows as REALISTIC_NGB22 above; only Box 12b's date
+// changes to one that post-dates the AD window's own end.
 const NGB22_SEPARATION_DATE_AFTER_LAST_AD_WINDOW = `
 1. NAME (Last, First, Middle): DOE, JOHN ROBERT
 2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
@@ -152,12 +158,12 @@ const NGB22_SEPARATION_DATE_AFTER_LAST_AD_WINDOW = `
 28. NARRATIVE REASON: COMPLETION OF REQUIRED ACTIVE SERVICE
 `;
 
-describe("Observation 1: NGB-22 rank attachment when the separation date post-dates the terminal AD window", () => {
+describe("Observation 1 regression (final10 QA correctness re-review, 2026-09-26): rank must not attach without a proven link", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("still attaches rank to the document's own latest AD window, not just an exact separationDate match", async () => {
+  it("does not attach rank to an AD window when the document's separation date belongs to a later, undocumented window", async () => {
     const extractedData = await parseServiceRecord(
       NGB22_SEPARATION_DATE_AFTER_LAST_AD_WINDOW,
       "NGB22",
@@ -181,7 +187,7 @@ describe("Observation 1: NGB-22 rank attachment when the separation date post-da
     );
 
     expect(ad).toBeDefined();
-    expect(ad.rank).toBe("SGT");
+    expect(ad.rank).toBe("");
     expect(iadt).toBeDefined();
     expect(iadt.rank).toBe("");
   });
@@ -338,6 +344,24 @@ HONORABLE
     ["08 | 13 | 10", "months over 11"],
     ["08 | 03 | 45", "days over 31"],
     ["99 | 03 | 10", "years over the sane career-length ceiling"],
+    // D-E regression (final10 QA correctness re-review, 2026-09-26): an
+    // all-zero duration passed the plain range check (0 is in-range on
+    // every field individually) and derived a zero-length period -
+    // entryDate === separationDate - from what a real "00 00 00" OCR read
+    // means: a total miss, not a same-day tour.
+    ["00 | 00 | 00", "an all-zero duration is not a plausible tour length"],
+    // Boundary-pins (final10 QA "tests" lens, 2026-09-26): 12 months and 32
+    // days are exactly one past the valid ceiling - months/days are
+    // calendar remainders (0-11 / 0-31), never a full unit's worth of the
+    // next one up.
+    [
+      "08 | 12 | 10",
+      "exactly 12 months (one past the calendar-remainder ceiling)",
+    ],
+    [
+      "08 | 03 | 32",
+      "exactly 32 days (one past the calendar-remainder ceiling)",
+    ],
   ])(
     "derives nothing when the net-service duration is invalid (%s: %s)",
     async (net) => {
@@ -358,5 +382,87 @@ HONORABLE
     );
     expect(extractedData.serviceStartDate).toBe("2002-03-05");
     expect(extractedData.serviceStartDateDerived).toBe(true);
+  });
+
+  // Boundary-pin: 11 months and 31 days are the top of the valid range and
+  // must still derive - only 12 months / 32 days (above) are rejected.
+  it("still derives the date at the top of the valid range (11 months, 31 days)", async () => {
+    const extractedData = await parseServiceRecord(
+      ngbWithNetService("08 | 11 | 31"),
+      "NGB22",
+    );
+    expect(extractedData.serviceStartDate).toBeTruthy();
+    expect(extractedData.serviceStartDateDerived).toBe(true);
+  });
+});
+
+// D-C (final10 QA correctness re-review, 2026-09-26): entryDateDerived
+// describes entryDate itself - _mergeDD214Record used to merge each key
+// independently, so a document's own real (false) entryDateDerived could
+// "win" this key while a DIFFERENT document's entryDate won that key,
+// mislabeling a calculated NGB-22 date as printed. Fixture values are
+// synthetic.
+describe("D-C: dd214Data.entryDateDerived merges in lockstep with entryDate, not independently", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("keeps the calculated flag with the calculated date, even though a higher-confidence document (with no entry date at all) exists", () => {
+    // A DD256 discharge certificate: no entry date, higher confidence.
+    saveServiceRecordToProfile(
+      { name: "dd256.pdf" },
+      {
+        classification: { confidence: 95 },
+        extractedData: { type: "service_record", formType: "DD256" },
+      },
+    );
+    // A lower-confidence NGB-22 with a CALCULATED entry date.
+    saveServiceRecordToProfile(
+      { name: "ngb22.pdf" },
+      {
+        classification: { confidence: 80 },
+        extractedData: {
+          type: "service_record",
+          formType: "NGB22",
+          serviceStartDate: "1997-07-30",
+          serviceStartDateDerived: true,
+        },
+      },
+    );
+
+    const { dd214Data } = getServiceHistory();
+    expect(dd214Data.entryDate).toBe("1997-07-30");
+    expect(dd214Data.entryDateDerived).toBe(true);
+  });
+
+  it("clears the calculated flag once a real, printed entry date is merged in at equal confidence", () => {
+    saveServiceRecordToProfile(
+      { name: "ngb22.pdf" },
+      {
+        classification: { confidence: 90 },
+        extractedData: {
+          type: "service_record",
+          formType: "NGB22",
+          serviceStartDate: "1997-07-30",
+          serviceStartDateDerived: true,
+        },
+      },
+    );
+    saveServiceRecordToProfile(
+      { name: "dd214.pdf" },
+      {
+        classification: { confidence: 90 },
+        extractedData: {
+          type: "service_record",
+          formType: "DD214",
+          serviceStartDate: "1997-06-01",
+          serviceStartDateDerived: false,
+        },
+      },
+    );
+
+    const { dd214Data } = getServiceHistory();
+    expect(dd214Data.entryDate).toBe("1997-06-01");
+    expect(dd214Data.entryDateDerived).toBe(false);
   });
 });

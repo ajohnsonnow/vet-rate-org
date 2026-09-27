@@ -819,6 +819,21 @@ const _isEmptyDD214Value = (value) => {
   return false;
 };
 
+// D-C: whether `newVal` should win a DD214 field merge - same fill-if-
+// empty/confidence-high-water-mark rule _mergeDD214Record applies to every
+// other field, split out so entryDate and entryDateDerived (below) can
+// resolve as one unit instead of two independent per-key decisions.
+function _dd214FieldKeepsNew(
+  oldVal,
+  newVal,
+  candidateConfidence,
+  existingConfidence,
+) {
+  if (_isEmptyDD214Value(oldVal)) return true;
+  if (_isEmptyDD214Value(newVal)) return false;
+  return candidateConfidence >= existingConfidence;
+}
+
 // Merges a newly-extracted DD214 record onto whatever is already stored in
 // the Service tab. Confidence is tracked at the record level (a single
 // high-water mark via Math.max below, not per field): a field is only
@@ -847,13 +862,34 @@ const _mergeDD214Record = (existing, candidate) => {
       merged[key] = mergeCombatService(oldVal, newVal);
       return;
     }
-    if (_isEmptyDD214Value(oldVal)) {
-      merged[key] = newVal;
-    } else if (_isEmptyDD214Value(newVal)) {
-      merged[key] = oldVal;
-    } else {
-      merged[key] = candidateConfidence >= existingConfidence ? newVal : oldVal;
+    // D-C (final10 QA correctness re-review, 2026-09-26): entryDateDerived
+    // describes entryDate itself, not an independent fact - merging each
+    // key on its own let one document's real (false) entryDateDerived
+    // "win" this key while a DIFFERENT document's entryDate won that key,
+    // mislabeling a calculated NGB-22 date as printed (or vice versa).
+    // Resolved together: whichever side's entryDate is kept, its own
+    // entryDateDerived comes with it.
+    if (key === "entryDateDerived") return;
+    if (key === "entryDate") {
+      const keepNew = _dd214FieldKeepsNew(
+        oldVal,
+        newVal,
+        candidateConfidence,
+        existingConfidence,
+      );
+      merged.entryDate = keepNew ? newVal : oldVal;
+      merged.entryDateDerived = keepNew
+        ? !!candidate.entryDateDerived
+        : !!existing.entryDateDerived;
+      return;
     }
+    const keepNew = _dd214FieldKeepsNew(
+      oldVal,
+      newVal,
+      candidateConfidence,
+      existingConfidence,
+    );
+    merged[key] = keepNew ? newVal : oldVal;
   });
   merged.confidence = Math.max(existingConfidence, candidateConfidence);
   return merged;
@@ -929,21 +965,24 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 // so the rank never attached to any of them even when exactly one
 // Active Duty period unambiguously deserved it. Falls back to "the latest
 // Active Duty period this same document describes" as the terminal-period
-// proxy in that case.
+// proxy in that case, ONLY when separationDate is absent (see
+// _saveNGB22AdditionalPeriods below) - a present separationDate is this
+// document's own proof of when its rank field applies, and the standing
+// data rule ("never guess a link") means that proof, when it doesn't match
+// this window's own end date, is proof this window does NOT get the rank,
+// not license to guess a different one.
 //
-// Observation 1 (final10 QA, 2026-09-25): that fallback used to be gated
-// on separationDate being ABSENT (see _saveNGB22AdditionalPeriods below),
-// on the assumption a present separationDate always equals the terminal
-// AD window's own end date. For a Guard member, separationDate is the
-// overall Guard discharge date, which routinely POST-DATES the last
-// individual activation by years of ordinary drilling - once an NGB-22
-// extraction started reliably recovering that overall date, the exact
-// match (periodEndDate === separationDate) stopped firing for those
-// veterans and the previously-working fallback was disabled at the exact
-// same time, losing the rank on the correct final AD window. Computed
-// unconditionally now: it's this document's own field, not a guess, and
-// either proof (matches separationDate, or is this document's own latest
-// AD end) is independently sufficient.
+// Observation 1 (final10 QA, 2026-09-25) computed this unconditionally,
+// reasoning a present separationDate that POST-DATES the terminal AD
+// window (routine for a Guard member, whose overall discharge is years
+// after their last individual activation) meant the fallback should still
+// apply. Reverted in final10 QA's correctness re-review (2026-09-26): that
+// stamps the NGB-22's rank AS OF ITS OWN SEPARATION onto whichever window
+// merely happens to be chronologically last among this document's own
+// listed windows - years before the veteran actually held that rank, with
+// nothing on the document proving they held it that early. No rank on
+// that window (until a real DD214 for it supplies one) is the honest
+// result, not a guessed one.
 function _latestActiveDutyEndDate(periods) {
   return (
     periods
@@ -964,7 +1003,9 @@ function _latestActiveDutyEndDate(periods) {
 function _saveNGB22AdditionalPeriods(file, candidate) {
   if (!Array.isArray(candidate.additionalPeriods)) return;
   const separationDate = _toISODateString(candidate.separationDate);
-  const latestADEnd = _latestActiveDutyEndDate(candidate.additionalPeriods);
+  const latestADEnd = separationDate
+    ? null
+    : _latestActiveDutyEndDate(candidate.additionalPeriods);
   candidate.additionalPeriods.forEach((period) => {
     try {
       const periodEndDate = _toISODateString(period.serviceEndDate);
@@ -1254,6 +1295,11 @@ const buildVKBDD214Data = (result) => {
 
   return {
     ...candidate,
+    // D-C: buildDD214ProfileUpdate's own candidate never carries formType
+    // (veteranKnowledgeBase.js's _serviceEntryTimelineEvent needs it to
+    // tell an NGB-22's own enlistment record apart from any other document
+    // for the same, possibly Guard/Reserve, veteran).
+    formType: d.formType || null,
     netActiveServiceTime: candidate.netActiveService,
     spnCode: candidate.separationCode,
     education: candidate.militaryEducation?.[0] || null,
@@ -4599,7 +4645,14 @@ const NGB22_NET_SERVICE_RE = /NET\s+SERVICE\s+THIS\s+PERIOD\D{0,20}?(\d{1,2})(?:
 // than an arbitrary "any positive number" pass-through.
 const MAX_NGB22_NET_SERVICE_YEARS = 50;
 
+// D-E (final10 QA correctness re-review, 2026-09-26): "00 00 00" passed
+// this range check (0 is a valid year/month/day count on its own) and
+// derived a zero-length primary period - entryDate === separationDate -
+// from what is really a total OCR miss, not a plausible one-day-or-less
+// tour. Rejected outright rather than range-checked, since there is no
+// valid all-zero NET SERVICE duration.
 function _isValidNetServiceDuration(years, months, days) {
+  if (years === 0 && months === 0 && days === 0) return false;
   return (
     Number.isInteger(years) &&
     years >= 0 &&
@@ -5884,6 +5937,13 @@ export const autoPopulateProfile = async (processedResults) => {
     }
 
     Object.keys(documentUpdates).forEach((field) => {
+      // D-C (final10 QA correctness re-review, 2026-09-26): describes
+      // serviceStartDate itself, not an independent fact - paired with it
+      // below instead of running through this generic pass on its own,
+      // where it always wrote through even when serviceStartDate itself
+      // was blocked as a conflict, flagging the veteran's OWN typed date
+      // as "calculated".
+      if (field === "serviceStartDateDerived") return;
       const newValue = documentUpdates[field];
       if (newValue === undefined || newValue === null || newValue === "") {
         return;
@@ -5907,6 +5967,10 @@ export const autoPopulateProfile = async (processedResults) => {
       } else {
         updates[field] = newValue;
         fieldSources[field] = "document";
+        if (field === "serviceStartDate") {
+          updates.serviceStartDateDerived =
+            !!documentUpdates.serviceStartDateDerived;
+        }
       }
     });
   }

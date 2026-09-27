@@ -304,6 +304,31 @@ describe("D-C: autoPopulateProfile propagates serviceStartDateDerived onto the p
     expect(profile.serviceStartDate).toBe("1997-06-01");
     expect(profile.serviceStartDateDerived).toBe(false);
   });
+
+  // Regression (final10 QA correctness re-review, 2026-09-26): a
+  // conflicting document must never flag the veteran's OWN typed date as
+  // "calculated" - serviceStartDateDerived used to run through the
+  // generic per-field pass independently of serviceStartDate, so it wrote
+  // through even when serviceStartDate itself was correctly blocked as a
+  // conflict.
+  it("does not flag the veteran's own typed date as calculated when a conflicting document is blocked", async () => {
+    saveVeteranProfile({
+      serviceStartDate: "1998-05-11",
+      profileFieldSources: { serviceStartDate: "user" },
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-07-30",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("1998-05-11");
+    expect(profile.serviceStartDateDerived).toBeFalsy();
+    expect(result.conflicts.map((c) => c.field)).toContain("serviceStartDate");
+  });
 });
 
 describe("autoPopulateProfile: a claim letter", () => {
