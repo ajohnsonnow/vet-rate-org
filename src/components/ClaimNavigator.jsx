@@ -477,7 +477,17 @@ const NavigatorHeader = ({
   // Observation fix in MusterCallHeader.jsx/AboutUs.jsx - this instance
   // wasn't QA-named but the DOM-enumerated e2e spec caught it too).
   <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex-shrink-0 sm:pr-28">
-    <HeaderCloseSlot close={<NavigatorCloseButton onClose={onClose} />}>
+    <HeaderCloseSlot
+      // At 640-700px the view toggle (which only appears at sm:) plus the
+      // action icons no longer fit next to the title on one line, wrapping
+      // the children column onto a second row. HeaderCloseSlot's shared
+      // `sm:items-center` default then centres close-x against that
+      // wrapped block's full two-row height, dropping it a whole row below
+      // the title instead of keeping it on the title's own first line - see
+      // MusterCallHeader.jsx's identical comment for the full rationale.
+      className="sm:!items-start"
+      close={<NavigatorCloseButton onClose={onClose} />}
+    >
       <div className="flex min-w-0 items-center gap-3">
         <Map className="w-6 h-6 shrink-0 text-amber-500" />
         <div className="min-w-0">
