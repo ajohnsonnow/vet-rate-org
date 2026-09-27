@@ -132,6 +132,45 @@ async function readEveryStore(page: Page) {
   );
 }
 
+// Chromium (this suite's browser) always implements indexedDB.databases(),
+// so clearIndexedDb()'s fallback name list - the one piece of code this
+// branch's wipe-audit commit actually changed - was never exercised by a
+// real browser run. Assigning `undefined` (not `delete`) is load-bearing:
+// `databases` lives on IDBFactory.prototype, not the `indexedDB` instance,
+// so `delete window.indexedDB.databases` would find no own property to
+// remove and silently leave the prototype method reachable.
+async function forceIndexedDbFallbackPath(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.indexedDB.databases = undefined;
+  });
+}
+
+// Standing in for `indexedDB.databases()` (unavailable on this path by
+// construction - see forceIndexedDbFallbackPath), so this check exercises
+// exactly what a real "does the fallback browser see it as gone" query
+// looks like: opening with no explicit version creates a fresh, empty
+// database (firing onupgradeneeded) if - and only if - none existed.
+// Deletes that empty database again immediately so a "did it get created"
+// check is not itself destructive to a later check.
+async function installNoDatabasesExistsCheck(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.__dbExistsNoDatabases = (dbName) =>
+      new Promise((resolve, reject) => {
+        let existed = true;
+        const req = indexedDB.open(dbName);
+        req.onupgradeneeded = () => {
+          existed = false;
+        };
+        req.onsuccess = () => {
+          req.result.close();
+          if (!existed) indexedDB.deleteDatabase(dbName);
+          resolve(existed);
+        };
+        req.onerror = () => reject(req.error);
+      });
+  });
+}
+
 async function seedReturningUser(page: Page): Promise<void> {
   await page.addInitScript((appVersion) => {
     localStorage.setItem("vet-rate-tos-accepted", "true");
@@ -184,6 +223,51 @@ test.describe("Atomic Wipe clears every persistent store", () => {
     expect(after.aiModelDbExists).toBe(false);
     expect(after.cacheExists).toBe(false);
   });
+
+  // Discriminates the actual fix (AtomicWipe.jsx's fallback name list): the
+  // test above always takes the indexedDB.databases() path in Chromium, so
+  // it would pass identically whether or not VetRateVKB was ever added to
+  // that fallback list.
+  test("still deletes the Veteran Knowledge Base when indexedDB.databases() is unavailable (the fallback path)", async ({
+    page,
+  }) => {
+    test.setTimeout(30_000);
+    await installDbHelpers(page);
+    await installNoDatabasesExistsCheck(page);
+    await forceIndexedDbFallbackPath(page);
+    await seedReturningUser(page);
+
+    await page.goto("/");
+    await dismissDisclaimer(page);
+    await page.evaluate(
+      ({ vkbDb, vkbStore }) =>
+        window.__putInDb(vkbDb, vkbStore, {
+          id: "main",
+          personal: { fullName: "E2E Seeded Veteran" },
+        }),
+      { vkbDb: VKB_DB, vkbStore: VKB_STORE },
+    );
+
+    expect(
+      await page.evaluate((db) => window.__dbExistsNoDatabases(db), VKB_DB),
+    ).toBe(true);
+
+    await page.evaluate(() =>
+      window.dispatchEvent(new CustomEvent("openBackupManager")),
+    );
+    await page
+      .getByRole("button", { name: /clear data/i })
+      .waitFor({ state: "visible", timeout: 5000 });
+    await page.getByRole("button", { name: /clear data/i }).click();
+    await page.getByRole("button", { name: /confirm wipe/i }).click();
+
+    await page.waitForURL(/nocache=/, { timeout: 15000 });
+    await page.waitForLoadState("load");
+
+    expect(
+      await page.evaluate((db) => window.__dbExistsNoDatabases(db), VKB_DB),
+    ).toBe(false);
+  });
 });
 
 declare global {
@@ -194,5 +278,6 @@ declare global {
       record: unknown,
     ) => Promise<void>;
     __dbExists: (dbName: string) => Promise<boolean>;
+    __dbExistsNoDatabases: (dbName: string) => Promise<boolean>;
   }
 }

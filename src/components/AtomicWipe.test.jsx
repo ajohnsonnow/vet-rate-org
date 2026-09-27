@@ -6,6 +6,9 @@
  */
 import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import AtomicWipe, { clearIndexedDb } from "./AtomicWipe";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import {
@@ -163,5 +166,94 @@ describe("Atomic Wipe beforeunload guard", () => {
       expect(dispatchBeforeUnload().defaultPrevented).toBe(false);
     });
     expect(window.onbeforeunload).toBeNull();
+  });
+});
+
+function walkJsFiles(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walkJsFiles(full, out);
+    } else if (/\.jsx?$/.test(entry.name) && !entry.name.includes(".test.")) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+const CONST_ASSIGN_REGEX = /const\s+(\w+)\s*=\s*["'`]([^"'`]+)["'`]/g;
+// Anchored and applied one line at a time (not matchAll over the whole
+// file) - the unanchored `(\w+):` shape flags eslint's own ReDoS heuristic
+// when scanned globally across an arbitrarily long string.
+const OBJECT_PROP_LINE_REGEX = /^\s*(\w+)\s*:\s*["'`]([^"'`]+)["'`],?\s*$/;
+const OPEN_CALL_REGEX = /indexedDB\.open\(\s*([\w.]+)/g;
+
+// Resolves each real `indexedDB.open(SOME_NAME, ...)` call site in src/ back
+// to its literal database name, by finding that identifier's own
+// `const SOME_NAME = "..."` (or `SOME_NAME: "..."` object-literal) in the
+// same file - every real call site in this codebase passes a named
+// constant, never an inline string.
+function discoverRealIndexedDBNames(srcRoot) {
+  const names = new Set();
+  for (const file of walkJsFiles(srcRoot)) {
+    const source = fs.readFileSync(file, "utf-8");
+    if (!source.includes("indexedDB.open(")) continue;
+
+    const declared = new Map();
+    for (const match of source.matchAll(CONST_ASSIGN_REGEX)) {
+      declared.set(match[1], match[2]);
+    }
+    for (const line of source.split("\n")) {
+      const match = OBJECT_PROP_LINE_REGEX.exec(line);
+      if (match) declared.set(match[1], match[2]);
+    }
+
+    for (const match of source.matchAll(OPEN_CALL_REGEX)) {
+      const identifier = match[1].split(".").pop();
+      const resolved = declared.get(identifier);
+      if (resolved) names.add(resolved);
+    }
+  }
+  return names;
+}
+
+// Regression: the no-databases()-support fallback test above hardcodes the
+// same name list AtomicWipe.jsx's fallback added, so a database added to
+// src/ later without also touching that list would pass silently - the
+// comment above the list says it "must stay in sync with that grep", but
+// nothing enforced it. This discovers the names itself (see
+// discoverRealIndexedDBNames), instead of hand-copying them a second time.
+describe("AtomicWipe's fallback list vs. every real indexedDB.open() call site in src/", () => {
+  afterEach(() => {
+    delete window.indexedDB;
+  });
+
+  it("deletes every database name discovered directly from src/ source, not a hand-maintained copy of it", async () => {
+    const srcRoot = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "..",
+    );
+    const discovered = discoverRealIndexedDBNames(srcRoot);
+    // idb-keyval's own default store name - its indexedDB.open() call lives
+    // inside node_modules, not src/, so it can't be auto-discovered the
+    // same way and is asserted separately here.
+    discovered.add("keyval-store");
+    expect(discovered.size).toBeGreaterThan(5);
+
+    const deletedNames = [];
+    window.indexedDB = {
+      deleteDatabase: vi.fn((dbName) => {
+        deletedNames.push(dbName);
+        const req = {};
+        setTimeout(() => req.onsuccess?.(), 0);
+        return req;
+      }),
+    };
+
+    await clearIndexedDb();
+
+    for (const name of discovered) {
+      expect(deletedNames).toContain(name);
+    }
   });
 });
