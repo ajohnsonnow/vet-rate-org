@@ -248,3 +248,52 @@ describe("N9c: NGB-22 primary period dates derived from Item 8 + Item 10", () =>
     expect(extractedData.serviceEndDate).toBeFalsy();
   });
 });
+
+// D-E (final10 QA, 2026-09-25): NET SERVICE THIS PERIOD was never
+// range-checked, so an OCR/label misread producing an impossible duration
+// (13 months, 45 days) round-tripped straight through subtractDuration as
+// if it meant 13 real calendar months. Fixture values are synthetic.
+describe("D-E: NGB-22 net-service duration is range-checked before deriving a date", () => {
+  const ngbWithNetService = (net) => `
+1. LAST NAME - FIRST NAME - MIDDLE NAME    2. DEPARTMENT, COMPONENT AND BRANCH
+SAMPLE JORDAN TAYLOR                        ARNGUS/CAARNG
+
+5a. RANK
+SSG
+
+8a. STATION OR INSTALLATION AT WHICH EFFECTED   YR MO DA
+HHC 1-100 IN, ANYTOWN, ST 00000                 DATE 2010 | 06 | 15
+
+9. COMMAND TO WHICH TRANSFERRED    10. RECORD OF SERVICE   YRS MOS DAYS
+(a) NET SERVICE THIS PERIOD   ${net}
+
+24. CHARACTER OF SERVICE
+HONORABLE
+`;
+
+  it.each([
+    ["08 | 13 | 10", "months over 11"],
+    ["08 | 03 | 45", "days over 31"],
+    ["99 | 03 | 10", "years over the sane career-length ceiling"],
+  ])(
+    "derives nothing when the net-service duration is invalid (%s: %s)",
+    async (net) => {
+      const extractedData = await parseServiceRecord(
+        ngbWithNetService(net),
+        "NGB22",
+      );
+      expect(extractedData.serviceStartDate).toBeFalsy();
+      expect(extractedData.serviceEndDate).toBeFalsy();
+      expect(extractedData.serviceStartDateDerived).toBeFalsy();
+    },
+  );
+
+  it("still derives the date for an in-range duration", async () => {
+    const extractedData = await parseServiceRecord(
+      ngbWithNetService("08 | 03 | 10"),
+      "NGB22",
+    );
+    expect(extractedData.serviceStartDate).toBe("2002-03-05");
+    expect(extractedData.serviceStartDateDerived).toBe(true);
+  });
+});

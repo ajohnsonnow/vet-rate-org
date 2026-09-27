@@ -4578,6 +4578,29 @@ const NGB22_SEPARATION_DATE_RE = /STATION\s+OR\s+INSTALLATION\s+AT\s+WHICH\s+EFF
 // eslint-disable-next-line sonarjs/regex-complexity -- same tolerant-separator shape as NGB22_SEPARATION_DATE_RE above
 const NGB22_NET_SERVICE_RE = /NET\s+SERVICE\s+THIS\s+PERIOD\D{0,20}?(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})(?:\s*[|/-]\s*|\s+)(\d{1,2})\b/;
 
+// D-E (final10 QA, 2026-09-25): Item 10's YRS|MOS|DAYS triple was never
+// range-checked, so an OCR/label misread (e.g. months and days swapped,
+// or a stray digit) that produced "13" months round-tripped straight
+// through subtractDuration as if it meant 13 real calendar months.
+// Months and days are calendar remainders, never a full unit's worth of
+// the next one up; years is bounded to a plausible career length rather
+// than an arbitrary "any positive number" pass-through.
+const MAX_NGB22_NET_SERVICE_YEARS = 50;
+
+function _isValidNetServiceDuration(years, months, days) {
+  return (
+    Number.isInteger(years) &&
+    years >= 0 &&
+    years <= MAX_NGB22_NET_SERVICE_YEARS &&
+    Number.isInteger(months) &&
+    months >= 0 &&
+    months <= 11 &&
+    Number.isInteger(days) &&
+    days >= 0 &&
+    days <= 31
+  );
+}
+
 /**
  * Derives the NGB-22's own primary (enlistment-level) period dates from
  * Item 8's separation date and Item 10's net-service duration - never a
@@ -4602,6 +4625,7 @@ function _extractNGB22PrimaryPeriodDates(ctx) {
   if (!separationDate) return;
 
   const [years, months, days] = netMatch.slice(1, 4).map(Number);
+  if (!_isValidNetServiceDuration(years, months, days)) return;
   const entryDate = subtractDuration(separationDate, years, months, days);
   if (!entryDate || !parseExplicitDate(entryDate)) return;
 
