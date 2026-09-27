@@ -121,3 +121,41 @@ describe("useSequentialFormationFlow - Verify & Save persistence", () => {
     expect(autoPopulateProfile).not.toHaveBeenCalled();
   });
 });
+
+describe("useSequentialFormationFlow - D11-1 corrected derived flag", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("a corrected serviceStartDateDerived: false overrides the original extraction's calculated flag", async () => {
+    const { result } = renderHook(() =>
+      useSequentialFormationFlow({
+        formationQueue: buildFormationQueue(),
+        toast: { success: vi.fn(), error: vi.fn() },
+        setError: vi.fn(),
+        setProcessingState: vi.fn(),
+      }),
+    );
+
+    await processOneDocument(result, {
+      serviceStartDate: "2002-03-05",
+      serviceStartDateDerived: true,
+    });
+
+    await act(async () => {
+      result.current.handleVerifyAndSave({
+        verifiedData: {
+          serviceStartDate: "2001-11-01",
+          serviceStartDateDerived: false,
+        },
+        saveToVKB: true,
+        updateProfile: true,
+      });
+      await Promise.resolve();
+    });
+
+    const [, persistedResult] = persistFormationDocument.mock.calls[0];
+    expect(persistedResult.extractedData.serviceStartDate).toBe("2001-11-01");
+    expect(persistedResult.extractedData.serviceStartDateDerived).toBe(false);
+  });
+});

@@ -982,6 +982,25 @@ function useDocumentBriefingData({
   };
 }
 
+// D11-1: groupedFields (what FieldGroup actually renders) previously never
+// changed on edit - the review modal kept showing the ORIGINAL OCR value
+// after the veteran clicked [Edit] and saved a correction, even though the
+// corrected value was (via editedData) what actually got persisted on
+// Verify & Save. Rebuilds only the category the field lives in.
+function _syncGroupedFieldsOnEdit(prevGrouped, field, newValue) {
+  let changed = false;
+  const next = {};
+  for (const [category, fields] of Object.entries(prevGrouped)) {
+    if (field in fields) {
+      next[category] = { ...fields, [field]: newValue };
+      changed = true;
+    } else {
+      next[category] = fields;
+    }
+  }
+  return changed ? next : prevGrouped;
+}
+
 function useDocumentFieldActions({
   filteredData,
   setFilteredData,
@@ -996,6 +1015,10 @@ function useDocumentFieldActions({
 
   const handleFieldEdit = (field, newValue) => {
     setEditedData((prev) => ({ ...prev, [field]: newValue }));
+    setFilteredData((prev) =>
+      field in prev ? { ...prev, [field]: newValue } : prev,
+    );
+    setGroupedFields((prev) => _syncGroupedFieldsOnEdit(prev, field, newValue));
   };
 
   // Delete a field that was incorrectly extracted by OCR
@@ -2123,9 +2146,27 @@ function useUnverifiedFieldWarning(
   }, [filteredData, verifiedFields, hasFields, allFieldsVerified, conflicts]);
 }
 
+// D11-1: a veteran-edited serviceStartDate must never keep reading as
+// "calculated from net service" - currentData is the untouched extraction,
+// so a real difference from it (as opposed to merely checking the
+// verification box on an unedited value) is the proof this was an actual
+// correction, not just an acknowledgment of the OCR guess.
+function _clearServiceStartDateDerivedIfEdited(
+  verifiedData,
+  editedData,
+  currentData,
+) {
+  if (verifiedData.serviceStartDate === undefined) return verifiedData;
+  if (editedData.serviceStartDate === currentData?.serviceStartDate) {
+    return verifiedData;
+  }
+  return { ...verifiedData, serviceStartDateDerived: false };
+}
+
 function buildVerifyAndSaveHandler({
   verifiedFields,
   editedData,
+  currentData,
   onVerify,
   saveToVKB,
   updateProfile,
@@ -2134,9 +2175,14 @@ function buildVerifyAndSaveHandler({
   conflicts,
 }) {
   return () => {
-    const verifiedData = Object.keys(verifiedFields)
+    const rawVerifiedData = Object.keys(verifiedFields)
       .filter((key) => verifiedFields[key])
       .reduce((acc, key) => ({ ...acc, [key]: editedData[key] }), {});
+    const verifiedData = _clearServiceStartDateDerivedIfEdited(
+      rawVerifiedData,
+      editedData,
+      currentData,
+    );
 
     onVerify({
       verifiedData,
@@ -2180,6 +2226,7 @@ function useDocumentBriefingController({
     filteredData,
     setFilteredData,
     setGroupedFields,
+    currentData,
   } = sourceState;
 
   const {
@@ -2206,6 +2253,7 @@ function useDocumentBriefingController({
   const handleVerifyAndSave = buildVerifyAndSaveHandler({
     verifiedFields,
     editedData,
+    currentData,
     onVerify,
     saveToVKB,
     updateProfile,
