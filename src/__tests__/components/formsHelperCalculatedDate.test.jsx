@@ -21,7 +21,11 @@ import FormsHelper, {
   buildFormsHelperPrefillDefaults,
 } from "../../components/FormsHelper.jsx";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
-import { updateVeteranProfile } from "../../utils/veteranProfile.js";
+import {
+  updateVeteranProfile,
+  upsertServicePeriod,
+  getServiceEntry,
+} from "../../utils/veteranProfile.js";
 
 function renderFormsHelper() {
   return render(
@@ -105,6 +109,38 @@ describe("FormsHelper - editing a calculated service start date clears the stale
     expect(buildFormsHelperPrefillDefaults().serviceStartDate).toBe(
       "2011-09-01",
     );
+  });
+});
+
+describe("ADR-007 [D12-1]: a FormsHelper correction reaches the canonical period", () => {
+  it("routes through setServiceEntryDate and getServiceEntry agrees, unmarked", () => {
+    localStorage.setItem(
+      "vet_rate_veteran_profile",
+      JSON.stringify({ firstName: "Jane", lastName: "Veteran" }),
+    );
+    const periodId = upsertServicePeriod(
+      {
+        serviceStartDate: "2002-03-05",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22-synthetic.pdf", confidence: 60 },
+    );
+
+    renderFormsHelper();
+    openProfileSetup();
+    fireEvent.change(serviceStartDateInput(), {
+      target: { value: "2001-11-01" },
+    });
+    fireEvent.click(screen.getByText("Save Profile"));
+
+    expect(getServiceEntry()).toMatchObject({
+      date: "2001-11-01",
+      derived: false,
+      source: "veteran",
+      periodId,
+    });
   });
 });
 

@@ -25,7 +25,10 @@ import {
   exportAllVeteranData,
   importVeteranData,
   getMyRatings,
+  getServiceEntry,
+  setServiceEntryDate,
 } from "../utils/veteranProfile";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { normalizeConditionName } from "../utils/conditionName";
 
@@ -5783,32 +5786,42 @@ function ProfileSensitiveDataSection({
   );
 }
 
-function ProfileSaveFooter({ handleSaveProfile, t }) {
+function ProfileSaveFooter({ handleSaveProfile, profileSaveError, t }) {
   return (
-    <div className="flex items-center justify-between border-t border-blue-200 dark:border-blue-700 pt-4">
-      <p className="text-xs text-blue-700 dark:text-blue-400">
-        🔒 {t("formsHelper", "privacyLocalStorage")}
-      </p>
-      <button
-        type="button"
-        onClick={handleSaveProfile}
-        className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    <div className="border-t border-blue-200 dark:border-blue-700 pt-4">
+      {profileSaveError && (
+        <p
+          role="alert"
+          className="mb-2 text-xs font-bold text-red-700 dark:text-red-400"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
-        {t("formsHelper", "saveProfile")}
-      </button>
+          {profileSaveError}
+        </p>
+      )}
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-blue-700 dark:text-blue-400">
+          🔒 {t("formsHelper", "privacyLocalStorage")}
+        </p>
+        <button
+          type="button"
+          onClick={handleSaveProfile}
+          className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-2 transition-all"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          {t("formsHelper", "saveProfile")}
+        </button>
+      </div>
     </div>
   );
 }
@@ -5817,6 +5830,7 @@ function ProfileSetupPanel({
   veteranProfile,
   handleProfileChange,
   profileSaved,
+  profileSaveError,
   handleSaveProfile,
   t,
 }) {
@@ -5870,7 +5884,11 @@ function ProfileSetupPanel({
         t={t}
       />
 
-      <ProfileSaveFooter handleSaveProfile={handleSaveProfile} t={t} />
+      <ProfileSaveFooter
+        handleSaveProfile={handleSaveProfile}
+        profileSaveError={profileSaveError}
+        t={t}
+      />
     </div>
   );
 }
@@ -7791,7 +7809,12 @@ function useFormsHelperProfileState() {
   const [veteranProfile, setVeteranProfile] = useState({});
   const [profileSaved, setProfileSaved] = useState(false);
   const [importStatus, setImportStatus] = useState(null);
+  const [profileSaveError, setProfileSaveError] = useState(null);
   const fileInputRef = useRef(null);
+  // ADR-007 W6: tracks whether THIS session typed a new serviceStartDate,
+  // so Save Profile only ever calls setServiceEntryDate for a genuine edit -
+  // never for an untouched, prefilled value.
+  const serviceStartDateEditedRef = useRef(false);
 
   return {
     showProfileSetup,
@@ -7803,6 +7826,9 @@ function useFormsHelperProfileState() {
     importStatus,
     setImportStatus,
     fileInputRef,
+    serviceStartDateEditedRef,
+    profileSaveError,
+    setProfileSaveError,
   };
 }
 
@@ -7925,16 +7951,18 @@ export function buildFormsHelperPrefillDefaults() {
     payGrade: profile.payGrade,
     mos: profile.mos,
     mosTitle: profile.mosTitle,
-    // A calculated NGB-22 entry date (serviceStartDateDerived, set in
-    // musterCallProcessor.js) was never printed on the veteran's paperwork -
-    // it must not be silently handed to a VA form field as if it were.
-    // Leaving it blank matches how this same prefill already treats any
-    // other field it isn't confident about (e.g. conditionsDefault above,
-    // blank with nothing on file) rather than inventing a UI-only "confirm
-    // this" affordance this wizard has nowhere else.
-    serviceStartDate: profile.serviceStartDateDerived
-      ? ""
-      : profile.serviceStartDate,
+    // ADR-007: reads the SAME canonical resolver every other consumer
+    // does, not the flat profile field directly - a calculated guess
+    // (entry.derived) was never printed on the veteran's paperwork, so it
+    // must not be silently handed to a VA form field as if it were. Leaving
+    // it blank matches how this same prefill already treats any other
+    // field it isn't confident about (e.g. conditionsDefault above, blank
+    // with nothing on file) rather than inventing a UI-only "confirm this"
+    // affordance this wizard has nowhere else.
+    serviceStartDate: (() => {
+      const entry = getServiceEntry();
+      return entry.derived ? "" : entry.date || "";
+    })(),
     serviceEndDate: profile.serviceEndDate,
     characterOfService: profile.characterOfService,
     separationType: profile.separationType,
@@ -7946,9 +7974,20 @@ export function buildFormsHelperPrefillDefaults() {
   };
 }
 
-function _runFormsHelperProfilePrefillEffect(setVeteranProfile, setFormData) {
+function _runFormsHelperProfilePrefillEffect(
+  setVeteranProfile,
+  setFormData,
+  serviceStartDateEditedRef,
+) {
   const profile = getVeteranProfile();
-  setVeteranProfile(profile);
+  const entry = getServiceEntry();
+  setVeteranProfile({
+    ...profile,
+    ...(entry.periodId
+      ? { serviceStartDate: entry.date, serviceStartDateDerived: entry.derived }
+      : null),
+  });
+  if (serviceStartDateEditedRef) serviceStartDateEditedRef.current = false;
   const defaults = buildFormsHelperPrefillDefaults();
   // Pre-fill formData with profile/records data, unless nothing at all is
   // on file (every value would just be "").
@@ -7957,53 +7996,68 @@ function _runFormsHelperProfilePrefillEffect(setVeteranProfile, setFormData) {
   }
 }
 
+// ADR-007 W6: a typed serviceStartDate now reaches the canonical period (or
+// the flat store, with no period yet) through setServiceEntryDate - never
+// straight through saveVeteranProfile, whose own chokepoint would silently
+// replace it with the projection the moment a period backs the entry.
+// Returns an error string, or null on success.
+function _applyFormsHelperServiceStartCorrection(veteranProfile) {
+  const typed = veteranProfile.serviceStartDate;
+  if (isSameCalendarDay(typed, getServiceEntry().date)) return null;
+  const result = setServiceEntryDate({ date: typed, via: "forms_helper" });
+  if (result.ok) return null;
+  return "Your service start date couldn't be saved. Please use a valid date (YYYY-MM-DD).";
+}
+
 function _buildFormsHelperProfileEditHandlers(ctx) {
-  const { veteranProfile, setVeteranProfile, setProfileSaved, setFormData } =
-    ctx;
+  const {
+    veteranProfile,
+    setVeteranProfile,
+    setProfileSaved,
+    setFormData,
+    serviceStartDateEditedRef,
+    setProfileSaveError,
+  } = ctx;
 
   const handleProfileChange = (field, value) => {
     setVeteranProfile((prev) => ({
       ...prev,
       [field]: value,
-      // A veteran typing their own serviceStartDate is providing a real,
-      // remembered date - it is never the calculated NGB-22 guess the
-      // "(calculated from net service)" label and the FormsHelper prefill
-      // guard above both key off, so the flag must not survive the edit.
+      // Cosmetic only (component-local display state) - a typed edit no
+      // longer looks like the prior calculated guess while the veteran is
+      // still typing, ahead of the real correction setServiceEntryDate
+      // applies to the canonical period on save.
       ...(field === "serviceStartDate"
         ? { serviceStartDateDerived: false }
         : null),
     }));
+    if (field === "serviceStartDate" && serviceStartDateEditedRef) {
+      serviceStartDateEditedRef.current = true;
+    }
     setProfileSaved(false);
+    setProfileSaveError?.(null);
   };
 
   const handleSaveProfile = () => {
     const success = saveVeteranProfile(veteranProfile);
-    if (success) {
-      setProfileSaved(true);
-      const middleInitial = _resolveMiddleInitial(veteranProfile);
-      // Update formData with new profile
-      setFormData((prev) => ({
-        ...prev,
-        veteranName: _buildVeteranFullNameGuess(veteranProfile, middleInitial),
-        veteranFirstName: veteranProfile.firstName,
-        veteranMiddleInitial: middleInitial,
-        veteranLastName: veteranProfile.lastName,
-        ssn: veteranProfile.ssn,
-        dob: veteranProfile.dob,
-        email: veteranProfile.email,
-        phone: veteranProfile.phone,
-        street: veteranProfile.street,
-        apt: veteranProfile.apt,
-        city: veteranProfile.city,
-        state: veteranProfile.state,
-        zip: veteranProfile.zip,
-        country: veteranProfile.country || "United States",
-        veteranBranch: veteranProfile.branch,
-        vaFileNumber: veteranProfile.vaFileNumber,
-        serviceNumber: veteranProfile.serviceNumber,
-      }));
-      setTimeout(() => setProfileSaved(false), 3000);
+    if (!success) return;
+
+    if (serviceStartDateEditedRef?.current) {
+      const error = _applyFormsHelperServiceStartCorrection(veteranProfile);
+      if (error) {
+        setProfileSaveError?.(error);
+        return;
+      }
     }
+
+    setProfileSaveError?.(null);
+    setProfileSaved(true);
+    _runFormsHelperProfilePrefillEffect(
+      setVeteranProfile,
+      setFormData,
+      serviceStartDateEditedRef,
+    );
+    setTimeout(() => setProfileSaved(false), 3000);
   };
 
   return { handleProfileChange, handleSaveProfile };
@@ -8341,6 +8395,7 @@ function FormsHelperFormSelection({ state, handlers }) {
     importStatus,
     veteranProfile,
     profileSaved,
+    profileSaveError,
   } = state;
   const {
     handleFileSelect,
@@ -8392,6 +8447,7 @@ function FormsHelperFormSelection({ state, handlers }) {
           veteranProfile={veteranProfile}
           handleProfileChange={handleProfileChange}
           profileSaved={profileSaved}
+          profileSaveError={profileSaveError}
           handleSaveProfile={handleSaveProfile}
           t={t}
         />
@@ -8714,8 +8770,13 @@ const FormsHelper = ({ onClose, onReportBug, onOpenAISettings }) => {
       _runFormsHelperProfilePrefillEffect(
         profileState.setVeteranProfile,
         coreState.setFormData,
+        profileState.serviceStartDateEditedRef,
       ),
-    [profileState.setVeteranProfile, coreState.setFormData],
+    [
+      profileState.setVeteranProfile,
+      coreState.setFormData,
+      profileState.serviceStartDateEditedRef,
+    ],
   );
 
   const state = {
