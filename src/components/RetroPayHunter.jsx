@@ -17,6 +17,7 @@ import { useState, useEffect, useCallback } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ToolCardButton from "./ToolCardButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
@@ -366,7 +367,31 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
       <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
       <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-white/5 rounded-full" />
 
-      <div className="relative flex flex-wrap items-start justify-between gap-2">
+      <HeaderCloseSlot
+        className="relative"
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
         <div className="flex min-w-0 items-center gap-4">
           <div className="w-16 h-16 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
             <span className="text-4xl">💸</span>
@@ -389,36 +414,14 @@ function RetroPayHunterHeader({ onClose, onReportBug }) {
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="Retroactive Pay Hunter"
-            />
-          )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="Retroactive Pay Hunter"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }
