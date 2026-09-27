@@ -242,3 +242,187 @@ test.describe("Panic key (triple-Escape) vs. dialog-closing Escapes", () => {
     expect(page.url()).toMatch(/weather\.com/);
   });
 });
+
+/**
+ * Coverage for the app-wide beforeunload "unsaved changes" guard
+ * (dataPersistence.js/persistentStorage.js) vs. the panic redirect. Root
+ * cause: a `beforeunload` listener that calls preventDefault() makes the
+ * browser show a native "Leave site?" prompt, and that prompt blocks
+ * location.replace() the same as any other navigation - confirmed directly
+ * against a real Chromium `dialog` event (type "beforeunload") before
+ * writing this fix, not assumed. The panic redirect must remove every such
+ * guard before it ever navigates, so neither Quick Exit nor triple-Escape
+ * can be blocked by it, with unsaved changes genuinely pending.
+ */
+const QUICK_EXIT_SELECTOR =
+  'button[aria-label="Quick exit - immediately leave this page"]';
+
+async function seedUnsavedChanges(page: Page): Promise<void> {
+  // dataPersistence.js's hasUnsavedChanges() reads this key and compares its
+  // hash against vetrate_last_backup_timestamp/vetrate_data_hash - seeding it
+  // alone (with no matching backup hash recorded) is exactly the real "typed
+  // something, never backed up" state a veteran mid-task is in.
+  await page.addInitScript(() => {
+    localStorage.setItem("saved_claims", JSON.stringify([{ id: "e2e-1" }]));
+  });
+}
+
+/**
+ * Holds every `indexedDB.open()` call open-ended, simulating a stalled
+ * migration decision so MigrationScreen stays mounted long enough to
+ * exercise Quick Exit/triple-Escape against it deterministically, without
+ * racing how briefly it renders in the normal case. Mirrors
+ * boot-migration.spec.ts's holdIndexedDbOpen (kept local - that file is
+ * outside this change's scope).
+ */
+async function holdIndexedDbOpen(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const originalOpen = indexedDB.open.bind(indexedDB);
+    indexedDB.open = ((...args: Parameters<typeof indexedDB.open>) => {
+      const fakeRequest = {} as IDBOpenDBRequest;
+      // Never resolves - useBootSequence.js's MIGRATION_DECISION_TIMEOUT_MS
+      // (3000ms) fail-open is what eventually moves the boot gate, not this.
+      void originalOpen;
+      return fakeRequest;
+    }) as typeof indexedDB.open;
+  });
+}
+
+function watchForBeforeUnloadDialog(page: Page): { fired: boolean } {
+  const state = { fired: false };
+  page.on("dialog", (dialog) => {
+    if (dialog.type() === "beforeunload") state.fired = true;
+    dialog.dismiss().catch(() => {});
+  });
+  return state;
+}
+
+async function clickQuickExit(page: Page): Promise<void> {
+  await page.locator(QUICK_EXIT_SELECTOR).first().click();
+  await page.getByRole("button", { name: /^exit$/i }).click();
+}
+
+test.describe("Panic paths vs. the beforeunload unsaved-changes guard", () => {
+  test("Quick Exit lands on the decoy URL with no beforeunload dialog, with unsaved changes pending", async ({
+    page,
+  }) => {
+    await seedUnsavedChanges(page);
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+    const dialogState = watchForBeforeUnloadDialog(page);
+
+    await clickQuickExit(page);
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(dialogState.fired).toBe(false);
+  });
+
+  test("triple-Escape lands on the decoy URL with no beforeunload dialog, with unsaved changes pending", async ({
+    page,
+  }) => {
+    await seedUnsavedChanges(page);
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+    const dialogState = watchForBeforeUnloadDialog(page);
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(dialogState.fired).toBe(false);
+  });
+
+  test("Quick Exit on the migration screen lands on the decoy URL with no beforeunload dialog, with unsaved changes pending", async ({
+    page,
+  }) => {
+    await seedUnsavedChanges(page);
+    await holdIndexedDbOpen(page);
+    await stubWeatherRedirect(page);
+    const dialogState = watchForBeforeUnloadDialog(page);
+
+    await page.goto("/");
+    await page.locator(QUICK_EXIT_SELECTOR).first().waitFor({
+      state: "visible",
+      timeout: 5000,
+    });
+    await clickQuickExit(page);
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(dialogState.fired).toBe(false);
+  });
+});
+
+/**
+ * CrisisModal is non-dismissible by design (no onEscape - see
+ * CrisisModal.jsx) - correct, and unchanged here. But the app-wide
+ * triple-Escape panic key is a separate system with its own standing
+ * requirement: it must always work, crisis screens included. Before the
+ * fix, safetyRedirect.js trusted any open [role="dialog"/"alertdialog"] to
+ * close on its own Escape and never re-checked, so a modal that (correctly)
+ * never closes on Escape left the panic key permanently swallowed for as
+ * long as it stayed open.
+ */
+async function openCrisisModal(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new CustomEvent("vetrate:crisis", {
+        detail: { severity: "high", source: "e2e" },
+      }),
+    );
+  });
+  await page
+    .locator('[role="alertdialog"]')
+    .waitFor({ state: "visible", timeout: 5000 });
+}
+
+test.describe("Triple-Escape vs. the non-dismissible Crisis Modal", () => {
+  test("a single Escape does not dismiss the crisis modal", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await openCrisisModal(page);
+
+    await page.keyboard.press("Escape");
+
+    await expect(page.locator('[role="alertdialog"]')).toBeVisible();
+  });
+
+  test("triple-Escape still redirects while the crisis modal is open and never closes it", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+    await openCrisisModal(page);
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  // Stacked-dialog dead zone (item 3): a dialog opened first, then the
+  // non-dismissible crisis modal on top of it. Closing neither via Escape,
+  // triple-Escape must still redirect - the dialog COUNT never decreases,
+  // so this must not be swallowed just because something else is open
+  // underneath.
+  test("triple-Escape still redirects with the crisis modal stacked on top of an already-open dialog", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await page.locator(TOOL_GRID_SELECTOR).first().click();
+    await page
+      .locator(DIALOG_SELECTOR)
+      .first()
+      .waitFor({ state: "visible", timeout: 5000 });
+    await openCrisisModal(page);
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+});

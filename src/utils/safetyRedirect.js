@@ -19,6 +19,8 @@
  * - Redirects to neutral site (weather.com)
  */
 
+import { removeBeforeUnloadWarning } from "./dataPersistence";
+
 // Storage key to track safety feature usage (for UX analytics, no PII)
 const SAFETY_USE_KEY = "vetrate_safety_use_count";
 
@@ -61,11 +63,32 @@ export const triggerPanicRedirect = () => {
       window.dispatchEvent(new CustomEvent("vetrate:panic-triggered"));
     }
 
-    // 6. Redirect to neutral site using replace (no back button)
+    // 6. Disable every beforeunload guard before navigating away. A
+    // `beforeunload` handler that calls preventDefault() shows the browser's
+    // native "Leave site?" prompt, which blocks location.replace() exactly
+    // like any other navigation - the panic redirect must never be
+    // blockable, in any state (mid-migration, with unsaved changes, etc).
+    // `onbeforeunload = null` is a second, independent guard for any
+    // property-style (not addEventListener) registration, present or future.
+    removeBeforeUnloadWarning();
+    if (typeof window !== "undefined") {
+      window.onbeforeunload = null;
+    }
+
+    // 7. Redirect to neutral site using replace (no back button)
     window.location.replace(SAFE_REDIRECT_URL);
   } catch (error) {
-    // Failsafe: even if something errors, still redirect
+    // Failsafe: even if something errors, still redirect. Repeats the
+    // beforeunload teardown in case the try block failed before reaching it
+    // above - a blocked failsafe redirect would defeat the entire point of
+    // a failsafe.
     console.error("Panic redirect error (still redirecting):", error);
+    try {
+      removeBeforeUnloadWarning();
+    } catch {
+      // already failing; fall through to the property-style guard below
+    }
+    window.onbeforeunload = null;
     window.location.href = SAFE_REDIRECT_URL;
   }
 };
@@ -97,9 +120,21 @@ export const triggerSoftExit = () => {
 };
 
 // Modal dialogs/alertdialogs (incl. the aria-modal-only kind, which also
-// covers the mobile nav drawer) always close synchronously in response to
-// their own Escape handler (useFocusTrap's onEscape or equivalent) - trust
-// that and never count an Escape that lands while one is open.
+// covers the mobile nav drawer). MOST close synchronously in response to
+// their own Escape handler (useFocusTrap's onEscape or equivalent) - a
+// dialog that does is never counted (see the dialog-count comparison in
+// handleEscapeKey). But "a dialog is open" must not mean "trust it forever,
+// no matter what": some dialogs never respond to Escape at all - a
+// non-dismissible one by design (CrisisModal has no onEscape - it must not
+// close), or one whose useFocusTrap never got a chance to trap focus in the
+// first place (a loading/initializing state with no focusable content -
+// VKBViewer and TheTribunal both render a bare ResponsiveModal shell with no
+// header/footer while their data loads - so a keydown fired at whatever had
+// focus before the dialog opened never bubbles through the dialog's own
+// element-scoped keydown listener at all: that listener lives on the panel
+// node, not window/document, and only sees events that pass through it).
+// Either way, the panic key must not go dead for as long as that dialog
+// happens to be open - so "closed" is verified after the fact, not assumed.
 const DIALOG_SELECTOR =
   '[role="dialog"], [role="alertdialog"], [aria-modal="true"]';
 
@@ -125,7 +160,7 @@ const MENU_POPOVER_SELECTOR = '[aria-haspopup][aria-expanded="true"]';
 // state: capture always runs before bubble for the same dispatched event,
 // and the next Escape's capture call always overwrites these before its own
 // bubble call would read them, so there is no cross-event leakage.
-let pendingDialogOpen = false;
+let pendingDialogCount = 0;
 let pendingMenuTrigger = null;
 
 /**
@@ -138,15 +173,20 @@ let pendingMenuTrigger = null;
  * "is a dialog open right now" at that point reads a false "no". Capture
  * fires on window before the event even reaches the dialog's own bubble-phase
  * listener, so this always observes the true pre-close DOM state instead of
- * racing it.
+ * racing it. Counting (not just a boolean) is what lets handleEscapeKey tell
+ * "a dialog closed" (count went down) apart from "nothing closed" (count
+ * unchanged) when more than one dialog is stacked - closing the top one of
+ * two must not count, but leaving both open when neither responds to Escape
+ * must.
  * @param {KeyboardEvent} event
  */
 const snapshotEscapeContext = (event) => {
   if (event.key !== "Escape" || event.repeat) return;
-  pendingDialogOpen = !!document.querySelector(DIALOG_SELECTOR);
-  pendingMenuTrigger = pendingDialogOpen
-    ? null
-    : document.querySelector(MENU_POPOVER_SELECTOR);
+  pendingDialogCount = document.querySelectorAll(DIALOG_SELECTOR).length;
+  pendingMenuTrigger =
+    pendingDialogCount > 0
+      ? null
+      : document.querySelector(MENU_POPOVER_SELECTOR);
 };
 
 const recordEscapePress = () => {
@@ -196,10 +236,32 @@ const handleEscapeKey = (event) => {
   // Don't count ESC presses already handled by something else (a dialog
   // dismissing itself, or any handler that called preventDefault or stopped
   // propagation before this listener ran). Only rapid ESC presses with
-  // nothing open - or open behind a menu/popover that doesn't actually
-  // respond to Escape - count toward the panic threshold.
+  // nothing open - or open behind something that doesn't actually respond
+  // to Escape (a dead-end dialog or menu/popover) - count toward the panic
+  // threshold.
   if (event.defaultPrevented) return;
-  if (pendingDialogOpen) return;
+
+  if (pendingDialogCount > 0) {
+    // By this point (bubble phase, the last stop) a dialog that closes
+    // synchronously in response to its own Escape handler has already done
+    // so (see snapshotEscapeContext's doc comment) - so re-querying now
+    // reflects the true post-close state, no deferral needed the way the
+    // menu case below requires. Fewer dialogs now than at capture time means
+    // this Escape actually dismissed one - don't count it, even if others
+    // remain stacked underneath. The same count (or more) means nothing
+    // closed - a non-dismissible dialog (CrisisModal), or one whose
+    // element-scoped Escape handler never saw this event because focus
+    // never made it inside (a loading-state dialog with no focusable
+    // content) - so this Escape counts like any other unhandled one instead
+    // of being swallowed for as long as that dialog stays open.
+    if (
+      document.querySelectorAll(DIALOG_SELECTOR).length < pendingDialogCount
+    ) {
+      return;
+    }
+    recordEscapePress();
+    return;
+  }
 
   if (pendingMenuTrigger) {
     const trigger = pendingMenuTrigger;
