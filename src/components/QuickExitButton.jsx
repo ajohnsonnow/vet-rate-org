@@ -137,6 +137,15 @@ const QuickExitButton = ({
   // is the panic-exit safety net), so this repositions it instead of
   // suppressing it the way the AI bubble / bug button are suppressed
   // (see `.above-mobile-nav` in index.css).
+  //
+  // At `sm:` and up this box moves back to top-right and stays fixed there
+  // regardless of dialog size - short, wide desktop viewports can still pin a
+  // centered dialog's top (and its close-X) close enough to the top-right
+  // corner to reach it (measured at 1024x768/1280x720). That side of the fix
+  // lives in ResponsiveModal.jsx's shared `sm:!mt-16` gutter instead of a
+  // second reposition here, for the same reason the mobile gutter above
+  // isn't a title-bar patch: it has to clear whatever a given tool's header
+  // renders, and only the shared shell sees every dialog.
   const positions = {
     "top-right": "fixed top-3 left-3 sm:left-auto sm:right-3",
     "top-left": "fixed top-3 left-3",

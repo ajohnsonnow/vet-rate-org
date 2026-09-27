@@ -149,7 +149,26 @@ export default function ResponsiveModal({
         // ModalHeader's `!p-0` above) because a same-specificity legacy
         // `@media (width<=768px) { .modal-content { margin: 0 } }` rule in
         // index.css otherwise wins on source order and zeroes it out.
-        className={`modal-content relative !mt-20 flex w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] sm:!mt-0 sm:h-auto sm:max-h-[90dvh] sm:rounded-2xl ${
+        //
+        // `sm:!mt-16`/`sm:max-h-[calc(90dvh-4rem)]` (D3 wide-viewport
+        // follow-up): Quick Exit moves to top-right at `sm:` (top-3/right-3,
+        // ~44px tall) instead of disappearing, and on short desktop heights
+        // (a tall dialog centered in a short viewport pins its top near the
+        // backdrop's 16px `sm:p-4` floor) the header's own close-X can land
+        // under it - measured at 1024x768/1280x720. The `sm:` breakpoint
+        // (640px) still overlaps the same `<=768px` legacy rule above, so
+        // this also needs `!`. The 4rem max-height reduction exactly offsets
+        // the added margin so a dialog already pinned to `max-h` keeps the
+        // same bottom edge - only its top moves down - instead of risking a
+        // bottom-of-viewport clip the mobile gutter avoids via its own
+        // matching height reduction. Trade-off: every `sm:`+ dialog now
+        // renders ~64px lower (and, once max-height-bound, ~64px shorter)
+        // than before, even though only wide/short combinations actually
+        // reach Quick Exit - a conditional per-dialog offset would avoid that
+        // cost but needs each dialog's real height at render time, which the
+        // shared shell doesn't have; a flat, always-on offset is the
+        // fewest-touch fix that still guarantees the whole 640-1920 sweep.
+        className={`modal-content relative !mt-20 flex w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] sm:!mt-16 sm:h-auto sm:max-h-[calc(90dvh-4rem)] sm:rounded-2xl ${
           SIZE[size] || SIZE.lg
         } ${className}`}
       >
