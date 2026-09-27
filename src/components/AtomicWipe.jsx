@@ -16,6 +16,7 @@
 import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
 
 function clearLocalAndSessionStorage() {
   // 1. Clear all localStorage
@@ -188,8 +189,23 @@ function forceReloadWithCacheBypass() {
     Date.now();
 }
 
+function disableBeforeUnloadPrompt() {
+  // clearLocalAndSessionStorage() below deletes vetrate_data_hash, which
+  // makes dataPersistence.hasUnsavedChanges() read as true from that point
+  // on - so the reload a few lines down would otherwise trip the browser's
+  // native "Leave site?" prompt on every wipe, even for a veteran who had
+  // fully backed up. If they choose Stay, the reload never happens: the
+  // IndexedDB deletes already issued stay pending behind this tab's own open
+  // connections, and the in-memory caches they fed survive right along with
+  // them. Disabling the guard up front - the same way the panic redirect
+  // does - means the reload this wipe promised actually happens.
+  removeBeforeUnloadWarning();
+  window.onbeforeunload = null;
+}
+
 async function handleAtomicWipe(setIsWiping, onWipeComplete) {
   setIsWiping(true);
+  disableBeforeUnloadPrompt();
 
   try {
     clearLocalAndSessionStorage();

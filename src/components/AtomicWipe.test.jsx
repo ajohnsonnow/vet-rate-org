@@ -4,8 +4,21 @@
  * onblocked) before resolving. A wipe that resolves before every database
  * is deleted could leave veteran data behind.
  */
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { clearIndexedDb } from "./AtomicWipe";
+import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import AtomicWipe, { clearIndexedDb } from "./AtomicWipe";
+import { ThemeProvider } from "../contexts/ThemeContext";
+import {
+  setupBeforeUnloadWarning,
+  removeBeforeUnloadWarning,
+  markBackupCreated,
+} from "../utils/dataPersistence";
+
+function dispatchBeforeUnload() {
+  const event = new Event("beforeunload", { cancelable: true });
+  window.dispatchEvent(event);
+  return event;
+}
 
 describe("clearIndexedDb", () => {
   afterEach(() => {
@@ -100,5 +113,55 @@ describe("clearIndexedDb", () => {
     ]) {
       expect(deletedNames).toContain(expected);
     }
+  });
+});
+
+describe("Atomic Wipe beforeunload guard", () => {
+  // ThemeProvider (required by AtomicWipe's useTheme()) reads
+  // window.matchMedia on mount; jsdom doesn't implement it.
+  beforeAll(() => {
+    if (typeof window !== "undefined" && !window.matchMedia) {
+      window.matchMedia = (query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      });
+    }
+  });
+
+  afterEach(() => {
+    removeBeforeUnloadWarning();
+    localStorage.clear();
+  });
+
+  // handleAtomicWipe's own localStorage.clear() deletes vetrate_data_hash,
+  // which makes dataPersistence.hasUnsavedChanges() read as true from that
+  // point on - so without disabling the guard first, the reload this wipe
+  // promises would trip the browser's native "Leave site?" prompt on every
+  // confirmed wipe, even for a veteran who had fully backed up moments
+  // earlier. A veteran who answers Stay to that prompt gets a wipe that
+  // never actually reloads.
+  it("disables the beforeunload prompt before reloading, even for a fully backed-up veteran", async () => {
+    markBackupCreated();
+    setupBeforeUnloadWarning();
+    expect(dispatchBeforeUnload().defaultPrevented).toBe(false);
+
+    render(
+      <ThemeProvider>
+        <AtomicWipe />
+      </ThemeProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Atomic Wipe/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirm Wipe/i }));
+
+    await waitFor(() => {
+      expect(dispatchBeforeUnload().defaultPrevented).toBe(false);
+    });
+    expect(window.onbeforeunload).toBeNull();
   });
 });
