@@ -19,6 +19,7 @@
 
 import { markAsModified } from "./persistentStorage";
 import { ensureQuota } from "./storage";
+import { awardDisplayName } from "./combatService";
 
 // ============================================================
 // DATABASE CONFIGURATION
@@ -903,10 +904,17 @@ function _formatServiceRecordBasics(data) {
   return out;
 }
 
-function _formatServiceRecordHighlights(data) {
+// D11-5 (final11 QA, 2026-09-27): award objects reaching this function have
+// no flat `.name` when they came from ribbonRackData.parseDD214Text (Muster
+// Call's regex path emits {award: {name}, matchedText}, not {name}) - `a.name
+// || a` fell through to the whole object, printing "[object Object]" into
+// this packet doc's AI context. awardDisplayName (combatService.js) already
+// handles every award shape in circulation; reused here instead of
+// duplicating that shape knowledge.
+export function _formatServiceRecordHighlights(data) {
   let out = "";
   if (data.awards?.length) {
-    out += `  Awards: ${data.awards.map((a) => a.name || a).join("; ")}\n`;
+    out += `  Awards: ${data.awards.map((a) => awardDisplayName(a)).join("; ")}\n`;
   }
   if (data.combatService?.hasVerifiedCombat) {
     out += `  Combat: YES (${data.combatService.indicators?.join(", ") || "verified"})\n`;
