@@ -4295,18 +4295,20 @@ function UserManualMobileHeader({ t, sidebarOpen, setSidebarOpen, onClose }) {
  * pane, not the header, in this layout. `hidden md:flex`: below `md` the
  * mobile header (above) already renders its own close-X.
  *
- * `top-16` (not `top-3`): this panel's own `md:m-4` margin only insets it
- * 16px from the viewport edge, nowhere near enough to clear the fixed
- * top-right Quick Exit button's ~60px-tall box on its own - measured
- * overlap at 768x1024/1024x768 with `top-3`. `top-16` (64px) matches
- * ResponsiveModal.jsx's own `sm:!mt-16` gutter, the same value already
- * proven to clear Quick Exit's box at every dialog using that shared shell.
+ * `top-3` (flush with the panel's own top corner, decision (1)'s "top end
+ * corner" placement): the panel itself now reserves the Quick Exit gutter
+ * via `md:mt-16` on its own margin (see the dialog panel's className
+ * comment), the same 64px this button used to carry on its own `top`
+ * offset - which floated it 64px down *inside* the panel, past the content
+ * pane's own top padding and into the section title's row (measured
+ * overlap at 768px). Clearing Quick Exit on the panel instead means
+ * nothing else ever renders above this button to collide with.
  */
 function UserManualDesktopCloseButton({ onClose }) {
   return (
     <button
       onClick={onClose}
-      className="hidden md:flex absolute top-16 end-3 z-20 h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+      className="hidden md:flex absolute top-3 end-3 z-20 h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
       aria-label="Close Field Manual"
     >
       <svg
@@ -4747,14 +4749,12 @@ function UserManualContentArea({ s }) {
           setCurrentSection={setCurrentSection}
         />
 
-        {/* Title */}
-        {/* `md:pe-16` clears UserManualDesktopCloseButton (`top-16 end-3
-            h-11 w-11`, 56px of end-edge space) - at `md` specifically the
-            content pane is narrow enough (sidebar + content share a
-            768px-ish panel) that a long/wrapped title's last line reached
-            all the way to the pane's own end edge, right under the
-            floating close-X. */}
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 md:pe-16">
+        {/* Title. No end-edge reserve needed for UserManualDesktopCloseButton
+            (unlike the old `top-16` placement, that used to float down to
+            this row's own height): the panel's `md:mt-16` margin now clears
+            the close-X well above where this title (and the breadcrumb
+            above it) ever renders, on every section - verified live. */}
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
           {getNavTitle(currentSection, currentContent.title)}
         </h1>
 
@@ -4827,7 +4827,20 @@ const UserManual = ({ onClose, onReportBug }) => {
         // `sm:` left the 640-767px band with no clearance at all from Quick
         // Exit, which moves to top-right at that same `sm:` breakpoint
         // (measured at 640x800).
-        className="relative flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 pt-20 md:pt-0 rounded-none md:rounded-xl overflow-hidden"
+        //
+        // `md:mt-16` (not the plain `md:m-4` this used to share on every
+        // side): at >=md the panel has no shared header row (see
+        // UserManualDesktopCloseButton below), so the close-X used to clear
+        // Quick Exit's box the same way this comment used to justify -
+        // sitting at a fixed `top-16` *inside* the panel, floating 64px down
+        // into the content pane and overlapping the section title (decision
+        // (1) violation - measured at 768px). Reserving that same 64px as
+        // the panel's own top margin instead moves the clearance to where
+        // ResponsiveModal.jsx puts it for every other dialog - on the panel,
+        // not the button - so the close-X can sit flush at the panel's own
+        // top corner (see UserManualDesktopCloseButton) with nothing ever
+        // rendering above it to overlap.
+        className="relative flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:mx-4 md:mb-4 md:mt-16 pt-20 md:pt-0 rounded-none md:rounded-xl overflow-hidden"
       >
         {/* Mobile header */}
         <UserManualMobileHeader
