@@ -762,7 +762,12 @@ const SERVICE_HISTORY_KEY = "vet_rate_service_history";
 // veteran instead of re-fingerprinting (and risking a false positive on)
 // every single read. A history saved before this field existed has no
 // `schemaVersion` at all, which getServiceHistory normalizes to 0.
-const SERVICE_HISTORY_SCHEMA_VERSION = 1;
+// Bumped to 2 for _repairStaleCodeSheetDerivedFlag below (D11-1 follow-up):
+// a code-sheet-corrected period saved before _mergeExistingServicePeriod's
+// authoritativeDates bypass existed can still carry a stale
+// serviceStartDateDerived: true, which reads VA's own printed date as
+// "calculated from net service".
+const SERVICE_HISTORY_SCHEMA_VERSION = 2;
 
 /**
  * Valid deployment locations/theaters
@@ -864,6 +869,7 @@ export const getServiceHistory = () => {
       typeof parsed.schemaVersion === "number" ? parsed.schemaVersion : 0;
     if (parsed.schemaVersion < SERVICE_HISTORY_SCHEMA_VERSION) {
       _repairContaminatedWindowPeriods(parsed);
+      _repairStaleCodeSheetDerivedFlag(parsed);
       parsed.schemaVersion = SERVICE_HISTORY_SCHEMA_VERSION;
       saveServiceHistory(parsed);
     }
@@ -1280,6 +1286,27 @@ function _repairContaminatedWindowPeriods(history) {
       ...recovered,
     ];
   }
+}
+
+// D11-1 follow-up: a period a code sheet has already contributed to is VA's
+// own authoritative record for its dates (same reasoning
+// _mergeExistingServicePeriod's authoritativeDates bypass already applies
+// going forward) - it is never a calculated guess, regardless of what an
+// earlier NGB-22/DD214 merge left on serviceStartDateDerived before that
+// bypass existed. Idempotent: a period without this stale combination is
+// returned unchanged, so this is safe to run on every migration pass.
+function _isStaleCodeSheetDerivedPeriod(p) {
+  if (!p.serviceStartDateDerived) return false;
+  if (p.formType === "Code Sheet") return true;
+  return (p.sources || []).some((s) => s.formType === "Code Sheet");
+}
+
+function _repairStaleCodeSheetDerivedFlag(history) {
+  history.servicePeriods = history.servicePeriods.map((p) =>
+    _isStaleCodeSheetDerivedPeriod(p)
+      ? { ...p, serviceStartDateDerived: false }
+      : p,
+  );
 }
 
 function _sanitizeServicePeriodIdentity(p) {
@@ -1800,6 +1827,28 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     // now-authoritative date doesn't keep reading as "calculated" (mirrors
     // veteranKnowledgeBase.js's _applyAuthoritativeCorrection).
     merged.serviceStartDateDerived = false;
+  } else if (
+    sameSource &&
+    incoming.serviceStartDateDerived === false &&
+    !_isEmptyServicePeriodValue(incoming.serviceStartDate)
+  ) {
+    // D11-1: Muster Call's Verify & Save re-runs this exact merge for the
+    // SAME document with the veteran's corrected fields spliced in
+    // (useSequentialFormationFlow.js's runVerifyAndSave ->
+    // persistFormationDocument). serviceStartDate is the identity key, so
+    // it (and serviceStartDateDerived, skipped above) never updated here -
+    // the corrected date reached profile.serviceStartDate/dd214Data but
+    // never this canonical period, so getServiceEntry() (which reads
+    // periods first) kept showing the original calculated guess.
+    // serviceStartDateDerived: false only ever comes from a printed
+    // document's own extraction, or from
+    // DocumentIntelligenceBriefing.jsx's _clearServiceStartDateDerivedIfEdited
+    // forcing it false the moment the veteran edits the field - never from
+    // an unedited re-scan of the same file (which re-reports whatever its
+    // own OCR/calculation produced) - so this can't be re-triggered by a
+    // later, uncorrected re-import regressing an already-fixed period.
+    merged.serviceStartDate = incoming.serviceStartDate;
+    merged.serviceStartDateDerived = false;
   }
   merged.confidence = Math.max(incomingConfidence, existingConfidence);
   merged.incomplete = incoming.incomplete && existing.incomplete;
@@ -2016,9 +2065,22 @@ export const upsertServicePeriod = (periodData, options = {}) => {
 // tab edit reaches FormsHelper without FormsHelper needing to change at
 // all. Only ever narrows/corrects the mirror when a real period date is
 // known; never clears it back to empty.
+//
+// This runs on EVERY period write, including one that only touched an
+// unrelated field (e.g. MOS) on a different period - it must never
+// silently replace an already-real profile date (FormsHelper's own
+// non-derived correction) with a still-calculated guess just because that
+// guess happens to be the earliest period on file (standing decision 3:
+// never silently lose a value).
 function _syncFlatServiceStartDateMirror(servicePeriods) {
   const entry = pickServiceEntry(servicePeriods, null);
   if (!entry.date) return;
+  const profile = getVeteranProfile();
+  const wouldReplaceRealDateWithGuess =
+    !!profile.serviceStartDate &&
+    !profile.serviceStartDateDerived &&
+    entry.derived;
+  if (wouldReplaceRealDateWithGuess) return;
   updateVeteranProfile({
     serviceStartDate: entry.date,
     serviceStartDateDerived: entry.derived,
@@ -2298,6 +2360,23 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
   };
 };
 
+// FormsHelper's handleSaveProfile (FormsHelper.jsx) writes a veteran's
+// corrected serviceStartDate straight to the flat profile field, clearing
+// serviceStartDateDerived, but never touches servicePeriods[] itself (that
+// write-through is FormsHelper's own gap, outside this module). Without
+// this, getServiceEntry() kept returning a still-calculated period's guess
+// over the veteran's own correction, so the AI prompt/dossier/Service span
+// regressed to the calculated date the moment a period existed at all. A
+// profile date the veteran has confirmed is real (not derived) beats a
+// guess, but never a printed/proven period - only ever fires when the
+// periods-based answer is itself missing or still a calculated guess.
+function _profileOverridesDerivedEntry(profile, result) {
+  if (!profile.serviceStartDate || profile.serviceStartDateDerived) {
+    return false;
+  }
+  return !result.date || result.derived;
+}
+
 /**
  * The single canonical source for "when did the veteran's service begin",
  * with provenance - see serviceEntryDate.js's pickServiceEntry for the
@@ -2319,9 +2398,18 @@ export const getServiceEntry = () => {
       }
     : null;
   const result = pickServiceEntry(history.servicePeriods, dd214Legacy);
+  const profile = getVeteranProfile();
+
+  if (_profileOverridesDerivedEntry(profile, result)) {
+    return {
+      date: profile.serviceStartDate,
+      derived: false,
+      source: "veteran",
+      periodId: null,
+    };
+  }
   if (result.date) return result;
 
-  const profile = getVeteranProfile();
   if (profile.serviceStartDate) {
     return {
       date: profile.serviceStartDate,

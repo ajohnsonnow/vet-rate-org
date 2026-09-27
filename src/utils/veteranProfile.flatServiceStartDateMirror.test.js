@@ -16,6 +16,7 @@ import {
   addServicePeriod,
   updateServicePeriod,
   removeServicePeriod,
+  updateVeteranProfile,
   getVeteranProfile,
 } from "./veteranProfile";
 
@@ -48,6 +49,30 @@ describe("service period editors keep profile.serviceStartDate in sync (for Form
       serviceStartDate: "2001-11-01",
       serviceStartDateDerived: false,
     });
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("2001-11-01");
+    expect(profile.serviceStartDateDerived).toBe(false);
+  });
+
+  it("does not let an unrelated field edit on a still-calculated period clobber a real profile date with a guess", () => {
+    // Simulates: profile.serviceStartDate already holds FormsHelper's real,
+    // non-derived correction, while the canonical period is still an
+    // unresolved calculated NGB-22 guess (a different edit path, e.g.
+    // Muster Call, never corrected servicePeriods[] itself).
+    const id = addServicePeriod({
+      serviceStartDate: "2002-03-05",
+      serviceStartDateDerived: true,
+      serviceEndDate: "2010-06-15",
+    });
+    updateVeteranProfile({
+      serviceStartDate: "2001-11-01",
+      serviceStartDateDerived: false,
+    });
+
+    // My Packet edits an unrelated field on the same (still-calculated)
+    // period.
+    updateServicePeriod(id, { mos: "11B" });
 
     const profile = getVeteranProfile();
     expect(profile.serviceStartDate).toBe("2001-11-01");

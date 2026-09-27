@@ -90,3 +90,75 @@ describe("service entry date: one edit, every consumer agrees", () => {
     });
   });
 });
+
+// Mirrors musterCallProcessor.js's _savePrimaryServicePeriod call shape for
+// an NGB-22 (same sourceDocument each time - the identity a re-persist or
+// re-import shares with the original extraction).
+function upsertNgb22Period(serviceStartDate, derived) {
+  upsertServicePeriod(
+    {
+      serviceStartDate,
+      serviceStartDateDerived: derived,
+      serviceEndDate: "2010-06-15",
+      branch: "Army National Guard",
+      formType: "NGB22",
+    },
+    { sourceDocument: "ngb22.pdf", confidence: 60 },
+  );
+}
+
+describe("D11-1: a Muster Call review correction reaches servicePeriods[] on re-persist", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem(
+      PROFILE_KEY,
+      JSON.stringify({ fullName: "Jordan Sample" }),
+    );
+  });
+
+  it("overwrites the calculated period when Verify & Save re-runs persistFormationDocument for the same file", () => {
+    // Initial extraction: musterCallProcessor.js's saveServiceRecordToProfile
+    // (_savePrimaryServicePeriod) upserts the calculated guess.
+    upsertNgb22Period("2002-03-05", true);
+    expect(getServiceEntry()).toMatchObject({
+      date: "2002-03-05",
+      derived: true,
+    });
+
+    // Verify & Save re-runs the exact same call for the same file, with the
+    // veteran's corrected fields spliced in (useSequentialFormationFlow.js's
+    // runVerifyAndSave -> persistFormationDocument -> saveServiceRecordToProfile).
+    upsertNgb22Period("2002-03-01", false);
+
+    expect(getServicePeriods()).toHaveLength(1);
+    expect(getServiceEntry()).toMatchObject({
+      date: "2002-03-01",
+      derived: false,
+    });
+
+    const prompt = buildSystemPrompt({
+      includeAppContext: false,
+      includeRegulations: false,
+    });
+    expect(prompt).toContain("- Entry Date: 2002-03-01\n");
+    expect(prompt).not.toContain("calculated from net service");
+
+    const dossier = generateDossierHTML();
+    expect(dossier).toContain("2002-03-01");
+    expect(dossier).not.toContain("calculated from net service");
+  });
+
+  it("does not let a later, uncorrected re-import regress an already-corrected period", () => {
+    upsertNgb22Period("2002-03-05", true);
+    upsertNgb22Period("2002-03-01", false);
+
+    // A later, plain re-import (no correction this time) re-extracts the
+    // SAME raw calculated guess it always would from this document.
+    upsertNgb22Period("2002-03-05", true);
+
+    expect(getServiceEntry()).toMatchObject({
+      date: "2002-03-01",
+      derived: false,
+    });
+  });
+});

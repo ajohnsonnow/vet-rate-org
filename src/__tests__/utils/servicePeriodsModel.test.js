@@ -1228,9 +1228,21 @@ describe("D-A: the contamination repair is a versioned migration that runs once"
   });
 
   it("does not re-run the repair on a history already at the current schema version", () => {
+    // Derive the real current schema version from an actual migration run,
+    // rather than hardcoding a number that drifts out of date the next time
+    // a migration is added (SERVICE_HISTORY_SCHEMA_VERSION isn't exported).
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify(contaminatedRawHistory()),
+    );
+    getServicePeriods();
+    const { schemaVersion } = JSON.parse(
+      localStorage.getItem("vet_rate_service_history"),
+    );
+
     const alreadyMigrated = {
       ...contaminatedRawHistory(),
-      schemaVersion: 1,
+      schemaVersion,
     };
     localStorage.setItem(
       "vet_rate_service_history",
