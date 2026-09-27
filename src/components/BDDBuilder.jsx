@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import {
@@ -325,30 +326,8 @@ function useBDDBuilderState() {
 
 function BDDBuilderTitleRow({ onClose, onReportBug }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="text-3xl">🎖️</span>
-        <div className="min-w-0">
-          <h2 id="bdd-builder-title" className="text-xl font-bold text-white">
-            BDD Builder{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              NEW
-            </span>
-          </h2>
-          <p className="text-sm text-emerald-100">
-            Pre-Discharge Claims Planner (38 CFR § 3.326)
-          </p>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-x-2">
-        <ReportBugLink
-          onClick={() => {
-            onClose();
-            onReportBug?.();
-          }}
-          variant="light"
-          moduleName="BDD Builder"
-        />
+    <HeaderCloseSlot
+      close={
         <button
           onClick={onClose}
           className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -368,8 +347,31 @@ function BDDBuilderTitleRow({ onClose, onReportBug }) {
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="text-3xl">🎖️</span>
+        <div className="min-w-0">
+          <h2 id="bdd-builder-title" className="text-xl font-bold text-white">
+            BDD Builder{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+              NEW
+            </span>
+          </h2>
+          <p className="text-sm text-emerald-100">
+            Pre-Discharge Claims Planner (38 CFR § 3.326)
+          </p>
+        </div>
       </div>
-    </div>
+      <ReportBugLink
+        onClick={() => {
+          onClose();
+          onReportBug?.();
+        }}
+        variant="light"
+        moduleName="BDD Builder"
+      />
+    </HeaderCloseSlot>
   );
 }
 

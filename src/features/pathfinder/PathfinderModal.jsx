@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import ReportBugLink from "../../components/ReportBugLink";
 import ResponsiveModal from "../../components/common/ResponsiveModal";
+import HeaderCloseSlot from "../../components/common/HeaderCloseSlot";
 
 const Pathfinder = lazy(() => import("../../components/Pathfinder"));
 
@@ -11,31 +12,8 @@ const Pathfinder = lazy(() => import("../../components/Pathfinder"));
 function PathfinderModalHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="text-3xl">🧭</span>
-          <div className="min-w-0">
-            <h2
-              id="pathfinder-modal-title"
-              className="text-xl font-bold text-white flex items-center gap-2 flex-wrap"
-            >
-              The Pathfinder{" "}
-              <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
-                AI
-              </span>
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-                BETA
-              </span>
-            </h2>
-            <p className="text-sm text-teal-100">Strategic Claims Analysis</p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-x-2">
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Pathfinder"
-          />
+      <HeaderCloseSlot
+        close={
           <button
             onClick={onClose}
             className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -55,8 +33,32 @@ function PathfinderModalHeader({ onClose, onReportBug }) {
               />
             </svg>
           </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl">🧭</span>
+          <div className="min-w-0">
+            <h2
+              id="pathfinder-modal-title"
+              className="text-xl font-bold text-white flex items-center gap-2 flex-wrap"
+            >
+              The Pathfinder{" "}
+              <span className="px-1.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold rounded">
+                AI
+              </span>
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-teal-100">Strategic Claims Analysis</p>
+          </div>
         </div>
-      </div>
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Pathfinder"
+        />
+      </HeaderCloseSlot>
     </div>
   );
 }

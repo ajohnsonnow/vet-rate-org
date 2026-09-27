@@ -12,6 +12,7 @@ import { getTimelineEvents, saveTimelineEvents } from "../utils/veteranProfile";
 import { loadVKB } from "../utils/veteranKnowledgeBase";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatLocalDate } from "../utils/dateUtils";
 
 // Event categories with their visual styles
@@ -419,33 +420,9 @@ function performRemoveEvent({
 function TimelineModalHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-slate-600 to-gray-700 p-4 shadow-lg">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="text-3xl">🧵</span>
-          <div className="min-w-0">
-            <h2
-              id="evidence-timeline-title"
-              className="text-xl font-bold text-white"
-            >
-              🧵 The Continuity Thread - Evidence Timeline{" "}
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                BETA
-              </span>
-            </h2>
-            <p className="text-sm text-slate-100">
-              Visual nexus timeline with gap detection
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-x-3">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="The Continuity Thread"
-            />
-          )}
-          {onClose && (
+      <HeaderCloseSlot
+        close={
+          onClose && (
             <button
               onClick={onClose}
               className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -465,9 +442,34 @@ function TimelineModalHeader({ onClose, onReportBug }) {
                 />
               </svg>
             </button>
-          )}
+          )
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl">🧵</span>
+          <div className="min-w-0">
+            <h2
+              id="evidence-timeline-title"
+              className="text-xl font-bold text-white"
+            >
+              🧵 The Continuity Thread - Evidence Timeline{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-slate-100">
+              Visual nexus timeline with gap detection
+            </p>
+          </div>
         </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="The Continuity Thread"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }

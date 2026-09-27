@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   EVIDENCE_REQUIREMENTS,
   getAvailableConditions,
@@ -207,34 +208,9 @@ const EvidenceGapHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-20 translate-x-20" />
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12" />
 
-    <div className="relative flex flex-wrap items-start justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-4">
-        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
-          <span className="text-4xl">🔬</span>
-        </div>
-        <div className="min-w-0">
-          <h2
-            id="evidence-gap-title"
-            className="text-2xl sm:text-3xl font-bold"
-          >
-            Evidence Gap Visualizer{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-              BETA
-            </span>
-          </h2>
-          <p className="text-purple-200 mt-1">
-            &quot;The Missing Link&quot; • See exactly what you need
-          </p>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-x-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Evidence Gap Visualizer"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
           className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -254,8 +230,35 @@ const EvidenceGapHeader = ({ onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
+          <span className="text-4xl">🔬</span>
+        </div>
+        <div className="min-w-0">
+          <h2
+            id="evidence-gap-title"
+            className="text-2xl sm:text-3xl font-bold"
+          >
+            Evidence Gap Visualizer{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+          <p className="text-purple-200 mt-1">
+            &quot;The Missing Link&quot; • See exactly what you need
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Evidence Gap Visualizer"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 
