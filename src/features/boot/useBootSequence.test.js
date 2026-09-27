@@ -16,11 +16,17 @@ import {
  * React rendering: it must track migration settling (not maintenance-check
  * settling, which is a network fetch with no timeout and must never block
  * it), and must not flip false until an in-progress copy has completed.
+ *
+ * A second group below covers the maintenance-mode kill switch: the cached
+ * last-known flag (maintenanceMode.js) must be able to stop a migration
+ * from ever starting, and the live check must be able to stop one already
+ * running, without either ever waiting on the network to do so.
  */
 
 const mockNeedsMigration = vi.fn();
 const mockMigrateFromLocalStorage = vi.fn();
-const mockFetchVersionJson = vi.fn();
+const mockCheckMaintenanceMode = vi.fn();
+const mockReadCachedMaintenanceMode = vi.fn();
 const mockMigrateUserData = vi.fn(() => ({
   migrationsRun: [],
   success: true,
@@ -35,8 +41,10 @@ vi.mock("../../utils/storage", () => ({
   needsMigration: (...args) => mockNeedsMigration(...args),
   migrateFromLocalStorage: (...args) => mockMigrateFromLocalStorage(...args),
 }));
-vi.mock("../../utils/version", () => ({
-  fetchVersionJson: (...args) => mockFetchVersionJson(...args),
+vi.mock("../../utils/maintenanceMode", () => ({
+  checkMaintenanceMode: (...args) => mockCheckMaintenanceMode(...args),
+  readCachedMaintenanceMode: (...args) =>
+    mockReadCachedMaintenanceMode(...args),
 }));
 vi.mock("../../utils/migrationManager", () => ({
   migrateUserData: (...args) => mockMigrateUserData(...args),
@@ -73,7 +81,10 @@ function deferred() {
 beforeEach(() => {
   mockNeedsMigration.mockReset();
   mockMigrateFromLocalStorage.mockReset();
-  mockFetchVersionJson.mockReset();
+  mockCheckMaintenanceMode.mockReset();
+  mockCheckMaintenanceMode.mockResolvedValue(false);
+  mockReadCachedMaintenanceMode.mockReset();
+  mockReadCachedMaintenanceMode.mockReturnValue(false);
   mockMigrateUserData.mockClear();
   mockInitPersistentStorage.mockClear();
   mockInitAutoBackup.mockClear();
@@ -86,8 +97,8 @@ afterEach(() => {
 describe("useBootSequence: isBooting gate", () => {
   it("flips isBooting false once no migration is needed, without waiting on the maintenance fetch", async () => {
     mockNeedsMigration.mockResolvedValue(false);
-    const versionFetch = deferred();
-    mockFetchVersionJson.mockReturnValue(versionFetch.promise);
+    const maintenanceCheck = deferred();
+    mockCheckMaintenanceMode.mockReturnValue(maintenanceCheck.promise);
 
     const { result } = renderHook(() => useBootSequence());
 
@@ -97,15 +108,11 @@ describe("useBootSequence: isBooting gate", () => {
     expect(result.current.maintenanceMode).toBe(false);
     expect(result.current.isMigrating).toBe(false);
 
-    versionFetch.resolve({ ok: true, data: { maintenance_mode: false } });
+    maintenanceCheck.resolve(false);
   });
 
   it("keeps isBooting true for the full duration of an in-progress migration copy", async () => {
     mockNeedsMigration.mockResolvedValue(true);
-    mockFetchVersionJson.mockResolvedValue({
-      ok: true,
-      data: { maintenance_mode: false },
-    });
     const migrationCopy = deferred();
     mockMigrateFromLocalStorage.mockReturnValue(migrationCopy.promise);
 
@@ -116,6 +123,7 @@ describe("useBootSequence: isBooting gate", () => {
 
     migrationCopy.resolve({
       success: true,
+      aborted: false,
       migratedKeys: ["vet_rate_veteran_profile"],
       failedKeys: [],
     });
@@ -126,21 +134,24 @@ describe("useBootSequence: isBooting gate", () => {
 
   it("settles maintenanceMode independently, even after isBooting has already resolved", async () => {
     mockNeedsMigration.mockResolvedValue(false);
-    const versionFetch = deferred();
-    mockFetchVersionJson.mockReturnValue(versionFetch.promise);
+    const maintenanceCheck = deferred();
+    mockCheckMaintenanceMode.mockImplementation(
+      (setMaintenanceMode, setMaintenanceMessage) =>
+        maintenanceCheck.promise.then((isOn) => {
+          if (isOn) {
+            setMaintenanceMode(true);
+            setMaintenanceMessage("Down for scheduled work.");
+          }
+          return isOn;
+        }),
+    );
 
     const { result } = renderHook(() => useBootSequence());
 
     await waitFor(() => expect(result.current.isBooting).toBe(false));
     expect(result.current.maintenanceMode).toBe(false);
 
-    versionFetch.resolve({
-      ok: true,
-      data: {
-        maintenance_mode: true,
-        maintenance_message: "Down for scheduled work.",
-      },
-    });
+    maintenanceCheck.resolve(true);
 
     await waitFor(() => expect(result.current.maintenanceMode).toBe(true));
     expect(result.current.maintenanceMessage).toBe("Down for scheduled work.");
@@ -158,12 +169,9 @@ describe("useBootSequence: fail-open timeout, logging, and background work", () 
         resolveNeedsMigration = resolve;
       }),
     );
-    mockFetchVersionJson.mockResolvedValue({
-      ok: true,
-      data: { maintenance_mode: false },
-    });
     mockMigrateFromLocalStorage.mockResolvedValue({
       success: true,
+      aborted: false,
       migratedKeys: ["vet_rate_veteran_profile"],
       failedKeys: [],
     });
@@ -189,12 +197,9 @@ describe("useBootSequence: fail-open timeout, logging, and background work", () 
   it("logs the real migrated-key count and list, not stale itemsMigrated/keysProcessed fields", async () => {
     const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     mockNeedsMigration.mockResolvedValue(true);
-    mockFetchVersionJson.mockResolvedValue({
-      ok: true,
-      data: { maintenance_mode: false },
-    });
     mockMigrateFromLocalStorage.mockResolvedValue({
       success: true,
+      aborted: false,
       migratedKeys: ["a", "b", "c"],
       failedKeys: [],
     });
@@ -219,15 +224,91 @@ describe("useBootSequence: fail-open timeout, logging, and background work", () 
 
   it("runs the background inits (persistent storage, auto-backup, user-data migrations) after the boot gate opens", async () => {
     mockNeedsMigration.mockResolvedValue(false);
-    mockFetchVersionJson.mockResolvedValue({
-      ok: true,
-      data: { maintenance_mode: false },
-    });
 
     renderHook(() => useBootSequence());
 
     await waitFor(() => expect(mockInitPersistentStorage).toHaveBeenCalled());
     await waitFor(() => expect(mockInitAutoBackup).toHaveBeenCalled());
     await waitFor(() => expect(mockMigrateUserData).toHaveBeenCalled());
+  });
+});
+
+describe("useBootSequence: maintenance-mode kill switch", () => {
+  it("skips starting a migration entirely when the cached maintenance flag is already on", async () => {
+    mockReadCachedMaintenanceMode.mockReturnValue(true);
+    mockCheckMaintenanceMode.mockResolvedValue(true);
+
+    const { result } = renderHook(() => useBootSequence());
+
+    await waitFor(() => expect(result.current.isBooting).toBe(false));
+    expect(mockNeedsMigration).not.toHaveBeenCalled();
+    expect(mockMigrateFromLocalStorage).not.toHaveBeenCalled();
+  });
+
+  it("starts the migration normally when the cached flag is off (unchanged path)", async () => {
+    mockReadCachedMaintenanceMode.mockReturnValue(false);
+    mockNeedsMigration.mockResolvedValue(false);
+
+    renderHook(() => useBootSequence());
+
+    await waitFor(() => expect(mockNeedsMigration).toHaveBeenCalled());
+  });
+
+  it("trips the kill switch passed to migrateFromLocalStorage as shouldAbort once the live check confirms maintenance mid-copy", async () => {
+    mockNeedsMigration.mockResolvedValue(true);
+    let capturedShouldAbort;
+    const migrationCopy = deferred();
+    mockMigrateFromLocalStorage.mockImplementation(({ shouldAbort } = {}) => {
+      capturedShouldAbort = shouldAbort;
+      return migrationCopy.promise;
+    });
+
+    let tripKillSwitch;
+    mockCheckMaintenanceMode.mockImplementation(
+      (setMaintenanceMode, setMaintenanceMessage, onMaintenanceOn) => {
+        tripKillSwitch = onMaintenanceOn;
+        return new Promise(() => {});
+      },
+    );
+
+    renderHook(() => useBootSequence());
+
+    await waitFor(() => expect(capturedShouldAbort).toBeTypeOf("function"));
+    expect(capturedShouldAbort()).toBe(false);
+
+    tripKillSwitch();
+
+    expect(capturedShouldAbort()).toBe(true);
+
+    migrationCopy.resolve({
+      success: false,
+      aborted: true,
+      migratedKeys: [],
+      failedKeys: [],
+    });
+  });
+});
+
+describe("useBootSequence: pre-mount dialog events are no-ops by design", () => {
+  it("dispatching open* events before anything can be listening does not throw or corrupt boot state", async () => {
+    mockNeedsMigration.mockResolvedValue(false);
+
+    const { result } = renderHook(() => useBootSequence());
+
+    // No production code dispatches these before the interactive tree
+    // mounts (boot shows MigrationScreen instead) - but nothing should
+    // break if one somehow did. window.dispatchEvent with zero listeners
+    // registered is inherently a no-op; this pins that useBootSequence
+    // itself never becomes such a listener and never reacts to them.
+    expect(() => {
+      window.dispatchEvent(new CustomEvent("openMyPacket"));
+      window.dispatchEvent(new CustomEvent("openClaimNavigator"));
+      window.dispatchEvent(new CustomEvent("openAskTheRegs"));
+    }).not.toThrow();
+
+    await waitFor(() => expect(result.current.isBooting).toBe(false));
+    expect(result.current.maintenanceMode).toBe(false);
+    expect(result.current.maintenanceMessage).toBe("");
+    expect(result.current.isMigrating).toBe(false);
   });
 });
