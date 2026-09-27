@@ -17,6 +17,8 @@ const {
   checkMaintenanceMode,
   readCachedMaintenanceMode,
   MAINTENANCE_MODE_CACHE_KEY,
+  MAINTENANCE_MODE_CACHE_TIMESTAMP_KEY,
+  MAINTENANCE_MODE_CACHE_TTL_MS,
 } = await import("./maintenanceMode");
 
 beforeEach(() => {
@@ -63,6 +65,32 @@ describe("readCachedMaintenanceMode", () => {
     expect(readCachedMaintenanceMode()).toBe(false);
 
     getItemSpy.mockRestore();
+  });
+
+  it("still trusts a cached 'on' flag while inside its TTL window", () => {
+    localStorage.setItem(MAINTENANCE_MODE_CACHE_KEY, "true");
+    localStorage.setItem(
+      MAINTENANCE_MODE_CACHE_TIMESTAMP_KEY,
+      String(Date.now()),
+    );
+
+    expect(readCachedMaintenanceMode()).toBe(true);
+  });
+
+  it("treats a cached 'on' flag as stale once its TTL has elapsed, so a device whose network keeps failing eventually retries the migration instead of skipping it forever", () => {
+    localStorage.setItem(MAINTENANCE_MODE_CACHE_KEY, "true");
+    localStorage.setItem(
+      MAINTENANCE_MODE_CACHE_TIMESTAMP_KEY,
+      String(Date.now() - MAINTENANCE_MODE_CACHE_TTL_MS - 1),
+    );
+
+    expect(readCachedMaintenanceMode()).toBe(false);
+  });
+
+  it("treats a cached 'on' flag with no timestamp (e.g. from before the TTL was added) as stale", () => {
+    localStorage.setItem(MAINTENANCE_MODE_CACHE_KEY, "true");
+
+    expect(readCachedMaintenanceMode()).toBe(false);
   });
 });
 
