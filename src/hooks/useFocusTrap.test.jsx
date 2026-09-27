@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { useRef, useState } from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useFocusTrap } from "./useFocusTrap";
 
 function Harness({ onEscape }) {
@@ -26,6 +26,32 @@ function Harness({ onEscape }) {
           <button data-testid="last" onClick={() => setOpen(false)}>
             last
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// VKBViewer/TheTribunal activate the trap while still loading, rendering a
+// bare dialog shell with nothing focusable inside it - `open` never toggles
+// again for the loading->loaded transition, only the dialog's own children
+// change once data arrives.
+function LoadingHarness() {
+  const [open, setOpen] = useState(false);
+  const [ready, setReady] = useState(false);
+  const ref = useRef(null);
+  useFocusTrap(ref, { active: open, onEscape: () => setOpen(false) });
+  return (
+    <div>
+      <button data-testid="opener" onClick={() => setOpen(true)}>
+        open
+      </button>
+      <button data-testid="finish-load" onClick={() => setReady(true)}>
+        finish load
+      </button>
+      {open && (
+        <div ref={ref} data-testid="trap">
+          {ready && <button data-testid="loaded">loaded</button>}
         </div>
       )}
     </div>
@@ -107,5 +133,25 @@ describe("useFocusTrap", () => {
     fireEvent.click(screen.getByTestId("last")); // close
 
     expect(document.activeElement).toBe(opener);
+  });
+
+  // Dead-zone regression: a dialog that activates before it has any
+  // focusable content (VKBViewer/TheTribunal while loading) used to never
+  // get a second autoFocus attempt once real content rendered, so focus
+  // stayed on whatever opened it - and Escape, bound to the dialog node
+  // itself, never bubbled through to close it.
+  it("moves focus into content that appears after the dialog activates empty (loading dead zone)", async () => {
+    render(<LoadingHarness />);
+    const opener = screen.getByTestId("opener");
+    opener.focus();
+    fireEvent.click(opener);
+
+    expect(document.activeElement).toBe(opener);
+
+    fireEvent.click(screen.getByTestId("finish-load"));
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByTestId("loaded"));
+    });
   });
 });
