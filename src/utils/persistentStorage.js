@@ -766,18 +766,16 @@ function generateChecksum(data) {
 // ============================================================================
 
 /**
- * Initialize the beforeunload warning for unsaved changes
+ * No-op kept only so existing callers (useBootSequence.js) don't need to
+ * change their import. This module used to register its own `beforeunload`
+ * listener here, duplicating dataPersistence.js's — two listeners existing
+ * purely to gate the same native "Leave site?" dialog, and two separate
+ * references the panic-redirect path had to track down and remove before it
+ * could safely navigate. dataPersistence.js's setupBeforeUnloadWarning() now
+ * checks checkHasUnsavedChanges() (below) itself, so this file's condition is
+ * still enforced, just through the one consolidated listener.
  */
-export function initUnsavedChangesWarning() {
-  window.addEventListener("beforeunload", (event) => {
-    if (hasUnsavedChanges) {
-      // This triggers the browser's native warning dialog
-      event.preventDefault();
-      event.returnValue = "";
-      return "";
-    }
-  });
-}
+export function initUnsavedChangesWarning() {}
 
 /**
  * Check if there are unsaved changes
