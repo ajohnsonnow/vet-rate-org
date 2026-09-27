@@ -641,11 +641,11 @@ const NexusHeaderBar = ({
   t,
 }) => (
   <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div className="flex-1 min-w-0 pr-10 sm:pr-0">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0 flex-1">
         <h2
           id="nexus-builder-title"
-          className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2 truncate"
+          className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2"
         >
           {existingStatement
             ? t("nexusBuilder.editStatement")
@@ -667,7 +667,7 @@ const NexusHeaderBar = ({
           )}
         </p>
       </div>
-      <div className="absolute top-3 right-3 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 sm:gap-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
         <LLMRecommendationBadge toolId="nexus-builder" />
         <AIStatusBadge onClick={onOpenAISettings} showLabel={false} />
         {onReportBug && (
@@ -679,7 +679,7 @@ const NexusHeaderBar = ({
         )}
         <button
           onClick={onClose}
-          className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
           aria-label={t("nexusBuilder.close")}
         >
           <svg
