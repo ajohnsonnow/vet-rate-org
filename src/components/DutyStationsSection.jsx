@@ -52,7 +52,7 @@ function titleCasePlaceOfEntry(value) {
     .join(", ");
 }
 
-function formatPeriodLabel(period, t) {
+export function formatPeriodLabel(period, t) {
   const branch = period.branch || t("myPacketSection.service");
   const start = period.serviceStartDate || "?";
   // Guard/Reserve periods whose NGB-22 printed no entry date get one

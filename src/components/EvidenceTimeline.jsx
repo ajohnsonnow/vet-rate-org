@@ -287,6 +287,54 @@ function dedupeTimelineEvents(events) {
   });
 }
 
+function _isServiceEntryEventType(eventType) {
+  return eventType === "guard_enlistment" || eventType === "service_entry";
+}
+
+// ADR-007 R10: a local copy imported from a PROJECTED VKB service-entry
+// event goes stale the moment a correction changes that same projection's
+// date/description - re-importing must replace it, not leave a second,
+// outdated entry sitting alongside the fresh one. A legacy copy (no
+// sourceKey, from before this tracking existed) is stale once no current
+// VKB service-entry event still matches its own (date, description).
+// Veteran-added events (numeric id, never a "vkb_" import) are never
+// touched - EvidenceTimeline has no edit path for them, only add/remove.
+function _isStaleImportedServiceEntryEvent(local, projectedEvents, knownKeys) {
+  if (!_isServiceEntryEventType(local.eventType)) return false;
+  if (typeof local.id !== "string" || !local.id.startsWith("vkb_")) {
+    return false;
+  }
+  if (local.sourceKey) {
+    const match = projectedEvents.find(
+      (p) => p.projectionKey === local.sourceKey,
+    );
+    if (!match) return true;
+    return match.date !== local.date || match.description !== local.description;
+  }
+  return !knownKeys.has(timelineEventKey(local));
+}
+
+function _dropStaleServiceEntryEvents(events, projectedEvents, knownKeys) {
+  let removed = 0;
+  const kept = events.filter((local) => {
+    const stale = _isStaleImportedServiceEntryEvent(
+      local,
+      projectedEvents,
+      knownKeys,
+    );
+    if (stale) removed += 1;
+    return !stale;
+  });
+  return { kept, removed };
+}
+
+function _importConfirmMessage(addedCount, updatedCount) {
+  if (updatedCount === 0) {
+    return `Add ${addedCount} event(s) from your analyzed records to the timeline?`;
+  }
+  return `Update ${updatedCount} event(s) and add ${addedCount} new event(s) from your analyzed records to the timeline?`;
+}
+
 // Pull dated events the C-File analyzer filed into the VKB
 // (evidenceTimeline entries + dated evidence items) into this timeline.
 // `auto` (first-open auto-import) skips the confirm/alert dialogs a manual
@@ -305,11 +353,33 @@ async function performImportFromRecords({
       ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
     ].filter((e) => e?.date && (e.description || e.text));
 
-    // Dedupe against existing timeline events AND, as items are accepted,
-    // against each other - migrateOffSchemaVKB copies legacy evidence[]
-    // entries into evidenceTimeline[], so the same item can otherwise show
-    // up in both vkbEvents halves and get added twice.
-    const existing = new Set(timelineEvents.map(timelineEventKey));
+    const projectedEvents = vkbEvents.filter(
+      (e) => e.projected && _isServiceEntryEventType(e.eventType),
+    );
+    const knownServiceEntryKeys = new Set(
+      vkbEvents
+        .filter((e) => _isServiceEntryEventType(e.eventType))
+        .map((e) =>
+          timelineEventKey({
+            date: e.date,
+            description: e.description || e.text,
+          }),
+        ),
+    );
+    const { kept: workingEvents, removed: staleRemoved } =
+      projectedEvents.length > 0
+        ? _dropStaleServiceEntryEvents(
+            timelineEvents,
+            projectedEvents,
+            knownServiceEntryKeys,
+          )
+        : { kept: timelineEvents, removed: 0 };
+
+    // Dedupe against the (stale-filtered) existing timeline events AND, as
+    // items are accepted, against each other - migrateOffSchemaVKB copies
+    // legacy evidence[] entries into evidenceTimeline[], so the same item
+    // can otherwise show up in both vkbEvents halves and get added twice.
+    const existing = new Set(workingEvents.map(timelineEventKey));
     const fresh = [];
     vkbEvents.forEach((e, i) => {
       const description = e.description || e.text;
@@ -328,26 +398,27 @@ async function performImportFromRecords({
         // a Guard/Reserve enlistment event after it's imported into this
         // timeline's own persisted event shape.
         eventType: e.eventType || null,
+        // ADR-007: names the projection this copy came from, if any - lets
+        // a LATER re-import recognize this exact copy as stale once the
+        // projection itself has since changed.
+        sourceKey: e.projectionKey || null,
       });
     });
 
-    if (fresh.length === 0) {
+    if (fresh.length === 0 && staleRemoved === 0) {
       if (!auto) alert("No new dated events found in your records.");
       return [];
     }
+    const updatedCount = Math.min(staleRemoved, fresh.length);
+    const addedCount = fresh.length - updatedCount;
     if (
       !auto &&
-      !window.confirm(
-        `Add ${fresh.length} event(s) from your analyzed records to the timeline?`,
-      )
+      !window.confirm(_importConfirmMessage(addedCount, updatedCount))
     ) {
       return [];
     }
-    let updated = fresh;
-    setTimelineEvents((prev) => {
-      updated = dedupeTimelineEvents([...prev, ...fresh]);
-      return updated;
-    });
+    const updated = dedupeTimelineEvents([...workingEvents, ...fresh]);
+    setTimelineEvents(updated);
     saveTimelineEvents(updated);
     if (onEventsUpdate) {
       onEventsUpdate(updated);
