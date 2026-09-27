@@ -5579,6 +5579,11 @@ function MilitaryServiceDateFields({ veteranProfile, handleProfileChange }) {
         {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Service Start Date
+          {veteranProfile.serviceStartDateDerived && (
+            <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+              (calculated from net service)
+            </span>
+          )}
         </label>
         <input
           type="date"
@@ -7867,7 +7872,12 @@ function _buildVeteranFullNameGuess(profile, middleInitial) {
     .join(" ");
 }
 
-function buildFormsHelperPrefillDefaults() {
+// Exported for direct unit testing: no wizard step currently binds a field
+// named serviceStartDate (the PTSD stressor / buddy-statement steps use
+// their own free-text "serviceDates" field instead), so there is nothing in
+// the rendered UI today that can observe whether a calculated date was
+// correctly left out of this object - see formsHelperCalculatedDate.test.jsx.
+export function buildFormsHelperPrefillDefaults() {
   const profile = getVeteranProfile();
   const conditionsDefault = getFormsHelperConditionsDefault();
   const middleInitial = _resolveMiddleInitial(profile);
@@ -7911,7 +7921,16 @@ function buildFormsHelperPrefillDefaults() {
     payGrade: profile.payGrade,
     mos: profile.mos,
     mosTitle: profile.mosTitle,
-    serviceStartDate: profile.serviceStartDate,
+    // A calculated NGB-22 entry date (serviceStartDateDerived, set in
+    // musterCallProcessor.js) was never printed on the veteran's paperwork -
+    // it must not be silently handed to a VA form field as if it were.
+    // Leaving it blank matches how this same prefill already treats any
+    // other field it isn't confident about (e.g. conditionsDefault above,
+    // blank with nothing on file) rather than inventing a UI-only "confirm
+    // this" affordance this wizard has nowhere else.
+    serviceStartDate: profile.serviceStartDateDerived
+      ? ""
+      : profile.serviceStartDate,
     serviceEndDate: profile.serviceEndDate,
     characterOfService: profile.characterOfService,
     separationType: profile.separationType,
