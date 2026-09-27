@@ -297,9 +297,10 @@ function watchForBeforeUnloadDialog(page: Page): { fired: boolean } {
   return state;
 }
 
+// One click, no confirmation step - Quick Exit must always work a single
+// tap away, on every screen, with nothing able to block or delay it.
 async function clickQuickExit(page: Page): Promise<void> {
   await page.locator(QUICK_EXIT_SELECTOR).first().click();
-  await page.getByRole("button", { name: /^exit$/i }).click();
 }
 
 test.describe("Panic paths vs. the beforeunload unsaved-changes guard", () => {
@@ -342,6 +343,16 @@ test.describe("Panic paths vs. the beforeunload unsaved-changes guard", () => {
     const dialogState = watchForBeforeUnloadDialog(page);
 
     await page.goto("/");
+    // Confirms this actually exercises MigrationScreen (its boot splash,
+    // held open by holdIndexedDbOpen above) rather than the main app's own
+    // Quick Exit - MIGRATION_DECISION_TIMEOUT_MS fails the boot gate open at
+    // ~3000ms, after which the main app mounts and renders one too, so a
+    // regression that stopped MigrationScreen from rendering Quick Exit
+    // could otherwise still pass this test via that later button.
+    await page
+      .getByRole("status")
+      .filter({ hasText: /Loading\.\.\./ })
+      .waitFor({ state: "visible", timeout: 2000 });
     await page.locator(QUICK_EXIT_SELECTOR).first().waitFor({
       state: "visible",
       timeout: 5000,

@@ -39,12 +39,16 @@ describe("MaintenancePage", () => {
     expect(screen.getByText("Scheduled maintenance")).toBeInTheDocument();
   });
 
-  it("performs the full panic redirect when Quick Exit is used", () => {
+  // Standing decision: Quick Exit must always work one tap away, with
+  // nothing (a confirmation dialog included) able to block or delay it.
+  it("performs the full panic redirect on a single tap, with no confirmation step", () => {
     renderMaintenancePage();
 
     fireEvent.click(screen.getByRole("button", { name: /quick exit/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^exit$/i }));
 
     expect(mockTriggerPanicRedirect).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole("button", { name: /^exit$/i }),
+    ).not.toBeInTheDocument();
   });
 });

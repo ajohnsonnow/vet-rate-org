@@ -64,11 +64,12 @@ describe("MigrationScreen", () => {
     ).toBeInTheDocument();
   });
 
-  it("still performs the full panic wipe when Quick Exit is used mid-migration", () => {
+  // Standing decision: Quick Exit must always work one tap away, with
+  // nothing (a confirmation dialog included) able to block or delay it.
+  it("still performs the full panic wipe on a single tap when Quick Exit is used mid-migration", () => {
     renderMigrationScreen({ isMigrating: true });
 
     fireEvent.click(screen.getByRole("button", { name: /quick exit/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^exit$/i }));
 
     expect(mockTriggerPanicRedirect).toHaveBeenCalledTimes(1);
   });
