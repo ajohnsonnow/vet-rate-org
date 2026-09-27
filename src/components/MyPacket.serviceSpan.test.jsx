@@ -24,9 +24,15 @@ vi.mock("../utils/smolVLMService", () => ({
   isSmolVLMSupported: () => false,
 }));
 
-import { DD214PeriodsSummary } from "./MyPacket.jsx";
+import { DD214PeriodsSummary, _saveProfileTab } from "./MyPacket.jsx";
+import {
+  upsertServicePeriod,
+  updateServicePeriod,
+  getServiceEntry,
+} from "../utils/veteranProfile.js";
 
 const t = (...keys) => keys.join(".");
+const PROFILE_KEY = "vet_rate_veteran_profile";
 
 describe("DD214PeriodsSummary - Service span calculated-date marker", () => {
   it("marks a calculated service span start date", () => {
@@ -81,5 +87,41 @@ describe("DD214PeriodsSummary - Service span calculated-date marker", () => {
     expect(
       screen.queryByText(/calculated from net service/),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("[D12-3] _saveProfileTab: a stale Save Profile payload cannot revert the mirror", () => {
+  it("excludes serviceStartDate/serviceStartDateDerived from the user-sourcing walk, so the chokepoint's projection wins", () => {
+    localStorage.clear();
+    localStorage.setItem(
+      PROFILE_KEY,
+      JSON.stringify({ fullName: "Jordan Sample" }),
+    );
+    const id = upsertServicePeriod(
+      {
+        serviceStartDate: "2002-03-05",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22-synthetic.pdf", confidence: 60 },
+    );
+    // A My Packet edit elsewhere corrects the period AFTER the Profile tab
+    // already captured its (now stale) local component state.
+    updateServicePeriod(id, { serviceStartDate: "2001-11-01" });
+
+    const staleVeteranProfile = {
+      fullName: "Jordan Sample",
+      serviceStartDate: "2002-03-05",
+      serviceStartDateDerived: true,
+    };
+    const success = _saveProfileTab(staleVeteranProfile);
+
+    expect(success).toBe(true);
+    expect(getServiceEntry()).toMatchObject({
+      date: "2001-11-01",
+      derived: false,
+      source: "veteran",
+    });
   });
 });

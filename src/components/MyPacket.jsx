@@ -1909,28 +1909,31 @@ function ContactInfoSection({ veteranProfile, setVeteranProfile, t }) {
 // period in veteranProfile.servicePeriods always has a real canonical id
 // (see ServicePeriodsSection's add handler), so every edit here is an
 // immediate updateServicePeriod call, not a batched "Save Profile" write.
-function _updateServicePeriodField(
+// ADR-007: a serviceStartDate edit now routes through updateServicePeriod's
+// own corrections layer (_applyStartCorrection) instead of this component
+// guessing at provenance - state is refreshed from getServicePeriods()
+// afterward so the displayed source/derived/correction fields are the
+// real, canonical result, not an optimistic local guess.
+export function _updateServicePeriodField(
   veteranProfile,
   setVeteranProfile,
   idx,
   field,
   value,
 ) {
-  // A veteran editing this period's own start date is supplying a real,
-  // remembered date - never the calculated NGB-22 guess the "(calculated
-  // from net service)" label (ServicePeriodFieldsA) keys off, so the
-  // sibling flag must not survive the edit.
-  const changes =
-    field === "serviceStartDate"
-      ? { [field]: value, serviceStartDateDerived: false }
-      : { [field]: value };
-  const newPeriods = [...veteranProfile.servicePeriods];
-  const updated = { ...newPeriods[idx], ...changes };
-  newPeriods[idx] = updated;
-  setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
-  if (updated.id) {
-    updateServicePeriod(updated.id, changes);
+  const changes = { [field]: value };
+  const period = veteranProfile.servicePeriods[idx];
+  if (period?.id) {
+    updateServicePeriod(period.id, changes);
+    setVeteranProfile({
+      ...veteranProfile,
+      servicePeriods: getServicePeriods(),
+    });
+    return;
   }
+  const newPeriods = [...veteranProfile.servicePeriods];
+  newPeriods[idx] = { ...period, ...changes };
+  setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
 }
 
 function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
@@ -1955,6 +1958,21 @@ function ServicePeriodHeader({ idx, veteranProfile, setVeteranProfile, t }) {
       </button>
     </div>
   );
+}
+
+// ADR-007: the "you corrected this" note names the document's own value
+// (never silently dropped, invariant I5) whenever a veteran-authored
+// correction exists - regardless of the CURRENT effective source, which
+// may already read as 'veteran' rather than showing "(calculated from net
+// service)" (that marker still comes only from serviceStartDateDerived).
+function _startDateCorrectionNote(period) {
+  const documentDate = period.startDateCorrection?.documentDate;
+  if (!documentDate) return null;
+  const calculatedSuffix =
+    period.startDateCorrection?.documentSource === "calculated"
+      ? " - calculated"
+      : "";
+  return `(you corrected this; your document shows ${documentDate}${calculatedSuffix})`;
 }
 
 function ServicePeriodFieldsA({ period, update, t }) {
@@ -2002,6 +2020,11 @@ function ServicePeriodFieldsA({ period, update, t }) {
           {period.serviceStartDateDerived && (
             <span className="ml-1 font-normal text-xs text-gray-600 dark:text-gray-400">
               (calculated from net service)
+            </span>
+          )}
+          {_startDateCorrectionNote(period) && (
+            <span className="ml-1 font-normal text-xs text-gray-600 dark:text-gray-400">
+              {_startDateCorrectionNote(period)}
             </span>
           )}
         </label>
@@ -2259,6 +2282,46 @@ function ProfileConflictsBanner({ veteranProfile, setVeteranProfile }) {
   );
 }
 
+// FIX-9: an explicit Save Profile click is the user confirming these field
+// values - mark every currently non-empty field "user"-sourced so a later
+// document import never silently overwrites it (autoPopulateProfile treats
+// profileFieldSources[field] === "user" as never-overwrite).
+// ADR-007 (D12-3): serviceStartDate/serviceStartDateDerived are EXCLUDED -
+// their provenance is owned entirely by the projection/chokepoint now, not
+// by this generic "confirm every field" walk; a stale local value for
+// either field can no longer be marked "user"-sourced and clobber a
+// correction made elsewhere (My Packet's own period editor, FormsHelper,
+// the VKB viewer) since saveVeteranProfile's chokepoint replaces both
+// fields with the real projection whenever a period backs the entry.
+const EXCLUDED_FROM_SOURCE_TRACKING = new Set([
+  "profileFieldSources",
+  "servicePeriods",
+  "lastUpdated",
+  "profileVersion",
+  "serviceStartDate",
+  "serviceStartDateDerived",
+]);
+
+// FIX-10 (SECURITY): route through saveVeteranProfile()'s whitelist +
+// sanitizeString + markAsModified() instead of a raw localStorage.setItem
+// that bypassed all of it.
+export function _saveProfileTab(veteranProfile) {
+  const fieldSources = { ...(veteranProfile.profileFieldSources || {}) };
+  Object.keys(veteranProfile).forEach((field) => {
+    if (
+      !EXCLUDED_FROM_SOURCE_TRACKING.has(field) &&
+      veteranProfile[field] !== undefined &&
+      veteranProfile[field] !== ""
+    ) {
+      fieldSources[field] = "user";
+    }
+  });
+  return saveVeteranProfile({
+    ...veteranProfile,
+    profileFieldSources: fieldSources,
+  });
+}
+
 function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
   return (
     <>
@@ -2289,45 +2352,15 @@ function ProfileTab({ veteranProfile, setVeteranProfile, t }) {
           <button
             type="button"
             onClick={() => {
-              // FIX-10 (SECURITY): route through saveVeteranProfile()'s
-              // whitelist + sanitizeString + markAsModified() instead of a
-              // raw localStorage.setItem that bypassed all of it. Branch
-              // the alert on the actual return value - it returns false on
-              // quota exhaustion, which the old code always claimed as
-              // success.
-              //
-              // FIX-9: an explicit Save Profile click is the user
-              // confirming these field values - mark every currently
-              // non-empty field "user"-sourced so a later document import
-              // never silently overwrites it (autoPopulateProfile treats
-              // profileFieldSources[field] === "user" as never-overwrite).
-              const EXCLUDED_FROM_SOURCE_TRACKING = new Set([
-                "profileFieldSources",
-                "servicePeriods",
-                "lastUpdated",
-                "profileVersion",
-              ]);
-              const fieldSources = {
-                ...(veteranProfile.profileFieldSources || {}),
-              };
-              Object.keys(veteranProfile).forEach((field) => {
-                if (
-                  !EXCLUDED_FROM_SOURCE_TRACKING.has(field) &&
-                  veteranProfile[field] !== undefined &&
-                  veteranProfile[field] !== ""
-                ) {
-                  fieldSources[field] = "user";
-                }
-              });
-
-              const success = saveVeteranProfile({
-                ...veteranProfile,
-                profileFieldSources: fieldSources,
-              });
+              // Branch the alert on the actual return value - it returns
+              // false on quota exhaustion, which the old code always
+              // claimed as success.
+              const success = _saveProfileTab(veteranProfile);
 
               if (success) {
                 // Re-read from storage so the UI reflects what was
-                // actually persisted post-sanitization, not the raw
+                // actually persisted post-sanitization (and post-projection
+                // - see saveVeteranProfile's chokepoint), not the raw
                 // pre-sanitized local state.
                 setVeteranProfile(getVeteranProfile());
                 alert(`✅ ${t("myPacketSection.profileSaved")}`);
@@ -2735,20 +2768,32 @@ function ServicePeriodFieldConflicts({ conflicts }) {
 }
 
 // C3: detail view - one card per period, most recent first.
+function DD214PeriodDetailCardTitle({ period }) {
+  return (
+    <h5 className="font-semibold text-gray-900 dark:text-gray-100">
+      {period.serviceStartDate || "?"}
+      {period.serviceStartDateDerived && (
+        <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+          {" "}
+          (calculated from net service)
+        </span>
+      )}
+      {_startDateCorrectionNote(period) && (
+        <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+          {" "}
+          {_startDateCorrectionNote(period)}
+        </span>
+      )}{" "}
+      - {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
+    </h5>
+  );
+}
+
 function DD214PeriodDetailCard({ period, t }) {
   return (
     <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between mb-2">
-        <h5 className="font-semibold text-gray-900 dark:text-gray-100">
-          {period.serviceStartDate || "?"}
-          {period.serviceStartDateDerived && (
-            <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
-              {" "}
-              (calculated from net service)
-            </span>
-          )}{" "}
-          - {period.serviceEndDate || (period.incomplete ? "?" : "Present")}
-        </h5>
+        <DD214PeriodDetailCardTitle period={period} />
         {period.incomplete && (
           <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
             Incomplete
@@ -5178,11 +5223,16 @@ function downloadAsPdf(statement, fileName, claim) {
 
 function _loadVeteranProfile(ctx) {
   const { setVeteranProfile } = ctx;
-  const profile = getVeteranProfile();
   // Q4: the Profile tab's manual editor reads/writes the SAME canonical
   // array as the Service tab (serviceHistory.servicePeriods[]), not the
   // legacy profile.servicePeriods field.
-  profile.servicePeriods = getServicePeriods();
+  // ADR-007: read BEFORE getVeteranProfile() - getServicePeriods() may run
+  // the one-time v3 migration, which re-projects the flat profile mirror;
+  // reading the profile first would capture it pre-projection and go stale
+  // the moment this function's own servicePeriods read triggers it.
+  const servicePeriods = getServicePeriods();
+  const profile = getVeteranProfile();
+  profile.servicePeriods = servicePeriods;
   setVeteranProfile(profile || {});
 }
 
@@ -7035,6 +7085,21 @@ function _useMyPacketEffects({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  // ADR-007: the Service/Profile tabs both display projections of
+  // servicePeriods[] - reload both stores on entry so a correction made in
+  // another tab, another editor (FormsHelper, the VKB viewer), or a
+  // re-import processed while this tab wasn't active is never shown stale.
+  useEffect(() => {
+    if (
+      tabsState.activeTab === "service" ||
+      tabsState.activeTab === "profile"
+    ) {
+      loaders.loadServiceHistory();
+      loaders.loadVeteranProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabsState.activeTab]);
 }
 
 const MyPacket = ({
