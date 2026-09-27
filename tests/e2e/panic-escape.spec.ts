@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test, expect, Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
+import { ESCAPE_WINDOW_MS } from "../../src/utils/safetyRedirect";
 
 /**
  * Coverage for safetyRedirect.js's triple-Escape panic key vs. an Escape
@@ -81,6 +82,59 @@ async function closeDialogWithEscape(page: Page): Promise<void> {
     .waitFor({ state: "hidden", timeout: 5000 });
 }
 
+// Five distinct dialogs opened/closed via their bare `open*` event (bypassing
+// the grid click), so each cycle is fast enough that consecutive
+// dialog-closing Escapes land well inside ESCAPE_WINDOW_MS of each other -
+// the actual scenario a veteran closing dialogs one after another produces,
+// and the one openFirstDialog/closeDialogWithEscape's slower grid-click cycle
+// does not reliably reproduce (see this file's module doc comment history).
+const TIGHT_DIALOG_EVENTS = [
+  "openAboutUs",
+  "openUserManual",
+  "openMusterCall",
+  "openClaimNavigator",
+  "openCAPSimulator",
+];
+
+async function openDialogByEvent(page: Page, eventName: string): Promise<void> {
+  await page.evaluate(
+    (evt) => window.dispatchEvent(new CustomEvent(evt)),
+    eventName,
+  );
+  await page
+    .locator(DIALOG_SELECTOR)
+    .first()
+    .waitFor({ state: "visible", timeout: 5000 });
+}
+
+/**
+ * Closes each of TIGHT_DIALOG_EVENTS via Escape and records the wall-clock
+ * gap between consecutive closes (in-page, via performance.now(), so the
+ * timestamps aren't skewed by CDP round-trip latency). Asserting those gaps
+ * are under ESCAPE_WINDOW_MS is what makes this test discriminate a capture-
+ * vs-bubble regression instead of passing vacuously because the cycle
+ * happened to be slow enough to reset the counter between closes.
+ */
+async function closeDialogsTightly(page: Page): Promise<number[]> {
+  const gaps: number[] = [];
+  let lastCloseAt: number | null = null;
+
+  for (const eventName of TIGHT_DIALOG_EVENTS) {
+    await openDialogByEvent(page, eventName);
+    await page.keyboard.press("Escape");
+    await page
+      .locator(DIALOG_SELECTOR)
+      .first()
+      .waitFor({ state: "hidden", timeout: 5000 });
+
+    const closedAt = await page.evaluate(() => performance.now());
+    if (lastCloseAt !== null) gaps.push(closedAt - lastCloseAt);
+    lastCloseAt = closedAt;
+  }
+
+  return gaps;
+}
+
 test.describe("Panic key (triple-Escape) vs. dialog-closing Escapes", () => {
   test("closing 4 dialogs in a row via Escape never trips the panic key", async ({
     page,
@@ -122,6 +176,68 @@ test.describe("Panic key (triple-Escape) vs. dialog-closing Escapes", () => {
 
     // Now 3 real, deliberate Escapes with nothing open still fire.
     for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  // Tight-timing regression guard: the "closing 4 dialogs in a row" test
+  // above opens each dialog via a real grid click, and that cycle (click,
+  // wait visible, Escape, wait hidden) routinely runs well past
+  // ESCAPE_WINDOW_MS, so the counter resets between dialog-closing Escapes
+  // even with a capture-vs-bubble regression present - it can pass
+  // vacuously. This closes 5 distinct dialogs via their bare open* event
+  // (no grid click) and asserts the actual gap between consecutive closes
+  // stayed under ESCAPE_WINDOW_MS, so the test can't pass by timing alone.
+  test("closing 5 different dialogs with tight Escape timing never trips the panic key", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+
+    const gaps = await closeDialogsTightly(page);
+
+    expect(gaps.every((gap) => gap < ESCAPE_WINDOW_MS)).toBe(true);
+    expect(await stillOnApp(page)).toBe(true);
+  });
+
+  // REGRESSION: HANDLED_ELSEWHERE_SELECTOR's aria-haspopup clause treated
+  // every open disclosure menu as "will be handled elsewhere", full stop.
+  // Header's Tools/Resources dropdowns have no Escape handler at all (close
+  // only on blur or a second trigger click), so with either open, every
+  // Escape was swallowed and the panic key stayed dead until the menu closed
+  // some other way. This opens the desktop Tools menu (unaffected by
+  // whether it also closes) and proves 3 Escapes still redirect.
+  test("triple-Escape still redirects while the desktop Tools menu is open", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await page.locator('[data-e2e-menu-trigger="tools"]').click();
+    await page
+      .locator('[data-e2e-menu-panel="tools"]')
+      .waitFor({ state: "visible", timeout: 5000 });
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  test("triple-Escape still redirects while the desktop Resources menu is open", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await page.locator('[data-e2e-menu-trigger="resources"]').click();
+    await page
+      .locator('[data-e2e-menu-panel="resources"]')
+      .waitFor({ state: "visible", timeout: 5000 });
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
     await page.waitForURL(/weather\.com/, { timeout: 5000 });
     expect(page.url()).toMatch(/weather\.com/);
   });
