@@ -33,13 +33,18 @@ export default function PublicationsLibraryModal() {
       size="2xl"
       labelledBy="publications-library-title"
       header={
-        // `sm:pr-28` reserves the same fixed Quick Exit gutter as
-        // ClaimNavigator.jsx's header: at `size="2xl"` (max-w-6xl), the
-        // panel is still viewport-width-bound (not cap-bound) at every
-        // required desktop width up to ~1568px, so its close-X sits close
-        // enough to the physical top-right corner to reach Quick Exit's
-        // fixed box there (measured at 1024x768/1280x720).
-        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 sm:pr-28">
+        // No Quick Exit gutter needed here, unlike ClaimNavigator.jsx: this
+        // panel goes through ResponsiveModal's shared shell, whose
+        // `sm:!mt-16` already sits this header well below Quick Exit's
+        // top-right box at every `sm:`+ width - re-verified live at
+        // 640-1920px (plus two short-landscape widths), 0 intersections.
+        // A `sm:pr-28` gutter was added here for a collision that doesn't
+        // reproduce; it also rested on an incorrect premise (`max-w-6xl` is
+        // 1152px, not the ~1568px the removed comment claimed), and it
+        // pushed the close-X 112px off the header's actual top-end corner
+        // at every `sm:`+ width - a decision (1) violation with no offsetting
+        // benefit.
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4">
           <HeaderCloseSlot
             close={
               <button
