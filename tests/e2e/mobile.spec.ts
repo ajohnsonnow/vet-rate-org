@@ -1175,7 +1175,19 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
 type Rect = { left: number; top: number; right: number; bottom: number };
 
 const DESKTOP_VIEWPORT = { name: "desktop", width: 1440, height: 900 };
-const BYPASS_TEST_VIEWPORTS = [...QUICK_EXIT_VIEWPORTS, DESKTOP_VIEWPORT];
+// 640x800/700x900: Header mobile menu (opened by click, not a bare open*
+// event, so the DOM-enumerated tool-grid sweep above never reaches it) has
+// the same sm/md gutter mismatch AboutUs/UserManual had - its own mobile
+// header stays mounted (md:hidden drawer) through 767px while its gutter
+// used to drop at sm: (640px), the same width Quick Exit moves to
+// top-right, so 640-767px had zero clearance (measured collision at both
+// widths, fixed in Header.jsx).
+const BYPASS_TEST_VIEWPORTS = [
+  ...QUICK_EXIT_VIEWPORTS,
+  { name: "sm-boundary", width: 640, height: 800 },
+  { name: "sm-boundary-tall", width: 700, height: 900 },
+  DESKTOP_VIEWPORT,
+];
 
 type BypassDialog = {
   label: string;
