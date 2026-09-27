@@ -5664,6 +5664,32 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
   setIsProcessingDD214(true);
   try {
     const parsed = await parseServiceRecord(dd214Text);
+    // ADR-007: upserts the canonical period BEFORE the legacy dd214Data
+    // save, same reasoning/order as musterCallProcessor.js's
+    // saveServiceRecordToProfile - the period (and saveServiceHistory's own
+    // preservation guard) already knows this document's date by the time
+    // the legacy write runs, not the other way around.
+    upsertServicePeriod(
+      {
+        serviceStartDate: _toIsoDate(parsed.serviceStartDate),
+        serviceEndDate: _toIsoDate(parsed.serviceEndDate),
+        serviceStartDateDerived: !!parsed.serviceStartDateDerived,
+        branch: parsed.branch || "",
+        rank: parsed.rank || "",
+        payGrade: parsed.payGrade || "",
+        mos: parsed.mos || "",
+        mosTitle: parsed.mosTitle || "",
+        characterOfService: parsed.dischargeType || "",
+        separationType: parsed.separationType || "",
+        separationAuthority: parsed.separationAuthority || "",
+        separationCode: parsed.spdCode || "",
+        reentryCode: parsed.reentryCode || "",
+        narrativeReason: parsed.narrativeReason || "",
+        foreignService: parsed.foreignService ?? null,
+        formType: parsed.formType || "DD214",
+      },
+      { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },
+    );
     saveDD214Data({
       fullName: parsed.veteranName,
       // FIX: this manual paste path used to omit fullNameSourceForm, so the
@@ -5681,26 +5707,6 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
       extractedText: dd214Text.substring(0, 5000),
       confidence: 0.4,
     });
-    upsertServicePeriod(
-      {
-        serviceStartDate: _toIsoDate(parsed.serviceStartDate),
-        serviceEndDate: _toIsoDate(parsed.serviceEndDate),
-        branch: parsed.branch || "",
-        rank: parsed.rank || "",
-        payGrade: parsed.payGrade || "",
-        mos: parsed.mos || "",
-        mosTitle: parsed.mosTitle || "",
-        characterOfService: parsed.dischargeType || "",
-        separationType: parsed.separationType || "",
-        separationAuthority: parsed.separationAuthority || "",
-        separationCode: parsed.spdCode || "",
-        reentryCode: parsed.reentryCode || "",
-        narrativeReason: parsed.narrativeReason || "",
-        foreignService: parsed.foreignService ?? null,
-        formType: parsed.formType || "DD214",
-      },
-      { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },
-    );
     (parsed.awards || []).forEach((item) => {
       const name = item.award?.name || item.matchedText;
       if (!name) return;
@@ -5718,6 +5724,33 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
   } finally {
     setIsProcessingDD214(false);
   }
+}
+
+// ADR-007: upserts the canonical period at the same trust tier (confidence
+// 0.4) as the sibling non-AI paste path, before the legacy dd214Data save.
+function _saveDD214AiTextResult(data, dd214Text) {
+  upsertServicePeriod(
+    {
+      serviceStartDate: _toIsoDate(data.entryDate),
+      serviceEndDate: _toIsoDate(data.separationDate),
+      serviceStartDateDerived: false,
+      branch: data.branch || "",
+      mos: data.mos || "",
+      mosTitle: data.mosTitle || "",
+      characterOfService: data.characterOfService || "",
+      separationType: data.separationType || "",
+    },
+    { sourceDocument: "Pasted DD214 Text", confidence: 0.4 },
+  );
+  saveDD214Data({
+    ...data,
+    // FIX: matches the same fix on the non-AI paste path above and the
+    // primary upload path (musterCallProcessor.js _buildDD214IdentityFields)
+    // -- only set when a name was actually found, so the Name card's source
+    // attribution doesn't go stale.
+    fullNameSourceForm: data.fullName ? "DD214" : null,
+    extractedText: dd214Text.substring(0, 5000), // Store first 5000 chars
+  });
 }
 
 async function _processDD214Text(dd214Text, aiStatus, ctx) {
@@ -5774,16 +5807,7 @@ Return ONLY the JSON object, no explanation.`,
       const contentStr =
         typeof content === "string" ? content : JSON.stringify(content);
       const data = _parseDD214AiResponse(contentStr);
-
-      saveDD214Data({
-        ...data,
-        // FIX: matches the same fix on the non-AI paste path above and the
-        // primary upload path (musterCallProcessor.js
-        // _buildDD214IdentityFields) -- only set when a name was actually
-        // found, so the Name card's source attribution doesn't go stale.
-        fullNameSourceForm: data.fullName ? "DD214" : null,
-        extractedText: dd214Text.substring(0, 5000), // Store first 5000 chars
-      });
+      _saveDD214AiTextResult(data, dd214Text);
       loadServiceHistory();
       setDD214Text("");
       setShowDD214Processor(false);
