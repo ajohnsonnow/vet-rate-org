@@ -1608,6 +1608,14 @@ function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
     if (value && !existing[field]) existing[field] = value;
   }
   if (authoritativeDates && complete) {
+    // Proven link to the top-level singular field (buildServiceHistoryCoreContext's
+    // "Service:" line, VKBViewer's own display): only true when THIS period's
+    // pre-correction start date is the exact one currently mirrored there -
+    // never guessed, and never applied to a different period that happens to
+    // also be derived.
+    const correctsTopLevelEntry =
+      vkb.serviceHistory.entryDateDerived &&
+      existing.serviceStartDate === vkb.serviceHistory.entryDate;
     existing.serviceStartDate = period.serviceStartDate;
     existing.serviceEndDate = period.serviceEndDate;
     // The VA code sheet's own dates are never a calculated guess - clear
@@ -1616,6 +1624,10 @@ function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
     existing.serviceStartDateDerived = false;
     existing.incomplete = false;
     existing.datesVerifiedBy = period.source;
+    if (correctsTopLevelEntry) {
+      vkb.serviceHistory.entryDate = period.serviceStartDate;
+      vkb.serviceHistory.entryDateDerived = false;
+    }
   }
 }
 
