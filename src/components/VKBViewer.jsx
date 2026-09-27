@@ -169,6 +169,48 @@ const ServiceHistoryCharacterField = ({ vkb, setVkb, editMode }) => (
   </div>
 );
 
+// D11-6: editing the top-level entry date only ever touched
+// vkb.serviceHistory.entryDate/entryDateDerived - the matching entry in
+// servicePeriods[] (what generateLLMContext's "Period 1:" line and
+// VKBViewer's own periods list actually read) kept its stale
+// serviceStartDateDerived: true, so the two disagreed after every edit.
+// Finds the period currently mirrored at the top level (its start date
+// equals the entry date BEFORE this edit) and carries the correction
+// through to it too - the reverse direction of
+// veteranKnowledgeBase.js's _applyAuthoritativeCorrection, which already
+// does the period-to-top-level sync for a code-sheet correction.
+function _applyEntryDateEdit(vkb, newValue) {
+  const periods = vkb.serviceHistory.servicePeriods;
+  const previousEntryDate = vkb.serviceHistory.entryDate;
+  const matchIndex = Array.isArray(periods)
+    ? periods.findIndex((p) => p.serviceStartDate === previousEntryDate)
+    : -1;
+  const nextPeriods =
+    matchIndex === -1
+      ? periods
+      : periods.map((p, i) =>
+          i === matchIndex
+            ? {
+                ...p,
+                serviceStartDate: newValue,
+                serviceStartDateDerived: false,
+              }
+            : p,
+        );
+  return {
+    ...vkb,
+    serviceHistory: {
+      ...vkb.serviceHistory,
+      entryDate: newValue,
+      // A veteran editing this field is supplying a real, remembered
+      // date - never the calculated NGB-22 guess the marker above and
+      // generateLLMContext's own check of this same flag key off.
+      entryDateDerived: false,
+      servicePeriods: nextPeriods,
+    },
+  };
+}
+
 const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
   <div>
     <label
@@ -186,19 +228,7 @@ const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
       id="vkbServiceHistoryEntryDate"
       type="date"
       value={vkb.serviceHistory.entryDate || ""}
-      onChange={(e) =>
-        setVkb({
-          ...vkb,
-          serviceHistory: {
-            ...vkb.serviceHistory,
-            entryDate: e.target.value,
-            // A veteran editing this field is supplying a real, remembered
-            // date - never the calculated NGB-22 guess the marker above and
-            // generateLLMContext's own check of this same flag key off.
-            entryDateDerived: false,
-          },
-        })
-      }
+      onChange={(e) => setVkb(_applyEntryDateEdit(vkb, e.target.value))}
       disabled={!editMode}
       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 disabled:opacity-50"
     />
@@ -310,9 +340,52 @@ const ServiceHistoryAwardsList = ({ awards }) => (
   </div>
 );
 
+// D11-6: previously never rendered at all - a veteran with more than one
+// enlistment period (or a single corrected period) had no way to see what
+// this same data looked like to generateLLMContext's "Period N:" lines.
+// Display-only (matches "service periods display" scope) - editing a
+// specific period lives in My Packet's Service tab, the canonical editor
+// for the profile-side servicePeriods[] array.
+const ServiceHistoryPeriodsList = ({ periods }) => {
+  if (!periods || periods.length === 0) return null;
+  return (
+    <div>
+      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+        Service Periods
+      </h4>
+      <div className="space-y-2">
+        {periods.map((period, index) => (
+          <div
+            key={`${period.serviceStartDate || ""}-${period.serviceEndDate || ""}-${index}`}
+            className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+          >
+            <div className="font-semibold">
+              {period.serviceStartDate || "?"}
+              {period.serviceStartDateDerived && (
+                <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+                  (calculated from net service)
+                </span>
+              )}{" "}
+              to {period.serviceEndDate || "?"}
+            </div>
+            {(period.branch || period.rank || period.mos) && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {[period.branch, period.rank, period.mos]
+                  .filter(Boolean)
+                  .join(" - ")}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const ServiceSection = ({ vkb, setVkb, editMode }) => (
   <div className="space-y-6">
     <ServiceHistoryFields vkb={vkb} setVkb={setVkb} editMode={editMode} />
+    <ServiceHistoryPeriodsList periods={vkb.serviceHistory.servicePeriods} />
     <ServiceHistoryMOSList mosList={vkb.serviceHistory.mos} />
     <ServiceHistoryAwardsList awards={vkb.serviceHistory.awards} />
   </div>

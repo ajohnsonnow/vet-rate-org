@@ -2217,8 +2217,11 @@ function buildServiceHistoryCoreContext(vkb) {
 function buildServicePeriodsAndSeparationContext(vkb) {
   let context = "";
 
-  // Service periods (multi-DD214)
-  if (vkb.serviceHistory.servicePeriods?.length > 1) {
+  // Service periods (multi-DD214). D11-6: gated on 2+ periods before, so a
+  // single-period veteran's "Service:" line (buildServiceHistoryCoreContext)
+  // and this "Period 1:" line could show different dates/markers with no
+  // way to tell they described the same period - always list what's there.
+  if (vkb.serviceHistory.servicePeriods?.length > 0) {
     context += "\nService Periods:\n";
     vkb.serviceHistory.servicePeriods.forEach((p, i) => {
       const note = p.serviceStartDateDerived
