@@ -795,7 +795,15 @@ function formatServiceHistorySection(serviceHistory) {
   let section = `\nSERVICE HISTORY:\n`;
   if (sh.branch) section += `- Branch: ${sh.branch}\n`;
   if (sh.mos) section += `- MOS/Rating: ${sh.mos}\n`;
-  if (sh.entryDate) section += `- Entry Date: ${sh.entryDate}\n`;
+  if (sh.entryDate) {
+    // D-C: an NGB-22's entry date can be CALCULATED (separation date minus
+    // net service) rather than printed on the form - an AI tool told this
+    // as a plain fact could place an in-service injury before "entry" and
+    // steer toward a pre-existing-condition/aggravation theory that isn't
+    // warranted. See mergeDD214ServiceDates's own use of this same flag.
+    const note = sh.entryDateDerived ? " (calculated from net service)" : "";
+    section += `- Entry Date: ${sh.entryDate}${note}\n`;
+  }
   if (sh.separationDate) section += `- Separation Date: ${sh.separationDate}\n`;
   if (sh.yearsService) section += `- Years of Service: ${sh.yearsService}\n`;
   if (sh.characterOfService)

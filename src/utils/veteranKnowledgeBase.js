@@ -1527,6 +1527,12 @@ function mergeDD214ServicePeriodTracking(vkb, dd214Data, options) {
     _upsertVkbServicePeriod(vkb, {
       ...shared,
       serviceStartDate: dd214Data.entryDate || null,
+      // D-C: carries the same calculated-vs-printed flag entryDate itself
+      // carries at vkb.serviceHistory.entryDateDerived (mergeDD214ServiceDates
+      // above), so buildServicePeriodsAndSeparationContext's "Period N:" line
+      // can mark it too - Box 18 additionalPeriods below are always real
+      // printed sub-period dates and never get this flag.
+      serviceStartDateDerived: !!dd214Data.entryDateDerived,
       serviceEndDate: dd214Data.separationDate || null,
       component: dd214Data.component || "",
       characterOfService: dd214Data.characterOfService || "",
@@ -1604,6 +1610,10 @@ function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
   if (authoritativeDates && complete) {
     existing.serviceStartDate = period.serviceStartDate;
     existing.serviceEndDate = period.serviceEndDate;
+    // The VA code sheet's own dates are never a calculated guess - clear
+    // any stale flag a prior NGB-22 merge left on this same period so the
+    // now-authoritative date doesn't keep reading as "calculated".
+    existing.serviceStartDateDerived = false;
     existing.incomplete = false;
     existing.datesVerifiedBy = period.source;
   }
@@ -2083,7 +2093,16 @@ function buildServiceHistoryCoreContext(vkb) {
     context += `Component: ${vkb.serviceHistory.component}\n`;
   }
   if (vkb.serviceHistory.entryDate && vkb.serviceHistory.separationDate) {
-    context += `Service: ${vkb.serviceHistory.entryDate} to ${vkb.serviceHistory.separationDate}`;
+    context += `Service: ${vkb.serviceHistory.entryDate}`;
+    // D-C: entryDateDerived means this entry date is arithmetic (separation
+    // minus net service), not a printed NGB-22 date - every consumer of
+    // generateLLMContext (AI tools, VKBViewer's own "Show LLM Context")
+    // must see the same qualifier _serviceEntryTimelineEvent already puts
+    // on the matching evidence-timeline entry below.
+    if (vkb.serviceHistory.entryDateDerived) {
+      context += " (calculated from net service)";
+    }
+    context += ` to ${vkb.serviceHistory.separationDate}`;
     if (vkb.serviceHistory.yearsOfService) {
       context += ` (${vkb.serviceHistory.yearsOfService} years)`;
     }
@@ -2112,7 +2131,10 @@ function buildServicePeriodsAndSeparationContext(vkb) {
   if (vkb.serviceHistory.servicePeriods?.length > 1) {
     context += "\nService Periods:\n";
     vkb.serviceHistory.servicePeriods.forEach((p, i) => {
-      context += `  Period ${i + 1}: ${p.serviceStartDate} to ${p.serviceEndDate} - ${p.branch || ""} ${p.rank || ""} (${p.mos || ""})\n`;
+      const note = p.serviceStartDateDerived
+        ? " (calculated from net service)"
+        : "";
+      context += `  Period ${i + 1}: ${p.serviceStartDate}${note} to ${p.serviceEndDate} - ${p.branch || ""} ${p.rank || ""} (${p.mos || ""})\n`;
     });
   }
 

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import {
   spotlight,
   untrustedSection,
@@ -9,7 +9,58 @@ import {
   CITATION_ENFORCEMENT_RULES,
   BASE_SYSTEM_PROMPT,
   ANTI_HALLUCINATION_SUFFIX,
+  buildSystemPrompt,
 } from "../../utils/aiSystemPrompts";
+
+describe("buildSystemPrompt - calculated NGB-22 entry date", () => {
+  afterEach(() => {
+    localStorage.removeItem("vet_rate_service_history");
+  });
+
+  it("marks a calculated entry date instead of stating it as a plain fact", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        dd214Data: {
+          branch: "Army National Guard",
+          entryDate: "2002-03-05",
+          entryDateDerived: true,
+          separationDate: "2010-06-15",
+        },
+      }),
+    );
+
+    const prompt = buildSystemPrompt({
+      includeAppContext: false,
+      includeRegulations: false,
+    });
+
+    expect(prompt).toContain(
+      "- Entry Date: 2002-03-05 (calculated from net service)",
+    );
+  });
+
+  it("states a genuinely printed entry date as a plain fact", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        dd214Data: {
+          branch: "Army",
+          entryDate: "2011-09-01",
+          separationDate: "2015-09-01",
+        },
+      }),
+    );
+
+    const prompt = buildSystemPrompt({
+      includeAppContext: false,
+      includeRegulations: false,
+    });
+
+    expect(prompt).toContain("- Entry Date: 2011-09-01\n");
+    expect(prompt).not.toContain("calculated from net service");
+  });
+});
 
 describe("spotlight", () => {
   it("wraps text in untrusted_content delimiters", () => {
