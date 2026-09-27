@@ -365,34 +365,6 @@ async function assertQuickExitClearOfDialog(
   await assertQuickExitOnTop(page, qeRect!);
 }
 
-/**
- * Known, pre-existing bug outside this task's file ownership (D3-era bypass
- * dialogs that carry their own copy of the Quick Exit gutter instead of
- * ResponsiveModal's shared one - see openIssues): AboutUs.jsx line ~1242
- * (`pt-20 sm:pt-4`) and UserManual.jsx line ~4799 (`pt-20 sm:pt-0`) both let
- * their close-X get taken by Quick Exit at 640x800, the one width/height
- * pair in this sweep where a live probe reproduces it - the other 7 required
- * viewports measure clean for both dialogs. Scoped to that one pair (not
- * every viewport) so a regression at any of the other 7 - including every
- * viewport >= 768px, where these two dialogs' real desktop layout runs -
- * still fails this suite instead of being silently skipped alongside a bug
- * that's actually confined to one narrow width band.
- *
- * A same-file fix (moving QuickExitButton.jsx's top-right corner swap from
- * `sm:` to `md:`, so these two dialogs' still-mobile header at 640-767
- * never shares a corner with Quick Exit) was tried and reverted: it clears
- * both of these but regresses ClaimNavigator, which keeps its title/icon
- * flush at the screen's top-left below `md:` on the assumption Quick Exit
- * is already on the right by `sm:` (measured collision at 640x800 - see
- * QuickExitButton.jsx). Fixing AboutUs/UserManual's own gutter needs those
- * files, which this task doesn't own; flagged here (not silently skipped)
- * so the gap stays visible instead of just living in this comment.
- */
-const KNOWN_OUT_OF_SCOPE = new Set([
-  "openAboutUs@640x800",
-  "openUserManual@640x800",
-]);
-
 const TRIGGERS = buildTriggers();
 
 for (const vp of WIDE_VIEWPORTS) {
@@ -405,19 +377,13 @@ for (const vp of WIDE_VIEWPORTS) {
 
     for (const trigger of TRIGGERS) {
       const title = `${trigger.label}: Quick Exit never overlaps the dialog's title/header controls`;
-      const run = async ({ page }: { page: Page }) => {
+      test(title, async ({ page }) => {
         // Default 30s test timeout can't cover openDialog's own 30s worst
         // case plus assertQuickExitClearOfDialog's follow-up retry budget.
         test.setTimeout(60000);
         await openDialog(page, trigger.dispatch);
         await assertQuickExitClearOfDialog(page, trigger.dispatch);
-      };
-
-      if (KNOWN_OUT_OF_SCOPE.has(`${trigger.label}@${vp.width}x${vp.height}`)) {
-        test.fixme(title, run);
-      } else {
-        test(title, run);
-      }
+      });
     }
   });
 }
