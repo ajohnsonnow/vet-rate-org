@@ -168,6 +168,34 @@ describe("buildDocumentFindings", () => {
   });
 });
 
+describe("buildDocumentFindings: calculated entry date", () => {
+  it("does not flag a printed entry date as calculated", () => {
+    const findings = buildDocumentFindings(dd214Doc);
+    const enteredService = findings.scalars.find(
+      (s) => s.label === "Entered service",
+    );
+    expect(enteredService.value).toBe("2010-06-01");
+    expect(enteredService.derived).toBe(false);
+  });
+
+  it("flags an NGB-22's calculated entry date (separation date minus net service)", () => {
+    const findings = buildDocumentFindings({
+      fileName: "ngb22.pdf",
+      extractedData: {
+        formType: "NGB22",
+        serviceStartDate: "2012-03-14",
+        serviceStartDateDerived: true,
+        separationDate: "2020-03-14",
+      },
+    });
+    const enteredService = findings.scalars.find(
+      (s) => s.label === "Entered service",
+    );
+    expect(enteredService.value).toBe("2012-03-14");
+    expect(enteredService.derived).toBe(true);
+  });
+});
+
 describe("buildAllDocumentFindings", () => {
   it("flattens every category and skips empty ones", () => {
     const all = buildAllDocumentFindings(documentsByCategory);

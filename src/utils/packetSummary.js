@@ -92,7 +92,16 @@ const looksLikeCondition = (label) => {
 const SCALAR_FINDINGS = [
   { label: "Branch", keys: ["branch", "branchOfService", "branch_of_service"] },
   { label: "Rank", keys: ["rank", "rankAtDischarge", "payGrade"] },
-  { label: "Entered service", keys: ["entryDate", "serviceStartDate"] },
+  // An NGB-22 that prints no entry date gets one calculated (separation date
+  // minus net service - musterCallProcessor.js's _extractNGB22PrimaryPeriodDates);
+  // derivedKeys carries the matching "was this one calculated" flag for
+  // whichever of keys[] actually supplied the value, so the packet can say so
+  // instead of presenting a guess as something read off the form.
+  {
+    label: "Entered service",
+    keys: ["entryDate", "serviceStartDate"],
+    derivedKeys: ["entryDateDerived", "serviceStartDateDerived"],
+  },
   { label: "Separated", keys: ["separationDate", "serviceEndDate"] },
   {
     label: "Character of service",
@@ -124,11 +133,29 @@ const CONDITION_KEYS = [
 
 const CLAIM_KEYS = ["potential_claims", "potentialClaims", "claims"];
 
+// Index of the first key in `keys` that actually supplied firstValue's
+// result, so a sibling derivedKeys[] entry can be read off the SAME field
+// that won - two alias keys can disagree on whether their own value was
+// calculated (e.g. one document's real serviceStartDate merged against
+// another's derived one), so matching by position instead of re-deriving
+// from the value alone keeps the flag tied to the field it describes.
+const firstMatchingKeyIndex = (source, keys) =>
+  keys.findIndex((key) => {
+    const raw = source?.[key];
+    if (typeof raw === "number" && Number.isFinite(raw)) return true;
+    return !!cleanString(raw);
+  });
+
 const collectScalarFindings = (data) =>
-  SCALAR_FINDINGS.map(({ label, keys }) => ({
-    label,
-    value: firstValue(data, keys),
-  })).filter((entry) => entry.value);
+  SCALAR_FINDINGS.map(({ label, keys, derivedKeys }) => {
+    const matchIndex = firstMatchingKeyIndex(data, keys);
+    const derivedKey = matchIndex === -1 ? null : derivedKeys?.[matchIndex];
+    return {
+      label,
+      value: firstValue(data, keys),
+      derived: derivedKey ? !!data?.[derivedKey] : false,
+    };
+  }).filter((entry) => entry.value);
 
 const collectListFindings = (data) =>
   LIST_FINDINGS.map(({ label, keys }) => {
