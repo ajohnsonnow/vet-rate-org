@@ -1647,33 +1647,38 @@ const calculateGenericRating = (answers, condition) => {
 
 function CAPIntroHeader({ onClose, onReportBug }) {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6 relative">
-      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="C&P Exam Simulator"
-          />
-        )}
-        <button
-          onClick={onClose}
-          className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-          aria-label="Close C&P Simulator"
-        >
-          <X className="h-5 w-5 sm:h-6 sm:w-6" />
-        </button>
+    <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 shrink-0" />
+          <h2
+            id="cap-simulator-title"
+            className="text-xl sm:text-3xl font-bold"
+          >
+            C&P Exam Simulator{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              BETA
+            </span>
+          </h2>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="C&P Exam Simulator"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
+            aria-label="Close C&P Simulator"
+          >
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
-        <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
-        <h2 id="cap-simulator-title" className="text-xl sm:text-3xl font-bold">
-          C&P Exam Simulator{" "}
-          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-            BETA
-          </span>
-        </h2>
-      </div>
-      <p className="text-emerald-100 text-sm sm:text-lg pr-8">
+      <p className="text-emerald-100 text-sm sm:text-lg">
         Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book Test
       </p>
     </div>

@@ -414,31 +414,33 @@ const resourceCardClassName = (resource) => {
 
 const VAResourcesHeader = ({ onClose, onReportBug, t }) => (
   <>
-    <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-6 relative flex-shrink-0">
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="VA Resources Hub"
-          />
-        )}
-        <button
-          onClick={onClose}
-          className="text-white hover:text-gray-200 transition-colors"
-          aria-label={t("vaResources.closeVaResources")}
-        >
-          <X className="h-6 w-6" />
-        </button>
-      </div>
-      <div className="flex items-center gap-3 mb-2">
-        <Globe className="h-8 w-8" />
-        <h2 id="va-resources-title" className="text-3xl font-bold">
-          {t("vaResources.title")}{" "}
-          <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-            {t("common.beta")}
-          </span>
-        </h2>
+    <div className="bg-gradient-to-r from-blue-800 to-blue-900 text-white p-6 flex-shrink-0">
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <Globe className="h-8 w-8 shrink-0" />
+          <h2 id="va-resources-title" className="text-3xl font-bold">
+            {t("vaResources.title")}{" "}
+            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+              {t("common.beta")}
+            </span>
+          </h2>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="VA Resources Hub"
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/10 hover:text-gray-200 transition-colors"
+            aria-label={t("vaResources.closeVaResources")}
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
       </div>
       <p className="text-blue-100 text-lg">{t("vaResources.subtitle")}</p>
     </div>
