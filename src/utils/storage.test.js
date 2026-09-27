@@ -78,3 +78,71 @@ describe("needsMigration", () => {
     expect(await needsMigration()).toBe(false);
   });
 });
+
+describe("migrateFromLocalStorage: shouldAbort (maintenance-mode kill switch)", () => {
+  it("runs to completion unchanged when no shouldAbort is given", async () => {
+    localStorage.setItem("vet_rate_veteran_profile", "profile-data");
+
+    const result = await migrateFromLocalStorage();
+
+    expect(result.success).toBe(true);
+    expect(result.aborted).toBe(false);
+    expect(result.migratedKeys).toContain("vet_rate_veteran_profile");
+  });
+
+  it("runs to completion unchanged when shouldAbort never returns true", async () => {
+    localStorage.setItem("vet_rate_veteran_profile", "profile-data");
+
+    const result = await migrateFromLocalStorage({ shouldAbort: () => false });
+
+    expect(result.success).toBe(true);
+    expect(result.aborted).toBe(false);
+    expect(store.get("vet_rate_migrated_to_indexeddb")).toBe("true");
+  });
+
+  it("stops before the completion flag once shouldAbort turns true mid-copy, leaving originals untouched", async () => {
+    localStorage.setItem("vet_rate_veteran_profile", "profile-data");
+    localStorage.setItem("vet_rate_saved_claims", "claims-data");
+
+    let calls = 0;
+    const shouldAbort = () => {
+      calls += 1;
+      return calls > 1;
+    };
+
+    const result = await migrateFromLocalStorage({ shouldAbort });
+
+    expect(result.aborted).toBe(true);
+    expect(result.success).toBe(false);
+    // Only ever a copy, never a delete - this held true before shouldAbort
+    // existed and must keep holding now.
+    expect(localStorage.getItem("vet_rate_veteran_profile")).toBe(
+      "profile-data",
+    );
+    expect(localStorage.getItem("vet_rate_saved_claims")).toBe("claims-data");
+    // The completion flag was never written, so needsMigration() still
+    // reports true afterward.
+    expect(store.get("vet_rate_migrated_to_indexeddb")).toBeUndefined();
+    expect(await needsMigration()).toBe(true);
+  });
+
+  it("a later boot (shouldAbort no longer tripped) completes an aborted migration", async () => {
+    localStorage.setItem("vet_rate_veteran_profile", "profile-data");
+    localStorage.setItem("vet_rate_saved_claims", "claims-data");
+
+    await migrateFromLocalStorage({ shouldAbort: () => true });
+    expect(await needsMigration()).toBe(true);
+
+    const secondResult = await migrateFromLocalStorage();
+
+    expect(secondResult.success).toBe(true);
+    expect(secondResult.aborted).toBe(false);
+    expect(secondResult.migratedKeys).toEqual(
+      expect.arrayContaining([
+        "vet_rate_veteran_profile",
+        "vet_rate_saved_claims",
+      ]),
+    );
+    expect(await needsMigration()).toBe(false);
+  });
+});
