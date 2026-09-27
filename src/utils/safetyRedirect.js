@@ -96,45 +96,60 @@ export const triggerSoftExit = () => {
   }
 };
 
-// Anything an Escape press should be considered "consumed by" rather than a
-// panic gesture: modal dialogs/alertdialogs (incl. the aria-modal-only kind,
-// which also covers the mobile nav drawer), and open disclosure menus/
-// popovers (Header's Tools/Resources dropdowns, AccessibilityMenu, SearchBar's
-// combobox — this repo's convention for those is `aria-haspopup` +
-// `aria-expanded="true"` together on the trigger, grepped across every such
-// component). Deliberately narrower than every `aria-expanded="true"` in the
-// app: a plain accordion/disclosure section (VersionDropdown's changelog,
-// SystemRequirementsNotice's ExpandSection) sets `aria-expanded` with no
-// `aria-haspopup` and must NOT swallow a genuine panic Escape just because a
-// veteran left an unrelated accordion open somewhere on the page.
-const HANDLED_ELSEWHERE_SELECTOR =
-  '[role="dialog"], [role="alertdialog"], [aria-modal="true"], ' +
-  '[aria-haspopup][aria-expanded="true"]';
+// Modal dialogs/alertdialogs (incl. the aria-modal-only kind, which also
+// covers the mobile nav drawer) always close synchronously in response to
+// their own Escape handler (useFocusTrap's onEscape or equivalent) - trust
+// that and never count an Escape that lands while one is open.
+const DIALOG_SELECTOR =
+  '[role="dialog"], [role="alertdialog"], [aria-modal="true"]';
+
+// Open disclosure menus/popovers (Header's Tools/Resources dropdowns,
+// AccessibilityMenu, SearchBar's combobox — this repo's convention is
+// `aria-haspopup` + `aria-expanded="true"` together on the trigger). Unlike
+// dialogs, NOT every one of these actually closes on Escape - Header's Tools
+// and Resources dropdowns only close on blur or a second trigger click, and
+// have no Escape handler at all. Treating "open" as automatically "will be
+// handled elsewhere" left the panic key permanently dead for as long as one
+// of those was open (see safetyRedirect.test.js). So this selector only gets
+// a deferred, verified exemption (see handleEscapeKey) rather than an
+// immediate one. Deliberately narrower than every `aria-expanded="true"` in
+// the app: a plain accordion/disclosure section (VersionDropdown's
+// changelog, SystemRequirementsNotice's ExpandSection) sets `aria-expanded`
+// with no `aria-haspopup` and must NOT suppress a genuine panic Escape just
+// because a veteran left an unrelated accordion open somewhere on the page.
+const MENU_POPOVER_SELECTOR = '[aria-haspopup][aria-expanded="true"]';
+
+// Snapshot of what was open at the moment an Escape was pressed, taken
+// during the capture phase (see snapshotEscapeContext) and read back during
+// the bubble-phase decision (see handleEscapeKey). Safe as shared module
+// state: capture always runs before bubble for the same dispatched event,
+// and the next Escape's capture call always overwrites these before its own
+// bubble call would read them, so there is no cross-event leakage.
+let pendingDialogOpen = false;
+let pendingMenuTrigger = null;
 
 /**
- * Handle keydown events for triple-escape detection.
- *
- * Registered on the CAPTURE phase (see initializePanicKey) rather than
- * bubble, and that's load-bearing: a dialog's own Escape handler (e.g.
- * useFocusTrap's onEscape) closes it via a React state update, and — verified
- * live against the real app, not assumed — the DOM has already been updated
- * to remove that dialog's `role="dialog"` node by the time a *bubble*-phase
- * listener on window would run, so a query for "is a dialog open right now"
- * at that point reads a false "no". Capture fires on window before the
- * event even reaches the dialog's own bubble-phase listener, so this always
- * observes the true pre-close DOM state instead of racing it.
+ * Capture-phase snapshot of "what's open right now". Registered on window's
+ * CAPTURE phase (see initializePanicKey), which is load-bearing: a dialog's
+ * own Escape handler (e.g. useFocusTrap's onEscape) closes it via a React
+ * state update, and — verified live against the real app, not assumed — the
+ * DOM has already been updated to remove that dialog's `role="dialog"` node
+ * by the time a *bubble*-phase listener on window would run, so a query for
+ * "is a dialog open right now" at that point reads a false "no". Capture
+ * fires on window before the event even reaches the dialog's own bubble-phase
+ * listener, so this always observes the true pre-close DOM state instead of
+ * racing it.
  * @param {KeyboardEvent} event
  */
-const handleEscapeKey = (event) => {
-  if (event.key !== "Escape") return;
+const snapshotEscapeContext = (event) => {
+  if (event.key !== "Escape" || event.repeat) return;
+  pendingDialogOpen = !!document.querySelector(DIALOG_SELECTOR);
+  pendingMenuTrigger = pendingDialogOpen
+    ? null
+    : document.querySelector(MENU_POPOVER_SELECTOR);
+};
 
-  // Don't count ESC presses already handled by something else (a dialog
-  // dismissing itself, a menu/popover closing, or any handler that called
-  // preventDefault). Only rapid ESC presses with nothing open count toward
-  // the panic threshold.
-  if (event.defaultPrevented) return;
-  if (document.querySelector(HANDLED_ELSEWHERE_SELECTOR)) return;
-
+const recordEscapePress = () => {
   escapeKeyCount++;
 
   // Clear existing timer
@@ -162,18 +177,65 @@ const handleEscapeKey = (event) => {
 };
 
 /**
+ * Bubble-phase decision of whether this Escape counts toward the panic
+ * threshold. Registered on window's BUBBLE phase (see initializePanicKey),
+ * which is load-bearing for two reasons a capture-phase decision can't
+ * satisfy: `event.defaultPrevented` and whether propagation was stopped are
+ * only meaningful once every other handler along the dispatch path (a
+ * dialog's own handler, a document capture-phase listener like Tooltip's,
+ * etc.) has had a chance to run - guaranteed by the time a bubble-phase
+ * listener on window runs, since window is the last stop in the bubble
+ * phase. Reading them during the capture-phase snapshot above would always
+ * see false/not-stopped, since capture runs before any of those handlers
+ * exist yet.
+ * @param {KeyboardEvent} event
+ */
+const handleEscapeKey = (event) => {
+  if (event.key !== "Escape" || event.repeat) return;
+
+  // Don't count ESC presses already handled by something else (a dialog
+  // dismissing itself, or any handler that called preventDefault or stopped
+  // propagation before this listener ran). Only rapid ESC presses with
+  // nothing open - or open behind a menu/popover that doesn't actually
+  // respond to Escape - count toward the panic threshold.
+  if (event.defaultPrevented) return;
+  if (pendingDialogOpen) return;
+
+  if (pendingMenuTrigger) {
+    const trigger = pendingMenuTrigger;
+    // Give the menu one tick to actually close in response to this Escape.
+    // If it's still expanded afterward, nothing consumed the keypress, so
+    // count it like any other unhandled Escape instead of swallowing it
+    // forever.
+    setTimeout(() => {
+      if (
+        trigger.isConnected &&
+        trigger.getAttribute("aria-expanded") === "true"
+      ) {
+        recordEscapePress();
+      }
+    }, 0);
+    return;
+  }
+
+  recordEscapePress();
+};
+
+/**
  * Initialize the panic key listener
  * Should be called once at app startup
  */
 export const initializePanicKey = () => {
   if (typeof window === "undefined") return;
 
-  // Remove any existing listener to prevent duplicates. Capture phase (see
-  // handleEscapeKey's doc comment for why).
-  window.removeEventListener("keydown", handleEscapeKey, true);
+  // Remove any existing listeners to prevent duplicates.
+  window.removeEventListener("keydown", snapshotEscapeContext, true);
+  window.removeEventListener("keydown", handleEscapeKey);
 
-  // Add listener
-  window.addEventListener("keydown", handleEscapeKey, true);
+  // Capture-phase snapshot, then bubble-phase decision (see each handler's
+  // doc comment for why they're split this way).
+  window.addEventListener("keydown", snapshotEscapeContext, true);
+  window.addEventListener("keydown", handleEscapeKey);
 
   // eslint-disable-next-line no-console
   console.log("🛡️ Panic key initialized (triple-tap Escape to exit)");
@@ -186,7 +248,8 @@ export const initializePanicKey = () => {
 export const cleanupPanicKey = () => {
   if (typeof window === "undefined") return;
 
-  window.removeEventListener("keydown", handleEscapeKey, true);
+  window.removeEventListener("keydown", snapshotEscapeContext, true);
+  window.removeEventListener("keydown", handleEscapeKey);
 
   if (escapeTimer) {
     clearTimeout(escapeTimer);
