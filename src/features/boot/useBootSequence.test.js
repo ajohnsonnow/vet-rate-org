@@ -245,6 +245,19 @@ describe("useBootSequence: maintenance-mode kill switch", () => {
     expect(mockMigrateFromLocalStorage).not.toHaveBeenCalled();
   });
 
+  it("flips isBooting false on the cached-ON path without ever waiting on the live maintenance fetch", async () => {
+    mockReadCachedMaintenanceMode.mockReturnValue(true);
+    // Never settles - if the cached-ON skip ever regressed to await this
+    // before setIsBooting(false), boot would hang forever instead of
+    // failing the waitFor below.
+    mockCheckMaintenanceMode.mockReturnValue(new Promise(() => {}));
+
+    const { result } = renderHook(() => useBootSequence());
+
+    await waitFor(() => expect(result.current.isBooting).toBe(false));
+    expect(mockNeedsMigration).not.toHaveBeenCalled();
+  });
+
   it("starts the migration normally when the cached flag is off (unchanged path)", async () => {
     mockReadCachedMaintenanceMode.mockReturnValue(false);
     mockNeedsMigration.mockResolvedValue(false);
@@ -253,7 +266,9 @@ describe("useBootSequence: maintenance-mode kill switch", () => {
 
     await waitFor(() => expect(mockNeedsMigration).toHaveBeenCalled());
   });
+});
 
+describe("useBootSequence: maintenance-mode kill switch (mid-copy abort)", () => {
   it("trips the kill switch passed to migrateFromLocalStorage as shouldAbort once the live check confirms maintenance mid-copy", async () => {
     mockNeedsMigration.mockResolvedValue(true);
     let capturedShouldAbort;
@@ -272,6 +287,56 @@ describe("useBootSequence: maintenance-mode kill switch", () => {
     );
 
     renderHook(() => useBootSequence());
+
+    await waitFor(() => expect(capturedShouldAbort).toBeTypeOf("function"));
+    expect(capturedShouldAbort()).toBe(false);
+
+    tripKillSwitch();
+
+    expect(capturedShouldAbort()).toBe(true);
+
+    migrationCopy.resolve({
+      success: false,
+      aborted: true,
+      migratedKeys: [],
+      failedKeys: [],
+    });
+  });
+
+  it("still threads the kill switch's shouldAbort through the migration copy that finishes in the background after a fail-open timeout", async () => {
+    let resolveNeedsMigration;
+    mockNeedsMigration.mockReturnValue(
+      new Promise((resolve) => {
+        resolveNeedsMigration = resolve;
+      }),
+    );
+    let capturedShouldAbort;
+    const migrationCopy = deferred();
+    mockMigrateFromLocalStorage.mockImplementation(({ shouldAbort } = {}) => {
+      capturedShouldAbort = shouldAbort;
+      return migrationCopy.promise;
+    });
+
+    let tripKillSwitch;
+    mockCheckMaintenanceMode.mockImplementation(
+      (setMaintenanceMode, setMaintenanceMessage, onMaintenanceOn) => {
+        tripKillSwitch = onMaintenanceOn;
+        return new Promise(() => {});
+      },
+    );
+
+    vi.useFakeTimers();
+    renderHook(() => useBootSequence());
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(MIGRATION_DECISION_TIMEOUT_MS + 50);
+    });
+    vi.useRealTimers();
+
+    // The decision only settles now, after the fail-open timeout has already
+    // mounted the tree - finishMigrationInBackground's path, not
+    // runStorageMigration's direct await.
+    resolveNeedsMigration(true);
 
     await waitFor(() => expect(capturedShouldAbort).toBeTypeOf("function"));
     expect(capturedShouldAbort()).toBe(false);
