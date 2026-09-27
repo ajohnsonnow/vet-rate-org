@@ -283,6 +283,7 @@ const ToolsMenuTrigger = ({ t, showToolsMenu, setShowToolsMenu }) => (
     aria-label={t("common", "tools")}
     aria-expanded={showToolsMenu}
     aria-haspopup="true"
+    data-e2e-menu-trigger="tools"
   >
     🛠️ <span className="hidden lg:inline">{t("common", "tools")}</span>
     <svg
@@ -1310,6 +1311,7 @@ const SupportResourcesSection = (props) => (
 
 const ToolsMenuPanel = (props) => (
   <div
+    data-e2e-menu-panel="tools"
     className={`fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-96 rounded-lg shadow-xl z-50 overflow-hidden max-h-[80vh] overflow-y-auto ${props.dropdownClasses.menu.replace("absolute mt-2", "")}`}
   >
     <div className="p-2">
@@ -1425,6 +1427,7 @@ const VeteranResourceLink = ({ resource }) => {
 
 const ResourcesMenuPanel = (props) => (
   <div
+    data-e2e-menu-panel="resources"
     className={`fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 mt-2 sm:w-72 rounded-lg shadow-xl z-50 overflow-hidden max-h-[70vh] sm:max-h-[80vh] overflow-y-auto ${props.dropdownClasses.menu.replace("absolute mt-2", "")}`}
   >
     <div className="p-2">
@@ -1461,6 +1464,7 @@ const ResourcesMenuTrigger = ({
     aria-label={t("header", "veteranResources")}
     aria-expanded={showResourcesMenu}
     aria-haspopup="true"
+    data-e2e-menu-trigger="resources"
   >
     🎖️ <span className="hidden lg:inline">{t("header", "resources")}</span>
     <svg
@@ -1529,6 +1533,7 @@ const MobileMenuButton = ({ showMobileMenu, setShowMobileMenu }) => (
     className="md:hidden p-2.5 rounded-lg bg-va-blue/10 dark:bg-gray-700 hover:bg-va-blue/20 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-va-gold flex-shrink-0"
     aria-label="Toggle menu"
     aria-expanded={showMobileMenu}
+    data-e2e-menu-trigger="mobile-drawer"
   >
     {showMobileMenu ? (
       <svg
@@ -2007,7 +2012,7 @@ const MobileMenuDrawer = (props) => {
       >
         <MobileMenuHeader setShowMobileMenu={props.setShowMobileMenu} />
 
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2" data-e2e-menu-panel="mobile-drawer">
           <MobileMenuCoreNav {...props} />
           <MobileMenuToolsSection {...props} />
           <MobileMenuResourcesSection {...props} />

@@ -1537,24 +1537,22 @@ for (const vp of BYPASS_TEST_VIEWPORTS) {
 //
 // Scope note (openIssues, corrected - a prior version of this note both
 // mis-listed two real grid launchers as header-only and missed most of the
-// actual gap): the header's own Tools/Resources dropdown menus and the
-// mobile hamburger drawer are a separate, pre-existing nav surface this
-// sweep does not open, and 23 dialogs are reachable only from there (or,
-// for My Packet, the bottom nav) - none of them covered here or by
-// `BYPASS_DIALOGS`/the CAP-deep-mode/DenialDecoder/ClaimNavigator blocks
-// below: AI Command Center, Appeals Lane Advisor, Ask the Regs, Backup
-// Manager, Body Map Selector, Cloud Sync Manager, Community Roadmap,
-// Consistency Engine, DD214 Analyzer, Feature Request, My Packet, Nexus
-// Builder, Nexus Quality Analyzer, Record Search, Remand Risk Checker, VA
-// Resources, VKB Timeline, VKB Viewer, Vision Simulator, What-If Sandbox.
-// (Global Command Search is covered via `BYPASS_DIALOGS`; Claim Navigator
-// and Denial Decoder get their own targeted N12/N13 coverage below, since
-// this branch specifically touches their placement. Claim Stress Test and
-// The Tribunal are NOT part of this gap - both are real grid launchers and
-// stay fully covered by this sweep.) Flagged rather than silently dropped,
-// same spirit as the allow-lists below - restoring full coverage (e.g. by
-// also driving the header/drawer surface) is a larger, cross-cutting change
-// outside this branch's scope.
+// actual gap; RESOLVED by N16, see MENU_SURFACES/enumerateHeaderMenuLaunchers
+// below - kept for history): the header's own Tools/Resources dropdown menus
+// and the mobile hamburger drawer were a separate nav surface this sweep did
+// not open, and 23 dialogs were reachable only from there (or, for My
+// Packet, the bottom nav - that surface specifically is still outside this
+// sweep, N16 only added the header menus/drawer): AI Command Center, Appeals
+// Lane Advisor, Ask the Regs, Backup Manager, Body Map Selector, Cloud Sync
+// Manager, Community Roadmap, Consistency Engine, DD214 Analyzer, Feature
+// Request, My Packet, Nexus Builder, Nexus Quality Analyzer, Record Search,
+// Remand Risk Checker, VA Resources, VKB Timeline, VKB Viewer, Vision
+// Simulator, What-If Sandbox. (Global Command Search is covered via
+// `BYPASS_DIALOGS`; Claim Navigator and Denial Decoder get their own
+// targeted N12/N13 coverage below, since that branch specifically touches
+// their placement. Claim Stress Test and The Tribunal were never part of
+// this gap - both are real grid launchers and were already fully covered by
+// this sweep.)
 // Kept as two named selectors (not just the union below) so the sweep can
 // assert each surface independently has launchers - a routine restyle of
 // HomeFeatureCards' wrapper classes would otherwise silently zero out the
@@ -1566,13 +1564,27 @@ const FOOTER_ONLY_SELECTOR = 'footer[role="contentinfo"] button';
 const TOOL_GRID_SELECTOR = `${TOOL_GRID_ONLY_SELECTOR}, ${FOOTER_ONLY_SELECTOR}`;
 
 /**
- * Launcher buttons `TOOL_GRID_SELECTOR` matches that legitimately open no
- * dialog. Currently empty: every button it matches today dispatches a real
- * `open*` event. Add a label here (with a comment explaining why) if a
+ * Launcher buttons - `TOOL_GRID_SELECTOR`'s grid/footer buttons, or (N16)
+ * any button inside a `MENU_SURFACES` panel - that legitimately open no
+ * dialog. Every button either sweep matches dispatches a real `open*` event
+ * (audited directly against Header.jsx's source for the menu/drawer panels
+ * specifically - every onClick in ToolsMenuPanel/ResourcesMenuPanel/the
+ * mobile drawer's four sections calls a real `onXClick` handler; the only
+ * buttonless items are `<a>` external links, which `MENU_SURFACES`' own
+ * `button`-only selectors never match in the first place) except the one
+ * listed below. Add a label here (with a comment explaining why) if a
  * future launcher legitimately doesn't - anything NOT listed here that opens
  * no dialog fails the sweep instead of silently passing.
  */
-const NO_DIALOG_LAUNCHERS = new Set<string>([]);
+const NO_DIALOG_LAUNCHERS = new Set<string>([
+  // Same VITE_VA_API_ENABLED-off-by-default gate as quick-exit-wide.spec.ts's
+  // own BUILD_GATED_EVENTS ("openVaIntegrationDemo" never registers a
+  // listener in the default build) - Header.jsx's own onClick prop for this
+  // button is conditionally `undefined` when the flag is off
+  // (`isVaApiEnabled() ? dispatch(...) : undefined` in AppHeader.jsx), so a
+  // real click here is a genuine no-op, not a defect.
+  "🔗 VA.gov IntegrationDEMOConnect to VA.gov APIs (OAuth 2.0)",
+]);
 
 /**
  * Dialogs (keyed by their own `aria-labelledby` id, not the launcher's own
@@ -1586,7 +1598,206 @@ const NO_CLOSE_BY_DESIGN = new Set<string>(["mission-protocol-title"]);
 const NON_SPLASH_DIALOG_SELECTOR =
   '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]';
 
+/**
+ * True once a *real* dialog (not the splash, not the header's own
+ * mobile-menu drawer - see `findProbeBundle`'s identical exclusion for why
+ * the drawer needs to be excluded here too) is in the DOM. N16's header-menu
+ * sweep uses this instead of the plain `someDialogOpen` above: that one
+ * only excludes the splash, and the drawer (`role="dialog"` itself, N16's
+ * own enumeration surface) can still be mid-unmount at the exact moment a
+ * freshly-opened tool dialog also exists.
+ */
+function someRealDialogOpen(page: Page, timeout: number): Promise<boolean> {
+  return page
+    .waitForFunction(
+      ({ sel }) =>
+        Array.from(document.querySelectorAll(sel)).some(
+          (d) =>
+            d.getAttribute("aria-labelledby") !== "splash-title" &&
+            d.getAttribute("aria-labelledby") !== "mobile-menu-title",
+        ),
+      { sel: NON_SPLASH_DIALOG_SELECTOR },
+      { timeout },
+    )
+    .then(() => true)
+    .catch(() => false);
+}
+
 type GridLauncher = { index: number; label: string };
+
+/**
+ * A launcher the sweep can process regardless of where it actually lives -
+ * a tool-grid/footer button (always present in the DOM, opened by index)
+ * or a header-menu/mobile-drawer item (opened by re-opening its menu fresh
+ * each time - see `openMenuLauncherUntilDialog`). `processSweepLauncher`
+ * only ever needs `label` and `open`; the two enumerators below build these
+ * from their own, differently-shaped launcher lists.
+ */
+type SweepLauncher = { label: string; open: (page: Page) => Promise<boolean> };
+
+type MenuSurface = {
+  key: string;
+  triggerSelector: string;
+  panelSelector: string;
+};
+
+/**
+ * N16: the header's own Tools/Resources dropdown menus and the mobile
+ * hamburger drawer, the 23-dialog gap the tool-grid enumeration above
+ * doesn't reach (see its own scope-note comment). Tools/Resources are
+ * desktop-only (`hidden md:flex`-style) and the hamburger is mobile-only -
+ * never more than one or two of these three are actually visible/openable
+ * at a given viewport; `openMenuSurface` skips a surface whose trigger
+ * isn't visible rather than failing on it.
+ */
+const MENU_SURFACES: MenuSurface[] = [
+  {
+    key: "tools",
+    triggerSelector: '[data-e2e-menu-trigger="tools"]',
+    panelSelector: '[data-e2e-menu-panel="tools"]',
+  },
+  {
+    key: "resources",
+    triggerSelector: '[data-e2e-menu-trigger="resources"]',
+    panelSelector: '[data-e2e-menu-panel="resources"]',
+  },
+  {
+    key: "mobile-drawer",
+    triggerSelector: '[data-e2e-menu-trigger="mobile-drawer"]',
+    panelSelector: '[data-e2e-menu-panel="mobile-drawer"]',
+  },
+];
+
+const MENU_ITEM_INDEX_ATTR = "data-e2e-menu-item-index";
+
+/**
+ * Opens `surface`'s panel and (re-)stamps every real `<button>` inside it
+ * with `MENU_ITEM_INDEX_ATTR`, in DOM order - same restamp-before-every-use
+ * pattern `stampToolGridButtons` uses, for a stronger reason here: opening
+ * any item inside also closes the menu (that item's own onClick side
+ * effect, matching every tool-grid launcher's own idempotent-open
+ * assumption elsewhere in this file), so a stale index from a previous open
+ * can never be reused across opens - this must run fresh immediately before
+ * every single click, not once upfront. Returns false (skip, not fail) when
+ * `surface`'s trigger isn't visible at all - the expected case for two of
+ * the three surfaces at any given viewport (see `MENU_SURFACES`).
+ */
+async function openMenuSurface(
+  page: Page,
+  surface: MenuSurface,
+): Promise<boolean> {
+  const trigger = page.locator(surface.triggerSelector);
+  if (!(await trigger.isVisible().catch(() => false))) return false;
+  await trigger.click({ timeout: 3000 }).catch(() => {});
+  const opened = await page
+    .locator(surface.panelSelector)
+    .first()
+    .waitFor({ state: "visible", timeout: 3000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!opened) return false;
+  await page.evaluate(
+    ({ sel, attr }) =>
+      Array.from(document.querySelectorAll(sel)).forEach((b, i) =>
+        b.setAttribute(attr, String(i)),
+      ),
+    { sel: `${surface.panelSelector} button`, attr: MENU_ITEM_INDEX_ATTR },
+  );
+  return true;
+}
+
+/**
+ * Same idempotent-retry shape as `openLauncherUntilDialog` below, adapted
+ * for a launcher that lives behind a menu that must be freshly (re-)opened
+ * before every attempt (see `openMenuSurface`) instead of always being
+ * present in the DOM already.
+ */
+async function openMenuLauncherUntilDialog(
+  page: Page,
+  surface: MenuSurface,
+  index: number,
+): Promise<boolean> {
+  const deadline = Date.now() + 45000;
+  while (Date.now() < deadline) {
+    if (!(await openMenuSurface(page, surface))) continue;
+    await page
+      .locator(`[${MENU_ITEM_INDEX_ATTR}="${index}"]`)
+      .click({ timeout: 3000 })
+      .catch(() => {});
+    if (await someRealDialogOpen(page, 1000)) return true;
+  }
+  return false;
+}
+
+/**
+ * Every real launcher `<button>` currently inside `surface`'s panel,
+ * labelled - closes the panel again afterward (its own trigger toggles it
+ * shut, same as a second click on any disclosure trigger) so the page
+ * returns to a clean baseline before the next surface is opened.
+ */
+/**
+ * Closes `surface`'s panel back up after enumeration, so the page returns
+ * to a clean baseline before the next surface (or the grid/menu processing
+ * loop) starts. NOT a second click on the trigger for the mobile drawer:
+ * its own backdrop is `fixed inset-0` (full-screen, above the header), so
+ * once open it physically covers the hamburger trigger sitting behind it -
+ * a click there either no-ops (actionability timeout, silently swallowed by
+ * the `.catch()` a naive version of this used to have) or lands on the
+ * backdrop instead and does something else entirely. Escape reliably closes
+ * it instead, via its own `useFocusTrap` `onEscape` wiring (confirmed
+ * working - unlike Tools/Resources, which have no such wiring and rely on
+ * the trigger click). Tools/Resources aren't covered by anything, so a
+ * second trigger click closes those two safely.
+ */
+async function closeMenuSurface(
+  page: Page,
+  surface: MenuSurface,
+): Promise<void> {
+  if (surface.key === "mobile-drawer") {
+    await page.keyboard.press("Escape").catch(() => {});
+  } else {
+    await page
+      .locator(surface.triggerSelector)
+      .click({ timeout: 3000 })
+      .catch(() => {});
+  }
+  await page
+    .locator(surface.panelSelector)
+    .first()
+    .waitFor({ state: "hidden", timeout: 3000 })
+    .catch(() => {});
+}
+
+async function enumerateMenuSurfaceLaunchers(
+  page: Page,
+  surface: MenuSurface,
+): Promise<SweepLauncher[]> {
+  if (!(await openMenuSurface(page, surface))) return [];
+  const labels = await page.evaluate(
+    (sel) =>
+      Array.from(document.querySelectorAll(sel)).map((b) =>
+        (b.textContent || b.getAttribute("aria-label") || "")
+          .trim()
+          .replace(/\s+/g, " "),
+      ),
+    `${surface.panelSelector} button`,
+  );
+  await closeMenuSurface(page, surface);
+  return labels.map((label, index) => ({
+    label,
+    open: (p: Page) => openMenuLauncherUntilDialog(p, surface, index),
+  }));
+}
+
+async function enumerateHeaderMenuLaunchers(
+  page: Page,
+): Promise<SweepLauncher[]> {
+  const all: SweepLauncher[] = [];
+  for (const surface of MENU_SURFACES) {
+    all.push(...(await enumerateMenuSurfaceLaunchers(page, surface)));
+  }
+  return all;
+}
 
 const GRID_INDEX_ATTR = "data-e2e-tool-grid-index";
 
@@ -1775,16 +1986,20 @@ async function openLauncherUntilDialog(
  * rather than returned/thrown - an unexpected exception here (a genuinely
  * broken action, not a geometry finding) becomes a violation entry plus a
  * recovery reload instead of crashing the whole sweep and losing every
- * launcher after it.
+ * launcher after it. Takes a `SweepLauncher` (just a label + an `open`
+ * function) rather than a `GridLauncher` directly - N16's header-menu
+ * launchers open via a completely different mechanism (re-opening a menu,
+ * not clicking an always-present indexed button), and this cycle is
+ * otherwise identical for either kind.
  */
-async function processGridLauncher(
+async function processSweepLauncher(
   page: Page,
-  launcher: GridLauncher,
+  launcher: SweepLauncher,
   onDialog: (outcome: GridDialogOutcome) => Promise<string[]>,
   violations: string[],
 ): Promise<void> {
   try {
-    if (!(await openLauncherUntilDialog(page, launcher.index))) {
+    if (!(await launcher.open(page))) {
       if (!NO_DIALOG_LAUNCHERS.has(launcher.label)) {
         violations.push(
           `"${launcher.label}" opened no dialog and is not on NO_DIALOG_LAUNCHERS`,
@@ -1823,13 +2038,20 @@ async function processGridLauncher(
   }
 }
 
+function toSweepLauncher(launcher: GridLauncher): SweepLauncher {
+  return {
+    label: launcher.label || `button #${launcher.index}`,
+    open: (page) => openLauncherUntilDialog(page, launcher.index),
+  };
+}
+
 async function runToolGridSweep(
   page: Page,
   onDialog: (outcome: GridDialogOutcome) => Promise<string[]>,
 ): Promise<string[]> {
   const violations: string[] = [];
-  const launchers = await enumerateToolGridButtons(page);
-  expect(launchers.length).toBeGreaterThan(0);
+  const gridLaunchers = await enumerateToolGridButtons(page);
+  expect(gridLaunchers.length).toBeGreaterThan(0);
   // The union assertion above passes vacuously if either surface alone goes
   // to zero - assert both independently so a grid-only (or footer-only)
   // regression fails loudly instead of quietly running a smaller sweep.
@@ -1840,9 +2062,24 @@ async function runToolGridSweep(
   await expect(page.locator(TOOL_GRID_ONLY_SELECTOR)).not.toHaveCount(0);
   await expect(page.locator(FOOTER_ONLY_SELECTOR)).not.toHaveCount(0);
 
+  // N16: the header's Tools/Resources menus + the mobile drawer, on top of
+  // the grid/footer above - closes the "23 dialogs reachable only from
+  // there" gap the scope-note above `enumerateToolGridButtons` used to
+  // document. Not asserted non-empty the same strict way as the grid/footer
+  // above: at some viewports none of the three surfaces in `MENU_SURFACES`
+  // are visible at all by design (e.g. a width where the responsive nav
+  // hides all of them), which is a legitimate outcome here, not a
+  // regression to fail on.
+  const menuLaunchers = await enumerateHeaderMenuLaunchers(page);
+
+  const launchers: SweepLauncher[] = [
+    ...gridLaunchers.map(toSweepLauncher),
+    ...menuLaunchers,
+  ];
+
   for (const launcher of launchers) {
-    await test.step(launcher.label || `button #${launcher.index}`, () =>
-      processGridLauncher(page, launcher, onDialog, violations),
+    await test.step(launcher.label, () =>
+      processSweepLauncher(page, launcher, onDialog, violations),
     );
   }
   return violations;
@@ -2046,13 +2283,21 @@ type ProbeBundle = {
  */
 function findProbeBundle(): ProbeBundle {
   const isRendered = (el: Element) => el.getClientRects().length > 0;
-  // `:not(...)` excludes the DisclaimerSplash the same way `someDialogOpen`/
-  // `noDialogOpen` already do (this dialog match can't reference their
-  // shared `NON_SPLASH_DIALOG_SELECTOR` constant - see the N14 comment
-  // above `ProbeBundle`, this function has no access to outer module scope
-  // once Playwright re-runs it in the browser).
+  // `:not(...)` excludes the DisclaimerSplash and (N16) the header's own
+  // mobile-menu drawer the same way `someDialogOpen`/`noDialogOpen` already
+  // do (this dialog match can't reference their shared
+  // `NON_SPLASH_DIALOG_SELECTOR` constant - see the N14 comment above
+  // `ProbeBundle`, this function has no access to outer module scope once
+  // Playwright re-runs it in the browser). The drawer is `role="dialog"`
+  // too (it traps focus/blocks the background like one) but N16's header-
+  // menu sweep opens it purely as an enumeration surface to reach the real
+  // dialogs behind it, not as something to probe itself - without this it
+  // can still be mid-close (its own onClick already fired, closing it, but
+  // React hasn't unmounted it yet) at the exact moment a freshly-opened
+  // tool dialog also exists, and `document.querySelector` would return
+  // whichever of the two happens to sit first in DOM order.
   const dialog = document.querySelector(
-    '[role="dialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]), [role="alertdialog"][aria-modal="true"]:not([aria-labelledby="splash-title"])',
+    '[role="dialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]):not([aria-labelledby="mobile-menu-title"]), [role="alertdialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]):not([aria-labelledby="mobile-menu-title"])',
   ) as HTMLElement | null;
   const labelledBy = dialog?.getAttribute("aria-labelledby");
   const titleEl = ((labelledBy && document.getElementById(labelledBy)) ||
@@ -2385,6 +2630,9 @@ const TABLET_LAPTOP_VIEWPORTS = [
 function closeCentreHitsQuickExit(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     // Splash-excluded the same way `findProbeBundle` is - see its comment.
+    // Deliberately does NOT also exclude the mobile-menu drawer the way
+    // `findProbeBundle` (N16) now does: BYPASS_DIALOGS' own "Header mobile
+    // menu" entry probes the drawer itself as the dialog under test here.
     const dialog = document.querySelector(
       '[role="dialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]), [role="alertdialog"][aria-modal="true"]:not([aria-labelledby="splash-title"])',
     );
