@@ -59,10 +59,17 @@ describe("CrisisModal keyboard panic exit", () => {
     expect(panicSpy).not.toHaveBeenCalled();
   });
 
-  it("triple-Escape still fires the panic redirect while the crisis modal is open and never closes", () => {
+  it("triple-Escape still fires the panic redirect while the crisis modal is open and never closes", async () => {
     renderCrisisModal();
 
-    for (let i = 0; i < ESCAPE_THRESHOLD; i++) pressEscapeOnFocusedElement();
+    for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+      pressEscapeOnFocusedElement();
+      // The dialog-open recount is deferred a tick (safetyRedirect.js) so it
+      // sees the true post-dispatch DOM state in every engine, not just the
+      // ones that happen to flush synchronously - real timers here, so a
+      // real tick has to pass before recordEscapePress runs.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
 
     expect(panicSpy).toHaveBeenCalledTimes(1);
     // Still non-dismissible - the modal itself never closed; it was the
