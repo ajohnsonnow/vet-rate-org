@@ -88,7 +88,12 @@ async function clearIndexedDbModern() {
 }
 
 async function clearIndexedDbFallback() {
-  // Fallback: delete known database names
+  // Fallback: delete known database names, for the rare browser without
+  // indexedDB.databases() (clearIndexedDbModern's path, used everywhere
+  // else). Audited against every indexedDB.open(name, ...) call site in
+  // src/ (2026-09-27) - this list must stay in sync with that grep, since
+  // unlike the modern path it cannot discover a database it doesn't already
+  // know the name of.
   // eslint-disable-next-line no-console
   console.log("  Using fallback database deletion...");
   const knownDbs = [
@@ -100,7 +105,16 @@ async function clearIndexedDbFallback() {
     "onnx-models",
     "webllm-cache",
     "vet-rate-cache",
-    "keyval-store",
+    "keyval-store", // idb-keyval default DB - src/utils/storage.js's primary packet/claims store
+    "VetRateVKB", // src/utils/veteranKnowledgeBase.js - the Veteran Knowledge Base
+    "VetRateAutoBackup", // src/utils/autoBackup.js
+    "VetRateBugSquasher", // src/utils/bugReportStorage.js
+    "vet-rate-dbq-cache", // src/utils/dbqOfflineStorage.js
+    "VetRate_DKB", // src/utils/dkbIndexedDB.js
+    "VetRateFeatureRequests", // src/utils/featureRequestStorage.js
+    "VetRateMyPacket", // src/utils/myPacketManager.js
+    "VetRate_CFileStream", // src/utils/pdfExtractor.js
+    "VetRate_UserDocVectors", // src/utils/userDocSemanticIndex.js
   ];
   const deletePromises = knownDbs.map(deleteDatabaseFallback);
   await Promise.all(deletePromises);

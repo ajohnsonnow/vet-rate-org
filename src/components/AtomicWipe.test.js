@@ -65,4 +65,40 @@ describe("clearIndexedDb", () => {
 
     await expect(clearIndexedDb()).resolves.toBeUndefined();
   });
+
+  // Panic-wipe audit (item 5): a browser without indexedDB.databases() falls
+  // back to a hand-kept name list, which can only delete a database it
+  // already knows the name of - unlike the modern path, it cannot discover
+  // one. VetRateVKB (the Veteran Knowledge Base) was missing from that list
+  // entirely; this proves every real src/ database name is now included.
+  it("the no-databases()-support fallback includes every real IndexedDB name in src/, including VetRateVKB", async () => {
+    const deletedNames = [];
+    window.indexedDB = {
+      // No `databases` property - forces clearIndexedDb() down the fallback
+      // path, same as a browser that predates that API.
+      deleteDatabase: vi.fn((dbName) => {
+        deletedNames.push(dbName);
+        const req = {};
+        setTimeout(() => req.onsuccess?.(), 0);
+        return req;
+      }),
+    };
+
+    await clearIndexedDb();
+
+    for (const expected of [
+      "keyval-store",
+      "VetRateVKB",
+      "VetRateAutoBackup",
+      "VetRateBugSquasher",
+      "vet-rate-dbq-cache",
+      "VetRate_DKB",
+      "VetRateFeatureRequests",
+      "VetRateMyPacket",
+      "VetRate_CFileStream",
+      "VetRate_UserDocVectors",
+    ]) {
+      expect(deletedNames).toContain(expected);
+    }
+  });
 });
