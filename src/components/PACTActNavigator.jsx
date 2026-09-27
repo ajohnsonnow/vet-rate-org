@@ -17,6 +17,7 @@
 
 import { useState } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { getMyRatings } from "../utils/veteranProfile";
@@ -1151,36 +1152,12 @@ function renderResults({ results, onReset }) {
 function renderModalHeader({ onClose, onReportBug }) {
   return (
     <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 to-orange-600 p-4 shadow-lg rounded-t-xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🔥</span>
-          <div>
-            <h2
-              id="pact-act-navigator-title"
-              className="text-xl font-bold text-white"
-            >
-              PACT Act Navigator{" "}
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                BETA
-              </span>
-            </h2>
-            <p className="text-sm text-amber-100">
-              Presumptive Condition Checker
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="PACT Act Navigator"
-            />
-          )}
+      <HeaderCloseSlot
+        close={
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
             aria-label="Close"
           >
             <svg
@@ -1197,8 +1174,33 @@ function renderModalHeader({ onClose, onReportBug }) {
               />
             </svg>
           </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="text-3xl">🔥</span>
+          <div className="min-w-0">
+            <h2
+              id="pact-act-navigator-title"
+              className="text-xl font-bold text-white"
+            >
+              PACT Act Navigator{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                BETA
+              </span>
+            </h2>
+            <p className="text-sm text-amber-100">
+              Presumptive Condition Checker
+            </p>
+          </div>
         </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="PACT Act Navigator"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }

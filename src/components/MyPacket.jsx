@@ -79,6 +79,7 @@ import {
 } from "../utils/veteranKnowledgeBase";
 import { buildPacketSummary } from "../utils/packetSummary";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { triggerBlobDownload } from "../utils/sanitize";
 import { useVaAuth } from "../hooks/useVaAuth";
 import {
@@ -490,8 +491,31 @@ function _confirmDataImport(mergeMode, data, ctx) {
 function MyPacketHeader({ onClose, onReportBug, packetContentRef, t }) {
   return (
     <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white px-4 sm:px-6 py-4 sm:py-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex-1 min-w-0">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6 sm:w-8 sm:h-8"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
+        <div className="min-w-0">
           <h2
             id="my-packet-title"
             className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2"
@@ -518,28 +542,8 @@ function MyPacketHeader({ onClose, onReportBug, packetContentRef, t }) {
               moduleName="My Claim Packet"
             />
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6 sm:w-8 sm:h-8"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
