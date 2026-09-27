@@ -1,5 +1,20 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import fs from "node:fs";
 import { generatePDF } from "./pdfGenerator";
+
+// jsPDF's Node build calls fs.writeFileSync(filename, ...) directly inside
+// doc.save() with no way to redirect the output path from the caller, so the
+// only way to stop this suite from littering real PDFs into the repo root
+// (988 had accumulated before this fix) is to intercept the write itself.
+let writeFileSyncSpy;
+
+beforeEach(() => {
+  writeFileSyncSpy = vi.spyOn(fs, "writeFileSync").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  writeFileSyncSpy.mockRestore();
+});
 
 function makeResult(overrides = {}) {
   return {
@@ -40,6 +55,8 @@ describe("generatePDF", () => {
     const output = generatePDF(result, "migraine");
     expect(output.success).toBe(true);
     expect(output.filename).toContain("VA-Disability-8100-");
+    expect(writeFileSyncSpy).toHaveBeenCalledTimes(1);
+    expect(writeFileSyncSpy.mock.calls[0][0]).toContain("VA-Disability-8100-");
   });
 
   it("handles a result with only ratedUnder (no ratings table)", () => {
