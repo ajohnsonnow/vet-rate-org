@@ -1535,17 +1535,35 @@ for (const vp of BYPASS_TEST_VIEWPORTS) {
 // resolved. Never measures the DisclaimerSplash (excluded the same way
 // `anyDialogProbe` already excludes it elsewhere in this file).
 //
-// Scope note (openIssues): the header's own Tools/Resources dropdown menus
-// and the mobile hamburger drawer are a separate, pre-existing nav surface
-// this sweep does not open. Most of what they list duplicates a home-grid or
-// footer launcher for the same dialog; a handful (Ask the Regs, Community
-// Roadmap, Feature Request, AI Command Center, Global Command Search, Cloud
-// Sync Manager, Backup Manager, Claim Stress Test, The Tribunal, Nexus
-// Builder, What-If Sandbox, Vision Simulator) are reachable only from there
-// and so are not covered by this sweep - flagged rather than silently
-// dropped, same spirit as the allow-lists below.
-const TOOL_GRID_SELECTOR =
-  '#main-content .mt-12.max-w-4xl.mx-auto button, footer[role="contentinfo"] button';
+// Scope note (openIssues, corrected - a prior version of this note both
+// mis-listed two real grid launchers as header-only and missed most of the
+// actual gap): the header's own Tools/Resources dropdown menus and the
+// mobile hamburger drawer are a separate, pre-existing nav surface this
+// sweep does not open, and 23 dialogs are reachable only from there (or,
+// for My Packet, the bottom nav) - none of them covered here or by
+// `BYPASS_DIALOGS`/the CAP-deep-mode/DenialDecoder/ClaimNavigator blocks
+// below: AI Command Center, Appeals Lane Advisor, Ask the Regs, Backup
+// Manager, Body Map Selector, Cloud Sync Manager, Community Roadmap,
+// Consistency Engine, DD214 Analyzer, Feature Request, My Packet, Nexus
+// Builder, Nexus Quality Analyzer, Record Search, Remand Risk Checker, VA
+// Resources, VKB Timeline, VKB Viewer, Vision Simulator, What-If Sandbox.
+// (Global Command Search is covered via `BYPASS_DIALOGS`; Claim Navigator
+// and Denial Decoder get their own targeted N12/N13 coverage below, since
+// this branch specifically touches their placement. Claim Stress Test and
+// The Tribunal are NOT part of this gap - both are real grid launchers and
+// stay fully covered by this sweep.) Flagged rather than silently dropped,
+// same spirit as the allow-lists below - restoring full coverage (e.g. by
+// also driving the header/drawer surface) is a larger, cross-cutting change
+// outside this branch's scope.
+// Kept as two named selectors (not just the union below) so the sweep can
+// assert each surface independently has launchers - a routine restyle of
+// HomeFeatureCards' wrapper classes would otherwise silently zero out the
+// 32 grid launchers while the 13 footer buttons alone keep the union
+// non-empty, and the whole grid's worth of coverage would drop with no
+// failure anywhere.
+const TOOL_GRID_ONLY_SELECTOR = "#main-content .mt-12.max-w-4xl.mx-auto button";
+const FOOTER_ONLY_SELECTOR = 'footer[role="contentinfo"] button';
+const TOOL_GRID_SELECTOR = `${TOOL_GRID_ONLY_SELECTOR}, ${FOOTER_ONLY_SELECTOR}`;
 
 /**
  * Launcher buttons `TOOL_GRID_SELECTOR` matches that legitimately open no
@@ -1659,16 +1677,21 @@ function someDialogOpen(page: Page, timeout: number): Promise<boolean> {
 /**
  * Closes whatever dialog is open so the next launcher starts clean, instead
  * of stacking dialogs (which would corrupt every probe after the first one
- * that fails to close). Escape first - every real dialog in this app wires
- * it via `useFocusTrap`'s `onEscape` or ResponsiveModal's `dismissable`
- * default - then a found close/exit button as a fallback. Returns false
- * (rather than throwing) if neither worked, so the caller can record a
- * violation and recover via a full reload instead of aborting the sweep.
+ * that fails to close). The dialog's own close/exit button first - Escape
+ * only as a last-resort fallback for a dialog with no such control (e.g.
+ * Mission Protocol's by-design consent gate, NO_CLOSE_BY_DESIGN). Escape as
+ * the *default* close path here would fire on nearly every one of the 45
+ * launchers in this sweep in quick succession and trip the app's own
+ * triple-Escape panic key (safetyRedirect.js's `handleEscapeKey`): its
+ * "don't count an ESC that dismissed a dialog" guard doesn't actually
+ * suppress these presses (a real, pre-existing app bug, filed separately -
+ * not fixed here since it's outside this sweep's file), so three dialogs
+ * closed this way redirects the whole test page to weather.com and clears
+ * sessionStorage. Returns false (rather than throwing) if neither worked, so
+ * the caller can record a violation and recover via a full reload instead of
+ * aborting the sweep.
  */
 async function closeOpenToolGridDialog(page: Page): Promise<boolean> {
-  await page.keyboard.press("Escape");
-  if (await noDialogOpen(page, 4000)) return true;
-
   const closeBtn = page
     .locator(
       '[role="dialog"][aria-modal="true"] button[aria-label*="close" i], ' +
@@ -1679,7 +1702,10 @@ async function closeOpenToolGridDialog(page: Page): Promise<boolean> {
     .first();
   if (await closeBtn.count()) {
     await closeBtn.click({ timeout: 4000 }).catch(() => {});
+    if (await noDialogOpen(page, 4000)) return true;
   }
+
+  await page.keyboard.press("Escape");
   return noDialogOpen(page, 4000);
 }
 
@@ -1688,14 +1714,28 @@ async function resetToolGridPage(page: Page): Promise<void> {
   await dismissDisclaimer(page);
 }
 
-async function seedReturningUserAndGoHome(page: Page): Promise<void> {
-  await page.addInitScript((appVersion) => {
-    localStorage.setItem("vet-rate-tos-accepted", "true");
-    localStorage.setItem("vet_rate_last_seen_version", appVersion);
-    localStorage.setItem("vetrate-tour-completed", "true");
-    localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
-    localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
-  }, APP_VERSION);
+/**
+ * `language` (LanguageContext.jsx's `vetrate_language` key) is optional and
+ * defaults to unset (English/LTR) - passing an RTL code (`ar`/`fa`/`prs`/
+ * `ps`) is what N13's RTL regression test below uses to actually exercise
+ * `closeTopRightViolations`' `isRtl` branch, which no committed test
+ * previously set up a document `dir="rtl"` to run.
+ */
+async function seedReturningUserAndGoHome(
+  page: Page,
+  language?: string,
+): Promise<void> {
+  await page.addInitScript(
+    ({ appVersion, language }) => {
+      localStorage.setItem("vet-rate-tos-accepted", "true");
+      localStorage.setItem("vet_rate_last_seen_version", appVersion);
+      localStorage.setItem("vetrate-tour-completed", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      if (language) localStorage.setItem("vetrate_language", language);
+    },
+    { appVersion: APP_VERSION, language },
+  );
   await resetToolGridPage(page);
 }
 
@@ -1790,6 +1830,15 @@ async function runToolGridSweep(
   const violations: string[] = [];
   const launchers = await enumerateToolGridButtons(page);
   expect(launchers.length).toBeGreaterThan(0);
+  // The union assertion above passes vacuously if either surface alone goes
+  // to zero - assert both independently so a grid-only (or footer-only)
+  // regression fails loudly instead of quietly running a smaller sweep.
+  // Auto-retrying locator assertions (not a one-shot `.count()` read): the
+  // home grid's own dev-mode React.StrictMode remount blip (documented on
+  // `enumerateToolGridButtons` above) can land the count at 0 for a moment
+  // even when the grid is fine, and a one-shot read caught exactly that.
+  await expect(page.locator(TOOL_GRID_ONLY_SELECTOR)).not.toHaveCount(0);
+  await expect(page.locator(FOOTER_ONLY_SELECTOR)).not.toHaveCount(0);
 
   for (const launcher of launchers) {
     await test.step(launcher.label || `button #${launcher.index}`, () =>
@@ -1812,10 +1861,20 @@ async function onScreenViolations(
 ): Promise<string[]> {
   const violations: string[] = [];
   const r = outcome.probe.closeRect;
-  if (r && (r.left < -0.5 || r.right > vpWidth + 0.5)) {
-    violations.push(
-      `"${outcome.label}": close control not fully on-screen (left=${r.left.toFixed(1)}, right=${r.right.toFixed(1)}, viewport=${vpWidth})`,
-    );
+  const noCloseByDesign =
+    !!outcome.probe.dialogId && NO_CLOSE_BY_DESIGN.has(outcome.probe.dialogId);
+  if (r) {
+    if (r.left < -0.5 || r.right > vpWidth + 0.5) {
+      violations.push(
+        `"${outcome.label}": close control not fully on-screen (left=${r.left.toFixed(1)}, right=${r.right.toFixed(1)}, viewport=${vpWidth})`,
+      );
+    }
+  } else if (!noCloseByDesign) {
+    // Without this, a dialog whose close-X regresses to "not found" at this
+    // viewport silently passes (nothing to compare against `vpWidth`) - the
+    // same "fail loudly, never vacuously" rule N13's `closeTopRightViolations`
+    // already applies.
+    violations.push(`"${outcome.label}": close control not found`);
   }
   const overflow = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
@@ -1853,6 +1912,12 @@ type HeaderProbe = {
   // Protocol's by-design missing close-X) instead of the launcher button's
   // own label, which rarely matches the dialog's title text.
   dialogId: string | null;
+  // False for a dialog with no discoverable `.modal-header`/
+  // `[data-modal-header]` landmark at all (e.g. User Manual's >=md two-pane
+  // layout) - `closeTopRightViolations` skips its "on the header's first
+  // line" check in that case, since there's no header line for the close-X
+  // to be on or off of; the end-edge alignment check still applies.
+  hasHeaderLandmark: boolean;
   // Document reading direction at probe time - `closeTopRightViolations`
   // measures against the header's right edge in `ltr`, left edge in `rtl`
   // (decision (1): the close-X sits at the header's top END corner, which
@@ -1910,6 +1975,7 @@ type HeaderProbe = {
 const EMPTY_HEADER_PROBE: HeaderProbe = {
   found: false,
   dialogId: null,
+  hasHeaderLandmark: false,
   direction: "ltr",
   titleClipped: false,
   titleTextRects: null,
@@ -1951,22 +2017,42 @@ type ProbeBundle = {
   headerRegion: HTMLElement;
   paddedSource: HTMLElement;
   dialogId: string | null;
+  // False when no `.modal-header`/`[data-modal-header]` landmark exists at
+  // all (e.g. User Manual's >=md two-pane layout, which by design has no
+  // unified top bar - see UserManualDesktopCloseButton) - `headerRegion` is
+  // then just the dialog panel itself, not a real header, so callers that
+  // assume "the header's first line" (N13's top-offset check) shouldn't
+  // apply that assumption to it.
+  hasHeaderLandmark: boolean;
 } | null;
 
 /**
- * Resolves the dialog, its title, the visible `.modal-header` region, and
- * (N13) the first visible, padded ancestor within it - a header's own real
- * breathing room (often px-6/p-6, a normal design choice) lives one or more
- * levels down `.modal-header`'s own (deliberately zero-padding) box, so this
- * walks zero-padding wrappers until one carries padding, skipping any
- * hidden sibling/child so a mobile-only header can't win by being first in
- * DOM order (N14). Capped at 5 levels so a genuinely paddingless header
- * can't walk into unrelated body content.
+ * Resolves the dialog, its title, the visible header region (`.modal-header`,
+ * `[data-modal-header]`, or a bare semantic `<header>`), and (N13) the first
+ * visible, padded ancestor within it - a header's own real breathing room
+ * (often px-6/p-6, a normal design choice) lives one or more levels down the
+ * header landmark's own (deliberately zero-padding) box, so this walks
+ * zero-padding wrappers until one carries padding, skipping any hidden
+ * sibling/child so a mobile-only header can't win by being first in DOM
+ * order (N14). Capped at 5 levels so a genuinely paddingless header can't
+ * walk into unrelated body content. `[data-modal-header]`/`<header>` cover
+ * real headers that (like AboutUs's/Claim Navigator's) don't go through
+ * ResponsiveModal's shared `.modal-header` wrapper - without a landmark at
+ * all, this walk has no signal to distinguish a real header from an
+ * unrelated zero-padding control (a dialog's own floating close button, for
+ * one - the walk landed there on User Manual's >=md layout, comparing its
+ * close-X rect against its own icon), so it doesn't run: `paddedSource`
+ * stays the dialog panel itself.
  */
 function findProbeBundle(): ProbeBundle {
   const isRendered = (el: Element) => el.getClientRects().length > 0;
+  // `:not(...)` excludes the DisclaimerSplash the same way `someDialogOpen`/
+  // `noDialogOpen` already do (this dialog match can't reference their
+  // shared `NON_SPLASH_DIALOG_SELECTOR` constant - see the N14 comment
+  // above `ProbeBundle`, this function has no access to outer module scope
+  // once Playwright re-runs it in the browser).
   const dialog = document.querySelector(
-    '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+    '[role="dialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]), [role="alertdialog"][aria-modal="true"]:not([aria-labelledby="splash-title"])',
   ) as HTMLElement | null;
   const labelledBy = dialog?.getAttribute("aria-labelledby");
   const titleEl = ((labelledBy && document.getElementById(labelledBy)) ||
@@ -1974,12 +2060,13 @@ function findProbeBundle(): ProbeBundle {
   if (!dialog || !titleEl) return null;
 
   const headerCandidates = Array.from(
-    dialog.querySelectorAll(".modal-header"),
+    dialog.querySelectorAll(".modal-header, [data-modal-header], header"),
   ) as HTMLElement[];
-  const headerRegion = headerCandidates.find(isRendered) || dialog;
+  const realHeader = headerCandidates.find(isRendered);
+  const headerRegion = realHeader || dialog;
 
   let paddedSource: HTMLElement = headerRegion;
-  for (let depth = 0; depth < 5; depth++) {
+  for (let depth = 0; realHeader && depth < 5; depth++) {
     if (
       isRendered(paddedSource) &&
       parseFloat(getComputedStyle(paddedSource).paddingRight || "0") > 0
@@ -1991,7 +2078,13 @@ function findProbeBundle(): ProbeBundle {
     if (!next) break;
     paddedSource = next;
   }
-  return { titleEl, headerRegion, paddedSource, dialogId: labelledBy || null };
+  return {
+    titleEl,
+    headerRegion,
+    paddedSource,
+    dialogId: labelledBy || null,
+    hasHeaderLandmark: !!realHeader,
+  };
 }
 
 /**
@@ -2006,14 +2099,9 @@ function findProbeBundle(): ProbeBundle {
  */
 async function extractProbeData(bundle: ProbeBundle) {
   if (!bundle) return null;
-  const { titleEl, headerRegion, paddedSource, dialogId } = bundle;
+  const { titleEl, headerRegion, paddedSource, dialogId, hasHeaderLandmark } =
+    bundle;
   const isRendered = (el: Element) => el.getClientRects().length > 0;
-  // Node.DOCUMENT_POSITION_FOLLOWING is itself a bitmask, so testing
-  // membership needs `&`, not `&&` - genuinely bitwise, not a logical-
-  // operator typo (sonarjs/bitwise-operators default assumption).
-  const nodePrecedes = (a: Node, b: Node) =>
-    // eslint-disable-next-line sonarjs/bitwise-operators
-    (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   const hasCloseCandidate = () =>
     Array.from(headerRegion.querySelectorAll("button")).some(
       (b) =>
@@ -2057,7 +2145,11 @@ async function extractProbeData(bundle: ProbeBundle) {
   const range = document.createRange();
   range.selectNodeContents(titleEl);
   if (nested.length > 0) {
-    range.setEndBefore(nested.reduce((a, b) => (nodePrecedes(a, b) ? a : b)));
+    // `querySelectorAll("*")`'s own document order ranks the nested parts - no `compareDocumentPosition` bitmask needed.
+    const order = Array.from(titleEl.querySelectorAll("*"));
+    range.setEndBefore(
+      nested.reduce((a, b) => (order.indexOf(a) < order.indexOf(b) ? a : b)),
+    );
   }
   const titleTextRects = Array.from(range.getClientRects())
     .filter((r) => r.width > 0 && r.height > 0)
@@ -2072,6 +2164,7 @@ async function extractProbeData(bundle: ProbeBundle) {
   const hcs = getComputedStyle(paddedSource);
   return {
     dialogId,
+    hasHeaderLandmark,
     direction: getComputedStyle(document.documentElement).direction as
       | "ltr"
       | "rtl",
@@ -2182,6 +2275,13 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
  * skipping) when the close control or the header region itself can't be
  * found, so a dialog with no discoverable close button is a reported
  * violation, not a vacuous pass.
+ *
+ * The top-offset half of this check assumes a real header row exists to be
+ * "on the first line" of - meaningless for a dialog with no header landmark
+ * at all (`hasHeaderLandmark: false`; `probe.headerRect` is then just the
+ * dialog panel's own box). Decision (1) is unambiguous about the *end-edge*
+ * ("rightmost control left of [a] reserved area") regardless, so that half
+ * still runs for every dialog.
  */
 function closeTopRightViolations(probe: HeaderProbe): string[] {
   if (!probe.headerRect) return ["header region not found"];
@@ -2198,11 +2298,13 @@ function closeTopRightViolations(probe: HeaderProbe): string[] {
       `close ${isRtl ? "left" : "right"} edge is ${endGap.toFixed(1)}px from the header's usable ${isRtl ? "left" : "right"} (end) edge (max 16)`,
     );
   }
-  const topOffset = probe.closeRect.top - probe.headerRect.top;
-  if (topOffset > 16) {
-    violations.push(
-      `close top sits ${topOffset.toFixed(1)}px below the header's top - not on its first line (max 16)`,
-    );
+  if (probe.hasHeaderLandmark) {
+    const topOffset = probe.closeRect.top - probe.headerRect.top;
+    if (topOffset > 16) {
+      violations.push(
+        `close top sits ${topOffset.toFixed(1)}px below the header's top - not on its first line (max 16)`,
+      );
+    }
   }
   return violations;
 }
@@ -2240,6 +2342,24 @@ for (const vp of HEADER_ALIGNMENT_VIEWPORTS) {
   });
 }
 
+// RTL regression coverage: `closeTopRightViolations`' `isRtl` branch
+// (decision (1): the close-X flips to the header's top-LEFT corner under
+// RTL) had no committed test that ever set `document.dir` to `rtl` to run
+// it. `ar` (LanguageContext.jsx) is one of four RTL languages the app
+// supports (ar/fa/prs/ps) - any one exercises the same `isRtl` branch.
+test.describe("Tool dialog close-X stays top-END in RTL (Arabic) @ 1440px", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("every launcher's close × stays pinned to the header's top-left corner", async ({
+    page,
+  }) => {
+    test.setTimeout(600_000);
+    await seedReturningUserAndGoHome(page, "ar");
+    const violations = await runToolGridSweep(page, closeTopRightCallback);
+    expect(violations).toEqual([]);
+  });
+});
+
 // N14: the widths between QUICK_EXIT_VIEWPORTS' widest phone (430px) and
 // HEADER_ALIGNMENT_VIEWPORTS' desktop check (1440px) - nothing in this file
 // ran a real browser at any width in between until now, which is exactly
@@ -2264,8 +2384,9 @@ const TABLET_LAPTOP_VIEWPORTS = [
  */
 function closeCentreHitsQuickExit(page: Page): Promise<boolean> {
   return page.evaluate(() => {
+    // Splash-excluded the same way `findProbeBundle` is - see its comment.
     const dialog = document.querySelector(
-      '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+      '[role="dialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]), [role="alertdialog"][aria-modal="true"]:not([aria-labelledby="splash-title"])',
     );
     if (!dialog) return false;
     const closeBtn = Array.from(
@@ -2288,9 +2409,11 @@ function closeCentreHitsQuickExit(page: Page): Promise<boolean> {
 
 /**
  * Mission Protocol has no header close-X at all by design (N13 openIssues,
- * NO_CLOSE_BY_DESIGN) - nothing for this hit-test to check. Publications
- * Library is no longer excluded here (fixed - see PublicationsLibraryModal's
- * `sm:pr-28` gutter).
+ * NO_CLOSE_BY_DESIGN) - nothing for this hit-test to check. Every other
+ * dialog must have one: `closeCentreHitsQuickExit` itself silently returns
+ * `false` (no violation) when it can't find a close button, which would let
+ * a regressed/missing close-X at these two widths pass vacuously instead of
+ * failing loudly, so this checks `probe.closeRect` first.
  */
 async function closeCentreCallback(
   page: Page,
@@ -2298,6 +2421,9 @@ async function closeCentreCallback(
 ): Promise<string[]> {
   if (outcome.probe.dialogId && NO_CLOSE_BY_DESIGN.has(outcome.probe.dialogId))
     return [];
+  if (!outcome.probe.closeRect) {
+    return [`"${outcome.label}": close control not found`];
+  }
   const hit = await closeCentreHitsQuickExit(page);
   return hit
     ? [`"${outcome.label}": close × centre point is covered by Quick Exit`]
@@ -2458,6 +2584,55 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
         page,
       }) => {
         await openCAPMode(page, mode.buttonText, mode.pickCondition);
+        const probe = await probeHeaderLayout(page);
+        expect(probe.found).toBe(true);
+        expect(headerCollisionViolations(probe)).toEqual([]);
+        expect(closeTopRightViolations(probe)).toEqual([]);
+      });
+    }
+  });
+}
+
+/**
+ * N13/N12 regression coverage for Claim Navigator and Denial Decoder -
+ * both dropped out of the DOM-enumerated tool-grid sweep above (openIssues,
+ * Scope note) because neither has a home-grid or footer launcher today.
+ * Claim Navigator is decision (1)'s own worked example (the full-bleed
+ * dialog whose header reserves Quick Exit's corner via `sm:pr-28`) and
+ * Denial Decoder is this branch's own restructured dialog
+ * (`openDenialDecoder` -> a real modal instead of an in-flow div), so both
+ * keep a targeted header-layout/top-right check instead of relying only on
+ * the looser Quick-Exit-clearance check `BYPASS_DIALOGS` already runs for
+ * Claim Navigator.
+ */
+const HEADER_REGRESSION_DIALOGS = [
+  { label: "Claim Navigator", event: "openClaimNavigator" },
+  { label: "Denial Decoder", event: "openDenialDecoder" },
+];
+
+for (const vp of HEADER_ALIGNMENT_VIEWPORTS) {
+  test.describe(`Claim Navigator / Denial Decoder header layout @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const dialog of HEADER_REGRESSION_DIALOGS) {
+      test(`${dialog.label}: title/badge/close don't collide, close stays top-right`, async ({
+        page,
+      }) => {
+        await triggerUntilDialogFound(
+          page,
+          dispatchTrigger(page, dialog.event),
+        );
         const probe = await probeHeaderLayout(page);
         expect(probe.found).toBe(true);
         expect(headerCollisionViolations(probe)).toEqual([]);
