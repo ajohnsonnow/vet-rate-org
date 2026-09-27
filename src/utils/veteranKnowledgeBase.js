@@ -22,6 +22,7 @@ import {
   isDesignatedCombatZone,
   parseExplicitDate,
 } from "./dateUtils";
+import { isSameCalendarDay, documentSources } from "./serviceEntryDate";
 import { ensureQuota } from "./storage";
 import {
   calendarDay,
@@ -405,7 +406,8 @@ export async function _migrateAndPersist(vkb) {
   if (
     vkb?.metadata?.migratedOffSchema &&
     vkb?.metadata?.migratedServicePeriodFieldNames &&
-    vkb?.metadata?.migratedEntryRankFieldName
+    vkb?.metadata?.migratedEntryRankFieldName &&
+    vkb?.metadata?.migratedServiceEntryProjection
   ) {
     return vkb;
   }
@@ -437,11 +439,11 @@ export const raceVkb = (promise, timeoutMs = 3000) =>
  */
 export const loadVKB = async () => {
   if (vkbCache) {
-    return structuredClone(vkbCache);
+    return _applyServiceEntryProjection(structuredClone(vkbCache));
   }
   const vkb = await loadVKBFromStorage();
   vkbCache = structuredClone(vkb);
-  return vkb;
+  return _applyServiceEntryProjection(vkb);
 };
 
 const loadVKBFromStorage = async () => {
@@ -528,6 +530,9 @@ const loadVKBFromStorage = async () => {
  */
 export const saveVKB = async (vkb) => {
   try {
+    // ADR-007: every VKB writer converges the service-entry projection at
+    // the one point they all funnel through.
+    await _applyServiceEntryProjection(vkb);
     vkb.metadata.lastUpdated = new Date().toISOString();
     vkb.metadata.completeness = calculateCompleteness(vkb);
 
@@ -1510,23 +1515,48 @@ function mergeDD214Addresses(vkb, dd214Data) {
 // an enlistment and dropped it from gap detection. An enlistment record is
 // the NGB-22 ITSELF (formType), or a calculated (entryDateDerived) entry
 // date - a real DD214 is neither, regardless of the veteran's component.
-function _serviceEntryTimelineEvent(dd214Data, vkb, options) {
-  const branch = dd214Data.branch || vkb.serviceHistory.branch || "Military";
-  const derived = !!dd214Data.entryDateDerived;
-  const isEnlistmentRecord = dd214Data.formType === "NGB22" || derived;
+/**
+ * Pure builder for a single "when did service begin" timeline event -
+ * shared by the DD214 merge path above (_serviceEntryTimelineEvent) and
+ * the ADR-007 VKB projection (projectServiceEntryIntoVkb), so both ever
+ * produce the exact same label/description for the same facts. "(calculated)"
+ * appears only when `derived`; a Code Sheet period (formType !== 'NGB22',
+ * never derived) always gets the "Entered active duty" label.
+ */
+export function buildServiceEntryTimelineEvent({
+  date,
+  branch,
+  component,
+  formType,
+  derived,
+  source,
+}) {
+  const resolvedBranch = branch || "Military";
+  const isEnlistmentRecord = formType === "NGB22" || !!derived;
   const eventType = isEnlistmentRecord ? "guard_enlistment" : "service_entry";
-  const componentSuffix = dd214Data.component ? ` ${dd214Data.component}` : "";
+  const componentSuffix = component ? ` ${component}` : "";
   const label = isEnlistmentRecord
-    ? `Enlisted (${branch}${componentSuffix})`
-    : `Entered active duty (${branch})`;
+    ? `Enlisted (${resolvedBranch}${componentSuffix})`
+    : `Entered active duty (${resolvedBranch})`;
   return {
-    date: dd214Data.entryDate,
+    date,
     eventType,
     description: derived ? `${label} (calculated)` : label,
-    derived,
-    source: options.fileName || "DD-214",
+    derived: !!derived,
+    source: source || "DD-214",
     significance: "service_milestone",
   };
+}
+
+function _serviceEntryTimelineEvent(dd214Data, vkb, options) {
+  return buildServiceEntryTimelineEvent({
+    date: dd214Data.entryDate,
+    branch: dd214Data.branch || vkb.serviceHistory.branch,
+    component: dd214Data.component,
+    formType: dd214Data.formType,
+    derived: dd214Data.entryDateDerived,
+    source: options.fileName,
+  });
 }
 
 // Exported for the same reason mergeDD214Deployments is (N2, final8 QA,
@@ -1803,6 +1833,248 @@ function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
   _fillVkbPeriodFields(existing, period);
   if (authoritativeDates && complete) {
     _applyAuthoritativeCorrection(vkb, existing, period);
+  }
+}
+
+// ============================================================================
+// ADR-007: the service-entry subset of the VKB is a PROJECTION of shape 1
+// (servicePeriods[]), applied at read time (loadVKB) and write time
+// (saveVKB) so storage itself converges. Pure - the caller persists.
+// ============================================================================
+
+function _hasServiceEntrySnapshot(vkb) {
+  return !!vkb.serviceHistory.preProjectionSnapshot;
+}
+
+function _takeServiceEntrySnapshot(vkb) {
+  if (_hasServiceEntrySnapshot(vkb)) return;
+  vkb.serviceHistory.preProjectionSnapshot = {
+    takenAt: new Date().toISOString(),
+    entryDate: vkb.serviceHistory.entryDate ?? null,
+    entryDateDerived: !!vkb.serviceHistory.entryDateDerived,
+    servicePeriods: structuredClone(vkb.serviceHistory.servicePeriods || []),
+    serviceEntryEvents: structuredClone(
+      vkb.evidenceTimeline.filter(_isServiceEntryEvent),
+    ),
+  };
+}
+
+function _isServiceEntryEvent(e) {
+  return e.eventType === "guard_enlistment" || e.eventType === "service_entry";
+}
+
+function _projectServiceEntryTopLevel(vkb, entry) {
+  if (!entry.date) return false;
+  const changed =
+    vkb.serviceHistory.entryDate !== entry.date ||
+    !!vkb.serviceHistory.entryDateDerived !== !!entry.derived ||
+    vkb.serviceHistory.entrySource !== entry.source ||
+    vkb.serviceHistory.entryPeriodId !== entry.periodId;
+  vkb.serviceHistory.entryDate = entry.date;
+  vkb.serviceHistory.entryDateDerived = entry.derived;
+  vkb.serviceHistory.entrySource = entry.source;
+  vkb.serviceHistory.entryPeriodId = entry.periodId;
+  if (vkb.serviceHistory.separationDate) {
+    const years =
+      (new Date(vkb.serviceHistory.separationDate) - new Date(entry.date)) /
+      (365.25 * 24 * 60 * 60 * 1000);
+    vkb.serviceHistory.yearsOfService = Number.parseFloat(years.toFixed(1));
+  }
+  return changed;
+}
+
+// A VKB row V links to canonical period C by the first rule that matches:
+// (a) an already-recorded canonicalPeriodId, (b) the ends are calendar-equal
+// and V's start matches C's effective start or its correction's documentDate,
+// (c) C is non-window, V's own source names a document C is proven to come
+// from, and the ends are calendar-equal. A row whose canonicalPeriodId names
+// a period that no longer exists is dropped, not kept as VKB-only.
+function _linkVkbRowToPeriod(v, canonicalPeriods) {
+  if (v.canonicalPeriodId) {
+    return {
+      period:
+        canonicalPeriods.find((c) => c.id === v.canonicalPeriodId) || null,
+      hadId: true,
+    };
+  }
+  const byDate = canonicalPeriods.find(
+    (c) =>
+      isSameCalendarDay(v.serviceEndDate, c.serviceEndDate) &&
+      (isSameCalendarDay(v.serviceStartDate, c.serviceStartDate) ||
+        isSameCalendarDay(
+          v.serviceStartDate,
+          c.startDateCorrection?.documentDate,
+        )),
+  );
+  if (byDate) return { period: byDate, hadId: false };
+  const bySource = canonicalPeriods.find(
+    (c) =>
+      c.periodScope !== "window" &&
+      !!v.source &&
+      documentSources(c).includes(v.source) &&
+      isSameCalendarDay(v.serviceEndDate, c.serviceEndDate),
+  );
+  return { period: bySource || null, hadId: false };
+}
+
+function _buildProjectedPeriodRow(period, linkedRows) {
+  const verified = linkedRows.find((v) => v.datesVerifiedBy);
+  return {
+    serviceStartDate: period.serviceStartDate,
+    serviceStartDateDerived: !!period.serviceStartDateDerived,
+    serviceStartDateSource: period.serviceStartDateSource ?? null,
+    serviceEndDate: period.serviceEndDate,
+    branch: period.branch,
+    component: period.component,
+    rank: period.rank,
+    payGrade: period.payGrade,
+    mos: period.mos,
+    mosTitle: period.mosTitle,
+    characterOfService: period.characterOfService,
+    source: period.sourceDocument || "Veteran entry",
+    incomplete: !!period.incomplete,
+    periodScope: period.periodScope ?? null,
+    canonicalPeriodId: period.id,
+    ...(verified ? { datesVerifiedBy: verified.datesVerifiedBy } : {}),
+  };
+}
+
+function _sortByStartAscending(rows) {
+  rows.sort((a, b) => {
+    if (!a.serviceStartDate) return 1;
+    if (!b.serviceStartDate) return -1;
+    return a.serviceStartDate.localeCompare(b.serviceStartDate);
+  });
+  return rows;
+}
+
+function _linkAndFoldPeriods(vkbRows, canonicalPeriods) {
+  const rowsByPeriodId = new Map();
+  const vkbOnly = [];
+  vkbRows.forEach((v) => {
+    const { period, hadId } = _linkVkbRowToPeriod(v, canonicalPeriods);
+    if (period) {
+      if (!rowsByPeriodId.has(period.id)) rowsByPeriodId.set(period.id, []);
+      rowsByPeriodId.get(period.id).push(v);
+    } else if (!hadId) {
+      const clone = { ...v };
+      if (clone.datesVerifiedBy && clone.serviceStartDateDerived) {
+        clone.serviceStartDateDerived = false;
+      }
+      vkbOnly.push(clone);
+    }
+    // hadId && !period: the linked canonical period no longer exists - drop.
+  });
+  const projected = canonicalPeriods
+    .filter((p) => p.serviceStartDate || p.serviceEndDate)
+    .map((p) => _buildProjectedPeriodRow(p, rowsByPeriodId.get(p.id) || []));
+  return _sortByStartAscending([...projected, ...vkbOnly]);
+}
+
+function _buildProjectedEntryEvents(canonicalPeriods) {
+  return canonicalPeriods
+    .filter((p) => p.periodScope !== "window" && p.serviceStartDate)
+    .map((p) => ({
+      ...buildServiceEntryTimelineEvent({
+        date: p.serviceStartDate,
+        branch: p.branch,
+        component: p.component,
+        formType: p.formType,
+        derived: p.serviceStartDateDerived,
+        source: p.sourceDocument || "Veteran entry",
+      }),
+      projected: true,
+      projectionKey: `entry:${p.id}`,
+    }));
+}
+
+function _projectTimeline(vkb, canonicalPeriods, knownSources) {
+  const projectedEvents = _buildProjectedEntryEvents(canonicalPeriods);
+  const survivors = vkb.evidenceTimeline.filter((e) => {
+    if (!_isServiceEntryEvent(e)) return true;
+    if (e.projected) return false;
+    return !(e.source && knownSources.has(e.source));
+  });
+  const deduped = survivors.filter((e) => {
+    if (!_isServiceEntryEvent(e)) return true;
+    return !projectedEvents.some(
+      (p) => p.eventType === e.eventType && isSameCalendarDay(p.date, e.date),
+    );
+  });
+  vkb.evidenceTimeline = [...deduped, ...projectedEvents];
+  vkb.evidenceTimeline.sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return new Date(a.date) - new Date(b.date);
+  });
+}
+
+/**
+ * ADR-007 §2.6: pure projection of the service-entry subset of shape 1
+ * (`view`, built by serviceEntryView.js's buildServiceEntryView) onto a VKB
+ * object - top-level entry fields, linked/folded period rows, and the
+ * evidence-timeline entry events. No-op on a metadata-only cache object
+ * (no serviceHistory/evidenceTimeline array at all).
+ * @returns {{changed: boolean}}
+ */
+export function projectServiceEntryIntoVkb(vkb, view) {
+  if (!vkb?.serviceHistory || !Array.isArray(vkb.evidenceTimeline)) {
+    return { changed: false };
+  }
+  vkb.serviceHistory.servicePeriods ??= [];
+
+  const willChange =
+    !!view.entry.date &&
+    (vkb.serviceHistory.entryDate !== view.entry.date ||
+      !!vkb.serviceHistory.entryDateDerived !== !!view.entry.derived ||
+      vkb.serviceHistory.entrySource !== view.entry.source);
+  if (willChange) _takeServiceEntrySnapshot(vkb);
+
+  const topChanged = _projectServiceEntryTopLevel(vkb, view.entry);
+  vkb.serviceHistory.servicePeriods = _linkAndFoldPeriods(
+    vkb.serviceHistory.servicePeriods,
+    view.periods,
+  );
+  _projectTimeline(vkb, view.periods, view.knownSources);
+
+  return { changed: topChanged || willChange };
+}
+
+let _serviceEntryViewModulePromise = null;
+function _loadServiceEntryViewModule() {
+  _serviceEntryViewModulePromise ??= import("./serviceEntryView");
+  return _serviceEntryViewModulePromise;
+}
+
+let _projectionErrorLogged = false;
+
+/**
+ * ADR-007 §8.4: runs the one-time legacy adoption (guarded by
+ * metadata.migratedServiceEntryProjection) then the projection itself.
+ * Fails open - a projection error never blocks a VKB read/write, it just
+ * leaves the VKB unprojected for this one call.
+ */
+export async function _applyServiceEntryProjection(vkb) {
+  try {
+    const view = await _loadServiceEntryViewModule();
+    vkb.metadata = vkb.metadata || {};
+    if (!vkb.metadata.migratedServiceEntryProjection) {
+      view.adoptLegacyVkbEntryEdits({
+        entryDate: vkb.serviceHistory?.entryDate ?? null,
+        entryDateDerived: !!vkb.serviceHistory?.entryDateDerived,
+        servicePeriods: vkb.serviceHistory?.servicePeriods ?? [],
+        source: vkb.serviceHistory?.source ?? null,
+      });
+      vkb.metadata.migratedServiceEntryProjection = true;
+    }
+    projectServiceEntryIntoVkb(vkb, view.buildServiceEntryView());
+    return vkb;
+  } catch (error) {
+    if (!_projectionErrorLogged) {
+      _projectionErrorLogged = true;
+      console.error("Service entry projection failed:", error);
+    }
+    return vkb;
   }
 }
 
