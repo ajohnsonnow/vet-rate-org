@@ -283,3 +283,45 @@ test.describe("Boot migration does not close an open dialog or lose data", () =>
     watcher.detach();
   });
 });
+
+// The exact key src/utils/maintenanceMode.js caches the last-known
+// maintenance flag under - see ADR-004.
+const MAINTENANCE_MODE_CACHE_KEY = "vet_rate_maintenance_mode_cached";
+
+test.describe("Maintenance-mode kill switch", () => {
+  test("a cached maintenance flag skips the migration entirely, without the boot gate ever waiting on the network to confirm it", async ({
+    page,
+  }) => {
+    test.setTimeout(20_000);
+    const watcher = attachBootWatcher(page);
+    await seedPreMigrationKeys(page);
+    await page.addInitScript(
+      (key) => localStorage.setItem(key, "true"),
+      MAINTENANCE_MODE_CACHE_KEY,
+    );
+
+    // Held open for the rest of the test: the cached flag alone must be
+    // enough to skip starting a migration, with zero dependency on this
+    // live check ever resolving.
+    await page.route("**/version.json*", () => {});
+
+    await page.goto("/");
+    // dismissDisclaimer waits for #main-content - part of the interactive
+    // tree isBooting gates - so this only returns once boot has completed,
+    // proving it did not hang waiting on the held route above.
+    await dismissDisclaimer(page);
+
+    expect(watcher.state.copyRan).toBe(false);
+    expect(watcher.state.alreadyDone).toBe(false);
+    watcher.detach();
+
+    // The seeded pre-migration keys are still there, untouched - nothing
+    // ran, successfully or otherwise.
+    expect(
+      await page.evaluate(
+        (k) => localStorage.getItem(k),
+        "vet-rate-tos-accepted",
+      ),
+    ).toBe("true");
+  });
+});
