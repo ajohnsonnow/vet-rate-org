@@ -11,7 +11,7 @@ const Pathfinder = lazy(() => import("../../components/Pathfinder"));
 function PathfinderModalHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-teal-600 to-emerald-600 p-4 shadow-lg">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-3xl">🧭</span>
           <div className="min-w-0">

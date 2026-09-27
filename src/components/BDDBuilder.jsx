@@ -325,14 +325,11 @@ function useBDDBuilderState() {
 
 function BDDBuilderTitleRow({ onClose, onReportBug }) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
         <span className="text-3xl">🎖️</span>
         <div className="min-w-0">
-          <h2
-            id="bdd-builder-title"
-            className="text-xl font-bold text-white flex items-center gap-2"
-          >
+          <h2 id="bdd-builder-title" className="text-xl font-bold text-white">
             BDD Builder{" "}
             <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
               NEW

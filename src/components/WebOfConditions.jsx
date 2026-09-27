@@ -1066,7 +1066,7 @@ const WebOfConditionsHeader = ({ onClose, onReportBug }) => (
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
     <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
 
-    <div className="relative flex items-start justify-between gap-3">
+    <div className="relative flex flex-wrap items-start justify-between gap-3">
       <div className="flex min-w-0 items-center gap-4">
         <div className="w-14 h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center shrink-0">
           <span className="text-3xl">🕸️</span>

@@ -419,7 +419,7 @@ function performRemoveEvent({
 function TimelineModalHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-slate-600 to-gray-700 p-4 shadow-lg">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="text-3xl">🧵</span>
           <div className="min-w-0">
