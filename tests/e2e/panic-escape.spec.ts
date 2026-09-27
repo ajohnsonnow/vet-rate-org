@@ -437,3 +437,129 @@ test.describe("Triple-Escape vs. the non-dismissible Crisis Modal", () => {
     expect(page.url()).toMatch(/weather\.com/);
   });
 });
+
+/**
+ * VKBViewer and TheTribunal both activate their focus trap while still
+ * loading, rendering a bare dialog shell with nothing focusable - so the
+ * dialog's own Escape handler (bound to the panel node, relying on
+ * bubbling) never saw a keydown fired at focus sitting outside it, and
+ * Escape could never close either dialog for as long as it stayed open
+ * (useFocusTrap.js). Each non-closing Escape counted like any other
+ * unhandled one, so three quick Escapes aimed at closing the dialog fired
+ * the panic redirect instead. Waiting for each dialog's real, post-load
+ * content before pressing Escape is what actually exercises this - the bare
+ * shell alone would close (or fail to) too fast to reproduce the dead zone
+ * either way.
+ */
+test.describe("Triple-Escape vs. dialogs that load empty (VKB viewer / The Tribunal dead zone)", () => {
+  test("an Escape actually closes the VKB viewer once its content has loaded, and does not misfire the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+
+    await openDialogByEvent(page, "openVKBViewer");
+    await page
+      .getByRole("button", { name: /clear all data/i })
+      .waitFor({ state: "visible", timeout: 5000 });
+
+    await closeDialogWithEscape(page);
+
+    expect(await stillOnApp(page)).toBe(true);
+  });
+
+  test("an Escape actually closes The Tribunal once its content has loaded, and does not misfire the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+
+    await openDialogByEvent(page, "openTheTribunal");
+    await page
+      .locator("#the-tribunal-title")
+      .waitFor({ state: "visible", timeout: 5000 });
+
+    await closeDialogWithEscape(page);
+
+    expect(await stillOnApp(page)).toBe(true);
+  });
+});
+
+/**
+ * event.repeat filtering already existed at both the capture snapshot and
+ * the bubble decision before this branch (see safetyRedirect.js) - covered
+ * so far only by jsdom unit tests, never against a real browser's dispatch.
+ */
+test.describe("Holding Escape (auto-repeat) never misfires the panic redirect", () => {
+  test("holding Escape after it closes a dialog does not trigger the panic redirect, no matter how long the key stays down", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+
+    await openFirstDialog(page);
+    await closeDialogWithEscape(page); // one genuine press: closes the dialog, not counted
+
+    await page.evaluate(() => {
+      for (let i = 0; i < 15; i++) {
+        window.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "Escape",
+            bubbles: true,
+            cancelable: true,
+            repeat: true,
+          }),
+        );
+      }
+    });
+    await page.waitForTimeout(ESCAPE_WINDOW_MS / 2);
+
+    expect(await stillOnApp(page)).toBe(true);
+  });
+});
+
+/**
+ * MaintenancePage is the only thing on screen when /version.json reports
+ * maintenance_mode: true (App.jsx) - Quick Exit and triple-Escape must stay
+ * reachable there too, a veteran routed here mid-session is not exempt.
+ * Covered so far only by a unit test with a mocked triggerPanicRedirect,
+ * never against a real browser's navigation.
+ */
+async function forceMaintenanceMode(page: Page): Promise<void> {
+  await page.route("**/version.json*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        version: APP_VERSION,
+        maintenance_mode: true,
+        maintenance_message: "e2e-forced maintenance",
+      }),
+    }),
+  );
+  await page.goto("/");
+  await page
+    .getByRole("heading", { name: /maintenance mode/i })
+    .waitFor({ state: "visible", timeout: 5000 });
+}
+
+test.describe("Quick Exit / triple-Escape on the maintenance kill-switch page", () => {
+  test("Quick Exit lands on the decoy URL with a single click and no confirmation dialog", async ({
+    page,
+  }) => {
+    await stubWeatherRedirect(page);
+    await forceMaintenanceMode(page);
+
+    await clickQuickExit(page);
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  test("triple-Escape redirects on the maintenance page", async ({ page }) => {
+    await stubWeatherRedirect(page);
+    await forceMaintenanceMode(page);
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+});
