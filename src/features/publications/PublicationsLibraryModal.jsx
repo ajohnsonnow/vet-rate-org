@@ -33,7 +33,13 @@ export default function PublicationsLibraryModal() {
       size="2xl"
       labelledBy="publications-library-title"
       header={
-        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4">
+        // `sm:pr-28` reserves the same fixed Quick Exit gutter as
+        // ClaimNavigator.jsx's header: at `size="2xl"` (max-w-6xl), the
+        // panel is still viewport-width-bound (not cap-bound) at every
+        // required desktop width up to ~1568px, so its close-X sits close
+        // enough to the physical top-right corner to reach Quick Exit's
+        // fixed box there (measured at 1024x768/1280x720).
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 sm:pr-28">
           <HeaderCloseSlot
             close={
               <button
