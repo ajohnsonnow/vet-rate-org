@@ -335,9 +335,14 @@ describe("C1: service periods - an incomplete period joins the dated period it b
     });
   });
 
-  it("does not guess when the one known date matches more than one existing period", () => {
-    upsertServicePeriod(period("2002-05-06", "2003-04-30"), meta("a.pdf", 60));
-    upsertServicePeriod(period("2003-04-30", "2004-01-01"), meta("b.pdf", 60));
+  // D11-4 (final12 QA, 2026-09-27): the one known date must be ambiguous
+  // against the SAME boundary on two periods (both end dates, here) - the
+  // old fixture relied on the incoming end date coincidentally equalling
+  // one period's end AND a different period's start, which was only
+  // "ambiguous" because of the conflation bug _hasProvenLink now fixes.
+  it("does not guess when the one known date matches more than one existing period's same boundary", () => {
+    upsertServicePeriod(period("2000-01-01", "2003-04-30"), meta("a.pdf", 60));
+    upsertServicePeriod(period("2001-06-15", "2003-04-30"), meta("b.pdf", 60));
     upsertServicePeriod(
       period(null, "2003-04-30", { rank: "AMBIGUOUS" }),
       meta("c.pdf", 40),
@@ -346,6 +351,44 @@ describe("C1: service periods - an incomplete period joins the dated period it b
     const periods = getServicePeriods();
     expect(periods).toHaveLength(2);
     expect(periods.some((p) => p.rank === "AMBIGUOUS")).toBe(false);
+  });
+});
+
+describe("D11-4: a boundary match only proves a link start-to-start or end-to-end", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("does not merge when incoming's start date only matches the existing period's END date", () => {
+    upsertServicePeriod(
+      period("2002-05-06", "2003-04-30", { branch: "Army" }),
+      meta("a.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2003-04-30", null, { rank: "MISMATCHED" }),
+      meta("c.pdf", 40),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(2);
+    const original = periods.find((p) => p.serviceStartDate === "2002-05-06");
+    expect(original.rank).toBe("");
+  });
+
+  it("does not merge when incoming's end date only matches the existing period's START date", () => {
+    upsertServicePeriod(
+      period("2002-05-06", "2003-04-30", { branch: "Army" }),
+      meta("a.pdf", 60),
+    );
+    upsertServicePeriod(
+      period(null, "2002-05-06", { rank: "MISMATCHED" }),
+      meta("c.pdf", 40),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(2);
+    const original = periods.find((p) => p.serviceEndDate === "2003-04-30");
+    expect(original.rank).toBe("");
   });
 });
 

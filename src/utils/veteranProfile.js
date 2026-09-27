@@ -1874,12 +1874,16 @@ function _hasProvenLink(period, incoming, documentPeriodCounts) {
   // incomplete period can carry its OWN single known date, and that date
   // coincidentally equalling incoming's is not evidence they're the same
   // period (see "does not collide two different incomplete periods...").
-  const singleDate = incoming.serviceStartDate || incoming.serviceEndDate;
+  // A start date is only ever checked against the period's OWN start date,
+  // and an end date only against its OWN end date (D11-4, final12 QA):
+  // matching incoming's start against an unrelated period's end conflates
+  // "this one started the day that one ended" with "this is that period".
   return (
     !period.incomplete &&
-    !!singleDate &&
-    (_sameCalendarDay(period.serviceStartDate, singleDate) ||
-      _sameCalendarDay(period.serviceEndDate, singleDate))
+    ((!!incoming.serviceStartDate &&
+      _sameCalendarDay(period.serviceStartDate, incoming.serviceStartDate)) ||
+      (!!incoming.serviceEndDate &&
+        _sameCalendarDay(period.serviceEndDate, incoming.serviceEndDate)))
   );
 }
 
