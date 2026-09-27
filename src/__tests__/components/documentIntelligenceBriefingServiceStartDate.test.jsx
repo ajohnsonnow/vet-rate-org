@@ -74,6 +74,28 @@ describe("DocumentIntelligenceBriefing - editing a calculated serviceStartDate",
     expect(screen.queryByText(/2002-03-05/)).not.toBeInTheDocument();
   });
 
+  it("clears the (calculated from net service) marker live, as soon as the date is edited - before Verify & Save", async () => {
+    renderBriefing({
+      serviceStartDate: "2002-03-05",
+      serviceStartDateDerived: true,
+    });
+
+    expect(
+      await screen.findByText(/calculated from net service/),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("[Edit]"));
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "2001-11-01" },
+    });
+    fireEvent.click(screen.getByText("Save"));
+
+    await screen.findByText(/2001-11-01/);
+    expect(
+      screen.queryByText(/calculated from net service/),
+    ).not.toBeInTheDocument();
+  });
+
   it("clears serviceStartDateDerived on Verify & Save once the date was actually edited", async () => {
     const onVerify = renderBriefing({
       serviceStartDate: "2002-03-05",

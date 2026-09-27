@@ -2151,6 +2151,16 @@ function useUnverifiedFieldWarning(
 // so a real difference from it (as opposed to merely checking the
 // verification box on an unedited value) is the proof this was an actual
 // correction, not just an acknowledgment of the OCR guess.
+// D11-1: the same rule _clearServiceStartDateDerivedIfEdited applies to the
+// SAVED payload, applied live to the field's own "(calculated from net
+// service)" marker - otherwise the veteran sees their own just-typed
+// correction labelled a guess the entire time they're reviewing it, only
+// clearing the moment they click Verify & Save.
+function _stillDerived(filteredData, currentData) {
+  if (!currentData?.serviceStartDateDerived) return false;
+  return filteredData?.serviceStartDate === currentData?.serviceStartDate;
+}
+
 function _clearServiceStartDateDerivedIfEdited(
   verifiedData,
   editedData,
@@ -2450,7 +2460,7 @@ function DocumentBriefingBody({
           setEditedData,
           setVerifiedFields,
         )}
-        serviceStartDateDerived={!!currentData?.serviceStartDateDerived}
+        serviceStartDateDerived={_stillDerived(filteredData, currentData)}
       />
 
       <DocumentBriefingOptionsAndHelp
