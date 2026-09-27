@@ -166,6 +166,7 @@ export const AIStatusBadge = ({ onClick, className = "" }) => {
         onClick={onClick}
         className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg border-2 transition-all hover:scale-105 hover:shadow-lg ${badgeStyle} ${className}`}
         aria-label={tooltip}
+        data-testid="ai-status-badge"
       >
         <AIStatusBadgeContent status={status} />
       </button>

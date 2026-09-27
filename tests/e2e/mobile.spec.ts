@@ -1177,14 +1177,23 @@ type BypassDialog = {
   availableAt?: (width: number) => boolean;
 };
 
-/** True once *any* modal dialog is in the DOM. */
+/**
+ * True once *any* modal dialog is in the DOM - excluding the one-time
+ * DisclaimerSplash. Without this exclusion, a slow-to-dismiss splash (the
+ * dismissDisclaimer race documented on that helper) satisfies this check on
+ * its own, and every caller below moves on to probe the splash instead of
+ * the tool dialog it actually triggered.
+ */
 async function anyDialogProbe(page: Page): Promise<{ found: boolean }> {
   return {
     found: await page.evaluate(
       () =>
-        document.querySelectorAll(
-          '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
-        ).length > 0,
+        Array.from(
+          document.querySelectorAll(
+            '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+          ),
+        ).filter((d) => d.getAttribute("aria-labelledby") !== "splash-title")
+          .length > 0,
     ),
   };
 }
@@ -1215,9 +1224,44 @@ async function triggerUntilDialogFound(
     .toBe(true);
 }
 
-function dispatchTrigger(page: Page, event: string): () => Promise<void> {
+function dispatchTrigger(
+  page: Page,
+  event: string,
+  detail?: unknown,
+): () => Promise<void> {
   return () =>
-    page.evaluate((evt) => window.dispatchEvent(new CustomEvent(evt)), event);
+    page.evaluate(
+      ({ evt, detail }) =>
+        window.dispatchEvent(
+          detail === undefined
+            ? new CustomEvent(evt)
+            : new CustomEvent(evt, { detail }),
+        ),
+      { evt: event, detail },
+    );
+}
+
+/**
+ * Runs `trigger` and probes with `probeFn`, retrying the pair up to twice
+ * more if the probe comes back empty. `triggerUntilDialogFound` only proves
+ * a dialog existed at poll time - a separate dialog that opens and then
+ * closes itself before the follow-up `probeFn` call runs (an open, real,
+ * still-uninvestigated race - see the mobile.spec.ts N12 flakiness notes)
+ * would otherwise fail the whole test on a dialog that was never actually
+ * broken.
+ */
+async function triggerAndProbe<T extends { found: boolean }>(
+  page: Page,
+  trigger: () => Promise<void>,
+  probeFn: (page: Page) => Promise<T>,
+): Promise<T> {
+  let probe: T;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await triggerUntilDialogFound(page, trigger);
+    probe = await probeFn(page);
+    if (probe.found) return probe;
+  }
+  return probe!;
 }
 
 const BYPASS_DIALOGS: BypassDialog[] = [
@@ -1467,14 +1511,32 @@ for (const vp of BYPASS_TEST_VIEWPORTS) {
 // event: several dialogs are catalogued in more than one array above (e.g.
 // TOOL_HEADERS re-lists some MODALS entries for the Quick Exit check), and
 // each should only be opened once per width here.
-const TOOL_GRID_DIALOG_EVENTS: { label: string; event: string }[] = (() => {
-  const merged = [
+//
+// N12 follow-up (independent audit): a bare `openNexusBuilder` mounts the
+// condition-picker header, not NexusHeaderBar - the header this branch
+// restructured - so it needs its own entry with a `detail` payload (see the
+// "Not listed: NexusBuilder" comment above; that comment is about the
+// separate MODALS array and stays accurate for a bare open). TheTribunal,
+// CloudSyncManager and WhatIfSandbox were simply missing from every one of
+// the arrays above.
+type ToolGridDialog = { label: string; event: string; detail?: unknown };
+
+const TOOL_GRID_DIALOG_EVENTS: ToolGridDialog[] = (() => {
+  const merged: ToolGridDialog[] = [
     ...MODALS,
     ...MIGRATED_MODALS,
     ...TOOL_HEADERS.map(({ label, event }) => ({ label, event })),
     { label: "AI Command Center", event: "openAISettings" },
     { label: "Claim Stress Test", event: "openClaimStressTest" },
     { label: "Denial Decoder", event: "openDenialDecoder" },
+    { label: "The Tribunal", event: "openTheTribunal" },
+    {
+      label: "Nexus Builder",
+      event: "openNexusBuilder",
+      detail: { condition: "Tinnitus" },
+    },
+    { label: "Cloud Sync Manager", event: "openCloudSyncManager" },
+    { label: "What-If Sandbox", event: "openWhatIfSandbox" },
   ];
   const seen = new Set<string>();
   return merged.filter(({ event }) => {
@@ -1494,6 +1556,11 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
         localStorage.setItem("vet_rate_last_seen_version", appVersion);
         localStorage.setItem("vetrate-tour-completed", "true");
         localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+        // N12 fix: acknowledge the splash up front rather than racing
+        // dismissDisclaimer's non-waiting isVisible() check against it (it
+        // can win, leaving the splash as the DOM's only open dialog when
+        // triggerUntilDialogFound below goes looking for one).
+        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
       }, APP_VERSION);
       await page.goto("/");
       await dismissDisclaimer(page);
@@ -1503,12 +1570,11 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
       test(`${dialog.label}: close control fully on-screen, no page horizontal overflow`, async ({
         page,
       }) => {
-        await triggerUntilDialogFound(
+        const probe = await triggerAndProbe(
           page,
-          dispatchTrigger(page, dialog.event),
+          dispatchTrigger(page, dialog.event, dialog.detail),
+          probeOpenDialog,
         );
-
-        const probe = await probeOpenDialog(page);
         expect(probe.found).toBe(true);
 
         // The × must be fully inside the viewport - not clipped or pushed
@@ -1543,6 +1609,10 @@ type HeaderProbe = {
   badgeRect: Rect | null;
   bugLinkRect: Rect | null;
   closeRect: Rect | null;
+  backRect: Rect | null;
+  aiStatusRect: Rect | null;
+  llmBadgeRect: Rect | null;
+  shareRect: Rect | null;
 };
 
 /**
@@ -1554,77 +1624,170 @@ type HeaderProbe = {
  * is normally a `<span>` *inside* the heading, so the heading's own rect
  * always contains it, and that nesting isn't the defect - a naive
  * parent/child rect check would fail every dialog that has a badge at all.
+ *
+ * Independent-audit follow-up: the AIStatusBadge ("No AI" etc.),
+ * LLMRecommendationBadge, ShareButton and "Go back" controls are now probed
+ * too (TheTribunal's BETA badge collided with AIStatusBadge and neither the
+ * original probe nor its dialog inventory could see it). Badge search is
+ * scoped to `.modal-header` - the wrapper ResponsiveModal always renders
+ * around both its `header` and default `title` slots - instead of only the
+ * heading, so a BETA badge painted outside the `<h2>` is no longer invisible
+ * either. A dialog with no discoverable title now fails outright instead of
+ * reporting `found: true` with every part null and nothing left to compare.
+ *
+ * The trailing-badge exclusion above generalizes to every tracked part, not
+ * just the amber BETA span: SymptomLogger nests its AIStatusBadge directly
+ * inside the `<h2>` alongside the BETA badge, so a range that only cut
+ * before the amber span still counted the AIStatusBadge as "title" *and*
+ * compared it against the separately-probed `aiStatusRect` - a guaranteed
+ * self-collision on a dialog with no real defect.
  */
+/** All-null probe result - a constant, so it doesn't count against the
+ * max-lines-per-function budget of the (already long) probe below. */
+const EMPTY_HEADER_PROBE: HeaderProbe = {
+  found: false,
+  titleClipped: false,
+  titleTextRects: null,
+  badgeRect: null,
+  bugLinkRect: null,
+  closeRect: null,
+  backRect: null,
+  aiStatusRect: null,
+  llmBadgeRect: null,
+  shareRect: null,
+};
+
 async function probeHeaderLayout(page: Page): Promise<HeaderProbe> {
-  return page.evaluate(() => {
-    const toRect = (r: DOMRect) => ({
-      left: r.left,
-      top: r.top,
-      right: r.right,
-      bottom: r.bottom,
-    });
+  return page
+    .evaluate(() => {
+      const rectOf = (el: Element | null | undefined) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+      };
 
-    const empty = {
-      found: false,
-      titleClipped: false,
-      titleTextRects: null,
-      badgeRect: null,
-      bugLinkRect: null,
-      closeRect: null,
-    };
+      const dialog = document.querySelector(
+        '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+      ) as HTMLElement | null;
+      const labelledBy = dialog?.getAttribute("aria-labelledby");
+      const titleEl = ((labelledBy && document.getElementById(labelledBy)) ||
+        dialog?.querySelector("h1, h2, h3")) as HTMLElement | null;
+      if (!dialog || !titleEl) return null;
 
-    const dialog = document.querySelector(
-      '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
-    ) as HTMLElement | null;
-    if (!dialog) return empty;
+      const headerRegion = (dialog.querySelector(".modal-header") ||
+        dialog) as HTMLElement;
+      const byLabel = (pattern: RegExp) =>
+        Array.from(headerRegion.querySelectorAll("button")).find((b) =>
+          pattern.test(b.getAttribute("aria-label") || ""),
+        ) as HTMLElement | undefined;
 
-    const labelledBy = dialog.getAttribute("aria-labelledby");
-    const titleEl = ((labelledBy && document.getElementById(labelledBy)) ||
-      dialog.querySelector("h1, h2, h3")) as HTMLElement | null;
-    if (!titleEl) return { ...empty, found: true };
+      const c = {
+        badgeEl: Array.from(headerRegion.querySelectorAll("span")).find((s) =>
+          s.className.includes("bg-amber-700"),
+        ) as HTMLElement | undefined,
+        bugLinkEl: byLabel(/^Report a bug/i),
+        closeEl: byLabel(/close|exit/i),
+        backEl: byLabel(/^go back$/i),
+        aiStatusEl:
+          (headerRegion.querySelector(
+            '[data-testid="ai-status-badge"]',
+          ) as HTMLElement | null) || undefined,
+        llmBadgeEl: byLabel(/View AI model recommendations/i),
+        shareEl: byLabel(/^Export for Reddit/i),
+      };
 
-    const titleClipped = titleEl.scrollWidth > titleEl.clientWidth + 1;
+      const nested = Object.values(c).filter(
+        (el): el is HTMLElement =>
+          !!el && el !== titleEl && titleEl.contains(el),
+      );
+      const range = document.createRange();
+      range.selectNodeContents(titleEl);
+      if (nested.length > 0) {
+        range.setEndBefore(
+          nested.reduce((a, b) =>
+            (a.compareDocumentPosition(b) &
+              Node.DOCUMENT_POSITION_FOLLOWING) !==
+            0
+              ? a
+              : b,
+          ),
+        );
+      }
+      const titleTextRects = Array.from(range.getClientRects())
+        .filter((r) => r.width > 0 && r.height > 0)
+        .map((r) => ({
+          left: r.left,
+          top: r.top,
+          right: r.right,
+          bottom: r.bottom,
+        }));
 
-    const badgeEl = Array.from(titleEl.querySelectorAll("span")).find((s) =>
-      s.className.includes("bg-amber-700"),
-    ) as HTMLElement | undefined;
+      return {
+        titleClipped: titleEl.scrollWidth > titleEl.clientWidth + 1,
+        titleTextRects,
+        badgeRect: rectOf(c.badgeEl),
+        bugLinkRect: rectOf(c.bugLinkEl),
+        closeRect: rectOf(c.closeEl),
+        backRect: rectOf(c.backEl),
+        aiStatusRect: rectOf(c.aiStatusEl),
+        llmBadgeRect: rectOf(c.llmBadgeEl),
+        shareRect: rectOf(c.shareEl),
+      };
+    })
+    .then((found) => (found ? { found: true, ...found } : EMPTY_HEADER_PROBE));
+}
 
-    const range = document.createRange();
-    range.selectNodeContents(titleEl);
-    if (badgeEl) range.setEndBefore(badgeEl);
-    const titleTextRects = Array.from(range.getClientRects())
-      .filter((r) => r.width > 0 && r.height > 0)
-      .map(toRect);
-    const badgeRect = badgeEl ? toRect(badgeEl.getBoundingClientRect()) : null;
+/**
+ * Every header part `probeHeaderLayout` can find, as the label/rects pairs
+ * the pairwise collision check below consumes - one place to add a part
+ * (rather than growing the per-dialog test callback past the max-lines
+ * budget every time the probe grows a field).
+ */
+function headerParts(
+  probe: HeaderProbe,
+): { label: string; rects: Rect[] | null }[] {
+  const one = (r: Rect | null) => (r ? [r] : null);
+  return [
+    { label: "title", rects: probe.titleTextRects },
+    { label: "badge", rects: one(probe.badgeRect) },
+    { label: "bug-link", rects: one(probe.bugLinkRect) },
+    { label: "close", rects: one(probe.closeRect) },
+    { label: "back", rects: one(probe.backRect) },
+    { label: "ai-status", rects: one(probe.aiStatusRect) },
+    { label: "llm-badge", rects: one(probe.llmBadgeRect) },
+    { label: "share", rects: one(probe.shareRect) },
+  ];
+}
 
-    const bugLinkEl = dialog.querySelector(
-      'button[aria-label^="Report a bug"]',
-    ) as HTMLElement | null;
-    const bugLinkRect = bugLinkEl
-      ? toRect(bugLinkEl.getBoundingClientRect())
-      : null;
+/** Every pairwise collision among `headerParts`, plus title clipping. */
+function headerCollisionViolations(probe: HeaderProbe): string[] {
+  const present = headerParts(probe).filter(
+    (p): p is { label: string; rects: Rect[] } =>
+      !!p.rects && p.rects.length > 0,
+  );
 
-    const closeEl = Array.from(dialog.querySelectorAll("button")).find((b) =>
-      /close|exit/i.test(b.getAttribute("aria-label") || ""),
-    ) as HTMLElement | undefined;
-    const closeRect = closeEl ? toRect(closeEl.getBoundingClientRect()) : null;
-
-    return {
-      found: true,
-      titleClipped,
-      titleTextRects,
-      badgeRect,
-      bugLinkRect,
-      closeRect,
-    };
-  });
+  const violations: string[] = [];
+  if (probe.titleTextRects && probe.titleClipped) {
+    violations.push("title text is clipped (scrollWidth > clientWidth)");
+  }
+  for (let i = 0; i < present.length; i++) {
+    for (let j = i + 1; j < present.length; j++) {
+      const a = present[i];
+      const b = present[j];
+      const collides = a.rects.some((ra) =>
+        b.rects.some((rb) => rectsIntersect(ra, rb)),
+      );
+      if (collides) violations.push(`${a.label} intersects ${b.label}`);
+    }
+  }
+  return violations;
 }
 
 // N12 (QA final10): DOM-enumerated header-collision sweep across the whole
 // tool-grid inventory (TOOL_GRID_DIALOG_EVENTS, above) at the four widths QA
 // hit-tested for the VAResources/CAPSimulator/TacticalCalculator defects.
-// Reuses `rectsIntersect` (Quick Exit checks above) pairwise across
-// title/badge/bug-link/close instead of hand-picking which pair a given
+// Reuses `rectsIntersect` (Quick Exit checks above) pairwise across every
+// part `headerParts` returns instead of hand-picking which pair a given
 // dialog happens to collide on.
 for (const vp of QUICK_EXIT_VIEWPORTS) {
   test.describe(`Tool dialog header layout @ ${vp.width}px (${vp.name})`, () => {
@@ -1636,6 +1799,9 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
         localStorage.setItem("vet_rate_last_seen_version", appVersion);
         localStorage.setItem("vetrate-tour-completed", "true");
         localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+        // N12 fix: see the matching comment on the close-buttons describe
+        // block above - avoids racing dismissDisclaimer against the splash.
+        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
       }, APP_VERSION);
       await page.goto("/");
       await dismissDisclaimer(page);
@@ -1645,46 +1811,92 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
       test(`${dialog.label}: title/badge/bug-link/close don't collide, title isn't clipped`, async ({
         page,
       }) => {
-        await triggerUntilDialogFound(
+        const probe = await triggerAndProbe(
           page,
-          dispatchTrigger(page, dialog.event),
+          dispatchTrigger(page, dialog.event, dialog.detail),
+          probeHeaderLayout,
         );
+        expect(probe.found).toBe(true);
+        expect(headerCollisionViolations(probe)).toEqual([]);
+      });
+    }
+  });
+}
 
+/**
+ * CAPSimulator's three "deeper" headers (select a condition, mid-simulation,
+ * terminology flashcards) still had the absolute-positioned back/close
+ * cluster painted over a centered title (independent audit, N12 follow-up).
+ * The generic sweep above can't reach them - `openCAPSimulator` alone only
+ * ever mounts the default intro branch - so this drives the real button
+ * clicks QA's audit used to get there.
+ */
+async function openCAPMode(
+  page: Page,
+  buttonText: string,
+  pickCondition: boolean,
+): Promise<void> {
+  await triggerUntilDialogFound(
+    page,
+    dispatchTrigger(page, "openCAPSimulator"),
+  );
+  await page.getByText(buttonText, { exact: false }).first().click();
+  if (pickCondition) {
+    await page.waitForTimeout(200);
+    await page.evaluate(() => {
+      const dialog = document.querySelector(
+        '[role="dialog"][aria-modal="true"]',
+      );
+      const btn = Array.from(dialog?.querySelectorAll("button") ?? []).find(
+        (b) => b.querySelector("h3"),
+      );
+      (btn as HTMLElement | undefined)?.click();
+    });
+  }
+}
+
+const CAP_DEEP_MODES = [
+  {
+    label: "Select Condition",
+    buttonText: "Start Simulation",
+    pickCondition: false,
+  },
+  {
+    label: "Mid-Simulation",
+    buttonText: "Start Simulation",
+    pickCondition: true,
+  },
+  {
+    label: "Terminology",
+    buttonText: "Learn Terminology",
+    pickCondition: false,
+  },
+];
+
+for (const vp of QUICK_EXIT_VIEWPORTS) {
+  test.describe(`CAP Simulator deep-mode headers @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const mode of CAP_DEEP_MODES) {
+      test(`${mode.label}: title/back/close don't collide, title isn't clipped`, async ({
+        page,
+      }) => {
+        await openCAPMode(page, mode.buttonText, mode.pickCondition);
         const probe = await probeHeaderLayout(page);
         expect(probe.found).toBe(true);
-
-        const parts: { label: string; rects: Rect[] | null }[] = [
-          { label: "title", rects: probe.titleTextRects },
-          { label: "badge", rects: probe.badgeRect ? [probe.badgeRect] : null },
-          {
-            label: "bug-link",
-            rects: probe.bugLinkRect ? [probe.bugLinkRect] : null,
-          },
-          { label: "close", rects: probe.closeRect ? [probe.closeRect] : null },
-        ];
-        const present = parts.filter(
-          (p): p is { label: string; rects: Rect[] } =>
-            !!p.rects && p.rects.length > 0,
-        );
-
-        const violations: string[] = [];
-        if (probe.titleTextRects && probe.titleClipped) {
-          violations.push("title text is clipped (scrollWidth > clientWidth)");
-        }
-        for (let i = 0; i < present.length; i++) {
-          for (let j = i + 1; j < present.length; j++) {
-            const a = present[i];
-            const b = present[j];
-            const collides = a.rects.some((ra) =>
-              b.rects.some((rb) => rectsIntersect(ra, rb)),
-            );
-            if (collides) {
-              violations.push(`${a.label} intersects ${b.label}`);
-            }
-          }
-        }
-
-        expect(violations).toEqual([]);
+        expect(headerCollisionViolations(probe)).toEqual([]);
       });
     }
   });
