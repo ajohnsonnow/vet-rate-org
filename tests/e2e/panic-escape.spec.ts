@@ -104,6 +104,7 @@ test.describe("Panic key (triple-Escape) vs. dialog-closing Escapes", () => {
     for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
 
     await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
   });
 
   test("mixed: dialog-closing Escapes don't count toward 3 real ones", async ({
@@ -122,5 +123,6 @@ test.describe("Panic key (triple-Escape) vs. dialog-closing Escapes", () => {
     // Now 3 real, deliberate Escapes with nothing open still fire.
     for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
     await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
   });
 });
