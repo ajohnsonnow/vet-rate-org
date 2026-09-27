@@ -2907,8 +2907,33 @@ export const exportVKB = async () => {
 
 /**
  * Clear entire VKB (with confirmation)
+ *
+ * Must actually erase the record, not just the localStorage metadata cache:
+ * the real data lives in IndexedDB (openVKBDatabase/VKB_STORE_NAME), and
+ * loadVKB() also serves a structuredClone of the in-memory vkbCache before
+ * ever touching either. Deleting only the localStorage key left both of
+ * those fully intact, so loadVKB() (and every AI context built from it -
+ * getVeteranAIContext, generateLLMContext) kept returning the "cleared"
+ * veteran's entire history, in the same session and after reload.
  */
-export const clearVKB = () => {
+export const clearVKB = async () => {
   localStorage.removeItem(VKB_STORAGE_KEY);
-  return initializeVKB();
+  vkbCache = null;
+
+  try {
+    const db = await openVKBDatabase();
+    await new Promise((resolve, reject) => {
+      const transaction = db.transaction([VKB_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(VKB_STORE_NAME);
+      const request = store.delete("main");
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error("Error clearing VKB from IndexedDB:", err);
+  }
+
+  const fresh = initializeVKB();
+  vkbCache = structuredClone(fresh);
+  return fresh;
 };
