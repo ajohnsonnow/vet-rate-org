@@ -124,6 +124,69 @@ describe("saveServiceRecordToProfile: NGB-22 rank attachment without a Box 12b d
   });
 });
 
+// Observation 1 (final10 QA, 2026-09-25): the terminal-AD rank rule
+// stopped matching once the NGB-22 gained a separation date that does NOT
+// equal the terminal AD window's own end date - a real scenario for a
+// Guard member whose overall discharge (Box 12b, the Guard's own final
+// separation) post-dates their last individual activation by years of
+// ordinary drilling. Same REMARKS windows as REALISTIC_NGB22 above; only
+// Box 12b's date changes to one that post-dates the AD window's own end.
+const NGB22_SEPARATION_DATE_AFTER_LAST_AD_WINDOW = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4a. GRADE, RATE OR RANK: SGT
+4b. PAY GRADE: E-5
+5. DATE OF BIRTH: 01/15/1980
+7a. PLACE OF ENTRY: PORTLAND OR
+11. PRIMARY SPECIALTY: 92Y UNIT SUPPLY SPECIALIST
+12a. DATE ENTERED AD THIS PERIOD: 06/22/2004
+12b. DATE OF SEPARATION: 08/27/2007
+13. DECORATIONS, MEDALS, BADGES: ARMY ACHIEVEMENT MEDAL
+14. MILITARY EDUCATION: PRIMARY LEADERSHIP DEVELOPMENT COURSE
+18. REMARKS: IADT: 20040101-20040301//AD: 20040622-20050827//NOTHING FOLLOWS
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+25. SEPARATION AUTHORITY: AR 635-200
+26. SEPARATION CODE: MBK
+27. REENTRY CODE: RE-1
+28. NARRATIVE REASON: COMPLETION OF REQUIRED ACTIVE SERVICE
+`;
+
+describe("Observation 1: NGB-22 rank attachment when the separation date post-dates the terminal AD window", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("still attaches rank to the document's own latest AD window, not just an exact separationDate match", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_SEPARATION_DATE_AFTER_LAST_AD_WINDOW,
+      "NGB22",
+    );
+    expect(extractedData.serviceEndDate).toBe("08/27/2007");
+    saveServiceRecordToProfile(
+      { name: "ngb22_late_separation.pdf" },
+      { extractedData },
+    );
+
+    const periods = getServicePeriods();
+    const ad = periods.find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    const iadt = periods.find(
+      (p) =>
+        p.serviceStartDate === "2004-01-01" &&
+        p.serviceEndDate === "2004-03-01",
+    );
+
+    expect(ad).toBeDefined();
+    expect(ad.rank).toBe("SGT");
+    expect(iadt).toBeDefined();
+    expect(iadt.rank).toBe("");
+  });
+});
+
 describe("saveCodeSheetServicePeriodsToProfile: labels its own source correctly", () => {
   beforeEach(() => {
     localStorage.clear();

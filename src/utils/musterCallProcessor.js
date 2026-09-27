@@ -930,6 +930,20 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 // Active Duty period unambiguously deserved it. Falls back to "the latest
 // Active Duty period this same document describes" as the terminal-period
 // proxy in that case.
+//
+// Observation 1 (final10 QA, 2026-09-25): that fallback used to be gated
+// on separationDate being ABSENT (see _saveNGB22AdditionalPeriods below),
+// on the assumption a present separationDate always equals the terminal
+// AD window's own end date. For a Guard member, separationDate is the
+// overall Guard discharge date, which routinely POST-DATES the last
+// individual activation by years of ordinary drilling - once an NGB-22
+// extraction started reliably recovering that overall date, the exact
+// match (periodEndDate === separationDate) stopped firing for those
+// veterans and the previously-working fallback was disabled at the exact
+// same time, losing the rank on the correct final AD window. Computed
+// unconditionally now: it's this document's own field, not a guess, and
+// either proof (matches separationDate, or is this document's own latest
+// AD end) is independently sufficient.
 function _latestActiveDutyEndDate(periods) {
   return (
     periods
@@ -950,9 +964,7 @@ function _latestActiveDutyEndDate(periods) {
 function _saveNGB22AdditionalPeriods(file, candidate) {
   if (!Array.isArray(candidate.additionalPeriods)) return;
   const separationDate = _toISODateString(candidate.separationDate);
-  const latestADEnd = separationDate
-    ? null
-    : _latestActiveDutyEndDate(candidate.additionalPeriods);
+  const latestADEnd = _latestActiveDutyEndDate(candidate.additionalPeriods);
   candidate.additionalPeriods.forEach((period) => {
     try {
       const periodEndDate = _toISODateString(period.serviceEndDate);
