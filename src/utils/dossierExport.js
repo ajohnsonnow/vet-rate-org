@@ -12,7 +12,7 @@
 
 import { exportData } from "./dataBackup";
 import { triggerBlobDownload, safeOpenBlobUrl } from "./sanitize";
-import { getServiceEntry } from "./veteranProfile";
+import { getServiceEntry, getServicePeriods } from "./veteranProfile";
 
 // Storage keys for different data types
 const DATA_SOURCES = {
@@ -82,14 +82,25 @@ function escapeHtml(text) {
  * reads, not profile.serviceStartDate directly - a correction made through
  * the VKB viewer or Muster Call review never touched that copy, so the
  * dossier could show a stale, silently-still-"calculated" date otherwise.
+ *
+ * The end date comes from that SAME period (entry.periodId), not
+ * profile.serviceEndDate directly - otherwise a multi-document veteran
+ * could see the canonical start paired with whichever unrelated document
+ * last happened to write the flat profile field, a range no single source
+ * actually states. Only falls back to the flat field for the legacy
+ * (periodId: null) case, where no period backs the entry at all.
  * @returns {string} HTML string
  */
 function generateServiceDatesValue(profile) {
   const entry = getServiceEntry();
+  const period = entry.periodId
+    ? getServicePeriods().find((p) => p.id === entry.periodId)
+    : null;
   const start = entry.date || profile?.serviceStartDate;
   const derived = entry.date ? entry.derived : profile?.serviceStartDateDerived;
+  const end = period?.serviceEndDate || profile?.serviceEndDate;
   const note = derived ? " (calculated from net service)" : "";
-  return `${escapeHtml(start || "?")}${note} - ${escapeHtml(profile?.serviceEndDate || "?")}`;
+  return `${escapeHtml(start || "?")}${note} - ${escapeHtml(end || "?")}`;
 }
 
 /**
