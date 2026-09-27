@@ -17,6 +17,7 @@ import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import ReportBugLink from "./ReportBugLink";
 import VoiceInputButton from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 // Red Team Analysis Logic - Simulates skeptical VA examiner. Each checker
 // inspects the claim text and returns a { weakness, question } pair, or
@@ -292,26 +293,48 @@ const analyzeClaimWeaknesses = (claim) => {
 };
 
 const StressTestHeader = ({ onClose, onReportBug }) => (
-  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-    <div className="min-w-0">
-      <h2
-        id="claim-stress-title"
-        className="mb-2 flex flex-wrap items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
-      >
-        ⚔️ The War Game - Red Team Simulator{" "}
-        <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-          AI
-        </span>
-        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-          BETA
-        </span>
-      </h2>
-      <p className="text-sm text-gray-700 dark:text-gray-300">
-        Stress-test your claim. See the tough questions{" "}
-        <span className="font-bold">before</span> the C&P examiner asks them.
-      </p>
-    </div>
-    <div className="flex shrink-0 items-center gap-2">
+  <div className="border-b border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+          aria-label="Close dialog"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
+      <div className="min-w-0">
+        <h2
+          id="claim-stress-title"
+          className="mb-2 flex flex-wrap items-center gap-2 text-2xl font-bold text-red-600 dark:text-red-400"
+        >
+          ⚔️ The War Game - Red Team Simulator{" "}
+          <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            AI
+          </span>
+          <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            BETA
+          </span>
+        </h2>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          Stress-test your claim. See the tough questions{" "}
+          <span className="font-bold">before</span> the C&P examiner asks them.
+        </p>
+      </div>
       {onReportBug && (
         <ReportBugLink
           onClick={onReportBug}
@@ -319,26 +342,7 @@ const StressTestHeader = ({ onClose, onReportBug }) => (
           moduleName="The War Game"
         />
       )}
-      <button
-        onClick={onClose}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        aria-label="Close dialog"
-      >
-        <svg
-          className="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+    </HeaderCloseSlot>
   </div>
 );
 

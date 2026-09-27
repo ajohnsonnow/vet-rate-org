@@ -18,6 +18,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatLocalDate } from "../utils/dateUtils";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
@@ -409,13 +410,7 @@ const NavigatorViewToggle = ({ view, setView }) => (
   </div>
 );
 
-const NavigatorActions = ({
-  onReportBug,
-  onShowHelp,
-  onExport,
-  onImport,
-  onClose,
-}) => (
+const NavigatorActions = ({ onReportBug, onShowHelp, onExport, onImport }) => (
   <>
     {onReportBug && (
       <ReportBugLink
@@ -453,15 +448,17 @@ const NavigatorActions = ({
         className="hidden"
       />
     </label>
-
-    <button
-      onClick={onClose}
-      className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-      aria-label="Close"
-    >
-      <X className="w-5 h-5" />
-    </button>
   </>
+);
+
+const NavigatorCloseButton = ({ onClose }) => (
+  <button
+    onClick={onClose}
+    className="p-2 text-slate-400 hover:text-red-400 transition-colors"
+    aria-label="Close"
+  >
+    <X className="w-5 h-5" />
+  </button>
 );
 
 const NavigatorHeader = ({
@@ -473,26 +470,29 @@ const NavigatorHeader = ({
   onImport,
   onClose,
 }) => (
-  // flex-wrap: title + the view toggle + five action buttons don't all fit
-  // on one row at 320px even at their own minimum content widths, which
-  // pushed the close button off-screen (same overflow pattern as the
+  // The close × stays pinned to the header's top-right corner
+  // (HeaderCloseSlot); title + the view toggle + the other action buttons
+  // wrap onto their own line inside their own wrapping column when they
+  // don't all fit on one row at 320px (same overflow pattern as the
   // Observation fix in MusterCallHeader.jsx/AboutUs.jsx - this instance
   // wasn't QA-named but the DOM-enumerated e2e spec caught it too).
-  // Wrapping drops the actions onto their own row instead of overflowing.
-  <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex flex-wrap items-center justify-between gap-y-2 flex-shrink-0 sm:pr-28">
-    <div className="flex items-center gap-3">
-      <Map className="w-6 h-6 text-amber-500" />
-      <div>
-        <h1 id="claim-navigator-title" className="text-lg font-bold text-white">
-          Claim Navigator
-        </h1>
-        <p className="text-xs text-slate-400">
-          Mission Control for Your VA Claims
-        </p>
+  <header className="bg-slate-800/80 border-b border-slate-700 px-4 py-3 flex-shrink-0 sm:pr-28">
+    <HeaderCloseSlot close={<NavigatorCloseButton onClose={onClose} />}>
+      <div className="flex min-w-0 items-center gap-3">
+        <Map className="w-6 h-6 shrink-0 text-amber-500" />
+        <div className="min-w-0">
+          <h1
+            id="claim-navigator-title"
+            className="text-lg font-bold text-white"
+          >
+            Claim Navigator
+          </h1>
+          <p className="text-xs text-slate-400">
+            Mission Control for Your VA Claims
+          </p>
+        </div>
       </div>
-    </div>
 
-    <div className="flex items-center gap-2">
       {/* View Toggle */}
       <NavigatorViewToggle view={view} setView={setView} />
 
@@ -502,9 +502,8 @@ const NavigatorHeader = ({
         onShowHelp={onShowHelp}
         onExport={onExport}
         onImport={onImport}
-        onClose={onClose}
       />
-    </div>
+    </HeaderCloseSlot>
   </header>
 );
 
