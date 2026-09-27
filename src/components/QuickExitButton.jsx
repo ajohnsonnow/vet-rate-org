@@ -138,6 +138,16 @@ const QuickExitButton = ({
   // suppressing it the way the AI bubble / bug button are suppressed
   // (see `.above-mobile-nav` in index.css).
   //
+  // Moving this swap to `md:` instead (so hand-built dialogs whose own
+  // mobile header survives past `sm:` - UserManual, AboutUs - would clear
+  // Quick Exit without touching those files) was tried and reverted: it
+  // regresses ClaimNavigator, which keeps its title/icon flush at the
+  // screen's top-left below `md:` (its own `pt-20 sm:pt-0` assumes Quick
+  // Exit is already on the *right* by `sm:`) - measured collision at
+  // 640x800 (icon {l:16,t:22,r:40,b:46} inside Quick Exit's top-left
+  // {l:12,t:12,r:90,b:60}). Fixing UserManual/AboutUs this way would only
+  // trade one dialog's collision for another's; see openIssues.
+  //
   // At `sm:` and up this box moves back to top-right and stays fixed there
   // regardless of dialog size - short, wide desktop viewports can still pin a
   // centered dialog's top (and its close-X) close enough to the top-right

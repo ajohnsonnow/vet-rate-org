@@ -88,11 +88,20 @@ type Trigger = { label: string; dispatch: (page: Page) => Promise<void> };
 
 /**
  * Every dialog-opening trigger this sweep exercises: the full
- * source-scanned tool-grid inventory, plus CrisisModal (named in the D
- * requirement) - it doesn't fit the `open*` shape (`vetrate:crisis`,
- * carries a detail payload) so the scan above can't find it. ClaimNavigator/
- * UserManual/AboutUs/MyPacket (also named) already surface through their
- * real `openX` events.
+ * source-scanned tool-grid inventory, plus two triggers that don't fit the
+ * bare `open*` shape the scan above can find:
+ *
+ * - CrisisModal (named in the D requirement): `vetrate:crisis`, always
+ *   carries a detail payload.
+ * - NexusBuilder with a condition already chosen: a bare `openNexusBuilder`
+ *   (already covered by the scan) only ever mounts its condition-picker
+ *   step. `NexusHeaderBar` - the header actually restructured most
+ *   recently - only mounts once `detail.condition` is set (see
+ *   DiscoverCluster.jsx / PathfinderModal.jsx), so the auto-discovered
+ *   trigger alone never exercises it.
+ *
+ * ClaimNavigator/UserManual/AboutUs/MyPacket (also named) already surface
+ * through their real `openX` events.
  */
 function buildTriggers(): Trigger[] {
   const triggers: Trigger[] = toolGridEvents().map((event) => ({
@@ -109,6 +118,21 @@ function buildTriggers(): Trigger[] {
         window.dispatchEvent(
           new CustomEvent("vetrate:crisis", {
             detail: { severity: "high", source: "e2e" },
+          }),
+        );
+      }),
+  });
+  triggers.push({
+    label: "openNexusBuilder (with condition, NexusHeaderBar)",
+    dispatch: (page) =>
+      page.evaluate(() => {
+        window.dispatchEvent(
+          new CustomEvent("openNexusBuilder", {
+            detail: {
+              condition: "Tinnitus",
+              primaryCondition: null,
+              existingStatement: null,
+            },
           }),
         );
       }),
@@ -215,9 +239,16 @@ async function probeDialog(page: Page): Promise<DialogProbe> {
         bottom: r.bottom,
       }));
 
-    const closeBtn = buttons.find((b) =>
-      /close|exit/i.test(b.getAttribute("aria-label") || ""),
-    );
+    // Visible-only: some dialogs (e.g. UserManual) render two
+    // close-labelled buttons - one `md:hidden` mobile close-X and one
+    // desktop one - and an invisible button's collapsed [0,0,0,0] rect
+    // would otherwise win by DOM order and fail every hit-test regardless
+    // of the real, visible close-X's position.
+    const closeBtn = buttons.find((b) => {
+      if (!/close|exit/i.test(b.getAttribute("aria-label") || "")) return false;
+      const r = b.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
     const closeRect = closeBtn ? rectOf(closeBtn) : null;
 
     let closeHit = { center: false, topEdge: false };
@@ -245,33 +276,68 @@ async function elementRect(page: Page, selector: string): Promise<Rect | null> {
   }, selector);
 }
 
+type DialogReading = { probe: DialogProbe; qeRect: Rect | null };
+
 /**
- * Re-dispatches and re-probes up to a few times if the dialog or Quick Exit
- * itself isn't there yet. `openDialog` above only proves a dialog existed at
- * poll time - the app's one-time IndexedDB-migration boot gate can still
- * unmount and remount the whole shell (dialog *and* Quick Exit) a moment
- * later on a slow/loaded machine (see the Vision Simulator (D) writeup), so
- * a single follow-up read can catch that in-between state. Every dispatch
- * here is the same idempotent "show" toggle `openDialog` already used.
+ * Re-dispatches and re-probes until the dialog and Quick Exit are both
+ * present AND two consecutive reads agree, rather than trusting whatever
+ * the first successful read happens to show. Two distinct races justify
+ * this: the app's one-time IndexedDB-migration boot gate can unmount and
+ * remount the whole shell (dialog *and* Quick Exit) a moment after it first
+ * appears on a slow/loaded machine (see the Vision Simulator (D) writeup),
+ * and a dialog whose content is still loading/growing can hand back a
+ * transient layout that happens to clear Quick Exit on one tick and not the
+ * next (measured: a single-read version of this check passed VKBViewer 1
+ * run in 3 against code with a real, reproducible overlap). `expect.poll`'s
+ * own interval is the only wait here - no fixed sleep.
  */
 async function probeAfterOpen(
   page: Page,
   dispatch: (page: Page) => Promise<void>,
-): Promise<{ probe: DialogProbe; qeRect: Rect | null }> {
-  let last = {
-    probe: await probeDialog(page),
-    qeRect: await elementRect(page, QUICK_EXIT_SELECTOR),
-  };
-  const deadline = Date.now() + 10_000;
-  while ((!last.probe.found || !last.qeRect) && Date.now() < deadline) {
-    await dispatch(page);
-    await page.waitForTimeout(300);
-    last = {
-      probe: await probeDialog(page),
-      qeRect: await elementRect(page, QUICK_EXIT_SELECTOR),
-    };
-  }
-  return last;
+): Promise<DialogReading> {
+  let previous: DialogReading | null = null;
+
+  await expect
+    .poll(
+      async () => {
+        await dispatch(page);
+        const current: DialogReading = {
+          probe: await probeDialog(page),
+          qeRect: await elementRect(page, QUICK_EXIT_SELECTOR),
+        };
+        const stable =
+          previous !== null &&
+          JSON.stringify(current) === JSON.stringify(previous);
+        previous = current;
+        return current.probe.found && current.qeRect !== null && stable;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+
+  return previous as DialogReading;
+}
+
+/**
+ * Quick Exit must stay one tap away: `toBeVisible()` alone can't tell a
+ * button apart from something opaque covering it (ResponsiveModal takes a
+ * `zIndex` prop, so a future dialog above Quick Exit's z-index would still
+ * read "visible"). This hit-tests Quick Exit's own center the same way
+ * `probeDialog` hit-tests a dialog's close button.
+ */
+async function assertQuickExitOnTop(page: Page, qeRect: Rect): Promise<void> {
+  const onTop = await page.evaluate(
+    ({ selector, cx, cy }) => {
+      const qe = document.querySelector(selector);
+      return !!qe && qe.contains(document.elementFromPoint(cx, cy));
+    },
+    {
+      selector: QUICK_EXIT_SELECTOR,
+      cx: (qeRect.left + qeRect.right) / 2,
+      cy: (qeRect.top + qeRect.bottom) / 2,
+    },
+  );
+  expect(onTop).toBe(true);
 }
 
 async function assertQuickExitClearOfDialog(
@@ -296,19 +362,36 @@ async function assertQuickExitClearOfDialog(
   }
 
   await expect(page.locator(QUICK_EXIT_SELECTOR)).toBeVisible();
+  await assertQuickExitOnTop(page, qeRect!);
 }
 
 /**
- * Known, pre-existing bugs outside this task's file ownership (D3-era
- * bypass dialogs that carry their own copy of the Quick Exit gutter instead
- * of ResponsiveModal's shared one - see openIssues): AboutUs.jsx line ~1242
- * (`pt-20 sm:pt-4`) and UserManual.jsx line ~4799 (`pt-20 sm:pt-0`) both
- * reset the gutter at `sm:` (640px) while their own mobile header keeps
- * rendering up to their `md:` (768px) layout switch, leaving a real,
- * reproducible 640-767px gap. Flagged here (not silently skipped) so the
- * gap is visible in every run instead of just in this file's history.
+ * Known, pre-existing bug outside this task's file ownership (D3-era bypass
+ * dialogs that carry their own copy of the Quick Exit gutter instead of
+ * ResponsiveModal's shared one - see openIssues): AboutUs.jsx line ~1242
+ * (`pt-20 sm:pt-4`) and UserManual.jsx line ~4799 (`pt-20 sm:pt-0`) both let
+ * their close-X get taken by Quick Exit at 640x800, the one width/height
+ * pair in this sweep where a live probe reproduces it - the other 7 required
+ * viewports measure clean for both dialogs. Scoped to that one pair (not
+ * every viewport) so a regression at any of the other 7 - including every
+ * viewport >= 768px, where these two dialogs' real desktop layout runs -
+ * still fails this suite instead of being silently skipped alongside a bug
+ * that's actually confined to one narrow width band.
+ *
+ * A same-file fix (moving QuickExitButton.jsx's top-right corner swap from
+ * `sm:` to `md:`, so these two dialogs' still-mobile header at 640-767
+ * never shares a corner with Quick Exit) was tried and reverted: it clears
+ * both of these but regresses ClaimNavigator, which keeps its title/icon
+ * flush at the screen's top-left below `md:` on the assumption Quick Exit
+ * is already on the right by `sm:` (measured collision at 640x800 - see
+ * QuickExitButton.jsx). Fixing AboutUs/UserManual's own gutter needs those
+ * files, which this task doesn't own; flagged here (not silently skipped)
+ * so the gap stays visible instead of just living in this comment.
  */
-const KNOWN_OUT_OF_SCOPE = new Set(["openAboutUs", "openUserManual"]);
+const KNOWN_OUT_OF_SCOPE = new Set([
+  "openAboutUs@640x800",
+  "openUserManual@640x800",
+]);
 
 const TRIGGERS = buildTriggers();
 
@@ -330,7 +413,7 @@ for (const vp of WIDE_VIEWPORTS) {
         await assertQuickExitClearOfDialog(page, trigger.dispatch);
       };
 
-      if (KNOWN_OUT_OF_SCOPE.has(trigger.label)) {
+      if (KNOWN_OUT_OF_SCOPE.has(`${trigger.label}@${vp.width}x${vp.height}`)) {
         test.fixme(title, run);
       } else {
         test(title, run);
