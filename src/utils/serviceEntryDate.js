@@ -52,11 +52,30 @@ function _sourceForPeriod(period) {
   return "printed";
 }
 
+// A calculated (derived) start is a guess, never a proven fact - it must
+// never outrank a real one just for being chronologically earlier. Reduced
+// to a two-tier split (proven vs. calculated), not a full
+// veteran/printed/code_sheet ranking: two proven periods still need a
+// chronological tiebreak (the earlier enlistment genuinely IS "when
+// service began"), and this module has no cross-period signal for
+// preferring one proven source over another.
+function _isMoreProvenEntry(candidate, currentBest) {
+  const candidateProven = !candidate.serviceStartDateDerived;
+  const bestProven = !currentBest.serviceStartDateDerived;
+  if (candidateProven !== bestProven) return candidateProven;
+  return (
+    new Date(candidate.serviceStartDate) <
+    new Date(currentBest.serviceStartDate)
+  );
+}
+
 /**
- * Picks the earliest proven period start out of `periods`. Each period is
- * expected to carry `serviceStartDate`/`serviceStartDateDerived`, and may
- * carry `userEdited`/`formType`/`periodScope` - callers pass whichever of
- * those their own store tracks; a store that doesn't track one just never
+ * Picks the earliest proven period start out of `periods` - preferring any
+ * non-calculated (proven) period over a calculated one regardless of date,
+ * and the chronologically earliest among ties. Each period is expected to
+ * carry `serviceStartDate`/`serviceStartDateDerived`, and may carry
+ * `userEdited`/`formType`/`periodScope` - callers pass whichever of those
+ * their own store tracks; a store that doesn't track one just never
  * matches that branch of `_sourceForPeriod`.
  *
  * Falls back to `legacy` only when no period has a usable date - data saved
@@ -69,14 +88,14 @@ function _sourceForPeriod(period) {
 export function pickServiceEntry(periods, legacy = null) {
   const candidates = (periods || []).filter(_isEntryCandidate);
   if (candidates.length > 0) {
-    const earliest = candidates.reduce((min, p) =>
-      new Date(p.serviceStartDate) < new Date(min.serviceStartDate) ? p : min,
+    const best = candidates.reduce((currentBest, p) =>
+      _isMoreProvenEntry(p, currentBest) ? p : currentBest,
     );
     return {
-      date: earliest.serviceStartDate,
-      derived: !!earliest.serviceStartDateDerived,
-      source: _sourceForPeriod(earliest),
-      periodId: earliest.id || null,
+      date: best.serviceStartDate,
+      derived: !!best.serviceStartDateDerived,
+      source: _sourceForPeriod(best),
+      periodId: best.id || null,
     };
   }
 
