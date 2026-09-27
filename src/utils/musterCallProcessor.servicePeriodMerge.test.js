@@ -137,6 +137,17 @@ describe("saveServiceRecordToProfile: NGB-22 rank attachment without a Box 12b d
     );
     saveServiceRecordToProfile({ name: "ngb22_no_sep.pdf" }, { extractedData });
 
+    // Precondition, not a duplicate of the sibling test above: without this
+    // assertion, a reintroduced guess-the-rank fallback would still leave
+    // this test green, since the upsertServicePeriod below overwrites
+    // whatever rank was already there with the same value either way.
+    const before = getServicePeriods().find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    expect(before.rank).toBe("");
+
     upsertServicePeriod(
       {
         serviceStartDate: "2004-06-22",
