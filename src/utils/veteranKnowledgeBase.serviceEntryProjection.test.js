@@ -72,7 +72,7 @@ describe("projectServiceEntryIntoVkb: no-op guards", () => {
   });
 });
 
-describe("projectServiceEntryIntoVkb: top-level fields and snapshot", () => {
+describe("projectServiceEntryIntoVkb: top-level fields", () => {
   beforeEach(() => {
     localStorage.clear();
     seedProfile();
@@ -109,6 +109,13 @@ describe("projectServiceEntryIntoVkb: top-level fields and snapshot", () => {
     expect(vkb.serviceHistory.entrySource).toBe("calculated");
     expect(vkb.serviceHistory.entryPeriodId).toBe(id);
     expect(vkb.serviceHistory.yearsOfService).toBeCloseTo(8.4, 1);
+  });
+});
+
+describe("projectServiceEntryIntoVkb: preProjectionSnapshot", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    seedProfile();
   });
 
   it("writes preProjectionSnapshot exactly once, only on the first real change", () => {
@@ -234,7 +241,9 @@ describe("projectServiceEntryIntoVkb: period link-and-fold", () => {
     expect(vkb.serviceHistory.servicePeriods).toHaveLength(1);
     expect(vkb.serviceHistory.servicePeriods[0].canonicalPeriodId).toBe("p1");
   });
+});
 
+describe("projectServiceEntryIntoVkb: period link-and-fold (c)", () => {
   it("(c) links a non-window period by a proven document source, MM/DD/YYYY vs ISO", () => {
     const vkb = baseVkb({
       serviceHistory: {
@@ -418,7 +427,9 @@ describe("projectServiceEntryIntoVkb: timeline projection", () => {
     );
     expect(event.description).not.toContain("(calculated)");
   });
+});
 
+describe("projectServiceEntryIntoVkb: timeline projection dedup", () => {
   it("removes a VKB-only event whose source is a known document, but keeps a genuinely unrelated one", () => {
     const vkb = baseVkb({
       evidenceTimeline: [

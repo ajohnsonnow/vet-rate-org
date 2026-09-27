@@ -937,32 +937,29 @@ function _resetFieldsForDocument(
   setGroupedFields(grouped);
 }
 
-function useDocumentBriefingData({
-  currentData,
-  classification,
-  filename,
-  providedConflicts,
-  currentDocIndex,
-  totalDocuments,
-  isMultiDocument,
-  extractedData,
-  priorServiceStartCorrection,
-}) {
-  const [editedData, setEditedData] = useState({});
-  const [verifiedFields, setVerifiedFields] = useState({});
-  const [conflicts, setConflicts] = useState([]);
-  const [filteredData, setFilteredData] = useState({});
-  const [groupedFields, setGroupedFields] = useState({});
-  const [typedFields, setTypedFields] = useState(new Set());
-
-  useDocumentBriefingDebugLog({
-    extractedData,
+// Detect conflicts on mount and when document changes. Extracted from
+// useDocumentBriefingData to stay under the 80-line function cap.
+function useDocumentBriefingConflictEffect(args) {
+  const {
+    currentData,
     classification,
-    isMultiDocument,
+    filename,
+    providedConflicts,
+    currentDocIndex,
     totalDocuments,
-  });
+    isMultiDocument,
+    priorServiceStartCorrection,
+    setters,
+  } = args;
+  const {
+    setEditedData,
+    setVerifiedFields,
+    setTypedFields,
+    setFilteredData,
+    setGroupedFields,
+    setConflicts,
+  } = setters;
 
-  // Detect conflicts on mount and when document changes
   useEffect(() => {
     let cancelled = false;
 
@@ -1018,7 +1015,58 @@ function useDocumentBriefingData({
     isMultiDocument,
     totalDocuments,
     priorServiceStartCorrection,
+    setEditedData,
+    setVerifiedFields,
+    setTypedFields,
+    setFilteredData,
+    setGroupedFields,
+    setConflicts,
   ]);
+}
+
+function useDocumentBriefingData({
+  currentData,
+  classification,
+  filename,
+  providedConflicts,
+  currentDocIndex,
+  totalDocuments,
+  isMultiDocument,
+  extractedData,
+  priorServiceStartCorrection,
+}) {
+  const [editedData, setEditedData] = useState({});
+  const [verifiedFields, setVerifiedFields] = useState({});
+  const [conflicts, setConflicts] = useState([]);
+  const [filteredData, setFilteredData] = useState({});
+  const [groupedFields, setGroupedFields] = useState({});
+  const [typedFields, setTypedFields] = useState(new Set());
+
+  useDocumentBriefingDebugLog({
+    extractedData,
+    classification,
+    isMultiDocument,
+    totalDocuments,
+  });
+
+  useDocumentBriefingConflictEffect({
+    currentData,
+    classification,
+    filename,
+    providedConflicts,
+    currentDocIndex,
+    totalDocuments,
+    isMultiDocument,
+    priorServiceStartCorrection,
+    setters: {
+      setEditedData,
+      setVerifiedFields,
+      setTypedFields,
+      setFilteredData,
+      setGroupedFields,
+      setConflicts,
+    },
+  });
 
   return {
     editedData,
