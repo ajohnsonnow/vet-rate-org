@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 /**
  * VAAITransparency Component
@@ -904,7 +905,17 @@ function VAAITransparencyHeader({ activeTab, onChangeTab, onClose }) {
   return (
     <>
       <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 p-6 rounded-t-lg">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <HeaderCloseSlot
+          close={
+            <button
+              onClick={onClose}
+              className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          }
+        >
           <div className="flex min-w-0 items-center gap-4">
             <div className="p-3 bg-white/20 rounded-lg shrink-0">
               <Brain className="h-8 w-8 text-white" />
@@ -924,14 +935,7 @@ function VAAITransparencyHeader({ activeTab, onChangeTab, onClose }) {
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
-            aria-label="Close"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+        </HeaderCloseSlot>
       </div>
 
       <VAAITransparencyTabs activeTab={activeTab} onChangeTab={onChangeTab} />

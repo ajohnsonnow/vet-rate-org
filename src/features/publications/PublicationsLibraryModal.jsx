@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import ResponsiveModal from "../../components/common/ResponsiveModal";
+import HeaderCloseSlot from "../../components/common/HeaderCloseSlot";
 
 const PublicationsLibrary = lazy(
   () => import("../../components/PublicationsLibrary"),
@@ -32,23 +33,28 @@ export default function PublicationsLibraryModal() {
       size="2xl"
       labelledBy="publications-library-title"
       header={
-        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex flex-wrap justify-between items-center gap-2">
-          <h2
-            id="publications-library-title"
-            className="min-w-0 text-xl font-bold text-gray-900 dark:text-white"
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4">
+          <HeaderCloseSlot
+            close={
+              <button
+                onClick={() => setOpen(false)}
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            }
           >
-            📚 Publications Library{" "}
-            <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
-              BETA
-            </span>
-          </h2>
-          <button
-            onClick={() => setOpen(false)}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+            <h2
+              id="publications-library-title"
+              className="min-w-0 text-xl font-bold text-gray-900 dark:text-white"
+            >
+              📚 Publications Library{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
+                BETA
+              </span>
+            </h2>
+          </HeaderCloseSlot>
         </div>
       }
     >
