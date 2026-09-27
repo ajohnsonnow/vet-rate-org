@@ -2054,7 +2054,101 @@ async function _runOcrOnFiles(filesToProcess, ctx) {
   }
 }
 
-function _prepareAndShowProfileImport(
+// Note: Use EITHER serviceStartDate OR entryDate, not both (they're duplicates)
+// Same for serviceEndDate/separationDate
+// serviceStartDate/serviceEndDate, not entryDate/separationDate:
+// updateVeteranProfile's VALID_PROFILE_FIELDS whitelist only recognizes
+// the former - entryDate/separationDate silently dropped on save, so a
+// DD214Analyzer-only veteran's profile/dossier never got a service
+// span at all ("? - ?"). Box 12a is a printed date, never a calculated
+// guess, so serviceStartDateDerived is explicitly cleared too.
+function _buildRawProfileImportData(result) {
+  return {
+    // Personal Identification
+    fullName: result.fullName,
+    lastName: result.lastName,
+    firstName: result.firstName,
+    middleName: result.middleName,
+    ssnLast4: result.ssnLast4,
+    serviceNumber: result.serviceNumber,
+    dateOfBirth: validateDate(result.dateOfBirth),
+    placeOfBirth: result.placeOfBirth,
+    homeOfRecord: result.homeOfRecord,
+
+    // Component & Rank
+    branch: result.branch,
+    component: result.component,
+    componentFull: result.componentFull,
+    rank: result.rank,
+    payGrade: result.payGrade,
+    dateOfRank: validateDate(result.dateOfRank),
+
+    // MOS & Assignments
+    mos: result.mos,
+    mosTitle: result.mosTitle,
+    lastDutyAssignment: result.lastDutyAssignment,
+    commandTransferredTo: result.commandTransferredTo,
+
+    // Dates & Service Time
+    serviceStartDate: validateDate(result.entryDate),
+    serviceStartDateDerived: false,
+    serviceEndDate: validateDate(result.separationDate),
+    netActiveService: result.netActiveService,
+    totalPriorActiveService: result.totalPriorActiveService,
+    totalPriorInactiveService: result.totalPriorInactiveService,
+    yearsService: result.yearsService,
+    monthsService: result.monthsService,
+    daysService: result.daysService,
+
+    // Benefits & Obligations
+    sglCoverage: result.sglCoverage,
+    giBlStatus: result.giBlStatus,
+    reserveObligationDate: validateDate(result.reserveObligationDate),
+    daysLost: result.daysLost,
+    foreignService: result.foreignService,
+    foreignServiceDetails: result.foreignServiceDetails,
+    seaService: result.seaService,
+
+    // Separation Info
+    separationAuthority: result.separationAuthority,
+    separationCode: result.separationCode,
+    reentryCode: result.reentryCode,
+    separationProgramDesignator: result.separationProgramDesignator,
+    separationType: result.separationType,
+    characterOfService: result.characterOfService,
+    narrativeReason: result.narrativeReason,
+
+    // Education & Training
+    militaryEducation: result.militaryEducation,
+    memberRequests: result.memberRequests,
+
+    // Contact
+    homeAddress: result.homeAddress,
+
+    // Combat & Qualifications
+    specialQualifications: result.specialQualifications,
+    securityClearance: result.securityClearance,
+
+    // Legacy
+    reenlisted: result.reenlisted,
+  };
+}
+
+// Filter out undefined/null values but keep empty strings for user to fill.
+// Also keeps boolean false values (like reenlisted: false).
+function _filterProfileImportData(rawProfileData) {
+  return Object.fromEntries(
+    Object.entries(rawProfileData).filter(([_key, value]) => {
+      if (value === undefined || value === null) return false;
+      if (typeof value === "boolean") return true;
+      if (typeof value === "string" && value.trim() !== "") return true;
+      if (typeof value === "number") return true;
+      return false;
+    }),
+  );
+}
+
+export function _prepareAndShowProfileImport(
   result,
   setExtractedProfileData,
   setShowProfileImportModal,
@@ -2065,97 +2159,8 @@ function _prepareAndShowProfileImport(
   }
 
   try {
-    // Validate dates before using
-    const validatedEntryDate = validateDate(result.entryDate);
-    const validatedSeparationDate = validateDate(result.separationDate);
-
-    // Prepare extracted profile data for review
-    // Note: Use EITHER serviceStartDate OR entryDate, not both (they're duplicates)
-    // Same for serviceEndDate/separationDate
-    const rawProfileData = {
-      // Personal Identification
-      fullName: result.fullName,
-      lastName: result.lastName,
-      firstName: result.firstName,
-      middleName: result.middleName,
-      ssnLast4: result.ssnLast4,
-      serviceNumber: result.serviceNumber,
-      dateOfBirth: validateDate(result.dateOfBirth),
-      placeOfBirth: result.placeOfBirth,
-      homeOfRecord: result.homeOfRecord,
-
-      // Component & Rank
-      branch: result.branch,
-      component: result.component,
-      componentFull: result.componentFull,
-      rank: result.rank,
-      payGrade: result.payGrade,
-      dateOfRank: validateDate(result.dateOfRank),
-
-      // MOS & Assignments
-      mos: result.mos,
-      mosTitle: result.mosTitle,
-      lastDutyAssignment: result.lastDutyAssignment,
-      commandTransferredTo: result.commandTransferredTo,
-
-      // Dates & Service Time
-      entryDate: validatedEntryDate,
-      separationDate: validatedSeparationDate,
-      netActiveService: result.netActiveService,
-      totalPriorActiveService: result.totalPriorActiveService,
-      totalPriorInactiveService: result.totalPriorInactiveService,
-      yearsService: result.yearsService,
-      monthsService: result.monthsService,
-      daysService: result.daysService,
-
-      // Benefits & Obligations
-      sglCoverage: result.sglCoverage,
-      giBlStatus: result.giBlStatus,
-      reserveObligationDate: validateDate(result.reserveObligationDate),
-      daysLost: result.daysLost,
-      foreignService: result.foreignService,
-      foreignServiceDetails: result.foreignServiceDetails,
-      seaService: result.seaService,
-
-      // Separation Info
-      separationAuthority: result.separationAuthority,
-      separationCode: result.separationCode,
-      reentryCode: result.reentryCode,
-      separationProgramDesignator: result.separationProgramDesignator,
-      separationType: result.separationType,
-      characterOfService: result.characterOfService,
-      narrativeReason: result.narrativeReason,
-
-      // Education & Training
-      militaryEducation: result.militaryEducation,
-      memberRequests: result.memberRequests,
-
-      // Contact
-      homeAddress: result.homeAddress,
-
-      // Combat & Qualifications
-      specialQualifications: result.specialQualifications,
-      securityClearance: result.securityClearance,
-
-      // Legacy
-      reenlisted: result.reenlisted,
-    };
-
-    // Filter out undefined/null values but keep empty strings for user to fill
-    // Also keep boolean false values (like reenlisted: false)
-    const profileData = Object.fromEntries(
-      Object.entries(rawProfileData).filter(([_key, value]) => {
-        // Always exclude undefined/null
-        if (value === undefined || value === null) return false;
-        // Keep booleans (including false)
-        if (typeof value === "boolean") return true;
-        // Keep non-empty strings
-        if (typeof value === "string" && value.trim() !== "") return true;
-        // Keep numbers
-        if (typeof value === "number") return true;
-        // Filter out empty strings
-        return false;
-      }),
+    const profileData = _filterProfileImportData(
+      _buildRawProfileImportData(result),
     );
 
     // Only show modal if we have data to import
@@ -2173,7 +2178,7 @@ function _prepareAndShowProfileImport(
   }
 }
 
-function _prepareManualProfileImport(
+export function _prepareManualProfileImport(
   analysisResult,
   setExtractedProfileData,
   setShowProfileImportModal,
@@ -2185,14 +2190,17 @@ function _prepareManualProfileImport(
     const validatedEntryDate = validateDate(analysisResult.entryDate);
     const validatedSeparationDate = validateDate(analysisResult.separationDate);
 
-    // Prepare extracted profile data for review
-    // Note: No duplicate fields (removed serviceStartDate/serviceEndDate aliases)
+    // Prepare extracted profile data for review. serviceStartDate/
+    // serviceEndDate, not entryDate/separationDate - see the same note in
+    // _prepareAndShowProfileImport above (updateVeteranProfile's whitelist
+    // silently drops the latter).
     const profileData = {
       branch: analysisResult.branch,
       mos: analysisResult.mos,
       mosTitle: analysisResult.mosTitle,
-      entryDate: validatedEntryDate,
-      separationDate: validatedSeparationDate,
+      serviceStartDate: validatedEntryDate,
+      serviceStartDateDerived: false,
+      serviceEndDate: validatedSeparationDate,
       separationType: analysisResult.separationType,
       characterOfService: analysisResult.characterOfService,
       reenlisted: analysisResult.reenlisted,
