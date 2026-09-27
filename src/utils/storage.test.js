@@ -120,6 +120,9 @@ describe("migrateFromLocalStorage: shouldAbort (maintenance-mode kill switch)", 
       "profile-data",
     );
     expect(localStorage.getItem("vet_rate_saved_claims")).toBe("claims-data");
+    // shouldAbort is checked *before* each key's write, not after - the key
+    // reached right as the trip fires must never make it into IndexedDB.
+    expect(store.get("vet_rate_saved_claims")).toBeUndefined();
     // The completion flag was never written, so needsMigration() still
     // reports true afterward.
     expect(store.get("vet_rate_migrated_to_indexeddb")).toBeUndefined();
