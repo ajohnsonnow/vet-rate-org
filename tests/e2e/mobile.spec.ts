@@ -38,6 +38,17 @@ const QUICK_EXIT_VIEWPORTS = [
   { name: "iphone-max", width: 430, height: 932 },
 ];
 
+// N13: the close-X-stays-top-right sweep runs at the four QUICK_EXIT_VIEWPORTS
+// widths plus a desktop width - the "safety net" regression this guards
+// against (a wrapped cluster landing left-aligned on its own row) reproduces
+// at both a narrow phone AND a wide desktop header once the title/cluster
+// text is long enough to wrap, so a phone-only sweep could miss a desktop-only
+// regression.
+const HEADER_ALIGNMENT_VIEWPORTS = [
+  ...QUICK_EXIT_VIEWPORTS,
+  { name: "desktop", width: 1440, height: 900 },
+];
+
 const MODALS = [
   // Cluster F5 (S10): My Packet's main shell plus its four nested viewers (Pain
   // Map Detail, Form Viewer, Statement Viewer, Import Confirm) migrated to the
@@ -1613,6 +1624,10 @@ type HeaderProbe = {
   aiStatusRect: Rect | null;
   llmBadgeRect: Rect | null;
   shareRect: Rect | null;
+  // The `.modal-header` (or dialog, if no such element) region itself -
+  // the reference frame the N13 top-right-pin assertion measures the
+  // close control against.
+  headerRect: Rect | null;
 };
 
 /**
@@ -1655,6 +1670,7 @@ const EMPTY_HEADER_PROBE: HeaderProbe = {
   aiStatusRect: null,
   llmBadgeRect: null,
   shareRect: null,
+  headerRect: null,
 };
 
 async function probeHeaderLayout(page: Page): Promise<HeaderProbe> {
@@ -1732,6 +1748,7 @@ async function probeHeaderLayout(page: Page): Promise<HeaderProbe> {
         aiStatusRect: rectOf(c.aiStatusEl),
         llmBadgeRect: rectOf(c.llmBadgeEl),
         shareRect: rectOf(c.shareEl),
+        headerRect: rectOf(headerRegion),
       };
     })
     .then((found) => (found ? { found: true, ...found } : EMPTY_HEADER_PROBE));
@@ -1824,6 +1841,67 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
 }
 
 /**
+ * N13: the close × must stay pinned to the header's top-right corner at
+ * every width - the fix for the N12 "flex-wrap safety net" regression
+ * (wrapping the whole title+cluster row let a lone-on-its-line close button
+ * degrade to flex-start, i.e. left-aligned, instead of staying right-aligned
+ * top-right). Fails outright (rather than skipping) when the close control
+ * or the header region itself can't be found, so a dialog with no
+ * discoverable close button is a reported violation, not a vacuous pass.
+ */
+function closeTopRightViolations(probe: HeaderProbe): string[] {
+  if (!probe.headerRect) return ["header region not found"];
+  if (!probe.closeRect) return ["close control not found"];
+
+  const violations: string[] = [];
+  const rightGap = Math.abs(probe.headerRect.right - probe.closeRect.right);
+  if (rightGap > 16) {
+    violations.push(
+      `close right edge is ${rightGap.toFixed(1)}px from the header's right edge (max 16)`,
+    );
+  }
+  const topOffset = probe.closeRect.top - probe.headerRect.top;
+  if (topOffset > 16) {
+    violations.push(
+      `close top sits ${topOffset.toFixed(1)}px below the header's top - not on its first line (max 16)`,
+    );
+  }
+  return violations;
+}
+
+for (const vp of HEADER_ALIGNMENT_VIEWPORTS) {
+  test.describe(`Tool dialog close-X stays top-right @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const dialog of TOOL_GRID_DIALOG_EVENTS) {
+      test(`${dialog.label}: close × right edge and top stay pinned to the header's top-right corner`, async ({
+        page,
+      }) => {
+        const probe = await triggerAndProbe(
+          page,
+          dispatchTrigger(page, dialog.event, dialog.detail),
+          probeHeaderLayout,
+        );
+        expect(probe.found).toBe(true);
+        expect(closeTopRightViolations(probe)).toEqual([]);
+      });
+    }
+  });
+}
+
+/**
  * CAPSimulator's three "deeper" headers (select a condition, mid-simulation,
  * terminology flashcards) still had the absolute-positioned back/close
  * cluster painted over a centered title (independent audit, N12 follow-up).
@@ -1890,13 +1968,14 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
     });
 
     for (const mode of CAP_DEEP_MODES) {
-      test(`${mode.label}: title/back/close don't collide, title isn't clipped`, async ({
+      test(`${mode.label}: title/back/close don't collide, title isn't clipped, close stays top-right`, async ({
         page,
       }) => {
         await openCAPMode(page, mode.buttonText, mode.pickCondition);
         const probe = await probeHeaderLayout(page);
         expect(probe.found).toBe(true);
         expect(headerCollisionViolations(probe)).toEqual([]);
+        expect(closeTopRightViolations(probe)).toEqual([]);
       });
     }
   });
