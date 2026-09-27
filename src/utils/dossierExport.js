@@ -100,7 +100,11 @@ function generateProfileSection(profile) {
         </div>
         <div class="profile-item">
           <span class="label">Service Dates:</span>
-          <span class="value">${escapeHtml(profile.startDate || "?")} - ${escapeHtml(profile.endDate || "?")}</span>
+          <span class="value">${escapeHtml(profile.serviceStartDate || "?")}${
+            profile.serviceStartDateDerived
+              ? " (calculated from net service)"
+              : ""
+          } - ${escapeHtml(profile.serviceEndDate || "?")}</span>
         </div>
         <div class="profile-item">
           <span class="label">Current Combined Rating:</span>
