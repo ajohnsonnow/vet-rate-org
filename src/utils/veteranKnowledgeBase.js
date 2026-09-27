@@ -326,9 +326,18 @@ function _renameServicePeriodFields(vkb) {
 function _renameEntryRankField(vkb) {
   const rank = vkb.serviceHistory?.rank;
   if (!rank || typeof rank !== "object") return false;
-  if (rank.firstPeriodRank !== undefined) return false;
-  rank.firstPeriodRank = rank.entry ?? null;
-  rank.firstPeriodEntryDate = rank.entryAsOf ?? null;
+  const hasLegacyKeys =
+    Object.hasOwn(rank, "entry") || Object.hasOwn(rank, "entryAsOf");
+  if (!hasLegacyKeys) return false;
+  // A merge that ran before this migration could already have populated
+  // firstPeriodRank from a genuinely earlier record - the legacy value must
+  // not clobber it, but the mislabeled keys still need to go, or a future
+  // reader (or another writer re-seeding the legacy shape) can resurrect
+  // "entry rank" as if it meant something.
+  if (rank.firstPeriodRank === undefined) {
+    rank.firstPeriodRank = rank.entry ?? null;
+    rank.firstPeriodEntryDate = rank.entryAsOf ?? null;
+  }
   delete rank.entry;
   delete rank.entryAsOf;
   return true;
@@ -392,7 +401,7 @@ export const migrateOffSchemaVKB = (vkb) => {
  * so readers never wait on a full VKB write; the persist runs in the background
  * and, being idempotent, is safe to re-run if a reload beats the write.
  */
-async function _migrateAndPersist(vkb) {
+export async function _migrateAndPersist(vkb) {
   if (
     vkb?.metadata?.migratedOffSchema &&
     vkb?.metadata?.migratedServicePeriodFieldNames &&
@@ -1164,6 +1173,15 @@ function mergeDD214RankAndCharacter(vkb, dd214Data) {
   ) {
     rank.firstPeriodRank = dd214Data.rank || null;
     rank.firstPeriodEntryDate = dd214Data.entryDate;
+    // firstPeriodEntryDate exists to pick "the earliest known period", not
+    // to claim the rank held true that early - firstPeriodRank is really
+    // that record's rank as of ITS OWN separation. Keep the one date that
+    // is actually true of the rank value alongside it, so a future reader
+    // can't pair "first period" rank with an entry date and print a rank
+    // at entry this pipeline never extracted.
+    rank.firstPeriodRankAsOf = dd214Data.rank
+      ? dd214Data.separationDate || null
+      : null;
   }
   if (dd214Data.payGrade) {
     if (!vkb.serviceHistory.payGrade)

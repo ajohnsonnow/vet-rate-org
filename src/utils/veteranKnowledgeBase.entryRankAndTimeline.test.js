@@ -23,6 +23,7 @@ import {
   mergeDD214IntoVKB,
   mergeDD214EvidenceTimeline,
   migrateOffSchemaVKB,
+  _migrateAndPersist,
 } from "./veteranKnowledgeBase";
 
 describe("Observation 2: firstPeriodRank reflects the earliest genuinely dated record", () => {
@@ -140,6 +141,103 @@ describe("D11-3: legacy rank.entry/rank.entryAsOf migrates to its honest name", 
 
     expect(second.changed).toBe(false);
     expect(second.vkb.serviceHistory.rank.firstPeriodRank).toBe("SPC");
+  });
+
+  // QA follow-up (2026-09-27): a merge that already ran before this
+  // migration can leave firstPeriodRank set from a real, dated record -
+  // the migration must still delete the legacy keys so they can't be
+  // resurrected by another writer that seeds the old shape, but it must
+  // never let the legacy value clobber the already-correct one.
+  it("deletes the legacy keys without clobbering a firstPeriodRank a merge already set", () => {
+    const vkb = initializeVKB();
+    vkb.serviceHistory.rank.firstPeriodRank = "PVT";
+    vkb.serviceHistory.rank.firstPeriodEntryDate = "1997-09-29";
+    vkb.serviceHistory.rank.entry = "SFC";
+    vkb.serviceHistory.rank.entryAsOf = "2010-06-15";
+    delete vkb.metadata.migratedEntryRankFieldName;
+
+    const { changed } = migrateOffSchemaVKB(vkb);
+
+    expect(changed).toBe(true);
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("PVT");
+    expect(vkb.serviceHistory.rank.entry).toBeUndefined();
+    expect(vkb.serviceHistory.rank.entryAsOf).toBeUndefined();
+  });
+
+  // QA follow-up (2026-09-27): _migrateAndPersist's own early-return guard
+  // is a separate check from migrateOffSchemaVKB's per-field guards - it
+  // must require ALL three migration flags, or an existing VKB that only
+  // completed the two OLDER migrations would skip calling
+  // migrateOffSchemaVKB entirely and never run the rank rename at all.
+  it("still runs the rank rename when only migratedEntryRankFieldName is missing", async () => {
+    const vkb = initializeVKB();
+    vkb.metadata.migratedOffSchema = true;
+    vkb.metadata.migratedServicePeriodFieldNames = true;
+    delete vkb.metadata.migratedEntryRankFieldName;
+    delete vkb.serviceHistory.rank.firstPeriodRank;
+    vkb.serviceHistory.rank.entry = "SPC";
+
+    const migrated = await _migrateAndPersist(vkb);
+
+    expect(migrated.serviceHistory.rank.firstPeriodRank).toBe("SPC");
+    expect(migrated.serviceHistory.rank.entry).toBeUndefined();
+    expect(migrated.metadata.migratedEntryRankFieldName).toBe(true);
+  });
+
+  // QA follow-up (2026-09-27): the reverse - once every flag is already
+  // true, _migrateAndPersist must take the early-return path and leave the
+  // VKB alone (this is the fire-and-forget persist's whole reason to
+  // exist: readers never wait on a redundant migration + save).
+  it("takes the early-return path once every migration flag is already set", async () => {
+    const vkb = initializeVKB();
+    vkb.metadata.migratedOffSchema = true;
+    vkb.metadata.migratedServicePeriodFieldNames = true;
+    vkb.metadata.migratedEntryRankFieldName = true;
+    vkb.serviceHistory.rank.firstPeriodRank = "SPC";
+
+    const result = await _migrateAndPersist(vkb);
+
+    expect(result).toBe(vkb);
+    expect(result.serviceHistory.rank.firstPeriodRank).toBe("SPC");
+  });
+});
+
+describe("D11-3 QA follow-up: mergeDD214RankAndCharacter never re-creates the legacy keys", () => {
+  it("never sets rank.entry/rank.entryAsOf through a normal merge", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(vkb, { rank: "PV1", entryDate: "1997-09-29" });
+
+    expect(vkb.serviceHistory.rank.entry).toBeUndefined();
+    expect(vkb.serviceHistory.rank.entryAsOf).toBeUndefined();
+  });
+
+  // QA follow-up (2026-09-27): firstPeriodEntryDate exists to pick "the
+  // earliest known period", not to claim the rank held true that early -
+  // firstPeriodRank is really that record's rank as of ITS OWN separation.
+  // firstPeriodRankAsOf carries the one date that is actually true of the
+  // rank value, so a future reader can't pair "first period" rank with an
+  // entry date and print a rank at entry this pipeline never extracts.
+  it("stores the earliest record's own separation date as firstPeriodRankAsOf, not its entry date", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(vkb, {
+      rank: "PV1",
+      entryDate: "1997-09-29",
+      separationDate: "1998-02-27",
+    });
+
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBe("PV1");
+    expect(vkb.serviceHistory.rank.firstPeriodRankAsOf).toBe("1998-02-27");
+  });
+
+  it("leaves firstPeriodRankAsOf null when the earliest record's rank is unknown", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(vkb, {
+      entryDate: "1997-09-29",
+      separationDate: "1998-02-27",
+    });
+
+    expect(vkb.serviceHistory.rank.firstPeriodRank).toBeNull();
+    expect(vkb.serviceHistory.rank.firstPeriodRankAsOf).toBeNull();
   });
 });
 
