@@ -134,7 +134,11 @@ export async function saveServiceHistoryToVKB(serviceHistory, rawData = null) {
       serviceHistory.discharge_status;
 
     if (serviceHistory.payGrade) {
-      if (!sh.rank) sh.rank = { entry: null, discharge: null };
+      // D11-3 (final11 QA, 2026-09-27): rank.entry was the mislabeled
+      // "entry rank" field renamed to firstPeriodRank in
+      // mergeDD214RankAndCharacter - seeding the old shape here would let
+      // it come back the moment this writer runs before that one.
+      if (!sh.rank) sh.rank = { firstPeriodRank: null, discharge: null };
       sh.rank.discharge = sh.rank.discharge || serviceHistory.payGrade;
     }
 
