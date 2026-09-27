@@ -131,6 +131,30 @@ describe("subtractDuration", () => {
   });
 });
 
+// D-E (final10 QA, 2026-09-25): Date#setUTCMonth/setUTCFullYear roll an
+// out-of-range day-of-month OVER into the following month instead of
+// clamping to the target month's real last day - "Feb 31" silently became
+// "Mar 2/3", and "Feb 29 minus 1 year" (landing on a non-leap year)
+// became "Mar 1". The calendar convention is to clamp instead.
+describe("D-E: subtractDuration clamps to the target month's last day instead of overflowing", () => {
+  it("clamps a month-end date minus whole months to the shorter target month, not 2 days into the next one", () => {
+    // March 31 minus 1 month: February 2008 (leap year) only has 29 days.
+    expect(subtractDuration("2008-03-31", 0, 1, 0)).toBe("2008-02-29");
+  });
+
+  it("clamps Feb 29 minus 1 year to Feb 28 of a non-leap target year, not March 1", () => {
+    expect(subtractDuration("2008-02-29", 1, 0, 0)).toBe("2007-02-28");
+  });
+
+  it("clamps across a combined years+months subtraction landing on a short month", () => {
+    expect(subtractDuration("2008-05-31", 10, 3, 0)).toBe("1998-02-28");
+  });
+
+  it("is a no-op for a zero duration", () => {
+    expect(subtractDuration("2008-04-04", 0, 0, 0)).toBe("2008-04-04");
+  });
+});
+
 describe("N6: isDesignatedCombatZone shares one date-aware rule", () => {
   it("flags a designated location on or after its designation start date", () => {
     expect(isDesignatedCombatZone("AFGHANISTAN", "2004-08-08")).toBe(true);

@@ -187,15 +187,35 @@ export function parseExplicitDate(value) {
  * @param {string} isoDate - "YYYY-MM-DD"
  * @returns {string|null} "YYYY-MM-DD", or null if `isoDate` isn't that shape.
  */
+// D-E (final10 QA, 2026-09-25): `Date#setUTCFullYear`/`setUTCMonth` don't
+// clamp an out-of-range day-of-month, they ROLL OVER into the following
+// month - "Feb 31" (March 31 minus 1 month) silently became "Mar 2/3",
+// and "Feb 29" minus 1 year (landing on a non-leap year, where Feb only
+// has 28 days) became "Mar 1". The calendar convention or - Date, JS
+// libraries and every DoD net-service worksheet - is to clamp to the
+// LAST day of the target month instead. Years/months are resolved on the
+// calendar month grid first (with that clamp) before days are subtracted;
+// day-level subtraction has no equivalent overflow (rolling from, say,
+// March 3rd back across the month boundary into February is correct,
+// calendar-accurate behavior, not overflow).
 export function subtractDuration(isoDate, years, months, days) {
   const match = String(isoDate).match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return null;
-  const date = new Date(
-    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
-  );
-  date.setUTCFullYear(date.getUTCFullYear() - years);
-  date.setUTCMonth(date.getUTCMonth() - months);
+  const origYear = Number(match[1]);
+  const origMonth = Number(match[2]) - 1;
+  const origDay = Number(match[3]);
+
+  const targetMonthIndex = origYear * 12 + origMonth - years * 12 - months;
+  const targetYear = Math.floor(targetMonthIndex / 12);
+  const targetMonth = targetMonthIndex - targetYear * 12;
+  const daysInTargetMonth = new Date(
+    Date.UTC(targetYear, targetMonth + 1, 0),
+  ).getUTCDate();
+  const clampedDay = Math.min(origDay, daysInTargetMonth);
+
+  const date = new Date(Date.UTC(targetYear, targetMonth, clampedDay));
   date.setUTCDate(date.getUTCDate() - days);
+
   const y = date.getUTCFullYear();
   const m = String(date.getUTCMonth() + 1).padStart(2, "0");
   const d = String(date.getUTCDate()).padStart(2, "0");
