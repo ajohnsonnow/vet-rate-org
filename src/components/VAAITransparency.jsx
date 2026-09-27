@@ -923,7 +923,7 @@ function VAAITransparencyHeader({ activeTab, onChangeTab, onClose }) {
             <div className="min-w-0">
               <h2
                 id="va-ai-transparency-title"
-                className="text-3xl font-bold text-white"
+                className="text-xl sm:text-3xl font-bold text-white break-words"
               >
                 VA AI Transparency Hub{" "}
                 <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
