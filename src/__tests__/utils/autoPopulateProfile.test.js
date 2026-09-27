@@ -354,3 +354,37 @@ describe("autoPopulateProfile: a claim letter", () => {
     });
   });
 });
+
+describe("ADR-007: autoPopulateProfile never moves serviceStartDate once a period backs the entry", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("skips serviceStartDate but still fills every other field", async () => {
+    const { upsertServicePeriod, setServiceEntryDate } =
+      await import("../../utils/veteranProfile");
+    const id = upsertServicePeriod(
+      {
+        serviceStartDate: "2002-01-10",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22.pdf", confidence: 60 },
+    );
+    setServiceEntryDate({
+      date: "2001-11-01",
+      via: "muster_review",
+      periodId: id,
+    });
+
+    const result = await autoPopulateProfile([
+      serviceRecordResult({ serviceStartDate: "06/01/2010", mos: "68W" }),
+    ]);
+    expect(result.success).toBe(true);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("2001-11-01");
+    expect(profile.mos).toBe("68W");
+  });
+});

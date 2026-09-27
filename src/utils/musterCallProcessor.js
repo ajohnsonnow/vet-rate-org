@@ -49,6 +49,7 @@ import {
   addDeployment,
   updateDeployment,
   upsertServicePeriod,
+  hasPeriodBackedServiceEntry,
   getMyRatings,
   saveMyRatings,
 } from "./veteranProfile";
@@ -1042,20 +1043,14 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
   });
 }
 
+// ADR-007: periods now upsert BEFORE the dd214Data merge (reversed from the
+// original order) - so a new document's printed/calculated start is
+// already known to servicePeriods[] (and saveServiceHistory's own
+// preservation guard) by the time saveDD214Data below runs, instead of the
+// other way around.
 export const saveServiceRecordToProfile = (file, result) => {
   if (result.extractedData?.type !== "service_record") return;
   const candidate = buildDD214ProfileUpdate(result);
-  try {
-    const existing = getServiceHistory().dd214Data;
-    saveDD214Data(_mergeDD214Record(existing, candidate));
-    // eslint-disable-next-line no-console
-    console.log(`✅ Saved DD214 data to Service tab for ${file.name}`);
-  } catch (dd214Err) {
-    console.warn(
-      `Service history save failed for ${file.name} (non-fatal):`,
-      dd214Err.message,
-    );
-  }
 
   // N8 (final8 QA, 2026-09-24): the Box 18 additional periods run first so
   // that when the primary Box 12a/12b row can't be dated (a real gap on
@@ -1068,6 +1063,18 @@ export const saveServiceRecordToProfile = (file, result) => {
   // real periods happened to be created first.
   _saveNGB22AdditionalPeriods(file, candidate);
   _savePrimaryServicePeriod(file, result, candidate);
+
+  try {
+    const existing = getServiceHistory().dd214Data;
+    saveDD214Data(_mergeDD214Record(existing, candidate));
+    // eslint-disable-next-line no-console
+    console.log(`✅ Saved DD214 data to Service tab for ${file.name}`);
+  } catch (dd214Err) {
+    console.warn(
+      `Service history save failed for ${file.name} (non-fatal):`,
+      dd214Err.message,
+    );
+  }
 };
 
 // result.extractedData.awards reaches this in one of two shapes depending on
@@ -5872,6 +5879,11 @@ export const autoPopulateProfile = async (processedResults) => {
   const fieldSources = { ...(currentProfile.profileFieldSources || {}) };
   const updates = { ...currentProfile };
   const conflicts = [];
+  // ADR-007: once a canonical period backs the service entry date, it (not
+  // this generic document-fill loop) is the only path allowed to move
+  // serviceStartDate - the projection (saveServiceHistory/saveVeteranProfile's
+  // chokepoint) keeps the flat mirror in sync instead.
+  const skipStart = hasPeriodBackedServiceEntry();
 
   let updateCount = 0;
 
@@ -5938,6 +5950,7 @@ export const autoPopulateProfile = async (processedResults) => {
       // was blocked as a conflict, flagging the veteran's OWN typed date
       // as "calculated".
       if (field === "serviceStartDateDerived") return;
+      if (field === "serviceStartDate" && skipStart) return;
       const newValue = documentUpdates[field];
       if (newValue === undefined || newValue === null || newValue === "") {
         return;
