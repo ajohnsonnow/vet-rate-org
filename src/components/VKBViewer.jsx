@@ -173,6 +173,11 @@ const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
     {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
       Entry Date
+      {vkb.serviceHistory.entryDateDerived && (
+        <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+          (calculated from net service)
+        </span>
+      )}
     </label>
     <input
       type="date"
