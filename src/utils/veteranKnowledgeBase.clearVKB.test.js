@@ -106,3 +106,61 @@ describe("clearVKB deletes the IndexedDB record and in-memory cache", () => {
     expect(mod2.generateLLMContext(afterReload)).not.toContain("Jane Veteran");
   });
 });
+
+function makeFailingDeleteStore() {
+  return {
+    delete: () => {
+      const deleteRequest = {};
+      queueMicrotask(() => {
+        deleteRequest.error = new Error("simulated IDB failure");
+        deleteRequest.onerror?.();
+      });
+      return deleteRequest;
+    },
+  };
+}
+
+function createIndexedDBWhoseDeleteAlwaysFails() {
+  return {
+    open: () => {
+      const request = {};
+      queueMicrotask(() => {
+        request.result = {
+          objectStoreNames: { contains: () => true },
+          createObjectStore: () => ({ createIndex: () => {} }),
+          transaction: () => ({ objectStore: makeFailingDeleteStore }),
+        };
+        request.onsuccess?.();
+      });
+      return request;
+    },
+  };
+}
+
+// Regression: an IndexedDB delete failure used to only reach console.error -
+// clearVKB() still returned a fresh, empty VKB, so a caller had no way to
+// tell "actually deleted" apart from "cleared in this session only, and the
+// record will come back after a reload". A user-initiated privacy deletion
+// must fail loudly, not silently.
+describe("clearVKB reports a persistence failure instead of swallowing it", () => {
+  afterEach(() => {
+    delete window.indexedDB;
+    vi.resetModules();
+  });
+
+  it("resets the in-memory view but reports persisted:false when the IndexedDB delete errors", async () => {
+    window.indexedDB = createIndexedDBWhoseDeleteAlwaysFails();
+
+    const mod = await import("./veteranKnowledgeBase");
+
+    const result = await mod.clearVKB();
+
+    expect(result.persisted).toBe(false);
+    expect(result.vkb.personal.fullName).toBeNull();
+    // The in-memory view must still be reset even though the disk delete
+    // failed - a caller needs both signals, not one at the expense of the
+    // other.
+    const afterSameSession = await mod.loadVKB();
+    expect(afterSameSession.personal.fullName).toBeNull();
+  });
+});

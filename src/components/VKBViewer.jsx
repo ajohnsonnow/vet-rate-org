@@ -950,8 +950,13 @@ const VKBViewer = ({ isOpen, onClose }) => {
     if (
       confirm("⚠️ This will delete your entire Knowledge Base. Are you sure?")
     ) {
-      const newVKB = await clearVKB();
+      const { vkb: newVKB, persisted } = await clearVKB();
       setVkb(newVKB);
+      if (!persisted) {
+        alert(
+          "Cleared for this session, but the stored copy on this device could not be deleted and may return after a reload. Please try again.",
+        );
+      }
     }
   };
 

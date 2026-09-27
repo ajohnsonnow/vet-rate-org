@@ -2915,11 +2915,18 @@ export const exportVKB = async () => {
  * those fully intact, so loadVKB() (and every AI context built from it -
  * getVeteranAIContext, generateLLMContext) kept returning the "cleared"
  * veteran's entire history, in the same session and after reload.
+ *
+ * Returns `{ vkb, persisted }` rather than just the fresh VKB: the in-memory
+ * reset below always succeeds, but the IndexedDB delete it also attempts can
+ * fail independently, and a caller that reports success on a privacy
+ * deletion that didn't actually persist (the record would come back on
+ * reload) is exactly the silent-failure this must not allow.
  */
 export const clearVKB = async () => {
   localStorage.removeItem(VKB_STORAGE_KEY);
   vkbCache = null;
 
+  let persistError = null;
   try {
     const db = await openVKBDatabase();
     await new Promise((resolve, reject) => {
@@ -2930,10 +2937,19 @@ export const clearVKB = async () => {
       request.onerror = () => reject(request.error);
     });
   } catch (err) {
-    console.error("Error clearing VKB from IndexedDB:", err);
+    persistError = err;
   }
 
+  // Reset the in-memory view either way - a veteran must never see stale
+  // data in THIS session regardless of whether the disk copy actually went
+  // away.
   const fresh = initializeVKB();
   vkbCache = structuredClone(fresh);
-  return fresh;
+
+  if (persistError) {
+    console.error("Error clearing VKB from IndexedDB:", persistError);
+    return { vkb: fresh, persisted: false };
+  }
+
+  return { vkb: fresh, persisted: true };
 };
