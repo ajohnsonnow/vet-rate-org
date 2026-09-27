@@ -642,7 +642,7 @@ const NexusHeaderBar = ({
 }) => (
   <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
     <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0">
         <h2
           id="nexus-builder-title"
           className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2"

@@ -990,12 +990,12 @@ function TribunalHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-4 text-white sm:px-6 sm:py-6">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 sm:mb-2">
             <h2
               id="the-tribunal-title"
-              className="flex items-center gap-2 text-xl font-bold sm:text-3xl"
+              className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-3xl"
             >
               ⚖️ The Tribunal{" "}
               <span className="rounded bg-gray-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
