@@ -115,7 +115,7 @@ function SecondaryScoutHeader({
         <div className="min-w-0">
           <h2
             id="secondary-scout-title"
-            className="text-xl sm:text-3xl font-bold truncate"
+            className="text-xl sm:text-3xl font-bold"
           >
             🔍 Secondary Scout Results
           </h2>
