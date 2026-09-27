@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { jsPDF } from "jspdf";
 import ShareButton from "./ShareButton";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
@@ -616,7 +617,6 @@ const SymptomLoggerHeaderActions = ({
   setShowAISettings,
   symptomLoggerContentRef,
   onReportBug,
-  onClose,
 }) => (
   <div className="flex shrink-0 items-center gap-2">
     <button
@@ -643,27 +643,30 @@ const SymptomLoggerHeaderActions = ({
         moduleName="Symptom Logger"
       />
     )}
-    <button
-      type="button"
-      onClick={onClose}
-      className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
-      aria-label="Close"
-    >
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    </button>
   </div>
+);
+
+const SymptomLoggerCloseButton = ({ onClose }) => (
+  <button
+    type="button"
+    onClick={onClose}
+    className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
+    aria-label="Close"
+  >
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  </button>
 );
 
 const SymptomLoggerHeader = ({
@@ -679,7 +682,10 @@ const SymptomLoggerHeader = ({
   <div className="flex-shrink-0 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 text-white px-6 py-6 rounded-t-lg relative overflow-hidden">
     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-    <div className="relative flex flex-wrap items-start justify-between gap-2">
+    <HeaderCloseSlot
+      className="relative"
+      close={<SymptomLoggerCloseButton onClose={onClose} />}
+    >
       <div className="flex min-w-0 items-center gap-4">
         <div className="w-14 h-14 shrink-0 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
           <span className="text-3xl">{config.emoji}</span>
@@ -705,9 +711,8 @@ const SymptomLoggerHeader = ({
         setShowAISettings={setShowAISettings}
         symptomLoggerContentRef={symptomLoggerContentRef}
         onReportBug={onReportBug}
-        onClose={onClose}
       />
-    </div>
+    </HeaderCloseSlot>
 
     {/* AI Settings Panel */}
     {showAISettings && (
