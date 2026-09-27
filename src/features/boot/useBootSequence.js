@@ -127,16 +127,25 @@ async function initializeApp({
   setMaintenanceMode,
   setMaintenanceMessage,
   setIsMigrating,
+  setIsBooting,
 }) {
-  const inMaintenanceMode = await checkMaintenanceMode(
+  // The maintenance check is a network fetch with no timeout (version.js);
+  // the migration check/copy is local (IndexedDB + localStorage) and must
+  // never be held hostage by a slow or stalled request. Start both without
+  // sequencing one behind the other, and drop the boot gate the instant the
+  // (fast) migration side settles.
+  const maintenanceCheck = checkMaintenanceMode(
     setMaintenanceMode,
     setMaintenanceMessage,
   );
-  if (inMaintenanceMode) {
+
+  await runStorageMigration(setIsMigrating);
+  setIsBooting(false);
+
+  if (await maintenanceCheck) {
     return;
   }
 
-  await runStorageMigration(setIsMigrating);
   await runPersistentStorageInit();
   await runAutoBackupInit();
   runUserDataMigrations();
@@ -160,9 +169,25 @@ async function initializeApp({
  * The What's-New modal and SW update checker (formerly Step 2 / Step 3)
  * are owned by useUpdateOrchestrator now.
  *
- * Returns: { isMigrating, maintenanceMode, maintenanceMessage }
+ * isBooting gates App.jsx's *first* mount of the interactive tree: it
+ * starts true and only flips false once the migration decision (and the
+ * copy itself, if one was needed) has fully resolved. Before this existed,
+ * App.jsx mounted the interactive tree immediately (isMigrating started
+ * false), then swapped the whole tree out for <MigrationScreen/> the
+ * moment a returning user's migration kicked in, then swapped back when it
+ * finished - unmounting (and losing the state of) anything already open,
+ * and dropping any window CustomEvent dispatched while nothing was
+ * mounted to hear it. Gating the first mount on isBooting instead means
+ * the interactive tree - and everything a veteran can open inside it -
+ * only ever mounts once, after migration is already done, so there is no
+ * window left in which it can be swapped out from under them. isMigrating
+ * is kept (now purely informational: true only while the copy itself is
+ * running) since isBooting alone doesn't distinguish "still deciding" from
+ * "actively copying" for any future consumer that cares.
+ *
+ * Returns: { isBooting, isMigrating, maintenanceMode, maintenanceMessage }
+ *   - App.jsx renders a migration/boot screen while isBooting is true.
  *   - App.jsx renders <MaintenancePage> when maintenanceMode is true.
- *   - App.jsx renders a migration loading screen when isMigrating is true.
  *
  * Extracted from App.jsx (audit #35, B59; B70 absorbed the sync inits).
  */
@@ -170,6 +195,7 @@ export function useBootSequence() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState("");
   const [isMigrating, setIsMigrating] = useState(false);
+  const [isBooting, setIsBooting] = useState(true);
 
   useEffect(() => {
     initializeErrorCapture();
@@ -185,8 +211,9 @@ export function useBootSequence() {
       setMaintenanceMode,
       setMaintenanceMessage,
       setIsMigrating,
+      setIsBooting,
     });
   }, []);
 
-  return { isMigrating, maintenanceMode, maintenanceMessage };
+  return { isBooting, isMigrating, maintenanceMode, maintenanceMessage };
 }

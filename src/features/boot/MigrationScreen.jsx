@@ -1,12 +1,14 @@
 import LoadingBunker from "../../components/LoadingBunker";
 
 /**
- * MigrationScreen — full-page boot splash shown while
- * useBootSequence is migrating localStorage data into IndexedDB.
+ * MigrationScreen — full-page boot splash shown while useBootSequence is
+ * still deciding whether a localStorage → IndexedDB migration is needed,
+ * and while running it if so.
  *
- * Renders only when isMigrating is true; replaces the entire app
- * tree until migration completes, so siblings (toasts, modals,
- * shell overlays) intentionally do not mount.
+ * Renders only while isBooting is true (App.jsx); the interactive tree -
+ * and every dialog/listener inside it - does not mount until this resolves,
+ * so a migration can never swap an already-open dialog out from under a
+ * veteran or drop a dispatch aimed at a not-yet-mounted listener.
  *
  * Extracted from App.jsx (audit #35, B79).
  */
