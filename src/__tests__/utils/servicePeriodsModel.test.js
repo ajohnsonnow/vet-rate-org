@@ -17,6 +17,16 @@ import {
   getUnmatchedServiceRecords,
 } from "../../utils/veteranProfile";
 
+// musterCallProcessor transitively imports pdfjs, which references canvas
+// globals jsdom doesn't provide. Stub them so the module loads in the test
+// environment (same pattern as musterCallProcessor.serviceRecord.test.js).
+globalThis.DOMMatrix ??= class DOMMatrix {};
+globalThis.Path2D ??= class Path2D {};
+globalThis.ImageData ??= class ImageData {};
+
+const { saveServiceRecordToProfile } =
+  await import("../../utils/musterCallProcessor");
+
 function period(start, end, extra = {}) {
   return { serviceStartDate: start, serviceEndDate: end, ...extra };
 }
@@ -741,6 +751,167 @@ describe("N9e: repairs a previously mis-merged window period", () => {
     );
 
     expect(getServicePeriods()[0].rank).toBe("SGT");
+    expect(getUnmatchedServiceRecords()).toHaveLength(0);
+  });
+});
+
+// D-A (final10 QA, 2026-09-25): _isContaminatedBox18Period's fingerprint
+// (formType NGB22 + Box-18 notes + an "impossible" field populated) also
+// matched a period an ORDINARY, legitimate merge produced - a dated DD214
+// for that exact window saved before the NGB-22, at equal or lower
+// confidence, whose Box 18 upsert only ever reassigns provenance fields
+// (formType/notes/sourceDocument), never the DD214's real content fields.
+// Reproduces QA's R1/R2 with generic fixtures. Fixture values are generic,
+// not any real veteran's data.
+describe("D-A: the contamination repair never strips a legitimate DD214's fields from another document's window", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  function seedIadtDD214(confidence) {
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", {
+        branch: "Army",
+        component: "IADT",
+        rank: "PV2",
+        payGrade: "E-2",
+        characterOfService: "UNCHARACTERIZED",
+        mos: "42A10",
+        reentryCode: "NA",
+        formType: "DD214",
+        sourceDocument: "dd214_iadt.pdf",
+      }),
+      meta("dd214_iadt.pdf", confidence),
+    );
+  }
+
+  function saveNgb22(confidence) {
+    saveServiceRecordToProfile(
+      { name: "ngb22_generic.pdf" },
+      {
+        classification: { confidence },
+        extractedData: {
+          type: "service_record",
+          formType: "NGB22",
+          branch: "Army",
+          component: "National Guard",
+          rank: "SSG",
+          mos: "42A20",
+          reentryCode: "RE-3",
+          dischargeType: "GENERAL UNDER HONORABLE CONDITIONS",
+          additionalPeriods: [
+            ["03/10/1999", "09/02/1999", "IADT"],
+            ["01/15/2003", "12/20/2003", "Active Duty"],
+          ].map(([s, e, c]) => ({
+            serviceStartDate: s,
+            serviceEndDate: e,
+            component: c,
+          })),
+        },
+      },
+    );
+  }
+
+  function expectDD214FieldsIntact() {
+    const periods = getServicePeriods();
+    const window = periods.find((p) => p.serviceStartDate === "1999-03-10");
+    expect(window).toBeDefined();
+    expect(window.payGrade).toBe("E-2");
+    expect(window.mos).toBe("42A10");
+    expect(window.characterOfService).toBe("UNCHARACTERIZED");
+    expect(window.reentryCode).toBe("NA");
+    expect(window.sources.map((s) => s.sourceDocument).sort()).toEqual(
+      ["dd214_iadt.pdf", "ngb22_generic.pdf"].sort(),
+    );
+    // The NGB-22's own undated enlistment-level record legitimately stays
+    // unmatched (N9 - a multi-period document's primary row never merges
+    // into one of its own windows), but it must never carry the DD214's
+    // fields - that would be the D-A bug moving them there instead of
+    // leaving them on the window.
+    const unmatched = getUnmatchedServiceRecords();
+    expect(unmatched.some((r) => r.mos === "42A10")).toBe(false);
+    expect(unmatched.some((r) => r.payGrade === "E-2")).toBe(false);
+  }
+
+  it("R1: DD214 at lower confidence saved first, then a higher-confidence NGB-22", () => {
+    seedIadtDD214(80);
+    saveNgb22(90);
+    expectDD214FieldsIntact();
+  });
+
+  it("R2: DD214 and NGB-22 at equal confidence", () => {
+    seedIadtDD214(85);
+    saveNgb22(85);
+    expectDD214FieldsIntact();
+  });
+});
+
+// D-A: the one-time migration is versioned and never re-runs once applied.
+describe("D-A: the contamination repair is a versioned migration that runs once", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const BOX18_NOTES =
+    "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
+
+  function contaminatedRawHistory() {
+    return {
+      deployments: [],
+      awards: [],
+      dd214Data: null,
+      serviceInfo: null,
+      servicePeriods: [
+        {
+          id: "contaminated_window",
+          serviceStartDate: "1999-03-10",
+          serviceEndDate: "1999-09-02",
+          branch: "Army",
+          component: "National Guard",
+          formType: "NGB22",
+          rank: "SSG",
+          mos: "42A20",
+          characterOfService: "GENERAL UNDER HONORABLE CONDITIONS",
+          reentryCode: "RE-3",
+          sourceDocument: "single_source_form.pdf",
+          notes: BOX18_NOTES,
+        },
+      ],
+      unmatchedServiceRecords: [],
+      dateUpdated: "2026-01-01T00:00:00.000Z",
+    };
+  }
+
+  it("stamps a schema version on first read and repairs the legacy row", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify(contaminatedRawHistory()),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods[0].mos).toBe("");
+    expect(getUnmatchedServiceRecords()).toHaveLength(1);
+
+    const raw = JSON.parse(localStorage.getItem("vet_rate_service_history"));
+    expect(raw.schemaVersion).toBeGreaterThanOrEqual(1);
+  });
+
+  it("does not re-run the repair on a history already at the current schema version", () => {
+    const alreadyMigrated = {
+      ...contaminatedRawHistory(),
+      schemaVersion: 1,
+    };
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify(alreadyMigrated),
+    );
+
+    // The row is still shaped exactly like the legacy bug's signature, but
+    // schemaVersion already claims the migration ran - a real migration
+    // would have moved mos off this row already, so its presence here
+    // proves the repair did NOT re-fire.
+    const periods = getServicePeriods();
+    expect(periods[0].mos).toBe("42A20");
     expect(getUnmatchedServiceRecords()).toHaveLength(0);
   });
 });

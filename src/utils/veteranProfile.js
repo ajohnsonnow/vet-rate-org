@@ -750,6 +750,14 @@ export const hasMyRatings = () => {
 
 const SERVICE_HISTORY_KEY = "vet_rate_service_history";
 
+// D-A (final10 QA, 2026-09-25): schema version for one-time service-history
+// migrations - bumped to 1 for the Box-18-contamination repair
+// (_repairContaminatedWindowPeriods) below, so it runs exactly once per
+// veteran instead of re-fingerprinting (and risking a false positive on)
+// every single read. A history saved before this field existed has no
+// `schemaVersion` at all, which getServiceHistory normalizes to 0.
+const SERVICE_HISTORY_SCHEMA_VERSION = 1;
+
 /**
  * Valid deployment locations/theaters
  */
@@ -805,6 +813,8 @@ export const getServiceHistory = () => {
         unmatchedServiceRecords: [],
         dutyStations: [],
         documentPeriodCounts: {},
+        // Nothing to migrate for a brand-new history.
+        schemaVersion: SERVICE_HISTORY_SCHEMA_VERSION,
         dateUpdated: null,
       };
     }
@@ -839,7 +849,18 @@ export const getServiceHistory = () => {
     parsed.unmatchedServiceRecords = parsed.unmatchedServiceRecords.map(
       _seedSourcesIfMissing,
     );
-    _repairContaminatedWindowPeriods(parsed);
+    // D-A: one-time, versioned migration - a history already at (or past)
+    // the current schema version has already had this repair applied (or
+    // never needed it), so it never runs a second time and can never
+    // re-fingerprint a period a user or a later document has since
+    // legitimately changed.
+    parsed.schemaVersion =
+      typeof parsed.schemaVersion === "number" ? parsed.schemaVersion : 0;
+    if (parsed.schemaVersion < SERVICE_HISTORY_SCHEMA_VERSION) {
+      _repairContaminatedWindowPeriods(parsed);
+      parsed.schemaVersion = SERVICE_HISTORY_SCHEMA_VERSION;
+      saveServiceHistory(parsed);
+    }
     return parsed;
   } catch (error) {
     console.error("Error reading service history:", error);
@@ -852,6 +873,7 @@ export const getServiceHistory = () => {
       unmatchedServiceRecords: [],
       dutyStations: [],
       documentPeriodCounts: {},
+      schemaVersion: SERVICE_HISTORY_SCHEMA_VERSION,
       dateUpdated: null,
     };
   }
@@ -1147,11 +1169,29 @@ const BOX18_IMPOSSIBLE_FIELD_DEFAULTS = {
   serviceStartDateDerived: false,
 };
 
+// D-A (final10 QA, 2026-09-25): the fingerprint above (formType + Box-18
+// notes boilerplate + an "impossible" field populated) also matches a
+// period an ORDINARY, legitimate merge produced - a dated DD214 for that
+// exact window saved before the NGB-22, whose Box 18 upsert is provenance-
+// only (formType/notes/sourceDocument, all reassignable per the "Code
+// Sheet" precedent) and never touches payGrade/mos/characterOfService/etc,
+// so those fields staying populated after the merge is the DD214's real
+// data, not contamination. Only a period whose provenance (`sources`)
+// contains no document other than that one NGB-22 is provably the OLD
+// bug's signature (the document's own undated primary record absorbed
+// into its own window) - any other contributor proves these fields are
+// real and must be left alone.
+function _hasNoOtherContributor(p) {
+  const sources = Array.isArray(p.sources) ? p.sources : [];
+  return sources.every((s) => s.sourceDocument === p.sourceDocument);
+}
+
 function _isContaminatedBox18Period(p) {
   return (
     !p.userEdited &&
     p.formType === "NGB22" &&
     p.notes === NGB22_BOX18_NOTES &&
+    _hasNoOtherContributor(p) &&
     Object.keys(BOX18_IMPOSSIBLE_FIELD_DEFAULTS).some((field) => p[field])
   );
 }
@@ -2066,6 +2106,15 @@ export const saveServiceHistory = (history) => {
       documentPeriodCounts: _sanitizeDocumentPeriodCounts(
         history.documentPeriodCounts,
       ),
+      // D-A: any regular save (always sourced from a prior getServiceHistory()
+      // read) carries forward whatever version that read already resolved -
+      // missing only for data saved by code that predates this field, which
+      // defaults to the current version since it was never subject to the
+      // legacy contamination bug the migration repairs.
+      schemaVersion:
+        typeof history.schemaVersion === "number"
+          ? history.schemaVersion
+          : SERVICE_HISTORY_SCHEMA_VERSION,
       dateUpdated: new Date().toISOString(),
     };
 
