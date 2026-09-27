@@ -390,6 +390,26 @@ describe("D11-4: a boundary match only proves a link start-to-start or end-to-en
     const original = periods.find((p) => p.serviceEndDate === "2003-04-30");
     expect(original.rank).toBe("");
   });
+
+  // Positive counterpart to the two mismatches above (mutation-testing gap,
+  // final12 QA re-review, 2026-09-27): a start date matched against the
+  // existing period's OWN start date must still prove a link and merge -
+  // otherwise both boundary checks could be silently dropped and only the
+  // "doesn't match" half would ever be caught.
+  it("merges when incoming's start date matches the existing period's own start date", () => {
+    upsertServicePeriod(
+      period("2002-05-06", "2003-04-30", { branch: "Army" }),
+      meta("a.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2002-05-06", null, { rank: "SGT" }),
+      meta("c.pdf", 40),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0].rank).toBe("SGT");
+  });
 });
 
 describe("service periods - the same period from two documents", () => {
@@ -977,11 +997,19 @@ describe("D-A: the Box-18 contamination repair only trusts real, accumulated `so
 
   // Regression (final10 QA "tests" lens re-review, 2026-09-26): origin/main's
   // Box-18 upsert writes payGrade onto every window from a single NGB-22 -
-  // an "impossible" field per BOX18_IMPOSSIBLE_FIELD_DEFAULTS. Before this
-  // gate, every one of a deployed veteran's NGB-22-only windows would have
-  // payGrade wiped and gained a duplicate undated "unmatched record" on
-  // first read after this branch ships, even with zero real contamination.
-  it("does not strip payGrade or fabricate unmatched records across a single NGB-22's own multiple windows", () => {
+  // an "impossible" field per BOX18_IMPOSSIBLE_FIELD_DEFAULTS. This
+  // contamination repair (BOX18_IMPOSSIBLE_FIELD_DEFAULTS/
+  // _isContaminatedBox18Period) must not fabricate an unmatched record here
+  // - it can't tell this ambiguous, seeded-sources shape apart from a
+  // legitimate multi-window NGB-22.
+  //
+  // D11-4 residual (final12 QA re-review, 2026-09-27): rank/payGrade
+  // themselves are a DIFFERENT, narrower repair (_isGuessedWindowRankPeriod)
+  // that no longer needs real, accumulated `sources` to act - this exact
+  // shape (every window from one NGB-22, no periodScope, no proof any one
+  // of them held this rank) is precisely what a deployed veteran's data
+  // looks like, and D11-4 now correctly clears it.
+  it("does not fabricate unmatched records across a single NGB-22's own multiple windows, but does clear the guessed rank/payGrade", () => {
     const window = (id, start, end) => ({
       id,
       serviceStartDate: start,
@@ -1012,7 +1040,8 @@ describe("D-A: the Box-18 contamination repair only trusts real, accumulated `so
     );
 
     const periods = getServicePeriods();
-    expect(periods.every((p) => p.payGrade === "E-6")).toBe(true);
+    expect(periods.every((p) => p.payGrade === "")).toBe(true);
+    expect(periods.every((p) => p.rank === "")).toBe(true);
     expect(getUnmatchedServiceRecords()).toHaveLength(0);
   });
 });
@@ -1090,7 +1119,15 @@ describe("D-A: the Box-18 contamination repair still leaves an uncontaminated pe
   const BOX18_NOTES =
     "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
 
-  it("leaves an uncontaminated Box 18 period alone", () => {
+  // D11-4 residual (final12 QA re-review, 2026-09-27): rank is no longer a
+  // safe canary for "the contamination repair left this record untouched" -
+  // this exact shape (a Box-18-fingerprinted window whose only rank
+  // provenance is its own NGB-22) is precisely what D11-4's narrower,
+  // sibling repair (_isGuessedWindowRankPeriod) now correctly clears. No
+  // BOX18_IMPOSSIBLE_FIELD_DEFAULTS field is set here, so the ONLY safe
+  // canary left for "the contamination repair itself didn't fire" is that
+  // it never fabricates an unmatched record.
+  it("clears the guessed rank without the (separate) contamination repair firing", () => {
     localStorage.setItem(
       "vet_rate_service_history",
       JSON.stringify({
@@ -1119,7 +1156,9 @@ describe("D-A: the Box-18 contamination repair still leaves an uncontaminated pe
       }),
     );
 
-    expect(getServicePeriods()[0].rank).toBe("SGT");
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("");
+    expect(migrated.branch).toBe("Army");
     expect(getUnmatchedServiceRecords()).toHaveLength(0);
   });
 });
@@ -1591,6 +1630,14 @@ describe("D11-4: a window's own DD214 outranks a guessed rank regardless of pay 
     const periods = getServicePeriods();
     expect(periods).toHaveLength(1);
     expect(periods[0].rank).toBe("CPL");
+    // D11-4 residual (final12 QA re-review, 2026-09-27): the spec requires
+    // the window's own DD214 to win "regardless of pay-grade comparison" -
+    // this only ever wired `merged.rank`, leaving the guessed E-7 standing
+    // next to the DD214's real E-4.
+    expect(periods[0].payGrade).toBe("E-4");
+    expect(
+      periods[0].fieldConflicts?.some((c) => c.field === "payGrade"),
+    ).toBeFalsy();
   });
 
   // Control: the same pay-grade shape, but neither period is a window
@@ -1619,5 +1666,277 @@ describe("D11-4: a window's own DD214 outranks a guessed rank regardless of pay 
     );
 
     expect(getServicePeriods()[0].rank).toBe("SFC");
+  });
+});
+
+describe("D11-4 residual: the window's-own-DD214 bypass is scoped correctly", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  // Mutation-testing gap (B3, final12 QA re-review, 2026-09-27): only a
+  // DD214 is this window's own record - any other form type merging into a
+  // window must still go through the ordinary tiebreak below.
+  it("does not bypass the tiebreak for a non-DD214 document merging into a window", () => {
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "NGB22",
+        rank: "SFC",
+        payGrade: "E-7",
+        periodScope: "window",
+      }),
+      meta("ngb22_generic.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "DD256",
+        rank: "CPL",
+        payGrade: "E-4",
+      }),
+      meta("dd256_window.pdf", 90),
+    );
+
+    expect(getServicePeriods()[0].rank).toBe("SFC");
+  });
+
+  // D11-4 residual (final12 QA re-review, 2026-09-27): the bypass above is
+  // scoped to the FIRST DD214 a window ever sees (see
+  // _windowsOwnDD214Bypass, veteranProfile.js) - once one has already
+  // supplied a proven rank, a second, later, lower-confidence DD214 (a
+  // second scan, a different copy) must go back through the normal
+  // recency/confidence tiebreak instead of overwriting it unconditionally.
+  it("does not let a second, lower-confidence DD214 silently overwrite the window's first DD214 rank", () => {
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "NGB22",
+        periodScope: "window",
+      }),
+      meta("ngb22_generic.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "DD214",
+        rank: "SGT",
+        payGrade: "E-5",
+      }),
+      meta("dd214_clean.pdf", 95),
+    );
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "DD214",
+        rank: "SPC",
+        payGrade: "E-4",
+      }),
+      meta("dd214_photo.jpg", 30),
+    );
+
+    const [merged] = getServicePeriods();
+    expect(merged.rank).toBe("SGT");
+    // The lower-confidence rank is never silently lost either - it's
+    // recorded as a conflict, same as any other genuine disagreement.
+    expect(merged.fieldConflicts?.some((c) => c.field === "payGrade")).toBe(
+      true,
+    );
+  });
+});
+
+// D11-4 residual (final12 QA re-review, 2026-09-27): `periodScope: "window"`
+// and a real, accumulated `sources` array only exist on data THIS branch's
+// own fixed _saveNGB22AdditionalPeriods wrote. Every deployed veteran's data
+// was written by main's pre-fix version, which stamped rank/payGrade on
+// EVERY Box-18 window with neither field - the migration must reach that
+// shape too, not just data this branch's own writer already produced.
+const NGB22_BOX18_NOTES =
+  "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
+
+function legacyMainWrittenHistory(overrides = {}) {
+  return {
+    deployments: [],
+    awards: [],
+    dd214Data: null,
+    serviceInfo: null,
+    servicePeriods: [
+      {
+        id: "legacy_window",
+        serviceStartDate: "2003-06-01",
+        serviceEndDate: "2003-12-20",
+        branch: "Army National Guard",
+        component: "Active Duty",
+        formType: "NGB22",
+        rank: "SSG",
+        payGrade: "E-6",
+        notes: NGB22_BOX18_NOTES,
+        sourceDocument: "ngb22_legacy.pdf",
+      },
+    ],
+    unmatchedServiceRecords: [],
+    dateUpdated: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("D11-4 residual: the guessed-rank repair reaches main-written (legacy) data too", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("strips the guess from a window main's pre-fix writer produced (no periodScope, no sources, no schemaVersion)", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify(legacyMainWrittenHistory()),
+    );
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("");
+    expect(migrated.payGrade).toBe("");
+  });
+
+  it("then lets the window's own DD214 win rank and pay grade once the guess is cleared", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify(legacyMainWrittenHistory()),
+    );
+    getServicePeriods(); // trigger the migration
+
+    upsertServicePeriod(
+      period("2003-06-01", "2003-12-20", {
+        branch: "Army National Guard",
+        component: "Active Duty",
+        formType: "DD214",
+        rank: "SPC",
+        payGrade: "E-4",
+      }),
+      meta("dd214_legacy_window.pdf", 90),
+    );
+
+    const [merged] = getServicePeriods();
+    expect(merged.rank).toBe("SPC");
+    expect(merged.payGrade).toBe("E-4");
+  });
+
+  // Mutation-testing gap (M5, final12 QA re-review, 2026-09-27): a history
+  // already stamped at schemaVersion 2 (the version before this D11-4
+  // repair existed) must still run the repair on its next read - if
+  // SERVICE_HISTORY_SCHEMA_VERSION were never bumped past 2 for this fix,
+  // every veteran who'd already migrated once would never be reached.
+  it("still repairs a guessed window on a history already stamped at the pre-D11-4 schema version", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify(legacyMainWrittenHistory({ schemaVersion: 2 })),
+    );
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("");
+    expect(migrated.payGrade).toBe("");
+  });
+});
+
+describe("D11-4 residual: the guessed-rank repair never reverts a veteran's own correction", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("leaves a userEdited window's rank/pay grade alone even though it still looks like the NGB-22 guess", () => {
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "NGB22",
+        rank: "SSG",
+        payGrade: "E-6",
+        periodScope: "window",
+      }),
+      meta("ngb22_generic.pdf", 60),
+    );
+    const [{ id }] = getServicePeriods();
+    updateServicePeriod(id, { rank: "SGT", payGrade: "E-5" });
+
+    // Force the stored schema version back below the D11-4 migration's
+    // version, the same as it would read for a veteran who corrected this
+    // window before upgrading to a build carrying this repair.
+    const raw = JSON.parse(localStorage.getItem("vet_rate_service_history"));
+    raw.schemaVersion = 2;
+    localStorage.setItem("vet_rate_service_history", JSON.stringify(raw));
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.userEdited).toBe(true);
+    expect(migrated.rank).toBe("SGT");
+    expect(migrated.payGrade).toBe("E-5");
+  });
+});
+
+describe("D11-4 residual: a rank-less contributor never blocks the guessed-rank repair", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  function seedMultiTouchWindow(sources) {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify(
+        legacyMainWrittenHistory({
+          servicePeriods: [
+            {
+              id: "multi_touch_window",
+              serviceStartDate: "2003-01-15",
+              serviceEndDate: "2003-12-20",
+              branch: "Army",
+              component: "Active Duty",
+              formType: "NGB22",
+              rank: "SFC",
+              payGrade: "E-7",
+              notes: NGB22_BOX18_NOTES,
+              periodScope: "window",
+              sourceDocument: "ngb22_generic.pdf",
+              sources,
+            },
+          ],
+        }),
+      ),
+    );
+  }
+
+  it("still strips the guess when a duplicate NGB-22 upload (a different filename) also touched the window", () => {
+    seedMultiTouchWindow([
+      { sourceDocument: "ngb22_generic.pdf", formType: "NGB22" },
+      { sourceDocument: "ngb22_generic (1).pdf", formType: "NGB22" },
+    ]);
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("");
+    expect(migrated.payGrade).toBe("");
+  });
+
+  it("still strips the guess when a VA code sheet (which never carries a rank) also touched the window", () => {
+    seedMultiTouchWindow([
+      { sourceDocument: "ngb22_generic.pdf", formType: "NGB22" },
+      { sourceDocument: "codesheet.pdf", formType: "Code Sheet" },
+    ]);
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("");
+    expect(migrated.payGrade).toBe("");
+  });
+
+  it("still leaves the rank alone once a real DD214 for the window has contributed, alongside a code sheet", () => {
+    seedMultiTouchWindow([
+      { sourceDocument: "ngb22_generic.pdf", formType: "NGB22" },
+      { sourceDocument: "codesheet.pdf", formType: "Code Sheet" },
+      { sourceDocument: "dd214_window.pdf", formType: "DD214" },
+    ]);
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("SFC");
+    expect(migrated.payGrade).toBe("E-7");
   });
 });

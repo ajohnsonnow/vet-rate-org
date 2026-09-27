@@ -1603,19 +1603,47 @@ function _mergeReviewCorrectionDuplicates(history) {
   history.servicePeriods = periods.filter((_, index) => !toRemove.has(index));
 }
 
-// D11-4 (final12 QA, 2026-09-27): a pre-fix musterCallProcessor.js stamped
-// the NGB-22's own rank/payGrade onto every Box-18 window it produced, with
-// nothing on the document proving that rank applied to any one of them in
-// particular. Reuses _hasNoOtherContributor (above) - the exact same "no
-// document has ever independently proven a link to this period" test the
-// Box-18-contamination repair already uses - so a window whose rank instead
-// came from that window's OWN dated DD214 (a genuinely different, proven
-// contributor) is correctly left alone.
+// D11-4 residual (final12 QA re-review, 2026-09-27): `periodScope: "window"`
+// was only ever written by THIS branch's fixed _saveNGB22AdditionalPeriods -
+// every deployed (main) veteran's Box-18 windows were written by the
+// pre-fix version, which stamped rank/payGrade with no periodScope at all.
+// The exact same NGB22_BOX18_NOTES fingerprint _isContaminatedBox18Period
+// (above) already uses to identify a Box-18 window independent of
+// periodScope catches those rows too, so this repair no longer depends on
+// a field no deployed writer has ever produced.
+function _isBox18WindowPeriod(p) {
+  return (
+    p.periodScope === "window" ||
+    (p.formType === "NGB22" && p.notes === NGB22_BOX18_NOTES)
+  );
+}
+
+// Deliberately NOT _hasNoOtherContributor (above): that helper treats a
+// read-time-seeded, single-entry `sources` (`__seededSources: true`) as "we
+// don't know, so don't touch it" - the right call for the more destructive
+// content-recovery repair it guards, but wrong here. A seeded single entry
+// naming this same NGB-22 is exactly what every deployed veteran's guessed
+// window looks like on read (main never wrote `sources` at all), and is
+// precisely the population this repair exists to reach. A genuinely
+// different, rank-capable contributor (this window's own DD214, a DD256)
+// always appears in `sources` under its own formType (N9a's `_addSource` is
+// additive and never overwritten), so still blocks the strip. A duplicate
+// NGB-22 upload under another filename, or a VA code sheet (which never
+// carries a rank field - see _codeSheetSummary/_ratingFieldsFromCodeSheet),
+// proves nothing new about this window's rank either way.
+const _RANK_UNPROVEN_FORM_TYPES = new Set(["NGB22", "Code Sheet"]);
+
+function _hasNoOtherRankContributor(p) {
+  const sources = Array.isArray(p.sources) ? p.sources : [];
+  return sources.every((s) => _RANK_UNPROVEN_FORM_TYPES.has(s.formType));
+}
+
 function _isGuessedWindowRankPeriod(p) {
   return (
-    p.periodScope === "window" &&
+    _isBox18WindowPeriod(p) &&
+    !p.userEdited &&
     (!!p.rank || !!p.payGrade) &&
-    _hasNoOtherContributor(p)
+    _hasNoOtherRankContributor(p)
   );
 }
 
@@ -2337,9 +2365,49 @@ function _mergeIncomingStart(merged, existing, incoming, options, conflicts) {
   }
 }
 
+// D11-4 (final12 QA, 2026-09-27): a Box-18 window (periodScope "window")
+// only ever gets a rank/pay grade from a genuinely proven link - either the
+// NGB-22's own terminal-AD match (musterCallProcessor.js) or a dated DD214
+// that describes this exact window. A DD214 IS that window's own record,
+// not a competing document whose recency needs arbitrating by pay grade.
+// D11-4 residual (final12 QA re-review, 2026-09-27): scoped to the FIRST
+// DD214 a window ever sees - once one has already supplied a proven
+// rank/pay grade (recorded in `sources`), a second, later DD214 for the
+// same window goes back through the normal recency/confidence tiebreak
+// below instead of overwriting it unconditionally regardless of quality
+// (which silently lost a clean earlier scan to a garbled later one).
+function _windowsOwnDD214Bypass(existing, incoming) {
+  return (
+    existing.periodScope === "window" &&
+    incoming.formType === "DD214" &&
+    !(existing.sources || []).some((s) => s.formType === "DD214")
+  );
+}
+
+// D11-4 residual: the bypass above applies to BOTH rank and pay grade
+// together - wiring it to `merged.rank` alone left the guessed pay grade
+// standing next to the DD214's real, now-authoritative rank.
+function _mergeWindowRankFields(merged, existing, incoming, windowsOwnDD214) {
+  if (incoming.rank) {
+    const incomingIsLater =
+      windowsOwnDD214 ||
+      _isLaterRecord(
+        incoming.serviceEndDate,
+        existing.serviceEndDate,
+        parsePayGrade(incoming.payGrade),
+        parsePayGrade(existing.payGrade),
+      );
+    if (!existing.rank || incomingIsLater) merged.rank = incoming.rank;
+  }
+  if (windowsOwnDD214 && !_isEmptyServicePeriodValue(incoming.payGrade)) {
+    merged.payGrade = incoming.payGrade;
+  }
+}
+
 function _mergeExistingServicePeriod(existing, incoming, options) {
   const incomingConfidence = incoming.confidence ?? 0;
   const existingConfidence = existing.confidence ?? 0;
+  const windowsOwnDD214 = _windowsOwnDD214Bypass(existing, incoming);
   const sameSource =
     !!existing.sourceDocument &&
     existing.sourceDocument === incoming.sourceDocument;
@@ -2352,6 +2420,10 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     // scan of an early enlistment isn't "later" than a garbled scan of the
     // discharge that followed it).
     if (field === "rank") return;
+    // D11-4 residual: pay grade rides the same window's-own-DD214 bypass as
+    // rank (see _mergeWindowRankFields below) instead of the generic
+    // disagreement check, whenever that bypass applies.
+    if (field === "payGrade" && windowsOwnDD214) return;
     // serviceStartDateDerived describes serviceStartDate itself, not an
     // independent fact (same pairing veteranKnowledgeBase.js's
     // entryDate/entryDateDerived already uses) - it only ever changes
@@ -2402,30 +2474,10 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
   // A later record's rank wins - "later" by the period's own end date when
   // both sides have one, else by pay grade (same rule
   // veteranKnowledgeBase.js's mergeDD214RankAndCharacter already uses for
-  // the Service tab's single discharge-rank field).
-  if (incoming.rank) {
-    // D11-4 (final12 QA, 2026-09-27): a Box-18 window (periodScope
-    // "window") only ever gets a rank from a genuinely proven link - either
-    // the NGB-22's own terminal-AD match (musterCallProcessor.js) or a
-    // dated DD214 that describes this exact window. A DD214 IS that
-    // window's own record, not a competing document whose recency needs
-    // arbitrating by pay grade - the pay-grade tie-break exists to settle
-    // which of two real, independent records is more current, and doesn't
-    // apply when one side is simply the authority for this specific period.
-    const windowsOwnDD214 =
-      existing.periodScope === "window" && incoming.formType === "DD214";
-    const incomingIsLater =
-      windowsOwnDD214 ||
-      _isLaterRecord(
-        incoming.serviceEndDate,
-        existing.serviceEndDate,
-        parsePayGrade(incoming.payGrade),
-        parsePayGrade(existing.payGrade),
-      );
-    if (!existing.rank || incomingIsLater) {
-      merged.rank = incoming.rank;
-    }
-  }
+  // the Service tab's single discharge-rank field) - unless this window's
+  // own DD214 bypass applies (see _mergeWindowRankFields/_windowsOwnDD214Bypass
+  // above).
+  _mergeWindowRankFields(merged, existing, incoming, windowsOwnDD214);
   // VA's own record (the code sheet) settles the end date of two
   // near-identical dates; the START date is now decided by
   // _mergeIncomingStart's own precedence, below, which folds
