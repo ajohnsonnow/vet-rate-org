@@ -286,7 +286,10 @@ describe("Triple-Escape panic key counter - dialog dead zones", () => {
   // "still present after the Escape" - is identical either way.
   it("an Escape while a dialog is open but does not close counts toward the panic sequence", () => {
     const dialog = openDialog();
-    for (let i = 0; i < ESCAPE_THRESHOLD; i++) pressEscapeOn(dialog);
+    for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+      pressEscapeOn(dialog);
+      vi.advanceTimersByTime(0);
+    }
     expect(panicSpy).toHaveBeenCalledTimes(1);
     dialog.remove();
   });
@@ -308,10 +311,40 @@ describe("Triple-Escape panic key counter - dialog dead zones", () => {
   it("an Escape while two stacked dialogs are both unresponsive still counts", () => {
     const base = openDialog();
     const top = openDialog();
-    for (let i = 0; i < ESCAPE_THRESHOLD; i++) pressEscapeOn(top);
+    for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+      pressEscapeOn(top);
+      vi.advanceTimersByTime(0);
+    }
     expect(panicSpy).toHaveBeenCalledTimes(1);
     base.remove();
     top.remove();
+  });
+
+  // REGRESSION GUARD: StressReliefDivision's Doom-easter-egg overlay and
+  // AdminAuthContext both close on Escape via their own window-level BUBBLE
+  // listener, added only once activated - well after boot's
+  // initializePanicKey() registers this module's. A synchronous recount
+  // read the dialog as still present (that later listener hadn't run yet)
+  // and counted the very press that closed it - so closing the overlay and
+  // pressing Escape twice more fired the panic redirect by accident.
+  // Deferring the recount lets every same-phase listener, including one
+  // registered after this module's own, finish first.
+  it("an Escape closed by a later-registered window bubble listener (StressReliefDivision/AdminAuthContext pattern) is not counted", () => {
+    const dialog = openDialog();
+    const closeOnEscape = (e) => {
+      if (e.key === "Escape") dialog.remove();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+
+    pressEscape(); // closes the dialog via the later listener - not counted
+    vi.advanceTimersByTime(0);
+    pressEscape();
+    vi.advanceTimersByTime(0);
+    pressEscape();
+    vi.advanceTimersByTime(0);
+
+    expect(panicSpy).not.toHaveBeenCalled();
+    window.removeEventListener("keydown", closeOnEscape);
   });
 
   it("mixed sequence: dialog-closes don't count, but 3 real ones afterward still fire", () => {

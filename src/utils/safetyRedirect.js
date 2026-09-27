@@ -242,24 +242,37 @@ const handleEscapeKey = (event) => {
   if (event.defaultPrevented) return;
 
   if (pendingDialogCount > 0) {
-    // By this point (bubble phase, the last stop) a dialog that closes
-    // synchronously in response to its own Escape handler has already done
-    // so (see snapshotEscapeContext's doc comment) - so re-querying now
-    // reflects the true post-close state, no deferral needed the way the
-    // menu case below requires. Fewer dialogs now than at capture time means
-    // this Escape actually dismissed one - don't count it, even if others
-    // remain stacked underneath. The same count (or more) means nothing
-    // closed - a non-dismissible dialog (CrisisModal), or one whose
-    // element-scoped Escape handler never saw this event because focus
-    // never made it inside (a loading-state dialog with no focusable
-    // content) - so this Escape counts like any other unhandled one instead
-    // of being swallowed for as long as that dialog stays open.
-    if (
-      document.querySelectorAll(DIALOG_SELECTOR).length < pendingDialogCount
-    ) {
-      return;
-    }
-    recordEscapePress();
+    const countAtCapture = pendingDialogCount;
+    // Defer the recount a tick instead of reading it synchronously here.
+    // Verified live against the real app, not assumed: a dialog's own
+    // Escape handler closes it via a React state update, and browsers
+    // differ on whether that update - and the DOM removal of its
+    // `role="dialog"` node - has already flushed by the time a bubble-phase
+    // listener on window runs for the SAME event. Chromium's has; Firefox's
+    // hasn't, so reading synchronously here saw the dialog as still open and
+    // counted a genuinely dialog-closing Escape as a panic press. A
+    // macrotask always runs after the full synchronous dispatch (and any
+    // microtask flush) completes in both engines, so it sees the true
+    // post-close state either way - the same reasoning the menu branch
+    // below already relies on. It also gives a *later*-registered window
+    // bubble listener (e.g. a component that closes its own overlay on
+    // Escape, registered after this module's listener during boot) a chance
+    // to run first, instead of this recount running before that listener
+    // even gets a turn and treating its dialog as still open too.
+    setTimeout(() => {
+      // Fewer dialogs now than at capture time means this Escape actually
+      // dismissed one - don't count it, even if others remain stacked
+      // underneath. The same count (or more) means nothing closed - a
+      // non-dismissible dialog (CrisisModal), or one whose element-scoped
+      // Escape handler never saw this event because focus never made it
+      // inside (a loading-state dialog with no focusable content) - so this
+      // Escape counts like any other unhandled one instead of being
+      // swallowed for as long as that dialog stays open.
+      if (document.querySelectorAll(DIALOG_SELECTOR).length < countAtCapture) {
+        return;
+      }
+      recordEscapePress();
+    }, 0);
     return;
   }
 
