@@ -147,3 +147,124 @@ describe("mergeServicePeriodsIntoVKB: no cross-period attachment", () => {
     expect(corrected.characterOfService).toBe("Honorable");
   });
 });
+
+describe("mergeServicePeriodsIntoVKB: no cross-period attachment when two periods share a start date", () => {
+  it("does not rewrite the top-level entryDate from a Box-18 IADT window's own correction", () => {
+    const vkb = initializeVKB();
+    // The IADT window happens to start the same calendar day as the
+    // calculated primary period, which real NGB-22s do whenever the
+    // member shipped on the enlistment day.
+    mergeDD214IntoVKB(vkb, {
+      branch: "Army National Guard",
+      entryDate: "2002-03-01",
+      entryDateDerived: true,
+      separationDate: "2010-06-15",
+      additionalPeriods: [
+        { serviceStartDate: "2002-03-01", serviceEndDate: "2002-08-15" },
+      ],
+    });
+
+    mergeServicePeriodsIntoVKB(vkb, [
+      {
+        entryDate: "2002-03-04",
+        separationDate: "2002-08-15",
+        branch: "Army National Guard",
+        characterOfDischarge: "Honorable",
+      },
+    ]);
+
+    expect(vkb.serviceHistory.entryDate).toBe("2002-03-01");
+    expect(vkb.serviceHistory.entryDateDerived).toBe(true);
+
+    const window = vkb.serviceHistory.servicePeriods.find(
+      (p) => p.serviceStartDate === "2002-03-04",
+    );
+    expect(window).toBeDefined();
+    expect(window.serviceStartDateDerived).toBe(false);
+  });
+});
+
+describe("mergeServicePeriodsIntoVKB: reverse order (code sheet before the NGB-22)", () => {
+  it("keeps the code sheet's printed date un-flagged when a later, calculated NGB-22 near-matches it", () => {
+    const vkb = initializeVKB();
+    mergeServicePeriodsIntoVKB(vkb, [
+      {
+        entryDate: "2002-03-05",
+        separationDate: "2010-06-15",
+        branch: "Army National Guard",
+        characterOfDischarge: "Honorable",
+      },
+    ]);
+
+    mergeDD214IntoVKB(vkb, {
+      branch: "Army National Guard",
+      entryDate: "2002-03-01",
+      entryDateDerived: true,
+      separationDate: "2010-06-15",
+    });
+
+    const period = vkb.serviceHistory.servicePeriods.find(
+      (p) => p.serviceStartDate === "2002-03-05",
+    );
+    expect(period.serviceStartDateDerived).toBe(false);
+    expect(vkb.serviceHistory.entryDate).toBe("2002-03-05");
+    expect(vkb.serviceHistory.entryDateDerived).toBe(false);
+  });
+});
+
+describe("mergeServicePeriodsIntoVKB: survives an NGB-22 re-import after the correction", () => {
+  it("does not let a re-imported NGB-22's calculated date undo an already-authoritative top-level date", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(vkb, {
+      branch: "Army National Guard",
+      entryDate: "2002-03-01",
+      entryDateDerived: true,
+      separationDate: "2010-06-15",
+    });
+    mergeServicePeriodsIntoVKB(vkb, [
+      {
+        entryDate: "2002-03-05",
+        separationDate: "2010-06-15",
+        branch: "Army National Guard",
+        characterOfDischarge: "Honorable",
+      },
+    ]);
+    expect(vkb.serviceHistory.entryDate).toBe("2002-03-05");
+
+    // Verify & Save (or any later re-run) persists the same NGB-22 again.
+    mergeDD214IntoVKB(vkb, {
+      branch: "Army National Guard",
+      entryDate: "2002-03-01",
+      entryDateDerived: true,
+      separationDate: "2010-06-15",
+    });
+
+    expect(vkb.serviceHistory.entryDate).toBe("2002-03-05");
+    expect(vkb.serviceHistory.entryDateDerived).toBe(false);
+    const period = vkb.serviceHistory.servicePeriods.find(
+      (p) => p.serviceStartDate === "2002-03-05",
+    );
+    expect(period.serviceStartDateDerived).toBe(false);
+  });
+});
+
+describe("mergeServicePeriodsIntoVKB: populates the top-level entry/separation for a code-sheet-only veteran", () => {
+  it("sets vkb.serviceHistory.entryDate/separationDate when no DD214/NGB-22 has ever been processed", () => {
+    const vkb = initializeVKB();
+    mergeServicePeriodsIntoVKB(vkb, [
+      {
+        entryDate: "2002-05-06",
+        separationDate: "2007-06-29",
+        branch: "Army",
+        characterOfDischarge: "Honorable",
+      },
+    ]);
+
+    expect(vkb.serviceHistory.entryDate).toBe("2002-05-06");
+    expect(vkb.serviceHistory.entryDateDerived).toBe(false);
+    expect(vkb.serviceHistory.separationDate).toBe("2007-06-29");
+    expect(generateLLMContext(vkb)).toContain(
+      "Service: 2002-05-06 to 2007-06-29",
+    );
+  });
+});

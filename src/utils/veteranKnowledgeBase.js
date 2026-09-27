@@ -981,9 +981,20 @@ function mergeDD214PersonalInfo(vkb, dd214Data) {
 function mergeDD214ServiceDates(vkb, dd214Data) {
   // Dates - use the EARLIEST entry and LATEST separation across all DD214s
   if (dd214Data.entryDate) {
+    const incomingDerived = !!dd214Data.entryDateDerived;
+    // A calculated (derived) guess must never displace an entryDate this
+    // VKB already holds as authoritative (entryDateDerived === false, e.g.
+    // set by a VA code sheet's proven date) just because the guess happens
+    // to land earlier - decision (3): a fact attaches only on a proven
+    // link, never a guess, and a guess never outranks a proven fact. Two
+    // real dates, or two guesses, still resolve by earliest as before.
+    const currentIsAuthoritative =
+      !!vkb.serviceHistory.entryDate &&
+      vkb.serviceHistory.entryDateDerived === false;
     if (
       !vkb.serviceHistory.entryDate ||
-      new Date(dd214Data.entryDate) < new Date(vkb.serviceHistory.entryDate)
+      (!(incomingDerived && currentIsAuthoritative) &&
+        new Date(dd214Data.entryDate) < new Date(vkb.serviceHistory.entryDate))
     ) {
       vkb.serviceHistory.entryDate = dd214Data.entryDate;
       // D-C (final10 QA, 2026-09-25): carries whether THIS entryDate was
@@ -991,7 +1002,7 @@ function mergeDD214ServiceDates(vkb, dd214Data) {
       // printed on the form, so a consumer never treats a calculated
       // Guard/Reserve enlistment date the way it would a real printed
       // one - see mergeDD214RankAndCharacter's own use of this same flag.
-      vkb.serviceHistory.entryDateDerived = !!dd214Data.entryDateDerived;
+      vkb.serviceHistory.entryDateDerived = incomingDerived;
     }
   }
   if (dd214Data.separationDate) {
@@ -1579,13 +1590,40 @@ export const mergeServicePeriodsIntoVKB = (vkb, periods, options = {}) => {
       { authoritativeDates: true },
     );
   }
+  _adoptEarliestCodeSheetEntry(vkb, periods);
   return vkb;
 };
 
-function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
-  const periods = vkb.serviceHistory.servicePeriods;
-  const complete = Boolean(period.serviceStartDate && period.serviceEndDate);
-  const existing =
+// A code-sheet-only veteran (no DD214/NGB-22 ever processed) never gets a
+// top-level entryDate/separationDate from mergeDD214ServiceDates, so
+// buildServiceHistoryCoreContext's "Service:" line and VKBViewer's own
+// top-level display stayed empty even though the period itself was already
+// stored. Only fires when the top-level field is still completely unset, so
+// it can never override a value a DD214/NGB-22 or an earlier code sheet
+// already established - never a guess, since these are the code sheet's own
+// printed dates.
+function _adoptEarliestCodeSheetEntry(vkb, periods) {
+  const complete = (periods || []).filter(
+    (p) => p.entryDate && p.separationDate,
+  );
+  if (complete.length === 0) return;
+  if (!vkb.serviceHistory.entryDate) {
+    const earliest = complete.reduce((min, p) =>
+      new Date(p.entryDate) < new Date(min.entryDate) ? p : min,
+    );
+    vkb.serviceHistory.entryDate = earliest.entryDate;
+    vkb.serviceHistory.entryDateDerived = false;
+  }
+  if (!vkb.serviceHistory.separationDate) {
+    const latest = complete.reduce((max, p) =>
+      new Date(p.separationDate) > new Date(max.separationDate) ? p : max,
+    );
+    vkb.serviceHistory.separationDate = latest.separationDate;
+  }
+}
+
+function _findExistingVkbPeriod(periods, period, complete) {
+  return (
     periods.find(
       (p) =>
         p.serviceStartDate === period.serviceStartDate &&
@@ -1599,35 +1637,75 @@ function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
           period.serviceStartDate,
           period.serviceEndDate,
         ),
-      ));
-  if (!existing) {
-    periods.push({ ...period, incomplete: !complete });
-    return;
-  }
+      ))
+  );
+}
+
+// serviceStartDateDerived describes THIS existing period's start date, not
+// whatever a lower-confidence merge happens to carry - only adopt an
+// incoming derived flag when the start date itself was missing (a genuine
+// fill). Handled separately from the generic fill loop so a non-derived flag
+// an authoritative correction already cleared is never silently re-set to
+// true by a later, non-authoritative merge finding it "empty".
+function _fillVkbPeriodFields(existing, period) {
+  const startDateWasMissing = !existing.serviceStartDate;
   for (const [field, value] of Object.entries(period)) {
+    if (field === "serviceStartDateDerived") continue;
     if (value && !existing[field]) existing[field] = value;
   }
-  if (authoritativeDates && complete) {
-    // Proven link to the top-level singular field (buildServiceHistoryCoreContext's
-    // "Service:" line, VKBViewer's own display): only true when THIS period's
-    // pre-correction start date is the exact one currently mirrored there -
-    // never guessed, and never applied to a different period that happens to
-    // also be derived.
-    const correctsTopLevelEntry =
-      vkb.serviceHistory.entryDateDerived &&
-      existing.serviceStartDate === vkb.serviceHistory.entryDate;
-    existing.serviceStartDate = period.serviceStartDate;
-    existing.serviceEndDate = period.serviceEndDate;
-    // The VA code sheet's own dates are never a calculated guess - clear
-    // any stale flag a prior NGB-22 merge left on this same period so the
-    // now-authoritative date doesn't keep reading as "calculated".
-    existing.serviceStartDateDerived = false;
-    existing.incomplete = false;
-    existing.datesVerifiedBy = period.source;
-    if (correctsTopLevelEntry) {
-      vkb.serviceHistory.entryDate = period.serviceStartDate;
-      vkb.serviceHistory.entryDateDerived = false;
+  if (startDateWasMissing && period.serviceStartDateDerived !== undefined) {
+    existing.serviceStartDateDerived = !!period.serviceStartDateDerived;
+  }
+}
+
+// Proven link to the top-level singular field (buildServiceHistoryCoreContext's
+// "Service:" line, VKBViewer's own display): only true when THIS period's
+// pre-correction start date is the exact one currently mirrored there AND
+// this period is itself the one that carries the derived flag - Box-18 IADT
+// windows never get serviceStartDateDerived set at all
+// (mergeDD214ServicePeriodTracking never sets it on additionalPeriods), so
+// without this a window sharing the primary period's start date could
+// misattribute its own correction to the top-level entry.
+function _applyAuthoritativeCorrection(vkb, existing, period) {
+  const correctsTopLevelEntry =
+    vkb.serviceHistory.entryDateDerived &&
+    existing.serviceStartDateDerived === true &&
+    existing.serviceStartDate === vkb.serviceHistory.entryDate;
+  existing.serviceStartDate = period.serviceStartDate;
+  existing.serviceEndDate = period.serviceEndDate;
+  // The VA code sheet's own dates are never a calculated guess - clear any
+  // stale flag a prior NGB-22 merge left on this same period so the
+  // now-authoritative date doesn't keep reading as "calculated".
+  existing.serviceStartDateDerived = false;
+  existing.incomplete = false;
+  existing.datesVerifiedBy = period.source;
+  if (correctsTopLevelEntry) {
+    vkb.serviceHistory.entryDate = period.serviceStartDate;
+    vkb.serviceHistory.entryDateDerived = false;
+  }
+}
+
+function _upsertVkbServicePeriod(vkb, period, { authoritativeDates } = {}) {
+  const periods = vkb.serviceHistory.servicePeriods;
+  const complete = Boolean(period.serviceStartDate && period.serviceEndDate);
+  const existing = _findExistingVkbPeriod(periods, period, complete);
+  if (!existing) {
+    const fresh = { ...period, incomplete: !complete };
+    // A brand-new period from an authoritative source (the code sheet
+    // itself, with nothing to correct yet) is never a calculated guess -
+    // matches the flags an authoritative CORRECTION sets below, so a code
+    // sheet processed before any DD214/NGB-22 doesn't leave its own period
+    // looking unverified.
+    if (authoritativeDates && complete) {
+      fresh.serviceStartDateDerived = false;
+      fresh.datesVerifiedBy = period.source;
     }
+    periods.push(fresh);
+    return;
+  }
+  _fillVkbPeriodFields(existing, period);
+  if (authoritativeDates && complete) {
+    _applyAuthoritativeCorrection(vkb, existing, period);
   }
 }
 

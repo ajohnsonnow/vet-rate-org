@@ -499,6 +499,11 @@ describe("veteranKnowledgeBase: a rating decision's servicePeriods merge like a 
         characterOfService: "Honorable",
         source: "cfile.pdf",
         incomplete: false,
+        // The code sheet's own dates are printed, never a guess, from the
+        // moment this period is first created - see the QA follow-up fix
+        // in _upsertVkbServicePeriod's push path.
+        serviceStartDateDerived: false,
+        datesVerifiedBy: "cfile.pdf",
       },
     ]);
   });
