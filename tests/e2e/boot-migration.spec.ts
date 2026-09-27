@@ -284,9 +284,11 @@ test.describe("Boot migration does not close an open dialog or lose data", () =>
   });
 });
 
-// The exact key src/utils/maintenanceMode.js caches the last-known
-// maintenance flag under - see ADR-004.
+// The exact keys src/utils/maintenanceMode.js caches the last-known
+// maintenance flag (and when it was cached) under - see ADR-004.
 const MAINTENANCE_MODE_CACHE_KEY = "vet_rate_maintenance_mode_cached";
+const MAINTENANCE_MODE_CACHE_TIMESTAMP_KEY =
+  "vet_rate_maintenance_mode_cached_at";
 
 test.describe("Maintenance-mode kill switch", () => {
   test("a cached maintenance flag skips the migration entirely, without the boot gate ever waiting on the network to confirm it", async ({
@@ -295,9 +297,18 @@ test.describe("Maintenance-mode kill switch", () => {
     test.setTimeout(20_000);
     const watcher = attachBootWatcher(page);
     await seedPreMigrationKeys(page);
+    // A real cache write (cacheMaintenanceMode()) always sets the flag and
+    // its timestamp together - readCachedMaintenanceMode() treats a flag
+    // with no (or stale) timestamp as expired, see maintenanceMode.js.
     await page.addInitScript(
-      (key) => localStorage.setItem(key, "true"),
-      MAINTENANCE_MODE_CACHE_KEY,
+      ({ key, tsKey }) => {
+        localStorage.setItem(key, "true");
+        localStorage.setItem(tsKey, String(Date.now()));
+      },
+      {
+        key: MAINTENANCE_MODE_CACHE_KEY,
+        tsKey: MAINTENANCE_MODE_CACHE_TIMESTAMP_KEY,
+      },
     );
 
     // Held open for the rest of the test: the cached flag alone must be
@@ -306,9 +317,16 @@ test.describe("Maintenance-mode kill switch", () => {
     await page.route("**/version.json*", () => {});
 
     await page.goto("/");
-    // dismissDisclaimer waits for #main-content - part of the interactive
-    // tree isBooting gates - so this only returns once boot has completed,
-    // proving it did not hang waiting on the held route above.
+    // dismissDisclaimer's own #main-content wait swallows a timeout (it has
+    // to, since on other tests the splash may never appear at all) - so it
+    // cannot prove boot actually completed rather than the app hanging with
+    // the splash absent. Wait on #main-content directly, uncaught, first:
+    // this is the same gated element the fail-open test above asserts on
+    // without a catch, and it's the only thing here that can fail this test
+    // if a regression makes the cached-ON path wait on the held route.
+    await page
+      .locator("#main-content")
+      .waitFor({ state: "attached", timeout: 8000 });
     await dismissDisclaimer(page);
 
     expect(watcher.state.copyRan).toBe(false);
@@ -323,5 +341,12 @@ test.describe("Maintenance-mode kill switch", () => {
         "vet-rate-tos-accepted",
       ),
     ).toBe("true");
+    // Nothing landed in IndexedDB either - a copy that started and then
+    // aborted or failed partway (rather than never starting at all) would
+    // pass the console-message checks above but fail here.
+    expect(await readIdbValue(page, MARKER_KEY)).toBeUndefined();
+    expect(
+      await readIdbValue(page, "vet_rate_migrated_to_indexeddb"),
+    ).toBeUndefined();
   });
 });
