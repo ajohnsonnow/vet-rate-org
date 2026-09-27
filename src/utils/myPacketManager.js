@@ -999,15 +999,35 @@ function _formatServiceRecordSection(grouped, options) {
   return out;
 }
 
+// D12-5 residual (final12 QA re-review, 2026-09-27): musterCallProcessor's
+// buildSegmentedCFileResult stores `summary` as quickScanCFile()'s scan
+// object ({estimatedPages, hasCodeSheet, hasDD214, hasDBQs, hasBVA,
+// detectedTypes}), not prose - `String(summary)` printed "[object Object]"
+// into every AI tool's context. cfileAnalyzer.js's separate AI-analysis path
+// still emits a plain string summary, so that shape is rendered unchanged.
+function _formatCFileSummaryLine(summary) {
+  if (!summary) return "";
+  if (typeof summary === "string") return summary.slice(0, 400);
+  if (typeof summary !== "object") return "";
+  const pages = Number.isFinite(summary.estimatedPages)
+    ? `~${summary.estimatedPages} pages`
+    : "";
+  const types = Array.isArray(summary.detectedTypes)
+    ? summary.detectedTypes.join(", ")
+    : "";
+  return [pages, types && `detected: ${types}`].filter(Boolean).join(", ");
+}
+
 // Structured C-File formatter - replaces the 500-char JSON blob for C-Files.
 // The extractedData is the C-File analysis object (potential_claims, timeline,
 // summary, exposures), so emit readable condition/evidence lines an AI tool can
 // actually use. Conditions are AI SUGGESTIONS (not filed claims) - labelled so.
-function _formatCFileDoc(doc) {
+export function _formatCFileDoc(doc) {
   const data = doc.extractedData || {};
   let out = `File: ${doc.fileName} (${(doc.uploadDate || "").split("T")[0]})\n`;
-  if (data.summary) {
-    out += `  Summary: ${String(data.summary).slice(0, 400)}\n`;
+  const summaryLine = _formatCFileSummaryLine(data.summary);
+  if (summaryLine) {
+    out += `  Summary: ${summaryLine}\n`;
   }
   const claims = Array.isArray(data.potential_claims)
     ? data.potential_claims
