@@ -1674,119 +1674,175 @@ const EMPTY_HEADER_PROBE: HeaderProbe = {
   headerRect: null,
 };
 
+// N14: both functions below are passed straight to `page.evaluateHandle`/
+// `JSHandle.evaluate`, which serializes each with `.toString()` and re-runs
+// it inside the browser realm - it can only ever see its own body, not
+// sibling functions or outer closure variables (verified live: a
+// stringified function calling a same-file sibling throws `ReferenceError`
+// in the browser, it doesn't inline it). So each is fully self-contained,
+// and `probeHeaderLayout` chains them via a single `page.evaluateHandle` +
+// `JSHandle.evaluate` round trip (not one per lookup - each extra
+// evaluate/evaluateHandle hop is a real IPC round trip, and the more of
+// them stack up before the close button's own rect is finally read, the
+// more often a dialog whose close button mounts a beat after its title
+// loses that race; measured live going from 1 round trip to 4 turned 2
+// flaky failures into 11 on an identical, unrelated-to-N14 baseline sweep).
+//
+// `isRendered` (not just "exists") is the load-bearing check in both.
+// A `md:hidden` mobile-only header (User Manual) still resolves a computed
+// `paddingRight` and still matches a close-button label query even while
+// `display: none` - only `getClientRects().length` reflects that it isn't
+// actually rendered. Without it, the padding walk below stops on the hidden
+// header and the close-button search grabs its (also hidden, zero-rect)
+// close button first, so every downstream check compares against an
+// all-zero rect and passes vacuously instead of measuring the real, visible
+// control.
+type ProbeBundle = {
+  titleEl: HTMLElement;
+  headerRegion: HTMLElement;
+  paddedSource: HTMLElement;
+} | null;
+
+/**
+ * Resolves the dialog, its title, the visible `.modal-header` region, and
+ * (N13) the first visible, padded ancestor within it - a header's own real
+ * breathing room (often px-6/p-6, a normal design choice) lives one or more
+ * levels down `.modal-header`'s own (deliberately zero-padding) box, so this
+ * walks zero-padding wrappers until one carries padding, skipping any
+ * hidden sibling/child so a mobile-only header can't win by being first in
+ * DOM order (N14). Capped at 5 levels so a genuinely paddingless header
+ * can't walk into unrelated body content.
+ */
+function findProbeBundle(): ProbeBundle {
+  const isRendered = (el: Element) => el.getClientRects().length > 0;
+  const dialog = document.querySelector(
+    '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+  ) as HTMLElement | null;
+  const labelledBy = dialog?.getAttribute("aria-labelledby");
+  const titleEl = ((labelledBy && document.getElementById(labelledBy)) ||
+    dialog?.querySelector("h1, h2, h3")) as HTMLElement | null;
+  if (!dialog || !titleEl) return null;
+
+  const headerCandidates = Array.from(
+    dialog.querySelectorAll(".modal-header"),
+  ) as HTMLElement[];
+  const headerRegion = headerCandidates.find(isRendered) || dialog;
+
+  let paddedSource: HTMLElement = headerRegion;
+  for (let depth = 0; depth < 5; depth++) {
+    if (
+      isRendered(paddedSource) &&
+      parseFloat(getComputedStyle(paddedSource).paddingRight || "0") > 0
+    )
+      break;
+    const next = Array.from(paddedSource.children).find(isRendered) as
+      | HTMLElement
+      | undefined;
+    if (!next) break;
+    paddedSource = next;
+  }
+  return { titleEl, headerRegion, paddedSource };
+}
+
+/**
+ * Final round trip: reads every rect `HeaderProbe` reports off the elements
+ * `findProbeBundle` resolved. `triggerUntilDialogFound` only waits for a
+ * title to exist before this runs - a heavier dialog's own close button can
+ * still be a paint or two behind its title, so this polls (bounded, via
+ * rAF - not a fixed sleep) for a close-like button to actually render
+ * before reading rects, instead of racing it and reporting a false
+ * "close control not found" (measured live: this class of flake dropped
+ * back to the pre-N14 baseline rate once this wait was added).
+ */
+async function extractProbeData(bundle: ProbeBundle) {
+  if (!bundle) return null;
+  const { titleEl, headerRegion, paddedSource } = bundle;
+  const isRendered = (el: Element) => el.getClientRects().length > 0;
+  const hasCloseCandidate = () =>
+    Array.from(headerRegion.querySelectorAll("button")).some(
+      (b) =>
+        /close|exit/i.test(b.getAttribute("aria-label") || "") && isRendered(b),
+    );
+  // N13 (VKB Viewer): a dialog that loads its content asynchronously (e.g.
+  // "Loading your Knowledge Base...") can take longer than a couple of
+  // frames to reach the state that actually has a close button - bounded to
+  // match the `expect.poll`/`triggerUntilDialogFound` convention elsewhere
+  // in this file rather than picking an arbitrary shorter number.
+  const deadline = Date.now() + 6000;
+  while (!hasCloseCandidate() && Date.now() < deadline) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
+  const rectOf = (el: Element | null | undefined) => {
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+  };
+  const byLabel = (pattern: RegExp) =>
+    Array.from(headerRegion.querySelectorAll("button")).find(
+      (b) => pattern.test(b.getAttribute("aria-label") || "") && isRendered(b),
+    ) as HTMLElement | undefined;
+  const parts = {
+    badgeEl: Array.from(headerRegion.querySelectorAll("span")).find(
+      (s) => s.className.includes("bg-amber-700") && isRendered(s),
+    ) as HTMLElement | undefined,
+    bugLinkEl: byLabel(/^Report a bug/i),
+    closeEl: byLabel(/close|exit/i),
+    backEl: byLabel(/^go back$/i),
+    aiStatusEl: Array.from(
+      headerRegion.querySelectorAll('[data-testid="ai-status-badge"]'),
+    ).find(isRendered) as HTMLElement | undefined,
+    llmBadgeEl: byLabel(/View AI model recommendations/i),
+    shareEl: byLabel(/^Export for Reddit/i),
+  };
+
+  const nested = Object.values(parts).filter(
+    (el): el is HTMLElement => !!el && el !== titleEl && titleEl.contains(el),
+  );
+  const range = document.createRange();
+  range.selectNodeContents(titleEl);
+  if (nested.length > 0) {
+    range.setEndBefore(
+      nested.reduce((a, b) =>
+        (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+          ? a
+          : b,
+      ),
+    );
+  }
+  const titleTextRects = Array.from(range.getClientRects())
+    .filter((r) => r.width > 0 && r.height > 0)
+    .map((r) => ({
+      left: r.left,
+      top: r.top,
+      right: r.right,
+      bottom: r.bottom,
+    }));
+
+  const hr = paddedSource.getBoundingClientRect();
+  const hcs = getComputedStyle(paddedSource);
+  return {
+    titleClipped: titleEl.scrollWidth > titleEl.clientWidth + 1,
+    titleTextRects,
+    badgeRect: rectOf(parts.badgeEl),
+    bugLinkRect: rectOf(parts.bugLinkEl),
+    closeRect: rectOf(parts.closeEl),
+    backRect: rectOf(parts.backEl),
+    aiStatusRect: rectOf(parts.aiStatusEl),
+    llmBadgeRect: rectOf(parts.llmBadgeEl),
+    shareRect: rectOf(parts.shareEl),
+    headerRect: {
+      left: hr.left + parseFloat(hcs.paddingLeft || "0"),
+      top: hr.top + parseFloat(hcs.paddingTop || "0"),
+      right: hr.right - parseFloat(hcs.paddingRight || "0"),
+      bottom: hr.bottom - parseFloat(hcs.paddingBottom || "0"),
+    },
+  };
+}
+
 async function probeHeaderLayout(page: Page): Promise<HeaderProbe> {
-  return page
-    .evaluate(() => {
-      const rectOf = (el: Element | null | undefined) => {
-        if (!el) return null;
-        const r = el.getBoundingClientRect();
-        return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
-      };
-
-      const dialog = document.querySelector(
-        '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
-      ) as HTMLElement | null;
-      const labelledBy = dialog?.getAttribute("aria-labelledby");
-      const titleEl = ((labelledBy && document.getElementById(labelledBy)) ||
-        dialog?.querySelector("h1, h2, h3")) as HTMLElement | null;
-      if (!dialog || !titleEl) return null;
-
-      const headerRegion = (dialog.querySelector(".modal-header") ||
-        dialog) as HTMLElement;
-
-      // N13: `.modal-header` itself is the *decorative* box - ResponsiveModal
-      // wraps a custom `header` prop in a zero-padding `.modal-header` (its
-      // `!p-0`), so a header's own real breathing room (often px-6/p-6 -
-      // 24px, a completely normal design choice) lives one or more levels
-      // down, on that custom header's own root element(s) - some headers
-      // return their padded row directly, others wrap it in a plain `<div>`
-      // alongside a tab strip (e.g. MultiCloudManager). Measuring the close
-      // button against `.modal-header`'s raw box would count that
-      // intentional padding (or wrapper nesting) as "drift", so this walks
-      // down through zero-padding single-purpose wrappers until it reaches
-      // whichever level actually carries padding, and reports *that*
-      // element's padding-adjusted content box instead of `.modal-header`'s
-      // outer one. Capped at 5 levels so a genuinely paddingless header
-      // (rare, but not impossible) can't walk into unrelated body content.
-      let paddedSource = headerRegion;
-      for (let depth = 0; depth < 5; depth++) {
-        if (parseFloat(getComputedStyle(paddedSource).paddingRight || "0") > 0)
-          break;
-        const next = paddedSource.firstElementChild as HTMLElement | null;
-        if (!next) break;
-        paddedSource = next;
-      }
-      const paddedContentBox = (el: HTMLElement) => {
-        const r = el.getBoundingClientRect();
-        const cs = getComputedStyle(el);
-        return {
-          left: r.left + parseFloat(cs.paddingLeft || "0"),
-          top: r.top + parseFloat(cs.paddingTop || "0"),
-          right: r.right - parseFloat(cs.paddingRight || "0"),
-          bottom: r.bottom - parseFloat(cs.paddingBottom || "0"),
-        };
-      };
-
-      const byLabel = (pattern: RegExp) =>
-        Array.from(headerRegion.querySelectorAll("button")).find((b) =>
-          pattern.test(b.getAttribute("aria-label") || ""),
-        ) as HTMLElement | undefined;
-
-      const c = {
-        badgeEl: Array.from(headerRegion.querySelectorAll("span")).find((s) =>
-          s.className.includes("bg-amber-700"),
-        ) as HTMLElement | undefined,
-        bugLinkEl: byLabel(/^Report a bug/i),
-        closeEl: byLabel(/close|exit/i),
-        backEl: byLabel(/^go back$/i),
-        aiStatusEl:
-          (headerRegion.querySelector(
-            '[data-testid="ai-status-badge"]',
-          ) as HTMLElement | null) || undefined,
-        llmBadgeEl: byLabel(/View AI model recommendations/i),
-        shareEl: byLabel(/^Export for Reddit/i),
-      };
-
-      const nested = Object.values(c).filter(
-        (el): el is HTMLElement =>
-          !!el && el !== titleEl && titleEl.contains(el),
-      );
-      const range = document.createRange();
-      range.selectNodeContents(titleEl);
-      if (nested.length > 0) {
-        range.setEndBefore(
-          nested.reduce((a, b) =>
-            (a.compareDocumentPosition(b) &
-              Node.DOCUMENT_POSITION_FOLLOWING) !==
-            0
-              ? a
-              : b,
-          ),
-        );
-      }
-      const titleTextRects = Array.from(range.getClientRects())
-        .filter((r) => r.width > 0 && r.height > 0)
-        .map((r) => ({
-          left: r.left,
-          top: r.top,
-          right: r.right,
-          bottom: r.bottom,
-        }));
-
-      return {
-        titleClipped: titleEl.scrollWidth > titleEl.clientWidth + 1,
-        titleTextRects,
-        badgeRect: rectOf(c.badgeEl),
-        bugLinkRect: rectOf(c.bugLinkEl),
-        closeRect: rectOf(c.closeEl),
-        backRect: rectOf(c.backEl),
-        aiStatusRect: rectOf(c.aiStatusEl),
-        llmBadgeRect: rectOf(c.llmBadgeEl),
-        shareRect: rectOf(c.shareEl),
-        headerRect: paddedContentBox(paddedSource),
-      };
-    })
-    .then((found) => (found ? { found: true, ...found } : EMPTY_HEADER_PROBE));
+  const bundleHandle = await page.evaluateHandle(findProbeBundle);
+  const probe = await bundleHandle.evaluate(extractProbeData);
+  return probe ? { found: true, ...probe } : EMPTY_HEADER_PROBE;
 }
 
 /**
@@ -1945,6 +2001,169 @@ for (const vp of HEADER_ALIGNMENT_VIEWPORTS) {
     }
   });
 }
+
+// N14: the widths between QUICK_EXIT_VIEWPORTS' widest phone (430px) and
+// HEADER_ALIGNMENT_VIEWPORTS' desktop check (1440px) - nothing in this file
+// ran a real browser at any width in between until now, which is exactly
+// where HeaderCloseSlot's `items-start` alignment (fixed above, N14) turned
+// a pre-existing partial rect overlap between the close-X and the fixed
+// Quick Exit button into a dead-centre hit: a tap on the dialog's own close
+// control opened Quick Exit's panic "Exit Now?" prompt instead.
+const TABLET_LAPTOP_VIEWPORTS = [
+  { name: "ipad-landscape", width: 1024, height: 768 },
+  { name: "laptop", width: 1280, height: 720 },
+];
+
+/**
+ * True if the *topmost dialog's* close button's own centre point resolves
+ * (via `elementFromPoint`) to the fixed Quick Exit button specifically -
+ * the exact mechanism a real tap on that point would hit. Scoped to the
+ * active dialog (not `document`-wide) so a stray same-labelled control
+ * elsewhere on the page can't be mistaken for the dialog's own close, and
+ * checks the hit element's own aria-label (not just "something covers it")
+ * so an unrelated in-dialog overlap doesn't get misreported as this
+ * specific Quick-Exit regression.
+ */
+function closeCentreHitsQuickExit(page: Page): Promise<boolean> {
+  return page.evaluate(() => {
+    const dialog = document.querySelector(
+      '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+    );
+    if (!dialog) return false;
+    const closeBtn = Array.from(
+      dialog.querySelectorAll(
+        'button[aria-label*="close" i], button[aria-label*="exit" i]',
+      ),
+    ).find((b) => b.getClientRects().length > 0);
+    if (!closeBtn) return false;
+    const r = closeBtn.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      r.left + r.width / 2,
+      r.top + r.height / 2,
+    );
+    const hitLabel = (hit?.closest("button")?.getAttribute("aria-label") ||
+      hit?.getAttribute("aria-label") ||
+      "") as string;
+    return /quick exit/i.test(hitLabel);
+  });
+}
+
+for (const vp of TABLET_LAPTOP_VIEWPORTS) {
+  test.describe(`Tool dialog close-X isn't shadowed by Quick Exit @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    // Mission Protocol has no header close-X at all by design (N13
+    // openIssues) - nothing for this hit-test to check, so it's excluded
+    // from the dialog list up front rather than skipped per-test.
+    //
+    // Publications Library (size="2xl") is wide enough that its close-X
+    // sits in this exact spot on base (b5b9a3a0) too - verified live by
+    // swapping in base's own PublicationsLibraryModal.jsx (pre-HeaderCloseSlot,
+    // plain `items-center`) against this same dev server: identical hit,
+    // identical rect. This branch's `items-start`->`sm:items-center` fix
+    // can't touch it either way, because the collision here is horizontal
+    // (the dialog's own width vs. Quick Exit's fixed position), not
+    // vertical - out of scope per the boundaries (not ResponsiveModal.jsx
+    // sizing, not QuickExitButton.jsx), and already flagged in openIssues as
+    // the sibling fix/quick-exit-wide-vision branch's job.
+    for (const dialog of TOOL_GRID_DIALOG_EVENTS.filter(
+      (d) =>
+        d.label !== "Mission Protocol" && d.label !== "Publications Library",
+    )) {
+      test(`${dialog.label}: close × centre point isn't covered by Quick Exit`, async ({
+        page,
+      }) => {
+        const probe = await triggerAndProbe(
+          page,
+          dispatchTrigger(page, dialog.event, dialog.detail),
+          probeHeaderLayout,
+        );
+        expect(probe.found).toBe(true);
+        expect(await closeCentreHitsQuickExit(page)).toBe(false);
+      });
+    }
+  });
+}
+
+/**
+ * A real tap, not just geometry: the four dialog/width pairs the original
+ * regression report verified by clicking (rather than just measuring) - a
+ * click at the close-X's centre must close the dialog itself, not surface
+ * Quick Exit's "Exit Now?" panic prompt over a still-open dialog.
+ */
+const QUICK_EXIT_CLICK_CASES = [
+  { label: "Pathfinder", event: "openPathfinder", width: 1024, height: 768 },
+  { label: "BDD Builder", event: "openBDDBuilder", width: 1024, height: 768 },
+  {
+    label: "PACT Act Navigator",
+    event: "openPACTActNavigator",
+    width: 1024,
+    height: 768,
+  },
+  {
+    label: "C-File Analyzer",
+    event: "openCFileAnalyzer",
+    width: 1280,
+    height: 720,
+  },
+];
+
+test.describe("Tool dialog close-X click actually closes the dialog, not Quick Exit", () => {
+  for (const testCase of QUICK_EXIT_CLICK_CASES) {
+    test(`${testCase.label} @ ${testCase.width}x${testCase.height}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({
+        width: testCase.width,
+        height: testCase.height,
+      });
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+        localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+
+      await triggerAndProbe(
+        page,
+        dispatchTrigger(page, testCase.event),
+        probeHeaderLayout,
+      );
+      const dialogLocator = page.locator(
+        '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+      );
+      const closeBtn = page
+        .locator(
+          'button[aria-label*="close" i]:not([aria-label*="quick exit" i])',
+        )
+        .last();
+      await closeBtn.waitFor({ state: "visible", timeout: 6000 });
+      const box = await closeBtn.boundingBox();
+      if (!box) throw new Error("close button has no bounding box");
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+
+      await expect(page.getByText("Exit Now?", { exact: false })).toHaveCount(
+        0,
+      );
+      await expect(dialogLocator).toHaveCount(0);
+    });
+  }
+});
 
 /**
  * CAPSimulator's three "deeper" headers (select a condition, mid-simulation,
