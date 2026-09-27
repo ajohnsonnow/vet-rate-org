@@ -4286,32 +4286,53 @@ function UserManualMobileHeader({ t, sidebarOpen, setSidebarOpen, onClose }) {
   );
 }
 
-function UserManualSidebarHeader({ t, onClose, searchQuery, setSearchQuery }) {
+/**
+ * Close control for the >=md two-pane layout, pinned to the whole dialog
+ * panel's own top end corner (`end-3` - RTL-safe logical inset, matching
+ * the language-switch direction, not the sidebar-scrollbar `dir="rtl"`
+ * trick two levels down in UserManualSidebar) rather than living inside
+ * the sidebar it used to share a header with - the sidebar is the LEFT
+ * pane, not the header, in this layout. `hidden md:flex`: below `md` the
+ * mobile header (above) already renders its own close-X.
+ *
+ * `top-16` (not `top-3`): this panel's own `md:m-4` margin only insets it
+ * 16px from the viewport edge, nowhere near enough to clear the fixed
+ * top-right Quick Exit button's ~60px-tall box on its own - measured
+ * overlap at 768x1024/1024x768 with `top-3`. `top-16` (64px) matches
+ * ResponsiveModal.jsx's own `sm:!mt-16` gutter, the same value already
+ * proven to clear Quick Exit's box at every dialog using that shared shell.
+ */
+function UserManualDesktopCloseButton({ onClose }) {
+  return (
+    <button
+      onClick={onClose}
+      className="hidden md:flex absolute top-16 end-3 z-20 h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+      aria-label="Close Field Manual"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
+  );
+}
+
+function UserManualSidebarHeader({ t, searchQuery, setSearchQuery }) {
   return (
     <div className="hidden md:block sticky top-0 bg-gradient-to-r from-va-blue to-emerald-700 text-white p-4">
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-lg font-bold flex items-center gap-2">
           {t("userManual", "title")}
         </h1>
-        <button
-          onClick={onClose}
-          className="h-11 w-11 flex items-center justify-center hover:bg-white/20 rounded"
-          aria-label="Close Field Manual"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
       </div>
 
       {/* Search */}
@@ -4622,7 +4643,6 @@ function UserManualSidebar({ s }) {
         {/* Desktop header */}
         <UserManualSidebarHeader
           t={t}
-          onClose={onClose}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
@@ -4791,12 +4811,17 @@ const UserManual = ({ onClose, onReportBug }) => {
         role="dialog"
         aria-modal="true"
         aria-label={t("userManual", "title")}
-        // pt-20 below `sm` reserves the same Quick Exit gutter as
+        // pt-20 below `md` reserves the same Quick Exit gutter as
         // ResponsiveModal.jsx (D3, 52a1edd8): this two-pane dialog stays
         // hand-built (see the note above), so the mobile header's hamburger
         // button and title need their own reserved space instead of
-        // ResponsiveModal's built-in one.
-        className="flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 pt-20 sm:pt-0 rounded-none md:rounded-xl overflow-hidden"
+        // ResponsiveModal's built-in one. `md:` (not `sm:`): the mobile
+        // header (below) stays mounted through 767px and this panel is
+        // still full-bleed (`m-0`) there too, so dropping the gutter to 0 at
+        // `sm:` left the 640-767px band with no clearance at all from Quick
+        // Exit, which moves to top-right at that same `sm:` breakpoint
+        // (measured at 640x800).
+        className="relative flex-1 flex flex-col md:flex-row bg-white dark:bg-gray-900 m-0 md:m-4 pt-20 md:pt-0 rounded-none md:rounded-xl overflow-hidden"
       >
         {/* Mobile header */}
         <UserManualMobileHeader
@@ -4805,6 +4830,12 @@ const UserManual = ({ onClose, onReportBug }) => {
           setSidebarOpen={setSidebarOpen}
           onClose={onClose}
         />
+
+        {/* Desktop close - the two-pane layout (>=md) has no single unified
+            top bar (title/search live in the LEFT sidebar), so the close-X
+            is pinned directly to the panel's own top end corner instead,
+            per decision (1)/HeaderCloseSlot's "last control" convention. */}
+        <UserManualDesktopCloseButton onClose={onClose} />
 
         {/* Sidebar - scrollbar on left using RTL */}
         <UserManualSidebar
