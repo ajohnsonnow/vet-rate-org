@@ -14,6 +14,10 @@ import {
   loadVKB,
   getAllDocumentsByCategory,
 } from "../../utils/veteranKnowledgeBase.js";
+import {
+  addServicePeriod,
+  getServicePeriods,
+} from "../../utils/veteranProfile.js";
 
 vi.mock("../../utils/veteranKnowledgeBase.js", async (importOriginal) => {
   const actual = await importOriginal();
@@ -105,5 +109,46 @@ describe("MyPacket Documents tab: calculated entry date marker", () => {
     expect(
       screen.queryByText(/calculated from net service/),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("MyPacket Profile tab: service period editor", () => {
+  it("marks a calculated period start date and clears the flag once the veteran edits it", async () => {
+    loadVKB.mockResolvedValue(buildVkb(false));
+    getAllDocumentsByCategory.mockResolvedValue(
+      (
+        await vi.importActual("../../utils/veteranKnowledgeBase.js")
+      ).groupDocumentationByCategory(buildVkb(false)),
+    );
+    const periodId = addServicePeriod({
+      branch: "Army National Guard",
+      component: "Guard",
+      serviceStartDate: "2012-03-14",
+      serviceStartDateDerived: true,
+      serviceEndDate: "2020-03-14",
+    });
+
+    renderMyPacket();
+    fireEvent.click(await screen.findByText("Profile"));
+
+    expect(
+      await screen.findByText(/calculated from net service/),
+    ).toBeInTheDocument();
+
+    const startDateInput = screen
+      .getByText("Start Date")
+      .closest("div")
+      .querySelector('input[type="date"]');
+    fireEvent.change(startDateInput, { target: { value: "2011-09-01" } });
+
+    expect(
+      screen.queryByText(/calculated from net service/),
+    ).not.toBeInTheDocument();
+
+    const saved = getServicePeriods().find((p) => p.id === periodId);
+    expect(saved).toMatchObject({
+      serviceStartDate: "2011-09-01",
+      serviceStartDateDerived: false,
+    });
   });
 });

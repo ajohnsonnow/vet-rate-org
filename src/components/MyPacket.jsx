@@ -1912,12 +1912,20 @@ function _updateServicePeriodField(
   field,
   value,
 ) {
+  // A veteran editing this period's own start date is supplying a real,
+  // remembered date - never the calculated NGB-22 guess the "(calculated
+  // from net service)" label (ServicePeriodFieldsA) keys off, so the
+  // sibling flag must not survive the edit.
+  const changes =
+    field === "serviceStartDate"
+      ? { [field]: value, serviceStartDateDerived: false }
+      : { [field]: value };
   const newPeriods = [...veteranProfile.servicePeriods];
-  const updated = { ...newPeriods[idx], [field]: value };
+  const updated = { ...newPeriods[idx], ...changes };
   newPeriods[idx] = updated;
   setVeteranProfile({ ...veteranProfile, servicePeriods: newPeriods });
   if (updated.id) {
-    updateServicePeriod(updated.id, { [field]: value });
+    updateServicePeriod(updated.id, changes);
   }
 }
 
@@ -1987,6 +1995,11 @@ function ServicePeriodFieldsA({ period, update, t }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {t("myPacketSection.startDate")}
+          {period.serviceStartDateDerived && (
+            <span className="ml-1 font-normal text-xs text-gray-600 dark:text-gray-400">
+              (calculated from net service)
+            </span>
+          )}
         </label>
         <input
           type="date"
