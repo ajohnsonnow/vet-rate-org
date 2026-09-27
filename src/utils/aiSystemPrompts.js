@@ -18,6 +18,7 @@ import { getConditionCount as getDisabilityCount } from "../services/knowledgeQu
 import { getFormsCount } from "./formsCount";
 import { spotlight as _spotlight } from "./piiScrubber";
 import { deriveCombatService } from "./combatService";
+import { getServiceEntry } from "./veteranProfile";
 
 /**
  * Re-export of `spotlight()` for any caller that's already importing from this
@@ -795,14 +796,21 @@ function formatServiceHistorySection(serviceHistory) {
   let section = `\nSERVICE HISTORY:\n`;
   if (sh.branch) section += `- Branch: ${sh.branch}\n`;
   if (sh.mos) section += `- MOS/Rating: ${sh.mos}\n`;
-  if (sh.entryDate) {
+  // D11-6: sh.entryDate/entryDateDerived (dd214Data, the ORIGINAL
+  // extraction) is never updated by any editor - the VKB viewer, My Packet
+  // profile editor, and FormsHelper all correct servicePeriods[]/
+  // profile.serviceStartDate instead, so a veteran's correction never
+  // reached this prompt. getServiceEntry() is the canonical selector every
+  // consumer reads instead.
+  const entry = getServiceEntry();
+  if (entry.date) {
     // D-C: an NGB-22's entry date can be CALCULATED (separation date minus
     // net service) rather than printed on the form - an AI tool told this
     // as a plain fact could place an in-service injury before "entry" and
     // steer toward a pre-existing-condition/aggravation theory that isn't
     // warranted. See mergeDD214ServiceDates's own use of this same flag.
-    const note = sh.entryDateDerived ? " (calculated from net service)" : "";
-    section += `- Entry Date: ${sh.entryDate}${note}\n`;
+    const note = entry.derived ? " (calculated from net service)" : "";
+    section += `- Entry Date: ${entry.date}${note}\n`;
   }
   if (sh.separationDate) section += `- Separation Date: ${sh.separationDate}\n`;
   if (sh.yearsService) section += `- Years of Service: ${sh.yearsService}\n`;

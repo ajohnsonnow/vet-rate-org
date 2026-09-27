@@ -62,6 +62,48 @@ describe("buildSystemPrompt - calculated NGB-22 entry date", () => {
   });
 });
 
+describe("buildSystemPrompt - D11-6: reads the canonical servicePeriods[] entry date, not the stale dd214Data copy", () => {
+  afterEach(() => {
+    localStorage.removeItem("vet_rate_service_history");
+  });
+
+  it("prefers a veteran-corrected servicePeriods[] entry over dd214Data's own calculated date", () => {
+    // dd214Data.entryDate/entryDateDerived is the ORIGINAL extraction and is
+    // never updated by the VKB viewer, My Packet profile editor, or
+    // FormsHelper - only servicePeriods[] (via upsertServicePeriod/
+    // updateServicePeriod) is. A veteran who corrected the date through one
+    // of those editors must still see it reflected here.
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        dd214Data: {
+          branch: "Army National Guard",
+          entryDate: "2002-03-05",
+          entryDateDerived: true,
+          separationDate: "2010-06-15",
+        },
+        servicePeriods: [
+          {
+            id: "period_1",
+            serviceStartDate: "2001-11-01",
+            serviceStartDateDerived: false,
+            serviceEndDate: "2010-06-15",
+            userEdited: true,
+          },
+        ],
+      }),
+    );
+
+    const prompt = buildSystemPrompt({
+      includeAppContext: false,
+      includeRegulations: false,
+    });
+
+    expect(prompt).toContain("- Entry Date: 2001-11-01\n");
+    expect(prompt).not.toContain("calculated from net service");
+  });
+});
+
 describe("spotlight", () => {
   it("wraps text in untrusted_content delimiters", () => {
     const out = spotlight("hello");
