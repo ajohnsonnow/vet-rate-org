@@ -1236,12 +1236,17 @@ const AboutUs = ({ onClose, onReportBug }) => {
   return (
     <div
       ref={dialogRef}
-      // pt-20 below `sm` reserves the same Quick Exit gutter as
+      // pt-20 below `md` reserves the same Quick Exit gutter as
       // ResponsiveModal.jsx (D3, 52a1edd8), applied on the backdrop (not the
       // `.modal-content` panel) to avoid the legacy `@media (width<=768px)
       // { .modal-content { margin: 0 } }` rule in index.css that panel
-      // already carries.
-      className={`${modalClasses.backdrop} pt-20 sm:pt-4`}
+      // already carries. `md:` (not `sm:`): this dialog's own header stays
+      // in its mobile layout through 767px (only its horizontal gutter
+      // narrows at `sm:`, via modalClasses/max-w-4xl), so dropping to pt-4
+      // at `sm:` left the 640-767px band with just 16px of clearance -
+      // Quick Exit moves to top-right at `sm:` too, and its ~48px box
+      // reached the header's close-X there (measured at 640x800).
+      className={`${modalClasses.backdrop} pt-20 md:pt-4`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="about-us-title"
