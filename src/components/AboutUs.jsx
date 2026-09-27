@@ -202,7 +202,14 @@ function AboutUsHeader({ getColorClass, colors, onReportBug, onClose }) {
     // The close × always stays pinned to the header's top-right corner; the
     // title and report-bug link wrap onto their own line inside their own
     // wrapping column when they don't fit alongside it (HeaderCloseSlot).
+    // `data-modal-header`: this dialog predates ResponsiveModal (it renders
+    // its own backdrop directly, role="dialog" and all) so it never gets
+    // the shared shell's `.modal-header` class - without an equivalent
+    // landmark, e2e's header-region probe (mobile.spec.ts's
+    // `findProbeBundle`) fell back to the whole backdrop, whose own
+    // centering `p-4` padding it mistook for a header's.
     <div
+      data-modal-header
       className={`sticky top-0 border-b px-6 py-4 rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}
     >
       <HeaderCloseSlot
