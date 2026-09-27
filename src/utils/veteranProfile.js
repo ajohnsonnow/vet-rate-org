@@ -860,7 +860,13 @@ const SERVICE_HISTORY_KEY = "vet_rate_service_history";
 // (_mergeReviewCorrectionDuplicates). Each step is gated on its OWN prior
 // version (v<1, v<2, v<3), not just "below current", so a v1 history never
 // re-runs the v1 repair and a v2 history never re-runs the v2 one.
-const SERVICE_HISTORY_SCHEMA_VERSION = 3;
+// Bumped to 4 for _repairGuessedWindowRank below (D11-4, final12 QA,
+// 2026-09-27): a pre-fix musterCallProcessor.js stamped the NGB-22's own
+// rank/payGrade onto EVERY Box-18 window it produced, not just a window it
+// could actually prove that rank applied to - that stored guess still
+// blocks the window's own DD214 from ever winning the pay-grade tiebreak.
+// Gated on its own v<4 step for the same reason as the others above.
+const SERVICE_HISTORY_SCHEMA_VERSION = 4;
 
 /**
  * Valid deployment locations/theaters
@@ -899,6 +905,26 @@ const VALID_THEATERS = new Set([
   "Sinai",
   "Other",
 ]);
+
+// Each step gated on its OWN prior version (v<1, v<2, ...), not just "below
+// current" - so a v1 history never re-runs the v1 repair and a v2 history
+// never re-runs the v2 one. See SERVICE_HISTORY_SCHEMA_VERSION above for
+// what each version bump repairs and why.
+function _runVersionedMigrations(parsed) {
+  if (parsed.schemaVersion < 1) {
+    _repairContaminatedWindowPeriods(parsed);
+  }
+  if (parsed.schemaVersion < 2) {
+    _repairStaleCodeSheetDerivedFlag(parsed);
+  }
+  if (parsed.schemaVersion < 3) {
+    _inferStartDateProvenance(parsed);
+    _mergeReviewCorrectionDuplicates(parsed);
+  }
+  if (parsed.schemaVersion < 4) {
+    _repairGuessedWindowRank(parsed);
+  }
+}
 
 /**
  * Get service history data
@@ -961,16 +987,7 @@ export const getServiceHistory = () => {
     parsed.schemaVersion =
       typeof parsed.schemaVersion === "number" ? parsed.schemaVersion : 0;
     if (parsed.schemaVersion < SERVICE_HISTORY_SCHEMA_VERSION) {
-      if (parsed.schemaVersion < 1) {
-        _repairContaminatedWindowPeriods(parsed);
-      }
-      if (parsed.schemaVersion < 2) {
-        _repairStaleCodeSheetDerivedFlag(parsed);
-      }
-      if (parsed.schemaVersion < 3) {
-        _inferStartDateProvenance(parsed);
-        _mergeReviewCorrectionDuplicates(parsed);
-      }
+      _runVersionedMigrations(parsed);
       parsed.schemaVersion = SERVICE_HISTORY_SCHEMA_VERSION;
       saveServiceHistory(parsed);
     }
@@ -1584,6 +1601,28 @@ function _mergeReviewCorrectionDuplicates(history) {
     toRemove.add(bIndex);
   });
   history.servicePeriods = periods.filter((_, index) => !toRemove.has(index));
+}
+
+// D11-4 (final12 QA, 2026-09-27): a pre-fix musterCallProcessor.js stamped
+// the NGB-22's own rank/payGrade onto every Box-18 window it produced, with
+// nothing on the document proving that rank applied to any one of them in
+// particular. Reuses _hasNoOtherContributor (above) - the exact same "no
+// document has ever independently proven a link to this period" test the
+// Box-18-contamination repair already uses - so a window whose rank instead
+// came from that window's OWN dated DD214 (a genuinely different, proven
+// contributor) is correctly left alone.
+function _isGuessedWindowRankPeriod(p) {
+  return (
+    p.periodScope === "window" &&
+    (!!p.rank || !!p.payGrade) &&
+    _hasNoOtherContributor(p)
+  );
+}
+
+function _repairGuessedWindowRank(history) {
+  history.servicePeriods = history.servicePeriods.map((p) =>
+    _isGuessedWindowRankPeriod(p) ? { ...p, rank: "", payGrade: "" } : p,
+  );
 }
 
 // ADR-007: serviceStartDateSource is now authoritative provenance for the
@@ -2365,12 +2404,24 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
   // veteranKnowledgeBase.js's mergeDD214RankAndCharacter already uses for
   // the Service tab's single discharge-rank field).
   if (incoming.rank) {
-    const incomingIsLater = _isLaterRecord(
-      incoming.serviceEndDate,
-      existing.serviceEndDate,
-      parsePayGrade(incoming.payGrade),
-      parsePayGrade(existing.payGrade),
-    );
+    // D11-4 (final12 QA, 2026-09-27): a Box-18 window (periodScope
+    // "window") only ever gets a rank from a genuinely proven link - either
+    // the NGB-22's own terminal-AD match (musterCallProcessor.js) or a
+    // dated DD214 that describes this exact window. A DD214 IS that
+    // window's own record, not a competing document whose recency needs
+    // arbitrating by pay grade - the pay-grade tie-break exists to settle
+    // which of two real, independent records is more current, and doesn't
+    // apply when one side is simply the authority for this specific period.
+    const windowsOwnDD214 =
+      existing.periodScope === "window" && incoming.formType === "DD214";
+    const incomingIsLater =
+      windowsOwnDD214 ||
+      _isLaterRecord(
+        incoming.serviceEndDate,
+        existing.serviceEndDate,
+        parsePayGrade(incoming.payGrade),
+        parsePayGrade(existing.payGrade),
+      );
     if (!existing.rank || incomingIsLater) {
       merged.rank = incoming.rank;
     }

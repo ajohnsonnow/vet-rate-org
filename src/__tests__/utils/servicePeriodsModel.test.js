@@ -1466,3 +1466,158 @@ describe("C1: service periods - rank recency falls back to pay grade (D2)", () =
     expect(getServicePeriods()[0].rank).toBe("SGT");
   });
 });
+
+// D11-4 (final12 QA, 2026-09-27): a pre-fix musterCallProcessor.js stamped
+// the NGB-22's own rank/payGrade onto EVERY Box-18 window it produced (a
+// guess), which then permanently blocked that window's own real DD214 from
+// ever winning the pay-grade tiebreak below. Fixture values are generic.
+function seedServiceHistory(servicePeriods) {
+  localStorage.setItem(
+    "vet_rate_service_history",
+    JSON.stringify({
+      deployments: [],
+      awards: [],
+      dd214Data: null,
+      serviceInfo: null,
+      servicePeriods,
+      unmatchedServiceRecords: [],
+      dateUpdated: "2026-01-01T00:00:00.000Z",
+    }),
+  );
+}
+
+describe("D11-4: the guessed-window-rank repair migrates stale Box-18 windows", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("clears rank/payGrade on a window whose only rank provenance is the NGB-22 guess", () => {
+    seedServiceHistory([
+      {
+        id: "guessed_window",
+        serviceStartDate: "2003-01-15",
+        serviceEndDate: "2003-12-20",
+        branch: "Army",
+        component: "Active Duty",
+        formType: "NGB22",
+        rank: "SSG",
+        payGrade: "E-6",
+        periodScope: "window",
+        sourceDocument: "ngb22_generic.pdf",
+        sources: [{ sourceDocument: "ngb22_generic.pdf", formType: "NGB22" }],
+      },
+    ]);
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("");
+    expect(migrated.payGrade).toBe("");
+  });
+
+  it("leaves a window's rank/payGrade alone once its own DD214 has independently contributed", () => {
+    seedServiceHistory([
+      {
+        id: "proven_window",
+        serviceStartDate: "2003-01-15",
+        serviceEndDate: "2003-12-20",
+        branch: "Army",
+        component: "Active Duty",
+        formType: "DD214",
+        rank: "CPL",
+        payGrade: "E-4",
+        periodScope: "window",
+        sourceDocument: "dd214_window.pdf",
+        sources: [
+          { sourceDocument: "ngb22_generic.pdf", formType: "NGB22" },
+          { sourceDocument: "dd214_window.pdf", formType: "DD214" },
+        ],
+      },
+    ]);
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("CPL");
+    expect(migrated.payGrade).toBe("E-4");
+  });
+
+  it("never touches an enlistment-level period's rank (periodScope is not 'window')", () => {
+    seedServiceHistory([
+      {
+        id: "enlistment_period",
+        serviceStartDate: "2003-01-15",
+        serviceEndDate: "2003-12-20",
+        branch: "Army",
+        component: "Active Duty",
+        formType: "NGB22",
+        rank: "SSG",
+        payGrade: "E-6",
+        sourceDocument: "ngb22_generic.pdf",
+        sources: [{ sourceDocument: "ngb22_generic.pdf", formType: "NGB22" }],
+      },
+    ]);
+
+    const [migrated] = getServicePeriods();
+    expect(migrated.rank).toBe("SSG");
+    expect(migrated.payGrade).toBe("E-6");
+  });
+});
+
+describe("D11-4: a window's own DD214 outranks a guessed rank regardless of pay grade", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("lets a lower-pay-grade DD214 for the same window overwrite a higher-pay-grade guessed rank", () => {
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "NGB22",
+        rank: "SFC",
+        payGrade: "E-7",
+        periodScope: "window",
+      }),
+      meta("ngb22_generic.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "DD214",
+        rank: "CPL",
+        payGrade: "E-4",
+      }),
+      meta("dd214_window.pdf", 90),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    expect(periods[0].rank).toBe("CPL");
+  });
+
+  // Control: the same pay-grade shape, but neither period is a window
+  // (periodScope unset) - the ordinary recency/pay-grade tiebreak must
+  // still apply here, proving the bypass is scoped to windows only.
+  it("still applies the ordinary pay-grade tiebreak when neither period is a window", () => {
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "DD214",
+        rank: "SFC",
+        payGrade: "E-7",
+      }),
+      meta("dd214_a.pdf", 60),
+    );
+    upsertServicePeriod(
+      period("2003-01-15", "2003-12-20", {
+        branch: "Army",
+        component: "Active Duty",
+        formType: "DD214",
+        rank: "CPL",
+        payGrade: "E-4",
+      }),
+      meta("dd214_b.pdf", 90),
+    );
+
+    expect(getServicePeriods()[0].rank).toBe("SFC");
+  });
+});
