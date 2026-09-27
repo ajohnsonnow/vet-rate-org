@@ -35,6 +35,11 @@ const EXCLUDED_METADATA_FIELDS = new Set([
   "multiDocument",
   "documentIndex",
   "totalDocuments",
+  // Sibling flag for serviceStartDate (musterCallProcessor.js's
+  // parseServiceRecord): a raw boolean the veteran would otherwise have to
+  // verify like any other field. It drives the "(calculated from net
+  // service)" note on the serviceStartDate row instead (see FieldGroup).
+  "serviceStartDateDerived",
 ]);
 
 function FieldEditControls({ editValue, onChange, onSave, onCancel }) {
@@ -70,6 +75,7 @@ function FieldEditControls({ editValue, onChange, onSave, onCancel }) {
 
 function FieldValueDisplay({
   value,
+  derivedNote,
   onEdit,
   onDelete,
   showDeleteConfirm,
@@ -80,6 +86,12 @@ function FieldValueDisplay({
     <div className="flex items-center gap-2">
       <span className="text-sm text-gray-900 dark:text-white font-mono">
         {value}
+        {derivedNote && (
+          <span className="text-xs font-normal text-gray-500 dark:text-gray-400">
+            {" "}
+            ({derivedNote})
+          </span>
+        )}
       </span>
       <button
         type="button"
@@ -119,6 +131,24 @@ function FieldValueDisplay({
   );
 }
 
+function FieldLabelWithTooltip({ label, tooltip }) {
+  return (
+    <div className="flex items-center gap-2 mb-1">
+      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        {label}
+      </label>
+      {tooltip && (
+        <span
+          className="text-xs text-gray-500 dark:text-gray-400 cursor-help"
+          aria-label={tooltip}
+        >
+          💡
+        </span>
+      )}
+    </div>
+  );
+}
+
 /**
  * Field verification checkbox with inline editing
  */
@@ -126,6 +156,7 @@ const VerifiableField = ({
   label,
   value,
   tooltip,
+  derivedNote,
   onChange,
   checked,
   onCheckChange,
@@ -173,19 +204,7 @@ const VerifiableField = ({
       />
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {label}
-          </label>
-          {tooltip && (
-            <span
-              className="text-xs text-gray-500 dark:text-gray-400 cursor-help"
-              aria-label={tooltip}
-            >
-              💡
-            </span>
-          )}
-        </div>
+        <FieldLabelWithTooltip label={label} tooltip={tooltip} />
 
         {isEditing ? (
           <FieldEditControls
@@ -197,6 +216,7 @@ const VerifiableField = ({
         ) : (
           <FieldValueDisplay
             value={value}
+            derivedNote={derivedNote}
             onEdit={() => setIsEditing(true)}
             onDelete={onDelete}
             showDeleteConfirm={showDeleteConfirm}
@@ -1797,6 +1817,7 @@ function FieldGroup({
   hasConflict,
   onFieldDelete,
   onArrayItemDelete,
+  serviceStartDateDerived,
 }) {
   return (
     <div>
@@ -1851,6 +1872,11 @@ function FieldGroup({
               }
               value={String(value)}
               tooltip={getTooltip(key)}
+              derivedNote={
+                key === "serviceStartDate" && serviceStartDateDerived
+                  ? "calculated from net service"
+                  : null
+              }
               checked={verifiedFields[key] || false}
               onCheckChange={(checked) => onFieldCheck(key, checked)}
               onChange={(newValue) => onFieldEdit(key, newValue)}
@@ -1874,6 +1900,7 @@ function DocumentFieldGroups({
   hasConflict,
   onFieldDelete,
   onArrayItemDelete,
+  serviceStartDateDerived,
 }) {
   return (
     <div className="space-y-6 mb-6">
@@ -1890,6 +1917,7 @@ function DocumentFieldGroups({
           hasConflict={hasConflict}
           onFieldDelete={onFieldDelete}
           onArrayItemDelete={onArrayItemDelete}
+          serviceStartDateDerived={serviceStartDateDerived}
         />
       ))}
     </div>
@@ -1950,6 +1978,7 @@ function ExtractedInformationSection({
   onArrayItemDelete,
   classification,
   onAddField,
+  serviceStartDateDerived,
 }) {
   return (
     <div className="py-6">
@@ -1972,6 +2001,7 @@ function ExtractedInformationSection({
           hasConflict={hasConflict}
           onFieldDelete={onFieldDelete}
           onArrayItemDelete={onArrayItemDelete}
+          serviceStartDateDerived={serviceStartDateDerived}
         />
       )}
 
@@ -2372,6 +2402,7 @@ function DocumentBriefingBody({
           setEditedData,
           setVerifiedFields,
         )}
+        serviceStartDateDerived={!!currentData?.serviceStartDateDerived}
       />
 
       <DocumentBriefingOptionsAndHelp

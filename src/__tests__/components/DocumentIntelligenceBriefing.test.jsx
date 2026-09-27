@@ -385,6 +385,36 @@ describe("DocumentIntelligenceBriefing - state awards toggle", () => {
   });
 });
 
+describe("DocumentIntelligenceBriefing - calculated NGB-22 entry date", () => {
+  it("marks the Service Start Date row as calculated instead of showing a raw derived-flag row", async () => {
+    renderBriefing({
+      formType: "NGB22",
+      serviceStartDate: "2002-03-05",
+      serviceStartDateDerived: true,
+    });
+
+    await screen.findByText("2002-03-05");
+    expect(
+      screen.getByText(/\(calculated from net service\)/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Service Start Date Derived/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not mark a genuinely printed serviceStartDate as calculated", async () => {
+    renderBriefing({
+      formType: "DD214",
+      serviceStartDate: "2011-09-01",
+    });
+
+    await screen.findByText("2011-09-01");
+    expect(
+      screen.queryByText(/calculated from net service/),
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("formatArrayItem", () => {
   it("formats a granted decision with a rating and effective date", () => {
     const text = formatArrayItem({
