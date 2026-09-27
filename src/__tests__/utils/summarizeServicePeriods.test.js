@@ -222,6 +222,30 @@ describe("summarizeServicePeriods: D-B - Total time in service is a union of int
     ]);
     expect(summary.totalTimeInService).toMatch(/^[34] years/);
   });
+
+  // Regression (final10 QA correctness re-review, 2026-09-26): the
+  // interval was [start, end) - the printed end date itself was excluded,
+  // so a single-day period (start === end) counted as zero-length and two
+  // DD214s that legitimately chain (one ends the day before the next
+  // begins) each lost a real day instead of forming one continuous span.
+  it("counts a single-day period as one real day, not zero", () => {
+    const summary = summarizeServicePeriods([
+      { serviceStartDate: "2005-05-05", serviceEndDate: "2005-05-05" },
+    ]);
+    expect(summary.totalTimeInService).toBe("1 day");
+  });
+
+  it("gives two chained DD214-style periods (end D, next start D+1) the same total as one continuous span", () => {
+    const chained = summarizeServicePeriods([
+      { serviceStartDate: "2000-01-01", serviceEndDate: "2003-12-31" },
+      { serviceStartDate: "2004-01-01", serviceEndDate: "2007-12-31" },
+    ]);
+    const continuous = summarizeServicePeriods([
+      { serviceStartDate: "2000-01-01", serviceEndDate: "2007-12-31" },
+    ]);
+    expect(chained.totalTimeInService).toBe("8 years");
+    expect(chained.totalTimeInService).toBe(continuous.totalTimeInService);
+  });
 });
 
 // D-F (final10 QA, 2026-09-25): punctuation/hyphen differences alone are

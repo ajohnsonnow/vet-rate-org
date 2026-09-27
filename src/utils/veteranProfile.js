@@ -1130,12 +1130,23 @@ const SERVICE_PERIOD_MERGE_FIELDS = [
 // of the full sanitize (_sanitizeSources) that only runs on the next save
 // - so a proven-link check running before anything has re-saved this
 // veteran's data still sees real provenance instead of an empty list.
+//
+// D-A (final10 QA correctness re-review, 2026-09-26): a fabricated,
+// single-entry `sources` built here from `sourceDocument` alone proves
+// nothing about how many documents actually contributed historically -
+// `sourceDocument` is routinely REASSIGNED by an ordinary higher-confidence
+// merge (see _mergeExistingServicePeriod), so a period two real documents
+// built together looks identical, at read time, to one only a single
+// document ever touched. `__seededSources` marks that distinction so
+// _hasNoOtherContributor (below) can tell a fabricated guess apart from
+// `sources` this app's own merge code actually accumulated.
 function _seedSourcesIfMissing(p) {
   if (Array.isArray(p.sources) && p.sources.length > 0) return p;
   if (!p.sourceDocument) return p;
   return {
     ...p,
     sources: [{ sourceDocument: p.sourceDocument, formType: p.formType || "" }],
+    __seededSources: true,
   };
 }
 
@@ -1179,19 +1190,40 @@ const BOX18_IMPOSSIBLE_FIELD_DEFAULTS = {
   serviceStartDateDerived: false,
 };
 
-// D-A (final10 QA, 2026-09-25): the fingerprint above (formType + Box-18
-// notes boilerplate + an "impossible" field populated) also matches a
-// period an ORDINARY, legitimate merge produced - a dated DD214 for that
-// exact window saved before the NGB-22, whose Box 18 upsert is provenance-
-// only (formType/notes/sourceDocument, all reassignable per the "Code
-// Sheet" precedent) and never touches payGrade/mos/characterOfService/etc,
-// so those fields staying populated after the merge is the DD214's real
+// D-A (final10 QA, 2026-09-25; corrected in final10 QA's correctness
+// re-review, 2026-09-26): the fingerprint above (formType + Box-18 notes
+// boilerplate + an "impossible" field populated) also matches a period an
+// ORDINARY, legitimate merge produced - a dated DD214 for that exact
+// window saved before the NGB-22, whose Box 18 upsert is provenance-only
+// (formType/notes/sourceDocument, all reassignable per the "Code Sheet"
+// precedent) and never touches payGrade/mos/characterOfService/etc, so
+// those fields staying populated after the merge is the DD214's real
 // data, not contamination. Only a period whose provenance (`sources`)
 // contains no document other than that one NGB-22 is provably the OLD
 // bug's signature (the document's own undated primary record absorbed
 // into its own window) - any other contributor proves these fields are
 // real and must be left alone.
+//
+// The catch: `sources` didn't exist until 547bd981, and this repair's own
+// target bug (the OLD _absorbUnmatchedRecords) predates that too - so
+// EVERY period this repair could legitimately need to fix was ALSO saved
+// before `sources` existed, and reads back with a single, fabricated
+// entry (_seedSourcesIfMissing, `__seededSources: true`) built from
+// `sourceDocument` alone. That fabricated entry looks identical to a real
+// single-contributor history - it can't tell "only one document ever
+// touched this" from "we simply never recorded who else did", and this
+// exact shape is also precisely what a normal, never-contaminated
+// pre-`sources` history (i.e. every deployed veteran's data, since neither
+// `sources` nor the contamination bug ever shipped past this feature
+// branch) looks like on read. Only a period whose `sources` this app's
+// OWN merge code actually accumulated - never fabricated by the read-time
+// seed - is real evidence of "no other contributor". A fabricated seed is
+// treated as "we don't know", not as proof, so this repair now only ever
+// fires on a fresh regression by CURRENT merge code (which always writes
+// real `sources`), never on legacy or deployed data it can't safely
+// evaluate.
 function _hasNoOtherContributor(p) {
+  if (p.__seededSources) return false;
   const sources = Array.isArray(p.sources) ? p.sources : [];
   return sources.every((s) => s.sourceDocument === p.sourceDocument);
 }
@@ -1362,10 +1394,29 @@ function _sanitizeSources(p) {
     .slice(0, MAX_SOURCES);
 }
 
+// Obs 3 (final10 QA "tests" lens re-review, 2026-09-26): a field FILLED by
+// a lower-confidence document (from "unknown" to "known") never recorded
+// which document actually supplied it - only the period's single overall
+// `sourceDocument` (whichever document happens to be the highest-
+// confidence contributor), which may never have touched this field at
+// all. A later conflict on that field then blamed the wrong document.
+// Per-field, so each field's own fieldConflicts entry can cite the
+// document that genuinely supplied its kept value.
+function _sanitizeFieldSourceDocument(p) {
+  const raw = p.fieldSourceDocument;
+  if (!raw || typeof raw !== "object") return {};
+  const sanitized = {};
+  SERVICE_PERIOD_MERGE_FIELDS.forEach((field) => {
+    if (raw[field]) sanitized[field] = sanitizeString(raw[field], 300);
+  });
+  return sanitized;
+}
+
 function _sanitizeServicePeriodMetadata(p) {
   return {
     sourceDocument: sanitizeString(p.sourceDocument || "", 300),
     sources: _sanitizeSources(p),
+    fieldSourceDocument: _sanitizeFieldSourceDocument(p),
     // N9c: "window" marks a period as a training/activation sub-period
     // (musterCallProcessor.js's NGB-22 Box 18 extraction) rather than an
     // enlistment-level record - see _hasProvenLink below for why that
@@ -1596,19 +1647,24 @@ const SERVICE_PERIOD_PROVENANCE_FIELDS = new Set([
   "notes",
 ]);
 
-// D-F (final10 QA, 2026-09-25): shared by _valuesConflict here and
+// D-F (final10 QA, 2026-09-25; corrected in final10 QA's correctness
+// re-review, 2026-09-26): shared by _valuesConflict here and
 // summarizeServicePeriods' own characterOfService disagreement check below
 // - normalizes case, whitespace, AND punctuation/hyphens, so an OCR
 // artifact like "GENERAL - UNDER HONORABLE CONDITIONS" vs "GENERAL UNDER
 // HONORABLE CONDITIONS" compares equal instead of flagging a disagreement
-// between two records that say the same thing.
+// between two records that say the same thing. Punctuation is REMOVED,
+// not replaced with a space - a replace-with-space still left "E-5" ("e
+// 5") distinct from "E5" ("e5"), so a hyphen the vision parser
+// (dd214VisionParser.js) drops and the regex parser (musterCallProcessor.js)
+// keeps - true for pay grade, RE code, and MOS alike - still "disagreed".
+// Stripping every run of non-alphanumerics entirely still keeps genuinely
+// different values distinct (e.g. "GENERAL" vs "GENERALUNDERHONORABLE...").
 function _normalizeForComparison(value) {
   return String(value)
     .trim()
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+    .replace(/[^\p{L}\p{N}]/gu, "");
 }
 
 const _valuesConflict = (a, b) =>
@@ -1641,6 +1697,18 @@ function _addSource(existingSources, sourceDocument, formType) {
  * high-water-mark as before. Split out for the same line-count/complexity
  * reason as _findExistingServicePeriodIndex above.
  */
+// Obs 3 (final10 QA correctness re-review, 2026-09-26): "empty" must mean
+// never-extracted, not merely falsy - `foreignService: false` (a confirmed
+// "no"), `yearsService: 0` (a real, sub-one-year tour), and
+// `serviceStartDateDerived: false` (a real, printed date) are all genuine
+// values a different, lower-confidence document must never silently
+// overwrite. Only null/undefined/"" mean the period never had a value at
+// all for that field - matches musterCallProcessor.js's own
+// _isEmptyDD214Value for the same distinction on the dd214Data merge.
+function _isEmptyServicePeriodValue(value) {
+  return value === null || value === undefined || value === "";
+}
+
 function _mergeExistingServicePeriod(existing, incoming, options) {
   const incomingConfidence = incoming.confidence ?? 0;
   const existingConfidence = existing.confidence ?? 0;
@@ -1648,6 +1716,7 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     !!existing.sourceDocument &&
     existing.sourceDocument === incoming.sourceDocument;
   const merged = { ...existing };
+  const fieldSourceDocument = { ...(existing.fieldSourceDocument || {}) };
   const conflicts = [];
   SERVICE_PERIOD_MERGE_FIELDS.forEach((field) => {
     // Rank has its own recency-based tiebreak just below - OCR confidence
@@ -1655,17 +1724,26 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     // scan of an early enlistment isn't "later" than a garbled scan of the
     // discharge that followed it).
     if (field === "rank") return;
-    if (!incoming[field]) return;
+    if (_isEmptyServicePeriodValue(incoming[field])) return;
+    const existingIsEmpty = _isEmptyServicePeriodValue(existing[field]);
     const isDisagreement =
       !SERVICE_PERIOD_PROVENANCE_FIELDS.has(field) &&
       !sameSource &&
-      existing[field] &&
+      !existingIsEmpty &&
       _valuesConflict(existing[field], incoming[field]);
     if (isDisagreement) {
       conflicts.push({
         field,
         keptValue: existing[field],
-        keptSourceDocument: existing.sourceDocument || null,
+        // Obs 3 (final10 QA "tests" lens re-review, 2026-09-26): the
+        // document that actually supplied the KEPT value, not necessarily
+        // whichever document is this period's current overall
+        // sourceDocument - a field can be filled by a lower-confidence
+        // document while a different, higher-confidence document keeps
+        // the period's top-level label. Falls back to the period's own
+        // sourceDocument only for data saved before this tracking existed.
+        keptSourceDocument:
+          fieldSourceDocument[field] || existing.sourceDocument || null,
         conflictingValue: incoming[field],
         conflictingSourceDocument: incoming.sourceDocument || null,
         recordedAt: new Date().toISOString(),
@@ -1678,10 +1756,12 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     // simply the only fact recorded for that field so far. The confidence
     // gate below only decides which VALUE wins between two records that
     // both HAVE one; it never applies to going from "unknown" to "known".
-    if (!existing[field] || incomingConfidence >= existingConfidence) {
+    if (existingIsEmpty || incomingConfidence >= existingConfidence) {
       merged[field] = incoming[field];
+      fieldSourceDocument[field] = incoming.sourceDocument || null;
     }
   });
+  merged.fieldSourceDocument = fieldSourceDocument;
   if (conflicts.length > 0) {
     merged.fieldConflicts = [...(existing.fieldConflicts || []), ...conflicts];
   }
@@ -1807,6 +1887,21 @@ function _absorbUnmatchedRecords(history) {
   history.unmatchedServiceRecords = remaining;
 }
 
+// Obs 3 (final10 QA "tests" lens re-review, 2026-09-26): seeds per-field
+// provenance for a brand-new period, same document for every field it
+// arrives with - see _sanitizeFieldSourceDocument for why this can't just
+// fall back to the period's own sourceDocument forever.
+function _initialFieldSourceDocument(incoming) {
+  const fieldSourceDocument = {};
+  if (!incoming.sourceDocument) return fieldSourceDocument;
+  SERVICE_PERIOD_MERGE_FIELDS.forEach((field) => {
+    if (!_isEmptyServicePeriodValue(incoming[field])) {
+      fieldSourceDocument[field] = incoming.sourceDocument;
+    }
+  });
+  return fieldSourceDocument;
+}
+
 /**
  * Ingest-side upsert: merge a document-derived period into the canonical
  * array by (serviceStartDate, serviceEndDate) identity. Never overwrites a
@@ -1859,6 +1954,7 @@ export const upsertServicePeriod = (periodData, options = {}) => {
               },
             ]
           : [],
+        fieldSourceDocument: _initialFieldSourceDocument(incoming),
       };
       periods.push(newPeriod);
       history.servicePeriods = periods;
@@ -1977,10 +2073,20 @@ function _payGradeRank(payGrade) {
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
+// D-B (final10 QA correctness re-review, 2026-09-26): a DD214's own
+// serviceEndDate is a day of service, not the day service stopped - a
+// [start, end) interval treated it as excluded, so a single-day period
+// (start === end) counted as zero-length, and two DD214s that legitimately
+// chain (one ends the day before the next begins) each lost a real day
+// instead of forming one continuous span. +1 day makes `end` exclusive of
+// the day AFTER the printed end date instead, so the printed date itself
+// is counted and two periods that chain end-to-start-next-day now touch
+// (and merge) exactly like one continuous span would.
 function _periodInterval(period) {
   if (!period.serviceStartDate || !period.serviceEndDate) return null;
   const start = new Date(`${period.serviceStartDate}T00:00:00`).getTime();
-  const end = new Date(`${period.serviceEndDate}T00:00:00`).getTime();
+  const end =
+    new Date(`${period.serviceEndDate}T00:00:00`).getTime() + MS_PER_DAY;
   if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return null;
   return { start, end };
 }

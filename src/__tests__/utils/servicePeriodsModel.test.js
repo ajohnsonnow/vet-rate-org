@@ -175,6 +175,72 @@ describe("N1b: a different source document's conflict is kept, not overwritten",
     );
     expect(periods[0].fieldConflicts ?? []).toEqual([]);
   });
+
+  // D-F regression (final10 QA correctness re-review, 2026-09-26):
+  // replace-with-space still left an intra-token hyphen distinct from its
+  // joined form ("E-5" -> "e 5" vs "E5" -> "e5") - exactly what happens
+  // when the vision parser strips a hyphen the regex parser keeps, for
+  // pay grade, RE code, and MOS alike.
+  it.each([
+    ["payGrade", "E-5", "E5"],
+    ["reentryCode", "RE-3", "RE3"],
+    ["mos", "11B-10", "11B10"],
+  ])(
+    "does not record a conflict when two documents differ only by an intra-token hyphen (%s: %s vs %s)",
+    (field, withHyphen, withoutHyphen) => {
+      upsertServicePeriod(
+        period("2010-06-01", "2015-05-30", { [field]: withHyphen }),
+        meta("dd214.pdf", 90),
+      );
+      upsertServicePeriod(
+        period("2010-06-01", "2015-05-30", { [field]: withoutHyphen }),
+        meta("codesheet.pdf", 100),
+      );
+
+      const periods = getServicePeriods();
+      expect(periods[0].fieldConflicts ?? []).toEqual([]);
+    },
+  );
+});
+
+// Regression (final10 QA "tests" lens re-review, 2026-09-26): a field
+// FILLED by a lower-confidence document (going from "unknown" to "known")
+// never recorded which document supplied it, only the period's single
+// overall sourceDocument - which may belong to a different, higher-
+// confidence document that never even had this field. A later conflict
+// then blamed the wrong document.
+describe("Obs 3 regression: a filled field's conflict is attributed to the document that actually supplied it", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("attributes a filled field's conflict to the document that actually supplied it, not the period's overall sourceDocument", () => {
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { yearsService: 0, payGrade: "E-4" }),
+      meta("hi.pdf", 95),
+    );
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { mos: "42A10" }),
+      meta("lo.pdf", 40),
+    );
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", { mos: "11B10" }),
+      meta("third.pdf", 70),
+    );
+
+    const [saved] = getServicePeriods();
+    // hi.pdf never supplied mos at all - lo.pdf did.
+    expect(saved.mos).toBe("42A10");
+    expect(saved.fieldConflicts).toEqual([
+      expect.objectContaining({
+        field: "mos",
+        keptValue: "42A10",
+        keptSourceDocument: "lo.pdf",
+        conflictingValue: "11B10",
+        conflictingSourceDocument: "third.pdf",
+      }),
+    ]);
+  });
 });
 
 describe("C1: service periods - incomplete periods and edits", () => {
@@ -706,6 +772,65 @@ describe("Observation 3: a lower-confidence document can still fill a field the 
   });
 });
 
+// Regression (final10 QA correctness re-review, 2026-09-26): `!existing[field]`
+// treated a real false/0 value the same as "never had a value", so a
+// lower-confidence document from a DIFFERENT source silently overwrote a
+// confirmed "no" or a real zero-length tour with no fieldConflict.
+describe("Observation 3 regression: a real false/0 value is never silently overwritten by a different, lower-confidence document", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("never lets a lower-confidence, different-source document silently overwrite a confirmed 'no' (foreignService: false)", () => {
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", { foreignService: false }),
+      meta("dd214_a.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", { foreignService: true }),
+      meta("other_doc.pdf", 50),
+    );
+
+    const [saved] = getServicePeriods();
+    expect(saved.foreignService).toBe(false);
+    expect(saved.fieldConflicts).toEqual([
+      expect.objectContaining({ field: "foreignService" }),
+    ]);
+  });
+
+  it("never lets a lower-confidence, different-source document silently overwrite a real zero-length tour (yearsService: 0)", () => {
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", { yearsService: 0 }),
+      meta("dd214_a.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", { yearsService: 4 }),
+      meta("other_doc.pdf", 50),
+    );
+
+    const [saved] = getServicePeriods();
+    expect(saved.yearsService).toBe(0);
+    expect(saved.fieldConflicts).toEqual([
+      expect.objectContaining({ field: "yearsService" }),
+    ]);
+  });
+
+  it("still fills a genuinely unknown (null) foreignService from any confidence", () => {
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", {}),
+      meta("dd214_a.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", { foreignService: true }),
+      meta("other_doc.pdf", 40),
+    );
+
+    const [saved] = getServicePeriods();
+    expect(saved.foreignService).toBe(true);
+    expect(saved.fieldConflicts ?? []).toEqual([]);
+  });
+});
+
 describe("N9a: migration seeds `sources` for data stored before it existed", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -746,8 +871,17 @@ describe("N9a: migration seeds `sources` for data stored before it existed", () 
 // absorbed into one of its own document's Box 18 sub-periods. Traced by
 // structural impossibility (see veteranProfile.js's
 // _isContaminatedBox18Period) - only fields that document's Box 18 upsert
-// could never have set directly. Fixture values are generic.
-describe("N9e: repairs a previously mis-merged window period", () => {
+// could never have set directly.
+//
+// Corrected in final10 QA's correctness re-review (2026-09-26): this exact
+// raw shape (single sourceDocument, no `sources` array) is what origin/main
+// ALSO produces for a perfectly legitimate DD214-then-NGB22 merge, since
+// `sources` never shipped there - the repair can no longer tell "the only
+// document that ever touched this" apart from "we never recorded who
+// else did", so it now only trusts `sources` this app's own merge code
+// actually accumulated (see _hasNoOtherContributor), never a read-time
+// seed built from `sourceDocument` alone. Fixture values are generic.
+describe("D-A: the Box-18 contamination repair only trusts real, accumulated `sources` - never a read-time seed", () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -755,7 +889,59 @@ describe("N9e: repairs a previously mis-merged window period", () => {
   const BOX18_NOTES =
     "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
 
-  it("moves fields Box 18 could never have set back to an unmatched record", () => {
+  it("leaves a raw, pre-`sources` history alone - indistinguishable from a legitimate DD214+NGB22 merge", () => {
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        deployments: [],
+        awards: [],
+        dd214Data: null,
+        serviceInfo: null,
+        servicePeriods: [
+          {
+            id: "legacy_window",
+            serviceStartDate: "1997-09-29",
+            serviceEndDate: "1998-02-27",
+            branch: "Army",
+            component: "National Guard",
+            formType: "NGB22",
+            rank: "SGT",
+            mos: "92Y20",
+            mosTitle: "UNIT SUPPLY SP",
+            characterOfService: "GENERAL UNDER HONORABLE CONDITIONS",
+            reentryCode: "RE-3",
+            sourceDocument: "multi_period_form.pdf",
+            notes: BOX18_NOTES,
+          },
+        ],
+        unmatchedServiceRecords: [],
+        dateUpdated: "2026-01-01T00:00:00.000Z",
+      }),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods).toHaveLength(1);
+    // A real DD214's fields, saved before the NGB-22 by origin/main's own
+    // (unfixed) merge, look identical on read - stripping these would be
+    // the exact D-A data-loss bug on real deployed data.
+    expect(periods[0].mos).toBe("92Y20");
+    expect(periods[0].characterOfService).toBe(
+      "GENERAL UNDER HONORABLE CONDITIONS",
+    );
+    expect(periods[0].reentryCode).toBe("RE-3");
+    expect(getUnmatchedServiceRecords()).toHaveLength(0);
+  });
+});
+
+describe("D-A: the Box-18 contamination repair still fires given genuine, accumulated evidence", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const BOX18_NOTES =
+    "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
+
+  it("still repairs a period whose `sources` this app's own merge code genuinely recorded as single-contributor", () => {
     localStorage.setItem(
       "vet_rate_service_history",
       JSON.stringify({
@@ -778,6 +964,13 @@ describe("N9e: repairs a previously mis-merged window period", () => {
             reentryCode: "RE-3",
             sourceDocument: "multi_period_form.pdf",
             notes: BOX18_NOTES,
+            // Real, already-accumulated provenance (as this app's own
+            // _addSource writes it) naming only the one document that
+            // could have absorbed its own undated row into this window -
+            // genuine evidence, not a read-time guess.
+            sources: [
+              { sourceDocument: "multi_period_form.pdf", formType: "NGB22" },
+            ],
           },
         ],
         unmatchedServiceRecords: [],
@@ -803,6 +996,15 @@ describe("N9e: repairs a previously mis-merged window period", () => {
     expect(unmatched[0].reentryCode).toBe("RE-3");
     expect(unmatched[0].incomplete).toBe(true);
   });
+});
+
+describe("D-A: the Box-18 contamination repair still leaves an uncontaminated period alone", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const BOX18_NOTES =
+    "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
 
   it("leaves an uncontaminated Box 18 period alone", () => {
     localStorage.setItem(
@@ -823,6 +1025,9 @@ describe("N9e: repairs a previously mis-merged window period", () => {
             rank: "SGT",
             sourceDocument: "multi_period_form.pdf",
             notes: BOX18_NOTES,
+            sources: [
+              { sourceDocument: "multi_period_form.pdf", formType: "NGB22" },
+            ],
           },
         ],
         unmatchedServiceRecords: [],
@@ -935,6 +1140,8 @@ describe("D-A: the contamination repair is a versioned migration that runs once"
   const BOX18_NOTES =
     "Date range from NGB-22 Box 18 remarks (no location listed on the document).";
 
+  // Real, already-accumulated `sources` (see the previous describe block) -
+  // the only shape this repair can safely act on.
   function contaminatedRawHistory() {
     return {
       deployments: [],
@@ -955,6 +1162,9 @@ describe("D-A: the contamination repair is a versioned migration that runs once"
           reentryCode: "RE-3",
           sourceDocument: "single_source_form.pdf",
           notes: BOX18_NOTES,
+          sources: [
+            { sourceDocument: "single_source_form.pdf", formType: "NGB22" },
+          ],
         },
       ],
       unmatchedServiceRecords: [],
@@ -962,7 +1172,7 @@ describe("D-A: the contamination repair is a versioned migration that runs once"
     };
   }
 
-  it("stamps a schema version on first read and repairs the legacy row", () => {
+  it("stamps a schema version on first read and repairs a genuinely contaminated row", () => {
     localStorage.setItem(
       "vet_rate_service_history",
       JSON.stringify(contaminatedRawHistory()),
