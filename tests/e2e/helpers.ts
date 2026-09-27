@@ -14,12 +14,19 @@ import { Page } from "@playwright/test";
  * there to dismiss. `isVisible({ timeout })` does not wait (Playwright
  * ignores that option on isVisible), so checking it right after goto() used
  * to race the boot gate and silently no-op every time.
+ *
+ * The #main-content wait is intentionally uncaught: every caller navigates
+ * to the real app root, where #main-content always mounts once boot settles
+ * (maintenanceMode only short-circuits to <MaintenancePage> from a resolved
+ * live check, which no spec here resolves "on"). A previous version
+ * swallowed this timeout, so a hung/never-booting app let every caller
+ * proceed as if dismissal succeeded - a vacuous pass instead of a loud
+ * failure. Do not re-add a `.catch()` here.
  */
 export async function dismissDisclaimer(page: Page): Promise<void> {
   await page
     .locator("#main-content")
-    .waitFor({ state: "attached", timeout: 15000 })
-    .catch(() => {});
+    .waitFor({ state: "attached", timeout: 15000 });
 
   const dialog = page.locator(
     '[role="dialog"][aria-labelledby="splash-title"]',

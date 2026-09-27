@@ -317,13 +317,10 @@ test.describe("Maintenance-mode kill switch", () => {
     await page.route("**/version.json*", () => {});
 
     await page.goto("/");
-    // dismissDisclaimer's own #main-content wait swallows a timeout (it has
-    // to, since on other tests the splash may never appear at all) - so it
-    // cannot prove boot actually completed rather than the app hanging with
-    // the splash absent. Wait on #main-content directly, uncaught, first:
-    // this is the same gated element the fail-open test above asserts on
-    // without a catch, and it's the only thing here that can fail this test
-    // if a regression makes the cached-ON path wait on the held route.
+    // dismissDisclaimer's own #main-content wait is uncaught (helpers.ts)
+    // and would already fail this test loudly on a hung boot. This explicit
+    // wait keeps a tighter 8s deadline (vs its 15s) so a regression that
+    // makes the cached-ON path wait on the held route fails fast here.
     await page
       .locator("#main-content")
       .waitFor({ state: "attached", timeout: 8000 });
