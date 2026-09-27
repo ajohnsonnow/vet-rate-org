@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { isSameCalendarDay } from "../utils/serviceEntryDate";
 
 // Field labels for display
 const fieldLabels = {
@@ -554,6 +555,31 @@ function _hasImportableValue(value) {
   return value !== null && value !== undefined && value !== "";
 }
 
+// ADR-007 W10/W9: serviceStartDateEdited is distinct from merely selecting
+// the field - a genuine typed edit is the only thing that may correct the
+// canonical period's start date; an unedited, selected extraction never
+// should.
+function _buildProfileImportConfirmPayload(
+  selectedFields,
+  editableData,
+  extractedData,
+) {
+  const fieldsToImport = {};
+  Object.keys(selectedFields).forEach((key) => {
+    const value = editableData[key];
+    if (selectedFields[key] && _hasImportableValue(value)) {
+      fieldsToImport[key] = value;
+    }
+  });
+  const serviceStartDateEdited =
+    !!selectedFields.serviceStartDate &&
+    !isSameCalendarDay(
+      editableData.serviceStartDate,
+      extractedData?.serviceStartDate,
+    );
+  return { fieldsToImport, meta: { serviceStartDateEdited } };
+}
+
 /**
  * Profile Import Confirmation Modal
  * Shows extracted data with side-by-side comparison and selective import
@@ -606,14 +632,12 @@ const ProfileImportConfirmModal = ({
    * Confirm import - only save selected fields
    */
   const handleConfirm = () => {
-    const fieldsToImport = {};
-    Object.keys(selectedFields).forEach((key) => {
-      const value = editableData[key];
-      if (selectedFields[key] && _hasImportableValue(value)) {
-        fieldsToImport[key] = value;
-      }
-    });
-    onConfirm(fieldsToImport);
+    const { fieldsToImport, meta } = _buildProfileImportConfirmPayload(
+      selectedFields,
+      editableData,
+      extractedData,
+    );
+    onConfirm(fieldsToImport, meta);
   };
 
   const categories = categorizeFields(editableData);

@@ -10,7 +10,7 @@
  * - Vision model support (direct image analysis, bypassing OCR)
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -39,7 +39,13 @@ import {
   addAward,
   getVeteranProfile,
   updateVeteranProfile,
+  upsertServicePeriod,
+  hasPeriodBackedServiceEntry,
+  isKnownServiceEntryDate,
+  recordServiceEntryDisagreement,
+  setServiceEntryDate,
 } from "../utils/veteranProfile";
+import { parseExplicitDate } from "../utils/dateUtils";
 import {
   extractDD214Fields,
   mergeAIAndRegexResults,
@@ -711,7 +717,101 @@ function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
   }
 }
 
-function _saveDd214ToProfile(analysisResult, combinedText, selectedFields) {
+// The same label _saveDd214ToVkb uses to identify this analysis, so
+// setServiceEntryDate's sourceDocument targeting and upsertServicePeriod's
+// own identity both agree with whatever addDocumentToVKB filed this under.
+function _dd214SourceFileName(extractedTexts) {
+  return extractedTexts.length > 0
+    ? extractedTexts.map((et) => et.filename).join(", ")
+    : "Pasted DD214 Text";
+}
+
+// DR-3 (accepted): a single DD214 with both printed dates gets a real
+// canonical period, not just the legacy flat/dd214Data fields - so a
+// veteran who only ever uses DD214Analyzer still has a Service card
+// period. Confidence 0.5 matches migrationManager.js's own trust tier for
+// this source; it is only ever compared against a RE-analysis of this
+// same file (upsertServicePeriod's own identity match).
+function _upsertDd214CanonicalPeriod(analysisResult, sourceFileName) {
+  return upsertServicePeriod(
+    {
+      serviceStartDate: parseExplicitDate(analysisResult.entryDate),
+      serviceEndDate: parseExplicitDate(analysisResult.separationDate),
+      serviceStartDateDerived: false,
+      formType: "DD214",
+      branch: analysisResult.branch,
+      component: analysisResult.component,
+      rank: analysisResult.rank,
+      payGrade: analysisResult.payGrade,
+      mos: analysisResult.mos,
+      mosTitle: analysisResult.mosTitle,
+      characterOfService: analysisResult.characterOfService,
+      separationType: analysisResult.separationType,
+    },
+    { sourceDocument: sourceFileName, confidence: 0.5 },
+  );
+}
+
+function _saveDd214EntryDate(analysisResult, sourceFileName) {
+  // dd214Count is stripped by saveDD214Data's own sanitizer - analysisResult
+  // is the only reliable source for "how many DD214s did this analysis
+  // cover".
+  const eligible =
+    (analysisResult.dd214Count ?? 1) <= 1 &&
+    !!parseExplicitDate(analysisResult.entryDate) &&
+    !!parseExplicitDate(analysisResult.separationDate);
+  if (eligible) {
+    return _upsertDd214CanonicalPeriod(analysisResult, sourceFileName);
+  }
+  if (
+    hasPeriodBackedServiceEntry() &&
+    analysisResult.entryDate &&
+    !isKnownServiceEntryDate(analysisResult.entryDate)
+  ) {
+    recordServiceEntryDisagreement(
+      analysisResult.entryDate,
+      "DD-214 analysis (multiple DD-214s)",
+    );
+  }
+  return null;
+}
+
+function _saveDd214Awards(awards) {
+  // FIX-4: `award.devices?.join(", ")` produced "[object Object]" garbage
+  // whenever devices were already structured {type, position} objects,
+  // and - critically - never passed devices through to addAward's
+  // `devices` key at all, so they could never reach VisualRibbon. Pass
+  // devices through as structured data; addAward's sanitizer accepts
+  // {type, position} objects and safely drops anything else (e.g. a
+  // plain display-name string from a different extractor).
+  if (!awards || !Array.isArray(awards)) return;
+  awards.forEach((award) => {
+    const deviceLabels = (award.devices || [])
+      .map((d) => (typeof d === "string" ? d : d?.type || ""))
+      .filter(Boolean);
+    addAward({
+      name: award.name,
+      abbreviation: award.abbreviation,
+      dateReceived: null,
+      notes:
+        deviceLabels.length > 0 ? `Devices: ${deviceLabels.join(", ")}` : "",
+      devices: award.devices || [],
+      isCombat: award.isCombat || false,
+      sourceDD214: award.sourceDD214,
+    });
+  });
+}
+
+export function _saveDd214ToProfile(
+  analysisResult,
+  combinedText,
+  selectedFields,
+  meta = {},
+  extractedTexts = [],
+) {
+  const sourceFileName = _dd214SourceFileName(extractedTexts);
+  const periodId = _saveDd214EntryDate(analysisResult, sourceFileName);
+
   saveDD214Data({
     branch: analysisResult.branch,
     component: analysisResult.component,
@@ -741,35 +841,30 @@ function _saveDd214ToProfile(analysisResult, combinedText, selectedFields) {
     specialQualifications: analysisResult.specialQualifications,
   });
 
-  // Save awards to profile.
-  // FIX-4: `award.devices?.join(", ")` produced "[object Object]" garbage
-  // whenever devices were already structured {type, position} objects,
-  // and - critically - never passed devices through to addAward's
-  // `devices` key at all, so they could never reach VisualRibbon. Pass
-  // devices through as structured data; addAward's sanitizer accepts
-  // {type, position} objects and safely drops anything else (e.g. a
-  // plain display-name string from a different extractor).
-  if (analysisResult.awards && Array.isArray(analysisResult.awards)) {
-    analysisResult.awards.forEach((award) => {
-      const deviceLabels = (award.devices || [])
-        .map((d) => (typeof d === "string" ? d : d?.type || ""))
-        .filter(Boolean);
-      addAward({
-        name: award.name,
-        abbreviation: award.abbreviation,
-        dateReceived: null,
-        notes:
-          deviceLabels.length > 0 ? `Devices: ${deviceLabels.join(", ")}` : "",
-        devices: award.devices || [],
-        isCombat: award.isCombat || false,
-        sourceDD214: award.sourceDD214,
-      });
+  _saveDd214Awards(analysisResult.awards);
+
+  if (meta.serviceStartDateEdited) {
+    setServiceEntryDate({
+      date: selectedFields.serviceStartDate,
+      via: "dd214_import",
+      ...(periodId ? { periodId } : {}),
     });
   }
 
   // Update veteran profile with selected fields only
   if (selectedFields && Object.keys(selectedFields).length > 0) {
-    updateVeteranProfile(selectedFields);
+    const fieldsToSave = { ...selectedFields };
+    if (
+      !periodId &&
+      !meta.serviceStartDateEdited &&
+      fieldsToSave.serviceStartDate
+    ) {
+      fieldsToSave.profileFieldSources = {
+        ...(getVeteranProfile().profileFieldSources || {}),
+        serviceStartDate: "document",
+      };
+    }
+    updateVeteranProfile(fieldsToSave);
   }
 }
 
@@ -2060,8 +2155,7 @@ async function _runOcrOnFiles(filesToProcess, ctx) {
 // updateVeteranProfile's VALID_PROFILE_FIELDS whitelist only recognizes
 // the former - entryDate/separationDate silently dropped on save, so a
 // DD214Analyzer-only veteran's profile/dossier never got a service
-// span at all ("? - ?"). Box 12a is a printed date, never a calculated
-// guess, so serviceStartDateDerived is explicitly cleared too.
+// span at all ("? - ?").
 function _buildRawProfileImportData(result) {
   return {
     // Personal Identification
@@ -2090,8 +2184,10 @@ function _buildRawProfileImportData(result) {
     commandTransferredTo: result.commandTransferredTo,
 
     // Dates & Service Time
+    // ADR-007: serviceStartDateDerived is no longer part of this import
+    // shape - the flat profile mirror's derived flag is owned entirely by
+    // the projection now (saveVeteranProfile's chokepoint / saveServiceHistory).
     serviceStartDate: validateDate(result.entryDate),
-    serviceStartDateDerived: false,
     serviceEndDate: validateDate(result.separationDate),
     netActiveService: result.netActiveService,
     totalPriorActiveService: result.totalPriorActiveService,
@@ -2199,7 +2295,6 @@ export function _prepareManualProfileImport(
       mos: analysisResult.mos,
       mosTitle: analysisResult.mosTitle,
       serviceStartDate: validatedEntryDate,
-      serviceStartDateDerived: false,
       serviceEndDate: validatedSeparationDate,
       separationType: analysisResult.separationType,
       characterOfService: analysisResult.characterOfService,
@@ -2547,12 +2642,18 @@ function _buildDd214SaveHandlers(state) {
    *   2. Veteran Knowledge Base (IndexedDB) - for AI tools
    *   3. My Packet (IndexedDB) - permanent document archive
    */
-  const handleConfirmProfileImport = async (selectedFields) => {
+  const handleConfirmProfileImport = async (selectedFields, meta = {}) => {
     try {
       const combinedText = _getDd214CombinedText(pastedText, extractedTexts);
 
       // ── 1. SAVE TO VETERAN PROFILE (existing behavior) ──
-      _saveDd214ToProfile(analysisResult, combinedText, selectedFields);
+      _saveDd214ToProfile(
+        analysisResult,
+        combinedText,
+        selectedFields,
+        meta,
+        extractedTexts,
+      );
 
       // ── 2. SAVE TO VETERAN KNOWLEDGE BASE (VKB) ──
       // This makes ALL extracted DD214 data available to every AI tool
@@ -2698,6 +2799,15 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
     setShowFormBuilder,
   } = state;
   const { handleConfirmProfileImport, handleCancelProfileImport } = handlers;
+  // G10: a fresh getVeteranProfile() object every render gave the modal's
+  // own reset effect (keyed on this prop's identity) a new reference on
+  // every parent re-render, wiping the veteran's in-progress field
+  // selections/edits - only re-reads when the modal actually opens.
+  const currentProfile = useMemo(
+    () => getVeteranProfile(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showProfileImportModal],
+  );
 
   return (
     <>
@@ -2707,7 +2817,7 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
         createPortal(
           <ProfileImportConfirmModal
             extractedData={extractedProfileData}
-            currentProfile={getVeteranProfile()}
+            currentProfile={currentProfile}
             onConfirm={handleConfirmProfileImport}
             onCancel={handleCancelProfileImport}
           />,
