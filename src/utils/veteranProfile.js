@@ -1586,8 +1586,23 @@ const SERVICE_PERIOD_PROVENANCE_FIELDS = new Set([
   "notes",
 ]);
 
+// D-F (final10 QA, 2026-09-25): shared by _valuesConflict here and
+// summarizeServicePeriods' own characterOfService disagreement check below
+// - normalizes case, whitespace, AND punctuation/hyphens, so an OCR
+// artifact like "GENERAL - UNDER HONORABLE CONDITIONS" vs "GENERAL UNDER
+// HONORABLE CONDITIONS" compares equal instead of flagging a disagreement
+// between two records that say the same thing.
+function _normalizeForComparison(value) {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const _valuesConflict = (a, b) =>
-  String(a).trim().toLowerCase() !== String(b).trim().toLowerCase();
+  _normalizeForComparison(a) !== _normalizeForComparison(b);
 
 // N9a: append-only - a document already in the list is never duplicated,
 // and nothing already there is ever dropped or reordered.
@@ -1944,27 +1959,49 @@ function _payGradeRank(payGrade) {
   return (PAY_GRADE_CATEGORY_BASE[category] ?? 0) + level;
 }
 
-function _sumPeriodDurationDays(period) {
-  if (period.serviceStartDate && period.serviceEndDate) {
-    const start = new Date(`${period.serviceStartDate}T00:00:00`);
-    const end = new Date(`${period.serviceEndDate}T00:00:00`);
-    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-      const days = (end - start) / (1000 * 60 * 60 * 24);
-      if (days > 0) return days;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function _periodInterval(period) {
+  if (!period.serviceStartDate || !period.serviceEndDate) return null;
+  const start = new Date(`${period.serviceStartDate}T00:00:00`).getTime();
+  const end = new Date(`${period.serviceEndDate}T00:00:00`).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) return null;
+  return { start, end };
+}
+
+/**
+ * D-B (final10 QA, 2026-09-25): summing every period's own duration
+ * double-counts any time covered by more than one period at once - a
+ * dated enclosing enlistment period plus its own Box 18 activation
+ * windows, most visibly. Sorts periods by start date and merges any
+ * overlapping or touching (adjacent) intervals before summing, so
+ * overlapped time is only ever counted once no matter how many periods
+ * describe it. A period with no start AND end date (or one whose dates
+ * don't parse into a real positive-length interval) has nothing to place
+ * on this timeline and is skipped entirely, not estimated from its own
+ * self-reported yearsService/monthsService/daysService.
+ */
+function _unionDurationDays(periods) {
+  const intervals = periods
+    .map(_periodInterval)
+    .filter(Boolean)
+    .sort((a, b) => a.start - b.start);
+
+  let totalMs = 0;
+  let current = null;
+  intervals.forEach((interval) => {
+    if (!current) {
+      current = { ...interval };
+    } else if (interval.start <= current.end) {
+      current.end = Math.max(current.end, interval.end);
+    } else {
+      totalMs += current.end - current.start;
+      current = { ...interval };
     }
-  }
-  if (
-    typeof period.yearsService === "number" ||
-    typeof period.monthsService === "number" ||
-    typeof period.daysService === "number"
-  ) {
-    return (
-      (period.yearsService || 0) * 365.25 +
-      (period.monthsService || 0) * 30.44 +
-      (period.daysService || 0)
-    );
-  }
-  return 0;
+  });
+  if (current) totalMs += current.end - current.start;
+
+  return totalMs / MS_PER_DAY;
 }
 
 function _formatDurationFromDays(totalDays) {
@@ -2027,7 +2064,7 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
 
   const branches = [...new Set(list.map((p) => p.branch).filter(Boolean))];
 
-  const totalDays = list.reduce((sum, p) => sum + _sumPeriodDurationDays(p), 0);
+  const totalDays = _unionDurationDays(list);
   const totalTimeInService =
     totalDays > 0 ? _formatDurationFromDays(totalDays) : null;
 
@@ -2051,19 +2088,19 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
   const mostRecentRank =
     sortedMostRecentFirst.find((p) => p.rank)?.rank || null;
 
-  // N12 (final9 QA, 2026-09-25): two periods whose characterOfService only
-  // differs by case or incidental whitespace ("Honorable" vs "HONORABLE ",
-  // or "General  Under Honorable" with a doubled OCR space) are the same
-  // real value, not a disagreement - compared the same way
-  // _mergeExistingServicePeriod's own conflict check already treats case,
-  // plus whitespace collapse so OCR spacing noise can't manufacture a
+  // N12 (final9 QA, 2026-09-25), extended by D-F (final10 QA, 2026-09-25):
+  // two periods whose characterOfService only differs by case, incidental
+  // whitespace, or punctuation/hyphenation ("GENERAL - UNDER..." vs
+  // "GENERAL UNDER...") are the same real value, not a disagreement -
+  // shares _normalizeForComparison with _mergeExistingServicePeriod's own
+  // conflict check (_valuesConflict) so OCR noise can't manufacture a
   // second, distinct entry in the Set below.
   const charactersOfService = [
     ...new Set(
       list
         .map((p) => p.characterOfService)
         .filter(Boolean)
-        .map((value) => value.trim().toLowerCase().replace(/\s+/g, " ")),
+        .map(_normalizeForComparison),
     ),
   ];
   const characterOfService =

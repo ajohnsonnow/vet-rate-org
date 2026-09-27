@@ -53,11 +53,16 @@ describe("summarizeServicePeriods", () => {
     expect(summary.totalTimeInService).toMatch(/^7 years|^8 years/);
   });
 
-  it("falls back to yearsService/monthsService when dates are incomplete", () => {
+  // D-B (final10 QA, 2026-09-25): previously fell back to estimating from
+  // yearsService/monthsService when a period had no dates at all - now
+  // skipped entirely instead, since it has no interval to place on the
+  // union timeline the total is computed from (see the "undated period"
+  // case in the D-B describe block below for full coverage).
+  it("skips a fully undated period instead of estimating from yearsService/monthsService", () => {
     const summary = summarizeServicePeriods([
       { yearsService: 4, monthsService: 2, daysService: 0, incomplete: true },
     ]);
-    expect(summary.totalTimeInService).toMatch(/4 years, 2 months/);
+    expect(summary.totalTimeInService).toBeNull();
   });
 
   it("picks the highest pay grade across periods", () => {
@@ -170,6 +175,78 @@ describe("summarizeServicePeriods: N1b - a row-level fieldConflicts entry also f
             conflictingValue: "General",
           },
         ],
+      },
+    ]);
+    expect(summary.characterOfServiceDisagrees).toBe(true);
+  });
+});
+
+// D-B (final10 QA, 2026-09-25): summing every period's own duration
+// double-counted time covered by more than one period at once (a dated
+// enclosing enlistment period plus its own Box 18 activation windows,
+// most visibly) - Total time in service is now the union of the date
+// intervals, merging overlaps before summing. Fixture values are generic.
+describe("summarizeServicePeriods: D-B - Total time in service is a union of intervals, not a sum", () => {
+  it("does not double-count a period nested entirely inside another", () => {
+    const summary = summarizeServicePeriods([
+      { serviceStartDate: "2000-01-01", serviceEndDate: "2010-01-01" },
+      { serviceStartDate: "2003-01-01", serviceEndDate: "2004-01-01" },
+    ]);
+    // The nested period contributes nothing beyond the enclosing 10 years.
+    expect(summary.totalTimeInService).toMatch(/^(9|10) years/);
+  });
+
+  it("does not double-count two periods that partially overlap", () => {
+    const summary = summarizeServicePeriods([
+      { serviceStartDate: "2000-01-01", serviceEndDate: "2005-01-01" },
+      { serviceStartDate: "2003-01-01", serviceEndDate: "2008-01-01" },
+    ]);
+    // Union is 2000-01-01 to 2008-01-01 (8 years), not the naive 10-year
+    // sum of two 5-year periods.
+    expect(summary.totalTimeInService).toMatch(/^[78] years/);
+    expect(summary.totalTimeInService).not.toMatch(/^(9|10) years/);
+  });
+
+  it("sums two adjacent (touching, non-overlapping) periods normally", () => {
+    const summary = summarizeServicePeriods([
+      { serviceStartDate: "2000-01-01", serviceEndDate: "2004-01-01" },
+      { serviceStartDate: "2004-01-01", serviceEndDate: "2008-01-01" },
+    ]);
+    expect(summary.totalTimeInService).toMatch(/^[78] years/);
+  });
+
+  it("skips an undated period entirely instead of counting it", () => {
+    const summary = summarizeServicePeriods([
+      { serviceStartDate: "2000-01-01", serviceEndDate: "2004-01-01" },
+      { yearsService: 3, incomplete: true },
+    ]);
+    expect(summary.totalTimeInService).toMatch(/^[34] years/);
+  });
+});
+
+// D-F (final10 QA, 2026-09-25): punctuation/hyphen differences alone are
+// not a real disagreement, same normalizer as _valuesConflict.
+describe("summarizeServicePeriods: D-F - punctuation/hyphen-insensitive disagreement check", () => {
+  it("does not flag disagreement when periods differ only by punctuation/hyphenation", () => {
+    const summary = summarizeServicePeriods([
+      {
+        characterOfService: "GENERAL - UNDER HONORABLE CONDITIONS",
+        serviceEndDate: "2008-01-01",
+      },
+      {
+        characterOfService: "GENERAL UNDER HONORABLE CONDITIONS",
+        serviceEndDate: "2012-01-01",
+      },
+    ]);
+    expect(summary.characterOfServiceDisagrees).toBe(false);
+  });
+
+  it("still flags a genuine difference after punctuation normalization", () => {
+    const summary = summarizeServicePeriods([
+      { characterOfService: "Honorable", serviceEndDate: "2008-01-01" },
+      {
+        characterOfService: "GENERAL - UNDER HONORABLE CONDITIONS",
+        serviceEndDate: "2012-01-01",
       },
     ]);
     expect(summary.characterOfServiceDisagrees).toBe(true);

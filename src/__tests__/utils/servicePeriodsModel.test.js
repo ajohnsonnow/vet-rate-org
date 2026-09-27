@@ -154,6 +154,29 @@ describe("N1b: a different source document's conflict is kept, not overwritten",
   });
 });
 
+// D-F (final10 QA, 2026-09-25): shares _normalizeForComparison with
+// summarizeServicePeriods' own characterOfService disagreement check.
+it("does not record a conflict when two documents disagree only by punctuation/hyphenation", () => {
+  upsertServicePeriod(
+    period("2010-06-01", "2015-05-30", {
+      characterOfService: "GENERAL - UNDER HONORABLE CONDITIONS",
+    }),
+    meta("dd214.pdf", 90),
+  );
+  upsertServicePeriod(
+    period("2010-06-01", "2015-05-30", {
+      characterOfService: "GENERAL UNDER HONORABLE CONDITIONS",
+    }),
+    meta("codesheet.pdf", 100),
+  );
+
+  const periods = getServicePeriods();
+  expect(periods[0].characterOfService).toBe(
+    "GENERAL UNDER HONORABLE CONDITIONS",
+  );
+  expect(periods[0].fieldConflicts ?? []).toEqual([]);
+});
+
 describe("C1: service periods - incomplete periods and edits", () => {
   beforeEach(() => {
     localStorage.clear();
