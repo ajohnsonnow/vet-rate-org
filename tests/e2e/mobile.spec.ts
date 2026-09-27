@@ -2875,7 +2875,26 @@ const HEADER_REGRESSION_DIALOGS = [
   { label: "Denial Decoder", event: "openDenialDecoder" },
 ];
 
-for (const vp of HEADER_ALIGNMENT_VIEWPORTS) {
+// QA follow-up: HEADER_ALIGNMENT_VIEWPORTS jumps straight from 430px
+// (QUICK_EXIT_VIEWPORTS' widest phone) to 1440px desktop, so nothing in this
+// loop ever exercised the exact band Claim Navigator's own `sm:!items-start`
+// override targets - NavigatorHeader's view toggle (`sm:flex`) plus its
+// action icons wrap the children column onto a second row starting at
+// `sm:` (640px) and stop needing to by ~720px. A regression that dropped
+// the override (or changed how HeaderCloseSlot merges className) would fall
+// back to the shared `sm:items-center` default, centre close-x against that
+// wrapped two-row block, and pass every width this file already ran.
+// Scoped to this targeted loop only - not folded into the shared
+// HEADER_ALIGNMENT_VIEWPORTS, which the full DOM-enumerated tool-grid sweep
+// above also uses across ~40 other HeaderCloseSlot users that still inherit
+// the shared default and have their own unresolved gap in this band
+// (tracked separately, not this branch's scope).
+const CLAIM_NAV_HEADER_VIEWPORTS = [
+  ...HEADER_ALIGNMENT_VIEWPORTS,
+  { name: "sm-boundary-wrap", width: 680, height: 800 },
+];
+
+for (const vp of CLAIM_NAV_HEADER_VIEWPORTS) {
   test.describe(`Claim Navigator / Denial Decoder header layout @ ${vp.width}px (${vp.name})`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
