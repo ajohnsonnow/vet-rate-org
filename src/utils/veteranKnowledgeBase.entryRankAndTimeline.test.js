@@ -211,3 +211,43 @@ describe("D-C: evidence-timeline entry event is labeled by component and marks a
     expect(event.derived).toBe(false);
   });
 });
+
+describe("D11-1: a corrected entry date replaces its own timeline event instead of duplicating it", () => {
+  it("re-processing the same NGB-22 with a corrected date updates the existing event, in place", () => {
+    const vkb = initializeVKB();
+    mergeDD214EvidenceTimeline(
+      vkb,
+      {
+        entryDate: "2002-03-08",
+        entryDateDerived: true,
+        branch: "Army",
+        component: "National Guard",
+        formType: "NGB22",
+      },
+      { fileName: "ngb22.pdf" },
+    );
+    // Muster Call's Verify & Save re-runs the same merge for the same file
+    // with the veteran's corrected fields spliced in.
+    mergeDD214EvidenceTimeline(
+      vkb,
+      {
+        entryDate: "2002-03-05",
+        entryDateDerived: false,
+        branch: "Army",
+        component: "National Guard",
+        formType: "NGB22",
+      },
+      { fileName: "ngb22.pdf" },
+    );
+
+    const enlistmentEvents = vkb.evidenceTimeline.filter((e) =>
+      e.description.startsWith("Enlisted"),
+    );
+    expect(enlistmentEvents).toHaveLength(1);
+    expect(enlistmentEvents[0]).toMatchObject({
+      date: "2002-03-05",
+      derived: false,
+      description: "Enlisted (Army National Guard)",
+    });
+  });
+});

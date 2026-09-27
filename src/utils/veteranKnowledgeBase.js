@@ -1465,6 +1465,28 @@ function _serviceEntryTimelineEvent(dd214Data, vkb, options) {
 // 2026-09-24): a deployments-only C-File source needs the evidence-timeline
 // entries too, without running mergeDD214IntoVKB's mergeDD214Documentation
 // step, which would file the C-File a second time as a fabricated DD-214.
+function _isServiceEntryEventType(eventType) {
+  return eventType === "guard_enlistment" || eventType === "service_entry";
+}
+
+// A correction re-processes the SAME document (Muster Call's Verify & Save,
+// or a later re-import) with a new date for this single "when did service
+// begin" event - not a genuinely separate enlistment. The generic
+// (date, eventType) dedup below only catches an EXACT repeat, so a
+// corrected date left the original, un-corrected guess sitting on the
+// timeline as a second "Enlisted ... (calculated)" entry. Matches on
+// EITHER service-entry eventType (not just the incoming entry's own) since
+// _serviceEntryTimelineEvent's derived flag flipping false can itself
+// change which of the two labels a re-scan of a non-NGB22 document gets.
+function _upsertServiceEntryTimelineEvent(vkb, entry, sourceKey) {
+  const existingIndex = vkb.evidenceTimeline.findIndex(
+    (e) => _isServiceEntryEventType(e.eventType) && e.source === sourceKey,
+  );
+  if (existingIndex === -1) return false;
+  vkb.evidenceTimeline[existingIndex] = entry;
+  return true;
+}
+
 export function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
   // ─── EVIDENCE TIMELINE ───
   const timelineEntries = [];
@@ -1495,7 +1517,14 @@ export function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
   }
 
   // Add timeline entries (avoid duplicates)
+  const sourceKey = options.fileName || "DD-214";
   timelineEntries.forEach((entry) => {
+    if (
+      _isServiceEntryEventType(entry.eventType) &&
+      _upsertServiceEntryTimelineEvent(vkb, entry, sourceKey)
+    ) {
+      return;
+    }
     const isDuplicate = vkb.evidenceTimeline.some(
       (e) => e.date === entry.date && e.eventType === entry.eventType,
     );
