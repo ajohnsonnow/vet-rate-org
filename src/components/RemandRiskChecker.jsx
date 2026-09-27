@@ -441,8 +441,8 @@ const RemandRiskChecker = ({ onClose }) => {
       size="xl"
       labelledBy="remand-risk-title"
       header={
-        <div className="flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
-          <div>
+        <div className="flex items-start justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
+          <div className="min-w-0">
             <h2
               id="remand-risk-title"
               className="text-xl font-bold flex items-center gap-2"
@@ -456,7 +456,7 @@ const RemandRiskChecker = ({ onClose }) => {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="text-white hover:text-amber-200 text-2xl"
+            className="grid h-11 w-11 shrink-0 place-items-center text-2xl text-white hover:text-amber-200"
           >
             ×
           </button>

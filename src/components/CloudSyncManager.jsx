@@ -22,10 +22,10 @@ import {
 import { exportAllData, importAllData } from "../utils/storage";
 
 const CloudSyncHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-center justify-between">
-    <div className="flex items-center gap-3">
+  <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-start justify-between gap-2">
+    <div className="flex min-w-0 items-center gap-3">
       <div className="text-3xl">☁️</div>
-      <div>
+      <div className="min-w-0">
         <h1 id="cloud-sync-title" className="text-xl font-bold text-white">
           The Off-Site Bunker
         </h1>
@@ -36,7 +36,7 @@ const CloudSyncHeader = ({ onClose }) => (
     </div>
     <button
       onClick={onClose}
-      className="text-white hover:text-green-200 transition-colors text-2xl font-bold"
+      className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-green-200 transition-colors text-2xl font-bold"
       aria-label="Close"
     >
       ×

@@ -251,12 +251,14 @@ function AppealsLaneHeader({ onClose }) {
           Choose the right path for your situation
         </p>
       </div>
-      {/* mr-20 keeps the close button clear of the fixed Quick Exit
-          panic button on phones (WCAG 2.5.8 target collision) */}
+      {/* N13: no mr-20 phone offset - Quick Exit repositions itself to
+          top-left below `sm` (QuickExitButton.jsx), and ResponsiveModal's
+          shared `!mt-20` gutter clears it vertically, so the close × stays
+          flush top-right at every width instead of shifting left. */}
       <button
         onClick={onClose}
         aria-label="Close"
-        className="mr-20 grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl text-white hover:text-blue-200 sm:mr-0"
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl text-white hover:text-blue-200"
       >
         ×
       </button>

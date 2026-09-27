@@ -2,8 +2,8 @@ import ResponsiveModal from "./common/ResponsiveModal";
 
 const TermsHeader = ({ onClose }) => (
   <div className="bg-red-700 dark:bg-red-800 text-white px-6 py-5 border-b-4 border-red-900 dark:border-red-950">
-    <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <svg
           className="w-8 h-8 flex-shrink-0"
           fill="none"
@@ -17,7 +17,7 @@ const TermsHeader = ({ onClose }) => (
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <div>
+        <div className="min-w-0">
           <h1
             id="terms-of-service-page-title"
             className="text-2xl sm:text-3xl font-bold"
@@ -32,7 +32,7 @@ const TermsHeader = ({ onClose }) => (
       {onClose && (
         <button
           onClick={onClose}
-          className="flex-shrink-0 text-white hover:bg-red-800 p-2 rounded-lg transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-red-800 rounded-lg transition-colors"
           aria-label="Close"
         >
           <svg

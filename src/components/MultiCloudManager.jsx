@@ -745,10 +745,10 @@ function useBackupOperations({
 
 const MultiCloudHeader = ({ onClose, activeTab, setActiveTab }) => (
   <div>
-    <div className="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
-      <div className="flex items-center gap-3">
+    <div className="flex items-start justify-between gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
+      <div className="flex min-w-0 items-center gap-3">
         <div className="text-3xl">🏰</div>
-        <div>
+        <div className="min-w-0">
           <h1 id="multicloud-title" className="text-xl font-bold text-white">
             The Redundant Bunker Network
           </h1>
@@ -760,7 +760,7 @@ const MultiCloudHeader = ({ onClose, activeTab, setActiveTab }) => (
       <button
         onClick={onClose}
         aria-label="Close dialog"
-        className="text-2xl font-bold text-white transition-colors hover:text-cyan-200"
+        className="grid h-11 w-11 shrink-0 place-items-center text-2xl font-bold text-white transition-colors hover:text-cyan-200"
       >
         ×
       </button>

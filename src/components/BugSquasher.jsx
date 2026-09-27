@@ -343,8 +343,8 @@ function _computeWizardNav(step, formData, submitted, onClose, setStep) {
 function BugSquasherHeader({ step, onClose }) {
   return (
     <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="bg-white/20 rounded-xl p-2">
             <svg
               className="w-8 h-8"
@@ -360,7 +360,7 @@ function BugSquasherHeader({ step, onClose }) {
               />
             </svg>
           </div>
-          <div>
+          <div className="min-w-0">
             <h2 id="bug-squasher-title" className="text-2xl font-bold">
               🐛 Bug Squasher
             </h2>
@@ -369,7 +369,7 @@ function BugSquasherHeader({ step, onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
           aria-label="Close bug reporter"
         >
           <svg

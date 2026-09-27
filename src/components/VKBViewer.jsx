@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   loadVKB,
   saveVKB,
@@ -593,69 +594,74 @@ const ViewerHeader = ({
   onExport,
   onClose,
 }) => (
-  <div className="flex flex-wrap items-center justify-between gap-2 p-6 border-b border-gray-200 dark:border-gray-700">
-    <div className="min-w-0">
-      <h2
-        id="vkb-viewer-title"
-        className="text-2xl font-bold text-gray-900 dark:text-gray-100"
-      >
-        📚 Veteran Knowledge Base
-      </h2>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-        Completeness: {vkb.metadata.completeness}% •{" "}
-        {vkb.metadata.documentCount} documents
-      </p>
-    </div>
-    <div className="flex flex-wrap items-center gap-2">
-      {editMode ? (
-        <>
-          <button
-            onClick={onSave}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-          >
-            💾 Save
-          </button>
-          <button
-            onClick={() => setEditMode(false)}
-            className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
-          >
-            Cancel
-          </button>
-        </>
-      ) : (
+  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <HeaderCloseSlot
+      close={
         <button
-          onClick={() => setEditMode(true)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          aria-label="Close"
         >
-          ✏️ Edit
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
         </button>
-      )}
-      <button
-        onClick={onExport}
-        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-      >
-        📥 Export
-      </button>
-      <button
-        onClick={onClose}
-        className="grid h-11 w-11 shrink-0 place-items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-        aria-label="Close"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      }
+    >
+      <div className="min-w-0">
+        <h2
+          id="vkb-viewer-title"
+          className="text-2xl font-bold text-gray-900 dark:text-gray-100"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+          📚 Veteran Knowledge Base
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Completeness: {vkb.metadata.completeness}% •{" "}
+          {vkb.metadata.documentCount} documents
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {editMode ? (
+          <>
+            <button
+              onClick={onSave}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+            >
+              💾 Save
+            </button>
+            <button
+              onClick={() => setEditMode(false)}
+              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setEditMode(true)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          >
+            ✏️ Edit
+          </button>
+        )}
+        <button
+          onClick={onExport}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+        >
+          📥 Export
+        </button>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 

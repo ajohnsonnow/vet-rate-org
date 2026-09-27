@@ -149,8 +149,8 @@ function useVKBTimelineData(onDocumentClick) {
 }
 
 const TimelineHeaderTitle = ({ totalDocs, onClose }) => (
-  <div className="flex items-center justify-between mb-4">
-    <div>
+  <div className="flex items-start justify-between gap-2 mb-4">
+    <div className="min-w-0">
       <h2
         id="vkb-timeline-title"
         className="text-2xl font-bold text-white flex items-center space-x-2"
@@ -165,7 +165,7 @@ const TimelineHeaderTitle = ({ totalDocs, onClose }) => (
     </div>
     <button
       onClick={onClose}
-      className="text-slate-400 hover:text-white transition-colors"
+      className="grid h-11 w-11 shrink-0 place-items-center text-slate-400 hover:text-white transition-colors"
       aria-label="Close timeline"
     >
       <svg

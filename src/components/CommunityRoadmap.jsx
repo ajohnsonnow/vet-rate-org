@@ -845,8 +845,8 @@ const RoadmapModalFooter = ({ onClose }) => (
 
 const RoadmapModalHeader = ({ onClose, stats, userVotes }) => (
   <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white px-6 py-5 flex-shrink-0 rounded-t-2xl">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="flex items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
         <div className="bg-white/20 rounded-xl p-2">
           <svg
             className="w-8 h-8"
@@ -862,7 +862,7 @@ const RoadmapModalHeader = ({ onClose, stats, userVotes }) => (
             />
           </svg>
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 id="community-roadmap-title" className="text-2xl font-bold">
             🗺️ Community Roadmap
           </h2>
@@ -873,7 +873,7 @@ const RoadmapModalHeader = ({ onClose, stats, userVotes }) => (
       </div>
       <button
         onClick={onClose}
-        className="text-white/80 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+        className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
         aria-label="Close roadmap"
       >
         <svg
