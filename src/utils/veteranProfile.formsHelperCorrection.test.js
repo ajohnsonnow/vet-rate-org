@@ -1,29 +1,28 @@
 /**
- * FormsHelper.jsx's handleSaveProfile writes a veteran's corrected
- * serviceStartDate straight to the flat profile field (with
- * serviceStartDateDerived cleared), never through servicePeriods[] -
- * getServiceEntry() read servicePeriods[] first, so the correction never
- * reached the AI system prompt, the exported dossier, or the Service span:
- * they kept showing the original calculated guess. getServiceEntry() now
- * treats a non-derived profile.serviceStartDate as an override whenever
- * the canonical periods-based answer is missing or still a guess - but
- * never over an already-proven (non-derived) period. Fixture values are
- * synthetic, not any real veteran's data.
+ * ADR-007: FormsHelper's handleSaveProfile no longer writes a corrected
+ * serviceStartDate straight to the flat profile field - it routes through
+ * setServiceEntryDate (via: 'forms_helper'), the one write API every
+ * service-entry-date editor shares, which applies the correction directly
+ * to the canonical period so every consumer of getServiceEntry() agrees
+ * immediately. A stray direct write (saveVeteranProfile/updateVeteranProfile
+ * bypassing that API) is blocked by the chokepoint instead of ever reaching
+ * getServiceEntry(). Fixture values are synthetic, not any real veteran's
+ * data.
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   upsertServicePeriod,
   updateVeteranProfile,
-  saveVeteranProfile,
+  setServiceEntryDate,
   getServiceEntry,
 } from "./veteranProfile";
 
-describe("getServiceEntry: a real profile.serviceStartDate overrides a still-calculated period", () => {
+describe("getServiceEntry: a FormsHelper correction via setServiceEntryDate reaches a still-calculated period", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("prefers FormsHelper's corrected, non-derived profile date over a calculated NGB-22 period", () => {
+  it("prefers FormsHelper's corrected, non-derived date over a calculated NGB-22 period", () => {
     upsertServicePeriod(
       {
         serviceStartDate: "2002-03-08",
@@ -38,13 +37,13 @@ describe("getServiceEntry: a real profile.serviceStartDate overrides a still-cal
       derived: true,
     });
 
-    // FormsHelper.jsx's handleSaveProfile: saveVeteranProfile(veteranProfile)
-    // with the veteran's typed date and serviceStartDateDerived: false.
-    saveVeteranProfile({
-      fullName: "Jordan Sample",
-      serviceStartDate: "2001-11-01",
-      serviceStartDateDerived: false,
+    // FormsHelper.jsx's handleSaveProfile: setServiceEntryDate with the
+    // veteran's typed date, no periodId (falls back to the current entry).
+    const result = setServiceEntryDate({
+      date: "2001-11-01",
+      via: "forms_helper",
     });
+    expect(result.ok).toBe(true);
 
     expect(getServiceEntry()).toMatchObject({
       date: "2001-11-01",
@@ -53,7 +52,7 @@ describe("getServiceEntry: a real profile.serviceStartDate overrides a still-cal
     });
   });
 
-  it("never overrides an already-printed (non-derived) period with a stale profile field", () => {
+  it("a stray direct flat write never overrides an already-printed period", () => {
     upsertServicePeriod(
       {
         serviceStartDate: "2004-01-10",
@@ -72,5 +71,14 @@ describe("getServiceEntry: a real profile.serviceStartDate overrides a still-cal
       date: "2004-01-10",
       derived: false,
     });
+  });
+
+  it("rejects an invalid via and an invalid date", () => {
+    expect(
+      setServiceEntryDate({ date: "2001-11-01", via: "bogus" }),
+    ).toMatchObject({ ok: false, reason: "invalid_via" });
+    expect(
+      setServiceEntryDate({ date: "not a date", via: "forms_helper" }),
+    ).toMatchObject({ ok: false, reason: "invalid_date" });
   });
 });

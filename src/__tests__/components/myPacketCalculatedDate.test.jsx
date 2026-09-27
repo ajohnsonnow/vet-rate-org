@@ -15,7 +15,7 @@ import {
   getAllDocumentsByCategory,
 } from "../../utils/veteranKnowledgeBase.js";
 import {
-  addServicePeriod,
+  upsertServicePeriod,
   getServicePeriods,
 } from "../../utils/veteranProfile.js";
 
@@ -120,13 +120,20 @@ describe("MyPacket Profile tab: service period editor", () => {
         await vi.importActual("../../utils/veteranKnowledgeBase.js")
       ).groupDocumentationByCategory(buildVkb(false)),
     );
-    const periodId = addServicePeriod({
-      branch: "Army National Guard",
-      component: "Guard",
-      serviceStartDate: "2012-03-14",
-      serviceStartDateDerived: true,
-      serviceEndDate: "2020-03-14",
-    });
+    // ADR-007: addServicePeriod (the manual "Add Period" editor) always
+    // stamps a supplied date 'veteran' - a calculated period only ever
+    // comes from document ingestion, so this simulates that path instead.
+    const periodId = upsertServicePeriod(
+      {
+        branch: "Army National Guard",
+        component: "Guard",
+        serviceStartDate: "2012-03-14",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2020-03-14",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22.pdf", confidence: 60 },
+    );
 
     renderMyPacket();
     fireEvent.click(await screen.findByText("Profile"));

@@ -48,6 +48,7 @@ describe("summarizeServicePeriods", () => {
     expect(summary.serviceSpan).toEqual({
       start: "2004-01-01",
       startDerived: false,
+      startSource: "printed",
       end: "2016-01-01",
     });
     // ~8 years total (sum of the two 4-year periods), not the 12-year span

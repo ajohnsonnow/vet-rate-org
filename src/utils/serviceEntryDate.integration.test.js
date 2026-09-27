@@ -131,9 +131,13 @@ describe("D11-1: a Muster Call review correction reaches servicePeriods[] on re-
     upsertNgb22Period("2002-03-01", false);
 
     expect(getServicePeriods()).toHaveLength(1);
+    // ADR-007: the corrected date came from the same document re-scanned
+    // with a printed (non-derived) value, not a veteran-typed correction -
+    // it reports provenance 'printed', not 'veteran'.
     expect(getServiceEntry()).toMatchObject({
       date: "2002-03-01",
       derived: false,
+      source: "printed",
     });
 
     const prompt = buildSystemPrompt({

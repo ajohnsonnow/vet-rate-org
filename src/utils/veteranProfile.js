@@ -11,10 +11,43 @@
  * Now integrates with persistentStorage for crash-proof auto-saving
  */
 
-import { isSameServicePeriod, formatLocalDate } from "./dateUtils";
+import {
+  isSameServicePeriod,
+  formatLocalDate,
+  isSameDate,
+  parseExplicitDate,
+} from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
 import { _isLaterRecord, parsePayGrade } from "./veteranKnowledgeBase";
-import { pickServiceEntry } from "./serviceEntryDate";
+import {
+  pickServiceEntry,
+  periodStartSource,
+  documentSources,
+  isStableSourceDocument,
+  isSameCalendarDay,
+  SOURCE_RANK,
+  START_SOURCES,
+} from "./serviceEntryDate";
+
+// ADR-007: servicePeriods[] is the one authoritative store for the service
+// entry date - every write to a period's start date goes through
+// setServiceEntryDate/updateServicePeriod/addServicePeriod (veteran
+// corrections), or the ingest merge path (_mergeIncomingStart), or this
+// one-time migration (legacy_*). Nothing else may claim provenance 'veteran'.
+export const SERVICE_ENTRY_VIAS = [
+  // Editors
+  "muster_review",
+  "vkb_viewer",
+  "my_packet",
+  "forms_helper",
+  "dd214_import",
+  // Migration
+  "legacy_edit",
+  "legacy_muster_review",
+  "legacy_profile",
+  "legacy_dd214",
+  "legacy_vkb_viewer",
+];
 
 const PROFILE_KEY = "vet_rate_veteran_profile";
 const SAVED_FORMS_KEY = "vet_rate_saved_forms";
@@ -193,10 +226,48 @@ function _sanitizeProfileFieldValue(value) {
  * @param {Object} profile - The profile data to save
  * @returns {boolean} Success status
  */
+// ADR-007 chokepoint: while a canonical period backs the service entry
+// date, this is the ONLY place the flat serviceStartDate/
+// serviceStartDateDerived/profileFieldSources.serviceStartDate mirror is
+// ever written (alongside setServiceEntryDate's own flat-mode branch and
+// saveServiceHistory's _projectProfileMirror) - a stale caller (My Packet's
+// Save Profile re-submitting component state captured before a period
+// edit) can never revert the projection, because its payload values for
+// those three fields are replaced here before the whitelist even runs. No
+// console warning is emitted for the same reason ADR-007 §2.5 names: any
+// future write path must route through setServiceEntryDate, enforced by
+// the boundary test, not by a runtime log nobody reads.
 export const saveVeteranProfile = (profile) => {
   try {
     if (!profile || typeof profile !== "object") {
       return false;
+    }
+
+    const payload = { ...profile };
+    // Reading servicePeriods[] may run the one-time v3 migration - safe
+    // here: the migration's own save projects the mirror with a raw
+    // localStorage write, never by calling back into this function.
+    let entry = pickServiceEntry(getServiceHistory().servicePeriods);
+    if (entry.periodId) {
+      const stored = getVeteranProfile();
+      if (
+        stored.serviceStartDate &&
+        !stored.serviceStartDateDerived &&
+        !isKnownServiceEntryDate(stored.serviceStartDate)
+      ) {
+        // The value currently on disk isn't derivable from anything the
+        // projection already knows about - give saveServiceHistory's
+        // section 11.2 guard a chance to preserve it (as a correction or a
+        // recorded disagreement) before it gets silently overwritten below.
+        saveServiceHistory(getServiceHistory());
+        entry = pickServiceEntry(getServiceHistory().servicePeriods);
+      }
+      payload.serviceStartDate = entry.date;
+      payload.serviceStartDateDerived = entry.derived;
+      payload.profileFieldSources = {
+        ...(payload.profileFieldSources || {}),
+        serviceStartDate: entry.source === "veteran" ? "user" : "document",
+      };
     }
 
     const sanitizedProfile = {};
@@ -204,11 +275,11 @@ export const saveVeteranProfile = (profile) => {
     // Only save valid fields
     for (const field of VALID_PROFILE_FIELDS) {
       if (
-        Object.prototype.hasOwnProperty.call(profile, field) &&
-        profile[field] !== undefined &&
-        profile[field] !== ""
+        Object.prototype.hasOwnProperty.call(payload, field) &&
+        payload[field] !== undefined &&
+        payload[field] !== ""
       ) {
-        sanitizedProfile[field] = _sanitizeProfileFieldValue(profile[field]);
+        sanitizedProfile[field] = _sanitizeProfileFieldValue(payload[field]);
       }
     }
 
@@ -499,6 +570,22 @@ export const exportAllVeteranData = () => {
 function _importProfile(data, mode) {
   if (!data.profile || typeof data.profile !== "object") return null;
 
+  // ADR-007 §11.5/W12: a restored backup's flat serviceStartDate is about
+  // to be overwritten by saveVeteranProfile's own chokepoint (once a
+  // period backs the entry) - record it as a disagreement first so an
+  // older, non-derived value the backup remembers is never silently lost.
+  if (
+    data.profile.serviceStartDate &&
+    !data.profile.serviceStartDateDerived &&
+    hasPeriodBackedServiceEntry() &&
+    !isKnownServiceEntryDate(data.profile.serviceStartDate)
+  ) {
+    recordServiceEntryDisagreement(
+      data.profile.serviceStartDate,
+      "Restored backup",
+    );
+  }
+
   const profileSaved =
     mode === "replace"
       ? saveVeteranProfile(data.profile)
@@ -767,7 +854,13 @@ const SERVICE_HISTORY_KEY = "vet_rate_service_history";
 // authoritativeDates bypass existed can still carry a stale
 // serviceStartDateDerived: true, which reads VA's own printed date as
 // "calculated from net service".
-const SERVICE_HISTORY_SCHEMA_VERSION = 2;
+// Bumped to 3 for ADR-007: infers serviceStartDateSource/startDateCorrection
+// on every period that predates those fields (_inferStartDateProvenance),
+// then folds the legacy >7-day-correction duplicate pairs D12-2 left behind
+// (_mergeReviewCorrectionDuplicates). Each step is gated on its OWN prior
+// version (v<1, v<2, v<3), not just "below current", so a v1 history never
+// re-runs the v1 repair and a v2 history never re-runs the v2 one.
+const SERVICE_HISTORY_SCHEMA_VERSION = 3;
 
 /**
  * Valid deployment locations/theaters
@@ -868,8 +961,16 @@ export const getServiceHistory = () => {
     parsed.schemaVersion =
       typeof parsed.schemaVersion === "number" ? parsed.schemaVersion : 0;
     if (parsed.schemaVersion < SERVICE_HISTORY_SCHEMA_VERSION) {
-      _repairContaminatedWindowPeriods(parsed);
-      _repairStaleCodeSheetDerivedFlag(parsed);
+      if (parsed.schemaVersion < 1) {
+        _repairContaminatedWindowPeriods(parsed);
+      }
+      if (parsed.schemaVersion < 2) {
+        _repairStaleCodeSheetDerivedFlag(parsed);
+      }
+      if (parsed.schemaVersion < 3) {
+        _inferStartDateProvenance(parsed);
+        _mergeReviewCorrectionDuplicates(parsed);
+      }
       parsed.schemaVersion = SERVICE_HISTORY_SCHEMA_VERSION;
       saveServiceHistory(parsed);
     }
@@ -1309,7 +1410,189 @@ function _repairStaleCodeSheetDerivedFlag(history) {
   );
 }
 
+function _hasCodeSheetContributor(p) {
+  return (
+    p.formType === "Code Sheet" ||
+    (Array.isArray(p.sources) &&
+      p.sources.some((s) => s?.formType === "Code Sheet"))
+  );
+}
+
+// ADR-007 v3 migration, step 1: every period saved before
+// serviceStartDateSource existed gets provenance inferred from what's
+// already on it - never re-inferred once a valid explicit source is
+// already stored (idempotent). userEdited alone is never enough to infer
+// 'veteran' provenance for a DERIVED date (a MOS-only manual edit doesn't
+// prove the veteran corrected the date too); it only matters for a
+// non-derived date, where it's the strongest signal this codebase has ever
+// recorded of a veteran-authored value.
+function _inferPeriodStartProvenance(p, dateUpdated) {
+  if (!p.serviceStartDate || START_SOURCES.includes(p.serviceStartDateSource)) {
+    return p;
+  }
+  if (_hasCodeSheetContributor(p)) {
+    return {
+      ...p,
+      serviceStartDateSource: "code_sheet",
+      serviceStartDateDerived: false,
+      startDateCorrection: null,
+    };
+  }
+  if (p.serviceStartDateDerived) {
+    return {
+      ...p,
+      serviceStartDateSource: "calculated",
+      startDateCorrection: null,
+    };
+  }
+  if (p.userEdited) {
+    const hasDocs = documentSources(p).length > 0;
+    return {
+      ...p,
+      serviceStartDateSource: "veteran",
+      startDateCorrection: hasDocs
+        ? {
+            via: "legacy_edit",
+            correctedAt: dateUpdated || new Date().toISOString(),
+            documentDate: null,
+            documentSource: null,
+          }
+        : null,
+    };
+  }
+  if (documentSources(p).length === 0) {
+    return {
+      ...p,
+      serviceStartDateSource: "veteran",
+      startDateCorrection: null,
+    };
+  }
+  return { ...p, serviceStartDateSource: "printed", startDateCorrection: null };
+}
+
+function _inferStartDateProvenance(history) {
+  history.servicePeriods = history.servicePeriods.map((p) =>
+    _inferPeriodStartProvenance(p, history.dateUpdated),
+  );
+  history.unmatchedServiceRecords = history.unmatchedServiceRecords.map((p) =>
+    _inferPeriodStartProvenance(p, history.dateUpdated),
+  );
+}
+
+// ADR-007 v3 migration, step 2 (D12-2 legacy repair): before this feature,
+// a review correction more than isSameServicePeriod's 7-day tolerance away
+// from the original calculated guess couldn't merge onto it, so both
+// periods for the SAME real enlistment ended up stored side by side - the
+// calculated one stayed on file forever, still feeding Service span/total
+// time. A pair only qualifies when it's unambiguous: same document (or a
+// code-sheet-only contributor on B), same end date, genuinely different
+// starts, and each period appears in exactly one such pair.
+function _reviewPairSharedSource(a, b) {
+  const aSources = documentSources(a);
+  const bEntries = Array.isArray(b.sources) ? b.sources : [];
+  return aSources.find((s) => bEntries.some((e) => e.sourceDocument === s));
+}
+
+function _isReviewCorrectionPair(a, b) {
+  if (a.periodScope === "window" || b.periodScope === "window") return null;
+  if (a.userEdited || b.userEdited) return null;
+  if (periodStartSource(a) !== "calculated") return null;
+  if (periodStartSource(b) === "calculated") return null;
+  const shared = _reviewPairSharedSource(a, b);
+  if (!shared) return null;
+  const bEntries = Array.isArray(b.sources) ? b.sources : [];
+  const subsetOk = bEntries.every(
+    (e) => e.sourceDocument === shared || e.formType === "Code Sheet",
+  );
+  if (!subsetOk) return null;
+  if (!isSameCalendarDay(a.serviceEndDate, b.serviceEndDate)) return null;
+  if (isSameDate(a.serviceStartDate, b.serviceStartDate)) return null;
+  return { shared };
+}
+
+function _mergeReviewCorrectionDuplicates(history) {
+  const periods = history.servicePeriods;
+  const pairs = [];
+  periods.forEach((a, aIndex) => {
+    periods.forEach((b, bIndex) => {
+      if (aIndex === bIndex) return;
+      const match = _isReviewCorrectionPair(a, b);
+      if (match) pairs.push({ aIndex, bIndex, shared: match.shared });
+    });
+  });
+  if (pairs.length === 0) return;
+
+  const involvedCounts = new Map();
+  pairs.forEach(({ aIndex, bIndex }) => {
+    involvedCounts.set(aIndex, (involvedCounts.get(aIndex) || 0) + 1);
+    involvedCounts.set(bIndex, (involvedCounts.get(bIndex) || 0) + 1);
+  });
+  const validPairs = pairs.filter(
+    ({ aIndex, bIndex }) =>
+      involvedCounts.get(aIndex) === 1 && involvedCounts.get(bIndex) === 1,
+  );
+  if (validPairs.length === 0) return;
+
+  const toRemove = new Set();
+  validPairs.forEach(({ aIndex, bIndex, shared }) => {
+    const a = periods[aIndex];
+    const b = periods[bIndex];
+    const bHasCodeSheet = (b.sources || []).some(
+      (s) => s.formType === "Code Sheet",
+    );
+    let merged = _mergeExistingServicePeriod(a, b, {});
+    merged.fieldConflicts = [
+      ...(merged.fieldConflicts || []),
+      ...(b.fieldConflicts || []),
+    ];
+    const combinedSources = [...(a.sources || [])];
+    (b.sources || []).forEach((s) => {
+      if (
+        !combinedSources.some(
+          (existing) => existing.sourceDocument === s.sourceDocument,
+        )
+      ) {
+        combinedSources.push(s);
+      }
+    });
+    merged.sources = combinedSources;
+    merged = bHasCodeSheet
+      ? _setPeriodStart(merged, b.serviceStartDate, "code_sheet", null)
+      : _setPeriodStart(merged, b.serviceStartDate, "veteran", {
+          via: "legacy_muster_review",
+          correctedAt: history.dateUpdated || new Date().toISOString(),
+          documentDate: a.serviceStartDate,
+          documentSource: "calculated",
+        });
+    periods[aIndex] = { ...merged, id: a.id };
+
+    history.deployments = (history.deployments || []).map((d) =>
+      d.periodId === b.id ? { ...d, periodId: a.id } : d,
+    );
+    history.dutyStations = (history.dutyStations || []).map((s) =>
+      s.periodId === b.id ? { ...s, periodId: a.id } : s,
+    );
+    if (shared) {
+      history.documentPeriodCounts = {
+        ...history.documentPeriodCounts,
+        [shared]: Math.max(
+          1,
+          (history.documentPeriodCounts?.[shared] || 1) - 1,
+        ),
+      };
+    }
+    toRemove.add(bIndex);
+  });
+  history.servicePeriods = periods.filter((_, index) => !toRemove.has(index));
+}
+
+// ADR-007: serviceStartDateSource is now authoritative provenance for the
+// period's own effective start - periodStartSource (serviceEntryDate.js)
+// both validates an already-explicit source and infers one for data that
+// doesn't have it yet (a writer that supplies only serviceStartDateDerived:
+// true and no source keeps 'calculated' - never silently reset to false).
 function _sanitizeServicePeriodIdentity(p) {
+  const source = periodStartSource(p);
   return {
     id:
       p.id || `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -1325,7 +1608,8 @@ function _sanitizeServicePeriodIdentity(p) {
     unit: sanitizeString(p.unit || "", 300),
     placeOfEntry: sanitizeString(p.placeOfEntry || "", 300),
     placeOfEntryLowConfidence: !!p.placeOfEntryLowConfidence,
-    serviceStartDateDerived: !!p.serviceStartDateDerived,
+    serviceStartDateSource: source,
+    serviceStartDateDerived: source === "calculated",
   };
 }
 
@@ -1440,6 +1724,28 @@ function _sanitizeFieldSourceDocument(p) {
   return sanitized;
 }
 
+// ADR-007: the corrections layer for a period's start date. Only ever
+// valid when the period's own (re-derived, not merely stored) provenance
+// is 'veteran' - a period whose source has since changed (e.g. a code
+// sheet superseded it) can never carry a stale correction pointing at a
+// document that no longer decides the effective date.
+function _sanitizeStartDateCorrection(p) {
+  if (periodStartSource(p) !== "veteran") return null;
+  const c = p.startDateCorrection;
+  if (!c || typeof c !== "object") return null;
+  if (!SERVICE_ENTRY_VIAS.includes(c.via)) return null;
+  return {
+    via: c.via,
+    correctedAt: sanitizeString(c.correctedAt || "", 40),
+    documentDate: parseExplicitDate(c.documentDate) || null,
+    documentSource: ["code_sheet", "printed", "calculated"].includes(
+      c.documentSource,
+    )
+      ? c.documentSource
+      : null,
+  };
+}
+
 function _sanitizeServicePeriodMetadata(p) {
   return {
     sourceDocument: sanitizeString(p.sourceDocument || "", 300),
@@ -1455,6 +1761,7 @@ function _sanitizeServicePeriodMetadata(p) {
     incomplete: !!p.incomplete,
     notes: sanitizeString(p.notes || "", 1000),
     fieldConflicts: _sanitizeFieldConflicts(p.fieldConflicts),
+    startDateCorrection: _sanitizeStartDateCorrection(p),
   };
 }
 
@@ -1628,23 +1935,80 @@ function _incompletePeriodHasContent(incoming) {
  * purely to keep that function's line count/complexity under the repo's
  * lint ceiling - same behavior.
  */
+// ADR-007 identity rule 2: a document re-scanned under a DIFFERENT
+// (start, end) than its first pass - OCR correcting itself, or a review
+// correction - is still the same physical form, proven by (a) a stable
+// filename this exact document has already contributed to and (b) the
+// SAME end date. Never keys on filename alone (two different files can
+// share a name), and only ever fires when exactly one period matches -
+// an ambiguous same-filename/same-end situation falls through to the
+// weaker rules below rather than guessing.
+function _findSameDocumentIndex(periods, incoming) {
+  if (
+    incoming.periodScope === "window" ||
+    !isStableSourceDocument(incoming.sourceDocument) ||
+    !incoming.serviceEndDate
+  ) {
+    return -1;
+  }
+  const matches = periods
+    .map((p, i) => ({ p, i }))
+    .filter(
+      ({ p }) =>
+        p.periodScope !== "window" &&
+        documentSources(p).includes(incoming.sourceDocument) &&
+        isSameCalendarDay(p.serviceEndDate, incoming.serviceEndDate),
+    );
+  return matches.length === 1 ? matches[0].i : -1;
+}
+
+// ADR-007 identity rule 3: a period the veteran has corrected keys its
+// identity match on the DOCUMENT's own date (startDateCorrection.documentDate)
+// too, not just its current effective (corrected) start - so a later
+// re-import of the same document's unedited data still finds this period
+// instead of creating a duplicate.
+function _findCorrectionAliasIndex(periods, incoming) {
+  const incomingKey = _servicePeriodKey(incoming);
+  return periods.findIndex((p) => {
+    const doc = p.startDateCorrection?.documentDate;
+    if (!doc) return false;
+    if (`${doc}|${p.serviceEndDate}` === incomingKey) return true;
+    return isSameServicePeriod(
+      doc,
+      p.serviceEndDate,
+      incoming.serviceStartDate,
+      incoming.serviceEndDate,
+    );
+  });
+}
+
+function _findDatedServicePeriodIndex(periods, incoming) {
+  const incomingKey = _servicePeriodKey(incoming);
+  let index = periods.findIndex((p) => _servicePeriodKey(p) === incomingKey);
+  if (index !== -1 || incoming.incomplete) return index;
+
+  index = _findSameDocumentIndex(periods, incoming);
+  if (index !== -1) return index;
+
+  index = _findCorrectionAliasIndex(periods, incoming);
+  if (index !== -1) return index;
+
+  return periods.findIndex((p) =>
+    isSameServicePeriod(
+      p.serviceStartDate,
+      p.serviceEndDate,
+      incoming.serviceStartDate,
+      incoming.serviceEndDate,
+    ),
+  );
+}
+
 function _findExistingServicePeriodIndex(
   periods,
   incoming,
   documentPeriodCounts,
 ) {
-  const incomingKey = _servicePeriodKey(incoming);
-  let index = periods.findIndex((p) => _servicePeriodKey(p) === incomingKey);
-  if (index === -1 && !incoming.incomplete) {
-    index = periods.findIndex((p) =>
-      isSameServicePeriod(
-        p.serviceStartDate,
-        p.serviceEndDate,
-        incoming.serviceStartDate,
-        incoming.serviceEndDate,
-      ),
-    );
-  }
+  const index = _findDatedServicePeriodIndex(periods, incoming);
   if (index !== -1 || !incoming.incomplete) return { index };
 
   const matches = _matchIncompletePeriod(
@@ -1737,6 +2101,199 @@ function _isEmptyServicePeriodValue(value) {
   return value === null || value === undefined || value === "";
 }
 
+// ADR-007: the only function allowed to change a start date. Sets
+// serviceStartDate/serviceStartDateSource/serviceStartDateDerived/
+// startDateCorrection together so they can never drift out of sync -
+// derived is always exactly (source === 'calculated'), and a correction
+// is only ever kept when the resulting source is 'veteran'.
+function _setPeriodStart(p, date, source, correction = null) {
+  return {
+    ...p,
+    serviceStartDate: date,
+    serviceStartDateSource: source,
+    serviceStartDateDerived: source === "calculated",
+    startDateCorrection: source === "veteran" ? correction : null,
+  };
+}
+
+/**
+ * ADR-007 §2.5: the one place a veteran's own edit to a period's start
+ * date is applied - setServiceEntryDate's period-mode branch,
+ * updateServicePeriod, and the migration's legacy-value adoption all
+ * route through this. Editing back to the document's own value (or
+ * clearing the field entirely, when the period never had a document of
+ * its own) reverts the correction rather than creating an ever-growing
+ * chain of them.
+ */
+function _applyStartCorrection(period, isoOrEmpty, via) {
+  const currentSource = periodStartSource(period);
+  const docDate =
+    period.startDateCorrection?.documentDate ??
+    (currentSource !== "veteran" ? period.serviceStartDate : null);
+  const docSource =
+    period.startDateCorrection?.documentSource ??
+    (currentSource !== "veteran" ? currentSource : null);
+  const hasDocs = documentSources(period).length > 0;
+
+  if (!isoOrEmpty) {
+    if (docDate) {
+      return {
+        period: _setPeriodStart(period, docDate, docSource, null),
+        changed: true,
+      };
+    }
+    if (!hasDocs) {
+      return {
+        period: _setPeriodStart(period, null, null, null),
+        changed: true,
+      };
+    }
+    return { period, changed: false, reason: "no_document_value" };
+  }
+
+  if (isSameCalendarDay(isoOrEmpty, docDate)) {
+    return {
+      period: _setPeriodStart(period, docDate, docSource, null),
+      changed: true,
+    };
+  }
+
+  if (!hasDocs) {
+    return {
+      period: _setPeriodStart(period, isoOrEmpty, "veteran", null),
+      changed: true,
+    };
+  }
+
+  return {
+    period: _setPeriodStart(period, isoOrEmpty, "veteran", {
+      via,
+      correctedAt: new Date().toISOString(),
+      documentDate: docDate,
+      documentSource: docSource,
+    }),
+    changed: true,
+  };
+}
+
+// Ingest can never claim provenance 'veteran' - options.authoritativeDates
+// (the VA code sheet) is always 'code_sheet' regardless of what the
+// incoming payload itself carries.
+function _incomingStartSource(incoming, options) {
+  if (options.authoritativeDates) return "code_sheet";
+  if (
+    ["printed", "calculated", "code_sheet"].includes(
+      incoming.serviceStartDateSource,
+    )
+  ) {
+    return incoming.serviceStartDateSource;
+  }
+  if (incoming.serviceStartDateDerived) return "calculated";
+  if (incoming.formType === "Code Sheet") return "code_sheet";
+  return "printed";
+}
+
+function _pushStartConflict(existing, merged, conflicts, incoming) {
+  const conflict = {
+    field: "serviceStartDate",
+    keptValue: merged.serviceStartDate,
+    keptSourceDocument: "Your correction",
+    conflictingValue: incoming.serviceStartDate,
+    conflictingSourceDocument: incoming.sourceDocument || "",
+    recordedAt: new Date().toISOString(),
+  };
+  const alreadyRecorded = [
+    ...(existing.fieldConflicts || []),
+    ...conflicts,
+  ].some(
+    (c) =>
+      c.field === "serviceStartDate" &&
+      isSameCalendarDay(c.conflictingValue, conflict.conflictingValue) &&
+      c.conflictingSourceDocument === conflict.conflictingSourceDocument,
+  );
+  if (!alreadyRecorded) conflicts.push(conflict);
+}
+
+// A veteran-corrected period's effective date never moves for ingest - it
+// only ever refreshes what the document itself says (documentDate/
+// documentSource, so reverting still lands on the latest document value),
+// and surfaces a genuine printed/code-sheet disagreement as a conflict
+// instead of silently discarding it (never a mere calculated re-guess,
+// which is expected and uninteresting next to a veteran's own correction).
+function _mergeIncomingStartOntoVeteranPeriod(
+  merged,
+  incoming,
+  inSrc,
+  conflicts,
+  existing,
+) {
+  const correction = merged.startDateCorrection;
+  if (
+    correction &&
+    (!correction.documentSource ||
+      SOURCE_RANK[inSrc] >= SOURCE_RANK[correction.documentSource])
+  ) {
+    merged.startDateCorrection = {
+      ...correction,
+      documentDate: parseExplicitDate(incoming.serviceStartDate),
+      documentSource: inSrc,
+    };
+  }
+  if (
+    (inSrc === "printed" || inSrc === "code_sheet") &&
+    !isSameCalendarDay(incoming.serviceStartDate, merged.serviceStartDate)
+  ) {
+    _pushStartConflict(existing, merged, conflicts, incoming);
+  }
+}
+
+/**
+ * ADR-007 §2.2: the ONE place ingest decides a period's start date.
+ * Precedence within one enlistment is veteran > code_sheet > printed >
+ * calculated - a 'veteran' start is never moved, only annotated
+ * (documentDate/documentSource, and a fieldConflicts entry for a genuine
+ * printed/code-sheet disagreement). Mutates `merged` and `conflicts`
+ * in place; returns nothing.
+ */
+function _mergeIncomingStart(merged, existing, incoming, options, conflicts) {
+  if (!incoming.serviceStartDate) return;
+  const exSrc = periodStartSource(existing);
+  const inSrc = _incomingStartSource(incoming, options);
+
+  if (!existing.serviceStartDate) {
+    Object.assign(
+      merged,
+      _setPeriodStart(merged, incoming.serviceStartDate, inSrc),
+    );
+    return;
+  }
+
+  if (exSrc === "veteran") {
+    _mergeIncomingStartOntoVeteranPeriod(
+      merged,
+      incoming,
+      inSrc,
+      conflicts,
+      existing,
+    );
+    return;
+  }
+
+  const sameRank = SOURCE_RANK[inSrc] === SOURCE_RANK[exSrc];
+  const shouldReplace =
+    SOURCE_RANK[inSrc] > SOURCE_RANK[exSrc] ||
+    (sameRank &&
+      _periodHasSource(existing, incoming.sourceDocument) &&
+      (incoming.confidence ?? 0) >= (existing.confidence ?? 0)) ||
+    (sameRank && inSrc === "code_sheet" && exSrc === "code_sheet");
+  if (shouldReplace) {
+    Object.assign(
+      merged,
+      _setPeriodStart(merged, incoming.serviceStartDate, inSrc),
+    );
+  }
+}
+
 function _mergeExistingServicePeriod(existing, incoming, options) {
   const incomingConfidence = incoming.confidence ?? 0;
   const existingConfidence = existing.confidence ?? 0;
@@ -1799,9 +2356,6 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     }
   });
   merged.fieldSourceDocument = fieldSourceDocument;
-  if (conflicts.length > 0) {
-    merged.fieldConflicts = [...(existing.fieldConflicts || []), ...conflicts];
-  }
   // A later record's rank wins - "later" by the period's own end date when
   // both sides have one, else by pay grade (same rule
   // veteranKnowledgeBase.js's mergeDD214RankAndCharacter already uses for
@@ -1817,38 +2371,16 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
       merged.rank = incoming.rank;
     }
   }
-  // VA's own record (the code sheet) settles which of two near-identical
-  // dates is right.
+  // VA's own record (the code sheet) settles the end date of two
+  // near-identical dates; the START date is now decided by
+  // _mergeIncomingStart's own precedence, below, which folds
+  // authoritativeDates into _incomingStartSource instead.
   if (options.authoritativeDates && !incoming.incomplete) {
-    merged.serviceStartDate = incoming.serviceStartDate;
     merged.serviceEndDate = incoming.serviceEndDate;
-    // The code sheet's own dates are never a calculated guess - clear any
-    // stale flag a prior DD214/NGB-22 merge left on this period so the
-    // now-authoritative date doesn't keep reading as "calculated" (mirrors
-    // veteranKnowledgeBase.js's _applyAuthoritativeCorrection).
-    merged.serviceStartDateDerived = false;
-  } else if (
-    sameSource &&
-    incoming.serviceStartDateDerived === false &&
-    !_isEmptyServicePeriodValue(incoming.serviceStartDate)
-  ) {
-    // D11-1: Muster Call's Verify & Save re-runs this exact merge for the
-    // SAME document with the veteran's corrected fields spliced in
-    // (useSequentialFormationFlow.js's runVerifyAndSave ->
-    // persistFormationDocument). serviceStartDate is the identity key, so
-    // it (and serviceStartDateDerived, skipped above) never updated here -
-    // the corrected date reached profile.serviceStartDate/dd214Data but
-    // never this canonical period, so getServiceEntry() (which reads
-    // periods first) kept showing the original calculated guess.
-    // serviceStartDateDerived: false only ever comes from a printed
-    // document's own extraction, or from
-    // DocumentIntelligenceBriefing.jsx's _clearServiceStartDateDerivedIfEdited
-    // forcing it false the moment the veteran edits the field - never from
-    // an unedited re-scan of the same file (which re-reports whatever its
-    // own OCR/calculation produced) - so this can't be re-triggered by a
-    // later, uncorrected re-import regressing an already-fixed period.
-    merged.serviceStartDate = incoming.serviceStartDate;
-    merged.serviceStartDateDerived = false;
+  }
+  _mergeIncomingStart(merged, existing, incoming, options, conflicts);
+  if (conflicts.length > 0) {
+    merged.fieldConflicts = [...(existing.fieldConflicts || []), ...conflicts];
   }
   merged.confidence = Math.max(incomingConfidence, existingConfidence);
   merged.incomplete = incoming.incomplete && existing.incomplete;
@@ -1992,6 +2524,14 @@ export const upsertServicePeriod = (periodData, options = {}) => {
           : (periodData.confidence ?? null),
       incomplete: !(periodData.serviceStartDate && periodData.serviceEndDate),
     };
+    // ADR-007 §2.2: ingest can never claim provenance 'veteran', and never
+    // arrives with a corrections layer of its own - only
+    // setServiceEntryDate/updateServicePeriod/addServicePeriod/the
+    // migration ever write those.
+    delete incoming.startDateCorrection;
+    if (incoming.serviceStartDateSource === "veteran") {
+      delete incoming.serviceStartDateSource;
+    }
 
     const {
       index: existingIndex,
@@ -2010,6 +2550,10 @@ export const upsertServicePeriod = (periodData, options = {}) => {
         id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         userEdited: false,
         ...incoming,
+        serviceStartDateSource: incoming.serviceStartDate
+          ? _incomingStartSource(incoming, options)
+          : null,
+        startDateCorrection: null,
         sources: incoming.sourceDocument
           ? [
               {
@@ -2058,49 +2602,29 @@ export const upsertServicePeriod = (periodData, options = {}) => {
   }
 };
 
-// FormsHelper.jsx's prefill (buildFormsHelperPrefillDefaults) reads
-// profile.serviceStartDate/serviceStartDateDerived directly, not through
-// getServiceEntry() - keeping this flat mirror in sync with whatever
-// servicePeriods[] now says is the earliest entry means a My Packet Service
-// tab edit reaches FormsHelper without FormsHelper needing to change at
-// all. Only ever narrows/corrects the mirror when a real period date is
-// known; never clears it back to empty.
-//
-// This runs on EVERY period write, including one that only touched an
-// unrelated field (e.g. MOS) on a different period - it must never
-// silently replace an already-real profile date (FormsHelper's own
-// non-derived correction) with a still-calculated guess just because that
-// guess happens to be the earliest period on file (standing decision 3:
-// never silently lose a value).
-function _syncFlatServiceStartDateMirror(servicePeriods) {
-  const entry = pickServiceEntry(servicePeriods, null);
-  if (!entry.date) return;
-  const profile = getVeteranProfile();
-  const wouldReplaceRealDateWithGuess =
-    !!profile.serviceStartDate &&
-    !profile.serviceStartDateDerived &&
-    entry.derived;
-  if (wouldReplaceRealDateWithGuess) return;
-  updateVeteranProfile({
-    serviceStartDate: entry.date,
-    serviceStartDateDerived: entry.derived,
-  });
-}
-
 /**
  * Manually add a service period (Profile tab editor). Always userEdited.
+ * ADR-007: a supplied start date is always the veteran's own - saveServiceHistory's
+ * own projection (not a mirror call here) keeps the flat profile/dd214Data
+ * copies in sync.
  */
 export const addServicePeriod = (period) => {
   try {
     const history = getServiceHistory();
+    const iso = period.serviceStartDate
+      ? parseExplicitDate(period.serviceStartDate)
+      : null;
     const newPeriod = {
       id: `period_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       userEdited: true,
       ...period,
+      serviceStartDate: iso,
+      serviceStartDateSource: iso ? "veteran" : null,
+      serviceStartDateDerived: false,
+      startDateCorrection: null,
     };
     history.servicePeriods.push(newPeriod);
     saveServiceHistory(history);
-    _syncFlatServiceStartDateMirror(history.servicePeriods);
     return newPeriod.id;
   } catch (error) {
     console.error("Error adding service period:", error);
@@ -2110,7 +2634,11 @@ export const addServicePeriod = (period) => {
 
 /**
  * Manually update a service period (Profile tab editor). Marks it
- * userEdited so ingest never overwrites it again.
+ * userEdited so ingest never overwrites it again. ADR-007: a start-date
+ * edit routes through _applyStartCorrection (the same corrections layer
+ * setServiceEntryDate uses) rather than being spread in generically, so it
+ * always gets real provenance instead of silently becoming an unmarked
+ * "printed" value.
  */
 export const updateServicePeriod = (periodId, updates) => {
   try {
@@ -2118,14 +2646,36 @@ export const updateServicePeriod = (periodId, updates) => {
     const index = history.servicePeriods.findIndex((p) => p.id === periodId);
     if (index === -1) return false;
 
-    history.servicePeriods[index] = {
+    const { serviceStartDate, ...rest } = updates;
+    delete rest.serviceStartDateDerived;
+    delete rest.serviceStartDateSource;
+    delete rest.startDateCorrection;
+
+    let period = {
       ...history.servicePeriods[index],
-      ...updates,
+      ...rest,
       userEdited: true,
     };
-    const success = saveServiceHistory(history);
-    _syncFlatServiceStartDateMirror(history.servicePeriods);
-    return success;
+    let supersededValue;
+
+    if ("serviceStartDate" in updates) {
+      const currentEffective = history.servicePeriods[index].serviceStartDate;
+      if (
+        !serviceStartDate ||
+        !isSameCalendarDay(serviceStartDate, currentEffective)
+      ) {
+        supersededValue = currentEffective;
+        const result = _applyStartCorrection(
+          period,
+          serviceStartDate || "",
+          "my_packet",
+        );
+        period = result.period;
+      }
+    }
+
+    history.servicePeriods[index] = period;
+    return saveServiceHistory(history, { supersededValue });
   } catch (error) {
     console.error("Error updating service period:", error);
     return false;
@@ -2138,9 +2688,7 @@ export const removeServicePeriod = (periodId) => {
     history.servicePeriods = history.servicePeriods.filter(
       (p) => p.id !== periodId,
     );
-    const success = saveServiceHistory(history);
-    _syncFlatServiceStartDateMirror(history.servicePeriods);
-    return success;
+    return saveServiceHistory(history);
   } catch (error) {
     console.error("Error removing service period:", error);
     return false;
@@ -2259,6 +2807,37 @@ function _highestPayGradeAcross(sources) {
  * (or one that only ever reached unmatchedServiceRecords/dd214Data, never
  * a period) must not show as N/A when it's really known.
  */
+// ADR-007: the Service tab's span start is now the SAME resolver every
+// other consumer uses (pickServiceEntry), so it can never disagree with the
+// AI prompt/dossier/VKB over which period "when did service begin" actually
+// is. pickServiceEntry excludes windows; only fall back to the old
+// earliest-start-including-windows reduce when it has nothing at all (e.g.
+// every period here is itself a window).
+function _resolveSpanStart(list) {
+  const entry = pickServiceEntry(list);
+  if (entry.date) {
+    return {
+      start: entry.date,
+      startDerived: entry.derived,
+      startSource: entry.source,
+    };
+  }
+  const startPeriod = list
+    .filter((p) => p.serviceStartDate)
+    .reduce(
+      (earliest, p) =>
+        !earliest || p.serviceStartDate < earliest.serviceStartDate
+          ? p
+          : earliest,
+      null,
+    );
+  return {
+    start: startPeriod?.serviceStartDate || null,
+    startDerived: !!startPeriod?.serviceStartDateDerived,
+    startSource: startPeriod ? periodStartSource(startPeriod) : null,
+  };
+}
+
 export const summarizeServicePeriods = (periods, extra = {}) => {
   const { unmatchedRecords = [], dd214Data = null } = extra;
   const list = Array.isArray(periods) ? periods : [];
@@ -2290,25 +2869,10 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
 
   const startDates = list.map((p) => p.serviceStartDate).filter(Boolean);
   const endDates = list.map((p) => p.serviceEndDate).filter(Boolean);
-  // D11-2: which period actually supplied the earliest start date, not just
-  // the date string itself - so the Service tab can mark it "(calculated
-  // from net service)" the same way every other consumer of
-  // serviceStartDateDerived does, instead of presenting a guess as a
-  // printed fact.
-  const startPeriod = list
-    .filter((p) => p.serviceStartDate)
-    .reduce(
-      (earliest, p) =>
-        !earliest || p.serviceStartDate < earliest.serviceStartDate
-          ? p
-          : earliest,
-      null,
-    );
   const serviceSpan =
     startDates.length > 0 || endDates.length > 0
       ? {
-          start: startPeriod?.serviceStartDate || null,
-          startDerived: !!startPeriod?.serviceStartDateDerived,
+          ..._resolveSpanStart(list),
           end: endDates.toSorted((a, b) => a.localeCompare(b)).at(-1) || null,
         }
       : null;
@@ -2360,47 +2924,29 @@ export const summarizeServicePeriods = (periods, extra = {}) => {
   };
 };
 
-// FormsHelper's handleSaveProfile (FormsHelper.jsx) writes a veteran's
-// corrected serviceStartDate straight to the flat profile field, clearing
-// serviceStartDateDerived, but never touches servicePeriods[] itself (that
-// write-through is FormsHelper's own gap, outside this module). Without
-// this, getServiceEntry() kept returning a still-calculated period's guess
-// over the veteran's own correction, so the AI prompt/dossier/Service span
-// regressed to the calculated date the moment a period existed at all. A
-// profile date the veteran has confirmed is real (not derived) beats a
-// guess, but never a printed/proven period - only ever fires when the
-// periods-based answer is itself missing or still a calculated guess.
-function _profileOverridesDerivedEntry(profile, result) {
-  if (!profile.serviceStartDate || profile.serviceStartDateDerived) {
-    return false;
-  }
-  return !result.date || result.derived;
-}
-
 /**
  * The single canonical source for "when did the veteran's service begin",
  * with provenance - see serviceEntryDate.js's pickServiceEntry for the
- * precedence rule. Reads getServiceHistory()'s canonical servicePeriods[]
- * first (kept correct by upsertServicePeriod/updateServicePeriod's
- * userEdited protection and _mergeExistingServicePeriod's authoritativeDates
- * bypass), falling back to the legacy top-level dd214Data.entryDate and
- * finally profile.serviceStartDate only when no period has ever been
- * recorded - a veteran who has only ever used the FormsHelper/My Packet
- * profile fields directly, with no document imported.
+ * precedence rule (ADR-007). Reads getServiceHistory()'s canonical
+ * servicePeriods[] first; falls back to a non-derived flat profile value
+ * (a veteran who typed a correction that hasn't reached a period, e.g.
+ * FormsHelper before it ever ran the migration/projection), then to the
+ * legacy dd214Data.entryDate, then to any other flat value, only when no
+ * period has ever been recorded at all.
  * @returns {import('./serviceEntryDate').ServiceEntry}
  */
 export const getServiceEntry = () => {
   const history = getServiceHistory();
-  const dd214Legacy = history.dd214Data?.entryDate
-    ? {
-        date: history.dd214Data.entryDate,
-        derived: !!history.dd214Data.entryDateDerived,
-      }
-    : null;
-  const result = pickServiceEntry(history.servicePeriods, dd214Legacy);
-  const profile = getVeteranProfile();
+  const r = pickServiceEntry(history.servicePeriods);
+  if (r.date) return r;
 
-  if (_profileOverridesDerivedEntry(profile, result)) {
+  const profile = getVeteranProfile();
+  if (
+    profile.serviceStartDate &&
+    !profile.serviceStartDateDerived &&
+    profile.profileFieldSources?.serviceStartDate !== "document" &&
+    !isSameCalendarDay(profile.serviceStartDate, history.dd214Data?.entryDate)
+  ) {
     return {
       date: profile.serviceStartDate,
       derived: false,
@@ -2408,20 +2954,267 @@ export const getServiceEntry = () => {
       periodId: null,
     };
   }
-  if (result.date) return result;
 
-  if (profile.serviceStartDate) {
+  if (history.dd214Data?.entryDate) {
+    const derived = !!history.dd214Data.entryDateDerived;
     return {
-      date: profile.serviceStartDate,
-      derived: !!profile.serviceStartDateDerived,
-      source: profile.serviceStartDateDerived ? "calculated" : "printed",
+      date: history.dd214Data.entryDate,
+      derived,
+      source: derived ? "calculated" : "printed",
       periodId: null,
     };
   }
-  return result;
+
+  if (profile.serviceStartDate) {
+    const derived = !!profile.serviceStartDateDerived;
+    return {
+      date: profile.serviceStartDate,
+      derived,
+      source: derived ? "calculated" : "printed",
+      periodId: null,
+    };
+  }
+
+  return r;
 };
 
-export const saveServiceHistory = (history) => {
+function _isKnownServiceEntryDateIn(history, value) {
+  if (!value) return false;
+  const periods = [
+    ...(history.servicePeriods || []),
+    ...(history.unmatchedServiceRecords || []),
+  ];
+  if (periods.some((p) => isSameCalendarDay(p.serviceStartDate, value))) {
+    return true;
+  }
+  if (
+    periods.some((p) =>
+      isSameCalendarDay(p.startDateCorrection?.documentDate, value),
+    )
+  ) {
+    return true;
+  }
+  return periods.some((p) =>
+    (p.fieldConflicts || [])
+      .filter((c) => c.field === "serviceStartDate")
+      .some(
+        (c) =>
+          isSameCalendarDay(c.keptValue, value) ||
+          isSameCalendarDay(c.conflictingValue, value),
+      ),
+  );
+}
+
+function _recordEntryDisagreementInto(history, value, label) {
+  const entry = pickServiceEntry(history.servicePeriods);
+  if (!entry.periodId) return false;
+  const index = history.servicePeriods.findIndex(
+    (p) => p.id === entry.periodId,
+  );
+  if (index === -1) return false;
+  const period = history.servicePeriods[index];
+  const keptSourceDocument =
+    entry.source === "veteran"
+      ? "Your correction"
+      : period.sourceDocument || "";
+  const conflict = {
+    field: "serviceStartDate",
+    keptValue: period.serviceStartDate,
+    keptSourceDocument,
+    conflictingValue: value,
+    conflictingSourceDocument: label,
+    recordedAt: new Date().toISOString(),
+  };
+  const existing = period.fieldConflicts || [];
+  const isDuplicate = existing.some(
+    (c) =>
+      c.field === "serviceStartDate" &&
+      isSameCalendarDay(c.conflictingValue, value) &&
+      c.conflictingSourceDocument === label,
+  );
+  if (isDuplicate) return false;
+  history.servicePeriods[index] = {
+    ...period,
+    fieldConflicts: [...existing, conflict],
+  };
+  return true;
+}
+
+function _adoptLegacyValueOntoPeriod(history, period, iso, via) {
+  const index = history.servicePeriods.findIndex((p) => p.id === period.id);
+  if (index === -1) return;
+  history.servicePeriods[index] = _setPeriodStart(period, iso, "veteran", {
+    via,
+    correctedAt: history.dateUpdated || new Date().toISOString(),
+    documentDate: period.serviceStartDate,
+    documentSource: periodStartSource(period),
+  });
+}
+
+// ADR-007 §11.2, rules A and B: a legacy value (V1 = dd214Data.entryDate,
+// V2 = the flat profile field) that predates servicePeriods[] carrying its
+// own provenance. Rule A covers a D11-1-era correction that reached
+// dd214Data/the flat field but never the period itself (same-document end
+// match onto a still-calculated period). Rule B preserves ADR-005's old
+// read-time override (a non-derived flat value beating an all-calculated
+// history) by converting it into a real correction instead of a
+// read-time-only guess. Anything else is recorded as a disagreement so the
+// value is never silently dropped (invariant I5).
+function _preserveOneLegacyValue(
+  history,
+  value,
+  end,
+  label,
+  via,
+  fieldSource,
+  entry,
+) {
+  const iso = parseExplicitDate(value);
+  if (!iso) {
+    _recordEntryDisagreementInto(
+      history,
+      sanitizeString(String(value), 200),
+      label,
+    );
+    return true;
+  }
+
+  if (end) {
+    const matches = history.servicePeriods.filter(
+      (p) =>
+        p.periodScope !== "window" && isSameCalendarDay(p.serviceEndDate, end),
+    );
+    if (
+      matches.length === 1 &&
+      periodStartSource(matches[0]) === "calculated" &&
+      new Date(iso) < new Date(matches[0].serviceEndDate)
+    ) {
+      _adoptLegacyValueOntoPeriod(history, matches[0], iso, via);
+      return true;
+    }
+  }
+
+  const dd214Entry = history.dd214Data?.entryDate;
+  if (
+    fieldSource !== "document" &&
+    !isSameCalendarDay(value, dd214Entry) &&
+    entry.periodId
+  ) {
+    const nonWindow = history.servicePeriods.filter(
+      (p) => p.periodScope !== "window" && p.serviceStartDate,
+    );
+    const allCalculated =
+      nonWindow.length > 0 &&
+      nonWindow.every((p) => periodStartSource(p) === "calculated");
+    const entryPeriod = history.servicePeriods.find(
+      (p) => p.id === entry.periodId,
+    );
+    if (
+      allCalculated &&
+      entryPeriod?.serviceEndDate &&
+      new Date(iso) < new Date(entryPeriod.serviceEndDate)
+    ) {
+      _adoptLegacyValueOntoPeriod(history, entryPeriod, iso, "legacy_profile");
+      return true;
+    }
+  }
+
+  _recordEntryDisagreementInto(history, iso, label);
+  return true;
+}
+
+function _preserveLegacyValueIfUnknown(
+  history,
+  value,
+  derived,
+  end,
+  label,
+  via,
+  fieldSource,
+  entry,
+  supersededValue,
+) {
+  if (!value || derived) return false;
+  if (_isKnownServiceEntryDateIn(history, value)) return false;
+  // A value this exact save is deliberately superseding (setServiceEntryDate/
+  // updateServicePeriod applying a correction or a revert) is not orphaned
+  // legacy data - it's the flat mirror's own last projection, one save-cycle
+  // stale by construction (the mirror only catches up in this same call's
+  // later _projectProfileMirror step). Without this, reverting a correction
+  // would immediately "rediscover" the value it just superseded as an
+  // unrecognized disagreement and silently re-apply it - undoing the revert.
+  if (isSameCalendarDay(value, supersededValue)) return false;
+  return _preserveOneLegacyValue(
+    history,
+    value,
+    end,
+    label,
+    via,
+    fieldSource,
+    entry,
+  );
+}
+
+function _preserveUnprojectedEntryValues(
+  history,
+  profile,
+  entry,
+  supersededValue,
+) {
+  const v1Changed = _preserveLegacyValueIfUnknown(
+    history,
+    history.dd214Data?.entryDate,
+    !!history.dd214Data?.entryDateDerived,
+    history.dd214Data?.separationDate,
+    "Earlier DD-214 record",
+    "legacy_dd214",
+    undefined,
+    entry,
+    supersededValue,
+  );
+  const v2Changed = _preserveLegacyValueIfUnknown(
+    history,
+    profile?.serviceStartDate,
+    !!profile?.serviceStartDateDerived,
+    profile?.serviceEndDate,
+    "Your profile (earlier entry)",
+    "legacy_profile",
+    profile?.profileFieldSources?.serviceStartDate,
+    entry,
+    supersededValue,
+  );
+  return v1Changed || v2Changed;
+}
+
+// ADR-007 §2.6: raw read-modify-write of the flat profile mirror, run from
+// inside saveServiceHistory so every writer of servicePeriods[] converges
+// the flat copy - never calls saveVeteranProfile (no recursion into its
+// own chokepoint).
+function _projectProfileMirror(entry) {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) return;
+    const profile = JSON.parse(raw);
+    const nextSource = entry.source === "veteran" ? "user" : "document";
+    const changed =
+      profile.serviceStartDate !== entry.date ||
+      !!profile.serviceStartDateDerived !== !!entry.derived ||
+      profile.profileFieldSources?.serviceStartDate !== nextSource;
+    if (!changed) return;
+    profile.serviceStartDate = entry.date;
+    profile.serviceStartDateDerived = entry.derived;
+    profile.profileFieldSources = {
+      ...(profile.profileFieldSources || {}),
+      serviceStartDate: nextSource,
+    };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    markAsModified();
+  } catch (error) {
+    console.error("Error projecting service entry into profile:", error);
+  }
+}
+
+export const saveServiceHistory = (history, { supersededValue } = {}) => {
   try {
     const sanitized = {
       deployments: _sanitizeDeployments(history.deployments),
@@ -2440,23 +3233,195 @@ export const saveServiceHistory = (history) => {
         history.documentPeriodCounts,
       ),
       // D-A: any regular save (always sourced from a prior getServiceHistory()
-      // read) carries forward whatever version that read already resolved -
-      // missing only for data saved by code that predates this field, which
-      // defaults to the current version since it was never subject to the
-      // legacy contamination bug the migration repairs.
+      // read) carries forward whatever version that read already resolved.
+      // G9 (ADR-007): a save from outside a read (no schemaVersion at all)
+      // stores 2, not the current version - the NEXT read then runs the
+      // v<3 migration steps rather than silently skipping them.
       schemaVersion:
-        typeof history.schemaVersion === "number"
-          ? history.schemaVersion
-          : SERVICE_HISTORY_SCHEMA_VERSION,
+        typeof history.schemaVersion === "number" ? history.schemaVersion : 2,
       dateUpdated: new Date().toISOString(),
     };
 
+    let entry = pickServiceEntry(sanitized.servicePeriods);
+    if (entry.periodId) {
+      const profile = getVeteranProfile();
+      if (
+        _preserveUnprojectedEntryValues(
+          sanitized,
+          profile,
+          entry,
+          supersededValue,
+        )
+      ) {
+        entry = pickServiceEntry(sanitized.servicePeriods);
+      }
+      if (sanitized.dd214Data) {
+        sanitized.dd214Data.entryDate = entry.date;
+        sanitized.dd214Data.entryDateDerived = entry.derived;
+      }
+    }
+
     localStorage.setItem(SERVICE_HISTORY_KEY, JSON.stringify(sanitized));
+    if (entry.periodId) {
+      _projectProfileMirror(entry);
+    }
     return true;
   } catch (error) {
     console.error("Error saving service history:", error);
     return false;
   }
+};
+
+/**
+ * ADR-007 §2.5: the ONE write API every service-entry-date editor routes
+ * through - the Muster Call review modal, the VKB viewer, My Packet, and
+ * FormsHelper. Applies a veteran's own correction (or a revert, on an
+ * empty value) to the period identified by periodId/sourceDocument/the
+ * current entry, or to the flat profile field when no period exists yet.
+ * @returns {{ok: boolean, periodId: string|null, reason?: string}}
+ */
+export const setServiceEntryDate = ({
+  date,
+  via,
+  periodId,
+  sourceDocument,
+  documentStartDate,
+  documentEndDate,
+} = {}) => {
+  if (!SERVICE_ENTRY_VIAS.includes(via)) {
+    return { ok: false, periodId: null, reason: "invalid_via" };
+  }
+
+  const isRevert = date === "" || date === null || date === undefined;
+  let iso = null;
+  if (!isRevert) {
+    iso = parseExplicitDate(date);
+    if (!iso) return { ok: false, periodId: null, reason: "invalid_date" };
+  }
+
+  const history = getServiceHistory();
+  const nonWindowPeriods = history.servicePeriods.filter(
+    (p) => p.periodScope !== "window",
+  );
+
+  const target = _resolveServiceEntryTarget(history, nonWindowPeriods, {
+    periodId,
+    sourceDocument,
+    documentStartDate,
+    documentEndDate,
+  });
+  if (target.reason) return target;
+  const targetId = target.id;
+
+  if (!targetId) {
+    const ok = updateVeteranProfile({
+      serviceStartDate: iso || "",
+      serviceStartDateDerived: false,
+      profileFieldSources: {
+        ...(getVeteranProfile().profileFieldSources || {}),
+        serviceStartDate: "user",
+      },
+    });
+    return { ok, periodId: null };
+  }
+
+  const index = history.servicePeriods.findIndex((p) => p.id === targetId);
+  const supersededValue = history.servicePeriods[index].serviceStartDate;
+  const { period, changed, reason } = _applyStartCorrection(
+    history.servicePeriods[index],
+    iso,
+    via,
+  );
+  if (!changed) return { ok: false, periodId: targetId, reason };
+  history.servicePeriods[index] = period;
+  saveServiceHistory(history, { supersededValue });
+  return { ok: true, periodId: targetId };
+};
+
+function _resolveServiceEntryTarget(
+  history,
+  nonWindowPeriods,
+  { periodId, sourceDocument, documentStartDate, documentEndDate },
+) {
+  if (periodId) {
+    const found = nonWindowPeriods.find((p) => p.id === periodId);
+    return found
+      ? { id: found.id }
+      : { ok: false, periodId: null, reason: "period_not_found" };
+  }
+  if (sourceDocument) {
+    let candidates = nonWindowPeriods.filter((p) =>
+      documentSources(p).includes(sourceDocument),
+    );
+    if (documentStartDate || documentEndDate) {
+      candidates = candidates.filter((p) => {
+        const startMatches =
+          !documentStartDate ||
+          isSameCalendarDay(p.serviceStartDate, documentStartDate) ||
+          isSameCalendarDay(
+            p.startDateCorrection?.documentDate,
+            documentStartDate,
+          );
+        const endMatches =
+          !documentEndDate ||
+          isSameCalendarDay(p.serviceEndDate, documentEndDate);
+        return startMatches && endMatches;
+      });
+    }
+    if (candidates.length !== 1) {
+      return { ok: false, periodId: null, reason: "no_period_for_document" };
+    }
+    return { id: candidates[0].id };
+  }
+  return { id: pickServiceEntry(history.servicePeriods).periodId };
+}
+
+/**
+ * Recorded when a document (or a restored backup) disagrees with the
+ * canonical entry date without proof it's the same period - never silently
+ * dropped (invariant I5), never applied as a correction. No-op when no
+ * period backs the entry.
+ */
+export const recordServiceEntryDisagreement = (value, label) => {
+  const history = getServiceHistory();
+  const changed = _recordEntryDisagreementInto(history, value, label);
+  if (changed) saveServiceHistory(history);
+  return changed;
+};
+
+/**
+ * True when `value` is already accounted for somewhere in the canonical
+ * record - a period start, a correction's documentDate, or a recorded
+ * fieldConflicts value - so a caller (the migration guard, VKB adoption)
+ * never re-surfaces the same disagreement twice.
+ */
+export const isKnownServiceEntryDate = (value) =>
+  _isKnownServiceEntryDateIn(getServiceHistory(), value);
+
+export const hasPeriodBackedServiceEntry = () =>
+  !!pickServiceEntry(getServiceHistory().servicePeriods).periodId;
+
+/**
+ * The entry date as recorded specifically by `fileName` - distinct from
+ * getServiceEntry()'s overall winner, which may be a different enlistment
+ * entirely. Returns null unless exactly one non-window period is proven to
+ * come from this document (never guesses across an ambiguous match).
+ */
+export const getServiceEntryForDocument = (fileName) => {
+  const periods = getServiceHistory().servicePeriods.filter(
+    (p) => p.periodScope !== "window" && documentSources(p).includes(fileName),
+  );
+  if (periods.length !== 1) return null;
+  const p = periods[0];
+  const source = periodStartSource(p);
+  return {
+    date: p.serviceStartDate,
+    derived: source === "calculated",
+    source,
+    periodId: p.id,
+    documentDate: p.startDateCorrection?.documentDate ?? null,
+    documentSource: p.startDateCorrection?.documentSource ?? null,
+  };
 };
 
 /**
@@ -2895,6 +3860,11 @@ export const saveTimelineEvents = (events) => {
       // (e.g. "guard_enlistment") - EvidenceTimeline.jsx's own gap
       // detection needs it to survive a save/reload round-trip.
       eventType: e.eventType ? sanitizeString(e.eventType, 50) : null,
+      // ADR-007: the VKB projection's projectionKey ('entry:<periodId>'),
+      // if this local copy was imported from a projected VKB event -
+      // EvidenceTimeline's re-import dedup needs it to survive a
+      // save/reload round-trip too.
+      sourceKey: e.sourceKey ? sanitizeString(e.sourceKey, 200) : null,
     }));
 
     localStorage.setItem(TIMELINE_EVENTS_KEY, JSON.stringify(sanitizedEvents));
@@ -3157,6 +4127,11 @@ export default {
   clearServicePeriods,
   summarizeServicePeriods,
   getServiceEntry,
+  setServiceEntryDate,
+  getServiceEntryForDocument,
+  hasPeriodBackedServiceEntry,
+  isKnownServiceEntryDate,
+  recordServiceEntryDisagreement,
   // Timeline Events functions
   getTimelineEvents,
   saveTimelineEvents,
