@@ -1532,6 +1532,164 @@ for (const vp of QUICK_EXIT_VIEWPORTS) {
   });
 }
 
+type HeaderProbe = {
+  found: boolean;
+  titleClipped: boolean;
+  // One rect per wrapped line, not a single bounding box: a wide line 1 +
+  // short line 2 (the badge's line) would otherwise union into an L-shaped
+  // box whose bounding rect's right edge sits far past line 2's actual
+  // content, making an adjacent-not-overlapping badge look "contained".
+  titleTextRects: Rect[] | null;
+  badgeRect: Rect | null;
+  bugLinkRect: Rect | null;
+  closeRect: Rect | null;
+};
+
+/**
+ * N12 (QA final10): VAResources/CAPSimulator/NexusBuilder pinned their
+ * header's Bug-link+close cluster with `absolute`, painting it over the
+ * title/badge the surrounding normal-flow layout put underneath - plain
+ * bounding-box geometry can't otherwise tell "adjacent" from "stacked".
+ * Title text is isolated from a trailing badge via a DOM Range: the badge
+ * is normally a `<span>` *inside* the heading, so the heading's own rect
+ * always contains it, and that nesting isn't the defect - a naive
+ * parent/child rect check would fail every dialog that has a badge at all.
+ */
+async function probeHeaderLayout(page: Page): Promise<HeaderProbe> {
+  return page.evaluate(() => {
+    const toRect = (r: DOMRect) => ({
+      left: r.left,
+      top: r.top,
+      right: r.right,
+      bottom: r.bottom,
+    });
+
+    const empty = {
+      found: false,
+      titleClipped: false,
+      titleTextRects: null,
+      badgeRect: null,
+      bugLinkRect: null,
+      closeRect: null,
+    };
+
+    const dialog = document.querySelector(
+      '[role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]',
+    ) as HTMLElement | null;
+    if (!dialog) return empty;
+
+    const labelledBy = dialog.getAttribute("aria-labelledby");
+    const titleEl = ((labelledBy && document.getElementById(labelledBy)) ||
+      dialog.querySelector("h1, h2, h3")) as HTMLElement | null;
+    if (!titleEl) return { ...empty, found: true };
+
+    const titleClipped = titleEl.scrollWidth > titleEl.clientWidth + 1;
+
+    const badgeEl = Array.from(titleEl.querySelectorAll("span")).find((s) =>
+      s.className.includes("bg-amber-700"),
+    ) as HTMLElement | undefined;
+
+    const range = document.createRange();
+    range.selectNodeContents(titleEl);
+    if (badgeEl) range.setEndBefore(badgeEl);
+    const titleTextRects = Array.from(range.getClientRects())
+      .filter((r) => r.width > 0 && r.height > 0)
+      .map(toRect);
+    const badgeRect = badgeEl ? toRect(badgeEl.getBoundingClientRect()) : null;
+
+    const bugLinkEl = dialog.querySelector(
+      'button[aria-label^="Report a bug"]',
+    ) as HTMLElement | null;
+    const bugLinkRect = bugLinkEl
+      ? toRect(bugLinkEl.getBoundingClientRect())
+      : null;
+
+    const closeEl = Array.from(dialog.querySelectorAll("button")).find((b) =>
+      /close|exit/i.test(b.getAttribute("aria-label") || ""),
+    ) as HTMLElement | undefined;
+    const closeRect = closeEl ? toRect(closeEl.getBoundingClientRect()) : null;
+
+    return {
+      found: true,
+      titleClipped,
+      titleTextRects,
+      badgeRect,
+      bugLinkRect,
+      closeRect,
+    };
+  });
+}
+
+// N12 (QA final10): DOM-enumerated header-collision sweep across the whole
+// tool-grid inventory (TOOL_GRID_DIALOG_EVENTS, above) at the four widths QA
+// hit-tested for the VAResources/CAPSimulator/TacticalCalculator defects.
+// Reuses `rectsIntersect` (Quick Exit checks above) pairwise across
+// title/badge/bug-link/close instead of hand-picking which pair a given
+// dialog happens to collide on.
+for (const vp of QUICK_EXIT_VIEWPORTS) {
+  test.describe(`Tool dialog header layout @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript((appVersion) => {
+        localStorage.setItem("vet-rate-tos-accepted", "true");
+        localStorage.setItem("vet_rate_last_seen_version", appVersion);
+        localStorage.setItem("vetrate-tour-completed", "true");
+        localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      }, APP_VERSION);
+      await page.goto("/");
+      await dismissDisclaimer(page);
+    });
+
+    for (const dialog of TOOL_GRID_DIALOG_EVENTS) {
+      test(`${dialog.label}: title/badge/bug-link/close don't collide, title isn't clipped`, async ({
+        page,
+      }) => {
+        await triggerUntilDialogFound(
+          page,
+          dispatchTrigger(page, dialog.event),
+        );
+
+        const probe = await probeHeaderLayout(page);
+        expect(probe.found).toBe(true);
+
+        const parts: { label: string; rects: Rect[] | null }[] = [
+          { label: "title", rects: probe.titleTextRects },
+          { label: "badge", rects: probe.badgeRect ? [probe.badgeRect] : null },
+          {
+            label: "bug-link",
+            rects: probe.bugLinkRect ? [probe.bugLinkRect] : null,
+          },
+          { label: "close", rects: probe.closeRect ? [probe.closeRect] : null },
+        ];
+        const present = parts.filter(
+          (p): p is { label: string; rects: Rect[] } =>
+            !!p.rects && p.rects.length > 0,
+        );
+
+        const violations: string[] = [];
+        if (probe.titleTextRects && probe.titleClipped) {
+          violations.push("title text is clipped (scrollWidth > clientWidth)");
+        }
+        for (let i = 0; i < present.length; i++) {
+          for (let j = i + 1; j < present.length; j++) {
+            const a = present[i];
+            const b = present[j];
+            const collides = a.rects.some((ra) =>
+              b.rects.some((rb) => rectsIntersect(ra, rb)),
+            );
+            if (collides) {
+              violations.push(`${a.label} intersects ${b.label}`);
+            }
+          }
+        }
+
+        expect(violations).toEqual([]);
+      });
+    }
+  });
+}
+
 // CrisisModal-specific content check (320x568): the panic-exit gutter fix
 // (CrisisModal.jsx) must not come at the cost of the hotline actions
 // themselves - QA's other stated requirement for N4's highest-priority
