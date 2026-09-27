@@ -2601,7 +2601,7 @@ function DD214PasteProcessor({
 // (Q2 - Total time in service headline + Service span context, shown
 // separately since they answer different questions for a veteran with a
 // break in service).
-function DD214PeriodsSummary({ summary, dd214Data, awards, t }) {
+export function DD214PeriodsSummary({ summary, dd214Data, awards, t }) {
   return (
     <div className="space-y-3">
       {dd214Data?.fullName && (
@@ -2629,8 +2629,11 @@ function DD214PeriodsSummary({ summary, dd214Data, awards, t }) {
         </p>
         {summary.serviceSpan && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Service span: {summary.serviceSpan.start || "?"} -{" "}
-            {summary.serviceSpan.end || "?"}
+            Service span: {summary.serviceSpan.start || "?"}
+            {summary.serviceSpan.startDerived && (
+              <span className="text-xs"> (calculated from net service)</span>
+            )}{" "}
+            - {summary.serviceSpan.end || "?"}
           </p>
         )}
       </div>
