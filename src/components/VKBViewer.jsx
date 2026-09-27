@@ -17,6 +17,7 @@ import {
   exportVKB,
   clearVKB,
 } from "../utils/veteranKnowledgeBase";
+import { isSameDate } from "../utils/dateUtils";
 
 const SECTIONS = [
   { id: "personal", label: "Personal Info", icon: "👤" },
@@ -179,11 +180,22 @@ const ServiceHistoryCharacterField = ({ vkb, setVkb, editMode }) => (
 // through to it too - the reverse direction of
 // veteranKnowledgeBase.js's _applyAuthoritativeCorrection, which already
 // does the period-to-top-level sync for a code-sheet correction.
+// An exact string match is too narrow: mergeDD214ServiceDates (the
+// top-level field's own writer) and the servicePeriods[] merge are two
+// independent code paths, so a real-world veteran whose top-level entry
+// date has already been corrected by one but not the other landed here
+// with the two a few days apart, not identical - isSameDate's tolerance
+// (matching isSameServicePeriod's own) is the same "close enough to be the
+// same real event" rule already used everywhere else in this codebase.
 function _applyEntryDateEdit(vkb, newValue) {
   const periods = vkb.serviceHistory.servicePeriods;
   const previousEntryDate = vkb.serviceHistory.entryDate;
   const matchIndex = Array.isArray(periods)
-    ? periods.findIndex((p) => p.serviceStartDate === previousEntryDate)
+    ? periods.findIndex(
+        (p) =>
+          p.serviceStartDate === previousEntryDate ||
+          isSameDate(p.serviceStartDate, previousEntryDate),
+      )
     : -1;
   const nextPeriods =
     matchIndex === -1

@@ -21,6 +21,11 @@ vi.mock("../../utils/veteranKnowledgeBase.js", async (importOriginal) => {
 });
 
 afterEach(cleanup);
+// Two tests now assert on saveVKB.mock.calls[0] - without this, calls
+// accumulate across tests and the second test reads the first test's call.
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 function buildVkb() {
   return {
@@ -62,6 +67,31 @@ describe("VKBViewer - service periods display", () => {
     expect(
       screen.getAllByText(/calculated from net service/).length,
     ).toBeGreaterThan(1);
+  });
+
+  it("propagates an Entry Date edit to the matching period even when the two dates have already drifted a few days apart", async () => {
+    const vkb = buildVkb();
+    // mergeDD214ServiceDates (the top-level field's own writer) and the
+    // servicePeriods[] merge are independent code paths - a veteran whose
+    // top-level entry date was already nudged by one but not the other
+    // lands here with the two close, but not byte-identical.
+    vkb.serviceHistory.servicePeriods[0].serviceStartDate = "2002-03-08";
+    loadVKB.mockResolvedValue(vkb);
+    await openServiceHistory();
+
+    fireEvent.click(screen.getByText("✏️ Edit"));
+    fireEvent.change(screen.getByLabelText(/Entry Date/), {
+      target: { value: "2001-01-15" },
+    });
+    fireEvent.click(screen.getByText("💾 Save"));
+
+    const { saveVKB } = await import("../../utils/veteranKnowledgeBase.js");
+    await vi.waitFor(() => expect(saveVKB).toHaveBeenCalled());
+    const saved = saveVKB.mock.calls[0][0];
+    expect(saved.serviceHistory.servicePeriods[0]).toMatchObject({
+      serviceStartDate: "2001-01-15",
+      serviceStartDateDerived: false,
+    });
   });
 
   it("propagates an Entry Date edit through to the matching service period", async () => {
