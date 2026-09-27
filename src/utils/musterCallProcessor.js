@@ -5753,7 +5753,15 @@ const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
   if (extractedData.branch) updates.branch = extractedData.branch;
 
   const entryDate = extractedData.serviceStartDate || extractedData.entryDate;
-  if (entryDate) updates.serviceStartDate = entryDate;
+  if (entryDate) {
+    updates.serviceStartDate = entryDate;
+    // D-C (final10 QA, 2026-09-25): carries whether this date was
+    // calculated (NGB-22 separation date minus net service) rather than
+    // printed on the form - propagated onto the profile alongside it so
+    // no consumer treats a calculated Guard enlistment date the way it
+    // would a real printed entry date.
+    updates.serviceStartDateDerived = !!extractedData.serviceStartDateDerived;
+  }
 
   const separationDate =
     extractedData.serviceEndDate || extractedData.separationDate;

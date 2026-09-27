@@ -61,6 +61,11 @@ const VALID_PROFILE_FIELDS = [
   "rankAtDischarge",
   "payGrade",
   "serviceStartDate",
+  // D-C (final10 QA, 2026-09-25): whether serviceStartDate was calculated
+  // (separation date minus net service) rather than printed on the
+  // document it came from - see musterCallProcessor.js's
+  // applyServiceRecordToProfileUpdates.
+  "serviceStartDateDerived",
   "serviceEndDate",
   "totalServiceYears",
   "totalServiceMonths",
@@ -985,6 +990,11 @@ function _sanitizeDd214DataCore(dd214Data) {
     mos: sanitizeString(dd214Data.mos || "", 200),
     mosTitle: sanitizeString(dd214Data.mosTitle || "", 200),
     entryDate: dd214Data.entryDate || null,
+    // D-C (final10 QA, 2026-09-25): whether entryDate was calculated
+    // (NGB-22 separation date minus net service) rather than printed on
+    // the source document - see musterCallProcessor.js's
+    // _extractNGB22PrimaryPeriodDates.
+    entryDateDerived: !!dd214Data.entryDateDerived,
     separationDate: dd214Data.separationDate || null,
     yearsService: dd214Data.yearsService || null,
     monthsService: dd214Data.monthsService || null,
@@ -1662,7 +1672,13 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
       });
       return;
     }
-    if (incomingConfidence >= existingConfidence) {
+    // Observation 3 (adv11b, final10 QA, 2026-09-25): a lower-confidence
+    // document filling a field the existing period never had a value for
+    // at all is not a correction that needs to out-rank anything - it's
+    // simply the only fact recorded for that field so far. The confidence
+    // gate below only decides which VALUE wins between two records that
+    // both HAVE one; it never applies to going from "unknown" to "known".
+    if (!existing[field] || incomingConfidence >= existingConfidence) {
       merged[field] = incoming[field];
     }
   });
@@ -2437,6 +2453,9 @@ function _dd214DateFields(d) {
   // === Dates and Service Time ===
   return {
     entryDate: d.entryDate || null,
+    // D-C (final10 QA, 2026-09-25): see _sanitizeDd214DataCore's matching
+    // field - saveDD214Data's write path passes through both sanitizers.
+    entryDateDerived: !!d.entryDateDerived,
     separationDate: d.separationDate || null,
     netActiveService: d.netActiveService || null,
     totalPriorActiveService: d.totalPriorActiveService || null,
@@ -2592,6 +2611,10 @@ export const saveTimelineEvents = (events) => {
       description: sanitizeString(e.description || "", 1000),
       category: sanitizeString(e.category || "Event", 100),
       dateAdded: e.dateAdded || new Date().toISOString(),
+      // D-C (final10 QA, 2026-09-25): a VKB-imported event's eventType
+      // (e.g. "guard_enlistment") - EvidenceTimeline.jsx's own gap
+      // detection needs it to survive a save/reload round-trip.
+      eventType: e.eventType ? sanitizeString(e.eventType, 50) : null,
     }));
 
     localStorage.setItem(TIMELINE_EVENTS_KEY, JSON.stringify(sanitizedEvents));

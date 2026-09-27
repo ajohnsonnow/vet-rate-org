@@ -986,6 +986,12 @@ function mergeDD214ServiceDates(vkb, dd214Data) {
       new Date(dd214Data.entryDate) < new Date(vkb.serviceHistory.entryDate)
     ) {
       vkb.serviceHistory.entryDate = dd214Data.entryDate;
+      // D-C (final10 QA, 2026-09-25): carries whether THIS entryDate was
+      // calculated (separation date minus net service) rather than
+      // printed on the form, so a consumer never treats a calculated
+      // Guard/Reserve enlistment date the way it would a real printed
+      // one - see mergeDD214RankAndCharacter's own use of this same flag.
+      vkb.serviceHistory.entryDateDerived = !!dd214Data.entryDateDerived;
     }
   }
   if (dd214Data.separationDate) {
@@ -1036,6 +1042,22 @@ export function _isLaterRecord(dateA, dateB, gradeA, gradeB) {
   return gradeA > gradeB;
 }
 
+// Observation 2 (final9/final10 QA, 2026-09-25): the entry-rank check used
+// to reuse _isLaterRecord's "having a date beats not having one" tie-break,
+// which is right for the DISCHARGE case above (prefer a dated record over
+// an undated guess) but backwards for ENTRY: an incoming document with NO
+// entryDate at all could still win and blank out a real, already-known
+// earliest date, while a document that legitimately provided a real first
+// entryDate (existing.entryAsOf still unset) could lose to it. This is a
+// dedicated MIN-by-date comparator instead: only a document that actually
+// has an entryDate can ever claim "earliest", and it only wins when there
+// is no existing dated claim or its date is genuinely earlier.
+function _isEarlierEntryCandidate(existingEntryAsOf, incomingEntryDate) {
+  if (!incomingEntryDate) return false;
+  if (!existingEntryAsOf) return true;
+  return _calendarDay(incomingEntryDate) < _calendarDay(existingEntryAsOf);
+}
+
 function mergeDD214RankAndCharacter(vkb, dd214Data) {
   // Documents arrive in upload order, so the discharge rank comes from the
   // latest separation and the entry rank from the earliest entry. Scanned
@@ -1056,12 +1078,21 @@ function mergeDD214RankAndCharacter(vkb, dd214Data) {
       rank.dischargeAsOf = dd214Data.separationDate || null;
       rank.dischargeGrade = grade;
     }
+    // D-C: a document's own single rank field only proves the veteran's
+    // rank as of THAT field's true moment - real for a genuinely printed
+    // entry date, but not for a CALCULATED one (serviceStartDateDerived):
+    // an NGB-22's derived entry date is arithmetic on ITS OWN separation
+    // date, and its rank field is that same document's rank as of
+    // separation/report, not as of the calculated entry decades earlier.
+    // Never let a derived date claim "entry" - if no genuinely dated
+    // record ever contributes, entry correctly stays whatever it already
+    // was (null, if none ever has).
     if (
-      !rank.entry ||
-      _isLaterRecord(rank.entryAsOf, dd214Data.entryDate, 0, 0)
+      !dd214Data.entryDateDerived &&
+      _isEarlierEntryCandidate(rank.entryAsOf, dd214Data.entryDate)
     ) {
       rank.entry = dd214Data.rank;
-      rank.entryAsOf = dd214Data.entryDate || null;
+      rank.entryAsOf = dd214Data.entryDate;
     }
   }
   if (dd214Data.payGrade) {
@@ -1379,6 +1410,33 @@ function mergeDD214Addresses(vkb, dd214Data) {
   }
 }
 
+// D-C (final10 QA, 2026-09-25): a National Guard/Reserve enlistment is not
+// "entered active duty" - years without evidence between drill weekends is
+// normal for that component, not the start of a continuous-service
+// expectation the way a real active-duty entry is. Labels the timeline
+// event by component instead of assuming Active Duty, and marks a
+// calculated (serviceStartDateDerived) date as such rather than presenting
+// it as if it were printed on the form.
+function _serviceEntryTimelineEvent(dd214Data, vkb, options) {
+  const branch = dd214Data.branch || vkb.serviceHistory.branch || "Military";
+  const isGuardOrReserve =
+    dd214Data.component === "National Guard" ||
+    dd214Data.component === "Reserve";
+  const eventType = isGuardOrReserve ? "guard_enlistment" : "service_entry";
+  const label = isGuardOrReserve
+    ? `Enlisted (${branch} ${dd214Data.component})`
+    : `Entered active duty (${branch})`;
+  const derived = !!dd214Data.entryDateDerived;
+  return {
+    date: dd214Data.entryDate,
+    eventType,
+    description: derived ? `${label} (calculated)` : label,
+    derived,
+    source: options.fileName || "DD-214",
+    significance: "service_milestone",
+  };
+}
+
 // Exported for the same reason mergeDD214Deployments is (N2, final8 QA,
 // 2026-09-24): a deployments-only C-File source needs the evidence-timeline
 // entries too, without running mergeDD214IntoVKB's mergeDD214Documentation
@@ -1387,13 +1445,7 @@ export function mergeDD214EvidenceTimeline(vkb, dd214Data, options) {
   // ─── EVIDENCE TIMELINE ───
   const timelineEntries = [];
   if (dd214Data.entryDate) {
-    timelineEntries.push({
-      date: dd214Data.entryDate,
-      eventType: "service_entry",
-      description: `Entered active duty (${dd214Data.branch || vkb.serviceHistory.branch || "Military"})`,
-      source: options.fileName || "DD-214",
-      significance: "service_milestone",
-    });
+    timelineEntries.push(_serviceEntryTimelineEvent(dd214Data, vkb, options));
   }
   if (dd214Data.separationDate) {
     timelineEntries.push({

@@ -263,6 +263,59 @@ describe("EvidenceTimeline auto-import from records", () => {
   });
 });
 
+// D-C (final10 QA, 2026-09-25): a National Guard/Reserve enlistment date
+// is not the start of active duty - years without evidence between drill
+// weekends is normal for that component, not a missing-evidence gap.
+describe("EvidenceTimeline gap detection excludes a Guard/Reserve enlistment anchor", () => {
+  it("does not flag a gap between a Guard enlistment event and the next real event", async () => {
+    mockLoadVKB.mockResolvedValue({
+      evidenceTimeline: [
+        {
+          date: "2000-01-01",
+          description: "Enlisted (Army National Guard) (calculated)",
+          eventType: "guard_enlistment",
+        },
+        {
+          date: "2015-06-01",
+          description: "Knee injury noted in service record",
+        },
+      ],
+      evidence: [],
+    });
+
+    renderTimeline();
+
+    expect(
+      await screen.findByText("📋 Timeline Events (2)"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Evidence Gaps Detected/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("still flags a gap of the same size between two ordinary events", async () => {
+    mockLoadVKB.mockResolvedValue({
+      evidenceTimeline: [
+        { date: "2000-01-01", description: "Separated from service" },
+        {
+          date: "2015-06-01",
+          description: "Knee injury noted in service record",
+        },
+      ],
+      evidence: [],
+    });
+
+    renderTimeline();
+
+    expect(
+      await screen.findByText("📋 Timeline Events (2)"),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Evidence Gaps Detected/i),
+    ).toBeInTheDocument();
+  });
+});
+
 describe("EvidenceTimeline import dedupe", () => {
   it("keeps the manual Import from My Records button working with its confirm dialog", async () => {
     saveTimelineEvents([

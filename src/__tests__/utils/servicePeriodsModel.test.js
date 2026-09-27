@@ -152,29 +152,29 @@ describe("N1b: a different source document's conflict is kept, not overwritten",
     expect(periods[0].characterOfService).toBe("HONORABLE");
     expect(periods[0].fieldConflicts ?? []).toEqual([]);
   });
-});
 
-// D-F (final10 QA, 2026-09-25): shares _normalizeForComparison with
-// summarizeServicePeriods' own characterOfService disagreement check.
-it("does not record a conflict when two documents disagree only by punctuation/hyphenation", () => {
-  upsertServicePeriod(
-    period("2010-06-01", "2015-05-30", {
-      characterOfService: "GENERAL - UNDER HONORABLE CONDITIONS",
-    }),
-    meta("dd214.pdf", 90),
-  );
-  upsertServicePeriod(
-    period("2010-06-01", "2015-05-30", {
-      characterOfService: "GENERAL UNDER HONORABLE CONDITIONS",
-    }),
-    meta("codesheet.pdf", 100),
-  );
+  // D-F (final10 QA, 2026-09-25): shares _normalizeForComparison with
+  // summarizeServicePeriods' own characterOfService disagreement check.
+  it("does not record a conflict when two documents disagree only by punctuation/hyphenation", () => {
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", {
+        characterOfService: "GENERAL - UNDER HONORABLE CONDITIONS",
+      }),
+      meta("dd214.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("2010-06-01", "2015-05-30", {
+        characterOfService: "GENERAL UNDER HONORABLE CONDITIONS",
+      }),
+      meta("codesheet.pdf", 100),
+    );
 
-  const periods = getServicePeriods();
-  expect(periods[0].characterOfService).toBe(
-    "GENERAL UNDER HONORABLE CONDITIONS",
-  );
-  expect(periods[0].fieldConflicts ?? []).toEqual([]);
+    const periods = getServicePeriods();
+    expect(periods[0].characterOfService).toBe(
+      "GENERAL UNDER HONORABLE CONDITIONS",
+    );
+    expect(periods[0].fieldConflicts ?? []).toEqual([]);
+  });
 });
 
 describe("C1: service periods - incomplete periods and edits", () => {
@@ -646,6 +646,63 @@ describe("N9a: the provenance list (`sources`) survives merges", () => {
     );
 
     expect(getServicePeriods()[0].sources).toHaveLength(1);
+  });
+});
+
+// Observation 3 (adv11b, final10 QA, 2026-09-25): a lower-confidence
+// document never filled an EMPTY field on an existing period - the
+// confidence high-water-mark gate applied even when there was no existing
+// value to protect. Filling an empty field with no conflict is now always
+// allowed, with provenance recorded via `sources` regardless.
+describe("Observation 3: a lower-confidence document can still fill a field the period never had", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("fills an empty field from a later, lower-confidence document", () => {
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", {
+        branch: "Army",
+        component: "IADT",
+        formType: "NGB22",
+      }),
+      meta("ngb22.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", {
+        payGrade: "E-2",
+        mos: "42A10",
+        characterOfService: "UNCHARACTERIZED",
+        reentryCode: "NA",
+      }),
+      meta("dd214_iadt.pdf", 80),
+    );
+
+    const [saved] = getServicePeriods();
+    expect(saved.payGrade).toBe("E-2");
+    expect(saved.mos).toBe("42A10");
+    expect(saved.characterOfService).toBe("UNCHARACTERIZED");
+    expect(saved.reentryCode).toBe("NA");
+    // Not a disagreement - nothing to record.
+    expect(saved.fieldConflicts ?? []).toEqual([]);
+    expect(saved.sources.map((s) => s.sourceDocument).sort()).toEqual(
+      ["dd214_iadt.pdf", "ngb22.pdf"].sort(),
+    );
+  });
+
+  it("still protects a genuinely populated field with the confidence gate", () => {
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", { mos: "42A10" }),
+      meta("dd214_a.pdf", 90),
+    );
+    upsertServicePeriod(
+      period("1999-03-10", "1999-09-02", { mos: "68W99" }),
+      meta("dd214_a.pdf", 40),
+    );
+
+    // Same sourceDocument (a re-scan) - the low-confidence pass never wins
+    // over a real, already-known value from the SAME document.
+    expect(getServicePeriods()[0].mos).toBe("42A10");
   });
 });
 

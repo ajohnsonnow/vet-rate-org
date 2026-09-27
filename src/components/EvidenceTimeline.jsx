@@ -55,12 +55,20 @@ const EVENT_TYPES = {
 };
 
 function detectTimelineGaps(timelineEvents) {
-  if (timelineEvents.length < 2) {
+  // D-C (final10 QA, 2026-09-25): a National Guard/Reserve enlistment date
+  // is not the start of active duty - years between drill weekends with
+  // nothing to show is normal for that component, not missing evidence.
+  // Excluded from gap-pairing only (still shown on the timeline itself,
+  // which renders the full, unfiltered `timelineEvents`).
+  const gapAnchors = timelineEvents.filter(
+    (e) => e.eventType !== "guard_enlistment",
+  );
+  if (gapAnchors.length < 2) {
     return [];
   }
 
   // Sort events by date
-  const sorted = [...timelineEvents].sort(
+  const sorted = [...gapAnchors].sort(
     (a, b) => new Date(a.date) - new Date(b.date),
   );
 
@@ -315,6 +323,10 @@ async function performImportFromRecords({
         title: String(description).substring(0, 50),
         category: "Medical Records",
         sourceDocumentId: e.sourceDocumentId || null,
+        // D-C: carried through so detectTimelineGaps can still recognize
+        // a Guard/Reserve enlistment event after it's imported into this
+        // timeline's own persisted event shape.
+        eventType: e.eventType || null,
       });
     });
 

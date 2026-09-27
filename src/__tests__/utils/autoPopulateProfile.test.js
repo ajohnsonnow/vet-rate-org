@@ -260,6 +260,52 @@ describe("autoPopulateProfile: a rating decision letter", () => {
   });
 });
 
+// D-C (final10 QA, 2026-09-25): serviceStartDateDerived previously stopped
+// propagating at the service-period row - the top-level profile field
+// (read by MyPacket's Profile tab) never learned a serviceStartDate came
+// from an NGB-22's calculated entry date rather than a printed one.
+describe("D-C: autoPopulateProfile propagates serviceStartDateDerived onto the profile", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("marks the profile's serviceStartDate as derived when the document's was calculated", async () => {
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-07-30",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+
+    expect(getVeteranProfile().serviceStartDateDerived).toBe(true);
+  });
+
+  it("marks the profile's serviceStartDate as not derived for an ordinary printed date", async () => {
+    await autoPopulateProfile([serviceRecordResult()]);
+
+    expect(getVeteranProfile().serviceStartDateDerived).toBe(false);
+  });
+
+  it("clears the derived flag once a later, genuinely dated document refines the field", async () => {
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-07-30",
+        serviceStartDateDerived: true,
+      }),
+    ]);
+    await autoPopulateProfile([
+      serviceRecordResult({
+        serviceStartDate: "1997-06-01",
+        serviceStartDateDerived: false,
+      }),
+    ]);
+
+    const profile = getVeteranProfile();
+    expect(profile.serviceStartDate).toBe("1997-06-01");
+    expect(profile.serviceStartDateDerived).toBe(false);
+  });
+});
+
 describe("autoPopulateProfile: a claim letter", () => {
   beforeEach(() => {
     localStorage.clear();
