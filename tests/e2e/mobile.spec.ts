@@ -1537,22 +1537,35 @@ for (const vp of BYPASS_TEST_VIEWPORTS) {
 //
 // Scope note (openIssues, corrected - a prior version of this note both
 // mis-listed two real grid launchers as header-only and missed most of the
-// actual gap; RESOLVED by N16, see MENU_SURFACES/enumerateHeaderMenuLaunchers
-// below - kept for history): the header's own Tools/Resources dropdown menus
-// and the mobile hamburger drawer were a separate nav surface this sweep did
-// not open, and 23 dialogs were reachable only from there (or, for My
-// Packet, the bottom nav - that surface specifically is still outside this
-// sweep, N16 only added the header menus/drawer): AI Command Center, Appeals
-// Lane Advisor, Ask the Regs, Backup Manager, Body Map Selector, Cloud Sync
-// Manager, Community Roadmap, Consistency Engine, DD214 Analyzer, Feature
-// Request, My Packet, Nexus Builder, Nexus Quality Analyzer, Record Search,
-// Remand Risk Checker, VA Resources, VKB Timeline, VKB Viewer, Vision
-// Simulator, What-If Sandbox. (Global Command Search is covered via
-// `BYPASS_DIALOGS`; Claim Navigator and Denial Decoder get their own
-// targeted N12/N13 coverage below, since that branch specifically touches
-// their placement. Claim Stress Test and The Tribunal were never part of
-// this gap - both are real grid launchers and were already fully covered by
-// this sweep.)
+// actual gap; PARTIALLY addressed by N16, see MENU_SURFACES/
+// enumerateHeaderMenuLaunchers below - kept for history, not "RESOLVED": the
+// header's own Tools/Resources dropdown menus and the mobile hamburger
+// drawer were a separate nav surface this sweep did not open, and 23 dialogs
+// were reachable only from there (or, for My Packet, the bottom nav - that
+// surface specifically is still outside this sweep, N16 only added the
+// header menus/drawer): AI Command Center, Appeals Lane Advisor, Ask the
+// Regs, Backup Manager, Body Map Selector, Cloud Sync Manager, Community
+// Roadmap, Consistency Engine, DD214 Analyzer, Feature Request, My Packet,
+// Nexus Builder, Nexus Quality Analyzer, Record Search, Remand Risk Checker,
+// VA Resources, VKB Timeline, VKB Viewer, Vision Simulator, What-If Sandbox.
+// (Global Command Search is covered via `BYPASS_DIALOGS`; Claim Navigator and
+// Denial Decoder get their own targeted N12/N13 coverage below, since that
+// branch specifically touches their placement. Claim Stress Test and The
+// Tribunal were never part of this gap - both are real grid launchers and
+// were already fully covered by this sweep.)
+//
+// Still open after N16, not yet fixed (two distinct residual gaps, tracked
+// rather than rushed - each needs its own pass, not a quick bolt-on here):
+// (a) the phone-width sweeps (QUICK_EXIT_VIEWPORTS, 320-430px) only ever see
+// the 4-item mobile drawer, so the header-collision/on-screen checks never
+// run against the six dialogs reachable *only* through the desktop-only
+// Tools/Resources panels (Appeals Lane Advisor, Consistency Engine, Nexus
+// Builder, Record Search, Remand Risk Checker, What-If Sandbox) at any phone
+// width - only the 1024/1280/1440 desktop checks reach them; (b) launchers
+// that live directly in QuickActionsRow/LowerHeaderRow rather than inside a
+// MENU_SURFACES panel - My Packet, AI Settings, AI Command Center, Community
+// Roadmap, Feature Request - are enumerated by neither the grid/footer sweep
+// nor MENU_SURFACES, at any viewport.
 // Kept as two named selectors (not just the union below) so the sweep can
 // assert each surface independently has launchers - a routine restyle of
 // HomeFeatureCards' wrapper classes would otherwise silently zero out the
@@ -2065,12 +2078,16 @@ async function runToolGridSweep(
   // N16: the header's Tools/Resources menus + the mobile drawer, on top of
   // the grid/footer above - closes the "23 dialogs reachable only from
   // there" gap the scope-note above `enumerateToolGridButtons` used to
-  // document. Not asserted non-empty the same strict way as the grid/footer
-  // above: at some viewports none of the three surfaces in `MENU_SURFACES`
-  // are visible at all by design (e.g. a width where the responsive nav
-  // hides all of them), which is a legitimate outcome here, not a
-  // regression to fail on.
+  // document. Asserted non-empty for the same reason the grid/footer are
+  // above: Header.jsx's DesktopNav (`hidden md:flex`, wraps Tools +
+  // Resources) and MobileMenuButton (`md:hidden`, the drawer trigger) are
+  // exact complements, so at every width at least one of the three
+  // `MENU_SURFACES` is visible and openable - a run where the enumeration
+  // comes back empty is always a real regression (a renamed data-e2e-menu-*
+  // attribute, or a trigger click silently swallowed by `openMenuSurface`'s
+  // own `.catch()`), never a legitimate "nothing to check here" outcome.
   const menuLaunchers = await enumerateHeaderMenuLaunchers(page);
+  expect(menuLaunchers.length).toBeGreaterThan(0);
 
   const launchers: SweepLauncher[] = [
     ...gridLaunchers.map(toSweepLauncher),
