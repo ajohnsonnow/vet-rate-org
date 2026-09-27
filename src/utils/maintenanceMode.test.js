@@ -55,8 +55,13 @@ describe("readCachedMaintenanceMode", () => {
   });
 
   it("fails open (false) without throwing when localStorage.getItem throws", () => {
+    // setup.js installs a plain-object localStorage shim (not a real Storage
+    // instance) so every test runtime is spy-able the same way; spying on
+    // Storage.prototype instead silently no-ops here, and the mutant this
+    // regressed to (readCachedMaintenanceMode's catch failing closed) still
+    // passed 9/9 with that spy target.
     const getItemSpy = vi
-      .spyOn(Storage.prototype, "getItem")
+      .spyOn(localStorage, "getItem")
       .mockImplementation(() => {
         throw new Error("SecurityError: storage disabled");
       });
@@ -153,8 +158,11 @@ describe("checkMaintenanceMode", () => {
       ok: true,
       data: { maintenance_mode: true },
     });
+    // See the getItem test above: spy on localStorage itself, not
+    // Storage.prototype - setup.js's shim is a plain object, not a Storage
+    // instance.
     const setItemSpy = vi
-      .spyOn(Storage.prototype, "setItem")
+      .spyOn(localStorage, "setItem")
       .mockImplementation(() => {
         throw new Error("QuotaExceededError");
       });
