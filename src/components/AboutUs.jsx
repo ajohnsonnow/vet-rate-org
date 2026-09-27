@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import ReportBugLink from "./ReportBugLink";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { useBodyScrollLock } from "../utils/useBodyScrollLock";
 import useFocusTrap from "../hooks/useFocusTrap";
 import {
@@ -198,21 +199,29 @@ const VersionDropUp = () => {
 function AboutUsHeader({ getColorClass, colors, onReportBug, onClose }) {
   const { t } = useLanguage();
   return (
-    // flex-wrap: the title plus the report-bug link and close button don't
-    // both fit on one row at 320-390px even at their own minimum content
-    // widths, which pushed the close button off-screen (confirmed against
-    // 52a1edd8/d78330db - neither D3 nor D7 touched this file; pre-existing).
-    // Wrapping drops the actions onto their own row instead of overflowing.
+    // The close × always stays pinned to the header's top-right corner; the
+    // title and report-bug link wrap onto their own line inside their own
+    // wrapping column when they don't fit alongside it (HeaderCloseSlot).
     <div
-      className={`sticky top-0 border-b px-6 py-4 flex flex-wrap justify-between items-center gap-y-2 rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}
+      className={`sticky top-0 border-b px-6 py-4 rounded-t-lg z-10 ${getColorClass(colors.base.modal)} ${getColorClass(colors.border.default)}`}
     >
-      <h2
-        id="about-us-title"
-        className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className={`h-11 w-11 flex items-center justify-center rounded text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
+            aria-label="Close About Us"
+          >
+            ×
+          </button>
+        }
       >
-        ℹ️ {t("about", "aboutVetRate")}
-      </h2>
-      <div className="flex items-center gap-3">
+        <h2
+          id="about-us-title"
+          className={`text-2xl font-bold ${getColorClass(colors.text.primary)}`}
+        >
+          ℹ️ {t("about", "aboutVetRate")}
+        </h2>
         {onReportBug && (
           <ReportBugLink
             onClick={onReportBug}
@@ -220,14 +229,7 @@ function AboutUsHeader({ getColorClass, colors, onReportBug, onClose }) {
             moduleName="About Us"
           />
         )}
-        <button
-          onClick={onClose}
-          className={`h-11 w-11 flex items-center justify-center rounded text-3xl font-bold leading-none ${getColorClass(colors.text.tertiary)} hover:${getColorClass(colors.text.secondary)}`}
-          aria-label="Close About Us"
-        >
-          ×
-        </button>
-      </div>
+      </HeaderCloseSlot>
     </div>
   );
 }

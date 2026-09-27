@@ -23,6 +23,7 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { getCalculatorFunction } from "../utils/capSimulatorLogic";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   getDbqLogicMap,
   getConditionDataset,
@@ -1648,7 +1649,18 @@ const calculateGenericRating = (answers, condition) => {
 function CAPIntroHeader({ onClose, onReportBug }) {
   return (
     <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-4 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+      <HeaderCloseSlot
+        className="mb-2"
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
+            aria-label="Close C&P Simulator"
+          >
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+        }
+      >
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <ClipboardList className="h-6 w-6 sm:h-8 sm:w-8 shrink-0" />
           <h2
@@ -1661,23 +1673,14 @@ function CAPIntroHeader({ onClose, onReportBug }) {
             </span>
           </h2>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="C&P Exam Simulator"
-            />
-          )}
-          <button
-            onClick={onClose}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white hover:bg-white/20 transition-colors"
-            aria-label="Close C&P Simulator"
-          >
-            <X className="h-5 w-5 sm:h-6 sm:w-6" />
-          </button>
-        </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="C&P Exam Simulator"
+          />
+        )}
+      </HeaderCloseSlot>
       <p className="text-emerald-100 text-sm sm:text-lg">
         Turn the &quot;Black Box&quot; of the C&P Exam into an Open-Book Test
       </p>
@@ -1911,17 +1914,17 @@ function CAPIntroView({ onClose, onReportBug, setMode, conditionCount }) {
 
 function CAPExamPrepListHeader({ onClose, setMode }) {
   return (
-    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           onClick={() => setMode("intro")}
-          className="text-white hover:text-cyan-200 transition-colors"
+          className="shrink-0 text-white hover:text-cyan-200 transition-colors"
           aria-label="Go back"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <FileText className="h-8 w-8 text-white" />
-        <div>
+        <FileText className="h-8 w-8 shrink-0 text-white" />
+        <div className="min-w-0">
           <h1 id="exam-prep-title" className="text-xl font-bold text-white">
             Exam Prep Room
           </h1>
@@ -1932,7 +1935,7 @@ function CAPExamPrepListHeader({ onClose, setMode }) {
       </div>
       <button
         onClick={onClose}
-        className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
+        className="shrink-0 text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
         aria-label="Close"
       >
         ×
@@ -2101,7 +2104,7 @@ function CAPSelectConditionHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-start gap-2 mb-4">
         <button
           onClick={() => setMode("intro")}
           className="shrink-0 text-white hover:text-gray-200"
@@ -3026,23 +3029,23 @@ function CAPExamPrepDetailHeader({
   examPrepDBQ,
 }) {
   return (
-    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 flex items-start justify-between gap-2">
+      <div className="flex min-w-0 items-center gap-3">
         <button
           onClick={() => {
             setMode("exam-prep");
             setExpandedQuestion(null);
           }}
-          className="text-white hover:text-cyan-200 transition-colors"
+          className="shrink-0 text-white hover:text-cyan-200 transition-colors"
           aria-label="Go back"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
-        <FileText className="h-8 w-8 text-white" />
-        <div>
+        <FileText className="h-8 w-8 shrink-0 text-white" />
+        <div className="min-w-0">
           <h1
             id="exam-prep-detail-title"
-            className="text-xl font-bold text-white"
+            className="text-xl font-bold text-white break-words"
           >
             {examPrepDBQ.condition_name}
           </h1>
@@ -3053,7 +3056,7 @@ function CAPExamPrepDetailHeader({
       </div>
       <button
         onClick={onClose}
-        className="text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
+        className="shrink-0 text-white hover:text-cyan-200 transition-colors text-2xl font-bold leading-none"
         aria-label="Close"
       >
         ×
@@ -3225,7 +3228,7 @@ function CAPFlashcardHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         <button
           onClick={() => setMode("intro")}
           className="shrink-0 text-white hover:text-gray-200"
@@ -3510,7 +3513,7 @@ function CAPSimulationHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 text-white p-6">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-start gap-2 mb-4">
         <button
           onClick={() => setMode("select-condition")}
           className="shrink-0 text-white hover:text-gray-200"

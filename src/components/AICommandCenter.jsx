@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   getAIStatus,
   unloadLocalAI,
@@ -439,28 +440,9 @@ const AICommandCenterBrandBanner = ({ aiStatus, onClose, onReportBug }) => (
   <div className="relative overflow-hidden bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 px-6 py-5 text-white">
     <div className="absolute right-0 top-0 h-32 w-32 -translate-y-16 translate-x-16 rounded-full bg-white/10" />
 
-    <div className="relative flex flex-wrap items-start justify-between gap-2">
-      <div className="flex min-w-0 items-center gap-4">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
-          <span className="text-3xl">🛡️</span>
-        </div>
-        <div className="min-w-0">
-          <h2 id="ai-command-center-title" className="text-2xl font-bold">
-            AI Command Center
-          </h2>
-          <p className="mt-1 text-sm text-cyan-200">
-            Faraday Cage Protocol • All AI Settings in One Place
-          </p>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="AI Command Center"
-          />
-        )}
+    <HeaderCloseSlot
+      className="relative"
+      close={
         <button
           onClick={onClose}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-white/80 transition-colors hover:bg-white/20 hover:text-white"
@@ -480,8 +462,29 @@ const AICommandCenterBrandBanner = ({ aiStatus, onClose, onReportBug }) => (
             />
           </svg>
         </button>
+      }
+    >
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+          <span className="text-3xl">🛡️</span>
+        </div>
+        <div className="min-w-0">
+          <h2 id="ai-command-center-title" className="text-2xl font-bold">
+            AI Command Center
+          </h2>
+          <p className="mt-1 text-sm text-cyan-200">
+            Faraday Cage Protocol • All AI Settings in One Place
+          </p>
+        </div>
       </div>
-    </div>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="AI Command Center"
+        />
+      )}
+    </HeaderCloseSlot>
 
     {/* Status Indicator */}
     <div
