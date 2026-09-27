@@ -962,37 +962,31 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 // D-2 (final7 QA, 2026-09-24): candidate.separationDate is only extracted
 // from Box 12b, which an NGB-22 (unlike a DD214) doesn't always carry -
 // when it's missing, no additionalPeriod's end date could ever equal it,
-// so the rank never attached to any of them even when exactly one
-// Active Duty period unambiguously deserved it. Falls back to "the latest
-// Active Duty period this same document describes" as the terminal-period
-// proxy in that case, ONLY when separationDate is absent (see
-// _saveNGB22AdditionalPeriods below) - a present separationDate is this
-// document's own proof of when its rank field applies, and the standing
-// data rule ("never guess a link") means that proof, when it doesn't match
-// this window's own end date, is proof this window does NOT get the rank,
-// not license to guess a different one.
+// so the rank never attached to any of them even when exactly one Active
+// Duty period unambiguously deserved it. D-2 fell back to "the latest
+// Active Duty period this same document describes" as a terminal-period
+// proxy whenever separationDate was absent.
 //
-// Observation 1 (final10 QA, 2026-09-25) computed this unconditionally,
-// reasoning a present separationDate that POST-DATES the terminal AD
-// window (routine for a Guard member, whose overall discharge is years
-// after their last individual activation) meant the fallback should still
-// apply. Reverted in final10 QA's correctness re-review (2026-09-26): that
-// stamps the NGB-22's rank AS OF ITS OWN SEPARATION onto whichever window
-// merely happens to be chronologically last among this document's own
-// listed windows - years before the veteran actually held that rank, with
-// nothing on the document proving they held it that early. No rank on
-// that window (until a real DD214 for it supplies one) is the honest
-// result, not a guessed one.
-function _latestActiveDutyEndDate(periods) {
-  return (
-    periods
-      .filter((p) => p.component === "Active Duty")
-      .map((p) => _toISODateString(p.serviceEndDate))
-      .filter(Boolean)
-      .sort()
-      .at(-1) || null
-  );
-}
+// D11-4 (final11 QA, 2026-09-27): that fallback is still a guess. Without
+// an extracted separation date, nothing on the document proves its rank
+// field applies to that particular window at all - a lone Active Duty
+// period is still a period that may have been served years earlier, at a
+// lower rank, than whatever rank the document's own (undated) separation
+// reflects. Removed: a Box-18 window now gets a rank only via a proven
+// link (its own DD214, or this NGB-22's own separation date, extracted AND
+// equal to that window's own end date).
+//
+// Observation 1 (final10 QA, 2026-09-25) computed the terminal-AD fallback
+// unconditionally, reasoning a present separationDate that POST-DATES the
+// terminal AD window (routine for a Guard member, whose overall discharge
+// is years after their last individual activation) meant the fallback
+// should still apply. Reverted in final10 QA's correctness re-review
+// (2026-09-26): that stamps the NGB-22's rank AS OF ITS OWN SEPARATION onto
+// whichever window merely happens to be chronologically last among this
+// document's own listed windows - years before the veteran actually held
+// that rank, with nothing on the document proving they held it that early.
+// No rank on that window (until a real DD214 for it supplies one) is the
+// honest result, not a guessed one.
 
 // FIX-15: NGB-22 Box 18's granular IADT/AD date ranges (see
 // _extractNGB22PeriodDates) each become their own servicePeriods[] entry,
@@ -1003,21 +997,21 @@ function _latestActiveDutyEndDate(periods) {
 function _saveNGB22AdditionalPeriods(file, candidate) {
   if (!Array.isArray(candidate.additionalPeriods)) return;
   const separationDate = _toISODateString(candidate.separationDate);
-  const latestADEnd = separationDate
-    ? null
-    : _latestActiveDutyEndDate(candidate.additionalPeriods);
   candidate.additionalPeriods.forEach((period) => {
     try {
       const periodEndDate = _toISODateString(period.serviceEndDate);
-      // The DD214's own rank (Box 4a) is only known to apply at the end of
-      // the actual Active Duty stretch it was issued for - an earlier IADT
-      // window, or an AD window that isn't the one ending on this
-      // document's own separation date, may have been served at a
-      // different rank, so only the matching AD period gets it.
+      // The NGB-22's own rank field is only known to apply at the end of
+      // the actual Active Duty stretch this document's own separation date
+      // proves it was issued for - an earlier IADT window, or an AD window
+      // that isn't the one ending on this document's own separation date,
+      // may have been served at a different rank, so only the matching AD
+      // period gets it. No separation date extracted means no proof at
+      // all, so no window gets the rank via this path.
       const isTerminalADPeriod =
+        !!separationDate &&
         period.component === "Active Duty" &&
         !!periodEndDate &&
-        (periodEndDate === separationDate || periodEndDate === latestADEnd);
+        periodEndDate === separationDate;
       const rank = isTerminalADPeriod ? candidate.rank || "" : undefined;
       upsertServicePeriod(
         {

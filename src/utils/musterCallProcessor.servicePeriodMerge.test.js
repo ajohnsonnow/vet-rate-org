@@ -76,11 +76,14 @@ describe("saveServiceRecordToProfile: NGB-22 additional-period rank attachment",
   });
 });
 
-// D-2 (final7 QA, 2026-09-24): candidate.separationDate (Box 12b) isn't
-// always extracted from an NGB-22 - when it's missing, the original
-// condition (periodEndDate === separationDate) could never match ANY
-// additional period, so the rank never attached even when exactly one
-// Active Duty period unambiguously deserved it.
+// D11-4 (final11 QA, 2026-09-27): candidate.separationDate (Box 12b) isn't
+// always extracted from an NGB-22. D-2 (final7 QA, 2026-09-24) used to fall
+// back to stamping the rank onto "the sole/latest Active Duty period" as a
+// proxy in that case - reverted, because that's still a guess: without an
+// extracted separation date, nothing on the document proves the rank field
+// applies to that specific window at all. No rank is attached via this path
+// until a document (this one, or a later DD214 for that same window)
+// actually proves the link.
 const NGB22_NO_SEPARATION_DATE = `
 1. NAME (Last, First, Middle): DOE, JOHN ROBERT
 2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
@@ -101,7 +104,7 @@ describe("saveServiceRecordToProfile: NGB-22 rank attachment without a Box 12b d
     localStorage.clear();
   });
 
-  it("still attaches rank to the sole Active Duty period when the document's own separation date wasn't extracted", async () => {
+  it("does not guess rank onto the sole Active Duty period when the document's own separation date wasn't extracted", async () => {
     const extractedData = await parseServiceRecord(
       NGB22_NO_SEPARATION_DATE,
       "NGB22",
@@ -122,9 +125,33 @@ describe("saveServiceRecordToProfile: NGB-22 rank attachment without a Box 12b d
     );
 
     expect(ad).toBeDefined();
-    expect(ad.rank).toBe("SGT");
+    expect(ad.rank).toBe("");
     expect(iadt).toBeDefined();
     expect(iadt.rank).toBe("");
+  });
+
+  it("attaches rank to that same Active Duty period once a later document supplies its own separation date proving the link", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_NO_SEPARATION_DATE,
+      "NGB22",
+    );
+    saveServiceRecordToProfile({ name: "ngb22_no_sep.pdf" }, { extractedData });
+
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2004-06-22",
+        serviceEndDate: "2005-08-27",
+        rank: "SGT",
+      },
+      { sourceDocument: "dd214_ad_window.pdf", confidence: 90 },
+    );
+
+    const ad = getServicePeriods().find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    expect(ad.rank).toBe("SGT");
   });
 });
 
