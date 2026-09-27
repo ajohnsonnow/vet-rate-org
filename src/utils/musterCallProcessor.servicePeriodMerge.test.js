@@ -20,8 +20,12 @@ const {
   saveServiceRecordToProfile,
   saveCodeSheetServicePeriodsToProfile,
 } = await import("./musterCallProcessor");
-const { getServicePeriods, getUnmatchedServiceRecords, getServiceHistory } =
-  await import("./veteranProfile");
+const {
+  getServicePeriods,
+  getUnmatchedServiceRecords,
+  getServiceHistory,
+  upsertServicePeriod,
+} = await import("./veteranProfile");
 
 const REALISTIC_NGB22 = `
 1. NAME (Last, First, Middle): DOE, JOHN ROBERT
@@ -190,6 +194,33 @@ describe("Observation 1 regression (final10 QA correctness re-review, 2026-09-26
     expect(ad.rank).toBe("");
     expect(iadt).toBeDefined();
     expect(iadt.rank).toBe("");
+  });
+
+  it("lets a real DD214 for that window supply its own rank afterward, unblocked by any guessed rank", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_SEPARATION_DATE_AFTER_LAST_AD_WINDOW,
+      "NGB22",
+    );
+    saveServiceRecordToProfile(
+      { name: "ngb22_late_separation.pdf" },
+      { extractedData },
+    );
+
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2004-06-22",
+        serviceEndDate: "2005-08-27",
+        rank: "SPC",
+      },
+      { sourceDocument: "dd214_ad_window.pdf", confidence: 90 },
+    );
+
+    const ad = getServicePeriods().find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    expect(ad.rank).toBe("SPC");
   });
 });
 
