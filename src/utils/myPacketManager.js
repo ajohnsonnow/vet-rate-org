@@ -20,6 +20,7 @@
 import { markAsModified } from "./persistentStorage";
 import { ensureQuota } from "./storage";
 import { awardDisplayName } from "./combatService";
+import { getServiceEntryForDocument } from "./veteranProfile";
 
 // ============================================================
 // DATABASE CONFIGURATION
@@ -890,14 +891,38 @@ function _formatDeployment(d) {
   return `${place} ${dates}`;
 }
 
-function _formatServiceRecordBasics(data) {
+// ADR-007: the entry date line is now a projection of the SAME canonical
+// resolver every other consumer uses, not the document's own raw
+// extractedData - getServiceEntryForDocument proves this specific document
+// is linked to a canonical period before overriding its own printed value,
+// so a veteran's correction (or a later document's higher-precedence date)
+// is visible here too, with honest provenance, instead of this AI-context
+// line silently disagreeing with the Service tab/dossier/system prompt.
+function _formatServiceEntryLine(data, documentEntryDate, fileName) {
+  const p = getServiceEntryForDocument(fileName);
+  if (p) {
+    let line = `  Entry: ${p.date}`;
+    if (p.derived) line += " (calculated from net service)";
+    if (p.source === "veteran" && p.documentDate) {
+      line += ` (veteran-corrected; this document shows ${p.documentDate})`;
+    }
+    return `${line}\n`;
+  }
+  const derived = !!(data.entryDateDerived || data.serviceStartDateDerived);
+  return `  Entry: ${documentEntryDate}${derived ? " (calculated from net service)" : ""}\n`;
+}
+
+export function _formatServiceRecordBasics(data, fileName) {
   let out = "";
   if (data.fullName) out += `  Name: ${data.fullName}\n`;
   if (data.branch) out += `  Branch: ${data.branch}\n`;
   if (data.component) out += `  Component: ${data.component}\n`;
   if (data.rank) out += `  Rank: ${data.rank} (${data.payGrade || ""})\n`;
   if (data.mos) out += `  MOS: ${data.mos} - ${data.mosTitle || ""}\n`;
-  if (data.entryDate) out += `  Entry: ${data.entryDate}\n`;
+  const documentEntryDate = data.entryDate ?? data.serviceStartDate;
+  if (documentEntryDate) {
+    out += _formatServiceEntryLine(data, documentEntryDate, fileName);
+  }
   if (data.separationDate) out += `  Separation: ${data.separationDate}\n`;
   if (data.characterOfService)
     out += `  Character: ${data.characterOfService}\n`;
@@ -938,7 +963,7 @@ function _formatServiceRecordDoc(doc, options) {
   }
 
   let out = `File: ${doc.fileName}\n`;
-  out += _formatServiceRecordBasics(data);
+  out += _formatServiceRecordBasics(data, doc.fileName);
   out += _formatServiceRecordHighlights(data);
   out += "\n";
   return out;
