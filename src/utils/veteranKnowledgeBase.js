@@ -1323,7 +1323,16 @@ function mergeDD214Awards(vkb, dd214Data, options) {
       // combatService.js's awardDisplayName) - ribbonRackData.parseDD214Text's
       // nested {award: {name}, matchedText} resolved to "", so `!awardName`
       // silently dropped the award instead of merging it.
-      const awardName = awardDisplayName(award);
+      //
+      // D12-5 residual (final12 QA re-review, 2026-09-27): awardDisplayName
+      // itself has no abbreviation fallback (by design - combatService.js
+      // doesn't own the two shapes that never carry one), so an extraction
+      // with only an abbreviation (dd214VisionParser's {name: "", abbreviation})
+      // still resolved to "" here and was silently dropped, same as base's
+      // regression. Falling back to the raw abbreviation only in
+      // mergeDD214Awards keeps that fallback scoped to this file's own
+      // ownership rather than combatService.js's.
+      const awardName = awardDisplayName(award) || award?.abbreviation || "";
       if (!awardName) return;
 
       // Normalize for comparison - ignore case, trim, collapse spaces
