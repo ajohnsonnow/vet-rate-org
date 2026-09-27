@@ -546,6 +546,14 @@ const ImportFooter = ({ onCancel, selectedCount, onConfirm }) => (
   </div>
 );
 
+// A plain truthiness check dropped an explicit `false` (e.g.
+// DD214Analyzer.jsx's serviceStartDateDerived: false, clearing a stale
+// calculated flag on import) as if the field had never been extracted at
+// all - only null/undefined/"" mean that.
+function _hasImportableValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
 /**
  * Profile Import Confirmation Modal
  * Shows extracted data with side-by-side comparison and selective import
@@ -600,8 +608,9 @@ const ProfileImportConfirmModal = ({
   const handleConfirm = () => {
     const fieldsToImport = {};
     Object.keys(selectedFields).forEach((key) => {
-      if (selectedFields[key] && editableData[key]) {
-        fieldsToImport[key] = editableData[key];
+      const value = editableData[key];
+      if (selectedFields[key] && _hasImportableValue(value)) {
+        fieldsToImport[key] = value;
       }
     });
     onConfirm(fieldsToImport);
