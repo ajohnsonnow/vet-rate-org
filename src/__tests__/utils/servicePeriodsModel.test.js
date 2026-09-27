@@ -931,6 +931,47 @@ describe("D-A: the Box-18 contamination repair only trusts real, accumulated `so
     expect(periods[0].reentryCode).toBe("RE-3");
     expect(getUnmatchedServiceRecords()).toHaveLength(0);
   });
+
+  // Regression (final10 QA "tests" lens re-review, 2026-09-26): origin/main's
+  // Box-18 upsert writes payGrade onto every window from a single NGB-22 -
+  // an "impossible" field per BOX18_IMPOSSIBLE_FIELD_DEFAULTS. Before this
+  // gate, every one of a deployed veteran's NGB-22-only windows would have
+  // payGrade wiped and gained a duplicate undated "unmatched record" on
+  // first read after this branch ships, even with zero real contamination.
+  it("does not strip payGrade or fabricate unmatched records across a single NGB-22's own multiple windows", () => {
+    const window = (id, start, end) => ({
+      id,
+      serviceStartDate: start,
+      serviceEndDate: end,
+      branch: "Army",
+      component: "Active Duty",
+      formType: "NGB22",
+      rank: "SSG",
+      payGrade: "E-6",
+      sourceDocument: "ngb22_generic.pdf",
+      notes: BOX18_NOTES,
+    });
+    localStorage.setItem(
+      "vet_rate_service_history",
+      JSON.stringify({
+        deployments: [],
+        awards: [],
+        dd214Data: null,
+        serviceInfo: null,
+        servicePeriods: [
+          window("w1", "2003-01-15", "2003-12-20"),
+          window("w2", "2005-06-01", "2005-12-31"),
+          window("w3", "2008-02-01", "2009-01-31"),
+        ],
+        unmatchedServiceRecords: [],
+        dateUpdated: "2026-01-01T00:00:00.000Z",
+      }),
+    );
+
+    const periods = getServicePeriods();
+    expect(periods.every((p) => p.payGrade === "E-6")).toBe(true);
+    expect(getUnmatchedServiceRecords()).toHaveLength(0);
+  });
 });
 
 describe("D-A: the Box-18 contamination repair still fires given genuine, accumulated evidence", () => {
