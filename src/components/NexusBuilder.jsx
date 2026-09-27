@@ -1860,21 +1860,8 @@ function useNexusConditionChoices() {
 // onSelect so NexusBuilder can proceed with the wizard.
 const NexusConditionPickerHeader = ({ onClose, onReportBug, t }) => (
   <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
-    <div className="flex items-center justify-between gap-3">
-      <h2
-        id="nexus-builder-picker-title"
-        className="text-xl sm:text-2xl font-bold"
-      >
-        📝 {t("nexusBuilder.pickerTitle")}
-      </h2>
-      <div className="flex items-center gap-2">
-        {onReportBug && (
-          <ReportBugLink
-            onClick={onReportBug}
-            variant="light"
-            moduleName="Nexus Builder"
-          />
-        )}
+    <HeaderCloseSlot
+      close={
         <button
           onClick={onClose}
           className="grid h-11 w-11 shrink-0 place-items-center text-white hover:bg-white/20 rounded-lg transition-colors"
@@ -1894,8 +1881,22 @@ const NexusConditionPickerHeader = ({ onClose, onReportBug, t }) => (
             />
           </svg>
         </button>
-      </div>
-    </div>
+      }
+    >
+      <h2
+        id="nexus-builder-picker-title"
+        className="min-w-0 text-xl sm:text-2xl font-bold"
+      >
+        📝 {t("nexusBuilder.pickerTitle")}
+      </h2>
+      {onReportBug && (
+        <ReportBugLink
+          onClick={onReportBug}
+          variant="light"
+          moduleName="Nexus Builder"
+        />
+      )}
+    </HeaderCloseSlot>
   </div>
 );
 
