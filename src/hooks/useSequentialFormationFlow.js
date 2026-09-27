@@ -17,6 +17,11 @@ import {
   autoPopulateProfile,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
+import {
+  setServiceEntryDate,
+  getServiceEntryForDocument,
+} from "../utils/veteranProfile";
+import { parseExplicitDate } from "../utils/dateUtils";
 
 /**
  * Advance the queue: process the given entry if provided, otherwise look up
@@ -123,6 +128,18 @@ async function runDocumentProcessing(entry, ctx) {
     // eslint-disable-next-line no-console
     console.log("✅ Document processed:", result);
 
+    // ADR-007: if this exact document already carries a veteran correction
+    // (a prior Verify & Save, or a re-import after one), seed the review
+    // modal with it - DocumentIntelligenceBriefing.jsx shows "(your saved
+    // correction)" and pre-fills the field instead of the raw re-extraction.
+    const priorEntry = getServiceEntryForDocument(file.name);
+    if (priorEntry?.source === "veteran") {
+      result.priorServiceStartCorrection = {
+        date: priorEntry.date,
+        documentDate: priorEntry.documentDate,
+      };
+    }
+
     // Check status === 'complete' since processFormationDocument sets that, not success
     if (result.status === "complete" && result.readyForReview) {
       setExtractionResult(result);
@@ -148,6 +165,82 @@ async function runDocumentProcessing(entry, ctx) {
   }
 }
 
+const NO_PERIOD_FOR_DOCUMENT_WARNING =
+  "Your corrected service start date couldn't be matched to a service period from this document, so it wasn't saved. You can add it in My Packet > Profile > Service Periods.";
+
+/**
+ * ADR-007 §2.5/W2: applies a Muster Call review correction, if any, before
+ * persisting the document - so persistFormationDocument's own VKB write
+ * already reflects the corrected canonical period, not the raw
+ * calculated/printed guess. Exported so the review modal's "Verify & Save"
+ * handler and its own tests share exactly one code path.
+ * @returns {Promise<{persisted: boolean, correction: object|null}>}
+ */
+export async function persistVerifiedDocument(extractionResult, verifyPayload) {
+  const {
+    verifiedData: correctedFields = {},
+    saveToVKB = true,
+    updateProfile = true,
+    serviceEntryCorrection,
+  } = verifyPayload || {};
+
+  if (!saveToVKB && !updateProfile) {
+    return { persisted: false, correction: null };
+  }
+
+  if (
+    serviceEntryCorrection &&
+    !parseExplicitDate(serviceEntryCorrection.date)
+  ) {
+    throw new Error(
+      "That service start date isn't a valid date. Use YYYY-MM-DD.",
+    );
+  }
+
+  // Identity (serviceStartDate/serviceStartDateDerived) stays on the
+  // original extraction - the correction below is the only path that
+  // changes the canonical entry date now.
+  const {
+    serviceStartDate: _serviceStartDate,
+    serviceStartDateDerived: _serviceStartDateDerived,
+    ...restFields
+  } = correctedFields;
+  const correctedResult = {
+    ...extractionResult,
+    extractedData: { ...extractionResult.extractedData, ...restFields },
+  };
+  const pseudoFile = {
+    name: extractionResult.filename,
+    size: extractionResult.size,
+  };
+
+  const applyCorrection = () =>
+    setServiceEntryDate({
+      date: serviceEntryCorrection.date,
+      via: "muster_review",
+      sourceDocument: extractionResult.filename,
+      documentStartDate: serviceEntryCorrection.documentStartDate,
+      documentEndDate: serviceEntryCorrection.documentEndDate,
+    });
+
+  let correction = serviceEntryCorrection ? applyCorrection() : null;
+
+  if (saveToVKB) {
+    await persistFormationDocument(pseudoFile, correctedResult);
+    if (
+      serviceEntryCorrection &&
+      correction?.reason === "no_period_for_document"
+    ) {
+      correction = applyCorrection();
+    }
+  }
+  if (updateProfile) {
+    await autoPopulateProfile([correctedResult]);
+  }
+
+  return { persisted: true, correction };
+}
+
 async function runVerifyAndSave(verifyPayload, ctx) {
   const {
     formation,
@@ -161,12 +254,6 @@ async function runVerifyAndSave(verifyPayload, ctx) {
     setActiveEntry,
   } = ctx;
 
-  const {
-    verifiedData: correctedFields = {},
-    saveToVKB = true,
-    updateProfile = true,
-  } = verifyPayload || {};
-
   // eslint-disable-next-line no-console
   console.log("✅ User verified data:", verifyPayload);
 
@@ -178,25 +265,12 @@ async function runVerifyAndSave(verifyPayload, ctx) {
     // same persist sequence the initial extraction used, with the
     // corrected fields merged in; every write it touches is dedup-safe for
     // re-processing the same document (see persistFormationDocument).
-    if (saveToVKB || updateProfile) {
-      const correctedResult = {
-        ...extractionResult,
-        extractedData: {
-          ...extractionResult.extractedData,
-          ...correctedFields,
-        },
-      };
-      const pseudoFile = {
-        name: extractionResult.filename,
-        size: extractionResult.size,
-      };
-
-      if (saveToVKB) {
-        await persistFormationDocument(pseudoFile, correctedResult);
-      }
-      if (updateProfile) {
-        await autoPopulateProfile([correctedResult]);
-      }
+    const { correction } = await persistVerifiedDocument(
+      extractionResult,
+      verifyPayload,
+    );
+    if (correction?.reason === "no_period_for_document") {
+      toast.warning(NO_PERIOD_FOR_DOCUMENT_WARNING);
     }
 
     const nextEntry = completeCurrentAndNext({

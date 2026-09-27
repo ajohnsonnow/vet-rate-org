@@ -25,6 +25,7 @@ import {
   persistFormationDocument,
   autoPopulateProfile,
 } from "../utils/musterCallProcessor";
+import { upsertServicePeriod, getServiceEntry } from "../utils/veteranProfile";
 
 function buildFormationQueue() {
   return {
@@ -122,20 +123,77 @@ describe("useSequentialFormationFlow - Verify & Save persistence", () => {
   });
 });
 
-describe("useSequentialFormationFlow - D11-1 corrected derived flag", () => {
+function renderFlow() {
+  return renderHook(() =>
+    useSequentialFormationFlow({
+      formationQueue: buildFormationQueue(),
+      toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+      setError: vi.fn(),
+      setProcessingState: vi.fn(),
+    }),
+  );
+}
+
+describe("useSequentialFormationFlow [ADR-007]: a service-entry correction reaches the canonical period", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    localStorage.setItem(
+      "vet_rate_veteran_profile",
+      JSON.stringify({ fullName: "Jordan Sample" }),
+    );
   });
 
-  it("a corrected serviceStartDateDerived: false overrides the original extraction's calculated flag", async () => {
-    const { result } = renderHook(() =>
-      useSequentialFormationFlow({
-        formationQueue: buildFormationQueue(),
-        toast: { success: vi.fn(), error: vi.fn() },
-        setError: vi.fn(),
-        setProcessingState: vi.fn(),
-      }),
+  it("applies via setServiceEntryDate and leaves extractedData's own identity untouched", async () => {
+    const periodId = upsertServicePeriod(
+      {
+        serviceStartDate: "2002-03-05",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "sample-dd214.txt", confidence: 60 },
     );
+
+    const { result } = renderFlow();
+
+    await processOneDocument(result, {
+      serviceStartDate: "2002-03-05",
+      serviceStartDateDerived: true,
+      serviceEndDate: "2010-06-15",
+    });
+
+    await act(async () => {
+      result.current.handleVerifyAndSave({
+        verifiedData: {},
+        saveToVKB: true,
+        updateProfile: true,
+        serviceEntryCorrection: {
+          date: "2001-11-01",
+          documentStartDate: "2002-03-05",
+          documentEndDate: "2010-06-15",
+        },
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // Identity stays on the original extraction - the correction never
+    // rewrites extractedData.serviceStartDate/serviceStartDateDerived.
+    const [, persistedResult] = persistFormationDocument.mock.calls[0];
+    expect(persistedResult.extractedData.serviceStartDate).toBe("2002-03-05");
+    expect(persistedResult.extractedData.serviceStartDateDerived).toBe(true);
+
+    expect(getServiceEntry()).toMatchObject({
+      date: "2001-11-01",
+      derived: false,
+      source: "veteran",
+      periodId,
+    });
+  });
+
+  it("throws before persisting anything when the typed date does not parse", async () => {
+    const { result } = renderFlow();
 
     await processOneDocument(result, {
       serviceStartDate: "2002-03-05",
@@ -144,18 +202,14 @@ describe("useSequentialFormationFlow - D11-1 corrected derived flag", () => {
 
     await act(async () => {
       result.current.handleVerifyAndSave({
-        verifiedData: {
-          serviceStartDate: "2001-11-01",
-          serviceStartDateDerived: false,
-        },
+        verifiedData: {},
         saveToVKB: true,
         updateProfile: true,
+        serviceEntryCorrection: { date: "not a date" },
       });
       await Promise.resolve();
     });
 
-    const [, persistedResult] = persistFormationDocument.mock.calls[0];
-    expect(persistedResult.extractedData.serviceStartDate).toBe("2001-11-01");
-    expect(persistedResult.extractedData.serviceStartDateDerived).toBe(false);
+    expect(persistFormationDocument).not.toHaveBeenCalled();
   });
 });
