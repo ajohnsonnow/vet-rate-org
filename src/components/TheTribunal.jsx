@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -990,7 +991,18 @@ function TribunalHeader({
 }) {
   return (
     <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-4 text-white sm:px-6 sm:py-6">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+      <HeaderCloseSlot
+        close={
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-2xl font-bold text-white transition-colors hover:bg-white/20"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        }
+      >
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 sm:mb-2">
             <h2
@@ -1019,16 +1031,8 @@ function TribunalHeader({
               moduleName="The Tribunal"
             />
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-11 w-11 place-items-center rounded-lg text-2xl font-bold text-white transition-colors hover:bg-white/20"
-            aria-label="Close"
-          >
-            ×
-          </button>
         </div>
-      </div>
+      </HeaderCloseSlot>
 
       {/* Score Display */}
       {sessionScore.total > 0 && (

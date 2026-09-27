@@ -21,6 +21,7 @@ import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 import { getMyRatings } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatLocalDate } from "../utils/dateUtils";
 
 const ITF_STORAGE_KEY = "vet_rate_itf_date";
@@ -93,8 +94,21 @@ function TimeMachineHeader({ countdown, onReportBug, onClose }) {
         normal: "bg-gradient-to-r from-blue-600 to-blue-800",
       })}`}
     >
-      <div className="flex justify-between items-start">
-        <div>
+      <HeaderCloseSlot
+        close={
+          onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="grid h-11 w-11 shrink-0 place-items-center text-2xl font-bold text-white hover:text-gray-200"
+              aria-label="Close"
+            >
+              ×
+            </button>
+          )
+        }
+      >
+        <div className="min-w-0">
           <h2 id="timemachine-title" className="text-3xl font-bold mb-2">
             ⏰ The Time Machine{" "}
             <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
@@ -105,26 +119,14 @@ function TimeMachineHeader({ countdown, onReportBug, onClose }) {
             Intent to File Countdown & Financial Impact
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="The Time Machine"
-            />
-          )}
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-white hover:text-gray-200 text-2xl font-bold"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
+        {onReportBug && (
+          <ReportBugLink
+            onClick={onReportBug}
+            variant="light"
+            moduleName="The Time Machine"
+          />
+        )}
+      </HeaderCloseSlot>
     </div>
   );
 }

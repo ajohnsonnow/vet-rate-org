@@ -3,6 +3,7 @@ import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ShareButton from "./ShareButton";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
@@ -3129,39 +3130,9 @@ function TacticalCalculatorHeader({
     <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
 
-      <div className="relative flex flex-wrap items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-2xl sm:text-3xl">🧮</span>
-          </div>
-          <div className="min-w-0">
-            <h2
-              id="calculator-title"
-              className="text-lg sm:text-2xl md:text-3xl font-bold"
-            >
-              {t("tacticalCalc", "title")}{" "}
-              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
-                {t("common", "beta")}
-              </span>
-            </h2>
-            <p className="text-blue-100 text-xs sm:text-sm md:text-base mt-1 truncate">
-              {t("tacticalCalc", "subtitle")}
-            </p>
-          </div>
-        </div>
-        <div className="ml-auto flex items-center gap-1 sm:gap-2 flex-shrink-0">
-          <ShareButton
-            targetRef={calculatorContentRef}
-            filename="vet-rate-calculator"
-            variant="icon"
-          />
-          {onReportBug && (
-            <ReportBugLink
-              onClick={onReportBug}
-              variant="light"
-              moduleName="Tactical Calculator"
-            />
-          )}
+      <HeaderCloseSlot
+        className="relative"
+        close={
           <button
             type="button"
             onClick={onClose}
@@ -3182,8 +3153,42 @@ function TacticalCalculatorHeader({
               />
             </svg>
           </button>
+        }
+      >
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+          <div className="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-2xl sm:text-3xl">🧮</span>
+          </div>
+          <div className="min-w-0">
+            <h2
+              id="calculator-title"
+              className="text-lg sm:text-2xl md:text-3xl font-bold"
+            >
+              {t("tacticalCalc", "title")}{" "}
+              <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded align-middle">
+                {t("common", "beta")}
+              </span>
+            </h2>
+            <p className="text-blue-100 text-xs sm:text-sm md:text-base mt-1 truncate">
+              {t("tacticalCalc", "subtitle")}
+            </p>
+          </div>
         </div>
-      </div>
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          <ShareButton
+            targetRef={calculatorContentRef}
+            filename="vet-rate-calculator"
+            variant="icon"
+          />
+          {onReportBug && (
+            <ReportBugLink
+              onClick={onReportBug}
+              variant="light"
+              moduleName="Tactical Calculator"
+            />
+          )}
+        </div>
+      </HeaderCloseSlot>
     </div>
   );
 }
