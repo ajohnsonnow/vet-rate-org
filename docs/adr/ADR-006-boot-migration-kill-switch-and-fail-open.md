@@ -1,4 +1,4 @@
-# ADR-004: Boot migration - fail-open timeout, maintenance kill switch, pre-mount dialog no-ops
+# ADR-006: Boot migration - fail-open timeout, maintenance kill switch, pre-mount dialog no-ops
 
 **Status:** Accepted
 **Date:** 2026-09-27

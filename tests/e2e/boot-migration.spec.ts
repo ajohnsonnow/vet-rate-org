@@ -285,7 +285,7 @@ test.describe("Boot migration does not close an open dialog or lose data", () =>
 });
 
 // The exact keys src/utils/maintenanceMode.js caches the last-known
-// maintenance flag (and when it was cached) under - see ADR-004.
+// maintenance flag (and when it was cached) under - see ADR-006.
 const MAINTENANCE_MODE_CACHE_KEY = "vet_rate_maintenance_mode_cached";
 const MAINTENANCE_MODE_CACHE_TIMESTAMP_KEY =
   "vet_rate_maintenance_mode_cached_at";
