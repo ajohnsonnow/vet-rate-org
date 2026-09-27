@@ -12,7 +12,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import useFocusTrap from "../hooks/useFocusTrap";
 import {
   Camera,
   Upload,
@@ -32,6 +31,7 @@ import {
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import ResponsiveModal from "./common/ResponsiveModal";
 import {
   getVeteranAIContext,
   saveAnalysisResults,
@@ -585,8 +585,6 @@ const ResultsStep = ({
 );
 
 const DenialDecoderView = ({
-  dialogRef,
-  className,
   t,
   onClose,
   onOpenAISettings,
@@ -603,56 +601,53 @@ const DenialDecoderView = ({
   extractedText,
   handleReset,
 }) => (
-  <div
-    ref={dialogRef}
-    className={`denial-decoder ${className}`}
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="denial-decoder-title"
+  <ResponsiveModal
+    isOpen
+    onClose={onClose}
+    size="xl"
+    labelledBy="denial-decoder-title"
+    header={
+      <DenialDecoderHeader
+        t={t}
+        onClose={onClose}
+        onOpenAISettings={onOpenAISettings}
+      />
+    }
   >
-    {/* Header */}
-    <DenialDecoderHeader
-      t={t}
-      onClose={onClose}
-      onOpenAISettings={onOpenAISettings}
-    />
+    {/* Upload Step */}
+    {step === "upload" && (
+      <UploadStep
+        t={t}
+        aiStatus={aiStatus}
+        error={error}
+        cameraInputRef={cameraInputRef}
+        fileInputRef={fileInputRef}
+        handleFileUpload={handleFileUpload}
+      />
+    )}
 
-    <div className="p-6">
-      {/* Upload Step */}
-      {step === "upload" && (
-        <UploadStep
-          t={t}
-          aiStatus={aiStatus}
-          error={error}
-          cameraInputRef={cameraInputRef}
-          fileInputRef={fileInputRef}
-          handleFileUpload={handleFileUpload}
-        />
-      )}
+    {/* Processing Step */}
+    {step === "processing" && <ProcessingStep t={t} progress={progress} />}
 
-      {/* Processing Step */}
-      {step === "processing" && <ProcessingStep t={t} progress={progress} />}
+    {/* Analyzing Step */}
+    {step === "analyzing" && <AnalyzingStep t={t} />}
 
-      {/* Analyzing Step */}
-      {step === "analyzing" && <AnalyzingStep t={t} />}
-
-      {/* Results Step */}
-      {step === "results" && analysis && (
-        <ResultsStep
-          t={t}
-          analysis={analysis}
-          showRawText={showRawText}
-          setShowRawText={setShowRawText}
-          extractedText={extractedText}
-          handleReset={handleReset}
-          onClose={onClose}
-        />
-      )}
-    </div>
-  </div>
+    {/* Results Step */}
+    {step === "results" && analysis && (
+      <ResultsStep
+        t={t}
+        analysis={analysis}
+        showRawText={showRawText}
+        setShowRawText={setShowRawText}
+        extractedText={extractedText}
+        handleReset={handleReset}
+        onClose={onClose}
+      />
+    )}
+  </ResponsiveModal>
 );
 
-const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
+const DenialDecoder = ({ onClose, onOpenAISettings }) => {
   const { t } = useLanguage();
   const [step, setStep] = useState("upload"); // upload, processing, analyzing, results
   const [extractedText, setExtractedText] = useState("");
@@ -664,9 +659,6 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
-  const dialogRef = useRef(null);
-
-  useFocusTrap(dialogRef, { active: true, onEscape: onClose });
 
   // Monitor AI status
   useEffect(() => {
@@ -701,8 +693,6 @@ const DenialDecoder = ({ onClose, className = "", onOpenAISettings }) => {
 
   return (
     <DenialDecoderView
-      dialogRef={dialogRef}
-      className={className}
       t={t}
       onClose={onClose}
       onOpenAISettings={onOpenAISettings}
