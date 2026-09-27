@@ -190,7 +190,10 @@ export async function migrateFromLocalStorage() {
       try {
         const value = localStorage.getItem(key);
         if (value !== null) {
-          await storage.setItem(key, value);
+          const wrote = await storage.setItem(key, value);
+          if (!wrote) {
+            throw new Error("IndexedDB write failed");
+          }
           migrationResults.migratedKeys.push(key);
           migrationResults.totalSize += value.length;
           // eslint-disable-next-line no-console
@@ -203,8 +206,14 @@ export async function migrateFromLocalStorage() {
     }
 
     // Mark migration as complete
-    await storage.setItem(MIGRATION_KEY, "true");
+    const flagWritten = await storage.setItem(MIGRATION_KEY, "true");
     await storage.setItem(MIGRATION_TIMESTAMP_KEY, migrationResults.timestamp);
+    if (!flagWritten) {
+      migrationResults.failedKeys.push({
+        key: MIGRATION_KEY,
+        error: "IndexedDB write failed",
+      });
+    }
 
     migrationResults.success = migrationResults.failedKeys.length === 0;
 

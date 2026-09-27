@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { useBootSequence } from "./useBootSequence";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import {
+  useBootSequence,
+  MIGRATION_DECISION_TIMEOUT_MS,
+} from "./useBootSequence";
 
 /**
  * boot-swap-dialog-loss: the interactive tree used to mount immediately
@@ -76,6 +79,10 @@ beforeEach(() => {
   mockInitAutoBackup.mockClear();
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("useBootSequence: isBooting gate", () => {
   it("flips isBooting false once no migration is needed, without waiting on the maintenance fetch", async () => {
     mockNeedsMigration.mockResolvedValue(false);
@@ -140,6 +147,74 @@ describe("useBootSequence: isBooting gate", () => {
     // isBooting already having settled false is what lets App.jsx's
     // maintenanceMode check apply on a subsequent render.
     expect(result.current.isBooting).toBe(false);
+  });
+});
+
+describe("useBootSequence: fail-open timeout, logging, and background work", () => {
+  it("fails open once the migration decision exceeds its timeout, and still finishes it in the background", async () => {
+    let resolveNeedsMigration;
+    mockNeedsMigration.mockReturnValue(
+      new Promise((resolve) => {
+        resolveNeedsMigration = resolve;
+      }),
+    );
+    mockFetchVersionJson.mockResolvedValue({
+      ok: true,
+      data: { maintenance_mode: false },
+    });
+    mockMigrateFromLocalStorage.mockResolvedValue({
+      success: true,
+      migratedKeys: ["vet_rate_veteran_profile"],
+      failedKeys: [],
+    });
+
+    vi.useFakeTimers();
+    const { result } = renderHook(() => useBootSequence());
+    expect(result.current.isBooting).toBe(true);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(MIGRATION_DECISION_TIMEOUT_MS + 50);
+    });
+    // Fails open: the tree may mount even though needsMigration() still
+    // hasn't settled (simulating a blocked/stalled IndexedDB open).
+    expect(result.current.isBooting).toBe(false);
+
+    vi.useRealTimers();
+    resolveNeedsMigration(true);
+
+    await waitFor(() => expect(result.current.isMigrating).toBe(false));
+    expect(mockMigrateFromLocalStorage).toHaveBeenCalled();
+  });
+
+  it("logs the real migrated-key count and list, not stale itemsMigrated/keysProcessed fields", async () => {
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    mockNeedsMigration.mockResolvedValue(true);
+    mockFetchVersionJson.mockResolvedValue({
+      ok: true,
+      data: { maintenance_mode: false },
+    });
+    mockMigrateFromLocalStorage.mockResolvedValue({
+      success: true,
+      migratedKeys: ["a", "b", "c"],
+      failedKeys: [],
+    });
+
+    renderHook(() => useBootSequence());
+
+    await waitFor(() =>
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        "✅ IndexedDB Migration: Successfully migrated",
+        3,
+        "items",
+      ),
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith("   Migrated keys:", [
+      "a",
+      "b",
+      "c",
+    ]);
+
+    consoleLogSpy.mockRestore();
   });
 
   it("runs the background inits (persistent storage, auto-backup, user-data migrations) after the boot gate opens", async () => {

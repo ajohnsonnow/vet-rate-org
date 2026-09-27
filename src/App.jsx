@@ -72,7 +72,8 @@ function App() {
   // tree must not mount until the migration decision has resolved, or a
   // returning user's migration can swap it out (and lose whatever they
   // already opened) mid-session. See useBootSequence.js's own comment.
-  const { isBooting, maintenanceMode, maintenanceMessage } = useBootSequence();
+  const { isBooting, isMigrating, maintenanceMode, maintenanceMessage } =
+    useBootSequence();
 
   // Snapshot of App-level state for bug reports + feature requests.
   // See features/feedback/useAppStateSnapshot.js (audit #35, B80).
@@ -85,7 +86,7 @@ function App() {
     userConditions,
   });
 
-  if (isBooting) return <MigrationScreen />;
+  if (isBooting) return <MigrationScreen isMigrating={isMigrating} />;
   if (maintenanceMode) return <MaintenancePage message={maintenanceMessage} />;
 
   return (

@@ -34,40 +34,84 @@ async function checkMaintenanceMode(setMaintenanceMode, setMaintenanceMessage) {
   }
 }
 
-async function runStorageMigration(setIsMigrating) {
-  try {
-    const shouldMigrate = await needsMigration();
+// How long the boot gate waits for needsMigration()'s IndexedDB round-trip
+// before failing open. A stalled/blocked IndexedDB open (e.g. another tab
+// mid-delete during Atomic Wipe, see AtomicWipe.jsx's clearIndexedDb) must
+// never leave a veteran stuck on the boot screen with no way out.
+export const MIGRATION_DECISION_TIMEOUT_MS = 3000;
 
-    if (shouldMigrate) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "🔄 IndexedDB Migration: Migrating data from localStorage...",
+async function runMigrationCopy(setIsMigrating) {
+  // eslint-disable-next-line no-console
+  console.log("🔄 IndexedDB Migration: Migrating data from localStorage...");
+  setIsMigrating(true);
+
+  const migrationResult = await migrateFromLocalStorage();
+
+  if (migrationResult.success) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "✅ IndexedDB Migration: Successfully migrated",
+      migrationResult.migratedKeys.length,
+      "items",
+    );
+    // eslint-disable-next-line no-console
+    console.log("   Migrated keys:", migrationResult.migratedKeys);
+  } else {
+    console.error("⚠️ IndexedDB Migration: Failed", migrationResult.failedKeys);
+  }
+
+  setIsMigrating(false);
+}
+
+// Once the boot gate has already failed open, the migration decision (and
+// the copy itself, if one turns out to be needed) keeps running - it must
+// still finish and update isMigrating, just without anything left waiting
+// on it.
+function finishMigrationInBackground(pendingDecision, setIsMigrating) {
+  pendingDecision
+    .then((shouldMigrate) =>
+      shouldMigrate
+        ? runMigrationCopy(setIsMigrating)
+        : // eslint-disable-next-line no-console
+          console.log(
+            "✅ IndexedDB Migration: Already complete, using IndexedDB",
+          ),
+    )
+    .catch((error) => {
+      console.error(
+        "❌ IndexedDB Migration: Critical error (background)",
+        error,
       );
-      setIsMigrating(true);
-
-      const migrationResult = await migrateFromLocalStorage();
-
-      if (migrationResult.success) {
-        // eslint-disable-next-line no-console
-        console.log(
-          "✅ IndexedDB Migration: Successfully migrated",
-          migrationResult.itemsMigrated,
-          "items",
-        );
-        // eslint-disable-next-line no-console
-        console.log("   Migrated keys:", migrationResult.keysProcessed);
-      } else {
-        console.error("⚠️ IndexedDB Migration: Failed", migrationResult.errors);
-      }
-
       setIsMigrating(false);
-    } else {
-      // eslint-disable-next-line no-console
-      console.log("✅ IndexedDB Migration: Already complete, using IndexedDB");
-    }
-  } catch (error) {
+    });
+}
+
+async function runStorageMigration(setIsMigrating) {
+  const pendingDecision = needsMigration().catch((error) => {
     console.error("❌ IndexedDB Migration: Critical error", error);
-    setIsMigrating(false);
+    return false;
+  });
+
+  const decision = await Promise.race([
+    pendingDecision.then((shouldMigrate) => ({ shouldMigrate })),
+    new Promise((resolve) =>
+      setTimeout(() => resolve(null), MIGRATION_DECISION_TIMEOUT_MS),
+    ),
+  ]);
+
+  if (decision === null) {
+    console.warn(
+      `⚠️ IndexedDB Migration: decision did not settle within ${MIGRATION_DECISION_TIMEOUT_MS}ms - mounting the app and finishing the check in the background`,
+    );
+    finishMigrationInBackground(pendingDecision, setIsMigrating);
+    return;
+  }
+
+  if (decision.shouldMigrate) {
+    await runMigrationCopy(setIsMigrating);
+  } else {
+    // eslint-disable-next-line no-console
+    console.log("✅ IndexedDB Migration: Already complete, using IndexedDB");
   }
 }
 
@@ -184,6 +228,12 @@ async function initializeApp({
  * is kept (now purely informational: true only while the copy itself is
  * running) since isBooting alone doesn't distinguish "still deciding" from
  * "actively copying" for any future consumer that cares.
+ *
+ * The migration decision itself (needsMigration()'s IndexedDB open) is
+ * raced against MIGRATION_DECISION_TIMEOUT_MS: a blocked/stalled IndexedDB
+ * open (e.g. another tab mid-delete during Atomic Wipe) must never hold the
+ * boot gate open indefinitely with no way out. On timeout, isBooting still
+ * flips false and the decision/copy keeps resolving in the background.
  *
  * Returns: { isBooting, isMigrating, maintenanceMode, maintenanceMessage }
  *   - App.jsx renders a migration/boot screen while isBooting is true.
