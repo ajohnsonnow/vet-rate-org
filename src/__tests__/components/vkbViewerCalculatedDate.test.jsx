@@ -13,7 +13,11 @@ import { loadVKB } from "../../utils/veteranKnowledgeBase.js";
 
 vi.mock("../../utils/veteranKnowledgeBase.js", async (importOriginal) => {
   const actual = await importOriginal();
-  return { ...actual, loadVKB: vi.fn() };
+  return {
+    ...actual,
+    loadVKB: vi.fn(),
+    saveVKB: vi.fn().mockResolvedValue({ success: true }),
+  };
 });
 
 afterEach(cleanup);
@@ -55,5 +59,28 @@ describe("VKBViewer - calculated entry date marker", () => {
     expect(
       screen.queryByText(/calculated from net service/),
     ).not.toBeInTheDocument();
+  });
+
+  it("clears the marker once the veteran edits and saves their own entry date", async () => {
+    loadVKB.mockResolvedValue(buildVkb(true));
+    await openServiceHistory();
+
+    fireEvent.click(screen.getByText("✏️ Edit"));
+    fireEvent.change(screen.getByLabelText(/Entry Date/), {
+      target: { value: "2011-09-01" },
+    });
+
+    expect(
+      screen.queryByText(/calculated from net service/),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("💾 Save"));
+
+    const { saveVKB } = await import("../../utils/veteranKnowledgeBase.js");
+    await vi.waitFor(() => expect(saveVKB).toHaveBeenCalled());
+    expect(saveVKB.mock.calls[0][0].serviceHistory).toMatchObject({
+      entryDate: "2011-09-01",
+      entryDateDerived: false,
+    });
   });
 });

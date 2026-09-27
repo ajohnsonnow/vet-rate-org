@@ -5576,16 +5576,19 @@ function MilitaryServiceDateFields({ veteranProfile, handleProfileChange }) {
         />
       </div>
       <div>
-        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label
+          htmlFor="formsHelperServiceStartDate"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+        >
           Service Start Date
           {veteranProfile.serviceStartDateDerived && (
-            <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
+            <span className="ml-1 font-normal text-xs text-gray-600 dark:text-gray-400">
               (calculated from net service)
             </span>
           )}
         </label>
         <input
+          id="formsHelperServiceStartDate"
           type="date"
           value={veteranProfile.serviceStartDate || ""}
           onChange={(e) =>
@@ -7958,7 +7961,17 @@ function _buildFormsHelperProfileEditHandlers(ctx) {
     ctx;
 
   const handleProfileChange = (field, value) => {
-    setVeteranProfile((prev) => ({ ...prev, [field]: value }));
+    setVeteranProfile((prev) => ({
+      ...prev,
+      [field]: value,
+      // A veteran typing their own serviceStartDate is providing a real,
+      // remembered date - it is never the calculated NGB-22 guess the
+      // "(calculated from net service)" label and the FormsHelper prefill
+      // guard above both key off, so the flag must not survive the edit.
+      ...(field === "serviceStartDate"
+        ? { serviceStartDateDerived: false }
+        : null),
+    }));
     setProfileSaved(false);
   };
 

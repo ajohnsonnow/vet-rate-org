@@ -170,8 +170,10 @@ const ServiceHistoryCharacterField = ({ vkb, setVkb, editMode }) => (
 
 const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
   <div>
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <label
+      htmlFor="vkbServiceHistoryEntryDate"
+      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+    >
       Entry Date
       {vkb.serviceHistory.entryDateDerived && (
         <span className="ml-1 font-normal text-xs text-gray-500 dark:text-gray-400">
@@ -180,6 +182,7 @@ const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
       )}
     </label>
     <input
+      id="vkbServiceHistoryEntryDate"
       type="date"
       value={vkb.serviceHistory.entryDate || ""}
       onChange={(e) =>
@@ -188,6 +191,10 @@ const ServiceHistoryEntryDateField = ({ vkb, setVkb, editMode }) => (
           serviceHistory: {
             ...vkb.serviceHistory,
             entryDate: e.target.value,
+            // A veteran editing this field is supplying a real, remembered
+            // date - never the calculated NGB-22 guess the marker above and
+            // generateLLMContext's own check of this same flag key off.
+            entryDateDerived: false,
           },
         })
       }

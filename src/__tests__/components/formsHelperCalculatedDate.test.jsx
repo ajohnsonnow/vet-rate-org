@@ -10,10 +10,10 @@
  *    the veteran to fill in themselves (see buildFormsHelperPrefillDefaults
  *    in FormsHelper.jsx for why blank, not a note, was chosen here).
  *
- * Field inputs in the Profile Setup tab have no htmlFor/id association to
- * their <label> (an existing gap, not introduced here - see
- * FormsHelper.test.jsx), so the marker test below locates the input via the
- * label's sibling rather than getByLabelText.
+ * The Service Start Date field/label are now htmlFor/id-associated (D-C,
+ * final10 QA correctness re-review, 2026-09-26 - the marker text otherwise
+ * never reached a screen reader focused on the input), so the tests below
+ * use getByLabelText like any other associated control.
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
@@ -36,10 +36,7 @@ function openProfileSetup() {
 }
 
 function serviceStartDateInput() {
-  return screen
-    .getByText("Service Start Date")
-    .closest("div")
-    .querySelector('input[type="date"]');
+  return screen.getByLabelText(/Service Start Date/);
 }
 
 beforeEach(() => {
@@ -78,6 +75,36 @@ describe("FormsHelper - Profile Setup tab calculated-date marker", () => {
     expect(
       screen.queryByText(/calculated from net service/),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("FormsHelper - editing a calculated service start date clears the stale flag", () => {
+  it("stops calling the veteran's own correction 'calculated' after they edit and it is saved", () => {
+    updateVeteranProfile({
+      firstName: "Jane",
+      lastName: "Veteran",
+      serviceStartDate: "2012-03-14",
+      serviceStartDateDerived: true,
+    });
+
+    renderFormsHelper();
+    openProfileSetup();
+
+    expect(screen.getByText(/calculated from net service/)).toBeInTheDocument();
+
+    fireEvent.change(serviceStartDateInput(), {
+      target: { value: "2011-09-01" },
+    });
+
+    expect(
+      screen.queryByText(/calculated from net service/),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Save Profile"));
+
+    expect(buildFormsHelperPrefillDefaults().serviceStartDate).toBe(
+      "2011-09-01",
+    );
   });
 });
 
