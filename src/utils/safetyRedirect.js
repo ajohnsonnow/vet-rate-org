@@ -28,8 +28,10 @@ const SAFE_REDIRECT_URL = "https://www.weather.com";
 // Escape key tracking
 let escapeKeyCount = 0;
 let escapeTimer = null;
-const ESCAPE_THRESHOLD = 3;
-const ESCAPE_WINDOW_MS = 600; // Must tap 3 times within 600ms
+// Exported so tests can derive correct wait times instead of hardcoding a
+// copy of these numbers that could silently drift from the real values.
+export const ESCAPE_THRESHOLD = 3;
+export const ESCAPE_WINDOW_MS = 600; // Must tap 3 times within 600ms
 
 /**
  * Trigger the panic redirect - silences audio, clears session, redirects
@@ -94,17 +96,44 @@ export const triggerSoftExit = () => {
   }
 };
 
+// Anything an Escape press should be considered "consumed by" rather than a
+// panic gesture: modal dialogs/alertdialogs (incl. the aria-modal-only kind,
+// which also covers the mobile nav drawer), and open disclosure menus/
+// popovers (Header's Tools/Resources dropdowns, AccessibilityMenu, SearchBar's
+// combobox — this repo's convention for those is `aria-haspopup` +
+// `aria-expanded="true"` together on the trigger, grepped across every such
+// component). Deliberately narrower than every `aria-expanded="true"` in the
+// app: a plain accordion/disclosure section (VersionDropdown's changelog,
+// SystemRequirementsNotice's ExpandSection) sets `aria-expanded` with no
+// `aria-haspopup` and must NOT swallow a genuine panic Escape just because a
+// veteran left an unrelated accordion open somewhere on the page.
+const HANDLED_ELSEWHERE_SELECTOR =
+  '[role="dialog"], [role="alertdialog"], [aria-modal="true"], ' +
+  '[aria-haspopup][aria-expanded="true"]';
+
 /**
- * Handle keydown events for triple-escape detection
+ * Handle keydown events for triple-escape detection.
+ *
+ * Registered on the CAPTURE phase (see initializePanicKey) rather than
+ * bubble, and that's load-bearing: a dialog's own Escape handler (e.g.
+ * useFocusTrap's onEscape) closes it via a React state update, and — verified
+ * live against the real app, not assumed — the DOM has already been updated
+ * to remove that dialog's `role="dialog"` node by the time a *bubble*-phase
+ * listener on window would run, so a query for "is a dialog open right now"
+ * at that point reads a false "no". Capture fires on window before the
+ * event even reaches the dialog's own bubble-phase listener, so this always
+ * observes the true pre-close DOM state instead of racing it.
  * @param {KeyboardEvent} event
  */
 const handleEscapeKey = (event) => {
   if (event.key !== "Escape") return;
 
-  // Don't count ESC presses that are dismissing an open dialog/modal.
-  // Those are consumed by the dialog — not a panic-exit gesture.
-  // Only rapid ESC presses with NO modal open count toward the threshold.
-  if (document.querySelector('[role="dialog"], [aria-modal="true"]')) return;
+  // Don't count ESC presses already handled by something else (a dialog
+  // dismissing itself, a menu/popover closing, or any handler that called
+  // preventDefault). Only rapid ESC presses with nothing open count toward
+  // the panic threshold.
+  if (event.defaultPrevented) return;
+  if (document.querySelector(HANDLED_ELSEWHERE_SELECTOR)) return;
 
   escapeKeyCount++;
 
@@ -113,8 +142,15 @@ const handleEscapeKey = (event) => {
     clearTimeout(escapeTimer);
   }
 
-  // Check if threshold reached
+  // Check if threshold reached. Reset before firing (not just relying on
+  // triggerPanicRedirect's own navigation to blow away this module's state):
+  // clearTimeout above cancels whatever reset timer was pending without
+  // scheduling a new one, so without this the counter would otherwise stay
+  // stuck at/above the threshold forever - re-firing on every subsequent
+  // Escape, single deliberate presses included, in any context where the
+  // redirect doesn't actually unload the page (e.g. navigation blocked).
   if (escapeKeyCount >= ESCAPE_THRESHOLD) {
+    escapeKeyCount = 0;
     triggerPanicRedirect();
     return;
   }
@@ -132,11 +168,12 @@ const handleEscapeKey = (event) => {
 export const initializePanicKey = () => {
   if (typeof window === "undefined") return;
 
-  // Remove any existing listener to prevent duplicates
-  window.removeEventListener("keydown", handleEscapeKey);
+  // Remove any existing listener to prevent duplicates. Capture phase (see
+  // handleEscapeKey's doc comment for why).
+  window.removeEventListener("keydown", handleEscapeKey, true);
 
   // Add listener
-  window.addEventListener("keydown", handleEscapeKey);
+  window.addEventListener("keydown", handleEscapeKey, true);
 
   // eslint-disable-next-line no-console
   console.log("🛡️ Panic key initialized (triple-tap Escape to exit)");
@@ -149,7 +186,7 @@ export const initializePanicKey = () => {
 export const cleanupPanicKey = () => {
   if (typeof window === "undefined") return;
 
-  window.removeEventListener("keydown", handleEscapeKey);
+  window.removeEventListener("keydown", handleEscapeKey, true);
 
   if (escapeTimer) {
     clearTimeout(escapeTimer);
