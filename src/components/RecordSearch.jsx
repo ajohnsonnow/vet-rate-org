@@ -19,7 +19,7 @@ import {
 import { escapeHtml } from "../utils/sanitize";
 
 const ModalHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-start justify-between gap-2">
+  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-start justify-between gap-2 sm:items-center">
     <div className="flex min-w-0 items-center gap-3">
       <div className="text-3xl">🔍</div>
       <div className="min-w-0">

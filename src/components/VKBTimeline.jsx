@@ -149,7 +149,7 @@ function useVKBTimelineData(onDocumentClick) {
 }
 
 const TimelineHeaderTitle = ({ totalDocs, onClose }) => (
-  <div className="flex items-start justify-between gap-2 mb-4">
+  <div className="flex items-start justify-between gap-2 mb-4 sm:items-center">
     <div className="min-w-0">
       <h2
         id="vkb-timeline-title"

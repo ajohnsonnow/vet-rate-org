@@ -2,7 +2,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 
 const TermsHeader = ({ onClose }) => (
   <div className="bg-red-700 dark:bg-red-800 text-white px-6 py-5 border-b-4 border-red-900 dark:border-red-950">
-    <div className="flex items-start justify-between gap-3">
+    <div className="flex items-start justify-between gap-3 sm:items-center">
       <div className="flex min-w-0 items-center gap-3">
         <svg
           className="w-8 h-8 flex-shrink-0"

@@ -845,7 +845,7 @@ const RoadmapModalFooter = ({ onClose }) => (
 
 const RoadmapModalHeader = ({ onClose, stats, userVotes }) => (
   <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white px-6 py-5 flex-shrink-0 rounded-t-2xl">
-    <div className="flex items-start justify-between gap-2">
+    <div className="flex items-start justify-between gap-2 sm:items-center">
       <div className="flex min-w-0 items-center gap-3">
         <div className="bg-white/20 rounded-xl p-2">
           <svg

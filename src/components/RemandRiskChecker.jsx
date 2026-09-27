@@ -441,7 +441,7 @@ const RemandRiskChecker = ({ onClose }) => {
       size="xl"
       labelledBy="remand-risk-title"
       header={
-        <div className="flex items-start justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
+        <div className="flex items-start justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white sm:items-center">
           <div className="min-w-0">
             <h2
               id="remand-risk-title"

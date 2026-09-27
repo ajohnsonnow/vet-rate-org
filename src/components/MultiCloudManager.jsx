@@ -745,7 +745,7 @@ function useBackupOperations({
 
 const MultiCloudHeader = ({ onClose, activeTab, setActiveTab }) => (
   <div>
-    <div className="flex items-start justify-between gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4">
+    <div className="flex items-start justify-between gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-4 sm:items-center">
       <div className="flex min-w-0 items-center gap-3">
         <div className="text-3xl">🏰</div>
         <div className="min-w-0">

@@ -1098,7 +1098,7 @@ const WorkflowDetail = ({
 // MODAL HEADER / FOOTER
 // ============================================
 const WorkflowGuideHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-6 py-4 flex items-start justify-between gap-2 flex-shrink-0">
+  <div className="bg-gradient-to-r from-gray-800 via-gray-900 to-gray-800 border-b-2 border-va-gold px-6 py-4 flex items-start justify-between gap-2 flex-shrink-0 sm:items-center">
     <div className="flex min-w-0 items-center gap-3">
       <div className="p-2 bg-va-gold/20 rounded-lg">
         <Map className="w-6 h-6 text-va-gold" />

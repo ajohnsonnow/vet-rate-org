@@ -576,7 +576,7 @@ function useZoneSelection(symptoms) {
 function BodyMapHeader({ onClose }) {
   return (
     <div className="bg-gray-900 border-b border-yellow-500/30 px-6 py-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-3 sm:items-center">
         <div>
           <h2
             id="body-map-selector-title"

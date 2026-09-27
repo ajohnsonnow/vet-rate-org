@@ -22,7 +22,7 @@ import {
 import { exportAllData, importAllData } from "../utils/storage";
 
 const CloudSyncHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-start justify-between gap-2">
+  <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-4 flex items-start justify-between gap-2 sm:items-center">
     <div className="flex min-w-0 items-center gap-3">
       <div className="text-3xl">☁️</div>
       <div className="min-w-0">
