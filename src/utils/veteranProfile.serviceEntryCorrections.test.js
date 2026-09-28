@@ -403,7 +403,7 @@ describe("saveServiceHistory: schemaVersion default and round-trip (G9)", () => 
     seedProfile();
   });
 
-  it("a save without schemaVersion stores 2, and the next read migrates to 3", () => {
+  it("a save without schemaVersion stores 2, and the next read migrates to the current version", () => {
     const history = getServiceHistory();
     delete history.schemaVersion;
     saveServiceHistory(history);
@@ -411,8 +411,10 @@ describe("saveServiceHistory: schemaVersion default and round-trip (G9)", () => 
     const raw = JSON.parse(localStorage.getItem("vet_rate_service_history"));
     expect(raw.schemaVersion).toBe(2);
 
+    // D11-4 (final12 QA) bumped SERVICE_HISTORY_SCHEMA_VERSION to 4 for
+    // _repairGuessedWindowRank, alongside ADR-007's own bump to 3.
     const reread = getServiceHistory();
-    expect(reread.schemaVersion).toBe(3);
+    expect(reread.schemaVersion).toBe(4);
   });
 
   it("round-trips serviceStartDateSource and startDateCorrection", () => {

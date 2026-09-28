@@ -1,10 +1,11 @@
 /**
  * ADR-007 §11: the schemaVersion 2->3 migration. Each repair step is gated
- * on its OWN prior version (v<1, v<2, v<3) so a history already past a
- * given step never re-runs it (G3). The v3 steps infer provenance for
- * data older than serviceStartDateSource, then fold the legacy D12-2
- * duplicate-period pairs a >7-day review correction used to leave behind.
- * Fixture values are synthetic, not any real veteran's data.
+ * on its OWN prior version (v<1, v<2, v<3, and D11-4's own v<4) so a
+ * history already past a given step never re-runs it (G3). The v3 steps
+ * infer provenance for data older than serviceStartDateSource, then fold
+ * the legacy D12-2 duplicate-period pairs a >7-day review correction used
+ * to leave behind. Fixture values are synthetic, not any real veteran's
+ * data.
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { getServiceHistory, getServicePeriods } from "./veteranProfile";
@@ -165,7 +166,13 @@ describe("v3 migration [G3]: per-version gating never re-runs an earlier repair"
   it("v2 data does NOT re-run the v1 window-contamination repair", () => {
     seed({ schemaVersion: 2, servicePeriods: [contaminatedWindowPeriod()] });
     const history = getServiceHistory();
-    expect(history.servicePeriods[0].payGrade).toBe("E-5");
+    // The v1 contamination repair itself did not re-fire (that repair
+    // fabricates an unmatched record when it runs; it never does at v2).
+    // payGrade is no longer a safe canary for that specific repair once
+    // D11-4's own v<4 step exists (final12 QA) - the same "no proven rank
+    // contributor" shape is exactly what that separate, later repair
+    // clears here, at v2 < 4.
+    expect(history.servicePeriods[0].payGrade).toBe("");
     expect(history.unmatchedServiceRecords).toHaveLength(0);
   });
 
@@ -191,9 +198,14 @@ describe("v3 migration [G3]: per-version gating never re-runs an earlier repair"
       ],
     });
     const history = getServiceHistory();
-    // v1 window repair did NOT run (still at v1, not < 1).
+    // v1 contamination repair did NOT run (still at v1, not < 1) - it
+    // would have fabricated an unmatched record, which it did not.
+    // D11-4's own v<4 guessed-rank repair (final12 QA) runs regardless
+    // (1 < 4) and clears this same window's payGrade - a different,
+    // narrower repair than the one this assertion is about.
     const window1 = history.servicePeriods.find((p) => p.id === "window1");
-    expect(window1.payGrade).toBe("E-5");
+    expect(window1.payGrade).toBe("");
+    expect(history.unmatchedServiceRecords).toHaveLength(0);
     // v2 stale-derived-flag repair DID run (1 < 2).
     const codeSheetPeriod = history.servicePeriods.find(
       (p) => p.id === "codeSheetPeriod",
