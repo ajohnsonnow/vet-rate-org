@@ -335,6 +335,54 @@ function _importConfirmMessage(addedCount, updatedCount) {
   return `Update ${updatedCount} event(s) and add ${addedCount} new event(s) from your analyzed records to the timeline?`;
 }
 
+// Shared by performImportFromRecords and syncProjectedServiceEntryEvents:
+// loads the VKB's dated evidenceTimeline/evidence items, plus the
+// ADR-007-projected service-entry/enlistment subset of them and every
+// (date, description) key currently claimed by a service-entry event.
+async function _loadServiceEntryProjection() {
+  const vkb = await loadVKB();
+  const vkbEvents = [
+    ...(Array.isArray(vkb?.evidenceTimeline) ? vkb.evidenceTimeline : []),
+    ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
+  ].filter((e) => e?.date && (e.description || e.text));
+  const projectedEvents = vkbEvents.filter(
+    (e) => e.projected && _isServiceEntryEventType(e.eventType),
+  );
+  const knownServiceEntryKeys = new Set(
+    vkbEvents
+      .filter((e) => _isServiceEntryEventType(e.eventType))
+      .map((e) =>
+        timelineEventKey({
+          date: e.date,
+          description: e.description || e.text,
+        }),
+      ),
+  );
+  return { vkbEvents, projectedEvents, knownServiceEntryKeys };
+}
+
+// Builds this timeline's own persisted shape for a VKB-sourced event.
+function _buildImportedTimelineEvent(e, i) {
+  const description = e.description || e.text;
+  return {
+    id: `vkb_${Date.now()}_${i}`,
+    type: "records",
+    date: e.date,
+    description,
+    title: String(description).substring(0, 50),
+    category: "Medical Records",
+    sourceDocumentId: e.sourceDocumentId || null,
+    // D-C: carried through so detectTimelineGaps can still recognize
+    // a Guard/Reserve enlistment event after it's imported into this
+    // timeline's own persisted event shape.
+    eventType: e.eventType || null,
+    // ADR-007: names the projection this copy came from, if any - lets
+    // a LATER re-import recognize this exact copy as stale once the
+    // projection itself has since changed.
+    sourceKey: e.projectionKey || null,
+  };
+}
+
 // Pull dated events the C-File analyzer filed into the VKB
 // (evidenceTimeline entries + dated evidence items) into this timeline.
 // `auto` (first-open auto-import) skips the confirm/alert dialogs a manual
@@ -347,25 +395,8 @@ async function performImportFromRecords({
   auto = false,
 }) {
   try {
-    const vkb = await loadVKB();
-    const vkbEvents = [
-      ...(Array.isArray(vkb?.evidenceTimeline) ? vkb.evidenceTimeline : []),
-      ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
-    ].filter((e) => e?.date && (e.description || e.text));
-
-    const projectedEvents = vkbEvents.filter(
-      (e) => e.projected && _isServiceEntryEventType(e.eventType),
-    );
-    const knownServiceEntryKeys = new Set(
-      vkbEvents
-        .filter((e) => _isServiceEntryEventType(e.eventType))
-        .map((e) =>
-          timelineEventKey({
-            date: e.date,
-            description: e.description || e.text,
-          }),
-        ),
-    );
+    const { vkbEvents, projectedEvents, knownServiceEntryKeys } =
+      await _loadServiceEntryProjection();
     const { kept: workingEvents, removed: staleRemoved } =
       projectedEvents.length > 0
         ? _dropStaleServiceEntryEvents(
@@ -382,27 +413,13 @@ async function performImportFromRecords({
     const existing = new Set(workingEvents.map(timelineEventKey));
     const fresh = [];
     vkbEvents.forEach((e, i) => {
-      const description = e.description || e.text;
-      const key = timelineEventKey({ date: e.date, description });
+      const key = timelineEventKey({
+        date: e.date,
+        description: e.description || e.text,
+      });
       if (existing.has(key)) return;
       existing.add(key);
-      fresh.push({
-        id: `vkb_${Date.now()}_${i}`,
-        type: "records",
-        date: e.date,
-        description,
-        title: String(description).substring(0, 50),
-        category: "Medical Records",
-        sourceDocumentId: e.sourceDocumentId || null,
-        // D-C: carried through so detectTimelineGaps can still recognize
-        // a Guard/Reserve enlistment event after it's imported into this
-        // timeline's own persisted event shape.
-        eventType: e.eventType || null,
-        // ADR-007: names the projection this copy came from, if any - lets
-        // a LATER re-import recognize this exact copy as stale once the
-        // projection itself has since changed.
-        sourceKey: e.projectionKey || null,
-      });
+      fresh.push(_buildImportedTimelineEvent(e, i));
     });
 
     if (fresh.length === 0 && staleRemoved === 0) {
@@ -428,6 +445,54 @@ async function performImportFromRecords({
     console.error("Failed to import events from records:", e);
     if (!auto) alert("Could not read your records. Please try again.");
     return [];
+  }
+}
+
+// D13-2: keeps already-imported service-entry/enlistment timeline events
+// synced to the VKB's ADR-007 projection every time this component mounts
+// - not just on the very first, store-empty open - so a correction made
+// through any editor (VKB viewer, My Packet, FormsHelper, Muster Call
+// review) is reflected here too without the veteran clicking "Import from
+// My Records" again. Silent (no confirm/alert, no notice): this only ever
+// replaces a copy the projection itself previously produced (sourceKey
+// set) or a legacy copy that no longer matches any current service-entry
+// event; a veteran-added event (numeric id, no sourceKey match attempted)
+// is never touched - same guarantee as the manual re-import path.
+async function syncProjectedServiceEntryEvents({
+  timelineEvents,
+  setTimelineEvents,
+  onEventsUpdate,
+}) {
+  try {
+    const { projectedEvents, knownServiceEntryKeys } =
+      await _loadServiceEntryProjection();
+    if (projectedEvents.length === 0) return;
+
+    const { kept, removed } = _dropStaleServiceEntryEvents(
+      timelineEvents,
+      projectedEvents,
+      knownServiceEntryKeys,
+    );
+    if (removed === 0) return;
+
+    const existing = new Set(kept.map(timelineEventKey));
+    const replacements = [];
+    projectedEvents.forEach((p, i) => {
+      const key = timelineEventKey({
+        date: p.date,
+        description: p.description || p.text,
+      });
+      if (existing.has(key)) return;
+      existing.add(key);
+      replacements.push(_buildImportedTimelineEvent(p, i));
+    });
+
+    const updated = dedupeTimelineEvents([...kept, ...replacements]);
+    setTimelineEvents(updated);
+    saveTimelineEvents(updated);
+    if (onEventsUpdate) onEventsUpdate(updated);
+  } catch (e) {
+    console.error("Failed to sync service-entry timeline events:", e);
   }
 }
 
@@ -862,9 +927,13 @@ function AutoImportedNotice({ count }) {
 // silently try the same "Import from My Records" the button runs, so the
 // veteran isn't staring at a blank timeline the app could have filled in.
 // The existing date+description dedupe means a later reopen (events.length
-// > 0 by then) never re-runs this or duplicates entries. Split out of
-// EvidenceTimeline purely to keep its function body under the line-count
-// limit. Same logic, same order of operations.
+// > 0 by then) never re-runs this or duplicates entries. On every OTHER
+// mount (events already persisted), instead run the D13-2 service-entry
+// sync so a correction made elsewhere since the last open (or since this
+// timeline's very first auto-import) is never left showing a stale
+// calculated date. Split out of EvidenceTimeline purely to keep its
+// function body under the line-count limit. Same logic, same order of
+// operations.
 function useEvidenceTimelineAutoImport({
   timelineEvents,
   setTimelineEvents,
@@ -884,6 +953,12 @@ function useEvidenceTimelineAutoImport({
         auto: true,
       }).then((fresh) => {
         if (fresh.length > 0) setAutoImportedCount(fresh.length);
+      });
+    } else {
+      syncProjectedServiceEntryEvents({
+        timelineEvents,
+        setTimelineEvents,
+        onEventsUpdate,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -3,7 +3,11 @@
  * import automatically on first open when the timeline has no events, silently
  * (no confirm/alert dialogs) and without duplicating events on reopen once
  * they're persisted. The manual "Import from My Records" button keeps its
- * original confirm-dialog behavior.
+ * original confirm-dialog behavior. On every OTHER mount (events already
+ * persisted), D13-2's silent service-entry sync still calls loadVKB to
+ * check the VKB's ADR-007 projection for a stale calculated marker, but
+ * never shows the "we filled in" banner and never adds an unrelated event
+ * that isn't part of that projection.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -221,7 +225,7 @@ describe("EvidenceTimeline auto-import from records", () => {
     expect(window.confirm).not.toHaveBeenCalled();
   });
 
-  it("does not auto-import (or call loadVKB) when the timeline already has persisted events", async () => {
+  it("silently syncs (does not full-import or show a banner) when the timeline already has persisted events", async () => {
     saveTimelineEvents([
       {
         id: "existing_1",
@@ -238,11 +242,11 @@ describe("EvidenceTimeline auto-import from records", () => {
     expect(
       await screen.findByText("📋 Timeline Events (1)"),
     ).toBeInTheDocument();
-    expect(mockLoadVKB).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockLoadVKB).toHaveBeenCalled());
     expect(screen.queryByText(/we filled in/i)).not.toBeInTheDocument();
   });
 
-  it("does not auto-import when events were already supplied via props", async () => {
+  it("silently syncs (does not full-import) when events were already supplied via props", async () => {
     renderTimeline({
       events: [
         {
@@ -259,7 +263,7 @@ describe("EvidenceTimeline auto-import from records", () => {
     expect(
       await screen.findByText("📋 Timeline Events (1)"),
     ).toBeInTheDocument();
-    expect(mockLoadVKB).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockLoadVKB).toHaveBeenCalled());
   });
 });
 

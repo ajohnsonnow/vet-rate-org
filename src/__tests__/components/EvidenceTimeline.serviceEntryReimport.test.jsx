@@ -1,12 +1,15 @@
 /**
- * ADR-007 R10: a local timeline copy imported from the VKB's PROJECTED
- * service-entry event (sourceKey = the projection's projectionKey) goes
- * stale the moment a correction changes that projection's date or
- * description - re-importing must replace it, not leave a second,
- * outdated entry next to the fresh one. A legacy copy with no sourceKey
- * is replaced once no current VKB service-entry event still matches its
- * own (date, description). A veteran-added event (numeric id) is never
- * touched either way. Fixture values are synthetic, not any real
+ * ADR-007 R10 + D13-2: a local timeline copy imported from the VKB's
+ * PROJECTED service-entry event (sourceKey = the projection's
+ * projectionKey) goes stale the moment a correction changes that
+ * projection's date or description. D13-2 syncs this away silently on
+ * every mount (no click, no confirm dialog) - not just when the veteran
+ * manually clicks "Import from My Records". A legacy copy with no
+ * sourceKey is replaced once no current VKB service-entry event still
+ * matches its own (date, description). A veteran-added event (numeric id)
+ * is never touched either way, and mounting never adds a brand-new
+ * projected event that was never previously imported (only the manual
+ * button does that). Fixture values are synthetic, not any real
  * veteran's data.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -43,7 +46,7 @@ beforeEach(() => {
 });
 
 describe("a stale sourceKey copy is replaced by the corrected projection", () => {
-  it("drops the old (calculated) copy and adds the corrected one", async () => {
+  it("silently drops the old (calculated) copy and adds the corrected one on mount, no click needed", async () => {
     saveTimelineEvents([
       {
         id: "vkb_1",
@@ -70,23 +73,18 @@ describe("a stale sourceKey copy is replaced by the corrected projection", () =>
     });
 
     renderTimeline();
-    await screen.findByText("📋 Timeline Events (1)");
-
-    fireEvent.click(
-      screen.getByRole("button", { name: /import from my records/i }),
-    );
-    await waitFor(() => expect(window.confirm).toHaveBeenCalled());
 
     await screen.findByText(/Enlisted \(Army National Guard\)$/);
     expect(
       screen.queryByText(/Enlisted \(Army National Guard\) \(calculated\)/),
     ).not.toBeInTheDocument();
     expect(screen.getByText("📋 Timeline Events (1)")).toBeInTheDocument();
+    expect(window.confirm).not.toHaveBeenCalled();
   });
 });
 
 describe("a legacy copy with no sourceKey is replaced once it no longer matches", () => {
-  it("drops the outdated legacy copy and adds the current one", async () => {
+  it("silently drops the outdated legacy copy and adds the current one on mount, no click needed", async () => {
     saveTimelineEvents([
       {
         id: "vkb_1",
@@ -113,23 +111,18 @@ describe("a legacy copy with no sourceKey is replaced once it no longer matches"
     });
 
     renderTimeline();
-    await screen.findByText("📋 Timeline Events (1)");
-
-    fireEvent.click(
-      screen.getByRole("button", { name: /import from my records/i }),
-    );
-    await waitFor(() => expect(window.confirm).toHaveBeenCalled());
 
     await screen.findByText(/Enlisted \(Army National Guard\)$/);
     expect(
       screen.queryByText(/Enlisted \(Army National Guard\) \(calculated\)/),
     ).not.toBeInTheDocument();
     expect(screen.getByText("📋 Timeline Events (1)")).toBeInTheDocument();
+    expect(window.confirm).not.toHaveBeenCalled();
   });
 });
 
-describe("a veteran-added event is never touched", () => {
-  it("keeps a numeric-id event even when the VKB's own projection has since changed", async () => {
+describe("mounting never adds a brand-new projected event that was never previously imported", () => {
+  it("leaves a lone veteran-added event alone until the manual Import button is clicked", async () => {
     saveTimelineEvents([
       {
         id: 1234567890,
@@ -155,7 +148,9 @@ describe("a veteran-added event is never touched", () => {
     });
 
     renderTimeline();
-    await screen.findByText("📋 Timeline Events (1)");
+    await screen.findByText("My own enlistment note");
+    await waitFor(() => expect(mockLoadVKB).toHaveBeenCalled());
+    expect(screen.getByText("📋 Timeline Events (1)")).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: /import from my records/i }),
