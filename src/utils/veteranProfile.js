@@ -3369,20 +3369,31 @@ function _resolveServiceEntryTarget(
     let candidates = nonWindowPeriods.filter((p) =>
       documentSources(p).includes(sourceDocument),
     );
-    if (documentStartDate || documentEndDate) {
-      candidates = candidates.filter((p) => {
-        const startMatches =
-          !documentStartDate ||
+    // ADR-007 §2.3 identity rule 2: a stable filename plus a matching end
+    // date alone proves the period - stop there once it's unique. A
+    // higher-ranked contributor (a code sheet, say) can have since moved
+    // the period's own effective serviceStartDate away from what this
+    // document itself printed, and no veteran correction exists yet to
+    // carry documentDate either; requiring the CURRENT effective start to
+    // still match would wrongly refuse a real, provable match. Only fall
+    // back to a start-date tie-break when the end date alone still leaves
+    // more than one candidate (e.g. the same file printed two enlistments).
+    if (documentEndDate) {
+      const byEnd = candidates.filter((p) =>
+        isSameCalendarDay(p.serviceEndDate, documentEndDate),
+      );
+      if (byEnd.length === 1) return { id: byEnd[0].id };
+      candidates = byEnd;
+    }
+    if (documentStartDate) {
+      candidates = candidates.filter(
+        (p) =>
           isSameCalendarDay(p.serviceStartDate, documentStartDate) ||
           isSameCalendarDay(
             p.startDateCorrection?.documentDate,
             documentStartDate,
-          );
-        const endMatches =
-          !documentEndDate ||
-          isSameCalendarDay(p.serviceEndDate, documentEndDate);
-        return startMatches && endMatches;
-      });
+          ),
+      );
     }
     if (candidates.length !== 1) {
       return { ok: false, periodId: null, reason: "no_period_for_document" };

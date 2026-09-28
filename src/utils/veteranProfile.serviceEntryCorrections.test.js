@@ -316,6 +316,48 @@ describe("F2: precedence within one enlistment beats chronology", () => {
   });
 });
 
+describe("setServiceEntryDate: sourceDocument targeting survives a later source outranking the period's start", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    seedProfile();
+  });
+
+  it("still resolves by (filename, end date) once a code sheet has moved the period's effective start away from what the NGB-22 itself printed", () => {
+    const ngbId = upsertNgb22("2002-03-05", true, "2010-06-15");
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2002-03-01",
+        serviceEndDate: "2010-06-15",
+        formType: "Code Sheet",
+      },
+      {
+        sourceDocument: "codesheet-synthetic.pdf",
+        confidence: 100,
+        authoritativeDates: true,
+      },
+    );
+    expect(getServicePeriods()).toHaveLength(1);
+    expect(getServiceEntry()).toMatchObject({
+      source: "code_sheet",
+      periodId: ngbId,
+    });
+
+    const result = setServiceEntryDate({
+      date: "2002-01-15",
+      via: "muster_review",
+      sourceDocument: "ngb22-synthetic.pdf",
+      documentStartDate: "2002-03-05",
+      documentEndDate: "2010-06-15",
+    });
+
+    expect(result).toMatchObject({ ok: true, periodId: ngbId });
+    expect(getServiceEntry()).toMatchObject({
+      date: "2002-01-15",
+      source: "veteran",
+    });
+  });
+});
+
 describe("a code sheet for the same enlistment, filed separately, must not override a veteran's correction", () => {
   beforeEach(() => {
     localStorage.clear();
