@@ -192,6 +192,40 @@ describe("[F8b] a conflict pick updates the displayed value and emits no correct
   });
 });
 
+describe("[F8f] retyping the document's own value undoes a saved correction", () => {
+  it("emits a serviceEntryCorrection and shows the calculated marker instead of silently keeping the saved correction", async () => {
+    const onVerify = renderBriefing(
+      { serviceStartDate: "2002-03-05", serviceStartDateDerived: true },
+      {
+        priorServiceStartCorrection: {
+          date: "2001-11-01",
+          documentDate: "2002-03-05",
+        },
+      },
+    );
+
+    expect(await screen.findByText(/2001-11-01/)).toBeInTheDocument();
+    expect(screen.getByText(/your saved correction/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("[Edit]"));
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "2002-03-05" },
+    });
+    fireEvent.click(screen.getByText("Save"));
+
+    expect(
+      await screen.findByText(/calculated from net service/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/your saved correction/)).not.toBeInTheDocument();
+
+    const payload = await clickVerifyAndSave(onVerify);
+    expect(payload.serviceEntryCorrection).toMatchObject({
+      date: "2002-03-05",
+      documentStartDate: "2002-03-05",
+    });
+  });
+});
+
 describe("[G11] deleting an array item regroups from the current filteredData", () => {
   it("keeps the remaining item visible after deleting one from a two-item array field", async () => {
     renderBriefing({

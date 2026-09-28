@@ -2259,9 +2259,12 @@ function _displayedStartMarker(editedValue, currentData, prior) {
   if (prior?.date && isSameCalendarDay(editedValue, prior.date)) {
     return "your saved correction";
   }
+  // A prior correction only seeds the field's initial value - once the
+  // veteran retypes the document's own raw value (undoing that
+  // correction), this must show the guess for what it is, not fall
+  // through silently just because a prior correction still exists.
   if (
     currentData?.serviceStartDateDerived &&
-    !prior &&
     isSameCalendarDay(editedValue, currentData?.serviceStartDate)
   ) {
     return "calculated from net service";
@@ -2274,6 +2277,7 @@ function buildVerifyAndSaveHandler({
   editedData,
   typedFields,
   currentData,
+  priorServiceStartCorrection,
   onVerify,
   saveToVKB,
   updateProfile,
@@ -2288,15 +2292,21 @@ function buildVerifyAndSaveHandler({
 
     // ADR-007 §9 (W1): a correction is only ever sent when the veteran
     // actually TYPED it (typedFields), checked it as verified, and it
-    // genuinely differs from what this document printed - never for a
-    // conflict pick or an unedited acknowledgment of the OCR guess.
+    // genuinely differs from the value the field started this document at
+    // - the prior saved correction when this document was already
+    // corrected once, or this document's own raw printed value otherwise.
+    // Comparing only against the raw value meant retyping the document's
+    // own date to undo a prior correction looked like "no change" and was
+    // silently dropped (setServiceEntryDate already reverts a period back
+    // to its document value when the two match - see
+    // veteranProfile.serviceEntryCorrections.test.js's revert-semantics
+    // suite - this only needed to actually be sent).
+    const startFieldBaseline =
+      priorServiceStartCorrection?.date ?? currentData?.serviceStartDate;
     const typedNewStart =
       typedFields.has("serviceStartDate") &&
       verifiedFields.serviceStartDate &&
-      !isSameCalendarDay(
-        editedData.serviceStartDate,
-        currentData?.serviceStartDate,
-      );
+      !isSameCalendarDay(editedData.serviceStartDate, startFieldBaseline);
     const serviceEntryCorrection = typedNewStart
       ? {
           date: editedData.serviceStartDate,
@@ -2412,6 +2422,7 @@ function useDocumentBriefingController({
     editedData,
     typedFields,
     currentData,
+    priorServiceStartCorrection,
     onVerify,
     saveToVKB,
     updateProfile,
