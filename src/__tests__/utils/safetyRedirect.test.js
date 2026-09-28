@@ -396,22 +396,6 @@ describe("Triple-Escape panic key counter - bubble-phase decision edge cases", (
     child.remove();
   });
 
-  // REGRESSION GUARD: Tooltip.jsx dismisses on Escape via a document
-  // capture-phase listener that calls stopPropagation (not preventDefault).
-  // window's capture-phase snapshot still runs first (window is above
-  // document in the capture order), but stopPropagation halts the event
-  // before it ever reaches window's bubble-phase listener, so it must not be
-  // counted - matching pre-existing behavior for that interaction.
-  it("a document capture-phase handler that stops propagation (e.g. Tooltip dismissing on Escape) is not counted", () => {
-    const stopper = (e) => {
-      if (e.key === "Escape") e.stopPropagation();
-    };
-    document.addEventListener("keydown", stopper, true);
-    for (let i = 0; i < ESCAPE_THRESHOLD; i++) pressEscapeOn(document.body);
-    expect(panicSpy).not.toHaveBeenCalled();
-    document.removeEventListener("keydown", stopper, true);
-  });
-
   // REGRESSION GUARD: holding Escape sends OS auto-repeat keydowns
   // (event.repeat === true) after the initial press. A keyboard user with a
   // tremor or slow key release holding Escape to close a single dialog must
@@ -446,6 +430,116 @@ describe("Triple-Escape panic key counter - bubble-phase decision edge cases", (
     vi.advanceTimersByTime(ESCAPE_WINDOW_MS / 2);
 
     expect(panicSpy).not.toHaveBeenCalled();
+  });
+});
+
+// Split from the describe block above to stay under max-lines-per-function -
+// same setup/teardown, just the Tooltip/stopPropagation-swallow cases
+// (decision C: only a dialog-closing Escape is exempt, so one a tooltip
+// merely swallows via stopPropagation must still count).
+describe("Triple-Escape panic key counter - tooltip/stopPropagation swallow (decision C)", () => {
+  let panicSpy;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    initializePanicKey();
+    panicSpy = vi.fn();
+    window.addEventListener(PANIC_EVENT, panicSpy);
+  });
+
+  afterEach(() => {
+    window.removeEventListener(PANIC_EVENT, panicSpy);
+    vi.advanceTimersByTime(ESCAPE_WINDOW_MS + 100);
+    vi.useRealTimers();
+    cleanupPanicKey();
+    document
+      .querySelectorAll('[role="dialog"], [aria-haspopup]')
+      .forEach((el) => el.remove());
+    localStorage.removeItem("vetrate_safety_use_count");
+  });
+
+  // REGRESSION GUARD (decision C): Tooltip.jsx dismisses on Escape via a
+  // document capture-phase listener that calls stopPropagation (not
+  // preventDefault). window's capture-phase snapshot still runs first
+  // (window is above document in the capture order) - stopPropagation halts
+  // the event before it ever reaches window's BUBBLE-phase listener
+  // (handleEscapeKey), but decision C exempts only a dialog-closing Escape,
+  // not one a tooltip (or anything else) merely swallows - so this must
+  // still count. snapshotEscapeContext's own deferred capture-phase fallback
+  // is what makes that true even though handleEscapeKey never runs at all
+  // for this Escape.
+  it("an Escape swallowed by a document capture-phase stopPropagation handler (e.g. Tooltip dismissing on Escape) still counts (decision C)", () => {
+    const stopper = (e) => {
+      if (e.key === "Escape") e.stopPropagation();
+    };
+    document.addEventListener("keydown", stopper, true);
+    try {
+      for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+        pressEscapeOn(document.body);
+        vi.advanceTimersByTime(0);
+      }
+      expect(panicSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      // In a `try/finally`, not trailing code: a failed assertion above must
+      // not leave this listener registered for every later test in the file
+      // - it stops propagation for ANY Escape, so a leak here would silently
+      // fail unrelated tests instead of just this one.
+      document.removeEventListener("keydown", stopper, true);
+    }
+  });
+
+  // REGRESSION GUARD (decision C): the same stopPropagation swallow, but with
+  // a real dialog open underneath - e.g. a tooltip inside an open tool
+  // dialog. The dialog itself never closes, so the fallback's dialog-count
+  // comparison must not mistake "a tooltip closed" for "the dialog closed"
+  // and wrongly exempt it.
+  it("an Escape swallowed by stopPropagation while a dialog stays open still counts, without mistaking it for a dialog close", () => {
+    const dialog = openDialog();
+    const stopper = (e) => {
+      if (e.key === "Escape") e.stopPropagation();
+    };
+    document.addEventListener("keydown", stopper, true);
+    try {
+      for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+        pressEscapeOn(dialog);
+        vi.advanceTimersByTime(0);
+      }
+      expect(panicSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      document.removeEventListener("keydown", stopper, true);
+      dialog.remove();
+    }
+  });
+
+  // REGRESSION GUARD: live-browser-caught race, not reachable by the two
+  // tests above (both flush each deferred fallback with
+  // vi.advanceTimersByTime(0) before the next press, so only ever one is
+  // in flight at a time). Reproduced live: hover the Report-a-Bug button,
+  // press Escape 3 times as fast as Playwright can send them (~1ms apart,
+  // well inside a single setTimeout(0) tick) - no redirect. Tooltip closes
+  // (and its document capture-phase listener unmounts) on the FIRST Escape,
+  // so presses 2 and 3 reach window's bubble phase normally while press 1's
+  // fallback is still pending. A shared module-level "did this reach
+  // bubble" flag was the cause: press 3's capture phase reset it to false,
+  // then press 3's OWN bubble set it back to true - and by the time press
+  // 1's deferred fallback finally read it, it saw press 3's `true`, not its
+  // own outcome, and wrongly treated press 1 as already handled. Only 2 of
+  // 3 presses ever counted. Tracking reachability on each event object
+  // instead (not shared state) is what fixes it.
+  it("three rapid Escapes, only the first swallowed by a self-removing stopPropagation handler (Tooltip closing on its own Escape), still redirect", () => {
+    const stopper = (e) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      document.removeEventListener("keydown", stopper, true);
+    };
+    document.addEventListener("keydown", stopper, true);
+    try {
+      for (let i = 0; i < ESCAPE_THRESHOLD; i++) pressEscapeOn(document.body);
+      vi.advanceTimersByTime(0);
+      expect(panicSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      document.removeEventListener("keydown", stopper, true);
+    }
   });
 });
 

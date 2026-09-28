@@ -165,26 +165,71 @@ const DIALOG_SELECTOR =
 // bubble call would read them, so there is no cross-event leakage.
 let pendingDialogCount = 0;
 
+// Set on the specific KeyboardEvent object by handleEscapeKey (window BUBBLE
+// phase) the moment it actually runs, and read back by the capture-phase
+// fallback below - lets the fallback tell "the normal bubble path already
+// decided THIS Escape" apart from "the normal bubble path never got a turn
+// at all". Deliberately a property on the event, not shared module state: a
+// module-level flag looked equivalent but broke under rapid-fire Escapes
+// (verified live - three Escapes ~1ms apart, well inside a single
+// setTimeout(0) tick) - snapshotEscapeContext's deferred check for Escape 1
+// could run AFTER Escape 2 and 3's captures had already reset a shared flag,
+// reading THEIR reachability instead of its own. A Symbol keeps this off the
+// event's enumerable/visible surface.
+const REACHED_BUBBLE = Symbol("vetrateReachedBubble");
+
 /**
- * Capture-phase snapshot of "what's open right now". Registered on window's
- * CAPTURE phase (see initializePanicKey), which is load-bearing: a dialog's
- * own Escape handler (e.g. useFocusTrap's onEscape) closes it via a React
- * state update, and — verified live against the real app, not assumed — the
- * DOM has already been updated to remove that dialog's `role="dialog"` node
- * by the time a *bubble*-phase listener on window would run, so a query for
- * "is a dialog open right now" at that point reads a false "no". Capture
- * fires on window before the event even reaches the dialog's own bubble-phase
- * listener, so this always observes the true pre-close DOM state instead of
- * racing it. Counting (not just a boolean) is what lets handleEscapeKey tell
- * "a dialog closed" (count went down) apart from "nothing closed" (count
- * unchanged) when more than one dialog is stacked - closing the top one of
- * two must not count, but leaving both open when neither responds to Escape
- * must.
+ * Capture-phase snapshot of "what's open right now", PLUS an unblockable
+ * fallback decision for this same Escape. Registered on window's CAPTURE
+ * phase (see initializePanicKey), which is load-bearing for two reasons:
+ *
+ * 1. A dialog's own Escape handler (e.g. useFocusTrap's onEscape) closes it
+ *    via a React state update, and — verified live against the real app, not
+ *    assumed — the DOM has already been updated to remove that dialog's
+ *    `role="dialog"` node by the time a *bubble*-phase listener on window
+ *    would run, so a query for "is a dialog open right now" at that point
+ *    reads a false "no". Capture fires on window before the event even
+ *    reaches the dialog's own bubble-phase listener, so this always observes
+ *    the true pre-close DOM state instead of racing it.
+ *
+ * 2. Window's capture phase is the very first listener in the ENTIRE
+ *    dispatch - nothing downstream can prevent it from running. handleEscapeKey
+ *    below, registered on window's BUBBLE phase, can't say the same: any
+ *    listener earlier in the path that calls stopPropagation() (verified live
+ *    against Tooltip.jsx's own document capture-phase dismiss-on-Escape
+ *    handler, which does exactly this) stops the event before it ever
+ *    bubbles back to window, so handleEscapeKey silently never runs at all -
+ *    not delayed, skipped. Decision C says only a dialog-closing Escape is
+ *    exempt; a tooltip (or anything else) swallowing the event first must
+ *    still count. The deferred check here is what makes that true regardless
+ *    of whether the normal bubble path was reachable for this particular
+ *    Escape - see REACHED_BUBBLE.
+ *
+ * Counting dialogs (not just a boolean) is what lets both this fallback and
+ * handleEscapeKey tell "a dialog closed" (count went down) apart from
+ * "nothing closed" (count unchanged) when more than one dialog is stacked -
+ * closing the top one of two must not count, but leaving both open when
+ * neither responds to Escape must.
  * @param {KeyboardEvent} event
  */
 const snapshotEscapeContext = (event) => {
   if (event.key !== "Escape" || event.repeat) return;
-  pendingDialogCount = document.querySelectorAll(DIALOG_SELECTOR).length;
+  const countAtCapture = document.querySelectorAll(DIALOG_SELECTOR).length;
+  pendingDialogCount = countAtCapture;
+
+  // Deferred so every listener anywhere on the dispatch path - reachable or
+  // not - has finished (or definitively never will) before this decides.
+  setTimeout(() => {
+    if (event[REACHED_BUBBLE]) return; // handleEscapeKey already decided this one
+    if (event.defaultPrevented) return;
+    if (
+      countAtCapture > 0 &&
+      document.querySelectorAll(DIALOG_SELECTOR).length < countAtCapture
+    ) {
+      return; // a dialog closed - exempt per decision C
+    }
+    recordEscapePress();
+  }, 0);
 };
 
 const recordEscapePress = () => {
@@ -217,19 +262,25 @@ const recordEscapePress = () => {
 /**
  * Bubble-phase decision of whether this Escape counts toward the panic
  * threshold. Registered on window's BUBBLE phase (see initializePanicKey),
- * which is load-bearing for two reasons a capture-phase decision can't
- * satisfy: `event.defaultPrevented` and whether propagation was stopped are
- * only meaningful once every other handler along the dispatch path (a
- * dialog's own handler, a document capture-phase listener like Tooltip's,
+ * which is load-bearing for `event.defaultPrevented`: it's only meaningful
+ * once every other handler along the dispatch path (a dialog's own handler,
  * etc.) has had a chance to run - guaranteed by the time a bubble-phase
  * listener on window runs, since window is the last stop in the bubble
- * phase. Reading them during the capture-phase snapshot above would always
- * see false/not-stopped, since capture runs before any of those handlers
- * exist yet.
+ * phase. Reading it during the capture-phase snapshot above would always see
+ * false, since capture runs before any of those handlers exist yet.
+ *
+ * This is the fast/normal path, not the only path: whenever something
+ * earlier in the dispatch (a document capture-phase listener like Tooltip's)
+ * stops propagation before it gets here, this never runs at all for that
+ * Escape - snapshotEscapeContext's own deferred fallback is what still
+ * decides it correctly in that case. REACHED_BUBBLE, set on the event
+ * itself, tells that fallback this path already ran for THIS Escape, so the
+ * two never double-count it.
  * @param {KeyboardEvent} event
  */
 const handleEscapeKey = (event) => {
   if (event.key !== "Escape" || event.repeat) return;
+  event[REACHED_BUBBLE] = true;
 
   // Don't count ESC presses already handled by a dialog dismissing itself
   // (or any handler that called preventDefault before this listener ran).
