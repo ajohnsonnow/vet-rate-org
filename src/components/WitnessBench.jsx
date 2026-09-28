@@ -40,6 +40,8 @@ import {
   saveAnalysisResults,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
+import { loadVKB } from "../utils/veteranKnowledgeBase";
+import { substituteVeteranNamePlaceholder } from "../utils/aiStatementHelper";
 
 /**
  * Relationship types that affect the interview questions
@@ -814,6 +816,21 @@ function useStartInterview({
   }, [relationship, condition, useAI, aiAvailable]);
 }
 
+// ADR-008 / owner decision D: the AI (and the no-AI template) only ever
+// write the placeholder "[Veteran]" - never the veteran's real name, which
+// this looks up LOCALLY, after generation, purely to personalize the
+// veteran-visible/saved statement. Never sent to any AI provider.
+// Best-effort: an identifier-load failure must never block a statement
+// from being generated, just leave the placeholder as-is.
+async function _resolveVeteranName() {
+  try {
+    const vkb = await loadVKB();
+    return vkb?.personal?.fullName || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Generate the final statement
  */
@@ -845,6 +862,8 @@ function useGenerateStatement({
         statement = compileStatementWithoutAI(relationship, condition, answers);
       }
 
+      const veteranName = await _resolveVeteranName();
+      statement = substituteVeteranNamePlaceholder(statement, veteranName);
       setGeneratedStatement(statement);
       setStep(3);
 
@@ -863,10 +882,10 @@ function useGenerateStatement({
     } catch (err) {
       console.error("Statement generation failed:", err);
       // Fall back to template
-      const statement = compileStatementWithoutAI(
-        relationship,
-        condition,
-        answers,
+      const veteranName = await _resolveVeteranName();
+      const statement = substituteVeteranNamePlaceholder(
+        compileStatementWithoutAI(relationship, condition, answers),
+        veteranName,
       );
       setGeneratedStatement(statement);
       setStep(3);

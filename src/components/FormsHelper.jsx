@@ -10,7 +10,11 @@ import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
-import { enhanceFormStatement } from "../utils/aiStatementHelper";
+import {
+  enhanceFormStatement,
+  substituteVeteranNamePlaceholder,
+} from "../utils/aiStatementHelper";
+import { loadVKB } from "../utils/veteranKnowledgeBase";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -8299,7 +8303,17 @@ function _buildFormsHelperAIHandlers(ctx) {
       const result = await enhanceFormStatement(selectedForm?.id, formData);
 
       if (result.success) {
-        setAiEnhancedContent(result.content);
+        // ADR-008 / owner decision D: aiStatementHelper's buddy/personal/
+        // ptsd-stressor prompts all instruct the model to write "[Veteran]"
+        // (or "[Veteran Name]") instead of the veteran's real name - this
+        // swaps it back in LOCALLY, after generation, never sent to the AI.
+        const vkb = await loadVKB().catch(() => null);
+        setAiEnhancedContent(
+          substituteVeteranNamePlaceholder(
+            result.content,
+            vkb?.personal?.fullName,
+          ),
+        );
         setShowAIVersion(true);
       } else {
         setAiError(result.error || "Failed to enhance statement with AI.");

@@ -22,6 +22,8 @@ import {
   getAIStatus,
   AI_MODES,
 } from "./unifiedAIService";
+import { loadVKB } from "./veteranKnowledgeBase";
+import { redactVeteranIdentifiers } from "./piiScrubber";
 
 // LocalStorage key for BYOK (Bring Your Own Key)
 const STORAGE_KEY = "vetrate_gemini_key";
@@ -32,6 +34,26 @@ const STORAGE_KEY = "vetrate_gemini_key";
  */
 export const isAIAvailable = () => {
   return isAnyAIAvailable();
+};
+
+// Owner decision D (2026-09-28, ADR-008): every statement/letter prompt in
+// this file (and WitnessBench.jsx's buddy-statement prompt) instructs the
+// model to write a placeholder - "[Veteran]" or "[Veteran Name]" - instead
+// of the veteran's real name, so the model never sees it. This swaps the
+// placeholder back to the real name in the RESPONSE, after generation - a
+// purely local substitution the veteran-visible/saved statement needs, never
+// sent to any AI provider.
+const VETERAN_PLACEHOLDER = /\[Veteran(?:\s+Name)?\]/gi;
+
+/**
+ * @param {string} text - the model's (or a local template's) output
+ * @param {string} [veteranName] - the veteran's real name, looked up locally
+ * @returns {string} `text` unchanged if no name is known; otherwise every
+ *   placeholder occurrence replaced with the real name.
+ */
+export const substituteVeteranNamePlaceholder = (text, veteranName) => {
+  if (!text || typeof text !== "string" || !veteranName) return text;
+  return text.replace(VETERAN_PLACEHOLDER, veteranName);
 };
 
 /**
@@ -554,6 +576,20 @@ function mapAIErrorToResponse(error) {
   };
 }
 
+// ADR-008: best-effort - an identifier-load failure (no IndexedDB, private
+// browsing, …) must never block a statement from being generated.
+async function _finalizeAiPrompt(prompt) {
+  try {
+    const vkb = await loadVKB();
+    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+      .map((c) => c.claimNumber)
+      .filter(Boolean);
+    return redactVeteranIdentifiers(prompt, vkb?.personal, claimNumbers);
+  } catch {
+    return prompt;
+  }
+}
+
 /**
  * Call AI service (Unified - supports both Cloud and Local AI)
  * Now with built-in rate limiting ("The Cooldown") and crisis detection
@@ -589,8 +625,14 @@ const callGeminiAPI = async (prompt, userInput = null) => {
   recordAIRequest();
 
   try {
+    // ADR-008 single enforcement point: this file's prompt builders already
+    // avoid interpolating the veteran's identity by construction (see the
+    // CLOUD_AI_DATA_DISCLOSURE "notShared" lists above), but every prompt
+    // funnels through this one call site regardless of which builder made
+    // it - the final backstop belongs here, not duplicated per builder.
+    const safePrompt = await _finalizeAiPrompt(prompt);
     // ═══ USE UNIFIED AI SERVICE ═══
-    const result = await generateAI(prompt, {
+    const result = await generateAI(safePrompt, {
       systemPrompt:
         "You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.",
       maxTokens: 2048,
@@ -2068,6 +2110,7 @@ export default {
   searchVSOs,
   stressTestStatement,
   decodeDecision,
+  substituteVeteranNamePlaceholder,
   // New unified AI exports
   isLocalAIReady,
   isCloudAIAvailable,
