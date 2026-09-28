@@ -14,21 +14,6 @@ export default function MusterCallHeader({ onClose, processing }) {
   return (
     <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900 p-6 text-white">
       <HeaderCloseSlot
-        // This header's title is always followed by a description paragraph
-        // (two lines), so it's taller than HeaderCloseSlot's shared
-        // `sm:items-center` assumes (that default centers close against a
-        // single-line title, to clear Quick Exit's box for short headers -
-        // see HeaderCloseSlot.jsx's own comment). Centering against this
-        // header's full two-line height instead pushed close-x ~22px below
-        // the header's own top line, off decision (1)'s "top corner, never
-        // below a title" line. `sm:!items-start` overrides just this
-        // instance back to top alignment (matching the header's actual
-        // shape) without touching the shared default the other 45+ shorter
-        // headers rely on. ResponsiveModal's own `sm:!mt-16` already
-        // reserves clearance from Quick Exit's box for every dialog
-        // regardless of header height, so this doesn't reintroduce N14's
-        // centre-hit regression (verified live at 1024x768/1280x720).
-        className="sm:!items-start"
         close={
           <button
             onClick={onClose}

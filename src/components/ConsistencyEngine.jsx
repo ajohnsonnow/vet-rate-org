@@ -193,11 +193,6 @@ function ConsistencyEngineHeader({
       )} text-white p-6`}
     >
       <HeaderCloseSlot
-        // Two-line header (title+tabs row, then a description paragraph) -
-        // taller than HeaderCloseSlot's shared `sm:items-center` assumes.
-        // See MusterCallHeader.jsx's identical comment for the full
-        // rationale; same fix, same verification.
-        className="sm:!items-start"
         close={
           <button
             onClick={onClose}

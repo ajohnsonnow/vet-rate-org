@@ -2604,6 +2604,34 @@ for (const vp of HEADER_ALIGNMENT_VIEWPORTS) {
   });
 }
 
+// D13: HeaderCloseSlot's root-cause fix (removing the `sm:items-center`
+// special case entirely, back to unconditional `items-start`) targets
+// exactly the 640-720px band HEADER_ALIGNMENT_VIEWPORTS never covered (see
+// CLAIM_NAV_HEADER_VIEWPORTS above, previously scoped to only two dialogs
+// because it was a per-dialog override at the time). Now that the fix lives
+// in the shared default, this runs the same DOM-enumerated sweep across
+// every launcher instead of just those two.
+const HEADER_WRAP_BAND_VIEWPORTS = [
+  { name: "sm-boundary", width: 640, height: 800 },
+  { name: "sm-boundary-wrap", width: 660, height: 800 },
+  { name: "sm-boundary-wrap-tall", width: 700, height: 900 },
+];
+
+for (const vp of HEADER_WRAP_BAND_VIEWPORTS) {
+  test.describe(`Tool dialog close-X stays top-right @ ${vp.width}px (${vp.name})`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test("every launcher's close × right edge and top stay pinned to the header's top-right corner", async ({
+      page,
+    }) => {
+      test.setTimeout(600_000);
+      await seedReturningUserAndGoHome(page);
+      const violations = await runToolGridSweep(page, closeTopRightCallback);
+      expect(violations).toEqual([]);
+    });
+  });
+}
+
 // RTL regression coverage: `closeTopRightViolations`' `isRtl` branch
 // (decision (1): the close-X flips to the header's top-LEFT corner under
 // RTL) had no committed test that ever set `document.dir` to `rtl` to run

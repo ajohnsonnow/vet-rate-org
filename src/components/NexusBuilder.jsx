@@ -1861,13 +1861,6 @@ function useNexusConditionChoices() {
 const NexusConditionPickerHeader = ({ onClose, onReportBug, t }) => (
   <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 text-white px-4 sm:px-6 py-4 sm:py-6 flex-shrink-0">
     <HeaderCloseSlot
-      // The title + ReportBugLink cluster can still wrap onto two lines at
-      // sm+ (a long pickerTitle translation, or RTL's wider glyphs), which
-      // makes HeaderCloseSlot's shared `sm:items-center` default centre
-      // close-x against the wrapped block's full height instead of its top
-      // line - see MusterCallHeader.jsx's identical comment for the full
-      // rationale; same fix, same verification (N13/N14).
-      className="sm:!items-start"
       close={
         <button
           onClick={onClose}
