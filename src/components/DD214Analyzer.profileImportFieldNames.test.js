@@ -46,7 +46,11 @@ import {
   _prepareManualProfileImport,
   _saveDd214ToProfile,
 } from "./DD214Analyzer.jsx";
-import { getServicePeriods, getServiceEntry } from "../utils/veteranProfile.js";
+import {
+  getServicePeriods,
+  getServiceEntry,
+  upsertServicePeriod,
+} from "../utils/veteranProfile.js";
 
 describe("DD214Analyzer: profile import uses the whitelisted field names", () => {
   it("_prepareAndShowProfileImport sends serviceStartDate/serviceEndDate, not entryDate/separationDate", () => {
@@ -179,5 +183,48 @@ describe("[DR-3] _saveDd214ToProfile creates a canonical period for a single DD-
       ),
     ).toBe(true);
     expect(getServiceEntry()).toMatchObject({ date: "1998-01-05" });
+  });
+});
+
+describe("_saveDd214ToProfile: an edit with no eligible period must not target an unrelated enlistment", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem(
+      "vet_rate_veteran_profile",
+      JSON.stringify({ fullName: "Jordan Sample" }),
+    );
+  });
+
+  it("a multi-DD-214 import's edited start date does not overwrite an unrelated existing enlistment", () => {
+    // An existing NGB-22 enlistment already backs the entry - no period
+    // is eligible for creation from a multi-DD-214 result (dd214Count: 2).
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2002-03-05",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22-synthetic.pdf", confidence: 60 },
+    );
+
+    _saveDd214ToProfile(
+      {
+        dd214Count: 2,
+        entryDate: "2004-01-10",
+        separationDate: "2005-03-15",
+        branch: "Army",
+      },
+      "combined text",
+      { serviceStartDate: "2004-01-01" },
+      { serviceStartDateEdited: true },
+      [{ filename: "two-dd214s-synthetic.pdf" }],
+    );
+
+    expect(getServicePeriods()).toHaveLength(1);
+    const ngbPeriod = getServicePeriods()[0];
+    expect(ngbPeriod.serviceStartDate).toBe("2002-03-05");
+    expect(ngbPeriod.serviceStartDateSource).toBe("calculated");
+    expect(ngbPeriod.startDateCorrection).toBeNull();
   });
 });

@@ -847,7 +847,7 @@ export function _saveDd214ToProfile(
     setServiceEntryDate({
       date: selectedFields.serviceStartDate,
       via: "dd214_import",
-      ...(periodId ? { periodId } : {}),
+      ...(periodId ? { periodId } : { noPeriod: true }),
     });
   }
 

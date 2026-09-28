@@ -3293,6 +3293,7 @@ export const setServiceEntryDate = ({
   sourceDocument,
   documentStartDate,
   documentEndDate,
+  noPeriod = false,
 } = {}) => {
   if (!SERVICE_ENTRY_VIAS.includes(via)) {
     return { ok: false, periodId: null, reason: "invalid_via" };
@@ -3310,12 +3311,21 @@ export const setServiceEntryDate = ({
     (p) => p.periodScope !== "window",
   );
 
-  const target = _resolveServiceEntryTarget(history, nonWindowPeriods, {
-    periodId,
-    sourceDocument,
-    documentStartDate,
-    documentEndDate,
-  });
+  // noPeriod: an explicit "no period backs this edit" signal (e.g. a
+  // DD214Analyzer import that wasn't eligible for a period). Without it,
+  // the resolver's no-periodId/no-sourceDocument branch falls back to
+  // whatever period the entry currently resolves to - fine for an editor
+  // generically correcting "the" service entry, wrong for a document-scoped
+  // edit that never proved a link to any existing period (standing
+  // decision 3).
+  const target = noPeriod
+    ? { id: null }
+    : _resolveServiceEntryTarget(history, nonWindowPeriods, {
+        periodId,
+        sourceDocument,
+        documentStartDate,
+        documentEndDate,
+      });
   if (target.reason) return target;
   const targetId = target.id;
 
