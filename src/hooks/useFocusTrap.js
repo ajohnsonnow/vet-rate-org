@@ -108,6 +108,75 @@ function handleTabKey(e, node) {
   }
 }
 
+const DIALOG_CONTAINER_SELECTOR = '[role="dialog"], [aria-modal="true"]';
+
+// Every trap that's currently active, in activation order (push on mount,
+// splice out on unmount) — last entry is the topmost/innermost dialog.
+// Module-scoped, not per-hook-instance: ResponsiveModal portals every dialog
+// straight to document.body, so a "nested" dialog (e.g. Muster Call's
+// Intelligence Briefing opened on top of Muster Call itself) is a DOM
+// *sibling* of its opener, not a descendant — a bubbling keydown listener on
+// the briefing's own node never reaches Muster Call's node and vice versa.
+// Escape is handled once, centrally, for whichever trap is topmost, instead
+// of per-node — see the document-level listener below.
+const escapeTrapStack = [];
+
+function handleTopmostEscape(e) {
+  if (e.key !== "Escape") return;
+  escapeTrapStack.at(-1)?.onEscapeRef.current?.(e);
+}
+
+function pushEscapeTrap(entry) {
+  if (typeof document === "undefined") return;
+  escapeTrapStack.push(entry);
+  if (escapeTrapStack.length === 1) {
+    document.addEventListener("keydown", handleTopmostEscape);
+  }
+}
+
+function popEscapeTrap(entry) {
+  if (typeof document === "undefined") return;
+  const index = escapeTrapStack.indexOf(entry);
+  if (index !== -1) escapeTrapStack.splice(index, 1);
+  if (escapeTrapStack.length === 0) {
+    document.removeEventListener("keydown", handleTopmostEscape);
+  }
+}
+
+// Same-tree bubbling handles Escape for whichever trap is topmost even when
+// focus never made it past `document` (e.g. a loading-state dialog with no
+// focusable content yet) — but the deciding case this exists for is teardown
+// focus landing on <body>, which is *inside* `document` and so still reaches
+// this listener, unlike the old node-scoped one.
+function findNearestMountedDialog(excludeNode) {
+  const dialogs = document.querySelectorAll(DIALOG_CONTAINER_SELECTOR);
+  for (let i = dialogs.length - 1; i >= 0; i--) {
+    if (dialogs[i] !== excludeNode) return dialogs[i];
+  }
+  return null;
+}
+
+function restoreFocusOnTeardown(node, restoreRef) {
+  const opener = restoreRef.current;
+  // A nested dialog's opener can legitimately leave the DOM before the
+  // nested dialog itself closes (e.g. Muster Call swaps its whole formation
+  // view out from under the Intelligence Briefing while it's still open) —
+  // calling .focus() on a detached element silently no-ops, dropping focus
+  // to <body> instead of restoring it anywhere useful.
+  if (
+    opener &&
+    document.contains(opener) &&
+    typeof opener.focus === "function"
+  ) {
+    opener.focus();
+    return;
+  }
+  const fallback = findNearestMountedDialog(node);
+  if (!fallback) return;
+  const items = getFocusables(fallback);
+  (items[0] || fallback).focus?.();
+}
+
 function attachFocusTrap(node, { autoFocus, onEscapeRef, restoreRef }) {
   restoreRef.current =
     typeof document !== "undefined" ? document.activeElement : null;
@@ -120,20 +189,19 @@ function attachFocusTrap(node, { autoFocus, onEscapeRef, restoreRef }) {
   const contentObserver = autoFocus ? watchForFocusableContent(node) : null;
 
   const onKeyDown = (e) => {
-    if (e.key === "Escape") {
-      onEscapeRef.current?.(e);
-      return;
-    }
     if (e.key !== "Tab") return;
     handleTabKey(e, node);
   };
 
   node.addEventListener("keydown", onKeyDown);
+  const trapEntry = { onEscapeRef };
+  pushEscapeTrap(trapEntry);
+
   return () => {
     contentObserver?.disconnect();
     node.removeEventListener("keydown", onKeyDown);
-    const opener = restoreRef.current;
-    if (opener && typeof opener.focus === "function") opener.focus();
+    popEscapeTrap(trapEntry);
+    restoreFocusOnTeardown(node, restoreRef);
   };
 }
 

@@ -191,22 +191,19 @@ describe("Triple-Escape panic key counter", () => {
     expect(panicSpy).not.toHaveBeenCalled();
   });
 
-  it("an Escape that actually closes an aria-haspopup menu/popover is not counted", () => {
+  // Owner decision C: only an Escape that closes a tool DIALOG is exempt -
+  // a popup/menu closing on Escape still counts toward the panic threshold.
+  it("an Escape that closes an aria-haspopup menu/popover still counts (decision C)", () => {
     const trigger = openMenuPopoverThatClosesOnEscape();
-    pressEscapeOn(trigger);
-    vi.advanceTimersByTime(0);
-    expect(panicSpy).not.toHaveBeenCalled();
+    for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+      pressEscapeOn(trigger);
+      vi.advanceTimersByTime(0);
+    }
+    expect(panicSpy).toHaveBeenCalledTimes(1);
     trigger.remove();
   });
 
-  // REGRESSION GUARD: an earlier version of this exemption treated every
-  // open aria-haspopup+aria-expanded menu as "will be handled elsewhere",
-  // full stop - which left the panic key completely dead for as long as a
-  // menu that doesn't respond to Escape (Header's Tools/Resources dropdowns)
-  // stayed open, since nothing ever closed it and every Escape was swallowed
-  // forever. It must fall back to counting once it's clear the menu isn't
-  // actually going to close.
-  it("an Escape while an aria-haspopup menu/popover stays expanded (nothing closes it) is still counted, so the panic key isn't swallowed forever", () => {
+  it("an Escape while an aria-haspopup menu/popover stays expanded (nothing closes it) also counts", () => {
     const trigger = openMenuPopover();
     for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
       pressEscape();
@@ -449,6 +446,70 @@ describe("Triple-Escape panic key counter - bubble-phase decision edge cases", (
     vi.advanceTimersByTime(ESCAPE_WINDOW_MS / 2);
 
     expect(panicSpy).not.toHaveBeenCalled();
+  });
+});
+
+// Split out to stay under max-lines-per-function - owner decision C's exact
+// exemption scope: only a dialog-closing Escape is exempt, so a non-dialog
+// overlay (crisis modal is a dialog that never closes; a combobox is not a
+// dialog at all) counts either way.
+describe("Triple-Escape panic key counter - decision C exemption scope", () => {
+  let panicSpy;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    initializePanicKey();
+    panicSpy = vi.fn();
+    window.addEventListener(PANIC_EVENT, panicSpy);
+  });
+
+  afterEach(() => {
+    window.removeEventListener(PANIC_EVENT, panicSpy);
+    vi.advanceTimersByTime(ESCAPE_WINDOW_MS + 100);
+    vi.useRealTimers();
+    cleanupPanicKey();
+    document
+      .querySelectorAll(
+        '[role="dialog"], [role="alertdialog"], [aria-haspopup]',
+      )
+      .forEach((el) => el.remove());
+    localStorage.removeItem("vetrate_safety_use_count");
+  });
+
+  // The crisis modal (role="alertdialog" + aria-modal, no onEscape by design
+  // - see CrisisModal.jsx) never closes on Escape, so its Escapes count like
+  // any other unhandled press.
+  it("an Escape while the crisis modal is open (alertdialog, non-dismissible) counts toward the panic sequence", () => {
+    const crisisModal = document.createElement("div");
+    crisisModal.setAttribute("role", "alertdialog");
+    crisisModal.setAttribute("aria-modal", "true");
+    document.body.appendChild(crisisModal);
+    for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+      pressEscapeOn(crisisModal);
+      vi.advanceTimersByTime(0);
+    }
+    expect(panicSpy).toHaveBeenCalledTimes(1);
+    crisisModal.remove();
+  });
+
+  // A combobox (SearchBar's search suggestions - role=combobox +
+  // aria-haspopup=listbox + aria-expanded) is not a dialog, so an Escape
+  // that closes it still counts, unlike a dialog-closing Escape.
+  it("an Escape that closes a search combobox's suggestion list still counts", () => {
+    const combobox = document.createElement("input");
+    combobox.setAttribute("role", "combobox");
+    combobox.setAttribute("aria-haspopup", "listbox");
+    combobox.setAttribute("aria-expanded", "true");
+    combobox.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") combobox.setAttribute("aria-expanded", "false");
+    });
+    document.body.appendChild(combobox);
+    for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+      pressEscapeOn(combobox);
+      vi.advanceTimersByTime(0);
+    }
+    expect(panicSpy).toHaveBeenCalledTimes(1);
+    combobox.remove();
   });
 });
 

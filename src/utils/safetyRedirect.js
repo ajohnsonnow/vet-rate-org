@@ -135,24 +135,13 @@ export const triggerSoftExit = () => {
 // node, not window/document, and only sees events that pass through it).
 // Either way, the panic key must not go dead for as long as that dialog
 // happens to be open - so "closed" is verified after the fact, not assumed.
+// Owner decision C: ONLY an Escape that closes a tool dialog (role="dialog" /
+// role="alertdialog" / aria-modal="true") is exempt from the panic count.
+// Escapes that close (or fail to close) a popup, menu, tooltip, or combobox
+// still count, same as one that closes nothing - so this selector is
+// deliberately scoped to dialogs only, not every dismissible overlay.
 const DIALOG_SELECTOR =
   '[role="dialog"], [role="alertdialog"], [aria-modal="true"]';
-
-// Open disclosure menus/popovers (Header's Tools/Resources dropdowns,
-// AccessibilityMenu, SearchBar's combobox — this repo's convention is
-// `aria-haspopup` + `aria-expanded="true"` together on the trigger). Unlike
-// dialogs, NOT every one of these actually closes on Escape - Header's Tools
-// and Resources dropdowns only close on blur or a second trigger click, and
-// have no Escape handler at all. Treating "open" as automatically "will be
-// handled elsewhere" left the panic key permanently dead for as long as one
-// of those was open (see safetyRedirect.test.js). So this selector only gets
-// a deferred, verified exemption (see handleEscapeKey) rather than an
-// immediate one. Deliberately narrower than every `aria-expanded="true"` in
-// the app: a plain accordion/disclosure section (VersionDropdown's
-// changelog, SystemRequirementsNotice's ExpandSection) sets `aria-expanded`
-// with no `aria-haspopup` and must NOT suppress a genuine panic Escape just
-// because a veteran left an unrelated accordion open somewhere on the page.
-const MENU_POPOVER_SELECTOR = '[aria-haspopup][aria-expanded="true"]';
 
 // Snapshot of what was open at the moment an Escape was pressed, taken
 // during the capture phase (see snapshotEscapeContext) and read back during
@@ -161,7 +150,6 @@ const MENU_POPOVER_SELECTOR = '[aria-haspopup][aria-expanded="true"]';
 // and the next Escape's capture call always overwrites these before its own
 // bubble call would read them, so there is no cross-event leakage.
 let pendingDialogCount = 0;
-let pendingMenuTrigger = null;
 
 /**
  * Capture-phase snapshot of "what's open right now". Registered on window's
@@ -183,10 +171,6 @@ let pendingMenuTrigger = null;
 const snapshotEscapeContext = (event) => {
   if (event.key !== "Escape" || event.repeat) return;
   pendingDialogCount = document.querySelectorAll(DIALOG_SELECTOR).length;
-  pendingMenuTrigger =
-    pendingDialogCount > 0
-      ? null
-      : document.querySelector(MENU_POPOVER_SELECTOR);
 };
 
 const recordEscapePress = () => {
@@ -233,12 +217,12 @@ const recordEscapePress = () => {
 const handleEscapeKey = (event) => {
   if (event.key !== "Escape" || event.repeat) return;
 
-  // Don't count ESC presses already handled by something else (a dialog
-  // dismissing itself, or any handler that called preventDefault or stopped
-  // propagation before this listener ran). Only rapid ESC presses with
-  // nothing open - or open behind something that doesn't actually respond
-  // to Escape (a dead-end dialog or menu/popover) - count toward the panic
-  // threshold.
+  // Don't count ESC presses already handled by a dialog dismissing itself
+  // (or any handler that called preventDefault before this listener ran).
+  // Owner decision C: only a dialog-closing Escape is exempt - a popup,
+  // menu, tooltip, or combobox closing (or failing to close) still counts,
+  // same as one that closes nothing, so there is no equivalent exemption
+  // for them below.
   if (event.defaultPrevented) return;
 
   if (pendingDialogCount > 0) {
@@ -253,8 +237,7 @@ const handleEscapeKey = (event) => {
     // counted a genuinely dialog-closing Escape as a panic press. A
     // macrotask always runs after the full synchronous dispatch (and any
     // microtask flush) completes in both engines, so it sees the true
-    // post-close state either way - the same reasoning the menu branch
-    // below already relies on. It also gives a *later*-registered window
+    // post-close state either way. It also gives a *later*-registered window
     // bubble listener (e.g. a component that closes its own overlay on
     // Escape, registered after this module's listener during boot) a chance
     // to run first, instead of this recount running before that listener
@@ -272,23 +255,6 @@ const handleEscapeKey = (event) => {
         return;
       }
       recordEscapePress();
-    }, 0);
-    return;
-  }
-
-  if (pendingMenuTrigger) {
-    const trigger = pendingMenuTrigger;
-    // Give the menu one tick to actually close in response to this Escape.
-    // If it's still expanded afterward, nothing consumed the keypress, so
-    // count it like any other unhandled Escape instead of swallowing it
-    // forever.
-    setTimeout(() => {
-      if (
-        trigger.isConnected &&
-        trigger.getAttribute("aria-expanded") === "true"
-      ) {
-        recordEscapePress();
-      }
     }, 0);
     return;
   }
