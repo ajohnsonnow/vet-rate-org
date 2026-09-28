@@ -3,6 +3,7 @@
 **Status:** Accepted. DR-1 (the cross-enlistment "service began" comparator) is resolved: the "chronological" variant, per owner decision 2026-09-28.
 **Date:** 2026-09-27
 **Amends:** ADR-002.
+**Amended by:** ADR-008 (2026-09-28) - the "does the veteran's own structured identity belong in an AI context" question this ADR's own consistency test file flagged as open (see `serviceEntryConsistency.integration.test.jsx` and `veteranContextProvider.piiRedaction.test.js`'s prior comments) is decided: no, never. `generateLLMContext` remains the one flattener for shape 2; its output is no longer identity-bearing.
 **Supersedes in part:** ADR-004 and ADR-005.
 **Context:** QA final12, defects D12-1, D12-2, D12-3, D12-4, D12-10, plus 9 review findings synthesized by a two-judge panel (see the implementation spec this ADR ships alongside).
 
