@@ -44,10 +44,17 @@ const APP_VERSION: string = JSON.parse(
  *     none found), matching this app's single-local-profile-per-browser
  *     design (no multi-veteran/VSO accounts in one browser profile).
  *
- * Conclusion: no gap found. This spec is the real-browser proof for that
- * conclusion, not just the source read above - it seeds one representative
- * record in every store category and confirms all are gone after the wipe
- * and a reload.
+ * Conclusion: no gap found - the guarantee is no veteran data anywhere. This
+ * spec is the real-browser proof for that conclusion, not just the source
+ * read above - it seeds one representative record in every store category
+ * and confirms all are gone after the wipe and a reload.
+ *
+ * The next boot legitimately re-creates a small, deliberately non-veteran
+ * set: settings-only local storage (theme/language/accessibility prefs),
+ * settings-only backup/restore-point scaffolding (empty, not a restored
+ * copy of what was deleted), and the public Diamond Knowledge Base corpus
+ * (static VA rating/legal reference content that ships with the app - no
+ * veteran-specific information).
  */
 
 const MARKER = "panic-wipe-e2e-marker";
@@ -270,11 +277,18 @@ test.describe("Atomic Wipe clears every persistent store", () => {
   });
 });
 
-// Decision B: VKBViewer's "Clear All Data" reuses the same wipeAllLocalData
-// module as Atomic Wipe (no decoy redirect - it reloads instead), and must
-// propagate to every open tab so a stale tab's in-memory caches (vkbCache
-// and siblings) can't re-save deleted data. Reuses this file's own
-// store-seeding/reading helpers - same scope, same module under the hood.
+// Decision B: VKBViewer's "Clear All Data" guarantees no veteran data
+// anywhere - it reuses the same wipeAllLocalData module as Atomic Wipe (no
+// decoy redirect - it reloads instead), and must propagate to every open
+// tab so a stale tab's in-memory caches (vkbCache and siblings) can't
+// re-save deleted data. Reuses this file's own store-seeding/reading
+// helpers - same scope, same module under the hood.
+//
+// What the next boot legitimately re-creates (none of it veteran data):
+// settings-only local storage (theme/language/accessibility prefs),
+// settings-only backup/restore-point scaffolding (empty, not a restored
+// copy of what was deleted), and the public Diamond Knowledge Base corpus
+// (static VA rating/legal reference content, no veteran-specific info).
 test.describe("VKBViewer Clear All Data propagates to every open tab (decision B)", () => {
   test("clicking Clear All Data in tab 1 wipes every store, and tab 2 reloads on its own with nothing coming back", async ({
     page,
