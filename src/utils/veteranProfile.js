@@ -2682,13 +2682,19 @@ export const updateServicePeriod = (periodId, updates) => {
   }
 };
 
+// ADR-007 §11.2: removing a period can retarget the resolved entry onto a
+// different, unrelated period. Without supersededValue, that surviving
+// period's own flat-mirror/dd214Data projection (this save's own prior
+// output, one cycle stale) reads back as unrecognized legacy data and rules
+// A/B silently adopt the just-deleted date as a veteran correction.
 export const removeServicePeriod = (periodId) => {
   try {
     const history = getServiceHistory();
+    const supersededValue = pickServiceEntry(history.servicePeriods).date;
     history.servicePeriods = history.servicePeriods.filter(
       (p) => p.id !== periodId,
     );
-    return saveServiceHistory(history);
+    return saveServiceHistory(history, { supersededValue });
   } catch (error) {
     console.error("Error removing service period:", error);
     return false;

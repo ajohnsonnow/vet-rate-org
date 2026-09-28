@@ -9,6 +9,7 @@ import {
   upsertServicePeriod,
   addServicePeriod,
   updateServicePeriod,
+  removeServicePeriod,
   getServicePeriods,
   getServiceEntry,
   getServiceEntryForDocument,
@@ -518,6 +519,60 @@ describe("saveVeteranProfile chokepoint: F3 provenance labels", () => {
       },
     );
     expect(getServiceEntry()).toMatchObject({ source: "code_sheet" });
+  });
+});
+
+describe("removeServicePeriod: deleting a mistaken period must not adopt its date onto another enlistment", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    seedProfile();
+  });
+
+  it("leaves the calculated NGB-22 entry alone once the veteran's mistaken period is deleted", () => {
+    const ngbId = upsertNgb22("2002-03-05", true, "2010-06-15");
+    const mistakenId = addServicePeriod({
+      serviceStartDate: "2001-01-01",
+      serviceEndDate: "2001-12-31",
+    });
+    expect(getServiceEntry()).toMatchObject({
+      date: "2001-01-01",
+      periodId: mistakenId,
+    });
+
+    removeServicePeriod(mistakenId);
+
+    expect(getServiceEntry()).toMatchObject({
+      date: "2002-03-05",
+      derived: true,
+      source: "calculated",
+      periodId: ngbId,
+    });
+    const ngbPeriod = getServicePeriods().find((p) => p.id === ngbId);
+    expect(ngbPeriod.serviceStartDateSource).toBe("calculated");
+    expect(ngbPeriod.startDateCorrection).toBeNull();
+  });
+
+  it("does not resurrect a deleted DD-214 correction as a spurious conflict on the remaining period", () => {
+    const ngbId = upsertNgb22("2002-03-05", true, "2010-06-15");
+    const dd214Id = upsertServicePeriod(
+      {
+        serviceStartDate: "1998-01-05",
+        serviceEndDate: "1999-12-20",
+        formType: "DD214",
+      },
+      { sourceDocument: "dd214-synthetic.pdf", confidence: 90 },
+    );
+    setServiceEntryDate({
+      date: "2000-05-01",
+      via: "vkb_viewer",
+      periodId: dd214Id,
+    });
+
+    removeServicePeriod(dd214Id);
+
+    const ngbPeriod = getServicePeriods().find((p) => p.id === ngbId);
+    expect(ngbPeriod.serviceStartDateSource).toBe("calculated");
+    expect(ngbPeriod.fieldConflicts ?? []).toHaveLength(0);
   });
 });
 
