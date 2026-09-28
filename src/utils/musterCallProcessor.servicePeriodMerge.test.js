@@ -25,6 +25,7 @@ const {
   getUnmatchedServiceRecords,
   getServiceHistory,
   upsertServicePeriod,
+  setServiceEntryDate,
 } = await import("./veteranProfile");
 
 const REALISTIC_NGB22 = `
@@ -384,6 +385,73 @@ describe("N9c: NGB-22 primary period dates derived from Item 8 + Item 10", () =>
 
     expect(extractedData.serviceStartDate).toBeFalsy();
     expect(extractedData.serviceEndDate).toBeFalsy();
+  });
+});
+
+// ADR-007 open issue, closed here: once the veteran has corrected an
+// enlistment-level period's start date, an unrelated later document (even
+// VA's own, higher-confidence code sheet) must never re-label
+// formType/sourceDocument away from the document that classification was
+// proven against - doing so used to flip a Guard enlistment's projected
+// timeline event from guard_enlistment to service_entry
+// (buildServiceEntryTimelineEvent keys off formType === "NGB22"), which
+// broke EvidenceTimeline's gap detection for that enlistment. Fixture
+// values are synthetic.
+describe("classification (formType/sourceDocument) is proven once the veteran corrects the start date", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("keeps formType/sourceDocument once the veteran has corrected this period's start date, even against a higher-confidence code sheet", async () => {
+    const extractedData = await parseServiceRecord(
+      NGB22_WITH_NET_SERVICE,
+      "NGB22",
+    );
+    saveServiceRecordToProfile(
+      { name: "ngb22_net_service.pdf" },
+      { extractedData },
+    );
+
+    const enlistment = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2002-03-05",
+    );
+    expect(enlistment.formType).toBe("NGB22");
+    expect(enlistment.periodScope).not.toBe("window");
+
+    const correction = setServiceEntryDate({
+      date: "2002-03-10",
+      via: "vkb_viewer",
+      periodId: enlistment.id,
+    });
+    expect(correction.ok).toBe(true);
+    expect(
+      getServicePeriods().find((p) => p.id === enlistment.id)
+        .serviceStartDateSource,
+    ).toBe("veteran");
+
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      {
+        extractedData: {
+          ratingSource: "code_sheet",
+          servicePeriods: [
+            {
+              entryDate: "2002-03-10",
+              separationDate: "2010-06-15",
+              branch: "Army",
+              characterOfDischarge: "Honorable",
+            },
+          ],
+        },
+      },
+    );
+
+    const corrected = getServicePeriods().find((p) => p.id === enlistment.id);
+    expect(corrected.formType).toBe("NGB22");
+    expect(corrected.sourceDocument).toBe("ngb22_net_service.pdf");
+    expect(corrected.serviceStartDate).toBe("2002-03-10");
+    // Non-classification fields still merge normally.
+    expect(corrected.characterOfService).toBe("Honorable");
   });
 });
 

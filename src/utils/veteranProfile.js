@@ -2411,6 +2411,19 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
   const sameSource =
     !!existing.sourceDocument &&
     existing.sourceDocument === incoming.sourceDocument;
+  // ADR-007 open issue, closed here: formType/sourceDocument are provenance
+  // fields (SERVICE_PERIOD_PROVENANCE_FIELDS, N1b) that otherwise always
+  // follow raw OCR confidence, same as an ordinary re-label. Once a
+  // veteran has corrected this period's start date though (the only real
+  // "correction" ADR-007 recognizes - periodStartSource/SOURCE_RANK), that
+  // correction proved this exact document classifies the period; an
+  // unrelated later document merging onto the SAME period must never
+  // re-label it away, even with higher confidence - _mergeIncomingStart's
+  // veteran branch already refuses to move the date itself for the same
+  // reason. Without this, a code sheet merging onto an already-corrected
+  // Guard enlistment (formType "NGB22") could flip formType and, with it,
+  // the projected timeline event from guard_enlistment to service_entry.
+  const classificationProven = periodStartSource(existing) === "veteran";
   const merged = { ...existing };
   const fieldSourceDocument = { ...(existing.fieldSourceDocument || {}) };
   const conflicts = [];
@@ -2435,6 +2448,13 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
     if (field === "serviceStartDateDerived") return;
     if (_isEmptyServicePeriodValue(incoming[field])) return;
     const existingIsEmpty = _isEmptyServicePeriodValue(existing[field]);
+    if (
+      (field === "formType" || field === "sourceDocument") &&
+      !existingIsEmpty &&
+      classificationProven
+    ) {
+      return;
+    }
     const isDisagreement =
       !SERVICE_PERIOD_PROVENANCE_FIELDS.has(field) &&
       !sameSource &&
