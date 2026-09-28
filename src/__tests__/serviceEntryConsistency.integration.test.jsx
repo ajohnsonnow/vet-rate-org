@@ -11,15 +11,21 @@
  * mid-chain and after a later, disagreeing document import or an unedited
  * re-import.
  *
- * final13 QA: musterCallProcessor is no longer mocked - every "document"
- * step below (NGB-22, code sheet, printed DD-214) calls the REAL
- * persistFormationDocument/persistVerifiedDocument ingest path this app's
- * own Muster Call flow uses, per ADR-007 §7's own flagged gap. Only
+ * final13 QA: musterCallProcessor AND veteranKnowledgeBase are no longer
+ * mocked - every "document" step below (NGB-22, code sheet, printed DD-214)
+ * calls the REAL persistFormationDocument/persistVerifiedDocument ingest
+ * path this app's own Muster Call flow uses, and that path's own real
+ * IndexedDB writes (addDocumentToVKB, My Packet's archiveDocumentInPacket)
+ * now run for real too, against a hand-built fake `window.indexedDB`
+ * (jsdom has none) instead of a module-mock that only intercepted
+ * loadVKB/saveVKB's own top-level exports - a vi.mock re-export can't
+ * intercept a call the REAL module makes to itself internally
+ * (addDocumentToVKB calling its own module's loadVKB), so those writes used
+ * to fail against a real, unavailable `indexedDB` global and get silently
+ * swallowed, with the failure never surfacing as a test failure. Only
  * documentAnalyzer/smolVLMService (OCR/vision, never reached once a
- * pre-built extraction result is supplied directly) and the VKB's own
- * IndexedDB backend (jsdom has none - swapped for an in-memory store that
- * still runs the REAL projection engine, same harness as before) are
- * substituted. Fixture values are synthetic, not any real veteran's data.
+ * pre-built extraction result is supplied directly) are substituted.
+ * Fixture values are synthetic, not any real veteran's data.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
@@ -43,29 +49,92 @@ vi.mock("../utils/smolVLMService", () => ({
   isSmolVLMSupported: () => false,
 }));
 
-// The VKB harness (§13 pattern): loadVKB/saveVKB route through the REAL
-// _applyServiceEntryProjection against a module-level store, so every
-// consumer below sees the true projection engine, not a hand-built fixture.
-// jsdom has no IndexedDB, which is what this harness stands in for - it is
-// NOT standing in for musterCallProcessor's own merge/persist logic, which
-// runs for real below.
-let store = null;
-vi.mock("../utils/veteranKnowledgeBase.js", async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    loadVKB: vi.fn(async () =>
-      actual._applyServiceEntryProjection(
-        structuredClone(store ?? actual.initializeVKB()),
-      ),
-    ),
-    saveVKB: vi.fn(async (vkb) => {
-      await actual._applyServiceEntryProjection(vkb);
-      store = structuredClone(vkb);
-      return { success: true };
-    }),
+// Minimal fake IndexedDB (same pattern as
+// veteranKnowledgeBase.clearVKB.test.js's createFakeIndexedDB, extended
+// with getAll/clear/index support for My Packet's two-store, indexed
+// PACKET_STORE_NAME/PACKET_INDEX_STORE usage) backed by one persistent
+// in-memory Map per (dbName, storeName) - installed once at module load, so
+// the module-level connection caches inside veteranKnowledgeBase.js
+// (vkbDB) and myPacketManager.js (its own openPacketDB cache) stay valid
+// across every test in this file. Per-test isolation comes from calling
+// the real clearVKB()/clearPacket() in beforeEach, not from swapping this
+// fake out.
+function makeRequest(run, onError) {
+  const request = {};
+  queueMicrotask(() => {
+    try {
+      request.result = run();
+      request.onsuccess?.();
+    } catch (error) {
+      request.error = error;
+      onError?.(error);
+      request.onerror?.();
+    }
+  });
+  return request;
+}
+
+function makeTransaction(storesByName) {
+  const tx = { pending: 0, oncomplete: null, onerror: null, error: null };
+  const track = (fn) => {
+    tx.pending += 1;
+    return makeRequest(
+      () => {
+        const result = fn();
+        tx.pending -= 1;
+        if (tx.pending === 0) queueMicrotask(() => tx.oncomplete?.());
+        return result;
+      },
+      (error) => {
+        tx.error = error;
+        tx.pending -= 1;
+        queueMicrotask(() => tx.onerror?.());
+      },
+    );
   };
-});
+  tx.objectStore = (name) => {
+    if (!storesByName.has(name)) storesByName.set(name, new Map());
+    const rows = storesByName.get(name);
+    return {
+      get: (key) => track(() => rows.get(key)),
+      put: (value) =>
+        track(() => {
+          rows.set(value.id, value);
+          return value.id;
+        }),
+      delete: (key) => track(() => rows.delete(key)),
+      getAll: () => track(() => Array.from(rows.values())),
+      clear: () => track(() => rows.clear()),
+      index: (field) => ({
+        getAll: (value) => track(() => filterByField(rows, field, value)),
+      }),
+    };
+  };
+  return tx;
+}
+
+function filterByField(rows, field, value) {
+  return Array.from(rows.values()).filter((r) => r[field] === value);
+}
+
+function createFakeIndexedDB() {
+  const databases = new Map();
+  return {
+    open: (dbName) => {
+      if (!databases.has(dbName)) databases.set(dbName, new Map());
+      const storesByName = databases.get(dbName);
+      return makeRequest(() => ({
+        objectStoreNames: { contains: () => true },
+        createObjectStore: (name) => {
+          if (!storesByName.has(name)) storesByName.set(name, new Map());
+          return { createIndex: () => {} };
+        },
+        transaction: () => makeTransaction(storesByName),
+      }));
+    },
+  };
+}
+window.indexedDB = createFakeIndexedDB();
 
 const {
   setServiceEntryDate,
@@ -74,14 +143,15 @@ const {
   getServiceHistory,
   getVeteranProfile,
   summarizeServicePeriods,
+  getTimelineEvents,
 } = await import("../utils/veteranProfile.js");
-const { loadVKB, saveVKB, generateLLMContext } =
+const { loadVKB, saveVKB, generateLLMContext, clearVKB } =
   await import("../utils/veteranKnowledgeBase.js");
 const { getVeteranAIContext } =
   await import("../utils/veteranContextProvider.js");
 const { buildSystemPrompt } = await import("../utils/aiSystemPrompts.js");
 const { generateDossierHTML } = await import("../utils/dossierExport.js");
-const { _formatServiceRecordBasics } =
+const { _formatServiceRecordBasics, clearPacket, getAllPacketDocuments } =
   await import("../utils/myPacketManager.js");
 const { formatPeriodLabel } =
   await import("../components/DutyStationsSection.jsx");
@@ -182,9 +252,10 @@ async function ingestCodeSheet(fileName, overrides = {}) {
   );
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   localStorage.clear();
-  store = null;
+  await clearVKB();
+  await clearPacket();
   localStorage.setItem(
     PROFILE_KEY,
     JSON.stringify({ fullName: "Jordan Sample" }),
@@ -277,9 +348,31 @@ function stubCanvasContext() {
 
 // D13-2 (this same pass): EvidenceTimeline.jsx's OWN localStorage store is
 // NOT part of the VKB - it only follows the projection through its own
-// silent mount-time sync. A fresh mount is required per check (the sync
-// runs once per component instance).
+// silent mount-time sync (plus, since final13's store-level fix, every
+// saveServiceHistory call). A fresh mount is required per check (the
+// component sync runs once per instance).
+//
+// F6/F12 (final13 QA re-review, 2026-09-28): the marker check below can't
+// tell a stale DATE apart from a fresh one once a correction is no longer
+// the derived-to-corrected transition (every correction after the first,
+// and every code-sheet period, which is never derived) - the description
+// text doesn't change either in that case. The date is now checked
+// directly against the STORE, and BEFORE this function ever mounts
+// EvidenceTimeline - mounting runs its own separate sync, which would
+// paper over a regression in the store-level sync this same date check is
+// meant to guard (saveServiceHistory's
+// _syncTimelineEventsWithServiceEntryProjection, veteranProfile.js). Only
+// checked once the store already holds a copy - the very first call has
+// nothing yet (only a mount's own first-open auto-import creates one).
 async function assertEvidenceTimelineAgrees(expected) {
+  const beforeMount = getTimelineEvents();
+  if (beforeMount.length > 0) {
+    const serviceEntryEvent = beforeMount.find((e) =>
+      ["guard_enlistment", "service_entry"].includes(e.eventType),
+    );
+    expect(serviceEntryEvent?.date).toBe(expected.date);
+  }
+
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
     stubCanvasContext(),
   );
@@ -484,6 +577,42 @@ describe("ADR-007: service entry date consistency across all editors and consume
     await runEditorCorrectionChain();
     await assertDisagreeingImportNeverReverts();
     await assertEveryDocumentReimportIsIdempotent();
+  });
+});
+
+describe("ADR-007: real IndexedDB writes and the item-3 classification bug's actual reproduction order", () => {
+  // F13 (final13 QA re-review, 2026-09-28): the previously-mocked
+  // veteranKnowledgeBase.js meant addDocumentToVKB/archiveDocumentInPacket
+  // ran for real but against a real, unavailable `indexedDB` global -
+  // their errors were caught and logged, never surfaced as a test
+  // failure. Now backed by a real fake IndexedDB, so both writes can
+  // actually be verified to have succeeded.
+  it("archives the ingested document into both My Packet's IndexedDB store and the VKB's own documentation, for real", async () => {
+    await seedNgb22();
+
+    const packetDocs = await getAllPacketDocuments();
+    expect(packetDocs.some((d) => d.fileName === NGB22_FILE)).toBe(true);
+
+    const vkb = await loadVKB();
+    expect(vkb.metadata.documentCount).toBeGreaterThanOrEqual(1);
+  });
+
+  // F14/item 3 (final13 QA re-review, 2026-09-28): the full correction
+  // chain elsewhere in this file only re-imports a code sheet AFTER the
+  // period is already veteran-corrected, so it never actually reaches the
+  // item-3 bug's real reproduction order - an uncorrected NGB-22 period
+  // relabeled by a code sheet import. Exercised directly here.
+  it("a code sheet merging onto an uncorrected NGB-22 period never flips its projected timeline event to service_entry", async () => {
+    await seedNgb22();
+    await primeVkbSeparationDate();
+    await ingestCodeSheet("codesheet-synthetic.pdf");
+
+    const vkb = await loadVKB();
+    const timelineEvent = vkb.evidenceTimeline.find(
+      (e) =>
+        e.eventType === "guard_enlistment" || e.eventType === "service_entry",
+    );
+    expect(timelineEvent.eventType).toBe("guard_enlistment");
   });
 });
 
