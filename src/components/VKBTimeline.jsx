@@ -14,6 +14,7 @@
 
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   getAllDocumentsByCategory,
   compareDocumentVersions,
@@ -149,39 +150,44 @@ function useVKBTimelineData(onDocumentClick) {
 }
 
 const TimelineHeaderTitle = ({ totalDocs, onClose }) => (
-  <div className="flex items-start justify-between gap-2 mb-4 sm:items-center">
-    <div className="min-w-0">
-      <h2
-        id="vkb-timeline-title"
-        className="text-2xl font-bold text-white flex items-center space-x-2"
-      >
-        <span>📚</span>
-        <span>Knowledge Base Timeline</span>
-      </h2>
-      <p className="text-slate-400 mt-1">
-        {totalDocs} document{totalDocs !== 1 ? "s" : ""} in your Veteran
-        Knowledge Base
-      </p>
-    </div>
-    <button
-      onClick={onClose}
-      className="grid h-11 w-11 shrink-0 place-items-center text-slate-400 hover:text-white transition-colors"
-      aria-label="Close timeline"
+  <div className="mb-4">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-slate-400 hover:text-white transition-colors"
+          aria-label="Close timeline"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
     >
-      <svg
-        className="w-6 h-6"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M6 18L18 6M6 6l12 12"
-        />
-      </svg>
-    </button>
+      <div className="min-w-0">
+        <h2
+          id="vkb-timeline-title"
+          className="text-2xl font-bold text-white flex items-center space-x-2"
+        >
+          <span>📚</span>
+          <span>Knowledge Base Timeline</span>
+        </h2>
+        <p className="text-slate-400 mt-1">
+          {totalDocs} document{totalDocs !== 1 ? "s" : ""} in your Veteran
+          Knowledge Base
+        </p>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 

@@ -13,6 +13,7 @@ import {
 import { saveBugReport, saveToLocalStorage } from "../utils/bugReportStorage";
 import { scrubText } from "../utils/piiScrubber";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 // Developer contact email for bug reports
 const DEVELOPER_EMAIL = "Anth@StructuredForGrowth.com";
@@ -343,7 +344,29 @@ function _computeWizardNav(step, formData, submitted, onClose, setStep) {
 function BugSquasherHeader({ step, onClose }) {
   return (
     <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-5">
-      <div className="flex items-start justify-between gap-2 sm:items-center">
+      <HeaderCloseSlot
+        close={
+          <button
+            onClick={onClose}
+            className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+            aria-label="Close bug reporter"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        }
+      >
         <div className="flex min-w-0 items-center gap-3">
           <div className="bg-white/20 rounded-xl p-2">
             <svg
@@ -367,26 +390,7 @@ function BugSquasherHeader({ step, onClose }) {
             <p className="text-red-100 text-sm">Help me fix issues quickly</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-          aria-label="Close bug reporter"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+      </HeaderCloseSlot>
 
       {/* Progress Steps */}
       <div className="flex items-center justify-between mt-6">

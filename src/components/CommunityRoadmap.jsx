@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import changelogData from "../data/changelog.json";
 import { SQUASHED_BUGS } from "../data/squashedBugs";
 import { scrubText } from "../utils/piiScrubber";
@@ -843,9 +844,61 @@ const RoadmapModalFooter = ({ onClose }) => (
   </div>
 );
 
+const RoadmapStatsBar = ({ stats, userVotes }) => (
+  <div className="flex items-center gap-4 mt-4 text-sm flex-wrap">
+    <div className="flex items-center gap-2">
+      <span className="bg-white/20 px-2 py-0.5 rounded-full">
+        {stats.totalShipped} shipped
+      </span>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="bg-white/20 px-2 py-0.5 rounded-full">
+        {stats.features} features
+      </span>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="bg-white/20 px-2 py-0.5 rounded-full">
+        {stats.bugFixes} bugs squashed
+      </span>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="bg-white/20 px-2 py-0.5 rounded-full">
+        {stats.improvements} improvements
+      </span>
+    </div>
+    <div className="flex items-center gap-2">
+      <span className="bg-white/20 px-2 py-0.5 rounded-full">
+        {userVotes.length} your votes
+      </span>
+    </div>
+  </div>
+);
+
 const RoadmapModalHeader = ({ onClose, stats, userVotes }) => (
   <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600 text-white px-6 py-5 flex-shrink-0 rounded-t-2xl">
-    <div className="flex items-start justify-between gap-2 sm:items-center">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+          aria-label="Close roadmap"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      }
+    >
       <div className="flex min-w-0 items-center gap-3">
         <div className="bg-white/20 rounded-xl p-2">
           <svg
@@ -871,55 +924,9 @@ const RoadmapModalHeader = ({ onClose, stats, userVotes }) => (
           </p>
         </div>
       </div>
-      <button
-        onClick={onClose}
-        className="grid h-11 w-11 shrink-0 place-items-center text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-        aria-label="Close roadmap"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-    </div>
+    </HeaderCloseSlot>
 
-    {/* Stats Bar */}
-    <div className="flex items-center gap-4 mt-4 text-sm flex-wrap">
-      <div className="flex items-center gap-2">
-        <span className="bg-white/20 px-2 py-0.5 rounded-full">
-          {stats.totalShipped} shipped
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="bg-white/20 px-2 py-0.5 rounded-full">
-          {stats.features} features
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="bg-white/20 px-2 py-0.5 rounded-full">
-          {stats.bugFixes} bugs squashed
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="bg-white/20 px-2 py-0.5 rounded-full">
-          {stats.improvements} improvements
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="bg-white/20 px-2 py-0.5 rounded-full">
-          {userVotes.length} your votes
-        </span>
-      </div>
-    </div>
+    <RoadmapStatsBar stats={stats} userVotes={userVotes} />
   </div>
 );
 

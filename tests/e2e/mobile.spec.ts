@@ -2940,6 +2940,174 @@ test.describe("Tool dialog close-X click actually closes the dialog, not Quick E
 });
 
 /**
+ * Final-14 D-3: Body Map Selector, Cloud Sync Manager, Community Roadmap,
+ * Feature Request, Record Search, Remand Risk Checker and VKB Timeline are
+ * reachable only via HomeFeatureCards CTA cards or the header's Tools/
+ * Resources panels - the N15/N16 gap note above (`enumerateToolGridButtons`)
+ * lists all seven as outside both the tool-grid/footer sweep and (below the
+ * `md` breakpoint the Tools/Resources triggers need) the header-menu sweep
+ * too. Neither HEADER_WRAP_BAND_VIEWPORTS (640/660/700, tool-grid/footer/menu
+ * only) nor HEADER_ALIGNMENT_VIEWPORTS (phones + a single 1440 desktop point)
+ * ever exercises these seven, and no existing sweep runs at 680/1024/1280 at
+ * all - opened directly via their own `open*` event (same pattern
+ * QUICK_EXIT_CLICK_CASES above already uses for this exact reason) instead of
+ * hunting for a grid/menu launcher that doesn't reach them at these widths.
+ */
+/**
+ * "Cloud Sync Manager" (CloudSyncManager.jsx, `cloud-sync-title`) is a
+ * nested view reached only through BackupManager's own "Connect Drive"
+ * button, not directly by any window event - `openCloudSyncManager` (the
+ * event name) actually opens MultiCloudManager (`multicloud-title`), a
+ * separate component DataManagementCluster.jsx wires it to. Confirmed by
+ * reading DataManagementCluster.jsx/BackupManager.jsx directly rather than
+ * assuming the event name matches the component file name.
+ */
+async function openCloudSyncManagerNestedView(page: Page): Promise<void> {
+  await dispatchTrigger(page, "openBackupManager")();
+  await page
+    .getByRole("button", { name: /connect drive/i })
+    .click({ timeout: 10_000 });
+}
+
+/**
+ * `probeHeaderLayout`'s generic `document.querySelector` picks whichever
+ * real dialog sits first in DOM order - fine when only one is ever open,
+ * but Cloud Sync Manager stays stacked ON TOP of the BackupManager dialog
+ * that opened it (both mounted, both real `[role=dialog]`s), so the generic
+ * probe silently measures BackupManager's own header instead. Scoped by the
+ * dialog's own known `aria-labelledby` id instead of "the first real dialog
+ * found" - same extraction (`extractProbeData`), different selection.
+ */
+function findProbeBundleById(dialogId: string): ProbeBundle {
+  const isRendered = (el: Element) => el.getClientRects().length > 0;
+  const dialog = document.querySelector(
+    `[aria-labelledby="${dialogId}"]`,
+  ) as HTMLElement | null;
+  const titleEl = document.getElementById(dialogId);
+  if (!dialog || !titleEl) return null;
+
+  const headerCandidates = Array.from(
+    dialog.querySelectorAll(".modal-header, [data-modal-header], header"),
+  ) as HTMLElement[];
+  const realHeader = headerCandidates.find(isRendered);
+  const headerRegion = realHeader || dialog;
+
+  let paddedSource: HTMLElement = headerRegion;
+  for (let depth = 0; realHeader && depth < 5; depth++) {
+    if (
+      isRendered(paddedSource) &&
+      parseFloat(getComputedStyle(paddedSource).paddingRight || "0") > 0
+    )
+      break;
+    const next = Array.from(paddedSource.children).find(isRendered) as
+      | HTMLElement
+      | undefined;
+    if (!next) break;
+    paddedSource = next;
+  }
+  return {
+    titleEl,
+    headerRegion,
+    paddedSource,
+    dialogId,
+    hasHeaderLandmark: !!realHeader,
+  };
+}
+
+async function probeHeaderLayoutById(
+  page: Page,
+  dialogId: string,
+): Promise<HeaderProbe> {
+  const bundleHandle = await page.evaluateHandle(findProbeBundleById, dialogId);
+  const probe = await bundleHandle.evaluate(extractProbeData);
+  return probe ? { found: true, ...probe } : EMPTY_HEADER_PROBE;
+}
+
+const NESTED_VIEW_HEADER_CASES = [
+  {
+    label: "Body Map Selector",
+    event: "openBodyMapSelector",
+    dialogId: "body-map-selector-title",
+  },
+  {
+    label: "Cloud Sync Manager",
+    open: openCloudSyncManagerNestedView,
+    dialogId: "cloud-sync-title",
+  },
+  {
+    label: "Community Roadmap",
+    event: "openCommunityRoadmap",
+    dialogId: "community-roadmap-title",
+  },
+  {
+    label: "Feature Request",
+    event: "openFeatureRequest",
+    dialogId: "feature-request-title",
+  },
+  {
+    label: "Record Search",
+    event: "openRecordSearch",
+    dialogId: "record-search-title",
+  },
+  {
+    label: "Remand Risk Checker",
+    event: "openRemandRiskChecker",
+    dialogId: "remand-risk-title",
+  },
+  {
+    label: "VKB Timeline",
+    event: "openVKBTimeline",
+    dialogId: "vkb-timeline-title",
+  },
+];
+
+const NESTED_VIEW_WIDTHS = [640, 660, 680, 700, 1024, 1280];
+
+for (const width of NESTED_VIEW_WIDTHS) {
+  test.describe(`Nested-view dialog header layout @ ${width}px`, () => {
+    test.use({ viewport: { width, height: 900 } });
+
+    for (const testCase of NESTED_VIEW_HEADER_CASES) {
+      test(`${testCase.label}: close-X on title's first line, not under Quick Exit, centre tap closes`, async ({
+        page,
+      }) => {
+        await seedReturningUserAndGoHome(page);
+
+        const trigger = testCase.open
+          ? () => testCase.open(page)
+          : dispatchTrigger(page, testCase.event);
+        const probe = await triggerAndProbe(page, trigger, (p) =>
+          probeHeaderLayoutById(p, testCase.dialogId),
+        );
+        expect(probe.dialogId).toBe(testCase.dialogId);
+        expect(closeTopRightViolations(probe)).toEqual([]);
+
+        const dialogSelector = `[aria-labelledby="${testCase.dialogId}"]`;
+        const closeSelector = `${dialogSelector} button[aria-label*="close" i]:not([aria-label*="quick exit" i]), ${dialogSelector} button[aria-label*="exit" i]:not([aria-label*="quick exit" i])`;
+
+        // Not-under-Quick-Exit: a real hit-test at the close-X's own centre
+        // point (the same S46 regression class `centerHitsSelf` documents -
+        // a fixed higher-z-index sibling can silently intercept a tap that
+        // still measures a clean, fully-visible box on its own).
+        const { found, hit } = await centerHitsSelf(page, closeSelector);
+        expect(found).toBe(true);
+        expect(hit).toBe(true);
+
+        const closeBtn = page.locator(closeSelector).first();
+        const box = await closeBtn.boundingBox();
+        if (!box) {
+          throw new Error(
+            `${testCase.label}: close button has no bounding box`,
+          );
+        }
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        await expect(page.locator(dialogSelector)).toHaveCount(0);
+      });
+    }
+  });
+}
+
+/**
  * CAPSimulator's three "deeper" headers (select a condition, mid-simulation,
  * terminology flashcards) still had the absolute-positioned back/close
  * cluster painted over a centered title (independent audit, N12 follow-up).

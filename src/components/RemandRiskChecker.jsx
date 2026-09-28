@@ -15,6 +15,7 @@ import {
   getPersistenceMessage,
 } from "../data/bvaSuccessData";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 
 const questions = [
   {
@@ -441,25 +442,30 @@ const RemandRiskChecker = ({ onClose }) => {
       size="xl"
       labelledBy="remand-risk-title"
       header={
-        <div className="flex items-start justify-between gap-2 bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white sm:items-center">
-          <div className="min-w-0">
-            <h2
-              id="remand-risk-title"
-              className="text-xl font-bold flex items-center gap-2"
-            >
-              🔍 Pre-Submission Remand Risk Checker
-            </h2>
-            <p className="text-amber-100 text-sm">
-              Find gaps before VA finds them
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="grid h-11 w-11 shrink-0 place-items-center text-2xl text-white hover:text-amber-200"
+        <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
+          <HeaderCloseSlot
+            close={
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="grid h-11 w-11 shrink-0 place-items-center text-2xl text-white hover:text-amber-200"
+              >
+                ×
+              </button>
+            }
           >
-            ×
-          </button>
+            <div className="min-w-0">
+              <h2
+                id="remand-risk-title"
+                className="text-xl font-bold flex items-center gap-2"
+              >
+                🔍 Pre-Submission Remand Risk Checker
+              </h2>
+              <p className="text-amber-100 text-sm">
+                Find gaps before VA finds them
+              </p>
+            </div>
+          </HeaderCloseSlot>
         </div>
       }
     >

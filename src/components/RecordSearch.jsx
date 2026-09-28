@@ -10,6 +10,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
+import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   searchPdfForKeyword,
   searchPdfForMultipleKeywords,
@@ -19,25 +20,30 @@ import {
 import { escapeHtml } from "../utils/sanitize";
 
 const ModalHeader = ({ onClose }) => (
-  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 flex items-start justify-between gap-2 sm:items-center">
-    <div className="flex min-w-0 items-center gap-3">
-      <div className="text-3xl">🔍</div>
-      <div className="min-w-0">
-        <h1 id="record-search-title" className="text-xl font-bold text-white">
-          The Needle in the Haystack
-        </h1>
-        <p className="text-blue-100 text-sm">
-          Search 2,000+ page PDFs in seconds
-        </p>
-      </div>
-    </div>
-    <button
-      onClick={onClose}
-      className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-blue-200 transition-colors text-2xl font-bold"
-      aria-label="Close"
+  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+    <HeaderCloseSlot
+      close={
+        <button
+          onClick={onClose}
+          className="grid h-11 w-11 shrink-0 place-items-center text-white hover:text-blue-200 transition-colors text-2xl font-bold"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      }
     >
-      ×
-    </button>
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="text-3xl">🔍</div>
+        <div className="min-w-0">
+          <h1 id="record-search-title" className="text-xl font-bold text-white">
+            The Needle in the Haystack
+          </h1>
+          <p className="text-blue-100 text-sm">
+            Search 2,000+ page PDFs in seconds
+          </p>
+        </div>
+      </div>
+    </HeaderCloseSlot>
   </div>
 );
 
