@@ -163,8 +163,18 @@ function restoreFocusOnTeardown(node, restoreRef) {
   // view out from under the Intelligence Briefing while it's still open) —
   // calling .focus() on a detached element silently no-ops, dropping focus
   // to <body> instead of restoring it anywhere useful.
+  //
+  // <body>/<html> are excluded even though both pass `document.contains` and
+  // have a real `.focus`: this trap activating while focus had already
+  // fallen to <body> (e.g. a still-mounted outer dialog whose last focused
+  // control just unmounted) is not a real "opener" worth restoring to - the
+  // fallback below, into the nearest still-mounted dialog, is strictly
+  // better than leaving/returning focus to the page body while that dialog
+  // is still open.
   if (
     opener &&
+    opener !== document.body &&
+    opener !== document.documentElement &&
     document.contains(opener) &&
     typeof opener.focus === "function"
   ) {

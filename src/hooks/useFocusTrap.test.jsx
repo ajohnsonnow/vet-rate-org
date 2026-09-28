@@ -164,6 +164,34 @@ describe("useFocusTrap: nested traps (Muster Call / Intelligence Briefing shape)
     );
   });
 
+  // Regression: restoreFocusOnTeardown used to treat <body> as a valid
+  // "opener" (it passes document.contains + has a real .focus), so when the
+  // inner trap activated while focus had already fallen to <body> - e.g. a
+  // still-mounted outer dialog whose last-focused control just unmounted -
+  // restoreRef captured <body>, and closing the inner trap called
+  // document.body.focus() instead of ever reaching the nearest-mounted-
+  // dialog fallback. The outer dialog stayed open but lost focus into it.
+  it("falls back to the nearest mounted dialog, not <body>, when the inner dialog opened while focus was already on <body>", () => {
+    render(<NestedHarness onOuterEscape={() => {}} onInnerEscape={() => {}} />);
+
+    document.body.focus?.();
+    document.activeElement?.blur?.();
+    expect(document.activeElement).toBe(document.body);
+
+    // No .focus() call here (unlike the other tests' opener.focus()) - jsdom
+    // does not move focus on a bare click, so this opens the inner trap with
+    // focus still on <body>, exactly the state restoreRef captures as
+    // "opener".
+    fireEvent.click(screen.getByTestId("opener"));
+
+    fireEvent.keyDown(document, { key: "Escape" }); // closes inner
+
+    expect(document.activeElement).not.toBe(document.body);
+    expect(screen.getByTestId("outer").contains(document.activeElement)).toBe(
+      true,
+    );
+  });
+
   it("Escape closes the topmost trap even when focus has fallen to <body>", () => {
     const onInnerEscape = vi.fn();
     render(
