@@ -2006,6 +2006,17 @@ const MobileMenuDrawer = (props) => {
         ref={props.mobileMenuRef}
         role="dialog"
         aria-modal="true"
+        // Owner decision (C): the panic-key threshold must count an Escape
+        // that closes a navigation menu/drawer (unlike one that closes a
+        // tool dialog, which is exempt). This attribute is a pure marker for
+        // safetyRedirect.js's DIALOG_SELECTOR to exclude the drawer from its
+        // "a tool dialog closed" exemption - it changes nothing about the
+        // drawer's own accessibility semantics (still role="dialog"
+        // aria-modal="true", still focus-trapped, still closes on Escape)
+        // and nothing about index.css's floating-widget-hiding rule (keyed
+        // off role/aria-modal alone, so the drawer still hides Quick Exit's
+        // siblings while open).
+        data-vetrate-nav-menu="true"
         aria-labelledby="mobile-menu-title"
         className="absolute right-0 top-0 bottom-0 w-[85vw] max-w-sm bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto"
         onClick={(e) => e.stopPropagation()}

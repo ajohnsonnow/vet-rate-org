@@ -154,8 +154,17 @@ export const triggerSoftExit = () => {
 // Escapes that close (or fail to close) a popup, menu, tooltip, or combobox
 // still count, same as one that closes nothing - so this selector is
 // deliberately scoped to dialogs only, not every dismissible overlay.
+//
+// `:not([data-vetrate-nav-menu])` excludes Header.jsx's mobile navigation
+// drawer specifically: it is marked role="dialog" aria-modal="true" for real
+// accessibility reasons (focus trap, background inertness, index.css's
+// floating-widget-hiding rule) but is a navigation MENU, not a tool dialog -
+// decision C is explicit that a menu/drawer's Escape counts toward the panic
+// threshold, unlike a tool dialog's. The marker attribute is scoped to this
+// one exemption only; it does not change the drawer's ARIA semantics or
+// remove it from useFocusTrap's or index.css's own (unrelated) selectors.
 const DIALOG_SELECTOR =
-  '[role="dialog"], [role="alertdialog"], [aria-modal="true"]';
+  '[role="dialog"]:not([data-vetrate-nav-menu]), [role="alertdialog"]:not([data-vetrate-nav-menu]), [aria-modal="true"]:not([data-vetrate-nav-menu])';
 
 // Snapshot of what was open at the moment an Escape was pressed, taken
 // during the capture phase (see snapshotEscapeContext) and read back during

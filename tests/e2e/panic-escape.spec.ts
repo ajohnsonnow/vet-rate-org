@@ -785,3 +785,60 @@ test.describe("Triple-Escape vs. an open tooltip (decision C)", () => {
     expect(await stillOnApp(page)).toBe(true);
   });
 });
+
+/**
+ * Owner decision C, the mobile nav drawer specifically: Header.jsx marks it
+ * role="dialog" aria-modal="true" (real accessibility semantics - focus
+ * trap, background inertness, index.css's floating-widget-hiding rule) with
+ * a useFocusTrap onEscape that closes it. Unlike a tool dialog, decision C
+ * says a navigation menu/drawer's Escape counts toward the panic threshold -
+ * safetyRedirect.js's DIALOG_SELECTOR excludes the drawer's own
+ * data-vetrate-nav-menu marker from its "closed a tool dialog" exemption so
+ * this holds. Phone viewport: the drawer trigger is `md:hidden`.
+ */
+test.describe("Triple-Escape vs. the mobile nav drawer (decision C)", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  async function openMobileNavDrawer(page: Page): Promise<void> {
+    await page.getByLabel("Toggle menu").click();
+    await page
+      .locator('[data-e2e-menu-panel="mobile-drawer"]')
+      .waitFor({ state: "visible", timeout: 5000 });
+  }
+
+  test("drawer open, 3 Escapes 300ms apart triggers the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await openMobileNavDrawer(page);
+
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(300);
+    }
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  // Proves the test above isn't vacuously passing regardless of the drawer:
+  // a single Escape must close the drawer (real dismissal, not swallowed)
+  // and must not by itself trigger the redirect.
+  test("drawer open, 1 Escape closes it without redirecting", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await openMobileNavDrawer(page);
+
+    await page.keyboard.press("Escape");
+    await page
+      .locator('[data-e2e-menu-panel="mobile-drawer"]')
+      .waitFor({ state: "hidden", timeout: 5000 });
+
+    expect(await stillOnApp(page)).toBe(true);
+  });
+});

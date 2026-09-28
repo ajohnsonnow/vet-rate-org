@@ -605,6 +605,43 @@ describe("Triple-Escape panic key counter - decision C exemption scope", () => {
     expect(panicSpy).toHaveBeenCalledTimes(1);
     combobox.remove();
   });
+
+  // Header.jsx's mobile nav drawer: role="dialog" aria-modal="true" (real
+  // accessibility semantics - focus trap, background inertness) PLUS the
+  // data-vetrate-nav-menu marker that tells DIALOG_SELECTOR it is a
+  // navigation menu, not a tool dialog. Decision C is explicit that a menu/
+  // drawer's Escape counts - unlike CrisisModal/combobox above (which count
+  // for other reasons), this one matches every DIALOG_SELECTOR token
+  // (role="dialog" AND aria-modal="true") and would be wrongly exempted
+  // without the marker + the :not() exclusion in safetyRedirect.js.
+  function openNavMenuDrawerThatClosesOnEscape() {
+    const drawer = document.createElement("div");
+    drawer.setAttribute("role", "dialog");
+    drawer.setAttribute("aria-modal", "true");
+    drawer.setAttribute("data-vetrate-nav-menu", "true");
+    drawer.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") drawer.remove();
+    });
+    document.body.appendChild(drawer);
+    return drawer;
+  }
+
+  it("3 Escapes that each close the mobile nav drawer still redirect (decision C: menu, not a tool dialog)", () => {
+    for (let i = 0; i < ESCAPE_THRESHOLD; i++) {
+      const drawer = openNavMenuDrawerThatClosesOnEscape();
+      pressEscapeOn(drawer);
+      vi.advanceTimersByTime(0);
+    }
+    expect(panicSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("1 Escape that closes the mobile nav drawer closes it without redirecting", () => {
+    const drawer = openNavMenuDrawerThatClosesOnEscape();
+    pressEscapeOn(drawer);
+    vi.advanceTimersByTime(0);
+    expect(document.body.contains(drawer)).toBe(false);
+    expect(panicSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe("Crisis Keywords Detection", () => {
