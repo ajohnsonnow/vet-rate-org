@@ -466,6 +466,7 @@ export default function TheTribunal({
   onOpenAISettings,
 }) {
   const [isInitialized, setIsInitialized] = useState(false);
+  const headingRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [conversation, setConversation] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -619,6 +620,22 @@ export default function TheTribunal({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // D13-5: the `!isInitialized` shell above renders with no focusable
+  // content, so useFocusTrap's own autoFocus is a no-op until its
+  // MutationObserver sees the real header mount once isInitialized flips -
+  // and the first focusable element in DOM order at that point is the
+  // header's AI status badge (before the close-X - see HeaderCloseSlot),
+  // whose Tooltip shows on focus (D13-6) and, while open, swallows Escape
+  // via a document capture-phase listener. Explicitly moving focus to the
+  // heading instead - same tabIndex={-1}+ref+focus() pattern as
+  // FormsHelper's stepHeadingRef - blurs the badge before its 200ms
+  // show-tooltip timer can fire, consistent with how other dialogs in this
+  // codebase hand focus to a heading rather than "whatever happens to be
+  // first".
+  useEffect(() => {
+    if (isInitialized) headingRef.current?.focus();
+  }, [isInitialized]);
 
   // Play the last judge message
   const speakLastJudgeMessage = () => {
@@ -916,6 +933,7 @@ export default function TheTribunal({
       onClose={onClose}
       onReportBug={onReportBug}
       onOpenAISettings={onOpenAISettings}
+      headingRef={headingRef}
     />
   );
 
@@ -988,6 +1006,7 @@ function TribunalHeader({
   onClose,
   onReportBug,
   onOpenAISettings,
+  headingRef,
 }) {
   return (
     <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-4 text-white sm:px-6 sm:py-6">
@@ -1006,8 +1025,10 @@ function TribunalHeader({
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2 sm:mb-2">
             <h2
+              ref={headingRef}
               id="the-tribunal-title"
-              className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-3xl"
+              tabIndex={-1}
+              className="flex flex-wrap items-center gap-2 text-xl font-bold sm:text-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded"
             >
               ⚖️ The Tribunal{" "}
               <span className="rounded bg-gray-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
