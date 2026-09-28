@@ -895,7 +895,13 @@ export async function saveVkbViewerEdits({ edited, loaded }) {
   fresh.serviceHistory.characterOfService =
     edited.serviceHistory.characterOfService;
   fresh.serviceHistory.separationDate = edited.serviceHistory.separationDate;
-  await saveVKB(fresh);
+  const saveResult = await saveVKB(fresh);
+  if (!saveResult.success) {
+    alert(
+      `Your changes couldn't be saved: ${saveResult.error || "please try again."}`,
+    );
+    return { ok: false };
+  }
   return { ok: true, vkb: fresh };
 }
 
