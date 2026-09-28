@@ -385,6 +385,227 @@ export const scrubAndSpotlight = (text, options = {}) => {
 export const spotlight = (text) =>
   `${SPOTLIGHT_OPEN}\n${neutralizeFence(text)}\n${SPOTLIGHT_CLOSE}`;
 
+// ============================================================
+// KNOWN-VALUE REDACTION (owner decision D, 2026-09-28 / ADR-008)
+// ============================================================
+//
+// scrubPII above is pattern-only: it can find "something shaped like an
+// SSN" but has no way to find "this veteran's own name" - a bare name has
+// no detectable shape, only a KNOWN VALUE. redactKnownValues replaces
+// exact known values (the veteran's own profile/VKB identifiers) instead
+// of guessing at a pattern, so it catches what scrubPII structurally
+// cannot: a bare name, an ISO-format DOB ("1984-03-15", which none of the
+// dob patterns above match), a claim/file number in unlabeled prose, or a
+// non-standard address line.
+
+const WORD_CHAR = /[\p{L}\p{N}_]/u;
+
+// `\b` assumes the character on each side of the match is a word char -
+// wrong when a known value legitimately starts/ends on punctuation (an
+// address line ending in a comma, say), which would silently suppress the
+// match instead of redacting it. Only assert the boundary on the side that
+// actually borders a word character.
+const _boundary = (char) => (WORD_CHAR.test(char) ? "\\b" : "");
+
+const _escapeForRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Redact every occurrence of each known value from `text`.
+ * @param {string} text
+ * @param {Array<string|{value: string, context?: RegExp}>} knownValues
+ *   A bare string is redacted unconditionally, word-bounded. An entry with
+ *   `context` (e.g. /ssn|social\s*security/i) is only redacted when that
+ *   pattern appears within the preceding ~40 characters on the same line -
+ *   for values (like a bare last-4 digit run) too generic to redact on
+ *   their own.
+ * @param {string} [replacement]
+ * @returns {string}
+ */
+export const redactKnownValues = (
+  text,
+  knownValues,
+  replacement = "[REDACTED]",
+) => {
+  if (!text || typeof text !== "string") return text;
+  if (!Array.isArray(knownValues) || knownValues.length === 0) return text;
+
+  let out = text;
+  for (const entry of knownValues) {
+    const raw = typeof entry === "string" ? entry : entry?.value;
+    const value = typeof raw === "string" ? raw.trim() : "";
+    if (value.length < 2) continue;
+
+    const escaped = _escapeForRegex(value);
+    const lead = _boundary(value[0]);
+    const tail = _boundary(value[value.length - 1]);
+    const context = typeof entry === "object" ? entry.context : null;
+
+    if (context) {
+      const gated = new RegExp(
+        `(${context.source})([^\\n]{0,40}?)(${lead}${escaped}${tail})`,
+        "gi",
+      );
+      out = out.replace(gated, (_m, ctx, gap) => `${ctx}${gap}${replacement}`);
+    } else {
+      const pattern = new RegExp(`${lead}${escaped}${tail}`, "gi");
+      out = out.replace(pattern, replacement);
+    }
+  }
+  return out;
+};
+
+const _nonEmptyString = (value) =>
+  typeof value === "string" && value.trim() ? value.trim() : null;
+
+const DOB_MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+// Only ISO ("YYYY-MM-DD", the VKB's own stored format) is parsed into
+// alternate forms - anything else is redacted as-typed only.
+function _dobVariants(dob) {
+  const variants = [dob];
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob);
+  if (!m) return variants;
+  const [, y, mo, d] = m;
+  const monthNum = Number(mo);
+  const dayNum = Number(d);
+  variants.push(`${mo}/${d}/${y}`);
+  variants.push(`${monthNum}/${dayNum}/${y}`);
+  const monthName = DOB_MONTHS[monthNum - 1];
+  if (monthName) variants.push(`${monthName} ${dayNum}, ${y}`);
+  return variants;
+}
+
+// Trailing punctuation stripper for a name token ("Smith," / "Jr.") - a
+// hand-rolled loop instead of a trailing-punctuation regex, which
+// sonarjs's super-linear-regex check flags regardless of the (here safe,
+// two-char class) alphabet size.
+function _stripTrailingPunctuation(token) {
+  let end = token.length;
+  while (end > 0 && (token[end - 1] === "." || token[end - 1] === ",")) {
+    end -= 1;
+  }
+  return token.slice(0, end);
+}
+
+function _nameTokenValues(personal) {
+  const fullName =
+    _nonEmptyString(personal.fullName) || _nonEmptyString(personal.name);
+  if (!fullName) return [];
+  return fullName
+    .split(/\s+/)
+    .map(_stripTrailingPunctuation)
+    .filter((t) => t.length >= 2)
+    .map((value) => ({ value }));
+}
+
+function _ssnValues(personal) {
+  const values = [];
+  const ssn =
+    _nonEmptyString(personal.ssn) || _nonEmptyString(personal.ssnFull);
+  const ssnLast4 = _nonEmptyString(personal.ssnLast4);
+  const context = /ssn|social\s*security/i;
+  if (ssn) {
+    const digits = ssn.replace(/\D/g, "");
+    if (digits.length >= 9) values.push({ value: digits });
+    else if (digits.length >= 4) values.push({ value: digits, context });
+  }
+  if (ssnLast4) values.push({ value: ssnLast4.replace(/\D/g, ""), context });
+  return values;
+}
+
+function _fileNumberValues(personal) {
+  const values = [];
+  const fileNumber =
+    _nonEmptyString(personal.veteranFileNumber) ||
+    _nonEmptyString(personal.vaFileNumber);
+  const context = /file\s*number|va\s*file|c-?file/i;
+  if (!fileNumber) return values;
+  const digits = fileNumber.replace(/\D/g, "");
+  if (digits.length >= 8) values.push({ value: digits });
+  else if (digits.length >= 4) values.push({ value: digits, context });
+  if (digits.length > 4) values.push({ value: digits.slice(-4), context });
+  return values;
+}
+
+function _contactValues(personal) {
+  const values = [];
+  const email = _nonEmptyString(personal.email);
+  if (email) values.push({ value: email });
+  const phone = _nonEmptyString(personal.phone);
+  if (phone) {
+    values.push({ value: phone });
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length >= 7) values.push({ value: digits });
+  }
+  return values;
+}
+
+function _addressValues(personal) {
+  const address = personal.address || {};
+  return [address.street, address.city, personal.street, personal.city]
+    .map((line) => _nonEmptyString(line))
+    .filter((line) => line && line.length >= 4)
+    .map((value) => ({ value }));
+}
+
+/**
+ * Collect the veteran's own known identifier values from a "personal"-shaped
+ * object - either VKB's `.personal` (fullName/dateOfBirth/ssn/
+ * veteranFileNumber/email/phone/address{street,city,...}) or the flat
+ * legacy profile store (fullName/dob/ssn/ssnLast4/vaFileNumber/email/
+ * phone/street/city/...). Aliases for both shapes are checked; whichever
+ * keys are absent are simply skipped.
+ * @param {Object} [personal]
+ * @param {Array<string>} [claimNumbers]
+ * @returns {Array<{value: string, context?: RegExp}>}
+ */
+export const collectKnownIdentifierValues = (
+  personal = {},
+  claimNumbers = [],
+) => {
+  const p = personal || {};
+  const values = [
+    ..._nameTokenValues(p),
+    ..._ssnValues(p),
+    ..._fileNumberValues(p),
+    ..._contactValues(p),
+    ..._addressValues(p),
+  ];
+  const dob = _nonEmptyString(p.dateOfBirth) || _nonEmptyString(p.dob);
+  if (dob) _dobVariants(dob).forEach((value) => values.push({ value }));
+  (claimNumbers || []).forEach((c) => {
+    const value = _nonEmptyString(c);
+    if (value) values.push({ value });
+  });
+  return values;
+};
+
+/**
+ * ADR-008 single enforcement point: the one function every AI-context
+ * builder in this codebase routes its final output through, so a future
+ * builder that forgets to scrub free text still can't leak a direct
+ * identifier - it just won't get anything past this backstop either.
+ * @param {string} text
+ * @param {Object} [personal]
+ * @param {Array<string>} [claimNumbers]
+ * @returns {string}
+ */
+export const redactVeteranIdentifiers = (text, personal, claimNumbers) =>
+  redactKnownValues(text, collectKnownIdentifierValues(personal, claimNumbers));
+
 export default {
   scrubPII,
   scrubText,
@@ -392,4 +613,7 @@ export default {
   analyzePII,
   scrubAndSpotlight,
   spotlight,
+  redactKnownValues,
+  collectKnownIdentifierValues,
+  redactVeteranIdentifiers,
 };
