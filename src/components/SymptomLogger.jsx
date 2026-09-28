@@ -613,12 +613,14 @@ const SymptomLoggerAISettingsPanel = ({ aiStatus, setAIStatus }) => (
 );
 
 const SymptomLoggerHeaderActions = ({
+  aiStatus,
   showAISettings,
   setShowAISettings,
   symptomLoggerContentRef,
   onReportBug,
 }) => (
   <div className="flex shrink-0 items-center gap-2">
+    <AIStatusBadge status={aiStatus} />
     <button
       type="button"
       onClick={() => setShowAISettings(!showAISettings)}
@@ -696,7 +698,6 @@ const SymptomLoggerHeader = ({
             className="text-2xl sm:text-3xl font-bold flex flex-wrap items-center gap-2"
           >
             Symptom Logger
-            <AIStatusBadge status={aiStatus} />
             <span className="px-1.5 py-0.5 bg-amber-700 text-white text-[10px] font-bold rounded">
               BETA
             </span>
@@ -707,6 +708,7 @@ const SymptomLoggerHeader = ({
         </div>
       </div>
       <SymptomLoggerHeaderActions
+        aiStatus={aiStatus}
         showAISettings={showAISettings}
         setShowAISettings={setShowAISettings}
         symptomLoggerContentRef={symptomLoggerContentRef}
