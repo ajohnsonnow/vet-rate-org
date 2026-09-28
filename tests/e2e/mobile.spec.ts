@@ -2632,6 +2632,137 @@ for (const vp of HEADER_WRAP_BAND_VIEWPORTS) {
   });
 }
 
+/**
+ * D14-3: Tooltip.jsx had no viewport clamping - focusing The Tribunal's AI
+ * status badge (the one Tooltip-wrapped control reliably present in the
+ * global header and in every tool dialog's header) rendered its bubble
+ * partly off-screen at narrow widths (measured: left -34px at 320/390px,
+ * -10px at 640px, first word cut off). DOM-enumerates every real, rendered,
+ * focusable control inside a header region rather than hard-coding the AI
+ * badge specifically - a header control with no tooltip simply never
+ * produces a `[role=tooltip]` and is skipped, not a violation.
+ */
+const HEADER_REGION_SELECTOR =
+  'header[role="banner"], [role="dialog"][aria-modal="true"] .modal-header, [role="alertdialog"][aria-modal="true"] .modal-header';
+const HEADER_FOCUSABLE_INDEX_ATTR = "data-e2e-header-focusable-index";
+
+async function stampHeaderFocusableControls(page: Page): Promise<number> {
+  return page.evaluate(
+    ({ sel, attr }) => {
+      const isRendered = (el: Element) => el.getClientRects().length > 0;
+      const controls = Array.from(document.querySelectorAll(sel))
+        .flatMap((region) =>
+          Array.from(
+            region.querySelectorAll(
+              'button, a[href], [tabindex]:not([tabindex="-1"])',
+            ),
+          ),
+        )
+        .filter(isRendered);
+      controls.forEach((el, i) => el.setAttribute(attr, String(i)));
+      return controls.length;
+    },
+    { sel: HEADER_REGION_SELECTOR, attr: HEADER_FOCUSABLE_INDEX_ATTR },
+  );
+}
+
+/**
+ * Focuses header control `index` and, only if that actually opens a
+ * `[role=tooltip]`, asserts the bubble's real rendered rect is fully inside
+ * `vpWidth`x`vpHeight`. Blurs (and waits for the bubble to actually close)
+ * before returning either way, so a still-open tooltip's own Escape-capture
+ * handler can't interfere with the sweep's subsequent dialog-close step.
+ */
+async function tooltipViewportViolation(
+  page: Page,
+  index: number,
+  vpWidth: number,
+  vpHeight: number,
+  label: string,
+): Promise<string | null> {
+  const control = page.locator(`[${HEADER_FOCUSABLE_INDEX_ATTR}="${index}"]`);
+  await control.focus().catch(() => {});
+  const tooltip = page.locator('[role="tooltip"]').first();
+  const appeared = await tooltip
+    .waitFor({ state: "visible", timeout: 1500 })
+    .then(() => true)
+    .catch(() => false);
+
+  let violation: string | null = null;
+  if (appeared) {
+    const box = await tooltip.boundingBox();
+    if (!box) {
+      violation = `"${label}" control #${index}: tooltip open but has no bounding box`;
+    } else if (
+      box.x < -0.5 ||
+      box.y < -0.5 ||
+      box.x + box.width > vpWidth + 0.5 ||
+      box.y + box.height > vpHeight + 0.5
+    ) {
+      violation =
+        `"${label}" control #${index}: tooltip rect ` +
+        `(${box.x.toFixed(1)},${box.y.toFixed(1)})-(${(box.x + box.width).toFixed(1)},${(box.y + box.height).toFixed(1)}) ` +
+        `outside 0..${vpWidth}x0..${vpHeight}`;
+    }
+  }
+  await control.blur().catch(() => {});
+  await tooltip.waitFor({ state: "hidden", timeout: 1000 }).catch(() => {});
+  return violation;
+}
+
+async function headerTooltipViolations(
+  page: Page,
+  vpWidth: number,
+  vpHeight: number,
+  label: string,
+): Promise<string[]> {
+  const count = await stampHeaderFocusableControls(page);
+  const violations: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const v = await tooltipViewportViolation(page, i, vpWidth, vpHeight, label);
+    if (v) violations.push(v);
+  }
+  return violations;
+}
+
+const TOOLTIP_VIEWPORT_CASES = [
+  { width: 320, height: 568 },
+  { width: 390, height: 844 },
+  { width: 640, height: 800 },
+  { width: 1280, height: 720 },
+];
+
+for (const vp of TOOLTIP_VIEWPORT_CASES) {
+  test.describe(`Tooltip stays inside the viewport @ ${vp.width}px`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test("every home-header tooltip trigger's [role=tooltip] rect is fully on-screen", async ({
+      page,
+    }) => {
+      test.setTimeout(60_000);
+      await seedReturningUserAndGoHome(page);
+      const violations = await headerTooltipViolations(
+        page,
+        vp.width,
+        vp.height,
+        "Home header",
+      );
+      expect(violations).toEqual([]);
+    });
+
+    test("every tool dialog header's tooltip trigger's [role=tooltip] rect is fully on-screen", async ({
+      page,
+    }) => {
+      test.setTimeout(600_000);
+      await seedReturningUserAndGoHome(page);
+      const violations = await runToolGridSweep(page, (outcome) =>
+        headerTooltipViolations(page, vp.width, vp.height, outcome.label),
+      );
+      expect(violations).toEqual([]);
+    });
+  });
+}
+
 // RTL regression coverage: `closeTopRightViolations`' `isRtl` branch
 // (decision (1): the close-X flips to the header's top-LEFT corner under
 // RTL) had no committed test that ever set `document.dir` to `rtl` to run
