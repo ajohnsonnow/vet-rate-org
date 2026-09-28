@@ -22,7 +22,8 @@ import { ensureQuota } from "./storage";
 import { awardDisplayName } from "./combatService";
 import { getServiceEntryForDocument } from "./veteranProfile";
 import { isSameCalendarDay } from "./serviceEntryDate";
-import { scrubText } from "./piiScrubber";
+import { scrubText, redactVeteranIdentifiers } from "./piiScrubber";
+import { loadVKB } from "./veteranKnowledgeBase";
 
 // ============================================================
 // DATABASE CONFIGURATION
@@ -872,9 +873,12 @@ function _formatServiceEntryLine(data, documentEntryDate, fileName) {
   return `  Entry: ${documentEntryDate}${derived ? " (calculated from net service)" : ""}\n`;
 }
 
+// Owner decision D (2026-09-28, ADR-008): a DD-214/NGB-22's own extracted
+// `fullName` is a direct veteran identifier - it never enters an AI
+// context, full stop, the same as VKB's buildPersonalContext. This used to
+// print `  Name: ${data.fullName}` here.
 export function _formatServiceRecordBasics(data, fileName) {
   let out = "";
-  if (data.fullName) out += `  Name: ${data.fullName}\n`;
   if (data.branch) out += `  Branch: ${data.branch}\n`;
   if (data.component) out += `  Component: ${data.component}\n`;
   // F19 (final13 QA re-review, 2026-09-28): the same D13-7 empty-placeholder
@@ -923,6 +927,19 @@ export function _formatServiceRecordHighlights(data) {
   return out;
 }
 
+// Owner decision D (2026-09-28, ADR-008): a veteran's real exported
+// document filenames commonly carry their own surname/first name and the
+// last four of their VA file number (VA's own export naming convention).
+// Every AI-context label built from a document uses a neutral, structural
+// label - document type + upload date + index - instead of the raw
+// fileName, so a document label can never itself be an identifier. The
+// real fileName is still shown in the veteran-facing UI (My Packet's
+// document list) - only the AI-context text goes through this.
+function _neutralDocLabel(doc, typeLabel, index) {
+  const date = (doc.uploadDate || "").split("T")[0] || "unknown date";
+  return `${typeLabel} ${date} (#${index + 1})`;
+}
+
 // D13-4: no raw-OCR-text fallback here (dropped a dormant, never-called
 // `options.includeRawText` branch that used to embed up to 2000 chars of a
 // document's raw text - a claim letter's raw OCR is its own letterhead,
@@ -930,11 +947,15 @@ export function _formatServiceRecordHighlights(data) {
 // with no structured extraction contributes nothing, same as any other
 // doc type once JSON.stringify(doc.extractedData) itself was replaced by
 // an explicit safe-field whitelist below.
-export function _formatServiceRecordDoc(doc) {
+export function _formatServiceRecordDoc(
+  doc,
+  typeLabel = "Service record",
+  index = 0,
+) {
   const data = doc.extractedData || {};
   if (Object.keys(data).length === 0) return "";
 
-  let out = `File: ${doc.fileName}\n`;
+  let out = `Document: ${_neutralDocLabel(doc, typeLabel, index)}\n`;
   out += _formatServiceRecordBasics(data, doc.fileName);
   out += _formatServiceRecordHighlights(data);
   out += "\n";
@@ -951,10 +972,11 @@ function _formatServiceRecordSection(grouped) {
   let out = "";
   for (const type of serviceRecordTypes) {
     if (!grouped[type]) continue;
-    out += `--- ${PACKET_DOC_LABELS[type]} ---\n`;
-    for (const doc of grouped[type]) {
-      out += _formatServiceRecordDoc(doc);
-    }
+    const typeLabel = PACKET_DOC_LABELS[type];
+    out += `--- ${typeLabel} ---\n`;
+    grouped[type].forEach((doc, index) => {
+      out += _formatServiceRecordDoc(doc, typeLabel, index);
+    });
     delete grouped[type];
   }
   return out;
@@ -983,9 +1005,9 @@ function _formatCFileSummaryLine(summary) {
 // The extractedData is the C-File analysis object (potential_claims, timeline,
 // summary, exposures), so emit readable condition/evidence lines an AI tool can
 // actually use. Conditions are AI SUGGESTIONS (not filed claims) - labelled so.
-export function _formatCFileDoc(doc) {
+export function _formatCFileDoc(doc, index = 0) {
   const data = doc.extractedData || {};
-  let out = `File: ${doc.fileName} (${(doc.uploadDate || "").split("T")[0]})\n`;
+  let out = `Document: ${_neutralDocLabel(doc, "C-File", index)}\n`;
   const summaryLine = _formatCFileSummaryLine(data.summary);
   if (summaryLine) {
     out += `  Summary: ${summaryLine}\n`;
@@ -1021,9 +1043,9 @@ function _formatCFileSection(grouped) {
   const cFiles = grouped[PACKET_DOC_TYPES.C_FILE];
   if (!cFiles || cFiles.length === 0) return "";
   let out = `--- ${PACKET_DOC_LABELS[PACKET_DOC_TYPES.C_FILE]} ---\n`;
-  for (const doc of cFiles) {
-    out += _formatCFileDoc(doc);
-  }
+  cFiles.forEach((doc, index) => {
+    out += _formatCFileDoc(doc, index);
+  });
   // Remove so it does NOT also fall through to the truncated JSON blob below.
   delete grouped[PACKET_DOC_TYPES.C_FILE];
   return out;
@@ -1115,17 +1137,35 @@ export function _formatOtherDocsSection(grouped) {
   for (const [type, docs] of Object.entries(grouped)) {
     const label = PACKET_DOC_LABELS[type] || type;
     out += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
-    for (const doc of docs) {
-      out += `  ${doc.fileName} (${doc.uploadDate.split("T")[0]})\n`;
+    docs.forEach((doc, index) => {
+      out += `  ${_neutralDocLabel(doc, label, index)}\n`;
       const safe = _safeExtractedDataSummary(doc.extractedData || {});
       if (Object.keys(safe).length > 0) {
         const summary = JSON.stringify(safe).substring(0, 500);
         out += `  Data: ${summary}\n`;
       }
-    }
+    });
     out += "\n";
   }
   return out;
+}
+
+// ADR-008: generatePacketContext is called both directly (VSO/AI tools that
+// only want the document archive) and as one half of getVeteranAIContext -
+// it must self-apply the final redaction pass rather than rely on a caller
+// to do it, since a direct caller has no reason to know that's needed.
+// Best-effort: an identifier-load failure (e.g. no IndexedDB) must never
+// block the packet context itself from returning.
+async function _redactPacketContext(context) {
+  try {
+    const vkb = await loadVKB();
+    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+      .map((c) => c.claimNumber)
+      .filter(Boolean);
+    return redactVeteranIdentifiers(context, vkb?.personal, claimNumbers);
+  } catch {
+    return context;
+  }
 }
 
 export const generatePacketContext = async (options = {}) => {
@@ -1155,7 +1195,7 @@ export const generatePacketContext = async (options = {}) => {
     }
 
     context += "=== END MY PACKET ===\n";
-    return context;
+    return await _redactPacketContext(context);
   } catch (error) {
     console.error("Failed to generate packet context:", error);
     return "";
