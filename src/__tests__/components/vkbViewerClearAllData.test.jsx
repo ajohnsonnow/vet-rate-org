@@ -101,3 +101,55 @@ describe("VKBViewer Clear All Data", () => {
     expect(broadcastDataWipe).toHaveBeenCalledTimes(1);
   });
 });
+
+// "Handle errors explicitly - no silent catches": a reload that looks
+// identical whether or not the delete actually landed leaves the veteran
+// believing everything is gone when it might not be - the VKB-only clear
+// path this replaced explicitly warned about exactly this. Split from the
+// describe block above to stay under max-lines-per-function.
+describe("VKBViewer Clear All Data - failure is surfaced, not silently reloaded away", () => {
+  beforeEach(() => {
+    localStorage.setItem(
+      "vet_rate_veteran_profile",
+      JSON.stringify(initializeVKB().personal),
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    wipeAllLocalData.mockClear();
+    forceReloadWithCacheBypass.mockClear();
+    broadcastDataWipe.mockClear();
+    localStorage.clear();
+  });
+
+  it("warns the veteran when wipeAllLocalData fails, instead of silently reloading as if it succeeded", async () => {
+    wipeAllLocalData.mockImplementationOnce(async () => {
+      throw new Error("indexedDB delete failed");
+    });
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const alertSpy = vi.spyOn(globalThis, "alert").mockImplementation(() => {});
+    const clearButton = await openViewerAndFindClearButton();
+
+    fireEvent.click(clearButton);
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledTimes(1));
+    expect(alertSpy.mock.calls[0][0]).toMatch(
+      /may not have been fully deleted/i,
+    );
+  });
+
+  it("does not warn the veteran when wipeAllLocalData succeeds", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
+    const alertSpy = vi.spyOn(globalThis, "alert").mockImplementation(() => {});
+    const clearButton = await openViewerAndFindClearButton();
+
+    fireEvent.click(clearButton);
+
+    await waitFor(() =>
+      expect(forceReloadWithCacheBypass).toHaveBeenCalledTimes(1),
+    );
+    expect(alertSpy).not.toHaveBeenCalled();
+  });
+});

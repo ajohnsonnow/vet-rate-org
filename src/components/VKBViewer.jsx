@@ -962,16 +962,18 @@ const VKBViewer = ({ isOpen, onClose }) => {
   // AtomicWipe's wipeAllLocalData, not a VKB-only clear), without the decoy
   // redirect (Quick Exit keeps that job - this just reloads), and
   // propagates to every open tab so a stale tab cannot re-save deleted data.
-  // Decision B: deletes everything the full data delete deletes (reuses
-  // AtomicWipe's wipeAllLocalData, not a VKB-only clear), without the decoy
-  // redirect (Quick Exit keeps that job - this just reloads), and
-  // propagates to every open tab so a stale tab cannot re-save deleted data.
   const handleClear = async () => {
     if (!confirm(CLEAR_ALL_DATA_CONFIRM_TEXT)) return;
     try {
       await wipeAllLocalData();
     } catch (error) {
       console.error("Error during Clear All Data wipe:", error);
+      // A silent reload here would look identical to a real success - the
+      // veteran needs to know the delete may not have fully landed, the same
+      // warning the VKB-only clear path this replaced used to give.
+      alert(
+        "Some data may not have been fully deleted and could return after this reload. If this device is shared, clearing your browser's site data for this page is the more thorough option.",
+      );
     }
     broadcastDataWipe();
     forceReloadWithCacheBypass();
