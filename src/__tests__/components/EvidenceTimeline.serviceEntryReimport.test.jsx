@@ -161,3 +161,151 @@ describe("mounting never adds a brand-new projected event that was never previou
     expect(screen.getByText("📋 Timeline Events (2)")).toBeInTheDocument();
   });
 });
+
+// Reviewer findings F2/F11 (final13 QA re-review, 2026-09-28): the old sync
+// iterated over EVERY projected event missing from the store, not just the
+// specific copies it had just found stale - so a second enlistment's event
+// came back silently the moment ANY other copy went stale, whether the
+// veteran had deliberately removed it or had simply never imported it yet.
+describe("a stale copy's sync never resurrects or invents an UNRELATED enlistment's event", () => {
+  function twoEnlistmentProjection() {
+    return {
+      evidenceTimeline: [
+        {
+          date: "2001-11-01",
+          description: "Enlisted (Army National Guard)",
+          eventType: "guard_enlistment",
+          projected: true,
+          projectionKey: "entry:period1",
+        },
+        {
+          date: "2008-05-01",
+          description: "Entered active duty (Army)",
+          eventType: "service_entry",
+          projected: true,
+          projectionKey: "entry:period2",
+        },
+      ],
+      evidence: [],
+    };
+  }
+
+  it("never re-adds a projectionKey the veteran deliberately removed, while still fixing the stale sibling", async () => {
+    saveTimelineEvents([
+      {
+        id: "vkb_1",
+        type: "records",
+        date: "2002-03-05",
+        title: "Enlisted",
+        description: "Enlisted (Army National Guard) (calculated)",
+        category: "Medical Records",
+        eventType: "guard_enlistment",
+        sourceKey: "entry:period1",
+      },
+      // No copy of entry:period2 here - the veteran removed it.
+    ]);
+    mockLoadVKB.mockResolvedValue(twoEnlistmentProjection());
+
+    renderTimeline();
+
+    await screen.findByText(/Enlisted \(Army National Guard\)$/);
+    expect(
+      screen.queryByText("Entered active duty (Army)"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("📋 Timeline Events (1)")).toBeInTheDocument();
+  });
+
+  it("never adds an entry that was never imported at all, while still fixing the stale sibling", async () => {
+    saveTimelineEvents([
+      {
+        id: "vkb_1",
+        type: "records",
+        date: "2002-03-05",
+        title: "Enlisted",
+        description: "Enlisted (Army National Guard) (calculated)",
+        category: "Medical Records",
+        eventType: "guard_enlistment",
+        sourceKey: "entry:period1",
+      },
+      // No copy of entry:period2 - a DD-214 imported after this timeline's
+      // last open, never brought in.
+    ]);
+    mockLoadVKB.mockResolvedValue(twoEnlistmentProjection());
+
+    renderTimeline();
+
+    await screen.findByText(/Enlisted \(Army National Guard\)$/);
+    expect(
+      screen.queryByText("Entered active duty (Army)"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("📋 Timeline Events (1)")).toBeInTheDocument();
+  });
+});
+
+// Reviewer finding F3 (final13 QA re-review, 2026-09-28): the old sync
+// closed over the mount-time timelineEvents snapshot, so a hand-added
+// event that persisted (synchronously, via performAddEvent) WHILE the
+// projection was still loading got silently dropped once the sync's own
+// stale write landed. Fixed by re-reading the store only after the await,
+// with no further await before writing it back.
+describe("a concurrent hand-added event survives the mount-time sync", () => {
+  it("keeps an event added while the projection load is still pending", async () => {
+    saveTimelineEvents([
+      {
+        id: "vkb_1",
+        type: "records",
+        date: "2002-03-05",
+        title: "Enlisted",
+        description: "Enlisted (Army National Guard) (calculated)",
+        category: "Medical Records",
+        eventType: "guard_enlistment",
+        sourceKey: "entry:period1",
+      },
+    ]);
+    let resolveLoadVKB;
+    mockLoadVKB.mockReturnValue(
+      new Promise((resolve) => {
+        resolveLoadVKB = resolve;
+      }),
+    );
+
+    renderTimeline();
+    await waitFor(() => expect(mockLoadVKB).toHaveBeenCalled());
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /add timeline event/i }),
+    );
+    fireEvent.change(document.querySelector('input[type="date"]'), {
+      target: { value: "2015-06-01" },
+    });
+    fireEvent.change(document.querySelector("textarea"), {
+      target: { value: "Knee injury at drill weekend" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^add event$/i }));
+    await screen.findByText("Knee injury at drill weekend");
+
+    resolveLoadVKB({
+      evidenceTimeline: [
+        {
+          date: "2001-11-01",
+          description: "Enlisted (Army National Guard)",
+          eventType: "guard_enlistment",
+          projected: true,
+          projectionKey: "entry:period1",
+        },
+      ],
+      evidence: [],
+    });
+
+    await screen.findByText(/Enlisted \(Army National Guard\)$/);
+    expect(
+      screen.getByText("Knee injury at drill weekend"),
+    ).toBeInTheDocument();
+    const persisted = JSON.parse(
+      localStorage.getItem("vet_rate_timeline_events"),
+    );
+    expect(
+      persisted.some((e) => e.description === "Knee injury at drill weekend"),
+    ).toBe(true);
+  });
+});

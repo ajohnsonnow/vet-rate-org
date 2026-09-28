@@ -1983,7 +1983,29 @@ function _linkAndFoldPeriods(vkbRows, canonicalPeriods) {
   return _sortByStartAscending([...projected, ...vkbOnly]);
 }
 
-function _buildProjectedEntryEvents(canonicalPeriods) {
+// Item 3 follow-up (final13 QA re-review, 2026-09-28): a period's DISPLAY
+// formType is allowed to move on to a later, higher-confidence document
+// (e.g. Code Sheet legitimately relabeling an uncorrected NGB-22 period -
+// veteranProfile.js's N1b) - but the projected timeline event's
+// enlistment-vs-active-duty classification must not, since that governs
+// EvidenceTimeline's gap-pairing exclusion and the "Enlisted"/"Entered
+// active duty" label itself. An NGB-22 having ever proven this period is a
+// real Guard/Reserve enlistment is durable regardless of which document
+// later becomes the period's own display label - musterCallProcessor.js's
+// _addSource keeps every prior contributor in `sources[]`, additive, never
+// overwritten, so it survives the relabel.
+function _enlistmentClassificationFormType(p) {
+  if (p.formType === "NGB22") return "NGB22";
+  const everNGB22 = (p.sources || []).some((s) => s.formType === "NGB22");
+  return everNGB22 ? "NGB22" : p.formType;
+}
+
+// Exported (D13-2 follow-up): veteranProfile.js's saveServiceHistory needs
+// this same pure projection, synchronously and without touching the VKB/
+// IndexedDB, to keep the vet_rate_timeline_events store itself in sync with
+// every service-entry correction - not just while EvidenceTimeline.jsx
+// happens to be mounted. See _syncTimelineEventsWithServiceEntryProjection.
+export function _buildProjectedEntryEvents(canonicalPeriods) {
   return canonicalPeriods
     .filter((p) => p.periodScope !== "window" && p.serviceStartDate)
     .map((p) => ({
@@ -1991,7 +2013,7 @@ function _buildProjectedEntryEvents(canonicalPeriods) {
         date: p.serviceStartDate,
         branch: p.branch,
         component: p.component,
-        formType: p.formType,
+        formType: _enlistmentClassificationFormType(p),
         derived: p.serviceStartDateDerived,
         source: p.sourceDocument || "Veteran entry",
       }),

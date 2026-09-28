@@ -18,7 +18,11 @@ import {
   parseExplicitDate,
 } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
-import { _isLaterRecord, parsePayGrade } from "./veteranKnowledgeBase";
+import {
+  _isLaterRecord,
+  parsePayGrade,
+  _buildProjectedEntryEvents,
+} from "./veteranKnowledgeBase";
 import {
   pickServiceEntry,
   periodStartSource,
@@ -2415,14 +2419,23 @@ function _mergeExistingServicePeriod(existing, incoming, options) {
   // fields (SERVICE_PERIOD_PROVENANCE_FIELDS, N1b) that otherwise always
   // follow raw OCR confidence, same as an ordinary re-label. Once a
   // veteran has corrected this period's start date though (the only real
-  // "correction" ADR-007 recognizes - periodStartSource/SOURCE_RANK), that
-  // correction proved this exact document classifies the period; an
+  // "correction" ADR-007 recognizes - periodStartSource/SOURCE_RANK), an
   // unrelated later document merging onto the SAME period must never
-  // re-label it away, even with higher confidence - _mergeIncomingStart's
-  // veteran branch already refuses to move the date itself for the same
-  // reason. Without this, a code sheet merging onto an already-corrected
-  // Guard enlistment (formType "NGB22") could flip formType and, with it,
-  // the projected timeline event from guard_enlistment to service_entry.
+  // re-label its DISPLAY formType/sourceDocument away, even with higher
+  // confidence - _mergeIncomingStart's veteran branch already refuses to
+  // move the date itself for the same reason.
+  //
+  // final13 QA re-review (2026-09-28): this freeze protects whatever
+  // formType happens to be attached AT THE MOMENT of correction - if an
+  // uncorrected code sheet already relabeled an NGB-22 period away first
+  // (N1b's legitimate pre-correction re-label, tested below), the display
+  // label stays "Code Sheet" from then on, import-order dependent. The
+  // classification that actually matters for gap detection/the projected
+  // timeline event (guard_enlistment vs service_entry) no longer depends
+  // on this freeze at all - veteranKnowledgeBase.js's
+  // _enlistmentClassificationFormType reads the period's own `sources[]`
+  // (additive, always keeps every prior contributor) instead of the
+  // current display formType, so it survives regardless of import order.
   const classificationProven = periodStartSource(existing) === "veteran";
   const merged = { ...existing };
   const fieldSourceDocument = { ...(existing.fieldSourceDocument || {}) };
@@ -3347,6 +3360,85 @@ function _projectProfileMirror(entry) {
   }
 }
 
+function _isServiceEntryTimelineEventType(eventType) {
+  return eventType === "guard_enlistment" || eventType === "service_entry";
+}
+
+function _timelineSyncKey(date, description) {
+  return `${date}|${String(description || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()}`;
+}
+
+function _buildSyncedTimelineEvent(projected, i) {
+  return {
+    id: `vkb_${Date.now()}_${i}`,
+    type: "records",
+    date: projected.date,
+    description: projected.description,
+    title: String(projected.description).substring(0, 50),
+    category: "Medical Records",
+    sourceDocumentId: null,
+    eventType: projected.eventType || null,
+    sourceKey: projected.projectionKey || null,
+  };
+}
+
+// D13-2 follow-up (ADR-007): the vet_rate_timeline_events store is its own
+// separate copy of any already-imported service-entry event, so it must be
+// kept synced with the projection on every write that can change it - not
+// just while EvidenceTimeline.jsx happens to be mounted (that only fixed
+// its OWN in-memory view, and My Packet's Timeline tab reads the store
+// directly). Runs off servicePeriods[] only - synchronous, never touches
+// the VKB/IndexedDB - so it can't race a concurrent add/remove in an open
+// EvidenceTimeline and can't fail in a test that doesn't mock the VKB.
+// Only ever replaces a copy THIS projection previously produced (sourceKey
+// match still present): a veteran-deleted or never-imported projected
+// event is never silently resurrected, and a legacy copy with no
+// sourceKey, or a veteran-added event, is left for EvidenceTimeline's own
+// richer VKB-aware sync to reconcile once it's actually opened.
+function _syncTimelineEventsWithServiceEntryProjection(servicePeriods) {
+  const projectedEvents = _buildProjectedEntryEvents(servicePeriods);
+  if (projectedEvents.length === 0) return;
+
+  const staleProjectionKeys = new Set();
+  const kept = getTimelineEvents().filter((local) => {
+    if (
+      !_isServiceEntryTimelineEventType(local.eventType) ||
+      typeof local.id !== "string" ||
+      !local.id.startsWith("vkb_") ||
+      !local.sourceKey
+    ) {
+      return true;
+    }
+    const match = projectedEvents.find(
+      (p) => p.projectionKey === local.sourceKey,
+    );
+    const stale =
+      !match ||
+      match.date !== local.date ||
+      match.description !== local.description;
+    if (stale) staleProjectionKeys.add(local.sourceKey);
+    return !stale;
+  });
+  if (staleProjectionKeys.size === 0) return;
+
+  const existingKeys = new Set(
+    kept.map((e) => _timelineSyncKey(e.date, e.description)),
+  );
+  const replacements = [];
+  projectedEvents.forEach((p, i) => {
+    if (!staleProjectionKeys.has(p.projectionKey)) return;
+    const key = _timelineSyncKey(p.date, p.description);
+    if (existingKeys.has(key)) return;
+    existingKeys.add(key);
+    replacements.push(_buildSyncedTimelineEvent(p, i));
+  });
+
+  saveTimelineEvents([...kept, ...replacements]);
+}
+
 export const saveServiceHistory = (history, { supersededValue } = {}) => {
   try {
     const sanitized = {
@@ -3398,6 +3490,7 @@ export const saveServiceHistory = (history, { supersededValue } = {}) => {
     if (entry.periodId) {
       _projectProfileMirror(entry);
     }
+    _syncTimelineEventsWithServiceEntryProjection(sanitized.servicePeriods);
     return true;
   } catch (error) {
     console.error("Error saving service history:", error);

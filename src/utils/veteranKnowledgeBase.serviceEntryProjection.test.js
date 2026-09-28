@@ -474,6 +474,74 @@ describe("projectServiceEntryIntoVkb: timeline projection dedup", () => {
   });
 });
 
+// Item 3 follow-up (final13 QA re-review, 2026-09-28): the projected
+// timeline event's enlistment classification must survive a later
+// document's legitimate DISPLAY-formType relabel (N1b) - it reads the
+// period's own additive `sources[]`, not the current formType.
+describe("projectServiceEntryIntoVkb: enlistment classification survives a display relabel", () => {
+  it("stays guard_enlistment once an NGB-22 has ever contributed, even after Code Sheet becomes the display formType", () => {
+    const vkb = baseVkb();
+    const view = {
+      entry: {
+        date: "2002-01-10",
+        derived: false,
+        source: "code_sheet",
+        periodId: "p1",
+      },
+      periods: [
+        {
+          id: "p1",
+          serviceStartDate: "2002-01-10",
+          serviceEndDate: "2010-06-15",
+          formType: "Code Sheet",
+          sourceDocument: "cfile_codesheet.pdf",
+          sources: [
+            { sourceDocument: "ngb22.pdf", formType: "NGB22" },
+            { sourceDocument: "cfile_codesheet.pdf", formType: "Code Sheet" },
+          ],
+        },
+      ],
+      knownSources: new Set(["ngb22.pdf", "cfile_codesheet.pdf"]),
+    };
+    projectServiceEntryIntoVkb(vkb, view);
+    const event = vkb.evidenceTimeline.find(
+      (e) => e.projectionKey === "entry:p1",
+    );
+    expect(event.eventType).toBe("guard_enlistment");
+    expect(event.description).toBe("Enlisted (Military)");
+  });
+
+  it("still classifies as service_entry when no NGB-22 ever contributed", () => {
+    const vkb = baseVkb();
+    const view = {
+      entry: {
+        date: "2002-01-10",
+        derived: false,
+        source: "code_sheet",
+        periodId: "p1",
+      },
+      periods: [
+        {
+          id: "p1",
+          serviceStartDate: "2002-01-10",
+          serviceEndDate: "2010-06-15",
+          formType: "Code Sheet",
+          sourceDocument: "cfile_codesheet.pdf",
+          sources: [
+            { sourceDocument: "cfile_codesheet.pdf", formType: "Code Sheet" },
+          ],
+        },
+      ],
+      knownSources: new Set(["cfile_codesheet.pdf"]),
+    };
+    projectServiceEntryIntoVkb(vkb, view);
+    const event = vkb.evidenceTimeline.find(
+      (e) => e.projectionKey === "entry:p1",
+    );
+    expect(event.eventType).toBe("service_entry");
+  });
+});
+
 describe("projectServiceEntryIntoVkb: idempotence and order independence", () => {
   it("project(project(x)) equals project(x)", () => {
     const vkb = baseVkb({

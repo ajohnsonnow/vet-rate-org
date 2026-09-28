@@ -314,18 +314,38 @@ function _isStaleImportedServiceEntryEvent(local, projectedEvents, knownKeys) {
   return !knownKeys.has(timelineEventKey(local));
 }
 
+// Also tracks WHICH specific projectionKeys the removed copies were stale
+// against, so the caller can rebuild only those exact copies - never every
+// event currently in the projection. Without this, a copy the veteran
+// deliberately removed (performRemoveEvent) or a period that was never
+// imported at all comes back silently the next time any OTHER copy goes
+// stale, since both are equally "missing from kept". A stale LEGACY copy
+// (no sourceKey) only maps to a replacement when exactly one current
+// projected event shares its eventType - with two+ candidates there's no
+// way to prove which one it was, so (same "never guess a link" rule as
+// everywhere else) it's just dropped, not guessed.
 function _dropStaleServiceEntryEvents(events, projectedEvents, knownKeys) {
-  let removed = 0;
+  const staleProjectionKeys = new Set();
+  const legacyStaleTypes = new Set();
   const kept = events.filter((local) => {
     const stale = _isStaleImportedServiceEntryEvent(
       local,
       projectedEvents,
       knownKeys,
     );
-    if (stale) removed += 1;
+    if (stale) {
+      if (local.sourceKey) staleProjectionKeys.add(local.sourceKey);
+      else legacyStaleTypes.add(local.eventType);
+    }
     return !stale;
   });
-  return { kept, removed };
+  legacyStaleTypes.forEach((eventType) => {
+    const candidates = projectedEvents.filter((p) => p.eventType === eventType);
+    if (candidates.length === 1) {
+      staleProjectionKeys.add(candidates[0].projectionKey);
+    }
+  });
+  return { kept, removed: events.length - kept.length, staleProjectionKeys };
 }
 
 function _importConfirmMessage(addedCount, updatedCount) {
@@ -454,12 +474,20 @@ async function performImportFromRecords({
 // through any editor (VKB viewer, My Packet, FormsHelper, Muster Call
 // review) is reflected here too without the veteran clicking "Import from
 // My Records" again. Silent (no confirm/alert, no notice): this only ever
-// replaces a copy the projection itself previously produced (sourceKey
-// set) or a legacy copy that no longer matches any current service-entry
-// event; a veteran-added event (numeric id, no sourceKey match attempted)
-// is never touched - same guarantee as the manual re-import path.
+// REPLACES a copy that was itself found stale (sourceKey still present in
+// the projection, but date/description changed) or a legacy copy that no
+// longer matches any current service-entry event - it never resurrects a
+// projected event the veteran deliberately removed, or adds one that was
+// never imported at all, just because some OTHER copy went stale. A
+// veteran-added event (numeric id, no sourceKey match attempted) is never
+// touched - same guarantee as the manual re-import path.
+//
+// Reads the CURRENT store (not a mount-time snapshot) only after the
+// await below resolves, and writes it back with no further await in
+// between - performAddEvent/performRemoveEvent persist synchronously, so
+// this can never observe, then clobber, a hand-add/remove that happened
+// while the projection was loading.
 async function syncProjectedServiceEntryEvents({
-  timelineEvents,
   setTimelineEvents,
   onEventsUpdate,
 }) {
@@ -468,8 +496,9 @@ async function syncProjectedServiceEntryEvents({
       await _loadServiceEntryProjection();
     if (projectedEvents.length === 0) return;
 
-    const { kept, removed } = _dropStaleServiceEntryEvents(
-      timelineEvents,
+    const currentEvents = getTimelineEvents();
+    const { kept, removed, staleProjectionKeys } = _dropStaleServiceEntryEvents(
+      currentEvents,
       projectedEvents,
       knownServiceEntryKeys,
     );
@@ -478,6 +507,7 @@ async function syncProjectedServiceEntryEvents({
     const existing = new Set(kept.map(timelineEventKey));
     const replacements = [];
     projectedEvents.forEach((p, i) => {
+      if (!staleProjectionKeys.has(p.projectionKey)) return;
       const key = timelineEventKey({
         date: p.date,
         description: p.description || p.text,
@@ -956,7 +986,6 @@ function useEvidenceTimelineAutoImport({
       });
     } else {
       syncProjectedServiceEntryEvents({
-        timelineEvents,
         setTimelineEvents,
         onEventsUpdate,
       });
