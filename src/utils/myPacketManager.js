@@ -22,6 +22,7 @@ import { ensureQuota } from "./storage";
 import { awardDisplayName } from "./combatService";
 import { getServiceEntryForDocument } from "./veteranProfile";
 import { isSameCalendarDay } from "./serviceEntryDate";
+import { scrubText } from "./piiScrubber";
 
 // ============================================================
 // DATABASE CONFIGURATION
@@ -563,57 +564,6 @@ export const getDocumentExtractedData = async (documentId) => {
 };
 
 /**
- * Get ALL raw text concatenated for use in AI prompts.
- * This gives AI tools complete context about the veteran.
- *
- * @param {Object} options - Options
- * @param {string|string[]} options.types - Filter by document type(s)
- * @param {number} options.maxChars - Maximum total characters
- * @returns {Promise<string>} Concatenated text from all documents
- */
-export const getAllDocumentText = async (options = {}) => {
-  try {
-    const allDocs = await getAllPacketDocuments();
-    let filteredDocs = allDocs;
-
-    // Filter by type if specified
-    if (options.types) {
-      const typeArray = Array.isArray(options.types)
-        ? options.types
-        : [options.types];
-      filteredDocs = allDocs.filter((d) =>
-        typeArray.includes(d.classification),
-      );
-    }
-
-    // Sort by upload date (oldest first for chronological context)
-    filteredDocs.sort(
-      (a, b) => new Date(a.uploadDate) - new Date(b.uploadDate),
-    );
-
-    let combinedText = "";
-    for (const doc of filteredDocs) {
-      const label = PACKET_DOC_LABELS[doc.classification] || doc.classification;
-      const header = `\n=== ${label}: ${doc.fileName} (${doc.uploadDate.split("T")[0]}) ===\n`;
-      combinedText += header + (doc.rawText || "") + "\n\n";
-
-      // Check size limit
-      if (options.maxChars && combinedText.length > options.maxChars) {
-        combinedText = combinedText.substring(0, options.maxChars);
-        combinedText +=
-          "\n\n[... DOCUMENT TEXT TRUNCATED FOR AI PROCESSING ...]\n";
-        break;
-      }
-    }
-
-    return combinedText;
-  } catch (error) {
-    console.error("Failed to get all document text:", error);
-    return "";
-  }
-};
-
-/**
  * Get ALL extracted structured data for use by AI tools.
  * Returns a combined object with data organized by document type.
  */
@@ -927,8 +877,18 @@ export function _formatServiceRecordBasics(data, fileName) {
   if (data.fullName) out += `  Name: ${data.fullName}\n`;
   if (data.branch) out += `  Branch: ${data.branch}\n`;
   if (data.component) out += `  Component: ${data.component}\n`;
-  if (data.rank) out += `  Rank: ${data.rank} (${data.payGrade || ""})\n`;
-  if (data.mos) out += `  MOS: ${data.mos} - ${data.mosTitle || ""}\n`;
+  // F19 (final13 QA re-review, 2026-09-28): the same D13-7 empty-placeholder
+  // defect (fixed in veteranKnowledgeBase.js's Period line) was still live
+  // here - a rank with no extracted pay grade printed "SGT ()", and a MOS
+  // with no title left a trailing " - ".
+  if (data.rank) {
+    const payGradePart = data.payGrade ? ` (${data.payGrade})` : "";
+    out += `  Rank: ${data.rank}${payGradePart}\n`;
+  }
+  if (data.mos) {
+    const mosTitlePart = data.mosTitle ? ` - ${data.mosTitle}` : "";
+    out += `  MOS: ${data.mos}${mosTitlePart}\n`;
+  }
   const documentEntryDate = data.entryDate ?? data.serviceStartDate;
   if (documentEntryDate) {
     out += _formatServiceEntryLine(data, documentEntryDate, fileName);
@@ -1106,13 +1066,46 @@ const PACKET_CONTEXT_SAFE_FIELDS = [
   "provider",
 ];
 
+// F5 (final13 QA re-review, 2026-09-28): several allowlisted fields are
+// near-raw OCR text rather than tightly-structured extraction -
+// evidenceNeeded is a regex capture of up to 800 chars of page text
+// (musterCallProcessor.js's parseClaimLetter), and diagnosis/rationale/
+// opinion/provider/examiner are similarly loosely bounded. A letterhead or
+// footer landing inside that captured span (a running page header pdf.js
+// emits at the end of a content stream, a "write your name and file
+// number" line) carries the veteran's own name/VA file number straight
+// through the allowlist. Scrubbed for the numeric PII piiScrubber.js can
+// actually detect (SSN/VA file number/phone/email/DOB/address) before
+// being embedded - it has no name-detection (no regex catches a bare
+// name), so this narrows the exposure rather than closing it outright.
+const FREE_TEXT_SAFE_FIELDS = new Set([
+  "evidenceNeeded",
+  "diagnosis",
+  "diagnoses",
+  "rationale",
+  "opinion",
+  "nexusOpinion",
+  "provider",
+  "examiner",
+]);
+
+function _scrubFreeTextValue(value) {
+  if (typeof value === "string") return scrubText(value);
+  if (Array.isArray(value)) {
+    return value.map((v) => (typeof v === "string" ? scrubText(v) : v));
+  }
+  return value;
+}
+
 function _safeExtractedDataSummary(extractedData) {
   const safe = {};
   for (const field of PACKET_CONTEXT_SAFE_FIELDS) {
     const value = extractedData[field];
     if (value === null || value === undefined) continue;
     if (Array.isArray(value) && value.length === 0) continue;
-    safe[field] = value;
+    safe[field] = FREE_TEXT_SAFE_FIELDS.has(field)
+      ? _scrubFreeTextValue(value)
+      : value;
   }
   return safe;
 }
@@ -1199,7 +1192,6 @@ export default {
   searchPacketDocuments,
   getDocumentRawText,
   getDocumentExtractedData,
-  getAllDocumentText,
   getAllExtractedData,
   getPacketStats,
   hasPacketDocuments,

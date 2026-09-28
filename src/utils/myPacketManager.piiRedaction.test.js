@@ -59,6 +59,31 @@ describe("_formatOtherDocsSection: whitelisted fields only", () => {
     expect(out).toContain("Tinnitus");
   });
 
+  // F5 (final13 QA re-review, 2026-09-28): evidenceNeeded is a regex
+  // capture of up to 800 raw chars of page text (musterCallProcessor.js's
+  // parseClaimLetter) - a running page header/footer landing inside that
+  // span carries the VA file number straight through the allowlist.
+  it("scrubs a VA file number that lands inside evidenceNeeded's raw-text capture, but keeps the real evidence request", () => {
+    const out = _formatOtherDocsSection({
+      va_correspondence: [
+        {
+          fileName: "development_letter.pdf",
+          uploadDate: "2026-02-03T00:00:00.000Z",
+          extractedData: {
+            type: "claim_letter",
+            evidenceNeeded: [
+              "Send us treatment records for your knee condition",
+              `Regional Office ${FAKE_NAME} VA File Number ${FAKE_VA_FILE_NUMBER}`,
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(out).not.toContain(FAKE_VA_FILE_NUMBER);
+    expect(out).toContain("treatment records for your knee condition");
+  });
+
   it("prints nothing for a document with only the raw-text fallback (unclassified type)", () => {
     const out = _formatOtherDocsSection({
       other: [
@@ -85,5 +110,21 @@ describe("_formatServiceRecordDoc: no raw-text fallback", () => {
     });
 
     expect(out).toBe("");
+  });
+
+  // F16 (final13 QA re-review, 2026-09-28): the sibling test above passes
+  // trivially the moment extractedData is empty (short-circuits before
+  // rawText is ever in play) - it never actually exercised a document that
+  // both has real structured fields AND carries doc.rawText, so it
+  // wouldn't have caught rawText leaking back in alongside them.
+  it("never leaks doc.rawText even when the same document has real structured fields", () => {
+    const out = _formatServiceRecordDoc({
+      fileName: "dd214_scan.pdf",
+      extractedData: { branch: "Army", rank: "SGT" },
+      rawText: FAKE_LETTERHEAD,
+    });
+
+    expectNoPii(out);
+    expect(out).toContain("Army");
   });
 });

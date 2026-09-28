@@ -2637,7 +2637,14 @@ function buildServicePeriodsAndSeparationContext(vkb) {
       const branchRank = [p.branch, p.rank].filter(Boolean).join(" ");
       const mosPart = p.mos ? ` (${p.mos})` : "";
       const detail = branchRank ? ` - ${branchRank}${mosPart}` : mosPart;
-      context += `  Period ${i + 1}: ${p.serviceStartDate}${note} to ${p.serviceEndDate}${detail}\n`;
+      // F8 (final13 QA re-review, 2026-09-28): serviceStartDate/serviceEndDate
+      // were interpolated unguarded - a still-serving veteran's open-ended
+      // period (My Packet's "+ Add Service Period", serviceEndDate: "") or a
+      // DD-214 whose end date wasn't extracted (null) printed literal
+      // "to null"/"undefined to ..." into every AI tool's context.
+      const startPart = p.serviceStartDate || "?";
+      const endPart = p.serviceEndDate || "?";
+      context += `  Period ${i + 1}: ${startPart}${note} to ${endPart}${detail}\n`;
     });
   }
 
