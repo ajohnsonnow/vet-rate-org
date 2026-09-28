@@ -16,7 +16,10 @@
 import { getTotalToolCount } from "../data/toolkitData";
 import { getConditionCount as getDisabilityCount } from "../services/knowledgeQuery";
 import { getFormsCount } from "./formsCount";
-import { spotlight as _spotlight } from "./piiScrubber";
+import {
+  spotlight as _spotlight,
+  redactVeteranIdentifiers,
+} from "./piiScrubber";
 import { deriveCombatService } from "./combatService";
 import { getServiceEntry } from "./veteranProfile";
 
@@ -476,26 +479,6 @@ DO NOT:
 - Include information the witness didn't directly observe`;
 
 /**
- * System Prompt for My Packet Data Context
- * When veteran has saved claims, statements, or evidence
- */
-export const MY_PACKET_CONTEXT_PROMPT = `VETERAN'S MY PACKET DATA:
-The veteran has saved the following information in their My Packet:
-
-{MY_PACKET_DATA}
-
-USE THIS DATA TO:
-1. Understand their current claim preparation status
-2. Reference their specific conditions and ratings
-3. Identify gaps in their evidence
-4. Provide personalized guidance based on what they have vs. what they need
-
-NEVER:
-- Contradict information in their saved data without explicit explanation
-- Ignore conditions they've already documented
-- Suggest they start over when they've already made progress`;
-
-/**
  * System Prompt for Regulation Grounding
  * Ensures AI only references loaded 38 CFR sections
  */
@@ -925,7 +908,6 @@ function buildVeteranDataPrompt(veteranContext) {
 export function buildSystemPrompt(options = {}) {
   const {
     task = "general", // 'cfile', 'nexus', 'statement', 'decision', 'buddy', 'rating'
-    myPacketData = null,
     regulationText = null,
     veteranConditions = [],
     includeAppContext = true, // Include full app context
@@ -972,21 +954,11 @@ export function buildSystemPrompt(options = {}) {
       break;
   }
 
-  // Auto-load veteran's data from My Packet if enabled
-  if (includeVeteranData) {
-    const veteranContext = gatherVeteranContext();
-    if (veteranContext.hasData) {
-      systemPrompt += buildVeteranDataPrompt(veteranContext);
-    }
-  }
-
-  // Add explicit My Packet context if provided (overrides auto-load)
-  if (myPacketData) {
-    const packetContext = MY_PACKET_CONTEXT_PROMPT.replace(
-      "{MY_PACKET_DATA}",
-      JSON.stringify(myPacketData, null, 2),
-    );
-    systemPrompt += "\n\n" + packetContext;
+  // Auto-load veteran's data from My Packet if enabled. gatherVeteranContext
+  // is also the ADR-008 identifier source below, so it's loaded unconditionally.
+  const veteranContext = gatherVeteranContext();
+  if (includeVeteranData && veteranContext.hasData) {
+    systemPrompt += buildVeteranDataPrompt(veteranContext);
   }
 
   // Add regulation grounding if provided
@@ -1016,7 +988,14 @@ You are helping a veteran who served their country. Your guidance could signific
 - When in doubt, recommend they consult a VSO (free) or VA-accredited attorney
 === END MISSION IMPORTANCE ===`;
 
-  return systemPrompt;
+  // ADR-008 single enforcement point: a final known-value pass using
+  // whatever identifiers the auto-loaded veteran profile carries, so a
+  // future task-specific prompt or veteranConditions entry that
+  // accidentally interpolates a direct identifier still can't leak one.
+  return redactVeteranIdentifiers(
+    systemPrompt,
+    veteranContext.veteranProfile || {},
+  );
 }
 
 /**
@@ -1614,7 +1593,6 @@ export default {
   STATEMENT_BUILDER_SYSTEM_PROMPT,
   DECISION_DECODER_SYSTEM_PROMPT,
   BUDDY_STATEMENT_SYSTEM_PROMPT,
-  MY_PACKET_CONTEXT_PROMPT,
   REGULATION_GROUNDING_PROMPT,
   RATING_CRITERIA_SYSTEM_PROMPT,
   DD214_MULTI_DOCUMENT_SYSTEM_PROMPT,

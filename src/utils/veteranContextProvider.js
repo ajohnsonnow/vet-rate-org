@@ -26,6 +26,7 @@ import { saveDocumentToPacket, generatePacketContext } from "./myPacketManager";
 import { getSavedClaims } from "./claimsStorage";
 import { getMyRatings } from "./veteranProfile";
 import { normalizeConditionName } from "./conditionName";
+import { redactVeteranIdentifiers } from "./piiScrubber";
 
 // ============================================================
 // CONDITION NORMALIZATION + RECORD AGGREGATION
@@ -139,11 +140,12 @@ export const getVeteranAIContext = async (options = {}) => {
   } = options;
 
   let ctx = "";
+  let vkb = null;
 
   try {
     // 1) VKB — structured knowledge graph (service history, conditions, etc.)
     if (includeVKB) {
-      const vkb = await loadVKB();
+      vkb = await loadVKB();
       // Content gate (not a fullName gate): include VKB context whenever the
       // knowledge base holds anything an AI tool can use — document-derived
       // conditions, filed claims, a timeline, or a stored C-File — even before
@@ -177,7 +179,23 @@ export const getVeteranAIContext = async (options = {}) => {
     );
   }
 
-  return ctx;
+  // ADR-008 single enforcement point: generateLLMContext/generatePacketContext
+  // already self-redact, but this is the outermost boundary every caller of
+  // this module actually sees - a second pass here (using the SAME VKB
+  // identifiers, so it's a cheap no-op over already-redacted text) means a
+  // future piece concatenated onto `ctx` without its own redaction still
+  // can't leak a direct identifier past this function.
+  if (!vkb) {
+    try {
+      vkb = await loadVKB();
+    } catch {
+      // best-effort backstop only; nothing to redact against if this fails
+    }
+  }
+  const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+    .map((c) => c.claimNumber)
+    .filter(Boolean);
+  return redactVeteranIdentifiers(ctx, vkb?.personal, claimNumbers);
 };
 
 // ============================================================
