@@ -872,11 +872,10 @@ export const clearPacket = async () => {
  *
  * @param {Object} options - Options
  * @param {number} options.maxTokens - Approximate max tokens (chars/2)
- * @param {boolean} options.includeRawText - Include raw document text
  * @param {string[]} options.types - Filter to specific doc types
  * @returns {Promise<string>} AI-ready context string
  */
-function _groupDocsByType(allDocs, types) {
+export function _groupDocsByType(allDocs, types) {
   const grouped = {};
   for (const doc of allDocs) {
     if (types && !types.includes(doc.classification)) continue;
@@ -964,14 +963,16 @@ export function _formatServiceRecordHighlights(data) {
   return out;
 }
 
-function _formatServiceRecordDoc(doc, options) {
+// D13-4: no raw-OCR-text fallback here (dropped a dormant, never-called
+// `options.includeRawText` branch that used to embed up to 2000 chars of a
+// document's raw text - a claim letter's raw OCR is its own letterhead,
+// carrying the veteran's name/address/VA file number). A service record
+// with no structured extraction contributes nothing, same as any other
+// doc type once JSON.stringify(doc.extractedData) itself was replaced by
+// an explicit safe-field whitelist below.
+export function _formatServiceRecordDoc(doc) {
   const data = doc.extractedData || {};
-  if (Object.keys(data).length === 0) {
-    if (options.includeRawText && doc.rawText) {
-      return `[Raw text from ${doc.fileName}]\n${doc.rawText.substring(0, 2000)}\n\n`;
-    }
-    return "";
-  }
+  if (Object.keys(data).length === 0) return "";
 
   let out = `File: ${doc.fileName}\n`;
   out += _formatServiceRecordBasics(data, doc.fileName);
@@ -980,7 +981,7 @@ function _formatServiceRecordDoc(doc, options) {
   return out;
 }
 
-function _formatServiceRecordSection(grouped, options) {
+function _formatServiceRecordSection(grouped) {
   const serviceRecordTypes = [
     PACKET_DOC_TYPES.DD214,
     PACKET_DOC_TYPES.NGB22,
@@ -992,7 +993,7 @@ function _formatServiceRecordSection(grouped, options) {
     if (!grouped[type]) continue;
     out += `--- ${PACKET_DOC_LABELS[type]} ---\n`;
     for (const doc of grouped[type]) {
-      out += _formatServiceRecordDoc(doc, options);
+      out += _formatServiceRecordDoc(doc);
     }
     delete grouped[type];
   }
@@ -1068,15 +1069,64 @@ function _formatCFileSection(grouped) {
   return out;
 }
 
-function _formatOtherDocsSection(grouped) {
+// D13-4: every musterCallProcessor.js parser bakes a `raw: text.substring(0,
+// N)` field straight into extractedData (a claim letter's letterhead - the
+// veteran's own name/home address/VA file number), and a document type with
+// no dedicated parser resolves to ONLY that raw field
+// (parseDocumentByType's default branch). Dumping doc.extractedData whole
+// used to embed all of it verbatim. An explicit allowlist of known-safe,
+// non-identifying field names - never `raw`/`type`/`error`, never
+// `vaFileNumber` (often literally the veteran's SSN, per parseClaimLetter's
+// own comment), never `claimNumber` (document-identifying, not needed for
+// analysis) - so a document with nothing but the raw-text fallback
+// contributes nothing at all instead of leaking it.
+const PACKET_CONTEXT_SAFE_FIELDS = [
+  "combinedRating",
+  "combinedRatingHistory",
+  "effectiveDate",
+  "decisionDate",
+  "claimDate",
+  "letterDate",
+  "decisions",
+  "conditions",
+  "evidenceNeeded",
+  "responseDeadlineDays",
+  "status",
+  "condition",
+  "diagnosis",
+  "diagnoses",
+  "nexusOpinion",
+  "opinion",
+  "rationale",
+  "examDate",
+  "examiner",
+  "dateOfService",
+  "treatments",
+  "medications",
+  "provider",
+];
+
+function _safeExtractedDataSummary(extractedData) {
+  const safe = {};
+  for (const field of PACKET_CONTEXT_SAFE_FIELDS) {
+    const value = extractedData[field];
+    if (value === null || value === undefined) continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    safe[field] = value;
+  }
+  return safe;
+}
+
+export function _formatOtherDocsSection(grouped) {
   let out = "";
   for (const [type, docs] of Object.entries(grouped)) {
     const label = PACKET_DOC_LABELS[type] || type;
     out += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
     for (const doc of docs) {
       out += `  ${doc.fileName} (${doc.uploadDate.split("T")[0]})\n`;
-      if (doc.extractedData && Object.keys(doc.extractedData).length > 0) {
-        const summary = JSON.stringify(doc.extractedData).substring(0, 500);
+      const safe = _safeExtractedDataSummary(doc.extractedData || {});
+      if (Object.keys(safe).length > 0) {
+        const summary = JSON.stringify(safe).substring(0, 500);
         out += `  Data: ${summary}\n`;
       }
     }
@@ -1097,7 +1147,7 @@ export const generatePacketContext = async (options = {}) => {
     const grouped = _groupDocsByType(allDocs, options.types);
 
     // DD214s first (most important for claims)
-    context += _formatServiceRecordSection(grouped, options);
+    context += _formatServiceRecordSection(grouped);
 
     // C-Files get a structured formatter (conditions + missing evidence +
     // summary) instead of the truncated JSON blob used for other types.
