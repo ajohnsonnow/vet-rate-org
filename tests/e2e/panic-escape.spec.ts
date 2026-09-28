@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 import { test, expect, Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
-import { ESCAPE_WINDOW_MS } from "../../src/utils/safetyRedirect";
+import {
+  ESCAPE_WINDOW_MS,
+  ESCAPE_THRESHOLD,
+} from "../../src/utils/safetyRedirect";
 
 /**
  * Coverage for safetyRedirect.js's triple-Escape panic key vs. an Escape
@@ -107,32 +110,139 @@ async function openDialogByEvent(page: Page, eventName: string): Promise<void> {
     .waitFor({ state: "visible", timeout: 5000 });
 }
 
+interface DialogCloseProbeResult {
+  eventName: string;
+  panicFiredAfterClose: boolean;
+  panicFiredAfterProbes: boolean;
+}
+
 /**
- * Closes each of TIGHT_DIALOG_EVENTS via Escape and records the wall-clock
- * gap between consecutive closes (in-page, via performance.now(), so the
- * timestamps aren't skewed by CDP round-trip latency). Asserting those gaps
- * are under ESCAPE_WINDOW_MS is what makes this test discriminate a capture-
- * vs-bubble regression instead of passing vacuously because the cycle
- * happened to be slow enough to reset the counter between closes.
+ * For each of TIGHT_DIALOG_EVENTS: open it, close it via Escape, then
+ * immediately fire ESCAPE_THRESHOLD - 1 more deliberate Escapes (nothing
+ * open) back-to-back and record whether `vetrate:panic-triggered` fired
+ * after the close itself and after the probes.
+ *
+ * An earlier version measured the real wall-clock gap between five
+ * open->Escape->close cycles and asserted it stayed under ESCAPE_WINDOW_MS,
+ * on the theory that a capture-vs-bubble regression (the dialog-closing
+ * Escape gets miscounted) would only accumulate toward the redirect if
+ * consecutive closes landed within that window - otherwise the counter
+ * resets between them and the test passes vacuously even with the
+ * regression present. That held the *test's* own cycle speed to an
+ * unrealistic standard: under worker contention, five real dialogs
+ * open/close on real React renders, and the compositor and CPU scheduling
+ * of several concurrent Chromium instances measurably slow that down -
+ * "no CDP round trip" removed one source of slack but not that one, so the
+ * gap assertion itself still flaked under 6-worker load with no app
+ * regression involved.
+ *
+ * Probing immediately after each close sidesteps needing the *dialogs* to
+ * cycle quickly at all: the probes are ESCAPE_THRESHOLD - 1 = 2 raw
+ * `document.dispatchEvent` calls with no real work (no render, no CDP round
+ * trip) between them, so their own timing is effectively instant regardless
+ * of system load. If the preceding dialog-close had secretly counted (the
+ * exact regression this guards), the running total reaches ESCAPE_THRESHOLD
+ * once the probes land and the redirect fires; if it was correctly exempt,
+ * the probes alone (2) never reach the threshold (3) and nothing fires -
+ * proof either way, independent of how long the dialog itself took to open
+ * and close.
  */
-async function closeDialogsTightly(page: Page): Promise<number[]> {
-  const gaps: number[] = [];
-  let lastCloseAt: number | null = null;
+async function probeDialogClosesForMiscount(
+  page: Page,
+): Promise<DialogCloseProbeResult[]> {
+  return page.evaluate(
+    async ({ events, dialogSelector, escapeThreshold, resetWindowMs }) => {
+      let panicFired = false;
+      window.addEventListener("vetrate:panic-triggered", () => {
+        panicFired = true;
+      });
 
-  for (const eventName of TIGHT_DIALOG_EVENTS) {
-    await openDialogByEvent(page, eventName);
-    await page.keyboard.press("Escape");
-    await page
-      .locator(DIALOG_SELECTOR)
-      .first()
-      .waitFor({ state: "hidden", timeout: 5000 });
+      // setTimeout, not requestAnimationFrame: rAF ties polling to the
+      // compositor's own frame rate, which several concurrent Chromium
+      // instances (a multi-worker run) visibly throttle under GPU/compositor
+      // contention.
+      const waitFor = (predicate: () => boolean, timeoutMs: number) =>
+        new Promise<void>((resolve, reject) => {
+          const start = performance.now();
+          const poll = () => {
+            if (predicate()) {
+              resolve();
+              return;
+            }
+            if (performance.now() - start > timeoutMs) {
+              reject(new Error("waitFor timed out"));
+              return;
+            }
+            setTimeout(poll, 0);
+          };
+          poll();
+        });
 
-    const closedAt = await page.evaluate(() => performance.now());
-    if (lastCloseAt !== null) gaps.push(closedAt - lastCloseAt);
-    lastCloseAt = closedAt;
-  }
+      // The dialog's DOM node existing is not enough: useFocusTrap registers
+      // its Escape handler (pushEscapeTrap) and moves focus in from a
+      // useEffect, which runs *after* the DOM mutation commits, not in the
+      // same synchronous step. Dispatching Escape the instant querySelector
+      // finds the node can fire into the gap before the trap is registered,
+      // so it does nothing and the dialog never closes. Waiting for focus to
+      // have actually landed inside the dialog (every one of
+      // TIGHT_DIALOG_EVENTS autoFocuses on open) proves the same effect that
+      // installed the trap has run.
+      const dialogIsReady = () => {
+        const dialog = document.querySelector(dialogSelector);
+        return !!dialog && dialog.contains(document.activeElement);
+      };
 
-  return gaps;
+      const pressEscape = () => {
+        document.dispatchEvent(
+          new KeyboardEvent("keydown", {
+            key: "Escape",
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      };
+
+      const results: DialogCloseProbeResult[] = [];
+
+      for (const eventName of events) {
+        window.dispatchEvent(new CustomEvent(eventName));
+        await waitFor(dialogIsReady, 5000);
+
+        panicFired = false;
+        pressEscape();
+        await waitFor(
+          () => document.querySelector(dialogSelector) === null,
+          5000,
+        );
+        const panicFiredAfterClose = panicFired;
+
+        panicFired = false;
+        for (let i = 0; i < escapeThreshold - 1; i++) pressEscape();
+        const panicFiredAfterProbes = panicFired;
+
+        results.push({
+          eventName,
+          panicFiredAfterClose,
+          panicFiredAfterProbes,
+        });
+        if (panicFiredAfterClose || panicFiredAfterProbes) break;
+
+        // Let ESCAPE_WINDOW_MS elapse so this iteration's probes don't carry
+        // into the next dialog's baseline.
+        await new Promise((resolve) =>
+          setTimeout(resolve, resetWindowMs + 100),
+        );
+      }
+
+      return results;
+    },
+    {
+      events: TIGHT_DIALOG_EVENTS,
+      dialogSelector: DIALOG_SELECTOR,
+      escapeThreshold: ESCAPE_THRESHOLD,
+      resetWindowMs: ESCAPE_WINDOW_MS,
+    },
+  );
 }
 
 test.describe("Panic key (triple-Escape) vs. dialog-closing Escapes", () => {
@@ -186,16 +296,26 @@ test.describe("Panic key (triple-Escape) vs. dialog-closing Escapes", () => {
   // ESCAPE_WINDOW_MS, so the counter resets between dialog-closing Escapes
   // even with a capture-vs-bubble regression present - it can pass
   // vacuously. This closes 5 distinct dialogs via their bare open* event
-  // (no grid click) and asserts the actual gap between consecutive closes
-  // stayed under ESCAPE_WINDOW_MS, so the test can't pass by timing alone.
-  test("closing 5 different dialogs with tight Escape timing never trips the panic key", async ({
+  // (no grid click) and immediately probes each close with
+  // ESCAPE_THRESHOLD - 1 deliberate Escapes (see probeDialogClosesForMiscount)
+  // so the test can't pass by timing alone, deterministically rather than by
+  // hoping five real dialog cycles happen to land within ESCAPE_WINDOW_MS of
+  // each other.
+  test("closing 5 different dialogs never trips the panic key, even probed immediately after each close", async ({
     page,
   }) => {
     await seedReturningUser(page);
+    await stubWeatherRedirect(page);
 
-    const gaps = await closeDialogsTightly(page);
+    const results = await probeDialogClosesForMiscount(page);
 
-    expect(gaps.every((gap) => gap < ESCAPE_WINDOW_MS)).toBe(true);
+    expect(results).toEqual(
+      TIGHT_DIALOG_EVENTS.map((eventName) => ({
+        eventName,
+        panicFiredAfterClose: false,
+        panicFiredAfterProbes: false,
+      })),
+    );
     expect(await stillOnApp(page)).toBe(true);
   });
 
@@ -561,5 +681,56 @@ test.describe("Quick Exit / triple-Escape on the maintenance kill-switch page", 
 
     await page.waitForURL(/weather\.com/, { timeout: 5000 });
     expect(page.url()).toMatch(/weather\.com/);
+  });
+});
+
+/**
+ * Owner decision C: ONLY an Escape that closes a tool DIALOG is exempt from
+ * the panic count - a popup/menu/combobox closing (or failing to close) on
+ * Escape still counts, same as a dialog that stays open (Crisis Modal,
+ * already covered above) or a tool dialog that closes normally (already
+ * covered above too - "closing 4/5 dialogs never trips the panic key").
+ * SearchBar's suggestion combobox is the one non-dialog exemption case with
+ * no existing e2e coverage: it closes on Escape via its own handler, but is
+ * `role="combobox"`, not `role="dialog"`, so safetyRedirect.js's
+ * DIALOG_SELECTOR never matches it and those Escapes must count.
+ */
+test.describe("Triple-Escape vs. a non-dialog combobox (decision C)", () => {
+  test("3 Escapes that close the search suggestions combobox still trigger the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    const searchInput = page.getByRole("combobox");
+    await searchInput.fill("tinnitus");
+    await page
+      .getByRole("listbox")
+      .waitFor({ state: "visible", timeout: 5000 });
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  // Proves the test above isn't vacuously passing regardless of what the
+  // combobox does: fewer than the threshold, even with the same combobox
+  // interaction, must not redirect.
+  test("2 Escapes that close the search suggestions combobox do not trigger the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    const searchInput = page.getByRole("combobox");
+    await searchInput.fill("tinnitus");
+    await page
+      .getByRole("listbox")
+      .waitFor({ state: "visible", timeout: 5000 });
+
+    for (let i = 0; i < 2; i++) await page.keyboard.press("Escape");
+
+    expect(await stillOnApp(page)).toBe(true);
   });
 });
