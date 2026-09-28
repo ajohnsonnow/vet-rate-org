@@ -135,16 +135,26 @@ export function isStableSourceDocument(name) {
 }
 
 // Same-enlistment grouping (union-find): two candidate periods describe
-// the same real enlistment when they share an end date AND either share a
-// document, or one of them was never tied to any document at all (a
-// veteran-created/corrected period naming no document of its own still
-// belongs with the document-derived period for that same enlistment).
+// the same real enlistment when they share a document OR share an end
+// date (ADR-007 §2.2: "different enlistments" requires BOTH no shared
+// document AND no shared end date). A shared end date alone is enough -
+// a code sheet or a second DD-214 filed under a different filename for the
+// exact same separation still describes the same enlistment an existing
+// (possibly veteran-corrected) period already represents, even though
+// identity matching (upsertServicePeriod, a stricter same-document-or-
+// close-date rule) never merged them into one period object. Without this,
+// that second period reads as a genuinely different, earlier enlistment
+// and silently outranks the veteran's own correction on the first one.
 function _sameEnlistmentGroup(a, b) {
-  if (!a.serviceEndDate || !b.serviceEndDate) return false;
-  if (!isSameDate(a.serviceEndDate, b.serviceEndDate)) return false;
+  if (
+    a.serviceEndDate &&
+    b.serviceEndDate &&
+    isSameDate(a.serviceEndDate, b.serviceEndDate)
+  ) {
+    return true;
+  }
   const aSources = documentSources(a);
   const bSources = documentSources(b);
-  if (aSources.length === 0 || bSources.length === 0) return true;
   return aSources.some((s) => bSources.includes(s));
 }
 

@@ -316,6 +316,45 @@ describe("F2: precedence within one enlistment beats chronology", () => {
   });
 });
 
+describe("a code sheet for the same enlistment, filed separately, must not override a veteran's correction", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    seedProfile();
+  });
+
+  it("keeps the veteran's correction as the entry once the far-off code sheet lands as its own period", () => {
+    const ngbId = upsertNgb22("2002-03-05", true, "2010-06-15");
+    setServiceEntryDate({
+      date: "2001-09-10",
+      via: "forms_helper",
+      periodId: ngbId,
+    });
+
+    // >7 days from both the correction and the calculated start, and a
+    // different file, so identity matching creates a second period
+    // instead of merging onto the NGB-22 period.
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2001-09-01",
+        serviceEndDate: "2010-06-15",
+        formType: "Code Sheet",
+      },
+      {
+        sourceDocument: "codesheet-synthetic.pdf",
+        confidence: 100,
+        authoritativeDates: true,
+      },
+    );
+
+    expect(getServicePeriods()).toHaveLength(2);
+    expect(getServiceEntry()).toMatchObject({
+      date: "2001-09-10",
+      source: "veteran",
+      periodId: ngbId,
+    });
+  });
+});
+
 describe("saveServiceHistory: schemaVersion default and round-trip (G9)", () => {
   beforeEach(() => {
     localStorage.clear();
