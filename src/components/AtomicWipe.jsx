@@ -17,6 +17,7 @@ import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
+import { stopAutoBackup } from "../utils/autoBackup";
 
 function clearLocalAndSessionStorage() {
   // 1. Clear all localStorage
@@ -177,7 +178,7 @@ async function unregisterServiceWorkers() {
   }
 }
 
-function forceReloadWithCacheBypass() {
+export function forceReloadWithCacheBypass() {
   // Build from pathname/search only (not the raw href) so this is never
   // read as "unsanitized location input flows back into window.location".
   const separator = window.location.search ? "&" : "?";
@@ -203,19 +204,37 @@ function disableBeforeUnloadPrompt() {
   window.onbeforeunload = null;
 }
 
+/**
+ * The full local-data wipe, shared by every caller that needs to delete
+ * everything a veteran's browser holds (Atomic Wipe's own confirm flow,
+ * VKBViewer's "Clear All Data" - see D13/decision B). Callers that also want
+ * a hard reload or a UI progress flag layer that on top; this function is
+ * just the deletion itself, so the list of what gets cleared lives in
+ * exactly one place.
+ */
+export async function wipeAllLocalData() {
+  disableBeforeUnloadPrompt();
+  // Stop before clearing storage: a debounced backup already scheduled by a
+  // write from moments earlier fires on its own timer regardless of how
+  // thoroughly storage gets cleared next, and would otherwise write a fresh
+  // snapshot right back after this wipe (D13-8).
+  stopAutoBackup();
+
+  clearLocalAndSessionStorage();
+  clearCookies();
+  await clearIndexedDb();
+  await clearCacheStorage();
+  await unregisterServiceWorkers();
+
+  // eslint-disable-next-line no-console
+  console.log("✅ Wipe complete!");
+}
+
 async function handleAtomicWipe(setIsWiping, onWipeComplete) {
   setIsWiping(true);
-  disableBeforeUnloadPrompt();
 
   try {
-    clearLocalAndSessionStorage();
-    clearCookies();
-    await clearIndexedDb();
-    await clearCacheStorage();
-    await unregisterServiceWorkers();
-
-    // eslint-disable-next-line no-console
-    console.log("✅ Atomic Wipe complete!");
+    await wipeAllLocalData();
 
     // Notify completion
     if (onWipeComplete) {

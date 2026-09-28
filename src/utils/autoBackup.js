@@ -56,6 +56,13 @@ let backupTimer = null;
 let backupInProgress = false;
 let backupListeners = [];
 let _lastBackupTime = null;
+// The real (unwrapped) localStorage.setItem, captured once by startAutoBackup
+// and restored by stopAutoBackup. Also doubles as the "already patched"
+// guard: without it, a second startAutoBackup() call (nothing currently
+// prevents that) would capture the *already-wrapped* setItem as "original"
+// and wrap it again, chaining calls to the previous wrapper on every write
+// instead of replacing it.
+let originalSetItem = null;
 
 // ============================================================================
 // INDEXEDDB SETUP
@@ -434,8 +441,10 @@ export const triggerBackup = () => {
  * Monitor localStorage changes and trigger backups
  */
 export const startAutoBackup = () => {
+  if (originalSetItem) return; // already patched - see the guard comment above
+
   // Override localStorage.setItem to monitor changes
-  const originalSetItem = localStorage.setItem;
+  originalSetItem = localStorage.setItem;
   localStorage.setItem = function (key, value) {
     // Call original method
     originalSetItem.call(localStorage, key, value);
@@ -448,6 +457,28 @@ export const startAutoBackup = () => {
 
   // eslint-disable-next-line no-console
   console.log("✅ Auto-backup system started");
+};
+
+/**
+ * Stop the auto-backup system: cancels any pending debounced backup and
+ * un-patches localStorage.setItem. Must run as part of every full data
+ * delete (Atomic Wipe, Quick Exit's panic redirect) - a backup already
+ * scheduled by triggerBackup() before the wipe fires ~2s later regardless of
+ * how thoroughly storage was just cleared (clearing storage does not cancel
+ * a pending setTimeout), and would otherwise write a fresh snapshot back
+ * into IndexedDB (or, if any other in-memory state is still saved to a
+ * monitored key after the wipe, back into localStorage itself) right after
+ * a veteran asked for everything to be gone.
+ */
+export const stopAutoBackup = () => {
+  if (backupTimer) {
+    clearTimeout(backupTimer);
+    backupTimer = null;
+  }
+  if (originalSetItem) {
+    localStorage.setItem = originalSetItem;
+    originalSetItem = null;
+  }
 };
 
 /**
@@ -586,6 +617,7 @@ export default {
   initAutoBackup,
   performBackup,
   triggerBackup,
+  stopAutoBackup,
   getAllBackups,
   restoreFromBackup,
   importBackupFile,

@@ -20,6 +20,7 @@
  */
 
 import { clearBeforeUnloadWarning } from "./beforeUnloadGuard";
+import { stopAutoBackup } from "./autoBackup";
 
 // Storage key to track safety feature usage (for UX analytics, no PII)
 const SAFETY_USE_KEY = "vetrate_safety_use_count";
@@ -54,6 +55,14 @@ export const triggerPanicRedirect = () => {
 
     // 3. Clear temporary session data (NOT persistent localStorage)
     sessionStorage.clear();
+
+    // 3b. Stop autoBackup's pending debounced backup (D13-8) - a write from
+    // moments before this redirect can still be sitting in its 2s debounce
+    // window, and navigating away doesn't reliably cancel it (e.g. under
+    // test, or if replace() is briefly async) before it would otherwise
+    // fire and write a fresh snapshot to IndexedDB after a veteran asked to
+    // leave immediately.
+    stopAutoBackup();
 
     // 4. Increment safety use counter (anonymous UX metric)
     incrementSafetyUseCount();
