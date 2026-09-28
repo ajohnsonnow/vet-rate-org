@@ -64,6 +64,51 @@ let _lastBackupTime = null;
 // instead of replacing it.
 let originalSetItem = null;
 
+// A real `localStorage` is an instance of the `Storage` interface - a
+// "legacy platform object" whose spec-defined named-property setter
+// intercepts `localStorage.setItem = fn` as an *instance* assignment (per
+// WebIDL, that's indistinguishable from `localStorage.setItem = fn` meaning
+// "write a storage entry named 'setItem'"). Verified directly (not assumed):
+// Firefox and WebKit both follow that and silently no-op the override -
+// `localStorage.getItem('setItem')` afterward holds the wrapper's own source
+// code, and every write still goes through the ORIGINAL, unpatched setItem.
+// Chromium happens not to enforce this for own-property overrides, which is
+// why the instance-assignment approach used to look correct there. Patching
+// the PROTOTYPE's setItem instead - an ordinary object, not a legacy
+// platform object, so `[[DefineOwnProperty]]` there is ordinary - is
+// unaffected by that trap and verified identical across Chromium, Firefox,
+// and WebKit.
+//
+// Deliberately not `localStorage instanceof Storage`: verified directly, this
+// project's own vitest+jsdom test environment gives `localStorage` and the
+// bare global `Storage` reference from two different realms, so `instanceof`
+// (and even `sessionStorage.constructor === Storage`) reads false for a
+// genuine, unpatched `Storage` instance - the check would silently fall back
+// to instance assignment even where the real bug is reproducible. Walking
+// the actual prototype chain sidesteps that: it never compares against the
+// `Storage` global at all, so it isn't sensitive to which realm exposed it.
+// Falls back to instance assignment only for something with no real
+// prototype chain, e.g. this project's test shim (src/__tests__/setup.js),
+// a plain object literal - `Object.getPrototypeOf` on that is
+// `Object.prototype` unconditionally.
+function getStoragePatchTarget() {
+  const proto = Object.getPrototypeOf(localStorage);
+  return proto === Object.prototype ? null : proto;
+}
+
+function patchLocalStorageSetItem(fn) {
+  const target = getStoragePatchTarget();
+  if (target) {
+    Object.defineProperty(target, "setItem", {
+      value: fn,
+      writable: true,
+      configurable: true,
+    });
+  } else {
+    localStorage.setItem = fn;
+  }
+}
+
 // ============================================================================
 // INDEXEDDB SETUP
 // ============================================================================
@@ -445,15 +490,15 @@ export const startAutoBackup = () => {
 
   // Override localStorage.setItem to monitor changes
   originalSetItem = localStorage.setItem;
-  localStorage.setItem = function (key, value) {
+  patchLocalStorageSetItem(function (key, value) {
     // Call original method
-    originalSetItem.call(localStorage, key, value);
+    originalSetItem.call(this, key, value);
 
     // Trigger backup if it's a monitored key
     if (MONITORED_STORAGE_KEYS.has(key)) {
       triggerBackup();
     }
-  };
+  });
 
   // eslint-disable-next-line no-console
   console.log("✅ Auto-backup system started");
@@ -476,7 +521,7 @@ export const stopAutoBackup = () => {
     backupTimer = null;
   }
   if (originalSetItem) {
-    localStorage.setItem = originalSetItem;
+    patchLocalStorageSetItem(originalSetItem);
     originalSetItem = null;
   }
 };

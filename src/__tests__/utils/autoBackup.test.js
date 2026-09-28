@@ -161,6 +161,59 @@ describe("startAutoBackup idempotency", () => {
   });
 });
 
+// D13-8: every other test in this file runs against src/__tests__/setup.js's
+// plain-object localStorage shim, which has no real prototype chain at all -
+// an instance assignment "override" works fine against it regardless of
+// which strategy startAutoBackup uses, so it can't discriminate this defect.
+// jsdom's `sessionStorage` is a genuine, untouched `Storage` instance
+// (verified separately: jsdom follows the same spec-compliant named-property
+// setter as real Firefox/WebKit here, unlike Chromium) - swapped in as
+// `localStorage` for just this block, it reproduces the real bug: instance
+// assignment silently creates a storage entry literally named "setItem"
+// instead of overriding the method, so monitored writes never trigger a
+// backup at all.
+describe("startAutoBackup against a real Storage instance (D13-8)", () => {
+  let realStorage;
+  let originalGlobalLocalStorage;
+
+  beforeEach(() => {
+    originalGlobalLocalStorage = globalThis.localStorage;
+    realStorage = globalThis.sessionStorage;
+    realStorage.clear();
+    Object.defineProperty(globalThis, "localStorage", {
+      value: realStorage,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    stopAutoBackup();
+    realStorage.clear();
+    Object.defineProperty(globalThis, "localStorage", {
+      value: originalGlobalLocalStorage,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("intercepts writes without creating a phantom 'setItem' storage entry, and un-patches cleanly", () => {
+    const beforePatch = localStorage.setItem;
+    startAutoBackup();
+
+    localStorage.setItem(MONITORED_KEY, JSON.stringify({ a: 1 }));
+
+    expect(localStorage.getItem("setItem")).toBeNull();
+    expect(localStorage.getItem(MONITORED_KEY)).toBe(JSON.stringify({ a: 1 }));
+    expect(Object.prototype.hasOwnProperty.call(localStorage, "setItem")).toBe(
+      false,
+    );
+
+    stopAutoBackup();
+    expect(localStorage.setItem).toBe(beforePatch);
+  });
+});
+
 // Full-scope wipe scenario: the actual "storage stays empty" test the owner
 // decision requires, exercised through the real backup pipeline (not just
 // stopAutoBackup in isolation) - a monitored write is pending, a wipe stops
