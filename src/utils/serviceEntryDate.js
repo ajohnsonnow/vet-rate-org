@@ -206,17 +206,13 @@ function _bestInGroup(group) {
  * should be preferred over `b`, positive when `b` should be preferred, 0
  * on an exact tie.
  *
- * Recommended "chronological" variant (built and tested here): the
+ * "Chronological" variant, final per owner decision 2026-09-28: the
  * earliest enlistment's start wins outright, even when it's calculated -
  * a calculated NGB-22 start can only run LATE, never early (a real,
  * printed later enlistment can never be "actually earlier" than a
  * calculated guess), and it keeps every top-level editor (FormsHelper,
  * the VKB viewer) unambiguously correcting the period it displays. Marked
  * "calculated" when it is.
- *
- * If Anth keeps ADR-005 instead: swap this one function's body for the
- * "two-tier" variant (non-calculated beats calculated, then earliest) and
- * rerun the tests tagged [DR-1].
  */
 function _compareEnlistmentGroups(a, b) {
   if (!isSameCalendarDay(a.serviceStartDate, b.serviceStartDate)) {

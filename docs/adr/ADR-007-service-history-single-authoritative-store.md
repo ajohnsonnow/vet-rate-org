@@ -1,6 +1,6 @@
 # ADR-007: Service entry date — one authoritative store with a corrections layer; every other copy is a projection
 
-**Status:** Proposed. Becomes Accepted when merged, and only after Anth signs off on DR-1 (the cross-enlistment "service began" comparator — see Open Issues).
+**Status:** Accepted. DR-1 (the cross-enlistment "service began" comparator) is resolved: the "chronological" variant, per owner decision 2026-09-28.
 **Date:** 2026-09-27
 **Amends:** ADR-002.
 **Supersedes in part:** ADR-004 and ADR-005.
@@ -33,7 +33,7 @@ This is ADR-002's own revisit trigger (b): shape 2 should be derived from shape 
 
 Within one enlistment: **veteran > code_sheet > printed > calculated**. Ingest can never produce `'veteran'`, and never changes the effective start of a `'veteran'` period — it only refreshes `documentDate`/`documentSource` and records a deduplicated conflict when a printed/code-sheet document actively disagrees with the veteran's own correction.
 
-Across different enlistments (no shared document, no shared end date): the earliest enlistment's best start wins, marked `'calculated'` when it is — a calculated NGB-22 start can only run _late_, never early, so a real, later-printed enlistment can never actually be "earlier" than a calculated guess (`_compareEnlistmentGroups`, the "chronological" variant — see DR-1 below). This is the one frozen-contract decision this ADR ships pending sign-off; the fallback ("two-tier": non-calculated beats calculated, then earliest) is a one-function swap if kept instead.
+Across different enlistments (no shared document, no shared end date): the earliest enlistment's best start wins, marked `'calculated'` when it is — a calculated NGB-22 start can only run _late_, never early, so a real, later-printed enlistment can never actually be "earlier" than a calculated guess (`_compareEnlistmentGroups`, the "chronological" variant — see DR-1 below).
 
 ### 2.3 Identity
 
@@ -59,9 +59,9 @@ Every value that would otherwise be overwritten survives as one of: a period's o
 
 The VA API (shape 3, ADR-002) never flows into shape 1: no adoption, no conflict entry. A VA.gov-API-sourced VKB value is recognized by `serviceHistory.source === 'VA.gov API'` and is neither adopted nor recorded when the one-time legacy-edit adoption runs.
 
-## 3. Frozen-contract decision recorded here (DR-1)
+## 3. Decision recorded here (DR-1)
 
-The cross-enlistment comparator (`_compareEnlistmentGroups`, section 2.2) is implemented as the recommended "chronological" variant and built/tested against it. If Anth keeps ADR-005's "proven beats calculated" instead, the fallback is a one-function swap (the "two-tier" variant: non-calculated beats calculated, then earliest) with the `[DR-1]`-tagged tests re-run against it. **Do not merge before this is answered** — everything else in this ADR is independent of which variant wins.
+The cross-enlistment comparator (`_compareEnlistmentGroups`, section 2.2) is the "chronological" variant: the earliest enlistment's best start wins outright, even when calculated. Owner decision, recorded 2026-09-28: chronological is final. The competing "two-tier" variant (non-calculated beats calculated, then earliest) considered in the original draft of this ADR is not implemented and will not be; the `[DR-1]`-tagged tests pin the chronological behavior.
 
 ## 4. Consequences
 
@@ -105,7 +105,7 @@ Both judges scored this design (the "one-store" design) highest on correctness a
 
 **ADR-004** (status: Accepted; superseded in part by ADR-007): superseded — "one selector applied once per storage shape" (now one authoritative store, shape 2 projected); "the selector does not re-resolve conflicting sources" (it now does, via `_mergeIncomingStart`'s precedence); VKBViewer writing through to its own period (it is a projection now, never an editor); "legacy fields left in place, unread" (they are now active projections, not dead mirrors); `autoPopulateProfile` owning the flat field (the projection/chokepoint owns it once a period exists). Still in force, unchanged: pairing `serviceStartDateDerived` with its date, and excluding Box-18 windows from entry-date candidacy.
 
-**ADR-005** (status: Accepted; superseded in part by ADR-007): superseded — the same-source bypass and `_profileOverridesDerivedEntry` (both folded into `_mergeIncomingStart`/`getServiceEntry`'s new logic); the guard in `_syncFlatServiceStartDateMirror` (that function is deleted — the chokepoint and the projection now own this entirely); the tolerance edit in VKBViewer (VKBViewer no longer edits `servicePeriods[]` at all); the cross-period two-tier rule (superseded only if DR-1 approves the chronological variant instead). Each of ADR-005's open issues is closed with a pointer: code sheets reaching the profile/timeline → the projection; the stale Save Profile → the chokepoint (`_saveProfileTab`'s `EXCLUDED_FROM_SOURCE_TRACKING`); the `ProfileImportConfirmModal.jsx` flag → the canonical period plus `serviceStartDateEdited` metadata; disagreement between the stores → the projection; three-tier precedence → section 2.2 above; an unreliable `source` label → `serviceStartDateSource`; the ADR numbering collision → already resolved in commit `89bbccb7`.
+**ADR-005** (status: Accepted; superseded in part by ADR-007): superseded — the same-source bypass and `_profileOverridesDerivedEntry` (both folded into `_mergeIncomingStart`/`getServiceEntry`'s new logic); the guard in `_syncFlatServiceStartDateMirror` (that function is deleted — the chokepoint and the projection now own this entirely); the tolerance edit in VKBViewer (VKBViewer no longer edits `servicePeriods[]` at all); the cross-period two-tier rule (superseded — DR-1 resolved chronological). Each of ADR-005's open issues is closed with a pointer: code sheets reaching the profile/timeline → the projection; the stale Save Profile → the chokepoint (`_saveProfileTab`'s `EXCLUDED_FROM_SOURCE_TRACKING`); the `ProfileImportConfirmModal.jsx` flag → the canonical period plus `serviceStartDateEdited` metadata; disagreement between the stores → the projection; three-tier precedence → section 2.2 above; an unreliable `source` label → `serviceStartDateSource`; the ADR numbering collision → already resolved in commit `89bbccb7`.
 
 ## 7. Verification
 
