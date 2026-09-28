@@ -76,3 +76,47 @@ describe("_formatServiceRecordBasics: the Entry line", () => {
     expect(out).not.toContain("Entry:");
   });
 });
+
+describe("_formatServiceRecordBasics: the Entry line after a later document merges onto the corrected period", () => {
+  it("names THIS document's own value, not a later code sheet's", () => {
+    const id = upsertServicePeriod(
+      {
+        serviceStartDate: "2002-03-05",
+        serviceStartDateDerived: true,
+        serviceEndDate: "2010-06-15",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22-synthetic.pdf", confidence: 60 },
+    );
+    setServiceEntryDate({
+      date: "2002-08-01",
+      via: "my_packet",
+      periodId: id,
+    });
+
+    // Merges onto the same period (its start is within the correction
+    // alias tolerance of the NGB-22's original documentDate) and, being a
+    // veteran-owned period, never moves serviceStartDate - it only
+    // refreshes startDateCorrection.documentDate/documentSource.
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2002-03-01",
+        serviceEndDate: "2010-06-15",
+        formType: "Code Sheet",
+      },
+      {
+        sourceDocument: "codesheet-synthetic.pdf",
+        confidence: 100,
+        authoritativeDates: true,
+      },
+    );
+
+    const out = _formatServiceRecordBasics(
+      { entryDate: "2002-03-05", entryDateDerived: true },
+      "ngb22-synthetic.pdf",
+    );
+    expect(out).toContain("Entry: 2002-08-01");
+    expect(out).toContain("veteran-corrected; this document shows 2002-03-05");
+    expect(out).not.toContain("2002-03-01");
+  });
+});

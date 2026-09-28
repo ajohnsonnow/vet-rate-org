@@ -21,6 +21,7 @@ import { markAsModified } from "./persistentStorage";
 import { ensureQuota } from "./storage";
 import { awardDisplayName } from "./combatService";
 import { getServiceEntryForDocument } from "./veteranProfile";
+import { isSameCalendarDay } from "./serviceEntryDate";
 
 // ============================================================
 // DATABASE CONFIGURATION
@@ -903,8 +904,18 @@ function _formatServiceEntryLine(data, documentEntryDate, fileName) {
   if (p) {
     let line = `  Entry: ${p.date}`;
     if (p.derived) line += " (calculated from net service)";
-    if (p.source === "veteran" && p.documentDate) {
-      line += ` (veteran-corrected; this document shows ${p.documentDate})`;
+    // p.documentDate (startDateCorrection.documentDate) is period-level,
+    // not per-document - a later document merging onto this same period
+    // (a code sheet, say) refreshes it to ITS OWN incoming date, so it can
+    // disagree with what THIS specific fileName actually printed. This
+    // packet doc's own extractedData (documentEntryDate) is always this
+    // document's real value.
+    if (
+      p.source === "veteran" &&
+      documentEntryDate &&
+      !isSameCalendarDay(documentEntryDate, p.date)
+    ) {
+      line += ` (veteran-corrected; this document shows ${documentEntryDate})`;
     }
     return `${line}\n`;
   }
