@@ -2608,7 +2608,14 @@ function buildServicePeriodsAndSeparationContext(vkb) {
       const note = p.serviceStartDateDerived
         ? " (calculated from net service)"
         : "";
-      context += `  Period ${i + 1}: ${p.serviceStartDate}${note} to ${p.serviceEndDate} - ${p.branch || ""} ${p.rank || ""} (${p.mos || ""})\n`;
+      // D13-7: a Box-18 sub-period (branch known, rank/MOS not individually
+      // tracked) used to print "Army  ()" - the blank rank left a double
+      // space, and the blank MOS left an empty, meaningless "()". Omit
+      // each empty part instead of printing its blank placeholder.
+      const branchRank = [p.branch, p.rank].filter(Boolean).join(" ");
+      const mosPart = p.mos ? ` (${p.mos})` : "";
+      const detail = branchRank ? ` - ${branchRank}${mosPart}` : mosPart;
+      context += `  Period ${i + 1}: ${p.serviceStartDate}${note} to ${p.serviceEndDate}${detail}\n`;
     });
   }
 
