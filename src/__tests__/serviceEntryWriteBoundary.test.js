@@ -36,6 +36,34 @@ const STORAGE_KEY_ALLOWED = new Set([
   "src/components/DemoDataLoader.jsx",
 ]);
 
+// DIRECT_WRITE_RE only catches `obj.field =` assignment syntax - the real
+// bypasses this feature actually had (an object-literal spread passed
+// straight to one of the chokepoint sinks: FormsHelper's
+// saveVeteranProfile(profileData), VKBViewer's saveVKB(fresh) built from
+// edited state, DocumentIntelligenceBriefing's verifiedData) never assign
+// with `=` at all. This catches a mirrored field written as an object-
+// literal key anywhere within a call to one of those three sinks, outside
+// the sinks' own implementation files.
+const SINK_CALLS = ["saveVeteranProfile(", "updateVeteranProfile(", "saveVKB("];
+const SINK_FIELD_KEY_RE =
+  /\b(serviceStartDate|serviceStartDateDerived|entryDate|entryDateDerived)\s*:/;
+const SINK_CALL_ALLOWED = new Set([
+  "src/utils/veteranProfile.js",
+  "src/utils/veteranKnowledgeBase.js",
+]);
+
+function _sinkCallArgSlices(src) {
+  const slices = [];
+  for (const call of SINK_CALLS) {
+    let idx = src.indexOf(call);
+    while (idx !== -1) {
+      slices.push(src.slice(idx, idx + 400));
+      idx = src.indexOf(call, idx + call.length);
+    }
+  }
+  return slices;
+}
+
 function walk(dir, files = []) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
@@ -98,6 +126,29 @@ describe("service-entry write boundary: no direct write outside the projection's
       if (STORAGE_KEY_ALLOWED.has(rel)) continue;
       const src = readFileSync(full, "utf8");
       if (STORAGE_KEY_WRITE_RE.test(src)) offenders.push(rel);
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("the SINK_FIELD_KEY regex actually catches a violation (self-check)", () => {
+    expect(
+      SINK_FIELD_KEY_RE.test("saveVeteranProfile({ serviceStartDate: x })"),
+    ).toBe(true);
+    expect(SINK_FIELD_KEY_RE.test("saveVeteranProfile({ fullName: x })")).toBe(
+      false,
+    );
+  });
+
+  it("no editor outside the allowlist spreads a mirrored field into a chokepoint sink call", () => {
+    const offenders = [];
+    for (const full of walk(SRC_ROOT)) {
+      const rel = relPath(full);
+      if (SINK_CALL_ALLOWED.has(rel)) continue;
+      const src = readFileSync(full, "utf8");
+      const hit = _sinkCallArgSlices(src).some((slice) =>
+        SINK_FIELD_KEY_RE.test(slice),
+      );
+      if (hit) offenders.push(rel);
     }
     expect(offenders).toEqual([]);
   });
