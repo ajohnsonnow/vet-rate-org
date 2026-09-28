@@ -270,6 +270,108 @@ test.describe("Atomic Wipe clears every persistent store", () => {
   });
 });
 
+// Decision B: VKBViewer's "Clear All Data" reuses the same wipeAllLocalData
+// module as Atomic Wipe (no decoy redirect - it reloads instead), and must
+// propagate to every open tab so a stale tab's in-memory caches (vkbCache
+// and siblings) can't re-save deleted data. Reuses this file's own
+// store-seeding/reading helpers - same scope, same module under the hood.
+test.describe("VKBViewer Clear All Data propagates to every open tab (decision B)", () => {
+  test("clicking Clear All Data in tab 1 wipes every store, and tab 2 reloads on its own with nothing coming back", async ({
+    page,
+    context,
+  }) => {
+    test.setTimeout(30_000);
+    await installDbHelpers(page);
+    await seedReturningUser(page);
+    await page.goto("/");
+    await dismissDisclaimer(page);
+    await seedEveryStore(page);
+    // seedEveryStore's raw VKB record (personal.fullName only) is missing
+    // most of the schema - calculateCompleteness (runs on any VKB load/save,
+    // app-wide, not just VKBViewer opening) reads several nested fields
+    // unconditionally and throws on a record shaped that thinly. Dynamically
+    // importing the real module inside the page gets the actual, always-
+    // in-sync default shape instead of hand-copying fields one crash at a
+    // time.
+    await page.evaluate(
+      async ({ vkbDb, vkbStore }) => {
+        const mod = await import("/src/utils/veteranKnowledgeBase.js");
+        const fresh = mod.initializeVKB();
+        fresh.id = "main";
+        fresh.personal.fullName = "E2E Seeded Veteran";
+        await window.__putInDb(vkbDb, vkbStore, fresh);
+      },
+      { vkbDb: VKB_DB, vkbStore: VKB_STORE },
+    );
+
+    const page2 = await context.newPage();
+    await installDbHelpers(page2);
+    await seedReturningUser(page2);
+    await page2.goto("/");
+    await dismissDisclaimer(page2);
+
+    // Sanity: tab 2 sees the same seeded, shared-origin data before any wipe.
+    const before2 = await readEveryStore(page2);
+    expect(before2.vkbDbExists).toBe(true);
+
+    // Start listening for tab 2's own reload *before* triggering the wipe in
+    // tab 1 - dataWipeChannel's broadcast reaches tab 2 (and its listener
+    // calls location.reload()) essentially immediately, well before tab 1's
+    // own reload+load-state sequence below finishes. Registering this wait
+    // afterward races a navigation that may have already happened and
+    // misses it (Playwright's waitForEvent does not buffer past events).
+    const page2Reloaded = page2.waitForEvent("framenavigated", {
+      timeout: 20000,
+    });
+
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.evaluate(() =>
+      window.dispatchEvent(new CustomEvent("openVKBViewer")),
+    );
+    await page
+      .getByRole("button", { name: /clear all data/i })
+      .waitFor({ state: "visible", timeout: 5000 });
+    await page.getByRole("button", { name: /clear all data/i }).click();
+
+    // VKBViewer's wipe reuses forceReloadWithCacheBypass (nocache=<timestamp>).
+    await page.waitForURL(/nocache=/, { timeout: 15000 });
+    await page.waitForLoadState("load");
+
+    await page2Reloaded;
+    await page2.waitForLoadState("load");
+
+    const after1 = await readEveryStore(page);
+    const after2 = await readEveryStore(page2);
+    for (const after of [after1, after2]) {
+      expect(after.localStorage).toBeNull();
+      expect(after.sessionStorage).toBeNull();
+      expect(after.cookie).toBe(false);
+      expect(after.vkbDbExists).toBe(false);
+      expect(after.aiModelDbExists).toBe(false);
+      expect(after.cacheExists).toBe(false);
+    }
+
+    // "Act in tab 2": open the VKB viewer there too, after its own reload -
+    // it must render empty, not the stale seeded veteran re-served from an
+    // in-memory cache that survived the reload. dismissDisclaimer is a
+    // no-op if already acknowledged (the reload re-applies the seeded
+    // returning-user init script) - defensive against any first-load gate.
+    await dismissDisclaimer(page2);
+    await page2.evaluate(() =>
+      window.dispatchEvent(new CustomEvent("openVKBViewer")),
+    );
+    await page2
+      .locator('[role="dialog"]')
+      .first()
+      .waitFor({ state: "visible", timeout: 10000 });
+    const nameInput = page2
+      .locator('[role="dialog"] input[type="text"]')
+      .first();
+    await nameInput.waitFor({ state: "visible", timeout: 10000 });
+    expect(await nameInput.inputValue()).not.toBe("E2E Seeded Veteran");
+  });
+});
+
 declare global {
   interface Window {
     __putInDb: (
