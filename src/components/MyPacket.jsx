@@ -76,6 +76,7 @@ import {
   getAllDocumentsByCategory,
   groupDocumentationByCategory,
   raceVkb,
+  periodDisplayFormType,
 } from "../utils/veteranKnowledgeBase";
 import { buildPacketSummary } from "../utils/packetSummary";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -2849,7 +2850,9 @@ function DD214PeriodDetailCard({ period, t }) {
         <p>
           <span className="text-gray-500 dark:text-gray-400">Source: </span>
           {period.sourceDocument || "N/A"}
-          {period.formType ? ` (${period.formType})` : ""}
+          {periodDisplayFormType(period)
+            ? ` (${periodDisplayFormType(period)})`
+            : ""}
         </p>
       </div>
       <ServicePeriodFieldConflicts conflicts={period.fieldConflicts} />

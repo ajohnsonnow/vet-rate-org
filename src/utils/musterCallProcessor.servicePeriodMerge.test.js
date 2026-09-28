@@ -27,6 +27,7 @@ const {
   upsertServicePeriod,
   setServiceEntryDate,
 } = await import("./veteranProfile");
+const { periodDisplayFormType } = await import("./veteranKnowledgeBase");
 
 const REALISTIC_NGB22 = `
 1. NAME (Last, First, Middle): DOE, JOHN ROBERT
@@ -298,6 +299,147 @@ describe("saveCodeSheetServicePeriodsToProfile: labels its own source correctly"
     );
     expect(period.formType).toBe("Code Sheet");
     expect(period.characterOfService).toBe("Honorable");
+  });
+});
+
+// Same shape as REALISTIC_NGB22 but with no Item 18 Box-18 breakdown - N9c
+// ("once a period is a window, it stays one") means an AD breakdown whose
+// dates exactly match the primary 12a/12b period merges ONTO it and keeps
+// periodScope "window" permanently, which setServiceEntryDate deliberately
+// excludes from correction (windows are sub-periods, not the enlistment
+// itself). This fixture's primary period stays a normal, correctable
+// period so item 4's correction step actually applies.
+const NGB22_NO_BOX18 = `
+1. NAME (Last, First, Middle): DOE, JOHN ROBERT
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
+4a. GRADE, RATE OR RANK: SGT
+4b. PAY GRADE: E-5
+5. DATE OF BIRTH: 01/15/1980
+7a. PLACE OF ENTRY: PORTLAND OR
+11. PRIMARY SPECIALTY: 92Y UNIT SUPPLY SPECIALIST
+12a. DATE ENTERED AD THIS PERIOD: 06/22/2004
+12b. DATE OF SEPARATION: 08/27/2005
+13. DECORATIONS, MEDALS, BADGES: ARMY ACHIEVEMENT MEDAL
+14. MILITARY EDUCATION: PRIMARY LEADERSHIP DEVELOPMENT COURSE
+23. TYPE OF SEPARATION: RELEASE FROM ACTIVE DUTY
+24. CHARACTER OF SERVICE: HONORABLE
+25. SEPARATION AUTHORITY: AR 635-200
+26. SEPARATION CODE: MBK
+27. REENTRY CODE: RE-1
+28. NARRATIVE REASON: COMPLETION OF REQUIRED ACTIVE SERVICE
+`;
+
+const CODE_SHEET_RESULT = {
+  extractedData: {
+    ratingSource: "code_sheet",
+    servicePeriods: [
+      {
+        entryDate: "2004-06-22",
+        separationDate: "2005-08-27",
+        branch: "Army",
+        characterOfDischarge: "Honorable",
+      },
+    ],
+  },
+};
+
+// Item 3 (final14 QA, "what you see is what was imported"): a genuine
+// NGB-22 enlistment period's DISPLAY label must read "NGB22" regardless of
+// which order the NGB-22/code sheet arrived in - the raw STORED formType is
+// allowed to legitimately relabel to "Code Sheet" (the test above pins that
+// intent, unchanged), but periodDisplayFormType is the order-independent
+// label every human/AI-facing surface (Service tab, My Packet, AI context)
+// must use instead.
+describe("periodDisplayFormType: order-independent document label (item 3)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("reads NGB22 when the NGB-22 is imported BEFORE the code sheet", async () => {
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      CODE_SHEET_RESULT,
+    );
+
+    const period = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2004-06-22",
+    );
+    expect(periodDisplayFormType(period)).toBe("NGB22");
+  });
+
+  it("still reads NGB22 when the code sheet is imported BEFORE the NGB-22 (the import-order-dependent case this item fixes)", async () => {
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      CODE_SHEET_RESULT,
+    );
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    const period = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2004-06-22",
+    );
+    expect(periodDisplayFormType(period)).toBe("NGB22");
+  });
+});
+
+// Item 4 (final14 QA, flagged as implicit): re-processing the SAME code
+// sheet a second time, after a veteran correction has already locked this
+// period's formType/sourceDocument, must not create a duplicate period,
+// must not revert the correction, and must not lose provenance.
+describe("code-sheet re-import after a veteran correction (item 4)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("re-processing the same code sheet twice after a correction: no duplicate period, correction kept, provenance kept", async () => {
+    const extractedData = await parseServiceRecord(NGB22_NO_BOX18, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      CODE_SHEET_RESULT,
+    );
+
+    const beforeCorrection = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2004-06-22",
+    );
+    expect(beforeCorrection).toBeDefined();
+    expect(beforeCorrection.periodScope).not.toBe("window");
+
+    const correctionResult = setServiceEntryDate({
+      date: "2004-06-25",
+      via: "my_packet",
+      periodId: beforeCorrection.id,
+    });
+    expect(correctionResult.ok).toBe(true);
+
+    // Re-process the identical code sheet a second time (e.g. the veteran
+    // re-uploads the same C-File).
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      CODE_SHEET_RESULT,
+    );
+
+    const periodsAtCorrectedDate = getServicePeriods().filter(
+      (p) => p.serviceStartDate === "2004-06-25",
+    );
+    // No duplicate period.
+    expect(periodsAtCorrectedDate).toHaveLength(1);
+    const period = periodsAtCorrectedDate[0];
+    // Correction kept - the re-import never moved the date back.
+    expect(period.serviceStartDate).toBe("2004-06-25");
+    expect(period.serviceStartDateSource).toBe("veteran");
+    // Provenance kept - both documents are still recorded as sources.
+    expect(periodDisplayFormType(period)).toBe("NGB22");
+    expect(
+      (period.sources || []).some(
+        (s) => s.sourceDocument === "cfile_codesheet.pdf",
+      ),
+    ).toBe(true);
+    expect(
+      (period.sources || []).some((s) => s.sourceDocument === "ngb22.pdf"),
+    ).toBe(true);
   });
 });
 
