@@ -21,6 +21,11 @@
 
 import { clearBeforeUnloadWarning } from "./beforeUnloadGuard";
 import { stopAutoBackup } from "./autoBackup";
+// Side-effect-only: installs the cross-tab data-wipe listener (decision B).
+// safetyRedirect.js is reliably imported early in every tab (via
+// QuickExitButton -> AppShellOverlays), so this import is what guarantees
+// every tab listens, regardless of which tool (if any) is open in it.
+import "./dataWipeChannel";
 
 // Storage key to track safety feature usage (for UX analytics, no PII)
 const SAFETY_USE_KEY = "vetrate_safety_use_count";

@@ -15,10 +15,22 @@ import {
   saveVKB,
   generateLLMContext,
   exportVKB,
-  clearVKB,
 } from "../utils/veteranKnowledgeBase";
 import { setServiceEntryDate } from "../utils/veteranProfile";
 import { isSameCalendarDay } from "../utils/serviceEntryDate";
+import { wipeAllLocalData, forceReloadWithCacheBypass } from "./AtomicWipe";
+import { broadcastDataWipe } from "../utils/dataWipeChannel";
+
+// Decision B: same scope as the app's full "delete my data" (Atomic Wipe) -
+// this confirm must say exactly that, not a VKB-only subset, since
+// wipeAllLocalData() below deletes everything Atomic Wipe deletes.
+const CLEAR_ALL_DATA_CONFIRM_TEXT =
+  "This permanently deletes EVERYTHING Vet-Rate.org has about you on this " +
+  "device: your records, profile, and service history; My Packet documents; " +
+  "the knowledge base; your timeline; saved claims and conditions; local AI " +
+  "models and vector databases; preferences and settings; and all cached or " +
+  "offline data. This does not redirect you anywhere and cannot be undone. " +
+  "Continue?";
 
 const SECTIONS = [
   { id: "personal", label: "Personal Info", icon: "👤" },
@@ -946,18 +958,23 @@ const VKBViewer = ({ isOpen, onClose }) => {
     exportVKB();
   };
 
+  // Decision B: deletes everything the full data delete deletes (reuses
+  // AtomicWipe's wipeAllLocalData, not a VKB-only clear), without the decoy
+  // redirect (Quick Exit keeps that job - this just reloads), and
+  // propagates to every open tab so a stale tab cannot re-save deleted data.
+  // Decision B: deletes everything the full data delete deletes (reuses
+  // AtomicWipe's wipeAllLocalData, not a VKB-only clear), without the decoy
+  // redirect (Quick Exit keeps that job - this just reloads), and
+  // propagates to every open tab so a stale tab cannot re-save deleted data.
   const handleClear = async () => {
-    if (
-      confirm("⚠️ This will delete your entire Knowledge Base. Are you sure?")
-    ) {
-      const { vkb: newVKB, persisted } = await clearVKB();
-      setVkb(newVKB);
-      if (!persisted) {
-        alert(
-          "Cleared for this session, but the stored copy on this device could not be deleted and may return after a reload. Please try again.",
-        );
-      }
+    if (!confirm(CLEAR_ALL_DATA_CONFIRM_TEXT)) return;
+    try {
+      await wipeAllLocalData();
+    } catch (error) {
+      console.error("Error during Clear All Data wipe:", error);
     }
+    broadcastDataWipe();
+    forceReloadWithCacheBypass();
   };
 
   return (
