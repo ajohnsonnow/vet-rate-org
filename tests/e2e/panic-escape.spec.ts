@@ -734,3 +734,54 @@ test.describe("Triple-Escape vs. a non-dialog combobox (decision C)", () => {
     expect(await stillOnApp(page)).toBe(true);
   });
 });
+
+/**
+ * Owner decision C, the tooltip case specifically: Tooltip.jsx dismisses on
+ * Escape via a `document`-level CAPTURE-phase listener that calls
+ * stopPropagation() (not preventDefault()) - safetyRedirect.js's own count
+ * decision used to live on window's BUBBLE phase, the very last stop in the
+ * dispatch, so that stopPropagation() call meant the decision never ran at
+ * all for that Escape, not just late. Decision C exempts only a
+ * dialog-closing Escape; a tooltip (or anything else) swallowing the event
+ * first must still count.
+ */
+test.describe("Triple-Escape vs. an open tooltip (decision C)", () => {
+  const bugButtonName = /report a bug/i;
+
+  async function openBugButtonTooltip(page: Page): Promise<void> {
+    await page.getByRole("button", { name: bugButtonName }).hover();
+    await page
+      .locator('[role="tooltip"]')
+      .waitFor({ state: "visible", timeout: 3000 });
+  }
+
+  test("3 Escapes with the Report-a-Bug tooltip open still trigger the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await openBugButtonTooltip(page);
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  // Proves the test above isn't vacuously passing regardless of the
+  // tooltip: fewer than the threshold, even with the same tooltip
+  // interaction, must not redirect.
+  test("2 Escapes with the Report-a-Bug tooltip open do not trigger the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await openBugButtonTooltip(page);
+
+    for (let i = 0; i < 2; i++) await page.keyboard.press("Escape");
+
+    expect(await stillOnApp(page)).toBe(true);
+  });
+});

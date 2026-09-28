@@ -314,6 +314,37 @@ test.describe("VKBViewer Clear All Data propagates to every open tab (decision B
     const before2 = await readEveryStore(page2);
     expect(before2.vkbDbExists).toBe(true);
 
+    // Give tab 2 a real, trusted user gesture before the wipe: a returning
+    // user's dismissDisclaimer() is a no-op (already acknowledged), so
+    // without this tab 2 never has ANY genuine interaction, and Chromium's
+    // own anti-annoyance heuristic suppresses beforeunload prompts entirely
+    // for a document with no user interaction, regardless of what the app's
+    // own beforeunload handler does - a programmatic
+    // dispatchEvent(CustomEvent) does not count as one. Opening the viewer
+    // and clicking Edit reproduces the veteran's exact scenario: an
+    // interacted-with tab whose own "unsaved changes" guard could otherwise
+    // block its cross-tab reload.
+    await page2.evaluate(() =>
+      window.dispatchEvent(new CustomEvent("openVKBViewer")),
+    );
+    await page2
+      .getByRole("button", { name: /Edit/i })
+      .waitFor({ state: "visible", timeout: 10000 });
+    await page2.getByRole("button", { name: /Edit/i }).click();
+
+    // Tab 2 must not show a "Leave site?" beforeunload prompt at all when it
+    // receives the wipe broadcast (decision B: cross-tab must never be
+    // blockable) - if it does, dismiss it (the pre-fix, buggy answer a
+    // veteran would most naturally pick for an "unsaved changes" warning) so
+    // the rest of this test can still observe the actual consequence (a
+    // stale tab that never reloaded) instead of hanging on an unhandled
+    // dialog.
+    const page2DialogTypes: string[] = [];
+    page2.on("dialog", (dialog) => {
+      page2DialogTypes.push(dialog.type());
+      dialog.dismiss().catch(() => {});
+    });
+
     // Start listening for tab 2's own reload *before* triggering the wipe in
     // tab 1 - dataWipeChannel's broadcast reaches tab 2 (and its listener
     // calls location.reload()) essentially immediately, well before tab 1's
@@ -339,6 +370,8 @@ test.describe("VKBViewer Clear All Data propagates to every open tab (decision B
 
     await page2Reloaded;
     await page2.waitForLoadState("load");
+
+    expect(page2DialogTypes).not.toContain("beforeunload");
 
     const after1 = await readEveryStore(page);
     const after2 = await readEveryStore(page2);
@@ -369,6 +402,105 @@ test.describe("VKBViewer Clear All Data propagates to every open tab (decision B
       .first();
     await nameInput.waitFor({ state: "visible", timeout: 10000 });
     expect(await nameInput.inputValue()).not.toBe("E2E Seeded Veteran");
+
+    // The AI-facing context an LLM tool would actually receive must be
+    // empty too, in tab 2, not just the editor's rendered field - a stale
+    // in-memory vkbCache surviving the reload could still feed the seeded
+    // veteran into every AI tool even if the editor UI itself looked clean.
+    const llmContext = await page2.evaluate(async () => {
+      const mod = await import("/src/utils/veteranKnowledgeBase.js");
+      const vkb = await mod.loadVKB();
+      return mod.generateLLMContext(vkb);
+    });
+    expect(llmContext).not.toContain("E2E Seeded Veteran");
+  });
+});
+
+// Decision B again, but through Atomic Wipe (Backup Manager > Clear Data >
+// Confirm Wipe) rather than VKBViewer's Clear All Data - dataWipeChannel.js's
+// own doc comment claims to cover both, but only VKBViewer ever actually
+// called broadcastDataWipe() before this fix. Reuses seedReturningUser only
+// (not seedEveryStore/readEveryStore) - the thing under test is purely
+// "does tab 2 reload at all", already proven sufficient by tab 2's own
+// framenavigated wait timing out on the pre-fix code.
+test.describe("Atomic Wipe propagates to every open tab too (decision B)", () => {
+  test("Atomic Wipe in tab 1 reloads tab 2 on its own", async ({
+    page,
+    context,
+  }) => {
+    test.setTimeout(30_000);
+    await seedReturningUser(page);
+    await page.goto("/");
+    await dismissDisclaimer(page);
+
+    const page2 = await context.newPage();
+    await seedReturningUser(page2);
+    await page2.goto("/");
+    await dismissDisclaimer(page2);
+
+    const page2Reloaded = page2.waitForEvent("framenavigated", {
+      timeout: 20000,
+    });
+
+    await page.evaluate(() =>
+      window.dispatchEvent(new CustomEvent("openBackupManager")),
+    );
+    await page
+      .getByRole("button", { name: /clear data/i })
+      .waitFor({ state: "visible", timeout: 5000 });
+    await page.getByRole("button", { name: /clear data/i }).click();
+    await page.getByRole("button", { name: /confirm wipe/i }).click();
+
+    // Atomic Wipe force-reloads (nocache=<timestamp>) 500ms after the wipe
+    // completes - wait for that real navigation rather than a fixed sleep.
+    await page.waitForURL(/nocache=/, { timeout: 15000 });
+    await page.waitForLoadState("load");
+
+    // The actual regression this proves fixed: before broadcastDataWipe()
+    // was wired into handleAtomicWipe, tab 2 got no notification at all and
+    // this wait timed out.
+    await page2Reloaded;
+    await page2.waitForLoadState("load");
+  });
+});
+
+// D13-8: startAutoBackup patches localStorage.setItem to monitor writes to
+// veteran-data keys. Firefox and WebKit follow the WebIDL named-property
+// setter for Storage's own instances, which turns a naive instance-assignment
+// patch into a silent no-op that ALSO creates a literal 'setItem' storage
+// entry holding the wrapper's own source - confirmed live, not assumed (see
+// src/__tests__/utils/autoBackup.test.js's real-Storage-instance test for the
+// underlying mechanism, reproduced there via jsdom's own spec-compliant
+// Storage). This runs the actual shipped app, in every configured project
+// (including firefox) - proof in the browser this defect was specific to,
+// not just a jsdom stand-in.
+test.describe("Auto-backup patches localStorage without a phantom 'setItem' entry (D13-8)", () => {
+  test("no 'setItem' storage entry exists after boot, and writing a monitored key doesn't create one either", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await page.goto("/");
+    await dismissDisclaimer(page);
+
+    expect(
+      await page.evaluate(() => localStorage.getItem("setItem")),
+    ).toBeNull();
+
+    await page.evaluate(() => {
+      localStorage.setItem(
+        "vet_rate_veteran_profile",
+        JSON.stringify({ fullName: "E2E Probe" }),
+      );
+    });
+
+    expect(
+      await page.evaluate(() => localStorage.getItem("setItem")),
+    ).toBeNull();
+    expect(
+      await page.evaluate(() =>
+        localStorage.getItem("vet_rate_veteran_profile"),
+      ),
+    ).toContain("E2E Probe");
   });
 });
 
