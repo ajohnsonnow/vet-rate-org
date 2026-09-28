@@ -30,6 +30,13 @@ function expectNoLeaks(context) {
     expect(content).not.toMatch(/\(\s*\)/);
     expect(content).not.toMatch(/ {2,}/);
   });
+  // D14-2 (final14 QA) / owner decision D: a claim number is never a valid
+  // AI-context VALUE, whether or not it resolved - a missing claimNumber
+  // must never render the literal word "null", and no claim number
+  // (present or absent) may appear as "#<anything>" at all.
+  expect(context).not.toMatch(/\bnull\b/i);
+  expect(context).not.toMatch(/#null/i);
+  expect(context).not.toMatch(/Claim #/i);
 }
 
 function buildRichVKB() {
@@ -143,6 +150,41 @@ describe("D12-5: generateLLMContext never leaks a raw object or NaN/undefined", 
 
     const context = generateLLMContext(vkb);
     expect(context).toContain("future_device");
+    expectNoLeaks(context);
+  });
+});
+
+describe("D14-2: claim numbers never enter AI context", () => {
+  it('never prints "Claim #null" for a denial with no claimNumber, labels by condition + decision date instead', () => {
+    const vkb = initializeVKB();
+    for (let i = 0; i < 7; i += 1) {
+      vkb.vaClaimsHistory.claims.push({
+        claimNumber: null,
+        status: "denied",
+        decision: "denied",
+        decisionDate: "2024-0" + ((i % 9) + 1) + "-01",
+        conditions: [`Condition ${i}`],
+        source: "decision_letter.pdf",
+      });
+    }
+
+    const context = generateLLMContext(vkb);
+    expectNoLeaks(context);
+    expect(context).toContain("Condition 0: denied (decided 2024-01-01)");
+  });
+
+  it("never prints a real claim number either, even though it has one", () => {
+    const vkb = initializeVKB();
+    vkb.vaClaimsHistory.claims.push({
+      claimNumber: "600123456789",
+      status: "denied",
+      decisionDate: "2024-05-01",
+      conditions: ["Tinnitus"],
+    });
+
+    const context = generateLLMContext(vkb);
+    expect(context).not.toContain("600123456789");
+    expect(context).toContain("Tinnitus: denied (decided 2024-05-01)");
     expectNoLeaks(context);
   });
 });

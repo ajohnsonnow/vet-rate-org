@@ -35,6 +35,7 @@ import {
 } from "./conditionName";
 import { DOCUMENT_TYPES } from "./documentClassifier";
 import { awardDisplayName } from "./combatService";
+import { redactVeteranIdentifiers } from "./piiScrubber";
 
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
 const VKB_VERSION = "1.0.0";
@@ -1983,21 +1984,40 @@ function _linkAndFoldPeriods(vkbRows, canonicalPeriods) {
   return _sortByStartAscending([...projected, ...vkbOnly]);
 }
 
-// Item 3 follow-up (final13 QA re-review, 2026-09-28): a period's DISPLAY
-// formType is allowed to move on to a later, higher-confidence document
-// (e.g. Code Sheet legitimately relabeling an uncorrected NGB-22 period -
-// veteranProfile.js's N1b) - but the projected timeline event's
-// enlistment-vs-active-duty classification must not, since that governs
-// EvidenceTimeline's gap-pairing exclusion and the "Enlisted"/"Entered
-// active duty" label itself. An NGB-22 having ever proven this period is a
-// real Guard/Reserve enlistment is durable regardless of which document
-// later becomes the period's own display label - musterCallProcessor.js's
-// _addSource keeps every prior contributor in `sources[]`, additive, never
-// overwritten, so it survives the relabel.
+// Item 3 (final13 QA re-review, 2026-09-28; resolved final14 QA,
+// 2026-09-28): a period's STORED formType is allowed to move on to a
+// later, higher-confidence document (e.g. Code Sheet legitimately
+// relabeling an uncorrected NGB-22 period - veteranProfile.js's N1b) -
+// that's real provenance, not a bug, and the raw field stays exactly as
+// N1b leaves it (musterCallProcessor.servicePeriodMerge.test.js pins this).
+// But neither the projected timeline event's enlistment-vs-active-duty
+// classification NOR the human/AI-facing DOCUMENT LABEL should follow that
+// same race: an NGB-22 having ever proven this period is a real
+// Guard/Reserve enlistment is durable regardless of which document later
+// becomes the period's raw stored formType/sourceDocument via N1b's
+// confidence race - musterCallProcessor.js's _addSource keeps every prior
+// contributor in `sources[]`, additive, never overwritten, so this reads
+// as "NGB22" independent of import order. Used for BOTH the gap-detection
+// classification below and periodDisplayFormType (the read-only label
+// shown in the Service tab / My Packet / any AI context) - never for the
+// mutable form-type editor control, which must keep binding to the raw
+// stored value the veteran is actually editing.
 function _enlistmentClassificationFormType(p) {
   if (p.formType === "NGB22") return "NGB22";
   const everNGB22 = (p.sources || []).some((s) => s.formType === "NGB22");
   return everNGB22 ? "NGB22" : p.formType;
+}
+
+/**
+ * The document label to SHOW a veteran or an AI for a service period -
+ * order-independent (see _enlistmentClassificationFormType above). Distinct
+ * from `period.formType` itself, which stays a mutable, import-order-
+ * sensitive provenance field editors read/write directly.
+ * @param {Object} period
+ * @returns {string|undefined}
+ */
+export function periodDisplayFormType(period) {
+  return _enlistmentClassificationFormType(period);
 }
 
 // Exported (D13-2 follow-up): veteranProfile.js's saveServiceHistory needs
@@ -2551,29 +2571,17 @@ export const mergeMusterCallIntoVKB = (vkb, musterCallData) => {
   return vkb;
 };
 
-function buildPersonalContext(vkb) {
-  // ─── PERSONAL ───
-  let context = "";
-  if (vkb.personal.fullName) {
-    context += `Veteran: ${vkb.personal.fullName}\n`;
-  }
-  if (vkb.personal.dateOfBirth) {
-    context += `DOB: ${vkb.personal.dateOfBirth}\n`;
-  }
-  if (vkb.personal.ssn) {
-    context += `SSN (last 4): ${vkb.personal.ssn}\n`;
-  }
-  if (
-    vkb.personal.address &&
-    (vkb.personal.address.city || vkb.personal.address.state)
-  ) {
-    const addr = vkb.personal.address;
-    const parts = [addr.street, addr.city, addr.state, addr.zip].filter(
-      Boolean,
-    );
-    context += `Address: ${parts.join(", ")}\n`;
-  }
-  return context;
+// Owner decision D (2026-09-28, ADR-008): no AI context may ever contain a
+// direct veteran identifier - full/partial name, DOB, SSN (any part), VA
+// file number, address, phone, or email. This function is the historical
+// location those fields were rendered from (name/DOB/SSN(last4)/address);
+// kept as a deliberate no-op, not deleted, so a future edit that wants to
+// add veteran identity back to the AI context has to consciously remove
+// this comment first. No live consumer needs age from this - if one ever
+// does, add ONLY a whole-year age computed from dateOfBirth, never the DOB
+// itself.
+function buildPersonalContext() {
+  return "";
 }
 
 function buildServiceHistoryCoreContext(vkb) {
@@ -2848,6 +2856,20 @@ function buildExposuresContext(vkb) {
   return context;
 }
 
+// D14-2 (final14 QA) / owner decision D: claim numbers never enter AI
+// context - they identify a specific VA claim file, not a fact about the
+// veteran's condition an AI tool needs to reason about. Label by condition/
+// claim type and decision date instead. `claim.claimNumber` used to be
+// interpolated directly, so an entry with none printed the literal string
+// "Claim #null" - condition/claimType/status/decisionDate are all plain
+// strings or absent (guarded below), never interpolated when falsy.
+function _claimContextLabel(claim) {
+  if (Array.isArray(claim.conditions) && claim.conditions.length > 0) {
+    return claim.conditions.join(", ");
+  }
+  return claim.condition || claim.claimType || "Claim";
+}
+
 function buildClaimsHistoryContext(vkb) {
   // ─── CLAIMS HISTORY ───
   let context = "";
@@ -2857,8 +2879,12 @@ function buildClaimsHistoryContext(vkb) {
   ) {
     context += "\n--- VA CLAIMS HISTORY ---\n";
     vkb.vaClaimsHistory.claims.forEach((claim) => {
-      context += `• Claim #${claim.claimNumber}: ${claim.status}`;
-      if (claim.filedDate) context += ` (filed ${claim.filedDate})`;
+      context += `• ${_claimContextLabel(claim)}: ${claim.status || "status unknown"}`;
+      const decidedOn = claim.decisionDate || claim.filedDate;
+      if (decidedOn) {
+        const verb = claim.decisionDate ? "decided" : "filed";
+        context += ` (${verb} ${decidedOn})`;
+      }
       context += "\n";
     });
     if (vkb.vaClaimsHistory.ratings.length > 0) {
@@ -2884,13 +2910,47 @@ function buildEvidenceSummaryContext(vkb) {
   return context;
 }
 
+// D-D / ADR-008: `source` on an evidenceTimeline/keyFacts entry is
+// routinely the veteran's own uploaded fileName (see mergeDD214EvidenceTimeline,
+// mergeRatingDecisionIntoVKB) - real exported VA documents commonly carry
+// the veteran's surname/first name and the last four of their VA file
+// number in the filename itself. That value is load-bearing for internal
+// provenance matching (_upsertServiceEntryTimelineEvent, _projectTimeline's
+// knownSources) so it can't be changed in storage - only neutralized at
+// the point this text is rendered for an AI context. A safe, non-filename
+// label ("DD-214", "C-File Analysis", a tool name like "DenialDecoder", …)
+// is passed straight through; anything shaped like an uploaded file
+// (ends in a recognizable extension) is replaced with a generic
+// "<document type> <date> (#index)" label instead.
+const EVENT_TYPE_DOCUMENT_LABELS = {
+  service_entry: "Service record",
+  guard_enlistment: "Service record",
+  service_separation: "Service record",
+  deployment: "Service record",
+  diagnosis: "Medical record",
+  rating_decision: "VA decision",
+  c_file_event: "C-File",
+};
+
+function _looksLikeFileName(value) {
+  return typeof value === "string" && /\.[a-z0-9]{2,5}$/i.test(value.trim());
+}
+
+function _neutralSourceLabel(source, eventType, date, index) {
+  if (!_looksLikeFileName(source)) return source || "";
+  const type = EVENT_TYPE_DOCUMENT_LABELS[eventType] || "Document";
+  const dated = date ? `${type}, ${date}` : type;
+  return `${dated} (#${index + 1})`;
+}
+
 function buildEvidenceTimelineContext(vkb) {
   // ─── EVIDENCE TIMELINE ───
   let context = "";
   if (vkb.evidenceTimeline.length > 0) {
     context += "\n--- EVIDENCE TIMELINE ---\n";
-    vkb.evidenceTimeline.slice(0, 20).forEach((e) => {
-      context += `  ${e.date || "???"}: ${e.description} [${e.source || ""}]\n`;
+    vkb.evidenceTimeline.slice(0, 20).forEach((e, i) => {
+      const label = _neutralSourceLabel(e.source, e.eventType, e.date, i);
+      context += `  ${e.date || "???"}: ${e.description} [${label}]\n`;
     });
     if (vkb.evidenceTimeline.length > 20) {
       context += `  ... and ${vkb.evidenceTimeline.length - 20} more events\n`;
@@ -2904,8 +2964,9 @@ function buildKeyFactsContext(vkb) {
   let context = "";
   if (vkb.keyFacts.length > 0) {
     context += "\n--- KEY FACTS ---\n";
-    vkb.keyFacts.slice(0, 10).forEach((fact) => {
-      context += `• ${fact.fact} [Source: ${fact.source}]\n`;
+    vkb.keyFacts.slice(0, 10).forEach((fact, i) => {
+      const label = _neutralSourceLabel(fact.source, null, null, i);
+      context += `• ${fact.fact} [Source: ${label}]\n`;
     });
   }
   return context;
@@ -2943,7 +3004,7 @@ function buildAIInsightsContext(vkb) {
 export const generateLLMContext = (vkb) => {
   let context = "=== VETERAN KNOWLEDGE BASE ===\n\n";
 
-  context += buildPersonalContext(vkb);
+  context += buildPersonalContext();
   context += buildServiceHistoryCoreContext(vkb);
   context += buildServicePeriodsAndSeparationContext(vkb);
   context += buildDeploymentsContext(vkb);
@@ -2964,7 +3025,17 @@ export const generateLLMContext = (vkb) => {
   context += buildAIInsightsContext(vkb);
 
   context += "\n=== END KNOWLEDGE BASE ===\n";
-  return context;
+
+  // ADR-008 single enforcement point: a final known-value pass over the
+  // WHOLE assembled string, not just the personal-info section above - a
+  // free-text field elsewhere (evidenceNeeded, a nexus statement's
+  // `relationship` text, …) can still carry the veteran's own name/DOB/SSN/
+  // address/file number verbatim from OCR, and this is the one place that
+  // can't be bypassed by a future section a developer forgets to scrub.
+  const claimNumbers = (vkb.vaClaimsHistory?.claims || [])
+    .map((c) => c.claimNumber)
+    .filter(Boolean);
+  return redactVeteranIdentifiers(context, vkb.personal, claimNumbers);
 };
 
 /**
