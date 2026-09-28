@@ -17,6 +17,11 @@ import {
   markBackupCreated,
 } from "../utils/dataPersistence";
 
+const broadcastDataWipe = vi.fn();
+vi.mock("../utils/dataWipeChannel", () => ({
+  broadcastDataWipe: (...args) => broadcastDataWipe(...args),
+}));
+
 function dispatchBeforeUnload() {
   const event = new Event("beforeunload", { cancelable: true });
   window.dispatchEvent(event);
@@ -166,6 +171,47 @@ describe("Atomic Wipe beforeunload guard", () => {
       expect(dispatchBeforeUnload().defaultPrevented).toBe(false);
     });
     expect(window.onbeforeunload).toBeNull();
+  });
+});
+
+// Decision B: dataWipeChannel's own doc comment claims to cover Atomic Wipe
+// ("Cross-tab propagation for a full local-data wipe (Atomic Wipe,
+// VKBViewer's 'Clear All Data')"), but only VKBViewer's Clear All Data
+// actually called broadcastDataWipe() - a second open tab got no
+// notification at all and kept serving (and could re-save) the deleted
+// veteran's data from its in-memory caches.
+describe("Atomic Wipe cross-tab broadcast (decision B)", () => {
+  beforeAll(() => {
+    if (typeof window !== "undefined" && !window.matchMedia) {
+      window.matchMedia = (query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      });
+    }
+  });
+
+  afterEach(() => {
+    removeBeforeUnloadWarning();
+    localStorage.clear();
+    broadcastDataWipe.mockClear();
+  });
+
+  it("broadcasts the wipe to other open tabs when the veteran confirms", async () => {
+    render(
+      <ThemeProvider>
+        <AtomicWipe />
+      </ThemeProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Atomic Wipe/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirm Wipe/i }));
+
+    await waitFor(() => expect(broadcastDataWipe).toHaveBeenCalledTimes(1));
   });
 });
 

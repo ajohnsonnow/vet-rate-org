@@ -18,6 +18,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
 import { stopAutoBackup } from "../utils/autoBackup";
+import { broadcastDataWipe } from "../utils/dataWipeChannel";
 
 function clearLocalAndSessionStorage() {
   // 1. Clear all localStorage
@@ -241,11 +242,18 @@ async function handleAtomicWipe(setIsWiping, onWipeComplete) {
       onWipeComplete();
     }
 
+    // Decision B: propagate to every other open tab, the same way
+    // VKBViewer's "Clear All Data" does - without this, a second tab keeps
+    // every in-memory cache (vkbCache and siblings) fed from the data this
+    // wipe just deleted, and can re-save it right back into storage.
+    broadcastDataWipe();
+
     // Force hard reload with cache bypass
     setTimeout(forceReloadWithCacheBypass, 500);
   } catch (error) {
     console.error("Error during atomic wipe:", error);
     // Still try to reload with cache bypass
+    broadcastDataWipe();
     forceReloadWithCacheBypass();
   }
 }

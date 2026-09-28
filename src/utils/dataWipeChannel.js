@@ -20,6 +20,9 @@
  * tool, if any, is open in it.
  */
 
+import { clearBeforeUnloadWarning } from "./beforeUnloadGuard";
+import { stopAutoBackup } from "./autoBackup";
+
 const CHANNEL_NAME = "vetrate-data-wipe";
 const STORAGE_FALLBACK_KEY = "vetrate_data_wipe_broadcast";
 
@@ -32,7 +35,18 @@ function getChannel() {
   ) {
     return null;
   }
-  channel ??= new BroadcastChannel(CHANNEL_NAME);
+  if (channel) return channel;
+  try {
+    channel = new BroadcastChannel(CHANNEL_NAME);
+  } catch {
+    // e.g. Firefox with cookies/site storage blocked throws SecurityError
+    // constructing a BroadcastChannel. This module self-initializes on
+    // import (see the bottom of this file) from safetyRedirect.js - the
+    // panic key - so an uncaught throw here would fail that whole module's
+    // evaluation and take the panic key down with it. The storage-event
+    // fallback in broadcastDataWipe() below still works without a channel.
+    return null;
+  }
   return channel;
 }
 
@@ -56,14 +70,32 @@ export function broadcastDataWipe() {
   }
 }
 
+// A tab receiving this broadcast still has its OWN beforeunload guard armed
+// (dataPersistence.js) - the wipe that just happened in another tab deleted
+// vetrate_data_hash from shared localStorage, which makes THIS tab's own
+// hasUnsavedChanges() read true from that point on, tripping the browser's
+// native "Leave site?" prompt on the reload() below. Choosing Stay there
+// leaves this tab alive with every in-memory cache (vkbCache and siblings)
+// the wipe was supposed to invalidate, able to re-save the "deleted"
+// veteran's data right back into storage - decision B requires the wipe to
+// take effect in every open tab, not just the one it started in, so this
+// mirrors wipeAllLocalData's own disableBeforeUnloadPrompt/stopAutoBackup
+// for the RECEIVING side of the broadcast.
+function reloadAfterWipe() {
+  clearBeforeUnloadWarning();
+  window.onbeforeunload = null;
+  stopAutoBackup();
+  window.location.reload();
+}
+
 function installListener() {
   const bc = getChannel();
   bc?.addEventListener("message", (event) => {
-    if (event.data?.type === "wipe") window.location.reload();
+    if (event.data?.type === "wipe") reloadAfterWipe();
   });
   window.addEventListener("storage", (event) => {
     if (event.key === STORAGE_FALLBACK_KEY && event.newValue) {
-      window.location.reload();
+      reloadAfterWipe();
     }
   });
 }
