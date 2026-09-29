@@ -24,7 +24,7 @@ import {
 } from "./veteranKnowledgeBase";
 import { saveDocumentToPacket, generatePacketContext } from "./myPacketManager";
 import { getSavedClaims } from "./claimsStorage";
-import { getMyRatings } from "./veteranProfile";
+import { getMyRatings, getVeteranProfile } from "./veteranProfile";
 import { normalizeConditionName } from "./conditionName";
 import { redactVeteranIdentifiers } from "./piiScrubber";
 
@@ -195,7 +195,12 @@ export const getVeteranAIContext = async (options = {}) => {
   const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
     .map((c) => c.claimNumber)
     .filter(Boolean);
-  return redactVeteranIdentifiers(ctx, vkb?.personal, claimNumbers);
+  // ADR-008: VKB's .personal block never carries firstName/lastName/
+  // serviceNumber/mailingStreet/mailingCity - those live only on the flat
+  // legacy profile store. Merge both so a veteran ingested through a path
+  // that only ever populated one of the two stores is still fully covered.
+  const personal = { ...getVeteranProfile(), ...vkb?.personal };
+  return redactVeteranIdentifiers(ctx, personal, claimNumbers);
 };
 
 // ============================================================

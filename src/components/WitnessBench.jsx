@@ -40,8 +40,10 @@ import {
   saveAnalysisResults,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
-import { loadVKB } from "../utils/veteranKnowledgeBase";
-import { substituteVeteranNamePlaceholder } from "../utils/aiStatementHelper";
+import {
+  substituteVeteranNamePlaceholder,
+  resolveVeteranDisplayName,
+} from "../utils/aiStatementHelper";
 
 /**
  * Relationship types that affect the interview questions
@@ -375,7 +377,14 @@ Return EXACTLY 4 questions in this JSON format:
 /**
  * Compile answers into a formal buddy statement using AI
  */
-const compileStatementWithAI = async (relationship, condition, answers) => {
+// Exported (test-only, per this codebase's underscore-prefix convention) so
+// a direct test can assert on the real prompt this builds, without
+// rendering the whole component.
+export const _compileStatementWithAI = async (
+  relationship,
+  condition,
+  answers,
+) => {
   // Check if ANY AI is available
   if (!isAnyAIAvailable()) {
     throw new Error(
@@ -816,21 +825,6 @@ function useStartInterview({
   }, [relationship, condition, useAI, aiAvailable]);
 }
 
-// ADR-008 / owner decision D: the AI (and the no-AI template) only ever
-// write the placeholder "[Veteran]" - never the veteran's real name, which
-// this looks up LOCALLY, after generation, purely to personalize the
-// veteran-visible/saved statement. Never sent to any AI provider.
-// Best-effort: an identifier-load failure must never block a statement
-// from being generated, just leave the placeholder as-is.
-async function _resolveVeteranName() {
-  try {
-    const vkb = await loadVKB();
-    return vkb?.personal?.fullName || null;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Generate the final statement
  */
@@ -853,7 +847,7 @@ function useGenerateStatement({
       let statement;
 
       if (useAI && aiAvailable) {
-        statement = await compileStatementWithAI(
+        statement = await _compileStatementWithAI(
           relationship,
           condition,
           answers,
@@ -862,7 +856,7 @@ function useGenerateStatement({
         statement = compileStatementWithoutAI(relationship, condition, answers);
       }
 
-      const veteranName = await _resolveVeteranName();
+      const veteranName = await resolveVeteranDisplayName();
       statement = substituteVeteranNamePlaceholder(statement, veteranName);
       setGeneratedStatement(statement);
       setStep(3);
@@ -882,7 +876,7 @@ function useGenerateStatement({
     } catch (err) {
       console.error("Statement generation failed:", err);
       // Fall back to template
-      const veteranName = await _resolveVeteranName();
+      const veteranName = await resolveVeteranDisplayName();
       const statement = substituteVeteranNamePlaceholder(
         compileStatementWithoutAI(relationship, condition, answers),
         veteranName,

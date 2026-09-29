@@ -23,6 +23,7 @@ import {
   AI_MODES,
 } from "./unifiedAIService";
 import { loadVKB } from "./veteranKnowledgeBase";
+import { getFullName, getVeteranProfile } from "./veteranProfile";
 import { redactVeteranIdentifiers } from "./piiScrubber";
 
 // LocalStorage key for BYOK (Bring Your Own Key)
@@ -38,12 +39,14 @@ export const isAIAvailable = () => {
 
 // Owner decision D (2026-09-28, ADR-008): every statement/letter prompt in
 // this file (and WitnessBench.jsx's buddy-statement prompt) instructs the
-// model to write a placeholder - "[Veteran]" or "[Veteran Name]" - instead
-// of the veteran's real name, so the model never sees it. This swaps the
-// placeholder back to the real name in the RESPONSE, after generation - a
-// purely local substitution the veteran-visible/saved statement needs, never
-// sent to any AI provider.
-const VETERAN_PLACEHOLDER = /\[Veteran(?:\s+Name)?\]/gi;
+// model to write a placeholder - "[Veteran]", "[Veteran Name]", or
+// "[Veteran's Name]" - instead of the veteran's real name, so the model
+// never sees it. This swaps the placeholder back to the real name in the
+// RESPONSE, after generation - a purely local substitution the
+// veteran-visible/saved statement needs, never sent to any AI provider.
+// Longest alternative first so "'s Name" isn't left dangling by an earlier,
+// shorter match; the apostrophe class covers straight/curly quotes.
+const VETERAN_PLACEHOLDER = /\[Veteran(?:['’]s\s+Name|\s+Name|['’]s)?\]/gi;
 
 /**
  * @param {string} text - the model's (or a local template's) output
@@ -54,6 +57,29 @@ const VETERAN_PLACEHOLDER = /\[Veteran(?:\s+Name)?\]/gi;
 export const substituteVeteranNamePlaceholder = (text, veteranName) => {
   if (!text || typeof text !== "string" || !veteranName) return text;
   return text.replace(VETERAN_PLACEHOLDER, veteranName);
+};
+
+// The legacy profile's firstName/lastName are checked FIRST, ahead of VKB's
+// personal.fullName: a DD-214 merge stores fullName in the printed Box 1
+// "LAST, FIRST MIDDLE" order, which reads unnaturally spliced into a
+// first-person statement, while getFullName() joins the profile's parsed
+// parts in natural order. It's also the ONLY populated source for a
+// veteran ingested through Muster Call, which never writes vkb.personal.
+// Best-effort: an identifier-load failure must never block a statement
+// from being generated, just leave the placeholder as-is.
+export const resolveVeteranDisplayName = async () => {
+  try {
+    const profileName = getFullName();
+    if (profileName) return profileName;
+  } catch {
+    // fall through to the VKB fallback below
+  }
+  try {
+    const vkb = await loadVKB();
+    return vkb?.personal?.fullName || null;
+  } catch {
+    return null;
+  }
 };
 
 /**
@@ -584,7 +610,10 @@ async function _finalizeAiPrompt(prompt) {
     const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
       .map((c) => c.claimNumber)
       .filter(Boolean);
-    return redactVeteranIdentifiers(prompt, vkb?.personal, claimNumbers);
+    // ADR-008: merge in the flat legacy profile - it's the only place
+    // firstName/lastName/serviceNumber/mailingStreet/mailingCity live.
+    const personal = { ...getVeteranProfile(), ...vkb?.personal };
+    return redactVeteranIdentifiers(prompt, personal, claimNumbers);
   } catch {
     return prompt;
   }

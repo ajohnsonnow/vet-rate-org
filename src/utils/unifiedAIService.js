@@ -20,6 +20,7 @@ import {
   redactVeteranIdentifiers,
 } from "./piiScrubber";
 import { loadVKB } from "./veteranKnowledgeBase";
+import { getVeteranProfile } from "./veteranProfile";
 import { stripUntrustedUrls } from "./sanitize";
 import { validateAIResponse as validateHallucinations } from "./hallucinationTrap";
 import { logModelCallWithDigests } from "./aiAuditLog";
@@ -2150,7 +2151,11 @@ async function _redactPromptForSend(text) {
     const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
       .map((c) => c.claimNumber)
       .filter(Boolean);
-    return redactVeteranIdentifiers(text, vkb?.personal, claimNumbers);
+    // ADR-008: merge in the flat legacy profile - a Muster Call ingest
+    // writes the veteran's name/service number ONLY there, never to VKB's
+    // .personal block.
+    const personal = { ...getVeteranProfile(), ...vkb?.personal };
+    return redactVeteranIdentifiers(text, personal, claimNumbers);
   } catch {
     return text;
   }

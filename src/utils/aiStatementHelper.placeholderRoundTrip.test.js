@@ -14,7 +14,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   enhanceBuddyStatement,
   substituteVeteranNamePlaceholder,
+  resolveVeteranDisplayName,
 } from "./aiStatementHelper";
+import { saveVeteranProfile } from "./veteranProfile";
 
 const REAL_NAME = "Jordan Q Faketon";
 
@@ -90,5 +92,37 @@ describe("buddy statement placeholder round-trip", () => {
     expect(substituteVeteranNamePlaceholder(text, REAL_NAME)).toBe(
       `Regarding ${REAL_NAME}'s claim for service connection.`,
     );
+  });
+
+  it('also matches the possessive "[Veteran\'s Name]" wording', () => {
+    const text = "This statement concerns [Veteran's Name]'s claim.";
+    expect(substituteVeteranNamePlaceholder(text, REAL_NAME)).toBe(
+      `This statement concerns ${REAL_NAME}'s claim.`,
+    );
+  });
+
+  it("matches the possessive placeholder with a curly apostrophe too", () => {
+    const text = "This statement concerns [Veteran’s Name]'s claim.";
+    expect(substituteVeteranNamePlaceholder(text, REAL_NAME)).toBe(
+      `This statement concerns ${REAL_NAME}'s claim.`,
+    );
+  });
+});
+
+describe("resolveVeteranDisplayName: legacy profile takes priority over VKB's inverted DD-214 form", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("prefers the legacy profile's natural name order - never reaches VKB's 'LAST, FIRST' form", async () => {
+    saveVeteranProfile({ firstName: "Jordan", lastName: "Faketon" });
+    // No VKB/IndexedDB set up in this test at all - if the profile weren't
+    // checked first, the VKB fallback would throw/hang instead of the
+    // name resolving cleanly.
+    expect(await resolveVeteranDisplayName()).toBe("Jordan Faketon");
+  });
+
+  it("falls back to null (never fabricates a name) when neither source has one", async () => {
+    expect(await resolveVeteranDisplayName()).toBeNull();
   });
 });

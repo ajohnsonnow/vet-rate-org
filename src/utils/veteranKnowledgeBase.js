@@ -36,6 +36,7 @@ import {
 import { DOCUMENT_TYPES } from "./documentClassifier";
 import { awardDisplayName } from "./combatService";
 import { redactVeteranIdentifiers } from "./piiScrubber";
+import { getVeteranProfile } from "./veteranProfile";
 
 const VKB_STORAGE_KEY = "vetrate_knowledge_base";
 const VKB_VERSION = "1.0.0";
@@ -3035,7 +3036,12 @@ export const generateLLMContext = (vkb) => {
   const claimNumbers = (vkb.vaClaimsHistory?.claims || [])
     .map((c) => c.claimNumber)
     .filter(Boolean);
-  return redactVeteranIdentifiers(context, vkb.personal, claimNumbers);
+  // ADR-008: VKB's .personal block never carries firstName/lastName/
+  // serviceNumber/mailingStreet/mailingCity - those live only on the flat
+  // legacy profile store. Merge both so a veteran ingested through a path
+  // that only ever populated one of the two stores is still fully covered.
+  const personal = { ...getVeteranProfile(), ...vkb.personal };
+  return redactVeteranIdentifiers(context, personal, claimNumbers);
 };
 
 /**

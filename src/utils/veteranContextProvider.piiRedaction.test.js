@@ -327,3 +327,69 @@ describe("D14-1: no direct veteran identifier ever enters an AI context (owner d
     expect(ctx).not.toContain("Claim #");
   });
 });
+
+// ============================================================================
+// Identifiers that live ONLY on the flat legacy profile (vet_rate_veteran_
+// profile) - a Muster Call ingest never writes VKB's .personal block at all
+// (applyServiceRecordToProfileUpdates writes name only to the profile), and
+// no production writer has ever set vkb.personal.veteranFileNumber or a
+// service number. VKB.personal is left at its untouched default throughout.
+// ============================================================================
+
+const FAKE_SERVICE_NUMBER = "RA28345671";
+const FAKE_MAILING_STREET = "742 Fictional Ave";
+const FAKE_MAILING_CITY = "Nowhereville";
+
+describe("D14-1: identifiers on the legacy profile only (no VKB.personal write)", () => {
+  beforeEach(async () => {
+    // The fake IndexedDB is module-scoped (persists across tests in this
+    // file) - reset VKB to a clean slate so an earlier describe block's
+    // saved personal block can never leak into these assertions.
+    await saveVKB(initializeVKB());
+    localStorage.setItem(
+      "vet_rate_veteran_profile",
+      JSON.stringify({
+        firstName: FAKE_FIRST,
+        lastName: FAKE_LAST,
+        serviceNumber: FAKE_SERVICE_NUMBER,
+        mailingStreet: FAKE_MAILING_STREET,
+        mailingCity: FAKE_MAILING_CITY,
+      }),
+    );
+  });
+
+  it("generateLLMContext redacts a legacy-profile-only name even when VKB.personal is empty", () => {
+    const vkb = initializeVKB();
+    vkb.evidenceTimeline.push({
+      date: "2010-06-29",
+      eventType: "service_separation",
+      description: `Contact ${FAKE_FIRST} ${FAKE_LAST}, Service #: ${FAKE_SERVICE_NUMBER}.`,
+      source: "note",
+    });
+    const ctx = generateLLMContext(vkb);
+    expect(ctx).not.toContain(FAKE_FIRST);
+    expect(ctx).not.toContain(FAKE_LAST);
+    expect(ctx).not.toContain(FAKE_SERVICE_NUMBER);
+  });
+
+  it("getVeteranAIContext redacts a legacy-profile-only identifier surfaced through a packet document", async () => {
+    await saveDocumentToPacket({
+      fileName: "note.pdf",
+      fileSize: 1000,
+      classification: "va_correspondence",
+      rawText: "note",
+      extractedData: {
+        type: "claim_letter",
+        evidenceNeeded: [
+          `Contact ${FAKE_FIRST} ${FAKE_LAST} (Service #: ${FAKE_SERVICE_NUMBER}) at ${FAKE_MAILING_STREET}, ${FAKE_MAILING_CITY}.`,
+        ],
+      },
+    });
+
+    const ctx = await getVeteranAIContext({ maxPacketTokens: 4000 });
+    expect(ctx).not.toContain(FAKE_FIRST);
+    expect(ctx).not.toContain(FAKE_LAST);
+    expect(ctx).not.toContain(FAKE_SERVICE_NUMBER);
+    expect(ctx).not.toContain(FAKE_MAILING_STREET);
+  });
+});

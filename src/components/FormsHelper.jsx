@@ -13,8 +13,8 @@ import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import {
   enhanceFormStatement,
   substituteVeteranNamePlaceholder,
+  resolveVeteranDisplayName,
 } from "../utils/aiStatementHelper";
-import { loadVKB } from "../utils/veteranKnowledgeBase";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -8305,14 +8305,12 @@ function _buildFormsHelperAIHandlers(ctx) {
       if (result.success) {
         // ADR-008 / owner decision D: aiStatementHelper's buddy/personal/
         // ptsd-stressor prompts all instruct the model to write "[Veteran]"
-        // (or "[Veteran Name]") instead of the veteran's real name - this
-        // swaps it back in LOCALLY, after generation, never sent to the AI.
-        const vkb = await loadVKB().catch(() => null);
+        // (or "[Veteran Name]"/"[Veteran's Name]") instead of the veteran's
+        // real name - this swaps it back in LOCALLY, after generation,
+        // never sent to the AI.
+        const veteranName = await resolveVeteranDisplayName();
         setAiEnhancedContent(
-          substituteVeteranNamePlaceholder(
-            result.content,
-            vkb?.personal?.fullName,
-          ),
+          substituteVeteranNamePlaceholder(result.content, veteranName),
         );
         setShowAIVersion(true);
       } else {

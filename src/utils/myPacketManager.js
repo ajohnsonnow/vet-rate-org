@@ -20,7 +20,10 @@
 import { markAsModified } from "./persistentStorage";
 import { ensureQuota } from "./storage";
 import { awardDisplayName } from "./combatService";
-import { getServiceEntryForDocument } from "./veteranProfile";
+import {
+  getServiceEntryForDocument,
+  getVeteranProfile,
+} from "./veteranProfile";
 import { isSameCalendarDay } from "./serviceEntryDate";
 import { scrubText, redactVeteranIdentifiers } from "./piiScrubber";
 import { loadVKB } from "./veteranKnowledgeBase";
@@ -1162,7 +1165,10 @@ async function _redactPacketContext(context) {
     const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
       .map((c) => c.claimNumber)
       .filter(Boolean);
-    return redactVeteranIdentifiers(context, vkb?.personal, claimNumbers);
+    // ADR-008: merge in the flat legacy profile - it's the only place
+    // firstName/lastName/serviceNumber/mailingStreet/mailingCity live.
+    const personal = { ...getVeteranProfile(), ...vkb?.personal };
+    return redactVeteranIdentifiers(context, personal, claimNumbers);
   } catch {
     return context;
   }
@@ -1189,13 +1195,19 @@ export const generatePacketContext = async (options = {}) => {
     // Other document types
     context += _formatOtherDocsSection(grouped);
 
-    // Trim to max size
-    if (context.length > maxChars) {
-      context = context.substring(0, maxChars) + "\n[... TRUNCATED ...]\n";
-    }
+    // ADR-008: redact BEFORE truncating - cutting first can leave a
+    // partial name/file-number token (e.g. a surname sliced to "Faketo"
+    // immediately before "[... TRUNCATED ...]") that no longer matches a
+    // whole known value and survives the cut.
+    const redacted = await _redactPacketContext(context);
 
-    context += "=== END MY PACKET ===\n";
-    return await _redactPacketContext(context);
+    if (redacted.length > maxChars) {
+      return (
+        redacted.substring(0, maxChars) +
+        "\n[... TRUNCATED ...]\n=== END MY PACKET ===\n"
+      );
+    }
+    return redacted + "=== END MY PACKET ===\n";
   } catch (error) {
     console.error("Failed to generate packet context:", error);
     return "";
