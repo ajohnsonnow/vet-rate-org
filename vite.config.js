@@ -235,7 +235,65 @@ function resolveManualChunk(id) {
   return rule ? rule[1] : undefined;
 }
 
-export default defineConfig({
+// Resolve dompurify to a no-op stub. This is intentional — see
+// packages/dompurify-noop/README.md for the full design rationale.
+// Summary: no direct callers; jspdf lists it as optional peer; all 3.x
+// versions ship XSS advisories; we sanitize at the source via sanitize.js
+// helpers (escapeHtml, sanitizeUrl, safeHtml) with CSP as the perimeter.
+//
+// `mode === "e2e"` (only ever set by `vite --mode e2e`, the Playwright
+// webServer command - see playwright.config.ts) additionally aliases
+// @mlc-ai/web-llm to a deterministic fake under tests/e2e/fakes/ so
+// AI-dependent e2e specs (Muster Call's Start Formation) can reach
+// ai.aiReady without a real GPU: headless Chromium reports
+// navigator.gpu but requestAdapter() resolves null, so the real engine
+// never loads there regardless of how long a test waits. Every other
+// mode ("development", "production", "test") is unaffected - this branch
+// does not exist in a normal `npm run dev`/`npm run build`.
+function buildResolveConfig(mode) {
+  return {
+    alias: {
+      dompurify: fileURLToPath(
+        new URL("./packages/dompurify-noop/index.js", import.meta.url),
+      ),
+      ...(mode === "e2e" && {
+        "@mlc-ai/web-llm": fileURLToPath(
+          new URL("./tests/e2e/fakes/web-llm.fake.js", import.meta.url),
+        ),
+      }),
+    },
+  };
+}
+
+// VA Sandbox API proxy (dev server only) - bypasses CORS and logs each
+// proxied request/response for debugging.
+function buildVaApiProxyConfig() {
+  return {
+    target: "https://sandbox-api.va.gov",
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/va-api/, ""),
+    secure: true,
+    configure: (proxy, options) => {
+      proxy.on("proxyReq", (proxyReq, req, _res) => {
+        console.log(
+          "[Proxy]",
+          req.method,
+          req.url,
+          "→",
+          options.target + proxyReq.path,
+        );
+      });
+      proxy.on("proxyRes", (proxyRes, req, _res) => {
+        console.log("[Proxy Response]", proxyRes.statusCode, req.url);
+      });
+      proxy.on("error", (err, _req, _res) => {
+        console.error("[Proxy Error]", err.message);
+      });
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     brandingPlugin(),
@@ -250,18 +308,7 @@ export default defineConfig({
       }),
   ].filter(Boolean),
 
-  // Resolve dompurify to a no-op stub. This is intentional — see
-  // packages/dompurify-noop/README.md for the full design rationale.
-  // Summary: no direct callers; jspdf lists it as optional peer; all 3.x
-  // versions ship XSS advisories; we sanitize at the source via sanitize.js
-  // helpers (escapeHtml, sanitizeUrl, safeHtml) with CSP as the perimeter.
-  resolve: {
-    alias: {
-      dompurify: fileURLToPath(
-        new URL("./packages/dompurify-noop/index.js", import.meta.url),
-      ),
-    },
-  },
+  resolve: buildResolveConfig(mode),
 
   // === WEBGPU / TRANSFORMERS.JS SUPPORT ===
   // Required for Florence-2 Vision LLM
@@ -291,30 +338,7 @@ export default defineConfig({
     },
     // Proxy VA Sandbox API calls to bypass CORS
     proxy: {
-      "/va-api": {
-        target: "https://sandbox-api.va.gov",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/va-api/, ""),
-        secure: true,
-        configure: (proxy, options) => {
-          // Log proxy requests for debugging
-          proxy.on("proxyReq", (proxyReq, req, _res) => {
-            console.log(
-              "[Proxy]",
-              req.method,
-              req.url,
-              "→",
-              options.target + proxyReq.path,
-            );
-          });
-          proxy.on("proxyRes", (proxyRes, req, _res) => {
-            console.log("[Proxy Response]", proxyRes.statusCode, req.url);
-          });
-          proxy.on("error", (err, _req, _res) => {
-            console.error("[Proxy Error]", err.message);
-          });
-        },
-      },
+      "/va-api": buildVaApiProxyConfig(),
     },
   },
   build: {
@@ -343,4 +367,4 @@ export default defineConfig({
       target: "esnext", // Required for WebGPU modules
     },
   },
-});
+}));

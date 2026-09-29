@@ -116,8 +116,16 @@ export default defineConfig({
   // normal dev server (5173) and any other long-running Vite processes.
   // reuseExistingServer is always false: silently reusing a foreign server (e.g.
   // a different project's dev server) produces axe results for the wrong app.
+  //
+  // --mode e2e activates vite.config.js's @mlc-ai/web-llm alias (a
+  // deterministic fake under tests/e2e/fakes/), so ai.aiReady-gated flows
+  // (Muster Call's Start Formation) are reachable here: headless Chromium
+  // reports navigator.gpu but requestAdapter() resolves null, so the real
+  // engine never loads in this suite regardless of how long a test waits.
+  // Every other mode ("development", "production", "test") is unaffected -
+  // `npm run dev`/`npm run build` never pass --mode e2e.
   webServer: {
-    command: "npm run dev -- --port 5197 --host 127.0.0.1",
+    command: "npm run dev -- --port 5197 --host 127.0.0.1 --mode e2e",
     url: "http://127.0.0.1:5197",
     reuseExistingServer: false,
     timeout: 30_000,
