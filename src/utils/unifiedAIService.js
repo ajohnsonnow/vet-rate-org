@@ -795,22 +795,29 @@ const resolveCloudGenerationConfig = (options) => {
 /**
  * Scrub PII from the full Cloud AI prompt (Client-Side Privacy Firewall),
  * warning when non-Latin scripts limit scrubbing coverage.
+ *
+ * D15-1: this ALWAYS runs the aggressive pass directly - it used to gate the
+ * aggressive scrub behind `analyzePII(...).hasPII`, but `analyzePII` itself
+ * runs `scrubPII` in NON-aggressive mode. Every aggressive-only pattern (a
+ * bare SSN/DOB with no label) is therefore invisible to that pre-check, so
+ * a well-profiled veteran whose ONLY remaining PII was address/DOB/SSN in a
+ * bare, unlabeled form - because `_redactPiecesForSend` already replaced
+ * their name/known-SSN/known-file-number with `[REDACTED]` upstream - could
+ * make the gate see nothing left to trip and skip the aggressive pass
+ * entirely, sending that bare PII to the cloud verbatim.
  */
 const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
   if (!scrubPIIEnabled) return fullPrompt;
 
-  let scrubbed = fullPrompt;
-  const piiAnalysis = analyzePII(scrubbed);
+  const { scrubbedText, piiFound, details } = scrubPII(fullPrompt, {
+    aggressive: true, // Also scrub bare DOB/SSN/VA-file numbers
+    preservePartial: false, // Full redaction for safety
+  });
 
-  if (piiAnalysis.hasPII) {
-    console.warn(`⚠️ PII Detected before AI call:`, piiAnalysis.types);
-
-    const { scrubbedText, details } = scrubPII(scrubbed, {
-      aggressive: true, // Also scrub DOB and addresses
-      preservePartial: false, // Full redaction for safety
-    });
-
-    scrubbed = scrubbedText;
+  if (piiFound) {
+    console.warn(`⚠️ PII Detected before AI call:`, [
+      ...new Set(details.map((d) => d.type)),
+    ]);
     // eslint-disable-next-line no-console
     console.info(`🛡️ PII Scrubbed:`, details);
   }
@@ -819,7 +826,7 @@ const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
   // non-Latin (CJK/Arabic/Korean/Cyrillic) narratives, so a non-English document may
   // carry unredacted PII to the cloud. Flag it (conservative handling) rather than
   // over-redacting, which would corrupt the analysis. Prefer local AI for these.
-  if (containsSignificantNonLatin(scrubbed)) {
+  if (containsSignificantNonLatin(scrubbedText)) {
     console.warn(
       "⚠️ Non-Latin script detected: PII scrubbing has limited coverage for " +
         "non-English text; this cloud request may contain unredacted PII. " +
@@ -827,7 +834,7 @@ const scrubCloudPromptPII = (fullPrompt, scrubPIIEnabled) => {
     );
   }
 
-  return scrubbed;
+  return scrubbedText;
 };
 
 /**
@@ -1120,12 +1127,20 @@ const resolveWarrantCouncilAgent = (toolId, taskType) => {
  * known-value-redacted by `_buildFullPrompt`/`_redactPiecesForSend`. This
  * backend HAS a native system-role field (`generateWithSwarm`'s own
  * `systemPrompt` option, which analyzeChunk relies on to swap in the
- * compact C-File prompt for XGrammar constrained decoding) - so
- * `systemPrompt` is forwarded there directly and `userPrompt` never has it
- * baked in a second time. Previously `options.systemPrompt` (the RAW,
- * unredacted caller override) was forwarded here while the ALREADY-baked,
- * ALREADY-redacted copy of that same text also sat inside the prompt
- * string - both a duplicate send and a redaction bypass.
+ * compact C-File prompt for XGrammar constrained decoding) - so, when the
+ * CALLER explicitly asked for a custom systemPrompt, it's forwarded there
+ * directly and `userPrompt` never has it baked in a second time (that
+ * double-send + redaction-bypass was the original D15-2 bug).
+ *
+ * When there was no caller override, `systemPrompt` here is just
+ * `_buildFullPrompt`'s generic app-context+DKB default - NOT forwarding
+ * that as an override lets `generateWithSwarm` fall back to the agent's
+ * OWN persona (CW3 Rater / CW4 Writer / CW5 Auditor, including the Rater's
+ * bilateral-pairing hardening), which a blanket forward would silently
+ * replace on every one of the ~25 call sites that don't supply their own
+ * systemPrompt. The default text still reaches the model - folded into the
+ * user turn instead of overriding the system turn - so DKB context isn't
+ * lost, it's just no longer competing with the agent's persona.
  */
 const generateWithWarrantCouncil = async (
   systemPrompt,
@@ -1139,21 +1154,31 @@ const generateWithWarrantCouncil = async (
     temperature = 0.7,
     scrubPIIEnabled = true,
     timeout = null,
+    _hadCallerSystemPrompt = false,
   } = options;
 
   const scrubbedSystemPrompt = systemPrompt
     ? scrubPromptForWarrantCouncil(systemPrompt, scrubPIIEnabled)
     : systemPrompt;
-  const scrubbedPrompt = scrubPromptForWarrantCouncil(
+  const scrubbedUserPrompt = scrubPromptForWarrantCouncil(
     userPrompt,
     scrubPIIEnabled,
   );
 
+  const forwardSystemPrompt = _hadCallerSystemPrompt
+    ? scrubbedSystemPrompt
+    : null;
+  const basePrompt = _hadCallerSystemPrompt
+    ? scrubbedUserPrompt
+    : [scrubbedSystemPrompt, scrubbedUserPrompt]
+        .filter(Boolean)
+        .join("\n\n---\n\n");
+
   const agentId = resolveWarrantCouncilAgent(toolId, taskType);
   const enhancedPrompt =
     agentId === "rater"
-      ? injectCalculatorForRater(scrubbedPrompt, options)
-      : scrubbedPrompt;
+      ? injectCalculatorForRater(basePrompt, options)
+      : basePrompt;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1168,7 +1193,7 @@ const generateWithWarrantCouncil = async (
       toolId,
       maxTokens,
       temperature,
-      ...(scrubbedSystemPrompt ? { systemPrompt: scrubbedSystemPrompt } : {}),
+      ...(forwardSystemPrompt ? { systemPrompt: forwardSystemPrompt } : {}),
       ...(options.responseFormat
         ? { responseFormat: options.responseFormat }
         : {}),
@@ -1296,23 +1321,25 @@ const generateWithLocalServer = async (
     ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
     : userPrompt;
 
-  // PII Scrubbing
+  // PII Scrubbing — D15-1: always run the aggressive pass directly rather
+  // than gating it behind a non-aggressive `analyzePII` pre-check (see
+  // `scrubCloudPromptPII` above for why that gate misses bare-PII-only
+  // prompts). The local llama.cpp server is a separate process reached over
+  // localhost HTTP, so this is an egress boundary the same as cloud.
   let scrubbedPrompt = combinedPrompt;
   if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(combinedPrompt);
-    if (piiAnalysis.hasPII) {
-      console.warn(
-        `⚠️ PII Detected before Local Server call:`,
-        piiAnalysis.types,
-      );
-      const { scrubbedText, details } = scrubPII(combinedPrompt, {
-        aggressive: true,
-        preservePartial: false,
-      });
-      scrubbedPrompt = scrubbedText;
+    const { scrubbedText, piiFound, details } = scrubPII(combinedPrompt, {
+      aggressive: true,
+      preservePartial: false,
+    });
+    if (piiFound) {
+      console.warn(`⚠️ PII Detected before Local Server call:`, [
+        ...new Set(details.map((d) => d.type)),
+      ]);
       // eslint-disable-next-line no-console
       console.info(`🛡️ PII Scrubbed (Local Server):`, details);
     }
+    scrubbedPrompt = scrubbedText;
   }
 
   try {
@@ -2072,6 +2099,23 @@ async function _redactPiecesForSend(pieces) {
   }
 }
 
+// Per-backend DKB budget defaults. Restores the pre-D15-2 per-backend sizing
+// instead of a single uniform 10-entry/8000-char budget for every backend:
+// on-device engines (Swarm, Wllama, legacy local WebLLM) run on far smaller
+// context windows than cloud, and a small-context tier (e.g. a 4096-token
+// tablet profile) can have its ENTIRE input budget consumed by DKB alone
+// once it's sharing space with a system prompt instead of being the whole
+// system prompt on its own. Cloud and the local llama.cpp server (which
+// typically runs a larger-context build) keep the original, larger budgets.
+const DKB_BUDGET_BY_MODE = {
+  [AI_MODES.SWARM]: { maxEntries: 6, maxChars: 4000 },
+  [AI_MODES.WLLAMA]: { maxEntries: 6, maxChars: 4000 },
+  [AI_MODES.LOCAL]: { maxEntries: 6, maxChars: 4000 },
+  [AI_MODES.LOCAL_SERVER]: { maxEntries: 8, maxChars: 6000 },
+  [AI_MODES.CLOUD]: { maxEntries: 10, maxChars: 8000 },
+};
+const DKB_BUDGET_DEFAULT = { maxEntries: 10, maxChars: 8000 };
+
 // D15-2: single DKB (Diamond Knowledge Base) injection point. Every backend
 // used to run its own copy of this block (cloud/local/warrant-council/
 // wllama/local-server), each with a different maxEntries/maxChars budget,
@@ -2083,9 +2127,11 @@ async function _injectDKBContext(prompt, systemPrompt, options) {
   if (options.useDKB === false) return systemPrompt;
   try {
     const { buildDKBContext } = await getAISystemPrompts();
+    const budget =
+      DKB_BUDGET_BY_MODE[options.effectiveMode] || DKB_BUDGET_DEFAULT;
     const dkbContext = await buildDKBContext(prompt, {
-      maxEntries: options.maxDKBEntries || 10,
-      maxChars: options.maxDKBChars || 8000,
+      maxEntries: options.maxDKBEntries || budget.maxEntries,
+      maxChars: options.maxDKBChars || budget.maxChars,
     });
     if (!dkbContext) return systemPrompt;
     // eslint-disable-next-line no-console
@@ -2108,8 +2154,9 @@ async function _injectDKBContext(prompt, systemPrompt, options) {
 // (cloud, wllama, local server) concatenates them into one string itself,
 // exactly once, immediately before it sends. Either way, this function is
 // the only place the system prompt is ever built.
-async function _buildFullPrompt(prompt, options) {
+async function _buildFullPrompt(prompt, options, effectiveMode) {
   const { buildSystemPrompt } = await getAISystemPrompts();
+  const hadCallerSystemPrompt = Boolean(options.systemPrompt);
   const baseSystemPrompt =
     options.systemPrompt ||
     buildSystemPrompt({
@@ -2120,11 +2167,10 @@ async function _buildFullPrompt(prompt, options) {
       includeVeteranData: true,
     });
 
-  const systemPrompt = await _injectDKBContext(
-    prompt,
-    baseSystemPrompt,
-    options,
-  );
+  const systemPrompt = await _injectDKBContext(prompt, baseSystemPrompt, {
+    ...options,
+    effectiveMode,
+  });
 
   // Apply user's saved preset if no preset specified in options
   const effectivePreset = options.preset || getUserPreset();
@@ -2133,6 +2179,7 @@ async function _buildFullPrompt(prompt, options) {
   const enhancedOptions = {
     ...options,
     preset: effectivePreset,
+    _hadCallerSystemPrompt: hadCallerSystemPrompt,
   };
 
   return { systemPrompt, userPrompt: prompt, enhancedOptions };
@@ -2475,7 +2522,7 @@ const generateAIInternal = async (prompt, options = {}) => {
     systemPrompt: builtSystemPrompt,
     userPrompt: builtUserPrompt,
     enhancedOptions,
-  } = await _buildFullPrompt(prompt, options);
+  } = await _buildFullPrompt(prompt, options, effectiveMode);
 
   // ADR-008: redact both halves of the assembled request before either
   // reaches the dispatch below OR either fallback path in the catch block -

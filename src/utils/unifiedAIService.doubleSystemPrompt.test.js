@@ -238,4 +238,28 @@ describe("D15-2: the system prompt is sent exactly once per backend, and redacte
     expect(combined).not.toContain(FAKE_DOB);
     expect(userPrompt).toContain("Please analyze this claim.");
   });
+
+  it("WARRANT COUNCIL (no caller systemPrompt): the generic app-context default is folded into the user turn instead of overriding the agent's own persona system prompt", async () => {
+    registerSwarmEngine({}, true, false, "auditor");
+    setAIMode(AI_MODES.SWARM);
+    diamondSwarm.generateWithSwarm.mockResolvedValue({ text: "OK response" });
+
+    await generateAI("Please analyze this claim.", {
+      skipCrisisCheck: true,
+      skipFeatureCheck: true,
+      skipHallucinationCheck: true,
+      skipValidation: true,
+      useDKB: false,
+    });
+
+    expect(diamondSwarm.generateWithSwarm).toHaveBeenCalledTimes(1);
+    const [userPrompt, swarmOptions] =
+      diamondSwarm.generateWithSwarm.mock.calls[0];
+
+    // No systemPrompt forwarded at all -> generateWithSwarm's own
+    // `systemPrompt || agent.systemPrompt` fallback uses the agent's own
+    // persona (CW3 Rater / CW4 Writer / CW5 Auditor), not a generic default.
+    expect(swarmOptions.systemPrompt).toBeUndefined();
+    expect(userPrompt).toContain("Please analyze this claim.");
+  });
 });
