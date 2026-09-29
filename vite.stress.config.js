@@ -1,3 +1,4 @@
+import { defineConfig } from "vite";
 import baseConfig from "./vite.config.js";
 
 /**
@@ -22,13 +23,23 @@ import baseConfig from "./vite.config.js";
  * harness injects dev-only module paths (`import("/src/utils/...")` in
  * tests/stress/helpers.ts), which a hashed production bundle does not serve.
  */
-export default {
-  ...baseConfig,
-  server: {
-    ...baseConfig.server,
-    port: 5198,
-    strictPort: true,
-    hmr: false,
-    watch: null,
-  },
-};
+export default defineConfig((env) => {
+  // vite.config.js's default export is a `({ mode }) => config` function (the
+  // e2e-mode web-llm alias needs `mode`), not a plain object — spreading a
+  // function yields `{}`, which silently dropped every plugin, the dompurify
+  // alias, and the COOP/COEP headers the WebGPU/SharedArrayBuffer paths need.
+  // Resolving it here keeps this file correct whether vite.config.js's export
+  // is a function or a plain object.
+  const resolvedBase =
+    typeof baseConfig === "function" ? baseConfig(env) : baseConfig;
+  return {
+    ...resolvedBase,
+    server: {
+      ...resolvedBase.server,
+      port: 5198,
+      strictPort: true,
+      hmr: false,
+      watch: null,
+    },
+  };
+});
