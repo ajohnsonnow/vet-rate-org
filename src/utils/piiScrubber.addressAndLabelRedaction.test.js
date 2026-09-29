@@ -85,10 +85,12 @@ describe("D15-1a: full US address block redaction (aggressive)", () => {
     expect(scrubbed).not.toContain("90210");
   });
 
-  it("does NOT touch the address block in non-aggressive mode (on-device date-preservation policy unchanged)", () => {
+  it("also redacts the address block in non-aggressive mode (owner decision D / ADR-008 §2.6: the address is protected regardless of provider, unlike the bare-DOB/bare-SSN catchalls, which stay aggressive-only to preserve on-device service/exam dates)", () => {
     const text = "Anytown, CA 90210";
     const { scrubbedText } = scrubPII(text, { aggressive: false });
-    expect(scrubbedText).toBe(text);
+    expect(scrubbedText).not.toContain("Anytown");
+    expect(scrubbedText).not.toContain("90210");
+    expect(scrubbedText).toContain("[REDACTED_ADDRESS]");
   });
 });
 

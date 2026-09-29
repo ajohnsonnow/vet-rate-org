@@ -64,8 +64,15 @@ const PII_PATTERNS = {
   // before each subsequent digit while still bounding the total digit count
   // to 8-9, so "C12345678" / "C-12345678" / "C 12 345 678" all match, but an
   // unrelated longer digit run (a phone number, a different ID) does not.
+  // The negative lookahead excludes the one shape that isn't a re-grouped
+  // file number at all: a 4-digit group immediately followed by another
+  // separator+digits, which is what a date ("C 2019-03-15"), a year range
+  // ("Medicare Part C 2023-2024") or a repeated dosage ("Vitamin C 1000
+  // 1000 mg") looks like when "C" happens to precede it. A real re-grouped
+  // file number's first group is 1-3 digits, never 4, so this doesn't
+  // narrow the D15-1c case above.
   // Standalone 8–9 digit IDs go through `vaFileStandalone` in aggressive mode.
-  vaFile: /\bC[-\s]?\d(?:[-\s]?\d){7,8}\b/gi,
+  vaFile: /\bC[-\s]?(?!\d{4}[-\s]\d{2,4}\b)\d(?:[-\s]?\d){7,8}\b/gi,
   vaFileStandalone: /\b\d{8,9}\b/g,
 
   // SSN — XXX-XX-XXXX is the canonical form. The bare 9-digit form is
@@ -96,7 +103,8 @@ const PII_PATTERNS = {
     /\b(0[1-9]|[12]\d|3[01])[/-](0[1-9]|1[0-2])[/-](\d{2}|\d{4})\b/g, // DD/MM/YYYY
   ],
 
-  // Street addresses — US format. Aggressive only.
+  // Street addresses — US format. Redacted regardless of provider (owner
+  // decision D / ADR-008 §2.6 - see `_applyAddressAndLabelRedaction`).
   // Security review note: same as dobLabeled above — high complexity (41 vs
   // 20) on a PII-detection pattern, deserves dedicated fixture-based review
   // rather than a rushed rewrite. The [A-Za-z0-9\s] duplicate (redundant
@@ -105,29 +113,45 @@ const PII_PATTERNS = {
   // D15-1a: an optional trailing APT/UNIT/SUITE/# sub-unit is appended as a
   // non-capturing group so "123 Main St, Apt 4B" / "123 Main St Unit 200"
   // redact as one block instead of leaving the sub-unit exposed after the
-  // street line is replaced.
+  // street line is replaced. The suffix list also covers Terrace/Parkway/
+  // Highway/Trail/Loop/Pike/Route, which the original list omitted.
   address:
     // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on alternation count (the street-suffix list) and the redundant A-Za-z under /i, not on backtracking; bounding below (S8786) addressed separately
-    /\b\d{1,6}\s{1,5}[A-Za-z0-9\s]{1,100}\b(?:Street|St\.?|Avenue|Ave\.?|Road|Rd\.?|Boulevard|Blvd\.?|Lane|Ln\.?|Drive|Dr\.?|Court|Ct\.?|Circle|Cir\.?|Way|Plaza|Place|Pl\.?)\b(?:[,.]?\s{1,5}(?:APT|UNIT|SUITE|STE|#)\.?\s{0,5}[A-Za-z0-9-]{1,10})?/gi,
+    /\b\d{1,6}\s{1,5}[A-Za-z0-9\s]{1,100}\b(?:Street|St\.?|Avenue|Ave\.?|Road|Rd\.?|Boulevard|Blvd\.?|Lane|Ln\.?|Drive|Dr\.?|Court|Ct\.?|Circle|Cir\.?|Way|Plaza|Place|Pl\.?|Terrace|Ter\.?|Parkway|Pkwy\.?|Highway|Hwy\.?|Trail|Trl\.?|Loop|Pike|Route|Rte\.?)\b(?:[,.]?\s{1,5}(?:APT|UNIT|SUITE|STE|#)\.?\s{0,5}[A-Za-z0-9-]{1,10})?/gi,
 
-  // PO Box — aggressive only.
+  // PO Box — redacted regardless of provider (see `address` above).
   poBox: /\bP\.?\s*O\.?\s*Box\s+\d+\b/gi,
+
+  // D15-1a: military mailing addresses that use a PSC/CMR/UNIT + BOX line
+  // instead of a street name ("PSC 1234 BOX 5678", "UNIT 1234 BOX 5678",
+  // "CMR 450 BOX 123") - the plain `address` pattern above requires a
+  // street suffix and never matches this shape.
+  militaryBoxLine:
+    /\b(?:PSC|CMR|UNIT)\s{1,3}\d{1,5}\s{1,3}BOX\s{1,3}\d{1,5}\b/gi,
 
   // D15-1a: the second line of a US mailing address block - "City, ST
   // 12345" or "City, ST 12345-6789", with or without the comma, and either
-  // a 2-letter state abbreviation or a spelled-out state name. Aggressive
-  // only (same egress-boundary gate as `address`/`poBox` above).
+  // a 2-letter state/territory abbreviation or a spelled-out state name.
+  // No /i flag: the abbreviation branch must match its EXACT case (real
+  // addresses print it that way) so common lowercase words that happen to
+  // collide with a state code ("in", "or", "va") can't false-positive; the
+  // city-name class below spells out both cases instead of relying on /i.
+  // The prefix classes use `[ \t]` (never `\n`) so a preceding sentence on
+  // its OWN line can't be pulled into the match across a line break.
   cityStateZip:
-    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the 50-state alternation count, not backtracking; each branch is a fixed literal, no nested quantifiers. Lowercase-only classes below (no A-Za-z duplicate) since /i already covers case.
-    /\b[a-z][a-z\s.'-]{1,40},?\s{1,3}(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s{1,3}Hampshire|New\s{1,3}Jersey|New\s{1,3}Mexico|New\s{1,3}York|North\s{1,3}Carolina|North\s{1,3}Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s{1,3}Island|South\s{1,3}Carolina|South\s{1,3}Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s{1,3}Virginia|Wisconsin|Wyoming)\b\.?,?\s{1,3}\d{5}(?:-\d{4})?\b/gi,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the 50-state alternation count, not backtracking; each branch is a fixed literal, no nested quantifiers.
+    /\b[A-Za-z][A-Za-z \t.'-]{1,40},?[ \t]{1,3}(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|PR|GU|VI|Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s{1,3}Hampshire|New\s{1,3}Jersey|New\s{1,3}Mexico|New\s{1,3}York|North\s{1,3}Carolina|North\s{1,3}Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s{1,3}Island|South\s{1,3}Carolina|South\s{1,3}Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s{1,3}Virginia|Wisconsin|Wyoming)\b\.?,?[ \t]{1,3}\d{5}(?:-\d{4})?\b/g,
 
   // D15-1a: military overseas mailing addresses (APO/FPO/DPO + AA/AE/AP +
-  // ZIP). Aggressive only.
-  apoFpoDpo: /\b(?:APO|FPO|DPO)\s{1,3}(?:AA|AE|AP)\s{1,3}\d{5}(?:-\d{4})?\b/gi,
+  // ZIP), with or without a comma after either segment.
+  apoFpoDpo:
+    /\b(?:APO|FPO|DPO),?\s{1,3}(?:AA|AE|AP),?\s{1,3}\d{5}(?:-\d{4})?\b/gi,
 
   // D15-1a: a bare ZIP+4 not already caught as part of a city/state/zip
-  // line above (e.g. a ZIP printed alone on its own line). Aggressive only.
-  zip4Bare: /\b\d{5}-\d{4}\b/g,
+  // line above (e.g. a ZIP printed alone on its own line). Excludes an NDC
+  // (National Drug Code) label's 5-4-2 grouping, which is byte-for-byte the
+  // same shape as a ZIP+4 for its first two segments.
+  zip4Bare: /(?<!ndc[ \t]{0,5})\b\d{5}-\d{4}\b(?!-\d)/gi,
 };
 
 /**
@@ -180,18 +204,59 @@ const normalizeForScan = (text) =>
 // OCR-garbled label) still reaches the model on first mention. This is a
 // structural limit of label anchoring, not a bug - see ADR-008 §4.
 
+// A label's own trailing hint text - a "(Last, First, Middle)" /
+// "(YYYYMMDD)" parenthetical, or a short suffix word like "NO." / "NUMBER"
+// / "#" - absorbed as part of the LABEL (group 1) rather than left as
+// something the value pattern could backtrack into claiming. Without this,
+// a greedy-but-optional hint group and a "value must be >= 2 chars" value
+// group compete: when the real value is on the NEXT line, the engine
+// backtracks the hint out of the label so the value group can match the
+// hint text itself instead, redacting "(Last, First, Middle)" and leaving
+// the real name on the next line untouched.
+const _LABEL_HINT =
+  "(?:[ \\t]{0,10}\\([^)\\n]{0,60}\\))?(?:[ \\t]{0,10}(?:NO\\.?|NUMBER|#))?";
+
 /**
  * Build a "label, then redact the rest of the line" pattern. Group 1 (the
- * label) is preserved by the caller's replacer; group 2 (the value) is what
- * gets redacted.
+ * label, plus any trailing hint text) is preserved by the caller's
+ * replacer; group 2 (the value) is what gets redacted.
  * @param {string} labelAlternatives regex source for the label (no capture groups)
- * @param {number} [maxValueChars=80]
+ * @param {Object} [opts]
+ * @param {number} [opts.maxValueChars=80]
+ * @param {boolean} [opts.numeric=false] restrict the value to an optional
+ *   single leading letter (a "C" file-number prefix) plus digits/spaces/
+ *   hyphens, so a label that's merely mentioned in prose ("your VA file
+ *   number on your evidence...") doesn't have unrelated prose swept up as
+ *   if it were the value.
+ * @param {string} [opts.flags="gi"]
  * @returns {RegExp}
  */
-function _labelValuePattern(labelAlternatives, maxValueChars = 80) {
+function _labelValuePattern(labelAlternatives, opts = {}) {
+  const { maxValueChars = 80, numeric = false, flags = "gi" } = opts;
+  const value = numeric
+    ? `(?:[A-Za-z][-\\s]?)?\\d[\\d\\s-]{1,${Math.max(maxValueChars - 1, 4)}}`
+    : `[^\\n]{2,${maxValueChars}}`;
   return new RegExp(
-    `((?:${labelAlternatives})[:.]?[ \\t]{0,10})([^\\n]{2,${maxValueChars}})`,
-    "gi",
+    `((?:${labelAlternatives})${_LABEL_HINT}[:.]?[ \\t]{0,10})(${value})`,
+    flags,
+  );
+}
+
+/**
+ * Same label matching as `_labelValuePattern`, but for the OCR'd
+ * label-above-value layout: the label's line has nothing (or only
+ * whitespace/hint text) after it, and the real value is the very next
+ * line. Applying this BEFORE the same-line pattern means the same-line
+ * pattern never gets a chance to backtrack into the label's own hint text.
+ * @param {string} labelAlternatives
+ * @param {Object} [opts]
+ * @returns {RegExp}
+ */
+function _labelNextLinePattern(labelAlternatives, opts = {}) {
+  const { maxValueChars = 80, flags = "gi" } = opts;
+  return new RegExp(
+    `((?:${labelAlternatives})${_LABEL_HINT}[:.]?[ \\t]{0,10})\\n([^\\n]{2,${maxValueChars}})`,
+    flags,
   );
 }
 
@@ -199,36 +264,85 @@ function _labelValuePattern(labelAlternatives, maxValueChars = 80) {
 // identifiers (name, SSN/service number, DOB, home of record, mailing/home
 // address). Both forms print the same block VOCABULARY even where the box
 // NUMBER differs across revisions (mailing address lands on Block 19 on
-// some layouts, Block 30 on others - both are matched).
-const LABELED_BOX_PATTERNS = [
-  _labelValuePattern(
-    "(?:BLOCK[ \\t]{0,10}1|BOX[ \\t]{0,10}1|1\\.)[ \\t]{0,10}NAME(?:[ \\t]{0,10}\\([^)\\n]{0,60}\\))?",
-  ),
-  _labelValuePattern(
-    "(?:BLOCK[ \\t]{0,10}3|BOX[ \\t]{0,10}3|3\\.)[ \\t]{0,10}(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)",
-    40,
-  ),
-  _labelValuePattern(
-    "(?:BLOCK[ \\t]{0,10}5|BOX[ \\t]{0,10}5|5\\.)[ \\t]{0,10}DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH",
-    40,
-  ),
-  _labelValuePattern(
-    "(?:BLOCK[ \\t]{0,10}7[ \\t]{0,10}B|BOX[ \\t]{0,10}7[ \\t]{0,10}B|7[ \\t]{0,10}B\\.)[ \\t]{0,10}HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
-  ),
-  _labelValuePattern(
-    "(?:BLOCK[ \\t]{0,10}(?:19|30)|BOX[ \\t]{0,10}(?:19|30)|(?:19|30)\\.)[ \\t]{0,10}(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
-  ),
-  // VA decision-letter file/claim number line - not a DD-214 box, but the
-  // same "redact the value, keep the label" treatment applies.
-  _labelValuePattern(
-    "(?:VA[ \\t]{0,10})?(?:FILE[ \\t]{0,10}NO\\.?|FILE[ \\t]{0,10}NUMBER|CLAIM[ \\t]{0,10}NUMBER)",
-    40,
-  ),
+// some layouts, Block 30 on others - both are matched), and a sub-item
+// letter can appear before or after the number's period ("7B." / "7.b").
+//
+// Each entry has a `broad` form (a "BLOCK N" / "BOX N" prefix, which
+// disambiguates from ordinary prose regardless of case) and, where the form
+// also prints a bare "N." prefix, a `strict` form: real box labels print in
+// ALL CAPS, so requiring exact case for the bare-number form stops an
+// ordinary numbered list item ("1. Name of the medication...") from
+// colliding with the DD-214's own "1. NAME" box label.
+const BOX_LABEL_DEFS = [
+  {
+    broad: "(?:BLOCK[ \\t]{0,10}1|BOX[ \\t]{0,10}1)[ \\t]{0,10}NAME",
+    strict: "\\b1[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}NAME",
+  },
+  {
+    broad:
+      "(?:BLOCK[ \\t]{0,10}3|BOX[ \\t]{0,10}3)[ \\t]{0,10}(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)",
+    strict:
+      "\\b3[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)",
+    maxValueChars: 40,
+    numeric: true,
+  },
+  {
+    broad:
+      "(?:BLOCK[ \\t]{0,10}5|BOX[ \\t]{0,10}5)[ \\t]{0,10}DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH",
+    strict:
+      "\\b5[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH",
+    maxValueChars: 40,
+  },
+  {
+    broad:
+      "(?:BLOCK[ \\t]{0,10}7[ \\t]{0,10}[Bb]|BOX[ \\t]{0,10}7[ \\t]{0,10}[Bb])[ \\t]{0,10}HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
+    strict:
+      "\\b7[ \\t]{0,10}\\.?[ \\t]{0,10}[Bb]\\.?[ \\t]{0,10}HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
+  },
+  {
+    broad:
+      "(?:BLOCK[ \\t]{0,10}(?:19|30)|BOX[ \\t]{0,10}(?:19|30))[ \\t]{0,10}(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
+    strict:
+      "\\b(?:19|30)[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
+  },
+  {
+    // VA decision-letter file/claim number line - not a DD-214 box, no bare
+    // numbered-box form, but the same "redact the value, keep the label"
+    // treatment applies. `\b` before FILE/CLAIM stops "PROFILE NO." or
+    // "file now"/"file notice of disagreement" from matching (no word
+    // boundary exists between the "O"/"E" that precedes "FILE" there and
+    // the label itself), and `\b` after NO/NUMBER stops "file no" from
+    // continuing to match into "file now".
+    broad:
+      "(?:VA[ \\t]{0,10})?\\b(?:FILE[ \\t]{0,10}NO\\.?\\b|FILE[ \\t]{0,10}NUMBER\\b|CLAIM[ \\t]{0,10}NUMBER\\b)",
+    strict: null,
+    maxValueChars: 40,
+    numeric: true,
+  },
 ];
+
+const LABELED_BOX_PATTERNS = BOX_LABEL_DEFS.flatMap((def) => {
+  const opts = { maxValueChars: def.maxValueChars, numeric: def.numeric };
+  const patterns = [
+    _labelNextLinePattern(def.broad, opts),
+    _labelValuePattern(def.broad, opts),
+  ];
+  if (def.strict) {
+    const strictOpts = { ...opts, flags: "g" };
+    patterns.push(
+      _labelNextLinePattern(def.strict, strictOpts),
+      _labelValuePattern(def.strict, strictOpts),
+    );
+  }
+  return patterns;
+});
 
 /**
  * Redact the value following any recognized DD-214/NGB-22 box label or VA
- * file/claim-number label, keeping the label itself intact.
+ * file/claim-number label, keeping the label itself intact. Each label's
+ * "value is on the next OCR line" pattern runs before its "value is on the
+ * same line" pattern, so the same-line pattern only ever sees text the
+ * next-line pattern already decided wasn't its concern.
  * @param {string} text
  * @returns {string}
  */
@@ -244,58 +358,102 @@ export const redactLabeledBoxValues = (text) => {
 // A VA decision letter's date line ("March 15, 2024" or "3/15/2024") sits
 // directly above the addressee block; "Dear ..." (or an equivalent
 // salutation) sits directly below it. Redacting everything between the LAST
-// such date before the salutation and the salutation itself catches the
-// veteran's name/address block without needing to parse each line.
+// such date before a given salutation and that salutation catches the
+// veteran's name/address block without needing to parse each line. Global
+// so a document with several concatenated letters (a C-File chunk, a
+// Muster Call segment) has every letter's block - not just the first -
+// redacted.
 // prettier-ignore
 // eslint-disable-next-line sonarjs/regex-complexity -- every quantifier is explicitly bounded ({0,10}/{1,5}/{3,10}); flagged on branch count from the two date shapes, not on backtracking
 const LETTER_DATE_LINE = /^[ \t]{0,10}(?:[A-Za-z]{3,10}\.?[ \t]{1,5}\d{1,2},?[ \t]{1,5}\d{4}|\d{1,2}\/\d{1,2}\/\d{2,4})[ \t]{0,10}$/gm;
 const IN_REPLY_REFER_TO =
-  /In[ \t]{1,5}Reply[ \t]{1,5}Refer[ \t]{1,5}To\b[^\n]*/i;
+  /In[ \t]{1,5}Reply[ \t]{1,5}Refer[ \t]{1,5}To\b[^\n]*/gi;
 // prettier-ignore
 // eslint-disable-next-line sonarjs/regex-complexity -- every quantifier is explicitly bounded ({0,10}/{0,60}/{1,5}); flagged on branch count from the two salutation shapes, not on backtracking
-const SALUTATION_LINE = /^[ \t]{0,10}(?:Dear\b[^\n]{0,60}|To[ \t]{1,5}Whom[ \t]{1,5}It[ \t]{1,5}May[ \t]{1,5}Concern)[:,]?[ \t]{0,10}$/im;
+const SALUTATION_LINE = /^[ \t]{0,10}(Dear\b[^\n]{0,60}|To[ \t]{1,5}Whom[ \t]{1,5}It[ \t]{1,5}May[ \t]{1,5}Concern)[:,]?[ \t]{0,10}$/gim;
+// Only redact the salutation when it's addressed to an actual person - a
+// courtesy title ("Mr."/"Ms."/"Mrs."/"Miss"/"Dr."/"Mx.") followed by a
+// name - never a generic/templated greeting ("Dear Veteran:", "Dear Sir or
+// Madam:", "Dear Applicant:") that carries no identifying text at all.
+const SALUTATION_NAME =
+  /^([ \t]{0,10}Dear[ \t]{1,5}(?:Mr|Mrs|Ms|Miss|Dr|Mx)\.?[ \t]{1,5})([^\n:,]{1,60})/i;
+
+// Find the end index of the last date-line (or "In Reply Refer To" line)
+// anchor inside `text.slice(searchStart, searchEnd)` - the region between
+// the previous letter's salutation (or the start of the document) and the
+// current one. Returns -1 if no anchor is found in that region.
+function _findAnchorEnd(text, searchStart, searchEnd) {
+  const region = text.slice(searchStart, searchEnd);
+  const dateMatches = [...region.matchAll(LETTER_DATE_LINE)];
+  if (dateMatches.length > 0) {
+    const last = dateMatches[dateMatches.length - 1];
+    return searchStart + last.index + last[0].length;
+  }
+  const referMatches = [...region.matchAll(IN_REPLY_REFER_TO)];
+  if (referMatches.length > 0) {
+    const last = referMatches[referMatches.length - 1];
+    return searchStart + last.index + last[0].length;
+  }
+  return -1;
+}
+
+// Guard against a mis-anchored date far from the real letterhead pulling in
+// an implausibly large span - returned unchanged (safe no-op) rather than
+// redacting a huge chunk of legitimate content.
+function _redactAddresseeSpan(text, start, end) {
+  const block = text.slice(start, end);
+  if (block.length > 400) return block;
+  return block.replace(/[^\n]{2,}/g, (line) =>
+    line.trim() ? "[REDACTED]" : line,
+  );
+}
 
 /**
- * Redact a VA letter's addressee block - the lines between its date (or
- * "In Reply Refer To" line, when no date line is found) and its salutation
- * - without needing to identify which line is the name vs. the street vs.
- * the city/state/ZIP. A no-match (no salutation found, or no anchor before
- * it, or an implausibly long span) is a safe no-op: the text is returned
- * unchanged rather than guessing.
+ * Redact every VA letter's addressee block in `text` - the lines between
+ * each letter's date (or "In Reply Refer To" line) and its salutation -
+ * without needing to identify which line is the name vs. the street vs.
+ * the city/state/ZIP, and redact the surname carried in a "Dear Mr./Ms.
+ * <Surname>:" salutation line itself. Handles multiple concatenated
+ * letters: each salutation only claims the anchor found after the
+ * PREVIOUS letter's salutation, so letter 2's date can't be mistaken for
+ * letter 1's and vice versa. A letter with no anchor found in its own
+ * region is left alone (safe no-op) rather than guessing.
  * @param {string} text
  * @returns {string}
  */
 export const redactLetterAddresseeBlock = (text) => {
   if (!text || typeof text !== "string") return text;
 
-  const salutationMatch = SALUTATION_LINE.exec(text);
-  if (!salutationMatch) return text;
+  const salutations = [...text.matchAll(SALUTATION_LINE)];
+  if (salutations.length === 0) return text;
 
-  const beforeSalutation = text.slice(0, salutationMatch.index);
-  const dateMatches = [...beforeSalutation.matchAll(LETTER_DATE_LINE)];
+  let out = "";
+  let cursor = 0;
+  let prevSalutationEnd = 0;
 
-  let anchorEnd = -1;
-  if (dateMatches.length > 0) {
-    const lastDate = dateMatches[dateMatches.length - 1];
-    anchorEnd = lastDate.index + lastDate[0].length;
-  } else {
-    const referToMatch = IN_REPLY_REFER_TO.exec(beforeSalutation);
-    if (referToMatch) anchorEnd = referToMatch.index + referToMatch[0].length;
+  for (const salutation of salutations) {
+    const salStart = salutation.index;
+    const salEnd = salStart + salutation[0].length;
+    const anchorEnd = _findAnchorEnd(text, prevSalutationEnd, salStart);
+
+    if (anchorEnd >= 0) {
+      out += text.slice(cursor, anchorEnd);
+      out += _redactAddresseeSpan(text, anchorEnd, salStart);
+      cursor = salStart;
+    }
+
+    const nameMatch = SALUTATION_NAME.exec(salutation[0]);
+    if (nameMatch) {
+      const [, greeting, name] = nameMatch;
+      out += text.slice(cursor, salStart) + greeting + "[REDACTED]";
+      cursor = salStart + greeting.length + name.length;
+    }
+
+    prevSalutationEnd = salEnd;
   }
-  if (anchorEnd < 0) return text;
 
-  const addresseeBlock = text.slice(anchorEnd, salutationMatch.index);
-  // Guard against a mis-anchored date far from the real letterhead pulling
-  // in an implausibly large span.
-  if (addresseeBlock.length > 400) return text;
-
-  const redactedBlock = addresseeBlock.replace(/[^\n]{2,}/g, (line) =>
-    line.trim() ? "[REDACTED]" : line,
-  );
-
-  return (
-    text.slice(0, anchorEnd) + redactedBlock + text.slice(salutationMatch.index)
-  );
+  out += text.slice(cursor);
+  return out;
 };
 
 function _countMatches(text, pattern) {
@@ -303,28 +461,28 @@ function _countMatches(text, pattern) {
   return matches ? matches.length : 0;
 }
 
-// Steps 9-10 of scrubPII below: the full US address block (D15-1a,
-// aggressive only) plus D15-1b's always-on label-anchored protection.
-// Extracted so scrubPII itself stays under the line-count limit - these
-// steps don't need scrubPII's piiFound/details closure, they just report
-// what they touched and let the caller merge it in.
-function _applyAddressAndLabelRedaction(text, aggressive) {
+// Steps 9-10 of scrubPII below: D15-1b's always-on label/letter-anchored
+// protection, plus the full US address block (D15-1a). Extracted so
+// scrubPII itself stays under the line-count limit - these steps don't need
+// scrubPII's piiFound/details closure, they just report what they touched
+// and let the caller merge it in.
+//
+// Order matters: the letter-addressee and labeled-box passes run FIRST,
+// while the date-line/salutation anchors they depend on are still intact.
+// The address-block patterns below (a street/PO-Box/city-state-zip run)
+// would otherwise be free to consume a date line that sits right next to an
+// addressee block, destroying the anchor before `redactLetterAddresseeBlock`
+// ever gets to look for it. Running address-block patterns afterward is
+// still safe/idempotent against whatever the first two passes already
+// turned into `[REDACTED]`.
+function _applyAddressAndLabelRedaction(text) {
   let scrubbed = text;
   const hits = [];
 
-  if (aggressive) {
-    [
-      PII_PATTERNS.address,
-      PII_PATTERNS.poBox,
-      PII_PATTERNS.cityStateZip,
-      PII_PATTERNS.apoFpoDpo,
-      PII_PATTERNS.zip4Bare,
-    ].forEach((pattern) => {
-      const count = _countMatches(scrubbed, pattern);
-      if (count === 0) return;
-      hits.push({ type: "Address", count });
-      scrubbed = scrubbed.replace(reset(pattern), "[REDACTED_ADDRESS]");
-    });
+  const beforeAddressee = scrubbed;
+  scrubbed = redactLetterAddresseeBlock(scrubbed);
+  if (scrubbed !== beforeAddressee) {
+    hits.push({ type: "Letter Addressee Block", count: 1 });
   }
 
   const beforeLabeled = scrubbed;
@@ -333,11 +491,26 @@ function _applyAddressAndLabelRedaction(text, aggressive) {
     hits.push({ type: "Labeled Identifier", count: 1 });
   }
 
-  const beforeAddressee = scrubbed;
-  scrubbed = redactLetterAddresseeBlock(scrubbed);
-  if (scrubbed !== beforeAddressee) {
-    hits.push({ type: "Letter Addressee Block", count: 1 });
-  }
+  // D15-1a / ADR-008 §2.6 (owner decision D): the address block is redacted
+  // regardless of provider - unlike the DOB/SSN/VA-file bare-digit
+  // catchalls in scrubPII below, which stay aggressive-only because they'd
+  // otherwise strip legitimate service/exam/treatment dates an on-device
+  // C-File analysis depends on. The address patterns require a street
+  // suffix, PO Box, city/state/ZIP shape, or military box line - none of
+  // which collide with a bare date.
+  [
+    PII_PATTERNS.address,
+    PII_PATTERNS.poBox,
+    PII_PATTERNS.militaryBoxLine,
+    PII_PATTERNS.cityStateZip,
+    PII_PATTERNS.apoFpoDpo,
+    PII_PATTERNS.zip4Bare,
+  ].forEach((pattern) => {
+    const count = _countMatches(scrubbed, pattern);
+    if (count === 0) return;
+    hits.push({ type: "Address", count });
+    scrubbed = scrubbed.replace(reset(pattern), "[REDACTED_ADDRESS]");
+  });
 
   return { scrubbed, hits };
 }
@@ -380,7 +553,9 @@ export const containsSignificantNonLatin = (text) => {
  * @param {string} text
  * @param {Object} options
  * @param {boolean} [options.aggressive=false] also scrub bare SSN, bare VA
- *   file numbers, DOB, addresses, PO Boxes.
+ *   file numbers, and bare DOB. The address block (street/PO-Box/military-
+ *   box-line/city-state-zip) is redacted regardless of this flag - see
+ *   `_applyAddressAndLabelRedaction`.
  * @param {boolean} [options.preservePartial=false] keep last 4 digits of
  *   SSN / phone for human-readable debugging.
  * @param {Array<{pattern: RegExp, label: string}>} [options.customPatterns]
@@ -476,17 +651,14 @@ export const scrubPII = (text, options = {}) => {
     });
   }
 
-  // 9-10. Full US address block (aggressive only, D15-1a) plus always-on
-  //       label-anchored first-mention protection (D15-1b) — see
+  // 9-10. Always-on label/letter-anchored first-mention protection
+  //       (D15-1b) plus the full US address block (D15-1a, also always-on
+  //       per owner decision D / ADR-008 §2.6) — see
   //       _applyAddressAndLabelRedaction. The label-anchored patterns are
   //       anchored to a specific DD-214/NGB-22 box label or VA-letter
   //       structural landmark this app ingests, so they don't collide with
-  //       the bare dates/numbers in free-form prose that the
-  //       aggressive-only address gate exists to protect.
-  const addressAndLabelResult = _applyAddressAndLabelRedaction(
-    scrubbed,
-    aggressive,
-  );
+  //       the bare dates/numbers in free-form prose.
+  const addressAndLabelResult = _applyAddressAndLabelRedaction(scrubbed);
   scrubbed = addressAndLabelResult.scrubbed;
   if (addressAndLabelResult.hits.length > 0) {
     piiFound = true;
@@ -626,7 +798,13 @@ export const spotlight = (text) =>
 // dob patterns above match), a claim/file number in unlabeled prose, or a
 // non-standard address line.
 
-const WORD_CHAR = /[\p{L}\p{N}_]/u;
+// Underscore is deliberately EXCLUDED from this word-char set (unlike JS's
+// own ASCII `\b`, which treats `_` as a word character). A VA-export
+// filename joins its tokens with underscores ("Faketon_Jordan_VAFile-
+// 6789_DD214.pdf"), so treating `_` as word-continuing would mean a known
+// name/number value directly adjacent to one could never satisfy the
+// boundary check below and would silently pass through this backstop.
+const WORD_CHAR = /[\p{L}\p{N}]/u;
 
 // JS `\b` is ASCII-only - even with the `u` flag - so a value that starts
 // or ends on a Unicode letter outside Basic Latin (José, Zoë, Ångström)
@@ -637,9 +815,9 @@ const WORD_CHAR = /[\p{L}\p{N}_]/u;
 // borders a word character - a known value legitimately starting/ending on
 // punctuation (an address line ending in a comma, say) must still match.
 const _leadBoundary = (char) =>
-  WORD_CHAR.test(char) ? "(?<![\\p{L}\\p{N}_])" : "";
+  WORD_CHAR.test(char) ? "(?<![\\p{L}\\p{N}])" : "";
 const _tailBoundary = (char) =>
-  WORD_CHAR.test(char) ? "(?![\\p{L}\\p{N}_])" : "";
+  WORD_CHAR.test(char) ? "(?![\\p{L}\\p{N}])" : "";
 
 const _escapeForRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -682,26 +860,48 @@ const COMBINING_MARKS = /[̀-ͯ]/g;
 const _foldAccents = (value) =>
   value.normalize("NFD").replace(COMBINING_MARKS, "");
 
+// Fold `text` one Unicode code point at a time (rather than as a whole
+// string) and track, for every character position IN the folded output,
+// which ORIGINAL-string index produced it. Folding a single precomposed
+// accented letter is length-preserving ("é" -> "e"), but folding text that
+// ALREADY arrives NFD-decomposed (a combining mark as its own character,
+// common from macOS/PDF copy-paste) is NOT - the mark disappears entirely,
+// shortening that one character's contribution to 0. Building the map
+// per-character means a length change ANYWHERE in the string - a
+// decomposed input, an unrelated Hangul/CJK character elsewhere in the same
+// prompt - no longer disables folding for the whole text, only ever affects
+// the specific characters it actually changes.
+function _buildFoldMap(text) {
+  let folded = "";
+  const foldedToOrig = [];
+  let origIndex = 0;
+  for (const ch of text) {
+    const f = _foldAccents(ch);
+    for (let i = 0; i < f.length; i += 1) foldedToOrig.push(origIndex);
+    origIndex += ch.length;
+    folded += f;
+  }
+  foldedToOrig.push(origIndex);
+  return { folded, foldedToOrig };
+}
+
 /**
  * Accent-insensitive redaction for a single known value: fold both the
- * value and a working copy of `text`, find match positions against the
- * FOLDED copy, then slice/replace those same positions in the ORIGINAL
- * `text` - so accents/casing elsewhere in the string survive untouched and
- * only the matched span is ever replaced. Falls back to `null` (caller
- * redoes an exact, non-folded match) if folding broke the length-preserving
- * assumption (a multi-mark character, e.g. a diacritic stacked on a
- * ligature) - rare for names, but this refuses to guess at a misaligned
- * replacement rather than risk corrupting unrelated text.
+ * value and a working copy of `text` (per-character, via `_buildFoldMap`),
+ * find match positions against the FOLDED copy, then map those positions
+ * back to the ORIGINAL string's indices before slicing/replacing - so
+ * accents/casing elsewhere in the string survive untouched and only the
+ * matched span is ever replaced, regardless of whether folding changed the
+ * text's overall length.
  * @param {string} text
  * @param {string} value
  * @param {string} lead lookbehind boundary source
  * @param {string} tail lookahead boundary source
  * @param {string} replacement
- * @returns {string|null}
+ * @returns {string}
  */
 function _redactAccentFold(text, value, lead, tail, replacement) {
-  const foldedText = _foldAccents(text);
-  if (foldedText.length !== text.length) return null;
+  const { folded: foldedText, foldedToOrig } = _buildFoldMap(text);
 
   const foldedValue = _foldAccents(value);
   const pattern = _valuePattern(foldedValue);
@@ -711,8 +911,10 @@ function _redactAccentFold(text, value, lead, tail, replacement) {
   let cursor = 0;
   let match = re.exec(foldedText);
   while (match) {
-    out += text.slice(cursor, match.index) + replacement;
-    cursor = match.index + match[0].length;
+    const origStart = foldedToOrig[match.index];
+    const origEnd = foldedToOrig[match.index + match[0].length];
+    out += text.slice(cursor, origStart) + replacement;
+    cursor = origEnd;
     if (match[0].length === 0) re.lastIndex += 1;
     match = re.exec(foldedText);
   }
@@ -735,11 +937,7 @@ function _redactEntry(out, entry, replacement) {
   const accentFold = typeof entry === "object" && entry.accentFold;
 
   if (accentFold && !context) {
-    const folded = _redactAccentFold(out, value, lead, tail, replacement);
-    return (
-      folded ??
-      out.replace(new RegExp(`${lead}${pattern}${tail}`, "giu"), replacement)
-    );
+    return _redactAccentFold(out, value, lead, tail, replacement);
   }
   if (context) {
     const gated = new RegExp(
