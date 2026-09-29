@@ -992,9 +992,12 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 // FIX-15: NGB-22 Box 18's granular IADT/AD date ranges (see
 // _extractNGB22PeriodDates) each become their own servicePeriods[] entry,
 // additive to the single Box 12a/12b period saved by
-// _savePrimaryServicePeriod - upsertServicePeriod's own (serviceStartDate,
-// serviceEndDate) identity key means a range that happens to match the
-// primary period is a no-op, not a duplicate.
+// _savePrimaryServicePeriod. Box-18 window demotion fix (final15 QA
+// review): a window range that happens to match the primary period's own
+// dates stays its OWN separate row - upsertServicePeriod's identity match
+// (veteranProfile.js's _scopeCompatible) never merges a "window"-scoped
+// period with a non-window one, in either import order, so a coinciding
+// window can never demote the primary enlistment period.
 function _saveNGB22AdditionalPeriods(file, candidate) {
   if (!Array.isArray(candidate.additionalPeriods)) return;
   const separationDate = _toISODateString(candidate.separationDate);

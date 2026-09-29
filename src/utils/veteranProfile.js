@@ -2046,7 +2046,9 @@ function _findCorrectionAliasIndex(periods, incoming) {
   const incomingKey = _servicePeriodKey(incoming);
   return periods.findIndex((p) => {
     const doc = p.startDateCorrection?.documentDate;
-    if (!doc) return false;
+    if (!doc || !_scopeCompatible(p.periodScope, incoming.periodScope)) {
+      return false;
+    }
     if (`${doc}|${p.serviceEndDate}` === incomingKey) return true;
     return isSameServicePeriod(
       doc,
@@ -2057,9 +2059,55 @@ function _findCorrectionAliasIndex(periods, incoming) {
   });
 }
 
+// Box-18 window demotion (final15 QA review): a Box-18 IADT/AD window
+// sharing IDENTICAL dates with its OWN NGB-22's 12a/12b PRIMARY period
+// used to date-key-match onto the same servicePeriods[] row - both are
+// upserted from the SAME source document, one right after the other
+// (_saveNGB22AdditionalPeriods, then _savePrimaryServicePeriod). N9c's
+// "once a window, stays a window" rule (_mergeExistingServicePeriod) then
+// locked the merged row's periodScope to "window" forever, demoting a real
+// enlistment and locking it out of setServiceEntryDate's periodId-based
+// correction (nonWindowPeriods excludes it). The same concern
+// _hasProvenLink already enforces for an INCOMPLETE incoming row's own
+// matching path ("an enlistment-level record must never merge into one of
+// a document's own sub-periods") never got the same guard for DATED
+// periods.
+//
+// A genuinely DIFFERENT document proving a link to an EXISTING window (a
+// real DD214 for that specific window, a code sheet) is a wholly separate,
+// legitimate case (_windowsOwnDD214Bypass; _hasProvenLink's "same
+// document" rule) that must still be allowed to match/update it - so the
+// fix is two-pass, not a blanket scope wall:
+//  1. Prefer a same-scope match (window matches window, non-window
+//     matches non-window) - this alone resolves the sibling collision,
+//     since the NGB-22's OWN primary/window pair are scope-mismatched by
+//     definition and neither ever needs to fall through to pass 2.
+//  2. Only when no same-scope candidate exists, allow a cross-scope exact-
+//     date match - but never onto a period that ALREADY records the
+//     incoming record's own source document (the exact sibling collision
+//     this guards against; _periodHasSource is the same "proven same-
+//     document link" check N9/N9a already use elsewhere in this file).
+function _scopeCompatible(existingScope, incomingScope) {
+  return (existingScope === "window") === (incomingScope === "window");
+}
+
+function _isOwnSiblingWindow(existing, incoming) {
+  if (_scopeCompatible(existing.periodScope, incoming.periodScope)) {
+    return false;
+  }
+  return (
+    !!incoming.sourceDocument &&
+    _periodHasSource(existing, incoming.sourceDocument)
+  );
+}
+
 function _findDatedServicePeriodIndex(periods, incoming) {
   const incomingKey = _servicePeriodKey(incoming);
-  let index = periods.findIndex((p) => _servicePeriodKey(p) === incomingKey);
+  let index = periods.findIndex(
+    (p) =>
+      _servicePeriodKey(p) === incomingKey &&
+      _scopeCompatible(p.periodScope, incoming.periodScope),
+  );
   if (index !== -1 || incoming.incomplete) return index;
 
   index = _findSameDocumentIndex(periods, incoming);
@@ -2068,13 +2116,24 @@ function _findDatedServicePeriodIndex(periods, incoming) {
   index = _findCorrectionAliasIndex(periods, incoming);
   if (index !== -1) return index;
 
-  return periods.findIndex((p) =>
-    isSameServicePeriod(
-      p.serviceStartDate,
-      p.serviceEndDate,
-      incoming.serviceStartDate,
-      incoming.serviceEndDate,
-    ),
+  index = periods.findIndex(
+    (p) =>
+      _scopeCompatible(p.periodScope, incoming.periodScope) &&
+      isSameServicePeriod(
+        p.serviceStartDate,
+        p.serviceEndDate,
+        incoming.serviceStartDate,
+        incoming.serviceEndDate,
+      ),
+  );
+  if (index !== -1) return index;
+
+  // Pass 2: no same-scope candidate at all - allow a cross-scope exact-key
+  // match, as long as it isn't the incoming record's own sibling window/
+  // primary (see the comment above _scopeCompatible).
+  return periods.findIndex(
+    (p) =>
+      _servicePeriodKey(p) === incomingKey && !_isOwnSiblingWindow(p, incoming),
   );
 }
 

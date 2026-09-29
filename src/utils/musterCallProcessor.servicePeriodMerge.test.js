@@ -60,10 +60,18 @@ describe("saveServiceRecordToProfile: NGB-22 additional-period rank attachment",
     saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
 
     const periods = getServicePeriods();
+    // REALISTIC_NGB22's Box-18 AD window shares its dates with the primary
+    // 12a/12b period (the Box-18 window demotion fixture, final15 QA
+    // review) - scoped to periodScope === "window" so this specifically
+    // exercises the AD WINDOW's own terminal-AD rank attachment
+    // (_saveNGB22AdditionalPeriods), not the primary period that happens
+    // to share its dates (which gets its rank from Box 4a directly, a
+    // different code path entirely).
     const ad = periods.find(
       (p) =>
         p.serviceStartDate === "2004-06-22" &&
-        p.serviceEndDate === "2005-08-27",
+        p.serviceEndDate === "2005-08-27" &&
+        p.periodScope === "window",
     );
     const iadt = periods.find(
       (p) =>
@@ -75,6 +83,17 @@ describe("saveServiceRecordToProfile: NGB-22 additional-period rank attachment",
     expect(ad.rank).toBe("SGT");
     expect(iadt).toBeDefined();
     expect(iadt.rank).toBe("");
+
+    // The primary/enlistment period is a separate row, never demoted to
+    // periodScope "window" by its own coinciding Box-18 sub-period.
+    const primary = periods.find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27" &&
+        p.periodScope !== "window",
+    );
+    expect(primary).toBeDefined();
+    expect(primary.rank).toBe("SGT");
   });
 });
 
@@ -269,13 +288,20 @@ describe("saveCodeSheetServicePeriodsToProfile: labels its own source correctly"
     localStorage.clear();
   });
 
+  // REALISTIC_NGB22's Box-18 AD window shares its dates with the primary
+  // 12a/12b period (the Box-18 window demotion fixture, final15 QA review)
+  // - both are real, separate rows at the same dates once the demotion fix
+  // lands, so every query here is scoped to periodScope !== "window" to
+  // land on the primary/enlistment row specifically, not whichever of the
+  // two `.find()` happens to hit first.
   it("relabels an NGB-22-sourced period as Code Sheet once VA's own record confirms it, instead of keeping the stale NGB22 label", async () => {
     const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
     saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
-    expect(
-      getServicePeriods().find((p) => p.serviceStartDate === "2004-06-22")
-        .formType,
-    ).toBe("NGB22");
+    const primaryBefore = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2004-06-22" && p.periodScope !== "window",
+    );
+    expect(primaryBefore).toBeDefined();
+    expect(primaryBefore.formType).toBe("NGB22");
 
     saveCodeSheetServicePeriodsToProfile(
       { name: "cfile_codesheet.pdf" },
@@ -295,20 +321,31 @@ describe("saveCodeSheetServicePeriodsToProfile: labels its own source correctly"
     );
 
     const period = getServicePeriods().find(
-      (p) => p.serviceStartDate === "2004-06-22",
+      (p) => p.serviceStartDate === "2004-06-22" && p.periodScope !== "window",
     );
     expect(period.formType).toBe("Code Sheet");
     expect(period.characterOfService).toBe("Honorable");
+
+    // The Box-18 window at the SAME dates is a separate row, untouched by
+    // the code sheet's update to the primary.
+    const window = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2004-06-22" && p.periodScope === "window",
+    );
+    expect(window).toBeDefined();
+    expect(window.formType).toBe("NGB22");
   });
 });
 
-// Same shape as REALISTIC_NGB22 but with no Item 18 Box-18 breakdown - N9c
-// ("once a period is a window, it stays one") means an AD breakdown whose
-// dates exactly match the primary 12a/12b period merges ONTO it and keeps
-// periodScope "window" permanently, which setServiceEntryDate deliberately
-// excludes from correction (windows are sub-periods, not the enlistment
-// itself). This fixture's primary period stays a normal, correctable
-// period so item 4's correction step actually applies.
+// Same shape as REALISTIC_NGB22 but with no Item 18 Box-18 breakdown.
+// Historical note (superseded by the Box-18 window demotion fix, final15
+// QA review): this fixture used to be REQUIRED for item 4's correction
+// test below, because a Box-18 window sharing dates with the primary
+// period used to merge onto it and permanently lock periodScope to
+// "window" (excluded from setServiceEntryDate's correction path). That
+// demotion no longer happens - a coinciding window now stays its own
+// separate row (see _scopeCompatible/_isOwnSiblingWindow) - but this
+// simpler no-Box-18 fixture is kept as-is since item 4 doesn't need a
+// window at all to exercise the correction/re-import behavior it tests.
 const NGB22_NO_BOX18 = `
 1. NAME (Last, First, Middle): DOE, JOHN ROBERT
 2. DEPARTMENT, COMPONENT AND BRANCH: ARMY
@@ -765,5 +802,161 @@ describe("D-C: dd214Data.entryDateDerived merges in lockstep with entryDate, not
     const { dd214Data } = getServiceHistory();
     expect(dd214Data.entryDate).toBe("1997-06-01");
     expect(dd214Data.entryDateDerived).toBe(false);
+  });
+});
+
+// Box-18 window demotion (final15 QA review): REALISTIC_NGB22's Box-18 AD
+// window (20040622-20050827) shares its dates EXACTLY with its own 12a/12b
+// primary period (06/22/2004-08/27/2005) - the fixture this whole file's
+// first describe block already exercises for rank attachment. N9c's "once
+// a window, stays a window" rule used to let that coincidence merge the
+// primary into its own sibling window's row, demoting a real enlistment to
+// a training sub-period and locking it out of setServiceEntryDate's
+// periodId-based correction (nonWindowPeriods excludes "window"-scoped
+// rows). A primary period and a Box-18 window must never be the same row,
+// however closely their dates coincide - see veteranProfile.js's
+// _scopeCompatible/_isOwnSiblingWindow.
+function findBox18PrimaryAndWindow() {
+  const periods = getServicePeriods();
+  const primary = periods.find(
+    (p) =>
+      p.serviceStartDate === "2004-06-22" &&
+      p.serviceEndDate === "2005-08-27" &&
+      p.periodScope !== "window",
+  );
+  const window = periods.find(
+    (p) =>
+      p.serviceStartDate === "2004-06-22" &&
+      p.serviceEndDate === "2005-08-27" &&
+      p.periodScope === "window",
+  );
+  return { primary, window };
+}
+
+describe("Box-18 window demotion: a coinciding window never demotes the primary enlistment", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("keeps the primary as its own row (not periodScope 'window'), separate from the coinciding Box-18 window, in the app's real import order", async () => {
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    const { primary, window } = findBox18PrimaryAndWindow();
+    expect(primary).toBeDefined();
+    expect(primary.periodScope).not.toBe("window");
+    expect(window).toBeDefined();
+    expect(window.periodScope).toBe("window");
+    // Exactly one primary + one window at this date - not a duplicate of
+    // either.
+    expect(
+      getServicePeriods().filter(
+        (p) =>
+          p.serviceStartDate === "2004-06-22" &&
+          p.serviceEndDate === "2005-08-27",
+      ),
+    ).toHaveLength(2);
+  });
+
+  it("lets the veteran correct the primary enlistment's start date via its periodId (proves it isn't locked out as a 'window')", async () => {
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    const { primary } = findBox18PrimaryAndWindow();
+    const result = setServiceEntryDate({
+      date: "2004-06-25",
+      via: "my_packet",
+      periodId: primary.id,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.periodId).toBe(primary.id);
+    const corrected = getServicePeriods().find((p) => p.id === primary.id);
+    expect(corrected.serviceStartDate).toBe("2004-06-25");
+    expect(corrected.serviceStartDateSource).toBe("veteran");
+    // The window is untouched by the primary's correction.
+    const window = getServicePeriods().find(
+      (p) => p.periodScope === "window" && p.serviceEndDate === "2005-08-27",
+    );
+    expect(window.serviceStartDate).toBe("2004-06-22");
+  });
+
+  it("keeps the primary and window as separate rows in the REVERSE import order too (window upserted first, primary second - matching production's real internal order - vs. primary upserted first, window second, simulating a different caller)", () => {
+    // Reverse of saveServiceRecordToProfile's own internal order
+    // (_saveNGB22AdditionalPeriods then _savePrimaryServicePeriod) - proves
+    // the fix is in the MATCHING logic itself, not an artifact of call
+    // sequence.
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2004-06-22",
+        serviceEndDate: "2005-08-27",
+        branch: "Army",
+        rank: "SGT",
+        formType: "NGB22",
+      },
+      { sourceDocument: "ngb22_reverse.pdf", confidence: 80 },
+    );
+    upsertServicePeriod(
+      {
+        serviceStartDate: "2004-06-22",
+        serviceEndDate: "2005-08-27",
+        component: "Active Duty",
+        formType: "NGB22",
+        notes: "Date range from NGB-22 Box 18 remarks.",
+        periodScope: "window",
+      },
+      { sourceDocument: "ngb22_reverse.pdf", confidence: 80 },
+    );
+
+    const periods = getServicePeriods().filter(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    expect(periods).toHaveLength(2);
+    expect(periods.some((p) => p.periodScope !== "window")).toBe(true);
+    expect(periods.some((p) => p.periodScope === "window")).toBe(true);
+  });
+});
+
+describe("Box-18 window demotion: correction survives a re-import", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("re-import after correction: re-processing the same NGB-22 preserves the veteran's correction and does not re-create or re-collide the primary with the window", async () => {
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    const { primary: primaryBefore } = findBox18PrimaryAndWindow();
+    const correction = setServiceEntryDate({
+      date: "2004-06-25",
+      via: "my_packet",
+      periodId: primaryBefore.id,
+    });
+    expect(correction.ok).toBe(true);
+
+    const totalBefore = getServicePeriods().length;
+
+    // Re-import the identical document (e.g. a re-upload).
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    expect(getServicePeriods()).toHaveLength(totalBefore);
+    const corrected = getServicePeriods().find(
+      (p) => p.id === primaryBefore.id,
+    );
+    expect(corrected).toBeDefined();
+    expect(corrected.serviceStartDate).toBe("2004-06-25");
+    expect(corrected.serviceStartDateSource).toBe("veteran");
+    expect(corrected.periodScope).not.toBe("window");
+
+    // The window is still its own separate, untouched row.
+    const window = getServicePeriods().find(
+      (p) =>
+        p.periodScope === "window" &&
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27",
+    );
+    expect(window).toBeDefined();
   });
 });
