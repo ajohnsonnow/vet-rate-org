@@ -175,7 +175,9 @@ describe("getVeteranAIContext: no document PII leaks at any real-caller budget",
 
   it("still surfaces the safe, whitelisted claim facts", async () => {
     const ctx = await getVeteranAIContext({ maxPacketTokens: 1000 });
-    expect(ctx).toContain("combinedRating");
+    // D15-4: rendered as a readable "Label: value" line, not the raw JSON
+    // key - see myPacketManager.js's _renderReadableValue.
+    expect(ctx).toContain("Combined Rating: 10");
     expect(ctx).toContain("Tinnitus");
   });
 });
