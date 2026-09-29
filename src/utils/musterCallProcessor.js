@@ -6281,12 +6281,16 @@ export const analyzeEvidenceGaps = (processedResults) => {
   return result;
 };
 
-// Summarize extracted data to avoid token overflow
+// Summarize extracted data to avoid token overflow.
+// D15-5 / ADR-008: `data.name`/`data.serviceNumber` are the veteran's own
+// direct identifiers - never printed into an AI prompt, the same as every
+// other AI-context builder in this codebase (myPacketManager.js,
+// veteranKnowledgeBase.js, ...). This summary feeds buildMusterCallPrompt
+// below; it never needed the name to make a service-connection
+// recommendation.
 const summarizeExtractedData = (data) => {
   if (!data) return "No data extracted";
   const summary = [];
-  if (data.name) summary.push(`Name: ${data.name}`);
-  if (data.serviceNumber) summary.push(`Service #: ${data.serviceNumber}`);
   if (data.branch) summary.push(`Branch: ${data.branch}`);
   if (data.entryDate) summary.push(`Entry: ${data.entryDate}`);
   if (data.dischargeDate) summary.push(`Discharge: ${data.dischargeDate}`);
@@ -6319,18 +6323,41 @@ const groupProcessedDocuments = (processedResults) => ({
   ),
 });
 
+// D15-5 / ADR-008: a real VA-exported filename routinely carries the
+// veteran's own surname/first name and the last four of their VA file
+// number (the same convention myPacketManager.js's _neutralDocLabel exists
+// to neutralize for My Packet's AI contexts) - a neutral, structural label
+// (category + index) replaces the raw filename here too. The real filename
+// is unaffected anywhere in the veteran-facing UI (Formation queue/upload
+// list); only this AI-context prompt goes through this.
+const neutralDocLabel = (categoryLabel, index) =>
+  `${categoryLabel} #${index + 1}`;
+
 // A-H03: filenames and extracted fields are user-uploaded (untrusted). Wrap the
 // whole document-derived block in a spotlighted section so an injected
 // instruction inside a filename/summary is treated as data, not a command.
-const buildMusterCallPrompt = (serviceRecords, ratingDocs, medicalDocs) => {
+export const buildMusterCallPrompt = (
+  serviceRecords,
+  ratingDocs,
+  medicalDocs,
+) => {
   const serviceRecordLines = serviceRecords
-    .map((r) => `- ${r.filename}: ${summarizeExtractedData(r.extractedData)}`)
+    .map(
+      (r, i) =>
+        `- ${neutralDocLabel("Service Record", i)}: ${summarizeExtractedData(r.extractedData)}`,
+    )
     .join("\n");
   const ratingDocLines = ratingDocs
-    .map((r) => `- ${r.filename}: ${summarizeExtractedData(r.extractedData)}`)
+    .map(
+      (r, i) =>
+        `- ${neutralDocLabel("Rating Decision", i)}: ${summarizeExtractedData(r.extractedData)}`,
+    )
     .join("\n");
   const medicalDocLines = medicalDocs
-    .map((r) => `- ${r.filename}: ${r.classification.type}`)
+    .map(
+      (r, i) =>
+        `- ${neutralDocLabel("Medical Record", i)}: ${r.classification.type}`,
+    )
     .join("\n");
 
   const documentEvidence = untrustedSection(
