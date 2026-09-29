@@ -2052,7 +2052,7 @@ function ServicePeriodFieldsA({ period, update, t }) {
   );
 }
 
-function ServicePeriodFieldsB({ period, update, t }) {
+export function ServicePeriodFieldsB({ period, update, t }) {
   return (
     <>
       <div>
@@ -2088,6 +2088,12 @@ function ServicePeriodFieldsB({ period, update, t }) {
           <option value="DD214">DD214 (Active Duty)</option>
           <option value="NGB22">NGB 22 (National Guard)</option>
           <option value="DD256">DD256 (Reserve)</option>
+          {/* D14-1 follow-up: musterCallProcessor.js's code-sheet ingest
+              stores formType: "Code Sheet" - without this option, a
+              controlled <select> whose value matches none of its <option>s
+              falls back to selecting the first one, presenting "DD214
+              (Active Duty)" as fact for a period a code sheet supplied. */}
+          <option value="Code Sheet">VA Rating Code Sheet</option>
           <option value="Other">Other</option>
         </select>
       </div>
@@ -2790,7 +2796,28 @@ function DD214PeriodDetailCardTitle({ period }) {
   );
 }
 
-function DD214PeriodDetailCard({ period, t }) {
+// D14-1 follow-up (final14 QA, 2026-09-28): the Source line used to pair
+// `period.sourceDocument` (raw, follows whichever document most recently
+// upserted this period) with `periodDisplayFormType` (sticky - "NGB22" for
+// as long as ANY NGB-22 ever contributed, per veteranKnowledgeBase.js's
+// _enlistmentClassificationFormType), so a code sheet re-import could read
+// "Source: cfile_codesheet.pdf (NGB22)" - the shown filename and its
+// printed type disagreeing. The Source line above now pairs sourceDocument
+// with its OWN period.formType (both written together by the same
+// upsert); this note keeps the sticky NGB-22 signal, but labeled honestly
+// as a fact about the ENLISTMENT, not a description of the filename shown.
+function _backedByNgb22Note(period) {
+  const sticky = periodDisplayFormType(period);
+  if (!sticky || sticky === period.formType) return null;
+  return (
+    <span className="block text-xs text-gray-500 dark:text-gray-400">
+      An NGB-22 on file establishes this as a Guard/Reserve enlistment,
+      regardless of which document above most recently supplied its dates.
+    </span>
+  );
+}
+
+export function DD214PeriodDetailCard({ period, t }) {
   return (
     <div className="border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between mb-2">
@@ -2850,9 +2877,8 @@ function DD214PeriodDetailCard({ period, t }) {
         <p>
           <span className="text-gray-500 dark:text-gray-400">Source: </span>
           {period.sourceDocument || "N/A"}
-          {periodDisplayFormType(period)
-            ? ` (${periodDisplayFormType(period)})`
-            : ""}
+          {period.formType ? ` (${period.formType})` : ""}
+          {_backedByNgb22Note(period)}
         </p>
       </div>
       <ServicePeriodFieldConflicts conflicts={period.fieldConflicts} />
