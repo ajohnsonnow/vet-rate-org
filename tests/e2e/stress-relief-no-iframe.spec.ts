@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test, expect, Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
-import { TOOLS } from "./tool-launch-matrix.spec";
+import { TOOLS } from "./tool-launch-matrix.data";
 
 /**
  * StressReliefDivision's DOOM easter egg used to embed
@@ -41,8 +41,24 @@ async function openDoomEasterEgg(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 5000 });
 }
 
-async function countIframes(page: Page): Promise<number> {
-  return page.locator("iframe").count();
+async function crossOriginSurfaceCounts(
+  page: Page,
+): Promise<{ frameElements: number; childFrames: number }> {
+  const frameElements = await page
+    .locator("iframe, frame, embed, object")
+    .count();
+  // page.frames() always includes the main frame itself.
+  const childFrames = Math.max(page.frames().length - 1, 0);
+  return { frameElements, childFrames };
+}
+
+async function expectNoCrossOriginSurface(
+  page: Page,
+  context: string,
+): Promise<void> {
+  const { frameElements, childFrames } = await crossOriginSurfaceCounts(page);
+  expect(frameElements, `frame/iframe/embed/object ${context}`).toBe(0);
+  expect(childFrames, `child frames ${context}`).toBe(0);
 }
 
 test.describe("Stress Relief Division easter egg: no cross-origin iframe", () => {
@@ -62,7 +78,7 @@ test.describe("Stress Relief Division easter egg: no cross-origin iframe", () =>
     // A clear label that it leaves the app, not just "opens in a new tab".
     await expect(page.getByText(/leaves Vet-Rate\.org/i)).toBeVisible();
 
-    expect(await countIframes(page)).toBe(0);
+    await expectNoCrossOriginSurface(page, "after opening the DOOM easter egg");
   });
 
   // The iframe this replaces was cross-origin: with it focused, a keydown
@@ -85,33 +101,41 @@ test.describe("Stress Relief Division easter egg: no cross-origin iframe", () =>
       .waitFor({ state: "hidden", timeout: 5000 });
   });
 
-  // No dialog anywhere in the app (this easter egg included) ever mounts a
-  // real cross-origin frame - proven by opening every one of them, not just
-  // asserted from reading the source.
-  test("no cross-origin iframe exists in the DOM after opening every tool", async ({
+  // Regression guard, not proof of this fix: the DOOM easter egg's dialog
+  // shows its new-tab link immediately on open (no extra click), so this
+  // loop cannot reproduce the old base behaviour (an iframe that only
+  // mounted after clicking "INITIATE RELIEF PROTOCOL"). Tests 1 and 2 above
+  // are the ones that actually discriminate base from fixed for the DOOM
+  // egg. What this test does prove, every run: none of the app's other 48
+  // tool dialogs has silently grown a cross-origin frame since. A tool that
+  // fails to open its dialog is reported (expect.soft) rather than swallowed
+  // silently, so a broken launcher shows up here even though it isn't this
+  // test's primary assertion.
+  test("regression guard: no dialog anywhere gains a cross-origin frame", async ({
     page,
   }) => {
     test.setTimeout(180_000);
     await seedReturningUser(page);
+    const dialog = page.locator('[role="dialog"], [aria-modal="true"]').first();
 
     for (const tool of TOOLS) {
       await page.evaluate(
         (eventName) => window.dispatchEvent(new CustomEvent(eventName)),
         tool.event,
       );
-      await page
-        .locator('[role="dialog"], [aria-modal="true"]')
-        .first()
+      const opened = await dialog
         .waitFor({ state: "visible", timeout: 10000 })
-        .catch(() => {});
-      expect(await countIframes(page), `after opening "${tool.name}"`).toBe(0);
+        .then(() => true)
+        .catch(() => false);
+      expect.soft(opened, `dialog opened for "${tool.name}"`).toBe(true);
+
+      await expectNoCrossOriginSurface(page, `after opening "${tool.name}"`);
+
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(200);
+      await dialog.waitFor({ state: "hidden", timeout: 2000 }).catch(() => {});
     }
 
     await openDoomEasterEgg(page);
-    expect(await countIframes(page), "after opening the DOOM easter egg").toBe(
-      0,
-    );
+    await expectNoCrossOriginSurface(page, "after opening the DOOM easter egg");
   });
 });
