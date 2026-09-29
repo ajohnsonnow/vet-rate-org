@@ -72,7 +72,7 @@ import DD214FormBuilder from "./DD214FormBuilder";
  * Condensed System Prompt for Local Models (4K context)
  * Focus on essential JSON extraction - comprehensive DD214 coverage
  */
-const DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL = `You are a DD214 military records analyst. Extract ALL available data as JSON.
+export const DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL = `You are a DD214 military records analyst. Extract ALL available data as JSON.
 
 COMPLETE DD214 FIELD LOCATIONS:
 Block 1: Name (Last, First, Middle)
@@ -125,21 +125,18 @@ CRITICAL EXTRACTION RULES:
 3. Service time: YYYYMMDD means Years/Months/Days (e.g., "00000429" = 0y 4m 29d)
 4. If field not found or not applicable, use null
 
+D15-1d / ADR-008: name, SSN/service number, DOB, home-of-record, and
+mailing/home address are NOT requested below - _applyRegexSafetyNet fills
+them from extractDD214Fields' local regex parser (dd214FieldExtractor.js)
+instead, so the model is never asked to extract a direct identifier.
+
 OUTPUT JSON:
 {
   "documentCount": number,
   "documentTypes": ["DD214","NGB22","DD256"],
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214",
-  "fullName": "Last, First Middle",
-  "lastName": "string",
-  "firstName": "string", 
-  "middleName": "string",
-  "ssnLast4": "string (last 4 only)",
-  "serviceNumber": "string (if applicable)",
-  "dateOfBirth": "YYYY-MM-DD",
   "placeOfBirth": "City, State, Country",
-  "homeOfRecord": "City, County, State",
   "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
   "componentFull": "Regular Army|Army National Guard|Navy Reserve|etc",
   "branch": "Army|Navy|Air Force|Marines|Coast Guard|Space Force",
@@ -172,7 +169,6 @@ OUTPUT JSON:
   "narrativeReason": "narrative reason text",
   "giBlStatus": "eligible|transferred|etc",
   "memberRequests": "requests made by member",
-  "homeAddress": "address at separation",
   "awards": [{"name":"name","abbreviation":"abbr","devices":[],"deviceCount":0,"isCombat":boolean}],
   "combatService": {"hasVerifiedCombat":boolean,"indicators":[],"deployments":[]},
   "specialQualifications": ["Airborne","Ranger","SF","etc"],
@@ -186,7 +182,7 @@ CRITICAL: Return ONLY valid JSON. No comments, markdown, or explanations.`;
  * Full System Prompt for Cloud AI (larger context)
  * Comprehensive multi-document handling with detailed instructions
  */
-const DD214_ANALYSIS_SYSTEM_PROMPT = `You are a military records analyst specializing in discharge document interpretation.
+export const DD214_ANALYSIS_SYSTEM_PROMPT = `You are a military records analyst specializing in discharge document interpretation.
 
 SUPPORTED DISCHARGE DOCUMENTS:
 - DD Form 214: Active Duty Separation (Certificate of Release or Discharge from Active Duty)
@@ -251,17 +247,13 @@ Return a JSON object with this EXACT structure (ALL DD214 BLOCKS):
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214|NGB22|DD256|DD257",
   
-  // PERSONAL IDENTIFICATION (Blocks 1-7)
-  "fullName": "Last, First Middle",
-  "lastName": "string",
-  "firstName": "string",
-  "middleName": "string",
-  "ssnLast4": "last 4 digits only",
-  "serviceNumber": "service number if applicable",
-  "dateOfBirth": "YYYY-MM-DD (Block 5)",
+  // PERSONAL IDENTIFICATION (Blocks 1-7) - D15-1d / ADR-008: name, SSN/
+  // service number, DOB, and home-of-record are NOT requested here -
+  // _applyRegexSafetyNet fills them from extractDD214Fields' local regex
+  // parser (dd214FieldExtractor.js) instead, so the model is never asked
+  // to extract a direct identifier.
   "placeOfBirth": "City, State, Country (Block 6)",
-  "homeOfRecord": "City, County, State (Block 7)",
-  
+
   // COMPONENT & RANK (Blocks 2, 4a-4c, 17)
   "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
   "componentFull": "Regular Army|Army National Guard|Navy Reserve|etc",
@@ -307,10 +299,10 @@ Return a JSON object with this EXACT structure (ALL DD214 BLOCKS):
   // EDUCATION & TRAINING (Blocks 14, 15, 18)
   "militaryEducation": ["Course names from Block 14 or Block 18 overflow"],
   "memberRequests": "Member requests and options selected (Block 15)",
-  
-  // CONTACT (Block 30)
-  "homeAddress": "Home address at time of separation (Block 30)",
-  
+
+  // CONTACT (Block 30) - D15-1d / ADR-008: home address is NOT requested
+  // here either - see the PERSONAL IDENTIFICATION note above.
+
   // AWARDS & DECORATIONS (Blocks 13, 18)
   "awards": [
     {
@@ -693,11 +685,23 @@ function _parseDd214Json(content, t) {
   return data;
 }
 
-function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
+export function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
   try {
     const regexResult = extractDD214Fields(combinedRawText);
     if (regexResult && Object.keys(regexResult).length > 0) {
       const merged = mergeAIAndRegexResults(data, regexResult);
+      // D15-1d: the AI schema no longer requests name/SSN/DOB/home-of-
+      // record at all, so mergeAIAndRegexResults' generic "fill missing
+      // key from regex" pass already backfills fullName/lastName/
+      // firstName/middleName/ssnLast4/dateOfBirth/homeOfRecord under
+      // those SAME key names. `homeAddress` is the one exception - the
+      // regex extractor's own field for this is named `mailingAddress`
+      // (Block 19 on the layouts it targets), not `homeAddress` (Block 30
+      // in the AI schema's numbering) - bridge the name mismatch here so
+      // downstream code (which reads `.homeAddress`) still gets it.
+      if (!merged.homeAddress && regexResult.fields?.mailingAddress) {
+        merged.homeAddress = regexResult.fields.mailingAddress;
+      }
       // eslint-disable-next-line no-console
       console.log(
         "🔀 Merged AI + Regex results:",
