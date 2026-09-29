@@ -73,11 +73,15 @@ const PREPROCESS_HEIGHT = 6336;
 // between the two with margin on both sides.
 const LONGTASK_TRIGGER_MS = 500;
 
-// scheduler.yield()/MessageChannel yields measured at ~0.002-0.03ms each
-// (vs. setTimeout(0)'s ~5.6ms nested-timer-clamped cost) - a keypress landing
-// mid-chain should reach the redirect within well under a second even on a
-// loaded CI runner. Contrast: the same measurement against base 39d73d40
-// (fully unchunked) was 38.9-39.1s.
+// MessageChannel yields measured at ~0.007-0.01ms each in both browsers this
+// app targets (vs. setTimeout(0)'s ~5.6ms nested-timer-clamped cost) - a
+// keypress landing mid-chain should reach the redirect within well under a
+// second even on a loaded CI runner. Contrast: the same measurement against
+// base 39d73d40 (fully unchunked) was 38.9-39.1s. advancedOCR.js's own
+// yieldToEventLoop doc comment covers why this is MessageChannel only, not
+// scheduler.yield() - the latter starved real input for an entire busy-loop
+// in Firefox specifically, verified live, despite being just as cheap
+// per-yield as MessageChannel there.
 const PANIC_KEY_LATENCY_TRIGGER_MS = 1000;
 
 async function seedReturningUser(page: Page): Promise<void> {
@@ -196,13 +200,13 @@ async function measureKeydownToNavigation(page: Page): Promise<number> {
 // verified live that this distinction is load-bearing, not stylistic.
 // locator.click()'s own actionability pre-check waits for the element's
 // bounding box to be stable across two consecutive animation frames before
-// it dispatches anything - and a scheduler.yield()-based chunk loop that
-// keeps rescheduling itself with ~0ms gaps starves rendering (no rAF/paint
-// opportunity) for as long as it runs, so that pre-check (and a plain
-// el.dispatchEvent("click")) both measured ~55-60s here, the same duration as
-// the whole preprocessing pass - a false positive for "blocked", not a real
-// one. A genuine trusted click is prioritized by Chromium's scheduler the
-// same way a keydown is (measured ~100-200ms here) - this is what a real
+// it dispatches anything - and a chunk loop that keeps rescheduling itself
+// with ~0ms gaps starves rendering (no rAF/paint opportunity) for as long as
+// it runs, so that pre-check (and a plain el.dispatchEvent("click")) both
+// measured ~55-60s here, the same duration as the whole preprocessing pass -
+// a false positive for "blocked", not a real one. A genuine trusted click is
+// prioritized by Chromium's scheduler the same way a keydown is (measured
+// ~100-200ms here) - this is what a real
 // veteran's mouse click actually goes through, so it's what this test needs
 // to measure.
 async function measureClickToNavigation(

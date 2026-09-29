@@ -687,18 +687,24 @@ const ROWS_PER_CHUNK = 6;
 // (every browser's documented nested-timer throttling, and this chunking
 // loop's own await chain reaches that depth immediately) - measured live at
 // ~5.6ms/yield here, turning a chunking pass meant to keep the main thread
-// responsive into a 2-3x wall-clock slowdown instead. scheduler.yield() (or,
-// where unavailable, a MessageChannel round-trip) returns control to the
-// event loop the same way but isn't a timer at all, so neither clamp
-// applies - measured at ~0.002-0.008ms/yield in the same browsers this app
-// targets (Chromium, Firefox; see playwright.config.ts's projects).
+// responsive into a 2-3x wall-clock slowdown instead. A MessageChannel round
+// trip returns control to the event loop the same way but isn't a timer at
+// all, so the clamp doesn't apply - measured at ~0.007-0.01ms/yield in both
+// browsers this app targets (Chromium, Firefox; see playwright.config.ts's
+// projects).
+//
+// scheduler.yield() looks like the more "correct" choice (it exists
+// specifically for this) and is just as cheap per-yield in Chromium, but
+// verified live in Firefox that it does NOT do what MessageChannel/
+// setTimeout(0) both do there: a real keydown dispatched mid-loop was
+// starved for the loop's ENTIRE remaining duration (an 8s busy-loop kept a
+// keydown from firing until all 8s had elapsed, vs. ~0.5s for
+// MessageChannel or setTimeout(0) in the same loop, same browser) - i.e.
+// exactly the failure this chunking exists to prevent, and worse than doing
+// nothing since it looks like a fix. Do not reintroduce it without
+// re-verifying that specific behavior in a real Firefox, not just checking
+// that the API exists.
 function yieldToEventLoop() {
-  if (
-    typeof scheduler !== "undefined" &&
-    typeof scheduler.yield === "function"
-  ) {
-    return scheduler.yield();
-  }
   return new Promise((resolve) => {
     const channel = new MessageChannel();
     channel.port2.onmessage = () => resolve();
