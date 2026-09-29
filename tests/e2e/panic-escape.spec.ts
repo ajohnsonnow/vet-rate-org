@@ -842,3 +842,56 @@ test.describe("Triple-Escape vs. the mobile nav drawer (decision C)", () => {
     expect(await stillOnApp(page)).toBe(true);
   });
 });
+
+/**
+ * Owner decision C, Quick search specifically: GlobalCommandSearch.jsx marks
+ * its palette role="dialog" aria-modal="true" aria-label="Quick search" for
+ * real accessibility reasons (focus trap, background inertness) but it's a
+ * search/navigation surface, not a tool dialog - same treatment as the
+ * mobile nav drawer above. safetyRedirect.js's DIALOG_SELECTOR excludes its
+ * own data-vetrate-nav-menu marker from the "closed a tool dialog" exemption
+ * so this holds.
+ */
+test.describe("Triple-Escape vs. Quick search (decision C)", () => {
+  async function openQuickSearch(page: Page): Promise<void> {
+    await page.evaluate(() =>
+      window.dispatchEvent(new CustomEvent("openGlobalCommandSearch")),
+    );
+    await page
+      .getByRole("dialog", { name: "Quick search" })
+      .waitFor({ state: "visible", timeout: 5000 });
+  }
+
+  test("Quick search open, 3 Escapes trigger the panic redirect", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await openQuickSearch(page);
+
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
+
+    await page.waitForURL(/weather\.com/, { timeout: 5000 });
+    expect(page.url()).toMatch(/weather\.com/);
+  });
+
+  // Proves the test above isn't vacuously passing regardless of Quick
+  // search: a single Escape must close the palette (real dismissal, not
+  // swallowed) and must not by itself trigger the redirect.
+  test("Quick search open, 1 Escape closes it without redirecting", async ({
+    page,
+  }) => {
+    await seedReturningUser(page);
+    await stubWeatherRedirect(page);
+
+    await openQuickSearch(page);
+
+    await page.keyboard.press("Escape");
+    await page
+      .getByRole("dialog", { name: "Quick search" })
+      .waitFor({ state: "hidden", timeout: 5000 });
+
+    expect(await stillOnApp(page)).toBe(true);
+  });
+});
