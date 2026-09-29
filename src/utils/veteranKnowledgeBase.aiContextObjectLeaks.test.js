@@ -133,6 +133,50 @@ describe("D12-5: generateLLMContext never leaks a raw object or NaN/undefined", 
     expectNoLeaks(context);
   });
 
+  it("omits the trailing '()' when a MOS code has no title", () => {
+    const vkb = initializeVKB();
+    mergeDD214IntoVKB(
+      vkb,
+      { mos: "11B", mosTitle: "" },
+      { fileName: "dd214.pdf" },
+    );
+
+    const context = generateLLMContext(vkb);
+    expect(context).toContain("MOS: 11B\n");
+    expect(context).not.toContain("11B (");
+    expectNoLeaks(context);
+  });
+
+  it("omits the dangling 'at' when an environmental exposure has no location", () => {
+    const vkb = initializeVKB();
+    vkb.exposures.environmental.push({
+      type: "Burn pits",
+      location: "",
+      dates: "",
+      documentation: "",
+    });
+
+    const context = generateLLMContext(vkb);
+    expect(context).toContain("Burn pits (dates unknown)");
+    expect(context).not.toContain(" at  (");
+    expectNoLeaks(context);
+  });
+
+  it("omits the dangling 'Need' when a missing-evidence entry has no evidenceType", () => {
+    const vkb = initializeVKB();
+    vkb.aiInsights.missingEvidence.push({
+      condition: "Tinnitus",
+      evidenceType: "",
+      howToObtain: "Get a nexus letter",
+      priority: "medium",
+    });
+
+    const context = generateLLMContext(vkb);
+    expect(context).toContain("• Tinnitus\n");
+    expect(context).not.toContain("Need \n");
+    expect(context).not.toMatch(/[^\S\n]\n/);
+  });
+
   it("still renders a device of an unrecognized type by its raw type, not as an object", () => {
     const vkb = initializeVKB();
     mergeDD214IntoVKB(

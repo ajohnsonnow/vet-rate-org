@@ -2617,7 +2617,9 @@ function buildServiceHistoryCoreContext(vkb) {
     context += "\n";
   }
   if (vkb.serviceHistory.mos.length > 0) {
-    const mosList = vkb.serviceHistory.mos.map((m) => `${m.code} (${m.title})`);
+    const mosList = vkb.serviceHistory.mos.map((m) =>
+      m.title ? `${m.code} (${m.title})` : m.code,
+    );
     context += `MOS: ${mosList.join(", ")}\n`;
   }
   if (vkb.serviceHistory.characterOfService) {
@@ -2845,7 +2847,8 @@ function buildExposuresContext(vkb) {
   if (hasExposures) {
     context += "\n--- EXPOSURES ---\n";
     vkb.exposures.environmental.forEach((e) => {
-      context += `• Environmental: ${e.type} at ${e.location} (${e.dates || "dates unknown"})\n`;
+      const locationPart = e.location ? ` at ${e.location}` : "";
+      context += `• Environmental: ${e.type}${locationPart} (${e.dates || "dates unknown"})\n`;
     });
     vkb.exposures.occupational.forEach((e) => {
       context += `• Occupational: ${e.hazard} - MOS ${e.mos}\n`;
@@ -2991,7 +2994,8 @@ function buildAIInsightsContext(vkb) {
   if (vkb.aiInsights.missingEvidence.length > 0) {
     context += "\n--- MISSING EVIDENCE ---\n";
     vkb.aiInsights.missingEvidence.slice(0, 5).forEach((missing) => {
-      context += `• ${missing.condition}: Need ${missing.evidenceType}\n`;
+      const need = missing.evidenceType ? `: Need ${missing.evidenceType}` : "";
+      context += `• ${missing.condition}${need}\n`;
     });
   }
   return context;
