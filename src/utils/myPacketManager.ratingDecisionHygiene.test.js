@@ -135,4 +135,34 @@ describe("D15-4: rating-decision fields render as readable lines, never truncate
       expect(out).toContain("as a whole.");
     }
   });
+
+  it("drops the literal string \"null\" the same as a real null, instead of rendering 'Status: null'", () => {
+    const doc = ratingDecisionDoc();
+    doc.extractedData.status = "null";
+    const out = _formatOtherDocsSection({ rating_decision: [doc] });
+    expect(out).not.toMatch(/status:\s*null/i);
+  });
+
+  it("a multi-issue decision (25+ items, one line each) does not drop every LATER allow-listed field once the decisions array alone exceeds the whole-doc budget", () => {
+    const doc = ratingDecisionDoc();
+    doc.extractedData.decisions = Array.from({ length: 25 }, (_, i) => ({
+      issue: `Condition ${i + 1}`,
+      outcome: "granted",
+      rating: 10,
+      effectiveDate: "2024-01-15",
+    }));
+    doc.extractedData.responseDeadlineDays = 365;
+
+    const out = _formatOtherDocsSection({ rating_decision: [doc] });
+
+    // The old `break` dropped every field after the first over-budget
+    // line, including these two - which sit AFTER `decisions` in
+    // PACKET_CONTEXT_SAFE_FIELDS - even though each fits easily on its
+    // own.
+    expect(out).toContain("Response Deadline Days: 365");
+    expect(out).toContain("Rationale:");
+    // At least SOME of the 25 decisions make it in individually (one line
+    // per item), rather than the whole array being all-or-nothing.
+    expect(out).toContain("Issue: Condition 1");
+  });
 });

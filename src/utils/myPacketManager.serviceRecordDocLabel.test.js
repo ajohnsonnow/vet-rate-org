@@ -82,6 +82,42 @@ describe("D15-3: service-record document labels use the document's own extracted
     const out = _formatServiceRecordDoc(doc, "DD-214 (Service Record)", 0);
     expect(out).toContain("NGB-22 (Guard Service Record) 2026-02-01 (#1)");
   });
+});
+
+describe("D15-3: falls back to the document's own recorded formType (parseServiceRecord's real return shape - never masterRecordType/documentTypes, those are DD214Analyzer's separate AI-schema field names)", () => {
+  it("labels a REAL Muster Call NGB-22 import correctly", () => {
+    // documentClassifier routinely misclassifies a genuine NGB-22 scan as
+    // "DD214" (musterCallProcessor.js's own FIX-15 note), so
+    // archiveDocumentInPacket's group label - passed in here as
+    // `fallbackLabel` - is "DD-214 (Service Record)" even though this is a
+    // real NGB-22. Only `formType: "NGB22"` is present on extractedData,
+    // matching parseServiceRecord's actual return shape.
+    const doc = {
+      uploadDate: "2026-02-01T00:00:00.000Z",
+      fileName: "ngb22-realscan.pdf",
+      extractedData: {
+        formType: "NGB22",
+        branch: "Army",
+        component: "ARNG",
+      },
+    };
+    const out = _formatServiceRecordDoc(doc, "DD-214 (Service Record)", 0);
+    expect(out).toContain("NGB-22 (Guard Service Record) 2026-02-01 (#1)");
+    expect(out).not.toContain("DD-214 (Service Record) 2026-02-01");
+  });
+
+  it.each(["NGB-22", "NGB 22", "ngb22"])(
+    "normalizes a model/OCR-output form-type spelling variant (%s) the same as the plain form",
+    (variant) => {
+      const doc = {
+        uploadDate: "2026-02-01T00:00:00.000Z",
+        fileName: "ngb22-variant.pdf",
+        extractedData: { formType: variant },
+      };
+      const out = _formatServiceRecordDoc(doc, "DD-214 (Service Record)", 0);
+      expect(out).toContain("NGB-22 (Guard Service Record)");
+    },
+  );
 
   it.each([
     [

@@ -951,10 +951,31 @@ const EXTRACTED_TYPE_TO_PACKET_TYPE = {
   DD215: PACKET_DOC_TYPES.DD215,
 };
 
+// D15-3: strip anything but letters/digits and uppercase before the lookup,
+// so "NGB-22" / "NGB 22" / "ngb22" (all real model/OCR output shapes) match
+// EXTRACTED_TYPE_TO_PACKET_TYPE's plain "NGB22" key the same as an exact one.
+function _normalizeExtractedType(value) {
+  return typeof value === "string"
+    ? value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
+    : value;
+}
+
+// D15-3: documentClassifier routinely misclassifies a genuine NGB-22 scan
+// as "DD214" (FIX-15's own note in musterCallProcessor.js), which is what
+// archiveDocumentInPacket's group label (`fallbackLabel` here) is keyed on
+// - so a real NGB-22 could read "DD-214 (Service Record)" in the packet.
+// parseServiceRecord's own output only ever carries `formType` (NEVER
+// `masterRecordType`/`documentTypes` - those are DD214Analyzer's AI-schema
+// field names, a different pipeline entirely), so a Muster Call-imported
+// document's own recorded formType is checked too, and wins over the
+// group's classification-derived fallback whenever it names a form this
+// app has its own label for.
 function _resolveDocTypeLabel(doc, fallbackLabel) {
-  const extractedType =
+  const extractedType = _normalizeExtractedType(
     doc.extractedData?.masterRecordType ||
-    doc.extractedData?.documentTypes?.[0];
+      doc.extractedData?.documentTypes?.[0] ||
+      doc.extractedData?.formType,
+  );
   const packetType =
     extractedType && EXTRACTED_TYPE_TO_PACKET_TYPE[extractedType];
   return packetType ? PACKET_DOC_LABELS[packetType] : fallbackLabel;
@@ -1171,9 +1192,17 @@ function _humanizeFieldLabel(field) {
     .join(" ");
 }
 
+// D15-4: an LLM-parsed field can come back holding the literal STRING
+// "null" (a common model output for "no value") rather than a real JS
+// null - that string is truthy and non-empty by every other check here, so
+// it survived to render as "Status: null" instead of being dropped like an
+// actual null would be.
 function _isEmptyValue(value) {
   if (value === null || value === undefined) return true;
-  if (typeof value === "string") return value.trim() === "";
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed === "" || trimmed.toLowerCase() === "null";
+  }
   if (Array.isArray(value)) return value.length === 0;
   if (typeof value === "object") return Object.keys(value).length === 0;
   return false;
@@ -1235,16 +1264,47 @@ function _safeExtractedDataSummary(extractedData) {
 // would exceed the budget - unlike the old fixed substring(0, 500), no
 // value is ever sliced partway through.
 const MAX_OTHER_DOC_SUMMARY_CHARS = 2000;
+// D15-4: a single field (a multi-issue rating decision's `decisions`
+// array, one line per issue) can be large enough to consume the ENTIRE
+// doc budget on its own, leaving nothing for every field that comes after
+// it (evidenceNeeded, responseDeadlineDays, rationale) even though each
+// would fit easily by itself. Capping any one field's own share guarantees
+// the remaining fields still get a chance at the rest of the budget.
+const MAX_SINGLE_FIELD_CHARS = Math.floor(MAX_OTHER_DOC_SUMMARY_CHARS * 0.6);
+
+// D15-4 regression: a multi-issue rating decision's `decisions` array (25+
+// items for a real decision letter) rendered as ONE line via
+// `_renderReadableValue`'s array branch (`.join("; ")`) - a single line
+// that alone exceeds the whole-doc budget. The original `break` on the
+// first over-budget line then dropped every field that came AFTER it too
+// (evidenceNeeded, responseDeadlineDays, rationale), even ones that would
+// have fit on their own. Rendering an array field as one line PER ITEM
+// lets individual decisions be included up to the budget instead of an
+// all-or-nothing blob, and `continue` (not `break`) below means one
+// oversized line only costs itself, not every field after it.
+function _fieldLines(field, value) {
+  const label = _humanizeFieldLabel(field);
+  if (Array.isArray(value)) {
+    return value.map(
+      (item, i) => `    ${label} ${i + 1}: ${_renderReadableValue(item)}\n`,
+    );
+  }
+  return [`    ${label}: ${_renderReadableValue(value)}\n`];
+}
 
 function _formatOtherDoc(doc, label, index) {
   let out = `  ${_neutralDocLabel(doc, label, index)}\n`;
   const safe = _safeExtractedDataSummary(doc.extractedData || {});
   let summaryChars = 0;
   for (const [field, value] of Object.entries(safe)) {
-    const line = `    ${_humanizeFieldLabel(field)}: ${_renderReadableValue(value)}\n`;
-    if (summaryChars + line.length > MAX_OTHER_DOC_SUMMARY_CHARS) break;
-    out += line;
-    summaryChars += line.length;
+    let fieldChars = 0;
+    for (const line of _fieldLines(field, value)) {
+      if (summaryChars + line.length > MAX_OTHER_DOC_SUMMARY_CHARS) continue;
+      if (fieldChars + line.length > MAX_SINGLE_FIELD_CHARS) continue;
+      out += line;
+      summaryChars += line.length;
+      fieldChars += line.length;
+    }
   }
   return out;
 }
