@@ -37,6 +37,83 @@ function getSafeAreaInsets() {
   return insets;
 }
 
+function clipsOverflow(overflowValue) {
+  return (
+    overflowValue === "hidden" ||
+    overflowValue === "auto" ||
+    overflowValue === "scroll" ||
+    overflowValue === "clip"
+  );
+}
+
+// jsdom's getComputedStyle doesn't expand the `overflow` shorthand into
+// `overflow-x`/`overflow-y` (real browsers always populate both), so the
+// shorthand is checked as a fallback rather than assuming the longhands
+// are set.
+function axisOverflow(style, longhand) {
+  return style[longhand] || style.overflow;
+}
+
+/**
+ * D14-3 follow-up: the viewport isn't the only box that can clip a tooltip -
+ * ResponsiveModal's `.modal-content` (and any other ancestor with
+ * overflow:hidden/auto/scroll) clips it first whenever the dialog panel is
+ * narrower than the viewport (e.g. 640px). Walks up from the bubble looking
+ * for the nearest overflow-clipping ancestors and intersects all of their
+ * boxes, so the clamp below targets whichever box is actually smaller.
+ * Stops at `document.body` - this app has no clipping ancestor above it.
+ */
+function getClippingRect(el) {
+  let rect = null;
+  let node = el.parentElement;
+  while (node && node !== document.body) {
+    const style = getComputedStyle(node);
+    if (
+      clipsOverflow(axisOverflow(style, "overflowX")) ||
+      clipsOverflow(axisOverflow(style, "overflowY"))
+    ) {
+      const nodeRect = node.getBoundingClientRect();
+      rect = rect
+        ? {
+            left: Math.max(rect.left, nodeRect.left),
+            right: Math.min(rect.right, nodeRect.right),
+            top: Math.max(rect.top, nodeRect.top),
+            bottom: Math.min(rect.bottom, nodeRect.bottom),
+          }
+        : {
+            left: nodeRect.left,
+            right: nodeRect.right,
+            top: nodeRect.top,
+            bottom: nodeRect.bottom,
+          };
+    }
+    node = node.parentElement;
+  }
+  return rect;
+}
+
+function computeSafeRect(insets, pad, clip) {
+  return {
+    left: Math.max(insets.left + pad, clip ? clip.left + pad : -Infinity),
+    right: Math.min(
+      window.innerWidth - insets.right - pad,
+      clip ? clip.right - pad : Infinity,
+    ),
+    top: Math.max(insets.top + pad, clip ? clip.top + pad : -Infinity),
+    bottom: Math.min(
+      window.innerHeight - insets.bottom - pad,
+      clip ? clip.bottom - pad : Infinity,
+    ),
+  };
+}
+
+function clampAxisDelta(start, end, safeStart, safeEnd) {
+  let delta = 0;
+  if (end + delta > safeEnd) delta -= end + delta - safeEnd;
+  if (start + delta < safeStart) delta += safeStart - (start + delta);
+  return delta;
+}
+
 /**
  * Root-cause fix for D14-3: the tooltip bubble is centred/anchored off its
  * trigger via Tailwind's translate utilities, with no awareness of the
@@ -47,30 +124,36 @@ function getSafeAreaInsets() {
  * than fighting Tailwind's classes with a competing positioning scheme).
  * A zero-size rect (jsdom, or not yet laid out) is a no-op - nothing to
  * clamp against.
+ *
+ * The safe box is the viewport intersected with the nearest clipping
+ * ancestor (see getClippingRect) - a translate alone can't help once the
+ * bubble is wider than that box, so it's also given an explicit max-width
+ * and allowed to wrap onto a second line instead of running off-screen.
  */
 function clampTooltipToViewport(el, placement) {
   if (!el) return;
   el.style.transform = "";
-  const rect = el.getBoundingClientRect();
+  el.style.maxWidth = "";
+  el.style.whiteSpace = "";
+  let rect = el.getBoundingClientRect();
   if (rect.width === 0 && rect.height === 0) return;
 
   const insets = getSafeAreaInsets();
-  const pad = VIEWPORT_EDGE_PADDING;
-  const safeLeft = insets.left + pad;
-  const safeRight = window.innerWidth - insets.right - pad;
-  const safeTop = insets.top + pad;
-  const safeBottom = window.innerHeight - insets.bottom - pad;
+  const safe = computeSafeRect(
+    insets,
+    VIEWPORT_EDGE_PADDING,
+    getClippingRect(el),
+  );
 
-  let deltaX = 0;
-  if (rect.right + deltaX > safeRight)
-    deltaX -= rect.right + deltaX - safeRight;
-  if (rect.left + deltaX < safeLeft) deltaX += safeLeft - (rect.left + deltaX);
+  const safeWidth = safe.right - safe.left;
+  if (safeWidth > 0 && rect.width > safeWidth) {
+    el.style.maxWidth = `${safeWidth}px`;
+    el.style.whiteSpace = "normal";
+    rect = el.getBoundingClientRect();
+  }
 
-  let deltaY = 0;
-  if (rect.bottom + deltaY > safeBottom)
-    deltaY -= rect.bottom + deltaY - safeBottom;
-  if (rect.top + deltaY < safeTop) deltaY += safeTop - (rect.top + deltaY);
-
+  const deltaX = clampAxisDelta(rect.left, rect.right, safe.left, safe.right);
+  const deltaY = clampAxisDelta(rect.top, rect.bottom, safe.top, safe.bottom);
   if (deltaX === 0 && deltaY === 0) return;
 
   const horizontalCenter = placement === "top" || placement === "bottom";
@@ -152,7 +235,12 @@ export function Tooltip({
     recompute();
     window.addEventListener("resize", recompute);
     return () => window.removeEventListener("resize", recompute);
-  }, [open, placement]);
+    // `content` is intentionally a dep, not just used inside: callers like
+    // AIStatusBadge poll status every second and change this prop while the
+    // tooltip is still open (e.g. "AI is warming up..." -> the ready
+    // string), which resizes/repositions the bubble. Without this dep the
+    // clamp computed for the old text goes stale until the next resize/blur.
+  }, [open, placement, content]);
 
   const placementClasses = {
     top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
