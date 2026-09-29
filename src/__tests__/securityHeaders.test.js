@@ -72,3 +72,35 @@ describe("CSP connect-src vs. actual fetch origins (D-H11)", () => {
     }
   });
 });
+
+// The Stress Relief Division's DOOM easter egg used to embed
+// archive.org/dos.zone in a same-page iframe; that iframe is gone (it's now
+// a plain new-tab link - see StressReliefDivision.jsx), but the CSP
+// allowlist entries for it stayed behind. Nothing in src/ frames either
+// origin any more, so the "no third party inside the app" rule is only
+// enforced in practice, not by policy, until this allowlist matches.
+describe("CSP frame-src has no dead third-party allowlist entries (D-frame)", () => {
+  const indexHtml = read("index.html");
+  const yaml = read("render.yaml");
+  const frameSrcBlocks = [
+    (indexHtml.match(/frame-src([^;]*);/) || [])[1] || "",
+    ...(yaml.match(/frame-src[^;]*;/g) || []),
+  ];
+
+  it("found frame-src to check in both index.html and render.yaml", () => {
+    expect(frameSrcBlocks.filter(Boolean).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("no longer allows framing archive.org or dos.zone", () => {
+    for (const block of frameSrcBlocks) {
+      expect(block).not.toContain("archive.org");
+      expect(block).not.toContain("dos.zone");
+    }
+  });
+
+  it("still allows the real cross-origin frame the app uses (Google OAuth)", () => {
+    for (const block of frameSrcBlocks) {
+      expect(block).toContain("https://accounts.google.com");
+    }
+  });
+});
