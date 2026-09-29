@@ -107,13 +107,7 @@ function referenceSearchDKB(entries, query, topK) {
     .map((s) => s.entry);
 }
 
-function buildFixtureEntries() {
-  const entries = [];
-  let id = 0;
-  const add = (instruction, output, metadata = {}) => {
-    entries.push({ id: `FX-${id++}`, instruction, output, metadata });
-  };
-
+function addCoreFixtureEntries(add) {
   add(
     "What are the rating criteria for tinnitus, diagnostic code 6260?",
     "Tinnitus is rated 10 percent under DC 6260, recurrent or persistent.",
@@ -173,6 +167,9 @@ function buildFixtureEntries() {
     "A nexus opinion may link sleep apnea to in-service exposure or weight gain.",
     { condition_name: "sleep apnea" },
   );
+}
+
+function addIsolatedPathFixtureEntries(add) {
   // Deliberately no metadata at all - exercises the empty/no-boost path.
   add(
     "Generic entry about surgery and treatment.",
@@ -202,6 +199,17 @@ function buildFixtureEntries() {
     "This text does not mention the code at all.",
     { dc: "9999" },
   );
+}
+
+function buildFixtureEntries() {
+  const entries = [];
+  let id = 0;
+  const add = (instruction, output, metadata = {}) => {
+    entries.push({ id: `FX-${id++}`, instruction, output, metadata });
+  };
+
+  addCoreFixtureEntries(add);
+  addIsolatedPathFixtureEntries(add);
 
   return entries;
 }
