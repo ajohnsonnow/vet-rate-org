@@ -760,54 +760,15 @@ const getGeminiApiKey = () => {
 };
 
 /**
- * Build the Cloud AI system prompt, including DKB (Diamond Knowledge Base)
- * context injection based on the user's prompt.
+ * Resolve the effective Cloud AI generation config (timeout/temperature/
+ * topK/topP/maxTokens), applying an AI_PRESETS override when requested. The
+ * system prompt is NOT resolved here (D15-2): `_buildFullPrompt` already
+ * assembled it - together with DKB context - into the request exactly once,
+ * before this backend ever sees it. Re-resolving/re-prepending it here was
+ * the double-send bug (ADR-008 §2.4.1).
  */
-const buildCloudSystemPrompt = async (prompt, options) => {
-  const { buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
-
-  let defaultSystemPrompt = buildSystemPrompt({
-    task: options.taskType || "general",
-    toolContext: options.toolContext,
-    includeAppContext: true,
-    includeRegulations: true,
-    includeVeteranData: true,
-  });
-
-  // 💎 Inject DKB context based on user's prompt (makes Gemini "smart" on VA data)
-  const useDKB = options.useDKB !== false; // Enabled by default
-  if (useDKB) {
-    try {
-      const dkbContext = await buildDKBContext(prompt, {
-        maxEntries: options.maxDKBEntries || 10,
-        maxChars: options.maxDKBChars || 8000,
-      });
-      if (dkbContext) {
-        defaultSystemPrompt += dkbContext;
-        // eslint-disable-next-line no-console
-        console.log(
-          "[Gemini] 💎 DKB context injected for enhanced VA knowledge",
-        );
-      }
-    } catch (dkbError) {
-      console.warn(
-        "[Gemini] DKB context injection failed, continuing without:",
-        dkbError.message,
-      );
-    }
-  }
-
-  return defaultSystemPrompt;
-};
-
-/**
- * Resolve the effective Cloud AI generation config (systemPrompt/timeout/
- * temperature/topK/topP/maxTokens), applying an AI_PRESETS override when
- * requested.
- */
-const resolveCloudGenerationConfig = (options, defaultSystemPrompt) => {
+const resolveCloudGenerationConfig = (options) => {
   const {
-    systemPrompt = defaultSystemPrompt,
     maxTokens = getUserTokenLimit(), // Use user-configured limit or default
     temperature = 0.7,
     topK = 40,
@@ -828,7 +789,7 @@ const resolveCloudGenerationConfig = (options, defaultSystemPrompt) => {
     };
   }
 
-  return { systemPrompt, finalConfig, timeout, scrubPIIEnabled };
+  return { finalConfig, timeout, scrubPIIEnabled };
 };
 
 /**
@@ -1020,21 +981,29 @@ const handleGeminiErrorResponse = async (response) => {
 };
 
 /**
- * Generate text using Cloud AI (Gemini)
- * 💎 Now enhanced with DKB (Diamond Knowledge Base) context injection
+ * Generate text using Cloud AI (Gemini).
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt` and `userPrompt` arrive already
+ * assembled (system prompt + DKB context, and the user request) and already
+ * known-value-redacted by `_buildFullPrompt`/`_redactPiecesForSend` in
+ * `generateAIInternal` - this backend has no native system-role field (the
+ * Gemini body below is one text blob), so the two halves are combined into
+ * ONE string here, exactly once, immediately before the pattern-scrub (the
+ * last defense before the network send).
  */
-const generateWithCloudAI = async (prompt, options = {}) => {
+const generateWithCloudAI = async (systemPrompt, userPrompt, options = {}) => {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
     throw new Error("Gemini API key not configured");
   }
 
-  const defaultSystemPrompt = await buildCloudSystemPrompt(prompt, options);
-  const { systemPrompt, finalConfig, timeout, scrubPIIEnabled } =
-    resolveCloudGenerationConfig(options, defaultSystemPrompt);
+  const { finalConfig, timeout, scrubPIIEnabled } =
+    resolveCloudGenerationConfig(options);
 
-  let fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
-  fullPrompt = scrubCloudPromptPII(fullPrompt, scrubPIIEnabled);
+  const combinedPrompt = systemPrompt
+    ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
+    : userPrompt;
+  const fullPrompt = scrubCloudPromptPII(combinedPrompt, scrubPIIEnabled);
 
   const requestBody = buildGeminiRequestBody(fullPrompt, finalConfig);
   const response = await fetchGeminiWithRetry(requestBody, apiKey, timeout);
@@ -1079,33 +1048,6 @@ const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
   // eslint-disable-next-line no-console
   console.info(`🛡️ PII Scrubbed (Warrant Council):`, details);
   return scrubbedText;
-};
-
-/**
- * 💎 Inject DKB context for Warrant Council (makes specialized agents VA-smart!)
- */
-const injectDKBForWarrantCouncil = async (prompt, options, useDKB) => {
-  if (!useDKB) return prompt;
-  try {
-    const { buildDKBContext } = await getAISystemPrompts();
-    const dkbContext = await buildDKBContext(prompt, {
-      maxEntries: options.maxDKBEntries || 6, // Smaller for fine-tuned models (they know more already)
-      maxChars: options.maxDKBChars || 4000,
-    });
-    if (dkbContext) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "[WarrantCouncil] 💎 DKB context injected - agents have live knowledge base access",
-      );
-      return prompt + dkbContext;
-    }
-  } catch (dkbError) {
-    console.warn(
-      "[WarrantCouncil] DKB context injection failed:",
-      dkbError.message,
-    );
-  }
-  return prompt;
 };
 
 /**
@@ -1172,30 +1114,46 @@ const resolveWarrantCouncilAgent = (toolId, taskType) => {
  * Generate text using Warrant Council (Primary AI Engine)
  * Routes to the appropriate specialized agent based on task type
  * 💎 Now enhanced with DKB context injection
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt` and `userPrompt` arrive already
+ * assembled (system prompt + DKB context, and the user request) and already
+ * known-value-redacted by `_buildFullPrompt`/`_redactPiecesForSend`. This
+ * backend HAS a native system-role field (`generateWithSwarm`'s own
+ * `systemPrompt` option, which analyzeChunk relies on to swap in the
+ * compact C-File prompt for XGrammar constrained decoding) - so
+ * `systemPrompt` is forwarded there directly and `userPrompt` never has it
+ * baked in a second time. Previously `options.systemPrompt` (the RAW,
+ * unredacted caller override) was forwarded here while the ALREADY-baked,
+ * ALREADY-redacted copy of that same text also sat inside the prompt
+ * string - both a duplicate send and a redaction bypass.
  */
-const generateWithWarrantCouncil = async (prompt, options = {}) => {
+const generateWithWarrantCouncil = async (
+  systemPrompt,
+  userPrompt,
+  options = {},
+) => {
   const {
     taskType = "general",
     toolId = null,
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
-    useDKB = true, // Enable DKB by default
     timeout = null,
   } = options;
 
-  const scrubbedPrompt = scrubPromptForWarrantCouncil(prompt, scrubPIIEnabled);
-  const dkbEnhancedPrompt = await injectDKBForWarrantCouncil(
-    scrubbedPrompt,
-    options,
-    useDKB,
+  const scrubbedSystemPrompt = systemPrompt
+    ? scrubPromptForWarrantCouncil(systemPrompt, scrubPIIEnabled)
+    : systemPrompt;
+  const scrubbedPrompt = scrubPromptForWarrantCouncil(
+    userPrompt,
+    scrubPIIEnabled,
   );
 
   const agentId = resolveWarrantCouncilAgent(toolId, taskType);
   const enhancedPrompt =
     agentId === "rater"
-      ? injectCalculatorForRater(dkbEnhancedPrompt, options)
-      : dkbEnhancedPrompt;
+      ? injectCalculatorForRater(scrubbedPrompt, options)
+      : scrubbedPrompt;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1205,16 +1163,12 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
   try {
     swarmGenerating = true;
 
-    // 💎 Use enhanced prompt with DKB context
     const inferencePromise = generateWithSwarm(enhancedPrompt, {
       agentId,
       toolId,
       maxTokens,
       temperature,
-      // Thread caller-supplied system prompt and schema through so analyzeChunk
-      // can replace the AUDITOR default prompt with the compact C-File version
-      // and enable XGrammar constrained decoding for the chunk loop.
-      ...(options.systemPrompt ? { systemPrompt: options.systemPrompt } : {}),
+      ...(scrubbedSystemPrompt ? { systemPrompt: scrubbedSystemPrompt } : {}),
       ...(options.responseFormat
         ? { responseFormat: options.responseFormat }
         : {}),
@@ -1252,27 +1206,35 @@ const generateWithWarrantCouncil = async (prompt, options = {}) => {
 
 /**
  * 🌐 Generate text using Wllama (Browser WASM inference)
- * 💎 Now enhanced with DKB context injection
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt`/`userPrompt` are already assembled
+ * (system + DKB context, and the user request) and already known-value-
+ * redacted. wllamaService's `chatCompletion` has no separate system-role
+ * parameter, so the two halves are combined into ONE string here, exactly
+ * once, before the pattern-scrub.
  */
-const generateWithWllama = async (prompt, options = {}) => {
+const generateWithWllama = async (systemPrompt, userPrompt, options = {}) => {
   const {
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
     onStream = null,
-    useDKB = true,
   } = options;
 
+  const combinedPrompt = systemPrompt
+    ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
+    : userPrompt;
+
   // PII Scrubbing
-  let scrubbedPrompt = prompt;
+  let scrubbedPrompt = combinedPrompt;
   if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(prompt);
+    const piiAnalysis = analyzePII(combinedPrompt);
     if (piiAnalysis.hasPII) {
       console.warn(`⚠️ PII Detected before Wllama call:`, piiAnalysis.types);
       // Not aggressive - wllama is in-page WASM inference, not an egress
       // boundary. See scrubPromptForWarrantCouncil for why aggressive mode
       // destroys the dates a C-File analysis depends on.
-      const { scrubbedText, details } = scrubPII(prompt, {
+      const { scrubbedText, details } = scrubPII(combinedPrompt, {
         aggressive: false,
         preservePartial: false,
       });
@@ -1284,27 +1246,9 @@ const generateWithWllama = async (prompt, options = {}) => {
 
   // Ground the Rater model in the deterministic calculator before the LLM
   // ever sees the prompt - see injectCalculatorForRater for why.
-  let enhancedPrompt = wllamaCurrentModel?.startsWith("rater")
+  const enhancedPrompt = wllamaCurrentModel?.startsWith("rater")
     ? injectCalculatorForRater(scrubbedPrompt, options)
     : scrubbedPrompt;
-
-  // 💎 Inject DKB context for Wllama
-  if (useDKB) {
-    try {
-      const { buildDKBContext } = await getAISystemPrompts();
-      const dkbContext = await buildDKBContext(scrubbedPrompt, {
-        maxEntries: options.maxDKBEntries || 6,
-        maxChars: options.maxDKBChars || 4000,
-      });
-      if (dkbContext) {
-        enhancedPrompt = enhancedPrompt + dkbContext;
-        // eslint-disable-next-line no-console
-        console.log("[Wllama] 💎 DKB context injected");
-      }
-    } catch (dkbError) {
-      console.warn("[Wllama] DKB context injection failed:", dkbError.message);
-    }
-  }
 
   try {
     // eslint-disable-next-line no-console
@@ -1330,55 +1274,44 @@ const generateWithWllama = async (prompt, options = {}) => {
 
 /**
  * 🖥️ Generate text using Local Server (llama.cpp API)
- * 💎 Now enhanced with DKB context injection
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt`/`userPrompt` are already assembled
+ * (system + DKB context, and the user request) and already known-value-
+ * redacted. Combined into ONE string here, exactly once, before the
+ * pattern-scrub (the last defense before this local-engine call).
  */
-const generateWithLocalServer = async (prompt, options = {}) => {
+const generateWithLocalServer = async (
+  systemPrompt,
+  userPrompt,
+  options = {},
+) => {
   const {
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
     scrubPIIEnabled = true,
     onStream = null,
-    useDKB = true,
   } = options;
 
+  const combinedPrompt = systemPrompt
+    ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
+    : userPrompt;
+
   // PII Scrubbing
-  let scrubbedPrompt = prompt;
+  let scrubbedPrompt = combinedPrompt;
   if (scrubPIIEnabled) {
-    const piiAnalysis = analyzePII(prompt);
+    const piiAnalysis = analyzePII(combinedPrompt);
     if (piiAnalysis.hasPII) {
       console.warn(
         `⚠️ PII Detected before Local Server call:`,
         piiAnalysis.types,
       );
-      const { scrubbedText, details } = scrubPII(prompt, {
+      const { scrubbedText, details } = scrubPII(combinedPrompt, {
         aggressive: true,
         preservePartial: false,
       });
       scrubbedPrompt = scrubbedText;
       // eslint-disable-next-line no-console
       console.info(`🛡️ PII Scrubbed (Local Server):`, details);
-    }
-  }
-
-  // 💎 Inject DKB context for Local Server
-  let enhancedPrompt = scrubbedPrompt;
-  if (useDKB) {
-    try {
-      const { buildDKBContext } = await getAISystemPrompts();
-      const dkbContext = await buildDKBContext(scrubbedPrompt, {
-        maxEntries: options.maxDKBEntries || 8,
-        maxChars: options.maxDKBChars || 6000,
-      });
-      if (dkbContext) {
-        enhancedPrompt = scrubbedPrompt + dkbContext;
-        // eslint-disable-next-line no-console
-        console.log("[LocalServer] 💎 DKB context injected");
-      }
-    } catch (dkbError) {
-      console.warn(
-        "[LocalServer] DKB context injection failed:",
-        dkbError.message,
-      );
     }
   }
 
@@ -1389,9 +1322,9 @@ const generateWithLocalServer = async (prompt, options = {}) => {
     // chatCompletion's real signature is (messages, systemPrompt, options)
     // and it resolves to the completion text directly (or null on abort) -
     // not a {success, text, error} object. The system prompt is already
-    // folded into enhancedPrompt by the time this backend runs.
+    // folded into scrubbedPrompt by the time this backend runs.
     const result = await localServerClient.chatCompletion(
-      [{ role: "user", content: enhancedPrompt }],
+      [{ role: "user", content: scrubbedPrompt }],
       "",
       { maxTokens, temperature, onToken: onStream },
     );
@@ -1428,51 +1361,13 @@ const assertLocalAIReady = () => {
 };
 
 /**
- * Build the Local AI system prompt, including DKB context injection.
- */
-const buildLocalAISystemPrompt = async (prompt, options) => {
-  const { buildSystemPrompt, buildDKBContext } = await getAISystemPrompts();
-  let defaultSystemPrompt = buildSystemPrompt({
-    task: options.taskType || "general",
-    toolContext: options.toolContext,
-    includeAppContext: true,
-    includeRegulations: true,
-    includeVeteranData: true,
-  });
-
-  // 💎 Inject DKB context for Local AI (makes local models VA-smart!)
-  const useDKB = options.useDKB !== false; // Enabled by default
-  if (useDKB) {
-    try {
-      const dkbContext = await buildDKBContext(prompt, {
-        maxEntries: options.maxDKBEntries || 8, // Slightly less than cloud due to context limits
-        maxChars: options.maxDKBChars || 6000, // Smaller context for local models
-      });
-      if (dkbContext) {
-        defaultSystemPrompt += dkbContext;
-        // eslint-disable-next-line no-console
-        console.log(
-          "[LocalAI] 💎 DKB context injected - local model now has VA knowledge base access",
-        );
-      }
-    } catch (dkbError) {
-      console.warn(
-        "[LocalAI] DKB context injection failed, continuing without:",
-        dkbError.message,
-      );
-    }
-  }
-
-  return defaultSystemPrompt;
-};
-
-/**
  * Resolve the effective Local AI generation config, applying an AI_PRESETS
- * override when requested.
+ * override when requested. The system prompt is NOT resolved here (D15-2):
+ * `_buildFullPrompt` already assembled it - together with DKB context -
+ * exactly once, before this backend ever sees it.
  */
-const resolveLocalAIConfig = (options, defaultSystemPrompt) => {
+const resolveLocalAIConfig = (options) => {
   const {
-    systemPrompt = defaultSystemPrompt,
     maxTokens = getUserTokenLimit(), // Use user-configured limit or default
     temperature = 0.7,
     topK = 40,
@@ -1493,7 +1388,7 @@ const resolveLocalAIConfig = (options, defaultSystemPrompt) => {
     };
   }
 
-  return { systemPrompt, finalConfig, scrubPIIEnabled, onStream };
+  return { finalConfig, scrubPIIEnabled, onStream };
 };
 
 /**
@@ -1709,15 +1604,23 @@ const mapLocalAIError = (err) => {
 
 /**
  * Generate text using Local AI (Legacy WebLLM - fallback only)
+ *
+ * D15-2 / ADR-008 §2.4.1: `systemPrompt`/`userPrompt` arrive already
+ * assembled (system + DKB context, and the user request) and already
+ * known-value-redacted. This backend has a native system-role message, so
+ * each half is delivered exactly once, in its own role - previously this
+ * function ALSO rebuilt its own system prompt (with a second DKB injection)
+ * and sent it as `messages[0]`, while the SAME text (built once already by
+ * `_buildFullPrompt`) sat baked into `messages[1]`'s content too.
  */
-const generateWithLocalAI = async (prompt, options = {}) => {
+const generateWithLocalAI = async (systemPrompt, userPrompt, options = {}) => {
   // First try Warrant Council if available
   if (isDiamondSwarmReady()) {
     // eslint-disable-next-line no-console
     console.log(
       "🎖️ Routing to Warrant Council (upgraded from legacy local AI)",
     );
-    return generateWithWarrantCouncil(prompt, options);
+    return generateWithWarrantCouncil(systemPrompt, userPrompt, options);
   }
 
   assertLocalAIReady();
@@ -1737,21 +1640,23 @@ const generateWithLocalAI = async (prompt, options = {}) => {
     );
   }
 
-  // Build comprehensive system prompt if not provided (lazy load)
-  // 💎 Now also injects DKB context for enhanced VA knowledge (same as cloud AI)
-  const defaultSystemPrompt = await buildLocalAISystemPrompt(prompt, options);
-  const { systemPrompt, finalConfig, scrubPIIEnabled, onStream } =
-    resolveLocalAIConfig(options, defaultSystemPrompt);
+  const { finalConfig, scrubPIIEnabled, onStream } =
+    resolveLocalAIConfig(options);
 
-  const scrubbedPrompt = scrubPromptForLocalAI(prompt, scrubPIIEnabled);
+  const scrubbedSystemPrompt = systemPrompt
+    ? scrubPromptForLocalAI(systemPrompt, scrubPIIEnabled)
+    : systemPrompt;
+  const scrubbedUserPrompt = scrubPromptForLocalAI(userPrompt, scrubPIIEnabled);
 
   try {
     localAIGenerating = true;
 
-    const messages = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: scrubbedPrompt },
-    ];
+    const messages = scrubbedSystemPrompt
+      ? [
+          { role: "system", content: scrubbedSystemPrompt },
+          { role: "user", content: scrubbedUserPrompt },
+        ]
+      : [{ role: "user", content: scrubbedUserPrompt }];
 
     // Generation config with repetition penalty to prevent degenerate output
     const generationConfig = {
@@ -2141,11 +2046,15 @@ async function _checkCrisisSafety(prompt, options) {
 // buildSystemPrompt, callGeminiAPI) only cover the free text THOSE
 // builders assemble - a caller that hands generateAI its own raw prompt
 // (a Muster Call report, a witness's typed answers, a pasted decision
-// letter...) bypassed every one of them. This runs on the fully-combined
-// prompt right before ANY backend (Warrant Council, Wllama, local server,
-// legacy local, cloud) is dispatched, so no send path can skip it.
-// Best-effort: an identifier-load failure must never block generation.
-async function _redactPromptForSend(text) {
+// letter...) bypassed every one of them. This redacts every piece of the
+// assembled request (the system prompt AND the user prompt - see D15-2's
+// _buildFullPrompt, which keeps them separate so a backend with a native
+// system role can deliver each exactly once) right before ANY backend
+// (Warrant Council, Wllama, local server, legacy local, cloud) is
+// dispatched, so no send path can skip it. One shared VKB/profile lookup
+// covers every piece. Best-effort: an identifier-load failure must never
+// block generation.
+async function _redactPiecesForSend(pieces) {
   try {
     const vkb = await loadVKB();
     const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
@@ -2155,16 +2064,53 @@ async function _redactPromptForSend(text) {
     // writes the veteran's name/service number ONLY there, never to VKB's
     // .personal block.
     const personal = { ...getVeteranProfile(), ...vkb?.personal };
-    return redactVeteranIdentifiers(text, personal, claimNumbers);
+    return pieces.map((text) =>
+      redactVeteranIdentifiers(text, personal, claimNumbers),
+    );
   } catch {
-    return text;
+    return pieces;
   }
 }
 
+// D15-2: single DKB (Diamond Knowledge Base) injection point. Every backend
+// used to run its own copy of this block (cloud/local/warrant-council/
+// wllama/local-server), each with a different maxEntries/maxChars budget,
+// AFTER the system prompt had already been assembled once here - meaning a
+// caller-supplied systemPrompt got baked into the request twice: once as
+// plain text in `fullPrompt`, once again re-resolved/re-injected inside the
+// backend. Best-effort: a DKB fetch failure never blocks the call.
+async function _injectDKBContext(prompt, systemPrompt, options) {
+  if (options.useDKB === false) return systemPrompt;
+  try {
+    const { buildDKBContext } = await getAISystemPrompts();
+    const dkbContext = await buildDKBContext(prompt, {
+      maxEntries: options.maxDKBEntries || 10,
+      maxChars: options.maxDKBChars || 8000,
+    });
+    if (!dkbContext) return systemPrompt;
+    // eslint-disable-next-line no-console
+    console.log("[AI] 💎 DKB context injected");
+    return systemPrompt + dkbContext;
+  } catch (dkbError) {
+    console.warn(
+      "[AI] DKB context injection failed, continuing without:",
+      dkbError.message,
+    );
+    return systemPrompt;
+  }
+}
+
+// D15-2: the ONE assembly point. Returns the system prompt (default or
+// caller override, plus DKB context) and the user prompt as SEPARATE
+// pieces rather than a single pre-concatenated string - a backend with a
+// native system-role message (legacy local, Warrant Council) delivers each
+// piece exactly once in its own role; a backend with no role separation
+// (cloud, wllama, local server) concatenates them into one string itself,
+// exactly once, immediately before it sends. Either way, this function is
+// the only place the system prompt is ever built.
 async function _buildFullPrompt(prompt, options) {
-  // Build system prompt with anti-hallucination guardrails (unless overridden)
   const { buildSystemPrompt } = await getAISystemPrompts();
-  const systemPrompt =
+  const baseSystemPrompt =
     options.systemPrompt ||
     buildSystemPrompt({
       task: options.taskType || "general",
@@ -2173,6 +2119,12 @@ async function _buildFullPrompt(prompt, options) {
       includeRegulations: true,
       includeVeteranData: true,
     });
+
+  const systemPrompt = await _injectDKBContext(
+    prompt,
+    baseSystemPrompt,
+    options,
+  );
 
   // Apply user's saved preset if no preset specified in options
   const effectivePreset = options.preset || getUserPreset();
@@ -2183,83 +2135,106 @@ async function _buildFullPrompt(prompt, options) {
     preset: effectivePreset,
   };
 
-  // Prepend system prompt to user prompt
-  const fullPrompt = systemPrompt
-    ? `${systemPrompt}\n\n---\n\nUser Request:\n${prompt}`
-    : prompt;
+  return { systemPrompt, userPrompt: prompt, enhancedOptions };
+}
 
-  return { fullPrompt, enhancedOptions };
+// One call site per backend, shared by both the mode-directed dispatch and
+// the "whatever's available" fallback chain in _dispatchAiGeneration below -
+// each backend's (systemPrompt, userPrompt, options) argument shape now
+// exists exactly once instead of being repeated per branch.
+async function _invokeBackend(mode, systemPrompt, userPrompt, options) {
+  switch (mode) {
+    case AI_MODES.SWARM: {
+      const text = await generateWithWarrantCouncil(
+        systemPrompt,
+        userPrompt,
+        options,
+      );
+      return { text, agentUsed: getCurrentAgent() || "auditor" };
+    }
+    case AI_MODES.WLLAMA: {
+      const text = await generateWithWllama(systemPrompt, userPrompt, options);
+      return { text, agentUsed: wllamaCurrentModel || "auditor" };
+    }
+    case AI_MODES.LOCAL_SERVER: {
+      const text = await generateWithLocalServer(
+        systemPrompt,
+        userPrompt,
+        options,
+      );
+      return { text, agentUsed: null };
+    }
+    case AI_MODES.LOCAL: {
+      const text = await generateWithLocalAI(systemPrompt, userPrompt, options);
+      return { text, agentUsed: null };
+    }
+    case AI_MODES.CLOUD: {
+      const text = await generateWithCloudAI(systemPrompt, userPrompt, options);
+      return { text, agentUsed: null };
+    }
+    default:
+      throw new Error(`Unknown AI mode: ${mode}`);
+  }
+}
+
+const _BACKEND_USED_LOG = {
+  [AI_MODES.SWARM]: (agentUsed) =>
+    `🎖️ Generated with Warrant Council (${(agentUsed || "auditor").toUpperCase()} agent)`,
+  [AI_MODES.WLLAMA]: (agentUsed) =>
+    `🌐 Generated with Wllama (${(agentUsed || "auditor").toUpperCase()} model)`,
+  [AI_MODES.LOCAL_SERVER]: () => "🖥️ Generated with local llama.cpp server",
+  [AI_MODES.LOCAL]: () => "💻 Generated with legacy local AI",
+};
+
+function _logBackendUsed(mode, agentUsed) {
+  const buildMessage = _BACKEND_USED_LOG[mode];
+  if (!buildMessage) return;
+  // eslint-disable-next-line no-console
+  console.log(buildMessage(agentUsed));
 }
 
 async function _dispatchAiGeneration(
   effectiveMode,
-  fullPrompt,
+  systemPrompt,
+  userPrompt,
   enhancedOptions,
   options,
 ) {
   // Dispatch follows getEffectiveAIMode() - never implicitly upgrade to a
   // backend the user didn't choose. getEffectiveAIMode() already handles the
-  // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD).
-  const useSwarm = effectiveMode === AI_MODES.SWARM;
-  const useWllama = effectiveMode === AI_MODES.WLLAMA;
-  const useLocalServer = effectiveMode === AI_MODES.LOCAL_SERVER;
-  const useCloud =
-    effectiveMode === AI_MODES.CLOUD ||
-    (options.preferCloud === true && isCloudAIAvailable());
-  const useLocal = effectiveMode === AI_MODES.LOCAL;
+  // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD). The
+  // ordered checks below mirror that chain: a mode-directed attempt first,
+  // then "whatever's available" as a last resort.
+  const preferCloud = options.preferCloud === true && isCloudAIAvailable();
+  const orderedAttempts = [
+    [AI_MODES.SWARM, effectiveMode === AI_MODES.SWARM && isDiamondSwarmReady()],
+    [AI_MODES.WLLAMA, effectiveMode === AI_MODES.WLLAMA && isWllamaAvailable()],
+    [
+      AI_MODES.LOCAL_SERVER,
+      effectiveMode === AI_MODES.LOCAL_SERVER && isLocalServerAvailable(),
+    ],
+    [AI_MODES.LOCAL, effectiveMode === AI_MODES.LOCAL && isLocalAIReady()],
+    [
+      AI_MODES.CLOUD,
+      effectiveMode === AI_MODES.CLOUD || preferCloud || isCloudAIAvailable(),
+    ],
+    [AI_MODES.WLLAMA, isWllamaAvailable()],
+    [AI_MODES.LOCAL_SERVER, isLocalServerAvailable()],
+    [AI_MODES.LOCAL, isLocalAIReady()],
+  ];
 
-  if (useSwarm && isDiamondSwarmReady()) {
-    // 🎖️ Warrant Council - Primary AI Engine (WebGPU)
-    const text = await generateWithWarrantCouncil(fullPrompt, enhancedOptions);
-    const agentUsed = getCurrentAgent() || "auditor";
-    // eslint-disable-next-line no-console
-    console.log(
-      `🎖️ Generated with Warrant Council (${agentUsed.toUpperCase()} agent)`,
+  for (const [mode, isAttemptable] of orderedAttempts) {
+    if (!isAttemptable) continue;
+    const { text, agentUsed } = await _invokeBackend(
+      mode,
+      systemPrompt,
+      userPrompt,
+      enhancedOptions,
     );
-    return { text, usedMode: AI_MODES.SWARM, agentUsed };
+    _logBackendUsed(mode, agentUsed);
+    return { text, usedMode: mode, agentUsed };
   }
-  if (useWllama && isWllamaAvailable()) {
-    // 🌐 Wllama - Browser WASM inference
-    const text = await generateWithWllama(fullPrompt, enhancedOptions);
-    const agentUsed = wllamaCurrentModel || "auditor";
-    // eslint-disable-next-line no-console
-    console.log(`🌐 Generated with Wllama (${agentUsed.toUpperCase()} model)`);
-    return { text, usedMode: AI_MODES.WLLAMA, agentUsed };
-  }
-  if (useLocalServer && isLocalServerAvailable()) {
-    // 🖥️ Local Server - llama.cpp API
-    const text = await generateWithLocalServer(fullPrompt, enhancedOptions);
-    // eslint-disable-next-line no-console
-    console.log("🖥️ Generated with local llama.cpp server");
-    return { text, usedMode: AI_MODES.LOCAL_SERVER, agentUsed: null };
-  }
-  if (useLocal && isLocalAIReady()) {
-    // Legacy local AI (fallback)
-    const text = await generateWithLocalAI(fullPrompt, enhancedOptions);
-    // eslint-disable-next-line no-console
-    console.log("💻 Generated with legacy local AI");
-    return { text, usedMode: AI_MODES.LOCAL, agentUsed: null };
-  }
-  if (useCloud || isCloudAIAvailable()) {
-    // Cloud AI (Gemini - fallback)
-    const text = await generateWithCloudAI(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.CLOUD, agentUsed: null };
-  }
-  if (isWllamaAvailable()) {
-    // Fallback: Wllama
-    const text = await generateWithWllama(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.WLLAMA, agentUsed: null };
-  }
-  if (isLocalServerAvailable()) {
-    // Fallback: Local Server
-    const text = await generateWithLocalServer(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.LOCAL_SERVER, agentUsed: null };
-  }
-  if (isLocalAIReady()) {
-    // Final fallback: try legacy local
-    const text = await generateWithLocalAI(fullPrompt, enhancedOptions);
-    return { text, usedMode: AI_MODES.LOCAL, agentUsed: null };
-  }
+
   throw new Error(
     "No AI available. Please initialize Warrant Council, start the local server, or configure a Gemini API key.",
   );
@@ -2356,7 +2331,8 @@ async function _buildValidatedResult(
 
 async function _handleContextOverflowFallback(
   err,
-  fullPrompt,
+  systemPrompt,
+  userPrompt,
   enhancedOptions,
   options,
 ) {
@@ -2380,11 +2356,15 @@ async function _handleContextOverflowFallback(
     // eslint-disable-next-line no-console
     console.log("☁️ Auto-falling back to Cloud AI for large document...");
     try {
-      const text = await generateWithCloudAI(fullPrompt, {
-        ...enhancedOptions,
-        // Use minimal system prompt for large documents to save tokens
-        systemPrompt: options.systemPrompt || null,
-      });
+      // D15-2: the local model overflowed, not cloud (1M token window) - the
+      // already-assembled systemPrompt/userPrompt are reused as-is, with no
+      // "minimize the system prompt" special case, since re-deriving one
+      // here would be exactly the re-assembly this refactor removes.
+      const text = await generateWithCloudAI(
+        systemPrompt,
+        userPrompt,
+        enhancedOptions,
+      );
       return {
         text,
         mode: AI_MODES.CLOUD,
@@ -2427,18 +2407,28 @@ function _pickFallbackMode(effectiveMode) {
   };
 }
 
-async function _generateFallback(mode, fullPrompt, options) {
+async function _generateFallback(mode, systemPrompt, userPrompt, options) {
   if (mode === AI_MODES.SWARM) {
-    const text = await generateWithWarrantCouncil(fullPrompt, options);
+    const text = await generateWithWarrantCouncil(
+      systemPrompt,
+      userPrompt,
+      options,
+    );
     return { text, mode, agent: getCurrentAgent(), fallback: true };
   }
   const generate =
     mode === AI_MODES.LOCAL ? generateWithLocalAI : generateWithCloudAI;
-  const text = await generate(fullPrompt, options);
+  const text = await generate(systemPrompt, userPrompt, options);
   return { text, mode, fallback: true };
 }
 
-async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
+async function _handleGeneralFallback(
+  err,
+  effectiveMode,
+  systemPrompt,
+  userPrompt,
+  options,
+) {
   const { mode: fallbackMode, available } = _pickFallbackMode(effectiveMode);
 
   if (available && !options.noFallback) {
@@ -2447,7 +2437,12 @@ async function _handleGeneralFallback(err, effectiveMode, fullPrompt, options) {
       err.message,
     );
     try {
-      return await _generateFallback(fallbackMode, fullPrompt, options);
+      return await _generateFallback(
+        fallbackMode,
+        systemPrompt,
+        userPrompt,
+        options,
+      );
     } catch (fallbackErr) {
       throw new Error(
         `All AI modes failed. Primary: ${_describeThrown(err)}. Fallback: ${_describeThrown(fallbackErr)}`,
@@ -2476,15 +2471,19 @@ const generateAIInternal = async (prompt, options = {}) => {
     );
   }
 
-  const { fullPrompt: builtPrompt, enhancedOptions } = await _buildFullPrompt(
-    prompt,
-    options,
-  );
+  const {
+    systemPrompt: builtSystemPrompt,
+    userPrompt: builtUserPrompt,
+    enhancedOptions,
+  } = await _buildFullPrompt(prompt, options);
 
-  // ADR-008: redact the combined prompt before it reaches the dispatch
-  // below OR either fallback path in the catch block - see
-  // _redactPromptForSend for why this belongs here, not per-caller.
-  const fullPrompt = await _redactPromptForSend(builtPrompt);
+  // ADR-008: redact both halves of the assembled request before either
+  // reaches the dispatch below OR either fallback path in the catch block -
+  // see _redactPiecesForSend for why this belongs here, not per-caller.
+  const [systemPrompt, userPrompt] = await _redactPiecesForSend([
+    builtSystemPrompt,
+    builtUserPrompt,
+  ]);
 
   try {
     const {
@@ -2493,7 +2492,8 @@ const generateAIInternal = async (prompt, options = {}) => {
       agentUsed,
     } = await _dispatchAiGeneration(
       effectiveMode,
-      fullPrompt,
+      systemPrompt,
+      userPrompt,
       enhancedOptions,
       options,
     );
@@ -2513,7 +2513,8 @@ const generateAIInternal = async (prompt, options = {}) => {
   } catch (err) {
     const overflowResult = await _handleContextOverflowFallback(
       err,
-      fullPrompt,
+      systemPrompt,
+      userPrompt,
       enhancedOptions,
       options,
     );
@@ -2522,7 +2523,8 @@ const generateAIInternal = async (prompt, options = {}) => {
     return await _handleGeneralFallback(
       err,
       effectiveMode,
-      fullPrompt,
+      systemPrompt,
+      userPrompt,
       options,
     );
   }
