@@ -2997,7 +2997,30 @@ test.describe("Tool dialog close-X click actually closes the dialog, not Quick E
  * reading DataManagementCluster.jsx/BackupManager.jsx directly rather than
  * assuming the event name matches the component file name.
  */
+/**
+ * Mounting CloudSyncManager fires a real, unconditional `useEffect`
+ * (cloudSync.js's `ensureGoogleApis`) that loads
+ * https://apis.google.com/js/api.js and https://accounts.google.com/gsi/client
+ * from Google's own CDN - an external network dependency this suite doesn't
+ * need (these tests only check header/close-X layout, never Drive
+ * connection state) and shouldn't have: flaky offline and in CI. Fulfilling
+ * both with an empty-but-valid script keeps the component's own retry/error
+ * handling deterministic and local instead of racing a real CDN.
+ */
+async function stubGoogleApiScripts(page: Page): Promise<void> {
+  await page.route(
+    /^https:\/\/(apis\.google\.com\/js\/api\.js|accounts\.google\.com\/gsi\/client)/,
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        body: "// stubbed for e2e - no real Google API network dependency",
+      }),
+  );
+}
+
 async function openCloudSyncManagerNestedView(page: Page): Promise<void> {
+  await stubGoogleApiScripts(page);
   await dispatchTrigger(page, "openBackupManager")();
   await page
     .getByRole("button", { name: /connect drive/i })
