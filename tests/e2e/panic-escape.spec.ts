@@ -806,7 +806,18 @@ test.describe("Triple-Escape vs. the mobile nav drawer (decision C)", () => {
       .waitFor({ state: "visible", timeout: 5000 });
   }
 
-  test("drawer open, 3 Escapes 300ms apart triggers the panic redirect", async ({
+  // Back-to-back, no fixed sleep between presses - same pattern as the
+  // combobox/tooltip/Quick-search decision-C tests above, which are stable
+  // under 6-worker load. A 300ms `waitForTimeout` between presses here used
+  // to burn half of ESCAPE_WINDOW_MS (600ms) per gap with none of it doing
+  // real work, so real-world load (worker contention, a slower recount
+  // macrotask) only had to add ~300ms once to push a press outside the
+  // window and reset the counter - measured live: 1 failure in 3 firefox
+  // repeats at --workers=6. safetyRedirect.js's REACHED_BUBBLE handling is
+  // explicitly built to count correctly for Escapes ~1ms apart (see its doc
+  // comment), so back-to-back is also the more realistic shape of a veteran
+  // hammering Escape to get out fast.
+  test("drawer open, 3 Escapes back-to-back triggers the panic redirect", async ({
     page,
   }) => {
     await seedReturningUser(page);
@@ -814,10 +825,7 @@ test.describe("Triple-Escape vs. the mobile nav drawer (decision C)", () => {
 
     await openMobileNavDrawer(page);
 
-    for (let i = 0; i < 3; i++) {
-      await page.keyboard.press("Escape");
-      await page.waitForTimeout(300);
-    }
+    for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
 
     await page.waitForURL(/weather\.com/, { timeout: 5000 });
     expect(page.url()).toMatch(/weather\.com/);
