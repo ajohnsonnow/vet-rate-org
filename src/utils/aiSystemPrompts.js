@@ -22,6 +22,7 @@ import {
 } from "./piiScrubber";
 import { deriveCombatService } from "./combatService";
 import { getServiceEntry } from "./veteranProfile";
+import { buildDKBIndex, searchIndexedDKB } from "./dkbSearchIndex";
 
 /**
  * Re-export of `spotlight()` for any caller that's already importing from this
@@ -1348,6 +1349,10 @@ export function validateAIResponse(response, context = {}) {
 // Cache for DKB data
 let dkbCache = null;
 let dkbLoadingPromise = null;
+// D16-7: the search index (buildDKBIndex) is built once alongside the raw
+// fetch, not per query - see dkbSearchIndex.js's module doc comment for why.
+let dkbIndex = null;
+let dkbIndexBuildPromise = null;
 
 /**
  * Load the Diamond Knowledge Base (DKB) for context injection
@@ -1375,121 +1380,67 @@ async function loadDKB() {
   return dkbLoadingPromise;
 }
 
-/**
- * Score a single DKB entry's term matches against the query (instruction,
- * output, diagnostic code, and condition name overlap).
- */
-function scoreTermMatches(entry, queryTerms, query, isDCQuery) {
-  const instruction = (entry.instruction || "").toLowerCase();
-  const output = (entry.output || "").toLowerCase();
-  let score = 0;
+async function loadDKBIndex() {
+  const dkb = await loadDKB();
+  if (!dkb?.entries) return null;
+  if (dkbIndex) return dkbIndex;
+  if (dkbIndexBuildPromise) return dkbIndexBuildPromise;
 
-  for (const term of queryTerms) {
-    if (instruction.includes(term)) score += 2;
-    if (output.includes(term)) score += 1;
+  dkbIndexBuildPromise = buildDKBIndex(dkb.entries).then((index) => {
+    dkbIndex = index;
+    return index;
+  });
+  return dkbIndexBuildPromise;
+}
 
-    // Boost for diagnostic code matches
-    if (isDCQuery && entry.metadata?.dc && query.includes(entry.metadata.dc)) {
-      score += 10;
-    }
+// D16-7: bounded cache for repeated identical queries (e.g. a user re-asking
+// the same question, or a UI element re-rendering with the same prompt).
+// searchIndexedDKB is a pure function of (index, query, topK) and the index
+// is immutable for the life of a session, so caching its result is always
+// safe. Insertion-ordered Map used as a cheap LRU: evict the oldest entry
+// once the cap is hit.
+const DKB_QUERY_CACHE_MAX = 20;
+const dkbQueryCache = new Map();
 
-    // Boost for condition name matches
-    if (entry.metadata?.condition_name?.toLowerCase().includes(term)) {
-      score += 3;
-    }
+function getCachedDKBSearch(query, topK) {
+  const key = `${topK}\u0000${query}`;
+  if (dkbQueryCache.has(key)) {
+    const hit = dkbQueryCache.get(key);
+    dkbQueryCache.delete(key);
+    dkbQueryCache.set(key, hit);
+    return hit;
   }
+  return undefined;
+}
 
-  return score;
+function setCachedDKBSearch(query, topK, result) {
+  const key = `${topK}\u0000${query}`;
+  dkbQueryCache.set(key, result);
+  if (dkbQueryCache.size > DKB_QUERY_CACHE_MAX) {
+    dkbQueryCache.delete(dkbQueryCache.keys().next().value);
+  }
 }
 
 /**
- * Apply source-based score multipliers (official/precedent sources rank higher).
- */
-function applySourceBoost(score, source) {
-  let boosted = score;
-  if (source === "eCFR_OFFICIAL") boosted *= 1.3;
-  if (source === "OGC_PRECEDENT_OPINION") boosted *= 1.4;
-  if (source === "BVA_DECISIONS" || source === "BVA_REPORTS_OFFICIAL")
-    boosted *= 1.2;
-  return boosted;
-}
-
-/**
- * Apply query-intent score multipliers (secondary/PACT/rating/BVA queries
- * boost matching source types).
- */
-function applyIntentBoost(score, source, type, intent) {
-  let boosted = score;
-  if (intent.isSecondaryQuery && source === "SECONDARY_CONDITIONS_MATRIX")
-    boosted *= 2.5;
-  if (intent.isPACTQuery && source === "PACT_ACT_OFFICIAL") boosted *= 2.5;
-  if (intent.isRatingQuery && type === "rating_criteria") boosted *= 2;
-  if (intent.isBVAQuery && (source.includes("BVA") || source.includes("OGC")))
-    boosted *= 2;
-  return boosted;
-}
-
-/**
- * Score a DKB entry against the query: term matches, then source boost,
- * then query-intent boost.
- */
-function scoreDKBEntry(entry, query, queryTerms, isDCQuery, intent) {
-  const source = entry.metadata?.source || "";
-  const type = entry.metadata?.type || "";
-
-  let score = scoreTermMatches(entry, queryTerms, query, isDCQuery);
-  score = applySourceBoost(score, source);
-  score = applyIntentBoost(score, source, type, intent);
-
-  return { entry, score };
-}
-
-/**
- * Search DKB for relevant entries based on user query
- * Uses TF-IDF style matching with source boosting
+ * Search DKB for relevant entries based on user query. Uses a character-
+ * trigram inverted index (built once, see dkbSearchIndex.js) instead of a
+ * full per-entry scan - see D16-7 in dkbSearchIndex.js's module doc comment
+ * for why, and its equivalence test for proof this returns byte-identical
+ * entries/order to the pre-D16-7 full-scan algorithm.
  * @param {string} query - User's question or prompt
  * @param {number} topK - Number of results to return (default 10)
- * @returns {Array} Relevant DKB entries with context
+ * @returns {Promise<Array>} Relevant DKB entries with context
  */
 export async function searchDKB(query, topK = 10) {
-  const dkb = await loadDKB();
-  if (!dkb?.entries) return [];
+  const index = await loadDKBIndex();
+  if (!index) return [];
 
-  const queryTerms = query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((t) => t.length > 2);
-  const queryLower = query.toLowerCase();
+  const cached = getCachedDKBSearch(query, topK);
+  if (cached !== undefined) return cached;
 
-  // Detect query intent for boosting
-  const isSecondaryQuery =
-    queryLower.includes("secondary") ||
-    queryLower.includes("nexus") ||
-    queryLower.includes("caused by");
-  const isPACTQuery =
-    queryLower.includes("pact") ||
-    queryLower.includes("toxic") ||
-    queryLower.includes("burn pit");
-  const isRatingQuery =
-    queryLower.includes("rating") ||
-    queryLower.includes("percentage") ||
-    queryLower.includes("criteria");
-  const isBVAQuery =
-    queryLower.includes("bva") ||
-    queryLower.includes("appeal") ||
-    queryLower.includes("board");
-  const isDCQuery = /\b\d{4}\b/.test(query); // Looking for diagnostic codes
-
-  const intent = { isSecondaryQuery, isPACTQuery, isRatingQuery, isBVAQuery };
-  const scored = dkb.entries.map((entry) =>
-    scoreDKBEntry(entry, query, queryTerms, isDCQuery, intent),
-  );
-
-  return scored
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, topK)
-    .map((s) => s.entry);
+  const result = searchIndexedDKB(index, query, topK);
+  setCachedDKBSearch(query, topK, result);
+  return result;
 }
 
 /**
