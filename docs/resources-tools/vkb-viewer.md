@@ -56,7 +56,7 @@ For a chronological, document-by-document view instead of the sectioned editor, 
 
 ## Clearing Your Data
 
-The Viewer's own **"Clear All Data"** button is a full wipe, worded honestly: it deletes **no veteran data anywhere** the AI can see - every store the app uses on this device (My Packet, saved claims and conditions, the knowledge base, service history, local AI models and vector databases, preferences, and cached/offline files), the same scope as [Backup Manager](backup-manager.md)'s Atomic Wipe. It does not redirect you anywhere (unlike Quick Exit), and it propagates to every other open tab so a stale tab cannot re-save deleted data after the reload.
+The Viewer's own **"Clear All Data"** button is a full wipe, worded honestly: it leaves **no veteran data anywhere** the AI can see - every store the app uses on this device (My Packet, saved claims and conditions, the knowledge base, service history, local AI models and vector databases, preferences, and cached/offline files), the same scope as [Backup Manager](backup-manager.md)'s Atomic Wipe. It does not redirect you anywhere (unlike Quick Exit), and it propagates to every other open tab so a stale tab cannot re-save deleted data after the reload.
 
 The next time the app boots, it legitimately re-creates only:
 
