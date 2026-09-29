@@ -400,14 +400,47 @@ export const spotlight = (text) =>
 
 const WORD_CHAR = /[\p{L}\p{N}_]/u;
 
-// `\b` assumes the character on each side of the match is a word char -
-// wrong when a known value legitimately starts/ends on punctuation (an
-// address line ending in a comma, say), which would silently suppress the
-// match instead of redacting it. Only assert the boundary on the side that
-// actually borders a word character.
-const _boundary = (char) => (WORD_CHAR.test(char) ? "\\b" : "");
+// JS `\b` is ASCII-only - even with the `u` flag - so a value that starts
+// or ends on a Unicode letter outside Basic Latin (José, Zoë, Ångström)
+// can never satisfy it and silently fails to match instead of being
+// redacted. These lookarounds test \p{L}/\p{N} directly (the constructed
+// RegExp is built with the "u" flag below) so a boundary is recognized on
+// ANY Unicode letter. Only assert the boundary on the side that actually
+// borders a word character - a known value legitimately starting/ending on
+// punctuation (an address line ending in a comma, say) must still match.
+const _leadBoundary = (char) =>
+  WORD_CHAR.test(char) ? "(?<![\\p{L}\\p{N}_])" : "";
+const _tailBoundary = (char) =>
+  WORD_CHAR.test(char) ? "(?![\\p{L}\\p{N}_])" : "";
 
 const _escapeForRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Apostrophe variants (straight/curly/backtick) - "O'Brien" typed or OCR'd
+// with one style must still match the same name in another style, or with
+// the apostrophe dropped entirely ("OBrien").
+const APOSTROPHE_SPLIT = /['‘’`]/;
+const APOSTROPHE_CLASS = "['‘’`]?";
+
+function _literalPattern(value) {
+  return value
+    .split(APOSTROPHE_SPLIT)
+    .map(_escapeForRegex)
+    .join(APOSTROPHE_CLASS);
+}
+
+// A known numeric identifier (SSN/file number/service number) is often
+// re-typed or OCR'd with digit-grouping separators the stored value never
+// had ("28 345 671" for a stored "28345671") - allow an optional space or
+// hyphen between every digit instead of requiring an exact literal match.
+function _digitSpacedPattern(value) {
+  return [...value].map(_escapeForRegex).join("[\\s-]?");
+}
+
+function _valuePattern(value) {
+  return /^\d+$/.test(value)
+    ? _digitSpacedPattern(value)
+    : _literalPattern(value);
+}
 
 /**
  * Redact every occurrence of each known value from `text`.
@@ -435,20 +468,20 @@ export const redactKnownValues = (
     const value = typeof raw === "string" ? raw.trim() : "";
     if (value.length < 2) continue;
 
-    const escaped = _escapeForRegex(value);
-    const lead = _boundary(value[0]);
-    const tail = _boundary(value[value.length - 1]);
+    const pattern = _valuePattern(value);
+    const lead = _leadBoundary(value[0]);
+    const tail = _tailBoundary(value[value.length - 1]);
     const context = typeof entry === "object" ? entry.context : null;
 
     if (context) {
       const gated = new RegExp(
-        `(${context.source})([^\\n]{0,40}?)(${lead}${escaped}${tail})`,
-        "gi",
+        `(${context.source})([^\\n]{0,40}?)(${lead}${pattern}${tail})`,
+        "giu",
       );
       out = out.replace(gated, (_m, ctx, gap) => `${ctx}${gap}${replacement}`);
     } else {
-      const pattern = new RegExp(`${lead}${escaped}${tail}`, "gi");
-      out = out.replace(pattern, replacement);
+      const re = new RegExp(`${lead}${pattern}${tail}`, "giu");
+      out = out.replace(re, replacement);
     }
   }
   return out;
@@ -472,19 +505,50 @@ const DOB_MONTHS = [
   "Dec",
 ];
 
-// Only ISO ("YYYY-MM-DD", the VKB's own stored format) is parsed into
-// alternate forms - anything else is redacted as-typed only.
+// ISO ("YYYY-MM-DD", the VKB's own stored format) or US ("MM/DD/YYYY", how
+// the legacy profile/VKB viewer can store a typed DOB) are both normalized
+// into {y, mo, d} so every variant below is generated regardless of which
+// format the veteran's DOB happens to be stored in - previously a
+// non-ISO stored DOB got no variants at all, not even the ISO one.
+function _parseDobParts(dob) {
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob);
+  if (iso) return { y: iso[1], mo: iso[2], d: iso[3] };
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dob);
+  if (us) {
+    return { y: us[3], mo: us[1].padStart(2, "0"), d: us[2].padStart(2, "0") };
+  }
+  return null;
+}
+
+// Military/service records overwhelmingly print DOB as "DD Mon YYYY" (e.g.
+// "15 Mar 1984") or the compact "DDMonYY(YY)" form - neither is MM/DD/YYYY,
+// so scrubPII's own dob patterns never catch them either.
 function _dobVariants(dob) {
   const variants = [dob];
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob);
-  if (!m) return variants;
-  const [, y, mo, d] = m;
+  const parts = _parseDobParts(dob);
+  if (!parts) return variants;
+  const { y, mo, d } = parts;
   const monthNum = Number(mo);
   const dayNum = Number(d);
-  variants.push(`${mo}/${d}/${y}`);
-  variants.push(`${monthNum}/${dayNum}/${y}`);
+  const yy = y.slice(-2);
   const monthName = DOB_MONTHS[monthNum - 1];
-  if (monthName) variants.push(`${monthName} ${dayNum}, ${y}`);
+
+  variants.push(
+    `${y}-${mo}-${d}`,
+    `${mo}/${d}/${y}`,
+    `${monthNum}/${dayNum}/${y}`,
+  );
+  variants.push(
+    `${monthNum}/${dayNum}/${yy}`,
+    `${mo}-${d}-${y}`,
+    `${y}${mo}${d}`,
+  );
+  if (monthName) {
+    const monthUpper = monthName.toUpperCase();
+    variants.push(`${monthName} ${dayNum}, ${y}`);
+    variants.push(`${dayNum} ${monthName} ${y}`); // military: "15 Mar 1984"
+    variants.push(`${d}${monthUpper}${y}`, `${d}${monthUpper}${yy}`); // "15MAR1984" / "15MAR84"
+  }
   return variants;
 }
 
@@ -500,15 +564,83 @@ function _stripTrailingPunctuation(token) {
   return token.slice(0, end);
 }
 
+// Generational suffixes and short compound-surname particles that, as a
+// BARE unconditional redaction target, collide with ordinary words and
+// medical terms elsewhere in the same context ("de novo", "Jr ROTC", "Stage
+// III chronic kidney disease", "Type II diabetes"). A veteran's own name
+// still gets redacted via the OTHER tokens in it; only these specific short
+// tokens are excluded from standing alone as a known value.
+const NAME_TOKEN_STOPLIST = new Set([
+  "ii",
+  "iii",
+  "iv",
+  "v",
+  "vi",
+  "jr",
+  "sr",
+  "de",
+  "la",
+  "le",
+  "el",
+  "da",
+  "du",
+  "al",
+  "von",
+  "van",
+  "der",
+  "den",
+  "di",
+]);
+
+const MIN_BARE_NAME_TOKEN_LENGTH = 3;
+
+function _isRedactableNameToken(token) {
+  return (
+    token.length >= MIN_BARE_NAME_TOKEN_LENGTH &&
+    !NAME_TOKEN_STOPLIST.has(token.toLowerCase())
+  );
+}
+
+// Falls back to the flat legacy profile's first/middle/last/suffix fields
+// when no single fullName/name string is stored - the VKB personal shape
+// and the legacy profile shape disagree on which one exists.
+function _fullNameFromParts(personal) {
+  const parts = [
+    personal.firstName,
+    personal.middleName || personal.middleInitial,
+    personal.lastName,
+    personal.suffix,
+  ]
+    .map(_nonEmptyString)
+    .filter(Boolean);
+  return parts.length > 0 ? parts.join(" ") : null;
+}
+
 function _nameTokenValues(personal) {
   const fullName =
-    _nonEmptyString(personal.fullName) || _nonEmptyString(personal.name);
+    _nonEmptyString(personal.fullName) ||
+    _nonEmptyString(personal.name) ||
+    _fullNameFromParts(personal);
   if (!fullName) return [];
-  return fullName
+
+  const tokens = fullName
     .split(/\s+/)
     .map(_stripTrailingPunctuation)
-    .filter((t) => t.length >= 2)
-    .map((value) => ({ value }));
+    .filter(Boolean);
+
+  const values = [];
+  tokens.forEach((token) => {
+    if (_isRedactableNameToken(token)) values.push({ value: token });
+    // A hyphenated compound name ("Mary-Kate") is one token, but free text
+    // may use only one half of it ("Mary reports...").
+    if (token.includes("-")) {
+      token
+        .split("-")
+        .filter(_isRedactableNameToken)
+        .forEach((part) => values.push({ value: part }));
+    }
+  });
+  return values;
 }
 
 function _ssnValues(personal) {
@@ -516,11 +648,18 @@ function _ssnValues(personal) {
   const ssn =
     _nonEmptyString(personal.ssn) || _nonEmptyString(personal.ssnFull);
   const ssnLast4 = _nonEmptyString(personal.ssnLast4);
-  const context = /ssn|social\s*security/i;
+  const context = /ssn|ssan|social(?:\s*security)?/i;
   if (ssn) {
     const digits = ssn.replace(/\D/g, "");
-    if (digits.length >= 9) values.push({ value: digits });
-    else if (digits.length >= 4) values.push({ value: digits, context });
+    if (digits.length >= 9) {
+      values.push({ value: digits });
+      // A full SSN is known, but free text may only reference its last 4
+      // ("SSN ending 6789") - that value was never collected before, so it
+      // could never be redacted no matter how it was labeled.
+      values.push({ value: digits.slice(-4), context });
+    } else if (digits.length >= 4) {
+      values.push({ value: digits, context });
+    }
   }
   if (ssnLast4) values.push({ value: ssnLast4.replace(/\D/g, ""), context });
   return values;
@@ -540,22 +679,47 @@ function _fileNumberValues(personal) {
   return values;
 }
 
+// Service number - listed in decision (D) alongside SSN/file number, but
+// never previously collected at all.
+function _serviceNumberValues(personal) {
+  const serviceNumber = _nonEmptyString(personal.serviceNumber);
+  if (!serviceNumber) return [];
+  const context = /service\s*(?:#|no\.?|number)/i;
+  return serviceNumber.length >= 6
+    ? [{ value: serviceNumber }]
+    : [{ value: serviceNumber, context }];
+}
+
 function _contactValues(personal) {
   const values = [];
   const email = _nonEmptyString(personal.email);
   if (email) values.push({ value: email });
-  const phone = _nonEmptyString(personal.phone);
-  if (phone) {
-    values.push({ value: phone });
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length >= 7) values.push({ value: digits });
-  }
+  [personal.phone, personal.alternatePhone, personal.intlPhone].forEach(
+    (raw) => {
+      const phone = _nonEmptyString(raw);
+      if (!phone) return;
+      values.push({ value: phone });
+      const digits = phone.replace(/\D/g, "");
+      if (digits.length >= 7) values.push({ value: digits });
+    },
+  );
   return values;
 }
 
 function _addressValues(personal) {
   const address = personal.address || {};
-  return [address.street, address.city, personal.street, personal.city]
+  const lines = [
+    address.street,
+    address.city,
+    personal.street,
+    personal.city,
+    personal.mailingStreet,
+    personal.mailingCity,
+    address.zip,
+    personal.zip,
+    personal.mailingZip,
+  ];
+  return lines
     .map((line) => _nonEmptyString(line))
     .filter((line) => line && line.length >= 4)
     .map((value) => ({ value }));
@@ -581,6 +745,7 @@ export const collectKnownIdentifierValues = (
     ..._nameTokenValues(p),
     ..._ssnValues(p),
     ..._fileNumberValues(p),
+    ..._serviceNumberValues(p),
     ..._contactValues(p),
     ..._addressValues(p),
   ];
