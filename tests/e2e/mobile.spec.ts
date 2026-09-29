@@ -2371,7 +2371,7 @@ function findProbeBundle(): ProbeBundle {
  * "close control not found" (measured live: this class of flake dropped
  * back to the pre-N14 baseline rate once this wait was added).
  */
-async function extractProbeData(bundle: ProbeBundle) {
+async function extractProbeData(bundle: ProbeBundle, deadline: number) {
   if (!bundle) return null;
   const { titleEl, headerRegion, paddedSource, dialogId, hasHeaderLandmark } =
     bundle;
@@ -2383,10 +2383,13 @@ async function extractProbeData(bundle: ProbeBundle) {
     );
   // N13 (VKB Viewer): a dialog that loads its content asynchronously (e.g.
   // "Loading your Knowledge Base...") can take longer than a couple of
-  // frames to reach the state that actually has a close button - bounded to
-  // match the `expect.poll`/`triggerUntilDialogFound` convention elsewhere
-  // in this file rather than picking an arbitrary shorter number.
-  const deadline = Date.now() + 6000;
+  // frames to reach the state that actually has a close button. `deadline`
+  // is this attempt's own slice of probeHeaderLayout's shared budget (see
+  // PROBE_ATTEMPT_BUDGET_MS) - not a fresh 6s of its own - so a captured
+  // subtree that's about to be swapped out (and can therefore never satisfy
+  // hasCloseCandidate no matter how long this polls) still leaves the outer
+  // retry loop enough of the total budget to try again against a freshly
+  // re-queried bundle, instead of burning the whole thing on one doomed poll.
   while (!hasCloseCandidate() && Date.now() < deadline) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
   }
@@ -2502,42 +2505,59 @@ function dialogHasVisibleCloseControl(): boolean {
  * dialog was never going to gain a close button by waiting longer), while a
  * dialog whose content just hasn't swapped in yet gets however much of the
  * budget it actually needs, checked every animation frame with a live query
- * instead of once after an arbitrary fixed sleep.
+ * instead of once after an arbitrary fixed sleep. `timeoutMs` is this
+ * attempt's own slice of the caller's shared budget (see
+ * PROBE_ATTEMPT_BUDGET_MS) - never a fresh timeout of its own, or a single
+ * slow/stale attempt could exhaust the caller's ENTIRE retry budget before
+ * a second attempt ever gets a turn.
  */
-async function waitForDialogContentMounted(page: Page): Promise<void> {
+async function waitForDialogContentMounted(
+  page: Page,
+  timeoutMs: number,
+): Promise<void> {
   await page
     .waitForFunction(dialogHasVisibleCloseControl, undefined, {
-      timeout: 6000,
+      timeout: Math.max(0, timeoutMs),
       polling: "raf",
     })
     .catch(() => {});
 }
 
-/**
- * A dialog that renders its own internal loading placeholder first (its own
- * real `role="dialog"`, its own real title - e.g. The Tribunal's
- * "Initializing speech recognition...") and then swaps its ENTIRE header
- * subtree for a different one once real content is ready can still lose the
- * single-attempt race `waitForDialogContentMounted` closes above: the swap
- * can land in the narrow gap between that wait resolving (a fresh, correct
- * "yes" at that instant) and the SEPARATE `findProbeBundle` round trip that
- * follows it capturing a bundle - once captured, `extractProbeData`'s own
- * poll is stuck re-querying that now-detached subtree forever, since the
- * real close button lives in a different, freshly-mounted one. Retrying the
- * WHOLE wait-then-capture cycle (not just the wait) gives a losing attempt a
- * fresh, later capture instead of returning its first, stale result -
- * bounded to the same 6s budget as the wait itself, and short-circuited the
- * moment either a close button is found or `dialogId` is a confirmed
- * by-design exception (NO_CLOSE_BY_DESIGN), so a real no-close dialog still
- * returns promptly instead of burning the whole budget every time.
- */
+// probeHeaderLayout/probeHeaderLayoutById split their total budget into
+// several smaller attempts rather than one all-or-nothing 6s wait, because a
+// dialog that renders a loading placeholder first (its own real
+// `role="dialog"`, its own real title - e.g. The Tribunal's "Initializing
+// speech recognition...") and then swaps its ENTIRE header subtree for a
+// different one once real content is ready can otherwise lose a
+// single-attempt race: the swap can land in the narrow gap between
+// waitForDialogContentMounted resolving (a fresh, correct "yes" at that
+// instant) and the SEPARATE findProbeBundle round trip that follows it
+// capturing a bundle - once captured, extractProbeData's own poll is stuck
+// re-querying that now-detached subtree forever, since the real close
+// button lives in a different, freshly-mounted one, and would otherwise run
+// for whatever timeout it was given with no chance of ever succeeding.
+// Giving each attempt only a SLICE of the total budget (not the whole
+// thing) is what actually lets a later attempt happen at all: with each
+// inner wait allowed a full independent budget of its own, one doomed
+// attempt could consume 2x the intended total before the retry loop's own
+// deadline check ever got a chance to loop again.
+const PROBE_TOTAL_BUDGET_MS = 6000;
+const PROBE_ATTEMPT_BUDGET_MS = 2000;
+
 async function probeHeaderLayout(page: Page): Promise<HeaderProbe> {
-  const deadline = Date.now() + 6000;
+  const deadline = Date.now() + PROBE_TOTAL_BUDGET_MS;
   let probe: Awaited<ReturnType<typeof extractProbeData>> = null;
   do {
-    await waitForDialogContentMounted(page);
+    const attemptBudget = Math.min(
+      PROBE_ATTEMPT_BUDGET_MS,
+      Math.max(0, deadline - Date.now()),
+    );
+    await waitForDialogContentMounted(page, attemptBudget);
     const bundleHandle = await page.evaluateHandle(findProbeBundle);
-    probe = await bundleHandle.evaluate(extractProbeData);
+    probe = await bundleHandle.evaluate(
+      extractProbeData,
+      Date.now() + attemptBudget,
+    );
     if (probe?.closeRect) break;
     if (probe?.dialogId && NO_CLOSE_BY_DESIGN.has(probe.dialogId)) break;
   } while (Date.now() < deadline);
@@ -3202,12 +3222,16 @@ async function probeHeaderLayoutById(
   page: Page,
   dialogId: string,
 ): Promise<HeaderProbe> {
-  const deadline = Date.now() + 6000;
+  const deadline = Date.now() + PROBE_TOTAL_BUDGET_MS;
   let probe: Awaited<ReturnType<typeof extractProbeData>> = null;
   do {
+    const attemptBudget = Math.min(
+      PROBE_ATTEMPT_BUDGET_MS,
+      Math.max(0, deadline - Date.now()),
+    );
     await page
       .waitForFunction(dialogByIdHasVisibleCloseControl, dialogId, {
-        timeout: 6000,
+        timeout: attemptBudget,
         polling: "raf",
       })
       .catch(() => {});
@@ -3215,7 +3239,10 @@ async function probeHeaderLayoutById(
       findProbeBundleById,
       dialogId,
     );
-    probe = await bundleHandle.evaluate(extractProbeData);
+    probe = await bundleHandle.evaluate(
+      extractProbeData,
+      Date.now() + attemptBudget,
+    );
     if (probe?.closeRect) break;
     if (probe?.dialogId && NO_CLOSE_BY_DESIGN.has(probe.dialogId)) break;
   } while (Date.now() < deadline);
