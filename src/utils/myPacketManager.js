@@ -930,6 +930,36 @@ export function _formatServiceRecordHighlights(data) {
   return out;
 }
 
+// D15-3: DD214Analyzer.jsx classifies EVERY service-record upload as
+// PACKET_DOC_TYPES.DD214 regardless of which form it actually is (an
+// NGB-22 the analyzer processed lands in the same packet group as a real
+// DD-214 - Muster Call's own import path classifies correctly, so this
+// only matters for documents that went through DD214Analyzer). The
+// group's label alone is therefore unreliable; the document's OWN
+// extracted form type (`masterRecordType`, or `documentTypes[0]` as a
+// fallback - both are fields DD214Analyzer's AI schema always returns,
+// never gated by ADR-008 since neither is a direct identifier) is the
+// source of truth whenever it names a form this app has its own label
+// for. Order-independent by construction - it reads only the document's
+// own already-saved data, never anything about WHEN or in what sequence
+// other documents were imported.
+const EXTRACTED_TYPE_TO_PACKET_TYPE = {
+  DD214: PACKET_DOC_TYPES.DD214,
+  NGB22: PACKET_DOC_TYPES.NGB22,
+  DD256: PACKET_DOC_TYPES.DD256,
+  DD257: PACKET_DOC_TYPES.DD257,
+  DD215: PACKET_DOC_TYPES.DD215,
+};
+
+function _resolveDocTypeLabel(doc, fallbackLabel) {
+  const extractedType =
+    doc.extractedData?.masterRecordType ||
+    doc.extractedData?.documentTypes?.[0];
+  const packetType =
+    extractedType && EXTRACTED_TYPE_TO_PACKET_TYPE[extractedType];
+  return packetType ? PACKET_DOC_LABELS[packetType] : fallbackLabel;
+}
+
 // Owner decision D (2026-09-28, ADR-008): a veteran's real exported
 // document filenames commonly carry their own surname/first name and the
 // last four of their VA file number (VA's own export naming convention).
@@ -940,7 +970,8 @@ export function _formatServiceRecordHighlights(data) {
 // document list) - only the AI-context text goes through this.
 function _neutralDocLabel(doc, typeLabel, index) {
   const date = (doc.uploadDate || "").split("T")[0] || "unknown date";
-  return `${typeLabel} ${date} (#${index + 1})`;
+  const resolvedLabel = _resolveDocTypeLabel(doc, typeLabel);
+  return `${resolvedLabel} ${date} (#${index + 1})`;
 }
 
 // D13-4: no raw-OCR-text fallback here (dropped a dormant, never-called
