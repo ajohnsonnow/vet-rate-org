@@ -20,6 +20,18 @@ import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
 import { stopAutoBackup } from "../utils/autoBackup";
 import { broadcastDataWipe } from "../utils/dataWipeChannel";
 
+// Decision B: every "Clear All Data"/"Clear Data" control in the app (VKB
+// Viewer, The Bunker) deletes this same full scope via wipeAllLocalData - the
+// confirm text they show must say exactly that, not a narrower subset, since
+// a veteran reading it needs to know nothing survives anywhere it can be
+// clicked from.
+export const FULL_DATA_DELETE_CONFIRM_TEXT =
+  "This permanently deletes EVERYTHING Vet-Rate.org has about you on this " +
+  "device: your records, profile, and service history; My Packet documents; " +
+  "the knowledge base; your timeline; saved claims and conditions; local AI " +
+  "models and vector databases; preferences and settings; and all cached or " +
+  "offline data. This does not redirect you anywhere and cannot be undone.";
+
 function clearLocalAndSessionStorage() {
   // 1. Clear all localStorage
   // eslint-disable-next-line no-console

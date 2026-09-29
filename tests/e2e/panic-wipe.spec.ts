@@ -430,6 +430,73 @@ test.describe("VKBViewer Clear All Data propagates to every open tab (decision B
   });
 });
 
+// Decision B, through The Bunker's OWN "Clear All Data" button (BackupManager.jsx)
+// - distinct from the "🔥 Clear Data" button (Atomic Wipe, already covered
+// above) that sits right next to it in the same modal. Before this fix,
+// BackupManager's own button called dataBackup.js's clearAllData(), which
+// only removed a fixed localStorage key list - IndexedDB (the knowledge
+// base, My Packet documents), cookies, Cache Storage, and every other
+// localStorage key survived while the confirm dialog told a veteran
+// everything was gone. Now reuses the same wipeAllLocalData module as Atomic
+// Wipe and VKBViewer, confirmed with this file's own store-seeding/reading
+// helpers - same scope, same module, same cross-tab guarantee.
+test.describe("BackupManager's own Clear All Data propagates to every open tab (decision B)", () => {
+  test("clicking Clear All Data (The Bunker) in tab 1 wipes every store, and tab 2 reloads on its own with nothing coming back", async ({
+    page,
+    context,
+  }) => {
+    test.setTimeout(30_000);
+    await installDbHelpers(page);
+    await seedReturningUser(page);
+    await page.goto("/");
+    await dismissDisclaimer(page);
+    await seedEveryStore(page);
+
+    const page2 = await context.newPage();
+    await installDbHelpers(page2);
+    await seedReturningUser(page2);
+    await page2.goto("/");
+    await dismissDisclaimer(page2);
+
+    const before2 = await readEveryStore(page2);
+    expect(before2.vkbDbExists).toBe(true);
+
+    const page2Reloaded = page2.waitForEvent("framenavigated", {
+      timeout: 20000,
+    });
+
+    await page.evaluate(() =>
+      window.dispatchEvent(new CustomEvent("openBackupManager")),
+    );
+    await page
+      .getByRole("button", { name: "Clear All Data" })
+      .waitFor({ state: "visible", timeout: 5000 });
+    await page.getByRole("button", { name: "Clear All Data" }).click();
+    await page
+      .getByRole("button", { name: /yes, clear everything/i })
+      .waitFor({ state: "visible", timeout: 5000 });
+    await page.getByRole("button", { name: /yes, clear everything/i }).click();
+
+    // BackupManager's wipe reuses forceReloadWithCacheBypass (nocache=<timestamp>).
+    await page.waitForURL(/nocache=/, { timeout: 15000 });
+    await page.waitForLoadState("load");
+
+    await page2Reloaded;
+    await page2.waitForLoadState("load");
+
+    const after1 = await readEveryStore(page);
+    const after2 = await readEveryStore(page2);
+    for (const after of [after1, after2]) {
+      expect(after.localStorage).toBeNull();
+      expect(after.sessionStorage).toBeNull();
+      expect(after.cookie).toBe(false);
+      expect(after.vkbDbExists).toBe(false);
+      expect(after.aiModelDbExists).toBe(false);
+      expect(after.cacheExists).toBe(false);
+    }
+  });
+});
+
 // Decision B again, but through Atomic Wipe (Backup Manager > Clear Data >
 // Confirm Wipe) rather than VKBViewer's Clear All Data - dataWipeChannel.js's
 // own doc comment claims to cover both, but only VKBViewer ever actually

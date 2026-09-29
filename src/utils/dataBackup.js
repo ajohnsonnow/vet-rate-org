@@ -290,23 +290,6 @@ export const parseBackupFile = async (file) => {
 };
 
 /**
- * Clear all Vet-Rate data from localStorage (nuclear option)
- * @returns {number} Number of keys cleared
- */
-export const clearAllData = () => {
-  let clearedKeys = 0;
-
-  STORAGE_KEYS.forEach((key) => {
-    if (localStorage.getItem(key) !== null) {
-      localStorage.removeItem(key);
-      clearedKeys++;
-    }
-  });
-
-  return clearedKeys;
-};
-
-/**
  * Get storage statistics
  * @returns {Object} Statistics about current localStorage usage
  */

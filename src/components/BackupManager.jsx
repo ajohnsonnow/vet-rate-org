@@ -18,7 +18,6 @@ import {
   parseBackupFile,
   validateBackup,
   getStorageStats,
-  clearAllData,
   createRestorePoint,
   getRestorePoint,
   restoreFromRestorePoint,
@@ -26,9 +25,14 @@ import {
 import { markBackupCreated } from "../utils/dataPersistence";
 import { downloadDossier, previewDossier } from "../utils/dossierExport";
 import CloudSyncManager from "./CloudSyncManager";
-import AtomicWipe from "./AtomicWipe";
+import AtomicWipe, {
+  wipeAllLocalData,
+  forceReloadWithCacheBypass,
+  FULL_DATA_DELETE_CONFIRM_TEXT,
+} from "./AtomicWipe";
 import DbqBrowser from "./DbqBrowser";
 import { getCacheStats } from "../utils/dbqOfflineStorage";
+import { broadcastDataWipe } from "../utils/dataWipeChannel";
 
 const COUNTED_KEYS = [
   { key: "vet_rate_saved_claims", label: "Claims" },
@@ -232,17 +236,25 @@ function handleFileInputChange(e, onFileSelect) {
   }
 }
 
-// Clear all data
-function handleClearData(setShowConfirmClear, setStatus) {
-  const cleared = clearAllData();
+// Decision B: same scope as the app's full "delete my data" (Atomic Wipe /
+// VKBViewer's "Clear All Data") - reuses wipeAllLocalData rather than a
+// Bunker-only subset, broadcasts to every open tab, and reloads instead of
+// redirecting (Quick Exit already owns the decoy-redirect job).
+async function handleClearData(setShowConfirmClear) {
   setShowConfirmClear(false);
-  setStatus({
-    type: "success",
-    message: `✅ Cleared ${cleared} data items. Page will reload.`,
-  });
-  setTimeout(() => {
-    window.location.reload();
-  }, 2000);
+  try {
+    await wipeAllLocalData();
+  } catch (error) {
+    console.error("Error during Clear All Data wipe:", error);
+    // alert(), not a status message: the reload right below would carry any
+    // status state away before a veteran could ever read it, and a silent
+    // reload here would look identical to a real success.
+    alert(
+      "Some data may not have been fully deleted and could return after this reload. If this device is shared, clearing your browser's site data for this page is the more thorough option.",
+    );
+  }
+  broadcastDataWipe();
+  forceReloadWithCacheBypass();
 }
 
 function BunkerHeader({ onClose }) {
@@ -924,11 +936,7 @@ function ConfirmRestoreDialog({
   );
 }
 
-function ConfirmClearDialog({
-  showConfirmClear,
-  setShowConfirmClear,
-  setStatus,
-}) {
+function ConfirmClearDialog({ showConfirmClear, setShowConfirmClear }) {
   if (!showConfirmClear) return null;
 
   return (
@@ -947,7 +955,7 @@ function ConfirmClearDialog({
             Cancel
           </button>
           <button
-            onClick={() => handleClearData(setShowConfirmClear, setStatus)}
+            onClick={() => handleClearData(setShowConfirmClear)}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
           >
             Yes, Clear Everything
@@ -962,8 +970,7 @@ function ConfirmClearDialog({
         ⚠️ Clear All Data?
       </h3>
       <p className="text-gray-700 dark:text-gray-300 mb-4">
-        This will permanently delete ALL your data from this browser. This
-        cannot be undone.
+        {FULL_DATA_DELETE_CONFIRM_TEXT}
       </p>
       <p className="text-gray-700 dark:text-gray-300 font-semibold">
         Make sure you have exported a backup first!
@@ -1085,7 +1092,6 @@ function BunkerDialogs({
       <ConfirmClearDialog
         showConfirmClear={showConfirmClear}
         setShowConfirmClear={setShowConfirmClear}
-        setStatus={setStatus}
       />
 
       {/* Cloud Sync Modal */}
