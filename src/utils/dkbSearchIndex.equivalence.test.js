@@ -278,7 +278,9 @@ describe("D16-7: searchIndexedDKB matches the pre-fix full-scan algorithm exactl
 
     for (const query of REPRESENTATIVE_QUERIES) {
       const expected = referenceSearchDKB(entries, query, 10).map((e) => e.id);
-      const actual = searchIndexedDKB(index, query, 10).map((e) => e.id);
+      const actual = (await searchIndexedDKB(index, query, 10)).map(
+        (e) => e.id,
+      );
       expect(actual, `query=${JSON.stringify(query.slice(0, 60))}`).toEqual(
         expected,
       );
@@ -288,14 +290,14 @@ describe("D16-7: searchIndexedDKB matches the pre-fix full-scan algorithm exactl
   it("respects topK", async () => {
     const entries = buildFixtureEntries();
     const index = await buildDKBIndex(entries);
-    const result = searchIndexedDKB(index, "tinnitus rating DC 6260", 1);
+    const result = await searchIndexedDKB(index, "tinnitus rating DC 6260", 1);
     expect(result).toHaveLength(1);
   });
 
   it("returns [] for a query with no matches", async () => {
     const entries = buildFixtureEntries();
     const index = await buildDKBIndex(entries);
-    const result = searchIndexedDKB(index, "zzz_no_such_term_zzz", 10);
+    const result = await searchIndexedDKB(index, "zzz_no_such_term_zzz", 10);
     expect(result).toEqual([]);
   });
 
@@ -308,7 +310,7 @@ describe("D16-7: searchIndexedDKB matches the pre-fix full-scan algorithm exactl
   it("finds an entry that can only match via the condition_name boost", async () => {
     const entries = buildFixtureEntries();
     const index = await buildDKBIndex(entries);
-    const result = searchIndexedDKB(index, "xerostomia", 10);
+    const result = await searchIndexedDKB(index, "xerostomia", 10);
     expect(result.map((e) => e.id)).toContain(
       entries.find((e) => e.metadata.condition_name === "xerostomia").id,
     );
@@ -317,7 +319,7 @@ describe("D16-7: searchIndexedDKB matches the pre-fix full-scan algorithm exactl
   it("finds an entry that can only match via the diagnostic-code boost", async () => {
     const entries = buildFixtureEntries();
     const index = await buildDKBIndex(entries);
-    const result = searchIndexedDKB(index, "9999", 10);
+    const result = await searchIndexedDKB(index, "9999", 10);
     expect(result.map((e) => e.id)).toContain(
       entries.find((e) => e.metadata.dc === "9999").id,
     );

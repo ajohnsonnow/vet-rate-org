@@ -1438,7 +1438,7 @@ export async function searchDKB(query, topK = 10) {
   const cached = getCachedDKBSearch(query, topK);
   if (cached !== undefined) return cached;
 
-  const result = searchIndexedDKB(index, query, topK);
+  const result = await searchIndexedDKB(index, query, topK);
   setCachedDKBSearch(query, topK, result);
   return result;
 }

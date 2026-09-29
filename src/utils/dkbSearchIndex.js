@@ -45,6 +45,30 @@ function yieldToEventLoop() {
   });
 }
 
+function now() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+// A soft per-batch time budget, not an item count: entry text length in the
+// real corpus ranges from empty to ~1,600 chars and query term counts range
+// from one to (a large-blob caller's) thousands, so a fixed item count
+// under- or over-shoots depending on what lands in a given batch. 16ms
+// leaves comfortable headroom under D16-7's 200ms main-thread-task target
+// even at a 4x CPU slowdown (16ms x ~5 = 80ms). Shared by buildDKBIndex and
+// searchIndexedDKB's scoring loops - see maybeYield.
+const YIELD_BUDGET_MS = 16;
+
+function makeYieldBudget() {
+  return { lastCheck: now() };
+}
+
+async function maybeYield(budget) {
+  if (now() - budget.lastCheck > YIELD_BUDGET_MS) {
+    await yieldToEventLoop();
+    budget.lastCheck = now();
+  }
+}
+
 function addTrigrams(str, keyIndex, trigramIndex) {
   const lastStart = str.length - 3;
   for (let i = 0; i <= lastStart; i++) {
@@ -126,13 +150,6 @@ function indexConditionNames(state) {
   state.condTrigramIndex = condTrigramIndex;
 }
 
-// A soft per-batch time budget, not an entry count: entry text length in the
-// real corpus ranges from empty to ~1,600 chars, so a fixed entry count
-// under- or over-shoots depending on which entries land in a given batch.
-// 16ms leaves comfortable headroom under D16-7's 200ms main-thread-task
-// target even at a 4x CPU slowdown (16ms x ~5 = 80ms).
-const INDEX_BUILD_BATCH_BUDGET_MS = 16;
-
 /**
  * Build the DKB search index once. Chunked with a real event-loop yield
  * between batches so index construction itself never produces a single
@@ -148,17 +165,10 @@ export async function buildDKBIndex(entries) {
     conditionNameGroups: new Map(),
   };
 
-  let batchStart =
-    typeof performance !== "undefined" ? performance.now() : Date.now();
+  const budget = makeYieldBudget();
   for (let i = 0; i < entries.length; i++) {
     indexOneEntry(entries[i], i, state);
-    const now =
-      typeof performance !== "undefined" ? performance.now() : Date.now();
-    if (now - batchStart > INDEX_BUILD_BATCH_BUDGET_MS) {
-      await yieldToEventLoop();
-      batchStart =
-        typeof performance !== "undefined" ? performance.now() : Date.now();
-    }
+    await maybeYield(budget);
   }
 
   indexConditionNames(state);
@@ -214,14 +224,27 @@ function applyIntentBoost(score, source, type, intent) {
   return boosted;
 }
 
-function scoreTextMatches(index, termFrequency, rawScore) {
+function scoreTextMatchesForTerm(index, term, count, rawScore) {
+  const candidates = candidatesForTerm(index.textTrigramIndex, term);
+  if (!candidates) return;
+  for (const i of candidates) {
+    if (index.lowerInstruction[i].includes(term)) rawScore[i] += 2 * count;
+    if (index.lowerOutput[i].includes(term)) rawScore[i] += 1 * count;
+  }
+}
+
+// Item 2's own CDP profile (a 520-page synthetic import at 4x CPU throttle)
+// measured one 253ms task here, over D16-7's 200ms target - this loop
+// iterates over every unique query term (up to ~1,000+ for the large-blob
+// caller D16-7 was written for), and unlike buildDKBIndex, scoring itself
+// wasn't chunked, since it measured 5-30ms unthrottled. Same yield pattern
+// as buildDKBIndex: check every iteration is cheap, actually yielding is
+// what matters, and this keeps scoring correct for a real-time caller (see
+// searchIndexedDKB's own doc comment) while capping worst-case task size.
+async function scoreTextMatches(index, termFrequency, rawScore, budget) {
   for (const [term, count] of termFrequency) {
-    const candidates = candidatesForTerm(index.textTrigramIndex, term);
-    if (!candidates) continue;
-    for (const i of candidates) {
-      if (index.lowerInstruction[i].includes(term)) rawScore[i] += 2 * count;
-      if (index.lowerOutput[i].includes(term)) rawScore[i] += 1 * count;
-    }
+    scoreTextMatchesForTerm(index, term, count, rawScore);
+    await maybeYield(budget);
   }
 }
 
@@ -242,17 +265,27 @@ function scoreDiagnosticCodeMatches(
   }
 }
 
-function scoreConditionNameMatches(index, termFrequency, rawScore) {
-  for (const [term, count] of termFrequency) {
-    const candidates = candidatesForTerm(index.condTrigramIndex, term);
-    if (!candidates) continue;
-    for (const condIdx of candidates) {
-      const condition = index.distinctConds[condIdx];
-      if (!condition.includes(term)) continue;
-      for (const i of index.conditionNameGroups.get(condition)) {
-        rawScore[i] += 3 * count;
-      }
+function scoreConditionNameMatchesForTerm(index, term, count, rawScore) {
+  const candidates = candidatesForTerm(index.condTrigramIndex, term);
+  if (!candidates) return;
+  for (const condIdx of candidates) {
+    const condition = index.distinctConds[condIdx];
+    if (!condition.includes(term)) continue;
+    for (const i of index.conditionNameGroups.get(condition)) {
+      rawScore[i] += 3 * count;
     }
+  }
+}
+
+async function scoreConditionNameMatches(
+  index,
+  termFrequency,
+  rawScore,
+  budget,
+) {
+  for (const [term, count] of termFrequency) {
+    scoreConditionNameMatchesForTerm(index, term, count, rawScore);
+    await maybeYield(budget);
   }
 }
 
@@ -267,9 +300,11 @@ function buildTermFrequency(queryTerms) {
  * the original searchDKB post-load logic: entries with score > 0, sorted
  * by score descending, top `topK`. Byte-identical output and ordering to
  * the pre-D16-7 full-scan algorithm for any query - see the equivalence
- * test for the proof.
+ * test for the proof. Async (not just for buildDKBIndex's benefit): the
+ * text/condition-name scoring loops below also yield mid-loop on a large
+ * query - see scoreTextMatches's doc comment.
  */
-export function searchIndexedDKB(index, query, topK = 10) {
+export async function searchIndexedDKB(index, query, topK = 10) {
   const queryTerms = query
     .toLowerCase()
     .split(/\s+/)
@@ -280,7 +315,7 @@ export function searchIndexedDKB(index, query, topK = 10) {
   const termFrequency = buildTermFrequency(queryTerms);
 
   const rawScore = new Float64Array(index.entries.length);
-  scoreTextMatches(index, termFrequency, rawScore);
+  await scoreTextMatches(index, termFrequency, rawScore, makeYieldBudget());
   scoreDiagnosticCodeMatches(
     index,
     query,
@@ -288,7 +323,12 @@ export function searchIndexedDKB(index, query, topK = 10) {
     queryTerms.length,
     rawScore,
   );
-  scoreConditionNameMatches(index, termFrequency, rawScore);
+  await scoreConditionNameMatches(
+    index,
+    termFrequency,
+    rawScore,
+    makeYieldBudget(),
+  );
 
   const scored = [];
   for (let i = 0; i < index.entries.length; i++) {
