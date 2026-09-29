@@ -1027,3 +1027,224 @@ describe("Box-18 window demotion: correction survives a re-import", () => {
     expect(window).toBeDefined();
   });
 });
+
+// D16-1 (final16 regression, 2026-09-29): the final16 fix above stopped a
+// coinciding Box-18 window from demoting its own primary period by
+// requiring pass 2's cross-scope match to skip the incoming record's own
+// sibling window/primary (_isOwnSiblingWindow). That guard's fallback -
+// "does the existing row already record incoming's own source document" -
+// stays true FOREVER once it fires once, because a successful cross-scope
+// merge itself adds the incoming document to `existing.sources`. Every
+// document persistFormationDocument (musterCallProcessor.js) processes is
+// saved TWICE by design - once from the initial extraction, once more from
+// the Muster Call review modal's "Verify & Save" (see
+// persistFormationDocument's own doc comment) - so a code-sheet or DD-214
+// period that legitimately merged into an existing Box-18 window on its
+// first save could never re-confirm that same link on its second, and
+// created a fresh duplicate instead (musterCallProcessor.servicePeriodMerge:
+// this is the exact call sequence saveCodeSheetServicePeriodsToProfile's
+// own doc comment already promises is dedup-safe to call twice). A second,
+// independent gap: pass 1's near-date (isSameServicePeriod) fuzzy match was
+// scoped to same-periodScope candidates only, with no fuzzy fallback in
+// cross-scope pass 2 - so a code-sheet period a few days off from how the
+// NGB-22 itself dated its own Box-18 window could never merge into that
+// window at all, even on the very first save.
+//
+// This fixture extends REALISTIC_NGB22 (same primary dates, same coinciding
+// AD window) with a THIRD Box-18 window and a code sheet that lists all
+// three: the coinciding AD window and the IADT window at an exact date
+// match, and a third window 3 days off the NGB-22's own dating (within
+// isSameServicePeriod's 7-day tolerance) - plus a DD-214 for the IADT
+// window specifically. Fixture values are synthetic.
+const D16_PRIMARY_START = "2004-06-22";
+const D16_PRIMARY_END = "2005-08-27";
+const D16_IADT_START = "2004-01-01";
+const D16_IADT_END = "2004-03-01";
+const D16_AD2003_START = "2003-06-01";
+const D16_AD2003_END = "2003-08-01";
+
+function d16Ngb22ExtractedData() {
+  return {
+    formType: "NGB22",
+    serviceStartDate: D16_PRIMARY_START,
+    serviceStartDateDerived: false,
+    serviceEndDate: D16_PRIMARY_END,
+    rank: "SGT",
+    additionalPeriods: [
+      {
+        serviceStartDate: D16_IADT_START,
+        serviceEndDate: D16_IADT_END,
+        component: "IADT",
+      },
+      {
+        serviceStartDate: D16_AD2003_START,
+        serviceEndDate: D16_AD2003_END,
+        component: "Active Duty",
+      },
+      // Coincides EXACTLY with the primary above - the final16 demotion-
+      // prevention case, folded into this larger fixture too.
+      {
+        serviceStartDate: D16_PRIMARY_START,
+        serviceEndDate: D16_PRIMARY_END,
+        component: "Active Duty",
+      },
+    ],
+  };
+}
+
+function saveD16Ngb22(fileName = "ngb22-d16.pdf") {
+  saveServiceRecordToProfile(
+    { name: fileName },
+    { extractedData: { type: "service_record", ...d16Ngb22ExtractedData() } },
+  );
+}
+
+function saveD16CodeSheet(fileName = "codesheet-d16.pdf") {
+  saveCodeSheetServicePeriodsToProfile(
+    { name: fileName },
+    {
+      extractedData: {
+        ratingSource: "code_sheet",
+        servicePeriods: [
+          { entryDate: D16_PRIMARY_START, separationDate: D16_PRIMARY_END },
+          { entryDate: D16_IADT_START, separationDate: D16_IADT_END },
+          // 3 days off the NGB-22's own 2003-06-01 IADT window start - still
+          // within isSameServicePeriod's 7-day tolerance.
+          { entryDate: "2003-06-04", separationDate: D16_AD2003_END },
+        ],
+      },
+    },
+  );
+}
+
+function saveD16Dd214ForIadtWindow(fileName = "dd214-window-d16.pdf") {
+  saveServiceRecordToProfile(
+    { name: fileName },
+    {
+      extractedData: {
+        type: "service_record",
+        formType: "DD214",
+        serviceStartDate: D16_IADT_START,
+        serviceStartDateDerived: false,
+        serviceEndDate: D16_IADT_END,
+        rank: "PFC",
+      },
+    },
+  );
+}
+
+// The code sheet's own dates are authoritative (options.authoritativeDates)
+// and win the merge over the NGB-22's own Box-18-remarks-parsed dates - so
+// the AD-2003 window's stored serviceStartDate moves from D16_AD2003_START
+// to the code sheet's "3 days off" value once it merges. Windows are found
+// by elimination (component/exact-date for the other two) rather than by
+// the AD-2003 window's own original date, which the merge is SUPPOSED to
+// move.
+function findD16Rows() {
+  const periods = getServicePeriods();
+  const windows = periods.filter((p) => p.periodScope === "window");
+  const iadtWindow = windows.find(
+    (p) => p.component === "IADT" || p.serviceStartDate === D16_IADT_START,
+  );
+  const coincidingWindow = windows.find(
+    (p) =>
+      p.serviceStartDate === D16_PRIMARY_START &&
+      p.serviceEndDate === D16_PRIMARY_END,
+  );
+  const ad2003Window = windows.find(
+    (p) => p !== iadtWindow && p !== coincidingWindow,
+  );
+  const primary = periods.find(
+    (p) =>
+      p.periodScope !== "window" &&
+      p.serviceStartDate === D16_PRIMARY_START &&
+      p.serviceEndDate === D16_PRIMARY_END,
+  );
+  return { periods, iadtWindow, ad2003Window, coincidingWindow, primary };
+}
+
+function expectD16FixtureIsClean() {
+  const rows = findD16Rows();
+  expect(rows.periods).toHaveLength(4);
+  expect(rows.iadtWindow).toBeDefined();
+  expect(rows.ad2003Window).toBeDefined();
+  expect(rows.coincidingWindow).toBeDefined();
+  expect(rows.primary).toBeDefined();
+  // Box-18 window demotion invariant (final16): the coinciding window
+  // never demotes its own primary enlistment - they stay two rows.
+  expect(rows.primary.id).not.toBe(rows.coincidingWindow.id);
+  return rows;
+}
+
+function sourcesOf(period, fileName) {
+  return (period.sources || []).filter((s) => s.sourceDocument === fileName);
+}
+
+describe("D16-1: code-sheet/DD-214 periods merge into Box-18 windows idempotently", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("merges an exact-date and a near-date code-sheet period into their Box-18 windows, in the app's real import order", () => {
+    saveD16Ngb22();
+    saveD16CodeSheet();
+    saveD16Dd214ForIadtWindow();
+
+    const { iadtWindow, ad2003Window, primary } = expectD16FixtureIsClean();
+    expect(sourcesOf(iadtWindow, "codesheet-d16.pdf")).toHaveLength(1);
+    expect(sourcesOf(iadtWindow, "dd214-window-d16.pdf")).toHaveLength(1);
+    expect(sourcesOf(ad2003Window, "codesheet-d16.pdf")).toHaveLength(1);
+    expect(sourcesOf(primary, "ngb22-d16.pdf")).toHaveLength(1);
+  });
+
+  it("produces the identical result in the reverse import order (DD-214 and code sheet before the NGB-22)", () => {
+    saveD16Dd214ForIadtWindow();
+    saveD16CodeSheet();
+    saveD16Ngb22();
+
+    expectD16FixtureIsClean();
+  });
+
+  it("stays at 4 periods, with each contributing document listed exactly once, when every document is saved twice (persistFormationDocument's own documented initial-extraction-then-Verify&Save double-save)", () => {
+    saveD16Ngb22();
+    saveD16Ngb22();
+    saveD16CodeSheet();
+    saveD16CodeSheet();
+    saveD16Dd214ForIadtWindow();
+    saveD16Dd214ForIadtWindow();
+
+    const { iadtWindow, ad2003Window, primary } = expectD16FixtureIsClean();
+    // N9a: append-only - a document already listed as a source is never
+    // duplicated by re-saving the same document.
+    expect(sourcesOf(iadtWindow, "codesheet-d16.pdf")).toHaveLength(1);
+    expect(sourcesOf(iadtWindow, "dd214-window-d16.pdf")).toHaveLength(1);
+    expect(sourcesOf(ad2003Window, "codesheet-d16.pdf")).toHaveLength(1);
+    expect(sourcesOf(primary, "ngb22-d16.pdf")).toHaveLength(1);
+  });
+
+  it("stays at 4 periods on an unedited re-import after a veteran correction", () => {
+    saveD16Ngb22();
+    saveD16CodeSheet();
+
+    const { primary } = expectD16FixtureIsClean();
+    const correction = setServiceEntryDate({
+      date: "2004-06-25",
+      via: "my_packet",
+      periodId: primary.id,
+    });
+    expect(correction.ok).toBe(true);
+
+    saveD16Ngb22();
+    saveD16CodeSheet();
+
+    // The correction moved the primary's own serviceStartDate, so it's
+    // looked up by id here rather than through expectD16FixtureIsClean's
+    // date-keyed lookup (D16_PRIMARY_START no longer matches it).
+    expect(getServicePeriods()).toHaveLength(4);
+    const primaryAfter = getServicePeriods().find((p) => p.id === primary.id);
+    expect(primaryAfter).toBeDefined();
+    expect(primaryAfter.periodScope).not.toBe("window");
+    expect(primaryAfter.serviceStartDate).toBe("2004-06-25");
+    expect(primaryAfter.serviceStartDateSource).toBe("veteran");
+  });
+});

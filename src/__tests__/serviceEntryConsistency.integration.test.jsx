@@ -144,6 +144,7 @@ const {
   getVeteranProfile,
   summarizeServicePeriods,
   getTimelineEvents,
+  saveServiceHistory,
 } = await import("../utils/veteranProfile.js");
 const { loadVKB, saveVKB, generateLLMContext, clearVKB } =
   await import("../utils/veteranKnowledgeBase.js");
@@ -247,6 +248,22 @@ async function ingestCodeSheet(fileName, overrides = {}) {
           },
         ],
       },
+      pageCount: 1,
+    },
+  );
+}
+
+// D16-1: a code sheet listing several periods at once (one per Box-18
+// window it separately confirms), not just the single enlistment-level
+// period ingestCodeSheet above always sends.
+async function ingestCodeSheetPeriods(fileName, servicePeriods) {
+  await persistFormationDocument(
+    { name: fileName, size: 3000 },
+    {
+      filename: fileName,
+      text: "",
+      classification: { type: "C_FILE_MEDICAL", confidence: 90 },
+      extractedData: { ratingSource: "code_sheet", servicePeriods },
       pageCount: 1,
     },
   );
@@ -722,4 +739,294 @@ describe("ADR-007: My Packet's Save Profile never reverts a proven correction wi
       source: "veteran",
     });
   });
+});
+
+// D16-1 (final16 regression, 2026-09-29): a period-count + timeline-count
+// assertion so a future change to either number fails loudly, per the D16-1
+// fix notes (musterCallProcessor.servicePeriodMerge.test.js has the
+// matching-logic-level regression tests; this file adds the real-ingest,
+// real-VKB-timeline-projection check the ADR-007 suite is for). The
+// fixture: an NGB-22 with 3 Box-18 windows (one coinciding exactly with the
+// primary enlistment - final16's own demotion-prevention case), a code
+// sheet listing all 3 windows (one of them 3 days off, within
+// isSameServicePeriod's 7-day tolerance), and a DD-214 for one specific
+// window. Only the primary enlistment is periodScope !== "window", so
+// exactly one "Enlisted"/"Entered active duty" timeline event is ever
+// projected (veteranKnowledgeBase.js's _buildProjectedEntryEvents filters
+// window periods out) - a phantom duplicate period from the regression
+// this guards against is always non-window-scoped (a code sheet/DD-214
+// period never carries periodScope: "window" itself), so it always
+// inflates this count too. Fixture values are synthetic.
+const D16_NGB22_FILE = "ngb22-d16-synthetic.pdf";
+const D16_CODESHEET_FILE = "codesheet-d16-synthetic.pdf";
+const D16_DD214_FILE = "dd214-window-d16-synthetic.pdf";
+const D16_PRIMARY_START = "2002-03-05";
+const D16_PRIMARY_END = "2010-06-15";
+const D16_IADT_START = "2000-06-01";
+const D16_IADT_END = "2000-08-15";
+const D16_AD2003_START = "2003-06-01";
+const D16_AD2003_END = "2003-08-01";
+
+async function ingestD16Ngb22(fileName = D16_NGB22_FILE) {
+  await ingestServiceRecord({
+    formType: "NGB22",
+    fileName,
+    serviceStartDate: D16_PRIMARY_START,
+    serviceStartDateDerived: false,
+    serviceEndDate: D16_PRIMARY_END,
+    additionalPeriods: [
+      {
+        serviceStartDate: D16_IADT_START,
+        serviceEndDate: D16_IADT_END,
+        component: "Inactive Duty Training",
+      },
+      {
+        serviceStartDate: D16_AD2003_START,
+        serviceEndDate: D16_AD2003_END,
+        component: "Active Duty",
+      },
+      // Coincides EXACTLY with the primary above.
+      {
+        serviceStartDate: D16_PRIMARY_START,
+        serviceEndDate: D16_PRIMARY_END,
+        component: "Active Duty",
+      },
+    ],
+  });
+}
+
+async function ingestD16CodeSheet(fileName = D16_CODESHEET_FILE) {
+  await ingestCodeSheetPeriods(fileName, [
+    { entryDate: D16_PRIMARY_START, separationDate: D16_PRIMARY_END },
+    { entryDate: D16_IADT_START, separationDate: D16_IADT_END },
+    // 3 days off the NGB-22's own 2003-06-01 window start - still within
+    // isSameServicePeriod's 7-day tolerance.
+    { entryDate: "2003-06-04", separationDate: D16_AD2003_END },
+  ]);
+}
+
+async function ingestD16Dd214ForWindow(fileName = D16_DD214_FILE) {
+  await ingestServiceRecord({
+    formType: "DD214",
+    fileName,
+    serviceStartDate: D16_IADT_START,
+    serviceStartDateDerived: false,
+    serviceEndDate: D16_IADT_END,
+  });
+}
+
+// The VKB's own evidenceTimeline (what My Packet's Timeline tab reads) is
+// re-projected from the FULL current servicePeriods[] on every NGB-22/
+// DD-214 import (projectServiceEntryIntoVkb -> _projectTimeline,
+// veteranKnowledgeBase.js) - unlike EvidenceTimeline.jsx's own separate
+// localStorage store, which only gets its first copy once that component
+// has actually been mounted (see assertEvidenceTimelineAgrees above), so
+// it isn't a reliable check here without also rendering the component.
+async function serviceEntryTimelineEvents() {
+  const vkb = await loadVKB();
+  return vkb.evidenceTimeline.filter((e) =>
+    ["guard_enlistment", "service_entry"].includes(e.eventType),
+  );
+}
+
+async function expectD16CountsAreStable() {
+  expect(getServicePeriods()).toHaveLength(4);
+  expect(
+    getServicePeriods().filter((p) => p.periodScope === "window"),
+  ).toHaveLength(3);
+  expect(await serviceEntryTimelineEvents()).toHaveLength(1);
+}
+
+async function d16RealImportOrder() {
+  await ingestD16Ngb22();
+  await ingestD16CodeSheet();
+  await ingestD16Dd214ForWindow();
+  await primeVkbSeparationDate();
+
+  await expectD16CountsAreStable();
+}
+
+async function d16ReverseImportOrder() {
+  await ingestD16Dd214ForWindow();
+  await ingestD16CodeSheet();
+  await ingestD16Ngb22();
+  await primeVkbSeparationDate();
+
+  await expectD16CountsAreStable();
+}
+
+async function d16EveryDocumentSavedTwice() {
+  await ingestD16Ngb22();
+  await ingestD16Ngb22();
+  await ingestD16CodeSheet();
+  await ingestD16CodeSheet();
+  await ingestD16Dd214ForWindow();
+  await ingestD16Dd214ForWindow();
+  await primeVkbSeparationDate();
+
+  await expectD16CountsAreStable();
+}
+
+async function d16ReimportAfterCorrection() {
+  await ingestD16Ngb22();
+  await ingestD16CodeSheet();
+  await primeVkbSeparationDate();
+
+  const primary = getServicePeriods().find(
+    (p) =>
+      p.periodScope !== "window" && p.serviceStartDate === D16_PRIMARY_START,
+  );
+  const correction = setServiceEntryDate({
+    date: "2002-03-08",
+    via: "my_packet",
+    periodId: primary.id,
+  });
+  expect(correction.ok).toBe(true);
+
+  await ingestD16Ngb22();
+  await ingestD16CodeSheet();
+
+  await expectD16CountsAreStable();
+  const primaryAfter = getServicePeriods().find((p) => p.id === primary.id);
+  expect(primaryAfter.serviceStartDate).toBe("2002-03-08");
+  expect(primaryAfter.serviceStartDateSource).toBe("veteran");
+}
+
+function d16RawPeriod({ id, start, end, scope, sourceDocument, formType }) {
+  return {
+    id,
+    serviceStartDate: start,
+    serviceEndDate: end,
+    periodScope: scope || null,
+    formType,
+    sourceDocument,
+    confidence: 70,
+    sources: [{ sourceDocument, formType }],
+  };
+}
+
+// A profile already holding a stored 5-period state - built directly via
+// saveServiceHistory, bypassing upsertServicePeriod's own (now-fixed)
+// matching entirely, since routing this seed through the FIXED matching
+// logic would just merge the phantom row away immediately instead of
+// reproducing the pre-fix stored shape.
+function seedD16FivePeriodState() {
+  saveServiceHistory({
+    deployments: [],
+    awards: [],
+    dd214Data: null,
+    serviceInfo: null,
+    servicePeriods: [
+      d16RawPeriod({
+        id: "d16-iadt",
+        start: D16_IADT_START,
+        end: D16_IADT_END,
+        scope: "window",
+        sourceDocument: D16_NGB22_FILE,
+        formType: "NGB22",
+      }),
+      d16RawPeriod({
+        id: "d16-ad2003",
+        start: D16_AD2003_START,
+        end: D16_AD2003_END,
+        scope: "window",
+        sourceDocument: D16_NGB22_FILE,
+        formType: "NGB22",
+      }),
+      d16RawPeriod({
+        id: "d16-coinciding",
+        start: D16_PRIMARY_START,
+        end: D16_PRIMARY_END,
+        scope: "window",
+        sourceDocument: D16_NGB22_FILE,
+        formType: "NGB22",
+      }),
+      d16RawPeriod({
+        id: "d16-primary",
+        start: D16_PRIMARY_START,
+        end: D16_PRIMARY_END,
+        scope: null,
+        sourceDocument: D16_NGB22_FILE,
+        formType: "NGB22",
+      }),
+      // The pre-existing phantom: an old, buggy merge's near-date
+      // code-sheet duplicate that never found its Box-18 window.
+      d16RawPeriod({
+        id: "d16-cs-near-dup",
+        start: "2003-06-04",
+        end: D16_AD2003_END,
+        scope: null,
+        sourceDocument: D16_CODESHEET_FILE,
+        formType: "Code Sheet",
+      }),
+    ],
+    unmatchedServiceRecords: [],
+    dutyStations: [],
+    documentPeriodCounts: { [D16_NGB22_FILE]: 4, [D16_CODESHEET_FILE]: 1 },
+    schemaVersion: 4,
+  });
+}
+
+// A brand-new document (never seen before, so it can't rely on pass 1's
+// same-scope match the way the code-sheet re-import does) confirming the
+// AD-2003 window a few days off how the NGB-22 itself dated it still has
+// to merge cross-scope into that window, not create a 6th row - the
+// specific gap a stored pre-fix profile still needs the fix for, post-
+// upgrade. 2003-05-26 is deliberately within isSameServicePeriod's 7-day
+// tolerance of the real window (2003-06-01, 6 days) but outside it for the
+// pre-existing phantom (2003-06-04, 9 days), so it can only match the
+// window, not the phantom.
+async function d16IngestFollowupForAd2003Window() {
+  await ingestServiceRecord({
+    formType: "DD214",
+    fileName: "dd214-ad2003-followup-d16-synthetic.pdf",
+    serviceStartDate: "2003-05-26",
+    serviceStartDateDerived: false,
+    serviceEndDate: D16_AD2003_END,
+  });
+  expect(getServicePeriods()).toHaveLength(5);
+  const ad2003Window = getServicePeriods().find((p) => p.id === "d16-ad2003");
+  expect(ad2003Window.sources.map((s) => s.sourceDocument)).toContain(
+    "dd214-ad2003-followup-d16-synthetic.pdf",
+  );
+}
+
+// "Upgrade": loading/upgrading must never itself change the stored count -
+// there is no migration that retroactively collapses pre-existing
+// duplicates - and a subsequent re-import must not grow it further, since
+// the fix's idempotency guarantee applies going forward.
+async function d16UpgradeFromStoredFivePeriodState() {
+  seedD16FivePeriodState();
+  await primeVkbSeparationDate();
+  expect(getServiceHistory().servicePeriods).toHaveLength(5);
+
+  // A later, unrelated re-import of the code sheet must not grow the count
+  // further - only the fixture's own already-linked periods may absorb it.
+  await ingestD16CodeSheet();
+  expect(getServicePeriods()).toHaveLength(5);
+
+  await d16IngestFollowupForAd2003Window();
+}
+
+describe("ADR-007: D16-1 regression guard - Box-18 code-sheet/DD-214 merges keep the period count and timeline count fixed", () => {
+  it(
+    "stays at 4 periods / 1 service-entry timeline event in the app's real import order",
+    d16RealImportOrder,
+  );
+  it(
+    "stays at 4 periods / 1 timeline event in the reverse import order",
+    d16ReverseImportOrder,
+  );
+  it(
+    "stays at 4 periods / 1 timeline event when every document is saved twice",
+    d16EveryDocumentSavedTwice,
+  );
+  it(
+    "stays at 4 periods / 1 timeline event on an unedited re-import after a veteran correction",
+    d16ReimportAfterCorrection,
+  );
+  it(
+    "upgrade from a stored 5-period state: loading and a subsequent re-import never change the count",
+    d16UpgradeFromStoredFivePeriodState,
+  );
 });
