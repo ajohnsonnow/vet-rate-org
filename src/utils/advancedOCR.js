@@ -402,7 +402,7 @@ async function createOCRScheduler(poolSize, config) {
 function createPageRecognizer(scheduler) {
   return async (page, scale, preprocessStrategy) => {
     const canvas = await renderPageToCanvas(page, scale);
-    const processedCanvas = applyAdvancedPreprocessing(
+    const processedCanvas = await applyAdvancedPreprocessing(
       canvas,
       preprocessStrategy,
     );
@@ -669,10 +669,28 @@ async function renderPageToCanvas(page, scale) {
   return canvas;
 }
 
+// A scanned-page image at typical OCR working scale (CANVAS_SCALES up to
+// 4.5x, CANVAS_SCALES_DEGRADED/the high-scale retry up to 8.0x) runs each of
+// adaptiveThreshold/denoise/sharpen/dilate/erode's nested pixel loops
+// synchronously - measured live (CDP Profiler + PerformanceObserver
+// longtask, a real 1700x2200 scanned-image import): a single
+// applyAdvancedPreprocessing call is ONE uninterrupted main-thread task
+// lasting up to ~30s, freezing every other event on the page (the panic key
+// included) for the full duration. Yielding every ROWS_PER_CHUNK rows keeps
+// each chunk's own cost bounded regardless of image size, without changing
+// what gets computed - every read still comes from the untouched `data`
+// buffer and every write still lands in `output`, exactly as before; only
+// when control returns to the event loop between chunks changes.
+const ROWS_PER_CHUNK = 6;
+
+function yieldToEventLoop() {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 /**
  * Apply advanced preprocessing based on detected strategy
  */
-function applyAdvancedPreprocessing(canvas, strategy) {
+async function applyAdvancedPreprocessing(canvas, strategy) {
   const processed = document.createElement("canvas");
   const ctx = processed.getContext("2d");
   processed.width = canvas.width;
@@ -684,40 +702,40 @@ function applyAdvancedPreprocessing(canvas, strategy) {
   switch (strategy) {
     case PREPROCESS_STRATEGIES.CLEAN:
       imageData = enhanceContrast(imageData, 1.1);
-      imageData = sharpen(imageData, 0.3);
+      imageData = await sharpen(imageData, 0.3);
       break;
 
     case PREPROCESS_STRATEGIES.STANDARD:
       imageData = grayscale(imageData);
       imageData = enhanceContrast(imageData, 1.4);
-      imageData = adaptiveThreshold(imageData);
-      imageData = denoise(imageData, 1);
-      imageData = sharpen(imageData, 0.8);
+      imageData = await adaptiveThreshold(imageData);
+      imageData = await denoise(imageData, 1);
+      imageData = await sharpen(imageData, 0.8);
       break;
 
     case PREPROCESS_STRATEGIES.POOR:
       imageData = grayscale(imageData);
       imageData = enhanceContrast(imageData, 2.0);
-      imageData = adaptiveThreshold(imageData, 15);
-      imageData = denoise(imageData, 2);
-      imageData = morphologicalClosing(imageData);
-      imageData = sharpen(imageData, 1.2);
+      imageData = await adaptiveThreshold(imageData, 15);
+      imageData = await denoise(imageData, 2);
+      imageData = await morphologicalClosing(imageData);
+      imageData = await sharpen(imageData, 1.2);
       break;
 
     case PREPROCESS_STRATEGIES.AGED:
       imageData = grayscale(imageData);
       imageData = removeYellowing(imageData);
       imageData = enhanceContrast(imageData, 1.8);
-      imageData = adaptiveThreshold(imageData);
-      imageData = denoise(imageData, 1.5);
-      imageData = sharpen(imageData, 1.0);
+      imageData = await adaptiveThreshold(imageData);
+      imageData = await denoise(imageData, 1.5);
+      imageData = await sharpen(imageData, 1.0);
       break;
 
     case PREPROCESS_STRATEGIES.HANDWRITTEN:
       imageData = grayscale(imageData);
       imageData = enhanceContrast(imageData, 1.6);
-      imageData = adaptiveThreshold(imageData, 20);
-      imageData = denoise(imageData, 1);
+      imageData = await adaptiveThreshold(imageData, 20);
+      imageData = await denoise(imageData, 1);
       break;
 
     case PREPROCESS_STRATEGIES.SEVERELY_AGED:
@@ -730,11 +748,11 @@ function applyAdvancedPreprocessing(canvas, strategy) {
       imageData = removeYellowing(imageData); // Remove age discoloration
       imageData = autoLevels(imageData); // Automatic contrast stretching
       imageData = enhanceContrast(imageData, 2.5); // Very aggressive contrast
-      imageData = unsharpMask(imageData, 2.0); // Strong edge enhancement
-      imageData = adaptiveThreshold(imageData, 21); // Larger block for faded text
-      imageData = morphologicalClosing(imageData, 1); // Fill small gaps
-      imageData = denoise(imageData, 2); // Strong denoising
-      imageData = sharpen(imageData, 1.5); // Final sharpening
+      imageData = await unsharpMask(imageData, 2.0); // Strong edge enhancement
+      imageData = await adaptiveThreshold(imageData, 21); // Larger block for faded text
+      imageData = await morphologicalClosing(imageData, 1); // Fill small gaps
+      imageData = await denoise(imageData, 2); // Strong denoising
+      imageData = await sharpen(imageData, 1.5); // Final sharpening
       break;
 
     case PREPROCESS_STRATEGIES.INVERTED:
@@ -744,9 +762,9 @@ function applyAdvancedPreprocessing(canvas, strategy) {
       imageData = grayscale(imageData);
       imageData = invert(imageData); // Flip black/white
       imageData = enhanceContrast(imageData, 1.6);
-      imageData = adaptiveThreshold(imageData);
-      imageData = denoise(imageData, 1);
-      imageData = sharpen(imageData, 0.8);
+      imageData = await adaptiveThreshold(imageData);
+      imageData = await denoise(imageData, 1);
+      imageData = await sharpen(imageData, 0.8);
       break;
   }
 
@@ -983,7 +1001,7 @@ function _localMean(data, x, y, width, height, radius) {
   return sum / count;
 }
 
-export function adaptiveThreshold(imageData, blockSize = 11) {
+export async function adaptiveThreshold(imageData, blockSize = 11) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
@@ -1000,13 +1018,14 @@ export function adaptiveThreshold(imageData, blockSize = 11) {
 
       output[idx] = output[idx + 1] = output[idx + 2] = value;
     }
+    if (y % ROWS_PER_CHUNK === 0) await yieldToEventLoop();
   }
 
   imageData.data.set(output);
   return imageData;
 }
 
-function denoise(imageData, strength = 1) {
+export async function denoise(imageData, strength = 1) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
@@ -1030,13 +1049,14 @@ function denoise(imageData, strength = 1) {
 
       output[idx] = output[idx + 1] = output[idx + 2] = median;
     }
+    if (y % ROWS_PER_CHUNK === 0) await yieldToEventLoop();
   }
 
   imageData.data.set(output);
   return imageData;
 }
 
-function sharpen(imageData, amount = 1.0) {
+export async function sharpen(imageData, amount = 1.0) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
@@ -1070,19 +1090,20 @@ function sharpen(imageData, amount = 1.0) {
       const value = clamp(sum);
       output[idx] = output[idx + 1] = output[idx + 2] = value;
     }
+    if (y % ROWS_PER_CHUNK === 0) await yieldToEventLoop();
   }
 
   imageData.data.set(output);
   return imageData;
 }
 
-function morphologicalClosing(imageData, size = 2) {
-  imageData = dilate(imageData, size);
-  imageData = erode(imageData, size);
+export async function morphologicalClosing(imageData, size = 2) {
+  imageData = await dilate(imageData, size);
+  imageData = await erode(imageData, size);
   return imageData;
 }
 
-function dilate(imageData, size) {
+export async function dilate(imageData, size) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
@@ -1102,13 +1123,14 @@ function dilate(imageData, size) {
       const idx = (y * width + x) * 4;
       output[idx] = output[idx + 1] = output[idx + 2] = maxVal;
     }
+    if (y % ROWS_PER_CHUNK === 0) await yieldToEventLoop();
   }
 
   imageData.data.set(output);
   return imageData;
 }
 
-function erode(imageData, size) {
+export async function erode(imageData, size) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
@@ -1128,6 +1150,7 @@ function erode(imageData, size) {
       const idx = (y * width + x) * 4;
       output[idx] = output[idx + 1] = output[idx + 2] = minVal;
     }
+    if (y % ROWS_PER_CHUNK === 0) await yieldToEventLoop();
   }
 
   imageData.data.set(output);
@@ -1212,7 +1235,7 @@ function autoLevels(imageData) {
  * Unsharp mask: enhance edges for better OCR on blurry/faded text
  * amount: strength of sharpening (1.0 = normal, 2.0 = strong)
  */
-function unsharpMask(imageData, amount = 1.0) {
+export async function unsharpMask(imageData, amount = 1.0) {
   const width = imageData.width;
   const height = imageData.height;
   const data = imageData.data;
@@ -1238,14 +1261,17 @@ function unsharpMask(imageData, amount = 1.0) {
       blurred[idx + 1] = sum / 9;
       blurred[idx + 2] = sum / 9;
     }
+    if (y % ROWS_PER_CHUNK === 0) await yieldToEventLoop();
   }
 
   // Unsharp mask: output = original + amount * (original - blurred)
+  const pixelsPerChunk = ROWS_PER_CHUNK * width * 4;
   for (let i = 0; i < data.length; i += 4) {
     const diff = data[i] - blurred[i];
     output[i] = clamp(data[i] + amount * diff);
     output[i + 1] = clamp(data[i + 1] + amount * diff);
     output[i + 2] = clamp(data[i + 2] + amount * diff);
+    if (i % pixelsPerChunk === 0) await yieldToEventLoop();
   }
 
   imageData.data.set(output);

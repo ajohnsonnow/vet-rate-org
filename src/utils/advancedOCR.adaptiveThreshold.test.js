@@ -25,13 +25,13 @@ const grayImage = (values, width, height) => {
 };
 
 describe("advancedOCR: adaptiveThreshold", () => {
-  it("binarizes each pixel against its own local neighborhood mean, not a single global cutoff", () => {
+  it("binarizes each pixel against its own local neighborhood mean, not a single global cutoff", async () => {
     // Row of 3 pixels: [100, 100, 200]. blockSize 3 -> radius 1.
     // x=0: mean(100,100)=100,  100 > 95      -> white (255)
     // x=1: mean(100,100,200)=133.3, 100 <= 126.7 -> black (0)
     // x=2: mean(100,200)=150,  200 > 142.5   -> white (255)
     const image = grayImage([100, 100, 200], 3, 1);
-    const result = adaptiveThreshold(image, 3);
+    const result = await adaptiveThreshold(image, 3);
 
     const pixel = (x) => [
       result.data[x * 4],
@@ -43,9 +43,9 @@ describe("advancedOCR: adaptiveThreshold", () => {
     expect(pixel(2)).toEqual([255, 255, 255]);
   });
 
-  it("preserves the alpha channel and image dimensions", () => {
+  it("preserves the alpha channel and image dimensions", async () => {
     const image = grayImage([10, 250, 10, 250], 2, 2);
-    const result = adaptiveThreshold(image, 3);
+    const result = await adaptiveThreshold(image, 3);
     expect(result.width).toBe(2);
     expect(result.height).toBe(2);
     expect([...result.data].filter((_, i) => i % 4 === 3)).toEqual([
@@ -53,9 +53,9 @@ describe("advancedOCR: adaptiveThreshold", () => {
     ]);
   });
 
-  it("only ever writes pure black or white into each channel", () => {
+  it("only ever writes pure black or white into each channel", async () => {
     const image = grayImage([12, 240, 88, 60, 199, 5, 133, 77, 210], 3, 3);
-    const result = adaptiveThreshold(image, 5);
+    const result = await adaptiveThreshold(image, 5);
     for (let i = 0; i < result.data.length; i += 4) {
       expect([0, 255]).toContain(result.data[i]);
       expect(result.data[i]).toBe(result.data[i + 1]);
