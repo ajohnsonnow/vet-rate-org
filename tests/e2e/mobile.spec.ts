@@ -2642,11 +2642,22 @@ for (const vp of HEADER_WRAP_BAND_VIEWPORTS) {
  * badge specifically - a header control with no tooltip simply never
  * produces a `[role=tooltip]` and is skipped, not a violation.
  */
-const HEADER_REGION_SELECTOR =
-  'header[role="banner"], [role="dialog"][aria-modal="true"] .modal-header, [role="alertdialog"][aria-modal="true"] .modal-header';
+// Two separate selectors, not one union: the global `header[role="banner"]`
+// never unmounts while a tool dialog is open, so a union selector would
+// re-scan and re-test its ~15-20 nav controls (Tools/Resources items, AI
+// badge, language, etc.) on every single one of the ~40 dialogs the sweep
+// below opens - 40x redundant work for a region already covered once by the
+// dedicated "home header" test. Each call site picks the one it actually
+// means.
+const HOME_HEADER_REGION_SELECTOR = 'header[role="banner"]';
+const DIALOG_HEADER_REGION_SELECTOR =
+  '[role="dialog"][aria-modal="true"] .modal-header, [role="alertdialog"][aria-modal="true"] .modal-header';
 const HEADER_FOCUSABLE_INDEX_ATTR = "data-e2e-header-focusable-index";
 
-async function stampHeaderFocusableControls(page: Page): Promise<number> {
+async function stampHeaderFocusableControls(
+  page: Page,
+  sel: string,
+): Promise<number> {
   return page.evaluate(
     ({ sel, attr }) => {
       const isRendered = (el: Element) => el.getClientRects().length > 0;
@@ -2662,7 +2673,7 @@ async function stampHeaderFocusableControls(page: Page): Promise<number> {
       controls.forEach((el, i) => el.setAttribute(attr, String(i)));
       return controls.length;
     },
-    { sel: HEADER_REGION_SELECTOR, attr: HEADER_FOCUSABLE_INDEX_ATTR },
+    { sel, attr: HEADER_FOCUSABLE_INDEX_ATTR },
   );
 }
 
@@ -2672,6 +2683,10 @@ async function stampHeaderFocusableControls(page: Page): Promise<number> {
  * `vpWidth`x`vpHeight`. Blurs (and waits for the bubble to actually close)
  * before returning either way, so a still-open tooltip's own Escape-capture
  * handler can't interfere with the sweep's subsequent dialog-close step.
+ * The 500/300ms waits are generous relative to Tooltip.jsx's own 200ms
+ * SHOW_DELAY_MS - most controls have no tooltip at all, so this cost is
+ * paid on every one of them; a longer wait multiplies across every control
+ * on every dialog the sweep opens.
  */
 async function tooltipViewportViolation(
   page: Page,
@@ -2684,7 +2699,7 @@ async function tooltipViewportViolation(
   await control.focus().catch(() => {});
   const tooltip = page.locator('[role="tooltip"]').first();
   const appeared = await tooltip
-    .waitFor({ state: "visible", timeout: 1500 })
+    .waitFor({ state: "visible", timeout: 500 })
     .then(() => true)
     .catch(() => false);
 
@@ -2706,17 +2721,18 @@ async function tooltipViewportViolation(
     }
   }
   await control.blur().catch(() => {});
-  await tooltip.waitFor({ state: "hidden", timeout: 1000 }).catch(() => {});
+  await tooltip.waitFor({ state: "hidden", timeout: 300 }).catch(() => {});
   return violation;
 }
 
 async function headerTooltipViolations(
   page: Page,
+  sel: string,
   vpWidth: number,
   vpHeight: number,
   label: string,
 ): Promise<string[]> {
-  const count = await stampHeaderFocusableControls(page);
+  const count = await stampHeaderFocusableControls(page, sel);
   const violations: string[] = [];
   for (let i = 0; i < count; i++) {
     const v = await tooltipViewportViolation(page, i, vpWidth, vpHeight, label);
@@ -2743,6 +2759,7 @@ for (const vp of TOOLTIP_VIEWPORT_CASES) {
       await seedReturningUserAndGoHome(page);
       const violations = await headerTooltipViolations(
         page,
+        HOME_HEADER_REGION_SELECTOR,
         vp.width,
         vp.height,
         "Home header",
@@ -2756,7 +2773,13 @@ for (const vp of TOOLTIP_VIEWPORT_CASES) {
       test.setTimeout(600_000);
       await seedReturningUserAndGoHome(page);
       const violations = await runToolGridSweep(page, (outcome) =>
-        headerTooltipViolations(page, vp.width, vp.height, outcome.label),
+        headerTooltipViolations(
+          page,
+          DIALOG_HEADER_REGION_SELECTOR,
+          vp.width,
+          vp.height,
+          outcome.label,
+        ),
       );
       expect(violations).toEqual([]);
     });
