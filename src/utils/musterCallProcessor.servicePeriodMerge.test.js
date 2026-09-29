@@ -919,6 +919,73 @@ describe("Box-18 window demotion: a coinciding window never demotes the primary 
   });
 });
 
+describe("Box-18 window demotion: a coinciding window never demotes a primary from an EARLIER, different import", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("keeps the code-sheet-sourced enlistment as its own non-window row when the NGB-22 (with its coinciding Box-18 window) is imported AFTER it", async () => {
+    // Veteran imports the C-File code sheet FIRST - its enlistment row has
+    // no periodScope at all yet (null), same as any ordinary primary
+    // period. Importing the NGB-22 SECOND must not let its Box-18 AD
+    // window (same dates) cross-scope-match onto this pre-existing row and
+    // turn it into a "window" - that's the code-sheet-first ordering this
+    // test targets (veteranProfile.js's _crossScopeMergeAllowed).
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      {
+        extractedData: {
+          ratingSource: "code_sheet",
+          servicePeriods: [
+            {
+              entryDate: "2004-06-22",
+              separationDate: "2005-08-27",
+              branch: "Army",
+              characterOfDischarge: "Honorable",
+            },
+          ],
+        },
+      },
+    );
+
+    const extractedData = await parseServiceRecord(REALISTIC_NGB22, "NGB22");
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    const { primary, window } = findBox18PrimaryAndWindow();
+    expect(primary).toBeDefined();
+    expect(primary.periodScope).not.toBe("window");
+    expect(window).toBeDefined();
+    expect(window.periodScope).toBe("window");
+    // Without the fix, the code sheet's row gets hijacked into the WINDOW
+    // (both sources merge onto a periodScope:"window" row) and a brand-new,
+    // code-sheet-less duplicate primary is created from the NGB-22's own
+    // 12a/12b data alone - which still satisfies "a non-window row exists
+    // at these dates" (masking the bug from a periodScope-only check), so
+    // this explicitly proves the SURVIVING primary is the SAME logical row
+    // the code sheet populated, not a fresh duplicate that merely looks
+    // right.
+    const primarySources = (primary.sources || []).map((s) => s.sourceDocument);
+    expect(primarySources).toContain("cfile_codesheet.pdf");
+    expect(primarySources).toContain("ngb22.pdf");
+    expect(
+      getServicePeriods().filter(
+        (p) =>
+          p.serviceStartDate === "2004-06-22" &&
+          p.serviceEndDate === "2005-08-27",
+      ),
+    ).toHaveLength(2);
+
+    // The primary is still reachable/correctable via its own periodId -
+    // proof it was never folded into the window row.
+    const result = setServiceEntryDate({
+      date: "2004-06-20",
+      via: "vkb_viewer",
+      periodId: primary.id,
+    });
+    expect(result.ok).toBe(true);
+  });
+});
+
 describe("Box-18 window demotion: correction survives a re-import", () => {
   beforeEach(() => {
     localStorage.clear();
