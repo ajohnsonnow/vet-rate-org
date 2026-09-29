@@ -303,10 +303,33 @@ async function createFileInput(page: Page): Promise<void> {
   });
 }
 
+// Real signal, not a guessed delay: analyzeCFileWithAI (musterCallProcessor.js)
+// logs this exact line immediately before calling generateAI, the call that
+// reaches searchDKB. Waiting for the console message (a real, observable
+// event - not a fixed timeout) means Escape/Quick Exit get pressed right as
+// that call is about to start, on both base and fixed code, without a
+// guess at how long extraction/classification/segmentation take first.
+const AI_ANALYSIS_STARTING_LOG = "Starting AI-enhanced C-File analysis";
+
+// The console signal proves we're past extraction/classification/
+// segmentation (the variable-duration part), but analyzeCFileWithAI's log
+// line fires a few steps before its generateAI call actually reaches
+// searchDKB (circuit-breaker/feature-flag/crisis-scan checks, mode
+// resolution, system-prompt assembly - all fast and bounded, measured
+// under 50ms combined at 1x). Verified live: without this buffer, Escape/
+// Quick Exit sometimes still won the race against that short remainder on
+// base code too, an intermittent false pass. bufferMs bridges that known,
+// bounded gap - scaled by cpuRate since CPU throttling slows it too.
 async function startBackgroundImport(
   page: Page,
   filePath: string,
+  cpuRate: number,
 ): Promise<void> {
+  const aiCallStarting = page.waitForEvent("console", {
+    predicate: (msg) => msg.text().includes(AI_ANALYSIS_STARTING_LOG),
+    timeout: 30_000,
+  });
+
   await page.locator("#__dkb_latency_file_input").setInputFiles(filePath);
   await page.evaluate(() => {
     const input = document.getElementById(
@@ -317,6 +340,9 @@ async function startBackgroundImport(
     if (!file || !mods) return;
     mods.musterMod.processFormationDocument(file).catch(() => {});
   });
+
+  await aiCallStarting;
+  await page.waitForTimeout(150 * cpuRate);
 }
 
 async function measureKeydownToNavigation(page: Page): Promise<number> {
@@ -365,8 +391,7 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
     await stubWeatherRedirect(page);
     await prepareImportReadyPage(page);
 
-    await startBackgroundImport(page, fixturePath);
-    await page.waitForTimeout(300);
+    await startBackgroundImport(page, fixturePath, 1);
     const latencyMs = await measureKeydownToNavigation(page);
     // eslint-disable-next-line no-console
     console.log(`[dkb-latency] triple-Escape during import: ${latencyMs}ms`);
@@ -386,8 +411,7 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
     const box = await page.locator(QUICK_EXIT_SELECTOR).first().boundingBox();
     if (!box) throw new Error("Quick Exit button has no bounding box");
 
-    await startBackgroundImport(page, fixturePath);
-    await page.waitForTimeout(300);
+    await startBackgroundImport(page, fixturePath, 1);
     const latencyMs = await measureClickToNavigation(page, box);
     // eslint-disable-next-line no-console
     console.log(`[dkb-latency] Quick Exit during import: ${latencyMs}ms`);
@@ -412,11 +436,7 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
     const client = await page.context().newCDPSession(page);
     await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
 
-    await startBackgroundImport(page, fixturePath);
-    // 4x the 1x settle delay: the setup steps before the DKB call (file read,
-    // classify, segment) are ALSO throttled 4x, so the window needs the same
-    // scaling to reliably land inside the DKB call rather than before it.
-    await page.waitForTimeout(1200);
+    await startBackgroundImport(page, fixturePath, 4);
     const latencyMs = await measureKeydownToNavigation(page);
     // eslint-disable-next-line no-console
     console.log(
