@@ -2700,15 +2700,24 @@ async function stampHeaderFocusableControls(
  * paid on every one of them; a longer wait multiplies across every control
  * on every dialog the sweep opens.
  */
+interface TooltipCheckResult {
+  violation: string | null;
+  appeared: boolean;
+}
+
 async function tooltipViewportViolation(
   page: Page,
   index: number,
   vpWidth: number,
   vpHeight: number,
   label: string,
-): Promise<string | null> {
+): Promise<TooltipCheckResult> {
   const control = page.locator(`[${HEADER_FOCUSABLE_INDEX_ATTR}="${index}"]`);
-  await control.focus().catch(() => {});
+  // Bounded timeouts on both ends: an unbounded focus()/blur() on a control
+  // that's detached or re-rendered mid-sweep otherwise waits forever and
+  // burns the whole test timeout on one stamped node (measured live: a
+  // detached target hung for 14,972ms against a 15s test timeout).
+  await control.focus({ timeout: 5000 }).catch(() => {});
   const tooltip = page.locator('[role="tooltip"]').first();
   const appeared = await tooltip
     .waitFor({ state: "visible", timeout: 500 })
@@ -2732,9 +2741,14 @@ async function tooltipViewportViolation(
         `outside 0..${vpWidth}x0..${vpHeight}`;
     }
   }
-  await control.blur().catch(() => {});
+  await control.blur({ timeout: 5000 }).catch(() => {});
   await tooltip.waitFor({ state: "hidden", timeout: 300 }).catch(() => {});
-  return violation;
+  return { violation, appeared };
+}
+
+interface HeaderTooltipSweepResult {
+  violations: string[];
+  seenCount: number;
 }
 
 async function headerTooltipViolations(
@@ -2743,14 +2757,22 @@ async function headerTooltipViolations(
   vpWidth: number,
   vpHeight: number,
   label: string,
-): Promise<string[]> {
+): Promise<HeaderTooltipSweepResult> {
   const count = await stampHeaderFocusableControls(page, sel);
   const violations: string[] = [];
+  let seenCount = 0;
   for (let i = 0; i < count; i++) {
-    const v = await tooltipViewportViolation(page, i, vpWidth, vpHeight, label);
-    if (v) violations.push(v);
+    const { violation, appeared } = await tooltipViewportViolation(
+      page,
+      i,
+      vpWidth,
+      vpHeight,
+      label,
+    );
+    if (violation) violations.push(violation);
+    if (appeared) seenCount++;
   }
-  return violations;
+  return { violations, seenCount };
 }
 
 const TOOLTIP_VIEWPORT_CASES = [
@@ -2769,7 +2791,7 @@ for (const vp of TOOLTIP_VIEWPORT_CASES) {
     }) => {
       test.setTimeout(60_000);
       await seedReturningUserAndGoHome(page);
-      const violations = await headerTooltipViolations(
+      const { violations } = await headerTooltipViolations(
         page,
         HOME_HEADER_REGION_SELECTOR,
         vp.width,
@@ -2784,16 +2806,26 @@ for (const vp of TOOLTIP_VIEWPORT_CASES) {
     }) => {
       test.setTimeout(600_000);
       await seedReturningUserAndGoHome(page);
-      const violations = await runToolGridSweep(page, (outcome) =>
-        headerTooltipViolations(
+      let seenCount = 0;
+      const violations = await runToolGridSweep(page, async (outcome) => {
+        const result = await headerTooltipViolations(
           page,
           DIALOG_HEADER_REGION_SELECTOR,
           vp.width,
           vp.height,
           outcome.label,
-        ),
-      );
+        );
+        seenCount += result.seenCount;
+        return result.violations;
+      });
       expect(violations).toEqual([]);
+      // D14-3: guards against the whole suite passing vacuously if
+      // Tooltip.jsx broke outright (never opens on focus) - this sweep
+      // touches every tool dialog in the grid, so at least one real tooltip
+      // must have appeared for the empty-violations result above to mean
+      // anything (proven on a stubbed Tooltip that never renders: see this
+      // block's commit message).
+      expect(seenCount).toBeGreaterThan(0);
     });
   });
 }
