@@ -1732,7 +1732,19 @@ async function openMenuLauncherUntilDialog(
 ): Promise<boolean> {
   const deadline = Date.now() + 45000;
   while (Date.now() < deadline) {
-    if (!(await openMenuSurface(page, surface))) continue;
+    if (!(await openMenuSurface(page, surface))) {
+      // A dialog from a PRIOR iteration's item click can still be mounting
+      // when that iteration's own `someRealDialogOpen(page, 1000)` below
+      // times out - by the time this iteration retries, that now-mounted
+      // dialog covers the trigger, so `openMenuSurface`'s click lands on it
+      // (swallowed) and the panel never opens. Re-checking here catches that
+      // delayed dialog instead of looping forever, reporting "opened no
+      // dialog" once the 45s deadline is hit despite one having actually
+      // opened - the "Roadmap opened no dialog" flake under firefox worker
+      // load.
+      if (await someRealDialogOpen(page, 500)) return true;
+      continue;
+    }
     await page
       .locator(`[${MENU_ITEM_INDEX_ATTR}="${index}"]`)
       .click({ timeout: 3000 })
