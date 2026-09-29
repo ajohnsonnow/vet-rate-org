@@ -81,6 +81,16 @@ const PII_PATTERNS = {
   ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
   ssnBare: /\b\d{9}\b/g,
 
+  // D16-5: OCR letter-for-digit substitution inside an SSN's 3-2-4 grouping
+  // ("l23-O5-678l" for "123-05-6781" - O/o for 0, I/l for 1). Always on
+  // (not aggressive-only): the grouping shape itself is the anchor, and the
+  // replacer below (see scrubPII) additionally requires a majority of the
+  // 9 characters to already be real digits before redacting, so it can't
+  // sweep up a run of ordinary letters that merely happens to fall into
+  // 3-2-4 chunks.
+  ssnOcrGarbled:
+    /\b[0-9OoIl]{3}[\s.\-_|]{1,3}[0-9OoIl]{2}[\s.\-_|]{1,3}[0-9OoIl]{4}\b/g,
+
   // MRN — medical record number, labeled or numeric.
   mrn: /\bMRN[:\s#-]*\d{6,12}\b/gi,
   mrnLabeled:
@@ -89,6 +99,13 @@ const PII_PATTERNS = {
   // Email — RFC-5322-lite. Runs late because /-chars don't overlap with the
   // numeric patterns above.
   email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+
+  // D16-5: OCR-garbled email - small (0-2 char) whitespace runs around "@"
+  // and each "." that the strict pattern above doesn't tolerate
+  // ("john.smith @ gmail . com"). The "@" stays a required literal, so this
+  // can't fire on ordinary prose that merely contains "at"/"dot" text.
+  emailOcrSpaced:
+    /\b[A-Za-z0-9._%+-]+[ \t]{0,2}@[ \t]{0,2}[A-Za-z0-9-]+(?:[ \t]{0,2}\.[ \t]{0,2}[A-Za-z0-9-]+){1,4}\b/g,
 
   // Dates of birth — labeled or unlabeled numeric. Aggressive only.
   // Security review note: flagged for high regex complexity (51 vs 20) on a
@@ -129,18 +146,48 @@ const PII_PATTERNS = {
   militaryBoxLine:
     /\b(?:PSC|CMR|UNIT)\s{1,3}\d{1,5}\s{1,3}BOX\s{1,3}\d{1,5}\b/gi,
 
-  // D15-1a: the second line of a US mailing address block - "City, ST
-  // 12345" or "City, ST 12345-6789", with or without the comma, and either
-  // a 2-letter state/territory abbreviation or a spelled-out state name.
-  // No /i flag: the abbreviation branch must match its EXACT case (real
-  // addresses print it that way) so common lowercase words that happen to
-  // collide with a state code ("in", "or", "va") can't false-positive; the
-  // city-name class below spells out both cases instead of relying on /i.
+  // D15-1a/D16-5: the second line of a US mailing address block - "City, ST
+  // 12345" or "City, ST 12345-6789" - split into 4 variants (abbreviation
+  // vs spelled-out state name, crossed with ZIP present vs absent) instead
+  // of one pattern, because the two asks pull in opposite directions:
+  //
+  // - 2-letter abbreviations stay case-SENSITIVE (exact ALL-CAPS, as real
+  //   addresses print them) so a lowercase sentence word that happens to
+  //   collide with a state code ("in", "or", "va") can't false-positive -
+  //   a blanket /i here would be a real over-redaction regression.
+  // - Spelled-out state names ARE matched case-insensitively (D16-5: "make
+  //   cityStateZip case-insensitive") - they're long enough that
+  //   lowercasing them doesn't collide with ordinary short words the way a
+  //   2-letter code would.
+  // - The ZIP is now optional (D16-5: "with or without ZIP") for BOTH
+  //   variants, but that removes the ZIP's own digit-shape as an anchor -
+  //   so the no-ZIP variants require the comma before the state (the only
+  //   remaining structural signal); the with-ZIP variants keep the comma
+  //   optional as before, since the ZIP itself is anchor enough.
+  //
   // The prefix classes use `[ \t]` (never `\n`) so a preceding sentence on
   // its OWN line can't be pulled into the match across a line break.
-  cityStateZip:
+  cityStateZip: [
     // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the 50-state alternation count, not backtracking; each branch is a fixed literal, no nested quantifiers.
-    /\b[A-Za-z][A-Za-z \t.'-]{1,40},?[ \t]{1,3}(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|PR|GU|VI|Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s{1,3}Hampshire|New\s{1,3}Jersey|New\s{1,3}Mexico|New\s{1,3}York|North\s{1,3}Carolina|North\s{1,3}Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s{1,3}Island|South\s{1,3}Carolina|South\s{1,3}Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s{1,3}Virginia|Wisconsin|Wyoming)\b\.?,?[ \t]{1,3}\d{5}(?:-\d{4})?\b/g,
+    /\b[A-Za-z][A-Za-z \t.'-]{1,40},?[ \t]{1,3}(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|PR|GU|VI)\b\.?,?[ \t]{1,3}\d{5}(?:-\d{4})?\b/g,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the 50-state alternation count, not backtracking; each branch is a fixed literal, no nested quantifiers.
+    /\b[A-Za-z][A-Za-z \t.'-]{1,40},[ \t]{1,3}(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|PR|GU|VI)\b\.?(?![ \t]{0,3}\d)/g,
+    // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on the 50-state alternation count and the redundant A-Za-z under /i, not on backtracking; each branch is a fixed literal, no nested quantifiers.
+    /\b[A-Za-z][A-Za-z \t.'-]{1,40},?[ \t]{1,3}(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s{1,3}Hampshire|New\s{1,3}Jersey|New\s{1,3}Mexico|New\s{1,3}York|North\s{1,3}Carolina|North\s{1,3}Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s{1,3}Island|South\s{1,3}Carolina|South\s{1,3}Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s{1,3}Virginia|Wisconsin|Wyoming)\b\.?,?[ \t]{1,3}\d{5}(?:-\d{4})?\b/gi,
+    // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on the 50-state alternation count and the redundant A-Za-z under /i, not on backtracking; each branch is a fixed literal, no nested quantifiers.
+    /\b[A-Za-z][A-Za-z \t.'-]{1,40},[ \t]{1,3}(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s{1,3}Hampshire|New\s{1,3}Jersey|New\s{1,3}Mexico|New\s{1,3}York|North\s{1,3}Carolina|North\s{1,3}Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s{1,3}Island|South\s{1,3}Carolina|South\s{1,3}Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s{1,3}Virginia|Wisconsin|Wyoming)\b\.?(?![ \t]{0,3}\d)/gi,
+  ],
+
+  // D16-5: explicitly labeled "City:"/"State:"/"Zip code:" fields (a form
+  // layout, not free-flowing prose) - each redacted independently so a
+  // partial block (e.g. City present, State/Zip on lines this app never
+  // sees) still gets its own value covered.
+  // eslint-disable-next-line sonarjs/duplicates-in-character-class -- the A-Za-z is redundant under /i (flagged), kept explicit for readability
+  cityLabeled: /\bCity[ \t]{0,5}:[ \t]{0,5}[A-Za-z][A-Za-z \t.'-]{1,40}\b/gi,
+  // eslint-disable-next-line sonarjs/duplicates-in-character-class -- the A-Za-z is redundant under /i (flagged), kept explicit for readability
+  stateLabeled: /\bState[ \t]{0,5}:[ \t]{0,5}[A-Za-z][A-Za-z \t.'-]{1,20}\b/gi,
+  zipLabeled:
+    /\bZip(?:[ \t]{1,3}code)?[ \t]{0,5}:[ \t]{0,5}\d{5}(?:-\d{4})?\b/gi,
 
   // D15-1a: military overseas mailing addresses (APO/FPO/DPO + AA/AE/AP +
   // ZIP), with or without a comma after either segment.
@@ -152,6 +199,12 @@ const PII_PATTERNS = {
   // (National Drug Code) label's 5-4-2 grouping, which is byte-for-byte the
   // same shape as a ZIP+4 for its first two segments.
   zip4Bare: /(?<!ndc[ \t]{0,5})\b\d{5}-\d{4}\b(?!-\d)/gi,
+
+  // D16-5: "Patient: NAME (NNNN)" - a labeled EHR/medical-record header
+  // line pairing a name with a short numeric ID in parentheses.
+  patientLabeled:
+    // eslint-disable-next-line sonarjs/duplicates-in-character-class -- the A-Za-z is redundant under /i (flagged), kept explicit for readability
+    /\bPatient[ \t]{0,5}:[ \t]{0,5}[A-Za-z][A-Za-z,.\s'-]{1,60}\([ \t]{0,3}\d{2,10}[ \t]{0,3}\)/gi,
 };
 
 /**
@@ -213,8 +266,16 @@ const normalizeForScan = (text) =>
 // backtracks the hint out of the label so the value group can match the
 // hint text itself instead, redacting "(Last, First, Middle)" and leaving
 // the real name on the next line untouched.
+// D16-5: a trailing garbled suffix OCR leaves on the label line itself
+// ("SOCIAL SECURITY.N" from a mangled "NO.") - a short period-led run of
+// letters/periods, bounded so it can't reach into an actual value on the
+// same line. Added as its own alternative rather than widened into the
+// NO./NUMBER/# hint above, which stays exact so it can't itself absorb a
+// same-line numeric value.
+const _LABEL_OCR_SUFFIX = "(?:[ \\t]{0,10}\\.[A-Za-z]{0,6}\\.?)?";
 const _LABEL_HINT =
-  "(?:[ \\t]{0,10}\\([^)\\n]{0,60}\\))?(?:[ \\t]{0,10}(?:NO\\.?|NUMBER|#))?";
+  "(?:[ \\t]{0,10}\\([^)\\n]{0,60}\\))?(?:[ \\t]{0,10}(?:NO\\.?|NUMBER|#))?" +
+  _LABEL_OCR_SUFFIX;
 
 /**
  * Build a "label, then redact the rest of the line" pattern. Group 1 (the
@@ -273,16 +334,28 @@ function _labelNextLinePattern(labelAlternatives, opts = {}) {
 // ALL CAPS, so requiring exact case for the bare-number form stops an
 // ordinary numbered list item ("1. Name of the medication...") from
 // colliding with the DD-214's own "1. NAME" box label.
+//
+// D16-5: `labelOnly` (no box number required at all) closes a gap `broad`/
+// `strict` both leave: a form that numbers a box differently than DD214
+// (e.g. NGB-22), or OCR that simply loses the box number while still
+// printing the label text, previously matched NOTHING for that field. Left
+// `null` for NAME specifically - "NAME" alone with no box anchor at all is
+// far too generic (it collides with "Trade name:", "Name of medication:",
+// and countless other ordinary form fields), so name only ever redacts via
+// the box-anchored forms.
 const BOX_LABEL_DEFS = [
   {
     broad: "(?:BLOCK[ \\t]{0,10}1|BOX[ \\t]{0,10}1)[ \\t]{0,10}NAME",
     strict: "\\b1[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}NAME",
+    labelOnly: null,
   },
   {
     broad:
       "(?:BLOCK[ \\t]{0,10}3|BOX[ \\t]{0,10}3)[ \\t]{0,10}(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)",
     strict:
       "\\b3[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)",
+    labelOnly:
+      "(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|SSN|S\\.?S\\.?N\\.?)",
     maxValueChars: 40,
     numeric: true,
   },
@@ -291,6 +364,7 @@ const BOX_LABEL_DEFS = [
       "(?:BLOCK[ \\t]{0,10}5|BOX[ \\t]{0,10}5)[ \\t]{0,10}DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH",
     strict:
       "\\b5[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH",
+    labelOnly: "(?:DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH|DOB)\\.?",
     maxValueChars: 40,
   },
   {
@@ -298,12 +372,14 @@ const BOX_LABEL_DEFS = [
       "(?:BLOCK[ \\t]{0,10}7[ \\t]{0,10}[Bb]|BOX[ \\t]{0,10}7[ \\t]{0,10}[Bb])[ \\t]{0,10}HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
     strict:
       "\\b7[ \\t]{0,10}\\.?[ \\t]{0,10}[Bb]\\.?[ \\t]{0,10}HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
+    labelOnly: "HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
   },
   {
     broad:
       "(?:BLOCK[ \\t]{0,10}(?:19|30)|BOX[ \\t]{0,10}(?:19|30))[ \\t]{0,10}(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
     strict:
       "\\b(?:19|30)[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
+    labelOnly: "(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
   },
   {
     // VA decision-letter file/claim number line - not a DD-214 box, no bare
@@ -316,6 +392,7 @@ const BOX_LABEL_DEFS = [
     broad:
       "(?:VA[ \\t]{0,10})?\\b(?:FILE[ \\t]{0,10}NO\\.?\\b|FILE[ \\t]{0,10}NUMBER\\b|CLAIM[ \\t]{0,10}NUMBER\\b)",
     strict: null,
+    labelOnly: null,
     maxValueChars: 40,
     numeric: true,
   },
@@ -332,6 +409,12 @@ const LABELED_BOX_PATTERNS = BOX_LABEL_DEFS.flatMap((def) => {
     patterns.push(
       _labelNextLinePattern(def.strict, strictOpts),
       _labelValuePattern(def.strict, strictOpts),
+    );
+  }
+  if (def.labelOnly) {
+    patterns.push(
+      _labelNextLinePattern(def.labelOnly, opts),
+      _labelValuePattern(def.labelOnly, opts),
     );
   }
   return patterns;
@@ -377,6 +460,75 @@ const SALUTATION_LINE = /^[ \t]{0,10}(Dear\b[^\n]{0,60}|To[ \t]{1,5}Whom[ \t]{1,
 // Madam:", "Dear Applicant:") that carries no identifying text at all.
 const SALUTATION_NAME =
   /^([ \t]{0,10}Dear[ \t]{1,5}(?:Mr|Mrs|Ms|Miss|Dr|Mx)\.?[ \t]{1,5})([^\n:,]{1,60})/i;
+
+// A short stoplist of generic-but-still-Title-Case greetings ("Dear Claims
+// Team:") the no-title pattern above would otherwise redact - there's no
+// name dictionary to fall back on, so this is a documented, best-effort
+// limit rather than a claim of completeness (see the module-level "Limits"
+// note above).
+const GENERIC_SALUTATION_WORDS = new Set([
+  "veteran",
+  "team",
+  "customer",
+  "claimant",
+  "member",
+  "resident",
+  "applicant",
+  "staff",
+  "support",
+  "sir",
+  "madam",
+  "friend",
+  "claims",
+]);
+
+function _isGenericSalutationName(name) {
+  const words = name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w.toLowerCase());
+  return words.every((w) => GENERIC_SALUTATION_WORDS.has(w));
+}
+
+// Global (non-anchored) counterparts of SALUTATION_NAME - for
+// redactSalutationNames below - unlike redactLetterAddresseeBlock's
+// per-line loop, these don't require the salutation to be its own whole
+// line, so they also catch a salutation sitting in the middle of a
+// flattened single-line OCR page.
+const SALUTATION_NAME_G =
+  /(Dear[ \t]{1,5}(?:Mr|Mrs|Ms|Miss|Dr|Mx)\.?[ \t]{1,5})([^\n:,]{1,60})/gi;
+
+// D16-5: "Dear FIRST LAST:" with NO courtesy title. Two-plus consecutive
+// Title-Case words (capital first letter, lowercase rest) with no
+// lowercase connector between them - a generic/templated greeting
+// essentially never has this shape ("Dear Veteran:" is one word; "Dear
+// Sir or Madam:" has a lowercase "or" breaking the run). Case-sensitive on
+// purpose: an ALL-CAPS or all-lowercase run doesn't look like a real first
+// name so it's left alone rather than risking a false positive.
+const SALUTATION_NAME_NO_TITLE_G =
+  /(Dear[ \t]{1,5})([A-Z][a-z'-]{1,20}(?:[ \t]{1,3}[A-Z][a-z'-]{1,20}){1,3})/g;
+
+/**
+ * Redact the name in a "Dear ...:" salutation wherever it appears in
+ * `text`, with or without a courtesy title, regardless of whether the
+ * salutation sits on its own line (unlike redactLetterAddresseeBlock,
+ * which is line-anchored and so can't see a salutation embedded in a
+ * flattened single-line OCR page). A generic/templated greeting ("Dear
+ * Veteran:") is left alone - see GENERIC_SALUTATION_WORDS.
+ * @param {string} text
+ * @returns {string}
+ */
+export const redactSalutationNames = (text) => {
+  if (!text || typeof text !== "string") return text;
+  let out = text.replace(
+    reset(SALUTATION_NAME_G),
+    (_m, greeting) => `${greeting}[REDACTED]`,
+  );
+  out = out.replace(reset(SALUTATION_NAME_NO_TITLE_G), (m, greeting, name) =>
+    _isGenericSalutationName(name) ? m : `${greeting}[REDACTED]`,
+  );
+  return out;
+};
 
 // Find the end index of the last date-line (or "In Reply Refer To" line)
 // anchor inside `text.slice(searchStart, searchEnd)` - the region between
@@ -456,6 +608,29 @@ export const redactLetterAddresseeBlock = (text) => {
   return out;
 };
 
+// D16-5: VA-letter page footer pairing a file number with the veteran's
+// name and a page number ("File Number: 12345678  DOE, JOHN M  Page 2").
+// The trailing "Page N" is captured so it survives the redaction - it
+// isn't sensitive on its own, and losing it would make a multi-page
+// footer harder to reason about downstream for no privacy benefit.
+const LETTER_FOOTER =
+  // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on the label/name-shape alternation count and the redundant A-Za-z under /i, not on backtracking; every quantifier bounded
+  /\bFile[ \t]{0,5}Number[ \t]{0,5}:[ \t]{0,5}[\dA-Za-z-]{4,20}[ \t]{1,10}[A-Z][A-Z'-]{1,30},[ \t]{0,5}[A-Z][A-Z'-]{1,30}(?:[ \t]{1,5}[A-Z]\.?)?[ \t]{1,10}(Page[ \t]{1,5}\d{1,4}\b)/gi;
+
+/**
+ * Redact a VA-letter page footer's file-number-and-name span, keeping the
+ * trailing "Page N" intact.
+ * @param {string} text
+ * @returns {string}
+ */
+export const redactLetterFooter = (text) => {
+  if (!text || typeof text !== "string") return text;
+  return text.replace(
+    reset(LETTER_FOOTER),
+    (_m, pageGroup) => `[REDACTED] ${pageGroup}`,
+  );
+};
+
 function _countMatches(text, pattern) {
   const matches = text.match(reset(pattern));
   return matches ? matches.length : 0;
@@ -475,6 +650,41 @@ function _countMatches(text, pattern) {
 // ever gets to look for it. Running address-block patterns afterward is
 // still safe/idempotent against whatever the first two passes already
 // turned into `[REDACTED]`.
+// D16-5: salutation names (with or without a courtesy title, on their own
+// line or embedded in a flattened OCR page), the letter-footer file
+// number+name span, and labeled "Patient: NAME (NNNN)" lines - extracted
+// out of _applyAddressAndLabelRedaction so it stays under the line-count
+// limit. None of these interact with the date-line/salutation anchors the
+// comment on that function is about, so ordering relative to it doesn't
+// matter.
+function _applySalutationAndPatientRedaction(text) {
+  let scrubbed = text;
+  const hits = [];
+
+  const beforeSalutation = scrubbed;
+  scrubbed = redactSalutationNames(scrubbed);
+  if (scrubbed !== beforeSalutation) {
+    hits.push({ type: "Salutation Name", count: 1 });
+  }
+
+  const beforeFooter = scrubbed;
+  scrubbed = redactLetterFooter(scrubbed);
+  if (scrubbed !== beforeFooter) {
+    hits.push({ type: "Letter Footer", count: 1 });
+  }
+
+  const patientCount = _countMatches(scrubbed, PII_PATTERNS.patientLabeled);
+  if (patientCount > 0) {
+    hits.push({ type: "Patient Name", count: patientCount });
+    scrubbed = scrubbed.replace(
+      reset(PII_PATTERNS.patientLabeled),
+      "[REDACTED_PATIENT]",
+    );
+  }
+
+  return { scrubbed, hits };
+}
+
 function _applyAddressAndLabelRedaction(text) {
   let scrubbed = text;
   const hits = [];
@@ -491,6 +701,10 @@ function _applyAddressAndLabelRedaction(text) {
     hits.push({ type: "Labeled Identifier", count: 1 });
   }
 
+  const salutationResult = _applySalutationAndPatientRedaction(scrubbed);
+  scrubbed = salutationResult.scrubbed;
+  hits.push(...salutationResult.hits);
+
   // D15-1a / ADR-008 §2.6 (owner decision D): the address block is redacted
   // regardless of provider - unlike the DOB/SSN/VA-file bare-digit
   // catchalls in scrubPII below, which stay aggressive-only because they'd
@@ -502,7 +716,10 @@ function _applyAddressAndLabelRedaction(text) {
     PII_PATTERNS.address,
     PII_PATTERNS.poBox,
     PII_PATTERNS.militaryBoxLine,
-    PII_PATTERNS.cityStateZip,
+    ...PII_PATTERNS.cityStateZip,
+    PII_PATTERNS.cityLabeled,
+    PII_PATTERNS.stateLabeled,
+    PII_PATTERNS.zipLabeled,
     PII_PATTERNS.apoFpoDpo,
     PII_PATTERNS.zip4Bare,
   ].forEach((pattern) => {
@@ -591,6 +808,32 @@ function _applyPhoneMrnEdipiVaFile(applyPattern, aggressive, preservePartial) {
   }
 }
 
+function _ocrSsnDigitDensity(match) {
+  const chars = match.replace(/[\s.\-_|]/g, "");
+  if (chars.length !== 9) return 0;
+  const realDigits = [...chars].filter((c) => /\d/.test(c)).length;
+  return realDigits / chars.length;
+}
+
+// D16-5: only redact an OCR-garbled SSN-shaped run (ssnOcrGarbled above)
+// when most of its 9 characters are already real digits - guards against
+// sweeping up ordinary text that merely happens to fall into the same
+// 3-2-4 chunk shape using the handful of letters the pattern treats as
+// digit look-alikes (O/o/I/l). A bespoke step (not the generic
+// applyPattern helper) because it needs to know how many matches were
+// ACTUALLY plausible, not just how many the regex found.
+function _applySsnOcrGarbled(scrubbed) {
+  const matches = scrubbed.match(reset(PII_PATTERNS.ssnOcrGarbled)) || [];
+  const plausibleCount = matches.filter(
+    (m) => _ocrSsnDigitDensity(m) >= 0.55,
+  ).length;
+  if (plausibleCount === 0) return { scrubbed, count: 0 };
+  const next = scrubbed.replace(reset(PII_PATTERNS.ssnOcrGarbled), (m) =>
+    _ocrSsnDigitDensity(m) >= 0.55 ? "[REDACTED_SSN]" : m,
+  );
+  return { scrubbed: next, count: plausibleCount };
+}
+
 export const scrubPII = (text, options = {}) => {
   if (!text || typeof text !== "string") {
     return {
@@ -636,12 +879,24 @@ export const scrubPII = (text, options = {}) => {
     applyPattern(PII_PATTERNS.ssnBare, "SSN", "[REDACTED_SSN]");
   }
 
+  // 5b. OCR-garbled SSN (letter-for-digit substitution) - always on, since
+  //     the grouping shape plus digit-density check is its own anchor
+  //     (see _applySsnOcrGarbled).
+  const ssnOcrResult = _applySsnOcrGarbled(scrubbed);
+  scrubbed = ssnOcrResult.scrubbed;
+  if (ssnOcrResult.count > 0) {
+    piiFound = true;
+    details.push({ type: "SSN", count: ssnOcrResult.count });
+  }
+
   // 7. Email — late because @ doesn't overlap with the numeric patterns.
   applyPattern(PII_PATTERNS.email, "Email", (match) => {
     if (!preservePartial) return "[REDACTED_EMAIL]";
     const [user, domain] = match.split("@");
     return `${user[0]}***@${domain}`;
   });
+  // 7b. OCR-garbled email (spaced-out @ / . characters).
+  applyPattern(PII_PATTERNS.emailOcrSpaced, "Email", "[REDACTED_EMAIL]");
 
   // 8. DOB — labeled form always, bare numeric only in aggressive mode.
   applyPattern(PII_PATTERNS.dobLabeled, "Date of Birth", "[REDACTED_DOB]");
@@ -1278,4 +1533,6 @@ export default {
   redactVeteranIdentifiers,
   redactLabeledBoxValues,
   redactLetterAddresseeBlock,
+  redactSalutationNames,
+  redactLetterFooter,
 };
