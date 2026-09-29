@@ -17,7 +17,9 @@ import {
   scrubPII,
   analyzePII,
   containsSignificantNonLatin,
+  redactVeteranIdentifiers,
 } from "./piiScrubber";
+import { loadVKB } from "./veteranKnowledgeBase";
 import { stripUntrustedUrls } from "./sanitize";
 import { validateAIResponse as validateHallucinations } from "./hallucinationTrap";
 import { logModelCallWithDigests } from "./aiAuditLog";
@@ -1383,18 +1385,21 @@ const generateWithLocalServer = async (prompt, options = {}) => {
     // eslint-disable-next-line no-console
     console.log("🖥️ Local Server: Generating via llama.cpp API...");
 
-    const result = await localServerClient.chatCompletion(enhancedPrompt, {
-      maxTokens,
-      temperature,
-      stream: !!onStream,
-      onChunk: onStream,
-    });
+    // chatCompletion's real signature is (messages, systemPrompt, options)
+    // and it resolves to the completion text directly (or null on abort) -
+    // not a {success, text, error} object. The system prompt is already
+    // folded into enhancedPrompt by the time this backend runs.
+    const result = await localServerClient.chatCompletion(
+      [{ role: "user", content: enhancedPrompt }],
+      "",
+      { maxTokens, temperature, onToken: onStream },
+    );
 
-    if (!result.success) {
-      throw new Error(result.error || "Local server generation failed");
+    if (result === null) {
+      throw new Error("Local server generation failed");
     }
 
-    return result.text;
+    return result;
   } catch (err) {
     throw new Error(`Local Server error: ${_describeThrown(err)}`);
   }
@@ -2130,6 +2135,27 @@ async function _checkCrisisSafety(prompt, options) {
   }
 }
 
+// ADR-008 single enforcement point: the previous 5 builder-level redaction
+// passes (generateLLMContext, generatePacketContext, getVeteranAIContext,
+// buildSystemPrompt, callGeminiAPI) only cover the free text THOSE
+// builders assemble - a caller that hands generateAI its own raw prompt
+// (a Muster Call report, a witness's typed answers, a pasted decision
+// letter...) bypassed every one of them. This runs on the fully-combined
+// prompt right before ANY backend (Warrant Council, Wllama, local server,
+// legacy local, cloud) is dispatched, so no send path can skip it.
+// Best-effort: an identifier-load failure must never block generation.
+async function _redactPromptForSend(text) {
+  try {
+    const vkb = await loadVKB();
+    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+      .map((c) => c.claimNumber)
+      .filter(Boolean);
+    return redactVeteranIdentifiers(text, vkb?.personal, claimNumbers);
+  } catch {
+    return text;
+  }
+}
+
 async function _buildFullPrompt(prompt, options) {
   // Build system prompt with anti-hallucination guardrails (unless overridden)
   const { buildSystemPrompt } = await getAISystemPrompts();
@@ -2445,10 +2471,15 @@ const generateAIInternal = async (prompt, options = {}) => {
     );
   }
 
-  const { fullPrompt, enhancedOptions } = await _buildFullPrompt(
+  const { fullPrompt: builtPrompt, enhancedOptions } = await _buildFullPrompt(
     prompt,
     options,
   );
+
+  // ADR-008: redact the combined prompt before it reaches the dispatch
+  // below OR either fallback path in the catch block - see
+  // _redactPromptForSend for why this belongs here, not per-caller.
+  const fullPrompt = await _redactPromptForSend(builtPrompt);
 
   try {
     const {
