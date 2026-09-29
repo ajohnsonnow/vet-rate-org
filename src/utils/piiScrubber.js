@@ -246,14 +246,14 @@ export const redactLabeledBoxValues = (text) => {
 // salutation) sits directly below it. Redacting everything between the LAST
 // such date before the salutation and the salutation itself catches the
 // veteran's name/address block without needing to parse each line.
+// prettier-ignore
 // eslint-disable-next-line sonarjs/regex-complexity -- every quantifier is explicitly bounded ({0,10}/{1,5}/{3,10}); flagged on branch count from the two date shapes, not on backtracking
-const LETTER_DATE_LINE =
-  /^[ \t]{0,10}(?:[A-Za-z]{3,10}\.?[ \t]{1,5}\d{1,2},?[ \t]{1,5}\d{4}|\d{1,2}\/\d{1,2}\/\d{2,4})[ \t]{0,10}$/gm;
+const LETTER_DATE_LINE = /^[ \t]{0,10}(?:[A-Za-z]{3,10}\.?[ \t]{1,5}\d{1,2},?[ \t]{1,5}\d{4}|\d{1,2}\/\d{1,2}\/\d{2,4})[ \t]{0,10}$/gm;
 const IN_REPLY_REFER_TO =
   /In[ \t]{1,5}Reply[ \t]{1,5}Refer[ \t]{1,5}To\b[^\n]*/i;
+// prettier-ignore
 // eslint-disable-next-line sonarjs/regex-complexity -- every quantifier is explicitly bounded ({0,10}/{0,60}/{1,5}); flagged on branch count from the two salutation shapes, not on backtracking
-const SALUTATION_LINE =
-  /^[ \t]{0,10}(?:Dear\b[^\n]{0,60}|To[ \t]{1,5}Whom[ \t]{1,5}It[ \t]{1,5}May[ \t]{1,5}Concern)[:,]?[ \t]{0,10}$/im;
+const SALUTATION_LINE = /^[ \t]{0,10}(?:Dear\b[^\n]{0,60}|To[ \t]{1,5}Whom[ \t]{1,5}It[ \t]{1,5}May[ \t]{1,5}Concern)[:,]?[ \t]{0,10}$/im;
 
 /**
  * Redact a VA letter's addressee block - the lines between its date (or
