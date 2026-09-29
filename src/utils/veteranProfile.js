@@ -2123,15 +2123,41 @@ function _scopeCompatible(existingScope, incomingScope) {
 // servicePeriodsModel.test.js's "D-A" suite) precisely because that
 // DD-214's dates do NOT collide with the NGB-22's OWN primary dates - only
 // with its Box-18 window, which is what a merge there is supposed to do.
+// D16-1 (final16 regression): the `_periodHasSource` fallback below used to
+// be "does `existing` already record incoming's own source document" -
+// meant to catch the SAME-call sibling collision (a window and its
+// coinciding primary, both upserted from the SAME document a moment
+// apart), but that signal stays true FOREVER once it fires once, since a
+// successful cross-scope merge (the whole point of pass 2) itself adds the
+// incoming document to `existing.sources`. persistFormationDocument's own
+// documented double-save (initial extraction, then Verify & Save) - or a
+// plain re-import - re-presents the SAME code-sheet/DD-214 period a second
+// time, and the fallback then blocked its own prior link from ever being
+// re-confirmed, turning an idempotent re-save into a fresh duplicate.
+// `_isSoleFreshSibling` asks the narrower question the fallback actually
+// needs: is `existing` a row THIS SAME document created and that NOTHING
+// else has ever merged into - true only in the instant a document's own
+// two sibling rows are FIRST created back-to-back (an NGB-22's Box-18
+// window immediately followed by its own primary, or the reverse). Once
+// any merge has happened to `existing` - including this same document
+// re-confirming its own earlier link - `existing.sources` has more than
+// the one original entry, so the check stops firing and the row becomes an
+// ordinary, idempotent cross-scope merge target again.
+function _isSoleFreshSibling(existing, incomingSourceDocument) {
+  const sources = Array.isArray(existing.sources) ? existing.sources : [];
+  return (
+    !!incomingSourceDocument &&
+    sources.length === 1 &&
+    sources[0].sourceDocument === incomingSourceDocument
+  );
+}
+
 function _isOwnSiblingWindow(existing, incoming, options) {
   if (_scopeCompatible(existing.periodScope, incoming.periodScope)) {
     return false;
   }
   if (options?.mayCollideWithOwnPrimary) return true;
-  return (
-    !!incoming.sourceDocument &&
-    _periodHasSource(existing, incoming.sourceDocument)
-  );
+  return _isSoleFreshSibling(existing, incoming.sourceDocument);
 }
 
 function _findDatedServicePeriodIndex(periods, incoming, options) {
@@ -2161,13 +2187,22 @@ function _findDatedServicePeriodIndex(periods, incoming, options) {
   );
   if (index !== -1) return index;
 
-  // Pass 2: no same-scope candidate at all - allow a cross-scope exact-key
-  // match, as long as it isn't the incoming record's own sibling window/
-  // primary (see the comment above _isOwnSiblingWindow).
+  // Pass 2: no same-scope candidate at all - allow a cross-scope match
+  // (exact key, or within the same near-date tolerance pass 1 uses just
+  // above - a code sheet/DD-214 period describing an existing Box-18
+  // window a few days off from how the NGB-22 itself dated it), as long
+  // as it isn't the incoming record's own sibling window/primary (see the
+  // comment above _isOwnSiblingWindow).
   return periods.findIndex(
     (p) =>
-      _servicePeriodKey(p) === incomingKey &&
-      !_isOwnSiblingWindow(p, incoming, options),
+      !_isOwnSiblingWindow(p, incoming, options) &&
+      (_servicePeriodKey(p) === incomingKey ||
+        isSameServicePeriod(
+          p.serviceStartDate,
+          p.serviceEndDate,
+          incoming.serviceStartDate,
+          incoming.serviceEndDate,
+        )),
   );
 }
 
