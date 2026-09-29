@@ -683,14 +683,33 @@ async function renderPageToCanvas(page, scale) {
 // when control returns to the event loop between chunks changes.
 const ROWS_PER_CHUNK = 6;
 
+// `setTimeout(resolve, 0)` clamps to >= 4ms once nested five levels deep
+// (every browser's documented nested-timer throttling, and this chunking
+// loop's own await chain reaches that depth immediately) - measured live at
+// ~5.6ms/yield here, turning a chunking pass meant to keep the main thread
+// responsive into a 2-3x wall-clock slowdown instead. scheduler.yield() (or,
+// where unavailable, a MessageChannel round-trip) returns control to the
+// event loop the same way but isn't a timer at all, so neither clamp
+// applies - measured at ~0.002-0.008ms/yield in the same browsers this app
+// targets (Chromium, Firefox; see playwright.config.ts's projects).
 function yieldToEventLoop() {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  if (
+    typeof scheduler !== "undefined" &&
+    typeof scheduler.yield === "function"
+  ) {
+    return scheduler.yield();
+  }
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port2.onmessage = () => resolve();
+    channel.port1.postMessage(null);
+  });
 }
 
 /**
  * Apply advanced preprocessing based on detected strategy
  */
-async function applyAdvancedPreprocessing(canvas, strategy) {
+export async function applyAdvancedPreprocessing(canvas, strategy) {
   const processed = document.createElement("canvas");
   const ctx = processed.getContext("2d");
   processed.width = canvas.width;
@@ -701,21 +720,21 @@ async function applyAdvancedPreprocessing(canvas, strategy) {
 
   switch (strategy) {
     case PREPROCESS_STRATEGIES.CLEAN:
-      imageData = enhanceContrast(imageData, 1.1);
+      imageData = await enhanceContrast(imageData, 1.1);
       imageData = await sharpen(imageData, 0.3);
       break;
 
     case PREPROCESS_STRATEGIES.STANDARD:
-      imageData = grayscale(imageData);
-      imageData = enhanceContrast(imageData, 1.4);
+      imageData = await grayscale(imageData);
+      imageData = await enhanceContrast(imageData, 1.4);
       imageData = await adaptiveThreshold(imageData);
       imageData = await denoise(imageData, 1);
       imageData = await sharpen(imageData, 0.8);
       break;
 
     case PREPROCESS_STRATEGIES.POOR:
-      imageData = grayscale(imageData);
-      imageData = enhanceContrast(imageData, 2.0);
+      imageData = await grayscale(imageData);
+      imageData = await enhanceContrast(imageData, 2.0);
       imageData = await adaptiveThreshold(imageData, 15);
       imageData = await denoise(imageData, 2);
       imageData = await morphologicalClosing(imageData);
@@ -723,17 +742,17 @@ async function applyAdvancedPreprocessing(canvas, strategy) {
       break;
 
     case PREPROCESS_STRATEGIES.AGED:
-      imageData = grayscale(imageData);
-      imageData = removeYellowing(imageData);
-      imageData = enhanceContrast(imageData, 1.8);
+      imageData = await grayscale(imageData);
+      imageData = await removeYellowing(imageData);
+      imageData = await enhanceContrast(imageData, 1.8);
       imageData = await adaptiveThreshold(imageData);
       imageData = await denoise(imageData, 1.5);
       imageData = await sharpen(imageData, 1.0);
       break;
 
     case PREPROCESS_STRATEGIES.HANDWRITTEN:
-      imageData = grayscale(imageData);
-      imageData = enhanceContrast(imageData, 1.6);
+      imageData = await grayscale(imageData);
+      imageData = await enhanceContrast(imageData, 1.6);
       imageData = await adaptiveThreshold(imageData, 20);
       imageData = await denoise(imageData, 1);
       break;
@@ -744,10 +763,10 @@ async function applyAdvancedPreprocessing(canvas, strategy) {
       console.log(
         "🔧 Applying SEVERELY_AGED preprocessing (maximum enhancement)",
       );
-      imageData = grayscale(imageData);
-      imageData = removeYellowing(imageData); // Remove age discoloration
-      imageData = autoLevels(imageData); // Automatic contrast stretching
-      imageData = enhanceContrast(imageData, 2.5); // Very aggressive contrast
+      imageData = await grayscale(imageData);
+      imageData = await removeYellowing(imageData); // Remove age discoloration
+      imageData = await autoLevels(imageData); // Automatic contrast stretching
+      imageData = await enhanceContrast(imageData, 2.5); // Very aggressive contrast
       imageData = await unsharpMask(imageData, 2.0); // Strong edge enhancement
       imageData = await adaptiveThreshold(imageData, 21); // Larger block for faded text
       imageData = await morphologicalClosing(imageData, 1); // Fill small gaps
@@ -759,9 +778,9 @@ async function applyAdvancedPreprocessing(canvas, strategy) {
       // Handle white text on dark background
       // eslint-disable-next-line no-console
       console.log("🔧 Applying INVERTED preprocessing");
-      imageData = grayscale(imageData);
-      imageData = invert(imageData); // Flip black/white
-      imageData = enhanceContrast(imageData, 1.6);
+      imageData = await grayscale(imageData);
+      imageData = await invert(imageData); // Flip black/white
+      imageData = await enhanceContrast(imageData, 1.6);
       imageData = await adaptiveThreshold(imageData);
       imageData = await denoise(imageData, 1);
       imageData = await sharpen(imageData, 0.8);
@@ -959,23 +978,34 @@ export function applyVATerminologyCorrection(text) {
 // IMAGE PROCESSING FUNCTIONS
 // ============================================================================
 
-function grayscale(imageData) {
+// Row-based yield cadence for functions that loop flatly over `data`
+// (no neighbourhood access, so any row boundary is a valid chunk boundary).
+// Mirrors unsharpMask's own pixelsPerChunk pattern below.
+function rowPixelsPerChunk(width) {
+  return ROWS_PER_CHUNK * width * 4;
+}
+
+export async function grayscale(imageData) {
   const data = imageData.data;
+  const pixelsPerChunk = rowPixelsPerChunk(imageData.width);
   for (let i = 0; i < data.length; i += 4) {
     const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
     data[i] = data[i + 1] = data[i + 2] = avg;
+    if (i % pixelsPerChunk === 0) await yieldToEventLoop();
   }
   return imageData;
 }
 
-function enhanceContrast(imageData, factor) {
+export async function enhanceContrast(imageData, factor) {
   const data = imageData.data;
   const f = (259 * (factor * 255 + 255)) / (255 * (259 - factor * 255));
+  const pixelsPerChunk = rowPixelsPerChunk(imageData.width);
 
   for (let i = 0; i < data.length; i += 4) {
     data[i] = clamp(f * (data[i] - 128) + 128);
     data[i + 1] = clamp(f * (data[i + 1] - 128) + 128);
     data[i + 2] = clamp(f * (data[i + 2] - 128) + 128);
+    if (i % pixelsPerChunk === 0) await yieldToEventLoop();
   }
   return imageData;
 }
@@ -1157,8 +1187,9 @@ export async function erode(imageData, size) {
   return imageData;
 }
 
-function removeYellowing(imageData) {
+export async function removeYellowing(imageData) {
   const data = imageData.data;
+  const pixelsPerChunk = rowPixelsPerChunk(imageData.width);
 
   for (let i = 0; i < data.length; i += 4) {
     // Remove yellow tint (boost blue channel)
@@ -1171,6 +1202,7 @@ function removeYellowing(imageData) {
       const max = Math.max(r, g, b);
       data[i] = data[i + 1] = data[i + 2] = max;
     }
+    if (i % pixelsPerChunk === 0) await yieldToEventLoop();
   }
 
   return imageData;
@@ -1179,14 +1211,16 @@ function removeYellowing(imageData) {
 /**
  * Invert image colors (for white text on dark background)
  */
-function invert(imageData) {
+export async function invert(imageData) {
   const data = imageData.data;
+  const pixelsPerChunk = rowPixelsPerChunk(imageData.width);
 
   for (let i = 0; i < data.length; i += 4) {
     data[i] = 255 - data[i]; // R
     data[i + 1] = 255 - data[i + 1]; // G
     data[i + 2] = 255 - data[i + 2]; // B
     // Alpha (data[i + 3]) remains unchanged
+    if (i % pixelsPerChunk === 0) await yieldToEventLoop();
   }
 
   return imageData;
@@ -1196,8 +1230,9 @@ function invert(imageData) {
  * Auto-levels: stretch histogram to use full 0-255 range
  * Critical for faded documents where text has low contrast
  */
-function autoLevels(imageData) {
+export async function autoLevels(imageData) {
   const data = imageData.data;
+  const pixelsPerChunk = rowPixelsPerChunk(imageData.width);
 
   // First pass: find min and max values
   let min = 255;
@@ -1207,6 +1242,7 @@ function autoLevels(imageData) {
     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
     if (brightness < min) min = brightness;
     if (brightness > max) max = brightness;
+    if (i % pixelsPerChunk === 0) await yieldToEventLoop();
   }
 
   // Avoid division by zero
@@ -1226,6 +1262,7 @@ function autoLevels(imageData) {
     data[i] = clamp((data[i] - min) * scale);
     data[i + 1] = clamp((data[i + 1] - min) * scale);
     data[i + 2] = clamp((data[i + 2] - min) * scale);
+    if (i % pixelsPerChunk === 0) await yieldToEventLoop();
   }
 
   return imageData;

@@ -4,60 +4,52 @@ import { dismissDisclaimer } from "./helpers";
 
 /**
  * Real-browser main-thread cost of advancedOCR.js's preprocessing chain
- * (adaptiveThreshold/denoise/sharpen/dilate/erode/unsharpMask, applied per
- * scale in applyAdvancedPreprocessing) during one generic scanned-image
- * import - and whether it blocks the panic key (triple-Escape) or Quick
- * Exit while it runs.
+ * during a scanned-image import, and whether it blocks the panic key
+ * (triple-Escape) or Quick Exit while it runs.
  *
- * MEASURED LIVE before any fix (CDP Profiler + PerformanceObserver
- * longtask, this file's own fixture, 1x CPU): a single
- * applyAdvancedPreprocessing pass on a real 1700x2200 (200dpi Letter)
- * scanned-image import produced ONE uninterrupted main-thread task lasting
- * up to ~30.6s (denoise/adaptiveThreshold at scale, with morphological
- * dilate/erode close behind) - freezing every event on the page, panic key
- * included, for the full duration. The chain never yielded to the event
- * loop once it started.
+ * This spec used to drive the whole real pipeline (advancedPDFAnalysis on a
+ * real File, Tesseract worker pool included) and observe it for a fixed
+ * 35s window. Two problems with that, found in review: (1) Tesseract worker
+ * creation downloads its core/wasm files from a CDN before any preprocessing
+ * runs at all - in a fresh browser context that download's latency is
+ * unbounded, so a 35s window can end before the preprocessing chain (the
+ * thing actually under test) has even started, silently proving nothing;
+ * (2) the "still redirects promptly" tests pressed Escape/clicked Quick Exit
+ * immediately after starting the import - before preprocessing began - and
+ * asserted no latency bound, so they passed identically whether or not the
+ * panic key was ever actually blocked.
  *
- * Fix: each of those functions now yields every ROWS_PER_CHUNK (6) rows
- * (advancedOCR.js) - same reads from the untouched source buffer, same
- * writes to the output buffer, only WHEN control returns to the event loop
- * changes. Proven byte-identical against an unchunked reference
- * implementation of the same algorithm:
- * src/utils/advancedOCR.chunkedYield.byteIdentical.test.js.
+ * Fix: call the real, exported applyAdvancedPreprocessing/
+ * PREPROCESS_STRATEGIES directly on a synthetic canvas, bypassing Tesseract/
+ * the CDN entirely. This is deterministic (no network dependency) and lets
+ * every assertion below target the exact property in question: does a
+ * single degraded-document preprocessing pass ever produce a main-thread
+ * block, and does the panic key still respond promptly while one is
+ * in flight. Byte-identical proof that chunking doesn't change what gets
+ * computed lives in src/utils/advancedOCR.chunkedYield.byteIdentical.test.js;
+ * this spec only covers timing/responsiveness.
  *
- * Re-measured after the fix, same fixture, same method (isolated
- * micro-benchmark, this machine otherwise idle - see this commit's own
- * investigation notes): each chunked function individually stayed under
- * ~100-160ms max task, vs. ~30.6s for a single unchunked
- * applyAdvancedPreprocessing pass before this fix - roughly a 200-400x
- * reduction. Isolated getImageData/putImageData/toDataURL calls on the
- * same canvas size (native, unchunkable, out of this fix's scope) cost a
- * combined ~50ms, ruling them out as a contributor. Under heavier system
- * load (sharing the machine with a concurrent full unit-test run and
- * other e2e suites during this investigation) single tasks were observed
- * up to ~530ms - the same chunked code taking measurably longer per chunk
- * under contention, a real but environment-dependent effect, not a defect
- * in the chunking itself: the row count per chunk (and therefore the work
- * per chunk) never changes. LONGTASK_TRIGGER_MS below is set well above
- * that observed range so ordinary CI contention can't flake it, while
- * still catching the actual regression this guards against (reverting the
- * chunking reintroduces multi-SECOND tasks, an order of magnitude past
- * this bound either way).
+ * Canvas size (4896x6336) matches the real working resolution of the
+ * SEVERELY_AGED 8.0x high-scale retry (ENABLE_RETRY_WITH_HIGHER_SCALE) on a
+ * Letter page - the worst case flagged in review, and the strategy with the
+ * most preprocessing steps (grayscale, removeYellowing, autoLevels,
+ * enhanceContrast, unsharpMask, adaptiveThreshold, morphologicalClosing,
+ * denoise, sharpen).
  *
- * 4x CPU throttle was verified manually during this investigation
- * (Emulation.setCPUThrottlingRate) and showed the same qualitative
- * result - proportionally longer per-chunk time, still no single task
- * anywhere near 200ms - but isn't run as a standing CI test here: at 4x,
- * the full pipeline (real Tesseract recognition included) runs long enough
- * to make every CI run pay several extra minutes for a result 1x already
- * demonstrates the mechanism for.
- *
- * "Scanned image" fixture: a Letter-size canvas filled with deterministic
- * speckle (no real content, no Math.random - reproducible across runs),
- * embedded as the only content of a single-page PDF via jsPDF (already an
- * app dependency). No text layer, so pdf.js's own text extraction returns
- * nothing and advancedPDFAnalysis's OCR path (not its fast text-extraction
- * path) is what actually runs.
+ * Honest limit on the two "still redirects promptly" tests below: Chromium
+ * prioritizes genuine trusted input (a real keydown or a real
+ * Input.dispatchMouseEvent click) over continuing JS work, so at this canvas
+ * size a press landing right at the start of the chain measured ~50-220ms on
+ * both the fixed code AND a targeted revert of grayscale/enhanceContrast/
+ * removeYellowing/invert/autoLevels back to unchunked passes - those 4 flat
+ * passes combined are individually fast enough (tens of ms even at 31M
+ * pixels) that Chromium's input scheduling gets a keypress through either
+ * way. These two are regression guards against a much larger future
+ * regression (e.g. chunking removed entirely, which measured 38.9-39.1s on
+ * base 39d73d40), not proof that this specific fix changed their outcome -
+ * that proof is test 1 above (the longtask trigger) and the wall-clock/yield-
+ * cost numbers in LONGTASK_TRIGGER_MS's and PANIC_KEY_LATENCY_TRIGGER_MS's
+ * own comments.
  */
 
 const APP_VERSION: string = JSON.parse(
@@ -67,13 +59,26 @@ const APP_VERSION: string = JSON.parse(
 const QUICK_EXIT_SELECTOR =
   'button[aria-label="Quick exit - immediately leave this page"]';
 
-// Regression-guard bound (not the task's literal 200ms trigger - see the
-// file-level doc comment for why 2000ms is the right assertion here: real
-// system-load variance observed up to ~530ms on otherwise-identical chunked
-// code, while the actual regression this guards against - reverting the
-// chunking - reintroduces multi-SECOND tasks, an order of magnitude past
-// this bound either way).
-const LONGTASK_TRIGGER_MS = 2000;
+const PREPROCESS_WIDTH = 4896;
+const PREPROCESS_HEIGHT = 6336;
+
+// Measured live on this machine (real Chromium, this file's own fixture):
+// fixed code's longest single task at this canvas size was 173-225ms across
+// repeated runs (the rest of the chain stays chunked under the browser's own
+// 50ms longtask threshold). A targeted revert of grayscale/enhanceContrast/
+// removeYellowing/invert/autoLevels back to unchunked, synchronous passes
+// (the code this test exists to catch a regression to) measured 552ms at the
+// same size - back-to-back unchunked passes accumulating into one
+// uninterrupted task before the chain's first yield point. 500ms sits
+// between the two with margin on both sides.
+const LONGTASK_TRIGGER_MS = 500;
+
+// scheduler.yield()/MessageChannel yields measured at ~0.002-0.03ms each
+// (vs. setTimeout(0)'s ~5.6ms nested-timer-clamped cost) - a keypress landing
+// mid-chain should reach the redirect within well under a second even on a
+// loaded CI runner. Contrast: the same measurement against base 39d73d40
+// (fully unchunked) was 38.9-39.1s.
+const PANIC_KEY_LATENCY_TRIGGER_MS = 1000;
 
 async function seedReturningUser(page: Page): Promise<void> {
   await page.addInitScript((appVersion) => {
@@ -97,65 +102,87 @@ async function stubWeatherRedirect(page: Page): Promise<void> {
   );
 }
 
-/** Base64 (no data: prefix) of a single-page, image-only PDF: a deterministic
- * speckle pattern at typical 200dpi scan resolution (1700x2200), built
- * entirely in-page via canvas + the app's own jsPDF dependency. `/@id/jspdf`
- * (not the bare `"jspdf"` specifier) is required here: page.evaluate's code
- * runs outside Vite's own import-analysis transform, so only Vite's
- * explicit bare-specifier resolution endpoint can resolve it. */
-async function buildSyntheticScannedPdfBase64(page: Page): Promise<string> {
-  return page.evaluate(async () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1700;
-    canvas.height = 2200;
-    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-    ctx.fillStyle = "#f3ecd9";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    let seed = 42;
-    const rand = () => {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return seed / 0x7fffffff;
-    };
-    for (let i = 0; i < 400000; i++) {
-      const x = Math.floor(rand() * canvas.width);
-      const y = Math.floor(rand() * canvas.height);
-      const shade = Math.floor(rand() * 120);
-      ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
-      ctx.fillRect(x, y, 2, 1);
-    }
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-
-    const { default: JsPDF } = await import("/@id/jspdf");
-    const doc = new JsPDF({ unit: "pt", format: "letter" });
-    doc.addImage(dataUrl, "JPEG", 0, 0, 612, 792);
-    const uri = doc.output("datauristring") as string;
-    return uri.split(",")[1];
-  });
-}
-
-async function installLongTaskObserver(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    window.__longTasks = [];
-    new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        window.__longTasks.push(entry.duration);
+// Installs a real (not string-eval'd) canvas-building function on `window`
+// before the app's own scripts run, so both helpers below can call it inside
+// their own page.evaluate without duplicating the speckle-generation logic.
+// Deterministic pseudo-random speckle standing in for a scanned page - no
+// Math.random, reproducible across runs. Same generation shape as the old
+// PDF-routed fixture, just built directly onto a canvas.
+async function installSyntheticScanCanvasBuilder(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.__buildSyntheticScanCanvas = (width: number, height: number) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+      ctx.fillStyle = "#f3ecd9";
+      ctx.fillRect(0, 0, width, height);
+      let seed = 42;
+      const rand = () => {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed / 0x7fffffff;
+      };
+      for (let i = 0; i < 400000; i++) {
+        const x = Math.floor(rand() * width);
+        const y = Math.floor(rand() * height);
+        const shade = Math.floor(rand() * 120);
+        ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+        ctx.fillRect(x, y, 2, 1);
       }
-    }).observe({ entryTypes: ["longtask"] });
+      return canvas;
+    };
   });
 }
 
-async function runOcrImport(page: Page, pdfBase64: string): Promise<void> {
-  await page.evaluate(async (base64) => {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const file = new File([bytes], "e2e-scanned-fixture.pdf", {
-      type: "application/pdf",
-    });
-    const mod = await import("/src/utils/advancedOCR.js");
-    await mod.advancedPDFAnalysis(file, {}, () => {});
-  }, pdfBase64);
+async function measureSeverelyAgedPreprocessingLongTasks(
+  page: Page,
+): Promise<{ count: number; longest: number }> {
+  return page.evaluate(
+    async ({ width, height }) => {
+      const tasks: number[] = [];
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) tasks.push(entry.duration);
+      });
+      observer.observe({ entryTypes: ["longtask"] });
+
+      const canvas = window.__buildSyntheticScanCanvas(width, height);
+      const mod = await import("/src/utils/advancedOCR.js");
+      await mod.applyAdvancedPreprocessing(
+        canvas,
+        mod.PREPROCESS_STRATEGIES.SEVERELY_AGED,
+      );
+      // Long task entries only fire once their task completes and the
+      // observer callback is flushed - give it one macrotask turn.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      observer.disconnect();
+      return {
+        count: tasks.length,
+        longest: tasks.length ? Math.max(...tasks) : 0,
+      };
+    },
+    { width: PREPROCESS_WIDTH, height: PREPROCESS_HEIGHT },
+  );
+}
+
+async function startBackgroundSeverelyAgedPreprocessing(
+  page: Page,
+): Promise<void> {
+  await page.evaluate(
+    async ({ width, height }) => {
+      const canvas = window.__buildSyntheticScanCanvas(width, height);
+      const mod = await import("/src/utils/advancedOCR.js");
+      // Fire-and-forget: the caller presses the panic key/clicks Quick Exit
+      // while this is still running, not after it finishes. The page
+      // navigates away before this ever resolves in the passing case.
+      mod
+        .applyAdvancedPreprocessing(
+          canvas,
+          mod.PREPROCESS_STRATEGIES.SEVERELY_AGED,
+        )
+        .catch(() => {});
+    },
+    { width: PREPROCESS_WIDTH, height: PREPROCESS_HEIGHT },
+  );
 }
 
 async function measureKeydownToNavigation(page: Page): Promise<number> {
@@ -165,94 +192,107 @@ async function measureKeydownToNavigation(page: Page): Promise<number> {
   return Date.now() - start;
 }
 
-async function measureClickToNavigation(page: Page): Promise<number> {
+// page.mouse.click (real CDP Input.dispatchMouseEvent), not locator.click():
+// verified live that this distinction is load-bearing, not stylistic.
+// locator.click()'s own actionability pre-check waits for the element's
+// bounding box to be stable across two consecutive animation frames before
+// it dispatches anything - and a scheduler.yield()-based chunk loop that
+// keeps rescheduling itself with ~0ms gaps starves rendering (no rAF/paint
+// opportunity) for as long as it runs, so that pre-check (and a plain
+// el.dispatchEvent("click")) both measured ~55-60s here, the same duration as
+// the whole preprocessing pass - a false positive for "blocked", not a real
+// one. A genuine trusted click is prioritized by Chromium's scheduler the
+// same way a keydown is (measured ~100-200ms here) - this is what a real
+// veteran's mouse click actually goes through, so it's what this test needs
+// to measure.
+async function measureClickToNavigation(
+  page: Page,
+  box: { x: number; y: number; width: number; height: number },
+): Promise<number> {
   const start = Date.now();
-  await page.locator(QUICK_EXIT_SELECTOR).first().click();
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await page.waitForURL(/weather\.com/, { timeout: 30000 });
   return Date.now() - start;
 }
 
-// Bounds this test's own runtime independent of how long the full pipeline
-// takes end to end. Real Tesseract recognition against this fixture's
-// content-free speckle (nothing for it to converge on) can run for minutes
-// via ENABLE_RETRY_WITH_HIGHER_SCALE/the multi-scale ensemble - irrelevant
-// to what this test checks, since Tesseract's own recognize() call runs in
-// a Web Worker and produces no main-thread longtask entries at all. The
-// preprocessing chain this test cares about runs early and synchronously.
-//
-// 35s, not a shorter guess: a PerformanceObserver longtask entry only
-// fires once its task COMPLETES, never while still in progress - verified
-// live against the pre-fix code (a single unchunked preprocessing pass
-// blocks for ~30.6s), a 30s window caught ZERO entries for it, since the
-// one giant task was still running, not yet reported, at the 30s mark -
-// a vacuous pass on exactly the code this test exists to catch. 35s
-// reliably observes that task's own completion on unfixed code, while
-// costing the fixed path nothing extra (its own short tasks are already
-// visible within the first second or two either way).
-const OBSERVATION_WINDOW_MS = 35000;
-
 test.describe("advancedOCR.js preprocessing: main-thread cost during a scanned-image import", () => {
-  test("no single main-thread task exceeds the 200ms trigger during a scanned-image import", async ({
+  test("no single main-thread task exceeds the regression-guard trigger during SEVERELY_AGED preprocessing", async ({
     page,
+    browserName,
   }) => {
-    test.setTimeout(90000);
+    test.skip(
+      browserName !== "chromium",
+      "Long Tasks API (PerformanceObserver 'longtask') is Chromium-only - Firefox never reports entries for it.",
+    );
+    test.setTimeout(120_000);
+    await installSyntheticScanCanvasBuilder(page);
     await seedReturningUser(page);
-    const pdfBase64 = await buildSyntheticScannedPdfBase64(page);
-    await installLongTaskObserver(page);
 
-    runOcrImport(page, pdfBase64).catch(() => {});
-    await page.waitForTimeout(OBSERVATION_WINDOW_MS);
-
-    const longTasks = await page.evaluate(() => window.__longTasks);
-    const longest = longTasks.length ? Math.max(...longTasks) : 0;
+    const { count, longest } =
+      await measureSeverelyAgedPreprocessingLongTasks(page);
     // eslint-disable-next-line no-console
     console.log(
-      `[ocr-perf] ${OBSERVATION_WINDOW_MS}ms window: taskCount=${longTasks.length} longestTaskMs=${longest.toFixed(1)}`,
+      `[ocr-perf] SEVERELY_AGED @ ${PREPROCESS_WIDTH}x${PREPROCESS_HEIGHT}: taskCount=${count} longestTaskMs=${longest.toFixed(1)}`,
     );
 
-    expect(longTasks.length).toBeGreaterThan(0);
     expect(longest).toBeLessThan(LONGTASK_TRIGGER_MS);
   });
 
-  test("triple-Escape still redirects promptly while a scanned-image import is running", async ({
+  // Regression guard (see the file-level doc comment) - Chromium's input
+  // scheduling already got a press through quickly on a targeted revert of
+  // this fix at this canvas size, so this doesn't prove the fix by itself.
+  test("regression guard: triple-Escape still redirects promptly while SEVERELY_AGED preprocessing is actively running", async ({
     page,
   }) => {
-    test.setTimeout(180000);
+    test.setTimeout(120_000);
+    await installSyntheticScanCanvasBuilder(page);
     await seedReturningUser(page);
     await stubWeatherRedirect(page);
-    const pdfBase64 = await buildSyntheticScannedPdfBase64(page);
 
-    const ocrDone = runOcrImport(page, pdfBase64).catch(() => {});
+    await startBackgroundSeverelyAgedPreprocessing(page);
     const latencyMs = await measureKeydownToNavigation(page);
     // eslint-disable-next-line no-console
     console.log(
-      `[ocr-perf] triple-Escape during import: latency=${latencyMs}ms`,
+      `[ocr-perf] triple-Escape during SEVERELY_AGED preprocessing: latency=${latencyMs}ms`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
-    await ocrDone;
+    expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_MS);
   });
 
-  test("Quick Exit still redirects promptly while a scanned-image import is running", async ({
+  // Regression guard (see the file-level doc comment) - same caveat as
+  // triple-Escape above.
+  test("regression guard: Quick Exit still redirects promptly while SEVERELY_AGED preprocessing is actively running", async ({
     page,
   }) => {
-    test.setTimeout(180000);
+    test.setTimeout(120_000);
+    await installSyntheticScanCanvasBuilder(page);
     await seedReturningUser(page);
     await stubWeatherRedirect(page);
-    const pdfBase64 = await buildSyntheticScannedPdfBase64(page);
+    // Resolved before the heavy work starts: the button's position doesn't
+    // move once mounted, and boundingBox() itself has its own (shorter,
+    // but still non-zero) actionability wait that would otherwise leak into
+    // the latency this test measures.
+    const box = await page.locator(QUICK_EXIT_SELECTOR).first().boundingBox();
+    if (!box) throw new Error("Quick Exit button has no bounding box");
 
-    const ocrDone = runOcrImport(page, pdfBase64).catch(() => {});
-    const latencyMs = await measureClickToNavigation(page);
+    await startBackgroundSeverelyAgedPreprocessing(page);
+    const latencyMs = await measureClickToNavigation(page, box);
     // eslint-disable-next-line no-console
-    console.log(`[ocr-perf] Quick Exit during import: latency=${latencyMs}ms`);
+    console.log(
+      `[ocr-perf] Quick Exit during SEVERELY_AGED preprocessing: latency=${latencyMs}ms`,
+    );
 
     expect(page.url()).toMatch(/weather\.com/);
-    await ocrDone;
+    expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_MS);
   });
 });
 
 declare global {
   interface Window {
-    __longTasks: number[];
+    __buildSyntheticScanCanvas: (
+      width: number,
+      height: number,
+    ) => HTMLCanvasElement;
   }
 }
