@@ -55,7 +55,7 @@ describe("_formatOtherDocsSection: whitelisted fields only", () => {
     });
 
     expectNoPii(out);
-    expect(out).toContain("combinedRating");
+    expect(out).toContain("Combined Rating: 10");
     expect(out).toContain("Tinnitus");
   });
 

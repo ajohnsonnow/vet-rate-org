@@ -1153,17 +1153,100 @@ function _scrubFreeTextValue(value) {
   return value;
 }
 
+// D15-4: was `JSON.stringify(safe).substring(0, 500)` - a fixed character
+// cut with no regard for where a value ended, routinely slicing mid-JSON
+// (an unterminated string, a dangling `"field":` with the rest of its
+// value cut off). `_safeExtractedDataSummary`'s null check was also
+// top-level only - a nested sub-field (a `{years:0,months:null,days:5}`-
+// shaped service-time object, say) still printed `"months":null` into the
+// blob. Rendered as readable "Label: value" lines instead of JSON:
+// _deepCleanNullish drops null/undefined/empty values at EVERY depth, and
+// nothing is ever cut mid-value - a field line is either included whole or
+// dropped whole (see the char-budget loop in _formatOtherDocsSection).
+function _humanizeFieldLabel(field) {
+  return field
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function _isEmptyValue(value) {
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string") return value.trim() === "";
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === "object") return Object.keys(value).length === 0;
+  return false;
+}
+
+function _deepCleanNullish(value) {
+  if (_isEmptyValue(value)) return undefined;
+  if (Array.isArray(value)) {
+    const cleaned = value
+      .map(_deepCleanNullish)
+      .filter((v) => !_isEmptyValue(v));
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+  if (typeof value === "object") {
+    const cleaned = {};
+    for (const [key, val] of Object.entries(value)) {
+      const cleanedVal = _deepCleanNullish(val);
+      if (!_isEmptyValue(cleanedVal)) cleaned[key] = cleanedVal;
+    }
+    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+  }
+  return value;
+}
+
+// Renders an already-deep-cleaned value as a compact, readable string -
+// never JSON.stringify, so the result can never contain a literal "null"
+// or an unbalanced brace/quote from a mid-value cut.
+function _renderReadableValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(_renderReadableValue).join("; ");
+  }
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(
+        ([key, val]) =>
+          `${_humanizeFieldLabel(key)}: ${_renderReadableValue(val)}`,
+      )
+      .join(", ");
+  }
+  return String(value);
+}
+
 function _safeExtractedDataSummary(extractedData) {
   const safe = {};
   for (const field of PACKET_CONTEXT_SAFE_FIELDS) {
-    const value = extractedData[field];
-    if (value === null || value === undefined) continue;
-    if (Array.isArray(value) && value.length === 0) continue;
-    safe[field] = FREE_TEXT_SAFE_FIELDS.has(field)
-      ? _scrubFreeTextValue(value)
-      : value;
+    const rawValue = extractedData[field];
+    const scrubbedValue = FREE_TEXT_SAFE_FIELDS.has(field)
+      ? _scrubFreeTextValue(rawValue)
+      : rawValue;
+    const cleaned = _deepCleanNullish(scrubbedValue);
+    if (cleaned === undefined) continue;
+    safe[field] = cleaned;
   }
   return safe;
+}
+
+// Whole-line budget, never a mid-value cut: a field's "Label: value" line
+// is either included in full or dropped in full once the running total
+// would exceed the budget - unlike the old fixed substring(0, 500), no
+// value is ever sliced partway through.
+const MAX_OTHER_DOC_SUMMARY_CHARS = 2000;
+
+function _formatOtherDoc(doc, label, index) {
+  let out = `  ${_neutralDocLabel(doc, label, index)}\n`;
+  const safe = _safeExtractedDataSummary(doc.extractedData || {});
+  let summaryChars = 0;
+  for (const [field, value] of Object.entries(safe)) {
+    const line = `    ${_humanizeFieldLabel(field)}: ${_renderReadableValue(value)}\n`;
+    if (summaryChars + line.length > MAX_OTHER_DOC_SUMMARY_CHARS) break;
+    out += line;
+    summaryChars += line.length;
+  }
+  return out;
 }
 
 export function _formatOtherDocsSection(grouped) {
@@ -1172,12 +1255,7 @@ export function _formatOtherDocsSection(grouped) {
     const label = PACKET_DOC_LABELS[type] || type;
     out += `--- ${label} (${docs.length} document${docs.length > 1 ? "s" : ""}) ---\n`;
     docs.forEach((doc, index) => {
-      out += `  ${_neutralDocLabel(doc, label, index)}\n`;
-      const safe = _safeExtractedDataSummary(doc.extractedData || {});
-      if (Object.keys(safe).length > 0) {
-        const summary = JSON.stringify(safe).substring(0, 500);
-        out += `  Data: ${summary}\n`;
-      }
+      out += _formatOtherDoc(doc, label, index);
     });
     out += "\n";
   }
