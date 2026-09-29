@@ -127,9 +127,21 @@ describe("D15-1d: _applyRegexSafetyNet backfills every identifier field the mode
     expect(data.homeAddress).toContain("123 MAIN ST");
   });
 
-  it("does not overwrite an AI-supplied homeAddress with the regex value", () => {
+  it("overwrites an AI-supplied homeAddress with the local regex value (owner decision D: identifier fields come from the local parser, never the model, even if one slips past the schema)", () => {
     const data = { branch: "Army", homeAddress: "AI-reported address" };
     _applyRegexSafetyNet(data, FIXTURE_DD214_TEXT, () => {});
-    expect(data.homeAddress).toBe("AI-reported address");
+    expect(data.homeAddress).toContain("123 MAIN ST");
+    expect(data.homeAddress).not.toBe("AI-reported address");
+  });
+
+  it("overwrites an AI-supplied fullName/dateOfBirth with the local regex value the same way", () => {
+    const data = {
+      branch: "Army",
+      fullName: "AI GUESS, WRONG",
+      dateOfBirth: "1900-01-01",
+    };
+    _applyRegexSafetyNet(data, FIXTURE_DD214_TEXT, () => {});
+    expect(data.fullName).toContain(FAKE_LAST.toUpperCase());
+    expect(data.dateOfBirth).toBe("1984-03-15");
   });
 });

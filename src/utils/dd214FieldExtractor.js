@@ -32,11 +32,34 @@ const DD214_FIELD_PATTERNS = {
     block: 1,
     label: "Name",
     patterns: [
-      /(?:BLOCK\s*1|BOX\s*1|1\.\s*NAME)[:\s.]*([A-Z][A-Z,.\s'-]+)/i,
-      /NAME[:\s]*(?:LAST,?\s*FIRST,?\s*(?:AND\s*)?MIDDLE)[:\s.]*([A-Z][A-Z,.\s'-]+)/i,
-      /(?:^|\n)\s{0,20}([A-Z]{2,}(?:\s*,\s*[A-Z]{2,}){1,2})\s{0,20}(?:\n|$)/m,
+      // Same line as the label, with or without the "(Last, First,
+      // Middle)" printed hint - the hint is consumed as an optional
+      // non-capturing group BEFORE `[:\s.]*` so it can't be captured as
+      // the value on its own (which happened when the value was actually
+      // on the next line and this pattern's only alternative was to grab
+      // the hint text instead of failing outright).
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional parenthetical-hint/label alternation, not backtracking; bounded {0,60} capture
+      /(?:BLOCK\s*1|BOX\s*1|1\.\s*NAME)(?:\s*\([^)\n]{0,60}\))?[:\s.]*([A-Z][A-Z,;.\s'-]+)/i,
+      // Row-wise/OCR label-above-value layout: the label's line ends right
+      // after the (optional) hint, and the actual name is the next line.
+      // The same-line separator class is bounded AND excludes `\n` (unlike
+      // `\s`, which includes it) - directly followed by a required literal
+      // `\n`, an ambiguous unbounded `[:\s.]*` can match the newline
+      // itself, needing to backtrack through every possible split point on
+      // a long run of blank/whitespace lines (ReDoS regression).
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional parenthetical-hint/label alternation, not backtracking; bounded {0,60}/{0,20} captures
+      /(?:BLOCK\s*1|BOX\s*1|1\.\s*NAME)(?:[ \t]{0,10}\([^)\n]{0,60}\))?[ \t:.]{0,20}\n[ \t]{0,20}([A-Z][A-Z,;.\s'-]+)/i,
+      /NAME[:\s]*(?:\(?LAST,?\s*FIRST,?\s*(?:AND\s*)?MIDDLE\)?)[:\s.]*([A-Z][A-Z,;.\s'-]+)/i,
+      // Bare "LAST, FIRST[, MIDDLE]" line fallback - anchored via a bounded
+      // lookbehind requiring a "1. NAME" (or NGB-22's "1. LAST NAME")
+      // label within the preceding 200 chars, so a bare "CITY, STATE" line
+      // elsewhere in the document (Box 7b's home of record, an address
+      // block) is never mistaken for the veteran's name just because it's
+      // the first comma-separated CAPS pair the whole-document scan finds.
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the bounded {0,200} lookbehind window, not backtracking (fixed-length alternation inside)
+      /(?<=1\.?\s{0,10}(?:LAST\s{0,10})?NAME[\s\S]{0,200})(?:^|\n)\s{0,20}([A-Z]{2,}(?:\s*[,;]\s*[A-Z]{2,}){1,2})\s{0,20}(?:\n|$)/m,
     ],
-    validate: (val) => val?.includes(",") && val.length > 4,
+    validate: (val) => /[,;]/.test(val || "") && val.length > 4,
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
   },
 
@@ -59,9 +82,16 @@ const DD214_FIELD_PATTERNS = {
     block: 3,
     label: "Social Security Number",
     patterns: [
-      /(?:BLOCK\s*3|BOX\s*3|3\.\s*SOCIAL)[:\s.]*(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
-      /(?:SOCIAL\s*SECURITY|SSN|S\.?S\.?N\.?)[:\s#.]*(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
-      /(\d{3}[\s|]*\d{2}[\s|]*\d{4})(?:\s|$)/,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional "SECURITY NUMBER" suffix alternation, not backtracking
+      /(?:BLOCK\s*3|BOX\s*3|3\.\s*SOCIAL(?:\s*SECURITY(?:\s*NUMBER)?)?)[:\s.]*(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
+      // Bounded and newline-excluded before the required `\n` literal for
+      // the same reason as the fullName next-line pattern above (ReDoS
+      // regression: an unbounded `[:\s.]*` overlaps the `\n` it precedes).
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional "SECURITY NUMBER"/"NO."/"#" suffix alternation, not backtracking; every quantifier bounded
+      /(?:BLOCK\s*3|BOX\s*3|3\.\s*SOCIAL(?:\s*SECURITY(?:\s*NUMBER)?)?)[ \t:.]{0,20}(?:NO\.?|#)?[ \t:.]{0,20}\n[ \t]{0,20}(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional "NUMBER" suffix alternation, not backtracking
+      /(?:SOCIAL\s*SECURITY(?:\s*NUMBER)?|SSN|S\.?S\.?N\.?)[:\s#.]*(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
+      /(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})(?:\s|$)/,
     ],
     sensitive: true,
     normalize: (val) => {
@@ -109,9 +139,24 @@ const DD214_FIELD_PATTERNS = {
     label: "Date of Birth",
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /(?:BLOCK\s*5|BOX\s*5|5\.\s*DATE\s*OF\s*BIRTH)[:\s.]*(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2})/i,
+      /(?:BLOCK\s*5|BOX\s*5|5\.\s*DATE\s*OF\s*BIRTH)(?:\s*\([^)\n]{0,20}\))?[:\s.]*(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2})/i,
+      // Row-wise/OCR label-above-value layout: the label's own line ends
+      // right after the "(YYYYMMDD)" hint, and the actual DOB is on the
+      // next line. Bounded AND newline-excluded before the required `\n`
+      // literal - an unbounded `[:\s.]*` overlaps the `\n` it precedes,
+      // same ReDoS regression class as the fullName next-line pattern.
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional parenthetical-hint/value-shape alternation, not backtracking; every quantifier bounded
+      /(?:BLOCK\s*5|BOX\s*5|5\.\s*DATE\s*OF\s*BIRTH)(?:[ \t]{0,10}\([^)\n]{0,20}\))?[ \t:.]{0,20}\n[ \t]{0,20}(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2})/i,
+      // Row-wise OCR can also print an UNRELATED field's short value ("E4"
+      // pay grade) before the actual DOB digits on that same value line -
+      // skip up to 30 non-newline chars (lazily, so it stops at the
+      // EARLIEST 8-digit run rather than the latest) to find the bare
+      // YYYYMMDD run, word-bounded on both sides so it can't start or end
+      // mid-number.
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional parenthetical-hint alternation, not backtracking; every quantifier bounded
+      /(?:BLOCK\s*5|BOX\s*5|5\.\s*DATE\s*OF\s*BIRTH)(?:[ \t]{0,10}\([^)\n]{0,20}\))?[ \t:.]{0,20}\n[^\n]{0,30}?\b(\d{8})\b/i,
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /DATE\s*OF\s*BIRTH[:\s.]*(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4})/i,
+      /DATE\s*OF\s*BIRTH(?:\s*\([^)\n]{0,20}\))?[:\s.]*(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4})/i,
     ],
     normalize: (val) => normalizeDate(val),
   },
@@ -146,9 +191,14 @@ const DD214_FIELD_PATTERNS = {
     block: "7b",
     label: "Home of Record at Time of Entry",
     patterns: [
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; bounded {10,100} capture for S8786 above
-      /(?:BLOCK\s{0,10}7\s{0,10}B|BOX\s{0,10}7\s{0,10}B|7\s{0,10}B\.?\s{0,10}HOME\s{0,10}OF\s{0,10}RECORD)[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8\s{0,10}A|\d+\.))/i,
-      /HOME\s{0,10}OF\s{0,10}RECORD[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8|\d+\.))/i,
+      // The label's own sub-box letter can appear as "7B." or "7.b" (dot
+      // BEFORE the letter), and the full printed label often continues
+      // "...AT TIME OF ENTRY" plus a parenthetical hint - both consumed
+      // here as optional non-capturing text so neither pollutes the value.
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/"AT TIME OF ENTRY"/parenthetical-hint alternation count, not backtracking; bounded {10,100} capture for S8786 above. `B` (not `[Bb]`) since /i already covers case.
+      /(?:BLOCK\s{0,10}7\s{0,10}B|BOX\s{0,10}7\s{0,10}B|7\s{0,10}\.?\s{0,10}B\.?)\s{0,10}HOME\s{0,10}OF\s{0,10}RECORD(?:\s{0,10}AT\s{0,10}TIME\s{0,10}OF\s{0,10}ENTRY)?(?:\s{0,10}\([^)\n]{0,80}\))?[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8\s{0,10}A|\d+\.))/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the "AT TIME OF ENTRY"/parenthetical-hint/next-block alternation count, not backtracking; bounded {10,100} capture
+      /HOME\s{0,10}OF\s{0,10}RECORD(?:\s{0,10}AT\s{0,10}TIME\s{0,10}OF\s{0,10}ENTRY)?(?:\s{0,10}\([^)\n]{0,80}\))?[:\s.]{0,20}([\s\S]{10,100}?)(?=\n\s{0,10}(?:BLOCK|BOX|8|\d+\.))/i,
     ],
     normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
   },
@@ -378,10 +428,15 @@ const DD214_FIELD_PATTERNS = {
     block: 19,
     label: "Mailing Address After Separation",
     patterns: [
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above
-      /(?:BLOCK\s{0,10}19|BOX\s{0,10}19|19\.?\s{0,10}MAILING\s{0,10}ADDRESS)[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|20\.))/i,
+      // The box number can carry a sub-item letter ("19a.") and this
+      // field also covers Block 30's "HOME ADDRESS" wording on layouts
+      // that use that numbering instead. "AFTER SEPARATION" and a
+      // parenthetical hint ("(INCLUDE ZIP CODE)") are both consumed as
+      // part of the label so neither pollutes the captured value.
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above. `[A-Z]` (not `[A-Za-z]`) since /i already covers case.
+      /(?:BLOCK\s{0,10}(?:19|30)|BOX\s{0,10}(?:19|30)|(?:19|30)[A-Z]?\.?\s{0,10}(?:MAILING|HOME)\s{0,10}ADDRESS)(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|20\.))/i,
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above
-      /MAILING\s{0,10}ADDRESS\s{0,10}(?:AFTER\s{0,10}SEPARATION)?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|20\.))/i,
+      /(?:MAILING|HOME)\s{0,10}ADDRESS(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|20\.))/i,
     ],
     normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
   },
@@ -837,8 +892,9 @@ function parseBranchComponent(text) {
 function parseName(fullName) {
   if (!fullName) return { lastName: null, firstName: null, middleName: null };
 
-  // Format: "LAST, FIRST MIDDLE" or "LAST, FIRST M."
-  const parts = fullName.split(",").map((s) => s.trim());
+  // Format: "LAST, FIRST MIDDLE" or "LAST, FIRST M." - some OCR/scan
+  // layouts print the separator as a semicolon instead of a comma.
+  const parts = fullName.split(/[,;]/).map((s) => s.trim());
   if (parts.length >= 2) {
     const lastName = parts[0];
     const firstMiddle = parts[1].split(/\s+/);

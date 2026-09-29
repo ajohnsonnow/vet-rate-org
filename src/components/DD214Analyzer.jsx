@@ -72,18 +72,20 @@ import DD214FormBuilder from "./DD214FormBuilder";
  * Condensed System Prompt for Local Models (4K context)
  * Focus on essential JSON extraction - comprehensive DD214 coverage
  */
+// D15-1d / ADR-008: name, SSN/service number, DOB, home-of-record, and
+// mailing/home address must never be requested from the model - a local
+// regex parser fills them from the original text after the model returns.
+// This is a code comment, kept OUTSIDE the template literal below - unlike
+// a comment placed inside the backtick string, this one is never sent to
+// the model as prompt text.
 export const DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL = `You are a DD214 military records analyst. Extract ALL available data as JSON.
 
 COMPLETE DD214 FIELD LOCATIONS:
-Block 1: Name (Last, First, Middle)
 Block 2: Department/Component/Branch
-Block 3: SSN/Service Number
 Block 4a: Pay Grade (E-1 through E-9, W-1 through W-5, O-1 through O-10)
 Block 4b: MOS/AFSC/Rating/Primary Specialty Code
 Block 4c: Grade/Rank (PV1, PFC, SGT, SSG, CPT, MAJ, etc)
-Block 5: Date of Birth
 Block 6: Place of Birth (City, State, Country)
-Block 7: Home of Record (City, County, State)
 Block 8: Last Duty Assignment and Major Command
 Block 9: Command to Which Transferred
 Block 10: SGL Coverage Amount
@@ -109,7 +111,11 @@ Block 26: Post-9/11 GI Bill Status
 Block 27: Reserve Obligation Termination Date (YYYYMMDD)
 Block 28: Days Lost (AWOL, confinement, etc)
 Block 29: Foreign Service Credit
-Block 30: Home Address at Time of Separation
+
+DO NOT extract or return: Name (Block 1), SSN/Service Number (Block 3),
+Date of Birth (Block 5), Home of Record (Block 7), or Home Address (Block
+30) - these are filled in separately. Omit them entirely from your JSON
+output, or use null if your schema requires the key.
 
 CRITICAL EXTRACTION RULES:
 1. Block 18 (Remarks) often contains:
@@ -124,11 +130,6 @@ CRITICAL EXTRACTION RULES:
 2. Convert ALL dates to YYYY-MM-DD format
 3. Service time: YYYYMMDD means Years/Months/Days (e.g., "00000429" = 0y 4m 29d)
 4. If field not found or not applicable, use null
-
-D15-1d / ADR-008: name, SSN/service number, DOB, home-of-record, and
-mailing/home address are NOT requested below - _applyRegexSafetyNet fills
-them from extractDD214Fields' local regex parser (dd214FieldExtractor.js)
-instead, so the model is never asked to extract a direct identifier.
 
 OUTPUT JSON:
 {
@@ -247,11 +248,9 @@ Return a JSON object with this EXACT structure (ALL DD214 BLOCKS):
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214|NGB22|DD256|DD257",
   
-  // PERSONAL IDENTIFICATION (Blocks 1-7) - D15-1d / ADR-008: name, SSN/
-  // service number, DOB, and home-of-record are NOT requested here -
-  // _applyRegexSafetyNet fills them from extractDD214Fields' local regex
-  // parser (dd214FieldExtractor.js) instead, so the model is never asked
-  // to extract a direct identifier.
+  // PERSONAL IDENTIFICATION (Blocks 1-7) - do NOT include name, SSN/
+  // service number, date of birth, or home-of-record; they are filled in
+  // separately and must be omitted from this JSON entirely.
   "placeOfBirth": "City, State, Country (Block 6)",
 
   // COMPONENT & RANK (Blocks 2, 4a-4c, 17)
@@ -300,8 +299,8 @@ Return a JSON object with this EXACT structure (ALL DD214 BLOCKS):
   "militaryEducation": ["Course names from Block 14 or Block 18 overflow"],
   "memberRequests": "Member requests and options selected (Block 15)",
 
-  // CONTACT (Block 30) - D15-1d / ADR-008: home address is NOT requested
-  // here either - see the PERSONAL IDENTIFICATION note above.
+  // CONTACT (Block 30) - do NOT include home address either; see the
+  // PERSONAL IDENTIFICATION note above. Omit it entirely from this JSON.
 
   // AWARDS & DECORATIONS (Blocks 13, 18)
   "awards": [
@@ -685,23 +684,46 @@ function _parseDd214Json(content, t) {
   return data;
 }
 
+// D15-1d / ADR-008 (owner decision D): "identifier fields are extracted by
+// local parsers, never by the model" - not merely "not requested". The
+// schema omits these keys, but a model doesn't reliably honor a schema
+// (some backends echo extra keys anyway), so this is the actual
+// enforcement point: whatever the regex parser found for one of these
+// keys OVERWRITES any AI-supplied value, rather than only filling it in
+// when the AI left it empty (mergeAIAndRegexResults' generic behavior,
+// which is correct for every OTHER field but wrong for an identifier).
+// `homeAddress` is deliberately excluded here - the regex extractor's own
+// field for this is named `mailingAddress` (Block 19 on the layouts it
+// targets), not `homeAddress` (Block 30 in the AI schema's numbering), so
+// it's bridged separately below rather than looked up under this list's key.
+const IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY = [
+  "fullName",
+  "lastName",
+  "firstName",
+  "middleName",
+  "ssnLast4",
+  "dateOfBirth",
+  "homeOfRecord",
+];
+
 export function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
   try {
     const regexResult = extractDD214Fields(combinedRawText);
     if (regexResult && Object.keys(regexResult).length > 0) {
       const merged = mergeAIAndRegexResults(data, regexResult);
-      // D15-1d: the AI schema no longer requests name/SSN/DOB/home-of-
-      // record at all, so mergeAIAndRegexResults' generic "fill missing
-      // key from regex" pass already backfills fullName/lastName/
-      // firstName/middleName/ssnLast4/dateOfBirth/homeOfRecord under
-      // those SAME key names. `homeAddress` is the one exception - the
-      // regex extractor's own field for this is named `mailingAddress`
-      // (Block 19 on the layouts it targets), not `homeAddress` (Block 30
-      // in the AI schema's numbering) - bridge the name mismatch here so
-      // downstream code (which reads `.homeAddress`) still gets it.
-      if (!merged.homeAddress && regexResult.fields?.mailingAddress) {
+      if (regexResult.fields?.mailingAddress) {
         merged.homeAddress = regexResult.fields.mailingAddress;
       }
+      IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY.forEach((key) => {
+        const regexValue = regexResult.fields?.[key];
+        if (
+          regexValue !== undefined &&
+          regexValue !== null &&
+          regexValue !== ""
+        ) {
+          merged[key] = regexValue;
+        }
+      });
       // eslint-disable-next-line no-console
       console.log(
         "🔀 Merged AI + Regex results:",
