@@ -3358,3 +3358,79 @@ test.describe("Claim Navigator closes on Escape below sm", () => {
     });
   }
 });
+
+/**
+ * Symptom Logger header regression: commit 335dca2a moved AIStatusBadge into
+ * SymptomLoggerHeaderActions, whose cluster was `flex shrink-0` with no wrap -
+ * once the badge widened the cluster past the header's own width, it ran past
+ * the header's overflow-hidden edge instead of shrinking/wrapping, clipping
+ * "Report a bug"/Share/AI Settings off-screen at every phone width. Checked
+ * with AI unconfigured AND with a Gemini key set (the widest real badge
+ * string) - only the wider cloud-mode badge pushed some controls fully
+ * off-screen.
+ */
+async function measureSymptomLoggerHeaderClipping(
+  page: Page,
+): Promise<{ label: string; visiblePx: number; totalPx: number }[]> {
+  return page.evaluate(() => {
+    const title = document.querySelector("#symptom-logger-title");
+    const header = title?.closest(".overflow-hidden");
+    if (!header) return [];
+    const headerRect = header.getBoundingClientRect();
+    return Array.from(header.querySelectorAll("button, a")).map((el) => {
+      const r = el.getBoundingClientRect();
+      const label =
+        el.getAttribute("aria-label") || el.textContent?.trim() || "?";
+      const visibleRight = Math.min(r.right, headerRect.right, innerWidth);
+      const visibleLeft = Math.max(r.left, headerRect.left, 0);
+      return {
+        label,
+        visiblePx: Math.max(0, visibleRight - visibleLeft),
+        totalPx: r.width,
+      };
+    });
+  });
+}
+
+async function openSymptomLoggerHeader(
+  page: Page,
+  width: number,
+  geminiKey: string | null,
+): Promise<void> {
+  await page.setViewportSize({ width, height: 800 });
+  await page.addInitScript(
+    ({ appVersion, geminiKey }) => {
+      localStorage.setItem("vet-rate-tos-accepted", "true");
+      localStorage.setItem("vet_rate_last_seen_version", appVersion);
+      localStorage.setItem("vetrate-tour-completed", "true");
+      localStorage.setItem("vetrate_affiliation-prompt-seen", "true");
+      localStorage.setItem("vetrate_disclaimer-acknowledged", "true");
+      if (geminiKey) localStorage.setItem("vetrate_gemini_key", geminiKey);
+    },
+    { appVersion: APP_VERSION, geminiKey },
+  );
+  await page.goto("/");
+  await dismissDisclaimer(page);
+  await page.evaluate(() =>
+    window.dispatchEvent(new CustomEvent("openSymptomLogger")),
+  );
+  await page
+    .locator("#symptom-logger-title")
+    .waitFor({ state: "visible", timeout: 10000 });
+}
+
+test.describe("Symptom Logger header controls stay fully visible (no clipping)", () => {
+  for (const vp of QUICK_EXIT_VIEWPORTS) {
+    for (const geminiKey of [null, "AIzaFAKEKEYFORTEST1234567890"]) {
+      test(`@ ${vp.width}px, AI ${geminiKey ? "configured (cloud)" : "unconfigured"}`, async ({
+        page,
+      }) => {
+        await openSymptomLoggerHeader(page, vp.width, geminiKey);
+        const controls = await measureSymptomLoggerHeaderClipping(page);
+        expect(controls.length).toBeGreaterThan(0);
+        const clipped = controls.filter((c) => c.visiblePx < c.totalPx - 0.5);
+        expect(clipped, JSON.stringify(clipped)).toEqual([]);
+      });
+    }
+  }
+});
