@@ -15,7 +15,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
-import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { generateAI, getAIStatus, AI_MODES } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -684,18 +684,21 @@ function _parseDd214Json(content, t) {
   return data;
 }
 
-// D15-1d / ADR-008 (owner decision D): "identifier fields are extracted by
-// local parsers, never by the model" - not merely "not requested". The
-// schema omits these keys, but a model doesn't reliably honor a schema
-// (some backends echo extra keys anyway), so this is the actual
-// enforcement point: whatever the regex parser found for one of these
-// keys OVERWRITES any AI-supplied value, rather than only filling it in
-// when the AI left it empty (mergeAIAndRegexResults' generic behavior,
-// which is correct for every OTHER field but wrong for an identifier).
-// `homeAddress` is deliberately excluded here - the regex extractor's own
-// field for this is named `mailingAddress` (Block 19 on the layouts it
-// targets), not `homeAddress` (Block 30 in the AI schema's numbering), so
-// it's bridged separately below rather than looked up under this list's key.
+// D16-5 / owner decision (2026-09-29, final), superseding D15-1d's
+// stricter "local parser only, never the model" rule: raw documents stay
+// on the device, so the on-device engine MAY now see identifiers inside
+// them (nothing leaves the computer) and on-device extraction of these
+// fields is allowed again. Display precedence is veteran-entered (not
+// this function's concern - a veteran's own edit happens later, in the UI,
+// after this runs once) > confident local parse = on-device model > empty.
+// An off-device (cloud) model never supplies an identifier field, even if
+// one slips past the JSON schema - the routing change means cloud never
+// even sees the document text, so any value here would be a
+// hallucination, not a read; this function enforces that anyway as
+// defense in depth. `homeAddress` is bridged separately below - the regex
+// extractor's own field for this is named `mailingAddress` (Block 19 on
+// the layouts it targets), not `homeAddress` (Block 30 in the AI schema's
+// numbering).
 const IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY = [
   "fullName",
   "lastName",
@@ -706,24 +709,58 @@ const IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY = [
   "homeOfRecord",
 ];
 
-export function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
+// SWARM/WLLAMA/LOCAL are in-browser engines; LOCAL_SERVER is a local
+// server on a loopback host - all on-device per the owner decision above.
+// CLOUD, and any mode this component can't identify (e.g. a response with
+// no `mode` at all), are treated as NOT confirmed on-device - failing
+// closed here matters more than the (structurally rare) case of a
+// document-derived identifier from the vision-analysis path, which never
+// reports a mode at all.
+function _isOnDeviceModelMode(usedMode) {
+  return (
+    usedMode === AI_MODES.SWARM ||
+    usedMode === AI_MODES.WLLAMA ||
+    usedMode === AI_MODES.LOCAL ||
+    usedMode === AI_MODES.LOCAL_SERVER
+  );
+}
+
+// Local parse (dd214FieldExtractor.js only ever emits a value it's
+// confident about - see D16-5) wins when present. Otherwise, an on-device
+// model's own value is left as whatever mergeAIAndRegexResults already put
+// there; an off-device (or unconfirmed) model's value is cleared to an
+// empty string so Object.assign below actually overwrites it on `data`
+// rather than leaving a stale value in place.
+function _applyIdentifierFieldPrecedence(merged, regexFields, usedMode) {
+  const trustModelValue = _isOnDeviceModelMode(usedMode);
+
+  const resolve = (key, regexValue) => {
+    const hasRegexValue =
+      regexValue !== undefined && regexValue !== null && regexValue !== "";
+    if (hasRegexValue) {
+      merged[key] = regexValue;
+    } else if (!trustModelValue) {
+      merged[key] = "";
+    }
+  };
+
+  IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY.forEach((key) =>
+    resolve(key, regexFields?.[key]),
+  );
+  resolve("homeAddress", regexFields?.mailingAddress);
+}
+
+export function _applyRegexSafetyNet(
+  data,
+  combinedRawText,
+  setAnalysisResult,
+  usedMode,
+) {
   try {
     const regexResult = extractDD214Fields(combinedRawText);
     if (regexResult && Object.keys(regexResult).length > 0) {
       const merged = mergeAIAndRegexResults(data, regexResult);
-      if (regexResult.fields?.mailingAddress) {
-        merged.homeAddress = regexResult.fields.mailingAddress;
-      }
-      IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY.forEach((key) => {
-        const regexValue = regexResult.fields?.[key];
-        if (
-          regexValue !== undefined &&
-          regexValue !== null &&
-          regexValue !== ""
-        ) {
-          merged[key] = regexValue;
-        }
-      });
+      _applyIdentifierFieldPrecedence(merged, regexResult.fields, usedMode);
       // eslint-disable-next-line no-console
       console.log(
         "🔀 Merged AI + Regex results:",
@@ -2609,10 +2646,15 @@ function _buildDd214AnalysisHandlers(state) {
       // merge with AI results. If AI missed a field but regex found it,
       // the regex value fills the gap. If both have a value, AI wins for
       // complex fields, regex wins for structured fields like dates/MOS.
+      // `response?.mode` (undefined for the vision path) tells
+      // _applyRegexSafetyNet which backend actually answered, so it can
+      // keep an on-device model's own identifier value but never an
+      // off-device one - see D16-5.
       _applyRegexSafetyNet(
         data,
         _getDd214CombinedText(pastedText, extractedTexts),
         setAnalysisResult,
+        response?.mode,
       );
 
       // Automatically trigger the save flow to show import confirmation

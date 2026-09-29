@@ -2,20 +2,33 @@
  * D15-1d (final15 QA review, 2026-09-28): DD214Analyzer's AI prompt schema
  * asked the model to extract the veteran's name/SSN-last-4/service number/
  * DOB/home-of-record/home-address directly from the just-uploaded DD-214's
- * raw OCR/pasted text - identifiers ADR-008 says a model must never be
+ * raw OCR/pasted text - identifiers ADR-008 said a model must never be
  * asked to extract, even though `extractDD214Fields` (dd214FieldExtractor.js)
  * already parses every one of these fields locally via regex, box-label-
  * anchored, with zero AI involvement.
+ *
+ * D16-5 (owner decision, 2026-09-29, final) SUPERSEDES D15-1d's strict
+ * "local parser only, never the model" rule: raw documents stay on the
+ * device, so an ON-DEVICE model may now supply an identifier field too
+ * (nothing left the computer). Display precedence is veteran-entered >
+ * confident local parse = on-device model > empty; an OFF-DEVICE (cloud)
+ * model still never supplies one. In practice this only changes behavior
+ * when the local parser found NOTHING for a field - when it did (every
+ * fixture below), the parser's value still wins, matching both the old and
+ * new rule.
  *
  * Covers:
  *  - Neither system prompt (local or cloud) requests a direct identifier
  *    field in its JSON schema.
  *  - `_applyRegexSafetyNet` still produces every one of those fields on the
- *    final merged result - sourced from the local regex parser instead of
- *    the model - so the veteran-visible result does not lose a field it
- *    showed before D15-1d.
+ *    final merged result when the local parser finds them - sourced from
+ *    the local regex parser instead of the model - so the veteran-visible
+ *    result does not lose a field it showed before D15-1d.
  *  - The `homeAddress` (AI schema's Block-30 name) / `mailingAddress`
  *    (dd214FieldExtractor's Block-19 name) naming mismatch is bridged.
+ *  - The NEW on-device/off-device precedence for the case the local parser
+ *    finds nothing: an on-device model's own value is kept, an off-device
+ *    (or unidentified) model's value is cleared rather than shown.
  *
  * `serviceNumber` has no local regex parser (confirmed by grep on
  * dd214FieldExtractor.js) - flagged in openIssues rather than silently
@@ -43,6 +56,7 @@ vi.mock("../utils/smolVLMService", () => ({
   isSmolVLMSupported: () => false,
 }));
 
+import { AI_MODES } from "../utils/unifiedAIService";
 import {
   DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL,
   DD214_ANALYSIS_SYSTEM_PROMPT,
@@ -143,5 +157,69 @@ describe("D15-1d: _applyRegexSafetyNet backfills every identifier field the mode
     _applyRegexSafetyNet(data, FIXTURE_DD214_TEXT, () => {});
     expect(data.fullName).toContain(FAKE_LAST.toUpperCase());
     expect(data.dateOfBirth).toBe("1984-03-15");
+  });
+});
+
+// D16-5: text with NONE of the local parser's identifier boxes present, so
+// `regexResult.fields` has nothing for any identifier field - the only way
+// to exercise the on-device/off-device precedence, since every fixture
+// above gives the local parser a confident value that wins regardless.
+const NO_IDENTIFIER_BOXES_TEXT = `
+DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY/ACTIVE
+12A. DATE ENTERED ACTIVE DUTY THIS PERIOD: 20020305
+12B. SEPARATION DATE THIS PERIOD: 20100615
+24. CHARACTER OF SERVICE: HONORABLE
+`;
+
+describe("D16-5: on-device/off-device precedence when the local parser finds nothing", () => {
+  it("keeps an on-device (SWARM) model's own identifier value", () => {
+    const data = { branch: "Army", fullName: "ON-DEVICE MODEL, ANSWER" };
+    _applyRegexSafetyNet(
+      data,
+      NO_IDENTIFIER_BOXES_TEXT,
+      () => {},
+      AI_MODES.SWARM,
+    );
+    expect(data.fullName).toBe("ON-DEVICE MODEL, ANSWER");
+  });
+
+  it("keeps an on-device (LOCAL_SERVER) model's own identifier value", () => {
+    const data = { branch: "Army", dateOfBirth: "1984-03-15" };
+    _applyRegexSafetyNet(
+      data,
+      NO_IDENTIFIER_BOXES_TEXT,
+      () => {},
+      AI_MODES.LOCAL_SERVER,
+    );
+    expect(data.dateOfBirth).toBe("1984-03-15");
+  });
+
+  it("clears an off-device (CLOUD) model's identifier value rather than showing it", () => {
+    const data = { branch: "Army", fullName: "CLOUD MODEL, ANSWER" };
+    _applyRegexSafetyNet(
+      data,
+      NO_IDENTIFIER_BOXES_TEXT,
+      () => {},
+      AI_MODES.CLOUD,
+    );
+    expect(data.fullName).toBe("");
+  });
+
+  it("clears an identifier value when the backend mode is unknown (fails closed)", () => {
+    const data = { branch: "Army", homeOfRecord: "UNKNOWN-MODE ANSWER" };
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, undefined);
+    expect(data.homeOfRecord).toBe("");
+  });
+
+  it("clears homeAddress (the AI schema's Block-30 name) the same way when off-device", () => {
+    const data = { branch: "Army", homeAddress: "CLOUD MODEL ADDRESS" };
+    _applyRegexSafetyNet(
+      data,
+      NO_IDENTIFIER_BOXES_TEXT,
+      () => {},
+      AI_MODES.CLOUD,
+    );
+    expect(data.homeAddress).toBe("");
   });
 });
