@@ -18,7 +18,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
 import { stopAutoBackup } from "../utils/autoBackup";
-import { broadcastDataWipe } from "../utils/dataWipeChannel";
+import {
+  broadcastDataWipe,
+  broadcastWipePending,
+} from "../utils/dataWipeChannel";
 
 // Decision B: every "Clear All Data"/"Clear Data" control in the app (VKB
 // Viewer, The Bunker) deletes this same full scope via wipeAllLocalData - the
@@ -243,31 +246,59 @@ export async function wipeAllLocalData() {
   console.log("✅ Wipe complete!");
 }
 
-async function handleAtomicWipe(setIsWiping, onWipeComplete) {
-  setIsWiping(true);
+/**
+ * The full, cross-tab-safe data wipe. Every "Clear All Data"/"Atomic Wipe"
+ * entry point (this component, VKBViewer, The Bunker) should call this
+ * rather than sequencing wipeAllLocalData/broadcastDataWipe/
+ * forceReloadWithCacheBypass itself - a bare wipeAllLocalData() ->
+ * broadcastDataWipe() sequence leaves a real window open: every OTHER tab
+ * keeps running normally for as long as THIS tab's own wipeAllLocalData()
+ * takes (IndexedDB deletes alone can block ~100ms+ per open connection in
+ * another tab), and whatever any of them write during that window lands in
+ * storage AFTER this tab's own clear already ran, surviving every tab's
+ * reload.
+ *
+ * Two things narrow that window, on both ends of it. broadcastWipePending()
+ * tells other tabs to stop their own debounced auto-backup writes as early
+ * as possible - before this tab has cleared anything at all, not after.
+ * The second wipeAllLocalData() pass right before reload re-clears whatever
+ * still landed despite that - a write already in flight when the pending
+ * signal arrives, or from this tab's own timers. Neither closes the window
+ * completely (there is no cross-tab "stop everything now" primitive), but
+ * together they shrink it from "the whole first wipe's duration" to
+ * whatever's left on either side of it.
+ *
+ * onError, if given, is only for the FIRST wipeAllLocalData() call - the
+ * caller's chance to tell a veteran their data may not be fully gone before
+ * the reload carries any status UI away. The close-out re-wipe below always
+ * proceeds regardless (logging only), since it exists precisely to catch
+ * what the first pass might have missed.
+ */
+export async function performFullDataWipe(onWipeComplete, onError) {
+  broadcastWipePending();
 
   try {
     await wipeAllLocalData();
-
-    // Notify completion
-    if (onWipeComplete) {
-      onWipeComplete();
-    }
-
-    // Decision B: propagate to every other open tab, the same way
-    // VKBViewer's "Clear All Data" does - without this, a second tab keeps
-    // every in-memory cache (vkbCache and siblings) fed from the data this
-    // wipe just deleted, and can re-save it right back into storage.
-    broadcastDataWipe();
-
-    // Force hard reload with cache bypass
-    setTimeout(forceReloadWithCacheBypass, 500);
+    onWipeComplete?.();
   } catch (error) {
-    console.error("Error during atomic wipe:", error);
-    // Still try to reload with cache bypass
-    broadcastDataWipe();
-    forceReloadWithCacheBypass();
+    console.error("Error during data wipe:", error);
+    onError?.(error);
   }
+
+  // Decision B: propagate to every other open tab - without this, a second
+  // tab keeps every in-memory cache (vkbCache and siblings) fed from the
+  // data this wipe just deleted, and can re-save it right back into storage.
+  broadcastDataWipe();
+
+  await wipeAllLocalData().catch((error) => {
+    console.error("Error during pre-reload re-wipe:", error);
+  });
+  forceReloadWithCacheBypass();
+}
+
+async function handleAtomicWipe(setIsWiping, onWipeComplete) {
+  setIsWiping(true);
+  await performFullDataWipe(onWipeComplete);
 }
 
 export default function AtomicWipe({ compact = false, onWipeComplete }) {

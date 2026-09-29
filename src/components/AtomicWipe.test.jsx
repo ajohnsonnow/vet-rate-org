@@ -18,8 +18,10 @@ import {
 } from "../utils/dataPersistence";
 
 const broadcastDataWipe = vi.fn();
+const broadcastWipePending = vi.fn();
 vi.mock("../utils/dataWipeChannel", () => ({
   broadcastDataWipe: (...args) => broadcastDataWipe(...args),
+  broadcastWipePending: (...args) => broadcastWipePending(...args),
 }));
 
 function dispatchBeforeUnload() {
@@ -200,6 +202,7 @@ describe("Atomic Wipe cross-tab broadcast (decision B)", () => {
     removeBeforeUnloadWarning();
     localStorage.clear();
     broadcastDataWipe.mockClear();
+    broadcastWipePending.mockClear();
   });
 
   it("broadcasts the wipe to other open tabs when the veteran confirms", async () => {
@@ -212,6 +215,38 @@ describe("Atomic Wipe cross-tab broadcast (decision B)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Confirm Wipe/i }));
 
     await waitFor(() => expect(broadcastDataWipe).toHaveBeenCalledTimes(1));
+  });
+
+  // The race this closes: another open tab keeps writing normally for the
+  // whole time this tab's own wipeAllLocalData() runs, and whatever it
+  // writes during that window lands in storage AFTER a bare
+  // wipeAllLocalData()->broadcastDataWipe() sequence's own clear already
+  // ran. broadcastWipePending() has to fire BEFORE this tab starts
+  // clearing - not merely before the reload - to give other tabs any chance
+  // of stopping their own writes before this tab's clear even starts.
+  it("broadcasts wipe-pending before clearing, not merely before the reload", async () => {
+    const callOrder = [];
+    broadcastWipePending.mockImplementation(() => callOrder.push("pending"));
+    broadcastDataWipe.mockImplementation(() => callOrder.push("wipe"));
+    const clearSpy = vi
+      .spyOn(window.localStorage, "clear")
+      .mockImplementation(() => callOrder.push("clear"));
+
+    render(
+      <ThemeProvider>
+        <AtomicWipe />
+      </ThemeProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Atomic Wipe/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Confirm Wipe/i }));
+
+    await waitFor(() => expect(broadcastDataWipe).toHaveBeenCalledTimes(1));
+    clearSpy.mockRestore();
+
+    expect(callOrder[0]).toBe("pending");
+    expect(callOrder.indexOf("pending")).toBeLessThan(
+      callOrder.indexOf("clear"),
+    );
   });
 });
 

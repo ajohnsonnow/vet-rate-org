@@ -26,13 +26,11 @@ import { markBackupCreated } from "../utils/dataPersistence";
 import { downloadDossier, previewDossier } from "../utils/dossierExport";
 import CloudSyncManager from "./CloudSyncManager";
 import AtomicWipe, {
-  wipeAllLocalData,
-  forceReloadWithCacheBypass,
+  performFullDataWipe,
   FULL_DATA_DELETE_CONFIRM_TEXT,
 } from "./AtomicWipe";
 import DbqBrowser from "./DbqBrowser";
 import { getCacheStats } from "../utils/dbqOfflineStorage";
-import { broadcastDataWipe } from "../utils/dataWipeChannel";
 
 const COUNTED_KEYS = [
   { key: "vet_rate_saved_claims", label: "Claims" },
@@ -237,24 +235,22 @@ function handleFileInputChange(e, onFileSelect) {
 }
 
 // Decision B: same scope as the app's full "delete my data" (Atomic Wipe /
-// VKBViewer's "Clear All Data") - reuses wipeAllLocalData rather than a
-// Bunker-only subset, broadcasts to every open tab, and reloads instead of
-// redirecting (Quick Exit already owns the decoy-redirect job).
+// VKBViewer's "Clear All Data") - performFullDataWipe() reuses that shared
+// wipe rather than a Bunker-only subset, broadcasts to every open tab (both
+// before clearing and after, to narrow the window another open tab could
+// write through - see performFullDataWipe's own doc comment), and reloads
+// instead of redirecting (Quick Exit already owns the decoy-redirect job).
 async function handleClearData(setShowConfirmClear) {
   setShowConfirmClear(false);
-  try {
-    await wipeAllLocalData();
-  } catch (error) {
-    console.error("Error during Clear All Data wipe:", error);
-    // alert(), not a status message: the reload right below would carry any
-    // status state away before a veteran could ever read it, and a silent
-    // reload here would look identical to a real success.
+  await performFullDataWipe(null, () => {
+    // alert(), not a status message: the reload performFullDataWipe
+    // triggers would carry any status state away before a veteran could
+    // ever read it, and a silent reload here would look identical to a
+    // real success.
     alert(
       "Some data may not have been fully deleted and could return after this reload. If this device is shared, clearing your browser's site data for this page is the more thorough option.",
     );
-  }
-  broadcastDataWipe();
-  forceReloadWithCacheBypass();
+  });
 }
 
 function BunkerHeader({ onClose }) {

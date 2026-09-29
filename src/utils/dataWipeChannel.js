@@ -25,6 +25,7 @@ import { stopAutoBackup } from "./autoBackup";
 
 const CHANNEL_NAME = "vetrate-data-wipe";
 const STORAGE_FALLBACK_KEY = "vetrate_data_wipe_broadcast";
+const PENDING_STORAGE_FALLBACK_KEY = "vetrate_data_wipe_pending_broadcast";
 
 let channel = null;
 
@@ -70,6 +71,33 @@ export function broadcastDataWipe() {
   }
 }
 
+/**
+ * Announce that a full data wipe is ABOUT to start, before this tab clears
+ * anything itself. wipeAllLocalData() takes real time (IndexedDB deletes can
+ * block on another tab's open connection for ~100ms each - see
+ * AtomicWipe.jsx's deleteDatabaseModern), and every other open tab keeps
+ * running normally for that whole window: an in-flight import or a
+ * debounced autosave can write straight through it, land in storage after
+ * the wiping tab's own clear already ran, and survive every tab's reload.
+ * This can't make another tab stop writing INSTANTLY (there is no such
+ * primitive across tabs), but it starts the stop as early as possible -
+ * paired with performFullDataWipe's second wipeAllLocalData() pass right
+ * before reload, which is the other half of narrowing this window.
+ */
+export function broadcastWipePending() {
+  const bc = getChannel();
+  if (bc) {
+    bc.postMessage({ type: "wipe-pending" });
+    return;
+  }
+  try {
+    localStorage.setItem(PENDING_STORAGE_FALLBACK_KEY, String(Date.now()));
+    localStorage.removeItem(PENDING_STORAGE_FALLBACK_KEY);
+  } catch {
+    // Best-effort only - the sender's own wipe proceeds regardless.
+  }
+}
+
 // A tab receiving this broadcast still has its OWN beforeunload guard armed
 // (dataPersistence.js) - the wipe that just happened in another tab deleted
 // vetrate_data_hash from shared localStorage, which makes THIS tab's own
@@ -88,12 +116,26 @@ function reloadAfterWipe() {
   window.location.reload();
 }
 
+// Stops this tab's own debounced/auto-triggered writes as early as possible
+// - before the sending tab has even started clearing - narrowing (not
+// closing; a write already in flight when this arrives still lands) the
+// window a straggler write from this tab could survive in. Does not reload:
+// the actual "wipe" message still owns that, once the sender's clear (and
+// its own close-out re-clear) has actually run.
+function stopWritesForPendingWipe() {
+  stopAutoBackup();
+}
+
 function installListener() {
   const bc = getChannel();
   bc?.addEventListener("message", (event) => {
+    if (event.data?.type === "wipe-pending") stopWritesForPendingWipe();
     if (event.data?.type === "wipe") reloadAfterWipe();
   });
   window.addEventListener("storage", (event) => {
+    if (event.key === PENDING_STORAGE_FALLBACK_KEY && event.newValue) {
+      stopWritesForPendingWipe();
+    }
     if (event.key === STORAGE_FALLBACK_KEY && event.newValue) {
       reloadAfterWipe();
     }

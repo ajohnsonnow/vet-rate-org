@@ -4,16 +4,21 @@
  * localStorage key list - IndexedDB (the knowledge base, My Packet
  * documents), cookies, and every other store survived while the confirm
  * dialog told a veteran everything was gone (decision B). This proves the
- * button now goes through the same shared wipeAllLocalData module VKBViewer's
- * "Clear All Data" uses, with an honest confirm listing the real scope, no
- * decoy redirect, and a cross-tab broadcast - not a re-implementation of the
- * deleted narrow path.
+ * button now goes through the same shared performFullDataWipe() module
+ * VKBViewer's "Clear All Data" uses, with an honest confirm listing the real
+ * scope and no decoy redirect - not a re-implementation of the deleted
+ * narrow path.
+ *
+ * performFullDataWipe's own cross-tab-race behavior (broadcasting a
+ * "pending" signal before clearing, re-clearing once more before reload) is
+ * proven directly against the real function in AtomicWipe.test.jsx; this
+ * file only needs to prove BackupManager calls it, not re-derive its
+ * internals.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import BackupManager from "../../components/BackupManager.jsx";
 import * as atomicWipe from "../../components/AtomicWipe.jsx";
-import * as dataWipeChannel from "../../utils/dataWipeChannel.js";
 
 vi.mock("../../utils/dataBackup.js", () => ({
   exportData: vi.fn(),
@@ -29,13 +34,8 @@ vi.mock("../../utils/dataBackup.js", () => ({
 
 vi.mock("../../components/AtomicWipe.jsx", () => ({
   default: () => null,
-  wipeAllLocalData: vi.fn().mockResolvedValue(undefined),
-  forceReloadWithCacheBypass: vi.fn(),
+  performFullDataWipe: vi.fn().mockResolvedValue(undefined),
   FULL_DATA_DELETE_CONFIRM_TEXT: "TEST_FULL_DELETE_SCOPE_TEXT",
-}));
-
-vi.mock("../../utils/dataWipeChannel.js", () => ({
-  broadcastDataWipe: vi.fn(),
 }));
 
 vi.mock("../../utils/dbqOfflineStorage.js", () => ({
@@ -57,7 +57,7 @@ describe("BackupManager Clear All Data (decision B)", () => {
     ).toBeInTheDocument();
   });
 
-  it("confirming calls the shared wipeAllLocalData, broadcasts to other tabs, and reloads with no decoy redirect", async () => {
+  it("confirming calls the shared performFullDataWipe with no decoy redirect", async () => {
     render(<BackupManager onClose={() => {}} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Clear All Data" }));
@@ -66,9 +66,7 @@ describe("BackupManager Clear All Data (decision B)", () => {
     );
 
     await waitFor(() => {
-      expect(atomicWipe.wipeAllLocalData).toHaveBeenCalledTimes(1);
+      expect(atomicWipe.performFullDataWipe).toHaveBeenCalledTimes(1);
     });
-    expect(dataWipeChannel.broadcastDataWipe).toHaveBeenCalledTimes(1);
-    expect(atomicWipe.forceReloadWithCacheBypass).toHaveBeenCalledTimes(1);
   });
 });

@@ -61,3 +61,34 @@ describe("a received wipe broadcast makes this tab's own reload unblockable", ()
     expect(stopAutoBackupSpy).not.toHaveBeenCalled();
   });
 });
+
+// The race this closes: another open tab keeps writing normally for as long
+// as the wiping tab's own wipeAllLocalData() takes. A "wipe-pending" signal,
+// received and acted on before the actual "wipe" signal (which only fires
+// after that tab has already cleared once), gives this tab a chance to stop
+// its own debounced writes earlier - without reloading before the real wipe
+// signal says to.
+describe("a wipe-pending broadcast stops this tab's own writes without reloading yet", () => {
+  it("calls stopAutoBackup but not reload (storage-fallback path)", () => {
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "vetrate_data_wipe_pending_broadcast",
+        newValue: String(Date.now()),
+      }),
+    );
+
+    expect(stopAutoBackupSpy).toHaveBeenCalledTimes(1);
+    expect(clearBeforeUnloadWarningSpy).not.toHaveBeenCalled();
+  });
+
+  it("ignores a storage event for a different key", () => {
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "some_unrelated_key",
+        newValue: "1",
+      }),
+    );
+
+    expect(stopAutoBackupSpy).not.toHaveBeenCalled();
+  });
+});
