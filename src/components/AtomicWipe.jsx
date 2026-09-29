@@ -290,9 +290,21 @@ export async function performFullDataWipe(onWipeComplete, onError) {
   // data this wipe just deleted, and can re-save it right back into storage.
   broadcastDataWipe();
 
-  await wipeAllLocalData().catch((error) => {
-    console.error("Error during pre-reload re-wipe:", error);
-  });
+  // Best-effort only: a deleteDatabase() call that resolved via the
+  // "blocked, forcing" escape hatch above (deleteDatabaseModern's onblocked)
+  // can leave the real browser-level delete still pending underneath, which
+  // then blocks THIS pass's deleteDatabase() call for that same name
+  // indefinitely - no onsuccess/onerror/onblocked ever fires again, since
+  // the browser serializes delete requests per database name and the first
+  // one never actually finished. Racing it against a bounded timeout
+  // restores forceReloadWithCacheBypass's original guarantee (it must always
+  // run) without giving up the re-wipe when it does finish in time.
+  await Promise.race([
+    wipeAllLocalData().catch((error) => {
+      console.error("Error during pre-reload re-wipe:", error);
+    }),
+    new Promise((resolve) => setTimeout(resolve, 3000)),
+  ]);
   forceReloadWithCacheBypass();
 }
 
