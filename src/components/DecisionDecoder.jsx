@@ -480,14 +480,30 @@ function useDecisionDecode() {
   return { results, isLoading, error, handleDecode };
 }
 
+// ADR-008: a real dropped file's own name commonly carries the veteran's
+// own surname/first name (VA's own export naming convention) - this text
+// becomes `denialText`, sent straight to the AI via decodeDecision, so the
+// label here must be structural (index + type + upload date), never the
+// raw fileName, matching the same neutral-label convention
+// myPacketManager.js's _neutralDocLabel already uses for AI-context text.
+function _neutralDroppedFileLabel(f, index) {
+  const typeLabel = f.fileType === "pdf" ? "PDF" : "Image";
+  const date = (f.addedAt || "").split("T")[0] || "unknown date";
+  return `Document ${index + 1} (${typeLabel}, ${date})`;
+}
+
 // Joins extracted text from all successfully processed files into one blob.
-// `excludeProcessing` additionally drops files still mid-OCR.
-function computeCombinedText(fileList, { excludeProcessing = false } = {}) {
+// `excludeProcessing` additionally drops files still mid-OCR. Exported for
+// D16-6's own regression test (see processFile above).
+export function computeCombinedText(
+  fileList,
+  { excludeProcessing = false } = {},
+) {
   return fileList
     .filter((f) => f.extractedText && (!excludeProcessing || !f.processing))
     .map(
       (f, idx) =>
-        `--- Document ${idx + 1}: ${f.file.name} ---\n${f.extractedText}`,
+        `--- ${_neutralDroppedFileLabel(f, idx)} ---\n${f.extractedText}`,
     )
     .join("\n\n");
 }
@@ -531,7 +547,10 @@ async function extractFileTextAndPreview(file, fileType, setOcrProgress) {
   return { extractedText, preview, error };
 }
 
-async function processFile(
+// Exported for D16-6's own regression tests (Drop-In File accepting a real
+// PDF/image File object, and computeCombinedText's neutral AI-context
+// labeling) - not part of the component's public interface otherwise.
+export async function processFile(
   file,
   {
     setUploadedFiles,
@@ -541,11 +560,14 @@ async function processFile(
     setDenialText,
   },
 ) {
-  // Determine file type
+  // Determine file type. D16-6: isPDFFile/isImageFile match against a
+  // filename string (a `.pdf$`/image-extension regex) - passing the File
+  // object itself here coerced it to "[object File]" via the regex's
+  // implicit toString(), so every drop was rejected as "Unsupported file".
   let fileType = null;
-  if (isPDFFile(file)) {
+  if (isPDFFile(file.name)) {
     fileType = "pdf";
-  } else if (isImageFile(file)) {
+  } else if (isImageFile(file.name)) {
     fileType = "image";
   } else {
     setFileError(
@@ -560,6 +582,7 @@ async function processFile(
     id: fileId,
     file,
     fileType,
+    addedAt: new Date().toISOString(),
     preview: null,
     extractedText: "",
     error: null,
