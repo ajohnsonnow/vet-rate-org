@@ -992,17 +992,22 @@ function _savePrimaryServicePeriod(file, result, candidate) {
 // FIX-15: NGB-22 Box 18's granular IADT/AD date ranges (see
 // _extractNGB22PeriodDates) each become their own servicePeriods[] entry,
 // additive to the single Box 12a/12b period saved by
-// _savePrimaryServicePeriod. Box-18 window demotion fix (final15 QA
-// review): a window range that happens to match the primary period's own
-// dates stays its OWN separate row - upsertServicePeriod's identity match
-// (veteranProfile.js's _scopeCompatible) never merges a "window"-scoped
-// period with a non-window one, in either import order, so a coinciding
-// window can never demote the primary enlistment period.
+// _savePrimaryServicePeriod (called right after this, same import). Box-18
+// window demotion fix (final15 QA review): a window range that happens to
+// match THIS SAME IMPORT's own primary-period dates is flagged via
+// `mayCollideWithOwnPrimary` - veteranProfile.js's `_isOwnSiblingWindow`
+// uses it to bar that specific window from merging into whatever
+// PRE-EXISTING (possibly non-window) row already occupies that date key, so
+// a coinciding window can never demote an earlier import's primary
+// enlistment period, in either import order.
 function _saveNGB22AdditionalPeriods(file, candidate) {
   if (!Array.isArray(candidate.additionalPeriods)) return;
   const separationDate = _toISODateString(candidate.separationDate);
+  const primaryStart = _toISODateString(candidate.entryDate);
+  const primaryEnd = separationDate;
   candidate.additionalPeriods.forEach((period) => {
     try {
+      const periodStartDate = _toISODateString(period.serviceStartDate);
       const periodEndDate = _toISODateString(period.serviceEndDate);
       // The NGB-22's own rank field is only known to apply at the end of
       // the actual Active Duty stretch this document's own separation date
@@ -1017,9 +1022,14 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
         !!periodEndDate &&
         periodEndDate === separationDate;
       const rank = isTerminalADPeriod ? candidate.rank || "" : undefined;
+      const mayCollideWithOwnPrimary =
+        !!primaryStart &&
+        !!primaryEnd &&
+        periodStartDate === primaryStart &&
+        periodEndDate === primaryEnd;
       upsertServicePeriod(
         {
-          serviceStartDate: _toISODateString(period.serviceStartDate),
+          serviceStartDate: periodStartDate,
           serviceEndDate: periodEndDate,
           branch: candidate.branch || "",
           component: period.component,
@@ -1035,7 +1045,11 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
           // _hasProvenLink).
           periodScope: "window",
         },
-        { sourceDocument: file.name, confidence: candidate.confidence },
+        {
+          sourceDocument: file.name,
+          confidence: candidate.confidence,
+          mayCollideWithOwnPrimary,
+        },
       );
     } catch (periodErr) {
       console.warn(

@@ -2091,41 +2091,50 @@ function _scopeCompatible(existingScope, incomingScope) {
   return (existingScope === "window") === (incomingScope === "window");
 }
 
-function _isOwnSiblingWindow(existing, incoming) {
+// Box-18 window demotion, take 2 (final15 QA re-review): this only excluded
+// a pass-2 cross-scope match when the EXISTING period already recorded the
+// INCOMING document as a source - i.e. it only caught the NGB-22's own
+// primary/window pair colliding with EACH OTHER when both are upserted from
+// the SAME import. It did nothing for a coinciding window from a DIFFERENT,
+// EARLIER import (a code sheet's enlistment row imported before the NGB-22):
+// that existing row has never seen the incoming file before, so this
+// returned false and pass 2 merged anyway. `_mergeExistingServicePeriod`'s
+// `existing.periodScope ?? incoming.periodScope` then turned that real,
+// null-scoped primary into "window" forever (N9c: once a window, stays a
+// window), locking it out of setServiceEntryDate's periodId-based
+// correction.
+//
+// `options.mayCollideWithOwnPrimary` (set by musterCallProcessor.js's
+// `_saveNGB22AdditionalPeriods` - the only place that creates a `"window"`-
+// scoped period) is true precisely when THIS window's dates match what the
+// SAME import's own primary-period upsert (`_savePrimaryServicePeriod`,
+// called right after) is about to use - the sibling-collision signature,
+// computed proactively since the window upserts first. This catches the
+// cross-import case a same-sourceDocument check alone cannot: whichever
+// PRE-EXISTING row happens to sit at that date key when the window arrives,
+// the window is barred from merging into it and becomes its own new row -
+// leaving the primary upsert that follows to merge normally (same-scope,
+// pass 1) onto whatever was there.
+//
+// This is NOT a blanket "a window may never merge into a non-window row"
+// rule - a genuinely different, real DD-214 for that exact window, saved
+// BEFORE an NGB-22 whose Box-18 entry describes the SAME window, is a
+// legitimate merge (the DD-214's content fields survive; see
+// servicePeriodsModel.test.js's "D-A" suite) precisely because that
+// DD-214's dates do NOT collide with the NGB-22's OWN primary dates - only
+// with its Box-18 window, which is what a merge there is supposed to do.
+function _isOwnSiblingWindow(existing, incoming, options) {
   if (_scopeCompatible(existing.periodScope, incoming.periodScope)) {
     return false;
   }
+  if (options?.mayCollideWithOwnPrimary) return true;
   return (
     !!incoming.sourceDocument &&
     _periodHasSource(existing, incoming.sourceDocument)
   );
 }
 
-// Box-18 window demotion, take 2 (final15 QA re-review): `_isOwnSiblingWindow`
-// only excludes a pass-2 cross-scope match when the EXISTING period already
-// records the INCOMING document as a source - i.e. it only catches the
-// NGB-22's own primary/window pair colliding with EACH OTHER. It does
-// nothing for a coinciding window from a DIFFERENT import (a code sheet's
-// enlistment row imported before the NGB-22, an unrelated document that
-// happens to share the exact date key): that existing row has never seen
-// the incoming file before, so `_isOwnSiblingWindow` returns false and pass
-// 2 merges anyway. `_mergeExistingServicePeriod`'s
-// `existing.periodScope ?? incoming.periodScope` then turns that real,
-// null-scoped primary into "window" forever (N9c: once a window, stays a
-// window), locking it out of setServiceEntryDate's periodId-based
-// correction and every other non-window-only editor path.
-//
-// Cross-scope merging is only ever safe in ONE direction: an existing
-// WINDOW period being upgraded/corroborated by a genuinely proven non-
-// window record (a dated DD214, a code sheet - _windowsOwnDD214Bypass's
-// same case). The reverse - an existing non-window (real enlistment/
-// primary) period absorbing an incoming WINDOW-scoped record - must never
-// happen, because that is exactly the demotion the standing rule forbids.
-function _crossScopeMergeAllowed(existing, incoming) {
-  return existing.periodScope === "window" && incoming.periodScope !== "window";
-}
-
-function _findDatedServicePeriodIndex(periods, incoming) {
+function _findDatedServicePeriodIndex(periods, incoming, options) {
   const incomingKey = _servicePeriodKey(incoming);
   let index = periods.findIndex(
     (p) =>
@@ -2154,14 +2163,11 @@ function _findDatedServicePeriodIndex(periods, incoming) {
 
   // Pass 2: no same-scope candidate at all - allow a cross-scope exact-key
   // match, as long as it isn't the incoming record's own sibling window/
-  // primary (see the comment above _scopeCompatible) AND the merge
-  // direction can't demote an existing non-window period into a window
-  // (see the comment above _crossScopeMergeAllowed).
+  // primary (see the comment above _isOwnSiblingWindow).
   return periods.findIndex(
     (p) =>
       _servicePeriodKey(p) === incomingKey &&
-      !_isOwnSiblingWindow(p, incoming) &&
-      _crossScopeMergeAllowed(p, incoming),
+      !_isOwnSiblingWindow(p, incoming, options),
   );
 }
 
@@ -2169,8 +2175,9 @@ function _findExistingServicePeriodIndex(
   periods,
   incoming,
   documentPeriodCounts,
+  options,
 ) {
-  const index = _findDatedServicePeriodIndex(periods, incoming);
+  const index = _findDatedServicePeriodIndex(periods, incoming, options);
   if (index !== -1 || !incoming.incomplete) return { index };
 
   const matches = _matchIncompletePeriod(
@@ -2768,6 +2775,7 @@ export const upsertServicePeriod = (periodData, options = {}) => {
       periods,
       incoming,
       history.documentPeriodCounts,
+      options,
     );
     if (shouldDrop) return null;
     if (unmatched) return _upsertUnmatchedRecord(history, incoming);
