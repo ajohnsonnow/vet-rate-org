@@ -13,7 +13,7 @@ const FIXTURE = JSON.parse(
 // All 48 user-facing tool events (verified against window.addEventListener
 // calls across src/). Organised by cluster matching the app's 7 clusters.
 // ──────────────────────────────────────────────────────────────
-const TOOLS: { name: string; event: string; cluster: string }[] = [
+export const TOOLS: { name: string; event: string; cluster: string }[] = [
   // Calculate Your Rating
   {
     name: "Tactical Calculator",
