@@ -414,23 +414,45 @@ describe("code-sheet re-import after a veteran correction (item 4)", () => {
     });
     expect(correctionResult.ok).toBe(true);
 
-    // Re-process the identical code sheet a second time (e.g. the veteran
-    // re-uploads the same C-File).
+    const totalPeriodsBeforeReimport = getServicePeriods().length;
+
+    // Re-process the identical code sheet TWICE more (e.g. the veteran
+    // re-uploads the same C-File on two separate occasions) - a duplicate
+    // that only appeared on a later re-import would slip past a single
+    // re-import.
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      CODE_SHEET_RESULT,
+    );
     saveCodeSheetServicePeriodsToProfile(
       { name: "cfile_codesheet.pdf" },
       CODE_SHEET_RESULT,
     );
 
+    // No duplicate period AT ALL - not just none at the corrected date. A
+    // regression that re-creates a period at the code sheet's own
+    // (uncorrected) date instead of merging into the corrected one would
+    // pass a check scoped only to serviceStartDate === "2004-06-25".
+    expect(getServicePeriods()).toHaveLength(totalPeriodsBeforeReimport);
+    expect(
+      getServicePeriods().some((p) => p.serviceStartDate === "2004-06-22"),
+    ).toBe(false);
+
     const periodsAtCorrectedDate = getServicePeriods().filter(
       (p) => p.serviceStartDate === "2004-06-25",
     );
-    // No duplicate period.
     expect(periodsAtCorrectedDate).toHaveLength(1);
     const period = periodsAtCorrectedDate[0];
     // Correction kept - the re-import never moved the date back.
     expect(period.serviceStartDate).toBe("2004-06-25");
     expect(period.serviceStartDateSource).toBe("veteran");
-    // Provenance kept - both documents are still recorded as sources.
+    // Provenance kept - both documents are still recorded as sources. The
+    // raw formType/sourceDocument follow whichever document most recently
+    // contributed (the re-imported code sheet) - periodDisplayFormType is
+    // the order-independent, sticky label a UI must read instead (see
+    // MyPacket.jsx's DD214PeriodDetailCard).
+    expect(period.formType).toBe("Code Sheet");
+    expect(period.sourceDocument).toBe("cfile_codesheet.pdf");
     expect(periodDisplayFormType(period)).toBe("NGB22");
     expect(
       (period.sources || []).some(
