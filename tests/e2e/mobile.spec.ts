@@ -2460,9 +2460,87 @@ async function extractProbeData(bundle: ProbeBundle) {
   };
 }
 
+/**
+ * Fresh-query predicate for `page.waitForFunction` (self-contained per N14 -
+ * no outer-scope references survive the browser round trip). Re-runs
+ * `document.querySelector` from scratch on every poll tick rather than
+ * reusing a captured element reference, which is exactly what makes this
+ * immune to the race `waitForDialogContentMounted` exists to close: a dialog
+ * that renders a loading/initializing placeholder first (its own real
+ * `role="dialog"`, its own real title, e.g. The Tribunal's "Initializing
+ * speech recognition...") and then swaps its ENTIRE header subtree for a
+ * different one once real content is ready. `findProbeBundle`/
+ * `extractProbeData` below still capture a snapshot and poll `hasCloseCandidate`
+ * against it - reasonable while the same element sticks around, but wrong
+ * for that swap: the captured `headerRegion` handle keeps pointing at the
+ * now-detached placeholder, forever reporting no close button no matter how
+ * long that same poll waits, since the real one exists in a different,
+ * freshly-mounted subtree the stale handle never re-resolves into. Measured
+ * live as the cause of an intermittent "close control not found" on The
+ * Tribunal at 6 workers (never reproduced single-tool, in isolation, or at
+ * workers=1 - see this file's flake-history comment above the config).
+ */
+function dialogHasVisibleCloseControl(): boolean {
+  const dialog = document.querySelector(
+    '[role="dialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]):not([aria-labelledby="mobile-menu-title"]), [role="alertdialog"][aria-modal="true"]:not([aria-labelledby="splash-title"]):not([aria-labelledby="mobile-menu-title"])',
+  );
+  if (!dialog) return false;
+  const isRendered = (el: Element) => el.getClientRects().length > 0;
+  return Array.from(dialog.querySelectorAll("button")).some(
+    (b) =>
+      /close|exit/i.test(b.getAttribute("aria-label") || "") && isRendered(b),
+  );
+}
+
+/**
+ * Waits for the currently-open dialog's REAL content to have mounted, before
+ * `probeHeaderLayout`/`probeHeaderLayoutById` capture anything to measure.
+ * "Mounted" is defined as "a close-like button now exists" - the one thing
+ * every probed dialog either has or (NO_CLOSE_BY_DESIGN) never will, so a
+ * bounded timeout is the correct outcome for both: a genuine by-design
+ * exception simply exhausts the budget and probing proceeds anyway (that
+ * dialog was never going to gain a close button by waiting longer), while a
+ * dialog whose content just hasn't swapped in yet gets however much of the
+ * budget it actually needs, checked every animation frame with a live query
+ * instead of once after an arbitrary fixed sleep.
+ */
+async function waitForDialogContentMounted(page: Page): Promise<void> {
+  await page
+    .waitForFunction(dialogHasVisibleCloseControl, undefined, {
+      timeout: 6000,
+      polling: "raf",
+    })
+    .catch(() => {});
+}
+
+/**
+ * A dialog that renders its own internal loading placeholder first (its own
+ * real `role="dialog"`, its own real title - e.g. The Tribunal's
+ * "Initializing speech recognition...") and then swaps its ENTIRE header
+ * subtree for a different one once real content is ready can still lose the
+ * single-attempt race `waitForDialogContentMounted` closes above: the swap
+ * can land in the narrow gap between that wait resolving (a fresh, correct
+ * "yes" at that instant) and the SEPARATE `findProbeBundle` round trip that
+ * follows it capturing a bundle - once captured, `extractProbeData`'s own
+ * poll is stuck re-querying that now-detached subtree forever, since the
+ * real close button lives in a different, freshly-mounted one. Retrying the
+ * WHOLE wait-then-capture cycle (not just the wait) gives a losing attempt a
+ * fresh, later capture instead of returning its first, stale result -
+ * bounded to the same 6s budget as the wait itself, and short-circuited the
+ * moment either a close button is found or `dialogId` is a confirmed
+ * by-design exception (NO_CLOSE_BY_DESIGN), so a real no-close dialog still
+ * returns promptly instead of burning the whole budget every time.
+ */
 async function probeHeaderLayout(page: Page): Promise<HeaderProbe> {
-  const bundleHandle = await page.evaluateHandle(findProbeBundle);
-  const probe = await bundleHandle.evaluate(extractProbeData);
+  const deadline = Date.now() + 6000;
+  let probe: Awaited<ReturnType<typeof extractProbeData>> = null;
+  do {
+    await waitForDialogContentMounted(page);
+    const bundleHandle = await page.evaluateHandle(findProbeBundle);
+    probe = await bundleHandle.evaluate(extractProbeData);
+    if (probe?.closeRect) break;
+    if (probe?.dialogId && NO_CLOSE_BY_DESIGN.has(probe.dialogId)) break;
+  } while (Date.now() < deadline);
   return probe ? { found: true, ...probe } : EMPTY_HEADER_PROBE;
 }
 
@@ -3104,12 +3182,43 @@ function findProbeBundleById(dialogId: string): ProbeBundle {
   };
 }
 
+/** `dialogHasVisibleCloseControl`'s scoped-by-id sibling - see its own doc
+ * comment and `findProbeBundleById`'s for why this needs the id, not the
+ * generic "first real dialog" selector. */
+function dialogByIdHasVisibleCloseControl(dialogId: string): boolean {
+  const dialog = document.querySelector(`[aria-labelledby="${dialogId}"]`);
+  if (!dialog) return false;
+  const isRendered = (el: Element) => el.getClientRects().length > 0;
+  return Array.from(dialog.querySelectorAll("button")).some(
+    (b) =>
+      /close|exit/i.test(b.getAttribute("aria-label") || "") && isRendered(b),
+  );
+}
+
+/** Same retry-the-whole-cycle treatment as `probeHeaderLayout` above, scoped
+ * by id - see its doc comment for why a single wait-then-capture attempt can
+ * still lose the race. */
 async function probeHeaderLayoutById(
   page: Page,
   dialogId: string,
 ): Promise<HeaderProbe> {
-  const bundleHandle = await page.evaluateHandle(findProbeBundleById, dialogId);
-  const probe = await bundleHandle.evaluate(extractProbeData);
+  const deadline = Date.now() + 6000;
+  let probe: Awaited<ReturnType<typeof extractProbeData>> = null;
+  do {
+    await page
+      .waitForFunction(dialogByIdHasVisibleCloseControl, dialogId, {
+        timeout: 6000,
+        polling: "raf",
+      })
+      .catch(() => {});
+    const bundleHandle = await page.evaluateHandle(
+      findProbeBundleById,
+      dialogId,
+    );
+    probe = await bundleHandle.evaluate(extractProbeData);
+    if (probe?.closeRect) break;
+    if (probe?.dialogId && NO_CLOSE_BY_DESIGN.has(probe.dialogId)) break;
+  } while (Date.now() < deadline);
   return probe ? { found: true, ...probe } : EMPTY_HEADER_PROBE;
 }
 
