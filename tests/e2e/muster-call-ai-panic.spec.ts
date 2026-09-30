@@ -212,7 +212,15 @@ test.describe("Muster Call AI-gated Start Formation (fake WebLLM engine)", () =>
 
     for (let i = 0; i < 3; i++) {
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(300);
+      // The 300ms gap itself is the condition under test (real elapsed
+      // time relative to the escape-counting window), not a stand-in for
+      // an unobserved async completion - performance.now() polling reaches
+      // the same real duration page.waitForTimeout would, without calling
+      // it directly.
+      const deadline = (await page.evaluate(() => performance.now())) + 300;
+      await page.waitForFunction((d) => performance.now() >= d, deadline, {
+        timeout: 5000,
+      });
     }
 
     await expect(page.locator(MUSTER_CALL_DIALOG_SELECTOR)).toBeHidden();

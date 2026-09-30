@@ -146,8 +146,14 @@ test.describe("AI mode detection — no AI configured", () => {
       window.dispatchEvent(new CustomEvent("openCFileAnalyzer"));
     });
 
-    // Give the app time to respond
-    await page.waitForTimeout(2000);
+    // Give the dialog a chance to actually open (or fail trying) before
+    // checking for crashes - a real completion signal instead of a guessed
+    // duration; tolerated either way since only the error list is asserted.
+    await page
+      .locator('[role="dialog"]')
+      .first()
+      .waitFor({ state: "visible", timeout: 5000 })
+      .catch(() => {});
 
     const fatalErrors = errors.filter(
       (e) => !e.includes("ResizeObserver") && !e.includes("WebGPU"),
@@ -228,8 +234,16 @@ test.describe("AI mode preference — localStorage contract", () => {
     page,
   }) => {
     await bootApp(page, { aiMode: "local" });
-    // Give the app time to call getAIMode() which triggers migration
-    await page.waitForTimeout(1000);
+    // Wait for getAIMode()'s lazy migration to actually flip the stored
+    // value away from "local" - tolerated either way below (the migration
+    // "may or may not have been triggered by boot time").
+    await page
+      .waitForFunction(
+        () => localStorage.getItem("vet_rate_ai_mode") !== "local",
+        null,
+        { timeout: 2000 },
+      )
+      .catch(() => {});
 
     const storedMode = await page.evaluate(() =>
       localStorage.getItem("vet_rate_ai_mode"),

@@ -60,9 +60,17 @@ test.describe("PII protection", () => {
     const input = page.locator(searchInput).first();
     if (await input.isVisible({ timeout: 5000 }).catch(() => false)) {
       await input.fill("123-45-6789");
+      // useDisabilitySearch debounces 300ms before actually running the
+      // search; wait for its real completion signal ("No matching
+      // disabilities found" - this fake SSN can never match a condition)
+      // instead of guessing a duration, so any async console.log the
+      // search itself might trigger has had a real chance to fire.
+      await page
+        .getByText(/No matching disabilities found/i)
+        .waitFor({ state: "visible", timeout: 3000 })
+        .catch(() => {});
     }
 
-    await page.waitForTimeout(500);
     const ssnLeaks = consoleLogs.filter((log) => /\d{3}-\d{2}-\d{4}/.test(log));
     expect(ssnLeaks).toHaveLength(0);
   });

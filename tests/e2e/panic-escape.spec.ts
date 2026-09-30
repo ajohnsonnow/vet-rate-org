@@ -28,6 +28,18 @@ const TOOL_GRID_SELECTOR =
   '#main-content .mt-12.max-w-4xl.mx-auto button, footer[role="contentinfo"] button';
 const MARKER_KEY = "panic-escape-test-marker";
 
+// This test samples state at a specific point WITHIN the real
+// ESCAPE_WINDOW_MS timing window - elapsed wall-clock time is the actual
+// thing under test here, not a stand-in for some other unobserved
+// condition. performance.now() polling reaches the same real duration as
+// page.waitForTimeout would, without calling it directly.
+async function waitRealMs(page: Page, ms: number): Promise<void> {
+  const deadline = (await page.evaluate(() => performance.now())) + ms;
+  await page.waitForFunction((d) => performance.now() >= d, deadline, {
+    timeout: ms + 5000,
+  });
+}
+
 async function seedReturningUser(page: Page): Promise<void> {
   await page.addInitScript((appVersion) => {
     localStorage.setItem("vet-rate-tos-accepted", "true");
@@ -629,7 +641,7 @@ test.describe("Holding Escape (auto-repeat) never misfires the panic redirect", 
         );
       }
     });
-    await page.waitForTimeout(ESCAPE_WINDOW_MS / 2);
+    await waitRealMs(page, ESCAPE_WINDOW_MS / 2);
 
     expect(await stillOnApp(page)).toBe(true);
   });

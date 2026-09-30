@@ -119,8 +119,26 @@ async function boot(page: Page): Promise<void> {
   await page
     .waitForLoadState("networkidle", { timeout: 60_000 })
     .catch(() => {});
-  await page.waitForTimeout(2000);
+  await waitForInteractiveEffectsToSettle(page);
   await dismissDisclaimer(page);
+}
+
+// React commits the interactive tree (including every cluster's listener-
+// registering useEffect) once useBootSequence's isBooting gate flips false,
+// but passive effects flush a tick AFTER that commit paints - networkidle
+// only proves the commit happened, not that effects have run yet. Waiting
+// on two animation frames plus a macrotask turn is tied to the browser's
+// real paint/task-queue lifecycle (and so scales with actual system load)
+// rather than guessing a fixed duration.
+async function waitForInteractiveEffectsToSettle(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setTimeout(resolve, 0)),
+        );
+      }),
+  );
 }
 
 // Same pre-creation workaround as tests/e2e/cfile-canonical-dataflow.spec.ts:
@@ -170,7 +188,16 @@ async function injectMods(page: Page): Promise<void> {
       import * as vkbMod from "/src/utils/veteranKnowledgeBase.js";
       import * as pktMod from "/src/utils/myPacketManager.js";
       import * as profileMod from "/src/utils/veteranProfile.js";
-      window.__verifyMods = { musterMod, vkbMod, pktMod, profileMod };
+      import * as dkbMod from "/src/utils/dkbIndexedDB.js";
+      import * as backupMod from "/src/utils/autoBackup.js";
+      window.__verifyMods = {
+        musterMod,
+        vkbMod,
+        pktMod,
+        profileMod,
+        dkbMod,
+        backupMod,
+      };
     `,
   });
   await page.waitForFunction(() => Boolean(window.__verifyMods), null, {
@@ -178,9 +205,19 @@ async function injectMods(page: Page): Promise<void> {
   });
 }
 
-// Same DKB-auto-download settle window as cfile-canonical-dataflow.spec.ts.
+// Same DKB-auto-download settle window as cfile-canonical-dataflow.spec.ts:
+// isFullDKBCached() only reads small metadata via an open on the SAME
+// existing database (not a new one), so polling it converges on the real
+// finish time instead of guessing a fixed 60s budget - same worst-case
+// safety (still capped at 60s). The trailing wait resolves as soon as a
+// pending debounced backup (autoBackup.js) actually completes via its own
+// onBackupComplete hook, falling back to the same 5s ceiling otherwise.
 async function waitForDkbSettled(page: Page): Promise<void> {
-  await page.waitForTimeout(60_000);
+  await page
+    .waitForFunction(() => window.__verifyMods.dkbMod.isFullDKBCached(), null, {
+      timeout: 60_000,
+    })
+    .catch(() => {});
   await page.evaluate(async () => {
     const mods = window.__verifyMods;
     const race = (pr: Promise<unknown>, ms: number) =>
@@ -188,7 +225,17 @@ async function waitForDkbSettled(page: Page): Promise<void> {
     await race(mods.vkbMod.loadVKB(), 30_000);
     await race(mods.pktMod.getAllPacketDocuments(), 30_000);
   });
-  await page.waitForTimeout(5000);
+  await page.evaluate(async () => {
+    const mods = window.__verifyMods;
+    await new Promise<void>((resolve) => {
+      const done = () => {
+        mods.backupMod.removeBackupListener(done);
+        resolve();
+      };
+      mods.backupMod.onBackupComplete(done);
+      setTimeout(done, 5000);
+    });
+  });
 }
 
 async function createFileInput(page: Page): Promise<void> {
@@ -402,16 +449,25 @@ async function screenshotMyPacketTabs(page: Page): Promise<string[]> {
   await page
     .waitForLoadState("networkidle", { timeout: 60_000 })
     .catch(() => {});
-  await page.waitForTimeout(2000);
+  await waitForInteractiveEffectsToSettle(page);
   await dismissDisclaimer(page);
 
-  await page.evaluate(() =>
-    window.dispatchEvent(new CustomEvent("openMyPacket")),
-  );
   const dialog = page.locator('[role="dialog"]').first();
-  await expect(dialog, "MyPacket modal should open").toBeVisible({
-    timeout: 15_000,
-  });
+  // Re-fire the open event on every poll tick (a single dispatch can race
+  // the listener's own registration) - every open handler is an idempotent
+  // setShow(true), so re-firing is harmless.
+  await expect
+    .poll(
+      async () => {
+        await page.evaluate(() =>
+          window.dispatchEvent(new CustomEvent("openMyPacket")),
+        );
+        return dialog.count();
+      },
+      { timeout: 15_000 },
+    )
+    .toBeGreaterThan(0);
+  await expect(dialog, "MyPacket modal should open").toBeVisible();
 
   const tabButtons = dialog.locator('nav[aria-label="Tabs"] button');
   const count = await tabButtons.count();
@@ -422,7 +478,9 @@ async function screenshotMyPacketTabs(page: Page): Promise<string[]> {
       .replace(/\s+/g, "_")
       .replace(/[^\w-]/g, "");
     await btn.click().catch(() => {});
-    await page.waitForTimeout(700);
+    await expect(btn)
+      .toHaveAttribute("aria-selected", "true", { timeout: 5000 })
+      .catch(() => {});
     if (/service/i.test(label)) {
       const ribbonRackToggle = dialog.getByRole("button", {
         name: /view ribbon rack/i,
@@ -431,7 +489,7 @@ async function screenshotMyPacketTabs(page: Page): Promise<string[]> {
         await ribbonRackToggle.isVisible({ timeout: 3_000 }).catch(() => false)
       ) {
         await ribbonRackToggle.click().catch(() => {});
-        await page.waitForTimeout(700);
+        await waitForInteractiveEffectsToSettle(page);
       }
     }
     const screenshotPath = join(OUTPUT_DIR, `mypacket-${i}-${label}.png`);
