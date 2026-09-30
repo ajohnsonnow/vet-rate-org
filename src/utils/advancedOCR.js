@@ -126,7 +126,6 @@ export async function advancedPDFAnalysis(
   enforceOCRSizeLimits(file, config);
 
   try {
-    // Load PDF
     onProgress({
       stage: "loading",
       progress: 0,
@@ -145,78 +144,76 @@ export async function advancedPDFAnalysis(
       message: `Analyzing ${numPages} page(s)...`,
     });
 
-    // Fast path: Try standard text extraction
-    const standardText = await extractStandardText(pdf, numPages, onProgress);
-    const avgCharsPerPage = standardText.text.length / numPages;
+    // D-4: the text layer is cheap (no rendering/Tesseract) - read it from
+    // EVERY page regardless of MAX_OCR_PAGES. A previous version capped
+    // this loop too, so a 520-page text-only PDF silently imported as its
+    // first 20 pages with no signal that the other 500 were never read.
+    const standardText = await extractStandardText(
+      pdf,
+      numPages,
+      config,
+      onProgress,
+    );
 
-    // If sufficient text found, return it
-    if (avgCharsPerPage >= config.MIN_CHARS_PER_PAGE) {
+    const needsOCR =
+      standardText.pagesNeedingOCR.length > 0 ||
+      config.ocrOnlyPageNumbers?.length;
+    if (!needsOCR) {
       onProgress({
         stage: "complete",
         progress: 100,
         message: "Text extraction complete",
       });
-      return {
-        text: standardText.text,
-        letterheadText: standardText.letterheadText,
-        pageCount: numPages,
-        method: "standard",
-        confidence: 100,
-        processingTime: Date.now() - standardText.startTime,
-        ocrUsed: false,
-      };
+      return buildFullTextResult(standardText, numPages);
     }
 
-    // Insufficient text - use advanced OCR
-    // eslint-disable-next-line no-console
-    console.log(
-      `📷 Sparse text detected (${avgCharsPerPage.toFixed(0)} chars/page). Activating advanced OCR...`,
-    );
-    onProgress({
-      stage: "ocr",
-      progress: 10,
-      message: "Preparing advanced OCR...",
-    });
-
-    // Analyze first page to determine optimal strategy
-    const strategy = await detectOptimalStrategy(pdf, 1);
-    // eslint-disable-next-line no-console
-    console.log(`🎯 Detected quality: ${strategy}`);
-
-    // Run advanced multi-pass OCR
-    const ocrResult = await runAdvancedOCR(
+    const result = await ocrImageOnlyPages(
       pdf,
       numPages,
-      strategy,
+      standardText,
       config,
       onProgress,
     );
-
     onProgress({ stage: "complete", progress: 100, message: "OCR complete" });
-    return ocrResult;
+    return result;
   } catch (error) {
     console.error("❌ Advanced OCR failed:", error);
     throw error;
   }
 }
 
+// Text layer read for every page is cheap enough to yield only occasionally
+// (not per-page like the pixel-processing loops below) while still keeping
+// a 500+ page document from hogging the main thread in one long task.
+const TEXT_LAYER_YIELD_INTERVAL = 25;
+
+// D-4: does this SPECIFIC page's own text layer look usable? Mirrors the
+// old whole-document average check's threshold, but per-page - a blended
+// document-wide average let a handful of real text pages mask a genuinely
+// image-only majority (or the reverse), silently deciding OCR for the
+// entire document instead of just the pages that actually need it.
+function pageNeedsOCR(pageText, config) {
+  return pageText.trim().length < config.MIN_CHARS_PER_PAGE;
+}
+
 /**
- * Extract standard PDF text (fast path)
+ * Extract every page's embedded text layer (fast path) - always the full
+ * document. Reports, per page, whether that layer looked usable so the
+ * caller knows exactly which pages (if any) still need real OCR.
  */
-async function extractStandardText(pdf, numPages, onProgress) {
+async function extractStandardText(pdf, numPages, config, onProgress) {
   const startTime = Date.now();
   let fullText = "";
   let letterheadText = "";
+  const pageTexts = new Map();
+  const pagesNeedingOCR = [];
 
-  for (
-    let i = 1;
-    i <= Math.min(numPages, ADVANCED_OCR_CONFIG.MAX_OCR_PAGES);
-    i++
-  ) {
+  for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
     const pageText = textContent.items.map((item) => item.str).join(" ");
     fullText += `--- PAGE ${i} ---\n${pageText}\n\n`;
+    pageTexts.set(i, pageText);
     // Every parser expects the space-joined page, so the line breaks a VA
     // letter's standalone letterhead date depends on are kept separately.
     if (i === 1) {
@@ -224,15 +221,153 @@ async function extractStandardText(pdf, numPages, onProgress) {
         .map((item) => item.str + (item.hasEOL ? "\n" : " "))
         .join("");
     }
+    if (pageNeedsOCR(pageText, config)) pagesNeedingOCR.push(i);
 
     onProgress({
       stage: "extracting",
       progress: 5 + (i / numPages) * 5,
       message: `Extracting text from page ${i}/${numPages}...`,
     });
+    if (i % TEXT_LAYER_YIELD_INTERVAL === 0) await yieldToEventLoop();
   }
 
-  return { text: fullText, letterheadText, startTime };
+  return {
+    text: fullText,
+    letterheadText,
+    pageTexts,
+    pagesNeedingOCR,
+    startTime,
+  };
+}
+
+function buildFullTextResult(standardText, numPages) {
+  return {
+    text: standardText.text,
+    letterheadText: standardText.letterheadText,
+    pageCount: numPages,
+    pagesRead: numPages,
+    pagesOCRd: 0,
+    pagesSkipped: [],
+    method: "standard",
+    confidence: 100,
+    processingTime: Date.now() - standardText.startTime,
+    ocrUsed: false,
+    coverageNote: `Read all ${numPages} page(s) - every page had a usable text layer.`,
+  };
+}
+
+// D-4: "a way to continue" - a caller that got back a non-empty
+// `pagesSkipped` can re-invoke advancedPDFAnalysis with
+// `options.ocrOnlyPageNumbers` set to (a batch of) those page numbers to
+// OCR exactly them, bypassing the auto-detected image-only list.
+async function ocrImageOnlyPages(
+  pdf,
+  numPages,
+  standardText,
+  config,
+  onProgress,
+) {
+  const imageOnlyPages = standardText.pagesNeedingOCR;
+  const targetPages = config.ocrOnlyPageNumbers?.length
+    ? config.ocrOnlyPageNumbers
+    : imageOnlyPages;
+  const pagesToOcr = targetPages.slice(0, config.MAX_OCR_PAGES);
+  const skippedPages = targetPages.slice(config.MAX_OCR_PAGES);
+
+  // eslint-disable-next-line no-console
+  console.log(
+    `📷 ${imageOnlyPages.length} page(s) lack a usable text layer. OCR-ing ${pagesToOcr.length}, skipping ${skippedPages.length}.`,
+  );
+  onProgress({
+    stage: "ocr",
+    progress: 10,
+    message: `Preparing OCR for ${pagesToOcr.length} scanned page(s)...`,
+  });
+
+  const strategy = await detectOptimalStrategy(pdf, pagesToOcr[0] || 1);
+  // eslint-disable-next-line no-console
+  console.log(`🎯 Detected quality: ${strategy}`);
+
+  const ocrResults = await runAdvancedOCR(
+    pdf,
+    pagesToOcr,
+    strategy,
+    config,
+    onProgress,
+  );
+
+  return mergePageCoverageResult({
+    standardText,
+    numPages,
+    imageOnlyCount: imageOnlyPages.length,
+    pagesToOcr,
+    skippedPages,
+    ocrResults,
+    strategy,
+  });
+}
+
+function buildCoverageNote(numPages, imageOnlyCount, ocrdCount, skippedCount) {
+  if (skippedCount === 0) {
+    return `Read all ${numPages} page(s); ${ocrdCount} scanned page(s) were OCR'd.`;
+  }
+  return (
+    `Read ${numPages} page(s): ${ocrdCount} of ${imageOnlyCount} scanned ` +
+    `page(s) were OCR'd, and ${skippedCount} scanned page(s) were skipped ` +
+    "due to size limits - pass their page numbers as ocrOnlyPageNumbers to continue."
+  );
+}
+
+// Weaves the three per-page sources (real text layer, freshly OCR'd, or
+// explicitly skipped) back into one document in page order, so a skipped
+// page is always a visible marker in the text - never a silent gap.
+function mergePageCoverageResult({
+  standardText,
+  numPages,
+  imageOnlyCount,
+  pagesToOcr,
+  skippedPages,
+  ocrResults,
+  strategy,
+}) {
+  const ocrByPage = new Map(ocrResults.map((r) => [r.pageNum, r]));
+  const skippedSet = new Set(skippedPages);
+  let fullText = "";
+  let confidenceSum = 0;
+  let confidenceCount = 0;
+
+  for (let i = 1; i <= numPages; i++) {
+    const ocrResult = ocrByPage.get(i);
+    if (skippedSet.has(i)) {
+      fullText += `--- PAGE ${i} (NOT READ - scanned page, OCR skipped due to size limits) ---\n\n`;
+    } else if (ocrResult) {
+      fullText += `--- PAGE ${i} (OCR ${ocrResult.confidence.toFixed(0)}%) ---\n${ocrResult.text.trim()}\n\n`;
+      confidenceSum += ocrResult.confidence;
+      confidenceCount++;
+    } else {
+      fullText += `--- PAGE ${i} ---\n${(standardText.pageTexts.get(i) || "").trim()}\n\n`;
+    }
+  }
+
+  return {
+    text: applyVATerminologyCorrection(fullText),
+    letterheadText: standardText.letterheadText,
+    pageCount: numPages,
+    pagesRead: numPages,
+    pagesOCRd: pagesToOcr.length,
+    pagesSkipped: skippedPages,
+    method: pagesToOcr.length > 0 ? "advanced_ocr" : "standard",
+    strategy,
+    confidence: confidenceCount > 0 ? confidenceSum / confidenceCount : 100,
+    processingTime: Date.now() - standardText.startTime,
+    ocrUsed: pagesToOcr.length > 0,
+    coverageNote: buildCoverageNote(
+      numPages,
+      imageOnlyCount,
+      pagesToOcr.length,
+      skippedPages.length,
+    ),
+  };
 }
 
 /**
@@ -501,16 +636,16 @@ async function recognizePageWithEnsemble(
 }
 
 /**
- * Run `processPage` across all pages with bounded (poolSize) concurrency,
- * returning results sorted by page number.
+ * Run `processPage` across the given page numbers with bounded (poolSize)
+ * concurrency, returning results sorted by page number.
  */
 async function runPagesWithBoundedConcurrency(
-  pagesToProcess,
+  pageNumbers,
   poolSize,
   processPage,
 ) {
-  const pageNumbers = Array.from({ length: pagesToProcess }, (_, i) => i + 1);
-  const inFlight = pageNumbers.splice(0, poolSize).map((n) => processPage(n));
+  const queue = [...pageNumbers];
+  const inFlight = queue.splice(0, poolSize).map((n) => processPage(n));
   const settled = [];
   while (inFlight.length > 0) {
     const done = await Promise.race(
@@ -518,8 +653,8 @@ async function runPagesWithBoundedConcurrency(
     );
     settled.push(done.r);
     inFlight.splice(done.idx, 1);
-    if (pageNumbers.length > 0) {
-      inFlight.push(processPage(pageNumbers.shift()));
+    if (queue.length > 0) {
+      inFlight.push(processPage(queue.shift()));
     }
   }
   settled.sort((a, b) => a.pageNum - b.pageNum);
@@ -527,64 +662,13 @@ async function runPagesWithBoundedConcurrency(
 }
 
 /**
- * Combine per-page OCR results into the final corrected text + metadata.
+ * Run advanced multi-pass OCR with ensemble voting, for a specific set of
+ * page numbers only (the caller has already decided which pages actually
+ * lack a usable text layer) - not "the first N pages of the document".
+ * Enhanced with retry logic for degraded documents.
  */
-function buildOCRResult(
-  results,
-  numPages,
-  strategy,
-  pagesToProcess,
-  startTime,
-) {
-  // Combine all pages
-  const fullText = results
-    .map(
-      (r) =>
-        `--- PAGE ${r.pageNum} (OCR ${r.confidence.toFixed(0)}%) ---\n${r.text.trim()}\n\n`,
-    )
-    .join("");
-
-  // Post-process: VA terminology correction
-  const correctedText = applyVATerminologyCorrection(fullText);
-
-  const avgConfidence =
-    results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
-
-  // Log summary
-  const totalChars = correctedText
-    .replace(/---\s*PAGE.*?---\n/g, "")
-    .replace(/\s+/g, " ")
-    .trim().length;
-  // eslint-disable-next-line no-console
-  console.log(
-    `📊 OCR Summary: ${totalChars} chars extracted from ${pagesToProcess} pages (avg confidence: ${avgConfidence.toFixed(0)}%)`,
-  );
-
-  return {
-    text: correctedText,
-    pageCount: numPages,
-    method: "advanced_ocr",
-    strategy: strategy,
-    confidence: avgConfidence,
-    processingTime: Date.now() - startTime,
-    pagesProcessed: pagesToProcess,
-    totalCharsExtracted: totalChars,
-    // D-12: this result IS OCR - the vision-fallback guard in
-    // musterCallProcessor's _applyVisionFallbackIfNeeded checks this flag
-    // (deliberately kept, not removed) to decide whether a low-confidence
-    // OCR result is even eligible for the Florence-2 fallback.
-    ocrUsed: true,
-  };
-}
-
-/**
- * Run advanced multi-pass OCR with ensemble voting
- * Enhanced with retry logic for degraded documents
- */
-async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
-  const startTime = Date.now();
-  const pagesToProcess = Math.min(numPages, config.MAX_OCR_PAGES);
-
+async function runAdvancedOCR(pdf, pageNumbers, strategy, config, onProgress) {
+  const pagesToProcess = pageNumbers.length;
   const { isDegraded, baseScales, poolSize } = computeOCRPoolConfig(
     strategy,
     config,
@@ -603,6 +687,10 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
   const processPage = async (pageNum) => {
     const page = await pdf.getPage(pageNum);
 
+    // Defensive re-check: the caller's page list is normally already
+    // filtered to image-only pages, but a caller-supplied
+    // ocrOnlyPageNumbers could name a page that actually has a fine text
+    // layer - skip the expensive render+Tesseract pass for it too.
     const layerText = await tryTextLayerText(page);
     if (layerText !== null) {
       completedPages++;
@@ -611,7 +699,7 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
         progress: 10 + (completedPages / pagesToProcess) * 85,
         message: `Page ${pageNum}/${pagesToProcess} (text layer)...`,
       });
-      return { text: layerText, confidence: 100, usedTextLayer: true };
+      return { pageNum, text: layerText, confidence: 100, usedTextLayer: true };
     }
 
     const { text: pageText, confidence: avgConfidence } =
@@ -637,18 +725,10 @@ async function runAdvancedOCR(pdf, numPages, strategy, config, onProgress) {
 
   try {
     // Bounded page-level concurrency: poolSize pages in flight at once
-    const results = await runPagesWithBoundedConcurrency(
-      pagesToProcess,
+    return await runPagesWithBoundedConcurrency(
+      pageNumbers,
       poolSize,
       processPage,
-    );
-
-    return buildOCRResult(
-      results,
-      numPages,
-      strategy,
-      pagesToProcess,
-      startTime,
     );
   } finally {
     await scheduler.terminate();
