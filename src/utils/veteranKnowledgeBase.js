@@ -2940,11 +2940,42 @@ function _looksLikeFileName(value) {
   return typeof value === "string" && /\.[a-z0-9]{2,5}$/i.test(value.trim());
 }
 
+// D19-6: matches a whole filename-shaped TOKEN (e.g. "veteran_smith_dd214.pdf"
+// embedded inside "DD-214: veteran_smith_dd214.pdf") rather than requiring
+// the entire string to be a filename, since musterCallProcessor's own
+// evidenceTimeline description is built as "<label>: <raw file.name>" (see
+// mergeDocumentImportEntry) - the file name is a SUBSTRING there, not the
+// whole value, so `_looksLikeFileName`'s end-of-string anchor never matches
+// it. Restricted to a real document-extension allowlist (not any
+// `.xx`-shaped suffix) so a decimal value like "$1,500.00" or a CFR/USC
+// pinpoint like "20.203" is never mistaken for a file name.
+// The body class explicitly EXCLUDES "." (not `\S`, which includes it) so it
+// can never overlap with the literal "." that ends it - the same
+// self-overlap that made the base `email` pattern quadratic (see its own
+// comment in piiScrubber.js) is why this is bounded and dot-free rather
+// than a greedy `\S*`/`\S+`.
+const FILENAME_TOKEN =
+  /[^\s.]{1,80}\.(?:pdf|jpeg|jpg|png|gif|bmp|tif|tiff|heic|webp|docx|doc|txt|rtf)\b/gi;
+
 function _neutralSourceLabel(source, eventType, date, index) {
   if (!_looksLikeFileName(source)) return source || "";
   const type = EVENT_TYPE_DOCUMENT_LABELS[eventType] || "Document";
   const dated = date ? `${type}, ${date}` : type;
   return `${dated} (#${index + 1})`;
+}
+
+// D19-6: neutralizes any raw file name embedded IN the description text
+// itself (not just the bracketed `source` label _neutralSourceLabel
+// already covers) - same ADR-008 rule, applied at the same render-time
+// choke point, since the raw name is load-bearing in storage (dedup keys
+// off the exact description text) and can only be neutralized here.
+function _neutralizeDescription(description, eventType, date, index) {
+  if (typeof description !== "string") return description;
+  const type = EVENT_TYPE_DOCUMENT_LABELS[eventType] || "Document";
+  const label = date
+    ? `${type}, ${date} (#${index + 1})`
+    : `${type} (#${index + 1})`;
+  return description.replace(FILENAME_TOKEN, label);
 }
 
 function buildEvidenceTimelineContext(vkb) {
@@ -2954,7 +2985,13 @@ function buildEvidenceTimelineContext(vkb) {
     context += "\n--- EVIDENCE TIMELINE ---\n";
     vkb.evidenceTimeline.slice(0, 20).forEach((e, i) => {
       const label = _neutralSourceLabel(e.source, e.eventType, e.date, i);
-      context += `  ${e.date || "???"}: ${e.description} [${label}]\n`;
+      const description = _neutralizeDescription(
+        e.description,
+        e.eventType,
+        e.date,
+        i,
+      );
+      context += `  ${e.date || "date not recorded"}: ${description} [${label}]\n`;
     });
     if (vkb.evidenceTimeline.length > 20) {
       context += `  ... and ${vkb.evidenceTimeline.length - 20} more events\n`;

@@ -21,10 +21,17 @@ import {
   generateLLMContext,
 } from "./veteranKnowledgeBase";
 
-const FORBIDDEN = ["[object Object]", "undefined", "NaN"];
+const FORBIDDEN = ["[object Object]", "undefined", "NaN", "???"];
+
+// D19-6: a raw uploaded file name is never a valid AI-context VALUE - ADR-008
+// requires a neutral document label instead (see veteranKnowledgeBase.js's
+// EVENT_TYPE_DOCUMENT_LABELS/_neutralSourceLabel/_neutralizeDescription).
+const FILE_EXTENSION_PATTERN =
+  /\.(pdf|jpe?g|png|gif|bmp|tiff?|heic|webp|docx?|txt|rtf)\b/i;
 
 function expectNoLeaks(context) {
   FORBIDDEN.forEach((token) => expect(context).not.toContain(token));
+  expect(context).not.toMatch(FILE_EXTENSION_PATTERN);
   context.split("\n").forEach((line) => {
     const content = line.replace(/^\s+/, "");
     expect(content).not.toMatch(/\(\s*\)/);
@@ -229,6 +236,42 @@ describe("D14-2: claim numbers never enter AI context", () => {
     const context = generateLLMContext(vkb);
     expect(context).not.toContain("600123456789");
     expect(context).toContain("Tinnitus: denied (decided 2024-05-01)");
+    expectNoLeaks(context);
+  });
+});
+
+describe("D19-6: evidence timeline lines never leak a raw file name or print '???'", () => {
+  it("neutralizes a raw file name embedded IN the description, not just the bracketed source label", () => {
+    // Mirrors musterCallProcessor's own evidenceTimeline shape: description
+    // is built as "<label>: <raw file.name>", not just carried on `source`.
+    const vkb = initializeVKB();
+    vkb.evidenceTimeline.push({
+      date: "2024-03-01",
+      dateIsProcessingDate: false,
+      eventType: "document_import",
+      description: "DD-214: veteran_jordan_faketon_dd214.pdf",
+      source: "Muster Call",
+      significance: "",
+    });
+
+    const context = generateLLMContext(vkb);
+    expect(context).not.toContain("veteran_jordan_faketon_dd214.pdf");
+    expectNoLeaks(context);
+  });
+
+  it("phrases a missing event date plainly instead of printing '???'", () => {
+    const vkb = initializeVKB();
+    vkb.evidenceTimeline.push({
+      date: null,
+      eventType: "document_import",
+      description: "Decision Letter: decision_letter.pdf",
+      source: "Muster Call",
+      significance: "",
+    });
+
+    const context = generateLLMContext(vkb);
+    expect(context).toContain("date not recorded");
+    expect(context).not.toContain("???");
     expectNoLeaks(context);
   });
 });
