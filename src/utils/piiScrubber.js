@@ -228,7 +228,16 @@ const PII_PATTERNS = {
   //      optional space on either side of it - every existing garbled-SSN
   //      fixture (comma, colon, hyphen, spaced-hyphen) still has that
   //      literal character present; only a bare space/run-of-spaces with
-  //      NO punctuation stops matching.
+  //      NO punctuation stops matching. KNOWN LIMIT (documented, not
+  //      silently assumed): an UNLABELED, pure-whitespace-separated SSN in
+  //      free-running prose ("Veteran record 123 45 6789 attached") is
+  //      byte-for-byte the same shape as the audiogram row above - there is
+  //      no regex-level signal that tells them apart, so this stays
+  //      unmatched here. A LABELED occurrence of that same shape (an actual
+  //      DD-214 "SOCIAL SECURITY: 123 45 6789" box value) is still caught -
+  //      see the numeric labelOnly/broad/strict patterns in
+  //      `LABELED_BOX_PATTERNS` below, whose value class already tolerates
+  //      internal spaces.
   //   2) A citation/section-number LIST ("38 C.F.R. §§ 3.156, 20.203,
   //      20.1103") chains multiple period-joined numbers with ", " between
   //      them - `20.203, 20.1103` on its own is 3-2-4-shaped and ALL real
@@ -240,9 +249,18 @@ const PII_PATTERNS = {
   //      rejected; a digit immediately before the first group is already
   //      excluded by the `\b` word-boundary that follows this lookbehind
   //      (digit-to-digit is never a boundary), so only the period case
-  //      needed an explicit guard. Mirrored after the match for symmetry.
+  //      needed an explicit guard.
+  //
+  // D19-3 follow-up: a trailing `(?!\.)` mirroring the lookbehind above was
+  // tried and reverted - it does nothing for the citation case (the
+  // lookbehind alone already rejects it, verified with the lookahead
+  // removed), but it silently broke every garbled SSN that ends a sentence
+  // ("Member 123-45-6789.", "id 123.45.6789.") - a period is the single
+  // most common character to immediately follow a 9-digit run in ordinary
+  // prose, so this was rejecting the majority of real garbled SSNs to guard
+  // against a case the lookbehind already handles alone.
   ssnOcrGarbled:
-    /(?<!\.)\b[0-9OoIlSsBb]{3}\s?[.\-_|,:]\s?[0-9OoIlSsBb]{2}\s?[.\-_|,:]\s?[0-9OoIlSsBb]{4}\b(?!\.)/g,
+    /(?<!\.)\b[0-9OoIlSsBb]{3}\s?[.\-_|,:]\s?[0-9OoIlSsBb]{2}\s?[.\-_|,:]\s?[0-9OoIlSsBb]{4}\b/g,
 
   // MRN — medical record number, labeled or numeric.
   mrn: /\bMRN[:\s#-]*\d{6,12}\b/gi,
@@ -260,13 +278,23 @@ const PII_PATTERNS = {
   // character at a time before giving up at THIS start position, then
   // repeats that same O(n) backtrack at every subsequent start position -
   // O(n) positions x O(n) backtrack = O(n²). Bounding every quantifier
-  // (local part to RFC-5321's 64-octet max, each domain label to 63, at
-  // most 8 labels, TLD to 24) removes the overlap: a label's char class no
-  // longer contains the dot that ends it, so a run of dots can never
-  // partially match a label at all, let alone backtrack through one -
-  // same fix already applied to `emailOcrSpaced` below.
+  // removes the overlap: a label's char class no longer contains the dot
+  // that ends it, so a run of dots can never partially match a label at
+  // all, let alone backtrack through one - same fix already applied to
+  // `emailOcrSpaced` below. The backtrack cost per anchor is capped at
+  // whatever the bound is, not at the input length, so it's the boundedness
+  // that matters for the O(n) guarantee, not the specific numbers - a
+  // reviewer proved the original RFC-5321-literal bounds (64-octet local
+  // part, 8 domain labels) rejected real, if RFC-invalid, OCR/typed input
+  // (a 70-char local part, a 9-label domain) outright: `\b` can only anchor
+  // once at the true start of a contiguous run, so once the bound is
+  // exceeded there's no shorter/later position left to retry from and the
+  // whole address goes unmatched, not just partially. Widened to limits
+  // generous enough for realistic malformed input (254 = RFC 5321's total
+  // envelope max, 32 domain labels) while staying bounded - confirmed still
+  // <50ms against the same pathological '.'-heavy inputs above.
   email:
-    /\b[A-Za-z0-9._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\.){1,8}[A-Za-z]{2,24}\b/g,
+    /\b[A-Za-z0-9._%+-]{1,254}@(?:[A-Za-z0-9-]{1,63}\.){1,32}[A-Za-z]{2,24}\b/g,
 
   // D16-5/D16-6: OCR-garbled email - small (0-2 char) whitespace runs around
   // "@" and each "." that the strict pattern above doesn't tolerate

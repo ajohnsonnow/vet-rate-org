@@ -482,6 +482,34 @@ describe("D16-6/D19: no pattern (new, widened, or pre-existing) has a quadratic 
   });
 });
 
+describe("D19 follow-up: email bound widened to catch realistic malformed addresses", () => {
+  // The RFC-5321-literal bounds (64-octet local part, 8 domain labels) used
+  // to reject the whole address outright once exceeded - `\b` can only
+  // anchor once at the true start of a contiguous run, so there's no
+  // shorter/later position to retry from. Widened to 254 (RFC 5321's total
+  // envelope max) / 32 labels while staying bounded.
+  it("redacts an email with a local part over 64 characters", () => {
+    const address = `${"a".repeat(70)}@gmail.com`;
+    const result = scrubText(`email ${address}`);
+    expect(result).toContain("[REDACTED_EMAIL]");
+    expect(result).not.toContain(address);
+  });
+
+  it("redacts an email with more than 8 domain labels", () => {
+    const address = "u@a.b.c.d.e.f.g.h.i.com";
+    const result = scrubText(`contact ${address} for records.`);
+    expect(result).toContain("[REDACTED_EMAIL]");
+    expect(result).not.toContain(address);
+  });
+
+  it("still runs in bounded time against a pathological run with a long local part", () => {
+    const pathological = "a".repeat(80000);
+    const start = Date.now();
+    pathological.match(_testOnlyPatterns.email);
+    expect(Date.now() - start).toBeLessThan(500);
+  });
+});
+
 describe("D19-3: ssnOcrGarbled leaves real-world digit lists alone", () => {
   // Isolated against the pattern itself, not the full `scrubText()`
   // pipeline - a full-pipeline run can still legitimately redact some of
@@ -523,5 +551,40 @@ describe("D19-3: ssnOcrGarbled leaves real-world digit lists alone", () => {
   it("leaves an audiogram frequency/threshold row completely untouched end to end", () => {
     const text = "500 10 2000 Hz, right ear.";
     expect(scrubText(text)).toBe(text);
+  });
+});
+
+describe("D19-3 follow-up: ssnOcrGarbled still catches a garbled SSN that ends a sentence", () => {
+  // The trailing `(?!\.)` the D19-3 fix added to mirror its own leading
+  // `(?<!\.)` guard did nothing for the citation-list case (the lookbehind
+  // alone rejects it - see the describe block above) but rejected every
+  // garbled SSN immediately followed by a sentence-ending period, which is
+  // the single most common character to follow a 9-digit run in prose.
+  it.each([
+    ["a hyphen-garbled SSN", "Member 123-4S-6789.", "123-4S-6789"],
+    ["a hyphen-garbled SSN with a letter-swap", "Member 123-45-67B9.", "67B9"],
+    ["a comma-separated SSN", "Member 123,45,6789.", "123,45,6789"],
+    ["a colon-separated SSN", "Member 123:45:6789.", "123:45:6789"],
+    ["a period-separated SSN", "id 123.45.6789.", "123.45.6789"],
+    ["an l-for-1 garbled SSN", "SSN: 12l-45-678l.", "12l-45-678l"],
+  ])(
+    "redacts %s immediately followed by a period",
+    (_label, text, fragment) => {
+      const result = scrubText(text);
+      expect(result).toContain("[REDACTED_SSN]");
+      expect(result).not.toContain(fragment);
+    },
+  );
+
+  it("still rejects a CFR citation list with the lookbehind alone (no trailing lookahead needed)", () => {
+    const text =
+      "See 38 C.F.R. §§ 3.156, 20.203, 20.1103 for the applicable rules.";
+    expect(text.match(_testOnlyPatterns.ssnOcrGarbled)).toBeNull();
+  });
+
+  it("fully redacts a labeled SSN value even when OCR drops the hyphens into spaces", () => {
+    const result = scrubText("3. SOCIAL SECURITY: 123 45 6789");
+    expect(result).not.toContain("123 45 6789");
+    expect(result).not.toContain("123");
   });
 });
