@@ -5,6 +5,7 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { searchStateBenefits, isAIAvailable } from "../utils/aiStatementHelper";
 import { generateAI } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import { getVeteranProfile, getMyRatings } from "../utils/veteranProfile";
@@ -938,8 +939,12 @@ const fetchAIAdvice = async (aiQuestion, selectedState, selectedRating) => {
 
   const prompt = buildAIAdvicePrompt(aiQuestion, selectedState, selectedRating);
 
-  // Race between AI call and timeout
-  const response = await Promise.race([generateAI(prompt), timeoutPromise]);
+  // ADR-009: "context" - the veteran's own question + state/rating
+  // selections, never a document upload.
+  const response = await Promise.race([
+    generateAI(prompt, { dataClass: AI_DATA_CLASS.CONTEXT }),
+    timeoutPromise,
+  ]);
 
   // generateAI returns { text, mode } object - extract the text content
   const aiText = response?.text || response;

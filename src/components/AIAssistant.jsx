@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { generateAI } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useHelperMode } from "../contexts/HelperModeContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -147,7 +148,10 @@ async function sendMessage({
   setIsLoading(true);
 
   try {
+    // ADR-009: "context" - the veteran's own typed question plus the
+    // allow-listed veteran context, never a document upload.
     const result = await generateAI(input.trim(), {
+      dataClass: AI_DATA_CLASS.CONTEXT,
       preset: "LEGAL", // Use LEGAL preset for accurate regulatory guidance
       maxTokens: 2048,
       temperature: 0.3, // Slightly more flexible than pure LEGAL but still precise

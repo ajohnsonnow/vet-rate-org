@@ -77,6 +77,7 @@ import {
   registerSwarmEngine,
   resetAICircuitBreaker,
 } from "../../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
 import {
   analyzeCFile,
   deduplicateTimeline,
@@ -288,6 +289,11 @@ describe("analyzeCFile - chunk retry and failedChunks manifest", () => {
 describe("generateAI - circuit breaker", () => {
   function cloudOptions() {
     return {
+      // ADR-009: this suite exercises the cloud backend's own retry/circuit-
+      // breaker mechanics with a synthetic "hello" prompt, not document
+      // routing - declared "context" so it isn't blocked by the fail-closed
+      // default this suite predates.
+      dataClass: AI_DATA_CLASS.CONTEXT,
       skipCrisisCheck: true,
       skipFeatureCheck: true,
       skipHallucinationCheck: true,
@@ -378,6 +384,7 @@ describe("generateAI - cloud timeout retry", () => {
     });
 
     const result = await generateAI("hello", {
+      dataClass: AI_DATA_CLASS.CONTEXT,
       skipCrisisCheck: true,
       skipFeatureCheck: true,
       skipHallucinationCheck: true,

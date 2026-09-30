@@ -6,6 +6,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { searchVSOs } from "../utils/aiStatementHelper";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 
@@ -773,7 +774,10 @@ function useVSOAIConsultation(t, setError) {
     setAIResponse(null);
 
     try {
-      const response = await generateAI(buildVSOAdvisorPrompt(aiQuestion));
+      // ADR-009: "context" - the veteran's own typed question only.
+      const response = await generateAI(buildVSOAdvisorPrompt(aiQuestion), {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
 
       // generateAI returns { text, mode } object - extract the text content
       const aiText = response?.text || response;

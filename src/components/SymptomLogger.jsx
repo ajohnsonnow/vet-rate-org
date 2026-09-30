@@ -6,6 +6,7 @@ import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { jsPDF } from "jspdf";
 import ShareButton from "./ShareButton";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import {
@@ -1820,6 +1821,7 @@ async function _runAISuggestion({
 
 IMPORTANT: Respond with ONLY the requested text, no explanations or prefixes. Keep it concise and directly usable.`,
       {
+        dataClass: AI_DATA_CLASS.CONTEXT,
         temperature: 0.7,
         maxTokens: 300,
         systemPrompt:

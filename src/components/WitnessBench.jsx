@@ -29,6 +29,7 @@ import {
   isAnyAIAvailable,
   getAIStatus,
 } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -352,8 +353,10 @@ Return EXACTLY 4 questions in this JSON format:
   ]
 }`;
 
-  // Use unified AI service
+  // Use unified AI service - ADR-009: "context" - condition/relationship
+  // metadata only, no document text.
   const response = await generateAI(prompt, {
+    dataClass: AI_DATA_CLASS.CONTEXT,
     temperature: 0.7,
     maxTokens: 1024,
     expectJSON: true,
@@ -421,8 +424,11 @@ INSTRUCTIONS:
 
 Write the complete buddy statement now:`;
 
-  // Use unified AI service
+  // Use unified AI service - ADR-009: "context" - the witness's own typed
+  // interview answers (their own words about the veteran), not a document
+  // upload; PII redaction is handled separately at the ADR-008 boundary.
   const response = await generateAI(prompt, {
+    dataClass: AI_DATA_CLASS.CONTEXT,
     temperature: 0.6,
     maxTokens: 2048,
   });

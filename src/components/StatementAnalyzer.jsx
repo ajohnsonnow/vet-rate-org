@@ -11,6 +11,7 @@
 import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, Check, Lightbulb, Brain } from "lucide-react";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import {
   getVeteranAIContext,
@@ -76,8 +77,10 @@ const fetchToneSuggestions = async (text) => {
     : "";
   const fullPrompt = TONE_ANALYSIS_PROMPT + contextBlock + "\n\n" + text;
 
-  // Use unified AI service
+  // Use unified AI service - ADR-009: "context" - the veteran's own
+  // personal-statement draft, never a document upload.
   const response = await generateAI(fullPrompt, {
+    dataClass: AI_DATA_CLASS.CONTEXT,
     temperature: 0.3,
     maxTokens: 2000,
     expectJSON: true,

@@ -3,6 +3,7 @@ import { Scale, AlertTriangle, ShieldAlert } from "lucide-react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { LegalCitationList } from "./LegalCitation";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { answer as answerLegalQuestion } from "../services/legalAnswerer";
 
@@ -13,9 +14,18 @@ const MAX_QUESTION_LENGTH = 500;
  * legalAnswerer.js's dual-LLM split expects deps.generateAI to resolve a
  * string (dualLLM.js does String(raw) on it, so an unwrapped object would
  * silently coerce to "[object Object]" and every question would refuse).
+ *
+ * ADR-009: "context" - the extractor/synthesizer split here only ever
+ * handles retrieved eCFR regulation text (public, app-fetched) plus the
+ * veteran's own typed question, never an uploaded/pasted document. Declared
+ * explicitly so this legitimately off-device-eligible flow doesn't fail
+ * closed to "document" by omission.
  */
 async function generateAIText(prompt, options) {
-  const result = await generateAI(prompt, options);
+  const result = await generateAI(prompt, {
+    ...options,
+    dataClass: AI_DATA_CLASS.CONTEXT,
+  });
   if (typeof result === "string") return result;
   return result?.text ?? "";
 }

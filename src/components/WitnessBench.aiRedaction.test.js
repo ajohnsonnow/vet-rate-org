@@ -24,6 +24,7 @@ const FAKE_LAST = "Faketon";
 vi.mock("../utils/localServerClient", () => ({
   checkServerHealth: vi.fn(async () => ({ available: true, model: "test" })),
   chatCompletion: vi.fn(async () => "OK response from the local model"),
+  getServerConfig: vi.fn(() => ({ host: "localhost", port: 8080 })),
 }));
 
 // Minimal fake IndexedDB - same pattern as

@@ -5,6 +5,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { isAIAvailable } from "../utils/aiStatementHelper";
 import { generateAI } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 
@@ -780,7 +781,11 @@ async function runLegislativeAIAnalysis(
   try {
     const prompt = buildLegislativeAnalysisPrompt(doc);
 
-    const response = await generateAI(prompt);
+    // ADR-009: "context" - doc is a public Federal Register record this app
+    // fetched itself, not a veteran-uploaded document.
+    const response = await generateAI(prompt, {
+      dataClass: AI_DATA_CLASS.CONTEXT,
+    });
 
     if (response) {
       setAIAnalysis((prev) => ({

@@ -21,6 +21,7 @@ import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ToolCardButton from "./ToolCardButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { isAIAvailable } from "../utils/aiStatementHelper";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -324,7 +325,11 @@ Provide a veteran-focused analysis covering:
 
 Be direct, practical, and emphasize that retroactive pay claims have specific time limits and procedures.`;
 
-      const response = await generateAI(prompt);
+      // ADR-009: "context" - structured rating history + the allow-listed
+      // veteran context, never a document upload.
+      const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
       // generateAI returns { text, mode } object - extract the text content
       const aiText = response?.text || response;
       setAIAnalysis(

@@ -10,6 +10,7 @@
  */
 
 import { generateAI, isAnyAIAvailable, getAIStatus } from "./unifiedAIService";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 
 // The specialized system prompt for generating nexus research
 const NEXUS_LOGIC_SYSTEM_PROMPT = `You are a Medical Research Assistant specializing in pathophysiology and VA Disability Law. Your task is to generate a "Medical Nexus Research Brief" for a veteran to present to their private physician.
@@ -90,7 +91,9 @@ Explain how the primary condition causes or aggravates the secondary condition.`
 
   try {
     // Use unified AI service - automatically chooses Cloud or Local
+    // ADR-009: "context" - condition names only, never document-derived.
     const response = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.CONTEXT,
       temperature: 0.3,
       maxTokens: 4096,
       expectJSON: true,

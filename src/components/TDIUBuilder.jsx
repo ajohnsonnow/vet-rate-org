@@ -35,6 +35,7 @@ import {
   isAnyAIAvailable,
   getAIStatus,
 } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -292,8 +293,10 @@ RESPOND IN THIS EXACT JSON FORMAT:
   "job_types_precluded": ["Sedentary", "Light", "Medium", "Heavy"]
 }`;
 
-  // Use unified AI service
+  // Use unified AI service - ADR-009: "context" - structured
+  // disability/symptom list + the allow-listed veteran context.
   const response = await generateAI(prompt, {
+    dataClass: AI_DATA_CLASS.CONTEXT,
     temperature: 0.4,
     maxTokens: 2048,
     expectJSON: true,

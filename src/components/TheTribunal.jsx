@@ -14,6 +14,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import ReportBugLink from "./ReportBugLink";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
@@ -534,7 +535,11 @@ export default function TheTribunal({
         questionContext,
       });
 
-      const response = await generateAI(prompt);
+      // ADR-009: "context" - the veteran's own typed mock-hearing answer +
+      // allow-listed VKB context, never a document upload.
+      const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
       setIsAIProcessing(false);
       // generateAI returns { text, mode } object - extract the text content
       const text = response?.text || response;
@@ -561,7 +566,11 @@ export default function TheTribunal({
         conversation,
       });
 
-      const response = await generateAI(prompt);
+      // ADR-009: "context" - structured claims/session data + allow-listed
+      // VKB context, never a document upload.
+      const response = await generateAI(prompt, {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+      });
       setIsAIProcessing(false);
       // generateAI returns { text, mode } object - extract the text content
       const text = response?.text || response;
