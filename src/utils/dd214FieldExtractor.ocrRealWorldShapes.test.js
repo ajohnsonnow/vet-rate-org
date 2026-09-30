@@ -290,3 +290,46 @@ describe("dd214FieldExtractor: date of birth is never an implausible age", () =>
     expect(result.fields.dateOfBirth).toBe("1945-03-12");
   });
 });
+
+describe("D19-4: strips the form's own printed instruction text from a captured value", () => {
+  it("strips a leading instructional parenthetical from home of record when a colon precedes it", () => {
+    // The exact reported layout: "HOME OF RECORD:" then the box's OWN
+    // printed instruction in parens, then the real value - the
+    // parenthetical-skip in the field's own patterns only tolerates
+    // whitespace (not a colon) directly before "(", so without the fix
+    // the captured value is the instruction text itself.
+    const text =
+      "7B. HOME OF RECORD: (CITY AND STATE, OR COMPLETE, , ADDRESS IF KNOWN) SPRINGFIELD, IL\n" +
+      "8A. LAST DUTY: FORT X\n";
+    const result = extractDD214Fields(text);
+    expect(result.fields.homeOfRecord).toBe("SPRINGFIELD, IL");
+    expect(result.fields.homeOfRecord).not.toContain("CITY AND STATE");
+  });
+
+  it("leaves home of record empty (not the instruction text) when nothing follows the parenthetical", () => {
+    const text =
+      "7B. HOME OF RECORD: (CITY AND STATE, OR COMPLETE, , ADDRESS IF KNOWN)\n" +
+      "8A. LAST DUTY: FORT X\n";
+    const result = extractDD214Fields(text);
+    expect(result.fields.homeOfRecord).toBeUndefined();
+  });
+
+  it("strips the same leading instructional parenthetical from mailing address", () => {
+    const text =
+      "19. MAILING ADDRESS: (STREET, CITY, STATE, ZIP) 123 MAIN ST, SPRINGFIELD IL 62704\n" +
+      "20. SEPARATION CODE: MBK\n";
+    const result = extractDD214Fields(text);
+    expect(result.fields.mailingAddress).toBe(
+      "123 MAIN ST, SPRINGFIELD IL 62704",
+    );
+    expect(result.fields.mailingAddress).not.toContain("STREET, CITY");
+  });
+
+  it("does not strip a parenthetical that is part of the real address, not a leading instruction", () => {
+    const text =
+      "19. MAILING ADDRESS: 123 MAIN ST (APT 4), SPRINGFIELD IL 62704\n" +
+      "20. SEPARATION CODE: MBK\n";
+    const result = extractDD214Fields(text);
+    expect(result.fields.mailingAddress).toContain("(APT 4)");
+  });
+});

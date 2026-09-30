@@ -39,6 +39,24 @@ const NAME_LABEL_LEAK_RE =
   // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the reject-keyword alternation count, not backtracking; every alternative is a fixed/bounded literal
   /\b(?:DEPARTMENT|COMPONENT|BRANCH|ARMY|NAVY|MARINE|COAST\s*GUARD|SPACE\s*FORCE|AIR\s*FORCE|SOCIAL\s*SECURITY|SSN|DATE\s*OF\s*BIRTH|PAY\s*GRADE|RESERVE\s*OBLIG|HOME\s*OF\s*RECORD|MAILING\s*ADDRESS|BLOCK|BOX|ITEM|NOTHING\s*FOLLOWS)\b/i;
 
+// D19-4: a box's own printed instructional parenthetical ("(CITY AND
+// STATE, OR COMPLETE, , ADDRESS IF KNOWN)") can still land at the START of
+// a captured value even though homeOfRecord/mailingAddress's own patterns
+// already try to skip one - their skip-group only tolerates WHITESPACE
+// immediately before the opening "(", but a real layout commonly prints
+// "HOME OF RECORD: (City and State...)" with a colon there instead, so the
+// skip never engages and the capture starts at the paren. A real address/
+// name value never legitimately STARTS with a parenthetical (one appearing
+// later, e.g. "123 MAIN ST (APT 4)", is untouched - only a LEADING one is
+// stripped), so this is safe regardless of which exact layout let it
+// through. Returns "" when nothing is left after stripping, rather than
+// the instruction text - `validate()` (below, per field) then rejects an
+// empty/too-short remainder as an empty field, never as a wrong value.
+function _stripLeadingPrintedInstruction(value) {
+  if (!value) return value;
+  return value.replace(/^\s*\([^)]{0,150}\)\s*[:.,-]*\s*/, "");
+}
+
 const DD214_FIELD_PATTERNS = {
   // ===== BLOCK 1: Name =====
   fullName: {
@@ -357,7 +375,11 @@ const DD214_FIELD_PATTERNS = {
       const letters = (trimmed.match(/[A-Za-z]/g) || []).length;
       return letters / trimmed.length >= 0.2;
     },
-    normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
+    normalize: (val) =>
+      _stripLeadingPrintedInstruction(val)
+        .replaceAll("\n", ", ")
+        .replace(/\s+/g, " ")
+        .trim(),
   },
 
   // ===== BLOCK 8a: Last Duty Assignment =====
@@ -616,7 +638,11 @@ const DD214_FIELD_PATTERNS = {
       const letters = (trimmed.match(/[A-Za-z]/g) || []).length;
       return letters / trimmed.length >= 0.15;
     },
-    normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
+    normalize: (val) =>
+      _stripLeadingPrintedInstruction(val)
+        .replaceAll("\n", ", ")
+        .replace(/\s+/g, " ")
+        .trim(),
   },
 
   // ===== BLOCK 23: Type of Separation =====
