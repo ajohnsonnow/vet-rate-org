@@ -80,6 +80,7 @@ import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
 import {
   formatLocalDate,
   isSameDate,
+  isSameServicePeriod,
   parseExplicitDate,
   isDesignatedCombatZone,
   subtractDuration,
@@ -1022,11 +1023,26 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
         !!periodEndDate &&
         periodEndDate === separationDate;
       const rank = isTerminalADPeriod ? candidate.rank || "" : undefined;
+      // D16-2 (final16 QA re-review, 2026-09-29): exact equality alone
+      // missed a window whose OWN dating is a few days off its document's
+      // own primary (report date vs entry date, an OCR digit miss) - too
+      // narrow to catch what veteranProfile.js's pass 2 will now cross-
+      // scope-match with the SAME isSameServicePeriod tolerance. Without
+      // this, that near-coinciding window was free to merge into whatever
+      // OTHER document's row already sat at the primary's exact dates,
+      // flip that row's periodScope to "window" (N9c), and then let the
+      // primary itself collide with and demote into its own now-window-
+      // scoped sibling. Widening this check to the same tolerance closes
+      // that gap the same way the exact-coincidence case already does.
       const mayCollideWithOwnPrimary =
         !!primaryStart &&
         !!primaryEnd &&
-        periodStartDate === primaryStart &&
-        periodEndDate === primaryEnd;
+        isSameServicePeriod(
+          periodStartDate,
+          periodEndDate,
+          primaryStart,
+          primaryEnd,
+        );
       upsertServicePeriod(
         {
           serviceStartDate: periodStartDate,
