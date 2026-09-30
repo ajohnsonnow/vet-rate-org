@@ -919,6 +919,80 @@ describe("Box-18 window demotion: a coinciding window never demotes the primary 
   });
 });
 
+// D16-2 (final16 QA re-review, 2026-09-29): the demotion prevented above
+// for an EXACT date coincidence still happened when the Box-18 window's
+// OWN dating is only a FEW DAYS off its document's own 12a/12b primary (a
+// report date vs an entry date, or a one-digit OCR miss) - REALISTIC_NGB22
+// with its AD window moved 2 days later than 12a. `mayCollideWithOwnPrimary`
+// (musterCallProcessor.js) used to compare with exact equality, so it
+// never flagged this near-miss case, and pass 2's own near-date cross-
+// scope tolerance (added for D16-1) was then free to merge the window
+// into whatever pre-existing, EARLIER-imported row already sat at the
+// primary's EXACT dates - flipping that row's periodScope to "window"
+// (N9c) and setting up the primary's own subsequent upsert to collide
+// with, and demote into, its own now-window-scoped sibling.
+const REALISTIC_NGB22_NEAR_MISS_WINDOW = REALISTIC_NGB22.replace(
+  "AD: 20040622-20050827",
+  "AD: 20040624-20050827",
+);
+
+describe("Box-18 window demotion: a NEAR-COINCIDING window never demotes a primary from an EARLIER, different import", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("keeps the code-sheet-sourced enlistment as its own non-window row when the NGB-22's Box-18 window is only 2 days off its own primary dates", async () => {
+    saveCodeSheetServicePeriodsToProfile(
+      { name: "cfile_codesheet.pdf" },
+      {
+        extractedData: {
+          ratingSource: "code_sheet",
+          servicePeriods: [
+            {
+              entryDate: "2004-06-22",
+              separationDate: "2005-08-27",
+              branch: "Army",
+              characterOfDischarge: "Honorable",
+            },
+          ],
+        },
+      },
+    );
+
+    const extractedData = await parseServiceRecord(
+      REALISTIC_NGB22_NEAR_MISS_WINDOW,
+      "NGB22",
+    );
+    saveServiceRecordToProfile({ name: "ngb22.pdf" }, { extractedData });
+
+    const primary = getServicePeriods().find(
+      (p) =>
+        p.serviceStartDate === "2004-06-22" &&
+        p.serviceEndDate === "2005-08-27" &&
+        p.periodScope !== "window",
+    );
+    const window = getServicePeriods().find(
+      (p) => p.serviceStartDate === "2004-06-24" && p.periodScope === "window",
+    );
+    expect(primary).toBeDefined();
+    expect(window).toBeDefined();
+    // Without the fix, the primary demotes into the near-coinciding window:
+    // no non-window row survives at the primary's own exact (06-22) dates.
+    const primarySources = (primary.sources || []).map((s) => s.sourceDocument);
+    expect(primarySources).toContain("cfile_codesheet.pdf");
+    expect(primarySources).toContain("ngb22.pdf");
+
+    // The primary is still reachable/correctable via its own periodId -
+    // proof it was never folded into the window row.
+    const result = setServiceEntryDate({
+      date: "2004-06-20",
+      via: "vkb_viewer",
+      periodId: primary.id,
+    });
+    expect(result.ok).toBe(true);
+  });
+});
+
 describe("Box-18 window demotion: a coinciding window never demotes a primary from an EARLIER, different import", () => {
   beforeEach(() => {
     localStorage.clear();
