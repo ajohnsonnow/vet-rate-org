@@ -186,6 +186,17 @@ function indexConditionNames(state) {
  * main-thread task over budget (see module doc comment).
  */
 export async function buildDKBIndex(entries) {
+  // Real, observable signal for tests/e2e/dkb-import-latency.spec.ts's
+  // cold-cache coverage: fires exactly when this loop's own chunking is
+  // about to run, i.e. after the DKB fetch/JSON-parse (real async work,
+  // already done by the time buildDKBIndex is invoked - see
+  // aiSystemPrompts.js's loadDKBIndex) and before any of it, so a fixed
+  // sleep or a network-response wait can't stand in for it: either fires
+  // too early (during the fetch's own genuine async gap - a false pass,
+  // even on broken code) or has to budget for irrelevant network-transfer
+  // time (a false failure, even on correct code).
+  // eslint-disable-next-line no-console
+  console.log("[DKB] 🔧 buildDKBIndex starting");
   const state = {
     entries,
     lowerInstruction: new Array(entries.length),

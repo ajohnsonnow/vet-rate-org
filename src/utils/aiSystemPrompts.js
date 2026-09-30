@@ -1432,6 +1432,13 @@ function setCachedDKBSearch(query, topK, result) {
  * @returns {Promise<Array>} Relevant DKB entries with context
  */
 export async function searchDKB(query, topK = 10) {
+  // Real, observable signal for tests/e2e/dkb-import-latency.spec.ts (D16-7):
+  // once the DKB index is already warm (loadDKBIndex resolves with no
+  // fetch/build - see its own doc comment), this fires immediately before
+  // scoring - a precise anchor a fixed sleep can't be, and the pod's
+  // "condition-based waits only in e2e" rule requires one.
+  // eslint-disable-next-line no-console
+  console.log("[DKB] 🔍 searchDKB called");
   const index = await loadDKBIndex();
   if (!index) return [];
 
