@@ -56,6 +56,7 @@ async function _extractTextForAnalysis(file, ctx) {
     text: musterResult.text || "",
     hasText: (musterResult.text || "").trim().length > 100,
     totalPages: musterResult.pageCount || 1,
+    totalCharacters: (musterResult.text || "").length,
     avgCharsPerPage: musterResult.text
       ? Math.round(musterResult.text.length / (musterResult.pageCount || 1))
       : 0,
@@ -251,7 +252,7 @@ export function CFileDashboardHeader({
               : `✅ ${t("cfileAnalyzer", "analysisComplete")}`}
           </h2>
           <p className="mt-1 opacity-90">
-            {file?.name} • {extractedText?.pageCount}{" "}
+            {file?.name} • {extractedText?.totalPages}{" "}
             {t("cfileAnalyzer", "pagesAnalyzed")} •{" "}
             {extractedText?.totalCharacters?.toLocaleString()}{" "}
             {t("cfileAnalyzer", "charactersExtracted")}

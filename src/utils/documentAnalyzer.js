@@ -127,6 +127,14 @@ async function analyzePDFDocument(file, onProgress) {
     method: result.method,
     fileType: "PDF",
     ocrUsed: result.ocrUsed,
+    // D-4: advancedOCR.js already reports exactly how many pages were
+    // read, OCR'd and skipped - forward it instead of silently dropping
+    // it, so a caller can tell the veteran (or retry the skipped pages via
+    // ocrOnlyPageNumbers) instead of the coverage note dead-ending here.
+    pagesRead: result.pagesRead,
+    pagesOCRd: result.pagesOCRd,
+    pagesSkipped: result.pagesSkipped,
+    coverageNote: result.coverageNote,
   };
 }
 

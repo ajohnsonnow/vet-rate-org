@@ -80,6 +80,11 @@ function UploadedFileRow({ fileEntry, onRemove }) {
                 </span>
               )}
             </p>
+            {fileEntry.coverageNote && !fileEntry.error && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                📄 {fileEntry.coverageNote}
+              </p>
+            )}
           </div>
         </div>
         <button
@@ -545,7 +550,15 @@ async function extractFileTextAndPreview(file, fileType, setOcrProgress) {
     const result = await analyzePDF(file, (progress) => {
       setOcrProgress(progress);
     });
-    return { extractedText: result.text || "", preview: null, error: null };
+    return {
+      extractedText: result.text || "",
+      preview: null,
+      error: null,
+      // D-4: tell the veteran exactly how many pages were read, OCR'd and
+      // skipped - advancedOCR.js already computes this note, it just never
+      // reached the UI.
+      coverageNote: result.coverageNote || null,
+    };
   }
 
   // Create preview for images
@@ -600,6 +613,7 @@ export async function processFile(
     addedAt: new Date().toISOString(),
     preview: null,
     extractedText: "",
+    coverageNote: null,
     error: null,
     processing: true,
   };
@@ -609,11 +623,8 @@ export async function processFile(
   setCurrentProcessingFile(file.name);
 
   try {
-    const { extractedText, preview, error } = await extractFileTextAndPreview(
-      file,
-      fileType,
-      setOcrProgress,
-    );
+    const { extractedText, preview, error, coverageNote } =
+      await extractFileTextAndPreview(file, fileType, setOcrProgress);
     if (error) {
       newFileEntry.error = error;
     }
@@ -626,6 +637,7 @@ export async function processFile(
               ...f,
               extractedText,
               preview,
+              coverageNote: coverageNote || null,
               processing: false,
               error: extractedText ? null : "No text extracted",
             }

@@ -26,7 +26,10 @@ function baseProps(overrides = {}) {
   return {
     t,
     file: { name: "decision-letter.pdf" },
-    extractedText: { pageCount: 1, totalCharacters: 500 },
+    // Matches the shape _extractTextForAnalysis actually builds
+    // (totalPages/totalCharacters) - not the "pageCount" field the header
+    // used to (wrongly) read.
+    extractedText: { totalPages: 1, totalCharacters: 500 },
     analysisMetadata: {},
     analysisResult: { potential_claims: [], summary: "" },
     onReset: () => {},
@@ -76,5 +79,20 @@ describe("CFileDashboardHeader: honors the fallback's own foundNothing signal", 
 
     expect(screen.getByText("✅ analysisComplete")).toBeTruthy();
     expect(screen.queryByText("⚠️ analysisNoFindings")).toBeNull();
+  });
+});
+
+describe("CFileDashboardHeader: shows the real page/character counts, not blanks", () => {
+  it("reads totalPages/totalCharacters, the fields _extractTextForAnalysis actually sets", () => {
+    render(
+      <CFileDashboardHeader
+        {...baseProps({
+          extractedText: { totalPages: 7, totalCharacters: 12345 },
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/decision-letter\.pdf • 7/)).toBeTruthy();
+    expect(screen.getByText(/12,345/)).toBeTruthy();
   });
 });
