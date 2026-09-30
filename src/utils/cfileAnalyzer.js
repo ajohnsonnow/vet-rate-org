@@ -1576,9 +1576,15 @@ function _buildSemanticOpts(onProgress, abortController, options) {
   };
 }
 
-async function _determineAiModeAndChunks(fullText, onProgress) {
-  const aiStatus = getAIStatus();
-  const aiMode = aiStatus.effectiveMode;
+async function _determineAiModeAndChunks(fullText, onProgress, aiMode) {
+  // ADR-009: `aiMode` is the ACTUAL on-device backend a document call will
+  // dispatch to (getDocumentAIRouting().onDeviceMode from analyzeCFile) -
+  // NOT getAIStatus().effectiveMode, which can be CLOUD (Cloud preferred +
+  // key configured) even while an on-device engine sits ready. Sizing
+  // chunks/prompt for cloud's ~2.7M-char budget when the call is about to
+  // dispatch on-device anyway silently truncates the document through the
+  // on-device backend's own last-resort context-fit guard, and mislabels
+  // the result's metadata.aiMode as "cloud".
 
   // Special check for Warrant Council mode - ensure model is fully loaded
   if (aiMode === "swarm") {
@@ -1646,7 +1652,7 @@ async function _analyzeSingleChunkPath(
     current: 1,
     total: 1,
   });
-  const result = await analyzeChunk(chunks[0], 1, 1, onProgress);
+  const result = await analyzeChunk(chunks[0], 1, 1, onProgress, 0, aiMode);
   surfaceDocumentedConditions(result, fullText);
   enrichClaimsWithDiagnosticCodes(result);
   const rejectedCodes = enforceValidDiagnosticCodes(result);
@@ -1723,6 +1729,7 @@ function _buildMultiChunkState(
 
   return {
     totalChunks,
+    aiMode,
     isLocalAIMode,
     chunkScores,
     floorIndices,
@@ -1914,6 +1921,7 @@ async function _runChunkWithRetries(chunk, chunkNum, ctx, abortController) {
         ctx.totalChunks,
         ctx.onProgress,
         attempt,
+        ctx.aiMode,
       );
       lastError = null;
       break;
@@ -2146,7 +2154,7 @@ export async function analyzeCFile(
   }
 
   const { aiMode, isLocalAIMode, chunks, skippedPages } =
-    await _determineAiModeAndChunks(fullText, onProgress);
+    await _determineAiModeAndChunks(fullText, onProgress, routing.onDeviceMode);
   const totalChunks = chunks.length;
 
   if (totalChunks === 1) {
@@ -2371,13 +2379,16 @@ async function _requestChunkAnalysis(
   totalChunks,
   onProgress,
   attempt = 0,
+  aiMode = null,
 ) {
-  // Detect if we're using local AI (smaller context). effectiveMode is the
-  // resolved routing target - the raw stored mode can disagree with it
-  // (e.g. "auto"), which silently gave local generations the short cloud
-  // timeout and the full-size prompt.
-  const status = getAIStatus();
-  const effectiveMode = status.effectiveMode || status.mode;
+  // ADR-009: `aiMode` is the ACTUAL on-device backend this document call
+  // will dispatch to (threaded down from analyzeCFile's getDocumentAIRouting()
+  // call, via ctx.aiMode) - NOT a fresh getAIStatus().effectiveMode read,
+  // which can disagree (Cloud preferred + an on-device engine ready) and
+  // silently pick the full-size cloud prompt/timeout for a call that is
+  // about to run on-device anyway. Falls back to a fresh read only for a
+  // caller that doesn't have a resolved mode yet (none in this file).
+  const effectiveMode = aiMode || getAIStatus().effectiveMode;
   const isLocalAI =
     effectiveMode === AI_MODES.LOCAL ||
     effectiveMode === AI_MODES.SWARM ||
@@ -2550,6 +2561,7 @@ async function analyzeChunk(
   totalChunks,
   onProgress,
   attempt = 0,
+  aiMode = null,
 ) {
   const contentStr = await _requestChunkAnalysis(
     chunk,
@@ -2557,6 +2569,7 @@ async function analyzeChunk(
     totalChunks,
     onProgress,
     attempt,
+    aiMode,
   );
   const analysisResult = _parseChunkAiResponse(contentStr);
 
