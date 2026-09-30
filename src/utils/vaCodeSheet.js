@@ -13,6 +13,9 @@
 
 const SC_HEADER =
   /SUBJECT TO COMPENSATION\s{0,3}\(?\s{0,3}[0-9il]?\.?\s{0,3}SC\)/gi;
+// Literal text (23) + \s{0,3} + \(? + \s{0,3} + [0-9il]? + \.? + \s{0,3} +
+// "SC)" (3) = 38 chars max; rounded up for margin.
+const SC_HEADER_MAX_CHARS = 64;
 const COMBINED_HEADER = /COMBINED\s?EVAL\s?UATION FOR COMPENSATION\s{0,5}:/i;
 const NSC_HEADER = /NOT SERVICE CONNECTED\s?\/\s?NOT SUBJECT TO COMPENSATION/i;
 const SHEET_END = /\beSign\b/i;
@@ -97,6 +100,55 @@ async function flattenChunked(text, slicer) {
     await slicer.maybeYield();
   }
   return result;
+}
+
+// D19-7: `[...text.matchAll(pattern)]` is one synchronous regex scan of the
+// whole string - with zero matches (the common case for SC_HEADER on a
+// C-File with no code sheet, or for the loose DC_PATTERN/COMBINED_LOOSE
+// fallback below on plain narrative text) there is no match to yield
+// between, so a chunked caller that only yields per-*match* never yields at
+// all. This scans bounded windows instead: `pattern`'s longest possible
+// match can never exceed `maxMatchChars`, so a window of `windowChars` new
+// (unconsumed) text plus a `maxMatchChars` lookahead is guaranteed to fully
+// contain every match that *starts* inside that window - nothing is ever
+// split across a window boundary. A match is only accepted once its start
+// reaches the window's own cursor (never the 1-char lookbehind kept only so
+// `\b`/anchors see real context), and the next window always resumes
+// exactly at the end of the last accepted match (or the window edge, if
+// none matched) - the same position a single continuous matchAll would
+// resume from - so matches are never duplicated or skipped at a boundary
+// either. See vaCodeSheet.chunked.equivalence.test.js.
+async function matchAllChunked(
+  text,
+  pattern,
+  maxMatchChars,
+  slicer,
+  windowChars = 200_000,
+) {
+  const global = new RegExp(
+    pattern.source,
+    pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`,
+  );
+  const matches = [];
+  let cursor = 0;
+  while (cursor < text.length) {
+    const windowEnd = Math.min(text.length, cursor + windowChars);
+    const sliceStart = cursor > 0 ? cursor - 1 : 0;
+    const sliceEnd = Math.min(text.length, windowEnd + maxMatchChars);
+    let lastAcceptedEnd = -1;
+    for (const m of text.slice(sliceStart, sliceEnd).matchAll(global)) {
+      const absStart = m.index + sliceStart;
+      if (absStart < cursor) continue;
+      if (absStart >= windowEnd) break;
+      const shifted = [...m];
+      shifted.index = absStart;
+      matches.push(shifted);
+      lastAcceptedEnd = absStart + m[0].length;
+    }
+    cursor = lastAcceptedEnd >= 0 ? lastAcceptedEnd : windowEnd;
+    await slicer.maybeYield();
+  }
+  return matches;
 }
 
 const toIsoDay = (mmddyyyy) => {
@@ -320,7 +372,12 @@ export function parseRatingCodeSheets(text) {
 export async function parseRatingCodeSheetsChunked(text, slicer) {
   if (typeof text !== "string" || !text) return [];
   const flat = await flattenChunked(text, slicer);
-  const headers = [...flat.matchAll(SC_HEADER)];
+  const headers = await matchAllChunked(
+    flat,
+    SC_HEADER,
+    SC_HEADER_MAX_CHARS,
+    slicer,
+  );
   const sheets = [];
   for (let i = 0; i < headers.length; i++) {
     const sheet = parseOneSheet(
@@ -390,4 +447,67 @@ export function recordEventsFromSheets(sheets) {
  */
 export function codeSheetRecordEvents(text) {
   return recordEventsFromSheets(parseRatingCodeSheets(text));
+}
+
+// D19-7: same best-effort "loose line" scan as vaDocumentParser.js's
+// parseCodeSheet() catch-all fallback (bare "DC - name NN%" lines, used when
+// no SC_HEADER exists at all - most C-Files for a veteran with no rating
+// yet, or a C-File whose code sheet is OCR-garbled), chunked via
+// matchAllChunked so a multi-million-character narrative with zero matches
+// still yields instead of running as one whole-text task. A caller that
+// already ran parseRatingCodeSheetsChunked and got no sheets already knows
+// latestRatingCodeSheet(text) would also be null (same SC_HEADER search,
+// proven byte-identical - see vaCodeSheet.chunked.equivalence.test.js), so
+// this never re-derives that; it only re-implements the loose regex pass.
+// COMBINED_LOOSE bounds the whitespace/colon run between "combined"/"total"
+// and the percentage (parseCodeSheet's own version is unbounded `[:\s]*`)
+// so its longest possible match is also known and boundable - no real
+// code sheet has 50+ consecutive colons/spaces there.
+const DC_PATTERN =
+  /\b([5-9]\d{3})\s{0,10}[:-]?\s{0,10}([A-Za-z][A-Za-z\s\-,()]{0,999}?)\s{0,10}[:-]?\s{0,10}(\d{1,3})%/g;
+const DC_PATTERN_MAX_CHARS = 1100;
+const DC_PATTERN_WINDOW_CHARS = 20_000;
+const COMBINED_LOOSE = /(?:combined|total)[:\s]{0,50}(\d{1,3})%/i;
+const COMBINED_LOOSE_MAX_CHARS = 80;
+
+export async function scanLooseRatingLinesChunked(text, slicer) {
+  const result = {
+    documentType: "CODE_SHEET",
+    success: true,
+    extractedAt: new Date().toISOString(),
+    combinedRating: null,
+    conditions: [],
+    ratingHistory: [],
+    confidence: 0,
+  };
+  try {
+    const matches = await matchAllChunked(
+      text,
+      DC_PATTERN,
+      DC_PATTERN_MAX_CHARS,
+      slicer,
+      DC_PATTERN_WINDOW_CHARS,
+    );
+    for (const match of matches) {
+      result.conditions.push({
+        diagnosticCode: match[1],
+        name: match[2].trim(),
+        percent: Number.parseInt(match[3]),
+      });
+    }
+    const combinedMatches = await matchAllChunked(
+      text,
+      COMBINED_LOOSE,
+      COMBINED_LOOSE_MAX_CHARS,
+      slicer,
+    );
+    if (combinedMatches.length > 0) {
+      result.combinedRating = Number.parseInt(combinedMatches[0][1]);
+    }
+    result.confidence = result.conditions.length > 0 ? 85 : 20;
+  } catch (err) {
+    result.success = false;
+    result.error = err.message;
+  }
+  return result;
 }

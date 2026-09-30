@@ -113,13 +113,13 @@ import { florenceOCRService, isWebGPUSupported } from "./florenceOCRService";
 import {
   parseDecisionLetter,
   parseDBQReport,
-  parseCodeSheet,
   extractBigThree,
 } from "./vaDocumentParser";
 import {
   parseRatingCodeSheetsChunked,
   latestFromSheets,
   recordEventsFromSheets,
+  scanLooseRatingLinesChunked,
 } from "./vaCodeSheet";
 import {
   segmentCFileChunked,
@@ -2514,13 +2514,19 @@ async function _computeSegmentation(text, slicer) {
 // derives both the "latest sheet" and "record events" views from that one
 // result - latestRatingCodeSheet(text) and codeSheetRecordEvents(text) used
 // to each re-run the full parse (including its own flatten() pass) on the
-// same text, doubling that cost for no reason.
+// same text, doubling that cost for no reason. When no sheet was found,
+// that chunked parse already proves latestRatingCodeSheet(text) would also
+// be null (same SC_HEADER search - see vaCodeSheet.chunked.equivalence.
+// test.js), so the fallback goes straight to scanLooseRatingLinesChunked's
+// loose-line scan instead of calling the synchronous, whole-text
+// parseCodeSheet(text) - that used to re-derive the same "no sheet" answer
+// and then run its own unyielded fallback scan, both in one main-thread task.
 async function _computeCodeSheetData(text, slicer) {
   const sheets = await parseRatingCodeSheetsChunked(text, slicer);
   const ratingSheet = latestFromSheets(sheets);
   const codeSheet = ratingSheet
     ? _codeSheetSummary(ratingSheet)
-    : parseCodeSheet(text);
+    : await scanLooseRatingLinesChunked(text, slicer);
   return {
     ratingSheet,
     codeSheet,
