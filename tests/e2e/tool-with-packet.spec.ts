@@ -36,6 +36,24 @@ const CONDITION_PTSD = "Post-Traumatic Stress Disorder (PTSD)";
 const CONDITION_LUMBAR = "Lumbosacral Strain";
 const CONDITION_TINNITUS = "Tinnitus";
 
+// React commits the interactive tree (including every cluster's listener-
+// registering useEffect) once useBootSequence's isBooting gate flips false,
+// but passive effects flush a tick AFTER that commit paints - networkidle
+// only proves the commit happened, not that effects have run yet. Waiting
+// on two animation frames plus a macrotask turn is tied to the browser's
+// real paint/task-queue lifecycle (and so scales with actual system load)
+// rather than guessing a fixed duration.
+async function waitForInteractiveEffectsToSettle(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setTimeout(resolve, 0)),
+        );
+      }),
+  );
+}
+
 // ── Boot helper ───────────────────────────────────────────────────────────────
 async function bootWithPacket(page: Page): Promise<void> {
   await page.addInitScript(
@@ -51,34 +69,29 @@ async function bootWithPacket(page: Page): Promise<void> {
   );
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  // Wait for React effects to register all window event listeners
-  await page.waitForTimeout(1200);
+  await waitForInteractiveEffectsToSettle(page);
 }
 
 // ── Tool dispatch + wait ──────────────────────────────────────────────────────
-// Polls 30 × 500 ms (15 s total) before giving up — matches the 15s
-// webServer/lazy-chunk budget established in mobile.spec.ts's Atomic Wipe
-// test. isVisible() returns immediately (no wait); this loop is the wait
-// mechanism. Heavier tools (PDF generation, adversarial-testing bundle) can
-// exceed a tighter budget under the parallel-worker local dev-server
-// contention this suite runs with (CI runs workers: 1, serial, no contention).
+// Waits up to 15s (matches the webServer/lazy-chunk budget established in
+// mobile.spec.ts's Atomic Wipe test) for either dialog shape to become
+// visible - a single locator.waitFor() replaces the old manual
+// 500ms-interval poll loop with Playwright's own built-in retry. Heavier
+// tools (PDF generation, adversarial-testing bundle) can exceed a tighter
+// budget under the parallel-worker local dev-server contention this suite
+// runs with (CI runs workers: 1, serial, no contention).
 async function openTool(page: Page, eventName: string): Promise<boolean> {
   await page.evaluate((evt) => {
     window.dispatchEvent(new CustomEvent(evt));
   }, eventName);
 
-  const selectors = ['[role="dialog"]', '[aria-modal="true"]'];
-  for (let i = 0; i < 30; i++) {
-    for (const sel of selectors) {
-      const visible = await page
-        .locator(sel)
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (visible) return true;
-    }
-    await page.waitForTimeout(500);
-  }
+  const found = await page
+    .locator('[role="dialog"], [aria-modal="true"]')
+    .first()
+    .waitFor({ state: "visible", timeout: 15000 })
+    .then(() => true)
+    .catch(() => false);
+  if (found) return true;
 
   // Fallback: full-screen fixed overlay (ClaimNavigator before Sprint 6)
   return page
@@ -95,7 +108,22 @@ async function closeTool(page: Page): Promise<void> {
     .first()
     .waitFor({ state: "hidden", timeout: 2000 })
     .catch(() => {});
-  await page.waitForTimeout(300);
+  // React's unmount/cleanup effects (focus restoration, scroll-lock removal)
+  // flush as passive effects after the dialog's DOM node is already gone -
+  // useBodyScrollLock's cleanup only removes "modal-open" once the LAST
+  // open modal's effect has flushed, so waiting for that class to clear is
+  // a real signal cleanup settled, not a fixed guess at how long that
+  // takes. Falls back to the same double-rAF+macrotask settle for any
+  // dialog that never used the body-scroll-lock hook in the first place.
+  const stillLocked = await page
+    .waitForFunction(
+      () => !document.body.classList.contains("modal-open"),
+      null,
+      { timeout: 3000 },
+    )
+    .then(() => false)
+    .catch(() => true);
+  if (stillLocked) await waitForInteractiveEffectsToSettle(page);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -171,8 +199,10 @@ test.describe("Discover cluster — with 9-condition packet", () => {
   }) => {
     await bootWithPacket(page);
 
-    // Give extra time — NexusBuilder may need conditions hydrated into React state
-    await page.waitForTimeout(500);
+    // NexusBuilder needs conditions hydrated into React state before it
+    // decides whether to render - give that effect the same real
+    // paint/task-queue settle bootWithPacket already waits on.
+    await waitForInteractiveEffectsToSettle(page);
     await openTool(page, "openNexusBuilder");
 
     const appeared = await page

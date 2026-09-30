@@ -10,12 +10,27 @@ const FIXTURE = JSON.parse(
   readFileSync("tests/fixtures/redacted-packet.json", "utf-8"),
 );
 
+// React commits the interactive tree (including every cluster's listener-
+// registering useEffect) once useBootSequence's isBooting gate flips false,
+// but passive effects flush a tick AFTER that commit paints - #main-content
+// attaching (or networkidle) only proves the commit happened, not that
+// effects have run yet. Waiting on two animation frames plus a macrotask
+// turn is tied to the browser's real paint/task-queue lifecycle (and so
+// scales with actual system load) rather than guessing a fixed duration.
+async function waitForInteractiveEffectsToSettle(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setTimeout(resolve, 0)),
+        );
+      }),
+  );
+}
+
 // ──────────────────────────────────────────────────────────────
 // Boot helper — seeds localStorage with returning-user flags +
 // redacted packet claims, then navigates to the app root.
-// Extra 1200ms wait gives all React useEffect hooks time to
-// register their window event listeners (lazy clusters mount
-// after networkidle but effects run a paint cycle later).
 // ──────────────────────────────────────────────────────────────
 async function bootWithPacket(page: Page): Promise<void> {
   const claims = FIXTURE.claims;
@@ -32,35 +47,27 @@ async function bootWithPacket(page: Page): Promise<void> {
   );
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(1200);
+  await waitForInteractiveEffectsToSettle(page);
 }
 
 // ──────────────────────────────────────────────────────────────
-// Modal detection — polls up to 15 s (30 × 500 ms) for a dialog to
-// appear (matches the budget established in tool-with-packet.spec.ts
-// and mobile.spec.ts's Atomic Wipe test). Heavier tools (My Packet,
-// Retro Pay Hunter, C&P Exam Simulator) can exceed a tighter budget
-// under the parallel-worker local dev-server contention this suite
-// runs with — a 48-step test has ~48x the exposure to that per-tool
-// risk of a single-tool test, so it needs the same generous margin.
-// Uses isVisible() snapshots rather than expect().toBeVisible() to
-// avoid Playwright's web-first retry machinery interfering with
-// back-to-back dispatches.
+// Modal detection — waits up to 15s for either dialog shape to become
+// visible (matches the budget established in tool-with-packet.spec.ts and
+// mobile.spec.ts's Atomic Wipe test). Heavier tools (My Packet, Retro Pay
+// Hunter, C&P Exam Simulator) can exceed a tighter budget under the
+// parallel-worker local dev-server contention this suite runs with — a
+// 48-step test has ~48x the exposure to that per-tool risk of a
+// single-tool test, so it needs the same generous margin. A single
+// locator.waitFor() replaces the old manual 500ms-interval poll loop with
+// Playwright's own built-in retry.
 // ──────────────────────────────────────────────────────────────
 async function modalIsVisible(page: Page): Promise<boolean> {
-  const selectors = ['[role="dialog"]', '[aria-modal="true"]'];
-  for (let i = 0; i < 30; i++) {
-    for (const sel of selectors) {
-      const visible = await page
-        .locator(sel)
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (visible) return true;
-    }
-    await page.waitForTimeout(500);
-  }
-  return false;
+  return page
+    .locator('[role="dialog"], [aria-modal="true"]')
+    .first()
+    .waitFor({ state: "visible", timeout: 15000 })
+    .then(() => true)
+    .catch(() => false);
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -93,15 +100,25 @@ async function closeModal(page: Page): Promise<void> {
     }
     await anyDialog.waitFor({ state: "hidden", timeout: 1500 }).catch(() => {});
   }
-  // Give React's unmount/cleanup effects (focus restoration, scroll-lock
-  // removal) time to settle before dispatching the next tool event. Widened
-  // from 300ms: under the parallel-worker local dev-server contention this
-  // suite runs with, a shorter wait let the next tool's dispatch fire while
-  // the previous tool's async cleanup was still in flight, producing a
-  // delayed React error #299 that got misattributed to whichever tool
-  // happened to be "current" when pageerror fired (a timing/attribution
-  // artifact, not a bug in that tool's own code).
-  await page.waitForTimeout(800);
+  // React's unmount/cleanup effects (focus restoration, scroll-lock removal)
+  // flush as passive effects after the dialog's DOM node is already gone;
+  // dispatching the next tool's open event before that finished raced the
+  // previous tool's cleanup and produced a delayed React error #299
+  // misattributed to whichever tool happened to be "current" when it
+  // fired. useBodyScrollLock's cleanup only removes "modal-open" once the
+  // LAST open modal's effect has flushed, so waiting for that class to
+  // clear is a real signal cleanup settled, not a fixed guess at how long
+  // that takes. Falls back to the same double-rAF+macrotask settle for any
+  // dialog that never used the body-scroll-lock hook in the first place.
+  const stillLocked = await page
+    .waitForFunction(
+      () => !document.body.classList.contains("modal-open"),
+      null,
+      { timeout: 3000 },
+    )
+    .then(() => false)
+    .catch(() => true);
+  if (stillLocked) await waitForInteractiveEffectsToSettle(page);
 }
 
 // ──────────────────────────────────────────────────────────────
