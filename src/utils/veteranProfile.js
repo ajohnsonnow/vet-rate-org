@@ -1817,10 +1817,34 @@ function _sanitizeStartDateCorrection(p) {
   };
 }
 
+// D16-1 (final16 QA re-review, 2026-09-29): `__seededSources` used to be
+// set ONLY by the read-time seed (_seedSourcesIfMissing) and never
+// persisted by an ordinary save, so it silently disappeared the moment
+// _saveNGB22AdditionalPeriods's very FIRST upsert for this document (a
+// window that isn't this row) called saveServiceHistory - that save
+// re-sanitizes EVERY period in the array, not just the one it touched, so
+// every OTHER still-legacy row lost the marker before its own turn to be
+// matched ever came, well before any real second source had actually been
+// added to it. Recomputing (and so persisting) it here, from whichever of
+// the two ways a length-1 `sources` array can be "we don't really know
+// who else contributed" - it was already marked seeded, or the raw
+// (pre-sanitize) `sources` was empty and this fell into `_sanitizeSources`'s
+// own from-`sourceDocument`-alone migration fallback - keeps the marker
+// alive across every save until a real second contributor legitimately
+// arrives, exactly like `_hasNoOtherContributor`'s own use of this same
+// marker already relies on.
+function _isSeededSourcesArray(p, sources) {
+  if (sources.length !== 1) return false;
+  const rawSources = Array.isArray(p.sources) ? p.sources : [];
+  return rawSources.length === 0 || !!p.__seededSources;
+}
+
 function _sanitizeServicePeriodMetadata(p) {
+  const sources = _sanitizeSources(p);
   return {
     sourceDocument: sanitizeString(p.sourceDocument || "", 300),
-    sources: _sanitizeSources(p),
+    sources,
+    __seededSources: _isSeededSourcesArray(p, sources),
     fieldSourceDocument: _sanitizeFieldSourceDocument(p),
     // N9c: "window" marks a period as a training/activation sub-period
     // (musterCallProcessor.js's NGB-22 Box 18 extraction) rather than an
@@ -2042,11 +2066,24 @@ function _findSameDocumentIndex(periods, incoming) {
 // too, not just its current effective (corrected) start - so a later
 // re-import of the same document's unedited data still finds this period
 // instead of creating a duplicate.
-function _findCorrectionAliasIndex(periods, incoming) {
+//
+// D16-3 (final16 QA re-review, 2026-09-29): a blanket `!_scopeCompatible`
+// gate here (added alongside the Box-18 window demotion fix below) blocked
+// every cross-scope alias too, not just the sibling-collision case it was
+// meant to guard against - a corrected WINDOW's own code sheet/DD-214
+// (necessarily non-window-scoped) could then never re-confirm through the
+// veteran's correction once re-saved, and fell through to create a phantom
+// non-window period at the document's ORIGINAL (pre-correction) date
+// instead. `_isOwnSiblingWindow` is the same guard pass 2 (below) already
+// uses to tell that real risk (this incoming record's own NGB-22 sibling)
+// apart from a genuinely different document earning a legitimate
+// cross-scope match - same-scope pairs return false immediately, so this
+// is a strict narrowing of the old gate, never a loosening of it.
+function _findCorrectionAliasIndex(periods, incoming, options) {
   const incomingKey = _servicePeriodKey(incoming);
   return periods.findIndex((p) => {
     const doc = p.startDateCorrection?.documentDate;
-    if (!doc || !_scopeCompatible(p.periodScope, incoming.periodScope)) {
+    if (!doc || _isOwnSiblingWindow(p, incoming, options)) {
       return false;
     }
     if (`${doc}|${p.serviceEndDate}` === incomingKey) return true;
@@ -2143,7 +2180,20 @@ function _scopeCompatible(existingScope, incomingScope) {
 // re-confirming its own earlier link - `existing.sources` has more than
 // the one original entry, so the check stops firing and the row becomes an
 // ordinary, idempotent cross-scope merge target again.
+// D16-1 (final16 QA re-review, 2026-09-29): a legacy row from BEFORE
+// `sources` existed reads back with `__seededSources: true` and exactly one
+// fabricated entry naming whatever `sourceDocument` it already had
+// (_seedSourcesIfMissing) - every deployed veteran's Box-18 window looks
+// IDENTICAL, on read, to a row this exact call just created a moment ago
+// (both are length-1 `sources` naming the incoming NGB-22). Unlike a
+// genuinely fresh sibling, `__seededSources` never clears itself once a
+// real merge adds a second source - a re-import that STOPS at merging the
+// window back into its own single-seeded-source legacy row (the fix, not
+// the bug) leaves `__seededSources` and the 1-length array exactly as they
+// were, so the exclusion below only ever needs to run once, on the very
+// next distinct document.
 function _isSoleFreshSibling(existing, incomingSourceDocument) {
+  if (existing.__seededSources) return false;
   const sources = Array.isArray(existing.sources) ? existing.sources : [];
   return (
     !!incomingSourceDocument &&
@@ -2172,7 +2222,7 @@ function _findDatedServicePeriodIndex(periods, incoming, options) {
   index = _findSameDocumentIndex(periods, incoming);
   if (index !== -1) return index;
 
-  index = _findCorrectionAliasIndex(periods, incoming);
+  index = _findCorrectionAliasIndex(periods, incoming, options);
   if (index !== -1) return index;
 
   index = periods.findIndex(
