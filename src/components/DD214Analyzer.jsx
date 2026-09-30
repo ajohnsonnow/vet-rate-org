@@ -15,7 +15,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
-import { generateAI, getAIStatus, AI_MODES } from "../utils/unifiedAIService";
+import { generateAI, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -690,15 +690,17 @@ function _parseDd214Json(content, t) {
 // them (nothing leaves the computer) and on-device extraction of these
 // fields is allowed again. Display precedence is veteran-entered (not
 // this function's concern - a veteran's own edit happens later, in the UI,
-// after this runs once) > confident local parse = on-device model > empty.
-// An off-device (cloud) model never supplies an identifier field, even if
-// one slips past the JSON schema - the routing change means cloud never
-// even sees the document text, so any value here would be a
-// hallucination, not a read; this function enforces that anyway as
-// defense in depth. `homeAddress` is bridged separately below - the regex
-// extractor's own field for this is named `mailingAddress` (Block 19 on
-// the layouts it targets), not `homeAddress` (Block 30 in the AI schema's
-// numbering).
+// after this runs once) > confident local parse = on-device model > empty
+// - and when a confident local parse AND a trusted on-device model value
+// are both present but DISAGREE, neither is shown (empty + a flagged
+// note) rather than silently guessing one is right. An off-device (cloud)
+// model never supplies an identifier field, even if one slips past the
+// JSON schema - the routing change means cloud never even sees the
+// document text, so any value here would be a hallucination, not a read;
+// this function enforces that anyway as defense in depth. `homeAddress`
+// is bridged separately below - the regex extractor's own field for this
+// is named `mailingAddress` (Block 19 on the layouts it targets), not
+// `homeAddress` (Block 30 in the AI schema's numbering).
 const IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY = [
   "fullName",
   "lastName",
@@ -709,75 +711,144 @@ const IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY = [
   "homeOfRecord",
 ];
 
-// SWARM/WLLAMA/LOCAL are in-browser engines; LOCAL_SERVER is a local
-// server on a loopback host - all on-device per the owner decision above.
-// CLOUD, and any mode this component can't identify (e.g. a response with
-// no `mode` at all), are treated as NOT confirmed on-device - failing
-// closed here matters more than the (structurally rare) case of a
-// document-derived identifier from the vision-analysis path, which never
-// reports a mode at all.
-function _isOnDeviceModelMode(usedMode) {
-  return (
-    usedMode === AI_MODES.SWARM ||
-    usedMode === AI_MODES.WLLAMA ||
-    usedMode === AI_MODES.LOCAL ||
-    usedMode === AI_MODES.LOCAL_SERVER
-  );
+// Legacy/alternate key names a model might emit for the SAME identifiers
+// above despite the JSON schema omitting them (`name` for fullName, `ssn`
+// for ssnLast4, `serviceNumber` has no schema field at all). There is no
+// local-parser value to prefer for these - just the same on-device/
+// off-device trust gate the canonical keys get above.
+const IDENTIFIER_ALIAS_KEYS_OFF_DEVICE_ONLY = ["name", "ssn", "serviceNumber"];
+
+function _hasValue(val) {
+  return val !== undefined && val !== null && val !== "";
+}
+
+// Light normalization so cosmetic differences (case, punctuation, extra
+// spaces) between the local parser's and the on-device model's own
+// reading of the SAME document don't get flagged as a false disagreement.
+function _valuesConflict(regexValue, modelValue) {
+  const normalize = (v) =>
+    String(v ?? "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+  const a = normalize(regexValue);
+  const b = normalize(modelValue);
+  if (!a || !b) return false;
+  return a !== b;
 }
 
 // Local parse (dd214FieldExtractor.js only ever emits a value it's
-// confident about - see D16-5) wins when present. Otherwise, an on-device
-// model's own value is left as whatever mergeAIAndRegexResults already put
-// there; an off-device (or unconfirmed) model's value is cleared to an
-// empty string so Object.assign below actually overwrites it on `data`
-// rather than leaving a stale value in place.
-function _applyIdentifierFieldPrecedence(merged, regexFields, usedMode) {
-  const trustModelValue = _isOnDeviceModelMode(usedMode);
+// confident about - see D16-5) wins when present and doesn't conflict with
+// a trusted on-device model value. Otherwise, an on-device model's own
+// value is left as whatever mergeAIAndRegexResults already put there; an
+// off-device (or unconfirmed) model's value is cleared to an empty string
+// so Object.assign below actually overwrites it on `data` rather than
+// leaving a stale value in place.
+function _resolveIdentifierField(merged, key, regexValue, trustModelValue) {
+  const hasRegexValue = _hasValue(regexValue);
+  const modelValue = merged[key];
+  const hasModelValue = trustModelValue && _hasValue(modelValue);
+
+  if (
+    hasRegexValue &&
+    hasModelValue &&
+    _valuesConflict(regexValue, modelValue)
+  ) {
+    merged[key] = "";
+    return key;
+  }
+  if (hasRegexValue) {
+    merged[key] = regexValue;
+  } else if (!trustModelValue) {
+    merged[key] = "";
+  }
+  return null;
+}
+
+// `onDevice` is the CONTRACT value the provider boundary sets on the AI
+// response (see unifiedAIService.js) - only a strict `true` counts as
+// on-device; anything else (false, undefined, a truthy-but-not-`true`
+// value) fails closed, matching "Consumers treat anything other than a
+// strict `true` as off-device".
+function _applyIdentifierFieldPrecedence(merged, regexFields, onDevice) {
+  const trustModelValue = onDevice === true;
+  const disagreements = [];
 
   const resolve = (key, regexValue) => {
-    const hasRegexValue =
-      regexValue !== undefined && regexValue !== null && regexValue !== "";
-    if (hasRegexValue) {
-      merged[key] = regexValue;
-    } else if (!trustModelValue) {
-      merged[key] = "";
-    }
+    const flagged = _resolveIdentifierField(
+      merged,
+      key,
+      regexValue,
+      trustModelValue,
+    );
+    if (flagged) disagreements.push(flagged);
   };
 
   IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY.forEach((key) =>
     resolve(key, regexFields?.[key]),
   );
   resolve("homeAddress", regexFields?.mailingAddress);
+
+  if (disagreements.length > 0) {
+    merged.extractionNotes = [
+      ...(merged.extractionNotes || []),
+      `Local document parsing and the on-device model disagreed on ${disagreements.join(", ")} - cleared rather than guessing which was right.`,
+    ];
+  }
+}
+
+// Alias identifier keys have no local-parser counterpart to prefer - an
+// off-device (or unconfirmed) model's value is cleared exactly like the
+// canonical keys above; a trusted on-device model's value is left as-is.
+// Runs unconditionally, outside any try/catch that could swallow it -
+// clearing must be fail-closed, never skipped because something else
+// upstream threw (see D16-5 QA finding: a merge exception used to leave a
+// cloud-supplied alias value on `data` untouched).
+function _clearOffDeviceIdentifierAliases(data, onDevice) {
+  if (onDevice === true) return;
+  IDENTIFIER_ALIAS_KEYS_OFF_DEVICE_ONLY.forEach((key) => {
+    if (_hasValue(data[key])) data[key] = "";
+  });
+}
+
+function _mergeRegexIntoData(data, combinedRawText) {
+  let regexResult = null;
+  try {
+    regexResult = extractDD214Fields(combinedRawText);
+  } catch (extractErr) {
+    console.warn(
+      "Regex field extraction failed (non-fatal):",
+      extractErr.message,
+    );
+    return null;
+  }
+  try {
+    if (regexResult && Object.keys(regexResult).length > 0) {
+      const merged = mergeAIAndRegexResults(data, regexResult);
+      Object.assign(data, merged);
+    }
+  } catch (mergeErr) {
+    console.warn("Regex/AI merge failed (non-fatal):", mergeErr.message);
+    // AI-only results are still valid - identifier precedence below still
+    // runs regardless, so this doesn't leave an off-device identifier
+    // displayed.
+  }
+  return regexResult;
 }
 
 export function _applyRegexSafetyNet(
   data,
   combinedRawText,
   setAnalysisResult,
-  usedMode,
+  onDevice,
 ) {
-  try {
-    const regexResult = extractDD214Fields(combinedRawText);
-    if (regexResult && Object.keys(regexResult).length > 0) {
-      const merged = mergeAIAndRegexResults(data, regexResult);
-      _applyIdentifierFieldPrecedence(merged, regexResult.fields, usedMode);
-      // eslint-disable-next-line no-console
-      console.log(
-        "🔀 Merged AI + Regex results:",
-        Object.keys(merged).length,
-        "fields",
-      );
-      // Update the result in state with merged data
-      Object.assign(data, merged);
-      setAnalysisResult({ ...data });
-    }
-  } catch (regexErr) {
-    console.warn(
-      "Regex field extraction failed (non-fatal):",
-      regexErr.message,
-    );
-    // AI-only results are still valid - this is just the safety net
-  }
+  const regexResult = _mergeRegexIntoData(data, combinedRawText);
+
+  // Both run unconditionally (fail-closed), regardless of whether
+  // extraction/merge above threw or found nothing.
+  _applyIdentifierFieldPrecedence(data, regexResult?.fields, onDevice);
+  _clearOffDeviceIdentifierAliases(data, onDevice);
+
+  setAnalysisResult({ ...data });
 }
 
 // The same label _saveDd214ToVkb uses to identify this analysis, so
@@ -2646,15 +2717,17 @@ function _buildDd214AnalysisHandlers(state) {
       // merge with AI results. If AI missed a field but regex found it,
       // the regex value fills the gap. If both have a value, AI wins for
       // complex fields, regex wins for structured fields like dates/MOS.
-      // `response?.mode` (undefined for the vision path) tells
-      // _applyRegexSafetyNet which backend actually answered, so it can
-      // keep an on-device model's own identifier value but never an
-      // off-device one - see D16-5.
+      // `response?.onDevice` is the CONTRACT the provider boundary sets on
+      // every generateAI response (set from the engine/host actually
+      // used, undefined for the vision path) - _applyRegexSafetyNet only
+      // trusts a strict `true`, so it can keep an on-device model's own
+      // identifier value but never an off-device (or unidentified) one -
+      // see D16-5.
       _applyRegexSafetyNet(
         data,
         _getDd214CombinedText(pastedText, extractedTexts),
         setAnalysisResult,
-        response?.mode,
+        response?.onDevice,
       );
 
       // Automatically trigger the save flow to show import confirmation

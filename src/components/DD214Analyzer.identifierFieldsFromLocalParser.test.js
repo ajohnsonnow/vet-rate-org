@@ -56,7 +56,6 @@ vi.mock("../utils/smolVLMService", () => ({
   isSmolVLMSupported: () => false,
 }));
 
-import { AI_MODES } from "../utils/unifiedAIService";
 import {
   DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL,
   DD214_ANALYSIS_SYSTEM_PROMPT,
@@ -173,53 +172,79 @@ DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
 `;
 
 describe("D16-5: on-device/off-device precedence when the local parser finds nothing", () => {
-  it("keeps an on-device (SWARM) model's own identifier value", () => {
+  it("keeps an on-device model's own identifier value (onDevice: true)", () => {
     const data = { branch: "Army", fullName: "ON-DEVICE MODEL, ANSWER" };
-    _applyRegexSafetyNet(
-      data,
-      NO_IDENTIFIER_BOXES_TEXT,
-      () => {},
-      AI_MODES.SWARM,
-    );
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
     expect(data.fullName).toBe("ON-DEVICE MODEL, ANSWER");
   });
 
-  it("keeps an on-device (LOCAL_SERVER) model's own identifier value", () => {
-    const data = { branch: "Army", dateOfBirth: "1984-03-15" };
-    _applyRegexSafetyNet(
-      data,
-      NO_IDENTIFIER_BOXES_TEXT,
-      () => {},
-      AI_MODES.LOCAL_SERVER,
-    );
-    expect(data.dateOfBirth).toBe("1984-03-15");
-  });
-
-  it("clears an off-device (CLOUD) model's identifier value rather than showing it", () => {
+  it("clears an off-device model's identifier value rather than showing it (onDevice: false)", () => {
     const data = { branch: "Army", fullName: "CLOUD MODEL, ANSWER" };
-    _applyRegexSafetyNet(
-      data,
-      NO_IDENTIFIER_BOXES_TEXT,
-      () => {},
-      AI_MODES.CLOUD,
-    );
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, false);
     expect(data.fullName).toBe("");
   });
 
-  it("clears an identifier value when the backend mode is unknown (fails closed)", () => {
+  it("clears an identifier value when onDevice is undefined (fails closed)", () => {
     const data = { branch: "Army", homeOfRecord: "UNKNOWN-MODE ANSWER" };
     _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, undefined);
     expect(data.homeOfRecord).toBe("");
   });
 
+  it("clears an identifier value when onDevice is truthy but not strictly true (fails closed)", () => {
+    const data = { branch: "Army", fullName: "TRUTHY-STRING MODE ANSWER" };
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, "true");
+    expect(data.fullName).toBe("");
+  });
+
   it("clears homeAddress (the AI schema's Block-30 name) the same way when off-device", () => {
     const data = { branch: "Army", homeAddress: "CLOUD MODEL ADDRESS" };
-    _applyRegexSafetyNet(
-      data,
-      NO_IDENTIFIER_BOXES_TEXT,
-      () => {},
-      AI_MODES.CLOUD,
-    );
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, false);
     expect(data.homeAddress).toBe("");
+  });
+
+  it("clears alias identifier keys (name/ssn/serviceNumber) off-device even though the local parser never produces them", () => {
+    const data = {
+      branch: "Army",
+      name: "CLOUD MODEL, ALIAS",
+      ssn: "999-99-9999",
+      serviceNumber: "RA99999999",
+    };
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, false);
+    expect(data.name).toBe("");
+    expect(data.ssn).toBe("");
+    expect(data.serviceNumber).toBe("");
+  });
+
+  it("leaves alias identifier keys alone when onDevice is true", () => {
+    const data = {
+      branch: "Army",
+      name: "ON-DEVICE MODEL, ALIAS",
+      ssn: "111-22-3333",
+      serviceNumber: "RA11112222",
+    };
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
+    expect(data.name).toBe("ON-DEVICE MODEL, ALIAS");
+    expect(data.ssn).toBe("111-22-3333");
+    expect(data.serviceNumber).toBe("RA11112222");
+  });
+
+  // A non-array combatService (e.g. a model emitting the string "Yes"
+  // instead of the schema's object shape) makes mergeCombatServiceIndicators
+  // throw when the document has a real combat decoration - identifier
+  // clearing must still run (fail-closed), never be skipped because this
+  // unrelated merge step threw. Confirmed via a temporary base-commit
+  // (cc34ecbb) snapshot that this exact scenario leaked the planted
+  // sentinel there.
+  it("clears an off-device identifier even when the combatService merge step throws", () => {
+    const data = {
+      branch: "Army",
+      fullName: "CLOUD MODEL, WRONG",
+      combatService: "not-an-object",
+    };
+    const text =
+      "1. NAME: DOE, JORDAN R\n13. DECORATIONS: COMBAT INFANTRYMAN BADGE\n14. MILITARY EDUCATION: NONE\n";
+    _applyRegexSafetyNet(data, text, () => {}, false);
+    expect(data.fullName).not.toBe("CLOUD MODEL, WRONG");
+    expect(data.fullName).toBe("DOE, JORDAN R");
   });
 });
