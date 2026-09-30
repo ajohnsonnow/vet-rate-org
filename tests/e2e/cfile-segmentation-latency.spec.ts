@@ -14,12 +14,14 @@
  * The fixture text reuses dkb-import-latency.spec.ts's medical-narrative
  * word list (proven live to classify as C_FILE_MEDICAL by that spec's own
  * doc comment) at a larger scale, packed into real PDF pages dense enough
- * to carry ~13M characters within the 20 real pages advancedOCR.js's
+ * to carry ~6.7M characters, well inside the 20 real pages advancedOCR.js's
  * MAX_OCR_PAGES actually extracts from a <50MB PDF (see
  * PDF_LINES_PER_PAGE's doc comment) - on base, a direct Node profile
  * against segmentCFile/vaCodeSheet.js at a comparable character count
  * measured ~1.4s of synchronous work, well past this spec's 500ms/1000ms
- * budgets with margin.
+ * budgets with margin. This fixture also carries no code-sheet header at
+ * all (plain progress-note narrative), the shape that hits the most
+ * expensive code-sheet-phase fallback path.
  */
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -180,7 +182,7 @@ async function drawLinesAsPages(
   }
 }
 
-// ~13M characters, within advancedOCR.js's 20-real-page cap (see
+// ~6.7M characters, well within advancedOCR.js's 20-real-page cap (see
 // PDF_LINES_PER_PAGE's doc comment) - large enough that base's unchunked
 // segmentation phase blocks for over a second (see file doc comment).
 async function buildFixturePdfBytes(): Promise<Buffer> {
@@ -302,12 +304,22 @@ async function createFileInput(page: Page): Promise<void> {
 // exact entry point into the risky synchronous pass this spec targets.
 const SEGMENTATION_STARTING_LOG = "📚 Using enhanced C-File Segmentation...";
 
+// buildSegmentedCFileResult logs this once segmentCFileChunked finishes and
+// before the code-sheet phase (parseRatingCodeSheetsChunked, and its
+// no-code-sheet fallback) starts - D19-7 item 1's own phase, distinct from
+// (and running well after) SEGMENTATION_STARTING_LOG above. The original
+// version of this spec only ever pressed at SEGMENTATION_STARTING_LOG, so a
+// regression that re-lengthens any later phase (this one included) could
+// pass unnoticed - see this file's own defect history.
+const SEGMENTED_INTO_LOG = "✅ Segmented C-File into";
+
 async function startBackgroundImport(
   page: Page,
   filePath: string,
+  waitForLog: string = SEGMENTATION_STARTING_LOG,
 ): Promise<void> {
-  const segmentationStarting = page.waitForEvent("console", {
-    predicate: (msg) => msg.text().includes(SEGMENTATION_STARTING_LOG),
+  const logSeen = page.waitForEvent("console", {
+    predicate: (msg) => msg.text().includes(waitForLog),
     timeout: 60_000,
   });
   await page.locator("#__cfile_seg_latency_file_input").setInputFiles(filePath);
@@ -320,7 +332,7 @@ async function startBackgroundImport(
     if (!file || !mods) return;
     mods.musterMod.processFormationDocument(file).catch(() => {});
   });
-  await segmentationStarting;
+  await logSeen;
 }
 
 async function measureKeydownToNavigation(page: Page): Promise<number> {
@@ -362,7 +374,7 @@ async function withCPUThrottle(
 }
 
 test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", () => {
-  // Every test here imports the same ~13M-char real PDF - CPU-heavy in its
+  // Every test here imports the same ~6.7M-char real PDF - CPU-heavy in its
   // own right, and the 4x-throttle tests are sensitive to contention from
   // other tests' Chromium instances running at the same time (same
   // rationale as dkb-import-latency.spec.ts's cold-cache describe block).
@@ -466,6 +478,110 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
     // eslint-disable-next-line no-console
     console.log(
       `[cfile-seg-latency] Quick Exit during segmentation (4x): ${latencyMs}ms`,
+    );
+
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(latencyMs).toBeLessThan(LATENCY_TRIGGER_4X_MS);
+  });
+
+  // D19-7 item 1: the code-sheet phase (parseRatingCodeSheetsChunked and its
+  // no-code-sheet fallback) runs right after SEGMENTED_INTO_LOG, and this
+  // fixture carries no code sheet at all - the shape that used to fall
+  // through to the most expensive, least-chunked path. The four tests above
+  // only ever pressed at SEGMENTATION_STARTING_LOG, well before this phase
+  // even starts, so a regression here could pass unnoticed.
+  test("triple-Escape still redirects promptly right as the code-sheet phase begins (1x)", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    const fixturePath = await getFixturePdfPath();
+    await stubWeatherRedirect(page);
+    await prepareImportReadyPage(page);
+
+    await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
+    const latencyMs = await measureKeydownToNavigation(page);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[cfile-seg-latency] triple-Escape during code-sheet phase: ${latencyMs}ms`,
+    );
+
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(latencyMs).toBeLessThan(LATENCY_TRIGGER_1X_MS);
+  });
+
+  test("Quick Exit still redirects promptly right as the code-sheet phase begins (1x)", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    const fixturePath = await getFixturePdfPath();
+    await stubWeatherRedirect(page);
+    await prepareImportReadyPage(page);
+
+    const box = await page.locator(QUICK_EXIT_SELECTOR).first().boundingBox();
+    if (!box) throw new Error("Quick Exit button has no bounding box");
+
+    await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
+    const latencyMs = await measureClickToNavigation(page, box);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[cfile-seg-latency] Quick Exit during code-sheet phase: ${latencyMs}ms`,
+    );
+
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(latencyMs).toBeLessThan(LATENCY_TRIGGER_1X_MS);
+  });
+
+  test("triple-Escape still redirects within budget right as the code-sheet phase begins under a 4x CPU throttle", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== "chromium",
+      "CPU throttling is a Chromium CDP feature.",
+    );
+    test.setTimeout(180_000);
+    const fixturePath = await getFixturePdfPath();
+    await stubWeatherRedirect(page);
+    await prepareImportReadyPage(page);
+
+    let latencyMs = 0;
+    await withCPUThrottle(page, 4, async () => {
+      await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
+      latencyMs = await measureKeydownToNavigation(page);
+    });
+    // eslint-disable-next-line no-console
+    console.log(
+      `[cfile-seg-latency] triple-Escape during code-sheet phase (4x): ${latencyMs}ms`,
+    );
+
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(latencyMs).toBeLessThan(LATENCY_TRIGGER_4X_MS);
+  });
+
+  test("Quick Exit still redirects within budget right as the code-sheet phase begins under a 4x CPU throttle", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== "chromium",
+      "CPU throttling is a Chromium CDP feature.",
+    );
+    test.setTimeout(180_000);
+    const fixturePath = await getFixturePdfPath();
+    await stubWeatherRedirect(page);
+    await prepareImportReadyPage(page);
+
+    const box = await page.locator(QUICK_EXIT_SELECTOR).first().boundingBox();
+    if (!box) throw new Error("Quick Exit button has no bounding box");
+
+    let latencyMs = 0;
+    await withCPUThrottle(page, 4, async () => {
+      await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
+      latencyMs = await measureClickToNavigation(page, box);
+    });
+    // eslint-disable-next-line no-console
+    console.log(
+      `[cfile-seg-latency] Quick Exit during code-sheet phase (4x): ${latencyMs}ms`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
