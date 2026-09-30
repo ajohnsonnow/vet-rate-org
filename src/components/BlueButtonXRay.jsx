@@ -801,7 +801,49 @@ function BlueButtonHeader({ onClose, onOpenAISettings, onReportBug }) {
 // decision the actual analysis call uses, so this banner can never say
 // "Cloud AI" for a call that was always going to be on-device-only or
 // blocked.
-function InfoBanner() {
+//
+// D19 follow-up: the "Load an on-device AI to enable this" CTA used to
+// show whenever `onDeviceReady` was false, regardless of whether a load
+// button is actually on screen to click. `SmartAILoadPrompt` below only
+// renders while `!isAnyAIAvailable()` - a cloud-configured veteran has
+// `isAnyAIAvailable()` true (cloud counts), so the button is hidden while
+// this banner still pointed them at it. `aiAvailable` is the same
+// `isAnyAIAvailable()` result `BlueButtonUploadContent` already computes
+// to decide whether to render that button, so the two can never disagree
+// again. Still not reactive to a later AI-state change within the same
+// render (documented, not silently assumed) - re-rendering this banner
+// live as AI status changes would need the caller to pass a subscribed
+// value rather than a one-time read, a larger change than this copy fix.
+function _infoBannerAIMessage(onDeviceReady, aiAvailable) {
+  if (onDeviceReady) {
+    return (
+      <>
+        🤖 <strong>AI-Powered:</strong> Uses your on-device AI to intelligently
+        extract diagnoses. Your data never leaves your device!
+      </>
+    );
+  }
+  if (aiAvailable) {
+    return (
+      <>
+        🤖 <strong>AI-Powered (on-device only):</strong> Diagnoses are only ever
+        extracted by an on-device AI, never sent to a cloud AI. Your configured
+        AI is cloud-only, so the app's built-in document reader is used instead
+        for this report.
+      </>
+    );
+  }
+  return (
+    <>
+      🤖 <strong>AI-Powered (on-device only):</strong> Diagnoses are only ever
+      extracted by an on-device AI, never sent to a cloud AI. Load an on-device
+      AI to enable this - without one, the app's built-in document reader is
+      used instead.
+    </>
+  );
+}
+
+export function InfoBanner({ aiAvailable }) {
   const { onDeviceReady } = getDocumentAIRouting();
   return (
     <div className="bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 p-4 mb-6 rounded-r-lg">
@@ -826,20 +868,7 @@ function InfoBanner() {
             <strong>today</strong>.
           </p>
           <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
-            {onDeviceReady ? (
-              <>
-                🤖 <strong>AI-Powered:</strong> Uses your on-device AI to
-                intelligently extract diagnoses. Your data never leaves your
-                device!
-              </>
-            ) : (
-              <>
-                🤖 <strong>AI-Powered (on-device only):</strong> Diagnoses are
-                only ever extracted by an on-device AI, never sent to a cloud
-                AI. Load an on-device AI to enable this - without one, the app's
-                built-in document reader is used instead.
-              </>
-            )}
+            {_infoBannerAIMessage(onDeviceReady, aiAvailable)}
           </p>
         </div>
       </div>
@@ -1401,7 +1430,7 @@ function BlueButtonUploadContent({
   return (
     <>
       {/* Info Banner */}
-      <InfoBanner />
+      <InfoBanner aiAvailable={aiAvailable} />
 
       {/* Smart AI Load Button */}
       {!aiAvailable && <SmartAILoadPrompt />}
