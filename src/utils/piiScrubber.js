@@ -39,6 +39,128 @@ const FENCE_TAG = /<(?:\s*\/)?\s*untrusted_content\s*>/gi;
 const neutralizeFence = (text) =>
   String(text ?? "").replace(FENCE_TAG, "[untrusted_content]");
 
+// D16-6: Tesseract's most common label-text misread - a capital "O" comes
+// back as a zero ("S0CIAL SECURITY", "H0ME 0F REC0RD", state code "0R"). Only
+// applied to specific LABEL/state-code literals below (never to free-running
+// prose), so a real "0" a document actually prints elsewhere is untouched -
+// this only widens what counts as a match for these fixed, known words.
+const _o0 = (word) => word.replace(/O/g, "[O0]");
+
+// Shared 2-letter/spelled-out US state lists - built once and reused by both
+// the with-ZIP `cityStateZip` variants and the labeled `stateLabeled` field,
+// so "is this actually a state" is answered the same way in both places
+// instead of two lists silently drifting apart.
+const _STATE_ABBR_SRC = [
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
+  "DC",
+  "PR",
+  "GU",
+  "VI",
+]
+  .map(_o0)
+  .join("|");
+const _STATE_NAME_SRC = [
+  "Alabama",
+  "Alaska",
+  "Arizona",
+  "Arkansas",
+  "California",
+  "Colorado",
+  "Connecticut",
+  "Delaware",
+  "Florida",
+  "Georgia",
+  "Hawaii",
+  "Idaho",
+  "Illinois",
+  "Indiana",
+  "Iowa",
+  "Kansas",
+  "Kentucky",
+  "Louisiana",
+  "Maine",
+  "Maryland",
+  "Massachusetts",
+  "Michigan",
+  "Minnesota",
+  "Mississippi",
+  "Missouri",
+  "Montana",
+  "Nebraska",
+  "Nevada",
+  "New\\s{1,3}Hampshire",
+  "New\\s{1,3}Jersey",
+  "New\\s{1,3}Mexico",
+  "New\\s{1,3}York",
+  "North\\s{1,3}Carolina",
+  "North\\s{1,3}Dakota",
+  "Ohio",
+  "Oklahoma",
+  "Oregon",
+  "Pennsylvania",
+  "Rhode\\s{1,3}Island",
+  "South\\s{1,3}Carolina",
+  "South\\s{1,3}Dakota",
+  "Tennessee",
+  "Texas",
+  "Utah",
+  "Vermont",
+  "Virginia",
+  "Washington",
+  "West\\s{1,3}Virginia",
+  "Wisconsin",
+  "Wyoming",
+].join("|");
+
 // Pattern application order matters: longest / most-specific first so the
 // less-specific catchalls don't consume tokens they shouldn't. Listed in the
 // order `scrubPII` applies them.
@@ -81,15 +203,21 @@ const PII_PATTERNS = {
   ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
   ssnBare: /\b\d{9}\b/g,
 
-  // D16-5: OCR letter-for-digit substitution inside an SSN's 3-2-4 grouping
-  // ("l23-O5-678l" for "123-05-6781" - O/o for 0, I/l for 1). Always on
-  // (not aggressive-only): the grouping shape itself is the anchor, and the
+  // D16-5/D16-6: OCR letter-for-digit substitution inside an SSN's 3-2-4
+  // grouping ("l23-O5-678l" for "123-05-6781" - O/o for 0, I/l for 1, S/s
+  // for 5, B/b for 8) with a comma/colon added to the separator set
+  // (Tesseract sometimes reads a hyphen as either). Always on (not
+  // aggressive-only): the grouping shape itself is the anchor, and the
   // replacer below (see scrubPII) additionally requires a majority of the
   // 9 characters to already be real digits before redacting, so it can't
   // sweep up a run of ordinary letters that merely happens to fall into
-  // 3-2-4 chunks.
+  // 3-2-4 chunks. Deliberately NOT widened to tolerate a stray space
+  // *inside* a group (e.g. typewriter "1 2 3 - 4 5 - 6 7 8 9") - per-digit
+  // spacing would mean matching against ordinary space-separated prose
+  // instead of a fixed 3-2-4 shape, which is exactly the over-redaction
+  // failure mode this task asked to remove elsewhere, not add here.
   ssnOcrGarbled:
-    /\b[0-9OoIl]{3}[\s.\-_|]{1,3}[0-9OoIl]{2}[\s.\-_|]{1,3}[0-9OoIl]{4}\b/g,
+    /\b[0-9OoIlSsBb]{3}[\s.\-_|,:]{1,3}[0-9OoIlSsBb]{2}[\s.\-_|,:]{1,3}[0-9OoIlSsBb]{4}\b/g,
 
   // MRN — medical record number, labeled or numeric.
   mrn: /\bMRN[:\s#-]*\d{6,12}\b/gi,
@@ -100,12 +228,22 @@ const PII_PATTERNS = {
   // numeric patterns above.
   email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
 
-  // D16-5: OCR-garbled email - small (0-2 char) whitespace runs around "@"
-  // and each "." that the strict pattern above doesn't tolerate
+  // D16-5/D16-6: OCR-garbled email - small (0-2 char) whitespace runs around
+  // "@" and each "." that the strict pattern above doesn't tolerate
   // ("john.smith @ gmail . com"). The "@" stays a required literal, so this
   // can't fire on ordinary prose that merely contains "at"/"dot" text.
+  // Narrowed to require the FINAL segment be a real top-level domain from a
+  // fixed list, rather than any capitalized word - clinical shorthand for
+  // "at" ("limited @ 45. Extension full.", "25 mg @ bedtime. Patient
+  // reports...") has the same @-then-word-then-dot-then-word shape but
+  // never ends in an actual TLD, so it no longer matches. Every quantifier
+  // is bounded ({1,64}/{1,63}/{0,3}) instead of unbounded `+` - both to
+  // enforce the TLD anchor and to stop this pattern from re-scanning long
+  // pathological runs of word-characters-and-dots from every start
+  // position (the quadratic-scan finding).
   emailOcrSpaced:
-    /\b[A-Za-z0-9._%+-]+[ \t]{0,2}@[ \t]{0,2}[A-Za-z0-9-]+(?:[ \t]{0,2}\.[ \t]{0,2}[A-Za-z0-9-]+){1,4}\b/g,
+    // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on the TLD alternation count and the redundant A-Za-z under /i, not on backtracking; every quantifier bounded (see comment above)
+    /\b[A-Za-z0-9._%+-]{1,64}[ \t]{0,2}@[ \t]{0,2}[A-Za-z0-9-]{1,63}(?:[ \t]{0,2}\.[ \t]{0,2}[A-Za-z0-9-]{1,63}){0,3}[ \t]{0,2}\.[ \t]{0,2}(?:com|net|org|edu|gov|mil|io|co|us|info|biz)\b/gi,
 
   // Dates of birth — labeled or unlabeled numeric. Aggressive only.
   // Security review note: flagged for high regex complexity (51 vs 20) on a
@@ -146,36 +284,38 @@ const PII_PATTERNS = {
   militaryBoxLine:
     /\b(?:PSC|CMR|UNIT)\s{1,3}\d{1,5}\s{1,3}BOX\s{1,3}\d{1,5}\b/gi,
 
-  // D15-1a/D16-5: the second line of a US mailing address block - "City, ST
-  // 12345" or "City, ST 12345-6789" - split into 4 variants (abbreviation
-  // vs spelled-out state name, crossed with ZIP present vs absent) instead
-  // of one pattern, because the two asks pull in opposite directions:
+  // D15-1a/D16-5/D16-6: the second line of a US mailing address block -
+  // "City, ST 12345" or "City, ST 12345-6789". A verifier proved the earlier
+  // no-ZIP, unlabeled variants of this pattern (a bare comma then a state
+  // code/name, anchored on NOTHING else) fire constantly on ordinary legal
+  // and clinical prose - "Accordingly, VA has determined...", "PTSD, MS,
+  // and diabetes...", "Camp Lejeune, North Carolina", "GU" (genitourinary),
+  // "SC" (service-connected), ", OR" in rating-criteria text, "Georgia" in
+  // a burn-pit-exposure country list. A comma followed by a short/common
+  // word is simply too weak an anchor on its own. Those no-ZIP/unlabeled
+  // variants are REMOVED here, not narrowed - free-running prose has no
+  // structural signal left once the ZIP is gone. The "with or without ZIP"
+  // ask for a label-anchored address (a DD-214 box, a City:/State:/Zip
+  // code: field) is still honored - see the labelOnly HOME OF RECORD /
+  // MAILING ADDRESS box patterns and cityLabeled/stateLabeled/zipLabeled
+  // below, which get the real anchor a bare comma never had.
   //
-  // - 2-letter abbreviations stay case-SENSITIVE (exact ALL-CAPS, as real
-  //   addresses print them) so a lowercase sentence word that happens to
-  //   collide with a state code ("in", "or", "va") can't false-positive -
-  //   a blanket /i here would be a real over-redaction regression.
-  // - Spelled-out state names ARE matched case-insensitively (D16-5: "make
-  //   cityStateZip case-insensitive") - they're long enough that
-  //   lowercasing them doesn't collide with ordinary short words the way a
-  //   2-letter code would.
-  // - The ZIP is now optional (D16-5: "with or without ZIP") for BOTH
-  //   variants, but that removes the ZIP's own digit-shape as an anchor -
-  //   so the no-ZIP variants require the comma before the state (the only
-  //   remaining structural signal); the with-ZIP variants keep the comma
-  //   optional as before, since the ZIP itself is anchor enough.
-  //
-  // The prefix classes use `[ \t]` (never `\n`) so a preceding sentence on
+  // The ZIP itself is the anchor for what's left, so BOTH variants below
+  // (2-letter code, spelled-out name) are safely case-insensitive - a
+  // lowercase state word directly followed by 5 digits ("springfield, il
+  // 62704") is not realistic ordinary prose. The 2-letter codes also tolerate
+  // Tesseract's O-for-0 misread (`_o0`, e.g. Oregon's "OR" read as "0R").
+  // The prefix class uses `[ \t]` (never `\n`) so a preceding sentence on
   // its OWN line can't be pulled into the match across a line break.
   cityStateZip: [
-    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the 50-state alternation count, not backtracking; each branch is a fixed literal, no nested quantifiers.
-    /\b[A-Za-z][A-Za-z \t.'-]{1,40},?[ \t]{1,3}(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|PR|GU|VI)\b\.?,?[ \t]{1,3}\d{5}(?:-\d{4})?\b/g,
-    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the 50-state alternation count, not backtracking; each branch is a fixed literal, no nested quantifiers.
-    /\b[A-Za-z][A-Za-z \t.'-]{1,40},[ \t]{1,3}(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC|PR|GU|VI)\b\.?(?![ \t]{0,3}\d)/g,
-    // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on the 50-state alternation count and the redundant A-Za-z under /i, not on backtracking; each branch is a fixed literal, no nested quantifiers.
-    /\b[A-Za-z][A-Za-z \t.'-]{1,40},?[ \t]{1,3}(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s{1,3}Hampshire|New\s{1,3}Jersey|New\s{1,3}Mexico|New\s{1,3}York|North\s{1,3}Carolina|North\s{1,3}Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s{1,3}Island|South\s{1,3}Carolina|South\s{1,3}Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s{1,3}Virginia|Wisconsin|Wyoming)\b\.?,?[ \t]{1,3}\d{5}(?:-\d{4})?\b/gi,
-    // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on the 50-state alternation count and the redundant A-Za-z under /i, not on backtracking; each branch is a fixed literal, no nested quantifiers.
-    /\b[A-Za-z][A-Za-z \t.'-]{1,40},[ \t]{1,3}(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New\s{1,3}Hampshire|New\s{1,3}Jersey|New\s{1,3}Mexico|New\s{1,3}York|North\s{1,3}Carolina|North\s{1,3}Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode\s{1,3}Island|South\s{1,3}Carolina|South\s{1,3}Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West\s{1,3}Virginia|Wisconsin|Wyoming)\b\.?(?![ \t]{0,3}\d)/gi,
+    new RegExp(
+      `\\b[A-Za-z][A-Za-z \\t.'-]{1,40},?[ \\t]{1,3}(?:${_STATE_ABBR_SRC})\\b\\.?,?[ \\t]{1,3}\\d{5}(?:-\\d{4})?\\b`,
+      "gi",
+    ),
+    new RegExp(
+      `\\b[A-Za-z][A-Za-z \\t.'-]{1,40},?[ \\t]{1,3}(?:${_STATE_NAME_SRC})\\b\\.?,?[ \\t]{1,3}\\d{5}(?:-\\d{4})?\\b`,
+      "gi",
+    ),
   ],
 
   // D16-5: explicitly labeled "City:"/"State:"/"Zip code:" fields (a form
@@ -184,8 +324,14 @@ const PII_PATTERNS = {
   // sees) still gets its own value covered.
   // eslint-disable-next-line sonarjs/duplicates-in-character-class -- the A-Za-z is redundant under /i (flagged), kept explicit for readability
   cityLabeled: /\bCity[ \t]{0,5}:[ \t]{0,5}[A-Za-z][A-Za-z \t.'-]{1,40}\b/gi,
-  // eslint-disable-next-line sonarjs/duplicates-in-character-class -- the A-Za-z is redundant under /i (flagged), kept explicit for readability
-  stateLabeled: /\bState[ \t]{0,5}:[ \t]{0,5}[A-Za-z][A-Za-z \t.'-]{1,20}\b/gi,
+  // D16-6: narrowed to an actual state name/code value - "State:" is also a
+  // common clinical-form label for something else entirely ("Emotional
+  // State: Anxious and depressed", "Mental state: depressed mood"), so the
+  // label alone isn't a safe anchor; requiring the value be a real state is.
+  stateLabeled: new RegExp(
+    `\\bState[ \\t]{0,5}:[ \\t]{0,5}(?:${_STATE_ABBR_SRC}|${_STATE_NAME_SRC})\\b\\.?`,
+    "gi",
+  ),
   zipLabeled:
     /\bZip(?:[ \t]{1,3}code)?[ \t]{0,5}:[ \t]{0,5}\d{5}(?:-\d{4})?\b/gi,
 
@@ -200,11 +346,20 @@ const PII_PATTERNS = {
   // same shape as a ZIP+4 for its first two segments.
   zip4Bare: /(?<!ndc[ \t]{0,5})\b\d{5}-\d{4}\b(?!-\d)/gi,
 
-  // D16-5: "Patient: NAME (NNNN)" - a labeled EHR/medical-record header
-  // line pairing a name with a short numeric ID in parentheses.
+  // D16-5/D16-6: "Patient: NAME (NNNN)" - a labeled EHR/medical-record
+  // header line pairing a name with a short numeric ID in parentheses.
+  // Narrowed to require the value look like a NAME (1-4 capitalized
+  // tokens, each starting with an uppercase letter - this also matches an
+  // ALL-CAPS name, since the run after the first letter allows any case) -
+  // the original free-text value matched an entire clinical sentence
+  // ending in a parenthesized year ("Patient: reports worsening tinnitus
+  // since discharge (2012)."), which starts with a lowercase word and so no
+  // longer qualifies. Case-sensitive on purpose (no /i) so the name-shape
+  // check itself can't be defeated by lower-casing "reports worsening...";
+  // the label alternation instead lists both cases it can appear in.
   patientLabeled:
-    // eslint-disable-next-line sonarjs/duplicates-in-character-class -- the A-Za-z is redundant under /i (flagged), kept explicit for readability
-    /\bPatient[ \t]{0,5}:[ \t]{0,5}[A-Za-z][A-Za-z,.\s'-]{1,60}\([ \t]{0,3}\d{2,10}[ \t]{0,3}\)/gi,
+    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the repeated name-token grouping, not backtracking; every quantifier bounded
+    /\b(?:Patient|PATIENT)[ \t]{0,5}:[ \t]{0,5}[A-Z][A-Za-z'-]{0,20},?[ \t]{1,3}[A-Z][A-Za-z'-]{0,20}(?:[ \t]{1,3}[A-Z][A-Za-z'-]{0,20}){0,2}[ \t]{0,3}\([ \t]{0,3}\d{2,10}[ \t]{0,3}\)/g,
 };
 
 /**
@@ -267,21 +422,49 @@ const normalizeForScan = (text) =>
 // hint text itself instead, redacting "(Last, First, Middle)" and leaving
 // the real name on the next line untouched.
 // D16-5: a trailing garbled suffix OCR leaves on the label line itself
-// ("SOCIAL SECURITY.N" from a mangled "NO.") - a short period-led run of
-// letters/periods, bounded so it can't reach into an actual value on the
-// same line. Added as its own alternative rather than widened into the
-// NO./NUMBER/# hint above, which stays exact so it can't itself absorb a
-// same-line numeric value.
-const _LABEL_OCR_SUFFIX = "(?:[ \\t]{0,10}\\.[A-Za-z]{0,6}\\.?)?";
+// ("SOCIAL SECURITY.N" from a mangled "NO.") - a period then a short run
+// of letters. D16-6: that run was originally ANY 0-6 letters, which is
+// exactly the shape of a value glued directly to the label with no space
+// ("1. NAME.DOE, JOHN A", "7B. HOME OF RECORD.ANYTOWN, TX") - up to 6
+// characters of the real name/city leaked into the "label" this way and
+// survived redaction. Narrowed to only the letters that are actually a
+// prefix of the garbled word this suffix exists for ("NO."/"NUMBER") -
+// "DOE"/"ANYTOW"/"ROE" don't start with "N", so they no longer qualify as
+// label text and fall through to the value group instead.
+const _LABEL_OCR_SUFFIX =
+  "(?:[ \\t]{0,10}\\.[ \\t]{0,10}(?:N|NO|NUM|NUMB|NUMBE|NUMBER)\\.?)?";
 const _LABEL_HINT =
   "(?:[ \\t]{0,10}\\([^)\\n]{0,60}\\))?(?:[ \\t]{0,10}(?:NO\\.?|NUMBER|#))?" +
   _LABEL_OCR_SUFFIX;
 
+// D16-6: a date-shaped value only - used for the DATE OF BIRTH box label so
+// its labelOnly/free-form form can't swallow a full line of unrelated prose
+// the way an open `[^\n]{2,N}` value class did ("date of birth\nand then
+// evaluated tinnitus under DC 6260." previously redacted the entire next
+// line). Mirrors the shapes `dob`/`dobLabeled` already accept elsewhere in
+// this file, plus the military "DD Mon YYYY" print format, an ISO
+// "YYYY-MM-DD" (the VKB's own stored format - see `_parseDobParts` below,
+// which already recognizes it), and a bare 8-digit "YYYYMMDD" -
+// deliberately NOT open-ended free text.
+const _MONTH_NAME_SRC =
+  "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]{0,10}\\.?";
+const _DATE_VALUE_SOURCE =
+  "(?:" +
+  "\\d{4}-\\d{1,2}-\\d{1,2}" + // YYYY-MM-DD (ISO)
+  "|\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4}" + // MM/DD/YYYY or DD/MM/YYYY
+  `|${_MONTH_NAME_SRC}[ \\t]{1,5}\\d{1,2},?[ \\t]{1,5}\\d{2,4}` + // Mon DD, YYYY
+  `|\\d{1,2}[ \\t]{1,5}${_MONTH_NAME_SRC}[ \\t]{1,5}\\d{2,4}` + // DD Mon YYYY
+  "|\\d{8}" + // YYYYMMDD / DDMMYYYY
+  ")";
+
 /**
- * Build a "label, then redact the rest of the line" pattern. Group 1 (the
- * label, plus any trailing hint text) is preserved by the caller's
- * replacer; group 2 (the value) is what gets redacted.
- * @param {string} labelAlternatives regex source for the label (no capture groups)
+ * Shared value-source builder for `_labelValuePattern`/`_labelNextLinePattern`
+ * - D16-6: previously only the same-line builder honored `numeric`/
+ * `valueSource`, so the next-line variant always fell back to wide-open
+ * free text (`[^\n]{2,N}`) even for a numeric-only field like SSN - "Social
+ * Security\ndisability benefits for PTSD..." redacted the entire next
+ * line because the OCR'd label-above-value layout never got the same
+ * numeric constraint the same-line layout did.
  * @param {Object} [opts]
  * @param {number} [opts.maxValueChars=80]
  * @param {boolean} [opts.numeric=false] restrict the value to an optional
@@ -289,16 +472,46 @@ const _LABEL_HINT =
  *   hyphens, so a label that's merely mentioned in prose ("your VA file
  *   number on your evidence...") doesn't have unrelated prose swept up as
  *   if it were the value.
+ * @param {string} [opts.valueSource] an explicit value regex source
+ *   (e.g. a date shape) overriding the default free-text/numeric value -
+ *   for fields (like DATE OF BIRTH) where "anything up to N chars" is too
+ *   wide open, so the value itself must look like the thing it claims to be.
+ * @returns {string}
+ */
+function _labelValueSource(opts) {
+  const { maxValueChars = 80, numeric = false, valueSource } = opts;
+  return (
+    valueSource ??
+    // D16-6: `[ \t]` not `\s` for the interior run - `\s` matches "\n", so
+    // once this same value-source is shared with the next-line builder
+    // (below), a greedy numeric value could otherwise run past the end of
+    // the OCR'd value line and into a SUBSEQUENT labeled line entirely
+    // ("SSN\n123-45-6789\nDOB\n1985-01-01" swallowing the DOB line too).
+    (numeric
+      ? `(?:[A-Za-z][- \\t]?)?\\d[\\d \\t-]{1,${Math.max(maxValueChars - 1, 4)}}`
+      : `[^\\n]{2,${maxValueChars}}`)
+  );
+}
+
+/**
+ * Build a "label, then redact the rest of the line" pattern. Group 1 (the
+ * label, plus any trailing hint text) is preserved by the caller's
+ * replacer; group 2 (the value) is what gets redacted.
+ * @param {string} labelAlternatives regex source for the label (no capture groups)
+ * @param {Object} [opts] see `_labelValueSource`
  * @param {string} [opts.flags="gi"]
  * @returns {RegExp}
  */
 function _labelValuePattern(labelAlternatives, opts = {}) {
-  const { maxValueChars = 80, numeric = false, flags = "gi" } = opts;
-  const value = numeric
-    ? `(?:[A-Za-z][-\\s]?)?\\d[\\d\\s-]{1,${Math.max(maxValueChars - 1, 4)}}`
-    : `[^\\n]{2,${maxValueChars}}`;
+  const { flags = "gi" } = opts;
+  const value = _labelValueSource(opts);
+  // D16-6: \b on both sides of the label - without it, "DOB" (a labelOnly
+  // alternative) matched as a bare substring inside the scrubber's OWN
+  // "[REDACTED_DOB]" placeholder (no boundary between "_" and "D") and
+  // inside ordinary prose like "Dobutamine" (no boundary between "B" and
+  // "u") - both self-collisions this task asked to close.
   return new RegExp(
-    `((?:${labelAlternatives})${_LABEL_HINT}[:.]?[ \\t]{0,10})(${value})`,
+    `(\\b(?:${labelAlternatives})\\b${_LABEL_HINT}[:.]?[ \\t]{0,10})(${value})`,
     flags,
   );
 }
@@ -310,13 +523,14 @@ function _labelValuePattern(labelAlternatives, opts = {}) {
  * line. Applying this BEFORE the same-line pattern means the same-line
  * pattern never gets a chance to backtrack into the label's own hint text.
  * @param {string} labelAlternatives
- * @param {Object} [opts]
+ * @param {Object} [opts] see `_labelValueSource`
  * @returns {RegExp}
  */
 function _labelNextLinePattern(labelAlternatives, opts = {}) {
-  const { maxValueChars = 80, flags = "gi" } = opts;
+  const { flags = "gi" } = opts;
+  const value = _labelValueSource(opts);
   return new RegExp(
-    `((?:${labelAlternatives})${_LABEL_HINT}[:.]?[ \\t]{0,10})\\n([^\\n]{2,${maxValueChars}})`,
+    `(\\b(?:${labelAlternatives})\\b${_LABEL_HINT}[:.]?[ \\t]{0,10})\\n(${value})`,
     flags,
   );
 }
@@ -350,12 +564,9 @@ const BOX_LABEL_DEFS = [
     labelOnly: null,
   },
   {
-    broad:
-      "(?:BLOCK[ \\t]{0,10}3|BOX[ \\t]{0,10}3)[ \\t]{0,10}(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)",
-    strict:
-      "\\b3[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)",
-    labelOnly:
-      "(?:SOCIAL[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|SSN|S\\.?S\\.?N\\.?)",
+    broad: `(?:BLOCK[ \\t]{0,10}3|BOX[ \\t]{0,10}3)[ \\t]{0,10}(?:${_o0("SOCIAL")}[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)`,
+    strict: `\\b3[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:${_o0("SOCIAL")}[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|S\\.?S\\.?N\\.?)`,
+    labelOnly: `(?:${_o0("SOCIAL")}[ \\t]{0,10}SECURITY(?:[ \\t]{0,10}NUMBER)?|SSN|S\\.?S\\.?N\\.?)`,
     maxValueChars: 40,
     numeric: true,
   },
@@ -366,20 +577,37 @@ const BOX_LABEL_DEFS = [
       "\\b5[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH",
     labelOnly: "(?:DATE[ \\t]{0,10}OF[ \\t]{0,10}BIRTH|DOB)\\.?",
     maxValueChars: 40,
+    valueSource: _DATE_VALUE_SOURCE,
   },
   {
-    broad:
-      "(?:BLOCK[ \\t]{0,10}7[ \\t]{0,10}[Bb]|BOX[ \\t]{0,10}7[ \\t]{0,10}[Bb])[ \\t]{0,10}HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
-    strict:
-      "\\b7[ \\t]{0,10}\\.?[ \\t]{0,10}[Bb]\\.?[ \\t]{0,10}HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
-    labelOnly: "HOME[ \\t]{0,10}OF[ \\t]{0,10}RECORD",
+    // D16-6: the printed DD-214 label is "HOME OF RECORD AT TIME OF ENTRY",
+    // not just "HOME OF RECORD" - the trailing "AT TIME OF ENTRY" sat
+    // between the label and its own "(City and state...)" hint
+    // parenthetical, which meant the hint never matched and the SAME-LINE
+    // value pattern instead redacted that descriptive text itself, leaving
+    // the real value on the next OCR line untouched. Also tolerates
+    // Tesseract's O-for-0 misread inside the label text (`_o0`).
+    broad: `(?:BLOCK[ \\t]{0,10}7[ \\t]{0,10}[Bb]|BOX[ \\t]{0,10}7[ \\t]{0,10}[Bb])[ \\t]{0,10}${_o0("HOME")}[ \\t]{0,10}${_o0("OF")}[ \\t]{0,10}${_o0("RECORD")}(?:[ \\t]{0,10}AT[ \\t]{0,10}TIME[ \\t]{0,10}${_o0("OF")}[ \\t]{0,10}ENTRY)?`,
+    strict: `\\b7[ \\t]{0,10}\\.?[ \\t]{0,10}[Bb]\\.?[ \\t]{0,10}${_o0("HOME")}[ \\t]{0,10}${_o0("OF")}[ \\t]{0,10}${_o0("RECORD")}(?:[ \\t]{0,10}AT[ \\t]{0,10}TIME[ \\t]{0,10}${_o0("OF")}[ \\t]{0,10}ENTRY)?`,
+    labelOnly: `${_o0("HOME")}[ \\t]{0,10}${_o0("OF")}[ \\t]{0,10}${_o0("RECORD")}(?:[ \\t]{0,10}AT[ \\t]{0,10}TIME[ \\t]{0,10}${_o0("OF")}[ \\t]{0,10}ENTRY)?`,
+    // D16-6: "home of record" (unlike "SOCIAL SECURITY"/"DATE OF BIRTH") is
+    // ordinary phrasing ("The home of record listed on file was updated
+    // last year...") - the SAME-LINE labelOnly form redacted the rest of
+    // that sentence as if it were a form value. Restricted to the
+    // label-alone-then-newline shape only, which a real, unnumbered form
+    // field still produces but a sentence mentioning the phrase does not.
+    labelOnlyNextLineOnly: true,
   },
   {
-    broad:
-      "(?:BLOCK[ \\t]{0,10}(?:19|30)|BOX[ \\t]{0,10}(?:19|30))[ \\t]{0,10}(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
-    strict:
-      "\\b(?:19|30)[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
-    labelOnly: "(?:MAILING|HOME)[ \\t]{0,10}ADDRESS",
+    // D16-6: same fix as HOME OF RECORD above - the printed label carries a
+    // trailing "AFTER SEPARATION" before its own "(Include ZIP Code)" hint.
+    broad: `(?:BLOCK[ \\t]{0,10}(?:19|30)|BOX[ \\t]{0,10}(?:19|30))[ \\t]{0,10}(?:MAILING|${_o0("HOME")})[ \\t]{0,10}ADDRESS(?:[ \\t]{0,10}AFTER[ \\t]{0,10}SEPARATION)?`,
+    strict: `\\b(?:19|30)[A-Za-z]?[ \\t]{0,10}\\.[ \\t]{0,10}(?:MAILING|${_o0("HOME")})[ \\t]{0,10}ADDRESS(?:[ \\t]{0,10}AFTER[ \\t]{0,10}SEPARATION)?`,
+    labelOnly: `(?:MAILING|${_o0("HOME")})[ \\t]{0,10}ADDRESS(?:[ \\t]{0,10}AFTER[ \\t]{0,10}SEPARATION)?`,
+    // D16-6: same reasoning as HOME OF RECORD above - "mailing address"/
+    // "home address" are everyday phrases ("your evaluation... sent to
+    // your mailing address"; "Veteran confirmed home address unchanged").
+    labelOnlyNextLineOnly: true,
   },
   {
     // VA decision-letter file/claim number line - not a DD-214 box, no bare
@@ -399,7 +627,11 @@ const BOX_LABEL_DEFS = [
 ];
 
 const LABELED_BOX_PATTERNS = BOX_LABEL_DEFS.flatMap((def) => {
-  const opts = { maxValueChars: def.maxValueChars, numeric: def.numeric };
+  const opts = {
+    maxValueChars: def.maxValueChars,
+    numeric: def.numeric,
+    valueSource: def.valueSource,
+  };
   const patterns = [
     _labelNextLinePattern(def.broad, opts),
     _labelValuePattern(def.broad, opts),
@@ -412,10 +644,10 @@ const LABELED_BOX_PATTERNS = BOX_LABEL_DEFS.flatMap((def) => {
     );
   }
   if (def.labelOnly) {
-    patterns.push(
-      _labelNextLinePattern(def.labelOnly, opts),
-      _labelValuePattern(def.labelOnly, opts),
-    );
+    patterns.push(_labelNextLinePattern(def.labelOnly, opts));
+    if (!def.labelOnlyNextLineOnly) {
+      patterns.push(_labelValuePattern(def.labelOnly, opts));
+    }
   }
   return patterns;
 });
@@ -455,17 +687,34 @@ const IN_REPLY_REFER_TO =
 // eslint-disable-next-line sonarjs/regex-complexity -- every quantifier is explicitly bounded ({0,10}/{0,60}/{1,5}); flagged on branch count from the two salutation shapes, not on backtracking
 const SALUTATION_LINE = /^[ \t]{0,10}(Dear\b[^\n]{0,60}|To[ \t]{1,5}Whom[ \t]{1,5}It[ \t]{1,5}May[ \t]{1,5}Concern)[:,]?[ \t]{0,10}$/gim;
 // Only redact the salutation when it's addressed to an actual person - a
-// courtesy title ("Mr."/"Ms."/"Mrs."/"Miss"/"Dr."/"Mx.") followed by a
-// name - never a generic/templated greeting ("Dear Veteran:", "Dear Sir or
-// Madam:", "Dear Applicant:") that carries no identifying text at all.
-const SALUTATION_NAME =
-  /^([ \t]{0,10}Dear[ \t]{1,5}(?:Mr|Mrs|Ms|Miss|Dr|Mx)\.?[ \t]{1,5})([^\n:,]{1,60})/i;
+// courtesy title ("Mr."/"Ms."/"Mrs."/"Miss"/"Dr."/"Mx.") or a common
+// military-correspondence rank abbreviation, followed by a name - never a
+// generic/templated greeting ("Dear Veteran:", "Dear Sir or Madam:", "Dear
+// Applicant:") that carries no identifying text at all. The rank list is a
+// documented, best-effort common subset (not every service's full rank
+// table) - same limit already accepted for GENERIC_SALUTATION_WORDS below.
+const _COURTESY_TITLE_SRC =
+  "Mr|Mrs|Ms|Miss|Dr|Mx|SSgt|MSgt|Sgt|Sfc|Cpl|Pfc|Pvt|Spc|Capt|Cpt|Lt|Col|Maj|Gen|Adm|Cmdr";
+const SALUTATION_NAME = new RegExp(
+  `^([ \\t]{0,10}Dear[ \\t]{1,5}(?:${_COURTESY_TITLE_SRC})\\.?[ \\t]{1,5})([^\\n:,]{1,60})`,
+  "i",
+);
 
 // A short stoplist of generic-but-still-Title-Case greetings ("Dear Claims
 // Team:") the no-title pattern above would otherwise redact - there's no
 // name dictionary to fall back on, so this is a documented, best-effort
 // limit rather than a claim of completeness (see the module-level "Limits"
-// note above).
+// note above). "or"/"and" are here specifically because broadening the
+// no-title token class to allow ALL-CAPS (D16-6, below) means an ALL-CAPS
+// "Dear SIR OR MADAM:" now tokenizes "OR" as a name-shaped word too. The
+// courtesy-title/rank words themselves are also included: the titled pass
+// (SALUTATION_NAME_G) runs FIRST and, for "Dear Sgt. Smith:", keeps "Sgt."
+// as its own preserved greeting text while replacing only "Smith" - without
+// this, the no-title pass then ran SECOND against that same leftover
+// "Dear Sgt." fragment and mistook the bare rank word for a surname.
+const _TITLE_STOPWORDS = _COURTESY_TITLE_SRC
+  .split("|")
+  .map((t) => t.toLowerCase());
 const GENERIC_SALUTATION_WORDS = new Set([
   "veteran",
   "team",
@@ -480,6 +729,9 @@ const GENERIC_SALUTATION_WORDS = new Set([
   "madam",
   "friend",
   "claims",
+  "or",
+  "and",
+  ..._TITLE_STOPWORDS,
 ]);
 
 function _isGenericSalutationName(name) {
@@ -495,18 +747,26 @@ function _isGenericSalutationName(name) {
 // per-line loop, these don't require the salutation to be its own whole
 // line, so they also catch a salutation sitting in the middle of a
 // flattened single-line OCR page.
-const SALUTATION_NAME_G =
-  /(Dear[ \t]{1,5}(?:Mr|Mrs|Ms|Miss|Dr|Mx)\.?[ \t]{1,5})([^\n:,]{1,60})/gi;
+const SALUTATION_NAME_G = new RegExp(
+  `(Dear[ \\t]{1,5}(?:${_COURTESY_TITLE_SRC})\\.?[ \\t]{1,5})([^\\n:,]{1,60})`,
+  "gi",
+);
 
-// D16-5: "Dear FIRST LAST:" with NO courtesy title. Two-plus consecutive
-// Title-Case words (capital first letter, lowercase rest) with no
-// lowercase connector between them - a generic/templated greeting
-// essentially never has this shape ("Dear Veteran:" is one word; "Dear
-// Sir or Madam:" has a lowercase "or" breaking the run). Case-sensitive on
-// purpose: an ALL-CAPS or all-lowercase run doesn't look like a real first
-// name so it's left alone rather than risking a false positive.
-const SALUTATION_NAME_NO_TITLE_G =
-  /(Dear[ \t]{1,5})([A-Z][a-z'-]{1,20}(?:[ \t]{1,3}[A-Z][a-z'-]{1,20}){1,3})/g;
+// D16-5/D16-6: "Dear FIRST LAST:" with NO courtesy title. One-plus
+// consecutive name-shaped tokens with no lowercase connector between them -
+// a generic/templated greeting essentially never has this shape ("Dear
+// Sir or Madam:" has a lowercase "or" breaking the run - still true here).
+// Each token is either Title-Case-or-ALL-CAPS (any case after the first
+// letter - this also covers an inner capital like "McDonald", which a
+// lowercase-only continuation used to truncate at "Mc") or a bare initial
+// ("A."). D16-6 also allows a SINGLE token (a bare "Dear Faketon:" surname,
+// with no title and no second word) - every candidate, of any word count,
+// is still checked against GENERIC_SALUTATION_WORDS below before redacting.
+const _SALUTATION_TOKEN_SRC = "(?:[A-Z][A-Za-z'-]{1,20}|[A-Z]\\.)";
+const SALUTATION_NAME_NO_TITLE_G = new RegExp(
+  `(Dear[ \\t]{1,5})(${_SALUTATION_TOKEN_SRC}(?:[ \\t]{1,3}${_SALUTATION_TOKEN_SRC}){0,3})`,
+  "g",
+);
 
 /**
  * Redact the name in a "Dear ...:" salutation wherever it appears in
@@ -608,14 +868,23 @@ export const redactLetterAddresseeBlock = (text) => {
   return out;
 };
 
-// D16-5: VA-letter page footer pairing a file number with the veteran's
-// name and a page number ("File Number: 12345678  DOE, JOHN M  Page 2").
-// The trailing "Page N" is captured so it survives the redaction - it
-// isn't sensitive on its own, and losing it would make a multi-page
+// D16-5/D16-6: VA-letter page footer pairing a file number with the
+// veteran's name and a page number ("File Number: 12345678  DOE, JOHN M
+// Page 2"). The trailing "Page N" is captured so it survives the redaction -
+// it isn't sensitive on its own, and losing it would make a multi-page
 // footer harder to reason about downstream for no privacy benefit.
+// D16-6: the file-number value now tolerates a single space/hyphen between
+// EACH character (mirroring `vaFile`'s "re-grouped digits" handling above -
+// "C 12 345 678", masked "XXX XX 1234") - this MUST run before any other
+// step gets a chance to redact the file number first (see `scrubPII`'s step
+// 1): the original ran late, by which point the bare-digit/VA-file/labeled-
+// box passes earlier in the pipeline had already replaced the number with
+// "[REDACTED...]" - a value this pattern's old `[\dA-Za-z-]{4,20}` class
+// couldn't match (no "[" / "]"), so the footer never fired for real and the
+// name leaked every time.
 const LETTER_FOOTER =
   // eslint-disable-next-line sonarjs/regex-complexity, sonarjs/duplicates-in-character-class -- flagged on the label/name-shape alternation count and the redundant A-Za-z under /i, not on backtracking; every quantifier bounded
-  /\bFile[ \t]{0,5}Number[ \t]{0,5}:[ \t]{0,5}[\dA-Za-z-]{4,20}[ \t]{1,10}[A-Z][A-Z'-]{1,30},[ \t]{0,5}[A-Z][A-Z'-]{1,30}(?:[ \t]{1,5}[A-Z]\.?)?[ \t]{1,10}(Page[ \t]{1,5}\d{1,4}\b)/gi;
+  /\bFile[ \t]{0,5}Number[ \t]{0,5}:[ \t]{0,5}[\dA-Za-z](?:[ \t-]?[\dA-Za-z]){3,19}[ \t]{1,10}[A-Z][A-Z'-]{1,30},[ \t]{0,5}[A-Z][A-Z'-]{1,30}(?:[ \t]{1,5}[A-Z]\.?)?[ \t]{1,10}(Page[ \t]{1,5}\d{1,4}\b)/gi;
 
 /**
  * Redact a VA-letter page footer's file-number-and-name span, keeping the
@@ -651,12 +920,14 @@ function _countMatches(text, pattern) {
 // still safe/idempotent against whatever the first two passes already
 // turned into `[REDACTED]`.
 // D16-5: salutation names (with or without a courtesy title, on their own
-// line or embedded in a flattened OCR page), the letter-footer file
-// number+name span, and labeled "Patient: NAME (NNNN)" lines - extracted
-// out of _applyAddressAndLabelRedaction so it stays under the line-count
-// limit. None of these interact with the date-line/salutation anchors the
-// comment on that function is about, so ordering relative to it doesn't
-// matter.
+// line or embedded in a flattened OCR page) and labeled "Patient: NAME
+// (NNNN)" lines - extracted out of _applyAddressAndLabelRedaction so it
+// stays under the line-count limit. Neither interacts with the date-line/
+// salutation anchors the comment on that function is about, so ordering
+// relative to it doesn't matter. D16-6: the letter-footer pass moved OUT of
+// here to `scrubPII`'s very first step - see the comment on `LETTER_FOOTER`
+// for why it has to run before the bare-digit/VA-file/labeled-box passes,
+// not after them.
 function _applySalutationAndPatientRedaction(text) {
   let scrubbed = text;
   const hits = [];
@@ -665,12 +936,6 @@ function _applySalutationAndPatientRedaction(text) {
   scrubbed = redactSalutationNames(scrubbed);
   if (scrubbed !== beforeSalutation) {
     hits.push({ type: "Salutation Name", count: 1 });
-  }
-
-  const beforeFooter = scrubbed;
-  scrubbed = redactLetterFooter(scrubbed);
-  if (scrubbed !== beforeFooter) {
-    hits.push({ type: "Letter Footer", count: 1 });
   }
 
   const patientCount = _countMatches(scrubbed, PII_PATTERNS.patientLabeled);
@@ -809,7 +1074,7 @@ function _applyPhoneMrnEdipiVaFile(applyPattern, aggressive, preservePartial) {
 }
 
 function _ocrSsnDigitDensity(match) {
-  const chars = match.replace(/[\s.\-_|]/g, "");
+  const chars = match.replace(/[\s.\-_|,:]/g, "");
   if (chars.length !== 9) return 0;
   const realDigits = [...chars].filter((c) => /\d/.test(c)).length;
   return realDigits / chars.length;
@@ -854,6 +1119,17 @@ export const scrubPII = (text, options = {}) => {
   let scrubbed = normalizeForScan(text);
   const details = [];
   let piiFound = false;
+
+  // 0. D16-6: the VA-letter footer's file-number+name span, before ANY
+  //    digit-eating pattern below gets a chance to redact the file number
+  //    first - see the comment on `LETTER_FOOTER` for why order here is
+  //    load-bearing, not cosmetic.
+  const beforeFooter = scrubbed;
+  scrubbed = redactLetterFooter(scrubbed);
+  if (scrubbed !== beforeFooter) {
+    piiFound = true;
+    details.push({ type: "Letter Footer", count: 1 });
+  }
 
   const applyPattern = (pattern, type, replacer) => {
     const matches = scrubbed.match(reset(pattern));
@@ -1520,6 +1796,15 @@ export const collectKnownIdentifierValues = (
  */
 export const redactVeteranIdentifiers = (text, personal, claimNumbers) =>
   redactKnownValues(text, collectKnownIdentifierValues(personal, claimNumbers));
+
+// D16-6: test-only seam so a perf/no-quadratic-scan test can time these two
+// NEW/widened patterns directly, isolated from the pre-existing (and
+// separately already-quadratic, out of this task's scope) base `email`
+// pattern that a full `scrubText()` call would otherwise also run.
+export const _testOnlyPatterns = {
+  emailOcrSpaced: PII_PATTERNS.emailOcrSpaced,
+  ssnOcrGarbled: PII_PATTERNS.ssnOcrGarbled,
+};
 
 export default {
   scrubPII,
