@@ -332,4 +332,65 @@ describe("D19-4: strips the form's own printed instruction text from a captured 
     const result = extractDD214Fields(text);
     expect(result.fields.mailingAddress).toContain("(APT 4)");
   });
+
+  // D19-4 follow-up: the closed-paren strip depends on a literal ")"
+  // surviving OCR - these lose the closing paren, or both parens, so the
+  // instruction wording itself has to be recognized directly.
+  it.each([
+    [
+      "OCR drops its closing parenthesis",
+      "HOME OF RECORD: (CITY AND STATE, OR COMPLETE ADDRESS IF KNOWN TESTVILLE, TS\n" +
+        "8A. LAST DUTY: FORT X\n",
+    ],
+    [
+      "OCR drops both parentheses entirely",
+      "HOME OF RECORD: CITY AND STATE, OR COMPLETE ADDRESS IF KNOWN TESTVILLE, TS\n" +
+        "8A. LAST DUTY: FORT X\n",
+    ],
+  ])("strips the home-of-record hint when %s", (_label, text) => {
+    const result = extractDD214Fields(text);
+    expect(result.fields.homeOfRecord).toBe("TESTVILLE, TS");
+    expect(result.fields.homeOfRecord).not.toContain("CITY AND STATE");
+  });
+});
+
+// D19-4 follow-up: the printed box label is "LAST DUTY ASSIGNMENT AND
+// MAJOR COMMAND", not just "LAST DUTY" - neither pattern consumed
+// "ASSIGNMENT"/"AND MAJOR COMMAND" as part of the label, so the value
+// capture started there instead and, with no stopping boundary, ran
+// straight through the next box too.
+describe("D19-4 follow-up: last duty assignment strips its own full printed label", () => {
+  it("does not swallow the label's own 'ASSIGNMENT AND MAJOR COMMAND' text, and stops before the next box", () => {
+    const text =
+      "8A. LAST DUTY ASSIGNMENT AND MAJOR COMMAND\n" +
+      "HHC 1-1 IN, FORT TEST\n" +
+      "8B. STATION WHERE SEPARATED\n" +
+      "FORT TEST";
+    const result = extractDD214Fields(text);
+    expect(result.fields.lastDutyAssignment).toBe("HHC 1-1 IN, FORT TEST");
+    expect(result.fields.lastDutyAssignment).not.toContain("ASSIGNMENT");
+    expect(result.fields.lastDutyAssignment).not.toContain("STATION");
+  });
+
+  it("does not swallow the label's own text on a same-line, colon-separated layout", () => {
+    const text =
+      "8A. LAST DUTY ASSIGNMENT AND MAJOR COMMAND: HHC 1-1 IN FORT TEST";
+    const result = extractDD214Fields(text);
+    expect(result.fields.lastDutyAssignment).toBe("HHC 1-1 IN FORT TEST");
+    expect(result.fields.lastDutyAssignment).not.toContain("ASSIGNMENT");
+  });
+
+  it("still extracts the short 'LAST DUTY' form with no 'ASSIGNMENT' wording", () => {
+    const result = extractDD214Fields("8A. LAST DUTY: FORT X\n");
+    expect(result.fields.lastDutyAssignment).toBe("FORT X");
+  });
+
+  it("stops at the next numbered box on a flattened single-line layout", () => {
+    const text =
+      "7.B HOME OF RECORD AT TIME OF ENTRY SPRINGFIELD, IL 62701 LAST DUTY " +
+      "ASSIGNMENT AND MAJOR COMMAND HHC 2 BN FORT X 9. COMMAND";
+    const result = extractDD214Fields(text);
+    expect(result.fields.lastDutyAssignment).toBe("HHC 2 BN FORT X");
+    expect(result.fields.lastDutyAssignment).not.toContain("9.");
+  });
 });

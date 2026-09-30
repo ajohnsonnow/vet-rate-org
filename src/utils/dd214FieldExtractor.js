@@ -52,9 +52,24 @@ const NAME_LABEL_LEAK_RE =
 // through. Returns "" when nothing is left after stripping, rather than
 // the instruction text - `validate()` (below, per field) then rejects an
 // empty/too-short remainder as an empty field, never as a wrong value.
+// D19-4 follow-up: the closed-paren strip below depends on a literal ")"
+// surviving OCR - it does nothing when OCR drops the closing paren (or
+// both of them), leaving the box's own instruction wording itself at the
+// start of the value. These recognize that FIXED, known wording directly
+// (own parens optional, either side), so a missing paren no longer leaves
+// the instruction text - only the real value after it - in the result.
+const _HOME_OF_RECORD_HINT_RE =
+  /^[\s(]{0,10}CITY\s{1,5}AND\s{1,5}STATE\s{0,5},\s{0,5}OR\s{1,5}COMPLETE\s{0,5}(?:,\s{0,5})?ADDRESS\s{1,5}IF\s{1,5}KNOWN[\s)]{0,10}[:.,-]{0,3}\s{0,5}/i;
+const _MAILING_ADDRESS_HINT_RE =
+  // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the two-branch hint-wording alternation, not backtracking; every quantifier bounded
+  /^[\s(]{0,10}(?:STREET\s{0,5},\s{0,5}CITY\s{0,5},\s{0,5}STATE\s{0,5},\s{0,5}ZIP|INCLUDE\s{1,5}ZIP\s{1,5}CODE)[\s)]{0,10}[:.,-]{0,3}\s{0,5}/i;
+
 function _stripLeadingPrintedInstruction(value) {
   if (!value) return value;
-  return value.replace(/^\s*\([^)]{0,150}\)\s*[:.,-]*\s*/, "");
+  return value
+    .replace(/^\s*\([^)]{0,150}\)\s*[:.,-]*\s*/, "")
+    .replace(_HOME_OF_RECORD_HINT_RE, "")
+    .replace(_MAILING_ADDRESS_HINT_RE, "");
 }
 
 const DD214_FIELD_PATTERNS = {
@@ -383,13 +398,29 @@ const DD214_FIELD_PATTERNS = {
   },
 
   // ===== BLOCK 8a: Last Duty Assignment =====
+  // D19-4 follow-up: the printed box label is "LAST DUTY ASSIGNMENT AND
+  // MAJOR COMMAND", not just "LAST DUTY" - neither pattern consumed
+  // "ASSIGNMENT"/"AND MAJOR COMMAND" as part of the label, so on the
+  // form's own real wording those words (letters, not colon/space/period)
+  // stopped the old `[:\s.]*` separator from matching past them, and the
+  // VALUE capture started there instead, swallowing "ASSIGNMENT AND MAJOR
+  // COMMAND" itself. The value class also had no stopping boundary at all
+  // (its own char class allows the newline `\s` matches), so on a
+  // newline-separated layout it ran straight through the 8B box too. Both
+  // patterns now consume the full label (the "AND MAJOR COMMAND" suffix is
+  // optional - some layouts/OCR drop it) and stop the value at the next
+  // recognizable box marker or end of string - using `\s{1,10}` rather
+  // than a literal `\n` so the SAME pattern stops correctly whether the
+  // next box is on its own line or the whole page flattened onto one
+  // (mirroring homeOfRecord's own stopping lookahead above).
   lastDutyAssignment: {
     block: "8a",
     label: "Last Duty Assignment and Major Command",
     patterns: [
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /(?:BLOCK\s*8\s*A|BOX\s*8\s*A|8\s*A\.?\s*LAST\s*DUT[YE])[:\s.]*([A-Z0-9][A-Z0-9()\s/,.-]+)/i,
-      /LAST\s*DUT[YE]\s*ASSIGNMENT[:\s.]*([A-Z0-9][A-Z0-9()\s/,.-]+)/i,
+      /(?:BLOCK\s*8\s*A|BOX\s*8\s*A|8\s*A\.?\s*LAST\s*DUT[YE])(?:\s*ASSIGNMENT(?:\s*AND\s*MAJOR\s*COMMAND)?)?[:\s.]*([A-Z0-9][A-Z0-9()\s/,.-]+?)(?=\s{1,10}(?:BLOCK|BOX|ITEM|8\s{0,10}B|STATION\s{0,10}WHERE\s{0,10}SEPARATED|\d+\s{0,10}[A-Z]?\.)|$)/i,
+      // eslint-disable-next-line sonarjs/regex-complexity -- same stopping lookahead as the pattern above, same verification
+      /LAST\s*DUT[YE]\s*ASSIGNMENT(?:\s*AND\s*MAJOR\s*COMMAND)?[:\s.]*([A-Z0-9][A-Z0-9()\s/,.-]+?)(?=\s{1,10}(?:BLOCK|BOX|ITEM|8\s{0,10}B|STATION\s{0,10}WHERE\s{0,10}SEPARATED|\d+\s{0,10}[A-Z]?\.)|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
   },
