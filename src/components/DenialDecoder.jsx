@@ -97,17 +97,26 @@ const getUrgencyColor = (urgency) => {
 // on-device only, so fall back to the local regex decision-letter parser
 // (vaDocumentParser.js, already used elsewhere for this exact letter
 // shape) instead of a dead end.
-function _buildOffDeviceFallbackAnalysis(text) {
+//
+// `_hasRealReason`/`_hasRealMissing` mark which of the fields below are
+// actually grounded in the letter text vs. a UI hedge shown when the
+// built-in parser found nothing - "never present a guess as a printed
+// fact" means _saveDenialAnalysis must not persist the hedge text (or the
+// invented "medium" urgency this used to default to) as if it were a real
+// finding about the veteran's claim.
+export function _buildOffDeviceFallbackAnalysis(text) {
   const parsed = parseDecisionLetter(text);
   const reasons = parsed.reasonsForDenial || [];
+  const hasRealReason = reasons.length > 0;
+  const hasRealMissing = Boolean(parsed.evidenceConsidered?.length);
   return {
-    denialReason:
-      reasons[0] ||
-      "Not determined by the built-in reader - load the on-device AI for a full analysis.",
-    simplifiedExplanation: reasons.length
+    denialReason: hasRealReason
+      ? reasons[0]
+      : "Not determined by the built-in reader - load the on-device AI for a full analysis.",
+    simplifiedExplanation: hasRealReason
       ? `The letter states: ${reasons.join("; ")}`
       : "The built-in reader could not identify a specific denial reason in this letter.",
-    whatWasMissing: parsed.evidenceConsidered?.length
+    whatWasMissing: hasRealMissing
       ? `Evidence considered: ${parsed.evidenceConsidered.join(", ")}`
       : "Not determined by the built-in reader.",
     nextSteps: [
@@ -115,15 +124,27 @@ function _buildOffDeviceFallbackAnalysis(text) {
       "Contact a VSO for free claim assistance.",
       "Request a copy of your C-File to understand what evidence VA used.",
     ],
-    urgency: "medium",
+    // Unknown, not "medium" - the built-in reader has no basis to guess
+    // urgency; getUrgencyColor's default case renders this neutrally.
+    urgency: null,
     appealDeadline: parsed.appealDeadline || "Not specified",
+    _hasRealReason: hasRealReason,
+    _hasRealMissing: hasRealMissing,
   };
 }
 
 // Both the off-device-blocked fallback and a successful AI analysis save
 // the identical VKB/My Packet shape, keyed off whichever `parsedAnalysis`
 // they produced - pulled out once so analyzeWithAI doesn't carry it twice.
-async function _saveDenialAnalysis(text, parsedAnalysis) {
+//
+// _hasRealReason/_hasRealMissing are only ever set (to false) by
+// _buildOffDeviceFallbackAnalysis when the built-in parser found nothing -
+// a real AI response never carries them, so `!== false` defaults to "real"
+// for the AI path and only excludes the fallback's own UI hedge text.
+export async function _saveDenialAnalysis(text, parsedAnalysis) {
+  const hasRealReason = parsedAnalysis._hasRealReason !== false;
+  const hasRealMissing = parsedAnalysis._hasRealMissing !== false;
+
   await saveAnalysisResults({
     toolName: "Denial Decoder",
     classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
@@ -137,18 +158,24 @@ async function _saveDenialAnalysis(text, parsedAnalysis) {
     },
     vkbMergeData: {
       aiInsights: {
-        lastDenialReason: parsedAnalysis.denialReason,
-        lastDenialMissing: parsedAnalysis.whatWasMissing,
-        denialUrgency: parsedAnalysis.urgency,
+        ...(hasRealReason && { lastDenialReason: parsedAnalysis.denialReason }),
+        ...(hasRealMissing && {
+          lastDenialMissing: parsedAnalysis.whatWasMissing,
+        }),
+        ...(parsedAnalysis.urgency && {
+          denialUrgency: parsedAnalysis.urgency,
+        }),
         appealDeadline: parsedAnalysis.appealDeadline,
       },
-      keyFacts: [
-        {
-          source: "DenialDecoder",
-          fact: `Denial reason: ${parsedAnalysis.denialReason}`,
-          date: new Date().toISOString(),
-        },
-      ],
+      keyFacts: hasRealReason
+        ? [
+            {
+              source: "DenialDecoder",
+              fact: `Denial reason: ${parsedAnalysis.denialReason}`,
+              date: new Date().toISOString(),
+            },
+          ]
+        : [],
     },
   });
 }
@@ -592,9 +619,15 @@ const ResultsRawTextToggle = ({
 const OffDeviceNotice = ({ notice }) => {
   if (!notice) return null;
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div
+      className="bg-amber-50 border border-amber-200 rounded-lg p-4"
+      role="status"
+    >
       <div className="flex items-start gap-3">
-        <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <Lightbulb
+          className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+          aria-hidden="true"
+        />
         <p className="text-sm text-amber-900">{notice}</p>
       </div>
     </div>
