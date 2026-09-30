@@ -4,7 +4,7 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
-import { isAnyAIAvailable } from "../utils/unifiedAIService";
+import { getAIStatus } from "../utils/unifiedAIService";
 import { buildDocumentOffDeviceNotice } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -558,12 +558,8 @@ async function extractFileTextAndPreview(file, fileType, setOcrProgress) {
   const result = await analyzeImage(file, (progress) => {
     setOcrProgress(progress);
   });
-  const extractedText = result.success ? result.text || "" : "";
-  const error = result.success
-    ? null
-    : result.error || "Failed to extract text";
 
-  return { extractedText, preview, error };
+  return { extractedText: result.text || "", preview, error: null };
 }
 
 // Exported for D16-6's own regression tests (Drop-In File accepting a real
@@ -1827,6 +1823,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
 
   const [denialText, setDenialText] = useState("");
+  const [aiStatus, setAIStatus] = useState(() => getAIStatus());
   const { results, isLoading, error, handleDecode } = useDecisionDecode();
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
@@ -1861,14 +1858,15 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
       <DecisionDecoderInfoBanner />
 
       {/* Smart AI Load Button */}
-      {!isAnyAIAvailable() && (
+      {!aiStatus.anyAvailable && (
         <div className="mb-6">
           <SmartAILoadButton
             toolId="decision-decoder"
-            onLoadComplete={(model) =>
+            onLoadComplete={(model) => {
               // eslint-disable-next-line no-console
-              console.log("Smart AI loaded for Decision Decoder:", model?.name)
-            }
+              console.log("Smart AI loaded for Decision Decoder:", model?.name);
+              setAIStatus(getAIStatus());
+            }}
           />
         </div>
       )}

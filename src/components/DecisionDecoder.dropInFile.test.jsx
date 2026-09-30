@@ -10,8 +10,18 @@
  * file's real name (which commonly carries a veteran's own name) into the
  * text sent to the AI (ADR-008) - a neutral "Document N (type, date)"
  * label is used instead.
+ *
+ * D19-1: the image test below used to mock `analyzeImage` itself, returning
+ * a canned `{ success: true, text }` shape that ocr.js's real analyzeImage
+ * never produces (no `success` field) and that never actually called OCR -
+ * so the test passed while the real dropped-image path always showed "No
+ * text extracted". This now leaves `analyzeImage` as the real
+ * implementation and only fakes the underlying tesseract.js worker (the
+ * same seam DenialDecoder.offDeviceFacts.test.js already mocks), so the
+ * real analyzeImage -> createWorker -> recognize() call chain is what's
+ * under test.
  */
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ocr.js transitively imports advancedOCR.js -> pdfjs-dist, which
 // references canvas globals jsdom doesn't provide - same recipe as
@@ -20,15 +30,32 @@ globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
 
+// jsdom ships no image decoder (no optional `canvas` package): a real
+// Image's onload/onerror never fires for a data: URL. analyzeImage only
+// needs *a* width/height, not real decoded pixels, so this stands in for
+// the browser's decode step the same way DOMMatrix/Path2D stand in above.
+class FakeImage {
+  set src(_value) {
+    queueMicrotask(() => this.onload?.());
+  }
+}
+globalThis.Image = FakeImage;
+
+const mockOCRWorker = {
+  recognize: vi.fn(async () => ({
+    data: { text: "extracted image text", confidence: 91 },
+  })),
+  terminate: vi.fn(async () => {}),
+};
+vi.mock("tesseract.js", () => ({
+  createWorker: vi.fn(async () => mockOCRWorker),
+}));
+
 vi.mock("../utils/ocr", async () => {
   const actual = await vi.importActual("../utils/ocr");
   return {
     ...actual,
     analyzePDF: vi.fn(async () => ({ text: "extracted PDF text" })),
-    analyzeImage: vi.fn(async () => ({
-      success: true,
-      text: "extracted image text",
-    })),
   };
 });
 
@@ -57,7 +84,23 @@ function pendingEntryFrom(ctx) {
   return updater([])[0];
 }
 
+// Every setUploadedFiles call is a functional update; replaying all of them
+// in order against an empty list recovers the final entry state, however
+// many intermediate updates (pending -> extracted -> combined-text refresh)
+// processFile made.
+function finalEntryFrom(ctx) {
+  let state = [];
+  for (const [updater] of ctx.setUploadedFiles.mock.calls) {
+    state = updater(state);
+  }
+  return state[0];
+}
+
 describe("DecisionDecoder processFile: accepts real PDF/image File objects (D16-6)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("accepts a dropped PDF instead of rejecting it as unsupported", async () => {
     const ctx = makeProcessFileCtx();
     await processFile(makeFile("decision-letter.pdf", "application/pdf"), ctx);
@@ -72,6 +115,16 @@ describe("DecisionDecoder processFile: accepts real PDF/image File objects (D16-
 
     expect(ctx.setFileError).not.toHaveBeenCalled();
     expect(pendingEntryFrom(ctx).fileType).toBe("image");
+  });
+
+  it("runs real OCR on a dropped image and surfaces the extracted text (D19-1)", async () => {
+    const ctx = makeProcessFileCtx();
+    await processFile(makeFile("decision-letter.png", "image/png"), ctx);
+
+    expect(mockOCRWorker.recognize).toHaveBeenCalledTimes(1);
+    const finalEntry = finalEntryFrom(ctx);
+    expect(finalEntry.extractedText).toBe("extracted image text");
+    expect(finalEntry.error).toBeNull();
   });
 
   it("still rejects a genuinely unsupported file type", async () => {
