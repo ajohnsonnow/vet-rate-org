@@ -15,6 +15,7 @@
 import { interceptBeforeAICall } from "./crisisInterceptor";
 import {
   scrubPII,
+  scrubText,
   analyzePII,
   containsSignificantNonLatin,
   redactVeteranIdentifiers,
@@ -2170,8 +2171,18 @@ async function _redactPiecesForSend(pieces) {
     return pieces.map((text) =>
       redactVeteranIdentifiers(text, personal, claimNumbers),
     );
-  } catch {
-    return pieces;
+  } catch (err) {
+    // Fail CLOSED, never open: a VKB/profile load failure must never let
+    // raw text reach an off-device backend un-redacted (the previous
+    // `catch { return pieces; }` did exactly that). The known-value
+    // redaction above is unavailable without the profile, so fall back to
+    // the full aggressive pattern scrubber, which catches bare SSNs/DOBs/
+    // etc even with no known value to match against.
+    console.warn(
+      "[ADR-008] _redactPiecesForSend: VKB/profile load failed, falling back to pattern scrubbing:",
+      err?.message,
+    );
+    return pieces.map((text) => scrubText(text));
   }
 }
 
