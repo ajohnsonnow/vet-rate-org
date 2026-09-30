@@ -15,6 +15,16 @@
  * directly, not a {success, text, error} object - the pre-fix call always
  * threw "Local server generation failed" regardless of the real outcome.
  *
+ * ADR-009 decision E (2026-09-29) amendment: a call with no declared
+ * `dataClass` fails closed to "document" (aiDataClassPolicy.resolveDataClass),
+ * and a document-classed call to a genuinely on-device backend (this file's
+ * "localhost" local-server fixture) is now EXEMPT from this redaction -
+ * nothing leaves the machine, so the on-device model may see the real
+ * identifier. The first test below used to assert the opposite; it now
+ * proves the exemption, and a second test proves a CONTEXT-classed call on
+ * the SAME on-device backend is still redacted (the exemption is scoped to
+ * "document", not "on-device" alone).
+ *
  * Fixture identifiers are synthetic.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -113,10 +123,30 @@ beforeEach(async () => {
 });
 
 describe("generateAI: single enforcement point redacts the raw caller prompt", () => {
-  it("never sends the veteran's name to the local-server backend, even when the CALLER builds its own raw prompt", async () => {
+  it("ADR-009 decision E: a call with no declared dataClass fails closed to 'document', and reaching a genuinely on-device (loopback) backend is EXEMPT from redaction - the veteran's name IS sent", async () => {
     const rawPrompt = `Witness statement: I have known ${FAKE_NAME} for 10 years.`;
 
     await generateAI(rawPrompt, {
+      systemPrompt: "You are a helpful assistant.",
+      skipCrisisCheck: true,
+      skipValidation: true,
+      skipHallucinationCheck: true,
+      useDKB: false,
+    });
+
+    expect(localServerClient.chatCompletion).toHaveBeenCalledTimes(1);
+    const [messages] = localServerClient.chatCompletion.mock.calls[0];
+    const sentContent = messages[0].content;
+    expect(sentContent).toContain(FAKE_FIRST);
+    expect(sentContent).toContain(FAKE_LAST);
+    expect(sentContent).toContain("Witness statement");
+  });
+
+  it("a CONTEXT-classed call on the SAME on-device backend is still redacted - the decision E exemption is scoped to 'document', not to on-device alone", async () => {
+    const rawPrompt = `Witness statement: I have known ${FAKE_NAME} for 10 years.`;
+
+    await generateAI(rawPrompt, {
+      dataClass: "context",
       systemPrompt: "You are a helpful assistant.",
       skipCrisisCheck: true,
       skipValidation: true,

@@ -1176,12 +1176,18 @@ const generateWithWarrantCouncil = async (
     _hadCallerSystemPrompt = false,
   } = options;
 
+  // ADR-009 decision E: SWARM is unconditionally on-device (a Web Worker
+  // WebLLM engine, no network send), so a "document"-classed call is exempt
+  // from PII scrubbing here - the model needs the real name/DOB/SSN printed
+  // on a DD-214 to extract them, and nothing leaves the device either way.
+  const effectiveScrubPIIEnabled =
+    scrubPIIEnabled && resolveDataClass(options) !== AI_DATA_CLASS.DOCUMENT;
   const scrubbedSystemPrompt = systemPrompt
-    ? scrubPromptForWarrantCouncil(systemPrompt, scrubPIIEnabled)
+    ? scrubPromptForWarrantCouncil(systemPrompt, effectiveScrubPIIEnabled)
     : systemPrompt;
   const scrubbedUserPrompt = scrubPromptForWarrantCouncil(
     userPrompt,
-    scrubPIIEnabled,
+    effectiveScrubPIIEnabled,
   );
 
   const forwardSystemPrompt = _hadCallerSystemPrompt
@@ -1269,9 +1275,15 @@ const generateWithWllama = async (systemPrompt, userPrompt, options = {}) => {
     ? `${systemPrompt}\n\n---\n\nUser Request:\n${userPrompt}`
     : userPrompt;
 
+  // ADR-009 decision E: Wllama is unconditionally on-device (in-page WASM),
+  // so a "document"-classed call is exempt from PII scrubbing - see
+  // generateWithWarrantCouncil's identical exemption for why.
+  const effectiveScrubPIIEnabled =
+    scrubPIIEnabled && resolveDataClass(options) !== AI_DATA_CLASS.DOCUMENT;
+
   // PII Scrubbing
   let scrubbedPrompt = combinedPrompt;
-  if (scrubPIIEnabled) {
+  if (effectiveScrubPIIEnabled) {
     const piiAnalysis = analyzePII(combinedPrompt);
     if (piiAnalysis.hasPII) {
       console.warn(`⚠️ PII Detected before Wllama call:`, piiAnalysis.types);
@@ -1337,8 +1349,10 @@ const generateWithLocalServer = async (
   userPrompt,
   options = {},
 ) => {
-  assertDocumentCallAllowed(resolveDataClass(options), {
-    isOnDevice: isLoopbackHost(localServerClient.getServerConfig().host),
+  const dataClass = resolveDataClass(options);
+  const isOnDevice = isLoopbackHost(localServerClient.getServerConfig().host);
+  assertDocumentCallAllowed(dataClass, {
+    isOnDevice,
     providerLabel: `Local Server (${localServerClient.getServerConfig().host})`,
   });
 
@@ -1358,8 +1372,16 @@ const generateWithLocalServer = async (
   // `scrubCloudPromptPII` above for why that gate misses bare-PII-only
   // prompts). The local llama.cpp server is a separate process reached over
   // localhost HTTP, so this is an egress boundary the same as cloud.
+  //
+  // ADR-009 decision E exception: the assertDocumentCallAllowed call above
+  // already guarantees that if we reach this point with dataClass DOCUMENT,
+  // isOnDevice is true (a loopback host) - nothing leaves the machine, so
+  // scrubbing here would only destroy the identifiers on-device extraction
+  // depends on, for no privacy benefit.
+  const isOnDeviceDocumentCall =
+    dataClass === AI_DATA_CLASS.DOCUMENT && isOnDevice;
   let scrubbedPrompt = combinedPrompt;
-  if (scrubPIIEnabled) {
+  if (scrubPIIEnabled && !isOnDeviceDocumentCall) {
     const { scrubbedText, piiFound, details } = scrubPII(combinedPrompt, {
       aggressive: true,
       preservePartial: false,
@@ -1913,6 +1935,11 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
         mode: "local",
         isVisionResponse: true,
         isEmpty: true,
+        // ADR-009 §4: this path only ever runs against the in-browser
+        // legacy WebLLM engine (localAIEngine) - unconditionally on-device
+        // by construction, so it must say so. Every consumer treats a
+        // response missing this flag as off-device (fail closed).
+        onDevice: true,
       };
     }
 
@@ -1920,6 +1947,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
       text: rawContent,
       mode: "local",
       isVisionResponse: true,
+      onDevice: true,
     };
   } catch (err) {
     localAIGenerating = false;
@@ -2279,6 +2307,42 @@ function _logBackendUsed(mode, agentUsed) {
   console.log(buildMessage(agentUsed));
 }
 
+// ADR-009: a document-classed call is dispatched straight to whichever
+// on-device backend is actually ready (_resolveOnDeviceMode), NEVER through
+// an off-device attempt-then-refuse-then-fallback dance. Attempting CLOUD
+// first whenever it's the preferred mode (the generic dispatch below does
+// this) would (a) waste a round trip through the per-backend
+// assertDocumentCallAllowed guard every single time Cloud is preferred and
+// an on-device engine is also ready, (b) previously missed WLLAMA and a
+// loopback LOCAL_SERVER entirely once the preferred mode was off-device,
+// because the general fallback picker only ever offered SWARM or legacy
+// LOCAL (see the old _pickFallbackMode), and (c) let callers that size a
+// prompt/chunk for "whatever generateAI will use" (cfileAnalyzer,
+// DD214Analyzer) read the wrong (cloud-sized) mode back before dispatch
+// silently rerouted on-device. generateAIInternal's primary gate already
+// guarantees at least one on-device backend is ready before this runs.
+async function _dispatchDocumentGeneration(
+  effectiveMode,
+  systemPrompt,
+  userPrompt,
+  enhancedOptions,
+) {
+  const mode = _resolveOnDeviceMode(effectiveMode);
+  if (!mode) {
+    throw new DocumentOffDeviceBlockedError(
+      _offDeviceProviderLabel(effectiveMode),
+    );
+  }
+  const { text, agentUsed } = await _invokeBackend(
+    mode,
+    systemPrompt,
+    userPrompt,
+    enhancedOptions,
+  );
+  _logBackendUsed(mode, agentUsed);
+  return { text, usedMode: mode, agentUsed };
+}
+
 async function _dispatchAiGeneration(
   effectiveMode,
   systemPrompt,
@@ -2286,6 +2350,15 @@ async function _dispatchAiGeneration(
   enhancedOptions,
   options,
 ) {
+  if (resolveDataClass(options) === AI_DATA_CLASS.DOCUMENT) {
+    return _dispatchDocumentGeneration(
+      effectiveMode,
+      systemPrompt,
+      userPrompt,
+      enhancedOptions,
+    );
+  }
+
   // Dispatch follows getEffectiveAIMode() - never implicitly upgrade to a
   // backend the user didn't choose. getEffectiveAIMode() already handles the
   // full fallback chain (SWARM → WLLAMA → LOCAL_SERVER → LOCAL → CLOUD). The
@@ -2522,6 +2595,21 @@ function _pickFallbackMode(effectiveMode) {
   };
 }
 
+// ADR-009: fallback picker for a document-classed call whose FIRST on-device
+// attempt (_resolveOnDeviceMode's choice) itself threw - e.g. the swarm
+// engine crashed mid-inference. Tries the next ready on-device backend in
+// priority order, skipping the one that just failed; never offers an
+// off-device mode (unlike the generic _pickFallbackMode above, which can
+// land on CLOUD).
+function _pickDocumentFallbackMode(effectiveMode) {
+  const failedMode = _resolveOnDeviceMode(effectiveMode);
+  const mode =
+    ON_DEVICE_MODE_PRIORITY.find(
+      (m) => m !== failedMode && _isOnDeviceModeReady(m),
+    ) || null;
+  return { mode, available: mode !== null };
+}
+
 async function _generateFallback(mode, systemPrompt, userPrompt, options) {
   if (mode === AI_MODES.SWARM) {
     const text = await generateWithWarrantCouncil(
@@ -2548,9 +2636,19 @@ async function _handleGeneralFallback(
   effectiveMode,
   systemPrompt,
   userPrompt,
-  options,
+  enhancedOptions,
 ) {
-  const { mode: fallbackMode, available } = _pickFallbackMode(effectiveMode);
+  // D15-2 bug: this used to receive the raw `options` passed into generateAI,
+  // not `enhancedOptions` (the object _buildFullPrompt actually enriched with
+  // _hadCallerSystemPrompt/preset). Every fallback then dropped the caller's
+  // "_hadCallerSystemPrompt" flag back to its default `false`, folding an
+  // explicit caller systemPrompt into the user turn a second time on any
+  // fallback, cloud or on-device.
+  const isDocument =
+    resolveDataClass(enhancedOptions) === AI_DATA_CLASS.DOCUMENT;
+  const { mode: fallbackMode, available } = isDocument
+    ? _pickDocumentFallbackMode(effectiveMode)
+    : _pickFallbackMode(effectiveMode);
 
   // ADR-009: a "document"-classed call never falls back to an off-device
   // mode. Surfacing the ORIGINAL error unwrapped (rather than attempting
@@ -2559,11 +2657,9 @@ async function _handleGeneralFallback(
   // DocumentOffDeviceBlockedError from the primary attempt - wrapping it
   // into the generic "All AI modes failed" Error below would make the
   // caller's `instanceof DocumentOffDeviceBlockedError` check miss it.
-  const fallbackBlocked =
-    resolveDataClass(options) === AI_DATA_CLASS.DOCUMENT &&
-    !_isModeOnDevice(fallbackMode);
+  const fallbackBlocked = isDocument && !_isModeOnDevice(fallbackMode);
 
-  if (available && !fallbackBlocked && !options.noFallback) {
+  if (available && !fallbackBlocked && !enhancedOptions.noFallback) {
     console.warn(
       `💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`,
       err.message,
@@ -2573,7 +2669,7 @@ async function _handleGeneralFallback(
         fallbackMode,
         systemPrompt,
         userPrompt,
-        options,
+        enhancedOptions,
       );
     } catch (fallbackErr) {
       throw new Error(
@@ -2585,18 +2681,54 @@ async function _handleGeneralFallback(
   throw err;
 }
 
-// ADR-009: is ANY on-device backend ready right now? A local-server
-// backend only counts when its CURRENTLY configured host is loopback -
-// checked live via real URL parsing, not cached, since the user can point
-// it at a different host at any time.
+// ADR-009: the on-device backend priority order (matches getEffectiveAIMode's
+// own SWARM -> WLLAMA -> LOCAL_SERVER -> LOCAL ordering) used whenever a
+// document-classed call must pick an on-device destination INDEPENDENT of
+// the user's preferred mode - a "document" call never attempts an off-device
+// backend at all (see _dispatchAiGeneration), so it can't rely on
+// getEffectiveAIMode()'s own preference-first ordering, which returns CLOUD
+// whenever CLOUD is both preferred and available even if an on-device engine
+// is ALSO ready.
+const ON_DEVICE_MODE_PRIORITY = [
+  AI_MODES.SWARM,
+  AI_MODES.WLLAMA,
+  AI_MODES.LOCAL_SERVER,
+  AI_MODES.LOCAL,
+];
+
+// Is THIS specific mode ready right now? A local-server backend only counts
+// when its CURRENTLY configured host is loopback - checked live via real URL
+// parsing, not cached, since the user can point it at a different host at
+// any time.
+function _isOnDeviceModeReady(mode) {
+  if (mode === AI_MODES.LOCAL_SERVER) {
+    return (
+      isLocalServerAvailable() &&
+      isLoopbackHost(localServerClient.getServerConfig().host)
+    );
+  }
+  return AI_BACKEND_READY_CHECKS[mode]();
+}
+
+// ADR-009: which on-device backend would actually run a document-classed
+// call right now - the user's preferred mode when it's on-device AND ready,
+// else the first ready backend in priority order. Returns null when none is
+// ready. This is the single source of truth both for the provider-boundary
+// dispatch (_dispatchAiGeneration) and for callers that need to size a
+// document prompt/chunk for whichever backend will really receive it
+// (getDocumentAIRouting) - so "what's ready" and "what will run" never
+// disagree.
+function _resolveOnDeviceMode(effectiveMode) {
+  if (_isModeOnDevice(effectiveMode) && _isOnDeviceModeReady(effectiveMode)) {
+    return effectiveMode;
+  }
+  return ON_DEVICE_MODE_PRIORITY.find(_isOnDeviceModeReady) || null;
+}
+
+// ADR-009: is ANY on-device backend ready right now, regardless of the
+// user's preferred mode?
 function _isAnyOnDeviceAIReady() {
-  return (
-    isDiamondSwarmReady() ||
-    isWllamaAvailable() ||
-    isLocalAIReady() ||
-    (isLocalServerAvailable() &&
-      isLoopbackHost(localServerClient.getServerConfig().host))
-  );
+  return ON_DEVICE_MODE_PRIORITY.some(_isOnDeviceModeReady);
 }
 
 // Human-readable label for the off-device provider a blocked document call
@@ -2618,14 +2750,23 @@ function _offDeviceProviderLabel(effectiveMode) {
  * DocumentOffDeviceBlockedError thrown inside generateAI itself remains the
  * authoritative enforcement point (this is only an optimization + a label
  * source for the UI notice) - both read the SAME live state.
+ *
+ * `onDeviceMode` is the on-device backend a document call will ACTUALLY
+ * dispatch to right now (or null when none is ready) - callers that size a
+ * chunk/prompt/timeout for "local vs cloud" (e.g. cfileAnalyzer, DD214
+ * analysis) must use this instead of getEffectiveAIMode(), which can return
+ * CLOUD even while an on-device engine sits ready (Cloud preferred + Warrant
+ * Council loaded), silently sizing a document call for the wrong backend.
  */
 export const getDocumentAIRouting = () => {
-  const onDeviceReady = _isAnyOnDeviceAIReady();
+  const effectiveMode = getEffectiveAIMode();
+  const onDeviceMode = _resolveOnDeviceMode(effectiveMode);
   return {
-    onDeviceReady,
-    blockedProviderLabel: onDeviceReady
+    onDeviceReady: onDeviceMode !== null,
+    onDeviceMode,
+    blockedProviderLabel: onDeviceMode
       ? null
-      : _offDeviceProviderLabel(getEffectiveAIMode()),
+      : _offDeviceProviderLabel(effectiveMode),
   };
 };
 
@@ -2670,10 +2811,19 @@ const generateAIInternal = async (prompt, options = {}) => {
   // ADR-008: redact both halves of the assembled request before either
   // reaches the dispatch below OR either fallback path in the catch block -
   // see _redactPiecesForSend for why this belongs here, not per-caller.
-  const [systemPrompt, userPrompt] = await _redactPiecesForSend([
-    builtSystemPrompt,
-    builtUserPrompt,
-  ]);
+  //
+  // ADR-009 decision E: a "document"-classed call is EXEMPT - it only ever
+  // reaches an on-device backend (the gate above already refused it
+  // otherwise, and _dispatchAiGeneration/_handleGeneralFallback never
+  // attempt an off-device mode for this data class), so nothing here leaves
+  // the veteran's machine. Redacting it anyway would defeat the whole point
+  // of decision E: the on-device model needs the real name/DOB/SSN printed
+  // on a DD-214 to extract them, and every downstream consumer treats a
+  // "[REDACTED]" token it gets back as a genuine on-device read.
+  const [systemPrompt, userPrompt] =
+    dataClass === AI_DATA_CLASS.DOCUMENT
+      ? [builtSystemPrompt, builtUserPrompt]
+      : await _redactPiecesForSend([builtSystemPrompt, builtUserPrompt]);
 
   try {
     const {
@@ -2715,7 +2865,7 @@ const generateAIInternal = async (prompt, options = {}) => {
       effectiveMode,
       systemPrompt,
       userPrompt,
-      options,
+      enhancedOptions,
     );
   }
 };
