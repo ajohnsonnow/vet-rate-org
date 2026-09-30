@@ -2204,19 +2204,31 @@ function _claimsFromCodeSheet(fullText) {
 // section headers. Dynamically imported the same way this file already
 // pulls in diamondSwarm - musterCallProcessor is a large module and this
 // fallback path only runs when no on-device AI is ready.
+//
+// Reads data.decisions (every per-issue outcome the letter states,
+// including denials), not data.conditions (parseClaimLetter's own
+// decisionsToConditions keeps only RATED_OUTCOMES entries with a non-null
+// rating, so a denial - exactly the appealable finding a veteran needs to
+// see - was silently excluded). Labeled "decision text" rather than "claim
+// letter": parseClaimLetter's per-issue extraction is a plain prose/sentence
+// scan that fires on any decision-bearing letter, not only development/
+// award letters, so "claim letter" mislabeled a real rating-decision finding
+// as something else.
 async function _claimsFromClaimLetter(fullText) {
   const { parseClaimLetter } = await import("./musterCallProcessor");
   const data = await parseClaimLetter(fullText);
-  return (data.conditions || []).map((c) =>
-    _localParserClaim(
-      c.name,
-      c.diagnosticCode,
-      c.rating,
-      null,
-      c.effectiveDate,
-      "claim-letter",
-    ),
-  );
+  return (data.decisions || [])
+    .filter((d) => !d.issue)
+    .map((d) =>
+      _localParserClaim(
+        d.condition,
+        null,
+        d.rating,
+        d.outcome === "denied" ? "DENIED" : null,
+        d.effectiveDate,
+        "decision-text",
+      ),
+    );
 }
 
 // D19-2: the off-device fallback used to run ONLY a 4-condition foot-terms
