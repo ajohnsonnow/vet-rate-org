@@ -26,6 +26,10 @@ const FAKE_LAST = "Faketon";
 vi.mock("./localServerClient", () => ({
   checkServerHealth: vi.fn(async () => ({ available: true, model: "test" })),
   chatCompletion: vi.fn(async () => "OK response from the local model"),
+  // ADR-009: the provider boundary re-checks the local server's CURRENT
+  // configured host on every call (isLoopbackHost) - "localhost" here keeps
+  // this file's existing on-device local-server scenario on-device.
+  getServerConfig: vi.fn(() => ({ host: "localhost", port: 8080 })),
 }));
 
 // Minimal fake IndexedDB - same pattern as

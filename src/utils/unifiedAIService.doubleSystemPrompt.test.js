@@ -35,6 +35,7 @@ const SYSTEM_PROMPT_MARKER = "You are a helpful assistant.";
 vi.mock("./localServerClient", () => ({
   checkServerHealth: vi.fn().mockResolvedValue({ available: false }),
   chatCompletion: vi.fn(),
+  getServerConfig: vi.fn(() => ({ host: "localhost", port: 8080 })),
 }));
 
 vi.mock("./diamondSwarm", async (importOriginal) => {
@@ -109,6 +110,7 @@ const {
   registerLocalAIEngine,
   resetAICircuitBreaker,
 } = await import("./unifiedAIService.js");
+const { AI_DATA_CLASS } = await import("./aiDataClassPolicy.js");
 
 async function seedFixtureVkb() {
   const vkb = initializeVKB();
@@ -144,6 +146,11 @@ function makeCapturingLocalEngine() {
 
 function baseOptions() {
   return {
+    // ADR-009: this fixture's prompt ("Please analyze this claim.") is a
+    // generic context-style call, not a document upload - declared
+    // explicitly so it isn't blocked by the fail-closed default this suite
+    // predates.
+    dataClass: AI_DATA_CLASS.CONTEXT,
     systemPrompt: `${SYSTEM_PROMPT_MARKER} The veteran is ${FAKE_NAME}, born ${FAKE_DOB}.`,
     skipCrisisCheck: true,
     skipFeatureCheck: true,

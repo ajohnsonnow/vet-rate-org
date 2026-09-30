@@ -46,6 +46,13 @@ import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
+import {
+  AI_DATA_CLASS,
+  resolveDataClass,
+  isLoopbackHost,
+  assertDocumentCallAllowed,
+  DocumentOffDeviceBlockedError,
+} from "./aiDataClassPolicy";
 
 // Dynamic imports for code splitting
 let aiSystemPromptsModule = null;
@@ -997,8 +1004,20 @@ const handleGeminiErrorResponse = async (response) => {
  * Gemini body below is one text blob), so the two halves are combined into
  * ONE string here, exactly once, immediately before the pattern-scrub (the
  * last defense before the network send).
+ *
+ * ADR-009 provider boundary: Gemini is always off-device (a third-party
+ * network endpoint), so a "document"-classed call is refused here,
+ * unconditionally, before anything is scrubbed/serialized/sent - this is
+ * the actual choke point every dispatch path (primary, context-overflow
+ * fallback, general fallback) converges on for this backend, so none of
+ * them can reach it another way.
  */
 const generateWithCloudAI = async (systemPrompt, userPrompt, options = {}) => {
+  assertDocumentCallAllowed(resolveDataClass(options), {
+    isOnDevice: false,
+    providerLabel: "Cloud AI (Gemini)",
+  });
+
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
     throw new Error("Gemini API key not configured");
@@ -1304,12 +1323,25 @@ const generateWithWllama = async (systemPrompt, userPrompt, options = {}) => {
  * (system + DKB context, and the user request) and already known-value-
  * redacted. Combined into ONE string here, exactly once, before the
  * pattern-scrub (the last defense before this local-engine call).
+ *
+ * ADR-009 provider boundary: this is the ONE backend whose transport is
+ * off-device or on-device depending on user configuration (a llama.cpp
+ * server the veteran points at ANY host/port, not necessarily their own
+ * machine) - so "on-device" is re-checked live against the CURRENT
+ * `localServerClient.getServerConfig()` host every call, via real URL
+ * parsing (`isLoopbackHost`), never a cached flag or a substring check a
+ * lookalike host ("localhost.evil.com") could pass.
  */
 const generateWithLocalServer = async (
   systemPrompt,
   userPrompt,
   options = {},
 ) => {
+  assertDocumentCallAllowed(resolveDataClass(options), {
+    isOnDevice: isLoopbackHost(localServerClient.getServerConfig().host),
+    providerLabel: `Local Server (${localServerClient.getServerConfig().host})`,
+  });
+
   const {
     maxTokens = getUserTokenLimit(),
     temperature = 0.7,
@@ -1931,8 +1963,15 @@ export const resetAICircuitBreaker = () => {
 };
 
 function _recordGenerationFailure(err) {
-  // Crisis interception is a safety block, not an engine failure
-  if (err.message !== "CRISIS_DETECTED") {
+  // Crisis interception is a safety block, not an engine failure. Same for
+  // a fail-closed document-routing refusal (ADR-009) - a veteran who only
+  // has cloud AI configured hitting a document tool repeatedly must not
+  // trip the shared circuit breaker and lock out their unrelated "context"
+  // calls (e.g. the AI Assistant) for the cooldown window.
+  if (
+    err.message !== "CRISIS_DETECTED" &&
+    err.code !== "DOCUMENT_OFF_DEVICE_BLOCKED"
+  ) {
     consecutiveGenerationFailures++;
     if (consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD) {
       circuitBreakerOpenedAt = Date.now();
@@ -2345,6 +2384,7 @@ async function _buildValidatedResult(
   hallucinationReport,
   options,
 ) {
+  const onDevice = _isModeOnDevice(usedMode);
   if (!options.skipValidation) {
     const { validateAIResponse } = await getAISystemPrompts();
     const validation = validateAIResponse(text, {
@@ -2361,6 +2401,7 @@ async function _buildValidatedResult(
       return {
         text,
         mode: usedMode,
+        onDevice,
         validationErrors: validation.errors,
         validationWarnings: validation.warnings,
         hallucinationReport,
@@ -2371,6 +2412,7 @@ async function _buildValidatedResult(
   return {
     text,
     mode: usedMode,
+    onDevice,
     ...(agentUsed && { agent: agentUsed }),
     ...(hallucinationReport && { hallucinationReport }),
   };
@@ -2398,6 +2440,15 @@ async function _handleContextOverflowFallback(
     "📏 Context window overflow detected - document too large for Local AI",
   );
 
+  // ADR-009: a "document"-classed call never auto-falls-back to Cloud on
+  // overflow - Cloud is off-device. Returning null here lets
+  // _handleGeneralFallback try another ON-DEVICE backend instead; if none
+  // is available, the original overflow error propagates unchanged rather
+  // than a cloud attempt this data class can't take.
+  if (resolveDataClass(options) === AI_DATA_CLASS.DOCUMENT) {
+    return null;
+  }
+
   // Try Cloud AI (Gemini has 1M token context window)
   if (isCloudAIAvailable() && !options.noFallback) {
     // eslint-disable-next-line no-console
@@ -2415,6 +2466,7 @@ async function _handleContextOverflowFallback(
       return {
         text,
         mode: AI_MODES.CLOUD,
+        onDevice: false,
         fallback: true,
         fallbackReason: "context_overflow",
         note: "Document was too large for Local AI (4096 tokens). Processed with Cloud AI instead.",
@@ -2434,6 +2486,22 @@ async function _handleContextOverflowFallback(
       `Options: 1) Configure a Gemini API key in Settings to enable Cloud AI fallback for large documents, ` +
       `2) Paste only the key sections of your decision letter (look for "Reasons for Decision" or "Denial" sections), ` +
       `3) Try uploading fewer pages at once.`,
+  );
+}
+
+// ADR-009: true for every backend that never leaves the device - the two
+// in-browser engines (Warrant Council/SWARM, WLLAMA) and legacy LOCAL are
+// unconditionally on-device; LOCAL_SERVER depends on whatever host is
+// CURRENTLY configured (re-checked live, never cached - see
+// _isAnyOnDeviceAIReady above); CLOUD is never on-device.
+function _isModeOnDevice(mode) {
+  if (mode === AI_MODES.LOCAL_SERVER) {
+    return isLoopbackHost(localServerClient.getServerConfig().host);
+  }
+  return (
+    mode === AI_MODES.SWARM ||
+    mode === AI_MODES.WLLAMA ||
+    mode === AI_MODES.LOCAL
   );
 }
 
@@ -2461,12 +2529,18 @@ async function _generateFallback(mode, systemPrompt, userPrompt, options) {
       userPrompt,
       options,
     );
-    return { text, mode, agent: getCurrentAgent(), fallback: true };
+    return {
+      text,
+      mode,
+      onDevice: _isModeOnDevice(mode),
+      agent: getCurrentAgent(),
+      fallback: true,
+    };
   }
   const generate =
     mode === AI_MODES.LOCAL ? generateWithLocalAI : generateWithCloudAI;
   const text = await generate(systemPrompt, userPrompt, options);
-  return { text, mode, fallback: true };
+  return { text, mode, onDevice: _isModeOnDevice(mode), fallback: true };
 }
 
 async function _handleGeneralFallback(
@@ -2478,7 +2552,18 @@ async function _handleGeneralFallback(
 ) {
   const { mode: fallbackMode, available } = _pickFallbackMode(effectiveMode);
 
-  if (available && !options.noFallback) {
+  // ADR-009: a "document"-classed call never falls back to an off-device
+  // mode. Surfacing the ORIGINAL error unwrapped (rather than attempting
+  // the off-device backend here and catching its refusal below) matters
+  // because that original error is often already the typed
+  // DocumentOffDeviceBlockedError from the primary attempt - wrapping it
+  // into the generic "All AI modes failed" Error below would make the
+  // caller's `instanceof DocumentOffDeviceBlockedError` check miss it.
+  const fallbackBlocked =
+    resolveDataClass(options) === AI_DATA_CLASS.DOCUMENT &&
+    !_isModeOnDevice(fallbackMode);
+
+  if (available && !fallbackBlocked && !options.noFallback) {
     console.warn(
       `💎 Primary AI (${effectiveMode}) failed, falling back to ${fallbackMode}:`,
       err.message,
@@ -2500,6 +2585,50 @@ async function _handleGeneralFallback(
   throw err;
 }
 
+// ADR-009: is ANY on-device backend ready right now? A local-server
+// backend only counts when its CURRENTLY configured host is loopback -
+// checked live via real URL parsing, not cached, since the user can point
+// it at a different host at any time.
+function _isAnyOnDeviceAIReady() {
+  return (
+    isDiamondSwarmReady() ||
+    isWllamaAvailable() ||
+    isLocalAIReady() ||
+    (isLocalServerAvailable() &&
+      isLoopbackHost(localServerClient.getServerConfig().host))
+  );
+}
+
+// Human-readable label for the off-device provider a blocked document call
+// would otherwise have reached - shown in the veteran-facing fallback
+// notice (aiDataClassPolicy.buildDocumentOffDeviceNotice).
+function _offDeviceProviderLabel(effectiveMode) {
+  if (effectiveMode === AI_MODES.CLOUD) return "Cloud AI (Gemini)";
+  if (effectiveMode === AI_MODES.LOCAL_SERVER) {
+    return `Local Server (${localServerClient.getServerConfig().host})`;
+  }
+  return null;
+}
+
+/**
+ * ADR-009: pre-flight check a "document"-classed feature can call BEFORE
+ * attempting generateAI, so it can go straight to its local-parser fallback
+ * (and show the notice) instead of burning retries/timeouts against a
+ * routing decision that won't change between attempts. The typed
+ * DocumentOffDeviceBlockedError thrown inside generateAI itself remains the
+ * authoritative enforcement point (this is only an optimization + a label
+ * source for the UI notice) - both read the SAME live state.
+ */
+export const getDocumentAIRouting = () => {
+  const onDeviceReady = _isAnyOnDeviceAIReady();
+  return {
+    onDeviceReady,
+    blockedProviderLabel: onDeviceReady
+      ? null
+      : _offDeviceProviderLabel(getEffectiveAIMode()),
+  };
+};
+
 /**
  * Internal generateAI implementation (wrapped by timeout in public API)
  */
@@ -2515,6 +2644,20 @@ const generateAIInternal = async (prompt, options = {}) => {
   if (!effectiveMode) {
     throw new Error(
       "No AI available. Please configure a Gemini API key or initialize Local AI.",
+    );
+  }
+
+  // ADR-009 fail-closed provider boundary: a "document"-classed call (or
+  // one with no declaration at all - fail closed) is refused up front,
+  // before any prompt assembly/DKB lookup/redaction work, when no on-device
+  // engine is ready. This is the primary path to the typed error; the
+  // per-backend checks inside generateWithCloudAI/generateWithLocalServer
+  // are defense in depth for every other path that can reach them
+  // (fallback, context-overflow fallback).
+  const dataClass = resolveDataClass(options);
+  if (dataClass === AI_DATA_CLASS.DOCUMENT && !_isAnyOnDeviceAIReady()) {
+    throw new DocumentOffDeviceBlockedError(
+      _offDeviceProviderLabel(effectiveMode),
     );
   }
 
@@ -2870,6 +3013,7 @@ export default {
   resetAICircuitBreaker,
   getAIStatus,
   getAIDataDisclosure,
+  getDocumentAIRouting,
   // Diamond Swarm
   SWARM_AGENTS,
   TOOL_AGENT_MAP,
