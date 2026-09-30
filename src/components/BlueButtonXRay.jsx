@@ -790,7 +790,19 @@ function BlueButtonHeader({ onClose, onOpenAISettings, onReportBug }) {
   );
 }
 
-function InfoBanner({ aiStatus }) {
+// D19-5: this banner used to phrase the AI line from `aiStatus.isPrivate`
+// (the user's PREFERRED/effective mode - true only when it isn't Cloud),
+// not from whether THIS document call will actually reach that mode. A
+// Blue Button report is document-derived (ADR-009), so it is ALWAYS
+// analyzed on-device when any on-device engine is ready - even when Cloud
+// is the preferred mode - and never reaches Cloud at all when none is
+// ready (the off-device notice built below then explains the built-in
+// reader ran instead). `getDocumentAIRouting()` is the same routing
+// decision the actual analysis call uses, so this banner can never say
+// "Cloud AI" for a call that was always going to be on-device-only or
+// blocked.
+function InfoBanner() {
+  const { onDeviceReady } = getDocumentAIRouting();
   return (
     <div className="bg-cyan-50 dark:bg-cyan-900/30 border-l-4 border-cyan-500 p-4 mb-6 rounded-r-lg">
       <div className="flex items-start gap-3">
@@ -814,10 +826,20 @@ function InfoBanner({ aiStatus }) {
             <strong>today</strong>.
           </p>
           <p className="text-cyan-700 dark:text-cyan-300 text-sm mt-2">
-            🤖 <strong>AI-Powered:</strong> Uses your{" "}
-            {aiStatus.isPrivate ? "secure Local AI" : "Cloud AI"} to
-            intelligently extract diagnoses.
-            {aiStatus.isPrivate && " Your data never leaves your device!"}
+            {onDeviceReady ? (
+              <>
+                🤖 <strong>AI-Powered:</strong> Uses your on-device AI to
+                intelligently extract diagnoses. Your data never leaves your
+                device!
+              </>
+            ) : (
+              <>
+                🤖 <strong>AI-Powered (on-device only):</strong> Diagnoses are
+                only ever extracted by an on-device AI, never sent to a cloud
+                AI. Load an on-device AI to enable this - without one, the app's
+                built-in document reader is used instead.
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -1358,7 +1380,6 @@ function SmartAILoadPrompt() {
 }
 
 function BlueButtonUploadContent({
-  aiStatus,
   extractedConditions,
   dropZoneClass,
   handleDrop,
@@ -1380,7 +1401,7 @@ function BlueButtonUploadContent({
   return (
     <>
       {/* Info Banner */}
-      <InfoBanner aiStatus={aiStatus} />
+      <InfoBanner />
 
       {/* Smart AI Load Button */}
       {!aiAvailable && <SmartAILoadPrompt />}
@@ -1470,7 +1491,6 @@ function BlueButtonResultsContent({
 }
 
 function BlueButtonMainContent({
-  aiStatus,
   extractedConditions,
   dropZoneClass,
   handleDrop,
@@ -1502,7 +1522,6 @@ function BlueButtonMainContent({
   return (
     <div className="max-w-4xl mx-auto">
       <BlueButtonUploadContent
-        aiStatus={aiStatus}
         extractedConditions={extractedConditions}
         dropZoneClass={dropZoneClass}
         handleDrop={handleDrop}
