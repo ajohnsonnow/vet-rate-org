@@ -5,12 +5,20 @@
  * (NEXUS_LETTER's bare "opinion"/"nexus", with no required adjacent word)
  * matches thousands of times close together, since each check rescanned
  * from the start instead of the newest (nearest, and thus most likely to
- * hit) entries. Measured 3.1s for that one pattern alone on a 12M-char
- * fixture before this fix, 0.76s after, with byte-identical `found` output
- * either way - it is an existence check, so scan order changes cost, never
- * the result. This is a strong candidate for Part 2's unattributed ~3.6s
- * main-thread task: a real C-File with clinical notes mentioning "nexus
- * opinion" or similar repeatedly is exactly this shape.
+ * hit) entries. That newest-first reorder only pays off while a signature's
+ * FIRST pattern is running, though: for a later pattern (NEXUS_LETTER's own
+ * loose `(?:MEDICAL\s*)?(?:NEXUS|OPINION)` is its third), the newest entries
+ * in `found` are an *earlier* pattern's matches, decorrelated from this
+ * pattern's own candidate positions - so the scan still walks back through
+ * roughly all of them, and total cost stays quadratic in match count. A
+ * bucket-indexed dedupe (see cFileSegmentation.js's _hasNearbyMatch) fixes
+ * this independent of pattern order. The first test below (the original
+ * regression test for the oldest-first bug) is too small to expose that
+ * this remained: 6,000 paragraphs already runs in ~500ms even with the
+ * quadratic scan present, well under its 1,500ms budget. The second test
+ * scales up enough to make the O(n^2) plainly visible (measured 1.7s on the
+ * pre-bucket-index branch vs ~0.2s after) while still finishing in well
+ * under a second post-fix.
  */
 import { describe, it, expect } from "vitest";
 import { segmentCFile, segmentCFileChunked } from "./cFileSegmentation";
@@ -59,6 +67,24 @@ describe("segmentCFile: duplicate-match dedupe does not regress to O(n^2)", () =
 
     expect(result.success).toBe(true);
     expect(elapsed).toBeLessThan(1500);
+  });
+
+  // Twice the paragraph count of the fixture above - a scan that is
+  // genuinely O(n) in match count should cost roughly 2x, not ~4x, for a 2x
+  // input; catching a revert to the old "scan order doesn't matter across
+  // patterns" behavior needs enough matches for that quadratic term to
+  // dominate within a tight budget.
+  it("does not regress to O(n^2) once a signature's later, looser pattern dominates", () => {
+    const fixture = buildPathologicalFixture(12_000);
+    const start = performance.now();
+    const result = segmentCFile(fixture, {
+      parseDocuments: false,
+      maxSegments: Infinity,
+    });
+    const elapsed = performance.now() - start;
+
+    expect(result.success).toBe(true);
+    expect(elapsed).toBeLessThan(800);
   });
 
   it("chunked path still matches on the same pathological fixture", async () => {

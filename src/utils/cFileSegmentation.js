@@ -401,23 +401,43 @@ export async function segmentCFileChunked(text, options = {}) {
   return result;
 }
 
-// Existence check only (which entry matched never matters), so scanning
-// found[] newest-first instead of Array.some()'s oldest-first is a pure
-// reorder, not a behavior change - but on real content a handful of common
-// words (e.g. a NEXUS_LETTER pattern matching bare "opinion"/"nexus")
-// produces tens of thousands of raw matches, and the most recent entry is
-// almost always the nearby one. Oldest-first measured 3.1s on a 12M-char
-// pathological fixture (effectively O(matches^2)); newest-first measured
-// 0.76s on the exact same input with byte-identical `found` output - see
-// cFileSegmentation.dedupePerf.test.js.
-function _hasNearbyMatch(found, typeName, position) {
-  for (let i = found.length - 1; i >= 0; i--) {
-    const b = found[i];
-    if (b.type === typeName && Math.abs(b.position - position) < 500) {
+// D19-7 follow-up: a linear scan of every already-accepted match (even
+// newest-first, as this used to be) only amortizes well while a signature's
+// FIRST pattern is running. For a later pattern, the newest entries in
+// `found` are the *earlier* pattern's matches - clustered whenever that
+// pattern hit a few common words, and almost always nowhere near this
+// pattern's own candidate positions, so the scan still walks back through
+// roughly all of them. That keeps total CPU quadratic in match count for a
+// signature with more than one pattern (see
+// cFileSegmentation.dedupePerf.test.js).
+//
+// This dedupe's own rule - "reject a candidate within NEARBY_WINDOW_CHARS of
+// an already-accepted match" - guarantees every pair of accepted positions
+// for a signature ends up >= NEARBY_WINDOW_CHARS apart (a rejected candidate
+// never gets recorded, so nothing closer than that ever survives). Bucketing
+// position by NEARBY_WINDOW_CHARS therefore holds at most one accepted
+// position per bucket, and any position within NEARBY_WINDOW_CHARS of a
+// given point can only fall in that point's own bucket or an immediate
+// neighbor - so checking those 3 buckets is an exact, O(1)-per-match
+// replacement for the full scan, independent of pattern order.
+const NEARBY_WINDOW_CHARS = 500;
+
+function _hasNearbyMatch(nearbyIndex, position) {
+  const bucket = Math.floor(position / NEARBY_WINDOW_CHARS);
+  for (let b = bucket - 1; b <= bucket + 1; b++) {
+    const existing = nearbyIndex.get(b);
+    if (
+      existing !== undefined &&
+      Math.abs(existing - position) < NEARBY_WINDOW_CHARS
+    ) {
       return true;
     }
   }
   return false;
+}
+
+function _recordMatch(nearbyIndex, position) {
+  nearbyIndex.set(Math.floor(position / NEARBY_WINDOW_CHARS), position);
 }
 
 function _matchToBoundary(typeName, signature, text, match) {
@@ -433,7 +453,17 @@ function _matchToBoundary(typeName, signature, text, match) {
 // One pattern's matches, appended into the signature's shared `found` list
 // so the 500-char dedupe below sees everything found for this signature so
 // far - same scope the inline per-signature loop used to keep implicitly.
-function _collectPatternMatches(typeName, signature, pattern, text, found) {
+// `nearbyIndex` is `found`'s companion spatial index (shared across every
+// pattern of this signature the same way `found` itself is) - see
+// _hasNearbyMatch's doc comment.
+function _collectPatternMatches(
+  typeName,
+  signature,
+  pattern,
+  text,
+  found,
+  nearbyIndex,
+) {
   let match;
   const globalPattern = new RegExp(
     pattern.source,
@@ -441,8 +471,9 @@ function _collectPatternMatches(typeName, signature, pattern, text, found) {
   );
 
   while ((match = globalPattern.exec(text)) !== null) {
-    if (!_hasNearbyMatch(found, typeName, match.index)) {
+    if (!_hasNearbyMatch(nearbyIndex, match.index)) {
       found.push(_matchToBoundary(typeName, signature, text, match));
+      _recordMatch(nearbyIndex, match.index);
     }
   }
 }
@@ -464,6 +495,7 @@ async function _collectPatternMatchesChunked(
   pattern,
   text,
   found,
+  nearbyIndex,
   slicer,
 ) {
   let match;
@@ -473,8 +505,9 @@ async function _collectPatternMatchesChunked(
   );
 
   while ((match = globalPattern.exec(text)) !== null) {
-    if (!_hasNearbyMatch(found, typeName, match.index)) {
+    if (!_hasNearbyMatch(nearbyIndex, match.index)) {
       found.push(_matchToBoundary(typeName, signature, text, match));
+      _recordMatch(nearbyIndex, match.index);
     }
     await slicer.maybeYield();
   }
@@ -484,8 +517,16 @@ async function _collectPatternMatchesChunked(
 // Dedupes matches of the *same* type within 500 chars of each other.
 function _collectPatternBoundaries(typeName, signature, text) {
   const found = [];
+  const nearbyIndex = new Map();
   for (const pattern of signature.patterns) {
-    _collectPatternMatches(typeName, signature, pattern, text, found);
+    _collectPatternMatches(
+      typeName,
+      signature,
+      pattern,
+      text,
+      found,
+      nearbyIndex,
+    );
   }
   return found;
 }
@@ -498,8 +539,9 @@ function _boundaryWorkItems() {
   const items = [];
   for (const [typeName, signature] of Object.entries(DOCUMENT_SIGNATURES)) {
     const found = [];
+    const nearbyIndex = new Map();
     for (const pattern of signature.patterns) {
-      items.push({ typeName, signature, pattern, found });
+      items.push({ typeName, signature, pattern, found, nearbyIndex });
     }
   }
   return items;
@@ -572,6 +614,7 @@ async function findDocumentBoundariesChunked(text, slicer) {
       item.pattern,
       text,
       item.found,
+      item.nearbyIndex,
       slicer,
     );
     await slicer.maybeYield();
