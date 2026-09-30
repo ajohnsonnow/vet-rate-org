@@ -104,6 +104,24 @@ async function stubCloudRoute(page: Page): Promise<CloudRecorder> {
   return recorder;
 }
 
+// deviceCapabilityDetector.js's _deviceTierFor forces ANY mobile-UA browser
+// straight to the "mobile" tier (canUseWebLLM: false) BEFORE it even looks
+// at WebGPU - a deliberate, pre-existing product decision (phones don't get
+// on-device WebLLM regardless of API availability, not something this ADR-
+// 009 test suite changed or should paper over). shimFakeGpuAdapter's fake
+// adapter can never make "on-device available" reachable on mobile-chrome
+// as a result, so these scenarios are structurally impossible there.
+function skipOnDeviceOnMobileTier(testInfo: {
+  project: { name: string };
+}): void {
+  test.skip(
+    testInfo.project.name === "mobile-chrome",
+    "mobile-chrome's UA forces the mobile device tier (canUseWebLLM: false " +
+      "unconditionally) in deviceCapabilityDetector.js - on-device WebLLM " +
+      "is unreachable here by design, real GPU or not.",
+  );
+}
+
 // Every tool's "load on-device AI" affordance is the shared
 // SmartAILoadButton (only rendered while `!isAnyAIAvailable()`) - clicking
 // it and waiting for it to disappear is backend-agnostic across tools.
@@ -215,7 +233,8 @@ test.describe("ADR-009: DD-214 Analyzer document routing", () => {
 
   test("on-device available: the fake engine receives the document and the feature works", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
     test.setTimeout(60000);
     await shimFakeGpuAdapter(page);
     await bootApp(page, { withCloudKey: false });
@@ -286,7 +305,8 @@ test.describe("ADR-009: C-File Analyzer document routing", () => {
 
   test("on-device available: the fake engine receives the document and the feature works", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
     test.setTimeout(60000);
     await shimFakeGpuAdapter(page);
     await bootApp(page, { withCloudKey: false });
@@ -353,7 +373,8 @@ test.describe("ADR-009: Blue Button X-Ray document routing", () => {
 
   test("on-device available: the fake engine receives the document and the feature works", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
     test.setTimeout(60000);
     await shimFakeGpuAdapter(page);
     await bootApp(page, { withCloudKey: false });
@@ -414,7 +435,8 @@ test.describe("ADR-009: Decision Decoder document routing (pasted text)", () => 
 
   test("on-device available: the fake engine receives the document and the feature works", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
     test.setTimeout(60000);
     await shimFakeGpuAdapter(page);
     await bootApp(page, { withCloudKey: false });
@@ -541,7 +563,8 @@ test.describe("ADR-009: Muster Call import-time C-File analysis document routing
 
   test("on-device available: the fake engine receives the document and the analysis completes", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
     test.setTimeout(60000);
     await shimFakeGpuAdapter(page);
     await bootApp(page, { withCloudKey: false });
