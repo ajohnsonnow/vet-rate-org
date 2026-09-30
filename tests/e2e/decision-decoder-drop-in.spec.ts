@@ -631,4 +631,49 @@ test.describe("D-4: advancedOCR full page coverage", () => {
     expect(result.text).toContain("Generic fixture text page 5");
     expect(result.text).toMatch(/NOT READ/);
   });
+
+  // A real text run - even one under MIN_CHARS_PER_PAGE - always produces at
+  // least one text item, unlike a genuinely scanned page (zero items). A
+  // page-level OCR decision that looks only at character count can't tell
+  // these apart and wrongly routes the short-but-real page through the full
+  // Tesseract ensemble, mislabeling it "scanned" and risking its
+  // already-extracted text being discarded once MAX_OCR_PAGES is exceeded.
+  async function buildShortRealTextPagePdf(): Promise<Buffer> {
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const page1 = pdfDoc.addPage([300, 150]);
+    page1.drawText(
+      "Generic fixture text page 1 has enough real text content here",
+      { x: 20, y: 100, size: 12, font },
+    );
+    // 27 characters - well under MIN_CHARS_PER_PAGE (50), but a real,
+    // short text run (an "Enclosure" line), not a scanned image.
+    const page2 = pdfDoc.addPage([300, 150]);
+    page2.drawText("Enclosure: VA Form 21-0958", {
+      x: 20,
+      y: 100,
+      size: 12,
+      font,
+    });
+    return Buffer.from(await pdfDoc.save());
+  }
+
+  test("a short-but-real text page (e.g. an enclosure line) is read as text, never sent through OCR", async ({
+    page,
+  }) => {
+    test.setTimeout(30000);
+    await bootDecisionDecoder(page);
+    await injectAdvancedOCRModule(page);
+
+    const pdfBuffer = await buildShortRealTextPagePdf();
+    const base64 = pdfBuffer.toString("base64");
+    const result = await runAdvancedPDFAnalysis(page, base64, {});
+
+    expect(result.pageCount).toBe(2);
+    expect(result.pagesOCRd).toBe(0);
+    expect(result.pagesSkipped).toHaveLength(0);
+    expect(result.coverageNote).not.toMatch(/OCR'd/i);
+    expect(result.text).toContain("Enclosure: VA Form 21-0958");
+    expect(result.text).not.toMatch(/NOT READ/);
+  });
 });

@@ -192,8 +192,17 @@ const TEXT_LAYER_YIELD_INTERVAL = 25;
 // document-wide average let a handful of real text pages mask a genuinely
 // image-only majority (or the reverse), silently deciding OCR for the
 // entire document instead of just the pages that actually need it.
-function pageNeedsOCR(pageText, config) {
-  return pageText.trim().length < config.MIN_CHARS_PER_PAGE;
+//
+// Character count alone is not enough: a genuinely scanned/image-only page
+// has NO text operators at all (itemCount === 0, since there's nothing but
+// a rendered image on it). A page with real embedded text - even a short
+// "Enclosure: VA Form 21-0958" last page, or a "Page N of M" footer page -
+// has real text items and must never be routed through the full Tesseract
+// ensemble (or have that already-extracted text discarded as "NOT READ"
+// once it falls past MAX_OCR_PAGES) just because its own character count
+// happens to be short.
+export function pageNeedsOCR(pageText, itemCount, config) {
+  return itemCount === 0 && pageText.trim().length < config.MIN_CHARS_PER_PAGE;
 }
 
 /**
@@ -221,7 +230,8 @@ async function extractStandardText(pdf, numPages, config, onProgress) {
         .map((item) => item.str + (item.hasEOL ? "\n" : " "))
         .join("");
     }
-    if (pageNeedsOCR(pageText, config)) pagesNeedingOCR.push(i);
+    if (pageNeedsOCR(pageText, textContent.items.length, config))
+      pagesNeedingOCR.push(i);
 
     onProgress({
       stage: "extracting",
