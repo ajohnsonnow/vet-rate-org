@@ -27,7 +27,13 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
+  getDocumentAIRouting,
 } from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
+import { parseDecisionLetter } from "../utils/vaDocumentParser";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
@@ -87,8 +93,74 @@ const getUrgencyColor = (urgency) => {
   }
 };
 
+// ADR-009: only an off-device AI is configured. Denial letter text stays
+// on-device only, so fall back to the local regex decision-letter parser
+// (vaDocumentParser.js, already used elsewhere for this exact letter
+// shape) instead of a dead end.
+function _buildOffDeviceFallbackAnalysis(text) {
+  const parsed = parseDecisionLetter(text);
+  const reasons = parsed.reasonsForDenial || [];
+  return {
+    denialReason:
+      reasons[0] ||
+      "Not determined by the built-in reader - load the on-device AI for a full analysis.",
+    simplifiedExplanation: reasons.length
+      ? `The letter states: ${reasons.join("; ")}`
+      : "The built-in reader could not identify a specific denial reason in this letter.",
+    whatWasMissing: parsed.evidenceConsidered?.length
+      ? `Evidence considered: ${parsed.evidenceConsidered.join(", ")}`
+      : "Not determined by the built-in reader.",
+    nextSteps: [
+      "Load the on-device AI (Warrant Council or Wllama) for a full plain-English translation.",
+      "Contact a VSO for free claim assistance.",
+      "Request a copy of your C-File to understand what evidence VA used.",
+    ],
+    urgency: "medium",
+    appealDeadline: parsed.appealDeadline || "Not specified",
+  };
+}
+
+// Both the off-device-blocked fallback and a successful AI analysis save
+// the identical VKB/My Packet shape, keyed off whichever `parsedAnalysis`
+// they produced - pulled out once so analyzeWithAI doesn't carry it twice.
+async function _saveDenialAnalysis(text, parsedAnalysis) {
+  await saveAnalysisResults({
+    toolName: "Denial Decoder",
+    classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
+    rawText: text,
+    extractedData: parsedAnalysis,
+    vkbDocument: {
+      classification: "va_decision",
+      rawText: text,
+      extractedData: parsedAnalysis,
+      source: "DenialDecoder",
+    },
+    vkbMergeData: {
+      aiInsights: {
+        lastDenialReason: parsedAnalysis.denialReason,
+        lastDenialMissing: parsedAnalysis.whatWasMissing,
+        denialUrgency: parsedAnalysis.urgency,
+        appealDeadline: parsedAnalysis.appealDeadline,
+      },
+      keyFacts: [
+        {
+          source: "DenialDecoder",
+          fact: `Denial reason: ${parsedAnalysis.denialReason}`,
+          date: new Date().toISOString(),
+        },
+      ],
+    },
+  });
+}
+
 async function analyzeWithAI(text, ctx) {
-  const { setError, setAnalysis, setStep, onOpenAISettings } = ctx;
+  const {
+    setError,
+    setAnalysis,
+    setStep,
+    setOffDeviceNotice,
+    onOpenAISettings,
+  } = ctx;
 
   // Check if AI is available
   if (!isAnyAIAvailable()) {
@@ -97,6 +169,18 @@ async function analyzeWithAI(text, ctx) {
     );
     onOpenAISettings?.();
     setStep("upload");
+    return;
+  }
+
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    const parsedAnalysis = _buildOffDeviceFallbackAnalysis(text);
+    setOffDeviceNotice?.(
+      buildDocumentOffDeviceNotice(routing.blockedProviderLabel),
+    );
+    setAnalysis(parsedAnalysis);
+    setStep("results");
+    await _saveDenialAnalysis(text, parsedAnalysis);
     return;
   }
 
@@ -110,8 +194,10 @@ async function analyzeWithAI(text, ctx) {
       : "";
     const fullPrompt = DENIAL_ANALYSIS_PROMPT + contextBlock + "\n\n" + text;
 
-    // Use unified AI service
+    // Use unified AI service - ADR-009: "document" - text is the veteran's
+    // denial letter (uploaded/OCR'd or pasted), stays on-device only.
     const response = await generateAI(fullPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: 0.3,
       maxTokens: 1500,
       expectJSON: true,
@@ -140,35 +226,7 @@ async function analyzeWithAI(text, ctx) {
 
     setAnalysis(parsedAnalysis);
     setStep("results");
-
-    // Save analysis results to VKB + My Packet
-    await saveAnalysisResults({
-      toolName: "Denial Decoder",
-      classification: PACKET_DOC_TYPES.VA_CORRESPONDENCE,
-      rawText: text,
-      extractedData: parsedAnalysis,
-      vkbDocument: {
-        classification: "va_decision",
-        rawText: text,
-        extractedData: parsedAnalysis,
-        source: "DenialDecoder",
-      },
-      vkbMergeData: {
-        aiInsights: {
-          lastDenialReason: parsedAnalysis.denialReason,
-          lastDenialMissing: parsedAnalysis.whatWasMissing,
-          denialUrgency: parsedAnalysis.urgency,
-          appealDeadline: parsedAnalysis.appealDeadline,
-        },
-        keyFacts: [
-          {
-            source: "DenialDecoder",
-            fact: `Denial reason: ${parsedAnalysis.denialReason}`,
-            date: new Date().toISOString(),
-          },
-        ],
-      },
-    });
+    await _saveDenialAnalysis(text, parsedAnalysis);
   } catch (err) {
     console.error("AI Analysis Error:", err);
     setError(
@@ -181,12 +239,19 @@ async function analyzeWithAI(text, ctx) {
 
 // Handle file upload or camera capture
 async function handleImageSelect(file, ctx) {
-  const { setStep, setError, setProgress, setExtractedText } = ctx;
+  const {
+    setStep,
+    setError,
+    setOffDeviceNotice,
+    setProgress,
+    setExtractedText,
+  } = ctx;
 
   if (!file) return;
 
   setStep("processing");
   setError(null);
+  setOffDeviceNotice?.(null);
   setProgress(0);
 
   try {
@@ -522,9 +587,24 @@ const ResultsRawTextToggle = ({
   </div>
 );
 
+// ADR-009: shown when only an off-device AI was configured, so the local
+// decision-letter parser ran instead of sending the denial letter off-device.
+const OffDeviceNotice = ({ notice }) => {
+  if (!notice) return null;
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+      <div className="flex items-start gap-3">
+        <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-amber-900">{notice}</p>
+      </div>
+    </div>
+  );
+};
+
 const ResultsStep = ({
   t,
   analysis,
+  offDeviceNotice,
   showRawText,
   setShowRawText,
   extractedText,
@@ -532,6 +612,7 @@ const ResultsStep = ({
   onClose,
 }) => (
   <div className="space-y-6">
+    <OffDeviceNotice notice={offDeviceNotice} />
     <ResultsSummary t={t} analysis={analysis} />
 
     {/* Next Steps */}
@@ -591,6 +672,7 @@ const DenialDecoderView = ({
   step,
   aiStatus,
   error,
+  offDeviceNotice,
   cameraInputRef,
   fileInputRef,
   handleFileUpload,
@@ -637,6 +719,7 @@ const DenialDecoderView = ({
       <ResultsStep
         t={t}
         analysis={analysis}
+        offDeviceNotice={offDeviceNotice}
         showRawText={showRawText}
         setShowRawText={setShowRawText}
         extractedText={extractedText}
@@ -653,6 +736,7 @@ const DenialDecoder = ({ onClose, onOpenAISettings }) => {
   const [extractedText, setExtractedText] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
+  const [offDeviceNotice, setOffDeviceNotice] = useState(null);
   const [progress, setProgress] = useState(0);
   const [showRawText, setShowRawText] = useState(false);
   const [aiStatus, setAIStatus] = useState(getAIStatus());
@@ -674,6 +758,7 @@ const DenialDecoder = ({ onClose, onOpenAISettings }) => {
       handleImageSelect(file, {
         setStep,
         setError,
+        setOffDeviceNotice,
         setProgress,
         setExtractedText,
         setAnalysis,
@@ -687,6 +772,7 @@ const DenialDecoder = ({ onClose, onOpenAISettings }) => {
     setExtractedText("");
     setAnalysis(null);
     setError(null);
+    setOffDeviceNotice(null);
     setProgress(0);
     setShowRawText(false);
   };
@@ -699,6 +785,7 @@ const DenialDecoder = ({ onClose, onOpenAISettings }) => {
       step={step}
       aiStatus={aiStatus}
       error={error}
+      offDeviceNotice={offDeviceNotice}
       cameraInputRef={cameraInputRef}
       fileInputRef={fileInputRef}
       handleFileUpload={handleFileUpload}

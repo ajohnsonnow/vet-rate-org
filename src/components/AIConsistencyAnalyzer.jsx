@@ -15,6 +15,7 @@
 
 import { useState } from "react";
 import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import {
   CONSISTENCY_CHECK_PROMPT,
   SOLO_STATEMENT_ANALYSIS_PROMPT,
@@ -431,7 +432,13 @@ async function performConsistencyCheck(
       ? `You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.\n\nVETERAN CASE DATA (use to cross-reference known facts):\n${veteranContext}`
       : "You are a JSON-only output machine. Return ONLY valid JSON, no markdown, no explanation.";
 
+    // ADR-009: "compare" mode's referenceText is evidence text the veteran
+    // pastes in (often lifted from a medical record/exam letter), so it is
+    // treated as "document"; "solo" mode only ever carries the veteran's
+    // own drafted statement, so it is "context".
     const response = await generateAI(prompt, {
+      dataClass:
+        mode === "compare" ? AI_DATA_CLASS.DOCUMENT : AI_DATA_CLASS.CONTEXT,
       systemPrompt: systemPromptWithContext,
       taskType: "analysis",
       maxTokens: 2000,

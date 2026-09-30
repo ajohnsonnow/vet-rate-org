@@ -5,6 +5,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
 import { isAnyAIAvailable } from "../utils/unifiedAIService";
+import { buildDocumentOffDeviceNotice } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -381,7 +382,21 @@ function createDecodeTimeout(ms, message) {
   return { timeoutPromise, clear: () => clearTimeout(timeoutId) };
 }
 
-function applyDecodeResponse(response, setResults, setError) {
+// ADR-009: only an off-device AI is configured - a decision letter is a
+// document, so it stays on-device only. Run the same pattern-match reader
+// already used when no AI is configured at all, and show a plain notice
+// instead of a dead end.
+function applyOffDeviceFallback(denialText, providerLabel, setResults) {
+  const matched = patternMatchDenial(denialText);
+  setResults({
+    ...(matched || {}),
+    _usedFallback: true,
+    _fallbackReason: "off_device_blocked",
+    _fallbackNote: buildDocumentOffDeviceNotice(providerLabel),
+  });
+}
+
+function applyDecodeResponse(response, denialText, setResults, setError) {
   if (response.success) {
     setResults({
       ...response.data,
@@ -393,6 +408,10 @@ function applyDecodeResponse(response, setResults, setError) {
       _wasTruncated: response.wasTruncated,
       _truncationNote: response.truncationNote,
     });
+    return;
+  }
+  if (response.isOffDeviceBlocked) {
+    applyOffDeviceFallback(denialText, response.providerLabel, setResults);
     return;
   }
   // Check for context overflow error - show helpful message
@@ -467,7 +486,7 @@ function useDecisionDecode() {
       // eslint-disable-next-line no-console
       console.log("[DecisionDecoder] AI response:", response);
 
-      applyDecodeResponse(response, setResults, setError);
+      applyDecodeResponse(response, denialText, setResults, setError);
     } catch (err) {
       clear();
       logDecodeError(err);
@@ -1212,6 +1231,33 @@ const PatternMatchFallbackNotice = ({ results }) => {
   );
 };
 
+// ADR-009: shown when only an off-device AI was configured, so the
+// pattern-match reader ran instead of sending the letter off-device.
+const OffDeviceFallbackNotice = ({ results }) => {
+  if (
+    !results._usedFallback ||
+    results._fallbackReason !== "off_device_blocked"
+  ) {
+    return null;
+  }
+
+  return (
+    <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+      <div className="flex items-start gap-2">
+        <span className="text-amber-500">🔒</span>
+        <div>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            On-Device AI Only
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            {results._fallbackNote}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CloudAIFallbackNotice = ({ results }) => {
   if (
     !results._usedFallback ||
@@ -1440,6 +1486,9 @@ const ResultsContent = ({ results }) => {
     <div className="space-y-4">
       {/* Pattern-Match Fallback Notice (when AI is not loaded) */}
       <PatternMatchFallbackNotice results={results} />
+
+      {/* On-Device-Only Fallback Notice (when only an off-device AI is configured) */}
+      <OffDeviceFallbackNotice results={results} />
 
       {/* Cloud AI Fallback Notice (when document was too large for Local AI) */}
       <CloudAIFallbackNotice results={results} />

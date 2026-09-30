@@ -38,6 +38,8 @@
  * without needing module-level mocking.
  */
 
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
+
 /**
  * @typedef {(prompt: string, options?: Object) => Promise<string>} GenerateAIFn
  */
@@ -82,7 +84,14 @@ ${untrustedContent ?? ""}
 </untrusted_content>
 === END ${contentLabel} ===`;
 
+  // ADR-009: fail-closed default. This factory's own header comment lists
+  // untrusted DOCUMENT content among its intended future uses (OCR text,
+  // user-pasted decision letters), so it must not assume "context" just
+  // because today's only wired caller (legalAnswerer.js's eCFR RAG) happens
+  // to pass public regulation text. A caller that genuinely has a
+  // context-eligible payload overrides this via generateAIOptions.dataClass.
   const raw = await generateAI(extractorUserPrompt, {
+    dataClass: AI_DATA_CLASS.DOCUMENT,
     ...generateAIOptions,
     systemPrompt: extractorSystemPrompt,
     taskType: "extraction",
@@ -116,7 +125,12 @@ async function _synthesizeAnswer(
 
 EXTRACTED FIELDS (already validated and structured - safe to reason over):
 ${sanitizedFacts}`;
-  return generateAI(userPrompt, options);
+  // ADR-009: same fail-closed default as _extractFields above - a caller
+  // overrides via options.dataClass.
+  return generateAI(userPrompt, {
+    dataClass: AI_DATA_CLASS.DOCUMENT,
+    ...options,
+  });
 }
 
 async function _runDualLLM(

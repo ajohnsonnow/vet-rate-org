@@ -25,6 +25,7 @@ import {
 import { loadVKB } from "./veteranKnowledgeBase";
 import { getFullName, getVeteranProfile } from "./veteranProfile";
 import { redactVeteranIdentifiers } from "./piiScrubber";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 
 // LocalStorage key for BYOK (Bring Your Own Key)
 const STORAGE_KEY = "vetrate_gemini_key";
@@ -661,12 +662,17 @@ const callGeminiAPI = async (prompt, userInput = null) => {
     // it - the final backstop belongs here, not duplicated per builder.
     const safePrompt = await _finalizeAiPrompt(prompt);
     // ═══ USE UNIFIED AI SERVICE ═══
+    // ADR-009: "context" - every caller of this shared choke point (personal/
+    // buddy/PTSD/form-statement enhancement) builds its prompt from the
+    // veteran's or witness's own typed interview answers, never an
+    // uploaded/pasted document.
     const result = await generateAI(safePrompt, {
       systemPrompt:
         "You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.",
       maxTokens: 2048,
       temperature: 0.7,
       skipCrisisCheck: true, // Already checked above
+      dataClass: AI_DATA_CLASS.CONTEXT,
     });
 
     const status = getAIStatus();
@@ -1201,10 +1207,12 @@ export const generateFieldSuggestion = async (
   }
 
   try {
-    // Use unified AI service
+    // Use unified AI service - ADR-009: "context" - condition name + the
+    // veteran's own in-progress field text, never document-derived.
     const response = await generateAI(prompt, {
       temperature: 0.7,
       maxTokens: 300,
+      dataClass: AI_DATA_CLASS.CONTEXT,
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -1498,12 +1506,13 @@ export const searchVSOs = async (zipCode) => {
   const prompt = buildVSOFinderPrompt(zipCode);
 
   try {
-    // Use unified AI service
+    // Use unified AI service - ADR-009: "context" - a ZIP code only.
     const response = await generateAI(prompt, {
       temperature: 0.3,
       maxTokens: 2048,
       expectJSON: true,
       skipHallucinationCheck: true, // VSO finder JSON doesn't contain diagnostic codes
+      dataClass: AI_DATA_CLASS.CONTEXT,
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -1689,12 +1698,14 @@ export const stressTestStatement = async (statement) => {
   const prompt = buildStressTestPrompt(statement);
 
   try {
-    // Use unified AI service
+    // Use unified AI service - ADR-009: "context" - the veteran's own draft
+    // statement, typed directly into this tool (not document-derived).
     const response = await generateAI(prompt, {
       temperature: 0.4,
       maxTokens: 2048,
       expectJSON: true,
       skipHallucinationCheck: true, // Stress test returns critique/score, not diagnostic codes
+      dataClass: AI_DATA_CLASS.CONTEXT,
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -2006,6 +2017,18 @@ function parseDecisionDecoderResponse(textStr, fallbackInfo, truncation) {
 function mapDecodeDecisionError(error) {
   console.error("Decision decoder error:", error);
 
+  // ADR-009: the provider boundary refused to send this document off-device
+  // - surface a distinguishable field so the UI runs the local parser
+  // fallback + shows the plain-language notice instead of a dead-end error.
+  if (error.code === "DOCUMENT_OFF_DEVICE_BLOCKED") {
+    return {
+      success: false,
+      error: error.message,
+      isOffDeviceBlocked: true,
+      providerLabel: error.providerLabel || null,
+    };
+  }
+
   // Check for context overflow error and provide helpful message
   const errorMsg = error.message || "";
   if (
@@ -2081,7 +2104,10 @@ export const decodeDecision = async (decisionText) => {
     // Use unified AI service with minimal system prompt
     // The decision decoder prompt already includes all necessary context
     // Set a 90-second timeout to match UI expectations
+    // ADR-009: "document" - decisionText is the veteran's uploaded/pasted
+    // decision letter; only an on-device engine may see it.
     const response = await generateAI(prompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: 0.3,
       maxTokens: 1500, // Reduced from 2048 to leave room for context
       expectJSON: true,

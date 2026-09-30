@@ -10,6 +10,7 @@
  */
 
 import { generateAI, isAnyAIAvailable, getAIStatus } from "./unifiedAIService";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 
 // The specialized system prompt for strategy analysis
 const PATHFINDER_SYSTEM_PROMPT = `You are a Senior VA Claims Strategist. Your goal is to analyze a veteran's current disability profile and suggest "High Probability" secondary claims based on established medical connections.
@@ -131,7 +132,13 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
 
   try {
     // Use unified AI service - automatically chooses Cloud or Local
+    // ADR-009: "document" (fail-closed) - Pathfinder.jsx can populate
+    // additionalContext from an uploaded file's OCR'd text (see
+    // analyzeDocument -> setAdditionalContext), so this prompt may carry
+    // document-derived text indistinguishable from free-typed notes at this
+    // call site. Treated as document rather than risk a leak.
     const response = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: 0.4,
       maxTokens: 8192,
       expectJSON: true,

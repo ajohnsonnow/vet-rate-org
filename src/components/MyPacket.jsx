@@ -102,7 +102,15 @@ import CertificationCheckbox from "./CertificationCheckbox";
 import NexusDisclaimerFooter from "./NexusDisclaimerFooter";
 import ClaimPrepDisclaimer from "./ClaimPrepDisclaimer";
 import ClaimProgress from "./ClaimProgress";
-import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import {
+  generateAI,
+  getAIStatus,
+  getDocumentAIRouting,
+} from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
 import { RibbonRackDisplay } from "./VisualRibbon";
 import { enrichAwardForDisplay } from "../utils/ribbonRackData";
 import VADataCenter from "./VADataCenter";
@@ -5683,7 +5691,7 @@ function _toIsoDate(dateStr) {
 // regex extractor Muster Call already uses) instead of hard-disabling the
 // paste button. Less reliable than AI extraction, so it's tagged with a
 // low confidence and the veteran is told to double-check the result.
-async function _processDD214TextWithoutAI(dd214Text, ctx) {
+async function _processDD214TextWithoutAI(dd214Text, ctx, message) {
   const {
     setIsProcessingDD214,
     loadServiceHistory,
@@ -5745,7 +5753,8 @@ async function _processDD214TextWithoutAI(dd214Text, ctx) {
     setDD214Text("");
     setShowDD214Processor(false);
     alert(
-      "DD214 information extracted using text pattern matching (no AI configured). Review the Service tab and correct anything that looks wrong.",
+      message ||
+        "DD214 information extracted using text pattern matching (no AI configured). Review the Service tab and correct anything that looks wrong.",
     );
   } catch (error) {
     console.error("Error processing DD214 without AI:", error);
@@ -5799,6 +5808,20 @@ async function _processDD214Text(dd214Text, aiStatus, ctx) {
     return;
   }
 
+  // ADR-009: pasted DD214 text is document-derived and stays on-device
+  // only. If only an off-device AI is configured, reuse the same local
+  // regex parser used when no AI is configured at all, with a notice
+  // explaining why.
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    await _processDD214TextWithoutAI(
+      dd214Text,
+      ctx,
+      buildDocumentOffDeviceNotice(routing.blockedProviderLabel),
+    );
+    return;
+  }
+
   setIsProcessingDD214(true);
 
   try {
@@ -5824,6 +5847,7 @@ ${dd214Text}
 
 Return ONLY the JSON object, no explanation.`,
       {
+        dataClass: AI_DATA_CLASS.DOCUMENT,
         temperature: 0.3,
         maxTokens: 512,
         expectJSON: true,

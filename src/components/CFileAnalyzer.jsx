@@ -261,6 +261,23 @@ function CFileDashboardWarnings({
 }) {
   return (
     <>
+      {/* ADR-009: only an off-device AI is configured - shown when the
+          built-in documented-term scan ran instead of sending the C-File
+          off-device. */}
+      {analysisMetadata?.offDeviceBlocked && (
+        <div
+          role="alert"
+          className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🔒</span>
+            <p className="text-amber-700 dark:text-amber-300 text-sm">
+              {analysisMetadata.offDeviceNotice}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Partial-analysis warning - a veteran must never mistake a partial
           analysis for a complete one */}
       {analysisResult.failedChunks?.length > 0 && (

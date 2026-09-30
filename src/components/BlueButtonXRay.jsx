@@ -20,7 +20,12 @@ import {
   generateAI,
   isAnyAIAvailable,
   getAIStatus,
+  getDocumentAIRouting,
 } from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -1063,6 +1068,22 @@ function ErrorBanner({ error }) {
   );
 }
 
+// ADR-009: shown when only an off-device AI is configured, so the built-in
+// regex condition scan ran instead of sending the health-record text
+// off-device.
+function OffDeviceNotice({ notice }) {
+  if (!notice) return null;
+
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">🔒</span>
+        <p className="text-amber-700 dark:text-amber-300 text-sm">{notice}</p>
+      </div>
+    </div>
+  );
+}
+
 function ResultsSummaryCard({ count, unclaimedCount }) {
   return (
     <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
@@ -1388,6 +1409,7 @@ function BlueButtonUploadContent({
 
 function BlueButtonResultsContent({
   error,
+  offDeviceNotice,
   extractedConditions,
   unclaimedCount,
   onSelectAllClaimable,
@@ -1407,6 +1429,9 @@ function BlueButtonResultsContent({
     <>
       {/* Error Display */}
       <ErrorBanner error={error} />
+
+      {/* ADR-009 on-device-only fallback notice */}
+      <OffDeviceNotice notice={offDeviceNotice} />
 
       {/* Results Section */}
       {extractedConditions.length > 0 && (
@@ -1458,6 +1483,7 @@ function BlueButtonMainContent({
   processingStage,
   onProcessFile,
   error,
+  offDeviceNotice,
   onSelectAllClaimable,
   onReset,
   showRawText,
@@ -1491,6 +1517,7 @@ function BlueButtonMainContent({
 
       <BlueButtonResultsContent
         error={error}
+        offDeviceNotice={offDeviceNotice}
         extractedConditions={extractedConditions}
         unclaimedCount={unclaimedCount}
         onSelectAllClaimable={onSelectAllClaimable}
@@ -1784,6 +1811,7 @@ async function _attemptChunkExtraction(
   scanDocumentForCrisis(chunkText);
 
   const aiResponse = await generateAI(chunkPrompt, {
+    dataClass: AI_DATA_CLASS.DOCUMENT,
     temperature: strategy.temp,
     maxTokens: strategy.maxTokens,
     expectJSON: true,
@@ -1985,6 +2013,29 @@ async function analyzeWithAI(text, setProcessingStage) {
     throw new Error("No AI available. Please configure AI in settings first.");
   }
 
+  // ADR-009: Blue Button health-record text is document-derived and stays
+  // on-device only. If only an off-device AI is configured, skip AI
+  // entirely (no per-chunk retries against a routing decision that can't
+  // change) and use the same regex condition scan already used as the
+  // per-chunk AI-failure fallback below.
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    setProcessingStage?.(
+      "On-device AI unavailable - using built-in document scan...",
+    );
+    const fallbackConditions = extractConditionsFromText(text);
+    return {
+      ...formatConditionsResponse({
+        conditions: fallbackConditions,
+        summary: null,
+      }),
+      offDeviceBlocked: true,
+      offDeviceNotice: buildDocumentOffDeviceNotice(
+        routing.blockedProviderLabel,
+      ),
+    };
+  }
+
   // Calculate prompt overhead (the AI prompt itself takes tokens)
   const promptTokens =
     estimateTokens(BLUE_BUTTON_AI_PROMPT_HEADER) +
@@ -2006,6 +2057,7 @@ async function analyzeWithAI(text, setProcessingStage) {
     scanDocumentForCrisis(text);
 
     const aiResponse = await generateAI(fullPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: 0.2,
       maxTokens: 2000,
       expectJSON: true,
@@ -2084,6 +2136,7 @@ async function handleProcessFile(
   { file, savedToVKB },
   {
     setError,
+    setOffDeviceNotice,
     setIsProcessing,
     setExtractedConditions,
     setProcessingStage,
@@ -2106,6 +2159,7 @@ async function handleProcessFile(
 
   setIsProcessing(true);
   setError(null);
+  setOffDeviceNotice(null);
   setExtractedConditions([]);
 
   try {
@@ -2128,10 +2182,19 @@ async function handleProcessFile(
     );
     const result = await analyzeWithAI(text, setProcessingStage);
 
+    if (result.offDeviceBlocked) {
+      setOffDeviceNotice(result.offDeviceNotice);
+    }
+
     if (result.conditions.length === 0) {
-      setError(
-        "No diagnoses found in this file. This might not be a Blue Button report, or it contains no medical conditions. You can view the raw text below.",
-      );
+      // ADR-009: an off-device-blocked scan finding nothing is still a
+      // completed local read, not a dead end - the notice above already
+      // explains why, so don't also show the generic "no diagnoses" error.
+      if (!result.offDeviceBlocked) {
+        setError(
+          "No diagnoses found in this file. This might not be a Blue Button report, or it contains no medical conditions. You can view the raw text below.",
+        );
+      }
     } else {
       setExtractedConditions(result.conditions);
     }
@@ -2154,6 +2217,7 @@ function useFileHandlers({
   extractedConditions,
   savedToVKB,
   setError,
+  setOffDeviceNotice,
   setFile,
   setIsDragging,
   setExtractedConditions,
@@ -2210,6 +2274,7 @@ function useFileHandlers({
       { file, savedToVKB },
       {
         setError,
+        setOffDeviceNotice,
         setIsProcessing,
         setExtractedConditions,
         setProcessingStage,
@@ -2346,6 +2411,7 @@ function useBlueButtonXRay() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStage, setProcessingStage] = useState("");
   const [error, setError] = useState(null);
+  const [offDeviceNotice, setOffDeviceNotice] = useState(null);
   const [extractedConditions, setExtractedConditions] = useState([]);
   const [rawText, setRawText] = useState("");
   const [showRawText, setShowRawText] = useState(false);
@@ -2356,6 +2422,7 @@ function useBlueButtonXRay() {
     extractedConditions,
     savedToVKB,
     setError,
+    setOffDeviceNotice,
     setFile,
     setIsDragging,
     setExtractedConditions,
@@ -2391,6 +2458,7 @@ function useBlueButtonXRay() {
     isProcessing,
     processingStage,
     error,
+    offDeviceNotice,
     extractedConditions,
     rawText,
     showRawText,

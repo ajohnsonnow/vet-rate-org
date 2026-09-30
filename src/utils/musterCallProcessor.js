@@ -53,7 +53,15 @@ import {
   getMyRatings,
   saveMyRatings,
 } from "./veteranProfile";
-import { generateAI, isAnyAIAvailable } from "./unifiedAIService";
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getDocumentAIRouting,
+} from "./unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "./aiDataClassPolicy";
 import {
   deriveCombatService,
   isCombatDecoration,
@@ -212,6 +220,7 @@ RULES: Only include findings present in text. Be concise.`;
 
   try {
     const response = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       systemPrompt,
       temperature: 0.2,
       maxTokens: 2048,
@@ -2493,9 +2502,19 @@ export const buildSegmentedCFileResult = async (text, cFileSummary) => {
 
   const deployments = _extractCFileDeployments(segments.segments);
 
-  // Attempt AI-enhanced analysis for potential claims (if AI available)
+  // Attempt AI-enhanced analysis for potential claims (if AI available).
+  // ADR-009: C-File text is document-derived and stays on-device only - if
+  // only an off-device AI is configured, skip the AI call entirely (the
+  // segmentation/inventory/codeSheet parsing above already ran and is real
+  // local analysis, not a dead end) and surface why the AI layer is absent.
   let aiAnalysis = null;
-  if (isAnyAIAvailable()) {
+  let offDeviceNotice = null;
+  const routing = getDocumentAIRouting();
+  if (isAnyAIAvailable() && !routing.onDeviceReady) {
+    offDeviceNotice = buildDocumentOffDeviceNotice(
+      routing.blockedProviderLabel,
+    );
+  } else if (isAnyAIAvailable()) {
     try {
       aiAnalysis = await analyzeCFileWithAI(text.substring(0, 50000)); // First 50K chars for context
     } catch (aiErr) {
@@ -2529,6 +2548,7 @@ export const buildSegmentedCFileResult = async (text, cFileSummary) => {
     recordEvents: codeSheetRecordEvents(text),
     deployments,
     aiAnalysis, // Include AI-enhanced analysis if available
+    offDeviceNotice, // ADR-009: set when only an off-device AI is configured
     parserVersion: "v1.18.3-enhanced",
   };
 };
@@ -6419,6 +6439,25 @@ Provide:
 Format as markdown with clear sections.`;
 };
 
+// ADR-009: only an off-device AI is configured. The narrative report itself
+// has no regex/local-parser equivalent (it's freeform prose), so the
+// "local parser path" here is the structural document counts Muster Call
+// already extracted locally (groupProcessedDocuments, non-AI) - zero
+// document TEXT is sent anywhere, no dead end.
+function _buildOffDeviceFallbackReport(
+  serviceRecords,
+  ratingDocs,
+  medicalDocs,
+) {
+  return (
+    `## Document Summary (Built-In Reader)\n\n` +
+    `- ${serviceRecords.length} service record(s)\n` +
+    `- ${ratingDocs.length} rating document(s)\n` +
+    `- ${medicalDocs.length} medical document(s)\n\n` +
+    `Load the on-device AI (Warrant Council or Wllama) for a full plain-English claims analysis of these documents.`
+  );
+}
+
 /**
  * Generate comprehensive analysis report using LLM
  */
@@ -6460,6 +6499,23 @@ export const generateMusterCallReport = async (
     };
   }
 
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    return {
+      success: true,
+      report: _buildOffDeviceFallbackReport(
+        serviceRecords,
+        ratingDocs,
+        medicalDocs,
+      ),
+      generatedAt: new Date().toISOString(),
+      offDeviceBlocked: true,
+      offDeviceNotice: buildDocumentOffDeviceNotice(
+        routing.blockedProviderLabel,
+      ),
+    };
+  }
+
   const prompt = buildMusterCallPrompt(serviceRecords, ratingDocs, medicalDocs);
 
   // eslint-disable-next-line no-console
@@ -6467,6 +6523,7 @@ export const generateMusterCallReport = async (
 
   try {
     const response = await generateAI(prompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       systemPrompt:
         "You are a VA disability claims expert. Provide actionable, regulation-based guidance.",
       temperature: 0.3,

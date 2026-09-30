@@ -12,6 +12,12 @@ globalThis.ImageData ??= class ImageData {};
 const mockGenerateAI = vi.fn(async () => "REPORT BODY");
 vi.mock("../../utils/unifiedAIService", () => ({
   isAnyAIAvailable: () => true,
+  // ADR-009: on-device AI is "available" for this suite's prompt-content
+  // assertions to actually reach the mocked generateAI call below.
+  getDocumentAIRouting: () => ({
+    onDeviceReady: true,
+    blockedProviderLabel: null,
+  }),
   generateAI: (...args) => mockGenerateAI(...args),
 }));
 

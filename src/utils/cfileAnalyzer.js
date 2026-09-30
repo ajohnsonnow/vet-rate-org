@@ -21,8 +21,13 @@ import {
   getAIStatus,
   resetAICircuitBreaker,
   reloadSwarmEngine,
+  getDocumentAIRouting,
   AI_MODES,
 } from "./unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  buildDocumentOffDeviceNotice,
+} from "./aiDataClassPolicy";
 import {
   validateDiagnosticCode,
   lookupDiagnosticCodeByName,
@@ -2077,6 +2082,38 @@ async function _finalizeMultiChunkResult(
   };
 }
 
+// ADR-009: only an off-device AI is configured. C-File text is
+// document-derived and stays on-device only, so skip AI entirely rather
+// than burn chunk retries against a routing decision that can't change
+// mid-run - go straight to the grounded documented-term scan
+// (surfaceDocumentedConditions) already used elsewhere in this file as a
+// safety net alongside AI results, reused here standalone.
+function _buildOffDeviceFallbackResult(fullText, providerLabel) {
+  const result = createEmptyChunkResult();
+  surfaceDocumentedConditions(result, fullText);
+  enrichClaimsWithDiagnosticCodes(result);
+  const rejectedCodes = enforceValidDiagnosticCodes(result);
+  result.failedChunks = [];
+
+  return {
+    success: true,
+    analysis: result,
+    metadata: {
+      analyzedAt: new Date().toISOString(),
+      textLength: fullText.length,
+      aiMode: "off_device_blocked",
+      chunksProcessed: 0,
+      boilerplatePagesSkipped: 0,
+      pagesExcludedFromAI: 0,
+      chunksExcludedFromAI: 0,
+      semanticIndex: { indexed: false, reason: "off_device_blocked" },
+      rejectedDiagnosticCodes: rejectedCodes,
+      offDeviceBlocked: true,
+      offDeviceNotice: buildDocumentOffDeviceNotice(providerLabel),
+    },
+  };
+}
+
 export async function analyzeCFile(
   apiKey,
   fullText,
@@ -2095,6 +2132,17 @@ export async function analyzeCFile(
 
   if (!fullText || fullText.trim().length < 100) {
     throw new Error("Insufficient text content to analyze");
+  }
+
+  const routing = getDocumentAIRouting();
+  if (!routing.onDeviceReady) {
+    onProgress("On-device AI unavailable - using built-in document scan...", {
+      phase: "analyze",
+    });
+    return _buildOffDeviceFallbackResult(
+      fullText,
+      routing.blockedProviderLabel,
+    );
   }
 
   const { aiMode, isLocalAIMode, chunks, skippedPages } =
@@ -2395,6 +2443,7 @@ async function _requestChunkAnalysis(
   let response;
   try {
     response = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: isLocalAI ? 0.1 : 0.2,
       maxTokens: localMaxTokens,
       expectJSON: true,
@@ -2630,6 +2679,7 @@ async function _requestPageAnalysis(pageText, pageNum, totalPages, onProgress) {
   let response;
   try {
     response = await generateAI(userPrompt, {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: isLocalAI ? 0.1 : 0.2,
       maxTokens: maxOutputTokens,
       expectJSON: true,
