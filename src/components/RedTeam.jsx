@@ -30,7 +30,7 @@ function useStressTest() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const runStressTest = async (draftStatement) => {
+  const runStressTest = async (draftStatement, draftStatementIsDocument) => {
     if (!draftStatement.trim()) {
       setError("Please paste your draft statement first.");
       return;
@@ -55,7 +55,9 @@ function useStressTest() {
     setResults(null);
 
     try {
-      const response = await stressTestStatement(draftStatement);
+      const response = await stressTestStatement(draftStatement, {
+        isDocument: draftStatementIsDocument,
+      });
 
       if (response.success) {
         setResults(response.data);
@@ -75,7 +77,14 @@ function useStressTest() {
   return { results, isLoading, error, runStressTest };
 }
 
-function usePdfDropIn(setDraftStatement) {
+// Split out of usePdfDropIn purely to keep it under the line-count limit -
+// same two setter calls, same order, every reset call site.
+function _clearDraftStatement(setDraftStatement, setDraftStatementIsDocument) {
+  setDraftStatement("");
+  setDraftStatementIsDocument(false);
+}
+
+function usePdfDropIn(setDraftStatement, setDraftStatementIsDocument) {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfOcrProgress, setPdfOcrProgress] = useState(null);
   const [pdfIsDragging, setPdfIsDragging] = useState(false);
@@ -85,7 +94,7 @@ function usePdfDropIn(setDraftStatement) {
   const processPdfFile = async (file) => {
     setPdfFile(file);
     setPdfError(null);
-    setDraftStatement("");
+    _clearDraftStatement(setDraftStatement, setDraftStatementIsDocument);
 
     try {
       const result = await analyzePDF(file, (progress) => {
@@ -94,6 +103,7 @@ function usePdfDropIn(setDraftStatement) {
 
       if (result.success && result.text) {
         setDraftStatement(result.text);
+        setDraftStatementIsDocument(true); // ADR-009: document-derived
       } else {
         setPdfError(result.error || "Failed to extract text from PDF");
       }
@@ -145,7 +155,7 @@ function usePdfDropIn(setDraftStatement) {
   const handleRemovePdf = () => {
     setPdfFile(null);
     setPdfOcrProgress(null);
-    setDraftStatement("");
+    _clearDraftStatement(setDraftStatement, setDraftStatementIsDocument);
     setPdfError(null);
     if (pdfFileInputRef.current) {
       pdfFileInputRef.current.value = "";
@@ -891,30 +901,65 @@ const WeakLanguageTipsCard = () => (
   </div>
 );
 
+// ADR-009: does the CURRENT draftStatement text come from the Drop-In PDF
+// tab's OCR/PDF.js extraction (document) rather than the veteran
+// typing/dictating it (context)? Bundled with draftStatement itself purely
+// to keep RedTeam's main component under the line-count limit.
+function useDraftStatementInput() {
+  const [draftStatement, setDraftStatement] = useState("");
+  const [draftStatementIsDocument, setDraftStatementIsDocument] =
+    useState(false);
+  const pdf = usePdfDropIn(setDraftStatement, setDraftStatementIsDocument);
+
+  // A manual edit or dictation always means "typed", never "document".
+  const handleDraftStatementChange = (value) => {
+    setDraftStatement(value);
+    setDraftStatementIsDocument(false);
+  };
+
+  return {
+    draftStatement,
+    draftStatementIsDocument,
+    handleDraftStatementChange,
+    pdf,
+  };
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
+// Split out of RedTeam purely to keep it under the line-count limit - same
+// markup, same behavior.
+const RedTeamFooter = ({ hasResults, onClose }) => (
+  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <BuyMeCoffee show={hasResults} trigger="red-team" />
+    <button
+      onClick={onClose}
+      className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+    >
+      Close
+    </button>
+  </div>
+);
+
+// AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
 const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
-  // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
-  const [draftStatement, setDraftStatement] = useState("");
+  const {
+    draftStatement,
+    draftStatementIsDocument,
+    handleDraftStatementChange,
+    pdf,
+  } = useDraftStatementInput();
   const { results, isLoading, error, runStressTest } = useStressTest();
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'pdf'
-  const pdf = usePdfDropIn(setDraftStatement);
   useAIStatusPolling();
 
-  const handleStressTest = () => runStressTest(draftStatement);
+  const handleStressTest = () =>
+    runStressTest(draftStatement, draftStatementIsDocument);
 
   const footer = (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-      <BuyMeCoffee show={results !== null} trigger="red-team" />
-      <button
-        onClick={onClose}
-        className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-      >
-        Close
-      </button>
-    </div>
+    <RedTeamFooter hasResults={results !== null} onClose={onClose} />
   );
 
   return (
@@ -947,7 +992,7 @@ const RedTeam = ({ onClose, onReportBug, onOpenAISettings }) => {
             <PasteInputPanel
               inputMethod={inputMethod}
               draftStatement={draftStatement}
-              setDraftStatement={setDraftStatement}
+              setDraftStatement={handleDraftStatementChange}
             />
             <PdfInputPanel
               inputMethod={inputMethod}

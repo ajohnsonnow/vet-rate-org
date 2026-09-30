@@ -1683,9 +1683,18 @@ export function sanitizeWeakSpotSuggestions(weakSpots) {
 /**
  * Stress test a draft statement using Gemini AI
  * @param {string} statement - The draft statement to analyze
+ * @param {object} [options]
+ * @param {boolean} [options.isDocument] - True when `statement` came from an
+ *   uploaded/dropped file's OCR/extraction (RedTeam's Drop-In PDF tab)
+ *   rather than the veteran typing/dictating it directly. Fails closed to
+ *   `true` when the caller doesn't say, since a caller-supplied statement of
+ *   unknown provenance could be document-derived.
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
-export const stressTestStatement = async (statement) => {
+export const stressTestStatement = async (
+  statement,
+  { isDocument = true } = {},
+) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
     return {
@@ -1698,14 +1707,18 @@ export const stressTestStatement = async (statement) => {
   const prompt = buildStressTestPrompt(statement);
 
   try {
-    // Use unified AI service - ADR-009: "context" - the veteran's own draft
-    // statement, typed directly into this tool (not document-derived).
+    // ADR-009: the caller (RedTeam.jsx) tracks whether this statement text
+    // came from the Drop-In PDF tab's OCR extraction (document) or the
+    // veteran typing/dictating it (context) - this call site can't tell on
+    // its own. A dropped PDF's text is document-derived even though the
+    // panel says nothing is sent anywhere; the veteran's own typed/dictated
+    // draft is not.
     const response = await generateAI(prompt, {
       temperature: 0.4,
       maxTokens: 2048,
       expectJSON: true,
       skipHallucinationCheck: true, // Stress test returns critique/score, not diagnostic codes
-      dataClass: AI_DATA_CLASS.CONTEXT,
+      dataClass: isDocument ? AI_DATA_CLASS.DOCUMENT : AI_DATA_CLASS.CONTEXT,
     });
 
     // generateAI returns { text, mode } object - extract the text content
