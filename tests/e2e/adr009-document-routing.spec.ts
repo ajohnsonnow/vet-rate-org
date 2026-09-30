@@ -310,6 +310,29 @@ test.describe("ADR-009: DD-214 Analyzer document routing", () => {
 
     expect(cloud.bodies.some((b) => b.includes(DOC_MARKER))).toBe(false);
     expect(cloud.bodies.length).toBe(0);
+
+    // D19 follow-up (ADR-009 Decision E / spec item 1): spelled out
+    // explicitly, not just implied by `cloud.bodies.length === 0` above -
+    // the fixture's own identifiers never reached the stubbed cloud
+    // either.
+    expect(cloud.bodies.some((b) => b.includes("TESTFIXTURE"))).toBe(false);
+    expect(cloud.bodies.some((b) => b.includes("123 45 6789"))).toBe(false);
+
+    // The test's own title claims the local parser's result still shows -
+    // this app's local (non-AI) regex parser runs on the pasted text
+    // regardless of provider (D16-5/ADR-008: identifiers ADR-009 blocks
+    // from an off-device AI call are not the same thing as a same-device
+    // regex read of text the veteran already has in their own browser),
+    // so the fixture's name/home-of-record still render from that local
+    // read even though no AI call happened at all. Scoped to a `<p>` (the
+    // rendered result card), not `dialog.getByText`, which also matches
+    // the still-visible input textarea's own raw pasted value. "TESTFIXTURE"
+    // only (not the full ", E2E" suffix) - dd214FieldExtractor's fullName
+    // value class is letters/punctuation only, a pre-existing, separate
+    // limitation this fixture's digit-bearing marker happens to hit, not
+    // an ADR-009 routing concern.
+    await expect(dialog.locator("p", { hasText: "TESTFIXTURE" })).toBeVisible();
+    await expect(dialog.locator("p", { hasText: "TESTVILLE" })).toBeVisible();
   });
 
   test("on-device available: the fake engine receives the document and the feature works", async ({
@@ -335,6 +358,21 @@ test.describe("ADR-009: DD-214 Analyzer document routing", () => {
 
     const calls = await readFakeEngineCalls(page);
     expect(calls.some((c) => c.user.includes(DOC_MARKER))).toBe(true);
+
+    // D19 follow-up (ADR-009 Decision E / spec item 1): an on-device
+    // document call MAY include identifiers so on-device extraction of
+    // name/DOB/home-of-record/SSN works - prove the REAL UI path actually
+    // sends them to the engine (the merge logic that accepts an on-device
+    // model's identifier value is already unit-tested, but nothing before
+    // this proved the real prompt-building path puts them there at all).
+    expect(calls.some((c) => c.user.includes("TESTFIXTURE, E2E"))).toBe(true);
+    expect(calls.some((c) => c.user.includes("TESTVILLE"))).toBe(true);
+    expect(calls.some((c) => c.user.includes("123 45 6789"))).toBe(true);
+
+    // Scoped to a `<p>` (the rendered result card) - see the comment on
+    // the equivalent assertion in the cloud-only test above.
+    await expect(dialog.locator("p", { hasText: "TESTFIXTURE" })).toBeVisible();
+    await expect(dialog.locator("p", { hasText: "TESTVILLE" })).toBeVisible();
   });
 });
 
