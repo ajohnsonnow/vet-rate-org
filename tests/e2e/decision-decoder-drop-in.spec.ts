@@ -676,4 +676,68 @@ test.describe("D-4: advancedOCR full page coverage", () => {
     expect(result.text).toContain("Enclosure: VA Form 21-0958");
     expect(result.text).not.toMatch(/NOT READ/);
   });
+
+  // The other D-4 coverage test above uses truly blank pages as stand-ins
+  // for scanned pages (no text layer, so getTextContent() returns nothing) -
+  // deliberately, to avoid needing a real image fixture. That means it never
+  // exercises real OCR at all, so it can't prove OCR'd content actually
+  // merges back into the document in the right page position rather than,
+  // say, all OCR'd pages landing at the end. This uses a real embedded PNG
+  // (same buildTextImagePng helper the D19-1 image-drop test above uses) as
+  // the middle page of a 3-page PDF, sandwiched between two real text-layer
+  // pages, and checks the recognized text lands between them in order.
+  async function buildScannedPageMergePdf(page: Page): Promise<Buffer> {
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    const page1 = pdfDoc.addPage([300, 150]);
+    page1.drawText(
+      "Generic fixture text page 1 has enough real text content here",
+      { x: 20, y: 100, size: 12, font },
+    );
+
+    const scannedPng = await buildTextImagePng(page, [
+      "SCANNED PAGE MARKER ZEBRAFISH",
+    ]);
+    const pngImage = await pdfDoc.embedPng(scannedPng);
+    const page2 = pdfDoc.addPage([pngImage.width, pngImage.height]);
+    page2.drawImage(pngImage, {
+      x: 0,
+      y: 0,
+      width: pngImage.width,
+      height: pngImage.height,
+    });
+
+    const page3 = pdfDoc.addPage([300, 150]);
+    page3.drawText(
+      "Generic fixture text page 3 has enough real text content here",
+      { x: 20, y: 100, size: 12, font },
+    );
+
+    return Buffer.from(await pdfDoc.save());
+  }
+
+  test("a real scanned page's OCR'd text merges back in the correct page position", async ({
+    page,
+  }) => {
+    test.setTimeout(60000);
+    await bootDecisionDecoder(page);
+    await injectAdvancedOCRModule(page);
+
+    const pdfBuffer = await buildScannedPageMergePdf(page);
+    const base64 = pdfBuffer.toString("base64");
+    const result = await runAdvancedPDFAnalysis(page, base64, {});
+
+    expect(result.pageCount).toBe(3);
+    expect(result.pagesOCRd).toBe(1);
+    expect(result.method).toBe("advanced_ocr");
+
+    const idxPage1 = result.text.indexOf("Generic fixture text page 1");
+    const idxMarker = result.text.search(/ZEBRAFISH/i);
+    const idxPage3 = result.text.indexOf("Generic fixture text page 3");
+
+    expect(idxPage1).toBeGreaterThanOrEqual(0);
+    expect(idxMarker).toBeGreaterThan(idxPage1);
+    expect(idxPage3).toBeGreaterThan(idxMarker);
+  });
 });

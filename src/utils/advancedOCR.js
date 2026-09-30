@@ -270,6 +270,26 @@ function buildFullTextResult(standardText, numPages) {
 // `pagesSkipped` can re-invoke advancedPDFAnalysis with
 // `options.ocrOnlyPageNumbers` set to (a batch of) those page numbers to
 // OCR exactly them, bypassing the auto-detected image-only list.
+//
+// That batch may name only SOME of the document's full image-only list -
+// every image-only page this round didn't OCR must still show up as
+// skipped, not just the ones past MAX_OCR_PAGES within the batch itself,
+// or a page outside the batch entirely falls through
+// mergePageCoverageResult's plain text-layer branch with empty content and
+// no marker: a silent gap. Exported for its own unit test.
+export function computeOcrPageSets(
+  imageOnlyPages,
+  ocrOnlyPageNumbers,
+  maxOcrPages,
+) {
+  const targetPages = ocrOnlyPageNumbers?.length
+    ? ocrOnlyPageNumbers
+    : imageOnlyPages;
+  const pagesToOcr = targetPages.slice(0, maxOcrPages);
+  const skippedPages = imageOnlyPages.filter((p) => !pagesToOcr.includes(p));
+  return { pagesToOcr, skippedPages };
+}
+
 async function ocrImageOnlyPages(
   pdf,
   numPages,
@@ -278,11 +298,11 @@ async function ocrImageOnlyPages(
   onProgress,
 ) {
   const imageOnlyPages = standardText.pagesNeedingOCR;
-  const targetPages = config.ocrOnlyPageNumbers?.length
-    ? config.ocrOnlyPageNumbers
-    : imageOnlyPages;
-  const pagesToOcr = targetPages.slice(0, config.MAX_OCR_PAGES);
-  const skippedPages = targetPages.slice(config.MAX_OCR_PAGES);
+  const { pagesToOcr, skippedPages } = computeOcrPageSets(
+    imageOnlyPages,
+    config.ocrOnlyPageNumbers,
+    config.MAX_OCR_PAGES,
+  );
 
   // eslint-disable-next-line no-console
   console.log(
