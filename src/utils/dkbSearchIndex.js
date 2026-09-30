@@ -82,6 +82,33 @@ function addTrigrams(str, keyIndex, trigramIndex) {
   }
 }
 
+// Postings start as Sets during construction (addTrigrams needs O(1)
+// membership checks to dedupe repeated trigram occurrences within one
+// entry's text) then get frozen into sorted Int32Arrays here - see
+// finalizeTrigramIndex. A Set<number> holds each posting as a boxed V8
+// object; on the real corpus (14,501 distinct trigrams, 3,196,193 text
+// postings) that costs ~85MB of heap held for the entire session, vs.
+// ~13MB (3,196,193 x 4 bytes) for packed Int32Arrays - measured live, see
+// this fix's commit. Sorted so hasSorted below can binary-search instead
+// of Set#has.
+function finalizeTrigramIndex(trigramIndex) {
+  for (const [gram, postings] of trigramIndex) {
+    trigramIndex.set(gram, Int32Array.from(postings).sort());
+  }
+}
+
+function hasSorted(sortedArray, value) {
+  let lo = 0;
+  let hi = sortedArray.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (sortedArray[mid] === value) return true;
+    if (sortedArray[mid] < value) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return false;
+}
+
 function termTrigrams(term) {
   const grams = [];
   const lastStart = term.length - 3;
@@ -94,6 +121,8 @@ function termTrigrams(term) {
  * COULD contain `term` as a substring - a safe superset, not a confirmed
  * match. `term.length` is always >= 3 (callers only pass searchDKB's
  * already-filtered queryTerms), so there is always at least one trigram.
+ * `trigramIndex`'s postings are sorted Int32Arrays (see
+ * finalizeTrigramIndex) once buildDKBIndex has returned.
  */
 function candidatesForTerm(trigramIndex, term) {
   const grams = termTrigrams(term);
@@ -101,17 +130,17 @@ function candidatesForTerm(trigramIndex, term) {
   for (const gram of grams) {
     const postings = trigramIndex.get(gram);
     if (!postings) return null;
-    if (!smallest || postings.size < smallest.size) smallest = postings;
+    if (!smallest || postings.length < smallest.length) smallest = postings;
   }
   if (grams.length === 1) return smallest;
 
   const others = grams
     .map((gram) => trigramIndex.get(gram))
     .filter((postings) => postings !== smallest);
-  const confirmed = new Set();
+  const confirmed = [];
   for (const candidate of smallest) {
-    if (others.every((postings) => postings.has(candidate))) {
-      confirmed.add(candidate);
+    if (others.every((postings) => hasSorted(postings, candidate))) {
+      confirmed.push(candidate);
     }
   }
   return confirmed;
@@ -146,6 +175,7 @@ function indexConditionNames(state) {
   for (let i = 0; i < distinctConds.length; i++) {
     addTrigrams(distinctConds[i], i, condTrigramIndex);
   }
+  finalizeTrigramIndex(condTrigramIndex);
   state.distinctConds = distinctConds;
   state.condTrigramIndex = condTrigramIndex;
 }
@@ -171,6 +201,7 @@ export async function buildDKBIndex(entries) {
     await maybeYield(budget);
   }
 
+  finalizeTrigramIndex(state.textTrigramIndex);
   indexConditionNames(state);
   return state;
 }
