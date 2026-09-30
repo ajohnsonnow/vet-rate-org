@@ -207,18 +207,26 @@ async function _runConsentAndProcess(file, t, ctx) {
   }
 }
 
-// D19-2: a result with zero potential claims AND no summary text is not a
-// completed analysis with nothing interesting to report - it is the
-// off-device fallback (or, in principle, a real AI pass) finding nothing at
-// all, which must never be labeled "Analysis Complete".
-function _cfileFoundNothing(analysisResult) {
+// D19-2: a result with zero potential claims is not a completed analysis
+// with nothing interesting to report - it is the off-device fallback (or,
+// in principle, a real AI pass) finding nothing at all, which must never be
+// labeled "Analysis Complete". The off-device fallback (cfileAnalyzer.js's
+// _buildOffDeviceFallbackResult) always writes a non-empty summary - even
+// its "found nothing" summary says so in prose - so a blank-summary check
+// can never fire for that path. metadata.foundNothing is the fallback's own
+// authoritative signal and takes priority; the summary/claims heuristic
+// only covers paths (e.g. a real AI pass) that never set that field.
+function _cfileFoundNothing(analysisResult, analysisMetadata) {
+  if (typeof analysisMetadata?.foundNothing === "boolean") {
+    return analysisMetadata.foundNothing;
+  }
   return (
     (analysisResult?.potential_claims?.length || 0) === 0 &&
     !analysisResult?.summary?.trim()
   );
 }
 
-function CFileDashboardHeader({
+export function CFileDashboardHeader({
   t,
   file,
   extractedText,
@@ -226,7 +234,7 @@ function CFileDashboardHeader({
   analysisResult,
   onReset,
 }) {
-  const foundNothing = _cfileFoundNothing(analysisResult);
+  const foundNothing = _cfileFoundNothing(analysisResult, analysisMetadata);
   return (
     <div
       className={`bg-gradient-to-r rounded-xl p-6 mb-6 text-white ${
