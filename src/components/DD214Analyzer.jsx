@@ -15,7 +15,11 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { createPortal } from "react-dom";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
-import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import {
+  generateAI,
+  getAIStatus,
+  getDocumentAIRouting,
+} from "../utils/unifiedAIService";
 import {
   AI_DATA_CLASS,
   DocumentOffDeviceBlockedError,
@@ -465,7 +469,7 @@ function truncateForContext(text, maxTokens = 2000) {
   return `${beginning}\n\n[... DOCUMENT TRUNCATED - ${omittedKB}KB OMITTED FOR LOCAL AI PROCESSING ...]\n\n${ending}`;
 }
 
-async function _runVisionAnalysis(originalPDFFiles, setOcrProgress) {
+export async function _runVisionAnalysis(originalPDFFiles, setOcrProgress) {
   // ========== VISION MODEL PATH - SmolVLM (transformers.js v3 + WebGPU) ==========
   // Processes PDF pages as images directly through SmolVLM-256M-Instruct.
   // Replaces the broken MLC WebLLM Phi-3.5-vision path.
@@ -516,14 +520,19 @@ async function _runVisionAnalysis(originalPDFFiles, setOcrProgress) {
 
   setOcrProgress(null);
 
-  // SmolVLM already generated structured output - use it directly as response
+  // SmolVLM already generated structured output - use it directly as response.
+  // ADR-009 §4: SmolVLM runs entirely in-browser (transformers.js v3 +
+  // WebGPU) - unconditionally on-device by construction. Every consumer
+  // treats a response missing this flag as off-device (fail closed), so a
+  // genuinely on-device vision read must say so explicitly.
   return {
     content: allPageTexts.join("\n\n---\n\n"),
     isVisionResponse: true,
+    onDevice: true,
   };
 }
 
-async function _runTextAnalysis(combinedText, aiStatus, setError) {
+export async function _runTextAnalysis(combinedText, setError) {
   // ========== TEXT MODEL PATH (original) ==========
   // Use OCR/text extraction then send to LLM
   // eslint-disable-next-line no-console
@@ -532,7 +541,15 @@ async function _runTextAnalysis(combinedText, aiStatus, setError) {
   // Determine if we're using local or cloud AI
   // Local models have tight context limits (4096), cloud has much more
   const localContextLimit = 4096;
-  const isLocalOnly = aiStatus.localAvailable && !aiStatus.cloudAvailable;
+  // ADR-009: a document call ALWAYS dispatches on-device when any on-device
+  // engine is ready - `getDocumentAIRouting().onDeviceReady` is the real
+  // answer, not `aiStatus.localAvailable && !aiStatus.cloudAvailable`. That
+  // old check treated ANY configured cloud key as "not local-only", so a
+  // veteran with both a Gemini key AND Warrant Council loaded got the full
+  // cloud-sized prompt/no truncation for a call that ADR-009 forces
+  // on-device anyway - the same silent-truncation-then-mislabeled-complete
+  // failure as cfileAnalyzer's chunk sizing.
+  const isLocalOnly = getDocumentAIRouting().onDeviceReady;
 
   // Choose system prompt based on AI availability
   // Local models need the condensed prompt to fit in 4K context
@@ -558,8 +575,6 @@ async function _runTextAnalysis(combinedText, aiStatus, setError) {
 
   const needsTruncation =
     totalEstimatedTokens > localContextLimit && isLocalOnly;
-  const preferCloud =
-    totalEstimatedTokens > localContextLimit && aiStatus.cloudAvailable;
 
   let documentText = combinedText;
 
@@ -581,15 +596,10 @@ async function _runTextAnalysis(combinedText, aiStatus, setError) {
     setError(null); // Clear any previous errors
   }
 
-  if (preferCloud) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `📄 Large document (${totalEstimatedTokens} tokens). Using Cloud AI for better results.`,
-    );
-  }
-
   // Call the unified AI service - system prompt goes in options, NOT in main message
-  // ADR-009: "document" - DD214 text stays on-device only.
+  // ADR-009: "document" - DD214 text stays on-device only, so there is no
+  // cloud-sized alternative to prefer (preferCloud removed - see isLocalOnly
+  // above).
   return generateAI(
     `Analyze this DD214 document and extract the information as JSON:\n\n${documentText}`,
     {
@@ -598,7 +608,6 @@ async function _runTextAnalysis(combinedText, aiStatus, setError) {
       maxTokens: outputBuffer, // Use calculated output buffer based on context size
       expectJSON: true,
       systemPrompt: systemPrompt,
-      preferCloud: preferCloud, // Hint to use cloud for large docs
       skipHallucinationCheck: true, // DD214 JSON doesn't contain diagnostic codes
     },
   );
@@ -636,7 +645,30 @@ export function _extractResponseContent(response) {
   return content;
 }
 
-function _parseDd214Json(content, t) {
+// Finds the FIRST balanced top-level {...} object in text via brace-depth
+// counting, instead of a single greedy regex spanning to the LAST '}' in
+// the whole string. That greedy match broke on SmolVLM's multi-page vision
+// output (smolVLMService.processMultiplePages joins each page's own JSON
+// object with "--- Page Break ---"): it captured from the first page's '{'
+// to the SECOND page's closing '}', swallowing the separator text as
+// invalid JSON. This does not track quoted-string escaping (a literal '{'
+// or '}' inside a JSON string value would still miscount), the same
+// limitation the regex it replaces already had for this schema.
+function _extractFirstJsonObject(text) {
+  const start = text.indexOf("{");
+  if (start === -1) return text;
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === "{") depth++;
+    else if (text[i] === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return text.slice(start);
+}
+
+export function _parseDd214Json(content, t) {
   // Parse JSON from response
   let data;
   try {
@@ -654,11 +686,9 @@ function _parseDd214Json(content, t) {
     if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
     if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
 
-    // Try to find JSON object in the response if it's mixed with other text
-    const jsonMatch = /\{[\s\S]{0,100000}\}/.exec(cleanContent);
-    if (jsonMatch) {
-      cleanContent = jsonMatch[0];
-    }
+    // Find the JSON object in the response if it's mixed with other text
+    // (or, for the vision path, followed by a second page's own object).
+    cleanContent = _extractFirstJsonObject(cleanContent);
 
     // Remove JavaScript-style comments from JSON (some models add these)
     // Remove single-line comments: // comment
@@ -1654,9 +1684,14 @@ function DD214ErrorBanner({ error, t }) {
 function DD214OffDeviceNotice({ notice }) {
   if (!notice) return null;
   return (
-    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+    <div
+      className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4"
+      role="status"
+    >
       <div className="flex items-start gap-3">
-        <span className="text-2xl">🔒</span>
+        <span className="text-2xl" aria-hidden="true">
+          🔒
+        </span>
         <p className="text-sm text-amber-700 dark:text-amber-300">{notice}</p>
       </div>
     </div>
@@ -2838,7 +2873,7 @@ function _buildDd214AnalysisHandlers(state) {
     try {
       const response = useVisionAnalysis
         ? await _runVisionAnalysis(originalPDFFiles, setOcrProgress)
-        : await _runTextAnalysis(combinedText, aiStatus, setError);
+        : await _runTextAnalysis(combinedText, setError);
       _finishDd214Analysis(response, state);
     } catch (err) {
       // ADR-009: only an off-device AI is configured - DD214 text stays
