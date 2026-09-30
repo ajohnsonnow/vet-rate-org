@@ -42,7 +42,7 @@ const PAGE_NOISE = [
 
 const ACRONYMS = /\b(nos|ptsd|tbi|copd|gerd|ibs|ivds|tera|itb)\b/g;
 
-const flatten = (text) => text.replace(/\s+/g, " ");
+export const flatten = (text) => text.replace(/\s+/g, " ");
 
 const stripNoise = (text) =>
   flatten(PAGE_NOISE.reduce((t, re) => t.replace(re, " "), text));
@@ -88,7 +88,7 @@ function _findSafeFlattenCut(text, approxIndex) {
   return text.length;
 }
 
-async function flattenChunked(text, slicer) {
+export async function flattenChunked(text, slicer) {
   let result = "";
   let pos = 0;
   while (pos < text.length) {
