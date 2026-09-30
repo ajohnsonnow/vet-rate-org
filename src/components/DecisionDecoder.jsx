@@ -1831,11 +1831,30 @@ const ClaimPhaseExplainer = ({
   </div>
 );
 
+// aiStatus used to be set once at mount and only refreshed inside
+// SmartAILoadButton's onLoadComplete, so it never noticed AI becoming
+// available any other way (AI settings, a cloud key entered, a model loaded
+// elsewhere) or becoming unavailable again. Polls the same way
+// DD214Analyzer.jsx's useDD214AIStatus and BlueButtonXRay.jsx's
+// useAIStatusPolling already do.
+// Exported for this hook's own regression test - not part of the
+// component's public interface otherwise.
+export function useAIStatusPolling() {
+  const [aiStatus, setAIStatus] = useState(() => getAIStatus());
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setAIStatus(getAIStatus()), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return { aiStatus, setAIStatus };
+}
+
 const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
 
   const [denialText, setDenialText] = useState("");
-  const [aiStatus, setAIStatus] = useState(() => getAIStatus());
+  const { aiStatus, setAIStatus } = useAIStatusPolling();
   const { results, isLoading, error, handleDecode } = useDecisionDecode();
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
