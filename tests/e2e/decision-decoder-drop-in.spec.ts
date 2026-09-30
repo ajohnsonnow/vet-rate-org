@@ -5,21 +5,28 @@
  * object itself - coerced to "[object File]", matching neither extension
  * pattern. Also verifies computeCombinedText's ADR-008 fix: a dropped
  * file's real name (which commonly carries a veteran's own name) never
- * reaches the text sent to the AI - a neutral "Document N (type, date)"
- * label is used instead.
+ * appears in the neutral "Document N (type, date)"-labeled text
+ * denialText builds from the dropped files' extracted content.
  *
- * Cloud AI (a syntactically valid but non-authenticating fake Gemini key)
- * is used as the deterministic fake engine here rather than the
- * `--mode e2e` @mlc-ai/web-llm alias: DecisionDecoder's own isAIAvailable()
- * (unifiedAIService.js's isAnyAIAvailable) only ever checks cloud/wllama/
- * local-server/legacy-local readiness, never the Warrant Council swarm
- * that alias fakes - so cloud is the only backend reachable here without
- * a real GPU. The Gemini call is a genuine network request, which lets
- * this test intercept and inspect the real request body Playwright's
- * page.route sees, rather than approximating it from in-page state.
+ * final16 QA re-review (2026-09-29): this spec used to go on to click
+ * "Decode This Decision" and assert that labeled text reached a real
+ * (network-intercepted) Gemini request body - i.e. that document-derived
+ * text may be sent off-device whenever only a cloud provider is
+ * configured. Owner decision (E) says the opposite: text derived from a
+ * dropped document may only ever reach an on-device engine; a cloud-only
+ * configuration must fall back to the local parsers instead. That
+ * routing decision belongs to aiStatementHelper.js/unifiedAIService.js
+ * (the parallel fix/final17-docs-on-device-routing track), not to
+ * DecisionDecoder.jsx's drop-in acceptance/labeling this spec is actually
+ * scoped to - so it stops at the label denialText carries, never at what
+ * decodeDecision/generateAI does with it afterward. Cloud AI (a
+ * syntactically valid but non-authenticating fake Gemini key) is still
+ * configured below purely so isAIAvailable()'s readiness check doesn't
+ * hide the "Decode This Decision" affordance the earlier D16-6 fix also
+ * covers.
  */
 import { readFileSync } from "node:fs";
-import { test, expect, type Page, type Route } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
 
 const APP_VERSION: string = JSON.parse(
@@ -111,34 +118,6 @@ async function bootDecisionDecoder(page: Page): Promise<void> {
     .waitFor({ state: "visible", timeout: 15000 });
 }
 
-// The real Gemini response shape interpretGeminiResponse (geminiResponse.js)
-// parses - decodedData's own content doesn't matter to this test, only that
-// decodeDecision's JSON.parse succeeds so the page doesn't error out before
-// the request has been captured.
-function fulfillFakeGeminiResponse(route: Route): Promise<void> {
-  return route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({
-      candidates: [
-        {
-          finishReason: "STOP",
-          content: {
-            parts: [
-              {
-                text: JSON.stringify({
-                  plainEnglish: "[e2e fake] deterministic Gemini response",
-                  outcome: "denied",
-                }),
-              },
-            ],
-          },
-        },
-      ],
-    }),
-  });
-}
-
 test.describe("Decision Decoder Drop-In File (D16-6)", () => {
   test("accepts a dropped PDF and image, and the captured AI request body has no file name", async ({
     page,
@@ -175,7 +154,7 @@ test.describe("Decision Decoder Drop-In File (D16-6)", () => {
     });
 
     // ADR-008: switch to the Paste tab to read denialText directly - the
-    // exact string handed to decodeDecision -> generateAI as the AI prompt.
+    // exact string computeCombinedText built from the two dropped files.
     // Neither dropped file's real name may appear in it.
     await dialog.getByRole("button", { name: "Paste Text" }).click();
     const denialText = await dialog.locator("textarea").inputValue();
@@ -186,25 +165,8 @@ test.describe("Decision Decoder Drop-In File (D16-6)", () => {
     expect(denialText).toContain("Document 1 (PDF,");
     expect(denialText).toContain("tinnitus is denied");
 
-    let capturedRequestBody: string | null = null;
-    await page.route("**generativelanguage.googleapis.com/**", (route) => {
-      capturedRequestBody = route.request().postData();
-      return fulfillFakeGeminiResponse(route);
-    });
-
-    await dialog.getByRole("button", { name: "Decode This Decision" }).click();
-
-    await expect
-      .poll(() => capturedRequestBody, { timeout: 20000 })
-      .not.toBeNull();
-
-    const body = capturedRequestBody as unknown as string;
-    expect(body).not.toContain(PDF_FILE_NAME);
-    expect(body).not.toContain(IMAGE_FILE_NAME);
-    expect(body).not.toContain("John-Doe");
-    expect(body).not.toContain("Jane-Smith");
-    expect(body).not.toContain(".pdf");
-    expect(body).not.toContain(".png");
-    expect(body).toContain("Document 1 (PDF,");
+    // Deliberately stops here - see the file header re: D16-6/owner
+    // decision (E) for why this spec never clicks "Decode This Decision"
+    // to assert what happens to denialText off-device.
   });
 });
