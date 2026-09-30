@@ -926,7 +926,9 @@ export function parseConditionsFromText(text) {
   return conditions;
 }
 
-async function _processPdfFile(file, ctx) {
+// Exported for this function's own regression test (analyzePDF's result
+// shape) - not part of the component's public interface otherwise.
+export async function _processPdfFile(file, ctx) {
   const {
     setPdfFile,
     setPdfError,
@@ -943,7 +945,10 @@ async function _processPdfFile(file, ctx) {
       setPdfOcrProgress(progress);
     });
 
-    if (result.success && result.text) {
+    // analyzePDF (ocr.js) never returns a `success` field - it either
+    // resolves with the extracted result or throws, caught below. Same
+    // defect class fixed in DecisionDecoder.jsx's extractFileTextAndPreview.
+    if (result.text) {
       // Parse conditions from the extracted text
       const conditions = parseConditionsFromText(result.text);
       setExtractedPdfConditions(conditions);

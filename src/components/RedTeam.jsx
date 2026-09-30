@@ -84,7 +84,9 @@ function _clearDraftStatement(setDraftStatement, setDraftStatementIsDocument) {
   setDraftStatementIsDocument(false);
 }
 
-function usePdfDropIn(setDraftStatement, setDraftStatementIsDocument) {
+// Exported for this hook's own regression test (analyzePDF's result shape) -
+// not part of the component's public interface otherwise.
+export function usePdfDropIn(setDraftStatement, setDraftStatementIsDocument) {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfOcrProgress, setPdfOcrProgress] = useState(null);
   const [pdfIsDragging, setPdfIsDragging] = useState(false);
@@ -101,7 +103,10 @@ function usePdfDropIn(setDraftStatement, setDraftStatementIsDocument) {
         setPdfOcrProgress(progress);
       });
 
-      if (result.success && result.text) {
+      // analyzePDF (ocr.js) never returns a `success` field - it either
+      // resolves with the extracted result or throws, caught below. Same
+      // defect class fixed in DecisionDecoder.jsx's extractFileTextAndPreview.
+      if (result.text) {
         setDraftStatement(result.text);
         setDraftStatementIsDocument(true); // ADR-009: document-derived
       } else {
