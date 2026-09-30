@@ -1233,7 +1233,7 @@ const PatternMatchFallbackNotice = ({ results }) => {
 
 // ADR-009: shown when only an off-device AI was configured, so the
 // pattern-match reader ran instead of sending the letter off-device.
-const OffDeviceFallbackNotice = ({ results }) => {
+export const OffDeviceFallbackNotice = ({ results }) => {
   if (
     !results._usedFallback ||
     results._fallbackReason !== "off_device_blocked"
@@ -1242,14 +1242,21 @@ const OffDeviceFallbackNotice = ({ results }) => {
   }
 
   return (
-    <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg">
+    <div
+      className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg"
+      role="status"
+    >
       <div className="flex items-start gap-2">
-        <span className="text-amber-500">🔒</span>
+        <span className="text-amber-500" aria-hidden="true">
+          🔒
+        </span>
         <div>
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
             On-Device AI Only
           </p>
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+          {/* text-amber-700, not -600: #d97706 on #fffbeb is ~3.07:1, below
+              the 4.5:1 AA minimum for small text - #b45309 clears it (~4.85:1). */}
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
             {results._fallbackNote}
           </p>
         </div>

@@ -1075,9 +1075,14 @@ function OffDeviceNotice({ notice }) {
   if (!notice) return null;
 
   return (
-    <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
+    <div
+      className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg"
+      role="status"
+    >
       <div className="flex items-start gap-3">
-        <span className="text-2xl">🔒</span>
+        <span className="text-2xl" aria-hidden="true">
+          🔒
+        </span>
         <p className="text-amber-700 dark:text-amber-300 text-sm">{notice}</p>
       </div>
     </div>
