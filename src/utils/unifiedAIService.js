@@ -1724,10 +1724,19 @@ const generateWithLocalAI = async (systemPrompt, userPrompt, options = {}) => {
   const { finalConfig, scrubPIIEnabled, onStream } =
     resolveLocalAIConfig(options);
 
+  // ADR-009 decision E: legacy LOCAL (in-page WebLLM) is unconditionally
+  // on-device, so a "document"-classed call is exempt from PII scrubbing -
+  // see generateWithWarrantCouncil's identical exemption for why.
+  const effectiveScrubPIIEnabled =
+    scrubPIIEnabled && resolveDataClass(options) !== AI_DATA_CLASS.DOCUMENT;
+
   const scrubbedSystemPrompt = systemPrompt
-    ? scrubPromptForLocalAI(systemPrompt, scrubPIIEnabled)
+    ? scrubPromptForLocalAI(systemPrompt, effectiveScrubPIIEnabled)
     : systemPrompt;
-  const scrubbedUserPrompt = scrubPromptForLocalAI(userPrompt, scrubPIIEnabled);
+  const scrubbedUserPrompt = scrubPromptForLocalAI(
+    userPrompt,
+    effectiveScrubPIIEnabled,
+  );
 
   try {
     localAIGenerating = true;

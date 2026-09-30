@@ -17,9 +17,18 @@
  * fixture below), the parser's value still wins, matching both the old and
  * new rule.
  *
+ * D19-1 (2026-09-30) finishes wiring D16-5 through: the LOCAL/on-device
+ * prompt's JSON schema had never actually been updated to ASK for these
+ * fields (it still told the model "DO NOT extract or return" them), so an
+ * on-device model had nowhere to put an identifier even though the merge
+ * logic above was ready to accept one. The cloud prompt is untouched - it
+ * still omits every identifier field, since cloud never receives document
+ * text at all (see ADR-009) but stays identifier-free as defense in depth.
+ *
  * Covers:
- *  - Neither system prompt (local or cloud) requests a direct identifier
- *    field in its JSON schema.
+ *  - The LOCAL/on-device prompt's JSON schema now requests the composite
+ *    identifier fields; the cloud prompt still omits them. Neither prompt
+ *    requests a name sub-field or serviceNumber (see below).
  *  - `_applyRegexSafetyNet` still produces every one of those fields on the
  *    final merged result when the local parser finds them - sourced from
  *    the local regex parser instead of the model - so the veteran-visible
@@ -82,14 +91,28 @@ DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
 24. CHARACTER OF SERVICE: HONORABLE
 `;
 
-describe("D15-1d: the AI prompt schema never requests a direct identifier", () => {
-  const IDENTIFIER_FIELD_LABELS = [
-    '"fullName"',
+// D19-1 (2026-09-30) supersedes this describe block's original D15-1d
+// claim for the LOCAL/on-device prompt only: since raw documents never
+// leave an on-device engine (ADR-009), that prompt now asks for the
+// composite identifier fields the on-device model CAN help extract
+// (fullName/ssnLast4/dateOfBirth/homeOfRecord/homeAddress) - the OFF-DEVICE
+// cloud prompt is untouched and still omits every one of them (cloud never
+// even receives document text at all, but the prompt itself stays
+// identifier-free as defense in depth). Neither prompt asks for the
+// name SUB-fields (lastName/firstName/middleName come from
+// `_applyRegexSafetyNet`'s own `parseName` split of `fullName`, not the
+// model) or `serviceNumber` (no local-parser counterpart - see this file's
+// header comment).
+describe("D19-1: the AI prompt schema's identifier fields are on-device only", () => {
+  const NAME_SUBFIELD_AND_SERVICE_NUMBER_LABELS = [
     '"lastName"',
     '"firstName"',
     '"middleName"',
-    '"ssnLast4"',
     '"serviceNumber"',
+  ];
+  const ON_DEVICE_IDENTIFIER_LABELS = [
+    '"fullName"',
+    '"ssnLast4"',
     '"dateOfBirth"',
     '"homeOfRecord"',
     '"homeAddress"',
@@ -99,13 +122,25 @@ describe("D15-1d: the AI prompt schema never requests a direct identifier", () =
     ["local/on-device", DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL],
     ["cloud", DD214_ANALYSIS_SYSTEM_PROMPT],
   ])(
-    "the %s system prompt's JSON schema omits every identifier field",
+    "the %s system prompt never requests a name sub-field or serviceNumber",
     (_label, prompt) => {
-      IDENTIFIER_FIELD_LABELS.forEach((label) => {
+      NAME_SUBFIELD_AND_SERVICE_NUMBER_LABELS.forEach((label) => {
         expect(prompt).not.toContain(label);
       });
     },
   );
+
+  it("the local/on-device prompt's JSON schema DOES request the composite identifier fields", () => {
+    ON_DEVICE_IDENTIFIER_LABELS.forEach((label) => {
+      expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).toContain(label);
+    });
+  });
+
+  it("the cloud prompt's JSON schema still omits every identifier field (defense in depth)", () => {
+    ON_DEVICE_IDENTIFIER_LABELS.forEach((label) => {
+      expect(DD214_ANALYSIS_SYSTEM_PROMPT).not.toContain(label);
+    });
+  });
 
   it("both prompts still request placeOfBirth (not an ADR-008-listed identifier)", () => {
     expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).toContain('"placeOfBirth"');

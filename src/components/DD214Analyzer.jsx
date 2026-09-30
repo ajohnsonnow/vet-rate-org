@@ -81,12 +81,20 @@ import DD214FormBuilder from "./DD214FormBuilder";
  * Condensed System Prompt for Local Models (4K context)
  * Focus on essential JSON extraction - comprehensive DD214 coverage
  */
-// D15-1d / ADR-008: name, SSN/service number, DOB, home-of-record, and
-// mailing/home address must never be requested from the model - a local
-// regex parser fills them from the original text after the model returns.
-// This is a code comment, kept OUTSIDE the template literal below - unlike
-// a comment placed inside the backtick string, this one is never sent to
-// the model as prompt text.
+// D16-5 (2026-09-29, final, supersedes D15-1d): this prompt only ever runs
+// on-device (DD214Analyzer.jsx's isLocalOnly gate picks it exactly when
+// getDocumentAIRouting().onDeviceReady is true) and nothing it extracts
+// ever leaves the veteran's machine, so it now asks the model for name/
+// SSN-last-4/DOB/home-of-record/mailing address too - _applyRegexSafetyNet
+// still decides what's actually shown (local parse wins when confident and
+// non-conflicting, an on-device model value is trusted otherwise, a
+// disagreement clears to empty rather than guessing). The off-device
+// DD214_ANALYSIS_SYSTEM_PROMPT below still omits these fields entirely -
+// cloud never receives document text at all (see ADR-009), but the prompt
+// itself stays identifier-free as defense in depth. This is a code
+// comment, kept OUTSIDE the template literal below - unlike a comment
+// placed inside the backtick string, this one is never sent to the model
+// as prompt text.
 export const DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL = `You are a DD214 military records analyst. Extract ALL available data as JSON.
 
 COMPLETE DD214 FIELD LOCATIONS:
@@ -121,10 +129,13 @@ Block 27: Reserve Obligation Termination Date (YYYYMMDD)
 Block 28: Days Lost (AWOL, confinement, etc)
 Block 29: Foreign Service Credit
 
-DO NOT extract or return: Name (Block 1), SSN/Service Number (Block 3),
-Date of Birth (Block 5), Home of Record (Block 7), or Home Address (Block
-30) - these are filled in separately. Omit them entirely from your JSON
-output, or use null if your schema requires the key.
+IDENTIFIER FIELDS (this document stays on THIS device - extract these too):
+Block 1: Full Name (Last, First, Middle)
+Block 3: SSN - return ONLY the last 4 digits as ssnLast4
+Block 5: Date of Birth (YYYY-MM-DD)
+Block 7: Home of Record (City, State)
+Block 30: Mailing/Home Address
+If a field is not found, use null. Never guess a value you can't read.
 
 CRITICAL EXTRACTION RULES:
 1. Block 18 (Remarks) often contains:
@@ -146,6 +157,11 @@ OUTPUT JSON:
   "documentTypes": ["DD214","NGB22","DD256"],
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214",
+  "fullName": "Last, First, Middle (Block 1)",
+  "ssnLast4": "last 4 digits only (Block 3)",
+  "dateOfBirth": "YYYY-MM-DD (Block 5)",
+  "homeOfRecord": "City, State (Block 7)",
+  "homeAddress": "Mailing/Home Address (Block 30)",
   "placeOfBirth": "City, State, Country",
   "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
   "componentFull": "Regular Army|Army National Guard|Navy Reserve|etc",

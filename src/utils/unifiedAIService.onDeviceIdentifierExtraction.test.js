@@ -170,6 +170,97 @@ describe("ADR-009 decision E: a Cloud-preferred user with an on-device engine lo
   });
 });
 
+describe("ADR-009 decision E: a loopback LOCAL_SERVER sees on-device document identifiers unredacted", () => {
+  it("forwards the real name and SSN to the local server, with no [REDACTED] tokens", async () => {
+    localServerConfig.host = "localhost";
+    localServerClient.checkServerHealth.mockResolvedValue({ available: true });
+    setAIMode(AI_MODES.LOCAL_SERVER);
+    await checkLocalServer(true);
+    localServerClient.chatCompletion.mockResolvedValue("ok");
+
+    const result = await generateAI(DOCUMENT_TEXT, documentOptions());
+
+    expect(localServerClient.chatCompletion).toHaveBeenCalledTimes(1);
+    const [messages] = localServerClient.chatCompletion.mock.calls[0];
+    const sentContent = messages[0].content;
+    expect(sentContent).toContain("Faketon");
+    expect(sentContent).toContain("123-45-6789");
+    expect(sentContent).not.toContain("[REDACTED");
+    expect(result.onDevice).toBe(true);
+  });
+
+  it("a CONTEXT-classed call on the same loopback LOCAL_SERVER backend is still redacted", async () => {
+    localServerConfig.host = "localhost";
+    localServerClient.checkServerHealth.mockResolvedValue({ available: true });
+    setAIMode(AI_MODES.LOCAL_SERVER);
+    await checkLocalServer(true);
+    localServerClient.chatCompletion.mockResolvedValue("ok");
+
+    await generateAI(DOCUMENT_TEXT, {
+      ...documentOptions(),
+      dataClass: AI_DATA_CLASS.CONTEXT,
+    });
+
+    const [messages] = localServerClient.chatCompletion.mock.calls[0];
+    expect(messages[0].content).not.toContain("123-45-6789");
+  });
+});
+
+describe("ADR-009 decision E: legacy LOCAL (in-page WebLLM) sees on-device document identifiers unredacted", () => {
+  it("forwards the real name and SSN to the local engine, with no [REDACTED] tokens", async () => {
+    const create = vi.fn().mockResolvedValue({
+      choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
+    });
+    registerLocalAIEngine(
+      { chat: { completions: { create } } },
+      true,
+      false,
+      "test-model",
+      false,
+    );
+    // registerLocalAIEngine(ready=true) auto-maps the model to a Diamond
+    // Swarm agent and marks Swarm ready too (see its own "Map legacy model
+    // to closest Diamond Swarm agent" step) - override back to not-ready so
+    // this test actually exercises generateWithLocalAI, not Warrant Council.
+    registerSwarmEngine(null, false, false, null);
+    setAIMode(AI_MODES.LOCAL);
+
+    const result = await generateAI(DOCUMENT_TEXT, documentOptions());
+
+    expect(create).toHaveBeenCalledTimes(1);
+    const sentMessages = create.mock.calls[0][0].messages;
+    const sentContent = sentMessages.map((m) => m.content).join("\n");
+    expect(sentContent).toContain("Faketon");
+    expect(sentContent).toContain("123-45-6789");
+    expect(sentContent).not.toContain("[REDACTED");
+    expect(result.onDevice).toBe(true);
+  });
+
+  it("a CONTEXT-classed call on the same legacy LOCAL backend is still redacted", async () => {
+    const create = vi.fn().mockResolvedValue({
+      choices: [{ message: { content: "ok" }, finish_reason: "stop" }],
+    });
+    registerLocalAIEngine(
+      { chat: { completions: { create } } },
+      true,
+      false,
+      "test-model",
+      false,
+    );
+    registerSwarmEngine(null, false, false, null);
+    setAIMode(AI_MODES.LOCAL);
+
+    await generateAI(DOCUMENT_TEXT, {
+      ...documentOptions(),
+      dataClass: AI_DATA_CLASS.CONTEXT,
+    });
+
+    const sentMessages = create.mock.calls[0][0].messages;
+    const sentContent = sentMessages.map((m) => m.content).join("\n");
+    expect(sentContent).not.toContain("123-45-6789");
+  });
+});
+
 describe("ADR-009 decision E: a ready on-device engine is used even when it isn't SWARM or legacy LOCAL", () => {
   it("Cloud preferred + key configured + ONLY Wllama ready: routes to Wllama, not blocked", async () => {
     setAIMode(AI_MODES.CLOUD);
