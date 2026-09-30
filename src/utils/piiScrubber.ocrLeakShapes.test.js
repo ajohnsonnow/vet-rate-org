@@ -437,13 +437,9 @@ describe("D16-5/D16-6: over-redaction guard - realistic medical/legal text survi
   });
 });
 
-describe("D16-6: no new/widened pattern re-introduces a quadratic scan", () => {
+describe("D16-6/D19: no pattern (new, widened, or pre-existing) has a quadratic scan", () => {
   // Timed directly against `_testOnlyPatterns` rather than through
-  // `scrubText()` - the pre-existing base `email` pattern (not touched by
-  // this task) is ALREADY quadratic on this same kind of input, which
-  // would make a full-pipeline timing assertion fail for a reason outside
-  // this file's D16-6 scope. These two patterns are the ones this task
-  // widened/added; each is asserted here in isolation.
+  // `scrubText()`, so each pattern's own cost is isolated.
   it("emailOcrSpaced does not blow up on a long run of '.'-and-word-character text", () => {
     const pathological = "a.".repeat(50000);
     const start = Date.now();
@@ -463,5 +459,69 @@ describe("D16-6: no new/widened pattern re-introduces a quadratic scan", () => {
     const start = Date.now();
     pathological.match(_testOnlyPatterns.ssnOcrGarbled);
     expect(Date.now() - start).toBeLessThan(500);
+  });
+
+  // D19: the base `email` pattern used to be quadratic on this exact shape
+  // (~6s for 80,000 chars) - every quantifier is now bounded (see the
+  // pattern's own comment in piiScrubber.js), so this should run in
+  // milliseconds instead.
+  it("email (base pattern) does not blow up on a long run of '.'-heavy text", () => {
+    const pathological = "a.".repeat(40000); // 80,000 chars
+    const start = Date.now();
+    pathological.match(_testOnlyPatterns.email);
+    expect(Date.now() - start).toBeLessThan(500);
+  });
+
+  it("email (base pattern) still matches a normal address after the pathological run", () => {
+    const text = `${"a.".repeat(40000)} contact veteran@example.com for records.`;
+    const start = Date.now();
+    const result = scrubText(text);
+    expect(Date.now() - start).toBeLessThan(500);
+    expect(result).toContain("[REDACTED_EMAIL]");
+    expect(result).not.toContain("veteran@example.com");
+  });
+});
+
+describe("D19-3: ssnOcrGarbled leaves real-world digit lists alone", () => {
+  // Isolated against the pattern itself, not the full `scrubText()`
+  // pipeline - a full-pipeline run can still legitimately redact some of
+  // these fixtures for an UNRELATED reason (e.g. a real MM/DD/YYYY date
+  // matches the pre-existing, intentionally aggressive `dob` pattern; four
+  // space-separated 4-digit groups match `creditCard`). This block only
+  // proves `ssnOcrGarbled` itself no longer fires on any of them.
+  it.each([
+    [
+      "a CFR citation list",
+      "See 38 C.F.R. §§ 3.156, 20.203, 20.1103 for the applicable rules.",
+    ],
+    [
+      "a USC citation list",
+      "Benefits are authorized under 38 U.S.C. §§ 5107, 1110, and 1131.",
+    ],
+    ["an audiogram frequency/threshold row", "500 10 2000 Hz, right ear."],
+    [
+      "a full audiogram table",
+      "Frequency (Hz): 500 1000 2000 3000 4000. Threshold (dB): 10 15 20 25 30.",
+    ],
+    ["a lab panel", "Glucose 95, Cholesterol 180, Triglycerides 150 mg/dL."],
+    ["an MM/DD/YYYY date", "Seen on 03/15/1985 for a routine exam."],
+    ["an MM-DD-YYYY date", "Seen on 03-15-1985 for a routine exam."],
+  ])("ssnOcrGarbled does not match %s", (_label, text) => {
+    expect(text.match(_testOnlyPatterns.ssnOcrGarbled)).toBeNull();
+  });
+
+  // The exact reported regression, through the full pipeline: the
+  // citation list's OWN "20." prefix must survive too, not just avoid the
+  // literal [REDACTED_SSN] token - and nothing else in the full aggressive
+  // pipeline has a reason to touch plain citation numbers either.
+  it("leaves a CFR citation list completely untouched end to end", () => {
+    const text =
+      "See 38 C.F.R. §§ 3.156, 20.203, 20.1103 for the applicable rules.";
+    expect(scrubText(text)).toBe(text);
+  });
+
+  it("leaves an audiogram frequency/threshold row completely untouched end to end", () => {
+    const text = "500 10 2000 Hz, right ear.";
+    expect(scrubText(text)).toBe(text);
   });
 });

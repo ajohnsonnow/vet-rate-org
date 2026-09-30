@@ -216,8 +216,33 @@ const PII_PATTERNS = {
   // spacing would mean matching against ordinary space-separated prose
   // instead of a fixed 3-2-4 shape, which is exactly the over-redaction
   // failure mode this task asked to remove elsewhere, not add here.
+  //
+  // D19-3: two further over-redaction shapes, fixed without loosening the
+  // fixtures above.
+  //   1) A separator slot that is PURE whitespace (no punctuation at all)
+  //      used to be allowed, which caught nothing but an ordinary run of
+  //      space-separated numbers - an audiogram row ("500 10 2000 Hz") is
+  //      a 3-2-4-shaped digit sequence with exactly that separator. Each
+  //      slot now REQUIRES the one OCR-plausible punctuation character
+  //      (comma/colon/hyphen/pipe/underscore/period), with at most one
+  //      optional space on either side of it - every existing garbled-SSN
+  //      fixture (comma, colon, hyphen, spaced-hyphen) still has that
+  //      literal character present; only a bare space/run-of-spaces with
+  //      NO punctuation stops matching.
+  //   2) A citation/section-number LIST ("38 C.F.R. §§ 3.156, 20.203,
+  //      20.1103") chains multiple period-joined numbers with ", " between
+  //      them - `20.203, 20.1103` on its own is 3-2-4-shaped and ALL real
+  //      digits, so it used to match and swallow "20." of the citation
+  //      before it into `[REDACTED_SSN]`. A real SSN is never itself part
+  //      of a larger dotted-decimal token, so a match whose first group is
+  //      immediately preceded by "." (i.e. it's the tail end of a
+  //      "NN.NNN"-shaped citation, not a standalone 3-digit group) is
+  //      rejected; a digit immediately before the first group is already
+  //      excluded by the `\b` word-boundary that follows this lookbehind
+  //      (digit-to-digit is never a boundary), so only the period case
+  //      needed an explicit guard. Mirrored after the match for symmetry.
   ssnOcrGarbled:
-    /\b[0-9OoIlSsBb]{3}[\s.\-_|,:]{1,3}[0-9OoIlSsBb]{2}[\s.\-_|,:]{1,3}[0-9OoIlSsBb]{4}\b/g,
+    /(?<!\.)\b[0-9OoIlSsBb]{3}\s?[.\-_|,:]\s?[0-9OoIlSsBb]{2}\s?[.\-_|,:]\s?[0-9OoIlSsBb]{4}\b(?!\.)/g,
 
   // MRN — medical record number, labeled or numeric.
   mrn: /\bMRN[:\s#-]*\d{6,12}\b/gi,
@@ -226,7 +251,22 @@ const PII_PATTERNS = {
 
   // Email — RFC-5322-lite. Runs late because /-chars don't overlap with the
   // numeric patterns above.
-  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
+  //
+  // D19: the previous unbounded `[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}`
+  // is quadratic on '.'-heavy input (~6s for 80,000 chars) - the domain
+  // class `[A-Za-z0-9.-]+` includes the literal dot it must later also
+  // match as a separate, required `\.`, so on a long run of dots with no
+  // real domain after it, the engine backtracks the domain match one
+  // character at a time before giving up at THIS start position, then
+  // repeats that same O(n) backtrack at every subsequent start position -
+  // O(n) positions x O(n) backtrack = O(n²). Bounding every quantifier
+  // (local part to RFC-5321's 64-octet max, each domain label to 63, at
+  // most 8 labels, TLD to 24) removes the overlap: a label's char class no
+  // longer contains the dot that ends it, so a run of dots can never
+  // partially match a label at all, let alone backtrack through one -
+  // same fix already applied to `emailOcrSpaced` below.
+  email:
+    /\b[A-Za-z0-9._%+-]{1,64}@(?:[A-Za-z0-9-]{1,63}\.){1,8}[A-Za-z]{2,24}\b/g,
 
   // D16-5/D16-6: OCR-garbled email - small (0-2 char) whitespace runs around
   // "@" and each "." that the strict pattern above doesn't tolerate
@@ -1797,11 +1837,11 @@ export const collectKnownIdentifierValues = (
 export const redactVeteranIdentifiers = (text, personal, claimNumbers) =>
   redactKnownValues(text, collectKnownIdentifierValues(personal, claimNumbers));
 
-// D16-6: test-only seam so a perf/no-quadratic-scan test can time these two
-// NEW/widened patterns directly, isolated from the pre-existing (and
-// separately already-quadratic, out of this task's scope) base `email`
-// pattern that a full `scrubText()` call would otherwise also run.
+// D16-6/D19: test-only seam so a perf/no-quadratic-scan test can time these
+// patterns directly, isolated from the rest of the full `scrubText()`
+// pipeline.
 export const _testOnlyPatterns = {
+  email: PII_PATTERNS.email,
   emailOcrSpaced: PII_PATTERNS.emailOcrSpaced,
   ssnOcrGarbled: PII_PATTERNS.ssnOcrGarbled,
 };
