@@ -14,8 +14,16 @@
  */
 
 import { useState } from "react";
-import { generateAI, isAnyAIAvailable } from "../utils/unifiedAIService";
-import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
+import {
+  generateAI,
+  isAnyAIAvailable,
+  getDocumentAIRouting,
+} from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  DocumentOffDeviceBlockedError,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
 import {
   CONSISTENCY_CHECK_PROMPT,
   SOLO_STATEMENT_ANALYSIS_PROMPT,
@@ -396,7 +404,35 @@ function ResultsDashboard({ mode, analysis, targetText }) {
 /**
  * Run the AI consistency check
  */
-async function performConsistencyCheck(
+// Split out of performConsistencyCheck purely to keep it under the
+// line-count limit - same fields, same behavior (fire-and-forget save).
+function _saveConsistencyResults(mode, referenceText, targetText, result) {
+  const consistencyScore = result.overall_score || result.score || null;
+  const contradictionsFound =
+    result.issues?.length || result.contradictions?.length || 0;
+
+  saveAnalysisResults({
+    toolName: "AI Cross-Examination",
+    classification: PACKET_DOC_TYPES.OTHER,
+    rawText:
+      mode === "compare"
+        ? `REFERENCE:\n${referenceText}\n\nSTATEMENT:\n${targetText}`
+        : targetText,
+    extractedData: result,
+    vkbMergeData: {
+      aiInsights: { consistencyScore, contradictionsFound },
+      keyFacts: [
+        {
+          source: "AI Cross-Examination",
+          fact: `Consistency score: ${consistencyScore ?? "N/A"}, Issues: ${contradictionsFound}`,
+          date: new Date().toISOString(),
+        },
+      ],
+    },
+  }).catch((err) => console.warn("Failed to save consistency results:", err));
+}
+
+export async function performConsistencyCheck(
   mode,
   referenceText,
   targetText,
@@ -409,6 +445,18 @@ async function performConsistencyCheck(
   if (mode === "solo" && !targetText) {
     setError("Please provide a statement to analyze.");
     return;
+  }
+
+  // ADR-009 spec item 5: "compare" mode's referenceText is document-derived
+  // evidence text, so a cloud-only veteran must get a plain notice instead
+  // of a dead-end error that invites an unwinnable retry - pre-flight check
+  // before spending a call on a routing decision that can't change.
+  if (mode === "compare") {
+    const routing = getDocumentAIRouting();
+    if (!routing.onDeviceReady) {
+      setError(buildDocumentOffDeviceNotice(routing.blockedProviderLabel));
+      return;
+    }
   }
 
   setLoading(true);
@@ -456,35 +504,17 @@ async function performConsistencyCheck(
     setAnalysis(result);
 
     // Save consistency analysis to VKB + My Packet
-    const consistencyScore = result.overall_score || result.score || null;
-    const contradictionsFound =
-      result.issues?.length || result.contradictions?.length || 0;
-
-    saveAnalysisResults({
-      toolName: "AI Cross-Examination",
-      classification: PACKET_DOC_TYPES.OTHER,
-      rawText:
-        mode === "compare"
-          ? `REFERENCE:\n${referenceText}\n\nSTATEMENT:\n${targetText}`
-          : targetText,
-      extractedData: result,
-      vkbMergeData: {
-        aiInsights: {
-          consistencyScore,
-          contradictionsFound,
-        },
-        keyFacts: [
-          {
-            source: "AI Cross-Examination",
-            fact: `Consistency score: ${consistencyScore ?? "N/A"}, Issues: ${contradictionsFound}`,
-            date: new Date().toISOString(),
-          },
-        ],
-      },
-    }).catch((err) => console.warn("Failed to save consistency results:", err));
+    _saveConsistencyResults(mode, referenceText, targetText, result);
   } catch (err) {
     console.error("AI Consistency Check Failed:", err);
-    setError(`Analysis failed: ${err.message}. Please try again.`);
+    // A DocumentOffDeviceBlockedError's message is already the plain,
+    // veteran-facing notice and retrying it cannot succeed - don't wrap it
+    // in "Analysis failed... Please try again."
+    setError(
+      err instanceof DocumentOffDeviceBlockedError
+        ? err.message
+        : `Analysis failed: ${err.message}. Please try again.`,
+    );
   } finally {
     setLoading(false);
   }
