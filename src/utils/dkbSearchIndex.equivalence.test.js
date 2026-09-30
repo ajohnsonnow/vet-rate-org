@@ -199,6 +199,21 @@ function addIsolatedPathFixtureEntries(add) {
     "This text does not mention the code at all.",
     { dc: "9999" },
   );
+  // Trigram-candidate false positive: condition_name "baba"'s trigrams are
+  // exactly {"bab", "aba"} - the same two trigrams query term "abab" splits
+  // into - so candidatesForTerm's AND-across-trigrams narrowing matches
+  // this entry, even though "baba" does NOT contain "abab" as a substring.
+  // candidatesForTerm is documented as a safe superset, not a confirmed
+  // match, specifically because trigram membership can be satisfied out of
+  // order like this - scoreConditionNameMatchesForTerm's own
+  // `condition.includes(term)` check is what filters this false positive
+  // back out. If that check were ever dropped, this entry would wrongly
+  // gain a condition-name-boost score for query "abab".
+  add(
+    "Generic outreach note with no diagnostic content.",
+    "No rating or condition information here.",
+    { condition_name: "baba" },
+  );
 }
 
 function buildFixtureEntries() {
@@ -266,6 +281,7 @@ const REPRESENTATIVE_QUERIES = [
   "moderate back pain 4.71a",
   "xerostomia",
   "9999",
+  "abab",
   synthLargeQuery(15000, 7),
   synthLargeQuery(15000, 42),
   synthLargeQuery(500, 3),
@@ -323,5 +339,21 @@ describe("D16-7: searchIndexedDKB matches the pre-fix full-scan algorithm exactl
     expect(result.map((e) => e.id)).toContain(
       entries.find((e) => e.metadata.dc === "9999").id,
     );
+  });
+
+  // Pins the fix for the false positive described where "baba" is added to
+  // the fixture: candidatesForTerm's trigram-AND narrowing is a superset,
+  // not a match, so scoreConditionNameMatchesForTerm must still verify with
+  // a real `.includes()` before scoring. Fails loudly (not vacuously) if
+  // that verification is ever dropped, since it asserts non-membership of
+  // a specific id, not just an empty/short result list.
+  it("never surfaces a condition-name trigram false positive without a real substring match", async () => {
+    const entries = buildFixtureEntries();
+    const index = await buildDKBIndex(entries);
+    const result = await searchIndexedDKB(index, "abab", 10);
+    const falsePositiveId = entries.find(
+      (e) => e.metadata.condition_name === "baba",
+    ).id;
+    expect(result.map((e) => e.id)).not.toContain(falsePositiveId);
   });
 });
