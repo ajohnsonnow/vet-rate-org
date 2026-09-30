@@ -26,6 +26,19 @@ import { findCombatDecorationsInText } from "./combatService";
  * Each pattern is tried in order; first match wins.
  * Patterns handle OCR typos, spacing variations, and era-specific layouts.
  */
+// A confident fullName match must not be another box's LABEL text that
+// happened to land in the value position - e.g. an empty Block 1 box
+// followed immediately by Block 2's own label line ("DEPARTMENT COMPONENT
+// AND BRANCH"), or a row-split capture that ran onto a neighbouring box's
+// label ("...DOE, JORDAN R SSN"). None of these words can plausibly be
+// part of a person's actual name, so their presence means the capture
+// landed on the WRONG box - reject outright (empty, never a wrong name)
+// rather than show it. Branch names are included since block 2 commonly
+// sits immediately after an empty/short block 1 value.
+const NAME_LABEL_LEAK_RE =
+  // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the reject-keyword alternation count, not backtracking; every alternative is a fixed/bounded literal
+  /\b(?:DEPARTMENT|COMPONENT|BRANCH|ARMY|NAVY|MARINE|COAST\s*GUARD|SPACE\s*FORCE|AIR\s*FORCE|SOCIAL\s*SECURITY|SSN|DATE\s*OF\s*BIRTH|PAY\s*GRADE|RESERVE\s*OBLIG|HOME\s*OF\s*RECORD|MAILING\s*ADDRESS|BLOCK|BOX|ITEM|NOTHING\s*FOLLOWS)\b/i;
+
 const DD214_FIELD_PATTERNS = {
   // ===== BLOCK 1: Name =====
   fullName: {
@@ -47,19 +60,27 @@ const DD214_FIELD_PATTERNS = {
       // stops at the first alternative that lets the OVERALL match
       // succeed, so a bare "ITEM 1" alternative would win on "ITEM 1.
       // LAST NAME: DOE..." before the longer, correct alternative ever
-      // got a chance, capturing "LAST NAME" itself as the value.
+      // got a chance, capturing "LAST NAME" itself as the value. The value
+      // class excludes `\n` and `|` (unlike the other block patterns
+      // below) - this pattern's whole point is "same line as the label",
+      // and letting it cross a newline or a pipe table-border let it eat
+      // straight into the NEXT box's label or column value whenever the
+      // real value box was empty or pipe-delimited (D16-5 regression).
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional parenthetical-hint/label alternation, not backtracking; bounded {0,60} capture
-      /(?:BLOCK\s*1|BOX\s*1|ITEM\s*1|1)[.\s]{0,10}(?:LAST\s*)?NAME(?:\s*\([^)\n]{0,60}\))?[:\s.]*([A-Z][A-Z,;.\s'|_-]+)/i,
+      /(?:BLOCK\s*1|BOX\s*1|ITEM\s*1|1)[.\s]{0,10}(?:LAST\s*)?NAME(?:\s*\([^)\n]{0,60}\))?[ \t:.]*([A-Z][A-Z,;.' \t_-]+)/i,
       // Row-wise/OCR label-above-value layout, tolerant of arbitrary OCR
       // garbage trailing the label (a mangled hint, a stray table-border
       // character) rather than only the one specific "(Last, First,
       // Middle)" parenthetical - bounded and newline-excluded before the
       // required `\n` literal, so an unbounded run of junk still can't
       // overlap the `\n` it precedes and force backtracking through every
-      // split point on a long blank run (ReDoS regression class).
+      // split point on a long blank run (ReDoS regression class). The
+      // captured value itself is also newline/pipe-excluded (see above) -
+      // it may only ever be the ONE line/column immediately following the
+      // label, never that plus whatever comes after it.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; every quantifier bounded
-      /(?:BLOCK\s*1|BOX\s*1|ITEM\s*1|1)[.\s]{0,10}(?:LAST\s*)?NAME[^\n]{0,60}\n[ \t]{0,20}([A-Z][A-Z,;.\s'|_-]{2,80})/i,
-      /NAME[:\s]*(?:\(?LAST,?\s*FIRST,?\s*(?:AND\s*)?MIDDLE\)?)[:\s.]*([A-Z][A-Z,;.\s'|_-]+)/i,
+      /(?:BLOCK\s*1|BOX\s*1|ITEM\s*1|1)[.\s]{0,10}(?:LAST\s*)?NAME[^\n]{0,60}\n[ \t]{0,20}([A-Z][A-Z,;.' \t_-]{2,80})/i,
+      /NAME[:\s]*(?:\(?LAST,?\s*FIRST,?\s*(?:AND\s*)?MIDDLE\)?)[ \t:.]*([A-Z][A-Z,;.' \t_-]+)/i,
       // Bare "LAST, FIRST[, MIDDLE]" line fallback - anchored via a bounded
       // lookbehind requiring a "1. NAME" (or NGB-22's "1. LAST NAME")
       // label within the preceding 200 chars, so a bare "CITY, STATE" line
@@ -75,10 +96,14 @@ const DD214_FIELD_PATTERNS = {
     // "DOE JOHN A" (no comma at all) is still a confident match. The bare
     // fallback above doesn't need the word-count branch: its own capture
     // group requires a comma/semicolon by construction, so `hasSeparator`
-    // is already true for anything it can possibly match.
+    // is already true for anything it can possibly match. NAME_LABEL_LEAK_RE
+    // rejects a capture that is actually another box's label/branch text
+    // (see D16-5 regression comment above) - "correct or empty" over a
+    // best-effort guess.
     validate: (val) => {
       const trimmed = (val || "").trim();
       if (trimmed.length < 3 || trimmed.length > 80) return false;
+      if (NAME_LABEL_LEAK_RE.test(trimmed)) return false;
       const hasSeparator = /[,;]/.test(trimmed);
       const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
       return hasSeparator || wordCount >= 2;
@@ -105,23 +130,42 @@ const DD214_FIELD_PATTERNS = {
     block: 3,
     label: "Social Security Number",
     patterns: [
+      // The box-number alternatives (BLOCK/BOX/ITEM 3) previously stood
+      // in for the label text entirely, so a re-numbered form whose real
+      // Block 3 is something else ("ITEM 3. SERVICE NUMBER") still matched
+      // and handed that field's digits to ssnLast4 - the box number is now
+      // only ever an OPTIONAL prefix; the literal SOCIAL text is mandatory
+      // regardless. `\b` after the digit also stops "ITEM 3" from
+      // partial-matching inside "ITEM 32"/"ITEM 35" etc.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional "SECURITY NUMBER" suffix alternation, not backtracking
-      /(?:BLOCK\s*3|BOX\s*3|ITEM\s*3|3\.\s*SOCIAL(?:\s*SECURITY(?:\s*NUMBER)?)?)[:\s.]*(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
+      /(?:(?:BLOCK|BOX|ITEM)\s*3\b[.\s]{0,10}|3\.\s{0,10})?SOCIAL(?:\s*SECURITY(?:\s*NUMBER)?)?[:\s.]*(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
       // Row-wise/OCR label-above-value layout, tolerant of arbitrary OCR
       // garbage trailing the label line ("SOCIAL SECURITY.N", where OCR
       // mangled "NO." into ".N") rather than only one specific punctuation
       // shape - bounded and newline-excluded before the required `\n`
       // literal, same ReDoS-avoidance reasoning as the other row-split
-      // patterns in this file.
+      // patterns in this file. Same mandatory-label fix as above.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; every quantifier bounded
-      /(?:BLOCK\s*3|BOX\s*3|ITEM\s*3|3\.\s*SOCIAL(?:\s*SECURITY)?)[^\n]{0,25}\n[ \t]{0,20}(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
+      /(?:(?:BLOCK|BOX|ITEM)\s*3\b[.\s]{0,10}|3\.\s{0,10})?SOCIAL(?:\s*SECURITY)?[^\n]{0,25}\n[ \t]{0,20}(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
       // Label-only row-split, no box number required at all - covers a
       // form (e.g. NGB-22) that numbers this box differently than DD214's
       // Block 3, since the label text itself is what OCR actually printed.
+      // The value row is scanned lazily up to 60 chars (not just its
+      // leading whitespace) so a shared row that concatenates several
+      // fields' printed values before the SSN ("DOE, JOHN ALAN ARMY/RA
+      // 123 45 6789") still recovers the last 4 - still label-anchored,
+      // unlike the fully-unanchored fallback removed below.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the "NUMBER" suffix alternation, not backtracking; every quantifier bounded
-      /(?:SOCIAL\s*SECURITY(?:\s*NUMBER)?|SSN|S\.?S\.?N\.?)[^\n]{0,25}\n[ \t]{0,20}(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
+      /(?:SOCIAL\s*SECURITY(?:\s*NUMBER)?|SSN|S\.?S\.?N\.?)[^\n]{0,25}\n[^\n]{0,60}?(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})\b/i,
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional "NUMBER" suffix alternation, not backtracking
       /(?:SOCIAL\s*SECURITY(?:\s*NUMBER)?|SSN|S\.?S\.?N\.?)[:\s#.]*(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})/i,
+      // Same-line label-only, lazy bounded scan - recovers a pipe-delimited
+      // table cell ("| 3. SOCIAL SECURITY NUMBER | 123-45-6789") where the
+      // value isn't immediately adjacent to the label. Still requires the
+      // literal label text within 25 chars, so this is not the unanchored
+      // fallback removed below.
+      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional "NUMBER" suffix alternation, not backtracking; every quantifier bounded
+      /(?:SOCIAL\s*SECURITY(?:\s*NUMBER)?|SSN|S\.?S\.?N\.?)[^\n]{0,25}?(\d{3}[\s|.-]*\d{2}[\s|.-]*\d{4})\b/i,
       // D16-5 regression: the previous last-resort fallback here matched
       // ANY bare 9-digit-shaped run anywhere in the document with no label
       // at all - it once grabbed an unrelated number and, because
@@ -184,23 +228,30 @@ const DD214_FIELD_PATTERNS = {
       // print a bare YYYYMMDD-style date at all. A 2-digit year is
       // deliberately not accepted anywhere in this shape - see
       // normalizeDate - guessing the century would be a wrong value.
+      // The box-number alternatives (BLOCK/BOX/ITEM 5) previously stood in
+      // for the label text entirely, so a re-numbered form whose real
+      // Block 5 is something else ("ITEM 5. DATE OF ENLISTMENT") still
+      // matched and handed that field's date to dateOfBirth - the box
+      // number is now only ever an OPTIONAL prefix; the literal "DATE OF
+      // BIRTH" text is mandatory regardless. `\b` after the digit also
+      // stops "ITEM 5" from partial-matching inside "ITEM 52"/"ITEM 59".
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /(?:BLOCK\s*5|BOX\s*5|ITEM\s*5|5\.\s*DATE\s*OF\s*BIRTH)(?:\s*\([^)\n]{0,20}\))?[:\s.]*(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2}|\d{1,2}\s{1,3}[A-Z]{3}\.?\s{1,3}\d{4})/i,
+      /(?:(?:BLOCK|BOX|ITEM)\s*5\b[.\s]{0,10}|5\.\s{0,10})?DATE\s*OF\s*BIRTH(?:\s*\([^)\n]{0,20}\))?[:\s.]*(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2}|\d{1,2}\s{1,3}[A-Z]{3}\.?\s{1,3}\d{4})/i,
       // Row-wise/OCR label-above-value layout, tolerant of arbitrary OCR
       // garbage trailing the label (not only the specific "(YYYYMMDD)"
       // hint) before the required `\n` literal - bounded and
       // newline-excluded for the same ReDoS-avoidance reason as the
-      // fullName/SSN next-line patterns above.
+      // fullName/SSN next-line patterns above. Same mandatory-label fix.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/value-shape alternation, not backtracking; every quantifier bounded
-      /(?:BLOCK\s*5|BOX\s*5|ITEM\s*5|5\.\s*DATE\s*OF\s*BIRTH)[^\n]{0,30}\n[ \t]{0,20}(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2}|\d{1,2}\s{1,3}[A-Z]{3}\.?\s{1,3}\d{4})/i,
+      /(?:(?:BLOCK|BOX|ITEM)\s*5\b[.\s]{0,10}|5\.\s{0,10})?DATE\s*OF\s*BIRTH[^\n]{0,30}\n[ \t]{0,20}(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{4}[/-]\d{2}[/-]\d{2}|\d{1,2}\s{1,3}[A-Z]{3}\.?\s{1,3}\d{4})/i,
       // Row-wise OCR can also print an UNRELATED field's short value ("E4"
       // pay grade) before the actual DOB digits on that same value line -
       // skip up to 30 non-newline chars (lazily, so it stops at the
       // EARLIEST 8-digit run rather than the latest) to find the bare
       // YYYYMMDD run, word-bounded on both sides so it can't start or end
-      // mid-number.
+      // mid-number. Same mandatory-label fix.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the optional parenthetical-hint alternation, not backtracking; every quantifier bounded
-      /(?:BLOCK\s*5|BOX\s*5|ITEM\s*5|5\.\s*DATE\s*OF\s*BIRTH)[^\n]{0,30}\n[^\n]{0,30}?\b(\d{8})\b/i,
+      /(?:(?:BLOCK|BOX|ITEM)\s*5\b[.\s]{0,10}|5\.\s{0,10})?DATE\s*OF\s*BIRTH[^\n]{0,30}\n[^\n]{0,30}?\b(\d{8})\b/i,
       // Label-only row-split, no box number required at all - covers a
       // form (e.g. NGB-22) that numbers this box differently than DD214's
       // Block 5.
@@ -209,6 +260,23 @@ const DD214_FIELD_PATTERNS = {
       // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
       /DATE\s*OF\s*BIRTH(?:\s*\([^)\n]{0,20}\))?[:\s.]*(\d{4}\s*\d{2}\s*\d{2}|\d{8}|\d{2}[/-]\d{2}[/-]\d{4}|\d{1,2}\s{1,3}[A-Z]{3}\.?\s{1,3}\d{4})/i,
     ],
+    // A swapped-column OCR layout (this box's VALUE line is actually the
+    // NEXT box's, because the values were printed one row higher than
+    // their labels) still produces a syntactically valid YYYYMMDD-shaped
+    // date, so the shape checks above can't catch it. A birth year that
+    // would make the veteran younger than the minimum US enlistment age
+    // (17) or older than 100 is implausible for a DD214 - reject rather
+    // than show it. This does not recover the true DOB in that layout
+    // (there is no reliable signal to do so from text alone) but it does
+    // stop the wrong value from ever displaying, per the "correct or
+    // empty, never wrong" rule.
+    validate: (val) => {
+      if (!val) return false;
+      const year = Number.parseInt(val.slice(0, 4), 10);
+      if (!Number.isFinite(year)) return false;
+      const currentYear = new Date().getFullYear();
+      return year <= currentYear - 17 && year >= currentYear - 100;
+    },
     normalize: (val) => normalizeDate(val),
   },
 
@@ -264,16 +332,30 @@ const DD214_FIELD_PATTERNS = {
     ],
     // D16-5: guards against the "found as OCR junk" failure mode - a
     // multi-line lookahead that skipped past a stray box-number-shaped
-    // artifact could truncate the real value and splice in noise. A value
-    // that's mostly non-letters (digits/symbols) or that swallowed another
-    // box's own label word is rejected outright rather than shown.
+    // artifact could truncate the real value and splice in noise, or (on
+    // a flattened single-line OCR page) ran straight through the "19.B
+    // NEAREST RELATIVE"/"8A. LAST DUTY ASSIGNMENT" boxes that follow this
+    // one. A value that's mostly non-letters (digits/symbols), that
+    // swallowed another box's own label word, or that absorbed a
+    // neighbouring box's content is rejected outright rather than shown.
+    // "BOX" is deliberately NOT in the reject list - real addresses
+    // legitimately contain it ("PSC 123 BOX 4567 APO AE 09012"), so
+    // blocking on it lost correct addresses base found. The letters-ratio
+    // floor is intentionally low (not majority-letters): a legitimate
+    // street address is often mostly digits (house number, ZIP) - this
+    // still catches near-all-digit/symbol OCR junk (ratio 0), just not
+    // real numeric-heavy addresses.
     validate: (val) => {
       const trimmed = (val || "").replace(/\s+/g, " ").trim();
       if (trimmed.length < 5 || trimmed.length > 100) return false;
-      if (/\b(?:BLOCK|BOX|ITEM|NOTHING\s*FOLLOWS)\b/i.test(trimmed))
+      if (
+        /\b(?:BLOCK|ITEM|NOTHING\s*FOLLOWS|NEAREST\s*RELATIVE|LAST\s*DUTY|MAJOR\s*COMMAND)\b/i.test(
+          trimmed,
+        )
+      )
         return false;
       const letters = (trimmed.match(/[A-Za-z]/g) || []).length;
-      return letters / trimmed.length >= 0.5;
+      return letters / trimmed.length >= 0.2;
     },
     normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
   },
@@ -509,24 +591,30 @@ const DD214_FIELD_PATTERNS = {
       // parenthetical hint ("(INCLUDE ZIP CODE)") are both consumed as
       // part of the label so neither pollutes the captured value.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above. `[A-Z]` (not `[A-Za-z]`) since /i already covers case.
-      /(?:BLOCK\s{0,10}(?:19|30)|BOX\s{0,10}(?:19|30)|ITEM\s{0,10}(?:19|30)|(?:19|30)[A-Z]?\.?\s{0,10}(?:MAILING|HOME)\s{0,10}ADDRESS)(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|ITEM\s{0,10}20|20\.))/i,
+      /(?:BLOCK\s{0,10}(?:19|30)|BOX\s{0,10}(?:19|30)|ITEM\s{0,10}(?:19|30)|(?:19|30)[A-Z]?\.?\s{0,10}(?:MAILING|HOME)\s{0,10}ADDRESS)(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19[.\s]{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|ITEM\s{0,10}20|20\.))/i,
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the next-block alternation count, not backtracking; bounded {10,150} capture for S8786 above
-      /(?:MAILING|HOME)\s{0,10}ADDRESS(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19\s{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|ITEM\s{0,10}20|20\.))/i,
+      /(?:MAILING|HOME)\s{0,10}ADDRESS(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([\s\S]{10,150}?)(?=\n\s{0,10}(?:19[.\s]{0,10}B|BLOCK\s{0,10}20|BOX\s{0,10}20|ITEM\s{0,10}20|20\.))/i,
       // Flattened-OCR fallback, same reasoning as homeOfRecord above: no
       // `\n` exists at all for the lookahead-based patterns to anchor on.
       // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label alternation count, not backtracking; every quantifier bounded
-      /(?:MAILING|HOME)\s{0,10}ADDRESS(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([A-Z0-9][A-Z0-9,.\s'-]{9,100}?)(?=\s{1,10}(?:19\s{0,10}B|BLOCK|BOX|ITEM|20\s{0,10}[A-Z]?\.)|$)/i,
+      /(?:MAILING|HOME)\s{0,10}ADDRESS(?:\s{0,10}AFTER\s{0,10}SEPARATION)?(?:\s{0,10}\([^)\n]{0,40}\))?[:\s.]{0,20}([A-Z0-9][A-Z0-9,.\s'-]{9,100}?)(?=\s{1,10}(?:19[.\s]{0,10}B|BLOCK|BOX|ITEM|20\s{0,10}[A-Z]?\.)|$)/i,
     ],
     // Addresses skew more numeric than homeOfRecord (street number, ZIP),
     // so the letters-ratio floor is lower - same OCR-junk guard, tuned for
-    // this field's shape.
+    // this field's shape. "BOX" is deliberately not in the reject list -
+    // see homeOfRecord's validate() above for why. "NEAREST RELATIVE" is
+    // Block 19.b's own label, immediately following this one on a
+    // flattened single-line OCR page - reject a capture that absorbed it
+    // rather than show someone else's name/address as the veteran's own.
     validate: (val) => {
       const trimmed = (val || "").replace(/\s+/g, " ").trim();
       if (trimmed.length < 10 || trimmed.length > 150) return false;
-      if (/\b(?:BLOCK|BOX|ITEM|NOTHING\s*FOLLOWS)\b/i.test(trimmed))
+      if (
+        /\b(?:BLOCK|ITEM|NOTHING\s*FOLLOWS|NEAREST\s*RELATIVE)\b/i.test(trimmed)
+      )
         return false;
       const letters = (trimmed.match(/[A-Za-z]/g) || []).length;
-      return letters / trimmed.length >= 0.3;
+      return letters / trimmed.length >= 0.15;
     },
     normalize: (val) => val.replaceAll("\n", ", ").replace(/\s+/g, " ").trim(),
   },
