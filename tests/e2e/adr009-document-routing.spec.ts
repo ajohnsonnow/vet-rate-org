@@ -17,6 +17,18 @@ import { dismissDisclaimer } from "./helpers";
  * and the tool completes without error. A single shared test additionally
  * proves (c): a genuinely "context"-classed call (the AI Assistant) still
  * reaches the stubbed cloud with only the allow-listed content.
+ *
+ * D19-9: this used to intercept ONLY the Gemini endpoint (hand-typed as a
+ * duplicate literal), which would silently miss a document leaking to any
+ * OTHER off-device AI provider the app might add. `installProviderGuard`
+ * (wired into `bootApp`, so every test in this file gets it) intercepts
+ * EVERY request and fails the test outright on one to any external host
+ * that isn't either the app's own dev server, a known-benign static asset
+ * host (verified empirically - see BENIGN_EXTERNAL_HOSTS), or an AI
+ * provider endpoint this file has explicitly stubbed. The Gemini endpoint
+ * itself is read from unifiedAIService.js's own source text (not
+ * re-typed), so a changed URL there is caught here too instead of the test
+ * silently stubbing a now-stale pattern.
  */
 
 const APP_VERSION: string = JSON.parse(
@@ -25,7 +37,75 @@ const APP_VERSION: string = JSON.parse(
 
 const DOC_MARKER = "ZZE2EDOCMARKER9f3a";
 const CLOUD_KEY = "AIzaSyE2EFAKEKEY00000000000000000000";
-const GEMINI_PATTERN = "https://generativelanguage.googleapis.com/**";
+
+// Reads the real endpoint out of the app's own source rather than
+// hand-typing a second copy that could silently drift from it.
+function readGeminiApiUrlFromSource(): string {
+  const src = readFileSync("src/utils/unifiedAIService.js", "utf-8");
+  const match = src.match(/GEMINI_API_URL\s*=\s*\n?\s*"([^"]+)"/);
+  if (!match) {
+    throw new Error(
+      "Could not find GEMINI_API_URL in src/utils/unifiedAIService.js - " +
+        "update this test's extraction regex to match the new shape.",
+    );
+  }
+  return match[1];
+}
+
+const GEMINI_API_URL = readGeminiApiUrlFromSource();
+const GEMINI_PATTERN = `${new URL(GEMINI_API_URL).origin}/**`;
+
+// Verified empirically (a Playwright request logger run against a real
+// boot + idle, and against every flow this file exercises): the flag-icons
+// stylesheet/flag image and the goatcounter analytics beacon are the ONLY
+// external hosts this app's own UI ever reaches on its own, independent of
+// any AI call. Neither ever carries prompt/document content.
+const BENIGN_EXTERNAL_HOSTS = [
+  "cdn.jsdelivr.net",
+  "gc.zgo.at",
+  "flagcdn.com",
+  "vet-rate-org.goatcounter.com",
+];
+
+function isBenignExternalHost(hostname: string): boolean {
+  return BENIGN_EXTERNAL_HOSTS.some(
+    (host) => hostname === host || hostname.endsWith(`.${host}`),
+  );
+}
+
+interface ProviderGuard {
+  unexpectedHosts: string[];
+}
+
+// Registered BEFORE any test-specific `page.route()` (e.g. stubCloudRoute),
+// so a later, more specific route registered by the test itself is tried
+// FIRST for a matching URL (Playwright tries the most-recently-registered
+// matching handler first) - this catch-all only ever actually runs for a
+// request nothing else claimed.
+async function installProviderGuard(page: Page): Promise<ProviderGuard> {
+  const guard: ProviderGuard = { unexpectedHosts: [] };
+  await page.route("**/*", async (route) => {
+    const url = new URL(route.request().url());
+    const isLocalDevServer =
+      url.hostname === "127.0.0.1" || url.hostname === "localhost";
+    if (isLocalDevServer || isBenignExternalHost(url.hostname)) {
+      await route.continue();
+      return;
+    }
+    guard.unexpectedHosts.push(route.request().url());
+    await route.abort("blockedbyclient");
+  });
+  return guard;
+}
+
+const providerGuards = new WeakMap<Page, ProviderGuard>();
+
+test.afterEach(async ({ page }) => {
+  // A request the guard above caught means a document (or the veteran's
+  // own words) reached an AI provider this file never intercepted/stubbed
+  // - fail loudly rather than let it pass silently.
+  expect(providerGuards.get(page)?.unexpectedHosts ?? []).toEqual([]);
+});
 
 async function shimFakeGpuAdapter(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -60,6 +140,7 @@ async function bootApp(
   page: Page,
   { withCloudKey }: { withCloudKey: boolean },
 ): Promise<void> {
+  providerGuards.set(page, await installProviderGuard(page));
   await page.addInitScript(
     ({ version, cloudKey, withCloudKey: seedKey }) => {
       localStorage.setItem("vet-rate-tos-accepted", "true");
@@ -448,6 +529,79 @@ test.describe("ADR-009: Decision Decoder document routing (pasted text)", () => 
       .first()
       .fill(DECISION_DECODER_FIXTURE_TEXT(DOC_MARKER));
     await loadFakeOnDeviceAI(page);
+    await dialog.getByRole("button", { name: /Decode This Decision/i }).click();
+
+    await expect(dialog.getByText(/Full Denial/i)).toBeVisible({
+      timeout: 20000,
+    });
+
+    const calls = await readFakeEngineCalls(page);
+    expect(calls.some((c) => c.user.includes(DOC_MARKER))).toBe(true);
+  });
+});
+
+// D19-9: the pasted-text describe block above never exercised Decision
+// Decoder's OTHER input method - "📷 Drop-In File" (FileDropZone/
+// FileDropInPanel, DecisionDecoder.jsx), a real PDF upload routed through
+// the same OCR/text-extraction pipeline as C-File/Blue Button before
+// `denialText` ever reaches `decodeDecision`. Uses the same
+// `makeTextPdfBuffer` fixture helper C-File already relies on.
+async function switchToFileDropTab(page: Page): Promise<void> {
+  const dialog = page.locator(DECISION_DECODER_DIALOG);
+  await dialog.getByRole("button", { name: /Drop-In File/i }).click();
+}
+
+async function uploadDecisionDecoderFixture(
+  page: Page,
+  marker: string,
+): Promise<void> {
+  const dialog = page.locator(DECISION_DECODER_DIALOG);
+  const pdfBuffer = await makeTextPdfBuffer(
+    DECISION_DECODER_FIXTURE_TEXT(marker),
+  );
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "decision-letter-fixture.pdf",
+    mimeType: "application/pdf",
+    buffer: pdfBuffer,
+  });
+}
+
+test.describe("ADR-009: Decision Decoder document routing (file drop)", () => {
+  test("cloud-only: the document never reaches the stubbed cloud, notice shows, local parser result shows", async ({
+    page,
+  }) => {
+    test.setTimeout(60000);
+    await bootApp(page, { withCloudKey: true });
+    const cloud = await stubCloudRoute(page);
+
+    await openToolDialog(page, "openDecisionDecoder", DECISION_DECODER_DIALOG);
+    await switchToFileDropTab(page);
+    await uploadDecisionDecoderFixture(page, DOC_MARKER);
+    const dialog = page.locator(DECISION_DECODER_DIALOG);
+    await dialog.getByRole("button", { name: /Decode This Decision/i }).click();
+
+    await expect(dialog.getByText(/was not sent to/i)).toBeVisible({
+      timeout: 20000,
+    });
+    await expect(dialog.getByText(/Full Denial/i)).toBeVisible();
+
+    expect(cloud.bodies.some((b) => b.includes(DOC_MARKER))).toBe(false);
+    expect(cloud.bodies.length).toBe(0);
+  });
+
+  test("on-device available: the fake engine receives the document and the feature works", async ({
+    page,
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
+    test.setTimeout(60000);
+    await shimFakeGpuAdapter(page);
+    await bootApp(page, { withCloudKey: false });
+
+    await openToolDialog(page, "openDecisionDecoder", DECISION_DECODER_DIALOG);
+    await switchToFileDropTab(page);
+    await uploadDecisionDecoderFixture(page, DOC_MARKER);
+    await loadFakeOnDeviceAI(page);
+    const dialog = page.locator(DECISION_DECODER_DIALOG);
     await dialog.getByRole("button", { name: /Decode This Decision/i }).click();
 
     await expect(dialog.getByText(/Full Denial/i)).toBeVisible({
