@@ -2145,6 +2145,27 @@ async function _checkCrisisSafety(prompt, options) {
   }
 }
 
+// D19 follow-up: a reviewer proved the loader-failure fallback below only
+// ever had the full pattern scrubber to fall back on, which cannot catch a
+// KNOWN-VALUE identifier with no generic shape (the veteran's own name) -
+// on a loader failure, a name typed into the veteran's own message (not
+// sourced from the VKB at all) reached an off-device backend un-redacted
+// even after the D19-1 fail-closed fix, since that fix only added pattern
+// scrubbing, never known-value scrubbing, back into the failure path.
+// Caching the last SUCCESSFULLY loaded profile closes this for the common
+// case (a transient loader hiccup after at least one earlier successful
+// call this session) without changing availability semantics (still never
+// blocks generation) or needing the bigger, product-level call of whether
+// a loader failure should block an off-device send outright. A loader that
+// has never once succeeded this session (the cold-start case) still has no
+// known value to fall back to - a structural limit documented here, not
+// silently assumed; see unifiedAIService.redactionFailClosed.test.js.
+let _lastKnownGoodRedactionProfile = null;
+
+export const resetLastKnownGoodRedactionProfile = () => {
+  _lastKnownGoodRedactionProfile = null;
+};
+
 // ADR-008 single enforcement point: the previous 5 builder-level redaction
 // passes (generateLLMContext, generatePacketContext, getVeteranAIContext,
 // buildSystemPrompt, callGeminiAPI) only cover the free text THOSE
@@ -2168,20 +2189,28 @@ async function _redactPiecesForSend(pieces) {
     // writes the veteran's name/service number ONLY there, never to VKB's
     // .personal block.
     const personal = { ...getVeteranProfile(), ...vkb?.personal };
+    _lastKnownGoodRedactionProfile = { personal, claimNumbers };
     return pieces.map((text) =>
       redactVeteranIdentifiers(text, personal, claimNumbers),
     );
   } catch (err) {
     // Fail CLOSED, never open: a VKB/profile load failure must never let
     // raw text reach an off-device backend un-redacted (the previous
-    // `catch { return pieces; }` did exactly that). The known-value
-    // redaction above is unavailable without the profile, so fall back to
-    // the full aggressive pattern scrubber, which catches bare SSNs/DOBs/
-    // etc even with no known value to match against.
+    // `catch { return pieces; }` did exactly that). Known-value redaction
+    // still runs against the last successfully loaded profile, if one
+    // exists this session, ON TOP OF the full aggressive pattern scrubber
+    // (which catches bare SSNs/DOBs/etc even with no known value to match
+    // against) - neither alone would catch every shape the other does.
     console.warn(
       "[ADR-008] _redactPiecesForSend: VKB/profile load failed, falling back to pattern scrubbing:",
       err?.message,
     );
+    if (_lastKnownGoodRedactionProfile) {
+      const { personal, claimNumbers } = _lastKnownGoodRedactionProfile;
+      return pieces.map((text) =>
+        scrubText(redactVeteranIdentifiers(text, personal, claimNumbers)),
+      );
+    }
     return pieces.map((text) => scrubText(text));
   }
 }
