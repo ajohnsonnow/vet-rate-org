@@ -707,17 +707,24 @@ function _extractFirstJsonObject(text) {
   return text.slice(start);
 }
 
+// D19 follow-up: since D16-5 restored identifier fields (name/SSN/DOB/home
+// of record/address) to the on-device schema, the raw and parsed content
+// this function handles can carry them. It used to `console.log`/
+// `console.error` that content directly (a debug leftover, never gated on
+// an error) - bugReportUtils' console interceptor captures any
+// `console.error` unconditionally, and any `console.log` whose stringified
+// args contain a common keyword ("null", "missing", ...), which a
+// JSON.stringify'd object with an unset identifier field almost always
+// does. A captured log becomes part of a bug report a veteran can copy to
+// the clipboard or POST off-device (BugSquasher) - a NEW path this
+// function's content never had before that schema change. Diagnostics now
+// report shape/length only, never content.
 export function _parseDd214Json(content, t) {
   // Parse JSON from response
   let data;
   try {
     let cleanContent =
       typeof content === "string" ? content.trim() : JSON.stringify(content);
-    // eslint-disable-next-line no-console
-    console.log(
-      "🧹 Clean content before JSON parse:",
-      cleanContent.substring(0, 500),
-    );
 
     // Remove markdown code fences if present
     if (cleanContent.startsWith("```json"))
@@ -737,9 +744,6 @@ export function _parseDd214Json(content, t) {
     // Clean up any trailing commas before } or ] (common after comment removal)
     cleanContent = cleanContent.replace(/,(\s*[}\]])/g, "$1");
 
-    // eslint-disable-next-line no-console
-    console.log("🧹 After comment removal:", cleanContent.substring(0, 500));
-
     data = JSON.parse(cleanContent.trim());
 
     // Normalize data - AI sometimes returns fields in unexpected formats
@@ -756,11 +760,13 @@ export function _parseDd214Json(content, t) {
     if (data.mosTitle && typeof data.mosTitle !== "string") {
       data.mosTitle = String(data.mosTitle);
     }
-
-    // eslint-disable-next-line no-console
-    console.log("✅ Parsed JSON data:", data);
   } catch (parseError) {
-    console.error("JSON parse error:", parseError, "Content:", content);
+    console.error(
+      "JSON parse error:",
+      parseError.message,
+      "Content length:",
+      typeof content === "string" ? content.length : 0,
+    );
     throw new Error(t("dd214Analyzer", "parseError"));
   }
   return data;
@@ -818,21 +824,47 @@ function _valuesConflict(regexValue, modelValue) {
   return a !== b;
 }
 
+// D19 follow-up: the on-device schema's own example values ("Last, First,
+// Middle (Block 1)", "YYYY-MM-DD (Block 5)", "City, State (Block 7)") are
+// exactly what a small on-device model tends to echo back verbatim when it
+// can't actually read a field - nothing previously rejected that echo
+// before it was trusted as a real read. Any of this app's identifier
+// placeholders carries the literal "(Block N)" hint text, so that's a
+// reliable, schema-derived signal rather than a guess. ssnLast4 is also
+// shape-checked to exactly 4 digits, so a model that returns the FULL SSN
+// in that field (small models sometimes do) is rejected rather than kept
+// as-is - the schema explicitly asks for "last 4 digits only".
+const _BLOCK_HINT_ECHO = /\(\s*Block\s+\d+[a-z]?\s*\)/i;
+const IDENTIFIER_FIELD_SHAPE = {
+  ssnLast4: /^\d{4}$/,
+  dateOfBirth: /^\d{4}-\d{1,2}-\d{1,2}$/,
+};
+
+function _isTrustworthyModelValue(key, value) {
+  if (typeof value !== "string") return true;
+  if (_BLOCK_HINT_ECHO.test(value)) return false;
+  const shape = IDENTIFIER_FIELD_SHAPE[key];
+  return shape ? shape.test(value.trim()) : true;
+}
+
 // Local parse (dd214FieldExtractor.js only ever emits a value it's
 // confident about - see D16-5) wins when present and doesn't conflict with
 // a trusted on-device model value. Otherwise, an on-device model's own
 // value is left as whatever mergeAIAndRegexResults already put there; an
-// off-device (or unconfirmed) model's value is cleared to an empty string
-// so Object.assign below actually overwrites it on `data` rather than
-// leaving a stale value in place.
+// off-device (or unconfirmed or untrustworthy-shaped) model's value is
+// cleared to an empty string so Object.assign below actually overwrites it
+// on `data` rather than leaving a stale value in place.
 function _resolveIdentifierField(merged, key, regexValue, trustModelValue) {
   const hasRegexValue = _hasValue(regexValue);
   const modelValue = merged[key];
-  const hasModelValue = trustModelValue && _hasValue(modelValue);
+  const modelValueTrusted =
+    trustModelValue &&
+    _hasValue(modelValue) &&
+    _isTrustworthyModelValue(key, modelValue);
 
   if (
     hasRegexValue &&
-    hasModelValue &&
+    modelValueTrusted &&
     _valuesConflict(regexValue, modelValue)
   ) {
     merged[key] = "";
@@ -840,7 +872,7 @@ function _resolveIdentifierField(merged, key, regexValue, trustModelValue) {
   }
   if (hasRegexValue) {
     merged[key] = regexValue;
-  } else if (!trustModelValue) {
+  } else if (!modelValueTrusted) {
     merged[key] = "";
   }
   return null;

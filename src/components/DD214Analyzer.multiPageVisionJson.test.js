@@ -99,3 +99,38 @@ describe("D19-2: _parseDd214Json's brace-depth scan is string-aware", () => {
     expect(result.extractionNotes).toEqual(['Says "CONT{" on remarks']);
   });
 });
+
+describe("D19 follow-up: _parseDd214Json never consoles the identifier-bearing content it handles", () => {
+  // D16-5 restored name/SSN/DOB/home-of-record/address to the on-device
+  // schema. bugReportUtils' console interceptor captures any console.error
+  // unconditionally, and any console.log whose stringified args contain a
+  // common keyword ("null" included) - a debug console.log/console.error of
+  // this function's own content used to hand identifiers to that capture
+  // buffer, a path this content never had before that schema change.
+  it("does not console.log the raw or parsed content on a successful parse", () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const identifierJson =
+      '{"fullName":"FAKETON, JORDAN Q","ssnLast4":"6789","dateOfBirth":"1990-01-01","homeOfRecord":"TESTVILLE, TS","homeAddress":null,"branch":"Army"}';
+
+    _parseDd214Json(identifierJson, t);
+
+    const loggedText = logSpy.mock.calls.flat().join(" ");
+    expect(loggedText).not.toContain("FAKETON");
+    expect(loggedText).not.toContain("6789");
+    expect(loggedText).not.toContain("TESTVILLE");
+    logSpy.mockRestore();
+  });
+
+  it("does not console.error the raw content on a parse failure", () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const identifierBearingGarbage =
+      "not json but contains FAKETON, JORDAN Q and 123-45-6789 {broken";
+
+    expect(() => _parseDd214Json(identifierBearingGarbage, t)).toThrow();
+
+    const loggedText = errorSpy.mock.calls.flat().join(" ");
+    expect(loggedText).not.toContain("FAKETON");
+    expect(loggedText).not.toContain("123-45-6789");
+    errorSpy.mockRestore();
+  });
+});

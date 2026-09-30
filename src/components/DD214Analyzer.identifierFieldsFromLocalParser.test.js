@@ -283,3 +283,42 @@ describe("D16-5: on-device/off-device precedence when the local parser finds not
     expect(data.fullName).toBe("DOE, JORDAN R");
   });
 });
+
+// D19 follow-up: the schema's own example values carry a literal
+// "(Block N)" hint ("Last, First, Middle (Block 1)", "YYYY-MM-DD
+// (Block 5)") - a small on-device model that can't read a field sometimes
+// echoes that hint back verbatim instead of a real value, and ssnLast4 in
+// particular can come back as a full 9-digit SSN instead of the last 4
+// digits the schema asks for.
+describe("D19 follow-up: an on-device model's identifier value is shape/placeholder-checked", () => {
+  it.each([
+    ["fullName", "Last, First, Middle (Block 1)"],
+    ["dateOfBirth", "YYYY-MM-DD (Block 5)"],
+    ["homeOfRecord", "City, State (Block 7)"],
+    ["homeAddress", "Mailing/Home Address (Block 30)"],
+  ])(
+    "clears a %s value that echoes the schema's own placeholder hint text",
+    (key, placeholder) => {
+      const data = { branch: "Army", [key]: placeholder };
+      _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
+      expect(data[key]).toBe("");
+    },
+  );
+
+  it("clears an ssnLast4 value that is a full 9-digit SSN instead of the last 4 digits", () => {
+    const data = { branch: "Army", ssnLast4: "123-45-6789" };
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
+    expect(data.ssnLast4).toBe("");
+  });
+
+  it("still keeps a well-shaped on-device ssnLast4/dateOfBirth value", () => {
+    const data = {
+      branch: "Army",
+      ssnLast4: "6789",
+      dateOfBirth: "1984-03-15",
+    };
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
+    expect(data.ssnLast4).toBe("6789");
+    expect(data.dateOfBirth).toBe("1984-03-15");
+  });
+});
