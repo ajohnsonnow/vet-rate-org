@@ -123,7 +123,7 @@ import {
 } from "./vaCodeSheet";
 import {
   segmentCFileChunked,
-  quickScanCFile,
+  quickScanCFileChunked,
   buildInventoryFromSegmentation,
 } from "./cFileSegmentation";
 import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
@@ -2698,8 +2698,10 @@ const parseCFileDocument = async (text) => {
   // eslint-disable-next-line no-console
   console.log("📚 Using enhanced C-File Segmentation...");
 
-  // Quick scan to determine file structure
-  const cFileSummary = quickScanCFile(text);
+  // Quick scan to determine file structure - chunked so a large narrative
+  // C-File missing most signatures doesn't spend this on one synchronous
+  // whole-text scan right at the pipeline's own entry point.
+  const cFileSummary = await quickScanCFileChunked(text, createTimeSlicer());
   // eslint-disable-next-line no-console
   console.log(
     `📊 C-File scan: ~${cFileSummary.estimatedPages} pages, types: ${cFileSummary.detectedTypes.join(", ") || "none detected"}`,

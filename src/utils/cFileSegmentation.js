@@ -734,6 +734,61 @@ export function quickScanCFile(text) {
   return scan;
 }
 
+// D19-7 follow-up: `text.match(pattern)` for a signature with no match at
+// all scans the whole string in one synchronous call, and a real C-File
+// always has several signatures that never appear at all (most files carry
+// only 2-4 of the 12 document types this checks). Windows overlap by
+// QUICK_SCAN_OVERLAP_CHARS so a match straddling a window boundary is still
+// fully contained in at least one window's slice - every DOCUMENT_SIGNATURES
+// pattern is a few literal words joined by small (`\s*`/`\s{1,N}`) gaps, so
+// 2,000 chars is generous margin for any realistic PDF text layer. A
+// signature is dropped from `remaining` the moment any of its patterns is
+// found, so a file that carries most signatures finishes early instead of
+// scanning the rest of the text for types it has already confirmed.
+const QUICK_SCAN_WINDOW_CHARS = 200_000;
+const QUICK_SCAN_OVERLAP_CHARS = 2000;
+
+export async function quickScanCFileChunked(text, slicer) {
+  const scan = {
+    estimatedPages: Math.ceil(text.length / 3000),
+    hasCodeSheet: false,
+    hasDD214: false,
+    hasDBQs: false,
+    hasBVA: false,
+    detectedTypes: [],
+  };
+
+  // Matches can be found in any window order depending on where in the
+  // text each signature's text actually sits, but quickScanCFile's own
+  // detectedTypes order is DOCUMENT_SIGNATURES' declaration order,
+  // independent of position - `found` records the set now and the
+  // declaration-order loop below replays it in that same order.
+  const remaining = new Map(Object.entries(DOCUMENT_SIGNATURES));
+  const found = new Set();
+  let pos = 0;
+  while (pos < text.length && remaining.size > 0) {
+    const windowEnd = Math.min(
+      text.length,
+      pos + QUICK_SCAN_WINDOW_CHARS + QUICK_SCAN_OVERLAP_CHARS,
+    );
+    const window = text.slice(pos, windowEnd);
+    for (const [typeName, signature] of remaining) {
+      if (signature.patterns.some((pattern) => window.match(pattern))) {
+        found.add(typeName);
+        remaining.delete(typeName);
+      }
+    }
+    pos += QUICK_SCAN_WINDOW_CHARS;
+    await slicer.maybeYield();
+  }
+
+  for (const typeName of Object.keys(DOCUMENT_SIGNATURES)) {
+    if (found.has(typeName)) _markDetectedType(scan, typeName);
+  }
+
+  return scan;
+}
+
 /**
  * Build a document inventory from C-File
  * Returns a table of contents for navigation
@@ -778,6 +833,7 @@ export default {
   extractDBQs,
   extractDecisions,
   quickScanCFile,
+  quickScanCFileChunked,
   buildDocumentInventory,
   DOCUMENT_SIGNATURES,
 };
