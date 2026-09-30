@@ -16,6 +16,11 @@ import { createPortal } from "react-dom";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import {
+  AI_DATA_CLASS,
+  DocumentOffDeviceBlockedError,
+  buildDocumentOffDeviceNotice,
+} from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -584,9 +589,11 @@ async function _runTextAnalysis(combinedText, aiStatus, setError) {
   }
 
   // Call the unified AI service - system prompt goes in options, NOT in main message
+  // ADR-009: "document" - DD214 text stays on-device only.
   return generateAI(
     `Analyze this DD214 document and extract the information as JSON:\n\n${documentText}`,
     {
+      dataClass: AI_DATA_CLASS.DOCUMENT,
       temperature: 0.2, // Lower temperature for more consistent JSON output
       maxTokens: outputBuffer, // Use calculated output buffer based on context size
       expectJSON: true,
@@ -597,14 +604,20 @@ async function _runTextAnalysis(combinedText, aiStatus, setError) {
   );
 }
 
-function _extractResponseContent(response) {
+export function _extractResponseContent(response) {
   // Extract text from response
-  // Handle both direct string responses and {text, mode} objects
+  // Handle direct string responses, {text, mode} objects from generateAI,
+  // AND {content, isVisionResponse} objects from _runVisionAnalysis - a
+  // vision-path response was never covered here, so it always fell through
+  // to content="" below and reported "Vision model returned empty
+  // response" even when SmolVLM returned real text.
   let content;
   if (typeof response === "string") {
     content = response;
   } else if (response && typeof response.text === "string") {
     content = response.text;
+  } else if (response && typeof response.content === "string") {
+    content = response.content;
   } else {
     content = "";
   }
@@ -1636,6 +1649,20 @@ function DD214ErrorBanner({ error, t }) {
   );
 }
 
+// ADR-009: shown when only an off-device AI was configured, so the local
+// regex parser ran instead of sending the DD214 text off-device.
+function DD214OffDeviceNotice({ notice }) {
+  if (!notice) return null;
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">🔒</span>
+        <p className="text-sm text-amber-700 dark:text-amber-300">{notice}</p>
+      </div>
+    </div>
+  );
+}
+
 function DD214ResultsSummaryHeader({ analysisResult, t }) {
   return (
     <div className="flex items-center justify-between">
@@ -2626,6 +2653,113 @@ function _buildDd214FileHandlers(state) {
   };
 }
 
+// ADR-009: only an off-device AI is configured - DD214 text stays on-device
+// only. Fall back to the same local regex parser used as the AI safety net
+// (now standalone), show its result, and show the plain-language notice
+// instead of a dead end.
+function _handleDd214OffDeviceBlocked(err, state) {
+  const {
+    pastedText,
+    extractedTexts,
+    setOffDeviceNotice,
+    setAnalysisResult,
+    setExtractedProfileData,
+    setShowProfileImportModal,
+  } = state;
+
+  setOffDeviceNotice(buildDocumentOffDeviceNotice(err.providerLabel));
+  const localData = {};
+  const rawText = _getDd214CombinedText(pastedText, extractedTexts);
+  _applyRegexSafetyNet(localData, rawText, setAnalysisResult);
+  setAnalysisResult({ ...localData });
+  setTimeout(() => {
+    _prepareAndShowProfileImport(
+      localData,
+      setExtractedProfileData,
+      setShowProfileImportModal,
+    );
+  }, 500);
+}
+
+// Pulled out of handleAnalyzeWithAI purely to keep that function under the
+// repo's max-lines-per-function limit - same two early-return guards, same
+// behavior (including resetting isGenerating on either rejection).
+function _dd214ReadyToAnalyze(ctx) {
+  const {
+    combinedText,
+    useVisionAnalysis,
+    hasPDFFiles,
+    droppedFiles,
+    aiStatus,
+    t,
+    setError,
+    setIsGenerating,
+  } = ctx;
+
+  if (!combinedText && !useVisionAnalysis) {
+    setError(
+      hasPDFFiles || droppedFiles.length > 0
+        ? t("dd214Analyzer", "runOcrFirst")
+        : t("dd214Analyzer", "pasteOrDropFirst"),
+    );
+    setIsGenerating(false);
+    return false;
+  }
+
+  if (!aiStatus.anyAvailable) {
+    setError(t("dd214Analyzer", "aiNotAvailable"));
+    setIsGenerating(false);
+    return false;
+  }
+
+  return true;
+}
+
+// The AI-success path (parse, merge with the regex safety net, schedule the
+// profile-import prompt) - pulled out of handleAnalyzeWithAI purely to keep
+// that function under the repo's max-lines-per-function limit.
+function _finishDd214Analysis(response, state) {
+  const {
+    t,
+    pastedText,
+    extractedTexts,
+    setAnalysisResult,
+    setExtractedProfileData,
+    setShowProfileImportModal,
+  } = state;
+
+  const content = _extractResponseContent(response);
+  const data = _parseDd214Json(content, t);
+  setAnalysisResult(data);
+
+  // ─── DIAMOND STANDARD: Regex Safety Net ───
+  // Run the deterministic field extractor on the raw OCR text and merge
+  // with AI results. If AI missed a field but regex found it, the regex
+  // value fills the gap. If both have a value, AI wins for complex fields,
+  // regex wins for structured fields like dates/MOS.
+  // `response?.onDevice` is the CONTRACT the provider boundary sets on
+  // every generateAI response (set from the engine/host actually used,
+  // undefined for the vision path) - _applyRegexSafetyNet only trusts a
+  // strict `true`, so it can keep an on-device model's own identifier
+  // value but never an off-device (or unidentified) one - see D16-5.
+  _applyRegexSafetyNet(
+    data,
+    _getDd214CombinedText(pastedText, extractedTexts),
+    setAnalysisResult,
+    response?.onDevice,
+  );
+
+  // Automatically trigger the save flow to show import confirmation - this
+  // provides immediate feedback to the user.
+  setTimeout(() => {
+    _prepareAndShowProfileImport(
+      data,
+      setExtractedProfileData,
+      setShowProfileImportModal,
+    );
+  }, 500);
+}
+
 function _buildDd214AnalysisHandlers(state) {
   const {
     t,
@@ -2639,8 +2773,7 @@ function _buildDd214AnalysisHandlers(state) {
     setError,
     setAnalysisResult,
     setOcrProgress,
-    setExtractedProfileData,
-    setShowProfileImportModal,
+    setOffDeviceNotice,
   } = state;
 
   /**
@@ -2683,63 +2816,39 @@ function _buildDd214AnalysisHandlers(state) {
     );
 
     // If no text has been extracted, prompt user to run OCR
-    if (!combinedText && !useVisionAnalysis) {
-      if (hasPDFFiles || droppedFiles.length > 0) {
-        setError(t("dd214Analyzer", "runOcrFirst"));
-      } else {
-        setError(t("dd214Analyzer", "pasteOrDropFirst"));
-      }
-      setIsGenerating(false); // Reset since we're returning early
-      return;
-    }
-
-    if (!aiStatus.anyAvailable) {
-      setError(t("dd214Analyzer", "aiNotAvailable"));
-      setIsGenerating(false); // Reset since we're returning early
+    if (
+      !_dd214ReadyToAnalyze({
+        combinedText,
+        useVisionAnalysis,
+        hasPDFFiles,
+        droppedFiles,
+        aiStatus,
+        t,
+        setError,
+        setIsGenerating,
+      })
+    ) {
       return;
     }
 
     setError(null);
+    setOffDeviceNotice(null);
     setAnalysisResult(null);
 
     try {
       const response = useVisionAnalysis
         ? await _runVisionAnalysis(originalPDFFiles, setOcrProgress)
         : await _runTextAnalysis(combinedText, aiStatus, setError);
-
-      const content = _extractResponseContent(response);
-      const data = _parseDd214Json(content, t);
-
-      setAnalysisResult(data);
-
-      // ─── DIAMOND STANDARD: Regex Safety Net ───
-      // Run the deterministic field extractor on the raw OCR text and
-      // merge with AI results. If AI missed a field but regex found it,
-      // the regex value fills the gap. If both have a value, AI wins for
-      // complex fields, regex wins for structured fields like dates/MOS.
-      // `response?.onDevice` is the CONTRACT the provider boundary sets on
-      // every generateAI response (set from the engine/host actually
-      // used, undefined for the vision path) - _applyRegexSafetyNet only
-      // trusts a strict `true`, so it can keep an on-device model's own
-      // identifier value but never an off-device (or unidentified) one -
-      // see D16-5.
-      _applyRegexSafetyNet(
-        data,
-        _getDd214CombinedText(pastedText, extractedTexts),
-        setAnalysisResult,
-        response?.onDevice,
-      );
-
-      // Automatically trigger the save flow to show import confirmation
-      // This provides immediate feedback to the user
-      setTimeout(() => {
-        _prepareAndShowProfileImport(
-          data,
-          setExtractedProfileData,
-          setShowProfileImportModal,
-        );
-      }, 500);
+      _finishDd214Analysis(response, state);
     } catch (err) {
+      // ADR-009: only an off-device AI is configured - DD214 text stays
+      // on-device only. Fall back to the same local regex parser used as
+      // the AI safety net (now standalone), show its result, and show the
+      // plain-language notice instead of a dead end.
+      if (err instanceof DocumentOffDeviceBlockedError) {
+        _handleDd214OffDeviceBlocked(err, state);
+        return;
+      }
       console.error("Analysis error:", err);
       setError(err.message || t("dd214Analyzer", "analysisFailed"));
     } finally {
@@ -2871,6 +2980,7 @@ function DD214AnalyzerModalContent({ state, handlers }) {
     extractedTexts,
     isProcessing,
     error,
+    offDeviceNotice,
     analysisResult,
     aiStatus,
     setAIStatus,
@@ -2926,6 +3036,7 @@ function DD214AnalyzerModalContent({ state, handlers }) {
       />
 
       <DD214ErrorBanner error={error} t={t} />
+      <DD214OffDeviceNotice notice={offDeviceNotice} />
 
       <DD214AnalysisResultsPanel analysisResult={analysisResult} t={t} />
     </div>
@@ -3086,6 +3197,7 @@ function useDD214ResultState() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
+  const [offDeviceNotice, setOffDeviceNotice] = useState(null);
 
   return {
     inputMethod,
@@ -3098,6 +3210,8 @@ function useDD214ResultState() {
     setAnalysisResult,
     error,
     setError,
+    offDeviceNotice,
+    setOffDeviceNotice,
   };
 }
 
