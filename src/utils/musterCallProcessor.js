@@ -116,13 +116,18 @@ import {
   parseCodeSheet,
   extractBigThree,
 } from "./vaDocumentParser";
-import { codeSheetRecordEvents, latestRatingCodeSheet } from "./vaCodeSheet";
 import {
-  segmentCFile,
+  parseRatingCodeSheetsChunked,
+  latestFromSheets,
+  recordEventsFromSheets,
+} from "./vaCodeSheet";
+import {
+  segmentCFileChunked,
   quickScanCFile,
   buildInventoryFromSegmentation,
 } from "./cFileSegmentation";
 import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
+import { createTimeSlicer } from "./mainThreadScheduler";
 
 // Vision AI confidence threshold - below this, try vision fallback
 const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
@@ -183,13 +188,44 @@ export { formatFileSize };
 // Includes JSON repair for truncated responses
 // ============================================================
 
+// Strips the ```json fencing a local model sometimes wraps its response in,
+// then parses - falling back to attemptJSONRepair for a truncated response.
+function _parseAIAnalysisContent(content) {
+  let cleanContent = content.trim();
+  if (cleanContent.startsWith("```json")) cleanContent = cleanContent.slice(7);
+  if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
+  if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
+  cleanContent = cleanContent.trim();
+
+  try {
+    return JSON.parse(cleanContent);
+  } catch (parseErr) {
+    console.warn(
+      `⚠️ JSON parse failed (${parseErr.message}), attempting repair...`,
+    );
+    const repaired = attemptJSONRepair(cleanContent);
+    if (repaired) {
+      // eslint-disable-next-line no-console
+      console.log("✅ Successfully repaired truncated AI response");
+    }
+    return repaired;
+  }
+}
+
 /**
  * Analyze C-File text with AI to extract potential claims
  * Uses compact prompt and JSON repair for Local AI compatibility
  * @param {string} text - C-File text (max 50K chars recommended)
- * @returns {Object|null} Analysis results or null if failed
+ * @param {Object} [options]
+ * @param {number} [options.timeoutMs] - forwarded to generateAI's own
+ *   timeout race, so a retry can give a contended engine longer to respond
+ * @returns {Promise<Object|null>} Analysis results, or null if the AI
+ *   genuinely found nothing to report (no throw)
+ * @throws when the AI call itself fails (timeout, engine error) - the
+ *   caller (buildSegmentedCFileResult) decides whether to retry and how to
+ *   surface that to the veteran; this never swallows that distinction.
  */
-const analyzeCFileWithAI = async (text) => {
+const analyzeCFileWithAI = async (text, { timeoutMs } = {}) => {
   if (!isAnyAIAvailable()) {
     // eslint-disable-next-line no-console
     console.log("⚠️ No AI available for C-File analysis");
@@ -218,64 +254,35 @@ RULES: Only include findings present in text. Be concise.`;
   // AIS-05: non-blocking crisis scan over the raw C-File excerpt.
   scanDocumentForCrisis(text);
 
-  try {
-    const response = await generateAI(userPrompt, {
-      dataClass: AI_DATA_CLASS.DOCUMENT,
-      systemPrompt,
-      temperature: 0.2,
-      maxTokens: 2048,
-      expectJSON: true,
-      skipCrisisCheck: true,
-      skipHallucinationCheck: true,
-      toolContext: "Muster Call C-File Analysis",
-    });
+  const response = await generateAI(userPrompt, {
+    dataClass: AI_DATA_CLASS.DOCUMENT,
+    systemPrompt,
+    temperature: 0.2,
+    maxTokens: 2048,
+    expectJSON: true,
+    skipCrisisCheck: true,
+    skipHallucinationCheck: true,
+    toolContext: "Muster Call C-File Analysis",
+    ...(timeoutMs ? { timeout: timeoutMs } : {}),
+  });
 
-    const content = response?.text || response;
-    if (!content) return null;
+  const content = response?.text || response;
+  if (!content) return null;
 
-    // Parse JSON response
-    let cleanContent = content.trim();
-    if (cleanContent.startsWith("```json"))
-      cleanContent = cleanContent.slice(7);
-    if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
-    if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
-    cleanContent = cleanContent.trim();
+  const result = _parseAIAnalysisContent(content);
+  if (!result) return null;
 
-    let result;
-    try {
-      result = JSON.parse(cleanContent);
-    } catch (parseErr) {
-      console.warn(
-        `⚠️ JSON parse failed (${parseErr.message}), attempting repair...`,
-      );
-      result = attemptJSONRepair(cleanContent);
-      if (result) {
-        // eslint-disable-next-line no-console
-        console.log("✅ Successfully repaired truncated AI response");
-      }
-    }
-
-    if (result) {
-      const rejectedCodes = enforceValidDiagnosticCodes(result);
-      // eslint-disable-next-line no-console
-      console.log(
-        `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
-      );
-      return {
-        ...result,
-        analyzedAt: new Date().toISOString(),
-        aiPowered: true,
-        ...(rejectedCodes.length > 0 && {
-          rejectedDiagnosticCodes: rejectedCodes,
-        }),
-      };
-    }
-
-    return null;
-  } catch (err) {
-    console.error("❌ AI C-File analysis error:", err);
-    return null;
-  }
+  const rejectedCodes = enforceValidDiagnosticCodes(result);
+  // eslint-disable-next-line no-console
+  console.log(
+    `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
+  );
+  return {
+    ...result,
+    analyzedAt: new Date().toISOString(),
+    aiPowered: true,
+    ...(rejectedCodes.length > 0 && { rejectedDiagnosticCodes: rejectedCodes }),
+  };
 };
 
 /**
@@ -2474,18 +2481,23 @@ function _extractCFileDeployments(segmentList) {
   return merged.deployments;
 }
 
-export const buildSegmentedCFileResult = async (text, cFileSummary) => {
+// D19-7: segmentCFileChunked/parseRatingCodeSheetsChunked share ONE slicer so
+// the ~40ms time budget carries across the whole segmentation+code-sheet
+// pass instead of resetting (and so allowing a longer uninterrupted run)
+// every time a new chunked call starts.
+async function _computeSegmentation(text, slicer) {
   // Full segmentation for large files, uncapped: a real 2,018-page C-File
-  // segments into ~1,030 documents (~170ms), past segmentCFile's 1000 default,
-  // and any cap silently drops the tail of the file.
+  // segments into ~1,030 documents, past segmentCFile's 1000 default, and
+  // any cap silently drops the tail of the file.
   // parseDocuments:false - the mapped return below reads only type/startPage/
   // endPage/confidence/snippet, and the inventory needs no parsed bodies, so
-  // the default (true) was parsing all ~332 segments of a real C-File into full
-  // VA document objects and discarding every one. That waste is a prime suspect
-  // for the renderer dying ~72 min into a 313MB run.
-  const segments = segmentCFile(text, {
+  // the default (true) was parsing all ~332 segments of a real C-File into
+  // full VA document objects and discarding every one. That waste is a prime
+  // suspect for the renderer dying ~72 min into a 313MB run.
+  const segments = await segmentCFileChunked(text, {
     parseDocuments: false,
     maxSegments: Infinity,
+    slicer,
   });
   // eslint-disable-next-line no-console
   console.log(`✅ Segmented C-File into ${segments.segments.length} documents`);
@@ -2494,61 +2506,135 @@ export const buildSegmentedCFileResult = async (text, cFileSummary) => {
   // buildDocumentInventory(text), which re-segments from scratch - a second
   // full pass over a text that is ~3.9M characters for a real C-File.
   const inventory = buildInventoryFromSegmentation(segments);
+  const deployments = _extractCFileDeployments(segments.segments);
+  return { segments, inventory, deployments };
+}
 
-  const ratingSheet = latestRatingCodeSheet(text);
+// D19-7: parses every code sheet in the text exactly once (chunked) and
+// derives both the "latest sheet" and "record events" views from that one
+// result - latestRatingCodeSheet(text) and codeSheetRecordEvents(text) used
+// to each re-run the full parse (including its own flatten() pass) on the
+// same text, doubling that cost for no reason.
+async function _computeCodeSheetData(text, slicer) {
+  const sheets = await parseRatingCodeSheetsChunked(text, slicer);
+  const ratingSheet = latestFromSheets(sheets);
   const codeSheet = ratingSheet
     ? _codeSheetSummary(ratingSheet)
     : parseCodeSheet(text);
+  return {
+    ratingSheet,
+    codeSheet,
+    recordEvents: recordEventsFromSheets(sheets),
+  };
+}
 
-  const deployments = _extractCFileDeployments(segments.segments);
+const AI_ANALYSIS_RETRY_DELAY_MS = 1500;
+const AI_ANALYSIS_RETRY_TIMEOUT_MS = 180_000;
+const AI_ANALYSIS_FAILED_NOTICE =
+  "AI analysis of this document couldn't complete right now - this can happen " +
+  "when several imports are running at once. Nothing was lost: your document, " +
+  "its segmentation and rating data were saved normally. You can try AI " +
+  "analysis again later from the C-File tools.";
 
-  // Attempt AI-enhanced analysis for potential claims (if AI available).
-  // ADR-009: C-File text is document-derived and stays on-device only - if
-  // only an off-device AI is configured, skip the AI call entirely (the
-  // segmentation/inventory/codeSheet parsing above already ran and is real
-  // local analysis, not a dead end) and surface why the AI layer is absent.
-  let aiAnalysis = null;
-  let offDeviceNotice = null;
+// Part 3 (final19): under GPU/engine contention from concurrent imports, an
+// on-device AI call that routing considered "ready" can still time out or
+// throw. analyzeCFileWithAI used to swallow that into a silent `null` with
+// only a console.error - the veteran never learned their AI analysis was
+// skipped. This retries once with a longer timeout (a transient contention
+// window is the one failure mode a retry can actually fix) and, only if
+// that also fails, returns a plain notice instead of silence. Segmentation/
+// codeSheet/deployments are computed independently of this and are never
+// affected by an AI failure here - no imported data is ever lost.
+async function _runCFileAIAnalysis(text) {
   const routing = getDocumentAIRouting();
-  if (isAnyAIAvailable() && !routing.onDeviceReady) {
-    offDeviceNotice = buildDocumentOffDeviceNotice(
-      routing.blockedProviderLabel,
-    );
-  } else if (isAnyAIAvailable()) {
-    try {
-      aiAnalysis = await analyzeCFileWithAI(text.substring(0, 50000)); // First 50K chars for context
-    } catch (aiErr) {
-      console.warn(
-        "⚠️ AI C-File analysis failed, continuing with basic parsing:",
-        aiErr.message,
-      );
-    }
+  if (!isAnyAIAvailable()) {
+    return { aiAnalysis: null, offDeviceNotice: null, aiAnalysisNotice: null };
   }
+  if (!routing.onDeviceReady) {
+    return {
+      aiAnalysis: null,
+      offDeviceNotice: buildDocumentOffDeviceNotice(
+        routing.blockedProviderLabel,
+      ),
+      aiAnalysisNotice: null,
+    };
+  }
+
+  const excerpt = text.substring(0, 50000); // First 50K chars for context
+  try {
+    const aiAnalysis = await analyzeCFileWithAI(excerpt);
+    return { aiAnalysis, offDeviceNotice: null, aiAnalysisNotice: null };
+  } catch (firstErr) {
+    console.warn(
+      "⚠️ AI C-File analysis failed, retrying once:",
+      firstErr.message,
+    );
+  }
+
+  await new Promise((resolve) =>
+    setTimeout(resolve, AI_ANALYSIS_RETRY_DELAY_MS),
+  );
+  try {
+    const aiAnalysis = await analyzeCFileWithAI(excerpt, {
+      timeoutMs: AI_ANALYSIS_RETRY_TIMEOUT_MS,
+    });
+    return { aiAnalysis, offDeviceNotice: null, aiAnalysisNotice: null };
+  } catch (secondErr) {
+    console.error(
+      "❌ AI C-File analysis failed on retry, surfacing to the veteran:",
+      secondErr,
+    );
+    return {
+      aiAnalysis: null,
+      offDeviceNotice: null,
+      aiAnalysisNotice: AI_ANALYSIS_FAILED_NOTICE,
+    };
+  }
+}
+
+// segmentCFile emits {id, type, category, position, length, preview,
+// confidence, rawText, parsed} - there is no `text`, and no startPage/
+// endPage has ever existed on a segment. This read `s.text.substring()`
+// (TypeError) and emitted two permanently-undefined page fields; it never
+// surfaced because nothing reached this function until page-count
+// classification started routing real C-Files here.
+const _projectSegment = (s) => ({
+  type: s.type,
+  category: s.category,
+  position: s.position,
+  length: s.length,
+  confidence: s.confidence,
+  snippet: s.preview.substring(0, 200),
+});
+
+export const buildSegmentedCFileResult = async (text, cFileSummary) => {
+  const slicer = createTimeSlicer();
+  const { segments, inventory, deployments } = await _computeSegmentation(
+    text,
+    slicer,
+  );
+  const { ratingSheet, codeSheet, recordEvents } = await _computeCodeSheetData(
+    text,
+    slicer,
+  );
+
+  // ADR-009: C-File text is document-derived and stays on-device only - see
+  // _runCFileAIAnalysis's own doc comment for the off-device/failure split.
+  const { aiAnalysis, offDeviceNotice, aiAnalysisNotice } =
+    await _runCFileAIAnalysis(text);
 
   return {
     type: "c_file",
     summary: cFileSummary,
-    // segmentCFile emits {id, type, category, position, length, preview,
-    // confidence, rawText, parsed} - there is no `text`, and no startPage/
-    // endPage has ever existed on a segment. This read `s.text.substring()`
-    // (TypeError) and emitted two permanently-undefined page fields; it never
-    // surfaced because nothing reached this function until page-count
-    // classification started routing real C-Files here.
-    segments: segments.segments.map((s) => ({
-      type: s.type,
-      category: s.category,
-      position: s.position,
-      length: s.length,
-      confidence: s.confidence,
-      snippet: s.preview.substring(0, 200),
-    })),
+    segments: segments.segments.map(_projectSegment),
     inventory,
     codeSheet: codeSheet.success ? codeSheet : null,
     ...(ratingSheet ? _ratingFieldsFromCodeSheet(ratingSheet) : {}),
-    recordEvents: codeSheetRecordEvents(text),
+    recordEvents,
     deployments,
     aiAnalysis, // Include AI-enhanced analysis if available
     offDeviceNotice, // ADR-009: set when only an off-device AI is configured
+    aiAnalysisNotice, // set when on-device AI was ready but failed twice
     parserVersion: "v1.18.3-enhanced",
   };
 };
