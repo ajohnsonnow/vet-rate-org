@@ -995,6 +995,23 @@ async function d16IngestFollowupForAd2003Window() {
 // there is no migration that retroactively collapses pre-existing
 // duplicates - and a subsequent re-import must not grow it further, since
 // the fix's idempotency guarantee applies going forward.
+//
+// D16-5 (final16 QA re-review, 2026-09-29): "matches pre-regression
+// (39d73d40) behaviour" is NOT a universal invariant to hold this fixture
+// to - it only holds here because this fixture's phantom is a genuine
+// duplicate (same document, same dates, nothing legitimately distinct
+// about the two rows). For an NGB-22 whose Box-18 window EXACTLY
+// coincides with its own 12a/12b primary (see
+// musterCallProcessor.servicePeriodMerge.test.js's "Box-18 window
+// demotion" suite), 39d73d40 demotes the primary into the window - one
+// FEWER period and no entry timeline event, which is the exact bug
+// final15's no-demotion rule exists to prevent. A future change (or
+// verifier) that finds this fixture's counts diverge from
+// 39d73d40-by-exactly-the-difference-above should treat that as a real
+// regression; one that finds a genuinely coinciding-window fixture NOT
+// diverge from 39d73d40 by +1 period/+1 event should treat THAT as the
+// regression instead - matching pre-regression counts is the bug there,
+// not the acceptance bar.
 async function d16UpgradeFromStoredFivePeriodState() {
   seedD16FivePeriodState();
   await primeVkbSeparationDate();
@@ -1028,5 +1045,159 @@ describe("ADR-007: D16-1 regression guard - Box-18 code-sheet/DD-214 merges keep
   it(
     "upgrade from a stored 5-period state: loading and a subsequent re-import never change the count",
     d16UpgradeFromStoredFivePeriodState,
+  );
+});
+
+// D16-1 QA re-review (final16, 2026-09-29): the "5-period state" fixture
+// above is already POST-fix shaped (periodScope/sources fields populated
+// on every row, including a pre-existing phantom this branch's fix would
+// never itself produce). No DEPLOYED (main 0ed0fdd4) profile has ever had
+// that shape - main never wrote periodScope OR sources at all. This seeds
+// the REAL deployed shape instead: raw localStorage, bypassing both
+// saveServiceHistory's save-time sanitize AND upsertServicePeriod's own
+// (now-fixed) matching, so every period genuinely has no periodScope key
+// and no sources key at all until the very first read seeds them
+// (_seedSourcesIfMissing, `__seededSources: true`, one fabricated
+// `sources` entry naming the NGB-22) - the exact shape
+// _isSoleFreshSibling's `__seededSources` guard exists for.
+function d16LegacyRawPeriod({ id, start, end, sourceDocument, formType }) {
+  return {
+    id,
+    serviceStartDate: start,
+    serviceEndDate: end,
+    formType,
+    sourceDocument,
+    confidence: 70,
+  };
+}
+
+function seedD16GenuineLegacyProductionShape() {
+  localStorage.setItem(
+    "vet_rate_service_history",
+    JSON.stringify({
+      deployments: [],
+      awards: [],
+      dd214Data: null,
+      serviceInfo: null,
+      servicePeriods: [
+        d16LegacyRawPeriod({
+          id: "legacy-primary",
+          start: D16_PRIMARY_START,
+          end: D16_PRIMARY_END,
+          sourceDocument: D16_NGB22_FILE,
+          formType: "NGB22",
+        }),
+        d16LegacyRawPeriod({
+          id: "legacy-iadt",
+          start: D16_IADT_START,
+          end: D16_IADT_END,
+          sourceDocument: D16_NGB22_FILE,
+          formType: "NGB22",
+        }),
+        d16LegacyRawPeriod({
+          id: "legacy-ad2003",
+          start: D16_AD2003_START,
+          end: D16_AD2003_END,
+          sourceDocument: D16_NGB22_FILE,
+          formType: "NGB22",
+        }),
+      ],
+      unmatchedServiceRecords: [],
+      dutyStations: [],
+      documentPeriodCounts: {},
+      schemaVersion: 4,
+    }),
+  );
+}
+
+async function d16UpgradeFromGenuineLegacyShape() {
+  seedD16GenuineLegacyProductionShape();
+  await primeVkbSeparationDate();
+  expect(getServiceHistory().servicePeriods).toHaveLength(3);
+
+  // Re-running Formation on the SAME NGB-22 + code sheet a real deployed
+  // veteran already had saved must self-heal the missing periodScope on
+  // BOTH pre-existing windows, not just the first one processed (D16-1's
+  // own re-review gap: a save after the first window's own upsert
+  // re-sanitizes every OTHER still-legacy row too, before its own turn to
+  // be matched ever comes) - and it must not fork a phantom sibling for
+  // either window, or move the resolved entry date onto a window's own
+  // start (the exact symptom every consumer agreed on in the reviewer's
+  // repro). The NGB-22's own THIRD, coinciding-with-primary window is
+  // deliberately excluded from this legacy seed (no deployed profile
+  // could have one merged into its primary - final15's demotion fix
+  // predates any release) and correctly always earns its own new row.
+  await ingestD16Ngb22();
+  await ingestD16CodeSheet();
+
+  expect(getServicePeriods()).toHaveLength(4);
+  expect(
+    getServicePeriods().filter((p) => p.periodScope === "window"),
+  ).toHaveLength(3);
+
+  // The entry stays the primary's own date - never a window's (the exact
+  // symptom the reviewer's repro found: the resolved date moving onto a
+  // Box-18 IADT window's start). The code sheet's own entry for these same
+  // dates legitimately re-confirms the primary at a higher-ranked source
+  // (code_sheet outranks printed) - a real, intentional promotion, not a
+  // regression.
+  const entry = getServiceEntry();
+  expect(entry.date).toBe(D16_PRIMARY_START);
+  expect(entry.source).toBe("code_sheet");
+}
+
+// D16-3 (final16 QA re-review, 2026-09-29): My Packet's Service tab lists
+// and edits every period, windows included (getVeteranProfile returns all
+// servicePeriods). Correcting a WINDOW's start by more than
+// isSameServicePeriod's 7-day tolerance used to strand its own code
+// sheet/DD-214 re-import: _findCorrectionAliasIndex was scope-gated
+// (window vs the incoming non-window record), so a later re-save of that
+// exact same code sheet/DD-214 could never re-find the corrected window
+// through startDateCorrection.documentDate, and instead created a
+// brand-new, non-window phantom period at the ORIGINAL (pre-correction)
+// date - which then counted as its own enlistment and re-asserted the
+// very date the veteran corrected away.
+async function d16CorrectWindowThenReimport() {
+  await ingestD16Ngb22();
+  await ingestD16CodeSheet();
+  await ingestD16Dd214ForWindow();
+  await primeVkbSeparationDate();
+
+  const periods = getServicePeriods();
+  const windowIdx = periods.findIndex(
+    (p) => p.periodScope === "window" && p.serviceStartDate === D16_IADT_START,
+  );
+  expect(windowIdx).toBeGreaterThanOrEqual(0);
+  const windowId = periods[windowIdx].id;
+
+  // More than isSameServicePeriod's 7-day tolerance away from
+  // D16_IADT_START ("2000-06-01").
+  _updateServicePeriodField(
+    { servicePeriods: periods },
+    () => {},
+    windowIdx,
+    "serviceStartDate",
+    "2000-05-01",
+  );
+
+  await ingestD16CodeSheet();
+  await ingestD16Dd214ForWindow();
+
+  expect(getServicePeriods()).toHaveLength(4);
+  const correctedWindow = getServicePeriods().find((p) => p.id === windowId);
+  expect(correctedWindow).toBeDefined();
+  expect(correctedWindow.serviceStartDate).toBe("2000-05-01");
+  expect(correctedWindow.serviceStartDateSource).toBe("veteran");
+  expect(correctedWindow.periodScope).toBe("window");
+}
+
+describe("ADR-007: D16-1/D16-3 QA re-review fixes - genuinely legacy data and a corrected window survive re-import", () => {
+  it(
+    "D16-1: a genuinely legacy (main-era, no periodScope/sources) profile self-heals instead of forking a phantom",
+    d16UpgradeFromGenuineLegacyShape,
+  );
+  it(
+    "D16-3: re-saving a corrected window's own code sheet/DD-214 never creates a phantom period at the pre-correction date",
+    d16CorrectWindowThenReimport,
   );
 });
