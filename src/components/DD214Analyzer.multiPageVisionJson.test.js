@@ -54,3 +54,48 @@ describe("_parseDd214Json: multi-page vision JSON", () => {
     expect(result.mosTitle).toBe("Infantryman");
   });
 });
+
+describe("D19-2: _parseDd214Json's brace-depth scan is string-aware", () => {
+  it("does not miscount an UNBALANCED literal '{' inside a quoted string value", () => {
+    // A single unmatched '{' inside the string (no closing '}' in the same
+    // string) is the case a non-string-aware depth count gets wrong: it
+    // increments depth for this one and then needs an EXTRA '}' beyond the
+    // object's own real closing brace, running on into the next page's
+    // object before it's satisfied.
+    const joined = [
+      '{"branch":"Army","extractionNotes":["Remarks: CONT ON DD FORM 214 {NGB cont."]}',
+      '{"characterOfService":"Honorable"}',
+    ].join("\n\n--- Page Break ---\n\n");
+
+    const result = _parseDd214Json(joined, t);
+    expect(result.branch).toBe("Army");
+    expect(result.extractionNotes).toEqual([
+      "Remarks: CONT ON DD FORM 214 {NGB cont.",
+    ]);
+    expect(result.characterOfService).toBeUndefined();
+  });
+
+  it("does not miscount a literal '}' inside a quoted string value", () => {
+    const joined = [
+      '{"branch":"Navy","extractionNotes":["Block 18: SEE {REMARKS} CONTINUED}"]}',
+      '{"characterOfService":"Honorable"}',
+    ].join("\n\n--- Page Break ---\n\n");
+
+    const result = _parseDd214Json(joined, t);
+    expect(result.branch).toBe("Navy");
+    expect(result.extractionNotes).toEqual([
+      "Block 18: SEE {REMARKS} CONTINUED}",
+    ]);
+  });
+
+  it("does not end the string early on an escaped quote immediately before a brace", () => {
+    const joined = [
+      '{"branch":"Air Force","extractionNotes":["Says \\"CONT{\\" on remarks"]}',
+      '{"characterOfService":"Honorable"}',
+    ].join("\n\n--- Page Break ---\n\n");
+
+    const result = _parseDd214Json(joined, t);
+    expect(result.branch).toBe("Air Force");
+    expect(result.extractionNotes).toEqual(['Says "CONT{" on remarks']);
+  });
+});

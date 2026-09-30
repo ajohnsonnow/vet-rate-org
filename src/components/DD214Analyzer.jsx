@@ -667,16 +667,39 @@ export function _extractResponseContent(response) {
 // output (smolVLMService.processMultiplePages joins each page's own JSON
 // object with "--- Page Break ---"): it captured from the first page's '{'
 // to the SECOND page's closing '}', swallowing the separator text as
-// invalid JSON. This does not track quoted-string escaping (a literal '{'
-// or '}' inside a JSON string value would still miscount), the same
-// limitation the regex it replaces already had for this schema.
+// invalid JSON.
+//
+// D19-2: string-aware - a literal '{'/'}' inside a JSON string VALUE (e.g.
+// `"extractionNotes": ["Remarks block reads: 'CONT ON DD FORM 214 {NGB}'"]`)
+// no longer miscounts, since a character encountered while inside a quoted
+// string is never treated as a brace. A backslash-escaped quote (`\"`)
+// inside the string doesn't end it early either - `_advanceStringState`
+// skips exactly the one character right after a backslash, matching JSON's
+// own escaping rules. Split into its own function (rather than inlined
+// into the loop below) specifically to keep the loop itself simple enough
+// to read at a glance.
+function _advanceStringState(ch, { inString, escaped }) {
+  if (!inString) return { inString: ch === '"', escaped: false };
+  if (escaped) return { inString: true, escaped: false };
+  if (ch === "\\") return { inString: true, escaped: true };
+  if (ch === '"') return { inString: false, escaped: false };
+  return { inString, escaped };
+}
+
 function _extractFirstJsonObject(text) {
   const start = text.indexOf("{");
   if (start === -1) return text;
   let depth = 0;
+  let state = { inString: false, escaped: false };
   for (let i = start; i < text.length; i++) {
-    if (text[i] === "{") depth++;
-    else if (text[i] === "}") {
+    const ch = text[i];
+    const wasInString = state.inString;
+    state = _advanceStringState(ch, state);
+    if (wasInString || state.inString) continue;
+
+    if (ch === "{") {
+      depth++;
+    } else if (ch === "}") {
       depth--;
       if (depth === 0) return text.slice(start, i + 1);
     }
