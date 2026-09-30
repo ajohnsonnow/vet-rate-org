@@ -2949,13 +2949,30 @@ function _looksLikeFileName(value) {
 // it. Restricted to a real document-extension allowlist (not any
 // `.xx`-shaped suffix) so a decimal value like "$1,500.00" or a CFR/USC
 // pinpoint like "20.203" is never mistaken for a file name.
-// The body class explicitly EXCLUDES "." (not `\S`, which includes it) so it
-// can never overlap with the literal "." that ends it - the same
-// self-overlap that made the base `email` pattern quadratic (see its own
-// comment in piiScrubber.js) is why this is bounded and dot-free rather
-// than a greedy `\S*`/`\S+`.
+//
+// D19-6 follow-up: the body class used to EXCLUDE both whitespace and "."
+// (`[^\s.]{1,80}`), which meant it only ever matched the LAST space/dot-free
+// word of the real file name, not the name itself - "Jane Doe DD214.pdf"
+// left "Jane Doe " (the veteran's own name) sitting in front of the
+// replacement untouched. Real upload names routinely contain spaces
+// ("Jane Doe DD214.pdf") and interior dots ("J.Q.Faketon_STR.pdf",
+// "faketon.pdf.pdf"), so both are now allowed in the body. The only
+// character still excluded is ":" (not "." - see below) - every real
+// caller builds this description as "<label>: <file.name>" with the file
+// name as a plain-text SUFFIX after that one colon, so excluding ":" from
+// the body stops a greedy match from crossing back over the label's own
+// "DD-214:" / "Supporting evidence:" separator and consuming (and thus
+// dropping) the label itself; a literal ":" inside a real file name is not
+// a case this needs to handle (invalid in a Windows file name, the
+// dominant upload source). The "." IS included in the body (unlike before)
+// specifically so an interior dot doesn't end the match early - this
+// reintroduces the same body-includes-its-own-separator shape the base
+// `email` pattern's quadratic bug had (see piiScrubber.js), so the body is
+// explicitly bounded (`{0,254}`, a real filesystem's max component length)
+// rather than a greedy `\S*`/`[^:\n]*` - confirmed <200ms against an
+// 80,000-char pathological '.'-heavy run.
 const FILENAME_TOKEN =
-  /[^\s.]{1,80}\.(?:pdf|jpeg|jpg|png|gif|bmp|tif|tiff|heic|webp|docx|doc|txt|rtf)\b/gi;
+  /[^\s:][^:\n]{0,254}\.(?:pdf|jpeg|jpg|png|gif|bmp|tif|tiff|heic|webp|docx|doc|txt|rtf)\b/gi;
 
 function _neutralSourceLabel(source, eventType, date, index) {
   if (!_looksLikeFileName(source)) return source || "";

@@ -259,6 +259,51 @@ describe("D19-6: evidence timeline lines never leak a raw file name or print '??
     expectNoLeaks(context);
   });
 
+  it("neutralizes a file name that contains spaces, not just underscore-joined tokens", () => {
+    // The body class used to exclude whitespace, so it only replaced the
+    // LAST space-free word of the name - "Jane Doe DD214.pdf" left
+    // "Jane Doe " (the veteran's own name) sitting in front of the
+    // replacement.
+    const vkb = initializeVKB();
+    vkb.evidenceTimeline.push({
+      date: "2024-03-01",
+      dateIsProcessingDate: false,
+      eventType: "document_import",
+      description: "DD-214: Jane Doe DD214.pdf",
+      source: "Muster Call",
+      significance: "",
+    });
+
+    const context = generateLLMContext(vkb);
+    expect(context).not.toContain("Jane Doe");
+    expectNoLeaks(context);
+  });
+
+  it("neutralizes a file name with interior dots, including a doubled extension", () => {
+    const vkb = initializeVKB();
+    vkb.evidenceTimeline.push({
+      date: "2024-03-01",
+      dateIsProcessingDate: false,
+      eventType: "document_import",
+      description: "Medical: J.Q.Faketon_STR.pdf",
+      source: "Muster Call",
+      significance: "",
+    });
+    vkb.evidenceTimeline.push({
+      date: "2024-03-02",
+      dateIsProcessingDate: false,
+      eventType: "document_import",
+      description: "Medical: faketon.pdf.pdf",
+      source: "Muster Call",
+      significance: "",
+    });
+
+    const context = generateLLMContext(vkb);
+    expect(context).not.toContain("Faketon");
+    expect(context).not.toContain("faketon");
+    expectNoLeaks(context);
+  });
+
   it("phrases a missing event date plainly instead of printing '???'", () => {
     const vkb = initializeVKB();
     vkb.evidenceTimeline.push({
