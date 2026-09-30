@@ -44,6 +44,61 @@ const flatten = (text) => text.replace(/\s+/g, " ");
 const stripNoise = (text) =>
   flatten(PAGE_NOISE.reduce((t, re) => t.replace(re, " "), text));
 
+// D19-7: flatten() alone measured ~290ms on a real-sized C-File's full text
+// (14.6M chars) - one synchronous regex.replace, long enough on its own to
+// blow the ~100ms/1x main-thread-task budget. Chunked equivalent: never cut
+// inside or adjacent to a run of whitespace (only between two non-space
+// characters), so no `\s+` run can ever straddle a chunk boundary - each
+// chunk's flatten() is then provably identical to what the whole-string
+// flatten() would have produced for that span. See
+// vaCodeSheet.chunked.equivalence.test.js's flattenChunked-specific cases.
+const FLATTEN_CHUNK_CHARS = 200_000;
+const SAFE_CUT_SEARCH_RADIUS = 2000;
+
+function _isWhitespace(char) {
+  return char !== undefined && /\s/.test(char);
+}
+
+function _findSafeFlattenCut(text, approxIndex) {
+  for (let offset = 0; offset <= SAFE_CUT_SEARCH_RADIUS; offset++) {
+    const after = approxIndex + offset;
+    if (
+      after > 0 &&
+      after < text.length &&
+      !_isWhitespace(text[after - 1]) &&
+      !_isWhitespace(text[after])
+    ) {
+      return after;
+    }
+    const before = approxIndex - offset;
+    if (
+      before > 0 &&
+      before < text.length &&
+      !_isWhitespace(text[before - 1]) &&
+      !_isWhitespace(text[before])
+    ) {
+      return before;
+    }
+  }
+  // No safe cut nearby (pathological input) - fall back to finishing the
+  // rest of the text as one slice rather than risking an unsafe cut.
+  return text.length;
+}
+
+async function flattenChunked(text, slicer) {
+  let result = "";
+  let pos = 0;
+  while (pos < text.length) {
+    let cut = Math.min(pos + FLATTEN_CHUNK_CHARS, text.length);
+    if (cut < text.length) cut = _findSafeFlattenCut(text, cut);
+    if (cut <= pos) cut = text.length;
+    result += flatten(text.slice(pos, cut));
+    pos = cut;
+    await slicer.maybeYield();
+  }
+  return result;
+}
+
 const toIsoDay = (mmddyyyy) => {
   const [mm, dd, yyyy] = mmddyyyy.split("/");
   return `${yyyy}-${mm}-${dd}`;
@@ -257,11 +312,37 @@ export function parseRatingCodeSheets(text) {
 }
 
 /**
- * The newest code sheet by its rating-decision date, or null. Undated sheets
- * only win when no sheet carries a date.
+ * D19-7: chunked twin of parseRatingCodeSheets - the flatten() pass is
+ * chunked (see flattenChunked), and the loop parsing each individual sheet
+ * yields between sheets. Byte-identical output for the same input - see
+ * vaCodeSheet.chunked.equivalence.test.js.
  */
-export function latestRatingCodeSheet(text) {
-  const sheets = parseRatingCodeSheets(text);
+export async function parseRatingCodeSheetsChunked(text, slicer) {
+  if (typeof text !== "string" || !text) return [];
+  const flat = await flattenChunked(text, slicer);
+  const headers = [...flat.matchAll(SC_HEADER)];
+  const sheets = [];
+  for (let i = 0; i < headers.length; i++) {
+    const sheet = parseOneSheet(
+      flat,
+      headers[i].index,
+      headers[i][0].length,
+      headers[i + 1]?.index,
+    );
+    if (sheet.conditions.length > 0) sheets.push(sheet);
+    await slicer.maybeYield();
+  }
+  return sheets;
+}
+
+/**
+ * The newest of an already-parsed set of code sheets by rating-decision
+ * date, or null. Undated sheets only win when no sheet carries a date.
+ * Split out of latestRatingCodeSheet so a caller that also needs
+ * recordEventsFromSheets can parse the text once and derive both, instead
+ * of two full passes over the same C-File.
+ */
+export function latestFromSheets(sheets) {
   if (sheets.length === 0) return null;
   return sheets.reduce((best, s) =>
     (s.sheetDate || "") > (best.sheetDate || "") ? s : best,
@@ -269,17 +350,27 @@ export function latestRatingCodeSheet(text) {
 }
 
 /**
- * Dated events every code sheet in a C-File records: each rating decision,
- * and the claim (or review exam) it answered. One event per date and kind.
+ * The newest code sheet by its rating-decision date, or null. Undated sheets
+ * only win when no sheet carries a date.
  */
-export function codeSheetRecordEvents(text) {
+export function latestRatingCodeSheet(text) {
+  return latestFromSheets(parseRatingCodeSheets(text));
+}
+
+/**
+ * Dated events an already-parsed set of code sheets records: each rating
+ * decision, and the claim (or review exam) it answered. One event per date
+ * and kind. See latestFromSheets's doc comment for why this takes `sheets`
+ * rather than `text`.
+ */
+export function recordEventsFromSheets(sheets) {
   const events = new Map();
   const add = (date, eventType, description) => {
     if (date && !events.has(`${date}|${eventType}`)) {
       events.set(`${date}|${eventType}`, { date, eventType, description });
     }
   };
-  for (const sheet of parseRatingCodeSheets(text)) {
+  for (const sheet of sheets) {
     add(sheet.sheetDate, "rating_decision", "VA rating decision");
     const j = sheet.jurisdiction;
     if (j) {
@@ -291,4 +382,12 @@ export function codeSheetRecordEvents(text) {
     }
   }
   return [...events.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Dated events every code sheet in a C-File records: each rating decision,
+ * and the claim (or review exam) it answered. One event per date and kind.
+ */
+export function codeSheetRecordEvents(text) {
+  return recordEventsFromSheets(parseRatingCodeSheets(text));
 }
