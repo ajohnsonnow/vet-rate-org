@@ -721,7 +721,7 @@ const PathfinderInputSection = ({
   removeRating,
   addRating,
   additionalContext,
-  setAdditionalContext,
+  handleAdditionalContextChange,
   handleClear,
   handleAnalyze,
   isAnalyzing,
@@ -764,7 +764,7 @@ const PathfinderInputSection = ({
       </label>
       <textarea
         value={additionalContext}
-        onChange={(e) => setAdditionalContext(e.target.value)}
+        onChange={(e) => handleAdditionalContextChange(e.target.value)}
         placeholder={t("pathfinder", "additionalContextPlaceholder")}
         className="w-full h-24 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 resize-none"
       />
@@ -1308,6 +1308,7 @@ async function _processUploadedFile({
   setFileProgress,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setShowDropInModal,
   setUploadedFile,
 }) {
@@ -1328,6 +1329,9 @@ async function _processUploadedFile({
       setAdditionalContext(result.text);
       alert(t("pathfinder", "noRatingsExtracted"));
     }
+    // ADR-009: this text came straight from the uploaded file's OCR/extraction
+    // output - a document call, so analyzeStrategy must not route it off-device.
+    setAdditionalContextIsDocument(true);
 
     setShowDropInModal(false);
     setUploadedFile(null);
@@ -1343,6 +1347,7 @@ async function _processUploadedFile({
 function _clearPathfinder({
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setResults,
   setError,
   setLoadedFromPacket,
@@ -1350,6 +1355,7 @@ function _clearPathfinder({
 }) {
   setRatings([{ condition: "", rating: "" }]);
   setAdditionalContext("");
+  setAdditionalContextIsDocument(false);
   setResults(null);
   setError(null);
   setLoadedFromPacket(false);
@@ -1402,6 +1408,7 @@ async function _runStrategyAnalysis({
   ratings,
   apiKey,
   additionalContext,
+  additionalContextIsDocument,
   t,
   onOpenAISettings,
   setError,
@@ -1431,9 +1438,19 @@ async function _runStrategyAnalysis({
       apiKey,
       validRatings,
       additionalContext,
+      {
+        additionalContextIsDocument,
+      },
     );
     setResults(result);
   } catch (err) {
+    // ADR-009: a DocumentOffDeviceBlockedError is only reachable now when
+    // additionalContext actually came from an uploaded document AND no
+    // on-device AI is configured - plain-typed analysis
+    // (additionalContextIsDocument: false) is never blocked here anymore.
+    // err.message is already the plain, veteran-facing notice text; the
+    // ratings already extracted from the document stay visible above, so
+    // this is a missing AI opinion, not a dead end.
     setError(err.message);
   } finally {
     setIsAnalyzing(false);
@@ -1544,6 +1561,7 @@ function createPathfinderFileHandlers({
   setFileProgress,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
 }) {
   return {
     handleFileSelect: (files) =>
@@ -1563,6 +1581,7 @@ function createPathfinderFileHandlers({
         setFileProgress,
         setRatings,
         setAdditionalContext,
+        setAdditionalContextIsDocument,
         setShowDropInModal,
         setUploadedFile,
       }),
@@ -1573,6 +1592,7 @@ function createPathfinderActionHandlers({
   ratings,
   apiKey,
   additionalContext,
+  additionalContextIsDocument,
   t,
   onNavigate,
   onOpenAISettings,
@@ -1581,6 +1601,7 @@ function createPathfinderActionHandlers({
   setResults,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setLoadedFromPacket,
   setAutoSeededFromRatings,
 }) {
@@ -1590,6 +1611,7 @@ function createPathfinderActionHandlers({
         ratings,
         apiKey,
         additionalContext,
+        additionalContextIsDocument,
         t,
         onOpenAISettings,
         setError,
@@ -1602,6 +1624,7 @@ function createPathfinderActionHandlers({
       _clearPathfinder({
         setRatings,
         setAdditionalContext,
+        setAdditionalContextIsDocument,
         setResults,
         setError,
         setLoadedFromPacket,
@@ -1617,9 +1640,11 @@ function usePathfinderHandlers({
   ratings,
   apiKey,
   additionalContext,
+  additionalContextIsDocument,
   uploadedFile,
   setRatings,
   setAdditionalContext,
+  setAdditionalContextIsDocument,
   setIsAnalyzing,
   setResults,
   setError,
@@ -1650,12 +1675,14 @@ function usePathfinderHandlers({
     setFileProgress,
     setRatings,
     setAdditionalContext,
+    setAdditionalContextIsDocument,
   });
 
   const actionHandlers = createPathfinderActionHandlers({
     ratings,
     apiKey,
     additionalContext,
+    additionalContextIsDocument,
     t,
     onNavigate,
     onOpenAISettings,
@@ -1664,12 +1691,20 @@ function usePathfinderHandlers({
     setResults,
     setRatings,
     setAdditionalContext,
+    setAdditionalContextIsDocument,
     setLoadedFromPacket,
     setAutoSeededFromRatings,
   });
 
   return {
     handleConsent: () => _consentToAI(setHasConsented),
+    // A manual edit always means "typed", never "document" - see
+    // additionalContextIsDocument's declaration for why that distinction
+    // controls whether analyzeStrategy's call can reach an off-device AI.
+    handleAdditionalContextChange: (value) => {
+      setAdditionalContext(value);
+      setAdditionalContextIsDocument(false);
+    },
     ...ratingsHandlers,
     ...fileHandlers,
     ...actionHandlers,
@@ -1689,6 +1724,12 @@ function usePathfinderCoreState() {
   // NOTE: AI is NOT auto-loaded - user selects AI model via SmartAILoadButton dropdown
   const [ratings, setRatings] = useState([{ condition: "", rating: "" }]);
   const [additionalContext, setAdditionalContext] = useState("");
+  // ADR-009: does the CURRENT additionalContext text come from an uploaded
+  // document (_processUploadedFile) rather than the veteran typing it
+  // directly? Only the document case may be blocked off-device - a typed
+  // symptom/evidence note is "context", not "document" (see analyzeStrategy).
+  const [additionalContextIsDocument, setAdditionalContextIsDocument] =
+    useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -1718,6 +1759,8 @@ function usePathfinderCoreState() {
     setRatings,
     additionalContext,
     setAdditionalContext,
+    additionalContextIsDocument,
+    setAdditionalContextIsDocument,
     isAnalyzing,
     setIsAnalyzing,
     results,
@@ -1777,9 +1820,11 @@ function usePathfinderState({
     ratings: s.ratings,
     apiKey: s.apiKey,
     additionalContext: s.additionalContext,
+    additionalContextIsDocument: s.additionalContextIsDocument,
     uploadedFile: s.uploadedFile,
     setRatings: s.setRatings,
     setAdditionalContext: s.setAdditionalContext,
+    setAdditionalContextIsDocument: s.setAdditionalContextIsDocument,
     setIsAnalyzing: s.setIsAnalyzing,
     setResults: s.setResults,
     setError: s.setError,
@@ -1803,6 +1848,8 @@ function usePathfinderState({
     ratings: s.ratings,
     additionalContext: s.additionalContext,
     setAdditionalContext: s.setAdditionalContext,
+    additionalContextIsDocument: s.additionalContextIsDocument,
+    setAdditionalContextIsDocument: s.setAdditionalContextIsDocument,
     isAnalyzing: s.isAnalyzing,
     results: s.results,
     setResults: s.setResults,
@@ -1887,7 +1934,7 @@ const PathfinderAuthenticatedContent = ({
   removeRating,
   addRating,
   additionalContext,
-  setAdditionalContext,
+  handleAdditionalContextChange,
   handleClear,
   handleAnalyze,
   isAnalyzing,
@@ -1918,7 +1965,7 @@ const PathfinderAuthenticatedContent = ({
       removeRating={removeRating}
       addRating={addRating}
       additionalContext={additionalContext}
-      setAdditionalContext={setAdditionalContext}
+      handleAdditionalContextChange={handleAdditionalContextChange}
       handleClear={handleClear}
       handleAnalyze={handleAnalyze}
       isAnalyzing={isAnalyzing}
