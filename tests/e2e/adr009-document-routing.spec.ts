@@ -441,7 +441,17 @@ test.describe("ADR-009: C-File Analyzer document routing", () => {
     });
     await startCFileAnalysis(page);
 
-    await expect(dialog.getByText(/Analysis Complete/i)).toBeVisible({
+    // D19-2 (fix/final19-document-features): a result with zero
+    // potential_claims and no summary now correctly renders "No Conditions
+    // Found" rather than "Analysis Complete" - see CFileAnalyzer.jsx's
+    // _cfileFoundNothing. The deterministic fake engine's CFILE_JSON_MARKER
+    // response is always empty-findings (tests/e2e/fakes/web-llm.fake.js),
+    // so the on-device path here legitimately lands on that heading, not
+    // "Analysis Complete". Either heading proves the real point: the tool
+    // reached a terminal, non-error state instead of hanging or erroring.
+    await expect(
+      dialog.getByText(/Analysis Complete|No Conditions Found/i),
+    ).toBeVisible({
       timeout: 30000,
     });
 
