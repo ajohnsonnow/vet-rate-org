@@ -20,6 +20,14 @@
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+// D19-2: the off-device fallback now dynamically imports musterCallProcessor
+// (for parseClaimLetter) -> documentAnalyzer -> ocr.js -> advancedOCR.js ->
+// pdfjs-dist, which references canvas globals jsdom doesn't provide - same
+// recipe as serviceEntryConsistency.integration.test.jsx.
+globalThis.DOMMatrix ??= class DOMMatrix {};
+globalThis.Path2D ??= class Path2D {};
+globalThis.ImageData ??= class ImageData {};
+
 vi.mock("./unifiedAIService", async (importOriginal) => {
   const actual = await importOriginal();
   return {
@@ -40,7 +48,8 @@ vi.mock("./diamondSwarm", async (importOriginal) => {
 });
 
 const unifiedAIService = await import("./unifiedAIService.js");
-const { analyzeCFile } = await import("./cfileAnalyzer.js");
+const { analyzeCFile, estimateChunks, getContextWindowInfo } =
+  await import("./cfileAnalyzer.js");
 
 // 8 pages (< the 10-marker floor screenRelevantPages needs before it screens
 // anything, so this exercises splitIntoChunks's char-budget path directly -
@@ -125,5 +134,33 @@ describe("analyzeCFile: chunk sizing follows the ACTUAL on-device backend, not t
 
     expect(result.metadata.offDeviceBlocked).toBe(true);
     expect(unifiedAIService.generateAI).not.toHaveBeenCalled();
+  });
+});
+
+describe("estimateChunks/getContextWindowInfo: pre-flight sizing follows the resolved on-device mode", () => {
+  it("Cloud preferred + Warrant Council ready: sizes for SWARM's small budget, not Gemini's", () => {
+    unifiedAIService.getAIStatus.mockReturnValue({ effectiveMode: "cloud" });
+    unifiedAIService.getDocumentAIRouting.mockReturnValue({
+      onDeviceReady: true,
+      onDeviceMode: "swarm",
+      blockedProviderLabel: null,
+    });
+
+    // A Gemini-sized (~2.7M char) budget would report 1 chunk for this;
+    // SWARM's ~28K char budget must report many more.
+    expect(estimateChunks(300_000)).toBeGreaterThan(1);
+    expect(getContextWindowInfo().mode).toBe("Local AI");
+  });
+
+  it("nothing on-device ready: falls back to getAIStatus().effectiveMode (cloud)", () => {
+    unifiedAIService.getAIStatus.mockReturnValue({ effectiveMode: "cloud" });
+    unifiedAIService.getDocumentAIRouting.mockReturnValue({
+      onDeviceReady: false,
+      onDeviceMode: null,
+      blockedProviderLabel: "Cloud AI (Gemini)",
+    });
+
+    expect(estimateChunks(300_000)).toBe(1);
+    expect(getContextWindowInfo().mode).toBe("Cloud AI (Gemini)");
   });
 });

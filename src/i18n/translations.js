@@ -12284,6 +12284,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Phân Tích Hoàn Tất",
       ko: "분석 완료",
     },
+    // D19-2: shown instead of analysisComplete when the built-in document
+    // scan found nothing - never claim success over an empty result.
+    analysisNoFindings: {
+      en: "No Conditions Found",
+    },
     pagesAnalyzed: {
       en: "pages analyzed",
       es: "páginas analizadas",

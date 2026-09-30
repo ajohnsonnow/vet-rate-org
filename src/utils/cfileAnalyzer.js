@@ -38,6 +38,11 @@ import { scrubText } from "./piiScrubber";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
 import { AI_CHUNK_RATE } from "../data/aiPerformanceProfile";
 import { segmentPages, chunkBySegment } from "./cFilePageSegmenter";
+import {
+  parseDecisionLetter,
+  parseCodeSheet,
+  extractBigThree,
+} from "./vaDocumentParser";
 
 // ============================================================================
 // CONFIGURATION - Token limits and chunking settings
@@ -2090,18 +2095,177 @@ async function _finalizeMultiChunkResult(
   };
 }
 
+// D19-2: turns a local parser's found condition into the same claim shape
+// surfaceDocumentedConditions already pushes, so both signals merge into one
+// list with one downstream contract (enrichClaimsWithDiagnosticCodes /
+// enforceValidDiagnosticCodes).
+function _localParserClaim(
+  name,
+  diagnosticCode,
+  percent,
+  status,
+  effectiveDate,
+  source,
+) {
+  const parts = [`found in your document (${source.replace("-", " ")})`];
+  if (typeof percent === "number" && !Number.isNaN(percent)) {
+    parts.push(`rated ${percent}%`);
+  }
+  if (status === "DENIED") parts.push("denied");
+  else if (status === "GRANTED") parts.push("granted");
+  if (effectiveDate) parts.push(`effective ${effectiveDate}`);
+
+  return {
+    condition: name,
+    diagnosticCode: diagnosticCode || null,
+    likelihood: "medium",
+    inServiceEvent: "",
+    currentDiagnosis: "unclear",
+    nexusStrength: "unclear",
+    missing_element:
+      "Auto-surfaced from your uploaded document's own extracted data - verify against your exam findings and file if applicable.",
+    evidence_pages: [],
+    recommendation: `"${name}" was ${parts.join(", ")}.`,
+    source: `local-parser:${source}`,
+  };
+}
+
+function _isSameCondition(a, b) {
+  return (
+    typeof a === "string" &&
+    typeof b === "string" &&
+    a.trim().toLowerCase() === b.trim().toLowerCase()
+  );
+}
+
+function _pushIfNewCondition(claims, claim) {
+  if (!claim.condition) return;
+  if (claims.some((c) => _isSameCondition(c.condition, claim.condition))) {
+    return;
+  }
+  claims.push(claim);
+}
+
+// Rating-decision letter signal: parseDecisionLetter (vaDocumentParser.js,
+// already used by Muster Call's own parseRatingDecisionDocument) plus
+// extractBigThree's header-agnostic "name NN% ... date" scan for whatever a
+// clean SECTION-HEADER-based parse misses.
+function _claimsFromDecisionLetter(fullText) {
+  const claims = [];
+  const data = parseDecisionLetter(fullText);
+  if (data.success) {
+    for (const c of data.conditions) {
+      claims.push(
+        _localParserClaim(
+          c.name,
+          c.diagnosticCode,
+          c.percent,
+          c.status,
+          c.effectiveDate,
+          "rating-decision",
+        ),
+      );
+    }
+  }
+  for (const c of extractBigThree(fullText)) {
+    claims.push(
+      _localParserClaim(
+        c.condition,
+        null,
+        c.percent,
+        null,
+        c.effectiveDate,
+        "rating-decision",
+      ),
+    );
+  }
+  return claims;
+}
+
+// Code-sheet signal: parseCodeSheet (vaDocumentParser.js) already resolves
+// the latest rating code sheet (vaCodeSheet.js) internally.
+function _claimsFromCodeSheet(fullText) {
+  const data = parseCodeSheet(fullText);
+  if (!data.success) return [];
+  return data.conditions.map((c) =>
+    _localParserClaim(
+      c.name,
+      c.diagnosticCode,
+      c.percent,
+      null,
+      null,
+      "code-sheet",
+    ),
+  );
+}
+
+// Claim-letter signal: musterCallProcessor.js's own parseClaimLetter covers
+// development/award letters that don't hit the stricter rating-decision
+// section headers. Dynamically imported the same way this file already
+// pulls in diamondSwarm - musterCallProcessor is a large module and this
+// fallback path only runs when no on-device AI is ready.
+async function _claimsFromClaimLetter(fullText) {
+  const { parseClaimLetter } = await import("./musterCallProcessor");
+  const data = await parseClaimLetter(fullText);
+  return (data.conditions || []).map((c) =>
+    _localParserClaim(
+      c.name,
+      c.diagnosticCode,
+      c.rating,
+      null,
+      c.effectiveDate,
+      "claim-letter",
+    ),
+  );
+}
+
+// D19-2: the off-device fallback used to run ONLY a 4-condition foot-terms
+// grounded scan (surfaceDocumentedConditions below) - across 32 real
+// decision letters that found 0 claims. Runs the app's real rating-decision/
+// code-sheet/claim-letter parsers (not a second, narrower implementation)
+// over the veteran's own document text first, merging every condition any
+// of them found into potential_claims, deduped by name.
+async function _surfaceLocalParserConditions(result, fullText) {
+  const allClaims = [
+    ..._claimsFromDecisionLetter(fullText),
+    ..._claimsFromCodeSheet(fullText),
+    ...(await _claimsFromClaimLetter(fullText)),
+  ];
+  for (const claim of allClaims) {
+    _pushIfNewCondition(result.potential_claims, claim);
+  }
+}
+
+function _buildOffDeviceSummary(potentialClaims) {
+  if (potentialClaims.length === 0) {
+    return (
+      "The built-in document scan (no AI available) did not find any " +
+      "claimable conditions, ratings, or decisions in this document. Load " +
+      "an on-device AI for a deeper analysis, or review the file manually."
+    );
+  }
+  const names = potentialClaims.map((c) => c.condition).join(", ");
+  return (
+    `The built-in document scan (no AI available) found ${potentialClaims.length} ` +
+    `potential condition(s) directly in your document's own text: ${names}. ` +
+    "Load an on-device AI for a deeper analysis."
+  );
+}
+
 // ADR-009: only an off-device AI is configured. C-File text is
 // document-derived and stays on-device only, so skip AI entirely rather
 // than burn chunk retries against a routing decision that can't change
-// mid-run - go straight to the grounded documented-term scan
-// (surfaceDocumentedConditions) already used elsewhere in this file as a
-// safety net alongside AI results, reused here standalone.
-function _buildOffDeviceFallbackResult(fullText, providerLabel) {
+// mid-run - go straight to the local parsers + grounded documented-term
+// scan (surfaceDocumentedConditions) already used elsewhere in this file as
+// a safety net alongside AI results.
+async function _buildOffDeviceFallbackResult(fullText, providerLabel) {
   const result = createEmptyChunkResult();
+  await _surfaceLocalParserConditions(result, fullText);
   surfaceDocumentedConditions(result, fullText);
   enrichClaimsWithDiagnosticCodes(result);
   const rejectedCodes = enforceValidDiagnosticCodes(result);
   result.failedChunks = [];
+  result.summary = _buildOffDeviceSummary(result.potential_claims);
 
   return {
     success: true,
@@ -2118,6 +2282,7 @@ function _buildOffDeviceFallbackResult(fullText, providerLabel) {
       rejectedDiagnosticCodes: rejectedCodes,
       offDeviceBlocked: true,
       offDeviceNotice: buildDocumentOffDeviceNotice(providerLabel),
+      foundNothing: result.potential_claims.length === 0,
     },
   };
 }
@@ -3034,9 +3199,15 @@ export { attemptJSONRepair };
  * Estimate chunks needed for a given text length
  * Useful for showing user what to expect before processing
  */
+// D19-2: sized for whichever backend a document call will ACTUALLY
+// dispatch to (getDocumentAIRouting().onDeviceMode), not
+// getAIStatus().effectiveMode - which can read CLOUD (Cloud preferred + key
+// configured) even while an on-device engine sits ready, sizing the
+// pre-flight estimate for the wrong backend's context window.
 export function estimateChunks(textLength) {
-  const aiStatus = getAIStatus();
-  const maxChars = getMaxCharsPerChunk(aiStatus.effectiveMode);
+  const routing = getDocumentAIRouting();
+  const aiMode = routing.onDeviceMode || getAIStatus().effectiveMode;
+  const maxChars = getMaxCharsPerChunk(aiMode);
   return Math.ceil(textLength / maxChars);
 }
 
@@ -3044,8 +3215,8 @@ export function estimateChunks(textLength) {
  * Get context window info for current AI mode
  */
 export function getContextWindowInfo() {
-  const aiStatus = getAIStatus();
-  const aiMode = aiStatus.effectiveMode;
+  const routing = getDocumentAIRouting();
+  const aiMode = routing.onDeviceMode || getAIStatus().effectiveMode;
 
   if (
     aiMode === AI_MODES.LOCAL ||

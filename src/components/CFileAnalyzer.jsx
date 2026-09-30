@@ -207,19 +207,40 @@ async function _runConsentAndProcess(file, t, ctx) {
   }
 }
 
+// D19-2: a result with zero potential claims AND no summary text is not a
+// completed analysis with nothing interesting to report - it is the
+// off-device fallback (or, in principle, a real AI pass) finding nothing at
+// all, which must never be labeled "Analysis Complete".
+function _cfileFoundNothing(analysisResult) {
+  return (
+    (analysisResult?.potential_claims?.length || 0) === 0 &&
+    !analysisResult?.summary?.trim()
+  );
+}
+
 function CFileDashboardHeader({
   t,
   file,
   extractedText,
   analysisMetadata,
+  analysisResult,
   onReset,
 }) {
+  const foundNothing = _cfileFoundNothing(analysisResult);
   return (
-    <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 mb-6 text-white">
+    <div
+      className={`bg-gradient-to-r rounded-xl p-6 mb-6 text-white ${
+        foundNothing
+          ? "from-amber-500 to-orange-600"
+          : "from-green-500 to-emerald-600"
+      }`}
+    >
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            ✅ {t("cfileAnalyzer", "analysisComplete")}
+            {foundNothing
+              ? `⚠️ ${t("cfileAnalyzer", "analysisNoFindings")}`
+              : `✅ ${t("cfileAnalyzer", "analysisComplete")}`}
           </h2>
           <p className="mt-1 opacity-90">
             {file?.name} • {extractedText?.pageCount}{" "}
@@ -758,6 +779,7 @@ function CFileDashboard({
         file={file}
         extractedText={extractedText}
         analysisMetadata={analysisMetadata}
+        analysisResult={analysisResult}
         onReset={handleReset}
       />
       <CFileDashboardWarnings
