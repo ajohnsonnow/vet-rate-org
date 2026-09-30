@@ -303,33 +303,10 @@ async function createFileInput(page: Page): Promise<void> {
   });
 }
 
-// Real signal, not a guessed delay: analyzeCFileWithAI (musterCallProcessor.js)
-// logs this exact line immediately before calling generateAI, the call that
-// reaches searchDKB. Waiting for the console message (a real, observable
-// event - not a fixed timeout) means Escape/Quick Exit get pressed right as
-// that call is about to start, on both base and fixed code, without a
-// guess at how long extraction/classification/segmentation take first.
-const AI_ANALYSIS_STARTING_LOG = "Starting AI-enhanced C-File analysis";
-
-// The console signal proves we're past extraction/classification/
-// segmentation (the variable-duration part), but analyzeCFileWithAI's log
-// line fires a few steps before its generateAI call actually reaches
-// searchDKB (circuit-breaker/feature-flag/crisis-scan checks, mode
-// resolution, system-prompt assembly - all fast and bounded, measured
-// under 50ms combined at 1x). Verified live: without this buffer, Escape/
-// Quick Exit sometimes still won the race against that short remainder on
-// base code too, an intermittent false pass. bufferMs bridges that known,
-// bounded gap - scaled by cpuRate since CPU throttling slows it too.
-async function startBackgroundImport(
+async function fireBackgroundImport(
   page: Page,
   filePath: string,
-  cpuRate: number,
 ): Promise<void> {
-  const aiCallStarting = page.waitForEvent("console", {
-    predicate: (msg) => msg.text().includes(AI_ANALYSIS_STARTING_LOG),
-    timeout: 30_000,
-  });
-
   await page.locator("#__dkb_latency_file_input").setInputFiles(filePath);
   await page.evaluate(() => {
     const input = document.getElementById(
@@ -340,9 +317,57 @@ async function startBackgroundImport(
     if (!file || !mods) return;
     mods.musterMod.processFormationDocument(file).catch(() => {});
   });
+}
 
-  await aiCallStarting;
-  await page.waitForTimeout(150 * cpuRate);
+// Real, observable signal (pod rule: "condition-based waits only in e2e" -
+// a fixed `waitForTimeout` buffer here was flagged as a violation).
+// aiSystemPrompts.js's searchDKB logs this exact line as its first
+// statement. Warm-path anchor only - see startColdBackgroundImport for why
+// this signal is unsafe to use before the DKB cache is primed.
+const DKB_SEARCH_CALLED_LOG = "[DKB] 🔍 searchDKB called";
+
+// With the DKB already primed (see primeDKBCache), loadDKBIndex resolves
+// with no fetch/build in between - only a microtask, which does not yield
+// to pending input - so scoring starts essentially synchronously right
+// after this fires. Pressing keys right here means the race is against
+// the scoring loops themselves, on both broken and fixed code.
+async function startPrimedBackgroundImport(
+  page: Page,
+  filePath: string,
+): Promise<void> {
+  const searchStarting = page.waitForEvent("console", {
+    predicate: (msg) => msg.text().includes(DKB_SEARCH_CALLED_LOG),
+    timeout: 30_000,
+  });
+  await fireBackgroundImport(page, filePath);
+  await searchStarting;
+}
+
+// Cold-cache path (D16-7 follow-up): DKB_SEARCH_CALLED_LOG fires before the
+// ~8MB diamond_knowledge.json fetch even starts, and that fetch is genuine
+// async I/O that DOES yield the main thread - pressing keys that early
+// risks navigating away during the fetch's own idle gap regardless of
+// whether buildDKBIndex's chunking is broken, the same false-pass failure
+// mode primeDKBCache's doc comment describes for the original bug. Waiting
+// for the fetch response instead (tried first - see this fix's commit)
+// fires before the response body finishes arriving, so it bakes irrelevant
+// network-transfer wall time into the same budget the primed tests use - a
+// false FAILURE on correct code. dkbSearchIndex.js's buildDKBIndex logs
+// DKB_INDEX_BUILDING_LOG as its first statement - by construction, that is
+// after the fetch/JSON-parse (both already resolved) and before any of
+// buildDKBIndex's own chunked work, so this anchor has neither problem.
+const DKB_INDEX_BUILDING_LOG = "[DKB] 🔧 buildDKBIndex starting";
+
+async function startColdBackgroundImport(
+  page: Page,
+  filePath: string,
+): Promise<void> {
+  const indexBuilding = page.waitForEvent("console", {
+    predicate: (msg) => msg.text().includes(DKB_INDEX_BUILDING_LOG),
+    timeout: 30_000,
+  });
+  await fireBackgroundImport(page, filePath);
+  await indexBuilding;
 }
 
 async function measureKeydownToNavigation(page: Page): Promise<number> {
@@ -367,14 +392,38 @@ async function measureClickToNavigation(
 // (Playwright's addInitScript only affects navigations after it was added) -
 // so this must run before seedReturningUser/precreateDatabases's own gotos,
 // not just before the final "/" load.
-async function prepareImportReadyPage(page: Page): Promise<void> {
+//
+// primeCache defaults to true (matches D16-7's original scenario: DKB
+// realistically already warm from an earlier AI-backed action). Passing
+// false reproduces the OTHER realistic scenario - a veteran whose first
+// AI-backed action in the session is the large import itself, so the DKB
+// fetch and buildDKBIndex construction land inside the import - see
+// startColdBackgroundImport.
+async function prepareImportReadyPage(
+  page: Page,
+  { primeCache = true }: { primeCache?: boolean } = {},
+): Promise<void> {
   await shimFakeGpuAdapter(page);
   await seedReturningUser(page);
   await precreateDatabases(page);
   await loadFakeAI(page);
   await injectMusterCallProcessor(page);
   await createFileInput(page);
-  await primeDKBCache(page);
+  if (primeCache) await primeDKBCache(page);
+}
+
+async function withCPUThrottle(
+  page: Page,
+  rate: number,
+  fn: () => Promise<void>,
+): Promise<void> {
+  const client = await page.context().newCDPSession(page);
+  await client.send("Emulation.setCPUThrottlingRate", { rate });
+  try {
+    await fn();
+  } finally {
+    await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  }
 }
 
 test.describe("D16-7: DKB scoring during a large C-File import never blocks the panic key", () => {
@@ -391,7 +440,7 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
     await stubWeatherRedirect(page);
     await prepareImportReadyPage(page);
 
-    await startBackgroundImport(page, fixturePath, 1);
+    await startPrimedBackgroundImport(page, fixturePath);
     const latencyMs = await measureKeydownToNavigation(page);
     // eslint-disable-next-line no-console
     console.log(`[dkb-latency] triple-Escape during import: ${latencyMs}ms`);
@@ -411,7 +460,7 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
     const box = await page.locator(QUICK_EXIT_SELECTOR).first().boundingBox();
     if (!box) throw new Error("Quick Exit button has no bounding box");
 
-    await startBackgroundImport(page, fixturePath, 1);
+    await startPrimedBackgroundImport(page, fixturePath);
     const latencyMs = await measureClickToNavigation(page, box);
     // eslint-disable-next-line no-console
     console.log(`[dkb-latency] Quick Exit during import: ${latencyMs}ms`);
@@ -433,19 +482,109 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
     await stubWeatherRedirect(page);
     await prepareImportReadyPage(page);
 
-    const client = await page.context().newCDPSession(page);
-    await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-
-    await startBackgroundImport(page, fixturePath, 4);
-    const latencyMs = await measureKeydownToNavigation(page);
+    let latencyMs = 0;
+    await withCPUThrottle(page, 4, async () => {
+      await startPrimedBackgroundImport(page, fixturePath);
+      latencyMs = await measureKeydownToNavigation(page);
+    });
     // eslint-disable-next-line no-console
     console.log(
       `[dkb-latency] triple-Escape during import (4x): ${latencyMs}ms`,
     );
 
-    await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_4X_MS);
+  });
+
+  test("Quick Exit still redirects within budget under a 4x CPU throttle", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== "chromium",
+      "CPU throttling is a Chromium CDP feature (Emulation.setCPUThrottlingRate).",
+    );
+    test.setTimeout(120_000);
+    const fixturePath = writeFixtureFile();
+    await stubWeatherRedirect(page);
+    await prepareImportReadyPage(page);
+
+    const box = await page.locator(QUICK_EXIT_SELECTOR).first().boundingBox();
+    if (!box) throw new Error("Quick Exit button has no bounding box");
+
+    let latencyMs = 0;
+    await withCPUThrottle(page, 4, async () => {
+      await startPrimedBackgroundImport(page, fixturePath);
+      latencyMs = await measureClickToNavigation(page, box);
+    });
+    // eslint-disable-next-line no-console
+    console.log(`[dkb-latency] Quick Exit during import (4x): ${latencyMs}ms`);
 
     expect(page.url()).toMatch(/weather\.com/);
     expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_4X_MS);
+  });
+});
+
+test.describe("D16-7 follow-up: DKB index construction on a COLD cache never blocks the panic key", () => {
+  // Both tests below measure wall-clock time across the real ~1.1-1.5s
+  // buildDKBIndex pass (cold cache, unlike the primed tests above, which
+  // never run it during their measured window) - CPU-bound work that is
+  // sensitive to contention from other tests' Chromium instances running
+  // at the same time under this suite's `fullyParallel: true`. Measured
+  // live: the same two tests that pass at 61-185ms under `--workers=1`
+  // read up to 1,385ms when run alongside each other and the primed
+  // describe block's tests. Serializing just this block (not a suite-wide
+  // change) keeps the two CPU-heavy tests from ever overlapping each
+  // other while leaving the lighter primed tests free to run in parallel.
+  test.describe.configure({ mode: "serial" });
+
+  test.skip(
+    ({ isMobile }) => !!isMobile,
+    "Warrant Council AI (fake or real) is desktop/laptop-only by device-tier design - see muster-call-ai-panic.spec.ts",
+  );
+
+  // Unlike the describe block above, this deliberately does NOT prime the
+  // DKB cache first - see prepareImportReadyPage's doc comment. This is
+  // the only coverage of buildDKBIndex's own chunking (dkbSearchIndex.js) -
+  // the primed tests above never run it during their measured window.
+  test("triple-Escape still redirects promptly on a cold DKB cache during a large C-File import (1x)", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const fixturePath = writeFixtureFile();
+    await stubWeatherRedirect(page);
+    await prepareImportReadyPage(page, { primeCache: false });
+
+    await startColdBackgroundImport(page, fixturePath);
+    const latencyMs = await measureKeydownToNavigation(page);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[dkb-latency] triple-Escape during a cold-cache import: ${latencyMs}ms`,
+    );
+
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_1X_MS);
+  });
+
+  test("Quick Exit still redirects promptly on a cold DKB cache during a large C-File import (1x)", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const fixturePath = writeFixtureFile();
+    await stubWeatherRedirect(page);
+    await prepareImportReadyPage(page, { primeCache: false });
+
+    const box = await page.locator(QUICK_EXIT_SELECTOR).first().boundingBox();
+    if (!box) throw new Error("Quick Exit button has no bounding box");
+
+    await startColdBackgroundImport(page, fixturePath);
+    const latencyMs = await measureClickToNavigation(page, box);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[dkb-latency] Quick Exit during a cold-cache import: ${latencyMs}ms`,
+    );
+
+    expect(page.url()).toMatch(/weather\.com/);
+    expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_1X_MS);
   });
 });
