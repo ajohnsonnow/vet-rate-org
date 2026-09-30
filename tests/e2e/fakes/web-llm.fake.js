@@ -33,24 +33,61 @@ export async function hasModelInCache() {
 }
 
 // Marker embedded in musterCallProcessor.js's analyzeCFileWithAI system
-// prompt - the one real call site in the app that asks the local swarm for
-// a specific JSON shape. Keying off it (rather than generically walking an
-// arbitrary JSON Schema neither this call nor any other on Muster Call's
-// path actually sends) keeps this fake exactly as complex as the one real
-// caller that needs structured output.
-const MUSTER_CALL_CFILE_JSON_MARKER = "potential_claims";
+// prompt AND cfileAnalyzer.js's CFILE_SYSTEM_PROMPT(_COMPACT) - both the
+// Muster Call and C-File Analyzer document paths ask the local swarm for
+// this exact JSON shape. Keying off it (rather than generically walking an
+// arbitrary JSON Schema no caller on either path actually sends) keeps this
+// fake exactly as complex as the real callers that need structured output.
+const CFILE_JSON_MARKER = "potential_claims";
+
+// DD214Analyzer.jsx's two system prompts (LOCAL condensed / full) share this
+// exact phrase; DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL/DD214_ANALYSIS_SYSTEM_PROMPT.
+const DD214_JSON_MARKER = "military records analyst";
+
+// BlueButtonXRay.jsx's BLUE_BUTTON_AI_PROMPT_HEADER - sent as the main
+// (user-role) prompt, not a systemPrompt option, so this is matched against
+// user content below rather than system content.
+const BLUE_BUTTON_JSON_MARKER = "VA Blue Button report";
+
+// aiStatementHelper.js's buildDecisionDecoderPrompt - also user-role, not a
+// systemPrompt option ("favorable_findings" is a field name unique to this
+// tool's schema, unlike the generic "You are a VA claims expert" system
+// prompt it's paired with).
+const DECISION_DECODER_JSON_MARKER = "favorable_findings";
 
 function findSystemContent(messages) {
   return messages?.find((m) => m.role === "system")?.content || "";
 }
 
-function buildFakeCompletionText(config) {
-  const systemContent = findSystemContent(config?.messages);
-  if (systemContent.includes(MUSTER_CALL_CFILE_JSON_MARKER)) {
-    // Matches analyzeCFileWithAI's documented schema exactly. Empty
-    // findings are the honest answer for a synthetic fixture with nothing
-    // in it to flag - its own system prompt says "Only include findings
-    // present in text."
+function findUserContent(messages) {
+  return (
+    messages
+      ?.filter((m) => m.role === "user")
+      .map((m) => m.content)
+      .join("\n") || ""
+  );
+}
+
+// Records every completion this fake engine receives, keyed to the exact
+// prompt content, so an e2e spec can assert (from the browser context) that
+// a specific document's text actually reached the on-device engine - the
+// counterpart to a network-level page.route() assertion for a real backend,
+// which this fake has no network call for.
+function recordFakeEngineCall(systemContent, userContent) {
+  if (typeof window === "undefined") return;
+  window.__e2eFakeEngineCalls ??= [];
+  window.__e2eFakeEngineCalls.push({
+    system: systemContent,
+    user: userContent,
+  });
+}
+
+function buildFakeCompletionText(systemContent, userContent) {
+  if (systemContent.includes(CFILE_JSON_MARKER)) {
+    // Matches analyzeCFileWithAI's/cfileAnalyzer's documented schema
+    // exactly. Empty findings are the honest answer for a synthetic fixture
+    // with nothing in it to flag - both system prompts say "only report
+    // findings present in the text."
     return JSON.stringify({
       potential_claims: [],
       exposures: [],
@@ -58,6 +95,48 @@ function buildFakeCompletionText(config) {
       actionItems: [
         "[e2e fake] Deterministic test engine - no real model ran.",
       ],
+    });
+  }
+  if (systemContent.includes(DD214_JSON_MARKER)) {
+    return JSON.stringify({
+      documentCount: 1,
+      documentTypes: ["DD214"],
+      masterRecordType: "DD214",
+      branch: "Army",
+      rank: "SGT",
+      mos: "11B",
+      entryDate: "2010-01-01",
+      separationDate: "2014-01-01",
+      characterOfService: "Honorable",
+      extractionNotes: [
+        "[e2e fake] Deterministic test engine - no real model ran.",
+      ],
+    });
+  }
+  if (userContent.includes(BLUE_BUTTON_JSON_MARKER)) {
+    return JSON.stringify({
+      conditions: [
+        {
+          name: "Tinnitus",
+          dateFound: null,
+          isClaimable: true,
+          category: "ENT",
+        },
+      ],
+      summary: "[e2e fake] Deterministic test engine - no real model ran.",
+    });
+  }
+  if (userContent.includes(DECISION_DECODER_JSON_MARKER)) {
+    return JSON.stringify({
+      decision_type: "Full Denial",
+      favorable_findings: [],
+      plain_english:
+        "[e2e fake] Deterministic test engine - no real model ran.",
+      va_reasoning: "[e2e fake] no real model ran",
+      missing_elements: ["Nexus letter"],
+      action_plan: ["Obtain a nexus letter"],
+      appeal_options: "Supplemental Claim, HLR, or BVA appeal",
+      deadline_warning: "1 year from the decision date",
     });
   }
   return (
@@ -89,7 +168,10 @@ function makeFakeEngine() {
     chat: {
       completions: {
         create: async (config) => {
-          const text = buildFakeCompletionText(config);
+          const systemContent = findSystemContent(config?.messages);
+          const userContent = findUserContent(config?.messages);
+          recordFakeEngineCall(systemContent, userContent);
+          const text = buildFakeCompletionText(systemContent, userContent);
           if (config?.stream) return makeFakeStream(text);
           return { choices: [{ message: { content: text } }] };
         },
