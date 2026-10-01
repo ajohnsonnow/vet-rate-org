@@ -671,7 +671,7 @@ const storeDocumentInVKB = async (file, result) => {
   if (vkbResult.success) {
     result.vkbDocumentId = vkbResult.documentId;
     // eslint-disable-next-line no-console
-    console.log(`✅ Stored ${file.name} in VKB as ${vkbResult.documentId}`);
+    console.log(`✅ Stored this document in VKB as ${vkbResult.documentId}`);
 
     if (vkbResult.storageWarning) {
       console.warn(`⚠️ ${vkbResult.storageWarning}`);
@@ -736,10 +736,10 @@ const archiveDocumentInPacket = async (file, result) => {
       ].filter(Boolean),
     });
     // eslint-disable-next-line no-console
-    console.log(`📁 Archived ${file.name} in My Packet`);
+    console.log(`📁 Archived this document in My Packet`);
   } catch (packetErr) {
     console.warn(
-      `My Packet save failed for ${file.name} (non-fatal):`,
+      `My Packet save failed for this document (non-fatal):`,
       packetErr.message,
     );
   }
@@ -987,10 +987,10 @@ function _savePrimaryServicePeriod(file, result, candidate) {
       { sourceDocument: file.name, confidence: candidate.confidence },
     );
     // eslint-disable-next-line no-console
-    console.log(`✅ Saved service period for ${file.name}`);
+    console.log(`✅ Saved service period for this document`);
   } catch (periodErr) {
     console.warn(
-      `Service period save failed for ${file.name} (non-fatal):`,
+      `Service period save failed for this document (non-fatal):`,
       periodErr.message,
     );
   }
@@ -1104,7 +1104,7 @@ function _saveNGB22AdditionalPeriods(file, candidate) {
       );
     } catch (periodErr) {
       console.warn(
-        `NGB-22 Box 18 period save failed for ${file.name} (non-fatal):`,
+        `NGB-22 Box 18 period save failed for this document (non-fatal):`,
         periodErr.message,
       );
     }
@@ -1136,10 +1136,10 @@ export const saveServiceRecordToProfile = (file, result) => {
     const existing = getServiceHistory().dd214Data;
     saveDD214Data(_mergeDD214Record(existing, candidate));
     // eslint-disable-next-line no-console
-    console.log(`✅ Saved DD214 data to Service tab for ${file.name}`);
+    console.log(`✅ Saved DD214 data to Service tab for this document`);
   } catch (dd214Err) {
     console.warn(
-      `Service history save failed for ${file.name} (non-fatal):`,
+      `Service history save failed for this document (non-fatal):`,
       dd214Err.message,
     );
   }
@@ -1223,11 +1223,11 @@ const saveAwardsToProfile = (file, result) => {
     });
     // eslint-disable-next-line no-console
     console.log(
-      `✅ Saved ${awards.length} award(s) to Ribbon Rack for ${file.name}`,
+      `✅ Saved ${awards.length} award(s) to Ribbon Rack for this document`,
     );
   } catch (awardErr) {
     console.warn(
-      `Award save failed for ${file.name} (non-fatal):`,
+      `Award save failed for this document (non-fatal):`,
       awardErr.message,
     );
   }
@@ -1317,11 +1317,11 @@ export const saveDeploymentsToProfile = (file, result) => {
     });
     // eslint-disable-next-line no-console
     console.log(
-      `✅ Saved ${deployments.length} deployment(s) to Service tab for ${file.name}`,
+      `✅ Saved ${deployments.length} deployment(s) to Service tab for this document`,
     );
   } catch (deploymentErr) {
     console.warn(
-      `Deployment save failed for ${file.name} (non-fatal):`,
+      `Deployment save failed for this document (non-fatal):`,
       deploymentErr.message,
     );
   }
@@ -1400,10 +1400,10 @@ const mergeServiceRecordIntoVKB = async (file, result) => {
     mergeDD214IntoVKB(vkb, dd214Data, { fileName: file.name });
     await saveVKB(vkb);
     // eslint-disable-next-line no-console
-    console.log(`✅ Merged DD214 data into VKB for ${file.name}`);
+    console.log(`✅ Merged DD214 data into VKB for this document`);
   } catch (vkbErr) {
     console.warn(
-      `VKB merge failed for ${file.name} (non-fatal):`,
+      `VKB merge failed for this document (non-fatal):`,
       vkbErr.message,
     );
   }
@@ -1445,10 +1445,10 @@ const mergeCFileDeploymentsIntoVKB = async (file, result) => {
     mergeDD214EvidenceTimeline(vkb, dd214Data, { fileName: file.name });
     await saveVKB(vkb);
     // eslint-disable-next-line no-console
-    console.log(`✅ Merged C-File deployments into VKB for ${file.name}`);
+    console.log(`✅ Merged C-File deployments into VKB for this document`);
   } catch (vkbErr) {
     console.warn(
-      `VKB merge failed for ${file.name} (non-fatal):`,
+      `VKB merge failed for this document (non-fatal):`,
       vkbErr.message,
     );
   }
@@ -1572,7 +1572,7 @@ const appendMusterCallTimelineEntry = async (file, result) => {
     await saveVKB(vkb);
   } catch (timelineErr) {
     console.warn(
-      `Evidence timeline update failed for ${file.name} (non-fatal):`,
+      `Evidence timeline update failed for this document (non-fatal):`,
       timelineErr.message,
     );
   }
@@ -1623,7 +1623,7 @@ const classifyAndParseDocument = async (
     );
   } catch (parseErr) {
     console.error(
-      `Parser failed for ${file.name} (${result.classification.type}); storing raw text so the document is not lost:`,
+      `Parser failed for this document (${result.classification.type}); storing raw text so the document is not lost:`,
       parseErr?.message,
     );
     result.extractedData = {
@@ -1735,11 +1735,11 @@ const saveRatingDecisionToProfile = (file, result) => {
     if (changed) saveMyRatings(ratings);
     // eslint-disable-next-line no-console
     console.log(
-      `✅ Saved ${rated.length} rated condition(s) from ${file.name} to My Ratings`,
+      `✅ Saved ${rated.length} rated condition(s) from this document to My Ratings`,
     );
   } catch (ratingErr) {
     console.warn(
-      `Ratings save failed for ${file.name} (non-fatal):`,
+      `Ratings save failed for this document (non-fatal):`,
       ratingErr.message,
     );
   }
@@ -1782,10 +1782,10 @@ const mergeRatingDecisionIntoVKBForFile = async (file, result) => {
     });
     await saveVKB(vkb);
     // eslint-disable-next-line no-console
-    console.log(`✅ Merged rating decision into VKB for ${file.name}`);
+    console.log(`✅ Merged rating decision into VKB for this document`);
   } catch (vkbErr) {
     console.warn(
-      `VKB rating-decision merge failed for ${file.name} (non-fatal):`,
+      `VKB rating-decision merge failed for this document (non-fatal):`,
       vkbErr.message,
     );
   }
@@ -1910,7 +1910,7 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
       },
     });
   } catch (error) {
-    console.error(`Error processing ${file.name}:`, error.message);
+    console.error(`Error processing this document:`, error.message);
     result.status = "error";
     result.error = error.message;
     onProgress?.({
@@ -1935,7 +1935,7 @@ export const processFormationDocument = async (
   options = {},
 ) => {
   // eslint-disable-next-line no-console
-  console.log(`🎖️ Platoon Sergeant inspecting: ${file.name}`);
+  console.log(`🎖️ Platoon Sergeant inspecting: this document`);
 
   // Use enhanced single document processor
   const result = await processSingleDocument(file, onProgress, options);
@@ -1950,7 +1950,7 @@ export const processFormationDocument = async (
       profilePopulateResult = await autoPopulateProfile([result]);
     } catch (populateErr) {
       console.warn(
-        `Profile auto-populate failed for ${file.name} (non-fatal):`,
+        `Profile auto-populate failed for this document (non-fatal):`,
         populateErr.message,
       );
     }
@@ -2093,7 +2093,7 @@ const selectBestDD214Segment = (segments, filename) => {
 
   // eslint-disable-next-line no-console
   console.log(
-    `🎯 Multiple DD214s found (${segments.length}), selecting best match for filename: ${filename}`,
+    `🎯 Multiple DD214s found (${segments.length}), selecting best match`,
   );
 
   // Extract potential names from filename
@@ -2123,11 +2123,6 @@ const selectBestDD214Segment = (segments, filename) => {
       word.length >= 3 && !IGNORE_WORDS.has(word) && /^[A-Z]+$/.test(word),
   );
 
-  // eslint-disable-next-line no-console
-  console.log(
-    `📛 Potential name(s) from filename: [${potentialNames.join(", ")}]`,
-  );
-
   // Score each segment
   const scoredSegments = segments.map((segment, index) => {
     const extractedName = extractQuickName(segment.text);
@@ -2139,14 +2134,14 @@ const selectBestDD214Segment = (segments, filename) => {
       for (const potentialName of potentialNames) {
         if (extractedName === potentialName) {
           score += 100; // Exact match
-          matchReason = `exact match: ${extractedName}`;
+          matchReason = "exact match";
           break;
         } else if (
           extractedName.startsWith(potentialName) ||
           potentialName.startsWith(extractedName)
         ) {
           score += 50; // Partial match
-          matchReason = `partial match: ${extractedName} ~ ${potentialName}`;
+          matchReason = "partial match";
         }
       }
     }
@@ -2174,7 +2169,7 @@ const selectBestDD214Segment = (segments, filename) => {
 
     // eslint-disable-next-line no-console
     console.log(
-      `  Segment ${index + 1} (pages ${segment.pages}): name="${extractedName}", score=${score}, reason="${matchReason}"`,
+      `  Segment ${index + 1} (pages ${segment.pages}): score=${score}, reason="${matchReason}"`,
     );
 
     return { ...segment, score, extractedName, matchReason };
@@ -2186,7 +2181,7 @@ const selectBestDD214Segment = (segments, filename) => {
   const best = scoredSegments[0];
   // eslint-disable-next-line no-console
   console.log(
-    `✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) with name "${best.extractedName}" - ${best.matchReason}`,
+    `✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) - ${best.matchReason}`,
   );
 
   return best;
@@ -2294,7 +2289,7 @@ const parseDD214Document = async (
     // Multiple DD214s found - use intelligent selection based on filename
     // eslint-disable-next-line no-console
     console.log(
-      `🎖️ Found ${dd214Segments.length} DD214s in ${filename} - selecting best match`,
+      `🎖️ Found ${dd214Segments.length} DD214s in this document - selecting best match`,
     );
 
     // Select the DD214 that best matches the filename (e.g., "Williams" in filename)
@@ -3442,9 +3437,7 @@ function _assignParsedName(data, lastName, firstName, middleName) {
       data.firstNamePossibleExpansions = expansion;
     }
     data.nameNeedsVerification = true;
-    console.warn(
-      `⚠️ Short first name detected: "${firstName}" - may be OCR abbreviation`,
-    );
+    console.warn("⚠️ Short first name detected - may be OCR abbreviation");
   }
 
   data.middleName = middleName;
@@ -5876,7 +5869,7 @@ const runConcurrentDocumentProcessing = async (
       return result;
     } catch (error) {
       // Catch any errors that slip through processSingleDocument
-      console.error(`Failed to process ${file.name}:`, error.message);
+      console.error(`Failed to process this document:`, error.message);
       processing--;
       completed++;
 
@@ -6109,7 +6102,7 @@ export const autoPopulateProfile = async (processedResults) => {
 
   for (const result of processedResults) {
     // eslint-disable-next-line no-console
-    console.log(`📄 Checking ${result.filename}:`, {
+    console.log(`📄 Checking this document:`, {
       status: result.status,
       hasExtractedData: !!result.extractedData,
       extractedDataType: result.extractedData?.type,
@@ -6119,14 +6112,14 @@ export const autoPopulateProfile = async (processedResults) => {
     if (result.status !== "complete" || !result.extractedData) {
       // eslint-disable-next-line no-console
       console.log(
-        `⏭️ Skipping ${result.filename} - status: ${result.status}, hasData: ${!!result.extractedData}`,
+        `⏭️ Skipping this document - status: ${result.status}, hasData: ${!!result.extractedData}`,
       );
       continue;
     }
 
     const { type } = result.extractedData;
     // eslint-disable-next-line no-console
-    console.log(`🔍 Processing ${result.filename} with type: ${type}`);
+    console.log(`🔍 Processing this document with type: ${type}`);
 
     const documentUpdates = {};
     switch (type) {
@@ -6158,7 +6151,7 @@ export const autoPopulateProfile = async (processedResults) => {
 
       default:
         // eslint-disable-next-line no-console
-        console.log(`⚠️ Unknown document type: ${type} for ${result.filename}`);
+        console.log(`⚠️ Unknown document type: ${type} for this document`);
         continue;
     }
 
@@ -6387,7 +6380,7 @@ export const extractIntelligenceBriefingData = (processedResults) => {
  */
 const analyzeDecisionLetterGaps = (decision, evidenceDocs, allGaps) => {
   // eslint-disable-next-line no-console
-  console.log(`📋 Analyzing Decision: ${decision.filename}`);
+  console.log(`📋 Analyzing Decision: this document`);
 
   // Combine all non-decision text as the "C-File equivalent"
   const combinedEvidence = evidenceDocs
@@ -6433,10 +6426,7 @@ const analyzeDecisionLetterGaps = (decision, evidenceDocs, allGaps) => {
       }
     }
   } catch (err) {
-    console.warn(
-      `⚠️ Gap analysis error for ${decision.filename}:`,
-      err.message,
-    );
+    console.warn(`⚠️ Gap analysis error for this document:`, err.message);
   }
 };
 

@@ -43,15 +43,11 @@ function logFormationStatsUpdated(newStats, current) {
 function logInitializeFormationStart(files) {
   // eslint-disable-next-line no-console
   console.log("🚩 initializeFormation called with:", files?.length, "files");
-  // eslint-disable-next-line no-console
-  console.log("🚩 Files are:", files);
 }
 
 function logInitializeFormationBuilt(newFormation) {
   // eslint-disable-next-line no-console
   console.log("🚩 buildFormation returned:", newFormation?.length, "entries");
-  // eslint-disable-next-line no-console
-  console.log("🚩 First entry:", newFormation?.[0]);
 }
 
 function logInitializeFormationSaved(count) {
@@ -80,7 +76,7 @@ function advanceToNext(
       status: FORMATION_STATUS.CALLED,
     });
     // eslint-disable-next-line no-console
-    console.log(`📞 Called to inspection: ${next.filename}`);
+    console.log("📞 Called to inspection");
   }
 
   return next;
@@ -222,7 +218,7 @@ function startFormationImpl(formation, updateEntry) {
       status: FORMATION_STATUS.CALLED,
     });
     // eslint-disable-next-line no-console
-    console.log(`🚩 Formation begun - First call: ${first.filename}`);
+    console.log("🚩 Formation begun");
     return first;
   }
   return null;
