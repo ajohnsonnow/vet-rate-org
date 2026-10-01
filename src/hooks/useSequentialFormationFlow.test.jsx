@@ -35,7 +35,8 @@ function buildFormationQueue() {
     startFormation: vi.fn(),
     completeCurrentAndNext: vi.fn(() => null),
     skipCurrentAndNext: vi.fn(() => null),
-    errorCurrentAndNext: vi.fn(() => null),
+    errorEntryAndNext: vi.fn(() => null),
+    getFormation: () => [],
   };
 }
 

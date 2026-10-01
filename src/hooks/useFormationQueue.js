@@ -6,7 +6,7 @@
  * React hook for managing formation queue state
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   buildFormation,
   sortFormation,
@@ -128,6 +128,24 @@ function errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error) {
   );
 }
 
+// Marks exactly the entry that failed - never "whatever the current entry was
+// when this closure rendered", which attributed the error to a different,
+// already-saved document and re-called the failed one - then calls the next
+// WAITING entry forward from the latest formation.
+function errorEntryAndNextImpl(entryId, error, formationRef, updateEntry) {
+  updateEntry(
+    entryId,
+    buildStatusUpdate(FORMATION_STATUS.ERROR, {
+      error: error?.message || error,
+    }),
+  );
+  const next = getNextInFormation(
+    formationRef.current.filter((entry) => entry.id !== entryId),
+  );
+  if (next) updateEntry(next.id, { status: FORMATION_STATUS.CALLED });
+  return next;
+}
+
 function loadInitialFormation(setFormation) {
   const savedFormation = loadFormationState();
   if (savedFormation && savedFormation.length > 0) {
@@ -243,7 +261,12 @@ function clearFormationImpl(setFormation, setCurrentEntry, setStats) {
  * custom hook (still calls useCallback internally) so the parent hook body
  * stays under the line budget without breaking rules-of-hooks.
  */
-function useFormationActions({ formation, setFormation, currentEntry }) {
+function useFormationActions({
+  formation,
+  formationRef,
+  setFormation,
+  currentEntry,
+}) {
   const initializeFormation = useCallback(
     (files) => initializeFormationImpl(files, setFormation),
     [setFormation],
@@ -289,6 +312,12 @@ function useFormationActions({ formation, setFormation, currentEntry }) {
     [currentEntry, formation, updateEntry],
   );
 
+  const errorEntryAndNext = useCallback(
+    (entryId, error) =>
+      errorEntryAndNextImpl(entryId, error, formationRef, updateEntry),
+    [formationRef, updateEntry],
+  );
+
   const startFormation = useCallback(
     () => startFormationImpl(formation, updateEntry),
     [formation, updateEntry],
@@ -313,6 +342,7 @@ function useFormationActions({ formation, setFormation, currentEntry }) {
     completeCurrentAndNext,
     skipCurrentAndNext,
     errorCurrentAndNext,
+    errorEntryAndNext,
     startFormation,
     reorderDocuments,
     removeDocument,
@@ -354,6 +384,11 @@ export const useFormationQueue = () => {
   const [formation, setFormation] = useState([]);
   const [currentEntry, setCurrentEntry] = useState(null);
   const [stats, setStats] = useState(null);
+  const formationRef = useRef(formation);
+  useEffect(() => {
+    formationRef.current = formation;
+  }, [formation]);
+  const getFormation = useCallback(() => formationRef.current, []);
 
   // Load saved formation on mount
   useEffect(() => {
@@ -373,11 +408,13 @@ export const useFormationQueue = () => {
     completeCurrentAndNext,
     skipCurrentAndNext,
     errorCurrentAndNext,
+    errorEntryAndNext,
     startFormation,
     reorderDocuments,
     removeDocument,
   } = useFormationActions({
     formation,
+    formationRef,
     setFormation,
     currentEntry,
   });
@@ -403,6 +440,8 @@ export const useFormationQueue = () => {
     completeCurrentAndNext,
     skipCurrentAndNext,
     errorCurrentAndNext,
+    errorEntryAndNext,
+    getFormation,
     startFormation,
     reorderDocuments,
     removeDocument,

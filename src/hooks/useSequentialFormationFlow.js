@@ -32,7 +32,10 @@ function scheduleNextDocument(nextEntry, formation, predicate, delay, ctx) {
     if (nextEntry) {
       runDocumentProcessing(nextEntry, ctx);
     } else {
-      const next = formation.find(predicate);
+      // The latest queue, not the snapshot this closure rendered with: that
+      // snapshot still lists finished documents as WAITING.
+      const latest = ctx.getFormation ? ctx.getFormation() : formation;
+      const next = latest.find(predicate);
       if (next) {
         runDocumentProcessing(next, ctx);
       } else {
@@ -82,7 +85,7 @@ async function runDocumentProcessing(entry, ctx) {
     formation,
     stats,
     updateEntry,
-    errorCurrentAndNext,
+    errorEntryAndNext,
     toast,
     setProcessingState,
     setActiveEntry,
@@ -150,7 +153,7 @@ async function runDocumentProcessing(entry, ctx) {
     }
   } catch (err) {
     console.error("❌ Document processing error:", err);
-    const nextEntry = errorCurrentAndNext(err.message);
+    const nextEntry = errorEntryAndNext(entry.id, err.message);
     setCurrentProgress(null);
     setActiveEntry(null);
 
@@ -363,7 +366,8 @@ export const useSequentialFormationFlow = ({
     startFormation,
     completeCurrentAndNext,
     skipCurrentAndNext,
-    errorCurrentAndNext,
+    errorEntryAndNext,
+    getFormation,
   } = formationQueue;
 
   const [currentProgress, setCurrentProgress] = useState(null);
@@ -380,7 +384,8 @@ export const useSequentialFormationFlow = ({
     startFormation,
     completeCurrentAndNext,
     skipCurrentAndNext,
-    errorCurrentAndNext,
+    errorEntryAndNext,
+    getFormation,
     toast,
     setError,
     setProcessingState,
