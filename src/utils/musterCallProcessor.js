@@ -58,6 +58,7 @@ import {
   generateAI,
   isAnyAIAvailable,
   getDocumentAIRouting,
+  reloadSwarmEngine,
 } from "./unifiedAIService";
 import {
   AI_DATA_CLASS,
@@ -2566,11 +2567,53 @@ async function _computeCodeSheetData(text, slicer) {
 
 const AI_ANALYSIS_RETRY_DELAY_MS = 1500;
 const AI_ANALYSIS_RETRY_TIMEOUT_MS = 180_000;
+const AI_ENGINE_RELOAD_TIMEOUT_MS = 330_000;
 const AI_ANALYSIS_FAILED_NOTICE =
   "AI analysis of this document couldn't complete right now - this can happen " +
   "when several imports are running at once. Nothing was lost: your document, " +
   "its segmentation and rating data were saved normally. You can try AI " +
   "analysis again later from the C-File tools.";
+
+// The first call's failure is usually a disposed or unloaded engine, or a call
+// the timeout race abandoned but the engine is still working through - a
+// plain retry then fails the same way (or queues behind the abandoned call).
+// Rebuilding the Warrant Council engine kills both. One rebuild is shared
+// when several imports fail at once, and it is bounded so a wedged GPU can
+// only delay the retry, never hang the import. Engines with no reload
+// (wllama, local server) keep the short pause.
+let _pendingEngineReload = null;
+
+function _reloadEngineOnce() {
+  _pendingEngineReload ??= reloadSwarmEngine().finally(() => {
+    _pendingEngineReload = null;
+  });
+  return _pendingEngineReload;
+}
+
+async function _prepareEngineForRetry(onDeviceMode) {
+  if (onDeviceMode !== "swarm") {
+    await new Promise((resolve) =>
+      setTimeout(resolve, AI_ANALYSIS_RETRY_DELAY_MS),
+    );
+    return;
+  }
+  let timer;
+  try {
+    await Promise.race([
+      _reloadEngineOnce(),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("engine reload timed out")),
+          AI_ENGINE_RELOAD_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } catch (reloadErr) {
+    console.warn("⚠️ AI engine reload before retry failed:", reloadErr.message);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // Part 3 (final19): under GPU/engine contention from concurrent imports, an
 // on-device AI call that routing considered "ready" can still time out or
@@ -2607,9 +2650,7 @@ async function _runCFileAIAnalysis(text) {
     );
   }
 
-  await new Promise((resolve) =>
-    setTimeout(resolve, AI_ANALYSIS_RETRY_DELAY_MS),
-  );
+  await _prepareEngineForRetry(routing.onDeviceMode);
   try {
     const aiAnalysis = await analyzeCFileWithAI(excerpt, {
       timeoutMs: AI_ANALYSIS_RETRY_TIMEOUT_MS,
@@ -2618,7 +2659,7 @@ async function _runCFileAIAnalysis(text) {
   } catch (secondErr) {
     console.error(
       "❌ AI C-File analysis failed on retry, surfacing to the veteran:",
-      secondErr,
+      secondErr.message,
     );
     return {
       aiAnalysis: null,
