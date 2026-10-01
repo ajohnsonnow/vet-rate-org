@@ -53,7 +53,11 @@ function handleProgressUpdate(progressData, entry, file, ctx) {
   const { setCurrentProgress, updateEntry } = ctx;
 
   // eslint-disable-next-line no-console
-  console.log("📊 Progress update received:", progressData);
+  console.log("📊 Progress update received:", {
+    stage: progressData.stage,
+    state: progressData.state,
+    progress: progressData.progress,
+  });
   setCurrentProgress({
     filename: file.name,
     fileSize: entry.fileSize || file.size,
@@ -129,7 +133,10 @@ async function runDocumentProcessing(entry, ctx) {
     );
 
     // eslint-disable-next-line no-console
-    console.log("✅ Document processed:", result);
+    console.log("✅ Document processed:", {
+      status: result.status,
+      classification: result.classification?.type,
+    });
 
     // ADR-007: if this exact document already carries a veteran correction
     // (a prior Verify & Save, or a re-import after one), seed the review
@@ -258,7 +265,11 @@ async function runVerifyAndSave(verifyPayload, ctx) {
   } = ctx;
 
   // eslint-disable-next-line no-console
-  console.log("✅ User verified data:", verifyPayload);
+  console.log("✅ User verified data:", {
+    fieldCount: Object.keys(verifyPayload?.verifiedData || {}).length,
+    saveToVKB: verifyPayload?.saveToVKB,
+    updateProfile: verifyPayload?.updateProfile,
+  });
 
   try {
     // The briefing screen's checked/edited fields never reached VKB/My
@@ -338,7 +349,7 @@ function runStartSequentialProcessing(ctx) {
   console.log("🚩 Starting sequential formation processing...");
   const firstEntry = ctx.startFormation();
   // eslint-disable-next-line no-console
-  console.log("🚩 First entry:", firstEntry);
+  console.log("🚩 First entry:", firstEntry?.id);
 
   if (firstEntry) {
     // Process the first document directly instead of relying on currentEntry

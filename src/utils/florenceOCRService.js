@@ -263,13 +263,12 @@ export async function processDocument(file, options = {}) {
         clearTimeout(watchdog);
         activeWorker.removeEventListener("message", messageHandler);
 
-        // Debug: Log raw Florence output to understand format
+        // Counts and types only: the response is the veteran's document text.
         // eslint-disable-next-line no-console
-        console.log("🔍 [FlorenceOCR] Raw worker response:", e.data);
-        // eslint-disable-next-line no-console
-        console.log("🔍 [FlorenceOCR] Text type:", typeof text);
-        // eslint-disable-next-line no-console
-        console.log("🔍 [FlorenceOCR] Text content:", text);
+        console.log(
+          "🔍 [FlorenceOCR] Worker response received, text type:",
+          typeof text,
+        );
 
         // Extract text from result - handle various Florence output formats
         let extractedText;
@@ -285,8 +284,8 @@ export async function processDocument(file, options = {}) {
 
         // eslint-disable-next-line no-console
         console.log(
-          "🔍 [FlorenceOCR] Extracted text (first 500 chars):",
-          extractedText?.substring(0, 500),
+          "🔍 [FlorenceOCR] Extracted text length:",
+          extractedText?.length ?? 0,
         );
 
         // Parse as DD214 if requested

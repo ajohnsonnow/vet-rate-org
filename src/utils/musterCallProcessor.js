@@ -181,6 +181,20 @@ const createEtaTracker = (windowSize = 5) => {
   };
 };
 
+// Console output is for field names and counts only: every value here is the
+// veteran's own (name, file number, SSN, dates, diagnoses).
+function presentFieldNames(obj) {
+  return Object.entries(obj || {})
+    .filter(
+      ([, v]) =>
+        v !== null &&
+        v !== undefined &&
+        v !== "" &&
+        !(Array.isArray(v) && v.length === 0),
+    )
+    .map(([key]) => key);
+}
+
 // Re-export formatFileSize for convenience
 export { formatFileSize };
 
@@ -201,10 +215,8 @@ function _parseAIAnalysisContent(content) {
 
   try {
     return JSON.parse(cleanContent);
-  } catch (parseErr) {
-    console.warn(
-      `⚠️ JSON parse failed (${parseErr.message}), attempting repair...`,
-    );
+  } catch {
+    console.warn("⚠️ JSON parse failed, attempting repair...");
     const repaired = attemptJSONRepair(cleanContent);
     if (repaired) {
       // eslint-disable-next-line no-console
@@ -1612,7 +1624,7 @@ const classifyAndParseDocument = async (
   } catch (parseErr) {
     console.error(
       `Parser failed for ${file.name} (${result.classification.type}); storing raw text so the document is not lost:`,
-      parseErr,
+      parseErr?.message,
     );
     result.extractedData = {
       raw: result.text.substring(0, 1000),
@@ -1898,7 +1910,7 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
       },
     });
   } catch (error) {
-    console.error(`Error processing ${file.name}:`, error);
+    console.error(`Error processing ${file.name}:`, error.message);
     result.status = "error";
     result.error = error.message;
     onProgress?.({
@@ -2234,12 +2246,9 @@ const buildVisionParsedServiceRecord = (text, visionParsedData) => {
   };
 
   // eslint-disable-next-line no-console
-  console.log(`✅ Vision-parsed DD214:`, {
-    branch: visionData.branch,
-    rank: visionData.rank,
-    mos: visionData.mos,
-    awards: visionData.awards?.length || 0,
-  });
+  console.log(
+    `✅ Vision-parsed DD214: fields [${presentFieldNames(visionData).join(", ")}], ${visionData.awards?.length || 0} award(s)`,
+  );
 
   return visionData;
 };
@@ -2308,9 +2317,7 @@ const parseDD214Document = async (
         }));
 
       // eslint-disable-next-line no-console
-      console.log(
-        `✅ Selected DD214 from pages ${bestSegment.pages} (${parsed.veteranName || "name TBD"})`,
-      );
+      console.log(`✅ Selected DD214 from pages ${bestSegment.pages}`);
       return parsed;
     }
 
@@ -2366,7 +2373,7 @@ const parseDBQDocument = async (text) => {
 
   if (dbqData.success && dbqData.diagnosis) {
     // eslint-disable-next-line no-console
-    console.log(`✅ Enhanced parser found diagnosis: ${dbqData.diagnosis}`);
+    console.log("✅ Enhanced parser found a diagnosis");
     return {
       type: "dbq",
       ...dbqData,
@@ -5042,19 +5049,14 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     _deriveCombatServiceField(ctx);
     // eslint-disable-next-line no-console
     console.log("📋 DD214 parsed fields:", {
-      branch: data.branch,
-      rank: data.rank,
-      mos: data.mos,
-      serviceStartDate: data.serviceStartDate,
-      serviceEndDate: data.serviceEndDate,
-      dischargeType: data.dischargeType,
+      fields: presentFieldNames(data),
       awardsCount: data.awards?.length || 0,
       deploymentsCount: data.deployments?.length || 0,
     });
 
     return data;
   } catch (error) {
-    console.error("Service record parsing error:", error);
+    console.error("Service record parsing error:", error.message);
     return { ...data, error: error.message };
   }
 };
@@ -5146,7 +5148,7 @@ export const parseRatingDecision = async (text, { letterheadText } = {}) => {
       if (match[0].length === 0) CONDITION_PERCENT_RE.lastIndex++;
     }
   } catch (error) {
-    console.error("Rating decision parsing error:", error);
+    console.error("Rating decision parsing error:", error.message);
     data.error = error.message;
   }
 
@@ -5681,7 +5683,7 @@ export const parseClaimLetter = async (text, { letterheadText } = {}) => {
       data.status = "pending";
     }
   } catch (error) {
-    console.error("Claim letter parsing error:", error);
+    console.error("Claim letter parsing error:", error.message);
     data.error = error.message;
   }
 
@@ -5734,7 +5736,7 @@ const parseDBQ = async (text) => {
       data.examDate = examDateMatch[1];
     }
   } catch (error) {
-    console.error("DBQ parsing error:", error);
+    console.error("DBQ parsing error:", error.message);
     data.error = error.message;
   }
 
@@ -5776,7 +5778,7 @@ const parseMedicalRecord = async (text) => {
       });
     }
   } catch (error) {
-    console.error("Medical record parsing error:", error);
+    console.error("Medical record parsing error:", error.message);
     data.error = error.message;
   }
 
@@ -5812,7 +5814,7 @@ const parseNexusLetter = async (text) => {
       data.provider = providerMatch[1].trim();
     }
   } catch (error) {
-    console.error("Nexus letter parsing error:", error);
+    console.error("Nexus letter parsing error:", error.message);
     data.error = error.message;
   }
 
@@ -5874,7 +5876,7 @@ const runConcurrentDocumentProcessing = async (
       return result;
     } catch (error) {
       // Catch any errors that slip through processSingleDocument
-      console.error(`Failed to process ${file.name}:`, error);
+      console.error(`Failed to process ${file.name}:`, error.message);
       processing--;
       completed++;
 
@@ -6219,7 +6221,7 @@ export const autoPopulateProfile = async (processedResults) => {
   // eslint-disable-next-line no-console
   console.log(`📊 Auto-populate complete: ${updateCount} documents processed`);
   // eslint-disable-next-line no-console
-  console.log("📝 Profile updates:", updates);
+  console.log("📝 Profile fields updated:", presentFieldNames(updates));
 
   if (updateCount > 0) {
     const success = updateVeteranProfile(updates);
@@ -6235,7 +6237,7 @@ export const autoPopulateProfile = async (processedResults) => {
 
 const applyServiceRecordToBriefing = (briefingData, serviceData) => {
   // eslint-disable-next-line no-console
-  console.log("📝 Extracting service record:", serviceData);
+  console.log("📝 Extracting service record:", presentFieldNames(serviceData));
 
   // Handle array-structured data (indexed 0, 1, 2, etc.)
   if (serviceData[0]) {
@@ -6368,7 +6370,11 @@ export const extractIntelligenceBriefingData = (processedResults) => {
   }
 
   // eslint-disable-next-line no-console
-  console.log("✅ Intelligence Briefing data extracted:", briefingData);
+  console.log("✅ Intelligence Briefing data extracted:", {
+    fields: presentFieldNames(briefingData),
+    conditionCount: briefingData.conditions.length,
+    claimNumberCount: briefingData.claimNumbers.length,
+  });
   return briefingData;
 };
 
@@ -6705,7 +6711,7 @@ export const generateMusterCallReport = async (
       generatedAt: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("❌ Report generation error:", error);
+    console.error("❌ Report generation error:", error.message);
     return {
       success: false,
       error: error.message,

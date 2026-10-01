@@ -612,17 +612,13 @@ function extractName(text) {
       if (!isPlausibleName(lastName, firstName, middleName)) {
         // eslint-disable-next-line no-console
         console.log(
-          `🔍 [DD214Parser:Name] Pattern ${i} match rejected (field-label text, not a name):`,
-          match[0].substring(0, 100),
+          `🔍 [DD214Parser:Name] Pattern ${i} match rejected (field-label text, not a name)`,
         );
         continue;
       }
 
       // eslint-disable-next-line no-console
-      console.log(
-        `🔍 [DD214Parser:Name] Pattern ${i} matched:`,
-        match[0].substring(0, 100),
-      );
+      console.log(`🔍 [DD214Parser:Name] Pattern ${i} matched`);
       return {
         value: match[0]
           .replace(/name[^:]*:\s*/i, "")
@@ -639,10 +635,7 @@ function extractName(text) {
   const zoneName = extractNameFromLabelZone(text);
   if (zoneName) {
     // eslint-disable-next-line no-console
-    console.log(
-      "🔍 [DD214Parser:Name] Block 1 zone matched:",
-      zoneName.lastName,
-    );
+    console.log("🔍 [DD214Parser:Name] Block 1 zone matched");
     const middle = zoneName.middleName ? ` ${zoneName.middleName}` : "";
     return {
       value: `${zoneName.lastName}, ${zoneName.firstName}${middle}`,
