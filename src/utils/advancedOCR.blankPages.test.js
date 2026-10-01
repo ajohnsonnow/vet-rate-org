@@ -313,31 +313,57 @@ describe("advancedPDFAnalysis: failures are recoverable and nothing hangs", () =
   });
 });
 
-describe("measureInkFraction / blank threshold", () => {
-  const solid = (lum, count = 4000) => {
-    const data = new Uint8ClampedArray(count * 4);
-    for (let i = 0; i < count; i++) {
-      data.set([lum, lum, lum, 255], i * 4);
+const W = 459;
+const H = 594;
+const page = (paper = 255) => {
+  const data = new Uint8ClampedArray(W * H * 4);
+  for (let i = 0; i < W * H; i++) data.set([paper, paper, paper, 255], i * 4);
+  return { data, width: W, height: H };
+};
+const rect = (img, x, y, w, h, lum) => {
+  for (let r = y; r < y + h; r++) {
+    for (let c = x; c < x + w; c++) {
+      img.data.set([lum, lum, lum, 255], (r * W + c) * 4);
     }
-    return data;
-  };
-  const withInk = (data, lum, pixels) => {
-    for (let i = 0; i < pixels; i++) data.set([lum, lum, lum, 255], i * 4);
-    return { data };
-  };
+  }
+};
+const textLine = (img, y, lum) => {
+  for (let k = 0; k < 20; k++) rect(img, 40 + k * 5, y, 2, 8, lum);
+};
+const grain = (img, amplitude) => {
+  let seed = 12345;
+  for (let i = 0; i < W * H; i++) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const v = img.data[i * 4] + ((seed >> 8) % (2 * amplitude + 1)) - amplitude;
+    img.data.set([v, v, v], i * 4);
+  }
+};
+const dust = (img, count) => {
+  for (let k = 0; k < count; k++) {
+    rect(img, 7 + (k % 40) * 11, 9 + Math.floor(k / 40) * 13, 2, 2, 110);
+  }
+};
+const edgeShadow = (img) => {
+  for (let c = 0; c < 40; c++) {
+    const v = Math.round(150 + (c / 40) * 105);
+    for (let r = 0; r < H; r++) img.data.set([v, v, v], (r * W + c) * 4);
+  }
+};
 
+describe("measureInkFraction / blank threshold", () => {
   it("measures a perfectly blank page (and a transparent canvas) as having no ink", async () => {
     const { measureInkFraction } = await import("./advancedOCR");
-    expect(measureInkFraction({ data: solid(255) })).toBe(0);
+    expect(measureInkFraction(page())).toBe(0);
     expect(measureInkFraction({ data: new Uint8ClampedArray(4000 * 4) })).toBe(
       0,
     );
   });
 
-  it("does not take a faint scan (text ~30 levels darker than the paper) for blank", async () => {
+  it("does not take a faint scan (text ~35 levels darker than the paper) for blank", async () => {
     const { measureInkFraction, BLANK_PAGE_MAX_INK_FRACTION } =
       await import("./advancedOCR");
-    const faint = withInk(solid(240), 205, 400);
+    const faint = page(240);
+    textLine(faint, 100, 205);
     expect(measureInkFraction(faint)).toBeGreaterThan(
       BLANK_PAGE_MAX_INK_FRACTION,
     );
@@ -346,17 +372,34 @@ describe("measureInkFraction / blank threshold", () => {
   it("does not take a page with one short line of dark text for blank", async () => {
     const { measureInkFraction, BLANK_PAGE_MAX_INK_FRACTION } =
       await import("./advancedOCR");
-    const oneLine = withInk(solid(255, 273_000), 30, 90);
+    const oneLine = page();
+    textLine(oneLine, 300, 30);
     expect(measureInkFraction(oneLine)).toBeGreaterThan(
       BLANK_PAGE_MAX_INK_FRACTION,
     );
   });
 
-  it("treats paper grain well under the threshold as blank", async () => {
+  it("treats a scanned blank with paper grain, dust specks and an edge shadow as blank", async () => {
     const { measureInkFraction, BLANK_PAGE_MAX_INK_FRACTION } =
       await import("./advancedOCR");
-    const grain = withInk(solid(250), 244, 400);
-    expect(measureInkFraction(grain)).toBeLessThanOrEqual(
+    const blank = page(250);
+    grain(blank, 4);
+    dust(blank, 130);
+    edgeShadow(blank);
+    expect(measureInkFraction(blank)).toBeLessThanOrEqual(
+      BLANK_PAGE_MAX_INK_FRACTION,
+    );
+  });
+
+  it("still finds a text line on a grainy, dusty, shadowed scan", async () => {
+    const { measureInkFraction, BLANK_PAGE_MAX_INK_FRACTION } =
+      await import("./advancedOCR");
+    const scan = page(250);
+    textLine(scan, 300, 120);
+    grain(scan, 4);
+    dust(scan, 130);
+    edgeShadow(scan);
+    expect(measureInkFraction(scan)).toBeGreaterThan(
       BLANK_PAGE_MAX_INK_FRACTION,
     );
   });

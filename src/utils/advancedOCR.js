@@ -76,7 +76,8 @@ export const ADVANCED_OCR_CONFIG = {
 // text only ~25 levels darker than the paper, and a page that is merely
 // faint must never be taken for blank); a page is blank when ink covers at most this fraction.
 // Kept deliberately tiny (about 27 px of a 459x594 render) so a page holding
-// even one short line of real text is never mistaken for blank.
+// even one short line of real text is never mistaken for blank. Scanner grain,
+// dust specks and smooth edge shadows are filtered out before this is measured.
 const BLANK_INK_LUMINANCE_DELTA = 16;
 export const BLANK_PAGE_MAX_INK_FRACTION = 0.0001;
 
@@ -105,26 +106,81 @@ function pixelLuminance(data, i) {
   return lum * alpha + 255 * (1 - alpha);
 }
 
+const BLANK_INK_MIN_EDGE_CONTRAST = 8;
+const BLANK_INK_MIN_COMPONENT_PIXELS = 6;
+
+function luminanceBackground(lum) {
+  const histogram = new Uint32Array(256);
+  for (let i = 0; i < lum.length; i++) histogram[lum[i]]++;
+  let background = 0;
+  for (let l = 1; l < 256; l++) {
+    if (histogram[l] > histogram[background]) background = l;
+  }
+  return background;
+}
+
+function buildInkMask(lum, width, background) {
+  const mask = new Uint8Array(lum.length);
+  for (let i = 0; i < lum.length; i++) {
+    if (Math.abs(lum[i] - background) <= BLANK_INK_LUMINANCE_DELTA) continue;
+    const x = i % width;
+    const contrast = Math.max(
+      x > 0 ? Math.abs(lum[i] - lum[i - 1]) : 0,
+      x < width - 1 ? Math.abs(lum[i] - lum[i + 1]) : 0,
+      i >= width ? Math.abs(lum[i] - lum[i - width]) : 0,
+      i + width < lum.length ? Math.abs(lum[i] - lum[i + width]) : 0,
+    );
+    if (contrast >= BLANK_INK_MIN_EDGE_CONTRAST) mask[i] = 1;
+  }
+  return mask;
+}
+
+function floodComponent(mask, start, width, stack) {
+  let size = 0;
+  let top = 0;
+  stack[top++] = start;
+  mask[start] = 2;
+  while (top > 0) {
+    const i = stack[--top];
+    size++;
+    const x = i % width;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx;
+        const n = i + dy * width + dx;
+        if (nx < 0 || nx >= width || n < 0 || n >= mask.length) continue;
+        if (mask[n] !== 1) continue;
+        mask[n] = 2;
+        stack[top++] = n;
+      }
+    }
+  }
+  return size;
+}
+
 /**
- * Fraction of pixels that differ visibly from the page's own background
- * (its most common luminance). Transparent pixels count as white paper.
+ * Fraction of pixels that are real ink: visibly different from the page's own
+ * background (its most common luminance), sitting on a sharp edge (so smooth
+ * scanner shadows are not ink), and part of a cluster of at least a few
+ * pixels (so isolated dust specks are not ink). Transparent pixels count as
+ * white paper. Without a width the pixels are read as a single row.
  */
 export function measureInkFraction(imageData) {
   const { data } = imageData;
   const pixelCount = data.length / 4;
   if (pixelCount === 0) return 0;
-  const histogram = new Uint32Array(256);
-  for (let i = 0; i < data.length; i += 4) {
-    histogram[Math.round(pixelLuminance(data, i))]++;
+  const width = imageData.width || pixelCount;
+  const lum = new Uint8Array(pixelCount);
+  for (let i = 0; i < pixelCount; i++) {
+    lum[i] = Math.round(pixelLuminance(data, i * 4));
   }
-  let background = 0;
-  for (let l = 1; l < 256; l++) {
-    if (histogram[l] > histogram[background]) background = l;
-  }
+  const mask = buildInkMask(lum, width, luminanceBackground(lum));
+  const stack = new Int32Array(pixelCount);
   let ink = 0;
-  for (let l = 0; l < 256; l++) {
-    if (Math.abs(l - background) > BLANK_INK_LUMINANCE_DELTA)
-      ink += histogram[l];
+  for (let i = 0; i < pixelCount; i++) {
+    if (mask[i] !== 1) continue;
+    const size = floodComponent(mask, i, width, stack);
+    if (size >= BLANK_INK_MIN_COMPONENT_PIXELS) ink += size;
   }
   return ink / pixelCount;
 }
