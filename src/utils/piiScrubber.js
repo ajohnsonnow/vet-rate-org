@@ -167,7 +167,7 @@ const _DOB_DATE_SRC =
   "(?:" +
   "\\d{4}[/.-]\\d{1,2}[/.-]\\d{1,2}" +
   "|\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}" +
-  `|\\d{1,2}(?:st|nd|rd|th)?[\\s-]{1,5}${_DOB_MONTH_SRC},?[\\s-]{1,5}\\d{2,4}` +
+  `|\\d{1,2}(?:st|nd|rd|th)?(?:\\s{1,5}of)?[\\s-]{0,5}${_DOB_MONTH_SRC},?[\\s-]{0,5}\\d{2,4}` +
   `|${_DOB_MONTH_SRC}\\s{1,5}\\d{1,2}(?:st|nd|rd|th)?,?\\s{1,5}\\d{2,4}` +
   "|\\d{8}" +
   ")";
@@ -334,13 +334,14 @@ const PII_PATTERNS = {
   // YYYYMMDD. The earlier version only knew MM/DD/YYYY and "Mon DD YYYY", so
   // "born 1984-03-15" / "DOB: 15 Mar 1984" went straight through.
   dobLabeled: new RegExp(
-    `\\b(?:DOB|D\\.O\\.B\\.|date\\s{1,5}of\\s{1,5}birth|born(?:\\s{1,5}on)?)(?:\\s{1,5}(?:is|was))?\\s{0,5}[:=-]?\\s{0,5}${_DOB_DATE_SRC}\\b`,
+    `\\b(?:DOB|D\\.O\\.B\\.?|birth\\s{0,3}date|birthday|date\\s{1,5}of\\s{1,5}birth|born(?:\\s{1,5}(?:on|in))?)(?:\\s{1,5}(?:is|was))?\\s{0,5}[:=-]?\\s{0,5}(?:the\\s{1,5})?${_DOB_DATE_SRC}\\b`,
     "gi",
   ),
   // D20-7: an unlabeled space-separated SSN (3-2-4 digit groups). Whether a
   // match is really an SSN or an audiogram row is decided from its context in
   // `_applyContextualDigitShape`, not by the pattern.
-  ssnSpaced: /(?<![\d.,/-])\b\d{3}[ \t]\d{2}[ \t]\d{4}\b(?![.,/-]?\d)/g,
+  ssnSpaced:
+    /(?<![\d.,/-])\b\d{3}[ \t]{1,2}\d{2}[ \t]{1,2}\d{4}\b(?![.,/-]?\d)/g,
   dob: [
     /\b(0[1-9]|1[0-2])[/-](0[1-9]|[12]\d|3[01])[/-](\d{2}|\d{4})\b/g, // MM/DD/YYYY
     /\b(0[1-9]|[12]\d|3[01])[/-](0[1-9]|1[0-2])[/-](\d{2}|\d{4})\b/g, // DD/MM/YYYY
@@ -1201,8 +1202,12 @@ function _applySsnPatterns(
     const digits = match.replace(/\D/g, "");
     return `XXX-XX-${digits.slice(-4)}`;
   };
-  [PII_PATTERNS.ssn, PII_PATTERNS.ssnSpaced].forEach((pattern) =>
-    applyContextual(pattern, "SSN", _isAudiogramRow, redactSsnMatch),
+  applyContextual(PII_PATTERNS.ssn, "SSN", _isAudiogramRow, redactSsnMatch);
+  applyContextual(
+    PII_PATTERNS.ssnSpaced,
+    "SSN",
+    _isAudiogramOrClinicalRow,
+    redactSsnMatch,
   );
   if (aggressive) {
     applyPattern(PII_PATTERNS.ssnBare, "SSN", "[REDACTED_SSN]");
@@ -1226,7 +1231,7 @@ const _AUDIOGRAM_FREQS = new Set([
   125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000,
 ]);
 const _AUDIOGRAM_KEYWORDS =
-  /\b(?:Hz|kHz|dB|audiogram|audiometry|audiometric|thresholds?|frequenc(?:y|ies)|pure[- ]tone)\b/i;
+  /\b(?:Hz|kHz|dB|audiogram|audiometry|audiometric|thresholds?|frequenc(?:y|ies)|pure[- ]tone|left|right|ear)\b/i;
 
 const _isAudiogramNumber = (n) =>
   _AUDIOGRAM_FREQS.has(n) || (n % 5 === 0 && n <= 120);
@@ -1237,36 +1242,28 @@ function _lineAround(text, offset, length) {
   return text.slice(start, end === -1 ? text.length : end);
 }
 
+// A row of nothing but numbers that are all audiogram values can be told from
+// a phone number or SSN only by its surroundings: audiogram wording on the
+// line, or a long run (more than three numbers) of such values.
 function _isAudiogramRow(line, match) {
   const groups = match.match(/\d+/g).map(Number);
-  if (groups.every(_isAudiogramNumber)) return true;
+  if (!groups.every(_isAudiogramNumber)) return false;
+  if (_AUDIOGRAM_KEYWORDS.test(line)) return true;
   const numbers = (line.match(/\d+/g) || []).map(Number);
   return numbers.length > 3 && numbers.every(_isAudiogramNumber);
 }
 
-function _passesLuhn(digits) {
-  let sum = 0;
-  [...digits].reverse().forEach((ch, i) => {
-    let d = Number(ch);
-    if (i % 2 === 1) {
-      d *= 2;
-      if (d > 9) d -= 9;
-    }
-    sum += d;
-  });
-  return sum % 10 === 0;
-}
+// Lab, vitals and range-of-motion rows carry 3-2-4 digit runs ("Platelets 250
+// 45 1300", "BP 140 90 2019") that are not SSNs. A line that names its own
+// SSN/social is never spared.
+const _CLINICAL_ROW_KEYWORDS =
+  // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the keyword alternation count, not backtracking; every alternative is a fixed literal
+  /\b(?:platelets?|wbc|rbc|hgb|hct|glucose|creatinine|lab|labs|bp|blood\s+pressure|pulse|heart\s+rate|bpm|mmHg|mg\/dL|ROM|range\s+of\s+motion|flexion|extension|abduction|rotation|degrees)\b/i;
+const _SSN_LABEL = /\b(?:SSN|social|SS#)/i;
 
-// A 16-digit run is left alone only when it is an audiogram row: every group
-// a standard frequency/threshold, or audiogram wording on the line and the
-// digits fail the card checksum. A Luhn-valid number on an audiogram line is
-// still redacted.
-function _isAudiogramCardShape(line, match) {
-  const groups = match.match(/\d+/g).map(Number);
-  if (groups.every(_isAudiogramNumber)) return true;
-  return (
-    _AUDIOGRAM_KEYWORDS.test(line) && !_passesLuhn(match.replace(/\D/g, ""))
-  );
+function _isAudiogramOrClinicalRow(line, match) {
+  if (_isAudiogramRow(line, match)) return true;
+  return _CLINICAL_ROW_KEYWORDS.test(line) && !_SSN_LABEL.test(line);
 }
 
 function _applyContextualDigitShape(
@@ -1291,11 +1288,11 @@ function _applyContextualDigitShape(
 function _applyCardDobPhoneSsnPatterns(appliers, aggressive, preservePartial) {
   const { applyPattern, applyContextual } = appliers;
   // 1. Credit cards (16 digits) — highest specificity - except an audiogram
-  //    row, which has the same shape (see _isAudiogramCardShape).
+  //    row, which has the same shape (see _isAudiogramRow).
   applyContextual(
     PII_PATTERNS.creditCard,
     "Credit Card",
-    _isAudiogramCardShape,
+    _isAudiogramRow,
     () => "[REDACTED_CC]",
   );
   // 1b. A labeled DOB before any bare-digit pattern can claim its digits
