@@ -27,6 +27,8 @@ import { isSameCalendarDay } from "../utils/serviceEntryDate";
 import { parseExplicitDate } from "../utils/dateUtils";
 import { BadgeDisplay, CombatIndicatorSummary } from "./BadgeDisplay";
 import { parseDD214Badges } from "../data/badgeData";
+import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
+import { getReadingNotices } from "../utils/readingNotices";
 
 // Internal/metadata fields skipped when filtering extracted data for display
 const EXCLUDED_METADATA_FIELDS = new Set([
@@ -42,6 +44,9 @@ const EXCLUDED_METADATA_FIELDS = new Set([
   // verify like any other field. It drives the "(calculated from net
   // service)" note on the serviceStartDate row instead (see FieldGroup).
   "serviceStartDateDerived",
+  // Shown plainly at the top of the briefing (DocumentReadingNotices), not as
+  // a field to verify.
+  "aiAnalysisNotice",
 ]);
 
 function FieldEditControls({ editValue, onChange, onSave, onCancel }) {
@@ -2658,6 +2663,7 @@ function DocumentBriefingModal({
   handleVerifyAndSave,
   allFieldsVerified,
   hasFields,
+  readingNotices,
   ...bodyProps
 }) {
   return (
@@ -2688,6 +2694,7 @@ function DocumentBriefingModal({
       labelledBy="doc-intel-briefing-title"
       size="xl"
     >
+      <DocumentReadingNotices {...readingNotices} />
       <DocumentBriefingBody
         {...bodyProps}
         filename={filename}
@@ -2722,6 +2729,7 @@ export default function DocumentIntelligenceBriefing({
   return (
     <DocumentBriefingModal
       {...state}
+      readingNotices={getReadingNotices(extractionResult)}
       onSkip={onSkip}
       onClose={onClose}
       onOpenDD214Analyzer={onOpenDD214Analyzer}

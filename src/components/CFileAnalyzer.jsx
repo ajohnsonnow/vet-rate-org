@@ -38,18 +38,24 @@ import { getStorageStats } from "../utils/storage";
 import CFileTimeline from "./CFileTimeline";
 import CFileClaimsCards from "./CFileClaimsCards";
 import CFileSemanticSearch from "./CFileSemanticSearch";
+import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
+import { getReadingNotices } from "../utils/readingNotices";
 
-async function _extractTextForAnalysis(file, ctx) {
-  const musterResult = await processFormationDocument(file, (progress) => {
-    // Map MusterCall progress events → CFileAnalyzer UI state
-    if (progress.state === PROCESSING_STATES.EXTRACTING) {
-      ctx.setExtractionProgress({
-        current: progress.currentPage || 0,
-        total: progress.totalPages || 0,
-      });
-      if (progress.message) ctx.setProcessingStage(progress.message);
-    }
-  });
+async function _extractTextForAnalysis(file, ctx, options) {
+  const musterResult = await processFormationDocument(
+    file,
+    (progress) => {
+      // Map MusterCall progress events → CFileAnalyzer UI state
+      if (progress.state === PROCESSING_STATES.EXTRACTING) {
+        ctx.setExtractionProgress({
+          current: progress.currentPage || 0,
+          total: progress.totalPages || 0,
+        });
+        if (progress.message) ctx.setProcessingStage(progress.message);
+      }
+    },
+    options,
+  );
 
   // Normalise to the shape the rest of handleConsentAndProcess expects
   const extractionResult = {
@@ -63,6 +69,11 @@ async function _extractTextForAnalysis(file, ctx) {
     method: musterResult.method || "ocr",
     ocrUsed: musterResult.ocrUsed ?? true,
     confidence: musterResult.confidence ?? null,
+    coverageNote: musterResult.coverageNote ?? null,
+    pagesOCRd: musterResult.pagesOCRd ?? null,
+    pagesBlank: musterResult.pagesBlank ?? [],
+    pagesSkipped: musterResult.pagesSkipped ?? [],
+    pagesFailed: musterResult.pagesFailed ?? [],
   };
 
   if (!extractionResult.hasText) {
@@ -152,7 +163,7 @@ async function _saveCFileResults(file, extractionResult, result) {
   }
 }
 
-async function _runConsentAndProcess(file, t, ctx) {
+async function _runConsentAndProcess(file, t, ctx, options = {}) {
   ctx.setHasConsented(true);
   ctx.setShowPrivacyConsent(false);
   ctx.setIsProcessing(true);
@@ -175,7 +186,7 @@ async function _runConsentAndProcess(file, t, ctx) {
     // Stage 2: Extract text - route through MusterCall pipeline for full
     // Tesseract OCR support (handles scanned / image-only PDFs)
     ctx.setProcessingStage(t("cfileAnalyzer", "extractingText"));
-    const extractionResult = await _extractTextForAnalysis(file, ctx);
+    const extractionResult = await _extractTextForAnalysis(file, ctx, options);
     if (!extractionResult) return;
 
     // Stage 3: Analyze with AI (uses unified AI service with automatic chunking)
@@ -280,6 +291,31 @@ export function CFileDashboardHeader({
           {t("cfileAnalyzer", "analyzeAnotherFile")}
         </button>
       </div>
+    </div>
+  );
+}
+
+// How completely the document was read: blank pages, OCR'd pages, and any
+// scanned pages that were not read, with a real action to read the rest.
+export function CFileReadCoverage({ extractedText, onReadRemainingPages }) {
+  const { coverageNote, pagesNotRead } = getReadingNotices(extractedText);
+  if (!coverageNote) return null;
+  const hasSkipped = (extractedText.pagesSkipped?.length || 0) > 0;
+  return (
+    <div className="mb-6 space-y-2" data-testid="cfile-read-coverage">
+      <DocumentReadingNotices
+        coverageNote={coverageNote}
+        pagesNotRead={pagesNotRead}
+      />
+      {hasSkipped && (
+        <button
+          type="button"
+          onClick={onReadRemainingPages}
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors"
+        >
+          Read remaining pages
+        </button>
+      )}
     </div>
   );
 }
@@ -780,6 +816,7 @@ function CFileDashboard({
   showSemanticSearch,
   setShowSemanticSearch,
   handleReset,
+  onReadRemainingPages,
 }) {
   return (
     <div className="max-w-7xl mx-auto">
@@ -790,6 +827,10 @@ function CFileDashboard({
         analysisMetadata={analysisMetadata}
         analysisResult={analysisResult}
         onReset={handleReset}
+      />
+      <CFileReadCoverage
+        extractedText={extractedText}
+        onReadRemainingPages={onReadRemainingPages}
       />
       <CFileDashboardWarnings
         analysisResult={analysisResult}
@@ -1475,24 +1516,41 @@ function useCFileConsentResetHandlers(ctx) {
     abortControllerRef,
   } = ctx;
 
+  const runProcess = (options) =>
+    _runConsentAndProcess(
+      file,
+      t,
+      {
+        setHasConsented,
+        setShowPrivacyConsent,
+        setIsProcessing,
+        setError,
+        setStorageWarning,
+        setChunkProgress,
+        setProcessingStage,
+        setExtractionProgress,
+        setExtractedText,
+        setAnalysisResult,
+        setAnalysisMetadata,
+        abortControllerRef,
+      },
+      options,
+    );
+
   // Process the file after consent
-  const handleConsentAndProcess = useCallback(async () => {
-    await _runConsentAndProcess(file, t, {
-      setHasConsented,
-      setShowPrivacyConsent,
-      setIsProcessing,
-      setError,
-      setStorageWarning,
-      setChunkProgress,
-      setProcessingStage,
-      setExtractionProgress,
-      setExtractedText,
-      setAnalysisResult,
-      setAnalysisMetadata,
-      abortControllerRef,
-    });
+  const handleConsentAndProcess = useCallback(
+    () => runProcess({}),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [file, t]);
+    [file, t],
+  );
+
+  // Re-read the same file with the scan limit lifted so scanned pages that
+  // were skipped are read too.
+  const handleReadRemainingPages = useCallback(
+    () => runProcess({ readAllPages: true }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [file, t],
+  );
 
   // Reset to start over
   const handleReset = useCallback(() => {
@@ -1523,19 +1581,20 @@ function useCFileConsentResetHandlers(ctx) {
     setShowSemanticSearch,
   ]);
 
-  return { handleConsentAndProcess, handleReset };
+  return { handleConsentAndProcess, handleReadRemainingPages, handleReset };
 }
 
 function useCFileAnalysisHandlers(ctx) {
   const { handleStopAnalysis, handleStartAnalysis } =
     useCFileStopStartHandlers(ctx);
-  const { handleConsentAndProcess, handleReset } =
+  const { handleConsentAndProcess, handleReadRemainingPages, handleReset } =
     useCFileConsentResetHandlers(ctx);
 
   return {
     handleStopAnalysis,
     handleStartAnalysis,
     handleConsentAndProcess,
+    handleReadRemainingPages,
     handleReset,
   };
 }
@@ -1568,6 +1627,7 @@ function CFileAnalyzerMainContent({ state }) {
     showSemanticSearch,
     setShowSemanticSearch,
     handleReset,
+    handleReadRemainingPages,
   } = state;
 
   if (isProcessing) {
@@ -1596,6 +1656,7 @@ function CFileAnalyzerMainContent({ state }) {
         showSemanticSearch={showSemanticSearch}
         setShowSemanticSearch={setShowSemanticSearch}
         handleReset={handleReset}
+        onReadRemainingPages={handleReadRemainingPages}
       />
     );
   }
@@ -1773,6 +1834,7 @@ export default function CFileAnalyzer({
     handleStopAnalysis,
     handleStartAnalysis,
     handleConsentAndProcess,
+    handleReadRemainingPages,
     handleReset,
   } = useCFileAnalysisHandlers({
     t,
@@ -1812,6 +1874,7 @@ export default function CFileAnalyzer({
         handleStopAnalysis,
         handleReset,
         handleConsentAndProcess,
+        handleReadRemainingPages,
       }}
     />
   );

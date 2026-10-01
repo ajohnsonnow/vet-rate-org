@@ -109,6 +109,7 @@ export default function MusterCall({
       <MusterCallFormationSection
         shouldShowFormation={shouldShowFormation}
         showProcessingView={showProcessingView}
+        processingState={processingState}
         formationQueue={formationQueue}
         ai={ai}
         flow={flow}

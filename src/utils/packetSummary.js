@@ -217,6 +217,8 @@ export function buildDocumentFindings(doc, categoryMeta = {}) {
     // record when a parser throws, and a document that stored no structured
     // data should say so rather than render as an empty card.
     parseError: cleanString(data.parseError),
+    aiAnalysisNotice: cleanString(data.aiAnalysisNotice),
+    coverageNote: cleanString(data.pageCoverageNote),
     findingCount:
       scalars.length +
       lists.reduce((sum, entry) => sum + entry.values.length, 0) +

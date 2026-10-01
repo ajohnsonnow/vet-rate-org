@@ -105,12 +105,12 @@ export async function analyzeImage(file, onProgress = () => {}) {
 /**
  * Main PDF Analysis Function
  */
-export async function analyzePDF(file, onProgress = () => {}) {
+export async function analyzePDF(file, onProgress = () => {}, options = {}) {
   // eslint-disable-next-line no-console
   console.log("🔬 Starting PDF analysis with advanced OCR system...");
 
   try {
-    const result = await advancedPDFAnalysis(file, {}, (progress) => {
+    const result = await advancedPDFAnalysis(file, options, (progress) => {
       const state = mapProgressState(progress.stage);
       onProgress({
         state,

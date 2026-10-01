@@ -26,6 +26,7 @@
 import { analyzeDocument, isFileSupported } from "./documentAnalyzer";
 import { processLargePDF } from "./pdfExtractor";
 import { formatFileSize } from "./ocr";
+import { withStoredReadingNotes } from "./readingNotices";
 import { scanDocumentForCrisis } from "./crisisInterceptor";
 import { untrustedSection } from "./aiSystemPrompts";
 import {
@@ -417,7 +418,7 @@ function isGarbledVisionText(text) {
   return !hasExpectedTerm;
 }
 
-async function _extractDocumentText(file, onProgress) {
+async function _extractDocumentText(file, onProgress, options) {
   onProgress?.({
     filename: file.name,
     state: PROCESSING_STATES.EXTRACTING,
@@ -481,19 +482,23 @@ async function _extractDocumentText(file, onProgress) {
       pagesEmpty: largeResult.pagesEmpty,
     };
   } else {
-    extractionResult = await analyzeDocument(file, (state) => {
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 25 + (state.progress || 0) * 0.4, // 25-65%
-        ocrState: state.message || state.state,
-        currentPage: state.currentPage,
-        totalPages: state.totalPages,
-        quality: state.quality,
-        confidence: state.confidence,
-        stage: "platoon_sergeant",
-      });
-    });
+    extractionResult = await analyzeDocument(
+      file,
+      (state) => {
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + (state.progress || 0) * 0.4, // 25-65%
+          ocrState: state.message || state.state,
+          currentPage: state.currentPage,
+          totalPages: state.totalPages,
+          quality: state.quality,
+          confidence: state.confidence,
+          stage: "platoon_sergeant",
+        });
+      },
+      options,
+    );
   }
 
   return extractionResult;
@@ -624,8 +629,9 @@ const runStandardDocumentExtraction = async (
   result,
   isPDF,
   looksLikeDD214 = false,
+  options = {},
 ) => {
-  let extractionResult = await _extractDocumentText(file, onProgress);
+  let extractionResult = await _extractDocumentText(file, onProgress, options);
   extractionResult = await _applyVisionFallbackIfNeeded(
     file,
     onProgress,
@@ -644,7 +650,7 @@ const storeDocumentInVKB = async (file, result) => {
     pageCount: result.pageCount || 1,
     classification: result.classification.type,
     extractedText: result.text,
-    extractedData: result.extractedData,
+    extractedData: withStoredReadingNotes(result),
     ocrUsed: result.ocrUsed || false,
     method: result.method || "text",
   });
@@ -706,7 +712,7 @@ const archiveDocumentInPacket = async (file, result) => {
       fileName: file.name,
       classification: packetType,
       rawText: result.text || "",
-      extractedData: result.extractedData || {},
+      extractedData: withStoredReadingNotes(result) || {},
       pageCount: result.pageCount || 1,
       fileSize: file.size || 0,
       ocrMethod: result.method || "text",
@@ -1794,7 +1800,19 @@ export const persistFormationDocument = async (file, result) => {
   await mergeRatingDecisionIntoVKBForFile(file, result);
 };
 
-const processSingleDocument = async (file, onProgress) => {
+// Page coverage the extractor reported (how many pages were read, OCR'd,
+// blank or not read at all) - carried on the result so Muster Call and the
+// C-File Analyzer can tell the veteran instead of the note dying here.
+const pickPageCoverage = (extraction) => ({
+  pagesRead: extraction.pagesRead ?? null,
+  pagesOCRd: extraction.pagesOCRd ?? null,
+  pagesBlank: extraction.pagesBlank || [],
+  pagesSkipped: extraction.pagesSkipped || [],
+  pagesFailed: extraction.pagesFailed || [],
+  coverageNote: extraction.coverageNote || null,
+});
+
+const processSingleDocument = async (file, onProgress, options = {}) => {
   const result = {
     filename: file.name,
     size: file.size,
@@ -1810,6 +1828,12 @@ const processSingleDocument = async (file, onProgress) => {
     visionUsed: false, // Track if Florence vision was used
     quality: null,
     confidence: null,
+    pagesRead: null,
+    pagesOCRd: null,
+    pagesBlank: [],
+    pagesSkipped: [],
+    pagesFailed: [],
+    coverageNote: null,
   };
 
   const startTime = Date.now();
@@ -1838,6 +1862,7 @@ const processSingleDocument = async (file, onProgress) => {
       result,
       isPDF,
       looksLikeDD214,
+      options,
     );
 
     // analyzeDocument throws on error, no need to check .success
@@ -1849,6 +1874,7 @@ const processSingleDocument = async (file, onProgress) => {
     result.pageCount = extractionResult.pageCount || 1;
     result.method = extractionResult.method || "text";
     result.ocrUsed = extractionResult.ocrUsed || false;
+    Object.assign(result, pickPageCoverage(extractionResult));
 
     await classifyAndParseDocument(file, onProgress, result, extractionResult);
 
@@ -1890,12 +1916,16 @@ const processSingleDocument = async (file, onProgress) => {
  * Process single document for formation workflow
  * Returns enhanced result object for user verification
  */
-export const processFormationDocument = async (file, onProgress) => {
+export const processFormationDocument = async (
+  file,
+  onProgress,
+  options = {},
+) => {
   // eslint-disable-next-line no-console
   console.log(`🎖️ Platoon Sergeant inspecting: ${file.name}`);
 
   // Use enhanced single document processor
-  const result = await processSingleDocument(file, onProgress);
+  const result = await processSingleDocument(file, onProgress, options);
 
   // FIX-9 (root cause 2): this single-document path never called
   // autoPopulateProfile at all - only the Muster Call batch path

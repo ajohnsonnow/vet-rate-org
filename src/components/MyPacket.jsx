@@ -20,6 +20,7 @@ import VAGovRatingPaster from "./VAGovRatingPaster";
 import CFileClaimsCards from "./CFileClaimsCards";
 import CFileTimeline from "./CFileTimeline";
 import DutyStationsSection from "./DutyStationsSection";
+import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   getSavedClaims,
@@ -6120,6 +6121,18 @@ function DocumentFindingsCard({ findings }) {
           Raw text stored, but structured fields could not be read from this
           document ({findings.parseError}).
         </p>
+      )}
+
+      {(findings.aiAnalysisNotice || findings.coverageNote) && (
+        <div className="px-4 py-3">
+          <DocumentReadingNotices
+            aiAnalysisNotice={findings.aiAnalysisNotice}
+            coverageNote={findings.coverageNote}
+            pagesNotRead={/not read|could not be read/i.test(
+              findings.coverageNote || "",
+            )}
+          />
+        </div>
       )}
 
       <DocumentFindingScalars scalars={findings.scalars} />

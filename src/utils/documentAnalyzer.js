@@ -118,8 +118,8 @@ const readFileAsText = (file) => file.text();
 /**
  * Analyze PDF file
  */
-async function analyzePDFDocument(file, onProgress) {
-  const result = await analyzePDF(file, onProgress);
+async function analyzePDFDocument(file, onProgress, options) {
+  const result = await analyzePDF(file, onProgress, options);
   return {
     text: result.text,
     letterheadText: result.letterheadText,
@@ -133,7 +133,9 @@ async function analyzePDFDocument(file, onProgress) {
     // ocrOnlyPageNumbers) instead of the coverage note dead-ending here.
     pagesRead: result.pagesRead,
     pagesOCRd: result.pagesOCRd,
+    pagesBlank: result.pagesBlank,
     pagesSkipped: result.pagesSkipped,
+    pagesFailed: result.pagesFailed,
     coverageNote: result.coverageNote,
   };
 }
@@ -304,7 +306,11 @@ async function analyzeDOCDocument(file, onProgress) {
  * @param {Function} onProgress - Progress callback
  * @returns {Promise<{text: string, pageCount: number, method: string, fileType: string, ocrUsed: boolean}>}
  */
-export async function analyzeDocument(file, onProgress = () => {}) {
+export async function analyzeDocument(
+  file,
+  onProgress = () => {},
+  options = {},
+) {
   // Validate file
   if (!file) {
     throw new Error("No file provided");
@@ -323,7 +329,7 @@ export async function analyzeDocument(file, onProgress = () => {}) {
   // Route to appropriate analyzer
   switch (ext) {
     case ".pdf":
-      return await analyzePDFDocument(file, onProgress);
+      return await analyzePDFDocument(file, onProgress, options);
 
     case ".docx":
       return await analyzeDOCXDocument(file, onProgress);
