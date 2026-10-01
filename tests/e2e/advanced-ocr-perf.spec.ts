@@ -292,6 +292,67 @@ test.describe("advancedOCR.js preprocessing: main-thread cost during a scanned-i
   });
 });
 
+// D20-1: blank pages inside a text PDF used to go through maximum-strength
+// OCR (~85 s each). A real generated PDF - one text page plus four blank
+// ones - must now import in seconds with zero OCR, in a real browser.
+test.describe("advancedOCR.js: blank pages inside a text PDF", () => {
+  test("a text PDF with 4 blank pages imports in seconds without OCR", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await seedReturningUser(page);
+
+    const outcome = await page.evaluate(async () => {
+      const objects: string[] = [];
+      const blank = "<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>";
+      const stream = "BT /F1 14 Tf 72 700 Td (Generic fixture page one) Tj ET";
+      objects[1] = "<</Type/Catalog/Pages 2 0 R>>";
+      objects[2] =
+        "<</Type/Pages/Kids[3 0 R 4 0 R 5 0 R 6 0 R 7 0 R]/Count 5>>";
+      objects[3] =
+        "<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 8 0 R/Resources<</Font<</F1 9 0 R>>>>>>";
+      for (const n of [4, 5, 6, 7]) objects[n] = blank;
+      objects[8] = `<</Length ${stream.length}>>\nstream\n${stream}\nendstream`;
+      objects[9] = "<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>";
+
+      let body = "%PDF-1.4\n";
+      const offsets: number[] = [];
+      for (let n = 1; n <= 9; n++) {
+        offsets[n] = body.length;
+        body += `${n} 0 obj\n${objects[n]}\nendobj\n`;
+      }
+      const xrefAt = body.length;
+      body += "xref\n0 10\n0000000000 65535 f \n";
+      for (let n = 1; n <= 9; n++) {
+        body += `${String(offsets[n]).padStart(10, "0")} 00000 n \n`;
+      }
+      body += `trailer\n<</Size 10/Root 1 0 R>>\nstartxref\n${xrefAt}\n%%EOF`;
+
+      const mod = await import("/src/utils/advancedOCR.js");
+      const file = new File([body], "generic-text-with-blanks.pdf", {
+        type: "application/pdf",
+      });
+      const started = performance.now();
+      const result = await mod.default(file, {}, () => {});
+      return {
+        elapsedMs: performance.now() - started,
+        pagesBlank: result.pagesBlank,
+        pagesOCRd: result.pagesOCRd,
+        pagesRead: result.pagesRead,
+        ocrUsed: result.ocrUsed,
+        text: result.text,
+      };
+    });
+
+    expect(outcome.text).toContain("Generic fixture page one");
+    expect(outcome.pagesBlank).toEqual([2, 3, 4, 5]);
+    expect(outcome.pagesOCRd).toBe(0);
+    expect(outcome.ocrUsed).toBe(false);
+    expect(outcome.pagesRead).toBe(5);
+    expect(outcome.elapsedMs).toBeLessThan(8000);
+  });
+});
+
 declare global {
   interface Window {
     __buildSyntheticScanCanvas: (
