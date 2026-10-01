@@ -294,6 +294,14 @@ describe("advancedPDFAnalysis: failures are recoverable and nothing hangs", () =
     expect(result.coverageNote).toMatch(/could not be read/);
   });
 
+  it("reports confidence 0, not a perfect read, when no page could be read at all", async () => {
+    fake.failRenderAboveScale = 0.1;
+    const result = await analyze([scannedPage(), scannedPage()]);
+    expect(result.pagesRead).toBe(0);
+    expect(result.pagesFailed).toEqual([1, 2]);
+    expect(result.confidence).toBe(0);
+  });
+
   it("does not hang when an OCR job never settles: the page is reported and the workers are torn down", async () => {
     fake.addJob = vi.fn(() => new Promise(() => {}));
     const result = await analyze([textPage("keep"), scannedPage()], {

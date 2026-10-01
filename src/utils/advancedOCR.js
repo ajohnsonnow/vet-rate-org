@@ -586,6 +586,13 @@ function buildCoverageNote({
   return parts.join(" ");
 }
 
+// A document where no page was read at all (every page skipped or failed) is
+// never a "perfect" read: confidence 0 lets the low-confidence fallbacks run.
+function documentConfidence({ confidenceSum, confidenceCount, pagesRead }) {
+  if (confidenceCount > 0) return confidenceSum / confidenceCount;
+  return pagesRead === 0 ? 0 : 100;
+}
+
 // Weaves the three per-page sources (real text layer, freshly OCR'd, or
 // explicitly skipped) back into one document in page order, so a skipped
 // page is always a visible marker in the text - never a silent gap.
@@ -643,7 +650,11 @@ function mergePageCoverageResult({
     pagesFailed: failedPages,
     method: ocrdCount > 0 ? "advanced_ocr" : "standard",
     strategy,
-    confidence: confidenceCount > 0 ? confidenceSum / confidenceCount : 100,
+    confidence: documentConfidence({
+      confidenceSum,
+      confidenceCount,
+      pagesRead: numPages - skippedPages.length,
+    }),
     processingTime: Date.now() - standardText.startTime,
     ocrUsed: ocrdCount > 0,
     coverageNote: buildCoverageNote({
