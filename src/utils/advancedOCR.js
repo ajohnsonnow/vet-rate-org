@@ -450,7 +450,13 @@ async function ocrImageOnlyPages(
     message: `Checking ${standardText.pagesNeedingOCR.length} page(s) for content...`,
   });
   const { contentPages: imageOnlyPages, blankPages } =
-    await partitionBlankPages(pdf, standardText.pagesNeedingOCR, config);
+    await partitionBlankPages(
+      pdf,
+      standardText.pagesNeedingOCR,
+      config,
+      onProgress,
+      config.ocrOnlyPageNumbers?.length ? Infinity : config.MAX_OCR_PAGES,
+    );
 
   const requested = config.ocrOnlyPageNumbers?.length
     ? config.ocrOnlyPageNumbers.filter((p) => !blankPages.includes(p))
@@ -525,10 +531,27 @@ async function isPageBlank(page, config) {
   }
 }
 
-async function partitionBlankPages(pdf, pageNumbers, config) {
+// Pages past the scan limit are never OCR'd, so once enough content pages
+// are found the rest are left unchecked (they are reported as not read).
+async function partitionBlankPages(
+  pdf,
+  pageNumbers,
+  config,
+  onProgress,
+  contentLimit,
+) {
   const contentPages = [];
   const blankPages = [];
-  for (const pageNum of pageNumbers) {
+  for (const [i, pageNum] of pageNumbers.entries()) {
+    if (contentPages.length >= contentLimit) {
+      contentPages.push(...pageNumbers.slice(i));
+      break;
+    }
+    onProgress({
+      stage: "ocr",
+      progress: 10,
+      message: `Checking page ${i + 1} of ${pageNumbers.length} for content...`,
+    });
     const page = await pdf.getPage(pageNum);
     if (await isPageBlank(page, config)) blankPages.push(pageNum);
     else contentPages.push(pageNum);

@@ -23,6 +23,7 @@ const fake = vi.hoisted(() => ({
   pages: [],
   failRenderAboveScale: Infinity,
   hangAtScale: null,
+  blankChecks: 0,
   cancelRender: null,
   createWorker: null,
   addJob: null,
@@ -98,6 +99,7 @@ function makePage(n) {
     render: ({ canvasContext, viewport }) => ({
       cancel: () => fake.cancelRender?.(),
       promise: (async () => {
+        if (viewport.scale === 0.75) fake.blankChecks++;
         if (viewport.scale === fake.hangAtScale) await new Promise(() => {});
         if (viewport.scale > fake.failRenderAboveScale) {
           throw new RangeError("Array buffer allocation failed");
@@ -152,6 +154,7 @@ beforeEach(() => {
   vi.restoreAllMocks();
   fake.failRenderAboveScale = Infinity;
   fake.hangAtScale = null;
+  fake.blankChecks = 0;
   fake.cancelRender = vi.fn();
   fake.createWorker = vi.fn().mockResolvedValue({
     setParameters: async () => {},
@@ -261,6 +264,16 @@ describe("advancedPDFAnalysis: coverage wording when pages are skipped", () => {
       /only 1 scanned pages are read at a time/,
     );
     expect(result.coverageNote).not.toMatch(/Read remaining pages/);
+  });
+
+  it("does not blank-check pages past the scan limit, and still reports them as not read", async () => {
+    const result = await analyze(
+      [scannedPage(), scannedPage(), scannedPage(), scannedPage()],
+      { MAX_OCR_PAGES: 1 },
+    );
+    expect(fake.blankChecks).toBe(1);
+    expect(result.pagesOCRd).toBe(1);
+    expect(result.pagesSkipped).toEqual([2, 3, 4]);
   });
 
   it("readAllPages lifts the scan limit so the continue action reads the rest", async () => {
