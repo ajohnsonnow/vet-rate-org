@@ -1612,18 +1612,18 @@ const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
  * Run a non-streaming Local AI generation.
  */
 const runLocalAINonStreaming = async (generationConfig, releaseLock) => {
+  // Model input and output are never logged: bugReportUtils captures console
+  // output into reports a veteran can send off-device, and DD-214 text and
+  // model JSON carry identifiers. Shape and length only.
   // eslint-disable-next-line no-console
   console.log(
-    "🔧 Local AI generation config:",
-    JSON.stringify(generationConfig, null, 2).substring(0, 500),
+    "🔧 Local AI generation: messages =",
+    generationConfig.messages?.length ?? 0,
+    "max_tokens =",
+    generationConfig.max_tokens,
   );
   const response =
     await localAIEngine.chat.completions.create(generationConfig);
-  // eslint-disable-next-line no-console
-  console.log(
-    "🔧 Local AI raw response:",
-    JSON.stringify(response, null, 2).substring(0, 1000),
-  );
 
   localAIGenerating = false;
 
@@ -1642,10 +1642,7 @@ const runLocalAINonStreaming = async (generationConfig, releaseLock) => {
   }
 
   // eslint-disable-next-line no-console
-  console.log(
-    "🔧 Local AI rawContent:",
-    rawContent.substring(0, 500) || "(empty)",
-  );
+  console.log("🔧 Local AI response length:", rawContent.length);
   releaseLock();
   return cleanLocalAIResponse(rawContent);
 };
@@ -1904,7 +1901,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
 
   // eslint-disable-next-line no-console
   console.log(
-    `🖼️ generateAIWithImage: ${images.length} image(s), prompt: ${prompt.substring(0, 100)}...`,
+    `🖼️ generateAIWithImage: ${images.length} image(s), prompt length: ${prompt.length}`,
   );
 
   const {
@@ -1932,10 +1929,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
     localAIGenerating = false;
     const rawContent = response.choices[0]?.message?.content || "";
     // eslint-disable-next-line no-console
-    console.log(
-      "🖼️ Vision model response:",
-      rawContent.substring(0, 500) || "(empty)",
-    );
+    console.log("🖼️ Vision model response length:", rawContent.length);
 
     // Check for empty response - this indicates the model failed to process the image
     if (!rawContent || rawContent.trim().length === 0) {
@@ -2891,10 +2885,9 @@ const generateAIInternal = async (prompt, options = {}) => {
   // reaches an on-device backend (the gate above already refused it
   // otherwise, and _dispatchAiGeneration/_handleGeneralFallback never
   // attempt an off-device mode for this data class), so nothing here leaves
-  // the veteran's machine. Redacting it anyway would defeat the whole point
-  // of decision E: the on-device model needs the real name/DOB/SSN printed
-  // on a DD-214 to extract them, and every downstream consumer treats a
-  // "[REDACTED]" token it gets back as a genuine on-device read.
+  // the veteran's machine. Redacting it anyway would feed the on-device model
+  // "[REDACTED]" tokens that downstream consumers read as genuine values
+  // (identifier fields themselves never come from the model - decision F).
   const [systemPrompt, userPrompt] =
     dataClass === AI_DATA_CLASS.DOCUMENT
       ? [builtSystemPrompt, builtUserPrompt]
