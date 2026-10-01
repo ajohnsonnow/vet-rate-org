@@ -19,6 +19,7 @@ import {
   analyzePII,
   containsSignificantNonLatin,
   redactVeteranIdentifiers,
+  collectKnownIdentifierValues,
 } from "./piiScrubber";
 import { loadVKB } from "./veteranKnowledgeBase";
 import { getVeteranProfile } from "./veteranProfile";
@@ -2179,40 +2180,65 @@ export const resetLastKnownGoodRedactionProfile = () => {
 // dispatched, so no send path can skip it. One shared VKB/profile lookup
 // covers every piece. Best-effort: an identifier-load failure must never
 // block generation.
-async function _redactPiecesForSend(pieces) {
+// D20-5: every source of the veteran's own identifiers, each loaded
+// independently so one failing source never hides the others - the VKB
+// personal block, the flat legacy profile (a Muster Call ingest writes the
+// veteran's name/service number ONLY there, never to VKB's .personal), and
+// the last copy that loaded successfully this session.
+async function _loadRedactionProfile() {
+  let vkb = null;
+  let loadFailed = false;
   try {
-    const vkb = await loadVKB();
-    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
-      .map((c) => c.claimNumber)
-      .filter(Boolean);
-    // ADR-008: merge in the flat legacy profile - a Muster Call ingest
-    // writes the veteran's name/service number ONLY there, never to VKB's
-    // .personal block.
-    const personal = { ...getVeteranProfile(), ...vkb?.personal };
-    _lastKnownGoodRedactionProfile = { personal, claimNumbers };
-    return pieces.map((text) =>
-      redactVeteranIdentifiers(text, personal, claimNumbers),
-    );
-  } catch (err) {
-    // Fail CLOSED, never open: a VKB/profile load failure must never let
-    // raw text reach an off-device backend un-redacted (the previous
-    // `catch { return pieces; }` did exactly that). Known-value redaction
-    // still runs against the last successfully loaded profile, if one
-    // exists this session, ON TOP OF the full aggressive pattern scrubber
-    // (which catches bare SSNs/DOBs/etc even with no known value to match
-    // against) - neither alone would catch every shape the other does.
-    console.warn(
-      "[ADR-008] _redactPiecesForSend: VKB/profile load failed, falling back to pattern scrubbing:",
-      err?.message,
-    );
-    if (_lastKnownGoodRedactionProfile) {
-      const { personal, claimNumbers } = _lastKnownGoodRedactionProfile;
-      return pieces.map((text) =>
-        scrubText(redactVeteranIdentifiers(text, personal, claimNumbers)),
-      );
-    }
-    return pieces.map((text) => scrubText(text));
+    vkb = await loadVKB();
+  } catch {
+    loadFailed = true;
   }
+  let flatProfile = {};
+  try {
+    flatProfile = getVeteranProfile() || {};
+  } catch {
+    loadFailed = true;
+  }
+  const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+    .map((c) => c.claimNumber)
+    .filter(Boolean);
+  const personal = { ...flatProfile, ...vkb?.personal };
+  return { personal, claimNumbers, loadFailed };
+}
+
+async function _redactPiecesForSend(pieces) {
+  const loaded = await _loadRedactionProfile();
+  const hasIdentifiers =
+    collectKnownIdentifierValues(loaded.personal, loaded.claimNumbers).length >
+    0;
+  if (hasIdentifiers) {
+    _lastKnownGoodRedactionProfile = {
+      personal: loaded.personal,
+      claimNumbers: loaded.claimNumbers,
+    };
+  }
+  const profile = hasIdentifiers ? loaded : _lastKnownGoodRedactionProfile;
+  const redactKnown = (text) =>
+    profile
+      ? redactVeteranIdentifiers(text, profile.personal, profile.claimNumbers)
+      : text;
+
+  // Healthy path: known values only, as before.
+  if (hasIdentifiers && !loaded.loadFailed) return pieces.map(redactKnown);
+
+  // Fail CLOSED, never open. A loader that threw, or that silently returned
+  // nothing, must never let raw text reach an off-device backend with only
+  // known-value redaction (which has nothing to match). Known values from the
+  // last good copy still run, ON TOP OF the full aggressive pattern scrubber
+  // (bare SSNs, labeled and bare DOBs, addresses...) - neither alone covers
+  // every shape. A name this app has never seen has no shape and cannot be
+  // recognised here (ADR-008 documents that limit).
+  console.warn(
+    loaded.loadFailed
+      ? "[ADR-008] _redactPiecesForSend: VKB/profile load failed, falling back to pattern scrubbing"
+      : "[ADR-008] _redactPiecesForSend: no stored identifiers available, falling back to pattern scrubbing",
+  );
+  return pieces.map((text) => scrubText(redactKnown(text)));
 }
 
 // Per-backend DKB budget defaults. Restores the pre-D15-2 per-backend sizing
