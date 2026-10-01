@@ -36,6 +36,8 @@ import SystemRequirementsNotice from "./SystemRequirementsNotice";
 /**
  * Muster Call - Mass Document Processor
  */
+// NOTE: toggle between Formation (sequential) and legacy batch mode is
+// currently locked to sequential; see FormationLineup for the UI path.
 export default function MusterCall({
   isOpen,
   onClose,
@@ -43,8 +45,6 @@ export default function MusterCall({
   onOpenDD214Analyzer,
 }) {
   const toast = useToast();
-  // NOTE: toggle between Formation (sequential) and legacy batch mode is
-  // currently locked to sequential; see FormationLineup for the UI path.
   const [useSequentialMode] = useState(true);
 
   const {
@@ -57,6 +57,7 @@ export default function MusterCall({
     batch,
     shouldShowFormation,
     showProcessingView,
+    showCompletionSummary,
     handleStartProcessing,
     handleReset,
   } = useMusterCallOrchestration({
@@ -64,8 +65,6 @@ export default function MusterCall({
     onProcessComplete,
     useSequentialMode,
   });
-
-  const { hasDocuments, isComplete: formationComplete } = formationQueue;
 
   return (
     <ResponsiveModal
@@ -80,7 +79,7 @@ export default function MusterCall({
           intake={intake}
           useSequentialMode={useSequentialMode}
           ai={ai}
-          formationComplete={formationComplete}
+          formationComplete={formationQueue.isComplete}
           onStart={handleStartProcessing}
           onReset={handleReset}
         />
@@ -102,14 +101,14 @@ export default function MusterCall({
         intake={intake}
         processingState={processingState}
         useSequentialMode={useSequentialMode}
-        hasDocuments={hasDocuments}
+        hasDocuments={formationQueue.hasDocuments}
         onReset={handleReset}
       />
 
       <MusterCallFormationSection
         shouldShowFormation={shouldShowFormation}
         showProcessingView={showProcessingView}
-        processingState={processingState}
+        showCompletionSummary={showCompletionSummary}
         formationQueue={formationQueue}
         ai={ai}
         flow={flow}

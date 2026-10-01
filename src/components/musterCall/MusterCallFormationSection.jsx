@@ -12,7 +12,6 @@ import FormationLineup from "../FormationLineup";
 import PlatoonSergeantReview from "../PlatoonSergeantReview";
 import DocumentIntelligenceBriefing from "../DocumentIntelligenceBriefing";
 import MusterCallCompletionSummary from "./MusterCallCompletionSummary";
-import { PROCESSING_STATES } from "../../utils/musterCallProcessor";
 
 // Conflict detection is not yet implemented for Muster Call, so this is
 // always empty — but it MUST be a stable reference. DocumentIntelligenceBriefing's
@@ -45,7 +44,7 @@ function FormationProcessingStatus({ stats, formation }) {
 export default function MusterCallFormationSection({
   shouldShowFormation,
   showProcessingView,
-  processingState,
+  showCompletionSummary,
   formationQueue,
   ai,
   flow,
@@ -96,7 +95,7 @@ export default function MusterCallFormationSection({
         </div>
       )}
 
-      {processingState === PROCESSING_STATES.COMPLETE && (
+      {showCompletionSummary && (
         <MusterCallCompletionSummary formation={formation} />
       )}
 

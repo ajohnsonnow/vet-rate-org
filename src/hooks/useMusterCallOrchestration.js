@@ -78,6 +78,9 @@ export const useMusterCallOrchestration = ({
   const showProcessingView =
     flow.activeEntry && flow.currentProgress && !flow.showIntelBriefing;
 
+  const showCompletionSummary =
+    useSequentialMode && processingState === PROCESSING_STATES.COMPLETE;
+
   /**
    * Start processing files (dispatches to Formation or legacy batch mode)
    */
@@ -110,6 +113,7 @@ export const useMusterCallOrchestration = ({
     batch,
     shouldShowFormation,
     showProcessingView,
+    showCompletionSummary,
     handleStartProcessing,
     handleReset,
   };
