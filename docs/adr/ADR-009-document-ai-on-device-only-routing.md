@@ -3,6 +3,7 @@
 **Status:** Accepted.
 **Date:** 2026-09-29/30.
 **Decided under:** owner decision E, 2026-09-29 ("RAW DOCUMENTS STAY ON THE DEVICE").
+**Amended by:** decision F, 2026-10-01 (§3) - the AI is never the source of a DD-214 identifier field.
 **Amends:** ADR-008 §4's first open issue (BlueButtonXRay/cfileAnalyzer/MyPacket's pasted-DD214 first-mention identifier gap) - see §5 below. Does not change ADR-008's own redaction mechanism (`_redactPiecesForSend`/`redactKnownValues`), which still runs on every `"context"`-classed call, on every backend.
 
 ## 1. Context
@@ -47,7 +48,7 @@ A `"context"`-classed call is never blocked by any of the above; it reaches what
 
 ### 2.3 The `onDevice` response contract
 
-Every `generateAI` response - success, validation-failed, or a fallback result - carries `onDevice: true | false`, computed from the engine/host that actually generated the response (`_isModeOnDevice(usedMode)`; for `LOCAL_SERVER` this re-checks the live host, same as §2.1). Consumers must treat anything other than a strict `true` as off-device (fail closed) - this is the contract the parser-side work (DD214Analyzer's regex safety net) reads to decide whether it's safe to trust an on-device response for identifier fields.
+Every `generateAI` response - success, validation-failed, or a fallback result - carries `onDevice: true | false`, computed from the engine/host that actually generated the response (`_isModeOnDevice(usedMode)`; for `LOCAL_SERVER` this re-checks the live host, same as §2.1). Consumers must treat anything other than a strict `true` as off-device (fail closed) - this flag no longer decides anything about identifier fields (decision F, §3: the model is never their source), but stays the contract for any consumer that needs to know where a response was generated.
 
 ### 2.4 UX: the fallback a document feature shows
 
@@ -61,11 +62,23 @@ When no on-device engine is available, a document feature:
 
 When an on-device engine **is** available, the feature works exactly as before - the document is sent to the on-device engine and the AI-derived result is shown.
 
-## 3. Identifier fields inside a document call
+## 3. Identifier fields inside a document call - decision F: the AI is never the source
 
-Decision E allows an on-device `"document"` call's prompt to request identifier fields again (name, DOB, SSN last 4, home of record, mailing address) - nothing leaves the device, so ADR-008's "no direct identifier in an AI context" rule doesn't apply to this specific, on-device-only case. **This ADR does not change DD214Analyzer.jsx's prompt schema or `_applyRegexSafetyNet`'s merge behavior** (still identifier-free, still local-regex-only per D15-1d) - that change is scoped to the parser track, which owns `_applyRegexSafetyNet` and will consume the `onDevice` contract from §2.3 when it lands. See openIssues.
+**Decision F (owner, 2026-10-01) supersedes the earlier text of this section**, which let an on-device `"document"` call request identifier fields (name, DOB, SSN last 4, home of record, mailing address) on the reasoning that nothing leaves the device. That reasoning was about privacy; the measured problem is correctness.
 
-An off-device prompt for a document never exists at all under this ADR - there is no code path where a `"document"`-classed call's prompt reaches an off-device backend, so the question of what that prompt may ask for is moot.
+**Why (measured wrong-value rate).** Three evaluation rounds on the owner's own scans showed the on-device model invents identifier values. On the final run of 5 scans the DD-214 Analyzer filled 14 of 25 identifier fields and **10 of those 14 were wrong**, some with values that appear nowhere in the document, and every one was pre-selected for profile import. A wrong identifier written to a veteran's profile is worse than a blank one, so no amount of "trusted device" framing justifies it.
+
+**Rule.** The AI is never the source of an identifier field. Name (and its parts), date of birth, SSN (any part), service number, home of record and mailing address, shown or saved by the DD-214 Analyzer, come only from `dd214FieldExtractor.js` when its parser is confident. Otherwise the field is empty and the veteran types it in. Specifically:
+
+- Neither DD-214 AI prompt (on-device or the cloud-sized one) asks for any identifier field, and the on-device prompt tells the model to omit them.
+- A model that returns one anyway has it dropped when the response is parsed (`_parseDd214Json`), and `_applyRegexSafetyNet` rebuilds every identifier field from the local parser alone. The `onDevice` response flag no longer changes this - an on-device model's value is not kept either.
+- The extractor is confident-or-empty for every identifier field: a value made only of the form's own printed label or instruction wording (CITY, STATE, COMPLETE, ADDRESS, IF KNOWN, ZIP CODE, HOME OF RECORD...) is rejected, a home of record must have a plausible city/state shape, and a mailing address must carry a digit or a city/state shape.
+- An empty identifier is a text box in the results panel. What the veteran types is stored on the result and always wins; it is offered to the profile import but never pre-selected.
+- Nothing identifier-related is pre-selected in the profile import dialog, whatever its source. Model responses, OCR text and extracted identifiers are never written to the browser console, so they cannot land in a captured bug report.
+
+Non-identifier AI extraction (service dates, character of service, MOS, awards, deployments and so on) is unchanged.
+
+An off-device prompt for a document never exists at all under this ADR - there is no code path where a `"document"`-classed call's prompt reaches an off-device backend, so the question of what that prompt may ask for is moot. Decision F is why the on-device prompt no longer asks for them either. See [ADR-008](./ADR-008-ai-context-data-minimisation.md) for the matching rule on stored data.
 
 ## 4. Inventory: every `generateAI`/`generateAIWithImage` call site in `src/`
 
@@ -134,7 +147,7 @@ End-to-end (`tests/e2e/adr009-document-routing.spec.ts`, `vite --mode e2e`'s fak
 
 ## 8. Open issues (not built in this pass, flagged for the owner)
 
-- **DD214Analyzer's on-device prompt still excludes identifier fields.** Decision E permits requesting them again on an on-device call (§3), but `_applyRegexSafetyNet` (owned by the parser track, not touched here) still unconditionally overwrites any AI-supplied identifier field with the local regex parser's value regardless of `onDevice` - so adding identifiers back to the prompt today would be pure wasted work with zero observable effect until the parser track's merge logic becomes `onDevice`-aware. Do this together once that lands.
+- **RESOLVED by decision F (2026-10-01): DD214Analyzer's on-device prompt excludes identifier fields, permanently.** The earlier plan to request them again on an on-device call and trust the `onDevice` flag was dropped after the measured wrong-value rate in §3.
 - **Pathfinder's fail-closed-to-document default blocks a text-only veteran.** See §6 - `pathfinderEngine.js` cannot currently distinguish "additionalContext is free-typed notes" from "additionalContext is OCR'd document text" at the call site. A real fix (e.g. a separate flag `Pathfinder.jsx` sets when `additionalContext` actually came from `analyzeDocument`) is a product/UX call, not made unilaterally here.
 - **`dualLLM.js`'s document-by-default has exactly one live caller today** (`legalAnswerer.js`'s eCFR RAG path, via `AskTheRegs.jsx`'s override to `"context"`). Its conservative default is intentional (see its own header comment on future document-analysis use), but is untested against a _second_ real document-classed caller, since none exists yet.
 - **The e2e suite's Muster Call coverage is boundary-level, not UI-level** (see §7) - a regression in `quickScanCFile`'s classification heuristic that stopped a genuine consolidated C-File from ever reaching `buildSegmentedCFileResult` in the first place would not be caught by this suite. That heuristic (and its 50-page/multi-type threshold) predates this ADR and is unrelated to data-class routing.

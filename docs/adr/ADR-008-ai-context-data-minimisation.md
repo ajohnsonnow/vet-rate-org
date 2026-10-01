@@ -4,6 +4,7 @@
 **Date:** 2026-09-28 (final14); amended 2026-09-29 (final15 QA review - D15-1/D15-2, see §2.4.1/§2.6/§3/§4); amended 2026-09-30 (see §4's first bullet - ADR-009 decision E).
 **Decided under:** the owner's standing direction, "best practice for every decision; protect veteran data always" (decision D, final14 QA pass).
 **Amends:** ADR-002 (generateLLMContext remains the one flattener for shape 2, but its output is no longer identity-bearing), ADR-007 §7 (`serviceEntryConsistency.integration.test.jsx`'s AI-context assertions still hold; they never asserted on personal identifiers).
+**Cross-reference (decision F, 2026-10-01):** the same principle applies on the way IN - the AI is never the source of a DD-214 identifier field; see [ADR-009 §3](./ADR-009-document-ai-on-device-only-routing.md#3-identifier-fields-inside-a-document-call---decision-f-the-ai-is-never-the-source). Amended 2026-10-01 for §2.9 (D20-5).
 **Amended by:** [ADR-009](./ADR-009-document-ai-on-device-only-routing.md) (decision E, 2026-09-29/30) - raw document text (including a document's first-ever mention of an identifier, §4 below) can no longer reach an off-device provider at all, via a separate fail-closed provider-routing boundary. ADR-009 does not change this ADR's own redaction mechanism (`_redactPiecesForSend`/`redactKnownValues`), which still runs on every `"context"`-classed call, on every backend.
 
 ## 1. Context
@@ -83,6 +84,16 @@ Beyond the pattern-based address block, `redactLabeledBoxValues` and `redactLett
 
 `buildClaimsHistoryContext` labels a claim by its condition(s)/claim type and decision (or filed) date - never a claim number, and never the literal string "null"/"undefined" for a missing one (D14-2).
 
+### 2.9 An empty or unavailable identifier set is a failure for off-device sends (D20-5)
+
+`_redactPiecesForSend` used to trust the identifier loader. When it threw before any successful load, or returned an EMPTY identifier set without throwing, known-value redaction had nothing to match, so a typed name and a typed ISO date of birth reached the off-device body. Now:
+
+- Identifiers are loaded from every source independently, so one failing source never hides another: VKB `.personal`, the flat legacy profile, and the last copy that loaded successfully this session.
+- If no identifier is available from any source (loader threw, or silently returned nothing), the full aggressive pattern scrubber runs on every piece on top of whatever known values exist, and a `[ADR-008] _redactPiecesForSend` warning is recorded. A healthy load with identifiers on file behaves as before.
+- The scrubber's labeled-DOB pattern now accepts any common date format after the label ("born 1984-03-15", "born 15 Mar 1984", "DOB: 03/15/1984", "date of birth 19840315"), and the unlabeled space-separated SSN is caught again with audiogram frequency/threshold rows (D20-7) excluded by context rather than shape.
+
+**Limit, stated plainly:** a name this app has never seen cannot be recognised. A name has no shape, so when the app holds no stored identifier for the veteran (a cold start with nothing in the VKB or profile, or a name typed about a third person), a name typed into a message goes to an off-device provider as typed. The pattern scrubber covers values that have a shape (SSN, DOB, address, phone, email) and nothing more. The only protection for a first-mention name is that raw documents never go off-device at all (ADR-009), and that the veteran's own typed words are the one thing a `"context"` call is allowed to carry.
+
 ## 3. Consequences
 
 Positive:
@@ -101,7 +112,7 @@ Visible behavior changes:
 
 Costs:
 
-- Two more IndexedDB round-trips (`loadVKB`) per statement-helper AI call and per `getVeteranAIContext`/`generatePacketContext` invocation, to gather identifiers for the final redaction pass. Best-effort: an identifier-load failure never blocks the AI call itself, it just means nothing to redact against for that one call.
+- Two more IndexedDB round-trips (`loadVKB`) per statement-helper AI call and per `getVeteranAIContext`/`generatePacketContext` invocation, to gather identifiers for the final redaction pass. Best-effort: an identifier-load failure never blocks the AI call itself; it now falls back to the aggressive pattern scrubber plus a warning instead of nothing (§2.9).
 - `aiSystemPrompts.js`'s dead `myPacketData`/`MY_PACKET_CONTEXT_PROMPT` path (zero live callers, confirmed by grep, owner-approved for deletion) is removed along with its dead default export.
 
 Risks:
