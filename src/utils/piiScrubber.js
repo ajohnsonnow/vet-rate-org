@@ -161,6 +161,17 @@ const _STATE_NAME_SRC = [
   "Wyoming",
 ].join("|");
 
+const _DOB_MONTH_SRC =
+  "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]{0,10}\\.?";
+const _DOB_DATE_SRC =
+  "(?:" +
+  "\\d{4}[/.-]\\d{1,2}[/.-]\\d{1,2}" +
+  "|\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}" +
+  `|\\d{1,2}(?:st|nd|rd|th)?[\\s-]{1,5}${_DOB_MONTH_SRC},?[\\s-]{1,5}\\d{2,4}` +
+  `|${_DOB_MONTH_SRC}\\s{1,5}\\d{1,2}(?:st|nd|rd|th)?,?\\s{1,5}\\d{2,4}` +
+  "|\\d{8}" +
+  ")";
+
 // Pattern application order matters: longest / most-specific first so the
 // less-specific catchalls don't consume tokens they shouldn't. Listed in the
 // order `scrubPII` applies them.
@@ -318,9 +329,18 @@ const PII_PATTERNS = {
   // PII-detection pattern; a same-session rewrite risks silently narrowing
   // what counts as a DOB (i.e. a PII leak). Deserves a dedicated pass with
   // fixture-based before/after matching, not a rushed simplification.
-  dobLabeled:
-    // eslint-disable-next-line sonarjs/regex-complexity -- flagged on alternation count (the 12 month names), not nesting; see docs/SONARQUBE.md S8786 note for the bounding rationale applied here
-    /\b(?:DOB|D\.O\.B\.|date\s{1,5}of\s{1,5}birth|born(?:\s{1,5}on)?)\s{0,5}:?\s{0,5}(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]{0,10}\.?\s{1,5}\d{1,2},?\s{1,5}\d{2,4})\b/gi,
+  // D20-5: a label followed by ANY common date format - ISO (YYYY-MM-DD,
+  // YYYY/MM/DD), US/EU numeric, "DD Mon YYYY", "Mon DD, YYYY" and bare
+  // YYYYMMDD. The earlier version only knew MM/DD/YYYY and "Mon DD YYYY", so
+  // "born 1984-03-15" / "DOB: 15 Mar 1984" went straight through.
+  dobLabeled: new RegExp(
+    `\\b(?:DOB|D\\.O\\.B\\.|date\\s{1,5}of\\s{1,5}birth|born(?:\\s{1,5}on)?)(?:\\s{1,5}(?:is|was))?\\s{0,5}[:=-]?\\s{0,5}${_DOB_DATE_SRC}\\b`,
+    "gi",
+  ),
+  // D20-7: an unlabeled space-separated SSN (3-2-4 digit groups). Whether a
+  // match is really an SSN or an audiogram row is decided from its context in
+  // `_applyContextualDigitShape`, not by the pattern.
+  ssnSpaced: /(?<![\d.,/-])\b\d{3}[ \t]\d{2}[ \t]\d{4}\b(?![.,/-]?\d)/g,
   dob: [
     /\b(0[1-9]|1[0-2])[/-](0[1-9]|[12]\d|3[01])[/-](\d{2}|\d{4})\b/g, // MM/DD/YYYY
     /\b(0[1-9]|[12]\d|3[01])[/-](0[1-9]|1[0-2])[/-](\d{2}|\d{4})\b/g, // DD/MM/YYYY
@@ -1115,10 +1135,15 @@ export const containsSignificantNonLatin = (text) => {
 // extracted so scrubPII itself stays under the line-count limit. Takes the
 // caller's `applyPattern` closure directly, so it still mutates scrubPII's
 // own `scrubbed`/`piiFound`/`details` state exactly as if inlined.
-function _applyPhoneMrnEdipiVaFile(applyPattern, aggressive, preservePartial) {
-  // 2. Phones (10 digits with separators or international).
+function _applyPhoneMrnEdipiVaFile(
+  { applyPattern, applyContextual },
+  aggressive,
+  preservePartial,
+) {
+  // 2. Phones (10 digits with separators or international) - but not an
+  //    audiogram row, which has the same 3-3-4 shape ("250 500 1000").
   PII_PATTERNS.phone.forEach((pattern) => {
-    applyPattern(pattern, "Phone", (match) => {
+    applyContextual(pattern, "Phone", _isAudiogramRow, (match) => {
       if (!preservePartial) return "[REDACTED_PHONE]";
       const digits = match.replace(/\D/g, "");
       return `XXX-XXX-${digits.slice(-4)}`;
@@ -1155,16 +1180,152 @@ function _ocrSsnDigitDensity(match) {
 // digit look-alikes (O/o/I/l). A bespoke step (not the generic
 // applyPattern helper) because it needs to know how many matches were
 // ACTUALLY plausible, not just how many the regex found.
-function _applySsnOcrGarbled(scrubbed) {
-  const matches = scrubbed.match(reset(PII_PATTERNS.ssnOcrGarbled)) || [];
-  const plausibleCount = matches.filter(
-    (m) => _ocrSsnDigitDensity(m) >= 0.55,
-  ).length;
-  if (plausibleCount === 0) return { scrubbed, count: 0 };
-  const next = scrubbed.replace(reset(PII_PATTERNS.ssnOcrGarbled), (m) =>
-    _ocrSsnDigitDensity(m) >= 0.55 ? "[REDACTED_SSN]" : m,
+function _skipGarbledSsn(line, match) {
+  return (
+    _ocrSsnDigitDensity(match) < 0.55 ||
+    (/^[\d\s.\-_|,:]+$/.test(match) && _isAudiogramRow(line, match))
   );
-  return { scrubbed: next, count: plausibleCount };
+}
+
+// Steps 5/5b of scrubPII: canonical hyphenated and spaced SSN (an audiogram
+// row of the same shape is spared), bare 9-digit only in aggressive mode, and
+// the OCR-garbled form (always on - the grouping shape plus digit-density
+// check is its own anchor; see _skipGarbledSsn).
+function _applySsnPatterns(
+  { applyPattern, applyContextual },
+  aggressive,
+  preservePartial,
+) {
+  const redactSsnMatch = (match) => {
+    if (!preservePartial) return "[REDACTED_SSN]";
+    const digits = match.replace(/\D/g, "");
+    return `XXX-XX-${digits.slice(-4)}`;
+  };
+  [PII_PATTERNS.ssn, PII_PATTERNS.ssnSpaced].forEach((pattern) =>
+    applyContextual(pattern, "SSN", _isAudiogramRow, redactSsnMatch),
+  );
+  if (aggressive) {
+    applyPattern(PII_PATTERNS.ssnBare, "SSN", "[REDACTED_SSN]");
+  }
+  applyContextual(
+    PII_PATTERNS.ssnOcrGarbled,
+    "SSN",
+    _skipGarbledSsn,
+    () => "[REDACTED_SSN]",
+  );
+}
+
+// D20-7: audiogram rows are digit runs shaped exactly like a credit card
+// ("1000 2000 3000 4000", the standard frequency header), a phone number
+// ("250 500 1000") or an SSN ("500 25 1000" / "500-25-1000", frequency / dB
+// threshold / frequency). Real identifiers are told apart by context, never by
+// shape alone: every number involved is a standard test frequency or a dB
+// threshold (a multiple of 5), or the row carries more than three numbers that
+// all are.
+const _AUDIOGRAM_FREQS = new Set([
+  125, 250, 500, 750, 1000, 1500, 2000, 3000, 4000, 6000, 8000,
+]);
+const _AUDIOGRAM_KEYWORDS =
+  /\b(?:Hz|kHz|dB|audiogram|audiometry|audiometric|thresholds?|frequenc(?:y|ies)|pure[- ]tone)\b/i;
+
+const _isAudiogramNumber = (n) =>
+  _AUDIOGRAM_FREQS.has(n) || (n % 5 === 0 && n <= 120);
+
+function _lineAround(text, offset, length) {
+  const start = text.lastIndexOf("\n", offset - 1) + 1;
+  const end = text.indexOf("\n", offset + length);
+  return text.slice(start, end === -1 ? text.length : end);
+}
+
+function _isAudiogramRow(line, match) {
+  const groups = match.match(/\d+/g).map(Number);
+  if (groups.every(_isAudiogramNumber)) return true;
+  const numbers = (line.match(/\d+/g) || []).map(Number);
+  return numbers.length > 3 && numbers.every(_isAudiogramNumber);
+}
+
+function _passesLuhn(digits) {
+  let sum = 0;
+  [...digits].reverse().forEach((ch, i) => {
+    let d = Number(ch);
+    if (i % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  });
+  return sum % 10 === 0;
+}
+
+// A 16-digit run is left alone only when it is an audiogram row: every group
+// a standard frequency/threshold, or audiogram wording on the line and the
+// digits fail the card checksum. A Luhn-valid number on an audiogram line is
+// still redacted.
+function _isAudiogramCardShape(line, match) {
+  const groups = match.match(/\d+/g).map(Number);
+  if (groups.every(_isAudiogramNumber)) return true;
+  return (
+    _AUDIOGRAM_KEYWORDS.test(line) && !_passesLuhn(match.replace(/\D/g, ""))
+  );
+}
+
+function _applyContextualDigitShape(
+  scrubbed,
+  pattern,
+  shouldSkip,
+  replacement,
+) {
+  let count = 0;
+  const next = scrubbed.replace(reset(pattern), (match, ...rest) => {
+    const offset = rest.at(-2);
+    if (shouldSkip(_lineAround(scrubbed, offset, match.length), match)) {
+      return match;
+    }
+    count += 1;
+    return replacement(match);
+  });
+  return { scrubbed: next, count };
+}
+
+// Steps 1-5 of scrubPII, in their load-bearing order.
+function _applyCardDobPhoneSsnPatterns(appliers, aggressive, preservePartial) {
+  const { applyPattern, applyContextual } = appliers;
+  // 1. Credit cards (16 digits) — highest specificity - except an audiogram
+  //    row, which has the same shape (see _isAudiogramCardShape).
+  applyContextual(
+    PII_PATTERNS.creditCard,
+    "Credit Card",
+    _isAudiogramCardShape,
+    () => "[REDACTED_CC]",
+  );
+  // 1b. A labeled DOB before any bare-digit pattern can claim its digits
+  //     (an 8-digit "date of birth 19840315" is a DOB, not a file number).
+  applyPattern(PII_PATTERNS.dobLabeled, "Date of Birth", "[REDACTED_DOB]");
+  _applyPhoneMrnEdipiVaFile(appliers, aggressive, preservePartial);
+  _applySsnPatterns(appliers, aggressive, preservePartial);
+}
+
+// Steps 7-8 of scrubPII. Email runs late because @ doesn't overlap with the
+// numeric patterns; the labeled DOB form is handled earlier (step 1b), bare
+// numeric DOBs only in aggressive mode.
+function _applyEmailAndBareDobPatterns(
+  applyPattern,
+  aggressive,
+  preservePartial,
+) {
+  applyPattern(PII_PATTERNS.email, "Email", (match) => {
+    if (!preservePartial) return "[REDACTED_EMAIL]";
+    const [user, domain] = match.split("@");
+    return `${user[0]}***@${domain}`;
+  });
+  // OCR-garbled email (spaced-out @ / . characters).
+  applyPattern(PII_PATTERNS.emailOcrSpaced, "Email", "[REDACTED_EMAIL]");
+
+  if (aggressive) {
+    PII_PATTERNS.dob.forEach((pattern) => {
+      applyPattern(pattern, "Date of Birth", "[REDACTED_DOB]");
+    });
+  }
 }
 
 export const scrubPII = (text, options = {}) => {
@@ -1207,48 +1368,23 @@ export const scrubPII = (text, options = {}) => {
     scrubbed = scrubbed.replace(reset(pattern), replacer);
   };
 
-  // 1. Credit cards (16 digits) — highest specificity.
-  applyPattern(PII_PATTERNS.creditCard, "Credit Card", "[REDACTED_CC]");
+  const applyContextual = (pattern, type, shouldSkip, replacement) => {
+    const r = _applyContextualDigitShape(
+      scrubbed,
+      pattern,
+      shouldSkip,
+      replacement,
+    );
+    scrubbed = r.scrubbed;
+    if (r.count > 0) {
+      piiFound = true;
+      details.push({ type, count: r.count });
+    }
+  };
 
-  _applyPhoneMrnEdipiVaFile(applyPattern, aggressive, preservePartial);
-
-  // 5. SSN — canonical form always; bare 9-digit form only in aggressive
-  //    mode to avoid swallowing veteran-specific IDs already handled above.
-  applyPattern(PII_PATTERNS.ssn, "SSN", (match) => {
-    if (!preservePartial) return "[REDACTED_SSN]";
-    const digits = match.replace(/\D/g, "");
-    return `XXX-XX-${digits.slice(-4)}`;
-  });
-  if (aggressive) {
-    applyPattern(PII_PATTERNS.ssnBare, "SSN", "[REDACTED_SSN]");
-  }
-
-  // 5b. OCR-garbled SSN (letter-for-digit substitution) - always on, since
-  //     the grouping shape plus digit-density check is its own anchor
-  //     (see _applySsnOcrGarbled).
-  const ssnOcrResult = _applySsnOcrGarbled(scrubbed);
-  scrubbed = ssnOcrResult.scrubbed;
-  if (ssnOcrResult.count > 0) {
-    piiFound = true;
-    details.push({ type: "SSN", count: ssnOcrResult.count });
-  }
-
-  // 7. Email — late because @ doesn't overlap with the numeric patterns.
-  applyPattern(PII_PATTERNS.email, "Email", (match) => {
-    if (!preservePartial) return "[REDACTED_EMAIL]";
-    const [user, domain] = match.split("@");
-    return `${user[0]}***@${domain}`;
-  });
-  // 7b. OCR-garbled email (spaced-out @ / . characters).
-  applyPattern(PII_PATTERNS.emailOcrSpaced, "Email", "[REDACTED_EMAIL]");
-
-  // 8. DOB — labeled form always, bare numeric only in aggressive mode.
-  applyPattern(PII_PATTERNS.dobLabeled, "Date of Birth", "[REDACTED_DOB]");
-  if (aggressive) {
-    PII_PATTERNS.dob.forEach((pattern) => {
-      applyPattern(pattern, "Date of Birth", "[REDACTED_DOB]");
-    });
-  }
+  const appliers = { applyPattern, applyContextual };
+  _applyCardDobPhoneSsnPatterns(appliers, aggressive, preservePartial);
+  _applyEmailAndBareDobPatterns(applyPattern, aggressive, preservePartial);
 
   // 9-10. Always-on label/letter-anchored first-mention protection
   //       (D15-1b) plus the full US address block (D15-1a, also always-on
