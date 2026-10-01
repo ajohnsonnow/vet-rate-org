@@ -410,6 +410,93 @@ test.describe("ADR-009: DD-214 Analyzer document routing", () => {
   });
 });
 
+const PLANTED_PATTERN =
+  /PLANTEDNAME|ALIASNAME|NESTEDNAME|987-65-432|1971-07-08|111-22-3333/;
+
+// Every record in every IndexedDB database, as one JSON string.
+async function dumpIndexedDb(page: Page): Promise<string> {
+  return page.evaluate(async () => {
+    const out: unknown[] = [];
+    const dbs = await indexedDB.databases();
+    for (const info of dbs) {
+      if (!info.name) continue;
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const req = indexedDB.open(info.name as string);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      for (const store of Array.from(db.objectStoreNames)) {
+        const rows = await new Promise<unknown[]>((resolve, reject) => {
+          const req = db
+            .transaction(store, "readonly")
+            .objectStore(store)
+            .getAll();
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        out.push({ db: info.name, store, rows });
+      }
+      db.close();
+    }
+    return JSON.stringify(out);
+  });
+}
+
+function findPersonalObjects(node: unknown, found: unknown[] = []): unknown[] {
+  if (node && typeof node === "object") {
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "personal") found.push(value);
+      findPersonalObjects(value, found);
+    }
+  }
+  return found;
+}
+
+test.describe("ADR-009 decision F: a wrong model identifier is never shown, saved or logged", () => {
+  test("planted identifiers under canonical, alias and nested keys, import with every identifier unticked", async ({
+    page,
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
+    test.setTimeout(90000);
+    const consoleText: string[] = [];
+    page.on("console", (msg) => consoleText.push(msg.text()));
+    await shimFakeGpuAdapter(page);
+    await bootApp(page, { withCloudKey: false });
+
+    await openToolDialog(page, "openDD214Analyzer", DD214_DIALOG);
+    const dialog = page.locator(DD214_DIALOG);
+    await dialog
+      .locator("textarea")
+      .first()
+      .fill(DD214_FIXTURE_TEXT("E2E_PLANT_WRONG_IDENTIFIERS"));
+    await loadFakeOnDeviceAI(page);
+    await dialog.getByRole("button", { name: /Analyze with AI/i }).click();
+    await expect(dialog.getByText(/Analysis Complete/i)).toBeVisible({
+      timeout: 20000,
+    });
+
+    await page.getByRole("button", { name: /Import Selected Fields/i }).click();
+    await expect(
+      page.getByRole("button", { name: /Import Selected Fields/i }),
+    ).toBeHidden({ timeout: 20000 });
+
+    await expect(dialog.getByLabel("Full Name")).toHaveValue(/TESTFIXTURE/);
+    expect(await dialog.innerText()).not.toMatch(PLANTED_PATTERN);
+
+    const dump = await dumpIndexedDb(page);
+    expect(dump).not.toMatch(PLANTED_PATTERN);
+    const personalObjects = findPersonalObjects(JSON.parse(dump));
+    expect(personalObjects.length).toBeGreaterThan(0);
+    const personal = JSON.stringify(personalObjects);
+    expect(personal).not.toMatch(/TESTFIXTURE|6789|1990/);
+
+    expect(consoleText.length).toBeGreaterThan(0);
+    const logged = consoleText.join(" | ");
+    expect(logged).not.toMatch(PLANTED_PATTERN);
+    expect(logged).not.toMatch(/TESTFIXTURE|123 45 6789/);
+  });
+});
+
 const CFILE_DIALOG = '[role="dialog"][aria-labelledby="cfile-analyzer-title"]';
 const CFILE_CONSENT_DIALOG =
   '[role="dialog"][aria-labelledby="cfile-privacy-title"]';

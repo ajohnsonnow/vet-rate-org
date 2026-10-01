@@ -732,6 +732,7 @@ export function _parseDd214Json(content, t) {
       data.mosTitle = String(data.mosTitle);
     }
     _stripModelIdentifiers(data);
+    _keepModelSchemaFields(data);
   } catch {
     // V8's JSON.parse message quotes a snippet of the input, so it is never
     // logged - only the length.
@@ -785,6 +786,66 @@ export function _stripModelIdentifiers(data) {
   return data;
 }
 
+// An allowlist, not a denylist: a model that files a name or SSN under a key
+// the schema never asked for ("SSN", "veteranName", a nested "personal"
+// object) must not reach the saved record. Only the keys the two prompts
+// request survive, and their values are never re-read as identifiers.
+const MODEL_SCHEMA_KEYS = new Set([
+  "documentCount",
+  "documentTypes",
+  "masterRecordDate",
+  "masterRecordType",
+  "placeOfBirth",
+  "component",
+  "componentFull",
+  "branch",
+  "rank",
+  "payGrade",
+  "dateOfRank",
+  "mos",
+  "mosTitle",
+  "lastDutyAssignment",
+  "commandTransferredTo",
+  "sglCoverage",
+  "entryDate",
+  "separationDate",
+  "netActiveService",
+  "totalPriorActiveService",
+  "totalPriorInactiveService",
+  "yearsService",
+  "monthsService",
+  "daysService",
+  "reserveObligationDate",
+  "daysLost",
+  "foreignService",
+  "foreignServiceDetails",
+  "seaService",
+  "militaryEducation",
+  "separationAuthority",
+  "separationCode",
+  "separationProgramDesignator",
+  "reentryCode",
+  "separationType",
+  "characterOfService",
+  "narrativeReason",
+  "giBlStatus",
+  "memberRequests",
+  "awards",
+  "combatService",
+  "specialQualifications",
+  "securityClearance",
+  "reenlisted",
+  "dd214Count",
+  "extractionNotes",
+]);
+
+export function _keepModelSchemaFields(data) {
+  Object.keys(data).forEach((key) => {
+    if (!MODEL_SCHEMA_KEYS.has(key)) delete data[key];
+  });
+  return data;
+}
+
 function _applyIdentifierFieldsFromLocalParser(data, regexFields) {
   _stripModelIdentifiers(data);
   IDENTIFIER_FIELDS.forEach((key) => {
@@ -795,6 +856,7 @@ function _applyIdentifierFieldsFromLocalParser(data, regexFields) {
 }
 
 function _mergeRegexIntoData(data, combinedRawText) {
+  _keepModelSchemaFields(data);
   let regexResult = null;
   try {
     regexResult = extractDD214Fields(combinedRawText);
@@ -980,21 +1042,39 @@ export function _saveDd214ToProfile(
   }
 }
 
-async function _saveDd214ToVkb(analysisResult, combinedText, extractedTexts) {
+// Owner decision (F): identifiers reach the Knowledge Base only when the
+// veteran ticked the matching import box.
+function _selectedVkbIdentifiers(analysisResult, selectedFields = {}) {
+  const picked = (key) => _hasValue(selectedFields[key]);
+  const nameSelected =
+    picked("fullName") || picked("lastName") || picked("firstName");
+  const fullName =
+    analysisResult.fullName ||
+    `${analysisResult.lastName || ""}, ${analysisResult.firstName || ""}`.replace(
+      /^, |, $/g,
+      "",
+    );
+  return {
+    fullName: nameSelected ? fullName : undefined,
+    name: nameSelected ? fullName : undefined,
+    ssn: picked("ssnLast4") ? analysisResult.ssnLast4 : undefined,
+    ssnLast4: picked("ssnLast4") ? analysisResult.ssnLast4 : undefined,
+    dateOfBirth: picked("dateOfBirth") ? analysisResult.dateOfBirth : undefined,
+    mailingAddress: picked("homeAddress") ? analysisResult.homeAddress : null,
+  };
+}
+
+export async function _saveDd214ToVkb(
+  analysisResult,
+  combinedText,
+  extractedTexts,
+  selectedFields,
+) {
   // This makes ALL extracted DD214 data available to every AI tool
   try {
     // Build comprehensive data object for VKB merge
     const vkbData = {
-      fullName:
-        analysisResult.fullName ||
-        `${analysisResult.lastName || ""}, ${analysisResult.firstName || ""}`.replace(
-          /^, |, $/g,
-          "",
-        ),
-      name: analysisResult.fullName || analysisResult.name,
-      ssn: analysisResult.ssnLast4 || analysisResult.ssn,
-      ssnLast4: analysisResult.ssnLast4,
-      dateOfBirth: analysisResult.dateOfBirth,
+      ..._selectedVkbIdentifiers(analysisResult, selectedFields),
       branch: analysisResult.branch,
       component: analysisResult.component || analysisResult.componentFull,
       rank: analysisResult.rank,
@@ -1021,7 +1101,6 @@ async function _saveDd214ToVkb(analysisResult, combinedText, extractedTexts) {
       deployments: analysisResult.deployments || [],
       combatService: analysisResult.combatService || null,
       specialQualifications: analysisResult.specialQualifications || [],
-      mailingAddress: analysisResult.homeAddress || null,
     };
 
     // Determine filename for tracking
@@ -2898,7 +2977,12 @@ function _buildDd214SaveHandlers(state) {
 
       // ── 2. SAVE TO VETERAN KNOWLEDGE BASE (VKB) ──
       // This makes ALL extracted DD214 data available to every AI tool
-      await _saveDd214ToVkb(analysisResult, combinedText, extractedTexts);
+      await _saveDd214ToVkb(
+        analysisResult,
+        combinedText,
+        extractedTexts,
+        selectedFields,
+      );
 
       // ── 3. SAVE TO MY PACKET (permanent archive) ──
       // This stores the full document text + structured data forever

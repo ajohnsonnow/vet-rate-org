@@ -43,6 +43,7 @@ const CFILE_JSON_MARKER = "potential_claims";
 // DD214Analyzer.jsx's two system prompts (LOCAL condensed / full) share this
 // exact phrase; DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL/DD214_ANALYSIS_SYSTEM_PROMPT.
 const DD214_JSON_MARKER = "military records analyst";
+const PLANT_IDENTIFIERS_MARKER = "E2E_PLANT_WRONG_IDENTIFIERS";
 
 // BlueButtonXRay.jsx's BLUE_BUTTON_AI_PROMPT_HEADER - sent as the main
 // (user-role) prompt, not a systemPrompt option, so this is matched against
@@ -98,7 +99,21 @@ function buildFakeCompletionText(systemContent, userContent) {
     });
   }
   if (systemContent.includes(DD214_JSON_MARKER)) {
+    // Opt-in (a marker in the document text): a model that invents identifiers
+    // under canonical, alias and nested keys, to prove none is shown or saved.
+    const planted = userContent.includes(PLANT_IDENTIFIERS_MARKER)
+      ? {
+          fullName: "PLANTEDNAME, WRONG",
+          ssnLast4: "0000",
+          SSN: "987-65-4322",
+          socialSecurityNumber: "987-65-4323",
+          DOB: "1971-07-08",
+          veteranName: "ALIASNAME, PLANTED",
+          personal: { fullName: "NESTEDNAME, PLANTED", ssn: "111-22-3333" },
+        }
+      : {};
     return JSON.stringify({
+      ...planted,
       documentCount: 1,
       documentTypes: ["DD214"],
       masterRecordType: "DD214",

@@ -147,6 +147,18 @@ describe("D20-4: model responses, OCR text and identifiers never reach the conso
     expect(loggedText(spies)).not.toContain(SENTINEL);
   });
 
+  it("_parseDd214Json does not forward a parser message that quotes the input", () => {
+    const spies = spyConsole();
+    vi.spyOn(JSON, "parse").mockImplementation(() => {
+      throw new SyntaxError(`Unexpected token in JSON: ${SENTINEL}`);
+    });
+    expect(() => _parseDd214Json(`{"a": 1}`, () => "parse error")).toThrow(
+      "parse error",
+    );
+    expect(spies[4]).toHaveBeenCalled();
+    expect(loggedText(spies)).not.toContain(SENTINEL);
+  });
+
   it("_applyRegexSafetyNet does not log OCR text or extracted identifiers", () => {
     const spies = spyConsole();
     _applyRegexSafetyNet(
