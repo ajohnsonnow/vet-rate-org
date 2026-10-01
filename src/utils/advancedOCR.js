@@ -93,6 +93,25 @@ function withTimeout(promise, ms, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+// Bounds a pdf.js render and cancels it on timeout so a stuck render stops
+// consuming CPU and memory after the page has been reported failed.
+async function renderWithTimeout(page, ctx, viewport, ms, label) {
+  const task = page.render({ canvasContext: ctx, viewport });
+  try {
+    await withTimeout(task.promise, ms, label);
+  } catch (error) {
+    if (error.isTimeout) {
+      try {
+        task.cancel?.();
+      } catch {
+        // already settled
+      }
+      task.promise?.catch?.(() => {});
+    }
+    throw error;
+  }
+}
+
 function releaseCanvas(canvas) {
   if (!canvas) return;
   canvas.width = 0;
@@ -454,7 +473,7 @@ async function ocrImageOnlyPages(
       progress: 10,
       message: `Preparing OCR for ${pagesToOcr.length} scanned page(s)...`,
     });
-    strategy = await detectOptimalStrategy(pdf, pagesToOcr[0]);
+    strategy = await detectOptimalStrategy(pdf, pagesToOcr[0], config);
     // eslint-disable-next-line no-console
     console.log(`🎯 Detected quality: ${strategy}`);
     ocrResults = await runAdvancedOCR(
@@ -488,8 +507,10 @@ async function isPageBlank(page, config) {
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await withTimeout(
-      page.render({ canvasContext: ctx, viewport }).promise,
+    await renderWithTimeout(
+      page,
+      ctx,
+      viewport,
       config.BLANK_CHECK_TIMEOUT_MS,
       "Blank-page check",
     );
@@ -639,62 +660,85 @@ function mergePageCoverageResult({
 /**
  * Detect optimal OCR strategy based on document quality
  */
-async function detectOptimalStrategy(pdf, pageNum = 1) {
+async function measureStrategyMetrics(pdf, pageNum, config) {
+  let canvas = null;
   try {
-    const page = await pdf.getPage(pageNum);
+    const page = await withTimeout(
+      pdf.getPage(pageNum),
+      config.OCR_PAGE_TIMEOUT_MS,
+      "Strategy page load",
+    );
     const viewport = page.getViewport({ scale: 1.5 });
-    const canvas = document.createElement("canvas");
+    canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     canvas.width = viewport.width;
     canvas.height = viewport.height;
+    await renderWithTimeout(
+      page,
+      ctx,
+      viewport,
+      config.OCR_PAGE_TIMEOUT_MS,
+      "Strategy render",
+    );
+    return analyzeImageQuality(
+      ctx.getImageData(0, 0, canvas.width, canvas.height),
+    );
+  } finally {
+    releaseCanvas(canvas);
+  }
+}
 
-    await page.render({ canvasContext: ctx, viewport }).promise;
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const metrics = analyzeImageQuality(imageData);
+function strategyFromMetrics(metrics) {
+  // Decision tree based on metrics - IMPROVED for aged documents
+  // Check for inverted text (white on dark)
+  if (metrics.isInverted) {
+    // eslint-disable-next-line no-console
+    console.log("🔄 Detected inverted text (white on dark background)");
+    return PREPROCESS_STRATEGIES.INVERTED;
+  }
 
-    canvas.remove();
+  // Severely degraded: very low contrast OR very faded (high brightness)
+  if (
+    metrics.contrast < 20 ||
+    (metrics.brightness > 220 && metrics.contrast < 40)
+  ) {
+    // eslint-disable-next-line no-console
+    console.log(
+      "⚠️ Severely degraded document detected - using maximum enhancement",
+    );
+    return PREPROCESS_STRATEGIES.SEVERELY_AGED;
+  }
 
+  // Poor quality: low contrast with high noise
+  if (metrics.contrast < 30) return PREPROCESS_STRATEGIES.POOR;
+
+  // Aged: yellowed or faded
+  if (metrics.brightness > 200 || metrics.brightness < 50) {
+    // Check if it's severely faded
+    if (metrics.contrast < 50) {
+      return PREPROCESS_STRATEGIES.SEVERELY_AGED;
+    }
+    return PREPROCESS_STRATEGIES.AGED;
+  }
+
+  if (metrics.noise > 40) return PREPROCESS_STRATEGIES.POOR;
+  if (metrics.contrast > 70 && metrics.noise < 20)
+    return PREPROCESS_STRATEGIES.CLEAN;
+  return PREPROCESS_STRATEGIES.STANDARD;
+}
+
+async function detectOptimalStrategy(
+  pdf,
+  pageNum = 1,
+  config = ADVANCED_OCR_CONFIG,
+) {
+  try {
+    const metrics = await measureStrategyMetrics(pdf, pageNum, config);
     // eslint-disable-next-line no-console
     console.log(
       `📊 Image quality metrics: brightness=${metrics.brightness.toFixed(0)}, contrast=${metrics.contrast.toFixed(0)}, noise=${metrics.noise.toFixed(0)}, inverted=${metrics.isInverted}`,
     );
-
-    // Decision tree based on metrics - IMPROVED for aged documents
-    // Check for inverted text (white on dark)
-    if (metrics.isInverted) {
-      // eslint-disable-next-line no-console
-      console.log("🔄 Detected inverted text (white on dark background)");
-      return PREPROCESS_STRATEGIES.INVERTED;
-    }
-
-    // Severely degraded: very low contrast OR very faded (high brightness)
-    if (
-      metrics.contrast < 20 ||
-      (metrics.brightness > 220 && metrics.contrast < 40)
-    ) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "⚠️ Severely degraded document detected - using maximum enhancement",
-      );
-      return PREPROCESS_STRATEGIES.SEVERELY_AGED;
-    }
-
-    // Poor quality: low contrast with high noise
-    if (metrics.contrast < 30) return PREPROCESS_STRATEGIES.POOR;
-
-    // Aged: yellowed or faded
-    if (metrics.brightness > 200 || metrics.brightness < 50) {
-      // Check if it's severely faded
-      if (metrics.contrast < 50) {
-        return PREPROCESS_STRATEGIES.SEVERELY_AGED;
-      }
-      return PREPROCESS_STRATEGIES.AGED;
-    }
-
-    if (metrics.noise > 40) return PREPROCESS_STRATEGIES.POOR;
-    if (metrics.contrast > 70 && metrics.noise < 20)
-      return PREPROCESS_STRATEGIES.CLEAN;
-    return PREPROCESS_STRATEGIES.STANDARD;
+    return strategyFromMetrics(metrics);
   } catch (error) {
     console.warn("Strategy detection failed, using STANDARD:", error);
     return PREPROCESS_STRATEGIES.STANDARD;
@@ -1135,11 +1179,7 @@ async function renderPageToCanvas(page, scale, timeoutMs) {
     canvas.width = viewport.width;
     canvas.height = viewport.height;
 
-    await withTimeout(
-      page.render({ canvasContext: ctx, viewport }).promise,
-      timeoutMs,
-      "Page render",
-    );
+    await renderWithTimeout(page, ctx, viewport, timeoutMs, "Page render");
     return canvas;
   } catch (error) {
     releaseCanvas(canvas);

@@ -22,6 +22,8 @@ const BASE_H = 52;
 const fake = vi.hoisted(() => ({
   pages: [],
   failRenderAboveScale: Infinity,
+  hangAtScale: null,
+  cancelRender: null,
   createWorker: null,
   addJob: null,
   terminate: null,
@@ -94,7 +96,9 @@ function makePage(n) {
       items: spec.items.map((str) => ({ str, hasEOL: false })),
     }),
     render: ({ canvasContext, viewport }) => ({
+      cancel: () => fake.cancelRender?.(),
       promise: (async () => {
+        if (viewport.scale === fake.hangAtScale) await new Promise(() => {});
         if (viewport.scale > fake.failRenderAboveScale) {
           throw new RangeError("Array buffer allocation failed");
         }
@@ -147,6 +151,8 @@ const analyze = (pages, options = {}) => {
 beforeEach(() => {
   vi.restoreAllMocks();
   fake.failRenderAboveScale = Infinity;
+  fake.hangAtScale = null;
+  fake.cancelRender = vi.fn();
   fake.createWorker = vi.fn().mockResolvedValue({
     setParameters: async () => {},
     terminate: async () => {},
@@ -305,6 +311,16 @@ describe("advancedPDFAnalysis: failures are recoverable and nothing hangs", () =
     });
     expect(result.pagesFailed).toEqual([2]);
     expect(result.text).toContain("keep lorem ipsum");
+  });
+
+  it("does not hang when the strategy-detection render never settles: it is cancelled and OCR still runs", async () => {
+    fake.hangAtScale = 1.5;
+    const result = await analyze([scannedPage()], {
+      OCR_PAGE_TIMEOUT_MS: 50,
+    });
+    expect(fake.cancelRender).toHaveBeenCalledTimes(1);
+    expect(result.pagesOCRd).toBe(1);
+    expect(result.strategy).toBe("standard");
   });
 
   it("does not hang when worker teardown never settles", async () => {
