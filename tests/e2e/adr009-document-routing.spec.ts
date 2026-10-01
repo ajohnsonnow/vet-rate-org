@@ -279,7 +279,7 @@ DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
 3. SOCIAL SECURITY: 123 45 6789
 4A. GRADE: E-4
 5. DATE OF BIRTH: 1990 01 01
-7B. HOME OF RECORD: TESTVILLE, TESTSTATE
+7B. HOME OF RECORD: TESTVILLE, OH
 8A. LAST DUTY ASSIGNMENT: FORT TEST
 12A. DATE ENTERED ACTIVE DUTY THIS PERIOD: 20100101
 12B. SEPARATION DATE THIS PERIOD: 20140101
@@ -318,21 +318,51 @@ test.describe("ADR-009: DD-214 Analyzer document routing", () => {
     expect(cloud.bodies.some((b) => b.includes("TESTFIXTURE"))).toBe(false);
     expect(cloud.bodies.some((b) => b.includes("123 45 6789"))).toBe(false);
 
-    // The test's own title claims the local parser's result still shows -
-    // this app's local (non-AI) regex parser runs on the pasted text
-    // regardless of provider (D16-5/ADR-008: identifiers ADR-009 blocks
-    // from an off-device AI call are not the same thing as a same-device
-    // regex read of text the veteran already has in their own browser),
-    // so the fixture's name/home-of-record still render from that local
-    // read even though no AI call happened at all. Scoped to a `<p>` (the
-    // rendered result card), not `dialog.getByText`, which also matches
-    // the still-visible input textarea's own raw pasted value. "TESTFIXTURE"
-    // only (not the full ", E2E" suffix) - dd214FieldExtractor's fullName
-    // value class is letters/punctuation only, a pre-existing, separate
-    // limitation this fixture's digit-bearing marker happens to hit, not
-    // an ADR-009 routing concern.
-    await expect(dialog.locator("p", { hasText: "TESTFIXTURE" })).toBeVisible();
-    await expect(dialog.locator("p", { hasText: "TESTVILLE" })).toBeVisible();
+    // The local (non-AI) parser runs on the pasted text regardless of
+    // provider, so the fixture's name/home-of-record still fill from that
+    // local read even though no AI call happened at all (decision F: the
+    // local parser is the only source of an identifier). They render as the
+    // values of the editable identifier fields. "TESTFIXTURE" only (not the
+    // full ", E2E" suffix) - dd214FieldExtractor's fullName value class is
+    // letters/punctuation only, a pre-existing, separate limitation this
+    // fixture's digit-bearing marker happens to hit.
+    await expect(dialog.getByLabel("Full Name")).toHaveValue(/TESTFIXTURE/);
+    await expect(dialog.getByLabel("Home of Record")).toHaveValue(/TESTVILLE/);
+  });
+
+  test("an identifier the local parser cannot read is an empty box the veteran can type into", async ({
+    page,
+  }) => {
+    test.setTimeout(60000);
+    await bootApp(page, { withCloudKey: true });
+    await stubCloudRoute(page);
+
+    await openToolDialog(page, "openDD214Analyzer", DD214_DIALOG);
+    const dialog = page.locator(DD214_DIALOG);
+    await dialog
+      .locator("textarea")
+      .first()
+      .fill(
+        "DD FORM 214\n2. DEPARTMENT, COMPONENT AND BRANCH: ARMY/ACTIVE\n" +
+          "12A. DATE ENTERED ACTIVE DUTY THIS PERIOD: 20100101\n" +
+          "24. CHARACTER OF SERVICE: HONORABLE\n",
+      );
+    await dialog.getByRole("button", { name: /Analyze with AI/i }).click();
+    await expect(dialog.getByText(/Analysis Complete/i)).toBeVisible({
+      timeout: 20000,
+    });
+
+    // The profile-import prompt opens on its own after analysis; dismiss it
+    // so the result panel underneath is reachable.
+    await page.getByRole("button", { name: /Cancel Import/i }).click();
+
+    const nameBox = dialog.getByLabel("Full Name");
+    await expect(nameBox).toHaveValue("");
+    await expect(
+      dialog.getByText(/Not read from the document/i).first(),
+    ).toBeVisible();
+    await nameBox.fill("TYPED, VETERAN");
+    await expect(nameBox).toHaveValue("TYPED, VETERAN");
   });
 
   test("on-device available: the fake engine receives the document and the feature works", async ({
@@ -359,20 +389,24 @@ test.describe("ADR-009: DD-214 Analyzer document routing", () => {
     const calls = await readFakeEngineCalls(page);
     expect(calls.some((c) => c.user.includes(DOC_MARKER))).toBe(true);
 
-    // D19 follow-up (ADR-009 Decision E / spec item 1): an on-device
-    // document call MAY include identifiers so on-device extraction of
-    // name/DOB/home-of-record/SSN works - prove the REAL UI path actually
-    // sends them to the engine (the merge logic that accepts an on-device
-    // model's identifier value is already unit-tested, but nothing before
-    // this proved the real prompt-building path puts them there at all).
-    expect(calls.some((c) => c.user.includes("TESTFIXTURE, E2E"))).toBe(true);
-    expect(calls.some((c) => c.user.includes("TESTVILLE"))).toBe(true);
-    expect(calls.some((c) => c.user.includes("123 45 6789"))).toBe(true);
+    // Decision F (ADR-009 §3): the raw document still goes to the on-device
+    // engine, but the real prompt-building path must NOT ask it for any
+    // identifier field - the AI is never the source of one.
+    const docCall = calls.find((c) => c.user.includes(DOC_MARKER));
+    expect(docCall).toBeTruthy();
+    for (const key of [
+      "fullName",
+      "ssnLast4",
+      "dateOfBirth",
+      "homeOfRecord",
+      "homeAddress",
+    ]) {
+      expect(docCall!.system).not.toContain(`"${key}"`);
+    }
 
-    // Scoped to a `<p>` (the rendered result card) - see the comment on
-    // the equivalent assertion in the cloud-only test above.
-    await expect(dialog.locator("p", { hasText: "TESTFIXTURE" })).toBeVisible();
-    await expect(dialog.locator("p", { hasText: "TESTVILLE" })).toBeVisible();
+    // The identifier fields still fill, from the local parser alone.
+    await expect(dialog.getByLabel("Full Name")).toHaveValue(/TESTFIXTURE/);
+    await expect(dialog.getByLabel("Home of Record")).toHaveValue(/TESTVILLE/);
   });
 });
 
