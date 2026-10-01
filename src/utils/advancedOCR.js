@@ -58,7 +58,74 @@ export const ADVANCED_OCR_CONFIG = {
   // Retry settings for failed OCR
   ENABLE_RETRY_WITH_HIGHER_SCALE: true, // Retry with higher scale if OCR fails
   MAX_RETRIES: 2, // Maximum retry attempts
+
+  // Blank-page detection: a zero-text-item page is rendered once at this low
+  // scale and skipped when almost nothing on it differs from the paper.
+  BLANK_CHECK_SCALE: 0.75,
+  BLANK_CHECK_TIMEOUT_MS: 30_000,
+
+  // No OCR promise may hang: every render, recognize job, worker start and
+  // teardown below is bounded by one of these.
+  OCR_PAGE_TIMEOUT_MS: 180_000,
+  OCR_WORKER_START_TIMEOUT_MS: 60_000,
+  OCR_CLEANUP_TIMEOUT_MS: 10_000,
 };
+
+// A pixel counts as ink when its luminance differs from the page background
+// by more than this; a page is blank when ink covers at most this fraction.
+// Kept deliberately tiny (about 27 px of a 459x594 render) so a page holding
+// even one short line of real text is never mistaken for blank.
+const BLANK_INK_LUMINANCE_DELTA = 48;
+export const BLANK_PAGE_MAX_INK_FRACTION = 0.0001;
+
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error(`${label} timed out after ${ms} ms`);
+      err.isTimeout = true;
+      reject(err);
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+function releaseCanvas(canvas) {
+  if (!canvas) return;
+  canvas.width = 0;
+  canvas.height = 0;
+  canvas.remove();
+}
+
+function pixelLuminance(data, i) {
+  const alpha = data[i + 3] / 255;
+  const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+  return lum * alpha + 255 * (1 - alpha);
+}
+
+/**
+ * Fraction of pixels that differ visibly from the page's own background
+ * (its most common luminance). Transparent pixels count as white paper.
+ */
+export function measureInkFraction(imageData) {
+  const { data } = imageData;
+  const pixelCount = data.length / 4;
+  if (pixelCount === 0) return 0;
+  const histogram = new Uint32Array(256);
+  for (let i = 0; i < data.length; i += 4) {
+    histogram[Math.round(pixelLuminance(data, i))]++;
+  }
+  let background = 0;
+  for (let l = 1; l < 256; l++) {
+    if (histogram[l] > histogram[background]) background = l;
+  }
+  let ink = 0;
+  for (let l = 0; l < 256; l++) {
+    if (Math.abs(l - background) > BLANK_INK_LUMINANCE_DELTA)
+      ink += histogram[l];
+  }
+  return ink / pixelCount;
+}
 
 /**
  * Preprocessing levels with automatic selection
@@ -123,6 +190,7 @@ export async function advancedPDFAnalysis(
   onProgress = () => {},
 ) {
   const config = { ...ADVANCED_OCR_CONFIG, ...options };
+  if (options.readAllPages) config.MAX_OCR_PAGES = Infinity;
   enforceOCRSizeLimits(file, config);
 
   try {
@@ -257,7 +325,9 @@ function buildFullTextResult(standardText, numPages) {
     pageCount: numPages,
     pagesRead: numPages,
     pagesOCRd: 0,
+    pagesBlank: [],
     pagesSkipped: [],
+    pagesFailed: [],
     method: "standard",
     confidence: 100,
     processingTime: Date.now() - standardText.startTime,
@@ -297,39 +367,52 @@ async function ocrImageOnlyPages(
   config,
   onProgress,
 ) {
-  const imageOnlyPages = standardText.pagesNeedingOCR;
-  const { pagesToOcr, skippedPages } = computeOcrPageSets(
-    imageOnlyPages,
-    config.ocrOnlyPageNumbers,
-    config.MAX_OCR_PAGES,
-  );
-
-  // eslint-disable-next-line no-console
-  console.log(
-    `📷 ${imageOnlyPages.length} page(s) lack a usable text layer. OCR-ing ${pagesToOcr.length}, skipping ${skippedPages.length}.`,
-  );
   onProgress({
     stage: "ocr",
     progress: 10,
-    message: `Preparing OCR for ${pagesToOcr.length} scanned page(s)...`,
+    message: `Checking ${standardText.pagesNeedingOCR.length} page(s) for content...`,
   });
+  const { contentPages: imageOnlyPages, blankPages } =
+    await partitionBlankPages(pdf, standardText.pagesNeedingOCR, config);
 
-  const strategy = await detectOptimalStrategy(pdf, pagesToOcr[0] || 1);
+  const requested = config.ocrOnlyPageNumbers?.length
+    ? config.ocrOnlyPageNumbers.filter((p) => !blankPages.includes(p))
+    : undefined;
+  const { pagesToOcr, skippedPages } =
+    requested?.length === 0
+      ? { pagesToOcr: [], skippedPages: imageOnlyPages }
+      : computeOcrPageSets(imageOnlyPages, requested, config.MAX_OCR_PAGES);
+
   // eslint-disable-next-line no-console
-  console.log(`🎯 Detected quality: ${strategy}`);
-
-  const ocrResults = await runAdvancedOCR(
-    pdf,
-    pagesToOcr,
-    strategy,
-    config,
-    onProgress,
+  console.log(
+    `📷 ${imageOnlyPages.length} page(s) lack a usable text layer (${blankPages.length} blank). OCR-ing ${pagesToOcr.length}, skipping ${skippedPages.length}.`,
   );
+
+  let strategy = null;
+  let ocrResults = [];
+  if (pagesToOcr.length > 0) {
+    onProgress({
+      stage: "ocr",
+      progress: 10,
+      message: `Preparing OCR for ${pagesToOcr.length} scanned page(s)...`,
+    });
+    strategy = await detectOptimalStrategy(pdf, pagesToOcr[0]);
+    // eslint-disable-next-line no-console
+    console.log(`🎯 Detected quality: ${strategy}`);
+    ocrResults = await runAdvancedOCR(
+      pdf,
+      pagesToOcr,
+      strategy,
+      config,
+      onProgress,
+    );
+  }
 
   return mergePageCoverageResult({
     standardText,
     numPages,
-    imageOnlyCount: imageOnlyPages.length,
+    maxOcrPages: config.MAX_OCR_PAGES,
+    blankPages,
     pagesToOcr,
     skippedPages,
     ocrResults,
@@ -337,15 +420,92 @@ async function ocrImageOnlyPages(
   });
 }
 
-function buildCoverageNote(numPages, imageOnlyCount, ocrdCount, skippedCount) {
-  if (skippedCount === 0) {
-    return `Read all ${numPages} page(s); ${ocrdCount} scanned page(s) were OCR'd.`;
+async function isPageBlank(page, config) {
+  let canvas = null;
+  try {
+    const viewport = page.getViewport({ scale: config.BLANK_CHECK_SCALE });
+    canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.ceil(viewport.width));
+    canvas.height = Math.max(1, Math.ceil(viewport.height));
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await withTimeout(
+      page.render({ canvasContext: ctx, viewport }).promise,
+      config.BLANK_CHECK_TIMEOUT_MS,
+      "Blank-page check",
+    );
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    return measureInkFraction(imageData) <= BLANK_PAGE_MAX_INK_FRACTION;
+  } catch (error) {
+    // A page that cannot be inspected is never assumed blank: it goes to OCR.
+    console.warn(`[advancedOCR] blank-page check failed: ${error.message}`);
+    return false;
+  } finally {
+    releaseCanvas(canvas);
   }
-  return (
-    `Read ${numPages} page(s): ${ocrdCount} of ${imageOnlyCount} scanned ` +
-    `page(s) were OCR'd, and ${skippedCount} scanned page(s) were skipped ` +
-    "due to size limits - pass their page numbers as ocrOnlyPageNumbers to continue."
-  );
+}
+
+async function partitionBlankPages(pdf, pageNumbers, config) {
+  const contentPages = [];
+  const blankPages = [];
+  for (const pageNum of pageNumbers) {
+    const page = await pdf.getPage(pageNum);
+    if (await isPageBlank(page, config)) blankPages.push(pageNum);
+    else contentPages.push(pageNum);
+  }
+  return { contentPages, blankPages };
+}
+
+function formatPageList(pages) {
+  const ranges = [];
+  for (const p of pages) {
+    const last = ranges[ranges.length - 1];
+    if (last && p === last[1] + 1) last[1] = p;
+    else ranges.push([p, p]);
+  }
+  const text = ranges.map(([a, b]) => (a === b ? `${a}` : `${a}-${b}`));
+  return `${pages.length === 1 ? "page" : "pages"} ${text.join(", ")}`;
+}
+
+// Plain sentences only: the veteran reads this, so it never names an API
+// option. "Read remaining pages" is the C-File Analyzer button that re-reads
+// the file with the scan limit lifted.
+function buildCoverageNote({
+  numPages,
+  ocrdCount,
+  maxOcrPages,
+  blankPages,
+  skippedPages,
+  failedPages,
+}) {
+  const unread = skippedPages.length;
+  const parts = [
+    unread === 0
+      ? `Read all ${numPages} page(s).`
+      : `Read ${numPages - unread} of ${numPages} page(s).`,
+  ];
+  if (ocrdCount > 0) {
+    parts.push(`${ocrdCount} scanned page(s) were read with OCR.`);
+  }
+  if (blankPages.length > 0) {
+    parts.push(
+      `${blankPages.length} blank page(s) (${formatPageList(blankPages)}) had nothing to read.`,
+    );
+  }
+  const failedSet = new Set(failedPages);
+  const overLimit = skippedPages.filter((p) => !failedSet.has(p));
+  if (overLimit.length > 0) {
+    parts.push(
+      `${overLimit.length} scanned page(s) (${formatPageList(overLimit)}) were not read because only ${maxOcrPages} scanned pages are read at a time. Use "Read remaining pages" to read them.`,
+    );
+  }
+  if (failedPages.length > 0) {
+    parts.push(
+      `${failedPages.length} scanned page(s) (${formatPageList(failedPages)}) could not be read. Use "Read remaining pages" to try them again.`,
+    );
+  }
+  return parts.join(" ");
 }
 
 // Weaves the three per-page sources (real text layer, freshly OCR'd, or
@@ -354,22 +514,37 @@ function buildCoverageNote(numPages, imageOnlyCount, ocrdCount, skippedCount) {
 function mergePageCoverageResult({
   standardText,
   numPages,
-  imageOnlyCount,
-  pagesToOcr,
-  skippedPages,
+  maxOcrPages,
+  blankPages,
+  skippedPages: limitSkippedPages,
   ocrResults,
   strategy,
 }) {
-  const ocrByPage = new Map(ocrResults.map((r) => [r.pageNum, r]));
+  const failedPages = ocrResults.filter((r) => r.failed).map((r) => r.pageNum);
+  const failedSet = new Set(failedPages);
+  const skippedPages = [...limitSkippedPages, ...failedPages].sort(
+    (a, b) => a - b,
+  );
+  const ocrByPage = new Map(
+    ocrResults.filter((r) => !r.failed).map((r) => [r.pageNum, r]),
+  );
+  const ocrdCount = ocrResults.filter(
+    (r) => !r.failed && !r.usedTextLayer,
+  ).length;
   const skippedSet = new Set(skippedPages);
+  const blankSet = new Set(blankPages);
   let fullText = "";
   let confidenceSum = 0;
   let confidenceCount = 0;
 
   for (let i = 1; i <= numPages; i++) {
     const ocrResult = ocrByPage.get(i);
-    if (skippedSet.has(i)) {
+    if (failedSet.has(i)) {
+      fullText += `--- PAGE ${i} (NOT READ - scanned page, OCR could not read it) ---\n\n`;
+    } else if (skippedSet.has(i)) {
       fullText += `--- PAGE ${i} (NOT READ - scanned page, OCR skipped due to size limits) ---\n\n`;
+    } else if (blankSet.has(i)) {
+      fullText += `--- PAGE ${i} (blank) ---\n\n`;
     } else if (ocrResult) {
       fullText += `--- PAGE ${i} (OCR ${ocrResult.confidence.toFixed(0)}%) ---\n${ocrResult.text.trim()}\n\n`;
       confidenceSum += ocrResult.confidence;
@@ -383,20 +558,24 @@ function mergePageCoverageResult({
     text: applyVATerminologyCorrection(fullText),
     letterheadText: standardText.letterheadText,
     pageCount: numPages,
-    pagesRead: numPages,
-    pagesOCRd: pagesToOcr.length,
+    pagesRead: numPages - skippedPages.length,
+    pagesOCRd: ocrdCount,
+    pagesBlank: blankPages,
     pagesSkipped: skippedPages,
-    method: pagesToOcr.length > 0 ? "advanced_ocr" : "standard",
+    pagesFailed: failedPages,
+    method: ocrdCount > 0 ? "advanced_ocr" : "standard",
     strategy,
     confidence: confidenceCount > 0 ? confidenceSum / confidenceCount : 100,
     processingTime: Date.now() - standardText.startTime,
-    ocrUsed: pagesToOcr.length > 0,
-    coverageNote: buildCoverageNote(
+    ocrUsed: ocrdCount > 0,
+    coverageNote: buildCoverageNote({
       numPages,
-      imageOnlyCount,
-      pagesToOcr.length,
-      skippedPages.length,
-    ),
+      ocrdCount,
+      maxOcrPages,
+      blankPages,
+      skippedPages,
+      failedPages,
+    }),
   };
 }
 
@@ -548,33 +727,74 @@ function computeOCRPoolConfig(strategy, config, pagesToProcess) {
  */
 async function createOCRScheduler(poolSize, config) {
   const scheduler = Tesseract.createScheduler();
-  await Promise.all(
-    Array.from({ length: poolSize }, async () => {
-      const worker = await Tesseract.createWorker(config.LANGUAGES);
-      await worker.setParameters({
-        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-        preserve_interword_spaces: "1",
-      });
-      scheduler.addWorker(worker);
-    }),
-  );
+  let abandoned = false;
+  try {
+    await withTimeout(
+      Promise.all(
+        Array.from({ length: poolSize }, async () => {
+          const worker = await Tesseract.createWorker(config.LANGUAGES);
+          if (abandoned) {
+            await worker.terminate().catch(() => {});
+            return;
+          }
+          await worker.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            preserve_interword_spaces: "1",
+          });
+          scheduler.addWorker(worker);
+        }),
+      ),
+      config.OCR_WORKER_START_TIMEOUT_MS,
+      "OCR worker start",
+    );
+  } catch (error) {
+    abandoned = true;
+    await terminateScheduler(scheduler, config);
+    throw error;
+  }
   return scheduler;
+}
+
+async function terminateScheduler(scheduler, config) {
+  try {
+    await withTimeout(
+      scheduler.terminate(),
+      config.OCR_CLEANUP_TIMEOUT_MS,
+      "OCR worker teardown",
+    );
+  } catch (error) {
+    console.warn(`[advancedOCR] ${error.message}`);
+  }
 }
 
 /**
  * Build the page recognizer closure bound to a scheduler.
  */
-function createPageRecognizer(scheduler) {
+function createPageRecognizer(scheduler, config) {
   return async (page, scale, preprocessStrategy) => {
-    const canvas = await renderPageToCanvas(page, scale);
-    const processedCanvas = await applyAdvancedPreprocessing(
-      canvas,
-      preprocessStrategy,
+    let canvas = null;
+    let processedCanvas = null;
+    let imageData;
+    try {
+      canvas = await renderPageToCanvas(
+        page,
+        scale,
+        config.OCR_PAGE_TIMEOUT_MS,
+      );
+      processedCanvas = await applyAdvancedPreprocessing(
+        canvas,
+        preprocessStrategy,
+      );
+      imageData = processedCanvas.toDataURL("image/png");
+    } finally {
+      releaseCanvas(canvas);
+      releaseCanvas(processedCanvas);
+    }
+    const result = await withTimeout(
+      scheduler.addJob("recognize", imageData),
+      config.OCR_PAGE_TIMEOUT_MS,
+      "OCR recognition",
     );
-    const imageData = processedCanvas.toDataURL("image/png");
-    canvas.remove();
-    processedCanvas.remove();
-    const result = await scheduler.addJob("recognize", imageData);
     return {
       text: result.data.text,
       confidence: result.data.confidence,
@@ -652,13 +872,19 @@ async function recognizePageWithEnsemble(
     textLength < config.MIN_USEFUL_TEXT_LENGTH &&
     config.ENABLE_RETRY_WITH_HIGHER_SCALE
   ) {
-    const retry = await recognize(
-      page,
-      8.0,
-      PREPROCESS_STRATEGIES.SEVERELY_AGED,
-    );
-    if (retry.text.trim().length > textLength) {
-      pageText = retry.text;
+    // 8x on a Letter page is ~31M pixels: an allocation failure here must
+    // only forfeit this optional retry, never the text already read.
+    try {
+      const retry = await recognize(
+        page,
+        8.0,
+        PREPROCESS_STRATEGIES.SEVERELY_AGED,
+      );
+      if (retry.text.trim().length > textLength) {
+        pageText = retry.text;
+      }
+    } catch (error) {
+      console.warn(`[advancedOCR] high-scale retry skipped: ${error.message}`);
     }
   }
 
@@ -692,10 +918,111 @@ async function runPagesWithBoundedConcurrency(
 }
 
 /**
+ * OCR one page. An allocation failure (huge canvas, out-of-memory buffer) is
+ * recoverable: the page is retried once as a single plain pass at the lowest
+ * scale. A timeout is not retried - the engine is the problem, not the size.
+ * A page that still cannot be read comes back as `failed`, never as a throw,
+ * so one bad page can't take the document's other pages down with it.
+ */
+async function ocrPageRecovering(
+  page,
+  recognize,
+  baseScales,
+  strategy,
+  config,
+) {
+  try {
+    return await recognizePageWithEnsemble(
+      page,
+      recognize,
+      baseScales,
+      strategy,
+      config,
+    );
+  } catch (error) {
+    if (error.isTimeout) throw error;
+    console.warn(
+      `[advancedOCR] OCR pass failed (${error.message}); retrying at the lowest scale`,
+    );
+    return recognizePageWithEnsemble(
+      page,
+      recognize,
+      [config.CANVAS_SCALES[0]],
+      PREPROCESS_STRATEGIES.STANDARD,
+      {
+        ...config,
+        ENABLE_ENSEMBLE: false,
+        ENABLE_RETRY_WITH_HIGHER_SCALE: false,
+      },
+    );
+  }
+}
+
+function createPageProcessor({
+  pdf,
+  recognize,
+  baseScales,
+  strategy,
+  config,
+  pagesToProcess,
+  onProgress,
+}) {
+  let completedPages = 0;
+  const report = (message, extra = {}) => {
+    completedPages++;
+    onProgress({
+      stage: "ocr",
+      progress: 10 + (completedPages / pagesToProcess) * 85,
+      message: message(completedPages),
+      ...extra,
+    });
+  };
+
+  return async (pageNum) => {
+    try {
+      const page = await pdf.getPage(pageNum);
+
+      // Defensive re-check: the caller's page list is normally already
+      // filtered to image-only pages, but a caller-supplied
+      // ocrOnlyPageNumbers could name a page that actually has a fine text
+      // layer - skip the expensive render+Tesseract pass for it too.
+      const layerText = await tryTextLayerText(page);
+      if (layerText !== null) {
+        report(() => `Page ${pageNum}/${pagesToProcess} (text layer)...`);
+        return {
+          pageNum,
+          text: layerText,
+          confidence: 100,
+          usedTextLayer: true,
+        };
+      }
+
+      const { text, confidence } = await ocrPageRecovering(
+        page,
+        recognize,
+        baseScales,
+        strategy,
+        config,
+      );
+      report((n) => `OCR processing page ${n}/${pagesToProcess}...`, {
+        currentPage: completedPages + 1,
+        totalPages: pagesToProcess,
+      });
+      return { pageNum, text, confidence };
+    } catch (error) {
+      console.warn(`[advancedOCR] page could not be read: ${error.message}`);
+      report((n) => `Page ${n}/${pagesToProcess} could not be read...`);
+      return { pageNum, failed: true };
+    }
+  };
+}
+
+/**
  * Run advanced multi-pass OCR with ensemble voting, for a specific set of
  * page numbers only (the caller has already decided which pages actually
  * lack a usable text layer) - not "the first N pages of the document".
- * Enhanced with retry logic for degraded documents.
+ * Enhanced with retry logic for degraded documents. Never rejects: pages the
+ * OCR engine could not produce text for come back flagged `failed`.
  */
 async function runAdvancedOCR(pdf, pageNumbers, strategy, config, onProgress) {
   const pagesToProcess = pageNumbers.length;
@@ -710,48 +1037,23 @@ async function runAdvancedOCR(pdf, pageNumbers, strategy, config, onProgress) {
     `🔬 OCR: ${poolSize} workers, ${isDegraded ? "HIGH" : "standard"} scales [${baseScales.join(", ")}], strategy: ${strategy}`,
   );
 
-  const scheduler = await createOCRScheduler(poolSize, config);
-  const recognize = createPageRecognizer(scheduler);
-  let completedPages = 0;
+  let scheduler;
+  try {
+    scheduler = await createOCRScheduler(poolSize, config);
+  } catch (error) {
+    console.warn(`[advancedOCR] OCR engine unavailable: ${error.message}`);
+    return pageNumbers.map((pageNum) => ({ pageNum, failed: true }));
+  }
 
-  const processPage = async (pageNum) => {
-    const page = await pdf.getPage(pageNum);
-
-    // Defensive re-check: the caller's page list is normally already
-    // filtered to image-only pages, but a caller-supplied
-    // ocrOnlyPageNumbers could name a page that actually has a fine text
-    // layer - skip the expensive render+Tesseract pass for it too.
-    const layerText = await tryTextLayerText(page);
-    if (layerText !== null) {
-      completedPages++;
-      onProgress({
-        stage: "ocr",
-        progress: 10 + (completedPages / pagesToProcess) * 85,
-        message: `Page ${pageNum}/${pagesToProcess} (text layer)...`,
-      });
-      return { pageNum, text: layerText, confidence: 100, usedTextLayer: true };
-    }
-
-    const { text: pageText, confidence: avgConfidence } =
-      await recognizePageWithEnsemble(
-        page,
-        recognize,
-        baseScales,
-        strategy,
-        config,
-      );
-
-    completedPages++;
-    onProgress({
-      stage: "ocr",
-      progress: 10 + (completedPages / pagesToProcess) * 85,
-      message: `OCR processing page ${completedPages}/${pagesToProcess}...`,
-      currentPage: completedPages,
-      totalPages: pagesToProcess,
-    });
-
-    return { pageNum, text: pageText, confidence: avgConfidence };
-  };
+  const processPage = createPageProcessor({
+    pdf,
+    recognize: createPageRecognizer(scheduler, config),
+    baseScales,
+    strategy,
+    config,
+    pagesToProcess,
+    onProgress,
+  });
 
   try {
     // Bounded page-level concurrency: poolSize pages in flight at once
@@ -761,22 +1063,31 @@ async function runAdvancedOCR(pdf, pageNumbers, strategy, config, onProgress) {
       processPage,
     );
   } finally {
-    await scheduler.terminate();
+    await terminateScheduler(scheduler, config);
   }
 }
 
 /**
  * Render PDF page to canvas
  */
-async function renderPageToCanvas(page, scale) {
+async function renderPageToCanvas(page, scale, timeoutMs) {
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
+  try {
+    const ctx = canvas.getContext("2d");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
 
-  await page.render({ canvasContext: ctx, viewport }).promise;
-  return canvas;
+    await withTimeout(
+      page.render({ canvasContext: ctx, viewport }).promise,
+      timeoutMs,
+      "Page render",
+    );
+    return canvas;
+  } catch (error) {
+    releaseCanvas(canvas);
+    throw error;
+  }
 }
 
 // A scanned-page image at typical OCR working scale (CANVAS_SCALES up to
