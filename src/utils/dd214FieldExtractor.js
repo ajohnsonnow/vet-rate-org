@@ -72,6 +72,40 @@ function _stripLeadingPrintedInstruction(value) {
     .replace(_MAILING_ADDRESS_HINT_RE, "");
 }
 
+// D20-3: every word a DD-214 prints in its own box labels and instruction
+// parentheticals. A captured identifier value made ONLY of these words is the
+// form's own wording (e.g. "CITY STATE COMPLETE ADDRESS IF KNOWN ZIP CODE"),
+// never the veteran's data, so it is rejected rather than shown.
+const PRINTED_LABEL_WORDS = new Set(
+  (
+    "CITY STATE COMPLETE ADDRESS IF KNOWN ZIP CODE HOME OF RECORD AT TIME ENTRY " +
+    "AND OR STREET INCLUDE MAILING AFTER SEPARATION THE NUMBER NAME LAST FIRST " +
+    "MIDDLE NEAREST RELATIVE DEPARTMENT COMPONENT BRANCH SOCIAL SECURITY DATE " +
+    "BIRTH PLACE ENTERED ACTIVE DUTY TYPED PRINTED INFORMATION REQUIRED FOR TO " +
+    "A AN IN BLOCK ITEM BOX NO"
+  ).split(" "),
+);
+
+function _isPrintedLabelVocabulary(value) {
+  const words = (value || "").toUpperCase().match(/[A-Z]+/g) || [];
+  return words.length === 0 || words.every((w) => PRINTED_LABEL_WORDS.has(w));
+}
+
+const _STATE_CODE_SHAPE = "[A-Z]{2}";
+const _US_STATE_NAMES =
+  "ALABAMA|ALASKA|ARIZONA|ARKANSAS|CALIFORNIA|COLORADO|CONNECTICUT|DELAWARE|DISTRICT\\s{1,5}OF\\s{1,5}COLUMBIA|FLORIDA|GEORGIA|HAWAII|IDAHO|ILLINOIS|INDIANA|IOWA|KANSAS|KENTUCKY|LOUISIANA|MAINE|MARYLAND|MASSACHUSETTS|MICHIGAN|MINNESOTA|MISSISSIPPI|MISSOURI|MONTANA|NEBRASKA|NEVADA|NEW\\s{1,5}HAMPSHIRE|NEW\\s{1,5}JERSEY|NEW\\s{1,5}MEXICO|NEW\\s{1,5}YORK|NORTH\\s{1,5}CAROLINA|NORTH\\s{1,5}DAKOTA|OHIO|OKLAHOMA|OREGON|PENNSYLVANIA|RHODE\\s{1,5}ISLAND|SOUTH\\s{1,5}CAROLINA|SOUTH\\s{1,5}DAKOTA|TENNESSEE|TEXAS|UTAH|VERMONT|VIRGINIA|WASHINGTON|WEST\\s{1,5}VIRGINIA|WISCONSIN|WYOMING|PUERTO\\s{1,5}RICO|GUAM";
+// A city-ish word run, then a state (2-letter code only when set off by a
+// comma/space after that run, so a stray "OR"/"IN" inside a label fragment
+// is not enough), then an optional ZIP, ending the value.
+const _CITY_STATE_SHAPE_RE = new RegExp(
+  `[A-Z][A-Z0-9 .'-]{1,60}[,\\s]\\s{0,5}(?:${_STATE_CODE_SHAPE}|${_US_STATE_NAMES})(?:\\s{0,5},?\\s{0,5}\\d{5}(?:-\\d{4})?)?\\s{0,5}$`,
+  "i",
+);
+
+function _hasCityStateShape(value) {
+  return _CITY_STATE_SHAPE_RE.test((value || "").trim());
+}
+
 const DD214_FIELD_PATTERNS = {
   // ===== BLOCK 1: Name =====
   fullName: {
@@ -137,6 +171,7 @@ const DD214_FIELD_PATTERNS = {
       const trimmed = (val || "").trim();
       if (trimmed.length < 3 || trimmed.length > 80) return false;
       if (NAME_LABEL_LEAK_RE.test(trimmed)) return false;
+      if (_isPrintedLabelVocabulary(trimmed)) return false;
       const hasSeparator = /[,;]/.test(trimmed);
       const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
       return hasSeparator || wordCount >= 2;
@@ -387,6 +422,8 @@ const DD214_FIELD_PATTERNS = {
         )
       )
         return false;
+      if (_isPrintedLabelVocabulary(trimmed)) return false;
+      if (!_hasCityStateShape(trimmed)) return false;
       const letters = (trimmed.match(/[A-Za-z]/g) || []).length;
       return letters / trimmed.length >= 0.2;
     },
@@ -666,6 +703,8 @@ const DD214_FIELD_PATTERNS = {
         /\b(?:BLOCK|ITEM|NOTHING\s*FOLLOWS|NEAREST\s*RELATIVE)\b/i.test(trimmed)
       )
         return false;
+      if (_isPrintedLabelVocabulary(trimmed)) return false;
+      if (!/\d/.test(trimmed) && !_hasCityStateShape(trimmed)) return false;
       const letters = (trimmed.match(/[A-Za-z]/g) || []).length;
       return letters / trimmed.length >= 0.15;
     },
