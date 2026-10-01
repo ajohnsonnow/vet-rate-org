@@ -72,10 +72,12 @@ export const ADVANCED_OCR_CONFIG = {
 };
 
 // A pixel counts as ink when its luminance differs from the page background
-// by more than this; a page is blank when ink covers at most this fraction.
+// by more than this (small on purpose: faded faxes and old photocopies print
+// text only ~25 levels darker than the paper, and a page that is merely
+// faint must never be taken for blank); a page is blank when ink covers at most this fraction.
 // Kept deliberately tiny (about 27 px of a 459x594 render) so a page holding
 // even one short line of real text is never mistaken for blank.
-const BLANK_INK_LUMINANCE_DELTA = 48;
+const BLANK_INK_LUMINANCE_DELTA = 16;
 export const BLANK_PAGE_MAX_INK_FRACTION = 0.0001;
 
 function withTimeout(promise, ms, label) {

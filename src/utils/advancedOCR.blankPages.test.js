@@ -312,3 +312,52 @@ describe("advancedPDFAnalysis: failures are recoverable and nothing hangs", () =
     expect(result.pagesOCRd).toBe(1);
   });
 });
+
+describe("measureInkFraction / blank threshold", () => {
+  const solid = (lum, count = 4000) => {
+    const data = new Uint8ClampedArray(count * 4);
+    for (let i = 0; i < count; i++) {
+      data.set([lum, lum, lum, 255], i * 4);
+    }
+    return data;
+  };
+  const withInk = (data, lum, pixels) => {
+    for (let i = 0; i < pixels; i++) data.set([lum, lum, lum, 255], i * 4);
+    return { data };
+  };
+
+  it("measures a perfectly blank page (and a transparent canvas) as having no ink", async () => {
+    const { measureInkFraction } = await import("./advancedOCR");
+    expect(measureInkFraction({ data: solid(255) })).toBe(0);
+    expect(measureInkFraction({ data: new Uint8ClampedArray(4000 * 4) })).toBe(
+      0,
+    );
+  });
+
+  it("does not take a faint scan (text ~30 levels darker than the paper) for blank", async () => {
+    const { measureInkFraction, BLANK_PAGE_MAX_INK_FRACTION } =
+      await import("./advancedOCR");
+    const faint = withInk(solid(240), 205, 400);
+    expect(measureInkFraction(faint)).toBeGreaterThan(
+      BLANK_PAGE_MAX_INK_FRACTION,
+    );
+  });
+
+  it("does not take a page with one short line of dark text for blank", async () => {
+    const { measureInkFraction, BLANK_PAGE_MAX_INK_FRACTION } =
+      await import("./advancedOCR");
+    const oneLine = withInk(solid(255, 273_000), 30, 90);
+    expect(measureInkFraction(oneLine)).toBeGreaterThan(
+      BLANK_PAGE_MAX_INK_FRACTION,
+    );
+  });
+
+  it("treats paper grain well under the threshold as blank", async () => {
+    const { measureInkFraction, BLANK_PAGE_MAX_INK_FRACTION } =
+      await import("./advancedOCR");
+    const grain = withInk(solid(250), 244, 400);
+    expect(measureInkFraction(grain)).toBeLessThanOrEqual(
+      BLANK_PAGE_MAX_INK_FRACTION,
+    );
+  });
+});
