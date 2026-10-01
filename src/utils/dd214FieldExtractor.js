@@ -86,24 +86,47 @@ const PRINTED_LABEL_WORDS = new Set(
   ).split(" "),
 );
 
+// Captions printed in NEIGHBOURING boxes. On a noisy scan one of these can
+// land under an identifier label; none occurs in a real name or home address.
+const OTHER_BOX_CAPTION_RE =
+  // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the alternation count, not backtracking; every alternative is a fixed literal
+  /\b(?:STATION\s+WHERE|SEPARATED|SEPARATION|ENTRY\s+INTO|ACTIVE\s+DUTY|PAY\s+GRADE|DATE\s+OF\s+RANK|GRADE\s+RATE|RATE\s+OR\s+RANK|REQUESTS?|SIGNATURE|DIRECTOR\s+OF\s+VETERANS|VETERANS\s+AFFAIRS|MEMBER|YES\s+\S+\s+NO)\b/i;
+
 function _isPrintedLabelVocabulary(value) {
   const words = (value || "").toUpperCase().match(/[A-Z]+/g) || [];
-  return words.length === 0 || words.every((w) => PRINTED_LABEL_WORDS.has(w));
+  return (
+    words.length === 0 ||
+    words.every((w) => PRINTED_LABEL_WORDS.has(w)) ||
+    OTHER_BOX_CAPTION_RE.test(value)
+  );
 }
 
-const _STATE_CODE_SHAPE = "[A-Z]{2}";
+const _STATE_CODES =
+  "AL|AK|AZ|AR|CA|CO|CT|DE|DC|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|PR|GU|VI|AS|MP|AA|AE|AP";
 const _US_STATE_NAMES =
-  "ALABAMA|ALASKA|ARIZONA|ARKANSAS|CALIFORNIA|COLORADO|CONNECTICUT|DELAWARE|DISTRICT\\s{1,5}OF\\s{1,5}COLUMBIA|FLORIDA|GEORGIA|HAWAII|IDAHO|ILLINOIS|INDIANA|IOWA|KANSAS|KENTUCKY|LOUISIANA|MAINE|MARYLAND|MASSACHUSETTS|MICHIGAN|MINNESOTA|MISSISSIPPI|MISSOURI|MONTANA|NEBRASKA|NEVADA|NEW\\s{1,5}HAMPSHIRE|NEW\\s{1,5}JERSEY|NEW\\s{1,5}MEXICO|NEW\\s{1,5}YORK|NORTH\\s{1,5}CAROLINA|NORTH\\s{1,5}DAKOTA|OHIO|OKLAHOMA|OREGON|PENNSYLVANIA|RHODE\\s{1,5}ISLAND|SOUTH\\s{1,5}CAROLINA|SOUTH\\s{1,5}DAKOTA|TENNESSEE|TEXAS|UTAH|VERMONT|VIRGINIA|WASHINGTON|WEST\\s{1,5}VIRGINIA|WISCONSIN|WYOMING|PUERTO\\s{1,5}RICO|GUAM";
-// A city-ish word run, then a state (2-letter code only when set off by a
-// comma/space after that run, so a stray "OR"/"IN" inside a label fragment
-// is not enough), then an optional ZIP, ending the value.
+  "ALABAMA|ALASKA|ARIZONA|ARKANSAS|CALIFORNIA|COLORADO|CONNECTICUT|DELAWARE|DISTRICT\\s{1,5}OF\\s{1,5}COLUMBIA|FLORIDA|GEORGIA|HAWAII|IDAHO|ILLINOIS|INDIANA|IOWA|KANSAS|KENTUCKY|LOUISIANA|MAINE|MARYLAND|MASSACHUSETTS|MICHIGAN|MINNESOTA|MISSISSIPPI|MISSOURI|MONTANA|NEBRASKA|NEVADA|NEW\\s{1,5}HAMPSHIRE|NEW\\s{1,5}JERSEY|NEW\\s{1,5}MEXICO|NEW\\s{1,5}YORK|NORTH\\s{1,5}CAROLINA|NORTH\\s{1,5}DAKOTA|OHIO|OKLAHOMA|OREGON|PENNSYLVANIA|RHODE\\s{1,5}ISLAND|SOUTH\\s{1,5}CAROLINA|SOUTH\\s{1,5}DAKOTA|TENNESSEE|TEXAS|UTAH|VERMONT|VIRGINIA|WASHINGTON|WEST\\s{1,5}VIRGINIA|WISCONSIN|WYOMING|PUERTO\\s{1,5}RICO|GUAM|AMERICAN\\s{1,5}SAMOA|VIRGIN\\s{1,5}ISLANDS|NORTHERN\\s{1,5}MARIANA\\s{1,5}ISLANDS|CALIF|MASS|PENN|MICH|MINN|WISC|TENN|MISS|ALA|ARIZ|COLO|CONN|FLA|ILL|IND|KANS|NEBR|NEV|OKLA|ORE|TEX|WASH|WYO|MONT";
+// A city-ish word run, then a real state (name, old-style abbreviation or
+// USPS code - never just any two letters, so a label tail like "SEPARATED AT"
+// is not enough), then an optional ZIP, ending the value. Dots in "N.Y." /
+// "D.C." and a trailing period are normalised away before the test.
 const _CITY_STATE_SHAPE_RE = new RegExp(
-  `[A-Z][A-Z0-9 .'-]{1,60}[,\\s]\\s{0,5}(?:${_STATE_CODE_SHAPE}|${_US_STATE_NAMES})(?:\\s{0,5},?\\s{0,5}\\d{5}(?:-\\d{4})?)?\\s{0,5}$`,
+  `[A-Z][A-Z0-9 .'-]{1,60}[,\\s]\\s{0,5}(?:${_STATE_CODES}|${_US_STATE_NAMES})(?:\\s{0,5},?\\s{0,5}\\d{5}(?:-\\d{4})?)?\\s{0,5}$`,
   "i",
 );
 
 function _hasCityStateShape(value) {
-  return _CITY_STATE_SHAPE_RE.test((value || "").trim());
+  const normalized = (value || "").trim().replaceAll(".", "");
+  return _CITY_STATE_SHAPE_RE.test(normalized);
+}
+
+// A digit alone is not an address: the value must start a street line, be a
+// PO box, or end in a ZIP code.
+const _STREET_START_RE = /^(?:PO\s?BOX\s?\d|\d{1,6}[A-Z]?\s+[A-Z0-9])/i;
+const _ZIP_END_RE = /\b\d{5}(?:-\d{4})?\s*$/;
+
+function _hasStreetShape(value) {
+  const trimmed = (value || "").trim().replace(/^P\.\s?O\./i, "PO");
+  return _STREET_START_RE.test(trimmed) || _ZIP_END_RE.test(trimmed);
 }
 
 const DD214_FIELD_PATTERNS = {
@@ -704,7 +727,8 @@ const DD214_FIELD_PATTERNS = {
       )
         return false;
       if (_isPrintedLabelVocabulary(trimmed)) return false;
-      if (!/\d/.test(trimmed) && !_hasCityStateShape(trimmed)) return false;
+      if (!_hasStreetShape(trimmed) && !_hasCityStateShape(trimmed))
+        return false;
       const letters = (trimmed.match(/[A-Za-z]/g) || []).length;
       return letters / trimmed.length >= 0.15;
     },

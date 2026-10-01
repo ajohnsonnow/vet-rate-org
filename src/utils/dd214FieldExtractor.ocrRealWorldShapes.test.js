@@ -339,17 +339,17 @@ describe("D19-4: strips the form's own printed instruction text from a captured 
   it.each([
     [
       "OCR drops its closing parenthesis",
-      "HOME OF RECORD: (CITY AND STATE, OR COMPLETE ADDRESS IF KNOWN TESTVILLE, TS\n" +
+      "HOME OF RECORD: (CITY AND STATE, OR COMPLETE ADDRESS IF KNOWN TESTVILLE, TX\n" +
         "8A. LAST DUTY: FORT X\n",
     ],
     [
       "OCR drops both parentheses entirely",
-      "HOME OF RECORD: CITY AND STATE, OR COMPLETE ADDRESS IF KNOWN TESTVILLE, TS\n" +
+      "HOME OF RECORD: CITY AND STATE, OR COMPLETE ADDRESS IF KNOWN TESTVILLE, TX\n" +
         "8A. LAST DUTY: FORT X\n",
     ],
   ])("strips the home-of-record hint when %s", (_label, text) => {
     const result = extractDD214Fields(text);
-    expect(result.fields.homeOfRecord).toBe("TESTVILLE, TS");
+    expect(result.fields.homeOfRecord).toBe("TESTVILLE, TX");
     expect(result.fields.homeOfRecord).not.toContain("CITY AND STATE");
   });
 });
