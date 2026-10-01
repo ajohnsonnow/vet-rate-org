@@ -418,6 +418,36 @@ test.describe("D19-1: Decision Decoder image drop-in document routing", () => {
     const calls = await readFakeEngineCalls(page);
     expect(calls.some((c) => c.user.includes(IMAGE_OCR_MARKER))).toBe(true);
   });
+
+  test("on-device available: a dropped 1-page PDF decodes to a result on every browser", async ({
+    page,
+  }, testInfo) => {
+    skipOnDeviceOnMobileTier(testInfo);
+    test.setTimeout(60000);
+    await shimFakeGpuAdapter(page);
+    await bootAppForImageRouting(page, { withCloudKey: false });
+
+    const dialog = await openDecisionDecoderForRouting(page);
+    await dialog.getByRole("button", { name: "Drop-In File" }).click();
+    await dialog.locator('input[type="file"]').setInputFiles({
+      name: "decision-letter.pdf",
+      mimeType: "application/pdf",
+      buffer: buildMinimalTextPdf(SYNTHETIC_DENIAL_TEXT),
+    });
+    await expect(dialog.getByText(/Combined text ready/i)).toBeVisible({
+      timeout: 30000,
+    });
+    await loadFakeOnDeviceAI(page);
+    await dialog.getByRole("button", { name: /Decode This Decision/i }).click();
+
+    await expect(dialog.getByText(/Full Denial/i)).toBeVisible({
+      timeout: 20000,
+    });
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+
+    const calls = await readFakeEngineCalls(page);
+    expect(calls.some((c) => c.user.includes("tinnitus is denied"))).toBe(true);
+  });
 });
 
 /**
