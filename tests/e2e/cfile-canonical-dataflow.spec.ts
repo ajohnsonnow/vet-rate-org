@@ -386,19 +386,21 @@ async function walkMyPacketTabs(page: Page): Promise<TabReport[]> {
     .toBeGreaterThan(0);
   await expect(dialog, "MyPacket modal should open").toBeVisible();
 
-  const tabButtons = dialog.locator('nav[aria-label="Tabs"] button');
+  // By role and accessible name: at phone width a tab's visible text is
+  // hidden (`hidden sm:inline`) and only its aria-label names it.
+  const tabButtons = dialog.getByRole("tab");
   const count = await tabButtons.count();
   const reports: TabReport[] = [];
   for (let i = 0; i < count; i++) {
     const btn = tabButtons.nth(i);
-    const label = (await btn.innerText().catch(() => `tab${i}`)).replace(
-      /\s+/g,
-      " ",
-    );
-    await btn.click().catch(() => {});
-    await expect(btn)
-      .toHaveAttribute("aria-selected", "true", { timeout: 5000 })
-      .catch(() => {});
+    const accessibleName =
+      (await btn.getAttribute("aria-label")) ??
+      (await btn.innerText().catch(() => `tab${i}`));
+    const label = accessibleName.replace(/\s+/g, " ");
+    await btn.click();
+    await expect(btn).toHaveAttribute("aria-selected", "true", {
+      timeout: 5000,
+    });
     const text = await dialog.innerText().catch(() => "");
     reports.push({
       tab: label,
