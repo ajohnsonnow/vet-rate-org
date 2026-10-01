@@ -251,7 +251,10 @@ describe("advancedPDFAnalysis: coverage wording when pages are skipped", () => {
     expect(result.coverageNote).toMatch(/^Read 2 of 4 page\(s\)\./);
     expect(result.coverageNote).not.toMatch(/ocrOnlyPageNumbers/);
     expect(result.coverageNote).toMatch(/pages 3-4/);
-    expect(result.coverageNote).toMatch(/Read remaining pages/);
+    expect(result.coverageNote).toMatch(
+      /only 1 scanned pages are read at a time/,
+    );
+    expect(result.coverageNote).not.toMatch(/Read remaining pages/);
   });
 
   it("readAllPages lifts the scan limit so the continue action reads the rest", async () => {

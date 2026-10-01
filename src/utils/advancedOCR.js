@@ -526,9 +526,8 @@ function formatPageList(pages) {
   return `${pages.length === 1 ? "page" : "pages"} ${text.join(", ")}`;
 }
 
-// Plain sentences only: the veteran reads this, so it never names an API
-// option. "Read remaining pages" is the C-File Analyzer button that re-reads
-// the file with the scan limit lifted.
+// Plain sentences only: the veteran reads this on screens that have no
+// "read more" control, so it never points at one.
 function buildCoverageNote({
   numPages,
   ocrdCount,
@@ -555,12 +554,12 @@ function buildCoverageNote({
   const overLimit = skippedPages.filter((p) => !failedSet.has(p));
   if (overLimit.length > 0) {
     parts.push(
-      `${overLimit.length} scanned page(s) (${formatPageList(overLimit)}) were not read because only ${maxOcrPages} scanned pages are read at a time. Use "Read remaining pages" to read them.`,
+      `${overLimit.length} scanned page(s) (${formatPageList(overLimit)}) were not read because only ${maxOcrPages} scanned pages are read at a time.`,
     );
   }
   if (failedPages.length > 0) {
     parts.push(
-      `${failedPages.length} scanned page(s) (${formatPageList(failedPages)}) could not be read. Use "Read remaining pages" to try them again.`,
+      `${failedPages.length} scanned page(s) (${formatPageList(failedPages)}) could not be read.`,
     );
   }
   return parts.join(" ");

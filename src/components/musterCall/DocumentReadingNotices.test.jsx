@@ -25,7 +25,7 @@ const { CFileReadCoverage } = await import("../CFileAnalyzer.jsx");
 const AI_NOTICE =
   "AI analysis of this document couldn't complete right now. Nothing was lost.";
 const SKIP_NOTE =
-  'Read 2 of 4 page(s). 2 scanned page(s) (pages 3-4) were not read because only 1 scanned pages are read at a time. Use "Read remaining pages" to read them.';
+  "Read 2 of 4 page(s). 2 scanned page(s) (pages 3-4) were not read because only 1 scanned pages are read at a time.";
 
 const savedEntry = (id, result) => ({
   id,
