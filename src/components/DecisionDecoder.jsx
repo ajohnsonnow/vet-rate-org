@@ -340,7 +340,7 @@ function patternMatchDenial(text) {
 }
 
 function getDecodeErrorMessage(err) {
-  if (err.message?.includes("TIMEOUT")) {
+  if (/TIMEOUT|timed out/i.test(err.message || "")) {
     return (
       "⏱️ The AI request timed out after 90 seconds. This usually means:\n\n" +
       "• The AI model is still loading (wait a few more seconds and try again)\n" +
@@ -391,17 +391,46 @@ function createDecodeTimeout(ms, message) {
 // document, so it stays on-device only. Run the same pattern-match reader
 // already used when no AI is configured at all, and show a plain notice
 // instead of a dead end.
-function applyOffDeviceFallback(denialText, providerLabel, setResults) {
+export const NOTHING_FOUND_MESSAGE =
+  "The built-in reader found no decision language in this text, so there is nothing to translate yet. If this is a VA decision letter, paste the Decision and Reasons for Decision sections, or load an on-device AI to read the whole document.";
+
+export function applyOffDeviceFallback(denialText, providerLabel, setResults) {
   const matched = patternMatchDenial(denialText);
   setResults({
-    ...(matched || {}),
+    ...(matched || { plain_english: NOTHING_FOUND_MESSAGE }),
     _usedFallback: true,
     _fallbackReason: "off_device_blocked",
     _fallbackNote: buildDocumentOffDeviceNotice(providerLabel),
   });
 }
 
+const RESULT_FIELDS = [
+  "decision_type",
+  "plain_english",
+  "va_reasoning",
+  "favorable_findings",
+  "missing_elements",
+  "action_plan",
+  "appeal_options",
+  "deadline_warning",
+];
+
+export const EMPTY_RESULT_MESSAGE =
+  "The AI finished but did not return anything readable, so there is no result to show. Please try again, or paste only the Decision and Reasons for Decision sections.";
+
+function hasReadableResult(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  return RESULT_FIELDS.some((field) => {
+    const value = data[field];
+    return Array.isArray(value) ? value.length > 0 : Boolean(value);
+  });
+}
+
 function applyDecodeResponse(response, denialText, setResults, setError) {
+  if (response.success && !hasReadableResult(response.data)) {
+    setError(EMPTY_RESULT_MESSAGE);
+    return;
+  }
   if (response.success) {
     setResults({
       ...response.data,
@@ -440,7 +469,7 @@ function logDecodeError(err) {
 
 // Owns the decode request lifecycle (pattern-match fallback + AI call with
 // timeout) so the component doesn't carry this async state machine inline.
-function useDecisionDecode() {
+export function useDecisionDecode() {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1192,11 +1221,14 @@ const DecisionDecoderInputSection = ({
   </div>
 );
 
-const ResultsErrorNotice = ({ error }) => {
+const ResultsErrorNotice = ({ error, onRetry, isLoading }) => {
   if (!error) return null;
 
   return (
-    <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg mb-4">
+    <div
+      role="alert"
+      className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg mb-4"
+    >
       <div className="flex items-center gap-2">
         <svg
           className="w-5 h-5 text-red-500"
@@ -1211,8 +1243,20 @@ const ResultsErrorNotice = ({ error }) => {
             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <span className="text-red-700 dark:text-red-300">{error}</span>
+        <span className="text-red-700 dark:text-red-300 whitespace-pre-line">
+          {error}
+        </span>
       </div>
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={isLoading}
+          className="mt-3 min-h-[44px] px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold"
+        >
+          Try again
+        </button>
+      )}
     </div>
   );
 };
@@ -1583,9 +1627,14 @@ const DecoderEmptyState = () => (
   </div>
 );
 
-const DecisionDecoderResultsSection = ({ error, results, isLoading }) => (
+const DecisionDecoderResultsSection = ({
+  error,
+  results,
+  isLoading,
+  onRetry,
+}) => (
   <div>
-    <ResultsErrorNotice error={error} />
+    <ResultsErrorNotice error={error} onRetry={onRetry} isLoading={isLoading} />
 
     <ResultsContent results={results} />
 
@@ -1919,6 +1968,7 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
           error={error}
           results={results}
           isLoading={isLoading}
+          onRetry={() => handleDecode(denialText)}
         />
       </div>
 
