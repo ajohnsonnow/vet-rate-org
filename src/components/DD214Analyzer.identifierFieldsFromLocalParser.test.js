@@ -1,49 +1,13 @@
 /**
- * D15-1d (final15 QA review, 2026-09-28): DD214Analyzer's AI prompt schema
- * asked the model to extract the veteran's name/SSN-last-4/service number/
- * DOB/home-of-record/home-address directly from the just-uploaded DD-214's
- * raw OCR/pasted text - identifiers ADR-008 said a model must never be
- * asked to extract, even though `extractDD214Fields` (dd214FieldExtractor.js)
- * already parses every one of these fields locally via regex, box-label-
- * anchored, with zero AI involvement.
+ * Owner decision (F), 2026-10-01 (ADR-009): the AI is NEVER the source of an
+ * identifier field. On the owner's 5 scans the on-device model filled 14 of 25
+ * identifier fields and 10 were wrong, some with values that appear nowhere in
+ * the document. Name parts, DOB, SSN (any part), service number, home of record
+ * and mailing address shown or saved by the DD-214 Analyzer come only from
+ * dd214FieldExtractor when it is confident; otherwise the field is empty.
  *
- * D16-5 (owner decision, 2026-09-29, final) SUPERSEDES D15-1d's strict
- * "local parser only, never the model" rule: raw documents stay on the
- * device, so an ON-DEVICE model may now supply an identifier field too
- * (nothing left the computer). Display precedence is veteran-entered >
- * confident local parse = on-device model > empty; an OFF-DEVICE (cloud)
- * model still never supplies one. In practice this only changes behavior
- * when the local parser found NOTHING for a field - when it did (every
- * fixture below), the parser's value still wins, matching both the old and
- * new rule.
- *
- * D19-1 (2026-09-30) finishes wiring D16-5 through: the LOCAL/on-device
- * prompt's JSON schema had never actually been updated to ASK for these
- * fields (it still told the model "DO NOT extract or return" them), so an
- * on-device model had nowhere to put an identifier even though the merge
- * logic above was ready to accept one. The cloud prompt is untouched - it
- * still omits every identifier field, since cloud never receives document
- * text at all (see ADR-009) but stays identifier-free as defense in depth.
- *
- * Covers:
- *  - The LOCAL/on-device prompt's JSON schema now requests the composite
- *    identifier fields; the cloud prompt still omits them. Neither prompt
- *    requests a name sub-field or serviceNumber (see below).
- *  - `_applyRegexSafetyNet` still produces every one of those fields on the
- *    final merged result when the local parser finds them - sourced from
- *    the local regex parser instead of the model - so the veteran-visible
- *    result does not lose a field it showed before D15-1d.
- *  - The `homeAddress` (AI schema's Block-30 name) / `mailingAddress`
- *    (dd214FieldExtractor's Block-19 name) naming mismatch is bridged.
- *  - The NEW on-device/off-device precedence for the case the local parser
- *    finds nothing: an on-device model's own value is kept, an off-device
- *    (or unidentified) model's value is cleared rather than shown.
- *
- * `serviceNumber` has no local regex parser (confirmed by grep on
- * dd214FieldExtractor.js) - flagged in openIssues rather than silently
- * re-adding it to the AI schema; this suite documents that it is simply
- * absent from the merged result now; it does not have a name-mismatch to
- * bridge either.
+ * This supersedes D15-1d (never the model), D16-5 and D19-1 (on-device model
+ * allowed), which let an on-device value through.
  *
  * Fixture identifiers are synthetic.
  */
@@ -69,13 +33,12 @@ import {
   DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL,
   DD214_ANALYSIS_SYSTEM_PROMPT,
   _applyRegexSafetyNet,
+  _parseDd214Json,
 } from "./DD214Analyzer.jsx";
 
 const FAKE_LAST = "Faketon";
 const FAKE_FIRST = "Jordan";
 
-// A minimal but realistic DD-214 text block covering the boxes
-// dd214FieldExtractor.js parses locally for these fields.
 const FIXTURE_DD214_TEXT = `
 DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
 1. NAME: ${FAKE_LAST.toUpperCase()}, ${FAKE_FIRST.toUpperCase()}
@@ -91,73 +54,91 @@ DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
 24. CHARACTER OF SERVICE: HONORABLE
 `;
 
-// D19-1 (2026-09-30) supersedes this describe block's original D15-1d
-// claim for the LOCAL/on-device prompt only: since raw documents never
-// leave an on-device engine (ADR-009), that prompt now asks for the
-// composite identifier fields the on-device model CAN help extract
-// (fullName/ssnLast4/dateOfBirth/homeOfRecord/homeAddress) - the OFF-DEVICE
-// cloud prompt is untouched and still omits every one of them (cloud never
-// even receives document text at all, but the prompt itself stays
-// identifier-free as defense in depth). Neither prompt asks for the
-// name SUB-fields (lastName/firstName/middleName come from
-// `_applyRegexSafetyNet`'s own `parseName` split of `fullName`, not the
-// model) or `serviceNumber` (no local-parser counterpart - see this file's
-// header comment).
-describe("D19-1: the AI prompt schema's identifier fields are on-device only", () => {
-  const NAME_SUBFIELD_AND_SERVICE_NUMBER_LABELS = [
-    '"lastName"',
-    '"firstName"',
-    '"middleName"',
-    '"serviceNumber"',
-  ];
-  const ON_DEVICE_IDENTIFIER_LABELS = [
-    '"fullName"',
-    '"ssnLast4"',
-    '"dateOfBirth"',
-    '"homeOfRecord"',
-    '"homeAddress"',
-  ];
+const NO_IDENTIFIER_BOXES_TEXT = `
+DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
+2. DEPARTMENT, COMPONENT AND BRANCH: ARMY/ACTIVE
+12A. DATE ENTERED ACTIVE DUTY THIS PERIOD: 20020305
+12B. SEPARATION DATE THIS PERIOD: 20100615
+24. CHARACTER OF SERVICE: HONORABLE
+`;
 
+const IDENTIFIER_SCHEMA_KEYS = [
+  "fullName",
+  "lastName",
+  "firstName",
+  "middleName",
+  "ssnLast4",
+  "ssn",
+  "serviceNumber",
+  "dateOfBirth",
+  "homeOfRecord",
+  "homeAddress",
+  "mailingAddress",
+];
+
+describe("(F): no DD-214 AI prompt asks for an identifier field", () => {
   it.each([
     ["local/on-device", DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL],
     ["cloud", DD214_ANALYSIS_SYSTEM_PROMPT],
-  ])(
-    "the %s system prompt never requests a name sub-field or serviceNumber",
-    (_label, prompt) => {
-      NAME_SUBFIELD_AND_SERVICE_NUMBER_LABELS.forEach((label) => {
-        expect(prompt).not.toContain(label);
-      });
-    },
-  );
-
-  it("the local/on-device prompt's JSON schema DOES request the composite identifier fields", () => {
-    ON_DEVICE_IDENTIFIER_LABELS.forEach((label) => {
-      expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).toContain(label);
+  ])("the %s prompt schema has no identifier key", (_label, prompt) => {
+    IDENTIFIER_SCHEMA_KEYS.forEach((key) => {
+      expect(prompt).not.toContain(`"${key}"`);
     });
   });
 
-  it("the cloud prompt's JSON schema still omits every identifier field (defense in depth)", () => {
-    ON_DEVICE_IDENTIFIER_LABELS.forEach((label) => {
-      expect(DD214_ANALYSIS_SYSTEM_PROMPT).not.toContain(label);
-    });
+  it("the on-device prompt no longer has an identifier-extraction section", () => {
+    expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).not.toMatch(
+      /IDENTIFIER FIELDS|extract these too|Block 1: Full Name|Block 3: SSN|Block 5: Date of Birth|Block 7: Home of Record/,
+    );
   });
 
-  it("both prompts still request placeOfBirth (not an ADR-008-listed identifier)", () => {
+  it("both prompts still request placeOfBirth (not an identifier under ADR-008)", () => {
     expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).toContain('"placeOfBirth"');
     expect(DD214_ANALYSIS_SYSTEM_PROMPT).toContain('"placeOfBirth"');
   });
+
+  it("non-identifier extraction stays in the on-device prompt", () => {
+    [
+      "entryDate",
+      "separationDate",
+      "characterOfService",
+      "mos",
+      "awards",
+    ].forEach((key) =>
+      expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).toContain(`"${key}"`),
+    );
+  });
 });
 
-describe("D15-1d: _applyRegexSafetyNet backfills every identifier field the model no longer provides", () => {
-  it("fills fullName/lastName/firstName/ssnLast4/dateOfBirth/homeOfRecord from the local parser", () => {
-    // Simulates the AI response after D15-1d - none of these fields are
-    // present, matching the new (identifier-free) schema.
-    const data = {
-      branch: "Army",
-      entryDate: "2002-03-05",
-      separationDate: "2010-06-15",
-    };
+describe("(F): a model's identifier output is dropped when the response is parsed", () => {
+  const t = () => "parse error";
 
+  it("drops every identifier key and alias a model returns, keeps the rest", () => {
+    const content = JSON.stringify({
+      branch: "Army",
+      characterOfService: "Honorable",
+      fullName: "MODEL, INVENTED",
+      lastName: "MODEL",
+      firstName: "INVENTED",
+      middleName: "X",
+      ssnLast4: "0000",
+      ssn: "000-00-0000",
+      serviceNumber: "RA00000000",
+      dateOfBirth: "1900-01-01",
+      dob: "1900-01-01",
+      homeOfRecord: "NOWHERE, ZZ",
+      homeAddress: "1 FAKE ST",
+      mailingAddress: "2 FAKE ST",
+      name: "MODEL, ALIAS",
+    });
+    const data = _parseDd214Json(content, t);
+    expect(data).toEqual({ branch: "Army", characterOfService: "Honorable" });
+  });
+});
+
+describe("(F): _applyRegexSafetyNet takes identifier fields only from the local parser", () => {
+  it("fills name/SSN-last-4/DOB/home of record from the local parser when confident", () => {
+    const data = { branch: "Army" };
     _applyRegexSafetyNet(data, FIXTURE_DD214_TEXT, () => {});
 
     expect(data.fullName).toContain(FAKE_LAST.toUpperCase());
@@ -169,156 +150,68 @@ describe("D15-1d: _applyRegexSafetyNet backfills every identifier field the mode
     expect(data.homeOfRecord).toContain("ANYTOWN");
   });
 
-  it("bridges the homeAddress (AI schema name) / mailingAddress (regex extractor name) mismatch", () => {
+  it("bridges the homeAddress / mailingAddress naming mismatch", () => {
     const data = { branch: "Army" };
     _applyRegexSafetyNet(data, FIXTURE_DD214_TEXT, () => {});
     expect(data.homeAddress).toContain("123 MAIN ST");
   });
 
-  it("overwrites an AI-supplied homeAddress with the local regex value (owner decision D: identifier fields come from the local parser, never the model, even if one slips past the schema)", () => {
-    const data = { branch: "Army", homeAddress: "AI-reported address" };
-    _applyRegexSafetyNet(data, FIXTURE_DD214_TEXT, () => {});
-    expect(data.homeAddress).toContain("123 MAIN ST");
-    expect(data.homeAddress).not.toBe("AI-reported address");
-  });
-
-  it("overwrites an AI-supplied fullName/dateOfBirth with the local regex value the same way", () => {
+  it("overwrites a model-supplied identifier with the local parser's value", () => {
     const data = {
       branch: "Army",
       fullName: "AI GUESS, WRONG",
       dateOfBirth: "1900-01-01",
+      homeAddress: "AI-reported address",
     };
     _applyRegexSafetyNet(data, FIXTURE_DD214_TEXT, () => {});
     expect(data.fullName).toContain(FAKE_LAST.toUpperCase());
     expect(data.dateOfBirth).toBe("1984-03-15");
-  });
-});
-
-// D16-5: text with NONE of the local parser's identifier boxes present, so
-// `regexResult.fields` has nothing for any identifier field - the only way
-// to exercise the on-device/off-device precedence, since every fixture
-// above gives the local parser a confident value that wins regardless.
-const NO_IDENTIFIER_BOXES_TEXT = `
-DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
-2. DEPARTMENT, COMPONENT AND BRANCH: ARMY/ACTIVE
-12A. DATE ENTERED ACTIVE DUTY THIS PERIOD: 20020305
-12B. SEPARATION DATE THIS PERIOD: 20100615
-24. CHARACTER OF SERVICE: HONORABLE
-`;
-
-describe("D16-5: on-device/off-device precedence when the local parser finds nothing", () => {
-  it("keeps an on-device model's own identifier value (onDevice: true)", () => {
-    const data = { branch: "Army", fullName: "ON-DEVICE MODEL, ANSWER" };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
-    expect(data.fullName).toBe("ON-DEVICE MODEL, ANSWER");
+    expect(data.homeAddress).toContain("123 MAIN ST");
   });
 
-  it("clears an off-device model's identifier value rather than showing it (onDevice: false)", () => {
-    const data = { branch: "Army", fullName: "CLOUD MODEL, ANSWER" };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, false);
-    expect(data.fullName).toBe("");
-  });
-
-  it("clears an identifier value when onDevice is undefined (fails closed)", () => {
-    const data = { branch: "Army", homeOfRecord: "UNKNOWN-MODE ANSWER" };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, undefined);
-    expect(data.homeOfRecord).toBe("");
-  });
-
-  it("clears an identifier value when onDevice is truthy but not strictly true (fails closed)", () => {
-    const data = { branch: "Army", fullName: "TRUTHY-STRING MODE ANSWER" };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, "true");
-    expect(data.fullName).toBe("");
-  });
-
-  it("clears homeAddress (the AI schema's Block-30 name) the same way when off-device", () => {
-    const data = { branch: "Army", homeAddress: "CLOUD MODEL ADDRESS" };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, false);
-    expect(data.homeAddress).toBe("");
-  });
-
-  it("clears alias identifier keys (name/ssn/serviceNumber) off-device even though the local parser never produces them", () => {
-    const data = {
-      branch: "Army",
-      name: "CLOUD MODEL, ALIAS",
-      ssn: "999-99-9999",
-      serviceNumber: "RA99999999",
-    };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, false);
-    expect(data.name).toBe("");
-    expect(data.ssn).toBe("");
-    expect(data.serviceNumber).toBe("");
-  });
-
-  it("leaves alias identifier keys alone when onDevice is true", () => {
-    const data = {
-      branch: "Army",
-      name: "ON-DEVICE MODEL, ALIAS",
-      ssn: "111-22-3333",
-      serviceNumber: "RA11112222",
-    };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
-    expect(data.name).toBe("ON-DEVICE MODEL, ALIAS");
-    expect(data.ssn).toBe("111-22-3333");
-    expect(data.serviceNumber).toBe("RA11112222");
-  });
-
-  // A non-array combatService (e.g. a model emitting the string "Yes"
-  // instead of the schema's object shape) makes mergeCombatServiceIndicators
-  // throw when the document has a real combat decoration - identifier
-  // clearing must still run (fail-closed), never be skipped because this
-  // unrelated merge step threw. Confirmed via a temporary base-commit
-  // (cc34ecbb) snapshot that this exact scenario leaked the planted
-  // sentinel there.
-  it("clears an off-device identifier even when the combatService merge step throws", () => {
-    const data = {
-      branch: "Army",
-      fullName: "CLOUD MODEL, WRONG",
-      combatService: "not-an-object",
-    };
-    const text =
-      "1. NAME: DOE, JORDAN R\n13. DECORATIONS: COMBAT INFANTRYMAN BADGE\n14. MILITARY EDUCATION: NONE\n";
-    _applyRegexSafetyNet(data, text, () => {}, false);
-    expect(data.fullName).not.toBe("CLOUD MODEL, WRONG");
-    expect(data.fullName).toBe("DOE, JORDAN R");
-  });
-});
-
-// D19 follow-up: the schema's own example values carry a literal
-// "(Block N)" hint ("Last, First, Middle (Block 1)", "YYYY-MM-DD
-// (Block 5)") - a small on-device model that can't read a field sometimes
-// echoes that hint back verbatim instead of a real value, and ssnLast4 in
-// particular can come back as a full 9-digit SSN instead of the last 4
-// digits the schema asks for.
-describe("D19 follow-up: an on-device model's identifier value is shape/placeholder-checked", () => {
-  it.each([
-    ["fullName", "Last, First, Middle (Block 1)"],
-    ["dateOfBirth", "YYYY-MM-DD (Block 5)"],
-    ["homeOfRecord", "City, State (Block 7)"],
-    ["homeAddress", "Mailing/Home Address (Block 30)"],
-  ])(
-    "clears a %s value that echoes the schema's own placeholder hint text",
-    (key, placeholder) => {
-      const data = { branch: "Army", [key]: placeholder };
-      _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
+  it.each(
+    IDENTIFIER_SCHEMA_KEYS.filter(
+      (k) => !["ssn", "serviceNumber", "mailingAddress"].includes(k),
+    ),
+  )(
+    "leaves %s empty when the local parser finds nothing, whatever the model returned",
+    (key) => {
+      const data = { branch: "Army", [key]: "PLANTED MODEL VALUE 1234" };
+      _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {});
       expect(data[key]).toBe("");
     },
   );
 
-  it("clears an ssnLast4 value that is a full 9-digit SSN instead of the last 4 digits", () => {
-    const data = { branch: "Army", ssnLast4: "123-45-6789" };
-    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
-    expect(data.ssnLast4).toBe("");
-  });
-
-  it("still keeps a well-shaped on-device ssnLast4/dateOfBirth value", () => {
+  it("removes alias identifier keys (name/ssn/serviceNumber/dob/mailingAddress)", () => {
     const data = {
       branch: "Army",
-      ssnLast4: "6789",
-      dateOfBirth: "1984-03-15",
+      name: "MODEL, ALIAS",
+      ssn: "999-99-9999",
+      serviceNumber: "RA99999999",
+      dob: "1900-01-01",
+      mailingAddress: "1 FAKE ST",
     };
+    _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {});
+    ["name", "ssn", "serviceNumber", "dob", "mailingAddress"].forEach((key) =>
+      expect(data[key]).toBeUndefined(),
+    );
+  });
+
+  it("ignores any legacy onDevice flag - an on-device model's value is not kept", () => {
+    const data = { branch: "Army", fullName: "ON-DEVICE MODEL, ANSWER" };
     _applyRegexSafetyNet(data, NO_IDENTIFIER_BOXES_TEXT, () => {}, true);
-    expect(data.ssnLast4).toBe("6789");
-    expect(data.dateOfBirth).toBe("1984-03-15");
+    expect(data.fullName).toBe("");
+  });
+
+  it("still clears model identifiers when the combatService merge step throws", () => {
+    const data = {
+      branch: "Army",
+      fullName: "MODEL, WRONG",
+      combatService: "not-an-object",
+    };
+    const text =
+      "1. NAME: DOE, JORDAN R\n13. DECORATIONS: COMBAT INFANTRYMAN BADGE\n14. MILITARY EDUCATION: NONE\n";
+    _applyRegexSafetyNet(data, text, () => {});
+    expect(data.fullName).toBe("DOE, JORDAN R");
   });
 });

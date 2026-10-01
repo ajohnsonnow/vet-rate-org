@@ -239,6 +239,22 @@ const formatSimpleFieldValue = (value) => {
   return String(value);
 };
 
+// Owner decision (F): nothing identifier-related is ever pre-selected for
+// import. The veteran ticks the box deliberately.
+const NEVER_PRESELECTED_FIELDS = new Set([
+  "fullName",
+  "firstName",
+  "middleName",
+  "lastName",
+  "ssnLast4",
+  "ssnFull",
+  "dateOfBirth",
+  "dob",
+  "serviceNumber",
+  "homeOfRecord",
+  "homeAddress",
+]);
+
 const useEditableProfileData = (extractedData, currentProfile) => {
   const [editableData, setEditableData] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
@@ -251,6 +267,7 @@ const useEditableProfileData = (extractedData, currentProfile) => {
       // Auto-select fields that are new or different
       const autoSelected = {};
       Object.keys(extractedData).forEach((key) => {
+        if (NEVER_PRESELECTED_FIELDS.has(key)) return;
         // Select if current profile doesn't have this field, or if values differ
         if (
           !currentProfile[key] ||

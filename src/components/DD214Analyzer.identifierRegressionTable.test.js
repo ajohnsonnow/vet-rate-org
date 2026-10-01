@@ -276,41 +276,52 @@ describe("D16-5: identifier-field regression table (correct or empty, never wron
   });
 });
 
-describe("D16-5: on-device model precedence (confident local parse = on-device model)", () => {
+// Owner decision (F): the model is never an identifier source, on ANY backend.
+// Every row of the table above and every case below plants wrong identifiers
+// and runs once per backend flag (on-device, off-device, unidentified).
+describe("(F): planted wrong model identifiers never appear, on every backend", () => {
   const CLEAN_TEXT =
     "1. NAME: DOE, JORDAN R\n3. SOCIAL SECURITY: 123-45-6789\n5. DATE OF BIRTH: 1985 06 21\n";
+  const BACKENDS = [
+    ["on-device", true],
+    ["off-device", false],
+    ["unidentified", undefined],
+    ["truthy string", "true"],
+  ];
 
-  it("keeps the value when the on-device model AGREES with the confident local parse", () => {
-    const data = { branch: "Army", fullName: "DOE, JORDAN R" };
-    _applyRegexSafetyNet(data, CLEAN_TEXT, () => {}, true);
-    expect(data.fullName).toBe("DOE, JORDAN R");
-  });
+  it.each(BACKENDS)(
+    "%s: the confident local parse wins over a planted wrong value",
+    (_label, onDevice) => {
+      const data = plantWrongValues();
+      _applyRegexSafetyNet(data, CLEAN_TEXT, () => {}, onDevice);
+      expectExactOrEmpty(data, {
+        fullName: "DOE, JORDAN R",
+        lastName: "DOE",
+        firstName: "JORDAN",
+        middleName: "R",
+        ssnLast4: "6789",
+        dateOfBirth: "1985-06-21",
+      });
+    },
+  );
 
-  it("shows nothing and flags it when the on-device model DISAGREES with the confident local parse", () => {
-    const data = { branch: "Army", fullName: "SMITH, ALEX Q" };
-    _applyRegexSafetyNet(data, CLEAN_TEXT, () => {}, true);
-    expect(data.fullName).toBe("");
-    expect(data.fullName).not.toBe("SMITH, ALEX Q");
-    expect(data.fullName).not.toBe("DOE, JORDAN R");
-    expect(
-      (data.extractionNotes || []).some((n) => n.includes("fullName")),
-    ).toBe(true);
-  });
+  it.each(BACKENDS)(
+    "%s: every identifier is empty when the local parser finds nothing",
+    (_label, onDevice) => {
+      const data = plantWrongValues();
+      _applyRegexSafetyNet(
+        data,
+        "2. DEPARTMENT: ARMY/ACTIVE\n",
+        () => {},
+        onDevice,
+      );
+      expectExactOrEmpty(data, {});
+    },
+  );
 
-  it("keeps the on-device model's own value when the local parser finds nothing at all", () => {
-    const data = { branch: "Army", fullName: "ON-DEVICE MODEL, ANSWER" };
-    _applyRegexSafetyNet(data, "2. DEPARTMENT: ARMY/ACTIVE\n", () => {}, true);
-    expect(data.fullName).toBe("ON-DEVICE MODEL, ANSWER");
-  });
-
-  it("only a strict boolean true counts as onDevice - a truthy string fails closed", () => {
-    const data = { branch: "Army", fullName: "TRUTHY STRING MODE" };
-    _applyRegexSafetyNet(
-      data,
-      "2. DEPARTMENT: ARMY/ACTIVE\n",
-      () => {},
-      "true",
-    );
-    expect(data.fullName).toBe("");
+  it.each(ROWS)("on-device backend, row: %s", (_label, text, expected) => {
+    const data = plantWrongValues();
+    _applyRegexSafetyNet(data, text, () => {}, true);
+    expectExactOrEmpty(data, expected);
   });
 });

@@ -81,20 +81,12 @@ import DD214FormBuilder from "./DD214FormBuilder";
  * Condensed System Prompt for Local Models (4K context)
  * Focus on essential JSON extraction - comprehensive DD214 coverage
  */
-// D16-5 (2026-09-29, final, supersedes D15-1d): this prompt only ever runs
-// on-device (DD214Analyzer.jsx's isLocalOnly gate picks it exactly when
-// getDocumentAIRouting().onDeviceReady is true) and nothing it extracts
-// ever leaves the veteran's machine, so it now asks the model for name/
-// SSN-last-4/DOB/home-of-record/mailing address too - _applyRegexSafetyNet
-// still decides what's actually shown (local parse wins when confident and
-// non-conflicting, an on-device model value is trusted otherwise, a
-// disagreement clears to empty rather than guessing). The off-device
-// DD214_ANALYSIS_SYSTEM_PROMPT below still omits these fields entirely -
-// cloud never receives document text at all (see ADR-009), but the prompt
-// itself stays identifier-free as defense in depth. This is a code
-// comment, kept OUTSIDE the template literal below - unlike a comment
-// placed inside the backtick string, this one is never sent to the model
-// as prompt text.
+// Owner decision (F), 2026-10-01 (ADR-009): the model is never the source of
+// an identifier field. Both prompts omit name/SSN/service number/DOB/home of
+// record/address; they come only from dd214FieldExtractor when confident.
+// This is a code comment, kept OUTSIDE the template literal below - unlike a
+// comment placed inside the backtick string, this one is never sent to the
+// model as prompt text.
 export const DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL = `You are a DD214 military records analyst. Extract ALL available data as JSON.
 
 COMPLETE DD214 FIELD LOCATIONS:
@@ -129,13 +121,7 @@ Block 27: Reserve Obligation Termination Date (YYYYMMDD)
 Block 28: Days Lost (AWOL, confinement, etc)
 Block 29: Foreign Service Credit
 
-IDENTIFIER FIELDS (this document stays on THIS device - extract these too):
-Block 1: Full Name (Last, First, Middle)
-Block 3: SSN - return ONLY the last 4 digits as ssnLast4
-Block 5: Date of Birth (YYYY-MM-DD)
-Block 7: Home of Record (City, State)
-Block 30: Mailing/Home Address
-If a field is not found, use null. Never guess a value you can't read.
+Do NOT output the veteran's name, SSN, service number, date of birth, home of record or mailing address. Omit those fields entirely.
 
 CRITICAL EXTRACTION RULES:
 1. Block 18 (Remarks) often contains:
@@ -157,11 +143,6 @@ OUTPUT JSON:
   "documentTypes": ["DD214","NGB22","DD256"],
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214",
-  "fullName": "Last, First, Middle (Block 1)",
-  "ssnLast4": "last 4 digits only (Block 3)",
-  "dateOfBirth": "YYYY-MM-DD (Block 5)",
-  "homeOfRecord": "City, State (Block 7)",
-  "homeAddress": "Mailing/Home Address (Block 30)",
   "placeOfBirth": "City, State, Country",
   "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
   "componentFull": "Regular Army|Army National Guard|Navy Reserve|etc",
@@ -646,8 +627,6 @@ export function _extractResponseContent(response) {
   } else {
     content = "";
   }
-  // eslint-disable-next-line no-console
-  console.log("🤖 Raw AI Response:", content || "(empty)");
 
   // Check for empty response - vision models may return empty if image processing failed
   if (!content || content.trim().length === 0) {
@@ -707,18 +686,10 @@ function _extractFirstJsonObject(text) {
   return text.slice(start);
 }
 
-// D19 follow-up: since D16-5 restored identifier fields (name/SSN/DOB/home
-// of record/address) to the on-device schema, the raw and parsed content
-// this function handles can carry them. It used to `console.log`/
-// `console.error` that content directly (a debug leftover, never gated on
-// an error) - bugReportUtils' console interceptor captures any
-// `console.error` unconditionally, and any `console.log` whose stringified
-// args contain a common keyword ("null", "missing", ...), which a
-// JSON.stringify'd object with an unset identifier field almost always
-// does. A captured log becomes part of a bug report a veteran can copy to
-// the clipboard or POST off-device (BugSquasher) - a NEW path this
-// function's content never had before that schema change. Diagnostics now
-// report shape/length only, never content.
+// Model output never reaches the console: bugReportUtils' interceptor
+// captures console output into bug reports a veteran can copy or send
+// off-device, so diagnostics here report shape/length only. Identifier fields
+// a model returns anyway are dropped at parse time (owner decision F).
 export function _parseDd214Json(content, t) {
   // Parse JSON from response
   let data;
@@ -760,11 +731,12 @@ export function _parseDd214Json(content, t) {
     if (data.mosTitle && typeof data.mosTitle !== "string") {
       data.mosTitle = String(data.mosTitle);
     }
-  } catch (parseError) {
+    _stripModelIdentifiers(data);
+  } catch {
+    // V8's JSON.parse message quotes a snippet of the input, so it is never
+    // logged - only the length.
     console.error(
-      "JSON parse error:",
-      parseError.message,
-      "Content length:",
+      "JSON parse error. Content length:",
       typeof content === "string" ? content.length : 0,
     );
     throw new Error(t("dd214Analyzer", "parseError"));
@@ -772,24 +744,15 @@ export function _parseDd214Json(content, t) {
   return data;
 }
 
-// D16-5 / owner decision (2026-09-29, final), superseding D15-1d's
-// stricter "local parser only, never the model" rule: raw documents stay
-// on the device, so the on-device engine MAY now see identifiers inside
-// them (nothing leaves the computer) and on-device extraction of these
-// fields is allowed again. Display precedence is veteran-entered (not
-// this function's concern - a veteran's own edit happens later, in the UI,
-// after this runs once) > confident local parse = on-device model > empty
-// - and when a confident local parse AND a trusted on-device model value
-// are both present but DISAGREE, neither is shown (empty + a flagged
-// note) rather than silently guessing one is right. An off-device (cloud)
-// model never supplies an identifier field, even if one slips past the
-// JSON schema - the routing change means cloud never even sees the
-// document text, so any value here would be a hallucination, not a read;
-// this function enforces that anyway as defense in depth. `homeAddress`
-// is bridged separately below - the regex extractor's own field for this
-// is named `mailingAddress` (Block 19 on the layouts it targets), not
-// `homeAddress` (Block 30 in the AI schema's numbering).
-const IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY = [
+// Owner decision (F), 2026-10-01 (ADR-009): the AI is NEVER the source of an
+// identifier field. Three evaluation rounds showed the on-device model
+// invents these values (on the owner's 5 scans it filled 14 of 25 identifier
+// fields and 10 were wrong, some appearing nowhere in the document). A value
+// shown or saved for any of these comes only from dd214FieldExtractor when it
+// is confident; otherwise the field is empty for the veteran to type. `homeAddress`
+// is bridged from the extractor's own `mailingAddress` field (Block 19 on the
+// layouts it targets; Block 30 in the AI schema's numbering).
+export const IDENTIFIER_FIELDS = [
   "fullName",
   "lastName",
   "firstName",
@@ -797,130 +760,37 @@ const IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY = [
   "ssnLast4",
   "dateOfBirth",
   "homeOfRecord",
+  "homeAddress",
 ];
 
-// Legacy/alternate key names a model might emit for the SAME identifiers
-// above despite the JSON schema omitting them (`name` for fullName, `ssn`
-// for ssnLast4, `serviceNumber` has no schema field at all). There is no
-// local-parser value to prefer for these - just the same on-device/
-// off-device trust gate the canonical keys get above.
-const IDENTIFIER_ALIAS_KEYS_OFF_DEVICE_ONLY = ["name", "ssn", "serviceNumber"];
+// Alternate key names a model might emit for the same identifiers despite
+// the prompt omitting them. No local-parser counterpart exists for these.
+const IDENTIFIER_ALIAS_KEYS = [
+  "name",
+  "ssn",
+  "ssnFull",
+  "serviceNumber",
+  "dob",
+  "mailingAddress",
+];
 
 function _hasValue(val) {
   return val !== undefined && val !== null && val !== "";
 }
 
-// Light normalization so cosmetic differences (case, punctuation, extra
-// spaces) between the local parser's and the on-device model's own
-// reading of the SAME document don't get flagged as a false disagreement.
-function _valuesConflict(regexValue, modelValue) {
-  const normalize = (v) =>
-    String(v ?? "")
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-  const a = normalize(regexValue);
-  const b = normalize(modelValue);
-  if (!a || !b) return false;
-  return a !== b;
+export function _stripModelIdentifiers(data) {
+  [...IDENTIFIER_FIELDS, ...IDENTIFIER_ALIAS_KEYS].forEach((key) => {
+    if (key in data) delete data[key];
+  });
+  return data;
 }
 
-// D19 follow-up: the on-device schema's own example values ("Last, First,
-// Middle (Block 1)", "YYYY-MM-DD (Block 5)", "City, State (Block 7)") are
-// exactly what a small on-device model tends to echo back verbatim when it
-// can't actually read a field - nothing previously rejected that echo
-// before it was trusted as a real read. Any of this app's identifier
-// placeholders carries the literal "(Block N)" hint text, so that's a
-// reliable, schema-derived signal rather than a guess. ssnLast4 is also
-// shape-checked to exactly 4 digits, so a model that returns the FULL SSN
-// in that field (small models sometimes do) is rejected rather than kept
-// as-is - the schema explicitly asks for "last 4 digits only".
-const _BLOCK_HINT_ECHO = /\(\s*Block\s+\d+[a-z]?\s*\)/i;
-const IDENTIFIER_FIELD_SHAPE = {
-  ssnLast4: /^\d{4}$/,
-  dateOfBirth: /^\d{4}-\d{1,2}-\d{1,2}$/,
-};
-
-function _isTrustworthyModelValue(key, value) {
-  if (typeof value !== "string") return true;
-  if (_BLOCK_HINT_ECHO.test(value)) return false;
-  const shape = IDENTIFIER_FIELD_SHAPE[key];
-  return shape ? shape.test(value.trim()) : true;
-}
-
-// Local parse (dd214FieldExtractor.js only ever emits a value it's
-// confident about - see D16-5) wins when present and doesn't conflict with
-// a trusted on-device model value. Otherwise, an on-device model's own
-// value is left as whatever mergeAIAndRegexResults already put there; an
-// off-device (or unconfirmed or untrustworthy-shaped) model's value is
-// cleared to an empty string so Object.assign below actually overwrites it
-// on `data` rather than leaving a stale value in place.
-function _resolveIdentifierField(merged, key, regexValue, trustModelValue) {
-  const hasRegexValue = _hasValue(regexValue);
-  const modelValue = merged[key];
-  const modelValueTrusted =
-    trustModelValue &&
-    _hasValue(modelValue) &&
-    _isTrustworthyModelValue(key, modelValue);
-
-  if (
-    hasRegexValue &&
-    modelValueTrusted &&
-    _valuesConflict(regexValue, modelValue)
-  ) {
-    merged[key] = "";
-    return key;
-  }
-  if (hasRegexValue) {
-    merged[key] = regexValue;
-  } else if (!modelValueTrusted) {
-    merged[key] = "";
-  }
-  return null;
-}
-
-// `onDevice` is the CONTRACT value the provider boundary sets on the AI
-// response (see unifiedAIService.js) - only a strict `true` counts as
-// on-device; anything else (false, undefined, a truthy-but-not-`true`
-// value) fails closed, matching "Consumers treat anything other than a
-// strict `true` as off-device".
-function _applyIdentifierFieldPrecedence(merged, regexFields, onDevice) {
-  const trustModelValue = onDevice === true;
-  const disagreements = [];
-
-  const resolve = (key, regexValue) => {
-    const flagged = _resolveIdentifierField(
-      merged,
-      key,
-      regexValue,
-      trustModelValue,
-    );
-    if (flagged) disagreements.push(flagged);
-  };
-
-  IDENTIFIER_FIELDS_LOCAL_PARSER_ONLY.forEach((key) =>
-    resolve(key, regexFields?.[key]),
-  );
-  resolve("homeAddress", regexFields?.mailingAddress);
-
-  if (disagreements.length > 0) {
-    merged.extractionNotes = [
-      ...(merged.extractionNotes || []),
-      `Local document parsing and the on-device model disagreed on ${disagreements.join(", ")} - cleared rather than guessing which was right.`,
-    ];
-  }
-}
-
-// Alias identifier keys have no local-parser counterpart to prefer - an
-// off-device (or unconfirmed) model's value is cleared exactly like the
-// canonical keys above; a trusted on-device model's value is left as-is.
-// Runs unconditionally, outside any try/catch that could swallow it -
-// clearing must be fail-closed, never skipped because something else
-// upstream threw (see D16-5 QA finding: a merge exception used to leave a
-// cloud-supplied alias value on `data` untouched).
-function _clearOffDeviceIdentifierAliases(data, onDevice) {
-  if (onDevice === true) return;
-  IDENTIFIER_ALIAS_KEYS_OFF_DEVICE_ONLY.forEach((key) => {
-    if (_hasValue(data[key])) data[key] = "";
+function _applyIdentifierFieldsFromLocalParser(data, regexFields) {
+  _stripModelIdentifiers(data);
+  IDENTIFIER_FIELDS.forEach((key) => {
+    const value =
+      key === "homeAddress" ? regexFields?.mailingAddress : regexFields?.[key];
+    data[key] = _hasValue(value) ? value : "";
   });
 }
 
@@ -949,18 +819,12 @@ function _mergeRegexIntoData(data, combinedRawText) {
   return regexResult;
 }
 
-export function _applyRegexSafetyNet(
-  data,
-  combinedRawText,
-  setAnalysisResult,
-  onDevice,
-) {
+export function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
   const regexResult = _mergeRegexIntoData(data, combinedRawText);
 
-  // Both run unconditionally (fail-closed), regardless of whether
-  // extraction/merge above threw or found nothing.
-  _applyIdentifierFieldPrecedence(data, regexResult?.fields, onDevice);
-  _clearOffDeviceIdentifierAliases(data, onDevice);
+  // Runs unconditionally (fail-closed), regardless of whether extraction or
+  // merge above threw or found nothing.
+  _applyIdentifierFieldsFromLocalParser(data, regexResult?.fields);
 
   setAnalysisResult({ ...data });
 }
@@ -1785,28 +1649,64 @@ function DD214ResultsSummaryHeader({ analysisResult, t }) {
   );
 }
 
-function DD214PersonalIdCards({ analysisResult }) {
+// Owner decision (F): an identifier field shows the local parser's confident
+// value or nothing. When empty it is a text box so the veteran can type it in;
+// whatever the veteran types is stored on the result and always wins.
+function DD214IdentifierCard({
+  field,
+  label,
+  placeholder,
+  value,
+  onChange,
+  wide,
+}) {
+  const inputId = `dd214-identifier-${field}`;
+  return (
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg p-3 ${wide ? "col-span-2" : ""}`}
+    >
+      <label
+        htmlFor={inputId}
+        className="text-xs text-gray-500 dark:text-gray-400 block"
+      >
+        {label}
+      </label>
+      <input
+        id={inputId}
+        type="text"
+        autoComplete="off"
+        value={value || ""}
+        placeholder={placeholder}
+        onChange={(e) => onChange(field, e.target.value)}
+        className="w-full min-w-0 font-bold text-gray-900 dark:text-gray-100 bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-blue-500 placeholder:font-normal placeholder:text-gray-400 min-h-[44px]"
+      />
+      {!value && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Not read from the document. Type it in if you want it saved.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DD214PersonalIdCards({ analysisResult, onIdentifierChange }) {
   return (
     <>
       {/* Personal Identification */}
-      {analysisResult.fullName && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Full Name</p>
-          <p className="font-bold text-gray-900 dark:text-gray-100">
-            {analysisResult.fullName}
-          </p>
-        </div>
-      )}
-      {analysisResult.dateOfBirth && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Date of Birth
-          </p>
-          <p className="font-bold text-gray-900 dark:text-gray-100">
-            {analysisResult.dateOfBirth}
-          </p>
-        </div>
-      )}
+      <DD214IdentifierCard
+        field="fullName"
+        label="Full Name"
+        placeholder="Last, First Middle"
+        value={analysisResult.fullName}
+        onChange={onIdentifierChange}
+      />
+      <DD214IdentifierCard
+        field="dateOfBirth"
+        label="Date of Birth"
+        placeholder="YYYY-MM-DD"
+        value={analysisResult.dateOfBirth}
+        onChange={onIdentifierChange}
+      />
       {analysisResult.placeOfBirth && (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -1817,16 +1717,13 @@ function DD214PersonalIdCards({ analysisResult }) {
           </p>
         </div>
       )}
-      {analysisResult.homeOfRecord && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Home of Record
-          </p>
-          <p className="font-bold text-gray-900 dark:text-gray-100">
-            {analysisResult.homeOfRecord}
-          </p>
-        </div>
-      )}
+      <DD214IdentifierCard
+        field="homeOfRecord"
+        label="Home of Record"
+        placeholder="City, State"
+        value={analysisResult.homeOfRecord}
+        onChange={onIdentifierChange}
+      />
     </>
   );
 }
@@ -2107,20 +2004,18 @@ function DD214SeparationCards({ analysisResult, t }) {
   );
 }
 
-function DD214ContactQualCards({ analysisResult }) {
+function DD214ContactQualCards({ analysisResult, onIdentifierChange }) {
   return (
     <>
       {/* Contact */}
-      {analysisResult.homeAddress && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 col-span-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Home Address at Separation
-          </p>
-          <p className="font-bold text-gray-900 dark:text-gray-100 text-sm">
-            {analysisResult.homeAddress}
-          </p>
-        </div>
-      )}
+      <DD214IdentifierCard
+        field="homeAddress"
+        label="Home Address at Separation"
+        placeholder="Street, City, State ZIP"
+        value={analysisResult.homeAddress}
+        onChange={onIdentifierChange}
+        wide
+      />
 
       {/* Qualifications */}
       {analysisResult.securityClearance && (
@@ -2245,7 +2140,7 @@ function DD214ExtractionNotesSection({ analysisResult, t }) {
   );
 }
 
-function DD214AnalysisResultsPanel({ analysisResult, t }) {
+function DD214AnalysisResultsPanel({ analysisResult, onIdentifierChange, t }) {
   if (!analysisResult) return null;
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 space-y-6">
@@ -2253,13 +2148,19 @@ function DD214AnalysisResultsPanel({ analysisResult, t }) {
 
       {/* Service Info Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <DD214PersonalIdCards analysisResult={analysisResult} />
+        <DD214PersonalIdCards
+          analysisResult={analysisResult}
+          onIdentifierChange={onIdentifierChange}
+        />
         <DD214RankComponentCards analysisResult={analysisResult} t={t} />
         <DD214MosAssignmentCards analysisResult={analysisResult} t={t} />
         <DD214ServiceDateCards analysisResult={analysisResult} t={t} />
         <DD214BenefitsCards analysisResult={analysisResult} />
         <DD214SeparationCards analysisResult={analysisResult} t={t} />
-        <DD214ContactQualCards analysisResult={analysisResult} />
+        <DD214ContactQualCards
+          analysisResult={analysisResult}
+          onIdentifierChange={onIdentifierChange}
+        />
       </div>
 
       <DD214EducationSection analysisResult={analysisResult} />
@@ -2279,11 +2180,6 @@ function _processDroppedFiles(files, ctx) {
     setError,
   } = ctx;
 
-  // eslint-disable-next-line no-console
-  console.log(
-    "📁 processFiles called with:",
-    files.map((f) => f.name),
-  );
   if (files.length === 0) return;
 
   setError(null);
@@ -2291,11 +2187,6 @@ function _processDroppedFiles(files, ctx) {
   // Store files in state
   const newDroppedFiles = [...droppedFiles, ...files];
   setDroppedFiles(newDroppedFiles);
-  // eslint-disable-next-line no-console
-  console.log(
-    "📁 droppedFiles now:",
-    newDroppedFiles.map((f) => f.name),
-  );
 
   // Keep original PDF files for vision model analysis
   const pdfFiles = files.filter((f) => f.name.toLowerCase().endsWith(".pdf"));
@@ -2323,7 +2214,6 @@ async function _processSingleFileForOcr(file, ctx) {
   const { setOcrProgress, setExtractedTexts, setError } = ctx;
 
   if (!isFileSupported(file)) {
-    console.warn(`⚠️ ${file.name} is not a supported format`);
     return;
   }
 
@@ -2334,10 +2224,6 @@ async function _processSingleFileForOcr(file, ctx) {
   });
 
   try {
-    // eslint-disable-next-line no-console
-    console.log(
-      `🔍 Starting OCR analysis of ${file.name} via MusterCall pipeline...`,
-    );
     // Route through MusterCall → Florence-2 vision first, Tesseract OCR fallback
     const musterResult = await processFormationDocument(file, (progress) => {
       // Map MusterCall progress → OCR progress bar state
@@ -2358,10 +2244,6 @@ async function _processSingleFileForOcr(file, ctx) {
       ocrUsed: musterResult.ocrUsed ?? true,
       ocrConfidence: musterResult.confidence || 0,
     };
-    // eslint-disable-next-line no-console
-    console.log(
-      `✅ MusterCall OCR complete for ${file.name}: ${result.text?.length || 0} chars extracted`,
-    );
 
     setExtractedTexts((prev) => [
       ...prev,
@@ -2431,7 +2313,6 @@ function _buildRawProfileImportData(result) {
     firstName: result.firstName,
     middleName: result.middleName,
     ssnLast4: result.ssnLast4,
-    serviceNumber: result.serviceNumber,
     dateOfBirth: validateDate(result.dateOfBirth),
     placeOfBirth: result.placeOfBirth,
     homeOfRecord: result.homeOfRecord,
@@ -2541,6 +2422,10 @@ export function _prepareAndShowProfileImport(
   }
 }
 
+function _pickIdentifierFields(result) {
+  return Object.fromEntries(IDENTIFIER_FIELDS.map((key) => [key, result[key]]));
+}
+
 export function _prepareManualProfileImport(
   analysisResult,
   setExtractedProfileData,
@@ -2575,6 +2460,18 @@ export function _prepareManualProfileImport(
     const filteredData = Object.fromEntries(
       Object.entries(profileData).filter(
         ([_, v]) => v !== null && v !== undefined,
+      ),
+    );
+
+    // Identifier values the veteran typed in (or the local parser read) are
+    // offered for import; the modal never pre-selects them.
+    Object.assign(
+      filteredData,
+      _filterProfileImportData(
+        _pickIdentifierFields({
+          ...analysisResult,
+          dateOfBirth: validateDate(analysisResult.dateOfBirth),
+        }),
       ),
     );
 
@@ -2653,15 +2550,8 @@ function _buildDd214DropHandlers(state) {
     e.stopPropagation();
     setIsDragging(false);
 
-    // eslint-disable-next-line no-console
-    console.log("📁 Files dropped:", e.dataTransfer.files);
     const files = Array.from(e.dataTransfer.files).filter((f) =>
       isFileSupported(f),
-    );
-    // eslint-disable-next-line no-console
-    console.log(
-      "📁 Supported files:",
-      files.map((f) => f.name),
     );
     if (files.length === 0) {
       setError(t("dd214Analyzer", "unsupportedFormat"));
@@ -2843,16 +2733,11 @@ function _finishDd214Analysis(response, state) {
   // with AI results. If AI missed a field but regex found it, the regex
   // value fills the gap. If both have a value, AI wins for complex fields,
   // regex wins for structured fields like dates/MOS.
-  // `response?.onDevice` is the CONTRACT the provider boundary sets on
-  // every generateAI response (set from the engine/host actually used,
-  // undefined for the vision path) - _applyRegexSafetyNet only trusts a
-  // strict `true`, so it can keep an on-device model's own identifier
-  // value but never an off-device (or unidentified) one - see D16-5.
+  // Identifier fields come only from the local parser (owner decision F).
   _applyRegexSafetyNet(
     data,
     _getDd214CombinedText(pastedText, extractedTexts),
     setAnalysisResult,
-    response?.onDevice,
   );
 
   // Automatically trigger the save flow to show import confirmation - this
@@ -3088,6 +2973,7 @@ function DD214AnalyzerModalContent({ state, handlers }) {
     error,
     offDeviceNotice,
     analysisResult,
+    setAnalysisResult,
     aiStatus,
     setAIStatus,
     onOpenMusterCall,
@@ -3144,7 +3030,13 @@ function DD214AnalyzerModalContent({ state, handlers }) {
       <DD214ErrorBanner error={error} t={t} />
       <DD214OffDeviceNotice notice={offDeviceNotice} />
 
-      <DD214AnalysisResultsPanel analysisResult={analysisResult} t={t} />
+      <DD214AnalysisResultsPanel
+        analysisResult={analysisResult}
+        onIdentifierChange={(field, value) =>
+          setAnalysisResult((prev) => ({ ...prev, [field]: value }))
+        }
+        t={t}
+      />
     </div>
   );
 }
