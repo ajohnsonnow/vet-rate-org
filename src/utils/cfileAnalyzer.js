@@ -2095,18 +2095,125 @@ async function _finalizeMultiChunkResult(
   };
 }
 
+// D20-8: the rating-decision parsers' section-header and "name ... NN%" scans
+// also fire on decision-letter scaffolding, so their raw "condition" can be a
+// bare percentage, a heading ("Service connection", "Combined evaluation"),
+// a sentence fragment ("shows evaluation") or a clause cut off mid-phrase.
+// A name made only of these words names no medical condition.
+const NON_CONDITION_WORDS = new Set([
+  "a",
+  "an",
+  "the",
+  "of",
+  "for",
+  "is",
+  "was",
+  "shows",
+  "show",
+  "service",
+  "connection",
+  "connected",
+  "evaluation",
+  "evaluations",
+  "rating",
+  "ratings",
+  "combined",
+  "overall",
+  "total",
+  "percent",
+  "effective",
+  "date",
+  "decision",
+  "granted",
+  "denied",
+  "continued",
+  "increased",
+  "condition",
+  "conditions",
+  "disability",
+  "disabilities",
+  "claim",
+  "issue",
+  "issues",
+  "entitlement",
+  "medical",
+  "description",
+  "assigned",
+  "sc",
+]);
+const DANGLING_END_WORDS = new Set([
+  "of",
+  "and",
+  "or",
+  "with",
+  "the",
+  "a",
+  "an",
+  "to",
+  "for",
+  "due",
+  "secondary",
+  "by",
+  "in",
+  "on",
+  "at",
+]);
+const MAX_CONDITION_NAME_CHARS = 120;
+
+const NAME_EDGE_CHARS = new Set([..." ,;:.-–"]);
+const NAME_PERCENT_RE = /\d{1,3}\s{0,3}(?:%|percent)\b/i;
+
+function _trimNameEdges(name) {
+  let start = 0;
+  let end = name.length;
+  while (start < end && NAME_EDGE_CHARS.has(name[start])) start++;
+  while (end > start && NAME_EDGE_CHARS.has(name[end - 1])) end--;
+  return name.slice(start, end);
+}
+
+function _stripNameNoise(name) {
+  const flat = name
+    .replace(/\s+/g, " ")
+    .replace(/\((?:formerly|previously|currently|which)[^)]{0,80}\)/gi, "");
+  const percentAt = flat.search(NAME_PERCENT_RE);
+  return _trimNameEdges(percentAt === -1 ? flat : flat.slice(0, percentAt));
+}
+
+function _isTruncatedName(name) {
+  if (name.length > MAX_CONDITION_NAME_CHARS) return true;
+  const opens = (name.match(/\(/g) || []).length;
+  const closes = (name.match(/\)/g) || []).length;
+  if (opens !== closes) return true;
+  const words = name.toLowerCase().split(/\s+/);
+  return DANGLING_END_WORDS.has(words[words.length - 1]);
+}
+
+// Returns the cleaned condition name, or null when the text is not a
+// condition (bare number/percentage, scaffolding words only, or truncated).
+function _cleanConditionName(rawName) {
+  if (typeof rawName !== "string") return null;
+  const name = _stripNameNoise(rawName);
+  if (!/[a-z]{3}/i.test(name)) return null;
+  const words = name.toLowerCase().match(/[a-z]+/g) || [];
+  if (words.every((w) => NON_CONDITION_WORDS.has(w))) return null;
+  if (_isTruncatedName(name)) return null;
+  return name;
+}
+
 // D19-2: turns a local parser's found condition into the same claim shape
 // surfaceDocumentedConditions already pushes, so both signals merge into one
 // list with one downstream contract (enrichClaimsWithDiagnosticCodes /
-// enforceValidDiagnosticCodes).
+// enforceValidDiagnosticCodes). Returns null when the name is not a condition.
 function _localParserClaim(
-  name,
+  rawName,
   diagnosticCode,
   percent,
   status,
   effectiveDate,
   source,
 ) {
+  const name = _cleanConditionName(rawName);
+  if (!name) return null;
   const parts = [`found in your document (${source.replace("-", " ")})`];
   if (typeof percent === "number" && !Number.isNaN(percent)) {
     parts.push(`rated ${percent}%`);
@@ -2139,7 +2246,7 @@ function _isSameCondition(a, b) {
 }
 
 function _pushIfNewCondition(claims, claim) {
-  if (!claim.condition) return;
+  if (!claim?.condition) return;
   if (claims.some((c) => _isSameCondition(c.condition, claim.condition))) {
     return;
   }
