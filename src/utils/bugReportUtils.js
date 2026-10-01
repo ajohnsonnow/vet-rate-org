@@ -4,6 +4,12 @@
  * Privacy-focused: User controls what data is included
  */
 
+import {
+  scrubText,
+  redactKnownValues,
+  collectKnownIdentifierValues,
+} from "./piiScrubber";
+
 // Application modules/features - DIAMOND LEVEL: All 45+ tools tracked!
 export const APP_MODULES = {
   // Core Navigation
@@ -317,17 +323,113 @@ export const getStorageInfo = () => {
   }
 };
 
-/**
- * Capture console messages (errors, warnings, logs) for bug reports
- * DIAMOND LEVEL: Captures ALL console activity with context
- */
-export const getConsoleErrors = () => {
+const CONSOLE_LOG_STORAGE_KEY = "vet_rate_console_logs";
+const MAX_CONSOLE_LOG_ENTRIES = 50;
+const MAX_CONSOLE_MESSAGE_CHARS = 2000;
+const MAX_CONSOLE_STACK_CHARS = 1500;
+const MAX_CONSOLE_URL_CHARS = 300;
+// Bounds the work the scrubber does on one pathological line; the kept text
+// is clipped much smaller afterwards.
+const MAX_CONSOLE_SCRUB_INPUT_CHARS = 20000;
+const CONSOLE_TRUNCATION_MARKER = "...[truncated]";
+const KNOWN_IDENTIFIER_REFRESH_MS = 10000;
+
+let knownIdentifierValues = [];
+let lastKnownIdentifierRefreshAt = 0;
+let knownIdentifierRefreshInFlight = false;
+
+export const setKnownIdentifiersForConsoleScrub = (personal, claimNumbers) => {
+  knownIdentifierValues = collectKnownIdentifierValues(personal, claimNumbers);
+};
+
+// Scrub, then clip (never clip first: cutting an identifier in half would
+// leave an unmatched fragment). Idempotent, so already-stored entries can be
+// scrubbed again once the veteran's known values are loaded.
+const scrubConsoleText = (text, maxChars) => {
+  if (typeof text !== "string" || text === "") return text;
+  const bounded = text.slice(0, MAX_CONSOLE_SCRUB_INPUT_CHARS);
+  const scrubbed = scrubText(redactKnownValues(bounded, knownIdentifierValues));
+  if (scrubbed.length <= maxChars) return scrubbed;
+  return (
+    scrubbed.slice(0, maxChars - CONSOLE_TRUNCATION_MARKER.length) +
+    CONSOLE_TRUNCATION_MARKER
+  );
+};
+
+const scrubConsoleEntry = (entry) => ({
+  ...entry,
+  message: scrubConsoleText(entry.message, MAX_CONSOLE_MESSAGE_CHARS),
+  stack: scrubConsoleText(entry.stack, MAX_CONSOLE_STACK_CHARS),
+  url: scrubConsoleText(entry.url, MAX_CONSOLE_URL_CHARS),
+});
+
+const readStoredConsoleLogs = () => {
   try {
-    const logs = sessionStorage.getItem("vet_rate_console_logs");
-    return logs ? JSON.parse(logs) : [];
+    const logs = sessionStorage.getItem(CONSOLE_LOG_STORAGE_KEY);
+    const parsed = logs ? JSON.parse(logs) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
+};
+
+/**
+ * Capture console messages (errors, warnings, logs) for bug reports.
+ * Every entry is scrubbed again on the way out, so nothing stored before the
+ * veteran's known values were loaded can reach a report.
+ */
+export const getConsoleErrors = () =>
+  readStoredConsoleLogs().map(scrubConsoleEntry);
+
+const rescrubStoredConsoleLogs = () => {
+  try {
+    sessionStorage.setItem(
+      CONSOLE_LOG_STORAGE_KEY,
+      JSON.stringify(getConsoleErrors()),
+    );
+  } catch {
+    // sessionStorage unavailable: nothing was stored, so nothing to scrub.
+  }
+};
+
+/**
+ * Load the veteran's own known identifier values (name, DOB, SSN, address,
+ * claim numbers...) so console lines can be redacted by value, not only by
+ * shape. Modules load lazily: this file is in the boot path.
+ */
+export const refreshKnownIdentifiers = async () => {
+  if (knownIdentifierRefreshInFlight) return;
+  knownIdentifierRefreshInFlight = true;
+  try {
+    const [{ loadVKB }, { getVeteranProfile }] = await Promise.all([
+      import("./veteranKnowledgeBase"),
+      import("./veteranProfile"),
+    ]);
+    const vkb = await loadVKB();
+    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
+      .map((c) => c.claimNumber)
+      .filter(Boolean);
+    setKnownIdentifiersForConsoleScrub(
+      { ...getVeteranProfile(), ...vkb?.personal },
+      claimNumbers,
+    );
+    rescrubStoredConsoleLogs();
+  } catch {
+    // Best-effort: the pattern scrubber still runs on every line without it.
+  } finally {
+    knownIdentifierRefreshInFlight = false;
+    lastKnownIdentifierRefreshAt = Date.now();
+  }
+};
+
+const refreshKnownIdentifiersIfStale = () => {
+  if (
+    knownIdentifierRefreshInFlight ||
+    Date.now() - lastKnownIdentifierRefreshAt < KNOWN_IDENTIFIER_REFRESH_MS
+  ) {
+    return;
+  }
+  refreshKnownIdentifiers();
 };
 
 /**
@@ -336,10 +438,9 @@ export const getConsoleErrors = () => {
  */
 export const logConsoleError = (entry) => {
   try {
-    const logs = getConsoleErrors();
+    const logs = readStoredConsoleLogs();
 
-    // Create structured entry
-    const logEntry = {
+    const logEntry = scrubConsoleEntry({
       type: entry.type || "error", // 'error', 'warn', 'log', 'info'
       message: entry.message || String(entry),
       stack: entry.stack || null,
@@ -348,16 +449,18 @@ export const logConsoleError = (entry) => {
       lineNumber: entry.lineno || null,
       columnNumber: entry.colno || null,
       userAgent: navigator.userAgent,
-    };
+    });
 
     logs.push(logEntry);
 
-    // Keep only last 50 messages (increased from 10)
-    const recentLogs = logs.slice(-50);
-    sessionStorage.setItem("vet_rate_console_logs", JSON.stringify(recentLogs));
+    sessionStorage.setItem(
+      CONSOLE_LOG_STORAGE_KEY,
+      JSON.stringify(logs.slice(-MAX_CONSOLE_LOG_ENTRIES)),
+    );
   } catch {
     // Silently fail if sessionStorage is unavailable
   }
+  refreshKnownIdentifiersIfStale();
 };
 
 const buildSummarySection = ({
@@ -652,12 +755,16 @@ export const copyToClipboard = async (text) => {
   }
 };
 
-const stringifyConsoleArgs = (args) =>
-  args
-    .map((arg) =>
-      typeof arg === "object" ? JSON.stringify(arg, null, 2) : String(arg),
-    )
-    .join(" ");
+const stringifyConsoleArg = (arg) => {
+  if (typeof arg !== "object" || arg === null) return String(arg);
+  try {
+    return JSON.stringify(arg, null, 2);
+  } catch {
+    return String(arg);
+  }
+};
+
+const stringifyConsoleArgs = (args) => args.map(stringifyConsoleArg).join(" ");
 
 const captureGlobalErrorEvents = () => {
   // Capture unhandled errors
@@ -778,4 +885,5 @@ const interceptConsoleMethods = () => {
 export const initializeErrorCapture = () => {
   captureGlobalErrorEvents();
   interceptConsoleMethods();
+  refreshKnownIdentifiersIfStale();
 };
