@@ -493,6 +493,7 @@ async function _extractDocumentText(file, onProgress, options) {
       scannedPageRanges: largeResult.scannedPageRanges || [],
       pagesWithText: largeResult.pagesWithText,
       pagesEmpty: largeResult.pagesEmpty,
+      ...largePdfCoverage(largeResult),
     };
   } else {
     extractionResult = await analyzeDocument(
@@ -1824,6 +1825,44 @@ const pickPageCoverage = (extraction) => ({
   pagesFailed: extraction.pagesFailed || [],
   coverageNote: extraction.coverageNote || null,
 });
+
+const MAX_RANGES_IN_NOTE = 8;
+
+const describeEmptyRanges = (ranges) => {
+  const shown = ranges
+    .slice(0, MAX_RANGES_IN_NOTE)
+    .map(({ start, end }) => (start === end ? `${start}` : `${start}-${end}`));
+  const more = ranges.length - shown.length;
+  if (shown.length === 0) return "";
+  const extra = more > 0 ? " and " + more + " more range(s)" : "";
+  return " (pages " + shown.join(", ") + extra + ")";
+};
+
+// Very large files are streamed for typed text only (no OCR), so every page
+// with no text layer was not read. Report it the way the small-file path does.
+const largePdfCoverage = (largeResult) => {
+  const emptyRanges = largeResult.scannedPageRanges || [];
+  const emptyCount = largeResult.pagesEmpty || 0;
+  const total = largeResult.pageCount || 0;
+  const pagesSkipped = emptyRanges.flatMap(({ start, end }) =>
+    Array.from({ length: end - start + 1 }, (_, i) => start + i),
+  );
+  let coverageNote = `Read all ${total} page(s).`;
+  if (emptyCount > 0) {
+    coverageNote =
+      `Read ${total - emptyCount} of ${total} page(s). ${emptyCount} page(s)` +
+      `${describeEmptyRanges(emptyRanges)} had no typed text and were not read, ` +
+      "because files this large are read for typed text only.";
+  }
+  return {
+    pagesRead: total - emptyCount,
+    pagesOCRd: 0,
+    pagesBlank: [],
+    pagesSkipped,
+    pagesFailed: [],
+    coverageNote,
+  };
+};
 
 const processSingleDocument = async (file, onProgress, options = {}) => {
   const result = {
