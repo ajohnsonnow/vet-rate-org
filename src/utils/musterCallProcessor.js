@@ -79,7 +79,11 @@ import {
   mergeRatingDecisionIntoVKB,
   resetVKBConnection,
 } from "./veteranKnowledgeBase";
-import { withStepTimeout, StepTimeoutError } from "./boundedStep";
+import {
+  withStepTimeout,
+  withStallTimeout,
+  StepTimeoutError,
+} from "./boundedStep";
 import { describePersistIncomplete } from "./persistIncompleteMessage";
 import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
 import {
@@ -441,45 +445,71 @@ function isGarbledVisionText(text) {
   return !hasExpectedTerm;
 }
 
+// The streamed read of a file over 50 MB opens its own IndexedDB and awaits
+// each page's text, none of which can be cancelled, and honest work on a
+// 300 MB file takes minutes. So it is bounded by silence, not by a deadline:
+// every page reports progress, and a read that goes quiet this long has hung.
+const LARGE_PDF_STALL_MS = 180_000;
+const LARGE_PDF_STALLED_MESSAGE =
+  "Reading this very large PDF stopped making progress, so the import ended " +
+  "instead of waiting forever. Nothing from it was saved. Close other " +
+  "Vet-Rate tabs and import the file again.";
+
+async function _readLargePdfBounded(start) {
+  try {
+    return await withStallTimeout(start, "large PDF read", LARGE_PDF_STALL_MS);
+  } catch (err) {
+    if (err instanceof StepTimeoutError) {
+      console.warn("Large PDF read went quiet and was given up on.");
+      throw new Error(LARGE_PDF_STALLED_MESSAGE, { cause: err });
+    }
+    throw err;
+  }
+}
+
 async function _extractLargePdfText(file, onProgress, options) {
   // eslint-disable-next-line no-console
   console.log(
     `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) - using streaming extraction...`,
   );
   const etaTracker = createEtaTracker();
-  const largeResult = await processLargePDF(file, {
-    batchSize: 20,
-    onProgress: (cur, total, pct) => {
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
-        stage: "platoon_sergeant",
-        message: `Streaming page ${cur}/${total} (${pct}%)...`,
-        currentPage: cur,
-        totalPages: total,
-        etaSeconds: etaTracker.etaSeconds(total - cur),
-        pagesPerSecond: etaTracker.pagesPerSecond(),
-      });
-    },
-    onBatch: (batch) => {
-      etaTracker.sample(batch.processedSoFar);
-      // Forward per-batch updates for responsive UI on very large files
-      onProgress?.({
-        filename: file.name,
-        state: PROCESSING_STATES.EXTRACTING,
-        progress: 25 + batch.pct * 0.4,
-        stage: "platoon_sergeant",
-        message: `Pages ${batch.startPage}-${batch.endPage} of ${batch.totalPages} extracted`,
-        currentPage: batch.processedSoFar,
-        totalPages: batch.totalPages,
-        etaSeconds: etaTracker.etaSeconds(
-          batch.totalPages - batch.processedSoFar,
-        ),
-        pagesPerSecond: etaTracker.pagesPerSecond(),
-      });
-    },
-  });
+  const largeResult = await _readLargePdfBounded((progressed) =>
+    processLargePDF(file, {
+      batchSize: 20,
+      onProgress: (cur, total, pct) => {
+        progressed();
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
+          stage: "platoon_sergeant",
+          message: `Streaming page ${cur}/${total} (${pct}%)...`,
+          currentPage: cur,
+          totalPages: total,
+          etaSeconds: etaTracker.etaSeconds(total - cur),
+          pagesPerSecond: etaTracker.pagesPerSecond(),
+        });
+      },
+      onBatch: (batch) => {
+        progressed();
+        etaTracker.sample(batch.processedSoFar);
+        // Forward per-batch updates for responsive UI on very large files
+        onProgress?.({
+          filename: file.name,
+          state: PROCESSING_STATES.EXTRACTING,
+          progress: 25 + batch.pct * 0.4,
+          stage: "platoon_sergeant",
+          message: `Pages ${batch.startPage}-${batch.endPage} of ${batch.totalPages} extracted`,
+          currentPage: batch.processedSoFar,
+          totalPages: batch.totalPages,
+          etaSeconds: etaTracker.etaSeconds(
+            batch.totalPages - batch.processedSoFar,
+          ),
+          pagesPerSecond: etaTracker.pagesPerSecond(),
+        });
+      },
+    }),
+  );
   return {
     text: largeResult.text,
     pageCount: largeResult.pageCount,

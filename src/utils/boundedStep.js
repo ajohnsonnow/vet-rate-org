@@ -44,3 +44,41 @@ export function withStepTimeout(run, step, timeoutMs) {
   }
   return Promise.race([started, timeout]).finally(() => clearTimeout(timer));
 }
+
+/**
+ * For a step that is legitimately long but reports progress as it goes (a
+ * several-hundred-page streamed read): a flat deadline would cut off honest
+ * work, so this gives up only when no progress has been reported for stallMs.
+ * The timer starts at once, so a step that never reports at all is bounded too.
+ * @param {(progressed: () => void) => Promise<any>} run - receives the function
+ *   to call each time the step makes progress
+ * @param {string} step - neutral step name (never a file name)
+ * @param {number} stallMs
+ * @returns {Promise<any>} the step's result, or rejects with StepTimeoutError
+ */
+export function withStallTimeout(run, step, stallMs) {
+  let timer;
+  let finished = false;
+  let giveUp;
+  const stalled = new Promise((_, reject) => {
+    giveUp = () => reject(new StepTimeoutError(step, stallMs));
+  });
+  const progressed = () => {
+    if (finished) return;
+    clearTimeout(timer);
+    timer = setTimeout(giveUp, stallMs);
+  };
+  progressed();
+  let started;
+  try {
+    started = Promise.resolve(run(progressed));
+  } catch (err) {
+    finished = true;
+    clearTimeout(timer);
+    return Promise.reject(err);
+  }
+  return Promise.race([started, stalled]).finally(() => {
+    finished = true;
+    clearTimeout(timer);
+  });
+}
