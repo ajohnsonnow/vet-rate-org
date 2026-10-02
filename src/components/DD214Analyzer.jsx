@@ -76,6 +76,7 @@ import ProfileImportConfirmModal from "./ProfileImportConfirmModal";
 import DD214FormBuilder from "./DD214FormBuilder";
 import {
   buildPlaceholderDetector,
+  sanitizeModelOutput,
   scrubModelFreeText,
 } from "../utils/dd214ModelOutputGuards";
 
@@ -738,7 +739,7 @@ export function _parseDd214Json(content, t) {
     _stripModelIdentifiers(data);
     _keepModelSchemaFields(data);
     _placeholderDetector.rejectPlaceholderEchoes(data);
-    scrubModelFreeText(data, [getVeteranProfile()]);
+    sanitizeModelOutput(data, [getVeteranProfile()]);
   } catch {
     // V8's JSON.parse message quotes a snippet of the input, so it is never
     // logged - only the length.
@@ -865,11 +866,9 @@ function _applyIdentifierFieldsFromLocalParser(data, regexFields) {
   });
 }
 
-function _mergeRegexIntoData(data, combinedRawText) {
-  _keepModelSchemaFields(data);
-  let regexResult = null;
+function _extractRegexFields(combinedRawText) {
   try {
-    regexResult = extractDD214Fields(combinedRawText);
+    return extractDD214Fields(combinedRawText);
   } catch (extractErr) {
     console.warn(
       "Regex field extraction failed (non-fatal):",
@@ -877,8 +876,12 @@ function _mergeRegexIntoData(data, combinedRawText) {
     );
     return null;
   }
+}
+
+function _mergeRegexIntoData(data, regexResult) {
+  if (!regexResult) return null;
   try {
-    if (regexResult && Object.keys(regexResult).length > 0) {
+    if (Object.keys(regexResult).length > 0) {
       const merged = mergeAIAndRegexResults(data, regexResult);
       Object.assign(data, merged);
     }
@@ -891,8 +894,22 @@ function _mergeRegexIntoData(data, combinedRawText) {
   return regexResult;
 }
 
+function _regexIdentifierSource(regexFields) {
+  if (!regexFields) return null;
+  return { ...regexFields, homeAddress: regexFields.mailingAddress };
+}
+
 export function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
-  const regexResult = _mergeRegexIntoData(data, combinedRawText);
+  const regexResult = _extractRegexFields(combinedRawText);
+  // The model's own values are sanitized BEFORE the merge, with the name the
+  // local parser read as a known value, so a name the model wrote under any
+  // key is redacted while the parser's own values stay untouched.
+  _keepModelSchemaFields(data);
+  sanitizeModelOutput(data, [
+    getVeteranProfile(),
+    _regexIdentifierSource(regexResult?.fields),
+  ]);
+  _mergeRegexIntoData(data, regexResult);
 
   // Runs unconditionally (fail-closed), regardless of whether extraction or
   // merge above threw or found nothing.
