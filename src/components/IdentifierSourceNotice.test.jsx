@@ -1,12 +1,14 @@
 /**
- * D20-5 remainder: a typed name reaches an off-device body unredacted only
- * when no identifier source has ever loaded. In exactly that state the AI
- * input shows a one-line notice; otherwise it never appears. The identifier
- * check is the real one (unifiedAIService); only the stored sources (the
- * Knowledge Base loader and the profile in localStorage) are set up here.
+ * D20-5 remainder: a typed name reaches an off-device body unredacted whenever
+ * the app holds no name to recognise it by. In exactly that state the AI input
+ * shows a one-line notice; otherwise it never appears. Holding some other
+ * identifier (a date of birth, an email, a phone, the last four of an SSN) does
+ * not count: none of them can recognise a typed name. The identifier check is
+ * the real one (unifiedAIService); only the stored sources (the Knowledge Base
+ * loader and the profile in localStorage) are set up here.
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 
 const loadVKBMock = vi.hoisted(() => vi.fn());
 vi.mock("../utils/veteranKnowledgeBase", async (importOriginal) => ({
@@ -25,9 +27,16 @@ const { initializeVKB } = await import("../utils/veteranKnowledgeBase");
 
 const vkbWith = (personal) => ({ ...initializeVKB(), personal });
 
-const NOTICE =
-  /Your profile has not loaded, so the app cannot remove your name/;
+const NOTICE = /The app does not have your name saved/;
 const FAKE_NAME = "Jordan Faketon";
+const PROFILE_KEY = "vet_rate_veteran_profile";
+
+const renderNotice = () =>
+  render(
+    <LanguageProvider>
+      <IdentifierSourceNotice />
+    </LanguageProvider>,
+  );
 
 async function settled() {
   await waitFor(() => expect(loadVKBMock).toHaveBeenCalled());
@@ -44,32 +53,60 @@ beforeEach(() => {
 describe("IdentifierSourceNotice", () => {
   it("shows when no identifier source holds anything", async () => {
     loadVKBMock.mockResolvedValue(vkbWith({}));
-    render(<IdentifierSourceNotice />);
+    renderNotice();
     expect(await screen.findByText(NOTICE)).toBeTruthy();
   });
 
   it("shows when the Knowledge Base loader fails and nothing else is stored", async () => {
     loadVKBMock.mockRejectedValue(new Error("VKB load failed"));
-    render(<IdentifierSourceNotice />);
+    renderNotice();
     expect(await screen.findByText(NOTICE)).toBeTruthy();
   });
 
   it("is absent when the Knowledge Base holds the name", async () => {
     loadVKBMock.mockResolvedValue(vkbWith({ fullName: FAKE_NAME }));
-    render(<IdentifierSourceNotice />);
+    renderNotice();
     await settled();
     expect(screen.queryByText(NOTICE)).toBeNull();
   });
 
   it("is absent when only the saved profile holds the name", async () => {
     loadVKBMock.mockResolvedValue(vkbWith({}));
-    localStorage.setItem(
-      "vet_rate_veteran_profile",
-      JSON.stringify({ fullName: FAKE_NAME }),
-    );
-    render(<IdentifierSourceNotice />);
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({ fullName: FAKE_NAME }));
+    renderNotice();
     await settled();
     expect(screen.queryByText(NOTICE)).toBeNull();
+  });
+});
+
+describe("IdentifierSourceNotice with an identifier but no name", () => {
+  it.each([
+    ["date of birth", { dateOfBirth: "1984-03-15" }],
+    ["email", { email: "someone@example.test" }],
+    ["phone", { phone: "5551234567" }],
+    ["last four of the SSN", { ssnLast4: "6789" }],
+  ])("still shows when the profile holds only a %s", async (_label, saved) => {
+    loadVKBMock.mockResolvedValue(vkbWith({}));
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(saved));
+    renderNotice();
+    expect(await screen.findByText(NOTICE)).toBeTruthy();
+  });
+
+  it("goes away once a name is saved while the input is open, and returns if it is removed", async () => {
+    loadVKBMock.mockResolvedValue(vkbWith({}));
+    renderNotice();
+    expect(await screen.findByText(NOTICE)).toBeTruthy();
+
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({ fullName: FAKE_NAME }));
+    const input = document.body.appendChild(document.createElement("input"));
+    fireEvent.focusIn(input);
+    await waitFor(() => expect(screen.queryByText(NOTICE)).toBeNull());
+
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({}));
+    resetLastKnownGoodRedactionProfile();
+    fireEvent.focusIn(input);
+    expect(await screen.findByText(NOTICE)).toBeTruthy();
+    input.remove();
   });
 });
 
@@ -83,7 +120,7 @@ describe("the AI assistant input", () => {
       </LanguageProvider>,
     );
 
-  it("shows the notice next to the input only when no identifier source loaded", async () => {
+  it("shows the notice next to the input only when no name is known", async () => {
     loadVKBMock.mockResolvedValue(vkbWith({}));
     renderAssistant();
     expect(await screen.findByText(NOTICE)).toBeTruthy();

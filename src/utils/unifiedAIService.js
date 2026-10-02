@@ -2200,17 +2200,23 @@ async function _loadRedactionProfile() {
   return { personal, claimNumbers, loadFailed };
 }
 
-// True once any identifier source (VKB personal block, flat profile, or the
-// last good copy this session) holds at least one identifier. False is the one
-// state in which a typed name reaches an off-device body unredacted (ADR-008
-// section 2.9), so the AI input warns the veteran.
-export async function hasLoadedIdentifierSource() {
-  if (_lastKnownGoodRedactionProfile) return true;
-  const loaded = await _loadRedactionProfile();
-  return (
-    collectKnownIdentifierValues(loaded.personal, loaded.claimNumbers).length >
-    0
+// Name tokens are the only known values flagged accentFold. A date of birth,
+// email, phone or SSN last four cannot recognise a typed name.
+const _hasKnownName = (personal, claimNumbers) =>
+  collectKnownIdentifierValues(personal, claimNumbers).some(
+    (entry) => entry.accentFold,
   );
+
+// True once any identifier source (VKB personal block, flat profile, or the
+// last good copy this session) holds the veteran's name. False is the state in
+// which a typed name reaches an off-device body unredacted (ADR-008 section
+// 2.9), so the AI input warns the veteran.
+export async function hasKnownVeteranName() {
+  const cached = _lastKnownGoodRedactionProfile;
+  if (cached && _hasKnownName(cached.personal, cached.claimNumbers))
+    return true;
+  const loaded = await _loadRedactionProfile();
+  return _hasKnownName(loaded.personal, loaded.claimNumbers);
 }
 
 async function _redactPiecesForSend(pieces) {

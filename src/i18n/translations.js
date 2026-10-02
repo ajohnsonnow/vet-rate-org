@@ -6023,6 +6023,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       vi: "Tôi cần bằng chứng gì cho TDIU?",
       ko: "TDIU에 어떤 증거가 필요한가요?",
     },
+    nameNotSavedNotice: {
+      en: "The app does not have your name saved, so it cannot remove your name from what you type.",
+      es: "La aplicación no tiene su nombre guardado, así que no puede quitar su nombre de lo que usted escribe.",
+      tl: "Walang naka-save na pangalan mo sa app, kaya hindi nito maalis ang pangalan mo sa mga tina-type mo.",
+      vi: "Ứng dụng chưa lưu tên của bạn nên không thể xóa tên bạn khỏi nội dung bạn nhập.",
+      ko: "앱에 저장된 이름이 없어 입력하신 내용에서 이름을 지울 수 없습니다.",
+    },
   },
 
   // Secondary Scout
@@ -11154,6 +11161,20 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       tl: "profile field(s) na-import",
       vi: "trường hồ sơ đã nhập",
       ko: "프로필 필드 가져옴",
+    },
+    nothingSavedYet: {
+      en: "Nothing from this analysis has been saved yet. You choose what to import in the next step.",
+      es: "Todavía no se ha guardado nada de este análisis. Usted elige qué importar en el siguiente paso.",
+      tl: "Wala pang na-save mula sa pagsusuring ito. Ikaw ang pipili kung ano ang i-import sa susunod na hakbang.",
+      vi: "Chưa có gì từ phân tích này được lưu. Bạn chọn nội dung cần nhập ở bước tiếp theo.",
+      ko: "이 분석에서 아직 저장된 내용이 없습니다. 다음 단계에서 가져올 항목을 직접 선택하세요.",
+    },
+    importSavedNote: {
+      en: "Saved. The fields you ticked went to your profile; the document was filed in your Knowledge Base and My Packet.",
+      es: "Guardado. Los campos que marcó se enviaron a su perfil; el documento se archivó en su Base de Conocimiento y en Mi Paquete.",
+      tl: "Na-save na. Ang mga field na minarkahan mo ay napunta sa iyong profile; ang dokumento ay inilagay sa iyong Knowledge Base at My Packet.",
+      vi: "Đã lưu. Các trường bạn chọn đã vào hồ sơ của bạn; tài liệu được lưu trong Knowledge Base và My Packet.",
+      ko: "저장되었습니다. 선택한 항목은 프로필에 저장되었고, 문서는 지식 베이스와 My Packet에 보관되었습니다.",
     },
   },
 
