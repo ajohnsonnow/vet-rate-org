@@ -380,6 +380,48 @@ export const setKnownIdentifiersForConsoleScrub = (personal, claimNumbers) => {
   );
 };
 
+// A file name with no extension, or one nobody listed, has no shape
+// redactFileNames can spot. Every file the veteran drops or picks is remembered
+// by name for the session instead, so a later line that mentions it is cleaned
+// whatever the name looks like.
+const MAX_REMEMBERED_FILE_NAMES = 100;
+const MIN_REMEMBERED_NAME_CHARS = 4;
+const rememberedFileNames = [];
+let fileNameListenersInstalled = false;
+
+const rememberFileNames = (files) => {
+  for (const file of Array.from(files || [])) {
+    const name = typeof file?.name === "string" ? file.name.trim() : "";
+    if (name.length < MIN_REMEMBERED_NAME_CHARS) continue;
+    if (rememberedFileNames.some((entry) => entry.value === name)) continue;
+    rememberedFileNames.push({ value: name });
+  }
+  rememberedFileNames.splice(
+    0,
+    Math.max(0, rememberedFileNames.length - MAX_REMEMBERED_FILE_NAMES),
+  );
+};
+
+const installFileNameListeners = () => {
+  if (fileNameListenersInstalled || typeof document === "undefined") return;
+  fileNameListenersInstalled = true;
+  document.addEventListener(
+    "drop",
+    (event) => rememberFileNames(event.dataTransfer?.files),
+    true,
+  );
+  document.addEventListener(
+    "change",
+    (event) => {
+      if (event.target?.type === "file") rememberFileNames(event.target.files);
+    },
+    true,
+  );
+};
+
+const redactFiles = (text) =>
+  redactKnownValues(redactFileNames(text), rememberedFileNames, "[file name]");
+
 // Scrub, then clip (never clip first: cutting an identifier in half would
 // leave an unmatched fragment). Idempotent, so already-stored entries can be
 // scrubbed again once the veteran's known values are loaded.
@@ -387,7 +429,7 @@ const scrubConsoleText = (text, maxChars) => {
   if (typeof text !== "string" || text === "") return text;
   const bounded = text.slice(0, MAX_CONSOLE_SCRUB_INPUT_CHARS);
   const scrubbed = scrubText(
-    redactKnownValues(redactFileNames(bounded), [
+    redactKnownValues(redactFiles(bounded), [
       ...profileIdentifierValues,
       ...explicitIdentifierValues,
     ]),
@@ -711,8 +753,8 @@ ${errorTypes.info
 // A file name can hold a surname or the last four of an SSN, and no known value
 // is needed to spot one: whatever reaches the report text is cleaned here, so a
 // line captured before this scrubber existed (or typed by the veteran) is too.
-const cleanReportText = (value) =>
-  typeof value === "string" ? redactFileNames(value) : value;
+export const cleanReportText = (value) =>
+  typeof value === "string" ? redactFiles(value) : value;
 
 const cleanConsoleEntry = (entry) => ({
   ...entry,
@@ -721,7 +763,7 @@ const cleanConsoleEntry = (entry) => ({
   url: cleanReportText(entry.url),
 });
 
-const cleanReportData = (reportData) => ({
+export const cleanReportData = (reportData) => ({
   ...reportData,
   userDescription: cleanReportText(reportData.userDescription),
   stepsToReproduce: cleanReportText(reportData.stepsToReproduce),
@@ -942,6 +984,7 @@ const interceptConsoleMethods = () => {
  * DIAMOND LEVEL: Captures ALL console activity (errors, warnings, logs, info)
  */
 export const initializeErrorCapture = () => {
+  installFileNameListeners();
   captureGlobalErrorEvents();
   interceptConsoleMethods();
   refreshKnownIdentifiers();
