@@ -118,6 +118,7 @@ import VADataCenter from "./VADataCenter";
 import ClaimEvidenceUpload from "./ClaimEvidenceUpload";
 import { calculateVARating } from "../utils/vaCalculator";
 import { formatLocalDate } from "../utils/dateUtils";
+import { recordRemovedTimelineEvent } from "../utils/timelineStoreSync";
 import { formatFileSize } from "../utils/documentAnalyzer";
 import { parseServiceRecord } from "../utils/musterCallProcessor";
 import { getDocumentTypeLabel } from "../utils/documentClassifier";
@@ -4252,6 +4253,7 @@ function TimelineEventEntry({ event, timelineEvents, setTimelineEvents, t }) {
           <button
             type="button"
             onClick={() => {
+              recordRemovedTimelineEvent(event);
               const updated = timelineEvents.filter((e) => e.id !== event.id);
               setTimelineEvents(updated);
               import("../utils/veteranProfile").then((m) =>

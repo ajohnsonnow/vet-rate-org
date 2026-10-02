@@ -4353,6 +4353,8 @@ export const removeTimelineEvent = (eventId) => {
 export const clearTimelineEvents = () => {
   try {
     localStorage.removeItem(TIMELINE_EVENTS_KEY);
+    // timelineStoreSync.js's record of imported events the veteran removed
+    localStorage.removeItem("vet_rate_timeline_removed_imports");
     return true;
   } catch (error) {
     console.error("Error clearing timeline events:", error);

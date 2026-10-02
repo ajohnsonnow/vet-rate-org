@@ -10,6 +10,12 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getTimelineEvents, saveTimelineEvents } from "../utils/veteranProfile";
 import { loadVKB } from "../utils/veteranKnowledgeBase";
+import {
+  timelineEventKey,
+  buildImportedTimelineEvent,
+  datedVkbEvents,
+  recordRemovedTimelineEvent,
+} from "../utils/timelineStoreSync";
 import ReportBugLink from "./ReportBugLink";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
@@ -262,17 +268,6 @@ function renderEvidenceTimelineCanvas(
   drawTimelineStartEndLabels(ctx, geometry);
 }
 
-function normalizeTimelineText(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function timelineEventKey(e) {
-  return `${e.date}|${normalizeTimelineText(e.description)}`;
-}
-
 // Drops duplicate date+description entries, keeping the first occurrence -
 // used both to re-dedupe the merged list against whatever the timeline's
 // real current state turns out to be (see the functional setTimelineEvents
@@ -361,10 +356,7 @@ function _importConfirmMessage(addedCount, updatedCount) {
 // (date, description) key currently claimed by a service-entry event.
 async function _loadServiceEntryProjection() {
   const vkb = await loadVKB();
-  const vkbEvents = [
-    ...(Array.isArray(vkb?.evidenceTimeline) ? vkb.evidenceTimeline : []),
-    ...(Array.isArray(vkb?.evidence) ? vkb.evidence : []),
-  ].filter((e) => e?.date && (e.description || e.text));
+  const vkbEvents = datedVkbEvents(vkb);
   const projectedEvents = vkbEvents.filter(
     (e) => e.projected && _isServiceEntryEventType(e.eventType),
   );
@@ -379,28 +371,6 @@ async function _loadServiceEntryProjection() {
       ),
   );
   return { vkbEvents, projectedEvents, knownServiceEntryKeys };
-}
-
-// Builds this timeline's own persisted shape for a VKB-sourced event.
-function _buildImportedTimelineEvent(e, i) {
-  const description = e.description || e.text;
-  return {
-    id: `vkb_${Date.now()}_${i}`,
-    type: "records",
-    date: e.date,
-    description,
-    title: String(description).substring(0, 50),
-    category: "Medical Records",
-    sourceDocumentId: e.sourceDocumentId || null,
-    // D-C: carried through so detectTimelineGaps can still recognize
-    // a Guard/Reserve enlistment event after it's imported into this
-    // timeline's own persisted event shape.
-    eventType: e.eventType || null,
-    // ADR-007: names the projection this copy came from, if any - lets
-    // a LATER re-import recognize this exact copy as stale once the
-    // projection itself has since changed.
-    sourceKey: e.projectionKey || null,
-  };
 }
 
 // Pull dated events the C-File analyzer filed into the VKB
@@ -439,7 +409,7 @@ async function performImportFromRecords({
       });
       if (existing.has(key)) return;
       existing.add(key);
-      fresh.push(_buildImportedTimelineEvent(e, i));
+      fresh.push(buildImportedTimelineEvent(e, i));
     });
 
     if (fresh.length === 0 && staleRemoved === 0) {
@@ -514,7 +484,7 @@ async function syncProjectedServiceEntryEvents({
       });
       if (existing.has(key)) return;
       existing.add(key);
-      replacements.push(_buildImportedTimelineEvent(p, i));
+      replacements.push(buildImportedTimelineEvent(p, i));
     });
 
     const updated = dedupeTimelineEvents([...kept, ...replacements]);
@@ -572,6 +542,8 @@ function performRemoveEvent({
   setTimelineEvents,
   onEventsUpdate,
 }) {
+  const removed = timelineEvents.find((e) => e.id === id);
+  if (removed) recordRemovedTimelineEvent(removed);
   const updated = timelineEvents.filter((e) => e.id !== id);
   setTimelineEvents(updated);
 
