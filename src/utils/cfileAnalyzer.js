@@ -2248,7 +2248,7 @@ function _isTruncatedName(name) {
 }
 
 const MONTH = String.raw`(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?`;
-const DATE_TAIL = String.raw`\s*[-:,]?\s*`;
+const DATE_TAIL = String.raw`\s*[,:-]?\s*`;
 const DATE_PREFIX_RES = [
   new RegExp(
     String.raw`^${MONTH}\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}${DATE_TAIL}`,
@@ -2256,8 +2256,8 @@ const DATE_PREFIX_RES = [
   ),
   new RegExp(String.raw`^\d{1,2}\s+${MONTH}\s+\d{4}${DATE_TAIL}`, "i"),
   new RegExp(String.raw`^${MONTH}\s+\d{4}${DATE_TAIL}`, "i"),
-  /^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*[-:,]?\s*/,
-  /^\d{4}-\d{2}-\d{2}\s*[-:,]?\s*/,
+  /^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*[,:-]?\s*/,
+  /^\d{4}-\d{2}-\d{2}\s*[,:-]?\s*/,
 ];
 const BOILERPLATE_PREFIX_RES = [
   /^service[- ]connected\s+(?=disabilit)/i,
