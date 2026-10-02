@@ -481,6 +481,12 @@ test.describe("ADR-009 decision F: a wrong model identifier is never shown, save
     ).toBeHidden({ timeout: 20000 });
 
     await expect(dialog.getByLabel("Full Name")).toHaveValue(/TESTFIXTURE/);
+    await expect(
+      dialog.getByText(/Saved\. The fields you ticked went to your profile/),
+    ).toBeVisible();
+    await expect(
+      dialog.getByText(/Nothing from this analysis has been saved yet/),
+    ).toBeHidden();
     expect(await dialog.innerText()).not.toMatch(PLANTED_PATTERN);
 
     const dump = await dumpIndexedDb(page);
@@ -795,6 +801,11 @@ test.describe("ADR-009: a context-classed call still reaches the stubbed cloud",
     await page.getByRole("button", { name: /Open AI Navigator/i }).click();
     const textarea = page.locator("textarea").last();
     await textarea.waitFor({ state: "visible", timeout: 10000 });
+    // ADR-008 section 2.9: a brand-new profile holds no name, so the input says
+    // a typed name cannot be removed.
+    await expect(
+      page.getByText(/The app does not have your name saved/),
+    ).toBeVisible();
     await textarea.fill(`What are my options regarding ${CONTEXT_MARKER}?`);
     await page.getByRole("button", { name: /Send message/i }).click();
 

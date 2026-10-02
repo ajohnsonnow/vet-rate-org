@@ -903,6 +903,10 @@ function MessageComposer({
 
   return (
     <div className={c.wrapperClass || undefined}>
+      {/* Above the row, not below it: the panel is anchored to the bottom, so a
+          line added below pushed the Send button up under the floating
+          Security Proof button on a phone. */}
+      <IdentifierSourceNotice className={c.hintClass} />
       <div className={c.rowGapClass}>
         <div className="flex-1 relative">
           <textarea
@@ -951,7 +955,6 @@ function MessageComposer({
           )}
         </button>
       </div>
-      <IdentifierSourceNotice className={c.hintClass} />
       <p className={c.hintClass}>
         {t("aiAssistant", c.hintKey)}{" "}
         {isHelperMode && t("aiAssistant", "helperModeActive")}
