@@ -131,6 +131,69 @@ describe("analyzeCFile off-device fallback: real condition shapes survive", () =
   });
 });
 
+const PREFIXED_LETTER = `
+Rating Decision
+Page 1 of 4
+
+DECISION
+
+1. Service connection for a skin condition is granted with an evaluation of 10 percent
+disabling effective January 1, 2020.
+2. Service connection for May 1, 2021 service connected disability of the right knee is granted with an evaluation of 20 percent
+disabling effective March 3, 2019.
+3. Service connection for tinnitus tinnitus is granted with an evaluation of 10 percent
+disabling effective March 3, 2019.
+4. Service connection for the migraine headaches is granted with an evaluation of 30 percent
+disabling effective March 3, 2019.
+`;
+
+describe("analyzeCFile off-device fallback: prefixes, fragments, duplicates", () => {
+  it("normalises prefixed names and merges run-together duplicates into an exact list", async () => {
+    expect(await conditionsFor(PREFIXED_LETTER)).toEqual([
+      "skin condition",
+      "right knee",
+      "tinnitus",
+      "migraine headaches",
+    ]);
+  });
+});
+
+describe("_cleanConditionName normalisation", () => {
+  it("strips date, article and boilerplate prefixes", () => {
+    expect(
+      _cleanConditionName(
+        "May 1, 2021 service connected disability of the right knee",
+      ),
+    ).toBe("right knee");
+    expect(_cleanConditionName("a skin condition")).toBe("skin condition");
+    expect(_cleanConditionName("03/04/2019 - the lumbar strain")).toBe(
+      "lumbar strain",
+    );
+    expect(_cleanConditionName("2019-03-04 hearing loss")).toBe("hearing loss");
+  });
+
+  it("collapses run-together duplicates", () => {
+    expect(_cleanConditionName("Tinnitus Tinnitus")).toBe("Tinnitus");
+    expect(_cleanConditionName("tinnitustinnitus")).toBe("tinnitus");
+    expect(_cleanConditionName("left knee strain left knee strain")).toBe(
+      "left knee strain",
+    );
+  });
+
+  it("drops fragments but keeps real conditions that look similar", () => {
+    expect(_cleanConditionName("of the right knee")).toBeNull();
+    expect(_cleanConditionName("due to service")).toBeNull();
+    expect(_cleanConditionName("and degenerative disc")).toBeNull();
+    expect(_cleanConditionName("lumbar strain with")).toBeNull();
+    expect(_cleanConditionName("Secondary hyperparathyroidism")).toBe(
+      "Secondary hyperparathyroidism",
+    );
+    expect(_cleanConditionName("Intestinal bacterial overgrowth")).toBe(
+      "Intestinal bacterial overgrowth",
+    );
+  });
+});
+
 describe("_cleanConditionName", () => {
   it("keeps two-letter acronyms and repairs or rejects unbalanced parentheses", () => {
     expect(_cleanConditionName("ED")).toBe("ED");

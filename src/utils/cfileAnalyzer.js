@@ -2194,12 +2194,87 @@ function _isTruncatedName(name) {
   return DANGLING_END_WORDS.has(words[words.length - 1]);
 }
 
+const MONTH = String.raw`(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?`;
+const DATE_TAIL = String.raw`\s*[-:,]?\s*`;
+const DATE_PREFIX_RES = [
+  new RegExp(
+    String.raw`^${MONTH}\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}${DATE_TAIL}`,
+    "i",
+  ),
+  new RegExp(String.raw`^\d{1,2}\s+${MONTH}\s+\d{4}${DATE_TAIL}`, "i"),
+  new RegExp(String.raw`^${MONTH}\s+\d{4}${DATE_TAIL}`, "i"),
+  /^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*[-:,]?\s*/,
+  /^\d{4}-\d{2}-\d{2}\s*[-:,]?\s*/,
+];
+const BOILERPLATE_PREFIX_RES = [
+  /^service[- ]connected\s+(?=disabilit)/i,
+  /^(?:disabilit(?:y|ies)|condition|diagnosis|evaluation)\s+(?:of|for)\s+/i,
+  /^service[- ]connection\s+(?:is\s+)?(?:for|of)\s+/i,
+  /^(?:claimed|claim|entitlement)\s+(?:as|for|to)\s+/i,
+  /^(?:a|an|the)\s+/i,
+];
+const FRAGMENT_START_RES = [
+  /^(?:of|and|or|with|to|for|by|in|on|at)\b/i,
+  /^(?:which|that|as|from|is|was|shows?)\b/i,
+  /^(?:due|secondary)\s+to\b/i,
+];
+
+function _stripNamePrefixes(name) {
+  let current = name;
+  for (let i = 0; i < 8; i++) {
+    let next = current;
+    for (const re of [...DATE_PREFIX_RES, ...BOILERPLATE_PREFIX_RES]) {
+      next = next.replace(re, "");
+    }
+    next = _trimNameEdges(next);
+    if (next === current) break;
+    current = next;
+  }
+  return current;
+}
+
+// Run-together duplicates: "Tinnitus Tinnitus" or "tinnitustinnitus".
+function _collapseRepeats(name) {
+  const tokens = name.split(" ");
+  const half = tokens.length / 2;
+  const lower = tokens.map((t) => t.toLowerCase());
+  if (
+    Number.isInteger(half) &&
+    half > 0 &&
+    lower.slice(0, half).join(" ") === lower.slice(half).join(" ")
+  ) {
+    return tokens.slice(0, half).join(" ");
+  }
+  return tokens
+    .map((t) => {
+      const mid = t.length / 2;
+      const isDoubled =
+        t.length >= 8 &&
+        Number.isInteger(mid) &&
+        /^[A-Za-z]+$/.test(t) &&
+        t.slice(0, mid).toLowerCase() === t.slice(mid).toLowerCase();
+      return isDoubled ? t.slice(0, mid) : t;
+    })
+    .join(" ");
+}
+
+function _isFragmentName(name) {
+  return (
+    FRAGMENT_START_RES.some((re) => re.test(name)) || _isTruncatedName(name)
+  );
+}
+
 // Returns the cleaned condition name, or null when the text is not a
-// condition (bare number/percentage, scaffolding words only, or truncated).
-// Two-letter all-caps acronyms (ED, MS) are real conditions.
+// condition (bare number/percentage, scaffolding words only, or a fragment).
+// Date/article/boilerplate prefixes are stripped and run-together duplicates
+// collapsed. Two-letter all-caps acronyms (ED, MS) are real conditions. A name
+// the 38 CFR catalogue recognises is never dropped as a fragment; an unknown
+// name is kept unless it is plainly a fragment.
 export function _cleanConditionName(rawName) {
   if (typeof rawName !== "string") return null;
-  const stripped = _stripNameNoise(rawName);
+  const stripped = _collapseRepeats(
+    _stripNamePrefixes(_stripNameNoise(rawName)),
+  );
   if (!/[a-z]{3}/i.test(stripped) && !/\b[A-Z]{2}\b/.test(stripped)) {
     return null;
   }
@@ -2207,7 +2282,7 @@ export function _cleanConditionName(rawName) {
   if (!name) return null;
   const words = name.toLowerCase().match(/[a-z]+/g) || [];
   if (words.every((w) => NON_CONDITION_WORDS.has(w))) return null;
-  if (_isTruncatedName(name)) return null;
+  if (_isFragmentName(name) && !lookupDiagnosticCodeByName(name)) return null;
   return name;
 }
 
