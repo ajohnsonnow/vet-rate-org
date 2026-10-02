@@ -43,6 +43,12 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test, expect, type Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
+import {
+  armPanicGesture,
+  armPanicTiming,
+  measureClickToNavigation,
+  measureKeydownToNavigation,
+} from "./panic-latency-timing";
 
 const APP_VERSION: string = JSON.parse(
   readFileSync("package.json", "utf-8"),
@@ -370,23 +376,6 @@ async function startColdBackgroundImport(
   await indexBuilding;
 }
 
-async function measureKeydownToNavigation(page: Page): Promise<number> {
-  const start = Date.now();
-  for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
-  await page.waitForURL(/weather\.com/, { timeout: 30000 });
-  return Date.now() - start;
-}
-
-async function measureClickToNavigation(
-  page: Page,
-  box: { x: number; y: number; width: number; height: number },
-): Promise<number> {
-  const start = Date.now();
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  await page.waitForURL(/weather\.com/, { timeout: 30000 });
-  return Date.now() - start;
-}
-
 // shimFakeGpuAdapter's addInitScript must be registered before the FIRST
 // navigation of the page's lifetime to apply to every document it creates
 // (Playwright's addInitScript only affects navigations after it was added) -
@@ -403,6 +392,7 @@ async function prepareImportReadyPage(
   page: Page,
   { primeCache = true }: { primeCache?: boolean } = {},
 ): Promise<void> {
+  await armPanicTiming(page);
   await shimFakeGpuAdapter(page);
   await seedReturningUser(page);
   await precreateDatabases(page);
@@ -410,6 +400,7 @@ async function prepareImportReadyPage(
   await injectMusterCallProcessor(page);
   await createFileInput(page);
   if (primeCache) await primeDKBCache(page);
+  await armPanicGesture(page);
 }
 
 async function withCPUThrottle(

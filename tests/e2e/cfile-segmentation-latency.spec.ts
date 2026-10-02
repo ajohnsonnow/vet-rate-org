@@ -28,6 +28,12 @@ import { join } from "node:path";
 import { PDFDocument, StandardFonts, type PDFFont } from "pdf-lib";
 import { test, expect, type Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
+import {
+  armPanicGesture,
+  armPanicTiming,
+  measureClickToNavigation,
+  measureKeydownToNavigation,
+} from "./panic-latency-timing";
 
 const APP_VERSION: string = JSON.parse(
   readFileSync("package.json", "utf-8"),
@@ -335,28 +341,13 @@ async function startBackgroundImport(
   await logSeen;
 }
 
-async function measureKeydownToNavigation(page: Page): Promise<number> {
-  const start = Date.now();
-  for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
-  await page.waitForURL(/weather\.com/, { timeout: 30000 });
-  return Date.now() - start;
-}
-
-async function measureClickToNavigation(
-  page: Page,
-  box: { x: number; y: number; width: number; height: number },
-): Promise<number> {
-  const start = Date.now();
-  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  await page.waitForURL(/weather\.com/, { timeout: 30000 });
-  return Date.now() - start;
-}
-
 async function prepareImportReadyPage(page: Page): Promise<void> {
+  await armPanicTiming(page);
   await seedReturningUser(page);
   await precreateDatabases(page);
   await injectMusterCallProcessor(page);
   await createFileInput(page);
+  await armPanicGesture(page);
 }
 
 async function withCPUThrottle(
