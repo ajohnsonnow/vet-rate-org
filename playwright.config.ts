@@ -132,16 +132,20 @@ export default defineConfig({
       testMatch: LATENCY_SPECS,
       fullyParallel: false,
       workers: 1,
-      // Firefox latency runs after Chromium latency and every project that
-      // depends on it, so the two never overlap and the rest of the suite is
-      // finished first. A teardown project runs even when `latency` fails (a
-      // plain dependency would skip it and hide the Firefox results).
-      teardown: "latency-firefox",
       use: { ...devices["Desktop Chrome"] },
     },
+    // Firefox latency waits for Chromium latency, so the two never overlap.
+    // It is deliberately a dependent project and not a teardown of `latency`:
+    // a teardown rides along with every run that selects `latency`, and
+    // `chromium` depends on it, so the blocking CI jobs that run
+    // `--project=chromium` with only Chromium installed would start Firefox.
+    // Cost: a failing Chromium latency run skips this one. To run Firefox
+    // latency alone (or with --repeat-each / -g) add --no-deps:
+    //   npx playwright test --project=latency-firefox --no-deps
     {
       name: "latency-firefox",
       testMatch: LATENCY_SPECS,
+      dependencies: ["latency"],
       fullyParallel: false,
       workers: 1,
       timeout: 60_000,
