@@ -32,6 +32,7 @@ import {
   validateDiagnosticCode,
   lookupDiagnosticCodeByName,
 } from "./hallucinationTrap";
+import { getAllConditions } from "../services/knowledgeQuery";
 import { scanDocumentForCrisis } from "./crisisInterceptor";
 import { untrustedSection } from "./aiSystemPrompts";
 import { scrubText } from "./piiScrubber";
@@ -2140,6 +2141,16 @@ const NON_CONDITION_WORDS = new Set([
   "description",
   "assigned",
   "sc",
+  "page",
+  "pages",
+  "reason",
+  "reasons",
+  "evidence",
+  "enclosure",
+  "enclosures",
+  "form",
+  "forms",
+  "va",
 ]);
 const DANGLING_END_WORDS = new Set([
   "of",
@@ -2161,6 +2172,24 @@ const MAX_CONDITION_NAME_CHARS = 400;
 
 const NAME_EDGE_CHARS = new Set([..." ,;:.-–"]);
 const NAME_PERCENT_RE = /\d{1,3}\s{0,3}(?:%|percent\b)/i;
+const NAME_CLAUSE_START_RE = /\s(?:which|that)\b/i;
+
+let catalogueIndex = null;
+
+// Words of the 38 CFR catalogue's condition names, built on first use.
+function _catalogueWords() {
+  if (!catalogueIndex) {
+    catalogueIndex = new Set(
+      getAllConditions().flatMap(
+        (d) =>
+          String(d.conditionName)
+            .toLowerCase()
+            .match(/[a-z]+/g) || [],
+      ),
+    );
+  }
+  return catalogueIndex;
+}
 
 function _trimNameEdges(name) {
   let start = 0;
@@ -2174,8 +2203,12 @@ function _stripNameNoise(name) {
   const flat = name
     .replace(/\s+/g, " ")
     .replace(/\((?:formerly|previously|currently|which)[^)]{0,80}\)/gi, "");
-  const percentAt = flat.search(NAME_PERCENT_RE);
-  return _trimNameEdges(percentAt === -1 ? flat : flat.slice(0, percentAt));
+  const cuts = [
+    flat.search(NAME_PERCENT_RE),
+    flat.search(NAME_CLAUSE_START_RE),
+  ];
+  const cutAt = Math.min(...cuts.filter((i) => i !== -1), flat.length);
+  return _trimNameEdges(flat.slice(0, cutAt));
 }
 
 function _balanceParens(name) {
@@ -2188,10 +2221,30 @@ function _balanceParens(name) {
   return count("(") === count(")") ? fixed : null;
 }
 
+const MIN_CUT_LETTERS = 3;
+
+// A multi-word name whose last word is not a catalogue word but is the start
+// of one ("... stress disor", "... sleep ap") was cut off mid-word.
+function _endsMidWord(name) {
+  const lastToken = name.split(/[\s-]+/).pop();
+  if (!/^[A-Za-z]{2,}$/.test(lastToken) || !name.includes(" ")) return false;
+  if (lastToken === lastToken.toUpperCase()) return false;
+  const last = lastToken.toLowerCase();
+  const words = _catalogueWords();
+  if (words.has(last)) return false;
+  for (const w of words) {
+    if (w.length >= last.length + MIN_CUT_LETTERS && w.startsWith(last)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function _isTruncatedName(name) {
   if (name.length > MAX_CONDITION_NAME_CHARS) return true;
-  const words = name.toLowerCase().split(/\s+/);
-  return DANGLING_END_WORDS.has(words[words.length - 1]);
+  const lower = name.toLowerCase();
+  const words = lower.split(/\s+/);
+  return DANGLING_END_WORDS.has(words[words.length - 1]) || _endsMidWord(name);
 }
 
 const MONTH = String.raw`(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?`;
@@ -2213,11 +2266,23 @@ const BOILERPLATE_PREFIX_RES = [
   /^(?:claimed|claim|entitlement)\s+(?:as|for|to)\s+/i,
   /^(?:a|an|the)\s+/i,
 ];
+// The lookahead keeps a hyphenated name ("in-service ...", "At-rest tremor")
+// out of the fragment rule: only a whole clause-opening word counts.
 const FRAGMENT_START_RES = [
-  /^(?:of|and|or|with|to|for|by|in|on|at)\b/i,
-  /^(?:which|that|as|from|is|was|shows?)\b/i,
-  /^(?:due|secondary)\s+to\b/i,
+  /^(?:of|and|or|with|to|for|by|in|on|at)(?=\s|$)/i,
+  /^(?:which|that|as|from|is|was|shows?)(?=\s|$)/i,
+  /^(?:due|secondary)\s+to(?=\s|$)/i,
 ];
+
+function _startsAsFragment(name) {
+  if (/^in\s+situ\b/i.test(name)) return false;
+  if (/^[A-Z]{2}$/.test(name)) return false;
+  // "Secondary to A, B" lists the conditions themselves.
+  if (/^(?:due|secondary)\s+to\b/i.test(name) && name.includes(",")) {
+    return false;
+  }
+  return FRAGMENT_START_RES.some((re) => re.test(name));
+}
 
 function _stripNamePrefixes(name) {
   let current = name;
@@ -2233,35 +2298,59 @@ function _stripNamePrefixes(name) {
   return current;
 }
 
-// Run-together duplicates: "Tinnitus Tinnitus" or "tinnitustinnitus".
-function _collapseRepeats(name) {
-  const tokens = name.split(" ");
-  const half = tokens.length / 2;
-  const lower = tokens.map((t) => t.toLowerCase());
-  if (
-    Number.isInteger(half) &&
-    half > 0 &&
-    lower.slice(0, half).join(" ") === lower.slice(half).join(" ")
-  ) {
-    return tokens.slice(0, half).join(" ");
+// Repeated word or phrase ("left left knee", "Bilateral hearing loss hearing
+// loss", "Tinnitus, tinnitus"): the later copy is dropped.
+function _dropAdjacentRepeats(tokens) {
+  const key = (t) => _trimNameEdges(t.toLowerCase());
+  const out = [...tokens];
+  for (let n = Math.floor(out.length / 2); n >= 1; n--) {
+    let i = 0;
+    while (i + 2 * n <= out.length) {
+      const same = out
+        .slice(i, i + n)
+        .every((t, k) => key(t) === key(out[i + n + k]));
+      if (same) out.splice(i + n, n);
+      else i++;
+    }
   }
-  return tokens
-    .map((t) => {
-      const mid = t.length / 2;
-      const isDoubled =
-        t.length >= 8 &&
-        Number.isInteger(mid) &&
-        /^[A-Za-z]+$/.test(t) &&
-        t.slice(0, mid).toLowerCase() === t.slice(mid).toLowerCase();
-      return isDoubled ? t.slice(0, mid) : t;
-    })
-    .join(" ");
+  return out;
+}
+
+// Run-together duplicates: "Tinnitus Tinnitus" or "tinnitustinnitus". A real
+// catalogue word that happens to double ("beriberi") is left alone.
+function _collapseRepeats(name) {
+  const tokens = _dropAdjacentRepeats(name.split(" "));
+  return _trimNameEdges(
+    tokens
+      .map((t) => {
+        const mid = t.length / 2;
+        const isDoubled =
+          t.length >= 8 &&
+          Number.isInteger(mid) &&
+          /^[A-Za-z]+$/.test(t) &&
+          t.slice(0, mid).toLowerCase() === t.slice(mid).toLowerCase() &&
+          !_catalogueWords().has(t.toLowerCase());
+        return isDoubled ? t.slice(0, mid) : t;
+      })
+      .join(" "),
+  );
+}
+
+// Scaffolding words only, ignoring tokens that carry a digit ("Page 3 of 7",
+// "VA Form 21-526EZ"). A name that is nothing but digit tokens is not scaffolding.
+function _isScaffoldingOnly(name) {
+  const lower = name.toLowerCase();
+  const letterWords = lower.match(/[a-z]+/g) || [];
+  if (letterWords.every((w) => NON_CONDITION_WORDS.has(w))) return true;
+  const plain = lower
+    .split(/\s+/)
+    .filter((t) => !/\d/.test(t))
+    .map((t) => t.replace(/[^a-z]/g, ""));
+  return plain.length > 0 && plain.every((w) => NON_CONDITION_WORDS.has(w));
 }
 
 function _isFragmentName(name) {
-  return (
-    FRAGMENT_START_RES.some((re) => re.test(name)) || _isTruncatedName(name)
-  );
+  return _startsAsFragment(name) || _isTruncatedName(name);
 }
 
 // Returns the cleaned condition name, or null when the text is not a
@@ -2280,8 +2369,7 @@ export function _cleanConditionName(rawName) {
   }
   const name = _balanceParens(stripped);
   if (!name) return null;
-  const words = name.toLowerCase().match(/[a-z]+/g) || [];
-  if (words.every((w) => NON_CONDITION_WORDS.has(w))) return null;
+  if (_isScaffoldingOnly(name)) return null;
   if (_isFragmentName(name) && !lookupDiagnosticCodeByName(name)) return null;
   return name;
 }

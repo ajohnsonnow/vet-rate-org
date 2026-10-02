@@ -204,3 +204,130 @@ describe("_cleanConditionName", () => {
     expect(_cleanConditionName("of")).toBeNull();
   });
 });
+
+describe("_cleanConditionName: real catalogue and free-text names survive", () => {
+  it("does not halve a real doubled-letter catalogue condition", () => {
+    expect(_cleanConditionName("beriberi")).toBe("beriberi");
+    expect(_cleanConditionName("Beriberi heart disease")).toBe(
+      "Beriberi heart disease",
+    );
+  });
+
+  it("keeps names that begin with a hyphenated or acronym fragment word", () => {
+    for (const name of [
+      "in-service ankle injury residuals",
+      "in-grown toenail",
+      "In situ carcinoma of the bladder",
+      "AS",
+      "At-rest tremor",
+      "On-the-job hearing loss",
+      "Secondary to diabetes mellitus, peripheral neuropathy",
+    ]) {
+      expect(_cleanConditionName(name)).toBe(name);
+    }
+  });
+
+  it("still drops the plain clause fragments", () => {
+    expect(_cleanConditionName("in service")).toBeNull();
+    expect(_cleanConditionName("on the right")).toBeNull();
+    expect(_cleanConditionName("as noted above")).toBeNull();
+    expect(_cleanConditionName("secondary to diabetes")).toBeNull();
+  });
+});
+
+describe("_cleanConditionName: partial duplicates, headings and truncations", () => {
+  it("collapses a repeated word or phrase that is not an exact half", () => {
+    expect(_cleanConditionName("Bilateral hearing loss hearing loss")).toBe(
+      "Bilateral hearing loss",
+    );
+    expect(_cleanConditionName("Tinnitus, tinnitus")).toBe("Tinnitus");
+    expect(_cleanConditionName("left left knee")).toBe("left knee");
+    expect(_cleanConditionName("chronic chronic pain")).toBe("chronic pain");
+  });
+
+  it("drops page, heading and form-reference text", () => {
+    for (const name of [
+      "Page 3 of 7",
+      "Enclosure",
+      "Reasons for Decision",
+      "Evidence",
+      "VA Form 21-526EZ",
+    ]) {
+      expect(_cleanConditionName(name)).toBeNull();
+    }
+  });
+
+  it("keeps a real condition whose name contains a digit", () => {
+    expect(_cleanConditionName("COVID-19")).toBe("COVID-19");
+    expect(_cleanConditionName("Vitamin B12 deficiency")).toBe(
+      "Vitamin B12 deficiency",
+    );
+  });
+
+  it("drops a name cut off in the middle of a catalogue word", () => {
+    expect(_cleanConditionName("post-traumatic stress disor")).toBeNull();
+    expect(_cleanConditionName("obstructive sleep ap")).toBeNull();
+    expect(_cleanConditionName("obstructive sleep apnea")).toBe(
+      "obstructive sleep apnea",
+    );
+  });
+
+  it("keeps real free-text conditions whose last word is not a catalogue word", () => {
+    for (const name of [
+      "Gulf War illness",
+      "right shin splint",
+      "plantar fasciitis",
+      "left hip bursitis",
+    ]) {
+      expect(_cleanConditionName(name)).toBe(name);
+    }
+  });
+
+  it("stops a name at a trailing which/that clause", () => {
+    expect(
+      _cleanConditionName(
+        "migraine headaches, which is currently 30 percent disabling",
+      ),
+    ).toBe("migraine headaches");
+    expect(_cleanConditionName("migraine headaches, which is currently")).toBe(
+      "migraine headaches",
+    );
+  });
+});
+
+describe("_cleanConditionName across the whole 38 CFR catalogue", () => {
+  it("returns every plain catalogue condition name unchanged", async () => {
+    const { getAllConditions } = await import("../services/knowledgeQuery");
+    const all = getAllConditions();
+    expect(all.length).toBeGreaterThan(700);
+    // The inverted "Hand, loss of use of" entries end in a dangling "of" and
+    // were already dropped as fragments before this rule set.
+    const plain = all.filter((d) => !d.conditionName.includes(","));
+    expect(plain.length).toBeGreaterThan(300);
+    const changed = plain
+      .map((d) => [d.conditionName, _cleanConditionName(d.conditionName)])
+      .filter(([raw, cleaned]) => cleaned !== raw);
+    expect(changed).toEqual([]);
+  });
+});
+
+const REAL_NAMES_LETTER = `
+Rating Decision
+Page 1 of 4
+
+DECISION
+
+1. Service connection for beriberi is granted with an evaluation of 10 percent
+disabling effective January 1, 2020.
+2. Service connection for in-service ankle injury residuals is granted with an evaluation of 20 percent
+disabling effective March 3, 2019.
+`;
+
+describe("analyzeCFile off-device fallback: hyphenated and doubled-letter names", () => {
+  it("lists beriberi and an in-service injury instead of dropping or halving them", async () => {
+    expect(await conditionsFor(REAL_NAMES_LETTER)).toEqual([
+      "beriberi",
+      "in-service ankle injury residuals",
+    ]);
+  });
+});
