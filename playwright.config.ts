@@ -102,6 +102,9 @@ export default defineConfig({
     {
       name: "chromium",
       testIgnore: LATENCY_SPECS,
+      // `--project=chromium` is the scope of preflight and pdca-check; the
+      // dependency makes the panic-key latency specs part of that gate.
+      dependencies: ["latency"],
       use: { ...devices["Desktop Chrome"] },
     },
     {

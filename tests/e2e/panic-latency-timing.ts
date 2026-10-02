@@ -19,6 +19,14 @@
  * thread (the work the specs exist to catch) therefore still lengthens this
  * interval, so the budgets are unchanged; only the runner's own
  * post-navigation bookkeeping is left out.
+ *
+ * Firefox stamps an input event's `timeStamp` only once the blocked main
+ * thread is free again, so on Firefox the block sits outside that interval
+ * (a 1500 ms busy-wait read 243 ms there). A second, browser-independent
+ * signal covers it: a 20 ms heartbeat timer records the longest time the
+ * main thread went without running it since the gesture was armed, including
+ * the still-pending gap at the moment of unload. The reported latency is the
+ * larger of the two, so a real stall fails on every browser.
  */
 import { expect, type Page } from "@playwright/test";
 
@@ -46,13 +54,31 @@ export async function armPanicTiming(page: Page): Promise<void> {
     // The runner arms one gesture right before it starts pressing. Setup
     // code (closing dialogs, priming caches) also sends input, so "the first
     // Escape seen" is not necessarily the measured gesture's first Escape.
+    const HEARTBEAT_MS = 20;
     let armed = false;
     let gestureStartedAt: number | null = null;
+    let lastBeatAt = performance.now();
+    let longestStallMs = 0;
+    const noteStall = (now: number) => {
+      if (armed) {
+        longestStallMs = Math.max(
+          longestStallMs,
+          now - lastBeatAt - HEARTBEAT_MS,
+        );
+      }
+    };
+    setInterval(() => {
+      const now = performance.now();
+      noteStall(now);
+      lastBeatAt = now;
+    }, HEARTBEAT_MS);
     (
       window as unknown as { __armPanicGesture?: () => void }
     ).__armPanicGesture = () => {
       armed = true;
       gestureStartedAt = null;
+      longestStallMs = 0;
+      lastBeatAt = performance.now();
     };
     const markGestureStart = (event: Event) => {
       if (armed && gestureStartedAt === null) {
@@ -76,7 +102,9 @@ export async function armPanicTiming(page: Page): Promise<void> {
             __reportPanicLatencyMs?: (ms: number) => void;
           }
         ).__reportPanicLatencyMs;
-        report?.(performance.now() - gestureStartedAt);
+        const now = performance.now();
+        noteStall(now);
+        report?.(Math.max(now - gestureStartedAt, longestStallMs));
       },
       true,
     );
