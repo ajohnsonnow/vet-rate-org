@@ -132,12 +132,16 @@ export default defineConfig({
       testMatch: LATENCY_SPECS,
       fullyParallel: false,
       workers: 1,
+      // Firefox latency runs after Chromium latency and every project that
+      // depends on it, so the two never overlap and the rest of the suite is
+      // finished first. A teardown project runs even when `latency` fails (a
+      // plain dependency would skip it and hide the Firefox results).
+      teardown: "latency-firefox",
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "latency-firefox",
       testMatch: LATENCY_SPECS,
-      dependencies: ["latency"],
       fullyParallel: false,
       workers: 1,
       timeout: 60_000,
