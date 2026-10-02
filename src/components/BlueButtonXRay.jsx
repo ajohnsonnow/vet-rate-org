@@ -1000,8 +1000,8 @@ function Step1ActionButtons({
 
       {/* Explanation of options */}
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-        💡 <strong>Save to My Packet</strong> stores the document now.{" "}
-        <strong>AI Scan</strong> auto-saves first, then extracts diagnoses.
+        💡 <strong>Save to My Packet</strong> stores the document when you
+        choose. <strong>AI Scan</strong> extracts diagnoses and saves nothing.
       </p>
     </>
   );
@@ -2145,48 +2145,11 @@ async function extractBlueButtonFileText(file, setProcessingStage) {
 }
 
 /**
- * Auto-save the Blue Button document to VKB before AI analysis, if it
- * hasn't already been saved. Failures here don't block AI analysis.
- */
-async function autoSaveBlueButtonToVKB(
-  file,
-  text,
-  savedToVKB,
-  { setProcessingStage, setSavedToVKB },
-) {
-  if (savedToVKB) return;
-
-  setProcessingStage("Saving to My Packet...");
-  try {
-    await addDocumentToVKB({
-      fileName: file.name,
-      classification: "blue_button",
-      rawText: text,
-      extractedData: {
-        conditions: [], // Will be updated after AI analysis
-        processingDate: new Date().toISOString(),
-        source: "BlueButtonXRay",
-      },
-      documentDate: new Date().toISOString(),
-      sourceFile: file.name,
-    });
-    setSavedToVKB(true);
-    // eslint-disable-next-line no-console
-    console.log("✅ Auto-saved Blue Button to VKB before AI analysis");
-  } catch (vkbErr) {
-    console.warn(
-      "⚠️ Could not save to VKB, continuing with AI analysis:",
-      vkbErr.message,
-    );
-  }
-}
-
-/**
- * Process the dropped in file using AI
- * Auto-saves to VKB first so the document is available to other tools
+ * Process the dropped in file using AI. Nothing is written to the Knowledge
+ * Base here: the veteran saves it with the explicit Save to My Packet button.
  */
 async function handleProcessFile(
-  { file, savedToVKB },
+  { file },
   {
     setError,
     setOffDeviceNotice,
@@ -2194,7 +2157,6 @@ async function handleProcessFile(
     setExtractedConditions,
     setProcessingStage,
     setRawText,
-    setSavedToVKB,
   },
 ) {
   if (!file) {
@@ -2224,11 +2186,6 @@ async function handleProcessFile(
         "File appears to be empty or too short. Please drop in a valid Blue Button report.",
       );
     }
-
-    await autoSaveBlueButtonToVKB(file, text, savedToVKB, {
-      setProcessingStage,
-      setSavedToVKB,
-    });
 
     setProcessingStage(
       "AI analyzing diagnoses (this may take 30-60 seconds)...",
@@ -2268,7 +2225,6 @@ function useFileHandlers({
   file,
   rawText,
   extractedConditions,
-  savedToVKB,
   setError,
   setOffDeviceNotice,
   setFile,
@@ -2324,7 +2280,7 @@ function useFileHandlers({
 
   const handleProcessFileClick = () =>
     handleProcessFile(
-      { file, savedToVKB },
+      { file },
       {
         setError,
         setOffDeviceNotice,
@@ -2332,7 +2288,6 @@ function useFileHandlers({
         setExtractedConditions,
         setProcessingStage,
         setRawText,
-        setSavedToVKB,
       },
     );
 
@@ -2473,7 +2428,6 @@ function useBlueButtonXRay() {
     file,
     rawText,
     extractedConditions,
-    savedToVKB,
     setError,
     setOffDeviceNotice,
     setFile,
