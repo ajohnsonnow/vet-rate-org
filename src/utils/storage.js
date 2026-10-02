@@ -399,6 +399,8 @@ export async function importAllData(exportedData) {
   }
 }
 
+const QUOTA_ESTIMATE_TIMEOUT_MS = 5000;
+
 /**
  * Pre-flight check that an upcoming write of roughly `estimatedBytes`
  * fits within the browser's storage quota.
@@ -417,7 +419,18 @@ export async function ensureQuota(estimatedBytes) {
       return { ok: true, remaining: null, message: "" };
     }
 
-    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    // estimate() can stall for a long time when the browser is busy writing;
+    // a save must never wait on an advisory check.
+    let estimateTimer;
+    const { usage = 0, quota = 0 } = await Promise.race([
+      navigator.storage.estimate(),
+      new Promise((resolve) => {
+        estimateTimer = setTimeout(
+          () => resolve({}),
+          QUOTA_ESTIMATE_TIMEOUT_MS,
+        );
+      }),
+    ]).finally(() => clearTimeout(estimateTimer));
     if (!quota) {
       return { ok: true, remaining: null, message: "" };
     }

@@ -12,7 +12,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 // browser's real on-disk IndexedDB, which a page reload does not erase
 // (only the module's in-memory state - vkbDB/vkbCache - resets on reload).
 function createFakeIndexedDB(diskStore) {
-  function makeStore() {
+  // A real transaction fires oncomplete once its requests have settled; the
+  // VKB save now waits for that (a commit can still fail after the request
+  // succeeds), so the fake must raise it too.
+  function makeStore(tx) {
     return {
       get: (key) => {
         const request = {};
@@ -27,6 +30,7 @@ function createFakeIndexedDB(diskStore) {
         queueMicrotask(() => {
           diskStore.set(value.id, value);
           request.onsuccess?.();
+          queueMicrotask(() => tx.oncomplete?.());
         });
         return request;
       },
@@ -35,10 +39,17 @@ function createFakeIndexedDB(diskStore) {
         queueMicrotask(() => {
           diskStore.delete(key);
           request.onsuccess?.();
+          queueMicrotask(() => tx.oncomplete?.());
         });
         return request;
       },
     };
+  }
+
+  function makeTransaction() {
+    const tx = {};
+    tx.objectStore = () => makeStore(tx);
+    return tx;
   }
 
   return {
@@ -48,7 +59,7 @@ function createFakeIndexedDB(diskStore) {
         request.result = {
           objectStoreNames: { contains: () => true },
           createObjectStore: () => ({ createIndex: () => {} }),
-          transaction: () => ({ objectStore: () => makeStore() }),
+          transaction: () => makeTransaction(),
         };
         request.onsuccess?.();
       });

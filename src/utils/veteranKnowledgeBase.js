@@ -94,11 +94,26 @@ const openVKBDatabase = () => {
       reject(request.error);
     };
 
+    request.onblocked = () => {
+      console.warn("VKB database is waiting for another tab to release it.");
+    };
+
     request.onsuccess = () => {
-      vkbDB = request.result;
+      const db = request.result;
+      vkbDB = db;
+      // A connection that outlives its own upgrade blocks every other tab's
+      // open forever; closing on versionchange/close also keeps a dead handle
+      // from being reused.
+      db.onversionchange = () => {
+        db.close();
+        if (vkbDB === db) vkbDB = null;
+      };
+      db.onclose = () => {
+        if (vkbDB === db) vkbDB = null;
+      };
       // eslint-disable-next-line no-console
       console.log("✅ VKB IndexedDB opened successfully");
-      resolve(vkbDB);
+      resolve(db);
     };
 
     request.onupgradeneeded = (event) => {
@@ -117,6 +132,17 @@ const openVKBDatabase = () => {
       }
     };
   });
+};
+
+// After a step timed out the cached connection may be the stuck one: drop it
+// so the retry opens a fresh connection instead of queueing behind it.
+export const resetVKBConnection = () => {
+  try {
+    vkbDB?.close();
+  } catch {
+    // already closed
+  }
+  vkbDB = null;
 };
 
 /**
@@ -563,7 +589,36 @@ export const saveVKB = async (vkb) => {
     const request = store.put(vkb);
 
     return new Promise((resolve) => {
-      request.onsuccess = () => {
+      let settled = false;
+      const settle = (value) => {
+        if (settled) return;
+        settled = true;
+        resolve(value);
+      };
+      const reportFailure = (error) => {
+        console.error("❌ Failed to save VKB to IndexedDB:", error);
+        if (error?.name === "QuotaExceededError") {
+          settle({
+            success: false,
+            quotaExceeded: true,
+            error:
+              "Your device storage is full, so your records could not be saved. Export a backup and free up space, then try again.",
+          });
+        } else {
+          settle({
+            success: false,
+            error: error?.message || "The save was aborted",
+          });
+        }
+      };
+
+      // The write is only durable once the transaction commits: a commit that
+      // fails after the request succeeded (quota) aborts the transaction, and
+      // resolving on the request alone would report that lost write as saved.
+      transaction.onabort = () =>
+        reportFailure(transaction.error || request.error);
+      request.onerror = () => reportFailure(request.error);
+      transaction.oncomplete = () => {
         // eslint-disable-next-line no-console
         console.log(`✅ VKB saved to IndexedDB (${sizeInMB}MB)`);
 
@@ -582,21 +637,7 @@ export const saveVKB = async (vkb) => {
 
         const result = { success: true, size: sizeInMB };
         if (!quota.ok) result.quotaWarning = quota.message;
-        resolve(result);
-      };
-
-      request.onerror = () => {
-        console.error("❌ Failed to save VKB to IndexedDB:", request.error);
-        if (request.error?.name === "QuotaExceededError") {
-          resolve({
-            success: false,
-            quotaExceeded: true,
-            error:
-              "Your device storage is full, so your records could not be saved. Export a backup and free up space, then try again.",
-          });
-        } else {
-          resolve({ success: false, error: request.error.message });
-        }
+        settle(result);
       };
     });
   } catch (err) {

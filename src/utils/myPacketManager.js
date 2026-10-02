@@ -63,9 +63,27 @@ const openPacketDB = () => {
       reject(request.error);
     };
 
+    request.onblocked = () => {
+      console.warn(
+        "My Packet database is waiting for another tab to release it.",
+      );
+    };
+
     request.onsuccess = () => {
-      packetDB = request.result;
-      resolve(packetDB);
+      const db = request.result;
+      packetDB = db;
+      // A connection that outlives its own upgrade blocks every other tab's
+      // open forever; closing on versionchange/close also keeps a dead handle
+      // from being reused.
+      const drop = () => {
+        db.close();
+        if (packetDB === db) packetDB = null;
+      };
+      db.onversionchange = drop;
+      db.onclose = () => {
+        if (packetDB === db) packetDB = null;
+      };
+      resolve(db);
     };
 
     request.onupgradeneeded = (event) => {
@@ -94,6 +112,17 @@ const openPacketDB = () => {
       }
     };
   });
+};
+
+// After a step timed out the cached connection may be the stuck one: drop it
+// so the retry opens a fresh connection instead of queueing behind it.
+export const resetPacketConnection = () => {
+  try {
+    packetDB?.close();
+  } catch {
+    // already closed
+  }
+  packetDB = null;
 };
 
 // ============================================================
@@ -307,6 +336,10 @@ export const saveDocumentToPacket = async (doc) => {
 
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
+      tx.onabort = () =>
+        reject(
+          tx.error || new DOMException("Transaction aborted", "AbortError"),
+        );
     });
 
     // Update localStorage metadata cache
