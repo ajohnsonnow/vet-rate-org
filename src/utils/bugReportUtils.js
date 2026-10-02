@@ -7,6 +7,7 @@
 import {
   scrubText,
   redactKnownValues,
+  redactFileNames,
   collectKnownIdentifierValues,
 } from "./piiScrubber";
 
@@ -386,7 +387,7 @@ const scrubConsoleText = (text, maxChars) => {
   if (typeof text !== "string" || text === "") return text;
   const bounded = text.slice(0, MAX_CONSOLE_SCRUB_INPUT_CHARS);
   const scrubbed = scrubText(
-    redactKnownValues(bounded, [
+    redactKnownValues(redactFileNames(bounded), [
       ...profileIdentifierValues,
       ...explicitIdentifierValues,
     ]),
@@ -707,7 +708,35 @@ ${errorTypes.info
 /**
  * Format the complete bug report for clipboard/display
  */
-export const formatBugReport = (reportData) => {
+// A file name can hold a surname or the last four of an SSN, and no known value
+// is needed to spot one: whatever reaches the report text is cleaned here, so a
+// line captured before this scrubber existed (or typed by the veteran) is too.
+const cleanReportText = (value) =>
+  typeof value === "string" ? redactFileNames(value) : value;
+
+const cleanConsoleEntry = (entry) => ({
+  ...entry,
+  message: cleanReportText(entry.message),
+  stack: cleanReportText(entry.stack),
+  url: cleanReportText(entry.url),
+});
+
+const cleanReportData = (reportData) => ({
+  ...reportData,
+  userDescription: cleanReportText(reportData.userDescription),
+  stepsToReproduce: cleanReportText(reportData.stepsToReproduce),
+  expectedBehavior: cleanReportText(reportData.expectedBehavior),
+  actualBehavior: cleanReportText(reportData.actualBehavior),
+  additionalContext: cleanReportText(reportData.additionalContext),
+  appState: reportData.appState && {
+    ...reportData.appState,
+    errorMessage: cleanReportText(reportData.appState.errorMessage),
+  },
+  consoleErrors: reportData.consoleErrors?.map(cleanConsoleEntry),
+});
+
+export const formatBugReport = (rawReportData) => {
+  const reportData = cleanReportData(rawReportData);
   const {
     userDescription,
     stepsToReproduce,

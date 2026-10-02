@@ -1710,6 +1710,25 @@ export const redactKnownValues = (
   return out;
 };
 
+// A file name (or a path ending in one) can carry the veteran's surname or the
+// last four of an SSN. The pattern needs no known value: anything shaped like
+// a path or a name with a document extension becomes a neutral token. A name
+// with spaces swallows up to four words before it, which over-redacts a log
+// line rather than leak a name.
+const FILE_EXTENSIONS =
+  "pdf|png|jpe?g|gif|bmp|tiff?|webp|heic|heif|txt|rtf|docx?|odt|xlsx?|csv|zip|dcm";
+const FILE_NAME_TOKEN = String.raw`[^\s\\/:*?"<>|]{1,100}`;
+const FILE_NAME_DIRECTORY = String.raw`[^\\/:*?"<>|\r\n]{1,100}[\\/]`;
+const FILE_NAME_PATTERN = new RegExp(
+  String.raw`(?:[A-Za-z]:[\\/])?(?:${FILE_NAME_DIRECTORY}){0,10}(?:${FILE_NAME_TOKEN} ){0,4}${FILE_NAME_TOKEN}\.(?:${FILE_EXTENSIONS})(?![A-Za-z0-9])`,
+  "giu",
+);
+
+export const redactFileNames = (text) => {
+  if (!text || typeof text !== "string") return text;
+  return text.replace(FILE_NAME_PATTERN, "[file name]");
+};
+
 const _nonEmptyString = (value) =>
   typeof value === "string" && value.trim() ? value.trim() : null;
 
@@ -2015,6 +2034,7 @@ export default {
   scrubAndSpotlight,
   spotlight,
   redactKnownValues,
+  redactFileNames,
   collectKnownIdentifierValues,
   redactVeteranIdentifiers,
   redactLabeledBoxValues,
