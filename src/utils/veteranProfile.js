@@ -4267,6 +4267,16 @@ export const getTimelineEvents = () => {
 };
 
 /**
+ * The form a timeline description takes once the store has saved it. Anything
+ * that has to recognise a stored event from its source text compares against
+ * this form, not the raw text.
+ * @param {string} [description]
+ * @returns {string}
+ */
+export const sanitizeTimelineDescription = (description) =>
+  sanitizeString(description || "", 1000);
+
+/**
  * Save all timeline events
  * @param {Array} events - Array of timeline events
  * @returns {boolean} Success status
@@ -4280,7 +4290,7 @@ export const saveTimelineEvents = (events) => {
       type: sanitizeString(e.type || "service", 50),
       date: e.date || null,
       title: sanitizeString(e.title || "", 200),
-      description: sanitizeString(e.description || "", 1000),
+      description: sanitizeTimelineDescription(e.description),
       category: sanitizeString(e.category || "Event", 100),
       dateAdded: e.dateAdded || new Date().toISOString(),
       // D-C (final10 QA, 2026-09-25): a VKB-imported event's eventType

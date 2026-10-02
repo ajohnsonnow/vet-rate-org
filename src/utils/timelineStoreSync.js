@@ -17,7 +17,11 @@
  */
 
 import { loadVKB } from "./veteranKnowledgeBase";
-import { getTimelineEvents, saveTimelineEvents } from "./veteranProfile";
+import {
+  getTimelineEvents,
+  sanitizeTimelineDescription,
+  saveTimelineEvents,
+} from "./veteranProfile";
 
 const REMOVED_KEY = "vet_rate_timeline_removed_imports";
 
@@ -28,8 +32,11 @@ function normalizeTimelineText(s) {
     .trim();
 }
 
+// The store saves descriptions sanitised (capped, control characters and
+// "on<word>=" runs removed), so a knowledge-base event only matches its stored
+// copy, and the removal memory, when both sides are keyed in that same form.
 export function timelineEventKey(e) {
-  return `${e.date}|${normalizeTimelineText(e.description)}`;
+  return `${e.date}|${normalizeTimelineText(sanitizeTimelineDescription(e.description))}`;
 }
 
 // cyrb53: small non-cryptographic 53-bit hash, enough to recognise a key
