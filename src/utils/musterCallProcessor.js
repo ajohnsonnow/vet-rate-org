@@ -2028,6 +2028,24 @@ const largePdfCoverage = (largeResult, { readAllRequested = false } = {}) => {
   };
 };
 
+const _markDocumentFailed = (result, error, onProgress) => {
+  console.error(`Error processing this document:`, error.message);
+  const persistIncomplete = error instanceof DocumentPersistIncompleteError;
+  const message = persistIncomplete
+    ? describePersistIncomplete(result.filename, "Retry", error)
+    : error.message;
+  result.status = "error";
+  result.error = message;
+  result.persistIncomplete = persistIncomplete;
+  result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;
+  onProgress?.({
+    filename: result.filename,
+    state: PROCESSING_STATES.ERROR,
+    error: message,
+    stage: "error",
+  });
+};
+
 const processSingleDocument = async (file, onProgress, options = {}) => {
   const result = {
     filename: file.name,
@@ -2053,6 +2071,7 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
   };
 
   const startTime = Date.now();
+  _noteOnDeviceEngineReady();
 
   try {
     // ============================================================
@@ -2113,21 +2132,7 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
       },
     });
   } catch (error) {
-    console.error(`Error processing this document:`, error.message);
-    const persistIncomplete = error instanceof DocumentPersistIncompleteError;
-    const message = persistIncomplete
-      ? describePersistIncomplete(file.name, "Retry", error)
-      : error.message;
-    result.status = "error";
-    result.error = message;
-    result.persistIncomplete = persistIncomplete;
-    result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;
-    onProgress?.({
-      filename: file.name,
-      state: PROCESSING_STATES.ERROR,
-      error: message,
-      stage: "error",
-    });
+    _markDocumentFailed(result, error, onProgress);
   }
 
   result.processingTime = Date.now() - startTime;
@@ -2852,6 +2857,16 @@ let _pendingEngineReload = null;
 // reload would start downloading a model nobody asked for).
 let _lastOnDeviceMode = null;
 
+// Sampled where every document starts as well as at the AI step itself: an
+// engine that was ready when the import began but is lost before the first
+// C-File reaches the AI step (a long OCR pass, vision work under load) would
+// otherwise look like "never loaded" and be skipped without a word.
+function _noteOnDeviceEngineReady() {
+  const routing = getDocumentAIRouting();
+  if (routing.onDeviceReady) _lastOnDeviceMode = routing.onDeviceMode;
+  return routing;
+}
+
 function _reloadEngineOnce() {
   if (!_pendingEngineReload) {
     const reload = reloadSwarmEngine().finally(() => {
@@ -2909,8 +2924,7 @@ const _boundedAnalysis = (excerpt, options, boundMs) =>
 // first attempt: it is rebuilt (bounded), retried once, and reported the same
 // way when it still cannot run.
 async function _runCFileAIAnalysis(text) {
-  const routing = getDocumentAIRouting();
-  if (routing.onDeviceReady) _lastOnDeviceMode = routing.onDeviceMode;
+  const routing = _noteOnDeviceEngineReady();
   const anyAI = isAnyAIAvailable();
   const engineGone =
     !routing.onDeviceReady && !anyAI && _lastOnDeviceMode !== null;
