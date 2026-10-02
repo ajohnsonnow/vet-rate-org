@@ -39,7 +39,6 @@ import {
 import {
   processFormationDocument,
   persistFormationDocument,
-  autoPopulateProfile,
   stripIdentifiersFromFormationResult,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
@@ -2996,8 +2995,10 @@ function _buildDd214AnalysisHandlers(state) {
 
 // Everything reading a scan found (service periods, awards, deployments, the
 // archived document) is written only now, after the veteran confirmed the
-// import dialog. Name and date of birth are never part of it: those reach the
-// profile and Knowledge Base only through the boxes the veteran ticked.
+// import dialog. Identifiers are never part of it, and neither are the flat
+// profile fields (branch, dates, MOS, character of service): those reach the
+// profile only through the boxes the veteran ticked, in the dialog's own
+// values.
 export async function _persistDeferredFormationResults(extractedTexts) {
   for (const item of extractedTexts) {
     if (!item.deferredResult) continue;
@@ -3006,7 +3007,6 @@ export async function _persistDeferredFormationResults(extractedTexts) {
       { name: result.filename, size: result.size },
       result,
     );
-    await autoPopulateProfile([result]);
   }
 }
 

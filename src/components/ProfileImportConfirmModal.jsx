@@ -370,6 +370,7 @@ const FieldRow = ({
             type="checkbox"
             checked={isSelected === true}
             onChange={onToggle}
+            aria-label={label}
             className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
           />
         </div>

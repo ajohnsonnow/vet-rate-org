@@ -1976,6 +1976,8 @@ const FORMATION_IDENTIFIER_KEYS = [
   "firstName",
   "middleName",
   "dateOfBirth",
+  "vaFileNumber",
+  "claimNumber",
 ];
 
 export const stripIdentifiersFromFormationResult = (result) => {

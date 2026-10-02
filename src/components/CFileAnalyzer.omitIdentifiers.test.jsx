@@ -63,6 +63,51 @@ beforeEach(() => {
   store.addDocumentToVKB.mockResolvedValue({ success: true, documentId: "d1" });
 });
 
+const LETTER_TEXT = `Department of Veterans Affairs
+Veterans Benefits Administration
+May 8, 2024
+
+VA File Number: 123456789
+Claim Number: 600123456
+
+Dear Veteran:
+
+We received your claim for disability compensation on April 2, 2024.
+What we need from you: please return the enclosed evidence request within
+30 days so that we can continue to process your claim.
+${"Additional claim letter body text. ".repeat(10)}
+`;
+
+describe("a claim letter's VA file number and claim number are not stored", () => {
+  it("files the letter without either number and never writes them to the profile", async () => {
+    analyzeDocument.mockResolvedValue({
+      text: LETTER_TEXT,
+      pageCount: 1,
+      method: "text",
+      ocrUsed: false,
+    });
+
+    const result = await _extractTextForAnalysis(
+      new File(["x"], "sample-letter.pdf", { type: "application/pdf" }),
+      ctx(),
+      {},
+    );
+
+    expect(result.hasText).toBe(true);
+    const filed = store.addDocumentToVKB.mock.calls[0][0].extractedData;
+    expect(filed.type).toBe("claim_letter");
+    expect(filed).not.toHaveProperty("vaFileNumber");
+    expect(filed).not.toHaveProperty("claimNumber");
+    const profile = getVeteranProfile();
+    expect(profile.vaFileNumber).toBeFalsy();
+    expect(profile.claimNumber).toBeFalsy();
+    const stored = Array.from({ length: localStorage.length }, (_, i) =>
+      localStorage.getItem(localStorage.key(i)),
+    ).join("\n");
+    expect(stored).not.toMatch(/123456789|600123456/);
+  });
+});
+
 describe("D21-4: reading a C-File never stores the name or date of birth", () => {
   it("files the document and service data without any identifier", async () => {
     const result = await _extractTextForAnalysis(

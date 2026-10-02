@@ -43,7 +43,8 @@ vi.mock("../utils/myPacketManager", async (importOriginal) => ({
 const { analyzeDocument } = await import("../utils/documentAnalyzer");
 const { processFormationDocument } =
   await import("../utils/musterCallProcessor");
-const { getVeteranProfile } = await import("../utils/veteranProfile");
+const { getVeteranProfile, getServiceHistory } =
+  await import("../utils/veteranProfile");
 const { LanguageProvider } = await import("../contexts/LanguageContext");
 const { default: DD214Analyzer, _persistDeferredFormationResults } =
   await import("./DD214Analyzer.jsx");
@@ -175,9 +176,39 @@ describe("D21-4: confirming stores the service data but never the name or DOB", 
     expect(filed.branch).toBeTruthy();
     expectNoStructuredIdentifiers(filed);
     const profile = getVeteranProfile();
-    expect(profile.branch).toBeTruthy();
+    expect(getServiceHistory().dd214Data?.branch).toBeTruthy();
+    [
+      "branch",
+      "serviceStartDate",
+      "serviceEndDate",
+      "characterOfService",
+    ].forEach((key) => expect(profile[key]).toBeFalsy());
     expect(profile.fullName || profile.lastName).toBeFalsy();
     expect(profile.dateOfBirth).toBeFalsy();
+  });
+
+  it("does not store a dropped claim letter's VA file number or claim number", async () => {
+    analyzeDocument.mockResolvedValue({
+      text: `Department of Veterans Affairs\nMay 8, 2024\nVA File Number: 123456789\nClaim Number: 600123456\nDear Veteran:\nWe received your claim for disability compensation on April 2, 2024.\nWhat we need from you: return the evidence request within 30 days.\n${"Claim letter body text. ".repeat(10)}`,
+      pageCount: 1,
+      method: "text",
+      ocrUsed: false,
+    });
+    const deferredResult = await processFormationDocument(
+      new File(["x"], "sample-letter.pdf", { type: "application/pdf" }),
+      () => {},
+      { deferPersist: true },
+    );
+    expect(deferredResult.extractedData.type).toBe("claim_letter");
+
+    await _persistDeferredFormationResults([
+      { filename: "sample-letter.pdf", deferredResult },
+    ]);
+
+    const filed = vkb.addDocumentToVKB.mock.calls[0][0].extractedData;
+    expect(filed).not.toHaveProperty("vaFileNumber");
+    expect(filed).not.toHaveProperty("claimNumber");
+    expect(wholeStore()).not.toMatch(/123456789|600123456/);
   });
 
   it("does nothing for a pasted text with no scan", async () => {
