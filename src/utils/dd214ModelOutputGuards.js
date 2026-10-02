@@ -22,6 +22,15 @@ export const FREE_TEXT_FIELDS = [
   "foreignServiceDetails",
 ];
 
+// Fields whose text a model writes in its own words (or copies as a unit
+// line), so a name the app has never seen can sit in them. They are never
+// pre-ticked for import and are stored only when the veteran ticks them.
+export const MODEL_TEXT_FIELDS = [
+  ...FREE_TEXT_FIELDS,
+  "lastDutyAssignment",
+  "commandTransferredTo",
+];
+
 const SCALAR_LITERAL = /"(\w+)"\s*:\s*"([^"\n]+)"/g;
 // Bracketed lists of plain strings, one line or several; a list that holds
 // objects or other lists (the awards example) never matches.

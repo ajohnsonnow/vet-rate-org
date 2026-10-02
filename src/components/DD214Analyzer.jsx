@@ -78,6 +78,7 @@ import {
   buildPlaceholderDetector,
   sanitizeModelOutput,
   scrubModelFreeText,
+  MODEL_TEXT_FIELDS,
 } from "../utils/dd214ModelOutputGuards";
 
 /**
@@ -1116,7 +1117,9 @@ export async function _saveDd214ToVkb(
       characterOfService: analysisResult.characterOfService,
       separationAuthority: analysisResult.separationAuthority,
       separationType: analysisResult.separationType,
-      narrativeReason: analysisResult.narrativeReason,
+      narrativeReason: _hasValue(selectedFields?.narrativeReason)
+        ? analysisResult.narrativeReason
+        : undefined,
       reentryCode: analysisResult.reentryCode,
       spnCode:
         analysisResult.separationCode ||
@@ -1166,11 +1169,32 @@ export async function _saveDd214ToVkb(
   }
 }
 
-async function _saveDd214ToPacket(
-  analysisResult,
+// The structured copy filed with the archived document carries an identifier
+// or model-written text only when the veteran ticked its import box.
+const UNCONFIRMED_UNLESS_TICKED = [
+  ...IDENTIFIER_FIELDS,
+  ...MODEL_TEXT_FIELDS,
+  "placeOfBirth",
+];
+
+function _confirmedFieldsOnly(analysisResult, selectedFields = {}) {
+  const confirmed = { ...analysisResult };
+  UNCONFIRMED_UNLESS_TICKED.forEach((key) => {
+    if (!_hasValue(selectedFields[key])) delete confirmed[key];
+  });
+  return confirmed;
+}
+
+export async function _saveDd214ToPacket(
+  rawAnalysisResult,
   combinedText,
   extractedTexts,
+  selectedFields,
 ) {
+  const analysisResult = _confirmedFieldsOnly(
+    rawAnalysisResult,
+    selectedFields,
+  );
   // This stores the full document text + structured data forever
   try {
     const sourceFileName =
@@ -3045,7 +3069,12 @@ function _buildDd214SaveHandlers(state) {
 
       // ── 3. SAVE TO MY PACKET (permanent archive) ──
       // This stores the full document text + structured data forever
-      await _saveDd214ToPacket(analysisResult, combinedText, extractedTexts);
+      await _saveDd214ToPacket(
+        analysisResult,
+        combinedText,
+        extractedTexts,
+        selectedFields,
+      );
 
       // Callback if provided
       if (onSaveResults) {

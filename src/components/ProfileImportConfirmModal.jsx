@@ -10,6 +10,7 @@
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { isSameCalendarDay } from "../utils/serviceEntryDate";
+import { MODEL_TEXT_FIELDS } from "../utils/dd214ModelOutputGuards";
 
 // Field labels for display
 const fieldLabels = {
@@ -240,8 +241,10 @@ const formatSimpleFieldValue = (value) => {
 };
 
 // Owner decision (F): nothing identifier-related is ever pre-selected for
-// import. The veteran ticks the box deliberately.
+// import. The veteran ticks the box deliberately. Text a model writes counts:
+// a name the app has never seen cannot be recognised in it.
 const NEVER_PRESELECTED_FIELDS = new Set([
+  ...MODEL_TEXT_FIELDS,
   "fullName",
   "firstName",
   "middleName",
