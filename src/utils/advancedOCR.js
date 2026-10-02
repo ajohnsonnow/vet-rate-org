@@ -69,6 +69,8 @@ export const ADVANCED_OCR_CONFIG = {
   OCR_PAGE_TIMEOUT_MS: 180_000,
   OCR_WORKER_START_TIMEOUT_MS: 60_000,
   OCR_CLEANUP_TIMEOUT_MS: 10_000,
+  TEXT_CONTENT_TIMEOUT_MS: 30_000,
+  PREPROCESS_TIMEOUT_MS: 120_000,
 };
 
 // A pixel counts as ink when its luminance differs from the page background
@@ -350,6 +352,23 @@ export function pageNeedsOCR(pageText, itemCount, config) {
   return itemCount === 0 && pageText.trim().length < config.MIN_CHARS_PER_PAGE;
 }
 
+// getTextContent never settles on a page whose content stream stalls. A page
+// that times out is treated as having no usable text layer (no items, no
+// text), which routes it to OCR instead of freezing the whole read.
+async function readTextContentBounded(page, config) {
+  try {
+    return await withTimeout(
+      page.getTextContent(),
+      config.TEXT_CONTENT_TIMEOUT_MS,
+      "Page text read",
+    );
+  } catch (error) {
+    if (!error.isTimeout) throw error;
+    console.warn(`[advancedOCR] ${error.message}`);
+    return { items: [] };
+  }
+}
+
 /**
  * Extract every page's embedded text layer (fast path) - always the full
  * document. Reports, per page, whether that layer looked usable so the
@@ -364,7 +383,7 @@ async function extractStandardText(pdf, numPages, config, onProgress) {
 
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
+    const textContent = await readTextContentBounded(page, config);
     const pageText = textContent.items.map((item) => item.str).join(" ");
     fullText += `--- PAGE ${i} ---\n${pageText}\n\n`;
     pageTexts.set(i, pageText);
@@ -916,9 +935,10 @@ function createPageRecognizer(scheduler, config) {
         scale,
         config.OCR_PAGE_TIMEOUT_MS,
       );
-      processedCanvas = await applyAdvancedPreprocessing(
-        canvas,
-        preprocessStrategy,
+      processedCanvas = await withTimeout(
+        applyAdvancedPreprocessing(canvas, preprocessStrategy),
+        config.PREPROCESS_TIMEOUT_MS,
+        "Page preprocessing",
       );
       imageData = processedCanvas.toDataURL("image/png");
     } finally {
@@ -947,9 +967,13 @@ function createPageRecognizer(scheduler, config) {
  * items; cover sheets may have 1-5 lines). Scanned pages return items=0.
  * Returns the layer text, or null if OCR is required.
  */
-async function tryTextLayerText(page) {
+async function tryTextLayerText(page, config = ADVANCED_OCR_CONFIG) {
   try {
-    const textContent = await page.getTextContent();
+    const textContent = await withTimeout(
+      page.getTextContent(),
+      config.TEXT_CONTENT_TIMEOUT_MS,
+      "Page text read",
+    );
     const layerText = textContent.items
       .map((item) => item.str)
       .join(" ")
@@ -1121,7 +1145,7 @@ function createPageProcessor({
       // filtered to image-only pages, but a caller-supplied
       // ocrOnlyPageNumbers could name a page that actually has a fine text
       // layer - skip the expensive render+Tesseract pass for it too.
-      const layerText = await tryTextLayerText(page);
+      const layerText = await tryTextLayerText(page, config);
       if (layerText !== null) {
         report(() => `Page ${pageNum}/${pagesToProcess} (text layer)...`);
         return {

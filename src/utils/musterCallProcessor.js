@@ -136,15 +136,18 @@ import {
   buildInventoryFromSegmentation,
 } from "./cFileSegmentation";
 import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
-import { createTimeSlicer } from "./mainThreadScheduler";
+import { createTimeSlicer, yieldToMainThread } from "./mainThreadScheduler";
 
 // Vision AI confidence threshold - below this, try vision fallback
 const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
 // Florence-2's own DD214 field parse must reach this before its text is
 // allowed to replace OCR text for a service record (real garbage scored 4-11)
 const VISION_MIN_FIELD_CONFIDENCE = 40;
+const VISION_INIT_TIMEOUT_MS = 180_000;
+const VISION_PROCESS_TIMEOUT_MS = 150_000;
 let visionInitialized = false;
 let visionInitializing = false;
+let visionUnavailable = false;
 
 /**
  * Adaptive ETA: rolling average of pages/sec over the most recent extraction
@@ -532,14 +535,20 @@ async function _applyVisionFallbackIfNeeded(
   extractionResult,
   looksLikeDD214 = false,
 ) {
-  // Store OCR confidence for fallback decision
-  const ocrConfidence = extractionResult.confidence || 0;
+  // Store OCR confidence for fallback decision. A missing value means the
+  // extractor did not report one, which is not the same as 0% - reading it as
+  // 0 sent every scan through the vision model (D21-6).
+  const ocrConfidence = Number.isFinite(extractionResult.confidence)
+    ? extractionResult.confidence
+    : null;
   result.confidence = ocrConfidence;
 
-  // Vision fallback for poor OCR quality on any PDF
+  // Vision fallback only for a PDF whose OCR genuinely read poorly
   const shouldTryVisionFallback =
     isPDF &&
+    ocrConfidence !== null &&
     ocrConfidence < VISION_FALLBACK_THRESHOLD &&
+    !visionUnavailable &&
     isWebGPUSupported() &&
     extractionResult.ocrUsed;
 
@@ -569,14 +578,54 @@ async function _applyVisionFallbackIfNeeded(
   return extractionResult;
 }
 
+// A vision model that cannot load or answer in time is switched off for the
+// rest of the session (and its worker torn down): every later scan would pay
+// the same wait, and a worker wedged on the GPU is what froze a tab (D21-6).
+function _switchVisionOff() {
+  visionUnavailable = true;
+  visionInitialized = false;
+  try {
+    florenceOCRService.shutdown?.();
+  } catch (shutdownErr) {
+    console.warn("⚠️ Vision worker teardown failed:", shutdownErr?.message);
+  }
+}
+
 async function _ensureVisionReady() {
   if (!visionInitialized && !visionInitializing) {
     visionInitializing = true;
-    visionInitialized = await florenceOCRService.initialize();
-    visionInitializing = false;
+    try {
+      visionInitialized = await withStepTimeout(
+        () => florenceOCRService.initialize(),
+        "vision model load",
+        VISION_INIT_TIMEOUT_MS,
+      );
+    } catch (initErr) {
+      if (initErr instanceof StepTimeoutError) _switchVisionOff();
+      throw initErr;
+    } finally {
+      visionInitializing = false;
+    }
   }
   return visionInitialized;
 }
+
+const _runBoundedVisionRead = async (file, looksLikeDD214) => {
+  try {
+    return await withStepTimeout(
+      () =>
+        florenceOCRService.processDocument(file, {
+          pageNumber: 1,
+          parseDD214: looksLikeDD214,
+        }),
+      "vision read",
+      VISION_PROCESS_TIMEOUT_MS,
+    );
+  } catch (readErr) {
+    if (readErr instanceof StepTimeoutError) _switchVisionOff();
+    throw readErr;
+  }
+};
 
 // For a service record Florence must beat a field-level bar, not just a
 // length/loop check: on real scans its garbage passed both text heuristics
@@ -609,10 +658,11 @@ async function _runVisionFallback(
   try {
     if (!(await _ensureVisionReady())) return extractionResult;
 
-    const visionResult = await florenceOCRService.processDocument(file, {
-      pageNumber: 1,
-      parseDD214: looksLikeDD214,
-    });
+    // Hand the main thread back before and after the vision call so a click
+    // (Quick Exit, the panic key) is never queued behind it.
+    await yieldToMainThread();
+    const visionResult = await _runBoundedVisionRead(file, looksLikeDD214);
+    await yieldToMainThread();
     const { visionText, fieldConfidence, garbled, accepted } =
       _judgeVisionOutput(visionResult, extractionResult, looksLikeDD214);
 

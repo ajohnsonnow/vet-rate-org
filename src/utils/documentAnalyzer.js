@@ -127,6 +127,9 @@ async function analyzePDFDocument(file, onProgress, options) {
     method: result.method,
     fileType: "PDF",
     ocrUsed: result.ocrUsed,
+    // The OCR's own reading confidence (0-100). Dropping it made the caller
+    // treat every scan as 0% and run the vision fallback each time (D21-6).
+    confidence: result.confidence,
     // D-4: advancedOCR.js already reports exactly how many pages were
     // read, OCR'd and skipped - forward it instead of silently dropping
     // it, so a caller can tell the veteran (or retry the skipped pages via
