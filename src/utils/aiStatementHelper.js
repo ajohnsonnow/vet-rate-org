@@ -2086,7 +2086,10 @@ function mapDecodeDecisionError(error) {
  * @param {string} decisionText - The decision letter text to analyze
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
-export const decodeDecision = async (decisionText) => {
+export const decodeDecision = async (
+  decisionText,
+  { timeout = 90000 } = {},
+) => {
   // Check if any AI is available via unified service
   if (!isAnyAIAvailable()) {
     return {
@@ -2116,7 +2119,7 @@ export const decodeDecision = async (decisionText) => {
   try {
     // Use unified AI service with minimal system prompt
     // The decision decoder prompt already includes all necessary context
-    // Set a 90-second timeout to match UI expectations
+    // The timeout is the caller's (the UI scales it to the engine's pace)
     // ADR-009: "document" - decisionText is the veteran's uploaded/pasted
     // decision letter; only an on-device engine may see it.
     const response = await generateAI(prompt, {
@@ -2124,7 +2127,7 @@ export const decodeDecision = async (decisionText) => {
       temperature: 0.3,
       maxTokens: 1500, // Reduced from 2048 to leave room for context
       expectJSON: true,
-      timeout: 90000, // 90 seconds - match UI timeout
+      timeout, // the caller scales this to the engine's measured pace
       // Tell generateAI to use a minimal/empty system prompt since our prompt is self-contained
       systemPrompt: "You are a VA claims expert. Respond only with valid JSON.",
       taskType: "legal", // Use legal preset for accuracy

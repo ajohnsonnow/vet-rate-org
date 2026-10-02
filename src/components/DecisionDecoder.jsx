@@ -5,6 +5,11 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
 import { getAIStatus } from "../utils/unifiedAIService";
+import {
+  getDecodeTimeoutMs,
+  recordDecodeDuration,
+  SLOW_NOTICE_AFTER_MS,
+} from "../utils/decodeTiming";
 import { buildDocumentOffDeviceNotice } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -339,13 +344,13 @@ function patternMatchDenial(text) {
   return null;
 }
 
-function getDecodeErrorMessage(err) {
+function getDecodeErrorMessage(err, timeoutMs) {
   if (/TIMEOUT|timed out/i.test(err.message || "")) {
     return (
-      "⏱️ The AI request timed out after 90 seconds. This usually means:\n\n" +
+      `⏱️ The AI request timed out after ${Math.round(timeoutMs / 1000)} seconds. This usually means:\n\n` +
       "• The AI model is still loading (wait a few more seconds and try again)\n" +
-      '• Your document is too large (try pasting only the "Reasons for Decision" section)\n' +
-      "• Network connection issues (check your internet connection)\n\n" +
+      "• This browser or computer runs the on-device AI slowly (a second try is allowed more time)\n" +
+      '• Your document is too large (try pasting only the "Reasons for Decision" section)\n\n' +
       "Please try again with a shorter excerpt, or wait for the AI model to fully load."
     );
   }
@@ -467,12 +472,72 @@ function logDecodeError(err) {
   console.error("[DecisionDecoder] Decode error:", errorDetails);
 }
 
+const TIMED_OUT_RE = /TIMEOUT|timed out/i;
+
+// Runs one AI decode against a time budget scaled to this engine's measured
+// pace. A completed on-device decode teaches the next budget; a timeout is a
+// lower bound on the pace, so the retry gets more room.
+async function runTimedDecode(denialText, timeoutMs) {
+  const { timeoutPromise, clear } = createDecodeTimeout(
+    timeoutMs,
+    `TIMEOUT: AI request exceeded ${Math.round(timeoutMs / 1000)} second limit`,
+  );
+  const startedAt = Date.now();
+  try {
+    // eslint-disable-next-line no-console
+    console.log(
+      "[DecisionDecoder] Starting AI decode with",
+      denialText.length,
+      "characters",
+    );
+    const response = await Promise.race([
+      decodeDecision(denialText, { timeout: timeoutMs }),
+      timeoutPromise,
+    ]);
+    // Model output is identifier-bearing free text: log its shape only.
+    // eslint-disable-next-line no-console
+    console.log(
+      "[DecisionDecoder] AI response: success =",
+      Boolean(response?.success),
+    );
+    if (response?.success && !response.usedFallback) {
+      recordDecodeDuration(Date.now() - startedAt);
+    } else if (TIMED_OUT_RE.test(response?.error || "")) {
+      recordDecodeDuration(timeoutMs);
+    }
+    return response;
+  } catch (err) {
+    if (TIMED_OUT_RE.test(err?.message || "")) {
+      recordDecodeDuration(timeoutMs);
+    }
+    throw err;
+  } finally {
+    clear();
+  }
+}
+
+function useElapsedWhile(active) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setElapsedMs(0);
+      return undefined;
+    }
+    const startedAt = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), 1000);
+    return () => clearInterval(id);
+  }, [active]);
+  return elapsedMs;
+}
+
 // Owns the decode request lifecycle (pattern-match fallback + AI call with
 // timeout) so the component doesn't carry this async state machine inline.
 export function useDecisionDecode() {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [budgetMs, setBudgetMs] = useState(null);
+  const elapsedMs = useElapsedWhile(isLoading);
 
   const handleDecode = async (denialText) => {
     if (!denialText.trim()) {
@@ -495,42 +560,21 @@ export function useDecisionDecode() {
     setIsLoading(true);
     setError(null);
     setResults(null);
-
-    const { timeoutPromise, clear } = createDecodeTimeout(
-      90000,
-      "TIMEOUT: AI request exceeded 90 second limit",
-    );
+    const timeoutMs = getDecodeTimeoutMs();
+    setBudgetMs(timeoutMs);
 
     try {
-      // eslint-disable-next-line no-console
-      console.log(
-        "[DecisionDecoder] Starting AI decode with",
-        denialText.length,
-        "characters",
-      );
-
-      // Race between the actual call and timeout
-      const response = await Promise.race([
-        decodeDecision(denialText),
-        timeoutPromise,
-      ]);
-
-      clear();
-
-      // eslint-disable-next-line no-console
-      console.log("[DecisionDecoder] AI response:", response);
-
+      const response = await runTimedDecode(denialText, timeoutMs);
       applyDecodeResponse(response, denialText, setResults, setError);
     } catch (err) {
-      clear();
       logDecodeError(err);
-      setError(getDecodeErrorMessage(err));
+      setError(getDecodeErrorMessage(err, timeoutMs));
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { results, isLoading, error, handleDecode };
+  return { results, isLoading, error, handleDecode, elapsedMs, budgetMs };
 }
 
 // ADR-008: a real dropped file's own name commonly carries the veteran's
@@ -1582,7 +1626,30 @@ const ResultsContent = ({ results }) => {
   );
 };
 
-const DecodingLoadingState = () => (
+export const DecodeProgressNotice = ({ elapsedMs, budgetMs }) => {
+  const seconds = Math.floor((elapsedMs || 0) / 1000);
+  const slow = (elapsedMs || 0) >= SLOW_NOTICE_AFTER_MS;
+  return (
+    <div
+      role="status"
+      className="mt-4 text-xs text-amber-600 dark:text-amber-400"
+    >
+      <p>
+        {slow
+          ? `Still working (${seconds} s). On-device AI is slower in some browsers and on some computers.`
+          : `Working... ${seconds} s. This usually takes 10-30 seconds.`}
+      </p>
+      {slow && budgetMs && (
+        <p className="mt-1">
+          Waiting up to {Math.round(budgetMs / 1000)} seconds in total, then you
+          can try again.
+        </p>
+      )}
+    </div>
+  );
+};
+
+const DecodingLoadingState = ({ elapsedMs, budgetMs }) => (
   <div className="h-full flex items-center justify-center py-12 text-center">
     <div className="max-w-sm">
       <div className="relative mb-6">
@@ -1608,9 +1675,7 @@ const DecodingLoadingState = () => (
           <span className="animate-pulse">📋</span> Building your action plan...
         </p>
       </div>
-      <p className="text-xs text-amber-600 dark:text-amber-400 mt-4">
-        This usually takes 10-30 seconds
-      </p>
+      <DecodeProgressNotice elapsedMs={elapsedMs} budgetMs={budgetMs} />
     </div>
   </div>
 );
@@ -1632,6 +1697,8 @@ const DecisionDecoderResultsSection = ({
   results,
   isLoading,
   onRetry,
+  elapsedMs,
+  budgetMs,
 }) => (
   <div>
     <ResultsErrorNotice error={error} onRetry={onRetry} isLoading={isLoading} />
@@ -1639,7 +1706,9 @@ const DecisionDecoderResultsSection = ({
     <ResultsContent results={results} />
 
     {/* Loading State - Shows progress while AI is working */}
-    {isLoading && <DecodingLoadingState />}
+    {isLoading && (
+      <DecodingLoadingState elapsedMs={elapsedMs} budgetMs={budgetMs} />
+    )}
 
     {/* Empty State */}
     {!results && !isLoading && !error && <DecoderEmptyState />}
@@ -1904,7 +1973,8 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
 
   const [denialText, setDenialText] = useState("");
   const { aiStatus, setAIStatus } = useAIStatusPolling();
-  const { results, isLoading, error, handleDecode } = useDecisionDecode();
+  const { results, isLoading, error, handleDecode, elapsedMs, budgetMs } =
+    useDecisionDecode();
   const [showPhaseExplainer, setShowPhaseExplainer] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [inputMethod, setInputMethod] = useState("paste"); // 'paste' or 'file'
@@ -1969,6 +2039,8 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
           results={results}
           isLoading={isLoading}
           onRetry={() => handleDecode(denialText)}
+          elapsedMs={elapsedMs}
+          budgetMs={budgetMs}
         />
       </div>
 

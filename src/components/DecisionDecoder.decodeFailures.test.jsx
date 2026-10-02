@@ -29,6 +29,7 @@ vi.mock("../utils/unifiedAIService", async (importOriginal) => {
   };
 });
 
+const { resetDecodeSpeed } = await import("../utils/decodeTiming");
 const {
   default: DecisionDecoder,
   useDecisionDecode,
@@ -52,6 +53,7 @@ const GOOD_RESPONSE = {
 
 beforeEach(() => {
   mockDecodeDecision.mockReset();
+  resetDecodeSpeed();
 });
 
 describe("useDecisionDecode: a failure is never a blank result", () => {
@@ -66,7 +68,7 @@ describe("useDecisionDecode: a failure is never a blank result", () => {
     });
 
     expect(result.current.results).toBeNull();
-    expect(result.current.error).toMatch(/timed out after 90 seconds/i);
+    expect(result.current.error).toMatch(/timed out after 180 seconds/i);
     expect(result.current.error).not.toMatch(/An error occurred during/i);
   });
 
@@ -120,7 +122,7 @@ describe("DecisionDecoder: error banner offers a retry", () => {
     );
 
     const alert = await screen.findByRole("alert");
-    expect(alert.textContent).toMatch(/timed out after 90 seconds/i);
+    expect(alert.textContent).toMatch(/timed out after 180 seconds/i);
 
     fireEvent.click(screen.getByRole("button", { name: /Try again/i }));
 
