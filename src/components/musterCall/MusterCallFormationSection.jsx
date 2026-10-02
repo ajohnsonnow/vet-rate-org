@@ -96,7 +96,11 @@ export default function MusterCallFormationSection({
       )}
 
       {showCompletionSummary && (
-        <MusterCallCompletionSummary formation={formation} />
+        <MusterCallCompletionSummary
+          formation={formation}
+          onRetry={flow.retryDocumentSave}
+          canRetry={flow.canRetryDocumentSave}
+        />
       )}
 
       {/* Intelligence Briefing Modal (SEQUENTIAL MODE - User Verification) */}

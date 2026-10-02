@@ -10,10 +10,12 @@
  * / complexity budget.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   processFormationDocument,
   persistFormationDocument,
+  retryFormationDocumentPersist,
+  describePersistIncomplete,
   autoPopulateProfile,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
@@ -86,10 +88,8 @@ function handleProgressUpdate(progressData, entry, file, ctx) {
  */
 async function runDocumentProcessing(entry, ctx) {
   const {
-    formation,
     stats,
     updateEntry,
-    errorEntryAndNext,
     toast,
     setProcessingState,
     setActiveEntry,
@@ -156,23 +156,39 @@ async function runDocumentProcessing(entry, ctx) {
       setShowIntelBriefing(true);
       updateEntry(entry.id, { status: "USER_REVIEW" });
     } else if (result.status === "error") {
-      throw new Error(result.error || "Processing failed");
+      const failure = new Error(result.error || "Processing failed");
+      if (result.persistIncomplete) {
+        ctx.retainedResults.set(entry.id, result);
+        failure.persistIncomplete = true;
+      }
+      throw failure;
     }
   } catch (err) {
-    console.error("❌ Document processing error:", err);
-    const nextEntry = errorEntryAndNext(entry.id, err.message);
-    setCurrentProgress(null);
-    setActiveEntry(null);
-
-    // Move to next document after error
-    scheduleNextDocument(
-      nextEntry,
-      formation,
-      (e) => e.status === "WAITING",
-      1000,
-      ctx,
-    );
+    handleDocumentFailure(err, entry, ctx);
   }
+}
+
+// The message of a save that did not finish names the document for the
+// veteran, so only a fixed phrase is written to the console.
+function handleDocumentFailure(err, entry, ctx) {
+  console.error(
+    "❌ Document processing error:",
+    err.persistIncomplete ? "saving did not finish" : err.message,
+  );
+  const nextEntry = err.persistIncomplete
+    ? ctx.errorEntryAndNext(entry.id, err.message, { retryable: true })
+    : ctx.errorEntryAndNext(entry.id, err.message);
+  ctx.setCurrentProgress(null);
+  ctx.setActiveEntry(null);
+
+  // Move to next document after error
+  scheduleNextDocument(
+    nextEntry,
+    ctx.formation,
+    (e) => e.status === "WAITING",
+    1000,
+    ctx,
+  );
 }
 
 const NO_PERIOD_FOR_DOCUMENT_WARNING =
@@ -309,9 +325,57 @@ async function runVerifyAndSave(verifyPayload, ctx) {
       ctx,
     );
   } catch (err) {
-    console.error("❌ Save error:", err);
-    setError(err.message);
-    toast.error(`Failed to save document: ${err.message}`);
+    const incomplete = err?.name === "DocumentPersistIncompleteError";
+    const message = incomplete
+      ? describePersistIncomplete(extractionResult?.filename, "Verify & Save")
+      : err.message;
+    console.error(
+      "❌ Save error:",
+      incomplete ? "saving did not finish" : err.message,
+    );
+    setError(message);
+    toast.error(`Failed to save document: ${message}`);
+  }
+}
+
+/**
+ * Retry saving a document whose first save did not finish. Resolves once the
+ * attempt has ended; on success the document goes to the same review screen a
+ * freshly read one reaches, on failure the entry keeps its Retry.
+ */
+async function runRetryPersist(entryId, ctx) {
+  const {
+    updateEntry,
+    toast,
+    setActiveEntry,
+    setExtractionResult,
+    setShowIntelBriefing,
+    retainedResults,
+  } = ctx;
+  const failed = retainedResults.get(entryId);
+  const entry = ctx.getFormation().find((e) => e.id === entryId);
+  if (!failed || !entry) return;
+
+  try {
+    const result = await retryFormationDocumentPersist(failed);
+    if (result.status === "complete") {
+      retainedResults.delete(entryId);
+      updateEntry(entryId, {
+        status: "USER_REVIEW",
+        error: null,
+        retryable: false,
+      });
+      setActiveEntry(entry);
+      setExtractionResult(result);
+      setShowIntelBriefing(true);
+      return;
+    }
+    retainedResults.set(entryId, result);
+    updateEntry(entryId, { error: result.error });
+    toast.error(result.error);
+  } catch (err) {
+    console.error("❌ Retry save error:", err.message);
+    toast.error(`Could not retry saving this document: ${err.message}`);
   }
 }
 
@@ -385,8 +449,12 @@ export const useSequentialFormationFlow = ({
   const [activeEntry, setActiveEntry] = useState(null);
   const [extractionResult, setExtractionResult] = useState(null);
   const [showIntelBriefing, setShowIntelBriefing] = useState(false);
+  // Held in memory only: a document's text must never reach the persisted
+  // formation ledger, so a page reload ends the chance to retry from here.
+  const retainedResults = useRef(new Map()).current;
 
   const ctx = {
+    retainedResults,
     formation,
     stats,
     activeEntry,
@@ -411,8 +479,12 @@ export const useSequentialFormationFlow = ({
     runVerifyAndSave(verifyPayload, ctx);
   const handleSkipDocument = () => runSkipDocument(ctx);
   const startSequentialProcessing = () => runStartSequentialProcessing(ctx);
+  const retryDocumentSave = (entryId) => runRetryPersist(entryId, ctx);
+  const canRetryDocumentSave = (entryId) => retainedResults.has(entryId);
 
   return {
+    retryDocumentSave,
+    canRetryDocumentSave,
     currentProgress,
     activeEntry,
     extractionResult,

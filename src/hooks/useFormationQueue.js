@@ -128,11 +128,18 @@ function errorCurrentAndNextImpl(currentEntry, formation, updateEntry, error) {
 // when this closure rendered", which attributed the error to a different,
 // already-saved document and re-called the failed one - then calls the next
 // WAITING entry forward from the latest formation.
-function errorEntryAndNextImpl(entryId, error, formationRef, updateEntry) {
+function errorEntryAndNextImpl(
+  entryId,
+  error,
+  formationRef,
+  updateEntry,
+  extra = {},
+) {
   updateEntry(
     entryId,
     buildStatusUpdate(FORMATION_STATUS.ERROR, {
       error: error?.message || error,
+      ...extra,
     }),
   );
   const next = getNextInFormation(
@@ -309,8 +316,8 @@ function useFormationActions({
   );
 
   const errorEntryAndNext = useCallback(
-    (entryId, error) =>
-      errorEntryAndNextImpl(entryId, error, formationRef, updateEntry),
+    (entryId, error, extra) =>
+      errorEntryAndNextImpl(entryId, error, formationRef, updateEntry, extra),
     [formationRef, updateEntry],
   );
 

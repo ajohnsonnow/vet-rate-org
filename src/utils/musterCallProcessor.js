@@ -77,7 +77,10 @@ import {
   mergeDD214Deployments,
   mergeDD214EvidenceTimeline,
   mergeRatingDecisionIntoVKB,
+  resetVKBConnection,
 } from "./veteranKnowledgeBase";
+import { withStepTimeout, StepTimeoutError } from "./boundedStep";
+import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
 import {
   dropSupersededConditions,
   findRatedConditionMatch,
@@ -86,7 +89,11 @@ import {
   normalizeConditionName,
   primaryConditionKey,
 } from "./conditionName";
-import { saveDocumentToPacket, PACKET_DOC_TYPES } from "./myPacketManager";
+import {
+  saveDocumentToPacket,
+  resetPacketConnection,
+  PACKET_DOC_TYPES,
+} from "./myPacketManager";
 import {
   formatLocalDate,
   isSameDate,
@@ -1800,18 +1807,95 @@ const mergeRatingDecisionIntoVKBForFile = async (file, result) => {
 // again from the verification screen's "Verify & Save" with corrected
 // field values, so a veteran's corrections actually reach the stores every
 // AI tool reads from instead of being silently discarded.
-export const persistFormationDocument = async (file, result) => {
-  await storeDocumentInVKB(file, result);
-  await archiveDocumentInPacket(file, result);
+//
+// Every step that waits on IndexedDB is bounded: a transaction that never
+// completes (blocked upgrade, contention across tabs) used to freeze the
+// import at 85% with no message. When a storage step runs out of time the
+// stores are given a fresh connection, the remaining storage steps are held
+// back (they would only queue behind the same stuck connection), the steps
+// that need no storage (profile, ratings, awards) still run, and the whole
+// call then fails with DocumentPersistIncompleteError so the caller can say
+// so plainly and offer a Retry - which is safe because every write is keyed.
+const PERSIST_STEP_TIMEOUT_MS = 60_000;
+
+export class DocumentPersistIncompleteError extends Error {
+  constructor(steps) {
+    super("Saving this document did not finish.");
+    this.name = "DocumentPersistIncompleteError";
+    this.steps = steps;
+  }
+}
+
+export const describePersistIncomplete = (fileName, retryLabel = "Retry") =>
+  `Saving "${fileName}" did not finish because your device's storage did not respond in time. ` +
+  `Nothing you imported was lost. Choose ${retryLabel} to finish saving it.`;
+
+function _createStorageStepRunner(stepTimeoutMs) {
+  const incomplete = [];
+  let stalled = false;
+  const run = async (step, start) => {
+    if (stalled) {
+      incomplete.push(step);
+      return;
+    }
+    try {
+      await withStepTimeout(start, step, stepTimeoutMs);
+    } catch (err) {
+      if (!(err instanceof StepTimeoutError)) throw err;
+      stalled = true;
+      incomplete.push(step);
+      resetVKBConnection();
+      resetPacketConnection();
+      console.warn(
+        `Saving step "${step}" timed out; later storage steps are held for a retry.`,
+      );
+    }
+  };
+  return { run, incomplete };
+}
+
+// The local timeline copy converges after the knowledge base is complete, and
+// only when the copy already exists (an empty one is filled by the timeline's
+// own first open, which tells the veteran what it filled in).
+const convergeTimelineStoreAfterImport = async () => {
+  try {
+    await convergeTimelineStoreWithVKB({ onlyIfStoreHasEvents: true });
+  } catch (err) {
+    console.warn(
+      "Timeline copy could not be completed (non-fatal):",
+      err?.message,
+    );
+  }
+};
+
+export const persistFormationDocument = async (
+  file,
+  result,
+  { stepTimeoutMs = PERSIST_STEP_TIMEOUT_MS } = {},
+) => {
+  const { run, incomplete } = _createStorageStepRunner(stepTimeoutMs);
+  await run("knowledge base", () => storeDocumentInVKB(file, result));
+  await run("my packet", () => archiveDocumentInPacket(file, result));
   saveServiceRecordToProfile(file, result);
   saveAwardsToProfile(file, result);
   saveDeploymentsToProfile(file, result);
   saveRatingDecisionToProfile(file, result);
   saveCodeSheetServicePeriodsToProfile(file, result);
-  await appendMusterCallTimelineEntry(file, result);
-  await mergeServiceRecordIntoVKB(file, result);
-  await mergeCFileDeploymentsIntoVKB(file, result);
-  await mergeRatingDecisionIntoVKBForFile(file, result);
+  await run("timeline entry", () =>
+    appendMusterCallTimelineEntry(file, result),
+  );
+  await run("service record merge", () =>
+    mergeServiceRecordIntoVKB(file, result),
+  );
+  await run("deployments merge", () =>
+    mergeCFileDeploymentsIntoVKB(file, result),
+  );
+  await run("rating merge", () =>
+    mergeRatingDecisionIntoVKBForFile(file, result),
+  );
+  await run("timeline copy", convergeTimelineStoreAfterImport);
+  if (incomplete.length > 0)
+    throw new DocumentPersistIncompleteError(incomplete);
 };
 
 // Page coverage the extractor reported (how many pages were read, OCR'd,
@@ -1950,12 +2034,17 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
     });
   } catch (error) {
     console.error(`Error processing this document:`, error.message);
+    const persistIncomplete = error instanceof DocumentPersistIncompleteError;
+    const message = persistIncomplete
+      ? describePersistIncomplete(file.name)
+      : error.message;
     result.status = "error";
-    result.error = error.message;
+    result.error = message;
+    result.persistIncomplete = persistIncomplete;
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.ERROR,
-      error: error.message,
+      error: message,
       stage: "error",
     });
   }
@@ -1964,21 +2053,7 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
   return result;
 };
 
-/**
- * Process single document for formation workflow
- * Returns enhanced result object for user verification
- */
-export const processFormationDocument = async (
-  file,
-  onProgress,
-  options = {},
-) => {
-  // eslint-disable-next-line no-console
-  console.log(`🎖️ Platoon Sergeant inspecting: this document`);
-
-  // Use enhanced single document processor
-  const result = await processSingleDocument(file, onProgress, options);
-
+const finishFormationResult = async (result) => {
   // FIX-9 (root cause 2): this single-document path never called
   // autoPopulateProfile at all - only the Muster Call batch path
   // (useLegacyBatchProcessing.js) did. Profile auto-fill must work here
@@ -2003,6 +2078,53 @@ export const processFormationDocument = async (
     vkbSaved: !!result.vkbDocumentId,
     profilePopulateResult,
   };
+};
+
+/**
+ * Process single document for formation workflow
+ * Returns enhanced result object for user verification
+ */
+export const processFormationDocument = async (
+  file,
+  onProgress,
+  options = {},
+) => {
+  // eslint-disable-next-line no-console
+  console.log(`🎖️ Platoon Sergeant inspecting: this document`);
+
+  // Use enhanced single document processor
+  const result = await processSingleDocument(file, onProgress, options);
+  return finishFormationResult(result);
+};
+
+/**
+ * Finish a formation document whose saving did not complete: runs the same
+ * keyed, idempotent persist again with what was already read (no second
+ * read of the file) and, when it now completes, hands back the same shape
+ * processFormationDocument does so the review screen can take over.
+ */
+export const retryFormationDocumentPersist = async (failed) => {
+  const pseudoFile = { name: failed.filename, size: failed.size };
+  const result = {
+    ...failed,
+    status: "processing",
+    error: null,
+    persistIncomplete: false,
+  };
+  try {
+    await persistFormationDocument(pseudoFile, result);
+  } catch (err) {
+    if (!(err instanceof DocumentPersistIncompleteError)) throw err;
+    return {
+      ...failed,
+      status: "error",
+      persistIncomplete: true,
+      error: describePersistIncomplete(failed.filename),
+      readyForReview: false,
+    };
+  }
+  result.status = "complete";
+  return finishFormationResult(result);
 };
 
 /**

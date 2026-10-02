@@ -8,6 +8,7 @@
  * words, so none of it is buried in a field list or a toast that disappears.
  */
 
+import { useState } from "react";
 import { FORMATION_STATUS } from "../../utils/formationQueue";
 import { getReadingNotices } from "../../utils/readingNotices";
 import DocumentReadingNotices from "./DocumentReadingNotices";
@@ -21,7 +22,34 @@ function entryNotices(entry) {
   return notices.coverageNote || notices.aiAnalysisNotice ? notices : null;
 }
 
-export default function MusterCallCompletionSummary({ formation }) {
+function RetrySaveButton({ entryId, onRetry }) {
+  const [retrying, setRetrying] = useState(false);
+  const handleClick = async () => {
+    setRetrying(true);
+    try {
+      await onRetry(entryId);
+    } finally {
+      setRetrying(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={retrying}
+      data-testid="retry-save-button"
+      className="mt-2 min-h-[44px] px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-60 text-white text-sm font-semibold"
+    >
+      {retrying ? "Retrying..." : "Retry"}
+    </button>
+  );
+}
+
+export default function MusterCallCompletionSummary({
+  formation,
+  onRetry,
+  canRetry,
+}) {
   const rows = formation
     .map((entry) => ({ entry, notices: entryNotices(entry) }))
     .filter((row) => row.notices);
@@ -50,9 +78,14 @@ export default function MusterCallCompletionSummary({ formation }) {
               {entry.filename || entry.file?.name}
             </p>
             {notices.error ? (
-              <p role="alert" className="mt-2 text-sm text-red-700">
-                This document could not be processed: {notices.error}
-              </p>
+              <>
+                <p role="alert" className="mt-2 text-sm text-red-700">
+                  This document could not be processed: {notices.error}
+                </p>
+                {entry.retryable && onRetry && canRetry?.(entry.id) && (
+                  <RetrySaveButton entryId={entry.id} onRetry={onRetry} />
+                )}
+              </>
             ) : (
               <div className="mt-2">
                 <DocumentReadingNotices {...notices} />
