@@ -70,7 +70,7 @@ afterEach(() => {
 
 describe("the vision fallback runs only when OCR genuinely read poorly", () => {
   it.each([60, 72, 89])(
-    "does not run when OCR read at %i%% (the real value, not a false 0%%)",
+    "does not run when OCR read at %i percent (the real value, not a false zero)",
     async (confidence) => {
       ocr.analyzePDF.mockResolvedValue(scan(confidence));
 
@@ -82,7 +82,7 @@ describe("the vision fallback runs only when OCR genuinely read poorly", () => {
   );
 
   it.each([46, 59])(
-    "runs when OCR genuinely read at %i%%",
+    "runs when OCR genuinely read at %i percent",
     async (confidence) => {
       ocr.analyzePDF.mockResolvedValue(scan(confidence));
       florence.processDocument.mockResolvedValue({
