@@ -2195,17 +2195,13 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
   return result;
 };
 
-const finishFormationResult = async (result) => {
+const finishFormationResult = async (result, { deferPersist = false } = {}) => {
   // FIX-9 (root cause 2): this single-document path never called
   // autoPopulateProfile at all - only the Muster Call batch path
   // (useLegacyBatchProcessing.js) did. Profile auto-fill must work here
   // too.
   let profilePopulateResult = null;
-  if (
-    result.status === "complete" &&
-    result.extractedData &&
-    !options.deferPersist
-  ) {
+  if (result.status === "complete" && result.extractedData && !deferPersist) {
     try {
       profilePopulateResult = await autoPopulateProfile([result]);
     } catch (populateErr) {
@@ -2252,7 +2248,9 @@ export const processFormationDocument = async (
       }),
     });
   }
-  return finishFormationResult(result);
+  return finishFormationResult(result, {
+    deferPersist: extractionOptions.deferPersist,
+  });
 };
 
 /**
