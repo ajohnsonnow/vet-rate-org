@@ -435,7 +435,7 @@ export const loadFormationState = () => {
         status = FORMATION_STATUS.WAITING;
         // eslint-disable-next-line no-console
         console.log(
-          `   ⏸️ Reset ${entry.filename} from ${entry.status} to WAITING`,
+          `   ⏸️ Reset a ${entry.estimatedType || "UNKNOWN"} document from ${entry.status} to WAITING`,
         );
       }
 

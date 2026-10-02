@@ -420,7 +420,8 @@ export default function PlatoonSergeantReview({
       console.log("🎖️ PlatoonSergeantReview received progress:", {
         overallProgress,
         progressProp: progress.progress,
-        fullProgress: progress,
+        stage: progress.stage,
+        state: progress.state,
       });
     }
   }, [progress, overallProgress]);

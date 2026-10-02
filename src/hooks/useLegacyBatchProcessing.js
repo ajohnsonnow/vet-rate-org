@@ -60,7 +60,7 @@ async function runBatchOnComplete(completeData, ctx) {
       completeData.classified,
     );
     // eslint-disable-next-line no-console
-    console.log("📊 Report result:", reportResult);
+    console.log("📊 Report result:", { success: reportResult.success });
 
     if (reportResult.success) {
       // eslint-disable-next-line no-console

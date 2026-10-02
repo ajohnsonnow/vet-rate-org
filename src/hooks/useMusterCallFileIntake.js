@@ -69,7 +69,12 @@ function runFileSelect(selectedFiles, ctx) {
   // Validate files
   const validationResult = validateFilesBatch(fileArray);
   // eslint-disable-next-line no-console
-  console.log("🎯 validationResult:", validationResult);
+  console.log("🎯 validationResult:", {
+    valid: validationResult.valid.length,
+    invalid: validationResult.invalid.length,
+    warnings: validationResult.warnings.length,
+    errors: validationResult.errors.length,
+  });
   setValidation(validationResult);
 
   if (validationResult.valid.length > 0) {

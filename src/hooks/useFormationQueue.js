@@ -23,19 +23,22 @@ import {
   clearFormationState,
   FORMATION_STATUS,
 } from "../utils/formationQueue";
+import { neutralDocumentLabel } from "../utils/documentLabel";
 
 function logFormationInitialized(count) {
   // eslint-disable-next-line no-console
   console.log(`🚩 Formation initialized with ${count} documents`);
 }
 
-function logFormationStatsUpdated(newStats, current) {
+function logFormationStatsUpdated(newStats, current, formation) {
   // eslint-disable-next-line no-console
   console.log("📊 Formation stats updated:", {
     total: newStats.total,
     waiting: newStats.waiting,
     inProgress: newStats.inProgress,
-    currentEntry: current ? current.filename : "none",
+    currentEntry: current
+      ? neutralDocumentLabel(current.estimatedType, formation.indexOf(current))
+      : "none",
     isProcessing: current !== null,
   });
 }
@@ -165,7 +168,7 @@ function syncFormationStats(formation, setStats, setCurrentEntry) {
     setCurrentEntry(current);
 
     // Debug logging
-    logFormationStatsUpdated(newStats, current);
+    logFormationStatsUpdated(newStats, current, formation);
 
     // Auto-save state
     saveFormationState(formation);

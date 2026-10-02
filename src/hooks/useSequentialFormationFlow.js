@@ -19,11 +19,18 @@ import {
   autoPopulateProfile,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
+import { neutralDocumentLabel } from "../utils/documentLabel";
 import {
   setServiceEntryDate,
   getServiceEntryForDocument,
 } from "../utils/veteranProfile";
 import { parseExplicitDate } from "../utils/dateUtils";
+
+function entryLabel(entry, ctx) {
+  const queue = ctx.getFormation ? ctx.getFormation() : ctx.formation;
+  const index = entry ? queue.findIndex((e) => e.id === entry.id) : -1;
+  return neutralDocumentLabel(entry?.estimatedType, index);
+}
 
 /**
  * Advance the queue: process the given entry if provided, otherwise look up
@@ -113,7 +120,7 @@ async function runDocumentProcessing(entry, ctx) {
 
   const file = entry.file;
   // eslint-disable-next-line no-console
-  console.log(`🎖️ Processing document: ${file.name}`);
+  console.log(`🎖️ Processing ${entryLabel(entry, ctx)}`);
 
   setActiveEntry(entry);
   updateEntry(entry.id, { status: "CALLED" });
@@ -391,7 +398,7 @@ function runSkipDocument(ctx) {
   } = ctx;
 
   // eslint-disable-next-line no-console
-  console.log("⏭️ Skipping document:", activeEntry?.file?.name);
+  console.log("⏭️ Skipping", entryLabel(activeEntry, ctx));
 
   const nextEntry = skipCurrentAndNext("User skipped");
   setShowIntelBriefing(false);

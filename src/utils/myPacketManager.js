@@ -347,7 +347,7 @@ export const saveDocumentToPacket = async (doc) => {
     markAsModified();
 
     // eslint-disable-next-line no-console
-    console.log(`📁 Saved to My Packet: ${document.fileName} (${id})`);
+    console.log(`📁 Saved to My Packet: ${document.classification} (${id})`);
     const result = { success: true, documentId: id };
     if (!quota.ok) result.quotaWarning = quota.message;
     return result;
