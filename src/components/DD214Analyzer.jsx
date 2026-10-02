@@ -71,7 +71,10 @@ import {
 } from "../utils/veteranKnowledgeBase";
 import ProfileImportConfirmModal from "./ProfileImportConfirmModal";
 import DD214FormBuilder from "./DD214FormBuilder";
-import { buildPlaceholderDetector } from "../utils/dd214ModelOutputGuards";
+import {
+  buildPlaceholderDetector,
+  scrubModelFreeText,
+} from "../utils/dd214ModelOutputGuards";
 
 /**
  * System Prompt for Multi-Document Cumulative Analysis
@@ -732,6 +735,7 @@ export function _parseDd214Json(content, t) {
     _stripModelIdentifiers(data);
     _keepModelSchemaFields(data);
     _placeholderDetector.rejectPlaceholderEchoes(data);
+    scrubModelFreeText(data, [getVeteranProfile()]);
   } catch {
     // V8's JSON.parse message quotes a snippet of the input, so it is never
     // logged - only the length.
@@ -890,6 +894,7 @@ export function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
   // Runs unconditionally (fail-closed), regardless of whether extraction or
   // merge above threw or found nothing.
   _applyIdentifierFieldsFromLocalParser(data, regexResult?.fields);
+  scrubModelFreeText(data, [getVeteranProfile(), data]);
 
   setAnalysisResult({ ...data });
 }

@@ -179,3 +179,55 @@ describe("D21-3: a model echoing its prompt placeholder is rejected", () => {
     expect(_parseDd214Json(JSON.stringify(real), t)).toEqual(real);
   });
 });
+
+describe("D21-7: model free text is scrubbed before display and save", () => {
+  const OCR_TEXT = "1. NAME: FAKETON, JORDAN\n2. DEPARTMENT: ARMY\n";
+  const hostile = JSON.stringify({
+    branch: "Army",
+    narrativeReason: "Separated per request of Jordan Faketon, SSN 123-45-6789",
+    extractionNotes: [
+      "Name on page 2 reads Faketon, Jordan",
+      "Social security number 987 65 4321 appears in Block 3",
+    ],
+    memberRequests:
+      "Copy 4 mailed to Faketon at 12 Fake Street, Anytown TX 75001",
+  });
+
+  it("removes an SSN-shaped string at parse time", () => {
+    const data = _parseDd214Json(hostile, t);
+    const shown = JSON.stringify(data);
+    expect(shown).not.toMatch(/123-45-6789|987 65 4321|987654321/);
+    expect(data.narrativeReason).toContain("Separated per request");
+  });
+
+  it("removes the name the local parser read, in every free-text field", () => {
+    let final;
+    const data = _parseDd214Json(hostile, t);
+    _applyRegexSafetyNet(data, OCR_TEXT, (value) => {
+      final = value;
+    });
+    const shown = JSON.stringify([
+      final.narrativeReason,
+      final.extractionNotes,
+      final.memberRequests,
+    ]);
+    expect(shown).not.toMatch(/faketon/i);
+    expect(shown).not.toMatch(/jordan/i);
+    expect(shown).not.toMatch(/123-45-6789|987 65 4321/);
+    expect(final.narrativeReason).toContain("Separated per request");
+    expect(final.extractionNotes).toHaveLength(2);
+  });
+
+  it("drops a free-text field the model filled with a nested object", () => {
+    const data = _parseDd214Json(
+      JSON.stringify({
+        branch: "Army",
+        narrativeReason: { text: "Jordan Faketon" },
+        extractionNotes: ["fine note", { name: "Jordan Faketon" }],
+      }),
+      t,
+    );
+    expect(data).not.toHaveProperty("narrativeReason");
+    expect(data.extractionNotes).toEqual(["fine note"]);
+  });
+});
