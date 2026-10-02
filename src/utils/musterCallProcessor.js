@@ -242,15 +242,14 @@ function _parseAIAnalysisContent(content) {
  *   timeout race, so a retry can give a contended engine longer to respond
  * @returns {Promise<Object|null>} Analysis results, or null if the AI
  *   genuinely found nothing to report (no throw)
- * @throws when the AI call itself fails (timeout, engine error) - the
- *   caller (buildSegmentedCFileResult) decides whether to retry and how to
- *   surface that to the veteran; this never swallows that distinction.
+ * @throws when the AI call itself fails (timeout, engine error) or the
+ *   engine is gone - the caller (_runCFileAIAnalysis) decides whether to
+ *   retry and how to surface that to the veteran; this never swallows that
+ *   distinction. A vanished engine used to come back as a silent null.
  */
 const analyzeCFileWithAI = async (text, { timeoutMs } = {}) => {
   if (!isAnyAIAvailable()) {
-    // eslint-disable-next-line no-console
-    console.log("⚠️ No AI available for C-File analysis");
-    return null;
+    throw new Error("The on-device AI engine is not available.");
   }
 
   // eslint-disable-next-line no-console
@@ -2731,6 +2730,11 @@ async function _computeCodeSheetData(text, slicer) {
 const AI_ANALYSIS_RETRY_DELAY_MS = 1500;
 const AI_ANALYSIS_RETRY_TIMEOUT_MS = 180_000;
 const AI_ENGINE_RELOAD_TIMEOUT_MS = 330_000;
+// generateAI races its own timeout (120s default, or the retry's); these outer
+// bounds add a small margin so the analysis step itself can never be the thing
+// that waits forever if that inner race is ever bypassed.
+const AI_ANALYSIS_FIRST_BOUND_MS = 135_000;
+const AI_ANALYSIS_RETRY_BOUND_MS = AI_ANALYSIS_RETRY_TIMEOUT_MS + 15_000;
 const AI_ANALYSIS_FAILED_NOTICE =
   "AI analysis of this document couldn't complete right now - this can happen " +
   "when several imports are running at once. Nothing was lost: your document, " +
@@ -2746,10 +2750,19 @@ const AI_ANALYSIS_FAILED_NOTICE =
 // (wllama, local server) keep the short pause.
 let _pendingEngineReload = null;
 
+// The on-device backend seen ready most recently. It is what tells "the engine
+// was running and is now gone" (reload it, retry, tell the veteran) apart from
+// "no on-device AI was ever loaded" (the status banner already says so, and a
+// reload would start downloading a model nobody asked for).
+let _lastOnDeviceMode = null;
+
 function _reloadEngineOnce() {
-  _pendingEngineReload ??= reloadSwarmEngine().finally(() => {
-    _pendingEngineReload = null;
-  });
+  if (!_pendingEngineReload) {
+    const reload = reloadSwarmEngine().finally(() => {
+      if (_pendingEngineReload === reload) _pendingEngineReload = null;
+    });
+    _pendingEngineReload = reload;
+  }
   return _pendingEngineReload;
 }
 
@@ -2760,23 +2773,32 @@ async function _prepareEngineForRetry(onDeviceMode) {
     );
     return;
   }
-  let timer;
   try {
-    await Promise.race([
-      _reloadEngineOnce(),
-      new Promise((_, reject) => {
-        timer = setTimeout(
-          () => reject(new Error("engine reload timed out")),
-          AI_ENGINE_RELOAD_TIMEOUT_MS,
-        );
-      }),
-    ]);
+    await withStepTimeout(
+      _reloadEngineOnce,
+      "engine reload",
+      AI_ENGINE_RELOAD_TIMEOUT_MS,
+    );
   } catch (reloadErr) {
+    // A reload that never settles must not stay shared: the next import would
+    // wait on the same dead promise instead of starting a fresh rebuild.
+    if (reloadErr instanceof StepTimeoutError) _pendingEngineReload = null;
     console.warn("⚠️ AI engine reload before retry failed:", reloadErr.message);
-  } finally {
-    clearTimeout(timer);
   }
 }
+
+const _analysisResult = (aiAnalysis) => ({
+  aiAnalysis,
+  offDeviceNotice: null,
+  aiAnalysisNotice: null,
+});
+
+const _boundedAnalysis = (excerpt, options, boundMs) =>
+  withStepTimeout(
+    () => analyzeCFileWithAI(excerpt, options),
+    "AI analysis",
+    boundMs,
+  );
 
 // Part 3 (final19): under GPU/engine contention from concurrent imports, an
 // on-device AI call that routing considered "ready" can still time out or
@@ -2787,12 +2809,19 @@ async function _prepareEngineForRetry(onDeviceMode) {
 // that also fails, returns a plain notice instead of silence. Segmentation/
 // codeSheet/deployments are computed independently of this and are never
 // affected by an AI failure here - no imported data is ever lost.
+// D21-2: an engine that was running and is gone by now counts as the failed
+// first attempt: it is rebuilt (bounded), retried once, and reported the same
+// way when it still cannot run.
 async function _runCFileAIAnalysis(text) {
   const routing = getDocumentAIRouting();
-  if (!isAnyAIAvailable()) {
+  if (routing.onDeviceReady) _lastOnDeviceMode = routing.onDeviceMode;
+  const anyAI = isAnyAIAvailable();
+  const engineGone =
+    !routing.onDeviceReady && !anyAI && _lastOnDeviceMode !== null;
+  if (!anyAI && !engineGone) {
     return { aiAnalysis: null, offDeviceNotice: null, aiAnalysisNotice: null };
   }
-  if (!routing.onDeviceReady) {
+  if (!routing.onDeviceReady && !engineGone) {
     return {
       aiAnalysis: null,
       offDeviceNotice: buildDocumentOffDeviceNotice(
@@ -2803,22 +2832,34 @@ async function _runCFileAIAnalysis(text) {
   }
 
   const excerpt = text.substring(0, 50000); // First 50K chars for context
-  try {
-    const aiAnalysis = await analyzeCFileWithAI(excerpt);
-    return { aiAnalysis, offDeviceNotice: null, aiAnalysisNotice: null };
-  } catch (firstErr) {
-    console.warn(
-      "⚠️ AI C-File analysis failed, retrying once:",
-      firstErr.message,
-    );
+  if (engineGone) {
+    console.warn("⚠️ On-device AI engine is gone, rebuilding it for one retry");
+  } else {
+    try {
+      const aiAnalysis = await _boundedAnalysis(
+        excerpt,
+        {},
+        AI_ANALYSIS_FIRST_BOUND_MS,
+      );
+      return _analysisResult(aiAnalysis);
+    } catch (firstErr) {
+      console.warn(
+        "⚠️ AI C-File analysis failed, retrying once:",
+        firstErr.message,
+      );
+    }
   }
 
-  await _prepareEngineForRetry(routing.onDeviceMode);
+  await _prepareEngineForRetry(
+    engineGone ? _lastOnDeviceMode : routing.onDeviceMode,
+  );
   try {
-    const aiAnalysis = await analyzeCFileWithAI(excerpt, {
-      timeoutMs: AI_ANALYSIS_RETRY_TIMEOUT_MS,
-    });
-    return { aiAnalysis, offDeviceNotice: null, aiAnalysisNotice: null };
+    const aiAnalysis = await _boundedAnalysis(
+      excerpt,
+      { timeoutMs: AI_ANALYSIS_RETRY_TIMEOUT_MS },
+      AI_ANALYSIS_RETRY_BOUND_MS,
+    );
+    return _analysisResult(aiAnalysis);
   } catch (secondErr) {
     console.error(
       "❌ AI C-File analysis failed on retry, surfacing to the veteran:",
