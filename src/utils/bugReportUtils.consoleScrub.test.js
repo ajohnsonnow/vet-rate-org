@@ -204,3 +204,62 @@ describe("console interceptor: what is kept is capped", () => {
     expect(getConsoleErrors()[0].stack.length).toBeLessThanOrEqual(1500);
   });
 });
+
+describe("console interceptor: a profile saved after the last refresh", () => {
+  it("redacts a name saved moments ago from the stored line and the report", () => {
+    const saved = {
+      fullName: "Ottoline Brightwater",
+      homeOfRecord: "Wahpeton, ND",
+    };
+    mockProfile = saved;
+
+    console.error("Profile saved for Ottoline Brightwater of Wahpeton, ND");
+
+    const reported = JSON.stringify(getConsoleErrors());
+    for (const value of ["Ottoline", "Brightwater", "Wahpeton"]) {
+      expect(rawStored()).not.toContain(value);
+      expect(reported).not.toContain(value);
+    }
+  });
+
+  it("redacts a name saved after the line was stored, when the report is read", () => {
+    mockProfile = {};
+    console.error("Profile saved for Ottoline Brightwater");
+    mockProfile = { fullName: "Ottoline Brightwater" };
+
+    expect(JSON.stringify(getConsoleErrors())).not.toContain("Brightwater");
+  });
+});
+
+describe("console interceptor: every saved-profile identifier is redacted", () => {
+  it("redacts home of record, birthplace, spouse, emergency contact, claim and account numbers", () => {
+    mockProfile = {
+      ...PLANTED_PROFILE,
+      homeOfRecord: "Wahpeton, ND",
+      placeOfBirth: "Kalispell, MT",
+      spouseName: "Ottoline Brightwater",
+      emergencyContactName: "Barnaby Thistlewood",
+      claimNumber: "8675309",
+      accountNumber: "000123456789",
+    };
+
+    console.error(
+      "save failed home Wahpeton, ND born Kalispell, MT spouse Ottoline Brightwater contact Barnaby Thistlewood claim 8675309 acct 000123456789",
+    );
+
+    const reported = JSON.stringify(getConsoleErrors());
+    for (const value of [
+      "Wahpeton",
+      "Kalispell",
+      "Ottoline",
+      "Brightwater",
+      "Barnaby",
+      "Thistlewood",
+      "8675309",
+      "000123456789",
+    ]) {
+      expect(rawStored()).not.toContain(value);
+      expect(reported).not.toContain(value);
+    }
+  });
+});

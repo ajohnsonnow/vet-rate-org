@@ -332,12 +332,45 @@ const MAX_CONSOLE_URL_CHARS = 300;
 // is clipped much smaller afterwards.
 const MAX_CONSOLE_SCRUB_INPUT_CHARS = 20000;
 const CONSOLE_TRUNCATION_MARKER = "...[truncated]";
-const KNOWN_IDENTIFIER_REFRESH_MS = 10000;
 
 let profileIdentifierValues = [];
 let explicitIdentifierValues = [];
-let lastKnownIdentifierRefreshAt = 0;
 let knownIdentifierRefreshInFlight = false;
+let readSavedProfile = null;
+
+const trimmedValue = (value) =>
+  typeof value === "string" && value.trim() ? { value: value.trim() } : null;
+
+// Every saved-profile field that identifies the veteran or someone close to
+// them, beyond the name/SSN/address fields collectKnownIdentifierValues reads.
+const profileKnownValues = (profile) => {
+  const p = profile || {};
+  return [
+    ...collectKnownIdentifierValues(p, [p.claimNumber, p.accountNumber]),
+    ...collectKnownIdentifierValues({
+      fullName: p.spouseName,
+      ssn: p.spouseSsn,
+      dob: p.spouseDob,
+    }),
+    ...collectKnownIdentifierValues({
+      fullName: p.emergencyContactName,
+      phone: p.emergencyContactPhone,
+    }),
+    ...[p.homeOfRecord, p.placeOfBirth].map(trimmedValue).filter(Boolean),
+  ];
+};
+
+// Once the profile module has loaded, every capture and every read re-reads
+// the saved profile, so a name saved a moment ago is never missing from the
+// redaction list.
+const syncProfileValues = () => {
+  if (!readSavedProfile) return;
+  try {
+    profileIdentifierValues = profileKnownValues(readSavedProfile());
+  } catch {
+    // Best-effort: the pattern scrubber still runs on every line.
+  }
+};
 
 export const setKnownIdentifiersForConsoleScrub = (personal, claimNumbers) => {
   explicitIdentifierValues = collectKnownIdentifierValues(
@@ -387,8 +420,10 @@ const readStoredConsoleLogs = () => {
  * Every entry is scrubbed again on the way out, so nothing stored before the
  * veteran's known values were loaded can reach a report.
  */
-export const getConsoleErrors = () =>
-  readStoredConsoleLogs().map(scrubConsoleEntry);
+export const getConsoleErrors = () => {
+  syncProfileValues();
+  return readStoredConsoleLogs().map(scrubConsoleEntry);
+};
 
 const rescrubStoredConsoleLogs = () => {
   try {
@@ -416,27 +451,14 @@ export const refreshKnownIdentifiers = async () => {
   knownIdentifierRefreshInFlight = true;
   try {
     const { getVeteranProfile } = await import("./veteranProfile");
-    profileIdentifierValues = collectKnownIdentifierValues(
-      getVeteranProfile(),
-      [],
-    );
+    readSavedProfile = getVeteranProfile;
+    syncProfileValues();
     rescrubStoredConsoleLogs();
   } catch {
     // Best-effort: the pattern scrubber still runs on every line without it.
   } finally {
     knownIdentifierRefreshInFlight = false;
-    lastKnownIdentifierRefreshAt = Date.now();
   }
-};
-
-const refreshKnownIdentifiersIfStale = () => {
-  if (
-    knownIdentifierRefreshInFlight ||
-    Date.now() - lastKnownIdentifierRefreshAt < KNOWN_IDENTIFIER_REFRESH_MS
-  ) {
-    return;
-  }
-  refreshKnownIdentifiers();
 };
 
 /**
@@ -444,6 +466,7 @@ const refreshKnownIdentifiersIfStale = () => {
  * ENHANCED: Now captures errors, warnings, logs, and info
  */
 export const logConsoleError = (entry) => {
+  syncProfileValues();
   try {
     const logs = readStoredConsoleLogs();
 
@@ -467,7 +490,7 @@ export const logConsoleError = (entry) => {
   } catch {
     // Silently fail if sessionStorage is unavailable
   }
-  refreshKnownIdentifiersIfStale();
+  if (!readSavedProfile) refreshKnownIdentifiers();
 };
 
 const buildSummarySection = ({
@@ -892,5 +915,5 @@ const interceptConsoleMethods = () => {
 export const initializeErrorCapture = () => {
   captureGlobalErrorEvents();
   interceptConsoleMethods();
-  refreshKnownIdentifiersIfStale();
+  refreshKnownIdentifiers();
 };
