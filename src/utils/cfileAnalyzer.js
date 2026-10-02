@@ -2147,7 +2147,6 @@ const DANGLING_END_WORDS = new Set([
   "or",
   "with",
   "the",
-  "a",
   "an",
   "to",
   "for",
@@ -2158,10 +2157,10 @@ const DANGLING_END_WORDS = new Set([
   "on",
   "at",
 ]);
-const MAX_CONDITION_NAME_CHARS = 120;
+const MAX_CONDITION_NAME_CHARS = 400;
 
 const NAME_EDGE_CHARS = new Set([..." ,;:.-–"]);
-const NAME_PERCENT_RE = /\d{1,3}\s{0,3}(?:%|percent)\b/i;
+const NAME_PERCENT_RE = /\d{1,3}\s{0,3}(?:%|percent\b)/i;
 
 function _trimNameEdges(name) {
   let start = 0;
@@ -2179,21 +2178,33 @@ function _stripNameNoise(name) {
   return _trimNameEdges(percentAt === -1 ? flat : flat.slice(0, percentAt));
 }
 
+function _balanceParens(name) {
+  let fixed = name;
+  const count = (ch) => fixed.split(ch).length - 1;
+  while (count(")") > count("(") && fixed.endsWith(")")) {
+    fixed = _trimNameEdges(fixed.slice(0, -1));
+  }
+  if (count("(") > count(")")) fixed += ")".repeat(count("(") - count(")"));
+  return count("(") === count(")") ? fixed : null;
+}
+
 function _isTruncatedName(name) {
   if (name.length > MAX_CONDITION_NAME_CHARS) return true;
-  const opens = (name.match(/\(/g) || []).length;
-  const closes = (name.match(/\)/g) || []).length;
-  if (opens !== closes) return true;
   const words = name.toLowerCase().split(/\s+/);
   return DANGLING_END_WORDS.has(words[words.length - 1]);
 }
 
 // Returns the cleaned condition name, or null when the text is not a
 // condition (bare number/percentage, scaffolding words only, or truncated).
-function _cleanConditionName(rawName) {
+// Two-letter all-caps acronyms (ED, MS) are real conditions.
+export function _cleanConditionName(rawName) {
   if (typeof rawName !== "string") return null;
-  const name = _stripNameNoise(rawName);
-  if (!/[a-z]{3}/i.test(name)) return null;
+  const stripped = _stripNameNoise(rawName);
+  if (!/[a-z]{3}/i.test(stripped) && !/\b[A-Z]{2}\b/.test(stripped)) {
+    return null;
+  }
+  const name = _balanceParens(stripped);
+  if (!name) return null;
   const words = name.toLowerCase().match(/[a-z]+/g) || [];
   if (words.every((w) => NON_CONDITION_WORDS.has(w))) return null;
   if (_isTruncatedName(name)) return null;
@@ -2212,7 +2223,10 @@ function _localParserClaim(
   effectiveDate,
   source,
 ) {
-  const name = _cleanConditionName(rawName);
+  const name =
+    source === "code-sheet" && typeof rawName === "string"
+      ? rawName.replace(/\s+/g, " ").trim()
+      : _cleanConditionName(rawName);
   if (!name) return null;
   const parts = [`found in your document (${source.replace("-", " ")})`];
   if (typeof percent === "number" && !Number.isNaN(percent)) {

@@ -27,7 +27,8 @@ vi.mock("./unifiedAIService", async (importOriginal) => {
   };
 });
 
-const { analyzeCFile } = await import("./cfileAnalyzer.js");
+const { analyzeCFile, _cleanConditionName } =
+  await import("./cfileAnalyzer.js");
 
 const SCAFFOLDED_LETTER = `
 Rating Decision
@@ -98,5 +99,45 @@ describe("analyzeCFile off-device fallback: non-condition fragments are filtered
     );
     expect(result.analysis.potential_claims).toEqual([]);
     expect(result.metadata.foundNothing).toBe(true);
+  });
+});
+
+const REAL_SHAPES_LETTER = `
+Rating Decision
+Page 1 of 4
+
+DECISION
+
+1. Service connection for hepatitis A is granted with an evaluation of 10 percent
+disabling effective January 1, 2020.
+2. Service connection for hemophilia A is granted with an evaluation of 30 percent
+disabling effective March 3, 2019.
+3. Service connection for lumbosacral strain with degenerative disc disease and intervertebral disc syndrome (claimed as low back pain, back condition, and spine problems, and other spinal complaints) is granted with an evaluation of 20 percent disabling effective March 3, 2019.
+4. Service connection for sleep apnea is denied.
+5. Service connection for traumatic brain injury (TBI is granted with an evaluation of 40 percent disabling effective March 3, 2019.
+6. Service connection for tinnitus 10% is granted effective March 3, 2019.
+`;
+
+describe("analyzeCFile off-device fallback: real condition shapes survive", () => {
+  it("keeps names ending in A, long names, two-letter acronyms and repairs an unclosed parenthesis", async () => {
+    const names = await conditionsFor(REAL_SHAPES_LETTER);
+    expect(names).toContain("hepatitis A");
+    expect(names).toContain("hemophilia A");
+    expect(names).toContain("traumatic brain injury (TBI)");
+    expect(
+      names.some((n) => n.startsWith("lumbosacral strain with degenerative")),
+    ).toBe(true);
+    expect(names.filter((n) => /^tinnitus/i.test(n))).toEqual(["tinnitus"]);
+  });
+});
+
+describe("_cleanConditionName", () => {
+  it("keeps two-letter acronyms and repairs or rejects unbalanced parentheses", () => {
+    expect(_cleanConditionName("ED")).toBe("ED");
+    expect(_cleanConditionName("MS")).toBe("MS");
+    expect(_cleanConditionName("Tinnitus 10%")).toBe("Tinnitus");
+    expect(_cleanConditionName("PTSD 70%, effective")).toBe("PTSD");
+    expect(_cleanConditionName("migraines)")).toBe("migraines");
+    expect(_cleanConditionName("of")).toBeNull();
   });
 });
