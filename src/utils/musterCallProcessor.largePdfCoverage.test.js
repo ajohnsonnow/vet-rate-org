@@ -59,7 +59,28 @@ describe("processFormationDocument on a PDF over 50 MB", () => {
     expect(result.pagesOCRd).toBe(0);
     expect(result.pagesSkipped).toEqual([5, 6, 7, 40, 41, 42, 43, 44, 45, 46]);
     expect(result.coverageNote).toBe(
-      "Read 90 of 100 page(s). 10 page(s) (pages 5-7, 40-46) had no typed text and were not read, because files this large are read for typed text only.",
+      "Read 90 of 100 page(s). 10 page(s) (pages 5-7, 40-46) had little or no typed text and were not read with OCR, because files this large are read for typed text only.",
+    );
+  });
+
+  it("says plainly that a read-every-scanned-page request does not apply to files this large", async () => {
+    processLargePDF.mockResolvedValue({
+      text: LETTER_TEXT,
+      pageCount: 100,
+      method: "streaming_all_pages",
+      pagesWithText: 97,
+      pagesEmpty: 3,
+      hasScannedSections: false,
+      scannedPageRanges: [{ start: 10, end: 12 }],
+    });
+    const result = await processFormationDocument(bigPdf(), () => {}, {
+      readAllPages: true,
+    });
+
+    expect(result.pagesRead).toBe(97);
+    expect(result.pagesOCRd).toBe(0);
+    expect(result.coverageNote).toContain(
+      "The option to read every scanned page does not apply to files this large.",
     );
   });
 

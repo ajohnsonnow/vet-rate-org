@@ -440,6 +440,61 @@ function isGarbledVisionText(text) {
   return !hasExpectedTerm;
 }
 
+async function _extractLargePdfText(file, onProgress, options) {
+  // eslint-disable-next-line no-console
+  console.log(
+    `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) - using streaming extraction...`,
+  );
+  const etaTracker = createEtaTracker();
+  const largeResult = await processLargePDF(file, {
+    batchSize: 20,
+    onProgress: (cur, total, pct) => {
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
+        stage: "platoon_sergeant",
+        message: `Streaming page ${cur}/${total} (${pct}%)...`,
+        currentPage: cur,
+        totalPages: total,
+        etaSeconds: etaTracker.etaSeconds(total - cur),
+        pagesPerSecond: etaTracker.pagesPerSecond(),
+      });
+    },
+    onBatch: (batch) => {
+      etaTracker.sample(batch.processedSoFar);
+      // Forward per-batch updates for responsive UI on very large files
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 25 + batch.pct * 0.4,
+        stage: "platoon_sergeant",
+        message: `Pages ${batch.startPage}-${batch.endPage} of ${batch.totalPages} extracted`,
+        currentPage: batch.processedSoFar,
+        totalPages: batch.totalPages,
+        etaSeconds: etaTracker.etaSeconds(
+          batch.totalPages - batch.processedSoFar,
+        ),
+        pagesPerSecond: etaTracker.pagesPerSecond(),
+      });
+    },
+  });
+  return {
+    text: largeResult.text,
+    pageCount: largeResult.pageCount,
+    method: largeResult.method,
+    fileType: "PDF",
+    ocrUsed: false,
+    hasScannedSections: largeResult.hasScannedSections,
+    scannedPageRanges: largeResult.scannedPageRanges || [],
+    pagesWithText: largeResult.pagesWithText,
+    pagesEmpty: largeResult.pagesEmpty,
+    ...largePdfCoverage(largeResult, {
+      readAllRequested: Boolean(options?.readAllPages),
+    }),
+  };
+}
+
 async function _extractDocumentText(file, onProgress, options) {
   onProgress?.({
     filename: file.name,
@@ -450,81 +505,25 @@ async function _extractDocumentText(file, onProgress, options) {
 
   const isLargePDF =
     file.name.toLowerCase().endsWith(".pdf") && file.size > 50 * 1024 * 1024;
+  if (isLargePDF) return _extractLargePdfText(file, onProgress, options);
 
-  let extractionResult;
-
-  if (isLargePDF) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) - using streaming extraction...`,
-    );
-    const etaTracker = createEtaTracker();
-    const largeResult = await processLargePDF(file, {
-      batchSize: 20,
-      onProgress: (cur, total, pct) => {
-        onProgress?.({
-          filename: file.name,
-          state: PROCESSING_STATES.EXTRACTING,
-          progress: 25 + pct * 0.4, // maps 0-100% → 25-65% of overall progress
-          stage: "platoon_sergeant",
-          message: `Streaming page ${cur}/${total} (${pct}%)...`,
-          currentPage: cur,
-          totalPages: total,
-          etaSeconds: etaTracker.etaSeconds(total - cur),
-          pagesPerSecond: etaTracker.pagesPerSecond(),
-        });
-      },
-      onBatch: (batch) => {
-        etaTracker.sample(batch.processedSoFar);
-        // Forward per-batch updates for responsive UI on very large files
-        onProgress?.({
-          filename: file.name,
-          state: PROCESSING_STATES.EXTRACTING,
-          progress: 25 + batch.pct * 0.4,
-          stage: "platoon_sergeant",
-          message: `Pages ${batch.startPage}-${batch.endPage} of ${batch.totalPages} extracted`,
-          currentPage: batch.processedSoFar,
-          totalPages: batch.totalPages,
-          etaSeconds: etaTracker.etaSeconds(
-            batch.totalPages - batch.processedSoFar,
-          ),
-          pagesPerSecond: etaTracker.pagesPerSecond(),
-        });
-      },
-    });
-    extractionResult = {
-      text: largeResult.text,
-      pageCount: largeResult.pageCount,
-      method: largeResult.method,
-      fileType: "PDF",
-      ocrUsed: false,
-      hasScannedSections: largeResult.hasScannedSections,
-      scannedPageRanges: largeResult.scannedPageRanges || [],
-      pagesWithText: largeResult.pagesWithText,
-      pagesEmpty: largeResult.pagesEmpty,
-      ...largePdfCoverage(largeResult),
-    };
-  } else {
-    extractionResult = await analyzeDocument(
-      file,
-      (state) => {
-        onProgress?.({
-          filename: file.name,
-          state: PROCESSING_STATES.EXTRACTING,
-          progress: 25 + (state.progress || 0) * 0.4, // 25-65%
-          ocrState: state.message || state.state,
-          currentPage: state.currentPage,
-          totalPages: state.totalPages,
-          quality: state.quality,
-          confidence: state.confidence,
-          stage: "platoon_sergeant",
-        });
-      },
-      options,
-    );
-  }
-
-  return extractionResult;
+  return analyzeDocument(
+    file,
+    (state) => {
+      onProgress?.({
+        filename: file.name,
+        state: PROCESSING_STATES.EXTRACTING,
+        progress: 25 + (state.progress || 0) * 0.4, // 25-65%
+        ocrState: state.message || state.state,
+        currentPage: state.currentPage,
+        totalPages: state.totalPages,
+        quality: state.quality,
+        confidence: state.confidence,
+        stage: "platoon_sergeant",
+      });
+    },
+    options,
+  );
 }
 
 async function _applyVisionFallbackIfNeeded(
@@ -1973,7 +1972,11 @@ const describeEmptyRanges = (ranges) => {
 
 // Very large files are streamed for typed text only (no OCR), so every page
 // with no text layer was not read. Report it the way the small-file path does.
-const largePdfCoverage = (largeResult) => {
+// Reading scanned pages needs the whole file in memory plus a full-size render
+// of each page, which is exactly what streaming a file this large avoids, so
+// the note says so rather than reporting scanned pages as read, and says that
+// a request to read every scanned page could not be honoured here.
+const largePdfCoverage = (largeResult, { readAllRequested = false } = {}) => {
   const emptyRanges = largeResult.scannedPageRanges || [];
   const emptyCount = largeResult.pagesEmpty || 0;
   const total = largeResult.pageCount || 0;
@@ -1984,8 +1987,12 @@ const largePdfCoverage = (largeResult) => {
   if (emptyCount > 0) {
     coverageNote =
       `Read ${total - emptyCount} of ${total} page(s). ${emptyCount} page(s)` +
-      `${describeEmptyRanges(emptyRanges)} had no typed text and were not read, ` +
+      `${describeEmptyRanges(emptyRanges)} had little or no typed text and were not read with OCR, ` +
       "because files this large are read for typed text only.";
+    if (readAllRequested) {
+      coverageNote +=
+        " The option to read every scanned page does not apply to files this large.";
+    }
   }
   return {
     pagesRead: total - emptyCount,
