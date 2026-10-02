@@ -255,25 +255,48 @@ const TEXT_OR_LIST_KEYS = new Set([
 
 // ISO (what the prompt asks for), compact YYYYMMDD and US MM/DD/YYYY.
 const DATE_SHAPE = /^(?:\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\/\d{1,2}\/\d{4})$/;
-const COUNT_SHAPE = /^\d{1,5}$/;
+// Lengths of service can be fractional ("8.5" years).
+const COUNT_SHAPE = /^\d{1,5}(?:\.\d{1,2})?$/;
 const MAX_COUNT = 99999;
+// A code or a name ("E-5", "Army", "Honorable") never needs more room than
+// this; a longer value is a sentence a model wrote into the wrong field.
+const SHORT_TEXT_KEYS = new Set([
+  "component",
+  "branch",
+  "rank",
+  "payGrade",
+  "mos",
+  "masterRecordType",
+  "reentryCode",
+  "separationCode",
+  "separationProgramDesignator",
+  "separationType",
+  "characterOfService",
+  "giBlStatus",
+  "securityClearance",
+]);
+const MAX_SHORT_TEXT_CHARS = 80;
+// Unit lines, course names, award names: longer, but not a paragraph.
+const MAX_TEXT_CHARS = 300;
 
-function cleanTextOrList(value, scrub) {
-  if (typeof value === "string") return scrub(value);
+const fits = (text, max) => text.length <= max;
+
+function cleanTextOrList(value, scrub, max = Infinity) {
+  if (typeof value === "string")
+    return fits(value, max) ? scrub(value) : undefined;
   if (Array.isArray(value)) {
     return value
-      .filter((item) => typeof item === "string")
+      .filter((item) => typeof item === "string" && fits(item, max))
       .map((item) => scrub(item));
   }
   return undefined;
 }
 
-function cleanText(value, scrub) {
-  if (typeof value === "string") return scrub(value);
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return scrub(String(value));
-  }
-  return undefined;
+function cleanText(value, scrub, max) {
+  const text =
+    typeof value === "number" && Number.isFinite(value) ? String(value) : value;
+  if (typeof text !== "string" || !fits(text, max)) return undefined;
+  return scrub(text);
 }
 
 // A date a model wrote is kept only when it is date-shaped and is not one of
@@ -288,7 +311,7 @@ function cleanDate(value, known) {
 
 function cleanCount(value) {
   if (typeof value === "number") {
-    return Number.isInteger(value) && value >= 0 && value <= MAX_COUNT
+    return Number.isFinite(value) && value >= 0 && value <= MAX_COUNT
       ? value
       : undefined;
   }
@@ -320,7 +343,7 @@ function cleanServiceTime(value) {
 function cleanStringList(value, scrub) {
   if (!Array.isArray(value)) return [];
   return value
-    .filter((item) => typeof item === "string")
+    .filter((item) => typeof item === "string" && fits(item, MAX_TEXT_CHARS))
     .map((item) => scrub(item));
 }
 
@@ -330,7 +353,8 @@ function cleanAward(award, scrub) {
   }
   const out = {};
   for (const key of ["name", "abbreviation", "sourceDocument"]) {
-    if (typeof award[key] === "string") out[key] = scrub(award[key]);
+    const text = cleanText(award[key], scrub, MAX_TEXT_CHARS);
+    if (text !== undefined) out[key] = text;
   }
   if (Array.isArray(award.devices)) {
     out.devices = cleanStringList(award.devices, scrub);
@@ -361,13 +385,17 @@ function cleanField(key, value, { known, scrub }) {
   if (COUNT_KEYS.has(key)) return cleanCount(value);
   if (FLAG_KEYS.has(key)) return cleanFlag(value);
   if (SERVICE_TIME_KEYS.has(key)) return cleanServiceTime(value);
-  if (TEXT_OR_LIST_KEYS.has(key)) return cleanTextOrList(value, scrub);
+  if (FREE_TEXT_FIELDS.includes(key)) return cleanTextOrList(value, scrub);
+  if (TEXT_OR_LIST_KEYS.has(key)) {
+    return cleanTextOrList(value, scrub, MAX_TEXT_CHARS);
+  }
   if (key === "awards") {
     if (!Array.isArray(value)) return undefined;
     return value.map((award) => cleanAward(award, scrub)).filter(Boolean);
   }
   if (key === "combatService") return cleanCombatService(value, scrub);
-  return cleanText(value, scrub);
+  const max = SHORT_TEXT_KEYS.has(key) ? MAX_SHORT_TEXT_CHARS : MAX_TEXT_CHARS;
+  return cleanText(value, scrub, max);
 }
 
 /**

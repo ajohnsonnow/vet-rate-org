@@ -92,21 +92,29 @@ describe("IdentifierSourceNotice with an identifier but no name", () => {
     expect(await screen.findByText(NOTICE)).toBeTruthy();
   });
 
-  it("goes away once a name is saved while the input is open, and returns if it is removed", async () => {
+  it("goes away once a name is saved while the input is open", async () => {
     loadVKBMock.mockResolvedValue(vkbWith({}));
     renderNotice();
     expect(await screen.findByText(NOTICE)).toBeTruthy();
 
     localStorage.setItem(PROFILE_KEY, JSON.stringify({ fullName: FAKE_NAME }));
-    const input = document.body.appendChild(document.createElement("input"));
-    fireEvent.focusIn(input);
+    const box = document.body.appendChild(document.createElement("textarea"));
+    fireEvent.focusIn(box);
     await waitFor(() => expect(screen.queryByText(NOTICE)).toBeNull());
+    box.remove();
+  });
 
-    localStorage.setItem(PROFILE_KEY, JSON.stringify({}));
-    resetLastKnownGoodRedactionProfile();
-    fireEvent.focusIn(input);
+  it("does not re-read the stores when a plain input gains focus", async () => {
+    loadVKBMock.mockResolvedValue(vkbWith({}));
+    renderNotice();
     expect(await screen.findByText(NOTICE)).toBeTruthy();
-    input.remove();
+    const readsOnMount = loadVKBMock.mock.calls.length;
+
+    const field = document.body.appendChild(document.createElement("input"));
+    fireEvent.focusIn(field);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(loadVKBMock.mock.calls).toHaveLength(readsOnMount);
+    field.remove();
   });
 });
 

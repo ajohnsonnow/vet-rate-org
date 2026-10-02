@@ -118,6 +118,35 @@ describe("genuine values of every kind pass through unchanged", () => {
   });
 });
 
+describe("size limits keep a paragraph out of a field that holds a code or a name", () => {
+  const LONG = `The member ${"x".repeat(100)}`;
+
+  it("drops a long value in a short-code key and a very long one anywhere", () => {
+    const data = _parseDd214Json(
+      JSON.stringify({
+        branch: LONG,
+        characterOfService: LONG,
+        lastDutyAssignment: LONG.repeat(5),
+        militaryEducation: ["Airborne School", LONG.repeat(5)],
+        mosTitle: LONG,
+      }),
+      t,
+    );
+    expect(data).toEqual({
+      militaryEducation: ["Airborne School"],
+      mosTitle: LONG,
+    });
+  });
+
+  it("keeps a fractional length of service", () => {
+    const data = _parseDd214Json(
+      JSON.stringify({ yearsService: 8.5, monthsService: "102.5" }),
+      t,
+    );
+    expect(data).toEqual({ yearsService: 8.5, monthsService: "102.5" });
+  });
+});
+
 describe("values of the wrong type for their key are dropped", () => {
   it("drops a non-date in a date key, a non-number in a count and a non-boolean flag", () => {
     const data = _parseDd214Json(
