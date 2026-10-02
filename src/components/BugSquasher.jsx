@@ -9,6 +9,8 @@ import {
   getConsoleErrors,
   formatBugReport,
   copyToClipboard,
+  cleanReportData,
+  cleanReportText,
 } from "../utils/bugReportUtils";
 import { saveBugReport, saveToLocalStorage } from "../utils/bugReportStorage";
 import { scrubText } from "../utils/piiScrubber";
@@ -75,7 +77,7 @@ const MODULE_FLAG_MAP = [
   ["showTermsOfService", APP_MODULES.TERMS_OF_SERVICE],
 ];
 
-async function _saveBugReportLocally(reportId, formData, appState) {
+export async function _saveBugReportLocally(reportId, formData, appState) {
   try {
     const systemInfo = formData.includeSystemInfo ? getSystemInfo() : {};
     const currentAppState = formData.includeAppState
@@ -87,23 +89,28 @@ async function _saveBugReportLocally(reportId, formData, appState) {
       : [];
 
     // Save to IndexedDB (sanitized automatically)
-    await saveBugReport({
-      report_id: reportId,
-      severity: formData.severity,
-      category: formData.category,
-      module: formData.module,
-      diagnosticCode: formData.diagnosticCode,
-      userDescription: formData.userDescription,
-      stepsToReproduce: formData.stepsToReproduce,
-      expectedBehavior: formData.expectedBehavior,
-      actualBehavior: formData.actualBehavior,
-      additionalContext: formData.additionalContext,
-      veteranEmail: formData.veteranEmail || null,
-      systemInfo,
-      appState: currentAppState,
-      storageInfo,
-      consoleErrors,
-    });
+    // A file name can hold a surname or the last four of an SSN, so the
+    // veteran's own text and the app error are cleaned the same way the
+    // formatted report is before anything is stored.
+    await saveBugReport(
+      cleanReportData({
+        report_id: reportId,
+        severity: formData.severity,
+        category: formData.category,
+        module: formData.module,
+        diagnosticCode: formData.diagnosticCode,
+        userDescription: formData.userDescription,
+        stepsToReproduce: formData.stepsToReproduce,
+        expectedBehavior: formData.expectedBehavior,
+        actualBehavior: formData.actualBehavior,
+        additionalContext: formData.additionalContext,
+        veteranEmail: formData.veteranEmail || null,
+        systemInfo,
+        appState: currentAppState,
+        storageInfo,
+        consoleErrors,
+      }),
+    );
 
     // eslint-disable-next-line no-console
     console.log(`✅ Bug report ${reportId} saved to My Tickets (Safe-Squash)`);
@@ -118,13 +125,19 @@ async function _saveBugReportLocally(reportId, formData, appState) {
       severity: formData.severity?.value,
       category: formData.category,
       module: formData.module,
-      userDescription: formData.userDescription,
+      userDescription: cleanReportText(formData.userDescription),
       created_at: new Date().toISOString(),
     });
   }
 }
 
-async function _sendBugReportRemote(reportId, formData, generatedReport) {
+const _outbound = (text) => scrubText(cleanReportText(text));
+
+export async function _sendBugReportRemote(
+  reportId,
+  formData,
+  generatedReport,
+) {
   try {
     const severityLabel = formData.severity?.label || "Unknown";
 
@@ -136,13 +149,13 @@ async function _sendBugReportRemote(reportId, formData, generatedReport) {
       category: formData.category,
       module: formData.module,
       diagnostic_code: formData.diagnosticCode || "N/A",
-      description: scrubText(formData.userDescription),
-      steps_to_reproduce: scrubText(
+      description: _outbound(formData.userDescription),
+      steps_to_reproduce: _outbound(
         formData.stepsToReproduce || "Not provided",
       ),
-      expected_behavior: scrubText(formData.expectedBehavior || "Not provided"),
-      actual_behavior: scrubText(formData.actualBehavior || "Not provided"),
-      additional_context: scrubText(formData.additionalContext || "None"),
+      expected_behavior: _outbound(formData.expectedBehavior || "Not provided"),
+      actual_behavior: _outbound(formData.actualBehavior || "Not provided"),
+      additional_context: _outbound(formData.additionalContext || "None"),
       veteran_email: formData.veteranEmail || "Anonymous (no reply requested)",
       submitted_at: new Date().toISOString(),
       full_report: scrubText(generatedReport),
