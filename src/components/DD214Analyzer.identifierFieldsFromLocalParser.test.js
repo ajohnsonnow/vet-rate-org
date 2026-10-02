@@ -92,9 +92,9 @@ describe("(F): no DD-214 AI prompt asks for an identifier field", () => {
     );
   });
 
-  it("both prompts still request placeOfBirth (not an identifier under ADR-008)", () => {
-    expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).toContain('"placeOfBirth"');
-    expect(DD214_ANALYSIS_SYSTEM_PROMPT).toContain('"placeOfBirth"');
+  it("neither prompt requests placeOfBirth (identifier-bearing under decision F)", () => {
+    expect(DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL).not.toContain("placeOfBirth");
+    expect(DD214_ANALYSIS_SYSTEM_PROMPT).not.toContain("placeOfBirth");
   });
 
   it("non-identifier extraction stays in the on-device prompt", () => {

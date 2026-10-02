@@ -253,6 +253,13 @@ const NEVER_PRESELECTED_FIELDS = new Set([
   "serviceNumber",
   "homeOfRecord",
   "homeAddress",
+  "placeOfBirth",
+  "email",
+  "phone",
+  "alternatePhone",
+  "nextOfKin",
+  "nearestRelative",
+  "signature",
 ]);
 
 const useEditableProfileData = (extractedData, currentProfile) => {

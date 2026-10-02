@@ -71,6 +71,7 @@ import {
 } from "../utils/veteranKnowledgeBase";
 import ProfileImportConfirmModal from "./ProfileImportConfirmModal";
 import DD214FormBuilder from "./DD214FormBuilder";
+import { buildPlaceholderDetector } from "../utils/dd214ModelOutputGuards";
 
 /**
  * System Prompt for Multi-Document Cumulative Analysis
@@ -94,7 +95,6 @@ Block 2: Department/Component/Branch
 Block 4a: Pay Grade (E-1 through E-9, W-1 through W-5, O-1 through O-10)
 Block 4b: MOS/AFSC/Rating/Primary Specialty Code
 Block 4c: Grade/Rank (PV1, PFC, SGT, SSG, CPT, MAJ, etc)
-Block 6: Place of Birth (City, State, Country)
 Block 8: Last Duty Assignment and Major Command
 Block 9: Command to Which Transferred
 Block 10: SGL Coverage Amount
@@ -121,7 +121,7 @@ Block 27: Reserve Obligation Termination Date (YYYYMMDD)
 Block 28: Days Lost (AWOL, confinement, etc)
 Block 29: Foreign Service Credit
 
-Do NOT output the veteran's name, SSN, service number, date of birth, home of record or mailing address. Omit those fields entirely.
+Do NOT output the veteran's name, SSN, service number, date of birth, place of birth, home of record, mailing address, phone, email, next of kin, nearest relative or any signature. Omit those fields entirely.
 
 CRITICAL EXTRACTION RULES:
 1. Block 18 (Remarks) often contains:
@@ -143,7 +143,6 @@ OUTPUT JSON:
   "documentTypes": ["DD214","NGB22","DD256"],
   "masterRecordDate": "YYYY-MM-DD",
   "masterRecordType": "DD214",
-  "placeOfBirth": "City, State, Country",
   "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
   "componentFull": "Regular Army|Army National Guard|Navy Reserve|etc",
   "branch": "Army|Navy|Air Force|Marines|Coast Guard|Space Force",
@@ -255,9 +254,8 @@ Return a JSON object with this EXACT structure (ALL DD214 BLOCKS):
   "masterRecordType": "DD214|NGB22|DD256|DD257",
   
   // PERSONAL IDENTIFICATION (Blocks 1-7) - do NOT include name, SSN/
-  // service number, date of birth, or home-of-record; they are filled in
-  // separately and must be omitted from this JSON entirely.
-  "placeOfBirth": "City, State, Country (Block 6)",
+  // service number, date of birth, place of birth, or home-of-record; they
+  // are filled in separately and must be omitted from this JSON entirely.
 
   // COMPONENT & RANK (Blocks 2, 4a-4c, 17)
   "component": "RA|ARNG|USAR|USN|USAF|USMC|USCG",
@@ -733,6 +731,7 @@ export function _parseDd214Json(content, t) {
     }
     _stripModelIdentifiers(data);
     _keepModelSchemaFields(data);
+    _placeholderDetector.rejectPlaceholderEchoes(data);
   } catch {
     // V8's JSON.parse message quotes a snippet of the input, so it is never
     // logged - only the length.
@@ -786,16 +785,20 @@ export function _stripModelIdentifiers(data) {
   return data;
 }
 
+const _placeholderDetector = buildPlaceholderDetector([
+  DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL,
+  DD214_ANALYSIS_SYSTEM_PROMPT,
+]);
+
 // An allowlist, not a denylist: a model that files a name or SSN under a key
 // the schema never asked for ("SSN", "veteranName", a nested "personal"
 // object) must not reach the saved record. Only the keys the two prompts
 // request survive, and their values are never re-read as identifiers.
-const MODEL_SCHEMA_KEYS = new Set([
+export const MODEL_SCHEMA_KEYS = new Set([
   "documentCount",
   "documentTypes",
   "masterRecordDate",
   "masterRecordType",
-  "placeOfBirth",
   "component",
   "componentFull",
   "branch",
