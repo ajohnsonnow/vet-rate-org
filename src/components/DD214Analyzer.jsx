@@ -38,6 +38,9 @@ import {
 } from "../utils/documentAnalyzer";
 import {
   processFormationDocument,
+  persistFormationDocument,
+  autoPopulateProfile,
+  stripIdentifiersFromFormationResult,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
 import { smolVLMService, isSmolVLMSupported } from "../utils/smolVLMService";
@@ -1722,7 +1725,7 @@ function DD214OffDeviceNotice({ notice }) {
 
 function DD214ResultsSummaryHeader({ analysisResult, t }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="space-y-1">
       <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
         ✅ {t("dd214Analyzer", "analysisComplete")}
         {analysisResult.dd214Count > 1 && (
@@ -1732,6 +1735,10 @@ function DD214ResultsSummaryHeader({ analysisResult, t }) {
           </span>
         )}
       </h3>
+      <p className="text-sm text-blue-700 dark:text-blue-300">
+        Nothing from this scan has been saved yet. You choose what to import in
+        the next step.
+      </p>
     </div>
   );
 }
@@ -2312,17 +2319,24 @@ async function _processSingleFileForOcr(file, ctx) {
 
   try {
     // Route through MusterCall → Florence-2 vision first, Tesseract OCR fallback
-    const musterResult = await processFormationDocument(file, (progress) => {
-      // Map MusterCall progress → OCR progress bar state
-      const mapped = {
-        state: _mapMusterCallStateToOcrState(progress.state),
-        progress: progress.progress || 0,
-        message: progress.message || `Processing ${file.name}...`,
-        currentPage: progress.currentPage,
-        totalPages: progress.totalPages,
-      };
-      setOcrProgress(mapped);
-    });
+    // deferPersist: reading a scan writes nothing to the profile or Knowledge
+    // Base; the veteran confirms the import dialog first (see
+    // _persistDeferredFormationResults).
+    const musterResult = await processFormationDocument(
+      file,
+      (progress) => {
+        // Map MusterCall progress → OCR progress bar state
+        const mapped = {
+          state: _mapMusterCallStateToOcrState(progress.state),
+          progress: progress.progress || 0,
+          message: progress.message || `Processing ${file.name}...`,
+          currentPage: progress.currentPage,
+          totalPages: progress.totalPages,
+        };
+        setOcrProgress(mapped);
+      },
+      { deferPersist: true },
+    );
     const result = {
       text: musterResult.text || "",
       pageCount: musterResult.pageCount || 1,
@@ -2341,6 +2355,8 @@ async function _processSingleFileForOcr(file, ctx) {
         method: result.method,
         fileType: result.fileType,
         ocrUsed: result.ocrUsed,
+        deferredResult:
+          musterResult.status === "complete" ? musterResult : null,
       },
     ]);
   } catch (err) {
@@ -2937,6 +2953,22 @@ function _buildDd214AnalysisHandlers(state) {
   return { handleAnalyzeWithAI };
 }
 
+// Everything reading a scan found (service periods, awards, deployments, the
+// archived document) is written only now, after the veteran confirmed the
+// import dialog. Name and date of birth are never part of it: those reach the
+// profile and Knowledge Base only through the boxes the veteran ticked.
+export async function _persistDeferredFormationResults(extractedTexts) {
+  for (const item of extractedTexts) {
+    if (!item.deferredResult) continue;
+    const result = stripIdentifiersFromFormationResult(item.deferredResult);
+    await persistFormationDocument(
+      { name: result.filename, size: result.size },
+      result,
+    );
+    await autoPopulateProfile([result]);
+  }
+}
+
 function _buildDd214SaveHandlers(state) {
   const {
     t,
@@ -2973,6 +3005,8 @@ function _buildDd214SaveHandlers(state) {
   const handleConfirmProfileImport = async (selectedFields, meta = {}) => {
     try {
       const combinedText = _getDd214CombinedText(pastedText, extractedTexts);
+
+      await _persistDeferredFormationResults(extractedTexts);
 
       // ── 1. SAVE TO VETERAN PROFILE (existing behavior) ──
       _saveDd214ToProfile(

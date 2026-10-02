@@ -1967,6 +1967,24 @@ const convergeTimelineStoreAfterImport = async () => {
   }
 };
 
+// Direct identifiers a parsed service record carries. A tool that has no review
+// step of its own for them (or defers its writes until one) removes them here
+// before anything is stored.
+const FORMATION_IDENTIFIER_KEYS = [
+  "veteranName",
+  "lastName",
+  "firstName",
+  "middleName",
+  "dateOfBirth",
+];
+
+export const stripIdentifiersFromFormationResult = (result) => {
+  if (!result?.extractedData) return result;
+  const extractedData = { ...result.extractedData };
+  FORMATION_IDENTIFIER_KEYS.forEach((key) => delete extractedData[key]);
+  return { ...result, extractedData };
+};
+
 export const persistFormationDocument = async (
   file,
   result,
@@ -2145,7 +2163,13 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
 
     // Steps 4-6: store to VKB, My Packet, Service tab, Ribbon Rack, and the
     // evidence timeline.
-    await persistFormationDocument(file, result);
+    if (options.omitIdentifiers) {
+      result.extractedData =
+        stripIdentifiersFromFormationResult(result).extractedData;
+    }
+    // deferPersist: the caller shows its own confirmation step and writes
+    // (persistFormationDocument) only after the veteran confirms it.
+    if (!options.deferPersist) await persistFormationDocument(file, result);
 
     result.status = "complete";
     onProgress?.({
@@ -2175,7 +2199,11 @@ const finishFormationResult = async (result) => {
   // (useLegacyBatchProcessing.js) did. Profile auto-fill must work here
   // too.
   let profilePopulateResult = null;
-  if (result.status === "complete" && result.extractedData) {
+  if (
+    result.status === "complete" &&
+    result.extractedData &&
+    !options.deferPersist
+  ) {
     try {
       profilePopulateResult = await autoPopulateProfile([result]);
     } catch (populateErr) {
