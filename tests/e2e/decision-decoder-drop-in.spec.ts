@@ -530,23 +530,28 @@ async function buildGenericTextOnlyPdf(pageCount: number): Promise<Buffer> {
 // A mix of real-text pages and truly blank (zero content stream, so
 // getTextContent() returns nothing) pages standing in for scanned,
 // image-only pages - without needing an actual scanned image fixture.
-async function buildMixedCoveragePdf(): Promise<Buffer> {
+async function buildMixedCoveragePdf(scannedPng: Buffer): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const layout = ["text", "blank", "text", "blank", "text"];
+  const pngImage = await pdfDoc.embedPng(scannedPng);
+  const layout = ["text", "scan", "text", "scan", "text"];
   layout.forEach((kind, idx) => {
-    const page = pdfDoc.addPage([300, 150]);
-    if (kind === "text") {
-      page.drawText(
-        `Generic fixture text page ${idx + 1} has enough real text content here`,
-        {
-          x: 20,
-          y: 100,
-          size: 12,
-          font,
-        },
-      );
+    if (kind === "scan") {
+      const scanned = pdfDoc.addPage([pngImage.width, pngImage.height]);
+      scanned.drawImage(pngImage, {
+        x: 0,
+        y: 0,
+        width: pngImage.width,
+        height: pngImage.height,
+      });
+      return;
     }
+    pdfDoc
+      .addPage([300, 150])
+      .drawText(
+        `Generic fixture text page ${idx + 1} has enough real text content here`,
+        { x: 20, y: 100, size: 12, font },
+      );
   });
   return Buffer.from(await pdfDoc.save());
 }
@@ -635,16 +640,19 @@ test.describe("D-4: advancedOCR full page coverage", () => {
     expect(denialText).toContain("Generic fixture page 520 contains");
   });
 
-  test("a mixed PDF (real-text + blank/image-only pages) reports coverage truthfully, never silently", async ({
+  test("a mixed PDF (real-text + scanned image-only pages) reports coverage truthfully, never silently", async ({
     page,
   }) => {
     test.setTimeout(60000);
     await bootDecisionDecoder(page);
     await injectAdvancedOCRModule(page);
 
-    const pdfBuffer = await buildMixedCoveragePdf();
+    const scannedPng = await buildTextImagePng(page, [
+      "SCANNED PAGE MARKER ZEBRAFISH",
+    ]);
+    const pdfBuffer = await buildMixedCoveragePdf(scannedPng);
     const base64 = pdfBuffer.toString("base64");
-    // MAX_OCR_PAGES: 1 - only 1 of the 2 blank (image-only) pages can be
+    // MAX_OCR_PAGES: 1 - only 1 of the 2 image-only (scanned) pages can be
     // OCR'd, so the other must show up as explicitly skipped, never dropped
     // with no trace.
     const result = await runAdvancedPDFAnalysis(page, base64, {
@@ -652,10 +660,10 @@ test.describe("D-4: advancedOCR full page coverage", () => {
     });
 
     expect(result.pageCount).toBe(5);
-    expect(result.pagesRead).toBe(5);
+    expect(result.pagesRead).toBe(4);
     expect(result.pagesOCRd).toBe(1);
     expect(result.pagesSkipped).toHaveLength(1);
-    expect(result.coverageNote).toMatch(/skipped/i);
+    expect(result.coverageNote).toMatch(/\(page 4\) were not read/i);
     expect(result.text).toContain("Generic fixture text page 1");
     expect(result.text).toContain("Generic fixture text page 3");
     expect(result.text).toContain("Generic fixture text page 5");
