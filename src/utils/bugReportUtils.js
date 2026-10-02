@@ -334,12 +334,16 @@ const MAX_CONSOLE_SCRUB_INPUT_CHARS = 20000;
 const CONSOLE_TRUNCATION_MARKER = "...[truncated]";
 const KNOWN_IDENTIFIER_REFRESH_MS = 10000;
 
-let knownIdentifierValues = [];
+let profileIdentifierValues = [];
+let explicitIdentifierValues = [];
 let lastKnownIdentifierRefreshAt = 0;
 let knownIdentifierRefreshInFlight = false;
 
 export const setKnownIdentifiersForConsoleScrub = (personal, claimNumbers) => {
-  knownIdentifierValues = collectKnownIdentifierValues(personal, claimNumbers);
+  explicitIdentifierValues = collectKnownIdentifierValues(
+    personal,
+    claimNumbers,
+  );
 };
 
 // Scrub, then clip (never clip first: cutting an identifier in half would
@@ -348,7 +352,12 @@ export const setKnownIdentifiersForConsoleScrub = (personal, claimNumbers) => {
 const scrubConsoleText = (text, maxChars) => {
   if (typeof text !== "string" || text === "") return text;
   const bounded = text.slice(0, MAX_CONSOLE_SCRUB_INPUT_CHARS);
-  const scrubbed = scrubText(redactKnownValues(bounded, knownIdentifierValues));
+  const scrubbed = scrubText(
+    redactKnownValues(bounded, [
+      ...profileIdentifierValues,
+      ...explicitIdentifierValues,
+    ]),
+  );
   if (scrubbed.length <= maxChars) return scrubbed;
   return (
     scrubbed.slice(0, maxChars - CONSOLE_TRUNCATION_MARKER.length) +
@@ -393,25 +402,23 @@ const rescrubStoredConsoleLogs = () => {
 };
 
 /**
- * Load the veteran's own known identifier values (name, DOB, SSN, address,
- * claim numbers...) so console lines can be redacted by value, not only by
- * shape. Modules load lazily: this file is in the boot path.
+ * Load the veteran's own known identifier values (name, DOB, SSN, address...)
+ * from the saved profile so console lines can be redacted by value, not only
+ * by shape. Reads localStorage only: this runs inside the console interceptor
+ * on every app boot, so it must never open or create an IndexedDB database
+ * (the Veteran Knowledge Base) as a side effect. Whoever holds more known
+ * values (VKB personal block, claim numbers) can add them with
+ * setKnownIdentifiersForConsoleScrub. The module loads lazily: this file is
+ * in the boot path.
  */
 export const refreshKnownIdentifiers = async () => {
   if (knownIdentifierRefreshInFlight) return;
   knownIdentifierRefreshInFlight = true;
   try {
-    const [{ loadVKB }, { getVeteranProfile }] = await Promise.all([
-      import("./veteranKnowledgeBase"),
-      import("./veteranProfile"),
-    ]);
-    const vkb = await loadVKB();
-    const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
-      .map((c) => c.claimNumber)
-      .filter(Boolean);
-    setKnownIdentifiersForConsoleScrub(
-      { ...getVeteranProfile(), ...vkb?.personal },
-      claimNumbers,
+    const { getVeteranProfile } = await import("./veteranProfile");
+    profileIdentifierValues = collectKnownIdentifierValues(
+      getVeteranProfile(),
+      [],
     );
     rescrubStoredConsoleLogs();
   } catch {

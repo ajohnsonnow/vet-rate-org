@@ -21,7 +21,6 @@ const PLANTED = {
   ssn: "512-34-9876",
   street: "4417 Marigold Lane",
   city: "Springfield",
-  dob: "1982-03-14",
   fileNumber: "C-000777123",
   claimNumber: "8675309",
 };
@@ -33,19 +32,16 @@ const PLANTED_VALUES = [
   PLANTED.fileNumber,
   PLANTED.claimNumber,
 ];
+const PLANTED_PROFILE = {
+  fullName: PLANTED.fullName,
+  ssn: PLANTED.ssn,
+  vaFileNumber: PLANTED.fileNumber,
+  street: PLANTED.street,
+  city: PLANTED.city,
+};
 
-vi.mock("./veteranKnowledgeBase", () => ({
-  loadVKB: vi.fn(async () => ({
-    personal: {
-      fullName: "Zebulon Quillfeather",
-      ssn: "512-34-9876",
-      veteranFileNumber: "C-000777123",
-      address: { street: "4417 Marigold Lane", city: "Springfield" },
-    },
-    vaClaimsHistory: { claims: [{ claimNumber: "8675309" }] },
-  })),
-}));
-vi.mock("./veteranProfile", () => ({ getVeteranProfile: () => ({}) }));
+let mockProfile = {};
+vi.mock("./veteranProfile", () => ({ getVeteranProfile: () => mockProfile }));
 
 const {
   initializeErrorCapture,
@@ -71,6 +67,11 @@ function expectNoPlantedValue(text) {
   }
 }
 
+async function loadProfile(profile) {
+  mockProfile = profile;
+  await refreshKnownIdentifiers();
+}
+
 beforeAll(() => {
   initializeErrorCapture();
 });
@@ -81,7 +82,8 @@ afterAll(() => {
 
 beforeEach(async () => {
   sessionStorage.clear();
-  await refreshKnownIdentifiers();
+  setKnownIdentifiersForConsoleScrub({}, [PLANTED.claimNumber]);
+  await loadProfile(PLANTED_PROFILE);
 });
 
 describe("console interceptor: identifiers never reach storage or a report", () => {
@@ -145,41 +147,31 @@ describe("console interceptor: identifiers never reach storage or a report", () 
 });
 
 describe("console interceptor: known values loaded after capture", () => {
-  it("re-scrubs entries stored before the known values were loaded, on read", () => {
+  const earlyEntry = {
+    type: "error",
+    message: `early line for ${PLANTED.fullName}`,
+    stack: null,
+    url: "https://example.test/",
+  };
+
+  it("re-scrubs entries stored before the known values were loaded, on read", async () => {
+    await loadProfile({});
     setKnownIdentifiersForConsoleScrub({}, []);
-    sessionStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify([
-        {
-          type: "error",
-          message: `early line for ${PLANTED.fullName}`,
-          stack: null,
-          url: "https://example.test/",
-        },
-      ]),
-    );
-    expect(rawStored()).toContain(PLANTED.fullName);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify([earlyEntry]));
 
     setKnownIdentifiersForConsoleScrub({ fullName: PLANTED.fullName }, []);
 
     expectNoPlantedValue(JSON.stringify(getConsoleErrors()));
+    expect(rawStored()).toContain(PLANTED.fullName);
   });
 
-  it("rewrites stored entries in place once the known values load", async () => {
+  it("rewrites stored entries in place once the saved profile loads", async () => {
+    await loadProfile({});
     setKnownIdentifiersForConsoleScrub({}, []);
-    sessionStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify([
-        {
-          type: "warn",
-          message: `early line for ${PLANTED.fullName}`,
-          stack: null,
-          url: "https://example.test/",
-        },
-      ]),
-    );
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify([earlyEntry]));
+    expect(rawStored()).toContain(PLANTED.fullName);
 
-    await refreshKnownIdentifiers();
+    await loadProfile(PLANTED_PROFILE);
 
     expectNoPlantedValue(rawStored());
   });
