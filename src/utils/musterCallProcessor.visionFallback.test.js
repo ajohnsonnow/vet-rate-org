@@ -7,10 +7,15 @@
  * vision service are the only fakes; analyzeDocument and the processor are real.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { createFakeIndexedDB } from "../__tests__/helpers/fakeIndexedDB";
 
 globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
+
+// Saving is part of every import now: without a store the document is reported
+// as not saved, so these extraction tests give it a working one.
+vi.stubGlobal("indexedDB", createFakeIndexedDB().indexedDB);
 
 vi.mock("./ocr", async (importOriginal) => ({
   ...(await importOriginal()),

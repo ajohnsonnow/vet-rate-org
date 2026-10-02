@@ -6,10 +6,15 @@
  * fields and a plain note (processLargePDF is the only fake).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createFakeIndexedDB } from "../__tests__/helpers/fakeIndexedDB";
 
 globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
+
+// Saving is part of every import now: without a store the document is reported
+// as not saved, so these extraction tests give it a working one.
+vi.stubGlobal("indexedDB", createFakeIndexedDB().indexedDB);
 
 vi.mock("./pdfExtractor", async (importOriginal) => {
   const actual = await importOriginal();

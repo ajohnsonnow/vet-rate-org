@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createFakeIndexedDB } from "../__tests__/helpers/fakeIndexedDB";
 
 // musterCallProcessor transitively imports pdfjs, which references canvas
 // globals jsdom doesn't provide (same pattern as
@@ -6,6 +7,10 @@ import { describe, it, expect, beforeEach } from "vitest";
 globalThis.DOMMatrix ??= class DOMMatrix {};
 globalThis.Path2D ??= class Path2D {};
 globalThis.ImageData ??= class ImageData {};
+
+// Saving is part of every import now: without a store the document is reported
+// as not saved, so these extraction tests give it a working one.
+vi.stubGlobal("indexedDB", createFakeIndexedDB().indexedDB);
 
 const { persistFormationDocument } = await import("./musterCallProcessor");
 const { getMyRatings } = await import("./veteranProfile");

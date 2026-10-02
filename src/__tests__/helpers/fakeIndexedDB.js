@@ -6,7 +6,21 @@
  * completes, and an open that is blocked and never settles.
  */
 
-function makeRequest(run, tx, stalls) {
+// A full device: the write request itself succeeds, then the commit fails and
+// the transaction aborts with QuotaExceededError, the way a browser reports it.
+function finishTransaction(tx, control) {
+  if (tx.wrote && control.quotaFull) {
+    tx.error = new DOMException(
+      "The quota has been exceeded.",
+      "QuotaExceededError",
+    );
+    tx.onabort?.();
+    return;
+  }
+  tx.oncomplete?.();
+}
+
+function makeRequest(run, tx, stalls, control) {
   const request = {};
   tx.pending++;
   queueMicrotask(() => {
@@ -14,7 +28,7 @@ function makeRequest(run, tx, stalls) {
     request.result = run();
     request.onsuccess?.();
     tx.pending--;
-    if (tx.pending === 0) queueMicrotask(() => tx.oncomplete?.());
+    if (tx.pending === 0) queueMicrotask(() => finishTransaction(tx, control));
   });
   return request;
 }
@@ -24,24 +38,27 @@ function makeStore(records, tx, control) {
   const reads = () => false;
   return {
     get: (key) =>
-      makeRequest(() => structuredClone(records.get(key)), tx, reads),
+      makeRequest(() => structuredClone(records.get(key)), tx, reads, control),
     getAll: () =>
       makeRequest(
         () => [...records.values()].map((v) => structuredClone(v)),
         tx,
         reads,
+        control,
       ),
     put: (value) =>
       makeRequest(
         () => {
-          records.set(value.id, structuredClone(value));
+          tx.wrote = true;
+          if (!control.quotaFull) records.set(value.id, structuredClone(value));
           return value.id;
         },
         tx,
         writes,
+        control,
       ),
     delete: (key) =>
-      makeRequest(() => records.delete(key) && undefined, tx, writes),
+      makeRequest(() => records.delete(key) && undefined, tx, writes, control),
   };
 }
 
@@ -67,7 +84,7 @@ function makeConnection(stores, control) {
 
 export function createFakeIndexedDB() {
   const databases = new Map();
-  const control = { stallWrites: false, blockOpen: false };
+  const control = { stallWrites: false, blockOpen: false, quotaFull: false };
 
   const indexedDB = {
     open: (name) => {

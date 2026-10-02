@@ -80,6 +80,7 @@ import {
   resetVKBConnection,
 } from "./veteranKnowledgeBase";
 import { withStepTimeout, StepTimeoutError } from "./boundedStep";
+import { describePersistIncomplete } from "./persistIncompleteMessage";
 import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
 import {
   dropSupersededConditions,
@@ -712,6 +713,30 @@ const runStandardDocumentExtraction = async (
   return extractionResult;
 };
 
+// A store that answers {success:false} (its write was refused or aborted, most
+// often because the device is full) has not saved anything. Persisting turns
+// that answer into this error so the step is reported instead of passing.
+class StorageSaveFailedError extends Error {
+  constructor(saveResult) {
+    super(saveResult?.error || "The save did not complete.");
+    this.name = "StorageSaveFailedError";
+    this.quotaExceeded = saveResult?.quotaExceeded === true;
+  }
+}
+
+const requireSaved = (saveResult) => {
+  if (saveResult?.success === false)
+    throw new StorageSaveFailedError(saveResult);
+  return saveResult;
+};
+
+// A merge step that fails for any other reason stays non-fatal: the document
+// itself is already filed. A save the store refused is not non-fatal.
+const warnNonFatalStep = (label, err) => {
+  if (err instanceof StorageSaveFailedError) throw err;
+  console.warn(`${label} failed for this document (non-fatal):`, err.message);
+};
+
 const storeDocumentInVKB = async (file, result) => {
   const vkbResult = await addDocumentToVKB({
     fileName: file.name,
@@ -723,6 +748,7 @@ const storeDocumentInVKB = async (file, result) => {
     ocrUsed: result.ocrUsed || false,
     method: result.method || "text",
   });
+  requireSaved(vkbResult);
 
   if (vkbResult.success) {
     result.vkbDocumentId = vkbResult.documentId;
@@ -772,12 +798,13 @@ const CLASS_TO_PACKET_TYPE = {
 };
 
 const archiveDocumentInPacket = async (file, result) => {
+  let saved;
   try {
     const packetType =
       CLASS_TO_PACKET_TYPE[result.classification.type] ||
       PACKET_DOC_TYPES.OTHER;
 
-    await saveDocumentToPacket({
+    saved = await saveDocumentToPacket({
       fileName: file.name,
       classification: packetType,
       rawText: result.text || "",
@@ -791,14 +818,13 @@ const archiveDocumentInPacket = async (file, result) => {
         result.classification?.subtype,
       ].filter(Boolean),
     });
-    // eslint-disable-next-line no-console
-    console.log(`📁 Archived this document in My Packet`);
   } catch (packetErr) {
-    console.warn(
-      `My Packet save failed for this document (non-fatal):`,
-      packetErr.message,
-    );
+    warnNonFatalStep("My Packet save", packetErr);
+    return;
   }
+  requireSaved(saved);
+  // eslint-disable-next-line no-console
+  console.log(`📁 Archived this document in My Packet`);
 };
 
 // Box 12b (NET ACTIVE SERVICE THIS PERIOD) is stored as a formatted string by
@@ -1454,14 +1480,11 @@ const mergeServiceRecordIntoVKB = async (file, result) => {
     const vkb = await loadVKB();
     const dd214Data = buildVKBDD214Data(result);
     mergeDD214IntoVKB(vkb, dd214Data, { fileName: file.name });
-    await saveVKB(vkb);
+    requireSaved(await saveVKB(vkb));
     // eslint-disable-next-line no-console
     console.log(`✅ Merged DD214 data into VKB for this document`);
   } catch (vkbErr) {
-    console.warn(
-      `VKB merge failed for this document (non-fatal):`,
-      vkbErr.message,
-    );
+    warnNonFatalStep("VKB merge", vkbErr);
   }
 };
 
@@ -1499,14 +1522,11 @@ const mergeCFileDeploymentsIntoVKB = async (file, result) => {
     };
     mergeDD214Deployments(vkb, dd214Data, { fileName: file.name });
     mergeDD214EvidenceTimeline(vkb, dd214Data, { fileName: file.name });
-    await saveVKB(vkb);
+    requireSaved(await saveVKB(vkb));
     // eslint-disable-next-line no-console
     console.log(`✅ Merged C-File deployments into VKB for this document`);
   } catch (vkbErr) {
-    console.warn(
-      `VKB merge failed for this document (non-fatal):`,
-      vkbErr.message,
-    );
+    warnNonFatalStep("VKB merge", vkbErr);
   }
 };
 
@@ -1625,12 +1645,9 @@ const appendMusterCallTimelineEntry = async (file, result) => {
         significance: "",
       });
     }
-    await saveVKB(vkb);
+    requireSaved(await saveVKB(vkb));
   } catch (timelineErr) {
-    console.warn(
-      `Evidence timeline update failed for this document (non-fatal):`,
-      timelineErr.message,
-    );
+    warnNonFatalStep("Evidence timeline update", timelineErr);
   }
 };
 
@@ -1836,14 +1853,11 @@ const mergeRatingDecisionIntoVKBForFile = async (file, result) => {
     mergeRatingDecisionIntoVKB(vkb, result.extractedData, {
       fileName: file.name,
     });
-    await saveVKB(vkb);
+    requireSaved(await saveVKB(vkb));
     // eslint-disable-next-line no-console
     console.log(`✅ Merged rating decision into VKB for this document`);
   } catch (vkbErr) {
-    console.warn(
-      `VKB rating-decision merge failed for this document (non-fatal):`,
-      vkbErr.message,
-    );
+    warnNonFatalStep("VKB rating-decision merge", vkbErr);
   }
 };
 
@@ -1867,19 +1881,21 @@ const mergeRatingDecisionIntoVKBForFile = async (file, result) => {
 const PERSIST_STEP_TIMEOUT_MS = 60_000;
 
 export class DocumentPersistIncompleteError extends Error {
-  constructor(steps) {
-    super("Saving this document did not finish.");
+  constructor(steps, { quotaExceeded = false, message } = {}) {
+    super(message || "Saving this document did not finish.");
     this.name = "DocumentPersistIncompleteError";
     this.steps = steps;
+    this.quotaExceeded = quotaExceeded;
   }
 }
 
-export const describePersistIncomplete = (fileName, retryLabel = "Retry") =>
-  `Saving "${fileName}" did not finish because your device's storage did not respond in time. ` +
-  `Nothing you imported was lost. Choose ${retryLabel} to finish saving it.`;
+export { describePersistIncomplete };
 
+// A save the store refused (a full device) does not stall the connection, so
+// the other steps still run and are each reported if they fail the same way.
 function _createStorageStepRunner(stepTimeoutMs) {
   const incomplete = [];
+  const outcome = { quotaExceeded: false };
   let stalled = false;
   const run = async (step, start) => {
     if (stalled) {
@@ -1889,6 +1905,11 @@ function _createStorageStepRunner(stepTimeoutMs) {
     try {
       await withStepTimeout(start, step, stepTimeoutMs);
     } catch (err) {
+      if (err instanceof StorageSaveFailedError) {
+        incomplete.push(step);
+        outcome.quotaExceeded ||= err.quotaExceeded;
+        return;
+      }
       if (!(err instanceof StepTimeoutError)) throw err;
       stalled = true;
       incomplete.push(step);
@@ -1899,7 +1920,7 @@ function _createStorageStepRunner(stepTimeoutMs) {
       );
     }
   };
-  return { run, incomplete };
+  return { run, incomplete, outcome };
 }
 
 // The local timeline copy converges after the knowledge base is complete, and
@@ -1921,7 +1942,7 @@ export const persistFormationDocument = async (
   result,
   { stepTimeoutMs = PERSIST_STEP_TIMEOUT_MS } = {},
 ) => {
-  const { run, incomplete } = _createStorageStepRunner(stepTimeoutMs);
+  const { run, incomplete, outcome } = _createStorageStepRunner(stepTimeoutMs);
   await run("knowledge base", () => storeDocumentInVKB(file, result));
   await run("my packet", () => archiveDocumentInPacket(file, result));
   saveServiceRecordToProfile(file, result);
@@ -1942,8 +1963,11 @@ export const persistFormationDocument = async (
     mergeRatingDecisionIntoVKBForFile(file, result),
   );
   await run("timeline copy", convergeTimelineStoreAfterImport);
-  if (incomplete.length > 0)
-    throw new DocumentPersistIncompleteError(incomplete);
+  if (incomplete.length > 0) {
+    throw new DocumentPersistIncompleteError(incomplete, {
+      quotaExceeded: outcome.quotaExceeded,
+    });
+  }
 };
 
 // Page coverage the extractor reported (how many pages were read, OCR'd,
@@ -2092,11 +2116,12 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
     console.error(`Error processing this document:`, error.message);
     const persistIncomplete = error instanceof DocumentPersistIncompleteError;
     const message = persistIncomplete
-      ? describePersistIncomplete(file.name)
+      ? describePersistIncomplete(file.name, "Retry", error)
       : error.message;
     result.status = "error";
     result.error = message;
     result.persistIncomplete = persistIncomplete;
+    result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;
     onProgress?.({
       filename: file.name,
       state: PROCESSING_STATES.ERROR,
@@ -2143,13 +2168,25 @@ const finishFormationResult = async (result) => {
 export const processFormationDocument = async (
   file,
   onProgress,
-  options = {},
+  { returnIncompleteSave = false, ...extractionOptions } = {},
 ) => {
   // eslint-disable-next-line no-console
   console.log(`🎖️ Platoon Sergeant inspecting: this document`);
 
   // Use enhanced single document processor
-  const result = await processSingleDocument(file, onProgress, options);
+  const result = await processSingleDocument(
+    file,
+    onProgress,
+    extractionOptions,
+  );
+  if (result.persistIncomplete && !returnIncompleteSave) {
+    throw new DocumentPersistIncompleteError([], {
+      quotaExceeded: result.persistQuotaExceeded,
+      message: describePersistIncomplete(result.filename, null, {
+        quotaExceeded: result.persistQuotaExceeded,
+      }),
+    });
+  }
   return finishFormationResult(result);
 };
 
@@ -2166,6 +2203,7 @@ export const retryFormationDocumentPersist = async (failed) => {
     status: "processing",
     error: null,
     persistIncomplete: false,
+    persistQuotaExceeded: false,
   };
   try {
     await persistFormationDocument(pseudoFile, result);
@@ -2175,7 +2213,8 @@ export const retryFormationDocumentPersist = async (failed) => {
       ...failed,
       status: "error",
       persistIncomplete: true,
-      error: describePersistIncomplete(failed.filename),
+      persistQuotaExceeded: err.quotaExceeded,
+      error: describePersistIncomplete(failed.filename, "Retry", err),
       readyForReview: false,
     };
   }

@@ -24,6 +24,7 @@ import {
   FORMATION_STATUS,
 } from "../utils/formationQueue";
 import { neutralDocumentLabel } from "../utils/documentLabel";
+import { describePersistIncomplete } from "../utils/persistIncompleteMessage";
 
 function logFormationInitialized(count) {
   // eslint-disable-next-line no-console
@@ -152,8 +153,26 @@ function errorEntryAndNextImpl(
   return next;
 }
 
+// A save that did not finish can only be retried while the read result is held
+// in memory, which a page reload drops. The restored entry must not promise a
+// Retry that is not there: it keeps the plain failure and says to import again.
+function withoutRetryThatReloadDropped(entry) {
+  if (!entry.retryable) return entry;
+  return {
+    ...entry,
+    retryable: false,
+    error: describePersistIncomplete(
+      entry.filename || entry.file?.name,
+      null,
+      entry,
+    ),
+  };
+}
+
 function loadInitialFormation(setFormation) {
-  const savedFormation = loadFormationState();
+  const savedFormation = loadFormationState()?.map(
+    withoutRetryThatReloadDropped,
+  );
   if (savedFormation && savedFormation.length > 0) {
     setFormation(savedFormation);
     logFormationInitialized(savedFormation.length);

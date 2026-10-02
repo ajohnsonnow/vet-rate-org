@@ -18,6 +18,7 @@ import {
   processFormationDocument,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
+import { describePersistIncomplete } from "../utils/persistIncompleteMessage";
 import {
   analyzeCFile,
   getCFilePrivacyDisclosure,
@@ -41,7 +42,7 @@ import CFileSemanticSearch from "./CFileSemanticSearch";
 import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
 import { getReadingNotices } from "../utils/readingNotices";
 
-async function _extractTextForAnalysis(file, ctx, options) {
+export async function _extractTextForAnalysis(file, ctx, options) {
   const musterResult = await processFormationDocument(
     file,
     (progress) => {
@@ -54,8 +55,18 @@ async function _extractTextForAnalysis(file, ctx, options) {
         if (progress.message) ctx.setProcessingStage(progress.message);
       }
     },
-    options,
+    { ...options, returnIncompleteSave: true },
   );
+
+  // The read text is still good for the analysis, but the document did not
+  // reach the knowledge base or My Packet; say so instead of carrying on.
+  if (musterResult.persistIncomplete) {
+    ctx.setStorageWarning(
+      describePersistIncomplete(musterResult.filename, null, {
+        quotaExceeded: musterResult.persistQuotaExceeded,
+      }),
+    );
+  }
 
   // Normalise to the shape the rest of handleConsentAndProcess expects
   const extractionResult = {

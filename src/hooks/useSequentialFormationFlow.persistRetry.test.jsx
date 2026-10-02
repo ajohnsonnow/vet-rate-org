@@ -97,7 +97,7 @@ describe("a document whose save did not finish", () => {
     expect(formationQueue.errorEntryAndNext).toHaveBeenCalledWith(
       "e1",
       NAMED_FAILURE,
-      { retryable: true },
+      { retryable: true, quotaExceeded: false },
     );
     expect(hook.result.current.canRetryDocumentSave("e1")).toBe(true);
   });

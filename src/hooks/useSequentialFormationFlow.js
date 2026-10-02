@@ -135,8 +135,10 @@ async function runDocumentProcessing(entry, ctx) {
   setProcessingState(PROCESSING_STATES.EXTRACTING);
 
   try {
-    const result = await processFormationDocument(file, (progressData) =>
-      handleProgressUpdate(progressData, entry, file, ctx),
+    const result = await processFormationDocument(
+      file,
+      (progressData) => handleProgressUpdate(progressData, entry, file, ctx),
+      { returnIncompleteSave: true },
     );
 
     // eslint-disable-next-line no-console
@@ -167,6 +169,7 @@ async function runDocumentProcessing(entry, ctx) {
       if (result.persistIncomplete) {
         ctx.retainedResults.set(entry.id, result);
         failure.persistIncomplete = true;
+        failure.quotaExceeded = result.persistQuotaExceeded === true;
       }
       throw failure;
     }
@@ -183,7 +186,10 @@ function handleDocumentFailure(err, entry, ctx) {
     err.persistIncomplete ? "saving did not finish" : err.message,
   );
   const nextEntry = err.persistIncomplete
-    ? ctx.errorEntryAndNext(entry.id, err.message, { retryable: true })
+    ? ctx.errorEntryAndNext(entry.id, err.message, {
+        retryable: true,
+        quotaExceeded: err.quotaExceeded === true,
+      })
     : ctx.errorEntryAndNext(entry.id, err.message);
   ctx.setCurrentProgress(null);
   ctx.setActiveEntry(null);
@@ -334,7 +340,11 @@ async function runVerifyAndSave(verifyPayload, ctx) {
   } catch (err) {
     const incomplete = err?.name === "DocumentPersistIncompleteError";
     const message = incomplete
-      ? describePersistIncomplete(extractionResult?.filename, "Verify & Save")
+      ? describePersistIncomplete(
+          extractionResult?.filename,
+          "Verify & Save",
+          err,
+        )
       : err.message;
     console.error(
       "❌ Save error:",
