@@ -1763,7 +1763,7 @@ function DD214OffDeviceNotice({ notice }) {
   );
 }
 
-function DD214ResultsSummaryHeader({ analysisResult, t }) {
+function DD214ResultsSummaryHeader({ analysisResult, importSaved, t }) {
   return (
     <div className="space-y-1">
       <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">
@@ -1776,8 +1776,10 @@ function DD214ResultsSummaryHeader({ analysisResult, t }) {
         )}
       </h3>
       <p className="text-sm text-blue-700 dark:text-blue-300">
-        Nothing from this scan has been saved yet. You choose what to import in
-        the next step.
+        {t(
+          "dd214Analyzer",
+          importSaved ? "importSavedNote" : "nothingSavedYet",
+        )}
       </p>
     </div>
   );
@@ -2274,11 +2276,20 @@ function DD214ExtractionNotesSection({ analysisResult, t }) {
   );
 }
 
-function DD214AnalysisResultsPanel({ analysisResult, onIdentifierChange, t }) {
+function DD214AnalysisResultsPanel({
+  analysisResult,
+  importSaved,
+  onIdentifierChange,
+  t,
+}) {
   if (!analysisResult) return null;
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800 space-y-6">
-      <DD214ResultsSummaryHeader analysisResult={analysisResult} t={t} />
+      <DD214ResultsSummaryHeader
+        analysisResult={analysisResult}
+        importSaved={importSaved}
+        t={t}
+      />
 
       {/* Service Info Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -2732,6 +2743,7 @@ function _buildDd214FileListHandlers(state) {
     originalPDFFiles,
     setPastedText,
     setAnalysisResult,
+    setImportSaved,
   } = state;
 
   const runOCROnFiles = async () => {
@@ -2779,6 +2791,7 @@ function _buildDd214FileListHandlers(state) {
     setDroppedFiles([]);
     setExtractedTexts([]);
     setAnalysisResult(null);
+    setImportSaved(false);
     setError(null);
   };
 
@@ -2908,6 +2921,7 @@ function _buildDd214AnalysisHandlers(state) {
     setAnalysisResult,
     setOcrProgress,
     setOffDeviceNotice,
+    setImportSaved,
   } = state;
 
   /**
@@ -2968,6 +2982,7 @@ function _buildDd214AnalysisHandlers(state) {
     setError(null);
     setOffDeviceNotice(null);
     setAnalysisResult(null);
+    setImportSaved(false);
 
     try {
       const response = useVisionAnalysis
@@ -3019,6 +3034,7 @@ function _buildDd214SaveHandlers(state) {
     onSaveResults,
     setExtractedProfileData,
     setShowProfileImportModal,
+    setImportSaved,
     setError,
   } = state;
 
@@ -3084,6 +3100,7 @@ function _buildDd214SaveHandlers(state) {
       // Close modal
       setShowProfileImportModal(false);
       setExtractedProfileData(null);
+      setImportSaved(true);
 
       // Success message
       const fieldCount = Object.keys(selectedFields).length;
@@ -3146,6 +3163,7 @@ function DD214AnalyzerModalContent({ state, handlers }) {
     offDeviceNotice,
     analysisResult,
     setAnalysisResult,
+    importSaved,
     aiStatus,
     setAIStatus,
     onOpenMusterCall,
@@ -3204,6 +3222,7 @@ function DD214AnalyzerModalContent({ state, handlers }) {
 
       <DD214AnalysisResultsPanel
         analysisResult={analysisResult}
+        importSaved={importSaved}
         onIdentifierChange={(field, value) =>
           setAnalysisResult((prev) => ({ ...prev, [field]: value }))
         }
@@ -3368,6 +3387,7 @@ function useDD214ResultState() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
   const [offDeviceNotice, setOffDeviceNotice] = useState(null);
+  const [importSaved, setImportSaved] = useState(false);
 
   return {
     inputMethod,
@@ -3382,6 +3402,8 @@ function useDD214ResultState() {
     setError,
     offDeviceNotice,
     setOffDeviceNotice,
+    importSaved,
+    setImportSaved,
   };
 }
 

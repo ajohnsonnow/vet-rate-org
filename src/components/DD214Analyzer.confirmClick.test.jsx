@@ -115,6 +115,23 @@ async function dropScanAndOpenImportDialog() {
 
 const tick = (name) => screen.getByRole("checkbox", { name });
 
+describe("the results card says what actually happened", () => {
+  const NOTHING_SAVED = /Nothing from this analysis has been saved yet/;
+  const SAVED = /Saved\. The fields you ticked went to your profile/;
+
+  it("says nothing is saved until the import is confirmed, then says it was", async () => {
+    const importButton = await dropScanAndOpenImportDialog();
+    expect(screen.getByText(NOTHING_SAVED)).toBeTruthy();
+    expect(screen.queryByText(SAVED)).toBeNull();
+
+    fireEvent.click(importButton);
+    await waitFor(() => expect(window.alert).toHaveBeenCalled());
+
+    expect(await screen.findByText(SAVED)).toBeTruthy();
+    expect(screen.queryByText(NOTHING_SAVED)).toBeNull();
+  });
+});
+
 describe("clicking Import Selected Fields writes exactly what was ticked", () => {
   it("leaves unticked service fields, the name and the date of birth out of the profile", async () => {
     const importButton = await dropScanAndOpenImportDialog();
