@@ -344,7 +344,16 @@ function patternMatchDenial(text) {
   return null;
 }
 
+const CIRCUIT_OPEN_RE = /AI_CIRCUIT_OPEN/;
+
+// Several failed or timed-out tries in a row pause the AI for a short while;
+// the service's own wording is about cloud settings, which does not apply to
+// an on-device decode.
+export const CIRCUIT_PAUSED_MESSAGE =
+  "The on-device AI did not finish the last few tries, so it is paused for about half a minute. Your text is still here. Wait a moment and try again, or paste only the Decision and Reasons for Decision sections.";
+
 function getDecodeErrorMessage(err, timeoutMs) {
+  if (CIRCUIT_OPEN_RE.test(err.message || "")) return CIRCUIT_PAUSED_MESSAGE;
   if (/TIMEOUT|timed out/i.test(err.message || "")) {
     return (
       `⏱️ The AI request timed out after ${Math.round(timeoutMs / 1000)} seconds. This usually means:\n\n` +
@@ -456,6 +465,10 @@ function applyDecodeResponse(response, denialText, setResults, setError) {
   // Check for context overflow error - show helpful message
   if (response.isContextOverflow) {
     setError(response.error);
+    return;
+  }
+  if (CIRCUIT_OPEN_RE.test(response.error || "")) {
+    setError(CIRCUIT_PAUSED_MESSAGE);
     return;
   }
   setError(response.error || "Failed to decode decision. Please try again.");

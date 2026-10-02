@@ -1,8 +1,10 @@
 /**
  * D21-8 / D20-10: a fixed 90 s cut-off failed an on-device decode on an engine
  * that needs longer, with no sign of life while it ran. The budget now scales
- * to the pace measured from the previous decode, the veteran sees elapsed time
- * and a plain "still working" note, and a timed-out retry is given more room.
+ * to the pace measured from the previous decode (never below 180 s, so a fast
+ * image decode cannot shorten the allowance for a slower PDF), the veteran sees
+ * elapsed time and a plain "still working" note, and a timed-out retry is given
+ * more room.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, renderHook, act } from "@testing-library/react";
@@ -22,7 +24,7 @@ vi.mock("../utils/unifiedAIService", async (importOriginal) => {
 });
 
 const timing = await import("../utils/decodeTiming");
-const { useDecisionDecode, DecodeProgressNotice } =
+const { useDecisionDecode, DecodeProgressNotice, CIRCUIT_PAUSED_MESSAGE } =
   await import("./DecisionDecoder.jsx");
 
 const LETTER =
@@ -33,6 +35,15 @@ const GOOD = {
   success: true,
   data: { decision_type: "Full Denial", plain_english: "Denied." },
 };
+
+// Moves the faked clock forward inside the mock, so the measured duration is
+// exact rather than whatever real milliseconds an instant mock happens to take.
+function decodeTakes(ms) {
+  mockDecodeDecision.mockImplementation(async () => {
+    vi.setSystemTime(Date.now() + ms);
+    return GOOD;
+  });
+}
 
 beforeEach(() => {
   mockDecodeDecision.mockReset();
@@ -45,11 +56,13 @@ describe("getDecodeTimeoutMs", () => {
     expect(timing.getDecodeTimeoutMs()).toBe(180_000);
   });
 
-  it("scales to three times the last measured decode, between 90 s and 300 s", () => {
+  it("never drops below 180 s after a fast decode, and scales up to 300 s", () => {
     timing.recordDecodeDuration(2_000);
-    expect(timing.getDecodeTimeoutMs()).toBe(90_000);
+    expect(timing.getDecodeTimeoutMs()).toBe(180_000);
     timing.recordDecodeDuration(60_000);
     expect(timing.getDecodeTimeoutMs()).toBe(180_000);
+    timing.recordDecodeDuration(70_000);
+    expect(timing.getDecodeTimeoutMs()).toBe(210_000);
     timing.recordDecodeDuration(200_000);
     expect(timing.getDecodeTimeoutMs()).toBe(300_000);
   });
@@ -63,22 +76,29 @@ describe("getDecodeTimeoutMs", () => {
 });
 
 describe("useDecisionDecode: time budget follows the engine's pace", () => {
-  it("passes the budget to the decode call and shortens it after a fast decode", async () => {
-    mockDecodeDecision.mockResolvedValue(GOOD);
+  it("keeps the full budget after a fast decode and raises it after a slow one", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
     const { result } = renderHook(() => useDecisionDecode());
+    const decodeOnce = async (takesMs) => {
+      decodeTakes(takesMs);
+      await act(async () => {
+        await result.current.handleDecode(LETTER);
+      });
+    };
 
-    await act(async () => {
-      await result.current.handleDecode(LETTER);
-    });
+    await decodeOnce(2_000);
     expect(mockDecodeDecision).toHaveBeenLastCalledWith(LETTER, {
       timeout: 180_000,
     });
 
-    await act(async () => {
-      await result.current.handleDecode(LETTER);
-    });
+    await decodeOnce(100_000);
     expect(mockDecodeDecision).toHaveBeenLastCalledWith(LETTER, {
-      timeout: 90_000,
+      timeout: 180_000,
+    });
+
+    await decodeOnce(2_000);
+    expect(mockDecodeDecision).toHaveBeenLastCalledWith(LETTER, {
+      timeout: 300_000,
     });
   });
 
@@ -143,6 +163,30 @@ describe("useDecisionDecode: time budget follows the engine's pace", () => {
     });
     expect(result.current.isLoading).toBe(false);
     expect(result.current.elapsedMs).toBe(0);
+  });
+});
+
+describe("useDecisionDecode: paused AI", () => {
+  it("shows a plain paused message, not the circuit breaker text, however it surfaces", async () => {
+    const breaker =
+      "AI_CIRCUIT_OPEN: AI generation has failed 3 times in a row. Please check your AI settings (is your API key valid? are you online?) and try again in 30 seconds.";
+    const { result } = renderHook(() => useDecisionDecode());
+
+    mockDecodeDecision.mockResolvedValueOnce({
+      success: false,
+      error: breaker,
+    });
+    await act(async () => {
+      await result.current.handleDecode(LETTER);
+    });
+    expect(result.current.error).toBe(CIRCUIT_PAUSED_MESSAGE);
+
+    mockDecodeDecision.mockRejectedValueOnce(new Error(breaker));
+    await act(async () => {
+      await result.current.handleDecode(LETTER);
+    });
+    expect(result.current.error).toBe(CIRCUIT_PAUSED_MESSAGE);
+    expect(result.current.error).not.toMatch(/API key|AI_CIRCUIT_OPEN/);
   });
 });
 
