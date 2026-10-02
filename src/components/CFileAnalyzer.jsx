@@ -42,6 +42,8 @@ import CFileSemanticSearch from "./CFileSemanticSearch";
 import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
 import { getReadingNotices } from "../utils/readingNotices";
 
+// No import dialog here, so reading the file never writes the veteran's name or
+// date of birth to the profile or Knowledge Base (omitIdentifiers).
 export async function _extractTextForAnalysis(file, ctx, options) {
   const musterResult = await processFormationDocument(
     file,
@@ -55,7 +57,7 @@ export async function _extractTextForAnalysis(file, ctx, options) {
         if (progress.message) ctx.setProcessingStage(progress.message);
       }
     },
-    { ...options, returnIncompleteSave: true },
+    { ...options, returnIncompleteSave: true, omitIdentifiers: true },
   );
 
   // The read text is still good for the analysis, but the document did not
