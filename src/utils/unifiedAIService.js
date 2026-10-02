@@ -2200,6 +2200,19 @@ async function _loadRedactionProfile() {
   return { personal, claimNumbers, loadFailed };
 }
 
+// True once any identifier source (VKB personal block, flat profile, or the
+// last good copy this session) holds at least one identifier. False is the one
+// state in which a typed name reaches an off-device body unredacted (ADR-008
+// section 2.9), so the AI input warns the veteran.
+export async function hasLoadedIdentifierSource() {
+  if (_lastKnownGoodRedactionProfile) return true;
+  const loaded = await _loadRedactionProfile();
+  return (
+    collectKnownIdentifierValues(loaded.personal, loaded.claimNumbers).length >
+    0
+  );
+}
+
 async function _redactPiecesForSend(pieces) {
   const loaded = await _loadRedactionProfile();
   const hasIdentifiers =

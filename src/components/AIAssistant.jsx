@@ -23,6 +23,7 @@ import { getTotalToolCount } from "../data/toolkitData";
 import { getConditionCount as getDisabilityCount } from "../services/knowledgeQuery";
 import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
+import IdentifierSourceNotice from "./IdentifierSourceNotice";
 import { useRedditClipboard } from "../hooks/useRedditClipboard";
 import { autoSummarizeIfLong } from "../utils/redditSummarizer";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
@@ -950,6 +951,7 @@ function MessageComposer({
           )}
         </button>
       </div>
+      <IdentifierSourceNotice className={c.hintClass} />
       <p className={c.hintClass}>
         {t("aiAssistant", c.hintKey)}{" "}
         {isHelperMode && t("aiAssistant", "helperModeActive")}
