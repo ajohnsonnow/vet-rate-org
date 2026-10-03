@@ -2151,8 +2151,49 @@ const NON_CONDITION_WORDS = new Set([
   "form",
   "forms",
   "va",
+  "your",
+  "you",
+  "no",
+  "not",
+  "longer",
+  "have",
+  "has",
+  "been",
+  "be",
+  "are",
+  "were",
+  "this",
+  "veteran",
+  "benefits",
+  "benefit",
+  "other",
+  "symptom",
+  "symptoms",
+  "examination",
+  "record",
+  "records",
+  "rated",
+  "following",
+  "shown",
+  "continues",
+  "left",
+  "right",
+  "bilateral",
+  "chronic",
+  "acute",
+  "mild",
+  "moderate",
+  "severe",
+  "status",
+  "post",
+  "history",
+  "residuals",
 ]);
 const DANGLING_END_WORDS = new Set([
+  "degenerative",
+  "chronic",
+  "acute",
+  "recurrent",
   "of",
   "and",
   "or",
@@ -2199,16 +2240,96 @@ function _trimNameEdges(name) {
   return name.slice(start, end);
 }
 
+// Letter wording a cut-off name can end on ("tinnitus effective date",
+// "sprain, status post", "migraines is"), removed from the end only. Longer
+// phrases come before the shorter phrase they contain.
+const TRAILING_PHRASES = [
+  "effective date",
+  "effective",
+  "granted",
+  "denied",
+  "continued",
+  "confirmed",
+  "shown",
+  "continues",
+  "because",
+  "since",
+  "evaluated",
+  "rated",
+  "assigned",
+  "based on",
+  "based",
+  "claimed as",
+  "claimed",
+  "status post",
+  "currently",
+  "previously",
+  "formerly",
+  "is",
+  "was",
+  "are",
+  "were",
+  "has",
+  "have",
+  "been",
+  "be",
+].map((phrase) => phrase.split(" "));
+
+function _trailingPhraseLength(words) {
+  const lowered = words.map((w) => _trimNameEdges(w).toLowerCase());
+  const hit = TRAILING_PHRASES.find(
+    (parts) =>
+      words.length > parts.length &&
+      parts.every((p, i) => lowered[lowered.length - parts.length + i] === p),
+  );
+  return hit ? hit.length : 0;
+}
+
+function _stripTrailingClauses(name) {
+  let words = name.split(" ");
+  for (let n = _trailingPhraseLength(words); n > 0; ) {
+    words = words.slice(0, -n);
+    n = _trailingPhraseLength(words);
+  }
+  return _trimNameEdges(words.join(" "));
+}
+
+// A last annotation that is open or holds only letter wording
+// ("(claimed as", "(previously)").
+const EMPTY_ANNOTATIONS = new Set([
+  "",
+  "claimed",
+  "claimed as",
+  "previously",
+  "formerly",
+  "currently",
+  "evaluated",
+  "evaluated as",
+  "which",
+]);
+
+function _dropEmptyAnnotation(text) {
+  const open = text.lastIndexOf("(");
+  if (open === -1) return text;
+  let inner = text.slice(open + 1).trim();
+  if (inner.endsWith(")")) inner = inner.slice(0, -1).trim();
+  return EMPTY_ANNOTATIONS.has(inner.toLowerCase())
+    ? text.slice(0, open)
+    : text;
+}
+
 function _stripNameNoise(name) {
-  const flat = name
-    .replace(/\s+/g, " ")
-    .replace(/\((?:formerly|previously|currently|which)[^)]{0,80}\)/gi, "");
+  const flat = _dropEmptyAnnotation(
+    name
+      .replace(/\s+/g, " ")
+      .replace(/\((?:formerly|previously|currently|which)[^)]{0,80}\)/gi, ""),
+  );
   const cuts = [
     flat.search(NAME_PERCENT_RE),
     flat.search(NAME_CLAUSE_START_RE),
   ];
   const cutAt = Math.min(...cuts.filter((i) => i !== -1), flat.length);
-  return _trimNameEdges(flat.slice(0, cutAt));
+  return _stripTrailingClauses(_trimNameEdges(flat.slice(0, cutAt)));
 }
 
 function _balanceParens(name) {
@@ -2240,11 +2361,22 @@ function _endsMidWord(name) {
   return false;
 }
 
+// Names that stop one word short of the condition they begin.
+const CUT_BEFORE_HEAD_TAILS = [
+  "post-traumatic stress",
+  "posttraumatic stress",
+  "sleep",
+];
+
 function _isTruncatedName(name) {
   if (name.length > MAX_CONDITION_NAME_CHARS) return true;
   const lower = name.toLowerCase();
   const words = lower.split(/\s+/);
-  return DANGLING_END_WORDS.has(words[words.length - 1]) || _endsMidWord(name);
+  return (
+    DANGLING_END_WORDS.has(words[words.length - 1]) ||
+    CUT_BEFORE_HEAD_TAILS.some((t) => lower === t || lower.endsWith(` ${t}`)) ||
+    _endsMidWord(name)
+  );
 }
 
 const MONTH = String.raw`(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?`;
@@ -2316,10 +2448,37 @@ function _dropAdjacentRepeats(tokens) {
   return out;
 }
 
+const nameKey = (text) => text.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+
+// A name that is one phrase twice: "Tinnitus and Tinnitus", "Lumbar strain /
+// lumbar strain", or run together at the join ("hearing losshearing loss").
+function _collapseWholeNameRepeat(name) {
+  const [first, second] = name.split(/[,;&/]|\band\b|\bor\b/i, 2);
+  if (second && nameKey(first) && nameKey(first) === nameKey(second)) {
+    return first.trim();
+  }
+  const compact = nameKey(name);
+  const half = compact.length / 2;
+  const isDoubled =
+    Number.isInteger(half) &&
+    half >= 4 &&
+    compact.slice(0, half) === compact.slice(half) &&
+    !_catalogueWords().has(compact);
+  if (!isDoubled) return name;
+  let seen = 0;
+  for (let i = 0; i < name.length; i++) {
+    if (/[A-Za-z0-9]/.test(name[i])) seen++;
+    if (seen === half) return _trimNameEdges(name.slice(0, i + 1));
+  }
+  return name;
+}
+
 // Run-together duplicates: "Tinnitus Tinnitus" or "tinnitustinnitus". A real
 // catalogue word that happens to double ("beriberi") is left alone.
 function _collapseRepeats(name) {
-  const tokens = _dropAdjacentRepeats(name.split(" "));
+  const tokens = _dropAdjacentRepeats(
+    _collapseWholeNameRepeat(name).split(" "),
+  );
   return _trimNameEdges(
     tokens
       .map((t) => {
