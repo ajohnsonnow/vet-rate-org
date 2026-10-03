@@ -25,6 +25,20 @@ import {
   getServiceEntryForDocument,
 } from "../utils/veteranProfile";
 import { parseExplicitDate } from "../utils/dateUtils";
+import { slimCompletedResult } from "../utils/formationQueue";
+import { isFileStillReadable } from "../utils/fileReadFailure";
+import { describeReadFailure } from "../utils/readFailureMessage";
+import {
+  clearImportMarker,
+  recordDocumentSaved,
+  startImportMarker,
+} from "../utils/importProgressMarker";
+
+// A read that fails is tried once more on its own before the veteran is
+// asked; after that a Retry is offered a bounded number of times.
+const AUTOMATIC_READ_RETRIES = 1;
+const MAX_MANUAL_READ_RETRIES = 3;
+const READ_RETRY_DELAY_MS = 1000;
 
 function entryLabel(entry, ctx) {
   const queue = ctx.getFormation ? ctx.getFormation() : ctx.formation;
@@ -108,6 +122,7 @@ async function runDocumentProcessing(entry, ctx) {
   if (!entry) {
     // eslint-disable-next-line no-console
     console.log("✅ Formation complete!");
+    clearImportMarker();
     setProcessingState(PROCESSING_STATES.COMPLETE);
     setActiveEntry(null);
     setCurrentProgress(null);
@@ -171,16 +186,64 @@ async function runDocumentProcessing(entry, ctx) {
         failure.persistIncomplete = true;
         failure.quotaExceeded = result.persistQuotaExceeded === true;
       }
+      failure.readFailed = result.readFailed === true;
       throw failure;
     }
   } catch (err) {
-    handleDocumentFailure(err, entry, ctx);
+    await handleDocumentFailure(err, entry, ctx);
   }
 }
 
-// The message of a save that did not finish names the document for the
-// veteran, so only a fixed phrase is written to the console.
-function handleDocumentFailure(err, entry, ctx) {
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The file stays referenced (never its bytes), so a read that failed can be
+// done again from the original. Once one automatic retry has been spent the
+// veteran is asked, with a bounded Retry while the file can still be read and
+// a plain "add it again" once it cannot.
+async function handleReadFailure(entry, ctx) {
+  // eslint-disable-next-line no-console
+  console.warn(`📂 Could not read ${entryLabel(entry, ctx)}`);
+  const attempts = ctx.readAttempts.get(entry.id) ?? { auto: 0, manual: 0 };
+  const readable = await isFileStillReadable(entry.file);
+
+  if (readable && attempts.auto < AUTOMATIC_READ_RETRIES) {
+    ctx.readAttempts.set(entry.id, { ...attempts, auto: attempts.auto + 1 });
+    await pause(READ_RETRY_DELAY_MS);
+    return runDocumentProcessing(entry, ctx);
+  }
+
+  const canRetry = readable && attempts.manual < MAX_MANUAL_READ_RETRIES;
+  if (canRetry) ctx.readRetryable.add(entry.id);
+  const message = describeReadFailure(entryLabel(entry, ctx), {
+    canRetry,
+    fileGone: !readable,
+  });
+  return finishFailedDocument(
+    ctx.errorEntryAndNext(entry.id, message, {
+      retryable: canRetry,
+      readFailure: true,
+    }),
+    ctx,
+  );
+}
+
+function finishFailedDocument(nextEntry, ctx) {
+  ctx.setCurrentProgress(null);
+  ctx.setActiveEntry(null);
+  scheduleNextDocument(
+    nextEntry,
+    ctx.formation,
+    (e) => e.status === "WAITING",
+    1000,
+    ctx,
+  );
+}
+
+// The message of a save that did not finish, or of a read that failed, names
+// the document for the veteran, so only a fixed phrase is written to the
+// console.
+async function handleDocumentFailure(err, entry, ctx) {
+  if (err.readFailed) return handleReadFailure(entry, ctx);
   console.error(
     "❌ Document processing error:",
     err.persistIncomplete ? "saving did not finish" : err.message,
@@ -191,17 +254,7 @@ function handleDocumentFailure(err, entry, ctx) {
         quotaExceeded: err.quotaExceeded === true,
       })
     : ctx.errorEntryAndNext(entry.id, err.message);
-  ctx.setCurrentProgress(null);
-  ctx.setActiveEntry(null);
-
-  // Move to next document after error
-  scheduleNextDocument(
-    nextEntry,
-    ctx.formation,
-    (e) => e.status === "WAITING",
-    1000,
-    ctx,
-  );
+  finishFailedDocument(nextEntry, ctx);
 }
 
 const NO_PERIOD_FOR_DOCUMENT_WARNING =
@@ -316,10 +369,16 @@ async function runVerifyAndSave(verifyPayload, ctx) {
       toast.warning(NO_PERIOD_FOR_DOCUMENT_WARNING);
     }
 
-    const nextEntry = completeCurrentAndNext({
-      ...extractionResult,
-      verifiedData: verifyPayload,
-    });
+    // The queue keeps only what the completion summary shows: the document's
+    // text is already saved and would otherwise stay in memory, once per
+    // document, until the page closes.
+    const nextEntry = completeCurrentAndNext(
+      slimCompletedResult({
+        ...extractionResult,
+        verifiedData: verifyPayload,
+      }),
+    );
+    recordDocumentSaved();
 
     toast.success(
       `Document "${extractionResult.filename}" saved to Knowledge Base`,
@@ -356,11 +415,38 @@ async function runVerifyAndSave(verifyPayload, ctx) {
 }
 
 /**
+ * Read a document again from the original file after a read failure. Bounded
+ * by the attempt count handleReadFailure keeps; the file is checked first so a
+ * file that is gone says so instead of failing a second time.
+ */
+async function runRetryRead(entryId, ctx) {
+  const entry = ctx.getFormation().find((e) => e.id === entryId);
+  ctx.readRetryable.delete(entryId);
+  if (!entry?.file) return;
+
+  const attempts = ctx.readAttempts.get(entryId) ?? { auto: 0, manual: 0 };
+  ctx.readAttempts.set(entryId, { ...attempts, manual: attempts.manual + 1 });
+  if (!(await isFileStillReadable(entry.file))) {
+    const message = describeReadFailure(entryLabel(entry, ctx), {
+      canRetry: false,
+      fileGone: true,
+    });
+    ctx.updateEntry(entryId, { error: message, retryable: false });
+    ctx.toast.error(message);
+    return;
+  }
+  ctx.updateEntry(entryId, { error: null, retryable: false });
+  await runDocumentProcessing(entry, ctx);
+}
+
+/**
  * Retry saving a document whose first save did not finish. Resolves once the
  * attempt has ended; on success the document goes to the same review screen a
- * freshly read one reaches, on failure the entry keeps its Retry.
+ * freshly read one reaches, on failure the entry keeps its Retry. A document
+ * that could not be read is read again instead.
  */
 async function runRetryPersist(entryId, ctx) {
+  if (ctx.readRetryable.has(entryId)) return runRetryRead(entryId, ctx);
   const {
     updateEntry,
     toast,
@@ -433,6 +519,13 @@ function runStartSequentialProcessing(ctx) {
   console.log("🚩 First entry:", firstEntry?.id);
 
   if (firstEntry) {
+    startImportMarker(
+      ctx
+        .getFormation()
+        .map((entry, index) =>
+          neutralDocumentLabel(entry.estimatedType, index),
+        ),
+    );
     // Process the first document directly instead of relying on currentEntry
     runDocumentProcessing(firstEntry, ctx);
   }
@@ -469,9 +562,16 @@ export const useSequentialFormationFlow = ({
   // Held in memory only: a document's text must never reach the persisted
   // formation ledger, so a page reload ends the chance to retry from here.
   const retainedResults = useRef(new Map()).current;
+  // Read failures keep the original File reference (never its bytes) in the
+  // queue entry; these track how often each was tried and which still offer a
+  // Retry.
+  const readAttempts = useRef(new Map()).current;
+  const readRetryable = useRef(new Set()).current;
 
   const ctx = {
     retainedResults,
+    readAttempts,
+    readRetryable,
     formation,
     stats,
     activeEntry,
@@ -497,7 +597,8 @@ export const useSequentialFormationFlow = ({
   const handleSkipDocument = () => runSkipDocument(ctx);
   const startSequentialProcessing = () => runStartSequentialProcessing(ctx);
   const retryDocumentSave = (entryId) => runRetryPersist(entryId, ctx);
-  const canRetryDocumentSave = (entryId) => retainedResults.has(entryId);
+  const canRetryDocumentSave = (entryId) =>
+    retainedResults.has(entryId) || readRetryable.has(entryId);
 
   return {
     retryDocumentSave,
