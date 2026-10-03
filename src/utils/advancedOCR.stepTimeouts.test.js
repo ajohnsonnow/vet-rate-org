@@ -67,6 +67,7 @@ function paintScanned(canvas) {
 }
 
 const scannedPage = () => ({
+  cleanup: () => true,
   getViewport: ({ scale }) => ({
     width: BASE_W * scale,
     height: BASE_H * scale,
@@ -86,6 +87,7 @@ vi.mock("pdfjs-dist", () => ({
   GlobalWorkerOptions: {},
   version: "0.0.0",
   getDocument: () => ({
+    destroy: async () => {},
     promise: Promise.resolve({
       numPages: 1,
       getPage: async () => scannedPage(),

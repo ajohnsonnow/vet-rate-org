@@ -42,6 +42,11 @@ export const ADVANCED_OCR_CONFIG = {
   // Processing limits
   MAX_OCR_PAGES: 20, // Process more pages for important docs
   MAX_PARALLEL_PAGES: 3, // Process multiple pages simultaneously
+  // Rendering and preprocessing a page holds several full-size pixel buffers
+  // (about 600 MB for one page at the 8x retry scale). Recognition runs on the
+  // worker pool, but that preparation shares one thread anyway, so only this
+  // many pages are prepared at once while the rest wait for recognition.
+  MAX_CONCURRENT_PAGE_PREP: 2,
 
   // Quality settings - INCREASED for degraded documents
   CANVAS_SCALES: [2.5, 3.5, 4.5], // Higher resolution for better OCR
@@ -272,17 +277,20 @@ export async function advancedPDFAnalysis(
   if (options.readAllPages) config.MAX_OCR_PAGES = Infinity;
   enforceOCRSizeLimits(file, config);
 
+  let loadingTask = null;
   try {
     onProgress({
       stage: "loading",
       progress: 0,
       message: "Loading document...",
     });
-    const arrayBuffer = await readFileAsArrayBuffer(file);
-    const pdf = await pdfjsLib.getDocument({
-      data: arrayBuffer,
+    // The buffer is handed to pdf.js's worker (transferred, not copied), so
+    // this thread holds no second copy of the file while pages are read.
+    loadingTask = pdfjsLib.getDocument({
+      data: await readFileAsArrayBuffer(file),
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
-    }).promise;
+    });
+    const pdf = await loadingTask.promise;
 
     const numPages = pdf.numPages;
     onProgress({
@@ -326,6 +334,18 @@ export async function advancedPDFAnalysis(
   } catch (error) {
     console.error("❌ Advanced OCR failed:", error);
     throw error;
+  } finally {
+    await releaseLoadingTask(loadingTask);
+  }
+}
+
+// Closing the document frees its worker and the file bytes it holds; a
+// release that fails must never replace the result already read.
+async function releaseLoadingTask(loadingTask) {
+  try {
+    await loadingTask?.destroy();
+  } catch (error) {
+    console.warn(`[advancedOCR] document release failed: ${error.message}`);
   }
 }
 
@@ -376,7 +396,6 @@ async function readTextContentBounded(page, config) {
  */
 async function extractStandardText(pdf, numPages, config, onProgress) {
   const startTime = Date.now();
-  let fullText = "";
   let letterheadText = "";
   const pageTexts = new Map();
   const pagesNeedingOCR = [];
@@ -384,8 +403,8 @@ async function extractStandardText(pdf, numPages, config, onProgress) {
   for (let i = 1; i <= numPages; i++) {
     const page = await pdf.getPage(i);
     const textContent = await readTextContentBounded(page, config);
+    page.cleanup();
     const pageText = textContent.items.map((item) => item.str).join(" ");
-    fullText += `--- PAGE ${i} ---\n${pageText}\n\n`;
     pageTexts.set(i, pageText);
     // Every parser expects the space-joined page, so the line breaks a VA
     // letter's standalone letterhead date depends on are kept separately.
@@ -405,18 +424,22 @@ async function extractStandardText(pdf, numPages, config, onProgress) {
     if (i % TEXT_LAYER_YIELD_INTERVAL === 0) await yieldToEventLoop();
   }
 
-  return {
-    text: fullText,
-    letterheadText,
-    pageTexts,
-    pagesNeedingOCR,
-    startTime,
-  };
+  return { letterheadText, pageTexts, pagesNeedingOCR, startTime };
+}
+
+// The per-page texts are the only copy kept while the pages are read; the
+// whole-document text is joined from them once, when a result is built.
+function joinPageTexts(pageTexts) {
+  let fullText = "";
+  for (const [pageNum, pageText] of pageTexts) {
+    fullText += `--- PAGE ${pageNum} ---\n${pageText}\n\n`;
+  }
+  return fullText;
 }
 
 function buildFullTextResult(standardText, numPages) {
   return {
-    text: standardText.text,
+    text: joinPageTexts(standardText.pageTexts),
     letterheadText: standardText.letterheadText,
     pageCount: numPages,
     pagesRead: numPages,
@@ -572,7 +595,9 @@ async function partitionBlankPages(
       message: `Checking page ${i + 1} of ${pageNumbers.length} for content...`,
     });
     const page = await pdf.getPage(pageNum);
-    if (await isPageBlank(page, config)) blankPages.push(pageNum);
+    const blank = await isPageBlank(page, config);
+    page.cleanup();
+    if (blank) blankPages.push(pageNum);
     else contentPages.push(pageNum);
   }
   return { contentPages, blankPages };
@@ -715,8 +740,9 @@ function mergePageCoverageResult({
  */
 async function measureStrategyMetrics(pdf, pageNum, config) {
   let canvas = null;
+  let page = null;
   try {
-    const page = await withTimeout(
+    page = await withTimeout(
       pdf.getPage(pageNum),
       config.OCR_PAGE_TIMEOUT_MS,
       "Strategy page load",
@@ -738,6 +764,7 @@ async function measureStrategyMetrics(pdf, pageNum, config) {
     );
   } finally {
     releaseCanvas(canvas);
+    page?.cleanup();
   }
 }
 
@@ -921,14 +948,35 @@ async function terminateScheduler(scheduler, config) {
   }
 }
 
+// Runs tasks with at most `limit` in flight; a finishing task hands its slot
+// straight to the next waiter so the limit is never exceeded in between.
+function createConcurrencyGate(limit) {
+  let active = 0;
+  const waiters = [];
+  const release = () => {
+    const next = waiters.shift();
+    if (next) next();
+    else active--;
+  };
+  return async (task) => {
+    if (active < limit) active++;
+    else await new Promise((resolve) => waiters.push(resolve));
+    try {
+      return await task();
+    } finally {
+      release();
+    }
+  };
+}
+
 /**
  * Build the page recognizer closure bound to a scheduler.
  */
 function createPageRecognizer(scheduler, config) {
-  return async (page, scale, preprocessStrategy) => {
+  const prepare = createConcurrencyGate(config.MAX_CONCURRENT_PAGE_PREP);
+  const renderAndEncode = async (page, scale, preprocessStrategy) => {
     let canvas = null;
     let processedCanvas = null;
-    let imageData;
     try {
       canvas = await renderPageToCanvas(
         page,
@@ -940,11 +988,16 @@ function createPageRecognizer(scheduler, config) {
         config.PREPROCESS_TIMEOUT_MS,
         "Page preprocessing",
       );
-      imageData = processedCanvas.toDataURL("image/png");
+      return processedCanvas.toDataURL("image/png");
     } finally {
       releaseCanvas(canvas);
       releaseCanvas(processedCanvas);
     }
+  };
+  return async (page, scale, preprocessStrategy) => {
+    const imageData = await prepare(() =>
+      renderAndEncode(page, scale, preprocessStrategy),
+    );
     const result = await withTimeout(
       scheduler.addJob("recognize", imageData),
       config.OCR_PAGE_TIMEOUT_MS,
@@ -1138,8 +1191,9 @@ function createPageProcessor({
   };
 
   return async (pageNum) => {
+    let page = null;
     try {
-      const page = await pdf.getPage(pageNum);
+      page = await pdf.getPage(pageNum);
 
       // Defensive re-check: the caller's page list is normally already
       // filtered to image-only pages, but a caller-supplied
@@ -1172,6 +1226,8 @@ function createPageProcessor({
       console.warn(`[advancedOCR] page could not be read: ${error.message}`);
       report((n) => `Page ${n}/${pagesToProcess} could not be read...`);
       return { pageNum, failed: true };
+    } finally {
+      page?.cleanup();
     }
   };
 }

@@ -240,6 +240,7 @@ async function extractPageAndTrack(pdf, pageNum, pageState) {
   try {
     const page = await pdf.getPage(pageNum);
     const textContent = await page.getTextContent();
+    page.cleanup();
     const pageText = textContent.items
       .map((item) => item.str)
       .join(" ")
@@ -303,6 +304,7 @@ async function processBatch({
   // Write batch to IDB, then let it be garbage-collected
   const batchIndex = Math.floor((startPage - 1) / batchSize);
   await writeBatchToDB(db, sessionKey, batchIndex, batchText, batchStats);
+  pdf.cleanup();
 
   if (onBatch) {
     onBatch({
@@ -352,9 +354,10 @@ export async function processLargePDF(file, options = {}) {
 
   const db = await openCFileDB();
   const objectUrl = URL.createObjectURL(file);
+  let loadingTask = null;
 
   try {
-    const loadingTask = pdfjsLib.getDocument({
+    loadingTask = pdfjsLib.getDocument({
       url: objectUrl,
       rangeChunkSize: 65536, // 64 KB per HTTP range chunk - enables streaming
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
@@ -415,8 +418,20 @@ export async function processLargePDF(file, options = {}) {
     if (pwError) throw pwError;
     throw error;
   } finally {
+    await releaseLoadingTask(loadingTask);
     URL.revokeObjectURL(objectUrl);
     db.close();
+  }
+}
+
+// Destroying the loading task frees pdf.js's worker and the file bytes it
+// pulled in; left open, every large document stays resident until the tab
+// closes. A release that fails must not replace the result already read.
+async function releaseLoadingTask(loadingTask) {
+  try {
+    await loadingTask?.destroy();
+  } catch (error) {
+    console.warn(`PDF release failed: ${error.message}`);
   }
 }
 

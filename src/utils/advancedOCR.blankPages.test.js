@@ -88,6 +88,7 @@ function paintScanned(canvas, pageNum) {
 function makePage(n) {
   const spec = fake.pages[n - 1];
   return {
+    cleanup: () => true,
     getViewport: ({ scale }) => ({
       width: BASE_W * scale,
       height: BASE_H * scale,
@@ -114,6 +115,7 @@ vi.mock("pdfjs-dist", () => ({
   GlobalWorkerOptions: {},
   version: "0.0.0",
   getDocument: () => ({
+    destroy: async () => {},
     promise: Promise.resolve({
       numPages: fake.pages.length,
       getPage: async (n) => makePage(n),
