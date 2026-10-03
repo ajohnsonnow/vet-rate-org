@@ -15,6 +15,7 @@
 import mammoth from "mammoth";
 import { analyzePDF, OCR_STATES } from "./ocr";
 import { describePdfPasswordError } from "./fileTypeGuards";
+import { FileReadError, forLog, isFileReadFailure } from "./fileReadFailure";
 
 // Re-export for convenience
 export { OCR_STATES };
@@ -194,6 +195,7 @@ async function analyzeDOCXDocument(file, onProgress) {
       warnings: result.messages || [],
     };
   } catch (error) {
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to read Word document: ${error.message}`);
   }
 }
@@ -225,6 +227,7 @@ async function analyzeTXTDocument(file, onProgress) {
       ocrUsed: false,
     };
   } catch (error) {
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to read text file: ${error.message}`);
   }
 }
@@ -274,6 +277,7 @@ async function analyzeRTFDocument(file, onProgress) {
       ocrUsed: false,
     };
   } catch (error) {
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to read RTF file: ${error.message}`);
   }
 }
@@ -419,6 +423,7 @@ async function _renderPdfPagesToImages({
     // Clean up
     canvas.width = 0;
     canvas.height = 0;
+    page.cleanup();
   }
 
   return images;
@@ -458,15 +463,14 @@ export async function renderPDFToImages(
     message: "Loading PDF for vision analysis...",
   });
 
+  let loadingTask = null;
   try {
-    // Read file into ArrayBuffer
-    const arrayBuffer = await readFileAsArrayBuffer(file);
-
-    // Load PDF document
-    const pdf = await pdfjsLib.getDocument({
-      data: arrayBuffer,
+    // Load PDF document (the buffer is transferred to pdf.js's worker)
+    loadingTask = pdfjsLib.getDocument({
+      data: await readFileAsArrayBuffer(file),
       standardFontDataUrl: STANDARD_FONT_DATA_URL,
-    }).promise;
+    });
+    const pdf = await loadingTask.promise;
     const numPages = pdf.numPages;
     const pagesToRender = Math.min(numPages, maxPages);
 
@@ -504,9 +508,16 @@ export async function renderPDFToImages(
       renderedPages: pagesToRender,
     };
   } catch (error) {
-    console.error("Error rendering PDF to images:", error);
+    console.error("Error rendering PDF to images:", forLog(error));
     const pwError = describePdfPasswordError(error);
     if (pwError) throw pwError;
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw new Error(`Failed to render PDF: ${error.message}`);
+  } finally {
+    try {
+      await loadingTask?.destroy();
+    } catch (releaseError) {
+      console.warn(`PDF release failed: ${releaseError.message}`);
+    }
   }
 }

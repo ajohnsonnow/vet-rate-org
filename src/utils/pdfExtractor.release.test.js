@@ -12,7 +12,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const fake = vi.hoisted(() => ({
   numPages: 0,
-  loadFails: false,
+  loadError: null,
+  failTextAt: null,
+  pageError: null,
   destroyed: 0,
   documentCleanups: 0,
   opened: new Set(),
@@ -29,8 +31,8 @@ vi.mock("pdfjs-dist", () => ({
     destroy: async () => {
       fake.destroyed++;
     },
-    promise: fake.loadFails
-      ? Promise.reject(new Error("load failed"))
+    promise: fake.loadError
+      ? Promise.reject(fake.loadError)
       : Promise.resolve({
           numPages: fake.numPages,
           cleanup: () => {
@@ -43,9 +45,10 @@ vi.mock("pdfjs-dist", () => ({
                 fake.cleaned.add(n);
                 return true;
               },
-              getTextContent: async () => ({
-                items: [{ str: pageText(n) }],
-              }),
+              getTextContent: async () => {
+                if (n === fake.failTextAt) throw fake.pageError;
+                return { items: [{ str: pageText(n) }] };
+              },
             };
           },
         }),
@@ -97,7 +100,9 @@ const file = () => new File([new Uint8Array(8)], "fixture.pdf");
 beforeEach(() => {
   Object.assign(fake, {
     numPages: 45,
-    loadFails: false,
+    loadError: null,
+    failTextAt: null,
+    pageError: null,
     destroyed: 0,
     documentCleanups: 0,
     opened: new Set(),
@@ -141,9 +146,58 @@ describe("processLargePDF: memory is released", () => {
   });
 
   it("destroys the loading task when the document cannot be opened", async () => {
-    fake.loadFails = true;
+    fake.loadError = new Error("load failed");
     await expect(processLargePDF(file())).rejects.toThrow("load failed");
     expect(fake.destroyed).toBe(1);
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:fake");
+  });
+});
+
+const RAW_READ_ERROR = Object.assign(
+  new Error(
+    'Unexpected server response (0) while retrieving PDF "blob:http://127.0.0.1:5381/0b1c-generic"',
+  ),
+  { name: "UnexpectedResponseException" },
+);
+
+describe("processLargePDF: a file that cannot be read", () => {
+  let warnSpy;
+  beforeEach(() => {
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  const logged = () => warnSpy.mock.calls.flat().map(String).join(" ");
+
+  it("fails as a plain read failure when the file cannot be opened", async () => {
+    fake.loadError = RAW_READ_ERROR;
+
+    const failure = await processLargePDF(file()).catch((error) => error);
+
+    expect(failure.name).toBe("FileReadError");
+    expect(failure.message).toBe("This file could not be read.");
+    expect(fake.destroyed).toBe(1);
+  });
+
+  it("fails the document, rather than saving empty pages, when the file stops being readable part way", async () => {
+    fake.failTextAt = 30;
+    fake.pageError = RAW_READ_ERROR;
+
+    const failure = await processLargePDF(file(), { batchSize: 20 }).catch(
+      (error) => error,
+    );
+
+    expect(failure.name).toBe("FileReadError");
+    expect(logged()).not.toMatch(/blob:|Unexpected server response/);
+    expect(fake.destroyed).toBe(1);
+  });
+
+  it("still tolerates one unreadable page that is not a file read failure", async () => {
+    fake.failTextAt = 3;
+    fake.pageError = new Error("bad page stream");
+
+    const result = await processLargePDF(file(), { batchSize: 20 });
+
+    expect(result.pageCount).toBe(45);
+    expect(result.text).toContain("--- PAGE 3 ---\n[extraction error]");
   });
 });

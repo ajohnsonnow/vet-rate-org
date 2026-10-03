@@ -85,6 +85,11 @@ import {
   StepTimeoutError,
 } from "./boundedStep";
 import { describePersistIncomplete } from "./persistIncompleteMessage";
+import {
+  FILE_READ_FAILED_MESSAGE,
+  FILE_READ_LOG_PHRASE,
+  isFileReadFailure,
+} from "./fileReadFailure";
 import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
 import {
   dropSupersededConditions,
@@ -2078,14 +2083,27 @@ const largePdfCoverage = (largeResult, { readAllRequested = false } = {}) => {
   };
 };
 
+const _failureMessage = (result, error, { persistIncomplete, readFailed }) => {
+  if (persistIncomplete) {
+    return describePersistIncomplete(result.filename, "Retry", error);
+  }
+  return readFailed ? FILE_READ_FAILED_MESSAGE : error.message;
+};
+
 const _markDocumentFailed = (result, error, onProgress) => {
-  console.error(`Error processing this document:`, error.message);
+  const readFailed = isFileReadFailure(error);
+  console.error(
+    `Error processing this document:`,
+    readFailed ? FILE_READ_LOG_PHRASE : error.message,
+  );
   const persistIncomplete = error instanceof DocumentPersistIncompleteError;
-  const message = persistIncomplete
-    ? describePersistIncomplete(result.filename, "Retry", error)
-    : error.message;
+  const message = _failureMessage(result, error, {
+    persistIncomplete,
+    readFailed,
+  });
   result.status = "error";
   result.error = message;
+  result.readFailed = readFailed;
   result.persistIncomplete = persistIncomplete;
   result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;
   onProgress?.({

@@ -24,6 +24,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import Tesseract from "tesseract.js";
 import { getCachedDeviceProfile } from "./deviceCapabilityDetector";
+import { FileReadError, forLog } from "./fileReadFailure";
 
 // Configure pdf.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -332,7 +333,7 @@ export async function advancedPDFAnalysis(
     onProgress({ stage: "complete", progress: 100, message: "OCR complete" });
     return result;
   } catch (error) {
-    console.error("❌ Advanced OCR failed:", error);
+    console.error("❌ Advanced OCR failed:", forLog(error));
     throw error;
   } finally {
     await releaseLoadingTask(loadingTask);
@@ -1961,7 +1962,7 @@ function readFileAsArrayBuffer(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.onerror = () => reject(new FileReadError());
     reader.readAsArrayBuffer(file);
   });
 }

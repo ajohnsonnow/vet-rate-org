@@ -10,6 +10,7 @@
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { describePdfPasswordError } from "./fileTypeGuards";
+import { FileReadError, isFileReadFailure } from "./fileReadFailure";
 
 /**
  * Wire pdf.js's onPassword callback to a prompt+retry. The VA ships encrypted
@@ -255,6 +256,9 @@ async function extractPageAndTrack(pdf, pageNum, pageState) {
       stat: { pageNum, chars },
     };
   } catch (pageErr) {
+    // A file that stops being readable part way is a failed document, not a
+    // run of empty pages that would be saved as if they had been read.
+    if (isFileReadFailure(pageErr)) throw new FileReadError();
     console.warn(`processLargePDF: page ${pageNum} error:`, pageErr.message);
     pageState.pagesEmpty++;
     return {
@@ -416,6 +420,7 @@ export async function processLargePDF(file, options = {}) {
   } catch (error) {
     const pwError = describePdfPasswordError(error);
     if (pwError) throw pwError;
+    if (isFileReadFailure(error)) throw new FileReadError();
     throw error;
   } finally {
     await releaseLoadingTask(loadingTask);

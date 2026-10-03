@@ -8,6 +8,7 @@
 
 import { createWorker } from "tesseract.js";
 import advancedPDFAnalysis from "./advancedOCR";
+import { forLog } from "./fileReadFailure";
 export {
   ADVANCED_OCR_CONFIG as OCR_CONFIG,
   PREPROCESS_STRATEGIES,
@@ -127,7 +128,7 @@ export async function analyzePDF(file, onProgress = () => {}, options = {}) {
     );
     return result;
   } catch (error) {
-    console.error("❌ PDF analysis failed:", error);
+    console.error("❌ PDF analysis failed:", forLog(error));
     onProgress({
       state: OCR_STATES.ERROR,
       progress: 0,
