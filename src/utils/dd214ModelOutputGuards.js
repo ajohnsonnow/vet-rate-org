@@ -23,7 +23,10 @@ import {
   dateKeys,
   isPlausibleDateKey,
 } from "./dd214EnumeratedFields";
-import { removePersonAndPlaceShapes } from "./dd214ModelTextScrub";
+import {
+  normaliseModelText,
+  removePersonAndPlaceShapes,
+} from "./dd214ModelTextScrub";
 
 export const FREE_TEXT_FIELDS = [
   "extractionNotes",
@@ -31,6 +34,10 @@ export const FREE_TEXT_FIELDS = [
   "memberRequests",
   "foreignServiceDetails",
 ];
+
+// Model-written lists and objects the import dialog shows as one text row each
+// (never pre-ticked); they are stored only when the veteran ticks that row.
+export const MODEL_LIST_FIELDS = ["awards", "combatService"];
 
 // Fields whose text a model writes in its own words (or copies as a unit
 // line), so a name the app has never seen can sit in them. They are never
@@ -218,12 +225,42 @@ function knownValuesFrom(sources) {
   });
 }
 
+const MONTH_NAMES = "JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC";
+const WRITTEN_DATE = new RegExp(
+  [
+    String.raw`(?:${MONTH_NAMES})[A-Z]*\.?[ \t]+\d{1,2},?[ \t]+\d{2,4}`,
+    String.raw`\d{1,2}[ \t-]?(?:${MONTH_NAMES})[A-Z]*\.?,?[ \t-]?\d{2,4}`,
+    String.raw`\d{4}[-/. ]?\d{2}[-/. ]?\d{2}`,
+    String.raw`\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}`,
+  ]
+    .map((shape) => String.raw`(?<![\p{L}\d])(?:${shape})(?![\p{L}\d])`)
+    .join("|"),
+  "giu",
+);
+
+// A known birth date written out in any common format, however the model
+// worded the text around it.
+const redactBirthDates = (text, birthDates) =>
+  birthDates.size === 0
+    ? text
+    : text.replace(WRITTEN_DATE, (match) =>
+        dateKeys(match).some((key) => birthDates.has(key))
+          ? "[REDACTED]"
+          : match,
+      );
+
 const makeScrubber = (sources) => {
   const known = knownValuesFrom(sources);
-  const base = (text) => scrubText(redactKnownValues(text, known));
+  const birthDates = birthDateKeysFrom(sources);
+  const base = (raw) => {
+    const text = normaliseModelText(raw);
+    return scrubText(
+      redactKnownValues(redactBirthDates(text, birthDates), known),
+    );
+  };
   return {
     known,
-    birthDates: birthDateKeysFrom(sources),
+    birthDates,
     scrub: (text) => removePersonAndPlaceShapes(base(text)),
     scrubShort: (text) =>
       removePersonAndPlaceShapes(base(text), { bare: "short" }),
@@ -275,6 +312,7 @@ const SERVICE_TIME_KEYS = new Set([
 ]);
 const TEXT_OR_LIST_KEYS = new Set([
   ...FREE_TEXT_FIELDS,
+  "mosTitle",
   "militaryEducation",
   "specialQualifications",
 ]);
@@ -359,7 +397,7 @@ function cleanStringList(value, scrub) {
 }
 
 // A source document is a file name, which can carry the veteran's own name.
-function cleanAward(award, { scrub, scrubShort }) {
+function cleanAward(award, { scrubProse, scrubShort }) {
   if (!award || typeof award !== "object" || Array.isArray(award)) {
     return undefined;
   }
@@ -368,7 +406,7 @@ function cleanAward(award, { scrub, scrubShort }) {
     const text = cleanText(award[key], scrubShort, MAX_TEXT_CHARS);
     if (text !== undefined) out[key] = text;
   }
-  const source = cleanText(award.sourceDocument, scrub, MAX_TEXT_CHARS);
+  const source = cleanText(award.sourceDocument, scrubProse, MAX_TEXT_CHARS);
   if (source !== undefined) out.sourceDocument = redactFileNames(source);
   if (Array.isArray(award.devices)) {
     out.devices = cleanStringList(award.devices, scrubShort);
@@ -394,13 +432,22 @@ function cleanCombatService(value, scrub) {
   return out;
 }
 
-function cleanEnumerated(key, value, { known }) {
+// A list or code field keeps a value only when nothing in it is an identifier
+// shape (SSN, file number, address, phone) or a known identifier: the shape
+// check narrows what the field may hold, this check is the second lock.
+function cleanEnumerated(key, value, { known, birthDates }) {
   if (key === "documentTypes") return cleanDocumentTypes(value);
   const asText =
     typeof value === "number" && Number.isFinite(value) ? String(value) : value;
   const text = cleanEnumeratedField(key, asText);
   if (text === undefined) return undefined;
-  return redactKnownValues(text, known) === text ? text : undefined;
+  const unchanged = (changed) => changed === text;
+  return unchanged(redactKnownValues(text, known)) &&
+    unchanged(redactBirthDates(text, birthDates)) &&
+    unchanged(scrubText(text)) &&
+    unchanged(removePersonAndPlaceShapes(text))
+    ? text
+    : undefined;
 }
 
 function cleanField(key, value, context) {

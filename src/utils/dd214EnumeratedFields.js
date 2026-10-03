@@ -23,6 +23,11 @@ const BRANCHES = new Set([
   "marines",
   "marine corps",
   "usmc",
+  "usn",
+  "usaf",
+  "usa",
+  "uscg",
+  "ussf",
   "coast guard",
   "space force",
   "army national guard",
@@ -59,6 +64,11 @@ const COMPONENTS = new Set([
   "active duty",
   "reserve",
   "national guard",
+  "regular army",
+  "regular navy",
+  "regular air force",
+  "regular marine corps",
+  "regular coast guard",
 ]);
 
 const COMPONENT_FULL_WORDS = new Set([
@@ -94,6 +104,10 @@ const RANK_WORDS = new Set([
   "staff",
   "first",
   "second",
+  "third",
+  "fourth",
+  "fifth",
+  "sixth",
   "class",
   "master",
   "major",
@@ -166,6 +180,8 @@ const RANK_WORDS = new Set([
   "maj",
   "ltc",
   "lcol",
+  "ltcol",
+  "ltcmdr",
   "col",
   "bg",
   "mg",
@@ -201,8 +217,13 @@ const RANK_WORDS = new Set([
   "w",
 ]);
 
-const RANK_TOKEN_SHAPE =
-  /^(?:(?:e|o|w|pv|po|cw|cwo|wo)\d{1,2}|\d{1,2}(?:st|nd|rd|th)?)$/;
+// E5, O-3 style grades, SP4 and Navy rates (HM2, BM1), 1SG, 1LT, 2LT.
+const RANK_CODE_SHAPE = /^[a-z]{1,3}\d{1,2}$/;
+const RANK_ORDINAL_SHAPE = /^\d{1,2}(?:st|nd|rd|th)?(?:lt|sg|sgt)?$/;
+const RANK_TOKEN_SHAPE = {
+  test: (token) =>
+    RANK_CODE_SHAPE.test(token) || RANK_ORDINAL_SHAPE.test(token),
+};
 
 const CHARACTER_WORDS = new Set([
   "honorable",
@@ -285,6 +306,17 @@ const SEPARATION_TYPE_WORDS = new Set([
   "reduction",
   "force",
   "separated",
+  "released",
+  "discharged",
+  "and",
+  "the",
+  "navy",
+  "army",
+  "air",
+  "marine",
+  "corps",
+  "coast",
+  "guard",
 ]);
 
 const GI_BILL_WORDS = new Set([
@@ -351,7 +383,9 @@ const SGL_WORDS = new Set([
   "full",
   "reduced",
 ]);
-const SGL_TOKEN_SHAPE = /^\$?\d[\d,]{2,9}(?:\.\d{2})?k?$/;
+// Real coverage amounts only: a bare run of eight or more digits is an SSN or
+// file number, not a dollar amount.
+const SGL_TOKEN_SHAPE = /^\$?(?:\d{1,3}(?:,\d{3}){1,2}|\d{3,7})(?:\.\d{2})?k?$/;
 
 const NAVY_RATINGS = new Set(
   (
@@ -363,13 +397,25 @@ const NAVY_RATINGS = new Set(
 );
 
 const SHORT_CODE = /^[A-Z0-9]{3}$/i;
-const REENTRY_CODE = /^(?:RE[- ]?)?[1-4][A-Z]?$/i;
-const PAY_GRADE = /^([EOW])-?(\d{1,2})$/i;
+const REENTRY_CODE = /^(?:RE[- ]?)?(?:[1-4][A-Z]?|R[1-4])$/i;
+const PAY_GRADE = /^([EOW])-?(\d{1,2})E?$/i;
 const PAY_GRADE_MAX = { E: 9, W: 5, O: 10 };
-const MOS_CODE = /^[A-Z0-9]{2,6}(?:[-/ ][A-Z0-9]{1,6}){0,2}$/i;
+const MOS_CODE = /^[A-Z0-9]{2,6}(?:[-/][A-Z0-9]{1,6}){0,2}$/i;
+const SSN_SHAPE = /^\d{3}[- ]?\d{2}[- ]?\d{4}$/;
 const FORM_NAME = /^(?:DD|NGB)[ -]?(?:FORM )?\d{2,4}[A-Z]?$/i;
 const AUTHORITY_SHAPE = /^[A-Za-z0-9 .,;:§()/-]{3,80}$/;
-const MAX_VOCAB_WORDS = 8;
+// A separation authority is a regulation reference: only these words and
+// acronyms may appear beside its numbers, so a name or an address cannot.
+const AUTHORITY_WORDS = new Set(
+  (
+    "ar afi afman afr afpd afh dafi dafman milpersman marcorsepman mco secnavinst opnavinst " +
+    "dodi dodd dod comdtinst navpers cfr usc ngr arngr angi ngb maradmin alnav navadmin jagman " +
+    "persman da dd ucmj rcm spd para paragraph chapter ch section sec title art article " +
+    "and of the army navy air force marine corps coast guard regulation reg instruction manual " +
+    "pt part subpara"
+  ).split(" "),
+);
+const MAX_VOCAB_WORDS = 12;
 
 function onlyWords(text, vocab, tokenShape) {
   const parts = words(normalizeWords(text));
@@ -391,12 +437,16 @@ function isPayGrade(text) {
 }
 
 function isMos(text) {
-  if (!MOS_CODE.test(text)) return false;
+  if (!MOS_CODE.test(text) || SSN_SHAPE.test(text)) return false;
   return /\d/.test(text) || NAVY_RATINGS.has(text.toUpperCase());
 }
 
 function isAuthority(text) {
-  return AUTHORITY_SHAPE.test(text) && /\d/.test(text);
+  if (!AUTHORITY_SHAPE.test(text) || !/\d/.test(text)) return false;
+  const letterWords = text.match(/[A-Za-z]+/g) ?? [];
+  return letterWords.every(
+    (word) => AUTHORITY_WORDS.has(word.toLowerCase()) || /^[a-z]$/i.test(word),
+  );
 }
 
 const RULES = {
@@ -480,10 +530,11 @@ function keysFor(yearText, month, day) {
     .filter(Boolean);
 }
 
-const YEAR_FIRST = /^(\d{4})([-/.]?)(\d{2})\2(\d{2})$/;
+const YEAR_FIRST = /^(\d{4})([-/. ]?)(\d{2})\2(\d{2})$/;
 const NUMERIC_DATE = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})$/;
-const DAY_MONTH_NAME = /^(\d{1,2}) ?([A-Z]{3})[A-Z]*\.? ?,? ?(\d{4}|\d{2})$/;
-const MONTH_NAME_DAY = /^([A-Z]{3})[A-Z]*\.? (\d{1,2}),? (\d{4})$/;
+const DAY_MONTH_NAME = /^(\d{1,2})[- ]?([A-Z]{3})[A-Z]*[.,\s-]*(\d{4}|\d{2})$/;
+const MONTH_NAME_DAY = /^([A-Z]{3})[A-Z]*\.? (\d{1,2}),? (\d{4}|\d{2})$/;
+const TIME_SUFFIX = /[T ]\d{2}:\d{2}[\d:.]*(?:Z|[+-]\d{2}:?\d{2})?$/;
 
 /**
  * Every calendar date a written date could mean, as YYYY-MM-DD keys. A
@@ -493,7 +544,7 @@ const MONTH_NAME_DAY = /^([A-Z]{3})[A-Z]*\.? (\d{1,2}),? (\d{4})$/;
  */
 export function dateKeys(raw) {
   if (typeof raw !== "string") return [];
-  const text = raw.trim().toUpperCase();
+  const text = raw.trim().toUpperCase().replace(TIME_SUFFIX, "");
   let match = YEAR_FIRST.exec(text);
   if (match) return keysFor(match[1], Number(match[3]), Number(match[4]));
   match = NUMERIC_DATE.exec(text);
@@ -512,25 +563,33 @@ export function dateKeys(raw) {
   return [];
 }
 
-const BIRTH_KEYS = ["dateOfBirth", "dob", "birthDate"];
+const BIRTH_KEY = /^(?:date_?of_?birth|dob|birth_?date)$/i;
+const MAX_BIRTH_SEARCH_DEPTH = 4;
+const MAX_BIRTH_SEARCH_NODES = 5000;
 
 /**
  * The birth dates held by any source object (a profile, a knowledge base
- * personal block, a document's extracted data, a parser result), at the top
- * level or under a `personal` key.
+ * personal block, a document's extracted data, a parser result), under a
+ * birth-date key at any nesting up to a few levels (personal,
+ * extractedData.fields, a list of documents).
  */
 export function birthDateKeysFrom(sources) {
   const found = new Set();
-  const add = (holder) => {
-    if (!holder || typeof holder !== "object") return;
-    for (const key of BIRTH_KEYS) {
-      dateKeys(holder[key]).forEach((date) => found.add(date));
+  let budget = MAX_BIRTH_SEARCH_NODES;
+  const walk = (node, depth) => {
+    if (!node || typeof node !== "object" || depth > MAX_BIRTH_SEARCH_DEPTH) {
+      return;
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (budget-- <= 0) return;
+      if (BIRTH_KEY.test(key)) {
+        dateKeys(value).forEach((date) => found.add(date));
+      } else {
+        walk(value, depth + 1);
+      }
     }
   };
-  for (const source of sources) {
-    add(source);
-    add(source?.personal);
-  }
+  sources.forEach((source) => walk(source, 0));
   return found;
 }
 

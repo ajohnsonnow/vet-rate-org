@@ -110,16 +110,27 @@ export function parseModelJsonReply(content) {
   const unfenced = removeFences(
     typeof content === "string" ? content : JSON.stringify(content),
   );
-  try {
-    return JSON.parse(unfenced);
-  } catch {
-    // fall through to extraction and cleanup
-  }
+  const whole = tryParseObject(unfenced);
+  if (whole) return whole;
   const extracted = extractFirstJsonObject(unfenced);
+  const object = tryParseObject(extracted);
+  if (object) return object;
+  return requireObject(
+    JSON.parse(dropTrailingCommas(stripJsonComments(extracted)).trim()),
+  );
+}
+
+// A reply that is valid JSON but not an object (an array wrapping the object,
+// a bare string) is not a reading; the first object inside it is.
+function requireObject(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  throw new SyntaxError("Model reply is not a JSON object");
+}
+
+function tryParseObject(text) {
   try {
-    return JSON.parse(extracted);
+    return requireObject(JSON.parse(text));
   } catch {
-    // fall through to cleanup
+    return null;
   }
-  return JSON.parse(dropTrailingCommas(stripJsonComments(extracted)).trim());
 }
