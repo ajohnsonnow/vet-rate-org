@@ -10,7 +10,10 @@
 import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { isSameCalendarDay } from "../utils/serviceEntryDate";
-import { MODEL_TEXT_FIELDS } from "../utils/dd214ModelOutputGuards";
+import {
+  MODEL_LIST_FIELDS,
+  MODEL_TEXT_FIELDS,
+} from "../utils/dd214ModelOutputGuards";
 
 // Field labels for display
 const fieldLabels = {
@@ -91,6 +94,8 @@ const fieldLabels = {
 
   // Combat & Qualifications
   specialQualifications: "Special Qualifications",
+  awards: "Awards and Decorations",
+  combatService: "Combat Service Details",
   securityClearance: "Security Clearance",
 
   // Legacy
@@ -153,6 +158,8 @@ const SERVICE_FIELDS = new Set([
   "militaryEducation",
   "memberRequests",
   "specialQualifications",
+  "awards",
+  "combatService",
   "securityClearance",
   "reenlisted",
 ]);
@@ -245,6 +252,7 @@ const formatSimpleFieldValue = (value) => {
 // a name the app has never seen cannot be recognised in it.
 const NEVER_PRESELECTED_FIELDS = new Set([
   ...MODEL_TEXT_FIELDS,
+  ...MODEL_LIST_FIELDS,
   "fullName",
   "firstName",
   "middleName",

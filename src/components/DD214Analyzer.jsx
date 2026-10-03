@@ -78,6 +78,7 @@ import {
   sanitizeModelOutput,
   scrubModelFreeText,
   MODEL_TEXT_FIELDS,
+  MODEL_LIST_FIELDS,
 } from "../utils/dd214ModelOutputGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
 import { loadKnownIdentifierSources } from "../utils/dd214KnownIdentifierSources";
@@ -971,7 +972,41 @@ const TICK_GATED_TEXT_FIELDS = [
   "mosTitle",
   "militaryEducation",
   "specialQualifications",
+  "awards",
+  "combatService",
 ];
+
+// The dialog shows a list or object as one text row; the stored value is
+// always taken from the analysis, never from that text.
+const LIST_IMPORT_KEYS = [
+  "militaryEducation",
+  "specialQualifications",
+  "awards",
+  "combatService",
+];
+
+const _joinTexts = (items) =>
+  (Array.isArray(items) ? items : [])
+    .filter((item) => typeof item === "string" && item.trim() !== "")
+    .join("; ");
+
+function _listImportText(result) {
+  const awardNames = (result.awards || []).map((award) => award?.name);
+  const combat = result.combatService;
+  const combatText =
+    _joinTexts([
+      ...(combat?.deployments || []),
+      ...(combat?.indicators || []),
+    ]) || (combat?.hasVerifiedCombat ? "Verified combat service" : "");
+  return Object.fromEntries(
+    Object.entries({
+      militaryEducation: _joinTexts(result.militaryEducation),
+      specialQualifications: _joinTexts(result.specialQualifications),
+      awards: _joinTexts(awardNames),
+      combatService: combatText,
+    }).filter(([, text]) => text !== ""),
+  );
+}
 
 function _ticked(analysisResult, selectedFields, key) {
   return _hasValue(selectedFields?.[key]) ? analysisResult[key] : undefined;
@@ -985,11 +1020,14 @@ export function _saveDd214ToProfile(
   extractedTexts = [],
 ) {
   const sourceFileName = _dd214SourceFileName(extractedTexts);
-  const periodId = _saveDd214EntryDate(analysisResult, sourceFileName);
-  const [mosTitle, militaryEducation, specialQualifications] =
+  const [mosTitle, militaryEducation, specialQualifications, awards, combat] =
     TICK_GATED_TEXT_FIELDS.map((key) =>
       _ticked(analysisResult, selectedFields, key),
     );
+  const periodId = _saveDd214EntryDate(
+    { ...analysisResult, mosTitle },
+    sourceFileName,
+  );
 
   saveDD214Data({
     branch: analysisResult.branch,
@@ -1016,11 +1054,11 @@ export function _saveDd214ToProfile(
     foreignService: analysisResult.foreignService,
     extractedText: combinedText.substring(0, 10000),
     dd214Count: analysisResult.dd214Count,
-    combatService: analysisResult.combatService,
+    combatService: combat,
     specialQualifications,
   });
 
-  _saveDd214Awards(analysisResult.awards);
+  _saveDd214Awards(awards);
 
   if (meta.serviceStartDateEdited) {
     setServiceEntryDate({
@@ -1033,6 +1071,7 @@ export function _saveDd214ToProfile(
   // Update veteran profile with selected fields only
   if (selectedFields && Object.keys(selectedFields).length > 0) {
     const fieldsToSave = { ...selectedFields };
+    LIST_IMPORT_KEYS.forEach((key) => delete fieldsToSave[key]);
     if (
       !periodId &&
       !meta.serviceStartDateEdited &&
@@ -1104,9 +1143,12 @@ export async function _saveDd214ToVkb(
       foreignService: analysisResult.foreignService,
       educationYears: analysisResult.educationYears,
       education: _ticked(analysisResult, selectedFields, "militaryEducation"),
-      awards: analysisResult.awards || [],
-      deployments: analysisResult.deployments || [],
-      combatService: analysisResult.combatService || null,
+      awards: _ticked(analysisResult, selectedFields, "awards") || [],
+      deployments: _ticked(analysisResult, selectedFields, "combatService")
+        ? analysisResult.deployments || []
+        : [],
+      combatService:
+        _ticked(analysisResult, selectedFields, "combatService") || null,
       specialQualifications:
         _ticked(analysisResult, selectedFields, "specialQualifications") || [],
     };
@@ -1151,6 +1193,7 @@ export async function _saveDd214ToVkb(
 const UNCONFIRMED_UNLESS_TICKED = [
   ...IDENTIFIER_FIELDS,
   ...MODEL_TEXT_FIELDS,
+  ...MODEL_LIST_FIELDS,
   "placeOfBirth",
 ];
 
@@ -1159,6 +1202,8 @@ function _confirmedFieldsOnly(analysisResult, selectedFields = {}) {
   UNCONFIRMED_UNLESS_TICKED.forEach((key) => {
     if (!_hasValue(selectedFields[key])) delete confirmed[key];
   });
+  if (!_hasValue(selectedFields.awards)) confirmed.awards = [];
+  if (!_hasValue(selectedFields.combatService)) delete confirmed.deployments;
   return confirmed;
 }
 
@@ -2495,15 +2540,14 @@ function _buildRawProfileImportData(result) {
     narrativeReason: result.narrativeReason,
 
     // Education & Training
-    militaryEducation: result.militaryEducation,
     memberRequests: result.memberRequests,
 
     // Contact
     homeAddress: result.homeAddress,
 
     // Combat & Qualifications
-    specialQualifications: result.specialQualifications,
     securityClearance: result.securityClearance,
+    ..._listImportText(result),
 
     // Legacy
     reenlisted: result.reenlisted,
@@ -2586,6 +2630,7 @@ export function _prepareManualProfileImport(
       foreignService: analysisResult.foreignService,
       yearsService: analysisResult.yearsService,
       monthsService: analysisResult.monthsService,
+      ..._listImportText(analysisResult),
     };
 
     // Filter out null/undefined

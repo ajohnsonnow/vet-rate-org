@@ -219,6 +219,18 @@ function openDialog(analysis) {
   return { importData, onConfirm };
 }
 
+// The test shim keeps data in a closed-over Map, so spreading localStorage
+// yields only its methods; read every key through the Storage API.
+const dumpLocalStorage = () =>
+  JSON.stringify(
+    Object.fromEntries(
+      Array.from({ length: localStorage.length }, (_, i) => {
+        const key = localStorage.key(i);
+        return [key, localStorage.getItem(key)];
+      }),
+    ),
+  );
+
 const shownText = () =>
   [
     document.body.textContent,
@@ -279,7 +291,8 @@ describe.each(SCENARIOS)("hostile model output: $label", (scenario) => {
     await _saveDd214ToVkb(analysis, scenario.text, [], fields);
     await _saveDd214ToPacket(analysis, scenario.text, [], fields);
 
-    const storage = JSON.stringify({ ...localStorage });
+    const storage = dumpLocalStorage();
+    expect(storage).toContain("vet_rate_veteran_profile");
     const stored = JSON.stringify({
       vkb: [
         stores.addDocumentToVKB.mock.calls,
