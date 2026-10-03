@@ -221,6 +221,7 @@ export const getVeteranAIContext = async (options = {}) => {
 // vaClaimsHistory.claims, which is reserved for FILED claims from decision /
 // denial letters.
 const CFILE_SUGGESTION_SOURCE = "C-File Analysis";
+const CFILE_LEGACY_EVIDENCE_SOURCE = "C-File";
 
 const _cfileConditionName = (c) => c.condition || c.name || "";
 
@@ -244,7 +245,15 @@ function _cfileCurrentConditions(claims, mhDiagnoses) {
         source: CFILE_SUGGESTION_SOURCE,
         serviceConnected: false,
       })),
-  ].filter((c) => c.name);
+  ]
+    .filter((c) => c.name)
+    .filter(
+      (c, i, all) =>
+        all.findIndex(
+          (o) =>
+            normalizeConditionName(o.name) === normalizeConditionName(c.name),
+        ) === i,
+    );
 }
 
 function _cfileMissingEvidence(claims) {
@@ -258,14 +267,68 @@ function _cfileMissingEvidence(claims) {
     }));
 }
 
+const _eventTypeKey = (type) =>
+  String(type || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+// The calendar day an event date names, however the model or the letter wrote
+// it ("2019-03-03", "March 3, 2019"); text that is no date compares as itself.
+function _eventDayKey(date) {
+  const text = String(date || "").trim();
+  if (!text) return "";
+  const iso = /^\d{4}-\d{2}-\d{2}/.exec(text);
+  if (iso) return iso[0];
+  const parsed = new Date(text);
+  if (Number.isNaN(parsed.getTime())) return text.toLowerCase();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}`;
+}
+
+// An event this tool wrote is identified by its document, day and type, never
+// by its wording: the model words the same event differently on each run.
+const _eventIdentity = (e) =>
+  `${_eventDayKey(e.date)}|${_eventTypeKey(e.eventType)}`;
+
+// One event per day and type from one analysis. An undated event cannot be
+// identified, so every one of those is kept.
 function _cfileEvidenceTimeline(timeline) {
-  return timeline.map((e) => ({
-    date: e.date || "",
-    eventType: e.category || "c_file_event",
-    description: e.description || e.event || e.quote || "",
-    source: CFILE_SUGGESTION_SOURCE,
-    significance: e.significance || "",
-  }));
+  const seen = new Set();
+  return timeline
+    .map((e) => ({
+      date: e.date || "",
+      eventType: e.category || "c_file_event",
+      description: e.description || e.event || e.quote || "",
+      source: CFILE_SUGGESTION_SOURCE,
+      significance: e.significance || "",
+    }))
+    .filter((e) => {
+      if (!e.date) return true;
+      const identity = _eventIdentity(e);
+      if (seen.has(identity)) return false;
+      seen.add(identity);
+      return true;
+    });
+}
+
+// Updates the earlier copy of the same event from the same document in place.
+// Only an event this tool wrote for that document can match, so an event added
+// by hand or taken from another document is never merged or overwritten.
+function _updateEarlierCFileEvent(list, item, source, sourceDocumentId) {
+  if (!sourceDocumentId || item.source !== source || !item.date) return false;
+  const identity = _eventIdentity(item);
+  const earlier = list.find(
+    (e) =>
+      e.source === source &&
+      e.sourceDocumentId === sourceDocumentId &&
+      e.date &&
+      _eventIdentity(e) === identity,
+  );
+  if (!earlier) return false;
+  earlier.description = item.description;
+  earlier.significance = item.significance ?? earlier.significance;
+  return true;
 }
 
 function _cfileEnvironmentalExposures(exposures) {
@@ -299,11 +362,13 @@ export const buildVkbMergeFromCFile = (analysis = {}, extraction = {}) => {
   const claims = Array.isArray(analysis.potential_claims)
     ? analysis.potential_claims
     : [];
-  const timeline = Array.isArray(analysis.timeline) ? analysis.timeline : [];
   const exposures = Array.isArray(analysis.exposures) ? analysis.exposures : [];
   const mhDiagnoses = Array.isArray(analysis.mentalHealth?.diagnoses)
     ? analysis.mentalHealth.diagnoses
     : [];
+  const evidenceTimeline = _cfileEvidenceTimeline(
+    Array.isArray(analysis.timeline) ? analysis.timeline : [],
+  );
 
   return {
     // ── Legacy off-schema (dual-write; kept until Wave 2 repoints readers) ──
@@ -314,11 +379,13 @@ export const buildVkbMergeFromCFile = (analysis = {}, extraction = {}) => {
       evidence: c.evidence || c.description || "",
       diagnosticCode: c.diagnosticCode || "",
     })),
-    evidence: timeline.map((e) => ({
+    evidence: evidenceTimeline.map((e) => ({
       date: e.date,
       type: "c_file_event",
-      description: e.event || e.description || "",
-      source: "C-File",
+      eventType: e.eventType,
+      description: e.description,
+      significance: e.significance,
+      source: CFILE_LEGACY_EVIDENCE_SOURCE,
     })),
     aiInsights: {
       cfileAnalysisSummary: analysis.summary || "",
@@ -333,7 +400,7 @@ export const buildVkbMergeFromCFile = (analysis = {}, extraction = {}) => {
     // ── Canonical VKB schema fields (new; merged by dedicated helpers) ──
     medicalConditionsCurrent: _cfileCurrentConditions(claims, mhDiagnoses),
     missingEvidence: _cfileMissingEvidence(claims),
-    evidenceTimeline: _cfileEvidenceTimeline(timeline),
+    evidenceTimeline,
     environmentalExposures: _cfileEnvironmentalExposures(exposures),
     presumptiveConditions: _cfilePresumptiveConditions(exposures),
   };
@@ -395,6 +462,16 @@ function _mergeEvidence(vkb, vkbMergeData, sourceDocumentId) {
     `${e.date || ""}|${normalizeConditionName(e.description || e.text || "")}`;
   const existingEvidence = new Set(vkb.evidence.map(evidenceKey));
   vkbMergeData.evidence.forEach((item) => {
+    if (
+      _updateEarlierCFileEvent(
+        vkb.evidence,
+        item,
+        CFILE_LEGACY_EVIDENCE_SOURCE,
+        sourceDocumentId,
+      )
+    ) {
+      return;
+    }
     const key = evidenceKey(item);
     if (existingEvidence.has(key)) return;
     existingEvidence.add(key);
@@ -469,17 +546,31 @@ function _mergePresumptiveConditions(vkb, vkbMergeData) {
   });
 }
 
-function _mergeEvidenceTimeline(vkb, vkbMergeData) {
+function _mergeEvidenceTimeline(vkb, vkbMergeData, sourceDocumentId) {
   if (!Array.isArray(vkbMergeData.evidenceTimeline)) return;
   vkb.evidenceTimeline = vkb.evidenceTimeline || [];
   const timelineKey = (e) =>
     `${e.date || ""}|${(e.eventType || "").toLowerCase()}|${normalizeConditionName(e.description || "")}`;
   const existing = new Set(vkb.evidenceTimeline.map(timelineKey));
   vkbMergeData.evidenceTimeline.forEach((e) => {
+    if (
+      _updateEarlierCFileEvent(
+        vkb.evidenceTimeline,
+        e,
+        CFILE_SUGGESTION_SOURCE,
+        sourceDocumentId,
+      )
+    ) {
+      return;
+    }
     const key = timelineKey(e);
     if (!existing.has(key)) {
       existing.add(key);
-      vkb.evidenceTimeline.push(e);
+      vkb.evidenceTimeline.push(
+        sourceDocumentId && e.source === CFILE_SUGGESTION_SOURCE
+          ? { ...e, sourceDocumentId }
+          : e,
+      );
     }
   });
 }
@@ -594,7 +685,7 @@ async function _saveToVkb({
     // populate the fields the AI-context builders and future readers consume.
     _mergeMedicalConditionsCurrent(vkb, vkbMergeData);
     _mergePresumptiveConditions(vkb, vkbMergeData);
-    _mergeEvidenceTimeline(vkb, vkbMergeData);
+    _mergeEvidenceTimeline(vkb, vkbMergeData, sourceDocumentId);
     _mergeMissingEvidence(vkb, vkbMergeData);
     _mergeEnvironmentalExposures(vkb, vkbMergeData);
 
