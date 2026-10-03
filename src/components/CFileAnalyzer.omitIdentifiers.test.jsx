@@ -28,7 +28,8 @@ vi.mock("../utils/myPacketManager", async (importOriginal) => ({
 
 const { analyzeDocument } = await import("../utils/documentAnalyzer");
 const { getVeteranProfile } = await import("../utils/veteranProfile");
-const { _extractTextForAnalysis } = await import("./CFileAnalyzer.jsx");
+const { _extractTextForAnalysis, _saveCFileToRecords } =
+  await import("./CFileAnalyzer.jsx");
 
 const SCAN_TEXT = `--- PAGE 1 ---
 DD FORM 214 CERTIFICATE OF RELEASE OR DISCHARGE FROM ACTIVE DUTY
@@ -94,6 +95,8 @@ describe("a claim letter's VA file number and claim number are not stored", () =
     );
 
     expect(result.hasText).toBe(true);
+    expect(store.addDocumentToVKB).not.toHaveBeenCalled();
+    await _saveCFileToRecords(result, {});
     const filed = store.addDocumentToVKB.mock.calls[0][0].extractedData;
     expect(filed.type).toBe("claim_letter");
     expect(filed).not.toHaveProperty("vaFileNumber");
@@ -108,8 +111,8 @@ describe("a claim letter's VA file number and claim number are not stored", () =
   });
 });
 
-describe("D21-4: reading a C-File never stores the name or date of birth", () => {
-  it("files the document and service data without any identifier", async () => {
+describe("D21-4 / D22-4: saving a C-File never stores the name or date of birth", () => {
+  it("files the document and service data without any identifier, only on save", async () => {
     const result = await _extractTextForAnalysis(
       new File(["x"], "sample-dd214.pdf", { type: "application/pdf" }),
       ctx(),
@@ -117,6 +120,9 @@ describe("D21-4: reading a C-File never stores the name or date of birth", () =>
     );
 
     expect(result.hasText).toBe(true);
+    expect(store.addDocumentToVKB).not.toHaveBeenCalled();
+    expect(localStorage).toHaveLength(0);
+    await _saveCFileToRecords(result, {});
     expect(store.addDocumentToVKB).toHaveBeenCalledTimes(1);
     const filed = store.addDocumentToVKB.mock.calls[0][0].extractedData;
     expect(filed.branch).toBeTruthy();
@@ -128,7 +134,6 @@ describe("D21-4: reading a C-File never stores the name or date of birth", () =>
       "dateOfBirth",
     ].forEach((key) => expect(filed).not.toHaveProperty(key));
     const profile = getVeteranProfile();
-    expect(profile.branch).toBeTruthy();
     expect(profile.fullName || profile.lastName).toBeFalsy();
     expect(profile.dateOfBirth).toBeFalsy();
   });

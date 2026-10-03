@@ -7,7 +7,7 @@
  * Analyzes veteran claims files locally using AI to identify evidence and claim opportunities
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
@@ -16,6 +16,9 @@ import { isPdfFile } from "../utils/fileTypeGuards";
 import SystemRequirementsNotice from "./SystemRequirementsNotice";
 import {
   processFormationDocument,
+  persistFormationDocument,
+  stripIdentifiersFromFormationResult,
+  DocumentPersistIncompleteError,
   PROCESSING_STATES,
 } from "../utils/musterCallProcessor";
 import { describePersistIncomplete } from "../utils/persistIncompleteMessage";
@@ -29,9 +32,8 @@ import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import ReportBugLink from "./ReportBugLink";
 import {
-  saveAnalysisResults,
+  mergeAnalysisIntoVkb,
   buildVkbMergeFromCFile,
-  PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
 import { getStorageStats } from "../utils/storage";
 
@@ -42,8 +44,9 @@ import CFileSemanticSearch from "./CFileSemanticSearch";
 import DocumentReadingNotices from "./musterCall/DocumentReadingNotices";
 import { getReadingNotices } from "../utils/readingNotices";
 
-// No import dialog here, so reading the file never writes the veteran's name or
-// date of birth to the profile or Knowledge Base (omitIdentifiers).
+// Reading the file writes nothing (deferPersist): the veteran decides on the
+// results screen, and name, date of birth and VA file and claim numbers are
+// never part of what is saved (omitIdentifiers).
 export async function _extractTextForAnalysis(file, ctx, options) {
   const musterResult = await processFormationDocument(
     file,
@@ -57,18 +60,8 @@ export async function _extractTextForAnalysis(file, ctx, options) {
         if (progress.message) ctx.setProcessingStage(progress.message);
       }
     },
-    { ...options, returnIncompleteSave: true, omitIdentifiers: true },
+    { ...options, deferPersist: true, omitIdentifiers: true },
   );
-
-  // The read text is still good for the analysis, but the document did not
-  // reach the knowledge base or My Packet; say so instead of carrying on.
-  if (musterResult.persistIncomplete) {
-    ctx.setStorageWarning(
-      describePersistIncomplete(musterResult.filename, null, {
-        quotaExceeded: musterResult.persistQuotaExceeded,
-      }),
-    );
-  }
 
   // Normalise to the shape the rest of handleConsentAndProcess expects
   const extractionResult = {
@@ -87,6 +80,7 @@ export async function _extractTextForAnalysis(file, ctx, options) {
     pagesBlank: musterResult.pagesBlank ?? [],
     pagesSkipped: musterResult.pagesSkipped ?? [],
     pagesFailed: musterResult.pagesFailed ?? [],
+    deferredResult: musterResult,
   };
 
   if (!extractionResult.hasText) {
@@ -152,28 +146,91 @@ async function _checkStorageQuota(extractionResult, result, ctx) {
   }
 }
 
-async function _saveCFileResults(file, extractionResult, result) {
-  // Save C-File analysis to VKB + My Packet
-  try {
-    const analysis = result.analysis || {};
-    await saveAnalysisResults({
-      toolName: "C-File Analyzer",
-      classification: PACKET_DOC_TYPES.C_FILE,
-      rawText: extractionResult?.text || "",
-      extractedData: analysis,
-      fileName: file?.name || "c-file.pdf",
-      pageCount: extractionResult?.totalPages || 1,
-      vkbDocument: {
-        classification: "c_file",
-        rawText: (extractionResult?.text || "").slice(0, 5000),
-        extractedData: analysis,
-        source: "CFileAnalyzer",
-      },
-      vkbMergeData: buildVkbMergeFromCFile(analysis, extractionResult),
-    });
-  } catch (saveErr) {
-    console.warn("Failed to save C-File results to VKB/Packet:", saveErr);
+// Filed once, under the document's real type, and only after the veteran chose
+// to save. Both stores key a document on its name and size and the merges skip
+// what is already there, so saving again or analysing the same file again adds
+// nothing new.
+export async function _saveCFileToRecords(extractionResult, analysis) {
+  const filed = stripIdentifiersFromFormationResult(
+    extractionResult.deferredResult,
+  );
+  await persistFormationDocument(
+    { name: filed.filename, size: filed.size },
+    filed,
+  );
+  await mergeAnalysisIntoVkb({
+    toolName: "C-File Analyzer",
+    vkbMergeData: buildVkbMergeFromCFile(analysis, extractionResult),
+  });
+}
+
+const SAVE_IDLE = { phase: "idle", message: "", saves: 0 };
+
+function _describeSaveFailure(err, fileName) {
+  if (err instanceof DocumentPersistIncompleteError) {
+    return describePersistIncomplete(fileName, "Save to my records", err);
   }
+  return "Saving did not finish. Nothing was lost. Choose Save to my records to try again.";
+}
+
+// Nothing is written until the veteran chooses this: it says what will be
+// kept, and closing the tool without it leaves the stored data as it was.
+export function CFileSaveToRecords({ file, extractedText, analysisResult }) {
+  const [status, setStatus] = useState(SAVE_IDLE);
+  useEffect(() => setStatus(SAVE_IDLE), [analysisResult, extractedText]);
+  const merge = useMemo(
+    () => buildVkbMergeFromCFile(analysisResult, extractedText),
+    [analysisResult, extractedText],
+  );
+  const fileName = file?.name || "this document";
+
+  const handleSave = async () => {
+    setStatus((s) => ({ ...s, phase: "saving", message: "" }));
+    try {
+      await _saveCFileToRecords(extractedText, analysisResult);
+      setStatus((s) => ({ phase: "saved", message: "", saves: s.saves + 1 }));
+    } catch (err) {
+      console.warn("C-File save did not finish:", err?.name);
+      setStatus((s) => ({
+        ...s,
+        phase: "error",
+        message: _describeSaveFailure(err, fileName),
+      }));
+    }
+  };
+
+  return (
+    <section
+      className="mb-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 p-4"
+      data-testid="cfile-save-to-records"
+      aria-label="Save to my records"
+      data-saves={status.saves}
+    >
+      <p className="text-sm text-blue-900 dark:text-blue-100">
+        {status.saves > 0
+          ? "Saved to your records on this device."
+          : "Nothing has been saved yet."}{" "}
+        Saving keeps {merge.claims.length} condition(s),{" "}
+        {merge.evidenceTimeline.length} timeline event(s) and the document "
+        {fileName}" in your Knowledge Base and My Packet. Your name, date of
+        birth, VA file number and claim number are not saved as fields. Closing
+        this screen without saving keeps nothing.
+      </p>
+      {status.phase === "error" && (
+        <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
+          {status.message}
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={status.phase === "saving"}
+        className="mt-3 min-h-[44px] px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-lg font-medium transition-colors"
+      >
+        {status.phase === "saving" ? "Saving..." : "Save to my records"}
+      </button>
+    </section>
+  );
 }
 
 async function _runConsentAndProcess(file, t, ctx, options = {}) {
@@ -207,7 +264,6 @@ async function _runConsentAndProcess(file, t, ctx, options = {}) {
     const result = await _runAiAnalysis(extractionResult, ctx);
 
     await _checkStorageQuota(extractionResult, result, ctx);
-    await _saveCFileResults(file, extractionResult, result);
   } catch (err) {
     console.error("Analysis error:", err);
     console.error("Error stack:", err.stack);
@@ -817,6 +873,27 @@ function CFileCombatIndicatorsSection({ t, combatIndicators }) {
 }
 
 // Render the analysis dashboard
+function CFileSaveAndCoverage({
+  file,
+  extractedText,
+  analysisResult,
+  onReadRemainingPages,
+}) {
+  return (
+    <>
+      <CFileSaveToRecords
+        file={file}
+        extractedText={extractedText}
+        analysisResult={analysisResult}
+      />
+      <CFileReadCoverage
+        extractedText={extractedText}
+        onReadRemainingPages={onReadRemainingPages}
+      />
+    </>
+  );
+}
+
 function CFileDashboard({
   t,
   file,
@@ -841,8 +918,10 @@ function CFileDashboard({
         analysisResult={analysisResult}
         onReset={handleReset}
       />
-      <CFileReadCoverage
+      <CFileSaveAndCoverage
+        file={file}
         extractedText={extractedText}
+        analysisResult={analysisResult}
         onReadRemainingPages={onReadRemainingPages}
       />
       <CFileDashboardWarnings

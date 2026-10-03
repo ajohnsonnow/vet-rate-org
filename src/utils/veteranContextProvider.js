@@ -636,5 +636,17 @@ export const saveAnalysisResults = async ({
   });
 };
 
+// For a tool that has already filed its document: merges only the structured
+// findings (conditions, timeline events) into the Knowledge Base, without a
+// second My Packet record or Knowledge Base document.
+export const mergeAnalysisIntoVkb = ({ toolName, vkbMergeData }) =>
+  _saveToVkb({
+    toolName,
+    vkbDocument: null,
+    vkbMergeData,
+    sourceDocumentId: null,
+    timestamp: new Date().toISOString(),
+  });
+
 // Re-export commonly-used constants so tools only need ONE import line
 export { PACKET_DOC_TYPES, PACKET_DOC_LABELS } from "./myPacketManager";
