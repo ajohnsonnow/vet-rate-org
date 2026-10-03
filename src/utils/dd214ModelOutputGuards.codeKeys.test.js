@@ -24,7 +24,10 @@ describe("a short code field cannot carry an identifier shape", () => {
 
   it.each([
     ["mos", "11B"],
-    ["mos", "0311"],
+    ["mos", "2A551"],
+    ["mos", "3D1X2"],
+    ["mos", "HM2"],
+    ["mos", "153A"],
     ["mos", "HM"],
     ["separationAuthority", "AR 635-200, paragraph 5-3"],
     ["separationAuthority", "MILPERSMAN 1910-164"],
@@ -40,6 +43,45 @@ describe("a short code field cannot carry an identifier shape", () => {
       clean({ separationAuthority: "AR 635-200 1984-03-15" }, sources),
     ).toEqual({});
   });
+});
+
+describe("a MOS code cannot be a date, an SSN fragment or a bare number", () => {
+  it.each([
+    "2010-01-01",
+    "20100101",
+    "2010 01 01",
+    "01/02/2010",
+    "6789",
+    "1985",
+    "123456",
+    "12345678",
+    "1234-5678",
+    "0311",
+  ])("drops %s", (value) => {
+    expect(clean({ mos: value }).mos).toBeUndefined();
+  });
+
+  it("keeps a four-digit Marine code only beside a Marine Corps branch", () => {
+    expect(clean({ branch: "Marines", mos: "0311" }).mos).toBe("0311");
+    expect(clean({ branch: "Marine Corps", mos: "0311" }).mos).toBe("0311");
+    expect(clean({ branch: "Army", mos: "0311" }).mos).toBeUndefined();
+    expect(clean({ branch: "Marines", mos: "2010-01-01" }).mos).toBeUndefined();
+  });
+});
+
+describe("a document count is a small whole number", () => {
+  it.each([[1], [2], ["3"], [20]])("keeps %s", (value) => {
+    expect(clean({ dd214Count: value }).dd214Count).toBe(Number(value));
+    expect(clean({ documentCount: value }).documentCount).toBe(Number(value));
+  });
+
+  it.each([[0], [21], [1985], [20100101], [12345], ["6789"], [2.5], [-1]])(
+    "drops %s",
+    (value) => {
+      expect(clean({ dd214Count: value }).dd214Count).toBeUndefined();
+      expect(clean({ documentCount: value }).documentCount).toBeUndefined();
+    },
+  );
 });
 
 describe("real values the local parser may not have read are kept", () => {

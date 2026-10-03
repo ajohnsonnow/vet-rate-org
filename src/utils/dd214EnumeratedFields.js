@@ -392,7 +392,7 @@ const NAVY_RATINGS = new Set(
     "AB AC AD AE AG AM AME AO AS AT AW AZ BM BU CE CM CS CTI CTM CTN CTR CTT " +
     "CU DC DK DM DT EA EM EMN EN EO EOD ET EW FC FT GM GS GSE HM HT IC IS IT " +
     "LN LS MA MC MM MN MR MT MU NC OS PC PH PN PR QM RM RP SB SH SK SM ST STG " +
-    "STS SW TM UT UC YN HN FN SN AN CN DN"
+    "STS SW TM UT UC YN HN FN SN AN CN DN AMT AET AST MST MSD IV HS FS MK ME"
   ).split(" "),
 );
 
@@ -400,7 +400,20 @@ const SHORT_CODE = /^[A-Z0-9]{3}$/i;
 const REENTRY_CODE = /^(?:RE[- ]?)?(?:[1-4][A-Z]?|R[1-4])$/i;
 const PAY_GRADE = /^([EOW])-?(\d{1,2})E?$/i;
 const PAY_GRADE_MAX = { E: 9, W: 5, O: 10 };
-const MOS_CODE = /^[A-Z0-9]{2,6}(?:[-/][A-Z0-9]{1,6}){0,2}$/i;
+// Each branch's own code shape, and every shape needs a letter, so a date, an
+// SSN fragment or a bare run of digits can never pass as a MOS:
+// Army 11B, 11B10, 68W, a warrant officer's 153A; Air Force and Space Force
+// 2A551, 3D1X2, an officer's 11M3; Navy and Coast Guard ratings with an
+// optional pay-grade digit and NEC (HM, HM2, HM-8404). Marine codes are four
+// bare digits and so cannot be told from a year or an SSN fragment: they pass
+// only when the same reading's branch is the Marine Corps.
+const MARINE_MOS = /^\d{4}$/;
+const MARINE_BRANCH = /^(?:marines?|marine corps|usmc|usmcr)$/;
+const MOS_SHAPES = [
+  /^\d{2}[A-Z]\d{0,2}[A-Z]?$/,
+  /^\d{3}[A-Z]\d?$/,
+  /^\d[A-Z]\d[0-9X]\d[A-Z]?$/,
+];
 const SSN_SHAPE = /^\d{3}[- ]?\d{2}[- ]?\d{4}$/;
 const FORM_NAME = /^(?:DD|NGB)[ -]?(?:FORM )?\d{2,4}[A-Z]?$/i;
 const AUTHORITY_SHAPE = /^[A-Za-z0-9 .,;:§()/-]{3,80}$/;
@@ -436,9 +449,21 @@ function isPayGrade(text) {
   return number >= 1 && number <= PAY_GRADE_MAX[match[1].toUpperCase()];
 }
 
-function isMos(text) {
-  if (!MOS_CODE.test(text) || SSN_SHAPE.test(text)) return false;
-  return /\d/.test(text) || NAVY_RATINGS.has(text.toUpperCase());
+const NAVY_RATING_WITH_GRADE = /^([A-Z]{2,3})[1-9]?(?:-\d{4})?$/;
+
+function isMarineBranch(branch) {
+  return (
+    typeof branch === "string" && MARINE_BRANCH.test(normalizeWords(branch))
+  );
+}
+
+function isMos(text, { branch } = {}) {
+  const code = text.trim().toUpperCase();
+  if (SSN_SHAPE.test(code)) return false;
+  if (MOS_SHAPES.some((shape) => shape.test(code))) return true;
+  if (MARINE_MOS.test(code)) return isMarineBranch(branch);
+  const rating = NAVY_RATING_WITH_GRADE.exec(code);
+  return rating !== null && NAVY_RATINGS.has(rating[1]);
 }
 
 function isAuthority(text) {
@@ -477,11 +502,11 @@ export const ENUMERATED_KEYS = new Set([
  * Returns the trimmed value when it is on the field's list (or matches its
  * shape), otherwise undefined. A non-string never passes.
  */
-export function cleanEnumeratedField(key, value) {
+export function cleanEnumeratedField(key, value, context = {}) {
   if (typeof value !== "string") return undefined;
   const text = value.trim();
   if (text === "" || text.length > 80) return undefined;
-  return RULES[key]?.(text) ? text : undefined;
+  return RULES[key]?.(text, context) ? text : undefined;
 }
 
 export function cleanDocumentTypes(value) {

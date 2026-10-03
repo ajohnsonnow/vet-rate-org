@@ -249,7 +249,7 @@ const redactBirthDates = (text, birthDates) =>
           : match,
       );
 
-const makeScrubber = (sources) => {
+export const makeScrubber = (sources) => {
   const known = knownValuesFrom(sources);
   const birthDates = birthDateKeysFrom(sources);
   const base = (raw) => {
@@ -303,6 +303,7 @@ const COUNT_KEYS = new Set([
   "daysLost",
   "dd214Count",
 ]);
+const DOCUMENT_COUNT_KEYS = new Set(["documentCount", "dd214Count"]);
 const FLAG_KEYS = new Set(["foreignService", "reenlisted"]);
 const SERVICE_TIME_KEYS = new Set([
   "netActiveService",
@@ -435,11 +436,11 @@ function cleanCombatService(value, scrub) {
 // A list or code field keeps a value only when nothing in it is an identifier
 // shape (SSN, file number, address, phone) or a known identifier: the shape
 // check narrows what the field may hold, this check is the second lock.
-function cleanEnumerated(key, value, { known, birthDates }) {
+function cleanEnumerated(key, value, { known, birthDates, branch }) {
   if (key === "documentTypes") return cleanDocumentTypes(value);
   const asText =
     typeof value === "number" && Number.isFinite(value) ? String(value) : value;
-  const text = cleanEnumeratedField(key, asText);
+  const text = cleanEnumeratedField(key, asText, { branch });
   if (text === undefined) return undefined;
   const unchanged = (changed) => changed === text;
   return unchanged(redactKnownValues(text, known)) &&
@@ -450,10 +451,25 @@ function cleanEnumerated(key, value, { known, birthDates }) {
     : undefined;
 }
 
+const MAX_DOCUMENT_COUNT = 20;
+const SMALL_COUNT_SHAPE = /^\d{1,2}$/;
+
+// How many documents a reading covers: a small whole number, never a 4 or 5
+// digit run that is really a year, a file number or part of an SSN.
+function cleanDocumentCount(value) {
+  const text = typeof value === "number" ? String(value) : value;
+  if (typeof text !== "string" || !SMALL_COUNT_SHAPE.test(text.trim())) {
+    return undefined;
+  }
+  const count = Number(text);
+  return count >= 1 && count <= MAX_DOCUMENT_COUNT ? count : undefined;
+}
+
 function cleanField(key, value, context) {
   const { scrub, scrubShort, scrubProse } = context;
   if (DATE_KEYS.has(key)) return cleanDate(value, context);
   if (ENUMERATED_KEYS.has(key)) return cleanEnumerated(key, value, context);
+  if (DOCUMENT_COUNT_KEYS.has(key)) return cleanDocumentCount(value);
   if (COUNT_KEYS.has(key)) return cleanCount(value);
   if (FLAG_KEYS.has(key)) return cleanFlag(value);
   if (SERVICE_TIME_KEYS.has(key)) return cleanServiceTime(value);
@@ -476,13 +492,25 @@ function cleanField(key, value, context) {
 }
 
 /**
+ * Fail-closed for a reading whose known-identifier set could not be read in
+ * full: a birth date or name the app holds cannot be checked for, so every date
+ * and all free text the model wrote is dropped (the dates and text are the
+ * values that carry an identifier). The model's short codes and fixed words are
+ * dropped with them, so what is left is only what the app read itself.
+ */
+export function dropModelWrittenValues(data) {
+  for (const key of Object.keys(data)) delete data[key];
+  return data;
+}
+
+/**
  * Check every key a model returned against the type that key allows and scrub
  * every string in it, in place. A value of the wrong type is dropped, never
  * coerced into something that could carry text. `sources` are the same
  * known-identifier objects scrubModelFreeText takes.
  */
 export function sanitizeModelOutput(data, sources = []) {
-  const context = makeScrubber(sources);
+  const context = { ...makeScrubber(sources), branch: data.branch };
   for (const key of Object.keys(data)) {
     const cleaned = cleanField(key, data[key], context);
     if (cleaned === undefined) delete data[key];

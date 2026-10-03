@@ -42,7 +42,7 @@ describe("enumerated fields keep every real value", () => {
       ],
     ],
     ["payGrade", ["E-1", "E4", "O-3", "W-2", "O-10", "E-9"]],
-    ["mos", ["11B", "68W", "0311", "3D0X2", "HM", "25B10", "HM-8404"]],
+    ["mos", ["11B", "68W", "3D0X2", "HM", "25B10", "HM-8404"]],
     ["reentryCode", ["RE-1", "RE-3", "RE-4", "1J", "RE-1A", "3"]],
     ["separationCode", ["MBK", "JFF", "KBK"]],
     ["separationProgramDesignator", ["MBK"]],
