@@ -2189,11 +2189,15 @@ const NON_CONDITION_WORDS = new Set([
   "history",
   "residuals",
 ]);
-const DANGLING_END_WORDS = new Set([
+// A qualifier after a comma ("Sinusitis, chronic") is the VA schedule's own
+// wording; only one with no comma before it is a name cut off.
+const DANGLING_QUALIFIERS = new Set([
   "degenerative",
   "chronic",
   "acute",
   "recurrent",
+]);
+const DANGLING_END_WORDS = new Set([
   "of",
   "and",
   "or",
@@ -2365,8 +2369,14 @@ function _endsMidWord(name) {
 const CUT_BEFORE_HEAD_TAILS = [
   "post-traumatic stress",
   "posttraumatic stress",
-  "sleep",
+  "obstructive sleep",
 ];
+
+function _endsOnBareQualifier(lower, words) {
+  const last = words[words.length - 1];
+  if (!DANGLING_QUALIFIERS.has(last)) return false;
+  return !/,\s*[a-z]+$/.test(lower);
+}
 
 function _isTruncatedName(name) {
   if (name.length > MAX_CONDITION_NAME_CHARS) return true;
@@ -2374,6 +2384,8 @@ function _isTruncatedName(name) {
   const words = lower.split(/\s+/);
   return (
     DANGLING_END_WORDS.has(words[words.length - 1]) ||
+    _endsOnBareQualifier(lower, words) ||
+    lower === "sleep" ||
     CUT_BEFORE_HEAD_TAILS.some((t) => lower === t || lower.endsWith(` ${t}`)) ||
     _endsMidWord(name)
   );
@@ -2453,9 +2465,12 @@ const nameKey = (text) => text.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
 // A name that is one phrase twice: "Tinnitus and Tinnitus", "Lumbar strain /
 // lumbar strain", or run together at the join ("hearing losshearing loss").
 function _collapseWholeNameRepeat(name) {
-  const [first, second] = name.split(/[,;&/]|\band\b|\bor\b/i, 2);
-  if (second && nameKey(first) && nameKey(first) === nameKey(second)) {
-    return first.trim();
+  const pieces = name.split(/[,;&/]|\band\b|\bor\b/i).filter((p) => nameKey(p));
+  if (
+    pieces.length >= 2 &&
+    pieces.every((p) => nameKey(p) === nameKey(pieces[0]))
+  ) {
+    return pieces[0].trim();
   }
   const compact = nameKey(name);
   const half = compact.length / 2;

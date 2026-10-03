@@ -84,6 +84,19 @@ const KEPT = [
   "traumatic brain injury (TBI)",
   "anxiety disorder, not otherwise specified",
   "ED",
+  "Sinusitis, chronic",
+  "Arthritis, degenerative",
+  "Left knee strain, chronic",
+  "Right shoulder dislocation, recurrent",
+  "Rhinitis, allergic, chronic",
+  "Pancreatitis, acute",
+  "Disturbed sleep",
+  "Insomnia with disturbed sleep",
+];
+
+const KEPT_AFTER_REPEAT_CLEANUP = [
+  ["Tinnitus, tinnitus, and hearing loss", "Tinnitus, and hearing loss"],
+  ["Depression, depression, anxiety", "Depression, anxiety"],
 ];
 
 describe("_cleanConditionName: wording that is not a condition", () => {
@@ -98,6 +111,13 @@ describe("_cleanConditionName: wording that is not a condition", () => {
   it.each(KEPT)("keeps the real name %j unchanged", (name) => {
     expect(_cleanConditionName(name)).toBe(name);
   });
+
+  it.each(KEPT_AFTER_REPEAT_CLEANUP)(
+    "keeps the second condition in %j",
+    (raw, expected) => {
+      expect(_cleanConditionName(raw)).toBe(expected);
+    },
+  );
 });
 
 const LETTER = `
