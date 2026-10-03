@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { registerLocalAIEngine } from "../utils/unifiedAIService";
 import { gpuManager } from "../utils/WebGPUManager";
+import { loadWithStallWatchdog } from "../utils/engineLoadStall";
 
 // Storage key for GPU preference
 const GPU_PREFERENCE_KEY = "vet_rate_gpu_preference";
@@ -1286,7 +1287,19 @@ const loadLegacyWebLLMEngine = async (modelId, visionFlags, ctx) => {
       { setError, setIsReady, setEngine },
     );
 
-    const mlcEngine = await CreateMLCEngine(modelId, engineOptions);
+    // The main-thread engine cannot be cancelled; a stalled load is only
+    // abandoned, so the retry starts a fresh one.
+    const mlcEngine = await loadWithStallWatchdog(
+      (noteProgress) =>
+        CreateMLCEngine(modelId, {
+          ...engineOptions,
+          initProgressCallback: (report) => {
+            noteProgress(report);
+            initProgressCallback(report);
+          },
+        }),
+      () => {},
+    );
 
     setEngine(mlcEngine);
     setLoadedModelId(modelId);

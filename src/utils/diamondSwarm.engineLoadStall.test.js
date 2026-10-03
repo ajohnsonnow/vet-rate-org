@@ -28,12 +28,15 @@ class FakeWorker {
   }
 }
 
-const { initializeSwarm, EngineLoadStalledError, ENGINE_LOAD_STALL_MS } =
+const { initializeSwarm, EngineLoadStalledError } =
   await import("./diamondSwarm.js");
+const { ENGINE_LOAD_STALL_MS, resetEngineLoadStallBudget } =
+  await import("./engineLoadStall.js");
 
 const FAKE_ENGINE = { chat: {} };
 
 beforeEach(() => {
+  resetEngineLoadStallBudget();
   vi.useFakeTimers();
   vi.clearAllMocks();
   vi.stubGlobal("Worker", FakeWorker);
@@ -66,7 +69,7 @@ describe("engine load stall detection", () => {
     const error = await outcome;
     expect(error).toBeInstanceOf(EngineLoadStalledError);
     expect(error.message).toMatch(/stopped making progress/);
-    expect(error.message).toMatch(/Try again/);
+    expect(error.message).toMatch(/try again/i);
     expect(engineApi.create).toHaveBeenCalledTimes(1);
     expect(terminate).toHaveBeenCalled();
   });
@@ -84,7 +87,9 @@ describe("engine load stall detection", () => {
 
     expect(await outcome).toBeInstanceOf(EngineLoadStalledError);
   });
+});
 
+describe("engine load: slow loads and retries", () => {
   it("never cuts off a slow load that keeps advancing, however long it takes", async () => {
     let finish;
     engineApi.create.mockImplementation((_worker, _id, options) => {
@@ -110,6 +115,61 @@ describe("engine load stall detection", () => {
 
     await expect(outcome).resolves.toBe(true);
     expect(terminate).not.toHaveBeenCalled();
+  });
+
+  it("ends a load whose progress stops at 99%", async () => {
+    engineApi.create.mockImplementation((_worker, _id, options) => {
+      options.initProgressCallback({ progress: 0.99, text: "Fetching 99/100" });
+      return new Promise(() => {});
+    });
+
+    const outcome = initializeSwarm({ modelId: "fake-model-a" }).catch(
+      (error) => error,
+    );
+    await vi.advanceTimersByTimeAsync(ENGINE_LOAD_STALL_MS + 1000);
+
+    expect(await outcome).toBeInstanceOf(EngineLoadStalledError);
+  });
+
+  it("waits through a slow first part: the library reports once per finished weight shard", async () => {
+    engineApi.create.mockImplementation((_worker, _id, options) => {
+      setTimeout(
+        () => options.initProgressCallback({ progress: 0.1, text: "shard 1" }),
+        ENGINE_LOAD_STALL_MS * 0.9,
+      );
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(FAKE_ENGINE), ENGINE_LOAD_STALL_MS * 1.7);
+      });
+    });
+
+    const outcome = initializeSwarm({ modelId: "fake-model-a" });
+    await vi.advanceTimersByTimeAsync(ENGINE_LOAD_STALL_MS * 2);
+
+    await expect(outcome).resolves.toBe(true);
+    expect(terminate).not.toHaveBeenCalled();
+  });
+});
+
+describe("engine load: the try after a stall", () => {
+  it("waits twice as long on the try after a stall", async () => {
+    engineApi.create.mockReturnValue(new Promise(() => {}));
+    const first = initializeSwarm({ modelId: "fake-model-a" }).catch(
+      (error) => error,
+    );
+    await vi.advanceTimersByTimeAsync(ENGINE_LOAD_STALL_MS + 1000);
+    expect(await first).toBeInstanceOf(EngineLoadStalledError);
+
+    let settled = false;
+    const second = initializeSwarm({ modelId: "fake-model-a" }).catch(
+      (error) => error,
+    );
+    second.then(() => {
+      settled = true;
+    });
+    await vi.advanceTimersByTimeAsync(ENGINE_LOAD_STALL_MS + 1000);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(ENGINE_LOAD_STALL_MS);
+    expect(await second).toBeInstanceOf(EngineLoadStalledError);
   });
 
   it("starts a clean second load after a stall", async () => {

@@ -20,6 +20,10 @@ import {
   detectDeviceCapabilities,
   getCachedDeviceProfile,
 } from "./deviceCapabilityDetector";
+import {
+  EngineLoadStalledError,
+  loadWithStallWatchdog,
+} from "./engineLoadStall";
 
 // Errors crossing the WebLLM worker boundary aren't guaranteed to survive as
 // real Error instances - a rejection can arrive with .message undefined,
@@ -429,55 +433,7 @@ function _ensureMLCGPUPatch() {
   window._mlc_gpu_patched = true;
 }
 
-// How long the engine load may go without any sign of progress (no change in
-// the reported percentage or text) before it is called stalled. A slow
-// download that keeps advancing never trips this; there is no total cap.
-export const ENGINE_LOAD_STALL_MS = 180_000;
-
-export class EngineLoadStalledError extends Error {
-  constructor(stallMs = ENGINE_LOAD_STALL_MS) {
-    const minutes = Math.max(1, Math.round(stallMs / 60_000));
-    super(
-      `Loading the on-device AI stopped making progress for ${minutes} minute(s). ` +
-        "Check your connection, then choose Try again. Parts already " +
-        "downloaded are kept, so it can pick up where it stopped.",
-    );
-    this.name = "EngineLoadStalledError";
-  }
-}
-
-// Runs startLoad(noteProgress) and rejects, after calling onStall, when
-// noteProgress sees nothing new for stallMs. Every change re-arms the timer.
-function _loadWithStallWatchdog(startLoad, stallMs, onStall) {
-  return new Promise((resolve, reject) => {
-    let timer = null;
-    let lastSeen = null;
-    const arm = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        onStall();
-        reject(new EngineLoadStalledError(stallMs));
-      }, stallMs);
-    };
-    const noteProgress = (report) => {
-      const seen = `${report?.progress}|${report?.text}`;
-      if (seen === lastSeen) return;
-      lastSeen = seen;
-      arm();
-    };
-    arm();
-    startLoad(noteProgress).then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (error) => {
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-}
+export { EngineLoadStalledError };
 
 /**
  * Try to load a WebLLM model from a device-optimal list, in order.
@@ -495,8 +451,6 @@ async function _loadModelFromList(
   for (const modelId of modelList) {
     let worker = null;
     try {
-      const { CreateWebWorkerMLCEngine } = await import("@mlc-ai/web-llm");
-
       onProgress?.({
         stage: "download",
         message: `Downloading ${agentInfo?.name} (${modelId.split("-")[0]})...`,
@@ -511,9 +465,10 @@ async function _loadModelFromList(
         { type: "module" },
       );
 
-      const engine = await _loadWithStallWatchdog(
-        (noteProgress) =>
-          CreateWebWorkerMLCEngine(
+      const engine = await loadWithStallWatchdog(
+        async (noteProgress) => {
+          const { CreateWebWorkerMLCEngine } = await import("@mlc-ai/web-llm");
+          return CreateWebWorkerMLCEngine(
             worker,
             modelId,
             {
@@ -531,8 +486,8 @@ async function _loadModelFromList(
             // Device-adaptive context window matches model max (Qwen2.5-3B = 8192).
             // desktop-mid/laptop/mobile fall back to 8192 or 4096.
             { context_window_size: contextWindowSize },
-          ),
-        ENGINE_LOAD_STALL_MS,
+          );
+        },
         () => worker.terminate(),
       );
 

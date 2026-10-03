@@ -74,11 +74,11 @@ test("a stalled engine load ends with a plain message and Try again, which loads
   await expect(dialog.getByText(/Fetching param cache 3\/10/)).toBeVisible();
   await expect(dialog.getByRole("alert")).toHaveCount(0);
 
-  await page.clock.fastForward("04:00");
+  await page.clock.fastForward("11:00");
 
   const alert = dialog.getByRole("alert").filter({ hasText: /stopped making/ });
   await expect(alert).toBeVisible();
-  await expect(alert).toContainText("Try again");
+  await expect(alert).toContainText(/try again/i);
 
   await page.evaluate(() => {
     (window as unknown as Record<string, unknown>).__e2eFakeEngineStall = false;
