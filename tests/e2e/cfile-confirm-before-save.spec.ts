@@ -38,6 +38,15 @@ async function makePdf(lines: string[]): Promise<Buffer> {
   return Buffer.from(await pdfDoc.save());
 }
 
+// Built once per worker: pdf-lib stamps the current time into the file and
+// compresses it, so two builds of the same lines can differ in size, and a
+// different size is rightly a different document to My Packet.
+let cachedLetterPdf: Buffer | null = null;
+async function letterPdf(): Promise<Buffer> {
+  cachedLetterPdf ??= await makePdf(LETTER_LINES);
+  return cachedLetterPdf;
+}
+
 async function boot(page: Page): Promise<void> {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
@@ -72,7 +81,7 @@ async function dropAndAnalyze(page: Page): Promise<void> {
   await dialog.locator('input[type="file"]').setInputFiles({
     name: "generic-letter.pdf",
     mimeType: "application/pdf",
-    buffer: await makePdf(LETTER_LINES),
+    buffer: await letterPdf(),
   });
   await dialog.getByRole("button", { name: /Analyze My C-File/i }).click();
   const consent = page.locator(CONSENT_DIALOG);
@@ -120,6 +129,39 @@ async function snapshotStorage(page: Page): Promise<string> {
     return { local, idb };
   });
   return JSON.stringify(snap);
+}
+
+// The app seeds and backs up its own stores for a moment after boot, so the
+// baseline is taken once two reads a second apart agree.
+async function settledSnapshot(page: Page): Promise<string> {
+  let last = await snapshotStorage(page);
+  for (let attempt = 0; attempt < 30; attempt++) {
+    await page.waitForTimeout(1000);
+    const next = await snapshotStorage(page);
+    if (next === last) return next;
+    last = next;
+  }
+  throw new Error("Storage never settled after boot");
+}
+
+function changedEntries(beforeJson: string, afterJson: string): string[] {
+  const before = JSON.parse(beforeJson) as StorageSnapshot;
+  const after = JSON.parse(afterJson) as StorageSnapshot;
+  const changed: string[] = [];
+  for (const area of ["local", "idb"] as const) {
+    const keys = new Set([
+      ...Object.keys(before[area]),
+      ...Object.keys(after[area]),
+    ]);
+    for (const key of keys) {
+      if (
+        JSON.stringify(before[area][key]) !== JSON.stringify(after[area][key])
+      ) {
+        changed.push(`${area}:${key}`);
+      }
+    }
+  }
+  return changed;
 }
 
 async function packetRecordCount(page: Page): Promise<number> {
@@ -188,7 +230,7 @@ test.describe("C-File Analyzer: nothing is saved until the veteran confirms", ()
   }) => {
     test.setTimeout(90000);
     await boot(page);
-    const before = await snapshotStorage(page);
+    const before = await settledSnapshot(page);
 
     await dropAndAnalyze(page);
     const dialog = page.locator(CFILE_DIALOG);
@@ -200,7 +242,9 @@ test.describe("C-File Analyzer: nothing is saved until the veteran confirms", ()
     await dialog.getByRole("button", { name: /Close C-File/i }).click();
     await expect(dialog).toBeHidden();
 
-    expect(await snapshotStorage(page)).toBe(before);
+    const after = await settledSnapshot(page);
+    expect(changedEntries(before, after)).toEqual([]);
+    expect(after).toBe(before);
   });
 
   test("save files the document once and saving again adds nothing", async ({
