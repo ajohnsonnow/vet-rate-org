@@ -10,9 +10,10 @@
  * short and the veteran is told so.
  *
  * Session storage is deliberate: it belongs to this one tab (two imports in
- * two tabs never clear each other's marker), survives the reload that follows
- * a killed tab, and is already emptied by Quick Exit, Atomic Wipe and every
- * Clear All Data path.
+ * two tabs never clear each other's marker) and survives the reload that
+ * follows a killed tab. The tab that starts a Clear All Data empties it, Quick
+ * Exit empties it, and every other tab drops it when the wipe broadcast
+ * arrives (dataWipeChannel.js).
  */
 
 export const IMPORT_MARKER_KEY = "vetrate_import_in_progress";
@@ -47,7 +48,12 @@ function readRaw() {
 export function startImportMarker(labels) {
   const kept = labels.slice(0, MAX_DOCUMENTS);
   if (kept.length === 0) return;
-  write({ total: kept.length, saved: 0, labels: kept });
+  write({
+    total: kept.length,
+    saved: 0,
+    labels: kept,
+    id: crypto.randomUUID(),
+  });
 }
 
 export function recordDocumentSaved() {
@@ -56,8 +62,11 @@ export function recordDocumentSaved() {
   write({ ...marker, saved: Math.min(marker.saved + 1, marker.total) });
 }
 
-export function clearImportMarker() {
+// With an id, removes only that import's marker: an import started since is
+// a different marker and must survive.
+export function clearImportMarker(id) {
   try {
+    if (id !== undefined && readRaw()?.id !== id) return;
     sessionStorage.removeItem(IMPORT_MARKER_KEY);
   } catch {
     console.warn("The import progress marker could not be cleared.");
@@ -71,7 +80,7 @@ export function readInterruptedImport() {
     clearImportMarker();
     return null;
   }
-  return { saved: marker.saved, total: marker.total };
+  return { saved: marker.saved, total: marker.total, id: marker.id };
 }
 
 export function describeInterruptedImport({ saved, total }) {

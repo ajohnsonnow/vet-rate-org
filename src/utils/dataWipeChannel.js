@@ -22,6 +22,7 @@
 
 import { clearBeforeUnloadWarning } from "./beforeUnloadGuard";
 import { stopAutoBackup } from "./autoBackup";
+import { clearImportMarker } from "./importProgressMarker";
 
 const CHANNEL_NAME = "vetrate-data-wipe";
 const STORAGE_FALLBACK_KEY = "vetrate_data_wipe_broadcast";
@@ -113,6 +114,7 @@ function reloadAfterWipe() {
   clearBeforeUnloadWarning();
   window.onbeforeunload = null;
   stopAutoBackup();
+  clearImportMarker();
   window.location.reload();
 }
 

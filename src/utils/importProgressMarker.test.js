@@ -38,7 +38,12 @@ describe("the import marker", () => {
     startImportMarker(LABELS);
 
     const stored = sessionStorage.getItem(IMPORT_MARKER_KEY);
-    expect(JSON.parse(stored)).toEqual({ total: 3, saved: 0, labels: LABELS });
+    expect(JSON.parse(stored)).toEqual({
+      total: 3,
+      saved: 0,
+      labels: LABELS,
+      id: expect.any(String),
+    });
     expect(stored).not.toMatch(/\.pdf|\.txt|\.docx/i);
   });
 
@@ -47,7 +52,7 @@ describe("the import marker", () => {
     recordDocumentSaved();
     recordDocumentSaved();
 
-    expect(readInterruptedImport()).toEqual({ saved: 2, total: 3 });
+    expect(readInterruptedImport()).toMatchObject({ saved: 2, total: 3 });
   });
 
   it("never counts past the total", () => {
@@ -55,7 +60,7 @@ describe("the import marker", () => {
     recordDocumentSaved();
     recordDocumentSaved();
 
-    expect(readInterruptedImport()).toEqual({ saved: 1, total: 1 });
+    expect(readInterruptedImport()).toMatchObject({ saved: 1, total: 1 });
   });
 
   it("is gone once the import finishes or is cancelled", () => {

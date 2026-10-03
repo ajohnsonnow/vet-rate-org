@@ -41,6 +41,20 @@ describe("InterruptedImportNotice", () => {
     expect(sessionStorage.getItem(IMPORT_MARKER_KEY)).toBeNull();
   });
 
+  it("keeps the marker of an import started while the old notice is showing", () => {
+    startImportMarker(["document 1 (DD214)", "document 2 (DBQ)"]);
+    render(<InterruptedImportNotice />);
+
+    startImportMarker(["document 1 (DD214)", "document 2 (DBQ)"]);
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    recordDocumentSaved();
+
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(JSON.parse(sessionStorage.getItem(IMPORT_MARKER_KEY))).toMatchObject(
+      { total: 2, saved: 1 },
+    );
+  });
+
   it("does not show an import that begins after the app has loaded", () => {
     render(<InterruptedImportNotice />);
 

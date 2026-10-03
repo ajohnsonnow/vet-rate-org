@@ -21,7 +21,7 @@ export default function InterruptedImportNotice() {
   if (!interrupted) return null;
 
   const dismiss = () => {
-    clearImportMarker();
+    clearImportMarker(interrupted.id);
     setInterrupted(null);
   };
 

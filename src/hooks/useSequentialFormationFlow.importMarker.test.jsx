@@ -89,7 +89,7 @@ describe("the import marker follows the import", () => {
 
     await act(async () => result.current.startSequentialProcessing());
 
-    expect(readInterruptedImport()).toEqual({ saved: 0, total: 2 });
+    expect(readInterruptedImport()).toMatchObject({ saved: 0, total: 2 });
     const stored = sessionStorage.getItem(IMPORT_MARKER_KEY);
     expect(JSON.parse(stored).labels).toEqual([
       "document 1 (DD214)",
@@ -109,7 +109,7 @@ describe("the import marker follows the import", () => {
         updateProfile: false,
       });
     });
-    expect(readInterruptedImport()).toEqual({ saved: 1, total: 2 });
+    expect(readInterruptedImport()).toMatchObject({ saved: 1, total: 2 });
 
     await settle(600);
     expect(readInterruptedImport()).toBeNull();
