@@ -10,7 +10,7 @@
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { describePdfPasswordError } from "./fileTypeGuards";
-import { FileReadError, isFileReadFailure } from "./fileReadFailure";
+import { FileReadError, forLog, isFileReadFailure } from "./fileReadFailure";
 
 /**
  * Wire pdf.js's onPassword callback to a prompt+retry. The VA ships encrypted
@@ -92,7 +92,7 @@ export async function ripTextFromPdf(
         }
       } catch (pageError) {
         failedPages++;
-        console.warn(`Error extracting page ${i}:`, pageError);
+        console.warn(`Error extracting page ${i}:`, forLog(pageError));
         fullText += `--- PAGE ${i} ---\n[Page extraction error]\n\n`;
         onProgress(i, numPages);
       }
@@ -114,7 +114,7 @@ export async function ripTextFromPdf(
       pagesRead: numPages - failedPages,
     };
   } catch (error) {
-    console.error("PDF extraction error:", error);
+    console.error("PDF extraction error:", forLog(error));
     const pwError = describePdfPasswordError(error);
     if (pwError) throw pwError;
     throw new Error(`Failed to read PDF: ${error.message}`);
@@ -259,7 +259,7 @@ async function extractPageAndTrack(pdf, pageNum, pageState) {
     // A file that stops being readable part way is a failed document, not a
     // run of empty pages that would be saved as if they had been read.
     if (isFileReadFailure(pageErr)) throw new FileReadError();
-    console.warn(`processLargePDF: page ${pageNum} error:`, pageErr.message);
+    console.warn(`processLargePDF: page ${pageNum} error:`, forLog(pageErr));
     pageState.pagesEmpty++;
     return {
       textBlock: `--- PAGE ${pageNum} ---\n[extraction error]\n\n`,
@@ -436,7 +436,7 @@ async function releaseLoadingTask(loadingTask) {
   try {
     await loadingTask?.destroy();
   } catch (error) {
-    console.warn(`PDF release failed: ${error.message}`);
+    console.warn(`PDF release failed: ${forLog(error)}`);
   }
 }
 

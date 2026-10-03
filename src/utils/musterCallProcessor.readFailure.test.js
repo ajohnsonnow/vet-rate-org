@@ -19,7 +19,6 @@ vi.mock("./documentAnalyzer", async (importOriginal) => {
 
 const { analyzeDocument } = await import("./documentAnalyzer");
 const { processFormationDocument } = await import("./musterCallProcessor");
-const { FILE_READ_FAILED_MESSAGE } = await import("./fileReadFailure");
 
 const RAW =
   'Unexpected server response (0) while retrieving PDF "blob:http://127.0.0.1:5381/0b1c-generic"';
@@ -48,7 +47,10 @@ describe("processFormationDocument: a file that cannot be read", () => {
 
     expect(result.status).toBe("error");
     expect(result.readFailed).toBe(true);
-    expect(result.error).toBe(FILE_READ_FAILED_MESSAGE);
+    expect(result.failureKind).toBe("read");
+    expect(result.error).toBe(
+      "This document could not be processed because the file could not be read.",
+    );
     expect(result.persistIncomplete).toBe(false);
   });
 
@@ -67,6 +69,7 @@ describe("processFormationDocument: a file that cannot be read", () => {
 
     expect(result.status).toBe("error");
     expect(result.readFailed).toBe(false);
-    expect(result.error).toBe("No text could be extracted");
+    expect(result.failureKind).toBe("unknown");
+    expect(result.error).not.toContain("No text could be extracted");
   });
 });

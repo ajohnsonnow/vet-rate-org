@@ -517,7 +517,7 @@ export async function renderPDFToImages(
     try {
       await loadingTask?.destroy();
     } catch (releaseError) {
-      console.warn(`PDF release failed: ${releaseError.message}`);
+      console.warn(`PDF release failed: ${forLog(releaseError)}`);
     }
   }
 }

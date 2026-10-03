@@ -86,10 +86,12 @@ import {
 } from "./boundedStep";
 import { describePersistIncomplete } from "./persistIncompleteMessage";
 import {
-  FILE_READ_FAILED_MESSAGE,
-  FILE_READ_LOG_PHRASE,
-  isFileReadFailure,
+  classifyDocumentFailure,
+  FAILURE_KINDS,
+  failureLogCode,
+  forLog,
 } from "./fileReadFailure";
+import { describeFailureKind } from "./readFailureMessage";
 import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
 import {
   dropSupersededConditions,
@@ -2083,27 +2085,25 @@ const largePdfCoverage = (largeResult, { readAllRequested = false } = {}) => {
   };
 };
 
-const _failureMessage = (result, error, { persistIncomplete, readFailed }) => {
+const _failureMessage = (result, error, { persistIncomplete, kind }) => {
   if (persistIncomplete) {
     return describePersistIncomplete(result.filename, "Retry", error);
   }
-  return readFailed ? FILE_READ_FAILED_MESSAGE : error.message;
+  return describeFailureKind(kind);
 };
 
 const _markDocumentFailed = (result, error, onProgress) => {
-  const readFailed = isFileReadFailure(error);
+  const persistIncomplete = error instanceof DocumentPersistIncompleteError;
+  const kind = classifyDocumentFailure(error);
   console.error(
     `Error processing this document:`,
-    readFailed ? FILE_READ_LOG_PHRASE : error.message,
+    persistIncomplete ? "saving did not finish" : failureLogCode(kind),
   );
-  const persistIncomplete = error instanceof DocumentPersistIncompleteError;
-  const message = _failureMessage(result, error, {
-    persistIncomplete,
-    readFailed,
-  });
+  const message = _failureMessage(result, error, { persistIncomplete, kind });
   result.status = "error";
   result.error = message;
-  result.readFailed = readFailed;
+  result.failureKind = kind;
+  result.readFailed = kind === FAILURE_KINDS.READ;
   result.persistIncomplete = persistIncomplete;
   result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;
   onProgress?.({
@@ -6257,7 +6257,7 @@ const runConcurrentDocumentProcessing = async (
       return result;
     } catch (error) {
       // Catch any errors that slip through processSingleDocument
-      console.error(`Failed to process this document:`, error.message);
+      console.error(`Failed to process this document:`, forLog(error));
       processing--;
       completed++;
 
@@ -6265,7 +6265,7 @@ const runConcurrentDocumentProcessing = async (
       results.push({
         filename: file.name,
         status: "error",
-        error: error.message || "Unknown error",
+        error: describeFailureKind(classifyDocumentFailure(error)),
         fileSize: file.size,
       });
 
@@ -6275,7 +6275,7 @@ const runConcurrentDocumentProcessing = async (
         completed,
         processing,
         filename: file.name,
-        error: error.message,
+        error: describeFailureKind(classifyDocumentFailure(error)),
       });
 
       return null;

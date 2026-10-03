@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import {
   FileReadError,
   FILE_READ_FAILED_MESSAGE,
-  FILE_READ_LOG_PHRASE,
+  classifyDocumentFailure,
   isFileReadFailure,
   forLog,
   isFileStillReadable,
@@ -47,18 +47,54 @@ describe("isFileReadFailure", () => {
   });
 });
 
+describe("classifyDocumentFailure", () => {
+  it.each([
+    [
+      "a worker script that cannot be fetched",
+      new Error(
+        'Setting up fake worker failed: "Failed to fetch dynamically imported module: http://localhost:5383/assets/pdf.worker.min.mjs".',
+      ),
+      "reader_unavailable",
+    ],
+    [
+      "a worker loaded from a blob: address",
+      new Error("Failed to load worker script blob:http://localhost:5383/ab"),
+      "reader_unavailable",
+    ],
+    ["a step that ran out of time", named("StepTimeoutError", "x"), "timeout"],
+    ["an abort by timeout", new Error("The operation timed out"), "timeout"],
+    [
+      "an allocation failure",
+      new RangeError("Array buffer allocation failed"),
+      "memory",
+    ],
+    ["a read failure", named("NotFoundError", "gone"), "read"],
+    ["anything else", new Error("analysis exploded"), "unknown"],
+    ["nothing", undefined, "unknown"],
+  ])("sorts %s as %s", (_label, error, kind) => {
+    expect(classifyDocumentFailure(error)).toBe(kind);
+  });
+});
+
 describe("forLog", () => {
+  it("never carries a local address, for any kind", () => {
+    const raw = new Error(
+      "Failed to fetch dynamically imported module: http://localhost:5383/pdf.worker.mjs",
+    );
+    expect(forLog(raw)).toBe("document_failure:reader_unavailable");
+  });
+
   it("replaces a read failure, which may carry a blob: address, with a fixed phrase", () => {
     const raw = new Error(
       'Unexpected server response (0) while retrieving PDF "blob:http://x/y"',
     );
-    expect(forLog(raw)).toBe(FILE_READ_LOG_PHRASE);
+    expect(forLog(raw)).toBe("document_failure:read");
     expect(String(forLog(raw))).not.toMatch(/blob:/);
   });
 
-  it("leaves any other error alone", () => {
-    const other = new Error("something else");
-    expect(forLog(other)).toBe(other);
+  it("replaces any other error too, so no technical text is logged", () => {
+    const other = new Error("something else at http://localhost:5383/x.mjs");
+    expect(forLog(other)).toBe("document_failure:unknown");
   });
 });
 
