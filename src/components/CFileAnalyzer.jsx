@@ -31,10 +31,8 @@ import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import ReportBugLink from "./ReportBugLink";
-import {
-  mergeAnalysisIntoVkb,
-  buildVkbMergeFromCFile,
-} from "../utils/veteranContextProvider";
+import { mergeAnalysisIntoVkb } from "../utils/veteranContextProvider";
+import { planCFileSave } from "../utils/cfileSavePlan";
 import { getStorageStats } from "../utils/storage";
 import { getPacketIndex } from "../utils/myPacketManager";
 
@@ -151,7 +149,12 @@ async function _checkStorageQuota(extractionResult, result, ctx) {
 // to save. Both stores key a document on its name and size and the merges skip
 // what is already there, so saving again or analysing the same file again adds
 // nothing new.
-export async function _saveCFileToRecords(extractionResult, analysis) {
+export async function _saveCFileToRecords(
+  extractionResult,
+  analysis,
+  ticked = [],
+) {
+  const plan = planCFileSave(analysis, extractionResult, { ticked });
   const filed = stripIdentifiersFromFormationResult(
     extractionResult.deferredResult,
   );
@@ -167,7 +170,7 @@ export async function _saveCFileToRecords(extractionResult, analysis) {
   );
   await mergeAnalysisIntoVkb({
     toolName: "C-File Analyzer",
-    vkbMergeData: buildVkbMergeFromCFile(analysis, extractionResult),
+    vkbMergeData: plan.vkbMergeData,
     sourceDocumentId: filedRecord?.id ?? null,
   });
 }
@@ -183,19 +186,76 @@ function _describeSaveFailure(err, fileName) {
 
 // Nothing is written until the veteran chooses this: it says what will be
 // kept, and closing the tool without it leaves the stored data as it was.
+function SavePlanLists({ plan, ticked, onToggle }) {
+  return (
+    <div className="mt-2 text-sm text-blue-900 dark:text-blue-100">
+      <p className="font-medium">Conditions saved ({plan.conditions.length})</p>
+      <ul className="list-disc pl-5" data-testid="cfile-save-conditions">
+        {plan.conditions.map((name) => (
+          <li key={name}>{name}</li>
+        ))}
+      </ul>
+      {plan.leftOut.length > 0 && (
+        <fieldset data-testid="cfile-save-left-out" className="mt-2">
+          <legend className="font-medium">
+            Not recognised as a condition ({plan.leftOut.length}), left out
+            unless you tick it
+          </legend>
+          {plan.leftOut.map((item) => (
+            <label
+              key={item.key}
+              className="flex items-center gap-2 min-h-[44px]"
+            >
+              <input
+                type="checkbox"
+                checked={ticked.includes(item.key)}
+                onChange={() => onToggle(item.key)}
+              />
+              <span>{item.name}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
+      <p className="mt-2 font-medium">
+        Timeline events saved ({plan.timeline.length})
+      </p>
+      <ul className="list-disc pl-5" data-testid="cfile-save-timeline">
+        {plan.timeline.map((e, i) => (
+          <li key={`${e.date}|${e.eventType}|${i}`}>
+            {e.date || "no date found"}: {e.description}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const NO_TICKS = [];
+
 export function CFileSaveToRecords({ file, extractedText, analysisResult }) {
   const [status, setStatus] = useState(SAVE_IDLE);
-  useEffect(() => setStatus(SAVE_IDLE), [analysisResult, extractedText]);
-  const merge = useMemo(
-    () => buildVkbMergeFromCFile(analysisResult, extractedText),
-    [analysisResult, extractedText],
+  const [ticked, setTicked] = useState(NO_TICKS);
+  useEffect(() => {
+    setStatus(SAVE_IDLE);
+    setTicked(NO_TICKS);
+  }, [analysisResult, extractedText]);
+  const plan = useMemo(
+    () => planCFileSave(analysisResult, extractedText, { ticked }),
+    [analysisResult, extractedText, ticked],
+  );
+  const toggleTick = useCallback(
+    (key) =>
+      setTicked((cur) =>
+        cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key],
+      ),
+    [],
   );
   const fileName = file?.name || "this document";
 
   const handleSave = async () => {
     setStatus((s) => ({ ...s, phase: "saving", message: "" }));
     try {
-      await _saveCFileToRecords(extractedText, analysisResult);
+      await _saveCFileToRecords(extractedText, analysisResult, ticked);
       setStatus((s) => ({ phase: "saved", message: "", saves: s.saves + 1 }));
     } catch (err) {
       console.warn("C-File save did not finish:", err?.name);
@@ -218,15 +278,16 @@ export function CFileSaveToRecords({ file, extractedText, analysisResult }) {
         {status.saves > 0
           ? "Saved to your records on this device."
           : "Nothing has been saved yet."}{" "}
-        Saving keeps {merge.claims.length} condition(s),{" "}
-        {merge.evidenceTimeline.length} timeline event(s), the summary,
-        exposures and action items the analysis wrote, any service periods,
-        awards, deployments and ratings found in the document, and the document
-        "{fileName}" in your Knowledge Base and My Packet. The text the analysis
-        wrote can repeat details from the document. Your name, date of birth, VA
-        file number and claim number are not saved as fields. Closing this
-        screen without saving keeps nothing.
+        Saving keeps the conditions and timeline events listed below, the
+        summary, exposures and action items the analysis wrote, any service
+        periods, awards, deployments and ratings found in the document, and the
+        document "{fileName}" in your Knowledge Base and My Packet. An event
+        already saved from this document is updated, not added again. The text
+        the analysis wrote can repeat details from the document. Your name, date
+        of birth, VA file number and claim number are not saved as fields.
+        Closing this screen without saving keeps nothing.
       </p>
+      <SavePlanLists plan={plan} ticked={ticked} onToggle={toggleTick} />
       {status.phase === "error" && (
         <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
           {status.message}
