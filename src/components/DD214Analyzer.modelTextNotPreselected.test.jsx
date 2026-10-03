@@ -68,8 +68,8 @@ beforeEach(() => {
   stores.saveDocumentToPacket.mockResolvedValue({ success: true });
 });
 
-describe("a name the app has never seen can still be in model text", () => {
-  it("is shown as written (the known limit) when the local parser read no name", () => {
+describe("a name the app has never seen is removed from model text", () => {
+  it("is not shown even when the local parser read no name", () => {
     let final;
     const data = _parseDd214Json(
       JSON.stringify({ branch: "Army", ...MODEL_TEXT }),
@@ -79,7 +79,8 @@ describe("a name the app has never seen can still be in model text", () => {
       final = value;
     });
     expect(final.fullName).toBe("");
-    expect(final.narrativeReason).toContain("Faketon");
+    expect(JSON.stringify(final)).not.toContain("Faketon");
+    expect(final.narrativeReason).toContain("Separated per request of");
   });
 });
 

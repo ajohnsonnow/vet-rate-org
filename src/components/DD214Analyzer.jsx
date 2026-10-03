@@ -80,6 +80,7 @@ import {
   MODEL_TEXT_FIELDS,
 } from "../utils/dd214ModelOutputGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
+import { loadKnownIdentifierSources } from "../utils/dd214KnownIdentifierSources";
 
 /**
  * System Prompt for Multi-Document Cumulative Analysis
@@ -650,7 +651,7 @@ export function _extractResponseContent(response) {
 // captures console output into bug reports a veteran can copy or send
 // off-device, so diagnostics here report shape/length only. Identifier fields
 // a model returns anyway are dropped at parse time (owner decision F).
-export function _parseDd214Json(content, t) {
+export function _parseDd214Json(content, t, knownSources) {
   // Parse JSON from response
   let data;
   try {
@@ -673,7 +674,10 @@ export function _parseDd214Json(content, t) {
     _stripModelIdentifiers(data);
     _keepModelSchemaFields(data);
     _placeholderDetector.rejectPlaceholderEchoes(data);
-    sanitizeModelOutput(data, [getVeteranProfile()]);
+    sanitizeModelOutput(
+      data,
+      Array.isArray(knownSources) ? knownSources : [getVeteranProfile()],
+    );
   } catch {
     // V8's JSON.parse message quotes a snippet of the input, so it is never
     // logged - only the length.
@@ -833,22 +837,45 @@ function _regexIdentifierSource(regexFields) {
   return { ...regexFields, homeAddress: regexFields.mailingAddress };
 }
 
-export function _applyRegexSafetyNet(data, combinedRawText, setAnalysisResult) {
+// Text a model writes in its own words: when the local parser read the same
+// field from the document, the parser's value replaces the model's.
+const LOCAL_PARSER_WINS_FIELDS = MODEL_TEXT_FIELDS.filter(
+  (key) => key !== "extractionNotes",
+);
+
+function _preferLocalParserText(data, regexFields) {
+  LOCAL_PARSER_WINS_FIELDS.forEach((key) => {
+    const value = regexFields?.[key];
+    const present = Array.isArray(value) ? value.length > 0 : _hasValue(value);
+    if (present) data[key] = value;
+  });
+}
+
+export function _applyRegexSafetyNet(
+  data,
+  combinedRawText,
+  setAnalysisResult,
+  knownSources,
+) {
   const regexResult = _extractRegexFields(combinedRawText);
+  const sources = Array.isArray(knownSources)
+    ? knownSources
+    : [getVeteranProfile()];
   // The model's own values are sanitized BEFORE the merge, with the name the
   // local parser read as a known value, so a name the model wrote under any
   // key is redacted while the parser's own values stay untouched.
   _keepModelSchemaFields(data);
   sanitizeModelOutput(data, [
-    getVeteranProfile(),
+    ...sources,
     _regexIdentifierSource(regexResult?.fields),
   ]);
   _mergeRegexIntoData(data, regexResult);
+  _preferLocalParserText(data, regexResult?.fields);
 
   // Runs unconditionally (fail-closed), regardless of whether extraction or
   // merge above threw or found nothing.
   _applyIdentifierFieldsFromLocalParser(data, regexResult?.fields);
-  scrubModelFreeText(data, [getVeteranProfile(), data]);
+  scrubModelFreeText(data, [...sources, data]);
 
   setAnalysisResult({ ...data });
 }
@@ -938,6 +965,18 @@ function _saveDd214Awards(awards) {
   });
 }
 
+// Job title, schools and qualifications are text a model wrote: they are
+// stored only when the veteran ticked the matching import box.
+const TICK_GATED_TEXT_FIELDS = [
+  "mosTitle",
+  "militaryEducation",
+  "specialQualifications",
+];
+
+function _ticked(analysisResult, selectedFields, key) {
+  return _hasValue(selectedFields?.[key]) ? analysisResult[key] : undefined;
+}
+
 export function _saveDd214ToProfile(
   analysisResult,
   combinedText,
@@ -947,6 +986,10 @@ export function _saveDd214ToProfile(
 ) {
   const sourceFileName = _dd214SourceFileName(extractedTexts);
   const periodId = _saveDd214EntryDate(analysisResult, sourceFileName);
+  const [mosTitle, militaryEducation, specialQualifications] =
+    TICK_GATED_TEXT_FIELDS.map((key) =>
+      _ticked(analysisResult, selectedFields, key),
+    );
 
   saveDD214Data({
     branch: analysisResult.branch,
@@ -956,7 +999,7 @@ export function _saveDd214ToProfile(
     payGrade: analysisResult.payGrade,
     dateOfRank: analysisResult.dateOfRank,
     mos: analysisResult.mos,
-    mosTitle: analysisResult.mosTitle,
+    mosTitle,
     entryDate: analysisResult.entryDate,
     separationDate: analysisResult.separationDate,
     netActiveService: analysisResult.netActiveService,
@@ -966,7 +1009,7 @@ export function _saveDd214ToProfile(
     monthsService: analysisResult.monthsService,
     daysService: analysisResult.daysService,
     reserveObligationDate: analysisResult.reserveObligationDate,
-    militaryEducation: analysisResult.militaryEducation,
+    militaryEducation,
     separationType: analysisResult.separationType,
     characterOfService: analysisResult.characterOfService,
     reenlisted: analysisResult.reenlisted,
@@ -974,7 +1017,7 @@ export function _saveDd214ToProfile(
     extractedText: combinedText.substring(0, 10000),
     dd214Count: analysisResult.dd214Count,
     combatService: analysisResult.combatService,
-    specialQualifications: analysisResult.specialQualifications,
+    specialQualifications,
   });
 
   _saveDd214Awards(analysisResult.awards);
@@ -1042,7 +1085,7 @@ export async function _saveDd214ToVkb(
       rank: analysisResult.rank,
       payGrade: analysisResult.payGrade,
       mos: analysisResult.mos,
-      mosTitle: analysisResult.mosTitle,
+      mosTitle: _ticked(analysisResult, selectedFields, "mosTitle"),
       entryDate: analysisResult.entryDate,
       separationDate: analysisResult.separationDate,
       yearsService: analysisResult.yearsService,
@@ -1060,11 +1103,12 @@ export async function _saveDd214ToVkb(
       reenlisted: analysisResult.reenlisted,
       foreignService: analysisResult.foreignService,
       educationYears: analysisResult.educationYears,
-      education: analysisResult.militaryEducation,
+      education: _ticked(analysisResult, selectedFields, "militaryEducation"),
       awards: analysisResult.awards || [],
       deployments: analysisResult.deployments || [],
       combatService: analysisResult.combatService || null,
-      specialQualifications: analysisResult.specialQualifications || [],
+      specialQualifications:
+        _ticked(analysisResult, selectedFields, "specialQualifications") || [],
     };
 
     // Determine filename for tracking
@@ -2804,7 +2848,7 @@ function _dd214ReadyToAnalyze(ctx) {
 // The AI-success path (parse, merge with the regex safety net, schedule the
 // profile-import prompt) - pulled out of handleAnalyzeWithAI purely to keep
 // that function under the repo's max-lines-per-function limit.
-function _finishDd214Analysis(response, state) {
+async function _finishDd214Analysis(response, state) {
   const {
     t,
     pastedText,
@@ -2815,7 +2859,8 @@ function _finishDd214Analysis(response, state) {
   } = state;
 
   const content = _extractResponseContent(response);
-  const data = _parseDd214Json(content, t);
+  const knownSources = await loadKnownIdentifierSources();
+  const data = _parseDd214Json(content, t, knownSources);
   setAnalysisResult(data);
 
   // ─── DIAMOND STANDARD: Regex Safety Net ───
@@ -2828,6 +2873,7 @@ function _finishDd214Analysis(response, state) {
     data,
     _getDd214CombinedText(pastedText, extractedTexts),
     setAnalysisResult,
+    knownSources,
   );
 
   // Automatically trigger the save flow to show import confirmation - this
@@ -2922,7 +2968,7 @@ function _buildDd214AnalysisHandlers(state) {
       const response = useVisionAnalysis
         ? await _runVisionAnalysis(originalPDFFiles, setOcrProgress)
         : await _runTextAnalysis(combinedText, setError);
-      _finishDd214Analysis(response, state);
+      await _finishDd214Analysis(response, state);
     } catch (err) {
       // ADR-009: only an off-device AI is configured - DD214 text stays
       // on-device only. Fall back to the same local regex parser used as
