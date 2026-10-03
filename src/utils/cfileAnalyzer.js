@@ -2212,6 +2212,7 @@ const DANGLING_END_WORDS = new Set([
   "in",
   "on",
   "at",
+  "without",
 ]);
 const MAX_CONDITION_NAME_CHARS = 400;
 
@@ -2304,6 +2305,8 @@ const EMPTY_ANNOTATIONS = new Set([
   "",
   "claimed",
   "claimed as",
+  "also claimed",
+  "also claimed as",
   "previously",
   "formerly",
   "currently",
@@ -2311,6 +2314,10 @@ const EMPTY_ANNOTATIONS = new Set([
   "evaluated as",
   "which",
 ]);
+
+// The VA sometimes types an annotation opener twice with no space and one
+// closing bracket: "(also claimed as(also claimed as X)".
+const DOUBLED_ANNOTATION_OPENER_RE = /\(([^()]{2,40}?)\s*\(\1(?=\s)/gi;
 
 function _dropEmptyAnnotation(text) {
   const open = text.lastIndexOf("(");
@@ -2326,6 +2333,7 @@ function _stripNameNoise(name) {
   const flat = _dropEmptyAnnotation(
     name
       .replace(/\s+/g, " ")
+      .replace(DOUBLED_ANNOTATION_OPENER_RE, "($1")
       .replace(/\((?:formerly|previously|currently|which)[^)]{0,80}\)/gi, ""),
   );
   const cuts = [
@@ -2342,8 +2350,20 @@ function _balanceParens(name) {
   while (count(")") > count("(") && fixed.endsWith(")")) {
     fixed = _trimNameEdges(fixed.slice(0, -1));
   }
+  if (_closesBeforeOpening(fixed)) return null;
   if (count("(") > count(")")) fixed += ")".repeat(count("(") - count(")"));
   return count("(") === count(")") ? fixed : null;
+}
+
+// A ")" with no "(" before it is the tail of a neighbouring table row the
+// name was read across, not part of this name.
+function _closesBeforeOpening(text) {
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === "(") depth++;
+    else if (ch === ")" && --depth < 0) return true;
+  }
+  return false;
 }
 
 const MIN_CUT_LETTERS = 3;
@@ -2515,12 +2535,32 @@ function _collapseRepeats(name) {
 function _isScaffoldingOnly(name) {
   const lower = name.toLowerCase();
   const letterWords = lower.match(/[a-z]+/g) || [];
-  if (letterWords.every((w) => NON_CONDITION_WORDS.has(w))) return true;
+  if (letterWords.every(_isScaffoldingWord)) return true;
   const plain = lower
     .split(/\s+/)
     .filter((t) => !/\d/.test(t))
     .map((t) => t.replace(/[^a-z]/g, ""));
-  return plain.length > 0 && plain.every((w) => NON_CONDITION_WORDS.has(w));
+  return plain.length > 0 && plain.every(_isScaffoldingWord);
+}
+
+const MIN_GLUED_WORD_LETTERS = 4;
+
+// OCR can glue two scaffolding words into one token ("Serviceconnection").
+// Only pieces of 4+ letters count, so short words ("a", "no", "be") cannot
+// stitch a real condition word together.
+function _isScaffoldingWord(word) {
+  if (NON_CONDITION_WORDS.has(word)) return true;
+  const reachable = [true];
+  for (let end = 1; end <= word.length; end++) {
+    reachable[end] = false;
+    for (let start = 0; start <= end - MIN_GLUED_WORD_LETTERS; start++) {
+      if (reachable[start] && NON_CONDITION_WORDS.has(word.slice(start, end))) {
+        reachable[end] = true;
+        break;
+      }
+    }
+  }
+  return reachable[word.length];
 }
 
 function _isFragmentName(name) {
@@ -2588,17 +2628,37 @@ function _localParserClaim(
   };
 }
 
+// Compared by letters and digits only, so a name OCR glued into one token
+// ("nightsweats") is the same condition as its spaced copy.
 function _isSameCondition(a, b) {
   return (
     typeof a === "string" &&
     typeof b === "string" &&
-    a.trim().toLowerCase() === b.trim().toLowerCase()
+    nameKey(a) !== "" &&
+    nameKey(a) === nameKey(b)
   );
+}
+
+const _spaceCount = (text) => text.split(/\s+/).length;
+
+// The spaced copy of a glued name is the better-read one: the kept finding
+// takes its wording.
+function _adoptBetterSpelling(kept, claim) {
+  if (_spaceCount(claim.condition) <= _spaceCount(kept.condition)) return;
+  kept.recommendation = kept.recommendation?.replace(
+    `"${kept.condition}"`,
+    `"${claim.condition}"`,
+  );
+  kept.condition = claim.condition;
 }
 
 function _pushIfNewCondition(claims, claim) {
   if (!claim?.condition) return;
-  if (claims.some((c) => _isSameCondition(c.condition, claim.condition))) {
+  const kept = claims.find((c) =>
+    _isSameCondition(c.condition, claim.condition),
+  );
+  if (kept) {
+    _adoptBetterSpelling(kept, claim);
     return;
   }
   claims.push(claim);
