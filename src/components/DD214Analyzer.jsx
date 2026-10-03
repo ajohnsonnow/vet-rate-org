@@ -2985,7 +2985,7 @@ function _dd214ReadyToAnalyze(ctx) {
 // Shown when a store the known-identifier set is built from could not be read
 // in time: the model's dates and free text are dropped for that reading.
 export const STORE_READ_FAILED_NOTICE =
-  "The app could not check this reading against what it already holds about you (your profile, knowledge base, service history or My Packet could not be read), so only the values the app read itself are shown. Dates and text the AI wrote were left out. Try Analyze again.";
+  "The app could not check this reading against what it already holds about you (your profile, knowledge base, service history or My Packet could not be read), so only the values the app read itself are shown. Every date and all text the AI wrote were left out of this reading. Try Analyze again.";
 
 // The AI-success path (parse, merge with the regex safety net, schedule the
 // profile-import prompt) - pulled out of handleAnalyzeWithAI purely to keep
