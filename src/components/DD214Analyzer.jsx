@@ -79,6 +79,7 @@ import {
   scrubModelFreeText,
   MODEL_TEXT_FIELDS,
 } from "../utils/dd214ModelOutputGuards";
+import { parseModelJsonReply } from "../utils/dd214JsonReply";
 
 /**
  * System Prompt for Multi-Document Cumulative Analysis
@@ -645,52 +646,6 @@ export function _extractResponseContent(response) {
   return content;
 }
 
-// Finds the FIRST balanced top-level {...} object in text via brace-depth
-// counting, instead of a single greedy regex spanning to the LAST '}' in
-// the whole string. That greedy match broke on SmolVLM's multi-page vision
-// output (smolVLMService.processMultiplePages joins each page's own JSON
-// object with "--- Page Break ---"): it captured from the first page's '{'
-// to the SECOND page's closing '}', swallowing the separator text as
-// invalid JSON.
-//
-// D19-2: string-aware - a literal '{'/'}' inside a JSON string VALUE (e.g.
-// `"extractionNotes": ["Remarks block reads: 'CONT ON DD FORM 214 {NGB}'"]`)
-// no longer miscounts, since a character encountered while inside a quoted
-// string is never treated as a brace. A backslash-escaped quote (`\"`)
-// inside the string doesn't end it early either - `_advanceStringState`
-// skips exactly the one character right after a backslash, matching JSON's
-// own escaping rules. Split into its own function (rather than inlined
-// into the loop below) specifically to keep the loop itself simple enough
-// to read at a glance.
-function _advanceStringState(ch, { inString, escaped }) {
-  if (!inString) return { inString: ch === '"', escaped: false };
-  if (escaped) return { inString: true, escaped: false };
-  if (ch === "\\") return { inString: true, escaped: true };
-  if (ch === '"') return { inString: false, escaped: false };
-  return { inString, escaped };
-}
-
-function _extractFirstJsonObject(text) {
-  const start = text.indexOf("{");
-  if (start === -1) return text;
-  let depth = 0;
-  let state = { inString: false, escaped: false };
-  for (let i = start; i < text.length; i++) {
-    const ch = text[i];
-    const wasInString = state.inString;
-    state = _advanceStringState(ch, state);
-    if (wasInString || state.inString) continue;
-
-    if (ch === "{") {
-      depth++;
-    } else if (ch === "}") {
-      depth--;
-      if (depth === 0) return text.slice(start, i + 1);
-    }
-  }
-  return text.slice(start);
-}
-
 // Model output never reaches the console: bugReportUtils' interceptor
 // captures console output into bug reports a veteran can copy or send
 // off-device, so diagnostics here report shape/length only. Identifier fields
@@ -699,28 +654,7 @@ export function _parseDd214Json(content, t) {
   // Parse JSON from response
   let data;
   try {
-    let cleanContent =
-      typeof content === "string" ? content.trim() : JSON.stringify(content);
-
-    // Remove markdown code fences if present
-    if (cleanContent.startsWith("```json"))
-      cleanContent = cleanContent.slice(7);
-    if (cleanContent.startsWith("```")) cleanContent = cleanContent.slice(3);
-    if (cleanContent.endsWith("```")) cleanContent = cleanContent.slice(0, -3);
-
-    // Find the JSON object in the response if it's mixed with other text
-    // (or, for the vision path, followed by a second page's own object).
-    cleanContent = _extractFirstJsonObject(cleanContent);
-
-    // Remove JavaScript-style comments from JSON (some models add these)
-    // Remove single-line comments: // comment
-    cleanContent = cleanContent.replace(/\/\/[^\n\r]*/g, "");
-    // Remove multi-line comments: /* comment */
-    cleanContent = cleanContent.replace(/\/\*[\s\S]*?\*\//g, "");
-    // Clean up any trailing commas before } or ] (common after comment removal)
-    cleanContent = cleanContent.replace(/,(\s*[}\]])/g, "$1");
-
-    data = JSON.parse(cleanContent.trim());
+    data = parseModelJsonReply(content);
 
     // Normalize data - AI sometimes returns fields in unexpected formats
     // Handle MOS being returned as an object instead of string
