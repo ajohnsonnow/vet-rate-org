@@ -4,9 +4,10 @@
  * 3): the saved profile, the service history, the knowledge base's personal
  * block, and the structured data stored with every My Packet document.
  *
- * Each read is bounded and best-effort. A source that cannot be read within
- * the limit is skipped and the analysis continues with what could be read; the
- * type and shape checks on model output still apply either way.
+ * Each read is bounded. A source that cannot be read within the limit, or
+ * whose read fails, makes the set incomplete: the caller then fails closed and
+ * drops every date and all free text the model wrote for that reading, because
+ * a birth date or a name the app holds cannot be checked for.
  */
 import { getVeteranProfile, getServiceHistory } from "./veteranProfile";
 import { loadVKB } from "./veteranKnowledgeBase";
@@ -27,9 +28,9 @@ function withLimit(promise) {
 
 async function readSource(read) {
   try {
-    return await withLimit(Promise.resolve().then(read));
+    return { ok: true, value: await withLimit(Promise.resolve().then(read)) };
   } catch {
-    return null;
+    return { ok: false, value: null };
   }
 }
 
@@ -41,18 +42,28 @@ function packetSources(extracted) {
     .flatMap((entry) => [entry?.extractedData, entry?.aiAnalysis]);
 }
 
-export async function loadKnownIdentifierSources() {
-  const [profile, history, vkb, packet] = await Promise.all([
+/**
+ * `{ sources, complete }`: `complete` is false when any of the four reads
+ * rejected or timed out.
+ */
+export async function loadKnownIdentifierSourcesChecked() {
+  const reads = await Promise.all([
     readSource(() => getVeteranProfile()),
     readSource(() => getServiceHistory()),
     readSource(() => loadVKB()),
     readSource(() => getAllExtractedData()),
   ]);
-  return [
+  const [profile, history, vkb, packet] = reads.map((read) => read.value);
+  const sources = [
     profile,
     history,
     vkb?.personal,
     vkb?.serviceHistory,
     ...packetSources(packet),
   ].filter((source) => source && typeof source === "object");
+  return { sources, complete: reads.every((read) => read.ok) };
+}
+
+export async function loadKnownIdentifierSources() {
+  return (await loadKnownIdentifierSourcesChecked()).sources;
 }
