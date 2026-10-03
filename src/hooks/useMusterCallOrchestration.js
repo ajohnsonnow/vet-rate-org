@@ -11,6 +11,7 @@
 
 import { useState, useEffect } from "react";
 import { PROCESSING_STATES } from "../utils/musterCallProcessor";
+import { clearImportMarker } from "../utils/importProgressMarker";
 import useFormationQueue from "./useFormationQueue";
 import useMusterCallAILoader from "./useMusterCallAILoader";
 import useMusterCallFileIntake from "./useMusterCallFileIntake";
@@ -97,6 +98,7 @@ export const useMusterCallOrchestration = ({
    * Reset to initial state
    */
   const handleReset = () => {
+    clearImportMarker();
     intake.resetFileIntake();
     batch.resetBatchState();
     setProcessingState(PROCESSING_STATES.IDLE);
