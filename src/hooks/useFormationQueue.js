@@ -25,7 +25,10 @@ import {
 } from "../utils/formationQueue";
 import { neutralDocumentLabel } from "../utils/documentLabel";
 import { describePersistIncomplete } from "../utils/persistIncompleteMessage";
-import { describeReadFailure } from "../utils/readFailureMessage";
+import {
+  describeDocumentFailure,
+  plainDocumentLabel,
+} from "../utils/readFailureMessage";
 import { clearImportMarker } from "../utils/importProgressMarker";
 
 function logFormationInitialized(count) {
@@ -159,13 +162,18 @@ function errorEntryAndNextImpl(
 // in memory, which a page reload drops. The restored entry must not promise a
 // Retry that is not there: it keeps the plain failure and says to import again.
 function withoutRetryThatReloadDropped(entry, index) {
-  if (entry.readFailure) {
+  if (entry.processingFailure) {
     return {
       ...entry,
       retryable: false,
-      error: describeReadFailure(
-        neutralDocumentLabel(entry.estimatedType, index),
-        { canRetry: false, fileGone: true },
+      error: describeDocumentFailure(
+        plainDocumentLabel(entry.estimatedType, index),
+        {
+          kind: entry.failureKind,
+          canRetry: false,
+          fileGone: true,
+          reloaded: true,
+        },
       ),
     };
   }

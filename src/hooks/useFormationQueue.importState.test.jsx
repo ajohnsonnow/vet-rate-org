@@ -17,8 +17,10 @@ const readFailedEntry = {
   estimatedType: "DD214",
   status: "ERROR",
   retryable: true,
-  readFailure: true,
-  error: "We could not read document 1 (DD214). Choose Retry to read it again.",
+  processingFailure: true,
+  failureKind: "read",
+  error:
+    "We could not finish the DD214 (document 1) because the file could not be read, so choose Retry to try again.",
   file: { name: "generic.pdf", size: 1, type: "application/pdf" },
 };
 
@@ -29,7 +31,7 @@ beforeEach(() => {
 });
 
 describe("restoring a document that could not be read", () => {
-  it("drops the retry flag and says to add the file again, naming only its neutral label", () => {
+  it("drops the retry flag and says to add the file again, naming only its plain label", () => {
     localStorage.setItem(
       "vetrate_formation_state",
       JSON.stringify({ formation: [readFailedEntry], savedAt: "2026-10-02" }),
@@ -38,8 +40,8 @@ describe("restoring a document that could not be read", () => {
     const { formation } = renderHook(() => useFormationQueue()).result.current;
 
     expect(formation[0].retryable).toBe(false);
-    expect(formation[0].error).toContain("document 1 (DD214)");
-    expect(formation[0].error).toContain("Add the file again");
+    expect(formation[0].error).toContain("the DD214 (document 1)");
+    expect(formation[0].error).toContain("add it again");
     expect(formation[0].error).not.toMatch(/Retry|generic\.pdf/);
   });
 });

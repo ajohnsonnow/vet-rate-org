@@ -108,7 +108,10 @@ describe("useSequentialFormationFlow: errors are attributed to the document that
     const errorEntry = result.current.queue.formation.find(
       (e) => e.filename === "second.pdf",
     );
-    expect(errorEntry.error).toBe("analysis exploded");
+    expect(errorEntry.error).toBe(
+      "We could not finish document 2 because something went wrong while reading it, so choose Retry to try again.",
+    );
+    expect(errorEntry.error).not.toContain("exploded");
 
     const secondCalls = processFormationDocument.mock.calls.filter(
       ([file]) => file.name === "second.pdf",

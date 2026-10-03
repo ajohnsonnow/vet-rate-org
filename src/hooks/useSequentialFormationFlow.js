@@ -25,9 +25,18 @@ import {
   getServiceEntryForDocument,
 } from "../utils/veteranProfile";
 import { parseExplicitDate } from "../utils/dateUtils";
-import { slimCompletedResult } from "../utils/formationQueue";
-import { isFileStillReadable } from "../utils/fileReadFailure";
-import { describeReadFailure } from "../utils/readFailureMessage";
+import { FORMATION_STATUS, slimCompletedResult } from "../utils/formationQueue";
+import {
+  classifyDocumentFailure,
+  failureLogCode,
+  FAILURE_KINDS,
+  forLog,
+  isFileStillReadable,
+} from "../utils/fileReadFailure";
+import {
+  describeDocumentFailure,
+  plainDocumentLabel,
+} from "../utils/readFailureMessage";
 import {
   clearImportMarker,
   recordDocumentSaved,
@@ -40,10 +49,50 @@ const AUTOMATIC_READ_RETRIES = 1;
 const MAX_MANUAL_READ_RETRIES = 3;
 const READ_RETRY_DELAY_MS = 1000;
 
-function entryLabel(entry, ctx) {
+function entryIndex(entry, ctx) {
   const queue = ctx.getFormation ? ctx.getFormation() : ctx.formation;
-  const index = entry ? queue.findIndex((e) => e.id === entry.id) : -1;
-  return neutralDocumentLabel(entry?.estimatedType, index);
+  return entry ? queue.findIndex((e) => e.id === entry.id) : -1;
+}
+
+// For the console: the internal type, never a file name.
+function entryLabel(entry, ctx) {
+  return neutralDocumentLabel(entry?.estimatedType, entryIndex(entry, ctx));
+}
+
+// For the screen: plain words.
+function plainEntryLabel(entry, ctx) {
+  return plainDocumentLabel(entry?.estimatedType, entryIndex(entry, ctx));
+}
+
+// A document counts as saved once it is actually filed, whether that happened
+// as it was read or when the veteran confirmed it - and only once.
+function noteDocumentSaved(key, ctx) {
+  if (ctx.savedDocuments.has(key)) return;
+  ctx.savedDocuments.add(key);
+  recordDocumentSaved();
+}
+
+function completionToast(ctx) {
+  const queue = ctx.getFormation ? ctx.getFormation() : ctx.formation;
+  const saved = queue.filter((e) => e.status === FORMATION_STATUS.SAVED);
+  const failed = queue.filter((e) => e.status === FORMATION_STATUS.ERROR);
+  const count = (n) => `${n} document${n === 1 ? "" : "s"}`;
+  if (saved.length === 0 && failed.length > 0) {
+    const why =
+      failed.length === 1 && failed[0].error
+        ? failed[0].error
+        : `${count(failed.length)} could not be processed. The list below says why.`;
+    ctx.toast.error(`Nothing was saved. ${why}`, 10000);
+  } else if (saved.length === 0) {
+    ctx.toast.warning("Nothing was saved because no document was kept.", 7000);
+  } else if (failed.length > 0) {
+    ctx.toast.warning(
+      `Import finished: ${count(saved.length)} saved, ${failed.length} not saved. The list below says why.`,
+      10000,
+    );
+  } else {
+    ctx.toast.success(`Import finished: ${count(saved.length)} saved.`, 7000);
+  }
 }
 
 /**
@@ -109,9 +158,7 @@ function handleProgressUpdate(progressData, entry, file, ctx) {
  */
 async function runDocumentProcessing(entry, ctx) {
   const {
-    stats,
     updateEntry,
-    toast,
     setProcessingState,
     setActiveEntry,
     setCurrentProgress,
@@ -126,10 +173,7 @@ async function runDocumentProcessing(entry, ctx) {
     setProcessingState(PROCESSING_STATES.COMPLETE);
     setActiveEntry(null);
     setCurrentProgress(null);
-    toast.success(
-      `Formation complete! ${stats?.completed || 0} document${(stats?.completed || 0) !== 1 ? "s" : ""} processed successfully.`,
-      7000,
-    );
+    completionToast(ctx);
     return;
   }
 
@@ -176,6 +220,7 @@ async function runDocumentProcessing(entry, ctx) {
 
     // Check status === 'complete' since processFormationDocument sets that, not success
     if (result.status === "complete" && result.readyForReview) {
+      if (result.vkbSaved) noteDocumentSaved(entry.id, ctx);
       setExtractionResult(result);
       setShowIntelBriefing(true);
       updateEntry(entry.id, { status: "USER_REVIEW" });
@@ -186,7 +231,9 @@ async function runDocumentProcessing(entry, ctx) {
         failure.persistIncomplete = true;
         failure.quotaExceeded = result.persistQuotaExceeded === true;
       }
-      failure.readFailed = result.readFailed === true;
+      failure.failureKind =
+        result.failureKind ??
+        (result.readFailed ? FAILURE_KINDS.READ : FAILURE_KINDS.UNKNOWN);
       throw failure;
     }
   } catch (err) {
@@ -199,14 +246,22 @@ const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // The file stays referenced (never its bytes), so a read that failed can be
 // done again from the original. Once one automatic retry has been spent the
 // veteran is asked, with a bounded Retry while the file can still be read and
-// a plain "add it again" once it cannot.
-async function handleReadFailure(entry, ctx) {
+// a plain "add it again" once it cannot. Only a failed read is retried on its
+// own; every other kind of failure waits for the veteran's Retry.
+async function handleRetryableFailure(entry, kind, ctx) {
   // eslint-disable-next-line no-console
-  console.warn(`📂 Could not read ${entryLabel(entry, ctx)}`);
+  console.warn(
+    `📂 Could not finish ${entryLabel(entry, ctx)}`,
+    failureLogCode(kind),
+  );
   const attempts = ctx.readAttempts.get(entry.id) ?? { auto: 0, manual: 0 };
   const readable = await isFileStillReadable(entry.file);
 
-  if (readable && attempts.auto < AUTOMATIC_READ_RETRIES) {
+  if (
+    kind === FAILURE_KINDS.READ &&
+    readable &&
+    attempts.auto < AUTOMATIC_READ_RETRIES
+  ) {
     ctx.readAttempts.set(entry.id, { ...attempts, auto: attempts.auto + 1 });
     await pause(READ_RETRY_DELAY_MS);
     return runDocumentProcessing(entry, ctx);
@@ -214,14 +269,16 @@ async function handleReadFailure(entry, ctx) {
 
   const canRetry = readable && attempts.manual < MAX_MANUAL_READ_RETRIES;
   if (canRetry) ctx.readRetryable.add(entry.id);
-  const message = describeReadFailure(entryLabel(entry, ctx), {
+  const message = describeDocumentFailure(plainEntryLabel(entry, ctx), {
+    kind,
     canRetry,
     fileGone: !readable,
   });
   return finishFailedDocument(
     ctx.errorEntryAndNext(entry.id, message, {
       retryable: canRetry,
-      readFailure: true,
+      processingFailure: true,
+      failureKind: kind,
     }),
     ctx,
   );
@@ -239,22 +296,22 @@ function finishFailedDocument(nextEntry, ctx) {
   );
 }
 
-// The message of a save that did not finish, or of a read that failed, names
-// the document for the veteran, so only a fixed phrase is written to the
-// console.
+// The text of any failure can carry a file name, a local address or a stack,
+// so only a neutral code is written to the console and the veteran is shown a
+// plain message built from the kind of failure.
 async function handleDocumentFailure(err, entry, ctx) {
-  if (err.readFailed) return handleReadFailure(entry, ctx);
-  console.error(
-    "❌ Document processing error:",
-    err.persistIncomplete ? "saving did not finish" : err.message,
-  );
-  const nextEntry = err.persistIncomplete
-    ? ctx.errorEntryAndNext(entry.id, err.message, {
+  if (err.persistIncomplete) {
+    console.error("❌ Document processing error:", "saving did not finish");
+    return finishFailedDocument(
+      ctx.errorEntryAndNext(entry.id, err.message, {
         retryable: true,
         quotaExceeded: err.quotaExceeded === true,
-      })
-    : ctx.errorEntryAndNext(entry.id, err.message);
-  finishFailedDocument(nextEntry, ctx);
+      }),
+      ctx,
+    );
+  }
+  const kind = err.failureKind ?? classifyDocumentFailure(err);
+  return handleRetryableFailure(entry, kind, ctx);
 }
 
 const NO_PERIOD_FOR_DOCUMENT_WARNING =
@@ -378,7 +435,7 @@ async function runVerifyAndSave(verifyPayload, ctx) {
         verifiedData: verifyPayload,
       }),
     );
-    recordDocumentSaved();
+    noteDocumentSaved(ctx.activeEntry?.id ?? extractionResult?.filename, ctx);
 
     toast.success(
       `Document "${extractionResult.filename}" saved to Knowledge Base`,
@@ -407,7 +464,9 @@ async function runVerifyAndSave(verifyPayload, ctx) {
       : err.message;
     console.error(
       "❌ Save error:",
-      incomplete ? "saving did not finish" : err.message,
+      incomplete
+        ? "saving did not finish"
+        : failureLogCode(classifyDocumentFailure(err)),
     );
     setError(message);
     toast.error(`Failed to save document: ${message}`);
@@ -416,7 +475,7 @@ async function runVerifyAndSave(verifyPayload, ctx) {
 
 /**
  * Read a document again from the original file after a read failure. Bounded
- * by the attempt count handleReadFailure keeps; the file is checked first so a
+ * by the attempt count handleRetryableFailure keeps; the file is checked first so a
  * file that is gone says so instead of failing a second time.
  */
 async function runRetryRead(entryId, ctx) {
@@ -427,7 +486,7 @@ async function runRetryRead(entryId, ctx) {
   const attempts = ctx.readAttempts.get(entryId) ?? { auto: 0, manual: 0 };
   ctx.readAttempts.set(entryId, { ...attempts, manual: attempts.manual + 1 });
   if (!(await isFileStillReadable(entry.file))) {
-    const message = describeReadFailure(entryLabel(entry, ctx), {
+    const message = describeDocumentFailure(plainEntryLabel(entry, ctx), {
       canRetry: false,
       fileGone: true,
     });
@@ -463,6 +522,7 @@ async function runRetryPersist(entryId, ctx) {
     const result = await retryFormationDocumentPersist(failed);
     if (result.status === "complete") {
       retainedResults.delete(entryId);
+      if (result.vkbSaved) noteDocumentSaved(entryId, ctx);
       updateEntry(entryId, {
         status: "USER_REVIEW",
         error: null,
@@ -477,8 +537,10 @@ async function runRetryPersist(entryId, ctx) {
     updateEntry(entryId, { error: result.error });
     toast.error(result.error);
   } catch (err) {
-    console.error("❌ Retry save error:", err.message);
-    toast.error(`Could not retry saving this document: ${err.message}`);
+    console.error("❌ Retry save error:", forLog(err));
+    toast.error(
+      "We could not retry saving this document. Nothing you imported was lost.",
+    );
   }
 }
 
@@ -546,7 +608,6 @@ export const useSequentialFormationFlow = ({
 }) => {
   const {
     formation,
-    stats,
     updateEntry,
     startFormation,
     completeCurrentAndNext,
@@ -567,13 +628,14 @@ export const useSequentialFormationFlow = ({
   // Retry.
   const readAttempts = useRef(new Map()).current;
   const readRetryable = useRef(new Set()).current;
+  const savedDocuments = useRef(new Set()).current;
 
   const ctx = {
     retainedResults,
     readAttempts,
     readRetryable,
+    savedDocuments,
     formation,
-    stats,
     activeEntry,
     extractionResult,
     updateEntry,

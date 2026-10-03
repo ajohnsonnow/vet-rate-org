@@ -80,7 +80,7 @@ export default function MusterCallCompletionSummary({
             {notices.error ? (
               <>
                 <p role="alert" className="mt-2 text-sm text-red-700">
-                  This document could not be processed: {notices.error}
+                  {notices.error}
                 </p>
                 {entry.retryable && onRetry && canRetry?.(entry.id) && (
                   <RetrySaveButton entryId={entry.id} onRetry={onRetry} />

@@ -126,9 +126,13 @@ describe("a document whose file cannot be read", () => {
     const [id, message, extra] = formationQueue.errorEntryAndNext.mock.calls[0];
     expect(id).toBe("e1");
     expect(message).toBe(
-      "We could not read document 1 (DD214). Nothing you imported was lost. Choose Retry to read it again.",
+      "We could not finish the DD214 (document 1) because the file could not be read, so choose Retry to try again.",
     );
-    expect(extra).toEqual({ retryable: true, readFailure: true });
+    expect(extra).toEqual({
+      retryable: true,
+      processingFailure: true,
+      failureKind: "read",
+    });
     expect(result.current.canRetryDocumentSave("e1")).toBe(true);
   });
 
@@ -163,8 +167,8 @@ describe("a document whose file cannot be read", () => {
 
     expect(result.current.canRetryDocumentSave("e1")).toBe(false);
     const lastMessage = formationQueue.errorEntryAndNext.mock.calls.at(-1)[1];
-    expect(lastMessage).toContain("after several tries");
-    expect(lastMessage).toContain("Add the file again");
+    expect(lastMessage).toContain("even after several tries");
+    expect(lastMessage).toContain("add the file again");
   });
 
   it("says so plainly, with no Retry and no second read, when the file is no longer readable", async () => {
@@ -176,12 +180,18 @@ describe("a document whose file cannot be read", () => {
     expect(processFormationDocument).toHaveBeenCalledTimes(1);
     const [, message, extra] = formationQueue.errorEntryAndNext.mock.calls[0];
     expect(message).toBe(
-      "We could not read document 1 (DD214) because the file is no longer available. Nothing you imported was lost. Add the file again to finish it.",
+      "We could not read the DD214 (document 1) because the file is no longer available, so add it again to finish it.",
     );
-    expect(extra).toEqual({ retryable: false, readFailure: true });
+    expect(extra).toEqual({
+      retryable: false,
+      processingFailure: true,
+      failureKind: "read",
+    });
     expect(result.current.canRetryDocumentSave("e1")).toBe(false);
   });
+});
 
+describe("what is shown and logged for a document that cannot be read", () => {
   it("never writes the file name or technical text to the console or the message", async () => {
     const result = setup();
     processFormationDocument.mockResolvedValue({

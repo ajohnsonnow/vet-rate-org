@@ -116,10 +116,10 @@ describe("a document whose save did not finish", () => {
       await Promise.resolve();
     });
 
-    expect(formationQueue.errorEntryAndNext).toHaveBeenCalledWith(
-      "e1",
-      "No text could be extracted from document",
-    );
+    const [id, message, extra] = formationQueue.errorEntryAndNext.mock.calls[0];
+    expect(id).toBe("e1");
+    expect(message).not.toContain("No text could be extracted");
+    expect(extra.retryable).toBe(false);
     expect(hook.result.current.canRetryDocumentSave("e1")).toBe(false);
   });
 
