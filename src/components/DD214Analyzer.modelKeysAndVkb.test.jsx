@@ -94,7 +94,7 @@ describe("(F): the Knowledge Base only receives identifiers the veteran ticked",
   });
 
   it("with every identifier box unticked, no identifier reaches the merge or the document", async () => {
-    await _saveDd214ToVkb(analysis, "text", [], { serviceStartDate: "x" });
+    await _saveDd214ToVkb(analysis, "text", [], { branch: "Army" });
 
     const merged = mergeDD214IntoVKB.mock.calls[0][1];
     const filed = addDocumentToVKB.mock.calls[0][0].extractedData;

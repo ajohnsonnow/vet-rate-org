@@ -11,6 +11,11 @@ import { useState, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { isSameCalendarDay } from "../utils/serviceEntryDate";
 import {
+  VALUE_SOURCE,
+  countBySource,
+  describeSourceCounts,
+} from "../utils/dd214ValueSources";
+import {
   MODEL_LIST_FIELDS,
   MODEL_TEXT_FIELDS,
 } from "../utils/dd214ModelOutputGuards";
@@ -273,7 +278,14 @@ const NEVER_PRESELECTED_FIELDS = new Set([
   "signature",
 ]);
 
-const useEditableProfileData = (extractedData, currentProfile) => {
+// Owner decision (G), 2026-10-03 (ADR-009): a row is pre-ticked only when its
+// value came from the app's own parser. A value the AI read, one typed by the
+// veteran, or one with no known source is offered unticked.
+const useEditableProfileData = (
+  extractedData,
+  currentProfile,
+  fieldSources,
+) => {
   const [editableData, setEditableData] = useState({});
   const [selectedFields, setSelectedFields] = useState({});
 
@@ -282,10 +294,11 @@ const useEditableProfileData = (extractedData, currentProfile) => {
     if (extractedData) {
       setEditableData({ ...extractedData });
 
-      // Auto-select fields that are new or different
+      // Auto-select parser-read fields that are new or different
       const autoSelected = {};
       Object.keys(extractedData).forEach((key) => {
         if (NEVER_PRESELECTED_FIELDS.has(key)) return;
+        if (fieldSources?.[key] !== VALUE_SOURCE.PARSER) return;
         // Select if current profile doesn't have this field, or if values differ
         if (
           !currentProfile[key] ||
@@ -296,15 +309,62 @@ const useEditableProfileData = (extractedData, currentProfile) => {
       });
       setSelectedFields(autoSelected);
     }
-  }, [extractedData, currentProfile]);
+  }, [extractedData, currentProfile, fieldSources]);
 
   return { editableData, setEditableData, selectedFields, setSelectedFields };
+};
+
+const FIELD_BOX_CLASS =
+  "w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50";
+
+// A service time or other structured value is shown read-only; a yes/no is a
+// select; everything else is a text box that can be corrected once ticked.
+const ImportedValueField = ({
+  label,
+  importedValue,
+  isSelected,
+  isBooleanField,
+  onChange,
+}) => {
+  if (typeof importedValue === "object" && importedValue !== null) {
+    return (
+      <div
+        aria-label={`${label} (read from the document)`}
+        className="px-2 py-1.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-700 dark:text-gray-300 break-words"
+      >
+        {formatFieldValue(label, importedValue)}
+      </div>
+    );
+  }
+  if (isBooleanField) {
+    return (
+      <select
+        value={importedValue ? "true" : "false"}
+        onChange={(e) => onChange(e.target.value === "true")}
+        disabled={!isSelected}
+        className={FIELD_BOX_CLASS}
+      >
+        <option value="true">Yes</option>
+        <option value="false">No</option>
+      </select>
+    );
+  }
+  return (
+    <input
+      type="text"
+      value={importedValue || ""}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={!isSelected}
+      className={FIELD_BOX_CLASS}
+    />
+  );
 };
 
 /**
  * Value Comparison - current value display + editable imported value
  */
 const FieldValueComparison = ({
+  label,
   currentValue,
   importedValue,
   isSelected,
@@ -324,34 +384,61 @@ const FieldValueComparison = ({
       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
         Imported Value:
       </div>
-      {isBooleanField ? (
-        <select
-          value={importedValue ? "true" : "false"}
-          onChange={(e) => onChange(e.target.value === "true")}
-          disabled={!isSelected}
-          className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50"
-        >
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-      ) : (
-        <input
-          type="text"
-          value={importedValue || ""}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={!isSelected}
-          className="w-full px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white disabled:opacity-50"
-        />
-      )}
+      <ImportedValueField
+        label={label}
+        importedValue={importedValue}
+        isSelected={isSelected}
+        isBooleanField={isBooleanField}
+        onChange={onChange}
+      />
     </div>
   </div>
 );
+
+function countRowSources(editableData, fieldSources) {
+  const rows = Object.keys(editableData).filter(
+    (field) => fieldSources?.[field],
+  );
+  return countBySource(
+    Object.fromEntries(rows.map((field) => [field, fieldSources[field]])),
+  );
+}
+
+const SOURCE_NOTES = {
+  [VALUE_SOURCE.PARSER]: {
+    text: "Read from your document by the app's own parser.",
+    className: "text-green-700 dark:text-green-300",
+  },
+  [VALUE_SOURCE.MODEL]: {
+    text: "Read by the AI. Check it against your document before you tick it.",
+    className: "text-amber-700 dark:text-amber-300",
+  },
+  [VALUE_SOURCE.VETERAN]: {
+    text: "Typed by you.",
+    className: "text-gray-600 dark:text-gray-300",
+  },
+};
+
+const SourceNote = ({ source }) => {
+  const note = SOURCE_NOTES[source];
+  if (!note) return null;
+  return (
+    <p
+      className={`text-xs mb-2 ${note.className}`}
+      data-source={source}
+      data-testid="import-row-source"
+    >
+      {note.text}
+    </p>
+  );
+};
 
 /**
  * Field Row Component - Shows current vs imported value with checkbox
  */
 const FieldRow = ({
   label,
+  source,
   currentValue,
   importedValue,
   isSelected,
@@ -396,7 +483,9 @@ const FieldRow = ({
             </label>
           </div>
 
+          <SourceNote source={source} />
           <FieldValueComparison
+            label={label}
             currentValue={currentValue}
             importedValue={importedValue}
             isSelected={isSelected}
@@ -419,6 +508,7 @@ const FieldCategorySection = ({
   currentProfile,
   editableData,
   selectedFields,
+  fieldSources,
   onToggle,
   onChange,
 }) => {
@@ -434,6 +524,7 @@ const FieldCategorySection = ({
           <FieldRow
             key={field}
             label={getFieldLabel(field)}
+            source={fieldSources?.[field]}
             currentValue={formatFieldValue(field, currentProfile[field])}
             importedValue={editableData[field]}
             isSelected={selectedFields[field]}
@@ -485,6 +576,7 @@ const ImportHeader = ({
   onCancel,
   selectedCount,
   totalCount,
+  sourceCounts,
   onSelectAll,
   onSelectNone,
 }) => (
@@ -528,10 +620,17 @@ const ImportHeader = ({
         <span className="text-lg">⚠️</span>
         <span>
           <strong>Important:</strong> Review the extracted information below.
-          Uncheck any fields you don&apos;t want to update. Fields already in
-          your profile that differ from the imported data are pre-selected for
-          your review.
+          Only values the app&apos;s own parser read from your document are
+          pre-selected, and only when they differ from what is already in your
+          profile. Anything the AI read is left unticked: check it against your
+          document, then tick it if it is right.
         </span>
+      </p>
+      <p
+        className="text-sm text-yellow-800 dark:text-yellow-200 mt-2"
+        data-testid="import-source-counts"
+      >
+        {describeSourceCounts(sourceCounts)}.
       </p>
     </div>
 
@@ -616,29 +715,35 @@ function _buildProfileImportConfirmPayload(
   return { fieldsToImport, meta: { serviceStartDateEdited } };
 }
 
+const CategorySections = ({ categories, ...sectionProps }) =>
+  CATEGORY_SECTIONS.map(({ key, icon, title }) => (
+    <FieldCategorySection
+      key={key}
+      icon={icon}
+      title={title}
+      fields={categories[key]}
+      {...sectionProps}
+    />
+  ));
+
 /**
  * Profile Import Confirmation Modal
  * Shows extracted data with side-by-side comparison and selective import
  */
 const ProfileImportConfirmModal = ({
   extractedData,
+  fieldSources,
   currentProfile,
   onConfirm,
   onCancel,
 }) => {
   const { editableData, setEditableData, selectedFields, setSelectedFields } =
-    useEditableProfileData(extractedData, currentProfile);
+    useEditableProfileData(extractedData, currentProfile, fieldSources);
 
-  /**
-   * Update a field value
-   */
   const handleFieldChange = (field, value) => {
     setEditableData((prev) => ({ ...prev, [field]: value }));
   };
 
-  /**
-   * Toggle field selection
-   */
   const handleFieldToggle = (field) => {
     setSelectedFields((prev) => ({
       ...prev,
@@ -646,9 +751,6 @@ const ProfileImportConfirmModal = ({
     }));
   };
 
-  /**
-   * Select all fields
-   */
   const handleSelectAll = () => {
     const allSelected = {};
     Object.keys(editableData).forEach((key) => {
@@ -657,28 +759,24 @@ const ProfileImportConfirmModal = ({
     setSelectedFields(allSelected);
   };
 
-  /**
-   * Deselect all fields
-   */
   const handleSelectNone = () => {
     setSelectedFields({});
   };
 
-  /**
-   * Confirm import - only save selected fields
-   */
   const handleConfirm = () => {
     const { fieldsToImport, meta } = _buildProfileImportConfirmPayload(
       selectedFields,
       editableData,
       extractedData,
     );
+    if (Object.keys(fieldsToImport).length === 0) return;
     onConfirm(fieldsToImport, meta);
   };
 
   const categories = categorizeFields(editableData);
   const selectedCount = Object.values(selectedFields).filter(Boolean).length;
   const totalCount = Object.keys(editableData).length;
+  const sourceCounts = countRowSources(editableData, fieldSources);
 
   return (
     <ResponsiveModal
@@ -699,24 +797,21 @@ const ProfileImportConfirmModal = ({
           onCancel={onCancel}
           selectedCount={selectedCount}
           totalCount={totalCount}
+          sourceCounts={sourceCounts}
           onSelectAll={handleSelectAll}
           onSelectNone={handleSelectNone}
         />
       }
     >
-      {CATEGORY_SECTIONS.map(({ key, icon, title }) => (
-        <FieldCategorySection
-          key={key}
-          icon={icon}
-          title={title}
-          fields={categories[key]}
-          currentProfile={currentProfile}
-          editableData={editableData}
-          selectedFields={selectedFields}
-          onToggle={handleFieldToggle}
-          onChange={handleFieldChange}
-        />
-      ))}
+      <CategorySections
+        categories={categories}
+        currentProfile={currentProfile}
+        editableData={editableData}
+        selectedFields={selectedFields}
+        fieldSources={fieldSources}
+        onToggle={handleFieldToggle}
+        onChange={handleFieldChange}
+      />
     </ResponsiveModal>
   );
 };

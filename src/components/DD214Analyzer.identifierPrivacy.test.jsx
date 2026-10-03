@@ -41,11 +41,18 @@ const IDENTIFIERS = {
   homeAddress: "123 MAIN ST, ANYTOWN ST 12345",
 };
 
+const NO_PROFILE = {};
+const PARSER_READ_EVERYTHING = {
+  ...Object.fromEntries(Object.keys(IDENTIFIERS).map((key) => [key, "parser"])),
+  serviceStartDate: "parser",
+};
+
 function renderModal(extractedData, onConfirm = vi.fn()) {
   render(
     <ProfileImportConfirmModal
       extractedData={extractedData}
-      currentProfile={{}}
+      fieldSources={PARSER_READ_EVERYTHING}
+      currentProfile={NO_PROFILE}
       onConfirm={onConfirm}
       onCancel={vi.fn()}
     />,

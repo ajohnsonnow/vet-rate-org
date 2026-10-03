@@ -75,13 +75,25 @@ import ProfileImportConfirmModal from "./ProfileImportConfirmModal";
 import DD214FormBuilder from "./DD214FormBuilder";
 import {
   buildPlaceholderDetector,
+  dropModelWrittenValues,
   sanitizeModelOutput,
   scrubModelFreeText,
-  MODEL_TEXT_FIELDS,
-  MODEL_LIST_FIELDS,
 } from "../utils/dd214ModelOutputGuards";
+import { sanitizeParserFields } from "../utils/dd214ParserTextGuards";
 import { parseModelJsonReply } from "../utils/dd214JsonReply";
-import { loadKnownIdentifierSources } from "../utils/dd214KnownIdentifierSources";
+import { loadKnownIdentifierSourcesChecked } from "../utils/dd214KnownIdentifierSources";
+import {
+  applyParserValues,
+  buildValueSources,
+  countBySource,
+  describeSourceCounts,
+  importKeyFor,
+  isReadValue,
+  PARSER_WINS_KEYS,
+  resultKeyFor,
+  sourcesForImportRows,
+  VALUE_SOURCE,
+} from "../utils/dd214ValueSources";
 
 /**
  * System Prompt for Multi-Document Cumulative Analysis
@@ -838,20 +850,10 @@ function _regexIdentifierSource(regexFields) {
   return { ...regexFields, homeAddress: regexFields.mailingAddress };
 }
 
-// Text a model writes in its own words: when the local parser read the same
-// field from the document, the parser's value replaces the model's.
-const LOCAL_PARSER_WINS_FIELDS = MODEL_TEXT_FIELDS.filter(
-  (key) => key !== "extractionNotes",
-);
-
-function _preferLocalParserText(data, regexFields) {
-  LOCAL_PARSER_WINS_FIELDS.forEach((key) => {
-    const value = regexFields?.[key];
-    const present = Array.isArray(value) ? value.length > 0 : _hasValue(value);
-    if (present) data[key] = value;
-  });
-}
-
+// Owner decision (G), 2026-10-03 (ADR-009): where the local parser read a
+// value it replaces whatever the model wrote, and the parser's free text is
+// scrubbed like model text before it is shown or saved. A value the parser
+// has none for stays the model's, labelled as read by the AI.
 export function _applyRegexSafetyNet(
   data,
   combinedRawText,
@@ -864,20 +866,33 @@ export function _applyRegexSafetyNet(
     : [getVeteranProfile()];
   // The model's own values are sanitized BEFORE the merge, with the name the
   // local parser read as a known value, so a name the model wrote under any
-  // key is redacted while the parser's own values stay untouched.
+  // key is redacted.
   _keepModelSchemaFields(data);
-  sanitizeModelOutput(data, [
-    ...sources,
-    _regexIdentifierSource(regexResult?.fields),
-  ]);
-  _mergeRegexIntoData(data, regexResult);
-  _preferLocalParserText(data, regexResult?.fields);
+  const known = [...sources, _regexIdentifierSource(regexResult?.fields)];
+  sanitizeModelOutput(data, known);
+  const parserFields = sanitizeParserFields(regexResult?.fields, known);
+  const modelKeys = new Set(
+    Object.keys(data).filter((key) => isReadValue(key, data[key])),
+  );
+  _mergeRegexIntoData(
+    data,
+    regexResult && { ...regexResult, fields: parserFields },
+  );
+  const parserKeys = new Set(applyParserValues(data, parserFields));
 
   // Runs unconditionally (fail-closed), regardless of whether extraction or
   // merge above threw or found nothing.
-  _applyIdentifierFieldsFromLocalParser(data, regexResult?.fields);
+  _applyIdentifierFieldsFromLocalParser(data, parserFields);
+  IDENTIFIER_FIELDS.filter((key) => _hasValue(data[key])).forEach((key) =>
+    parserKeys.add(key),
+  );
   scrubModelFreeText(data, [...sources, data]);
 
+  data.fieldSources = buildValueSources(data, {
+    modelKeys,
+    parserKeys,
+    rowKeys: [...PARSER_WINS_KEYS, ...IDENTIFIER_FIELDS],
+  });
   setAnalysisResult({ ...data });
 }
 
@@ -1012,6 +1027,60 @@ function _ticked(analysisResult, selectedFields, key) {
   return _hasValue(selectedFields?.[key]) ? analysisResult[key] : undefined;
 }
 
+// Owner decision (G): a key with no ticked row is never stored. What is
+// stored for a ticked row is the document reading; a typed correction travels
+// through the profile fields and the service-start-date edit flag.
+const _hasAnySelected = (selectedFields) =>
+  !!selectedFields && Object.values(selectedFields).some(_hasValue);
+
+function _pickScalar(analysisResult, selectedFields, resultKey) {
+  const ticked = selectedFields?.[importKeyFor(resultKey)];
+  if (!_hasValue(ticked)) return undefined;
+  return analysisResult[resultKey] ?? ticked;
+}
+
+const DD214_SCALAR_RECORD_KEYS = [
+  "branch",
+  "component",
+  "componentFull",
+  "rank",
+  "payGrade",
+  "dateOfRank",
+  "mos",
+  "entryDate",
+  "separationDate",
+  "netActiveService",
+  "totalPriorActiveService",
+  "totalPriorInactiveService",
+  "yearsService",
+  "monthsService",
+  "daysService",
+  "reserveObligationDate",
+  "separationType",
+  "characterOfService",
+  "reenlisted",
+  "foreignService",
+];
+
+function _dd214RecordFromTicks(analysisResult, selectedFields) {
+  const [mosTitle, militaryEducation, specialQualifications, , combatService] =
+    TICK_GATED_TEXT_FIELDS.map((key) =>
+      _ticked(analysisResult, selectedFields, key),
+    );
+  return {
+    ...Object.fromEntries(
+      DD214_SCALAR_RECORD_KEYS.map((key) => [
+        key,
+        _pickScalar(analysisResult, selectedFields, key),
+      ]),
+    ),
+    mosTitle,
+    militaryEducation,
+    specialQualifications,
+    combatService,
+  };
+}
+
 export function _saveDd214ToProfile(
   analysisResult,
   combinedText,
@@ -1019,46 +1088,25 @@ export function _saveDd214ToProfile(
   meta = {},
   extractedTexts = [],
 ) {
+  if (!_hasAnySelected(selectedFields)) return;
   const sourceFileName = _dd214SourceFileName(extractedTexts);
-  const [mosTitle, militaryEducation, specialQualifications, awards, combat] =
-    TICK_GATED_TEXT_FIELDS.map((key) =>
-      _ticked(analysisResult, selectedFields, key),
-    );
+  const record = _dd214RecordFromTicks(analysisResult, selectedFields);
   const periodId = _saveDd214EntryDate(
-    { ...analysisResult, mosTitle },
+    { ...record, dd214Count: analysisResult.dd214Count },
     sourceFileName,
   );
 
-  saveDD214Data({
-    branch: analysisResult.branch,
-    component: analysisResult.component,
-    componentFull: analysisResult.componentFull,
-    rank: analysisResult.rank,
-    payGrade: analysisResult.payGrade,
-    dateOfRank: analysisResult.dateOfRank,
-    mos: analysisResult.mos,
-    mosTitle,
-    entryDate: analysisResult.entryDate,
-    separationDate: analysisResult.separationDate,
-    netActiveService: analysisResult.netActiveService,
-    totalPriorActiveService: analysisResult.totalPriorActiveService,
-    totalPriorInactiveService: analysisResult.totalPriorInactiveService,
-    yearsService: analysisResult.yearsService,
-    monthsService: analysisResult.monthsService,
-    daysService: analysisResult.daysService,
-    reserveObligationDate: analysisResult.reserveObligationDate,
-    militaryEducation,
-    separationType: analysisResult.separationType,
-    characterOfService: analysisResult.characterOfService,
-    reenlisted: analysisResult.reenlisted,
-    foreignService: analysisResult.foreignService,
-    extractedText: combinedText.substring(0, 10000),
-    dd214Count: analysisResult.dd214Count,
-    combatService: combat,
-    specialQualifications,
-  });
+  const ticked = Object.entries(record).filter(
+    ([, value]) => value !== undefined,
+  );
+  if (ticked.length > 0) {
+    saveDD214Data({
+      ...(getServiceHistory().dd214Data || {}),
+      ...Object.fromEntries(ticked),
+    });
+  }
 
-  _saveDd214Awards(awards);
+  _saveDd214Awards(_ticked(analysisResult, selectedFields, "awards"));
 
   if (meta.serviceStartDateEdited) {
     setServiceEntryDate({
@@ -1114,34 +1162,30 @@ export async function _saveDd214ToVkb(
   extractedTexts,
   selectedFields,
 ) {
-  // This makes ALL extracted DD214 data available to every AI tool
+  if (!_hasAnySelected(selectedFields)) return;
+  // Only what the veteran ticked is made available to the AI tools
   try {
-    // Build comprehensive data object for VKB merge
+    const pick = (key) => _pickScalar(analysisResult, selectedFields, key);
     const vkbData = {
       ..._selectedVkbIdentifiers(analysisResult, selectedFields),
-      branch: analysisResult.branch,
-      component: analysisResult.component || analysisResult.componentFull,
-      rank: analysisResult.rank,
-      payGrade: analysisResult.payGrade,
-      mos: analysisResult.mos,
+      branch: pick("branch"),
+      component: pick("component") || pick("componentFull"),
+      rank: pick("rank"),
+      payGrade: pick("payGrade"),
+      mos: pick("mos"),
       mosTitle: _ticked(analysisResult, selectedFields, "mosTitle"),
-      entryDate: analysisResult.entryDate,
-      separationDate: analysisResult.separationDate,
-      yearsService: analysisResult.yearsService,
-      netActiveServiceTime: analysisResult.netActiveService,
-      characterOfService: analysisResult.characterOfService,
-      separationAuthority: analysisResult.separationAuthority,
-      separationType: analysisResult.separationType,
-      narrativeReason: _hasValue(selectedFields?.narrativeReason)
-        ? analysisResult.narrativeReason
-        : undefined,
-      reentryCode: analysisResult.reentryCode,
-      spnCode:
-        analysisResult.separationCode ||
-        analysisResult.separationProgramDesignator,
-      reenlisted: analysisResult.reenlisted,
-      foreignService: analysisResult.foreignService,
-      educationYears: analysisResult.educationYears,
+      entryDate: pick("entryDate"),
+      separationDate: pick("separationDate"),
+      yearsService: pick("yearsService"),
+      netActiveServiceTime: pick("netActiveService"),
+      characterOfService: pick("characterOfService"),
+      separationAuthority: pick("separationAuthority"),
+      separationType: pick("separationType"),
+      narrativeReason: pick("narrativeReason"),
+      reentryCode: pick("reentryCode"),
+      spnCode: pick("separationCode") || pick("separationProgramDesignator"),
+      reenlisted: pick("reenlisted"),
+      foreignService: pick("foreignService"),
       education: _ticked(analysisResult, selectedFields, "militaryEducation"),
       awards: _ticked(analysisResult, selectedFields, "awards") || [],
       deployments: _ticked(analysisResult, selectedFields, "combatService")
@@ -1188,22 +1232,39 @@ export async function _saveDd214ToVkb(
   }
 }
 
-// The structured copy filed with the archived document carries an identifier
-// or model-written text only when the veteran ticked its import box.
-const UNCONFIRMED_UNLESS_TICKED = [
-  ...IDENTIFIER_FIELDS,
-  ...MODEL_TEXT_FIELDS,
-  ...MODEL_LIST_FIELDS,
-  "placeOfBirth",
+// The structured copy filed with the archived document holds only the rows the
+// veteran ticked, in the value the dialog held, plus the form type the local
+// parser detected in the document (a label, not a read value). A key with no
+// visible row (masterRecordDate, dd214Count, the parser's remarks and station
+// lines) is never stored.
+const FORM_TYPE_PATTERNS = [
+  [/DD\s{0,3}(?:FORM\s{0,3})?214/i, "DD214"],
+  [/NGB\s{0,3}(?:FORM\s{0,3})?22/i, "NGB22"],
+  [/DD\s{0,3}(?:FORM\s{0,3})?256/i, "DD256"],
+  [/DD\s{0,3}(?:FORM\s{0,3})?257/i, "DD257"],
+  [/DD\s{0,3}(?:FORM\s{0,3})?215/i, "DD215"],
 ];
 
-function _confirmedFieldsOnly(analysisResult, selectedFields = {}) {
-  const confirmed = { ...analysisResult };
-  UNCONFIRMED_UNLESS_TICKED.forEach((key) => {
-    if (!_hasValue(selectedFields[key])) delete confirmed[key];
+function _detectFormType(combinedText) {
+  const found = FORM_TYPE_PATTERNS.map(([pattern, type]) => [
+    pattern.exec(combinedText)?.index,
+    type,
+  ]).filter(([index]) => index !== undefined);
+  found.sort((x, y) => x[0] - y[0]);
+  return found[0]?.[1];
+}
+
+function _confirmedFieldsOnly(analysisResult, selectedFields = {}, formType) {
+  const confirmed = { awards: [] };
+  Object.entries(selectedFields).forEach(([importKey, value]) => {
+    if (!_hasValue(value)) return;
+    const key = resultKeyFor(importKey);
+    confirmed[key] = analysisResult[key] ?? value;
   });
-  if (!_hasValue(selectedFields.awards)) confirmed.awards = [];
-  if (!_hasValue(selectedFields.combatService)) delete confirmed.deployments;
+  if (_hasValue(selectedFields.combatService) && analysisResult.deployments) {
+    confirmed.deployments = analysisResult.deployments;
+  }
+  if (formType) confirmed.formType = formType;
   return confirmed;
 }
 
@@ -1213,9 +1274,11 @@ export async function _saveDd214ToPacket(
   extractedTexts,
   selectedFields,
 ) {
+  if (!_hasAnySelected(selectedFields)) return;
   const analysisResult = _confirmedFieldsOnly(
     rawAnalysisResult,
     selectedFields,
+    _detectFormType(combinedText),
   );
   // This stores the full document text + structured data forever
   try {
@@ -1786,6 +1849,34 @@ function DD214OffDeviceNotice({ notice }) {
   );
 }
 
+// Owner decision (G): the card says plainly how many of the shown values the
+// app's own parser read and how many the AI read (those need checking).
+function DD214SourceCounts({ fieldSources }) {
+  const counts = countBySource(fieldSources);
+  return (
+    <p
+      className="text-sm text-blue-700 dark:text-blue-300"
+      data-testid="dd214-source-counts"
+    >
+      {describeSourceCounts(counts)}.
+      {counts.model > 0 &&
+        " Values read by the AI are marked in the import dialog and are never ticked for you: check them against your document."}
+    </p>
+  );
+}
+
+// A value the veteran types into an identifier box always wins and is labelled
+// as theirs.
+function _typeIdentifier(setAnalysisResult) {
+  return (field, value) =>
+    setAnalysisResult((prev) => {
+      const fieldSources = { ...prev.fieldSources };
+      if (_hasValue(value)) fieldSources[field] = VALUE_SOURCE.VETERAN;
+      else delete fieldSources[field];
+      return { ...prev, [field]: value, fieldSources };
+    });
+}
+
 function DD214ResultsSummaryHeader({ analysisResult, importSaved, t }) {
   return (
     <div className="space-y-1">
@@ -1804,6 +1895,7 @@ function DD214ResultsSummaryHeader({ analysisResult, importSaved, t }) {
           importSaved ? "importSavedNote" : "nothingSavedYet",
         )}
       </p>
+      <DD214SourceCounts fieldSources={analysisResult.fieldSources} />
     </div>
   );
 }
@@ -2890,6 +2982,11 @@ function _dd214ReadyToAnalyze(ctx) {
   return true;
 }
 
+// Shown when a store the known-identifier set is built from could not be read
+// in time: the model's dates and free text are dropped for that reading.
+export const STORE_READ_FAILED_NOTICE =
+  "The app could not check this reading against what it already holds about you (your profile, knowledge base, service history or My Packet could not be read), so only the values the app read itself are shown. Dates and text the AI wrote were left out. Try Analyze again.";
+
 // The AI-success path (parse, merge with the regex safety net, schedule the
 // profile-import prompt) - pulled out of handleAnalyzeWithAI purely to keep
 // that function under the repo's max-lines-per-function limit.
@@ -2901,11 +2998,17 @@ async function _finishDd214Analysis(response, state) {
     setAnalysisResult,
     setExtractedProfileData,
     setShowProfileImportModal,
+    setStoreReadNotice,
   } = state;
 
   const content = _extractResponseContent(response);
-  const knownSources = await loadKnownIdentifierSources();
+  const { sources: knownSources, complete } =
+    await loadKnownIdentifierSourcesChecked();
   const data = _parseDd214Json(content, t, knownSources);
+  if (!complete) {
+    dropModelWrittenValues(data);
+    setStoreReadNotice(STORE_READ_FAILED_NOTICE);
+  }
   setAnalysisResult(data);
 
   // ─── DIAMOND STANDARD: Regex Safety Net ───
@@ -2946,6 +3049,7 @@ function _buildDd214AnalysisHandlers(state) {
     setAnalysisResult,
     setOcrProgress,
     setOffDeviceNotice,
+    setStoreReadNotice,
     setImportSaved,
   } = state;
 
@@ -3006,6 +3110,7 @@ function _buildDd214AnalysisHandlers(state) {
 
     setError(null);
     setOffDeviceNotice(null);
+    setStoreReadNotice(null);
     setAnalysisResult(null);
     setImportSaved(false);
 
@@ -3186,6 +3291,7 @@ function DD214AnalyzerModalContent({ state, handlers }) {
     isProcessing,
     error,
     offDeviceNotice,
+    storeReadNotice,
     analysisResult,
     setAnalysisResult,
     importSaved,
@@ -3244,13 +3350,12 @@ function DD214AnalyzerModalContent({ state, handlers }) {
 
       <DD214ErrorBanner error={error} t={t} />
       <DD214OffDeviceNotice notice={offDeviceNotice} />
+      <DD214OffDeviceNotice notice={storeReadNotice} />
 
       <DD214AnalysisResultsPanel
         analysisResult={analysisResult}
         importSaved={importSaved}
-        onIdentifierChange={(field, value) =>
-          setAnalysisResult((prev) => ({ ...prev, [field]: value }))
-        }
+        onIdentifierChange={_typeIdentifier(setAnalysisResult)}
         t={t}
       />
     </div>
@@ -3263,8 +3368,14 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
     extractedProfileData,
     showFormBuilder,
     setShowFormBuilder,
+    analysisResult,
   } = state;
   const { handleConfirmProfileImport, handleCancelProfileImport } = handlers;
+  const fieldSources = useMemo(
+    () =>
+      sourcesForImportRows(analysisResult?.fieldSources, extractedProfileData),
+    [analysisResult, extractedProfileData],
+  );
   // G10: a fresh getVeteranProfile() object every render gave the modal's
   // own reset effect (keyed on this prop's identity) a new reference on
   // every parent re-render, wiping the veteran's in-progress field
@@ -3283,6 +3394,7 @@ function DD214AnalyzerExtraModals({ state, handlers }) {
         createPortal(
           <ProfileImportConfirmModal
             extractedData={extractedProfileData}
+            fieldSources={fieldSources}
             currentProfile={currentProfile}
             onConfirm={handleConfirmProfileImport}
             onCancel={handleCancelProfileImport}
@@ -3412,9 +3524,12 @@ function useDD214ResultState() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
   const [offDeviceNotice, setOffDeviceNotice] = useState(null);
+  const [storeReadNotice, setStoreReadNotice] = useState(null);
   const [importSaved, setImportSaved] = useState(false);
 
   return {
+    storeReadNotice,
+    setStoreReadNotice,
     inputMethod,
     setInputMethod,
     pastedText,

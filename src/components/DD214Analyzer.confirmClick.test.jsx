@@ -138,6 +138,7 @@ describe("clicking Import Selected Fields writes exactly what was ticked", () =>
     expect(tick("Full Name").checked).toBe(false);
     expect(tick("Date of Birth").checked).toBe(false);
     expect(tick("Branch of Service").checked).toBe(true);
+    expect(tick("MOS/Rating").checked).toBe(false);
     ["Branch of Service", "Separation Date", "Character of Service"].forEach(
       (label) => fireEvent.click(tick(label)),
     );
@@ -149,7 +150,7 @@ describe("clicking Import Selected Fields writes exactly what was ticked", () =>
     expect(profile.branch).toBeFalsy();
     expect(profile.serviceEndDate).toBeFalsy();
     expect(profile.characterOfService).toBeFalsy();
-    expect(profile.mos).toBe("11B");
+    expect(profile.mos).toBeFalsy();
     expect(profile.serviceStartDate).toBeTruthy();
     expect(profile.fullName || profile.lastName).toBeFalsy();
     expect(profile.dateOfBirth).toBeFalsy();

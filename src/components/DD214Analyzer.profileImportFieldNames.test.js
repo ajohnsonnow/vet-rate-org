@@ -98,6 +98,13 @@ describe("DD214Analyzer: profile import uses the whitelisted field names", () =>
   });
 });
 
+// The rows the import dialog pre-ticks when the parser read these values.
+const ticksFor = (analysis) => ({
+  serviceStartDate: analysis.entryDate,
+  serviceEndDate: analysis.separationDate,
+  branch: analysis.branch,
+});
+
 describe("[DR-3] _saveDd214ToProfile creates a canonical period for a single DD-214", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -115,7 +122,8 @@ describe("[DR-3] _saveDd214ToProfile creates a canonical period for a single DD-
       branch: "Army",
       formType: "DD214",
     };
-    _saveDd214ToProfile(analysisResult, "combined text", {}, {}, [
+    const ticked = ticksFor(analysisResult);
+    _saveDd214ToProfile(analysisResult, "combined text", ticked, {}, [
       { filename: "dd214-synthetic.pdf" },
     ]);
 
@@ -132,7 +140,7 @@ describe("[DR-3] _saveDd214ToProfile creates a canonical period for a single DD-
     _saveDd214ToProfile(
       analysisResult,
       "combined text",
-      { serviceStartDate: "2001-11-01" },
+      { ...ticked, serviceStartDate: "2001-11-01" },
       { serviceStartDateEdited: true },
       [{ filename: "dd214-synthetic.pdf" }],
     );
@@ -145,34 +153,28 @@ describe("[DR-3] _saveDd214ToProfile creates a canonical period for a single DD-
 
   it("[G2] a multi-DD214 import creates no period and records a conflict against an existing period-backed entry", () => {
     // An earlier, single DD-214 already backs the entry with a period.
-    _saveDd214ToProfile(
-      {
-        dd214Count: 1,
-        entryDate: "1998-01-05",
-        separationDate: "2001-12-20",
-        branch: "Army",
-      },
-      "combined text",
-      {},
-      {},
-      [{ filename: "dd214-synthetic.pdf" }],
-    );
+    const earlier = {
+      dd214Count: 1,
+      entryDate: "1998-01-05",
+      separationDate: "2001-12-20",
+      branch: "Army",
+    };
+    _saveDd214ToProfile(earlier, "combined text", ticksFor(earlier), {}, [
+      { filename: "dd214-synthetic.pdf" },
+    ]);
     expect(getServicePeriods()).toHaveLength(1);
 
     // A second analysis result covering multiple DD-214s never creates a
     // second period - it can only disagree, never silently overwrite.
-    _saveDd214ToProfile(
-      {
-        dd214Count: 2,
-        entryDate: "2002-03-05",
-        separationDate: "2010-06-15",
-        branch: "Army",
-      },
-      "combined text",
-      {},
-      {},
-      [{ filename: "multi-dd214-synthetic.pdf" }],
-    );
+    const multi = {
+      dd214Count: 2,
+      entryDate: "2002-03-05",
+      separationDate: "2010-06-15",
+      branch: "Army",
+    };
+    _saveDd214ToProfile(multi, "combined text", ticksFor(multi), {}, [
+      { filename: "multi-dd214-synthetic.pdf" },
+    ]);
 
     expect(getServicePeriods()).toHaveLength(1);
     const period = getServicePeriods()[0];

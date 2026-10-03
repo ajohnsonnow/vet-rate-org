@@ -84,13 +84,21 @@ describe("a name the app has never seen is removed from model text", () => {
   });
 });
 
+const EXTRACTED = { ...MODEL_TEXT, branch: "Army" };
+const SOURCES = {
+  ...Object.fromEntries(Object.keys(MODEL_TEXT).map((key) => [key, "model"])),
+  branch: "parser",
+};
+const NO_PROFILE = {};
+
 describe("the import dialog never pre-selects model-written text", () => {
   it("offers it unticked and leaves it out until the veteran ticks it", () => {
     const onConfirm = vi.fn();
     render(
       <ProfileImportConfirmModal
-        extractedData={{ ...MODEL_TEXT, branch: "Army" }}
-        currentProfile={{}}
+        extractedData={EXTRACTED}
+        fieldSources={SOURCES}
+        currentProfile={NO_PROFILE}
         onConfirm={onConfirm}
         onCancel={vi.fn()}
       />,

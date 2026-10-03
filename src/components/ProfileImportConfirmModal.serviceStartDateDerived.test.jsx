@@ -14,6 +14,12 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { useState, useMemo } from "react";
 import ProfileImportConfirmModal from "./ProfileImportConfirmModal.jsx";
 
+const PARSER_READ = {
+  serviceStartDate: "parser",
+  serviceStartDateDerived: "parser",
+  serviceEndDate: "parser",
+};
+
 describe("ProfileImportConfirmModal: an explicit false field value is not dropped on import", () => {
   it("includes serviceStartDateDerived: false in the confirmed payload", async () => {
     const onConfirm = vi.fn();
@@ -24,6 +30,7 @@ describe("ProfileImportConfirmModal: an explicit false field value is not droppe
           serviceStartDateDerived: false,
           serviceEndDate: "2005-03-20",
         }}
+        fieldSources={PARSER_READ}
         currentProfile={{
           serviceStartDate: "2002-03-05",
           serviceStartDateDerived: true,
@@ -79,6 +86,7 @@ describe("[G10] a parent re-render with a stable (memoized) currentProfile does 
           <button onClick={() => setTick((t) => t + 1)}>rerender {tick}</button>
           <ProfileImportConfirmModal
             extractedData={extractedData}
+            fieldSources={PARSER_READ}
             currentProfile={currentProfile}
             onConfirm={vi.fn()}
             onCancel={vi.fn()}

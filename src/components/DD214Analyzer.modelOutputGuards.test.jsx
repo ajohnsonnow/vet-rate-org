@@ -87,16 +87,24 @@ describe("D21-3: no identifier-bearing key is in the model schema", () => {
   });
 });
 
+const PLACE_OF_BIRTH_ROWS = {
+  placeOfBirth: "City, State, Country",
+  serviceStartDate: "2004-01-10",
+};
+const PLACE_OF_BIRTH_SOURCES = {
+  placeOfBirth: "parser",
+  serviceStartDate: "parser",
+};
+const NO_PROFILE = {};
+
 describe("D21-3: the import dialog never pre-selects a place of birth", () => {
   it("offers it unticked and leaves it out of the import", async () => {
     const onConfirm = vi.fn();
     render(
       <ProfileImportConfirmModal
-        extractedData={{
-          placeOfBirth: "City, State, Country",
-          serviceStartDate: "2004-01-10",
-        }}
-        currentProfile={{}}
+        extractedData={PLACE_OF_BIRTH_ROWS}
+        fieldSources={PLACE_OF_BIRTH_SOURCES}
+        currentProfile={NO_PROFILE}
         onConfirm={onConfirm}
         onCancel={vi.fn()}
       />,

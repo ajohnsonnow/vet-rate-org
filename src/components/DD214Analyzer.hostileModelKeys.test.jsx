@@ -57,6 +57,7 @@ const {
 const { loadKnownIdentifierSources } =
   await import("../utils/dd214KnownIdentifierSources");
 const { dateKeys } = await import("../utils/dd214EnumeratedFields");
+const { sourcesForImportRows } = await import("../utils/dd214ValueSources");
 
 const t = () => "parse error";
 const NAME = "Zorblax Quindle";
@@ -211,6 +212,7 @@ function openDialog(analysis) {
   render(
     <ProfileImportConfirmModal
       extractedData={importData}
+      fieldSources={sourcesForImportRows(analysis.fieldSources, importData)}
       currentProfile={{}}
       onConfirm={onConfirm}
       onCancel={vi.fn()}

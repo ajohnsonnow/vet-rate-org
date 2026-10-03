@@ -48,8 +48,20 @@ const {
   _saveDd214ToVkb,
   _saveDd214ToPacket,
 } = await import("./DD214Analyzer.jsx");
+const { sourcesForImportRows } = await import("../utils/dd214ValueSources");
 
 const ANALYSIS = {
+  fieldSources: {
+    branch: "parser",
+    entryDate: "parser",
+    separationDate: "parser",
+    mos: "model",
+    mosTitle: "model",
+    militaryEducation: "model",
+    specialQualifications: "model",
+    awards: "model",
+    combatService: "model",
+  },
   branch: "Army",
   mos: "11B",
   mosTitle: "Zzmarker rifleman",
@@ -96,6 +108,7 @@ function openDialog() {
   render(
     <ProfileImportConfirmModal
       extractedData={importData}
+      fieldSources={sourcesForImportRows(ANALYSIS.fieldSources, importData)}
       currentProfile={{}}
       onConfirm={onConfirm}
       onCancel={vi.fn()}
@@ -154,7 +167,9 @@ describe("a plain Import with nothing extra ticked", () => {
     await importWith(false);
     expect(dumpLocalStorage()).toContain("vet_rate_service_history");
     expect(dumpLocalStorage()).not.toMatch(MARKER);
+    expect(dumpLocalStorage()).not.toContain("11B");
     expect(storedByStores()).not.toMatch(MARKER);
+    expect(storedByStores()).not.toContain("11B");
     expect(stores.addDocumentToVKB).toHaveBeenCalled();
     expect(stores.saveDocumentToPacket).toHaveBeenCalled();
   });
