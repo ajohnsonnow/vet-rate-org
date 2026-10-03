@@ -105,4 +105,46 @@ describe("Save to my records when the save does not finish", () => {
     expect(filed.extractedData).toEqual({ branch: "Army" });
     expect(mergeAnalysisIntoVkb).toHaveBeenCalledTimes(1);
   });
+
+  it("does not say saved when the conditions and timeline merge failed", async () => {
+    mergeAnalysisIntoVkb.mockRejectedValueOnce(new Error("store refused"));
+    render(
+      <CFileSaveToRecords
+        file={FILE}
+        extractedText={EXTRACTED}
+        analysisResult={ANALYSIS}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save to my records" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toMatch(/did not finish/i);
+    expect(screen.getByText(/Nothing has been saved yet/)).toBeTruthy();
+    expect(screen.queryByText(/Saved to your records/)).toBeNull();
+    expect(
+      screen.getByTestId("cfile-save-to-records").getAttribute("data-saves"),
+    ).toBe("0");
+  });
+
+  it("links the saved conditions to the filed document when My Packet lists it", async () => {
+    vi.spyOn(
+      await import("../utils/myPacketManager"),
+      "getPacketIndex",
+    ).mockResolvedValue([{ id: "doc-1", fileName: FILE.name, fileSize: 10 }]);
+    render(
+      <CFileSaveToRecords
+        file={FILE}
+        extractedText={EXTRACTED}
+        analysisResult={ANALYSIS}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save to my records" }));
+
+    await waitFor(() => expect(mergeAnalysisIntoVkb).toHaveBeenCalledTimes(1));
+    expect(mergeAnalysisIntoVkb.mock.calls[0][0].sourceDocumentId).toBe(
+      "doc-1",
+    );
+  });
 });

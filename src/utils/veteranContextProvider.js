@@ -561,6 +561,7 @@ async function _saveToVkb({
   vkbMergeData,
   sourceDocumentId,
   timestamp,
+  strict = false,
 }) {
   try {
     if (vkbDocument) {
@@ -574,7 +575,10 @@ async function _saveToVkb({
     if (!vkbMergeData) return;
 
     const vkb = await loadVKB();
-    if (!vkb) return;
+    if (!vkb) {
+      if (strict) throw new Error("The Knowledge Base could not be opened.");
+      return;
+    }
 
     _mergeAiInsightsAndKeyFacts(vkb, vkbMergeData);
     // Merge claims data (normalized names so "PTSD (chronic)" and "ptsd"
@@ -595,11 +599,17 @@ async function _saveToVkb({
     _mergeEnvironmentalExposures(vkb, vkbMergeData);
 
     vkb.lastUpdated = timestamp;
-    await saveVKB(vkb);
+    const saved = await saveVKB(vkb);
+    if (strict && saved?.success === false) {
+      throw new Error(
+        saved.error || "The Knowledge Base save did not complete.",
+      );
+    }
     // eslint-disable-next-line no-console
     console.log(`[VeteranContextProvider] ✅ Merged ${toolName} data into VKB`);
   } catch (err) {
     console.error(`[VeteranContextProvider] ❌ Failed to save to VKB:`, err);
+    if (strict) throw err;
   }
 }
 
@@ -638,14 +648,20 @@ export const saveAnalysisResults = async ({
 
 // For a tool that has already filed its document: merges only the structured
 // findings (conditions, timeline events) into the Knowledge Base, without a
-// second My Packet record or Knowledge Base document.
-export const mergeAnalysisIntoVkb = ({ toolName, vkbMergeData }) =>
+// second My Packet record or Knowledge Base document. A merge that did not
+// reach storage throws, so the caller never reports it as saved.
+export const mergeAnalysisIntoVkb = ({
+  toolName,
+  vkbMergeData,
+  sourceDocumentId = null,
+}) =>
   _saveToVkb({
     toolName,
     vkbDocument: null,
     vkbMergeData,
-    sourceDocumentId: null,
+    sourceDocumentId,
     timestamp: new Date().toISOString(),
+    strict: true,
   });
 
 // Re-export commonly-used constants so tools only need ONE import line

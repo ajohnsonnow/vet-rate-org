@@ -36,6 +36,7 @@ import {
   buildVkbMergeFromCFile,
 } from "../utils/veteranContextProvider";
 import { getStorageStats } from "../utils/storage";
+import { getPacketIndex } from "../utils/myPacketManager";
 
 // Sub-components for the dashboard
 import CFileTimeline from "./CFileTimeline";
@@ -158,9 +159,16 @@ export async function _saveCFileToRecords(extractionResult, analysis) {
     { name: filed.filename, size: filed.size },
     filed,
   );
+  const packetIndex = await getPacketIndex();
+  const filedRecord = packetIndex.find(
+    (entry) =>
+      entry.fileName === filed.filename &&
+      (entry.fileSize || 0) === (filed.size || 0),
+  );
   await mergeAnalysisIntoVkb({
     toolName: "C-File Analyzer",
     vkbMergeData: buildVkbMergeFromCFile(analysis, extractionResult),
+    sourceDocumentId: filedRecord?.id ?? null,
   });
 }
 
@@ -211,10 +219,13 @@ export function CFileSaveToRecords({ file, extractedText, analysisResult }) {
           ? "Saved to your records on this device."
           : "Nothing has been saved yet."}{" "}
         Saving keeps {merge.claims.length} condition(s),{" "}
-        {merge.evidenceTimeline.length} timeline event(s) and the document "
-        {fileName}" in your Knowledge Base and My Packet. Your name, date of
-        birth, VA file number and claim number are not saved as fields. Closing
-        this screen without saving keeps nothing.
+        {merge.evidenceTimeline.length} timeline event(s), the summary,
+        exposures and action items the analysis wrote, any service periods,
+        awards, deployments and ratings found in the document, and the document
+        "{fileName}" in your Knowledge Base and My Packet. The text the analysis
+        wrote can repeat details from the document. Your name, date of birth, VA
+        file number and claim number are not saved as fields. Closing this
+        screen without saving keeps nothing.
       </p>
       {status.phase === "error" && (
         <p role="alert" className="mt-2 text-sm text-red-700 dark:text-red-300">
