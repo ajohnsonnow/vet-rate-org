@@ -12,8 +12,18 @@
 import {
   scrubText,
   redactKnownValues,
+  redactFileNames,
   collectKnownIdentifierValues,
 } from "./piiScrubber";
+import {
+  ENUMERATED_KEYS,
+  birthDateKeysFrom,
+  cleanDocumentTypes,
+  cleanEnumeratedField,
+  dateKeys,
+  isPlausibleDateKey,
+} from "./dd214EnumeratedFields";
+import { removePersonAndPlaceShapes } from "./dd214ModelTextScrub";
 
 export const FREE_TEXT_FIELDS = [
   "extractionNotes",
@@ -29,7 +39,17 @@ export const MODEL_TEXT_FIELDS = [
   ...FREE_TEXT_FIELDS,
   "lastDutyAssignment",
   "commandTransferredTo",
+  "mosTitle",
+  "militaryEducation",
+  "specialQualifications",
 ];
+
+// Sentences and unit lines: a bare "John Smith" is removed from these too.
+const PROSE_KEYS = new Set([
+  ...FREE_TEXT_FIELDS,
+  "lastDutyAssignment",
+  "commandTransferredTo",
+]);
 
 const SCALAR_LITERAL = /"(\w+)"\s*:\s*"([^"\n]+)"/g;
 // Bracketed lists of plain strings, one line or several; a list that holds
@@ -200,17 +220,24 @@ function knownValuesFrom(sources) {
 
 const makeScrubber = (sources) => {
   const known = knownValuesFrom(sources);
+  const base = (text) => scrubText(redactKnownValues(text, known));
   return {
     known,
-    scrub: (text) => scrubText(redactKnownValues(text, known)),
+    birthDates: birthDateKeysFrom(sources),
+    scrub: (text) => removePersonAndPlaceShapes(base(text)),
+    scrubShort: (text) =>
+      removePersonAndPlaceShapes(base(text), { bare: "short" }),
+    scrubProse: (text) =>
+      removePersonAndPlaceShapes(base(text), { bare: "prose" }),
   };
 };
 
 /**
  * Scrub every model-written free-text field in place. `sources` are objects
  * holding values the app already knows are identifiers (the saved profile, the
- * identifiers read by the local parser); each one is redacted by value on top
- * of the pattern scrubber.
+ * knowledge base, the identifiers read by the local parser); each one is
+ * redacted by value on top of the pattern scrubber, and person-, city- and
+ * ZIP-shaped text is removed whether or not the app knew it.
  */
 export function scrubModelFreeText(data, sources = []) {
   const { scrub } = makeScrubber(sources);
@@ -248,7 +275,6 @@ const SERVICE_TIME_KEYS = new Set([
 ]);
 const TEXT_OR_LIST_KEYS = new Set([
   ...FREE_TEXT_FIELDS,
-  "documentTypes",
   "militaryEducation",
   "specialQualifications",
 ]);
@@ -258,24 +284,6 @@ const DATE_SHAPE = /^(?:\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\/\d{1,2}\/\d{4})$/;
 // Lengths of service can be fractional ("8.5" years).
 const COUNT_SHAPE = /^\d{1,5}(?:\.\d{1,2})?$/;
 const MAX_COUNT = 99999;
-// A code or a name ("E-5", "Army", "Honorable") never needs more room than
-// this; a longer value is a sentence a model wrote into the wrong field.
-const SHORT_TEXT_KEYS = new Set([
-  "component",
-  "branch",
-  "rank",
-  "payGrade",
-  "mos",
-  "masterRecordType",
-  "reentryCode",
-  "separationCode",
-  "separationProgramDesignator",
-  "separationType",
-  "characterOfService",
-  "giBlStatus",
-  "securityClearance",
-]);
-const MAX_SHORT_TEXT_CHARS = 80;
 // Unit lines, course names, award names: longer, but not a paragraph.
 const MAX_TEXT_CHARS = 300;
 
@@ -299,13 +307,16 @@ function cleanText(value, scrub, max) {
   return scrub(text);
 }
 
-// A date a model wrote is kept only when it is date-shaped and is not one of
-// the identifiers the app already knows (a birth date filed under a service
-// date).
-function cleanDate(value, known) {
+// A date a model wrote is kept only when it is a real calendar date in a
+// plausible range and is not a birth date the app knows in any source, in any
+// format or reading (a birth date filed under a service date).
+function cleanDate(value, { known, birthDates }) {
   if (typeof value !== "string") return undefined;
   const text = value.trim();
   if (!DATE_SHAPE.test(text)) return undefined;
+  const keys = dateKeys(text).filter((key) => isPlausibleDateKey(key));
+  if (keys.length === 0) return undefined;
+  if (dateKeys(text).some((key) => birthDates.has(key))) return undefined;
   return redactKnownValues(text, known) === text ? text : undefined;
 }
 
@@ -347,17 +358,20 @@ function cleanStringList(value, scrub) {
     .map((item) => scrub(item));
 }
 
-function cleanAward(award, scrub) {
+// A source document is a file name, which can carry the veteran's own name.
+function cleanAward(award, { scrub, scrubShort }) {
   if (!award || typeof award !== "object" || Array.isArray(award)) {
     return undefined;
   }
   const out = {};
-  for (const key of ["name", "abbreviation", "sourceDocument"]) {
-    const text = cleanText(award[key], scrub, MAX_TEXT_CHARS);
+  for (const key of ["name", "abbreviation"]) {
+    const text = cleanText(award[key], scrubShort, MAX_TEXT_CHARS);
     if (text !== undefined) out[key] = text;
   }
+  const source = cleanText(award.sourceDocument, scrub, MAX_TEXT_CHARS);
+  if (source !== undefined) out.sourceDocument = redactFileNames(source);
   if (Array.isArray(award.devices)) {
-    out.devices = cleanStringList(award.devices, scrub);
+    out.devices = cleanStringList(award.devices, scrubShort);
   }
   const deviceCount = cleanCount(award.deviceCount);
   if (deviceCount !== undefined) out.deviceCount = deviceCount;
@@ -380,22 +394,38 @@ function cleanCombatService(value, scrub) {
   return out;
 }
 
-function cleanField(key, value, { known, scrub }) {
-  if (DATE_KEYS.has(key)) return cleanDate(value, known);
+function cleanEnumerated(key, value, { known }) {
+  if (key === "documentTypes") return cleanDocumentTypes(value);
+  const asText =
+    typeof value === "number" && Number.isFinite(value) ? String(value) : value;
+  const text = cleanEnumeratedField(key, asText);
+  if (text === undefined) return undefined;
+  return redactKnownValues(text, known) === text ? text : undefined;
+}
+
+function cleanField(key, value, context) {
+  const { scrub, scrubShort, scrubProse } = context;
+  if (DATE_KEYS.has(key)) return cleanDate(value, context);
+  if (ENUMERATED_KEYS.has(key)) return cleanEnumerated(key, value, context);
   if (COUNT_KEYS.has(key)) return cleanCount(value);
   if (FLAG_KEYS.has(key)) return cleanFlag(value);
   if (SERVICE_TIME_KEYS.has(key)) return cleanServiceTime(value);
-  if (FREE_TEXT_FIELDS.includes(key)) return cleanTextOrList(value, scrub);
+  if (FREE_TEXT_FIELDS.includes(key)) {
+    return cleanTextOrList(value, scrubProse);
+  }
   if (TEXT_OR_LIST_KEYS.has(key)) {
-    return cleanTextOrList(value, scrub, MAX_TEXT_CHARS);
+    return cleanTextOrList(value, scrubShort, MAX_TEXT_CHARS);
   }
   if (key === "awards") {
     if (!Array.isArray(value)) return undefined;
-    return value.map((award) => cleanAward(award, scrub)).filter(Boolean);
+    return value.map((award) => cleanAward(award, context)).filter(Boolean);
   }
-  if (key === "combatService") return cleanCombatService(value, scrub);
-  const max = SHORT_TEXT_KEYS.has(key) ? MAX_SHORT_TEXT_CHARS : MAX_TEXT_CHARS;
-  return cleanText(value, scrub, max);
+  if (key === "combatService") return cleanCombatService(value, scrubShort);
+  return cleanText(
+    value,
+    PROSE_KEYS.has(key) ? scrubProse : scrub,
+    MAX_TEXT_CHARS,
+  );
 }
 
 /**
