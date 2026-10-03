@@ -224,6 +224,64 @@ async function vkbCounts(
   });
 }
 
+async function savedFromThisTool(
+  page: Page,
+): Promise<{ conditions: string[]; timelineEvents: number }> {
+  return page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((res, rej) => {
+      const req = indexedDB.open("VetRateVKB");
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+    const vkb = await new Promise<Record<string, any>>((res, rej) => {
+      const r = db
+        .transaction("knowledge_base", "readonly")
+        .objectStore("knowledge_base")
+        .get("main");
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    db.close();
+    const current: Array<{ name: string; source?: string }> =
+      vkb.medicalConditions?.current || [];
+    return {
+      conditions: current
+        .filter((c) => c.source === "C-File Analysis")
+        .map((c) => c.name),
+      timelineEvents: (vkb.evidenceTimeline || []).length,
+    };
+  });
+}
+
+async function listedTexts(
+  dialog: ReturnType<Page["locator"]>,
+  testId: string,
+): Promise<string[]> {
+  return dialog.getByTestId(testId).getByRole("listitem").allTextContents();
+}
+
+test.describe("C-File Analyzer: the Save panel lists what Save writes", () => {
+  test("the conditions and the timeline event count shown are what is stored", async ({
+    page,
+  }) => {
+    test.setTimeout(90000);
+    await boot(page);
+    await dropAndAnalyze(page);
+    const dialog = page.locator(CFILE_DIALOG);
+    const conditions = await listedTexts(dialog, "cfile-save-conditions");
+    const timeline = await listedTexts(dialog, "cfile-save-timeline");
+    expect(conditions.length).toBeGreaterThan(0);
+
+    const panel = dialog.getByTestId("cfile-save-to-records");
+    await panel.getByRole("button", { name: "Save to my records" }).click();
+    await expect(panel).toHaveAttribute("data-saves", "1");
+
+    await expect
+      .poll(() => savedFromThisTool(page))
+      .toEqual({ conditions, timelineEvents: timeline.length });
+  });
+});
+
 test.describe("C-File Analyzer: nothing is saved until the veteran confirms", () => {
   test("drop, analyze, close leaves localStorage and IndexedDB unchanged", async ({
     page,
