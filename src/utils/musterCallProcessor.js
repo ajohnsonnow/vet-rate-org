@@ -90,6 +90,7 @@ import {
   FAILURE_KINDS,
   failureLogCode,
   forLog,
+  PlainDocumentError,
 } from "./fileReadFailure";
 import { describeFailureKind } from "./readFailureMessage";
 import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
@@ -264,7 +265,7 @@ function _parseAIAnalysisContent(content) {
  */
 const analyzeCFileWithAI = async (text, { timeoutMs } = {}) => {
   if (!isAnyAIAvailable()) {
-    throw new Error("The on-device AI engine is not available.");
+    throw new PlainDocumentError("The on-device AI engine is not available.");
   }
 
   // eslint-disable-next-line no-console
@@ -468,7 +469,11 @@ async function _readLargePdfBounded(start) {
   } catch (err) {
     if (err instanceof StepTimeoutError) {
       console.warn("Large PDF read went quiet and was given up on.");
-      throw new Error(LARGE_PDF_STALLED_MESSAGE, { cause: err });
+      throw new PlainDocumentError(
+        LARGE_PDF_STALLED_MESSAGE,
+        FAILURE_KINDS.TIMEOUT,
+        { cause: err },
+      );
     }
     throw err;
   }
@@ -2089,7 +2094,9 @@ const _failureMessage = (result, error, { persistIncomplete, kind }) => {
   if (persistIncomplete) {
     return describePersistIncomplete(result.filename, "Retry", error);
   }
-  return describeFailureKind(kind);
+  return error instanceof PlainDocumentError
+    ? error.message
+    : describeFailureKind(kind);
 };
 
 const _markDocumentFailed = (result, error, onProgress) => {
@@ -2103,6 +2110,7 @@ const _markDocumentFailed = (result, error, onProgress) => {
   result.status = "error";
   result.error = message;
   result.failureKind = kind;
+  if (error instanceof PlainDocumentError) result.plainMessage = error.message;
   result.readFailed = kind === FAILURE_KINDS.READ;
   result.persistIncomplete = persistIncomplete;
   result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;
@@ -2170,7 +2178,7 @@ const processSingleDocument = async (file, onProgress, options = {}) => {
 
     // analyzeDocument throws on error, no need to check .success
     if (!extractionResult.text || extractionResult.text.trim().length === 0) {
-      throw new Error("No text could be extracted from document");
+      throw new PlainDocumentError("No text could be extracted from document");
     }
 
     result.text = extractionResult.text;

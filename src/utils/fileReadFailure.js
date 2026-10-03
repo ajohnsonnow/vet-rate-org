@@ -27,6 +27,16 @@ export const FAILURE_KINDS = Object.freeze({
   UNKNOWN: "unknown",
 });
 
+// A failure whose message was written for the veteran (never built from a
+// file name, address or stack) and may be shown as it is.
+export class PlainDocumentError extends Error {
+  constructor(message, kind = FAILURE_KINDS.UNKNOWN, options) {
+    super(message, options);
+    this.name = "PlainDocumentError";
+    this.kind = kind;
+  }
+}
+
 const READ_ERROR_NAMES = new Set([
   "FileReadError",
   "NotReadableError",
@@ -50,6 +60,7 @@ const MEMORY_ERROR_MESSAGE =
   /out of memory|allocation failed|invalid (typed )?array length|memory access out of bounds/i;
 
 export const classifyDocumentFailure = (error) => {
+  if (error instanceof PlainDocumentError) return error.kind;
   const name = error?.name;
   const message = String(error?.message ?? "");
   if (READ_ERROR_NAMES.has(name)) return FAILURE_KINDS.READ;

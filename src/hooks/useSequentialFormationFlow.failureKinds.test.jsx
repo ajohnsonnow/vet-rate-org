@@ -163,6 +163,21 @@ describe("a document that fails for a reason other than reading the file", () =>
     expect(processFormationDocument.mock.calls[1][0]).toBe(queue[0].file);
   });
 
+  it("keeps a message already written for the veteran, such as an empty scan", async () => {
+    const result = setup();
+    processFormationDocument.mockResolvedValue({
+      ...workerFailure,
+      failureKind: "unknown",
+      plainMessage: "No text could be extracted from document",
+    });
+
+    await start(result);
+
+    expect(formationQueue.errorEntryAndNext.mock.calls[0][1]).toBe(
+      "We could not finish the claim letter (document 1). No text could be extracted from document",
+    );
+  });
+
   it("stops offering Retry after three tries", async () => {
     const result = setup();
     processFormationDocument.mockResolvedValue(workerFailure);

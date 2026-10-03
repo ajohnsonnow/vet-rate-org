@@ -50,12 +50,13 @@ export const describeFailureKind = (kind) =>
  * @param {string} label From plainDocumentLabel.
  * @param {{kind?: string, canRetry: boolean, fileGone: boolean}} state
  *   `fileGone`: the file can no longer be read at all, so only adding it
- *   again can help. `reloaded`: the page was reloaded since, which dropped
+ *   again can help. `detail`: a message already written for the veteran,
+ *   shown in place of the generic cause. `reloaded`: the page was reloaded since, which dropped
  *   the file reference.
  */
 export const describeDocumentFailure = (
   label,
-  { kind = FAILURE_KINDS.READ, canRetry, fileGone, reloaded = false },
+  { kind = FAILURE_KINDS.READ, detail, canRetry, fileGone, reloaded = false },
 ) => {
   if (reloaded && kind !== FAILURE_KINDS.READ) {
     return `We could not finish ${label} before the page was reloaded, so add the file again to finish it.`;
@@ -66,6 +67,7 @@ export const describeDocumentFailure = (
       "so add it again to finish it."
     );
   }
+  if (detail) return `We could not finish ${label}. ${detail}`;
   const cause = CAUSES[kind] ?? CAUSES[FAILURE_KINDS.UNKNOWN];
   if (canRetry) {
     return `We could not finish ${label} because ${cause}, so choose Retry to try again.`;

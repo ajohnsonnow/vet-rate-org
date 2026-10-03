@@ -31,6 +31,7 @@ import {
   failureLogCode,
   FAILURE_KINDS,
   forLog,
+  PlainDocumentError,
   isFileStillReadable,
 } from "../utils/fileReadFailure";
 import {
@@ -234,6 +235,7 @@ async function runDocumentProcessing(entry, ctx) {
       failure.failureKind =
         result.failureKind ??
         (result.readFailed ? FAILURE_KINDS.READ : FAILURE_KINDS.UNKNOWN);
+      failure.plainMessage = result.plainMessage;
       throw failure;
     }
   } catch (err) {
@@ -248,7 +250,7 @@ const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // veteran is asked, with a bounded Retry while the file can still be read and
 // a plain "add it again" once it cannot. Only a failed read is retried on its
 // own; every other kind of failure waits for the veteran's Retry.
-async function handleRetryableFailure(entry, kind, ctx) {
+async function handleRetryableFailure(entry, kind, ctx, detail) {
   // eslint-disable-next-line no-console
   console.warn(
     `📂 Could not finish ${entryLabel(entry, ctx)}`,
@@ -271,6 +273,7 @@ async function handleRetryableFailure(entry, kind, ctx) {
   if (canRetry) ctx.readRetryable.add(entry.id);
   const message = describeDocumentFailure(plainEntryLabel(entry, ctx), {
     kind,
+    detail,
     canRetry,
     fileGone: !readable,
   });
@@ -311,7 +314,10 @@ async function handleDocumentFailure(err, entry, ctx) {
     );
   }
   const kind = err.failureKind ?? classifyDocumentFailure(err);
-  return handleRetryableFailure(entry, kind, ctx);
+  const detail =
+    err.plainMessage ??
+    (err instanceof PlainDocumentError ? err.message : undefined);
+  return handleRetryableFailure(entry, kind, ctx, detail);
 }
 
 const NO_PERIOD_FOR_DOCUMENT_WARNING =
