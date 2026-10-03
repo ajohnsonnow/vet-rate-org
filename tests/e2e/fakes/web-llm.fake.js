@@ -203,6 +203,15 @@ async function reportFakeProgress(initProgressCallback) {
 }
 
 export async function CreateWebWorkerMLCEngine(_worker, _modelId, options) {
+  // window.__e2eFakeEngineStall: report some progress, then never finish, like
+  // a model download that has stopped.
+  if (typeof window !== "undefined" && window.__e2eFakeEngineStall) {
+    options?.initProgressCallback?.({
+      progress: 0.3,
+      text: "[e2e fake] Fetching param cache 3/10",
+    });
+    await new Promise(() => {});
+  }
   await reportFakeProgress(options?.initProgressCallback);
   return makeFakeEngine();
 }

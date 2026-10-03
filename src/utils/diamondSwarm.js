@@ -429,9 +429,61 @@ function _ensureMLCGPUPatch() {
   window._mlc_gpu_patched = true;
 }
 
+// How long the engine load may go without any sign of progress (no change in
+// the reported percentage or text) before it is called stalled. A slow
+// download that keeps advancing never trips this; there is no total cap.
+export const ENGINE_LOAD_STALL_MS = 180_000;
+
+export class EngineLoadStalledError extends Error {
+  constructor(stallMs = ENGINE_LOAD_STALL_MS) {
+    const minutes = Math.max(1, Math.round(stallMs / 60_000));
+    super(
+      `Loading the on-device AI stopped making progress for ${minutes} minute(s). ` +
+        "Check your connection, then choose Try again. Parts already " +
+        "downloaded are kept, so it can pick up where it stopped.",
+    );
+    this.name = "EngineLoadStalledError";
+  }
+}
+
+// Runs startLoad(noteProgress) and rejects, after calling onStall, when
+// noteProgress sees nothing new for stallMs. Every change re-arms the timer.
+function _loadWithStallWatchdog(startLoad, stallMs, onStall) {
+  return new Promise((resolve, reject) => {
+    let timer = null;
+    let lastSeen = null;
+    const arm = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        onStall();
+        reject(new EngineLoadStalledError(stallMs));
+      }, stallMs);
+    };
+    const noteProgress = (report) => {
+      const seen = `${report?.progress}|${report?.text}`;
+      if (seen === lastSeen) return;
+      lastSeen = seen;
+      arm();
+    };
+    arm();
+    startLoad(noteProgress).then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 /**
  * Try to load a WebLLM model from a device-optimal list, in order.
  * Returns { modelId, engine } on success, or null if every model failed.
+ * A load that stops making progress throws EngineLoadStalledError instead of
+ * moving to the next model: the next one would only stall on the same network.
  */
 async function _loadModelFromList(
   modelList,
@@ -459,23 +511,29 @@ async function _loadModelFromList(
         { type: "module" },
       );
 
-      const engine = await CreateWebWorkerMLCEngine(
-        worker,
-        modelId,
-        {
-          initProgressCallback: (report) => {
-            const progress = Math.round(report.progress * 80) + 10; // 10-90%
-            onProgress?.({
-              stage: "loading",
-              message: report.text || `Loading ${agentInfo?.name}...`,
-              progress,
-            });
-          },
-          logLevel: "SILENT",
-        },
-        // Device-adaptive context window matches model max (Qwen2.5-3B = 8192).
-        // desktop-mid/laptop/mobile fall back to 8192 or 4096.
-        { context_window_size: contextWindowSize },
+      const engine = await _loadWithStallWatchdog(
+        (noteProgress) =>
+          CreateWebWorkerMLCEngine(
+            worker,
+            modelId,
+            {
+              initProgressCallback: (report) => {
+                noteProgress(report);
+                const progress = Math.round(report.progress * 80) + 10; // 10-90%
+                onProgress?.({
+                  stage: "loading",
+                  message: report.text || `Loading ${agentInfo?.name}...`,
+                  progress,
+                });
+              },
+              logLevel: "SILENT",
+            },
+            // Device-adaptive context window matches model max (Qwen2.5-3B = 8192).
+            // desktop-mid/laptop/mobile fall back to 8192 or 4096.
+            { context_window_size: contextWindowSize },
+          ),
+        ENGINE_LOAD_STALL_MS,
+        () => worker.terminate(),
       );
 
       // eslint-disable-next-line no-console
@@ -485,6 +543,7 @@ async function _loadModelFromList(
       return { modelId, engine, worker }; // Success!
     } catch (modelError) {
       worker?.terminate();
+      if (modelError instanceof EngineLoadStalledError) throw modelError;
       const reason = _describeThrown(modelError);
       console.warn(`💎 Failed to load ${modelId}:`, reason);
 

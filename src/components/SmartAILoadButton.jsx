@@ -74,11 +74,21 @@ const AILoadingNotice = ({ progress }) => (
   </div>
 );
 
-const AILoadPrompt = ({ check, deviceType, onLoad }) => (
+const AILoadFailedNotice = ({ message }) => (
+  <p
+    role="alert"
+    className="mb-3 p-3 rounded-lg border border-red-700 bg-red-900/20 text-red-300 text-xs"
+  >
+    {message}
+  </p>
+);
+
+const AILoadPrompt = ({ check, deviceType, onLoad, loadError }) => (
   <div className="p-4 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 border-2 border-cyan-700/50 rounded-xl">
     <div className="flex items-start gap-3">
       <span className="text-2xl">🚀</span>
       <div className="flex-1">
+        {loadError && <AILoadFailedNotice message={loadError} />}
         <h4 className="text-cyan-300 font-semibold text-sm">
           {check.action === "switch"
             ? "Recommended: Switch Model"
@@ -99,9 +109,11 @@ const AILoadPrompt = ({ check, deviceType, onLoad }) => (
           onClick={onLoad}
           className="mt-3 w-full py-2 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-lg transition-all shadow-lg text-sm"
         >
-          {check.action === "switch"
-            ? `🔄 Switch to ${check.recommendedModel.name}`
-            : `📥 Load ${check.recommendedModel.name}`}
+          {loadError && "Try again"}
+          {!loadError &&
+            (check.action === "switch"
+              ? `🔄 Switch to ${check.recommendedModel.name}`
+              : `📥 Load ${check.recommendedModel.name}`)}
         </button>
 
         {check.action === "switch" && check.currentModel && (
@@ -124,6 +136,7 @@ const SmartAILoadButton = ({
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ value: 0, text: "" });
   const [deviceType, setDeviceType] = useState("");
+  const [loadError, setLoadError] = useState(null);
 
   // Check AI status on mount and periodically
   useEffect(() => {
@@ -139,14 +152,23 @@ const SmartAILoadButton = ({
 
   const handleSmartLoad = async () => {
     setIsLoading(true);
+    setLoadError(null);
     setProgress({ value: 0, text: "Starting..." });
 
+    let failure = null;
     const success = await smartLoadAI(toolId, (value, text) => {
+      if (value === -1) failure = text;
       setProgress({ value, text });
     });
 
     setIsLoading(false);
 
+    if (!success) {
+      setLoadError(
+        failure?.replace(/^Error:\s*/, "") ||
+          "Loading the on-device AI did not finish. Choose Try again.",
+      );
+    }
     if (success) {
       setCheck(checkModelMatch(toolId));
       onLoadComplete?.(check?.recommendedModel);
@@ -183,6 +205,7 @@ const SmartAILoadButton = ({
       check={check}
       deviceType={deviceType}
       onLoad={handleSmartLoad}
+      loadError={loadError}
     />
   );
 };
