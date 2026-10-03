@@ -129,6 +129,59 @@ function _hasStreetShape(value) {
   return _STREET_START_RE.test(trimmed) || _ZIP_END_RE.test(trimmed);
 }
 
+// Free-text blocks (education, awards, remarks, unit lines) are captured with
+// a lazy match up to the next box. On a page flattened to one line, or one
+// where the next box's number is missing or misread, that match has no end
+// and takes the rest of the page, street, SSN and birth date included. A
+// block therefore ends at the first caption printed in a neighbouring box or
+// the first SSN-shaped number, and a block still longer than a real entry of
+// that kind is dropped (correct or empty, never a page run).
+const _NEIGHBOUR_CAPTIONS = [
+  String.raw`MEMBER\s{1,5}(?:REQUESTS?|CONTRACT|COPY)`,
+  String.raw`(?:MAILING|HOME)\s{1,5}ADDRESS`,
+  String.raw`NEAREST\s{1,5}RELATIVE`,
+  String.raw`SOCIAL\s{1,5}SECURITY`,
+  String.raw`DATE\s{1,5}OF\s{1,5}BIRTH`,
+  String.raw`PLACE\s{1,5}OF\s{1,5}(?:BIRTH|ENTRY)`,
+  String.raw`HOME\s{1,5}OF\s{1,5}RECORD`,
+  String.raw`TYPE\s{1,5}OF\s{1,5}SEPARATION`,
+  String.raw`CHARACTER\s{1,5}OF\s{1,5}SERVICE`,
+  String.raw`SEPARATION\s{1,5}(?:AUTHORITY|CODE)`,
+  String.raw`REENTRY\s{1,5}CODE`,
+  String.raw`NARRATIVE\s{1,5}REASON`,
+  String.raw`SIGNATURE`,
+  String.raw`DIRECTOR\s{1,5}OF`,
+];
+const _STOP_AT_NEIGHBOUR = new RegExp(_NEIGHBOUR_CAPTIONS.join("|"), "i");
+const _STOP_AT_NEIGHBOUR_OR_BLOCK = new RegExp(
+  `${_NEIGHBOUR_CAPTIONS.join("|")}|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[5-9]|2\\d|30)\\b`,
+  "i",
+);
+const _STOP_AT_NEIGHBOUR_OR_NEXT_BLOCK = new RegExp(
+  `${_NEIGHBOUR_CAPTIONS.join("|")}|MILITARY\\s{1,5}EDUCATION|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[4-9]|2\\d|30)\\b`,
+  "i",
+);
+const _SSN_SHAPE_RE = /(?<!\d)(?:\d{3}[- ]\d{2}[- ]\d{4}|\d{9})(?!\d)/;
+// A house number, up to four words and a street-type word, or a PO box. A
+// real block entry (a course, a medal, a unit) never has this shape.
+const _STREET_TYPES =
+  "STREET|AVENUE|AVE|ROAD|RD|DRIVE|LANE|LN|BLVD|BOULEVARD|COURT|CIRCLE|HIGHWAY|HWY|PARKWAY|PKWY|TERRACE";
+const _STREET_LINE_RE = new RegExp(
+  String.raw`(?<![\dA-Z])\d{1,6}\s{1,3}(?:[A-Z0-9.'-]{1,20}\s{1,3}){1,4}(?:${_STREET_TYPES})\b`,
+);
+const _PO_BOX_RE = /(?<![A-Z])P\.?\s?O\.?\s?BOX\s{0,3}\d/;
+
+function _cutAtBlockEnd(value, stopAt) {
+  const cuts = [
+    stopAt.exec(value)?.index,
+    _SSN_SHAPE_RE.exec(value)?.index,
+    _STREET_LINE_RE.exec(value)?.index,
+    _PO_BOX_RE.exec(value)?.index,
+  ];
+  const first = Math.min(...cuts.filter((index) => index !== undefined));
+  return Number.isFinite(first) ? value.slice(0, first) : value;
+}
+
 const DD214_FIELD_PATTERNS = {
   // ===== BLOCK 1: Name =====
   fullName: {
@@ -483,6 +536,7 @@ const DD214_FIELD_PATTERNS = {
       /LAST\s*DUT[YE]\s*ASSIGNMENT(?:\s*AND\s*MAJOR\s*COMMAND)?[:\s.]*([A-Z0-9][A-Z0-9()\s/,.-]+?)(?=\s{1,10}(?:BLOCK|BOX|ITEM|8\s{0,10}B|STATION\s{0,10}WHERE\s{0,10}SEPARATED|\d+\s{0,10}[A-Z]?\.)|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR, maxChars: 150 },
   },
 
   // ===== BLOCK 8b: Station Where Separated =====
@@ -506,6 +560,7 @@ const DD214_FIELD_PATTERNS = {
       /COMMAND\s*(?:TO\s*WHICH\s*)?TRANSFERRED[:\s.]*([A-Z0-9][A-Z0-9()\s/,.-]+)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_BLOCK, maxChars: 150 },
   },
 
   // ===== BLOCK 10: SGLI Coverage =====
@@ -530,6 +585,7 @@ const DD214_FIELD_PATTERNS = {
       /PRIMARY\s{0,10}SPECIALTY[:\s.]{0,20}([A-Z0-9][A-Z0-9\s/,.-]{1,100000}?)(?=\/\/|NOTHING\s{0,10}FOLLOWS|\n)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_BLOCK, maxChars: 150 },
     extractMOS: (val) => {
       // Extract MOS code like 92Y10, 11B30, 68W10
       const mosMatch = val.match(/\b(\d{2}[A-Z]\d{2})\b/);
@@ -665,6 +721,7 @@ const DD214_FIELD_PATTERNS = {
       /DECORATIONS[,\s]{0,10}MEDALS[,\s]{0,10}BADGES[,\s]{0,10}(?:CITATIONS)?[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}14|BOX\s{0,10}14|14\.|MILITARY\s{0,10}EDUCATION))|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_NEXT_BLOCK, maxChars: 3000 },
   },
 
   // ===== BLOCK 14: Military Education =====
@@ -678,6 +735,7 @@ const DD214_FIELD_PATTERNS = {
       /MILITARY\s{0,10}EDUCATION[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}15|BOX\s{0,10}15|15\.))|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_BLOCK, maxChars: 800 },
   },
 
   // ===== BLOCK 18: Remarks =====
@@ -691,6 +749,7 @@ const DD214_FIELD_PATTERNS = {
       /REMARKS[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}19|BOX\s{0,10}19|19\.|MAILING))|$)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR, maxChars: 5000 },
   },
 
   // ===== BLOCK 19: Mailing Address =====
@@ -772,6 +831,7 @@ const DD214_FIELD_PATTERNS = {
       /SEPARATION\s*AUTHORITY[:\s.]*([A-Z0-9][A-Z0-9\s.,()-]+)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_BLOCK, maxChars: 120 },
   },
 
   // ===== BLOCK 26: Separation Code (SPD) =====
@@ -805,6 +865,7 @@ const DD214_FIELD_PATTERNS = {
       /NARRATIVE\s*REASON\s*(?:FOR\s*)?SEPARATION[:\s.]*([A-Z][A-Z\s]+)/i,
     ],
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
+    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_BLOCK, maxChars: 150 },
   },
 
   // ===== BLOCK 29: Dates of Time Lost =====
@@ -1260,10 +1321,14 @@ function parseName(fullName) {
  */
 function _processFieldMatch(fieldDef, rawValue) {
   let value = rawValue.trim();
+  const { bound } = fieldDef;
+  if (bound) value = _cutAtBlockEnd(value, bound.stopAt);
 
   if (fieldDef.normalize) {
     value = fieldDef.normalize(value);
   }
+
+  if (bound && (value === "" || value.length > bound.maxChars)) return null;
 
   if (fieldDef.validate && !fieldDef.validate(value)) {
     return null;

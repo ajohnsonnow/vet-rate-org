@@ -243,7 +243,7 @@ describe("dd214FieldExtractor: ReDoS regression - MOS title cleanup", () => {
     const result = extractDD214Fields(text);
     const elapsed = Date.now() - start;
     expect(result.success).toBe(true);
-    expect(result.fields.mosTitle).toBeTruthy();
+    expect(result.fields.mosTitle).toBeUndefined();
     expect(elapsed).toBeLessThan(1000);
   });
 });
