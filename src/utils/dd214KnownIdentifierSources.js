@@ -15,6 +15,10 @@ import { getAllExtractedData } from "./myPacketManager";
 
 const SOURCE_READ_LIMIT_MS = 4000;
 
+// The readers otherwise swallow their own errors and return an empty value,
+// which would read here as "nothing known" instead of "could not read".
+const STRICT = { strict: true };
+
 function withLimit(promise) {
   let timer;
   const limit = new Promise((_, reject) => {
@@ -48,10 +52,10 @@ function packetSources(extracted) {
  */
 export async function loadKnownIdentifierSourcesChecked() {
   const reads = await Promise.all([
-    readSource(() => getVeteranProfile()),
-    readSource(() => getServiceHistory()),
-    readSource(() => loadVKB()),
-    readSource(() => getAllExtractedData()),
+    readSource(() => getVeteranProfile(STRICT)),
+    readSource(() => getServiceHistory(STRICT)),
+    readSource(() => loadVKB(STRICT)),
+    readSource(() => getAllExtractedData(STRICT)),
   ]);
   const [profile, history, vkb, packet] = reads.map((read) => read.value);
   const sources = [

@@ -429,17 +429,18 @@ export const getPacketDocumentsByType = async (classification) => {
 /**
  * Get ALL full documents (with raw text) - use carefully, can be large
  */
-export const getAllPacketDocuments = async () => {
+export const getAllPacketDocuments = async ({ strict = false } = {}) => {
   try {
     const db = await openPacketDB();
-    return new Promise((resolve) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction([PACKET_STORE_NAME], "readonly");
       const request = tx.objectStore(PACKET_STORE_NAME).getAll();
       request.onsuccess = () => resolve(request.result || []);
-      request.onerror = () => resolve([]);
+      request.onerror = () => (strict ? reject(request.error) : resolve([]));
     });
   } catch (error) {
     console.error("Failed to get all packet documents:", error);
+    if (strict) throw error;
     return [];
   }
 };
@@ -604,9 +605,9 @@ export const getDocumentExtractedData = async (documentId) => {
  * Get ALL extracted structured data for use by AI tools.
  * Returns a combined object with data organized by document type.
  */
-export const getAllExtractedData = async () => {
+export const getAllExtractedData = async ({ strict = false } = {}) => {
   try {
-    const allDocs = await getAllPacketDocuments();
+    const allDocs = await getAllPacketDocuments({ strict });
     const data = {
       dd214s: [],
       claimLetters: [],
@@ -660,6 +661,7 @@ export const getAllExtractedData = async () => {
     return data;
   } catch (error) {
     console.error("Failed to get all extracted data:", error);
+    if (strict) throw error;
     return {
       dd214s: [],
       claimLetters: [],

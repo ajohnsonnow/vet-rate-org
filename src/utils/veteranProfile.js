@@ -202,12 +202,15 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
  * Get the veteran profile from localStorage
  * @returns {Object} The veteran profile or empty object
  */
-export const getVeteranProfile = () => {
+export const getVeteranProfile = ({ strict = false } = {}) => {
   try {
     const saved = localStorage.getItem(PROFILE_KEY);
     return saved ? JSON.parse(saved) : {};
   } catch (error) {
     console.error("Error reading veteran profile:", error);
+    // strict: a caller that must know a read failed (it cannot treat an empty
+    // profile as "nothing known") gets the error instead of {}.
+    if (strict) throw error;
     return {};
   }
 };
@@ -934,7 +937,7 @@ function _runVersionedMigrations(parsed) {
  * Get service history data
  * @returns {Object} Service history with deployments, awards, dd214Data
  */
-export const getServiceHistory = () => {
+export const getServiceHistory = ({ strict = false } = {}) => {
   try {
     const saved = localStorage.getItem(SERVICE_HISTORY_KEY);
     if (!saved) {
@@ -998,6 +1001,7 @@ export const getServiceHistory = () => {
     return parsed;
   } catch (error) {
     console.error("Error reading service history:", error);
+    if (strict) throw error;
     return {
       deployments: [],
       awards: [],

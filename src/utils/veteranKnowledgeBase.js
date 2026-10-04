@@ -466,16 +466,19 @@ export const raceVkb = (promise, timeoutMs = 3000) =>
 /**
  * Load VKB from IndexedDB (primary) or localStorage (legacy fallback)
  */
-export const loadVKB = async () => {
+export const loadVKB = async ({ strict = false } = {}) => {
   if (vkbCache) {
     return _applyServiceEntryProjection(structuredClone(vkbCache));
   }
-  const vkb = await loadVKBFromStorage();
+  const vkb = await loadVKBFromStorage(strict);
   vkbCache = structuredClone(vkb);
   return _applyServiceEntryProjection(vkb);
 };
 
-const loadVKBFromStorage = async () => {
+// strict: a store that cannot be read throws instead of falling back to the
+// localStorage copy or an empty knowledge base, for a caller that must not
+// mistake "could not read" for "nothing stored".
+const loadVKBFromStorage = async (strict = false) => {
   try {
     // Try IndexedDB first
     const db = await openVKBDatabase();
@@ -483,7 +486,7 @@ const loadVKBFromStorage = async () => {
     const store = transaction.objectStore(VKB_STORE_NAME);
     const request = store.get("main");
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       request.onsuccess = () => {
         if (request.result) {
           // eslint-disable-next-line no-console
@@ -524,13 +527,18 @@ const loadVKBFromStorage = async () => {
             }
           } catch (err) {
             console.error("Error loading from localStorage:", err);
-            resolve(initializeVKB());
+            if (strict) reject(err);
+            else resolve(initializeVKB());
           }
         }
       };
 
       request.onerror = () => {
         console.error("Error loading from IndexedDB:", request.error);
+        if (strict) {
+          reject(request.error);
+          return;
+        }
         // Fallback to localStorage
         try {
           const stored = localStorage.getItem(VKB_STORAGE_KEY);
@@ -543,6 +551,7 @@ const loadVKBFromStorage = async () => {
     });
   } catch (err) {
     console.error("Error opening VKB database:", err);
+    if (strict) throw err;
     // Fallback to localStorage
     try {
       const stored = localStorage.getItem(VKB_STORAGE_KEY);
