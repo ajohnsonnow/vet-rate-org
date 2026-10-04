@@ -167,9 +167,11 @@ describe("D21-4: confirming stores the service data but never the name or DOB", 
     );
     expectNothingWritten();
 
-    await _persistDeferredFormationResults([
-      { filename: "sample-dd214.pdf", deferredResult },
-    ]);
+    await _persistDeferredFormationResults(
+      [{ filename: "sample-dd214.pdf", deferredResult }],
+      { branch: deferredResult.extractedData.branch },
+      { branch: deferredResult.extractedData.branch },
+    );
 
     expect(vkb.addDocumentToVKB).toHaveBeenCalledTimes(1);
     const filed = vkb.addDocumentToVKB.mock.calls[0][0].extractedData;
@@ -216,5 +218,58 @@ describe("D21-4: confirming stores the service data but never the name or DOB", 
       { filename: "x", deferredResult: null },
     ]);
     expectNothingWritten();
+  });
+});
+
+describe("D23-3: the scan reader's own record is filed only as ticked", () => {
+  const RUN_ON_SCAN = `${SCAN_TEXT}14. MILITARY EDUCATION: BASIC LEADER COURSE, 4 WEEKS, 2009 ZORBLAX QUINDLE 44 ELMWOOD PLACE FAKETOWN OH 44444 SSN 234-66-7890\n`;
+
+  async function deferScan() {
+    analyzeDocument.mockResolvedValue({
+      text: RUN_ON_SCAN,
+      pageCount: 1,
+      method: "text",
+      ocrUsed: false,
+    });
+    return processFormationDocument(makeFile(), () => {}, {
+      deferPersist: true,
+    });
+  }
+
+  const everythingFiled = () =>
+    JSON.stringify([
+      vkb.addDocumentToVKB.mock.calls.map(([doc]) => doc.extractedData),
+      vkb.saveDocumentToPacket.mock.calls.map(([doc]) => doc.extractedData),
+    ]) +
+    JSON.stringify(getServiceHistory(), (key, value) =>
+      key === "extractedText" ? undefined : value,
+    );
+
+  it("files nothing from a service record when no row was ticked", async () => {
+    const deferredResult = await deferScan();
+    expect(deferredResult.extractedData.type).toBe("service_record");
+    await _persistDeferredFormationResults(
+      [{ filename: "sample-dd214.pdf", deferredResult }],
+      { branch: "Army" },
+      {},
+    );
+    expectNothingWritten();
+  });
+
+  it("never files the reader's own run-on education or page copy", async () => {
+    const deferredResult = await deferScan();
+    await _persistDeferredFormationResults(
+      [{ filename: "sample-dd214.pdf", deferredResult }],
+      { branch: "Army" },
+      { branch: "Army" },
+    );
+    expect(vkb.addDocumentToVKB).toHaveBeenCalledTimes(1);
+    expect(everythingFiled()).not.toMatch(
+      /234-66-7890|ZORBLAX|ELMWOOD|FAKETON/,
+    );
+    const filed = vkb.addDocumentToVKB.mock.calls[0][0].extractedData;
+    expect(filed.branch).toBe("Army");
+    expect(filed).not.toHaveProperty("militaryEducation");
+    expect(filed).not.toHaveProperty("raw");
   });
 });

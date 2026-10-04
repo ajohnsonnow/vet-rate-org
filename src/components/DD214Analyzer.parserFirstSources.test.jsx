@@ -48,6 +48,7 @@ vi.mock("../utils/veteranKnowledgeBase", async (importOriginal) => {
 vi.mock("../utils/myPacketManager", async (importOriginal) => ({
   ...(await importOriginal()),
   saveDocumentToPacket: stores.saveDocumentToPacket,
+  getAllExtractedData: vi.fn(async () => ({ dd214s: [] })),
 }));
 
 const { analyzeDocument } = await import("../utils/documentAnalyzer");
@@ -352,5 +353,41 @@ describe("a block the parser captured past its own box", () => {
     expect(packet.replaceAll("6789", "")).not.toMatch(LEAKS);
     expect(profile).not.toMatch(LEAKS);
     expect(kb).toContain("BASIC LEADER COURSE");
+  });
+});
+
+describe("a model value the veteran corrects and ticks", () => {
+  beforeEach(() => {
+    generateAI.mockResolvedValue({
+      text: JSON.stringify({ payGrade: "E-9", reenlisted: true }),
+    });
+  });
+
+  it("is stored in the corrected form everywhere", async () => {
+    const importButton = await readScan(PARSER_THREE_TEXT);
+    fireEvent.change(screen.getByDisplayValue("E-9"), {
+      target: { value: "E-5" },
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Pay Grade" }));
+    fireEvent.click(importButton);
+    await waitFor(() => expect(window.alert).toHaveBeenCalled());
+
+    expect(getVeteranProfile().payGrade).toBe("E-5");
+    expect(getServiceHistory().dd214Data.payGrade).toBe("E-5");
+    expect(ownVkbDocument().extractedData.payGrade).toBe("E-5");
+    expect(ownPacketDocument().extractedData.payGrade).toBe("E-5");
+    expect(ownPacketDocument().aiAnalysis.payGrade).toBe("E-5");
+    expect(stores.mergeDD214IntoVKB.mock.calls[0][1].payGrade).toBe("E-5");
+  });
+
+  it("labels the model-written Re-enlisted row and counts it", async () => {
+    await readScan(PARSER_THREE_TEXT);
+    const row = screen
+      .getByRole("checkbox", { name: "Re-enlisted" })
+      .closest(".rounded-lg.border");
+    expect(row.textContent).toContain("Read by the AI");
+    expect(screen.getByTestId("import-source-counts").textContent).toContain(
+      "2 values read by the AI",
+    );
   });
 });

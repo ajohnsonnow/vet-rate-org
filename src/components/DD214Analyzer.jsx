@@ -664,7 +664,7 @@ export function _extractResponseContent(response) {
 // captures console output into bug reports a veteran can copy or send
 // off-device, so diagnostics here report shape/length only. Identifier fields
 // a model returns anyway are dropped at parse time (owner decision F).
-export function _parseDd214Json(content, t, knownSources) {
+export function _parseDd214Json(content, t, knownSources, parserBranch) {
   // Parse JSON from response
   let data;
   try {
@@ -690,6 +690,7 @@ export function _parseDd214Json(content, t, knownSources) {
     sanitizeModelOutput(
       data,
       Array.isArray(knownSources) ? knownSources : [getVeteranProfile()],
+      { branch: parserBranch },
     );
   } catch {
     // V8's JSON.parse message quotes a snippet of the input, so it is never
@@ -845,6 +846,11 @@ function _mergeRegexIntoData(data, regexResult) {
   return regexResult;
 }
 
+function _parserBranch(combinedRawText, knownSources) {
+  const fields = _extractRegexFields(combinedRawText)?.fields;
+  return sanitizeParserFields(fields, knownSources)?.branch;
+}
+
 function _regexIdentifierSource(regexFields) {
   if (!regexFields) return null;
   return { ...regexFields, homeAddress: regexFields.mailingAddress };
@@ -869,8 +875,8 @@ export function _applyRegexSafetyNet(
   // key is redacted.
   _keepModelSchemaFields(data);
   const known = [...sources, _regexIdentifierSource(regexResult?.fields)];
-  sanitizeModelOutput(data, known);
   const parserFields = sanitizeParserFields(regexResult?.fields, known);
+  sanitizeModelOutput(data, known, { branch: parserFields?.branch });
   const modelKeys = new Set(
     Object.keys(data).filter((key) => isReadValue(key, data[key])),
   );
@@ -891,7 +897,7 @@ export function _applyRegexSafetyNet(
   data.fieldSources = buildValueSources(data, {
     modelKeys,
     parserKeys,
-    rowKeys: [...PARSER_WINS_KEYS, ...IDENTIFIER_FIELDS],
+    rowKeys: [...PARSER_WINS_KEYS, ...IDENTIFIER_FIELDS, "reenlisted"],
   });
   setAnalysisResult({ ...data });
 }
@@ -1024,7 +1030,10 @@ function _listImportText(result) {
 }
 
 function _ticked(analysisResult, selectedFields, key) {
-  return _hasValue(selectedFields?.[key]) ? analysisResult[key] : undefined;
+  const ticked = selectedFields?.[key];
+  return _hasValue(ticked)
+    ? _confirmedValue(analysisResult, key, ticked)
+    : undefined;
 }
 
 // Owner decision (G): a key with no ticked row is never stored. What is
@@ -1033,10 +1042,25 @@ function _ticked(analysisResult, selectedFields, key) {
 const _hasAnySelected = (selectedFields) =>
   !!selectedFields && Object.values(selectedFields).some(_hasValue);
 
+// A text value the veteran ticked is stored as the dialog held it, so a
+// correction typed over an AI-read value is what is stored, not the original.
+// Lists, numbers and flags keep the analysis value (the dialog shows them as
+// one text row). The service start date is the exception: a typed change to it
+// is recorded as a veteran correction of the printed date (setServiceEntryDate),
+// so the period keeps the date the document printed.
+function _confirmedValue(analysisResult, resultKey, ticked) {
+  const read = analysisResult[resultKey];
+  return typeof read === "string" &&
+    typeof ticked === "string" &&
+    resultKey !== "entryDate"
+    ? ticked
+    : (read ?? ticked);
+}
+
 function _pickScalar(analysisResult, selectedFields, resultKey) {
   const ticked = selectedFields?.[importKeyFor(resultKey)];
   if (!_hasValue(ticked)) return undefined;
-  return analysisResult[resultKey] ?? ticked;
+  return _confirmedValue(analysisResult, resultKey, ticked);
 }
 
 const DD214_SCALAR_RECORD_KEYS = [
@@ -1259,7 +1283,7 @@ function _confirmedFieldsOnly(analysisResult, selectedFields = {}, formType) {
   Object.entries(selectedFields).forEach(([importKey, value]) => {
     if (!_hasValue(value)) return;
     const key = resultKeyFor(importKey);
-    confirmed[key] = analysisResult[key] ?? value;
+    confirmed[key] = _confirmedValue(analysisResult, key, value);
   });
   if (_hasValue(selectedFields.combatService) && analysisResult.deployments) {
     confirmed.deployments = analysisResult.deployments;
@@ -3004,7 +3028,13 @@ async function _finishDd214Analysis(response, state) {
   const content = _extractResponseContent(response);
   const { sources: knownSources, complete } =
     await loadKnownIdentifierSourcesChecked();
-  const data = _parseDd214Json(content, t, knownSources);
+  const rawText = _getDd214CombinedText(pastedText, extractedTexts);
+  const data = _parseDd214Json(
+    content,
+    t,
+    knownSources,
+    _parserBranch(rawText, knownSources),
+  );
   if (!complete) {
     dropModelWrittenValues(data);
     setStoreReadNotice(STORE_READ_FAILED_NOTICE);
@@ -3017,12 +3047,7 @@ async function _finishDd214Analysis(response, state) {
   // value fills the gap. If both have a value, AI wins for complex fields,
   // regex wins for structured fields like dates/MOS.
   // Identifier fields come only from the local parser (owner decision F).
-  _applyRegexSafetyNet(
-    data,
-    _getDd214CombinedText(pastedText, extractedTexts),
-    setAnalysisResult,
-    knownSources,
-  );
+  _applyRegexSafetyNet(data, rawText, setAnalysisResult, knownSources);
 
   // Automatically trigger the save flow to show import confirmation - this
   // provides immediate feedback to the user.
@@ -3138,16 +3163,84 @@ function _buildDd214AnalysisHandlers(state) {
   return { handleAnalyzeWithAI };
 }
 
+// The scan reader's own service record (a second parser, with its own run-on
+// captures and a copy of the page's first lines) is never filed as it came.
+// Only the rows the veteran ticked reach it, in the value the dialog held, and
+// nothing at all is filed from a record when no row was ticked. Its keys for
+// the same boxes differ from the analyzer's.
+const SCAN_RECORD_KEY_FOR_RESULT_KEY = {
+  branch: "branch",
+  component: "component",
+  rank: "rank",
+  payGrade: "payGrade",
+  mos: "mos",
+  mosTitle: "mosTitle",
+  serviceStartDate: "entryDate",
+  serviceEndDate: "separationDate",
+  militaryEducation: "militaryEducation",
+  separationType: "separationType",
+  dischargeType: "characterOfService",
+  separationAuthority: "separationAuthority",
+  spdCode: "separationCode",
+  reentryCode: "reentryCode",
+  narrativeReason: "narrativeReason",
+  awards: "awards",
+};
+
+function _confirmedServiceRecord(
+  extractedData,
+  analysisResult,
+  selectedFields,
+) {
+  const record = { type: extractedData.type, formType: extractedData.formType };
+  for (const [recordKey, resultKey] of Object.entries(
+    SCAN_RECORD_KEY_FOR_RESULT_KEY,
+  )) {
+    const ticked = selectedFields[importKeyFor(resultKey)];
+    if (_hasValue(ticked)) {
+      record[recordKey] = _confirmedValue(analysisResult, resultKey, ticked);
+    }
+  }
+  if (_hasValue(selectedFields.combatService)) {
+    record.deployments =
+      sanitizeParserFields({ deployments: extractedData.deployments }, [])
+        .deployments ?? [];
+  }
+  return record;
+}
+
+function _deferredResultForSave(result, analysisResult, selectedFields) {
+  if (result.extractedData?.type !== "service_record") return result;
+  if (!_hasAnySelected(selectedFields)) return null;
+  return {
+    ...result,
+    extractedData: _confirmedServiceRecord(
+      result.extractedData,
+      analysisResult,
+      selectedFields,
+    ),
+  };
+}
+
 // Everything reading a scan found (service periods, awards, deployments, the
 // archived document) is written only now, after the veteran confirmed the
 // import dialog. Identifiers are never part of it, and neither are the flat
 // profile fields (branch, dates, MOS, character of service): those reach the
 // profile only through the boxes the veteran ticked, in the dialog's own
 // values.
-export async function _persistDeferredFormationResults(extractedTexts) {
+export async function _persistDeferredFormationResults(
+  extractedTexts,
+  analysisResult = {},
+  selectedFields = {},
+) {
   for (const item of extractedTexts) {
     if (!item.deferredResult) continue;
-    const result = stripIdentifiersFromFormationResult(item.deferredResult);
+    const result = _deferredResultForSave(
+      stripIdentifiersFromFormationResult(item.deferredResult),
+      analysisResult,
+      selectedFields,
+    );
+    if (!result) continue;
     await persistFormationDocument(
       { name: result.filename, size: result.size },
       result,
@@ -3193,7 +3286,11 @@ function _buildDd214SaveHandlers(state) {
     try {
       const combinedText = _getDd214CombinedText(pastedText, extractedTexts);
 
-      await _persistDeferredFormationResults(extractedTexts);
+      await _persistDeferredFormationResults(
+        extractedTexts,
+        analysisResult,
+        selectedFields,
+      );
 
       // ── 1. SAVE TO VETERAN PROFILE (existing behavior) ──
       _saveDd214ToProfile(

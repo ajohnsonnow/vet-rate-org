@@ -507,10 +507,13 @@ export function dropModelWrittenValues(data) {
  * Check every key a model returned against the type that key allows and scrub
  * every string in it, in place. A value of the wrong type is dropped, never
  * coerced into something that could carry text. `sources` are the same
- * known-identifier objects scrubModelFreeText takes.
+ * known-identifier objects scrubModelFreeText takes. `branch` is the branch
+ * the local parser read: a four-digit Marine MOS passes only against that, never
+ * against the model's own branch, because the model could write a Marine branch
+ * beside an SSN fragment or a year to get it past.
  */
-export function sanitizeModelOutput(data, sources = []) {
-  const context = { ...makeScrubber(sources), branch: data.branch };
+export function sanitizeModelOutput(data, sources = [], { branch } = {}) {
+  const context = { ...makeScrubber(sources), branch };
   for (const key of Object.keys(data)) {
     const cleaned = cleanField(key, data[key], context);
     if (cleaned === undefined) delete data[key];

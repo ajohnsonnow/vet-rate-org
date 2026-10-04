@@ -43,6 +43,7 @@ vi.mock("../utils/veteranKnowledgeBase", async (importOriginal) => {
 vi.mock("../utils/myPacketManager", async (importOriginal) => ({
   ...(await importOriginal()),
   saveDocumentToPacket: stores.saveDocumentToPacket,
+  getAllExtractedData: vi.fn(async () => ({ dd214s: [] })),
 }));
 
 const { analyzeDocument } = await import("../utils/documentAnalyzer");

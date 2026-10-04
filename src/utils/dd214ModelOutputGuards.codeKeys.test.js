@@ -61,12 +61,27 @@ describe("a MOS code cannot be a date, an SSN fragment or a bare number", () => 
     expect(clean({ mos: value }).mos).toBeUndefined();
   });
 
-  it("keeps a four-digit Marine code only beside a Marine Corps branch", () => {
-    expect(clean({ branch: "Marines", mos: "0311" }).mos).toBe("0311");
-    expect(clean({ branch: "Marine Corps", mos: "0311" }).mos).toBe("0311");
-    expect(clean({ branch: "Army", mos: "0311" }).mos).toBeUndefined();
-    expect(clean({ branch: "Marines", mos: "2010-01-01" }).mos).toBeUndefined();
+  const cleanWithParserBranch = (data, branch) =>
+    sanitizeModelOutput({ ...data }, [], { branch });
+
+  it("keeps a four-digit Marine code only beside a Marine Corps branch the parser read", () => {
+    expect(cleanWithParserBranch({ mos: "0311" }, "Marines").mos).toBe("0311");
+    expect(cleanWithParserBranch({ mos: "0311" }, "Marine Corps").mos).toBe(
+      "0311",
+    );
+    expect(cleanWithParserBranch({ mos: "0311" }, "Army").mos).toBeUndefined();
+    expect(
+      cleanWithParserBranch({ mos: "2010-01-01" }, "Marines").mos,
+    ).toBeUndefined();
   });
+
+  it.each(["6789", "1980", "0311"])(
+    "drops %s when only the model wrote a Marine branch",
+    (value) => {
+      expect(clean({ branch: "Marine Corps", mos: value }).mos).toBeUndefined();
+      expect(clean({ branch: "USMC", mos: value }).mos).toBeUndefined();
+    },
+  );
 });
 
 describe("a document count is a small whole number", () => {
