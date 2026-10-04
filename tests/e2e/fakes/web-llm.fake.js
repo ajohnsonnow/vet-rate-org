@@ -44,6 +44,32 @@ const CFILE_JSON_MARKER = "potential_claims";
 // exact phrase; DD214_ANALYSIS_SYSTEM_PROMPT_LOCAL/DD214_ANALYSIS_SYSTEM_PROMPT.
 const DD214_JSON_MARKER = "military records analyst";
 const PLANT_IDENTIFIERS_MARKER = "E2E_PLANT_WRONG_IDENTIFIERS";
+// Opt-in: a reply that fills nearly every non-identifier field, to prove none
+// of it is pre-ticked where the local parser read only a few.
+const FILL_EVERY_FIELD_MARKER = "E2E_MODEL_FILLS_EVERY_FIELD";
+const EVERY_FIELD_REPLY = {
+  component: "RA",
+  componentFull: "Regular Army",
+  branch: "Navy",
+  rank: "SGT",
+  payGrade: "E-9",
+  dateOfRank: "2005-01-01",
+  mos: "11B",
+  mosTitle: "Rifleman",
+  sglCoverage: "$400,000",
+  entryDate: "2003-02-02",
+  separationDate: "2011-07-07",
+  reserveObligationDate: "2016-07-07",
+  separationAuthority: "AR 635-200, Chapter 4",
+  separationCode: "MBK",
+  reentryCode: "RE-1",
+  separationType: "Honorable Discharge",
+  characterOfService: "General",
+  narrativeReason: "Completion of required service",
+  militaryEducation: ["Basic Leader Course"],
+  specialQualifications: ["Airborne"],
+  securityClearance: "Secret",
+};
 
 // BlueButtonXRay.jsx's BLUE_BUTTON_AI_PROMPT_HEADER - sent as the main
 // (user-role) prompt, not a systemPrompt option, so this is matched against
@@ -112,6 +138,9 @@ function buildFakeCompletionText(systemContent, userContent) {
           personal: { fullName: "NESTEDNAME, PLANTED", ssn: "111-22-3333" },
         }
       : {};
+    const everyField = userContent.includes(FILL_EVERY_FIELD_MARKER)
+      ? EVERY_FIELD_REPLY
+      : {};
     return JSON.stringify({
       ...planted,
       documentCount: 1,
@@ -123,6 +152,7 @@ function buildFakeCompletionText(systemContent, userContent) {
       entryDate: "2010-01-01",
       separationDate: "2014-01-01",
       characterOfService: "Honorable",
+      ...everyField,
       extractionNotes: [
         "[e2e fake] Deterministic test engine - no real model ran.",
       ],
