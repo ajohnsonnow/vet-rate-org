@@ -91,6 +91,7 @@ import {
   failureLogCode,
   forLog,
   PlainDocumentError,
+  deliberateMessageFor,
 } from "./fileReadFailure";
 import { describeFailureKind } from "./readFailureMessage";
 import { convergeTimelineStoreWithVKB } from "./timelineStoreSync";
@@ -2094,9 +2095,8 @@ const _failureMessage = (result, error, { persistIncomplete, kind }) => {
   if (persistIncomplete) {
     return describePersistIncomplete(result.filename, "Retry", error);
   }
-  return error instanceof PlainDocumentError
-    ? error.message
-    : describeFailureKind(kind);
+  if (error instanceof PlainDocumentError) return error.message;
+  return deliberateMessageFor(error) ?? describeFailureKind(kind);
 };
 
 const _markDocumentFailed = (result, error, onProgress) => {
@@ -2110,7 +2110,13 @@ const _markDocumentFailed = (result, error, onProgress) => {
   result.status = "error";
   result.error = message;
   result.failureKind = kind;
-  if (error instanceof PlainDocumentError) result.plainMessage = error.message;
+  const deliberate = deliberateMessageFor(error);
+  if (deliberate) {
+    result.plainMessage = deliberate;
+    result.plainComplete = true;
+  } else if (error instanceof PlainDocumentError) {
+    result.plainMessage = error.message;
+  }
   result.readFailed = kind === FAILURE_KINDS.READ;
   result.persistIncomplete = persistIncomplete;
   result.persistQuotaExceeded = persistIncomplete && error.quotaExceeded;

@@ -39,6 +39,11 @@ const workerFailure = {
   error:
     "This document could not be processed because the document reader did not start.",
 };
+const timeoutFailure = {
+  ...workerFailure,
+  failureKind: "timeout",
+  error: "This document could not be processed because it took too long.",
+};
 const reviewable = {
   filename: "x.pdf",
   size: 1,
@@ -117,7 +122,7 @@ afterEach(() => {
 describe("a document that fails for a reason other than reading the file", () => {
   it("is shown plainly with a Retry, and is not read again on its own", async () => {
     const result = setup();
-    processFormationDocument.mockResolvedValue(workerFailure);
+    processFormationDocument.mockResolvedValue(timeoutFailure);
 
     await start(result);
 
@@ -125,12 +130,12 @@ describe("a document that fails for a reason other than reading the file", () =>
     const [id, message, extra] = formationQueue.errorEntryAndNext.mock.calls[0];
     expect(id).toBe("e1");
     expect(message).toBe(
-      "We could not finish the claim letter (document 1) because the document reader did not start, so choose Retry to try again.",
+      "We could not finish the claim letter (document 1) because it took too long, so choose Retry to try again.",
     );
     expect(extra).toEqual({
       retryable: true,
       processingFailure: true,
-      failureKind: "reader_unavailable",
+      failureKind: "timeout",
     });
     expect(result.current.canRetryDocumentSave("e1")).toBe(true);
   });
@@ -151,7 +156,7 @@ describe("a document that fails for a reason other than reading the file", () =>
 
   it("Retry runs the same document again and goes on to review", async () => {
     const result = setup();
-    processFormationDocument.mockResolvedValue(workerFailure);
+    processFormationDocument.mockResolvedValue(timeoutFailure);
     await start(result);
 
     processFormationDocument.mockResolvedValue(reviewable);
@@ -174,13 +179,13 @@ describe("a document that fails for a reason other than reading the file", () =>
     await start(result);
 
     expect(formationQueue.errorEntryAndNext.mock.calls[0][1]).toBe(
-      "We could not finish the claim letter (document 1). No text could be extracted from document",
+      "We could not finish the claim letter (document 1). No text could be extracted from document. Choose Retry to try again.",
     );
   });
 
   it("stops offering Retry after three tries", async () => {
     const result = setup();
-    processFormationDocument.mockResolvedValue(workerFailure);
+    processFormationDocument.mockResolvedValue(timeoutFailure);
     await start(result);
 
     for (let attempt = 0; attempt < 2; attempt++) {

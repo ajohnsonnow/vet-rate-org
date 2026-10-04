@@ -30,9 +30,9 @@ export default function InterruptedImportNotice() {
       role="status"
       aria-live="polite"
       data-testid="interrupted-import-notice"
-      className="fixed left-4 right-4 top-[calc(4rem+env(safe-area-inset-top))] z-[55] max-w-lg rounded-lg border border-amber-300 bg-amber-50 p-4 shadow-lg dark:border-amber-600 dark:bg-gray-800 sm:right-auto"
+      className="fixed left-1/2 top-1/2 z-[55] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border-2 border-amber-500 bg-white p-4 shadow-2xl dark:bg-gray-900"
     >
-      <p className="text-sm text-amber-900 dark:text-amber-100">
+      <p className="text-sm text-gray-900 dark:text-gray-100">
         {describeInterruptedImport(interrupted)}
       </p>
       <button

@@ -32,6 +32,7 @@ import {
   FAILURE_KINDS,
   forLog,
   PlainDocumentError,
+  deliberateMessageFor,
   isFileStillReadable,
 } from "../utils/fileReadFailure";
 import {
@@ -73,9 +74,13 @@ function noteDocumentSaved(key, ctx) {
   recordDocumentSaved();
 }
 
+// A document is kept once it is filed (as it is read or when confirmed), so a
+// document the veteran skipped at review is still saved.
 function completionToast(ctx) {
   const queue = ctx.getFormation ? ctx.getFormation() : ctx.formation;
-  const saved = queue.filter((e) => e.status === FORMATION_STATUS.SAVED);
+  const saved = queue.filter(
+    (e) => e.status === FORMATION_STATUS.SAVED || ctx.savedDocuments.has(e.id),
+  );
   const failed = queue.filter((e) => e.status === FORMATION_STATUS.ERROR);
   const count = (n) => `${n} document${n === 1 ? "" : "s"}`;
   if (saved.length === 0 && failed.length > 0) {
@@ -236,6 +241,7 @@ async function runDocumentProcessing(entry, ctx) {
         result.failureKind ??
         (result.readFailed ? FAILURE_KINDS.READ : FAILURE_KINDS.UNKNOWN);
       failure.plainMessage = result.plainMessage;
+      failure.plainComplete = result.plainComplete;
       throw failure;
     }
   } catch (err) {
@@ -251,6 +257,7 @@ const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // a plain "add it again" once it cannot. Only a failed read is retried on its
 // own; every other kind of failure waits for the veteran's Retry.
 async function handleRetryableFailure(entry, kind, ctx, detail) {
+  const { text, complete } = detail ?? {};
   // eslint-disable-next-line no-console
   console.warn(
     `📂 Could not finish ${entryLabel(entry, ctx)}`,
@@ -269,11 +276,18 @@ async function handleRetryableFailure(entry, kind, ctx, detail) {
     return runDocumentProcessing(entry, ctx);
   }
 
-  const canRetry = readable && attempts.manual < MAX_MANUAL_READ_RETRIES;
+  // A reader that could not start stays failed until the page is reloaded, and
+  // a message that already says what to change gains nothing from a Retry.
+  const canRetry =
+    readable &&
+    attempts.manual < MAX_MANUAL_READ_RETRIES &&
+    kind !== FAILURE_KINDS.READER_UNAVAILABLE &&
+    !complete;
   if (canRetry) ctx.readRetryable.add(entry.id);
   const message = describeDocumentFailure(plainEntryLabel(entry, ctx), {
     kind,
-    detail,
+    detail: text,
+    detailComplete: complete,
     canRetry,
     fileGone: !readable,
   });
@@ -314,9 +328,14 @@ async function handleDocumentFailure(err, entry, ctx) {
     );
   }
   const kind = err.failureKind ?? classifyDocumentFailure(err);
-  const detail =
+  const deliberate = deliberateMessageFor(err);
+  const text =
+    deliberate ??
     err.plainMessage ??
     (err instanceof PlainDocumentError ? err.message : undefined);
+  const detail = text
+    ? { text, complete: Boolean(deliberate) || err.plainComplete === true }
+    : undefined;
   return handleRetryableFailure(entry, kind, ctx, detail);
 }
 
@@ -347,7 +366,7 @@ export async function persistVerifiedDocument(extractionResult, verifyPayload) {
     serviceEntryCorrection &&
     !parseExplicitDate(serviceEntryCorrection.date)
   ) {
-    throw new Error(
+    throw new PlainDocumentError(
       "That service start date isn't a valid date. Use YYYY-MM-DD.",
     );
   }
@@ -394,6 +413,13 @@ export async function persistVerifiedDocument(extractionResult, verifyPayload) {
   }
 
   return { persisted: true, correction };
+}
+
+// Only a message written for the veteran is shown as it is; any other error may
+// carry technical text.
+function plainSaveFailure(err) {
+  if (err instanceof PlainDocumentError) return err.message;
+  return "We could not finish saving this document, so choose Verify & Save to try again. Nothing you imported was lost.";
 }
 
 async function runVerifyAndSave(verifyPayload, ctx) {
@@ -467,7 +493,7 @@ async function runVerifyAndSave(verifyPayload, ctx) {
           "Verify & Save",
           err,
         )
-      : err.message;
+      : plainSaveFailure(err);
     console.error(
       "❌ Save error:",
       incomplete

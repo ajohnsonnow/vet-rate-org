@@ -34,20 +34,51 @@ describe("plainDocumentLabel", () => {
 describe("describeDocumentFailure", () => {
   const label = "the claim letter (document 3)";
 
-  it.each(Object.values(FAILURE_KINDS))(
-    "says in one sentence what failed and what to do for %s",
-    (kind) => {
-      const message = describeDocumentFailure(label, {
-        kind,
-        canRetry: true,
-        fileGone: false,
-      });
-      expect(message).toContain(label);
-      expect(message).toContain("Retry");
-      expect(message.match(/\./g)).toHaveLength(1);
-      expect(message).not.toMatch(/https?:|blob:|CLAIM_LETTER|UNKNOWN/);
-    },
-  );
+  it.each(
+    Object.values(FAILURE_KINDS).filter(
+      (kind) => kind !== FAILURE_KINDS.READER_UNAVAILABLE,
+    ),
+  )("says in one sentence what failed and what to do for %s", (kind) => {
+    const message = describeDocumentFailure(label, {
+      kind,
+      canRetry: true,
+      fileGone: false,
+    });
+    expect(message).toContain(label);
+    expect(message).toContain("Retry");
+    expect(message.match(/\./g)).toHaveLength(1);
+    expect(message).not.toMatch(/https?:|blob:|CLAIM_LETTER|UNKNOWN/);
+  });
+
+  it("says to reload, and offers no Retry, when the reader did not start", () => {
+    const message = describeDocumentFailure(label, {
+      kind: FAILURE_KINDS.READER_UNAVAILABLE,
+      canRetry: false,
+      fileGone: false,
+    });
+    expect(message).toBe(
+      "We could not finish the claim letter (document 3) because the document reader did not start. Reload this page, then add the file again to finish it.",
+    );
+  });
+
+  it("ends a message written for the veteran with a full stop and what to do", () => {
+    const retry = describeDocumentFailure(label, {
+      kind: FAILURE_KINDS.UNKNOWN,
+      detail: "No text could be extracted from document",
+      canRetry: true,
+      fileGone: false,
+    });
+    expect(retry).toBe(
+      "We could not finish the claim letter (document 3). No text could be extracted from document. Choose Retry to try again.",
+    );
+    const spent = describeDocumentFailure(label, {
+      kind: FAILURE_KINDS.UNKNOWN,
+      detail: "No text could be extracted from document.",
+      canRetry: false,
+      fileGone: false,
+    });
+    expect(spent).toMatch(/document\. Add the file again to finish it\.$/);
+  });
 
   it("tells a reload apart from a file that is gone", () => {
     const reloaded = describeDocumentFailure(label, {

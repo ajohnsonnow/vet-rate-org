@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { test, expect, Page } from "@playwright/test";
+import { test, expect, Locator, Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
 
 /**
@@ -15,6 +15,8 @@ const APP_VERSION: string = JSON.parse(
 const MARKER_KEY = "vetrate_import_in_progress";
 const QUICK_EXIT_SELECTOR =
   'button[aria-label="Quick exit - immediately leave this page"]';
+
+const CRISIS_LINK_SELECTOR = 'a[href="https://www.veteranscrisisline.net/"]';
 
 const VIEWPORTS = [
   { name: "390 px phone", width: 390, height: 844 },
@@ -49,6 +51,43 @@ async function loadWithInterruptedImport(page: Page): Promise<void> {
   await page.reload();
   await expect(page.getByTestId("interrupted-import-notice")).toBeAttached();
   await dismissDisclaimer(page);
+}
+
+async function isOnTop(locator: Locator): Promise<boolean> {
+  return locator.evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+    return hit === el || el.contains(hit);
+  });
+}
+
+async function expectLifeSafetyClear(
+  page: Page,
+  notice: Locator,
+): Promise<void> {
+  const crisis = page.locator(CRISIS_LINK_SELECTOR).first();
+  await expect(crisis).toBeVisible();
+  const noticeBox = await notice.boundingBox();
+  const crisisBox = await crisis.boundingBox();
+  expect(noticeBox).not.toBeNull();
+  expect(crisisBox).not.toBeNull();
+  const overlaps =
+    noticeBox!.x < crisisBox!.x + crisisBox!.width &&
+    crisisBox!.x < noticeBox!.x + noticeBox!.width &&
+    noticeBox!.y < crisisBox!.y + crisisBox!.height &&
+    crisisBox!.y < noticeBox!.y + noticeBox!.height;
+  expect(overlaps).toBe(false);
+  expect(await isOnTop(crisis)).toBe(true);
+  const alpha = await notice.evaluate((el) => {
+    const parts = getComputedStyle(el)
+      .backgroundColor.replace(/[^0-9.,]/g, "")
+      .split(",");
+    return parts.length === 4 ? Number(parts[3]) : 1;
+  });
+  expect(alpha).toBe(1);
 }
 
 for (const viewport of VIEWPORTS) {
@@ -93,15 +132,9 @@ for (const viewport of VIEWPORTS) {
         exitBox!.y < noticeBox!.y + noticeBox!.height;
       expect(overlaps).toBe(false);
 
-      const exitIsOnTop = await quickExit.evaluate((el) => {
-        const rect = el.getBoundingClientRect();
-        const hit = document.elementFromPoint(
-          rect.left + rect.width / 2,
-          rect.top + rect.height / 2,
-        );
-        return hit === el || el.contains(hit);
-      });
-      expect(exitIsOnTop).toBe(true);
+      expect(await isOnTop(quickExit)).toBe(true);
+      expect(await isOnTop(dismiss)).toBe(true);
+      await expectLifeSafetyClear(page, notice);
 
       await dismiss.click();
       await expect(notice).toBeHidden();

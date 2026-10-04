@@ -37,6 +37,41 @@ export class PlainDocumentError extends Error {
   }
 }
 
+// Messages written on purpose for the veteran by code that is not changed
+// here. Each is replaced with a fixed sentence that says what to do, never the
+// original text, which can carry a size or a file extension.
+const DELIBERATE_MESSAGES = [
+  [
+    /^Legacy \.doc format is not supported/i,
+    "Legacy .doc files are not supported, so save the document as .docx or .txt and add it again.",
+  ],
+  [
+    /^This Word document is too large/i,
+    "This Word document is too large to process safely, so convert it to PDF or split it into smaller files and add it again.",
+  ],
+  [
+    /is too large for OCR on your device/i,
+    "This PDF is too large to read here, so use the C-File Analyzer tool instead, which handles files of any size.",
+  ],
+  [
+    /password-protected/i,
+    "This PDF is password-protected, so remove the protection (open it, then re-save or print to PDF) and add it again.",
+  ],
+  [
+    /^Unsupported file type:/i,
+    "This file type is not supported, so use a PDF, DOCX, TXT or RTF file.",
+  ],
+];
+
+/**
+ * @returns {string|undefined} A sentence that is complete in itself (it says
+ *   what to do) when the error is one of the deliberate messages above.
+ */
+export const deliberateMessageFor = (error) => {
+  const message = String(error?.message ?? "");
+  return DELIBERATE_MESSAGES.find(([pattern]) => pattern.test(message))?.[1];
+};
+
 const READ_ERROR_NAMES = new Set([
   "FileReadError",
   "NotReadableError",
@@ -50,7 +85,7 @@ const READ_ERROR_MESSAGE =
 // Checked before READ_ERROR_MESSAGE: a worker script loaded from a blob:
 // address is an unavailable reader, not an unreadable file.
 const WORKER_ERROR_MESSAGE =
-  /worker|dynamically imported module|module script|importscripts|loading chunk/i;
+  /pdf\.worker|fake worker|worker script|dynamically imported module|module script|importscripts|loading chunk/i;
 
 const TIMEOUT_ERROR_NAMES = new Set(["StepTimeoutError", "TimeoutError"]);
 
@@ -71,9 +106,7 @@ export const classifyDocumentFailure = (error) => {
   if (TIMEOUT_ERROR_NAMES.has(name) || TIMEOUT_ERROR_MESSAGE.test(message)) {
     return FAILURE_KINDS.TIMEOUT;
   }
-  if (name === "RangeError" || MEMORY_ERROR_MESSAGE.test(message)) {
-    return FAILURE_KINDS.MEMORY;
-  }
+  if (MEMORY_ERROR_MESSAGE.test(message)) return FAILURE_KINDS.MEMORY;
   return FAILURE_KINDS.UNKNOWN;
 };
 

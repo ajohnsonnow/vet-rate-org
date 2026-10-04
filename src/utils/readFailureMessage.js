@@ -17,7 +17,7 @@ const TYPE_NAMES = {
   C_FILE_MEDICAL: "C-file medical record",
 };
 
-const typeName = (type) => {
+export const typeName = (type) => {
   if (!type || type === "UNKNOWN") return null;
   return TYPE_NAMES[type] ?? type.toLowerCase().replaceAll("_", " ");
 };
@@ -56,7 +56,14 @@ export const describeFailureKind = (kind) =>
  */
 export const describeDocumentFailure = (
   label,
-  { kind = FAILURE_KINDS.READ, detail, canRetry, fileGone, reloaded = false },
+  {
+    kind = FAILURE_KINDS.READ,
+    detail,
+    detailComplete = false,
+    canRetry,
+    fileGone,
+    reloaded = false,
+  },
 ) => {
   if (reloaded && kind !== FAILURE_KINDS.READ) {
     return `We could not finish ${label} before the page was reloaded, so add the file again to finish it.`;
@@ -67,8 +74,17 @@ export const describeDocumentFailure = (
       "so add it again to finish it."
     );
   }
-  if (detail) return `We could not finish ${label}. ${detail}`;
+  if (detail) {
+    const sentence = /[.!?]$/.test(detail) ? detail : `${detail}.`;
+    let next = " Add the file again to finish it.";
+    if (canRetry) next = " Choose Retry to try again.";
+    if (detailComplete) next = "";
+    return `We could not finish ${label}. ${sentence}${next}`;
+  }
   const cause = CAUSES[kind] ?? CAUSES[FAILURE_KINDS.UNKNOWN];
+  if (kind === FAILURE_KINDS.READER_UNAVAILABLE) {
+    return `We could not finish ${label} because ${cause}. Reload this page, then add the file again to finish it.`;
+  }
   if (canRetry) {
     return `We could not finish ${label} because ${cause}, so choose Retry to try again.`;
   }
