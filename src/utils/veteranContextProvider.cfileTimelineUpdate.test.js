@@ -97,22 +97,87 @@ describe("C-File Save: one event per document, day and type", () => {
       "From the analysis",
     ]);
   });
+});
 
-  it("lists one event per day and type from a single analysis", () => {
+describe("C-File Save: same-day events, vague dates and earlier saves", () => {
+  it("keeps every event of one analysis, including several on the same day and type", () => {
     const merge = buildVkbMergeFromCFile(
       analysisWith([
-        event("2019-03-03", "Medical", "First wording"),
-        event("March 3, 2019", "medical", "Second wording"),
+        event("2019-03-03", "Medical", "First diagnosis"),
+        event("March 3, 2019", "medical", "Second diagnosis"),
         event("", "Medical", "Undated one"),
         event("", "Medical", "Undated two"),
       ]),
       {},
     );
     expect(merge.evidenceTimeline.map((e) => e.description)).toEqual([
-      "First wording",
+      "First diagnosis",
+      "Second diagnosis",
       "Undated one",
       "Undated two",
     ]);
-    expect(merge.evidence).toHaveLength(3);
+    expect(merge.evidence).toHaveLength(4);
+  });
+
+  it("pairs same-day events with their earlier copies on a re-save", async () => {
+    const first = [
+      event("2019-03-03", "Medical", "Tinnitus diagnosed"),
+      event("2019-03-03", "Medical", "Lumbar strain diagnosed"),
+    ];
+    await save(first, "d1");
+    await save(
+      [
+        event("2019-03-03", "Medical", "Diagnosis of tinnitus"),
+        event("2019-03-03", "Medical", "Diagnosis of lumbar strain"),
+        event("2019-03-03", "Medical", "A third finding"),
+      ],
+      "d1",
+    );
+    expect(store.vkb.evidenceTimeline.map((e) => e.description)).toEqual([
+      "Diagnosis of tinnitus",
+      "Diagnosis of lumbar strain",
+      "A third finding",
+    ]);
+    expect(store.vkb.evidence).toHaveLength(3);
+  });
+
+  it.each([
+    ["2019", "2018-12-31"],
+    ["March 2019", "2019-03-01"],
+    ["2019-03", "2019-02-28"],
+  ])("does not mistake the date %j for the day %j", async (vague, day) => {
+    await save([event(vague, "Medical", "Vague date")], "d1");
+    await save([event(day, "Medical", "Exact day")], "d1");
+    expect(store.vkb.evidenceTimeline.map((e) => e.description)).toEqual([
+      "Vague date",
+      "Exact day",
+    ]);
+  });
+
+  it("updates, not repeats, an event saved before events carried a document id", async () => {
+    store.vkb.evidenceTimeline = [
+      {
+        date: "2019-03-03",
+        eventType: "Medical",
+        description: "Old wording",
+        source: "C-File Analysis",
+      },
+    ];
+    store.vkb.evidence = [
+      {
+        date: "2019-03-03",
+        type: "c_file_event",
+        description: "Old wording",
+        source: "C-File",
+      },
+    ];
+    await save([event("2019-03-03", "Medical", "New wording")], "d1");
+    expect(store.vkb.evidenceTimeline.map((e) => e.description)).toEqual([
+      "New wording",
+    ]);
+    expect(store.vkb.evidence.map((e) => e.description)).toEqual([
+      "New wording",
+    ]);
+    expect(store.vkb.evidenceTimeline[0].sourceDocumentId).toBe("d1");
   });
 });

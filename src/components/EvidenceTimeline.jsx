@@ -14,6 +14,7 @@ import {
   timelineEventKey,
   buildImportedTimelineEvent,
   datedVkbEvents,
+  freshVkbEvents,
   recordRemovedTimelineEvent,
 } from "../utils/timelineStoreSync";
 import ReportBugLink from "./ReportBugLink";
@@ -400,17 +401,9 @@ async function performImportFromRecords({
     // items are accepted, against each other - migrateOffSchemaVKB copies
     // legacy evidence[] entries into evidenceTimeline[], so the same item
     // can otherwise show up in both vkbEvents halves and get added twice.
-    const existing = new Set(workingEvents.map(timelineEventKey));
-    const fresh = [];
-    vkbEvents.forEach((e, i) => {
-      const key = timelineEventKey({
-        date: e.date,
-        description: e.description || e.text,
-      });
-      if (existing.has(key)) return;
-      existing.add(key);
-      fresh.push(buildImportedTimelineEvent(e, i));
-    });
+    const fresh = freshVkbEvents(vkbEvents, workingEvents).map(([e, i]) =>
+      buildImportedTimelineEvent(e, i),
+    );
 
     if (fresh.length === 0 && staleRemoved === 0) {
       if (!auto) alert("No new dated events found in your records.");

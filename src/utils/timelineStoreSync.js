@@ -16,6 +16,7 @@
  * description (no text of the event is stored again).
  */
 
+import { eventIdentity } from "./eventIdentity";
 import { loadVKB } from "./veteranKnowledgeBase";
 import {
   getTimelineEvents,
@@ -111,6 +112,61 @@ export function datedVkbEvents(vkb) {
   ].filter((e) => e?.date && (e.description || e.text));
 }
 
+const _vkbDescription = (e) => e.description || e.text;
+
+/**
+ * The knowledge-base events the store does not yet hold, as [event, index].
+ * An event is held when the store has the same date and wording, or an
+ * imported copy of the same document's event on the same day and type: the
+ * model words an event differently on each analysis, and the knowledge base
+ * updates that event in place, so the store must not gain a second copy.
+ * Several same-day, same-type events pair one-to-one with their copies.
+ * @param {Array} vkbEvents
+ * @param {Array} storeEvents
+ * @param {(key: string) => boolean} [isRemoved]
+ */
+export function freshVkbEvents(
+  vkbEvents,
+  storeEvents,
+  isRemoved = () => false,
+) {
+  const keyOf = (e) =>
+    timelineEventKey({ date: e.date, description: _vkbDescription(e) });
+  const present = new Set(storeEvents.map(timelineEventKey));
+  const claimed = new Set();
+  const copies = new Map();
+  for (const e of storeEvents) {
+    if (!isImportedTimelineEvent(e) || !e.sourceDocumentId || !e.eventType) {
+      continue;
+    }
+    const id = `${e.sourceDocumentId}|${eventIdentity(e)}`;
+    copies.set(id, [...(copies.get(id) || []), e]);
+  }
+  const wordedAlike = new Set(
+    vkbEvents.map(keyOf).filter((k) => present.has(k)),
+  );
+  for (const list of copies.values()) {
+    list.forEach((c) => wordedAlike.has(timelineEventKey(c)) && claimed.add(c));
+  }
+  const fresh = [];
+  vkbEvents.forEach((e, i) => {
+    const key = keyOf(e);
+    if (present.has(key) || isRemoved(key)) return;
+    present.add(key);
+    const earlier = e.sourceDocumentId
+      ? (copies.get(`${e.sourceDocumentId}|${eventIdentity(e)}`) || []).find(
+          (c) => !claimed.has(c),
+        )
+      : null;
+    if (earlier) {
+      claimed.add(earlier);
+      return;
+    }
+    fresh.push([e, i]);
+  });
+  return fresh;
+}
+
 /**
  * Adds every dated knowledge-base event the local timeline store lacks.
  * The store is read only after the knowledge base has loaded and written back
@@ -126,18 +182,10 @@ export async function convergeTimelineStoreWithVKB({
   const vkbEvents = datedVkbEvents(await loadVKB());
   const current = getTimelineEvents();
   if (onlyIfStoreHasEvents && current.length === 0) return { added: 0 };
-  const present = new Set(current.map(timelineEventKey));
   const removed = readRemovedHashes();
-  const fresh = [];
-  vkbEvents.forEach((e, i) => {
-    const key = timelineEventKey({
-      date: e.date,
-      description: e.description || e.text,
-    });
-    if (present.has(key) || removed.has(hashKey(key))) return;
-    present.add(key);
-    fresh.push(buildImportedTimelineEvent(e, i));
-  });
+  const fresh = freshVkbEvents(vkbEvents, current, (key) =>
+    removed.has(hashKey(key)),
+  ).map(([e, i]) => buildImportedTimelineEvent(e, i));
   if (fresh.length === 0) return { added: 0 };
   if (!saveTimelineEvents([...current, ...fresh])) {
     throw new Error("The timeline could not be saved.");

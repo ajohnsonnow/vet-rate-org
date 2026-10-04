@@ -4306,6 +4306,11 @@ export const saveTimelineEvents = (events) => {
       // EvidenceTimeline's re-import dedup needs it to survive a
       // save/reload round-trip too.
       sourceKey: e.sourceKey ? sanitizeString(e.sourceKey, 200) : null,
+      // Names the document an imported copy came from, so a later import of a
+      // reworded copy of that same event is recognised and not added again.
+      sourceDocumentId: e.sourceDocumentId
+        ? sanitizeString(String(e.sourceDocumentId), 200)
+        : null,
     }));
 
     localStorage.setItem(TIMELINE_EVENTS_KEY, JSON.stringify(sanitizedEvents));
