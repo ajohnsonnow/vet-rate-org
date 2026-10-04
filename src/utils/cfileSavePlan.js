@@ -21,6 +21,7 @@ import { buildVkbMergeFromCFile } from "./veteranContextProvider";
 import { resolveTimelineDate } from "./musterCallProcessor";
 import { getDocumentTypeLabel } from "./documentClassifier";
 
+const MIN_CONTENT_WORDS = 2;
 const MIN_CONTENT_WORD_LETTERS = 4;
 
 let catalogueIndex = null;
@@ -31,51 +32,59 @@ const _phraseOf = (text) =>
     .replaceAll(/[^a-z0-9]+/g, " ")
     .trim();
 
-// Every phrase the catalogue knows a condition by (its name, aliases and
-// search terms) and the words those phrases are made of.
+// The phrases the catalogue knows a condition by: its name and aliases are
+// whole names; its search terms are only ever a part of one. The words are
+// those every phrase is made of.
 function _catalogue() {
   if (!catalogueIndex) {
-    const phrases = new Set(
-      getAllConditions()
-        .flatMap((d) => [
-          d.conditionName,
-          ...(d.aliases || []),
-          ...(d.searchTerms || []),
-        ])
+    const conditions = getAllConditions();
+    const names = new Set(
+      conditions
+        .flatMap((d) => [d.conditionName, ...(d.aliases || [])])
         .map(_phraseOf)
         .filter(Boolean),
     );
     const words = new Set(
-      [...phrases]
+      [
+        ...names,
+        ...conditions.flatMap((d) => (d.searchTerms || []).map(_phraseOf)),
+      ]
         .flatMap((phrase) => phrase.split(" "))
         .filter((w) => w.length >= MIN_CONTENT_WORD_LETTERS),
     );
-    catalogueIndex = { phrases, words };
+    catalogueIndex = { names, words };
   }
   return catalogueIndex;
 }
 
+// A name the catalogue holds whole, or a wording of two or more content words
+// the catalogue knows. One everyday word that merely occurs inside condition
+// names ("Hearing", "Back pay") is not a condition.
 function _catalogueRecognises(name) {
-  const { phrases, words } = _catalogue();
-  const phrase = _phraseOf(normalizeConditionName(name));
+  const { names, words } = _catalogue();
+  const phrase = _phraseOf(normalizeConditionName(String(name).split("(")[0]));
   if (!phrase) return false;
-  if (phrases.has(phrase)) return true;
+  if (names.has(phrase)) return true;
   const content = phrase
     .split(" ")
     .filter((w) => w.length >= MIN_CONTENT_WORD_LETTERS);
-  return content.length > 0 && content.every((w) => words.has(w));
+  return (
+    content.length >= MIN_CONTENT_WORDS && content.every((w) => words.has(w))
+  );
 }
 
 /**
- * The cleaned name when the text validates as a condition, else null.
+ * The cleaned name when the text validates as a condition, else null. Only the
+ * name decides: a diagnostic code the model attached never makes a word a
+ * condition.
  * @param {string} rawName
- * @param {string|number|null} [diagnosticCode] a code already grounded in the
- *   rating schedule counts as a catalogue match
  */
-export function validateConditionName(rawName, diagnosticCode = null) {
+export function validateConditionName(rawName) {
+  const raw = String(rawName || "").trim();
+  if (_catalogue().names.has(_phraseOf(raw))) return raw;
   const cleaned = _cleanConditionName(rawName);
   if (!cleaned) return null;
-  if (diagnosticCode || lookupDiagnosticCodeByName(cleaned)) return cleaned;
+  if (lookupDiagnosticCodeByName(cleaned)) return cleaned;
   return _catalogueRecognises(cleaned) ? cleaned : null;
 }
 
@@ -91,11 +100,15 @@ function _splitConditions(items, ticked) {
   for (const item of items) {
     const raw = _nameOf(item).trim();
     if (!raw) continue;
-    const code = typeof item === "object" ? item.diagnosticCode : null;
-    const cleaned = validateConditionName(raw, code);
-    if (cleaned) kept.push({ item, name: cleaned });
-    else if (ticked.has(conditionKey(raw))) kept.push({ item, name: raw });
-    else leftOut.push({ name: raw, key: conditionKey(raw) });
+    const cleaned = validateConditionName(raw);
+    if (cleaned) {
+      kept.push({ item, name: cleaned });
+      continue;
+    }
+    const key = conditionKey(raw);
+    const isTicked = ticked.has(key);
+    if (isTicked) kept.push({ item, name: raw });
+    leftOut.push({ name: raw, key, ticked: isTicked });
   }
   return { kept, leftOut };
 }
@@ -129,7 +142,7 @@ function _documentEntry(extraction) {
  * @returns {{
  *   vkbMergeData: object,
  *   conditions: string[],
- *   leftOut: {name: string, key: string}[],
+ *   leftOut: {name: string, key: string, ticked: boolean}[],
  *   timeline: {date: string, eventType: string, description: string}[],
  * }}
  */

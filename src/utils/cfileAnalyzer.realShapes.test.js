@@ -109,6 +109,8 @@ describe("analyzeCFile off-device fallback: the five real failing shapes", () =>
   it("drops a glued 'Serviceconnection' heading but keeps the real denials", async () => {
     const names = await conditionsOf(GLUED_SERVICE_CONNECTION);
     expect(lower(names)).not.toContain("serviceconnection");
+    expect(lower(names)).toContain("heat rash");
+    expect(names.filter((n) => /^night ?sweats$/i.test(n))).toHaveLength(1);
     expect(names.some((n) => /^service\s?connection$/i.test(n))).toBe(false);
   });
 

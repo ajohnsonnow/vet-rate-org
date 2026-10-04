@@ -102,6 +102,18 @@ describe("the Save panel lists exactly what Save writes", () => {
 });
 
 describe("a word the catalogue does not recognise as a condition", () => {
+  it("can be unticked again after a mis-tick", async () => {
+    renderPanel();
+    fireEvent.click(screen.getByLabelText("Tuesday"));
+    fireEvent.click(screen.getByLabelText("Tuesday"));
+    expect(screen.getByLabelText("Tuesday").checked).toBe(false);
+    expect(listed("cfile-save-conditions")).toEqual(["Tinnitus"]);
+    save();
+    await waitFor(() => expect(mergeAnalysisIntoVkb).toHaveBeenCalledTimes(1));
+    const written = mergeAnalysisIntoVkb.mock.calls[0][0].vkbMergeData;
+    expect(JSON.stringify(written)).not.toContain("Tuesday");
+  });
+
   it("is shown as not recognised and left out of what Save writes", async () => {
     renderPanel();
     expect(listed("cfile-save-conditions")).toEqual(["Tinnitus"]);
@@ -119,7 +131,7 @@ describe("a word the catalogue does not recognise as a condition", () => {
     renderPanel();
     fireEvent.click(screen.getByLabelText("Tuesday"));
     expect(listed("cfile-save-conditions")).toEqual(["Tinnitus", "Tuesday"]);
-    expect(screen.queryByTestId("cfile-save-left-out")).toBeNull();
+    expect(screen.getByLabelText("Tuesday").checked).toBe(true);
 
     save();
     await waitFor(() => expect(mergeAnalysisIntoVkb).toHaveBeenCalledTimes(1));
