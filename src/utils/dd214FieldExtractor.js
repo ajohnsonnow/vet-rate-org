@@ -153,12 +153,14 @@ const _NEIGHBOUR_CAPTIONS = [
   String.raw`DIRECTOR\s{1,5}OF`,
 ];
 const _STOP_AT_NEIGHBOUR = new RegExp(_NEIGHBOUR_CAPTIONS.join("|"), "i");
+// A later box printed as "18. REMARKS" with no BLOCK, BOX or ITEM before it,
+// or its caption alone, ends a block just as the lettered form does.
 const _STOP_AT_NEIGHBOUR_OR_BLOCK = new RegExp(
-  `${_NEIGHBOUR_CAPTIONS.join("|")}|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[5-9]|2\\d|30)\\b`,
+  `${_NEIGHBOUR_CAPTIONS.join("|")}|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[5-9]|2\\d|30)\\b|(?<![\\d.])(?:1[5-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
   "i",
 );
 const _STOP_AT_NEIGHBOUR_OR_NEXT_BLOCK = new RegExp(
-  `${_NEIGHBOUR_CAPTIONS.join("|")}|MILITARY\\s{1,5}EDUCATION|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[4-9]|2\\d|30)\\b`,
+  `${_NEIGHBOUR_CAPTIONS.join("|")}|MILITARY\\s{1,5}EDUCATION|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[4-9]|2\\d|30)\\b|(?<![\\d.])(?:1[4-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
   "i",
 );
 const _SSN_SHAPE_RE = /(?<!\d)(?:\d{3}[- ]\d{2}[- ]\d{4}|\d{9})(?!\d)/;

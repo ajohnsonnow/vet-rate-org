@@ -9,6 +9,7 @@
  * neighbouring box, so its text is never trusted as read.
  */
 import { makeScrubber } from "./dd214ModelOutputGuards";
+import { cleanEnumeratedField } from "./dd214EnumeratedFields";
 
 export const PARSER_TEXT_CAPS = {
   mosTitle: 80,
@@ -47,8 +48,13 @@ const LABELLED_BIRTH_DATE = new RegExp(
   "gi",
 );
 
+const BARE_NUMERIC_DATE = /(?<!\d)\d{1,2}[ ./-]\d{1,2}[ ./-]\d{4}(?!\d)/g;
+
 function removeBirthDateAndSsnShapes(text) {
-  return text.replace(SSN_SHAPE, MARK).replace(LABELLED_BIRTH_DATE, MARK);
+  return text
+    .replace(SSN_SHAPE, MARK)
+    .replace(LABELLED_BIRTH_DATE, MARK)
+    .replace(BARE_NUMERIC_DATE, MARK);
 }
 
 function isMostlyRedacted(text) {
@@ -158,9 +164,12 @@ const SHORT_TEXT_KEYS = ["mosTitle"];
 const PLAIN_TEXT_KEYS = ["placeOfEntry", "stationWhereSeparated"];
 const LIST_KEYS = ["militaryEducation", "specialQualifications"];
 
+// The extractor upper-cases the whole page, so a run of capitalised words is
+// not a sign of a name the way it is in model text: parser prose is checked
+// for short name-length runs only, like a course or award title.
 function cleanParserStrings(out, scrubs) {
   const groups = [
-    [PROSE_KEYS, scrubs.scrubProse],
+    [PROSE_KEYS, scrubs.scrubShort],
     [SHORT_TEXT_KEYS, scrubs.scrubShort],
     [PLAIN_TEXT_KEYS, scrubs.scrub],
   ];
@@ -177,6 +186,40 @@ function cleanParserStrings(out, scrubs) {
         out,
         key,
         cleanList(out[key], PARSER_TEXT_CAPS[key], scrubs.scrubShort),
+      );
+    }
+  }
+}
+
+// Fields that hold only a fixed word or a code. They are pre-tickable, so a
+// capture that ran on into a name, a date or a street must never get through:
+// the value is held to the same list or shape a model's value must match, and
+// dropped (the model's own value then fills the row, labelled as read by the
+// AI, unticked) when it does not.
+const CODED_KEYS = [
+  "branch",
+  "component",
+  "componentFull",
+  "rank",
+  "payGrade",
+  "sglCoverage",
+  "giBlStatus",
+  "separationAuthority",
+  "separationCode",
+  "reentryCode",
+  "separationProgramDesignator",
+  "separationType",
+  "characterOfService",
+  "securityClearance",
+];
+
+function cleanParserCodedFields(out) {
+  for (const key of CODED_KEYS) {
+    if (key in out) {
+      set(
+        out,
+        key,
+        cleanEnumeratedField(key, out[key], { branch: out.branch }),
       );
     }
   }
@@ -212,6 +255,7 @@ export function sanitizeParserFields(fields, sources = []) {
   if (!fields || typeof fields !== "object") return fields;
   const scrubs = makeScrubber(sources);
   const out = { ...fields };
+  cleanParserCodedFields(out);
   cleanParserStrings(out, scrubs);
   cleanParserStructures(out, scrubs.scrubShort);
   return out;

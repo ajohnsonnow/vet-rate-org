@@ -160,7 +160,10 @@ const NOT_A_NAME = new Set(
     "jump wings pathfinder sere survival evasion resistance escape leadership development " +
     "primary advanced basic noncommissioned nco warrior leader professional education " +
     "instructor drill sergeant recruiter infantry airman soldier sailor coastguardsman " +
-    "mine marksmanship excellence overseas deployment ribbon unit presidential"
+    "mine marksmanship excellence overseas deployment ribbon unit presidential " +
+    "supply specialist wheeled vehicle motor transport operator drive full completed " +
+    "member has first second third inf regt bn div bde hhc btry det hq decorations " +
+    "medals badges citations ribbons awarded authorized authorised campaign"
   ).split(" "),
 );
 const STATE_WORDS = new Set(

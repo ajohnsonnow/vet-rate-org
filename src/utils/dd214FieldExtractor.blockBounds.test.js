@@ -76,3 +76,23 @@ describe("a block capture ends at the next printed box", () => {
     expect(fields.militaryEducation).toEqual(["BASIC LEADER COURSE 2010"]);
   });
 });
+
+describe("a block ends at a later box printed without BLOCK, BOX or ITEM", () => {
+  it("stops Military Education at '18. REMARKS' when box 15 is missing", () => {
+    const { fields } = extractDD214Fields(
+      "13. DECORATIONS: ARMY ACHIEVEMENT MEDAL\n14. MILITARY EDUCATION: BASIC LEADER COURSE, 4 WEEKS, 2009\n18. REMARKS: SERVICE IN IRAQ 20050101-20051201\n",
+    );
+    expect(fields.militaryEducation.join(" ")).toContain("BASIC LEADER COURSE");
+    expect(dump(fields.militaryEducation)).not.toMatch(/REMARKS|IRAQ/);
+  });
+
+  it("stops Awards at the REMARKS caption on a flattened page", () => {
+    const { fields } = extractDD214Fields(
+      flattened(
+        "13. DECORATIONS, MEDALS, BADGES: ARMY ACHIEVEMENT MEDAL 18. REMARKS: SERVICE IN IRAQ",
+      ),
+    );
+    expect(dump(fields.awards)).toContain("ARMY ACHIEVEMENT MEDAL");
+    expect(dump(fields.awards)).not.toMatch(/REMARKS|IRAQ/);
+  });
+});

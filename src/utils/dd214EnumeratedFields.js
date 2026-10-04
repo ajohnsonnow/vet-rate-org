@@ -423,7 +423,7 @@ const AUTHORITY_WORDS = new Set(
   (
     "ar afi afman afr afpd afh dafi dafman milpersman marcorsepman mco secnavinst opnavinst " +
     "dodi dodd dod comdtinst navpers cfr usc ngr arngr angi ngb maradmin alnav navadmin jagman " +
-    "persman da dd ucmj rcm spd para paragraph chapter ch section sec title art article " +
+    "persman da dd ucmj rcm spd para paragraph chapter chap ch section sec title art article " +
     "and of the army navy air force marine corps coast guard regulation reg instruction manual " +
     "pt part subpara"
   ).split(" "),
