@@ -353,7 +353,11 @@ function importFollowupDd214(printedDate) {
       branch: "Army National Guard",
     },
     "combined text",
-    {},
+    {
+      serviceStartDate: printedDate,
+      serviceEndDate: END_DATE,
+      branch: "Army National Guard",
+    },
     {},
     [{ filename: "dd214-followup-synthetic.pdf" }],
   );
