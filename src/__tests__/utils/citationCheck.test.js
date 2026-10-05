@@ -148,7 +148,7 @@ describe("cfrCitations", () => {
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
 // Runs recorded after this one have not had their flags reviewed by hand.
-const LAST_REVIEWED_RUN = "run_2026-10-05_141236";
+const LAST_REVIEWED_RUN = "run_2026-10-05_210108";
 
 function recordedAnswers() {
   return readdirSync(TRANSCRIPT_DIR)
@@ -171,7 +171,7 @@ describe("citation check over the recorded evaluation answers", () => {
   const answers = recordedAnswers();
 
   it("reads the recorded answers", () => {
-    expect(answers).toHaveLength(464);
+    expect(answers).toHaveLength(524);
   });
 
   it("flags only the citations to sections that do not exist", () => {
@@ -190,6 +190,7 @@ describe("citation check over the recorded evaluation answers", () => {
       "2026-10-05_135040 a05 4.71b",
       "2026-10-05_135040 a26 19.5",
       "2026-10-05_135908 a03 4.90",
+      "2026-10-05_210108 a26 19.5",
     ]);
   });
 });
