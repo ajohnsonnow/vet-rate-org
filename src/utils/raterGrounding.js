@@ -206,8 +206,8 @@ export function describeMismatch(check) {
  */
 export function buildCalculatorExplanation(calc) {
   const pairNote = calc.bilateralConditions.length
-    ? `The bilateral factor applies to ${describeBilateralPair(calc)}: the same body part on both sides.`
-    : "No bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).";
+    ? `The bilateral factor applies to ${describeBilateralPair(calc)}: disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26).`
+    : 'No bilateral pair applies. The bilateral factor needs "partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c)), that is both arms or both legs, one on each side. "Arms" and "legs" mean the upper and lower extremities as a whole, so a right thigh and a left foot are a pair (38 CFR § 4.26(a)). Two conditions on the same side are not a pair, and the two highest ratings are not automatically a pair.';
   return [
     "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.",
     "",

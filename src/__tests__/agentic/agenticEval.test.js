@@ -117,12 +117,12 @@ describe("Agentic harness - system-prompt fingerprints", () => {
   // To intentionally rotate: run the suite, copy the actual hash from
   // the failure message, and update the table below.
   const EXPECTED = {
-    // Rotated for S41's bilateral-calculator-grounding hardening (see
-    // CALCULATION BOUNDARY / BILATERAL PAIRING clauses in diamondSwarm.js) -
-    // auditor and rater prompts changed, writer did not.
-    auditor: "7bc41250561491594b5db5c9bba70d1617bc0c9960f1454894d55cf6a1bc0f3e",
+    // Rotated when the bilateral clauses were restated to match 38 CFR § 4.26
+    // (paired extremities, not only the same body part) - auditor and rater
+    // prompts changed, writer did not.
+    auditor: "0a8cfd441c30e8cfc0e85c1f91421d77ae73a886679c45ffd8ecb2a0f0c14462",
     writer: "6331e5c37386118743d25769b670bcf98f3d5b26744c2bdc9b80a0fef35df47c",
-    rater: "9dddaee831fda00d534444a0cd5f11aecf0a6a583a60e5cb042fa4153f22f161",
+    rater: "44903f31b0737ef63447db4ded07c86806c38dd6c50812a51d7f6dc196b9b1a1",
   };
 
   it("auditor prompt fingerprint is stable", () => {
@@ -167,6 +167,36 @@ describe("Agentic harness - contract clauses present in prompts", () => {
     const p = SWARM_AGENTS.RATER.systemPrompt;
     expect(p).toMatch(/bilateral factor/i);
     expect(p).toMatch(/38 CFR Part 4/);
+  });
+});
+
+describe("Agentic harness - bilateral clause matches 38 CFR § 4.26", () => {
+  it.each(["AUDITOR", "RATER"])(
+    "%s states the factor for paired extremities, with the regulation's own example",
+    (key) => {
+      const p = SWARM_AGENTS[key].systemPrompt;
+      expect(p).toMatch(/both arms or both legs/);
+      expect(p).toMatch(/paired skeletal muscles/);
+      expect(p).toMatch(/right thigh and a left foot/);
+      expect(p).toMatch(/upper and lower extremities as a whole/);
+    },
+  );
+
+  it.each(["AUDITOR", "RATER"])(
+    "%s keeps the same-side and highest-two warnings and drops the same-body-part rule",
+    (key) => {
+      const p = SWARM_AGENTS[key].systemPrompt;
+      expect(p).toMatch(/Two conditions on the SAME side are NOT bilateral/);
+      expect(p).toMatch(/two highest/);
+      expect(p).not.toMatch(/SAME body part/);
+      expect(p).not.toMatch(/OPPOSITE sides/);
+    },
+  );
+
+  it("rater still tells the model to show the pair and the calculator result is final", () => {
+    const p = SWARM_AGENTS.RATER.systemPrompt;
+    expect(p).toMatch(/Always show which specific conditions you paired/);
+    expect(p).toMatch(/If a COMPUTED RESULT block is provided, it is final/);
   });
 });
 

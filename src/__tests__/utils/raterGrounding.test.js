@@ -308,6 +308,29 @@ describe("buildCalculatorExplanation", () => {
     expect(text).toContain("No bilateral pair applies");
   });
 
+  it("states the bilateral rule as 38 CFR § 4.26 words it, not as same-body-part only", () => {
+    const text = buildCalculatorExplanation(calculateVARating(FOUR));
+    expect(text).toContain(
+      '"partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c))',
+    );
+    expect(text).toContain(
+      "a right thigh and a left foot are a pair (38 CFR § 4.26(a))",
+    );
+    expect(text).toContain("Two conditions on the same side are not a pair");
+    expect(text).toContain(
+      "the two highest ratings are not automatically a pair",
+    );
+    expect(text).not.toMatch(/same body part/);
+  });
+
+  it("describes a found pair as left and right disabilities of paired extremities", () => {
+    const text = buildCalculatorExplanation(calculateVARating(KNEES));
+    expect(text).toContain(
+      "disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26)",
+    );
+    expect(text).not.toMatch(/same body part/);
+  });
+
   it("names the pair when the calculator found one", () => {
     const text = buildCalculatorExplanation(calculateVARating(KNEES));
     expect(text).toContain(

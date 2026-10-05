@@ -96,7 +96,7 @@ describe("analyzeEngineRequest", () => {
     );
     const fingerprints = fingerprintPersonas(prompts);
     expect(fingerprints.auditor).toBe(
-      "7bc41250561491594b5db5c9bba70d1617bc0c9960f1454894d55cf6a1bc0f3e",
+      "0a8cfd441c30e8cfc0e85c1f91421d77ae73a886679c45ffd8ecb2a0f0c14462",
     );
     const sent = analyzeEngineRequest(request("hi", prompts.writer), prompts);
     expect(sent.actualAgent).toBe("writer");
