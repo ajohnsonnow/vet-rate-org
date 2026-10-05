@@ -28,6 +28,7 @@ import {
   resolveAgentForTool,
 } from "../../utils/agentBoundaries";
 import { SWARM_AGENTS } from "../../utils/diamondSwarm";
+import { calculateVARating } from "../../utils/vaCalculator";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const GOLDEN = readFileSync(join(__dirname, "golden-set.jsonl"), "utf8")
@@ -249,5 +250,35 @@ describe("Agentic harness - missing-material rule present in prompts", () => {
     expect(p).toMatch(/the witness for a buddy statement/);
     expect(p).toMatch(/request to the clinician for a nexus letter/);
     expect(p).toMatch(/never the clinician's own signed opinion/);
+  });
+});
+
+describe("Agentic harness - rubric R1 and R3 match the project calculator", () => {
+  const RUBRIC = readFileSync(join(__dirname, "JUDGE_RUBRIC.md"), "utf8");
+  const row = (id) =>
+    RUBRIC.split(/\r?\n/).find((l) => l.startsWith(`| ${id} `));
+
+  it("R1 rounds each combining step to a whole number, matching 38 CFR 4.25 Table I", () => {
+    expect(row("R1")).toMatch(/rounding each step's result to a whole number/);
+    expect(row("R1")).not.toMatch(/100\^/);
+  });
+
+  it("R1's worked example (50, 30, 20, 10) is what calculateVARating returns", () => {
+    const calc = calculateVARating(
+      [50, 30, 20, 10].map((rating, i) => ({
+        name: `C${i}`,
+        rating,
+        side: "none",
+        bodyPart: "x",
+      })),
+    );
+    expect(calc.combineSteps.map((s) => s.result)).toEqual([65, 72, 75]);
+    expect(calc.combinedRating).toBe(80);
+    expect(row("R1")).toContain("65, then 72, then 75");
+  });
+
+  it("R3 rounds once at the end, with a 5 going up", () => {
+    expect(row("R3")).toMatch(/rounded once, after all ratings are combined/);
+    expect(row("R3")).toMatch(/75 becomes 80/);
   });
 });
