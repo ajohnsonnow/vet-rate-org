@@ -242,7 +242,7 @@ describe("findCandidates", () => {
     expect(candidates[0]).toMatchObject({
       id: "Qwen3-1.7B-q4f16_1-MLC",
       kind: "text",
-      tier: "laptop",
+      tier: "phone",
       vramMb: 2036,
       licenceStatus: "review",
       goldenSetCommand: "npm run eval:golden -- --model Qwen3-1.7B-q4f16_1-MLC",
@@ -330,7 +330,7 @@ describe("findCandidates fit rules", () => {
     });
     expect(candidates[0]).toMatchObject({
       id: "Qwen3-4B-q0f16-MLC",
-      tier: "desktop",
+      tier: "laptop",
       vramEstimated: true,
       source: "huggingface:mlc-ai",
       inWebllmPrebuiltList: false,
