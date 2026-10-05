@@ -106,6 +106,7 @@ async function writeDryRunTranscript(
 function runPlaywright(opts, files) {
   const env = {
     ...process.env,
+    STRESS_MODE: "webgpu",
     EVAL: "1",
     EVAL_MODEL_ID: opts.model,
     EVAL_TRANSCRIPT: files.transcriptPath,
