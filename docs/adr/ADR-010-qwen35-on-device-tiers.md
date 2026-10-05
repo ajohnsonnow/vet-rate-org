@@ -64,3 +64,23 @@ First-load download is larger than before: about 2.4 GB against 1.8 GB on deskto
 ## 6. Open items
 
 Measure the 2B and 4B on a real laptop and tablet before trusting those tiers.
+
+## 7. Repetition loops on the 2B: frequency penalty
+
+On the final build the 2B ran 5 of 38 answers (a04, a06, a18, and the drafts of a12 and a13) in a loop to the output limit, about 30 seconds each, and the answers were trimmed afterwards. The 4B had none.
+
+- `SMALL_MODEL_FREQUENCY_PENALTY = 0.3` in `src/utils/deviceCapabilityDetector.js` is set on the 2B's row of the per-model table and sent as `frequency_penalty` with plain-text on-device requests. Every other model, including the 4B, stays at 0. Schema-constrained requests keep their existing 1.15.
+- **0.3 is a conservative starting point to be tuned by evaluation, not a measured optimum.** It has not been run against the engine yet.
+- The evaluation runs at temperature 0. Production tool calls pass 0.1 to 0.7 (most of the on-device tools use 0.2 to 0.4; the general default is 0.7), so loops at temperature 0 may overstate how often production sees them. How often they occur at the production temperatures is not measured.
+
+## 8. Laptop model on the final build, the small-model caveat, and open owner decisions
+
+The laptop model was graded on the final build: Qwen3.5-2B 22 of 30, against 6 of 30 for the Qwen2.5-1.5B it replaces, with invented case facts down from 14 cases to 2. QA recommends the replacement "because it does far less damage, not because it helps more", with conditions.
+
+What this change does: devices whose loaded model is 2B or smaller (the `smallModel` rows of the per-model table in `deviceCapabilityDetector.js`) show a plain, always-visible note on the result views of the Decision Decoder, Pathfinder, Red Team and the general assistant: this device runs a smaller AI model; check every statement against your own documents, and confirm filing steps with an accredited VSO or on VA.gov before acting. No tool is disabled. The PACT Act Navigator is rule-based and makes no model call, so it has no note. The note follows the device profile's first model; if a larger fallback loads instead, the note still shows.
+
+Open owner decisions and conditions, not decided here:
+
+1. QA's stricter recommendation: turn the Decision Decoder off on the 2B until its document case repeats clean (on the 2B it misread the fictional test letter and said no money for a condition the letter granted), and turn the free-text tools (War Room, PACT Navigator, Pathfinder, the general assistant) off, or show them with corrections firing; their long answers were usually wrong. Removing a tool from laptops is the owner's decision.
+2. A real laptop run before release: nothing has been measured on a laptop or tablet.
+3. The comparison model (Qwen2.5-1.5B) was never run on the final build, so the 6 of 30 and 14-case figures come from an earlier build.

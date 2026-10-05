@@ -24,6 +24,7 @@ import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import VAGovRatingPaster from "./VAGovRatingPaster";
+import SmallModelCaveat from "./SmallModelCaveat";
 import {
   analyzeDocument,
   isFileSupported,
@@ -938,6 +939,7 @@ const PathfinderResultsSection = ({
 }) =>
   results?.success && (
     <div className="space-y-6">
+      <SmallModelCaveat />
       <PathfinderStrategyOverview results={results} t={t} />
 
       <PathfinderOpportunities

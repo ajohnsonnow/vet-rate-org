@@ -2044,6 +2044,22 @@ export const APP_TRANSLATIONS = {
   },
 
   // Neural Engine / AI
+  smallModelCaveat: {
+    title: {
+      en: "This device runs a smaller AI model",
+      es: "Este dispositivo usa un modelo de IA más pequeño",
+      tl: "Mas maliit na AI model ang gumagana sa device na ito",
+      vi: "Thiết bị này chạy mô hình AI nhỏ hơn",
+      ko: "이 기기는 더 작은 AI 모델을 실행합니다",
+    },
+    body: {
+      en: "Check every statement against your own documents, and confirm filing steps with an accredited VSO or on VA.gov before acting.",
+      es: "Compare cada afirmación con sus propios documentos y confirme los pasos para presentar su reclamo con un VSO acreditado o en VA.gov antes de actuar.",
+      tl: "Suriin ang bawat pahayag laban sa sarili mong mga dokumento, at kumpirmahin ang mga hakbang sa pag-file sa isang accredited na VSO o sa VA.gov bago kumilos.",
+      vi: "Hãy đối chiếu mọi nhận định với tài liệu của chính bạn, và xác nhận các bước nộp hồ sơ với nhân viên VSO được công nhận hoặc trên VA.gov trước khi thực hiện.",
+      ko: "모든 내용을 본인의 문서와 대조하고, 조치하기 전에 공인 VSO 또는 VA.gov에서 신청 절차를 확인하세요.",
+    },
+  },
   ai: {
     selectNeuralEngine: {
       en: "Select Neural Engine",

@@ -10,6 +10,7 @@ import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import VoiceInputButton from "./VoiceInput";
+import SmallModelCaveat from "./SmallModelCaveat";
 
 /**
  * RedTeam Component - "The Statement Stress Test"
@@ -814,6 +815,7 @@ const ResultsCard = ({ results }) => {
   if (!results) return null;
   return (
     <div className="space-y-4">
+      <SmallModelCaveat />
       <ScoreCard score={results.score} />
       <CritiqueSummary critique={results.critique} />
       <WeakSpotsList weakSpots={results.weak_spots} />

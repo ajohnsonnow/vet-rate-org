@@ -23,6 +23,7 @@ import {
   detectDeviceCapabilities,
   DESKTOP_HIGH_MODELS,
   getCachedDeviceProfile,
+  getModelFrequencyPenalty,
 } from "./deviceCapabilityDetector";
 import {
   EngineLoadStalledError,
@@ -943,6 +944,9 @@ export const clearLastSwarmGeneration = () => {
 const EMPTY_AFTER_REASONING_MESSAGE =
   "Local AI returned an empty response: the model spent its whole token budget reasoning and produced no answer. Try again, raise the token limit, or turn reasoning off.";
 
+const _frequencyPenalty = (responseFormat) =>
+  responseFormat ? 1.15 : getModelFrequencyPenalty(loadedModelId);
+
 async function _runSwarmInference(
   agent,
   finalSystemPrompt,
@@ -969,7 +973,7 @@ async function _runSwarmInference(
     // amplifies loops - frequency_penalty 1.15 breaks them while keeping
     // factual field values intact (vLLM issue #40080). top_k/top_p narrow
     // the token distribution for deterministic extraction (Qwen2.5 docs).
-    frequency_penalty: responseFormat ? 1.15 : 0,
+    frequency_penalty: _frequencyPenalty(responseFormat),
     top_p: responseFormat ? 0.8 : 1,
     top_k: responseFormat ? 20 : -1,
     // XGrammar per-token constrained decoding - guarantees valid JSON,
