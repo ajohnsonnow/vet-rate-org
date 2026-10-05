@@ -8,10 +8,11 @@ import {
   selectCases,
 } from "../../scripts/eval/lib/goldenSet.js";
 import {
-  buildCaseRecord,
   buildMetaRecord,
   fingerprintPersonas,
 } from "../../scripts/eval/lib/goldenRecord.js";
+import { assembleCaseRecord } from "../../scripts/eval/lib/caseRecord.js";
+import { recordAllCases } from "../../scripts/eval/lib/caseLoop.js";
 
 /**
  * Golden-set evaluation of the on-device AI. Boots the real app (headed
@@ -32,6 +33,12 @@ interface CapturedRequest {
   messages: { role: string; content: unknown }[];
   max_tokens?: number;
   temperature?: number;
+  extra_body?: { enable_thinking?: boolean };
+}
+
+interface CalculatorReplacement {
+  reason?: string;
+  draft?: string;
 }
 
 interface EvalWindow {
@@ -42,7 +49,10 @@ interface EvalWindow {
     };
     swarm: {
       initializeSwarm(agent: string): Promise<boolean>;
+      reloadSwarmEngine(): Promise<boolean>;
       getSwarmStatus(): { model: string | null };
+      getLastSwarmGeneration(): { raw: string } | null;
+      clearLastSwarmGeneration(): void;
       SWARM_AGENTS: Record<string, { id: string; systemPrompt: string }>;
     };
     ai: {
@@ -55,6 +65,7 @@ interface EvalWindow {
             text?: string;
             validationErrors?: unknown;
             validationWarnings?: unknown;
+            calculatorReplacement?: CalculatorReplacement;
           }
       >;
       resetAICircuitBreaker(): void;
@@ -112,6 +123,7 @@ async function installEngineRequestTap(page: Page): Promise<void> {
             messages: JSON.parse(JSON.stringify(request.messages)),
             max_tokens: request.max_tokens,
             temperature: request.temperature,
+            extra_body: request.extra_body,
           });
         }
       } catch {
@@ -199,6 +211,8 @@ interface CaseOutcome {
   latencyMs: number;
   validationErrors?: unknown;
   validationWarnings?: unknown;
+  calculatorReplacement?: CalculatorReplacement;
+  rawResponse?: string;
   captured: CapturedRequest[];
 }
 
@@ -210,6 +224,7 @@ function runCase(
     conditions: unknown;
     temperature: number;
     maxTokens: number;
+    thinking: boolean;
     timeoutMs: number;
   },
 ): Promise<CaseOutcome> {
@@ -217,6 +232,7 @@ function runCase(
     const w = window as unknown as EvalWindow;
     const mods = w.__evalMods!;
     w.__evalCaptured.length = 0;
+    mods.swarm.clearLastSwarmGeneration();
     mods.ai.resetAICircuitBreaker();
     const started = performance.now();
     const options: Record<string, unknown> = {
@@ -224,6 +240,7 @@ function runCase(
       dataClass: "context",
       temperature: a.temperature,
       maxTokens: a.maxTokens,
+      thinking: a.thinking,
       timeout: a.timeoutMs,
     };
     if (a.conditions) options.conditions = a.conditions;
@@ -233,6 +250,11 @@ function runCase(
       return {
         ok: true,
         text,
+        rawResponse: mods.swarm.getLastSwarmGeneration()?.raw,
+        calculatorReplacement:
+          typeof result === "string"
+            ? undefined
+            : result?.calculatorReplacement,
         latencyMs: performance.now() - started,
         validationErrors:
           typeof result === "string" ? undefined : result?.validationErrors,
@@ -244,6 +266,7 @@ function runCase(
       return {
         ok: false,
         error: err instanceof Error ? err.message : String(err),
+        rawResponse: mods.swarm.getLastSwarmGeneration()?.raw,
         latencyMs: performance.now() - started,
         captured: [...w.__evalCaptured],
       };
@@ -265,6 +288,7 @@ function withNodeTimeout<T>(
 interface RunSettings {
   temperature: number;
   maxTokens: number;
+  thinking: boolean;
   timeoutMs: number;
   flags: string[];
 }
@@ -273,6 +297,7 @@ function readSettings(): RunSettings {
   return {
     temperature: Number(process.env.EVAL_TEMPERATURE ?? 0),
     maxTokens: Number(process.env.EVAL_MAX_TOKENS ?? 1024),
+    thinking: process.env.EVAL_THINKING === "on",
     timeoutMs: Number(process.env.EVAL_TIMEOUT_MS ?? 300_000),
     flags: (process.env.EVAL_FLAGS ?? "").split(",").filter(Boolean),
   };
@@ -280,11 +305,41 @@ function readSettings(): RunSettings {
 
 type GoldenCase = ReturnType<typeof loadGoldenSet>[number];
 
+const ENGINE_RESET_TIMEOUT_MS = 330_000;
+
+/**
+ * Bring the engine back to a clean idle state after a failed case: the app's
+ * own rebuild path (worker terminate and respawn, see reloadSwarmEngine), then
+ * confirm the swarm is ready and the forced model id is the one loaded.
+ */
+async function resetEngine(page: Page, modelId: string): Promise<void> {
+  const status = await withNodeTimeout(
+    page.evaluate(async () => {
+      const mods = (window as unknown as EvalWindow).__evalMods!;
+      await mods.swarm.reloadSwarmEngine();
+      return {
+        ready: mods.ai.isDiamondSwarmReady(),
+        model: mods.swarm.getSwarmStatus().model,
+      };
+    }),
+    ENGINE_RESET_TIMEOUT_MS,
+  );
+  if (status === "timeout") {
+    throw new Error(`reset did not finish in ${ENGINE_RESET_TIMEOUT_MS} ms`);
+  }
+  if (!status.ready || status.model !== modelId) {
+    throw new Error(
+      `after reset ready=${status.ready} model=${status.model}, wanted ${modelId}`,
+    );
+  }
+}
+
 /**
  * Send each case through generateAI and append its record the moment it
  * finishes, so a killed or wedged run still leaves a readable transcript.
- * Returns how many cases were recorded; stops early if the page stops
- * answering (a wedged GPU cannot be recovered mid-run).
+ * After a case that timed out or errored the engine is reset before the next
+ * case (see recordAllCases). Returns how many cases were recorded; the run
+ * stops early if the engine cannot be reset.
  */
 async function recordCases(
   page: Page,
@@ -294,49 +349,33 @@ async function recordCases(
     settings: RunSettings;
     run: Record<string, unknown>;
     personaPrompts: Record<string, string>;
+    modelId: string;
   },
 ): Promise<number> {
-  const { settings, run, personaPrompts } = ctx;
-  let recorded = 0;
-  for (const caseDef of cases) {
-    const outcome = await withNodeTimeout(
-      runCase(page, {
-        input: caseDef.input,
-        toolId: caseDef.toolId,
-        conditions: caseDef.conditions ?? null,
-        ...settings,
-      }),
-      settings.timeoutMs + NODE_SIDE_GRACE_MS,
-    );
-
-    const wedged = outcome === "timeout";
-    const result: CaseOutcome = wedged
-      ? {
-          ok: false,
-          error:
-            "page did not answer within the case timeout; GPU presumed wedged, run stopped",
-          latencyMs: settings.timeoutMs + NODE_SIDE_GRACE_MS,
-          captured: [],
-        }
-      : outcome;
-
-    const record = buildCaseRecord({
-      caseDef,
-      run,
-      captured: result.captured.at(-1) ?? null,
-      personaPrompts,
-      response: result.text ?? "",
-      latencyMs: Math.round(result.latencyMs),
-      error: result.ok ? null : (result.error ?? "unknown error"),
-      extra: {
-        engineRequests: result.captured.length,
-        validationErrors: result.validationErrors,
-        validationWarnings: result.validationWarnings,
-      },
-    });
-    appendFileSync(ctx.transcript, JSON.stringify(record) + "\n");
-    recorded++;
-    if (wedged) break;
+  const { settings, run, personaPrompts, modelId } = ctx;
+  const pageTimeoutMs = settings.timeoutMs + NODE_SIDE_GRACE_MS;
+  const { recorded, stopped } = await recordAllCases({
+    cases,
+    pageTimeoutMs,
+    attempt: (caseDef: GoldenCase) =>
+      withNodeTimeout(
+        runCase(page, {
+          input: caseDef.input,
+          toolId: caseDef.toolId,
+          conditions: caseDef.conditions ?? null,
+          ...settings,
+        }),
+        pageTimeoutMs,
+      ),
+    recover: () => resetEngine(page, modelId),
+    toRecord: (caseDef: GoldenCase, outcome: CaseOutcome) =>
+      assembleCaseRecord({ caseDef, run, personaPrompts, outcome }),
+    write: (record: unknown) =>
+      appendFileSync(ctx.transcript, JSON.stringify(record) + "\n"),
+  });
+  if (stopped) {
+    // eslint-disable-next-line no-console -- forensic
+    console.log(`[run stopped] ${stopped}`);
   }
   return recorded;
 }
@@ -428,6 +467,7 @@ test.describe("golden-set evaluation", () => {
       transcript,
       settings,
       personaPrompts,
+      modelId,
       run: {
         modelIdRequested: modelId,
         modelIdLoaded: load.modelIdLoaded,
