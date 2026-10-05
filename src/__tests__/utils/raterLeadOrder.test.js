@@ -112,13 +112,14 @@ describe("the bilateral factor is mentioned only when it is relevant", () => {
   });
 });
 
-describe("the notice can be left off without cutting the text", () => {
-  it("withNotice false starts at the combined rating", () => {
+describe("the notice opens the text only when a check failed", () => {
+  it("with no failed check the text starts at the combined rating", () => {
     const calc = calcOf("a11");
-    const text = buildCalculatorExplanation(calc, { withNotice: false });
+    const text = buildCalculatorExplanation(calc);
     expect(text.startsWith("Your combined rating is 80%.")).toBe(true);
-    expect(buildCalculatorExplanation(calc)).toBe(
-      `${buildReplacementNotice()}\n\n${text}`,
+    const check = checkRaterResponse("Your combined rating is 70%.", calc);
+    expect(buildCalculatorExplanation(calc, { check })).toBe(
+      `${buildReplacementNotice(check)}\n\n${text}`,
     );
   });
 

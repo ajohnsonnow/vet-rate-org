@@ -111,3 +111,27 @@ export const gradedIntegratedCase = (id) =>
 /** The model's own text in a recorded answer that led with the working. */
 export const commentaryOf = (record, lead) =>
   record.response.split(`${lead}\n\n`)[1] ?? "";
+
+// The graded run on the final build; read only by the notice tests.
+export const GRADED_FINAL_RUN_FILE =
+  "run_2026-10-05_230321_Qwen3.5-4B-q4f16_1-MLC.jsonl";
+
+export const gradedFinalCase = (id) =>
+  casesIn([GRADED_FINAL_RUN_FILE]).find((record) => record.id === id);
+
+/** The model's answer to every rating case in every run on disk. */
+export function allRaterAnswers() {
+  return allRecordedCases()
+    .filter((record) => Array.isArray(GOLDEN[record.id]?.conditions))
+    .map((record) => ({
+      run: record.run,
+      id: record.id,
+      input: GOLDEN[record.id].input,
+      text:
+        record.calculatorReplacement?.draft ??
+        record.rawResponse ??
+        record.response ??
+        "",
+      calc: calculateVARating(GOLDEN[record.id].conditions),
+    }));
+}
