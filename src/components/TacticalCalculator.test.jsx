@@ -130,6 +130,8 @@ describe("TacticalCalculator bilateral strings", () => {
     "bilateralIssueSingleEvaluation",
     "bilateralIssueNotChecked",
     "bilateralNotApplied",
+    "bilateralHint",
+    "bilateralExplanation",
     "whatIfBilateralRule",
   ])("%s has text in every locale", (key) => {
     const entry = APP_TRANSLATIONS.tacticalCalc[key];
@@ -137,6 +139,23 @@ describe("TacticalCalculator bilateral strings", () => {
       expect(entry?.[locale]?.length ?? 0).toBeGreaterThan(10);
     }
   });
+});
+
+describe("TacticalCalculator side hint", () => {
+  it.each(["bilateralHint", "bilateralExplanation"])(
+    "%s states the rule as 38 CFR 4.26(a) does, not as the same condition on both sides",
+    (key) => {
+      const entry = APP_TRANSLATIONS.tacticalCalc[key];
+      expect(entry.en).toContain("each arm, or each leg");
+      expect(entry.en).toContain("do not have to be the same condition");
+      expect(entry.en).not.toMatch(/same condition on both/i);
+      for (const locale of ["es", "tl", "vi", "ko"]) {
+        expect(entry[locale]).not.toBe(entry.en);
+        expect(entry[locale]).toContain("38 CFR § 4.26");
+      }
+      expect(entry.es).not.toContain("la misma condición en ambos lados");
+    },
+  );
 });
 
 describe("TacticalCalculator What-If tab", () => {

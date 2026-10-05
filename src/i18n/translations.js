@@ -3764,11 +3764,11 @@ export const APP_TRANSLATIONS = {
       ko: "양쪽",
     },
     bilateralExplanation: {
-      en: "If you have the same condition on both left and right (e.g., both knees), mark each as Left/Right to automatically apply the 10% Bilateral Factor per 38 CFR § 4.26",
-      es: "Si tienes la misma condición en ambos lados (ej., ambas rodillas), marca cada uno como Izquierda/Derecha para aplicar automáticamente el Factor Bilateral del 10% según 38 CFR § 4.26",
-      tl: "Kung pareho ang kondisyon sa kaliwa at kanan (hal., parehong tuhod), markahan ang bawat isa bilang Left/Right para awtomatikong mag-apply ang 10% Bilateral Factor ayon sa 38 CFR § 4.26",
-      vi: "Nếu bạn có cùng tình trạng ở cả hai bên trái và phải (ví dụ: cả hai đầu gối), đánh dấu mỗi bên là Trái/Phải để tự động áp dụng Hệ Số Song Phương 10% theo 38 CFR § 4.26",
-      ko: "좌우 양쪽에 동일한 상태가 있는 경우(예: 양쪽 무릎), 38 CFR § 4.26에 따라 10% 양측 요인을 자동으로 적용하려면 각각 왼쪽/오른쪽으로 표시하세요",
+      en: "The bilateral factor (38 CFR § 4.26) applies when each arm, or each leg, has a compensable disability. They do not have to be the same condition or the same joint. Enter each one separately as Left or Right; use Both Sides only for a single rating that already covers both sides.",
+      es: "El factor bilateral (38 CFR § 4.26) se aplica cuando cada brazo, o cada pierna, tiene una discapacidad compensable. No tienen que ser la misma condición ni la misma articulación. Ingresa cada una por separado como Izquierda o Derecha; usa Ambos Lados solo para un único rating que ya cubre ambos lados.",
+      tl: "Ang bilateral factor (38 CFR § 4.26) ay nag-a-apply kapag ang bawat braso, o bawat binti, ay may compensable na kapansanan. Hindi kailangang parehong kondisyon o parehong kasukasuan. Ilagay ang bawat isa nang hiwalay bilang Kaliwa o Kanan; gamitin ang Parehong Panig para lamang sa iisang rating na sumasaklaw na sa parehong panig.",
+      vi: "Hệ số song phương (38 CFR § 4.26) áp dụng khi mỗi tay, hoặc mỗi chân, đều có một khuyết tật được bồi thường. Chúng không cần là cùng một tình trạng hay cùng một khớp. Hãy nhập riêng từng tình trạng là Trái hoặc Phải; chỉ dùng Cả Hai Bên cho một mức đánh giá duy nhất đã bao gồm cả hai bên.",
+      ko: "양측 요인(38 CFR § 4.26)은 양쪽 팔 각각 또는 양쪽 다리 각각에 보상 대상 장애가 있을 때 적용됩니다. 같은 상태나 같은 관절일 필요는 없습니다. 각각을 왼쪽 또는 오른쪽으로 따로 입력하고, 양쪽은 이미 양쪽을 모두 포함하는 하나의 등급에만 사용하세요.",
     },
     bilateralWillApply: {
       en: "Bilateral Factor Will Apply",
@@ -3925,11 +3925,11 @@ export const APP_TRANSLATIONS = {
       ko: "측면 (양측 요인)",
     },
     bilateralHint: {
-      en: "If you have the same condition on both left and right (e.g., both knees), mark each as Left/Right to automatically apply the 10% Bilateral Factor per 38 CFR § 4.26",
-      es: "Si tienes la misma condición en ambos lados (ej., ambas rodillas), marca cada uno como Izquierda/Derecha para aplicar automáticamente el Factor Bilateral del 10% según 38 CFR § 4.26",
-      tl: "Kung pareho ang kondisyon sa kaliwa at kanan (hal., parehong tuhod), markahan ang bawat isa bilang Left/Right para awtomatikong mag-apply ang 10% Bilateral Factor ayon sa 38 CFR § 4.26",
-      vi: "Nếu bạn có cùng tình trạng ở cả hai bên trái và phải (ví dụ: cả hai đầu gối), đánh dấu mỗi bên là Trái/Phải để tự động áp dụng Hệ Số Song Phương 10% theo 38 CFR § 4.26",
-      ko: "좌우 양쪽에 동일한 상태가 있는 경우(예: 양쪽 무릎), 38 CFR § 4.26에 따라 10% 양측 요인을 자동으로 적용하려면 각각 왼쪽/오른쪽으로 표시하세요",
+      en: "The bilateral factor (38 CFR § 4.26) applies when each arm, or each leg, has a compensable disability. They do not have to be the same condition or the same joint. Enter each one separately as Left or Right; use Both Sides only for a single rating that already covers both sides.",
+      es: "El factor bilateral (38 CFR § 4.26) se aplica cuando cada brazo, o cada pierna, tiene una discapacidad compensable. No tienen que ser la misma condición ni la misma articulación. Ingresa cada una por separado como Izquierda o Derecha; usa Ambos Lados solo para un único rating que ya cubre ambos lados.",
+      tl: "Ang bilateral factor (38 CFR § 4.26) ay nag-a-apply kapag ang bawat braso, o bawat binti, ay may compensable na kapansanan. Hindi kailangang parehong kondisyon o parehong kasukasuan. Ilagay ang bawat isa nang hiwalay bilang Kaliwa o Kanan; gamitin ang Parehong Panig para lamang sa iisang rating na sumasaklaw na sa parehong panig.",
+      vi: "Hệ số song phương (38 CFR § 4.26) áp dụng khi mỗi tay, hoặc mỗi chân, đều có một khuyết tật được bồi thường. Chúng không cần là cùng một tình trạng hay cùng một khớp. Hãy nhập riêng từng tình trạng là Trái hoặc Phải; chỉ dùng Cả Hai Bên cho một mức đánh giá duy nhất đã bao gồm cả hai bên.",
+      ko: "양측 요인(38 CFR § 4.26)은 양쪽 팔 각각 또는 양쪽 다리 각각에 보상 대상 장애가 있을 때 적용됩니다. 같은 상태나 같은 관절일 필요는 없습니다. 각각을 왼쪽 또는 오른쪽으로 따로 입력하고, 양쪽은 이미 양쪽을 모두 포함하는 하나의 등급에만 사용하세요.",
     },
   },
 
