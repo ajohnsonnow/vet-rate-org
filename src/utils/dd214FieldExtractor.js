@@ -208,12 +208,14 @@ const _LIST_BOX_CAPTIONS = [
 const _LIST_STOP_COMMON = [..._NEIGHBOUR_CAPTIONS, ..._LIST_BOX_CAPTIONS].join(
   "|",
 );
+// A lettered box label ("15A.") ends a list with or without text after it.
+const _LETTERED_LABEL = String.raw`(?<![\d.])(?:1[5-9]|2\d|30)[A-C]\.`;
 const _STOP_AT_AWARDS_END = new RegExp(
-  `${_LIST_STOP_COMMON}|MILITARY\\s{1,5}EDUCATION|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[4-9]|2\\d|30)\\b|(?<![\\d.])(?:1[4-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
+  `${_LIST_STOP_COMMON}|MILITARY\\s{1,5}EDUCATION|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[4-9]|2\\d|30)\\b|(?<![\\d.])(?:1[4-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|${_LETTERED_LABEL}|REMARKS\\b`,
   "i",
 );
 const _STOP_AT_EDUCATION_END = new RegExp(
-  `${_LIST_STOP_COMMON}|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[5-9]|2\\d|30)\\b|(?<![\\d.])(?:1[5-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
+  `${_LIST_STOP_COMMON}|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[5-9]|2\\d|30)\\b|(?<![\\d.])(?:1[5-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|${_LETTERED_LABEL}|REMARKS\\b`,
   "i",
 );
 
@@ -226,7 +228,10 @@ const _EDUCATION_LABELS = [
 ];
 // The box's printed instruction, "(Course, title, number of weeks and month
 // and year completed)", with OCR errors in its words or its closing paren.
+// When the instruction wraps, its second line ("year completed)") goes too.
 const _EDUCATION_INSTRUCTION = /^(?:\([^)\n]{0,200}\)|\(COURSE\b[^\n]{0,160})/;
+const _EDUCATION_INSTRUCTION_WRAP =
+  /^\n[ \t]{0,5}(?:YEAR\s{1,3})?COMPLETED\)?[ \t]*(?=\n|$)/;
 
 function _findLabel(text, labels) {
   for (const label of labels) {
@@ -243,7 +248,8 @@ function _readEducationBlock(text) {
   return text
     .slice(label.end, label.end + MAX_BLOCK_CHARS)
     .replace(/^[ \t:.]{0,10}/, "")
-    .replace(_EDUCATION_INSTRUCTION, "");
+    .replace(_EDUCATION_INSTRUCTION, "")
+    .replace(_EDUCATION_INSTRUCTION_WRAP, "");
 }
 
 // The caption words after "DECORATIONS", in printed order. A word OCR lost
@@ -260,6 +266,10 @@ const _AWARDS_CAPTION_WORDS = [
   ["AUTHORIZED", "AUTHORISED"],
 ];
 const _CAPTION_GAP = /^[,.\s]{0,10}/;
+// The caption's printed note, "(All periods of service)", closing paren
+// optional because OCR loses it.
+const _AWARDS_CAPTION_NOTE =
+  /^(?:[:,.\s]{0,10}\(\s{0,3}ALL\s{1,3}PERIODS?[^)\n]{0,30}\)?)?/;
 
 function _skipAwardsCaption(text, from) {
   let at = from;
@@ -302,7 +312,10 @@ function _awardsValueStart(text) {
   const gap = /^[.:\s]{0,5}/.exec(text.slice(label.end, label.end + 5))[0];
   const lead = label.end + gap.length;
   if (!text.startsWith(_AWARDS_LEAD, lead)) return label.end;
-  const captionEnd = _skipAwardsCaption(text, lead + _AWARDS_LEAD.length);
+  const wordsEnd = _skipAwardsCaption(text, lead + _AWARDS_LEAD.length);
+  const captionEnd =
+    wordsEnd +
+    _AWARDS_CAPTION_NOTE.exec(text.slice(wordsEnd, wordsEnd + 60))[0].length;
   return captionEnd + _captionLineJunkLength(text, captionEnd);
 }
 
@@ -1204,7 +1217,8 @@ function parseSingleAward(raw) {
   const devicePatterns = [
     { pattern: /\((\d{1,3})(?:ST|ND|RD|TH)\s*AWARD\)/i, type: "award_count" },
     { pattern: /(\d{1,3})(?:ST|ND|RD|TH)\s*AWARD/i, type: "award_count" },
-    { pattern: /-(\d{1,3})/i, type: "award_count_dash" },
+    // Not a dash inside a longer number (a ZIP+4, a phone number).
+    { pattern: /(?<!\d)-(\d{1,3})(?!\d)/i, type: "award_count_dash" },
     { pattern: /W\/?\s*["']?M["']?\s*DEVICE/i, type: "M Device" },
     { pattern: /W\/?\s*["']?V["']?\s*DEVICE/i, type: "V Device" },
     {
@@ -1266,7 +1280,7 @@ const _isEndMarkerEntry = (entry) =>
 // Award names that start with the letter OCR also reads as the second slash
 // of a "//" separator ("/INFANTRYMAN" is a separator then INFANTRYMAN).
 const _I_WORDS = new Set(
-  "IRAQ IRAQI INFANTRY INFANTRYMAN INFANTRYMANS IMMINENT INTERNATIONAL INSIGNIA INDIVIDUAL INHERENT ISAF ISRAEL INSTRUCTOR INITIAL INTELLIGENCE".split(
+  "IRAQ IRAQI INFANTRY INFANTRYMAN INFANTRYMANS IMMINENT INTERNATIONAL INSIGNIA INDIVIDUAL INHERENT ISAF ISRAEL INSTRUCTOR INITIAL INTELLIGENCE ICELAND INTER".split(
     " ",
   ),
 );
@@ -1274,6 +1288,19 @@ const _I_WORDS = new Set(
 // before a digit (a date or a fraction), with the stray I the second slash is
 // sometimes read as and the word that follows.
 const _SINGLE_SLASH = /(?<!\bW)\/(?!\d)(I?)([A-Z]*)/g;
+
+const _isInsideParentheses = (text, at) => {
+  const before = text.slice(text.lastIndexOf("\n", at) + 1, at);
+  return before.split("(").length > before.split(")").length;
+};
+// "NAVY/MARINE CORPS ACHIEVEMENT MEDAL": a service name either side of the slash.
+const _SERVICE_BEFORE =
+  /\b(?:NAVY|ARMY|USN|USMC|AIR\s{1,3}FORCE|COAST\s{1,3}GUARD)$/;
+const _SERVICE_AFTER = new Set(
+  "NAVY ARMY MARINE MARINES USN USMC AIR COAST".split(" "),
+);
+const _isServicePair = (text, at, word) =>
+  _SERVICE_AFTER.has(word) && _SERVICE_BEFORE.test(text.slice(0, at));
 
 /**
  * Split an awards list on the form's own separators: "//", a single "/" (OCR
@@ -1283,7 +1310,13 @@ const _SINGLE_SLASH = /(?<!\bW)\/(?!\d)(I?)([A-Z]*)/g;
 export function splitAwardEntries(text) {
   return text
     .replaceAll(/\s{0,20}\/\/\s{0,20}/g, _ENTRY_BREAK)
-    .replaceAll(_SINGLE_SLASH, (_match, stray, word) => {
+    .replaceAll(_SINGLE_SLASH, (match, stray, word, offset, whole) => {
+      if (
+        _isInsideParentheses(whole, offset) ||
+        _isServicePair(whole, offset, word)
+      ) {
+        return match;
+      }
       const keepsI = stray === "I" && _I_WORDS.has(`I${word}`);
       return `${_ENTRY_BREAK}${keepsI ? "I" : ""}${word}`;
     })
@@ -1297,9 +1330,7 @@ export function splitAwardEntries(text) {
  * "/" set apart by spaces, and line breaks.
  */
 export function splitEducationEntries(text) {
-  return text
-    .split(/;|\n|\/\/|\s\/\s/)
-    .map((s) => s.replace(/\s+/g, " ").trim());
+  return text.split("\n").flatMap((line) => splitAwardEntries(line));
 }
 
 /**
@@ -1318,7 +1349,12 @@ function parseAwardsString(awardsRaw, remarksText) {
   // segment is .trim()'d below regardless, so a bound tighter than any
   // realistic separator gap is behavior-preserving.
   const rawAwards = splitAwardEntries(fullAwardsText).filter(
-    (s) => s && !_isEndMarkerEntry(s) && !s.match(/^CONT/i) && s.length > 2,
+    (s) =>
+      s &&
+      !_isEndMarkerEntry(s) &&
+      !/^CONT/i.test(s) &&
+      !/^NONE$/i.test(s) &&
+      s.length > 2,
   );
 
   // Parse each award
@@ -1455,6 +1491,12 @@ function _guardFullName(token, branch) {
   return "National Guard";
 }
 
+const _GUARD_CODE_BY_FULL_NAME = {
+  "Air National Guard": "ANG",
+  "Army National Guard": "ARNG",
+  "National Guard": "NG",
+};
+
 const _RESERVE_BY_TOKEN = {
   USAR: ["USAR", "Army Reserve"],
   USNR: ["USNR", "Navy Reserve"],
@@ -1500,8 +1542,10 @@ function parseBranchComponent(text) {
   // the branch printed beside it - never from a default branch.
   const guard = /\b(ARNGUS|ARNG|ANGUS|ANG|NGUS)\b/i.exec(text);
   if (guard || /NATIONAL\s*GUARD/i.test(text)) {
-    result.component = guard ? guard[1].toUpperCase() : "NG";
     result.componentFull = _guardFullName(guard?.[1], result.branch);
+    result.component = guard
+      ? guard[1].toUpperCase()
+      : _GUARD_CODE_BY_FULL_NAME[result.componentFull];
   } else if (/USAR|USNR|USAFR|USMCR|USCGR|RESERVE/i.test(text)) {
     Object.assign(result, _reserveComponent(text, result.branch));
   } else if (/ACTIVE|RA\b|USN\b|USAF\b|USMC\b/i.test(text)) {
@@ -1785,7 +1829,12 @@ function _buildFieldChecks(text, fields, unlocated) {
       CHECK_NOT_IN_OWN_BOX,
     );
   }
-  if (fields.component === "RA" && pageImpliesGuard(text)) {
+  if (
+    fields.component &&
+    !_GUARD_CODE_BY_FULL_NAME[fields.componentFull] &&
+    !/^(?:ARNGUS|ANGUS|NGUS|ARNG|ANG|NG)$/.test(fields.component) &&
+    pageImpliesGuard(text)
+  ) {
     flag(_COMPONENT_ROWS, CHECK_PAGE_DISAGREES);
   }
   return checks;

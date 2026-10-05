@@ -66,7 +66,7 @@ const COMPONENT_TOKENS = new Set(
   (
     "ARMY NAVY AIR FORCE MARINE MARINES CORPS COAST GUARD SPACE NATIONAL " +
     "ARNGUS ANGUS NGUS ARNG ANG USAR USNR USAFR USMCR USCGR USN USAF USMC USCG USSF " +
-    "ACTIVE REGULAR RA AD RESERVE RESERVES AGR THE OF US DEPT"
+    "ACTIVE REGULAR RA AD RESERVE RESERVES AGR THE OF US DEPT UNITED STATES"
   ).split(" "),
 );
 const BRANCH_WORDS = new Set(["ARMY", "NAVY", "MARINE", "MARINES"]);
@@ -87,23 +87,25 @@ const STANDALONE_COMPONENTS = new Set(
 const UNLABELLED_BRANCH_SLASH =
   /(?:ARMY|NAVY|AIR\s{0,5}FORCE|MARINES?|COAST\s{0,5}GUARD|SPACE\s{0,5}FORCE)\s{0,5}\/\s{0,5}([A-Z]{2,8})(?:\s{1,5}GUARD)?/;
 const UNLABELLED_COMPONENT_WORDS = new Set(
-  "ACTIVE ARNG USAR RESERVE NATIONAL RA USN USAF USMC USCG".split(" "),
+  (
+    "ACTIVE RESERVE NATIONAL RA ARNGUS ANGUS NGUS ARNG ANG USAR USNR USAFR " +
+    "USMCR USCGR USN USAF USMC USCG USSF"
+  ).split(" "),
 );
 
-// The run of box-2 words at the START of a line. A line that opens with any
-// other word (the corner notice, the title tail "ROM ACTIVE DUTY") yields
-// nothing, and a bare "ACTIVE" with no branch beside it is not a component.
+// A line made wholly of box-2 words (or whose first column, set apart by two
+// spaces or a tab, is). A line with any other word in it (the corner notice,
+// the title tail "ROM ACTIVE DUTY", another box's text) yields nothing, and a
+// bare "ACTIVE" with no branch beside it is not a component.
 function componentRun(line) {
   const tokens = line
+    .split(/\s{2,}|\t/)[0]
     .replace(/[^A-Z]+/g, " ")
     .trim()
     .split(" ")
     .filter(Boolean);
-  const run = [];
-  for (const token of tokens) {
-    if (!COMPONENT_TOKENS.has(token)) break;
-    run.push(token);
-  }
+  if (!tokens.every((token) => COMPONENT_TOKENS.has(token))) return "";
+  const run = tokens;
   const hasPair = BRANCH_PAIRS.some(
     ([first, second]) =>
       run.includes(first) && run[run.indexOf(first) + 1] === second,
@@ -171,26 +173,43 @@ export const pageImpliesGuard = (text) =>
 
 // ---------------------------------------------------------------- Box 29
 
+const DAYS_LOST_TAIL = String.raw`(?:\s{1,5}DURING\s{1,5}THIS\s{1,5}PERIOD(?:\s{0,5}\(\s{0,3}YYYY\s{0,3}MM\s{0,3}DD\s{0,3}\))?)?`;
 const DAYS_LOST_LABELS = [
-  /29\.?\s{0,5}DATES?\s{1,5}OF\s{1,5}TIME\s{1,5}LOST(?:\s{1,5}DURING\s{1,5}THIS\s{1,5}PERIOD)?/,
+  new RegExp(
+    String.raw`29\.?\s{0,5}DATES?\s{1,5}OF\s{1,5}TIME\s{1,5}LOST${DAYS_LOST_TAIL}`,
+  ),
   /(?:BLOCK|BOX)\s{0,10}29\b/,
-  /TIME\s{1,5}LOST(?:\s{1,5}DURING\s{1,5}THIS\s{1,5}PERIOD)?/,
+  new RegExp(String.raw`TIME\s{1,5}LOST${DAYS_LOST_TAIL}`),
 ];
+const NUMBERED_LABEL = /^\d{1,2}[ \t]{0,2}[A-Z]?\.[ \t]{0,3}[A-Z]{3}/;
+const DAYS_LOST_VALUE = /^(NONE|\d{1,4})(?:[ \t]{1,2}DAYS?)?$/;
 
 /**
  * Box 29: the first token on the label's own line after the label, or on the
- * line directly under it. The value ends at the first run of spaces, so a
- * stray mark or the form footer printed beside it is never part of it.
+ * line directly under it. The value ends at the first run of spaces, and it
+ * counts only when it is NONE or a count that stands alone on its line or is
+ * followed by the next box's numbered label: a number that begins another
+ * box's text is not the value. The search ends at the next numbered label.
  */
 export function readDaysLost(text) {
   const end = findLabelEnd(text, DAYS_LOST_LABELS);
   if (end < 0) return null;
   const rest = text.slice(end, end + REGION_CHARS);
+  let first = true;
   for (const line of rest.split("\n")) {
     const cleaned = line.replace(/^[\s:.]+/, "");
+    const ownLine = first;
+    first = false;
     if (cleaned === "") continue;
-    const token = trimTrailingMarks(cleaned.split(/\s{2,}|\t/)[0]);
-    return token === "" ? null : token;
+    if (NUMBERED_LABEL.test(cleaned)) {
+      if (ownLine) continue;
+      return null;
+    }
+    const [head, ...others] = cleaned.split(/\s{2,}|\t/);
+    const value = DAYS_LOST_VALUE.exec(trimTrailingMarks(head));
+    const tail = others.join(" ").trim();
+    const standsAlone = /^[-–—.|:\s]*$/.test(tail) || NUMBERED_LABEL.test(tail);
+    return standsAlone && value ? value[1] : null;
   }
   return null;
 }
@@ -206,10 +225,11 @@ const NARRATIVE_REGION_END = [
   /(?:^|\n)[ \t]{0,5}(?:29|3\d)\.?[ \t]{0,3}[A-Z]{3}/,
   /DATES?\s{1,5}OF\s{1,5}TIME\s{1,5}LOST/,
 ];
-const REASON_SHAPE = /^[A-Z][A-Z ]{3,78}$/;
-// Words of other boxes' captions; none is in a real narrative reason.
+const REASON_SHAPE = /^[A-Z][A-Z ,()-]{3,78}$/;
+// Words and phrases of other boxes' captions; none is in a real narrative
+// reason.
 const CAPTION_FRAGMENT =
-  /\b(?:ADDRESS|MAILING|INCLUDE|ZIP|SPECIAL|ADDITIONAL|INFORMATION|CHARACTER|AUTHORIZED|AGENCIES|BRANCH|COMPONENT|DEPARTMENT|SIGNATURE|REMARKS)\b/;
+  /\b(?:ADDRESS|MAILING|INCLUDE|ZIP|ADDITIONAL|INFORMATION\s+(?:REQUIRED|FOR)|CHARACTER|AUTHORIZED|AGENCIES|DEPARTMENT|COMPONENT\s+AND|SIGNATURE|REMARKS)\b/;
 const CHARACTER_VOCABULARY = new Set(
   (
     "HONORABLE GENERAL UNDER OTHER THAN CONDITIONS DISHONORABLE BAD CONDUCT " +
@@ -224,7 +244,11 @@ const isReasonLine = (line, { minWords }) => {
 };
 
 const isCharacterOfService = (line) =>
-  line.split(" ").every((word) => CHARACTER_VOCABULARY.has(word));
+  line
+    .replaceAll(/[^A-Z ]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .every((word) => CHARACTER_VOCABULARY.has(word));
 
 /**
  * Box 28. The line right under the label is the value when it is plain words.

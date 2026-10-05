@@ -78,26 +78,56 @@ function isMostlyRedacted(text) {
   );
 }
 
-// Words printed in the form's own box captions. Words every box and entry
-// uses (OF, AND, FOR ...) count for neither side.
-const LABEL_WORDS = new Set(
-  (
-    "MILITARY EDUCATION DECORATIONS BADGES CITATIONS RIBBONS AWARDED AUTHORIZED " +
-    "NARRATIVE REASON SEPARATION DUTY ASSIGNMENT MAJOR COMMAND MAILING ADDRESS " +
-    "AFTER REMARKS BIRTH SOCIAL SECURITY DEPARTMENT COMPONENT BRANCH VETERANS " +
-    "EDUCATIONAL ASSISTANCE PROGRAM CONTRIBUTED POST VIETNAM ERA HIGH SCHOOL " +
-    "GRADUATE EQUIVALENT SPECIAL ADDITIONAL INFORMATION CHARACTER NOTHING FOLLOWS"
-  ).split(" "),
-);
-const FILLER_WORDS = new Set("OF AND OR THE FOR TO IN A AN".split(" "));
-const MAX_LABEL_SHARE = 0.6;
+// The form's own box captions. An entry is a caption only when every word of
+// it falls in a run of two or more words printed together in one caption
+// (including the small words between them), so a real value that merely
+// shares a word with a caption (SPECIAL SEPARATION BENEFIT, MILITARY POLICE
+// SCHOOL, COMMAND SERGEANT MAJOR) is kept.
+const CAPTIONS = [
+  "MILITARY EDUCATION",
+  "DECORATIONS MEDALS BADGES CITATIONS AND CAMPAIGN RIBBONS AWARDED OR AUTHORIZED",
+  "NARRATIVE REASON FOR SEPARATION",
+  "LAST DUTY ASSIGNMENT AND MAJOR COMMAND",
+  "COMMAND TO WHICH TRANSFERRED",
+  "MAILING ADDRESS FOR AFTER SEPARATION",
+  "SOCIAL SECURITY NUMBER",
+  "DATE OF BIRTH",
+  "DEPARTMENT COMPONENT AND BRANCH",
+  "VETERANS EDUCATIONAL ASSISTANCE PROGRAM",
+  "MEMBER CONTRIBUTED TO POST VIETNAM ERA",
+  "HIGH SCHOOL GRADUATE OR EQUIVALENT",
+  "SPECIAL ADDITIONAL INFORMATION",
+  "CHARACTER OF SERVICE",
+  "NOTHING FOLLOWS",
+  "COMMISSIONED THROUGH SERVICE ACADEMY",
+];
+const MAX_CAPTION_RUN = 12;
+const CAPTION_RUNS = new Set();
+for (const caption of CAPTIONS) {
+  const words = caption.split(" ");
+  for (let from = 0; from < words.length; from++) {
+    for (let to = from + 2; to <= words.length; to++) {
+      CAPTION_RUNS.add(words.slice(from, to).join(" "));
+    }
+  }
+}
+const NOISE_WORDS = new Set(["YES", "NO"]);
 
-function isMostlyLabelWords(text) {
+function isCaptionText(text) {
   const words = (text.toUpperCase().match(/[A-Z]+/g) ?? []).filter(
-    (word) => !FILLER_WORDS.has(word),
+    (word) => word.length > 1 && !NOISE_WORDS.has(word),
   );
-  const labels = words.filter((word) => LABEL_WORDS.has(word)).length;
-  return labels > 0 && labels >= words.length * MAX_LABEL_SHARE;
+  if (words.length === 0) return false;
+  let at = 0;
+  while (at < words.length) {
+    let len = Math.min(MAX_CAPTION_RUN, words.length - at);
+    while (len >= 2 && !CAPTION_RUNS.has(words.slice(at, at + len).join(" "))) {
+      len--;
+    }
+    if (len < 2) return false;
+    at += len;
+  }
+  return true;
 }
 
 function cleanItem(value, cap, scrub) {
@@ -105,7 +135,7 @@ function cleanItem(value, cap, scrub) {
   const flat = value.replace(/\s+/g, " ").trim();
   if (flat === "" || flat.length > cap) return undefined;
   const text = scrub(removeBirthDateAndSsnShapes(flat));
-  return text === "" || isMostlyRedacted(text) || isMostlyLabelWords(text)
+  return text === "" || isMostlyRedacted(text) || isCaptionText(text)
     ? undefined
     : text;
 }
