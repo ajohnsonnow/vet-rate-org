@@ -48,6 +48,73 @@ export const describeBilateralPair = (calc) =>
         .join(", ")
     : "none";
 
+const withRating = (c) => `${c.name} (${c.rating}%)`;
+
+const joinList = (items) =>
+  items.length < 2
+    ? items.join("")
+    : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+
+const namesWhere = (list, test) => list.filter(test).map((c) => c.name);
+
+function describeExcluded(calc) {
+  const excluded = calc.bilateralExcludedConditions;
+  if (excluded.length === 0) return [];
+  const list = joinList(excluded.map(withRating));
+  const one = excluded.length === 1;
+  if (calc.bilateralConditions.length === 0) {
+    return [
+      `No bilateral factor was applied: ${list} are bilateral disabilities, and combining them separately gives a higher combined rating than including them in the bilateral factor calculation (38 CFR § 4.26(d)).`,
+    ];
+  }
+  return [
+    `${list} ${one ? "is also a bilateral disability" : "are also bilateral disabilities"}, left out of the bilateral factor calculation and combined separately because that gives a higher combined rating (38 CFR § 4.26(d)).`,
+  ];
+}
+
+/**
+ * Plain sentences about entries the bilateral factor treated specially: left
+ * out under 38 CFR § 4.26(d), in the group as one evaluation covering both
+ * sides, or given no factor because of a calculator `bilateralIssues` entry.
+ */
+export function describeBilateralNotes(calc) {
+  const notes = describeExcluded(calc);
+  const manual = "VA manual M21-1, V.iv.1.C.4.b";
+  const inGroup = namesWhere(
+    calc.bilateralConditions,
+    (c) => c.side === "bilateral",
+  );
+  if (inGroup.length > 0) {
+    notes.push(
+      `${joinList(inGroup)} ${inGroup.length === 1 ? "is" : "are each"} one evaluation that covers both sides; such an evaluation takes the factor because another disability in the group is rated separately (${manual}).`,
+    );
+  }
+  const issues = calc.bilateralIssues;
+  const unknown = namesWhere(issues, (i) => i.reason === "limb-unknown");
+  if (unknown.length > 0) {
+    const one = unknown.length === 1;
+    notes.push(
+      `Vet-Rate could not tell whether ${joinList(unknown)} ${one ? "is an arm or a leg condition, so it" : "are arm or leg conditions, so they"} took no bilateral factor.`,
+    );
+  }
+  const alone = namesWhere(
+    issues,
+    (i) => i.reason === "single-bilateral-evaluation",
+  );
+  if (alone.length > 0) {
+    const one = alone.length === 1;
+    notes.push(
+      `${joinList(alone)} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor: the factor needs another separately rated disability of the same limbs (${manual}).`,
+    );
+  }
+  if (issues.some((i) => i.reason === "most-favourable-not-checked")) {
+    notes.push(
+      "Vet-Rate did not check whether leaving some bilateral disabilities out of the bilateral factor calculation would give a higher combined rating (38 CFR § 4.26(d)), because there are too many arrangements to try.",
+    );
+  }
+  return notes;
+}
+
 const stepLine = (s) => `${s.from}% combined with ${s.with}% = ${s.result}%`;
 
 function bilateralGroupStep(calc) {
@@ -58,8 +125,9 @@ function bilateralGroupStep(calc) {
 
 /**
  * The calculator's working as plain lines: the bilateral group (when a pair
- * exists), each combining step in order, the raw value and the single final
- * rounding. Every figure comes from calculateVARating.
+ * exists), any bilateral disabilities left out of it under 38 CFR § 4.26(d),
+ * each combining step in order, the raw value and the single final rounding.
+ * Every figure comes from calculateVARating.
  */
 export function formatCalculatorWorking(calc) {
   const lines = [];
@@ -76,6 +144,11 @@ export function formatCalculatorWorking(calc) {
     bilateralSteps.forEach((s) => lines.push(`  ${stepLine(s)}`));
     lines.push(
       `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.bilateralFactor}, so the group rating is ${group.bilateralGroupRating}%`,
+    );
+  }
+  if (calc.bilateralExcludedConditions.length > 0) {
+    lines.push(
+      `Bilateral disabilities left out of the factor and combined separately under 38 CFR § 4.26(d): ${joinList(calc.bilateralExcludedConditions.map(withRating))}`,
     );
   }
 
@@ -97,12 +170,13 @@ export function formatCalculatorWorking(calc) {
 }
 
 export function buildComputedResultBlock(calc) {
+  const notes = describeBilateralNotes(calc);
   return `\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 - already calculated, do not recompute) ===
 Bilateral pair: ${describeBilateralPair(calc)}
 Bilateral group rating: ${calc.bilateralGroupRating || "n/a"}
 Working:
 ${formatCalculatorWorking(calc).join("\n")}
-Combined rating: ${calc.combinedRating}%
+${notes.length > 0 ? `Notes:\n${notes.join("\n")}\n` : ""}Combined rating: ${calc.combinedRating}%
 This result is final. Restate it exactly and explain it. Never recompute it, apply your own bilateral-factor arithmetic, or invent a different pairing.
 === END COMPUTED RESULT ===\n`;
 }
@@ -193,7 +267,9 @@ const namesIn = (sentence, names) =>
  * Sentences that present, as a finding about this veteran, a bilateral pairing
  * the calculator did not form: a pairing sentence that names a condition
  * outside the formed pair, or (with no pair formed) names two or more of the
- * veteran's conditions. Sentences that are examples ("e.g.", "for example",
+ * veteran's conditions. Disabilities left out of the factor under 38 CFR
+ * § 4.26(d) are still bilateral disabilities and count as part of the pair.
+ * Sentences that are examples ("e.g.", "for example",
  * "such as"), hypotheticals ("if you have"), negations, mentions of the
  * non-bilateral conditions, or that combine the already-formed bilateral group
  * with another condition never count. When the sentence names no condition the
@@ -201,8 +277,13 @@ const namesIn = (sentence, names) =>
  * parse.
  */
 export function findInventedBilateralClaims(text, calc) {
-  const inPair = calc.bilateralConditions.map((c) => c.name);
-  const outside = calc.nonBilateralConditions.map((c) => c.name);
+  const inPair = [
+    ...calc.bilateralConditions,
+    ...calc.bilateralExcludedConditions,
+  ].map((c) => c.name);
+  const outside = calc.nonBilateralConditions
+    .map((c) => c.name)
+    .filter((name) => !inPair.includes(name));
   const pairFormed = inPair.length > 0;
   const hits = [];
   for (const raw of splitSentences(text)) {
@@ -585,9 +666,9 @@ export function buildCalculatorExplanation(
   calc,
   { tdiu = false, check = null, tdiuCheck = null } = {},
 ) {
-  const pairNote = calc.bilateralConditions.length
-    ? `The bilateral factor applies to ${describeBilateralPair(calc)}: disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26).`
-    : 'No bilateral pair applies. The bilateral factor needs "partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c)), that is both arms or both legs, one on each side. "Arms" and "legs" mean the upper and lower extremities as a whole, so a right thigh and a left foot are a pair (38 CFR § 4.26(a)). Two conditions on the same side are not a pair, and the two highest ratings are not automatically a pair.';
+  const pairNote = [describePairFinding(calc), ...describeBilateralNotes(calc)]
+    .filter(Boolean)
+    .join(" ");
   return [
     buildReplacementNotice(check, tdiuCheck),
     "",
@@ -602,4 +683,23 @@ export function buildCalculatorExplanation(
     ...(tdiu ? [buildTdiuThresholdParagraph(calc), ""] : []),
     "Check these figures with a Veterans Service Officer before relying on them.",
   ].join("\n");
+}
+
+function describeGroupBasis(calc) {
+  if (calc.bilateralLimbs.length > 1) {
+    return "compensable disabilities of both arms and both legs, whose ratings are combined together before the factor is added once (38 CFR § 4.26(b))";
+  }
+  if (calc.bilateralConditions.some((c) => c.side === "bilateral")) {
+    const limbs = calc.bilateralLimbs[0] === "upper" ? "arms" : "legs";
+    return `compensable disabilities of both ${limbs} (38 CFR § 4.26)`;
+  }
+  return "disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26)";
+}
+
+function describePairFinding(calc) {
+  if (calc.bilateralConditions.length > 0) {
+    return `The bilateral factor applies to ${describeBilateralPair(calc)}: ${describeGroupBasis(calc)}.`;
+  }
+  if (calc.bilateralExcludedConditions.length > 0) return "";
+  return 'No bilateral pair applies. The bilateral factor needs "partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c)), that is both arms or both legs, one on each side. "Arms" and "legs" mean the upper and lower extremities as a whole, so a right thigh and a left foot are a pair (38 CFR § 4.26(a)). Two conditions on the same side are not a pair, and the two highest ratings are not automatically a pair.';
 }
