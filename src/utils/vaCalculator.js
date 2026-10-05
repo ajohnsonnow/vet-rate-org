@@ -319,10 +319,13 @@ const NAME_NON_LIMB_WORDS = new Set([
   ...withPlurals(["ear", "eye", "kidney"]),
 ]);
 
+// Words are runs of letters and digits in any script. A word with a digit or a
+// letter outside a-z ("우울증", "straín") is kept, so it fails the allowlist
+// like any other unknown word instead of vanishing from the name.
 const _nameWords = (name) =>
   String(name ?? "")
     .toLowerCase()
-    .split(/[^a-z]+/)
+    .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean);
 
 function _takeNamePhrases(name) {

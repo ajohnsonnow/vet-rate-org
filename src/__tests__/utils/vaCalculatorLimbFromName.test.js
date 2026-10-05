@@ -87,6 +87,35 @@ describe("a limb is read from a name only when every word is on the allowlist", 
   );
 });
 
+describe("a name with letters outside a-z, or digits, gives no limb", () => {
+  it.each([
+    ["Left knee 관련 우울증"],
+    ["Депрессия, left knee strain"],
+    ["Left knee straín"],
+    ["Left knee strain 2"],
+    ["Left knee strain うつ"],
+    ["Left knee strain ñ"],
+  ])("%s 30 + right knee strain 20 give 44, then 40 (not 50)", (name) => {
+    const list = [
+      { name, rating: 30, side: "left", bodyPart: "other" },
+      {
+        name: "Right knee strain",
+        rating: 20,
+        side: "right",
+        bodyPart: "other",
+      },
+    ];
+    const result = calculateVARating(list);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(44);
+    expect(result.combinedRating).toBe(40);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({ reason: "limb-unknown", name }),
+    ]);
+    expect(checkBilateralFactorCompliance(list).applicable).toBe(false);
+  });
+});
+
 describe("repros from QA", () => {
   it("sciatica of the right leg 20 + left knee strain 10 + PTSD 50 give 60, 64, then 60 (not 70)", () => {
     const list = [
