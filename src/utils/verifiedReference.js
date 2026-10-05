@@ -9,6 +9,7 @@
  */
 
 import reference from "../data/verifiedReference.json";
+import { resolveAgentForTool } from "./agentBoundaries";
 import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 
 const ENTRIES = new Map(reference.entries.map((entry) => [entry.id, entry]));
@@ -78,7 +79,9 @@ const isHerbicideQuestion = (text, toolId) =>
 
 // A rating tool's id alone says nothing about the question: the same tool
 // receives requests to do something else entirely. The text applies when the
-// question asks about combining, or the call carries ratings to combine.
+// question asks about combining, or the call carries ratings to combine. A
+// writing tool asked to combine ratings with none supplied is being asked to
+// do another agent's job, and gets no rating text to do it with.
 const COMBINED_RATING =
   /\bcombined (?:rating|evaluation|disability|percentage)\b|\bcombin(?:e|es|ing) (?:my |the |these |those )?(?:ratings|disabilities|percentages)\b|\bva math\b|\b4\.25\b/i;
 
@@ -142,9 +145,9 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "combined-rating",
-    when: (text, _toolId, { conditions }) =>
-      COMBINED_RATING.test(text) ||
-      (Array.isArray(conditions) && conditions.length > 0),
+    when: (text, toolId, { conditions }) =>
+      (Array.isArray(conditions) && conditions.length > 0) ||
+      (COMBINED_RATING.test(text) && resolveAgentForTool(toolId) !== "writer"),
     entries: ["cfr-4.25-b", "cfr-4.25", "cfr-4.25-a"],
   },
   {
