@@ -1233,6 +1233,9 @@ function createAIConsentHandler({
           result.content.replaceAll("[Date]", new Date().toLocaleDateString()),
         );
         setDraftNote(result.draftNote ?? null);
+        // The app-built draft is shown either way; when the AI itself
+        // failed, say why, next to the control that tries it again.
+        setAiError(result.draftErrorReason ?? null);
         setUseAIVersion(true);
       } else {
         setAiError(result.error);

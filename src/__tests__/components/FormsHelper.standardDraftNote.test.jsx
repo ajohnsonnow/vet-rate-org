@@ -77,6 +77,29 @@ describe("Forms Helper standard-draft notice", () => {
     expect(document.body.textContent).toContain("[date the symptoms began]");
   });
 
+  it("names the error and lets the veteran try the AI again", async () => {
+    generateAI.mockRejectedValueOnce(new Error("WebGPU inference timed out"));
+    await enhancePersonalStatement();
+    await screen.findByRole("status", { name: "Draft notice" });
+    expect(document.body.textContent).toMatch(/timed out/i);
+
+    localStorage.removeItem("vetrate_ai_ratelimit");
+    generateAI.mockImplementation(async (prompt) => ({
+      text: /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1],
+      mode: "swarm",
+    }));
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /i understand, enhance/i }),
+    );
+
+    await screen.findByText(/viewing ai/i);
+    expect(
+      screen.queryByRole("status", { name: "Draft notice" }),
+    ).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/timed out/i);
+  });
+
   it("is not shown when the model's wording was accepted", async () => {
     generateAI.mockImplementation(async (prompt) => ({
       text: /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1],

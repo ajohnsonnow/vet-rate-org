@@ -4844,6 +4844,15 @@ function AIEnhancementSection({
       {aiError && (
         <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
           ⚠️ {aiError}
+          {aiEnhancedContent && (
+            <button
+              type="button"
+              onClick={handleAIEnhanceClick}
+              className="block mt-2 min-h-[44px] px-3 underline font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded"
+            >
+              Try the AI again
+            </button>
+          )}
         </div>
       )}
 
@@ -8312,7 +8321,6 @@ function _buildFormsHelperAIHandlers(ctx) {
     setShowAIConsent(false);
     setIsEnhancingWithAI(true);
     setAiError(null);
-    setAiDraftNote(null);
 
     try {
       const result = await enhanceFormStatement(selectedForm?.id, formData);
@@ -8328,6 +8336,7 @@ function _buildFormsHelperAIHandlers(ctx) {
           substituteVeteranNamePlaceholder(result.content, veteranName),
         );
         setAiDraftNote(result.draftNote ?? null);
+        setAiError(result.draftErrorReason ?? null);
         setShowAIVersion(true);
       } else {
         setAiError(result.error || "Failed to enhance statement with AI.");

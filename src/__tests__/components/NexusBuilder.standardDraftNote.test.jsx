@@ -61,6 +61,26 @@ describe("NexusBuilder review step", () => {
     expect(screen.getByText(/\[date the symptoms began\]/)).toBeInTheDocument();
   });
 
+  it("names the error behind a standard draft and offers another try", async () => {
+    enhancePersonalStatement.mockResolvedValue({
+      success: true,
+      content: DRAFT,
+      draftPath: "template",
+      draftNote: STANDARD_DRAFT_NOTE,
+      draftErrorReason: "AI cooling down... please wait 8 seconds.",
+    });
+    await enhanceOnReviewStep();
+
+    await screen.findByText(STANDARD_DRAFT_NOTE);
+    expect(
+      screen.getByText("AI cooling down... please wait 8 seconds."),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+    expect(
+      await screen.findByRole("button", { name: /i understand, enhance/i }),
+    ).toBeInTheDocument();
+  });
+
   it("shows no note when the model's wording was accepted", async () => {
     enhancePersonalStatement.mockResolvedValue({
       success: true,
