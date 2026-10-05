@@ -134,3 +134,41 @@ describe("UnreadableProfileNotice choices", () => {
     expect(screen.getByRole("status")).toHaveTextContent("could not be read");
   });
 });
+
+describe("UnreadableProfileNotice after Not now", () => {
+  it("still tells the veteran when a later save replaced the unreadable profile", () => {
+    localStorage.setItem(PROFILE_KEY, BROKEN);
+    render(<UnreadableProfileNotice />);
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.queryByRole("status")).toBeNull();
+
+    act(() => {
+      saveVeteranProfile({ city: "Springfield" });
+    });
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "a new profile was started",
+    );
+    expect(localStorage.getItem(COPY_KEY)).toBe(BROKEN);
+  });
+
+  it("says so, and changes nothing, when a copy cannot be kept", () => {
+    localStorage.setItem(PROFILE_KEY, BROKEN);
+    render(<UnreadableProfileNotice />);
+    const realSetItem = localStorage.setItem.bind(localStorage);
+    vi.spyOn(localStorage, "setItem").mockImplementation((key, value) => {
+      if (String(key).startsWith(COPY_KEY)) throw new Error("full");
+      return realSetItem(key, value);
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Start a new profile" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Yes, start a new profile" }),
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("was not started");
+    expect(localStorage.getItem(PROFILE_KEY)).toBe(BROKEN);
+  });
+});

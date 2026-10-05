@@ -163,3 +163,52 @@ describe("starting a new profile in place of an unreadable one", () => {
     expect(profile.readVeteranProfileQuiet().status).toBe("absent");
   });
 });
+
+describe("a save that cannot keep a copy of the unreadable profile", () => {
+  const failCopyWrites = () => {
+    const realSetItem = localStorage.setItem.bind(localStorage);
+    vi.spyOn(localStorage, "setItem").mockImplementation((key, value) => {
+      if (String(key).startsWith(COPY_KEY)) {
+        throw new DOMException("full", "QuotaExceededError");
+      }
+      return realSetItem(key, value);
+    });
+  };
+
+  it("refuses the save and leaves the unreadable profile where it is", () => {
+    localStorage.setItem(PROFILE_KEY, SECRET);
+    failCopyWrites();
+
+    expect(profile.saveVeteranProfile({ city: "Springfield" })).toBe(false);
+
+    expect(localStorage.getItem(PROFILE_KEY)).toBe(SECRET);
+    expect(JSON.stringify(errors.mock.calls.flat().map(String))).toContain(
+      "could not be kept",
+    );
+  });
+
+  it("refuses to start a new profile, and keeps the unreadable one", () => {
+    localStorage.setItem(PROFILE_KEY, SECRET);
+    failCopyWrites();
+
+    expect(profile.startNewProfileInPlaceOfUnreadable()).toBe(false);
+
+    expect(localStorage.getItem(PROFILE_KEY)).toBe(SECRET);
+  });
+
+  it("keeps a second, different unreadable value under a key of its own", () => {
+    localStorage.setItem(PROFILE_KEY, SECRET);
+    profile.saveVeteranProfile({ city: "Springfield" });
+    localStorage.setItem(PROFILE_KEY, "[2]");
+
+    profile.saveVeteranProfile({ city: "Shelbyville" });
+
+    const kept = Array.from({ length: localStorage.length }, (_, i) =>
+      localStorage.key(i),
+    )
+      .filter((key) => key.startsWith(COPY_KEY))
+      .map((key) => localStorage.getItem(key));
+    expect(kept).toHaveLength(2);
+    expect(kept).toEqual(expect.arrayContaining([SECRET, "[2]"]));
+  });
+});

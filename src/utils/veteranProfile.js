@@ -274,18 +274,33 @@ export const UNREADABLE_PROFILE_COPY_KEY =
 
 // A save that lands on a profile nobody could read would replace it without
 // the veteran ever choosing to. The unreadable value is kept untouched under
-// its own key first (the first one kept wins: a later bad value never
-// overwrites it).
+// its own key first. A later, different unreadable value never overwrites the
+// first copy; it is kept under a key of its own. Returns false when the copy
+// could not be kept, and the caller must then leave the profile alone.
 const preserveUnreadableProfile = () => {
   const current = readVeteranProfileQuiet();
-  if (current.ok || current.raw === null) return;
+  if (current.ok || current.raw === null) return true;
   try {
-    if (localStorage.getItem(UNREADABLE_PROFILE_COPY_KEY) === null) {
-      localStorage.setItem(UNREADABLE_PROFILE_COPY_KEY, current.raw);
-    }
+    const kept = localStorage.getItem(UNREADABLE_PROFILE_COPY_KEY);
+    if (kept === current.raw) return true;
+    const key =
+      kept === null
+        ? UNREADABLE_PROFILE_COPY_KEY
+        : `${UNREADABLE_PROFILE_COPY_KEY}_${Date.now()}`;
+    localStorage.setItem(key, current.raw);
+    return true;
   } catch {
-    // Storage is full or blocked: the save itself reports that.
+    return false;
   }
+};
+
+const COPY_NOT_KEPT_MESSAGE =
+  "Veteran profile NOT saved - the saved profile could not be read and a copy of it could not be kept. Export a backup and free up space, then try again.";
+
+// Throws (into the save's own error path) when the profile key must not be
+// written because the unreadable value it holds could not be kept.
+const requireUnreadableProfileCopy = () => {
+  if (!preserveUnreadableProfile()) throw new Error(COPY_NOT_KEPT_MESSAGE);
 };
 
 /**
@@ -383,7 +398,7 @@ export const saveVeteranProfile = (profile) => {
 
     sanitizedProfile.lastUpdated = new Date().toISOString();
 
-    preserveUnreadableProfile();
+    requireUnreadableProfileCopy();
     localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitizedProfile));
     announceProfileChanged();
 
@@ -434,8 +449,9 @@ export const clearVeteranProfile = () => {
  * @returns {boolean} Success status
  */
 export const startNewProfileInPlaceOfUnreadable = () => {
-  preserveUnreadableProfile();
-  return clearVeteranProfile();
+  if (preserveUnreadableProfile()) return clearVeteranProfile();
+  console.error(COPY_NOT_KEPT_MESSAGE);
+  return false;
 };
 
 /**

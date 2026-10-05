@@ -10,7 +10,7 @@
  * under its own key. The app keeps working with an empty profile meanwhile.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   PROFILE_CHANGED_EVENT,
   PROFILE_UNREADABLE_EVENT,
@@ -42,6 +42,8 @@ const TEXT = {
     "Your saved profile could not be read. Nothing was deleted or changed, and the rest of your data (records, claims, documents) is untouched. You can restore a backup, or start a new profile. Until then the app works without your profile details.",
   confirm:
     "Starting a new profile takes the unreadable one out of your profile. Nothing else is deleted, and a copy of the unreadable profile stays on this device.",
+  notKept:
+    "A new profile was not started, because a copy of the unreadable one could not be kept on this device. Nothing was changed. Free up some space or restore a backup, then try again.",
   replaced:
     "Your saved profile could not be read, so a new profile was started when something was saved. The unreadable copy is still on this device. You can restore a backup if you have one.",
 };
@@ -50,20 +52,30 @@ function useProfileNoticeMode() {
   const [mode, setMode] = useState(() =>
     readVeteranProfileQuiet().ok ? null : "unreadable",
   );
+  // True from the moment the profile is known unreadable until a read succeeds,
+  // so a save after "Not now" still tells the veteran it was replaced.
+  const unresolved = useRef(mode !== null);
 
   const recheck = useCallback(() => {
-    const readable = readVeteranProfileQuiet().ok;
+    if (!readVeteranProfileQuiet().ok) return;
+    const wasUnresolved = unresolved.current;
+    unresolved.current = false;
     setMode((current) => {
-      if (!readable) return current;
       if (current === "unreadable" || current === "confirm") {
         return hasPreservedCopy() ? "replaced" : null;
+      }
+      if (current === null && wasUnresolved && hasPreservedCopy()) {
+        return "replaced";
       }
       return current;
     });
   }, []);
 
   useEffect(() => {
-    const onUnreadable = () => setMode((current) => current ?? "unreadable");
+    const onUnreadable = () => {
+      unresolved.current = true;
+      setMode((current) => current ?? "unreadable");
+    };
     window.addEventListener(PROFILE_UNREADABLE_EVENT, onUnreadable);
     window.addEventListener(PROFILE_CHANGED_EVENT, recheck);
     window.addEventListener("storage", recheck);
@@ -85,8 +97,7 @@ function NoticeActions({ mode, setMode }) {
           type="button"
           className={PRIMARY}
           onClick={() => {
-            startNewProfileInPlaceOfUnreadable();
-            setMode(null);
+            setMode(startNewProfileInPlaceOfUnreadable() ? null : "notKept");
           }}
         >
           Yes, start a new profile
@@ -106,7 +117,7 @@ function NoticeActions({ mode, setMode }) {
       <button type="button" className={PRIMARY} onClick={openBackupManager}>
         Restore a backup
       </button>
-      {mode === "unreadable" && (
+      {(mode === "unreadable" || mode === "notKept") && (
         <button
           type="button"
           className={SECONDARY}
@@ -116,7 +127,7 @@ function NoticeActions({ mode, setMode }) {
         </button>
       )}
       <button type="button" className={SECONDARY} onClick={() => setMode(null)}>
-        {mode === "unreadable" ? "Not now" : "Dismiss"}
+        {mode === "unreadable" || mode === "notKept" ? "Not now" : "Dismiss"}
       </button>
     </>
   );
