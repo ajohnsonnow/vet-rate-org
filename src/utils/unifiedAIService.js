@@ -1150,6 +1150,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       expected: check.expected,
       stated: check.stated,
       inventedPairs: check.inventedPairs,
+      deniedPairs: check.deniedPairs,
       ...(tdiuCheck?.contradicted
         ? { tdiuConclusion: tdiuCheck.sentences }
         : {}),

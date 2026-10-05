@@ -233,7 +233,7 @@ describe("the notice and the recorded reason say what fired", () => {
       "said the 38 CFR § 4.16(a) percentage thresholds are not met but they are met (highest rating 60%, combined 80%)",
     );
     expect(describeMismatch(wrongFigure, tdiuCheck)).toMatch(
-      /^stated combined rating 70% but the calculator gives 80%; said the 38 CFR § 4.16\(a\)/,
+      /^stated combined rating 70% but the calculator gives 80% \(from: "The final combined rating is 70%\."\); said the 38 CFR § 4\.16\(a\)/,
     );
     const notMet = calcOf(30, 30);
     const asserts = checkTdiuConclusion("You are eligible for TDIU.", notMet);

@@ -688,3 +688,54 @@ describe("rater grounding: a TDIU conclusion that contradicts the thresholds is 
     expect(result.tdiuParagraphAppended).toBe(true);
   });
 });
+
+describe("rater grounding: the bilateral check replaces only a contradicted pairing", () => {
+  const KNEES_BACK = [
+    { name: "Left knee", rating: 10, side: "left", bodyPart: "knee" },
+    { name: "Right knee", rating: 10, side: "right", bodyPart: "knee" },
+    { name: "Back", rating: 30, side: "none", bodyPart: "back" },
+  ];
+
+  beforeEach(async () => {
+    await BACKENDS.swarm.setup();
+  });
+
+  it("keeps a correct answer that combines the bilateral group with the back", async () => {
+    const text =
+      "The bilateral pair is Left knee and Right knee.\nNext, we combine the bilateral group rating (21%) with your remaining condition (Back, 30%).\nYour combined rating is 50%.";
+    const result = await ask(text, { conditions: KNEES_BACK });
+    expect(result.text).toBe(text);
+    expect(result.calculatorReplacement).toBeUndefined();
+  });
+
+  it("keeps an answer that finds no pair and gives a generic example", async () => {
+    const text =
+      "No bilateral pair applies here (e.g., left knee and right knee would be one). Your combined rating is 80%.";
+    const result = await ask(text);
+    expect(result.text).toBe(text);
+    expect(result.calculatorReplacement).toBeUndefined();
+  });
+
+  it("replaces an answer that denies the pair the calculator formed, and says so", async () => {
+    const result = await ask(
+      "No bilateral pair applies to your conditions. Your combined rating is 50%.",
+      { conditions: KNEES_BACK },
+    );
+    expect(result.text).toContain(
+      "denied a bilateral pairing that Vet-Rate's calculator found",
+    );
+    expect(result.text).not.toContain("stated a combined rating");
+    expect(result.calculatorReplacement.reason).toBe(
+      "denied the bilateral pair the calculator found",
+    );
+    expect(result.calculatorReplacement.deniedPairs).toHaveLength(1);
+  });
+
+  it("appends the calculator line instead of replacing when a pairing claim names no condition", async () => {
+    const result = await ask(
+      "Apply the bonus since the highest two are paired.",
+    );
+    expect(result.calculatorReplacement).toBeUndefined();
+    expect(result.calculatorAppended).toEqual({ expected: 80 });
+  });
+});

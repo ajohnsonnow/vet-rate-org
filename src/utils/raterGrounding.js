@@ -109,6 +109,21 @@ This result is final. Restate it exactly and explain it. Never recompute it, app
 
 const splitSentences = (text) => String(text ?? "").split(/(?<=[.!?])\s+|\n+/);
 
+const normalizeWords = (text) =>
+  ` ${String(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9']+/g, " ")
+    .trim()} `;
+
+/**
+ * Whether a sentence contains any listed word or phrase, compared as whole
+ * words with punctuation ignored ("e.g." is "e g").
+ */
+const mentionsAny = (sentence, { words = [], phrases = [] }) => {
+  const text = normalizeWords(sentence);
+  return [...words, ...phrases].some((w) => text.includes(normalizeWords(w)));
+};
+
 const NEGATION =
   /\b(?:no|not|none|neither|nor|without|isn't|aren't|doesn't|don't|didn't|cannot|can't|never|n\/a)\b/i;
 
@@ -118,28 +133,121 @@ const mentionsName = (sentence, name) =>
   Boolean(name) &&
   new RegExp(`\\b${escapeRegExp(String(name))}\\b`, "i").test(sentence);
 
+const EXAMPLE_WORDS = {
+  phrases: [
+    "e.g.",
+    "for example",
+    "for instance",
+    "such as",
+    "an example",
+    "example",
+    "examples",
+  ],
+};
+const HYPOTHETICAL_WORDS = {
+  words: ["if", "unless", "whether", "suppose", "assuming", "assume"],
+};
+const COMBINING_WORDS = {
+  words: ["combine", "combines", "combined", "combining", "remaining", "other"],
+};
+const GROUP_WORDS = {
+  phrases: ["bilateral group", "group rating", "bilateral knees"],
+};
+const NON_BILATERAL_WORDS = {
+  phrases: ["non-bilateral"],
+  words: ["nonbilateral"],
+};
+const PAIR_WORDS = {
+  words: ["bilateral", "pair", "paired", "pairs", "pairing"],
+};
+const PAIRING_VERBS = {
+  words: ["pair", "paired", "pairs", "pairing"],
+};
+const NO_PAIR_FINDING = {
+  phrases: [
+    "no bilateral",
+    "does not apply",
+    "do not apply",
+    "not applicable",
+    "n/a",
+    "not applied",
+    "not found",
+    "not identified",
+    "not formed",
+  ],
+  words: ["none"],
+};
+
+/** Sentences about pairing that are not findings about this veteran. */
+const isNotAFinding = (sentence) =>
+  mentionsAny(sentence, EXAMPLE_WORDS) ||
+  mentionsAny(sentence, HYPOTHETICAL_WORDS) ||
+  mentionsAny(sentence, NON_BILATERAL_WORDS) ||
+  (mentionsAny(sentence, COMBINING_WORDS) &&
+    mentionsAny(sentence, GROUP_WORDS));
+
+const namesIn = (sentence, names) =>
+  names.filter((n) => mentionsName(sentence, n));
+
 /**
- * Sentences that present a bilateral pairing the calculator did not find.
- * With no pair found, any un-negated sentence that mentions "bilateral" next
- * to one of the veteran's conditions counts. With a pair found, a sentence
- * that mentions "bilateral" and a condition outside the pair, and none inside
- * it, counts. Negated sentences ("no bilateral pair", "not applicable") never
- * count. This is a heuristic: it does not parse arbitrary prose.
+ * Sentences that present, as a finding about this veteran, a bilateral pairing
+ * the calculator did not form: a pairing sentence that names a condition
+ * outside the formed pair, or (with no pair formed) names two or more of the
+ * veteran's conditions. Sentences that are examples ("e.g.", "for example",
+ * "such as"), hypotheticals ("if you have"), negations, mentions of the
+ * non-bilateral conditions, or that combine the already-formed bilateral group
+ * with another condition never count. When the sentence names no condition the
+ * check cannot tell and does not fire. A heuristic over sentences, not a
+ * parse.
  */
 export function findInventedBilateralClaims(text, calc) {
   const inPair = calc.bilateralConditions.map((c) => c.name);
   const outside = calc.nonBilateralConditions.map((c) => c.name);
+  const pairFormed = inPair.length > 0;
   const hits = [];
   for (const raw of splitSentences(text)) {
     const sentence = raw.trim();
-    if (!/\bbilateral/i.test(sentence) || NEGATION.test(sentence)) continue;
-    const touchesOutside = outside.some((n) => mentionsName(sentence, n));
-    if (calc.bilateralConditions.length === 0) {
-      if (touchesOutside) hits.push(sentence);
+    if (!mentionsAny(sentence, PAIR_WORDS) || NEGATION.test(sentence)) continue;
+    if (isNotAFinding(sentence)) continue;
+    const touchesOutside = namesIn(sentence, outside).length > 0;
+    const namedCount = namesIn(sentence, [...inPair, ...outside]).length;
+    const sayPaired = mentionsAny(sentence, PAIRING_VERBS);
+    const asserts = pairFormed
+      ? touchesOutside && (namedCount >= 2 || sayPaired)
+      : namedCount >= 2;
+    if (asserts) hits.push(sentence);
+  }
+  return hits;
+}
+
+/**
+ * Sentences that deny the pair the calculator formed: a negated pairing
+ * sentence that names every condition of the pair (and no other condition), or
+ * a plain finding such as "no bilateral pair applies". Examples, hypotheticals
+ * and sentences about the other conditions never count. Always empty when the
+ * calculator formed no pair.
+ */
+export function findDeniedBilateralClaims(text, calc) {
+  const inPair = calc.bilateralConditions.map((c) => c.name);
+  if (inPair.length === 0) return [];
+  const outside = calc.nonBilateralConditions.map((c) => c.name);
+  const hits = [];
+  for (const raw of splitSentences(text)) {
+    const sentence = raw.trim();
+    if (!mentionsAny(sentence, PAIR_WORDS) || !NEGATION.test(sentence))
+      continue;
+    if (
+      mentionsAny(sentence, EXAMPLE_WORDS) ||
+      mentionsAny(sentence, HYPOTHETICAL_WORDS)
+    ) {
       continue;
     }
-    const touchesPair = inPair.some((n) => mentionsName(sentence, n));
-    if (touchesOutside && !touchesPair) hits.push(sentence);
+    if (namesIn(sentence, outside).length > 0) continue;
+    const namesPair = namesIn(sentence, inPair).length === inPair.length;
+    const saysNone =
+      mentionsAny(sentence, { words: ["bilateral"] }) &&
+      mentionsAny(sentence, NO_PAIR_FINDING);
+    if (namesPair || saysNone) hits.push(sentence);
   }
   return hits;
 }
@@ -167,18 +275,32 @@ function workingValues(calc) {
  * claims, and sentences that state a cap ("the maximum is 100%") are ignored.
  */
 export function checkRaterResponse(text, calc) {
-  const stated = extractStatedCombinedRatings(withoutCapStatements(text));
+  const body = withoutCapStatements(text);
+  const stated = extractStatedCombinedRatings(body);
   const working = workingValues(calc);
   const wrongFigures = stated.filter(
     (v) => v !== calc.combinedRating && (v % 10 === 0 || !working.has(v)),
   );
+  const wrongFigureSentences = wrongFigures.map(
+    (v) =>
+      body
+        .split("\n")
+        .find((line) => extractStatedCombinedRatings(line).includes(v))
+        ?.trim() ?? null,
+  );
   const inventedPairs = findInventedBilateralClaims(text, calc);
+  const deniedPairs = findDeniedBilateralClaims(text, calc);
   return {
-    ok: wrongFigures.length === 0 && inventedPairs.length === 0,
+    ok:
+      wrongFigures.length === 0 &&
+      inventedPairs.length === 0 &&
+      deniedPairs.length === 0,
     expected: calc.combinedRating,
     stated,
     wrongFigures,
+    wrongFigureSentences,
     inventedPairs,
+    deniedPairs,
   };
 }
 
@@ -192,12 +314,18 @@ export const buildCalculatorSummaryLine = (calc) =>
 export function describeMismatch(check, tdiuCheck = null) {
   const parts = [];
   if (check.wrongFigures.length > 0) {
+    const quote = (check.wrongFigureSentences ?? []).find(Boolean);
     parts.push(
-      `stated combined rating ${check.wrongFigures.join("%, ")}% but the calculator gives ${check.expected}%`,
+      `stated combined rating ${check.wrongFigures.join("%, ")}% but the calculator gives ${check.expected}%${
+        quote ? ` (from: "${quote.slice(0, 140)}")` : ""
+      }`,
     );
   }
   if (check.inventedPairs.length > 0) {
     parts.push("presented a bilateral pair the calculator did not find");
+  }
+  if (check.deniedPairs?.length > 0) {
+    parts.push("denied the bilateral pair the calculator found");
   }
   if (tdiuCheck?.contradicted) {
     const { eligible, highest, combined } = tdiuCheck.thresholds;
@@ -214,6 +342,8 @@ const NOTICE_FIGURES =
   "stated a combined rating that did not match Vet-Rate's calculator";
 const NOTICE_PAIR =
   "described a bilateral pairing that did not match Vet-Rate's calculator";
+const NOTICE_DENIED_PAIR =
+  "denied a bilateral pairing that Vet-Rate's calculator found";
 const NOTICE_TDIU =
   "gave a TDIU conclusion that did not match the percentage thresholds of 38 CFR § 4.16(a) applied to the ratings you entered";
 
@@ -226,6 +356,7 @@ export function buildReplacementNotice(check = null, tdiuCheck = null) {
   const reasons = [];
   if (!check || check.wrongFigures.length > 0) reasons.push(NOTICE_FIGURES);
   if (check?.inventedPairs.length > 0) reasons.push(NOTICE_PAIR);
+  if (check?.deniedPairs?.length > 0) reasons.push(NOTICE_DENIED_PAIR);
   if (tdiuCheck?.contradicted) reasons.push(NOTICE_TDIU);
   if (reasons.length === 0) reasons.push("did not match Vet-Rate's calculator");
   return `The AI's draft answer ${reasons.join(" and ")}, so it is not shown. This is the calculator's working for the ratings you entered.`;
@@ -262,21 +393,6 @@ export function tdiuThresholdsFor(calc) {
   const combined = calc.combinedRating;
   return { ...evaluateTdiuThresholds(highest, combined), highest, combined };
 }
-
-const tokensOf = (sentence) =>
-  String(sentence)
-    .toLowerCase()
-    .split(/[^a-z0-9']+/)
-    .filter(Boolean);
-
-const mentionsAny = (sentence, { words = [], phrases = [] }) => {
-  const lower = String(sentence).toLowerCase().replace(/\s+/g, " ");
-  const tokens = new Set(tokensOf(lower));
-  return (
-    words.some((w) => tokens.has(w)) ||
-    phrases.some((p) => ` ${lower} `.includes(` ${p} `))
-  );
-};
 
 const TDIU_SUBJECT = {
   words: ["tdiu", "unemployability", "unemployable"],
