@@ -75,3 +75,25 @@ describe("the bilateral group with its factor never exceeds 100", () => {
     expect(withMore.combinedRating).toBe(100);
   });
 });
+
+describe("38 CFR 4.26(c): compensable means rated 10 percent or more", () => {
+  it("a 5% side does not make a pair: 30, 20, 5 give 44, 47, then 50, with no factor", () => {
+    const result = calculateVARating([
+      c("Left knee", 5, "left", "knee"),
+      c("Right knee", 30, "right", "knee"),
+      c("Back", 20, "none", "back"),
+    ]);
+    expect(result.bilateralConditions).toEqual([]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(47);
+    expect(result.combinedRating).toBe(50);
+  });
+
+  it("a 10% side does: 30 + 10 give 37, plus 3.7 is 41", () => {
+    const result = calculateVARating([
+      c("Left knee", 10, "left", "knee"),
+      c("Right knee", 30, "right", "knee"),
+    ]);
+    expect(result.bilateralGroupRating).toBe(41);
+  });
+});

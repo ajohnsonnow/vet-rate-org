@@ -233,6 +233,8 @@ export const roundToNearest10 = (value) => {
 
 const SIDED = ["left", "right", "bilateral"];
 const LIMBS = ["upper", "lower"];
+// 38 CFR § 4.26(c) needs a disability "of compensable degree": 10% or more.
+const COMPENSABLE = 10;
 const LIMB_BY_BODY_PART = new Map(
   BODY_PARTS.extremities.map((part) => [part.value, part.limb]),
 );
@@ -394,7 +396,8 @@ function _limbOf(condition) {
  * The disabilities that take the bilateral factor under 38 CFR § 4.26.
  *
  * (a) the pair is both arms or both legs, each limb taken as a whole;
- * (c) each side needs a compensable disability, so 0% entries never count;
+ * (c) each side needs a compensable disability, so entries under 10% never
+ *     count;
  * (b) when both arms and both legs are affected, all four form one group.
  *
  * One evaluation that already covers both sides (side "bilateral") takes the
@@ -408,7 +411,7 @@ function _limbOf(condition) {
  */
 function _formBilateralGroup(conditions) {
   const candidates = conditions
-    .filter((c) => SIDED.includes(c.side) && c.rating > 0)
+    .filter((c) => SIDED.includes(c.side) && c.rating >= COMPENSABLE)
     .map((condition) => ({ condition, limb: _limbOf(condition) }))
     .filter((entry) => entry.limb !== "none");
 
