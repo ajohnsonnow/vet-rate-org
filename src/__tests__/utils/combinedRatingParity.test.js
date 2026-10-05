@@ -73,8 +73,10 @@ describe("RT-COMBINED-1 - Ratings tab must use the bilateral-aware engine", () =
 
   it("calculateVARating groups the paired hip/leg ratings under one bilateral factor (70 raw -> 70)", () => {
     const result = calculateVARating(bilateralHeavyProfile);
+    // The 0% entries are not of compensable degree, so they stay outside the
+    // group (38 CFR § 4.26(c)); the arithmetic is the same either way.
     expect(result.bilateralConditions.map((c) => c.rating).sort()).toEqual(
-      [0, 0, 0, 10, 10, 10, 20].sort(),
+      [10, 10, 10, 20].sort(),
     );
     expect(result.rawScore).toBe(70);
     expect(result.combinedRating).toBe(70);

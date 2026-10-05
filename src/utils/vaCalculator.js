@@ -111,20 +111,25 @@ export const VA_PAY_RATES_2026 = {
 // Body part categories for bilateral detection
 export const BODY_PARTS = {
   extremities: [
-    { value: "shoulder", label: "Shoulder", canBeBilateral: true },
-    { value: "arm", label: "Arm (Upper)", canBeBilateral: true },
-    { value: "elbow", label: "Elbow", canBeBilateral: true },
-    { value: "forearm", label: "Forearm", canBeBilateral: true },
-    { value: "wrist", label: "Wrist", canBeBilateral: true },
-    { value: "hand", label: "Hand", canBeBilateral: true },
-    { value: "fingers", label: "Fingers", canBeBilateral: true },
-    { value: "hip", label: "Hip", canBeBilateral: true },
-    { value: "thigh", label: "Thigh", canBeBilateral: true },
-    { value: "knee", label: "Knee", canBeBilateral: true },
-    { value: "leg", label: "Leg (Lower)", canBeBilateral: true },
-    { value: "ankle", label: "Ankle", canBeBilateral: true },
-    { value: "foot", label: "Foot", canBeBilateral: true },
-    { value: "toes", label: "Toes", canBeBilateral: true },
+    {
+      value: "shoulder",
+      label: "Shoulder",
+      canBeBilateral: true,
+      limb: "upper",
+    },
+    { value: "arm", label: "Arm (Upper)", canBeBilateral: true, limb: "upper" },
+    { value: "elbow", label: "Elbow", canBeBilateral: true, limb: "upper" },
+    { value: "forearm", label: "Forearm", canBeBilateral: true, limb: "upper" },
+    { value: "wrist", label: "Wrist", canBeBilateral: true, limb: "upper" },
+    { value: "hand", label: "Hand", canBeBilateral: true, limb: "upper" },
+    { value: "fingers", label: "Fingers", canBeBilateral: true, limb: "upper" },
+    { value: "hip", label: "Hip", canBeBilateral: true, limb: "lower" },
+    { value: "thigh", label: "Thigh", canBeBilateral: true, limb: "lower" },
+    { value: "knee", label: "Knee", canBeBilateral: true, limb: "lower" },
+    { value: "leg", label: "Leg (Lower)", canBeBilateral: true, limb: "lower" },
+    { value: "ankle", label: "Ankle", canBeBilateral: true, limb: "lower" },
+    { value: "foot", label: "Foot", canBeBilateral: true, limb: "lower" },
+    { value: "toes", label: "Toes", canBeBilateral: true, limb: "lower" },
   ],
   other: [
     { value: "head", label: "Head/Brain", canBeBilateral: false },
@@ -250,20 +255,130 @@ export const calculateBilateralFactor = (bilateralRatings) => {
   return Math.round(withBilateralFactor);
 };
 
+const SIDED = ["left", "right", "bilateral"];
+const LIMBS = ["upper", "lower"];
+const LIMB_BY_BODY_PART = new Map(
+  BODY_PARTS.extremities.map((part) => [part.value, part.limb]),
+);
+const NON_LIMB_BODY_PARTS = new Set(
+  BODY_PARTS.other.map((part) => part.value).filter((v) => v !== "other"),
+);
+const withPlurals = (words) => words.flatMap((w) => [w, `${w}s`]);
+const UPPER_LIMB_TERMS = [
+  "upper extremity",
+  "upper extremities",
+  ...withPlurals([
+    "shoulder",
+    "arm",
+    "elbow",
+    "forearm",
+    "wrist",
+    "hand",
+    "finger",
+    "thumb",
+  ]),
+];
+const LOWER_LIMB_TERMS = [
+  "lower extremity",
+  "lower extremities",
+  "foot",
+  "feet",
+  "pes planus",
+  "plantar",
+  ...withPlurals(["hip", "thigh", "knee", "leg", "ankle", "toe", "heel"]),
+];
+
+const mentionsTerm = (name, terms) => {
+  const text = ` ${String(name ?? "")
+    .toLowerCase()
+    .replace(/[^a-z]+/g, " ")
+    .trim()} `;
+  return terms.some((term) => text.includes(` ${term} `));
+};
+
 /**
- * Main VA Rating Calculator — the single source of truth for combined ratings.
- * Implements full 38 CFR § 4.25 logic including the § 4.26 Bilateral Factor.
- *
- * The bilateral factor is applied to the actual paired (left/right) set, NOT to
- * the two highest ratings. UI surfaces (MillionDollarDashboard, WhatIfSandbox,
- * SecondaryScoutLauncher) combine through this engine / its primitives
- * (combineMultipleRatings, calculateBilateralFactor) so the math stays
- * consistent. The flat ratingCalculator.calculateCombinedRating is legacy.
- *
- * @param {Array} conditions - Array of condition objects:
- *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none', bodyPart: string }
- * @returns {Object} - Calculation results
+ * Which extremity a condition affects: "upper", "lower", "none" (not a limb)
+ * or "unknown". An explicit `limb` wins, then a recognised `bodyPart`, then
+ * limb words in the name (ratings imported from a decision letter carry only a
+ * name and a side). A name that points at both an arm and a leg is "unknown".
  */
+function _limbOf(condition) {
+  if ([...LIMBS, "none"].includes(condition.limb)) return condition.limb;
+  if (LIMB_BY_BODY_PART.has(condition.bodyPart)) {
+    return LIMB_BY_BODY_PART.get(condition.bodyPart);
+  }
+  if (NON_LIMB_BODY_PARTS.has(condition.bodyPart)) return "none";
+  const upper = mentionsTerm(condition.name, UPPER_LIMB_TERMS);
+  const lower = mentionsTerm(condition.name, LOWER_LIMB_TERMS);
+  if (upper === lower) return "unknown";
+  return upper ? "upper" : "lower";
+}
+
+/**
+ * The disabilities that take the bilateral factor under 38 CFR § 4.26.
+ *
+ * (a) the pair is both arms or both legs, each limb taken as a whole;
+ * (c) each side needs a compensable disability, so 0% entries never count;
+ * (b) when both arms and both legs are affected, all four form one group.
+ *
+ * One evaluation that already covers both sides (side "bilateral") takes the
+ * factor only alongside a separately rated disability of those limbs, or when
+ * the other two limbs form a pair (M21-1 V.iv.1.C.4.b).
+ *
+ * Returns { group, limbs, issues }. `issues` lists sided entries left out
+ * because their limb is unknown, or because they are a both-sides evaluation
+ * with nothing to pair with.
+ */
+function _formBilateralGroup(conditions) {
+  const candidates = conditions
+    .filter((c) => SIDED.includes(c.side) && c.rating > 0)
+    .map((condition) => ({ condition, limb: _limbOf(condition) }))
+    .filter((entry) => entry.limb !== "none");
+
+  const byLimb = {};
+  for (const limb of LIMBS) {
+    const members = candidates
+      .filter((entry) => entry.limb === limb)
+      .map((entry) => entry.condition);
+    const left = members.some((c) => c.side === "left");
+    const right = members.some((c) => c.side === "right");
+    const bothSidesEntries = members.filter((c) => c.side === "bilateral");
+    byLimb[limb] = {
+      members,
+      bothSidesEntries,
+      bothSidesAffected: (left && right) || bothSidesEntries.length > 0,
+      qualifies:
+        (left && right) ||
+        (bothSidesEntries.length > 0 && (left || right)) ||
+        bothSidesEntries.length > 1,
+    };
+  }
+
+  const anyQualifies = LIMBS.some((limb) => byLimb[limb].qualifies);
+  const limbs = LIMBS.filter(
+    (limb) =>
+      byLimb[limb].qualifies ||
+      (anyQualifies && byLimb[limb].bothSidesAffected),
+  );
+  const inGroup = new Set(limbs.flatMap((limb) => byLimb[limb].members));
+  const alone = new Set(
+    LIMBS.filter((limb) => !limbs.includes(limb)).flatMap(
+      (limb) => byLimb[limb].bothSidesEntries,
+    ),
+  );
+
+  const issues = [];
+  for (const { condition, limb } of candidates) {
+    if (limb === "unknown" && candidates.length > 1) {
+      issues.push({ ...condition, reason: "limb-unknown" });
+    } else if (alone.has(condition)) {
+      issues.push({ ...condition, reason: "single-bilateral-evaluation" });
+    }
+  }
+
+  return { group: conditions.filter((c) => inGroup.has(c)), limbs, issues };
+}
+
 function _calculateBilateralGroup(bilateralConditions, steps, trail) {
   const bilateralRatings = bilateralConditions.map((c) => c.rating);
   const combinedBilateral = combineMultipleRatings(
@@ -333,6 +448,23 @@ function _buildFinalCalculationStep(
   };
 }
 
+/**
+ * Main VA Rating Calculator — the single source of truth for combined ratings.
+ * Implements full 38 CFR § 4.25 logic including the § 4.26 Bilateral Factor.
+ *
+ * The bilateral factor is applied to the group _formBilateralGroup forms, NOT
+ * to the two highest ratings. UI surfaces (MillionDollarDashboard, WhatIfSandbox,
+ * SecondaryScoutLauncher) combine through this engine / its primitives
+ * (combineMultipleRatings, calculateBilateralFactor) so the math stays
+ * consistent. The flat ratingCalculator.calculateCombinedRating is legacy.
+ *
+ * @param {Array} conditions - Array of condition objects:
+ *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none',
+ *     bodyPart: string, limb?: 'upper'|'lower'|'none' }
+ * @returns {Object} - Calculation results. `bilateralIssues` lists sided
+ *   entries that got no bilateral factor for a reason the veteran can fix:
+ *   { ...condition, reason: 'limb-unknown'|'single-bilateral-evaluation' }.
+ */
 export const calculateVARating = (conditions) => {
   if (!conditions || conditions.length === 0) {
     return {
@@ -342,6 +474,8 @@ export const calculateVARating = (conditions) => {
       bilateralFactor: 0,
       bilateralGroupRating: 0,
       nonBilateralConditions: [],
+      bilateralLimbs: [],
+      bilateralIssues: [],
       calculationSteps: [],
       combineSteps: [],
       gapToNext10: 0,
@@ -352,25 +486,14 @@ export const calculateVARating = (conditions) => {
   const steps = [];
   const combineSteps = [];
 
-  // Separate bilateral and non-bilateral conditions.
-  // Per §4.26 the bilateral factor requires an actual PAIR of compensable
-  // paired-extremity disabilities (a "left" + "right", or a single condition
-  // already marked "bilateral"). A lone "left" or "right" condition with no
-  // opposite-side counterpart is NOT bilateral and must not get the 10% boost.
-  const candidateBilateralConditions = conditions.filter(
-    (c) => c.side === "left" || c.side === "right" || c.side === "bilateral",
+  const {
+    group: bilateralConditions,
+    limbs: bilateralLimbs,
+    issues: bilateralIssues,
+  } = _formBilateralGroup(conditions);
+  const nonBilateralConditions = conditions.filter(
+    (c) => !bilateralConditions.includes(c),
   );
-  const hasQualifyingPair =
-    candidateBilateralConditions.some((c) => c.side === "bilateral") ||
-    (candidateBilateralConditions.some((c) => c.side === "left") &&
-      candidateBilateralConditions.some((c) => c.side === "right"));
-
-  const bilateralConditions = hasQualifyingPair
-    ? candidateBilateralConditions
-    : [];
-  const nonBilateralConditions = hasQualifyingPair
-    ? conditions.filter((c) => c.side === "none" || !c.side)
-    : conditions;
 
   steps.push({
     step: 1,
@@ -425,6 +548,8 @@ export const calculateVARating = (conditions) => {
     bilateralFactor,
     bilateralGroupRating,
     nonBilateralConditions: nonBilateralConditions.map((c) => ({ ...c })),
+    bilateralLimbs,
+    bilateralIssues,
     calculationSteps: steps,
     combineSteps,
     gapToNext10: Math.round(gapToNext10 * 10) / 10,
