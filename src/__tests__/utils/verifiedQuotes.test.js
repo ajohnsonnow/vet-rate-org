@@ -70,6 +70,9 @@ describe("correction quotes", () => {
       "presumptive-toxic",
       "presumed-toxic-exposure",
       "higher-level-review-evidence",
+      "supplemental-any-time",
+      "new-and-relevant",
+      "intent-to-file-purpose",
       "review-filing",
     ]);
   });
@@ -90,6 +93,9 @@ describe("correction quotes", () => {
     "tdiu-extra-schedular",
     "presumptive-toxic",
     "presumed-toxic-exposure",
+    "supplemental-any-time",
+    "new-and-relevant",
+    "intent-to-file-purpose",
     "review-filing",
   ])("%s is word for word in the text the model was given", (id) => {
     expect(allEntryText).toContain(quotes.corrections[id].text);

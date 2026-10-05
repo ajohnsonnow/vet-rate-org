@@ -167,6 +167,30 @@
         "retrieved": "2026-07-10"
       }
     },
+    "supplemental-any-time": {
+      "citation": "38 CFR § 3.2500(a)(2)",
+      "text": "(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "new-and-relevant": {
+      "citation": "38 CFR § 3.2501(a)",
+      "text": "(a) New and relevant evidence. The new and relevant standard will not impose a higher evidentiary threshold than the previous new and material evidence standard under § 3.156(a).",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "intent-to-file-purpose": {
+      "citation": "38 CFR § 3.155(b)",
+      "text": "(b) Intent to file a claim. A claimant, his or her duly authorized representative, a Member of Congress, or some person acting as next friend of claimant who is not of full age or capacity may indicate a claimant's desire to file a claim for benefits by submitting an intent to file a claim to VA.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
     "review-filing": {
       "citation": "38 CFR § 3.2500(a)",
       "text": "(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary: (i) A request for higher-level review under § 3.2601 or (ii) An appeal to the Board under § 20.202 of this chapter. (2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",

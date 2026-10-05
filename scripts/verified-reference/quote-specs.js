@@ -154,6 +154,21 @@ export const CORRECTION_SPECS = {
     section: "3.2601",
     select: [{ start: "(f) Evidentiary record.", firstSentences: 2 }],
   },
+  "supplemental-any-time": {
+    citation: "38 CFR § 3.2500(a)(2)",
+    section: "3.2500",
+    select: [SUPPLEMENTAL_ANY_TIME],
+  },
+  "new-and-relevant": {
+    citation: "38 CFR § 3.2501(a)",
+    section: "3.2501",
+    select: ["(a) New and relevant evidence."],
+  },
+  "intent-to-file-purpose": {
+    citation: "38 CFR § 3.155(b)",
+    section: "3.155",
+    select: [{ start: "(b) Intent to file a claim.", firstSentences: 2 }],
+  },
   "review-filing": {
     citation: "38 CFR § 3.2500(a)",
     section: "3.2500",
