@@ -1,0 +1,394 @@
+{
+  "_generated": {
+    "by": "scripts/verified-reference/build.mjs",
+    "note": "Generated. Do not edit by hand; change the script and rebuild."
+  },
+  "entries": [
+    {
+      "id": "cfr-3.155-b",
+      "citation": "38 CFR § 3.155(b)",
+      "sourceLabel": "eCFR",
+      "text": "The following paragraphs describe the manner and methods in which a claim can be initiated and filed. The provisions of this section are applicable to all claims governed by part 3, with the exception that paragraph (b) of this section, regarding intent to file a claim, does not apply to supplemental claims.\n[...]\n(b) Intent to file a claim. A claimant, his or her duly authorized representative, a Member of Congress, or some person acting as next friend of claimant who is not of full age or capacity may indicate a claimant's desire to file a claim for benefits by submitting an intent to file a claim to VA. An intent to file a claim must provide sufficient identifiable or biographical information to identify the claimant. Upon receipt of the intent to file a claim, VA will furnish the claimant with the appropriate application form prescribed by the Secretary. If VA receives a complete application form prescribed by the Secretary, as defined in paragraph (a) of § 3.160, appropriate to the benefit sought within 1 year of receipt of the intent to file a claim, VA will consider the complete claim filed as of the date the intent to file a claim was received.\n[...]\n(4) If an intent to file a claim is not submitted in the form required by paragraph (b)(1) of this section or a complete claim is not filed within 1 year of the receipt of the intent to file a claim, VA will not take further action unless a new claim or a new intent to file a claim is received.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.155",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.155",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-3.155-b-1",
+      "citation": "38 CFR § 3.155(b)(1)",
+      "sourceLabel": "eCFR",
+      "text": "(1) An intent to file a claim can be submitted in one of the following three ways:\n(i) Saved electronic application. When an application otherwise meeting the requirements of this paragraph (b) is electronically initiated and saved in a claims-submission tool within a VA web-based electronic claims application system prior to filing of a complete claim, VA will consider that application to be an intent to file a claim.\n(ii) Written intent on prescribed intent to file a claim form. The submission to an agency of original jurisdiction of a signed and dated intent to file a claim, on the form prescribed by the Secretary for that purpose, will be accepted as an intent to file a claim.\n(iii) Oral intent communicated to designated VA personnel and recorded in writing. An oral statement of intent to file a claim will be accepted if it is directed to a VA employee designated to receive such a communication, the VA employee receiving this information follows the provisions set forth in § 3.217(b), and the VA employee documents the date VA received the claimant's intent to file a claim in the claimant's records.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.155",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.155",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-3.310-a",
+      "citation": "38 CFR § 3.310(a)",
+      "sourceLabel": "eCFR",
+      "text": "(a) General. Except as provided in § 3.300(c), disability which is proximately due to or the result of a service-connected disease or injury shall be service connected. When service connection is thus established for a secondary condition, the secondary condition shall be considered a part of the original condition.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.310",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.310",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-3.310-b",
+      "citation": "38 CFR § 3.310(b)",
+      "sourceLabel": "eCFR",
+      "text": "(b) Aggravation of nonservice-connected disabilities. Any increase in severity of a nonservice-connected disease or injury that is proximately due to or the result of a service-connected disease or injury, and not due to the natural progress of the nonservice-connected disease, will be service connected. However, VA will not concede that a nonservice-connected disease or injury was aggravated by a service-connected disease or injury unless the baseline level of severity of the nonservice-connected disease or injury is established by medical evidence created before the onset of aggravation or by the earliest medical evidence created at any time between the onset of aggravation and the receipt of medical evidence establishing the current level of severity of the nonservice-connected disease or injury. The rating activity will determine the baseline and current levels of severity under the Schedule for Rating Disabilities (38 CFR part 4) and determine the extent of aggravation by deducting the baseline level of severity, as well as any increase in severity due to the natural progress of the disease, from the current level.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.310",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.310",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-3.310-c-d",
+      "citation": "38 CFR § 3.310(c)-(d)",
+      "sourceLabel": "eCFR",
+      "text": "(c) Cardiovascular disease. Ischemic heart disease or other cardiovascular disease developing in a veteran who has a service-connected amputation of one lower extremity at or above the knee or service-connected amputations of both lower extremities at or above the ankles, shall be held to be the proximate result of the service-connected amputation or amputations.\n(d) Traumatic brain injury.\n(1) In a veteran who has a service-connected traumatic brain injury, the following shall be held to be the proximate result of the service-connected traumatic brain injury (TBI), in the absence of clear evidence to the contrary:\n(i) Parkinsonism, including Parkinson's disease, following moderate or severe TBI;\n(ii) Unprovoked seizures following moderate or severe TBI;\n(iii) Dementias of the following types: presenile dementia of the Alzheimer type, frontotemporal dementia, and dementia with Lewy bodies, if manifest within 15 years following moderate or severe TBI;\n(iv) Depression if manifest within 3 years of moderate or severe TBI, or within 12 months of mild TBI; or\n(v) Diseases of hormone deficiency that result from hypothalamo-pituitary changes if manifest within 12 months of moderate or severe TBI.\n(2) Neither the severity levels nor the time limits in paragraph (d)(1) of this section preclude a finding of service connection for conditions shown by evidence to be proximately due to service-connected TBI. If a claim does not meet the requirements of paragraph (d)(1) with respect to the time of manifestation or the severity of the TBI, or both, VA will develop and decide the claim under generally applicable principles of service connection without regard to paragraph (d)(1).",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.310",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.310",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-3.2501",
+      "citation": "38 CFR § 3.2501",
+      "sourceLabel": "eCFR",
+      "text": "Except as otherwise provided, a claimant or his or her authorized representative, if any, who disagrees with a prior VA decision may file a supplemental claim (see § 3.1(p)(2)) by submitting in writing or electronically a complete application (see § 3.160(a)) on a form prescribed by the Secretary any time after the agency of original jurisdiction issues notice of a decision, regardless of whether the claim is pending (see § 3.160(c)) or has become finally adjudicated (see § 3.160(d)). If new and relevant evidence is presented or secured with respect to the supplemental claim, the agency of original jurisdiction will readjudicate the claim taking into consideration all of the evidence of record. If new and relevant evidence is not presented or secured, the agency of original jurisdiction will issue a decision finding that there was insufficient evidence to readjudicate the claim. In determining whether new and relevant evidence is presented or secured, VA will consider any VA treatment records reasonably identified by the claimant and any evidence received by VA after VA issued notice of a decision on the claim and while the evidentiary record was closed (see 3.103(c)).",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.2501",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.2501",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-3.2501-a-d",
+      "citation": "38 CFR § 3.2501(a), (d)",
+      "sourceLabel": "eCFR",
+      "text": "(a) New and relevant evidence. The new and relevant standard will not impose a higher evidentiary threshold than the previous new and material evidence standard under § 3.156(a).\n(1) Definition. New evidence is evidence not previously part of the actual record before agency adjudicators. Relevant evidence is information that tends to prove or disprove a matter at issue in a claim. Relevant evidence includes evidence that raises a theory of entitlement that was not previously addressed.\n[...]\n(d) Date of filing. The filing date of a supplemental claim is determined according to § 3.155, with the exception of the intent to file rule found in § 3.155(b) which applies to initial claims.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.2501",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.2501",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.16-a",
+      "citation": "38 CFR § 4.16(a)",
+      "sourceLabel": "eCFR",
+      "text": "(a) Total disability ratings for compensation may be assigned, where the schedular rating is less than total, when the disabled person is, in the judgment of the rating agency, unable to secure or follow a substantially gainful occupation as a result of service-connected disabilities: Provided That, if there is only one such disability, this disability shall be ratable at 60 percent or more, and that, if there are two or more disabilities, there shall be at least one disability ratable at 40 percent or more, and sufficient additional disability to bring the combined rating to 70 percent or more. For the above purpose of one 60 percent disability, or one 40 percent disability in combination, the following will be considered as one disability:\n(1) Disabilities of one or both upper extremities, or of one or both lower extremities, including the bilateral factor, if applicable,\n(2) disabilities resulting from common etiology or a single accident,\n(3) disabilities affecting a single body system, e.g. orthopedic, digestive, respiratory, cardiovascular-renal, neuropsychiatric,\n(4) multiple injuries incurred in action, or\n(5) multiple disabilities incurred as a prisoner of war.\n[...]",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.16",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.16",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.16-b",
+      "citation": "38 CFR § 4.16(b)",
+      "sourceLabel": "eCFR",
+      "text": "(b) It is the established policy of the Department of Veterans Affairs that all veterans who are unable to secure and follow a substantially gainful occupation by reason of service-connected disabilities shall be rated totally disabled. Therefore, rating boards should submit to the Director, Compensation Service, for extra-schedular consideration all cases of veterans who are unemployable by reason of service-connected disabilities, but who fail to meet the percentage standards set forth in paragraph (a) of this section. The rating board will include a full statement as to the veteran's service-connected disabilities, employment history, educational and vocational attainment and all other factors having a bearing on the issue.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.16",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.16",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.16-a-employment",
+      "citation": "38 CFR § 4.16(a), continued",
+      "sourceLabel": "eCFR",
+      "text": "[...]\nIt is provided further that the existence or degree of nonservice-connected disabilities or previous unemployability status will be disregarded where the percentages referred to in this paragraph for the service-connected disability or disabilities are met and in the judgment of the rating agency such service-connected disabilities render the veteran unemployable. Marginal employment shall not be considered substantially gainful employment. For purposes of this section, marginal employment generally shall be deemed to exist when a veteran's earned annual income does not exceed the amount established by the U.S. Department of Commerce, Bureau of the Census, as the poverty threshold for one person. Marginal employment may also be held to exist, on a facts found basis (includes but is not limited to employment in a protected environment such as a family business or sheltered workshop), when earned annual income exceeds the poverty threshold. Consideration shall be given in all claims to the nature of the employment and the reason for termination.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.16",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.16",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.25",
+      "citation": "38 CFR § 4.25",
+      "sourceLabel": "eCFR",
+      "text": "Table I, Combined Ratings Table, results from the consideration of the efficiency of the individual as affected first by the most disabling condition, then by the less disabling condition, then by other less disabling conditions, if any, in the order of severity. Thus, a person having a 60 percent disability is considered 40 percent efficient. Proceeding from this 40 percent efficiency, the effect of a further 30 percent disability is to leave only 70 percent of the efficiency remaining after consideration of the first disability, or 28 percent efficiency altogether. The individual is thus 72 percent disabled, as shown in table I opposite 60 percent and under 30 percent.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.25",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.25",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.25-a",
+      "citation": "38 CFR § 4.25(a)",
+      "sourceLabel": "eCFR",
+      "text": "(a) To use table I, the disabilities will first be arranged in the exact order of their severity, beginning with the greatest disability and then combined with use of table I as hereinafter indicated. For example, if there are two disabilities, the degree of one disability will be read in the left column and the degree of the other in the top row, whichever is appropriate. The figures appearing in the space where the column and row intersect will represent the combined value of the two. This combined value will then be converted to the nearest number divisible by 10, and combined values ending in 5 will be adjusted upward. Thus, with a 50 percent disability and a 30 percent disability, the combined value will be found to be 65 percent, but the 65 percent must be converted to 70 percent to represent the final degree of disability. Similarly, with a disability of 40 percent, and another disability of 20 percent, the combined value is found to be 52 percent, but the 52 percent must be converted to the nearest degree divisible by 10, which is 50 percent. If there are more than two disabilities, the disabilities will also be arranged in the exact order of their severity and the combined value for the first two will be found as previously described for two disabilities. The combined value, exactly as found in table I, will be combined with the degree of the third disability (in order of severity). The combined value for the three disabilities will be found in the space where the column and row intersect, and if there are only three disabilities will be converted to the nearest degree divisible by 10, adjusting final 5's upward. Thus, if there are three disabilities ratable at 60 percent, 40 percent, and 20 percent, respectively, the combined value for the first two will be found opposite 60 and under 40 and is 76 percent. This 76 will be combined with 20 and the combined value for the three is 81 percent. This combined value will be converted to the nearest degree divisible by 10 which is 80 percent. The same procedure will be employed when there are four or more disabilities. (See table I).",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.25",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.25",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.25-b",
+      "citation": "38 CFR § 4.25(b)",
+      "sourceLabel": "eCFR",
+      "text": "(b) Except as otherwise provided in this schedule, the disabilities arising from a single disease entity, e.g., arthritis, multiple sclerosis, cerebrovascular accident, etc., are to be rated separately as are all other disabiling conditions, if any. All disabilities are then to be combined as described in paragraph (a) of this section. The conversion to the nearest degree divisible by 10 will be done only once per rating decision, will follow the combining of all disabilities, and will be the last procedure in determining the combined degree of disability.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.25",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.25",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.26",
+      "citation": "38 CFR § 4.26",
+      "sourceLabel": "eCFR",
+      "text": "Except as provided in paragraph (d) of this section, when a partial disability results from disease or injury of both arms, or of both legs, or of paired skeletal muscles, the ratings for the disabilities of the right and left sides will be combined as usual, and 10 percent of this value will be added (i.e., not combined) before proceeding with further combinations, or converting to degree of disability. The bilateral factor will be applied to such bilateral disabilities before other combinations are carried out and the rating for such disabilities including the bilateral factor in this section will be treated as one disability for the purpose of arranging in order of severity and for all further combinations. For example, with disabilities evaluated at 60 percent, 20 percent, 10 percent and 10 percent (with the two 10 percent evaluations being bilateral disabilities), the order of severity would be 60, 21 and 20. The 60 and 21 combine to 68 percent and the 68 and 20 combine to 74 percent, converted to 70 percent as the final degree of disability.\n[...]\n(c) Applicability. The bilateral factor is not applicable unless there is partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.26",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.26",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-4.26-a-b-d",
+      "citation": "38 CFR § 4.26(a), (b), (d)",
+      "sourceLabel": "eCFR",
+      "text": "(a) Definitions. The use of the terms “arms” and “legs” is not intended to distinguish between the arm, forearm and hand, or the thigh, leg, and foot, but relates to the upper extremities and lower extremities as a whole. Thus with a compensable disability of the right thigh, for example, amputation, and one of the left foot, for example, pes planus, the bilateral factor applies, and similarly whenever there are compensable disabilities affecting use of paired extremities regardless of location or specified type of impairment.\n(b) Procedure for four affected extremities. The correct procedure when applying the bilateral factor to disabilities affecting both upper extremities and both lower extremities is to combine the ratings of the disabilities affecting the 4 extremities in the order of their individual severity and apply the bilateral factor by adding, not combining, 10 percent of the combined value thus attained.\n[...]\n(d) Exception. In cases where the combined evaluation is lower than what could be achieved by not including one or more bilateral disabilities in the bilateral factor calculation, those bilateral disabilities will be removed from the bilateral factor calculation and combined separately, to achieve the combined evaluation most favorable to the veteran.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 4.26",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-4/section-4.26",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "pact-toxic-conditions",
+      "citation": "M21-1 VIII.ii.2.A.1.f-h (PACT Act, 38 U.S.C. 1120; 38 CFR 3.320a, 3.320b)",
+      "sourceLabel": "VA Adjudication Procedures Manual M21-1",
+      "text": "VIII.ii.2.A.1.f. Presumptive Disabilities Under 38 U.S.C. 1120 Effective August 10, 2022, the PACT Act created 38 U.S.C. 1120, which allows for presumptive SC for certain diseases associated with exposure to burn pits and other toxins. Under 38 U.S.C. 1120, the recognized presumptive conditions are head cancer of any type neck cancer of any type respiratory cancer of any type gastrointestinal cancer of any type reproductive cancer of any type lymphoma cancer of any type kidney cancer brain cancer melanoma pancreatic cancer chronic bronchitis chronic obstructive pulmonary disease constrictive bronchiolitis or obliterative bronchiolitis emphysema granulomatous disease interstitial lung disease pleuritis pulmonary fibrosis sarcoidosis glioblastoma asthma diagnosed after service chronic sinusitis, or chronic rhinitis.\nVIII.ii.2.A.1.g. Presumptive Disabilities Under 38 CFR 3.320a Effective January 2, 2025, VA established 38 CFR 3.320a, which created presumptive SC for covered Veterans for the following disabilities: urinary bladder cancer, including over-lapping sites of the bladder, and ureter cancer, including the ureteric orifice and urachus.\nVIII.ii.2.A.1.h. Presumptive Disabilities Under 38 CFR 3.320b Effective January 10, 2025, VA established 38 CFR 3.320b, which created presumptive SC for covered Veterans for the following disabilities: acute leukemias chronic leukemias multiple myelomas, including monoclonal gammopathy of undetermined significance myelodysplastic syndromes, and myelofibrosis.",
+      "abbreviations": [
+        {
+          "short": "SC",
+          "long": "service connection"
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "article": "M21-1, Part VIII, Subpart ii, Chapter 2, Section A - General Information on Claims Based on Exposure to Burn Pits and Other Toxins, Including Fine Particulate Matter (BPOT)",
+        "url": "https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/article/554400000177441",
+        "retrieved": "2026-07-19",
+        "changeDate": "June 6, 2025"
+      }
+    },
+    {
+      "id": "pact-toxic-service",
+      "citation": "M21-1 VIII.ii.2.A.1.e (PACT Act covered Veteran: locations and dates, 38 U.S.C. 1119)",
+      "sourceLabel": "VA Adjudication Procedures Manual M21-1",
+      "text": "VIII.ii.2.A.1.e. Definition: Covered Veteran A covered Veteran means any Veteran who performed active military, naval, air, or space service while assigned to a duty station as shown in the table below. VA will presume BPOT exposure for any Veteran who served during the applicable timeframe in one of the locations as listed in the table below. Time period 38 CFR 3.320 Locations 38 U.S.C. 1119 Locations Active service on or after August 2, 1990 Duty station in, including airspace above, Bahrain Iraq Kuwait Oman Qatar Saudi Arabia United Arab Emirates the neutral zone between Iraq and Saudi Arabia the Gulf of Aden the Gulf of Oman the Persian Gulf the Arabian Sea, or the Red Sea. Duty station in, including airspace above, Somalia. Active service on or after September 11, 2001 Duty station in, including airspace above, Afghanistan Djibouti Syria, or Uzbekistan. Duty station in, including airspace above, Egypt Jordan Lebanon, or Yemen. Note: There is no minimum duration of exposure required for VA to concede BPOT exposure.",
+      "abbreviations": [
+        {
+          "short": "BPOT",
+          "long": "burn pits and other toxins, including fine particulate matter"
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "article": "M21-1, Part VIII, Subpart ii, Chapter 2, Section A - General Information on Claims Based on Exposure to Burn Pits and Other Toxins, Including Fine Particulate Matter (BPOT)",
+        "url": "https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/article/554400000177441",
+        "retrieved": "2026-07-19",
+        "changeDate": "June 6, 2025"
+      }
+    },
+    {
+      "id": "pact-toxic-rule",
+      "citation": "M21-1 VIII.ii.2.A.1.d (PACT Act presumption of service connection)",
+      "sourceLabel": "VA Adjudication Procedures Manual M21-1",
+      "text": "VIII.ii.2.A.1.d. Establishing Presumption of SC For Qualifying Disabilities Veterans who served in a qualifying location as listed in M21-1, Part VIII, Subpart ii, 2.A.1.e and are suffering from a recognized BPOT presumptive disability may receive compensation benefits. Effective August 10, 2022, the presumption of SC does not require the disability to manifest within any time frame after service nor to any degree of disability. Exception: Presumptive SC cannot be established if there is affirmative evidence the disability(ies) was caused by another condition or event that occurred between the Veteran’s qualifying service and the onset of the disability, or the result of the Veteran’s own willful misconduct or the abuse of alcohol or drugs.",
+      "abbreviations": [
+        {
+          "short": "SC",
+          "long": "service connection"
+        },
+        {
+          "short": "BPOT",
+          "long": "burn pits and other toxins, including fine particulate matter"
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "article": "M21-1, Part VIII, Subpart ii, Chapter 2, Section A - General Information on Claims Based on Exposure to Burn Pits and Other Toxins, Including Fine Particulate Matter (BPOT)",
+        "url": "https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/article/554400000177441",
+        "retrieved": "2026-07-19",
+        "changeDate": "June 6, 2025"
+      }
+    },
+    {
+      "id": "pact-herbicide-conditions",
+      "citation": "M21-1 VIII.i.1.A.1.f (presumptive herbicide disabilities, 38 CFR 3.309(e); 38 U.S.C. 1116)",
+      "sourceLabel": "VA Adjudication Procedures Manual M21-1",
+      "text": "VIII.i.1.A.1.f. Presumptive Herbicide Disabilities The table below lists the disabilities that qualify for presumptive service connection (SC) due to herbicide exposure and the relevant authority that establishes the presumption. Disability Authority Chloracne or other acne-form disease consistent with chloracne soft-tissue sarcoma, other than osteosarcoma chondrosarcoma Kaposi’s sarcoma, or mesothelioma non-Hodgkin’s lymphoma (NHL) porphyria cutanea tarda Hodgkin’s disease respiratory cancers of the lung bronchus larynx, or trachea, and multiple myeloma prostate cancer acute and subacute peripheral neuropathy type 2 diabetes mellitus chronic lymphocytic leukemia AL amyloidosis ischemic heart disease chronic B-cell leukemia Parkinson’s disease, and early-onset peripheral neuropathy. 38 CFR 3.309(e) parkinsonism bladder cancer hypothyroidism monoclonal gammopathy of undetermined significance (MGUS), and hypertension. 38 U.S.C. 1116",
+      "abbreviations": [
+        {
+          "short": "SC",
+          "long": "service connection"
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "article": "M21-1, Part VIII, Subpart i, Chapter 1, Section A - General Information on Claims Based on Herbicide Exposure",
+        "url": "https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/article/554400000177422",
+        "retrieved": "2026-07-19",
+        "changeDate": "September 15, 2025"
+      }
+    },
+    {
+      "id": "pact-herbicide-service",
+      "citation": "M21-1 VIII.i.1.A.1.c (presumed herbicide exposure: locations and dates)",
+      "sourceLabel": "VA Adjudication Procedures Manual M21-1",
+      "text": "VIII.i.1.A.1.c. Presuming Exposure to an Herbicide Agent Currently, the Department of Veterans Affairs (VA) recognizes a presumption of exposure to herbicides in specific locations and military service experiences as listed in the table below. Presumptive exposure provision applies to ... Authority Veterans who served in the Republic of Vietnam (RVN) during the period beginning on January 9, 1962, and ending on May 7, 1975, or a unit that, as determined by the Department of War, operated in or near the Korean demilitarized zone between September 1, 1967, and August 31, 1971, and individuals who performed service in the Air Force or Air Force Reserve under circumstances in which the individual concerned regularly and repeatedly operated, maintained, or served onboard C–123 aircraft known to have been used to spray an herbicide agent during the Vietnam era. 38 CFR 3.307(a)(6) Veterans who served aboard a vessel operating not more than 12 nautical miles seaward of a line commencing on the southwestern demarcation line of the waters of Vietnam and Cambodia and intersecting the coordinates listed in Public Law (PL) 116-23 during the period beginning January 9, 1962, and ending on May 7, 1975. 38 U.S.C. 1116A locations during specific time frames as shown in the table below. Veterans who performed covered service in/on ... During the period ... Thailand at any United States or Royal Thai base, without regard to where on the base the Veteran was located or what military occupational specialty (MOS) the Veteran performed January 9, 1962, to June 30, 1976. Laos December 1, 1965, to September 30, 1969. Cambodia at Mimot or Krek, Kampong Cham Province April 16, 1969, to April 30, 1969. Guam or American Samoa, or in the territorial waters thereof January 9, 1962, to July 31, 1980. Johnston Atoll or on a ship that called at Johnston Atoll January 1, 1972, to September 30, 1977. 38 U.S.C. 1116",
+      "abbreviations": [],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "article": "M21-1, Part VIII, Subpart i, Chapter 1, Section A - General Information on Claims Based on Herbicide Exposure",
+        "url": "https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/article/554400000177422",
+        "retrieved": "2026-07-19",
+        "changeDate": "September 15, 2025"
+      }
+    },
+    {
+      "id": "pact-herbicide-law-changes",
+      "citation": "M21-1 VIII.i.1.A.2.a (herbicide law changes, PACT Act)",
+      "sourceLabel": "VA Adjudication Procedures Manual M21-1",
+      "text": "VIII.i.1.A.2.a. Legislative Changes Related to Herbicide Claims Congress has enacted multiple herbicide-related legislative changes that are currently authorized by statute only. The table below lists the legislative herbicide changes that have not been finalized through rulemaking. Law Impact Enactment Date PL 116-23, the Blue Water Navy Vietnam Veterans Act of 2019 Created 38 U.S.C. 1116A, which extended the presumption of herbicide exposure to Veterans with service during the specified time range in the qualifying offshore waters of the RVN. January 1, 2020 PL 116-283, William M. (Mac) Thornberry National Defense Authorization Act for Fiscal Year 2021 Amended 38 U.S.C. 1116 to establish a presumption of SC based on herbicide exposure for the following: parkinsonism bladder cancer, and hypothyroidism. January 1, 2021 PL 117-168, Sergeant First Class Heath Robinson Honoring our Promise to Address Comprehensive Toxics Act of 2022 Expanded presumptive herbicide exposure to additional locations as listed in 38 U.S.C. 1116. Created a presumption of SC for hypertension and MGUS. August 10, 2022",
+      "abbreviations": [
+        {
+          "short": "SC",
+          "long": "service connection"
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "article": "M21-1, Part VIII, Subpart i, Chapter 1, Section A - General Information on Claims Based on Herbicide Exposure",
+        "url": "https://www.knowva.ebenefits.va.gov/system/templates/selfservice/va_ssnew/help/customer/locale/en-US/portal/554400000001018/article/554400000177422",
+        "retrieved": "2026-07-19",
+        "changeDate": "September 15, 2025"
+      }
+    },
+    {
+      "id": "va-forms",
+      "citation": "VA claim forms: number and official title",
+      "sourceLabel": "titles as cited in VA Adjudication Procedures Manual M21-1",
+      "text": "VA Form 21-526EZ: Application for Disability Compensation and Related Compensation Benefits\nVA Form 21-0966: Intent to File a Claim for Compensation and/or Pension, or Survivors Pension and/or DIC\nVA Form 20-0995: Decision Review Request: Supplemental Claim\nVA Form 20-0996: Decision Review Request: Higher-Level Review\nVA Form 10182: Decision Review Request: Board Appeal (Notice of Disagreement)\nVA Form 21-4138: Statement in Support of Claim\nVA Form 21-10210: Lay/Witness Statement\nVA Form 21-0781: Statement in Support of Claimed Mental Health Disorder(s) Due to an In-Service Traumatic Event(s)\nVA Form 21-8940: Veteran's Application for Increased Compensation Based on Unemployability\nVA Form 21-4192: Request for Employment Information in Connection With Claim for Disability Benefits\nVA Form 21-4142: Authorization to Disclose Information to the Department of Veterans Affairs (VA)\nVA Form 21-4142a: General Release for Medical Provider Information to the Department of Veterans Affairs (VA)\nVA Form 21-22: Appointment of Veterans Service Organization as Claimant's Representative\nVA Form 21-22a: Appointment of Individual as Claimant's Representative\nVA Form 21-686c: Application Request to Add and/or Remove Dependents\nVA Form 21-2680: Examination for Housebound Status or Permanent Need for Regular Aid and Attendance",
+      "forms": [
+        {
+          "number": "21-526EZ",
+          "title": "Application for Disability Compensation and Related Compensation Benefits",
+          "mentions": 43
+        },
+        {
+          "number": "21-0966",
+          "title": "Intent to File a Claim for Compensation and/or Pension, or Survivors Pension and/or DIC",
+          "mentions": 2
+        },
+        {
+          "number": "20-0995",
+          "title": "Decision Review Request: Supplemental Claim",
+          "mentions": 25
+        },
+        {
+          "number": "20-0996",
+          "title": "Decision Review Request: Higher-Level Review",
+          "mentions": 5
+        },
+        {
+          "number": "10182",
+          "title": "Decision Review Request: Board Appeal (Notice of Disagreement)",
+          "mentions": 3
+        },
+        {
+          "number": "21-4138",
+          "title": "Statement in Support of Claim",
+          "mentions": 12
+        },
+        {
+          "number": "21-10210",
+          "title": "Lay/Witness Statement",
+          "mentions": 10
+        },
+        {
+          "number": "21-0781",
+          "title": "Statement in Support of Claimed Mental Health Disorder(s) Due to an In-Service Traumatic Event(s)",
+          "mentions": 6
+        },
+        {
+          "number": "21-8940",
+          "title": "Veteran's Application for Increased Compensation Based on Unemployability",
+          "mentions": 9
+        },
+        {
+          "number": "21-4192",
+          "title": "Request for Employment Information in Connection With Claim for Disability Benefits",
+          "mentions": 5
+        },
+        {
+          "number": "21-4142",
+          "title": "Authorization to Disclose Information to the Department of Veterans Affairs (VA)",
+          "mentions": 10
+        },
+        {
+          "number": "21-4142a",
+          "title": "General Release for Medical Provider Information to the Department of Veterans Affairs (VA)",
+          "mentions": 8
+        },
+        {
+          "number": "21-22",
+          "title": "Appointment of Veterans Service Organization as Claimant's Representative",
+          "mentions": 14
+        },
+        {
+          "number": "21-22a",
+          "title": "Appointment of Individual as Claimant's Representative",
+          "mentions": 12
+        },
+        {
+          "number": "21-686c",
+          "title": "Application Request to Add and/or Remove Dependents",
+          "mentions": 24
+        },
+        {
+          "number": "21-2680",
+          "title": "Examination for Housebound Status or Permanent Need for Regular Aid and Attendance",
+          "mentions": 13
+        }
+      ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "numbersCheckedAgainst": "src/data/validVAForms.json",
+        "retrieved": "2026-07-19"
+      }
+    }
+  ]
+}
