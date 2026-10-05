@@ -64,3 +64,11 @@ First-load download is larger than before: about 2.4 GB against 1.8 GB on deskto
 ## 6. Open items
 
 Measure the 2B and 4B on a real laptop and tablet before trusting those tiers.
+
+## 7. Repetition loops on the 2B: frequency penalty
+
+On the final build the 2B ran 5 of 38 answers (a04, a06, a18, and the drafts of a12 and a13) in a loop to the output limit, about 30 seconds each, and the answers were trimmed afterwards. The 4B had none.
+
+- `SMALL_MODEL_FREQUENCY_PENALTY = 0.3` in `src/utils/deviceCapabilityDetector.js` is set on the 2B's row of the per-model table and sent as `frequency_penalty` with plain-text on-device requests. Every other model, including the 4B, stays at 0. Schema-constrained requests keep their existing 1.15.
+- **0.3 is a conservative starting point to be tuned by evaluation, not a measured optimum.** It has not been run against the engine yet.
+- The evaluation runs at temperature 0. Production tool calls pass 0.1 to 0.7 (most of the on-device tools use 0.2 to 0.4; the general default is 0.7), so loops at temperature 0 may overstate how often production sees them. How often they occur at the production temperatures is not measured.

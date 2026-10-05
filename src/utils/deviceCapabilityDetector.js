@@ -240,6 +240,11 @@ function _configForTier(tier) {
 // @mlc-ai/web-llm prebuilt model list, rounded to 0.1 GB. downloadGB for the
 // Qwen3.5 and Qwen2.5 q4f16 entries is the summed file size of the mlc-ai
 // Hugging Face repository (read 2026-10-05); the others are earlier estimates.
+// frequencyPenalty is sent with plain-text on-device requests; absent means 0.
+// A starting value for the 2B, chosen conservatively after it ran answers into
+// repetition loops in evaluation (ADR-010); tune by evaluation, not measured.
+export const SMALL_MODEL_FREQUENCY_PENALTY = 0.3;
+
 const MODEL_FOOTPRINT = {
   "Qwen3.5-4B-q4f16_1-MLC": {
     displayName: "Qwen 3.5 4B",
@@ -250,6 +255,7 @@ const MODEL_FOOTPRINT = {
     displayName: "Qwen 3.5 2B",
     downloadGB: 1.1,
     vramGB: 2.2,
+    frequencyPenalty: SMALL_MODEL_FREQUENCY_PENALTY,
   },
   "Qwen2.5-3B-Instruct-q4f16_1-MLC": {
     displayName: "Qwen 2.5 3B",
@@ -293,6 +299,10 @@ export function describeDeviceModel(profile) {
     downloadGB: footprint?.downloadGB ?? null,
     vramGB: footprint?.vramGB ?? null,
   };
+}
+
+export function getModelFrequencyPenalty(modelId) {
+  return MODEL_FOOTPRINT[modelId]?.frequencyPenalty ?? 0;
 }
 
 /** Returns the cached profile synchronously, or null if not yet probed. */

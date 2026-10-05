@@ -24,6 +24,7 @@ const profile = vi.hoisted(() => ({
 vi.mock("../../utils/deviceCapabilityDetector", () => ({
   detectDeviceCapabilities: vi.fn(async () => profile.value),
   getCachedDeviceProfile: vi.fn(() => profile.value),
+  getModelFrequencyPenalty: vi.fn(() => 0),
 }));
 
 import { generateWithSwarm, initializeSwarm } from "../../utils/diamondSwarm";
