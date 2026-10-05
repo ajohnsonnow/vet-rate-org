@@ -13,13 +13,20 @@ import {
 } from "../../scripts/eval/lib/goldenRecord.js";
 import { assembleCaseRecord } from "../../scripts/eval/lib/caseRecord.js";
 import { recordAllCases } from "../../scripts/eval/lib/caseLoop.js";
+import {
+  TOOL_ENTRIES,
+  normalizeToolOutcome,
+} from "../../scripts/eval/lib/toolEntries.js";
 
 /**
  * Golden-set evaluation of the on-device AI. Boots the real app (headed
  * Chromium with WebGPU, see playwright.eval.config.ts), forces ONE WebLLM
  * model id, then sends each golden-set case through the production generateAI
  * path with the case's toolId, so persona selection, knowledge-base context
- * injection and calculator grounding behave as they do for a user.
+ * injection and calculator grounding behave as they do for a user. A tool case
+ * (one with `entry`) instead calls the function the app's own screen calls,
+ * with the case's form inputs, so the request is the tool's own: its prompt,
+ * its system prompt, its temperature and token limit.
  *
  * Driven by scripts/eval/run-golden-set.mjs, which sets the EVAL_* variables,
  * claims the transcript file, and grades the transcript afterwards. This spec
@@ -75,6 +82,7 @@ interface EvalWindow {
       resetAICircuitBreaker(): void;
       isDiamondSwarmReady(): boolean;
     };
+    tools: Record<string, (...args: unknown[]) => Promise<unknown>>;
   };
 }
 
@@ -145,7 +153,19 @@ async function exposeAppModules(page: Page): Promise<void> {
       import * as dc from "/src/utils/deviceCapabilityDetector.js";
       import * as swarm from "/src/utils/diamondSwarm.js";
       import * as ai from "/src/utils/unifiedAIService.js";
-      window.__evalMods = { dc, swarm, ai };
+      import * as helper from "/src/utils/aiStatementHelper.js";
+      import { _compileStatementWithAI } from "/src/components/WitnessBench.jsx";
+      import { _generateVocationalImpact } from "/src/components/TDIUBuilder.jsx";
+      const tools = {
+        enhancePersonalStatement: helper.enhancePersonalStatement,
+        enhanceFormStatement: helper.enhanceFormStatement,
+        enhanceAppealStatement: helper.enhanceAppealStatement,
+        generateNexusLetterRequest: helper.generateNexusLetterRequest,
+        compileWitnessStatement: _compileStatementWithAI,
+        generateVocationalImpact: _generateVocationalImpact,
+        decodeDecision: helper.decodeDecision,
+      };
+      window.__evalMods = { dc, swarm, ai, tools };
     `,
   });
   await page.waitForFunction(
@@ -219,6 +239,7 @@ interface CaseOutcome {
   citationsUnverified?: unknown;
   rawResponse?: string;
   outputCleanup?: unknown;
+  toolResult?: unknown;
   captured: CapturedRequest[];
 }
 
@@ -286,6 +307,46 @@ function runCase(
   }, args);
 }
 
+/**
+ * Call the production function a tool case names, with its arguments. The
+ * run's temperature, token limit and thinking switch do not apply: the tool
+ * sets its own, as it does for a user. The function's own return value comes
+ * back as `toolResult`.
+ */
+function runToolCase(
+  page: Page,
+  args: { entry: string; args: unknown[] },
+): Promise<CaseOutcome> {
+  return page.evaluate(async (a) => {
+    const w = window as unknown as EvalWindow;
+    const mods = w.__evalMods!;
+    w.__evalCaptured.length = 0;
+    mods.swarm.clearLastSwarmGeneration();
+    mods.ai.resetAICircuitBreaker();
+    // The statement helper allows one request every 10 s and 30 an hour;
+    // cases run back to back.
+    localStorage.removeItem("vetrate_ai_ratelimit");
+    const started = performance.now();
+    const observed = () => ({
+      rawResponse: mods.swarm.getLastSwarmGeneration()?.raw,
+      outputCleanup:
+        mods.swarm.getLastSwarmGeneration()?.outputCleanup ?? undefined,
+      latencyMs: performance.now() - started,
+      captured: [...w.__evalCaptured],
+    });
+    try {
+      const toolResult = await mods.tools[a.entry](...a.args);
+      return { ok: true, toolResult, ...observed() };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : String(err),
+        ...observed(),
+      };
+    }
+  }, args);
+}
+
 function withNodeTimeout<T>(
   work: Promise<T>,
   ms: number,
@@ -347,7 +408,8 @@ async function resetEngine(page: Page, modelId: string): Promise<void> {
 }
 
 /**
- * Send each case through generateAI and append its record the moment it
+ * Send each case through generateAI, or through the tool it names, and append
+ * its record the moment it
  * finishes, so a killed or wedged run still leaves a readable transcript.
  * After a case that timed out or errored the engine is reset before the next
  * case (see recordAllCases). Returns how many cases were recorded; the run
@@ -371,12 +433,19 @@ async function recordCases(
     pageTimeoutMs,
     attempt: (caseDef: GoldenCase) =>
       withNodeTimeout(
-        runCase(page, {
-          input: caseDef.input,
-          toolId: caseDef.toolId,
-          conditions: caseDef.conditions ?? null,
-          ...settings,
-        }),
+        caseDef.entry
+          ? runToolCase(page, {
+              entry: caseDef.entry,
+              args: TOOL_ENTRIES[
+                caseDef.entry as keyof typeof TOOL_ENTRIES
+              ].args(caseDef.formInputs, settings),
+            }).then((outcome) => normalizeToolOutcome(caseDef.entry, outcome))
+          : runCase(page, {
+              input: caseDef.input,
+              toolId: caseDef.toolId,
+              conditions: caseDef.conditions ?? null,
+              ...settings,
+            }),
         pageTimeoutMs,
       ),
     recover: () => resetEngine(page, modelId),
@@ -426,7 +495,9 @@ test.describe("golden-set evaluation", () => {
     "golden-set evaluation: run via scripts/eval/run-golden-set.mjs",
   );
 
-  test("every golden-set case through generateAI", async ({ page }) => {
+  test("every golden-set case through generateAI or its tool", async ({
+    page,
+  }) => {
     const modelId = requiredEnv("EVAL_MODEL_ID");
     const transcript = requiredEnv("EVAL_TRANSCRIPT");
     const settings = readSettings();

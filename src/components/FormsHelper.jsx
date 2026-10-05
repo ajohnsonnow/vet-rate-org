@@ -9,6 +9,11 @@ import AIConsentModal from "./AIConsentModal";
 import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import StandardDraftNotice from "./common/StandardDraftNotice";
+import {
+  STRESSOR_TYPE_LABELS,
+  WITNESS_RELATION_LABELS,
+} from "../utils/writerTemplates";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import {
   enhanceFormStatement,
@@ -4778,6 +4783,27 @@ function AIEnhancementHeader({ aiStatus, t }) {
   );
 }
 
+// Which version is on screen. When the AI's wording was not usable the "AI
+// version" is the app-built draft, and the note says so in place of the label.
+function AIVersionIndicator({
+  aiEnhancedContent,
+  showAIVersion,
+  aiDraftNote,
+  t,
+}) {
+  if (!aiEnhancedContent) return null;
+  if (showAIVersion && aiDraftNote) {
+    return <StandardDraftNotice note={aiDraftNote} className="mt-3" />;
+  }
+  return (
+    <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
+      {showAIVersion
+        ? `✨ ${t("formsHelper", "viewingAIVersion")}`
+        : `📝 ${t("formsHelper", "viewingOriginal")}`}
+    </div>
+  );
+}
+
 function AIEnhancementSection({
   isAIEnabledFormType,
   aiStatus,
@@ -4787,6 +4813,7 @@ function AIEnhancementSection({
   toggleAIVersion,
   showAIVersion,
   aiError,
+  aiDraftNote,
   onOpenAISettings,
   t,
 }) {
@@ -4817,17 +4844,24 @@ function AIEnhancementSection({
       {aiError && (
         <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300 text-sm">
           ⚠️ {aiError}
+          {aiEnhancedContent && (
+            <button
+              type="button"
+              onClick={handleAIEnhanceClick}
+              className="block mt-2 min-h-[44px] px-3 underline font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded"
+            >
+              Try the AI again
+            </button>
+          )}
         </div>
       )}
 
-      {/* Version indicator */}
-      {aiEnhancedContent && (
-        <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
-          {showAIVersion
-            ? `✨ ${t("formsHelper", "viewingAIVersion")}`
-            : `📝 ${t("formsHelper", "viewingOriginal")}`}
-        </div>
-      )}
+      <AIVersionIndicator
+        aiEnhancedContent={aiEnhancedContent}
+        showAIVersion={showAIVersion}
+        aiDraftNote={aiDraftNote}
+        t={t}
+      />
     </div>
   );
 }
@@ -7362,16 +7396,7 @@ function generateBuddyStatement(formData) {
     day: "numeric",
   });
 
-  const relationLabels = {
-    "fellow-service-member": "Fellow Service Member",
-    supervisor: "Military Supervisor/NCO/Officer",
-    spouse: "Spouse",
-    family: "Family Member",
-    friend: "Friend",
-    coworker: "Civilian Coworker",
-    caregiver: "Caregiver",
-    other: "Other",
-  };
+  const relationLabels = WITNESS_RELATION_LABELS;
 
   // Clean, official format that works as an attachment to VA Form 21-10210
   let statement = `STATEMENT IN SUPPORT OF CLAIM
@@ -7580,15 +7605,7 @@ function generatePTSDStatement(formData) {
     day: "numeric",
   });
 
-  const stressorLabels = {
-    combat: "Combat-Related Trauma",
-    mst: "Military Sexual Trauma (MST)",
-    "personal-assault": "Personal Assault",
-    accident: "Serious Accident/Injury",
-    death: "Witnessing Death or Serious Injury",
-    "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
-    other: "Other Traumatic Event",
-  };
+  const stressorLabels = STRESSOR_TYPE_LABELS;
 
   const statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
 (To Be Submitted with VA Form 21-0781)
@@ -7842,8 +7859,11 @@ function useFormsHelperAIState() {
   const [aiEnhancedContent, setAiEnhancedContent] = useState(null);
   const [showAIVersion, setShowAIVersion] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [aiDraftNote, setAiDraftNote] = useState(null);
 
   return {
+    aiDraftNote,
+    setAiDraftNote,
     showAIConsent,
     setShowAIConsent,
     isEnhancingWithAI,
@@ -8234,6 +8254,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     setAiEnhancedContent,
     setShowAIVersion,
     setAiError,
+    setAiDraftNote,
   } = ctx;
 
   const generateContent = () => {
@@ -8249,6 +8270,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     setAiEnhancedContent(null);
     setShowAIVersion(false);
     setAiError(null);
+    setAiDraftNote(null);
   };
 
   return { generateContent, handleFinishWizard };
@@ -8260,6 +8282,7 @@ function _buildFormsHelperAIHandlers(ctx) {
     setShowAIConsent,
     setIsEnhancingWithAI,
     setAiError,
+    setAiDraftNote,
     formData,
     setAiEnhancedContent,
     setShowAIVersion,
@@ -8312,6 +8335,8 @@ function _buildFormsHelperAIHandlers(ctx) {
         setAiEnhancedContent(
           substituteVeteranNamePlaceholder(result.content, veteranName),
         );
+        setAiDraftNote(result.draftNote ?? null);
+        setAiError(result.draftErrorReason ?? null);
         setShowAIVersion(true);
       } else {
         setAiError(result.error || "Failed to enhance statement with AI.");
@@ -8514,6 +8539,7 @@ function FormsHelperReviewStep({ state, handlers }) {
     isEnhancingWithAI,
     showAIVersion,
     aiError,
+    aiDraftNote,
   } = state;
   const { onOpenAISettings, importStatus, selectedForm } = state;
   const {
@@ -8553,6 +8579,7 @@ function FormsHelperReviewStep({ state, handlers }) {
         toggleAIVersion={toggleAIVersion}
         showAIVersion={showAIVersion}
         aiError={aiError}
+        aiDraftNote={aiDraftNote}
         onOpenAISettings={onOpenAISettings}
         t={t}
       />
