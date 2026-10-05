@@ -304,7 +304,7 @@ function CompatibleNotice({
           <p className="text-green-700 dark:text-green-300 text-xs mt-1">
             <strong>First run:</strong> allow {warmup.minMin}-{warmup.maxMin}{" "}
             minutes for one-time browser setup (compiling GPU programs +
-            downloading the {AI_REQUIREMENTS.model.sizeGB} GB AI model).{" "}
+            downloading the AI model; {AI_REQUIREMENTS.model.sizeNote}).{" "}
             <strong>After that:</strong> {AI_WARMUP.subsequentRun.minMin}-
             {AI_WARMUP.subsequentRun.maxMin} min to start each session.
           </p>
@@ -376,8 +376,8 @@ function WhyExplanation({ warmup }) {
   return (
     <div className="space-y-2">
       <p>
-        WebLLM runs a {AI_REQUIREMENTS.model.sizeGB} GB AI model entirely inside
-        your browser using your GPU - your documents never leave your device.
+        WebLLM runs an AI model entirely inside your browser using your GPU -
+        your documents never leave your device.
       </p>
       <p>
         <strong>
@@ -427,8 +427,8 @@ function RequirementsList() {
         <strong>Note:</strong> {AI_REQUIREMENTS.browserNote}
       </li>
       <li>
-        <strong>First-time download:</strong> {AI_REQUIREMENTS.model.sizeGB} GB
-        - {AI_REQUIREMENTS.model.note}
+        <strong>First-time download:</strong> {AI_REQUIREMENTS.model.sizeNote}-{" "}
+        {AI_REQUIREMENTS.model.note}
       </li>
     </ul>
   );
