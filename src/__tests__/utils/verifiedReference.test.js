@@ -62,13 +62,13 @@ describe("detectReferenceTopics beyond single keywords", () => {
         "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
         "pact-navigator",
       ),
-    ).toEqual(["toxic-exposure", "pact-act"]);
+    ).toEqual(["toxic-exposure"]);
     expect(
       detectReferenceTopics(
         "Vietnam veteran with chronic respiratory issues — what PACT conditions apply?",
         "pact-navigator",
       ),
-    ).toEqual(["herbicide", "pact-act"]);
+    ).toEqual(["herbicide"]);
     expect(
       detectReferenceTopics(
         "I served with John in Iraq 2008-2009. I witnessed him struck by IED debris.",
@@ -143,12 +143,8 @@ describe("selectVerifiedEntries", () => {
   });
 
   it("lists an entry once when two topics name it", () => {
-    const picked = ids("PACT Act and burn pits");
+    const picked = ids("TDIU, unemployability and 38 CFR 4.16");
     expect(picked).toEqual([...new Set(picked)]);
-    expect(picked.slice(0, 2)).toEqual([
-      "pact-toxic-conditions",
-      "pact-toxic-service",
-    ]);
   });
 
   it("returns nothing when no topic applies", () => {
@@ -187,9 +183,11 @@ describe("buildVerifiedReferenceBlock", () => {
       maxChars: 8000,
     });
     expect(block).toContain(
-      "(VA Adjudication Procedures Manual M21-1, changed June 6, 2025, retrieved 2026-07-19)",
+      "(VA manual M21-1, changed June 6, 2025, retrieved 2026-07-19)",
     );
-    expect(block).toContain("Abbreviations: SC = service connection.");
+    expect(block).toContain(
+      "Abbreviations: SC = service connection; BPOT = burn pits and other toxins, including fine particulate matter.",
+    );
   });
 });
 

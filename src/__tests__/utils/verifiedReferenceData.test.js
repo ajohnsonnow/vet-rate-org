@@ -28,12 +28,11 @@ describe("verifiedReference.json", () => {
       "cfr-4.25-b",
       "cfr-4.26",
       "cfr-4.26-a-b-d",
-      "pact-toxic-conditions",
-      "pact-toxic-service",
+      "pact-toxic",
       "pact-toxic-rule",
-      "pact-herbicide-conditions",
-      "pact-herbicide-service",
+      "pact-herbicide",
       "pact-herbicide-law-changes",
+      "pact-overview",
       "va-forms",
     ]);
   });
@@ -76,22 +75,69 @@ describe("verifiedReference.json", () => {
 });
 
 describe("verifiedReference.json PACT Act lists and forms", () => {
-  it("carries the PACT Act conditions, locations and dates from the M21-1", () => {
-    expect(entry("pact-toxic-conditions").text).toContain(
-      "Under 38 U.S.C. 1120, the recognized presumptive conditions are",
+  const COVERED_VETERAN = "A covered Veteran means any Veteran who";
+  const TOXIC_LIST =
+    "Under 38 U.S.C. 1120, the recognized presumptive conditions are";
+  const HERBICIDE_SERVICE = "Presuming Exposure to an Herbicide Agent";
+  const HERBICIDE_LIST = "Presumptive Herbicide Disabilities";
+
+  it("gives the toxic-exposure conditions together with who they cover", () => {
+    const text = entry("pact-toxic").text;
+    expect(text.indexOf(COVERED_VETERAN)).toBeGreaterThan(-1);
+    expect(text.indexOf(COVERED_VETERAN)).toBeLessThan(
+      text.indexOf(TOXIC_LIST),
     );
-    expect(entry("pact-toxic-conditions").text).toContain("glioblastoma");
-    expect(entry("pact-toxic-service").text).toContain(
-      "Active service on or after August 2, 1990",
+    expect(text).toContain(
+      "Active service on or after August 2, 1990\n- Duty station in, including airspace above, Bahrain Iraq Kuwait",
     );
-    expect(entry("pact-toxic-service").text).toContain(
-      "Active service on or after September 11, 2001",
+    expect(text).toContain(
+      "Active service on or after September 11, 2001\n- Duty station in, including airspace above, Afghanistan",
     );
-    expect(entry("pact-herbicide-conditions").text).toContain("hypertension");
-    expect(entry("pact-herbicide-service").text).toContain(
-      "January 9, 1962, to June 30, 1976",
+    expect(text).toContain("\n- glioblastoma\n");
+    expect(text).toContain("\n- myelofibrosis.");
+  });
+
+  it("gives the herbicide conditions together with who they cover", () => {
+    const text = entry("pact-herbicide").text;
+    expect(text.indexOf(HERBICIDE_SERVICE)).toBeGreaterThan(-1);
+    expect(text.indexOf(HERBICIDE_SERVICE)).toBeLessThan(
+      text.indexOf(HERBICIDE_LIST),
     );
+    expect(text).toContain("\n- in the Republic of Vietnam (RVN)");
+    expect(text).toContain(
+      "the Veteran performed January 9, 1962, to June 30, 1976.\n- Laos December 1, 1965, to September 30, 1969.",
+    );
+    expect(text).toContain("\n- hypertension.\n38 U.S.C. 1116");
+  });
+
+  it("never bundles a conditions list without its covered-service definition", () => {
+    for (const e of reference.entries) {
+      if (e.text.includes(TOXIC_LIST)) {
+        expect(e.text, e.id).toContain(COVERED_VETERAN);
+      }
+      if (e.text.includes(HERBICIDE_LIST)) {
+        expect(e.text, e.id).toContain(HERBICIDE_SERVICE);
+      }
+    }
+  });
+
+  it("has an overview that says which service each group covers, with no list", () => {
+    const text = entry("pact-overview").text;
+    expect(text).toContain(COVERED_VETERAN);
+    expect(text).toContain(HERBICIDE_SERVICE);
+    expect(text).not.toContain(TOXIC_LIST);
+    expect(text).not.toContain(HERBICIDE_LIST);
+  });
+
+  it("records each article's change date", () => {
     expect(entry("pact-toxic-rule").source.changeDate).toBe("June 6, 2025");
+    expect(entry("pact-herbicide").source.changeDate).toBe(
+      "September 15, 2025",
+    );
+    expect(entry("pact-overview").source.changeDate).toBe(
+      "June 6, 2025 and September 15, 2025",
+    );
+    expect(entry("pact-overview").source.articles).toHaveLength(2);
   });
 
   it("spells out only the abbreviations the source article defines", () => {
@@ -102,9 +148,13 @@ describe("verifiedReference.json PACT Act lists and forms", () => {
         long: "burn pits and other toxins, including fine particulate matter",
       },
     ]);
-    expect(entry("pact-herbicide-service").abbreviations).toEqual([]);
+    expect(entry("pact-herbicide-law-changes").abbreviations).toEqual([
+      { short: "SC", long: "service connection" },
+    ]);
   });
+});
 
+describe("verifiedReference.json forms table", () => {
   it("lists the key claim forms by number and official title", () => {
     const forms = entry("va-forms");
     expect(forms.forms.map((f) => f.number)).toEqual([

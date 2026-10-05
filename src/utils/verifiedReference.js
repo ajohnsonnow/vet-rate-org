@@ -16,11 +16,11 @@ const PACT = /\bpact\b|\bpresumpti(?:ve|on)s?\b/i;
 const TOXIC_WORDS =
   /\bburn pits?\b|\bairborne hazards?\b|\btoxic exposures?\b|\bparticulate\b/i;
 const TOXIC_PLACES =
-  /\b(?:gulf war|southwest asia|iraq|afghanistan|kuwait|saudi arabia|somalia|djibouti|syria|uzbekistan|qatar|bahrain|oman|yemen|jordan|lebanon|egypt)\b/i;
+  /\b(?:gulf war|persian gulf|desert storm|desert shield|southwest asia|iraq|afghanistan|kuwait|saudi arabia|somalia|djibouti|syria|uzbekistan|qatar|bahrain|oman|yemen|jordan|lebanon|egypt)\b/i;
 const HERBICIDE_WORDS =
   /\bagent orange\b|\bherbicides?\b|\bblue water\b|\bc-?123\b|\bdioxin\b/i;
 const HERBICIDE_PLACES =
-  /\b(?:vietnam|thailand|laos|cambodia|guam|american samoa|johnston|korean dmz|demilitarized zone)\b/i;
+  /\b(?:vietnam|thailand|laos|cambodia|guam|american samoa|johnston|dmz|demilitarized zone)\b/i;
 const SECONDARY =
   /\bsecondar(?:y|ily)\b|\bproximately due\b|\b3\.310\b|\b(?:caused by|due to|result of|because of|aggravated by|worsened by) (?:my |a |an |the )?service[- ]connected\b/i;
 const SECONDARY_PRESUMED = /\btbi\b|\btraumatic brain\b|\bamputat/i;
@@ -31,6 +31,18 @@ const FORM_NUMBERS = /\bform \d|\b2\dp?-\d{3,5}[a-z]{0,2}\b|\b10182\b/i;
 
 const isPactQuestion = (text, toolId) =>
   PACT.test(text) || toolId === "pact-navigator";
+
+// The two presumption groups cover different service, and each conditions
+// list is bundled with its own covered-service definition. The era or place
+// in the question picks the group; a place name alone counts only inside a
+// PACT question. A question that names neither group, or both, gets the
+// overview of who each group covers.
+const isToxicQuestion = (text, toolId) =>
+  TOXIC_WORDS.test(text) ||
+  (isPactQuestion(text, toolId) && TOXIC_PLACES.test(text));
+const isHerbicideQuestion = (text, toolId) =>
+  HERBICIDE_WORDS.test(text) ||
+  (isPactQuestion(text, toolId) && HERBICIDE_PLACES.test(text));
 
 /**
  * Topic rules in priority order. `pattern` is tested against the question,
@@ -80,34 +92,23 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
     entries: ["cfr-4.25-b", "cfr-4.25", "cfr-4.25-a"],
   },
   {
+    id: "pact-act",
+    when: (text, toolId) => {
+      const toxic = isToxicQuestion(text, toolId);
+      const herbicide = isHerbicideQuestion(text, toolId);
+      return toxic === herbicide && (toxic || isPactQuestion(text, toolId));
+    },
+    entries: ["pact-overview"],
+  },
+  {
     id: "toxic-exposure",
-    when: (text, toolId) =>
-      TOXIC_WORDS.test(text) ||
-      (isPactQuestion(text, toolId) && TOXIC_PLACES.test(text)),
-    entries: ["pact-toxic-conditions", "pact-toxic-service", "pact-toxic-rule"],
+    when: isToxicQuestion,
+    entries: ["pact-toxic", "pact-toxic-rule"],
   },
   {
     id: "herbicide",
-    when: (text, toolId) =>
-      HERBICIDE_WORDS.test(text) ||
-      (isPactQuestion(text, toolId) && HERBICIDE_PLACES.test(text)),
-    entries: [
-      "pact-herbicide-conditions",
-      "pact-herbicide-service",
-      "pact-herbicide-law-changes",
-    ],
-  },
-  {
-    id: "pact-act",
-    when: isPactQuestion,
-    entries: [
-      "pact-toxic-conditions",
-      "pact-herbicide-conditions",
-      "pact-toxic-service",
-      "pact-herbicide-service",
-      "pact-toxic-rule",
-      "pact-herbicide-law-changes",
-    ],
+    when: isHerbicideQuestion,
+    entries: ["pact-herbicide", "pact-herbicide-law-changes"],
   },
   {
     id: "claim-forms",

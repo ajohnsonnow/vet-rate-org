@@ -172,8 +172,19 @@ describe("verified reference on the on-device swarm", () => {
     await generateAI(PACT_QUESTION, callOptions({ toolId: "pact-navigator" }));
 
     const sent = sentToSwarm();
-    expect(sent).toContain(entryText("pact-toxic-conditions"));
-    expect(sent).toContain(entryText("pact-toxic-service"));
+    expect(sent).toContain(entryText("pact-toxic"));
+    expect(sent).not.toContain("Presumptive Herbicide Disabilities");
+  });
+
+  it("gives a Vietnam veteran the herbicide entry and not the burn-pit list", async () => {
+    await generateAI(
+      "Vietnam veteran with chronic respiratory issues — what PACT conditions apply?",
+      callOptions({ toolId: "pact-navigator" }),
+    );
+
+    const sent = sentToSwarm();
+    expect(sent).toContain(entryText("pact-herbicide"));
+    expect(sent).not.toContain("38 U.S.C. 1120");
   });
 
   it("adds nothing, and changes nothing for the keyword search, when no topic applies", async () => {

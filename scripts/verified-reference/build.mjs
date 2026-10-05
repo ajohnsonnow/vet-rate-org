@@ -185,20 +185,15 @@ const ABBREVIATIONS = [
 
 const MANUAL_ENTRIES = [
   {
-    id: "pact-toxic-conditions",
+    id: "pact-toxic",
     citation:
-      "M21-1 VIII.ii.2.A.1.f-h (PACT Act, 38 U.S.C. 1120; 38 CFR 3.320a, 3.320b)",
+      "M21-1 VIII.ii.2.A.1.e-h (PACT Act burn pit and toxic exposure: who is covered, then the conditions)",
     topics: [
+      "toxic-service",
       "toxic-conditions-1120",
       "toxic-conditions-3.320a",
       "toxic-conditions-3.320b",
     ],
-  },
-  {
-    id: "pact-toxic-service",
-    citation:
-      "M21-1 VIII.ii.2.A.1.e (PACT Act covered Veteran: locations and dates, 38 U.S.C. 1119)",
-    topics: ["toxic-service"],
   },
   {
     id: "pact-toxic-rule",
@@ -207,21 +202,21 @@ const MANUAL_ENTRIES = [
     topics: ["toxic-rule"],
   },
   {
-    id: "pact-herbicide-conditions",
+    id: "pact-herbicide",
     citation:
-      "M21-1 VIII.i.1.A.1.f (presumptive herbicide disabilities, 38 CFR 3.309(e); 38 U.S.C. 1116)",
-    topics: ["herbicide-conditions"],
-  },
-  {
-    id: "pact-herbicide-service",
-    citation:
-      "M21-1 VIII.i.1.A.1.c (presumed herbicide exposure: locations and dates)",
-    topics: ["herbicide-service"],
+      "M21-1 VIII.i.1.A.1.c, 1.f (herbicide exposure: who is covered, then the conditions)",
+    topics: ["herbicide-service", "herbicide-conditions"],
   },
   {
     id: "pact-herbicide-law-changes",
     citation: "M21-1 VIII.i.1.A.2.a (herbicide law changes, PACT Act)",
     topics: ["herbicide-law-changes"],
+  },
+  {
+    id: "pact-overview",
+    citation:
+      "M21-1 VIII.ii.2.A.1.e, VIII.i.1.A.1.c (who each PACT Act group covers)",
+    topics: ["toxic-service", "herbicide-service"],
   },
 ];
 
@@ -325,24 +320,30 @@ function buildTopic(key, m21) {
   };
 }
 
+const unique = (values) => [...new Set(values)];
+
 function buildManualEntry(spec, m21) {
   const topics = spec.topics.map((key) => buildTopic(key, m21));
-  const [{ article, changeDate }] = topics;
   const text = topics.map((topic) => topic.text).join("\n\n");
+  const articles = unique(topics.map((topic) => topic.article.url)).map(
+    (url) => topics.find((topic) => topic.article.url === url).article,
+  );
+  const defined = articles.map((a) => `${a.title} ${a.text}`).join(" ");
   return {
     flat: topics.map((topic) => topic.flat).join("\n"),
     entry: {
       id: spec.id,
       citation: spec.citation,
-      sourceLabel: "VA Adjudication Procedures Manual M21-1",
+      sourceLabel: "VA manual M21-1",
       text,
-      abbreviations: abbreviationsIn(text, `${article.title} ${article.text}`),
+      abbreviations: abbreviationsIn(text, defined),
       source: {
         file: M21_FILE,
-        article: article.title,
-        url: article.url,
-        retrieved: article.retrieved,
-        changeDate,
+        articles: articles.map((a) => ({ title: a.title, url: a.url })),
+        retrieved: dateOf(articles.map((a) => ({ fetched_at: a.retrieved }))),
+        changeDate: unique(topics.map((topic) => topic.changeDate)).join(
+          " and ",
+        ),
       },
     },
   };
