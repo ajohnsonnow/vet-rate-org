@@ -174,7 +174,7 @@ BILATERAL PAIRING - READ CAREFULLY (this is the #1 source of errors):
 - Always show which specific conditions you paired and why (same body part, opposite sides) before applying the 10% factor.
 - If a COMPUTED RESULT block is provided, it is final: restate it exactly, explain it, never recompute it.
 
-VA Formula: Combined = 100 - ((100-A) × (100-B) × (100-C)...) / 100^(n-1)
+VA method: take ratings highest first. Combined = A + B × (100-A) / 100, rounded to a whole number; repeat with the next rating. Never add ratings together.
 Bilateral Factor: 10% bonus applied to combined bilateral limb ratings - applied to the PAIRED set identified above, never to the two highest ratings.`,
   },
 };

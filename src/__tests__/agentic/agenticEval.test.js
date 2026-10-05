@@ -122,7 +122,7 @@ describe("Agentic harness - system-prompt fingerprints", () => {
     // auditor and rater prompts changed, writer did not.
     auditor: "7bc41250561491594b5db5c9bba70d1617bc0c9960f1454894d55cf6a1bc0f3e",
     writer: "6331e5c37386118743d25769b670bcf98f3d5b26744c2bdc9b80a0fef35df47c",
-    rater: "e407a769348acc823e4e2016a8b817292d86a0967389a9e7d825ecc2925984ac",
+    rater: "9dddaee831fda00d534444a0cd5f11aecf0a6a583a60e5cb042fa4153f22f161",
   };
 
   it("auditor prompt fingerprint is stable", () => {
