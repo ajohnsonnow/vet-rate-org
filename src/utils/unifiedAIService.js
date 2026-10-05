@@ -28,6 +28,7 @@ import { validateAIResponse as validateHallucinations } from "./hallucinationTra
 import { logModelCallWithDigests } from "./aiAuditLog";
 import { interpretGeminiResponse } from "./geminiResponse";
 import { isFeatureEnabled } from "./featureFlags";
+import { isFullDKBGroundingEnabled } from "./dkbGroundingFlag";
 import {
   SWARM_AGENTS,
   TOOL_AGENT_MAP,
@@ -378,18 +379,13 @@ export const registerLocalAIEngine = (
         detail: {
           ready: true,
           modelId,
-          // The full 130K+ sharded corpus (dkbShardedRag.js/queryCorpus) is
-          // downloaded and cached, but is not wired into AI answer
-          // generation for any mode - buildDKBContext/searchDKB (what
-          // actually feeds the AI's system prompt, for Local and Cloud
-          // alike) reads the same static ~8K-entry diamond_knowledge.json
-          // regardless. This was unconditionally `true`, which told the KB
-          // status UI to claim "complete 130K+ entry access" the moment any
-          // local backend loaded - false. Flip back to a real check once
-          // searchDKB is actually wired to query the full corpus for local
-          // modes (a deliberately separate, eval-gated integration - see
-          // knowledgeQuery.js's S30 header comment).
-          fullDKBAvailable: false,
+          // True only while the opt-in full-corpus grounding flag is on
+          // (dkbGroundingFlag.js); then buildDKBContext adds passages from
+          // the authoritative shards (queryCorpus) to every call's context.
+          // With the flag off, the AI's context comes solely from the static
+          // ~8K-entry diamond_knowledge.json, so the KB status UI must not
+          // claim "complete 130K+ entry access".
+          fullDKBAvailable: isFullDKBGroundingEnabled(),
         },
       }),
     );
@@ -2282,6 +2278,7 @@ async function _injectDKBContext(prompt, systemPrompt, options) {
     const dkbContext = await buildDKBContext(prompt, {
       maxEntries: options.maxDKBEntries || budget.maxEntries,
       maxChars: options.maxDKBChars || budget.maxChars,
+      ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
     });
     if (!dkbContext) return systemPrompt;
     // eslint-disable-next-line no-console
