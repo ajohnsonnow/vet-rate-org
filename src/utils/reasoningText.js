@@ -12,6 +12,14 @@
  * block that quotes a tag is never cut short and leaked.
  */
 
+import { cleanModelText } from "./outputCleanup.js";
+
+export {
+  cleanModelText,
+  removeWrapperEchoes,
+  trimRunaway,
+} from "./outputCleanup.js";
+
 const OPEN = "<think>";
 
 const skipWhitespace = (text, from) => {
@@ -75,18 +83,26 @@ export function splitReasoning(raw, { final = true } = {}) {
 }
 
 /**
- * Remove a leading reasoning block from a finished reply. `answered` is false
- * when the model produced no answer: an unterminated block, or a block with
- * nothing after it.
+ * Remove a leading reasoning block from a finished reply, then (unless
+ * `clean` is false, as for JSON output) the wrapper echoes and runaway
+ * repetition. `answered` is false when the model produced no answer: an
+ * unterminated block, or a block with nothing after it. `echoRemoved` and
+ * `trimmed` say what the clean-up did; `trimmed` is null or
+ * { kind, copies, removedChars }.
  */
-export function stripReasoning(raw) {
+export function stripReasoning(raw, { clean = true } = {}) {
   const { visible, status } = splitReasoning(raw);
+  const cleaned = clean
+    ? cleanModelText(visible)
+    : { text: visible, echoRemoved: false, trimmed: null };
   return {
-    text: visible,
+    text: cleaned.text,
     raw: typeof raw === "string" ? raw : "",
     hadReasoning: status === "complete" || status === "unterminated",
     unterminated: status === "unterminated",
     answered: status === "none" || visible.trim() !== "",
+    echoRemoved: cleaned.echoRemoved,
+    trimmed: cleaned.trimmed,
   };
 }
 
@@ -94,18 +110,26 @@ export function stripReasoning(raw) {
  * Incremental form of splitReasoning for streamed deltas. `emit(delta, full)`
  * receives only visible text, in order, and never any part of a reasoning
  * block. Call end() once the stream is over; it flushes anything that was
- * held back while the reply's first characters were ambiguous.
+ * held back while the reply's first characters were ambiguous. When a repeat
+ * is cut after copies were already streamed, the next emit carries an empty
+ * delta and the shorter full text.
  */
-export function createReasoningStreamFilter(emit) {
+export function createReasoningStreamFilter(emit, { clean = true } = {}) {
   let raw = "";
   let sent = "";
 
   const flush = (final) => {
-    const { visible } = splitReasoning(raw, { final });
+    const split = splitReasoning(raw, { final });
+    const visible = clean
+      ? cleanModelText(split.visible, { final }).text
+      : split.visible;
     if (visible.length > sent.length && visible.startsWith(sent)) {
       const delta = visible.slice(sent.length);
       sent = visible;
       emit(delta, visible);
+    } else if (clean && visible !== sent && !visible.startsWith(sent)) {
+      sent = visible;
+      emit("", visible);
     }
   };
 

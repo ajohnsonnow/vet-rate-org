@@ -860,7 +860,9 @@ async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
 
   let responseText = "";
   const bracketState = { bracketDepth: 0, inString: false, escape: false };
-  const visible = onStream ? createReasoningStreamFilter(onStream) : null;
+  const visible = onStream
+    ? createReasoningStreamFilter(onStream, { clean: false })
+    : null;
 
   for await (const piece of jsonStream) {
     const delta = piece.choices[0]?.delta?.content || "";
@@ -1000,14 +1002,19 @@ async function _runSwarmInference(
     rawText = await _runNonStreamGeneration(webllmEngine, generationConfig);
   }
 
-  const stripped = stripReasoning(rawText);
+  const stripped = stripReasoning(rawText, { clean: !responseFormat });
   const responseText = stripped.text;
+  const outputCleanup =
+    stripped.echoRemoved || stripped.trimmed
+      ? { echoRemoved: stripped.echoRemoved, trimmed: stripped.trimmed }
+      : null;
   lastGeneration = {
     raw: rawText,
     visible: responseText,
     reasoningRemoved: stripped.hadReasoning,
     unterminated: stripped.unterminated,
     thinkingRequested: thinking === true,
+    outputCleanup,
   };
   if (!stripped.answered) {
     throw new Error(EMPTY_AFTER_REASONING_MESSAGE);
@@ -1023,6 +1030,7 @@ async function _runSwarmInference(
       completion: rawText.length,
       total: prompt.length + rawText.length,
     },
+    ...(outputCleanup ? { outputCleanup } : {}),
   };
 }
 

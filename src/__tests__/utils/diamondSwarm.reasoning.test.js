@@ -215,3 +215,64 @@ describe("the reasoning switch on the engine request", () => {
     expect(sentRequest().extra_body).toEqual({ enable_thinking: true });
   });
 });
+
+describe("output clean-up on the generation path", () => {
+  beforeEach(() => loadModel(QWEN25));
+
+  const loop = Array.from(
+    { length: 6 },
+    () => "- Please send the denial letter and the date you received it.",
+  ).join("\n");
+
+  it("removes the wrapper tag and cuts a runaway repeat, and says so", async () => {
+    engineState.create.mockResolvedValue(
+      reply(`Paste it inside <untrusted_content>\n${loop}`),
+    );
+
+    const result = await generateWithSwarm("q", { agentId: "auditor" });
+
+    expect(result.text).toBe(
+      "Paste it inside\n- Please send the denial letter and the date you received it.",
+    );
+    expect(result.outputCleanup).toMatchObject({
+      echoRemoved: true,
+      trimmed: { kind: "line", copies: 6 },
+    });
+    expect(getLastSwarmGeneration()).toMatchObject({
+      raw: `Paste it inside <untrusted_content>\n${loop}`,
+      outputCleanup: { echoRemoved: true },
+    });
+  });
+
+  it("reports no clean-up for a clean answer", async () => {
+    engineState.create.mockResolvedValue(reply("Your rating is 70%."));
+    const result = await generateWithSwarm("q", { agentId: "auditor" });
+    expect(result).not.toHaveProperty("outputCleanup");
+    expect(getLastSwarmGeneration().outputCleanup).toBeNull();
+  });
+
+  it("streams the cut text and ends on the same answer", async () => {
+    engineState.create.mockResolvedValue(
+      streamOf("Intro line is here.\n", loop.slice(0, 80), loop.slice(80)),
+    );
+    const seen = [];
+    const result = await generateWithSwarm("q", {
+      agentId: "auditor",
+      onStream: (delta, full) => seen.push(full),
+    });
+    expect(seen.at(-1)).toBe(result.text);
+    expect(result.text).toBe(
+      "Intro line is here.\n- Please send the denial letter and the date you received it.",
+    );
+  });
+
+  it("leaves JSON output alone", async () => {
+    const json = '{"a":"<untrusted_content>"}';
+    engineState.create.mockResolvedValue(streamOf(json));
+    const result = await generateWithSwarm("q", {
+      agentId: "auditor",
+      responseFormat: { type: "object" },
+    });
+    expect(result.text).toBe(json);
+  });
+});

@@ -130,6 +130,17 @@ const TIMEOUT_ERROR = "WebGPU inference timed out after 300s";
 const EMPTY_AFTER_REASONING_ERROR =
   "Warrant Council error (auditor): Local AI returned an empty response: the model spent its whole token budget reasoning and produced no answer.";
 
+function cleanupMarker(stripped) {
+  return stripped.echoRemoved || stripped.trimmed
+    ? {
+        outputCleanup: {
+          echoRemoved: stripped.echoRemoved,
+          trimmed: stripped.trimmed,
+        },
+      }
+    : {};
+}
+
 /**
  * Stand-in for the in-browser engine: builds the chat request the real engine
  * would receive (persona system prompt, user turn with optional computed
@@ -181,6 +192,7 @@ export function createStubEngine({
             ok: true,
             text: stripped.text,
             rawResponse: stripped.raw,
+            ...cleanupMarker(stripped),
             latencyMs: 5,
           }
         : {

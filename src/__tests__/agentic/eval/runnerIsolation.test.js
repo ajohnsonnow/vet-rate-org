@@ -293,3 +293,38 @@ describe("recordAllCases", () => {
     expect(h.written).toHaveLength(1);
   });
 });
+
+describe("outputCleanup in the transcript record", () => {
+  const caseDef = {
+    id: "a29",
+    toolId: "x",
+    scenario: "s",
+    input: "hi",
+    expectedAgent: "auditor",
+  };
+  const run = { thinking: false };
+  const personaPrompts = { auditor: "A", writer: "W", rater: "R" };
+
+  it("keeps the clean-up marker when present and omits it otherwise", () => {
+    const base = { ok: true, text: "Visible.", latencyMs: 1, captured: [] };
+    const marked = assembleCaseRecord({
+      caseDef,
+      run,
+      personaPrompts,
+      outcome: {
+        ...base,
+        outputCleanup: {
+          echoRemoved: false,
+          trimmed: { kind: "line", copies: 29, removedChars: 3867 },
+        },
+      },
+    });
+    expect(marked.outputCleanup).toEqual({
+      echoRemoved: false,
+      trimmed: { kind: "line", copies: 29, removedChars: 3867 },
+    });
+    expect(
+      assembleCaseRecord({ caseDef, run, personaPrompts, outcome: base }),
+    ).not.toHaveProperty("outputCleanup");
+  });
+});

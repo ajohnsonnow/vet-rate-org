@@ -9,7 +9,8 @@ import { selectOwnRequest } from "./requestCapture.js";
  *
  * `response` is the visible text, the field graders score. `rawResponse` is
  * the engine's reply before any reasoning block was removed, present only when
- * it differs. `calculatorReplacement` carries the reason and the replaced
+ * it differs. `outputCleanup` says the wrapper tags were removed or a runaway
+ * repeat was cut ({ echoRemoved, trimmed }). `calculatorReplacement` carries the reason and the replaced
  * draft when the calculator guard swapped the answer.
  */
 export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
@@ -40,6 +41,7 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
     outcome.rawResponse !== visible
       ? { rawResponse: outcome.rawResponse }
       : {}),
+    ...(outcome.outputCleanup ? { outputCleanup: outcome.outputCleanup } : {}),
     ...(replacement
       ? {
           calculatorReplacement: {

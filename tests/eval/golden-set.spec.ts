@@ -51,7 +51,10 @@ interface EvalWindow {
       initializeSwarm(agent: string): Promise<boolean>;
       reloadSwarmEngine(): Promise<boolean>;
       getSwarmStatus(): { model: string | null };
-      getLastSwarmGeneration(): { raw: string } | null;
+      getLastSwarmGeneration(): {
+        raw: string;
+        outputCleanup?: unknown;
+      } | null;
       clearLastSwarmGeneration(): void;
       SWARM_AGENTS: Record<string, { id: string; systemPrompt: string }>;
     };
@@ -213,6 +216,7 @@ interface CaseOutcome {
   validationWarnings?: unknown;
   calculatorReplacement?: CalculatorReplacement;
   rawResponse?: string;
+  outputCleanup?: unknown;
   captured: CapturedRequest[];
 }
 
@@ -251,6 +255,8 @@ function runCase(
         ok: true,
         text,
         rawResponse: mods.swarm.getLastSwarmGeneration()?.raw,
+        outputCleanup:
+          mods.swarm.getLastSwarmGeneration()?.outputCleanup ?? undefined,
         calculatorReplacement:
           typeof result === "string"
             ? undefined
@@ -267,6 +273,8 @@ function runCase(
         ok: false,
         error: err instanceof Error ? err.message : String(err),
         rawResponse: mods.swarm.getLastSwarmGeneration()?.raw,
+        outputCleanup:
+          mods.swarm.getLastSwarmGeneration()?.outputCleanup ?? undefined,
         latencyMs: performance.now() - started,
         captured: [...w.__evalCaptured],
       };
