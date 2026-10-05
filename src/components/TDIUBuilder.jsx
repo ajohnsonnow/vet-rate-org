@@ -36,6 +36,12 @@ import {
   getAIStatus,
 } from "../utils/unifiedAIService";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
+import { resolveTdiuDraft } from "../utils/writerDraftCheck";
+import {
+  buildTdiuAnalysisTemplate,
+  buildTdiuRewordPrompt,
+} from "../utils/writerTemplates";
+import StandardDraftNotice from "./common/StandardDraftNotice";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -247,7 +253,12 @@ const DISABILITY_CATEGORIES = [
 /**
  * Generate vocational impact analysis using Unified AI Service
  */
-const generateVocationalImpact = async (disabilities, veteranContext = "") => {
+// Exported (test-only, per this codebase's underscore-prefix convention) so
+// tests and the golden-set evaluation call the function the builder calls.
+export const _generateVocationalImpact = async (
+  disabilities,
+  veteranContext = "",
+) => {
   // Check if ANY AI is available
   if (!isAnyAIAvailable()) {
     throw new Error(
@@ -255,66 +266,31 @@ const generateVocationalImpact = async (disabilities, veteranContext = "") => {
     );
   }
 
-  const disabilityList = disabilities
-    .map((d) => `- ${d.condition}: ${d.symptoms.join(", ")}`)
-    .join("\n");
-
+  const template = buildTdiuAnalysisTemplate(disabilities);
   const contextBlock = veteranContext
-    ? `\nVETERAN CASE DATA (use for accurate service details and condition history):\n${veteranContext}\n`
+    ? `\n\nVETERAN CASE DATA (for reference only):\n${veteranContext}\n`
     : "";
-
-  const prompt = `You are a Vocational Rehabilitation Expert analyzing a veteran's disabilities for a TDIU (Total Disability Individual Unemployability) claim.
-${contextBlock}
-VETERAN'S SERVICE-CONNECTED DISABILITIES AND SYMPTOMS:
-${disabilityList}
-
-YOUR TASK:
-Translate these symptoms into formal "Occupational Limitations" that demonstrate why this veteran cannot maintain Substantially Gainful Employment.
-
-RULES:
-1. Use professional vocational rehabilitation terminology
-2. Connect each symptom to specific workplace requirements it precludes
-3. Focus on how these limitations interact/compound each other
-4. Reference "sedentary," "light," "medium," and "heavy" work classifications
-5. Mention "competitive employment environment" and "reasonable accommodations"
-6. Be factual and clinical, not emotional
-
-RESPOND IN THIS EXACT JSON FORMAT:
-{
-  "limitations": [
-    {
-      "condition": "Condition Name",
-      "symptom": "Specific symptom",
-      "vocational_impact": "Professional statement of how this limits work capacity"
-    }
-  ],
-  "combined_effect": "2-3 sentences explaining how these conditions TOGETHER create unemployability",
-  "summary_argument": "4-5 sentence formal argument for Box 18 of VA Form 21-8940 stating why the veteran cannot maintain Substantially Gainful Employment",
-  "job_types_precluded": ["Sedentary", "Light", "Medium", "Heavy"]
-}`;
 
   // Use unified AI service - ADR-009: "context" - structured
   // disability/symptom list + the allow-listed veteran context.
-  const response = await generateAI(prompt, {
-    dataClass: AI_DATA_CLASS.CONTEXT,
-    toolId: "tdiu-narrative",
-    temperature: 0.4,
-    maxTokens: 2048,
-    expectJSON: true,
-  });
+  const response = await generateAI(
+    `${buildTdiuRewordPrompt(template)}${contextBlock}`,
+    {
+      dataClass: AI_DATA_CLASS.CONTEXT,
+      toolId: "tdiu-narrative",
+      temperature: 0.3,
+      maxTokens: 2048,
+      expectJSON: true,
+    },
+  );
 
   // generateAI returns { text, mode } object - extract the text content
   const text = response?.text || response;
-  const textStr = typeof text === "string" ? text : JSON.stringify(text);
-
-  // Extract JSON from response (first "{" through last "}")
-  const firstBrace = textStr.indexOf("{");
-  const lastBrace = textStr.lastIndexOf("}");
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
-    throw new Error("Invalid response format");
-  }
-
-  return JSON.parse(textStr.slice(firstBrace, lastBrace + 1));
+  return resolveTdiuDraft({
+    output: typeof text === "string" ? text : JSON.stringify(text),
+    template,
+    reference: [veteranContext],
+  });
 };
 
 /**
@@ -528,7 +504,7 @@ async function downloadStatementAsDOCX(statement) {
  */
 async function generateVocationalAnalysis(
   disabilities,
-  { setError, setIsGenerating, setVocationalAnalysis, setStep },
+  { setError, setIsGenerating, setVocationalAnalysis, setDraftNote, setStep },
 ) {
   if (disabilities.length === 0) {
     setError("Please add at least one disability with symptoms.");
@@ -536,6 +512,7 @@ async function generateVocationalAnalysis(
   }
 
   setError(null);
+  setDraftNote(null);
   setIsGenerating(true);
 
   try {
@@ -547,7 +524,12 @@ async function generateVocationalAnalysis(
     });
 
     if (isAIAvailable()) {
-      analysis = await generateVocationalImpact(disabilities, veteranContext);
+      const drafted = await _generateVocationalImpact(
+        disabilities,
+        veteranContext,
+      );
+      analysis = drafted.analysis;
+      setDraftNote(drafted.draftNote);
     } else {
       analysis = generateTemplateImpact(disabilities);
     }
@@ -704,6 +686,7 @@ function useTDIUBuilderState() {
   useAIStatusPolling();
 
   const [vocationalAnalysis, setVocationalAnalysis] = useState(null);
+  const [draftNote, setDraftNote] = useState(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   const [savedRatingsTdiu] = useState(() => {
@@ -716,6 +699,7 @@ function useTDIUBuilderState() {
       setError,
       setIsGenerating,
       setVocationalAnalysis,
+      setDraftNote,
       setStep,
     });
 
@@ -745,6 +729,7 @@ function useTDIUBuilderState() {
     error,
     vocationalAnalysis,
     setVocationalAnalysis,
+    draftNote,
     showDownloadMenu,
     setShowDownloadMenu,
     savedRatingsTdiu,
@@ -1014,6 +999,7 @@ function TDIUMainContent({
   isGenerating,
   vocationalAnalysis,
   setVocationalAnalysis,
+  draftNote,
   copyToClipboard,
   showDownloadMenu,
   setShowDownloadMenu,
@@ -1055,6 +1041,7 @@ function TDIUMainContent({
           onBack={() => setStep(1)}
         />
       )}
+      {step === 3 && <StandardDraftNotice note={draftNote} className="mb-6" />}
       <TDIUResultsSection
         step={step}
         vocationalAnalysis={vocationalAnalysis}

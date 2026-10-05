@@ -25,7 +25,11 @@
  * some polish, an accepted invented fact goes into sworn evidence.
  */
 
-import { STANDARD_DRAFT_NOTE, listPlaceholders } from "./writerTemplates.js";
+import {
+  STANDARD_DRAFT_NOTE,
+  listPlaceholders,
+  tdiuAnalysisText,
+} from "./writerTemplates.js";
 
 export const DRAFT_PATH = { MODEL: "model", TEMPLATE: "template" };
 
@@ -792,4 +796,99 @@ export function resolveWriterDraft({ fallback, ...args }) {
         draftNote: STANDARD_DRAFT_NOTE,
         draftRejectReasons: check.reasons,
       };
+}
+
+function parseJsonObject(output) {
+  const reply = String(output ?? "");
+  const first = reply.indexOf("{");
+  const last = reply.lastIndexOf("}");
+  if (first === -1 || last < first) return null;
+  try {
+    return JSON.parse(reply.slice(first, last + 1));
+  } catch {
+    return null;
+  }
+}
+
+const sameText = (a, b) => typeof a === "string" && squash(a) === squash(b);
+
+function tdiuShapeProblems(analysis, template) {
+  const limitations = Array.isArray(analysis.limitations)
+    ? analysis.limitations
+    : [];
+  const problems = [];
+  if (limitations.length !== template.limitations.length) {
+    problems.push(
+      `has ${limitations.length} limitations, the app-built analysis has ${template.limitations.length}`,
+    );
+  } else if (
+    !template.limitations.every(
+      (expected, i) =>
+        sameText(limitations[i]?.condition, expected.condition) &&
+        sameText(limitations[i]?.symptom, expected.symptom) &&
+        typeof limitations[i]?.vocational_impact === "string",
+    )
+  ) {
+    problems.push("changes a condition or symptom");
+  }
+  for (const field of ["combined_effect", "summary_argument"]) {
+    if (typeof analysis[field] !== "string") problems.push(`has no ${field}`);
+  }
+  const jobTypes = Array.isArray(analysis.job_types_precluded)
+    ? analysis.job_types_precluded
+    : [];
+  if (
+    jobTypes.length !== template.job_types_precluded.length ||
+    !template.job_types_precluded.every((type, i) =>
+      sameText(jobTypes[i], type),
+    )
+  ) {
+    problems.push("changes the kinds of work ruled out");
+  }
+  return problems;
+}
+
+/**
+ * The TDIU analysis a tool returns: the model's wording of the three text
+ * fields when its reply is JSON in the app-built shape and passes the same
+ * check as a statement, otherwise the app-built analysis with the note.
+ * Conditions, symptoms and the kinds of work ruled out always come from the
+ * app-built analysis.
+ */
+export function resolveTdiuDraft({ output, template, reference = [] }) {
+  const rejected = (draftRejectReasons) => ({
+    analysis: template,
+    draftPath: DRAFT_PATH.TEMPLATE,
+    draftNote: STANDARD_DRAFT_NOTE,
+    draftRejectReasons,
+  });
+  const parsed = parseJsonObject(output);
+  if (!parsed) return rejected(["not a draft: no JSON object in the reply"]);
+  const shape = tdiuShapeProblems(parsed, template);
+  if (shape.length > 0) return rejected(shape);
+
+  const check = checkWriterDraft({
+    output: tdiuAnalysisText(parsed),
+    template: tdiuAnalysisText(template),
+    keep: template.limitations.flatMap((item) => [
+      item.condition,
+      item.symptom,
+    ]),
+    reference,
+  });
+  if (!check.accepted) return rejected(check.reasons);
+  return {
+    analysis: {
+      limitations: template.limitations.map((item, i) => ({
+        ...item,
+        vocational_impact: parsed.limitations[i].vocational_impact,
+      })),
+      combined_effect: parsed.combined_effect,
+      summary_argument: parsed.summary_argument,
+      job_types_precluded: template.job_types_precluded,
+    },
+    draftPath: DRAFT_PATH.MODEL,
+    draftNote: null,
+    draftRejectReasons: [],
+  };
 }
