@@ -108,7 +108,7 @@ function runSection({ meta, runInfo }) {
     `- Date: ${runInfo.date}`,
     `- Git commit: \`${runInfo.gitCommit}\`${dirty}`,
     `- Device / GPU: ${escapeCell(describeDevice(meta?.device))}`,
-    `- Settings: temperature ${settings.temperature ?? "?"}, max tokens ${settings.maxTokens ?? "?"}, per-case timeout ${settings.timeoutMs ?? "?"} ms`,
+    `- Settings: temperature ${settings.temperature ?? "?"}, max tokens ${settings.maxTokens ?? "?"}, per-case timeout ${settings.timeoutMs ?? "?"} ms; flags: ${settings.flags?.length ? settings.flags.join(", ") : "none"}`,
     `- 38 CFR index: ${escapeCell(runInfo.legalIndexNote)}`,
     `- Transcript: \`${runInfo.transcriptFile}\``,
     "",

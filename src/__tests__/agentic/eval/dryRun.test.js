@@ -215,6 +215,13 @@ describe("launcher argument parsing", () => {
       /invalid model id/,
     );
     expect(() => parseArgs(["--bogus"])).toThrow(/unknown argument/);
+    expect(() => parseArgs(["--flag", "a b;c"])).toThrow(
+      /plain localStorage key/,
+    );
+    expect(
+      parseArgs(["--flag", "vet_rate_x", "--flag", "vet_rate_x", "--flag", "y"])
+        .flags,
+    ).toEqual(["vet_rate_x", "y"]);
     expect(() => parseArgs(["--max-tokens", "1.5"])).toThrow(/integer/);
     expect(() => parseArgs(["--model"])).toThrow(/needs a value/);
   });

@@ -264,6 +264,7 @@ interface RunSettings {
   temperature: number;
   maxTokens: number;
   timeoutMs: number;
+  flags: string[];
 }
 
 function readSettings(): RunSettings {
@@ -271,6 +272,7 @@ function readSettings(): RunSettings {
     temperature: Number(process.env.EVAL_TEMPERATURE ?? 0),
     maxTokens: Number(process.env.EVAL_MAX_TOKENS ?? 1024),
     timeoutMs: Number(process.env.EVAL_TIMEOUT_MS ?? 300_000),
+    flags: (process.env.EVAL_FLAGS ?? "").split(",").filter(Boolean),
   };
 }
 
@@ -366,6 +368,9 @@ test.describe("golden-set evaluation", () => {
         `[requestfailed] ${req.url()} ${req.failure()?.errorText ?? ""}`,
       );
     });
+    await page.addInitScript((keys) => {
+      for (const key of keys) localStorage.setItem(key, "true");
+    }, settings.flags);
     await installEngineRequestTap(page);
     await bootStressPage(page);
     await exposeAppModules(page);

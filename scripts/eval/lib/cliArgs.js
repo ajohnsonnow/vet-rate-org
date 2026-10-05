@@ -12,6 +12,7 @@ options:
   --temperature <n>      sampling temperature (default 0)
   --max-tokens <n>       completion token cap (default 1024)
   --timeout-ms <n>       per-case generation timeout (default 300000)
+  --flag <key>           set localStorage[key]="true" in the app (repeatable)
   --context-window <n>   override the device profile's context window size
   --out-dir <path>       where run files go (default llm-compiler/logs/golden-set-results)
   --legal-chunks <path>  38 CFR chunk file for the citation check
@@ -42,6 +43,7 @@ export function parseArgs(argv) {
     contextWindow: null,
     outDir: null,
     legalChunks: null,
+    flags: [],
   };
   const valueFlags = new Set([
     "--model",
@@ -52,6 +54,7 @@ export function parseArgs(argv) {
     "--context-window",
     "--out-dir",
     "--legal-chunks",
+    "--flag",
   ]);
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
@@ -95,6 +98,14 @@ function applyValue(opts, flag, raw) {
       break;
     case "--out-dir":
       opts.outDir = resolve(raw);
+      break;
+    case "--flag":
+      if (!/^[A-Za-z0-9_-]{1,80}$/.test(raw)) {
+        throw new Error(
+          `--flag needs a plain localStorage key, got ${JSON.stringify(raw)}`,
+        );
+      }
+      if (!opts.flags.includes(raw)) opts.flags.push(raw);
       break;
     default:
       opts.legalChunks = resolve(raw);

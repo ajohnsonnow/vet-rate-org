@@ -114,6 +114,7 @@ function runPlaywright(opts, files) {
     EVAL_TEMPERATURE: String(opts.temperature),
     EVAL_MAX_TOKENS: String(opts.maxTokens),
     EVAL_TIMEOUT_MS: String(opts.timeoutMs),
+    EVAL_FLAGS: opts.flags.join(","),
     ...(opts.contextWindow
       ? { EVAL_CONTEXT_WINDOW: String(opts.contextWindow) }
       : {}),
@@ -144,6 +145,7 @@ async function main() {
     temperature: opts.temperature,
     maxTokens: opts.maxTokens,
     timeoutMs: opts.timeoutMs,
+    flags: opts.flags,
   };
 
   let exitCode = 0;
