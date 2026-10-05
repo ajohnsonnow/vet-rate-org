@@ -51,10 +51,21 @@ const GOLDEN = loadGoldenSet(
 );
 const WRITING_CASES = GOLDEN.filter(
   (c) => isToolCase(c) && isWritingEntry(c.entry),
-);
+).map((c) => ({ ...c, draft: TOOL_ENTRIES[c.entry].draft(c.formInputs) }));
+const CALLING_CASES = WRITING_CASES.filter((c) => c.draft.prompt !== null);
+const SILENT_CASES = WRITING_CASES.filter((c) => c.draft.prompt === null);
 
 const REFUSAL =
   "I cannot draft a statement for you because you have not provided the specific facts I would need.";
+const numbered = (passages) =>
+  passages.map((passage, i) => `${i + 1}. ${passage}`).join("\n");
+/** Rewords a passage without adding a fact. */
+const reword = (passage) => {
+  const body = /^I\b/.test(passage)
+    ? passage
+    : passage[0].toLowerCase() + passage.slice(1);
+  return `To put it plainly, ${body}${/[.!?]$/.test(body) ? "" : "."}`;
+};
 
 async function runThroughProduction(caseDef, modelReply) {
   generateAI.mockImplementation(async () => ({
@@ -77,13 +88,25 @@ describe("every entry name has a production function", () => {
       Object.keys(TOOL_ENTRIES).sort(),
     );
   });
+
+  it("the cases that call the model and the one that does not", () => {
+    expect(CALLING_CASES.map((c) => c.id)).toEqual([
+      "t01",
+      "t02",
+      "t03",
+      "t04",
+      "t05",
+      "t06",
+    ]);
+    expect(SILENT_CASES.map((c) => c.id)).toEqual(["t07"]);
+  });
 });
 
-describe.each(WRITING_CASES)("$id through $entry", (caseDef) => {
-  const draft = TOOL_ENTRIES[caseDef.entry].draft(caseDef.formInputs);
+describe.each(CALLING_CASES)("$id through $entry", (caseDef) => {
+  const { draft } = caseDef;
 
-  it("sends the request the dry run rebuilds, for the case's own tool", async () => {
-    await runThroughProduction(caseDef, draft.template);
+  it("sends only the typed passages, as the dry run rebuilds them", async () => {
+    await runThroughProduction(caseDef, numbered(draft.passages));
 
     expect(generateAI).toHaveBeenCalledTimes(1);
     const [prompt, options] = generateAI.mock.calls[0];
@@ -96,15 +119,36 @@ describe.each(WRITING_CASES)("$id through $entry", (caseDef) => {
     );
   });
 
-  it("hands back the model's wording when the model returns the draft", async () => {
-    const outcome = await runThroughProduction(caseDef, draft.template);
+  it("places accepted rewordings, counted as the dry run counts them", async () => {
+    const reply = numbered(draft.passages.map(reword));
+    const outcome = await runThroughProduction(caseDef, reply);
+    const expected = draft.resolve(reply);
 
     expect(outcome.ok).toBe(true);
     expect(outcome.tool.draftPath).toBe("model");
-    expect(outcome.text).toBe(draft.resolve(draft.template).content);
+    expect(outcome.tool.passages).toMatchObject(expected.passages);
+    expect(expected.passages.accepted).toBe(draft.passages.length);
+    for (const passage of draft.passages) {
+      expect(outcome.text).toContain(reword(passage));
+    }
   });
 
-  it("hands back the app-built draft, with the note, when the model refuses", async () => {
+  it("hands back the app draft, with no AI claim, when the model only echoes", async () => {
+    const outcome = await runThroughProduction(
+      caseDef,
+      numbered(draft.passages),
+    );
+
+    expect(outcome.tool.draftPath).toBe("template");
+    expect(outcome.tool.passages).toMatchObject({
+      sent: draft.passages.length,
+      accepted: 0,
+      unchanged: draft.passages.length,
+    });
+    expect(outcome.tool.draftNote).toBeTruthy();
+  });
+
+  it("hands back the app draft when the model refuses", async () => {
     const outcome = await runThroughProduction(caseDef, REFUSAL);
     const expected = draft.resolve(REFUSAL);
 
@@ -114,10 +158,25 @@ describe.each(WRITING_CASES)("$id through $entry", (caseDef) => {
       draftNote: expected.draftNote,
       draftRejectReasons: expected.draftRejectReasons,
     });
-    expect(outcome.text.length).toBeGreaterThan(100);
     for (const blank of draft.template.match(/\[[^[\]"\\]{2,160}\]/g) ?? []) {
       expect(outcome.text).toContain(blank);
     }
+    for (const passage of draft.passages) {
+      expect(outcome.text).toContain(passage);
+    }
+  });
+});
+
+describe.each(SILENT_CASES)("$id through $entry", (caseDef) => {
+  it("makes no model call and hands back the app draft", async () => {
+    const outcome = await runThroughProduction(caseDef, REFUSAL);
+
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(outcome.tool).toMatchObject({
+      draftPath: "template",
+      passages: { sent: 0 },
+    });
+    expect(outcome.text).toBe(caseDef.draft.resolve("").content);
   });
 });
 
@@ -140,7 +199,13 @@ describe("t08 through decodeDecision", () => {
       systemPrompt: TOOL_ENTRIES.decodeDecision.ownSystemPrompt,
     });
     expect(outcome.ok).toBe(true);
-    expect(JSON.parse(outcome.text)).toEqual(decoded);
+    const shown = JSON.parse(outcome.text);
+    expect(shown).toMatchObject(decoded);
+    expect(shown.review_options.lanes.map((lane) => lane.form.number)).toEqual([
+      "20-0996",
+      "10182",
+      "20-0995",
+    ]);
     expect(outcome.tool.draftPath).toBeNull();
   });
 });

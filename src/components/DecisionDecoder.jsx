@@ -3,6 +3,7 @@ import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import DecisionReviewOptions from "./DecisionReviewOptions";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
 import { getAIStatus } from "../utils/unifiedAIService";
 import {
@@ -164,8 +165,6 @@ const DENIAL_PATTERNS = [
       "File a Supplemental Claim with the nexus letter as new and relevant evidence",
       "Contact a Veterans Service Organization (VSO) for free claim assistance",
     ],
-    appeal_options:
-      "File a Supplemental Claim (new evidence), request a Higher-Level Review (same evidence, new rater), or appeal to the Board of Veterans' Appeals.",
     deadline_warning:
       "You have 1 year from this decision date to file an appeal. Gather your nexus evidence immediately - do not wait.",
   },
@@ -190,8 +189,6 @@ const DENIAL_PATTERNS = [
       "Obtain a medical nexus letter from a private physician",
       "Consider filing a direct service connection, secondary service connection, or aggravation claim",
     ],
-    appeal_options:
-      "You can file a Supplemental Claim with new evidence, a Higher-Level Review, or a Board Appeal.",
     deadline_warning:
       "You have 1 year from this decision to appeal. Contact a VSO immediately if you are unsure how to proceed.",
   },
@@ -216,8 +213,6 @@ const DENIAL_PATTERNS = [
       "Submit a personal statement describing your symptoms and their impact on daily life",
       "Seek an IME from a private physician to counter the C&P exam findings",
     ],
-    appeal_options:
-      "A Supplemental Claim is the right path if you have new, relevant evidence. A Higher-Level Review is appropriate if you believe the rater made a clear error.",
     deadline_warning:
       "Appeal deadlines apply. File within 1 year of this decision to preserve your effective date.",
   },
@@ -238,8 +233,6 @@ const DENIAL_PATTERNS = [
       "Consider secondary conditions that may be caused or aggravated by your service-connected condition",
       "File an Intent to File immediately if you plan to claim additional conditions",
     ],
-    appeal_options:
-      "If the rating percentage seems too low, compare against 38 CFR Part 4 diagnostic codes and file a Higher-Level Review citing a clear error.",
     deadline_warning: null,
   },
   {
@@ -260,8 +253,6 @@ const DENIAL_PATTERNS = [
       "Submit any outstanding evidence as soon as possible",
       "Contact VA or your VSO to confirm the status of your deferred claim",
     ],
-    appeal_options:
-      "No appeal action needed yet - wait for the final decision. Once issued, you have 1 year to appeal.",
     deadline_warning:
       "If a C&P exam is scheduled, attend it. Missing a C&P exam without good cause may result in a denial.",
   },
@@ -293,8 +284,6 @@ function buildMixedDecisionResult(granted, denied) {
       "File a Supplemental Claim or Higher-Level Review for just the denied issue(s) if you disagree",
       "Contact a VSO to confirm you understand which parts of the decision are final vs. appealable",
     ],
-    appeal_options:
-      "Only the denied issue(s) need an appeal. You can file a Supplemental Claim (new evidence) or Higher-Level Review (same evidence, new rater) for those specific issues within 1 year.",
     deadline_warning:
       "You have 1 year from this decision date to appeal the denied issue(s) while preserving your effective date.",
   };
@@ -334,8 +323,6 @@ function patternMatchDenial(text) {
         "Request a copy of your C-File to understand what evidence VA used",
         "You have 1 year from this decision to file an appeal",
       ],
-      appeal_options:
-        "You can file a Supplemental Claim, Higher-Level Review, or Board Appeal within 1 year.",
       deadline_warning:
         "You have 1 year from this decision date to file an appeal. Do not let the deadline pass.",
     };
@@ -425,7 +412,6 @@ const RESULT_FIELDS = [
   "favorable_findings",
   "missing_elements",
   "action_plan",
-  "appeal_options",
   "deadline_warning",
 ];
 
@@ -1549,32 +1535,6 @@ const ActionPlanSection = ({ results }) => {
   );
 };
 
-const AppealOptionsSection = ({ results }) => {
-  if (!results.appeal_options) return null;
-
-  return (
-    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700">
-      <h4 className="font-semibold text-purple-800 dark:text-purple-200 flex items-center gap-2 mb-3">
-        <span>⚖️</span> Appeal Options
-      </h4>
-      <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
-        {typeof results.appeal_options === "string" ? (
-          <p>{results.appeal_options}</p>
-        ) : (
-          results.appeal_options.map((option) => (
-            <div
-              key={option}
-              className="p-2 bg-white dark:bg-gray-800 rounded-lg"
-            >
-              {option}
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
-
 const DeadlineWarningSection = ({ results }) => {
   if (!results.deadline_warning) return null;
 
@@ -1630,8 +1590,8 @@ const ResultsContent = ({ results }) => {
       {/* Action Plan */}
       <ActionPlanSection results={results} />
 
-      {/* Appeal Options */}
-      <AppealOptionsSection results={results} />
+      {/* Review options: verified regulation text, not model output */}
+      <DecisionReviewOptions corrections={results.review_corrections} />
 
       {/* Deadline Warning */}
       <DeadlineWarningSection results={results} />

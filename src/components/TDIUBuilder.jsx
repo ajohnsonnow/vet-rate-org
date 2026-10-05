@@ -29,18 +29,10 @@ import {
   AlignmentType,
 } from "docx";
 import jsPDF from "jspdf";
-import { isAIAvailable } from "../utils/aiStatementHelper";
-import {
-  generateAI,
-  isAnyAIAvailable,
-  getAIStatus,
-} from "../utils/unifiedAIService";
-import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
-import { draftAfterError, resolveTdiuDraft } from "../utils/writerDraftCheck";
+import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import {
   STANDARD_DRAFT_NOTE,
   buildTdiuAnalysisTemplate,
-  buildTdiuRewordPrompt,
   tdiuSavePayload,
 } from "../utils/writerTemplates";
 import TdiuAnalysisEditor from "./TdiuAnalysisEditor";
@@ -51,7 +43,6 @@ import SmartAILoadButton from "./SmartAILoadButton";
 import ShareButton from "./ShareButton";
 import VoiceInputButton from "./VoiceInput";
 import {
-  getVeteranAIContext,
   saveAnalysisResults,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
@@ -254,51 +245,22 @@ const DISABILITY_CATEGORIES = [
 ];
 
 /**
- * Generate vocational impact analysis using Unified AI Service
+ * The TDIU analysis for the selected conditions and symptoms.
+ *
+ * The form collects no free text for the analysis (conditions and symptoms
+ * are chosen from lists), so there is no passage for the AI to reword and
+ * no model call is made: the veteran gets the app-built analysis, with a
+ * blank wherever they have to say how a symptom limits their work.
  */
 // Exported (test-only, per this codebase's underscore-prefix convention) so
 // tests and the golden-set evaluation call the function the builder calls.
-export const _generateVocationalImpact = async (
-  disabilities,
-  veteranContext = "",
-) => {
-  const template = buildTdiuAnalysisTemplate(disabilities);
-  const contextBlock = veteranContext
-    ? `\n\nVETERAN CASE DATA (for reference only):\n${veteranContext}\n`
-    : "";
-
-  let text;
-  try {
-    if (!isAnyAIAvailable()) {
-      throw new Error(
-        "No AI available. Please configure an API key or enable Local AI.",
-      );
-    }
-    // Use unified AI service - ADR-009: "context" - structured
-    // disability/symptom list + the allow-listed veteran context.
-    const response = await generateAI(
-      `${buildTdiuRewordPrompt(template)}${contextBlock}`,
-      {
-        dataClass: AI_DATA_CLASS.CONTEXT,
-        toolId: "tdiu-narrative",
-        temperature: 0.3,
-        maxTokens: 2048,
-        expectJSON: true,
-      },
-    );
-    // generateAI returns { text, mode } object - extract the text content
-    text = response?.text || response;
-  } catch (error) {
-    console.error("Generation error:", error);
-    return { analysis: template, ...draftAfterError(error) };
-  }
-
-  return resolveTdiuDraft({
-    output: typeof text === "string" ? text : JSON.stringify(text),
-    template,
-    reference: [veteranContext],
-  });
-};
+export const _generateVocationalImpact = (disabilities) => ({
+  analysis: buildTdiuAnalysisTemplate(disabilities),
+  draftPath: "template",
+  draftNote: STANDARD_DRAFT_NOTE,
+  draftRejectReasons: [],
+  passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+});
 
 /**
  * Build the full statement text from analysis + work history
@@ -423,49 +385,23 @@ async function downloadStatementAsDOCX(statement) {
   URL.revokeObjectURL(url);
 }
 
-// The app-built analysis, with its note: what the veteran gets with no AI
-// loaded, and whenever the AI could not be used.
-const standardDraft = (disabilities) => ({
-  analysis: buildTdiuAnalysisTemplate(disabilities),
-  draftNote: STANDARD_DRAFT_NOTE,
-});
-
 /**
- * Build the vocational analysis, worded by the AI when it is available and
- * its answer is usable, and update state. Nothing is saved here: the
- * veteran edits the result and saves it.
+ * Build the vocational analysis and update state. Nothing is saved here:
+ * the veteran edits the result and saves it.
  */
-async function generateVocationalAnalysis(
+function generateVocationalAnalysis(
   disabilities,
-  { setError, setIsGenerating, setVocationalAnalysis, setDraftNote, setStep },
+  { setError, setVocationalAnalysis, setDraftNote, setStep },
 ) {
   if (disabilities.length === 0) {
     setError("Please add at least one disability with symptoms.");
     return;
   }
-
   setError(null);
-  setDraftNote(null);
-  setIsGenerating(true);
-
-  try {
-    const drafted = isAIAvailable()
-      ? await _generateVocationalImpact(
-          disabilities,
-          await getVeteranAIContext({ maxPacketTokens: 600 }),
-        )
-      : standardDraft(disabilities);
-    setVocationalAnalysis(drafted.analysis);
-    setDraftNote(drafted.draftNote);
-  } catch (err) {
-    console.error("Generation error:", err);
-    const drafted = standardDraft(disabilities);
-    setVocationalAnalysis(drafted.analysis);
-    setDraftNote(drafted.draftNote);
-  } finally {
-    setStep(3);
-    setIsGenerating(false);
-  }
+  const drafted = _generateVocationalImpact(disabilities);
+  setVocationalAnalysis(drafted.analysis);
+  setDraftNote(drafted.draftNote);
+  setStep(3);
 }
 
 /**

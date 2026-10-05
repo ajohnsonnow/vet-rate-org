@@ -1,19 +1,18 @@
 import {
-  resolveTdiuDraft,
-  resolveWriterDraft,
+  draftAfterModelError,
+  resolvePassageDraft,
+  standardDraft,
 } from "../../../src/utils/writerDraftCheck.js";
 import {
-  buildAppealStatementTemplate,
-  buildBuddyStatementTemplate,
-  buildNexusLetterRequestTemplate,
-  buildPTSDStressorTemplate,
-  buildPersonalStatementTemplate,
-  buildRewordPrompt,
+  STANDARD_DRAFT_NOTE,
+  appealStatementPlan,
+  buildPassagePrompt,
   buildTdiuAnalysisTemplate,
-  buildTdiuRewordPrompt,
-  buildWitnessStatementTemplate,
-  formStatementInputs,
-  suppliedIn,
+  formStatementPlan,
+  nexusRequestPlan,
+  personalStatementPlan,
+  selectPassages,
+  witnessStatementPlan,
 } from "../../../src/utils/writerTemplates.js";
 
 /**
@@ -24,15 +23,18 @@ import {
  *                           the real function
  *   text(result)            the answer text out of the function's own result
  *   failure(result)         its error message, or null
- *   draft(formInputs)       writing tools only: the request the tool sends
- *                           and how it settles the model's reply, rebuilt
- *                           from the same pure modules for the dry run
+ *   draft(formInputs)       writing tools only: what the tool sends and how
+ *                           it settles the model's reply, rebuilt from the
+ *                           same pure modules for the dry run. `prompt` is
+ *                           null when the tool makes no model call (the form
+ *                           has no free-text passage to reword).
  *
  * The browser runner maps each name to the function itself
  * (tests/eval/golden-set.spec.ts). Nothing here calls production code that
- * needs a browser. toolEntries.test.js holds `draft` to what the real
- * functions send and return.
+ * needs a browser. toolEntries.production.test.js holds `draft` to what the
+ * real functions send and return.
  */
+
 /*
  * The statement helper and the Decision Decoder pass generateAI their own
  * system prompt, which the engine receives in place of a persona prompt
@@ -51,78 +53,40 @@ const helperResult = {
   failure: (result) => (result?.success ? null : (result?.error ?? "failed")),
 };
 
-const isText = (value) => typeof value === "string" && value.trim() !== "";
-
-const statementDraft = ({
-  template,
-  answers,
-  keep = [],
-  addressedToReader = false,
-}) => ({
-  template,
-  prompt: buildRewordPrompt(template),
-  resolve: (output) =>
-    resolveWriterDraft({
-      output,
-      template,
-      inputs: suppliedIn(template, Object.values(answers)),
-      keep: keep.filter(isText),
-      addressedToReader,
-    }),
-});
-
-const personalDraft = (answers, condition, primaryCondition) =>
-  statementDraft({
-    template: buildPersonalStatementTemplate(
-      answers,
-      condition,
-      primaryCondition,
-    ),
-    answers,
-    keep: [condition, primaryCondition],
-  });
-
-function formDraft(formType, formData) {
-  const mapped = formStatementInputs(formType, formData);
-  if (mapped?.kind === "buddy") {
-    return statementDraft({
-      template: buildBuddyStatementTemplate(mapped.answers, mapped.condition),
-      answers: mapped.answers,
-      keep: [mapped.condition],
-    });
-  }
-  if (mapped?.kind === "ptsd") {
-    return statementDraft({
-      template: buildPTSDStressorTemplate(mapped.answers),
-      answers: mapped.answers,
-    });
-  }
-  if (mapped?.kind === "personal") {
-    return personalDraft(
-      mapped.answers,
-      mapped.condition,
-      mapped.primaryCondition,
-    );
-  }
-  throw new Error(`form type ${formType} has no AI wording step`);
+function planDraft(plan) {
+  const sent = selectPassages(plan);
+  const passages = sent.map((passage) => passage.text);
+  return {
+    template: plan.build(plan.answers),
+    passages,
+    prompt: sent.length > 0 ? buildPassagePrompt(passages) : null,
+    resolve: (reply) =>
+      sent.length > 0
+        ? resolvePassageDraft({ plan, sent, reply })
+        : standardDraft(plan),
+    afterError: (error) => draftAfterModelError(plan, sent, error),
+  };
 }
 
-function tdiuDraft(disabilities, veteranContext) {
-  const template = buildTdiuAnalysisTemplate(disabilities);
-  const context = veteranContext
-    ? `\n\nVETERAN CASE DATA (for reference only):\n${veteranContext}\n`
-    : "";
+function formDraft(formType, formData) {
+  const plan = formStatementPlan(formType, formData);
+  if (!plan) throw new Error(`form type ${formType} has no AI wording step`);
+  return planDraft(plan);
+}
+
+function tdiuDraft(disabilities) {
+  const template = JSON.stringify(buildTdiuAnalysisTemplate(disabilities));
   return {
-    template: JSON.stringify(template),
-    prompt: `${buildTdiuRewordPrompt(template)}${context}`,
-    resolve: (output) => {
-      const { analysis, ...rest } = resolveTdiuDraft({
-        output,
-        template,
-        reference: [veteranContext],
-      });
-      return { content: JSON.stringify(analysis), ...rest };
-    },
+    template,
+    passages: [],
+    prompt: null,
+    resolve: () => ({
+      content: template,
+      draftPath: "template",
+      draftNote: STANDARD_DRAFT_NOTE,
+      draftRejectReasons: [],
+      passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+    }),
   };
 }
 
@@ -131,7 +95,13 @@ export const TOOL_ENTRIES = {
     ...helperResult,
     args: (i) => [i.answers ?? {}, i.condition, i.primaryCondition ?? null],
     draft: (i) =>
-      personalDraft(i.answers ?? {}, i.condition, i.primaryCondition ?? null),
+      planDraft(
+        personalStatementPlan(
+          i.answers ?? {},
+          i.condition,
+          i.primaryCondition ?? null,
+        ),
+      ),
   },
   enhanceFormStatement: {
     ...helperResult,
@@ -141,44 +111,27 @@ export const TOOL_ENTRIES = {
   enhanceAppealStatement: {
     ...helperResult,
     args: (i) => [i.answers ?? {}],
-    draft: (i) =>
-      statementDraft({
-        template: buildAppealStatementTemplate(i.answers ?? {}),
-        answers: i.answers ?? {},
-        keep: [i.answers?.conditionName],
-      }),
+    draft: (i) => planDraft(appealStatementPlan(i.answers ?? {})),
   },
   generateNexusLetterRequest: {
     ...helperResult,
     args: (i) => [i.answers ?? {}],
-    draft: (i) =>
-      statementDraft({
-        template: buildNexusLetterRequestTemplate(i.answers ?? {}),
-        answers: i.answers ?? {},
-        keep: [i.answers?.conditionName, i.answers?.primaryCondition],
-        addressedToReader: true,
-      }),
+    draft: (i) => planDraft(nexusRequestPlan(i.answers ?? {})),
   },
   compileWitnessStatement: {
     args: (i) => [i.relationship, i.condition, i.answers ?? {}],
     text: (result) => result?.statement ?? "",
     failure: () => null,
     draft: (i) =>
-      statementDraft({
-        template: buildWitnessStatementTemplate(
-          i.relationship,
-          i.condition,
-          i.answers ?? {},
-        ),
-        answers: i.answers ?? {},
-        keep: [i.condition],
-      }),
+      planDraft(
+        witnessStatementPlan(i.relationship, i.condition, i.answers ?? {}),
+      ),
   },
   generateVocationalImpact: {
-    args: (i) => [i.disabilities ?? [], i.veteranContext ?? ""],
+    args: (i) => [i.disabilities ?? []],
     text: (result) => (result?.analysis ? JSON.stringify(result.analysis) : ""),
     failure: () => null,
-    draft: (i) => tdiuDraft(i.disabilities ?? [], i.veteranContext ?? ""),
+    draft: (i) => tdiuDraft(i.disabilities ?? []),
   },
   decodeDecision: {
     ownSystemPrompt: DECODER_SYSTEM_PROMPT,
@@ -212,6 +165,7 @@ export function normalizeToolOutcome(entry, outcome) {
       draftNote: result?.draftNote ?? null,
       draftRejectReasons: result?.draftRejectReasons ?? [],
       draftErrorReason: result?.draftErrorReason ?? null,
+      passages: result?.passages ?? null,
     },
     // The tool handed back its app-built draft because the engine failed.
     // The case is answered, but the engine may still be busy or wedged.

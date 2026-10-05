@@ -5,7 +5,6 @@ import {
   NOT_APPLICABLE,
 } from "./goldenChecks.js";
 import { stripReasoning } from "../../../src/utils/reasoningText.js";
-import { draftAfterError } from "../../../src/utils/writerDraftCheck.js";
 import { assembleCaseRecord } from "./caseRecord.js";
 import { buildMetaRecord, fingerprintPersonas } from "./goldenRecord.js";
 import { TOOL_ENTRIES } from "./toolEntries.js";
@@ -75,24 +74,15 @@ const FAILING_OVERRIDES = {
       "The combined rating is 60%. Some calculators show a combined rating of 70% instead.",
   },
   a30: { noCapture: true },
+  t01: { reword: "all" },
   t02: { toolError: "WebGPU inference timed out after 300s" },
   t03: {
     toolReply:
       "I cannot draft a buddy statement because you have not provided the specific details of the incident.",
   },
-  t05: {
-    toolReply:
-      "I can help with your appeal. To make it accurate, please provide the following details: the date of the decision and the evidence you sent.",
-  },
+  t04: { reword: "first" },
+  t05: { reword: "all", rewordAdds: " This was decided on March 3, 2021." },
   t06: { noDraft: true },
-  t07: {
-    toolReply: JSON.stringify({
-      limitations: [],
-      combined_effect: "The veteran cannot work an 8-hour day.",
-      summary_argument: "No reasonable accommodations exist.",
-      job_types_precluded: ["Sedentary", "Light", "Medium", "Heavy"],
-    }),
-  },
 };
 
 const GOOD_DECODE = JSON.stringify({
@@ -158,7 +148,7 @@ export const DRY_RUN_EXPECTATIONS = {
   t04: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t05: { "draft-returned": AUTO_PASS },
   t06: { "draft-returned": AUTO_FAIL },
-  t07: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  t07: { routing: NOT_APPLICABLE, "draft-returned": AUTO_PASS },
   t08: {
     routing: AUTO_PASS,
     "draft-returned": NOT_APPLICABLE,
@@ -229,34 +219,57 @@ function toolOutcome(
       {
         role: "user",
         content: draft
-          ? draft.prompt
+          ? (draft.prompt ?? "")
           : `(dry-run stub) decode:\n${caseDef.formInputs.documentText}`,
       },
     ],
     ...TOOL_SETTINGS,
   };
   const noDraft = { draftPath: null, draftNote: null };
-  const done = (outcome) => ({
+  const done = (outcome, captured = [request]) => ({
     ok: true,
     ...outcome,
     latencyMs: 5,
-    captured: [request],
+    captured,
   });
   if (!draft) {
     return done({ text: GOOD_DECODE, tool: noDraft });
   }
+  const settle = (reply) => {
+    const { content, ...tool } = draft.resolve(reply);
+    return { text: content, tool };
+  };
+  // No free-text passage: the tool makes no model call at all.
+  if (draft.prompt === null) return done(settle(""), []);
   if (override.noDraft) return done({ text: "", tool: noDraft });
   if (override.toolError) {
-    return done({
-      text: draft.resolve("").content,
-      tool: draftAfterError(override.toolError),
-      needsRecovery: true,
-    });
+    const { content, ...tool } = draft.afterError(override.toolError);
+    return done({ text: content, tool, needsRecovery: true });
   }
-  const { content, ...tool } = draft.resolve(
-    override.toolReply ?? draft.template,
-  );
-  return done({ text: content, tool });
+  return done(settle(override.toolReply ?? cannedRewording(draft, override)));
+}
+
+/*
+ * The stub model's reply to a passage request. With no override it returns
+ * every passage as it came (so nothing is reworded and the app draft is
+ * returned). `reword: "all"` or "first" rewords those passages without
+ * adding a fact; `rewordAdds` appends a sentence that does add one.
+ */
+function cannedRewording(draft, override) {
+  const reworded = (passage) => {
+    const body = /^I\b/.test(passage)
+      ? passage
+      : passage[0].toLowerCase() + passage.slice(1);
+    const stop = /[.!?]$/.test(body) ? "" : ".";
+    return `To put it plainly, ${body}${stop}${override.rewordAdds ?? ""}`;
+  };
+  return draft.passages
+    .map((passage, i) => {
+      const change =
+        override.reword === "all" || (override.reword === "first" && i === 0);
+      return `${i + 1}. ${change ? reworded(passage) : passage}`;
+    })
+    .join("\n");
 }
 
 function rawReplyOutcome(rawReply) {

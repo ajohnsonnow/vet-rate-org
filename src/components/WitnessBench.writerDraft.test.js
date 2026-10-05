@@ -1,12 +1,12 @@
 /**
- * Witness Bench hands the model its own app-built statement to reword and
- * falls back to its standard statement when the model's answer is not
- * usable. Fixture values are invented for these tests.
+ * Witness Bench offers the model only the witness's own answers, one
+ * numbered passage each, and puts each accepted rewording back into its
+ * standard statement. Fixture values are invented for these tests.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   STANDARD_DRAFT_NOTE,
-  buildWitnessStatementTemplate,
+  buildPassagePrompt,
 } from "../utils/writerTemplates";
 
 vi.mock("../utils/unifiedAIService", async (importOriginal) => {
@@ -23,95 +23,124 @@ const { _compileStatementWithAI } = await import("./WitnessBench.jsx");
 
 const ANSWERS = {
   relationship_context: "I have been married to the veteran since 2012.",
-  q1: "They leave the room when fireworks start.",
+  q1: "leave the room when fireworks start, dont come back all evening",
   q2: "They no longer drive at night.",
+  q3: "   ",
 };
-const TEMPLATE = buildWitnessStatementTemplate("spouse", "PTSD", ANSWERS);
+const TYPED = [ANSWERS.relationship_context, ANSWERS.q1, ANSWERS.q2];
+const Q1_REWORDED =
+  "They leave the room when fireworks start and do not come back all evening.";
 
-const draftIn = (prompt) =>
-  /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1];
+const reply = (passages) =>
+  passages.map((passage, i) => `${i + 1}. ${passage}`).join("\n");
+const compile = () => _compileStatementWithAI("spouse", "PTSD", ANSWERS);
 
 beforeEach(() => {
   generateAI.mockReset();
 });
 
 describe("WitnessBench._compileStatementWithAI", () => {
-  it("asks the model to reword the app-built statement", async () => {
-    generateAI.mockImplementation(async (prompt) => ({
-      text: draftIn(prompt),
-    }));
-    await _compileStatementWithAI("spouse", "PTSD", ANSWERS);
+  it("sends the witness's answers as numbered passages and nothing else", async () => {
+    generateAI.mockResolvedValue({ text: reply(TYPED) });
+    await compile();
 
     const [prompt, options] = generateAI.mock.calls[0];
-    expect(draftIn(prompt)).toBe(TEMPLATE);
-    expect(prompt).toMatch(/square brackets/);
-    expect(prompt).toContain("Witness Type: Spouse / Partner");
+    expect(prompt).toBe(buildPassagePrompt(TYPED));
+    expect(prompt).not.toMatch(/VA FORM|Witness Type|ATTESTATION|\[Veteran\]/);
     expect(options).toMatchObject({
       toolId: "buddy-statement",
       dataClass: "context",
     });
   });
 
-  it("returns the model's wording when it passes the check", async () => {
-    generateAI.mockImplementation(async (prompt) => ({
-      text: draftIn(prompt).replace(
-        "They no longer drive at night.",
-        "At night, they no longer drive.",
-      ),
-    }));
-    const result = await _compileStatementWithAI("spouse", "PTSD", ANSWERS);
+  it("puts an accepted rewording in its answer's place in the standard statement", async () => {
+    generateAI.mockResolvedValue({
+      text: reply([TYPED[0], Q1_REWORDED, TYPED[2]]),
+    });
+    const result = await compile();
 
     expect(result.draftPath).toBe("model");
     expect(result.draftNote).toBeNull();
-    expect(result.statement).toContain("At night, they no longer drive.");
-    expect(result.statement).toContain("[Veteran]");
-    expect(result.statement).not.toMatch(/WITNESS ATTESTATION/);
-  });
-
-  it("returns the standard statement, attestation included, when the model refuses", async () => {
-    generateAI.mockResolvedValue({
-      text: "I cannot draft a buddy statement because you have not provided the specific details of the incident.",
+    expect(result.passages).toEqual({
+      sent: 3,
+      accepted: 1,
+      unchanged: 2,
+      rejected: 0,
     });
-    const result = await _compileStatementWithAI("spouse", "PTSD", ANSWERS);
-
-    expect(result.draftPath).toBe("template");
-    expect(result.draftNote).toBe(STANDARD_DRAFT_NOTE);
-    expect(result.draftRejectReasons).toEqual(["not a draft: refusal"]);
-    expect(result.statement).toContain(
-      "They leave the room when fireworks start.",
-    );
+    expect(result.statement).toContain(Q1_REWORDED);
+    expect(result.statement).not.toContain(ANSWERS.q1);
+    expect(result.statement).toContain("Witness Type: Spouse / Partner");
+    expect(result.statement).toContain("[Veteran]'s PTSD");
     expect(result.statement).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );
     expect(result.statement).toContain("18 U.S.C. § 1001");
   });
 
-  it("returns the standard statement when the model writes its own attestation", async () => {
-    generateAI.mockImplementation(async (prompt) => ({
-      text: `${draftIn(prompt)}\n\nI certify that the foregoing is true and correct.`,
-    }));
-    const result = await _compileStatementWithAI("spouse", "PTSD", ANSWERS);
+  it("returns the standard statement, with no AI claim, when the model only echoes", async () => {
+    generateAI.mockResolvedValue({ text: reply(TYPED) });
+    const result = await compile();
 
     expect(result.draftPath).toBe("template");
-    expect(result.draftRejectReasons.join(" ")).toMatch(/attestation/);
-    expect(result.statement).not.toContain("the foregoing");
+    expect(result.draftNote).toBe(STANDARD_DRAFT_NOTE);
+    expect(result.passages).toMatchObject({ accepted: 0, unchanged: 3 });
+    expect(result.statement).toContain(ANSWERS.q1);
+  });
+
+  it("returns the standard statement when the model refuses", async () => {
+    generateAI.mockResolvedValue({
+      text: "I cannot draft a buddy statement because you have not provided the specific details of the incident.",
+    });
+    const result = await compile();
+
+    expect(result.draftPath).toBe("template");
+    expect(result.passages).toMatchObject({ accepted: 0, rejected: 3 });
+    expect(result.statement).toContain(ANSWERS.q1);
+    expect(result.statement).not.toMatch(/cannot draft/);
+  });
+
+  it("keeps the witness's words where a rewording adds an attestation or a fact", async () => {
+    generateAI.mockResolvedValue({
+      text: reply([
+        TYPED[0],
+        `${Q1_REWORDED} I certify that this is true and correct.`,
+        "They stopped driving at night in 2019.",
+      ]),
+    });
+    const result = await compile();
+
+    expect(result.draftPath).toBe("template");
+    expect(result.draftRejectReasons.join(" | ")).toMatch(
+      /passage 2: .*attestation.*\| passage 3: .*2019/,
+    );
+    expect(result.statement).toContain(ANSWERS.q1);
+    expect(result.statement).not.toMatch(/I certify that this|2019/);
+  });
+
+  it("makes no model call when the witness answered nothing", async () => {
+    const result = await _compileStatementWithAI("spouse", "PTSD", {});
+
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(result.draftPath).toBe("template");
+    expect(result.statement).toContain(
+      "[what you have personally seen or heard, with specific examples]",
+    );
   });
 });
 
 describe("WitnessBench._compileStatementWithAI when the model cannot answer", () => {
   it("returns the standard statement and names the engine error", async () => {
     generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
-    const result = await _compileStatementWithAI("spouse", "PTSD", ANSWERS);
+    const result = await compile();
 
     expect(result).toMatchObject({
       draftPath: "template",
       draftNote: STANDARD_DRAFT_NOTE,
       draftRejectReasons: [],
       draftErrorReason: "WebGPU inference timed out",
+      passages: { sent: 3, accepted: 0 },
     });
-    expect(result.statement).toContain(
-      "They leave the room when fireworks start.",
-    );
+    expect(result.statement).toContain(ANSWERS.q2);
     expect(result.statement).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );

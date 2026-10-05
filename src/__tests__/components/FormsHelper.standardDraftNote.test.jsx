@@ -23,6 +23,15 @@ const { generateAI } = await import("../../utils/unifiedAIService");
 const { default: FormsHelper } =
   await import("../../components/FormsHelper.jsx");
 
+const EVENT = "fell from a cargo ramp during a night drill, hurt my back";
+const EVENT_REWORDED =
+  "I fell from a cargo ramp during a night drill and hurt my back.";
+const modelRewords = () =>
+  generateAI.mockImplementation(async () => ({
+    text: `1. ${EVENT_REWORDED}`,
+    mode: "swarm",
+  }));
+
 async function enhancePersonalStatement() {
   render(
     <LanguageProvider>
@@ -36,7 +45,13 @@ async function enhancePersonalStatement() {
     { target: { value: "Tinnitus" } },
   );
   const next = () => screen.queryByRole("button", { name: /^next$/i });
-  for (let guard = 0; next() && guard < 12; guard++) fireEvent.click(next());
+  for (let guard = 0; next() && guard < 12; guard++) {
+    const event = screen.queryByPlaceholderText(
+      /Describe the specific event, injury/,
+    );
+    if (event) fireEvent.change(event, { target: { value: EVENT } });
+    fireEvent.click(next());
+  }
   fireEvent.click(screen.getByRole("button", { name: /generate statement/i }));
   fireEvent.click(
     await screen.findByRole("button", { name: /enhance with ai/i }),
@@ -62,9 +77,20 @@ describe("Forms Helper standard-draft notice", () => {
     const notice = await screen.findByRole("status", { name: "Draft notice" });
     expect(notice.textContent).toBe(STANDARD_DRAFT_NOTE);
     expect(screen.queryByText(/viewing ai/i)).not.toBeInTheDocument();
-    expect(document.body.textContent).toContain(
-      "[what happened during your service that caused or started this condition]",
-    );
+    expect(generateAI).toHaveBeenCalledTimes(1);
+    expect(generateAI.mock.calls[0][0]).toContain(`1. ${EVENT}`);
+    expect(document.body.textContent).toContain(`${EVENT}.`);
+    expect(document.body.textContent).toContain("[date the symptoms began]");
+  });
+
+  it("is shown when the model only echoes what was typed", async () => {
+    generateAI.mockResolvedValue({ text: `1. ${EVENT}`, mode: "swarm" });
+    await enhancePersonalStatement();
+
+    expect(
+      (await screen.findByRole("status", { name: "Draft notice" })).textContent,
+    ).toBe(STANDARD_DRAFT_NOTE);
+    expect(screen.queryByText(/viewing ai/i)).not.toBeInTheDocument();
   });
 
   it("is shown after an engine error, with no error message in its place", async () => {
@@ -84,10 +110,7 @@ describe("Forms Helper standard-draft notice", () => {
     expect(document.body.textContent).toMatch(/timed out/i);
 
     localStorage.removeItem("vetrate_ai_ratelimit");
-    generateAI.mockImplementation(async (prompt) => ({
-      text: /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1],
-      mode: "swarm",
-    }));
+    modelRewords();
     fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
     fireEvent.click(
       await screen.findByRole("button", { name: /i understand, enhance/i }),
@@ -101,15 +124,13 @@ describe("Forms Helper standard-draft notice", () => {
   });
 
   it("is not shown when the model's wording was accepted", async () => {
-    generateAI.mockImplementation(async (prompt) => ({
-      text: /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1],
-      mode: "swarm",
-    }));
+    modelRewords();
     await enhancePersonalStatement();
 
     await screen.findByText(/viewing ai/i);
     expect(
       screen.queryByRole("status", { name: "Draft notice" }),
     ).not.toBeInTheDocument();
+    expect(document.body.textContent).toContain(EVENT_REWORDED);
   });
 });

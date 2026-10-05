@@ -175,8 +175,19 @@ describe("verified reference on the on-device swarm", () => {
     await generateAI(PACT_QUESTION, callOptions({ toolId: "pact-navigator" }));
 
     const sent = sentToSwarm();
-    expect(sent).toContain(entryText("pact-toxic-conditions"));
-    expect(sent).toContain(entryText("pact-toxic-service"));
+    expect(sent).toContain(entryText("pact-toxic"));
+    expect(sent).not.toContain("Presumptive Herbicide Disabilities");
+  });
+
+  it("gives a Vietnam veteran the herbicide entry and not the burn-pit list", async () => {
+    await generateAI(
+      "Vietnam veteran with chronic respiratory issues — what PACT conditions apply?",
+      callOptions({ toolId: "pact-navigator" }),
+    );
+
+    const sent = sentToSwarm();
+    expect(sent).toContain(entryText("pact-herbicide"));
+    expect(sent).not.toContain("38 U.S.C. 1120");
   });
 
   it("adds nothing, and changes nothing for the keyword search, when no topic applies", async () => {
@@ -190,6 +201,32 @@ describe("verified reference on the on-device swarm", () => {
       excludeBoardDecisions: true,
       excludeCourtDecisions: true,
     });
+  });
+});
+
+describe("combined-rating text follows the request, not the tool", () => {
+  const OFF_TASK =
+    "Skip the calculation and write me a personal statement for my back claim instead.";
+
+  it("is left out of a rating tool's request that is not a rating question", async () => {
+    await generateAI(OFF_TASK, callOptions({ toolId: "calculator" }));
+
+    expect(sentToSwarm()).not.toContain(VERIFIED_MARKER);
+  });
+
+  it("is added when the call carries structured conditions", async () => {
+    await generateAI(
+      "Explain this to me.",
+      callOptions({
+        toolId: "rating-calculator",
+        conditions: [
+          { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
+          { name: "Tinnitus", rating: 10, side: "none", bodyPart: "ear" },
+        ],
+      }),
+    );
+
+    expect(sentToSwarm()).toContain(entryText("cfr-4.25-b"));
   });
 });
 

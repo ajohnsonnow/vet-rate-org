@@ -37,15 +37,19 @@ function guardOutcome(flags) {
  * it differs. `outputCleanup` says the wrapper tags were removed or a runaway
  * repeat was cut ({ echoRemoved, trimmed }). `calculatorReplacement` carries the reason and the replaced
  * draft when the calculator guard swapped the answer. `citationsUnverified`
- * lists the 38 CFR sections the answer cited that do not exist.
+ * lists the 38 CFR sections the answer cited that do not exist, and
+ * `contradictionsFound` the rules and sentences where the answer contradicted
+ * the verified text.
  *
  * A tool case (one with `entry`) went through a production function, not
  * straight to generateAI. Its request is found by the case's `match` phrase,
  * and its record adds the entry point, the form inputs (an attached document
  * by name only) and, for a writing tool, which draft the veteran was handed:
- * `draftPath` "model" (the model's wording passed the acceptance check) or
- * "template" (the app-built draft was returned, with `draftRejectReasons`,
- * or with `draftErrorReason` when the model could not answer at all).
+ * `draftPath` "model" (at least one typed passage was reworded by the model
+ * and accepted) or "template" (the app-built draft was returned as it is).
+ * `passages` counts the passages sent, accepted, unchanged and rejected,
+ * `draftRejectReasons` says why each rejected one was, and
+ * `draftErrorReason` is set when the model could not answer at all.
  * `calculatorAppended` and `tdiuParagraphAppended` say the calculator's line
  * or the TDIU threshold paragraph was appended to a kept answer;
  * `calculatorLead` ({ expected, commentaryKept }) says the answer leads with
@@ -84,6 +88,7 @@ function toolFields(caseDef, outcome, own) {
     draftNote: outcome.tool?.draftNote ?? null,
     draftRejectReasons: outcome.tool?.draftRejectReasons ?? [],
     draftErrorReason: outcome.tool?.draftErrorReason ?? null,
+    passages: outcome.tool?.passages ?? null,
     ...ownSystemPromptSeen(caseDef, own),
   };
 }
@@ -129,6 +134,9 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
       : {}),
     ...(outcome.citationsUnverified
       ? { citationsUnverified: outcome.citationsUnverified }
+      : {}),
+    ...(outcome.contradictionsFound
+      ? { contradictionsFound: outcome.contradictionsFound }
       : {}),
   };
 }
