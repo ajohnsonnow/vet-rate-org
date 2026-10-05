@@ -1128,6 +1128,7 @@ export const enforceCalculatorOnResult = (result, options) => {
     ],
     calculatorReplacement: {
       reason,
+      draft: result.text,
       expected: check.expected,
       stated: check.stated,
       inventedPairs: check.inventedPairs,
