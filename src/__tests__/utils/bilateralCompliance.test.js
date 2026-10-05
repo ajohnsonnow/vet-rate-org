@@ -93,6 +93,18 @@ describe("checkBilateralFactorCompliance when it cannot ask for a check", () => 
     expect(check.message).toMatch(/arm or (a )?leg/);
   });
 
+  it("gives the single-evaluation reason for a lone both-sides rating", () => {
+    const check = checkBilateralFactorCompliance([
+      c("Bilateral pes planus", 30, "bilateral", "foot"),
+      c("PTSD", 50, "none", "mental"),
+    ]);
+    expect(check.applicable).toBe(false);
+    expect(check.message).toContain(
+      "Bilateral pes planus is one evaluation that covers both sides",
+    );
+    expect(check.message).toContain("M21-1, V.iv.1.C.4.b");
+  });
+
   it("handles an empty list", () => {
     expect(checkBilateralFactorCompliance([]).applicable).toBe(false);
   });

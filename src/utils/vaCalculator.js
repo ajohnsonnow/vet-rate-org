@@ -859,6 +859,19 @@ const _joinNames = (names) =>
     ? names.join("")
     : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 
+// Why the compliance check cannot ask the veteran to verify a factor, by
+// bilateralIssues reason, in the order they are reported.
+const _NO_CHECK_MESSAGES = {
+  "side-unknown": (names) =>
+    `Vet-Rate did not recognise the side entered for ${names}, so it could not check the bilateral factor.`,
+  "side-not-set": (names, one) =>
+    `${names} ${one ? "names" : "name"} a side, but no side is set, so Vet-Rate could not check the bilateral factor. Set the side and check again.`,
+  "limb-unknown": (names, one) =>
+    `Vet-Rate could not tell whether ${names} ${one ? "is an arm or a leg condition" : "are arm or leg conditions"}, so it could not check the bilateral factor for ${one ? "it" : "them"}.`,
+  "single-bilateral-evaluation": (names, one) =>
+    `${names} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor. The factor needs another separately rated disability of the same limbs (VA manual M21-1, V.iv.1.C.4.b).`,
+};
+
 /**
  * Whether the bilateral factor belongs in a veteran's combined rating, for
  * tools that ask the veteran to check a decision against it. It reads the
@@ -892,33 +905,11 @@ export const checkBilateralFactorCompliance = (conditions) => {
       message: `${names(excluded)} are bilateral disabilities, but leaving them out of the bilateral factor gives a higher combined rating, so no factor is expected (38 CFR § 4.26(d)).`,
     };
   }
-  const badSide = result.bilateralIssues.filter(
-    (issue) => issue.reason === "side-unknown",
-  );
-  if (badSide.length > 0) {
-    return {
-      ...none,
-      message: `Vet-Rate did not recognise the side entered for ${names(badSide)}, so it could not check the bilateral factor.`,
-    };
-  }
-  const noSide = result.bilateralIssues.filter(
-    (issue) => issue.reason === "side-not-set",
-  );
-  if (noSide.length > 0) {
-    return {
-      ...none,
-      message: `${names(noSide)} ${noSide.length === 1 ? "names" : "name"} a side, but no side is set, so Vet-Rate could not check the bilateral factor. Set the side and check again.`,
-    };
-  }
-  const unknown = result.bilateralIssues.filter(
-    (issue) => issue.reason === "limb-unknown",
-  );
-  if (unknown.length > 0) {
-    const one = unknown.length === 1;
-    return {
-      ...none,
-      message: `Vet-Rate could not tell whether ${names(unknown)} ${one ? "is an arm or a leg condition" : "are arm or leg conditions"}, so it could not check the bilateral factor for ${one ? "it" : "them"}.`,
-    };
+  for (const [reason, sentence] of Object.entries(_NO_CHECK_MESSAGES)) {
+    const found = result.bilateralIssues.filter((i) => i.reason === reason);
+    if (found.length > 0) {
+      return { ...none, message: sentence(names(found), found.length === 1) };
+    }
   }
   return {
     ...none,
