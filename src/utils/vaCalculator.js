@@ -472,9 +472,9 @@ const _withNormalisedSide = (conditions) =>
 
 /**
  * Entries left out of the group for a reason the veteran can fix, in input
- * order: an unrecognised side on a compensable limb entry, a limb that is
- * unknown where knowing it could have changed the group, or a both-sides
- * evaluation with nothing to pair with.
+ * order, as { condition, reason }: an unrecognised side on a compensable limb
+ * entry, a limb that is unknown where knowing it could have changed the
+ * group, or a both-sides evaluation with nothing to pair with.
  */
 function _groupIssues(conditions, candidates, inGroup, alone) {
   const couldPair = (entry) =>
@@ -497,11 +497,11 @@ function _groupIssues(conditions, candidates, inGroup, alone) {
       condition.rating >= COMPENSABLE &&
       (LIMBS.includes(limb) || (limb === "unknown" && candidates.length > 0));
     if (unknownSide) {
-      issues.push({ ...condition, reason: "side-unknown" });
+      issues.push({ condition, reason: "side-unknown" });
     } else if (entry?.limb === "unknown" && couldPair(entry)) {
-      issues.push({ ...condition, reason: "limb-unknown" });
+      issues.push({ condition, reason: "limb-unknown" });
     } else if (alone.has(condition)) {
-      issues.push({ ...condition, reason: "single-bilateral-evaluation" });
+      issues.push({ condition, reason: "single-bilateral-evaluation" });
     }
   }
   return issues;
@@ -695,34 +695,89 @@ function _usableConditions(conditions) {
 }
 
 /**
- * Entries with no side set whose name states a side and an allowlisted limb
- * ("Left knee strain" pasted from VA.gov arrives with side "none"). They take
- * no factor. They are reported only when setting the side the name states
- * would put them in a bilateral group, so the veteran is told to set it.
+ * What an entry might be, read loosely: every limb its name mentions (or the
+ * limb the calculator resolved) and every side it could be on. Used only to
+ * decide what to report, never to grant a factor.
  */
-function _sideNotSetIssues(conditions) {
-  const namedSide = new Map();
-  for (const c of conditions) {
-    if (c.side !== "none" || c.rating < COMPENSABLE) continue;
-    const name = _readName(c.name);
-    if (name.side && LIMBS.includes(name.limb) && _limbOf(c) === name.limb) {
-      namedSide.set(c, name.side);
-    }
-  }
-  if (namedSide.size === 0) return [];
-  const asNamed = conditions.map((c) =>
-    namedSide.has(c) ? { ...c, side: namedSide.get(c) } : c,
-  );
-  const wouldGroup = _formBilateralGroup(asNamed).group;
-  return conditions
-    .filter((c, i) => namedSide.has(c) && wouldGroup.includes(asNamed[i]))
-    .map((c) => ({ ...c, reason: "side-not-set" }));
+function _looseReading(condition) {
+  const items = _nameItems(condition.name);
+  const limb = _limbOf(condition);
+  const limbs = LIMBS.includes(limb)
+    ? new Set([limb])
+    : new Set(items.filter((i) => i.limb).map((i) => i.limb));
+  const nameSides = new Set(items.filter((i) => i.side).map((i) => i.side));
+  const sideSet = condition.side !== "none";
+  let sides = nameSides;
+  if (SIDED.includes(condition.side)) sides = new Set([condition.side]);
+  else if (sideSet) sides = null;
+  return {
+    condition,
+    limbs,
+    sides,
+    mightPair:
+      condition.rating >= COMPENSABLE &&
+      condition.limb !== "none" &&
+      limbs.size > 0 &&
+      (sideSet || nameSides.size > 0),
+    resolved: LIMBS.includes(limb) && SIDED.includes(condition.side),
+  };
+}
+
+function _looseCouldPair(one, other) {
+  const sharesLimb = [...one.limbs].some((limb) => other.limbs.has(limb));
+  if (!sharesLimb) return false;
+  if (!one.sides || !other.sides) return true;
+  const sameOneSide =
+    one.sides.size === 1 &&
+    other.sides.size === 1 &&
+    [...one.sides][0] === [...other.sides][0] &&
+    !one.sides.has("bilateral");
+  return !sameOneSide;
+}
+
+function _looseReason(condition) {
+  if (condition.side === "none") return "side-not-set";
+  return RECOGNISED_SIDES.includes(condition.side)
+    ? "limb-unknown"
+    : "side-unknown";
+}
+
+/**
+ * Entries that took no factor but might be half of a pair: the name states a
+ * side or a side is set, the name mentions a limb or the body part is one,
+ * and another compensable entry exists that the same loose reading could pair
+ * it with. This does not depend on the name allowlist. Reporting grants
+ * nothing, so it errs toward telling the veteran: "Left knee pain" pasted
+ * from VA.gov arrives with side "none" and would otherwise combine with no
+ * factor and no word of why.
+ */
+function _looseIssues(conditions, alreadyReported) {
+  const readings = conditions.map(_looseReading).filter((r) => r.mightPair);
+  return readings
+    .filter(
+      (reading) =>
+        !reading.resolved &&
+        !alreadyReported.has(reading.condition) &&
+        readings.some(
+          (other) => other !== reading && _looseCouldPair(reading, other),
+        ),
+    )
+    .map((reading) => ({
+      condition: reading.condition,
+      reason: _looseReason(reading.condition),
+    }));
 }
 
 function _sortIntoBilateralGroup(rawConditions) {
   const conditions = _withNormalisedSide(rawConditions);
   const formed = _formBilateralGroup(conditions);
-  const issues = [...formed.issues, ..._sideNotSetIssues(conditions)];
+  const reported = new Map(formed.issues.map((i) => [i.condition, i.reason]));
+  for (const issue of _looseIssues(conditions, reported)) {
+    reported.set(issue.condition, issue.reason);
+  }
+  const issues = conditions
+    .filter((c) => reported.has(c))
+    .map((c) => ({ ...c, reason: reported.get(c) }));
   const {
     kept: bilateralConditions,
     removed: bilateralExcludedConditions,
@@ -972,11 +1027,19 @@ export const checkBilateralFactorCompliance = (conditions) => {
       message: `${names(excluded)} are bilateral disabilities, but leaving them out of the bilateral factor gives a higher combined rating, so no factor is expected (38 CFR § 4.26(d)).`,
     };
   }
-  for (const [reason, sentence] of Object.entries(_NO_CHECK_MESSAGES)) {
-    const found = result.bilateralIssues.filter((i) => i.reason === reason);
-    if (found.length > 0) {
-      return { ...none, message: sentence(names(found), found.length === 1) };
-    }
+  const sentences = Object.entries(_NO_CHECK_MESSAGES).flatMap(
+    ([reason, sentence]) => {
+      const found = result.bilateralIssues.filter((i) => i.reason === reason);
+      return found.length > 0
+        ? [sentence(names(found), found.length === 1)]
+        : [];
+    },
+  );
+  if (sentences.length > 0) {
+    return {
+      ...none,
+      message: `${sentences.join(" ")} Check ${result.bilateralIssues.length === 1 ? "this entry" : "these entries"} in the calculator.`,
+    };
   }
   return {
     ...none,
