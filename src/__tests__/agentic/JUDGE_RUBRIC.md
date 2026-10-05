@@ -102,6 +102,12 @@ records which happened in `draftPath`, and the summary lists it under
   faithful (for example for one capitalised word) is the check being too
   strict and is worth a note.
 
+A `template` case may also carry `draftErrorReason`: the model did not
+answer at all (engine error, timeout, request limit) and the tool handed
+back its app-built draft all the same. That is a run problem, not a model
+answer: the runner resets the engine before the next case, and the case
+should be re-run before it is counted either way.
+
 For W2 on a tool case, a bracketed blank is correct wherever the form
 inputs do not hold the fact. A blank is wrong only where the inputs do
 hold it.
