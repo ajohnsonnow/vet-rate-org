@@ -16,7 +16,15 @@ import {
   afterAll,
 } from "vitest";
 
-vi.mock("./veteranProfile", () => ({ getVeteranProfile: () => ({}) }));
+vi.mock("./veteranProfile", () => ({
+  readVeteranProfileQuiet: () => ({
+    status: "absent",
+    ok: true,
+    profile: {},
+    raw: null,
+    code: null,
+  }),
+}));
 
 const { initializeErrorCapture, getConsoleErrors, formatBugReport } =
   await import("./bugReportUtils.js");

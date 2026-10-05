@@ -41,7 +41,15 @@ const PLANTED_PROFILE = {
 };
 
 let mockProfile = {};
-vi.mock("./veteranProfile", () => ({ getVeteranProfile: () => mockProfile }));
+vi.mock("./veteranProfile", () => ({
+  readVeteranProfileQuiet: () => ({
+    status: "ok",
+    ok: true,
+    profile: mockProfile,
+    raw: JSON.stringify(mockProfile),
+    code: null,
+  }),
+}));
 
 const {
   initializeErrorCapture,
@@ -65,6 +73,12 @@ function expectNoPlantedValue(text) {
   for (const value of PLANTED_VALUES) {
     expect(text).not.toContain(value);
   }
+}
+
+// What the profile module announces when the veteran's profile is saved.
+function profileSaved(profile) {
+  mockProfile = profile;
+  window.dispatchEvent(new CustomEvent("vetrate:profile-changed"));
 }
 
 async function loadProfile(profile) {
@@ -211,7 +225,7 @@ describe("console interceptor: a profile saved after the last refresh", () => {
       fullName: "Ottoline Brightwater",
       homeOfRecord: "Wahpeton, ND",
     };
-    mockProfile = saved;
+    profileSaved(saved);
 
     console.error("Profile saved for Ottoline Brightwater of Wahpeton, ND");
 
@@ -233,7 +247,7 @@ describe("console interceptor: a profile saved after the last refresh", () => {
 
 describe("console interceptor: every saved-profile identifier is redacted", () => {
   it("redacts home of record, birthplace, spouse, emergency contact, claim and account numbers", () => {
-    mockProfile = {
+    profileSaved({
       ...PLANTED_PROFILE,
       homeOfRecord: "Wahpeton, ND",
       placeOfBirth: "Kalispell, MT",
@@ -241,7 +255,7 @@ describe("console interceptor: every saved-profile identifier is redacted", () =
       emergencyContactName: "Barnaby Thistlewood",
       claimNumber: "8675309",
       accountNumber: "000123456789",
-    };
+    });
 
     console.error(
       "save failed home Wahpeton, ND born Kalispell, MT spouse Ottoline Brightwater contact Barnaby Thistlewood claim 8675309 acct 000123456789",

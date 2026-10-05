@@ -10,6 +10,7 @@ import {
   redactFileNames,
   collectKnownIdentifierValues,
 } from "./piiScrubber";
+import { PROFILE_CHANGED_EVENT } from "./profileEvents";
 
 // Application modules/features - DIAMOND LEVEL: All 45+ tools tracked!
 export const APP_MODULES = {
@@ -336,8 +337,21 @@ const CONSOLE_TRUNCATION_MARKER = "...[truncated]";
 
 let profileIdentifierValues = [];
 let explicitIdentifierValues = [];
-let knownIdentifierRefreshInFlight = false;
+let knownIdentifierRefresh = null;
 let readSavedProfile = null;
+// True while the veteran's known values could not be built (the profile module
+// is not loaded yet, or the saved profile is unreadable): capture then falls
+// back to pattern scrubbing only and says so on the entry.
+let knownValuesUnavailable = true;
+let profileSyncedAt = 0;
+let profileChanged = false;
+// The capture path re-reads the saved profile when it is saved or cleared
+// (this tab's own event, or another tab's storage event), and otherwise only
+// as a slow backstop for writers that announce nothing. A report rebuilds the
+// list before it leaves, so a name saved a moment ago is never in a report.
+const PROFILE_SYNC_INTERVAL_MS = 30000;
+const PATTERN_ONLY_SCRUB = "pattern-only";
+const PROFILE_STORAGE_KEY = "vet_rate_veteran_profile";
 
 const trimmedValue = (value) =>
   typeof value === "string" && value.trim() ? { value: value.trim() } : null;
@@ -361,15 +375,29 @@ const profileKnownValues = (profile) => {
   ];
 };
 
-// Once the profile module has loaded, every capture and every read re-reads
-// the saved profile, so a name saved a moment ago is never missing from the
-// redaction list.
-const syncProfileValues = () => {
-  if (!readSavedProfile) return;
+// Reads through the profile module's quiet reader only: nothing on this path
+// may write to the console, because every console write comes straight back
+// here.
+const syncProfileValues = ({ force = false } = {}) => {
+  if (!readSavedProfile) {
+    knownValuesUnavailable = true;
+    return;
+  }
+  const now = Date.now();
+  const due = now - profileSyncedAt >= PROFILE_SYNC_INTERVAL_MS;
+  if (!force && !due && !profileChanged) return;
+  profileSyncedAt = now;
+  profileChanged = false;
   try {
-    profileIdentifierValues = profileKnownValues(readSavedProfile());
+    const result = readSavedProfile();
+    if (result.ok) {
+      profileIdentifierValues = profileKnownValues(result.profile);
+      knownValuesUnavailable = false;
+    } else {
+      knownValuesUnavailable = true;
+    }
   } catch {
-    // Best-effort: the pattern scrubber still runs on every line.
+    knownValuesUnavailable = true;
   }
 };
 
@@ -441,11 +469,12 @@ const scrubConsoleText = (text, maxChars) => {
   );
 };
 
-const scrubConsoleEntry = (entry) => ({
+const scrubConsoleEntry = ({ scrubMode: _previous, ...entry }) => ({
   ...entry,
   message: scrubConsoleText(entry.message, MAX_CONSOLE_MESSAGE_CHARS),
   stack: scrubConsoleText(entry.stack, MAX_CONSOLE_STACK_CHARS),
   url: scrubConsoleText(entry.url, MAX_CONSOLE_URL_CHARS),
+  ...(knownValuesUnavailable ? { scrubMode: PATTERN_ONLY_SCRUB } : {}),
 });
 
 const readStoredConsoleLogs = () => {
@@ -464,7 +493,7 @@ const readStoredConsoleLogs = () => {
  * veteran's known values were loaded can reach a report.
  */
 export const getConsoleErrors = () => {
-  syncProfileValues();
+  syncProfileValues({ force: true });
   return readStoredConsoleLogs().map(scrubConsoleEntry);
 };
 
@@ -489,26 +518,49 @@ const rescrubStoredConsoleLogs = () => {
  * setKnownIdentifiersForConsoleScrub. The module loads lazily: this file is
  * in the boot path.
  */
-export const refreshKnownIdentifiers = async () => {
-  if (knownIdentifierRefreshInFlight) return;
-  knownIdentifierRefreshInFlight = true;
+const loadKnownIdentifiers = async () => {
   try {
-    const { getVeteranProfile } = await import("./veteranProfile");
-    readSavedProfile = getVeteranProfile;
-    syncProfileValues();
+    const { readVeteranProfileQuiet } = await import("./veteranProfile");
+    readSavedProfile = readVeteranProfileQuiet;
     rescrubStoredConsoleLogs();
   } catch {
     // Best-effort: the pattern scrubber still runs on every line without it.
   } finally {
-    knownIdentifierRefreshInFlight = false;
+    knownIdentifierRefresh = null;
   }
+};
+
+export const refreshKnownIdentifiers = () => {
+  if (readSavedProfile) {
+    rescrubStoredConsoleLogs();
+    return Promise.resolve();
+  }
+  knownIdentifierRefresh ??= loadKnownIdentifiers();
+  return knownIdentifierRefresh;
+};
+
+// The same line over and over is one entry with a count, not a full buffer.
+const pushOrCollapse = (logs, entry) => {
+  const last = logs.at(-1);
+  const repeats =
+    last &&
+    last.type === entry.type &&
+    last.message === entry.message &&
+    last.url === entry.url;
+  if (!repeats) {
+    logs.push(entry);
+    return;
+  }
+  last.count = (last.count || 1) + 1;
+  last.lastTimestamp = entry.timestamp;
 };
 
 /**
  * Log console message for bug reports
  * ENHANCED: Now captures errors, warnings, logs, and info
  */
-export const logConsoleError = (entry) => {
+const recordConsoleEntry = (entry) => {
+  if (!entry) return;
   syncProfileValues();
   try {
     const logs = readStoredConsoleLogs();
@@ -524,7 +576,7 @@ export const logConsoleError = (entry) => {
       userAgent: navigator.userAgent,
     });
 
-    logs.push(logEntry);
+    pushOrCollapse(logs, logEntry);
 
     sessionStorage.setItem(
       CONSOLE_LOG_STORAGE_KEY,
@@ -535,6 +587,25 @@ export const logConsoleError = (entry) => {
   }
   if (!readSavedProfile) refreshKnownIdentifiers();
 };
+
+// A line logged while another line is being captured (by a getter inside a
+// logged object, by anything the capture itself calls) is never captured:
+// that is what turns one failure into an endless loop.
+let capturing = false;
+
+const captureGuarded = (build) => {
+  if (capturing) return;
+  capturing = true;
+  try {
+    recordConsoleEntry(build());
+  } catch {
+    // Capturing must never throw into the code that logged.
+  } finally {
+    capturing = false;
+  }
+};
+
+export const logConsoleError = (entry) => captureGuarded(() => entry);
 
 const buildSummarySection = ({
   severity,
@@ -663,6 +734,11 @@ ${storageInfo.savedClaimConditions.map((c, i) => `  ${i + 1}. ${c.condition} (${
   return section;
 };
 
+// What a reader needs to know about a collapsed or less-scrubbed line.
+const entryNote = (entry) =>
+  (entry.count > 1 ? ` (repeated ${entry.count} times)` : "") +
+  (entry.scrubMode === PATTERN_ONLY_SCRUB ? " [pattern scrubbing only]" : "");
+
 const buildConsoleLogsSection = (consoleErrors, divider) => {
   if (!consoleErrors || consoleErrors.length === 0) {
     return `
@@ -694,7 +770,7 @@ ${errorTypes.error
   .map(
     (err, i) => `
 [${i + 1}] ${err.timestamp}
-    Message: ${err.message}
+    Message: ${err.message}${entryNote(err)}
     URL: ${err.url}${err.lineNumber ? `\n    Line: ${err.lineNumber}:${err.columnNumber}` : ""}
     ${err.stack ? `Stack: ${err.stack.split("\n").slice(0, 3).join("\n    ")}` : ""}
 `,
@@ -710,7 +786,7 @@ ${errorTypes.warn
   .map(
     (warn, i) => `
 [${i + 1}] ${warn.timestamp}
-    Message: ${warn.message}
+    Message: ${warn.message}${entryNote(warn)}
     URL: ${warn.url}
 `,
   )
@@ -724,7 +800,7 @@ ${errorTypes.warn
 ${errorTypes.log
   .map(
     (log, i) => `
-[${i + 1}] ${log.timestamp} - ${log.message}
+[${i + 1}] ${log.timestamp} - ${log.message}${entryNote(log)}
 `,
   )
   .join("")}
@@ -737,7 +813,7 @@ ${errorTypes.log
 ${errorTypes.info
   .map(
     (info, i) => `
-[${i + 1}] ${info.timestamp} - ${info.message}
+[${i + 1}] ${info.timestamp} - ${info.message}${entryNote(info)}
 `,
   )
   .join("")}
@@ -892,21 +968,21 @@ const captureGlobalErrorEvents = () => {
 
 const overrideConsoleError = (originalConsole) => {
   console.error = function (...args) {
-    logConsoleError({
+    captureGuarded(() => ({
       type: "error",
       message: stringifyConsoleArgs(args),
       stack: new Error().stack,
-    });
+    }));
     originalConsole.error.apply(console, args);
   };
 };
 
 const overrideConsoleWarn = (originalConsole) => {
   console.warn = function (...args) {
-    logConsoleError({
+    captureGuarded(() => ({
       type: "warn",
       message: stringifyConsoleArgs(args),
-    });
+    }));
     originalConsole.warn.apply(console, args);
   };
 };
@@ -927,14 +1003,14 @@ const overrideConsoleLog = (originalConsole) => {
   // Intercept console.log (capture only important logs to avoid spam)
   // eslint-disable-next-line no-console
   console.log = function (...args) {
-    const message = stringifyConsoleArgs(args);
-    if (
-      CONSOLE_LOG_KEYWORDS.some((keyword) =>
+    captureGuarded(() => {
+      const message = stringifyConsoleArgs(args);
+      return CONSOLE_LOG_KEYWORDS.some((keyword) =>
         message.toLowerCase().includes(keyword),
       )
-    ) {
-      logConsoleError({ type: "log", message });
-    }
+        ? { type: "log", message }
+        : null;
+    });
     originalConsole.log.apply(console, args);
   };
 };
@@ -951,14 +1027,14 @@ const CONSOLE_INFO_KEYWORDS = [
 const overrideConsoleInfo = (originalConsole) => {
   // eslint-disable-next-line no-console
   console.info = function (...args) {
-    const message = stringifyConsoleArgs(args);
-    if (
-      CONSOLE_INFO_KEYWORDS.some((keyword) =>
+    captureGuarded(() => {
+      const message = stringifyConsoleArgs(args);
+      return CONSOLE_INFO_KEYWORDS.some((keyword) =>
         message.toLowerCase().includes(keyword),
       )
-    ) {
-      logConsoleError({ type: "info", message });
-    }
+        ? { type: "info", message }
+        : null;
+    });
     originalConsole.info.apply(console, args);
   };
 };
@@ -985,6 +1061,14 @@ const interceptConsoleMethods = () => {
  */
 export const initializeErrorCapture = () => {
   installFileNameListeners();
+  window.addEventListener("storage", (event) => {
+    if (event.key === null || event.key === PROFILE_STORAGE_KEY) {
+      profileChanged = true;
+    }
+  });
+  window.addEventListener(PROFILE_CHANGED_EVENT, () => {
+    profileChanged = true;
+  });
   captureGlobalErrorEvents();
   interceptConsoleMethods();
   refreshKnownIdentifiers();
