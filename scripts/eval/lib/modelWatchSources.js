@@ -217,6 +217,31 @@ const TIER_LISTS = [
   "mobile",
 ];
 
+function resolveTierList(listBody, detector) {
+  const ids = [];
+  for (const [, spread, id] of listBody.matchAll(
+    /\.\.\.([A-Z_][A-Z0-9_]*)|"([A-Za-z0-9._-]+)"/g,
+  )) {
+    if (id) {
+      ids.push(id);
+      continue;
+    }
+    const constant = new RegExp(`const ${spread} = \\[([^\\]]*)\\]`).exec(
+      detector,
+    );
+    if (!constant) {
+      throw new SourceError(
+        "app-models:deviceCapabilityDetector.js",
+        `no list named ${spread}`,
+      );
+    }
+    for (const [, listed] of constant[1].matchAll(/"([A-Za-z0-9._-]+)"/g)) {
+      ids.push(listed);
+    }
+  }
+  return ids;
+}
+
 /** The models the app loads today, read from the source files. */
 export function parseAppModels({ detector, florence, smolvlm, legalRag }) {
   const models = [];
@@ -230,7 +255,7 @@ export function parseAppModels({ detector, florence, smolvlm, legalRag }) {
         `no recommendedModels list for tier ${tier}`,
       );
     }
-    for (const [, id] of match[1].matchAll(/"([A-Za-z0-9._-]+)"/g)) {
+    for (const id of resolveTierList(match[1], detector)) {
       models.push({ id, kind: "text", role: `text, ${tier} tier`, tier });
     }
   }

@@ -1,4 +1,5 @@
 // Trimmed copy of mlc-ai/web-llm src/config.ts fetched 2026-10-05
+// (the four Qwen3.5 entries were added from figures read 2026-10-05; model_lib omitted)
 export const prebuiltAppConfig: AppConfig = {
   cacheBackend: "cache",
   model_list: [
@@ -437,6 +438,42 @@ export const prebuiltAppConfig: AppConfig = {
         "/snowflake-arctic-embed-s-q0f32-ctx512_cs512_batch4-webgpu.wasm",
       vram_required_MB: 238.71,
       model_type: ModelType.embedding,
+    },
+    {
+      model: "https://huggingface.co/mlc-ai/Qwen3.5-4B-q4f16_1-MLC",
+      model_id: "Qwen3.5-4B-q4f16_1-MLC",
+      vram_required_MB: 3867.82,
+      low_resource_required: false,
+      overrides: {
+        context_window_size: 4096,
+      },
+    },
+    {
+      model: "https://huggingface.co/mlc-ai/Qwen3.5-4B-q4f32_1-MLC",
+      model_id: "Qwen3.5-4B-q4f32_1-MLC",
+      vram_required_MB: 4680.36,
+      low_resource_required: false,
+      overrides: {
+        context_window_size: 4096,
+      },
+    },
+    {
+      model: "https://huggingface.co/mlc-ai/Qwen3.5-2B-q4f16_1-MLC",
+      model_id: "Qwen3.5-2B-q4f16_1-MLC",
+      vram_required_MB: 2245.44,
+      low_resource_required: false,
+      overrides: {
+        context_window_size: 4096,
+      },
+    },
+    {
+      model: "https://huggingface.co/mlc-ai/Qwen3.5-2B-q4f32_1-MLC",
+      model_id: "Qwen3.5-2B-q4f32_1-MLC",
+      vram_required_MB: 2591.55,
+      low_resource_required: false,
+      overrides: {
+        context_window_size: 4096,
+      },
     },
   ],
 };

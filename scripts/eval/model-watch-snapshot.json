@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updatedAt": "2026-10-05T07:41:00.150Z",
+  "updatedAt": "2026-10-05T22:44:50.534Z",
   "models": [
     "DeepSeek-R1-Distill-Llama-70B-q0f16-MLC",
     "DeepSeek-R1-Distill-Llama-70B-q4f16_1-MLC",

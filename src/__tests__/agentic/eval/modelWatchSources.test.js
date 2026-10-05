@@ -139,12 +139,19 @@ describe("app models are read from the source files", () => {
     const models = parseAppModels(files());
     const ids = (pred) => models.filter(pred).map((m) => m.id);
     expect(ids((m) => m.tier === "laptop")).toEqual([
+      "Qwen3.5-2B-q4f16_1-MLC",
       "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
       "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
       "Qwen2.5-3B-Instruct-q4f16_1-MLC",
     ]);
-    expect(ids((m) => m.tier === "desktop-high")).toContain(
+    expect(ids((m) => m.tier === "desktop-high")).toEqual([
+      "Qwen3.5-4B-q4f16_1-MLC",
+      "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+      "Qwen2.5-3B-Instruct-q4f32_1-MLC",
       "Llama-3.2-3B-Instruct-q4f32_1-MLC",
+    ]);
+    expect(ids((m) => m.tier === "desktop-mid")[0]).toBe(
+      "Qwen3.5-4B-q4f16_1-MLC",
     );
     expect(ids((m) => m.kind === "vision")).toEqual([
       "onnx-community/Florence-2-base-ft",
@@ -153,6 +160,27 @@ describe("app models are read from the source files", () => {
     expect(ids((m) => m.kind === "embedding")).toEqual([
       "Xenova/bge-small-en-v1.5",
     ]);
+  });
+
+  it("resolves a tier list written as a spread of an exported constant", () => {
+    const detector = [
+      'export const SHARED = ["A-MLC", "B-MLC"];',
+      'case "desktop-high": return { recommendedModels: [...SHARED], x: 1 };',
+      'case "desktop-mid": return { recommendedModels: ["C-MLC"] };',
+      'case "laptop": return { recommendedModels: ["D-MLC"] };',
+      'case "tablet": return { recommendedModels: ["E-MLC"] };',
+      'case "mobile": default: return { recommendedModels: [] };',
+    ].join("\n");
+    const models = parseAppModels({ ...files(), detector });
+    expect(
+      models.filter((m) => m.tier === "desktop-high").map((m) => m.id),
+    ).toEqual(["A-MLC", "B-MLC"]);
+  });
+
+  it("fails naming the file when a spread constant cannot be found", () => {
+    const detector =
+      'case "desktop-high": return { recommendedModels: [...GONE] };';
+    expect(() => parseAppModels({ ...files(), detector })).toThrow(/GONE/);
   });
 
   it("fails naming the file when a constant moves", () => {

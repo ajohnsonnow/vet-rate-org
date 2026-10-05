@@ -85,7 +85,9 @@ async function main() {
       models: ids,
     };
     writeFileSync(opts.snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`);
-    console.log(`model-watch: snapshot written with ${ids.length} model ids`);
+    process.stdout.write(
+      `model-watch: snapshot written with ${ids.length} model ids\n`,
+    );
     return 0;
   }
 
@@ -111,7 +113,7 @@ async function main() {
     `${JSON.stringify(result, null, 2)}\n`,
   );
   printErrors(result.sourceErrors);
-  console.log(renderSummary(result));
+  process.stdout.write(`${renderSummary(result)}\n`);
   return result.exitCode;
 }
 
