@@ -134,6 +134,11 @@ export function describeBilateralNotes(calc) {
   ];
 }
 
+const groupCappedLine = (group) =>
+  group.combinedBilateral >= 100
+    ? "  Bilateral factor: the group already combines to 100%, so the factor adds nothing and the group rating is 100%"
+    : `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.combinedBilateral / 10}, but a rating cannot exceed 100%, so the group rating is 100%`;
+
 const stepLine = (s) => `${s.from}% combined with ${s.with}% = ${s.result}%`;
 
 function bilateralGroupStep(calc) {
@@ -163,7 +168,7 @@ export function formatCalculatorWorking(calc) {
     bilateralSteps.forEach((s) => lines.push(`  ${stepLine(s)}`));
     lines.push(
       group.bilateralFactorCapped
-        ? `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.combinedBilateral / 10}, but a rating cannot exceed 100%, so the group rating is 100%`
+        ? groupCappedLine(group)
         : `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.bilateralFactor}, so the group rating is ${group.bilateralGroupRating}%`,
     );
   }

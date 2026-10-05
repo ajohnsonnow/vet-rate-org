@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   calculateVARating,
+  calculateWhatIf,
   checkBilateralFactorCompliance,
 } from "../../utils/vaCalculator";
 import {
@@ -162,4 +163,75 @@ describe("calculateVARating input handling", () => {
       expect(result.bilateralIssues).toEqual([]);
     },
   );
+});
+
+describe("rating strings are read only as decimal digits with an optional percent sign", () => {
+  it.each([
+    ["0x10"],
+    ["1e2"],
+    ["+50"],
+    ["50 percent"],
+    ["5 0"],
+    [".5"],
+    ["50%%"],
+  ])("%j is not a rating: the 30 beside it stays 30", (text) => {
+    const result = calculateVARating([c("Odd", text), c("Back", 30)]);
+    expect(result.rawScore).toBe(30);
+    expect(result.nonBilateralConditions.map((x) => x.name)).toEqual(["Back"]);
+  });
+
+  it.each([
+    ["50", 50],
+    ["50%", 50],
+    [" 50 % ", 50],
+    ["010", 10],
+    ["12.5", 12.5],
+  ])("%j is read as %d", (text, value) => {
+    const result = calculateVARating([c("Only", text)]);
+    expect(result.nonBilateralConditions[0].rating).toBe(value);
+  });
+});
+
+describe("a group that already combines to 100", () => {
+  it("L knee 100 + R knee 10 give 100; the factor adds nothing and the group stays 100", () => {
+    const result = calculateVARating([
+      c("Left knee", 100, "left", "knee"),
+      c("Right knee", 10, "right", "knee"),
+    ]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.bilateralGroupRating).toBe(100);
+    expect(result.rawScore).toBe(100);
+    expect(result.combinedRating).toBe(100);
+    const working = formatCalculatorWorking(result).join(" | ");
+    expect(working).toContain("group rating is 100%");
+    expect(working).not.toContain("= 10,");
+  });
+});
+
+describe("calculateWhatIf input handling", () => {
+  it.each([[null], [undefined], ["x"]])(
+    "treats %j existing conditions as none: a proposed 30 gives 30",
+    (existing) => {
+      const result = calculateWhatIf(existing, 30);
+      expect(result.currentRating).toBe(0);
+      expect(result.newRating).toBe(30);
+    },
+  );
+
+  it("treats a null proposed condition as one with no side: 20 + 30 give 44", () => {
+    const result = calculateWhatIf(
+      [c("Left knee", 20, "left", "knee")],
+      30,
+      null,
+    );
+    expect(result.newRaw).toBe(44);
+  });
+
+  it("gives no percentage increase from a 0 baseline instead of Infinity or NaN", () => {
+    expect(calculateWhatIf([], 30).percentageIncrease).toBeNull();
+    expect(calculateWhatIf([], 0).percentageIncrease).toBeNull();
+    expect(calculateWhatIf([c("PTSD", 50)], 30).percentageIncrease).toBe(
+      "40.0",
+    );
+  });
 });

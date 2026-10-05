@@ -602,11 +602,14 @@ const _emptyResult = () => ({
   ratingNeededFor100: 0,
 });
 
+// Decimal digits with an optional percent sign. Number() alone would read
+// "0x10" as 16 and "1e2" as 100.
+const RATING_TEXT = /^(\d+(?:\.\d+)?)\s*%?$/;
+
 function _ratingValue(rating) {
   if (typeof rating !== "string") return rating;
-  const text = rating.trim();
-  if (text === "") return Number.NaN;
-  return Number(text.endsWith("%") ? text.slice(0, -1) : text);
+  const match = RATING_TEXT.exec(rating.trim());
+  return match ? Number(match[1]) : Number.NaN;
 }
 
 /**
@@ -1065,32 +1068,33 @@ export const calculateWhatIf = (
   newRating,
   proposed = {},
 ) => {
-  // Current combined rating
-  const current = calculateVARating(existingConditions);
+  const existing = Array.isArray(existingConditions) ? existingConditions : [];
+  const current = calculateVARating(existing);
 
   // New condition
   const newCondition = {
     name: "Proposed Condition",
     rating: newRating,
-    side: proposed.side ?? "none",
-    bodyPart: proposed.bodyPart ?? "other",
-    limb: proposed.limb,
+    side: proposed?.side ?? "none",
+    bodyPart: proposed?.bodyPart ?? "other",
+    limb: proposed?.limb,
   };
 
   // Calculate with new condition added
-  const withNew = calculateVARating([...existingConditions, newCondition]);
+  const withNew = calculateVARating([...existing, newCondition]);
+  const increase = withNew.combinedRating - current.combinedRating;
 
   return {
     currentRating: current.combinedRating,
     newRating: withNew.combinedRating,
     currentRaw: current.rawScore,
     newRaw: withNew.rawScore,
-    increase: withNew.combinedRating - current.combinedRating,
-    percentageIncrease: (
-      ((withNew.combinedRating - current.combinedRating) /
-        current.combinedRating) *
-      100
-    ).toFixed(1),
+    increase,
+    // No percentage is defined from a 0% baseline.
+    percentageIncrease:
+      current.combinedRating > 0
+        ? ((increase / current.combinedRating) * 100).toFixed(1)
+        : null,
   };
 };
 
