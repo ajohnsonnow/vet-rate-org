@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "69e92dcde6849bb2b2d8d94a",
+    "id": "mlc-ai/gemma3-1b-it-q4f16_1-MLC",
+    "downloads": 0,
+    "tags": ["region:us"],
+    "createdAt": "2026-04-22T20:21:33.000Z"
+  },
+  {
+    "_id": "69e91c88c2663cf856fa05ec",
+    "id": "mlc-ai/Ministral-3-3B-Instruct-2512-BF16-q4f32_1-MLC",
+    "downloads": 0,
+    "tags": ["region:us"],
+    "createdAt": "2026-04-22T19:07:52.000Z"
+  },
+  {
+    "_id": "69e91bf80a3b1cf2a7e607ad",
+    "id": "mlc-ai/Ministral-3-3B-Reasoning-2512-q4f32_1-MLC",
+    "downloads": 0,
+    "tags": ["region:us"],
+    "createdAt": "2026-04-22T19:05:28.000Z"
+  },
+  {
+    "_id": "69e91b66c0dc29784a0b5a95",
+    "id": "mlc-ai/Ministral-3-3B-Base-2512-q4f32_1-MLC",
+    "downloads": 0,
+    "tags": ["region:us"],
+    "createdAt": "2026-04-22T19:03:02.000Z"
+  }
+]
