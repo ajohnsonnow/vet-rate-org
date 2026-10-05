@@ -174,7 +174,10 @@ export async function _saveCFileToRecords(
     vkbMergeData: plan.vkbMergeData,
     sourceDocumentId: filedRecord?.id ?? null,
   });
-  await convergeTimelineStoreWithVKB({ onlyIfStoreHasEvents: true });
+  await convergeTimelineStoreWithVKB({
+    onlyIfStoreHasEvents: true,
+    cfileDocumentIds: filedRecord?.id ? [filedRecord.id] : [],
+  });
 }
 
 const SAVE_IDLE = { phase: "idle", message: "", saves: 0 };

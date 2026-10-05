@@ -248,7 +248,9 @@ async function savedFromThisTool(
       conditions: current
         .filter((c) => c.source === "C-File Analysis")
         .map((c) => c.name),
-      timelineEvents: (vkb.evidenceTimeline || []).length,
+      timelineEvents: (vkb.evidenceTimeline || []).filter(
+        (e: { date?: string }) => e.date,
+      ).length,
     };
   });
 }

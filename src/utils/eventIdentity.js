@@ -32,10 +32,23 @@ export const eventTypeKey = (type) =>
 // words in its type label do.
 const CANONICAL_TYPE_RULES = [
   [
+    "service",
+    /^(service|military service|combat award|combat|deployment|exposure)$/,
+  ],
+  [
+    "medical",
+    /^(medical|medical visit|injury|diagnosis|surgery|mental health|medication|treatment)$/,
+  ],
+  [
     "appeal decided",
     /\b(appeal|bva|board)\b.*\b(decid|decision|ruling|remand|grant|den)/,
   ],
-  ["appeal decided", /\b(decid|decision|ruling)\w*\b.*\b(appeal|bva|board)\b/],
+  [
+    "appeal decided",
+    /\b(decid|decision|ruling|denied|denial|den[iy])\w*\b.*\b(appeal|bva|board)\b/,
+  ],
+  ["appeal filed", /\bhearing\b/],
+  ["notice sent", /\b(statement of the case|soc|ssoc)\b/],
   ["appeal filed", /\b(appeal|nod|disagreement|form 9|hlr|higher level)/],
   ["exam", /\b(exam|c p|c and p|compensation and pension|dbq|evaluation)/],
   [
@@ -62,6 +75,8 @@ export const CANONICAL_EVENT_TYPES = [
   "appeal decided",
   "evidence submitted",
   "notice sent",
+  "service",
+  "medical",
   "other",
 ];
 
@@ -72,8 +87,32 @@ export function canonicalEventType(type) {
   return rule ? rule[0] : "other";
 }
 
-const isoDayIsReal = (text) => {
-  const [y, m, d] = text.split("-").map(Number);
+const MONTH_NAMES = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+const monthNumber = (word) => {
+  const name = word.toLowerCase();
+  if (name === "sept") return 9;
+  const index = MONTH_NAMES.findIndex(
+    (full) => full === name || (name.length === 3 && full.startsWith(name)),
+  );
+  return index + 1;
+};
+
+const dayIsReal = (y, m, d) => {
+  if (!m || m > 12 || !d || d > 31) return false;
   const date = new Date(Date.UTC(y, m - 1, d));
   return (
     date.getUTCFullYear() === y &&
@@ -82,18 +121,38 @@ const isoDayIsReal = (text) => {
   );
 };
 
-// A date that names a real moment: a calendar day, or a month or year the
-// letter gave without a day. Blank text, "unknown" and impossible days such as
-// 2019-02-31 are not dates.
+const DATE_FORMS = [
+  [/^(\d{4})-(\d{1,2})-(\d{1,2})(?:$|T)/, (m) => [m[1], m[2], m[3]]],
+  [/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, (m) => [m[3], m[1], m[2]]],
+  [
+    /^([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})$/,
+    (m) => [m[3], monthNumber(m[1]), m[2]],
+  ],
+  [
+    /^(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})\.?,?\s+(\d{4})$/,
+    (m) => [m[3], monthNumber(m[2]), m[1]],
+  ],
+];
+
+// A date that names a real moment: a calendar day in a form the letter or the
+// model plausibly uses, or a month or year given without a day. Anything else
+// is no date, including blank text, "unknown", impossible days (2019-02-31,
+// February 31, 2019) and words that merely contain a year ("circa 1998").
 export function isRealEventDate(date) {
   const text = String(date || "").trim();
   if (!text) return false;
-  const iso = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(text);
-  if (iso) return isoDayIsReal(`${iso[1]}-${iso[2]}-${iso[3]}`);
   if (/^\d{4}$/.test(text)) return true;
   if (/^\d{4}-(0[1-9]|1[0-2])$/.test(text)) return true;
-  if (!/\d{4}/.test(text)) return false;
-  return !Number.isNaN(new Date(text).getTime());
+  const monthYear = MONTH_YEAR.exec(text);
+  if (monthYear) return monthNumber(monthYear[1]) > 0;
+  for (const [pattern, pick] of DATE_FORMS) {
+    const match = pattern.exec(text);
+    if (match) {
+      const [y, m, d] = pick(match).map(Number);
+      return dayIsReal(y, m, d);
+    }
+  }
+  return false;
 }
 
 // The calendar day an event date names, however the model or the letter wrote

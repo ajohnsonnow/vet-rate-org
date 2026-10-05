@@ -64,7 +64,7 @@ describe("store follows the knowledge base set after each re-save", () => {
 
   it("does not drop anything when the knowledge base did not load", async () => {
     await converge([kbEvent("2019-01-01", "Decision", "Kept")]);
-    mockLoadVKB.mockResolvedValue(null);
+    mockLoadVKB.mockRejectedValue(new Error("unreadable"));
     await convergeTimelineStoreWithVKB();
     expect(descriptions()).toEqual(["By hand", "Kept"]);
   });

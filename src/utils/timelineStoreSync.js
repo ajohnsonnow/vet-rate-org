@@ -122,33 +122,57 @@ const _vkbDescription = (e) => e.description || e.text;
 const copyKey = (sourceDocumentId, date, description) =>
   `${sourceDocumentId}|${timelineEventKey({ date, description })}`;
 
-const _isCFileCopy = (e) =>
+// A copy written before copies carried their source has a document id and a
+// type but no source and no projection key. It is taken for a C-File copy only
+// when its document is one the C-File Analyzer saved events for, so another
+// tool's sourceless copy is never claimed.
+const _isUnmarkedCopy = (e, cfileDocumentIds) =>
+  !e.source &&
+  !e.sourceKey &&
+  Boolean(e.eventType) &&
+  e.eventType !== "document_import" &&
+  cfileDocumentIds.has(e.sourceDocumentId);
+
+const _isCFileCopy = (e, cfileDocumentIds) =>
   isImportedTimelineEvent(e) &&
-  isCFileToolSource(e.source) &&
   Boolean(e.sourceDocumentId) &&
-  !isVeteranEdited(e);
+  !isVeteranEdited(e) &&
+  (isCFileToolSource(e.source) || _isUnmarkedCopy(e, cfileDocumentIds));
 
 /**
  * Drops the C-File copies in the store that the knowledge base no longer
  * holds, so the next step writes each document's current set instead of
  * merging it with the earlier one. A document's copies the knowledge base
  * still holds word for word stay; a document the knowledge base holds no
- * C-File events for any more loses its copies too. Hand-added events, events
- * of other tools or documents, and events the veteran edited are never
- * dropped. Only call with a knowledge base that loaded.
+ * C-File events for any more loses its copies too. Copies saved by an earlier
+ * build, which carry no source, are replaced the same way for every document
+ * the knowledge base holds C-File events for and every id in `documentIds`.
+ * Hand-added events, events of other tools or documents, and events the
+ * veteran edited are never dropped. Only call with a knowledge base that
+ * loaded.
  * @param {Array} vkbEvents
  * @param {Array} storeEvents
+ * @param {Iterable<string>} [documentIds] documents just saved by the C-File
+ *   Analyzer, so a re-analysis that now finds no events still clears the
+ *   earlier copies
  * @returns {Array} the store events to keep
  */
-export function dropStaleCFileCopies(vkbEvents, storeEvents) {
-  const current = new Set(
-    vkbEvents
-      .filter((e) => isCFileToolSource(e.source) && e.sourceDocumentId)
-      .map((e) => copyKey(e.sourceDocumentId, e.date, _vkbDescription(e))),
+export function dropStaleCFileCopies(vkbEvents, storeEvents, documentIds = []) {
+  const fromCFile = vkbEvents.filter(
+    (e) => isCFileToolSource(e.source) && e.sourceDocumentId,
   );
+  const current = new Set(
+    fromCFile.map((e) =>
+      copyKey(e.sourceDocumentId, e.date, _vkbDescription(e)),
+    ),
+  );
+  const cfileDocumentIds = new Set([
+    ...fromCFile.map((e) => e.sourceDocumentId),
+    ...documentIds,
+  ]);
   return storeEvents.filter(
     (e) =>
-      !_isCFileCopy(e) ||
+      !_isCFileCopy(e, cfileDocumentIds) ||
       current.has(copyKey(e.sourceDocumentId, e.date, _vkbDescription(e))),
   );
 }
@@ -210,19 +234,28 @@ export function freshVkbEvents(
  * Adds every dated knowledge-base event the local timeline store lacks.
  * The store is read only after the knowledge base has loaded and written back
  * with no further await, so it cannot overwrite an edit made meanwhile.
- * @param {{onlyIfStoreHasEvents?: boolean}} [options] An empty store is left
- *   to the timeline's own first-open import, which tells the veteran what it
- *   filled in.
+ * A knowledge base that cannot be read changes nothing, so a failed read never
+ * empties the timeline.
+ * @param {{onlyIfStoreHasEvents?: boolean, cfileDocumentIds?: string[]}} [options]
+ *   An empty store is left to the timeline's own first-open import, which tells
+ *   the veteran what it filled in.
  * @returns {Promise<{added: number}>}
  */
 export async function convergeTimelineStoreWithVKB({
   onlyIfStoreHasEvents = false,
+  cfileDocumentIds = [],
 } = {}) {
-  const vkb = await loadVKB();
+  let vkb;
+  try {
+    vkb = await loadVKB({ strict: true });
+  } catch (error) {
+    console.warn("Timeline not updated, records unreadable:", error?.name);
+    return { added: 0 };
+  }
   const vkbEvents = datedVkbEvents(vkb);
   const stored = getTimelineEvents();
   if (onlyIfStoreHasEvents && stored.length === 0) return { added: 0 };
-  const current = vkb ? dropStaleCFileCopies(vkbEvents, stored) : stored;
+  const current = dropStaleCFileCopies(vkbEvents, stored, cfileDocumentIds);
   const dropped = stored.length - current.length;
   const removed = readRemovedHashes();
   const fresh = freshVkbEvents(vkbEvents, current, (key) =>

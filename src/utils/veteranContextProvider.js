@@ -32,6 +32,7 @@ import {
   canonicalEventType,
   eventDayKey,
   eventIdentity,
+  isCFileToolSource,
   isRealEventDate,
   isVeteranEdited,
 } from "./eventIdentity";
@@ -284,8 +285,8 @@ const _sameWords = (text) => text.toLowerCase().replaceAll(/\s+/g, " ");
 /**
  * The events of one analysis that can be written, and those that cannot. An
  * event without a real calendar date or without a description is never
- * written; it is returned with the reason. Two entries naming the same day,
- * canonical type and words are one event.
+ * written; it is returned with the reason. Two entries naming the same day
+ * and words are one event, whatever category each names.
  * @param {Array} timeline the analysis' timeline
  * @returns {{events: object[], leftOut: {date: string, description: string, reason: string}[]}}
  */
@@ -311,7 +312,7 @@ export function splitCFileTimeline(timeline) {
       source: CFILE_SUGGESTION_SOURCE,
       significance: e.significance || "",
     };
-    const key = `${eventIdentity(item)}|${_sameWords(description)}`;
+    const key = `${eventDayKey(date)}|${_sameWords(description)}`;
     if (seen.has(key)) continue;
     seen.add(key);
     events.push(item);
@@ -358,20 +359,45 @@ function _replacedCFileEvents(list, incoming, source, sourceDocumentId) {
   return replaced;
 }
 
+// The edited event that stands for an incoming one: the same day and type
+// first, else any other unpaired edited event on that day, because the model
+// names the type differently on each run and the veteran's copy must not gain a
+// second event beside it.
+function _standInFor(edited, stoodFor, item) {
+  const open = edited.filter((e) => !stoodFor.has(e));
+  return (
+    open.find((e) => eventIdentity(e) === eventIdentity(item)) ||
+    open.find((e) => eventDayKey(e.date) === eventDayKey(item.date))
+  );
+}
+
+// An event this tool wrote for another document does not stand for an incoming
+// one: each document owns its events, so replacing one document's set never
+// removes an event another document's save listed.
+const _standsFor = (e, source, sourceDocumentId) =>
+  !(
+    e.source === source &&
+    e.sourceDocumentId &&
+    e.sourceDocumentId !== sourceDocumentId
+  );
+
 // Writes one document's events from this tool as a set: the earlier set is
 // deleted and the new set written, so a re-analysis that words or counts its
 // events differently leaves exactly the events it lists. Only events this tool
 // wrote for this document are replaced; an event added by hand, taken from
 // another tool or document, or edited by the veteran is never deleted or
 // overwritten, and an incoming event the veteran's edited copy already stands
-// for (same day and type) is not written a second time.
-function _replaceCFileEventSet(
+// for (same day) is not written a second time. `alsoEdited` names edited
+// copies held in another list (the evidence timeline's, for the evidence
+// mirror), because an edit is flagged in one place only.
+function _replaceCFileEventSet({
   list,
   incoming,
   source,
   sourceDocumentId,
   keyOf,
-) {
+  alsoEdited = [],
+}) {
   const replaced = _replacedCFileEvents(
     list,
     incoming,
@@ -379,17 +405,20 @@ function _replaceCFileEventSet(
     sourceDocumentId,
   );
   const kept = list.filter((e) => !replaced.has(e));
-  const edited = kept.filter(
-    (e) =>
-      _isCopyFromDocument(e, source, sourceDocumentId) && isVeteranEdited(e),
+  const edited = [
+    ...kept.filter(
+      (e) =>
+        _isCopyFromDocument(e, source, sourceDocumentId) && isVeteranEdited(e),
+    ),
+    ...alsoEdited,
+  ];
+  const standing = new Set(
+    kept.filter((e) => _standsFor(e, source, sourceDocumentId)).map(keyOf),
   );
-  const standing = new Set(kept.map(keyOf));
   const stoodFor = new Set();
   const written = [];
   incoming.forEach((item) => {
-    const mine = edited.find(
-      (e) => !stoodFor.has(e) && eventIdentity(e) === eventIdentity(item),
-    );
+    const mine = _standInFor(edited, stoodFor, item);
     if (mine) {
       stoodFor.add(mine);
       return;
@@ -542,13 +571,19 @@ function _mergeEvidence(vkb, vkbMergeData, sourceDocumentId) {
     (item) => item.source !== CFILE_LEGACY_EVIDENCE_SOURCE,
   );
   if (sourceDocumentId) {
-    vkb.evidence = _replaceCFileEventSet(
-      vkb.evidence,
-      fromCFile,
-      CFILE_LEGACY_EVIDENCE_SOURCE,
+    vkb.evidence = _replaceCFileEventSet({
+      list: vkb.evidence,
+      incoming: fromCFile,
+      source: CFILE_LEGACY_EVIDENCE_SOURCE,
       sourceDocumentId,
-      evidenceKey,
-    );
+      keyOf: evidenceKey,
+      alsoEdited: (vkb.evidenceTimeline || []).filter(
+        (e) =>
+          isCFileToolSource(e.source) &&
+          e.sourceDocumentId === sourceDocumentId &&
+          isVeteranEdited(e),
+      ),
+    });
   }
   const existingEvidence = new Set(vkb.evidence.map(evidenceKey));
   (sourceDocumentId ? others : vkbMergeData.evidence).forEach((item) => {
@@ -638,13 +673,13 @@ function _mergeEvidenceTimeline(vkb, vkbMergeData, sourceDocumentId) {
     (e) => e.source !== CFILE_SUGGESTION_SOURCE,
   );
   if (sourceDocumentId) {
-    vkb.evidenceTimeline = _replaceCFileEventSet(
-      vkb.evidenceTimeline,
-      fromCFile,
-      CFILE_SUGGESTION_SOURCE,
+    vkb.evidenceTimeline = _replaceCFileEventSet({
+      list: vkb.evidenceTimeline,
+      incoming: fromCFile,
+      source: CFILE_SUGGESTION_SOURCE,
       sourceDocumentId,
-      timelineKey,
-    );
+      keyOf: timelineKey,
+    });
   }
   const existing = new Set(vkb.evidenceTimeline.map(timelineKey));
   (sourceDocumentId ? others : vkbMergeData.evidenceTimeline).forEach((e) => {

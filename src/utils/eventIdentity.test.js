@@ -26,7 +26,8 @@ describe("canonicalEventType", () => {
     ["Evidence submitted", "evidence submitted"],
     ["Lay statement", "evidence submitted"],
     ["Notice of VA letter", "notice sent"],
-    ["Medical", "other"],
+    ["Medical", "medical"],
+    ["Something unrecognised", "other"],
     ["", "other"],
     [undefined, "other"],
   ])("maps %j to %j", (type, canonical) => {

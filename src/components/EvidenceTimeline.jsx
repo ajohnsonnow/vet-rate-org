@@ -345,11 +345,15 @@ function _dropStaleServiceEntryEvents(events, projectedEvents, knownKeys) {
   return { kept, removed: events.length - kept.length, staleProjectionKeys };
 }
 
-function _importConfirmMessage(addedCount, updatedCount) {
-  if (updatedCount === 0) {
-    return `Add ${addedCount} event(s) from your analyzed records to the timeline?`;
+function _importConfirmMessage(addedCount, updatedCount, removedCount = 0) {
+  const parts = [];
+  if (updatedCount > 0) parts.push(`update ${updatedCount} event(s)`);
+  if (addedCount > 0) parts.push(`add ${addedCount} new event(s)`);
+  if (removedCount > 0) {
+    parts.push(`remove ${removedCount} event(s) your records no longer hold`);
   }
-  return `Update ${updatedCount} event(s) and add ${addedCount} new event(s) from your analyzed records to the timeline?`;
+  const text = parts.join(", ");
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)} on the timeline, based on your analyzed records?`;
 }
 
 // Shared by performImportFromRecords and syncProjectedServiceEntryEvents:
@@ -357,8 +361,7 @@ function _importConfirmMessage(addedCount, updatedCount) {
 // ADR-007-projected service-entry/enlistment subset of them and every
 // (date, description) key currently claimed by a service-entry event.
 async function _loadServiceEntryProjection() {
-  const vkb = await loadVKB();
-  const loaded = Boolean(vkb);
+  const vkb = await loadVKB({ strict: true });
   const vkbEvents = datedVkbEvents(vkb);
   const projectedEvents = vkbEvents.filter(
     (e) => e.projected && _isServiceEntryEventType(e.eventType),
@@ -373,7 +376,7 @@ async function _loadServiceEntryProjection() {
         }),
       ),
   );
-  return { loaded, vkbEvents, projectedEvents, knownServiceEntryKeys };
+  return { vkbEvents, projectedEvents, knownServiceEntryKeys };
 }
 
 // Pull dated events the C-File analyzer filed into the VKB
@@ -388,7 +391,7 @@ async function performImportFromRecords({
   auto = false,
 }) {
   try {
-    const { loaded, vkbEvents, projectedEvents, knownServiceEntryKeys } =
+    const { vkbEvents, projectedEvents, knownServiceEntryKeys } =
       await _loadServiceEntryProjection();
     const { kept: serviceKept, removed: serviceRemoved } =
       projectedEvents.length > 0
@@ -398,9 +401,7 @@ async function performImportFromRecords({
             knownServiceEntryKeys,
           )
         : { kept: timelineEvents, removed: 0 };
-    const workingEvents = loaded
-      ? dropStaleCFileCopies(vkbEvents, serviceKept)
-      : serviceKept;
+    const workingEvents = dropStaleCFileCopies(vkbEvents, serviceKept);
     const staleRemoved =
       serviceRemoved + (serviceKept.length - workingEvents.length);
 
@@ -420,7 +421,13 @@ async function performImportFromRecords({
     const addedCount = fresh.length - updatedCount;
     if (
       !auto &&
-      !window.confirm(_importConfirmMessage(addedCount, updatedCount))
+      !window.confirm(
+        _importConfirmMessage(
+          addedCount,
+          updatedCount,
+          staleRemoved - updatedCount,
+        ),
+      )
     ) {
       return [];
     }

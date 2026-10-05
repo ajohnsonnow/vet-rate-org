@@ -21,6 +21,7 @@ import {
   buildVkbMergeFromCFile,
   splitCFileTimeline,
 } from "./veteranContextProvider";
+import { isRealEventDate } from "./eventIdentity";
 import { resolveTimelineDate } from "./musterCallProcessor";
 import { getDocumentTypeLabel } from "./documentClassifier";
 
@@ -175,14 +176,28 @@ export function planCFileSave(analysis = {}, extraction = {}, options = {}) {
   const leftOut = [...fromClaims.leftOut, ...fromDiagnoses.leftOut].filter(
     (l, i, all) => all.findIndex((o) => o.key === l.key) === i,
   );
-  const document = _documentEntry(extraction);
+  const filing = _documentEntry(extraction);
+  const document = filing && isRealEventDate(filing.date) ? filing : null;
+  const timelineLeftOut = [
+    ...splitCFileTimeline(
+      Array.isArray(analysis.timeline) ? analysis.timeline : [],
+    ).leftOut,
+    ...(filing && !document
+      ? [
+          {
+            date: "",
+            description: filing.description,
+            reason:
+              "no real calendar date, so it does not appear on the timeline",
+          },
+        ]
+      : []),
+  ];
   return {
     vkbMergeData,
     conditions: vkbMergeData.medicalConditionsCurrent.map((c) => c.name),
     leftOut,
-    timelineLeftOut: splitCFileTimeline(
-      Array.isArray(analysis.timeline) ? analysis.timeline : [],
-    ).leftOut,
+    timelineLeftOut,
     timeline: [
       ...vkbMergeData.evidenceTimeline,
       ...(document ? [document] : []),
