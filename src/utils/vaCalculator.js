@@ -328,50 +328,67 @@ const _nameWords = (name) =>
     .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean);
 
-function _takeNamePhrases(name) {
+/**
+ * The words of a name in order, each as { word, side, limb, part, allowed }.
+ * A phrase from NAME_PHRASES becomes one item.
+ */
+function _nameItems(name) {
   let text = ` ${_nameWords(name).join(" ")} `;
-  const limbs = new Set();
-  let phraseParts = 0;
-  for (const phrase of NAME_PHRASES) {
-    const pieces = text.split(` ${phrase.words} `);
-    if (pieces.length > 1) {
-      text = pieces.join(" ");
-      if (phrase.limb) limbs.add(phrase.limb);
-      if (phrase.part) phraseParts += pieces.length - 1;
-    }
-  }
-  return { words: text.trim().split(" ").filter(Boolean), limbs, phraseParts };
+  NAME_PHRASES.forEach((phrase, index) => {
+    text = text.split(` ${phrase.words} `).join(` #${index} `);
+  });
+  return text
+    .trim()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => {
+      if (word.startsWith("#")) {
+        const phrase = NAME_PHRASES[Number(word.slice(1))];
+        return { word, limb: phrase.limb, part: phrase.part, allowed: true };
+      }
+      if (NAME_SIDE_WORDS[word]) {
+        return { word, side: NAME_SIDE_WORDS[word], allowed: true };
+      }
+      if (NAME_LIMB_PARTS.has(word)) {
+        return {
+          word,
+          limb: NAME_LIMB_PARTS.get(word),
+          part: true,
+          allowed: true,
+        };
+      }
+      return { word, allowed: NAME_CONDITION_WORDS.has(word) };
+    });
 }
 
 /**
  * What a condition name says, read against the allowlist:
  * { limb, side }. `limb` is "upper" or "lower" only when every word is
- * allowed and the name has at most one limb part and points at one limb;
- * "none" when it has no limb part and is about hearing, eyes or kidneys;
- * otherwise "unknown". `side` is the single side the name states, or null.
+ * allowed, the name has at most one limb part and points at one limb, and the
+ * limb and any side come before the first "with" ("strain with radiculopathy
+ * of the left leg" names the leg only for a secondary finding); "none" when
+ * it has no limb word and is about hearing, eyes or kidneys; otherwise
+ * "unknown". `side` is the single side the name states, or null.
  */
 function _readName(name) {
-  const { words, limbs, phraseParts } = _takeNamePhrases(name);
-  let parts = phraseParts;
-  const sides = new Set();
-  let allAllowed = true;
-  let nonLimb = false;
-  for (const word of words) {
-    if (NAME_SIDE_WORDS[word]) {
-      sides.add(NAME_SIDE_WORDS[word]);
-    } else if (NAME_LIMB_PARTS.has(word)) {
-      limbs.add(NAME_LIMB_PARTS.get(word));
-      parts += 1;
-    } else if (!NAME_CONDITION_WORDS.has(word)) {
-      allAllowed = false;
-      nonLimb = nonLimb || NAME_NON_LIMB_WORDS.has(word);
-    }
-  }
-
+  const items = _nameItems(name);
+  const withAt = items.findIndex((item) => item.word === "with");
+  const beforeWith = withAt < 0 ? items : items.slice(0, withAt);
+  const limbs = new Set(items.filter((i) => i.limb).map((i) => i.limb));
+  const sides = new Set(items.filter((i) => i.side).map((i) => i.side));
   const side = sides.size === 1 ? [...sides][0] : null;
-  if (allAllowed && limbs.size === 1 && parts <= 1) {
-    return { limb: [...limbs][0], side };
-  }
+
+  const placedBeforeWith = items.every(
+    (i) => !(i.limb || i.side) || beforeWith.includes(i),
+  );
+  const readable =
+    items.every((i) => i.allowed) &&
+    limbs.size === 1 &&
+    items.filter((i) => i.part).length <= 1 &&
+    placedBeforeWith;
+  if (readable) return { limb: [...limbs][0], side };
+
+  const nonLimb = items.some((i) => NAME_NON_LIMB_WORDS.has(i.word));
   return { limb: nonLimb && limbs.size === 0 ? "none" : "unknown", side };
 }
 

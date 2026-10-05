@@ -116,6 +116,41 @@ describe("a name with letters outside a-z, or digits, gives no limb", () => {
   });
 });
 
+describe("a limb named only after 'with' belongs to a secondary finding", () => {
+  it("degenerative joint disease with left leg radiculopathy 40 + right knee strain 10 give 46, then 50, with no factor", () => {
+    const list = [
+      named(
+        "Degenerative joint disease with left leg radiculopathy",
+        40,
+        "left",
+      ),
+      named("Right knee strain", 10, "right"),
+    ];
+    const result = calculateVARating(list);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(46);
+    expect(result.combinedRating).toBe(50);
+    expect(checkBilateralFactorCompliance(list).applicable).toBe(false);
+  });
+
+  it.each([
+    ["Strain with radiculopathy of the left leg", "knee"],
+    ["Arthritis with radiculopathy, left arm", "elbow"],
+    ["Strain with limitation of flexion, left knee", "knee"],
+    ["Knee strain with instability, left", "knee"],
+  ])("%s takes no factor and is flagged: 20 + 20 give 36", (name, bodyPart) => {
+    const result = calculateVARating([
+      named(name, 20, "left"),
+      partner("right", bodyPart),
+    ]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(36);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({ reason: "limb-unknown", name }),
+    ]);
+  });
+});
+
 describe("repros from QA", () => {
   it("sciatica of the right leg 20 + left knee strain 10 + PTSD 50 give 60, 64, then 60 (not 70)", () => {
     const list = [
