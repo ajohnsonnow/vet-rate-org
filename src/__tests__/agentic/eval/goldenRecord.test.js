@@ -36,6 +36,8 @@ describe("analyzeEngineRequest", () => {
     expect(out.kbContextInjected).toBe(false);
     expect(out.kbEntryCount).toBe(0);
     expect(out.computedResultInjected).toBe(false);
+    expect(out.verifiedReferenceInjected).toBe(false);
+    expect(out.verifiedReference).toBeNull();
   });
 
   it("reports an unrecognised system prompt as unknown", () => {
@@ -68,6 +70,8 @@ describe("analyzeEngineRequest", () => {
     expect(out.actualAgent).toBeNull();
     expect(out.kbContextInjected).toBeNull();
     expect(out.computedResultInjected).toBeNull();
+    expect(out.verifiedReferenceInjected).toBeNull();
+    expect(out.verifiedReference).toBeNull();
   });
 
   it("fingerprints the real persona prompts the way agenticEval pins them", () => {
@@ -134,6 +138,43 @@ describe("analyzeEngineRequest reference block", () => {
   });
 });
 
+describe("analyzeEngineRequest verified reference block", () => {
+  const verified =
+    "=== VERIFIED REFERENCE ===\nEach entry below is quoted.\n\n[38 CFR § 4.16(a)] (eCFR, retrieved 2026-07-10)\n(a) Total disability ratings\n\n=== END VERIFIED REFERENCE ===";
+  const reference =
+    "=== REFERENCE MATERIAL ===\nx\n[2 reference entries provided from OGC]\n=== END REFERENCE MATERIAL ===";
+
+  it("records the block exactly as the engine received it", () => {
+    const out = analyzeEngineRequest(
+      request(`app context\n\n${verified}\n\n---\n\nAm I eligible for TDIU?`),
+      personas,
+    );
+    expect(out.verifiedReferenceInjected).toBe(true);
+    expect(out.verifiedReference).toBe(verified);
+    expect(out.kbContextInjected).toBe(false);
+    expect(out.kbContext).toBeNull();
+  });
+
+  it("keeps the verified block and the keyword-search block apart", () => {
+    const out = analyzeEngineRequest(
+      request(`ctx\n\n${verified}\n\n\n${reference}\n\n---\n\nq`),
+      personas,
+    );
+    expect(out.verifiedReference).toBe(verified);
+    expect(out.kbContext).toBe(reference);
+    expect(out.kbEntryCount).toBe(2);
+  });
+
+  it("finds the block in a caller-supplied system message", () => {
+    const out = analyzeEngineRequest(
+      request("q", `CALLER PROMPT\n\n${verified}\n`),
+      personas,
+    );
+    expect(out.verifiedReferenceInjected).toBe(true);
+    expect(out.verifiedReference).toBe(verified);
+  });
+});
+
 describe("buildCaseRecord", () => {
   const caseDef = {
     id: "a11",
@@ -169,6 +210,8 @@ describe("buildCaseRecord", () => {
       kbContextInjected: false,
       kbEntryCount: 0,
       computedResultInjected: false,
+      verifiedReferenceInjected: false,
+      verifiedReference: null,
       temperature: 0.2,
       maxTokens: 512,
       response: "ok",

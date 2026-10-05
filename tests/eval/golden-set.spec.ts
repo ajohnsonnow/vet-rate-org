@@ -69,6 +69,7 @@ interface EvalWindow {
             validationErrors?: unknown;
             validationWarnings?: unknown;
             calculatorReplacement?: CalculatorReplacement;
+            citationsUnverified?: unknown;
           }
       >;
       resetAICircuitBreaker(): void;
@@ -215,6 +216,7 @@ interface CaseOutcome {
   validationErrors?: unknown;
   validationWarnings?: unknown;
   calculatorReplacement?: CalculatorReplacement;
+  citationsUnverified?: unknown;
   rawResponse?: string;
   outputCleanup?: unknown;
   captured: CapturedRequest[];
@@ -261,6 +263,8 @@ function runCase(
           typeof result === "string"
             ? undefined
             : result?.calculatorReplacement,
+        citationsUnverified:
+          typeof result === "string" ? undefined : result?.citationsUnverified,
         latencyMs: performance.now() - started,
         validationErrors:
           typeof result === "string" ? undefined : result?.validationErrors,

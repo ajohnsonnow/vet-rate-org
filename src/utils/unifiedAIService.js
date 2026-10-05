@@ -61,6 +61,8 @@ import {
   describeMismatch,
   TDIU_PARAGRAPH_LEAD,
 } from "./raterGrounding";
+import { buildVerifiedReferenceBlock } from "./verifiedReference";
+import { flagUnverifiedCitations } from "./citationCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -2344,26 +2346,62 @@ async function _redactPiecesForSend(pieces) {
 // not placed in the block on the small-budget on-device backends, where the
 // model reads a decision-shaped entry as the veteran's own decision. The
 // ranking is unchanged; the next-ranked entries fill the budget.
+// maxVerifiedChars: the share of maxChars the verified-reference block may
+// take. It is a share, not an addition, so reference material as a whole
+// never grows past maxChars on a small context window.
 const DKB_BUDGET_BY_MODE = {
   [AI_MODES.SWARM]: {
     maxEntries: 6,
     maxChars: 4000,
+    maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
   },
   [AI_MODES.WLLAMA]: {
     maxEntries: 6,
     maxChars: 4000,
+    maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
   },
   [AI_MODES.LOCAL]: {
     maxEntries: 6,
     maxChars: 4000,
+    maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
   },
-  [AI_MODES.LOCAL_SERVER]: { maxEntries: 8, maxChars: 6000 },
-  [AI_MODES.CLOUD]: { maxEntries: 10, maxChars: 8000 },
+  [AI_MODES.LOCAL_SERVER]: {
+    maxEntries: 8,
+    maxChars: 6000,
+    maxVerifiedChars: 5000,
+  },
+  [AI_MODES.CLOUD]: { maxEntries: 10, maxChars: 8000, maxVerifiedChars: 6500 },
 };
-const DKB_BUDGET_DEFAULT = { maxEntries: 10, maxChars: 8000 };
+const DKB_BUDGET_DEFAULT = {
+  maxEntries: 10,
+  maxChars: 8000,
+  maxVerifiedChars: 6500,
+};
+// Below this the keyword-search block could hold its own header and little
+// else, so it is skipped rather than sent empty.
+const DKB_MIN_CHARS_AFTER_VERIFIED = 800;
+
+const _referenceBudget = (options, effectiveMode) => {
+  const budget = DKB_BUDGET_BY_MODE[effectiveMode] || DKB_BUDGET_DEFAULT;
+  return { ...budget, maxChars: options.maxDKBChars || budget.maxChars };
+};
+
+/**
+ * The === VERIFIED REFERENCE === block for this request: regulation and
+ * manual text quoted from the bundled data, chosen by the question and tool.
+ * Empty when no topic applies or the caller turned reference material off.
+ */
+function _buildVerifiedReference(prompt, options, effectiveMode) {
+  if (options.useDKB === false) return "";
+  const budget = _referenceBudget(options, effectiveMode);
+  return buildVerifiedReferenceBlock(prompt, {
+    toolId: options.toolId,
+    maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars),
+  });
+}
 
 // D15-2: single DKB (Diamond Knowledge Base) injection point. Every backend
 // used to run its own copy of this block (cloud/local/warrant-council/
@@ -2372,19 +2410,30 @@ const DKB_BUDGET_DEFAULT = { maxEntries: 10, maxChars: 8000 };
 // caller-supplied systemPrompt got baked into the request twice: once as
 // plain text in `fullPrompt`, once again re-resolved/re-injected inside the
 // backend. Best-effort: a DKB fetch failure never blocks the call.
-async function _injectDKBContext(prompt, systemPrompt, options) {
+// `usedChars` is what the verified-reference block already took from the
+// shared budget; the keyword search gets the rest.
+async function _injectDKBContext(prompt, systemPrompt, options, usedChars = 0) {
   if (options.useDKB === false) return systemPrompt;
+  const budget = _referenceBudget(options, options.effectiveMode);
+  const maxChars = budget.maxChars - usedChars;
+  if (usedChars > 0 && maxChars < DKB_MIN_CHARS_AFTER_VERIFIED) {
+    return systemPrompt;
+  }
   try {
     const { buildDKBContext } = await getAISystemPrompts();
-    const budget =
-      DKB_BUDGET_BY_MODE[options.effectiveMode] || DKB_BUDGET_DEFAULT;
     const dkbContext = await buildDKBContext(prompt, {
       maxEntries: options.maxDKBEntries || budget.maxEntries,
-      maxChars: options.maxDKBChars || budget.maxChars,
+      maxChars,
       ...(budget.excludeBoardDecisions ? { excludeBoardDecisions: true } : {}),
       ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
     });
     if (!dkbContext) return systemPrompt;
+    // With a reduced budget the search can return its header and no entry.
+    // That header tells the model to say nothing addresses the question,
+    // which would contradict the verified text above it.
+    if (usedChars > 0 && dkbContext.includes("[0 reference entries provided")) {
+      return systemPrompt;
+    }
     // eslint-disable-next-line no-console
     console.log("[AI] 💎 DKB context injected");
     return systemPrompt + dkbContext;
@@ -2418,10 +2467,20 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
       includeVeteranData: true,
     });
 
-  const systemPrompt = await _injectDKBContext(prompt, baseSystemPrompt, {
-    ...options,
+  // Verified reference goes in here, before _redactPiecesForSend, so every
+  // backend receives it once. It sits ahead of the keyword-search block and
+  // is charged to the same budget first.
+  const verifiedReference = _buildVerifiedReference(
+    prompt,
+    options,
     effectiveMode,
-  });
+  );
+  const systemPrompt = await _injectDKBContext(
+    prompt,
+    baseSystemPrompt + verifiedReference,
+    { ...options, effectiveMode },
+    verifiedReference.length,
+  );
 
   // Apply user's saved preset if no preset specified in options
   const effectivePreset = options.preset || getUserPreset();
@@ -3022,9 +3081,10 @@ const generateAIInternal = async (prompt, options = {}) => {
     enhancedOptions,
     options,
   );
-  return _isRaterRoute(options, effectiveMode)
+  const grounded = _isRaterRoute(options, effectiveMode)
     ? enforceCalculatorOnResult(result, options, prompt)
     : result;
+  return flagUnverifiedCitations(grounded, options);
 };
 
 async function _dispatchWithRecovery(

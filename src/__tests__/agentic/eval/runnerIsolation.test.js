@@ -133,6 +133,12 @@ describe("assembleCaseRecord", () => {
     });
   });
 
+  it("keeps the citations the answer check could not verify", () => {
+    const record = build(ok({ citationsUnverified: { sections: ["4.37"] } }));
+    expect(record.citationsUnverified).toEqual({ sections: ["4.37"] });
+    expect(build(ok())).not.toHaveProperty("citationsUnverified");
+  });
+
   it("records nulls when no request carries the input", () => {
     const record = build(
       ok({ captured: [request("rater", "a different case entirely")] }),
