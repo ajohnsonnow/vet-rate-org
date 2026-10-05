@@ -2400,6 +2400,8 @@ function MyRatingsSummaryFilled({
         )}
       </div>
 
+      <BilateralIssuesNotice t={t} issues={myRatingsResults.bilateralIssues} />
+
       {/* Monthly Pay Estimate */}
       <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">
         <p className="text-green-100 text-sm mb-2">

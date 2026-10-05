@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import TacticalCalculator from "./TacticalCalculator";
 import { APP_TRANSLATIONS } from "../i18n/translations";
+import { saveMyRatings } from "../utils/veteranProfile";
 
 afterEach(() => {
   localStorage.clear();
@@ -94,6 +95,29 @@ describe("TacticalCalculator", () => {
     expect(
       screen.queryByRole("status", { name: /bilateral factor not applied/i }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("TacticalCalculator My Ratings tab", () => {
+  it("shows the bilateral notice for saved ratings, not only on the calculator tab", async () => {
+    saveMyRatings([
+      { name: "Left knee strain", rating: 10, side: "none", bodyPart: "other" },
+      {
+        name: "Right knee strain",
+        rating: 10,
+        side: "none",
+        bodyPart: "other",
+      },
+    ]);
+    renderCalculator();
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /my ratings/i })[0]);
+    const notice = await screen.findByRole("status", {
+      name: /bilateral factor not applied/i,
+    });
+    expect(notice).toHaveTextContent("Left knee strain");
+    expect(notice).toHaveTextContent("Right knee strain");
+    expect(notice).toHaveTextContent(/no side is set/i);
   });
 });
 
