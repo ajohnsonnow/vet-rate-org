@@ -97,6 +97,12 @@ export function describeBilateralNotes(calc) {
       `Vet-Rate could not tell whether ${joinList(unknown)} ${one ? "is an arm or a leg condition, so it" : "are arm or leg conditions, so they"} took no bilateral factor.`,
     );
   }
+  const badSide = namesWhere(issues, (i) => i.reason === "side-unknown");
+  if (badSide.length > 0) {
+    notes.push(
+      `Vet-Rate did not recognise the side entered for ${joinList(badSide)}, so ${badSide.length === 1 ? "it" : "they"} took no bilateral factor.`,
+    );
+  }
   const alone = namesWhere(
     issues,
     (i) => i.reason === "single-bilateral-evaluation",

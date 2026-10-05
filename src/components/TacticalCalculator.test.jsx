@@ -101,6 +101,7 @@ describe("TacticalCalculator bilateral strings", () => {
   it.each([
     "bilateralIssuesTitle",
     "bilateralIssueLimbUnknown",
+    "bilateralIssueSideUnknown",
     "bilateralIssueSingleEvaluation",
     "bilateralIssueNotChecked",
     "bilateralNotApplied",
