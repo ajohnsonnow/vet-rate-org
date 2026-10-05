@@ -62,6 +62,7 @@ import {
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import { fitOutputTokens, planPromptFit } from "./promptBudget";
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
+import { flagContradictions } from "./contradictionCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -2421,6 +2422,7 @@ function _buildVerifiedReference(prompt, options, effectiveMode, roomChars) {
   const budget = _referenceBudget(options, effectiveMode);
   return buildVerifiedReferenceBlock(prompt, {
     toolId: options.toolId,
+    conditions: options.conditions,
     maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars, roomChars),
   });
 }
@@ -3217,7 +3219,11 @@ const generateAIInternal = async (prompt, options = {}) => {
   const grounded = _isRaterRoute(options, effectiveMode)
     ? enforceCalculatorOnResult(result, options, prompt)
     : result;
-  return flagUnverifiedCitations(grounded, options);
+  return flagContradictions(
+    flagUnverifiedCitations(grounded, options),
+    options,
+    prompt,
+  );
 };
 
 async function _dispatchWithRecovery(

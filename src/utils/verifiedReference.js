@@ -16,14 +16,45 @@ const PACT = /\bpact\b|\bpresumpti(?:ve|on)s?\b/i;
 const TOXIC_WORDS =
   /\bburn pits?\b|\bairborne hazards?\b|\btoxic exposures?\b|\bparticulate\b/i;
 const TOXIC_PLACES =
-  /\b(?:gulf war|southwest asia|iraq|afghanistan|kuwait|saudi arabia|somalia|djibouti|syria|uzbekistan|qatar|bahrain|oman|yemen|jordan|lebanon|egypt)\b/i;
+  /\b(?:gulf war|persian gulf|desert storm|desert shield|southwest asia|iraq|afghanistan|kuwait|saudi arabia|somalia|djibouti|syria|uzbekistan|qatar|bahrain|oman|yemen|jordan|lebanon|egypt)\b/i;
 const HERBICIDE_WORDS =
   /\bagent orange\b|\bherbicides?\b|\bblue water\b|\bc-?123\b|\bdioxin\b/i;
 const HERBICIDE_PLACES =
-  /\b(?:vietnam|thailand|laos|cambodia|guam|american samoa|johnston|korean dmz|demilitarized zone)\b/i;
+  /\b(?:vietnam|thailand|laos|cambodia|guam|american samoa|johnston|dmz|demilitarized zone)\b/i;
 const SECONDARY =
   /\bsecondar(?:y|ily)\b|\bproximately due\b|\b3\.310\b|\b(?:caused by|due to|result of|because of|aggravated by|worsened by) (?:my |a |an |the )?service[- ]connected\b/i;
 const SECONDARY_PRESUMED = /\btbi\b|\btraumatic brain\b|\bamputat/i;
+
+// Veterans rarely use the regulation's own term. These are the everyday
+// phrasings that mean the same question.
+const ITF_TERMS =
+  /\bintent(?:ion)?s? to file\b|\bITF\b|\b21-0966\b|\b3\.155\b/i;
+const ITF_DATE =
+  /\beffective dates?\b|\b(?:hold|lock in|lock|protect|save|preserve|keep) (?:my |the )?(?:effective |filing )?date\b/i;
+const ITF_FIRST_CLAIM =
+  /\bstart(?:ing)? (?:my|a|the) claim\b|\bnever filed\b|\bfirst (?:va )?claim\b|\bwhere do i start\b/i;
+const SUPPLEMENTAL_TERMS =
+  /\bsupplemental claims?\b|\bnew and relevant\b|\b20-0995\b|\b3\.2501\b|\breopen(?:ed|ing)?\b|\bre-?fil(?:e|ing)\b/i;
+const DENIED_THEN_WHAT =
+  /\bdenied\b[\s\S]{0,120}\b(?:next steps?|what now|options|new evidence|try again)\b/i;
+const EVIDENCE_AFTER_DENIAL = /\bnew evidence\b[\s\S]{0,120}\bdenied\b/i;
+const TDIU_TERMS = /\btdiu\b|\bunemployab|\b4\.16\b|\b21-8940\b/i;
+const CANNOT_WORK =
+  /\b(?:can['’]?t|cannot|unable to) (?:work|hold (?:down )?a job|keep a job)\b/i;
+const LOST_WORK =
+  /\blost my job (?:because of|due to)\b|\b(?:had to|forced to) (?:quit|stop working)\b/i;
+const HIGH_RATING = /\b(?:60|70|80|90) ?(?:%|percent)/i;
+const PLANNING = /\b(?:plan|next|strategy)\b/i;
+const NEXT_STEP =
+  /\bnext (?:claim )?(?:steps?|actions?)\b|\bnext round of claims\b|\bwhat should i (?:do|file) next\b/i;
+
+const REVIEW_TERMS =
+  /\bhigher[- ]level review\b|\bHLR\b|\bboard appeal\b|\bboard of veterans\b|\bnotice of disagreement\b|\bstatement of the case\b|\bdecision review\b/i;
+const APPEAL_WORDS =
+  /\bappeal(?:s|ed|ing)?\b|\bdisagree with (?:the|my|this) decision\b/i;
+
+const anyMatch = (text, ...patterns) =>
+  patterns.some((pattern) => pattern.test(text));
 
 const FORM_WORDS =
   /\b(?:va|which|what|right|correct|wrong) forms?\b|\bforms? (?:do|should|number|is|are|for|to)\b/i;
@@ -32,16 +63,33 @@ const FORM_NUMBERS = /\bform \d|\b2\dp?-\d{3,5}[a-z]{0,2}\b|\b10182\b/i;
 const isPactQuestion = (text, toolId) =>
   PACT.test(text) || toolId === "pact-navigator";
 
+// The two presumption groups cover different service, and each conditions
+// list is bundled with its own covered-service definition. The era or place
+// in the question picks the group; a place name alone counts only inside a
+// PACT question. A question that names neither group, or both, gets the
+// overview of who each group covers.
+const isToxicQuestion = (text, toolId) =>
+  TOXIC_WORDS.test(text) ||
+  (isPactQuestion(text, toolId) && TOXIC_PLACES.test(text));
+const isHerbicideQuestion = (text, toolId) =>
+  HERBICIDE_WORDS.test(text) ||
+  (isPactQuestion(text, toolId) && HERBICIDE_PLACES.test(text));
+
+// A rating tool's id alone says nothing about the question: the same tool
+// receives requests to do something else entirely. The text applies when the
+// question asks about combining, or the call carries ratings to combine.
+const COMBINED_RATING =
+  /\bcombined (?:rating|evaluation|disability|percentage)\b|\bcombin(?:e|es|ing) (?:my |the |these |those )?(?:ratings|disabilities|percentages)\b|\bva math\b|\b4\.25\b/i;
+
 /**
- * Topic rules in priority order. `pattern` is tested against the question,
- * `toolIds` against the tool the question came from; `when` replaces both
- * for topics that need more than one signal. `entries` are bundled entry ids,
- * most important first.
+ * Topic rules in priority order. `pattern` is tested against the question;
+ * `when(question, toolId, { conditions })` replaces it for topics that need
+ * another signal. `entries` are bundled entry ids, most important first.
  */
 export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   {
     id: "intent-to-file",
-    pattern: /\bintent(?:ion)?s? to file\b|\bITF\b|\b21-0966\b|\b3\.155\b/i,
+    when: (text) => anyMatch(text, ITF_TERMS, ITF_DATE, ITF_FIRST_CLAIM),
     entries: ["cfr-3.155-b", "cfr-3.155-b-1"],
   },
   {
@@ -56,14 +104,35 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "supplemental",
-    pattern:
-      /\bsupplemental claims?\b|\bnew and relevant\b|\b20-0995\b|\b3\.2501\b|\breopen(?:ed|ing)?\b/i,
+    when: (text) =>
+      anyMatch(
+        text,
+        SUPPLEMENTAL_TERMS,
+        DENIED_THEN_WHAT,
+        EVIDENCE_AFTER_DENIAL,
+      ),
     entries: ["cfr-3.2501", "cfr-3.2501-a-d"],
   },
   {
+    id: "decision-review",
+    when: (text, toolId) =>
+      anyMatch(text, REVIEW_TERMS, APPEAL_WORDS) ||
+      toolId === "decision-decoder",
+    entries: [
+      "cfr-3.2500-a",
+      "review-forms",
+      "cfr-3.2601-f",
+      "cfr-20.203",
+      "cfr-20.202-a-b",
+    ],
+  },
+  {
     id: "tdiu",
-    pattern: /\btdiu\b|\bunemployab|\b4\.16\b|\b21-8940\b/i,
-    toolIds: ["tdiu-builder", "tdiu-narrative"],
+    when: (text, toolId) =>
+      anyMatch(text, TDIU_TERMS, CANNOT_WORK, LOST_WORK) ||
+      (HIGH_RATING.test(text) && PLANNING.test(text)) ||
+      toolId === "tdiu-builder" ||
+      toolId === "tdiu-narrative",
     entries: ["cfr-4.16-a", "cfr-4.16-b", "cfr-4.16-a-employment"],
   },
   {
@@ -74,40 +143,34 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "combined-rating",
-    pattern:
-      /\bcombined (?:rating|evaluation|disability|percentage)\b|\bcombin(?:e|es|ing) (?:my |the |these |those )?(?:ratings|disabilities|percentages)\b|\bva math\b|\b4\.25\b/i,
-    toolIds: ["calculator", "rating-calculator", "rating-analyzer"],
+    when: (text, _toolId, { conditions }) =>
+      COMBINED_RATING.test(text) ||
+      (Array.isArray(conditions) && conditions.length > 0),
     entries: ["cfr-4.25-b", "cfr-4.25", "cfr-4.25-a"],
   },
   {
+    id: "pact-act",
+    when: (text, toolId) => {
+      const toxic = isToxicQuestion(text, toolId);
+      const herbicide = isHerbicideQuestion(text, toolId);
+      return toxic === herbicide && (toxic || isPactQuestion(text, toolId));
+    },
+    entries: ["pact-overview"],
+  },
+  {
     id: "toxic-exposure",
-    when: (text, toolId) =>
-      TOXIC_WORDS.test(text) ||
-      (isPactQuestion(text, toolId) && TOXIC_PLACES.test(text)),
-    entries: ["pact-toxic-conditions", "pact-toxic-service", "pact-toxic-rule"],
+    when: isToxicQuestion,
+    entries: ["pact-toxic", "pact-toxic-rule"],
   },
   {
     id: "herbicide",
-    when: (text, toolId) =>
-      HERBICIDE_WORDS.test(text) ||
-      (isPactQuestion(text, toolId) && HERBICIDE_PLACES.test(text)),
-    entries: [
-      "pact-herbicide-conditions",
-      "pact-herbicide-service",
-      "pact-herbicide-law-changes",
-    ],
+    when: isHerbicideQuestion,
+    entries: ["pact-herbicide", "pact-herbicide-law-changes"],
   },
   {
-    id: "pact-act",
-    when: isPactQuestion,
-    entries: [
-      "pact-toxic-conditions",
-      "pact-herbicide-conditions",
-      "pact-toxic-service",
-      "pact-herbicide-service",
-      "pact-toxic-rule",
-      "pact-herbicide-law-changes",
-    ],
+    id: "next-claim-step",
+    pattern: NEXT_STEP,
+    entries: ["cfr-3.155-b", "cfr-3.2501"],
   },
   {
     id: "claim-forms",
@@ -116,16 +179,21 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
 ]);
 
-const topicApplies = (topic, text, toolId) =>
-  topic.when
-    ? topic.when(text, toolId)
-    : topic.pattern.test(text) || Boolean(topic.toolIds?.includes(toolId));
+const topicApplies = (topic, text, toolId, context) =>
+  topic.when ? topic.when(text, toolId, context) : topic.pattern.test(text);
 
-/** Ids of the topics a question raises, in priority order. */
-export function detectReferenceTopics(question, toolId = null) {
+/**
+ * Ids of the topics a request raises, in priority order. `conditions` are
+ * the structured ratings a call carries, when it carries any.
+ */
+export function detectReferenceTopics(
+  question,
+  toolId = null,
+  { conditions = null } = {},
+) {
   const text = String(question ?? "");
   return VERIFIED_REFERENCE_TOPICS.filter((topic) =>
-    topicApplies(topic, text, toolId),
+    topicApplies(topic, text, toolId, { conditions }),
   ).map((topic) => topic.id);
 }
 
@@ -175,10 +243,14 @@ function formatEntry(entry) {
  * formatted as a block. Entries are taken whole, in rank order; one that
  * does not fit is skipped and the next is tried, so legal text is never cut.
  */
-export function selectVerifiedEntries(question, { toolId = null, maxChars }) {
+export function selectVerifiedEntries(
+  question,
+  { toolId = null, maxChars, conditions = null },
+) {
   let remaining = maxChars - HEADER.length - FOOTER.length;
   const picked = [];
-  for (const id of rankEntryIds(detectReferenceTopics(question, toolId))) {
+  const topics = detectReferenceTopics(question, toolId, { conditions });
+  for (const id of rankEntryIds(topics)) {
     const entry = ENTRIES.get(id);
     const size = formatEntry(entry).length;
     if (size > remaining) continue;

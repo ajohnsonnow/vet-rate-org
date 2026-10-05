@@ -25,6 +25,7 @@ import {
 import { loadVKB } from "./veteranKnowledgeBase";
 import { getFullName, getVeteranProfile } from "./veteranProfile";
 import { redactVeteranIdentifiers } from "./piiScrubber";
+import { withVerifiedReviewOptions } from "./reviewOptions";
 import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 import {
   draftAfterModelError,
@@ -1644,7 +1645,6 @@ Respond ONLY with a valid JSON object (no markdown, no code blocks, just pure JS
     "Step 2: Next specific action",
     "Step 3: Additional steps if needed"
   ],
-  "appeal_options": "Brief explanation of appeal options (Supplemental Claim, HLR, or BVA)",
   "deadline_warning": "You typically have 1 year from the decision date to file an appeal while preserving your effective date. Check your decision letter for specific deadlines."
 }
 
@@ -1910,7 +1910,17 @@ export const decodeDecision = async (
     const textStr = typeof text === "string" ? text : JSON.stringify(text);
 
     // Better JSON parsing with multiple fallback strategies
-    return parseDecisionDecoderResponse(textStr, fallbackInfo, truncation);
+    const decoded = parseDecisionDecoderResponse(
+      textStr,
+      fallbackInfo,
+      truncation,
+    );
+    // The review options come from the bundled regulation text, never from
+    // the model: its own version is dropped and wrong filing instructions in
+    // its other fields are noted.
+    return decoded.success
+      ? { ...decoded, data: withVerifiedReviewOptions(decoded.data) }
+      : decoded;
   } catch (error) {
     return mapDecodeDecisionError(error);
   }

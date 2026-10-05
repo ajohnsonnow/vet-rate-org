@@ -144,6 +144,14 @@ describe("assembleCaseRecord", () => {
     expect(build(ok())).not.toHaveProperty("citationsUnverified");
   });
 
+  it("keeps the contradictions the answer check found", () => {
+    const found = [{ rule: "secondary-barred", sentence: "It cannot." }];
+    expect(build(ok({ contradictionsFound: found })).contradictionsFound).toBe(
+      found,
+    );
+    expect(build(ok())).not.toHaveProperty("contradictionsFound");
+  });
+
   it("records nulls when no request carries the input", () => {
     const record = build(
       ok({ captured: [request("rater", "a different case entirely")] }),

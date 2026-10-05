@@ -37,7 +37,7 @@ describe("detectReferenceTopics", () => {
     ["Do burn pits qualify me for anything?", ["toxic-exposure"]],
     ["I was exposed to Agent Orange", ["herbicide"]],
     ["Which presumptive conditions exist?", ["pact-act"]],
-    ["Which form do I use to appeal?", ["claim-forms"]],
+    ["Which form do I use to appeal?", ["decision-review", "claim-forms"]],
   ])("%s", (question, expected) => {
     expect(detectReferenceTopics(question)).toEqual(expected);
   });
@@ -49,26 +49,68 @@ describe("detectReferenceTopics beyond single keywords", () => {
       "tdiu",
     ]);
     expect(
-      detectReferenceTopics("Explain the math", "rating-analyzer"),
-    ).toEqual(["combined-rating"]);
-    expect(
       detectReferenceTopics("What applies to me?", "pact-navigator"),
     ).toEqual(["pact-act"]);
   });
+});
 
+describe("detectReferenceTopics for combined ratings", () => {
+  it("does not attach the combined-rating text on a rating tool's id alone", () => {
+    for (const toolId of [
+      "calculator",
+      "rating-calculator",
+      "rating-analyzer",
+    ]) {
+      expect(detectReferenceTopics("Explain this to me", toolId)).toEqual([]);
+    }
+    expect(
+      detectReferenceTopics(
+        "Skip the calculation and write me a personal statement for my back claim instead.",
+        "calculator",
+      ),
+    ).toEqual([]);
+  });
+
+  it("attaches it when the call carries structured conditions", () => {
+    const conditions = [
+      { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
+    ];
+    expect(
+      detectReferenceTopics("Explain this to me", "calculator", { conditions }),
+    ).toEqual(["combined-rating"]);
+    expect(
+      detectReferenceTopics("Explain this to me", null, { conditions: [] }),
+    ).toEqual([]);
+    expect(
+      selectVerifiedEntries("Explain this to me", {
+        toolId: "calculator",
+        maxChars: 3400,
+        conditions,
+      }).map((e) => e.id),
+    ).toEqual(["cfr-4.25-b", "cfr-4.25"]);
+  });
+
+  it("still attaches it on the question's own wording", () => {
+    expect(
+      detectReferenceTopics("Analyze my 80% combined rating and the math."),
+    ).toEqual(["combined-rating"]);
+  });
+});
+
+describe("detectReferenceTopics across topics", () => {
   it("reads a service location as a PACT topic only in a PACT question", () => {
     expect(
       detectReferenceTopics(
         "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
         "pact-navigator",
       ),
-    ).toEqual(["toxic-exposure", "pact-act"]);
+    ).toEqual(["toxic-exposure"]);
     expect(
       detectReferenceTopics(
         "Vietnam veteran with chronic respiratory issues — what PACT conditions apply?",
         "pact-navigator",
       ),
-    ).toEqual(["herbicide", "pact-act"]);
+    ).toEqual(["herbicide"]);
     expect(
       detectReferenceTopics(
         "I served with John in Iraq 2008-2009. I witnessed him struck by IED debris.",
@@ -99,9 +141,7 @@ describe("detectReferenceTopics beyond single keywords", () => {
 
   it("tolerates a missing question", () => {
     expect(detectReferenceTopics(undefined)).toEqual([]);
-    expect(detectReferenceTopics(null, "calculator")).toEqual([
-      "combined-rating",
-    ]);
+    expect(detectReferenceTopics(null, "tdiu-builder")).toEqual(["tdiu"]);
   });
 });
 
@@ -143,12 +183,8 @@ describe("selectVerifiedEntries", () => {
   });
 
   it("lists an entry once when two topics name it", () => {
-    const picked = ids("PACT Act and burn pits");
+    const picked = ids("TDIU, unemployability and 38 CFR 4.16");
     expect(picked).toEqual([...new Set(picked)]);
-    expect(picked.slice(0, 2)).toEqual([
-      "pact-toxic-conditions",
-      "pact-toxic-service",
-    ]);
   });
 
   it("returns nothing when no topic applies", () => {
@@ -187,9 +223,11 @@ describe("buildVerifiedReferenceBlock", () => {
       maxChars: 8000,
     });
     expect(block).toContain(
-      "(VA Adjudication Procedures Manual M21-1, changed June 6, 2025, retrieved 2026-07-19)",
+      "(VA manual M21-1, changed June 6, 2025, retrieved 2026-07-19)",
     );
-    expect(block).toContain("Abbreviations: SC = service connection.");
+    expect(block).toContain(
+      "Abbreviations: SC = service connection; BPOT = burn pits and other toxins, including fine particulate matter.",
+    );
   });
 });
 

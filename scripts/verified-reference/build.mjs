@@ -3,7 +3,12 @@
  * Build the bundled verified-reference data for the on-device AI:
  *
  *   src/data/verifiedReference.json  quoted regulation and manual text
- *   src/data/cfrSections.json        every 38 CFR Part 3 and Part 4 section
+ *   src/data/cfrSections.json        every 38 CFR section the index has text for
+ *   src/data/verifiedQuotes.json     the decision review options, and the
+ *                                    sentence each answer correction quotes
+ *   src/__tests__/utils/fixtures/verifiedReferenceSource.json
+ *                                    the manual passages as the shard holds
+ *                                    them, for the word-for-word test
  *
  * Every word of entry text is copied from sources the repo already holds:
  * the eCFR legal index and the M21-1 shard. The specs below only say which
@@ -31,6 +36,14 @@ import {
   sliceTopic,
   stitchChunks,
 } from "./lib/extract.js";
+import { sameWords, structureText } from "./lib/structure.js";
+import { MANUAL_TOPICS } from "./manual-topics.js";
+import {
+  CORRECTION_SPECS,
+  REVIEW_ENTRIES,
+  REVIEW_FORM_NUMBERS,
+  REVIEW_OPTIONS_SPEC,
+} from "./quote-specs.js";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -41,6 +54,9 @@ const M21_FILE = "public/dkb-index/m21_1/chunks.part0.jsonl";
 const FORMS_ALLOWLIST_FILE = "src/data/validVAForms.json";
 const REFERENCE_OUT = "src/data/verifiedReference.json";
 const SECTIONS_OUT = "src/data/cfrSections.json";
+const QUOTES_OUT = "src/data/verifiedQuotes.json";
+const FLAT_SOURCE_OUT =
+  "src/__tests__/utils/fixtures/verifiedReferenceSource.json";
 
 const CFR_ENTRIES = [
   {
@@ -168,11 +184,6 @@ const CFR_ENTRIES = [
   },
 ];
 
-const TOPIC_TAIL = [" References:", " Reference:"];
-const BPOT_ARTICLE = "M21-1, Part VIII, Subpart ii, Chapter 2, Section A - ";
-const HERBICIDE_ARTICLE =
-  "M21-1, Part VIII, Subpart i, Chapter 1, Section A - ";
-
 const ABBREVIATIONS = [
   { short: "SC", long: "service connection" },
   {
@@ -183,83 +194,38 @@ const ABBREVIATIONS = [
 
 const MANUAL_ENTRIES = [
   {
-    id: "pact-toxic-conditions",
+    id: "pact-toxic",
     citation:
-      "M21-1 VIII.ii.2.A.1.f-h (PACT Act, 38 U.S.C. 1120; 38 CFR 3.320a, 3.320b)",
-    article: BPOT_ARTICLE,
+      "M21-1 VIII.ii.2.A.1.e-h (PACT Act burn pit and toxic exposure: who is covered, then the conditions)",
     topics: [
-      {
-        start: "VIII.ii.2.A.1.f.",
-        end: "VIII.ii.2.A.1.g.",
-        stopAt: TOPIC_TAIL,
-      },
-      {
-        start: "VIII.ii.2.A.1.g.",
-        end: "VIII.ii.2.A.1.h.",
-        stopAt: TOPIC_TAIL,
-      },
-      { start: "VIII.ii.2.A.1.h.", end: " To Top", stopAt: TOPIC_TAIL },
-    ],
-  },
-  {
-    id: "pact-toxic-service",
-    citation:
-      "M21-1 VIII.ii.2.A.1.e (PACT Act covered Veteran: locations and dates, 38 U.S.C. 1119)",
-    article: BPOT_ARTICLE,
-    topics: [
-      {
-        start: "VIII.ii.2.A.1.e.",
-        end: "VIII.ii.2.A.1.f.",
-        stopAt: [" Important:", ...TOPIC_TAIL],
-      },
+      "toxic-service",
+      "toxic-conditions-1120",
+      "toxic-conditions-3.320a",
+      "toxic-conditions-3.320b",
     ],
   },
   {
     id: "pact-toxic-rule",
     citation:
       "M21-1 VIII.ii.2.A.1.d (PACT Act presumption of service connection)",
-    article: BPOT_ARTICLE,
-    topics: [
-      {
-        start: "VIII.ii.2.A.1.d.",
-        end: "VIII.ii.2.A.1.e.",
-        stopAt: TOPIC_TAIL,
-      },
-    ],
+    topics: ["toxic-rule"],
   },
   {
-    id: "pact-herbicide-conditions",
+    id: "pact-herbicide",
     citation:
-      "M21-1 VIII.i.1.A.1.f (presumptive herbicide disabilities, 38 CFR 3.309(e); 38 U.S.C. 1116)",
-    article: HERBICIDE_ARTICLE,
-    topics: [
-      { start: "VIII.i.1.A.1.f.", end: "VIII.i.1.A.1.g.", stopAt: TOPIC_TAIL },
-    ],
-  },
-  {
-    id: "pact-herbicide-service",
-    citation:
-      "M21-1 VIII.i.1.A.1.c (presumed herbicide exposure: locations and dates)",
-    article: HERBICIDE_ARTICLE,
-    topics: [
-      {
-        start: "VIII.i.1.A.1.c.",
-        end: "VIII.i.1.A.1.d.",
-        stopAt: [" Notes:", ...TOPIC_TAIL],
-      },
-    ],
+      "M21-1 VIII.i.1.A.1.c, 1.f (herbicide exposure: who is covered, then the conditions)",
+    topics: ["herbicide-service", "herbicide-conditions"],
   },
   {
     id: "pact-herbicide-law-changes",
     citation: "M21-1 VIII.i.1.A.2.a (herbicide law changes, PACT Act)",
-    article: HERBICIDE_ARTICLE,
-    topics: [
-      {
-        start: "VIII.i.1.A.2.a.",
-        end: "VIII.i.1.A.2.b.",
-        stopAt: [" Important:", ...TOPIC_TAIL],
-      },
-    ],
+    topics: ["herbicide-law-changes"],
+  },
+  {
+    id: "pact-overview",
+    citation:
+      "M21-1 VIII.ii.2.A.1.e, VIII.i.1.A.1.c (who each PACT Act group covers)",
+    topics: ["toxic-service", "herbicide-service"],
   },
 ];
 
@@ -326,30 +292,68 @@ function abbreviationsIn(text, article) {
   );
 }
 
-function buildManualEntry(spec, m21) {
-  const records = m21.filter((r) => r.title?.startsWith(spec.article));
+function loadArticle(prefix, m21) {
+  const records = m21.filter((r) => r.title?.startsWith(prefix));
   const urls = [...new Set(records.map((r) => r.source_url))];
   if (urls.length !== 1) {
     throw new Error(
-      `${spec.id}: expected one M21-1 article for "${spec.article}", found ${urls.length}`,
+      `expected one M21-1 article for "${prefix}", found ${urls.length}`,
     );
   }
-  const article = stitchChunks(records);
-  const text = spec.topics
-    .map((topic) => sliceTopic(article, topic))
-    .join("\n");
   return {
-    id: spec.id,
-    citation: spec.citation,
-    sourceLabel: "VA Adjudication Procedures Manual M21-1",
+    title: records[0].title,
+    url: urls[0],
+    retrieved: dateOf(records),
+    text: stitchChunks(records),
+  };
+}
+
+/**
+ * One manual topic: `flat` as the shard holds it and `text` with its tables
+ * and lists broken into lines. Refuses to return text that is not word for
+ * word the source.
+ */
+function buildTopic(key, m21) {
+  const topic = MANUAL_TOPICS[key];
+  const article = loadArticle(topic.article, m21);
+  const flat = sliceTopic(article.text, topic);
+  const text = structureText(flat, topic.structure);
+  if (!sameWords(flat, text)) {
+    throw new Error(`${key}: structured text differs from its source`);
+  }
+  return {
+    flat,
     text,
-    abbreviations: abbreviationsIn(text, `${records[0].title} ${article}`),
-    source: {
-      file: M21_FILE,
-      article: records[0].title,
-      url: urls[0],
-      retrieved: dateOf(records),
-      changeDate: changeDateBefore(article, spec.topics[0].start),
+    article,
+    changeDate: changeDateBefore(article.text, topic.start),
+  };
+}
+
+const unique = (values) => [...new Set(values)];
+
+function buildManualEntry(spec, m21) {
+  const topics = spec.topics.map((key) => buildTopic(key, m21));
+  const text = topics.map((topic) => topic.text).join("\n\n");
+  const articles = unique(topics.map((topic) => topic.article.url)).map(
+    (url) => topics.find((topic) => topic.article.url === url).article,
+  );
+  const defined = articles.map((a) => `${a.title} ${a.text}`).join(" ");
+  return {
+    flat: topics.map((topic) => topic.flat).join("\n"),
+    entry: {
+      id: spec.id,
+      citation: spec.citation,
+      sourceLabel: "VA manual M21-1",
+      text,
+      abbreviations: abbreviationsIn(text, defined),
+      source: {
+        file: M21_FILE,
+        articles: articles.map((a) => ({ title: a.title, url: a.url })),
+        retrieved: dateOf(articles.map((a) => ({ fetched_at: a.retrieved }))),
+        changeDate: unique(topics.map((topic) => topic.changeDate)).join(
+          " and ",
+        ),
+      },
     },
   };
 }
@@ -394,6 +398,86 @@ function buildFormsEntry(m21, allowlist) {
   };
 }
 
+const formLine = (form) => `VA Form ${form.number}: ${form.title}`;
+
+function findForm(forms, number) {
+  const form = forms.find((f) => f.number === number);
+  if (!form) throw new Error(`form ${number} is not in the forms table`);
+  return { number: form.number, title: form.title };
+}
+
+function buildReviewFormsEntry(formsEntry) {
+  return {
+    id: "review-forms",
+    citation: "Decision review forms: number and official title",
+    sourceLabel: formsEntry.sourceLabel,
+    text: REVIEW_FORM_NUMBERS.map((number) =>
+      formLine(findForm(formsEntry.forms, number)),
+    ).join("\n"),
+    source: formsEntry.source,
+  };
+}
+
+/** A quotation: the selected sentences as one line, with their citation. */
+function quoteRegulation(spec, ecfr) {
+  const selected = selectParagraphs(
+    sectionParagraphs(ecfr, spec.section),
+    spec.select,
+  );
+  return {
+    citation: spec.citation,
+    text: selected
+      .split("\n")
+      .filter((line) => line !== "[...]")
+      .join(" "),
+    source: {
+      file: ECFR_FILE,
+      retrieved: dateOf(sectionRecords(ecfr, spec.section)),
+    },
+  };
+}
+
+function quoteManualLine(spec, m21) {
+  const topic = buildTopic(spec.topic, m21);
+  const lines = topic.text
+    .split("\n")
+    .filter((line) => line.startsWith(spec.line));
+  if (lines.length !== 1) {
+    throw new Error(
+      `${spec.topic}: expected one line starting "${spec.line}", found ${lines.length}`,
+    );
+  }
+  const { article } = topic;
+  return {
+    citation: spec.citation,
+    text: lines[0],
+    abbreviations: abbreviationsIn(
+      lines[0],
+      `${article.title} ${article.text}`,
+    ),
+    source: { file: M21_FILE, retrieved: article.retrieved },
+  };
+}
+
+function buildReviewOptions(ecfr, forms) {
+  return {
+    lead: quoteRegulation(REVIEW_OPTIONS_SPEC.lead, ecfr),
+    lanes: REVIEW_OPTIONS_SPEC.lanes.map((lane) => ({
+      id: lane.id,
+      form: findForm(forms, lane.form),
+      quotes: lane.quotes.map((spec) => quoteRegulation(spec, ecfr)),
+    })),
+  };
+}
+
+const buildCorrections = (ecfr, m21) =>
+  Object.fromEntries(
+    Object.entries(CORRECTION_SPECS).map(([id, spec]) => [
+      id,
+      spec.topic ? quoteManualLine(spec, m21) : quoteRegulation(spec, ecfr),
+    ]),
+  );
+
 export function buildBundle(sourceRoot) {
   const read = (file) => readFileSync(path.join(sourceRoot, file), "utf8");
   const ecfr = parseJsonl(read(ECFR_FILE), ECFR_FILE);
@@ -402,26 +486,39 @@ export function buildBundle(sourceRoot) {
     readFileSync(path.join(REPO_ROOT, FORMS_ALLOWLIST_FILE), "utf8"),
   );
   const forms = buildFormsEntry(m21, allowlist);
-  const generatedBy = "scripts/verified-reference/build.mjs";
+  const manual = MANUAL_ENTRIES.map((spec) => buildManualEntry(spec, m21));
+  const _generated = {
+    by: "scripts/verified-reference/build.mjs",
+    note: "Generated. Do not edit by hand; change the script and rebuild.",
+  };
   return {
     reference: {
-      _generated: {
-        by: generatedBy,
-        note: "Generated. Do not edit by hand; change the script and rebuild.",
-      },
+      _generated,
       entries: [
-        ...CFR_ENTRIES.map((spec) => buildCfrEntry(spec, ecfr)),
-        ...MANUAL_ENTRIES.map((spec) => buildManualEntry(spec, m21)),
+        ...[...CFR_ENTRIES, ...REVIEW_ENTRIES].map((spec) =>
+          buildCfrEntry(spec, ecfr),
+        ),
+        ...manual.map((built) => built.entry),
         forms.entry,
+        buildReviewFormsEntry(forms.entry),
       ],
     },
+    quotes: {
+      _generated,
+      reviewOptions: buildReviewOptions(ecfr, forms.entry.forms),
+      corrections: buildCorrections(ecfr, m21),
+    },
     sections: {
-      _generated: {
-        by: generatedBy,
-        note: "Generated. Do not edit by hand; change the script and rebuild.",
-      },
+      _generated,
       source: { file: ECFR_FILE, retrieved: dateOf(ecfr) },
-      parts: collectSections(ecfr, ["3", "4"]),
+      parts: collectSections(ecfr),
+    },
+    flatSource: {
+      _generated,
+      source: { file: M21_FILE },
+      passages: Object.fromEntries(
+        manual.map((built) => [built.entry.id, built.flat]),
+      ),
     },
     omittedForms: forms.omitted,
   };
@@ -437,6 +534,8 @@ function main(argv) {
   const outputs = [
     [REFERENCE_OUT, serialize(bundle.reference)],
     [SECTIONS_OUT, serialize(bundle.sections)],
+    [QUOTES_OUT, serialize(bundle.quotes)],
+    [FLAT_SOURCE_OUT, serialize(bundle.flatSource)],
   ];
 
   if (argv.includes("--check")) {
@@ -459,7 +558,9 @@ function main(argv) {
     console.log(`${String(entry.text.length).padStart(5)}  ${entry.id}`);
   }
   console.log(
-    `sections: Part 3 ${bundle.sections.parts[3].length}, Part 4 ${bundle.sections.parts[4].length}`,
+    `sections: ${Object.entries(bundle.sections.parts)
+      .map(([part, list]) => `Part ${part} ${list.length}`)
+      .join(", ")}`,
   );
   if (bundle.omittedForms.length > 0) {
     console.warn(

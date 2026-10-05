@@ -199,7 +199,13 @@ describe("t08 through decodeDecision", () => {
       systemPrompt: TOOL_ENTRIES.decodeDecision.ownSystemPrompt,
     });
     expect(outcome.ok).toBe(true);
-    expect(JSON.parse(outcome.text)).toEqual(decoded);
+    const shown = JSON.parse(outcome.text);
+    expect(shown).toMatchObject(decoded);
+    expect(shown.review_options.lanes.map((lane) => lane.form.number)).toEqual([
+      "20-0996",
+      "10182",
+      "20-0995",
+    ]);
     expect(outcome.tool.draftPath).toBeNull();
   });
 });
