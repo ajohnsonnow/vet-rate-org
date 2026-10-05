@@ -610,34 +610,107 @@ export function findReworkedFigures(text, calc) {
   return hits;
 }
 
+const LEGAL_CITATION =
+  /(?:§|\bCFR|\bPart) ?\d+(?:\.\d+)?[a-z]?(?:\(\w{1,3}\))*/gi;
+const DECIMAL_FIGURE = /\d\.\d/;
+const ROUNDING_WORD = /\bround(?:ed|s|ing)?\b/i;
+const OPERATION = /=|\d ?%? ?[+×÷*/] ?\(? ?\d|\\times|\\frac/;
+const PERCENT_FIGURE = /(\d{1,3}(?:\.\d+)?) ?(?:%|percent\b)/gi;
+const REFUSAL =
+  /\bI (?:do not|don't|cannot|can't) (?:have|calculate|determine|access)\b|\bplease provide\b/i;
+const TDIU_THRESHOLD_PERCENTS = [40, 60, 70];
+
+/**
+ * Why a model's commentary may not be shown under the calculator's working,
+ * as a list of reasons (empty when it may). The working is the answer, so
+ * commentary is kept only when it adds words and no arithmetic of its own:
+ * "decimal" (74.8), "rounding" (any talk of rounding), "equation" (an equals
+ * sign or an operator between numbers), "figure" (a percentage that is not a
+ * rating entered, a step of the working, the 10 percent factor or 100), and
+ * "result" (the combined rating stated again), and "refusal" (it says it has
+ * no ratings or cannot calculate, under working that just did). Section
+ * numbers in citations
+ * are not figures. For a TDIU question the 38 CFR § 4.16(a) thresholds (40,
+ * 60, 70) are allowed. Deliberately strict: when in doubt the commentary is
+ * dropped.
+ */
+export function findCommentaryArithmetic(text, calc, { tdiu = false } = {}) {
+  const body = String(text ?? "").replace(LEGAL_CITATION, " ");
+  const allowed = ratingValues(calc);
+  [calc.rawScore, calc.combinedRating, 10, 100].forEach((v) => allowed.add(v));
+  if (tdiu) TDIU_THRESHOLD_PERCENTS.forEach((v) => allowed.add(v));
+  const strayFigure = [...body.matchAll(PERCENT_FIGURE)].some(
+    (m) => !allowed.has(Number(m[1])),
+  );
+  const found = {
+    decimal: DECIMAL_FIGURE.test(body),
+    rounding: ROUNDING_WORD.test(body),
+    equation: OPERATION.test(body),
+    figure: strayFigure,
+    result: extractStatedCombinedRatings(body).length > 0,
+    refusal: REFUSAL.test(body),
+  };
+  return Object.keys(found).filter((reason) => found[reason]);
+}
+
 /**
  * Compare a response with the calculator. A stated combined figure is wrong
  * when it differs from the calculator's rating and is either a multiple of 10
- * (it reads as a final rating) or is not one of the calculator's own working
- * values. Intermediate values from the working are not treated as final
- * claims. Figures in a cap ("the maximum is 100%"), an example, a what-if or
+ * (it reads as a final rating), or is a figure the calculator's working does
+ * not contain in a draft that states no other rating. Intermediate values,
+ * the calculator's own or not, are never reported as the stated rating: a
+ * step the calculator did not take counts as different working instead. Figures in a cap ("the maximum is 100%"), an example, a what-if or
  * a list of the ratings entered, and a threshold figure the answer says is
  * not reached, are not statements of the veteran's rating and are ignored.
  * An answer that lands on the right figure is still not ok when it shows
  * working the calculator did not produce (`reworked`) or calls the computed
  * block wrong (`disputes`).
  */
+/**
+ * Sort the figures a draft labels "combined" or "total" that are not the
+ * calculator's rating. A final rating is always a multiple of 10, so one of
+ * those is a wrong rating. Any other figure is a step. In a draft that also
+ * states a rating, right or wrong, a step is not its answer: the calculator's
+ * own unrounded value is fine and one the calculator did not take is
+ * different working (`strayStepFigures`). In a draft that states no rating
+ * at all, a step outside the calculator's rounded working is its answer.
+ */
+function classifyStatedFigures(stated, calc) {
+  const working = workingValues(calc);
+  const consistent = consistentValues(calc);
+  const statesARating = stated.some((v) => v % 10 === 0);
+  const others = stated.filter((v) => v !== calc.combinedRating);
+  const steps = others.filter((v) => v % 10 !== 0 && !working.has(v));
+  return {
+    wrongFigures: others.filter(
+      (v) => v % 10 === 0 || (steps.includes(v) && !statesARating),
+    ),
+    strayStepFigures: statesARating
+      ? steps.filter((v) => !consistent.has(v))
+      : [],
+  };
+}
+
 export function checkRaterResponse(text, calc) {
   const sentences = splitSentences(text).filter(
     (sentence) => !isNotOwnRating(sentence, calc),
   );
   const stated = [...new Set(sentences.flatMap(statedInSentence))];
-  const working = workingValues(calc);
-  const wrongFigures = stated.filter(
-    (v) => v !== calc.combinedRating && (v % 10 === 0 || !working.has(v)),
+  const sentenceStating = (v) =>
+    sentences.find((s) => statedInSentence(s).includes(v))?.trim() ?? null;
+  const { wrongFigures, strayStepFigures } = classifyStatedFigures(
+    stated,
+    calc,
   );
-  const wrongFigureSentences = wrongFigures.map(
-    (v) =>
-      sentences.find((s) => statedInSentence(s).includes(v))?.trim() ?? null,
-  );
+  const wrongFigureSentences = wrongFigures.map(sentenceStating);
   const inventedPairs = findInventedBilateralClaims(text, calc);
   const deniedPairs = findDeniedBilateralClaims(text, calc);
-  const reworked = findReworkedFigures(text, calc);
+  const reworked = [
+    ...new Set([
+      ...findReworkedFigures(text, calc),
+      ...strayStepFigures.map(sentenceStating).filter(Boolean),
+    ]),
+  ];
   const disputes = findCalculatorDisputes(text);
   return {
     ok:
@@ -1052,31 +1125,66 @@ export function buildTdiuThresholdParagraph(calc) {
   ].join("\n\n");
 }
 
+const ASKS_ABOUT_BILATERAL =
+  /\bbilateral|\bpair(?:ed|s)?\b|\bboth (?:knees|legs|arms|feet|hands|ankles|hips|shoulders|elbows|wrists|sides)\b/i;
+
+const hasSidedEntry = (calc) =>
+  [...calc.nonBilateralConditions, ...calc.bilateralExcludedConditions].some(
+    (c) => c.side && c.side !== "none",
+  );
+
 /**
- * Plain-language answer built only from the calculator's working, used when
- * the model's draft contradicts it.
+ * Whether to say anything about the bilateral factor having no pair. It is
+ * noise when no entry has a side and the question does not ask about it. A
+ * pair the calculator formed, and its notes on entries left out or treated
+ * specially, are always described. With no question given the finding is
+ * stated, since nothing shows it was not asked.
+ */
+const pairFindingIsRelevant = (calc, question) =>
+  question === null ||
+  calc.bilateralConditions.length > 0 ||
+  hasSidedEntry(calc) ||
+  ASKS_ABOUT_BILATERAL.test(question);
+
+/**
+ * Plain-language answer built only from the calculator's working: shown in
+ * place of a draft that contradicts it (with the notice saying why), and as
+ * the lead of every rating answer (`withNotice: false`). For a TDIU question
+ * the threshold paragraph comes right after the combined rating, ahead of the
+ * working, because it is what was asked. `question` is the veteran's text and
+ * decides only whether the no-pair finding is worth saying.
  */
 export function buildCalculatorExplanation(
   calc,
-  { tdiu = false, check = null, tdiuCheck = null } = {},
+  {
+    tdiu = false,
+    check = null,
+    tdiuCheck = null,
+    question = null,
+    withNotice = true,
+  } = {},
 ) {
-  const pairNote = [describePairFinding(calc), ...describeBilateralNotes(calc)]
+  const draftRaisedPairing =
+    check?.inventedPairs?.length > 0 || check?.deniedPairs?.length > 0;
+  const pairNote = [
+    draftRaisedPairing || pairFindingIsRelevant(calc, question)
+      ? describePairFinding(calc)
+      : "",
+    ...describeBilateralNotes(calc),
+  ]
     .filter(Boolean)
     .join(" ");
   return [
-    buildReplacementNotice(check, tdiuCheck),
-    "",
+    withNotice ? buildReplacementNotice(check, tdiuCheck) : "",
     `Your combined rating is ${calc.combinedRating}%.`,
-    "",
+    tdiu ? buildTdiuThresholdParagraph(calc) : "",
     "VA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).",
-    "",
-    ...formatCalculatorWorking(calc),
-    "",
+    formatCalculatorWorking(calc).join("\n"),
     pairNote,
-    "",
-    ...(tdiu ? [buildTdiuThresholdParagraph(calc), ""] : []),
     "Check these figures with a Veterans Service Officer before relying on them.",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function describeGroupBasis(calc) {

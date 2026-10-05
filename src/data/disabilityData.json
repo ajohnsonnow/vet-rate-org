@@ -8065,8 +8065,8 @@
       "conditionName": "Tuberculosis",
       "aliases": ["TB", "tuberculous", "tuberculosis"],
       "searchTerms": ["tuberculosis", "TB", "tuberculous disease"],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.88",
-      "ratingSchedule": "38 CFR § 4.88",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.88b",
+      "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Documentation must include: chest X-ray findings, sputum cultures, PPD or Quantiferon test results, treatment history, active vs inactive status, and any residual complications.",
       "relatedSecondaryConditions": [
         {
@@ -8866,8 +8866,8 @@
         "myalgic encephalomyelitis",
         "extreme fatigue"
       ],
-      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.88",
-      "ratingSchedule": "38 CFR § 4.88",
+      "ecfrUrl": "https://www.ecfr.gov/current/title-38/section-4.88b",
+      "ratingSchedule": "38 CFR § 4.88b",
       "documentationRequirements": "Documentation must include: diagnosis meeting CDC criteria (profound fatigue >6 months, post-exertional malaise, unrefreshing sleep, cognitive impairment, orthostatic intolerance), exclusion of other conditions, functional assessment, and impact on work/daily activities.",
       "relatedSecondaryConditions": [
         {

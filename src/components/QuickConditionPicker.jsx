@@ -10,7 +10,6 @@ const systemNameMap = {
   "38 CFR § 4.85": "👂 Ears - Hearing Loss (DC 6100-6260)",
   "38 CFR § 4.87": "👂 Ears - Other Conditions (DC 6200-6260)",
   "38 CFR § 4.87 or § 4.87a": "👂 Ears - Diseases (DC 6200-6260)",
-  "38 CFR § 4.88": "🦠 Infectious Diseases - General",
   "38 CFR § 4.88b":
     "🦠 Infectious Diseases, Immune Disorders & Nutritional Deficiencies (DC 6300-6399)",
   "38 CFR § 4.97": "🫁 Respiratory System (DC 6502-6847)",

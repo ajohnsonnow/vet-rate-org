@@ -512,7 +512,7 @@ describe("rater grounding: a response that contradicts the calculator is replace
   });
 
   it("leads with the calculator's working and keeps a consistent answer as commentary", async () => {
-    const draft = "Your combined rating is 80%. Hope that helps.";
+    const draft = "The order you list the ratings in does not matter.";
     const result = await ask(draft);
     expect(
       result.text.startsWith("Your combined rating is 80%.\n\nVA does"),
@@ -607,8 +607,8 @@ describe("rater grounding: the calculator's working always comes first", () => {
       "You have a 50% PTSD rating and a 30% tinnitus rating.",
     ],
     [
-      "states only a working value",
-      "The combined value before rounding is 75%.",
+      "mentions a step value",
+      "The 65% after the first step is why the total is not a simple sum.",
     ],
   ])(
     "an answer that %s follows the working as commentary",
@@ -751,7 +751,7 @@ describe("rater grounding: a kept answer to a TDIU question follows the threshol
       SIXTY,
     );
     expect(result.text).not.toContain("unemployability");
-    expect(result.calculatorLead.commentaryKept).toBe(true);
+    expect(result.calculatorLead.commentaryDropped).toEqual(["result"]);
   });
 });
 
@@ -826,7 +826,7 @@ describe("rater grounding: a TDIU conclusion that contradicts the thresholds is 
   it("keeps a hedged answer that depends on unemployability as commentary", async () => {
     const result = await askWith(
       "Can I qualify for TDIU with only one 60% mental health rating?",
-      "Your combined rating is 60%. If you are capable of working, you are not eligible for TDIU.",
+      "If you are capable of working, you are not eligible for TDIU.",
       SIXTY,
     );
     expect(result.calculatorReplacement).toBeUndefined();
@@ -848,7 +848,7 @@ describe("rater grounding: the bilateral check replaces only a contradicted pair
 
   it("keeps a correct answer that combines the bilateral group with the back", async () => {
     const text =
-      "The bilateral pair is Left knee and Right knee.\nNext, we combine the bilateral group rating (21%) with your remaining condition (Back, 30%).\nYour combined rating is 50%.";
+      "The bilateral pair is Left knee and Right knee.\nNext, we combine the bilateral group rating (21%) with your remaining condition (Back, 30%).";
     const result = await ask(text, { conditions: KNEES_BACK });
     expect(result.text.endsWith(text)).toBe(true);
     expect(result.calculatorReplacement).toBeUndefined();
@@ -856,7 +856,7 @@ describe("rater grounding: the bilateral check replaces only a contradicted pair
 
   it("keeps an answer that finds no pair and gives a generic example", async () => {
     const text =
-      "No bilateral pair applies here (e.g., left knee and right knee would be one). Your combined rating is 80%.";
+      "No bilateral pair applies here (e.g., left knee and right knee would be one).";
     const result = await ask(text);
     expect(result.text.endsWith(text)).toBe(true);
     expect(result.calculatorReplacement).toBeUndefined();

@@ -123,9 +123,7 @@ describe("generateAI citation check", () => {
   });
 
   it("checks a rater answer after the calculator guard has run", async () => {
-    modelSays(
-      "Your combined rating is 50%. The table is in 38 CFR § 4.25 and 38 CFR § 4.99.",
-    );
+    modelSays("The table is in 38 CFR § 4.25 and 38 CFR § 4.99.");
 
     const result = await generateAI(
       "Calculate my combined rating.",

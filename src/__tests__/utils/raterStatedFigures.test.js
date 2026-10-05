@@ -6,7 +6,7 @@ import {
   checkTdiuConclusion,
   describeMismatch,
 } from "../../utils/raterGrounding";
-import { GOLDEN, raterAnswers } from "./recordedAnswers";
+import { GOLDEN, gradedIntegratedCase, raterAnswers } from "./recordedAnswers";
 
 const single60 = calculateVARating(GOLDEN.a25.conditions);
 const four = calculateVARating(GOLDEN.a11.conditions);
@@ -107,7 +107,7 @@ describe("combined-rating figures reported over every recorded Rater answer", ()
     ["2026-10-05_123216", "a12", [30]],
     ["2026-10-05_141236", "a13", [60]],
     ["2026-10-05_201248", "a11", [70]],
-    ["2026-10-05_201248", "a12", [20, 4.5]],
+    ["2026-10-05_201248", "a12", [20]],
   ];
 
   it("3 figures in 2 answers were not statements of the rating; none is reported now and every other one still is", () => {
@@ -120,5 +120,67 @@ describe("combined-rating figures reported over every recorded Rater answer", ()
       .filter(([, , wrong]) => wrong.length > 0);
     expect(reported).toEqual(AFTER);
     expect(BEFORE_ONLY.flatMap(([, , figures]) => figures)).toHaveLength(3);
+  });
+});
+
+describe("an intermediate figure is never named as the stated combined rating", () => {
+  const knees = calculateVARating(GOLDEN.a12.conditions);
+  const record = gradedIntegratedCase("a12");
+  const draft = record.calculatorReplacement.draft;
+  const check = checkRaterResponse(draft, knees);
+
+  it("the graded a12 draft: 44.7 was a step, and its own working was the fault", () => {
+    expect(record.calculatorReplacement.reason).toContain(
+      "stated combined rating 44.7%",
+    );
+    expect(draft).toContain("**Total:** 44.7%");
+    expect(check.wrongFigures).toEqual([]);
+    expect(check.reworked.length).toBeGreaterThan(0);
+    expect(check.ok).toBe(false);
+  });
+
+  it("the notice says the draft re-derived the working, and nothing else", () => {
+    expect(buildReplacementNotice(check)).toBe(
+      "The AI's draft answer showed working that did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.",
+    );
+    expect(describeMismatch(check)).not.toContain("stated combined rating");
+    expect(describeMismatch(check)).toContain(
+      "showed working the calculator did not produce",
+    );
+  });
+
+  it.each([
+    [
+      "the calculator's own unrounded step",
+      "Total: 44.7%, which rounds to a combined rating of 50%.",
+      [],
+      true,
+    ],
+    [
+      "a step the calculator did not take, in a draft that ends on the right rating",
+      "Total: 47.3%. Your combined rating is 50%.",
+      [],
+      false,
+    ],
+    [
+      "an odd figure that is the draft's only answer",
+      "Your combined rating is 47.3%.",
+      [47.3],
+      false,
+    ],
+    [
+      "a wrong rating that is a multiple of ten, whatever else is said",
+      "Total: 44.7%. Your combined rating is 40%.",
+      [40],
+      false,
+    ],
+  ])("%s", (_name, text, wrong, ok) => {
+    const out = checkRaterResponse(text, knees);
+    expect(out.wrongFigures).toEqual(wrong);
+    expect(out.ok).toBe(ok);
+    if (!ok && wrong.length === 0) {
+      expect(buildReplacementNotice(out)).toContain("showed working");
+      expect(buildReplacementNotice(out)).not.toContain("stated a combined");
+    }
   });
 });

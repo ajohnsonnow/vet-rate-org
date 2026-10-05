@@ -53,11 +53,11 @@ import { calculateVARating } from "./vaCalculator";
 import {
   buildCalculatorExplanation,
   buildComputedResultBlock,
-  buildReplacementNotice,
   checkRaterResponse,
   checkTdiuConclusion,
   mentionsUnemployability,
   describeMismatch,
+  findCommentaryArithmetic,
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import {
@@ -67,6 +67,7 @@ import {
   planPromptFit,
 } from "./promptBudget";
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
+import { trimToLastSentence } from "./outputCleanup";
 import { flagContradictions } from "./contradictionCheck";
 import {
   AI_DATA_CLASS,
@@ -1057,7 +1058,9 @@ const generateWithCloudAI = async (systemPrompt, userPrompt, options = {}) => {
 
   const data = await response.json();
   // C-H05: surface safety blocks / truncation rather than "No response generated".
-  return interpretGeminiResponse(data);
+  return interpretGeminiResponse(data, {
+    onTruncated: () => _noteStoppedForLength(options, true),
+  });
 };
 
 /**
@@ -1138,7 +1141,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   const asksTdiu = mentionsUnemployability(prompt);
   const tdiuCheck = asksTdiu ? checkTdiuConclusion(result.text, calc) : null;
   if (check.ok && !tdiuCheck?.contradicted) {
-    return leadWithCalculatorWorking(result, calc, asksTdiu);
+    return leadWithCalculatorWorking(result, calc, asksTdiu, prompt);
   }
 
   const reason = describeMismatch(check, tdiuCheck);
@@ -1149,6 +1152,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       tdiu: asksTdiu,
       check,
       tdiuCheck,
+      question: prompt,
     }),
     calculatorLead: { expected: check.expected, commentaryKept: false },
     validationWarnings: [
@@ -1174,28 +1178,37 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
 export const CALCULATOR_COMMENTARY_LEAD =
   "The AI's comments on this result follow. The figures above come from Vet-Rate's calculator, not from the AI.";
 
-// buildCalculatorExplanation opens with the sentence that says a draft was
-// not shown. Here the draft is shown, below the working, so that sentence
-// would be untrue and is left off.
-function calculatorWorkingText(calc, tdiu) {
-  const explanation = buildCalculatorExplanation(calc, { tdiu });
-  const notice = buildReplacementNotice();
-  return explanation.startsWith(notice)
-    ? explanation.slice(notice.length).trimStart()
-    : explanation;
+function _commentaryDropReasons(result, commentary, calc, asksTdiu) {
+  if (result.blocked) return [];
+  if (result.truncated) return ["cut short"];
+  return findCommentaryArithmetic(commentary, calc, { tdiu: asksTdiu });
 }
 
-function leadWithCalculatorWorking(result, calc, asksTdiu) {
+// The model's text is kept under the working only when it adds words and no
+// arithmetic of its own (findCommentaryArithmetic). Otherwise the working
+// stands alone: the draft did not contradict the calculator, so there is no
+// notice to give, and `commentaryDropped` records why it was left out.
+function leadWithCalculatorWorking(result, calc, asksTdiu, question) {
   const commentary = String(result.text ?? "").trim();
-  const working = calculatorWorkingText(calc, asksTdiu);
-  const commentaryKept = commentary !== "" && !result.blocked;
+  const working = buildCalculatorExplanation(calc, {
+    tdiu: asksTdiu,
+    question,
+    withNotice: false,
+  });
+  const dropped = _commentaryDropReasons(result, commentary, calc, asksTdiu);
+  const commentaryKept =
+    commentary !== "" && !result.blocked && dropped.length === 0;
   const parts = [working];
   if (commentaryKept) parts.push(CALCULATOR_COMMENTARY_LEAD);
-  if (commentary) parts.push(commentary);
+  if (commentaryKept || result.blocked) parts.push(commentary);
   return {
     ...result,
-    text: parts.join("\n\n"),
-    calculatorLead: { expected: calc.combinedRating, commentaryKept },
+    text: parts.filter(Boolean).join("\n\n"),
+    calculatorLead: {
+      expected: calc.combinedRating,
+      commentaryKept,
+      ...(dropped.length > 0 ? { commentaryDropped: dropped } : {}),
+    },
   };
 }
 
@@ -1333,6 +1346,7 @@ const runWarrantCouncil = async (systemPrompt, userPrompt, options = {}) => {
       : await inferencePromise;
 
     swarmGenerating = false;
+    _noteStoppedForLength(options, result.truncated === true);
     return { text: result.text, agent: result.agent || agentId };
   } catch (err) {
     swarmGenerating = false;
@@ -1656,7 +1670,12 @@ const cleanLocalAIResponse = (text) => {
  * Run a streaming Local AI generation, aborting early if degenerate
  * (repetition-collapsed) output is detected.
  */
-const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
+const runLocalAIStreaming = async (
+  generationConfig,
+  onStream,
+  releaseLock,
+  options,
+) => {
   let fullResponse = "";
   const chunks = await localAIEngine.chat.completions.create({
     ...generationConfig,
@@ -1666,6 +1685,12 @@ const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
   for await (const chunk of chunks) {
     const delta = chunk.choices[0]?.delta?.content || "";
     fullResponse += delta;
+    if (chunk.choices[0]?.finish_reason) {
+      _noteStoppedForLength(
+        options,
+        chunk.choices[0].finish_reason === "length",
+      );
+    }
 
     // Clean and send the streamed response
     const cleanedResponse = cleanLocalAIResponse(fullResponse);
@@ -1697,7 +1722,11 @@ const runLocalAIStreaming = async (generationConfig, onStream, releaseLock) => {
 /**
  * Run a non-streaming Local AI generation.
  */
-const runLocalAINonStreaming = async (generationConfig, releaseLock) => {
+const runLocalAINonStreaming = async (
+  generationConfig,
+  releaseLock,
+  options,
+) => {
   // Model input and output are never logged: bugReportUtils captures console
   // output into reports a veteran can send off-device, and DD-214 text and
   // model JSON carry identifiers. Shape and length only.
@@ -1727,6 +1756,7 @@ const runLocalAINonStreaming = async (generationConfig, releaseLock) => {
     );
   }
 
+  _noteStoppedForLength(options, finishReason === "length");
   // eslint-disable-next-line no-console
   console.log("🔧 Local AI response length:", rawContent.length);
   releaseLock();
@@ -1848,9 +1878,14 @@ const generateWithLocalAI = async (systemPrompt, userPrompt, options = {}) => {
     };
 
     if (onStream) {
-      return await runLocalAIStreaming(generationConfig, onStream, releaseLock);
+      return await runLocalAIStreaming(
+        generationConfig,
+        onStream,
+        releaseLock,
+        options,
+      );
     }
-    return await runLocalAINonStreaming(generationConfig, releaseLock);
+    return await runLocalAINonStreaming(generationConfig, releaseLock, options);
   } catch (err) {
     localAIGenerating = false;
     releaseLock();
@@ -2680,6 +2715,48 @@ function _fittedOutputTokens(fit, assembledChars) {
 // device. Every send to a backend goes through here, so a mode that is not
 // on-device (cloud, a local server on another host) gets the veteran's
 // question without the block, whether it was the first choice or a fallback.
+// Whether the engine stopped the answer for length, noted by the backend on
+// a holder that belongs to this one generateAI call (`options._finish`), so
+// concurrent calls cannot read each other's. WebLLM (swarm and the legacy
+// engine) reports finish_reason "length"; Gemini reports MAX_TOKENS. The
+// local-server and wllama clients return text only, so nothing is known for
+// them.
+function _noteStoppedForLength(options, stopped) {
+  if (options?._finish) options._finish.truncated = stopped;
+}
+
+const PARAGRAPH_BREAK = "\n\n";
+
+export const CUT_SHORT_NOTICE =
+  "This answer was cut short because it reached the length limit. Ask for the rest if you need it.";
+
+/**
+ * A prose answer the engine stopped for length is trimmed to its last
+ * complete sentence and says so in one line. Structured output is left for
+ * its parser, a blocked answer is already a message, and on a rating answer
+ * the calculator lead drops the cut-off commentary instead.
+ */
+function _settleTruncation(result, finish, options, hasCalculatorLead) {
+  if (!finish.truncated || result.blocked) return result;
+  const text = String(result.text ?? "");
+  const leaveAsIs =
+    hasCalculatorLead ||
+    options.expectJSON ||
+    options.responseFormat ||
+    looksStructured(text);
+  return {
+    ...result,
+    truncated: true,
+    ...(leaveAsIs
+      ? {}
+      : {
+          text: [trimToLastSentence(text), CUT_SHORT_NOTICE].join(
+            PARAGRAPH_BREAK,
+          ),
+        }),
+  };
+}
+
 const _userPromptForMode = (mode, userPrompt, options) =>
   typeof options._offDeviceUserPrompt === "string" && !_isModeOnDevice(mode)
     ? options._offDeviceUserPrompt
@@ -2690,6 +2767,7 @@ const _userPromptForMode = (mode, userPrompt, options) =>
 // each backend's (systemPrompt, userPrompt, options) argument shape now
 // exists exactly once instead of being repeated per branch.
 async function _invokeBackend(mode, systemPrompt, sentUserPrompt, options) {
+  _noteStoppedForLength(options, false);
   const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   switch (mode) {
     case AI_MODES.SWARM: {
@@ -3069,6 +3147,7 @@ function _pickDocumentFallbackMode(effectiveMode) {
 }
 
 async function _generateFallback(mode, systemPrompt, sentUserPrompt, options) {
+  _noteStoppedForLength(options, false);
   const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   if (mode === AI_MODES.SWARM) {
     const { text, agent } = await runWarrantCouncil(
@@ -3285,19 +3364,34 @@ const generateAIInternal = async (prompt, options = {}) => {
     dataClass === AI_DATA_CLASS.DOCUMENT
       ? pieces
       : await _redactPiecesForSend(pieces);
-  const enhancedOptions =
-    offDevicePrompt === undefined
-      ? builtOptions
-      : { ...builtOptions, _offDeviceUserPrompt: offDevicePrompt };
+  const finish = { truncated: false };
+  const enhancedOptions = {
+    ...builtOptions,
+    _finish: finish,
+    ...(offDevicePrompt === undefined
+      ? {}
+      : { _offDeviceUserPrompt: offDevicePrompt }),
+  };
 
-  const result = await _dispatchWithRecovery(
+  const dispatched = await _dispatchWithRecovery(
     effectiveMode,
     systemPrompt,
     userPrompt,
     enhancedOptions,
     options,
   );
-  const grounded = _isRaterRoute(options, effectiveMode)
+  const isRater = _isRaterRoute(options, effectiveMode);
+  const hasCalculatorLead =
+    isRater &&
+    Array.isArray(options.conditions) &&
+    options.conditions.length > 0;
+  const result = _settleTruncation(
+    dispatched,
+    finish,
+    options,
+    hasCalculatorLead,
+  );
+  const grounded = isRater
     ? enforceCalculatorOnResult(result, options, prompt)
     : result;
   return flagContradictions(

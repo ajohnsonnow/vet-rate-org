@@ -177,7 +177,7 @@ EVIDENCE & PROCEDURES:
 - 38 CFR § 3.159: VA's duty to assist
 
 APPEALS:
-- 38 CFR § 19.5: Appeals under the Appeals Modernization Act (AMA)
+- 38 CFR § 3.2500: Appeals under the Appeals Modernization Act (AMA)
 - Higher-Level Review (HLR): Same evidence, different reviewer
 - Supplemental Claim: New and relevant evidence
 - Board Appeal: To Board of Veterans' Appeals (BVA)
@@ -299,7 +299,6 @@ YOUR TASK:
    - Incomplete C&P exams
    - Conditions mentioned but not claimed
    - Potential pyramiding violations (same manifestation rated twice)
-   - Missing bilateral factor application
    
 4. NEVER invent information not in the file
 5. If key information is missing, explicitly state "Not found in provided C-File"
@@ -419,7 +418,6 @@ YOUR TASK:
 4. Flag potential errors:
    - Failure to apply favorable findings (38 CFR § 3.104)
    - Improper pyramiding (38 CFR § 4.14)
-   - Missing bilateral factor (38 CFR § 4.26)
    - Clear and Unmistakable Error (CUE) per 38 CFR § 3.105
 
 DECISION LETTER STRUCTURE (help veteran navigate):
