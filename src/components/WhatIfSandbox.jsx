@@ -14,6 +14,7 @@ import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 import { calculateVARating, readRating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 
 // Common VA disabilities with typical ratings
 const commonConditions = [
@@ -492,6 +493,8 @@ const ScenarioCanvas = ({
     />
 
     <BilateralBonusIndicator bilateralNames={bilateralNames} />
+
+    <BilateralIssuesSummary conditions={currentConditions} />
 
     <ScenarioInfoBox ratesYear={ratesYear} />
   </div>

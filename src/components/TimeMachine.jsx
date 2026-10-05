@@ -20,6 +20,7 @@ import {
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
 import { getMyRatings } from "../utils/veteranProfile";
 import ReportBugLink from "./ReportBugLink";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { formatLocalDate } from "../utils/dateUtils";
@@ -168,6 +169,7 @@ function TimeMachineInputSection({
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Estimated Combined Rating (from Tactical Calculator):
           </label>
+          <BilateralIssuesSummary />
           <select
             value={estimatedRating}
             onChange={(e) =>

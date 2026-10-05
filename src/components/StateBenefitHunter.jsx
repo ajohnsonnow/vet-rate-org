@@ -10,6 +10,7 @@ import { AIStatusBadge } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
 import { getVeteranProfile, getMyRatings } from "../utils/veteranProfile";
 import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 
 /**
  * StateBenefitHunter Component
@@ -1080,6 +1081,7 @@ const StateBenefitHunter = ({ onClose, onReportBug }) => {
           hasState={hasStateDefault}
           hasRating={hasRatingDefault}
         />
+        {hasRatingDefault && <BilateralIssuesSummary />}
 
         <SelectionForm
           selectedState={selectedState}

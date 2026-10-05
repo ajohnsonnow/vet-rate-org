@@ -19,6 +19,7 @@ import {
   getVeteranProfile,
 } from "../utils/veteranProfile";
 import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import { checkSMCSHousebound } from "../utils/smcDetector";
 import { stateBenefits } from "../data/stateBenefits.js";
 import {
@@ -472,6 +473,7 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
     <div className="text-center text-2xl font-bold text-white mt-2">
       {rating}%
     </div>
+    <BilateralIssuesSummary />
   </div>
 );
 
