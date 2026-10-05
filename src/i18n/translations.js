@@ -3777,6 +3777,13 @@ export const APP_TRANSLATIONS = {
       vi: "Hệ Số Song Phương Sẽ Được Áp Dụng",
       ko: "양측 요인이 적용됩니다",
     },
+    bilateralNotApplied: {
+      en: "No bilateral factor for this condition as entered. It applies only when both arms or both legs have a compensable rating (38 CFR § 4.26).",
+      es: "Sin factor bilateral para esta condición tal como está ingresada. Solo se aplica cuando ambos brazos o ambas piernas tienen un rating compensable (38 CFR § 4.26).",
+      tl: "Walang bilateral factor para sa kondisyong ito ayon sa inilagay. Nag-a-apply lamang ito kapag parehong braso o parehong binti ay may compensable na rating (38 CFR § 4.26).",
+      vi: "Không có hệ số song phương cho tình trạng này như đã nhập. Hệ số chỉ áp dụng khi cả hai tay hoặc cả hai chân đều có mức đánh giá được bồi thường (38 CFR § 4.26).",
+      ko: "입력된 대로는 이 상태에 양측 요인이 적용되지 않습니다. 양쪽 팔 또는 양쪽 다리 모두에 보상 대상 등급이 있을 때만 적용됩니다 (38 CFR § 4.26).",
+    },
     bilateralApplyDesc: {
       en: "Per 38 CFR § 4.26, if you have paired extremities rated (left + right), you'll get an additional 10% boost to the combined bilateral rating.",
       es: "Según 38 CFR § 4.26, si tienes extremidades emparejadas calificadas (izquierda + derecha), obtendrás un impulso adicional del 10% al rating bilateral combinado.",

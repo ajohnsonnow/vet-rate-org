@@ -134,3 +134,55 @@ describe("TacticalCalculator What-If tab", () => {
     expect(screen.getByText(/raw score: 44%/i)).toBeInTheDocument();
   });
 });
+
+describe("TacticalCalculator bilateral claims follow the calculator result", () => {
+  const knee = (id, side) => ({
+    id,
+    name: `Knee ${id}`,
+    rating: 20,
+    side,
+    bodyPart: "knee",
+  });
+  const rightShoulder = {
+    id: "s",
+    name: "Shoulder s",
+    rating: 20,
+    side: "right",
+    bodyPart: "shoulder",
+  };
+  const BADGE = /bilateral \(/i;
+  const WILL_APPLY = /bilateral factor will apply/i;
+  const NOT_APPLIED = /no bilateral factor for this condition as entered/i;
+
+  it("shows the side without a bilateral badge when the entry is not in the group", async () => {
+    renderCalculator({ initialConditions: [knee("a", "left"), rightShoulder] });
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByText(BADGE)).not.toBeInTheDocument();
+    expect(screen.getByText("Left")).toBeInTheDocument();
+    expect(screen.getByText("Right")).toBeInTheDocument();
+  });
+
+  it("shows the bilateral badge on entries the calculator grouped", async () => {
+    renderCalculator({
+      initialConditions: [knee("a", "left"), knee("b", "right")],
+    });
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getAllByText(BADGE)).toHaveLength(2);
+  });
+
+  it("the edit panel claims the factor only while the edited entry is in the group", async () => {
+    renderCalculator({
+      initialConditions: [knee("a", "left"), knee("b", "right")],
+    });
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    expect(await screen.findByText(WILL_APPLY)).toBeInTheDocument();
+    expect(screen.queryByText(NOT_APPLIED)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/body part \/ system/i), {
+      target: { value: "shoulder" },
+    });
+    expect(screen.queryByText(WILL_APPLY)).not.toBeInTheDocument();
+    expect(screen.getByText(NOT_APPLIED)).toBeInTheDocument();
+  });
+});

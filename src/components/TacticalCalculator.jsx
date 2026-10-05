@@ -1451,15 +1451,44 @@ function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
   );
 }
 
+const SIDE_LABEL_KEYS = {
+  left: "left",
+  right: "right",
+  bilateral: "bothSides",
+};
+
+const bilateralGroupIds = (conditions) =>
+  new Set(calculateVARating(conditions).bilateralConditions.map((c) => c.id));
+
+function ConditionSideBadge({ t, side, inBilateralGroup }) {
+  const key = SIDE_LABEL_KEYS[side];
+  if (!key) return null;
+  const sideLabel = t("tacticalCalc", key);
+  if (!inBilateralGroup) {
+    return (
+      <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+        {sideLabel}
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
+      🔄 {t("tacticalCalc", "bilateral")} ({sideLabel})
+    </span>
+  );
+}
+
 function ConditionRow({
+  t,
   condition,
+  inBilateralGroup,
   handleEditCondition,
   handleRemoveCondition,
 }) {
   return (
     <div
       className={`flex items-center justify-between p-3 rounded-lg border ${
-        condition.side !== "none"
+        inBilateralGroup
           ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
           : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
       }`}
@@ -1472,11 +1501,11 @@ function ConditionRow({
           <p className="font-medium text-gray-800 dark:text-gray-200">
             {condition.name}
           </p>
-          {condition.side !== "none" && (
-            <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
-              🔄 Bilateral ({condition.side})
-            </span>
-          )}
+          <ConditionSideBadge
+            t={t}
+            side={condition.side}
+            inBilateralGroup={inBilateralGroup}
+          />
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -1532,6 +1561,7 @@ function ConditionsListSection({
   handleEditCondition,
   handleRemoveCondition,
 }) {
+  const groupIds = bilateralGroupIds(conditions);
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
@@ -1562,7 +1592,9 @@ function ConditionsListSection({
           {conditions.map((condition) => (
             <ConditionRow
               key={condition.id}
+              t={t}
               condition={condition}
+              inBilateralGroup={groupIds.has(condition.id)}
               handleEditCondition={handleEditCondition}
               handleRemoveCondition={handleRemoveCondition}
             />
@@ -3490,8 +3522,27 @@ function EditConditionSideField({ t, editForm, setEditForm, allBodyParts }) {
   );
 }
 
-function EditConditionBilateralExplanation({ t, editForm }) {
-  if (editForm.side === "none") return null;
+function EditConditionBilateralExplanation({
+  t,
+  editForm,
+  editingCondition,
+  conditions,
+  allBodyParts,
+}) {
+  const sided = allBodyParts.find(
+    (bp) => bp.value === editForm.bodyPart,
+  )?.canBeBilateral;
+  if (!sided || editForm.side === "none") return null;
+  const asEdited = conditions.map((c) =>
+    c.id === editingCondition.id ? { ...c, ...editForm } : c,
+  );
+  if (!bilateralGroupIds(asEdited).has(editingCondition.id)) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300">
+        {t("tacticalCalc", "bilateralNotApplied")}
+      </div>
+    );
+  }
   return (
     <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
       <div className="flex gap-2">
@@ -3583,6 +3634,7 @@ function VAGovRatingPasterModal({
 
 function EditConditionModal({
   t,
+  conditions,
   editingCondition,
   editForm,
   setEditForm,
@@ -3646,7 +3698,6 @@ function EditConditionModal({
           setEditForm={setEditForm}
         />
 
-        {/* Side (only show if body part can be bilateral) */}
         <EditConditionSideField
           t={t}
           editForm={editForm}
@@ -3654,8 +3705,13 @@ function EditConditionModal({
           allBodyParts={allBodyParts}
         />
 
-        {/* Bilateral Factor Explanation */}
-        <EditConditionBilateralExplanation t={t} editForm={editForm} />
+        <EditConditionBilateralExplanation
+          t={t}
+          editForm={editForm}
+          editingCondition={editingCondition}
+          conditions={conditions}
+          allBodyParts={allBodyParts}
+        />
       </div>
     </ResponsiveModal>
   );
@@ -3674,6 +3730,7 @@ const TacticalCalculator = ({
   });
   const {
     t,
+    conditions,
     showVAGovPaster,
     setShowVAGovPaster,
     editingCondition,
@@ -3704,6 +3761,7 @@ const TacticalCalculator = ({
       {/* Edit Condition Modal */}
       <EditConditionModal
         t={t}
+        conditions={conditions}
         editingCondition={editingCondition}
         editForm={editForm}
         setEditForm={setEditForm}
