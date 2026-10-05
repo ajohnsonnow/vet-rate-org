@@ -38,7 +38,7 @@ export function buildCitationNotice(missing) {
   return `Vet-Rate could not verify ${one ? "a citation" : "citations"} in this answer: ${listSections(missing)} ${one ? "is" : "are"} not in its copy of 38 CFR Parts 3 and 4 (as of ${sections.source.retrieved}). Check ${one ? "that citation" : "those citations"} at ecfr.gov or with a Veterans Service Officer before relying on ${one ? "it" : "them"}.`;
 }
 
-const looksStructured = (text) => /^\s*(?:```|[{[])/.test(text);
+export const looksStructured = (text) => /^\s*(?:```|[{[])/.test(text);
 
 /**
  * Append the notice to a prose answer that cites a section that does not

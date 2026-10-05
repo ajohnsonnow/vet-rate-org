@@ -61,7 +61,7 @@ import {
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import { fitOutputTokens, planPromptFit } from "./promptBudget";
-import { flagUnverifiedCitations } from "./citationCheck";
+import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -1182,15 +1182,14 @@ function calculatorWorkingText(calc, tdiu) {
 function leadWithCalculatorWorking(result, calc, asksTdiu) {
   const commentary = String(result.text ?? "").trim();
   const working = calculatorWorkingText(calc, asksTdiu);
+  const commentaryKept = commentary !== "" && !result.blocked;
+  const parts = [working];
+  if (commentaryKept) parts.push(CALCULATOR_COMMENTARY_LEAD);
+  if (commentary) parts.push(commentary);
   return {
     ...result,
-    text: commentary
-      ? [working, CALCULATOR_COMMENTARY_LEAD, commentary].join("\n\n")
-      : working,
-    calculatorLead: {
-      expected: calc.combinedRating,
-      commentaryKept: commentary !== "",
-    },
+    text: parts.join("\n\n"),
+    calculatorLead: { expected: calc.combinedRating, commentaryKept },
   };
 }
 
@@ -2798,9 +2797,17 @@ function _applyHallucinationFilter(text, options) {
   return { text, hallucinationReport };
 }
 
+/**
+ * Shown in place of an answer the response validator blocked. Callers render
+ * result.text, so a blocked answer left there was shown to the veteran.
+ */
+export const BLOCKED_RESPONSE_MESSAGE =
+  "The AI's answer is not shown because it did not pass Vet-Rate's safety check. That check stops answers worded as medical or legal advice, answers that promise a claim outcome, and citations Vet-Rate could not confirm. Nothing is wrong with your question. Please ask it again or word it differently. For a medical opinion, speak with your doctor. A Veterans Service Officer can help with your claim at no cost.";
+
 // Validate the AI response for forbidden medical/legal roleplay, ungrounded
 // CFR citations, missing disclaimers, invented stats, and over-certain claim
-// language. Runs unless explicitly skipped.
+// language. Runs unless explicitly skipped. A blocked prose answer is
+// replaced by BLOCKED_RESPONSE_MESSAGE; the original stays on `blockedText`.
 //
 // AIS-01: this was effectively dead in production. The guard required
 // `options.taskType` (so calls without one skipped validation entirely), and
@@ -2828,8 +2835,19 @@ async function _buildValidatedResult(
         validation.errors,
         validation.warnings,
       );
+      // Structured output goes to a parser, not to the veteran, and often
+      // quotes their records ("as a physician, I ..."); the caller gets it
+      // with the errors, as before.
+      const structured =
+        options.expectJSON || options.responseFormat || looksStructured(text);
       return {
-        text,
+        ...(structured
+          ? { text }
+          : {
+              text: BLOCKED_RESPONSE_MESSAGE,
+              blocked: true,
+              blockedText: text,
+            }),
         mode: usedMode,
         onDevice,
         validationErrors: validation.errors,
