@@ -1865,6 +1865,7 @@ async function _attemptChunkExtraction(
 
   const aiResponse = await generateAI(chunkPrompt, {
     dataClass: AI_DATA_CLASS.DOCUMENT,
+    toolId: "blue-button",
     temperature: strategy.temp,
     maxTokens: strategy.maxTokens,
     expectJSON: true,
@@ -2111,6 +2112,7 @@ async function analyzeWithAI(text, setProcessingStage) {
 
     const aiResponse = await generateAI(fullPrompt, {
       dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "blue-button",
       temperature: 0.2,
       maxTokens: 2000,
       expectJSON: true,

@@ -225,6 +225,7 @@ async function analyzeWithAI(text, ctx) {
     // denial letter (uploaded/OCR'd or pasted), stays on-device only.
     const response = await generateAI(fullPrompt, {
       dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "denial-decoder",
       temperature: 0.3,
       maxTokens: 1500,
       expectJSON: true,

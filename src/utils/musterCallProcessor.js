@@ -293,6 +293,7 @@ RULES: Only include findings present in text. Be concise.`;
 
   const response = await generateAI(userPrompt, {
     dataClass: AI_DATA_CLASS.DOCUMENT,
+    toolId: "cfile-analyzer",
     systemPrompt,
     temperature: 0.2,
     maxTokens: 2048,

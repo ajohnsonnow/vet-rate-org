@@ -5851,6 +5851,7 @@ ${dd214Text}
 Return ONLY the JSON object, no explanation.`,
       {
         dataClass: AI_DATA_CLASS.DOCUMENT,
+        toolId: "dd214-analyzer",
         temperature: 0.3,
         maxTokens: 512,
         expectJSON: true,

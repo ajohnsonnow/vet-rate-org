@@ -429,6 +429,7 @@ Write the complete buddy statement now:`;
   // upload; PII redaction is handled separately at the ADR-008 boundary.
   const response = await generateAI(prompt, {
     dataClass: AI_DATA_CLASS.CONTEXT,
+    toolId: "buddy-statement",
     temperature: 0.6,
     maxTokens: 2048,
   });

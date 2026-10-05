@@ -3150,6 +3150,7 @@ async function _requestChunkAnalysis(
   try {
     response = await generateAI(userPrompt, {
       dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "cfile-analyzer",
       temperature: isLocalAI ? 0.1 : 0.2,
       maxTokens: localMaxTokens,
       expectJSON: true,
@@ -3388,6 +3389,7 @@ async function _requestPageAnalysis(pageText, pageNum, totalPages, onProgress) {
   try {
     response = await generateAI(userPrompt, {
       dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "cfile-analyzer",
       temperature: isLocalAI ? 0.1 : 0.2,
       maxTokens: maxOutputTokens,
       expectJSON: true,

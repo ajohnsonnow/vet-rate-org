@@ -297,6 +297,7 @@ RESPOND IN THIS EXACT JSON FORMAT:
   // disability/symptom list + the allow-listed veteran context.
   const response = await generateAI(prompt, {
     dataClass: AI_DATA_CLASS.CONTEXT,
+    toolId: "tdiu-narrative",
     temperature: 0.4,
     maxTokens: 2048,
     expectJSON: true,

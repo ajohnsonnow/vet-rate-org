@@ -185,6 +185,8 @@ export const TOOL_AGENT_MAP = {
   "personal-statement": "writer",
   "statement-wizard": "writer",
   "buddy-statement": "writer",
+  "appeal-statement": "writer",
+  "tdiu-narrative": "writer",
 
   // Rating & Calculations - Rater
   calculator: "rater",

@@ -175,6 +175,7 @@ Provide a comprehensive strategy analysis with secondary claim opportunities.`;
       dataClass: additionalContextIsDocument
         ? AI_DATA_CLASS.DOCUMENT
         : AI_DATA_CLASS.CONTEXT,
+      toolId: "pathfinder",
       temperature: 0.4,
       maxTokens: 8192,
       expectJSON: true,

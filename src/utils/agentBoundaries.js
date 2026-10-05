@@ -62,6 +62,8 @@ export const TOOL_REQUIRED_CAPABILITY = Object.freeze({
   "personal-statement": "draft-statement",
   "statement-wizard": "draft-statement",
   "buddy-statement": "draft-buddy",
+  "appeal-statement": "draft-appeal",
+  "tdiu-narrative": "draft-narrative",
   calculator: "calculate-rating",
   "rating-calculator": "calculate-rating",
   "tdiu-builder": "tdiu-assessment",

@@ -628,7 +628,7 @@ async function _finalizeAiPrompt(prompt) {
  * @param {Object} userInput - Original user input (for crisis detection)
  * @returns {Promise<{success: boolean, content?: string, error?: string, mode?: string}>}
  */
-const callGeminiAPI = async (prompt, userInput = null) => {
+const callGeminiAPI = async (prompt, userInput = null, toolId = null) => {
   // ═══ CRISIS DETECTION CHECK (HIGHEST PRIORITY) ═══
   const crisisBlock = blockIfCrisisDetected(userInput);
   if (crisisBlock) return crisisBlock;
@@ -673,6 +673,7 @@ const callGeminiAPI = async (prompt, userInput = null) => {
       temperature: 0.7,
       skipCrisisCheck: true, // Already checked above
       dataClass: AI_DATA_CLASS.CONTEXT,
+      ...(toolId ? { toolId } : {}),
     });
 
     const status = getAIStatus();
@@ -706,7 +707,7 @@ export const enhancePersonalStatement = async (
     primaryCondition,
     claimType,
   );
-  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
+  return callGeminiAPI(prompt, answers, "personal-statement"); // Pass answers for crisis detection
 };
 
 /**
@@ -715,7 +716,7 @@ export const enhancePersonalStatement = async (
  */
 export const enhanceBuddyStatement = async (answers, conditionName) => {
   const prompt = buildBuddyStatementPrompt(answers, conditionName);
-  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
+  return callGeminiAPI(prompt, answers, "buddy-statement"); // Pass answers for crisis detection
 };
 
 /**
@@ -724,7 +725,7 @@ export const enhanceBuddyStatement = async (answers, conditionName) => {
  */
 export const enhancePTSDStatement = async (answers) => {
   const prompt = buildPTSDStressorPrompt(answers);
-  return callGeminiAPI(prompt, answers); // Pass answers for crisis detection
+  return callGeminiAPI(prompt, answers, "personal-statement"); // Pass answers for crisis detection
 };
 
 /**
@@ -818,7 +819,7 @@ Write the letter request now:`;
  */
 export const enhanceAppealStatement = async (answers) => {
   const prompt = buildAppealStatementPrompt(answers);
-  return callGeminiAPI(prompt);
+  return callGeminiAPI(prompt, null, "appeal-statement");
 };
 
 /**
@@ -826,7 +827,7 @@ export const enhanceAppealStatement = async (answers) => {
  */
 export const generateNexusLetterRequest = async (answers) => {
   const prompt = buildNexusLetterRequestPrompt(answers);
-  return callGeminiAPI(prompt);
+  return callGeminiAPI(prompt, null, "nexus-builder");
 };
 
 /**
@@ -1213,6 +1214,7 @@ export const generateFieldSuggestion = async (
       temperature: 0.7,
       maxTokens: 300,
       dataClass: AI_DATA_CLASS.CONTEXT,
+      toolId: "personal-statement",
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -1719,6 +1721,7 @@ export const stressTestStatement = async (
       expectJSON: true,
       skipHallucinationCheck: true, // Stress test returns critique/score, not diagnostic codes
       dataClass: isDocument ? AI_DATA_CLASS.DOCUMENT : AI_DATA_CLASS.CONTEXT,
+      toolId: "red-team",
     });
 
     // generateAI returns { text, mode } object - extract the text content
@@ -2124,6 +2127,7 @@ export const decodeDecision = async (
     // decision letter; only an on-device engine may see it.
     const response = await generateAI(prompt, {
       dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "decision-decoder",
       temperature: 0.3,
       maxTokens: 1500, // Reduced from 2048 to leave room for context
       expectJSON: true,

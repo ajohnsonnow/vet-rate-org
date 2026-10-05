@@ -621,6 +621,7 @@ export async function _runTextAnalysis(combinedText, setError) {
     `Analyze this DD214 document and extract the information as JSON:\n\n${documentText}`,
     {
       dataClass: AI_DATA_CLASS.DOCUMENT,
+      toolId: "dd214-analyzer",
       temperature: 0.2, // Lower temperature for more consistent JSON output
       maxTokens: outputBuffer, // Use calculated output buffer based on context size
       expectJSON: true,
