@@ -17,6 +17,19 @@ const toRatings = (conditions) => {
     .filter((r) => typeof r === "number" && r >= 0 && r <= 100);
 };
 
+/**
+ * The percentage test of 38 CFR § 4.16(a) on a highest single rating and a
+ * combined rating. Groupings the regulation treats as one disability (common
+ * etiology, a single body system and so on) are not evaluated.
+ */
+export function evaluateTdiuThresholds(highest, combined) {
+  if (highest >= 60) return { eligible: true, basis: "single60" };
+  if (combined >= 70 && highest >= 40) {
+    return { eligible: true, basis: "combined70" };
+  }
+  return { eligible: false, basis: null };
+}
+
 export function checkTDIUEligibility(conditions) {
   const ratings = toRatings(conditions);
   if (ratings.length === 0) {
@@ -25,14 +38,7 @@ export function checkTDIUEligibility(conditions) {
 
   const highest = Math.max(...ratings);
   const combined = calculateCombinedRating(ratings);
-
-  if (highest >= 60) {
-    return { eligible: true, basis: "single60", combined, highest };
-  }
-  if (combined >= 70 && highest >= 40) {
-    return { eligible: true, basis: "combined70", combined, highest };
-  }
-  return { eligible: false, basis: null, combined, highest };
+  return { ...evaluateTdiuThresholds(highest, combined), combined, highest };
 }
 
 export function checkSMCSHousebound(conditions) {

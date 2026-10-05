@@ -378,21 +378,21 @@ describe("rater grounding: the computed block carries the full working", () => {
   });
 });
 
-describe("rater grounding: a response that contradicts the calculator is replaced", () => {
-  const FOUR = [
-    { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
-    { name: "Tinnitus", rating: 30, side: "none", bodyPart: "ear" },
-    { name: "Back", rating: 20, side: "none", bodyPart: "back" },
-    { name: "Knee", rating: 10, side: "none", bodyPart: "knee" },
-  ];
-  const ask = (text, extra = {}) => {
-    diamondSwarm.generateWithSwarm.mockResolvedValue({ text });
-    return generateAI(
-      "What is my combined rating?",
-      callOptions({ toolId: "rating-calculator", conditions: FOUR, ...extra }),
-    );
-  };
+const FOUR = [
+  { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
+  { name: "Tinnitus", rating: 30, side: "none", bodyPart: "ear" },
+  { name: "Back", rating: 20, side: "none", bodyPart: "back" },
+  { name: "Knee", rating: 10, side: "none", bodyPart: "knee" },
+];
+const ask = (text, extra = {}) => {
+  diamondSwarm.generateWithSwarm.mockResolvedValue({ text });
+  return generateAI(
+    "What is my combined rating?",
+    callOptions({ toolId: "rating-calculator", conditions: FOUR, ...extra }),
+  );
+};
 
+describe("rater grounding: a response that contradicts the calculator is replaced", () => {
   beforeEach(async () => {
     await BACKENDS.swarm.setup();
   });
@@ -454,5 +454,116 @@ describe("rater grounding: a response that contradicts the calculator is replace
       conditions: undefined,
     });
     expect(result.text).toBe("The final combined rating is 70%.");
+  });
+});
+
+describe("rater grounding: an answer with no combined figure gets the calculator's line", () => {
+  beforeEach(async () => {
+    await BACKENDS.swarm.setup();
+  });
+
+  it("appends the calculator's line to an answer that never states the combined rating", async () => {
+    const draft = "Here is how VA combines ratings, largest first.";
+    const result = await ask(draft);
+    expect(result.text).toBe(
+      `${draft}
+
+Vet-Rate's calculator result for the ratings you entered: your combined rating is 80% (38 CFR § 4.25).`,
+    );
+    expect(result.calculatorAppended).toEqual({ expected: 80 });
+    expect(result.calculatorReplacement).toBeUndefined();
+  });
+
+  it("appends the line when the only figures stated are individual condition ratings", async () => {
+    const result = await ask(
+      "You have a 50% PTSD rating and a 30% tinnitus rating.",
+    );
+    expect(result.text).toMatch(/your combined rating is 80% \(38 CFR/);
+    expect(result.calculatorAppended).toEqual({ expected: 80 });
+  });
+
+  it("appends the line when the answer states only a working value, not the final rating", async () => {
+    const result = await ask("The combined value before rounding is 75%.");
+    expect(result.text).toContain("your combined rating is 80%");
+    expect(result.calculatorAppended).toEqual({ expected: 80 });
+  });
+
+  it("returns only the calculator's line when the draft is empty", async () => {
+    const result = await ask("");
+    expect(result.text).toBe(
+      "Vet-Rate's calculator result for the ratings you entered: your combined rating is 80% (38 CFR § 4.25).",
+    );
+  });
+
+  it("does not append the line to a non-rater route", async () => {
+    const result = await ask("No figure here.", { toolId: "cfile-analyzer" });
+    expect(result.text).toBe("No figure here.");
+    expect(result.calculatorAppended).toBeUndefined();
+  });
+});
+
+describe("rater grounding: a replaced answer still answers a TDIU question", () => {
+  const SIXTY = [
+    { name: "Mental health", rating: 60, side: "none", bodyPart: "mental" },
+  ];
+  const askWith = (prompt, text, conditions) => {
+    diamondSwarm.generateWithSwarm.mockResolvedValue({ text });
+    return generateAI(
+      prompt,
+      callOptions({ toolId: "tdiu-builder", conditions }),
+    );
+  };
+
+  beforeEach(async () => {
+    await BACKENDS.swarm.setup();
+  });
+
+  it("adds the 38 CFR § 4.16(a) threshold paragraph to a replaced answer when the prompt mentions TDIU", async () => {
+    const result = await askWith(
+      "Can I qualify for TDIU with only one 60% mental health rating?",
+      "Your combined rating is 70%.",
+      SIXTY,
+    );
+    expect(result.calculatorReplacement).toBeDefined();
+    expect(result.text).toContain("Your combined rating is 60%.");
+    expect(result.text).toContain(
+      "About your question on individual unemployability (TDIU):",
+    );
+    expect(result.text).toContain(
+      "Mental health is rated 60 percent, which meets the threshold for a single disability.",
+    );
+    expect(result.text).toContain("The percentage is only one part.");
+    expect(result.text).toContain("Vet-Rate cannot determine that.");
+  });
+
+  it("recognises unemployability worded without the TDIU acronym", async () => {
+    const result = await askWith(
+      "Am I entitled to individual unemployability?",
+      "Your combined rating is 70%.",
+      SIXTY,
+    );
+    expect(result.text).toContain(
+      "About your question on individual unemployability",
+    );
+  });
+
+  it("does not add the paragraph when the prompt does not mention TDIU", async () => {
+    const result = await askWith(
+      "Calculate my combined rating.",
+      "Your combined rating is 70%.",
+      SIXTY,
+    );
+    expect(result.calculatorReplacement).toBeDefined();
+    expect(result.text).not.toContain("unemployability");
+  });
+
+  it("does not add the paragraph when the answer was not replaced", async () => {
+    const result = await askWith(
+      "Can I qualify for TDIU with only one 60% mental health rating?",
+      "Your combined rating is 60%.",
+      SIXTY,
+    );
+    expect(result.calculatorReplacement).toBeUndefined();
+    expect(result.text).toBe("Your combined rating is 60%.");
   });
 });

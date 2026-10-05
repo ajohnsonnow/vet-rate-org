@@ -22,10 +22,10 @@ export const DRY_RUN_LEGAL_SECTIONS = new Set([
 
 const DKB_BLOCK = `
 
-=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
+=== REFERENCE MATERIAL ===
 (dry-run stub context)
-[3 relevant DKB entries provided from dry-run fixture]
-=== END DKB CONTEXT ===
+[3 reference entries provided from dry-run fixture]
+=== END REFERENCE MATERIAL ===
 `;
 
 const GOOD_AUDITOR =

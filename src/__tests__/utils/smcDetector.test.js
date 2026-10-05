@@ -7,6 +7,7 @@
 import { describe, it, expect } from "vitest";
 import {
   checkTDIUEligibility,
+  evaluateTdiuThresholds,
   checkSMCSHousebound,
 } from "../../utils/smcDetector";
 
@@ -21,6 +22,36 @@ const WILLIAMS_CONDITIONS = [
   { name: "Pes Planus, Bilateral", rating: 10 },
   { name: "Tinnitus", rating: 10 },
 ];
+
+describe("evaluateTdiuThresholds - 38 CFR § 4.16(a)", () => {
+  it.each([
+    [60, 60, true, "single60"],
+    [60, 100, true, "single60"],
+    [59, 70, true, "combined70"],
+    [59, 60, false, null],
+    [40, 70, true, "combined70"],
+    [50, 80, true, "combined70"],
+    [40, 60, false, null],
+    [30, 90, false, null],
+    [0, 0, false, null],
+  ])("highest %i, combined %i", (highest, combined, eligible, basis) => {
+    expect(evaluateTdiuThresholds(highest, combined)).toEqual({
+      eligible,
+      basis,
+    });
+  });
+
+  it("checkTDIUEligibility reports the same verdict as the shared thresholds", () => {
+    const out = checkTDIUEligibility([
+      { rating: 50 },
+      { rating: 30 },
+      { rating: 20 },
+    ]);
+    expect(out).toMatchObject(
+      evaluateTdiuThresholds(out.highest, out.combined),
+    );
+  });
+});
 
 describe("checkTDIUEligibility - 38 CFR § 4.16(a)", () => {
   it("Williams 9-condition set → eligible via 70/40 prong (combined 80, highest 50)", () => {

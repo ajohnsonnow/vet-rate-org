@@ -1,11 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
+  buildCalculatorSummaryLine,
   buildComputedResultBlock,
+  buildTdiuThresholdParagraph,
+  mentionsUnemployability,
+  TDIU_REGULATION_QUOTES,
   checkRaterResponse,
   extractStatedCombinedRatings,
   findInventedBilateralClaims,
@@ -49,6 +53,96 @@ const KNEES = [
 describe("extractStatedCombinedRatings (shared fixture with scripts/eval/lib/goldenChecks.js)", () => {
   it.each(FIXTURE)("$name", ({ text, stated }) => {
     expect(extractStatedCombinedRatings(text)).toEqual(stated);
+  });
+});
+
+const GOLDEN = Object.fromEntries(
+  readFileSync(join(here, "..", "agentic", "golden-set.jsonl"), "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .map((c) => [c.id, c]),
+);
+const TRANSCRIPT_ENTRIES = FIXTURE.filter((entry) => entry.expected);
+
+describe("Rater responses recorded in the five golden-set transcripts", () => {
+  it("covers cases a11, a12, a13, a24 and a25 in each of the five transcripts", () => {
+    expect(TRANSCRIPT_ENTRIES).toHaveLength(25);
+    expect(new Set(TRANSCRIPT_ENTRIES.map((e) => e.transcript)).size).toBe(5);
+    expect(new Set(TRANSCRIPT_ENTRIES.map((e) => e.caseId))).toEqual(
+      new Set(["a11", "a12", "a13", "a24", "a25"]),
+    );
+  });
+
+  it.each(TRANSCRIPT_ENTRIES)("$name", (entry) => {
+    const calc = calculateVARating(GOLDEN[entry.caseId].conditions);
+    expect(calc.combinedRating).toBe(entry.calculator);
+    const check = checkRaterResponse(entry.text, calc);
+    let outcome = "no final figure stated";
+    if (check.wrongFigures.length > 0) outcome = "contradicts calculator";
+    else if (check.stated.includes(calc.combinedRating))
+      outcome = "matches calculator";
+    expect(outcome).toBe(
+      entry.knownMiss ? "no final figure stated" : entry.expected,
+    );
+  });
+});
+
+describe("extractStatedCombinedRatings phrasings and exclusions", () => {
+  it.each([
+    [
+      "subject phrase before the verb, bold figure",
+      "The combined rating for the veteran, considering the bilateral factor and the highest-rated condition, is **52%**.",
+      [52],
+    ],
+    ["label then bold figure", "**Final Result:** 52%", [52]],
+    ["bold figure after a colon", "Final combined rating: **60%**", [60]],
+    [
+      "hedge after the verb",
+      "Your combined rating is approximately 99%.",
+      [99],
+    ],
+    [
+      "TeX escaped percent sign",
+      String.raw`\text{Final Combined Rating} = 58\%`,
+      [58],
+    ],
+  ])("finds the figure: %s", (_label, text, stated) => {
+    expect(extractStatedCombinedRatings(text)).toEqual(stated);
+  });
+
+  it.each([
+    ["group value", "Total Group Rating: 22%"],
+    ["operand of a sum", "Combined Rating: 10% + 10% = 20%"],
+    ["step value", "Final step: 72% combined with 10% = 75%"],
+    [
+      "condition rating after a clause word",
+      "The combined rating applies when the knee is 10%.",
+    ],
+    [
+      "input listed before the verb",
+      "Your combined rating uses 50% PTSD and 30% tinnitus.",
+    ],
+    [
+      "total of something else",
+      "Total possible rating without any pairing = 100%",
+    ],
+  ])("does not count: %s", (_label, text) => {
+    expect(extractStatedCombinedRatings(text)).toEqual([]);
+  });
+});
+
+describe("buildCalculatorSummaryLine", () => {
+  it("states only the calculator's figure and its source rule", () => {
+    expect(buildCalculatorSummaryLine(calculateVARating(FOUR))).toBe(
+      "Vet-Rate's calculator result for the ratings you entered: your combined rating is 80% (38 CFR § 4.25).",
+    );
+  });
+  it("is consistent with the check", () => {
+    const calc = calculateVARating(FOUR);
+    expect(
+      checkRaterResponse(buildCalculatorSummaryLine(calc), calc).stated,
+    ).toEqual([80]);
   });
 });
 
@@ -217,6 +311,29 @@ describe("buildCalculatorExplanation", () => {
     expect(text).toContain("No bilateral pair applies");
   });
 
+  it("states the bilateral rule as 38 CFR § 4.26 words it, not as same-body-part only", () => {
+    const text = buildCalculatorExplanation(calculateVARating(FOUR));
+    expect(text).toContain(
+      '"partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c))',
+    );
+    expect(text).toContain(
+      "a right thigh and a left foot are a pair (38 CFR § 4.26(a))",
+    );
+    expect(text).toContain("Two conditions on the same side are not a pair");
+    expect(text).toContain(
+      "the two highest ratings are not automatically a pair",
+    );
+    expect(text).not.toMatch(/same body part/);
+  });
+
+  it("describes a found pair as left and right disabilities of paired extremities", () => {
+    const text = buildCalculatorExplanation(calculateVARating(KNEES));
+    expect(text).toContain(
+      "disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26)",
+    );
+    expect(text).not.toMatch(/same body part/);
+  });
+
   it("names the pair when the calculator found one", () => {
     const text = buildCalculatorExplanation(calculateVARating(KNEES));
     expect(text).toContain(
@@ -233,4 +350,165 @@ describe("buildCalculatorExplanation", () => {
       ).toBe(true);
     }
   });
+});
+
+const set = (...ratings) =>
+  ratings.map((rating, i) => cond(`Condition ${i + 1}`, rating));
+const tdiuText = (...ratings) =>
+  buildTdiuThresholdParagraph(calculateVARating(set(...ratings)));
+
+describe("mentionsUnemployability", () => {
+  it.each([
+    "Am I eligible for TDIU with one 60% rating and three 20% ratings?",
+    "Can I qualify for tdiu?",
+    "Do I qualify for individual unemployability?",
+    "I am unemployable because of my back",
+  ])("matches: %s", (prompt) => {
+    expect(mentionsUnemployability(prompt)).toBe(true);
+  });
+
+  it.each([
+    "Calculate my combined rating: just 100% PTSD.",
+    "What is my rating with a 60% knee?",
+    "",
+    undefined,
+  ])("does not match: %s", (prompt) => {
+    expect(mentionsUnemployability(prompt)).toBe(false);
+  });
+});
+
+describe("buildTdiuThresholdParagraph", () => {
+  it("quotes the thresholds and says the percentage is only one part", () => {
+    const text = tdiuText(60);
+    expect(text).toContain(TDIU_REGULATION_QUOTES.thresholds);
+    expect(text).toContain("The percentage is only one part.");
+    expect(text).toContain(TDIU_REGULATION_QUOTES.unable);
+    expect(text).toContain("Vet-Rate cannot determine that.");
+  });
+
+  it("says plainly that common-origin and single-body-system groupings are not evaluated", () => {
+    const text = tdiuText(30, 30, 20);
+    expect(text).toContain(TDIU_REGULATION_QUOTES.commonOrigin);
+    expect(text).toContain(TDIU_REGULATION_QUOTES.singleSystem);
+    expect(text).toContain("Vet-Rate does not evaluate these groupings");
+  });
+
+  it("one 60% condition meets the single-disability threshold (case a25)", () => {
+    const text = tdiuText(60);
+    expect(text).toContain(
+      "Condition 1 is rated 60 percent, which meets the threshold for a single disability.",
+    );
+    expect(text).not.toContain("not met");
+  });
+
+  it("one 60% and three 20% meet both thresholds (case a13)", () => {
+    const text = tdiuText(60, 20, 20, 20);
+    expect(text).toContain(
+      "meets the threshold for a single disability, if that is the only disability",
+    );
+    expect(text).toContain("also met");
+    expect(text).toContain("your combined rating is 80 percent");
+  });
+
+  it("a 60% condition with a small second one meets the single threshold but not the combined one", () => {
+    const text = tdiuText(60, 10);
+    expect(text).toContain("meets the threshold for a single disability");
+    expect(text).toContain(
+      "two or more disabilities is not met on these ratings",
+    );
+    expect(text).toContain("your combined rating is 60 percent");
+  });
+
+  it("50, 30, 20 meets only the two-or-more threshold", () => {
+    const text = tdiuText(50, 30, 20);
+    expect(text).toContain("the threshold for a single disability is not met");
+    expect(text).toContain("two or more disabilities is met");
+    expect(text).toContain("your combined rating is 70 percent");
+  });
+
+  it("40 and 30 reach a 60 combined rating, below 70, and cite paragraph (b)", () => {
+    const text = tdiuText(40, 30);
+    expect(text).toContain("neither threshold is met");
+    expect(text).toContain("is below the 70 percent figure");
+    expect(text).toContain(TDIU_REGULATION_QUOTES.extraSchedular);
+  });
+
+  it("all conditions under 40 percent fail both thresholds even when they combine to 70", () => {
+    const calc = calculateVARating(set(30, 30, 30, 30));
+    expect(calc.combinedRating).toBeGreaterThanOrEqual(70);
+    const text = buildTdiuThresholdParagraph(calc);
+    expect(text).toContain("neither threshold is met");
+    expect(text).toContain("no condition is rated 40 percent or more");
+  });
+
+  it("uses the calculator's combined rating, bilateral factor included", () => {
+    const calc = calculateVARating(KNEES);
+    expect(buildTdiuThresholdParagraph(calc)).toContain(
+      `your combined rating is ${calc.combinedRating} percent`,
+    );
+  });
+
+  it("states no rating figure the check would read as a different combined rating", () => {
+    for (const ratings of [
+      [60],
+      [60, 20, 20, 20],
+      [60, 10],
+      [50, 30, 20],
+      [40, 30],
+    ]) {
+      const calc = calculateVARating(set(...ratings));
+      const text = buildCalculatorExplanation(calc, { tdiu: true });
+      expect(checkRaterResponse(text, calc).ok).toBe(true);
+    }
+  });
+});
+
+describe("buildCalculatorExplanation with a TDIU question", () => {
+  const calc = calculateVARating(set(60));
+  it("leaves the text unchanged unless asked", () => {
+    expect(buildCalculatorExplanation(calc)).not.toContain("TDIU");
+    expect(buildCalculatorExplanation(calc, { tdiu: false })).toBe(
+      buildCalculatorExplanation(calc),
+    );
+  });
+
+  it("adds the paragraph before the closing advice", () => {
+    const text = buildCalculatorExplanation(calc, { tdiu: true });
+    expect(text).toContain(
+      "About your question on individual unemployability (TDIU):",
+    );
+    expect(text.indexOf("About your question")).toBeLessThan(
+      text.indexOf("Check these figures with a Veterans Service Officer"),
+    );
+    expect(text).toContain("Your combined rating is 60%.");
+  });
+});
+
+const ECFR = "public/legal-index/v0.1.0/chunks/ecfr.jsonl";
+const ecfrText = existsSync(ECFR) ? readFileSync(ECFR, "utf8") : "";
+const ecfrAvailable =
+  ecfrText.length > 0 && !ecfrText.startsWith("version https://git-lfs");
+
+describe.skipIf(!ecfrAvailable)("TDIU quotes against the eCFR index", () => {
+  const section416 = ecfrAvailable
+    ? ecfrText
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => JSON.parse(line))
+        .filter((chunk) => chunk.citation === "38 CFR § 4.16")
+        .map((chunk) => chunk.text)
+        .join(" ")
+        .replace(/\s+/g, " ")
+    : "";
+
+  it("finds section 4.16 in the index", () => {
+    expect(section416).toContain("Total disability ratings for compensation");
+  });
+
+  it.each(Object.entries(TDIU_REGULATION_QUOTES))(
+    "%s is verbatim in 38 CFR § 4.16",
+    (_key, quote) => {
+      expect(section416).toContain(quote);
+    },
+  );
 });

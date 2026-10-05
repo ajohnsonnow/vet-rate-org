@@ -52,8 +52,10 @@ import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
 import {
   buildCalculatorExplanation,
+  buildCalculatorSummaryLine,
   buildComputedResultBlock,
   checkRaterResponse,
+  mentionsUnemployability,
   describeMismatch,
 } from "./raterGrounding";
 import {
@@ -1105,23 +1107,37 @@ export const injectCalculatorForRater = (prompt, options) => {
  * After generation, compare a rater-routed response with the calculator. A
  * response that states a different combined rating, or presents a bilateral
  * pair the calculator did not find, is replaced by the calculator's own
- * working in plain language. The replacement is recorded on the result
+ * working in plain language, plus the TDIU threshold paragraph when the
+ * veteran's prompt asks about TDIU. The replacement is recorded on the result
  * (validationWarnings, plus calculatorReplacement) so callers can see it
- * happened.
+ * happened. A response that never states the combined rating at all is kept
+ * and the calculator's one-line result is appended to it.
  */
-export const enforceCalculatorOnResult = (result, options) => {
+export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
     return result;
   }
   const calc = calculateVARating(options.conditions);
   const check = checkRaterResponse(result.text, calc);
-  if (check.ok) return result;
+  if (check.ok) {
+    if (check.stated.includes(check.expected)) return result;
+    const body = String(result.text ?? "").trimEnd();
+    return {
+      ...result,
+      text: body
+        ? `${body}\n\n${buildCalculatorSummaryLine(calc)}`
+        : buildCalculatorSummaryLine(calc),
+      calculatorAppended: { expected: check.expected },
+    };
+  }
 
   const reason = describeMismatch(check);
   console.warn(`🧮 Rater response replaced by calculator working: ${reason}`);
   return {
     ...result,
-    text: buildCalculatorExplanation(calc),
+    text: buildCalculatorExplanation(calc, {
+      tdiu: mentionsUnemployability(prompt),
+    }),
     validationWarnings: [
       ...(result.validationWarnings || []),
       `Response replaced with the calculator's working: ${reason}`,
@@ -2067,7 +2083,24 @@ function _stripUrlsFromResult(result, options) {
   return result;
 }
 
+export const EMPTY_PROMPT_REPLY =
+  "I didn't get a question. Tell me what you need help with, for example a question about your claim, your rating, or a form, and I will help from there.";
+
+const _isEmptyPrompt = (prompt) =>
+  prompt === undefined ||
+  prompt === null ||
+  (typeof prompt === "string" && prompt.trim() === "");
+
 export const generateAI = async (prompt, options = {}) => {
+  if (_isEmptyPrompt(prompt)) {
+    const mode = getEffectiveAIMode();
+    return {
+      text: EMPTY_PROMPT_REPLY,
+      mode,
+      onDevice: _isModeOnDevice(mode),
+    };
+  }
+
   if (
     consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD &&
     Date.now() - circuitBreakerOpenedAt < CIRCUIT_BREAKER_COOLDOWN_MS
@@ -2285,10 +2318,26 @@ async function _redactPiecesForSend(pieces) {
 // once it's sharing space with a system prompt instead of being the whole
 // system prompt on its own. Cloud and the local llama.cpp server (which
 // typically runs a larger-context build) keep the original, larger budgets.
+// excludeBoardDecisions: individual Board of Veterans' Appeals decisions are
+// not placed in the block on the small-budget on-device backends, where the
+// model reads a decision-shaped entry as the veteran's own decision. The
+// ranking is unchanged; the next-ranked entries fill the budget.
 const DKB_BUDGET_BY_MODE = {
-  [AI_MODES.SWARM]: { maxEntries: 6, maxChars: 4000 },
-  [AI_MODES.WLLAMA]: { maxEntries: 6, maxChars: 4000 },
-  [AI_MODES.LOCAL]: { maxEntries: 6, maxChars: 4000 },
+  [AI_MODES.SWARM]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    excludeBoardDecisions: true,
+  },
+  [AI_MODES.WLLAMA]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    excludeBoardDecisions: true,
+  },
+  [AI_MODES.LOCAL]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    excludeBoardDecisions: true,
+  },
   [AI_MODES.LOCAL_SERVER]: { maxEntries: 8, maxChars: 6000 },
   [AI_MODES.CLOUD]: { maxEntries: 10, maxChars: 8000 },
 };
@@ -2310,6 +2359,7 @@ async function _injectDKBContext(prompt, systemPrompt, options) {
     const dkbContext = await buildDKBContext(prompt, {
       maxEntries: options.maxDKBEntries || budget.maxEntries,
       maxChars: options.maxDKBChars || budget.maxChars,
+      ...(budget.excludeBoardDecisions ? { excludeBoardDecisions: true } : {}),
       ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
     });
     if (!dkbContext) return systemPrompt;
@@ -2951,7 +3001,7 @@ const generateAIInternal = async (prompt, options = {}) => {
     options,
   );
   return _isRaterRoute(options, effectiveMode)
-    ? enforceCalculatorOnResult(result, options)
+    ? enforceCalculatorOnResult(result, options, prompt)
     : result;
 };
 

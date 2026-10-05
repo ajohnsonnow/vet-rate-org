@@ -46,8 +46,8 @@ const shardChunk = (overrides = {}) => ({
   ...overrides,
 });
 
-const LEGACY_HEADER = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
-General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents, and never call it "DKB" or "Diamond Knowledge Base"; say "VA regulations and guidance".
+const LEGACY_HEADER = `\n\n=== REFERENCE MATERIAL ===
+General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents; refer to it as "VA regulations and guidance".
 Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
 Use this data to provide accurate, regulation-based answers. If none of the
 entries below address the question, say so explicitly instead of answering
@@ -87,7 +87,7 @@ describe("flag off (includeShards absent or false)", () => {
     LEGACY_HEADER +
     `---\n<untrusted_content>\nQ: ${FLAT_ENTRIES[0].instruction}\nA: ${FLAT_ENTRIES[0].output}\n</untrusted_content>\nSource: 38 CFR 3.310\nReference: https://example.test/3-310\n` +
     `---\n<untrusted_content>\nQ: ${FLAT_ENTRIES[1].instruction}\nA: ${FLAT_ENTRIES[1].output}\n</untrusted_content>\nSource: 38 CFR 4.130\n` +
-    `\n[2 relevant DKB entries provided from diamond-flat]\n=== END DKB CONTEXT ===\n`;
+    `\n[2 reference entries provided from diamond-flat]\n=== END REFERENCE MATERIAL ===\n`;
 
   it("produces the exact legacy bytes and never touches the shards", async () => {
     const out = await buildDKBContext(nextQuery("off"), {
@@ -177,7 +177,7 @@ describe("flag on (includeShards true)", () => {
     const out = await buildDKBContext(nextQuery("header"), opts());
 
     expect(out).toContain(
-      "Sources retrieved: eCFR (38 CFR); Vet-Rate.org curated DKB entries.",
+      "Sources retrieved: eCFR (38 CFR); Vet-Rate.org curated entries.",
     );
     expect(out).not.toContain("BVA decisions");
     expect(out).not.toContain("PACT Act");
@@ -193,12 +193,10 @@ describe("flag on (includeShards true)", () => {
     );
     expect(out).toContain("not this veteran's records");
     expect(out).toContain("the user did not provide it");
-    expect(out).toContain('never call it "DKB"');
-    expect(out).not.toContain("Diamond Knowledge Base.");
-    expect(out).toContain("=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===");
-    expect(out).toContain("=== END DKB CONTEXT ===");
+    expect(out).toContain("=== REFERENCE MATERIAL ===");
+    expect(out).toContain("=== END REFERENCE MATERIAL ===");
     expect(out).toMatch(
-      /\[\d+ relevant knowledge base entries provided: \d+ retrieved from the full corpus, \d+ curated DKB entries\]/,
+      /\[\d+ reference entries provided: \d+ retrieved from the full corpus, \d+ curated\]/,
     );
   });
 
@@ -208,7 +206,22 @@ describe("flag on (includeShards true)", () => {
     const out = await buildDKBContext(nextQuery("header-shard-only"), opts());
 
     expect(out).toContain("Sources retrieved: eCFR (38 CFR).");
-    expect(out).not.toContain("curated DKB entries.");
+    expect(out).not.toContain("curated entries.");
+  });
+});
+
+describe("the block names no internal knowledge base", () => {
+  it("no model-visible line of the block carries the internal name", async () => {
+    queryCorpusMock.mockResolvedValue({ chunks: [shardChunk()] });
+    const sharded = await buildDKBContext(nextQuery("no-name-shard"), opts());
+    const curated = await buildDKBContext(nextQuery("no-name-flat"), {
+      maxEntries: 10,
+      maxChars: 8000,
+    });
+    for (const out of [sharded, curated]) {
+      expect(out).not.toMatch(/DKB/i);
+      expect(out).not.toMatch(/knowledge base/i);
+    }
   });
 });
 
@@ -270,9 +283,7 @@ describe("flag on: budget and de-duplication", () => {
   it("returns flat-file context only, with a truthful header, when no passage comes back", async () => {
     const out = await buildDKBContext(nextQuery("none"), opts());
 
-    expect(out).toContain(
-      "Sources retrieved: Vet-Rate.org curated DKB entries.",
-    );
+    expect(out).toContain("Sources retrieved: Vet-Rate.org curated entries.");
     expect(out).toContain("Q: What is secondary service connection?");
     expect(out).not.toContain("Authority: ");
   });
@@ -457,5 +468,126 @@ describe("time-boxing", () => {
     process.off("unhandledRejection", unhandled);
 
     expect(unhandled).not.toHaveBeenCalled();
+  });
+});
+
+describe("excludeBoardDecisions", () => {
+  const entry = (n, source, extra = {}) => ({
+    instruction: `Question ${n}`,
+    output: `Answer ${n}`,
+    metadata: { source, cfr_section: `38 CFR 9.${n}`, ...extra },
+  });
+  const RANKED = [
+    entry(1, "BVA"),
+    entry(2, "BVA"),
+    entry(3, "ECFR"),
+    entry(4, "BVA"),
+    entry(5, "M21_1"),
+    entry(6, "CAVC"),
+    entry(7, "BVA"),
+    entry(8, "ECFR"),
+  ];
+
+  beforeEach(() => {
+    searchIndexedDKBMock.mockImplementation(async (_index, _query, topK) =>
+      RANKED.slice(0, topK),
+    );
+  });
+
+  it("recognises a Board decision by its source tag only", async () => {
+    const { isBoardDecisionEntry } =
+      await import("../../utils/aiSystemPrompts");
+    expect(isBoardDecisionEntry(entry(1, "BVA"))).toBe(true);
+    for (const source of ["ECFR", "M21_1", "CAVC", "FEDERAL_CIRCUIT", "OGC"]) {
+      expect(isBoardDecisionEntry(entry(1, source))).toBe(false);
+    }
+    expect(isBoardDecisionEntry({})).toBe(false);
+    expect(isBoardDecisionEntry(undefined)).toBe(false);
+  });
+
+  it("leaves Board decisions out and refills with the next-ranked entries, in rank order", async () => {
+    const out = await buildDKBContext(nextQuery("board-out"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeBoardDecisions: true,
+    });
+    const questions = [...out.matchAll(/Q: (Question \d+)/g)].map((m) => m[1]);
+    expect(questions).toEqual(["Question 3", "Question 5", "Question 6"]);
+    expect(out).toContain("[3 reference entries provided from ECFR]");
+  });
+
+  it("takes every scored entry in rank order, so a query dominated by Board decisions still refills", async () => {
+    await buildDKBContext(nextQuery("board-pool"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeBoardDecisions: true,
+    });
+    expect(searchIndexedDKBMock.mock.calls[0][2]).toBe(Infinity);
+  });
+
+  it("is off by default: the same ranked entries, Board decisions included", async () => {
+    const out = await buildDKBContext(nextQuery("board-default"), {
+      maxEntries: 3,
+      maxChars: 8000,
+    });
+    const questions = [...out.matchAll(/Q: (Question \d+)/g)].map((m) => m[1]);
+    expect(questions).toEqual(["Question 1", "Question 2", "Question 3"]);
+    expect(searchIndexedDKBMock.mock.calls[0][2]).toBe(3);
+  });
+});
+
+describe("excludeBoardDecisions in the block text", () => {
+  const entry = (n, source) => ({
+    instruction: `Question ${n}`,
+    output: `Answer ${n}`,
+    metadata: { source, cfr_section: `38 CFR 9.${n}` },
+  });
+
+  beforeEach(() => {
+    searchIndexedDKBMock.mockImplementation(async (_index, _query, topK) =>
+      [
+        entry(1, "BVA"),
+        entry(2, "BVA"),
+        entry(3, "ECFR"),
+        entry(4, "BVA"),
+        entry(5, "M21_1"),
+        entry(6, "CAVC"),
+      ].slice(0, topK),
+    );
+  });
+
+  it("drops the Board decisions line from the sources when they are excluded", async () => {
+    const withBoard = await buildDKBContext(nextQuery("sources-on"), {
+      maxEntries: 3,
+      maxChars: 8000,
+    });
+    const without = await buildDKBContext(nextQuery("sources-off"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeBoardDecisions: true,
+    });
+    expect(withBoard).toContain("Sources: 38 CFR, BVA decisions, OGC");
+    expect(without).toContain("Sources: 38 CFR, OGC precedent opinions");
+    expect(without).not.toContain("BVA decisions");
+  });
+
+  it("returns an empty block when every candidate is a Board decision", async () => {
+    searchIndexedDKBMock.mockResolvedValue([entry(1, "BVA"), entry(2, "BVA")]);
+    expect(
+      await buildDKBContext(nextQuery("board-only"), {
+        maxEntries: 6,
+        maxChars: 8000,
+        excludeBoardDecisions: true,
+      }),
+    ).toBe("");
+  });
+
+  it("applies to the flag-on path too, with the shard budget unchanged", async () => {
+    const out = await buildDKBContext(
+      nextQuery("board-shards"),
+      opts({ maxEntries: 3, excludeBoardDecisions: true }),
+    );
+    const questions = [...out.matchAll(/Q: (Question \d+)/g)].map((m) => m[1]);
+    expect(questions).toEqual(["Question 3", "Question 5", "Question 6"]);
   });
 });

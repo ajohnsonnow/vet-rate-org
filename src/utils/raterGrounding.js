@@ -6,17 +6,26 @@
  * model.
  */
 
+import { evaluateTdiuThresholds } from "./smcDetector";
+
 // Same pattern as STATED_COMBINED in scripts/eval/lib/goldenChecks.js. Both are
 // pinned by src/__tests__/agentic/eval/fixtures/statedCombinedRatings.json.
+const NEAR_FILLER = String.raw`(?:[\s:=*~≈]|\b(?:va|disability|rating|evaluation|is|of|would|be|comes|to|equals|at|rounds|approximately|about|roughly|percentage|calculation|results|in)\b){1,12}?`;
+const CLAUSE_WORDS = String.raw`when|if|where|because|since|while|which|that|than|group|step|steps|each`;
+const FAR_LINK = String.raw`(?:(?!\b(?:${CLAUSE_WORDS})\b)[^\d.!?\n]){0,100}?(?:\b(?:is|are|was|would be|will be|comes? to|equals?|totals?)\b|\\approx|[:=≈])`;
 const STATED_COMBINED = new RegExp(
-  String.raw`\b(?:combined|overall|final|total)(?:[\s:=*~≈]|\b(?:va|disability|rating|evaluation|is|of|would|be|comes|to|equals|at|rounds|approximately|about|roughly|percentage|calculation|results|in)\b){1,12}?(\d{1,3}(?:\.\d+)?)\s*(?:%|percent)`,
+  String.raw`\b(?:(?:combined|overall|final|total)${NEAR_FILLER}|(?:combined|overall|final)${FAR_LINK})[\s*_~:=≈]*(?:(?:about|approximately|roughly|around|nearly|almost)\b[\s*_~]*)?(\d{1,3}(?:\.\d+)?)\s*(?:\\?%|percent)(?!\s*(?:[+×*/÷]\s*\(?\s*\d|or\s+(?:more|higher|greater|better|above|less|lower)\b))`,
   "gi",
 );
 
 /**
  * Every distinct combined-rating figure a response states, in order of first
- * appearance. Only phrases of the form "combined/overall/final/total
- * [rating] [is|of|=|:] N%" count; ratings merely listed as inputs do not.
+ * appearance. A figure counts when it follows "combined/overall/final/total"
+ * either closely ("combined rating of 70%") or after a short subject phrase
+ * and a verb or colon ("The combined rating for the veteran, considering the
+ * bilateral factor, is **52%**", "Final Result:** 52%"). Ratings merely listed
+ * as inputs, group or step values, operands of a sum ("20% + 10% = 30%") and
+ * thresholds ("a combined rating of 70 percent or more") do not count.
  */
 export function extractStatedCombinedRatings(text) {
   const seen = [];
@@ -173,6 +182,13 @@ export function checkRaterResponse(text, calc) {
   };
 }
 
+/**
+ * One plain line carrying the calculator's figure, appended to an answer that
+ * never states the combined rating itself.
+ */
+export const buildCalculatorSummaryLine = (calc) =>
+  `Vet-Rate's calculator result for the ratings you entered: your combined rating is ${calc.combinedRating}% (38 CFR § 4.25).`;
+
 export function describeMismatch(check) {
   const parts = [];
   if (check.wrongFigures.length > 0) {
@@ -186,14 +202,78 @@ export function describeMismatch(check) {
   return parts.join("; ");
 }
 
+export const TDIU_REGULATION_QUOTES = {
+  thresholds:
+    "if there is only one such disability, this disability shall be ratable at 60 percent or more, and that, if there are two or more disabilities, there shall be at least one disability ratable at 40 percent or more, and sufficient additional disability to bring the combined rating to 70 percent or more",
+  asOne: "the following will be considered as one disability",
+  commonOrigin:
+    "disabilities resulting from common etiology or a single accident",
+  singleSystem: "disabilities affecting a single body system",
+  unable:
+    "unable to secure or follow a substantially gainful occupation as a result of service-connected disabilities",
+  judgment: "in the judgment of the rating agency",
+  extraSchedular:
+    "all cases of veterans who are unemployable by reason of service-connected disabilities, but who fail to meet the percentage standards set forth in paragraph (a) of this section",
+};
+
+export const mentionsUnemployability = (prompt) =>
+  /\btdiu\b|unemployab/i.test(String(prompt ?? ""));
+
+function describeTdiuResult(calc, conditions) {
+  const highest = Math.max(...conditions.map((c) => c.rating));
+  const top = conditions.find((c) => c.rating === highest);
+  const combined = calc.combinedRating;
+  const { basis } = evaluateTdiuThresholds(highest, combined);
+  const several = conditions.length > 1;
+  const second =
+    highest >= 40 && combined >= 70
+      ? `The threshold for two or more disabilities is also met: at least one condition is rated 40 percent or more and your combined rating is ${combined} percent.`
+      : `The threshold for two or more disabilities is not met on these ratings: it needs a combined rating of 70 percent or more together with one condition at 40 percent or more, and your combined rating is ${combined} percent.`;
+
+  if (basis === "single60") {
+    const lead = `${top.name} is rated ${highest} percent, which meets the threshold for a single disability`;
+    return several
+      ? `${lead}, if that is the only disability you rely on for unemployability. ${second}`
+      : `${lead}.`;
+  }
+  if (basis === "combined70") {
+    return `No condition is rated 60 percent or more (the highest is ${highest} percent), so the threshold for a single disability is not met. At least one condition is rated 40 percent or more and your combined rating is ${combined} percent, so the threshold for two or more disabilities is met.`;
+  }
+  return `On the ratings you entered neither threshold is met: no condition is rated 60 percent or more (the highest is ${highest} percent), and ${
+    highest >= 40
+      ? `your combined rating, ${combined} percent, is below the 70 percent figure`
+      : "no condition is rated 40 percent or more"
+  }. Paragraph (b) of the same section directs rating boards to submit for extra-schedular consideration "${TDIU_REGULATION_QUOTES.extraSchedular}".`;
+}
+
+/**
+ * Deterministic paragraph for a veteran who asked about TDIU: whether the
+ * percentage thresholds of 38 CFR § 4.16(a) are met for the supplied
+ * conditions, quoting the regulation, and what the percentage cannot settle.
+ */
+export function buildTdiuThresholdParagraph(calc) {
+  const conditions = [
+    ...calc.bilateralConditions,
+    ...calc.nonBilateralConditions,
+  ];
+  const q = TDIU_REGULATION_QUOTES;
+  return [
+    "About your question on individual unemployability (TDIU):",
+    `38 CFR § 4.16(a) sets these percentage thresholds: "${q.thresholds}".`,
+    describeTdiuResult(calc, conditions),
+    `For the one 60 percent or one 40 percent disability, 38 CFR § 4.16(a) says "${q.asOne}": disabilities of one or both upper extremities or of one or both lower extremities (including the bilateral factor, if applicable), "${q.commonOrigin}", "${q.singleSystem}", multiple injuries incurred in action, and multiple disabilities incurred as a prisoner of war. Vet-Rate does not evaluate these groupings, so the result above treats each condition separately.`,
+    `The percentage is only one part. 38 CFR § 4.16(a) also requires that the person be "${q.unable}", "${q.judgment}". Vet-Rate cannot determine that.`,
+  ].join("\n\n");
+}
+
 /**
  * Plain-language answer built only from the calculator's working, used when
  * the model's draft contradicts it.
  */
-export function buildCalculatorExplanation(calc) {
+export function buildCalculatorExplanation(calc, { tdiu = false } = {}) {
   const pairNote = calc.bilateralConditions.length
-    ? `The bilateral factor applies to ${describeBilateralPair(calc)}: the same body part on both sides.`
-    : "No bilateral pair applies: the bilateral factor needs the same body part rated on both the left and right side (38 CFR § 4.26).";
+    ? `The bilateral factor applies to ${describeBilateralPair(calc)}: disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26).`
+    : 'No bilateral pair applies. The bilateral factor needs "partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c)), that is both arms or both legs, one on each side. "Arms" and "legs" mean the upper and lower extremities as a whole, so a right thigh and a left foot are a pair (38 CFR § 4.26(a)). Two conditions on the same side are not a pair, and the two highest ratings are not automatically a pair.';
   return [
     "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.",
     "",
@@ -205,6 +285,7 @@ export function buildCalculatorExplanation(calc) {
     "",
     pairNote,
     "",
+    ...(tdiu ? [buildTdiuThresholdParagraph(calc), ""] : []),
     "Check these figures with a Veterans Service Officer before relying on them.",
   ].join("\n");
 }
