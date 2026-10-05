@@ -61,6 +61,8 @@ import {
   describeMismatch,
   TDIU_PARAGRAPH_LEAD,
 } from "./raterGrounding";
+import { buildVerifiedReferenceBlock } from "./verifiedReference";
+import { flagUnverifiedCitations } from "./citationCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -2392,10 +2394,9 @@ const _referenceBudget = (options, effectiveMode) => {
  * manual text quoted from the bundled data, chosen by the question and tool.
  * Empty when no topic applies or the caller turned reference material off.
  */
-async function _buildVerifiedReference(prompt, options, effectiveMode) {
+function _buildVerifiedReference(prompt, options, effectiveMode) {
   if (options.useDKB === false) return "";
   const budget = _referenceBudget(options, effectiveMode);
-  const { buildVerifiedReferenceBlock } = await import("./verifiedReference");
   return buildVerifiedReferenceBlock(prompt, {
     toolId: options.toolId,
     maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars),
@@ -2469,7 +2470,7 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
   // Verified reference goes in here, before _redactPiecesForSend, so every
   // backend receives it once. It sits ahead of the keyword-search block and
   // is charged to the same budget first.
-  const verifiedReference = await _buildVerifiedReference(
+  const verifiedReference = _buildVerifiedReference(
     prompt,
     options,
     effectiveMode,
@@ -3083,7 +3084,6 @@ const generateAIInternal = async (prompt, options = {}) => {
   const grounded = _isRaterRoute(options, effectiveMode)
     ? enforceCalculatorOnResult(result, options, prompt)
     : result;
-  const { flagUnverifiedCitations } = await import("./citationCheck");
   return flagUnverifiedCitations(grounded, options);
 };
 
