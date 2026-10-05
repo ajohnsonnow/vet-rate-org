@@ -55,6 +55,7 @@ import {
   buildCalculatorSummaryLine,
   buildComputedResultBlock,
   checkRaterResponse,
+  mentionsUnemployability,
   describeMismatch,
 } from "./raterGrounding";
 import {
@@ -1106,12 +1107,13 @@ export const injectCalculatorForRater = (prompt, options) => {
  * After generation, compare a rater-routed response with the calculator. A
  * response that states a different combined rating, or presents a bilateral
  * pair the calculator did not find, is replaced by the calculator's own
- * working in plain language. The replacement is recorded on the result
+ * working in plain language, plus the TDIU threshold paragraph when the
+ * veteran's prompt asks about TDIU. The replacement is recorded on the result
  * (validationWarnings, plus calculatorReplacement) so callers can see it
  * happened. A response that never states the combined rating at all is kept
  * and the calculator's one-line result is appended to it.
  */
-export const enforceCalculatorOnResult = (result, options) => {
+export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
     return result;
   }
@@ -1133,7 +1135,9 @@ export const enforceCalculatorOnResult = (result, options) => {
   console.warn(`🧮 Rater response replaced by calculator working: ${reason}`);
   return {
     ...result,
-    text: buildCalculatorExplanation(calc),
+    text: buildCalculatorExplanation(calc, {
+      tdiu: mentionsUnemployability(prompt),
+    }),
     validationWarnings: [
       ...(result.validationWarnings || []),
       `Response replaced with the calculator's working: ${reason}`,
@@ -2961,7 +2965,7 @@ const generateAIInternal = async (prompt, options = {}) => {
     options,
   );
   return _isRaterRoute(options, effectiveMode)
-    ? enforceCalculatorOnResult(result, options)
+    ? enforceCalculatorOnResult(result, options, prompt)
     : result;
 };
 

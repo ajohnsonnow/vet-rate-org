@@ -47,7 +47,7 @@ const NEAR_FILLER = String.raw`(?:[\s:=*~≈]|\b(?:va|disability|rating|evaluati
 const CLAUSE_WORDS = String.raw`when|if|where|because|since|while|which|that|than|group|step|steps|each`;
 const FAR_LINK = String.raw`(?:(?!\b(?:${CLAUSE_WORDS})\b)[^\d.!?\n]){0,100}?(?:\b(?:is|are|was|would be|will be|comes? to|equals?|totals?)\b|\\approx|[:=≈])`;
 const STATED_COMBINED = new RegExp(
-  String.raw`\b(?:(?:combined|overall|final|total)${NEAR_FILLER}|(?:combined|overall|final)${FAR_LINK})[\s*_~:=≈]*(?:(?:about|approximately|roughly|around|nearly|almost)\b[\s*_~]*)?(\d{1,3}(?:\.\d+)?)\s*(?:\\?%|percent)(?!\s*[+×*/÷]\s*\(?\s*\d)`,
+  String.raw`\b(?:(?:combined|overall|final|total)${NEAR_FILLER}|(?:combined|overall|final)${FAR_LINK})[\s*_~:=≈]*(?:(?:about|approximately|roughly|around|nearly|almost)\b[\s*_~]*)?(\d{1,3}(?:\.\d+)?)\s*(?:\\?%|percent)(?!\s*(?:[+×*/÷]\s*\(?\s*\d|or\s+(?:more|higher|greater|better|above|less|lower)\b))`,
   "gi",
 );
 
@@ -57,8 +57,8 @@ const STATED_COMBINED = new RegExp(
  * either closely ("combined rating of 70%") or after a short subject phrase
  * and a verb or colon ("The combined rating for the veteran, considering the
  * bilateral factor, is **52%**", "Final Result:** 52%"). Ratings merely listed
- * as inputs, group or step values, and operands of a sum ("20% + 10% = 30%")
- * do not count.
+ * as inputs, group or step values, operands of a sum ("20% + 10% = 30%") and
+ * thresholds ("a combined rating of 70 percent or more") do not count.
  */
 export function extractStatedCombinedRatings(text) {
   const seen = [];
