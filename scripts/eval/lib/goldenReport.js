@@ -224,12 +224,40 @@ function failuresSection(grades) {
   ];
 }
 
+function toolCasesSection({ goldenCases, cases, grades }) {
+  const toolCases = goldenCases.filter((c) => c.entry);
+  if (toolCases.length === 0) return [];
+  const byId = new Map(cases.map((c) => [c.id, c]));
+  const gradeById = new Map(grades.map((g) => [g.id, g]));
+  const rows = toolCases.map((caseDef) => {
+    const record = byId.get(caseDef.id);
+    const check = gradeById.get(caseDef.id)?.checks["draft-returned"];
+    const path = record?.draftPath ?? (record ? "-" : "not run");
+    const detail = record?.error
+      ? `ERROR: ${record.error}`
+      : (check?.detail ?? "");
+    return `| ${caseDef.id} | ${escapeCell(caseDef.entry)} | ${path} | ${escapeCell(detail).slice(0, 300)} |`;
+  });
+  return [
+    "## Tool cases",
+    "",
+    "These cases call the function the app's own screen calls, with form inputs, so the request is the tool's own. Draft path: `model` means the model's wording passed the acceptance check; `template` means the app-built draft was returned.",
+    "",
+    "| Case | Entry point | Draft path | Detail |",
+    "|---|---|---|---|",
+    ...rows,
+    "",
+  ];
+}
+
 const NOTES = [
   "- `routing`: the persona system prompt the engine received, matched against the SWARM_AGENTS prompts, versus the case's expected agent.",
   "- `calc-match`: only for cases with structured conditions in the golden set; the single combined rating the response states must equal calculateVARating and be a multiple of 10. Several different stated figures, or none, is `human`.",
   "- `cfr-in-index`: every `38 CFR` section cited must appear as a citation in the legal index (public/legal-index chunk file). The index covers what was ingested, so a FAIL means not found in the index; confirm against eCFR before calling it a fabrication.",
   "- `no-spotlight-echo`: the literal untrusted-content tag must not appear in the response.",
-  "- `no-new-pii`: no SSN-shaped string and no labeled date-of-birth-shaped string that is absent from the case input. Unlabeled dates are not flagged.",
+  "- `no-new-pii`: no SSN-shaped string and no labeled date-of-birth-shaped string that is absent from the case input (for a tool case, its form inputs and attached document). Unlabeled dates are not flagged.",
+  "- `draft-returned`: writing-tool cases only; the tool handed back a draft, either the model's wording or the app-built draft. It says a draft exists, not that it is good: score W1 to W4 on the response as usual.",
+  "- `routing` on tool cases: a tool that sends its own system prompt (the statement helper, the Decision Decoder) shows as `human`, because the engine did not receive a persona prompt to match.",
 ];
 
 export function renderSummary({ meta, runInfo, goldenCases, cases, grades }) {
@@ -237,6 +265,7 @@ export function renderSummary({ meta, runInfo, goldenCases, cases, grades }) {
     ...runSection({ meta, runInfo }),
     ...totalsSection({ goldenCases, cases, grades }),
     ...casesSection({ goldenCases, cases, grades }),
+    ...toolCasesSection({ goldenCases, cases, grades }),
     ...failuresSection(grades),
     "## Notes on the automated checks",
     "",

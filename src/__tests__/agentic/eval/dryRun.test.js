@@ -14,6 +14,7 @@ import {
   DRY_RUN_EXPECTATIONS,
   DRY_RUN_LEGAL_SECTIONS,
   DRY_RUN_MODEL_ID,
+  assertDryRunDraftPaths,
   assertDryRunExpectations,
   buildDryRunTranscript,
 } from "../../../../scripts/eval/lib/dryRun.js";
@@ -89,9 +90,37 @@ describe("dry run end to end", () => {
   const dir = makeTmp();
   const run = dryRun(dir);
 
-  it("records all 30 cases and meets every canned expectation", () => {
+  it("records every case and meets every canned expectation", () => {
     expect(run.cases).toHaveLength(goldenCases.length);
     expect(assertDryRunExpectations(run.grades)).toEqual([]);
+  });
+
+  it("records the draft path each tool case took", () => {
+    expect(assertDryRunDraftPaths(run.cases)).toEqual([]);
+    const byId = new Map(run.cases.map((c) => [c.id, c]));
+    expect(byId.get("t01")).toMatchObject({
+      entry: "enhancePersonalStatement",
+      draftPath: "model",
+      draftNote: null,
+      requestMatch: "matched",
+    });
+    expect(byId.get("t03")).toMatchObject({
+      draftPath: "template",
+      draftRejectReasons: ["not a draft: refusal"],
+    });
+    expect(byId.get("t03").response).toContain(
+      "[how you have seen the condition affect the veteran's daily life]",
+    );
+    expect(byId.get("a07")).not.toHaveProperty("draftPath");
+  });
+
+  it("reports a tool case that took the wrong path", () => {
+    const flipped = run.cases.map((c) =>
+      c.id === "t03" ? { ...c, draftPath: "model" } : c,
+    );
+    expect(assertDryRunDraftPaths(flipped)).toEqual([
+      "t03 draft path: expected template, got model",
+    ]);
   });
 
   it("every automated check is failed by at least one canned response", () => {
@@ -113,11 +142,16 @@ describe("dry run end to end", () => {
     expect(md).toContain("| Human score | Pass (Y/N) | Notes |");
     expect(md).toContain("## Totals");
     expect(md).toMatch(/\| a20 \| writer \/ rater \| FAIL \|/);
-    const rows = md.split("\n").filter((l) => /^\| a\d\d /.test(l));
+    const rows = md
+      .split("## Tool cases")[0]
+      .split("\n")
+      .filter((l) => /^\| [at]\d\d /.test(l));
     expect(rows).toHaveLength(goldenCases.length);
     for (const row of rows) {
-      expect(row.split(/(?<!\\)\|/)).toHaveLength(16);
+      expect(row.split(/(?<!\\)\|/)).toHaveLength(17);
     }
+    expect(md).toContain("| t03 | enhanceFormStatement | template |");
+    expect(md).toContain("| t06 | generateNexusLetterRequest | - |");
   });
 
   it("transcript file name carries the date and model id", () => {

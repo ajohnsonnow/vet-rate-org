@@ -1,0 +1,42 @@
+SYNTHETIC TEST FIXTURE - NOT A REAL DOCUMENT
+Written for the golden-set evaluation. Every name, date, office and finding
+below is invented and describes no real person or claim.
+
+DEPARTMENT OF VETERANS AFFAIRS
+Regional Office of Nowhere (fictional)
+
+RATING DECISION
+Dated: the 3rd day of Example, Year 0000
+
+Veteran: Pat Q. Sample-Fictional
+Representative: None listed
+
+ISSUES
+1. Service connection for ringing in the ears (tinnitus).
+2. Service connection for a left knee strain.
+
+DECISION
+1. Service connection for tinnitus is granted with an evaluation of 10 percent.
+2. Service connection for a left knee strain is denied.
+
+EVIDENCE
+- Service treatment records from the fictional Camp Placeholder clinic.
+- A VA examination report for hearing and for the left knee.
+- A written statement from the veteran.
+
+REASONS FOR DECISION
+1. Tinnitus. The examiner found it at least as likely as not that the
+ringing in the ears began with noise exposure during service. Noise exposure
+in service is conceded. Service connection is granted.
+
+2. Left knee strain. The service treatment records show one visit for left
+knee pain after a training march. The VA examination found a current left
+knee strain. The examiner gave the opinion that the current strain is less
+likely than not related to the visit in service, because the records show no
+further knee complaints for the rest of service. No medical opinion in the
+file links the current left knee strain to service. Service connection is
+denied because the evidence does not show a link between the current
+condition and service.
+
+You have one year from the date of this letter to ask for a review of this
+decision.

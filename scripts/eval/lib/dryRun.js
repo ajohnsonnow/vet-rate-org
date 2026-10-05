@@ -7,6 +7,7 @@ import {
 import { stripReasoning } from "../../../src/utils/reasoningText.js";
 import { assembleCaseRecord } from "./caseRecord.js";
 import { buildMetaRecord, fingerprintPersonas } from "./goldenRecord.js";
+import { TOOL_ENTRIES } from "./toolEntries.js";
 
 export const DRY_RUN_MODEL_ID = "dry-run-stub";
 
@@ -73,7 +74,46 @@ const FAILING_OVERRIDES = {
       "The combined rating is 60%. Some calculators show a combined rating of 70% instead.",
   },
   a30: { noCapture: true },
+  t03: {
+    toolReply:
+      "I cannot draft a buddy statement because you have not provided the specific details of the incident.",
+  },
+  t05: {
+    toolReply:
+      "I can help with your appeal. To make it accurate, please provide the following details: the date of the decision and the evidence you sent.",
+  },
+  t06: { noDraft: true },
+  t07: {
+    toolReply: JSON.stringify({
+      limitations: [],
+      combined_effect: "The veteran cannot work an 8-hour day.",
+      summary_argument: "No reasonable accommodations exist.",
+      job_types_precluded: ["Sedentary", "Light", "Medium", "Heavy"],
+    }),
+  },
 };
+
+const GOOD_DECODE = JSON.stringify({
+  decision_type: "Mixed Decision",
+  favorable_findings: ["Noise exposure in service is conceded"],
+  plain_english:
+    "Tinnitus was granted. The left knee strain was denied for lack of a link to service.",
+  missing_elements: [
+    "A medical opinion linking the left knee strain to service",
+  ],
+});
+
+/*
+ * The statement helper and the Decision Decoder send their own system
+ * prompt, so the engine gets no persona prompt from them. The Witness Bench
+ * and the TDIU Builder send none, and get the writer persona.
+ */
+const PERSONA_ENTRIES = new Set([
+  "compileWitnessStatement",
+  "generateVocationalImpact",
+]);
+const TOOL_SYSTEM_PROMPT = "(dry-run stub) the tool's own system prompt";
+const TOOL_SETTINGS = { max_tokens: 2048, temperature: 0.3 };
 
 /**
  * What the dry run must produce. Each automated check has at least one case
@@ -95,6 +135,7 @@ export const DRY_RUN_EXPECTATIONS = {
     routing: AUTO_PASS,
     "calc-match": NOT_APPLICABLE,
     "no-new-pii": NOT_APPLICABLE,
+    "draft-returned": NOT_APPLICABLE,
   },
   a11: { "calc-match": AUTO_FAIL },
   a12: { "calc-match": AUTO_FAIL, rubric: { R3: AUTO_FAIL } },
@@ -112,6 +153,29 @@ export const DRY_RUN_EXPECTATIONS = {
   a24: { "calc-match": AUTO_PASS },
   a25: { "calc-match": NEEDS_HUMAN },
   a30: { routing: NEEDS_HUMAN },
+  t01: { routing: NEEDS_HUMAN, "draft-returned": AUTO_PASS },
+  t03: { "draft-returned": AUTO_PASS },
+  t04: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  t05: { "draft-returned": AUTO_PASS },
+  t06: { "draft-returned": AUTO_FAIL },
+  t07: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  t08: {
+    routing: NEEDS_HUMAN,
+    "draft-returned": NOT_APPLICABLE,
+    "no-new-pii": AUTO_PASS,
+  },
+};
+
+/** The draft path each dry-run tool case must record. */
+export const DRY_RUN_DRAFT_PATHS = {
+  t01: "model",
+  t02: "model",
+  t03: "template",
+  t04: "model",
+  t05: "template",
+  t06: null,
+  t07: "template",
+  t08: null,
 };
 
 function cannedResponse(caseDef, override, calculateVARating) {
@@ -141,6 +205,52 @@ function cleanupMarker(stripped) {
     : {};
 }
 
+/*
+ * A tool case: the request is the tool's own (the app-built draft and the
+ * reword rules), and the canned model reply is settled the way the tool
+ * settles it. With no override the "model" returns the draft unchanged,
+ * which the acceptance check accepts.
+ */
+function toolOutcome(
+  caseDef,
+  override,
+  { personaPrompts, resolveAgentForTool },
+) {
+  const draft = TOOL_ENTRIES[caseDef.entry].draft?.(caseDef.formInputs);
+  const request = {
+    messages: [
+      {
+        role: "system",
+        content: PERSONA_ENTRIES.has(caseDef.entry)
+          ? personaPrompts[resolveAgentForTool(caseDef.toolId)]
+          : TOOL_SYSTEM_PROMPT,
+      },
+      {
+        role: "user",
+        content: draft
+          ? draft.prompt
+          : `(dry-run stub) decode:\n${caseDef.formInputs.documentText}`,
+      },
+    ],
+    ...TOOL_SETTINGS,
+  };
+  const noDraft = { draftPath: null, draftNote: null };
+  const done = (outcome) => ({
+    ok: true,
+    ...outcome,
+    latencyMs: 5,
+    captured: [request],
+  });
+  if (!draft) {
+    return done({ text: GOOD_DECODE, tool: noDraft });
+  }
+  if (override.noDraft) return done({ text: "", tool: noDraft });
+  const { content, ...tool } = draft.resolve(
+    override.toolReply ?? draft.template,
+  );
+  return done({ text: content, tool });
+}
+
 /**
  * Stand-in for the in-browser engine: builds the chat request the real engine
  * would receive (persona system prompt, user turn with optional computed
@@ -158,6 +268,7 @@ export function createStubEngine({
   settings,
 }) {
   let lateRequest = null;
+  const personas = { personaPrompts, resolveAgentForTool };
 
   function ownRequest(caseDef, override) {
     const routedAgent =
@@ -220,6 +331,7 @@ export function createStubEngine({
 
   return function run(caseDef) {
     const override = FAILING_OVERRIDES[caseDef.id] ?? {};
+    if (caseDef.entry) return toolOutcome(caseDef, override, personas);
     const outcome = replyOutcome(caseDef, override);
     const own =
       override.error || override.noCapture
@@ -297,5 +409,24 @@ export function assertDryRunExpectations(
     return Object.entries(expected).flatMap(([key, want]) =>
       compareExpectation(id, grade, key, want),
     );
+  });
+}
+
+/**
+ * Compare the draft path each tool case recorded with DRY_RUN_DRAFT_PATHS.
+ * Returns a list of problems; empty means every case took the path its
+ * canned reply calls for.
+ */
+export function assertDryRunDraftPaths(
+  records,
+  expected = DRY_RUN_DRAFT_PATHS,
+) {
+  const byId = new Map(records.map((record) => [record.id, record]));
+  return Object.entries(expected).flatMap(([id, want]) => {
+    const record = byId.get(id);
+    if (!record) return [`${id}: not recorded (case missing from this run)`];
+    return record.draftPath === want
+      ? []
+      : [`${id} draft path: expected ${want}, got ${record.draftPath}`];
   });
 }

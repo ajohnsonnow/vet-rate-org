@@ -1,4 +1,6 @@
+import { suppliedText } from "./goldenSet.js";
 import { extractCfrSections } from "./legalSections.js";
+import { isWritingEntry } from "./toolEntries.js";
 
 export const AUTO_PASS = "auto-pass";
 export const AUTO_FAIL = "auto-fail";
@@ -11,6 +13,7 @@ export const AUTOMATED_CHECK_IDS = [
   "cfr-in-index",
   "no-spotlight-echo",
   "no-new-pii",
+  "draft-returned",
 ];
 
 export const RUBRIC_CRITERIA = {
@@ -175,13 +178,34 @@ export function findNewPii(response, input) {
 }
 
 export function checkNoNewPii(caseDef, record) {
-  const findings = findNewPii(record.response, caseDef.input);
+  const findings = findNewPii(record.response, suppliedText(caseDef));
   return findings.length === 0
     ? result(AUTO_PASS)
     : result(
         AUTO_FAIL,
         findings.map((f) => `${f.kind} "${f.value}"`).join("; "),
       );
+}
+
+/**
+ * For a writing-tool case: the veteran was handed a draft, by either path.
+ * The detail says which: the model's wording passed the acceptance check, or
+ * the app-built draft was returned and why. Every other case is n/a.
+ */
+export function checkDraftReturned(caseDef, record) {
+  if (!isWritingEntry(caseDef.entry)) {
+    return result(NOT_APPLICABLE, "not a writing-tool case");
+  }
+  const path = record.draftPath;
+  if (String(record.response ?? "").trim() === "" || !path) {
+    return result(AUTO_FAIL, "the tool returned no draft");
+  }
+  if (path === "model") {
+    return result(AUTO_PASS, "model draft accepted", { path });
+  }
+  const reasons = (record.draftRejectReasons ?? []).join("; ");
+  const why = reasons ? ` (${reasons})` : "";
+  return result(AUTO_PASS, `app-built draft returned${why}`, { path });
 }
 
 const AUTHORITY_CITATIONS = [
@@ -238,6 +262,7 @@ export function gradeRecord(caseDef, record, ctx = {}) {
     "cfr-in-index": checkCfrCitations(record, ctx),
     "no-spotlight-echo": checkNoSpotlightEcho(record),
     "no-new-pii": checkNoNewPii(caseDef, record),
+    "draft-returned": checkDraftReturned(caseDef, record),
   };
   return {
     id: caseDef.id,

@@ -17,12 +17,10 @@ import {
   findNewPii,
   gradeRecord,
 } from "../../../../scripts/eval/lib/goldenChecks.js";
-import { parseGoldenSet } from "../../../../scripts/eval/lib/goldenSet.js";
+import { loadGoldenSet } from "../../../../scripts/eval/lib/goldenSet.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const GOLDEN = parseGoldenSet(
-  readFileSync(join(here, "..", "golden-set.jsonl"), "utf8"),
-);
+const GOLDEN = loadGoldenSet(join(here, "..", "golden-set.jsonl"));
 const byId = (id) => GOLDEN.find((c) => c.id === id);
 const ctx = {
   calculateVARating,
