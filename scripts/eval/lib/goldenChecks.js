@@ -1,4 +1,6 @@
+import { suppliedText } from "./goldenSet.js";
 import { extractCfrSections } from "./legalSections.js";
+import { TOOL_ENTRIES, isWritingEntry } from "./toolEntries.js";
 
 export const AUTO_PASS = "auto-pass";
 export const AUTO_FAIL = "auto-fail";
@@ -11,6 +13,7 @@ export const AUTOMATED_CHECK_IDS = [
   "cfr-in-index",
   "no-spotlight-echo",
   "no-new-pii",
+  "draft-returned",
 ];
 
 export const RUBRIC_CRITERIA = {
@@ -27,7 +30,35 @@ const result = (status, detail = "", data = undefined) => ({
   ...(data ? { data } : {}),
 });
 
+/*
+ * A tool that sends its own system prompt is routed correctly when the
+ * engine received that prompt: that is what production does, and no persona
+ * prompt reaches the engine for it.
+ */
+function checkOwnSystemPrompt(record) {
+  if (record.ownSystemPrompt === true) {
+    return result(AUTO_PASS, "the tool's own system prompt, as in production");
+  }
+  if (record.ownSystemPrompt === false) {
+    const received =
+      record.actualAgent === "unknown"
+        ? "another prompt"
+        : `the ${record.actualAgent} persona`;
+    return result(
+      AUTO_FAIL,
+      `expected the tool's own system prompt, engine received ${received}`,
+    );
+  }
+  return result(
+    NEEDS_HUMAN,
+    "the tool's request was not captured at the engine",
+  );
+}
+
 export function checkRouting(caseDef, record) {
+  if (TOOL_ENTRIES[caseDef.entry]?.ownSystemPrompt) {
+    return checkOwnSystemPrompt(record);
+  }
   const actual = record.actualAgent;
   if (!actual || actual === "unknown") {
     return result(
@@ -175,13 +206,39 @@ export function findNewPii(response, input) {
 }
 
 export function checkNoNewPii(caseDef, record) {
-  const findings = findNewPii(record.response, caseDef.input);
+  const findings = findNewPii(record.response, suppliedText(caseDef));
   return findings.length === 0
     ? result(AUTO_PASS)
     : result(
         AUTO_FAIL,
         findings.map((f) => `${f.kind} "${f.value}"`).join("; "),
       );
+}
+
+/**
+ * For a writing-tool case: the veteran was handed a draft, by either path.
+ * The detail says which: the model's wording passed the acceptance check, or
+ * the app-built draft was returned and why. Every other case is n/a.
+ */
+export function checkDraftReturned(caseDef, record) {
+  if (!isWritingEntry(caseDef.entry)) {
+    return result(NOT_APPLICABLE, "not a writing-tool case");
+  }
+  const path = record.draftPath;
+  if (String(record.response ?? "").trim() === "" || !path) {
+    return result(AUTO_FAIL, "the tool returned no draft");
+  }
+  if (path === "model") {
+    return result(AUTO_PASS, "model draft accepted", { path });
+  }
+  const reasons = [
+    ...(record.draftErrorReason
+      ? [`the model did not answer: ${record.draftErrorReason}`]
+      : []),
+    ...(record.draftRejectReasons ?? []),
+  ].join("; ");
+  const why = reasons ? ` (${reasons})` : "";
+  return result(AUTO_PASS, `app-built draft returned${why}`, { path });
 }
 
 const AUTHORITY_CITATIONS = [
@@ -238,6 +295,7 @@ export function gradeRecord(caseDef, record, ctx = {}) {
     "cfr-in-index": checkCfrCitations(record, ctx),
     "no-spotlight-echo": checkNoSpotlightEcho(record),
     "no-new-pii": checkNoNewPii(caseDef, record),
+    "draft-returned": checkDraftReturned(caseDef, record),
   };
   return {
     id: caseDef.id,

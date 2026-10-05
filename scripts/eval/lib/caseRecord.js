@@ -1,5 +1,6 @@
 import { buildCaseRecord } from "./goldenRecord.js";
 import { selectOwnRequest } from "./requestCapture.js";
+import { TOOL_ENTRIES } from "./toolEntries.js";
 
 /**
  * One transcript record from what happened to one case.
@@ -14,10 +15,53 @@ import { selectOwnRequest } from "./requestCapture.js";
  * repeat was cut ({ echoRemoved, trimmed }). `calculatorReplacement` carries the reason and the replaced
  * draft when the calculator guard swapped the answer. `citationsUnverified`
  * lists the 38 CFR sections the answer cited that do not exist.
+ *
+ * A tool case (one with `entry`) went through a production function, not
+ * straight to generateAI. Its request is found by the case's `match` phrase,
+ * and its record adds the entry point, the form inputs (an attached document
+ * by name only) and, for a writing tool, which draft the veteran was handed:
+ * `draftPath` "model" (the model's wording passed the acceptance check) or
+ * "template" (the app-built draft was returned, with `draftRejectReasons`,
+ * or with `draftErrorReason` when the model could not answer at all).
  */
+const systemTextOf = (request) => {
+  const content = request?.messages?.find((m) => m?.role === "system")?.content;
+  return typeof content === "string" ? content : null;
+};
+
+/**
+ * For an entry that sends its own system prompt: whether the engine received
+ * it (true or false), or null when no request was captured. Undefined for an
+ * entry that relies on the persona prompt.
+ */
+function ownSystemPromptSeen(caseDef, own) {
+  const expected = TOOL_ENTRIES[caseDef.entry]?.ownSystemPrompt;
+  if (!expected) return {};
+  const system = systemTextOf(own);
+  return {
+    ownSystemPrompt: system === null ? null : system.startsWith(expected),
+  };
+}
+
+function toolFields(caseDef, outcome, own) {
+  if (!caseDef.entry) return {};
+  const { documentText: _documentText, ...formInputs } =
+    caseDef.formInputs ?? {};
+  return {
+    entry: caseDef.entry,
+    formInputs,
+    ...(caseDef.document ? { document: caseDef.document } : {}),
+    draftPath: outcome.tool?.draftPath ?? null,
+    draftNote: outcome.tool?.draftNote ?? null,
+    draftRejectReasons: outcome.tool?.draftRejectReasons ?? [],
+    draftErrorReason: outcome.tool?.draftErrorReason ?? null,
+    ...ownSystemPromptSeen(caseDef, own),
+  };
+}
+
 export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
   const requests = outcome.captured ?? [];
-  const own = selectOwnRequest(requests, caseDef.input);
+  const own = selectOwnRequest(requests, caseDef.match ?? caseDef.input);
   const visible = outcome.text ?? "";
   const record = buildCaseRecord({
     caseDef,
@@ -39,6 +83,7 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
     thinking: run.thinking ?? null,
     engineThinking: own?.extra_body?.enable_thinking ?? null,
     requestMatch: own ? "matched" : "none",
+    ...toolFields(caseDef, outcome, own),
     ...(typeof outcome.rawResponse === "string" &&
     outcome.rawResponse !== visible
       ? { rawResponse: outcome.rawResponse }

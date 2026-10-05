@@ -30,6 +30,16 @@ import {
   getAIStatus,
 } from "../utils/unifiedAIService";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
+import { draftAfterError, resolveWriterDraft } from "../utils/writerDraftCheck";
+import {
+  STANDARD_DRAFT_NOTE,
+  buildRewordPrompt,
+  buildWitnessStatementBody,
+  buildWitnessStatementTemplate,
+  suppliedIn,
+  witnessRelationshipLabel,
+} from "../utils/writerTemplates";
+import StandardDraftNotice from "./common/StandardDraftNotice";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
@@ -388,64 +398,51 @@ export const _compileStatementWithAI = async (
   condition,
   answers,
 ) => {
-  // Check if ANY AI is available
-  if (!isAnyAIAvailable()) {
-    throw new Error(
-      "No AI available. Please configure an API key or enable Local AI.",
-    );
+  const standard = compileStatementWithoutAI(relationship, condition, answers);
+  const template = buildWitnessStatementTemplate(
+    relationship,
+    condition,
+    answers,
+  );
+
+  let text;
+  try {
+    if (!isAnyAIAvailable()) {
+      throw new Error(
+        "No AI available. Please configure an API key or enable Local AI.",
+      );
+    }
+    // Use unified AI service - ADR-009: "context" - the witness's own typed
+    // interview answers (their own words about the veteran), not a document
+    // upload; PII redaction is handled separately at the ADR-008 boundary.
+    const response = await generateAI(buildRewordPrompt(template), {
+      dataClass: AI_DATA_CLASS.CONTEXT,
+      toolId: "buddy-statement",
+      temperature: 0.3,
+      maxTokens: 2048,
+    });
+    // generateAI returns { text, mode } object - extract the text content
+    text = response?.text || response;
+  } catch (error) {
+    console.error("Statement generation failed:", error);
+    return { statement: standard, ...draftAfterError(error) };
   }
 
-  const relationshipLabel =
-    RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
-    relationship;
-
-  // Format answers for the prompt
-  const answersText = Object.entries(answers)
-    .filter(([_, value]) => value?.trim())
-    .map(([key, value]) => `${key}: ${value}`)
-    .join("\n\n");
-
-  const prompt = `You are drafting a Buddy/Lay Statement (VA Form 21-10210) for a veteran's ${relationshipLabel.toLowerCase()}.
-
-CONDITION BEING CLAIMED: ${condition}
-
-WITNESS RESPONSES TO INTERVIEW QUESTIONS:
-${answersText}
-
-INSTRUCTIONS:
-1. Write a first-person narrative from the WITNESS's perspective (use "I have observed..." not "The veteran...")
-2. Use the specific details and stories provided - DO NOT invent new facts
-3. Focus on OBSERVABLE behaviors, not medical opinions
-4. Be sincere and factual, not dramatic or exaggerated
-5. Include specific examples when provided
-6. Do NOT include names, addresses, or dates (use [Veteran], [Date], etc.)
-7. Format as 3-4 coherent paragraphs
-8. Do NOT write any "I certify..." or "true and correct" attestation. End the narrative without a signature or certification line - the witness must add and sign their own attestation only after personally verifying every statement is true.
-
-Write the complete buddy statement now:`;
-
-  // Use unified AI service - ADR-009: "context" - the witness's own typed
-  // interview answers (their own words about the veteran), not a document
-  // upload; PII redaction is handled separately at the ADR-008 boundary.
-  const response = await generateAI(prompt, {
-    dataClass: AI_DATA_CLASS.CONTEXT,
-    toolId: "buddy-statement",
-    temperature: 0.6,
-    maxTokens: 2048,
+  const { content, ...draft } = resolveWriterDraft({
+    output: typeof text === "string" ? text : JSON.stringify(text),
+    template,
+    inputs: suppliedIn(template, Object.values(answers)),
+    keep: [condition],
+    fallback: standard,
   });
-
-  // generateAI returns { text, mode } object - extract the text content
-  const text = response?.text || response;
-  return typeof text === "string" ? text : JSON.stringify(text);
+  return { statement: content, ...draft };
 };
 
 /**
  * Generate statement without AI (template-based)
  */
 const compileStatementWithoutAI = (relationship, condition, answers) => {
-  const relationshipLabel =
-    RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
-    relationship;
+  const relationshipLabel = witnessRelationshipLabel(relationship);
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -458,27 +455,7 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
   statement += `Date: ${currentDate}\n\n`;
   statement += `---\n\n`;
 
-  if (answers.relationship_context) {
-    statement += `${answers.relationship_context}\n\n`;
-  }
-
-  statement += `I am writing to provide my personal observations regarding [Veteran]'s ${condition}.\n\n`;
-
-  // Add all answered questions
-  const observationParts = [];
-
-  Object.entries(answers).forEach(([key, value]) => {
-    if (value?.trim() && key !== "relationship_context") {
-      observationParts.push(value.trim());
-    }
-  });
-
-  if (observationParts.length > 0) {
-    statement += `Based on my direct observations:\n\n`;
-    observationParts.forEach((part) => {
-      statement += `${part}\n\n`;
-    });
-  }
+  statement += `${buildWitnessStatementBody(condition, answers)}\n\n`;
 
   // AIS-03 / LEGAL-03: do not pre-assert "I certify ... true and correct" above a
   // blank signature line - that presents AI-drafted testimony as already attested.
@@ -754,10 +731,13 @@ function useOutputState() {
   const [generatedStatement, setGeneratedStatement] = useState("");
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [savedToPacket, setSavedToPacket] = useState(false);
+  const [draftNote, setDraftNote] = useState(null);
 
   return {
     generatedStatement,
     setGeneratedStatement,
+    draftNote,
+    setDraftNote,
     showDownloadMenu,
     setShowDownloadMenu,
     savedToPacket,
@@ -844,21 +824,25 @@ function useGenerateStatement({
   setError,
   setIsGeneratingStatement,
   setGeneratedStatement,
+  setDraftNote,
   setStep,
 }) {
   return useCallback(async () => {
     setError(null);
+    setDraftNote(null);
     setIsGeneratingStatement(true);
 
     try {
       let statement;
 
       if (useAI && aiAvailable) {
-        statement = await _compileStatementWithAI(
+        const drafted = await _compileStatementWithAI(
           relationship,
           condition,
           answers,
         );
+        statement = drafted.statement;
+        setDraftNote(drafted.draftNote);
       } else {
         statement = compileStatementWithoutAI(relationship, condition, answers);
       }
@@ -889,6 +873,7 @@ function useGenerateStatement({
         veteranName,
       );
       setGeneratedStatement(statement);
+      setDraftNote(STANDARD_DRAFT_NOTE);
       setStep(3);
 
       // Still save even template-based output
@@ -933,6 +918,7 @@ function useWitnessBench(t) {
     setError: ai.setError,
     setIsGeneratingStatement: ai.setIsGeneratingStatement,
     setGeneratedStatement: output.setGeneratedStatement,
+    setDraftNote: output.setDraftNote,
     setStep: wizard.setStep,
   });
 
@@ -944,6 +930,7 @@ function useWitnessBench(t) {
     interview.setAnswers({});
     interview.setCurrentQuestionIndex(0);
     output.setGeneratedStatement("");
+    output.setDraftNote(null);
   };
 
   return {
@@ -1641,6 +1628,7 @@ const NextStepsPanel = ({ t }) => (
 
 const OutputStep = ({
   t,
+  draftNote,
   generatedStatement,
   onGeneratedStatementChange,
   onCopyToClipboard,
@@ -1655,6 +1643,7 @@ const OutputStep = ({
 }) => (
   <div className="max-w-3xl mx-auto space-y-6">
     <OutputSuccessBanner t={t} />
+    <StandardDraftNotice note={draftNote} />
 
     <StatementPreviewPanel
       t={t}
@@ -1725,6 +1714,7 @@ const WitnessBenchStepContent = ({ t, wb, onOpenAISettings }) => {
     return (
       <OutputStep
         t={t}
+        draftNote={wb.output.draftNote}
         generatedStatement={wb.output.generatedStatement}
         onGeneratedStatementChange={wb.output.setGeneratedStatement}
         onCopyToClipboard={() =>

@@ -26,9 +26,25 @@ import { loadVKB } from "./veteranKnowledgeBase";
 import { getFullName, getVeteranProfile } from "./veteranProfile";
 import { redactVeteranIdentifiers } from "./piiScrubber";
 import { AI_DATA_CLASS } from "./aiDataClassPolicy";
+import { draftAfterError, resolveWriterDraft } from "./writerDraftCheck";
+import {
+  buildAppealStatementTemplate,
+  buildBuddyStatementTemplate,
+  buildNexusLetterRequestTemplate,
+  buildPTSDStressorTemplate,
+  buildPersonalStatementTemplate,
+  buildRewordPrompt,
+  formStatementInputs,
+  suppliedIn,
+} from "./writerTemplates";
 
 // LocalStorage key for BYOK (Bring Your Own Key)
 const STORAGE_KEY = "vetrate_gemini_key";
+
+// Rewording an existing draft wants fidelity, not variety.
+const REWORD_TEMPERATURE = 0.3;
+
+const isText = (value) => typeof value === "string" && value.trim() !== "";
 
 /**
  * Check if AI features are available (either cloud or local)
@@ -93,225 +109,6 @@ const _getApiKey = () => {
   const storedKey = localStorage.getItem(STORAGE_KEY);
   if (storedKey && storedKey.length > 0) return storedKey;
   return "";
-};
-
-/**
- * Build the prompt for enhancing a personal statement using the "Three Pillars" approach:
- * 1. The Event (what happened in service)
- * 2. Current Symptoms (what's wrong now)
- * 3. The Nexus/Link (how the event causes the current condition)
- */
-function buildSecondaryThreePillars(answers, condition, primaryCondition) {
-  // For secondary claims, the "event" is the primary condition
-  const pillar1_Event = `I have a service-connected condition: ${primaryCondition}.`;
-  const pillar2_Symptoms =
-    [
-      answers.specificExamples,
-      answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
-      answers.socialImpact
-        ? `Social/family impact: ${answers.socialImpact}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "Ongoing symptoms affecting daily life.";
-
-  // The nexus for secondary is how the primary causes/aggravates the secondary
-  const mechanismText = answers.aggravationMechanism || "";
-  const explanationText = answers.aggravationExplanation || "";
-  const incidentText = answers.specificIncident || "";
-  const pillar3_Nexus =
-    [mechanismText, explanationText, incidentText].filter(Boolean).join(" ") ||
-    `My ${primaryCondition} causes or aggravates my ${condition}.`;
-
-  return { pillar1_Event, pillar2_Symptoms, pillar3_Nexus };
-}
-
-function buildDirectThreePillars(answers, condition) {
-  // For primary/direct claims
-  const pillar1_Event =
-    answers.inServiceEvent ||
-    answers.specificIncident ||
-    `During my military service, I developed/experienced issues related to ${condition}.`;
-  const pillar2_Symptoms =
-    [
-      answers.specificExamples,
-      answers.workImpact ? `Work impact: ${answers.workImpact}` : "",
-      answers.socialImpact
-        ? `Social/family impact: ${answers.socialImpact}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "I currently experience ongoing symptoms.";
-  const pillar3_Nexus =
-    answers.nexusExplanation ||
-    `The symptoms started during/after service and have persisted since ${answers.symptomOnsetDate || "that time"}.`;
-
-  return { pillar1_Event, pillar2_Symptoms, pillar3_Nexus };
-}
-
-function deriveTreatmentStatus(answers) {
-  if (answers.hasTreatment === "yes-va") {
-    return "Currently receiving VA treatment";
-  }
-  if (answers.hasTreatment === "yes-private") {
-    return "Currently receiving private treatment";
-  }
-  return "Not currently in formal treatment";
-}
-
-const buildStatementPrompt = (
-  answers,
-  condition,
-  primaryCondition,
-  claimType,
-) => {
-  const isSecondary = claimType === "secondary";
-
-  // Build the Three Pillars from user input
-  const { pillar1_Event, pillar2_Symptoms, pillar3_Nexus } = isSecondary
-    ? buildSecondaryThreePillars(answers, condition, primaryCondition)
-    : buildDirectThreePillars(answers, condition);
-
-  const treatmentStatus = deriveTreatmentStatus(answers);
-
-  return `Draft a Personal Statement in Support of Claim (VA Form 21-4138) based on the following Three Pillars:
-
-=== PILLAR 1: THE IN-SERVICE EVENT ===
-${pillar1_Event}
-
-=== PILLAR 2: CURRENT SYMPTOMS ===
-Condition: ${condition}
-${pillar2_Symptoms}
-Treatment: ${treatmentStatus}
-
-=== PILLAR 3: THE NEXUS/LINK ===
-${pillar3_Nexus}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I").
-Do not be overly dramatic, but do not downplay the pain or limitations.
-Focus on how this affects my occupation and social/family life.
-Be professional, clear, and factual.
-Do NOT include specific dates, names, addresses, or identifying information.
-The statement should be 3-5 paragraphs.
-${isSecondary ? `Frame this as a SECONDARY claim - ${condition} caused or aggravated by service-connected ${primaryCondition}.` : "Frame this as a DIRECT service connection claim."}
-End with a respectful request for a C&P examination.
-
-=== PROTECTION RULES (CRITICAL) ===
-You are FORBIDDEN from outputting:
-- Social Security Numbers (SSN) - Replace with [SSN REDACTED] if present in input
-- Phone numbers - Replace with [PHONE REDACTED]
-- Specific street addresses - Use [ADDRESS] placeholder
-- Email addresses - Replace with [EMAIL REDACTED]
-- Full names of family members or medical providers - Use [NAME REDACTED]
-If the user input contains any of these, you MUST sanitize them in your output.
-
-Write the statement now:`;
-};
-
-/**
- * Build the prompt for enhancing a buddy/lay statement using the Three Pillars approach
- */
-const buildBuddyStatementPrompt = (answers, conditionName) => {
-  // Three Pillars adapted for witness perspective
-  const pillar1_Relationship = `${answers.relationship || "Someone close to"} the veteran, known them for ${answers.knownDuration || "several years"}.`;
-  const pillar2_Observations =
-    answers.observations ||
-    "Observed changes in the veteran's condition and daily life.";
-  const pillar3_Impact =
-    [
-      answers.changesNoticed
-        ? `Changes noticed: ${answers.changesNoticed}`
-        : "",
-      answers.dailyImpact ? `Daily impact: ${answers.dailyImpact}` : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "The condition significantly affects their daily life.";
-
-  return `Draft a Buddy/Lay Statement (VA Form 21-10210) based on the following:
-
-=== PILLAR 1: WITNESS RELATIONSHIP ===
-${pillar1_Relationship}
-
-=== PILLAR 2: WHAT I HAVE OBSERVED ===
-Veteran's condition: ${conditionName || "Not specified"}
-${pillar2_Observations}
-
-=== PILLAR 3: IMPACT I HAVE WITNESSED ===
-${pillar3_Impact}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I") from the WITNESS's perspective.
-Describe only what was personally observed - do not make medical diagnoses.
-Be sincere and factual, not dramatic.
-Focus on specific, observable behaviors and changes.
-Do NOT include specific dates, names, or identifying information (use [Veteran] as placeholder).
-The statement should be 2-4 paragraphs.
-End with a sincere attestation that the statement is true to the best of your knowledge.
-
-=== PROTECTION RULES (CRITICAL) ===
-You are FORBIDDEN from outputting:
-- Social Security Numbers - Replace with [SSN REDACTED]
-- Phone numbers - Replace with [PHONE REDACTED]
-- Specific street addresses - Use [ADDRESS] placeholder
-- Email addresses or full names - Use [NAME REDACTED] or [Veteran]
-If any PII appears in input, you MUST sanitize it in your output.
-
-Write the statement now:`;
-};
-
-/**
- * Build the prompt for enhancing a PTSD stressor statement using the Three Pillars approach
- */
-const buildPTSDStressorPrompt = (answers) => {
-  // Three Pillars for PTSD
-  const pillar1_Event =
-    answers.eventDescription ||
-    answers.stressorType ||
-    "Traumatic event during military service.";
-  const pillar2_Symptoms =
-    [
-      answers.currentSymptoms || "",
-      answers.immediateImpact
-        ? `Initial impact: ${answers.immediateImpact}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join(" ") || "Ongoing PTSD symptoms.";
-  const pillar3_Impact =
-    answers.dailyImpact || "Symptoms continue to affect daily life.";
-
-  return `Draft a PTSD Stressor Statement (VA Form 21-0781) based on the following:
-
-=== PILLAR 1: THE TRAUMATIC EVENT ===
-Type of stressor: ${answers.stressorType || "Military service-related trauma"}
-${pillar1_Event}
-
-=== PILLAR 2: CURRENT SYMPTOMS ===
-${pillar2_Symptoms}
-
-=== PILLAR 3: HOW IT AFFECTS MY LIFE NOW ===
-${pillar3_Impact}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I").
-=== PROTECTION RULES (CRITICAL) ===
-You are FORBIDDEN from outputting:
-- Social Security Numbers - Replace with [SSN REDACTED]
-- Phone numbers - Replace with [PHONE REDACTED]
-- Specific street addresses - Use [ADDRESS] placeholder
-- Email addresses, full names, unit IDs - Replace with [REDACTED]
-If any PII appears in input, you MUST sanitize it in your output.
-
-Be factual about the traumatic event without unnecessary graphic details.
-Acknowledge that recounting these events is difficult.
-Focus on the emotional/psychological impact and current symptoms.
-Do NOT include specific dates, names, unit designations, or locations (use placeholders like [Date], [Location]).
-Be sensitive to trauma while maintaining professional tone.
-The statement should be 3-5 paragraphs.
-End with a note about seeking help and a request for evaluation.
-
-Write the statement now:`;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -605,7 +402,7 @@ function mapAIErrorToResponse(error) {
 
 // ADR-008: best-effort - an identifier-load failure (no IndexedDB, private
 // browsing, …) must never block a statement from being generated.
-async function _finalizeAiPrompt(prompt) {
+async function _redactForAi(texts) {
   try {
     const vkb = await loadVKB();
     const claimNumbers = (vkb?.vaClaimsHistory?.claims || [])
@@ -614,11 +411,15 @@ async function _finalizeAiPrompt(prompt) {
     // ADR-008: merge in the flat legacy profile - it's the only place
     // firstName/lastName/serviceNumber/mailingStreet/mailingCity live.
     const personal = { ...getVeteranProfile(), ...vkb?.personal };
-    return redactVeteranIdentifiers(prompt, personal, claimNumbers);
+    return texts.map((text) =>
+      redactVeteranIdentifiers(text, personal, claimNumbers),
+    );
   } catch {
-    return prompt;
+    return texts;
   }
 }
+
+const _finalizeAiPrompt = async (prompt) => (await _redactForAi([prompt]))[0];
 
 /**
  * Call AI service (Unified - supports both Cloud and Local AI)
@@ -628,7 +429,12 @@ async function _finalizeAiPrompt(prompt) {
  * @param {Object} userInput - Original user input (for crisis detection)
  * @returns {Promise<{success: boolean, content?: string, error?: string, mode?: string}>}
  */
-const callGeminiAPI = async (prompt, userInput = null, toolId = null) => {
+const callGeminiAPI = async (
+  prompt,
+  userInput = null,
+  toolId = null,
+  { temperature = 0.7 } = {},
+) => {
   // ═══ CRISIS DETECTION CHECK (HIGHEST PRIORITY) ═══
   const crisisBlock = blockIfCrisisDetected(userInput);
   if (crisisBlock) return crisisBlock;
@@ -670,7 +476,7 @@ const callGeminiAPI = async (prompt, userInput = null, toolId = null) => {
       systemPrompt:
         "You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.",
       maxTokens: 2048,
-      temperature: 0.7,
+      temperature,
       skipCrisisCheck: true, // Already checked above
       dataClass: AI_DATA_CLASS.CONTEXT,
       ...(toolId ? { toolId } : {}),
@@ -692,6 +498,62 @@ const callGeminiAPI = async (prompt, userInput = null, toolId = null) => {
 };
 
 /**
+ * Ask the model to improve the wording of an app-built draft, and return
+ * the model's wording only when it passes the acceptance check. Otherwise
+ * the veteran gets the app-built draft itself, with a one-line note:
+ * also when the model could not answer at all, in which case
+ * `draftErrorReason` names the error. `draftPath` on the result records
+ * which draft it is ("model" or "template").
+ *
+ * The check runs against the identifier-redacted draft, the text the model
+ * actually saw. The draft handed back on rejection is the unredacted one:
+ * it is the veteran's own words and never left the device.
+ */
+async function draftWithModel({
+  template,
+  answers,
+  keep = [],
+  toolId,
+  userInput = null,
+  addressedToReader = false,
+}) {
+  const [safeTemplate, ...safeKeep] = await _redactForAi([template, ...keep]);
+  const result = await callGeminiAPI(
+    buildRewordPrompt(safeTemplate),
+    userInput,
+    toolId,
+    { temperature: REWORD_TEMPERATURE },
+  );
+  // The crisis block stays a block. Any other failure (engine error,
+  // timeout, request limit, no AI loaded) still leaves the veteran with the
+  // app-built draft to work from.
+  if (result.crisisDetected) return result;
+  if (!result.success) {
+    return {
+      success: true,
+      content: template,
+      ...(result.errorType ? { errorType: result.errorType } : {}),
+      ...draftAfterError(result.error),
+    };
+  }
+
+  return {
+    ...result,
+    ...resolveWriterDraft({
+      output: result.content,
+      template: safeTemplate,
+      inputs: suppliedIn(
+        safeTemplate,
+        await _redactForAi(Object.values(answers ?? {}).filter(isText)),
+      ),
+      keep: safeKeep.filter((phrase) => safeTemplate.includes(phrase)),
+      addressedToReader,
+      fallback: template,
+    }),
+  };
+}
+
+/**
  * Enhance a personal statement (Nexus Builder) using AI
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
@@ -699,179 +561,88 @@ export const enhancePersonalStatement = async (
   answers,
   condition,
   primaryCondition = null,
-) => {
-  const claimType = primaryCondition ? "secondary" : "primary";
-  const prompt = buildStatementPrompt(
+) =>
+  draftWithModel({
+    template: buildPersonalStatementTemplate(
+      answers,
+      condition,
+      primaryCondition,
+    ),
     answers,
-    condition,
-    primaryCondition,
-    claimType,
-  );
-  return callGeminiAPI(prompt, answers, "personal-statement"); // Pass answers for crisis detection
-};
+    keep: [condition, primaryCondition].filter(isText),
+    toolId: "personal-statement",
+    userInput: answers, // for crisis detection
+  });
 
 /**
  * Enhance a buddy/lay statement using AI
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const enhanceBuddyStatement = async (answers, conditionName) => {
-  const prompt = buildBuddyStatementPrompt(answers, conditionName);
-  return callGeminiAPI(prompt, answers, "buddy-statement"); // Pass answers for crisis detection
-};
+export const enhanceBuddyStatement = async (answers, conditionName) =>
+  draftWithModel({
+    template: buildBuddyStatementTemplate(answers, conditionName),
+    answers,
+    keep: [conditionName].filter(isText),
+    toolId: "buddy-statement",
+    userInput: answers, // for crisis detection
+  });
 
 /**
  * Enhance a PTSD stressor statement using AI
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const enhancePTSDStatement = async (answers) => {
-  const prompt = buildPTSDStressorPrompt(answers);
-  return callGeminiAPI(prompt, answers, "personal-statement"); // Pass answers for crisis detection
-};
-
-/**
- * Build prompt for an appeal statement (Notice of Disagreement, HLR, Supplemental Claim)
- */
-const buildAppealStatementPrompt = (answers) => {
-  const appealTypeLabels = {
-    nod: "Notice of Disagreement (NOD) / Board Appeal",
-    hlr: "Higher-Level Review (HLR)",
-    supplemental: "Supplemental Claim with New Evidence",
-  };
-
-  return `Draft an Appeal Statement based on the following:
-
-=== APPEAL INFORMATION ===
-Appeal Type: ${appealTypeLabels[answers.appealType] || answers.appealType || "Disability claim appeal"}
-Condition: ${answers.conditionName || "Not specified"}
-Original Decision Date: ${answers.decisionDate || "Recent"}
-Original Rating: ${answers.originalRating || "Not specified"}
-Desired Rating: ${answers.desiredRating || "Higher rating warranted by evidence"}
-
-=== PILLAR 1: WHY THE DECISION IS INCORRECT ===
-${answers.whyIncorrect || "The evidence in the record supports a higher rating than assigned."}
-
-=== PILLAR 2: WHAT EVIDENCE SUPPORTS YOUR APPEAL ===
-${answers.supportingEvidence || "Medical records and personal statements demonstrate greater severity."}
-
-=== PILLAR 3: WHAT OUTCOME YOU ARE SEEKING ===
-${answers.desiredOutcome || "Request reconsideration with appropriate rating that reflects actual severity of condition."}
-
-${
-  answers.newEvidence
-    ? `=== NEW/ADDITIONAL EVIDENCE ===
-${answers.newEvidence}`
-    : ""
-}
-
-=== OUTPUT FORMAT ===
-Write this in the first person ("I").
-Be professional, factual, and respectful.
-Reference 38 CFR rating criteria where appropriate.
-Focus on the discrepancy between evidence and the decision.
-Do NOT include specific dates, names, or identifying information.
-The statement should be 3-5 paragraphs.
-End with a clear request for the desired outcome.
-
-Write the statement now:`;
-};
-
-/**
- * Build prompt for a nexus letter request (help veteran communicate with doctor)
- */
-const buildNexusLetterRequestPrompt = (answers) => {
-  const isSecondary = Boolean(answers.primaryCondition);
-
-  return `Draft a Nexus Letter Request to help a veteran communicate with their doctor about what to include in a medical opinion letter.
-
-=== CLAIM INFORMATION ===
-Condition Being Claimed: ${answers.conditionName || "Not specified"}
-${
-  isSecondary
-    ? `Primary Service-Connected Condition: ${answers.primaryCondition}
-Connection Theory: ${answers.connectionTheory || "The primary condition caused or aggravates the claimed condition"}`
-    : `In-Service Event/Cause: ${answers.inServiceEvent || "Event during military service"}`
-}
-
-=== VETERAN'S SYMPTOMS ===
-${answers.symptoms || "Current symptoms affecting daily life"}
-
-=== RELEVANT MEDICAL HISTORY ===
-${answers.medicalHistory || "Treatment history and relevant medical records"}
-
-=== OUTPUT FORMAT ===
-Create a PROFESSIONAL letter the veteran can give to their doctor explaining:
-1. What a nexus letter is and why it's important for VA claims
-2. The specific connection that needs to be established (service connection ${isSecondary ? "OR secondary connection" : ""})
-3. The standard of proof: "at least as likely as not" (50% or greater probability)
-4. What the doctor should include in the letter
-5. Key medical terminology that would strengthen the opinion
-
-Write this as a helpful guide for the doctor, not as the medical opinion itself.
-Keep it professional and educational.
-Do NOT include patient names or identifying information (use [Veteran Name]).
-Remind that the doctor should base their opinion on their professional medical judgment and the patient's records.
-
-Write the letter request now:`;
-};
+export const enhancePTSDStatement = async (answers) =>
+  draftWithModel({
+    template: buildPTSDStressorTemplate(answers),
+    answers,
+    toolId: "personal-statement",
+    userInput: answers, // for crisis detection
+  });
 
 /**
  * Enhance an appeal statement using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const enhanceAppealStatement = async (answers) => {
-  const prompt = buildAppealStatementPrompt(answers);
-  return callGeminiAPI(prompt, null, "appeal-statement");
-};
+export const enhanceAppealStatement = async (answers) =>
+  draftWithModel({
+    template: buildAppealStatementTemplate(answers),
+    answers,
+    keep: [answers.conditionName].filter(isText),
+    toolId: "appeal-statement",
+    userInput: answers, // for crisis detection
+  });
 
 /**
  * Generate a nexus letter request using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
-export const generateNexusLetterRequest = async (answers) => {
-  const prompt = buildNexusLetterRequestPrompt(answers);
-  return callGeminiAPI(prompt, null, "nexus-builder");
-};
+export const generateNexusLetterRequest = async (answers) =>
+  draftWithModel({
+    template: buildNexusLetterRequestTemplate(answers),
+    answers,
+    keep: [answers.conditionName, answers.primaryCondition].filter(isText),
+    toolId: "nexus-builder",
+    userInput: answers, // for crisis detection
+    addressedToReader: true,
+  });
 
 /**
  * Generic enhance function that takes FormData from FormsHelper
  * This allows the FormsHelper to call AI enhancement on any generated statement
  */
 export const enhanceFormStatement = async (formType, formData) => {
-  switch (formType) {
-    case "buddy-statement":
-      return enhanceBuddyStatement(
-        {
-          relationship: formData.witnessRelation,
-          knownDuration: formData.knownSince,
-          observations: formData.whatObserved,
-          changesNoticed: formData.specificExamples,
-          dailyImpact: formData.dailyImpact,
-        },
-        formData.conditionName,
-      );
-
-    case "personal-statement":
+  const mapped = formStatementInputs(formType, formData);
+  switch (mapped?.kind) {
+    case "buddy":
+      return enhanceBuddyStatement(mapped.answers, mapped.condition);
+    case "personal":
       return enhancePersonalStatement(
-        {
-          inServiceEvent: formData.inServiceEvent,
-          specificExamples: formData.worstDays,
-          workImpact: formData.workImpact,
-          socialImpact: formData.socialImpact,
-          symptomOnsetDate: formData.onsetDate,
-          hasTreatment: formData.currentTreatment ? "yes-va" : "no",
-        },
-        formData.conditionName,
-        formData.primaryCondition,
+        mapped.answers,
+        mapped.condition,
+        mapped.primaryCondition,
       );
-
-    case "ptsd-stressor":
-      return enhancePTSDStatement({
-        stressorType: formData.stressorType,
-        eventDescription: formData.eventDescription,
-        currentSymptoms: Array.isArray(formData.symptoms)
-          ? formData.symptoms.join(", ")
-          : formData.symptomDetails,
-        dailyImpact: formData.symptomDetails,
-      });
-
+    case "ptsd":
+      return enhancePTSDStatement(mapped.answers);
     default:
       return {
         success: false,

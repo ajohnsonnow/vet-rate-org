@@ -7,7 +7,8 @@
  *
  * Real mode drives the app in a headed Chromium with WebGPU (Playwright spec
  * tests/eval/golden-set.spec.ts), sends every golden-set case through
- * generateAI, and records a JSONL transcript. Dry-run mode replaces the
+ * generateAI (a tool case goes through the production function it names,
+ * with its form inputs), and records a JSONL transcript. Dry-run mode replaces the
  * browser and engine with canned responses and exercises the same record,
  * check and report code; it needs no browser, GPU or dev server.
  *
@@ -21,9 +22,11 @@ import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runnerImport } from "vite";
 import {
+  DRY_RUN_DRAFT_PATHS,
   DRY_RUN_EXPECTATIONS,
   DRY_RUN_LEGAL_SECTIONS,
   DRY_RUN_MODEL_ID,
+  assertDryRunDraftPaths,
   assertDryRunExpectations,
   buildDryRunTranscript,
 } from "./lib/dryRun.js";
@@ -207,7 +210,7 @@ async function main() {
   console.log(`cases recorded: ${cases.length} of ${goldenCases.length}`);
 
   const verdict = opts.dryRun
-    ? checkDryRun(grades, goldenCases)
+    ? checkDryRun(grades, goldenCases, cases)
     : checkLoadedModel(meta, modelId);
   return exitCode || verdict;
 }
@@ -229,12 +232,14 @@ function checkLoadedModel(meta, modelId) {
   return 1;
 }
 
-function checkDryRun(grades, goldenCases) {
+function checkDryRun(grades, goldenCases, records) {
   const present = new Set(goldenCases.map((c) => c.id));
-  const expectations = Object.fromEntries(
-    Object.entries(DRY_RUN_EXPECTATIONS).filter(([id]) => present.has(id)),
-  );
-  const problems = assertDryRunExpectations(grades, expectations);
+  const forThisRun = (table) =>
+    Object.fromEntries(Object.entries(table).filter(([id]) => present.has(id)));
+  const problems = [
+    ...assertDryRunExpectations(grades, forThisRun(DRY_RUN_EXPECTATIONS)),
+    ...assertDryRunDraftPaths(records, forThisRun(DRY_RUN_DRAFT_PATHS)),
+  ];
   if (problems.length === 0) {
     console.log("DRY RUN PASSED: every canned failure was caught by its check");
     return 0;

@@ -3,8 +3,9 @@ export const PAGE_UNANSWERED_ERROR =
 
 /**
  * Run each case, append its record the moment it finishes, and after any case
- * that timed out or errored bring the engine back to a clean idle state before
- * the next case starts. Without that, the engine keeps working on the failed
+ * that timed out or errored (or whose tool swallowed an engine error and
+ * returned its app-built draft: `needsRecovery`) bring the engine back to a
+ * clean idle state before the next case starts. Without that, the engine keeps working on the failed
  * case, and its late request and slow decode leak into the next case.
  *
  *   attempt(caseDef)         resolves to an outcome, or "timeout" when the page
@@ -41,7 +42,7 @@ export async function recordAllCases({
     write(toRecord(caseDef, outcome));
     recorded++;
 
-    if (!outcome.ok) {
+    if (!outcome.ok || outcome.needsRecovery) {
       try {
         await recover();
       } catch (err) {
