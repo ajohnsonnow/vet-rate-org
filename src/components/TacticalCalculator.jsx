@@ -1723,6 +1723,7 @@ function MainRatingDisplay({ t, results }) {
 const BILATERAL_ISSUE_KEYS = {
   "limb-unknown": "bilateralIssueLimbUnknown",
   "side-unknown": "bilateralIssueSideUnknown",
+  "side-not-set": "bilateralIssueSideNotSet",
   "single-bilateral-evaluation": "bilateralIssueSingleEvaluation",
   "most-favourable-not-checked": "bilateralIssueNotChecked",
 };

@@ -100,6 +100,8 @@ const ISSUE_NOTES = {
     `Vet-Rate could not tell whether ${names} ${one ? "is an arm or a leg condition, so it" : "are arm or leg conditions, so they"} took no bilateral factor.`,
   "side-unknown": (names, one) =>
     `Vet-Rate did not recognise the side entered for ${names}, so ${one ? "it" : "they"} took no bilateral factor.`,
+  "side-not-set": (names, one) =>
+    `${names} ${one ? "names" : "name"} a side, but no side is set on ${one ? "that entry" : "those entries"}, so ${one ? "it" : "they"} took no bilateral factor.`,
   "single-bilateral-evaluation": (names, one) =>
     `${names} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor: the factor needs another separately rated disability of the same limbs (${MANUAL}).`,
 };

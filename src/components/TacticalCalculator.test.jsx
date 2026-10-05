@@ -102,6 +102,7 @@ describe("TacticalCalculator bilateral strings", () => {
     "bilateralIssuesTitle",
     "bilateralIssueLimbUnknown",
     "bilateralIssueSideUnknown",
+    "bilateralIssueSideNotSet",
     "bilateralIssueSingleEvaluation",
     "bilateralIssueNotChecked",
     "bilateralNotApplied",

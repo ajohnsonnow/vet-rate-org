@@ -95,3 +95,86 @@ describe("side is normalised before pairing", () => {
     expect(result.bilateralIssues).toEqual([]);
   });
 });
+
+describe("a name that states a side on an entry with no side set", () => {
+  const pasted = (name, rating) => ({
+    name,
+    rating,
+    side: "none",
+    bodyPart: "other",
+  });
+
+  it("is reported, with no factor: pasted left and right knee strain 10 + 10 with 30 give 37, 43, then 40", () => {
+    const list = [
+      pasted("Left knee strain", 10),
+      pasted("Right knee strain", 10),
+      pasted("PTSD", 30),
+    ];
+    const result = calculateVARating(list);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(43);
+    expect(result.combinedRating).toBe(40);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({
+        reason: "side-not-set",
+        name: "Left knee strain",
+      }),
+      expect.objectContaining({
+        reason: "side-not-set",
+        name: "Right knee strain",
+      }),
+    ]);
+    expect(buildCalculatorExplanation(result)).toContain(
+      "Left knee strain and Right knee strain name a side, but no side is set",
+    );
+    const check = checkBilateralFactorCompliance(list);
+    expect(check.applicable).toBe(false);
+    expect(check.message).toContain("no side is set");
+  });
+
+  it("is reported when the entry has no side field at all: 10 + 10 give 19", () => {
+    const result = calculateVARating([
+      { name: "Left knee strain", rating: 10 },
+      c("Right knee", 10, "right", "knee"),
+    ]);
+    expect(result.rawScore).toBe(19);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({
+        reason: "side-not-set",
+        name: "Left knee strain",
+      }),
+    ]);
+  });
+
+  it.each([
+    [
+      "nothing to pair with",
+      [pasted("Left knee strain", 10), pasted("PTSD", 30)],
+    ],
+    [
+      "only the same side",
+      [pasted("Left knee strain", 10), pasted("Left ankle sprain", 10)],
+    ],
+    [
+      "the other limb",
+      [pasted("Left knee strain", 10), pasted("Right shoulder strain", 10)],
+    ],
+    [
+      "a name outside the allowlist",
+      [pasted("Left knee pain", 10), c("Right knee", 10, "right", "knee")],
+    ],
+  ])("is not reported with %s", (_label, list) => {
+    expect(calculateVARating(list).bilateralIssues).toEqual([]);
+  });
+
+  it("an unrecognised side on an entry of unknown limb is reported next to a sided limb: 20 + 20 give 36", () => {
+    const result = calculateVARating([
+      c("Condition A", 20, "lft", "other"),
+      c("Right knee", 20, "right", "knee"),
+    ]);
+    expect(result.rawScore).toBe(36);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({ reason: "side-unknown", name: "Condition A" }),
+    ]);
+  });
+});

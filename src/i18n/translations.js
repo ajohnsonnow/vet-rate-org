@@ -3798,6 +3798,13 @@ export const APP_TRANSLATIONS = {
       vi: "Vet-Rate không nhận ra bên đã nhập cho tình trạng này, nên không áp dụng hệ số song phương. Hãy chỉnh sửa và chọn Trái, Phải hoặc Cả Hai.",
       ko: "Vet-Rate가 이 상태에 입력된 측면을 인식하지 못해 양측 요인을 적용하지 않았습니다. 편집하여 왼쪽, 오른쪽 또는 양쪽을 선택하세요.",
     },
+    bilateralIssueSideNotSet: {
+      en: "The name gives a side, but no side is set for this condition, so it got no bilateral factor. Edit it and choose its body part and side.",
+      es: "El nombre indica un lado, pero esta condición no tiene lado asignado, por lo que no recibió factor bilateral. Edítala y elige la parte del cuerpo y el lado.",
+      tl: "May binabanggit na panig ang pangalan, pero walang nakatakdang panig para sa kondisyong ito, kaya wala itong bilateral factor. I-edit ito at piliin ang bahagi ng katawan at panig.",
+      vi: "Tên có nêu một bên, nhưng tình trạng này chưa được chọn bên, nên không áp dụng hệ số song phương. Hãy chỉnh sửa và chọn bộ phận cơ thể và bên.",
+      ko: "이름에 측면이 나와 있지만 이 상태에 측면이 설정되지 않아 양측 요인을 적용하지 않았습니다. 편집하여 신체 부위와 측면을 선택하세요.",
+    },
     bilateralIssueSingleEvaluation: {
       en: "One rating that already covers both sides gets no bilateral factor by itself. If each side has its own rating, enter them as separate Left and Right conditions.",
       es: "Un solo rating que ya cubre ambos lados no recibe factor bilateral por sí solo. Si cada lado tiene su propio rating, ingrésalos como condiciones separadas de Izquierda y Derecha.",

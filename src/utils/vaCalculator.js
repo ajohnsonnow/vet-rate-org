@@ -427,10 +427,11 @@ function _groupIssues(conditions, candidates, inGroup, alone) {
   const issues = [];
   for (const condition of conditions) {
     const entry = entryOf.get(condition);
+    const limb = _limbOf(condition);
     const unknownSide =
       !RECOGNISED_SIDES.includes(condition.side) &&
       condition.rating >= COMPENSABLE &&
-      LIMBS.includes(_limbOf(condition));
+      (LIMBS.includes(limb) || (limb === "unknown" && candidates.length > 0));
     if (unknownSide) {
       issues.push({ ...condition, reason: "side-unknown" });
     } else if (entry?.limb === "unknown" && couldPair(entry)) {
@@ -626,9 +627,35 @@ function _usableConditions(conditions) {
   });
 }
 
+/**
+ * Entries with no side set whose name states a side and an allowlisted limb
+ * ("Left knee strain" pasted from VA.gov arrives with side "none"). They take
+ * no factor. They are reported only when setting the side the name states
+ * would put them in a bilateral group, so the veteran is told to set it.
+ */
+function _sideNotSetIssues(conditions) {
+  const namedSide = new Map();
+  for (const c of conditions) {
+    if (c.side !== "none" || c.rating < COMPENSABLE) continue;
+    const name = _readName(c.name);
+    if (name.side && LIMBS.includes(name.limb) && _limbOf(c) === name.limb) {
+      namedSide.set(c, name.side);
+    }
+  }
+  if (namedSide.size === 0) return [];
+  const asNamed = conditions.map((c) =>
+    namedSide.has(c) ? { ...c, side: namedSide.get(c) } : c,
+  );
+  const wouldGroup = _formBilateralGroup(asNamed).group;
+  return conditions
+    .filter((c, i) => namedSide.has(c) && wouldGroup.includes(asNamed[i]))
+    .map((c) => ({ ...c, reason: "side-not-set" }));
+}
+
 function _sortIntoBilateralGroup(rawConditions) {
   const conditions = _withNormalisedSide(rawConditions);
   const formed = _formBilateralGroup(conditions);
+  const issues = [...formed.issues, ..._sideNotSetIssues(conditions)];
   const {
     kept: bilateralConditions,
     removed: bilateralExcludedConditions,
@@ -647,8 +674,8 @@ function _sortIntoBilateralGroup(rawConditions) {
       bilateralConditions.some((c) => _limbOf(c) === limb),
     ),
     bilateralIssues: searched
-      ? formed.issues
-      : [...formed.issues, { reason: "most-favourable-not-checked" }],
+      ? issues
+      : [...issues, { reason: "most-favourable-not-checked" }],
   };
 }
 
@@ -738,7 +765,7 @@ function _buildFinalCalculationStep(
  *   also in `nonBilateralConditions`, which is everything combined outside the
  *   group. `bilateralIssues` lists sided entries that got no bilateral factor
  *   for a reason the veteran can fix:
- *   { ...condition, reason: 'limb-unknown'|'side-unknown'|
+ *   { ...condition, reason: 'limb-unknown'|'side-unknown'|'side-not-set'|
  *     'single-bilateral-evaluation' },
  *   plus { reason: 'most-favourable-not-checked' } when § 4.26(d) was skipped
  *   because there were too many arrangements to try.
@@ -872,6 +899,15 @@ export const checkBilateralFactorCompliance = (conditions) => {
     return {
       ...none,
       message: `Vet-Rate did not recognise the side entered for ${names(badSide)}, so it could not check the bilateral factor.`,
+    };
+  }
+  const noSide = result.bilateralIssues.filter(
+    (issue) => issue.reason === "side-not-set",
+  );
+  if (noSide.length > 0) {
+    return {
+      ...none,
+      message: `${names(noSide)} ${noSide.length === 1 ? "names" : "name"} a side, but no side is set, so Vet-Rate could not check the bilateral factor. Set the side and check again.`,
     };
   }
   const unknown = result.bilateralIssues.filter(
