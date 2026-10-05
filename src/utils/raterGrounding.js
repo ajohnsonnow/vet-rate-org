@@ -617,6 +617,15 @@ const TDIU_NEGATIVE = {
     "are insufficient",
     "falls short",
     "fall short",
+    "unlikely to qualify",
+    "unlikely to be eligible",
+    "not likely to qualify",
+    "will not qualify",
+    "would not qualify",
+    "won't qualify",
+    "wouldn't qualify",
+    "likely not eligible",
+    "probably not eligible",
     ...AUXILIARIES.flatMap((aux) =>
       NEGATIVE_VERBS.flatMap((v) => [`${aux} ${v}`, `${aux} currently ${v}`]),
     ),
@@ -649,8 +658,56 @@ const TDIU_POSITIVE = {
     "meets one",
     "meets both",
     "meets either",
+    "likely qualify",
+    "probably qualify",
+    "likely eligible",
+    "probably eligible",
   ],
   words: ["qualifies", "yes"],
+};
+const THRESHOLD_SUBJECT = {
+  words: ["threshold", "thresholds"],
+  phrases: [
+    "percentage standard",
+    "percentage standards",
+    "percentage requirement",
+    "percentage requirements",
+    "percentage test",
+    "percentage criteria",
+    "schedular requirement",
+    "schedular requirements",
+    "schedular criteria",
+  ],
+};
+const THRESHOLD_NEGATIVE = {
+  phrases: [
+    "not meet",
+    "not met",
+    "not satisfy",
+    "not satisfied",
+    "unlikely to meet",
+    "unlikely to satisfy",
+  ],
+};
+const THRESHOLD_POSITIVE = {
+  phrases: [
+    "is met",
+    "are met",
+    "is satisfied",
+    "are satisfied",
+    ...["likely", "probably", "may", "might", "should"].flatMap((w) => [
+      `${w} meet`,
+      `${w} meets`,
+    ]),
+    "appear to meet",
+    "appears to meet",
+    "seem to meet",
+    "seems to meet",
+  ],
+};
+const CONDITIONAL = { words: ["if", "unless", "until", "without", "whether"] };
+const EXTRA_SCHEDULAR = {
+  phrases: ["4.16(b)", "paragraph (b)", "extra-schedular", "extraschedular"],
 };
 const TDIU_HEDGE = {
   words: [
@@ -690,9 +747,10 @@ const SINGLE_TEST = {
   phrases: ["one disability", "one condition", "path a", "first"],
 };
 const COMBINED_TEST = {
-  words: ["combined", "multiple", "second", "70", "40", "forty", "additional"],
+  words: ["multiple", "second", "70", "40", "forty", "additional"],
   phrases: ["two or more", "path b"],
 };
+const COMBINED_WORD = { words: ["combined"] };
 
 const plainSentences = (text) =>
   splitSentences(String(text ?? "").replace(/[*_`#>]/g, ""));
@@ -702,28 +760,84 @@ function isEligibilityHeadline(sentence) {
   return colon > 0 && /eligib/i.test(sentence.slice(0, colon));
 }
 
-const isTdiuConclusionSentence = (sentence) =>
-  (mentionsAny(sentence, TDIU_SUBJECT) || isEligibilityHeadline(sentence)) &&
-  !mentionsAny(sentence, TDIU_HEDGE);
+const isThresholdStatement = (sentence) =>
+  mentionsAny(sentence, THRESHOLD_SUBJECT);
+
+/**
+ * A sentence about the percentage thresholds is a conclusion however it is
+ * hedged ("may not meet", "it appears"), because whether they are met is
+ * arithmetic. Only a real condition ("if", "unless") excuses it, or "alone"
+ * when one rating alone is not what met them. Any other TDIU sentence keeps
+ * the wider excuses: unemployability, evidence and possibility.
+ */
+function isTdiuConclusionSentence(sentence, thresholds) {
+  if (mentionsAny(sentence, EXTRA_SCHEDULAR)) return false;
+  if (isThresholdStatement(sentence)) {
+    if (mentionsAny(sentence, CONDITIONAL)) return false;
+    return (
+      thresholds.basis === "single60" ||
+      !mentionsAny(sentence, { words: ["alone"] })
+    );
+  }
+  return (
+    (mentionsAny(sentence, TDIU_SUBJECT) || isEligibilityHeadline(sentence)) &&
+    !mentionsAny(sentence, TDIU_HEDGE)
+  );
+}
+
+const saysNotMet = (sentence) =>
+  mentionsAny(sentence, TDIU_NEGATIVE) ||
+  (isThresholdStatement(sentence) && mentionsAny(sentence, THRESHOLD_NEGATIVE));
+
+const saysMet = (sentence) =>
+  mentionsAny(sentence, TDIU_POSITIVE) ||
+  (isThresholdStatement(sentence) && mentionsAny(sentence, THRESHOLD_POSITIVE));
+
+/**
+ * True when a denial is not a denial of the result: the sentence also affirms
+ * a test, or it speaks about the test the result did not rest on and that
+ * test is in fact not met. "Combined" by
+ * itself does not make a sentence about the two-or-more test when the sentence
+ * also names the single-disability test ("your combined rating is 60%, so the
+ * single rating does not meet the threshold").
+ */
+function isAboutUnmetOtherTest(sentence, thresholds) {
+  const { basis, highest, combined } = thresholds;
+  if (basis === "combined70") return mentionsAny(sentence, SINGLE_TEST);
+  if (basis !== "single60") return false;
+  const affirmsOneTest =
+    mentionsAny(sentence, TDIU_POSITIVE) ||
+    mentionsAny(sentence, THRESHOLD_POSITIVE);
+  if (affirmsOneTest) return true;
+  if (highest >= 40 && combined >= 70) return false;
+  return (
+    mentionsAny(sentence, COMBINED_TEST) ||
+    (mentionsAny(sentence, COMBINED_WORD) &&
+      !mentionsAny(sentence, SINGLE_TEST))
+  );
+}
 
 /**
  * Whether an answer states an overall TDIU conclusion on the percentage test
  * that contradicts evaluateTdiuThresholds for these conditions: "not eligible",
  * "cannot qualify", "does not meet" when the thresholds are met; "eligible",
- * "qualifies", "meets" when they are not. Sentences that hedge on
+ * "qualifies", "meets" when they are not. A hedged sentence about the
+ * thresholds themselves ("may not meet", "it appears the thresholds are not
+ * met", "likely meets") counts. Sentences that hedge overall eligibility on
  * unemployability, evidence or a condition ("if", "alone", "must", "may"),
- * that speak only about the test the thresholds did not rest on, or that are
- * not about TDIU, are not conclusions. A heuristic over sentences, not a parse.
+ * that speak only about a test that is in fact not met, that are about
+ * extra-schedular consideration, or that are not about TDIU, are not
+ * conclusions. A heuristic over sentences, not a parse.
  */
 export function checkTdiuConclusion(text, calc) {
   const thresholds = tdiuThresholdsFor(calc);
-  const otherTest =
-    thresholds.basis === "combined70" ? SINGLE_TEST : COMBINED_TEST;
-  const stance = thresholds.eligible ? TDIU_NEGATIVE : TDIU_POSITIVE;
+  const contradicts = thresholds.eligible
+    ? (s) => saysNotMet(s) && !isAboutUnmetOtherTest(s, thresholds)
+    : (s) => saysMet(s) && !NEGATION.test(s);
   const sentences = plainSentences(text)
     .map((s) => s.trim())
-    .filter(isTdiuConclusionSentence)
-    .filter((s) => mentionsAny(s, stance) && !mentionsAny(s, otherTest));
+    .filter((s) => isTdiuConclusionSentence(s, thresholds))
+    .filter(contradicts);
   const contradicted = sentences.length > 0;
   let direction = null;
   if (contradicted) direction = thresholds.eligible ? "denies" : "asserts";
