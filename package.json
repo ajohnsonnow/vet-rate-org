@@ -67,6 +67,8 @@
     "stress:all": "node scripts/stress/run-cfile-stress.mjs --spec both",
     "eval:golden": "node scripts/eval/run-golden-set.mjs",
     "eval:golden:dry": "node scripts/eval/run-golden-set.mjs --dry-run",
+    "eval:model-watch": "node scripts/eval/model-watch.mjs",
+    "eval:model-watch:snapshot": "node scripts/eval/model-watch.mjs --update-snapshot",
     "postinstall": "node scripts/copy-wasm.mjs",
     "prepare": "husky",
     "preflight": "node scripts/preflight.js",
