@@ -169,3 +169,31 @@ describe("pairs that are not reported", () => {
     expect(calculateVARating(list).bilateralIssues).toEqual([]);
   });
 });
+
+describe("an entry whose body part is not a limb is not told to set a side it cannot set", () => {
+  it("a Back entry that mentions the right leg, beside a left knee: 20 + 20 give 36, reported as needing its own entry", () => {
+    const list = [
+      form("Lumbar strain with right leg sciatica", "none", "back"),
+      form("Knee (Left)", "left", "knee"),
+    ];
+    const result = calculateVARating(list);
+    expect(result.rawScore).toBe(36);
+    expect(reported(result)).toEqual([
+      ["Lumbar strain with right leg sciatica", "separate-entry"],
+    ]);
+    const check = checkBilateralFactorCompliance(list);
+    expect(check.message).toContain("Lumbar strain with right leg sciatica");
+    expect(check.message).toContain("its own entry");
+    expect(check.message).not.toMatch(/set the side/i);
+  });
+
+  it("an imported Back entry with a side set and a leg in its name is reported the same way", () => {
+    const result = calculateVARating([
+      form("Left leg radiculopathy", "left", "back"),
+      form("Knee (Right)", "right", "knee"),
+    ]);
+    expect(reported(result)).toEqual([
+      ["Left leg radiculopathy", "separate-entry"],
+    ]);
+  });
+});

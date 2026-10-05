@@ -20,7 +20,7 @@ describe("a non-limb body part with a name that names a limb", () => {
     expect(result.combinedRating).toBe(40);
     expect(result.bilateralIssues).toEqual([
       expect.objectContaining({
-        reason: "limb-unknown",
+        reason: "separate-entry",
         name: "Left leg radiculopathy",
       }),
     ]);

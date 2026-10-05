@@ -874,6 +874,20 @@ function _looseIssues(conditions, alreadyReported, group) {
     }));
 }
 
+// The form offers no side for a non-limb body part, so "set the side" or
+// "choose its body part" would send the veteran nowhere. Such an entry is
+// told that a separately rated limb condition needs its own entry.
+const _REASONS_NEEDING_A_LIMB_ENTRY = [
+  "limb-unknown",
+  "side-not-set",
+  "side-unspecified",
+];
+const _reasonForEntry = (condition, reason) =>
+  NON_LIMB_BODY_PARTS.has(condition.bodyPart) &&
+  _REASONS_NEEDING_A_LIMB_ENTRY.includes(reason)
+    ? "separate-entry"
+    : reason;
+
 function _sortIntoBilateralGroup(rawConditions) {
   const conditions = _withNormalisedSide(rawConditions);
   const formed = _formBilateralGroup(conditions);
@@ -883,7 +897,7 @@ function _sortIntoBilateralGroup(rawConditions) {
   }
   const issues = conditions
     .filter((c) => reported.has(c))
-    .map((c) => ({ ...c, reason: reported.get(c) }));
+    .map((c) => ({ ...c, reason: _reasonForEntry(c, reported.get(c)) }));
   const {
     kept: bilateralConditions,
     removed: bilateralExcludedConditions,
@@ -996,7 +1010,7 @@ function _buildFinalCalculationStep(
  *   group. `bilateralIssues` lists sided entries that got no bilateral factor
  *   for a reason the veteran can fix:
  *   { ...condition, reason: 'limb-unknown'|'side-unknown'|'side-not-set'|
- *     'side-unspecified'|'single-bilateral-evaluation' },
+ *     'side-unspecified'|'separate-entry'|'single-bilateral-evaluation' },
  *   plus { reason: 'most-favourable-not-checked' } when § 4.26(d) was skipped
  *   because there were too many arrangements to try.
  */
@@ -1102,6 +1116,8 @@ const _NO_CHECK_MESSAGES = {
     `No side is set for ${names}, so Vet-Rate could not tell whether ${one ? "it pairs with another entry" : "they are on different sides"}.`,
   "limb-unknown": (names, one) =>
     `Vet-Rate could not tell whether ${names} ${one ? "is an arm or a leg condition" : "are arm or leg conditions"}, so it could not check the bilateral factor for ${one ? "it" : "them"}.`,
+  "separate-entry": (names, one) =>
+    `${names} ${one ? "has" : "have"} a body part that is not an arm or a leg, so Vet-Rate could not check the bilateral factor for ${one ? "it" : "them"}. If the arm or leg condition ${one ? "it mentions" : "they mention"} is rated separately, add it as its own entry with a body part and side.`,
   "single-bilateral-evaluation": (names, one) =>
     `${names} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor. The factor needs another separately rated disability of the same limbs (VA manual M21-1, V.iv.1.C.4.b).`,
 };

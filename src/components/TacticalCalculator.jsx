@@ -1726,6 +1726,7 @@ const BILATERAL_ISSUE_KEYS = {
   "side-unknown": "bilateralIssueSideUnknown",
   "side-not-set": "bilateralIssueSideNotSet",
   "side-unspecified": "bilateralIssueSideUnspecified",
+  "separate-entry": "bilateralIssueSeparateEntry",
   "single-bilateral-evaluation": "bilateralIssueSingleEvaluation",
   "most-favourable-not-checked": "bilateralIssueNotChecked",
 };
