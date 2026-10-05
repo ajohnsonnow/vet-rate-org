@@ -1113,9 +1113,24 @@ const _NO_CHECK_MESSAGES = {
  * does not support. `pairedParts` holds the names of the conditions in the
  * group.
  */
+/** One sentence per reason for the entries the calculator could not place. */
+function _unresolvedSentences(issues) {
+  const sentences = Object.entries(_NO_CHECK_MESSAGES).flatMap(
+    ([reason, sentence]) => {
+      const found = issues.filter((i) => i.reason === reason);
+      return found.length > 0
+        ? [sentence(_joinNames(found.map((c) => c.name)), found.length === 1)]
+        : [];
+    },
+  );
+  if (sentences.length === 0) return "";
+  return `${sentences.join(" ")} Check ${issues.length === 1 ? "this entry" : "these entries"} in the calculator.`;
+}
+
 export const checkBilateralFactorCompliance = (conditions) => {
   const result = calculateVARating(conditions);
   const names = (list) => _joinNames(list.map((c) => c.name));
+  const unresolved = _unresolvedSentences(result.bilateralIssues);
 
   if (result.bilateralConditions.length > 0) {
     const group = result.calculationSteps.find(
@@ -1124,7 +1139,12 @@ export const checkBilateralFactorCompliance = (conditions) => {
     return {
       applicable: true,
       pairedParts: result.bilateralConditions.map((c) => c.name),
-      message: `The bilateral factor applies to ${names(result.bilateralConditions)} (38 CFR § 4.26). Check that your rating decision applied it.`,
+      message: [
+        `The bilateral factor applies to ${names(result.bilateralConditions)} (38 CFR § 4.26). Check that your rating decision applied it.`,
+        unresolved,
+      ]
+        .filter(Boolean)
+        .join(" "),
       potentialBonus: group.bilateralFactorCapped
         ? `Combined, these ratings are ${group.combinedBilateral}%. With the factor they count as 100%, because a rating cannot exceed 100%.`
         : `Combined, these ratings are ${group.combinedBilateral}%. The factor adds 10% of that (${group.bilateralFactor}), so they count as ${group.bilateralGroupRating}% before combining with your other ratings.`,
@@ -1139,20 +1159,7 @@ export const checkBilateralFactorCompliance = (conditions) => {
       message: `${names(excluded)} are bilateral disabilities, but leaving them out of the bilateral factor gives a higher combined rating, so no factor is expected (38 CFR § 4.26(d)).`,
     };
   }
-  const sentences = Object.entries(_NO_CHECK_MESSAGES).flatMap(
-    ([reason, sentence]) => {
-      const found = result.bilateralIssues.filter((i) => i.reason === reason);
-      return found.length > 0
-        ? [sentence(names(found), found.length === 1)]
-        : [];
-    },
-  );
-  if (sentences.length > 0) {
-    return {
-      ...none,
-      message: `${sentences.join(" ")} Check ${result.bilateralIssues.length === 1 ? "this entry" : "these entries"} in the calculator.`,
-    };
-  }
+  if (unresolved) return { ...none, message: unresolved };
   return {
     ...none,
     message:
