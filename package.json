@@ -65,6 +65,8 @@
     "stress:cfile": "node scripts/stress/run-cfile-stress.mjs --spec cfile",
     "stress:muster": "node scripts/stress/run-cfile-stress.mjs --spec muster",
     "stress:all": "node scripts/stress/run-cfile-stress.mjs --spec both",
+    "eval:golden": "node scripts/eval/run-golden-set.mjs",
+    "eval:golden:dry": "node scripts/eval/run-golden-set.mjs --dry-run",
     "postinstall": "node scripts/copy-wasm.mjs",
     "prepare": "husky",
     "preflight": "node scripts/preflight.js",
