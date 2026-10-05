@@ -255,10 +255,54 @@ export function findDeniedBilateralClaims(text, calc) {
 const CAP_WORDS =
   /\b(?:maximum|max|cannot exceed|can't exceed|cap|limit|up to|at most|no more than)\b/i;
 
-const withoutCapStatements = (text) =>
-  splitSentences(text)
-    .filter((sentence) => !CAP_WORDS.test(sentence))
-    .join("\n");
+const WHAT_IF =
+  /\b(?:adding (?:a|an|another)|if you (?:had|add|added|were|get|got))\b/i;
+const NEED_WORDS = {
+  words: ["need", "needs", "needed", "require", "requires", "required", "must"],
+};
+const RATING_THRESHOLD_WORDS = { words: ["threshold", "thresholds"] };
+const TDIU_THRESHOLD_FIGURES = new Set([40, 60, 70]);
+
+/** "50% for PTSD, 30% for tinnitus": two or more of the ratings entered. */
+function listsEnteredRatings(sentence, calc) {
+  const listed = [
+    ...calc.bilateralConditions,
+    ...calc.nonBilateralConditions,
+  ].filter((c) =>
+    new RegExp(
+      String.raw`\b${c.rating}\s*(?:%|percent)\s+for\s+${escapeRegExp(String(c.name))}\b`,
+      "i",
+    ).test(sentence),
+  );
+  return listed.length >= 2;
+}
+
+/**
+ * Sentences whose figures are not statements of this veteran's combined
+ * rating: a cap ("the maximum is 100%"), an example or what-if ("e.g.",
+ * "adding a 10% condition would result in"), or a list of the ratings
+ * entered.
+ */
+const isNotOwnRating = (sentence, calc) =>
+  CAP_WORDS.test(sentence) ||
+  WHAT_IF.test(sentence) ||
+  mentionsAny(sentence, EXAMPLE_WORDS) ||
+  listsEnteredRatings(sentence, calc);
+
+/**
+ * The combined ratings one sentence states. In a sentence that says a
+ * threshold is not reached or is needed, the 38 CFR § 4.16(a) figures are the
+ * threshold, not the veteran's rating.
+ */
+function statedInSentence(sentence) {
+  const figures = extractStatedCombinedRatings(sentence);
+  const namesThreshold =
+    mentionsAny(sentence, RATING_THRESHOLD_WORDS) &&
+    (NEGATION.test(sentence) || mentionsAny(sentence, NEED_WORDS));
+  return namesThreshold
+    ? figures.filter((v) => !TDIU_THRESHOLD_FIGURES.has(v))
+    : figures;
+}
 
 function workingValues(calc) {
   const values = new Set(calc.combineSteps.map((s) => s.result));
@@ -451,24 +495,25 @@ export function findReworkedFigures(text, calc) {
  * when it differs from the calculator's rating and is either a multiple of 10
  * (it reads as a final rating) or is not one of the calculator's own working
  * values. Intermediate values from the working are not treated as final
- * claims, and sentences that state a cap ("the maximum is 100%") are ignored.
+ * claims. Figures in a cap ("the maximum is 100%"), an example, a what-if or
+ * a list of the ratings entered, and a threshold figure the answer says is
+ * not reached, are not statements of the veteran's rating and are ignored.
  * An answer that lands on the right figure is still not ok when it shows
  * working the calculator did not produce (`reworked`) or calls the computed
  * block wrong (`disputes`).
  */
 export function checkRaterResponse(text, calc) {
-  const body = withoutCapStatements(text);
-  const stated = extractStatedCombinedRatings(body);
+  const sentences = splitSentences(text).filter(
+    (sentence) => !isNotOwnRating(sentence, calc),
+  );
+  const stated = [...new Set(sentences.flatMap(statedInSentence))];
   const working = workingValues(calc);
   const wrongFigures = stated.filter(
     (v) => v !== calc.combinedRating && (v % 10 === 0 || !working.has(v)),
   );
   const wrongFigureSentences = wrongFigures.map(
     (v) =>
-      body
-        .split("\n")
-        .find((line) => extractStatedCombinedRatings(line).includes(v))
-        ?.trim() ?? null,
+      sentences.find((s) => statedInSentence(s).includes(v))?.trim() ?? null,
   );
   const inventedPairs = findInventedBilateralClaims(text, calc);
   const deniedPairs = findDeniedBilateralClaims(text, calc);
