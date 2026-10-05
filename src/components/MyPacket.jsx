@@ -117,6 +117,7 @@ import { enrichAwardForDisplay } from "../utils/ribbonRackData";
 import VADataCenter from "./VADataCenter";
 import ClaimEvidenceUpload from "./ClaimEvidenceUpload";
 import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import { formatLocalDate } from "../utils/dateUtils";
 import { recordRemovedTimelineEvent } from "../utils/timelineStoreSync";
 import { formatFileSize } from "../utils/documentAnalyzer";
@@ -1511,6 +1512,7 @@ function CombinedRatingSummary({ myRatings, stated, t }) {
       {stated && stated.rating !== rounded && (
         <StatedRatingMismatch stated={stated} calculated={rounded} />
       )}
+      <BilateralIssuesSummary conditions={myRatings} t={t} />
     </div>
   );
 }

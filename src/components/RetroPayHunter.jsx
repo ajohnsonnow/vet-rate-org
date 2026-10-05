@@ -7,8 +7,10 @@
  *
  * Features:
  * - Compare historical ratings against correct pay tables
- * - Detect missing bilateral factor application
- * - Identify potential Clear and Unmistakable Errors (CUE)
+ * - Say whether the bilateral factor (38 CFR 4.26) applies to the saved
+ *   ratings, so the veteran can check the decision; the tool does not read
+ *   the decision and cannot tell whether the factor was applied
+ * - List common Clear and Unmistakable Error (CUE) patterns for reference
  * - Calculate total missed compensation
  * - AI-powered analysis for action recommendations
  */
@@ -32,15 +34,12 @@ import {
 } from "../utils/veteranContextProvider";
 import {
   analyzeRetroactivePay,
-  checkBilateralFactorCompliance,
   CUE_PATTERNS,
 } from "../data/vaPayRatesHistorical";
+import { checkBilateralFactorCompliance } from "../utils/vaCalculator";
 import { formatLocalDate } from "../utils/dateUtils";
 
 const STORAGE_KEY = "vet_rate_retro_pay_history";
-
-const findCuePattern = (patternId) =>
-  CUE_PATTERNS.find((p) => p.id === patternId);
 
 const formatRatingHistoryLine = (p) => {
   const spouseNote = p.dependents?.married ? "with spouse" : "";
@@ -49,6 +48,25 @@ const formatRatingHistoryLine = (p) => {
     : "";
   return `• ${formatLocalDate(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
 };
+
+// Whether the decision applied the factor is never examined here, so the
+// bilateral check is a prompt to verify, not a CUE alert.
+export const buildRetroPayAlerts = () => [];
+
+export const formatBilateralPromptBlock = (bilateralCheck) =>
+  bilateralCheck?.applicable
+    ? `\n**Bilateral factor (38 CFR § 4.26):**\nIt applies to: ${bilateralCheck.pairedParts.join(", ")}\nWhether the rating decision applied it has not been checked; tell the veteran to verify it.`
+    : "";
+
+export const bilateralSaveFields = (bilateralCheck) => ({
+  bilateralFactorApplies: bilateralCheck?.applicable || false,
+});
+
+export const RETRO_PAY_ACTION_STEPS =
+  "2. **Action Steps**: What should the veteran do NEXT? (Request a payment review, ask a Veterans Service Officer to check the decision, etc.)";
+
+export const formatRetroPayFindings = (totalMonths, total) =>
+  `Analyzed ${totalMonths || 0} months, est. $${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 
 const formatCueIssuesBlock = (alerts) => {
   if (alerts.length === 0) return "";
@@ -223,7 +241,6 @@ function createPeriodHandlers({
 function useRunAnalysisCallback({
   ratingHistory,
   conditions,
-  bilateralCheck,
   setAnalysis,
   setBilateralCheck,
   setCueAlerts,
@@ -243,31 +260,18 @@ function useRunAnalysisCallback({
       const result = analyzeRetroactivePay(ratingHistory);
       setAnalysis(result);
 
-      // Check bilateral factor
-      if (conditions.length > 0) {
-        const bilateral = checkBilateralFactorCompliance(conditions);
-        setBilateralCheck(bilateral);
-      }
+      const bilateral =
+        conditions.length > 0
+          ? checkBilateralFactorCompliance(conditions)
+          : null;
+      if (bilateral) setBilateralCheck(bilateral);
 
-      // Generate CUE alerts based on patterns
-      const alerts = [];
-
-      // Check for bilateral factor issues
-      if (bilateralCheck?.applicable) {
-        alerts.push({
-          pattern: findCuePattern("bilateral_not_applied"),
-          severity: "high",
-          message: `You have bilateral conditions (${bilateralCheck.pairedParts.join(", ")}). Verify the 10% bilateral factor was applied.`,
-        });
-      }
-
-      setCueAlerts(alerts);
+      setCueAlerts(buildRetroPayAlerts());
       setIsAnalyzing(false);
     }, 1500);
   }, [
     ratingHistory,
     conditions,
-    bilateralCheck,
     setAnalysis,
     setBilateralCheck,
     setCueAlerts,
@@ -311,14 +315,14 @@ ${analysis.hasCoverageGap ? `- NOTE: ${analysis.uncoveredMonths} month(s) before
 **Rating History:**
 ${ratingHistory.map(formatRatingHistoryLine).join("\n")}
 
-${bilateralCheck?.applicable ? `\n**Bilateral Factor Issue Detected:**\nPaired body parts: ${bilateralCheck.pairedParts.join(", ")}\nThe 10% bilateral factor may not have been applied correctly.` : ""}
+${formatBilateralPromptBlock(bilateralCheck)}
 
 ${formatCueIssuesBlock(cueAlerts)}
 
 Provide a veteran-focused analysis covering:
 
 1. **What This Means**: Explain the findings in plain language - no VA jargon
-2. **Action Steps**: What should the veteran do NEXT? (File CUE claim, request payment review, etc.)
+${RETRO_PAY_ACTION_STEPS}
 3. **Timeline**: How long does the process typically take?
 4. **Documentation Needed**: What evidence should they gather?
 5. **Cautions**: Common mistakes to avoid when filing for retroactive pay
@@ -345,13 +349,16 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         extractedData: {
           totalMonths: analysis?.totalMonths,
           cueAlerts: cueAlerts?.length || 0,
-          bilateralIssue: bilateralCheck?.applicable || false,
+          ...bilateralSaveFields(bilateralCheck),
           ratingPeriods: ratingHistory?.length || 0,
         },
         vkbMergeData: {
           aiInsights: {
-            retroPayFindings: `Analyzed ${analysis?.totalMonths || 0} months, est. $${computeTotals(analysis).total.toLocaleString("en-US", { minimumFractionDigits: 2 })}; ${cueAlerts?.length || 0} potential CUE issues`,
-            bilateralFactorIssue: bilateralCheck?.applicable || false,
+            retroPayFindings: formatRetroPayFindings(
+              analysis?.totalMonths,
+              computeTotals(analysis).total,
+            ),
+            ...bilateralSaveFields(bilateralCheck),
           },
         },
       }).catch((err) => console.warn("Failed to save retro pay results:", err));
@@ -651,7 +658,7 @@ function ActualReceivedField({ newEntry, setNewEntry }) {
   );
 }
 
-function LoadedConditionsNotice({ conditions }) {
+export function LoadedConditionsNotice({ conditions }) {
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700 rounded-lg">
       <div className="flex items-center gap-2 mb-2">
@@ -660,14 +667,11 @@ function LoadedConditionsNotice({ conditions }) {
       </div>
       <p className="text-purple-300 text-sm">
         {conditions.length} condition
-        {conditions.length !== 1 ? "s" : ""} detected for bilateral factor
-        analysis.
-        {conditions.some(
-          (c) =>
-            c.side === "bilateral" || c.side === "left" || c.side === "right",
-        ) && (
+        {conditions.length !== 1 ? "s" : ""} loaded for the bilateral factor
+        check.
+        {checkBilateralFactorCompliance(conditions).applicable && (
           <span className="block mt-1 text-purple-400">
-            ⚠️ Paired body parts found - bilateral factor may apply!
+            The bilateral factor applies to some of these ratings.
           </span>
         )}
       </p>
@@ -1029,7 +1033,7 @@ function CueAlertsList({ cueAlerts }) {
   );
 }
 
-function BilateralCheckCard({ bilateralCheck }) {
+export function BilateralCheckCard({ bilateralCheck }) {
   if (!bilateralCheck) return null;
 
   return (
@@ -1043,7 +1047,9 @@ function BilateralCheckCard({ bilateralCheck }) {
       <div className="flex items-center gap-3 mb-2">
         <span className="text-xl">🦾</span>
         <h3 className="text-lg font-bold text-blue-400">
-          Bilateral Factor Analysis
+          {bilateralCheck.applicable
+            ? "Check that the bilateral factor was applied"
+            : "Bilateral factor"}
         </h3>
       </div>
       <p className="text-gray-300">{bilateralCheck.message}</p>
@@ -1314,7 +1320,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
   const runAnalysis = useRunAnalysisCallback({
     ratingHistory,
     conditions,
-    bilateralCheck,
     setAnalysis,
     setBilateralCheck,
     setCueAlerts,

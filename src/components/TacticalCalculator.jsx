@@ -149,7 +149,10 @@ function useTacticalCalculatorFormState(
 
   // What-If scenario
   const [whatIfRating, setWhatIfRating] = useState(30);
-  const [whatIfBilateral, setWhatIfBilateral] = useState(false);
+  const [whatIfCondition, setWhatIfCondition] = useState({
+    bodyPart: "",
+    side: "none",
+  });
 
   // View mode
   const [activeTab, setActiveTab] = useState(
@@ -183,8 +186,8 @@ function useTacticalCalculatorFormState(
     setDependents,
     whatIfRating,
     setWhatIfRating,
-    whatIfBilateral,
-    setWhatIfBilateral,
+    whatIfCondition,
+    setWhatIfCondition,
     activeTab,
     setActiveTab,
     showSteps,
@@ -549,7 +552,7 @@ function computeDerivedResults({
   myRatings,
   dependents,
   whatIfRating,
-  whatIfBilateral,
+  whatIfCondition,
 }) {
   const myRatingsResults = calculateVARating(myRatings);
   const myRatingsPyramiding = detectPyramiding(myRatings);
@@ -561,11 +564,10 @@ function computeDerivedResults({
   );
   const pyramiding = detectPyramiding(conditions);
   const tdiu = checkTDIUEligibility(conditions);
-  const whatIfResults = calculateWhatIf(
-    conditions,
-    whatIfRating,
-    whatIfBilateral,
-  );
+  const whatIfResults = calculateWhatIf(conditions, whatIfRating, {
+    side: whatIfCondition.side,
+    bodyPart: whatIfCondition.bodyPart || "other",
+  });
   const ratingNeededFor90 = calculateNeededRating(results.rawScore, 90);
   const ratingNeededFor100 = calculateNeededRating(results.rawScore, 100);
 
@@ -1007,8 +1009,9 @@ function WhatIfScenarioInput({
   t,
   whatIfRating,
   setWhatIfRating,
-  whatIfBilateral,
-  setWhatIfBilateral,
+  whatIfCondition,
+  setWhatIfCondition,
+  allBodyParts,
 }) {
   return (
     <div className="space-y-4">
@@ -1047,23 +1050,25 @@ function WhatIfScenarioInput({
           </div>
         </div>
 
-        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-        <label className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg cursor-pointer">
-          <input
-            type="checkbox"
-            checked={whatIfBilateral}
-            onChange={(e) => setWhatIfBilateral(e.target.checked)}
-            className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+        <div className="space-y-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
+          <BodyPartSelectField
+            t={t}
+            newCondition={whatIfCondition}
+            setNewCondition={setWhatIfCondition}
+            allBodyParts={allBodyParts}
           />
-          <div>
-            <span className="font-medium text-purple-800 dark:text-purple-200">
-              🔄 {t("tacticalCalc", "wouldBeBilateral")}
-            </span>
-            <p className="text-xs text-purple-600 dark:text-purple-400">
-              {t("tacticalCalc", "addsBilateralBoost")}
-            </p>
-          </div>
-        </label>
+          {allBodyParts.find((bp) => bp.value === whatIfCondition.bodyPart)
+            ?.canBeBilateral && (
+            <SideSelectField
+              t={t}
+              newCondition={whatIfCondition}
+              setNewCondition={setWhatIfCondition}
+            />
+          )}
+          <p className="text-xs text-purple-700 dark:text-purple-300">
+            {t("tacticalCalc", "whatIfBilateralRule")}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1203,8 +1208,9 @@ function WhatIfTab({
   t,
   whatIfRating,
   setWhatIfRating,
-  whatIfBilateral,
-  setWhatIfBilateral,
+  whatIfCondition,
+  setWhatIfCondition,
+  allBodyParts,
   whatIfResults,
 }) {
   return (
@@ -1213,8 +1219,9 @@ function WhatIfTab({
         t={t}
         whatIfRating={whatIfRating}
         setWhatIfRating={setWhatIfRating}
-        whatIfBilateral={whatIfBilateral}
-        setWhatIfBilateral={setWhatIfBilateral}
+        whatIfCondition={whatIfCondition}
+        setWhatIfCondition={setWhatIfCondition}
+        allBodyParts={allBodyParts}
       />
       <WhatIfResultsPanel
         t={t}
@@ -1444,15 +1451,44 @@ function RecordsCandidatesBanner({ recordCandidates, handleLoadFromRecords }) {
   );
 }
 
+const SIDE_LABEL_KEYS = {
+  left: "left",
+  right: "right",
+  bilateral: "bothSides",
+};
+
+const bilateralGroupIds = (conditions) =>
+  new Set(calculateVARating(conditions).bilateralConditions.map((c) => c.id));
+
+function ConditionSideBadge({ t, side, inBilateralGroup }) {
+  const key = SIDE_LABEL_KEYS[side];
+  if (!key) return null;
+  const sideLabel = t("tacticalCalc", key);
+  if (!inBilateralGroup) {
+    return (
+      <span className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+        {sideLabel}
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
+      🔄 {t("tacticalCalc", "bilateral")} ({sideLabel})
+    </span>
+  );
+}
+
 function ConditionRow({
+  t,
   condition,
+  inBilateralGroup,
   handleEditCondition,
   handleRemoveCondition,
 }) {
   return (
     <div
       className={`flex items-center justify-between p-3 rounded-lg border ${
-        condition.side !== "none"
+        inBilateralGroup
           ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
           : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
       }`}
@@ -1465,11 +1501,11 @@ function ConditionRow({
           <p className="font-medium text-gray-800 dark:text-gray-200">
             {condition.name}
           </p>
-          {condition.side !== "none" && (
-            <span className="text-xs px-2 py-0.5 bg-purple-200 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded-full">
-              🔄 Bilateral ({condition.side})
-            </span>
-          )}
+          <ConditionSideBadge
+            t={t}
+            side={condition.side}
+            inBilateralGroup={inBilateralGroup}
+          />
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -1525,6 +1561,7 @@ function ConditionsListSection({
   handleEditCondition,
   handleRemoveCondition,
 }) {
+  const groupIds = bilateralGroupIds(conditions);
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-between flex-shrink-0">
@@ -1555,7 +1592,9 @@ function ConditionsListSection({
           {conditions.map((condition) => (
             <ConditionRow
               key={condition.id}
+              t={t}
               condition={condition}
+              inBilateralGroup={groupIds.has(condition.id)}
               handleEditCondition={handleEditCondition}
               handleRemoveCondition={handleRemoveCondition}
             />
@@ -1677,6 +1716,37 @@ function MainRatingDisplay({ t, results }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const BILATERAL_ISSUE_KEYS = {
+  "limb-unknown": "bilateralIssueLimbUnknown",
+  "side-unknown": "bilateralIssueSideUnknown",
+  "side-not-set": "bilateralIssueSideNotSet",
+  "single-bilateral-evaluation": "bilateralIssueSingleEvaluation",
+  "most-favourable-not-checked": "bilateralIssueNotChecked",
+};
+
+function BilateralIssuesNotice({ t, issues }) {
+  if (!issues || issues.length === 0) return null;
+  return (
+    <div
+      role="status"
+      aria-label={t("tacticalCalc", "bilateralIssuesTitle")}
+      className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-800 dark:text-amber-200"
+    >
+      <p className="font-semibold">
+        {t("tacticalCalc", "bilateralIssuesTitle")}
+      </p>
+      <ul className="mt-1 space-y-1 list-disc list-inside">
+        {issues.map((issue, index) => (
+          <li key={issue.id ?? `${issue.reason}-${index}`}>
+            {issue.name && <strong>{issue.name}: </strong>}
+            {t("tacticalCalc", BILATERAL_ISSUE_KEYS[issue.reason])}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -1889,6 +1959,12 @@ function CalculationStepDetail({ step }) {
           Non-bilateral: {step.nonBilateral.join(", ")}
         </div>
       )}
+      {step.excludedFromFactor && step.excludedFromFactor.length > 0 && (
+        <div className="ml-8 text-sm text-gray-600 dark:text-gray-400">
+          Left out of the bilateral factor because that gives a higher rating
+          (38 CFR § 4.26(d)): {step.excludedFromFactor.join(", ")}
+        </div>
+      )}
       {step.ratings && (
         <div className="ml-8 text-sm font-mono text-gray-700 dark:text-gray-300">
           Ratings (sorted): [{step.ratings.join("%, ")}%]
@@ -1898,7 +1974,10 @@ function CalculationStepDetail({ step }) {
         <div className="ml-8 mt-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded text-sm">
           <div className="text-purple-700 dark:text-purple-300">
             <div>Combined: {step.combinedBilateral}%</div>
-            <div>Bilateral Factor (+10%): {step.bilateralFactor}%</div>
+            <div>
+              Bilateral Factor (+10%): {step.bilateralFactor}%
+              {step.bilateralFactorCapped && " (group capped at 100%)"}
+            </div>
             <div className="font-bold mt-1">
               Group Rating: {step.bilateralGroupRating}%
             </div>
@@ -1984,6 +2063,8 @@ function CalculatorResultsSection({
       <ResultsValidationBadge t={t} />
 
       <MainRatingDisplay t={t} results={results} />
+
+      <BilateralIssuesNotice t={t} issues={results.bilateralIssues} />
 
       {/* Pyramiding Warnings - NEW */}
       <PyramidingWarningsSection t={t} pyramiding={pyramiding} />
@@ -2318,6 +2399,8 @@ function MyRatingsSummaryFilled({
           </p>
         )}
       </div>
+
+      <BilateralIssuesNotice t={t} issues={myRatingsResults.bilateralIssues} />
 
       {/* Monthly Pay Estimate */}
       <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">
@@ -3443,8 +3526,27 @@ function EditConditionSideField({ t, editForm, setEditForm, allBodyParts }) {
   );
 }
 
-function EditConditionBilateralExplanation({ t, editForm }) {
-  if (editForm.side === "none") return null;
+function EditConditionBilateralExplanation({
+  t,
+  editForm,
+  editingCondition,
+  conditions,
+  allBodyParts,
+}) {
+  const sided = allBodyParts.find(
+    (bp) => bp.value === editForm.bodyPart,
+  )?.canBeBilateral;
+  if (!sided || editForm.side === "none") return null;
+  const asEdited = conditions.map((c) =>
+    c.id === editingCondition.id ? { ...c, ...editForm } : c,
+  );
+  if (!bilateralGroupIds(asEdited).has(editingCondition.id)) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300">
+        {t("tacticalCalc", "bilateralNotApplied")}
+      </div>
+    );
+  }
   return (
     <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
       <div className="flex gap-2">
@@ -3536,6 +3638,7 @@ function VAGovRatingPasterModal({
 
 function EditConditionModal({
   t,
+  conditions,
   editingCondition,
   editForm,
   setEditForm,
@@ -3599,7 +3702,6 @@ function EditConditionModal({
           setEditForm={setEditForm}
         />
 
-        {/* Side (only show if body part can be bilateral) */}
         <EditConditionSideField
           t={t}
           editForm={editForm}
@@ -3607,8 +3709,13 @@ function EditConditionModal({
           allBodyParts={allBodyParts}
         />
 
-        {/* Bilateral Factor Explanation */}
-        <EditConditionBilateralExplanation t={t} editForm={editForm} />
+        <EditConditionBilateralExplanation
+          t={t}
+          editForm={editForm}
+          editingCondition={editingCondition}
+          conditions={conditions}
+          allBodyParts={allBodyParts}
+        />
       </div>
     </ResponsiveModal>
   );
@@ -3627,6 +3734,7 @@ const TacticalCalculator = ({
   });
   const {
     t,
+    conditions,
     showVAGovPaster,
     setShowVAGovPaster,
     editingCondition,
@@ -3657,6 +3765,7 @@ const TacticalCalculator = ({
       {/* Edit Condition Modal */}
       <EditConditionModal
         t={t}
+        conditions={conditions}
         editingCondition={editingCondition}
         editForm={editForm}
         setEditForm={setEditForm}

@@ -151,6 +151,7 @@ import {
 } from "./cFileSegmentation";
 import { findEvidenceGaps, quickGapCheck } from "./evidenceGapFinder";
 import { createTimeSlicer, yieldToMainThread } from "./mainThreadScheduler";
+import { sideFromName } from "./vaCalculator";
 
 // Vision AI confidence threshold - below this, try vision fallback
 const VISION_FALLBACK_THRESHOLD = 60; // If OCR confidence < 60%, try Florence-2
@@ -1764,12 +1765,7 @@ const hasRatingDecisions = (result) => {
   );
 };
 
-const _sideFromConditionName = (name) => {
-  if (/\bbilateral\b/i.test(name)) return "bilateral";
-  if (/\bleft\b/i.test(name)) return "left";
-  if (/\bright\b/i.test(name)) return "right";
-  return "none";
-};
+const _sideFromConditionName = (name) => sideFromName(name);
 
 // Letters write effective dates as prose ("September 15, 2023", "Jun 30,
 // 2007"); everything that renders a saved rating runs it through

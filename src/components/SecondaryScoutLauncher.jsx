@@ -7,6 +7,7 @@ import { getMyRatings, addRating } from "../utils/veteranProfile";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { analyzePDF, OCR_STATES, formatFileSize } from "../utils/ocr";
 import { calculateVARating } from "../utils/vaCalculator";
+import BilateralIssuesSummary from "./BilateralIssuesSummary";
 import { searchDisabilityData } from "../utils/searchUtils";
 import disabilityData from "../data/disabilityData.json";
 
@@ -1859,6 +1860,7 @@ function MyRatingsHeader({ savedRatings, calculateCombinedRating }) {
           </span>
         </div>
       )}
+      <BilateralIssuesSummary conditions={savedRatings} />
     </div>
   );
 }

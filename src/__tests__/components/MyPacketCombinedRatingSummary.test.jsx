@@ -62,4 +62,35 @@ describe("MyPacket Ratings tab: combined rating via calculateVARating", () => {
     );
     expect(summary).toBeInTheDocument();
   });
+
+  it("names saved ratings that took no bilateral factor, next to the combined rating", async () => {
+    saveMyRatings([
+      { name: "Left knee pain", bodyPart: "other", rating: 10, side: "none" },
+      { name: "Right knee pain", bodyPart: "other", rating: 10, side: "none" },
+    ]);
+
+    renderMyPacket();
+    fireEvent.click(screen.getByText("Ratings"));
+
+    const notice = await screen.findByRole("status", {
+      name: /bilateral factor not applied/i,
+    });
+    expect(notice).toHaveTextContent("Left knee pain");
+    expect(notice).toHaveTextContent("Right knee pain");
+  });
+
+  it("shows no bilateral notice when the saved ratings pair up", async () => {
+    saveMyRatings([
+      { name: "Left knee", bodyPart: "knee", rating: 10, side: "left" },
+      { name: "Right knee", bodyPart: "knee", rating: 10, side: "right" },
+    ]);
+
+    renderMyPacket();
+    fireEvent.click(screen.getByText("Ratings"));
+
+    await screen.findByText(/% raw → /);
+    expect(
+      screen.queryByRole("status", { name: /bilateral factor not applied/i }),
+    ).toBeNull();
+  });
 });
