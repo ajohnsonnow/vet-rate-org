@@ -17,7 +17,10 @@ import { _cleanConditionName } from "./cfileAnalyzer";
 import { getAllConditions } from "../services/knowledgeQuery";
 import { lookupDiagnosticCodeByName } from "./hallucinationTrap";
 import { normalizeConditionName } from "./conditionName";
-import { buildVkbMergeFromCFile } from "./veteranContextProvider";
+import {
+  buildVkbMergeFromCFile,
+  splitCFileTimeline,
+} from "./veteranContextProvider";
 import { resolveTimelineDate } from "./musterCallProcessor";
 import { getDocumentTypeLabel } from "./documentClassifier";
 
@@ -144,6 +147,7 @@ function _documentEntry(extraction) {
  *   conditions: string[],
  *   leftOut: {name: string, key: string, ticked: boolean}[],
  *   timeline: {date: string, eventType: string, description: string}[],
+ *   timelineLeftOut: {date: string, description: string, reason: string}[],
  * }}
  */
 export function planCFileSave(analysis = {}, extraction = {}, options = {}) {
@@ -176,6 +180,9 @@ export function planCFileSave(analysis = {}, extraction = {}, options = {}) {
     vkbMergeData,
     conditions: vkbMergeData.medicalConditionsCurrent.map((c) => c.name),
     leftOut,
+    timelineLeftOut: splitCFileTimeline(
+      Array.isArray(analysis.timeline) ? analysis.timeline : [],
+    ).leftOut,
     timeline: [
       ...vkbMergeData.evidenceTimeline,
       ...(document ? [document] : []),

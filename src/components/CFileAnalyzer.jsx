@@ -226,6 +226,24 @@ function SavePlanLists({ plan, ticked, onToggle }) {
           </li>
         ))}
       </ul>
+      {plan.timelineLeftOut.length > 0 && (
+        <>
+          <p className="mt-2 font-medium">
+            Timeline events left out ({plan.timelineLeftOut.length})
+          </p>
+          <ul
+            className="list-disc pl-5"
+            data-testid="cfile-save-timeline-left-out"
+          >
+            {plan.timelineLeftOut.map((e, i) => (
+              <li key={`${e.date}|${e.description}|${i}`}>
+                {e.date || "no date"}: {e.description || "no description"}. Left
+                out: {e.reason}.
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
@@ -281,11 +299,11 @@ export function CFileSaveToRecords({ file, extractedText, analysisResult }) {
         Saving keeps the conditions and timeline events listed below, the
         summary, exposures and action items the analysis wrote, any service
         periods, awards, deployments and ratings found in the document, and the
-        document "{fileName}" in your Knowledge Base and My Packet. An event
-        already saved from this document is updated, not added again. The text
-        the analysis wrote can repeat details from the document. Your name, date
-        of birth, VA file number and claim number are not saved as fields.
-        Closing this screen without saving keeps nothing.
+        document "{fileName}" in your Knowledge Base and My Packet. Saving again
+        replaces the events earlier saved from this document, so none is
+        repeated. The text the analysis wrote can repeat details from the
+        document. Your name, date of birth, VA file number and claim number are
+        not saved as fields. Closing this screen without saving keeps nothing.
       </p>
       <SavePlanLists plan={plan} ticked={ticked} onToggle={toggleTick} />
       {status.phase === "error" && (
