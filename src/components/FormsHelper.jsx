@@ -9,6 +9,7 @@ import AIConsentModal from "./AIConsentModal";
 import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import StandardDraftNotice from "./common/StandardDraftNotice";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import {
   enhanceFormStatement,
@@ -4778,6 +4779,27 @@ function AIEnhancementHeader({ aiStatus, t }) {
   );
 }
 
+// Which version is on screen. When the AI's wording was not usable the "AI
+// version" is the app-built draft, and the note says so in place of the label.
+function AIVersionIndicator({
+  aiEnhancedContent,
+  showAIVersion,
+  aiDraftNote,
+  t,
+}) {
+  if (!aiEnhancedContent) return null;
+  if (showAIVersion && aiDraftNote) {
+    return <StandardDraftNotice note={aiDraftNote} className="mt-3" />;
+  }
+  return (
+    <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
+      {showAIVersion
+        ? `✨ ${t("formsHelper", "viewingAIVersion")}`
+        : `📝 ${t("formsHelper", "viewingOriginal")}`}
+    </div>
+  );
+}
+
 function AIEnhancementSection({
   isAIEnabledFormType,
   aiStatus,
@@ -4787,6 +4809,7 @@ function AIEnhancementSection({
   toggleAIVersion,
   showAIVersion,
   aiError,
+  aiDraftNote,
   onOpenAISettings,
   t,
 }) {
@@ -4820,14 +4843,12 @@ function AIEnhancementSection({
         </div>
       )}
 
-      {/* Version indicator */}
-      {aiEnhancedContent && (
-        <div className="mt-3 text-sm text-purple-600 dark:text-purple-300">
-          {showAIVersion
-            ? `✨ ${t("formsHelper", "viewingAIVersion")}`
-            : `📝 ${t("formsHelper", "viewingOriginal")}`}
-        </div>
-      )}
+      <AIVersionIndicator
+        aiEnhancedContent={aiEnhancedContent}
+        showAIVersion={showAIVersion}
+        aiDraftNote={aiDraftNote}
+        t={t}
+      />
     </div>
   );
 }
@@ -7842,8 +7863,11 @@ function useFormsHelperAIState() {
   const [aiEnhancedContent, setAiEnhancedContent] = useState(null);
   const [showAIVersion, setShowAIVersion] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [aiDraftNote, setAiDraftNote] = useState(null);
 
   return {
+    aiDraftNote,
+    setAiDraftNote,
     showAIConsent,
     setShowAIConsent,
     isEnhancingWithAI,
@@ -8234,6 +8258,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     setAiEnhancedContent,
     setShowAIVersion,
     setAiError,
+    setAiDraftNote,
   } = ctx;
 
   const generateContent = () => {
@@ -8249,6 +8274,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     setAiEnhancedContent(null);
     setShowAIVersion(false);
     setAiError(null);
+    setAiDraftNote(null);
   };
 
   return { generateContent, handleFinishWizard };
@@ -8260,6 +8286,7 @@ function _buildFormsHelperAIHandlers(ctx) {
     setShowAIConsent,
     setIsEnhancingWithAI,
     setAiError,
+    setAiDraftNote,
     formData,
     setAiEnhancedContent,
     setShowAIVersion,
@@ -8298,6 +8325,7 @@ function _buildFormsHelperAIHandlers(ctx) {
     setShowAIConsent(false);
     setIsEnhancingWithAI(true);
     setAiError(null);
+    setAiDraftNote(null);
 
     try {
       const result = await enhanceFormStatement(selectedForm?.id, formData);
@@ -8312,6 +8340,7 @@ function _buildFormsHelperAIHandlers(ctx) {
         setAiEnhancedContent(
           substituteVeteranNamePlaceholder(result.content, veteranName),
         );
+        setAiDraftNote(result.draftNote ?? null);
         setShowAIVersion(true);
       } else {
         setAiError(result.error || "Failed to enhance statement with AI.");
@@ -8514,6 +8543,7 @@ function FormsHelperReviewStep({ state, handlers }) {
     isEnhancingWithAI,
     showAIVersion,
     aiError,
+    aiDraftNote,
   } = state;
   const { onOpenAISettings, importStatus, selectedForm } = state;
   const {
@@ -8553,6 +8583,7 @@ function FormsHelperReviewStep({ state, handlers }) {
         toggleAIVersion={toggleAIVersion}
         showAIVersion={showAIVersion}
         aiError={aiError}
+        aiDraftNote={aiDraftNote}
         onOpenAISettings={onOpenAISettings}
         t={t}
       />

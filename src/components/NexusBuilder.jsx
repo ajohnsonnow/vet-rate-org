@@ -21,6 +21,8 @@ import CertificationCheckbox from "./CertificationCheckbox";
 import StatementAnalyzer from "./StatementAnalyzer";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
+import { AGGRAVATION_OPTIONS } from "../utils/writerTemplates";
+import StandardDraftNotice from "./common/StandardDraftNotice";
 import {
   isAIAvailable,
   enhancePersonalStatement,
@@ -33,28 +35,6 @@ import SmartAILoadButton from "./SmartAILoadButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims, getStatement } from "../utils/claimsStorage";
 import { normalizeConditionName } from "../utils/conditionName";
-
-const AGGRAVATION_OPTIONS = [
-  {
-    value: "stress",
-    label: "Stress and anxiety from primary condition causes flare-ups",
-  },
-  {
-    value: "medication",
-    label: "Medication side effects from treating primary condition",
-  },
-  {
-    value: "physical",
-    label: "Physical limitations or compensatory behaviors",
-  },
-  { value: "sleep", label: "Sleep disruption from primary condition" },
-  { value: "weight", label: "Weight gain or metabolic changes" },
-  {
-    value: "inflammation",
-    label: "Chronic inflammation or immune dysfunction",
-  },
-  { value: "other", label: "Other (please explain below)" },
-];
 
 // Pure statement generator, split out of NexusBuilder purely to keep its
 // function body under the line-count/complexity limits. Same logic, same
@@ -947,6 +927,7 @@ const NexusReviewControls = ({
 // markup, same behavior.
 const NexusReviewBanners = ({
   aiError,
+  draftNote,
   useAIVersion,
   aiEnhancedStatement,
   handleRequestAIEnhance,
@@ -981,8 +962,12 @@ const NexusReviewBanners = ({
       </div>
     )}
 
-    {/* AI Success indicator */}
     {useAIVersion && aiEnhancedStatement && (
+      <StandardDraftNotice note={draftNote} />
+    )}
+
+    {/* AI Success indicator */}
+    {useAIVersion && aiEnhancedStatement && !draftNote && (
       <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 flex items-center gap-2">
         <svg
           className="w-5 h-5 text-purple-500"
@@ -1129,6 +1114,7 @@ const NexusStepReview = ({
   handleRequestAIEnhance,
   toggleStatementVersion,
   aiError,
+  draftNote,
   currentStatement,
   currentDoctorNote,
   isSecondary,
@@ -1149,6 +1135,7 @@ const NexusStepReview = ({
 
     <NexusReviewBanners
       aiError={aiError}
+      draftNote={draftNote}
       useAIVersion={useAIVersion}
       aiEnhancedStatement={aiEnhancedStatement}
       handleRequestAIEnhance={handleRequestAIEnhance}
@@ -1225,12 +1212,14 @@ function createAIConsentHandler({
   setIsEnhancing,
   setAiError,
   setAiEnhancedStatement,
+  setDraftNote,
   setUseAIVersion,
 }) {
   return async () => {
     setShowAIConsent(false);
     setIsEnhancing(true);
     setAiError(null);
+    setDraftNote(null);
 
     try {
       const result = await enhancePersonalStatement(
@@ -1243,6 +1232,7 @@ function createAIConsentHandler({
         setAiEnhancedStatement(
           result.content.replaceAll("[Date]", new Date().toLocaleDateString()),
         );
+        setDraftNote(result.draftNote ?? null);
         setUseAIVersion(true);
       } else {
         setAiError(result.error);
@@ -1315,6 +1305,7 @@ function useNexusAIEnhancement({
   const [aiEnhancedStatement, setAiEnhancedStatement] = useState(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [aiError, setAiError] = useState(null);
+  const [draftNote, setDraftNote] = useState(null);
   const [useAIVersion, setUseAIVersion] = useState(false);
   const [fieldHelping, setFieldHelping] = useState(null);
 
@@ -1330,6 +1321,7 @@ function useNexusAIEnhancement({
     setIsEnhancing,
     setAiError,
     setAiEnhancedStatement,
+    setDraftNote,
     setUseAIVersion,
   });
 
@@ -1355,6 +1347,7 @@ function useNexusAIEnhancement({
     aiEnhancedStatement,
     isEnhancing,
     aiError,
+    draftNote,
     useAIVersion,
     fieldHelping,
     handleRequestAIEnhance,
@@ -1727,6 +1720,7 @@ const NexusStepContent = ({
         handleRequestAIEnhance={ai.handleRequestAIEnhance}
         toggleStatementVersion={ai.toggleStatementVersion}
         aiError={ai.aiError}
+        draftNote={ai.draftNote}
         currentStatement={output.currentStatement}
         currentDoctorNote={output.currentDoctorNote}
         isSecondary={wizard.isSecondary}
