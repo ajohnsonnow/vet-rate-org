@@ -45,6 +45,7 @@ import {
   resetAICircuitBreaker,
   checkLocalServer,
   CUT_SHORT_NOTICE,
+  REPEATED_NOTICE,
 } from "../../utils/unifiedAIService";
 import * as diamondSwarm from "../../utils/diamondSwarm";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
@@ -161,6 +162,56 @@ describe("generateAI when the swarm stopped for length", () => {
       `File an Intent to File first.\n\n${CUT_SHORT_NOTICE}`,
     );
     expect(result.truncated).toBe(true);
+  });
+
+  it("swarm: when the cut removed a repetition, says it started repeating and suggests rephrasing", async () => {
+    const trimmed = { kind: "block", copies: 4, removedChars: 3000 };
+    swarmReplies({
+      text: CUT,
+      truncated: true,
+      outputCleanup: { echoRemoved: false, trimmed },
+    });
+    const result = await generateAI("How do I start a claim?", callOptions());
+    expect(result.text).toBe(
+      `File an Intent to File first.
+
+${REPEATED_NOTICE}`,
+    );
+    expect(result.text).not.toMatch(/length limit|Ask for the rest/);
+    expect(result.truncated).toBe(true);
+  });
+
+  it("the repetition notice is one plain line", () => {
+    expect(REPEATED_NOTICE).toBe(
+      "This answer started repeating itself and was stopped. Try rephrasing your question.",
+    );
+  });
+
+  it("swarm: a clean-up that only removed a wrapper echo keeps the length note", async () => {
+    swarmReplies({
+      text: CUT,
+      truncated: true,
+      outputCleanup: { echoRemoved: true, trimmed: null },
+    });
+    const result = await generateAI("How do I start a claim?", callOptions());
+    expect(result.text).toBe(
+      `File an Intent to File first.
+
+${CUT_SHORT_NOTICE}`,
+    );
+  });
+
+  it("swarm: the repetition flag of one call does not leak into the next", async () => {
+    const trimmed = { kind: "block", copies: 4, removedChars: 3000 };
+    swarmReplies({ text: CUT, truncated: true, outputCleanup: { trimmed } });
+    await generateAI("How do I start a claim?", callOptions());
+    swarmReplies({ text: CUT, truncated: true });
+    const second = await generateAI("How do I start a claim?", callOptions());
+    expect(second.text).toBe(
+      `File an Intent to File first.
+
+${CUT_SHORT_NOTICE}`,
+    );
   });
 
   it("swarm: an answer that finished on its own is untouched", async () => {

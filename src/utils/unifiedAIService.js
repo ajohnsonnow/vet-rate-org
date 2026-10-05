@@ -1346,7 +1346,11 @@ const runWarrantCouncil = async (systemPrompt, userPrompt, options = {}) => {
       : await inferencePromise;
 
     swarmGenerating = false;
-    _noteStoppedForLength(options, result.truncated === true);
+    _noteStoppedForLength(
+      options,
+      result.truncated === true,
+      Boolean(result.outputCleanup?.trimmed),
+    );
     return { text: result.text, agent: result.agent || agentId };
   } catch (err) {
     swarmGenerating = false;
@@ -2722,14 +2726,19 @@ function _fittedOutputTokens(fit, assembledChars) {
 // engine) reports finish_reason "length"; Gemini reports MAX_TOKENS. The
 // local-server and wllama clients return text only, so nothing is known for
 // them.
-function _noteStoppedForLength(options, stopped) {
-  if (options?._finish) options._finish.truncated = stopped;
+function _noteStoppedForLength(options, stopped, repeated = false) {
+  if (!options?._finish) return;
+  options._finish.truncated = stopped;
+  options._finish.repeated = stopped && repeated;
 }
 
 const PARAGRAPH_BREAK = "\n\n";
 
 export const CUT_SHORT_NOTICE =
   "This answer was cut short because it reached the length limit. Ask for the rest if you need it.";
+
+export const REPEATED_NOTICE =
+  "This answer started repeating itself and was stopped. Try rephrasing your question.";
 
 /**
  * A prose answer the engine stopped for length is trimmed to its last
@@ -2751,9 +2760,10 @@ function _settleTruncation(result, finish, options, hasCalculatorLead) {
     ...(leaveAsIs
       ? {}
       : {
-          text: [trimToLastSentence(text), CUT_SHORT_NOTICE].join(
-            PARAGRAPH_BREAK,
-          ),
+          text: [
+            trimToLastSentence(text),
+            finish.repeated ? REPEATED_NOTICE : CUT_SHORT_NOTICE,
+          ].join(PARAGRAPH_BREAK),
         }),
   };
 }
