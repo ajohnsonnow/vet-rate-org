@@ -502,18 +502,18 @@ Vet-Rate's calculator result for the ratings you entered: your combined rating i
   });
 });
 
-describe("rater grounding: a replaced answer still answers a TDIU question", () => {
-  const SIXTY = [
-    { name: "Mental health", rating: 60, side: "none", bodyPart: "mental" },
-  ];
-  const askWith = (prompt, text, conditions) => {
-    diamondSwarm.generateWithSwarm.mockResolvedValue({ text });
-    return generateAI(
-      prompt,
-      callOptions({ toolId: "tdiu-builder", conditions }),
-    );
-  };
+const SIXTY = [
+  { name: "Mental health", rating: 60, side: "none", bodyPart: "mental" },
+];
+const askWith = (prompt, text, conditions) => {
+  diamondSwarm.generateWithSwarm.mockResolvedValue({ text });
+  return generateAI(
+    prompt,
+    callOptions({ toolId: "tdiu-builder", conditions }),
+  );
+};
 
+describe("rater grounding: a replaced answer still answers a TDIU question", () => {
   beforeEach(async () => {
     await BACKENDS.swarm.setup();
   });
@@ -556,14 +556,135 @@ describe("rater grounding: a replaced answer still answers a TDIU question", () 
     expect(result.calculatorReplacement).toBeDefined();
     expect(result.text).not.toContain("unemployability");
   });
+});
 
-  it("does not add the paragraph when the answer was not replaced", async () => {
+describe("rater grounding: a kept answer to a TDIU question gets the threshold paragraph", () => {
+  beforeEach(async () => {
+    await BACKENDS.swarm.setup();
+  });
+
+  it("appends the paragraph to a kept answer when the prompt mentions TDIU", async () => {
     const result = await askWith(
       "Can I qualify for TDIU with only one 60% mental health rating?",
       "Your combined rating is 60%.",
       SIXTY,
     );
     expect(result.calculatorReplacement).toBeUndefined();
+    expect(result.tdiuParagraphAppended).toBe(true);
+    expect(result.text.startsWith("Your combined rating is 60%.\n\n")).toBe(
+      true,
+    );
+    expect(result.text).toContain(
+      "About your question on individual unemployability (TDIU):",
+    );
+    expect(result.text).toContain(
+      "Mental health is rated 60 percent, which meets the threshold for a single disability.",
+    );
+    expect(
+      result.text.match(/About your question on individual/g),
+    ).toHaveLength(1);
+  });
+
+  it("appends both the calculator line and the paragraph when the kept answer states no combined rating", async () => {
+    const result = await askWith(
+      "Can I qualify for TDIU with only one 60% mental health rating?",
+      "Yes, the single 60 percent rating meets the TDIU percentage test.",
+      SIXTY,
+    );
+    expect(result.calculatorAppended).toEqual({ expected: 60 });
+    expect(result.tdiuParagraphAppended).toBe(true);
+    const line = result.text.indexOf("your combined rating is 60%");
+    const paragraph = result.text.indexOf("About your question on individual");
+    expect(line).toBeGreaterThan(0);
+    expect(paragraph).toBeGreaterThan(line);
+  });
+
+  it("leaves a kept answer alone when the prompt does not mention TDIU", async () => {
+    const result = await askWith(
+      "Calculate my combined rating.",
+      "Your combined rating is 60%.",
+      SIXTY,
+    );
     expect(result.text).toBe("Your combined rating is 60%.");
+    expect(result.tdiuParagraphAppended).toBeUndefined();
+  });
+});
+
+describe("rater grounding: a TDIU conclusion that contradicts the thresholds is replaced", () => {
+  beforeEach(async () => {
+    await BACKENDS.swarm.setup();
+  });
+
+  it("replaces an answer that says not eligible when the thresholds are met, and says why", async () => {
+    const FOUR_TDIU = [
+      { name: "Condition 1", rating: 60, side: "none", bodyPart: "other" },
+      { name: "Condition 2", rating: 20, side: "none", bodyPart: "other" },
+      { name: "Condition 3", rating: 20, side: "none", bodyPart: "other" },
+      { name: "Condition 4", rating: 20, side: "none", bodyPart: "other" },
+    ];
+    const draft =
+      "**TDIU Eligibility Status: NOT ELIGIBLE**\n\nYour combined rating is 80%.";
+    const result = await askWith(
+      "Am I eligible for TDIU with one 60% rating and three 20% ratings?",
+      draft,
+      FOUR_TDIU,
+    );
+    expect(result.text).toContain(
+      "gave a TDIU conclusion that did not match the percentage thresholds of 38 CFR § 4.16(a)",
+    );
+    expect(result.text).not.toContain("stated a combined rating");
+    expect(result.text).not.toContain("did not match Vet-Rate's calculator");
+    expect(result.text).toContain("Your combined rating is 80%.");
+    expect(result.text).toContain(
+      "About your question on individual unemployability (TDIU):",
+    );
+    expect(result.calculatorReplacement.draft).toBe(draft);
+    expect(result.calculatorReplacement.reason).toBe(
+      "said the 38 CFR § 4.16(a) percentage thresholds are not met but they are met (highest rating 60%, combined 80%)",
+    );
+    expect(result.calculatorReplacement.tdiuConclusion).toEqual([
+      "TDIU Eligibility Status: NOT ELIGIBLE",
+    ]);
+    expect(result.validationWarnings).toEqual([
+      expect.stringContaining("thresholds are not met but they are met"),
+    ]);
+  });
+
+  it("replaces an answer that says eligible when the thresholds are not met", async () => {
+    const result = await askWith(
+      "Am I eligible for TDIU with two 30% ratings?",
+      "You are eligible for TDIU. Your combined rating is 50%.",
+      [
+        { name: "Condition 1", rating: 30, side: "none", bodyPart: "other" },
+        { name: "Condition 2", rating: 30, side: "none", bodyPart: "other" },
+      ],
+    );
+    expect(result.calculatorReplacement.reason).toContain(
+      "said the 38 CFR § 4.16(a) percentage thresholds are met but they are not met",
+    );
+    expect(result.text).toContain("neither threshold is met");
+    expect(result.text).not.toContain("You are eligible for TDIU");
+  });
+
+  it("a replacement caused only by the combined figure does not claim a TDIU reason", async () => {
+    const result = await askWith(
+      "Can I qualify for TDIU with only one 60% mental health rating?",
+      "Your combined rating is 70%.",
+      SIXTY,
+    );
+    expect(result.text).toContain(
+      "stated a combined rating that did not match Vet-Rate's calculator",
+    );
+    expect(result.text).not.toContain("gave a TDIU conclusion");
+  });
+
+  it("keeps a hedged answer that depends on unemployability and appends the paragraph", async () => {
+    const result = await askWith(
+      "Can I qualify for TDIU with only one 60% mental health rating?",
+      "Your combined rating is 60%. If you are capable of working, you are not eligible for TDIU.",
+      SIXTY,
+    );
+    expect(result.calculatorReplacement).toBeUndefined();
+    expect(result.tdiuParagraphAppended).toBe(true);
   });
 });

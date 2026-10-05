@@ -1,0 +1,255 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { calculateVARating } from "../../utils/vaCalculator";
+import {
+  buildCalculatorExplanation,
+  buildReplacementNotice,
+  checkRaterResponse,
+  checkTdiuConclusion,
+  describeMismatch,
+  tdiuThresholdsFor,
+} from "../../utils/raterGrounding";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const evalDir = join(here, "..", "agentic", "eval", "fixtures");
+const FIXTURE = JSON.parse(
+  readFileSync(join(evalDir, "tdiuConclusions.json"), "utf8"),
+);
+const GOLDEN = Object.fromEntries(
+  readFileSync(join(here, "..", "agentic", "golden-set.jsonl"), "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .map((c) => [c.id, c]),
+);
+
+const set = (...ratings) =>
+  ratings.map((rating, i) => ({
+    name: `Condition ${i + 1}`,
+    rating,
+    side: "none",
+    bodyPart: "other",
+  }));
+const calcOf = (...ratings) => calculateVARating(set(...ratings));
+
+describe("tdiuThresholdsFor", () => {
+  it.each([
+    [[60, 20, 20, 20], true, "single60", 60, 80],
+    [[60], true, "single60", 60, 60],
+    [[50, 50], true, "combined70", 50, 80],
+    [[40, 20], false, null, 40, 50],
+    [[30, 30], false, null, 30, 50],
+  ])("%j", (ratings, eligible, basis, highest, combined) => {
+    const out = tdiuThresholdsFor(calcOf(...ratings));
+    expect(out.eligible).toBe(eligible);
+    expect(out.basis).toBe(basis);
+    expect(out.highest).toBe(highest);
+    expect(out.combined).toBe(combined);
+  });
+});
+
+describe("a13 and a25 answers recorded in every transcript", () => {
+  it("covers every a13 and a25 response and replaced draft in the results folder", () => {
+    expect(FIXTURE).toHaveLength(27);
+    expect(new Set(FIXTURE.map((e) => e.caseId))).toEqual(
+      new Set(["a13", "a25"]),
+    );
+    expect(FIXTURE.filter((e) => e.kind === "replaced draft")).toHaveLength(3);
+    expect(new Set(FIXTURE.map((e) => e.label))).toEqual(
+      new Set(["contradicts", "consistent", "none"]),
+    );
+  });
+
+  it("every one of those cases meets the thresholds through a single condition at 60", () => {
+    for (const id of ["a13", "a25"]) {
+      const t = tdiuThresholdsFor(calculateVARating(GOLDEN[id].conditions));
+      expect(t).toMatchObject({ eligible: true, basis: "single60" });
+    }
+  });
+
+  it.each(FIXTURE)("$transcript $caseId $kind ($label): $why", (entry) => {
+    const calc = calculateVARating(GOLDEN[entry.caseId].conditions);
+    const out = checkTdiuConclusion(entry.text, calc);
+    expect(out.contradicted).toBe(entry.label === "contradicts");
+    if (entry.label === "contradicts") expect(out.direction).toBe("denies");
+  });
+});
+
+describe("checkTdiuConclusion when the thresholds are met", () => {
+  const met = calcOf(60, 20, 20, 20);
+
+  it.each([
+    ["a bold status line", "**TDIU Eligibility Status: NOT ELIGIBLE**"],
+    [
+      "a plain refusal",
+      "No, you cannot qualify for TDIU with only one 60% rating.",
+    ],
+    [
+      "does not meet",
+      "You do not meet the thresholds for TDIU under 38 CFR § 4.16(a).",
+    ],
+    [
+      "ineligible",
+      "On these ratings you are ineligible for unemployability benefits.",
+    ],
+    [
+      "fails to meet",
+      "The veteran fails to meet the TDIU percentage standard.",
+    ],
+  ])("flags %s", (_name, text) => {
+    expect(checkTdiuConclusion(text, met).contradicted).toBe(true);
+  });
+
+  it.each([
+    [
+      "a conclusion that rests on being able to work",
+      "If you are capable of working, you are not eligible for TDIU.",
+    ],
+    [
+      "the rating alone is not enough",
+      "The 60% rating alone does not qualify you for TDIU automatically.",
+    ],
+    [
+      "a statement about the second test only",
+      "You do not meet the combined 70 percent test for TDIU, but the single 60 percent test is met.",
+    ],
+    [
+      "I cannot determine",
+      "I cannot determine whether you qualify for TDIU without your employment history.",
+    ],
+    [
+      "a refusal about calculating",
+      "I cannot calculate a TDIU rating without your occupational status.",
+    ],
+    [
+      "a sentence about another benefit",
+      "You are not eligible for SMC at these ratings.",
+    ],
+    [
+      "an affirmative conclusion",
+      "You meet the threshold for TDIU through the single 60 percent rating.",
+    ],
+    [
+      "no conclusion",
+      "TDIU also requires that you are unable to secure or follow a substantially gainful occupation.",
+    ],
+  ])("does not flag %s", (_name, text) => {
+    expect(checkTdiuConclusion(text, met).contradicted).toBe(false);
+  });
+});
+
+describe("checkTdiuConclusion when the thresholds are not met", () => {
+  const notMet = calcOf(30, 30);
+
+  it.each([
+    ["eligible", "You are eligible for TDIU."],
+    ["qualifies", "**Eligibility Determination: YES**"],
+    [
+      "yes you can qualify",
+      "Yes, you can qualify for TDIU with these ratings.",
+    ],
+    ["meets", "Your 30 percent rating meets the TDIU threshold."],
+  ])("flags an answer that says %s", (_name, text) => {
+    const out = checkTdiuConclusion(text, notMet);
+    expect(out.contradicted).toBe(true);
+    expect(out.direction).toBe("asserts");
+  });
+
+  it.each([
+    ["not eligible", "You do not meet the percentage thresholds for TDIU."],
+    [
+      "a conditional",
+      "You would be eligible for TDIU if your combined rating reached 70 percent.",
+    ],
+    [
+      "consideration",
+      "You may be eligible for TDIU consideration under paragraph (b).",
+    ],
+  ])("does not flag %s", (_name, text) => {
+    expect(checkTdiuConclusion(text, notMet).contradicted).toBe(false);
+  });
+
+  it("does not flag a statement about one test when the other carried the result", () => {
+    const viaCombined = calcOf(50, 50);
+    expect(
+      checkTdiuConclusion(
+        "You do not meet the single 60 percent test for TDIU.",
+        viaCombined,
+      ).contradicted,
+    ).toBe(false);
+    expect(
+      checkTdiuConclusion("You are not eligible for TDIU.", viaCombined)
+        .contradicted,
+    ).toBe(true);
+  });
+});
+
+describe("the notice and the recorded reason say what fired", () => {
+  const calc = calcOf(60, 20, 20, 20);
+  const okCheck = checkRaterResponse("Your combined rating is 80%.", calc);
+  const wrongFigure = checkRaterResponse(
+    "The final combined rating is 70%.",
+    calc,
+  );
+  const tdiuCheck = checkTdiuConclusion(
+    "TDIU Eligibility Status: NOT ELIGIBLE",
+    calc,
+  );
+
+  it("a TDIU-only replacement does not claim a combined-rating mismatch", () => {
+    const text = buildCalculatorExplanation(calc, {
+      tdiu: true,
+      check: okCheck,
+      tdiuCheck,
+    });
+    const notice = buildReplacementNotice(okCheck, tdiuCheck);
+    expect(text.startsWith(notice)).toBe(true);
+    expect(notice).toContain(
+      "TDIU conclusion that did not match the percentage thresholds of 38 CFR § 4.16(a)",
+    );
+    expect(notice).not.toMatch(/combined rating that did not match/);
+    expect(notice).not.toMatch(/bilateral/);
+  });
+
+  it("a figure-only replacement does not mention TDIU", () => {
+    const notice = buildReplacementNotice(wrongFigure, null);
+    expect(notice).toContain(
+      "stated a combined rating that did not match Vet-Rate's calculator",
+    );
+    expect(notice).not.toMatch(/TDIU/);
+  });
+
+  it("a replacement with both reasons names both", () => {
+    const notice = buildReplacementNotice(wrongFigure, tdiuCheck);
+    expect(notice).toMatch(
+      /combined rating that did not match Vet-Rate's calculator and gave a TDIU conclusion/,
+    );
+  });
+
+  it("the recorded reason states what the answer said and what the thresholds are", () => {
+    expect(describeMismatch(okCheck, tdiuCheck)).toBe(
+      "said the 38 CFR § 4.16(a) percentage thresholds are not met but they are met (highest rating 60%, combined 80%)",
+    );
+    expect(describeMismatch(wrongFigure, tdiuCheck)).toMatch(
+      /^stated combined rating 70% but the calculator gives 80%; said the 38 CFR § 4.16\(a\)/,
+    );
+    const notMet = calcOf(30, 30);
+    const asserts = checkTdiuConclusion("You are eligible for TDIU.", notMet);
+    expect(
+      describeMismatch(
+        checkRaterResponse("Your combined rating is 50%.", notMet),
+        asserts,
+      ),
+    ).toBe(
+      "said the 38 CFR § 4.16(a) percentage thresholds are met but they are not met (highest rating 30%, combined 50%)",
+    );
+  });
+
+  it("the default notice, with no check supplied, is the combined-rating wording", () => {
+    expect(buildReplacementNotice()).toContain(
+      "did not match Vet-Rate's calculator",
+    );
+  });
+});

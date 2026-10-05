@@ -54,9 +54,12 @@ import {
   buildCalculatorExplanation,
   buildCalculatorSummaryLine,
   buildComputedResultBlock,
+  buildTdiuThresholdParagraph,
   checkRaterResponse,
+  checkTdiuConclusion,
   mentionsUnemployability,
   describeMismatch,
+  TDIU_PARAGRAPH_LEAD,
 } from "./raterGrounding";
 import {
   AI_DATA_CLASS,
@@ -1105,13 +1108,16 @@ export const injectCalculatorForRater = (prompt, options) => {
 
 /**
  * After generation, compare a rater-routed response with the calculator. A
- * response that states a different combined rating, or presents a bilateral
- * pair the calculator did not find, is replaced by the calculator's own
+ * response that states a different combined rating, presents a bilateral
+ * pair the calculator did not find, or (for a TDIU question) states a
+ * percentage-threshold conclusion that contradicts 38 CFR § 4.16(a) as
+ * evaluateTdiuThresholds applies it, is replaced by the calculator's own
  * working in plain language, plus the TDIU threshold paragraph when the
  * veteran's prompt asks about TDIU. The replacement is recorded on the result
  * (validationWarnings, plus calculatorReplacement) so callers can see it
- * happened. A response that never states the combined rating at all is kept
- * and the calculator's one-line result is appended to it.
+ * happened. A response that is kept gets the calculator's one-line result
+ * appended when it never states the combined rating, and the TDIU threshold
+ * paragraph appended whenever the prompt asks about TDIU.
  */
 export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
@@ -1119,24 +1125,20 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   }
   const calc = calculateVARating(options.conditions);
   const check = checkRaterResponse(result.text, calc);
-  if (check.ok) {
-    if (check.stated.includes(check.expected)) return result;
-    const body = String(result.text ?? "").trimEnd();
-    return {
-      ...result,
-      text: body
-        ? `${body}\n\n${buildCalculatorSummaryLine(calc)}`
-        : buildCalculatorSummaryLine(calc),
-      calculatorAppended: { expected: check.expected },
-    };
+  const asksTdiu = mentionsUnemployability(prompt);
+  const tdiuCheck = asksTdiu ? checkTdiuConclusion(result.text, calc) : null;
+  if (check.ok && !tdiuCheck?.contradicted) {
+    return keepWithCalculatorAdditions(result, calc, check, asksTdiu);
   }
 
-  const reason = describeMismatch(check);
+  const reason = describeMismatch(check, tdiuCheck);
   console.warn(`🧮 Rater response replaced by calculator working: ${reason}`);
   return {
     ...result,
     text: buildCalculatorExplanation(calc, {
-      tdiu: mentionsUnemployability(prompt),
+      tdiu: asksTdiu,
+      check,
+      tdiuCheck,
     }),
     validationWarnings: [
       ...(result.validationWarnings || []),
@@ -1148,9 +1150,28 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       expected: check.expected,
       stated: check.stated,
       inventedPairs: check.inventedPairs,
+      ...(tdiuCheck?.contradicted
+        ? { tdiuConclusion: tdiuCheck.sentences }
+        : {}),
     },
   };
 };
+
+function keepWithCalculatorAdditions(result, calc, check, asksTdiu) {
+  const appendLine = !check.stated.includes(check.expected);
+  const body = String(result.text ?? "").trimEnd();
+  const appendTdiu = asksTdiu && !body.includes(TDIU_PARAGRAPH_LEAD);
+  if (!appendLine && !appendTdiu) return result;
+  const parts = [body];
+  if (appendLine) parts.push(buildCalculatorSummaryLine(calc));
+  if (appendTdiu) parts.push(buildTdiuThresholdParagraph(calc));
+  return {
+    ...result,
+    text: parts.filter(Boolean).join("\n\n"),
+    ...(appendLine ? { calculatorAppended: { expected: check.expected } } : {}),
+    ...(appendTdiu ? { tdiuParagraphAppended: true } : {}),
+  };
+}
 
 /**
  * Determine the right Warrant Council agent based on tool or task type.

@@ -189,7 +189,7 @@ export function checkRaterResponse(text, calc) {
 export const buildCalculatorSummaryLine = (calc) =>
   `Vet-Rate's calculator result for the ratings you entered: your combined rating is ${calc.combinedRating}% (38 CFR § 4.25).`;
 
-export function describeMismatch(check) {
+export function describeMismatch(check, tdiuCheck = null) {
   const parts = [];
   if (check.wrongFigures.length > 0) {
     parts.push(
@@ -199,7 +199,36 @@ export function describeMismatch(check) {
   if (check.inventedPairs.length > 0) {
     parts.push("presented a bilateral pair the calculator did not find");
   }
+  if (tdiuCheck?.contradicted) {
+    const { eligible, highest, combined } = tdiuCheck.thresholds;
+    const said = tdiuCheck.direction === "denies" ? "not met" : "met";
+    const is = eligible ? "are met" : "are not met";
+    parts.push(
+      `said the 38 CFR § 4.16(a) percentage thresholds are ${said} but they ${is} (highest rating ${highest}%, combined ${combined}%)`,
+    );
+  }
   return parts.join("; ");
+}
+
+const NOTICE_FIGURES =
+  "stated a combined rating that did not match Vet-Rate's calculator";
+const NOTICE_PAIR =
+  "described a bilateral pairing that did not match Vet-Rate's calculator";
+const NOTICE_TDIU =
+  "gave a TDIU conclusion that did not match the percentage thresholds of 38 CFR § 4.16(a) applied to the ratings you entered";
+
+/**
+ * The sentence shown to the veteran when an answer is replaced. It names only
+ * what actually fired. With no check supplied it is the combined-rating
+ * wording, the original reason for replacement.
+ */
+export function buildReplacementNotice(check = null, tdiuCheck = null) {
+  const reasons = [];
+  if (!check || check.wrongFigures.length > 0) reasons.push(NOTICE_FIGURES);
+  if (check?.inventedPairs.length > 0) reasons.push(NOTICE_PAIR);
+  if (tdiuCheck?.contradicted) reasons.push(NOTICE_TDIU);
+  if (reasons.length === 0) reasons.push("did not match Vet-Rate's calculator");
+  return `The AI's draft answer ${reasons.join(" and ")}, so it is not shown. This is the calculator's working for the ratings you entered.`;
 }
 
 export const TDIU_REGULATION_QUOTES = {
@@ -218,6 +247,169 @@ export const TDIU_REGULATION_QUOTES = {
 
 export const mentionsUnemployability = (prompt) =>
   /\btdiu\b|unemployab/i.test(String(prompt ?? ""));
+
+const calcConditions = (calc) => [
+  ...calc.bilateralConditions,
+  ...calc.nonBilateralConditions,
+];
+
+/**
+ * The percentage test of 38 CFR § 4.16(a) applied to the calculator's
+ * conditions and combined rating: { eligible, basis, highest, combined }.
+ */
+export function tdiuThresholdsFor(calc) {
+  const highest = Math.max(...calcConditions(calc).map((c) => c.rating));
+  const combined = calc.combinedRating;
+  return { ...evaluateTdiuThresholds(highest, combined), highest, combined };
+}
+
+const tokensOf = (sentence) =>
+  String(sentence)
+    .toLowerCase()
+    .split(/[^a-z0-9']+/)
+    .filter(Boolean);
+
+const mentionsAny = (sentence, { words = [], phrases = [] }) => {
+  const lower = String(sentence).toLowerCase().replace(/\s+/g, " ");
+  const tokens = new Set(tokensOf(lower));
+  return (
+    words.some((w) => tokens.has(w)) ||
+    phrases.some((p) => ` ${lower} `.includes(` ${p} `))
+  );
+};
+
+const TDIU_SUBJECT = {
+  words: ["tdiu", "unemployability", "unemployable"],
+  phrases: ["4.16(a)", "4.16"],
+};
+const AUXILIARIES = ["do not", "does not", "don't", "doesn't"];
+const NEGATIVE_VERBS = ["qualify", "meet", "satisfy"];
+const TDIU_NEGATIVE = {
+  phrases: [
+    "not eligible",
+    "not currently eligible",
+    "cannot qualify",
+    "can't qualify",
+    "cannot currently qualify",
+    "fails to meet",
+    "fail to meet",
+    "fails to satisfy",
+    "is insufficient",
+    "are insufficient",
+    "falls short",
+    "fall short",
+    ...AUXILIARIES.flatMap((aux) =>
+      NEGATIVE_VERBS.flatMap((v) => [`${aux} ${v}`, `${aux} currently ${v}`]),
+    ),
+  ],
+  words: ["ineligible"],
+};
+const SUBJECTS = ["you", "the veteran", "veteran"];
+const BE_FORMS = ["are", "is", "would be", "will be"];
+const ADVERBS = ["", "fully ", "likely ", "currently "];
+const TDIU_POSITIVE = {
+  phrases: [
+    ...SUBJECTS.flatMap((subject) =>
+      BE_FORMS.flatMap((be) =>
+        ADVERBS.map((adverb) => `${subject} ${be} ${adverb}eligible`),
+      ),
+    ),
+    "is eligible",
+    "are eligible",
+    "you qualify",
+    "you do qualify",
+    "you would qualify",
+    "you would indeed qualify",
+    "you can qualify",
+    "you meet",
+    "you do meet",
+    "you satisfy",
+    "meets the",
+    "meets this",
+    "meets that",
+    "meets one",
+    "meets both",
+    "meets either",
+  ],
+  words: ["qualifies", "yes"],
+};
+const TDIU_HEDGE = {
+  words: [
+    "if",
+    "unless",
+    "until",
+    "without",
+    "alone",
+    "automatic",
+    "automatically",
+    "unable",
+    "inability",
+    "capable",
+    "employment",
+    "evidence",
+    "consider",
+    "consideration",
+    "apply",
+    "file",
+    "must",
+    "need",
+    "needs",
+    "require",
+    "requires",
+    "required",
+    "should",
+    "may",
+    "might",
+    "could",
+    "depend",
+    "depends",
+  ],
+  phrases: ["able to work", "determination of", "first step"],
+};
+const SINGLE_TEST = {
+  words: ["single", "sixty", "60"],
+  phrases: ["one disability", "one condition", "path a", "first"],
+};
+const COMBINED_TEST = {
+  words: ["combined", "multiple", "second", "70", "40", "forty", "additional"],
+  phrases: ["two or more", "path b"],
+};
+
+const plainSentences = (text) =>
+  splitSentences(String(text ?? "").replace(/[*_`#>]/g, ""));
+
+function isEligibilityHeadline(sentence) {
+  const colon = sentence.indexOf(":");
+  return colon > 0 && /eligib/i.test(sentence.slice(0, colon));
+}
+
+const isTdiuConclusionSentence = (sentence) =>
+  (mentionsAny(sentence, TDIU_SUBJECT) || isEligibilityHeadline(sentence)) &&
+  !mentionsAny(sentence, TDIU_HEDGE);
+
+/**
+ * Whether an answer states an overall TDIU conclusion on the percentage test
+ * that contradicts evaluateTdiuThresholds for these conditions: "not eligible",
+ * "cannot qualify", "does not meet" when the thresholds are met; "eligible",
+ * "qualifies", "meets" when they are not. Sentences that hedge on
+ * unemployability, evidence or a condition ("if", "alone", "must", "may"),
+ * that speak only about the test the thresholds did not rest on, or that are
+ * not about TDIU, are not conclusions. A heuristic over sentences, not a parse.
+ */
+export function checkTdiuConclusion(text, calc) {
+  const thresholds = tdiuThresholdsFor(calc);
+  const otherTest =
+    thresholds.basis === "combined70" ? SINGLE_TEST : COMBINED_TEST;
+  const stance = thresholds.eligible ? TDIU_NEGATIVE : TDIU_POSITIVE;
+  const sentences = plainSentences(text)
+    .map((s) => s.trim())
+    .filter(isTdiuConclusionSentence)
+    .filter((s) => mentionsAny(s, stance) && !mentionsAny(s, otherTest));
+  const contradicted = sentences.length > 0;
+  let direction = null;
+  if (contradicted) direction = thresholds.eligible ? "denies" : "asserts";
+  return { contradicted, direction, sentences, thresholds };
+}
 
 function describeTdiuResult(calc, conditions) {
   const highest = Math.max(...conditions.map((c) => c.rating));
@@ -251,6 +443,9 @@ function describeTdiuResult(calc, conditions) {
  * percentage thresholds of 38 CFR § 4.16(a) are met for the supplied
  * conditions, quoting the regulation, and what the percentage cannot settle.
  */
+export const TDIU_PARAGRAPH_LEAD =
+  "About your question on individual unemployability (TDIU):";
+
 export function buildTdiuThresholdParagraph(calc) {
   const conditions = [
     ...calc.bilateralConditions,
@@ -258,7 +453,7 @@ export function buildTdiuThresholdParagraph(calc) {
   ];
   const q = TDIU_REGULATION_QUOTES;
   return [
-    "About your question on individual unemployability (TDIU):",
+    TDIU_PARAGRAPH_LEAD,
     `38 CFR § 4.16(a) sets these percentage thresholds: "${q.thresholds}".`,
     describeTdiuResult(calc, conditions),
     `For the one 60 percent or one 40 percent disability, 38 CFR § 4.16(a) says "${q.asOne}": disabilities of one or both upper extremities or of one or both lower extremities (including the bilateral factor, if applicable), "${q.commonOrigin}", "${q.singleSystem}", multiple injuries incurred in action, and multiple disabilities incurred as a prisoner of war. Vet-Rate does not evaluate these groupings, so the result above treats each condition separately.`,
@@ -270,12 +465,15 @@ export function buildTdiuThresholdParagraph(calc) {
  * Plain-language answer built only from the calculator's working, used when
  * the model's draft contradicts it.
  */
-export function buildCalculatorExplanation(calc, { tdiu = false } = {}) {
+export function buildCalculatorExplanation(
+  calc,
+  { tdiu = false, check = null, tdiuCheck = null } = {},
+) {
   const pairNote = calc.bilateralConditions.length
     ? `The bilateral factor applies to ${describeBilateralPair(calc)}: disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26).`
     : 'No bilateral pair applies. The bilateral factor needs "partial disability of compensable degree in each of 2 paired extremities, or paired skeletal muscles" (38 CFR § 4.26(c)), that is both arms or both legs, one on each side. "Arms" and "legs" mean the upper and lower extremities as a whole, so a right thigh and a left foot are a pair (38 CFR § 4.26(a)). Two conditions on the same side are not a pair, and the two highest ratings are not automatically a pair.';
   return [
-    "The AI's draft answer did not match Vet-Rate's calculator, so it is not shown. This is the calculator's working for the ratings you entered.",
+    buildReplacementNotice(check, tdiuCheck),
     "",
     `Your combined rating is ${calc.combinedRating}%.`,
     "",
