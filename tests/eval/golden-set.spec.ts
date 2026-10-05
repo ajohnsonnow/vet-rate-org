@@ -360,6 +360,12 @@ test.describe("golden-set evaluation", () => {
       // eslint-disable-next-line no-console -- forensic
       console.log(`[pageerror] ${err.message}`);
     });
+    page.context().on("requestfailed", (req) => {
+      // eslint-disable-next-line no-console -- forensic
+      console.log(
+        `[requestfailed] ${req.url()} ${req.failure()?.errorText ?? ""}`,
+      );
+    });
     await installEngineRequestTap(page);
     await bootStressPage(page);
     await exposeAppModules(page);
