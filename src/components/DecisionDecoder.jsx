@@ -1378,7 +1378,7 @@ const CloudAIFallbackNotice = ({ results }) => {
           </p>
           <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
             {results._fallbackNote ||
-              "Your document was too large for Local AI (4096 tokens). Cloud AI with 1M token context was used instead."}
+              "This request was too long for the AI model on this device, so Cloud AI answered instead."}
           </p>
         </div>
       </div>

@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   CHARS_PER_TOKEN,
+  MIN_OUTPUT_TOKENS,
+  cannotFit,
   fitOutputTokens,
   planPromptFit,
 } from "../../utils/promptBudget";
@@ -115,5 +117,47 @@ describe("fitOutputTokens", () => {
         promptChars: 24000,
       }),
     ).toBe(768);
+  });
+});
+
+describe("a backend with no truncation guard (wllama, 4,096 tokens)", () => {
+  it("cannot fit the persona and the default prompt", () => {
+    expect(
+      cannotFit({
+        contextWindow: 4096,
+        requestedOutputTokens: 2048,
+        fixedChars: FIXED,
+      }),
+    ).toBe(true);
+  });
+
+  it("can fit a short caller prompt, with the output lowered to what is left", () => {
+    const fixedChars = PERSONA + 4000 + QUESTION;
+    expect(
+      cannotFit({
+        contextWindow: 4096,
+        requestedOutputTokens: 2048,
+        fixedChars,
+      }),
+    ).toBe(false);
+    const sent = fitOutputTokens({
+      contextWindow: 4096,
+      requestedOutputTokens: 2048,
+      promptChars: fixedChars,
+      floorTokens: MIN_OUTPUT_TOKENS,
+    });
+    expect(sent).toBe(4096 - Math.ceil((fixedChars + 200) / 3));
+    expect(sent).toBeGreaterThanOrEqual(MIN_OUTPUT_TOKENS);
+  });
+
+  it("the floor never raises a request above what was asked for", () => {
+    expect(
+      fitOutputTokens({
+        contextWindow: 4096,
+        requestedOutputTokens: 100,
+        promptChars: 20000,
+        floorTokens: MIN_OUTPUT_TOKENS,
+      }),
+    ).toBe(100);
   });
 });

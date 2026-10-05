@@ -29,7 +29,12 @@ vi.mock("../../utils/wllamaService", () => ({
   generateWithModel: vi.fn(),
   getWllamaStatus: vi.fn().mockReturnValue({ ready: false }),
   unloadWllama: vi.fn(),
-  WLLAMA_MODELS: {},
+  // A roomy stand-in window: these tests are about what is sent, not about
+  // fitting wllama's real 4,096 tokens (unifiedAIService.wllamaFit.test.js).
+  WLLAMA_MODELS: {
+    auditor: { contextSize: 16384, systemPrompt: "" },
+    rater: { contextSize: 16384, systemPrompt: "" },
+  },
 }));
 vi.mock("../../utils/deviceCapabilityDetector", () => ({
   detectDeviceCapabilities: vi.fn().mockResolvedValue({
@@ -67,6 +72,8 @@ import * as wllamaService from "../../utils/wllamaService";
 import * as localServerClient from "../../utils/localServerClient";
 import { calculateVARating } from "../../utils/vaCalculator";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
+import { buildTdiuThresholdParagraph } from "../../utils/raterGrounding";
+import { savedRatingsGrounding } from "../../utils/savedRatingsGrounding";
 
 describe("injectCalculatorForRater", () => {
   it("passes the prompt through unchanged when no conditions are supplied", () => {
@@ -876,5 +883,52 @@ describe("rater grounding: the bilateral check replaces only a contradicted pair
     );
     expect(result.calculatorReplacement).toBeUndefined();
     expect(result.calculatorLead.commentaryKept).toBe(true);
+  });
+});
+
+describe("a TDIU question on a rater route always gets the threshold paragraph", () => {
+  const QUESTION = "Do I qualify for TDIU on my current ratings?";
+  const paragraph = buildTdiuThresholdParagraph(calculateVARating(SIXTY));
+
+  beforeEach(async () => {
+    await BACKENDS.swarm.setup();
+  });
+
+  it.each([
+    [
+      "a draft kept as commentary",
+      "The single 60 percent rating matters here.",
+    ],
+    ["a draft dropped for a wrong figure", "Your combined rating is 70%."],
+    [
+      "a draft dropped for a wrong conclusion",
+      "You are not eligible for TDIU. Your combined rating is 60%.",
+    ],
+    ["an empty draft", ""],
+    ["a draft the validator blocked", "As a doctor, I diagnose you with PTSD."],
+  ])("with %s", async (_name, draft) => {
+    diamondSwarm.generateWithSwarm.mockResolvedValue({ text: draft });
+    const result = await generateAI(
+      QUESTION,
+      callOptions({
+        toolId: "tdiu-builder",
+        conditions: SIXTY,
+        skipValidation: false,
+      }),
+    );
+    expect(result.text).toContain(paragraph);
+    expect(result.text.split(paragraph)).toHaveLength(2);
+    expect(result.text.indexOf("Your combined rating is 60%.")).toBeLessThan(
+      result.text.indexOf(paragraph),
+    );
+    expect(result.calculatorLead.expected).toBe(60);
+  });
+
+  it("through the options the assistant builds from saved ratings", async () => {
+    diamondSwarm.generateWithSwarm.mockResolvedValue({ text: "See above." });
+    const grounding = savedRatingsGrounding(QUESTION, SIXTY);
+    expect(grounding.toolId).toBe("tdiu-builder");
+    const result = await generateAI(QUESTION, callOptions(grounding));
+    expect(result.text).toContain(paragraph);
   });
 });

@@ -657,13 +657,6 @@ export function checkRaterResponse(text, calc) {
   };
 }
 
-/**
- * One plain line carrying the calculator's figure, appended to an answer that
- * never states the combined rating itself.
- */
-export const buildCalculatorSummaryLine = (calc) =>
-  `Vet-Rate's calculator result for the ratings you entered: your combined rating is ${calc.combinedRating}% (38 CFR § 4.25).`;
-
 export function describeMismatch(check, tdiuCheck = null) {
   const parts = [];
   if (check.wrongFigures.length > 0) {

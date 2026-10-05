@@ -27,17 +27,46 @@ export const GOLDEN = Object.fromEntries(
   ]),
 );
 
-/** Every `case` line of every recorded run, with `run` = its date and time. */
-export function recordedCases() {
-  return readdirSync(RESULTS_DIR)
-    .filter((name) => name.endsWith(".jsonl"))
-    .sort()
-    .flatMap((name) =>
-      parseLines(join(RESULTS_DIR, name))
-        .filter((line) => line.type === "case")
-        .map((line) => ({ ...line, run: name.slice(4, 21) })),
-    );
-}
+const casesIn = (names) =>
+  names.flatMap((name) =>
+    parseLines(join(RESULTS_DIR, name))
+      .filter((line) => line.type === "case")
+      .map((line) => ({ ...line, run: name.slice(4, 21) })),
+  );
+
+/** Every `case` line of every run on disk, with `run` = its date and time. */
+export const allRecordedCases = () =>
+  casesIn(
+    readdirSync(RESULTS_DIR)
+      .filter((name) => name.endsWith(".jsonl"))
+      .sort(),
+  );
+
+// The runs whose answers were read and labelled by hand. Tests that pin
+// counts read exactly these files, so recording a new run never breaks them.
+// Add a run here only together with new labels and counts.
+export const LABELLED_RUN_FILES = Object.freeze([
+  "run_2026-10-05_071859_Qwen2.5-3B-Instruct-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_074624_Qwen2.5-3B-Instruct-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_081228_Qwen2.5-3B-Instruct-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_090513_Qwen2.5-3B-Instruct-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_094601_Qwen2.5-3B-Instruct-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_105010_Qwen3.5-4B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_110055_Qwen3.5-2B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_110822_Qwen3.5-9B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_112504_Qwen3.5-4B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_122217_Qwen3.5-4B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_123216_Qwen3.5-4B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_124154_Qwen3.5-9B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_125630_Qwen3.5-2B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_135040_Qwen3.5-4B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_135908_Qwen3.5-9B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_141236_Qwen3.5-2B-q4f16_1-MLC.jsonl",
+  "run_2026-10-05_201248_Qwen2.5-1.5B-Instruct-q4f16_1-MLC.jsonl",
+]);
+
+/** The `case` lines of the 17 labelled runs. */
+export const recordedCases = () => casesIn(LABELLED_RUN_FILES);
 
 /** What the model wrote: the replaced draft when the guard swapped the answer. */
 export const modelTextOf = (record) =>
