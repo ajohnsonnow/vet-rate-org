@@ -72,53 +72,64 @@ function describeExcluded(calc) {
   ];
 }
 
-/**
- * Plain sentences about entries the bilateral factor treated specially: left
- * out under 38 CFR § 4.26(d), in the group as one evaluation covering both
- * sides, or given no factor because of a calculator `bilateralIssues` entry.
- */
-export function describeBilateralNotes(calc) {
-  const notes = describeExcluded(calc);
-  const manual = "VA manual M21-1, V.iv.1.C.4.b";
-  const inGroup = namesWhere(
+const MANUAL = "VA manual M21-1, V.iv.1.C.4.b";
+
+function describeBothSidesMembers(calc) {
+  const bothSides = namesWhere(
     calc.bilateralConditions,
     (c) => c.side === "bilateral",
   );
-  if (inGroup.length > 0) {
-    notes.push(
-      `${joinList(inGroup)} ${inGroup.length === 1 ? "is" : "are each"} one evaluation that covers both sides; such an evaluation takes the factor because another disability in the group is rated separately (${manual}).`,
-    );
-  }
-  const issues = calc.bilateralIssues;
-  const unknown = namesWhere(issues, (i) => i.reason === "limb-unknown");
-  if (unknown.length > 0) {
-    const one = unknown.length === 1;
-    notes.push(
-      `Vet-Rate could not tell whether ${joinList(unknown)} ${one ? "is an arm or a leg condition, so it" : "are arm or leg conditions, so they"} took no bilateral factor.`,
-    );
-  }
-  const badSide = namesWhere(issues, (i) => i.reason === "side-unknown");
-  if (badSide.length > 0) {
-    notes.push(
-      `Vet-Rate did not recognise the side entered for ${joinList(badSide)}, so ${badSide.length === 1 ? "it" : "they"} took no bilateral factor.`,
-    );
-  }
-  const alone = namesWhere(
-    issues,
-    (i) => i.reason === "single-bilateral-evaluation",
+  if (bothSides.length === 0) return [];
+  const separate = namesWhere(
+    calc.bilateralConditions,
+    (c) => c.side !== "bilateral",
   );
-  if (alone.length > 0) {
-    const one = alone.length === 1;
-    notes.push(
-      `${joinList(alone)} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor: the factor needs another separately rated disability of the same limbs (${manual}).`,
-    );
+  if (separate.length === 0) {
+    return [
+      `${joinList(bothSides)} are each one evaluation that covers both sides. Vet-Rate treats two such evaluations of the same limbs as separately rated disabilities of those limbs, so together they take the factor; ${MANUAL} does not address this case directly.`,
+    ];
   }
+  const one = bothSides.length === 1;
+  return [
+    `${joinList(bothSides)} ${one ? "is" : "are each"} one evaluation that covers both sides; ${one ? "it takes" : "they take"} the factor because ${joinList(separate)} ${separate.length === 1 ? "is" : "are"} rated separately (${MANUAL}).`,
+  ];
+}
+
+const ISSUE_NOTES = {
+  "limb-unknown": (names, one) =>
+    `Vet-Rate could not tell whether ${names} ${one ? "is an arm or a leg condition, so it" : "are arm or leg conditions, so they"} took no bilateral factor.`,
+  "side-unknown": (names, one) =>
+    `Vet-Rate did not recognise the side entered for ${names}, so ${one ? "it" : "they"} took no bilateral factor.`,
+  "single-bilateral-evaluation": (names, one) =>
+    `${names} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor: the factor needs another separately rated disability of the same limbs (${MANUAL}).`,
+};
+
+function describeIssues(issues) {
+  const notes = Object.entries(ISSUE_NOTES).flatMap(([reason, sentence]) => {
+    const names = namesWhere(issues, (i) => i.reason === reason);
+    return names.length > 0
+      ? [sentence(joinList(names), names.length === 1)]
+      : [];
+  });
   if (issues.some((i) => i.reason === "most-favourable-not-checked")) {
     notes.push(
       "Vet-Rate did not check whether leaving some bilateral disabilities out of the bilateral factor calculation would give a higher combined rating (38 CFR § 4.26(d)), because there are too many arrangements to try.",
     );
   }
   return notes;
+}
+
+/**
+ * Plain sentences about entries the bilateral factor treated specially: left
+ * out under 38 CFR § 4.26(d), in the group as one evaluation covering both
+ * sides, or given no factor because of a calculator `bilateralIssues` entry.
+ */
+export function describeBilateralNotes(calc) {
+  return [
+    ...describeExcluded(calc),
+    ...describeBothSidesMembers(calc),
+    ...describeIssues(calc.bilateralIssues),
+  ];
 }
 
 const stepLine = (s) => `${s.from}% combined with ${s.with}% = ${s.result}%`;
@@ -697,11 +708,21 @@ function describeGroupBasis(calc) {
   if (calc.bilateralLimbs.length > 1) {
     return "compensable disabilities of both arms and both legs, whose ratings are combined together before the factor is added once (38 CFR § 4.26(b))";
   }
-  if (calc.bilateralConditions.some((c) => c.side === "bilateral")) {
-    const limbs = calc.bilateralLimbs[0] === "upper" ? "arms" : "legs";
-    return `compensable disabilities of both ${limbs} (38 CFR § 4.26)`;
+  const count = (side) =>
+    calc.bilateralConditions.filter((c) => c.side === side).length;
+  const [left, right, both] = ["left", "right", "bilateral"].map(count);
+  if (left === 1 && right === 1 && both === 0) {
+    return "disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26)";
   }
-  return "disabilities of paired extremities, one on the left and one on the right (38 CFR § 4.26)";
+  const limbs = calc.bilateralLimbs[0] === "upper" ? "arms" : "legs";
+  const held = [
+    [left, "on the left"],
+    [right, "on the right"],
+    [both, "rated for both sides"],
+  ]
+    .filter(([n]) => n > 0)
+    .map(([n, where]) => `${n} ${where}`);
+  return `compensable disabilities of both ${limbs}: ${joinList(held)} (38 CFR § 4.26)`;
 }
 
 function describePairFinding(calc) {

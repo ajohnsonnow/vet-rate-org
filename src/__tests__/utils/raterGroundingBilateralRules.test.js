@@ -52,6 +52,47 @@ const LIMB_UNKNOWN = calculateVARating([
   c("Neuropathy", 20, "right", "other"),
 ]);
 
+const TWO_LEFT_ONE_RIGHT = calculateVARating([
+  c("Left knee", 30, "left", "knee"),
+  c("Left ankle", 10, "left", "ankle"),
+  c("Right hip", 20, "right", "hip"),
+  c("Back", 40, "none", "back"),
+]);
+const TWO_BOTH_SIDES = calculateVARating([
+  c("Bilateral pes planus", 30, "bilateral", "foot"),
+  c("Bilateral shin splints", 20, "bilateral", "leg"),
+]);
+
+describe("explanation says what the group actually holds", () => {
+  it("counts the sides of a left, left, right group", () => {
+    const text = buildCalculatorExplanation(TWO_LEFT_ONE_RIGHT);
+    expect(text).toContain(
+      "compensable disabilities of both legs: 2 on the left and 1 on the right (38 CFR § 4.26)",
+    );
+    expect(text).not.toContain(LEFT_RIGHT);
+  });
+
+  it("names the separately rated disability that lets a both-sides evaluation take the factor", () => {
+    const text = buildCalculatorExplanation(BOTH_SIDES_WITH_LEG);
+    expect(text).toContain(
+      "compensable disabilities of both legs: 1 on the left and 1 rated for both sides (38 CFR § 4.26)",
+    );
+    expect(text).toContain(
+      "it takes the factor because Left leg muscle damage is rated separately",
+    );
+  });
+
+  it("gives the real reason two both-sides evaluations of the same limbs take the factor", () => {
+    const text = buildCalculatorExplanation(TWO_BOTH_SIDES);
+    expect(text).toContain("2 rated for both sides");
+    expect(text).toContain(
+      "Vet-Rate treats two such evaluations of the same limbs as separately rated disabilities",
+    );
+    expect(text).not.toContain("because another disability in the group");
+    expect(text).not.toMatch(/because .* (is|are) rated separately/);
+  });
+});
+
 describe("explanation of the group the calculator formed", () => {
   it("says all four extremities take one factor under 38 CFR 4.26(b)", () => {
     const text = buildCalculatorExplanation(FOUR_LIMBS);
@@ -153,6 +194,8 @@ describe("the calculator's own explanation passes its own check", () => {
     ["one disability removed under (d)", ONE_REMOVED],
     ["every disability removed under (d)", ALL_REMOVED],
     ["an entry of unknown limb", LIMB_UNKNOWN],
+    ["two on the left and one on the right", TWO_LEFT_ONE_RIGHT],
+    ["two both-sides evaluations", TWO_BOTH_SIDES],
   ])("%s", (_label, calc) => {
     const check = checkRaterResponse(buildCalculatorExplanation(calc), calc);
     expect(check).toMatchObject({
