@@ -2299,10 +2299,26 @@ async function _redactPiecesForSend(pieces) {
 // once it's sharing space with a system prompt instead of being the whole
 // system prompt on its own. Cloud and the local llama.cpp server (which
 // typically runs a larger-context build) keep the original, larger budgets.
+// excludeBoardDecisions: individual Board of Veterans' Appeals decisions are
+// not placed in the block on the small-budget on-device backends, where the
+// model reads a decision-shaped entry as the veteran's own decision. The
+// ranking is unchanged; the next-ranked entries fill the budget.
 const DKB_BUDGET_BY_MODE = {
-  [AI_MODES.SWARM]: { maxEntries: 6, maxChars: 4000 },
-  [AI_MODES.WLLAMA]: { maxEntries: 6, maxChars: 4000 },
-  [AI_MODES.LOCAL]: { maxEntries: 6, maxChars: 4000 },
+  [AI_MODES.SWARM]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    excludeBoardDecisions: true,
+  },
+  [AI_MODES.WLLAMA]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    excludeBoardDecisions: true,
+  },
+  [AI_MODES.LOCAL]: {
+    maxEntries: 6,
+    maxChars: 4000,
+    excludeBoardDecisions: true,
+  },
   [AI_MODES.LOCAL_SERVER]: { maxEntries: 8, maxChars: 6000 },
   [AI_MODES.CLOUD]: { maxEntries: 10, maxChars: 8000 },
 };
@@ -2324,6 +2340,7 @@ async function _injectDKBContext(prompt, systemPrompt, options) {
     const dkbContext = await buildDKBContext(prompt, {
       maxEntries: options.maxDKBEntries || budget.maxEntries,
       maxChars: options.maxDKBChars || budget.maxChars,
+      ...(budget.excludeBoardDecisions ? { excludeBoardDecisions: true } : {}),
       ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
     });
     if (!dkbContext) return systemPrompt;

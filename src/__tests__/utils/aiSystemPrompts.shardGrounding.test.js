@@ -470,3 +470,124 @@ describe("time-boxing", () => {
     expect(unhandled).not.toHaveBeenCalled();
   });
 });
+
+describe("excludeBoardDecisions", () => {
+  const entry = (n, source, extra = {}) => ({
+    instruction: `Question ${n}`,
+    output: `Answer ${n}`,
+    metadata: { source, cfr_section: `38 CFR 9.${n}`, ...extra },
+  });
+  const RANKED = [
+    entry(1, "BVA"),
+    entry(2, "BVA"),
+    entry(3, "ECFR"),
+    entry(4, "BVA"),
+    entry(5, "M21_1"),
+    entry(6, "CAVC"),
+    entry(7, "BVA"),
+    entry(8, "ECFR"),
+  ];
+
+  beforeEach(() => {
+    searchIndexedDKBMock.mockImplementation(async (_index, _query, topK) =>
+      RANKED.slice(0, topK),
+    );
+  });
+
+  it("recognises a Board decision by its source tag only", async () => {
+    const { isBoardDecisionEntry } =
+      await import("../../utils/aiSystemPrompts");
+    expect(isBoardDecisionEntry(entry(1, "BVA"))).toBe(true);
+    for (const source of ["ECFR", "M21_1", "CAVC", "FEDERAL_CIRCUIT", "OGC"]) {
+      expect(isBoardDecisionEntry(entry(1, source))).toBe(false);
+    }
+    expect(isBoardDecisionEntry({})).toBe(false);
+    expect(isBoardDecisionEntry(undefined)).toBe(false);
+  });
+
+  it("leaves Board decisions out and refills with the next-ranked entries, in rank order", async () => {
+    const out = await buildDKBContext(nextQuery("board-out"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeBoardDecisions: true,
+    });
+    const questions = [...out.matchAll(/Q: (Question \d+)/g)].map((m) => m[1]);
+    expect(questions).toEqual(["Question 3", "Question 5", "Question 6"]);
+    expect(out).toContain("[3 reference entries provided from ECFR]");
+  });
+
+  it("takes every scored entry in rank order, so a query dominated by Board decisions still refills", async () => {
+    await buildDKBContext(nextQuery("board-pool"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeBoardDecisions: true,
+    });
+    expect(searchIndexedDKBMock.mock.calls[0][2]).toBe(Infinity);
+  });
+
+  it("is off by default: the same ranked entries, Board decisions included", async () => {
+    const out = await buildDKBContext(nextQuery("board-default"), {
+      maxEntries: 3,
+      maxChars: 8000,
+    });
+    const questions = [...out.matchAll(/Q: (Question \d+)/g)].map((m) => m[1]);
+    expect(questions).toEqual(["Question 1", "Question 2", "Question 3"]);
+    expect(searchIndexedDKBMock.mock.calls[0][2]).toBe(3);
+  });
+});
+
+describe("excludeBoardDecisions in the block text", () => {
+  const entry = (n, source) => ({
+    instruction: `Question ${n}`,
+    output: `Answer ${n}`,
+    metadata: { source, cfr_section: `38 CFR 9.${n}` },
+  });
+
+  beforeEach(() => {
+    searchIndexedDKBMock.mockImplementation(async (_index, _query, topK) =>
+      [
+        entry(1, "BVA"),
+        entry(2, "BVA"),
+        entry(3, "ECFR"),
+        entry(4, "BVA"),
+        entry(5, "M21_1"),
+        entry(6, "CAVC"),
+      ].slice(0, topK),
+    );
+  });
+
+  it("drops the Board decisions line from the sources when they are excluded", async () => {
+    const withBoard = await buildDKBContext(nextQuery("sources-on"), {
+      maxEntries: 3,
+      maxChars: 8000,
+    });
+    const without = await buildDKBContext(nextQuery("sources-off"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeBoardDecisions: true,
+    });
+    expect(withBoard).toContain("Sources: 38 CFR, BVA decisions, OGC");
+    expect(without).toContain("Sources: 38 CFR, OGC precedent opinions");
+    expect(without).not.toContain("BVA decisions");
+  });
+
+  it("returns an empty block when every candidate is a Board decision", async () => {
+    searchIndexedDKBMock.mockResolvedValue([entry(1, "BVA"), entry(2, "BVA")]);
+    expect(
+      await buildDKBContext(nextQuery("board-only"), {
+        maxEntries: 6,
+        maxChars: 8000,
+        excludeBoardDecisions: true,
+      }),
+    ).toBe("");
+  });
+
+  it("applies to the flag-on path too, with the shard budget unchanged", async () => {
+    const out = await buildDKBContext(
+      nextQuery("board-shards"),
+      opts({ maxEntries: 3, excludeBoardDecisions: true }),
+    );
+    const questions = [...out.matchAll(/Q: (Question \d+)/g)].map((m) => m[1]);
+    expect(questions).toEqual(["Question 3", "Question 5", "Question 6"]);
+  });
+});

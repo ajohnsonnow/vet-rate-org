@@ -1452,6 +1452,26 @@ export async function searchDKB(query, topK = 10) {
   return result;
 }
 
+// Board of Veterans' Appeals decisions in the curated file carry
+// metadata.source "BVA". They are non-precedential and someone else's case,
+// and a small on-device model reads a decision-shaped entry as the veteran's
+// own decision.
+export const isBoardDecisionEntry = (entry) =>
+  entry?.metadata?.source === "BVA";
+
+/**
+ * Curated entries for the budget. With excludeBoardDecisions the ranking is
+ * unchanged: every scored entry is taken in rank order, Board decisions are
+ * dropped and the next-ranked entries fill the places they leave.
+ */
+async function searchCuratedEntries(query, maxEntries, excludeBoardDecisions) {
+  if (!excludeBoardDecisions) return searchDKB(query, maxEntries);
+  const candidates = await searchDKB(query, Infinity);
+  return candidates
+    .filter((entry) => !isBoardDecisionEntry(entry))
+    .slice(0, maxEntries);
+}
+
 const DKB_REFERENCE_NOTICE = `General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents; refer to it as "VA regulations and guidance".`;
 
 /**
@@ -1467,6 +1487,7 @@ export async function buildDKBContext(query, options = {}) {
     maxChars = 8000, // Keep under token limits
     includeSourceUrls = true,
     includeShards = false,
+    excludeBoardDecisions = false,
   } = options;
 
   if (includeShards) {
@@ -1474,10 +1495,15 @@ export async function buildDKBContext(query, options = {}) {
       maxEntries,
       maxChars,
       includeSourceUrls,
+      excludeBoardDecisions,
     });
   }
 
-  const relevantEntries = await searchDKB(query, maxEntries);
+  const relevantEntries = await searchCuratedEntries(
+    query,
+    maxEntries,
+    excludeBoardDecisions,
+  );
 
   if (relevantEntries.length === 0) {
     return "";
@@ -1485,7 +1511,7 @@ export async function buildDKBContext(query, options = {}) {
 
   let context = `\n\n=== REFERENCE MATERIAL ===
 ${DKB_REFERENCE_NOTICE}
-Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
+Sources: 38 CFR, ${excludeBoardDecisions ? "" : "BVA decisions, "}OGC precedent opinions, PACT Act, M21-1.
 Use this data to provide accurate, regulation-based answers. If none of the
 entries below address the question, say so explicitly instead of answering
 from memory - do not cite a regulation that isn't backed by an entry here.
@@ -1715,10 +1741,11 @@ function packFlatEntries(
  * per-backend maxEntries/maxChars are never exceeded.
  */
 async function buildDKBContextWithShards(query, options) {
-  const { maxEntries, maxChars, includeSourceUrls } = options;
+  const { maxEntries, maxChars, includeSourceUrls, excludeBoardDecisions } =
+    options;
 
   const [flatEntries, shardChunks] = await Promise.all([
-    searchDKB(query, maxEntries),
+    searchCuratedEntries(query, maxEntries, excludeBoardDecisions),
     retrieveShardPassages(query, maxEntries),
   ]);
 

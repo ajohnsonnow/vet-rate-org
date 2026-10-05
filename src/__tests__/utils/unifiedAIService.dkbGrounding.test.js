@@ -58,8 +58,12 @@ import {
   registerSwarmEngine,
   registerLocalAIEngine,
   resetAICircuitBreaker,
+  checkLocalServer,
+  initializeWllama,
 } from "../../utils/unifiedAIService";
 import * as diamondSwarm from "../../utils/diamondSwarm";
+import * as wllamaService from "../../utils/wllamaService";
+import * as localServerClient from "../../utils/localServerClient";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
 import { FULL_DKB_GROUNDING_KEY } from "../../utils/dkbGroundingFlag";
 
@@ -98,7 +102,11 @@ describe("_injectDKBContext and the full-corpus grounding flag", () => {
     expect(buildDKBContextSpy).toHaveBeenCalledTimes(1);
     const [query, opts] = buildDKBContextSpy.mock.calls[0];
     expect(query).toBe("How do I claim sleep apnea?");
-    expect(opts).toStrictEqual({ maxEntries: 6, maxChars: 4000 });
+    expect(opts).toStrictEqual({
+      maxEntries: 6,
+      maxChars: 4000,
+      excludeBoardDecisions: true,
+    });
     expect(Object.keys(opts)).not.toContain("includeShards");
     expect(sentToSwarm()).toContain("=== DKB CONTEXT STUB ===");
   });
@@ -119,6 +127,7 @@ describe("_injectDKBContext and the full-corpus grounding flag", () => {
     expect(opts).toStrictEqual({
       maxEntries: 6,
       maxChars: 4000,
+      excludeBoardDecisions: true,
       includeShards: true,
     });
   });
@@ -129,6 +138,104 @@ describe("_injectDKBContext and the full-corpus grounding flag", () => {
 
     expect(buildDKBContextSpy).not.toHaveBeenCalled();
   });
+});
+
+const MODES = {
+  swarm: {
+    setup: () => {},
+    budget: { maxEntries: 6, maxChars: 4000 },
+    excluded: true,
+  },
+  local: {
+    setup: () => {
+      registerLocalAIEngine(
+        {
+          chat: {
+            completions: {
+              create: vi.fn(async () => ({
+                choices: [
+                  { message: { content: "ok" }, finish_reason: "stop" },
+                ],
+              })),
+            },
+          },
+        },
+        true,
+        false,
+        "test-model",
+        false,
+      );
+      registerSwarmEngine(null, false, false, null);
+      setAIMode(AI_MODES.LOCAL);
+    },
+    budget: { maxEntries: 6, maxChars: 4000 },
+    excluded: true,
+  },
+  wllama: {
+    setup: async () => {
+      await initializeWllama("auditor");
+      setAIMode(AI_MODES.WLLAMA);
+      wllamaService.chatCompletion.mockResolvedValue({
+        success: true,
+        text: "ok",
+      });
+    },
+    budget: { maxEntries: 6, maxChars: 4000 },
+    excluded: true,
+  },
+  "local server": {
+    setup: async () => {
+      localServerClient.checkServerHealth.mockResolvedValue({
+        available: true,
+      });
+      localServerClient.chatCompletion.mockResolvedValue("ok");
+      await checkLocalServer(true);
+      setAIMode(AI_MODES.LOCAL_SERVER);
+    },
+    budget: { maxEntries: 8, maxChars: 6000 },
+    excluded: false,
+  },
+  cloud: {
+    setup: () => {
+      localStorage.setItem(
+        "vetrate_gemini_key",
+        "AIzaSyValidKey12345678901234567890123",
+      );
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            candidates: [{ content: { parts: [{ text: "ok" }] } }],
+          }),
+        }),
+      );
+      setAIMode(AI_MODES.CLOUD);
+    },
+    budget: { maxEntries: 10, maxChars: 8000 },
+    excluded: false,
+  },
+};
+
+describe("individual Board decisions are kept out of the block on the small-budget backends", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it.each(Object.entries(MODES))(
+    "%s backend asks for the expected curated-entry rules",
+    async (_name, mode) => {
+      await mode.setup();
+      await generateAI("Decode my denial", callOptions());
+
+      const [, opts] = buildDKBContextSpy.mock.calls[0];
+      expect(opts).toStrictEqual(
+        mode.excluded
+          ? { ...mode.budget, excludeBoardDecisions: true }
+          : mode.budget,
+      );
+    },
+  );
 });
 
 describe("fullDKBAvailable status event", () => {
