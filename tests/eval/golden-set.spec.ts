@@ -219,6 +219,7 @@ interface CaseOutcome {
   citationsUnverified?: unknown;
   rawResponse?: string;
   outputCleanup?: unknown;
+  resultFlags?: Record<string, unknown>;
   captured: CapturedRequest[];
 }
 
@@ -265,6 +266,10 @@ function runCase(
             : result?.calculatorReplacement,
         citationsUnverified:
           typeof result === "string" ? undefined : result?.citationsUnverified,
+        resultFlags:
+          typeof result === "string"
+            ? undefined
+            : JSON.parse(JSON.stringify({ ...result, text: undefined })),
         latencyMs: performance.now() - started,
         validationErrors:
           typeof result === "string" ? undefined : result?.validationErrors,

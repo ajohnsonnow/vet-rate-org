@@ -207,6 +207,9 @@ export function createStubEngine({
       ok: true,
       text: cannedResponse(caseDef, override, calculateVARating),
       latencyMs: 5,
+      resultFlags: override.replacedDraft
+        ? { calculatorLead: { expected: 100, commentaryKept: false } }
+        : {},
       ...(override.replacedDraft
         ? {
             calculatorReplacement: {
