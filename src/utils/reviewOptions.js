@@ -14,33 +14,29 @@ import {
 
 export const REVIEW_OPTIONS = quotes.reviewOptions;
 
-const MODEL_WRITTEN_FIELDS = [
-  "plain_english",
-  "va_reasoning",
-  "favorable_findings",
-  "missing_elements",
-  "action_plan",
-  "deadline_warning",
-];
-
 const stringsIn = (value) =>
   [value].flat().filter((item) => typeof item === "string");
 
 /**
- * Corrections for filing instructions in the model's own fields that name
- * the wrong document or review lane, one per rule.
+ * Corrections for filing advice in the model's own fields that contradicts
+ * the verified review text: { field, rule, note }, one for each rule a field
+ * breaks. Every text field the model returned is checked, whatever its name.
  */
 function reviewCorrections(decoded) {
-  const seen = new Set();
   const notes = [];
-  for (const field of MODEL_WRITTEN_FIELDS) {
-    for (const text of stringsIn(decoded[field])) {
+  for (const [field, value] of Object.entries(decoded)) {
+    const seen = new Set();
+    for (const text of stringsIn(value)) {
       for (const hit of findContradictions(text, {
         topics: ["decision-review"],
       })) {
         if (seen.has(hit.rule)) continue;
         seen.add(hit.rule);
-        notes.push({ rule: hit.rule, note: buildContradictionNote(hit) });
+        notes.push({
+          field,
+          rule: hit.rule,
+          note: buildContradictionNote(hit),
+        });
       }
     }
   }
@@ -49,15 +45,20 @@ function reviewCorrections(decoded) {
 
 /**
  * A decoded decision with the review options replaced by the verified ones:
- * whatever the model put in `appeal_options` is dropped, `review_options`
- * carries the verified text, and `review_corrections` lists a correction for
- * each wrong filing instruction left in the model's other fields.
+ * whatever the model put in `appeal_options` or `review_options` is dropped,
+ * `review_options` carries the verified text, and `review_corrections` lists
+ * a correction for each contradiction left in the model's other fields.
  */
 export function withVerifiedReviewOptions(decoded) {
   if (!decoded || typeof decoded !== "object" || Array.isArray(decoded)) {
     return decoded;
   }
-  const { appeal_options: _modelWritten, ...rest } = decoded;
+  const {
+    appeal_options: _modelWritten,
+    review_options: _notTheModels,
+    review_corrections: _norThese,
+    ...rest
+  } = decoded;
   const corrections = reviewCorrections(rest);
   return {
     ...rest,
