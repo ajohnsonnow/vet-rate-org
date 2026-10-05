@@ -117,3 +117,18 @@ describe("TDIUBuilder._generateVocationalImpact", () => {
     expect(result.draftRejectReasons.length).toBeGreaterThan(0);
   });
 });
+
+describe("TDIUBuilder._generateVocationalImpact when the model cannot answer", () => {
+  it("returns the app-built analysis and names the engine error", async () => {
+    generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
+    const result = await _generateVocationalImpact(DISABILITIES);
+
+    expect(result).toEqual({
+      analysis: TEMPLATE,
+      draftPath: "template",
+      draftNote: STANDARD_DRAFT_NOTE,
+      draftRejectReasons: [],
+      draftErrorReason: "WebGPU inference timed out",
+    });
+  });
+});

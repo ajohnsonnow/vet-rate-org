@@ -6,7 +6,9 @@ import { STANDARD_DRAFT_NOTE } from "../../utils/writerTemplates";
 describe("StandardDraftNotice", () => {
   it("announces the note as a status message", () => {
     render(<StandardDraftNotice note={STANDARD_DRAFT_NOTE} />);
-    expect(screen.getByRole("status").textContent).toBe(STANDARD_DRAFT_NOTE);
+    expect(
+      screen.getByRole("status", { name: "Draft notice" }).textContent,
+    ).toBe(STANDARD_DRAFT_NOTE);
   });
 
   it("renders nothing without a note", () => {

@@ -36,11 +36,14 @@ import {
   getAIStatus,
 } from "../utils/unifiedAIService";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
-import { resolveTdiuDraft } from "../utils/writerDraftCheck";
+import { draftAfterError, resolveTdiuDraft } from "../utils/writerDraftCheck";
 import {
+  STANDARD_DRAFT_NOTE,
   buildTdiuAnalysisTemplate,
   buildTdiuRewordPrompt,
+  tdiuSavePayload,
 } from "../utils/writerTemplates";
+import TdiuAnalysisEditor from "./TdiuAnalysisEditor";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
@@ -259,121 +262,42 @@ export const _generateVocationalImpact = async (
   disabilities,
   veteranContext = "",
 ) => {
-  // Check if ANY AI is available
-  if (!isAnyAIAvailable()) {
-    throw new Error(
-      "No AI available. Please configure an API key or enable Local AI.",
-    );
-  }
-
   const template = buildTdiuAnalysisTemplate(disabilities);
   const contextBlock = veteranContext
     ? `\n\nVETERAN CASE DATA (for reference only):\n${veteranContext}\n`
     : "";
 
-  // Use unified AI service - ADR-009: "context" - structured
-  // disability/symptom list + the allow-listed veteran context.
-  const response = await generateAI(
-    `${buildTdiuRewordPrompt(template)}${contextBlock}`,
-    {
-      dataClass: AI_DATA_CLASS.CONTEXT,
-      toolId: "tdiu-narrative",
-      temperature: 0.3,
-      maxTokens: 2048,
-      expectJSON: true,
-    },
-  );
+  let text;
+  try {
+    if (!isAnyAIAvailable()) {
+      throw new Error(
+        "No AI available. Please configure an API key or enable Local AI.",
+      );
+    }
+    // Use unified AI service - ADR-009: "context" - structured
+    // disability/symptom list + the allow-listed veteran context.
+    const response = await generateAI(
+      `${buildTdiuRewordPrompt(template)}${contextBlock}`,
+      {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+        toolId: "tdiu-narrative",
+        temperature: 0.3,
+        maxTokens: 2048,
+        expectJSON: true,
+      },
+    );
+    // generateAI returns { text, mode } object - extract the text content
+    text = response?.text || response;
+  } catch (error) {
+    console.error("Generation error:", error);
+    return { analysis: template, ...draftAfterError(error) };
+  }
 
-  // generateAI returns { text, mode } object - extract the text content
-  const text = response?.text || response;
   return resolveTdiuDraft({
     output: typeof text === "string" ? text : JSON.stringify(text),
     template,
     reference: [veteranContext],
   });
-};
-
-/**
- * Generate template-based vocational impact (fallback without AI)
- */
-const generateTemplateImpact = (disabilities) => {
-  const limitations = disabilities.flatMap((d) =>
-    d.symptoms.map((symptom) => ({
-      condition: d.condition,
-      symptom: symptom,
-      vocational_impact: getTemplateImpact(d.condition, symptom),
-    })),
-  );
-
-  const conditionNames = disabilities.map((d) => d.condition).join(", ");
-
-  return {
-    limitations,
-    combined_effect: `The combination of ${conditionNames} creates a constellation of functional impairments that exceed the sum of individual limitations. These conditions interact to produce unpredictable flare-ups, requiring unscheduled absences that would exceed employer tolerance in a competitive work environment.`,
-    summary_argument: `Due to service-connected disabilities (${conditionNames}), I am unable to secure and maintain substantially gainful employment. My functional limitations preclude both sedentary and physical work requirements. The unpredictable nature of my symptoms makes it impossible to maintain the consistent attendance and productivity required in a competitive employment environment. No reasonable accommodations exist that would allow me to perform the essential functions of any occupation for which I am qualified by education and experience.`,
-    job_types_precluded: ["Sedentary", "Light", "Medium", "Heavy"],
-  };
-};
-
-/**
- * Template vocational impact statements
- */
-const getTemplateImpact = (condition, symptom) => {
-  const lowerSymptom = symptom.toLowerCase();
-
-  // Sitting/standing limitations
-  if (lowerSymptom.includes("sit") || lowerSymptom.includes("stand")) {
-    return `This limitation precludes sustained ${lowerSymptom.includes("sit") ? "sedentary" : "standing"} work; veteran cannot maintain posture required for typical 8-hour workday even with scheduled breaks.`;
-  }
-
-  // Lifting limitations
-  if (lowerSymptom.includes("lift") || lowerSymptom.includes("carry")) {
-    return `This precludes physical labor occupations requiring lifting/carrying; limitation also impacts sedentary work requiring occasional handling of materials.`;
-  }
-
-  // Concentration/focus
-  if (
-    lowerSymptom.includes("concentrat") ||
-    lowerSymptom.includes("focus") ||
-    lowerSymptom.includes("memory")
-  ) {
-    return `Impaired cognitive function prevents sustained concentration required for competitive employment; veteran cannot reliably process instructions or maintain task focus.`;
-  }
-
-  // Pain-related
-  if (lowerSymptom.includes("pain")) {
-    return `Chronic pain syndrome causes distraction and reduces productivity below competitive employment standards; pain management may require unscheduled breaks.`;
-  }
-
-  // Fatigue
-  if (
-    lowerSymptom.includes("fatigue") ||
-    lowerSymptom.includes("tired") ||
-    lowerSymptom.includes("sleep")
-  ) {
-    return `Fatigue prevents sustained work effort; veteran cannot maintain energy levels required for full-time employment in any occupation.`;
-  }
-
-  // Social/interpersonal
-  if (
-    lowerSymptom.includes("anger") ||
-    lowerSymptom.includes("irritab") ||
-    lowerSymptom.includes("social")
-  ) {
-    return `Impaired interpersonal functioning precludes work requiring interaction with supervisors, coworkers, or public; limits veteran to isolated work that is not available in competitive market.`;
-  }
-
-  // Attacks/episodes
-  if (
-    lowerSymptom.includes("attack") ||
-    lowerSymptom.includes("episode") ||
-    lowerSymptom.includes("flare")
-  ) {
-    return `Unpredictable symptomatic episodes require unscheduled workplace absences that would exceed employer tolerance for absenteeism in competitive employment.`;
-  }
-
-  // Default
-  return `This functional limitation significantly impacts the veteran's ability to perform essential job functions in a competitive employment environment.`;
 };
 
 /**
@@ -499,8 +423,17 @@ async function downloadStatementAsDOCX(statement) {
   URL.revokeObjectURL(url);
 }
 
+// The app-built analysis, with its note: what the veteran gets with no AI
+// loaded, and whenever the AI could not be used.
+const standardDraft = (disabilities) => ({
+  analysis: buildTdiuAnalysisTemplate(disabilities),
+  draftNote: STANDARD_DRAFT_NOTE,
+});
+
 /**
- * Run AI (or template fallback) vocational analysis and update state
+ * Build the vocational analysis, worded by the AI when it is available and
+ * its answer is usable, and update state. Nothing is saved here: the
+ * veteran edits the result and saves it.
  */
 async function generateVocationalAnalysis(
   disabilities,
@@ -516,48 +449,21 @@ async function generateVocationalAnalysis(
   setIsGenerating(true);
 
   try {
-    let analysis;
-
-    // Load veteran context for smarter generation
-    const veteranContext = await getVeteranAIContext({
-      maxPacketTokens: 600,
-    });
-
-    if (isAIAvailable()) {
-      const drafted = await _generateVocationalImpact(
-        disabilities,
-        veteranContext,
-      );
-      analysis = drafted.analysis;
-      setDraftNote(drafted.draftNote);
-    } else {
-      analysis = generateTemplateImpact(disabilities);
-    }
-
-    setVocationalAnalysis(analysis);
-    setStep(3);
-
-    // Save the generated TDIU statement to My Packet
-    const fullText = analysis.summary_argument || "";
-    saveAnalysisResults({
-      toolName: "TDIU Builder",
-      classification: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
-      rawText: fullText,
-      extractedData: analysis,
-      vkbMergeData: {
-        aiInsights: {
-          tdiuSummary: analysis.summary_argument,
-          tdiuJobsPrecluded: analysis.job_types_precluded,
-        },
-      },
-    }).catch((err) => console.warn("Failed to save TDIU results:", err));
+    const drafted = isAIAvailable()
+      ? await _generateVocationalImpact(
+          disabilities,
+          await getVeteranAIContext({ maxPacketTokens: 600 }),
+        )
+      : standardDraft(disabilities);
+    setVocationalAnalysis(drafted.analysis);
+    setDraftNote(drafted.draftNote);
   } catch (err) {
     console.error("Generation error:", err);
-    // Fall back to template
-    const analysis = generateTemplateImpact(disabilities);
-    setVocationalAnalysis(analysis);
-    setStep(3);
+    const drafted = standardDraft(disabilities);
+    setVocationalAnalysis(drafted.analysis);
+    setDraftNote(drafted.draftNote);
   } finally {
+    setStep(3);
     setIsGenerating(false);
   }
 }
@@ -655,6 +561,52 @@ async function copyBox18Statement(vocationalAnalysis) {
 }
 
 /**
+ * The result step's state: the analysis as edited, its draft note, saving
+ * and downloads. The veteran saves what is on screen; any change to the
+ * analysis clears the last save message.
+ */
+function useTdiuResults(workHistory) {
+  const [vocationalAnalysis, setAnalysis] = useState(null);
+  const [draftNote, setDraftNote] = useState(null);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [saveState, setSaveState] = useState(null);
+
+  const setVocationalAnalysis = (next) => {
+    setAnalysis(next);
+    setSaveState(null);
+  };
+  const saveToPacket = () =>
+    saveAnalysisResults({
+      toolName: "TDIU Builder",
+      classification: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+      ...tdiuSavePayload(vocationalAnalysis),
+    }).then(
+      () => setSaveState("saved"),
+      (err) => {
+        console.warn("Failed to save TDIU results:", err);
+        setSaveState("failed");
+      },
+    );
+  const getFullStatement = () =>
+    buildFullStatement(vocationalAnalysis, workHistory);
+
+  return {
+    vocationalAnalysis,
+    setVocationalAnalysis,
+    editAnalysis: setVocationalAnalysis,
+    draftNote,
+    setDraftNote,
+    saveToPacket,
+    saveState,
+    showDownloadMenu,
+    setShowDownloadMenu,
+    downloadPDF: () => downloadStatementAsPDF(getFullStatement()),
+    downloadDOCX: () => downloadStatementAsDOCX(getFullStatement()),
+    copyToClipboard: () => copyBox18Statement(vocationalAnalysis),
+  };
+}
+
+/**
  * Bundles all TDIUBuilder wizard state, derived data, and action handlers
  */
 function useTDIUBuilderState() {
@@ -685,9 +637,7 @@ function useTDIUBuilderState() {
   const [error, setError] = useState(null);
   useAIStatusPolling();
 
-  const [vocationalAnalysis, setVocationalAnalysis] = useState(null);
-  const [draftNote, setDraftNote] = useState(null);
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const results = useTdiuResults(workHistory);
 
   const [savedRatingsTdiu] = useState(() => {
     const ratings = getMyRatings();
@@ -698,16 +648,10 @@ function useTDIUBuilderState() {
     generateVocationalAnalysis(disabilities, {
       setError,
       setIsGenerating,
-      setVocationalAnalysis,
-      setDraftNote,
+      setVocationalAnalysis: results.setVocationalAnalysis,
+      setDraftNote: results.setDraftNote,
       setStep,
     });
-
-  const getFullStatement = () =>
-    buildFullStatement(vocationalAnalysis, workHistory);
-  const downloadPDF = () => downloadStatementAsPDF(getFullStatement());
-  const downloadDOCX = () => downloadStatementAsDOCX(getFullStatement());
-  const copyToClipboard = () => copyBox18Statement(vocationalAnalysis);
 
   return {
     step,
@@ -727,16 +671,10 @@ function useTDIUBuilderState() {
     setWorkHistory,
     isGenerating,
     error,
-    vocationalAnalysis,
-    setVocationalAnalysis,
-    draftNote,
-    showDownloadMenu,
-    setShowDownloadMenu,
+    vocationalAnalysis: results.vocationalAnalysis,
     savedRatingsTdiu,
     handleGenerate,
-    downloadPDF,
-    downloadDOCX,
-    copyToClipboard,
+    results,
   };
 }
 
@@ -937,31 +875,21 @@ function TDIUSupportCTA() {
 
 function TDIUResultsSection({
   step,
-  vocationalAnalysis,
-  copyToClipboard,
-  showDownloadMenu,
-  setShowDownloadMenu,
-  downloadPDF,
-  downloadDOCX,
   setStep,
   setDisabilities,
-  setVocationalAnalysis,
   setWorkHistory,
+  results,
 }) {
   if (step !== 3) return null;
   return (
     <>
+      <StandardDraftNotice note={results.draftNote} className="mb-6" />
       <ResultsStep
-        vocationalAnalysis={vocationalAnalysis}
-        copyToClipboard={copyToClipboard}
-        showDownloadMenu={showDownloadMenu}
-        setShowDownloadMenu={setShowDownloadMenu}
-        downloadPDF={downloadPDF}
-        downloadDOCX={downloadDOCX}
+        {...results}
         onStartOver={() => {
           setStep(1);
           setDisabilities([]);
-          setVocationalAnalysis(null);
+          results.setVocationalAnalysis(null);
           setWorkHistory({
             lastWorked: "",
             lastOccupation: "",
@@ -972,7 +900,7 @@ function TDIUResultsSection({
         }}
       />
       {/* Support CTA on results page */}
-      {vocationalAnalysis && <TDIUSupportCTA />}
+      {results.vocationalAnalysis && <TDIUSupportCTA />}
     </>
   );
 }
@@ -997,14 +925,7 @@ function TDIUMainContent({
   setWorkHistory,
   handleGenerate,
   isGenerating,
-  vocationalAnalysis,
-  setVocationalAnalysis,
-  draftNote,
-  copyToClipboard,
-  showDownloadMenu,
-  setShowDownloadMenu,
-  downloadPDF,
-  downloadDOCX,
+  results,
 }) {
   return (
     <div className="max-w-4xl mx-auto p-6 pt-0">
@@ -1041,19 +962,12 @@ function TDIUMainContent({
           onBack={() => setStep(1)}
         />
       )}
-      {step === 3 && <StandardDraftNotice note={draftNote} className="mb-6" />}
       <TDIUResultsSection
         step={step}
-        vocationalAnalysis={vocationalAnalysis}
-        copyToClipboard={copyToClipboard}
-        showDownloadMenu={showDownloadMenu}
-        setShowDownloadMenu={setShowDownloadMenu}
-        downloadPDF={downloadPDF}
-        downloadDOCX={downloadDOCX}
         setStep={setStep}
         setDisabilities={setDisabilities}
-        setVocationalAnalysis={setVocationalAnalysis}
         setWorkHistory={setWorkHistory}
+        results={results}
       />
     </div>
   );
@@ -1612,106 +1526,13 @@ function ResultsBanner() {
           <span className="text-4xl">💼</span>
         </div>
         <div>
-          <h3 className="text-2xl font-bold">Vocational Analysis Complete!</h3>
-          <p className="text-green-100">
-            Copy the Box 18 statement below for your VA Form 21-8940
+          <h3 className="text-2xl font-bold">Your TDIU statement draft</h3>
+          <p className="text-white">
+            Fill in each [bracketed] blank below in your own words, then copy
+            the Box 18 statement into your VA Form 21-8940.
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Box18Statement({ vocationalAnalysis, copyToClipboard }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border-2 border-green-500">
-      <div className="p-4 bg-green-50 dark:bg-green-900/30 border-b border-green-200 dark:border-green-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-green-800 dark:text-green-200">
-              📝 Statement for Box 18 (VA Form 21-8940)
-            </h3>
-            <p className="text-sm text-green-600 dark:text-green-400">
-              Copy this text directly into your TDIU application
-            </p>
-          </div>
-          <button
-            onClick={copyToClipboard}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          >
-            📋 Copy
-          </button>
-        </div>
-      </div>
-      <div className="p-6">
-        <p className="text-gray-700 dark:text-gray-200 leading-relaxed">
-          &quot;{vocationalAnalysis?.summary_argument}&quot;
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function WorkTypesPrecluded({ vocationalAnalysis }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
-        🚫 Work Categories Precluded
-      </h3>
-      <div className="flex flex-wrap gap-3">
-        {vocationalAnalysis?.job_types_precluded?.map((job) => (
-          <span
-            key={job}
-            className="px-4 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg font-medium"
-          >
-            ✕ {job} Work
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DetailedLimitations({ vocationalAnalysis }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-      <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-          📊 Detailed Functional Limitations
-        </h3>
-      </div>
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        {vocationalAnalysis?.limitations?.map((lim) => (
-          <div key={`${lim.condition}-${lim.symptom}`} className="p-4">
-            <div className="flex items-start gap-3">
-              <span className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-bold rounded">
-                {lim.condition}
-              </span>
-              <div>
-                <p className="font-medium text-gray-800 dark:text-gray-100">
-                  {lim.symptom}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  {lim.vocational_impact}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function CombinedEffect({ vocationalAnalysis }) {
-  return (
-    <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 rounded-r-lg">
-      <h3 className="font-bold text-amber-800 dark:text-amber-200 mb-2">
-        🔗 Combined Effect
-      </h3>
-      <p className="text-amber-700 dark:text-amber-300">
-        {vocationalAnalysis?.combined_effect}
-      </p>
     </div>
   );
 }
@@ -1808,7 +1629,10 @@ function NextSteps() {
 
 function ResultsStep({
   vocationalAnalysis,
+  editAnalysis,
   copyToClipboard,
+  saveToPacket,
+  saveState,
   showDownloadMenu,
   setShowDownloadMenu,
   downloadPDF,
@@ -1818,13 +1642,13 @@ function ResultsStep({
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <ResultsBanner />
-      <Box18Statement
-        vocationalAnalysis={vocationalAnalysis}
-        copyToClipboard={copyToClipboard}
+      <TdiuAnalysisEditor
+        analysis={vocationalAnalysis}
+        onChange={editAnalysis}
+        onCopy={copyToClipboard}
+        onSave={saveToPacket}
+        saveState={saveState}
       />
-      <WorkTypesPrecluded vocationalAnalysis={vocationalAnalysis} />
-      <DetailedLimitations vocationalAnalysis={vocationalAnalysis} />
-      <CombinedEffect vocationalAnalysis={vocationalAnalysis} />
       <DownloadOptions
         showDownloadMenu={showDownloadMenu}
         setShowDownloadMenu={setShowDownloadMenu}
