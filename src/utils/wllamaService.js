@@ -7,6 +7,8 @@
  * Models: VetRate Auditor, Writer, Rater (GGUF Q4_K_M)
  */
 
+import { SWARM_AGENTS } from "./diamondSwarm";
+
 // Dynamic import to avoid bundling Node.js code from wllama's embedded worker strings
 // The wllama library contains WASM worker code with Node.js require() calls that
 // cause "require is not defined" errors when statically imported
@@ -66,11 +68,7 @@ export const WLLAMA_MODELS = {
     fallbackUrl:
       "https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Auditor-7B-GGUF/resolve/main/vetrate-auditor-7b-v2-Q4_K_M-00001-of-00010.gguf",
     contextSize: 4096,
-    systemPrompt: `You are the VetRate CW5 Auditor, a Chief Warrant Officer Five and expert VA claims reviewer.
-Your role is to analyze disability claims for accuracy, completeness, and 38 CFR compliance.
-Always cite specific CFR sections. Never fabricate regulatory information.
-Be thorough but compassionate - veterans deserve accurate guidance.
-Never determine bilateral pairing (38 CFR § 4.26) from memory or by picking the two highest ratings - bilateral means the SAME body part on OPPOSITE sides only. If a DKB context block is provided, answer only from it and say so explicitly when it doesn't cover the question.`,
+    systemPrompt: SWARM_AGENTS.AUDITOR.systemPrompt,
   },
   // Test-only entry: 3B QLoRA candidate for wasm-mode's smaller-model fix.
   // Single 1.9GB file, no sharding needed (under wllama's 2GB/file cap).
@@ -92,10 +90,7 @@ Never determine bilateral pairing (38 CFR § 4.26) from memory or by picking the
     fallbackUrl:
       "https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Writer-7B-GGUF/resolve/main/vetrate-writer-7b-v2-Q4_K_M-00001-of-00010.gguf",
     contextSize: 4096,
-    systemPrompt: `You are the VetRate CW4 Writer, a Chief Warrant Officer Four specializing in VA claims documentation.
-Write compelling, truthful personal statements from the veteran's perspective.
-Include specific dates, locations, and details. Connect symptoms to daily life impact.
-Use medical terminology correctly. Balance emotional resonance with factual accuracy.`,
+    systemPrompt: SWARM_AGENTS.WRITER.systemPrompt,
   },
   rater: {
     name: "VetRate Rater",
@@ -104,11 +99,7 @@ Use medical terminology correctly. Balance emotional resonance with factual accu
     fallbackUrl:
       "https://huggingface.co/Vet-Rate-org/Diamond-Swarm-Rater-7B-GGUF/resolve/main/vetrate-rater-7b-v2-Q4_K_M-00001-of-00010.gguf",
     contextSize: 4096,
-    systemPrompt: `You are the VetRate CW3 Rater, a Chief Warrant Officer Three expert in VA disability calculations.
-Calculate combined ratings using the official VA bilateral factor formula.
-Explain rating criteria for specific conditions. Identify potential rating increases.
-Always show your work and cite 38 CFR Part 4 rating criteria.
-BILATERAL PAIRING: "Bilateral" means the SAME body part on BOTH left AND right sides. Never assume the two highest-rated conditions are the pair - check each condition's body part and side explicitly. If conditions don't clearly name matching left/right body parts, say no bilateral pair is identifiable rather than guessing one. If a COMPUTED RESULT block is provided, that number is authoritative - explain it, do not recompute it.`,
+    systemPrompt: SWARM_AGENTS.RATER.systemPrompt,
   },
   // Test-only entry: 3B QLoRA candidate for wasm-mode's smaller-model fix.
   // Single 1.9GB file, no sharding needed (under wllama's 2GB/file cap).
