@@ -2081,7 +2081,24 @@ function _stripUrlsFromResult(result, options) {
   return result;
 }
 
+export const EMPTY_PROMPT_REPLY =
+  "I didn't get a question. Tell me what you need help with, for example a question about your claim, your rating, or a form, and I will help from there.";
+
+const _isEmptyPrompt = (prompt) =>
+  prompt === undefined ||
+  prompt === null ||
+  (typeof prompt === "string" && prompt.trim() === "");
+
 export const generateAI = async (prompt, options = {}) => {
+  if (_isEmptyPrompt(prompt)) {
+    const mode = getEffectiveAIMode();
+    return {
+      text: EMPTY_PROMPT_REPLY,
+      mode,
+      onDevice: _isModeOnDevice(mode),
+    };
+  }
+
   if (
     consecutiveGenerationFailures >= CIRCUIT_BREAKER_THRESHOLD &&
     Date.now() - circuitBreakerOpenedAt < CIRCUIT_BREAKER_COOLDOWN_MS
