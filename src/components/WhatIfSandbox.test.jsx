@@ -32,8 +32,8 @@ describe("WhatIfSandbox - Load My Ratings", () => {
     localStorage.setItem(
       "vet_rate_my_ratings",
       JSON.stringify([
-        { condition: "Knee Pain", rating: 10, side: "left" },
-        { condition: "Knee Pain", rating: 10, side: "right" },
+        { condition: "Knee strain", rating: 10, side: "left" },
+        { condition: "Knee strain", rating: 10, side: "right" },
       ]),
     );
 

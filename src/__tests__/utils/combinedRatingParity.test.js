@@ -42,19 +42,20 @@ describe("RT7-2 - bilateral factor applies to the paired set, not the top two", 
 // name, was simply ignored). This fixture mirrors a veteran with several
 // genuinely bilateral (paired left/right) lower-extremity ratings plus a
 // couple of unrelated single-sided conditions - category/percentage/side
-// only, no real names.
+// only, no real names. The limb names use decision-letter wording the
+// calculator's name allowlist reads (it gets no bodyPart from this path).
 describe("RT-COMBINED-1 - Ratings tab must use the bilateral-aware engine", () => {
   const bilateralHeavyProfile = [
     { name: "mental-health condition", rating: 30, side: "none" },
     { name: "spine condition", rating: 20, side: "none" },
     { name: "sinus condition", rating: 0, side: "none" },
-    { name: "nerve condition, left leg", rating: 20, side: "left" },
-    { name: "hip condition, left", rating: 10, side: "left" },
-    { name: "hip condition, right", rating: 10, side: "right" },
-    { name: "hip condition variant, left", rating: 0, side: "left" },
-    { name: "hip condition variant 2, left", rating: 0, side: "left" },
-    { name: "hip condition variant, right", rating: 0, side: "right" },
-    { name: "nerve condition, right leg", rating: 10, side: "right" },
+    { name: "radiculopathy, left leg", rating: 20, side: "left" },
+    { name: "hip strain, left", rating: 10, side: "left" },
+    { name: "hip strain, right", rating: 10, side: "right" },
+    { name: "hip limitation of flexion, left", rating: 0, side: "left" },
+    { name: "hip limitation of extension, left", rating: 0, side: "left" },
+    { name: "hip limitation of flexion, right", rating: 0, side: "right" },
+    { name: "radiculopathy, right leg", rating: 10, side: "right" },
     { name: "respiratory condition", rating: 0, side: "none" },
   ];
 
@@ -84,7 +85,7 @@ describe("RT-COMBINED-1 - Ratings tab must use the bilateral-aware engine", () =
     const completeProfile = [
       ...bilateralHeavyProfile,
       {
-        name: "hip condition variant, right (missing from extraction today)",
+        name: "hip limitation of extension, right",
         rating: 0,
         side: "right",
       },

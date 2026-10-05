@@ -242,9 +242,20 @@ const NON_LIMB_BODY_PARTS = new Set(
   BODY_PARTS.other.map((part) => part.value).filter((v) => v !== "other"),
 );
 const withPlurals = (words) => words.flatMap((w) => [w, `${w}s`]);
-const UPPER_LIMB_TERMS = [
-  "upper extremity",
-  "upper extremities",
+
+// The name tier is an allowlist. A limb is read from a name only when every
+// word in it is a side word, a limb part, a musculoskeletal or peripheral-nerve
+// condition term of a limb, or a plain connective. One word outside the list
+// ("insomnia because of right knee pain", "plantar wart, left foot") and the
+// name gives no limb, because a blocklist of other conditions can never be
+// complete and a wrong guess overstates the rating.
+const NAME_SIDE_WORDS = {
+  left: "left",
+  right: "right",
+  bilateral: "bilateral",
+  both: "bilateral",
+};
+const NAME_LIMB_PARTS = new Map([
   ...withPlurals([
     "shoulder",
     "arm",
@@ -254,128 +265,114 @@ const UPPER_LIMB_TERMS = [
     "hand",
     "finger",
     "thumb",
-  ]),
+  ]).map((word) => [word, "upper"]),
+  ...withPlurals(["hip", "thigh", "knee", "leg", "ankle", "toe"]).map(
+    (word) => [word, "lower"],
+  ),
+  ["foot", "lower"],
+  ["feet", "lower"],
+]);
+// Phrases are matched before single words. A phrase with a limb counts as a
+// limb part ("upper extremity") or implies one ("pes planus" is the foot).
+const NAME_PHRASES = [
+  { words: "upper extremity", limb: "upper", part: true },
+  { words: "upper extremities", limb: "upper", part: true },
+  { words: "lower extremity", limb: "lower", part: true },
+  { words: "lower extremities", limb: "lower", part: true },
+  { words: "carpal tunnel syndrome", limb: "upper" },
+  { words: "pes planus", limb: "lower" },
+  { words: "plantar fasciitis", limb: "lower" },
+  { words: "degenerative joint disease" },
+  { words: "limitation of motion" },
+  { words: "limitation of flexion" },
+  { words: "limitation of extension" },
 ];
-const LOWER_LIMB_TERMS = [
-  "lower extremity",
-  "lower extremities",
-  "foot",
-  "feet",
-  "pes planus",
-  "plantar",
-  ...withPlurals(["hip", "thigh", "knee", "leg", "ankle", "toe", "heel"]),
-];
-// Words that mean the name is about something other than the limb it mentions.
-// A scar or skin condition is rated on the skin (M21-1 V.iii.10.1.h limits the
-// bilateral factor for skin to two diagnostic codes), and "depression
-// associated with left knee strain" is a mental-health rating.
-const SKIN_TERMS = [
-  "skin",
-  "eczema",
-  "dermatitis",
-  "psoriasis",
-  "acne",
-  "tinea",
-  "fungal",
-  "fungus",
-  "athlete",
-  "onychomycosis",
-  "urticaria",
-  "keloid",
-  ...withPlurals(["scar", "rash", "burn"]),
-];
-const NON_LIMB_TERMS = [
+const NAME_CONDITION_WORDS = new Set([
+  "strain",
+  "sprain",
+  "arthritis",
+  "osteoarthritis",
+  "limitation",
+  "instability",
+  "tendonitis",
+  "tendinitis",
+  "bursitis",
+  "meniscus",
+  "meniscal",
+  "replacement",
+  "fracture",
+  "residual",
+  "residuals",
+  "amputation",
+  "radiculopathy",
+  "neuropathy",
+  "impingement",
+  "of",
+  "the",
+  "with",
+]);
+// The sided body parts that are not limbs (ear, eye, kidney in BODY_PARTS).
+const NAME_NON_LIMB_WORDS = new Set([
   "hearing",
   "tinnitus",
   "vision",
-  "visual",
-  "cataract",
-  "glaucoma",
-  "head",
-  "brain",
-  "tbi",
-  "sinus",
-  "sinusitis",
-  "renal",
-  "heart",
-  "cardiac",
-  "hypertension",
-  "liver",
-  "bladder",
-  "sleep apnea",
-  "depression",
-  "depressive",
-  "anxiety",
-  "ptsd",
-  "posttraumatic",
-  "post traumatic",
-  "stress disorder",
-  "mood",
-  "bipolar",
-  "psychiatric",
-  "mental",
-  "schizophrenia",
-  "adjustment disorder",
-  ...withPlurals(["ear", "eye", "kidney", "lung", "headache", "migraine"]),
-];
-const RELATIONAL_TERMS = [
-  "associated with",
-  "secondary to",
-  "due to",
-  "caused by",
-  "as a result of",
-  "result of",
-  "after",
-  "following",
-  "status post",
-  "post operative",
-  "postoperative",
-  "surgery",
-  "surgical",
-];
+  ...withPlurals(["ear", "eye", "kidney"]),
+]);
 
-const normaliseWords = (name) =>
-  ` ${String(name ?? "")
-    .toLowerCase()
-    .replace(/[^a-z]+/g, " ")
-    .trim()} `;
-
-const mentionsTerm = (name, terms) => {
-  const text = normaliseWords(name);
-  return terms.some((term) => text.includes(` ${term} `));
-};
-
-const hasHyphenatedLimbWord = (name) =>
+const _nameWords = (name) =>
   String(name ?? "")
     .toLowerCase()
-    .split(/[^a-z-]+/)
-    .filter((word) => word.includes("-"))
-    .some((word) =>
-      mentionsTerm(word, [...UPPER_LIMB_TERMS, ...LOWER_LIMB_TERMS]),
-    );
+    .split(/[^a-z]+/)
+    .filter(Boolean);
+
+function _takeNamePhrases(name) {
+  let text = ` ${_nameWords(name).join(" ")} `;
+  const limbs = new Set();
+  let phraseParts = 0;
+  for (const phrase of NAME_PHRASES) {
+    const pieces = text.split(` ${phrase.words} `);
+    if (pieces.length > 1) {
+      text = pieces.join(" ");
+      if (phrase.limb) limbs.add(phrase.limb);
+      if (phrase.part) phraseParts += pieces.length - 1;
+    }
+  }
+  return { words: text.trim().split(" ").filter(Boolean), limbs, phraseParts };
+}
 
 /**
- * The limb a condition name gives, read conservatively: "upper" or "lower"
- * only when the name mentions one limb and nothing in it points elsewhere.
- * A relational clause ("secondary to", "after ... surgery"), a skin,
- * mental-health, head or organ term, or a hyphenated compound around the limb
- * word ("left-hand dominant") makes the name "unknown". A name with no limb
- * word that is about a non-limb part is "none".
+ * What a condition name says, read against the allowlist:
+ * { limb, side }. `limb` is "upper" or "lower" only when every word is
+ * allowed and the name has at most one limb part and points at one limb;
+ * "none" when it has no limb part and is about hearing, eyes or kidneys;
+ * otherwise "unknown". `side` is the single side the name states, or null.
  */
-function _limbFromName(name) {
-  const upper = mentionsTerm(name, UPPER_LIMB_TERMS);
-  const lower = mentionsTerm(name, LOWER_LIMB_TERMS);
-  const skin = mentionsTerm(name, SKIN_TERMS);
-  const nonLimb = mentionsTerm(name, NON_LIMB_TERMS);
-  if (!upper && !lower) return nonLimb && !skin ? "none" : "unknown";
-  const pointsElsewhere =
-    skin ||
-    nonLimb ||
-    mentionsTerm(name, RELATIONAL_TERMS) ||
-    hasHyphenatedLimbWord(name);
-  if (pointsElsewhere || upper === lower) return "unknown";
-  return upper ? "upper" : "lower";
+function _readName(name) {
+  const { words, limbs, phraseParts } = _takeNamePhrases(name);
+  let parts = phraseParts;
+  const sides = new Set();
+  let allAllowed = true;
+  let nonLimb = false;
+  for (const word of words) {
+    if (NAME_SIDE_WORDS[word]) {
+      sides.add(NAME_SIDE_WORDS[word]);
+    } else if (NAME_LIMB_PARTS.has(word)) {
+      limbs.add(NAME_LIMB_PARTS.get(word));
+      parts += 1;
+    } else if (!NAME_CONDITION_WORDS.has(word)) {
+      allAllowed = false;
+      nonLimb = nonLimb || NAME_NON_LIMB_WORDS.has(word);
+    }
+  }
+
+  const side = sides.size === 1 ? [...sides][0] : null;
+  if (allAllowed && limbs.size === 1 && parts <= 1) {
+    return { limb: [...limbs][0], side };
+  }
+  return { limb: nonLimb && limbs.size === 0 ? "none" : "unknown", side };
 }
+
+const _limbFromName = (name) => _readName(name).limb;
 
 /**
  * Which extremity a condition affects: "upper", "lower", "none" (not a limb)
