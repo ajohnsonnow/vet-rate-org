@@ -5,21 +5,19 @@
  */
 
 /*
- * VRAM tier ceilings, in MB. Anchored on the models the app loads today
- * (src/utils/deviceCapabilityDetector.js, VRAM from the WebLLM prebuilt list):
- *   laptop / tablet  Qwen2.5-1.5B q4f16 1629.75, q4f32 1888.97  -> 2 GiB ceiling
- *   desktop-mid/high Qwen2.5-3B q4f16 2504.76, q4f32 2893.64,
- *                    Llama-3.2-3B q4f32 2951.51                 -> 4 GiB ceiling
- *                    (largest current model rounded up to 3 GiB, plus 1 GiB
- *                    of headroom so a 4B-class q4f16 build is visible)
- *   phone            the app runs no text model on phones today; 1 GiB is a
- *                    judgment ceiling below the smallest current model, not a
- *                    derived figure.
+ * VRAM tier ceilings, in MB, compared with WebLLM's vram_required_MB. Set by
+ * what each device class can hold, not by what the app loads today, so a
+ * stronger model one size class up is surfaced instead of set aside:
+ *   phone    ~2.25 GiB  a 2B-class q4f16 build (flagship phones, 8 GB+ RAM)
+ *   laptop   4 GiB      a 4B-class q4f16 build (integrated / small discrete GPU)
+ *   desktop  8 GiB      a 9B-class q4f16 build on an 8-16 GB card
+ * Today's models (Qwen2.5-1.5B 1629.75, Qwen2.5-3B 2504.76, Llama-3.2-3B
+ * 2951.51) sit well inside these.
  * A model above the desktop ceiling is reported as "too-large", not a tier.
  */
-export const PHONE_MAX_VRAM_MB = 1024;
-export const LAPTOP_MAX_VRAM_MB = 2048;
-export const DESKTOP_MAX_VRAM_MB = 4096;
+export const PHONE_MAX_VRAM_MB = 2304;
+export const LAPTOP_MAX_VRAM_MB = 4096;
+export const DESKTOP_MAX_VRAM_MB = 8192;
 
 export const TIER_THRESHOLDS = [
   { tier: "phone", maxVramMb: PHONE_MAX_VRAM_MB },
