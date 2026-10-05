@@ -18,7 +18,7 @@
  * src/__tests__/agentic/JUDGE_RUBRIC.md when a real model is loaded.
  */
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -117,12 +117,11 @@ describe("Agentic harness - system-prompt fingerprints", () => {
   // To intentionally rotate: run the suite, copy the actual hash from
   // the failure message, and update the table below.
   const EXPECTED = {
-    // Rotated when the bilateral clauses were restated to match 38 CFR § 4.26
-    // (paired extremities, not only the same body part) - auditor and rater
-    // prompts changed, writer did not.
-    auditor: "26157e8c9d0356f5a228d81242cbb546b11a7acae20a5c4100697058eead4d0c",
-    writer: "1242f7ed8f1e34abf7baa7adf5231181faead77c33a1817a67801fda718f5581",
-    rater: "4148600d5b48660ce0652f2cd6c00a6ce1e647fa5f83882dacbd95b51453626e",
+    // Rotated when the capitalised headings became plain lead-ins and the
+    // Writer, Auditor and Rater behaviour rules were restated.
+    auditor: "ea2f4bdf03b474a07de8b13fe52f230de177249ad904a4b9fb8ed98c676d3d40",
+    writer: "532a8a6b9a07b5428849dc498953d29ae93c9ad64e083d05b35754fa6cd2fa17",
+    rater: "7584c59adf89a44ad3bb0dd64887c409f8cbd71568286f6d25aaa03c5738a057",
   };
 
   it("auditor prompt fingerprint is stable", () => {
@@ -237,9 +236,30 @@ describe("Agentic harness - lane rule present in prompts", () => {
     },
   );
 
-  it("writer drafts with brackets when given the document type and the condition", () => {
-    expect(SWARM_AGENTS.WRITER.systemPrompt).toMatch(
-      /Always write the draft when the user names the kind of document/,
+  it("writer has one behaviour: draft in this reply, brackets for unknown facts, at most three follow-ups", () => {
+    const p = SWARM_AGENTS.WRITER.systemPrompt;
+    expect(p).toMatch(/Write the draft in this reply/);
+    expect(p).toMatch(/Use every fact in the message/);
+    expect(p).toMatch(/put \[square brackets\] wherever a fact was not given/);
+    expect(p).toMatch(
+      /list at most three things the veteran should fill in or check/,
+    );
+    expect(p).toMatch(
+      /Ask questions without drafting only when the message names neither the kind of document nor the condition or event/,
+    );
+  });
+
+  it("writer no longer carries the missing-document instruction that suppressed drafts", () => {
+    const p = SWARM_AGENTS.WRITER.systemPrompt;
+    expect(p).not.toMatch(/is not in the message, say so and ask for it/);
+    expect(p).not.toMatch(/Always write the draft/);
+  });
+
+  it("writer owns the nexus request and addresses it to the clinician", () => {
+    const p = SWARM_AGENTS.WRITER.systemPrompt;
+    expect(p).toMatch(/A nexus request is your job: write it/);
+    expect(p).toMatch(
+      /the veteran's request addressed to the clinician \(never the clinician's own signed opinion\)/,
     );
   });
 
@@ -269,7 +289,7 @@ describe("Agentic harness - rater treats the computed result as final", () => {
 describe("Agentic harness - missing-material rule present in prompts", () => {
   // A model that is told about a document it was not given must say so and
   // ask for it instead of inventing its contents.
-  it.each(["AUDITOR", "WRITER", "RATER"])(
+  it.each(["AUDITOR", "RATER"])(
     "%s asks for absent material and never invents case facts",
     (key) => {
       const p = SWARM_AGENTS[key].systemPrompt;
@@ -291,11 +311,101 @@ describe("Agentic harness - missing-material rule present in prompts", () => {
   it("writer brackets unknown facts and matches the author to the document", () => {
     const p = SWARM_AGENTS.WRITER.systemPrompt;
     expect(p).toMatch(/\[square brackets\]/);
-    expect(p).toMatch(/Use only facts the user gave/);
+    expect(p).toMatch(/never invent/);
+    expect(p).toMatch(/dates, diagnoses/);
     expect(p).toMatch(/the veteran for a personal statement/);
-    expect(p).toMatch(/the witness for a buddy statement/);
-    expect(p).toMatch(/request to the clinician for a nexus letter/);
+    expect(p).toMatch(
+      /the witness \(about the veteran\) for a buddy statement/,
+    );
     expect(p).toMatch(/never the clinician's own signed opinion/);
+  });
+
+  it("auditor answers from the message and asks for a document only when its contents are the question", () => {
+    const p = SWARM_AGENTS.AUDITOR.systemPrompt;
+    expect(p).toMatch(
+      /Answer from the message and the reference material when they are enough/,
+    );
+    expect(p).toMatch(
+      /Ask for a document only when the question is about its contents/,
+    );
+  });
+
+  it("rater explains the method when no ratings are given, as a direct behaviour", () => {
+    const p = SWARM_AGENTS.RATER.systemPrompt;
+    expect(p).toMatch(
+      /If no ratings are given, explain the combining method step by step first, then ask for the ratings/,
+    );
+    expect(p).not.toMatch(/I will explain/);
+  });
+});
+
+describe("Agentic harness - Intent to File wording comes from the app's own data", () => {
+  const flat = readFileSync(
+    join(__dirname, "../../data/cfr3Regulations.json"),
+    "utf8",
+  );
+
+  it("auditor tells a veteran to file an Intent to File first, citing what the data cites", () => {
+    const p = SWARM_AGENTS.AUDITOR.systemPrompt;
+    expect(p).toMatch(
+      /how to start or file a claim, say first to file an Intent to File/,
+    );
+    expect(p).toContain("VA Form 21-0966");
+    expect(p).toContain("38 CFR § 3.155(b)");
+    expect(flat).toContain("ALWAYS file an Intent to File first");
+    expect(flat).toContain("VA Form 21-0966");
+    expect(flat).toContain("§3.155(b)");
+    expect(flat).toContain("Must file complete claim within 1 year");
+  });
+
+  it.skipIf(!existsSync("public/legal-index/v0.1.0/chunks/ecfr.jsonl"))(
+    "the quoted one-year language is in the eCFR index",
+    () => {
+      const quoted = "within 1 year of receipt of the intent to file a claim";
+      expect(SWARM_AGENTS.AUDITOR.systemPrompt).toContain(`"${quoted}"`);
+      const index = readFileSync(
+        "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "utf8",
+      );
+      expect(index.replace(/\s+/g, " ")).toContain(quoted);
+    },
+  );
+});
+
+describe("Agentic harness - no all-capitals section headings for the model to quote", () => {
+  const CAPS_HEADING = /^[A-Z][A-Z0-9 &\-/]{3,}[A-Z0-9](?=\s*(:|\(|$))/m;
+
+  it.each(["AUDITOR", "WRITER", "RATER"])(
+    "%s has no line that opens with an all-capitals heading",
+    (key) => {
+      const p = SWARM_AGENTS[key].systemPrompt;
+      expect(p).not.toMatch(CAPS_HEADING);
+      for (const heading of [
+        "MISSING MATERIAL",
+        "YOUR LANE",
+        "CALCULATION BOUNDARY",
+        "EVIDENCE HIERARCHY",
+        "CRITICAL RULES",
+        "BILATERAL PAIRING",
+        "MENTAL HEALTH CLAIM PRECISION",
+      ]) {
+        expect(p).not.toContain(heading);
+      }
+    },
+  );
+
+  it("the heading detector catches a heading", () => {
+    expect("a\nYOUR LANE:\nb").toMatch(CAPS_HEADING);
+    expect("a\nCRITICAL RULES:\nb").toMatch(CAPS_HEADING);
+    expect("Rules:\n1. Use EXACT VA formula").not.toMatch(CAPS_HEADING);
+  });
+
+  it("each persona stays within about 300 characters of its previous length", () => {
+    const PREVIOUS = { AUDITOR: 2704, WRITER: 1288, RATER: 2498 };
+    for (const key of Object.keys(PREVIOUS)) {
+      const grown = SWARM_AGENTS[key].systemPrompt.length - PREVIOUS[key];
+      expect(grown, key).toBeLessThanOrEqual(300);
+    }
   });
 });
 
