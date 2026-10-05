@@ -42,6 +42,9 @@ const KB_BLOCK = new RegExp(String.raw`${KB_HEADER}[\s\S]*?${KB_FOOTER}`);
 const COMPUTED_BLOCK =
   /=== COMPUTED RESULT \([\s\S]*?=== END COMPUTED RESULT ===/;
 const COMPUTED_MARKER = "=== COMPUTED RESULT (";
+const VERIFIED_BLOCK =
+  /=== VERIFIED REFERENCE ===[\s\S]*?=== END VERIFIED REFERENCE ===/;
+const VERIFIED_MARKER = "=== VERIFIED REFERENCE ===";
 
 /**
  * Derive what the engine actually received from the chat request captured at
@@ -60,6 +63,8 @@ export function analyzeEngineRequest(captured, personaPrompts) {
       kbContext: null,
       computedResultInjected: null,
       computedResult: null,
+      verifiedReferenceInjected: null,
+      verifiedReference: null,
       temperature: null,
       maxTokens: null,
     };
@@ -87,6 +92,8 @@ export function analyzeEngineRequest(captured, personaPrompts) {
     kbContext: KB_BLOCK.exec(allText)?.[0] ?? null,
     computedResultInjected: allText.includes(COMPUTED_MARKER),
     computedResult: COMPUTED_BLOCK.exec(allText)?.[0] ?? null,
+    verifiedReferenceInjected: allText.includes(VERIFIED_MARKER),
+    verifiedReference: VERIFIED_BLOCK.exec(allText)?.[0] ?? null,
     temperature: captured.temperature ?? null,
     maxTokens: captured.max_tokens ?? null,
   };
@@ -120,6 +127,8 @@ export function buildCaseRecord({
     kbContext: observed.kbContext,
     computedResultInjected: observed.computedResultInjected,
     computedResult: observed.computedResult,
+    verifiedReferenceInjected: observed.verifiedReferenceInjected,
+    verifiedReference: observed.verifiedReference,
     temperature: observed.temperature ?? run.temperature ?? null,
     maxTokens: observed.maxTokens ?? run.maxTokens ?? null,
     engineRequests: extra.engineRequests ?? (captured ? 1 : 0),

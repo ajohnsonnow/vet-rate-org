@@ -5,13 +5,15 @@ import { selectOwnRequest } from "./requestCapture.js";
  * One transcript record from what happened to one case.
  *
  * outcome: { ok, text, error, latencyMs, captured: request[], rawResponse,
- *            calculatorReplacement, validationErrors, validationWarnings }
+ *            calculatorReplacement, citationsUnverified, validationErrors,
+ *            validationWarnings }
  *
  * `response` is the visible text, the field graders score. `rawResponse` is
  * the engine's reply before any reasoning block was removed, present only when
  * it differs. `outputCleanup` says the wrapper tags were removed or a runaway
  * repeat was cut ({ echoRemoved, trimmed }). `calculatorReplacement` carries the reason and the replaced
- * draft when the calculator guard swapped the answer.
+ * draft when the calculator guard swapped the answer. `citationsUnverified`
+ * lists the 38 CFR sections the answer cited that do not exist.
  */
 export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
   const requests = outcome.captured ?? [];
@@ -49,6 +51,9 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
             draft: replacement.draft ?? null,
           },
         }
+      : {}),
+    ...(outcome.citationsUnverified
+      ? { citationsUnverified: outcome.citationsUnverified }
       : {}),
   };
 }
