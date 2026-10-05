@@ -83,7 +83,7 @@ describe("writer templates with nothing supplied", () => {
 });
 
 describe("personal statement template", () => {
-  it("uses every supplied answer and leaves no blank", () => {
+  it("uses every supplied answer and leaves only the continuity blank", () => {
     const draft = buildPersonalStatementTemplate(PERSONAL, "Lumbar strain");
     for (const value of [
       PERSONAL.inServiceEvent,
@@ -98,7 +98,9 @@ describe("personal statement template", () => {
     ]) {
       expect(draft).toContain(value);
     }
-    expect(listPlaceholders(draft)).toEqual([]);
+    expect(listPlaceholders(draft)).toEqual([
+      "[whether the symptoms have continued since then]",
+    ]);
   });
 
   it("states the treatment the veteran selected, including both", () => {
@@ -383,5 +385,55 @@ describe("saving a TDIU analysis", () => {
       aiInsights: { tdiuJobsPrecluded: ["Heavy"] },
     });
     expect(JSON.stringify(partly.vkbMergeData)).not.toMatch(/\[[a-z]/);
+  });
+});
+
+describe("templates say nothing the veteran did not supply", () => {
+  it("personal statement leaves continuity of symptoms as a blank", () => {
+    const draft = buildPersonalStatementTemplate(
+      { symptomOnsetDate: "March 2011" },
+      "Tinnitus",
+    );
+    expect(draft).toContain("When my symptoms began: March 2011");
+    expect(draft).toContain("[whether the symptoms have continued since then]");
+    expect(draft).not.toMatch(/have continued since then\./);
+    expect(buildPersonalStatementTemplate({}, "Tinnitus")).toContain(
+      "When my symptoms began: [date the symptoms began]",
+    );
+  });
+
+  it("personal statement with the veteran's own explanation adds no continuity line", () => {
+    const draft = buildPersonalStatementTemplate(
+      { nexusExplanation: "The ringing started after the range accident" },
+      "Tinnitus",
+    );
+    expect(draft).toContain("The ringing started after the range accident.");
+    expect(draft).not.toContain("continued since then");
+  });
+
+  it("PTSD statement does not say how the veteran feels about writing it", () => {
+    const draft = buildPTSDStressorTemplate({});
+    expect(draft).not.toMatch(/difficult for me/i);
+    expect(draft).toContain(
+      "I respectfully request an evaluation for this condition.",
+    );
+  });
+
+  it("nexus request asks without claiming to be the doctor's patient", () => {
+    const draft = buildNexusLetterRequestTemplate({
+      conditionName: "Hypertension",
+    });
+    expect(draft).not.toMatch(/your patient/i);
+    expect(draft).toContain("My name is [Veteran Name].");
+    expect(draft).toContain('"at least as likely as not" (50% or greater');
+  });
+
+  it("TDIU combined effect reads the right way round", () => {
+    const analysis = buildTdiuAnalysisTemplate([
+      { condition: "Migraines", symptoms: ["Nausea"] },
+    ]);
+    expect(analysis.combined_effect).toContain(
+      "My service-connected conditions (Migraines) together affect my ability to work.",
+    );
   });
 });

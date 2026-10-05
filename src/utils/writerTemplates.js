@@ -90,8 +90,12 @@ function secondaryLink(answers) {
 
 function directLink(answers) {
   if (text(answers.nexusExplanation)) return sentence(answers.nexusExplanation);
-  const onset = orBlank(answers.symptomOnsetDate, "date the symptoms began");
-  return `My symptoms began ${onset} and have continued since then.`;
+  // The form asks when the symptoms began, not whether they have gone on
+  // since, so that part is the veteran's to state.
+  return [
+    `When my symptoms began: ${orBlank(answers.symptomOnsetDate, "date the symptoms began")}`,
+    `Since then: ${blank("whether the symptoms have continued since then")}`,
+  ].join("\n");
 }
 
 const impactLines = (answers) =>
@@ -152,7 +156,7 @@ export function buildPTSDStressorTemplate(answers = {}) {
     `How it affected me at the time\n${said(answers.immediateImpact, "how the event affected you right afterwards")}`,
     `My symptoms now\n${said(answers.currentSymptoms, "the symptoms you have now")}`,
     `How it affects my life now\n${said(answers.dailyImpact, "how these symptoms affect your daily life, work and relationships")}`,
-    "Recounting these events is difficult for me. I respectfully request an evaluation for this condition.",
+    "I respectfully request an evaluation for this condition.",
   ]);
 }
 
@@ -264,7 +268,7 @@ export function buildNexusLetterRequestTemplate(answers = {}) {
   return paragraphs([
     "REQUEST FOR A MEDICAL OPINION (NEXUS LETTER)",
     "Dear Doctor,",
-    `I am your patient, [Veteran Name]. I am filing a VA disability claim for ${claimed} and I am asking whether you would write a medical opinion letter, often called a nexus letter. A nexus letter is a doctor's written opinion on whether a condition is connected to military service. It matters because the VA weighs it as medical evidence when it decides the claim.`,
+    `My name is [Veteran Name]. I am filing a VA disability claim for ${claimed} and I am asking whether you would write a medical opinion letter, often called a nexus letter. A nexus letter is a doctor's written opinion on whether a condition is connected to military service. It matters because the VA weighs it as medical evidence when it decides the claim.`,
     `The connection I am asking you to address\n${connection}`,
     `My symptoms\n${said(answers.symptoms, "your current symptoms")}`,
     `Relevant medical history\n${said(answers.medicalHistory, "relevant treatment and medical history")}`,
@@ -292,7 +296,7 @@ export function buildTdiuAnalysisTemplate(disabilities = []) {
         vocational_impact: `Because of this symptom, ${blank("the work tasks this stops you from doing, and how often")}.`,
       })),
     ),
-    combined_effect: `My service-connected conditions (${names}) affect my ability to work together. ${blank("how these conditions combine to limit the work you can do")}`,
+    combined_effect: `My service-connected conditions (${names}) together affect my ability to work. ${blank("how these conditions combine to limit the work you can do")}`,
     summary_argument: `Due to my service-connected disabilities (${names}), I am unable to secure and maintain substantially gainful employment. ${blank("the main reasons you cannot keep a job, in your own words")}`,
     job_types_precluded: [
       blank("types of work you cannot do: Sedentary, Light, Medium or Heavy"),

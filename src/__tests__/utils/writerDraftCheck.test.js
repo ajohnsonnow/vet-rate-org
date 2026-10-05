@@ -44,7 +44,8 @@ Effect on my family and social life: I stopped coaching my nephew's team.
 I am currently receiving treatment from a private provider.
 
 How this connects to my service
-My symptoms began [date the symptoms began] and have continued ever since.
+When my symptoms began: [date the symptoms began]
+Since then: [whether the symptoms have continued since then]
 
 I respectfully request a Compensation and Pension (C&P) examination to evaluate this condition and its connection to my service.`;
 
@@ -114,13 +115,13 @@ describe("checkWriterDraft rejects invented facts", () => {
     ["number", "I miss about two shifts a month", "I miss 6 shifts a month"],
     [
       "date",
-      "[date the symptoms began] and",
-      "[date the symptoms began], around October, and",
+      "began: [date the symptoms began]",
+      "began: [date the symptoms began], around October",
     ],
     [
       "quantity",
-      "have continued ever since",
-      "have continued for several years",
+      "I stopped coaching my nephew's team",
+      "I stopped coaching my nephew's team several years ago",
     ],
     [
       "service",
