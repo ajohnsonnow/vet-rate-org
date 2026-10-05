@@ -60,6 +60,7 @@ import {
   describeMismatch,
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
+import { fitOutputTokens, planPromptFit } from "./promptBudget";
 import { flagUnverifiedCitations } from "./citationCheck";
 import {
   AI_DATA_CLASS,
@@ -1282,7 +1283,7 @@ const runWarrantCouncil = async (systemPrompt, userPrompt, options = {}) => {
     ? scrubbedUserPrompt
     : [scrubbedSystemPrompt, scrubbedUserPrompt]
         .filter(Boolean)
-        .join("\n\n---\n\n");
+        .join(SWARM_PROMPT_SEPARATOR);
 
   const agentId = resolveWarrantCouncilAgent(toolId, taskType);
 
@@ -2416,13 +2417,43 @@ const _referenceBudget = (options, effectiveMode) => {
  * manual text quoted from the bundled data, chosen by the question and tool.
  * Empty when no topic applies or the caller turned reference material off.
  */
-function _buildVerifiedReference(prompt, options, effectiveMode) {
+function _buildVerifiedReference(prompt, options, effectiveMode, roomChars) {
   if (options.useDKB === false) return "";
   const budget = _referenceBudget(options, effectiveMode);
   return buildVerifiedReferenceBlock(prompt, {
     toolId: options.toolId,
-    maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars),
+    maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars, roomChars),
   });
+}
+
+const SWARM_PROMPT_SEPARATOR = "\n\n---\n\n";
+const SWARM_DEFAULT_CONTEXT_WINDOW = 8192;
+
+const _longestPersonaChars = () =>
+  Math.max(...Object.values(SWARM_AGENTS).map((a) => a.systemPrompt.length));
+
+/**
+ * The context window the on-device engine was loaded with, and how much of it
+ * this request leaves for reference material (promptBudget.js). Null for
+ * every other backend: their budgets are the per-mode constants above.
+ * Without a caller system prompt the swarm sends the persona as the system
+ * message and folds the default prompt into the user turn, so both count.
+ */
+async function _planSwarmFit(prompt, baseSystemPrompt, options, computedChars) {
+  const profile = await detectDeviceCapabilities();
+  const contextWindow =
+    profile?.contextWindowSize ?? SWARM_DEFAULT_CONTEXT_WINDOW;
+  const requestedOutputTokens = options.maxTokens ?? getUserTokenLimit();
+  const personaChars = options.systemPrompt
+    ? 0
+    : _longestPersonaChars() + SWARM_PROMPT_SEPARATOR.length;
+  const plan = planPromptFit({
+    contextWindow,
+    requestedOutputTokens,
+    fixedChars: personaChars + baseSystemPrompt.length + prompt.length,
+    computedChars,
+  });
+  return { ...plan, contextWindow, requestedOutputTokens, personaChars };
 }
 
 // D15-2: single DKB (Diamond Knowledge Base) injection point. Every backend
@@ -2433,12 +2464,20 @@ function _buildVerifiedReference(prompt, options, effectiveMode) {
 // plain text in `fullPrompt`, once again re-resolved/re-injected inside the
 // backend. Best-effort: a DKB fetch failure never blocks the call.
 // `usedChars` is what the verified-reference block already took from the
-// shared budget; the keyword search gets the rest.
-async function _injectDKBContext(prompt, systemPrompt, options, usedChars = 0) {
+// shared budget; the keyword search gets the rest, or `roomChars` when the
+// on-device context window has less than that left.
+async function _injectDKBContext(
+  prompt,
+  systemPrompt,
+  options,
+  usedChars = 0,
+  roomChars = Infinity,
+) {
   if (options.useDKB === false) return systemPrompt;
   const budget = _referenceBudget(options, options.effectiveMode);
-  const maxChars = budget.maxChars - usedChars;
-  if (usedChars > 0 && maxChars < DKB_MIN_CHARS_AFTER_VERIFIED) {
+  const maxChars = Math.min(budget.maxChars - usedChars, roomChars);
+  const limited = usedChars > 0 || roomChars !== Infinity;
+  if (limited && maxChars < DKB_MIN_CHARS_AFTER_VERIFIED) {
     return systemPrompt;
   }
   try {
@@ -2491,6 +2530,29 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
       includeVeteranData: true,
     });
 
+  // The single grounding point: appended to the user piece before
+  // _redactPiecesForSend, so every backend receives the computed block once
+  // and it is redacted like the rest of the request.
+  const groundedPrompt = _isRaterRoute(options, effectiveMode)
+    ? injectCalculatorForRater(prompt, options)
+    : prompt;
+
+  // On-device WebLLM only: what the loaded context window leaves for the
+  // blocks below. The keyword block is sized last, so it gives way first;
+  // the verified block next; the computed block only when it cannot fit at
+  // all.
+  const fit =
+    effectiveMode === AI_MODES.SWARM
+      ? await _planSwarmFit(
+          prompt,
+          baseSystemPrompt,
+          options,
+          groundedPrompt.length - prompt.length,
+        )
+      : null;
+  const roomChars = fit ? fit.referenceChars : Infinity;
+  const userPrompt = fit && !fit.keepComputed ? prompt : groundedPrompt;
+
   // Verified reference goes in here, before _redactPiecesForSend, so every
   // backend receives it once. It sits ahead of the keyword-search block and
   // is charged to the same budget first.
@@ -2498,12 +2560,14 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
     prompt,
     options,
     effectiveMode,
+    roomChars,
   );
   const systemPrompt = await _injectDKBContext(
     prompt,
     baseSystemPrompt + verifiedReference,
     { ...options, effectiveMode },
     verifiedReference.length,
+    roomChars - verifiedReference.length,
   );
 
   // Apply user's saved preset if no preset specified in options
@@ -2514,18 +2578,25 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
     ...options,
     preset: effectivePreset,
     _hadCallerSystemPrompt: hadCallerSystemPrompt,
+    ..._fittedOutputTokens(fit, systemPrompt.length + userPrompt.length),
   };
 
-  // The single grounding point: appended to the user piece before
-  // _redactPiecesForSend, so every backend receives the computed block once
-  // and it is redacted like the rest of the request.
-  const userPrompt = _isRaterRoute(options, effectiveMode)
-    ? injectCalculatorForRater(prompt, options)
-    : prompt;
   const offDeviceUserPrompt =
     options.conditionsOnDeviceOnly && userPrompt !== prompt ? prompt : null;
 
   return { systemPrompt, userPrompt, offDeviceUserPrompt, enhancedOptions };
+}
+
+// `maxTokens` for the swarm when the request asked for more output than the
+// window has left beside the assembled prompt; nothing when it fits.
+function _fittedOutputTokens(fit, assembledChars) {
+  if (!fit) return {};
+  const maxTokens = fitOutputTokens({
+    contextWindow: fit.contextWindow,
+    requestedOutputTokens: fit.requestedOutputTokens,
+    promptChars: fit.personaChars + assembledChars,
+  });
+  return maxTokens === fit.requestedOutputTokens ? {} : { maxTokens };
 }
 
 // conditionsOnDeviceOnly: the ratings in the computed block stay on the

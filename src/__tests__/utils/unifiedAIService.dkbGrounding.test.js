@@ -34,7 +34,8 @@ vi.mock("../../utils/wllamaService", () => ({
 }));
 vi.mock("../../utils/deviceCapabilityDetector", () => ({
   detectDeviceCapabilities: vi.fn().mockResolvedValue({
-    tier: "desktop",
+    tier: "desktop-high",
+    contextWindowSize: 12288,
     hasWebGPU: true,
     canUseWebLLM: true,
   }),
