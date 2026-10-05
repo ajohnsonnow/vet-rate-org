@@ -202,7 +202,12 @@ function _configForTier(tier) {
           "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
           "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
         ],
-        contextWindowSize: 4096,
+        // 8192, not 4096: the swarm always sends its persona plus the default
+        // system prompt (about 15,100 characters, some 3,800 to 5,000 tokens),
+        // which 4096 cannot hold beside any useful output. The laptop tier
+        // runs this same model at 8192; the larger KV cache costs roughly
+        // 0.1 GB over the 1.6 GB the model needs at 4096.
+        contextWindowSize: 8192,
         maxChunkChars: 8000,
         maxOutputTokens: 768,
         ocrWorkers: 2,

@@ -375,10 +375,54 @@ export function findDeniedBilateralClaims(text, calc) {
 const CAP_WORDS =
   /\b(?:maximum|max|cannot exceed|can't exceed|cap|limit|up to|at most|no more than)\b/i;
 
-const withoutCapStatements = (text) =>
-  splitSentences(text)
-    .filter((sentence) => !CAP_WORDS.test(sentence))
-    .join("\n");
+const WHAT_IF =
+  /\b(?:adding (?:a|an|another)|if you (?:had|add|added|were|get|got))\b/i;
+const NEED_WORDS = {
+  words: ["need", "needs", "needed", "require", "requires", "required", "must"],
+};
+const RATING_THRESHOLD_WORDS = { words: ["threshold", "thresholds"] };
+const TDIU_THRESHOLD_FIGURES = new Set([40, 60, 70]);
+
+/** "50% for PTSD, 30% for tinnitus": two or more of the ratings entered. */
+function listsEnteredRatings(sentence, calc) {
+  const listed = [
+    ...calc.bilateralConditions,
+    ...calc.nonBilateralConditions,
+  ].filter((c) =>
+    new RegExp(
+      String.raw`\b${c.rating}\s*(?:%|percent)\s+for\s+${escapeRegExp(String(c.name))}\b`,
+      "i",
+    ).test(sentence),
+  );
+  return listed.length >= 2;
+}
+
+/**
+ * Sentences whose figures are not statements of this veteran's combined
+ * rating: a cap ("the maximum is 100%"), an example or what-if ("e.g.",
+ * "adding a 10% condition would result in"), or a list of the ratings
+ * entered.
+ */
+const isNotOwnRating = (sentence, calc) =>
+  CAP_WORDS.test(sentence) ||
+  WHAT_IF.test(sentence) ||
+  mentionsAny(sentence, EXAMPLE_WORDS) ||
+  listsEnteredRatings(sentence, calc);
+
+/**
+ * The combined ratings one sentence states. In a sentence that says a
+ * threshold is not reached or is needed, the 38 CFR § 4.16(a) figures are the
+ * threshold, not the veteran's rating.
+ */
+function statedInSentence(sentence) {
+  const figures = extractStatedCombinedRatings(sentence);
+  const namesThreshold =
+    mentionsAny(sentence, RATING_THRESHOLD_WORDS) &&
+    (NEGATION.test(sentence) || mentionsAny(sentence, NEED_WORDS));
+  return namesThreshold
+    ? figures.filter((v) => !TDIU_THRESHOLD_FIGURES.has(v))
+    : figures;
+}
 
 function workingValues(calc) {
   const values = new Set(calc.combineSteps.map((s) => s.result));
@@ -387,40 +431,229 @@ function workingValues(calc) {
   return values;
 }
 
+const CALCULATOR_SUBJECT = {
+  words: ["calculator", "calculator's"],
+  phrases: [
+    "computed result",
+    "computed block",
+    "provided result",
+    "provided math",
+    "provided text",
+    "provided block",
+    "provided logic",
+    "provided figure",
+    "provided figures",
+    "provided number",
+    "provided numbers",
+    "provided calculation",
+    "the system",
+    "the prompt",
+  ],
+};
+const DISPUTE_WORDS = {
+  words: [
+    "incorrect",
+    "wrong",
+    "erroneous",
+    "error",
+    "errors",
+    "mistake",
+    "mistakes",
+    "mistaken",
+    "discrepancy",
+    "discrepancies",
+    "impossible",
+    "inaccurate",
+    "flawed",
+    "miscalculated",
+    "miscalculation",
+    "inconsistent",
+    "inconsistency",
+  ],
+  phrases: ["non-standard"],
+};
+const DISPUTE_DENIED = {
+  phrases: [
+    "no error",
+    "no errors",
+    "not an error",
+    "no mistake",
+    "not a mistake",
+    "no discrepancy",
+    "no inconsistency",
+    "not incorrect",
+    "not wrong",
+    "not inaccurate",
+    "not inconsistent",
+    "without error",
+  ],
+};
+
+/**
+ * Sentences that call the computed block wrong: a word such as "incorrect",
+ * "error" or "discrepancy" in a sentence that names the calculator, the
+ * computed result or the prompt, or that directly follows one. A sentence
+ * saying there is no error does not count.
+ */
+export function findCalculatorDisputes(text) {
+  const sentences = splitSentences(text)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return sentences.filter(
+    (sentence, i) =>
+      mentionsAny(sentence, DISPUTE_WORDS) &&
+      !mentionsAny(sentence, DISPUTE_DENIED) &&
+      (mentionsAny(sentence, CALCULATOR_SUBJECT) ||
+        (i > 0 && mentionsAny(sentences[i - 1], CALCULATOR_SUBJECT))),
+  );
+}
+
+const round2 = (n) => Math.round(n * 100) / 100;
+
+/**
+ * Every figure that can follow an equals sign in working that agrees with the
+ * calculator: the ratings entered, each combining step written any of the
+ * usual ways (a + b x (100 - a) / 100, a + b - a x b / 100, or the remaining
+ * efficiency), the bilateral group figures, the raw value and the final
+ * rating.
+ */
+function consistentValues(calc) {
+  const values = new Set();
+  const add = (...numbers) =>
+    numbers.forEach((n) => Number.isFinite(n) && values.add(round2(n)));
+  add(10, 100, calc.rawScore, calc.combinedRating);
+  for (const c of calcConditions(calc)) add(c.rating, 100 - c.rating);
+  for (const { from: a, with: b, result } of calc.combineSteps) {
+    const weighted = (b * (100 - a)) / 100;
+    const remaining = ((100 - a) * (100 - b)) / 100;
+    add(result, 100 - result, a, b, 100 - a, 100 - b);
+    add(a / 100, b / 100, (100 - a) / 100, (100 - b) / 100);
+    add(weighted, a + weighted, (a * b) / 100);
+    add(remaining, remaining / 100, 100 - remaining);
+  }
+  const group = bilateralGroupStep(calc);
+  if (group) {
+    add(group.combinedBilateral, group.bilateralFactor);
+    add(group.combinedBilateral + group.bilateralFactor);
+    add(group.bilateralGroupRating);
+  }
+  return values;
+}
+
+const normalizeMath = (line) =>
+  line.replace(/\\(?:times|cdot)/g, "×").replace(/\\%/g, "%");
+
+const NUMBER = String.raw`(\d+(?:\.\d+)?)`;
+const EQUALS_FIGURE = new RegExp(
+  String.raw`(?<![<>!=≤≥])=[\s*_\`([]*(\$?)\s*${NUMBER}(,\d{3})?\s*([%$\\]?)`,
+  "g",
+);
+const GAP = String.raw`[^\d+=×*/\n]{0,30}`;
+const PLAIN_SUM = new RegExp(
+  String.raw`${NUMBER}${GAP}\+${GAP}?${NUMBER}${GAP}=[^\d\n]{0,6}${NUMBER}`,
+  "g",
+);
+
+function ratingValues(calc) {
+  const values = new Set(calcConditions(calc).map((c) => c.rating));
+  calc.combineSteps.forEach((s) => values.add(s.result));
+  if (calc.bilateralGroupRating) values.add(calc.bilateralGroupRating);
+  return values;
+}
+
+const isCombiningStep = (calc, a, b, sum) =>
+  calc.combineSteps.some(
+    (s) =>
+      s.result === sum &&
+      ((s.from === a && s.with === b) || (s.from === b && s.with === a)),
+  );
+
+function lineReworksFigures(line, calc, consistent, ratings) {
+  for (const m of line.matchAll(EQUALS_FIGURE)) {
+    const [, dollar, digits, thousands, unit] = m;
+    const isMoney = thousands !== undefined || (dollar !== "" && unit === "");
+    if (!isMoney && !consistent.has(Number(digits))) return true;
+  }
+  for (const m of line.matchAll(PLAIN_SUM)) {
+    const [a, b, sum] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const addsRatings = ratings.has(a) && ratings.has(b) && sum === a + b;
+    if (addsRatings && !isCombiningStep(calc, a, b, sum)) return true;
+  }
+  return false;
+}
+
+/**
+ * Lines whose arithmetic the calculator did not produce: a figure after an
+ * equals sign that is not part of the calculator's working, or two ratings
+ * added as a plain sum where the calculator combines them. Lines that are
+ * examples or hypotheticals ("e.g.", "for example", "if") and money amounts
+ * are not working about this veteran and do not count. A heuristic over
+ * lines, not a parse.
+ */
+export function findReworkedFigures(text, calc) {
+  const consistent = consistentValues(calc);
+  const ratings = ratingValues(calc);
+  const hits = [];
+  for (const raw of String(text ?? "").split("\n")) {
+    const line = raw.trim();
+    if (!line.includes("=") || hits.includes(line)) continue;
+    if (
+      mentionsAny(line, EXAMPLE_WORDS) ||
+      mentionsAny(line, HYPOTHETICAL_WORDS)
+    ) {
+      continue;
+    }
+    if (lineReworksFigures(normalizeMath(line), calc, consistent, ratings)) {
+      hits.push(line);
+    }
+  }
+  return hits;
+}
+
 /**
  * Compare a response with the calculator. A stated combined figure is wrong
  * when it differs from the calculator's rating and is either a multiple of 10
  * (it reads as a final rating) or is not one of the calculator's own working
  * values. Intermediate values from the working are not treated as final
- * claims, and sentences that state a cap ("the maximum is 100%") are ignored.
+ * claims. Figures in a cap ("the maximum is 100%"), an example, a what-if or
+ * a list of the ratings entered, and a threshold figure the answer says is
+ * not reached, are not statements of the veteran's rating and are ignored.
+ * An answer that lands on the right figure is still not ok when it shows
+ * working the calculator did not produce (`reworked`) or calls the computed
+ * block wrong (`disputes`).
  */
 export function checkRaterResponse(text, calc) {
-  const body = withoutCapStatements(text);
-  const stated = extractStatedCombinedRatings(body);
+  const sentences = splitSentences(text).filter(
+    (sentence) => !isNotOwnRating(sentence, calc),
+  );
+  const stated = [...new Set(sentences.flatMap(statedInSentence))];
   const working = workingValues(calc);
   const wrongFigures = stated.filter(
     (v) => v !== calc.combinedRating && (v % 10 === 0 || !working.has(v)),
   );
   const wrongFigureSentences = wrongFigures.map(
     (v) =>
-      body
-        .split("\n")
-        .find((line) => extractStatedCombinedRatings(line).includes(v))
-        ?.trim() ?? null,
+      sentences.find((s) => statedInSentence(s).includes(v))?.trim() ?? null,
   );
   const inventedPairs = findInventedBilateralClaims(text, calc);
   const deniedPairs = findDeniedBilateralClaims(text, calc);
+  const reworked = findReworkedFigures(text, calc);
+  const disputes = findCalculatorDisputes(text);
   return {
     ok:
       wrongFigures.length === 0 &&
       inventedPairs.length === 0 &&
-      deniedPairs.length === 0,
+      deniedPairs.length === 0 &&
+      reworked.length === 0 &&
+      disputes.length === 0,
     expected: calc.combinedRating,
     stated,
     wrongFigures,
     wrongFigureSentences,
     inventedPairs,
     deniedPairs,
+    reworked,
+    disputes,
   };
 }
 
@@ -447,6 +680,16 @@ export function describeMismatch(check, tdiuCheck = null) {
   if (check.deniedPairs?.length > 0) {
     parts.push("denied the bilateral pair the calculator found");
   }
+  if (check.reworked?.length > 0) {
+    parts.push(
+      `showed working the calculator did not produce (from: "${check.reworked[0].slice(0, 140)}")`,
+    );
+  }
+  if (check.disputes?.length > 0) {
+    parts.push(
+      `disputed the computed result (from: "${check.disputes[0].slice(0, 140)}")`,
+    );
+  }
   if (tdiuCheck?.contradicted) {
     const { eligible, highest, combined } = tdiuCheck.thresholds;
     const said = tdiuCheck.direction === "denies" ? "not met" : "met";
@@ -464,6 +707,9 @@ const NOTICE_PAIR =
   "described a bilateral pairing that did not match Vet-Rate's calculator";
 const NOTICE_DENIED_PAIR =
   "denied a bilateral pairing that Vet-Rate's calculator found";
+const NOTICE_WORKING =
+  "showed working that did not match Vet-Rate's calculator";
+const NOTICE_DISPUTE = "questioned the result from Vet-Rate's calculator";
 const NOTICE_TDIU =
   "gave a TDIU conclusion that did not match the percentage thresholds of 38 CFR § 4.16(a) applied to the ratings you entered";
 
@@ -477,6 +723,8 @@ export function buildReplacementNotice(check = null, tdiuCheck = null) {
   if (!check || check.wrongFigures.length > 0) reasons.push(NOTICE_FIGURES);
   if (check?.inventedPairs.length > 0) reasons.push(NOTICE_PAIR);
   if (check?.deniedPairs?.length > 0) reasons.push(NOTICE_DENIED_PAIR);
+  if (check?.reworked?.length > 0) reasons.push(NOTICE_WORKING);
+  if (check?.disputes?.length > 0) reasons.push(NOTICE_DISPUTE);
   if (tdiuCheck?.contradicted) reasons.push(NOTICE_TDIU);
   if (reasons.length === 0) reasons.push("did not match Vet-Rate's calculator");
   return `The AI's draft answer ${reasons.join(" and ")}, so it is not shown. This is the calculator's working for the ratings you entered.`;
@@ -534,6 +782,15 @@ const TDIU_NEGATIVE = {
     "are insufficient",
     "falls short",
     "fall short",
+    "unlikely to qualify",
+    "unlikely to be eligible",
+    "not likely to qualify",
+    "will not qualify",
+    "would not qualify",
+    "won't qualify",
+    "wouldn't qualify",
+    "likely not eligible",
+    "probably not eligible",
     ...AUXILIARIES.flatMap((aux) =>
       NEGATIVE_VERBS.flatMap((v) => [`${aux} ${v}`, `${aux} currently ${v}`]),
     ),
@@ -566,8 +823,56 @@ const TDIU_POSITIVE = {
     "meets one",
     "meets both",
     "meets either",
+    "likely qualify",
+    "probably qualify",
+    "likely eligible",
+    "probably eligible",
   ],
   words: ["qualifies", "yes"],
+};
+const THRESHOLD_SUBJECT = {
+  words: ["threshold", "thresholds"],
+  phrases: [
+    "percentage standard",
+    "percentage standards",
+    "percentage requirement",
+    "percentage requirements",
+    "percentage test",
+    "percentage criteria",
+    "schedular requirement",
+    "schedular requirements",
+    "schedular criteria",
+  ],
+};
+const THRESHOLD_NEGATIVE = {
+  phrases: [
+    "not meet",
+    "not met",
+    "not satisfy",
+    "not satisfied",
+    "unlikely to meet",
+    "unlikely to satisfy",
+  ],
+};
+const THRESHOLD_POSITIVE = {
+  phrases: [
+    "is met",
+    "are met",
+    "is satisfied",
+    "are satisfied",
+    ...["likely", "probably", "may", "might", "should"].flatMap((w) => [
+      `${w} meet`,
+      `${w} meets`,
+    ]),
+    "appear to meet",
+    "appears to meet",
+    "seem to meet",
+    "seems to meet",
+  ],
+};
+const CONDITIONAL = { words: ["if", "unless", "until", "without", "whether"] };
+const EXTRA_SCHEDULAR = {
+  phrases: ["4.16(b)", "paragraph (b)", "extra-schedular", "extraschedular"],
 };
 const TDIU_HEDGE = {
   words: [
@@ -607,9 +912,10 @@ const SINGLE_TEST = {
   phrases: ["one disability", "one condition", "path a", "first"],
 };
 const COMBINED_TEST = {
-  words: ["combined", "multiple", "second", "70", "40", "forty", "additional"],
+  words: ["multiple", "second", "70", "40", "forty", "additional"],
   phrases: ["two or more", "path b"],
 };
+const COMBINED_WORD = { words: ["combined"] };
 
 const plainSentences = (text) =>
   splitSentences(String(text ?? "").replace(/[*_`#>]/g, ""));
@@ -619,28 +925,84 @@ function isEligibilityHeadline(sentence) {
   return colon > 0 && /eligib/i.test(sentence.slice(0, colon));
 }
 
-const isTdiuConclusionSentence = (sentence) =>
-  (mentionsAny(sentence, TDIU_SUBJECT) || isEligibilityHeadline(sentence)) &&
-  !mentionsAny(sentence, TDIU_HEDGE);
+const isThresholdStatement = (sentence) =>
+  mentionsAny(sentence, THRESHOLD_SUBJECT);
+
+/**
+ * A sentence about the percentage thresholds is a conclusion however it is
+ * hedged ("may not meet", "it appears"), because whether they are met is
+ * arithmetic. Only a real condition ("if", "unless") excuses it, or "alone"
+ * when one rating alone is not what met them. Any other TDIU sentence keeps
+ * the wider excuses: unemployability, evidence and possibility.
+ */
+function isTdiuConclusionSentence(sentence, thresholds) {
+  if (mentionsAny(sentence, EXTRA_SCHEDULAR)) return false;
+  if (isThresholdStatement(sentence)) {
+    if (mentionsAny(sentence, CONDITIONAL)) return false;
+    return (
+      thresholds.basis === "single60" ||
+      !mentionsAny(sentence, { words: ["alone"] })
+    );
+  }
+  return (
+    (mentionsAny(sentence, TDIU_SUBJECT) || isEligibilityHeadline(sentence)) &&
+    !mentionsAny(sentence, TDIU_HEDGE)
+  );
+}
+
+const saysNotMet = (sentence) =>
+  mentionsAny(sentence, TDIU_NEGATIVE) ||
+  (isThresholdStatement(sentence) && mentionsAny(sentence, THRESHOLD_NEGATIVE));
+
+const saysMet = (sentence) =>
+  mentionsAny(sentence, TDIU_POSITIVE) ||
+  (isThresholdStatement(sentence) && mentionsAny(sentence, THRESHOLD_POSITIVE));
+
+/**
+ * True when a denial is not a denial of the result: the sentence also affirms
+ * a test, or it speaks about the test the result did not rest on and that
+ * test is in fact not met. "Combined" by
+ * itself does not make a sentence about the two-or-more test when the sentence
+ * also names the single-disability test ("your combined rating is 60%, so the
+ * single rating does not meet the threshold").
+ */
+function isAboutUnmetOtherTest(sentence, thresholds) {
+  const { basis, highest, combined } = thresholds;
+  if (basis === "combined70") return mentionsAny(sentence, SINGLE_TEST);
+  if (basis !== "single60") return false;
+  const affirmsOneTest =
+    mentionsAny(sentence, TDIU_POSITIVE) ||
+    mentionsAny(sentence, THRESHOLD_POSITIVE);
+  if (affirmsOneTest) return true;
+  if (highest >= 40 && combined >= 70) return false;
+  return (
+    mentionsAny(sentence, COMBINED_TEST) ||
+    (mentionsAny(sentence, COMBINED_WORD) &&
+      !mentionsAny(sentence, SINGLE_TEST))
+  );
+}
 
 /**
  * Whether an answer states an overall TDIU conclusion on the percentage test
  * that contradicts evaluateTdiuThresholds for these conditions: "not eligible",
  * "cannot qualify", "does not meet" when the thresholds are met; "eligible",
- * "qualifies", "meets" when they are not. Sentences that hedge on
+ * "qualifies", "meets" when they are not. A hedged sentence about the
+ * thresholds themselves ("may not meet", "it appears the thresholds are not
+ * met", "likely meets") counts. Sentences that hedge overall eligibility on
  * unemployability, evidence or a condition ("if", "alone", "must", "may"),
- * that speak only about the test the thresholds did not rest on, or that are
- * not about TDIU, are not conclusions. A heuristic over sentences, not a parse.
+ * that speak only about a test that is in fact not met, that are about
+ * extra-schedular consideration, or that are not about TDIU, are not
+ * conclusions. A heuristic over sentences, not a parse.
  */
 export function checkTdiuConclusion(text, calc) {
   const thresholds = tdiuThresholdsFor(calc);
-  const otherTest =
-    thresholds.basis === "combined70" ? SINGLE_TEST : COMBINED_TEST;
-  const stance = thresholds.eligible ? TDIU_NEGATIVE : TDIU_POSITIVE;
+  const contradicts = thresholds.eligible
+    ? (s) => saysNotMet(s) && !isAboutUnmetOtherTest(s, thresholds)
+    : (s) => saysMet(s) && !NEGATION.test(s);
   const sentences = plainSentences(text)
     .map((s) => s.trim())
-    .filter(isTdiuConclusionSentence)
-    .filter((s) => mentionsAny(s, stance) && !mentionsAny(s, otherTest));
+    .filter((s) => isTdiuConclusionSentence(s, thresholds))
+    .filter(contradicts);
   const contradicted = sentences.length > 0;
   let direction = null;
   if (contradicted) direction = thresholds.eligible ? "denies" : "asserts";

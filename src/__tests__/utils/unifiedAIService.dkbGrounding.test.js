@@ -34,7 +34,8 @@ vi.mock("../../utils/wllamaService", () => ({
 }));
 vi.mock("../../utils/deviceCapabilityDetector", () => ({
   detectDeviceCapabilities: vi.fn().mockResolvedValue({
-    tier: "desktop",
+    tier: "desktop-high",
+    contextWindowSize: 12288,
     hasWebGPU: true,
     canUseWebLLM: true,
   }),
@@ -106,6 +107,7 @@ describe("_injectDKBContext and the full-corpus grounding flag", () => {
       maxEntries: 6,
       maxChars: 4000,
       excludeBoardDecisions: true,
+      excludeCourtDecisions: true,
     });
     expect(Object.keys(opts)).not.toContain("includeShards");
     expect(sentToSwarm()).toContain("=== DKB CONTEXT STUB ===");
@@ -128,6 +130,7 @@ describe("_injectDKBContext and the full-corpus grounding flag", () => {
       maxEntries: 6,
       maxChars: 4000,
       excludeBoardDecisions: true,
+      excludeCourtDecisions: true,
       includeShards: true,
     });
   });
@@ -231,7 +234,11 @@ describe("individual Board decisions are kept out of the block on the small-budg
       const [, opts] = buildDKBContextSpy.mock.calls[0];
       expect(opts).toStrictEqual(
         mode.excluded
-          ? { ...mode.budget, excludeBoardDecisions: true }
+          ? {
+              ...mode.budget,
+              excludeBoardDecisions: true,
+              excludeCourtDecisions: true,
+            }
           : mode.budget,
       );
     },

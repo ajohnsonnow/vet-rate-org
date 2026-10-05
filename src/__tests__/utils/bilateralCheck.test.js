@@ -309,8 +309,10 @@ describe("the recorded reason names the sentence a stated figure came from", () 
         e.kind === "replaced draft",
     );
     const out = checkRaterResponse(row.text, KNEES);
-    expect(describeMismatch(out)).toBe(
-      'stated combined rating 30% but the calculator gives 50% (from: "Total 30%.")',
-    );
+    expect(
+      describeMismatch(out).startsWith(
+        'stated combined rating 30% but the calculator gives 50% (from: "Total 30%.");',
+      ),
+    ).toBe(true);
   });
 });

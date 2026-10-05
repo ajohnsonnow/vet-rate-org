@@ -3,11 +3,34 @@ import { selectOwnRequest } from "./requestCapture.js";
 import { TOOL_ENTRIES } from "./toolEntries.js";
 
 /**
+ * What the calculator guard and the response validator did to the answer,
+ * read from the fields generateAI put on its result (`resultFlags`). All
+ * three flags are null when the case produced no result (an error or a
+ * timeout), so "not appended" is never confused with "not known".
+ */
+function guardOutcome(flags) {
+  if (!flags) {
+    return {
+      calculatorAppended: null,
+      tdiuParagraphAppended: null,
+      validatorBlocked: null,
+    };
+  }
+  return {
+    calculatorAppended: Boolean(flags.calculatorAppended),
+    tdiuParagraphAppended: Boolean(flags.tdiuParagraphAppended),
+    validatorBlocked: Boolean(flags.blocked),
+    ...(flags.calculatorLead ? { calculatorLead: flags.calculatorLead } : {}),
+    ...(flags.blocked ? { blockedText: flags.blockedText ?? null } : {}),
+  };
+}
+
+/**
  * One transcript record from what happened to one case.
  *
  * outcome: { ok, text, error, latencyMs, captured: request[], rawResponse,
  *            calculatorReplacement, citationsUnverified, validationErrors,
- *            validationWarnings }
+ *            validationWarnings, resultFlags }
  *
  * `response` is the visible text, the field graders score. `rawResponse` is
  * the engine's reply before any reasoning block was removed, present only when
@@ -23,6 +46,12 @@ import { TOOL_ENTRIES } from "./toolEntries.js";
  * `draftPath` "model" (the model's wording passed the acceptance check) or
  * "template" (the app-built draft was returned, with `draftRejectReasons`,
  * or with `draftErrorReason` when the model could not answer at all).
+ * `calculatorAppended` and `tdiuParagraphAppended` say the calculator's line
+ * or the TDIU threshold paragraph was appended to a kept answer;
+ * `calculatorLead` ({ expected, commentaryKept }) says the answer leads with
+ * the calculator's working. `validatorBlocked` says the response validator
+ * blocked the answer, in which case `response` is the message shown in its
+ * place and `blockedText` is what the model wrote.
  */
 const systemTextOf = (request) => {
   const content = request?.messages?.find((m) => m?.role === "system")?.content;
@@ -84,6 +113,7 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
     engineThinking: own?.extra_body?.enable_thinking ?? null,
     requestMatch: own ? "matched" : "none",
     ...toolFields(caseDef, outcome, own),
+    ...guardOutcome(outcome.ok ? outcome.resultFlags : null),
     ...(typeof outcome.rawResponse === "string" &&
     outcome.rawResponse !== visible
       ? { rawResponse: outcome.rawResponse }

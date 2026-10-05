@@ -1460,20 +1460,53 @@ export async function searchDKB(query, topK = 10) {
 export const isBoardDecisionEntry = (entry) =>
   entry?.metadata?.source === "BVA";
 
+// Court decisions in the curated file carry metadata.source "CAVC" or
+// "FEDERAL_CIRCUIT". Keyword search returns them for unrelated questions (a
+// case named Johnson for a buddy statement about a John), and a small
+// on-device model then answers about the case.
+const COURT_DECISION_SOURCES = new Set(["CAVC", "FEDERAL_CIRCUIT"]);
+export const isCourtDecisionEntry = (entry) =>
+  COURT_DECISION_SOURCES.has(entry?.metadata?.source);
+
+const COURT_SHARD_IDS = new Set(["cavc", "fedcir"]);
+const COURT_AUTHORITY_TIERS = new Set(["judicial", "judicial_federal_circuit"]);
+
 /**
- * Curated entries for the budget. With excludeBoardDecisions the ranking is
- * unchanged: every scored entry is taken in rank order, Board decisions are
- * dropped and the next-ranked entries fill the places they leave.
+ * Curated entries for the budget. With excludeBoardDecisions or
+ * excludeCourtDecisions the ranking is unchanged: every scored entry is taken
+ * in rank order, the excluded kinds are dropped and the next-ranked entries
+ * fill the places they leave.
  */
-async function searchCuratedEntries(query, maxEntries, excludeBoardDecisions) {
-  if (!excludeBoardDecisions) return searchDKB(query, maxEntries);
+async function searchCuratedEntries(
+  query,
+  maxEntries,
+  { excludeBoardDecisions = false, excludeCourtDecisions = false } = {},
+) {
+  if (!excludeBoardDecisions && !excludeCourtDecisions) {
+    return searchDKB(query, maxEntries);
+  }
   const candidates = await searchDKB(query, Infinity);
   return candidates
-    .filter((entry) => !isBoardDecisionEntry(entry))
+    .filter(
+      (entry) =>
+        !(excludeBoardDecisions && isBoardDecisionEntry(entry)) &&
+        !(excludeCourtDecisions && isCourtDecisionEntry(entry)),
+    )
     .slice(0, maxEntries);
 }
 
 const DKB_REFERENCE_NOTICE = `General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents; refer to it as "VA regulations and guidance".`;
+
+// With verified reference text above the block, telling the model to say
+// that no entry addresses the question makes a small model disclaim although
+// the verified text answers it.
+const DKB_USE_ALONE = `Use this data to provide accurate, regulation-based answers. If none of the
+entries below address the question, say so explicitly instead of answering
+from memory - do not cite a regulation that isn't backed by an entry here.`;
+const DKB_USE_WITH_VERIFIED = `Use this data to provide accurate, regulation-based answers. The VERIFIED REFERENCE text above comes first: where it answers the question, answer from it.
+Do not cite a regulation that is backed by neither the verified text nor an entry here.`;
+const dkbUseInstruction = (withVerifiedReference) =>
+  withVerifiedReference ? DKB_USE_WITH_VERIFIED : DKB_USE_ALONE;
 
 /**
  * Build DKB context string for injection into AI prompts
@@ -1489,6 +1522,8 @@ export async function buildDKBContext(query, options = {}) {
     includeSourceUrls = true,
     includeShards = false,
     excludeBoardDecisions = false,
+    excludeCourtDecisions = false,
+    withVerifiedReference = false,
   } = options;
 
   if (includeShards) {
@@ -1497,14 +1532,15 @@ export async function buildDKBContext(query, options = {}) {
       maxChars,
       includeSourceUrls,
       excludeBoardDecisions,
+      excludeCourtDecisions,
+      withVerifiedReference,
     });
   }
 
-  const relevantEntries = await searchCuratedEntries(
-    query,
-    maxEntries,
+  const relevantEntries = await searchCuratedEntries(query, maxEntries, {
     excludeBoardDecisions,
-  );
+    excludeCourtDecisions,
+  });
 
   if (relevantEntries.length === 0) {
     return "";
@@ -1513,9 +1549,7 @@ export async function buildDKBContext(query, options = {}) {
   let context = `\n\n=== REFERENCE MATERIAL ===
 ${DKB_REFERENCE_NOTICE}
 Sources: 38 CFR, ${excludeBoardDecisions ? "" : "BVA decisions, "}OGC precedent opinions, PACT Act, M21-1.
-Use this data to provide accurate, regulation-based answers. If none of the
-entries below address the question, say so explicitly instead of answering
-from memory - do not cite a regulation that isn't backed by an entry here.
+${dkbUseInstruction(withVerifiedReference)}
 
 `;
 
@@ -1573,7 +1607,7 @@ let shardRetrievalInFlight = false;
  * caller carries on with flat-file context. The query stays local (static
  * file fetches from this origin plus the in-browser embedder).
  */
-async function retrieveShardPassages(query, topK) {
+async function retrieveShardPassages(query, topK, shardIds = DKB_SHARD_IDS) {
   const text = String(query ?? "")
     .slice(0, DKB_SHARD_QUERY_MAX_CHARS)
     .trim();
@@ -1589,7 +1623,7 @@ async function retrieveShardPassages(query, topK) {
   let timer;
   try {
     const { queryCorpus } = await import("../services/knowledgeQuery");
-    work = queryCorpus(text, { only: [...DKB_SHARD_IDS], topK });
+    work = queryCorpus(text, { only: [...shardIds], topK });
     const release = () => {
       shardRetrievalInFlight = false;
     };
@@ -1643,13 +1677,11 @@ function formatShardPassage(chunk, text, includeSourceUrl) {
   return `---\n${spotlight(lines.join("\n"))}\n`;
 }
 
-function shardContextHeader(labels) {
+function shardContextHeader(labels, withVerifiedReference = false) {
   return `\n\n=== REFERENCE MATERIAL ===
 ${DKB_REFERENCE_NOTICE}
 Sources retrieved: ${labels.join("; ")}.
-Use this data to provide accurate, regulation-based answers. If none of the
-entries below address the question, say so explicitly instead of answering
-from memory - do not cite a regulation that isn't backed by an entry here.
+${dkbUseInstruction(withVerifiedReference)}
 
 `;
 }
@@ -1742,18 +1774,33 @@ function packFlatEntries(
  * per-backend maxEntries/maxChars are never exceeded.
  */
 async function buildDKBContextWithShards(query, options) {
-  const { maxEntries, maxChars, includeSourceUrls, excludeBoardDecisions } =
-    options;
+  const {
+    maxEntries,
+    maxChars,
+    includeSourceUrls,
+    excludeBoardDecisions,
+    excludeCourtDecisions,
+    withVerifiedReference,
+  } = options;
 
-  const [flatEntries, shardChunks] = await Promise.all([
-    searchCuratedEntries(query, maxEntries, excludeBoardDecisions),
-    retrieveShardPassages(query, maxEntries),
+  const shardIds = excludeCourtDecisions
+    ? DKB_SHARD_IDS.filter((id) => !COURT_SHARD_IDS.has(id))
+    : DKB_SHARD_IDS;
+  const [flatEntries, retrieved] = await Promise.all([
+    searchCuratedEntries(query, maxEntries, {
+      excludeBoardDecisions,
+      excludeCourtDecisions,
+    }),
+    retrieveShardPassages(query, maxEntries, shardIds),
   ]);
+  const shardChunks = excludeCourtDecisions
+    ? retrieved.filter((c) => !COURT_AUTHORITY_TIERS.has(c?.authority_tier))
+    : retrieved;
 
   const allLabels = [...Object.values(DKB_TIER_LABELS), DKB_CURATED_LABEL];
   const budget =
     maxChars -
-    shardContextHeader(allLabels).length -
+    shardContextHeader(allLabels, withVerifiedReference).length -
     shardContextFooter(maxEntries, maxEntries).length;
 
   const passages = dedupeShardChunks(shardChunks);
@@ -1776,7 +1823,7 @@ async function buildDKBContextWithShards(query, options) {
   const labels = [...shards.labels];
   if (flat.count > 0) labels.push(DKB_CURATED_LABEL);
   return (
-    shardContextHeader(labels) +
+    shardContextHeader(labels, withVerifiedReference) +
     shards.body +
     flat.body +
     shardContextFooter(shards.count, flat.count)

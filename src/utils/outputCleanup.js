@@ -204,6 +204,86 @@ function findNumericRun(text) {
     : null;
 }
 
+const INLINE_GRAM = 12;
+const INLINE_MIN_UNIT = 12;
+const INLINE_MAX_UNIT = 600;
+const INLINE_LONG_UNIT = 50;
+const INLINE_MIN_SPAN = 100;
+// The last copy usually lacks the space that separates the others.
+const INLINE_SEPARATOR_SLACK = 2;
+const CLOSING_PUNCTUATION = ".!?,;:)]*\"'";
+
+const inlineCopiesNeeded = (unit) =>
+  Math.max(
+    unit >= INLINE_LONG_UNIT ? LONG_BLOCK_REPEATS : EXACT_LINE_REPEATS,
+    Math.ceil(INLINE_MIN_SPAN / unit),
+  );
+
+/**
+ * The first place in one line where the same run of characters follows itself
+ * enough times. Each 12-character window is compared with its previous
+ * occurrence; in a loop that distance is the length of the repeated unit, and
+ * it stays the same for as long as the loop runs. Returns the offset in the
+ * line where the second copy starts.
+ */
+function findInlineLoop(line) {
+  const lastSeen = new Map();
+  let unit = 0;
+  let run = 0;
+  for (let i = 0; i + INLINE_GRAM <= line.length; i++) {
+    const gram = line.slice(i, i + INLINE_GRAM);
+    const previous = lastSeen.get(gram);
+    lastSeen.set(gram, i);
+    const distance = previous === undefined ? 0 : i - previous;
+    run = distance > 0 && distance === unit ? run + 1 : 1;
+    unit = distance;
+    if (unit < INLINE_MIN_UNIT || unit > INLINE_MAX_UNIT) continue;
+    const span = run + INLINE_GRAM - 1 + unit;
+    const copies = Math.floor((span + INLINE_SEPARATOR_SLACK) / unit);
+    const secondCopy = i - run + 1;
+    const hasWords = /[a-z0-9]/i.test(
+      line.slice(secondCopy, secondCopy + unit),
+    );
+    if (hasWords && copies >= inlineCopiesNeeded(unit)) {
+      return { secondCopy, unit };
+    }
+  }
+  return null;
+}
+
+function countInlineCopies(line, { secondCopy, unit }) {
+  const first = line.slice(secondCopy - unit, secondCopy);
+  let copies = 1;
+  while (line.startsWith(first, secondCopy + (copies - 1) * unit)) copies++;
+  return copies;
+}
+
+function findInlineRepeat(text) {
+  let pos = 0;
+  for (const line of text.split("\n")) {
+    const start = pos;
+    pos += line.length + 1;
+    if (line.length < INLINE_MIN_SPAN || line.trimStart().startsWith("|")) {
+      continue;
+    }
+    const loop = findInlineLoop(line);
+    if (loop) {
+      // The unit can be found one or two characters out of phase, which
+      // would leave the first copy without its closing punctuation.
+      let cut = loop.secondCopy;
+      while (cut < line.length && CLOSING_PUNCTUATION.includes(line[cut])) {
+        cut++;
+      }
+      return {
+        kind: "inline",
+        copies: countInlineCopies(line, loop),
+        cutAt: start + cut,
+      };
+    }
+  }
+  return null;
+}
+
 function trimTrailing(text, chars) {
   let end = text.length;
   while (end > 0 && chars.includes(text[end - 1])) end--;
@@ -225,15 +305,19 @@ function dropDanglingLead(text) {
  * more times in a row (list numbers ignored; digits masked only from ten
  * copies), a multi-line block of 200+ characters repeated three times (a
  * truncated third copy counts, one stray line between copies is tolerated),
- * and a run of more than 20 consecutive incrementing numbers separated by
- * commas. `trimmed` is null when the text was left alone, otherwise
+ * a run of more than 20 consecutive incrementing numbers separated by
+ * commas, and a sentence or phrase of 12+ characters repeated back to back
+ * inside one line (four copies spanning 100+ characters, or three copies of
+ * 50+ characters; table rows are left alone). `trimmed` is null when the text was left alone, otherwise
  * { kind, copies, removedChars }.
  */
 export function trimRunaway(text) {
   const input = typeof text === "string" ? text : "";
-  const hits = [findRepeatedBlock(input), findNumericRun(input)].filter(
-    Boolean,
-  );
+  const hits = [
+    findRepeatedBlock(input),
+    findNumericRun(input),
+    findInlineRepeat(input),
+  ].filter(Boolean);
   if (hits.length === 0) return { text: input, trimmed: null };
   const hit = hits.reduce((a, b) => (b.cutAt < a.cutAt ? b : a));
   const cut = input.slice(0, hit.cutAt);

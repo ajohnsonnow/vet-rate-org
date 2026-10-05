@@ -6,11 +6,14 @@ import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
   buildReplacementNotice,
+  buildTdiuThresholdParagraph,
   checkRaterResponse,
   checkTdiuConclusion,
   describeMismatch,
   tdiuThresholdsFor,
 } from "../../utils/raterGrounding";
+
+import { raterAnswers } from "./recordedAnswers";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const evalDir = join(here, "..", "agentic", "eval", "fixtures");
@@ -183,6 +186,160 @@ describe("checkTdiuConclusion when the thresholds are not met", () => {
       checkTdiuConclusion("You are not eligible for TDIU.", viaCombined)
         .contradicted,
     ).toBe(true);
+  });
+});
+
+describe("hedged conclusions about the percentage thresholds", () => {
+  const met = calcOf(60, 20, 20, 20);
+  const single = calcOf(60);
+
+  it.each([
+    ["may not meet", "You may not meet the percentage thresholds for TDIU."],
+    [
+      "likely does not qualify",
+      "The veteran likely does not qualify for TDIU.",
+    ],
+    ["appears not met", "It appears the thresholds are not met."],
+    [
+      "unlikely to qualify",
+      "You are unlikely to qualify for TDIU on these ratings.",
+    ],
+    ["would not qualify", "On these ratings you would not qualify for TDIU."],
+  ])("flags %s when the thresholds are met", (_name, text) => {
+    const out = checkTdiuConclusion(text, met);
+    expect(out.contradicted).toBe(true);
+    expect(out.direction).toBe("denies");
+  });
+
+  it("flags a denial of the threshold that rests on the single rating 'alone' (135908 a25)", () => {
+    const text =
+      "Since your current combined rating is 60%, you do not meet the standard statutory threshold for TDIU based on this single rating alone.";
+    expect(checkTdiuConclusion(text, single).contradicted).toBe(true);
+  });
+
+  it("flags a denial that cites the combined rating when both tests are met (141236 a13)", () => {
+    const text =
+      "You are not eligible for TDIU (Total Disability Based on Unemployability) with a combined rating of 80% under the standard VA rating schedule.";
+    expect(checkTdiuConclusion(text, met).contradicted).toBe(true);
+  });
+
+  it.each([
+    [
+      "a possibility that rests on being able to work",
+      "You may not qualify for TDIU if you are able to work.",
+      met,
+    ],
+    [
+      "a possibility about overall eligibility",
+      "You might not be eligible for TDIU, because it also depends on your work history.",
+      met,
+    ],
+    [
+      "a true statement about the test that is not met",
+      "The threshold for two or more disabilities is not met.",
+      calcOf(60, 10),
+    ],
+    [
+      "a true statement naming the 70 percent figure",
+      "A single 60% rating does not meet the 70% threshold.",
+      single,
+    ],
+    [
+      "a contrast that gets both tests right",
+      "While you meet the threshold for the first option (one disability at 60%), you do not meet the threshold for the second option (combined rating of 70%).",
+      single,
+    ],
+    [
+      "the wording of paragraph (b)",
+      "Paragraph (b) covers veterans who fail to meet the percentage standards of paragraph (a).",
+      met,
+    ],
+    [
+      "one rating alone below 60 when the combined test carries the result",
+      "The 50% rating alone does not meet the threshold.",
+      calcOf(50, 50),
+    ],
+  ])("does not flag %s", (_name, text, calc) => {
+    expect(checkTdiuConclusion(text, calc).contradicted).toBe(false);
+  });
+});
+
+describe("hedged claims that the thresholds are met when they are not", () => {
+  const notMet = calcOf(30, 30);
+
+  it.each([
+    ["likely meet", "You likely meet the percentage thresholds for TDIU."],
+    ["appears met", "It appears the thresholds are met."],
+    ["probably qualify", "You probably qualify for TDIU."],
+    ["may meet", "You may meet the thresholds."],
+  ])("flags %s when the thresholds are not met", (_name, text) => {
+    const out = checkTdiuConclusion(text, notMet);
+    expect(out.contradicted).toBe(true);
+    expect(out.direction).toBe("asserts");
+  });
+
+  it("flags a claim about the combined test when neither test is met", () => {
+    const text = "You meet the combined 70 percent threshold for TDIU.";
+    expect(checkTdiuConclusion(text, calcOf(40, 20)).contradicted).toBe(true);
+  });
+
+  it.each([
+    ["neither is met", "Neither threshold is met."],
+    [
+      "no condition meets",
+      "No single condition meets the 60 percent TDIU threshold.",
+    ],
+    [
+      "the extra-schedular route",
+      "You may be eligible for TDIU on an extra-schedular basis under paragraph (b).",
+    ],
+    ["a bare possibility", "You may qualify for TDIU."],
+    [
+      "a condition",
+      "The thresholds are met only if your combined rating reaches 70 percent.",
+    ],
+  ])("does not flag %s when the thresholds are not met", (_name, text) => {
+    expect(checkTdiuConclusion(text, notMet).contradicted).toBe(false);
+  });
+
+  it.each([
+    [[60]],
+    [[60, 20, 20, 20]],
+    [[60, 10]],
+    [[50, 30, 20]],
+    [[50, 50]],
+    [[40, 30]],
+    [[30, 30, 30, 30]],
+  ])("never flags the calculator's own paragraph for %j", (ratings) => {
+    const calc = calcOf(...ratings);
+    const out = checkTdiuConclusion(buildTdiuThresholdParagraph(calc), calc);
+    expect(out.sentences).toEqual([]);
+  });
+});
+
+describe("wrong threshold conclusions in every recorded a13 and a25 answer", () => {
+  const WRONG = [
+    "2026-10-05_071859 a25",
+    "2026-10-05_105010 a25",
+    "2026-10-05_123216 a13",
+    "2026-10-05_135040 a25",
+    "2026-10-05_135908 a25",
+    "2026-10-05_141236 a13",
+    "2026-10-05_201248 a25",
+  ];
+  const MISSED_BEFORE = ["2026-10-05_135908 a25", "2026-10-05_141236 a13"];
+  const answers = raterAnswers().filter((a) => ["a13", "a25"].includes(a.id));
+
+  it("covers 33 answers, all on ratings that meet the thresholds", () => {
+    expect(answers).toHaveLength(33);
+  });
+
+  it("after: all 7 that deny the thresholds are caught (before: 5) and no other answer is", () => {
+    const caught = answers
+      .filter((a) => checkTdiuConclusion(a.text, a.calc).contradicted)
+      .map((a) => `${a.run} ${a.id}`);
+    expect(caught.sort()).toEqual(WRONG);
+    expect(WRONG.filter((key) => !MISSED_BEFORE.includes(key))).toHaveLength(5);
   });
 });
 

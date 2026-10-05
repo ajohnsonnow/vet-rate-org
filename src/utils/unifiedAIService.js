@@ -52,17 +52,16 @@ import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildCalculatorSummaryLine,
   buildComputedResultBlock,
-  buildTdiuThresholdParagraph,
+  buildReplacementNotice,
   checkRaterResponse,
   checkTdiuConclusion,
   mentionsUnemployability,
   describeMismatch,
-  TDIU_PARAGRAPH_LEAD,
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
-import { flagUnverifiedCitations } from "./citationCheck";
+import { fitOutputTokens, planPromptFit } from "./promptBudget";
+import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -1111,15 +1110,18 @@ export const injectCalculatorForRater = (prompt, options) => {
 /**
  * After generation, compare a rater-routed response with the calculator. A
  * response that states a different combined rating, presents a bilateral
- * pair the calculator did not find, or (for a TDIU question) states a
+ * pair the calculator did not find, shows working the calculator did not
+ * produce, calls the computed block wrong, or (for a TDIU question) states a
  * percentage-threshold conclusion that contradicts 38 CFR § 4.16(a) as
  * evaluateTdiuThresholds applies it, is replaced by the calculator's own
  * working in plain language, plus the TDIU threshold paragraph when the
  * veteran's prompt asks about TDIU. The replacement is recorded on the result
  * (validationWarnings, plus calculatorReplacement) so callers can see it
- * happened. A response that is kept gets the calculator's one-line result
- * appended when it never states the combined rating, and the TDIU threshold
- * paragraph appended whenever the prompt asks about TDIU.
+ * happened. A response that passes is kept, but only as commentary: the text
+ * returned always leads with the calculator's working, so the figures a
+ * veteran reads first never come from the model's arithmetic. Either way
+ * `calculatorLead` records the calculator's figure and whether the model's
+ * text was kept.
  */
 export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
@@ -1130,7 +1132,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   const asksTdiu = mentionsUnemployability(prompt);
   const tdiuCheck = asksTdiu ? checkTdiuConclusion(result.text, calc) : null;
   if (check.ok && !tdiuCheck?.contradicted) {
-    return keepWithCalculatorAdditions(result, calc, check, asksTdiu);
+    return leadWithCalculatorWorking(result, calc, asksTdiu);
   }
 
   const reason = describeMismatch(check, tdiuCheck);
@@ -1142,6 +1144,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       check,
       tdiuCheck,
     }),
+    calculatorLead: { expected: check.expected, commentaryKept: false },
     validationWarnings: [
       ...(result.validationWarnings || []),
       `Response replaced with the calculator's working: ${reason}`,
@@ -1153,6 +1156,8 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       stated: check.stated,
       inventedPairs: check.inventedPairs,
       deniedPairs: check.deniedPairs,
+      reworked: check.reworked,
+      disputes: check.disputes,
       ...(tdiuCheck?.contradicted
         ? { tdiuConclusion: tdiuCheck.sentences }
         : {}),
@@ -1160,19 +1165,31 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   };
 };
 
-function keepWithCalculatorAdditions(result, calc, check, asksTdiu) {
-  const appendLine = !check.stated.includes(check.expected);
-  const body = String(result.text ?? "").trimEnd();
-  const appendTdiu = asksTdiu && !body.includes(TDIU_PARAGRAPH_LEAD);
-  if (!appendLine && !appendTdiu) return result;
-  const parts = [body];
-  if (appendLine) parts.push(buildCalculatorSummaryLine(calc));
-  if (appendTdiu) parts.push(buildTdiuThresholdParagraph(calc));
+export const CALCULATOR_COMMENTARY_LEAD =
+  "The AI's comments on this result follow. The figures above come from Vet-Rate's calculator, not from the AI.";
+
+// buildCalculatorExplanation opens with the sentence that says a draft was
+// not shown. Here the draft is shown, below the working, so that sentence
+// would be untrue and is left off.
+function calculatorWorkingText(calc, tdiu) {
+  const explanation = buildCalculatorExplanation(calc, { tdiu });
+  const notice = buildReplacementNotice();
+  return explanation.startsWith(notice)
+    ? explanation.slice(notice.length).trimStart()
+    : explanation;
+}
+
+function leadWithCalculatorWorking(result, calc, asksTdiu) {
+  const commentary = String(result.text ?? "").trim();
+  const working = calculatorWorkingText(calc, asksTdiu);
+  const commentaryKept = commentary !== "" && !result.blocked;
+  const parts = [working];
+  if (commentaryKept) parts.push(CALCULATOR_COMMENTARY_LEAD);
+  if (commentary) parts.push(commentary);
   return {
     ...result,
-    text: parts.filter(Boolean).join("\n\n"),
-    ...(appendLine ? { calculatorAppended: { expected: check.expected } } : {}),
-    ...(appendTdiu ? { tdiuParagraphAppended: true } : {}),
+    text: parts.join("\n\n"),
+    calculatorLead: { expected: calc.combinedRating, commentaryKept },
   };
 }
 
@@ -1265,7 +1282,7 @@ const runWarrantCouncil = async (systemPrompt, userPrompt, options = {}) => {
     ? scrubbedUserPrompt
     : [scrubbedSystemPrompt, scrubbedUserPrompt]
         .filter(Boolean)
-        .join("\n\n---\n\n");
+        .join(SWARM_PROMPT_SEPARATOR);
 
   const agentId = resolveWarrantCouncilAgent(toolId, taskType);
 
@@ -2346,6 +2363,8 @@ async function _redactPiecesForSend(pieces) {
 // not placed in the block on the small-budget on-device backends, where the
 // model reads a decision-shaped entry as the veteran's own decision. The
 // ranking is unchanged; the next-ranked entries fill the budget.
+// excludeCourtDecisions: the same for CAVC and Federal Circuit entries, which
+// keyword search returned for unrelated questions.
 // maxVerifiedChars: the share of maxChars the verified-reference block may
 // take. It is a share, not an addition, so reference material as a whole
 // never grows past maxChars on a small context window.
@@ -2355,18 +2374,21 @@ const DKB_BUDGET_BY_MODE = {
     maxChars: 4000,
     maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
   },
   [AI_MODES.WLLAMA]: {
     maxEntries: 6,
     maxChars: 4000,
     maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
   },
   [AI_MODES.LOCAL]: {
     maxEntries: 6,
     maxChars: 4000,
     maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
   },
   [AI_MODES.LOCAL_SERVER]: {
     maxEntries: 8,
@@ -2394,13 +2416,43 @@ const _referenceBudget = (options, effectiveMode) => {
  * manual text quoted from the bundled data, chosen by the question and tool.
  * Empty when no topic applies or the caller turned reference material off.
  */
-function _buildVerifiedReference(prompt, options, effectiveMode) {
+function _buildVerifiedReference(prompt, options, effectiveMode, roomChars) {
   if (options.useDKB === false) return "";
   const budget = _referenceBudget(options, effectiveMode);
   return buildVerifiedReferenceBlock(prompt, {
     toolId: options.toolId,
-    maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars),
+    maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars, roomChars),
   });
+}
+
+const SWARM_PROMPT_SEPARATOR = "\n\n---\n\n";
+const SWARM_DEFAULT_CONTEXT_WINDOW = 8192;
+
+const _longestPersonaChars = () =>
+  Math.max(...Object.values(SWARM_AGENTS).map((a) => a.systemPrompt.length));
+
+/**
+ * The context window the on-device engine was loaded with, and how much of it
+ * this request leaves for reference material (promptBudget.js). Null for
+ * every other backend: their budgets are the per-mode constants above.
+ * Without a caller system prompt the swarm sends the persona as the system
+ * message and folds the default prompt into the user turn, so both count.
+ */
+async function _planSwarmFit(prompt, baseSystemPrompt, options, computedChars) {
+  const profile = await detectDeviceCapabilities();
+  const contextWindow =
+    profile?.contextWindowSize ?? SWARM_DEFAULT_CONTEXT_WINDOW;
+  const requestedOutputTokens = options.maxTokens ?? getUserTokenLimit();
+  const personaChars = options.systemPrompt
+    ? 0
+    : _longestPersonaChars() + SWARM_PROMPT_SEPARATOR.length;
+  const plan = planPromptFit({
+    contextWindow,
+    requestedOutputTokens,
+    fixedChars: personaChars + baseSystemPrompt.length + prompt.length,
+    computedChars,
+  });
+  return { ...plan, contextWindow, requestedOutputTokens, personaChars };
 }
 
 // D15-2: single DKB (Diamond Knowledge Base) injection point. Every backend
@@ -2411,12 +2463,20 @@ function _buildVerifiedReference(prompt, options, effectiveMode) {
 // plain text in `fullPrompt`, once again re-resolved/re-injected inside the
 // backend. Best-effort: a DKB fetch failure never blocks the call.
 // `usedChars` is what the verified-reference block already took from the
-// shared budget; the keyword search gets the rest.
-async function _injectDKBContext(prompt, systemPrompt, options, usedChars = 0) {
+// shared budget; the keyword search gets the rest, or `roomChars` when the
+// on-device context window has less than that left.
+async function _injectDKBContext(
+  prompt,
+  systemPrompt,
+  options,
+  usedChars = 0,
+  roomChars = Infinity,
+) {
   if (options.useDKB === false) return systemPrompt;
   const budget = _referenceBudget(options, options.effectiveMode);
-  const maxChars = budget.maxChars - usedChars;
-  if (usedChars > 0 && maxChars < DKB_MIN_CHARS_AFTER_VERIFIED) {
+  const maxChars = Math.min(budget.maxChars - usedChars, roomChars);
+  const limited = usedChars > 0 || roomChars !== Infinity;
+  if (limited && maxChars < DKB_MIN_CHARS_AFTER_VERIFIED) {
     return systemPrompt;
   }
   try {
@@ -2425,6 +2485,8 @@ async function _injectDKBContext(prompt, systemPrompt, options, usedChars = 0) {
       maxEntries: options.maxDKBEntries || budget.maxEntries,
       maxChars,
       ...(budget.excludeBoardDecisions ? { excludeBoardDecisions: true } : {}),
+      ...(budget.excludeCourtDecisions ? { excludeCourtDecisions: true } : {}),
+      ...(usedChars > 0 ? { withVerifiedReference: true } : {}),
       ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
     });
     if (!dkbContext) return systemPrompt;
@@ -2467,6 +2529,29 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
       includeVeteranData: true,
     });
 
+  // The single grounding point: appended to the user piece before
+  // _redactPiecesForSend, so every backend receives the computed block once
+  // and it is redacted like the rest of the request.
+  const groundedPrompt = _isRaterRoute(options, effectiveMode)
+    ? injectCalculatorForRater(prompt, options)
+    : prompt;
+
+  // On-device WebLLM only: what the loaded context window leaves for the
+  // blocks below. The keyword block is sized last, so it gives way first;
+  // the verified block next; the computed block only when it cannot fit at
+  // all.
+  const fit =
+    effectiveMode === AI_MODES.SWARM
+      ? await _planSwarmFit(
+          prompt,
+          baseSystemPrompt,
+          options,
+          groundedPrompt.length - prompt.length,
+        )
+      : null;
+  const roomChars = fit ? fit.referenceChars : Infinity;
+  const userPrompt = fit && !fit.keepComputed ? prompt : groundedPrompt;
+
   // Verified reference goes in here, before _redactPiecesForSend, so every
   // backend receives it once. It sits ahead of the keyword-search block and
   // is charged to the same budget first.
@@ -2474,12 +2559,14 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
     prompt,
     options,
     effectiveMode,
+    roomChars,
   );
   const systemPrompt = await _injectDKBContext(
     prompt,
     baseSystemPrompt + verifiedReference,
     { ...options, effectiveMode },
     verifiedReference.length,
+    roomChars - verifiedReference.length,
   );
 
   // Apply user's saved preset if no preset specified in options
@@ -2490,23 +2577,42 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
     ...options,
     preset: effectivePreset,
     _hadCallerSystemPrompt: hadCallerSystemPrompt,
+    ..._fittedOutputTokens(fit, systemPrompt.length + userPrompt.length),
   };
 
-  // The single grounding point: appended to the user piece before
-  // _redactPiecesForSend, so every backend receives the computed block once
-  // and it is redacted like the rest of the request.
-  const userPrompt = _isRaterRoute(options, effectiveMode)
-    ? injectCalculatorForRater(prompt, options)
-    : prompt;
+  const offDeviceUserPrompt =
+    options.conditionsOnDeviceOnly && userPrompt !== prompt ? prompt : null;
 
-  return { systemPrompt, userPrompt, enhancedOptions };
+  return { systemPrompt, userPrompt, offDeviceUserPrompt, enhancedOptions };
 }
+
+// `maxTokens` for the swarm when the request asked for more output than the
+// window has left beside the assembled prompt; nothing when it fits.
+function _fittedOutputTokens(fit, assembledChars) {
+  if (!fit) return {};
+  const maxTokens = fitOutputTokens({
+    contextWindow: fit.contextWindow,
+    requestedOutputTokens: fit.requestedOutputTokens,
+    promptChars: fit.personaChars + assembledChars,
+  });
+  return maxTokens === fit.requestedOutputTokens ? {} : { maxTokens };
+}
+
+// conditionsOnDeviceOnly: the ratings in the computed block stay on the
+// device. Every send to a backend goes through here, so a mode that is not
+// on-device (cloud, a local server on another host) gets the veteran's
+// question without the block, whether it was the first choice or a fallback.
+const _userPromptForMode = (mode, userPrompt, options) =>
+  typeof options._offDeviceUserPrompt === "string" && !_isModeOnDevice(mode)
+    ? options._offDeviceUserPrompt
+    : userPrompt;
 
 // One call site per backend, shared by both the mode-directed dispatch and
 // the "whatever's available" fallback chain in _dispatchAiGeneration below -
 // each backend's (systemPrompt, userPrompt, options) argument shape now
 // exists exactly once instead of being repeated per branch.
-async function _invokeBackend(mode, systemPrompt, userPrompt, options) {
+async function _invokeBackend(mode, systemPrompt, sentUserPrompt, options) {
+  const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   switch (mode) {
     case AI_MODES.SWARM: {
       const { text, agent } = await runWarrantCouncil(
@@ -2691,9 +2797,17 @@ function _applyHallucinationFilter(text, options) {
   return { text, hallucinationReport };
 }
 
+/**
+ * Shown in place of an answer the response validator blocked. Callers render
+ * result.text, so a blocked answer left there was shown to the veteran.
+ */
+export const BLOCKED_RESPONSE_MESSAGE =
+  "The AI's answer is not shown because it did not pass Vet-Rate's safety check. That check stops answers worded as medical or legal advice, answers that promise a claim outcome, and citations Vet-Rate could not confirm. Nothing is wrong with your question. Please ask it again or word it differently. For a medical opinion, speak with your doctor. A Veterans Service Officer can help with your claim at no cost.";
+
 // Validate the AI response for forbidden medical/legal roleplay, ungrounded
 // CFR citations, missing disclaimers, invented stats, and over-certain claim
-// language. Runs unless explicitly skipped.
+// language. Runs unless explicitly skipped. A blocked prose answer is
+// replaced by BLOCKED_RESPONSE_MESSAGE; the original stays on `blockedText`.
 //
 // AIS-01: this was effectively dead in production. The guard required
 // `options.taskType` (so calls without one skipped validation entirely), and
@@ -2721,8 +2835,19 @@ async function _buildValidatedResult(
         validation.errors,
         validation.warnings,
       );
+      // Structured output goes to a parser, not to the veteran, and often
+      // quotes their records ("as a physician, I ..."); the caller gets it
+      // with the errors, as before.
+      const structured =
+        options.expectJSON || options.responseFormat || looksStructured(text);
       return {
-        text,
+        ...(structured
+          ? { text }
+          : {
+              text: BLOCKED_RESPONSE_MESSAGE,
+              blocked: true,
+              blockedText: text,
+            }),
         mode: usedMode,
         onDevice,
         validationErrors: validation.errors,
@@ -2783,7 +2908,7 @@ async function _handleContextOverflowFallback(
       // here would be exactly the re-assembly this refactor removes.
       const text = await generateWithCloudAI(
         systemPrompt,
-        userPrompt,
+        _userPromptForMode(AI_MODES.CLOUD, userPrompt, enhancedOptions),
         enhancedOptions,
       );
       return {
@@ -2860,7 +2985,8 @@ function _pickDocumentFallbackMode(effectiveMode) {
   return { mode, available: mode !== null };
 }
 
-async function _generateFallback(mode, systemPrompt, userPrompt, options) {
+async function _generateFallback(mode, systemPrompt, sentUserPrompt, options) {
+  const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   if (mode === AI_MODES.SWARM) {
     const { text, agent } = await runWarrantCouncil(
       systemPrompt,
@@ -3055,7 +3181,8 @@ const generateAIInternal = async (prompt, options = {}) => {
   const {
     systemPrompt: builtSystemPrompt,
     userPrompt: builtUserPrompt,
-    enhancedOptions,
+    offDeviceUserPrompt,
+    enhancedOptions: builtOptions,
   } = await _buildFullPrompt(prompt, options, effectiveMode);
 
   // ADR-008: redact both halves of the assembled request before either
@@ -3069,10 +3196,16 @@ const generateAIInternal = async (prompt, options = {}) => {
   // the veteran's machine. Redacting it anyway would feed the on-device model
   // "[REDACTED]" tokens that downstream consumers read as genuine values
   // (identifier fields themselves never come from the model - decision F).
-  const [systemPrompt, userPrompt] =
+  const pieces = [builtSystemPrompt, builtUserPrompt];
+  if (offDeviceUserPrompt !== null) pieces.push(offDeviceUserPrompt);
+  const [systemPrompt, userPrompt, offDevicePrompt] =
     dataClass === AI_DATA_CLASS.DOCUMENT
-      ? [builtSystemPrompt, builtUserPrompt]
-      : await _redactPiecesForSend([builtSystemPrompt, builtUserPrompt]);
+      ? pieces
+      : await _redactPiecesForSend(pieces);
+  const enhancedOptions =
+    offDevicePrompt === undefined
+      ? builtOptions
+      : { ...builtOptions, _offDeviceUserPrompt: offDevicePrompt };
 
   const result = await _dispatchWithRecovery(
     effectiveMode,

@@ -84,28 +84,33 @@ describe("selectOwnRequest", () => {
   });
 });
 
-describe("assembleCaseRecord", () => {
-  const caseDef = goldenCases.find((c) => c.id === "a15");
-  const run = {
-    modelIdRequested: "m",
-    modelIdLoaded: "m",
-    thinking: false,
-    maxTokens: 1024,
-  };
-  const ok = (extra = {}) => ({
-    ok: true,
-    text: "Visible answer.",
-    latencyMs: 12.4,
-    captured: [
-      request("auditor", caseDef.input, {
-        extra_body: { enable_thinking: false },
-      }),
-    ],
-    ...extra,
+const recordCase = goldenCases.find((c) => c.id === "a15");
+const recordRun = {
+  modelIdRequested: "m",
+  modelIdLoaded: "m",
+  thinking: false,
+  maxTokens: 1024,
+};
+const ok = (extra = {}) => ({
+  ok: true,
+  text: "Visible answer.",
+  latencyMs: 12.4,
+  captured: [
+    request("auditor", recordCase.input, {
+      extra_body: { enable_thinking: false },
+    }),
+  ],
+  ...extra,
+});
+const build = (outcome) =>
+  assembleCaseRecord({
+    caseDef: recordCase,
+    run: recordRun,
+    personaPrompts,
+    outcome,
   });
-  const build = (outcome) =>
-    assembleCaseRecord({ caseDef, run, personaPrompts, outcome });
 
+describe("assembleCaseRecord", () => {
   it("records visible text as response and omits rawResponse when identical", () => {
     const record = build(ok({ rawResponse: "Visible answer." }));
     expect(record.response).toBe("Visible answer.");
@@ -154,6 +159,70 @@ describe("assembleCaseRecord", () => {
   });
 });
 
+describe("assembleCaseRecord: what the guards did to the answer", () => {
+  it("records what the calculator guard and the validator did to the answer", () => {
+    const untouched = build(ok({ resultFlags: { mode: "swarm" } }));
+    expect(untouched).toMatchObject({
+      calculatorAppended: false,
+      tdiuParagraphAppended: false,
+      validatorBlocked: false,
+    });
+    expect(untouched).not.toHaveProperty("calculatorLead");
+    expect(untouched).not.toHaveProperty("blockedText");
+
+    const appended = build(
+      ok({
+        resultFlags: {
+          calculatorAppended: { expected: 80 },
+          tdiuParagraphAppended: true,
+        },
+      }),
+    );
+    expect(appended).toMatchObject({
+      calculatorAppended: true,
+      tdiuParagraphAppended: true,
+      validatorBlocked: false,
+    });
+
+    const led = build(
+      ok({
+        resultFlags: { calculatorLead: { expected: 80, commentaryKept: true } },
+      }),
+    );
+    expect(led.calculatorLead).toEqual({ expected: 80, commentaryKept: true });
+  });
+
+  it("records a blocked answer: the flag and the text the veteran did not see", () => {
+    const record = build(
+      ok({
+        text: "The AI's answer is not shown.",
+        resultFlags: {
+          blocked: true,
+          blockedText: "As a physician, I diagnose this.",
+          validationErrors: ["BLOCKED: ..."],
+        },
+      }),
+    );
+    expect(record.validatorBlocked).toBe(true);
+    expect(record.blockedText).toBe("As a physician, I diagnose this.");
+    expect(record.response).toBe("The AI's answer is not shown.");
+  });
+
+  it("records null for all three when the case produced no result", () => {
+    const record = build({
+      ok: false,
+      error: "WebGPU inference timed out after 300s",
+      latencyMs: 300000,
+      captured: [],
+    });
+    expect(record).toMatchObject({
+      calculatorAppended: null,
+      tdiuParagraphAppended: null,
+      validatorBlocked: null,
+    });
+  });
+});
+
 describe("dry run: reasoning, replacement and timeout isolation", () => {
   const { byId } = records();
 
@@ -180,6 +249,19 @@ describe("dry run: reasoning, replacement and timeout isolation", () => {
     expect(a24.calculatorReplacement.draft).toBe("The combined rating is 90%.");
     expect(a24.response).toContain("100%");
     expect(a24.response).not.toBe(a24.calculatorReplacement.draft);
+    expect(a24.calculatorLead).toEqual({
+      expected: 100,
+      commentaryKept: false,
+    });
+  });
+
+  it("a canned answer records the three guard flags as false, a timeout as null", () => {
+    expect(byId.get("a24")).toMatchObject({
+      calculatorAppended: false,
+      tdiuParagraphAppended: false,
+      validatorBlocked: false,
+    });
+    expect(byId.get("a14").validatorBlocked).toBeNull();
   });
 
   it("a case after a timeout does not inherit the timed-out case's request", () => {

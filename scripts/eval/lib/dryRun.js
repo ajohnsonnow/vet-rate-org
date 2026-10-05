@@ -259,6 +259,25 @@ function toolOutcome(
   return done({ text: content, tool });
 }
 
+function rawReplyOutcome(rawReply) {
+  const stripped = stripReasoning(rawReply);
+  return stripped.answered
+    ? {
+        ok: true,
+        text: stripped.text,
+        rawResponse: stripped.raw,
+        ...cleanupMarker(stripped),
+        latencyMs: 5,
+      }
+    : {
+        ok: false,
+        error: EMPTY_AFTER_REASONING_ERROR,
+        text: "",
+        rawResponse: stripped.raw,
+        latencyMs: 5,
+      };
+}
+
 /**
  * Stand-in for the in-browser engine: builds the chat request the real engine
  * would receive (persona system prompt, user turn with optional computed
@@ -305,27 +324,15 @@ export function createStubEngine({
       return { ok: false, error: override.error, text: "", latencyMs: 1 };
     }
     if (override.rawReply !== undefined) {
-      const stripped = stripReasoning(override.rawReply);
-      return stripped.answered
-        ? {
-            ok: true,
-            text: stripped.text,
-            rawResponse: stripped.raw,
-            ...cleanupMarker(stripped),
-            latencyMs: 5,
-          }
-        : {
-            ok: false,
-            error: EMPTY_AFTER_REASONING_ERROR,
-            text: "",
-            rawResponse: stripped.raw,
-            latencyMs: 5,
-          };
+      return rawReplyOutcome(override.rawReply);
     }
     return {
       ok: true,
       text: cannedResponse(caseDef, override, calculateVARating),
       latencyMs: 5,
+      resultFlags: override.replacedDraft
+        ? { calculatorLead: { expected: 100, commentaryKept: false } }
+        : {},
       ...(override.replacedDraft
         ? {
             calculatorReplacement: {
