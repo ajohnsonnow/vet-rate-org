@@ -39,9 +39,6 @@ import { formatLocalDate } from "../utils/dateUtils";
 
 const STORAGE_KEY = "vet_rate_retro_pay_history";
 
-const findCuePattern = (patternId) =>
-  CUE_PATTERNS.find((p) => p.id === patternId);
-
 const formatRatingHistoryLine = (p) => {
   const spouseNote = p.dependents?.married ? "with spouse" : "";
   const childrenNote = p.dependents?.childrenUnder18
@@ -49,6 +46,19 @@ const formatRatingHistoryLine = (p) => {
     : "";
   return `• ${formatLocalDate(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
 };
+
+// Whether the decision applied the factor is never examined here, so the
+// bilateral check is a prompt to verify, not a CUE alert.
+export const buildRetroPayAlerts = () => [];
+
+export const formatBilateralPromptBlock = (bilateralCheck) =>
+  bilateralCheck?.applicable
+    ? `\n**Bilateral factor (38 CFR § 4.26):**\nIt applies to: ${bilateralCheck.pairedParts.join(", ")}\nWhether the rating decision applied it has not been checked; tell the veteran to verify it.`
+    : "";
+
+export const bilateralSaveFields = (bilateralCheck) => ({
+  bilateralFactorApplies: bilateralCheck?.applicable || false,
+});
 
 const formatCueIssuesBlock = (alerts) => {
   if (alerts.length === 0) return "";
@@ -248,18 +258,7 @@ function useRunAnalysisCallback({
           : null;
       if (bilateral) setBilateralCheck(bilateral);
 
-      // Generate CUE alerts based on patterns
-      const alerts = [];
-
-      if (bilateral?.applicable) {
-        alerts.push({
-          pattern: findCuePattern("bilateral_not_applied"),
-          severity: "medium",
-          message: `The bilateral factor (38 CFR § 4.26) applies to ${bilateral.pairedParts.join(", ")}. Vet-Rate has not checked your decision: verify that the factor was applied.`,
-        });
-      }
-
-      setCueAlerts(alerts);
+      setCueAlerts(buildRetroPayAlerts());
       setIsAnalyzing(false);
     }, 1500);
   }, [
@@ -308,7 +307,7 @@ ${analysis.hasCoverageGap ? `- NOTE: ${analysis.uncoveredMonths} month(s) before
 **Rating History:**
 ${ratingHistory.map(formatRatingHistoryLine).join("\n")}
 
-${bilateralCheck?.applicable ? `\n**Bilateral factor (38 CFR § 4.26):**\nIt applies to: ${bilateralCheck.pairedParts.join(", ")}\nWhether the rating decision applied it has not been checked; tell the veteran to verify it.` : ""}
+${formatBilateralPromptBlock(bilateralCheck)}
 
 ${formatCueIssuesBlock(cueAlerts)}
 
@@ -342,13 +341,13 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         extractedData: {
           totalMonths: analysis?.totalMonths,
           cueAlerts: cueAlerts?.length || 0,
-          bilateralIssue: bilateralCheck?.applicable || false,
+          ...bilateralSaveFields(bilateralCheck),
           ratingPeriods: ratingHistory?.length || 0,
         },
         vkbMergeData: {
           aiInsights: {
             retroPayFindings: `Analyzed ${analysis?.totalMonths || 0} months, est. $${computeTotals(analysis).total.toLocaleString("en-US", { minimumFractionDigits: 2 })}; ${cueAlerts?.length || 0} potential CUE issues`,
-            bilateralFactorIssue: bilateralCheck?.applicable || false,
+            ...bilateralSaveFields(bilateralCheck),
           },
         },
       }).catch((err) => console.warn("Failed to save retro pay results:", err));
@@ -1023,7 +1022,7 @@ function CueAlertsList({ cueAlerts }) {
   );
 }
 
-function BilateralCheckCard({ bilateralCheck }) {
+export function BilateralCheckCard({ bilateralCheck }) {
   if (!bilateralCheck) return null;
 
   return (
@@ -1037,7 +1036,9 @@ function BilateralCheckCard({ bilateralCheck }) {
       <div className="flex items-center gap-3 mb-2">
         <span className="text-xl">🦾</span>
         <h3 className="text-lg font-bold text-blue-400">
-          Bilateral Factor Analysis
+          {bilateralCheck.applicable
+            ? "Check that the bilateral factor was applied"
+            : "Bilateral factor"}
         </h3>
       </div>
       <p className="text-gray-300">{bilateralCheck.message}</p>
