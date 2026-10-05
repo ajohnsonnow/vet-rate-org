@@ -58,6 +58,7 @@ import {
   checkTdiuConclusion,
   mentionsUnemployability,
   describeMismatch,
+  findCommentaryArithmetic,
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import {
@@ -1185,17 +1186,29 @@ function calculatorWorkingText(calc, tdiu) {
     : explanation;
 }
 
+// The model's text is kept under the working only when it adds words and no
+// arithmetic of its own (findCommentaryArithmetic). Otherwise the working
+// stands alone: the draft did not contradict the calculator, so there is no
+// notice to give, and `commentaryDropped` records why it was left out.
 function leadWithCalculatorWorking(result, calc, asksTdiu) {
   const commentary = String(result.text ?? "").trim();
   const working = calculatorWorkingText(calc, asksTdiu);
-  const commentaryKept = commentary !== "" && !result.blocked;
+  const dropped = result.blocked
+    ? []
+    : findCommentaryArithmetic(commentary, calc, { tdiu: asksTdiu });
+  const commentaryKept =
+    commentary !== "" && !result.blocked && dropped.length === 0;
   const parts = [working];
   if (commentaryKept) parts.push(CALCULATOR_COMMENTARY_LEAD);
-  if (commentary) parts.push(commentary);
+  if (commentaryKept || result.blocked) parts.push(commentary);
   return {
     ...result,
-    text: parts.join("\n\n"),
-    calculatorLead: { expected: calc.combinedRating, commentaryKept },
+    text: parts.filter(Boolean).join("\n\n"),
+    calculatorLead: {
+      expected: calc.combinedRating,
+      commentaryKept,
+      ...(dropped.length > 0 ? { commentaryDropped: dropped } : {}),
+    },
   };
 }
 

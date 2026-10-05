@@ -99,3 +99,15 @@ export function everyRecordedText() {
   }
   return [...texts];
 }
+
+// The graded 38-case run on the integrated build. It is outside the labelled
+// counts above; only the tests written from its grade read it.
+export const GRADED_INTEGRATED_RUN_FILE =
+  "run_2026-10-05_221648_Qwen3.5-4B-q4f16_1-MLC.jsonl";
+
+export const gradedIntegratedCase = (id) =>
+  casesIn([GRADED_INTEGRATED_RUN_FILE]).find((record) => record.id === id);
+
+/** The model's own text in a recorded answer that led with the working. */
+export const commentaryOf = (record, lead) =>
+  record.response.split(`${lead}\n\n`)[1] ?? "";

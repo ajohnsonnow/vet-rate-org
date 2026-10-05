@@ -610,6 +610,49 @@ export function findReworkedFigures(text, calc) {
   return hits;
 }
 
+const LEGAL_CITATION =
+  /(?:§|\bCFR|\bPart) ?\d+(?:\.\d+)?[a-z]?(?:\(\w{1,3}\))*/gi;
+const DECIMAL_FIGURE = /\d\.\d/;
+const ROUNDING_WORD = /\bround(?:ed|s|ing)?\b/i;
+const OPERATION = /=|\d ?%? ?[+×÷*/] ?\(? ?\d|\\times|\\frac/;
+const PERCENT_FIGURE = /(\d{1,3}(?:\.\d+)?) ?(?:%|percent\b)/gi;
+const REFUSAL =
+  /\bI (?:do not|don't|cannot|can't) (?:have|calculate|determine|access)\b|\bplease provide\b/i;
+const TDIU_THRESHOLD_PERCENTS = [40, 60, 70];
+
+/**
+ * Why a model's commentary may not be shown under the calculator's working,
+ * as a list of reasons (empty when it may). The working is the answer, so
+ * commentary is kept only when it adds words and no arithmetic of its own:
+ * "decimal" (74.8), "rounding" (any talk of rounding), "equation" (an equals
+ * sign or an operator between numbers), "figure" (a percentage that is not a
+ * rating entered, a step of the working, the 10 percent factor or 100), and
+ * "result" (the combined rating stated again), and "refusal" (it says it has
+ * no ratings or cannot calculate, under working that just did). Section
+ * numbers in citations
+ * are not figures. For a TDIU question the 38 CFR § 4.16(a) thresholds (40,
+ * 60, 70) are allowed. Deliberately strict: when in doubt the commentary is
+ * dropped.
+ */
+export function findCommentaryArithmetic(text, calc, { tdiu = false } = {}) {
+  const body = String(text ?? "").replace(LEGAL_CITATION, " ");
+  const allowed = ratingValues(calc);
+  [calc.rawScore, calc.combinedRating, 10, 100].forEach((v) => allowed.add(v));
+  if (tdiu) TDIU_THRESHOLD_PERCENTS.forEach((v) => allowed.add(v));
+  const strayFigure = [...body.matchAll(PERCENT_FIGURE)].some(
+    (m) => !allowed.has(Number(m[1])),
+  );
+  const found = {
+    decimal: DECIMAL_FIGURE.test(body),
+    rounding: ROUNDING_WORD.test(body),
+    equation: OPERATION.test(body),
+    figure: strayFigure,
+    result: extractStatedCombinedRatings(body).length > 0,
+    refusal: REFUSAL.test(body),
+  };
+  return Object.keys(found).filter((reason) => found[reason]);
+}
+
 /**
  * Compare a response with the calculator. A stated combined figure is wrong
  * when it differs from the calculator's rating and is either a multiple of 10
