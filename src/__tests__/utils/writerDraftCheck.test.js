@@ -342,3 +342,13 @@ describe("reference text", () => {
     ).toBe(true);
   });
 });
+
+describe("certification wording", () => {
+  it("is rejected when the app-built draft has none", () => {
+    const result = check(
+      `${REWORDED}\n\nI certify that the above is true and correct.`,
+    );
+    expect(result.accepted).toBe(false);
+    expect(result.newFacts.map((fact) => fact.kind)).toContain("attestation");
+  });
+});

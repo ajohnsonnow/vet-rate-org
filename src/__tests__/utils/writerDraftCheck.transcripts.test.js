@@ -71,12 +71,8 @@ describe("recorded writer answers", () => {
     expect(verdictOf(response)).toBe(verdict);
   });
 
-  it("only one is a draft that states no unsupplied fact", () => {
-    expect(
-      recorded
-        .filter((answer) => answer.verdict === "draft")
-        .map((a) => a.name),
-    ).toEqual(["2026-10-05_081228 Qwen2.5-3B a09"]);
+  it("none is a draft that states no unsupplied fact", () => {
+    expect(recorded.filter((answer) => answer.verdict === "draft")).toEqual([]);
   });
 
   it("none would replace its tool's app-built draft", () => {

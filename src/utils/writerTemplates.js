@@ -321,6 +321,7 @@ const REWORD_RULES = `Rules:
 - Keep every fact exactly as written: every number, date, rating, condition name and described event.
 - Keep every item in square brackets exactly as written, for example [date the symptoms began]. Those are blanks the veteran will fill in. Do not fill them in, remove them or add new ones.
 - Do not add any fact, date, unit, place, diagnosis, name, rating or legal citation that is not already in the draft.
+- Do not add a certification, attestation, date or signature line.
 - Do not ask questions, give advice or explain your changes.`;
 
 /** The request sent to the model: reword this draft, change nothing else. */

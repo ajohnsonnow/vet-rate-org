@@ -11,8 +11,9 @@
  *      advice about what a statement should contain;
  *   2. it keeps what the veteran supplied: every number, every phrase the
  *      caller marks as required, and most of the wording;
- *   3. it adds no number, date, service branch, unit, place, diagnosis or
- *      name that is in neither the inputs nor the app-built draft;
+ *   3. it adds no number, date, service branch, unit, place, diagnosis,
+ *      name or certification wording that is in neither the inputs nor
+ *      the app-built draft;
  *   4. it keeps every bracketed blank of the app-built draft;
  *   5. it is a rewording, not new material: not much longer than the
  *      app-built draft, and mostly made of words that draft or the inputs
@@ -461,6 +462,21 @@ const DIAGNOSES = [
   "herniated",
 ];
 
+// A statement is signed under penalty of law. Only the app adds
+// certification wording, and only above a signature line the signer
+// completes (AIS-03 / LEGAL-03).
+const ATTESTATIONS = [
+  "certify",
+  "certifies",
+  "attest",
+  "attests",
+  "sworn",
+  "swear",
+  "under oath",
+  "penalty of perjury",
+  "true and correct",
+];
+
 const TERM_GAP = String.raw`[-\s]+`;
 
 const termPattern = (term) =>
@@ -609,6 +625,7 @@ export function findNewFacts(draft, allowedText) {
   );
   add("service", newTerms(SERVICE_TERMS, body, allowed));
   add("diagnosis", newTerms(DIAGNOSES, body, allowed));
+  add("attestation", newTerms(ATTESTATIONS, body, allowed));
   add("name", newNames(body, wordSet(allowed)));
   return facts;
 }
