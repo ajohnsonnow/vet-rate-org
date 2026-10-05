@@ -859,6 +859,7 @@ async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
   });
 
   let responseText = "";
+  let finishReason = null;
   const bracketState = { bracketDepth: 0, inString: false, escape: false };
   const visible = onStream
     ? createReasoningStreamFilter(onStream, { clean: false })
@@ -877,7 +878,10 @@ async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
       responseText.trimStart().startsWith("{")
     )
       break;
-    if (piece.choices[0]?.finish_reason) break;
+    if (piece.choices[0]?.finish_reason) {
+      finishReason = piece.choices[0].finish_reason;
+      break;
+    }
     // Schema maxItems bounds valid output to ~3,300 chars. If we exceed
     // 4,500 the JSON won't parse cleanly anyway - interrupt as safety net.
     if (responseText.length > 4500) {
@@ -891,7 +895,7 @@ async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
   }
 
   visible?.end();
-  return responseText;
+  return { text: responseText, finishReason };
 }
 
 /** Non-JSON caller-driven streaming. */
@@ -902,14 +906,16 @@ async function _runPlainStreamGeneration(engine, generationConfig, onStream) {
   });
 
   let responseText = "";
+  let finishReason = null;
   const visible = createReasoningStreamFilter(onStream);
   for await (const chunk of chunks) {
     const delta = chunk.choices[0]?.delta?.content || "";
     responseText += delta;
     visible.push(delta);
+    finishReason = chunk.choices[0]?.finish_reason ?? finishReason;
   }
   visible.end();
-  return responseText;
+  return { text: responseText, finishReason };
 }
 
 /**
@@ -923,7 +929,10 @@ async function _runNonStreamGeneration(engine, generationConfig) {
     ...generationConfig,
     stream: false,
   });
-  return result.choices[0]?.message?.content || "";
+  return {
+    text: result.choices[0]?.message?.content || "",
+    finishReason: result.choices[0]?.finish_reason ?? null,
+  };
 }
 
 let lastGeneration = null;
@@ -984,23 +993,24 @@ async function _runSwarmInference(
       : {}),
   };
 
-  let rawText;
+  let generated;
 
   if (responseFormat) {
-    rawText = await _runJSONStreamGeneration(
+    generated = await _runJSONStreamGeneration(
       webllmEngine,
       generationConfig,
       onStream,
     );
   } else if (onStream) {
-    rawText = await _runPlainStreamGeneration(
+    generated = await _runPlainStreamGeneration(
       webllmEngine,
       generationConfig,
       onStream,
     );
   } else {
-    rawText = await _runNonStreamGeneration(webllmEngine, generationConfig);
+    generated = await _runNonStreamGeneration(webllmEngine, generationConfig);
   }
+  const rawText = generated.text;
 
   const stripped = stripReasoning(rawText, { clean: !responseFormat });
   const responseText = stripped.text;
@@ -1025,6 +1035,8 @@ async function _runSwarmInference(
     agent: agent.id,
     agentName: agent.name,
     model: loadedModelId || "diamond-swarm",
+    // "length": the output limit or the context window ended the answer.
+    truncated: generated.finishReason === "length",
     tokens: {
       prompt: prompt.length,
       completion: rawText.length,

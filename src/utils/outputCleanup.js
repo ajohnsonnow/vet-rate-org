@@ -332,6 +332,27 @@ export function trimRunaway(text) {
   };
 }
 
+const SENTENCE_END = /[.!?]["')\]*_]*(?=\s|$)/g;
+const NOT_A_SENTENCE_END =
+  /(?:^|[\s(])(?:\d+|e\.g|i\.e|vs|etc|Dr|Mr|Ms|Mrs|No)$/i;
+
+/**
+ * Cut an answer that stopped mid-sentence back to its last complete
+ * sentence. A full stop after a list number, a figure or an abbreviation
+ * ("2.", "74.", "e.g.") does not end a sentence. Text with no complete
+ * sentence is returned as it is.
+ */
+export function trimToLastSentence(text) {
+  const input = typeof text === "string" ? text.trimEnd() : "";
+  let end = -1;
+  for (const m of input.matchAll(SENTENCE_END)) {
+    if (!NOT_A_SENTENCE_END.test(input.slice(0, m.index))) {
+      end = m.index + m[0].length;
+    }
+  }
+  return end > 0 ? input.slice(0, end) : input;
+}
+
 /**
  * Wrapper echoes out, then runaway repetition cut. With final=false
  * (streaming) a marker that has only begun to arrive is held back.
