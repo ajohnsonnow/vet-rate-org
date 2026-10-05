@@ -17,6 +17,7 @@ vi.mock("./veteranKnowledgeBase", async (importOriginal) => ({
   addDocumentToVKB: vi.fn(),
 }));
 
+const { eventIdentity } = await import("./eventIdentity");
 const { mergeAnalysisIntoVkb, buildVkbMergeFromCFile } =
   await import("./veteranContextProvider");
 
@@ -70,11 +71,12 @@ describe("C-File Save: one event per document, day and type", () => {
   });
 
   it("adds a different type or day on the same document", async () => {
-    await save([event("2019-03-03", "Medical", "A")], "d1");
+    await save([event("2019-03-03", "Decision", "A")], "d1");
     await save(
       [
-        event("2019-03-03", "Service", "B"),
-        event("2019-04-04", "Medical", "C"),
+        event("2019-03-03", "Decision", "A"),
+        event("2019-03-03", "Exam", "B"),
+        event("2019-04-04", "Decision", "C"),
       ],
       "d1",
     );
@@ -105,18 +107,14 @@ describe("C-File Save: same-day events, vague dates and earlier saves", () => {
       analysisWith([
         event("2019-03-03", "Medical", "First diagnosis"),
         event("March 3, 2019", "medical", "Second diagnosis"),
-        event("", "Medical", "Undated one"),
-        event("", "Medical", "Undated two"),
       ]),
       {},
     );
     expect(merge.evidenceTimeline.map((e) => e.description)).toEqual([
       "First diagnosis",
       "Second diagnosis",
-      "Undated one",
-      "Undated two",
     ]);
-    expect(merge.evidence).toHaveLength(4);
+    expect(merge.evidence).toHaveLength(2);
   });
 
   it("pairs same-day events with their earlier copies on a re-save", async () => {
@@ -145,13 +143,10 @@ describe("C-File Save: same-day events, vague dates and earlier saves", () => {
     ["2019", "2018-12-31"],
     ["March 2019", "2019-03-01"],
     ["2019-03", "2019-02-28"],
-  ])("does not mistake the date %j for the day %j", async (vague, day) => {
-    await save([event(vague, "Medical", "Vague date")], "d1");
-    await save([event(day, "Medical", "Exact day")], "d1");
-    expect(store.vkb.evidenceTimeline.map((e) => e.description)).toEqual([
-      "Vague date",
-      "Exact day",
-    ]);
+  ])("does not mistake the date %j for the day %j", (vague, day) => {
+    expect(eventIdentity({ date: vague, eventType: "Medical" })).not.toBe(
+      eventIdentity({ date: day, eventType: "Medical" }),
+    );
   });
 
   it("updates, not repeats, an event saved before events carried a document id", async () => {

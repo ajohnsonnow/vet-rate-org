@@ -26,7 +26,15 @@ import { saveDocumentToPacket, generatePacketContext } from "./myPacketManager";
 import { getSavedClaims } from "./claimsStorage";
 import { getMyRatings, getVeteranProfile } from "./veteranProfile";
 import { normalizeConditionName } from "./conditionName";
-import { eventDayKey, eventIdentity, eventTypeKey } from "./eventIdentity";
+import {
+  CFILE_EVENT_SOURCE,
+  CFILE_LEGACY_EVENT_SOURCE,
+  canonicalEventType,
+  eventDayKey,
+  eventIdentity,
+  isRealEventDate,
+  isVeteranEdited,
+} from "./eventIdentity";
 import { redactVeteranIdentifiers } from "./piiScrubber";
 
 // ============================================================
@@ -221,8 +229,8 @@ export const getVeteranAIContext = async (options = {}) => {
 // (read-only, no rating so calculators exclude them). They are NEVER written to
 // vaClaimsHistory.claims, which is reserved for FILED claims from decision /
 // denial letters.
-const CFILE_SUGGESTION_SOURCE = "C-File Analysis";
-const CFILE_LEGACY_EVIDENCE_SOURCE = "C-File";
+const CFILE_SUGGESTION_SOURCE = CFILE_EVENT_SOURCE;
+const CFILE_LEGACY_EVIDENCE_SOURCE = CFILE_LEGACY_EVENT_SOURCE;
 
 const _cfileConditionName = (c) => c.condition || c.name || "";
 
@@ -268,63 +276,134 @@ function _cfileMissingEvidence(claims) {
     }));
 }
 
-// An event this tool wrote is identified by its document, day and type, never
-// by its wording: the model words the same event differently on each run.
-// Every event from one analysis is kept, including several on the same day.
-function _cfileEvidenceTimeline(timeline) {
-  return timeline.map((e) => ({
-    date: e.date || "",
-    eventType: e.category || "c_file_event",
-    description: e.description || e.event || e.quote || "",
-    source: CFILE_SUGGESTION_SOURCE,
-    significance: e.significance || "",
-  }));
+const _eventText = (e) =>
+  String(e.description || e.event || e.quote || "").trim();
+
+const _sameWords = (text) => text.toLowerCase().replaceAll(/\s+/g, " ");
+
+/**
+ * The events of one analysis that can be written, and those that cannot. An
+ * event without a real calendar date or without a description is never
+ * written; it is returned with the reason. Two entries naming the same day,
+ * canonical type and words are one event.
+ * @param {Array} timeline the analysis' timeline
+ * @returns {{events: object[], leftOut: {date: string, description: string, reason: string}[]}}
+ */
+export function splitCFileTimeline(timeline) {
+  const events = [];
+  const leftOut = [];
+  const seen = new Set();
+  for (const e of timeline) {
+    const date = String(e?.date || "").trim();
+    const description = _eventText(e || {});
+    const missing = [
+      !isRealEventDate(date) && "no real calendar date",
+      !description && "no description",
+    ].filter(Boolean);
+    if (missing.length > 0) {
+      leftOut.push({ date, description, reason: missing.join(" and ") });
+      continue;
+    }
+    const item = {
+      date,
+      eventType: e.category || "c_file_event",
+      description,
+      source: CFILE_SUGGESTION_SOURCE,
+      significance: e.significance || "",
+    };
+    const key = `${eventIdentity(item)}|${_sameWords(description)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    events.push(item);
+  }
+  return { events, leftOut };
 }
 
-const _isEarlierCopy = (e, source, sourceDocumentId, identity, claimed) =>
-  e.source === source &&
-  e.date &&
-  !claimed.has(e) &&
-  e.sourceDocumentId === sourceDocumentId &&
-  eventIdentity(e) === identity;
+const _cfileEvidenceTimeline = (timeline) =>
+  splitCFileTimeline(timeline).events;
+
+const _isCopyFromDocument = (e, source, sourceDocumentId) =>
+  e.source === source && e.sourceDocumentId === sourceDocumentId;
 
 // A copy saved before events carried a document id: same tool, same day, same
-// type (a legacy evidence item has no type, so the day alone), never already
-// taken by another event of this save.
+// canonical type (a legacy evidence item has no type, so the day alone), never
+// already taken by another event of this save.
 const _isLegacyCopy = (e, source, item, claimed) =>
   e.source === source &&
   e.date &&
   !e.sourceDocumentId &&
   !claimed.has(e) &&
   eventDayKey(e.date) === eventDayKey(item.date) &&
-  (!e.eventType || eventTypeKey(e.eventType) === eventTypeKey(item.eventType));
+  (!e.eventType ||
+    canonicalEventType(e.eventType) === canonicalEventType(item.eventType));
 
-// Updates the earlier copy of the same event from the same document in place.
-// Only an event this tool wrote can match, so an event added by hand or taken
-// from another tool is never merged or overwritten. `claimed` pairs several
-// events of one day and type one-to-one with their earlier copies.
-function _updateEarlierCFileEvent(
+// The tool-written events a save replaces: every unedited event this tool
+// wrote for the document, and each older copy saved before events carried a
+// document id.
+function _replacedCFileEvents(list, incoming, source, sourceDocumentId) {
+  const replaced = new Set(
+    list.filter(
+      (e) =>
+        _isCopyFromDocument(e, source, sourceDocumentId) && !isVeteranEdited(e),
+    ),
+  );
+  const claimed = new Set();
+  incoming.forEach((item) => {
+    const legacy = list.find((e) => _isLegacyCopy(e, source, item, claimed));
+    if (legacy) {
+      claimed.add(legacy);
+      replaced.add(legacy);
+    }
+  });
+  return replaced;
+}
+
+// Writes one document's events from this tool as a set: the earlier set is
+// deleted and the new set written, so a re-analysis that words or counts its
+// events differently leaves exactly the events it lists. Only events this tool
+// wrote for this document are replaced; an event added by hand, taken from
+// another tool or document, or edited by the veteran is never deleted or
+// overwritten, and an incoming event the veteran's edited copy already stands
+// for (same day and type) is not written a second time.
+function _replaceCFileEventSet(
   list,
-  item,
+  incoming,
   source,
   sourceDocumentId,
-  claimed,
+  keyOf,
 ) {
-  if (!sourceDocumentId || item.source !== source || !item.date) return false;
-  const identity = eventIdentity(item);
-  let earlier = list.find((e) =>
-    _isEarlierCopy(e, source, sourceDocumentId, identity, claimed),
+  const replaced = _replacedCFileEvents(
+    list,
+    incoming,
+    source,
+    sourceDocumentId,
   );
-  if (!earlier) {
-    earlier = list.find((e) => _isLegacyCopy(e, source, item, claimed));
-    if (!earlier) return false;
-    earlier.sourceDocumentId = sourceDocumentId;
-    earlier.eventType = item.eventType;
-  }
-  claimed.add(earlier);
-  earlier.description = item.description;
-  earlier.significance = item.significance ?? earlier.significance;
-  return true;
+  const kept = list.filter((e) => !replaced.has(e));
+  const edited = kept.filter(
+    (e) =>
+      _isCopyFromDocument(e, source, sourceDocumentId) && isVeteranEdited(e),
+  );
+  const standing = new Set(kept.map(keyOf));
+  const stoodFor = new Set();
+  const written = [];
+  incoming.forEach((item) => {
+    const mine = edited.find(
+      (e) => !stoodFor.has(e) && eventIdentity(e) === eventIdentity(item),
+    );
+    if (mine) {
+      stoodFor.add(mine);
+      return;
+    }
+    const key = keyOf(item);
+    if (standing.has(key)) return;
+    standing.add(key);
+    written.push(
+      sourceDocumentId && item.source === source
+        ? { ...item, sourceDocumentId }
+        : item,
+    );
+  });
+  return [...kept, ...written];
 }
 
 function _cfileEnvironmentalExposures(exposures) {
@@ -456,29 +535,31 @@ function _mergeEvidence(vkb, vkbMergeData, sourceDocumentId) {
   vkb.evidence = vkb.evidence || [];
   const evidenceKey = (e) =>
     `${e.date || ""}|${normalizeConditionName(e.description || e.text || "")}`;
+  const fromCFile = vkbMergeData.evidence.filter(
+    (item) => item.source === CFILE_LEGACY_EVIDENCE_SOURCE,
+  );
+  const others = vkbMergeData.evidence.filter(
+    (item) => item.source !== CFILE_LEGACY_EVIDENCE_SOURCE,
+  );
+  if (sourceDocumentId) {
+    vkb.evidence = _replaceCFileEventSet(
+      vkb.evidence,
+      fromCFile,
+      CFILE_LEGACY_EVIDENCE_SOURCE,
+      sourceDocumentId,
+      evidenceKey,
+    );
+  }
   const existingEvidence = new Set(vkb.evidence.map(evidenceKey));
-  const claimed = new Set();
-  vkbMergeData.evidence.forEach((item) => {
-    if (
-      _updateEarlierCFileEvent(
-        vkb.evidence,
-        item,
-        CFILE_LEGACY_EVIDENCE_SOURCE,
-        sourceDocumentId,
-        claimed,
-      )
-    ) {
-      return;
-    }
+  (sourceDocumentId ? others : vkbMergeData.evidence).forEach((item) => {
     const key = evidenceKey(item);
     if (existingEvidence.has(key)) return;
     existingEvidence.add(key);
-    const written =
+    vkb.evidence.push(
       sourceDocumentId && !item.sourceDocumentId
         ? { ...item, sourceDocumentId }
-        : item;
-    claimed.add(written);
-    vkb.evidence.push(written);
+        : item,
+    );
   });
 }
 
@@ -550,30 +631,27 @@ function _mergeEvidenceTimeline(vkb, vkbMergeData, sourceDocumentId) {
   vkb.evidenceTimeline = vkb.evidenceTimeline || [];
   const timelineKey = (e) =>
     `${e.date || ""}|${(e.eventType || "").toLowerCase()}|${normalizeConditionName(e.description || "")}`;
+  const fromCFile = vkbMergeData.evidenceTimeline.filter(
+    (e) => e.source === CFILE_SUGGESTION_SOURCE,
+  );
+  const others = vkbMergeData.evidenceTimeline.filter(
+    (e) => e.source !== CFILE_SUGGESTION_SOURCE,
+  );
+  if (sourceDocumentId) {
+    vkb.evidenceTimeline = _replaceCFileEventSet(
+      vkb.evidenceTimeline,
+      fromCFile,
+      CFILE_SUGGESTION_SOURCE,
+      sourceDocumentId,
+      timelineKey,
+    );
+  }
   const existing = new Set(vkb.evidenceTimeline.map(timelineKey));
-  const claimed = new Set();
-  vkbMergeData.evidenceTimeline.forEach((e) => {
-    if (
-      _updateEarlierCFileEvent(
-        vkb.evidenceTimeline,
-        e,
-        CFILE_SUGGESTION_SOURCE,
-        sourceDocumentId,
-        claimed,
-      )
-    ) {
-      return;
-    }
+  (sourceDocumentId ? others : vkbMergeData.evidenceTimeline).forEach((e) => {
     const key = timelineKey(e);
-    if (!existing.has(key)) {
-      existing.add(key);
-      const written =
-        sourceDocumentId && e.source === CFILE_SUGGESTION_SOURCE
-          ? { ...e, sourceDocumentId }
-          : e;
-      claimed.add(written);
-      vkb.evidenceTimeline.push(written);
-    }
+    if (existing.has(key)) return;
+    existing.add(key);
+    vkb.evidenceTimeline.push(e);
   });
 }
 
