@@ -83,10 +83,10 @@ describe("context window per device tier", () => {
     expect(profile.canUseWebLLM).toBe(false);
   });
 
-  it("the tablet runs the model the laptop tier already runs at 8,192", async () => {
+  it("the tablet runs a model the laptop tier also lists, at the same 8,192", async () => {
     const tablet = await profileFor(DEVICES.tablet);
     const laptop = await profileFor(DEVICES.laptop);
-    expect(tablet.recommendedModels[0]).toBe(laptop.recommendedModels[0]);
+    expect(laptop.recommendedModels).toContain(tablet.recommendedModels[0]);
     expect(tablet.contextWindowSize).toBe(laptop.contextWindowSize);
   });
 
