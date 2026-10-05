@@ -100,6 +100,86 @@ describe("sameWords", () => {
     expect(sameWords("a - b", "a\n- b")).toBe(false);
     expect(sameWords("a - b", "a - b")).toBe(true);
   });
+
+  it("accepts a colon added to the end of a word", () => {
+    expect(sameWords("Time period one two", "Time period:\n- one\n- two")).toBe(
+      true,
+    );
+    expect(sameWords("Laos December 1", "Laos: December 1")).toBe(true);
+  });
+
+  it("rejects a colon that was dropped, moved or added on its own", () => {
+    expect(sameWords("Note: none", "Note none")).toBe(false);
+    expect(sameWords("a b", "a : b")).toBe(false);
+    expect(sameWords("a b", "a:: b")).toBe(false);
+    expect(sameWords("a b", ":a b")).toBe(false);
+  });
+});
+
+describe("structureText colons", () => {
+  it("ends a heading with a colon before its list", () => {
+    expect(
+      structureText("Intro. Time period first second", [
+        { at: "Time period", as: "line" },
+        { at: "first", as: "item", colon: true },
+        { at: "second", as: "item" },
+      ]),
+    ).toBe("Intro.\nTime period:\n- first\n- second");
+  });
+
+  it("puts a colon between a place and its dates on one line", () => {
+    expect(
+      structureText("Places Laos December 1, 1965, to September 30, 1969.", [
+        { at: "Laos", as: "item" },
+        { at: "December 1, 1965", as: "colon" },
+      ]),
+    ).toBe("Places\n- Laos: December 1, 1965, to September 30, 1969.");
+  });
+});
+
+describe("the PACT tables as the model reads them", () => {
+  const text = (id) => reference.entries.find((e) => e.id === id).text;
+
+  it("labels the two columns of the covered-Veteran table the way its rows are laid out", () => {
+    expect(text("pact-toxic")).toContain(
+      [
+        "Time period:",
+        "- 38 CFR 3.320 Locations",
+        "- 38 U.S.C. 1119 Locations",
+        "",
+        "Active service on or after August 2, 1990:",
+        "- Duty station in, including airspace above, Bahrain Iraq Kuwait",
+      ].join("\n"),
+    );
+    expect(text("pact-toxic")).toContain(
+      "Active service on or after September 11, 2001:\n- Duty station in, including airspace above, Afghanistan Djibouti Syria, or Uzbekistan.\n- Duty station in, including airspace above, Egypt Jordan Lebanon, or Yemen.",
+    );
+  });
+
+  it("puts each herbicide table label on its own line, above rows laid out the same way", () => {
+    expect(text("pact-herbicide")).toContain(
+      "\n\nPresumptive exposure provision applies to ...\nAuthority\n\nVeterans who served\n- in the Republic of Vietnam (RVN)",
+    );
+    expect(text("pact-herbicide")).toContain(
+      "\nDisability\nAuthority\n\n- Chloracne",
+    );
+  });
+
+  it("separates each herbicide location from its dates with a colon", () => {
+    const herbicide = text("pact-herbicide");
+    expect(herbicide).toContain(
+      "Veterans who performed covered service in/on ...: During the period ...",
+    );
+    for (const row of [
+      "the Veteran performed: January 9, 1962, to June 30, 1976.",
+      "- Laos: December 1, 1965, to September 30, 1969.",
+      "- Cambodia at Mimot or Krek, Kampong Cham Province: April 16, 1969, to April 30, 1969.",
+      "- Guam or American Samoa, or in the territorial waters thereof: January 9, 1962, to July 31, 1980.",
+      "- Johnston Atoll or on a ship that called at Johnston Atoll: January 1, 1972, to September 30, 1977.",
+    ]) {
+      expect(herbicide).toContain(row);
+    }
+  });
 });
 
 describe("structured PACT entries against their flattened source", () => {

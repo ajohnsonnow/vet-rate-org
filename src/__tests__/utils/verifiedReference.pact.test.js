@@ -103,7 +103,7 @@ describe("PACT Act entries on the on-device budget", () => {
     });
     expect(block.length).toBeLessThanOrEqual(ON_DEVICE);
     expect(block).toContain("A covered Veteran means any Veteran who");
-    expect(block).toContain("Active service on or after August 2, 1990\n- ");
+    expect(block).toContain("Active service on or after August 2, 1990:\n- ");
     expect(block).toContain("\n- chronic obstructive pulmonary disease\n");
     expect(block).not.toContain("Presumptive Herbicide Disabilities");
   });

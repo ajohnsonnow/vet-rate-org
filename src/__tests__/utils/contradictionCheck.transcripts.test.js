@@ -11,7 +11,7 @@ import { findContradictions } from "../../utils/contradictionCheck";
 import { detectReferenceTopics } from "../../utils/verifiedReference";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
-const LAST_REVIEWED_RUN = "run_2026-10-05_210108";
+const LAST_REVIEWED_RUN = "run_2026-10-05_221648";
 const ALL_TOPICS = [
   "secondary",
   "toxic-exposure",
@@ -21,6 +21,7 @@ const ALL_TOPICS = [
   "decision-review",
   "supplemental",
   "next-claim-step",
+  "intent-to-file",
 ];
 
 const golden = Object.fromEntries(
@@ -49,6 +50,7 @@ function shownAnswers() {
 }
 
 const conditionsOf = (record) => golden[record.id]?.conditions ?? null;
+const isDecoderCase = (record) => golden[record.id]?.entry === "decodeDecision";
 
 function hitsFor(record, topics) {
   const conditions = conditionsOf(record);
@@ -58,15 +60,28 @@ function hitsFor(record, topics) {
   }).map((hit) => `${record.run} ${record.id} ${hit.rule}`);
 }
 
+function decoderFieldHits(record) {
+  const decoded = JSON.parse(record.response);
+  return Object.entries(decoded).flatMap(([field, value]) =>
+    [value]
+      .flat()
+      .filter((text) => typeof text === "string")
+      .flatMap((text) => findContradictions(text, { topics: ALL_TOPICS }))
+      .map((hit) => `${record.run} ${record.id} ${field} ${hit.rule}`),
+  );
+}
+
 describe("contradiction rules over the recorded evaluation answers", () => {
   const answers = shownAnswers();
+  const prose = answers.filter((record) => !isDecoderCase(record));
 
   it("reads every answer that was shown to the user", () => {
-    expect(answers).toHaveLength(508);
+    expect(answers).toHaveLength(551);
+    expect(prose).toHaveLength(549);
   });
 
   it("flags only real contradictions, each on the topic of its own question", () => {
-    const flagged = answers.flatMap((record) =>
+    const flagged = prose.flatMap((record) =>
       hitsFor(
         record,
         detectReferenceTopics(record.input, record.toolId, {
@@ -77,25 +92,61 @@ describe("contradiction rules over the recorded evaluation answers", () => {
     expect(flagged).toEqual([
       "071859 a13 tdiu-from-percentages",
       "071859 a16 presumptive-needs-exposure-proof",
-      "071859 a18 higher-level-review-new-evidence",
       "074624 a13 tdiu-from-percentages",
       "081228 a25 tdiu-from-percentages",
       "090513 a16 presumptive-needs-exposure-proof",
       "094601 a16 presumptive-needs-exposure-proof",
       "094601 a26 higher-level-review-new-evidence",
+      "110055 a26 new-and-material-standard",
       "124154 a13 tdiu-from-percentages",
       "125630 a25 tdiu-from-percentages",
+      "125630 a26 new-and-material-standard",
       "135040 a13 tdiu-from-percentages",
+      "135040 a26 new-and-material-standard",
+      "135040 a26 intent-to-file-for-filed-claim",
       "135040 a29 secondary-barred",
+      "135908 a26 new-and-material-standard",
       "201248 a13 tdiu-from-percentages",
       "210108 a13 tdiu-from-percentages",
+      "210108 a26 new-and-material-standard",
+      "210108 a26 intent-to-file-for-filed-claim",
       "210108 a27 presumptive-needs-proof",
       "210108 a29 secondary-barred",
+      "221648 a26 new-and-material-standard",
+      "221648 a26 intent-to-file-for-filed-claim",
     ]);
   });
 
-  it("flags nothing more when every rule is applied to every answer", () => {
-    const flagged = answers.flatMap((record) => hitsFor(record, ALL_TOPICS));
-    expect(flagged).toHaveLength(16);
+  it("no longer reaches three real a18 contradictions, because a18 raises no topic", () => {
+    const a18 = prose
+      .filter((record) => record.id === "a18")
+      .flatMap((record) => hitsFor(record, ALL_TOPICS));
+    expect(a18).toEqual([
+      "071859 a18 higher-level-review-new-evidence",
+      "105010 a18 new-and-material-standard",
+      "110822 a18 new-and-material-standard",
+    ]);
+  });
+
+  it("would misfire on quoted legacy decisions if a rule ran outside its topic", () => {
+    const outside = prose
+      .flatMap((record) => hitsFor(record, ALL_TOPICS))
+      .filter((hit) => hit.includes(" a28 "));
+    expect(outside).toEqual([
+      "071859 a28 new-and-material-standard",
+      "074624 a28 new-and-material-standard",
+      "090513 a28 new-and-material-standard",
+      "094601 a28 new-and-material-standard",
+    ]);
+  });
+
+  it("flags the wrong filing instructions in the Decision Decoder's own fields", () => {
+    const flagged = answers.filter(isDecoderCase).flatMap(decoderFieldHits);
+    expect(flagged).toEqual([
+      "213230 t08 action_plan files-statement-of-the-case",
+      "213230 t08 action_plan higher-level-review-at-the-board",
+      "213230 t08 appeal_options files-statement-of-the-case",
+      "221648 t08 deadline_warning supplemental-claim-deadline",
+    ]);
   });
 });

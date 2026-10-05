@@ -18,6 +18,8 @@ const line = (at) => ({ at, as: "line" });
 const item = (at) => ({ at, as: "item" });
 const block = (at) => ({ at, as: "block" });
 const firstItem = (at) => ({ at, as: "firstItem" });
+const labelled = (at) => ({ at, as: "item", colon: true });
+const afterColon = (at) => ({ at, as: "colon" });
 const items = (...phrases) => phrases.map(item);
 
 export const MANUAL_TOPICS = {
@@ -40,12 +42,16 @@ export const MANUAL_TOPICS = {
     structure: [
       line("A covered Veteran means"),
       line("VA will presume BPOT exposure"),
-      line("Time period 38 CFR 3.320 Locations"),
+      // The table's header row, laid out like its rows: a label ending in a
+      // colon, then one item per column, in column order.
+      block("Time period"),
+      labelled("38 CFR 3.320 Locations"),
+      item("38 U.S.C. 1119 Locations"),
       block("Active service on or after August 2, 1990"),
-      item("Duty station in, including airspace above, Bahrain"),
+      labelled("Duty station in, including airspace above, Bahrain"),
       item("Duty station in, including airspace above, Somalia"),
       block("Active service on or after September 11, 2001"),
-      item("Duty station in, including airspace above, Afghanistan"),
+      labelled("Duty station in, including airspace above, Afghanistan"),
       item("Duty station in, including airspace above, Egypt"),
       block("Note:"),
     ],
@@ -118,7 +124,10 @@ export const MANUAL_TOPICS = {
     stopAt: [" Notes:", ...TOPIC_TAIL],
     structure: [
       line("Currently, the Department of Veterans Affairs"),
-      line("Presumptive exposure provision applies to"),
+      // Header row: each column label on its own line, as each row below is
+      // its text and then its authority.
+      block("Presumptive exposure provision applies to"),
+      line("Authority"),
       block("Veterans who served"),
       item("in the Republic of Vietnam (RVN)"),
       item("a unit that, as determined"),
@@ -127,14 +136,19 @@ export const MANUAL_TOPICS = {
       block("Veterans who served aboard a vessel"),
       line("38 U.S.C. 1116A"),
       block("locations during specific time frames"),
+      // Inner table: place, then its period, with a colon between them.
       line("Veterans who performed covered service in/on"),
-      ...items(
-        "Thailand at any United States or Royal Thai base",
-        "Laos December 1, 1965",
-        "Cambodia at Mimot or Krek",
-        "Guam or American Samoa",
-        "Johnston Atoll or on a ship",
-      ),
+      afterColon("During the period"),
+      item("Thailand at any United States or Royal Thai base"),
+      afterColon("January 9, 1962, to June 30, 1976"),
+      item("Laos"),
+      afterColon("December 1, 1965"),
+      item("Cambodia at Mimot or Krek"),
+      afterColon("April 16, 1969"),
+      item("Guam or American Samoa"),
+      afterColon("January 9, 1962, to July 31, 1980"),
+      item("Johnston Atoll or on a ship"),
+      afterColon("January 1, 1972"),
       line("38 U.S.C. 1116"),
     ],
   },
@@ -145,7 +159,8 @@ export const MANUAL_TOPICS = {
     stopAt: TOPIC_TAIL,
     structure: [
       line("The table below lists the disabilities"),
-      line("Disability Authority"),
+      line("Disability"),
+      line("Authority"),
       firstItem("Chloracne or other acne-form disease"),
       ...items(
         "soft-tissue sarcoma, other than",

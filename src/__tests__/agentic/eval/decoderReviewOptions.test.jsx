@@ -10,7 +10,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadGoldenSet } from "../../../../scripts/eval/lib/goldenSet.js";
 import { TOOL_ENTRIES } from "../../../../scripts/eval/lib/toolEntries.js";
-import DecisionReviewOptions from "../../../components/DecisionReviewOptions";
+import DecisionReviewOptions, {
+  FieldCorrections,
+} from "../../../components/DecisionReviewOptions";
 import { REVIEW_OPTIONS } from "../../../utils/reviewOptions";
 
 vi.mock("../../../utils/unifiedAIService", async (importOriginal) => {
@@ -154,5 +156,73 @@ describe("what the veteran sees for t08", () => {
       screen.queryByRole("list", { name: "Corrections to the plan above" }),
     ).toBeNull();
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
+  });
+});
+
+describe("t08 with the deadline the 22:16 graded run gave", () => {
+  const DEADLINE =
+    "You have one year from the date of this letter to file a Supplemental Claim. If you do not file a Supplemental Claim within one year, you will likely lose the opportunity to appeal the denial of the knee strain.";
+  const REPLY = {
+    ...MODEL_REPLY,
+    action_plan: ["File a Supplemental Claim (VA Form 20-0995)."],
+    appeal_options: undefined,
+    deadline_warning: DEADLINE,
+  };
+
+  it("ties the correction to the field that carried the wrong deadline", async () => {
+    const { data } = await decodeT08(REPLY);
+
+    expect(data.deadline_warning).toBe(DEADLINE);
+    expect(data.review_corrections).toHaveLength(1);
+    expect(data.review_corrections[0]).toMatchObject({
+      field: "deadline_warning",
+      rule: "supplemental-claim-deadline",
+    });
+    expect(data.review_corrections[0].note).toContain(
+      '38 CFR § 3.2500(a)(2) says: "(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501."',
+    );
+  });
+
+  it("shows the correction beside that field and nowhere else", async () => {
+    const { data } = await decodeT08(REPLY);
+    render(
+      <div>
+        <p>{data.deadline_warning}</p>
+        <FieldCorrections
+          corrections={data.review_corrections}
+          field="deadline_warning"
+        />
+        <FieldCorrections
+          corrections={data.review_corrections}
+          field="action_plan"
+        />
+      </div>,
+    );
+
+    const notes = screen.getAllByRole("note", {
+      name: "Correction from Vet-Rate",
+    });
+    expect(notes).toHaveLength(1);
+    expect(notes[0].textContent).toContain(
+      "this answer puts a deadline on filing a Supplemental Claim",
+    );
+    expect(notes[0].textContent).toContain("At any time after VA issues");
+  });
+
+  it("lists it with the review options as well", async () => {
+    const { data } = await decodeT08(REPLY);
+    render(<DecisionReviewOptions corrections={data.review_corrections} />);
+
+    expect(
+      screen.getByRole("list", { name: "Corrections to the plan above" })
+        .textContent,
+    ).toContain("puts a deadline on filing a Supplemental Claim");
+  });
+
+  it("renders nothing beside a field with no correction", () => {
+    const { container } = render(
+      <FieldCorrections corrections={undefined} field="plain_english" />,
+    );
+    expect(container.textContent).toBe("");
   });
 });

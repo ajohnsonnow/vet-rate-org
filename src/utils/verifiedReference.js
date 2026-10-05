@@ -9,6 +9,8 @@
  */
 
 import reference from "../data/verifiedReference.json";
+import { resolveAgentForTool } from "./agentBoundaries";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 
 const ENTRIES = new Map(reference.entries.map((entry) => [entry.id, entry]));
 
@@ -47,6 +49,10 @@ const HIGH_RATING = /\b(?:60|70|80|90) ?(?:%|percent)/i;
 const PLANNING = /\b(?:plan|next|strategy)\b/i;
 const NEXT_STEP =
   /\bnext (?:claim )?(?:steps?|actions?)\b|\bnext round of claims\b|\bwhat should i (?:do|file) next\b/i;
+// "What should my next claim action be?" alone gives the model nothing to
+// apply the filing rules to. The question has to say where the claim stands.
+const CLAIM_STATE =
+  /\b(?:denied|denial|pending|granted|rated|rating|decision|appeal\w*|evidence|increase)\b/i;
 
 const REVIEW_TERMS =
   /\bhigher[- ]level review\b|\bHLR\b|\bboard appeal\b|\bboard of veterans\b|\bnotice of disagreement\b|\bstatement of the case\b|\bdecision review\b/i;
@@ -77,7 +83,9 @@ const isHerbicideQuestion = (text, toolId) =>
 
 // A rating tool's id alone says nothing about the question: the same tool
 // receives requests to do something else entirely. The text applies when the
-// question asks about combining, or the call carries ratings to combine.
+// question asks about combining, or the call carries ratings to combine. A
+// writing tool asked to combine ratings with none supplied is being asked to
+// do another agent's job, and gets no rating text to do it with.
 const COMBINED_RATING =
   /\bcombined (?:rating|evaluation|disability|percentage)\b|\bcombin(?:e|es|ing) (?:my |the |these |those )?(?:ratings|disabilities|percentages)\b|\bva math\b|\b4\.25\b/i;
 
@@ -115,9 +123,7 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "decision-review",
-    when: (text, toolId) =>
-      anyMatch(text, REVIEW_TERMS, APPEAL_WORDS) ||
-      toolId === "decision-decoder",
+    when: (text) => anyMatch(text, REVIEW_TERMS, APPEAL_WORDS),
     entries: [
       "cfr-3.2500-a",
       "review-forms",
@@ -143,9 +149,9 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "combined-rating",
-    when: (text, _toolId, { conditions }) =>
-      COMBINED_RATING.test(text) ||
-      (Array.isArray(conditions) && conditions.length > 0),
+    when: (text, toolId, { conditions }) =>
+      (Array.isArray(conditions) && conditions.length > 0) ||
+      (COMBINED_RATING.test(text) && resolveAgentForTool(toolId) !== "writer"),
     entries: ["cfr-4.25-b", "cfr-4.25", "cfr-4.25-a"],
   },
   {
@@ -169,7 +175,7 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "next-claim-step",
-    pattern: NEXT_STEP,
+    when: (text) => NEXT_STEP.test(text) && CLAIM_STATE.test(text),
     entries: ["cfr-3.155-b", "cfr-3.2501"],
   },
   {
@@ -182,15 +188,27 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
 const topicApplies = (topic, text, toolId, context) =>
   topic.when ? topic.when(text, toolId, context) : topic.pattern.test(text);
 
+// A call declared as carrying a document sends the document and the tool's
+// own instructions, not a question. Their wording says nothing reliable about
+// what the veteran needs ("effective date" in a prompt template is not a
+// question about Intent to File), so only the tool decides the topic.
+const DOCUMENT_TOOL_TOPICS = Object.freeze({
+  "decision-decoder": ["decision-review"],
+});
+
 /**
  * Ids of the topics a request raises, in priority order. `conditions` are
- * the structured ratings a call carries, when it carries any.
+ * the structured ratings a call carries, when it carries any; `dataClass` is
+ * the call's declared data class.
  */
 export function detectReferenceTopics(
   question,
   toolId = null,
-  { conditions = null } = {},
+  { conditions = null, dataClass = null } = {},
 ) {
+  if (dataClass === AI_DATA_CLASS.DOCUMENT) {
+    return [...(DOCUMENT_TOOL_TOPICS[toolId] ?? [])];
+  }
   const text = String(question ?? "");
   return VERIFIED_REFERENCE_TOPICS.filter((topic) =>
     topicApplies(topic, text, toolId, { conditions }),
@@ -245,11 +263,14 @@ function formatEntry(entry) {
  */
 export function selectVerifiedEntries(
   question,
-  { toolId = null, maxChars, conditions = null },
+  { toolId = null, maxChars, conditions = null, dataClass = null },
 ) {
   let remaining = maxChars - HEADER.length - FOOTER.length;
   const picked = [];
-  const topics = detectReferenceTopics(question, toolId, { conditions });
+  const topics = detectReferenceTopics(question, toolId, {
+    conditions,
+    dataClass,
+  });
   for (const id of rankEntryIds(topics)) {
     const entry = ENTRIES.get(id);
     const size = formatEntry(entry).length;

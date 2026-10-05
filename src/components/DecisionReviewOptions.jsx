@@ -12,15 +12,45 @@ const Quotation = ({ quote }) => (
 );
 
 /**
+ * The app's corrections for one field of the decoded result, shown directly
+ * under that field so a wrong instruction and its correction are read
+ * together. `corrections` are { field, rule, note }.
+ */
+export function FieldCorrections({ corrections = [], field }) {
+  const own = (corrections ?? []).filter((c) => c.field === field);
+  if (own.length === 0) return null;
+  return (
+    <div className="mt-2 space-y-2">
+      {own.map((correction) => (
+        <p
+          key={correction.rule}
+          role="note"
+          aria-label="Correction from Vet-Rate"
+          className="p-3 rounded-lg bg-white dark:bg-gray-800 border-2 border-yellow-500 text-sm text-gray-900 dark:text-gray-100"
+        >
+          {correction.note}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+const onePerRule = (corrections) =>
+  corrections.filter(
+    (c, i) => corrections.findIndex((other) => other.rule === c.rule) === i,
+  );
+
+/**
  * The review options a veteran has after a decision, shown from the bundled
  * regulation text. Nothing here is written by the model: `corrections` are
- * the app's notes ({ rule, note }) on wrong filing instructions found in the
- * model's own sections of the result.
+ * the app's notes ({ field, rule, note }) on wrong filing instructions found
+ * in the model's own sections of the result, listed here once per rule.
  */
 export default function DecisionReviewOptions({
   options = REVIEW_OPTIONS,
-  corrections = [],
+  corrections: allCorrections = [],
 }) {
+  const corrections = onePerRule(allCorrections ?? []);
   return (
     <section
       aria-labelledby="decision-review-options-heading"

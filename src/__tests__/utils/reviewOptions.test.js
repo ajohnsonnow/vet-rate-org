@@ -27,22 +27,46 @@ describe("withVerifiedReviewOptions", () => {
     });
   });
 
-  it("notes each kind of wrong filing instruction once, wherever it appears", () => {
+  it("notes a wrong filing instruction once for each field it appears in", () => {
     const out = withVerifiedReviewOptions({
       plain_english:
         "You must file a Statement of the Case to keep the claim alive.",
       action_plan: [
         "Submit a Statement of the Case to the regional office.",
+        "Then file a Statement of the Case again if needed.",
         "Request a Higher-Level Review and include any new evidence you have.",
       ],
     });
-    expect(out.review_corrections.map((c) => c.rule)).toEqual([
-      "files-statement-of-the-case",
-      "higher-level-review-new-evidence",
+    expect(out.review_corrections.map((c) => [c.field, c.rule])).toEqual([
+      ["plain_english", "files-statement-of-the-case"],
+      ["action_plan", "files-statement-of-the-case"],
+      ["action_plan", "higher-level-review-new-evidence"],
     ]);
-    expect(out.review_corrections[1].note).toContain(
+    expect(out.review_corrections[2].note).toContain(
       "the higher-level adjudicator may not consider additional evidence",
     );
+  });
+
+  it("checks every text field the model returns, not a fixed list", () => {
+    const out = withVerifiedReviewOptions({
+      decision_type: "Full Denial",
+      deadline_warning:
+        "You have one year from the date of this letter to file a Supplemental Claim.",
+      next_steps_summary:
+        "File a Supplemental Claim with new and material evidence.",
+      extra: { nested: "ignored" },
+    });
+    expect(out.review_corrections.map((c) => [c.field, c.rule])).toEqual([
+      ["deadline_warning", "supplemental-claim-deadline"],
+      ["next_steps_summary", "new-and-material-standard"],
+    ]);
+  });
+
+  it("never checks the verified options it attaches", () => {
+    const out = withVerifiedReviewOptions({
+      review_options: "File a Statement of the Case with the Board.",
+    });
+    expect(out).not.toHaveProperty("review_corrections");
   });
 
   it("returns anything that is not a decoded object unchanged", () => {

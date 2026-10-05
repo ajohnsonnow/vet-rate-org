@@ -3,7 +3,9 @@ import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
-import DecisionReviewOptions from "./DecisionReviewOptions";
+import DecisionReviewOptions, {
+  FieldCorrections,
+} from "./DecisionReviewOptions";
 import { decodeDecision, isAIAvailable } from "../utils/aiStatementHelper";
 import { getAIStatus } from "../utils/unifiedAIService";
 import {
@@ -1440,6 +1442,10 @@ const PlainEnglishSection = ({ results }) => {
       <p className="text-blue-700 dark:text-blue-300">
         {results.plain_english}
       </p>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="plain_english"
+      />
     </div>
   );
 };
@@ -1455,6 +1461,10 @@ const VaReasoningSection = ({ results }) => {
       <p className="text-sm text-gray-700 dark:text-gray-300">
         {results.va_reasoning}
       </p>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="va_reasoning"
+      />
     </div>
   );
 };
@@ -1483,6 +1493,10 @@ const FavorableFindingsSection = ({ results }) => {
           </li>
         ))}
       </ul>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="favorable_findings"
+      />
     </div>
   );
 };
@@ -1507,6 +1521,10 @@ const MissingElementsSection = ({ results }) => {
           </li>
         ))}
       </ul>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="missing_elements"
+      />
     </div>
   );
 };
@@ -1531,6 +1549,10 @@ const ActionPlanSection = ({ results }) => {
           </li>
         ))}
       </ol>
+      <FieldCorrections
+        corrections={results.review_corrections}
+        field="action_plan"
+      />
     </div>
   );
 };
@@ -1549,6 +1571,10 @@ const DeadlineWarningSection = ({ results }) => {
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
             {results.deadline_warning}
           </p>
+          <FieldCorrections
+            corrections={results.review_corrections}
+            field="deadline_warning"
+          />
         </div>
       </div>
     </div>

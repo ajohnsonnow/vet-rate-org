@@ -93,10 +93,10 @@ describe("verifiedReference.json PACT Act lists and forms", () => {
       text.indexOf(TOXIC_LIST),
     );
     expect(text).toContain(
-      "Active service on or after August 2, 1990\n- Duty station in, including airspace above, Bahrain Iraq Kuwait",
+      "Active service on or after August 2, 1990:\n- Duty station in, including airspace above, Bahrain Iraq Kuwait",
     );
     expect(text).toContain(
-      "Active service on or after September 11, 2001\n- Duty station in, including airspace above, Afghanistan",
+      "Active service on or after September 11, 2001:\n- Duty station in, including airspace above, Afghanistan",
     );
     expect(text).toContain("\n- glioblastoma\n");
     expect(text).toContain("\n- myelofibrosis.");
@@ -110,7 +110,7 @@ describe("verifiedReference.json PACT Act lists and forms", () => {
     );
     expect(text).toContain("\n- in the Republic of Vietnam (RVN)");
     expect(text).toContain(
-      "the Veteran performed January 9, 1962, to June 30, 1976.\n- Laos December 1, 1965, to September 30, 1969.",
+      "the Veteran performed: January 9, 1962, to June 30, 1976.\n- Laos: December 1, 1965, to September 30, 1969.",
     );
     expect(text).toContain("\n- hypertension.\n38 U.S.C. 1116");
   });

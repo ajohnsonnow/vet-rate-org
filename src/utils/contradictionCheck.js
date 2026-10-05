@@ -81,8 +81,28 @@ const REVIEW_SENT_TO_BOARD =
 const BOARD_ASKED_FOR_REVIEW =
   /\bboard\b(?:(?! or )[^.,;]){0,60}\b(?:to request|for|conducts?|performs?) a higher[- ]level review\b/i;
 
+const SUPPLEMENTAL_CLAIM = /\bsupplemental claims?\b/i;
+const YEAR_TO_FILE =
+  /\b(?:one|1) year\b[^.]{0,80}\bto file a supplemental claim\b|\bdeadline to file a supplemental claim\b/i;
+const MUST_FILE_WITHIN_A_YEAR =
+  /\bsupplemental claims?\b[^.]{0,20}\b(?:must|has to|have to|needs to) be filed within (?:one|1) year\b/i;
+const NOT_FILED_WITHIN_A_YEAR =
+  /\b(?:do not|don't|does not|fail to|fails to) file a supplemental claim within (?:one|1) year\b/i;
+const DATE_NOT_DEADLINE =
+  /\beffective date\b|\bback ?pay\b|\bany time\b|\bmore than\b|\bcontinuous/i;
+
+const NEW_AND_MATERIAL = /\bnew and material\b/i;
+const FORMER_STANDARD =
+  /\b(?:previous|former|formerly|old|older|legacy|replaced|no longer|used to|lower bar|higher (?:bar|threshold))\b/i;
+
+const INTENT_TO_FILE = /\bintent to file\b|\bITF\b/i;
+const FOR_PENDING_CLAIMS = /\bfor (?:\w+ ){0,5}(?:pending|existing) claims?\b/i;
+const FOR_CLAIMS_ALREADY_FILED =
+  /\bfor (?:\w+ )?claims? (?:\w+ ){0,3}already (?:filed|pending)\b/i;
+
 const PACT_TOPICS = ["toxic-exposure", "herbicide", "pact-act"];
 const REVIEW_TOPICS = ["decision-review", "supplemental", "next-claim-step"];
+const FILING_TOPICS = [...REVIEW_TOPICS, "intent-to-file"];
 
 /**
  * One rule per contradiction. `topics` are the verified-reference topics the
@@ -185,6 +205,41 @@ const RULES = [
     says: "sends a higher-level review to the Board, but they are separate review options",
     correction: () => "review-filing",
   },
+  {
+    // Filing inside the year keeps the effective date (38 CFR 3.2500(h)), so
+    // a sentence about the date is not a sentence about a deadline.
+    id: "supplemental-claim-deadline",
+    topics: REVIEW_TOPICS,
+    matches: (sentence) =>
+      SUPPLEMENTAL_CLAIM.test(sentence) &&
+      anyMatch(
+        sentence,
+        YEAR_TO_FILE,
+        MUST_FILE_WITHIN_A_YEAR,
+        NOT_FILED_WITHIN_A_YEAR,
+      ) &&
+      !DATE_NOT_DEADLINE.test(sentence),
+    says: "puts a deadline on filing a Supplemental Claim",
+    correction: () => "supplemental-any-time",
+  },
+  {
+    id: "new-and-material-standard",
+    topics: REVIEW_TOPICS,
+    matches: (sentence) =>
+      NEW_AND_MATERIAL.test(sentence) && !FORMER_STANDARD.test(sentence),
+    says: 'gives "new and material" evidence as the test, which is the previous standard',
+    correction: () => "new-and-relevant",
+  },
+  {
+    id: "intent-to-file-for-filed-claim",
+    topics: FILING_TOPICS,
+    matches: (sentence) =>
+      INTENT_TO_FILE.test(sentence) &&
+      anyMatch(sentence, FOR_PENDING_CLAIMS, FOR_CLAIMS_ALREADY_FILED) &&
+      !NEGATED.test(sentence.replace(/\bnot yet filed an intent\b/i, "")),
+    says: "recommends an Intent to File for a claim that is already filed",
+    correction: () => "intent-to-file-purpose",
+  },
 ];
 
 export const CONTRADICTION_RULE_IDS = RULES.map((rule) => rule.id);
@@ -250,6 +305,7 @@ export function flagContradictions(result, options = {}, prompt = "") {
   if (options.responseFormat || looksStructured(text)) return result;
   const topics = detectReferenceTopics(prompt, options.toolId, {
     conditions: options.conditions,
+    dataClass: options.dataClass,
   });
   const hits = findContradictions(text, {
     topics,
