@@ -119,9 +119,9 @@ describe("Agentic harness - system-prompt fingerprints", () => {
     // Rotated for S41's bilateral-calculator-grounding hardening (see
     // CALCULATION BOUNDARY / BILATERAL PAIRING clauses in diamondSwarm.js) -
     // auditor and rater prompts changed, writer did not.
-    auditor: "1d990dbb79f92b6733fbbd18dadd72619a65371cc6732975345699c4801e6dc4",
-    writer: "1ace5ae71d6dafdd7591cac5134aa0f916b9267fc7a18c4c5422f8bb6e53c366",
-    rater: "c74d0d41843a3761eb56e56152465769787a19aeac778ac930e8a0fe27749cbc",
+    auditor: "322920644cccbb5c4384754930ba2d0b2d59b997719ace9eb2fd463de0bcb680",
+    writer: "421f798d6b9baab3ec1504db45562a219d6dfd3ea216c6d309d37fb8300c3c96",
+    rater: "53275db6252410e7dc05b2292509464668ecd1443748b0ac7ea3341f88d20ade",
   };
 
   it("auditor prompt fingerprint is stable", () => {
@@ -167,6 +167,19 @@ describe("Agentic harness - contract clauses present in prompts", () => {
     expect(p).toMatch(/bilateral factor/i);
     expect(p).toMatch(/38 CFR Part 4/);
   });
+});
+
+describe("Agentic harness - reference-material rule present in prompts", () => {
+  it.each(["AUDITOR", "WRITER", "RATER"])(
+    "%s treats retrieved text as general law, not the veteran's records, and never names it",
+    (key) => {
+      const p = SWARM_AGENTS[key].systemPrompt;
+      expect(p).toMatch(
+        /general legal material, not (the|this) veteran's records/,
+      );
+      expect(p).toMatch(/never call it their documents or name it "DKB"/);
+    },
+  );
 });
 
 describe("Agentic harness - missing-material rule present in prompts", () => {

@@ -1452,6 +1452,8 @@ export async function searchDKB(query, topK = 10) {
   return result;
 }
 
+const DKB_REFERENCE_NOTICE = `General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents, and never call it "DKB" or "Diamond Knowledge Base"; say "VA regulations and guidance".`;
+
 /**
  * Build DKB context string for injection into AI prompts
  * This makes Gemini "smart" on our validated VA data
@@ -1482,7 +1484,7 @@ export async function buildDKBContext(query, options = {}) {
   }
 
   let context = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
-The following information comes from Vet-Rate.org's validated Diamond Knowledge Base.
+${DKB_REFERENCE_NOTICE}
 Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
 Use this data to provide accurate, regulation-based answers. If none of the
 entries below address the question, say so explicitly instead of answering
@@ -1616,7 +1618,7 @@ function formatShardPassage(chunk, text, includeSourceUrl) {
 
 function shardContextHeader(labels) {
   return `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
-The following information was retrieved for this question from Vet-Rate.org's Diamond Knowledge Base.
+${DKB_REFERENCE_NOTICE}
 Sources retrieved: ${labels.join("; ")}.
 Use this data to provide accurate, regulation-based answers. If none of the
 entries below address the question, say so explicitly instead of answering

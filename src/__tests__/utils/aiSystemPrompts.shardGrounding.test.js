@@ -47,7 +47,7 @@ const shardChunk = (overrides = {}) => ({
 });
 
 const LEGACY_HEADER = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
-The following information comes from Vet-Rate.org's validated Diamond Knowledge Base.
+General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents, and never call it "DKB" or "Diamond Knowledge Base"; say "VA regulations and guidance".
 Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
 Use this data to provide accurate, regulation-based answers. If none of the
 entries below address the question, say so explicitly instead of answering
@@ -182,6 +182,24 @@ describe("flag on (includeShards true)", () => {
     expect(out).not.toContain("BVA decisions");
     expect(out).not.toContain("PACT Act");
     expect(out).not.toContain("OGC precedent opinions");
+  });
+
+  it("header says the block is general reference material, not the veteran's records", async () => {
+    queryCorpusMock.mockResolvedValue({ chunks: [shardChunk()] });
+    const out = await buildDKBContext(nextQuery("header-notice"), opts());
+
+    expect(out).toContain(
+      "General legal reference material from Vet-Rate.org.",
+    );
+    expect(out).toContain("not this veteran's records");
+    expect(out).toContain("the user did not provide it");
+    expect(out).toContain('never call it "DKB"');
+    expect(out).not.toContain("Diamond Knowledge Base.");
+    expect(out).toContain("=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===");
+    expect(out).toContain("=== END DKB CONTEXT ===");
+    expect(out).toMatch(
+      /\[\d+ relevant knowledge base entries provided: \d+ retrieved from the full corpus, \d+ curated DKB entries\]/,
+    );
   });
 
   it("header drops the curated label when no flat entry made it in", async () => {
