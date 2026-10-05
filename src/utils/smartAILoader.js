@@ -7,6 +7,11 @@
 import { getToolRecommendation } from "./llmRecommendations";
 import { isMobilePhone, isTabletDevice } from "./persistentStorage";
 import { getAIStatus } from "./unifiedAIService";
+import {
+  describeDeviceModel,
+  getCachedDeviceProfile,
+} from "./deviceCapabilityDetector";
+import { formatDownloadSize } from "./localModelLabels";
 
 /**
  * Get device type
@@ -17,49 +22,47 @@ export const getDeviceType = () => {
   return "desktop";
 };
 
+const FALLBACK_ROLE = {
+  id: "diamond-auditor",
+  name: "CWO3 HAWKEYE",
+  reason: "Balanced performance for general tasks",
+};
+
+const describeLoadedModel = (deviceModel) =>
+  deviceModel
+    ? ` On this device it runs ${deviceModel.displayName} (${formatDownloadSize(deviceModel)}). It is a one-time download kept on your device.`
+    : "";
+
 /**
- * Get the perfect model for this device and tool
+ * Get the role and on-device model for this device and tool.
+ * The role (id, name) comes from the tool recommendation; the model is the
+ * first entry of the device profile's recommendedModels, the same list
+ * initializeSwarm loads from, so the button and the swarm cannot disagree.
  * @param {string} toolId - The tool being used (e.g., 'nexus-builder')
- * @returns {Object} Model recommendation { id, name, reason }
+ * @returns {Object} Recommendation { id, name, reason, deviceModel }
  */
 export const getRecommendedModelForDevice = (toolId) => {
-  const deviceType = getDeviceType();
   const toolRec = getToolRecommendation(toolId);
+  const primaryModel = toolRec?.primary;
+  const deviceModel = describeDeviceModel(getCachedDeviceProfile());
 
-  if (!toolRec) {
-    // Default fallback
-    return {
-      id: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-      name: "CWO3 HAWKEYE (3B)",
-      reason: "Balanced performance for general tasks",
-    };
-  }
-
-  // Use primary recommendation (structure is toolRec.primary, not mobile/desktop)
-  const primaryModel = toolRec.primary;
   if (!primaryModel?.modelId) {
-    // Fallback if primary doesn't have modelId
     return {
-      id: "Qwen2.5-3B-Instruct-q4f32_1-MLC",
-      name: "CWO3 HAWKEYE (3B)",
-      reason: "Balanced performance for general tasks",
+      ...FALLBACK_ROLE,
+      reason: FALLBACK_ROLE.reason + "." + describeLoadedModel(deviceModel),
+      deviceModel,
     };
   }
 
-  // Mobile/Tablet: Still use the primary model but note the device context
-  if (deviceType === "mobile" || deviceType === "tablet") {
-    return {
-      id: primaryModel.modelId,
-      name: primaryModel.modelName || primaryModel.modelId,
-      reason: `Optimized for ${toolRec.name}: ${primaryModel.reason || "Recommended model"}`,
-    };
-  }
-
-  // Desktop: Use primary model
+  const prefix =
+    getDeviceType() === "desktop" ? "Recommended for" : "Optimized for";
+  const fallbackReason =
+    prefix === "Recommended for" ? "Best match" : "Recommended model";
   return {
     id: primaryModel.modelId,
     name: primaryModel.modelName || primaryModel.modelId,
-    reason: `Recommended for ${toolRec.name}: ${primaryModel.reason || "Best match"}`,
+    reason: `${prefix} ${toolRec.name}: ${primaryModel.reason || fallbackReason}${describeLoadedModel(deviceModel)}`,
+    deviceModel,
   };
 };
 

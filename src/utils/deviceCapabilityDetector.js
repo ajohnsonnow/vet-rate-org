@@ -20,6 +20,14 @@
 const GPU_HIGH_THRESHOLD = 1_500_000_000; // ~1.5 GB maxBufferSize
 const GPU_MID_THRESHOLD = 200_000_000; // ~200 MB maxBufferSize
 
+// Also the list diamondSwarm tries when a profile lists none.
+export const DESKTOP_HIGH_MODELS = [
+  "Qwen3.5-4B-q4f16_1-MLC",
+  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // proven ~55 s/chunk on 4080 SUPER (stream:false)
+  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // f32 fallback
+  "Llama-3.2-3B-Instruct-q4f32_1-MLC", // alternative architecture
+];
+
 let _cachedProfile = null;
 
 // --- WebGPU probe ---
@@ -156,12 +164,7 @@ function _configForTier(tier) {
   switch (tier) {
     case "desktop-high":
       return {
-        recommendedModels: [
-          "Qwen3.5-4B-q4f16_1-MLC",
-          "Qwen2.5-3B-Instruct-q4f16_1-MLC", // proven ~55 s/chunk on 4080 SUPER (stream:false)
-          "Qwen2.5-3B-Instruct-q4f32_1-MLC", // f32 fallback
-          "Llama-3.2-3B-Instruct-q4f32_1-MLC", // alternative architecture
-        ],
+        recommendedModels: [...DESKTOP_HIGH_MODELS],
         contextWindowSize: 12288, // 28K-char chunk (~8235 tokens) + system prompt (~600) + 2048 output = ~10883; needs KV cache > 10883
         maxChunkChars: 28000,
         maxOutputTokens: 2048,

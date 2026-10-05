@@ -3462,10 +3462,12 @@ Choose a model that fits your GPU memory.
 
 ### 4 GB VRAM (Entry Gaming GPU)
 - VetRate models ✓ (1.8 GB) - RECOMMENDED
-- Qwen 2.5 3B (2.0 GB)
+- Qwen 3.5 2B (laptops): about 2.2 GB GPU memory, about 1.1 GB download
+- Qwen 2.5 3B (fallback): about 2.5 GB GPU memory, about 1.8 GB download
 - VetRate models (2.3 GB)
 
 ### 6 GB VRAM (GTX 1060, RTX 3060)
+- Qwen 3.5 4B (desktops): about 3.9 GB GPU memory, about 2.4 GB download
 - VetRate Auditor ⭐ (3.5 GB) - BEST VALUE
 - VetRate Vision Phi 👁️ (3.5 GB)
 

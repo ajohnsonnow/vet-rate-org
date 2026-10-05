@@ -1,21 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-const engineApi = vi.hoisted(() => ({ create: vi.fn() }));
+const engineApi = vi.hoisted(() => ({
+  create: vi.fn(),
+  profile: vi.fn(),
+}));
 vi.mock("@mlc-ai/web-llm", () => ({
   CreateWebWorkerMLCEngine: engineApi.create,
   WebWorkerMLCEngineHandler: class {},
 }));
 vi.mock("./deviceCapabilityDetector", async (importOriginal) => ({
   ...(await importOriginal()),
-  detectDeviceCapabilities: vi.fn().mockResolvedValue({
-    canUseWebLLM: true,
-    tier: "desktop-high",
-    recommendedModels: [
-      "Qwen3.5-4B-q4f16_1-MLC",
-      "Qwen2.5-3B-Instruct-q4f16_1-MLC",
-    ],
-    contextWindowSize: 12288,
-  }),
+  detectDeviceCapabilities: engineApi.profile,
 }));
 
 const terminate = vi.fn();
@@ -28,9 +23,20 @@ class FakeWorker {
 const { initializeSwarm } = await import("./diamondSwarm.js");
 const { resetEngineLoadStallBudget } = await import("./engineLoadStall.js");
 
+const TIER_PROFILE = {
+  canUseWebLLM: true,
+  tier: "desktop-high",
+  recommendedModels: [
+    "Qwen3.5-4B-q4f16_1-MLC",
+    "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+  ],
+  contextWindowSize: 12288,
+};
+
 beforeEach(() => {
   resetEngineLoadStallBudget();
   vi.clearAllMocks();
+  engineApi.profile.mockResolvedValue(TIER_PROFILE);
   vi.spyOn(console, "warn").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
   vi.stubGlobal("Worker", FakeWorker);
@@ -73,5 +79,23 @@ describe("model fallback order", () => {
     engineApi.create.mockResolvedValueOnce({ chat: {} });
     await expect(initializeSwarm({ modelId: "auditor" })).resolves.toBe(true);
     expect(engineApi.create).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("default model list when a profile lists none", () => {
+  it("is the desktop-high list, so no second list can drift", async () => {
+    const { DESKTOP_HIGH_MODELS } = await import("./deviceCapabilityDetector");
+    engineApi.profile.mockResolvedValue({
+      ...TIER_PROFILE,
+      recommendedModels: [],
+    });
+    engineApi.create.mockRejectedValue(new Error("no"));
+
+    await expect(initializeSwarm({ modelId: "auditor" })).resolves.toBe(false);
+
+    expect(engineApi.create.mock.calls.map((call) => call[1])).toEqual(
+      DESKTOP_HIGH_MODELS,
+    );
+    expect(DESKTOP_HIGH_MODELS[0]).toBe("Qwen3.5-4B-q4f16_1-MLC");
   });
 });

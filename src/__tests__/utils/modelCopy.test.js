@@ -20,4 +20,18 @@ describe("About and User Manual name the on-device models", () => {
     );
     expect(manual).toMatch(/one-time download kept on your device/);
   });
+
+  it("the manual's VRAM list gives GPU memory and download size separately, with no stale 2.0 GB Qwen 2.5 line", () => {
+    const manual = read("../../components/UserManual.jsx");
+    expect(manual).not.toMatch(/Qwen 2\.5 3B \(2\.0 GB\)/);
+    expect(manual).toMatch(
+      /Qwen 3\.5 2B \(laptops\): about 2\.2 GB GPU memory, about 1\.1 GB download/,
+    );
+    expect(manual).toMatch(
+      /Qwen 3\.5 4B \(desktops\): about 3\.9 GB GPU memory, about 2\.4 GB download/,
+    );
+    expect(manual).toMatch(
+      /Qwen 2\.5 3B \(fallback\): about 2\.5 GB GPU memory, about 1\.8 GB download/,
+    );
+  });
 });
