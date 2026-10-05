@@ -656,31 +656,61 @@ export function findCommentaryArithmetic(text, calc, { tdiu = false } = {}) {
 /**
  * Compare a response with the calculator. A stated combined figure is wrong
  * when it differs from the calculator's rating and is either a multiple of 10
- * (it reads as a final rating) or is not one of the calculator's own working
- * values. Intermediate values from the working are not treated as final
- * claims. Figures in a cap ("the maximum is 100%"), an example, a what-if or
+ * (it reads as a final rating), or is a figure the calculator's working does
+ * not contain in a draft that states no other rating. Intermediate values,
+ * the calculator's own or not, are never reported as the stated rating: a
+ * step the calculator did not take counts as different working instead. Figures in a cap ("the maximum is 100%"), an example, a what-if or
  * a list of the ratings entered, and a threshold figure the answer says is
  * not reached, are not statements of the veteran's rating and are ignored.
  * An answer that lands on the right figure is still not ok when it shows
  * working the calculator did not produce (`reworked`) or calls the computed
  * block wrong (`disputes`).
  */
+/**
+ * Sort the figures a draft labels "combined" or "total" that are not the
+ * calculator's rating. A final rating is always a multiple of 10, so one of
+ * those is a wrong rating. Any other figure is a step. In a draft that also
+ * states a rating, right or wrong, a step is not its answer: the calculator's
+ * own unrounded value is fine and one the calculator did not take is
+ * different working (`strayStepFigures`). In a draft that states no rating
+ * at all, a step outside the calculator's rounded working is its answer.
+ */
+function classifyStatedFigures(stated, calc) {
+  const working = workingValues(calc);
+  const consistent = consistentValues(calc);
+  const statesARating = stated.some((v) => v % 10 === 0);
+  const others = stated.filter((v) => v !== calc.combinedRating);
+  const steps = others.filter((v) => v % 10 !== 0 && !working.has(v));
+  return {
+    wrongFigures: others.filter(
+      (v) => v % 10 === 0 || (steps.includes(v) && !statesARating),
+    ),
+    strayStepFigures: statesARating
+      ? steps.filter((v) => !consistent.has(v))
+      : [],
+  };
+}
+
 export function checkRaterResponse(text, calc) {
   const sentences = splitSentences(text).filter(
     (sentence) => !isNotOwnRating(sentence, calc),
   );
   const stated = [...new Set(sentences.flatMap(statedInSentence))];
-  const working = workingValues(calc);
-  const wrongFigures = stated.filter(
-    (v) => v !== calc.combinedRating && (v % 10 === 0 || !working.has(v)),
+  const sentenceStating = (v) =>
+    sentences.find((s) => statedInSentence(s).includes(v))?.trim() ?? null;
+  const { wrongFigures, strayStepFigures } = classifyStatedFigures(
+    stated,
+    calc,
   );
-  const wrongFigureSentences = wrongFigures.map(
-    (v) =>
-      sentences.find((s) => statedInSentence(s).includes(v))?.trim() ?? null,
-  );
+  const wrongFigureSentences = wrongFigures.map(sentenceStating);
   const inventedPairs = findInventedBilateralClaims(text, calc);
   const deniedPairs = findDeniedBilateralClaims(text, calc);
-  const reworked = findReworkedFigures(text, calc);
+  const reworked = [
+    ...new Set([
+      ...findReworkedFigures(text, calc),
+      ...strayStepFigures.map(sentenceStating).filter(Boolean),
+    ]),
+  ];
   const disputes = findCalculatorDisputes(text);
   return {
     ok:

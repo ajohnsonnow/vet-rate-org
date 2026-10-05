@@ -219,18 +219,12 @@ describe("recorded Rater answers that dispute or re-derive the computed block", 
     expect(accepted).toHaveLength(14);
   });
 
-  // The one it misses writes its sums in words ("which equals 38%"); that
-  // answer already fails on the combined figures it states.
-  const IN_PROSE = "2026-10-05_201248 a12";
-
-  it("after: 25 of the 26 are caught, none accepted, and no other answer is caught", () => {
+  it("after: all 26 are caught, none accepted, and no other answer is caught", () => {
     const caught = answers.filter((a) => {
       const check = checkRaterResponse(a.text, a.calc);
       return check.reworked.length > 0 || check.disputes.length > 0;
     });
-    expect(caught.map(keyOf).sort()).toEqual(
-      [...labelled.keys()].filter((key) => key !== IN_PROSE).sort(),
-    );
+    expect(caught.map(keyOf).sort()).toEqual([...labelled.keys()].sort());
     const accepted = answers.filter(
       (a) => labelled.has(keyOf(a)) && checkRaterResponse(a.text, a.calc).ok,
     );
