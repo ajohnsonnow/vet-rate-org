@@ -222,6 +222,54 @@ function _configForTier(tier) {
   }
 }
 
+// Approximate footprint of every model _configForTier can recommend.
+// downloadGB is the weights download; vramGB is vram_required_MB from the
+// @mlc-ai/web-llm prebuilt model list, rounded to 0.1 GB.
+const MODEL_FOOTPRINT = {
+  "Qwen2.5-3B-Instruct-q4f16_1-MLC": {
+    displayName: "Qwen 2.5 3B",
+    downloadGB: 1.7,
+    vramGB: 2.5,
+  },
+  "Qwen2.5-3B-Instruct-q4f32_1-MLC": {
+    displayName: "Qwen 2.5 3B",
+    downloadGB: 2.0,
+    vramGB: 2.9,
+  },
+  "Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
+    displayName: "Qwen 2.5 1.5B",
+    downloadGB: 1.0,
+    vramGB: 1.6,
+  },
+  "Qwen2.5-1.5B-Instruct-q4f32_1-MLC": {
+    displayName: "Qwen 2.5 1.5B",
+    downloadGB: 1.0,
+    vramGB: 1.9,
+  },
+  "Llama-3.2-3B-Instruct-q4f32_1-MLC": {
+    displayName: "Llama 3.2 3B",
+    downloadGB: 1.8,
+    vramGB: 3.0,
+  },
+};
+
+/**
+ * The model a device profile will load first (diamondSwarm tries
+ * recommendedModels in order), or null when the profile is missing or the
+ * tier has no on-device model.
+ */
+export function describeDeviceModel(profile) {
+  const modelId = profile?.recommendedModels?.[0];
+  if (!modelId) return null;
+  const footprint = MODEL_FOOTPRINT[modelId];
+  return {
+    modelId,
+    displayName: footprint?.displayName ?? modelId,
+    downloadGB: footprint?.downloadGB ?? null,
+    vramGB: footprint?.vramGB ?? null,
+  };
+}
+
 /** Returns the cached profile synchronously, or null if not yet probed. */
 export function getCachedDeviceProfile() {
   return _cachedProfile;

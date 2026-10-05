@@ -208,7 +208,7 @@ const ModelBaseModelInfo = ({ model }) => {
       )}
       {model.trainingFocus && (
         <p className="ml-4 mt-0.5 text-xs text-emerald-600 dark:text-emerald-400/70">
-          🎯 Specialized for: {model.trainingFocus}
+          🎯 Role focus: {model.trainingFocus}
         </p>
       )}
     </div>

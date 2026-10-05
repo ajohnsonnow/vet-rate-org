@@ -4,18 +4,22 @@
 
 VetRate now supports **4 local AI inference backends** for 100% private claims assistance:
 
-| Backend            | Technology       | Best For                  | Status                        |
-| ------------------ | ---------------- | ------------------------- | ----------------------------- |
-| **Diamond Swarm**  | WebGPU/MLC       | Fast GPU inference        | ⏳ Pending WebGPU compilation |
-| **Wllama**         | WebAssembly      | Universal browser support | ✅ Ready                      |
-| **Local Server**   | llama.cpp API    | Desktop power users       | ✅ Ready                      |
-| **Cloud Fallback** | Gemini 2.5 Flash | When local unavailable    | ✅ Ready                      |
+| Backend            | Technology       | Best For                    | Status                                                               |
+| ------------------ | ---------------- | --------------------------- | -------------------------------------------------------------------- |
+| **Diamond Swarm**  | WebGPU/MLC       | Default on-device inference | ✅ Live (one stock Qwen2.5 / Llama-3.2 model per device, 3 personas) |
+| **Wllama**         | WebAssembly      | Experimental CPU fallback   | ⚠️ Not loaded by any screen; 7B GGUFs exceed its 4 GB WASM heap      |
+| **Local Server**   | llama.cpp API    | Desktop power users         | ✅ Ready                                                             |
+| **Cloud Fallback** | Gemini 2.5 Flash | When local unavailable      | ✅ Ready                                                             |
+
+The Swarm's three agents (auditor, writer, rater) are personas: the same
+stock model with a different system prompt. None of the models the web app
+loads is fine-tuned on VA data.
 
 ---
 
 ## 🌐 Wllama (Browser WASM)
 
-**Works everywhere a browser runs** - no WebGPU required.
+**Experimental.** Runs without WebGPU in principle, but no screen initializes it today (`initializeWllama` has no production caller), and the 7B GGUFs (~4.4 GB) do not fit its 4 GB WASM heap.
 
 ### How It Works
 
@@ -143,12 +147,10 @@ All local backends (Wllama, Local Server, Diamond Swarm, Legacy Local) provide:
 
 ---
 
-## Future: WebGPU Compilation
+## Future: WebGPU Compilation of the fine-tuned models
 
-Once MLC-LLM WebGPU compilation is complete, models will be available in MLC format for:
-
-- Faster inference than WASM
-- Native GPU acceleration
-- Smaller download size (with better quantization)
+The Swarm already runs on WebGPU with stock MLC builds. If the fine-tuned VetRate
+models are ever compiled to MLC format, they could replace those stock builds.
+Until they pass grading and are wired in, nothing in the app loads them.
 
 Track progress in: `llm-compiler/WEBGPU_COMPILATION_STATUS.md`

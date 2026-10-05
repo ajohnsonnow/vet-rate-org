@@ -2,13 +2,16 @@
  * Vet-Rate.org - Warrant Council AI Service
  * 🎖️ "The Warrant Standard" - 3-Model Swarm Architecture
  *
- * This service orchestrates 3 specialized fine-tuned models:
+ * This service runs ONE stock open-source model per device (the first usable
+ * entry of the device profile's recommendedModels in
+ * deviceCapabilityDetector.js - Qwen2.5 1.5B/3B or Llama-3.2-3B MLC builds)
+ * in a WebLLM web worker, and swaps the system prompt between 3 personas:
  * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
  * - WRITER: Generates compelling personal statements and nexus letters
- * - RATER: Calculates VA disability ratings using bilateral factor formula
+ * - RATER: Explains VA disability ratings and the bilateral factor formula
  *
- * All models are fine-tuned on official VA regulations and procedures.
- * 100% local inference via GGUF format - no data leaves the device.
+ * No model here is fine-tuned on VA data; the personas are prompts only.
+ * 100% local inference on WebGPU - no data leaves the device.
  */
 
 import {
@@ -344,6 +347,21 @@ const clearCorruptedCache = async () => {
  * 1. initializeSwarm('auditor', { onProgress, onComplete, onError })
  * 2. initializeSwarm({ modelId: 'vetrate-auditor-7b-v2', onProgress })
  */
+/**
+ * Derive the persona from a picker modelId (e.g. 'vetrate-writer-7b-v2' ->
+ * 'writer', 'diamond-rater' -> 'rater'). Every picker id, including retired
+ * ones such as 'vetrate-rater-1.7b-mobile-v1', embeds one of these role
+ * names; "auditor" is the explicit match, not just the fallback, so a future
+ * modelId that matches none of them doesn't silently masquerade as an
+ * auditor.
+ */
+export function roleFromModelId(modelId) {
+  if (modelId?.includes("writer")) return "writer";
+  if (modelId?.includes("rater")) return "rater";
+  if (modelId?.includes("auditor")) return "auditor";
+  return "auditor"; // no role embedded in modelId - default
+}
+
 function _resolveAgentIdAndCallbacks(agentIdOrConfig, callbacks) {
   if (typeof agentIdOrConfig === "object" && agentIdOrConfig !== null) {
     // Object form - extract modelId and derive agentId
@@ -354,16 +372,7 @@ function _resolveAgentIdAndCallbacks(agentIdOrConfig, callbacks) {
       onError: _onError,
     } = agentIdOrConfig;
 
-    // Derive agent from modelId (e.g., 'vetrate-writer-7b-v2' -> 'writer').
-    // Every real modelId (see AICommandCenter's MODELS list) embeds one of
-    // these three role names; "auditor" is the explicit match, not just the
-    // fallback, so a future modelId that matches none of them doesn't
-    // silently masquerade as an auditor.
-    let agentId;
-    if (modelId?.includes("writer")) agentId = "writer";
-    else if (modelId?.includes("rater")) agentId = "rater";
-    else if (modelId?.includes("auditor")) agentId = "auditor";
-    else agentId = "auditor"; // no role embedded in modelId - default
+    const agentId = roleFromModelId(modelId);
 
     return {
       agentId,

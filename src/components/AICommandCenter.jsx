@@ -6,7 +6,7 @@
  * Everything AI-related in one mission briefing.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
@@ -22,105 +22,19 @@ import TokenLimitConfig from "./TokenLimitConfig";
 import PresetSelector from "./PresetSelector";
 import ReportBugLink from "./ReportBugLink";
 import GPUSelector from "./GPUSelector";
+import {
+  buildCommandCenterModels,
+  getDeviceModelSummary,
+  useDeviceModel,
+} from "../utils/localModelLabels";
 
 const GEMINI_KEY_STORAGE = "vetrate_gemini_key";
 
-// ╔══════════════════════════════════════════════════════════════════════════════╗
-// ║  🎖️ THE WARRANT COUNCIL - VetRate's Custom Fine-Tuned AI Models             ║
-// ║══════════════════════════════════════════════════════════════════════════════║
-// ║  Each model maps to a REAL Army Warrant Officer MOS specialty:              ║
-// ║  • 350F - All Source Intelligence Technician (analyzes everything)          ║
-// ║  • 270A - Legal Administrator (documents & regulations)                      ║
-// ║  • 352N - SIGINT Analysis Technician (deciphers signals & patterns)         ║
-// ║══════════════════════════════════════════════════════════════════════════════║
-// ║  Desktop 7B = Senior Warrants (CWO3-CWO5) - Full SCIF-level analysis        ║
-// ║  Mobile 1.7B = Junior Warrants (WO1-CWO2) - Field-deployable ops            ║
-// ╚══════════════════════════════════════════════════════════════════════════════╝
-const MODELS = [
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 🖥️ DESKTOP EDITIONS (7B) - Senior Warrants - SCIF-Level Analysis
-  // ═══════════════════════════════════════════════════════════════════════════
-  {
-    id: "vetrate-auditor-7b-v2",
-    name: '🎖️ CWO3 "HAWKEYE" - 350F All Source Intel',
-    description:
-      "Fuses all claim intel: service records, medical evidence, 38 CFR regs, and BVA precedent",
-    size: "~1-2 GB",
-    vramRequired: "~4 GB",
-    recommended: true,
-    bestFor: "Deep claim audits, evidence correlation, multi-source analysis",
-    tier: "full",
-    callSign: "HAWKEYE",
-    mos: "350F",
-  },
-  {
-    id: "vetrate-writer-7b-v2",
-    name: '🎖️ CWO4 "PHANTOM" - 270A Legal Admin',
-    description:
-      "JAG-trained documentation expert: personal statements, nexus letters, and appeal briefs",
-    size: "~1-2 GB",
-    vramRequired: "~4 GB",
-    bestFor: "Legal documents, NODs, HLR scripts, formal correspondence",
-    tier: "full",
-    callSign: "PHANTOM",
-    mos: "270A",
-  },
-  {
-    id: "vetrate-rater-7b-v2",
-    name: '🎖️ CWO5 "ORACLE" - 352N SIGINT Analyst',
-    description:
-      "Muster Call SigInt specialist: deciphers rating patterns, bilateral math, SMC codes, and TDIU thresholds",
-    size: "~1-2 GB",
-    vramRequired: "~4 GB",
-    bestFor: "Complex calculations, pattern analysis, SMC/TDIU strategy",
-    tier: "full",
-    callSign: "ORACLE",
-    mos: "352N",
-  },
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 📱 MOBILE EDITIONS (1.7B) - Junior Warrants - Field Ops
-  // Knowledge-distilled from Senior Warrants for tactical deployment
-  // ═══════════════════════════════════════════════════════════════════════════
-  {
-    id: "vetrate-auditor-1.7b-mobile-v1",
-    name: '📱 WO1 "SCOUT" - 350F Field Intel',
-    description:
-      "Quick intel sweep: spots red flags, gathers initial HUMINT, preps for Senior analysis",
-    size: "~1-2 GB",
-    vramRequired: "~2 GB",
-    bestFor: "Fast claim triage, evidence spotting, mobile recon",
-    tier: "mobile",
-    mobileOptimized: true,
-    callSign: "SCOUT",
-    mos: "350F",
-  },
-  {
-    id: "vetrate-writer-1.7b-mobile-v1",
-    name: '📱 CWO2 "SCRIBE" - 270A Field Admin',
-    description:
-      "Rapid field documentation: captures testimony, outlines statements, secures the narrative",
-    size: "~1-2 GB",
-    vramRequired: "~2 GB",
-    bestFor: "Quick statement drafts, bullet capture, field notes",
-    tier: "mobile",
-    mobileOptimized: true,
-    callSign: "SCRIBE",
-    mos: "270A",
-  },
-  {
-    id: "vetrate-rater-1.7b-mobile-v1",
-    name: '📱 CWO2 "CIPHER" - 352N Field SIGINT',
-    description:
-      "Tactical signal decoding: quick rating reads, basic pattern recognition on-the-move",
-    size: "~1-2 GB",
-    vramRequired: "~2 GB",
-    bestFor: "Fast rating estimates, quick math checks, field calculations",
-    tier: "mobile",
-    mobileOptimized: true,
-    callSign: "CIPHER",
-    mos: "352N",
-  },
-];
+// The Warrant Council roles: each entry selects an assistant role, and every
+// role runs on the stock model the device profile picks. Names and sizes come
+// from utils/localModelLabels.js. The retired "-1.7b-mobile-v1" ids still
+// resolve to a role through roleFromModelId in diamondSwarm.js.
+const MODELS = buildCommandCenterModels(null);
 
 const getAIStatusIndicatorClass = (aiStatus) => {
   if (aiStatus.isPrivate) return "bg-green-500/30 text-green-200";
@@ -578,18 +492,21 @@ function ModelSelectionPanel({
   loadProgress,
   onInitialize,
 }) {
+  const deviceModel = useDeviceModel();
+  const models = useMemo(
+    () => buildCommandCenterModels(deviceModel),
+    [deviceModel],
+  );
   return (
     <div className="mt-4 space-y-3">
       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        Select AI Model:
+        Select AI Role:
       </p>
       <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
-        The specialties below share one underlying engine today - the app
-        automatically downloads whichever build (~1-2 GB) fits your device.
-        Specialty-tuned models are in testing and aren't live yet.
+        {getDeviceModelSummary(deviceModel)}
       </p>
       <div className="grid gap-2">
-        {MODELS.map((model) => (
+        {models.map((model) => (
           <ModelPickerButton
             key={model.id}
             model={model}
