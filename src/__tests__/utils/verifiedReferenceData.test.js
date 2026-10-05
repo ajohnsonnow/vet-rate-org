@@ -145,7 +145,12 @@ describe("verifiedReference.json PACT Act lists and forms", () => {
 });
 
 describe("cfrSections.json", () => {
-  const all = new Set([...sections.parts[3], ...sections.parts[4]]);
+  const all = new Set(Object.values(sections.parts).flat());
+
+  it("covers every part the legal index holds", () => {
+    expect(Object.keys(sections.parts)).toEqual(["3", "4", "19", "20"]);
+    expect(all.size).toBe(510);
+  });
 
   it("records where the list came from", () => {
     expect(sections.source.file).toBe(
@@ -154,8 +159,10 @@ describe("cfrSections.json", () => {
     expect(sections.source.retrieved).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it("contains real Part 3 and Part 4 sections", () => {
+  it("contains real sections", () => {
     for (const section of [
+      "19.1",
+      "20.1303",
       "3.1",
       "3.155",
       "3.310",
@@ -171,8 +178,17 @@ describe("cfrSections.json", () => {
     }
   });
 
-  it("does not contain sections that do not exist", () => {
-    for (const section of ["4.37", "4.71b", "4.90", "3.9999", "4.131"]) {
+  it("does not contain sections that do not exist or are reserved", () => {
+    for (const section of [
+      "4.37",
+      "4.71b",
+      "4.90",
+      "3.9999",
+      "4.131",
+      "19.5",
+      "4.110",
+      "3.18",
+    ]) {
       expect(all.has(section), section).toBe(false);
     }
   });

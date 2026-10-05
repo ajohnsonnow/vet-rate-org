@@ -172,28 +172,23 @@ describe("extractFormTitle", () => {
 });
 
 describe("collectSections", () => {
-  it("lists the sections of the requested parts, expanding reserved ranges", () => {
+  it("lists every part's sections that have text, leaving reserved numbers out", () => {
     const records = [
-      { citation: "38 CFR § 3.310" },
-      { citation: "38 CFR § 3.310" },
-      { citation: "38 CFR § 3.18-3.19" },
-      { citation: "38 CFR § 3.456-461" },
-      { citation: "38 CFR § 4.71a" },
-      { citation: "38 CFR § 20.1" },
+      { citation: "38 CFR § 3.310", title: "§ 3.310 Disabilities." },
+      { citation: "38 CFR § 3.310", title: "§ 3.310 Disabilities." },
+      { citation: "38 CFR § 3.18-3.19", title: "§§ 3.18-3.19 [Reserved]" },
+      { citation: "38 CFR § 3.456-461", title: "§ 3.456-461 [Reserved]" },
+      { citation: "38 CFR § 3.56", title: "§ 3.56 [Reserved]" },
+      { citation: "38 CFR § 4.71a", title: "§ 4.71a Schedule." },
+      { citation: "38 CFR § 20.1", title: "§ 20.1 Rule 1." },
+      { citation: "38 CFR § 19.3-19.5", title: "§§ 19.3-19.5 [Reserved]" },
+      { citation: "not a section" },
     ];
-    expect(collectSections(records, [3, 4])).toEqual({
-      3: [
-        "3.18",
-        "3.19",
-        "3.310",
-        "3.456",
-        "3.457",
-        "3.458",
-        "3.459",
-        "3.460",
-        "3.461",
-      ],
+    expect(collectSections(records)).toEqual({
+      3: ["3.310"],
       4: ["4.71a"],
+      19: [],
+      20: ["20.1"],
     });
   });
 });

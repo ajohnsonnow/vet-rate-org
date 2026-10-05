@@ -3,7 +3,7 @@
  * Build the bundled verified-reference data for the on-device AI:
  *
  *   src/data/verifiedReference.json  quoted regulation and manual text
- *   src/data/cfrSections.json        every 38 CFR Part 3 and Part 4 section
+ *   src/data/cfrSections.json        every 38 CFR section the index has text for
  *
  * Every word of entry text is copied from sources the repo already holds:
  * the eCFR legal index and the M21-1 shard. The specs below only say which
@@ -421,7 +421,7 @@ export function buildBundle(sourceRoot) {
         note: "Generated. Do not edit by hand; change the script and rebuild.",
       },
       source: { file: ECFR_FILE, retrieved: dateOf(ecfr) },
-      parts: collectSections(ecfr, ["3", "4"]),
+      parts: collectSections(ecfr),
     },
     omittedForms: forms.omitted,
   };
@@ -459,7 +459,9 @@ function main(argv) {
     console.log(`${String(entry.text.length).padStart(5)}  ${entry.id}`);
   }
   console.log(
-    `sections: Part 3 ${bundle.sections.parts[3].length}, Part 4 ${bundle.sections.parts[4].length}`,
+    `sections: ${Object.entries(bundle.sections.parts)
+      .map(([part, list]) => `Part ${part} ${list.length}`)
+      .join(", ")}`,
   );
   if (bundle.omittedForms.length > 0) {
     console.warn(

@@ -268,29 +268,24 @@ const sectionOrder = (a, b) => {
 };
 
 /**
- * Every section number the legal index holds for the given parts, as
- * "<part>.<section>[letter]". A reserved range ("§§ 3.18-3.19 [Reserved]")
- * contributes each number in the range.
+ * Every 38 CFR section the legal index holds text for, by part, as
+ * "<part>.<section>[letter]". Numbers the index marks "[Reserved]", singly
+ * or as a range ("§§ 3.18-3.19 [Reserved]"), are left out: a reserved section
+ * has no text to cite. A part with only reserved numbers is still listed.
  */
-export function collectSections(records, parts) {
-  const found = Object.fromEntries(parts.map((part) => [part, new Set()]));
+export function collectSections(records) {
+  const byPart = new Map();
   for (const record of records) {
     const match = SECTION_CITATION.exec(String(record?.citation ?? ""));
     if (!match) continue;
-    const [, part, first, letter, last] = match;
-    if (!found[part]) continue;
-    if (last === undefined) {
-      found[part].add(`${part}.${first}${letter}`);
-      continue;
-    }
-    for (let n = Number(first); n <= Number(last); n += 1) {
-      found[part].add(`${part}.${n}`);
-    }
+    const [, part, section, letter, rangeEnd] = match;
+    if (!byPart.has(part)) byPart.set(part, new Set());
+    const reserved =
+      rangeEnd !== undefined ||
+      String(record.title ?? "").includes("[Reserved]");
+    if (!reserved) byPart.get(part).add(`${part}.${section}${letter}`);
   }
   return Object.fromEntries(
-    Object.entries(found).map(([part, set]) => [
-      part,
-      [...set].sort(sectionOrder),
-    ]),
+    [...byPart].map(([part, set]) => [part, [...set].sort(sectionOrder)]),
   );
 }

@@ -1,9 +1,9 @@
 /**
  * Post-generation citation check. A model that states law from memory also
- * invents section numbers; this finds 38 CFR Part 3 and Part 4 citations in
- * an answer that are not in the bundled list of sections (generated from the
- * eCFR legal index by scripts/verified-reference/build.mjs) and says so
- * under the answer. It never rewrites the answer.
+ * invents section numbers; this finds 38 CFR citations in an answer that are
+ * not in the bundled list of sections (generated from the eCFR legal index
+ * by scripts/verified-reference/build.mjs, for every part the index holds)
+ * and says so under the answer. It never rewrites the answer.
  */
 
 import sections from "../data/cfrSections.json";
@@ -15,9 +15,9 @@ const KNOWN_SECTIONS = new Set(Object.values(sections.parts).flat());
 const partOf = (section) => section.slice(0, section.indexOf("."));
 
 /**
- * The 38 CFR sections an answer cites that do not exist. Only Parts 3 and 4
- * are checked, since those are the parts the bundled list covers; a citation
- * to any other part is left alone.
+ * The 38 CFR sections an answer cites that have no text: numbers that do not
+ * exist and numbers that are reserved. Only the parts the bundled list covers
+ * are checked; a citation to any other part is left alone.
  */
 export function findUnverifiedCitations(text) {
   return extractCfrSections(text).filter(
@@ -33,9 +33,15 @@ function listSections(missing) {
   return `38 CFR ${[first, ...rest].join(", ")} and ${last}`;
 }
 
+function listParts() {
+  const parts = [...CHECKED_PARTS];
+  const last = parts.pop();
+  return parts.length > 0 ? `${parts.join(", ")} and ${last}` : last;
+}
+
 export function buildCitationNotice(missing) {
   const one = missing.length === 1;
-  return `Vet-Rate could not verify ${one ? "a citation" : "citations"} in this answer: ${listSections(missing)} ${one ? "is" : "are"} not in its copy of 38 CFR Parts 3 and 4 (as of ${sections.source.retrieved}). Check ${one ? "that citation" : "those citations"} at ecfr.gov or with a Veterans Service Officer before relying on ${one ? "it" : "them"}.`;
+  return `Vet-Rate could not verify ${one ? "a citation" : "citations"} in this answer: ${listSections(missing)} ${one ? "is" : "are"} missing or reserved, with no text, in its copy of 38 CFR Parts ${listParts()} (as of ${sections.source.retrieved}). Check ${one ? "that citation" : "those citations"} at ecfr.gov or with a Veterans Service Officer before relying on ${one ? "it" : "them"}.`;
 }
 
 const looksStructured = (text) => /^\s*(?:```|[{[])/.test(text);
