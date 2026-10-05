@@ -3303,7 +3303,7 @@ Run AI 100% on your device - your data never leaves your computer.
 
 Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browser:
 
-1. **Download Once**: Model downloads to your browser cache (one-time)
+1. **Download Once**: The model is a one-time download kept on your device in browser storage (about 2.4 GB for the desktop model)
 2. **Run Locally**: All processing happens on YOUR GPU
 3. **Stay Private**: Zero data transmission - no internet needed
 
@@ -3312,6 +3312,8 @@ Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browse
 - **Modern Browser**: Chrome, Edge, or Brave (WebGPU support)
 - **GPU with VRAM**: 2-8 GB depending on model size
 - **Storage**: 0.3 GB to 4.8 GB per model
+
+Your device picks the on-device model for you: Qwen 3.5 4B on desktops (about 2.4 GB download) and Qwen 3.5 2B on laptops (about 1.1 GB download), with Qwen 2.5 models used if the first choice cannot load. Tablets use Qwen 2.5 1.5B (about 0.9 GB download). Download sizes are the published file sizes read on 2026-10-05. These are general-purpose open models, not trained on VA data.
 
 ## First Time Setup
 
@@ -3460,10 +3462,12 @@ Choose a model that fits your GPU memory.
 
 ### 4 GB VRAM (Entry Gaming GPU)
 - VetRate models ✓ (1.8 GB) - RECOMMENDED
-- Qwen 2.5 3B (2.0 GB)
+- Qwen 3.5 2B (laptops): about 2.2 GB GPU memory, about 1.1 GB download
+- Qwen 2.5 3B (fallback): about 2.5 GB GPU memory, about 1.8 GB download
 - VetRate models (2.3 GB)
 
 ### 6 GB VRAM (GTX 1060, RTX 3060)
+- Qwen 3.5 4B (desktops): about 3.9 GB GPU memory, about 2.4 GB download
 - VetRate Auditor ⭐ (3.5 GB) - BEST VALUE
 - VetRate Vision Phi 👁️ (3.5 GB)
 

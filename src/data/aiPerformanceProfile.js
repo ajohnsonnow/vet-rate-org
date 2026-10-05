@@ -31,19 +31,19 @@ export const AI_WARMUP = {
     minMin: 20,
     maxMin: 45,
     reason:
-      "WebGPU shader compilation (thousands of GPU programs, one-time per GPU driver version) + 1.7 GB model weight load from browser storage to GPU.",
+      "WebGPU shader compilation (thousands of GPU programs, one-time per GPU driver version) + model weight load from browser storage to GPU.",
   },
   firstRunAppleSilicon: {
     minMin: 5,
     maxMin: 15,
     reason:
-      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders in 5-15 min (vs 20-45 min on Windows/NVIDIA). 1.7 GB model weight load is the same.",
+      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders in 5-15 min (vs 20-45 min on Windows/NVIDIA). model weight load is the same.",
   },
   subsequentRun: {
     minMin: 3,
     maxMin: 8,
     reason:
-      "Shaders already compiled and cached. Only 1.7 GB model weights need to load from IndexedDB to GPU.",
+      "Shaders already compiled and cached. Only the model weights need to load from IndexedDB to GPU.",
   },
 };
 
@@ -87,9 +87,9 @@ export const AI_REQUIREMENTS = {
   formFactor:
     "Desktop or laptop - phones and tablets are not supported for on-device AI.",
   model: {
-    sizeGB: 1.7,
+    sizeNote: "size varies by device",
     cachedAfterFirstDownload: true,
-    note: "Downloaded once to your browser storage. Subsequent sessions skip the download.",
+    note: "A one time download, kept on your device in browser storage. Later sessions skip the download.",
   },
 };
 

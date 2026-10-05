@@ -14,8 +14,15 @@ import {
   describeDeviceModel,
 } from "./deviceCapabilityDetector";
 
-const UNKNOWN_SIZE = "~1-2 GB";
-const UNKNOWN_VRAM = "~2-3 GB";
+const UNKNOWN_SIZE = "varies";
+const UNKNOWN_VRAM = "varies";
+
+const ONE_TIME_DOWNLOAD = "It is a one-time download kept on your device.";
+
+export const formatDownloadSize = (deviceModel) =>
+  deviceModel?.downloadGB
+    ? `about ${deviceModel.downloadGB} GB`
+    : "download size varies";
 
 const formatGB = (gb, fallback) => (gb == null ? fallback : `~${gb} GB`);
 
@@ -29,12 +36,9 @@ export const getLocalModelLabels = (deviceModel) => ({
 
 export const getDeviceModelSummary = (deviceModel) => {
   if (!deviceModel) {
-    return "Each role uses the same on-device model, picked for your device (about 1-2 GB). A role only changes the instructions the model follows.";
+    return `Each role uses the same on-device model, picked for your device (download size varies). ${ONE_TIME_DOWNLOAD} A role only changes the instructions the model follows.`;
   }
-  const size = deviceModel.downloadGB
-    ? ` (about ${deviceModel.downloadGB} GB)`
-    : "";
-  return `Each role uses the same on-device model. Your device will load ${deviceModel.displayName}${size}. A role only changes the instructions the model follows.`;
+  return `Each role uses the same on-device model. Your device will load ${deviceModel.displayName} (${formatDownloadSize(deviceModel)}). ${ONE_TIME_DOWNLOAD} A role only changes the instructions the model follows.`;
 };
 
 const PANEL_ROLES = [

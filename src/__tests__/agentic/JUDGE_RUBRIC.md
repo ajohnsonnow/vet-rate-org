@@ -228,3 +228,40 @@ Options worth knowing: `--cases a01,a11` for a subset, `--temperature`,
 size for a model that needs a different one), and `--legal-chunks <path>`
 to point the citation check at a real `ecfr.jsonl` when the checkout holds
 only the git-lfs pointer.
+
+## Model watch: how a candidate reaches this rubric
+
+A weekly check ([model-watch.yml](../../../.github/workflows/model-watch.yml),
+run locally with `npm run eval:model-watch`) lists open-weight models that
+are new since a committed snapshot
+([model-watch-snapshot.json](../../../scripts/eval/model-watch-snapshot.json))
+and fit a tier or kind the app runs on the device. It reads the WebLLM
+prebuilt list, the Hugging Face listings for `mlc-ai` and `onnx-community`
+and the npm registry, and compares them with the models named in the source
+files (`deviceCapabilityDetector.js`, the Florence and SmolVLM workers,
+`legalRag.js`). It cannot tell whether a model is any good; a row means only
+"new candidate to evaluate". The loop:
+
+1. The watcher opens (or updates) one `model-watch` issue, or you run
+   `npm run eval:model-watch` and read `test-results/model-watch/`.
+2. Check the licence column. Anything other than Apache-2.0 or MIT is marked
+   `review`, and "unknown" means the fetched data had no licence tag; read
+   the model card before spending GPU time.
+3. For a text candidate, run the golden set with the command in the report,
+   `npm run eval:golden -- --model <id>`. The runner only loads ids the
+   installed `@mlc-ai/web-llm` build lists; a candidate marked "not in the
+   WebLLM prebuilt list" needs a newer web-llm release first (the report's
+   runtime table shows whether one exists). Vision, document OCR and
+   embedding candidates have no golden-set path yet; they need a
+   task-specific check before anyone compares them.
+4. Compare the new run summary with the committed baseline: the run
+   summary for the model the app ships today, run on the same machine with
+   the same settings. Score it with the criteria above. Only that
+   comparison, not the watcher, can show a candidate is an improvement.
+5. Once the candidates are reviewed, whatever the outcome, run
+   `npm run eval:model-watch:snapshot` and commit the rewritten snapshot so
+   the same models do not come back next week. The workflow never writes
+   the snapshot. The snapshot command refuses to write if any source failed.
+
+Exit codes of the watcher: 0 nothing new, 1 a source could not be fetched or
+parsed (the job fails), 2 candidates to evaluate or a newer runtime package.

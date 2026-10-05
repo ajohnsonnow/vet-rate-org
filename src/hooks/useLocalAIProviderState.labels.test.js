@@ -42,7 +42,7 @@ describe("useLocalAIProviderState availableModels", () => {
       expect(result.current.availableModels[0].baseModel).toBe("Qwen 2.5 1.5B"),
     );
     for (const model of result.current.availableModels) {
-      expect(model.size).toBe("~1 GB");
+      expect(model.size).toBe("~0.9 GB");
       expect(model.baseModelInfo).not.toMatch(/fine-tuned from/i);
     }
   });

@@ -703,7 +703,7 @@ function LocalAIArsenalBlock() {
         Council agents
       </p>
       <p>
-        <strong>Base Models:</strong> Stock open models such as Qwen 2.5, guided
+        <strong>Base Models:</strong> Stock open models such as Qwen 3.5, guided
         by role prompts and our knowledge base
       </p>
       <p>

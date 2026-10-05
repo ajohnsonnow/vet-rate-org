@@ -7,10 +7,10 @@
  *
  * Tiers and their implications:
  *   mobile       - phone or no GPU; WebLLM skipped, cloud or skip
- *   tablet       - iPad / Android tablet; WebLLM 1.5B if WebGPU present
- *   laptop       - integrated / low-end discrete GPU; WebLLM 1.5B q4f16
- *   desktop-mid  - mid discrete GPU (~8GB VRAM); WebLLM 3B q4f16
- *   desktop-high - high-end GPU (≥16GB, RTX 3000+); WebLLM 3B q4f16 (extraction primary), 28K chunks
+ *   tablet       - iPad / Android tablet; WebLLM Qwen2.5 1.5B if WebGPU present
+ *   laptop       - integrated / low-end discrete GPU; WebLLM Qwen3.5 2B q4f16
+ *   desktop-mid  - mid discrete GPU (~8GB VRAM); WebLLM Qwen3.5 4B q4f16
+ *   desktop-high - high-end GPU (≥16GB, RTX 3000+); WebLLM Qwen3.5 4B q4f16, 28K chunks
  */
 
 // WebGPU maxBufferSize thresholds correlate with GPU memory tier.
@@ -19,6 +19,14 @@
 // reliable proxy across Chrome/Edge on Windows/macOS/Android/iOS.
 const GPU_HIGH_THRESHOLD = 1_500_000_000; // ~1.5 GB maxBufferSize
 const GPU_MID_THRESHOLD = 200_000_000; // ~200 MB maxBufferSize
+
+// Also the list diamondSwarm tries when a profile lists none.
+export const DESKTOP_HIGH_MODELS = [
+  "Qwen3.5-4B-q4f16_1-MLC",
+  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // proven ~55 s/chunk on 4080 SUPER (stream:false)
+  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // f32 fallback
+  "Llama-3.2-3B-Instruct-q4f32_1-MLC", // alternative architecture
+];
 
 let _cachedProfile = null;
 
@@ -156,11 +164,7 @@ function _configForTier(tier) {
   switch (tier) {
     case "desktop-high":
       return {
-        recommendedModels: [
-          "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7 GB - proven ~55 s/chunk on 4080 SUPER (stream:false)
-          "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0 GB - f32 fallback
-          "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8 GB - alternative architecture
-        ],
+        recommendedModels: [...DESKTOP_HIGH_MODELS],
         contextWindowSize: 12288, // 28K-char chunk (~8235 tokens) + system prompt (~600) + 2048 output = ~10883; needs KV cache > 10883
         maxChunkChars: 28000,
         maxOutputTokens: 2048,
@@ -171,6 +175,7 @@ function _configForTier(tier) {
     case "desktop-mid":
       return {
         recommendedModels: [
+          "Qwen3.5-4B-q4f16_1-MLC",
           "Qwen2.5-3B-Instruct-q4f16_1-MLC",
           "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
           "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
@@ -185,9 +190,10 @@ function _configForTier(tier) {
     case "laptop":
       return {
         recommendedModels: [
-          "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", // ~1 GB VRAM
+          "Qwen3.5-2B-q4f16_1-MLC", // 2.2 GB VRAM, below the 2.5 GB this list already tries last
+          "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
           "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
-          "Qwen2.5-3B-Instruct-q4f16_1-MLC", // try if 1.5B fails
+          "Qwen2.5-3B-Instruct-q4f16_1-MLC",
         ],
         contextWindowSize: 8192,
         maxChunkChars: 14000,
@@ -202,6 +208,8 @@ function _configForTier(tier) {
           "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
           "Qwen2.5-1.5B-Instruct-q4f32_1-MLC",
         ],
+        // Stays on the 1.5B: the Qwen3.5-2B needs 2.2 GB (WebLLM config),
+        // about 0.6 GB more than this tier plans for, and was not tested here.
         // 8192, not 4096: the swarm always sends its persona plus the default
         // system prompt (about 15,100 characters, some 3,800 to 5,000 tokens),
         // which 4096 cannot hold beside any useful output. The laptop tier
@@ -229,11 +237,23 @@ function _configForTier(tier) {
 
 // Approximate footprint of every model _configForTier can recommend.
 // downloadGB is the weights download; vramGB is vram_required_MB from the
-// @mlc-ai/web-llm prebuilt model list, rounded to 0.1 GB.
+// @mlc-ai/web-llm prebuilt model list, rounded to 0.1 GB. downloadGB for the
+// Qwen3.5 and Qwen2.5 q4f16 entries is the summed file size of the mlc-ai
+// Hugging Face repository (read 2026-10-05); the others are earlier estimates.
 const MODEL_FOOTPRINT = {
+  "Qwen3.5-4B-q4f16_1-MLC": {
+    displayName: "Qwen 3.5 4B",
+    downloadGB: 2.4,
+    vramGB: 3.9,
+  },
+  "Qwen3.5-2B-q4f16_1-MLC": {
+    displayName: "Qwen 3.5 2B",
+    downloadGB: 1.1,
+    vramGB: 2.2,
+  },
   "Qwen2.5-3B-Instruct-q4f16_1-MLC": {
     displayName: "Qwen 2.5 3B",
-    downloadGB: 1.7,
+    downloadGB: 1.8,
     vramGB: 2.5,
   },
   "Qwen2.5-3B-Instruct-q4f32_1-MLC": {
@@ -243,7 +263,7 @@ const MODEL_FOOTPRINT = {
   },
   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
     displayName: "Qwen 2.5 1.5B",
-    downloadGB: 1.0,
+    downloadGB: 0.9,
     vramGB: 1.6,
   },
   "Qwen2.5-1.5B-Instruct-q4f32_1-MLC": {

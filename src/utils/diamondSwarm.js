@@ -4,7 +4,7 @@
  *
  * This service runs ONE stock open-source model per device (the first usable
  * entry of the device profile's recommendedModels in
- * deviceCapabilityDetector.js - Qwen2.5 1.5B/3B or Llama-3.2-3B MLC builds)
+ * deviceCapabilityDetector.js - Qwen3.5 2B/4B, Qwen2.5 1.5B/3B or Llama-3.2-3B MLC builds)
  * in a WebLLM web worker, and swaps the system prompt between 3 personas:
  * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
  * - WRITER: Generates compelling personal statements and nexus letters
@@ -21,6 +21,7 @@ import {
 } from "./agentBoundaries";
 import {
   detectDeviceCapabilities,
+  DESKTOP_HIGH_MODELS,
   getCachedDeviceProfile,
 } from "./deviceCapabilityDetector";
 import {
@@ -329,15 +330,6 @@ export const registerSwarmEngine = (
 let webllmEngine = null;
 let swarmWorker = null;
 
-// Default model list used before device probe completes. The device profile
-// (detectDeviceCapabilities) overrides this in initializeSwarm at runtime.
-const DIAMOND_MODELS_DEFAULT = [
-  "Qwen2.5-3B-Instruct-q4f16_1-MLC", // 1.7GB - f16, proven ~55 s/chunk on 4080 SUPER (stream:false)
-  "Qwen2.5-3B-Instruct-q4f32_1-MLC", // 2.0GB - f32 fallback
-  "Qwen2.5-1.5B-Instruct-q4f32_1-MLC", // 1.0GB - lower-VRAM fallback
-  "Llama-3.2-3B-Instruct-q4f32_1-MLC", // 1.8GB - alternative architecture
-];
-
 /**
  * Try to clear corrupted cache entries
  */
@@ -588,7 +580,7 @@ export const initializeSwarm = async (
     const modelList =
       deviceProfile.recommendedModels?.length > 0
         ? deviceProfile.recommendedModels
-        : DIAMOND_MODELS_DEFAULT;
+        : DESKTOP_HIGH_MODELS;
     const contextWindowSize = deviceProfile.contextWindowSize ?? 8192;
 
     if (!deviceProfile.canUseWebLLM) {
