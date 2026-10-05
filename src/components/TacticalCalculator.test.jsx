@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import TacticalCalculator from "./TacticalCalculator";
+import { APP_TRANSLATIONS } from "../i18n/translations";
 
 afterEach(() => {
   localStorage.clear();
@@ -93,6 +94,22 @@ describe("TacticalCalculator", () => {
     expect(
       screen.queryByRole("status", { name: /bilateral factor not applied/i }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("TacticalCalculator bilateral strings", () => {
+  it.each([
+    "bilateralIssuesTitle",
+    "bilateralIssueLimbUnknown",
+    "bilateralIssueSingleEvaluation",
+    "bilateralIssueNotChecked",
+    "bilateralNotApplied",
+    "whatIfBilateralRule",
+  ])("%s has text in every locale", (key) => {
+    const entry = APP_TRANSLATIONS.tacticalCalc[key];
+    for (const locale of ["en", "es", "tl", "vi", "ko"]) {
+      expect(entry?.[locale]?.length ?? 0).toBeGreaterThan(10);
+    }
   });
 });
 

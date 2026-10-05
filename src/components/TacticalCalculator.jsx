@@ -1720,31 +1720,28 @@ function MainRatingDisplay({ t, results }) {
   );
 }
 
-const BILATERAL_ISSUE_TEXT = {
-  "limb-unknown":
-    "Vet-Rate could not tell whether this is an arm or a leg condition, so it got no bilateral factor. Edit it and choose its body part.",
-  "single-bilateral-evaluation":
-    "One rating that already covers both sides gets no bilateral factor by itself. If each side has its own rating, enter them as separate Left and Right conditions.",
-  "most-favourable-not-checked":
-    "There are too many paired conditions to check whether leaving some out of the bilateral factor would give a higher rating (38 CFR § 4.26(d)).",
+const BILATERAL_ISSUE_KEYS = {
+  "limb-unknown": "bilateralIssueLimbUnknown",
+  "single-bilateral-evaluation": "bilateralIssueSingleEvaluation",
+  "most-favourable-not-checked": "bilateralIssueNotChecked",
 };
 
-function BilateralIssuesNotice({ issues }) {
+function BilateralIssuesNotice({ t, issues }) {
   if (!issues || issues.length === 0) return null;
   return (
     <div
       role="status"
-      aria-label="Bilateral factor not applied"
+      aria-label={t("tacticalCalc", "bilateralIssuesTitle")}
       className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-800 dark:text-amber-200"
     >
       <p className="font-semibold">
-        Bilateral factor not applied (38 CFR § 4.26)
+        {t("tacticalCalc", "bilateralIssuesTitle")}
       </p>
       <ul className="mt-1 space-y-1 list-disc list-inside">
         {issues.map((issue, index) => (
           <li key={issue.id ?? `${issue.reason}-${index}`}>
             {issue.name && <strong>{issue.name}: </strong>}
-            {BILATERAL_ISSUE_TEXT[issue.reason]}
+            {t("tacticalCalc", BILATERAL_ISSUE_KEYS[issue.reason])}
           </li>
         ))}
       </ul>
@@ -2062,7 +2059,7 @@ function CalculatorResultsSection({
 
       <MainRatingDisplay t={t} results={results} />
 
-      <BilateralIssuesNotice issues={results.bilateralIssues} />
+      <BilateralIssuesNotice t={t} issues={results.bilateralIssues} />
 
       {/* Pyramiding Warnings - NEW */}
       <PyramidingWarningsSection t={t} pyramiding={pyramiding} />
