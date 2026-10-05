@@ -154,6 +154,16 @@ export const CORRECTION_SPECS = {
     section: "3.2601",
     select: [{ start: "(f) Evidentiary record.", firstSentences: 2 }],
   },
+  "ratings-combined": {
+    citation: "38 CFR § 4.25",
+    section: "4.25",
+    select: [
+      {
+        start: "Table I, Combined Ratings Table, results from",
+        afterSentences: 1,
+      },
+    ],
+  },
   "supplemental-any-time": {
     citation: "38 CFR § 3.2500(a)(2)",
     section: "3.2500",
