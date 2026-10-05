@@ -588,6 +588,47 @@ function _mostFavourableGroup(group, otherRatings) {
   return { ...best, searched: true };
 }
 
+const _emptyResult = () => ({
+  combinedRating: 0,
+  rawScore: 0,
+  bilateralConditions: [],
+  bilateralFactor: 0,
+  bilateralGroupRating: 0,
+  nonBilateralConditions: [],
+  bilateralExcludedConditions: [],
+  bilateralLimbs: [],
+  bilateralIssues: [],
+  calculationSteps: [],
+  combineSteps: [],
+  gapToNext10: 0,
+  ratingNeededFor100: 0,
+});
+
+function _ratingValue(rating) {
+  if (typeof rating !== "string") return rating;
+  const text = rating.trim();
+  if (text === "") return Number.NaN;
+  return Number(text.endsWith("%") ? text.slice(0, -1) : text);
+}
+
+/**
+ * The entries calculateVARating can use: objects whose rating is a number or a
+ * numeric string ("50", "50%") of 0 or more, capped at 100. Anything else (a
+ * null entry, a missing, negative or non-numeric rating) is left out, so one
+ * bad entry cannot turn the result into NaN.
+ */
+function _usableConditions(conditions) {
+  if (!Array.isArray(conditions)) return [];
+  return conditions.flatMap((c) => {
+    if (c === null || typeof c !== "object") return [];
+    const rating = _ratingValue(c.rating);
+    if (typeof rating !== "number" || !Number.isFinite(rating) || rating < 0) {
+      return [];
+    }
+    return [{ ...c, rating: Math.min(100, rating) }];
+  });
+}
+
 function _sortIntoBilateralGroup(rawConditions) {
   const conditions = _withNormalisedSide(rawConditions);
   const formed = _formBilateralGroup(conditions);
@@ -691,7 +732,8 @@ function _buildFinalCalculationStep(
  * the math stays consistent. The flat ratingCalculator.calculateCombinedRating
  * is legacy.
  *
- * @param {Array} conditions - Array of condition objects:
+ * @param {Array} rawConditions - Array of condition objects (see
+ *   _usableConditions for what is read and what is left out):
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none',
  *     bodyPart: string, limb?: 'upper'|'lower'|'none' }
  * @returns {Object} - Calculation results. `bilateralExcludedConditions` are
@@ -704,24 +746,9 @@ function _buildFinalCalculationStep(
  *   plus { reason: 'most-favourable-not-checked' } when § 4.26(d) was skipped
  *   because there were too many arrangements to try.
  */
-export const calculateVARating = (conditions) => {
-  if (!conditions || conditions.length === 0) {
-    return {
-      combinedRating: 0,
-      rawScore: 0,
-      bilateralConditions: [],
-      bilateralFactor: 0,
-      bilateralGroupRating: 0,
-      nonBilateralConditions: [],
-      bilateralExcludedConditions: [],
-      bilateralLimbs: [],
-      bilateralIssues: [],
-      calculationSteps: [],
-      combineSteps: [],
-      gapToNext10: 0,
-      ratingNeededFor100: 0,
-    };
-  }
+export const calculateVARating = (rawConditions) => {
+  const conditions = _usableConditions(rawConditions);
+  if (conditions.length === 0) return _emptyResult();
 
   const steps = [];
   const combineSteps = [];

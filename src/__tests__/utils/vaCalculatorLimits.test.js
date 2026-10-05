@@ -97,3 +97,69 @@ describe("38 CFR 4.26(c): compensable means rated 10 percent or more", () => {
     expect(result.bilateralGroupRating).toBe(41);
   });
 });
+
+describe("calculateVARating input handling", () => {
+  it("reads numeric strings as numbers: '50' and '30' give 65, then 70", () => {
+    const result = calculateVARating([
+      c("PTSD", "50", "none", "mental"),
+      c("Back", " 30% ", "none", "back"),
+    ]);
+    expect(result.rawScore).toBe(65);
+    expect(result.combinedRating).toBe(70);
+    expect(result.nonBilateralConditions.map((x) => x.rating)).toEqual([
+      50, 30,
+    ]);
+  });
+
+  it("pairs knees entered as strings: '10' + '10' give 19, plus 1.9 is 21", () => {
+    const result = calculateVARating([
+      c("Left knee", "10", "left", "knee"),
+      c("Right knee", "10", "right", "knee"),
+    ]);
+    expect(result.bilateralGroupRating).toBe(21);
+  });
+
+  it("ignores entries with no usable rating instead of returning NaN or throwing: 50 + 30 give 65", () => {
+    const result = calculateVARating([
+      c("PTSD", 50, "none", "mental"),
+      c("Not a number", Number.NaN),
+      c("Negative", -10),
+      c("Null rating", null),
+      c("Missing rating"),
+      c("Words", "severe"),
+      c("Infinite", Number.POSITIVE_INFINITY),
+      null,
+      undefined,
+      "50",
+      42,
+      c("Back", 30, "none", "back"),
+    ]);
+    expect(result.rawScore).toBe(65);
+    expect(result.combinedRating).toBe(70);
+    expect(result.nonBilateralConditions.map((x) => x.name)).toEqual([
+      "PTSD",
+      "Back",
+    ]);
+  });
+
+  it("caps a rating above 100: 150 counts as 100", () => {
+    const result = calculateVARating([
+      c("PTSD", 150, "none", "mental"),
+      c("Back", 30, "none", "back"),
+    ]);
+    expect(result.rawScore).toBe(100);
+    expect(result.combinedRating).toBe(100);
+    expect(result.nonBilateralConditions[0].rating).toBe(100);
+  });
+
+  it.each([[null], [undefined], ["50"], [{}], [[null, "x", c("Bad", "n/a")]]])(
+    "returns the zero result for %j",
+    (input) => {
+      const result = calculateVARating(input);
+      expect(result.combinedRating).toBe(0);
+      expect(result.rawScore).toBe(0);
+      expect(result.combineSteps).toEqual([]);
+      expect(result.bilateralIssues).toEqual([]);
+    },
+  );
+});
