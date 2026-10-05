@@ -263,28 +263,123 @@ const LOWER_LIMB_TERMS = [
   "plantar",
   ...withPlurals(["hip", "thigh", "knee", "leg", "ankle", "toe", "heel"]),
 ];
+// Words that mean the name is about something other than the limb it mentions.
+// A scar or skin condition is rated on the skin (M21-1 V.iii.10.1.h limits the
+// bilateral factor for skin to two diagnostic codes), and "depression
+// associated with left knee strain" is a mental-health rating.
+const SKIN_TERMS = [
+  "skin",
+  "eczema",
+  "dermatitis",
+  "psoriasis",
+  "acne",
+  "tinea",
+  "fungal",
+  "fungus",
+  "athlete",
+  "onychomycosis",
+  "urticaria",
+  "keloid",
+  ...withPlurals(["scar", "rash", "burn"]),
+];
 const NON_LIMB_TERMS = [
   "hearing",
   "tinnitus",
   "vision",
-  ...withPlurals(["ear", "eye", "kidney"]),
+  "visual",
+  "cataract",
+  "glaucoma",
+  "head",
+  "brain",
+  "tbi",
+  "sinus",
+  "sinusitis",
+  "renal",
+  "heart",
+  "cardiac",
+  "hypertension",
+  "liver",
+  "bladder",
+  "sleep apnea",
+  "depression",
+  "depressive",
+  "anxiety",
+  "ptsd",
+  "posttraumatic",
+  "post traumatic",
+  "stress disorder",
+  "mood",
+  "bipolar",
+  "psychiatric",
+  "mental",
+  "schizophrenia",
+  "adjustment disorder",
+  ...withPlurals(["ear", "eye", "kidney", "lung", "headache", "migraine"]),
+];
+const RELATIONAL_TERMS = [
+  "associated with",
+  "secondary to",
+  "due to",
+  "caused by",
+  "as a result of",
+  "result of",
+  "after",
+  "following",
+  "status post",
+  "post operative",
+  "postoperative",
+  "surgery",
+  "surgical",
 ];
 
-const mentionsTerm = (name, terms) => {
-  const text = ` ${String(name ?? "")
+const normaliseWords = (name) =>
+  ` ${String(name ?? "")
     .toLowerCase()
     .replace(/[^a-z]+/g, " ")
     .trim()} `;
+
+const mentionsTerm = (name, terms) => {
+  const text = normaliseWords(name);
   return terms.some((term) => text.includes(` ${term} `));
 };
+
+const hasHyphenatedLimbWord = (name) =>
+  String(name ?? "")
+    .toLowerCase()
+    .split(/[^a-z-]+/)
+    .filter((word) => word.includes("-"))
+    .some((word) =>
+      mentionsTerm(word, [...UPPER_LIMB_TERMS, ...LOWER_LIMB_TERMS]),
+    );
+
+/**
+ * The limb a condition name gives, read conservatively: "upper" or "lower"
+ * only when the name mentions one limb and nothing in it points elsewhere.
+ * A relational clause ("secondary to", "after ... surgery"), a skin,
+ * mental-health, head or organ term, or a hyphenated compound around the limb
+ * word ("left-hand dominant") makes the name "unknown". A name with no limb
+ * word that is about a non-limb part is "none".
+ */
+function _limbFromName(name) {
+  const upper = mentionsTerm(name, UPPER_LIMB_TERMS);
+  const lower = mentionsTerm(name, LOWER_LIMB_TERMS);
+  const skin = mentionsTerm(name, SKIN_TERMS);
+  const nonLimb = mentionsTerm(name, NON_LIMB_TERMS);
+  if (!upper && !lower) return nonLimb && !skin ? "none" : "unknown";
+  const pointsElsewhere =
+    skin ||
+    nonLimb ||
+    mentionsTerm(name, RELATIONAL_TERMS) ||
+    hasHyphenatedLimbWord(name);
+  if (pointsElsewhere || upper === lower) return "unknown";
+  return upper ? "upper" : "lower";
+}
 
 /**
  * Which extremity a condition affects: "upper", "lower", "none" (not a limb)
  * or "unknown". An explicit `limb` wins, then a recognised `bodyPart`, then
- * limb words in the name (ratings imported from a decision letter carry only a
- * name and a side). A name that points at both an arm and a leg is "unknown";
- * a name about hearing, eyes or kidneys, the sided parts that are not limbs,
- * is "none".
+ * the name (ratings imported from a decision letter carry only a name and a
+ * side), read by _limbFromName.
  */
 function _limbOf(condition) {
   if ([...LIMBS, "none"].includes(condition.limb)) return condition.limb;
@@ -292,11 +387,7 @@ function _limbOf(condition) {
     return LIMB_BY_BODY_PART.get(condition.bodyPart);
   }
   if (NON_LIMB_BODY_PARTS.has(condition.bodyPart)) return "none";
-  const upper = mentionsTerm(condition.name, UPPER_LIMB_TERMS);
-  const lower = mentionsTerm(condition.name, LOWER_LIMB_TERMS);
-  if (upper !== lower) return upper ? "upper" : "lower";
-  if (upper) return "unknown";
-  return mentionsTerm(condition.name, NON_LIMB_TERMS) ? "none" : "unknown";
+  return _limbFromName(condition.name);
 }
 
 /**
