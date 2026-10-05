@@ -588,6 +588,7 @@ export const enhancePTSDStatement = async (answers) =>
 
 /**
  * Enhance an appeal statement using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const enhanceAppealStatement = async (answers) =>
   draftWithModel({
@@ -595,10 +596,12 @@ export const enhanceAppealStatement = async (answers) =>
     answers,
     keep: [answers.conditionName].filter(isText),
     toolId: "appeal-statement",
+    userInput: answers, // for crisis detection
   });
 
 /**
  * Generate a nexus letter request using AI
+ * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const generateNexusLetterRequest = async (answers) =>
   draftWithModel({
@@ -606,6 +609,7 @@ export const generateNexusLetterRequest = async (answers) =>
     answers,
     keep: [answers.conditionName, answers.primaryCondition].filter(isText),
     toolId: "nexus-builder",
+    userInput: answers, // for crisis detection
     addressedToReader: true,
   });
 
