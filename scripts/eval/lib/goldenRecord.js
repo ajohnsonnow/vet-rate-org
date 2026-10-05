@@ -34,7 +34,12 @@ const textOf = (content) => {
 };
 
 const KB_MARKER = "DIAMOND KNOWLEDGE BASE (DKB) CONTEXT";
-const KB_COUNT = /\[(\d+) relevant DKB entries provided/;
+const KB_COUNT =
+  /\[(\d+) relevant (?:DKB|knowledge base) entries provided(?:: (\d+) retrieved from the full corpus)?/;
+const KB_BLOCK =
+  /=== [^\n]*DIAMOND KNOWLEDGE BASE \(DKB\) CONTEXT ===[\s\S]*?=== END DKB CONTEXT ===/;
+const COMPUTED_BLOCK =
+  /=== COMPUTED RESULT \([\s\S]*?=== END COMPUTED RESULT ===/;
 const COMPUTED_MARKER = "=== COMPUTED RESULT (";
 
 /**
@@ -50,7 +55,10 @@ export function analyzeEngineRequest(captured, personaPrompts) {
       systemPromptFingerprint: null,
       kbContextInjected: null,
       kbEntryCount: null,
+      kbShardCount: null,
+      kbContext: null,
       computedResultInjected: null,
+      computedResult: null,
       temperature: null,
       maxTokens: null,
     };
@@ -74,7 +82,10 @@ export function analyzeEngineRequest(captured, personaPrompts) {
     systemPromptFingerprint: system ? sha256Hex(systemText) : null,
     kbContextInjected: kbInjected,
     kbEntryCount,
+    kbShardCount: kbInjected && kbCount ? Number(kbCount[2] ?? 0) : null,
+    kbContext: KB_BLOCK.exec(allText)?.[0] ?? null,
     computedResultInjected: allText.includes(COMPUTED_MARKER),
+    computedResult: COMPUTED_BLOCK.exec(allText)?.[0] ?? null,
     temperature: captured.temperature ?? null,
     maxTokens: captured.max_tokens ?? null,
   };
@@ -104,7 +115,10 @@ export function buildCaseRecord({
     systemPromptFingerprint: observed.systemPromptFingerprint,
     kbContextInjected: observed.kbContextInjected,
     kbEntryCount: observed.kbEntryCount,
+    kbShardCount: observed.kbShardCount,
+    kbContext: observed.kbContext,
     computedResultInjected: observed.computedResultInjected,
+    computedResult: observed.computedResult,
     temperature: observed.temperature ?? run.temperature ?? null,
     maxTokens: observed.maxTokens ?? run.maxTokens ?? null,
     engineRequests: extra.engineRequests ?? (captured ? 1 : 0),

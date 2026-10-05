@@ -51,6 +51,18 @@ describe("analyzeEngineRequest", () => {
     const out = analyzeEngineRequest(request(text), personas);
     expect(out.kbContextInjected).toBe(true);
     expect(out.kbEntryCount).toBe(4);
+    expect(out.kbShardCount).toBe(0);
+    expect(out.kbContext).toMatch(
+      /^=== .*CONTEXT ===\nx\n\[4 .*=== END DKB CONTEXT ===$/s,
+    );
+  });
+
+  it("counts full-corpus passages from the flag-on block", () => {
+    const text =
+      "q\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===\nx\n[5 relevant knowledge base entries provided: 3 retrieved from the full corpus, 2 curated DKB entries]\n=== END DKB CONTEXT ===";
+    const out = analyzeEngineRequest(request(text), personas);
+    expect(out.kbEntryCount).toBe(5);
+    expect(out.kbShardCount).toBe(3);
   });
 
   it("detects the computed-result block", () => {

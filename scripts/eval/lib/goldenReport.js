@@ -154,7 +154,10 @@ function totalsSection({ goldenCases, cases, grades }) {
 function kbCell(record) {
   if (record.kbContextInjected == null) return "?";
   if (!record.kbContextInjected) return "0";
-  return String(record.kbEntryCount ?? "yes");
+  if (record.kbEntryCount == null) return "yes";
+  return record.kbShardCount
+    ? `${record.kbEntryCount} (${record.kbShardCount} full corpus)`
+    : String(record.kbEntryCount);
 }
 
 function computedCell(record) {
