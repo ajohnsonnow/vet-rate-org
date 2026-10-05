@@ -60,7 +60,12 @@ import {
   describeMismatch,
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
-import { fitOutputTokens, planPromptFit } from "./promptBudget";
+import {
+  MIN_OUTPUT_TOKENS,
+  cannotFit,
+  fitOutputTokens,
+  planPromptFit,
+} from "./promptBudget";
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
 import { flagContradictions } from "./contradictionCheck";
 import {
@@ -2457,6 +2462,69 @@ async function _planSwarmFit(prompt, baseSystemPrompt, options, computedChars) {
   return { ...plan, contextWindow, requestedOutputTokens, personaChars };
 }
 
+const WLLAMA_DEFAULT_CONTEXT_WINDOW = 4096;
+// The chat-template tags and the "User Request:" separator wllama adds.
+const WLLAMA_WRAPPER_CHARS = 80;
+
+/**
+ * Thrown instead of sending a wllama request that cannot fit its window.
+ * wllama has no truncation guard, and what its engine does with an oversize
+ * prompt is not something a veteran should find out. The message is shown as
+ * it is. It names the context window so the overflow handler can still offer
+ * Cloud AI for a request that is allowed to leave the device.
+ */
+export class OnDevicePromptTooLargeError extends Error {
+  constructor(cause, contextWindow) {
+    const size = contextWindow.toLocaleString("en-US");
+    super(
+      cause === "instructions"
+        ? `The AI model loaded on this device cannot take this request. Its context window (${size} tokens) is too small for Vet-Rate's built-in instructions. Use a device with WebGPU, or add a Gemini API key in Settings to use Cloud AI.`
+        : `This request is too long for the AI model loaded on this device (context window ${size} tokens). Shorten your question or the text you pasted and try again, or add a Gemini API key in Settings so longer requests can use Cloud AI.`,
+    );
+    this.name = "OnDevicePromptTooLargeError";
+    this.cause = cause;
+    this.contextWindow = contextWindow;
+  }
+}
+
+/**
+ * The same plan for the WebAssembly backend. wllama wraps every request in
+ * the loaded model's persona, caller system prompt or not, so the persona
+ * always counts. `tooLarge` says the request cannot be sent at all: because
+ * of Vet-Rate's own default prompt ("instructions") or the caller's text
+ * ("request").
+ */
+function _planWllamaFit(prompt, baseSystemPrompt, options, computedChars) {
+  const model = wllamaService.WLLAMA_MODELS?.[wllamaCurrentModel || "auditor"];
+  const contextWindow = model?.contextSize ?? WLLAMA_DEFAULT_CONTEXT_WINDOW;
+  const requestedOutputTokens = options.maxTokens ?? getUserTokenLimit();
+  const personaChars =
+    (model?.systemPrompt?.length ?? _longestPersonaChars()) +
+    WLLAMA_WRAPPER_CHARS;
+  const fixedChars = personaChars + baseSystemPrompt.length + prompt.length;
+  const sizes = { contextWindow, requestedOutputTokens };
+  const plan = planPromptFit({ ...sizes, fixedChars, computedChars });
+  const instructionsAlone = options.systemPrompt
+    ? false
+    : cannotFit({ ...sizes, fixedChars: fixedChars - prompt.length });
+  const tooLarge = cannotFit({ ...sizes, fixedChars })
+    ? (instructionsAlone && "instructions") || "request"
+    : null;
+  return {
+    ...plan,
+    ...sizes,
+    personaChars,
+    tooLarge,
+    floorTokens: MIN_OUTPUT_TOKENS,
+  };
+}
+
+function _planOnDeviceFit(effectiveMode, ...args) {
+  if (effectiveMode === AI_MODES.SWARM) return _planSwarmFit(...args);
+  if (effectiveMode === AI_MODES.WLLAMA) return _planWllamaFit(...args);
+  return null;
+}
+
 // D15-2: single DKB (Diamond Knowledge Base) injection point. Every backend
 // used to run its own copy of this block (cloud/local/warrant-council/
 // wllama/local-server), each with a different maxEntries/maxChars budget,
@@ -2538,19 +2606,17 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
     ? injectCalculatorForRater(prompt, options)
     : prompt;
 
-  // On-device WebLLM only: what the loaded context window leaves for the
-  // blocks below. The keyword block is sized last, so it gives way first;
-  // the verified block next; the computed block only when it cannot fit at
-  // all.
-  const fit =
-    effectiveMode === AI_MODES.SWARM
-      ? await _planSwarmFit(
-          prompt,
-          baseSystemPrompt,
-          options,
-          groundedPrompt.length - prompt.length,
-        )
-      : null;
+  // In-browser engines only (WebLLM swarm, wllama): what the loaded context
+  // window leaves for the blocks below. The keyword block is sized last, so
+  // it gives way first; the verified block next; the computed block only
+  // when it cannot fit at all.
+  const fit = await _planOnDeviceFit(
+    effectiveMode,
+    prompt,
+    baseSystemPrompt,
+    options,
+    groundedPrompt.length - prompt.length,
+  );
   const roomChars = fit ? fit.referenceChars : Infinity;
   const userPrompt = fit && !fit.keepComputed ? prompt : groundedPrompt;
 
@@ -2588,14 +2654,24 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
   return { systemPrompt, userPrompt, offDeviceUserPrompt, enhancedOptions };
 }
 
-// `maxTokens` for the swarm when the request asked for more output than the
-// window has left beside the assembled prompt; nothing when it fits.
+// `maxTokens` for an in-browser engine when the request asked for more output
+// than the window has left beside the assembled prompt; nothing when it fits.
+// A wllama request that cannot be sent at all carries the reason instead.
 function _fittedOutputTokens(fit, assembledChars) {
   if (!fit) return {};
+  if (fit.tooLarge) {
+    return {
+      _promptTooLarge: {
+        cause: fit.tooLarge,
+        contextWindow: fit.contextWindow,
+      },
+    };
+  }
   const maxTokens = fitOutputTokens({
     contextWindow: fit.contextWindow,
     requestedOutputTokens: fit.requestedOutputTokens,
     promptChars: fit.personaChars + assembledChars,
+    ...(fit.floorTokens ? { floorTokens: fit.floorTokens } : {}),
   });
   return maxTokens === fit.requestedOutputTokens ? {} : { maxTokens };
 }
@@ -2625,6 +2701,10 @@ async function _invokeBackend(mode, systemPrompt, sentUserPrompt, options) {
       return { text, agentUsed: agent };
     }
     case AI_MODES.WLLAMA: {
+      if (options._promptTooLarge) {
+        const { cause, contextWindow } = options._promptTooLarge;
+        throw new OnDevicePromptTooLargeError(cause, contextWindow);
+      }
       const text = await generateWithWllama(systemPrompt, userPrompt, options);
       return { text, agentUsed: wllamaCurrentModel || "auditor" };
     }
@@ -2878,7 +2958,7 @@ async function _handleContextOverflowFallback(
   const errorMsg = err.message || "";
 
   // 🔥 CONTEXT WINDOW OVERFLOW HANDLING
-  // When Local AI (4096 tokens) can't handle large input, auto-fallback to Cloud AI (1M tokens)
+  // When the on-device engine cannot hold the input, fall back to Cloud AI
   const isContextOverflow =
     errorMsg.includes("ContextWindowSizeExceeded") ||
     errorMsg.includes("context window") ||
@@ -2919,25 +2999,26 @@ async function _handleContextOverflowFallback(
         onDevice: false,
         fallback: true,
         fallbackReason: "context_overflow",
-        note: "Document was too large for Local AI (4096 tokens). Processed with Cloud AI instead.",
+        note: CONTEXT_OVERFLOW_CLOUD_NOTE,
       };
     } catch (cloudErr) {
       console.error("☁️ Cloud AI fallback also failed:", cloudErr.message);
       throw new Error(
-        `Document is too large for Local AI (4096 token limit) and Cloud AI also failed. ` +
-          `Please try with a shorter document, or paste only the most important sections of your decision letter.`,
+        "This request is too long for the AI model on this device, and Cloud AI could not answer it either. Shorten your question or the text you pasted and try again.",
       );
     }
   }
 
-  // No Cloud AI available - give helpful error
+  // The window differs by device and engine, so no figure is quoted here; an
+  // OnDevicePromptTooLargeError already names its own.
+  if (err instanceof OnDevicePromptTooLargeError) throw err;
   throw new Error(
-    `📏 Document is too large for Local AI (4096 token limit). ` +
-      `Options: 1) Configure a Gemini API key in Settings to enable Cloud AI fallback for large documents, ` +
-      `2) Paste only the key sections of your decision letter (look for "Reasons for Decision" or "Denial" sections), ` +
-      `3) Try uploading fewer pages at once.`,
+    "This request is too long for the AI model on this device. Shorten your question or the text you pasted and try again, or add a Gemini API key in Settings so longer requests can use Cloud AI.",
   );
 }
+
+export const CONTEXT_OVERFLOW_CLOUD_NOTE =
+  "This request was too long for the AI model on this device, so Cloud AI answered instead.";
 
 // ADR-009: true for every backend that never leaves the device - the two
 // in-browser engines (Warrant Council/SWARM, WLLAMA) and legacy LOCAL are
@@ -3266,16 +3347,35 @@ async function _dispatchWithRecovery(
       enhancedOptions,
       options,
     );
-    if (overflowResult) return overflowResult;
-
-    return await _handleGeneralFallback(
-      err,
-      effectiveMode,
-      systemPrompt,
-      userPrompt,
-      enhancedOptions,
-    );
+    const fallback =
+      overflowResult ??
+      (await _handleGeneralFallback(
+        err,
+        effectiveMode,
+        systemPrompt,
+        userPrompt,
+        enhancedOptions,
+      ));
+    return _validateFallbackResult(fallback, options);
   }
+}
+
+// A fallback answer reaches the veteran exactly as a primary one does, so it
+// gets the same hallucination filter, validation and block handling. The
+// calculator and citation checks run on whatever this returns.
+async function _validateFallbackResult(fallback, options) {
+  const { text, hallucinationReport } = _applyHallucinationFilter(
+    fallback.text,
+    options,
+  );
+  const validated = await _buildValidatedResult(
+    text,
+    fallback.mode,
+    fallback.agent,
+    hallucinationReport,
+    options,
+  );
+  return { ...fallback, ...validated };
 }
 
 // Ordered [substring, friendly name] pairs - first match wins, so more

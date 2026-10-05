@@ -29,7 +29,12 @@ vi.mock("../../utils/wllamaService", () => ({
   generateWithModel: vi.fn(),
   getWllamaStatus: vi.fn().mockReturnValue({ ready: false }),
   unloadWllama: vi.fn(),
-  WLLAMA_MODELS: {},
+  // A roomy stand-in window: these tests are about what is sent, not about
+  // fitting wllama's real 4,096 tokens (unifiedAIService.wllamaFit.test.js).
+  WLLAMA_MODELS: {
+    auditor: { contextSize: 16384, systemPrompt: "" },
+    rater: { contextSize: 16384, systemPrompt: "" },
+  },
 }));
 vi.mock("../../utils/deviceCapabilityDetector", () => ({
   detectDeviceCapabilities: vi.fn().mockResolvedValue({
