@@ -49,6 +49,10 @@ const HIGH_RATING = /\b(?:60|70|80|90) ?(?:%|percent)/i;
 const PLANNING = /\b(?:plan|next|strategy)\b/i;
 const NEXT_STEP =
   /\bnext (?:claim )?(?:steps?|actions?)\b|\bnext round of claims\b|\bwhat should i (?:do|file) next\b/i;
+// "What should my next claim action be?" alone gives the model nothing to
+// apply the filing rules to. The question has to say where the claim stands.
+const CLAIM_STATE =
+  /\b(?:denied|denial|pending|granted|rated|rating|decision|appeal\w*|evidence|increase)\b/i;
 
 const REVIEW_TERMS =
   /\bhigher[- ]level review\b|\bHLR\b|\bboard appeal\b|\bboard of veterans\b|\bnotice of disagreement\b|\bstatement of the case\b|\bdecision review\b/i;
@@ -171,7 +175,7 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "next-claim-step",
-    pattern: NEXT_STEP,
+    when: (text) => NEXT_STEP.test(text) && CLAIM_STATE.test(text),
     entries: ["cfr-3.155-b", "cfr-3.2501"],
   },
   {

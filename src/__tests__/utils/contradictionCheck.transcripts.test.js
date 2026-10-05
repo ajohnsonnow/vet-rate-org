@@ -92,15 +92,12 @@ describe("contradiction rules over the recorded evaluation answers", () => {
     expect(flagged).toEqual([
       "071859 a13 tdiu-from-percentages",
       "071859 a16 presumptive-needs-exposure-proof",
-      "071859 a18 higher-level-review-new-evidence",
       "074624 a13 tdiu-from-percentages",
       "081228 a25 tdiu-from-percentages",
       "090513 a16 presumptive-needs-exposure-proof",
       "094601 a16 presumptive-needs-exposure-proof",
       "094601 a26 higher-level-review-new-evidence",
-      "105010 a18 new-and-material-standard",
       "110055 a26 new-and-material-standard",
-      "110822 a18 new-and-material-standard",
       "124154 a13 tdiu-from-percentages",
       "125630 a25 tdiu-from-percentages",
       "125630 a26 new-and-material-standard",
@@ -117,6 +114,17 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "210108 a29 secondary-barred",
       "221648 a26 new-and-material-standard",
       "221648 a26 intent-to-file-for-filed-claim",
+    ]);
+  });
+
+  it("no longer reaches three real a18 contradictions, because a18 raises no topic", () => {
+    const a18 = prose
+      .filter((record) => record.id === "a18")
+      .flatMap((record) => hitsFor(record, ALL_TOPICS));
+    expect(a18).toEqual([
+      "071859 a18 higher-level-review-new-evidence",
+      "105010 a18 new-and-material-standard",
+      "110822 a18 new-and-material-standard",
     ]);
   });
 

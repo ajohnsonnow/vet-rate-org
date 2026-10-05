@@ -81,19 +81,30 @@ describe("Supplemental Claim wording", () => {
 
 describe("questions about what to do next", () => {
   it.each([
-    "Given my situation, what should my next claim action be?",
-    "Help me prioritize next steps.",
-    "Help me plan my next round of claims.",
-    "What should I file next?",
+    "I have 5 pending claims and 3 denied. Help me prioritize next steps.",
+    "Help me plan my next round of claims given my current 70% rating.",
+    "My claim was denied. What should I do next?",
+    "I got a decision last week. What is my next claim action?",
+    "My knee is rated 10%. What should I file next?",
   ])("%s", (question) => {
     expect(detectReferenceTopics(question)).toContain("next-claim-step");
   });
 
+  it.each([
+    "Given my situation, what should my next claim action be?",
+    "Help me prioritize next steps.",
+    "Help me plan my next round of claims.",
+    "What should I file next?",
+  ])("says nothing about the claim, so gets nothing: %s", (question) => {
+    expect(detectReferenceTopics(question)).toEqual([]);
+  });
+
   it("offers both the Intent to File rule and the Supplemental Claim rule", () => {
     expect(
-      selectVerifiedEntries("What should my next claim action be?", {
-        maxChars: 3400,
-      }).map((e) => e.id),
+      selectVerifiedEntries(
+        "I got a decision last week. What is my next claim action?",
+        { maxChars: 3400 },
+      ).map((e) => e.id),
     ).toEqual(["cfr-3.155-b", "cfr-3.2501"]);
   });
 });
@@ -117,8 +128,8 @@ describe("the golden-set questions the graded run left without verified text", (
     expect(topicsFor("a15")).toEqual(["tdiu", "next-claim-step"]);
   });
 
-  it("a18: next claim action", () => {
-    expect(topicsFor("a18")).toEqual(["next-claim-step"]);
+  it("a18: asks for a next action and says nothing about the claim", () => {
+    expect(topicsFor("a18")).toEqual([]);
   });
 
   it.each(["a01", "a07", "a09", "a17", "a23", "a28"])(
