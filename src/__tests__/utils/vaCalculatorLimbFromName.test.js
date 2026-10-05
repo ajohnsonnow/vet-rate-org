@@ -172,6 +172,53 @@ describe("a limb named only after 'with' belongs to a secondary finding", () => 
   });
 });
 
+describe("a name with a symbol outside ordinary punctuation gives no limb", () => {
+  it.each([
+    ["\u24C5\u24E3\u24E2\u24D3, left arm amputation"],
+    ["\u2605 left arm amputation"],
+    ["Left arm amputation\u2122"],
+    ["Left arm amputation \u{1F600}"],
+    ["Left arm amputation #2"],
+    ["Left_arm amputation"],
+    ["Left arm amputation + PTSD".replace(" PTSD", "")],
+    ["\u00A7 left arm amputation"],
+  ])("%s 20 + right shoulder 20 give 36, flagged", (name) => {
+    const result = calculateVARating([
+      { name, rating: 20, side: "left", bodyPart: "other" },
+      {
+        name: "Right shoulder",
+        rating: 20,
+        side: "right",
+        bodyPart: "shoulder",
+      },
+    ]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(36);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({ reason: "limb-unknown", name }),
+    ]);
+  });
+
+  it.each([
+    ["Le\u00ADft knee strain", "soft hyphen"],
+    ["Left\u200B knee strain", "zero-width space"],
+    ["\uFEFFLeft knee\u200D strain", "byte-order mark and joiner"],
+    ["Knee strain (left); 10%".replace("; 10%", ""), "parentheses"],
+    ["Left knee: strain", "colon"],
+    ["Left knee strain.", "full stop"],
+  ])(
+    "%j (%s) still reads as the left knee: 20 + 20 give 36, plus 3.6 is 40",
+    (name) => {
+      const result = calculateVARating([
+        { name, rating: 20, side: "left", bodyPart: "other" },
+        { name: "Right knee", rating: 20, side: "right", bodyPart: "knee" },
+      ]);
+      expect(result.bilateralGroupRating).toBe(40);
+      expect(result.bilateralIssues).toEqual([]);
+    },
+  );
+});
+
 describe("repros from QA", () => {
   it("sciatica of the right leg 20 + left knee strain 10 + PTSD 50 give 60, 64, then 60 (not 70)", () => {
     const list = [

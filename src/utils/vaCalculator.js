@@ -348,8 +348,19 @@ const NAME_NON_LIMB_WORDS = new Set([
 // Words are runs of letters and digits in any script. A word with a digit or a
 // letter outside a-z ("우울증", "straín") is kept, so it fails the allowlist
 // like any other unknown word instead of vanishing from the name.
+const INVISIBLE_CHARACTERS = /[\u00AD\u200B-\u200D\u2060\uFEFF]/g;
+// Soft hyphens and zero-width characters are removed first, so "Le\u00ADft"
+// reads as "Left" instead of two unknown words.
+const _visibleName = (name) =>
+  String(name ?? "").replace(INVISIBLE_CHARACTERS, "");
+
+// Anything that is not a letter, a digit, white space or ordinary punctuation.
+// A symbol word ("\u24C5\u24E3\u24E2\u24D3") is not a letter run, so without
+// this check it would drop out of the name and the rest would be read alone.
+const ODD_NAME_CHARACTER = /[^\p{L}\p{N}\s,.\-'()/:;&%]/u;
+
 const _nameWords = (name) =>
-  String(name ?? "")
+  _visibleName(name)
     .toLowerCase()
     .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean);
@@ -421,6 +432,7 @@ function _readName(name) {
     (i) => !(i.limb || i.side) || beforeWith.includes(i),
   );
   const readable =
+    !ODD_NAME_CHARACTER.test(_visibleName(name)) &&
     items.every((i) => i.allowed) &&
     limbs.size === 1 &&
     items.filter((i) => i.part).length <= 1 &&
