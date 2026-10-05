@@ -60,6 +60,8 @@
     "stress:cfile": "node scripts/stress/run-cfile-stress.mjs --spec cfile",
     "stress:muster": "node scripts/stress/run-cfile-stress.mjs --spec muster",
     "stress:all": "node scripts/stress/run-cfile-stress.mjs --spec both",
+    "eval:model-watch": "node scripts/eval/model-watch.mjs",
+    "eval:model-watch:snapshot": "node scripts/eval/model-watch.mjs --update-snapshot",
     "postinstall": "node scripts/copy-wasm.mjs",
     "prepare": "husky",
     "preflight": "node scripts/preflight.js",
