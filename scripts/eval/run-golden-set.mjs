@@ -15,7 +15,7 @@
  * checks and writing a Markdown summary next to it. Existing run files are
  * never overwritten.
  */
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runnerImport } from "vite";
@@ -34,20 +34,12 @@ import {
   claimRunFiles,
   finalizeRun,
 } from "./lib/runArtifacts.js";
+import { captureRunStart } from "./lib/runStart.js";
 
 const REPO_ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const GOLDEN_PATH = join(REPO_ROOT, "src/__tests__/agentic/golden-set.jsonl");
 const RESULTS_DIR = join(REPO_ROOT, "llm-compiler/logs/golden-set-results");
 const DRY_RUN_DIR = join(REPO_ROOT, "test-results/golden-set-dry-run");
-
-function gitInfo() {
-  const run = (args) =>
-    execFileSync("git", args, { cwd: REPO_ROOT, encoding: "utf8" }).trim();
-  return {
-    gitCommit: run(["rev-parse", "HEAD"]),
-    gitDirty: run(["status", "--porcelain"]).length > 0,
-  };
-}
 
 async function loadFromSrc(relativePath) {
   const { module } = await runnerImport(join(REPO_ROOT, relativePath), {
@@ -136,11 +128,12 @@ async function main() {
     return 2;
   }
 
+  const start = captureRunStart({ cwd: REPO_ROOT });
   const modelId = opts.dryRun ? DRY_RUN_MODEL_ID : opts.model;
   const goldenCases = selectCases(loadGoldenSet(GOLDEN_PATH), opts.cases);
   const { calculateVARating } = await loadFromSrc("src/utils/vaCalculator.js");
   const outDir = opts.outDir ?? (opts.dryRun ? DRY_RUN_DIR : RESULTS_DIR);
-  const files = claimRunFiles(outDir, modelId);
+  const files = claimRunFiles(outDir, modelId, start.startedAt);
   const settings = {
     temperature: opts.temperature,
     maxTokens: opts.maxTokens,
@@ -168,10 +161,11 @@ async function main() {
     ctx: { calculateVARating, ...legal },
     runInfo: {
       modelId,
-      date: new Date().toISOString(),
+      date: start.date,
       transcriptFile: `${files.name}.jsonl`,
       legalIndexNote: legal.legalIndexNote,
-      ...gitInfo(),
+      gitCommit: start.gitCommit,
+      gitDirty: start.gitDirty,
     },
   });
 
