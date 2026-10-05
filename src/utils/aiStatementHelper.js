@@ -531,7 +531,7 @@ async function draftWithModel({
       template: safeTemplate,
       inputs: suppliedIn(
         safeTemplate,
-        await _redactForAi(Object.values(answers).filter(isText)),
+        await _redactForAi(Object.values(answers ?? {}).filter(isText)),
       ),
       keep: safeKeep.filter((phrase) => safeTemplate.includes(phrase)),
       addressedToReader,

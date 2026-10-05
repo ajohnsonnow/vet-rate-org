@@ -173,6 +173,16 @@ describe.each(TOOLS)("%s", (_name, run, template, toolId) => {
   });
 });
 
+describe("an empty form", () => {
+  it("still yields a draft made of blanks", async () => {
+    modelReplies("Please provide more details about your service.");
+    const result = await enhancePTSDStatement(undefined);
+
+    expect(result.draftPath).toBe("template");
+    expect(result.content).toBe(buildPTSDStressorTemplate({}));
+  });
+});
+
 describe("failures stay failures", () => {
   it("an engine error is reported, with no draft path", async () => {
     generateAI.mockRejectedValue(new Error("Local AI not initialized"));
