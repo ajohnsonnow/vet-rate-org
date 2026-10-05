@@ -25,6 +25,32 @@ const SECONDARY =
   /\bsecondar(?:y|ily)\b|\bproximately due\b|\b3\.310\b|\b(?:caused by|due to|result of|because of|aggravated by|worsened by) (?:my |a |an |the )?service[- ]connected\b/i;
 const SECONDARY_PRESUMED = /\btbi\b|\btraumatic brain\b|\bamputat/i;
 
+// Veterans rarely use the regulation's own term. These are the everyday
+// phrasings that mean the same question.
+const ITF_TERMS =
+  /\bintent(?:ion)?s? to file\b|\bITF\b|\b21-0966\b|\b3\.155\b/i;
+const ITF_DATE =
+  /\beffective dates?\b|\b(?:hold|lock in|lock|protect|save|preserve|keep) (?:my |the )?(?:effective |filing )?date\b/i;
+const ITF_FIRST_CLAIM =
+  /\bstart(?:ing)? (?:my|a|the) claim\b|\bnever filed\b|\bfirst (?:va )?claim\b|\bwhere do i start\b/i;
+const SUPPLEMENTAL_TERMS =
+  /\bsupplemental claims?\b|\bnew and relevant\b|\b20-0995\b|\b3\.2501\b|\breopen(?:ed|ing)?\b|\bre-?fil(?:e|ing)\b/i;
+const DENIED_THEN_WHAT =
+  /\bdenied\b[\s\S]{0,120}\b(?:next steps?|what now|options|new evidence|try again)\b/i;
+const EVIDENCE_AFTER_DENIAL = /\bnew evidence\b[\s\S]{0,120}\bdenied\b/i;
+const TDIU_TERMS = /\btdiu\b|\bunemployab|\b4\.16\b|\b21-8940\b/i;
+const CANNOT_WORK =
+  /\b(?:can['’]?t|cannot|unable to) (?:work|hold (?:down )?a job|keep a job)\b/i;
+const LOST_WORK =
+  /\blost my job (?:because of|due to)\b|\b(?:had to|forced to) (?:quit|stop working)\b/i;
+const HIGH_RATING = /\b(?:60|70|80|90) ?(?:%|percent)/i;
+const PLANNING = /\b(?:plan|next|strategy)\b/i;
+const NEXT_STEP =
+  /\bnext (?:claim )?(?:steps?|actions?)\b|\bnext round of claims\b|\bwhat should i (?:do|file) next\b/i;
+
+const anyMatch = (text, ...patterns) =>
+  patterns.some((pattern) => pattern.test(text));
+
 const FORM_WORDS =
   /\b(?:va|which|what|right|correct|wrong) forms?\b|\bforms? (?:do|should|number|is|are|for|to)\b/i;
 const FORM_NUMBERS = /\bform \d|\b2\dp?-\d{3,5}[a-z]{0,2}\b|\b10182\b/i;
@@ -53,7 +79,7 @@ const isHerbicideQuestion = (text, toolId) =>
 export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   {
     id: "intent-to-file",
-    pattern: /\bintent(?:ion)?s? to file\b|\bITF\b|\b21-0966\b|\b3\.155\b/i,
+    when: (text) => anyMatch(text, ITF_TERMS, ITF_DATE, ITF_FIRST_CLAIM),
     entries: ["cfr-3.155-b", "cfr-3.155-b-1"],
   },
   {
@@ -68,14 +94,22 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "supplemental",
-    pattern:
-      /\bsupplemental claims?\b|\bnew and relevant\b|\b20-0995\b|\b3\.2501\b|\breopen(?:ed|ing)?\b/i,
+    when: (text) =>
+      anyMatch(
+        text,
+        SUPPLEMENTAL_TERMS,
+        DENIED_THEN_WHAT,
+        EVIDENCE_AFTER_DENIAL,
+      ),
     entries: ["cfr-3.2501", "cfr-3.2501-a-d"],
   },
   {
     id: "tdiu",
-    pattern: /\btdiu\b|\bunemployab|\b4\.16\b|\b21-8940\b/i,
-    toolIds: ["tdiu-builder", "tdiu-narrative"],
+    when: (text, toolId) =>
+      anyMatch(text, TDIU_TERMS, CANNOT_WORK, LOST_WORK) ||
+      (HIGH_RATING.test(text) && PLANNING.test(text)) ||
+      toolId === "tdiu-builder" ||
+      toolId === "tdiu-narrative",
     entries: ["cfr-4.16-a", "cfr-4.16-b", "cfr-4.16-a-employment"],
   },
   {
@@ -109,6 +143,11 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
     id: "herbicide",
     when: isHerbicideQuestion,
     entries: ["pact-herbicide", "pact-herbicide-law-changes"],
+  },
+  {
+    id: "next-claim-step",
+    pattern: NEXT_STEP,
+    entries: ["cfr-3.155-b", "cfr-3.2501"],
   },
   {
     id: "claim-forms",
