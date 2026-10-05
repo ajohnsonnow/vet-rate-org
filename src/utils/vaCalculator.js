@@ -254,7 +254,18 @@ const NAME_SIDE_WORDS = {
   right: "right",
   bilateral: "bilateral",
   both: "bilateral",
+  lt: "left",
+  rt: "right",
 };
+// Clinical shorthand for a side plus a whole extremity.
+const NAME_EXTREMITY_ABBREVIATIONS = {
+  lue: { side: "left", limb: "upper" },
+  rue: { side: "right", limb: "upper" },
+  lle: { side: "left", limb: "lower" },
+  rle: { side: "right", limb: "lower" },
+};
+// Words that place a condition in one limb without being a part of it.
+const NAME_LIMB_WORDS = { sciatic: "lower" };
 const NAME_LIMB_PARTS = new Map([
   ...withPlurals([
     "shoulder",
@@ -280,6 +291,8 @@ const NAME_PHRASES = [
   { words: "lower extremity", limb: "lower", part: true },
   { words: "lower extremities", limb: "lower", part: true },
   { words: "carpal tunnel syndrome", limb: "upper" },
+  { words: "patellofemoral pain syndrome", limb: "lower" },
+  { words: "impingement syndrome" },
   { words: "pes planus", limb: "lower" },
   { words: "plantar fasciitis", limb: "lower" },
   { words: "degenerative joint disease" },
@@ -307,6 +320,19 @@ const NAME_CONDITION_WORDS = new Set([
   "radiculopathy",
   "neuropathy",
   "impingement",
+  "condition",
+  "injury",
+  "diabetic",
+  "peripheral",
+  "traumatic",
+  "nerve",
+  "paralysis",
+  "neuritis",
+  "neuralgia",
+  "chondromalacia",
+  "patellofemoral",
+  "pain",
+  "degenerative",
   "of",
   "the",
   "with",
@@ -348,6 +374,17 @@ function _nameItems(name) {
       }
       if (NAME_SIDE_WORDS[word]) {
         return { word, side: NAME_SIDE_WORDS[word], allowed: true };
+      }
+      if (NAME_EXTREMITY_ABBREVIATIONS[word]) {
+        return {
+          word,
+          ...NAME_EXTREMITY_ABBREVIATIONS[word],
+          part: true,
+          allowed: true,
+        };
+      }
+      if (NAME_LIMB_WORDS[word]) {
+        return { word, limb: NAME_LIMB_WORDS[word], allowed: true };
       }
       if (NAME_LIMB_PARTS.has(word)) {
         return {
@@ -393,6 +430,13 @@ function _readName(name) {
 }
 
 const _limbFromName = (name) => _readName(name).limb;
+
+/**
+ * The side a condition name states: "left", "right", "bilateral" or "none".
+ * Reads "Lt"/"Rt" and "LLE"/"RLE"/"LUE"/"RUE" as well as the words. A name
+ * that states more than one side gives "none".
+ */
+export const sideFromName = (name) => _readName(name).side ?? "none";
 
 /**
  * Which extremity a condition affects: "upper", "lower", "none" (not a limb)
@@ -1414,6 +1458,7 @@ export default {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
   detectPyramiding,
+  sideFromName,
   checkBilateralFactorCompliance,
   getAmputationMinimumRating,
   VA_PAY_RATES_2026,

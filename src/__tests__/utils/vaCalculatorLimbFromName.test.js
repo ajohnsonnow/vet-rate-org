@@ -5,7 +5,8 @@ import {
 } from "../../utils/vaCalculator";
 
 const named = (name, rating, side) => ({ name, rating, side });
-const sideIn = (name) => (/\bright\b/i.test(name) ? "right" : "left");
+const sideIn = (name) =>
+  /\b(?:right|rt|rle|rue)\b/i.test(name) ? "right" : "left";
 const opposite = (side) => (side === "left" ? "right" : "left");
 const partner = (side, bodyPart) => ({
   name: "Paired limb",
@@ -41,6 +42,12 @@ const NOT_A_LIMB_RATING = [
   ["Tinea pedis of the left foot", "knee"],
   ["Left arm and leg weakness", "knee"],
   ["Left knee and ankle strain", "knee"],
+  ["Strain with pain of the left leg", "knee"],
+  ["Pain syndrome of the left leg", "knee"],
+  ["Chronic left knee pain", "knee"],
+  ["Left knee disorder", "knee"],
+  ["Left knee syndrome", "knee"],
+  ["Sciatic nerve paralysis, left arm", "elbow"],
 ];
 
 const A_LIMB_RATING = [
@@ -56,6 +63,20 @@ const A_LIMB_RATING = [
   ["Degenerative joint disease of the right shoulder", "elbow"],
   ["Plantar fasciitis, left foot", "knee"],
   ["Left-knee meniscal residuals", "knee"],
+  ["Left knee pain", "knee"],
+  ["Diabetic peripheral neuropathy, left lower extremity", "foot"],
+  ["Paralysis of the sciatic nerve, left leg", "knee"],
+  ["LLE radiculopathy", "knee"],
+  ["RUE neuritis", "elbow"],
+  ["Rt. knee strain", "knee"],
+  ["Lt knee condition", "knee"],
+  ["Left knee injury", "knee"],
+  ["Traumatic arthritis, right ankle", "knee"],
+  ["Chondromalacia, left knee", "knee"],
+  ["Patellofemoral pain syndrome, left knee", "knee"],
+  ["Left shoulder impingement syndrome", "elbow"],
+  ["Sciatic neuralgia, left", "knee"],
+  ["Degenerative arthritis of the left hip", "knee"],
 ];
 
 describe("a limb is read from a name only when every word is on the allowlist", () => {

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   calculateVARating,
   checkBilateralFactorCompliance,
+  sideFromName,
 } from "../../utils/vaCalculator";
 import { buildCalculatorExplanation } from "../../utils/raterGrounding";
 
@@ -96,6 +97,25 @@ describe("side is normalised before pairing", () => {
   });
 });
 
+describe("sideFromName", () => {
+  it.each([
+    ["Left knee strain", "left"],
+    ["Knee, Right", "right"],
+    ["Bilateral pes planus", "bilateral"],
+    ["Pes planus, both feet", "bilateral"],
+    ["Rt. knee strain", "right"],
+    ["Lt knee strain", "left"],
+    ["LLE radiculopathy", "left"],
+    ["RUE neuritis", "right"],
+    ["Tinnitus", "none"],
+    ["Left and right knee strain", "none"],
+    ["Copyright claim", "none"],
+    [null, "none"],
+  ])("%j gives %s", (name, side) => {
+    expect(sideFromName(name)).toBe(side);
+  });
+});
+
 describe("a name that states a side on an entry with no side set", () => {
   const pasted = (name, rating) => ({
     name,
@@ -158,10 +178,6 @@ describe("a name that states a side on an entry with no side set", () => {
     [
       "the other limb",
       [pasted("Left knee strain", 10), pasted("Right shoulder strain", 10)],
-    ],
-    [
-      "a name outside the allowlist",
-      [pasted("Left knee pain", 10), c("Right knee", 10, "right", "knee")],
     ],
   ])("is not reported with %s", (_label, list) => {
     expect(calculateVARating(list).bilateralIssues).toEqual([]);
