@@ -149,6 +149,11 @@ export const CORRECTION_SPECS = {
     topic: "toxic-service",
     line: "VA will presume BPOT exposure",
   },
+  "higher-level-review-evidence": {
+    citation: "38 CFR § 3.2601(f)",
+    section: "3.2601",
+    select: [{ start: "(f) Evidentiary record.", firstSentences: 2 }],
+  },
   "review-filing": {
     citation: "38 CFR § 3.2500(a)",
     section: "3.2500",

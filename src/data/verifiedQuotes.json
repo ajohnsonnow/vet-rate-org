@@ -159,6 +159,14 @@
         "retrieved": "2026-07-19"
       }
     },
+    "higher-level-review-evidence": {
+      "citation": "38 CFR § 3.2601(f)",
+      "text": "(f) Evidentiary record. The evidentiary record in a higher-level review is limited to the evidence of record as of the date the agency of original jurisdiction issued notice of the prior decision under review and the higher-level adjudicator may not consider additional evidence.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
     "review-filing": {
       "citation": "38 CFR § 3.2500(a)",
       "text": "(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary: (i) A request for higher-level review under § 3.2601 or (ii) An appeal to the Board under § 20.202 of this chapter. (2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",
