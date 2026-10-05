@@ -52,6 +52,7 @@ import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
 import {
   buildCalculatorExplanation,
+  buildCalculatorSummaryLine,
   buildComputedResultBlock,
   checkRaterResponse,
   describeMismatch,
@@ -1107,7 +1108,8 @@ export const injectCalculatorForRater = (prompt, options) => {
  * pair the calculator did not find, is replaced by the calculator's own
  * working in plain language. The replacement is recorded on the result
  * (validationWarnings, plus calculatorReplacement) so callers can see it
- * happened.
+ * happened. A response that never states the combined rating at all is kept
+ * and the calculator's one-line result is appended to it.
  */
 export const enforceCalculatorOnResult = (result, options) => {
   if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
@@ -1115,7 +1117,17 @@ export const enforceCalculatorOnResult = (result, options) => {
   }
   const calc = calculateVARating(options.conditions);
   const check = checkRaterResponse(result.text, calc);
-  if (check.ok) return result;
+  if (check.ok) {
+    if (check.stated.includes(check.expected)) return result;
+    const body = String(result.text ?? "").trimEnd();
+    return {
+      ...result,
+      text: body
+        ? `${body}\n\n${buildCalculatorSummaryLine(calc)}`
+        : buildCalculatorSummaryLine(calc),
+      calculatorAppended: { expected: check.expected },
+    };
+  }
 
   const reason = describeMismatch(check);
   console.warn(`🧮 Rater response replaced by calculator working: ${reason}`);

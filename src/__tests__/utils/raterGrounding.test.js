@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
+  buildCalculatorSummaryLine,
   buildComputedResultBlock,
   checkRaterResponse,
   extractStatedCombinedRatings,
@@ -49,6 +50,96 @@ const KNEES = [
 describe("extractStatedCombinedRatings (shared fixture with scripts/eval/lib/goldenChecks.js)", () => {
   it.each(FIXTURE)("$name", ({ text, stated }) => {
     expect(extractStatedCombinedRatings(text)).toEqual(stated);
+  });
+});
+
+const GOLDEN = Object.fromEntries(
+  readFileSync(join(here, "..", "agentic", "golden-set.jsonl"), "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .map((c) => [c.id, c]),
+);
+const TRANSCRIPT_ENTRIES = FIXTURE.filter((entry) => entry.expected);
+
+describe("Rater responses recorded in the five golden-set transcripts", () => {
+  it("covers cases a11, a12, a13, a24 and a25 in each of the five transcripts", () => {
+    expect(TRANSCRIPT_ENTRIES).toHaveLength(25);
+    expect(new Set(TRANSCRIPT_ENTRIES.map((e) => e.transcript)).size).toBe(5);
+    expect(new Set(TRANSCRIPT_ENTRIES.map((e) => e.caseId))).toEqual(
+      new Set(["a11", "a12", "a13", "a24", "a25"]),
+    );
+  });
+
+  it.each(TRANSCRIPT_ENTRIES)("$name", (entry) => {
+    const calc = calculateVARating(GOLDEN[entry.caseId].conditions);
+    expect(calc.combinedRating).toBe(entry.calculator);
+    const check = checkRaterResponse(entry.text, calc);
+    let outcome = "no final figure stated";
+    if (check.wrongFigures.length > 0) outcome = "contradicts calculator";
+    else if (check.stated.includes(calc.combinedRating))
+      outcome = "matches calculator";
+    expect(outcome).toBe(
+      entry.knownMiss ? "no final figure stated" : entry.expected,
+    );
+  });
+});
+
+describe("extractStatedCombinedRatings phrasings and exclusions", () => {
+  it.each([
+    [
+      "subject phrase before the verb, bold figure",
+      "The combined rating for the veteran, considering the bilateral factor and the highest-rated condition, is **52%**.",
+      [52],
+    ],
+    ["label then bold figure", "**Final Result:** 52%", [52]],
+    ["bold figure after a colon", "Final combined rating: **60%**", [60]],
+    [
+      "hedge after the verb",
+      "Your combined rating is approximately 99%.",
+      [99],
+    ],
+    [
+      "TeX escaped percent sign",
+      String.raw`\text{Final Combined Rating} = 58\%`,
+      [58],
+    ],
+  ])("finds the figure: %s", (_label, text, stated) => {
+    expect(extractStatedCombinedRatings(text)).toEqual(stated);
+  });
+
+  it.each([
+    ["group value", "Total Group Rating: 22%"],
+    ["operand of a sum", "Combined Rating: 10% + 10% = 20%"],
+    ["step value", "Final step: 72% combined with 10% = 75%"],
+    [
+      "condition rating after a clause word",
+      "The combined rating applies when the knee is 10%.",
+    ],
+    [
+      "input listed before the verb",
+      "Your combined rating uses 50% PTSD and 30% tinnitus.",
+    ],
+    [
+      "total of something else",
+      "Total possible rating without any pairing = 100%",
+    ],
+  ])("does not count: %s", (_label, text) => {
+    expect(extractStatedCombinedRatings(text)).toEqual([]);
+  });
+});
+
+describe("buildCalculatorSummaryLine", () => {
+  it("states only the calculator's figure and its source rule", () => {
+    expect(buildCalculatorSummaryLine(calculateVARating(FOUR))).toBe(
+      "Vet-Rate's calculator result for the ratings you entered: your combined rating is 80% (38 CFR § 4.25).",
+    );
+  });
+  it("is consistent with the check", () => {
+    const calc = calculateVARating(FOUR);
+    expect(
+      checkRaterResponse(buildCalculatorSummaryLine(calc), calc).stated,
+    ).toEqual([80]);
   });
 });
 

@@ -8,15 +8,22 @@
 
 // Same pattern as STATED_COMBINED in scripts/eval/lib/goldenChecks.js. Both are
 // pinned by src/__tests__/agentic/eval/fixtures/statedCombinedRatings.json.
+const NEAR_FILLER = String.raw`(?:[\s:=*~≈]|\b(?:va|disability|rating|evaluation|is|of|would|be|comes|to|equals|at|rounds|approximately|about|roughly|percentage|calculation|results|in)\b){1,12}?`;
+const CLAUSE_WORDS = String.raw`when|if|where|because|since|while|which|that|than|group|step|steps|each`;
+const FAR_LINK = String.raw`(?:(?!\b(?:${CLAUSE_WORDS})\b)[^\d.!?\n]){0,100}?(?:\b(?:is|are|was|would be|will be|comes? to|equals?|totals?)\b|\\approx|[:=≈])`;
 const STATED_COMBINED = new RegExp(
-  String.raw`\b(?:combined|overall|final|total)(?:[\s:=*~≈]|\b(?:va|disability|rating|evaluation|is|of|would|be|comes|to|equals|at|rounds|approximately|about|roughly|percentage|calculation|results|in)\b){1,12}?(\d{1,3}(?:\.\d+)?)\s*(?:%|percent)`,
+  String.raw`\b(?:(?:combined|overall|final|total)${NEAR_FILLER}|(?:combined|overall|final)${FAR_LINK})[\s*_~:=≈]*(?:(?:about|approximately|roughly|around|nearly|almost)\b[\s*_~]*)?(\d{1,3}(?:\.\d+)?)\s*(?:\\?%|percent)(?!\s*[+×*/÷]\s*\(?\s*\d)`,
   "gi",
 );
 
 /**
  * Every distinct combined-rating figure a response states, in order of first
- * appearance. Only phrases of the form "combined/overall/final/total
- * [rating] [is|of|=|:] N%" count; ratings merely listed as inputs do not.
+ * appearance. A figure counts when it follows "combined/overall/final/total"
+ * either closely ("combined rating of 70%") or after a short subject phrase
+ * and a verb or colon ("The combined rating for the veteran, considering the
+ * bilateral factor, is **52%**", "Final Result:** 52%"). Ratings merely listed
+ * as inputs, group or step values, and operands of a sum ("20% + 10% = 30%")
+ * do not count.
  */
 export function extractStatedCombinedRatings(text) {
   const seen = [];
@@ -172,6 +179,13 @@ export function checkRaterResponse(text, calc) {
     inventedPairs,
   };
 }
+
+/**
+ * One plain line carrying the calculator's figure, appended to an answer that
+ * never states the combined rating itself.
+ */
+export const buildCalculatorSummaryLine = (calc) =>
+  `Vet-Rate's calculator result for the ratings you entered: your combined rating is ${calc.combinedRating}% (38 CFR § 4.25).`;
 
 export function describeMismatch(check) {
   const parts = [];
