@@ -568,9 +568,9 @@ function _buildFinalCalculationStep(
  *
  * The bilateral factor is applied to the group _formBilateralGroup forms, NOT
  * to the two highest ratings. UI surfaces (MillionDollarDashboard, WhatIfSandbox,
- * SecondaryScoutLauncher) combine through this engine / its primitives
- * (combineMultipleRatings, calculateBilateralFactor) so the math stays
- * consistent. The flat ratingCalculator.calculateCombinedRating is legacy.
+ * SecondaryScoutLauncher, RetroPayHunter) all combine through this engine so
+ * the math stays consistent. The flat ratingCalculator.calculateCombinedRating
+ * is legacy.
  *
  * @param {Array} conditions - Array of condition objects:
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none',
@@ -680,6 +680,59 @@ export const calculateVARating = (conditions) => {
     nextTier,
     ratingNeededFor100,
     currentEfficiency: Math.round(currentEfficiency * 1000) / 10, // As percentage
+  };
+};
+
+const _joinNames = (names) =>
+  names.length < 2
+    ? names.join("")
+    : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
+
+/**
+ * Whether the bilateral factor belongs in a veteran's combined rating, for
+ * tools that ask the veteran to check a decision against it. It reads the
+ * group calculateVARating forms, so it never points at a pairing 38 CFR § 4.26
+ * does not support. `pairedParts` holds the names of the conditions in the
+ * group.
+ */
+export const checkBilateralFactorCompliance = (conditions) => {
+  const result = calculateVARating(conditions);
+  const names = (list) => _joinNames(list.map((c) => c.name));
+
+  if (result.bilateralConditions.length > 0) {
+    const group = result.calculationSteps.find(
+      (step) => step.bilateralGroupRating !== undefined,
+    );
+    return {
+      applicable: true,
+      pairedParts: result.bilateralConditions.map((c) => c.name),
+      message: `The bilateral factor applies to ${names(result.bilateralConditions)} (38 CFR § 4.26). Check that your rating decision applied it.`,
+      potentialBonus: `Combined, these ratings are ${group.combinedBilateral}%. The factor adds 10% of that (${group.bilateralFactor}), so they count as ${group.bilateralGroupRating}% before combining with your other ratings.`,
+    };
+  }
+
+  const none = { applicable: false, pairedParts: [] };
+  const excluded = result.bilateralExcludedConditions;
+  if (excluded.length > 0) {
+    return {
+      ...none,
+      message: `${names(excluded)} are bilateral disabilities, but leaving them out of the bilateral factor gives a higher combined rating, so no factor is expected (38 CFR § 4.26(d)).`,
+    };
+  }
+  const unknown = result.bilateralIssues.filter(
+    (issue) => issue.reason === "limb-unknown",
+  );
+  if (unknown.length > 0) {
+    const one = unknown.length === 1;
+    return {
+      ...none,
+      message: `Vet-Rate could not tell whether ${names(unknown)} ${one ? "is an arm or a leg condition" : "are arm or leg conditions"}, so it could not check the bilateral factor for ${one ? "it" : "them"}.`,
+    };
+  }
+  return {
+    ...none,
+    message:
+      "No bilateral factor applies to these ratings. It needs a compensable rating in both arms or both legs (38 CFR § 4.26).",
   };
 };
 
@@ -1149,6 +1202,7 @@ export default {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
   detectPyramiding,
+  checkBilateralFactorCompliance,
   getAmputationMinimumRating,
   VA_PAY_RATES_2026,
   BODY_PARTS,

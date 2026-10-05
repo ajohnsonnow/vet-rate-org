@@ -32,9 +32,9 @@ import {
 } from "../utils/veteranContextProvider";
 import {
   analyzeRetroactivePay,
-  checkBilateralFactorCompliance,
   CUE_PATTERNS,
 } from "../data/vaPayRatesHistorical";
+import { checkBilateralFactorCompliance } from "../utils/vaCalculator";
 import { formatLocalDate } from "../utils/dateUtils";
 
 const STORAGE_KEY = "vet_rate_retro_pay_history";
@@ -223,7 +223,6 @@ function createPeriodHandlers({
 function useRunAnalysisCallback({
   ratingHistory,
   conditions,
-  bilateralCheck,
   setAnalysis,
   setBilateralCheck,
   setCueAlerts,
@@ -243,21 +242,20 @@ function useRunAnalysisCallback({
       const result = analyzeRetroactivePay(ratingHistory);
       setAnalysis(result);
 
-      // Check bilateral factor
-      if (conditions.length > 0) {
-        const bilateral = checkBilateralFactorCompliance(conditions);
-        setBilateralCheck(bilateral);
-      }
+      const bilateral =
+        conditions.length > 0
+          ? checkBilateralFactorCompliance(conditions)
+          : null;
+      if (bilateral) setBilateralCheck(bilateral);
 
       // Generate CUE alerts based on patterns
       const alerts = [];
 
-      // Check for bilateral factor issues
-      if (bilateralCheck?.applicable) {
+      if (bilateral?.applicable) {
         alerts.push({
           pattern: findCuePattern("bilateral_not_applied"),
-          severity: "high",
-          message: `You have bilateral conditions (${bilateralCheck.pairedParts.join(", ")}). Verify the 10% bilateral factor was applied.`,
+          severity: "medium",
+          message: `The bilateral factor (38 CFR § 4.26) applies to ${bilateral.pairedParts.join(", ")}. Vet-Rate has not checked your decision: verify that the factor was applied.`,
         });
       }
 
@@ -267,7 +265,6 @@ function useRunAnalysisCallback({
   }, [
     ratingHistory,
     conditions,
-    bilateralCheck,
     setAnalysis,
     setBilateralCheck,
     setCueAlerts,
@@ -311,7 +308,7 @@ ${analysis.hasCoverageGap ? `- NOTE: ${analysis.uncoveredMonths} month(s) before
 **Rating History:**
 ${ratingHistory.map(formatRatingHistoryLine).join("\n")}
 
-${bilateralCheck?.applicable ? `\n**Bilateral Factor Issue Detected:**\nPaired body parts: ${bilateralCheck.pairedParts.join(", ")}\nThe 10% bilateral factor may not have been applied correctly.` : ""}
+${bilateralCheck?.applicable ? `\n**Bilateral factor (38 CFR § 4.26):**\nIt applies to: ${bilateralCheck.pairedParts.join(", ")}\nWhether the rating decision applied it has not been checked; tell the veteran to verify it.` : ""}
 
 ${formatCueIssuesBlock(cueAlerts)}
 
@@ -662,12 +659,9 @@ function LoadedConditionsNotice({ conditions }) {
         {conditions.length} condition
         {conditions.length !== 1 ? "s" : ""} detected for bilateral factor
         analysis.
-        {conditions.some(
-          (c) =>
-            c.side === "bilateral" || c.side === "left" || c.side === "right",
-        ) && (
+        {checkBilateralFactorCompliance(conditions).applicable && (
           <span className="block mt-1 text-purple-400">
-            ⚠️ Paired body parts found - bilateral factor may apply!
+            The bilateral factor applies to some of these ratings.
           </span>
         )}
       </p>
@@ -1314,7 +1308,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
   const runAnalysis = useRunAnalysisCallback({
     ratingHistory,
     conditions,
-    bilateralCheck,
     setAnalysis,
     setBilateralCheck,
     setCueAlerts,
