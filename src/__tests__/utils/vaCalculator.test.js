@@ -119,6 +119,7 @@ describe("calculateVARating combineSteps (the per-step working)", () => {
         "bilateralConditions",
         "bilateralFactor",
         "bilateralGroupRating",
+        "bilateralExcludedConditions",
         "bilateralIssues",
         "bilateralLimbs",
         "calculationSteps",

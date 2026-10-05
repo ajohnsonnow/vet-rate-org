@@ -379,17 +379,110 @@ function _formBilateralGroup(conditions) {
   return { group: conditions.filter((c) => inGroup.has(c)), limbs, issues };
 }
 
-function _calculateBilateralGroup(bilateralConditions, steps, trail) {
-  const bilateralRatings = bilateralConditions.map((c) => c.rating);
-  const combinedBilateral = combineMultipleRatings(
-    bilateralRatings,
-    trail,
-    "bilateral",
-  );
-
-  // Calculate bilateral factor (10% of combined)
+function _bilateralGroupValue(ratings, trail = null) {
+  const combinedBilateral = combineMultipleRatings(ratings, trail, "bilateral");
   const bilateralFactor = Math.round(combinedBilateral * 0.1 * 10) / 10;
   const bilateralGroupRating = Math.round(combinedBilateral + bilateralFactor);
+  return { combinedBilateral, bilateralFactor, bilateralGroupRating };
+}
+
+const MAX_EXCEPTION_ARRANGEMENTS = 20000;
+
+const _isMoreFavourable = (candidate, best, full) =>
+  candidate.rating > best.rating ||
+  (best !== full &&
+    candidate.rating === best.rating &&
+    (candidate.raw > best.raw ||
+      (candidate.raw === best.raw &&
+        candidate.kept.length > best.kept.length)));
+
+/**
+ * 38 CFR § 4.26(d): when leaving one or more bilateral disabilities out of the
+ * bilateral factor calculation gives a higher combined evaluation, they are
+ * left out and combined separately. The whole group stays unless some other
+ * arrangement gives a higher evaluation after the final rounding. What stays
+ * in must still be a group under (a) to (c): keeping the factor on one side
+ * alone would turn the 60/20/10/10 example that § 4.26 itself gives into 80.
+ *
+ * Entries with the same limb, side and rating are interchangeable, so
+ * arrangements are counted per such class. Returns { kept, removed, searched };
+ * `searched` is false when there were too many arrangements to try.
+ */
+function _mostFavourableGroup(group, otherRatings) {
+  const evaluate = (members) => {
+    const kept = group.filter((c) => members.includes(c));
+    const removed = group.filter((c) => !members.includes(c));
+    const ratings = [...otherRatings, ...removed.map((c) => c.rating)];
+    if (kept.length > 0) {
+      ratings.push(
+        _bilateralGroupValue(kept.map((c) => c.rating)).bilateralGroupRating,
+      );
+    }
+    const raw = combineMultipleRatings(ratings);
+    return { kept, removed, raw, rating: roundToNearest10(raw) };
+  };
+
+  const full = evaluate(group);
+  const classes = new Map();
+  for (const c of group) {
+    const key = `${_limbOf(c)}|${c.side}|${c.rating}`;
+    classes.set(key, [...(classes.get(key) ?? []), c]);
+  }
+  const lists = [...classes.values()];
+  const arrangements = lists.reduce((n, list) => n * (list.length + 1), 1);
+  if (arrangements > MAX_EXCEPTION_ARRANGEMENTS) {
+    return { ...full, searched: false };
+  }
+
+  let best = full;
+  const visit = (index, members) => {
+    if (index < lists.length) {
+      for (let n = 0; n <= lists[index].length; n++) {
+        visit(index + 1, [...members, ...lists[index].slice(0, n)]);
+      }
+      return;
+    }
+    if (members.length === group.length) return;
+    const stillAGroup =
+      members.length === 0 ||
+      _formBilateralGroup(members).group.length === members.length;
+    if (!stillAGroup) return;
+    const candidate = evaluate(members);
+    if (_isMoreFavourable(candidate, best, full)) best = candidate;
+  };
+  visit(0, []);
+  return { ...best, searched: true };
+}
+
+function _sortIntoBilateralGroup(conditions) {
+  const formed = _formBilateralGroup(conditions);
+  const {
+    kept: bilateralConditions,
+    removed: bilateralExcludedConditions,
+    searched,
+  } = _mostFavourableGroup(
+    formed.group,
+    conditions.filter((c) => !formed.group.includes(c)).map((c) => c.rating),
+  );
+  return {
+    bilateralConditions,
+    bilateralExcludedConditions,
+    nonBilateralConditions: conditions.filter(
+      (c) => !bilateralConditions.includes(c),
+    ),
+    bilateralLimbs: formed.limbs.filter((limb) =>
+      bilateralConditions.some((c) => _limbOf(c) === limb),
+    ),
+    bilateralIssues: searched
+      ? formed.issues
+      : [...formed.issues, { reason: "most-favourable-not-checked" }],
+  };
+}
+
+function _calculateBilateralGroup(bilateralConditions, steps, trail) {
+  const bilateralRatings = bilateralConditions.map((c) => c.rating);
+  const { combinedBilateral, bilateralFactor, bilateralGroupRating } =
+    _bilateralGroupValue(bilateralRatings, trail);
 
   steps.push({
     step: 2,
@@ -461,9 +554,14 @@ function _buildFinalCalculationStep(
  * @param {Array} conditions - Array of condition objects:
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none',
  *     bodyPart: string, limb?: 'upper'|'lower'|'none' }
- * @returns {Object} - Calculation results. `bilateralIssues` lists sided
- *   entries that got no bilateral factor for a reason the veteran can fix:
- *   { ...condition, reason: 'limb-unknown'|'single-bilateral-evaluation' }.
+ * @returns {Object} - Calculation results. `bilateralExcludedConditions` are
+ *   the bilateral disabilities left out of the factor under § 4.26(d); they are
+ *   also in `nonBilateralConditions`, which is everything combined outside the
+ *   group. `bilateralIssues` lists sided entries that got no bilateral factor
+ *   for a reason the veteran can fix:
+ *   { ...condition, reason: 'limb-unknown'|'single-bilateral-evaluation' },
+ *   plus { reason: 'most-favourable-not-checked' } when § 4.26(d) was skipped
+ *   because there were too many arrangements to try.
  */
 export const calculateVARating = (conditions) => {
   if (!conditions || conditions.length === 0) {
@@ -474,6 +572,7 @@ export const calculateVARating = (conditions) => {
       bilateralFactor: 0,
       bilateralGroupRating: 0,
       nonBilateralConditions: [],
+      bilateralExcludedConditions: [],
       bilateralLimbs: [],
       bilateralIssues: [],
       calculationSteps: [],
@@ -487,19 +586,20 @@ export const calculateVARating = (conditions) => {
   const combineSteps = [];
 
   const {
-    group: bilateralConditions,
-    limbs: bilateralLimbs,
-    issues: bilateralIssues,
-  } = _formBilateralGroup(conditions);
-  const nonBilateralConditions = conditions.filter(
-    (c) => !bilateralConditions.includes(c),
-  );
+    bilateralConditions,
+    bilateralExcludedConditions,
+    nonBilateralConditions,
+    bilateralLimbs,
+    bilateralIssues,
+  } = _sortIntoBilateralGroup(conditions);
 
+  const label = (c) => `${c.name} (${c.rating}%)`;
   steps.push({
     step: 1,
     description: "Identify bilateral conditions",
-    bilateral: bilateralConditions.map((c) => `${c.name} (${c.rating}%)`),
-    nonBilateral: nonBilateralConditions.map((c) => `${c.name} (${c.rating}%)`),
+    bilateral: bilateralConditions.map(label),
+    nonBilateral: nonBilateralConditions.map(label),
+    excludedFromFactor: bilateralExcludedConditions.map(label),
   });
 
   let allRatings = [];
@@ -548,6 +648,9 @@ export const calculateVARating = (conditions) => {
     bilateralFactor,
     bilateralGroupRating,
     nonBilateralConditions: nonBilateralConditions.map((c) => ({ ...c })),
+    bilateralExcludedConditions: bilateralExcludedConditions.map((c) => ({
+      ...c,
+    })),
     bilateralLimbs,
     bilateralIssues,
     calculationSteps: steps,

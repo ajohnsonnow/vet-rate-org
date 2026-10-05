@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { calculateVARating, calculateWhatIf } from "../../utils/vaCalculator";
+import {
+  calculateBilateralFactor,
+  calculateVARating,
+  calculateWhatIf,
+  combineMultipleRatings,
+  roundToNearest10,
+} from "../../utils/vaCalculator";
 
 const c = (name, rating, side = "none", bodyPart = "other", extra = {}) => ({
   name,
@@ -242,6 +248,126 @@ describe("38 CFR 4.26(b): four affected extremities take one factor", () => {
   });
 });
 
+describe("38 CFR 4.26(d): the most favourable result", () => {
+  it("drops the factor when it lowers the result: 90, 30, knees 10 + 10 give 93, 94, 95, then 100 (not 94, then 90)", () => {
+    const result = calculateVARating([
+      c("PTSD", 90, "none", "mental"),
+      c("Back", 30, "none", "back"),
+      c("Left knee", 10, "left", "knee"),
+      c("Right knee", 10, "right", "knee"),
+    ]);
+    expect(result.bilateralConditions).toEqual([]);
+    expect(names(result.bilateralExcludedConditions)).toEqual([
+      "Left knee",
+      "Right knee",
+    ]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.bilateralGroupRating).toBe(0);
+    expect(result.combineSteps.map((s) => s.result)).toEqual([93, 94, 95]);
+    expect(result.rawScore).toBe(95);
+    expect(result.combinedRating).toBe(100);
+  });
+
+  it("removes one disability and keeps the factor on the rest: 40, 20, left 30 + 10, right 10 give 41, 65, 72, 75, then 80 (not 74, then 70)", () => {
+    const result = calculateVARating([
+      c("PTSD", 40, "none", "mental"),
+      c("Back", 20, "none", "back"),
+      c("Left knee", 30, "left", "knee"),
+      c("Left ankle", 10, "left", "ankle"),
+      c("Right knee", 10, "right", "knee"),
+    ]);
+    expect(names(result.bilateralConditions)).toEqual([
+      "Left knee",
+      "Right knee",
+    ]);
+    expect(names(result.bilateralExcludedConditions)).toEqual(["Left ankle"]);
+    expect(names(result.nonBilateralConditions)).toEqual([
+      "PTSD",
+      "Back",
+      "Left ankle",
+    ]);
+    expect(result.bilateralGroupRating).toBe(41);
+    expect(result.combineSteps).toEqual([
+      { stage: "bilateral", from: 30, with: 10, result: 37 },
+      { stage: "all", from: 41, with: 40, result: 65 },
+      { stage: "all", from: 65, with: 20, result: 72 },
+      { stage: "all", from: 72, with: 10, result: 75 },
+    ]);
+    expect(result.combinedRating).toBe(80);
+  });
+
+  it("never keeps the factor on one side alone, so the 4.26 worked example stays 74, then 70", () => {
+    const result = calculateVARating([
+      c("PTSD", 60, "none", "mental"),
+      c("Back", 20, "none", "back"),
+      c("Left knee", 10, "left", "knee"),
+      c("Right knee", 10, "right", "knee"),
+    ]);
+    expect(result.bilateralExcludedConditions).toEqual([]);
+    expect(result.rawScore).toBe(74);
+    expect(result.combinedRating).toBe(70);
+  });
+
+  it("keeps the whole group when removing nothing is at least as good: 30 + 20 give 44, plus 4.4 is 48, with 40 gives 69, then 70", () => {
+    const result = calculateVARating([
+      c("Back", 40, "none", "back"),
+      c("Left knee", 30, "left", "knee"),
+      c("Right knee", 20, "right", "knee"),
+    ]);
+    expect(result.bilateralExcludedConditions).toEqual([]);
+    expect(result.bilateralGroupRating).toBe(48);
+    expect(result.combinedRating).toBe(70);
+  });
+
+  it("says so instead of searching when there are too many arrangements to try", () => {
+    const ratings = [10, 20, 30, 40, 50, 60, 70, 80];
+    const legs = ratings.flatMap((rating) => [
+      c(`Left leg ${rating}`, rating, "left", "leg"),
+      c(`Right leg ${rating}`, rating, "right", "leg"),
+    ]);
+    const result = calculateVARating(legs);
+    expect(result.bilateralConditions).toHaveLength(16);
+    expect(result.bilateralIssues).toEqual([
+      { reason: "most-favourable-not-checked" },
+    ]);
+  });
+});
+
+describe("38 CFR 4.26(d) over a grid of inputs", () => {
+  const grid = [10, 20, 30, 40, 50, 60, 70];
+  const others = [[40, 20], [60], [80, 30], [90, 20]];
+  const cases = grid.flatMap((left) =>
+    grid.flatMap((right) =>
+      grid.flatMap((extraLeft) =>
+        others.map((other) => ({ legs: [left, right, extraLeft], other })),
+      ),
+    ),
+  );
+  const check = ({ legs, other }) => {
+    const result = calculateVARating([
+      c("Left knee", legs[0], "left", "knee"),
+      c("Right knee", legs[1], "right", "knee"),
+      c("Left ankle", legs[2], "left", "ankle"),
+      ...other.map((r, i) => c(`Other ${i}`, r, "none", "back")),
+    ]);
+    const wholeGroup = roundToNearest10(
+      combineMultipleRatings([calculateBilateralFactor(legs), ...other]),
+    );
+    const noFactor = roundToNearest10(
+      combineMultipleRatings([...legs, ...other]),
+    );
+    const improved = result.bilateralExcludedConditions.length > 0;
+    expect(result.combinedRating).toBeGreaterThanOrEqual(noFactor);
+    expect(result.combinedRating > wholeGroup).toBe(improved);
+    expect(result.combinedRating >= wholeGroup).toBe(true);
+    return improved;
+  };
+
+  it("is never below the whole-group result or the result with no factor, and leaves entries out only for a higher result", () => {
+    expect(cases.filter(check).length).toBeGreaterThan(0);
+  });
+});
+
 describe("limb type of a sided entry", () => {
   it("reads the limb from the name when the body part is not given: 30 + 30 give 51, plus 5.1 is 56", () => {
     const result = calculateVARating([
@@ -339,6 +465,7 @@ describe("result shape", () => {
     const empty = calculateVARating([]);
     const one = calculateVARating([c("PTSD", 50, "none", "mental")]);
     for (const result of [empty, one]) {
+      expect(result.bilateralExcludedConditions).toEqual([]);
       expect(result.bilateralIssues).toEqual([]);
       expect(result.bilateralLimbs).toEqual([]);
       expect(result.bilateralConditions).toEqual([]);
