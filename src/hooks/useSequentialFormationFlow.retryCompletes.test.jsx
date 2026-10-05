@@ -21,7 +21,7 @@ import {
 } from "../utils/musterCallProcessor";
 import { useFormationQueue } from "./useFormationQueue";
 import { useSequentialFormationFlow } from "./useSequentialFormationFlow";
-import { readInterruptedImport } from "../utils/importProgressMarker";
+import { readActiveImportMarker } from "../utils/importProgressMarker";
 
 const toast = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
 const setError = vi.fn();
@@ -57,6 +57,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   sessionStorage.clear();
+  localStorage.clear();
   for (const method of ["log", "warn", "error"]) {
     vi.spyOn(console, method).mockImplementation(() => {});
   }
@@ -116,6 +117,6 @@ describe("an import with one unreadable file", () => {
     expect(
       persistFormationDocument.mock.calls.map(([f]) => f.name).sort(),
     ).toEqual(["generic-a.pdf", "generic-b.pdf"]);
-    expect(readInterruptedImport()).toBeNull();
+    expect(readActiveImportMarker()).toBeNull();
   });
 });

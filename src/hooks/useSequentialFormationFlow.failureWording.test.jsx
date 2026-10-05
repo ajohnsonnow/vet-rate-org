@@ -21,6 +21,7 @@ import {
   persistFormationDocument,
 } from "../utils/musterCallProcessor";
 import { useSequentialFormationFlow } from "./useSequentialFormationFlow";
+import { readActiveImportMarker } from "../utils/importProgressMarker";
 
 const toast = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
 const setError = vi.fn();
@@ -91,6 +92,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
   sessionStorage.clear();
+  localStorage.clear();
   logged = [];
   for (const method of ["log", "warn", "error"]) {
     vi.spyOn(console, method).mockImplementation((...args) =>
@@ -228,8 +230,9 @@ describe("the console", () => {
 
     expect(logged.join("\n")).toContain("document 1");
     expect(logged.join("\n")).not.toMatch(/UNKNOWN|CLAIM_LETTER/);
-    expect(
-      JSON.parse(sessionStorage.getItem("vetrate_import_in_progress")).labels,
-    ).toEqual(["document 1", "document 2 (claim letter)"]);
+    expect(readActiveImportMarker().labels).toEqual([
+      "document 1",
+      "document 2 (claim letter)",
+    ]);
   });
 });

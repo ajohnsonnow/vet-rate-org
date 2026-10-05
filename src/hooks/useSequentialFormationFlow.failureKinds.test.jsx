@@ -19,7 +19,7 @@ vi.mock("../utils/musterCallProcessor", () => ({
 
 import { processFormationDocument } from "../utils/musterCallProcessor";
 import { useSequentialFormationFlow } from "./useSequentialFormationFlow";
-import { readInterruptedImport } from "../utils/importProgressMarker";
+import { readActiveImportMarker } from "../utils/importProgressMarker";
 
 const WORKER_URL = "http://localhost:5383/assets/pdf.worker.min.mjs";
 const RAW = `Setting up fake worker failed: "Failed to fetch dynamically imported module: ${WORKER_URL}".`;
@@ -106,6 +106,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
   sessionStorage.clear();
+  localStorage.clear();
   logged = [];
   for (const method of ["log", "warn", "error"]) {
     vi.spyOn(console, method).mockImplementation((...args) =>
@@ -251,7 +252,7 @@ describe("the interrupted-import count", () => {
       vkbSaved: true,
     });
     await start(result);
-    expect(readInterruptedImport()).toMatchObject({ saved: 1, total: 2 });
+    expect(readActiveImportMarker()).toMatchObject({ saved: 1, total: 2 });
 
     await act(async () => {
       await result.current.handleVerifyAndSave({
@@ -261,7 +262,7 @@ describe("the interrupted-import count", () => {
       });
     });
 
-    expect(readInterruptedImport()).toMatchObject({ saved: 1, total: 2 });
+    expect(readActiveImportMarker()).toMatchObject({ saved: 1, total: 2 });
   });
 
   it("does not count a document that is read but not yet filed", async () => {
@@ -272,6 +273,6 @@ describe("the interrupted-import count", () => {
     });
     await start(result);
 
-    expect(readInterruptedImport()).toMatchObject({ saved: 0, total: 2 });
+    expect(readActiveImportMarker()).toMatchObject({ saved: 0, total: 2 });
   });
 });

@@ -18,6 +18,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { removeBeforeUnloadWarning } from "../utils/dataPersistence";
 import { stopAutoBackup } from "../utils/autoBackup";
+import { clearAllImportMarkers } from "../utils/importProgressMarker";
 import {
   broadcastDataWipe,
   broadcastWipePending,
@@ -36,6 +37,7 @@ export const FULL_DATA_DELETE_CONFIRM_TEXT =
   "offline data. This does not redirect you anywhere and cannot be undone.";
 
 function clearLocalAndSessionStorage() {
+  clearAllImportMarkers();
   // 1. Clear all localStorage
   // eslint-disable-next-line no-console
   console.log("🔥 Clearing localStorage...");

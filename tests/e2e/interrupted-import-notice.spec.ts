@@ -3,16 +3,17 @@ import { test, expect, Locator, Page } from "@playwright/test";
 import { dismissDisclaimer } from "./helpers";
 
 /**
- * D23-3: the notice that an import was cut short is read from this tab's
- * session storage when the app starts, so it appears only when the killed tab
- * itself is reloaded. At the narrowest and widest screens it must not scroll
+ * D23-3 / D24-5: the notice that an import was cut short is read from local
+ * storage, so it survives a killed browser and appears in any tab once the
+ * owner stopped beating. At the narrowest and widest screens it must not scroll
  * the page sideways, its Dismiss must be reachable, and it must never cover
  * Quick Exit.
  */
 const APP_VERSION: string = JSON.parse(
   readFileSync("package.json", "utf-8"),
 ).version;
-const MARKER_KEY = "vetrate_import_in_progress";
+const MARKER_PREFIX = "vetrate_import_in_progress:";
+const STALE_MS = 5 * 60 * 1000;
 const QUICK_EXIT_SELECTOR =
   'button[aria-label="Quick exit - immediately leave this page"]';
 
@@ -33,25 +34,41 @@ async function seedFirstRunFlags(page: Page): Promise<void> {
   }, APP_VERSION);
 }
 
+async function seedMarker(page: Page, ageMs: number): Promise<void> {
+  await page.evaluate(
+    ({ prefix, age }) => {
+      localStorage.setItem(
+        prefix + "e2e-interrupted-import",
+        JSON.stringify({
+          total: 4,
+          saved: 3,
+          labels: ["document 1", "document 2", "document 3", "document 4"],
+          id: "e2e-interrupted-import",
+          owner: "another-tab",
+          heartbeat: Date.now() - age,
+        }),
+      );
+    },
+    { prefix: MARKER_PREFIX, age: ageMs },
+  );
+}
+
 async function loadWithInterruptedImport(page: Page): Promise<void> {
   await seedFirstRunFlags(page);
   await page.goto("/");
   await dismissDisclaimer(page);
-  await page.evaluate((key) => {
-    sessionStorage.setItem(
-      key,
-      JSON.stringify({
-        total: 4,
-        saved: 3,
-        labels: ["document 1", "document 2", "document 3", "document 4"],
-        id: "e2e-interrupted-import",
-      }),
-    );
-  }, MARKER_KEY);
+  await seedMarker(page, STALE_MS);
   await page.reload();
   await expect(page.getByTestId("interrupted-import-notice")).toBeAttached();
   await dismissDisclaimer(page);
 }
+
+const markerCount = (page: Page): Promise<number> =>
+  page.evaluate(
+    (prefix) =>
+      Object.keys(localStorage).filter((key) => key.startsWith(prefix)).length,
+    MARKER_PREFIX,
+  );
 
 async function isOnTop(locator: Locator): Promise<boolean> {
   return locator.evaluate((el) => {
@@ -138,14 +155,12 @@ for (const viewport of VIEWPORTS) {
 
       await dismiss.click();
       await expect(notice).toBeHidden();
-      expect(
-        await page.evaluate((key) => sessionStorage.getItem(key), MARKER_KEY),
-      ).toBeNull();
+      expect(await markerCount(page)).toBe(0);
     });
   });
 }
 
-test("a different tab of the same browser does not show the notice", async ({
+test("another tab of the same browser also shows an abandoned import", async ({
   page,
   context,
 }) => {
@@ -156,5 +171,22 @@ test("a different tab of the same browser does not show the notice", async ({
   await seedFirstRunFlags(other);
   await other.goto("/");
   await dismissDisclaimer(other);
+  await expect(other.getByTestId("interrupted-import-notice")).toBeVisible();
+});
+
+test("an import still beating in another tab is not reported", async ({
+  page,
+  context,
+}) => {
+  await seedFirstRunFlags(page);
+  await page.goto("/");
+  await dismissDisclaimer(page);
+  await seedMarker(page, 1000);
+
+  const other = await context.newPage();
+  await seedFirstRunFlags(other);
+  await other.goto("/");
+  await dismissDisclaimer(other);
   await expect(other.getByTestId("interrupted-import-notice")).toHaveCount(0);
+  expect(await markerCount(other)).toBe(1);
 });

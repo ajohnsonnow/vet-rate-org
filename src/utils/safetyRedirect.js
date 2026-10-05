@@ -21,6 +21,7 @@
 
 import { clearBeforeUnloadWarning } from "./beforeUnloadGuard";
 import { stopAutoBackup } from "./autoBackup";
+import { clearAllImportMarkers } from "./importProgressMarker";
 // Side-effect-only: installs the cross-tab data-wipe listener (decision B).
 // safetyRedirect.js is reliably imported early in every tab (via
 // QuickExitButton -> AppShellOverlays), so this import is what guarantees
@@ -60,6 +61,7 @@ export const triggerPanicRedirect = () => {
 
     // 3. Clear temporary session data (NOT persistent localStorage)
     sessionStorage.clear();
+    clearAllImportMarkers();
 
     // 3b. Stop autoBackup's pending debounced backup (D13-8) - a write from
     // moments before this redirect can still be sitting in its 2s debounce

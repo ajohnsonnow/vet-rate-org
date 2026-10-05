@@ -4,19 +4,32 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
  * A tab the browser kills mid-import cannot show a message, so the next load
- * says so. Read once when the app starts: an import begun later in this
- * session never shows it.
+ * says so, in any tab. An import that is still running in another tab keeps a
+ * fresh heartbeat and is never reported; if its owner later goes away, the
+ * periodic re-check below reports it once. An import begun in this tab is
+ * never reported here.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   clearImportMarker,
   describeInterruptedImport,
   readInterruptedImport,
 } from "../../utils/importProgressMarker";
 
+const RECHECK_MS = 10000;
+
 export default function InterruptedImportNotice() {
   const [interrupted, setInterrupted] = useState(readInterruptedImport);
+
+  useEffect(() => {
+    if (interrupted) return undefined;
+    const timer = setInterval(
+      () => setInterrupted(readInterruptedImport()),
+      RECHECK_MS,
+    );
+    return () => clearInterval(timer);
+  }, [interrupted]);
 
   if (!interrupted) return null;
 

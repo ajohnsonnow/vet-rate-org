@@ -18,10 +18,7 @@ vi.mock("../utils/musterCallProcessor", () => ({
 
 import { processFormationDocument } from "../utils/musterCallProcessor";
 import { useSequentialFormationFlow } from "./useSequentialFormationFlow";
-import {
-  IMPORT_MARKER_KEY,
-  readInterruptedImport,
-} from "../utils/importProgressMarker";
+import { readActiveImportMarker } from "../utils/importProgressMarker";
 
 const NAME = "generic-private-name.pdf";
 const TEXT = "generic document text ".repeat(1000);
@@ -63,6 +60,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();
   sessionStorage.clear();
+  localStorage.clear();
   for (const method of ["log", "warn", "error"]) {
     vi.spyOn(console, method).mockImplementation(() => {});
   }
@@ -89,9 +87,9 @@ describe("the import marker follows the import", () => {
 
     await act(async () => result.current.startSequentialProcessing());
 
-    expect(readInterruptedImport()).toMatchObject({ saved: 0, total: 2 });
-    const stored = sessionStorage.getItem(IMPORT_MARKER_KEY);
-    expect(JSON.parse(stored).labels).toEqual([
+    expect(readActiveImportMarker()).toMatchObject({ saved: 0, total: 2 });
+    const stored = JSON.stringify(readActiveImportMarker());
+    expect(readActiveImportMarker().labels).toEqual([
       "document 1 (DD214)",
       "document 2 (DBQ)",
     ]);
@@ -109,10 +107,10 @@ describe("the import marker follows the import", () => {
         updateProfile: false,
       });
     });
-    expect(readInterruptedImport()).toMatchObject({ saved: 1, total: 2 });
+    expect(readActiveImportMarker()).toMatchObject({ saved: 1, total: 2 });
 
     await settle(600);
-    expect(readInterruptedImport()).toBeNull();
+    expect(readActiveImportMarker()).toBeNull();
   });
 });
 

@@ -8,7 +8,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useFormationQueue } from "./useFormationQueue";
 import {
   startImportMarker,
-  readInterruptedImport,
+  readActiveImportMarker,
 } from "../utils/importProgressMarker";
 
 const readFailedEntry = {
@@ -27,6 +27,7 @@ const readFailedEntry = {
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
+  localStorage.clear();
   vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
@@ -53,6 +54,6 @@ describe("dismissing the formation", () => {
 
     act(() => result.current.clearFormation());
 
-    expect(readInterruptedImport()).toBeNull();
+    expect(readActiveImportMarker()).toBeNull();
   });
 });
