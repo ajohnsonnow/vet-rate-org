@@ -1464,7 +1464,16 @@ export async function buildDKBContext(query, options = {}) {
     maxEntries = 10,
     maxChars = 8000, // Keep under token limits
     includeSourceUrls = true,
+    includeShards = false,
   } = options;
+
+  if (includeShards) {
+    return buildDKBContextWithShards(query, {
+      maxEntries,
+      maxChars,
+      includeSourceUrls,
+    });
+  }
 
   const relevantEntries = await searchDKB(query, maxEntries);
 
@@ -1498,6 +1507,250 @@ from memory - do not cite a regulation that isn't backed by an entry here.
 === END DKB CONTEXT ===\n`;
 
   return context;
+}
+
+// Shards queried when full-corpus grounding is on. bva is left out (about
+// 190 MB of non-precedential decisions) and m21_4 (reference tier, internal
+// VA operations content).
+export const DKB_SHARD_IDS = Object.freeze([
+  "ecfr",
+  "m21_1",
+  "m21_5",
+  "cavc",
+  "fedcir",
+  "ogc",
+]);
+export const DKB_SHARD_TIMEOUT_MS = 4000;
+const DKB_SHARD_BUDGET_SHARE = 0.5;
+const DKB_SHARD_QUERY_MAX_CHARS = 1500;
+const DKB_SHARD_MIN_TRUNCATED_CHARS = 200;
+const DKB_CURATED_LABEL = "Vet-Rate.org curated DKB entries";
+// Header and footer labels come from this fixed table, never from chunk
+// fields, so nothing retrieved is interpolated outside the spotlight fence.
+const DKB_TIER_LABELS = Object.freeze({
+  statutory: "eCFR (38 CFR)",
+  procedural: "VA adjudication manuals (M21-1, M21-5)",
+  judicial: "CAVC decisions",
+  judicial_federal_circuit: "Federal Circuit decisions",
+  policy: "VA OGC precedent opinions",
+});
+const DKB_UNKNOWN_TIER_LABEL = "other official sources";
+
+let shardRetrievalInFlight = false;
+
+/**
+ * Query the authoritative shards, time-boxed. Never rejects: any failure,
+ * timeout or overlap with a still-running earlier retrieval yields [] so the
+ * caller carries on with flat-file context. The query stays local (static
+ * file fetches from this origin plus the in-browser embedder).
+ */
+async function retrieveShardPassages(query, topK) {
+  const text = String(query ?? "")
+    .slice(0, DKB_SHARD_QUERY_MAX_CHARS)
+    .trim();
+  if (!text) return [];
+  if (shardRetrievalInFlight) {
+    console.warn(
+      "[DKB] shard retrieval still running from an earlier call, using flat-file context only",
+    );
+    return [];
+  }
+  shardRetrievalInFlight = true;
+  let work = null;
+  let timer;
+  try {
+    const { queryCorpus } = await import("../services/knowledgeQuery");
+    work = queryCorpus(text, { only: [...DKB_SHARD_IDS], topK });
+    const release = () => {
+      shardRetrievalInFlight = false;
+    };
+    work.then(release, release);
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`timed out after ${DKB_SHARD_TIMEOUT_MS}ms`)),
+        DKB_SHARD_TIMEOUT_MS,
+      );
+    });
+    const result = await Promise.race([work, timeout]);
+    return Array.isArray(result?.chunks) ? result.chunks : [];
+  } catch (err) {
+    console.warn(
+      "[DKB] shard retrieval skipped, using flat-file context only:",
+      err?.message ?? err,
+    );
+    return [];
+  } finally {
+    clearTimeout(timer);
+    if (!work) shardRetrievalInFlight = false;
+  }
+}
+
+const normalizeCitation = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+
+const collapseWhitespace = (value) =>
+  String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+function tierLabelFor(tier) {
+  return DKB_TIER_LABELS[tier] ?? DKB_UNKNOWN_TIER_LABEL;
+}
+
+/**
+ * Format one shard passage. Citation, authority and URL travel inside the
+ * spotlight fence with the passage text: all of it is corpus data.
+ */
+function formatShardPassage(chunk, text, includeSourceUrl) {
+  const lines = [];
+  const citation = collapseWhitespace(chunk.citation || chunk.title);
+  if (citation) lines.push(`Citation: ${citation}`);
+  lines.push(`Authority: ${tierLabelFor(chunk.authority_tier)}`);
+  const url = collapseWhitespace(chunk.source_url);
+  if (includeSourceUrl && url) lines.push(`Reference: ${url}`);
+  lines.push(`Text: ${text}`);
+  return `---\n${spotlight(lines.join("\n"))}\n`;
+}
+
+function shardContextHeader(labels) {
+  return `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
+The following information was retrieved for this question from Vet-Rate.org's Diamond Knowledge Base.
+Sources retrieved: ${labels.join("; ")}.
+Use this data to provide accurate, regulation-based answers. If none of the
+entries below address the question, say so explicitly instead of answering
+from memory - do not cite a regulation that isn't backed by an entry here.
+
+`;
+}
+
+function shardContextFooter(shardCount, flatCount) {
+  return `\n[${shardCount + flatCount} relevant knowledge base entries provided: ${shardCount} retrieved from the full corpus, ${flatCount} curated DKB entries]
+=== END DKB CONTEXT ===\n`;
+}
+
+function dedupeShardChunks(chunks) {
+  const seen = new Set();
+  const passages = [];
+  for (const chunk of chunks) {
+    if (typeof chunk?.text !== "string" || !chunk.text.trim()) continue;
+    const key = normalizeCitation(chunk.citation);
+    if (key && seen.has(key)) continue;
+    if (key) seen.add(key);
+    passages.push(chunk);
+  }
+  return passages;
+}
+
+/**
+ * Format a passage to fit `remaining` chars. Only the first passage may be
+ * truncated, so a single long chunk still contributes; later ones that do not
+ * fit are left out. Returns null when nothing usable fits.
+ */
+function fitShardPassage(chunk, remaining, isFirst, includeSourceUrl) {
+  const full = chunk.text.trim();
+  const whole = formatShardPassage(chunk, full, includeSourceUrl);
+  if (whole.length <= remaining) return whole;
+  if (!isFirst) return null;
+  let room =
+    remaining - formatShardPassage(chunk, "", includeSourceUrl).length - 1;
+  if (room < DKB_SHARD_MIN_TRUNCATED_CHARS) return null;
+  while (room > 0) {
+    const out = formatShardPassage(
+      chunk,
+      `${full.slice(0, room)}…`,
+      includeSourceUrl,
+    );
+    if (out.length <= remaining) return out;
+    room -= Math.max(out.length - remaining, 1);
+  }
+  return null;
+}
+
+function packShardPassages(passages, { entryCap, charCap, includeSourceUrl }) {
+  const packed = { body: "", count: 0, labels: [], citations: new Set() };
+  for (const chunk of passages) {
+    if (packed.count >= entryCap) break;
+    const entryText = fitShardPassage(
+      chunk,
+      charCap - packed.body.length,
+      packed.count === 0,
+      includeSourceUrl,
+    );
+    if (entryText === null) break;
+    packed.body += entryText;
+    packed.count++;
+    const key = normalizeCitation(chunk.citation);
+    if (key) packed.citations.add(key);
+    const label = tierLabelFor(chunk.authority_tier);
+    if (!packed.labels.includes(label)) packed.labels.push(label);
+  }
+  return packed;
+}
+
+function packFlatEntries(
+  entries,
+  { entryCap, charCap, skipCitations, includeSourceUrl },
+) {
+  let body = "";
+  let count = 0;
+  for (const entry of entries) {
+    if (count >= entryCap) break;
+    const key = normalizeCitation(entry.metadata?.cfr_section);
+    if (key && skipCitations.has(key)) continue;
+    const entryText = formatDKBEntry(entry, includeSourceUrl);
+    if (body.length + entryText.length > charCap) break;
+    body += entryText;
+    count++;
+  }
+  return { body, count };
+}
+
+/**
+ * Flag-on variant of buildDKBContext. About half the budget is reserved for
+ * shard passages when any come back; the flat file fills the rest, and the
+ * per-backend maxEntries/maxChars are never exceeded.
+ */
+async function buildDKBContextWithShards(query, options) {
+  const { maxEntries, maxChars, includeSourceUrls } = options;
+
+  const [flatEntries, shardChunks] = await Promise.all([
+    searchDKB(query, maxEntries),
+    retrieveShardPassages(query, maxEntries),
+  ]);
+
+  const allLabels = [...Object.values(DKB_TIER_LABELS), DKB_CURATED_LABEL];
+  const budget =
+    maxChars -
+    shardContextHeader(allLabels).length -
+    shardContextFooter(maxEntries, maxEntries).length;
+
+  const passages = dedupeShardChunks(shardChunks);
+  const shards = packShardPassages(passages, {
+    entryCap: passages.length
+      ? Math.max(1, Math.ceil(maxEntries * DKB_SHARD_BUDGET_SHARE))
+      : 0,
+    charCap: Math.floor(budget * DKB_SHARD_BUDGET_SHARE),
+    includeSourceUrl: includeSourceUrls,
+  });
+  const flat = packFlatEntries(flatEntries, {
+    entryCap: maxEntries - shards.count,
+    charCap: budget - shards.body.length,
+    skipCitations: shards.citations,
+    includeSourceUrl: includeSourceUrls,
+  });
+
+  if (shards.count + flat.count === 0) return "";
+
+  const labels = [...shards.labels];
+  if (flat.count > 0) labels.push(DKB_CURATED_LABEL);
+  return (
+    shardContextHeader(labels) +
+    shards.body +
+    flat.body +
+    shardContextFooter(shards.count, flat.count)
+  );
 }
 
 /**
