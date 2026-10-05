@@ -6,6 +6,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
+import IgnoredRatingsNotice from "./IgnoredRatingsNotice";
 import {
   calculateVARating,
   calculateCompensation,
@@ -1724,6 +1725,8 @@ const BILATERAL_ISSUE_KEYS = {
   "limb-unknown": "bilateralIssueLimbUnknown",
   "side-unknown": "bilateralIssueSideUnknown",
   "side-not-set": "bilateralIssueSideNotSet",
+  "side-unspecified": "bilateralIssueSideUnspecified",
+  "separate-entry": "bilateralIssueSeparateEntry",
   "single-bilateral-evaluation": "bilateralIssueSingleEvaluation",
   "most-favourable-not-checked": "bilateralIssueNotChecked",
 };
@@ -2066,6 +2069,8 @@ function CalculatorResultsSection({
 
       <BilateralIssuesNotice t={t} issues={results.bilateralIssues} />
 
+      <IgnoredRatingsNotice t={t} ignored={results.ignoredEntries} />
+
       {/* Pyramiding Warnings - NEW */}
       <PyramidingWarningsSection t={t} pyramiding={pyramiding} />
 
@@ -2401,6 +2406,8 @@ function MyRatingsSummaryFilled({
       </div>
 
       <BilateralIssuesNotice t={t} issues={myRatingsResults.bilateralIssues} />
+
+      <IgnoredRatingsNotice t={t} ignored={myRatingsResults.ignoredEntries} />
 
       {/* Monthly Pay Estimate */}
       <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">

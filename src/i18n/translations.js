@@ -3777,6 +3777,13 @@ export const APP_TRANSLATIONS = {
       vi: "Hệ Số Song Phương Sẽ Được Áp Dụng",
       ko: "양측 요인이 적용됩니다",
     },
+    ratingUnreadable: {
+      en: "This rating could not be read, so it is not counted in the combined rating.",
+      es: "No se pudo leer este rating, por lo que no se cuenta en el rating combinado.",
+      tl: "Hindi mabasa ang rating na ito, kaya hindi ito kasama sa combined rating.",
+      vi: "Không đọc được mức đánh giá này, nên nó không được tính vào mức đánh giá kết hợp.",
+      ko: "이 등급을 읽을 수 없어 통합 등급에 포함되지 않았습니다.",
+    },
     bilateralIssuesTitle: {
       en: "Bilateral factor not applied (38 CFR § 4.26)",
       es: "Factor bilateral no aplicado (38 CFR § 4.26)",
@@ -3804,6 +3811,20 @@ export const APP_TRANSLATIONS = {
       tl: "May binabanggit na panig ang pangalan, pero walang nakatakdang panig para sa kondisyong ito, kaya wala itong bilateral factor. I-edit ito at piliin ang bahagi ng katawan at panig.",
       vi: "Tên có nêu một bên, nhưng tình trạng này chưa được chọn bên, nên không áp dụng hệ số song phương. Hãy chỉnh sửa và chọn bộ phận cơ thể và bên.",
       ko: "이름에 측면이 나와 있지만 이 상태에 측면이 설정되지 않아 양측 요인을 적용하지 않았습니다. 편집하여 신체 부위와 측면을 선택하세요.",
+    },
+    bilateralIssueSideUnspecified: {
+      en: "No side is set for this condition. If it and another arm or leg condition are on different sides (left and right), edit them and set the side.",
+      es: "Esta condición no tiene lado asignado. Si esta y otra condición de brazo o pierna están en lados distintos (izquierda y derecha), edítalas y elige el lado.",
+      tl: "Walang nakatakdang panig para sa kondisyong ito. Kung ito at ang isa pang kondisyon sa braso o binti ay nasa magkaibang panig (kaliwa at kanan), i-edit ang mga ito at itakda ang panig.",
+      vi: "Tình trạng này chưa được chọn bên. Nếu tình trạng này và một tình trạng khác ở tay hoặc chân nằm ở hai bên khác nhau (trái và phải), hãy chỉnh sửa và chọn bên.",
+      ko: "이 상태에 측면이 설정되지 않았습니다. 이 상태와 다른 팔 또는 다리 상태가 서로 다른 쪽(왼쪽과 오른쪽)에 있다면 편집하여 측면을 설정하세요.",
+    },
+    bilateralIssueSeparateEntry: {
+      en: "This entry's body part is not an arm or a leg, so it got no bilateral factor. If the arm or leg condition it mentions is rated separately, add it as its own entry with a body part and side.",
+      es: "La parte del cuerpo de esta entrada no es un brazo ni una pierna, por lo que no recibió factor bilateral. Si la condición de brazo o pierna que menciona tiene su propio rating, agrégala como una entrada aparte con su parte del cuerpo y su lado.",
+      tl: "Ang bahagi ng katawan ng entry na ito ay hindi braso o binti, kaya wala itong bilateral factor. Kung may sariling rating ang kondisyon sa braso o binti na binabanggit nito, idagdag ito bilang hiwalay na entry na may bahagi ng katawan at panig.",
+      vi: "Bộ phận cơ thể của mục này không phải tay hay chân, nên không áp dụng hệ số song phương. Nếu tình trạng ở tay hoặc chân mà mục này nhắc đến được đánh giá riêng, hãy thêm nó thành một mục riêng với bộ phận cơ thể và bên.",
+      ko: "이 항목의 신체 부위는 팔이나 다리가 아니어서 양측 요인을 적용하지 않았습니다. 여기에 언급된 팔 또는 다리 상태가 따로 등급을 받았다면 신체 부위와 측면을 지정해 별도 항목으로 추가하세요.",
     },
     bilateralIssueSingleEvaluation: {
       en: "One rating that already covers both sides gets no bilateral factor by itself. If each side has its own rating, enter them as separate Left and Right conditions.",

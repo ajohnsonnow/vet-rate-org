@@ -257,6 +257,7 @@ const NAME_SIDE_WORDS = {
   lt: "left",
   rt: "right",
 };
+const NAME_ABBREVIATED_SIDES = ["lt", "rt"];
 // Clinical shorthand for a side plus a whole extremity.
 const NAME_EXTREMITY_ABBREVIATIONS = {
   lue: { side: "left", limb: "upper" },
@@ -300,6 +301,8 @@ const NAME_PHRASES = [
   { words: "limitation of flexion" },
   { words: "limitation of extension" },
 ];
+// Words that start a second finding; see _nameWords for the punctuation.
+const NAME_BREAK_WORDS = ["with", "and"];
 const NAME_CONDITION_WORDS = new Set([
   "strain",
   "sprain",
@@ -335,22 +338,42 @@ const NAME_CONDITION_WORDS = new Set([
   "degenerative",
   "of",
   "the",
-  "with",
+  ...NAME_BREAK_WORDS,
 ]);
 // The sided body parts that are not limbs (ear, eye, kidney in BODY_PARTS).
 const NAME_NON_LIMB_WORDS = new Set([
   "hearing",
   "tinnitus",
   "vision",
-  ...withPlurals(["ear", "eye", "kidney"]),
+  "testicular",
+  ...withPlurals(["ear", "eye", "kidney", "testicle"]),
 ]);
 
 // Words are runs of letters and digits in any script. A word with a digit or a
 // letter outside a-z ("우울증", "straín") is kept, so it fails the allowlist
 // like any other unknown word instead of vanishing from the name.
+const INVISIBLE_CHARACTERS = /[\u00AD\u200B-\u200D\u2060\uFEFF]/g;
+// Soft hyphens and zero-width characters are removed first, so "Le\u00ADft"
+// reads as "Left" instead of two unknown words.
+const _visibleName = (name) =>
+  String(name ?? "").replace(INVISIBLE_CHARACTERS, "");
+
+// Anything that is not a letter, a digit, white space or ordinary punctuation.
+// A symbol word ("\u24C5\u24E3\u24E2\u24D3") is not a letter run, so without
+// this check it would drop out of the name and the rest would be read alone.
+const ODD_NAME_CHARACTER = /[^\p{L}\p{N}\s,.\-'()/:;&%]/u;
+
+// A semicolon, slash, ampersand or opening parenthesis starts a second
+// finding just as "with" and "and" do, so each becomes the word "and". A
+// parenthesis holding only a side, as in "Knee strain (Left)", is not a break.
+const SIDE_IN_PARENTHESES = /\(\s*(left|right|bilateral|both)\s*\)/g;
+const NAME_BREAK_CHARACTERS = /[;/&(]/g;
+
 const _nameWords = (name) =>
-  String(name ?? "")
+  _visibleName(name)
     .toLowerCase()
+    .replace(SIDE_IN_PARENTHESES, " $1 ")
+    .replace(NAME_BREAK_CHARACTERS, " and ")
     .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean);
 
@@ -358,7 +381,32 @@ const _nameWords = (name) =>
  * The words of a name in order, each as { word, side, limb, part, allowed }.
  * A phrase from NAME_PHRASES becomes one item.
  */
+/**
+ * "Lt" and "Rt" also stand for other things ("LT nerve", radiotherapy "RT"),
+ * so they count as a side only directly beside a limb word, at the start of
+ * the name with a limb word within the next two words, or at the end of a
+ * name that has a limb word.
+ */
+function _abbreviatedSideHolds(items, index) {
+  const hasLimb = (item) => Boolean(item?.limb);
+  if (hasLimb(items[index - 1]) || hasLimb(items[index + 1])) return true;
+  if (index === 0) return hasLimb(items[2]);
+  return index === items.length - 1 && items.some(hasLimb);
+}
+
+const _withoutLooseAbbreviations = (items) =>
+  items.map((item, index) =>
+    NAME_ABBREVIATED_SIDES.includes(item.word) &&
+    !_abbreviatedSideHolds(items, index)
+      ? { word: item.word, allowed: false }
+      : item,
+  );
+
 function _nameItems(name) {
+  return _withoutLooseAbbreviations(_classifiedNameWords(name));
+}
+
+function _classifiedNameWords(name) {
   let text = ` ${_nameWords(name).join(" ")} `;
   NAME_PHRASES.forEach((phrase, index) => {
     text = text.split(` ${phrase.words} `).join(` #${index} `);
@@ -409,16 +457,21 @@ function _nameItems(name) {
  */
 function _readName(name) {
   const items = _nameItems(name);
-  const withAt = items.findIndex((item) => item.word === "with");
+  const withAt = items.findIndex((item) =>
+    NAME_BREAK_WORDS.includes(item.word),
+  );
   const beforeWith = withAt < 0 ? items : items.slice(0, withAt);
   const limbs = new Set(items.filter((i) => i.limb).map((i) => i.limb));
   const sides = new Set(items.filter((i) => i.side).map((i) => i.side));
-  const side = sides.size === 1 ? [...sides][0] : null;
+  // "Bilateral knee strain, left worse than right" is a both-sides rating.
+  let side = sides.size === 1 ? [...sides][0] : null;
+  if (sides.has("bilateral")) side = "bilateral";
 
   const placedBeforeWith = items.every(
     (i) => !(i.limb || i.side) || beforeWith.includes(i),
   );
   const readable =
+    !ODD_NAME_CHARACTER.test(_visibleName(name)) &&
     items.every((i) => i.allowed) &&
     limbs.size === 1 &&
     items.filter((i) => i.part).length <= 1 &&
@@ -710,90 +763,141 @@ function _usableConditions(conditions) {
   return { usable, ignored };
 }
 
+// Read as a side only when deciding what to report, never to grant a factor.
+const REPORT_ONLY_SIDE_WORDS = { l: "left", r: "right" };
+
+const _isPluralLimbPart = (item) =>
+  Boolean(item.part) && (item.word.endsWith("s") || item.word === "feet");
+
+/** Every side a name could mean: side words, a lone "L" or "R", "feet". */
+function _looseNameSides(items) {
+  const sides = new Set();
+  for (const item of items) {
+    if (item.side) sides.add(item.side);
+    else if (REPORT_ONLY_SIDE_WORDS[item.word]) {
+      sides.add(REPORT_ONLY_SIDE_WORDS[item.word]);
+    } else if (_isPluralLimbPart(item)) sides.add("bilateral");
+  }
+  return sides;
+}
+
 /**
- * What an entry might be, read loosely: every limb its name mentions (or the
- * limb the calculator resolved) and every side it could be on. Used only to
- * decide what to report, never to grant a factor.
+ * What an entry might be, read loosely, used only to decide what to report:
+ * the limbs it could be in (empty when nothing says), the sides it could be
+ * on (null when a side is set but not recognised), and whether it is
+ * positively not a limb.
  */
 function _looseReading(condition) {
   const items = _nameItems(condition.name);
   const limb = _limbOf(condition);
-  const limbs = LIMBS.includes(limb)
-    ? new Set([limb])
-    : new Set(items.filter((i) => i.limb).map((i) => i.limb));
-  const nameSides = new Set(items.filter((i) => i.side).map((i) => i.side));
-  const sideSet = condition.side !== "none";
+  const nameLimbs = new Set(items.filter((i) => i.limb).map((i) => i.limb));
+  const limbKnown = LIMBS.includes(limb);
+  const nameSides = _looseNameSides(items);
   let sides = nameSides;
   if (SIDED.includes(condition.side)) sides = new Set([condition.side]);
-  else if (sideSet) sides = null;
+  else if (condition.side !== "none") sides = null;
+
+  const notALimb =
+    condition.limb === "none" ||
+    (!limbKnown &&
+      nameLimbs.size === 0 &&
+      (items.some((i) => NAME_NON_LIMB_WORDS.has(i.word)) ||
+        NON_LIMB_BODY_PARTS.has(condition.bodyPart)));
+  const unsidedLimb = limbKnown && sides !== null && sides.size === 0;
   return {
     condition,
-    limbs,
+    limbs: limbKnown ? new Set([limb]) : nameLimbs,
     sides,
-    mightPair:
+    unsidedLimb,
+    takesPart:
       condition.rating >= COMPENSABLE &&
-      condition.limb !== "none" &&
-      limbs.size > 0 &&
-      (sideSet || nameSides.size > 0),
-    resolved: LIMBS.includes(limb) && SIDED.includes(condition.side),
+      !notALimb &&
+      (sides === null || sides.size > 0 || unsidedLimb),
+    resolved: limbKnown && SIDED.includes(condition.side),
+    saysBothSides:
+      sides !== null &&
+      (sides.has("bilateral") || (sides.has("left") && sides.has("right"))),
   };
 }
 
+/** Whether two loosely read entries could be the two sides of a pair. */
 function _looseCouldPair(one, other) {
+  const bothLimbsKnown = one.limbs.size > 0 && other.limbs.size > 0;
   const sharesLimb = [...one.limbs].some((limb) => other.limbs.has(limb));
-  if (!sharesLimb) return false;
-  if (!one.sides || !other.sides) return true;
-  const sameOneSide =
-    one.sides.size === 1 &&
-    other.sides.size === 1 &&
-    [...one.sides][0] === [...other.sides][0] &&
-    !one.sides.has("bilateral");
-  return !sameOneSide;
+  if (bothLimbsKnown && !sharesLimb) return false;
+  // A form entry with a limb body part and no side pairs only with an entry
+  // known to be in the same limb type.
+  if (one.unsidedLimb || other.unsidedLimb) return bothLimbsKnown;
+  if (one.sides === null || other.sides === null) return true;
+  if (one.saysBothSides || other.saysBothSides) return true;
+  return [...one.sides][0] !== [...other.sides][0];
 }
 
-function _looseReason(condition) {
-  if (condition.side === "none") return "side-not-set";
-  return RECOGNISED_SIDES.includes(condition.side)
-    ? "limb-unknown"
-    : "side-unknown";
+function _looseReason(reading) {
+  const { side } = reading.condition;
+  if (!RECOGNISED_SIDES.includes(side)) return "side-unknown";
+  if (side !== "none") return "limb-unknown";
+  return reading.unsidedLimb ? "side-unspecified" : "side-not-set";
 }
 
 /**
- * Entries that took no factor but might be half of a pair: the name states a
- * side or a side is set, the name mentions a limb or the body part is one,
- * and another compensable entry exists that the same loose reading could pair
- * it with. This does not depend on the name allowlist. Reporting grants
- * nothing, so it errs toward telling the veteran: "Left knee pain" pasted
- * from VA.gov arrives with side "none" and would otherwise combine with no
- * factor and no word of why.
+ * Entries outside the group that might be half of a pair. This grants
+ * nothing, so it does not use the name allowlist or any list of limb words:
+ * among compensable entries that are not positively non-limb, one that says
+ * left and one that says right are reported (as is one that says both sides
+ * beside any other sided entry or any group, 38 CFR § 4.26(b)), unless both
+ * are known to be in different limbs. Two form entries of the same limb type
+ * with no side set are reported so the veteran can set the side. A pasted
+ * "Left meniscal tear" and "Right meniscal tear" would otherwise combine with
+ * no factor and no word of why.
  */
-function _looseIssues(conditions, alreadyReported) {
-  const readings = conditions.map(_looseReading).filter((r) => r.mightPair);
+function _looseIssues(conditions, alreadyReported, group) {
+  const readings = conditions.map(_looseReading).filter((r) => r.takesPart);
+  const besideAnotherSided = (reading) =>
+    reading.saysBothSides &&
+    (group.length > 0 ||
+      readings.some((other) => other !== reading && !other.unsidedLimb));
   return readings
     .filter(
       (reading) =>
         !reading.resolved &&
+        !group.includes(reading.condition) &&
         !alreadyReported.has(reading.condition) &&
-        readings.some(
-          (other) => other !== reading && _looseCouldPair(reading, other),
-        ),
+        (besideAnotherSided(reading) ||
+          readings.some(
+            (other) => other !== reading && _looseCouldPair(reading, other),
+          )),
     )
     .map((reading) => ({
       condition: reading.condition,
-      reason: _looseReason(reading.condition),
+      reason: _looseReason(reading),
     }));
 }
+
+// The form offers no side for a non-limb body part, so "set the side" or
+// "choose its body part" would send the veteran nowhere. Such an entry is
+// told that a separately rated limb condition needs its own entry.
+const _REASONS_NEEDING_A_LIMB_ENTRY = [
+  "limb-unknown",
+  "side-not-set",
+  "side-unspecified",
+];
+const _reasonForEntry = (condition, reason) =>
+  NON_LIMB_BODY_PARTS.has(condition.bodyPart) &&
+  _REASONS_NEEDING_A_LIMB_ENTRY.includes(reason)
+    ? "separate-entry"
+    : reason;
 
 function _sortIntoBilateralGroup(rawConditions) {
   const conditions = _withNormalisedSide(rawConditions);
   const formed = _formBilateralGroup(conditions);
   const reported = new Map(formed.issues.map((i) => [i.condition, i.reason]));
-  for (const issue of _looseIssues(conditions, reported)) {
+  for (const issue of _looseIssues(conditions, reported, formed.group)) {
     reported.set(issue.condition, issue.reason);
   }
   const issues = conditions
     .filter((c) => reported.has(c))
-    .map((c) => ({ ...c, reason: reported.get(c) }));
+    .map((c) => ({ ...c, reason: _reasonForEntry(c, reported.get(c)) }));
   const {
     kept: bilateralConditions,
     removed: bilateralExcludedConditions,
@@ -906,7 +1010,7 @@ function _buildFinalCalculationStep(
  *   group. `bilateralIssues` lists sided entries that got no bilateral factor
  *   for a reason the veteran can fix:
  *   { ...condition, reason: 'limb-unknown'|'side-unknown'|'side-not-set'|
- *     'single-bilateral-evaluation' },
+ *     'side-unspecified'|'separate-entry'|'single-bilateral-evaluation' },
  *   plus { reason: 'most-favourable-not-checked' } when § 4.26(d) was skipped
  *   because there were too many arrangements to try.
  */
@@ -1008,8 +1112,12 @@ const _NO_CHECK_MESSAGES = {
     `Vet-Rate did not recognise the side entered for ${names}, so it could not check the bilateral factor.`,
   "side-not-set": (names, one) =>
     `${names} ${one ? "names" : "name"} a side, but no side is set, so Vet-Rate could not check the bilateral factor. Set the side and check again.`,
+  "side-unspecified": (names, one) =>
+    `No side is set for ${names}, so Vet-Rate could not tell whether ${one ? "it pairs with another entry" : "they are on different sides"}.`,
   "limb-unknown": (names, one) =>
     `Vet-Rate could not tell whether ${names} ${one ? "is an arm or a leg condition" : "are arm or leg conditions"}, so it could not check the bilateral factor for ${one ? "it" : "them"}.`,
+  "separate-entry": (names, one) =>
+    `${names} ${one ? "has" : "have"} a body part that is not an arm or a leg, so Vet-Rate could not check the bilateral factor for ${one ? "it" : "them"}. If the arm or leg condition ${one ? "it mentions" : "they mention"} is rated separately, add it as its own entry with a body part and side.`,
   "single-bilateral-evaluation": (names, one) =>
     `${names} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor. The factor needs another separately rated disability of the same limbs (VA manual M21-1, V.iv.1.C.4.b).`,
 };
@@ -1021,9 +1129,24 @@ const _NO_CHECK_MESSAGES = {
  * does not support. `pairedParts` holds the names of the conditions in the
  * group.
  */
+/** One sentence per reason for the entries the calculator could not place. */
+function _unresolvedSentences(issues) {
+  const sentences = Object.entries(_NO_CHECK_MESSAGES).flatMap(
+    ([reason, sentence]) => {
+      const found = issues.filter((i) => i.reason === reason);
+      return found.length > 0
+        ? [sentence(_joinNames(found.map((c) => c.name)), found.length === 1)]
+        : [];
+    },
+  );
+  if (sentences.length === 0) return "";
+  return `${sentences.join(" ")} Check ${issues.length === 1 ? "this entry" : "these entries"} in the calculator.`;
+}
+
 export const checkBilateralFactorCompliance = (conditions) => {
   const result = calculateVARating(conditions);
   const names = (list) => _joinNames(list.map((c) => c.name));
+  const unresolved = _unresolvedSentences(result.bilateralIssues);
 
   if (result.bilateralConditions.length > 0) {
     const group = result.calculationSteps.find(
@@ -1032,7 +1155,12 @@ export const checkBilateralFactorCompliance = (conditions) => {
     return {
       applicable: true,
       pairedParts: result.bilateralConditions.map((c) => c.name),
-      message: `The bilateral factor applies to ${names(result.bilateralConditions)} (38 CFR § 4.26). Check that your rating decision applied it.`,
+      message: [
+        `The bilateral factor applies to ${names(result.bilateralConditions)} (38 CFR § 4.26). Check that your rating decision applied it.`,
+        unresolved,
+      ]
+        .filter(Boolean)
+        .join(" "),
       potentialBonus: group.bilateralFactorCapped
         ? `Combined, these ratings are ${group.combinedBilateral}%. With the factor they count as 100%, because a rating cannot exceed 100%.`
         : `Combined, these ratings are ${group.combinedBilateral}%. The factor adds 10% of that (${group.bilateralFactor}), so they count as ${group.bilateralGroupRating}% before combining with your other ratings.`,
@@ -1047,20 +1175,7 @@ export const checkBilateralFactorCompliance = (conditions) => {
       message: `${names(excluded)} are bilateral disabilities, but leaving them out of the bilateral factor gives a higher combined rating, so no factor is expected (38 CFR § 4.26(d)).`,
     };
   }
-  const sentences = Object.entries(_NO_CHECK_MESSAGES).flatMap(
-    ([reason, sentence]) => {
-      const found = result.bilateralIssues.filter((i) => i.reason === reason);
-      return found.length > 0
-        ? [sentence(names(found), found.length === 1)]
-        : [];
-    },
-  );
-  if (sentences.length > 0) {
-    return {
-      ...none,
-      message: `${sentences.join(" ")} Check ${result.bilateralIssues.length === 1 ? "this entry" : "these entries"} in the calculator.`,
-    };
-  }
+  if (unresolved) return { ...none, message: unresolved };
   return {
     ...none,
     message:

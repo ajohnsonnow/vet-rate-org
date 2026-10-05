@@ -20,7 +20,7 @@ describe("a non-limb body part with a name that names a limb", () => {
     expect(result.combinedRating).toBe(40);
     expect(result.bilateralIssues).toEqual([
       expect.objectContaining({
-        reason: "limb-unknown",
+        reason: "separate-entry",
         name: "Left leg radiculopathy",
       }),
     ]);
@@ -58,14 +58,17 @@ describe("side is normalised before pairing", () => {
     expect(result.rawScore).toBe(48);
   });
 
-  it("treats a missing or empty side as none, with nothing to report: 20 + 20 give 36", () => {
+  it("treats a missing or empty side as none: 20 + 20 give 36, and asks for the side of the two knees", () => {
     const result = calculateVARating([
       c("Knee A", 20, "", "knee"),
       c("Knee B", 20, undefined, "knee"),
       c("Knee C", 0, null, "knee"),
     ]);
     expect(result.rawScore).toBe(36);
-    expect(result.bilateralIssues).toEqual([]);
+    expect(result.bilateralIssues.map((i) => [i.name, i.reason])).toEqual([
+      ["Knee A", "side-unspecified"],
+      ["Knee B", "side-unspecified"],
+    ]);
   });
 
   it("flags an unrecognised side on a limb entry instead of dropping it: 20 + 20 give 36", () => {
@@ -110,6 +113,11 @@ describe("sideFromName", () => {
     ["Tinnitus", "none"],
     ["Left and right knee strain", "none"],
     ["Copyright claim", "none"],
+    ["Hodgkin lymphoma s/p RT", "none"],
+    ["LT nerve paralysis, shoulder", "none"],
+    ["Sciatic neuritis, Rt", "right"],
+    ["Knee strain, Lt", "left"],
+    ["Lt. arthritis, knee", "left"],
     [null, "none"],
   ])("%j gives %s", (name, side) => {
     expect(sideFromName(name)).toBe(side);

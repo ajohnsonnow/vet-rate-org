@@ -102,6 +102,10 @@ const ISSUE_NOTES = {
     `Vet-Rate did not recognise the side entered for ${names}, so ${one ? "it" : "they"} took no bilateral factor.`,
   "side-not-set": (names, one) =>
     `${names} ${one ? "names" : "name"} a side, but no side is set on ${one ? "that entry" : "those entries"}, so ${one ? "it" : "they"} took no bilateral factor.`,
+  "side-unspecified": (names, one) =>
+    `No side is set for ${names}, so ${one ? "it" : "they"} took no bilateral factor; if ${one ? "it is" : "they are"} on a different side from another arm or leg condition, the side needs to be set.`,
+  "separate-entry": (names, one) =>
+    `${names} ${one ? "has" : "have"} a body part that is not an arm or a leg, so ${one ? "it" : "they"} took no bilateral factor; an arm or leg condition that is rated separately needs its own entry with a body part and side.`,
   "single-bilateral-evaluation": (names, one) =>
     `${names} ${one ? "is one evaluation that covers both sides, and by itself it takes" : "are each one evaluation that covers both sides, and by themselves they take"} no bilateral factor: the factor needs another separately rated disability of the same limbs (${MANUAL}).`,
 };

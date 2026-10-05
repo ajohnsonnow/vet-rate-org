@@ -109,7 +109,7 @@ describe("sided entries whose limb the calculator would not read are reported", 
         entry("Left leg radiculopathy", 20, "left", "back"),
         entry("Right knee", 20, "right", "knee"),
       ],
-      [["Left leg radiculopathy", "limb-unknown"]],
+      [["Left leg radiculopathy", "separate-entry"]],
     );
     expect(result.rawScore).toBe(36);
   });
@@ -120,7 +120,7 @@ describe("sided entries whose limb the calculator would not read are reported", 
         entry("Scar, left knee", 20, "left", "skin"),
         entry("Right knee", 20, "right", "knee"),
       ],
-      [["Scar, left knee", "limb-unknown"]],
+      [["Scar, left knee", "separate-entry"]],
     );
     expect(result.rawScore).toBe(36);
   });

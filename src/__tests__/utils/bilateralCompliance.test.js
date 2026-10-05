@@ -109,3 +109,37 @@ describe("checkBilateralFactorCompliance when it cannot ask for a check", () => 
     expect(checkBilateralFactorCompliance([]).applicable).toBe(false);
   });
 });
+
+describe("checkBilateralFactorCompliance when a group forms and other entries are unresolved", () => {
+  it("names the group and the entries it could not place", () => {
+    const check = checkBilateralFactorCompliance([
+      c("Bilateral knee strain, left worse than right", 40, "bilateral"),
+      c("Left shoulder strain", 20, "left"),
+      c("Right shoulder strain", 20, "right"),
+      c("Left meniscal tear", 10, "none"),
+    ]);
+    expect(check.applicable).toBe(true);
+    expect(check.pairedParts).toEqual([
+      "Left shoulder strain",
+      "Right shoulder strain",
+    ]);
+    expect(check.message).toContain(
+      "Left shoulder strain and Right shoulder strain",
+    );
+    expect(check.message).toContain(
+      "Bilateral knee strain, left worse than right",
+    );
+    expect(check.message).toContain("Left meniscal tear");
+    expect(check.message).toMatch(/check th(is|ese) entr/i);
+  });
+
+  it("adds nothing when every entry is placed", () => {
+    const check = checkBilateralFactorCompliance([
+      c("Left knee", 10, "left", "knee"),
+      c("Right knee", 10, "right", "knee"),
+    ]);
+    expect(check.message).toBe(
+      "The bilateral factor applies to Left knee and Right knee (38 CFR § 4.26). Check that your rating decision applied it.",
+    );
+  });
+});
