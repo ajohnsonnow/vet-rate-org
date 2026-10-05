@@ -26,8 +26,6 @@ const ANSWERS = {
   q1: "They leave the room when fireworks start.",
   q2: "They no longer drive at night.",
 };
-// RELATIONSHIP_TYPES carries translation keys, not labels, so the statement
-// shows the stored value.
 const TEMPLATE = buildWitnessStatementTemplate("spouse", "PTSD", ANSWERS);
 
 const draftIn = (prompt) =>
@@ -47,6 +45,7 @@ describe("WitnessBench._compileStatementWithAI", () => {
     const [prompt, options] = generateAI.mock.calls[0];
     expect(draftIn(prompt)).toBe(TEMPLATE);
     expect(prompt).toMatch(/square brackets/);
+    expect(prompt).toContain("Witness Type: Spouse / Partner");
     expect(options).toMatchObject({
       toolId: "buddy-statement",
       dataClass: "context",

@@ -37,6 +37,7 @@ import {
   buildWitnessStatementBody,
   buildWitnessStatementTemplate,
   suppliedIn,
+  witnessRelationshipLabel,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -398,11 +399,8 @@ export const _compileStatementWithAI = async (
   answers,
 ) => {
   const standard = compileStatementWithoutAI(relationship, condition, answers);
-  const relationshipLabel =
-    RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
-    relationship;
   const template = buildWitnessStatementTemplate(
-    relationshipLabel,
+    relationship,
     condition,
     answers,
   );
@@ -444,9 +442,7 @@ export const _compileStatementWithAI = async (
  * Generate statement without AI (template-based)
  */
 const compileStatementWithoutAI = (relationship, condition, answers) => {
-  const relationshipLabel =
-    RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
-    relationship;
+  const relationshipLabel = witnessRelationshipLabel(relationship);
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",

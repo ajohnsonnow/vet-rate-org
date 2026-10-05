@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { APP_TRANSLATIONS } from "../../i18n/translations";
 import {
   STANDARD_DRAFT_NOTE,
   buildAppealStatementTemplate,
@@ -9,7 +10,9 @@ import {
   buildTdiuAnalysisTemplate,
   buildWitnessStatementBody,
   buildWitnessStatementTemplate,
+  formStatementInputs,
   listPlaceholders,
+  witnessRelationshipLabel,
   tdiuAnalysisText,
 } from "../../utils/writerTemplates";
 
@@ -268,5 +271,63 @@ describe("standard draft note", () => {
   it("is one plain line", () => {
     expect(STANDARD_DRAFT_NOTE).not.toContain("\n");
     expect(STANDARD_DRAFT_NOTE).toMatch(/standard draft with blanks to fill/);
+  });
+});
+
+describe("stored codes are printed as the form's own labels", () => {
+  it("Forms Helper witness relationship", () => {
+    const { answers, condition } = formStatementInputs("buddy-statement", {
+      witnessRelation: "fellow-service-member",
+      conditionName: "PTSD",
+    });
+    const draft = buildBuddyStatementTemplate(answers, condition);
+    expect(draft).toContain(
+      "My relationship to [Veteran]: Fellow Service Member",
+    );
+    expect(draft).not.toContain("fellow-service-member");
+  });
+
+  it("Forms Helper stressor type", () => {
+    const { answers } = formStatementInputs("ptsd-stressor", {
+      stressorType: "fear-hostile",
+    });
+    const draft = buildPTSDStressorTemplate(answers);
+    expect(draft).toContain(
+      "Type of stressor: Fear of Hostile Military/Terrorist Activity",
+    );
+    expect(draft).not.toContain("fear-hostile");
+  });
+
+  it("a value with no label, and an empty one, are left as they are", () => {
+    expect(
+      formStatementInputs("buddy-statement", { witnessRelation: "godparent" })
+        .answers.relationship,
+    ).toBe("godparent");
+    expect(
+      buildBuddyStatementTemplate(
+        formStatementInputs("buddy-statement", {}).answers,
+        "",
+      ),
+    ).toContain("[your relationship to the veteran]");
+  });
+
+  it("Witness Bench relationship, in the app's English wording", () => {
+    const draft = buildWitnessStatementTemplate("buddy", "PTSD", {});
+    expect(draft).toContain("Witness Type: Battle Buddy / Fellow Veteran");
+    expect(witnessRelationshipLabel("unlisted")).toBe("unlisted");
+    for (const [value, key] of [
+      ["spouse", "relationshipSpouse"],
+      ["parent", "relationshipParent"],
+      ["child", "relationshipChild"],
+      ["sibling", "relationshipSibling"],
+      ["friend", "relationshipFriend"],
+      ["buddy", "relationshipBuddy"],
+      ["coworker", "relationshipCoworker"],
+      ["neighbor", "relationshipNeighbor"],
+    ]) {
+      expect(witnessRelationshipLabel(value)).toBe(
+        APP_TRANSLATIONS.witnessBench[key].en,
+      );
+    }
   });
 });

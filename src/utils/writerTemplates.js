@@ -198,12 +198,16 @@ export function buildWitnessStatementBody(condition = "", answers = {}) {
   ]);
 }
 
-/** Witness Bench statement as offered to the model: heading plus narrative. */
+/**
+ * Witness Bench statement as offered to the model: heading plus narrative.
+ * `relationship` is the stored choice ("spouse"); its label is printed.
+ */
 export function buildWitnessStatementTemplate(
-  relationshipLabel = "",
+  relationship = "",
   condition = "",
   answers = {},
 ) {
+  const relationshipLabel = witnessRelationshipLabel(relationship);
   return paragraphs([
     [
       "STATEMENT IN SUPPORT OF CLAIM (VA FORM 21-10210)",
@@ -311,6 +315,49 @@ export const tdiuAnalysisText = (analysis) =>
     .filter((part) => typeof part === "string")
     .join("\n");
 
+/*
+ * A form stores a select's code ("fellow-service-member"); a statement
+ * prints its label. These are the labels the Forms Helper's own statements
+ * print, and the Witness Bench's English relationship labels.
+ */
+export const WITNESS_RELATION_LABELS = {
+  "fellow-service-member": "Fellow Service Member",
+  supervisor: "Military Supervisor/NCO/Officer",
+  spouse: "Spouse",
+  family: "Family Member",
+  friend: "Friend",
+  coworker: "Civilian Coworker",
+  caregiver: "Caregiver",
+  other: "Other",
+};
+
+export const STRESSOR_TYPE_LABELS = {
+  combat: "Combat-Related Trauma",
+  mst: "Military Sexual Trauma (MST)",
+  "personal-assault": "Personal Assault",
+  accident: "Serious Accident/Injury",
+  death: "Witnessing Death or Serious Injury",
+  "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
+  other: "Other Traumatic Event",
+};
+
+const WITNESS_BENCH_RELATIONSHIP_LABELS = {
+  spouse: "Spouse / Partner",
+  parent: "Parent",
+  child: "Adult Child",
+  sibling: "Sibling",
+  friend: "Close Friend",
+  buddy: "Battle Buddy / Fellow Veteran",
+  coworker: "Coworker / Supervisor",
+  neighbor: "Neighbor",
+};
+
+const labelFor = (labels, value) =>
+  Object.hasOwn(labels, value ?? "") ? labels[value] : value;
+
+export const witnessRelationshipLabel = (value) =>
+  labelFor(WITNESS_BENCH_RELATIONSHIP_LABELS, value);
+
 /**
  * The Forms Helper's field names mapped to the answers each statement
  * builder reads, or null for a form with no AI wording step.
@@ -321,7 +368,10 @@ export function formStatementInputs(formType, formData = {}) {
       return {
         kind: "buddy",
         answers: {
-          relationship: formData.witnessRelation,
+          relationship: labelFor(
+            WITNESS_RELATION_LABELS,
+            formData.witnessRelation,
+          ),
           knownDuration: formData.knownSince,
           observations: formData.whatObserved,
           changesNoticed: formData.specificExamples,
@@ -349,7 +399,7 @@ export function formStatementInputs(formType, formData = {}) {
       return {
         kind: "ptsd",
         answers: {
-          stressorType: formData.stressorType,
+          stressorType: labelFor(STRESSOR_TYPE_LABELS, formData.stressorType),
           eventDescription: formData.eventDescription,
           currentSymptoms: Array.isArray(formData.symptoms)
             ? formData.symptoms.join(", ")

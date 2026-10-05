@@ -10,6 +10,10 @@ import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import StandardDraftNotice from "./common/StandardDraftNotice";
+import {
+  STRESSOR_TYPE_LABELS,
+  WITNESS_RELATION_LABELS,
+} from "../utils/writerTemplates";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import {
   enhanceFormStatement,
@@ -7383,16 +7387,7 @@ function generateBuddyStatement(formData) {
     day: "numeric",
   });
 
-  const relationLabels = {
-    "fellow-service-member": "Fellow Service Member",
-    supervisor: "Military Supervisor/NCO/Officer",
-    spouse: "Spouse",
-    family: "Family Member",
-    friend: "Friend",
-    coworker: "Civilian Coworker",
-    caregiver: "Caregiver",
-    other: "Other",
-  };
+  const relationLabels = WITNESS_RELATION_LABELS;
 
   // Clean, official format that works as an attachment to VA Form 21-10210
   let statement = `STATEMENT IN SUPPORT OF CLAIM
@@ -7601,15 +7596,7 @@ function generatePTSDStatement(formData) {
     day: "numeric",
   });
 
-  const stressorLabels = {
-    combat: "Combat-Related Trauma",
-    mst: "Military Sexual Trauma (MST)",
-    "personal-assault": "Personal Assault",
-    accident: "Serious Accident/Injury",
-    death: "Witnessing Death or Serious Injury",
-    "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
-    other: "Other Traumatic Event",
-  };
+  const stressorLabels = STRESSOR_TYPE_LABELS;
 
   const statement = `STATEMENT IN SUPPORT OF CLAIM FOR PTSD
 (To Be Submitted with VA Form 21-0781)
