@@ -257,6 +257,7 @@ const NAME_SIDE_WORDS = {
   lt: "left",
   rt: "right",
 };
+const NAME_ABBREVIATED_SIDES = ["lt", "rt"];
 // Clinical shorthand for a side plus a whole extremity.
 const NAME_EXTREMITY_ABBREVIATIONS = {
   lue: { side: "left", limb: "upper" },
@@ -380,7 +381,32 @@ const _nameWords = (name) =>
  * The words of a name in order, each as { word, side, limb, part, allowed }.
  * A phrase from NAME_PHRASES becomes one item.
  */
+/**
+ * "Lt" and "Rt" also stand for other things ("LT nerve", radiotherapy "RT"),
+ * so they count as a side only directly beside a limb word, at the start of
+ * the name with a limb word within the next two words, or at the end of a
+ * name that has a limb word.
+ */
+function _abbreviatedSideHolds(items, index) {
+  const hasLimb = (item) => Boolean(item?.limb);
+  if (hasLimb(items[index - 1]) || hasLimb(items[index + 1])) return true;
+  if (index === 0) return hasLimb(items[2]);
+  return index === items.length - 1 && items.some(hasLimb);
+}
+
+const _withoutLooseAbbreviations = (items) =>
+  items.map((item, index) =>
+    NAME_ABBREVIATED_SIDES.includes(item.word) &&
+    !_abbreviatedSideHolds(items, index)
+      ? { word: item.word, allowed: false }
+      : item,
+  );
+
 function _nameItems(name) {
+  return _withoutLooseAbbreviations(_classifiedNameWords(name));
+}
+
+function _classifiedNameWords(name) {
   let text = ` ${_nameWords(name).join(" ")} `;
   NAME_PHRASES.forEach((phrase, index) => {
     text = text.split(` ${phrase.words} `).join(` #${index} `);

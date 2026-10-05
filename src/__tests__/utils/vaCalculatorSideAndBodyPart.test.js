@@ -113,6 +113,11 @@ describe("sideFromName", () => {
     ["Tinnitus", "none"],
     ["Left and right knee strain", "none"],
     ["Copyright claim", "none"],
+    ["Hodgkin lymphoma s/p RT", "none"],
+    ["LT nerve paralysis, shoulder", "none"],
+    ["Sciatic neuritis, Rt", "right"],
+    ["Knee strain, Lt", "left"],
+    ["Lt. arthritis, knee", "left"],
     [null, "none"],
   ])("%j gives %s", (name, side) => {
     expect(sideFromName(name)).toBe(side);

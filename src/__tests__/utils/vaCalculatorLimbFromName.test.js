@@ -270,6 +270,41 @@ describe("punctuation and 'and' break a name the way 'with' does", () => {
   );
 });
 
+describe("'Lt' and 'Rt' are sides only beside a limb word", () => {
+  it.each([
+    ["LT nerve paralysis, shoulder", "elbow"],
+    ["Lt paralysis of the nerve, knee", "knee"],
+  ])("%s is not read as left: 20 + 20 give 36, flagged", (name, bodyPart) => {
+    const result = calculateVARating([
+      named(name, 20, "left"),
+      partner("right", bodyPart),
+    ]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(36);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({ reason: "limb-unknown", name }),
+    ]);
+  });
+
+  it.each([
+    ["Lt knee pain", "knee"],
+    ["Rt. knee strain", "knee"],
+    ["Sciatic neuritis, Rt", "knee"],
+    ["Knee strain, Lt", "knee"],
+    ["Lt. arthritis, knee", "knee"],
+  ])(
+    "%s pairs with the opposite limb: 20 + 20 give 36, plus 3.6 is 40",
+    (name, bodyPart) => {
+      const side = sideIn(name);
+      const result = calculateVARating([
+        named(name, 20, side),
+        partner(opposite(side), bodyPart),
+      ]);
+      expect(result.bilateralGroupRating).toBe(40);
+    },
+  );
+});
+
 describe("repros from QA", () => {
   it("sciatica of the right leg 20 + left knee strain 10 + PTSD 50 give 60, 64, then 60 (not 70)", () => {
     const list = [
