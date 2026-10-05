@@ -29,9 +29,45 @@ export const HEARTBEAT_INTERVAL_MS = 5000;
 // only treated as abandoned well after that.
 export const STALE_AFTER_MS = 90000;
 
-const OWNER_ID = crypto.randomUUID();
+const OWNER_KEY = "vetrate_import_owner";
+let ownerId = null;
 let currentImportId = null;
 let heartbeatTimer = null;
+
+// crypto.randomUUID is missing from older browsers and plain-http origins; this
+// module is in the boot path, so it must never throw at load or here.
+function newId() {
+  if (typeof crypto?.randomUUID === "function") return crypto.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (typeof crypto?.getRandomValues === "function") {
+    crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i += 1) {
+      bytes[i] = Math.floor(Math.random() * 256);
+    }
+  }
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Kept in session storage so a tab that reloads or crashes and comes back
+// still recognises its own dead import and can report it at once.
+function owner() {
+  if (ownerId) return ownerId;
+  try {
+    ownerId = sessionStorage.getItem(OWNER_KEY);
+  } catch {
+    ownerId = null;
+  }
+  if (!ownerId) {
+    ownerId = newId();
+    try {
+      sessionStorage.setItem(OWNER_KEY, ownerId);
+    } catch {
+      // The id then lasts for this page load only.
+    }
+  }
+  return ownerId;
+}
 
 const markerKey = (id) => `${IMPORT_MARKER_KEY_PREFIX}${id}`;
 
@@ -92,8 +128,13 @@ function removeKey(key) {
   }
 }
 
+// This tab's own marker is dead as soon as it is not the import this page is
+// running (the page was reloaded); another tab's is dead once its heartbeat
+// has stopped.
 const isStale = (marker) =>
-  marker.owner !== OWNER_ID && Date.now() - marker.heartbeat > STALE_AFTER_MS;
+  marker.owner === owner()
+    ? marker.id !== currentImportId
+    : Date.now() - marker.heartbeat > STALE_AFTER_MS;
 
 function stopHeartbeat() {
   if (heartbeatTimer === null) return;
@@ -105,7 +146,7 @@ function beat() {
   let ownMarkers = 0;
   for (const key of markerKeys()) {
     const marker = parseMarker(localStorage.getItem(key));
-    if (marker?.owner !== OWNER_ID) continue;
+    if (marker?.owner !== owner() || marker.id !== currentImportId) continue;
     ownMarkers += 1;
     write({ ...marker, heartbeat: Date.now() });
   }
@@ -120,13 +161,20 @@ function startHeartbeat() {
 export function startImportMarker(labels) {
   const kept = labels.slice(0, MAX_DOCUMENTS);
   if (kept.length === 0) return;
-  currentImportId = crypto.randomUUID();
+  // Starting again means the veteran is finishing what an earlier import left
+  // undone; its stale marker must not come back as a notice after this one
+  // completes.
+  for (const key of markerKeys()) {
+    const marker = parseMarker(localStorage.getItem(key));
+    if (!marker || isStale(marker)) removeKey(key);
+  }
+  currentImportId = newId();
   write({
     total: kept.length,
     saved: 0,
     labels: kept,
     id: currentImportId,
-    owner: OWNER_ID,
+    owner: owner(),
     heartbeat: Date.now(),
   });
   startHeartbeat();
@@ -135,7 +183,7 @@ export function startImportMarker(labels) {
 // Never re-creates a marker that was removed (a wipe in any tab, Quick Exit).
 export function recordDocumentSaved() {
   const marker = currentImportId && readMarker(currentImportId);
-  if (!marker || marker.owner !== OWNER_ID) return;
+  if (!marker || marker.owner !== owner()) return;
   write({
     ...marker,
     saved: Math.min(marker.saved + 1, marker.total),
@@ -146,7 +194,7 @@ export function recordDocumentSaved() {
 // The marker of the import this tab is running, or null.
 export function readActiveImportMarker() {
   const marker = currentImportId && readMarker(currentImportId);
-  return marker?.owner === OWNER_ID ? marker : null;
+  return marker?.owner === owner() ? marker : null;
 }
 
 // With an id, removes only that import's marker, and only if this tab owns it
@@ -155,13 +203,13 @@ export function readActiveImportMarker() {
 export function clearImportMarker(id) {
   if (id !== undefined) {
     const marker = readMarker(id);
-    if (marker && (marker.owner === OWNER_ID || isStale(marker))) {
+    if (marker && (marker.owner === owner() || isStale(marker))) {
       removeKey(markerKey(id));
     }
     return;
   }
   for (const key of markerKeys()) {
-    if (parseMarker(localStorage.getItem(key))?.owner === OWNER_ID) {
+    if (parseMarker(localStorage.getItem(key))?.owner === owner()) {
       removeKey(key);
     }
   }

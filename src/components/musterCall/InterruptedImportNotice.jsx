@@ -23,13 +23,20 @@ export default function InterruptedImportNotice() {
   const [interrupted, setInterrupted] = useState(readInterruptedImport);
 
   useEffect(() => {
-    if (interrupted) return undefined;
-    const timer = setInterval(
-      () => setInterrupted(readInterruptedImport()),
-      RECHECK_MS,
-    );
-    return () => clearInterval(timer);
-  }, [interrupted]);
+    const recheck = () =>
+      setInterrupted((current) => {
+        const next = readInterruptedImport();
+        return next?.id === current?.id && next?.saved === current?.saved
+          ? current
+          : next;
+      });
+    const timer = setInterval(recheck, RECHECK_MS);
+    window.addEventListener("storage", recheck);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("storage", recheck);
+    };
+  }, []);
 
   if (!interrupted) return null;
 

@@ -101,3 +101,18 @@ describe("InterruptedImportNotice", () => {
     expect(screen.getByRole("status")).toHaveTextContent("1 of 3 documents");
   });
 });
+
+describe("InterruptedImportNotice in two tabs", () => {
+  it("goes away when another tab removed the marker", () => {
+    seedOtherTabMarker("killed", STALE_AFTER_MS + 5000);
+    render(<InterruptedImportNotice />);
+    expect(screen.getByRole("status")).toBeVisible();
+
+    act(() => {
+      localStorage.clear();
+      window.dispatchEvent(new Event("storage"));
+    });
+
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});

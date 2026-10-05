@@ -76,7 +76,7 @@ describe("the import marker", () => {
     });
     expect(key).toBe(`${IMPORT_MARKER_KEY_PREFIX}${JSON.parse(stored).id}`);
     expect(stored).not.toMatch(/\.pdf|\.txt|\.docx/i);
-    expect(sessionStorage).toHaveLength(0);
+    expect(sessionStorage.getItem(IMPORT_MARKER_KEY)).toBeNull();
   });
 
   it("counts documents as they are saved", () => {
@@ -243,5 +243,78 @@ describe("wiping", () => {
     await wipeAllLocalData();
 
     expect(markerKeys()).toHaveLength(0);
+  });
+});
+
+describe("a browser without crypto.randomUUID", () => {
+  it.each([
+    ["only getRandomValues", { getRandomValues: (a) => a.fill(7) }],
+    ["no crypto at all", undefined],
+  ])("loads and keeps a marker with %s", async (_name, fakeCrypto) => {
+    vi.stubGlobal("crypto", fakeCrypto);
+    vi.resetModules();
+
+    const marker = await import("./importProgressMarker");
+    marker.startImportMarker(LABELS);
+
+    const [key] = markerKeys();
+    expect(JSON.parse(localStorage.getItem(key)).id).toMatch(/^[0-9a-f]+$/);
+    marker.clearAllImportMarkers();
+  });
+});
+
+async function loadPage() {
+  vi.resetModules();
+  return import("./importProgressMarker");
+}
+
+describe("a tab that reloaded mid-import", () => {
+  it("reports its own dead import at once, not after the stale timeout", async () => {
+    const before = await loadPage();
+    before.startImportMarker(LABELS);
+    before.recordDocumentSaved();
+
+    const reloaded = await loadPage();
+
+    expect(reloaded.readInterruptedImport()).toMatchObject({
+      saved: 1,
+      total: 3,
+    });
+    reloaded.clearAllImportMarkers();
+  });
+
+  it("does not report the import the reloaded page is itself running", async () => {
+    const before = await loadPage();
+    before.startImportMarker(LABELS);
+
+    const reloaded = await loadPage();
+    reloaded.startImportMarker(LABELS);
+
+    expect(reloaded.readInterruptedImport()).toBeNull();
+    expect(markerKeys()).toHaveLength(1);
+    reloaded.clearAllImportMarkers();
+  });
+});
+
+describe("finishing the import that an interrupted one left undone", () => {
+  it("does not bring the old notice back once the new import completes", () => {
+    seedOtherTabMarker("killed", { ageMs: STALE_AFTER_MS + 1000, saved: 1 });
+
+    startImportMarker(LABELS);
+    recordDocumentSaved();
+    recordDocumentSaved();
+    recordDocumentSaved();
+    clearImportMarker();
+
+    expect(markerKeys()).toHaveLength(0);
+    expect(readInterruptedImport()).toBeNull();
+  });
+
+  it("leaves another tab's live import alone when a new one starts", () => {
+    seedOtherTabMarker("live-elsewhere", { ageMs: 1000 });
+
+    startImportMarker(LABELS);
+
+    expect(markerKeys()).toHaveLength(2);
   });
 });
