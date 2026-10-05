@@ -6,6 +6,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
+import IgnoredRatingsNotice from "./IgnoredRatingsNotice";
 import {
   calculateVARating,
   calculateCompensation,
@@ -2067,6 +2068,8 @@ function CalculatorResultsSection({
 
       <BilateralIssuesNotice t={t} issues={results.bilateralIssues} />
 
+      <IgnoredRatingsNotice t={t} ignored={results.ignoredEntries} />
+
       {/* Pyramiding Warnings - NEW */}
       <PyramidingWarningsSection t={t} pyramiding={pyramiding} />
 
@@ -2402,6 +2405,8 @@ function MyRatingsSummaryFilled({
       </div>
 
       <BilateralIssuesNotice t={t} issues={myRatingsResults.bilateralIssues} />
+
+      <IgnoredRatingsNotice t={t} ignored={myRatingsResults.ignoredEntries} />
 
       {/* Monthly Pay Estimate */}
       <div className="bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-xl p-6 text-center">

@@ -3777,6 +3777,13 @@ export const APP_TRANSLATIONS = {
       vi: "Hệ Số Song Phương Sẽ Được Áp Dụng",
       ko: "양측 요인이 적용됩니다",
     },
+    ratingUnreadable: {
+      en: "This rating could not be read, so it is not counted in the combined rating.",
+      es: "No se pudo leer este rating, por lo que no se cuenta en el rating combinado.",
+      tl: "Hindi mabasa ang rating na ito, kaya hindi ito kasama sa combined rating.",
+      vi: "Không đọc được mức đánh giá này, nên nó không được tính vào mức đánh giá kết hợp.",
+      ko: "이 등급을 읽을 수 없어 통합 등급에 포함되지 않았습니다.",
+    },
     bilateralIssuesTitle: {
       en: "Bilateral factor not applied (38 CFR § 4.26)",
       es: "Factor bilateral no aplicado (38 CFR § 4.26)",
