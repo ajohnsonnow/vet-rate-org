@@ -14,6 +14,8 @@ import {
   listPlaceholders,
   witnessRelationshipLabel,
   tdiuAnalysisText,
+  tdiuSavePayload,
+  tdiuUnfilledBlanks,
 } from "../../utils/writerTemplates";
 
 // Every value below is invented for these tests.
@@ -329,5 +331,57 @@ describe("stored codes are printed as the form's own labels", () => {
         APP_TRANSLATIONS.witnessBench[key].en,
       );
     }
+  });
+});
+
+describe("saving a TDIU analysis", () => {
+  const template = buildTdiuAnalysisTemplate([
+    { condition: "Migraines", symptoms: ["Light sensitivity"] },
+  ]);
+  const filled = {
+    limitations: [
+      {
+        condition: "Migraines",
+        symptom: "Light sensitivity",
+        vocational_impact: "I cannot look at a screen for a full shift.",
+      },
+    ],
+    combined_effect: "I cannot finish a working day.",
+    summary_argument: "I cannot keep a job because of my migraines.",
+    job_types_precluded: ["Medium", "Heavy"],
+  };
+
+  it("counts every blank still standing", () => {
+    expect(tdiuUnfilledBlanks(template)).toHaveLength(4);
+    expect(tdiuUnfilledBlanks(filled)).toEqual([]);
+  });
+
+  it("saves what the veteran sees, and all insights once nothing is blank", () => {
+    expect(tdiuSavePayload(filled)).toEqual({
+      rawText: filled.summary_argument,
+      extractedData: filled,
+      vkbMergeData: {
+        aiInsights: {
+          tdiuSummary: filled.summary_argument,
+          tdiuJobsPrecluded: ["Medium", "Heavy"],
+        },
+      },
+    });
+  });
+
+  it("keeps bracket text out of the insights", () => {
+    const untouched = tdiuSavePayload(template);
+    expect(untouched.extractedData).toBe(template);
+    expect(untouched.rawText).toBe(template.summary_argument);
+    expect(untouched).not.toHaveProperty("vkbMergeData");
+
+    const partly = tdiuSavePayload({
+      ...template,
+      job_types_precluded: ["Heavy"],
+    });
+    expect(partly.vkbMergeData).toEqual({
+      aiInsights: { tdiuJobsPrecluded: ["Heavy"] },
+    });
+    expect(JSON.stringify(partly.vkbMergeData)).not.toMatch(/\[[a-z]/);
   });
 });

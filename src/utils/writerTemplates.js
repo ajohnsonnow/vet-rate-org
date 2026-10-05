@@ -300,6 +300,8 @@ export function buildTdiuAnalysisTemplate(disabilities = []) {
   };
 }
 
+export const TDIU_WORK_TYPES = ["Sedentary", "Light", "Medium", "Heavy"];
+
 /** The TDIU analysis as one block of text, for wording checks. */
 export const tdiuAnalysisText = (analysis) =>
   [
@@ -447,3 +449,34 @@ ${REWORD_RULES}
 === DRAFT ===
 ${JSON.stringify(analysis, null, 2)}
 === END DRAFT ===`;
+
+/** Every blank still standing in a TDIU analysis, one entry per occurrence. */
+export const tdiuUnfilledBlanks = (analysis) =>
+  listPlaceholders(tdiuAnalysisText(analysis));
+
+const hasBlank = (value) =>
+  listPlaceholders([value].flat().join("\n")).length > 0;
+
+/**
+ * What the TDIU Builder saves: the analysis as the veteran sees it for My
+ * Packet, and for the knowledge base's insights only the parts with no
+ * blank left in them. A bracketed blank is a prompt to the veteran, not
+ * something the app has learned.
+ */
+export function tdiuSavePayload(analysis) {
+  const insights = {
+    ...(hasBlank(analysis.summary_argument)
+      ? {}
+      : { tdiuSummary: analysis.summary_argument }),
+    ...(hasBlank(analysis.job_types_precluded)
+      ? {}
+      : { tdiuJobsPrecluded: analysis.job_types_precluded }),
+  };
+  return {
+    rawText: analysis.summary_argument || "",
+    extractedData: analysis,
+    ...(Object.keys(insights).length > 0
+      ? { vkbMergeData: { aiInsights: insights } }
+      : {}),
+  };
+}
