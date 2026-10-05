@@ -28,12 +28,17 @@ describe("verifiedReference.json", () => {
       "cfr-4.25-b",
       "cfr-4.26",
       "cfr-4.26-a-b-d",
+      "cfr-3.2500-a",
+      "cfr-3.2601-f",
+      "cfr-20.203",
+      "cfr-20.202-a-b",
       "pact-toxic",
       "pact-toxic-rule",
       "pact-herbicide",
       "pact-herbicide-law-changes",
       "pact-overview",
       "va-forms",
+      "review-forms",
     ]);
   });
 

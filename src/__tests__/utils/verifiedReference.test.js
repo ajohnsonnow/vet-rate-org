@@ -37,7 +37,7 @@ describe("detectReferenceTopics", () => {
     ["Do burn pits qualify me for anything?", ["toxic-exposure"]],
     ["I was exposed to Agent Orange", ["herbicide"]],
     ["Which presumptive conditions exist?", ["pact-act"]],
-    ["Which form do I use to appeal?", ["claim-forms"]],
+    ["Which form do I use to appeal?", ["decision-review", "claim-forms"]],
   ])("%s", (question, expected) => {
     expect(detectReferenceTopics(question)).toEqual(expected);
   });

@@ -121,10 +121,42 @@ describe("the golden-set questions the graded run left without verified text", (
     expect(topicsFor("a18")).toEqual(["next-claim-step"]);
   });
 
-  it.each(["a01", "a04", "a07", "a09", "a17", "a23", "a28"])(
+  it.each(["a01", "a07", "a09", "a17", "a23", "a28"])(
     "%s still gets nothing",
     (id) => {
       expect(topicsFor(id)).toEqual([]);
     },
   );
+});
+
+describe("decision review wording", () => {
+  it.each([
+    "How do I appeal this decision?",
+    "Should I ask for a Higher-Level Review?",
+    "Is an HLR faster than a Board Appeal?",
+    "Do I send a Notice of Disagreement?",
+    "I disagree with the decision on my knee.",
+    "VA sent me a Statement of the Case. What now?",
+  ])("%s", (question) => {
+    expect(detectReferenceTopics(question)).toContain("decision-review");
+  });
+
+  it("applies to everything the Decision Decoder is asked", () => {
+    expect(topicsFor("a04")).toEqual(["decision-review"]);
+    expect(topicsFor("t08")).toEqual(["decision-review"]);
+  });
+
+  it("gives the three lanes, their forms and the Higher-Level Review evidence rule on device", () => {
+    expect(
+      selectVerifiedEntries("How do I appeal this decision?", {
+        maxChars: 3400,
+      }).map((e) => e.id),
+    ).toEqual([
+      "cfr-3.2500-a",
+      "review-forms",
+      "cfr-3.2601-f",
+      "cfr-20.203",
+      "cfr-20.202-a-b",
+    ]);
+  });
 });

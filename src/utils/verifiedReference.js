@@ -48,6 +48,11 @@ const PLANNING = /\b(?:plan|next|strategy)\b/i;
 const NEXT_STEP =
   /\bnext (?:claim )?(?:steps?|actions?)\b|\bnext round of claims\b|\bwhat should i (?:do|file) next\b/i;
 
+const REVIEW_TERMS =
+  /\bhigher[- ]level review\b|\bHLR\b|\bboard appeal\b|\bboard of veterans\b|\bnotice of disagreement\b|\bstatement of the case\b|\bdecision review\b/i;
+const APPEAL_WORDS =
+  /\bappeal(?:s|ed|ing)?\b|\bdisagree with (?:the|my|this) decision\b/i;
+
 const anyMatch = (text, ...patterns) =>
   patterns.some((pattern) => pattern.test(text));
 
@@ -107,6 +112,19 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
         EVIDENCE_AFTER_DENIAL,
       ),
     entries: ["cfr-3.2501", "cfr-3.2501-a-d"],
+  },
+  {
+    id: "decision-review",
+    when: (text, toolId) =>
+      anyMatch(text, REVIEW_TERMS, APPEAL_WORDS) ||
+      toolId === "decision-decoder",
+    entries: [
+      "cfr-3.2500-a",
+      "review-forms",
+      "cfr-3.2601-f",
+      "cfr-20.203",
+      "cfr-20.202-a-b",
+    ],
   },
   {
     id: "tdiu",

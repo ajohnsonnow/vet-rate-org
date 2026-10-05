@@ -4,6 +4,8 @@
  *
  *   src/data/verifiedReference.json  quoted regulation and manual text
  *   src/data/cfrSections.json        every 38 CFR section the index has text for
+ *   src/data/verifiedQuotes.json     the decision review options, and the
+ *                                    sentence each answer correction quotes
  *   src/__tests__/utils/fixtures/verifiedReferenceSource.json
  *                                    the manual passages as the shard holds
  *                                    them, for the word-for-word test
@@ -36,6 +38,12 @@ import {
 } from "./lib/extract.js";
 import { sameWords, structureText } from "./lib/structure.js";
 import { MANUAL_TOPICS } from "./manual-topics.js";
+import {
+  CORRECTION_SPECS,
+  REVIEW_ENTRIES,
+  REVIEW_FORM_NUMBERS,
+  REVIEW_OPTIONS_SPEC,
+} from "./quote-specs.js";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -46,6 +54,7 @@ const M21_FILE = "public/dkb-index/m21_1/chunks.part0.jsonl";
 const FORMS_ALLOWLIST_FILE = "src/data/validVAForms.json";
 const REFERENCE_OUT = "src/data/verifiedReference.json";
 const SECTIONS_OUT = "src/data/cfrSections.json";
+const QUOTES_OUT = "src/data/verifiedQuotes.json";
 const FLAT_SOURCE_OUT =
   "src/__tests__/utils/fixtures/verifiedReferenceSource.json";
 
@@ -389,6 +398,86 @@ function buildFormsEntry(m21, allowlist) {
   };
 }
 
+const formLine = (form) => `VA Form ${form.number}: ${form.title}`;
+
+function findForm(forms, number) {
+  const form = forms.find((f) => f.number === number);
+  if (!form) throw new Error(`form ${number} is not in the forms table`);
+  return { number: form.number, title: form.title };
+}
+
+function buildReviewFormsEntry(formsEntry) {
+  return {
+    id: "review-forms",
+    citation: "Decision review forms: number and official title",
+    sourceLabel: formsEntry.sourceLabel,
+    text: REVIEW_FORM_NUMBERS.map((number) =>
+      formLine(findForm(formsEntry.forms, number)),
+    ).join("\n"),
+    source: formsEntry.source,
+  };
+}
+
+/** A quotation: the selected sentences as one line, with their citation. */
+function quoteRegulation(spec, ecfr) {
+  const selected = selectParagraphs(
+    sectionParagraphs(ecfr, spec.section),
+    spec.select,
+  );
+  return {
+    citation: spec.citation,
+    text: selected
+      .split("\n")
+      .filter((line) => line !== "[...]")
+      .join(" "),
+    source: {
+      file: ECFR_FILE,
+      retrieved: dateOf(sectionRecords(ecfr, spec.section)),
+    },
+  };
+}
+
+function quoteManualLine(spec, m21) {
+  const topic = buildTopic(spec.topic, m21);
+  const lines = topic.text
+    .split("\n")
+    .filter((line) => line.startsWith(spec.line));
+  if (lines.length !== 1) {
+    throw new Error(
+      `${spec.topic}: expected one line starting "${spec.line}", found ${lines.length}`,
+    );
+  }
+  const { article } = topic;
+  return {
+    citation: spec.citation,
+    text: lines[0],
+    abbreviations: abbreviationsIn(
+      lines[0],
+      `${article.title} ${article.text}`,
+    ),
+    source: { file: M21_FILE, retrieved: article.retrieved },
+  };
+}
+
+function buildReviewOptions(ecfr, forms) {
+  return {
+    lead: quoteRegulation(REVIEW_OPTIONS_SPEC.lead, ecfr),
+    lanes: REVIEW_OPTIONS_SPEC.lanes.map((lane) => ({
+      id: lane.id,
+      form: findForm(forms, lane.form),
+      quotes: lane.quotes.map((spec) => quoteRegulation(spec, ecfr)),
+    })),
+  };
+}
+
+const buildCorrections = (ecfr, m21) =>
+  Object.fromEntries(
+    Object.entries(CORRECTION_SPECS).map(([id, spec]) => [
+      id,
+      spec.topic ? quoteManualLine(spec, m21) : quoteRegulation(spec, ecfr),
+    ]),
+  );
+
 export function buildBundle(sourceRoot) {
   const read = (file) => readFileSync(path.join(sourceRoot, file), "utf8");
   const ecfr = parseJsonl(read(ECFR_FILE), ECFR_FILE);
@@ -406,10 +495,18 @@ export function buildBundle(sourceRoot) {
     reference: {
       _generated,
       entries: [
-        ...CFR_ENTRIES.map((spec) => buildCfrEntry(spec, ecfr)),
+        ...[...CFR_ENTRIES, ...REVIEW_ENTRIES].map((spec) =>
+          buildCfrEntry(spec, ecfr),
+        ),
         ...manual.map((built) => built.entry),
         forms.entry,
+        buildReviewFormsEntry(forms.entry),
       ],
+    },
+    quotes: {
+      _generated,
+      reviewOptions: buildReviewOptions(ecfr, forms.entry.forms),
+      corrections: buildCorrections(ecfr, m21),
     },
     sections: {
       _generated,
@@ -437,6 +534,7 @@ function main(argv) {
   const outputs = [
     [REFERENCE_OUT, serialize(bundle.reference)],
     [SECTIONS_OUT, serialize(bundle.sections)],
+    [QUOTES_OUT, serialize(bundle.quotes)],
     [FLAT_SOURCE_OUT, serialize(bundle.flatSource)],
   ];
 

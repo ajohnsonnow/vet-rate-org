@@ -185,6 +185,54 @@
       }
     },
     {
+      "id": "cfr-3.2500-a",
+      "citation": "38 CFR § 3.2500(a)",
+      "sourceLabel": "eCFR",
+      "text": "(a) Reviews available.\n(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary:\n(i) A request for higher-level review under § 3.2601 or\n(ii) An appeal to the Board under § 20.202 of this chapter.\n(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.2500",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.2500",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-3.2601-f",
+      "citation": "38 CFR § 3.2601(f)",
+      "sourceLabel": "eCFR",
+      "text": "(f) Evidentiary record. The evidentiary record in a higher-level review is limited to the evidence of record as of the date the agency of original jurisdiction issued notice of the prior decision under review and the higher-level adjudicator may not consider additional evidence. The higher-level adjudicator may not order development of additional evidence that may be relevant to the claim under review, except as provided in paragraph (g) of this section.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 3.2601",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-3/section-3.2601",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-20.203",
+      "citation": "38 CFR § 20.203(a)-(b)",
+      "sourceLabel": "eCFR",
+      "text": "(a) Place of filing. The Notice of Disagreement must be filed with the Board of Veterans' Appeals, P.O. Box 27063, Washington, DC 20038.\n(b) Time of filing. Except as provided in § 20.402 for simultaneously contested claims, a claimant, or his or her representative, must file a properly completed Notice of Disagreement with a decision by the agency of original jurisdiction within one year from the date that the agency mails the notice of the decision. The date of mailing the letter of notification of the decision will be presumed to be the same as the date of that letter for purposes of determining whether an appeal has been timely filed.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 20.203",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-20/section-20.203",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
+      "id": "cfr-20.202-a-b",
+      "citation": "38 CFR § 20.202(a)-(b)",
+      "sourceLabel": "eCFR",
+      "text": "(a) In general. A Notice of Disagreement must be properly completed on a form prescribed by the Secretary.\n[...]\n(b) Review options. Upon filing the Notice of Disagreement, a claimant must indicate whether the claimant requests:\n(1) Direct review by the Board of the record before the agency of original jurisdiction at the time of its decision, without submission of additional evidence or a Board hearing;\n(2) A Board hearing, to include an opportunity to submit additional evidence at the hearing and within 90 days following the hearing; or\n(3) An opportunity to submit additional evidence without a Board hearing with the Notice of Disagreement and within 90 days following receipt of the Notice of Disagreement.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "section": "38 CFR § 20.202",
+        "url": "https://www.ecfr.gov/current/title-38/chapter-I/part-20/section-20.202",
+        "retrieved": "2026-07-10"
+      }
+    },
+    {
       "id": "pact-toxic",
       "citation": "M21-1 VIII.ii.2.A.1.e-h (PACT Act burn pit and toxic exposure: who is covered, then the conditions)",
       "sourceLabel": "VA manual M21-1",
@@ -398,6 +446,17 @@
           "mentions": 13
         }
       ],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "numbersCheckedAgainst": "src/data/validVAForms.json",
+        "retrieved": "2026-07-19"
+      }
+    },
+    {
+      "id": "review-forms",
+      "citation": "Decision review forms: number and official title",
+      "sourceLabel": "titles as cited in VA Adjudication Procedures Manual M21-1",
+      "text": "VA Form 20-0996: Decision Review Request: Higher-Level Review\nVA Form 10182: Decision Review Request: Board Appeal (Notice of Disagreement)\nVA Form 20-0995: Decision Review Request: Supplemental Claim",
       "source": {
         "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
         "numbersCheckedAgainst": "src/data/validVAForms.json",
