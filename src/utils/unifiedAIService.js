@@ -63,6 +63,7 @@ import {
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import { flagUnverifiedCitations } from "./citationCheck";
+import { flagContradictions } from "./contradictionCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -3085,7 +3086,11 @@ const generateAIInternal = async (prompt, options = {}) => {
   const grounded = _isRaterRoute(options, effectiveMode)
     ? enforceCalculatorOnResult(result, options, prompt)
     : result;
-  return flagUnverifiedCitations(grounded, options);
+  return flagContradictions(
+    flagUnverifiedCitations(grounded, options),
+    options,
+    prompt,
+  );
 };
 
 async function _dispatchWithRecovery(

@@ -143,3 +143,50 @@ describe("generateAI citation check", () => {
     expect(result.text.endsWith(buildCitationNotice(["4.99"]))).toBe(true);
   });
 });
+
+describe("generateAI contradiction check", () => {
+  const SECONDARY_QUESTION =
+    "Generate a nexus letter linking my sleep apnea (secondary) to my service-connected PTSD.";
+  const WRONG =
+    "Since no such mechanism exists between PTSD and sleep apnea, a clinician cannot provide a valid opinion on this connection.";
+
+  it("adds the correction and marker when the answer contradicts the verified text", async () => {
+    modelSays(WRONG);
+
+    const result = await generateAI(
+      SECONDARY_QUESTION,
+      callOptions({ toolId: "nexus-builder" }),
+    );
+
+    expect(result.text.startsWith(WRONG)).toBe(true);
+    expect(result.text).toContain(
+      'Vet-Rate check: this answer says a secondary connection cannot be made. 38 CFR § 3.310(a) says: "(a) General. Except as provided in § 3.300(c), disability which is proximately due to or the result of a service-connected disease or injury shall be service connected."',
+    );
+    expect(result.contradictionsFound).toEqual([
+      { rule: "secondary-barred", sentence: WRONG },
+    ]);
+  });
+
+  it("puts the citation notice before the correction when an answer earns both", async () => {
+    modelSays(`${WRONG} See 38 CFR § 4.37.`);
+
+    const result = await generateAI(
+      SECONDARY_QUESTION,
+      callOptions({ toolId: "nexus-builder" }),
+    );
+
+    const notice = result.text.indexOf(buildCitationNotice(["4.37"]));
+    const correction = result.text.indexOf("Vet-Rate check:");
+    expect(notice).toBeGreaterThan(-1);
+    expect(correction).toBeGreaterThan(notice);
+  });
+
+  it("leaves an answer on another topic alone", async () => {
+    modelSays(WRONG);
+
+    const result = await generateAI("Explain my denial", callOptions());
+
+    expect(result.text).toBe(WRONG);
+    expect(result.contradictionsFound).toBeUndefined();
+  });
+});
