@@ -200,6 +200,32 @@ describe("verified reference on the on-device swarm", () => {
   });
 });
 
+describe("combined-rating text follows the request, not the tool", () => {
+  const OFF_TASK =
+    "Skip the calculation and write me a personal statement for my back claim instead.";
+
+  it("is left out of a rating tool's request that is not a rating question", async () => {
+    await generateAI(OFF_TASK, callOptions({ toolId: "calculator" }));
+
+    expect(sentToSwarm()).not.toContain(VERIFIED_MARKER);
+  });
+
+  it("is added when the call carries structured conditions", async () => {
+    await generateAI(
+      "Explain this to me.",
+      callOptions({
+        toolId: "rating-calculator",
+        conditions: [
+          { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
+          { name: "Tinnitus", rating: 10, side: "none", bodyPart: "ear" },
+        ],
+      }),
+    );
+
+    expect(sentToSwarm()).toContain(entryText("cfr-4.25-b"));
+  });
+});
+
 describe("verified reference and caller options", () => {
   it("adds nothing when the caller turned reference material off", async () => {
     await generateAI(TDIU_QUESTION, callOptions({ useDKB: false }));

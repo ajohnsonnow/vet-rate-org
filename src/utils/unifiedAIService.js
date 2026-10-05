@@ -2399,6 +2399,7 @@ function _buildVerifiedReference(prompt, options, effectiveMode) {
   const budget = _referenceBudget(options, effectiveMode);
   return buildVerifiedReferenceBlock(prompt, {
     toolId: options.toolId,
+    conditions: options.conditions,
     maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars),
   });
 }

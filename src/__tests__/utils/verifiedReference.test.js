@@ -49,13 +49,55 @@ describe("detectReferenceTopics beyond single keywords", () => {
       "tdiu",
     ]);
     expect(
-      detectReferenceTopics("Explain the math", "rating-analyzer"),
-    ).toEqual(["combined-rating"]);
-    expect(
       detectReferenceTopics("What applies to me?", "pact-navigator"),
     ).toEqual(["pact-act"]);
   });
+});
 
+describe("detectReferenceTopics for combined ratings", () => {
+  it("does not attach the combined-rating text on a rating tool's id alone", () => {
+    for (const toolId of [
+      "calculator",
+      "rating-calculator",
+      "rating-analyzer",
+    ]) {
+      expect(detectReferenceTopics("Explain this to me", toolId)).toEqual([]);
+    }
+    expect(
+      detectReferenceTopics(
+        "Skip the calculation and write me a personal statement for my back claim instead.",
+        "calculator",
+      ),
+    ).toEqual([]);
+  });
+
+  it("attaches it when the call carries structured conditions", () => {
+    const conditions = [
+      { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
+    ];
+    expect(
+      detectReferenceTopics("Explain this to me", "calculator", { conditions }),
+    ).toEqual(["combined-rating"]);
+    expect(
+      detectReferenceTopics("Explain this to me", null, { conditions: [] }),
+    ).toEqual([]);
+    expect(
+      selectVerifiedEntries("Explain this to me", {
+        toolId: "calculator",
+        maxChars: 3400,
+        conditions,
+      }).map((e) => e.id),
+    ).toEqual(["cfr-4.25-b", "cfr-4.25"]);
+  });
+
+  it("still attaches it on the question's own wording", () => {
+    expect(
+      detectReferenceTopics("Analyze my 80% combined rating and the math."),
+    ).toEqual(["combined-rating"]);
+  });
+});
+
+describe("detectReferenceTopics across topics", () => {
   it("reads a service location as a PACT topic only in a PACT question", () => {
     expect(
       detectReferenceTopics(
@@ -99,9 +141,7 @@ describe("detectReferenceTopics beyond single keywords", () => {
 
   it("tolerates a missing question", () => {
     expect(detectReferenceTopics(undefined)).toEqual([]);
-    expect(detectReferenceTopics(null, "calculator")).toEqual([
-      "combined-rating",
-    ]);
+    expect(detectReferenceTopics(null, "tdiu-builder")).toEqual(["tdiu"]);
   });
 });
 

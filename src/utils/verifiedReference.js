@@ -70,11 +70,16 @@ const isHerbicideQuestion = (text, toolId) =>
   HERBICIDE_WORDS.test(text) ||
   (isPactQuestion(text, toolId) && HERBICIDE_PLACES.test(text));
 
+// A rating tool's id alone says nothing about the question: the same tool
+// receives requests to do something else entirely. The text applies when the
+// question asks about combining, or the call carries ratings to combine.
+const COMBINED_RATING =
+  /\bcombined (?:rating|evaluation|disability|percentage)\b|\bcombin(?:e|es|ing) (?:my |the |these |those )?(?:ratings|disabilities|percentages)\b|\bva math\b|\b4\.25\b/i;
+
 /**
- * Topic rules in priority order. `pattern` is tested against the question,
- * `toolIds` against the tool the question came from; `when` replaces both
- * for topics that need more than one signal. `entries` are bundled entry ids,
- * most important first.
+ * Topic rules in priority order. `pattern` is tested against the question;
+ * `when(question, toolId, { conditions })` replaces it for topics that need
+ * another signal. `entries` are bundled entry ids, most important first.
  */
 export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   {
@@ -120,9 +125,9 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "combined-rating",
-    pattern:
-      /\bcombined (?:rating|evaluation|disability|percentage)\b|\bcombin(?:e|es|ing) (?:my |the |these |those )?(?:ratings|disabilities|percentages)\b|\bva math\b|\b4\.25\b/i,
-    toolIds: ["calculator", "rating-calculator", "rating-analyzer"],
+    when: (text, _toolId, { conditions }) =>
+      COMBINED_RATING.test(text) ||
+      (Array.isArray(conditions) && conditions.length > 0),
     entries: ["cfr-4.25-b", "cfr-4.25", "cfr-4.25-a"],
   },
   {
@@ -156,16 +161,21 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
 ]);
 
-const topicApplies = (topic, text, toolId) =>
-  topic.when
-    ? topic.when(text, toolId)
-    : topic.pattern.test(text) || Boolean(topic.toolIds?.includes(toolId));
+const topicApplies = (topic, text, toolId, context) =>
+  topic.when ? topic.when(text, toolId, context) : topic.pattern.test(text);
 
-/** Ids of the topics a question raises, in priority order. */
-export function detectReferenceTopics(question, toolId = null) {
+/**
+ * Ids of the topics a request raises, in priority order. `conditions` are
+ * the structured ratings a call carries, when it carries any.
+ */
+export function detectReferenceTopics(
+  question,
+  toolId = null,
+  { conditions = null } = {},
+) {
   const text = String(question ?? "");
   return VERIFIED_REFERENCE_TOPICS.filter((topic) =>
-    topicApplies(topic, text, toolId),
+    topicApplies(topic, text, toolId, { conditions }),
   ).map((topic) => topic.id);
 }
 
@@ -215,10 +225,14 @@ function formatEntry(entry) {
  * formatted as a block. Entries are taken whole, in rank order; one that
  * does not fit is skipped and the next is tried, so legal text is never cut.
  */
-export function selectVerifiedEntries(question, { toolId = null, maxChars }) {
+export function selectVerifiedEntries(
+  question,
+  { toolId = null, maxChars, conditions = null },
+) {
   let remaining = maxChars - HEADER.length - FOOTER.length;
   const picked = [];
-  for (const id of rankEntryIds(detectReferenceTopics(question, toolId))) {
+  const topics = detectReferenceTopics(question, toolId, { conditions });
+  for (const id of rankEntryIds(topics)) {
     const entry = ENTRIES.get(id);
     const size = formatEntry(entry).length;
     if (size > remaining) continue;
