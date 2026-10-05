@@ -13,7 +13,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
-import { calculateVARating } from "../utils/vaCalculator";
+import { calculateVARating, readRating } from "../utils/vaCalculator";
 
 // Common VA disabilities with typical ratings
 const commonConditions = [
@@ -175,7 +175,8 @@ const loadMyRatings = (pendingAnnounceRef, setCurrentConditions) => {
   const savedRatings = getMyRatings();
   if (savedRatings && savedRatings.length > 0) {
     const formatted = savedRatings
-      .filter((r) => r.name && typeof r.rating === "number")
+      .map((r) => ({ ...r, rating: readRating(r.rating) }))
+      .filter((r) => r.name && r.rating !== null)
       .map((r) => ({
         id: `${r.name}-${r.rating}-${Date.now()}-${Math.random()}`,
         name: nameWithSide(r.name, r.side),

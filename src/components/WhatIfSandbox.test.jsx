@@ -67,6 +67,29 @@ describe("WhatIfSandbox - Load My Ratings", () => {
   });
 });
 
+describe("WhatIfSandbox reads saved ratings the way the calculator does", () => {
+  it("loads ratings stored as text and leaves out one it cannot read: knees '10' + '10%' give 21, then 20", async () => {
+    localStorage.setItem(
+      "vet_rate_my_ratings",
+      JSON.stringify([
+        { name: "Knee strain", rating: "10", side: "left" },
+        { name: "Knee strain", rating: "10%", side: "right" },
+        { name: "Unreadable", rating: "severe", side: "none" },
+      ]),
+    );
+    renderSandbox();
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /load my ratings/i }));
+    expect(
+      await screen.findByText(/current scenario \(2 condition/i),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId("combined-rating").textContent).toBe("20%"),
+    );
+    expect(screen.getByText(/bilateral factor applied/i)).toBeInTheDocument();
+  });
+});
+
 describe("WhatIfSandbox follows the shared 38 CFR 4.26 rules", () => {
   const load = async (ratings) => {
     saveMyRatings(ratings);
