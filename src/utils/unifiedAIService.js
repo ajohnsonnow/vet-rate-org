@@ -3074,9 +3074,11 @@ const generateAIInternal = async (prompt, options = {}) => {
     enhancedOptions,
     options,
   );
-  return _isRaterRoute(options, effectiveMode)
+  const grounded = _isRaterRoute(options, effectiveMode)
     ? enforceCalculatorOnResult(result, options, prompt)
     : result;
+  const { flagUnverifiedCitations } = await import("./citationCheck");
+  return flagUnverifiedCitations(grounded, options);
 };
 
 async function _dispatchWithRecovery(
