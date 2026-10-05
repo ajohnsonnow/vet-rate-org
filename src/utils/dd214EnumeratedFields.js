@@ -47,6 +47,8 @@ const COMPONENTS = new Set([
   "ng",
   "arng",
   "arngus",
+  "angus",
+  "ngus",
   "ang",
   "usar",
   "usn",

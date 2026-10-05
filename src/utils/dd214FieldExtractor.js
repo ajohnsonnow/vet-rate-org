@@ -20,6 +20,13 @@
  */
 
 import { findCombatDecorationsInText } from "./combatService";
+import {
+  END_MARKER,
+  pageImpliesGuard,
+  readComponentBox,
+  readDaysLost,
+  readNarrativeReason,
+} from "./dd214BoxReaders";
 
 /**
  * All DD214 block field definitions with multiple regex patterns per field.
@@ -159,10 +166,6 @@ const _STOP_AT_NEIGHBOUR_OR_BLOCK = new RegExp(
   `${_NEIGHBOUR_CAPTIONS.join("|")}|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[5-9]|2\\d|30)\\b|(?<![\\d.])(?:1[5-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
   "i",
 );
-const _STOP_AT_NEIGHBOUR_OR_NEXT_BLOCK = new RegExp(
-  `${_NEIGHBOUR_CAPTIONS.join("|")}|MILITARY\\s{1,5}EDUCATION|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[4-9]|2\\d|30)\\b|(?<![\\d.])(?:1[4-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
-  "i",
-);
 const _SSN_SHAPE_RE = /(?<!\d)(?:\d{3}[- ]\d{2}[- ]\d{4}|\d{9})(?!\d)/;
 // A house number, up to four words and a street-type word, or a PO box. A
 // real block entry (a course, a medal, a unit) never has this shape.
@@ -173,7 +176,7 @@ const _STREET_LINE_RE = new RegExp(
 );
 const _PO_BOX_RE = /(?<![A-Z])P\.?\s?O\.?\s?BOX\s{0,3}\d/;
 
-function _cutAtBlockEnd(value, stopAt) {
+function _blockEndIndex(value, stopAt) {
   const cuts = [
     stopAt.exec(value)?.index,
     _SSN_SHAPE_RE.exec(value)?.index,
@@ -181,7 +184,161 @@ function _cutAtBlockEnd(value, stopAt) {
     _PO_BOX_RE.exec(value)?.index,
   ];
   const first = Math.min(...cuts.filter((index) => index !== undefined));
-  return Number.isFinite(first) ? value.slice(0, first) : value;
+  return Number.isFinite(first) ? first : value.length;
+}
+
+// `endMarker`: a list box (awards, education) also ends where its own
+// "NOTHING FOLLOWS" line begins, in any of the forms OCR reads it.
+function _cutAtBlockEnd(value, stopAt, endMarker = false) {
+  const marker = endMarker ? END_MARKER.exec(value)?.index : undefined;
+  const end = _blockEndIndex(value, stopAt);
+  return value.slice(0, marker === undefined ? end : Math.min(end, marker));
+}
+
+// Captions printed in boxes that sit beside or after the list boxes. A column
+// ordered scan can put any of them straight after a list's first fragment.
+const _LIST_BOX_CAPTIONS = [
+  String.raw`DUTY\s{1,5}ASSIGNMENT`,
+  String.raw`VETERANS\s{1,5}EDUCATIONAL`,
+  String.raw`MEMBER\s{1,5}CONTRIBUTED`,
+  String.raw`HIGH\s{1,5}SCHOOL\s{1,5}GRADUATE`,
+  String.raw`DATES?\s{1,5}OF\s{1,5}TIME\s{1,5}LOST`,
+  String.raw`SPECIAL\s{1,5}ADDITIONAL`,
+];
+const _LIST_STOP_COMMON = [..._NEIGHBOUR_CAPTIONS, ..._LIST_BOX_CAPTIONS].join(
+  "|",
+);
+const _STOP_AT_AWARDS_END = new RegExp(
+  `${_LIST_STOP_COMMON}|MILITARY\\s{1,5}EDUCATION|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[4-9]|2\\d|30)\\b|(?<![\\d.])(?:1[4-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
+  "i",
+);
+const _STOP_AT_EDUCATION_END = new RegExp(
+  `${_LIST_STOP_COMMON}|(?:BLOCK|BOX|ITEM)\\s{0,5}(?:1[5-9]|2\\d|30)\\b|(?<![\\d.])(?:1[5-9]|2\\d|30)\\.\\s{1,3}[A-Z]{3}|REMARKS\\b`,
+  "i",
+);
+
+const MAX_BLOCK_CHARS = 5000;
+
+const _EDUCATION_LABELS = [
+  /(?:BLOCK|BOX)\s{0,10}14\b(?:[.:\s]{0,5}MILITARY\s{1,10}EDUCATION)?/,
+  /14\.\s{0,10}MILITARY\s{1,10}EDUCATION/,
+  /MILITARY\s{1,10}EDUCATION/,
+];
+// The box's printed instruction, "(Course, title, number of weeks and month
+// and year completed)", with OCR errors in its words or its closing paren.
+const _EDUCATION_INSTRUCTION = /^(?:\([^)\n]{0,200}\)|\(COURSE\b[^\n]{0,160})/;
+
+function _findLabel(text, labels) {
+  for (const label of labels) {
+    const match = label.exec(text);
+    if (match)
+      return { start: match.index, end: match.index + match[0].length };
+  }
+  return null;
+}
+
+function _readEducationBlock(text) {
+  const label = _findLabel(text, _EDUCATION_LABELS);
+  if (!label) return null;
+  return text
+    .slice(label.end, label.end + MAX_BLOCK_CHARS)
+    .replace(/^[ \t:.]{0,10}/, "")
+    .replace(_EDUCATION_INSTRUCTION, "");
+}
+
+// The caption words after "DECORATIONS", in printed order. A word OCR lost
+// ends the caption; AND may be read as AD or lost.
+const _AWARDS_CAPTION_WORDS = [
+  ["MEDALS"],
+  ["BADGES"],
+  ["CITATIONS", "CITATION"],
+  ["AND", "AD", "&"],
+  ["CAMPAIGN"],
+  ["RIBBONS"],
+  ["AWARDED"],
+  ["OR"],
+  ["AUTHORIZED", "AUTHORISED"],
+];
+const _CAPTION_GAP = /^[,.\s]{0,10}/;
+
+function _skipAwardsCaption(text, from) {
+  let at = from;
+  for (const alternatives of _AWARDS_CAPTION_WORDS) {
+    const gap = _CAPTION_GAP.exec(text.slice(at, at + 12))[0].length;
+    const word = alternatives.find(
+      (w) =>
+        text.startsWith(w, at + gap) &&
+        !/[A-Z]/.test(text.charAt(at + gap + w.length)),
+    );
+    if (word) at += gap + word.length;
+    else if (alternatives[0] !== "AND") break;
+  }
+  return at;
+}
+
+const _AWARDS_LABELS = [
+  /(?:BLOCK|BOX)\s{0,10}13\b/,
+  /13\.\s{0,10}(?=DECORATIONS)/,
+  /(?=DECORATIONS[,.\s]{1,10}MEDALS)/,
+];
+const _AWARDS_LEAD = "DECORATIONS";
+
+// What OCR leaves at the end of the caption's line: a stray letter or two and
+// a bracket from the box's border, set apart from the caption by spaces.
+function _captionLineJunkLength(text, from) {
+  const newline = text.indexOf("\n", from);
+  const hasNewline = newline >= 0;
+  const line = text.slice(from, hasNewline ? newline : from + 80);
+  const letters = line.replaceAll(/[ \t)]/g, "");
+  const isJunk =
+    line.startsWith("  ") && letters.length <= 2 && /^[A-Z]*$/.test(letters);
+  if (!isJunk) return 0;
+  return line.length + (hasNewline ? 1 : 0);
+}
+
+function _awardsValueStart(text) {
+  const label = _findLabel(text, _AWARDS_LABELS);
+  if (!label) return -1;
+  const gap = /^[.:\s]{0,5}/.exec(text.slice(label.end, label.end + 5))[0];
+  const lead = label.end + gap.length;
+  if (!text.startsWith(_AWARDS_LEAD, lead)) return label.end;
+  const captionEnd = _skipAwardsCaption(text, lead + _AWARDS_LEAD.length);
+  return captionEnd + _captionLineJunkLength(text, captionEnd);
+}
+
+// A fragment of a list that a column ordered scan printed away from its box:
+// the paragraphs right before the next box's label that hold list separators,
+// the last of them ending at the list's own "NOTHING FOLLOWS".
+function _listContinuation(text, from, nextLabel, stopAt) {
+  if (!nextLabel || nextLabel.start <= from) return "";
+  const paragraphs = text.slice(from, nextLabel.start).split(/\n[ \t]*\n/);
+  const kept = [];
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    const paragraph = paragraphs[i].trim();
+    if (paragraph === "") continue;
+    if (!paragraph.includes("/") || stopAt.test(paragraph)) break;
+    kept.unshift(paragraph);
+  }
+  const joined = kept.join(" ");
+  return END_MARKER.test(joined) ? joined : "";
+}
+
+function _readAwardsBlock(text) {
+  const labelEnd = _awardsValueStart(text);
+  if (labelEnd < 0) return null;
+  const start =
+    labelEnd + /^[:.\s]*/.exec(text.slice(labelEnd, labelEnd + 30))[0].length;
+  const rest = text.slice(start, start + MAX_BLOCK_CHARS);
+  const stopIndex = _blockEndIndex(rest, _STOP_AT_AWARDS_END);
+  const first = rest.slice(0, stopIndex);
+  if (END_MARKER.test(first)) return first;
+  const tail = _listContinuation(
+    text,
+    start + stopIndex,
+    _findLabel(text, _EDUCATION_LABELS),
+    _STOP_AT_AWARDS_END,
+  );
+  return tail ? `${first} ${tail}` : first;
 }
 
 const DD214_FIELD_PATTERNS = {
@@ -261,13 +418,10 @@ const DD214_FIELD_PATTERNS = {
   departmentComponentBranch: {
     block: 2,
     label: "Department/Component/Branch",
-    patterns: [
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the branch/label alternation count, not backtracking; bounded for S8786 above
-      /(?:BLOCK\s{0,10}2|BOX\s{0,10}2|2\.\s{0,10}DEPARTMENT)[:\s.]{0,20}([A-Z/\s]{1,60}(?:ARMY|NAVY|AIR\s{0,10}FORCE|MARINE|COAST\s{0,10}GUARD|SPACE\s{0,10}FORCE)[A-Z/\s]{0,60})/i,
-      /DEPARTMENT[,\s]*COMPONENT[,\s]*(?:AND\s*)?BRANCH[:\s.]*([A-Z][A-Z/\s]*)/i,
-      // eslint-disable-next-line sonarjs/regex-complexity -- verified via adversarial timing test: linear on long non-terminating values (see 'ReDoS regression — BLOCK 2-12h field patterns')
-      /((?:ARMY|NAVY|AIR\s*FORCE|MARINES?|COAST\s*GUARD|SPACE\s*FORCE)\s*\/\s*(?:ACTIVE|ARNG|USAR|RESERVE|NATIONAL\s*GUARD|RA|USN|USAF|USMC|USCG))/i,
-    ],
+    // Read only from the region under box 2's own label, whole words of the
+    // box's own vocabulary; see dd214BoxReaders.js.
+    patterns: [],
+    read: readComponentBox,
     normalize: (val) => val.replace(/\s+/g, " ").trim().toUpperCase(),
   },
 
@@ -356,6 +510,8 @@ const DD214_FIELD_PATTERNS = {
       /PAY\s*GRADE[:\s.]*([EWO]-?\d{1,2})/i,
       /\b([EWO][- ]?\d{1,2})\b/,
     ],
+    // The last pattern reads a grade-shaped word anywhere on the page.
+    unlocatedFrom: 2,
     normalize: (val) => {
       const clean = val.replace(/\s/g, "").toUpperCase();
       // Normalize E1 -> E-1, O3 -> O-3, etc.
@@ -716,28 +872,31 @@ const DD214_FIELD_PATTERNS = {
   awardsRaw: {
     block: 13,
     label: "Decorations, Medals, Badges, Citations",
-    patterns: [
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
-      /(?:BLOCK\s{0,10}13|BOX\s{0,10}13|13\.\s{0,10}DECORATIONS)[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}14|BOX\s{0,10}14|14\.|MILITARY\s{0,10}EDUCATION))|$)/i,
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
-      /DECORATIONS[,\s]{0,10}MEDALS[,\s]{0,10}BADGES[,\s]{0,10}(?:CITATIONS)?[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}14|BOX\s{0,10}14|14\.|MILITARY\s{0,10}EDUCATION))|$)/i,
-    ],
+    // The whole printed caption is skipped, and the list is closed at its own
+    // "NOTHING FOLLOWS" or the next box's caption. A list a column ordered
+    // scan split across the page is joined (see _readAwardsBlock).
+    patterns: [],
+    read: _readAwardsBlock,
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
-    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_NEXT_BLOCK, maxChars: 3000 },
+    bound: { stopAt: _STOP_AT_AWARDS_END, maxChars: 3000, endMarker: true },
   },
 
   // ===== BLOCK 14: Military Education =====
   militaryEducation: {
     block: 14,
     label: "Military Education",
-    patterns: [
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
-      /(?:BLOCK\s{0,10}14|BOX\s{0,10}14|14\.\s{0,10}MILITARY\s{0,10}EDUCATION)[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}15|BOX\s{0,10}15|15\.))|$)/i,
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the next-block alternation count, not backtracking; bounded {0,5000} capture for S8786 above
-      /MILITARY\s{0,10}EDUCATION[:\s.]{0,20}([\s\S]{0,5000}?)(?=(?:\n\s{0,10}(?:BLOCK\s{0,10}15|BOX\s{0,10}15|15\.))|$)/i,
-    ],
-    normalize: (val) => val.replace(/\s+/g, " ").trim(),
-    bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_BLOCK, maxChars: 800 },
+    // Starts after the box's printed instruction, ends at the list's own
+    // "NOTHING FOLLOWS" or the next box's caption. Line breaks are kept so the
+    // list can be split into entries.
+    patterns: [],
+    read: _readEducationBlock,
+    normalize: (val) =>
+      val
+        .split("\n")
+        .map((line) => line.replace(/[ \t]+/g, " ").trim())
+        .filter(Boolean)
+        .join("\n"),
+    bound: { stopAt: _STOP_AT_EDUCATION_END, maxChars: 800, endMarker: true },
   },
 
   // ===== BLOCK 18: Remarks =====
@@ -862,10 +1021,10 @@ const DD214_FIELD_PATTERNS = {
   narrativeReason: {
     block: 28,
     label: "Narrative Reason for Separation",
-    patterns: [
-      /(?:BLOCK\s*28|BOX\s*28|28\.\s*NARRATIVE\s*REASON)[:\s.]*([A-Z][A-Z\s]+)/i,
-      /NARRATIVE\s*REASON\s*(?:FOR\s*)?SEPARATION[:\s.]*([A-Z][A-Z\s]+)/i,
-    ],
+    // The whole label is skipped; a value is plain words only and never
+    // another box's caption (see dd214BoxReaders.js).
+    patterns: [],
+    read: readNarrativeReason,
     normalize: (val) => val.replace(/\s+/g, " ").trim(),
     bound: { stopAt: _STOP_AT_NEIGHBOUR_OR_BLOCK, maxChars: 150 },
   },
@@ -874,12 +1033,16 @@ const DD214_FIELD_PATTERNS = {
   daysLost: {
     block: 29,
     label: "Dates of Time Lost",
-    patterns: [
-      // eslint-disable-next-line sonarjs/regex-complexity -- flagged on the label/value alternation count, not backtracking; bounded for S8786 above
-      /(?:BLOCK\s{0,10}29|BOX\s{0,10}29|29\.\s{0,10}DATES?\s{0,10}(?:OF\s{0,10})?TIME\s{0,10}LOST)[:\s.]{0,20}(NONE|\d{1,5}(?:\s{0,10}DAYS?)?|[\s\S]{0,500}?)(?=\n\s{0,10}(?:BLOCK\s{0,10}30|BOX\s{0,10}30|30\.))/i,
-      /TIME\s*LOST[:\s.]*(NONE|\d+)/i,
-    ],
-    normalize: (val) => val.trim(),
+    // Only a number or an explicit none: the first token under the label.
+    patterns: [],
+    read: readDaysLost,
+    validate: (val) => /^(?:NONE|\d{1,5})$/.test(val),
+    normalize: (val) => {
+      const text = val.trim().toUpperCase();
+      if (/^(?:NONE|NIL|ZERO|NO TIME LOST)$/.test(text)) return "NONE";
+      const days = /^(\d{1,5})(?:\s{0,3}DAYS?)?$/.exec(text);
+      return days ? String(Number(days[1])) : "";
+    },
   },
 };
 
@@ -1042,8 +1205,8 @@ function parseSingleAward(raw) {
     { pattern: /\((\d{1,3})(?:ST|ND|RD|TH)\s*AWARD\)/i, type: "award_count" },
     { pattern: /(\d{1,3})(?:ST|ND|RD|TH)\s*AWARD/i, type: "award_count" },
     { pattern: /-(\d{1,3})/i, type: "award_count_dash" },
-    { pattern: /W\/?\s*'?M'?\s*DEVICE/i, type: "M Device" },
-    { pattern: /W\/?\s*'?V'?\s*DEVICE/i, type: "V Device" },
+    { pattern: /W\/?\s*["']?M["']?\s*DEVICE/i, type: "M Device" },
+    { pattern: /W\/?\s*["']?V["']?\s*DEVICE/i, type: "V Device" },
     {
       pattern: /W\/?\s*(\d{1,3})\s*(?:OLC|OAK\s*LEAF)/i,
       type: "Oak Leaf Cluster",
@@ -1059,16 +1222,16 @@ function parseSingleAward(raw) {
     if (match) {
       if (dp.type === "award_count" || dp.type === "award_count_dash") {
         award.deviceCount = Number.parseInt(match[1]);
-        award.name = raw.replace(match[0], "").trim();
+        award.name = award.name.replace(match[0], "").trim();
       } else if (dp.type === "M Device" || dp.type === "V Device") {
         award.devices.push(dp.type);
-        award.name = raw.replace(match[0], "").trim();
+        award.name = award.name.replace(match[0], "").trim();
       } else {
         const count = Number.parseInt(match[1]) || 1;
         for (let i = 0; i < count; i++) {
           award.devices.push(dp.type);
         }
-        award.name = raw.replace(match[0], "").trim();
+        award.name = award.name.replace(match[0], "").trim();
       }
     }
   }
@@ -1096,6 +1259,49 @@ function parseSingleAward(raw) {
   return award;
 }
 
+const _ENTRY_BREAK = "\n";
+const _isEndMarkerEntry = (entry) =>
+  /^[I1l|]?NOTHING\s{0,3}FOLLOWS$/i.test(entry);
+
+// Award names that start with the letter OCR also reads as the second slash
+// of a "//" separator ("/INFANTRYMAN" is a separator then INFANTRYMAN).
+const _I_WORDS = new Set(
+  "IRAQ IRAQI INFANTRY INFANTRYMAN INFANTRYMANS IMMINENT INTERNATIONAL INSIGNIA INDIVIDUAL INHERENT ISAF ISRAEL INSTRUCTOR INITIAL INTELLIGENCE".split(
+    " ",
+  ),
+);
+// A single slash that is a separator: not the "W/" of "W/ V DEVICE", not
+// before a digit (a date or a fraction), with the stray I the second slash is
+// sometimes read as and the word that follows.
+const _SINGLE_SLASH = /(?<!\bW)\/(?!\d)(I?)([A-Z]*)/g;
+
+/**
+ * Split an awards list on the form's own separators: "//", a single "/" (OCR
+ * reads one of the two slashes of "//" as a letter or loses it), "/I", and a
+ * semicolon. Line breaks are not separators: an award name wraps.
+ */
+export function splitAwardEntries(text) {
+  return text
+    .replaceAll(/\s{0,20}\/\/\s{0,20}/g, _ENTRY_BREAK)
+    .replaceAll(_SINGLE_SLASH, (_match, stray, word) => {
+      const keepsI = stray === "I" && _I_WORDS.has(`I${word}`);
+      return `${_ENTRY_BREAK}${keepsI ? "I" : ""}${word}`;
+    })
+    .replaceAll(";", _ENTRY_BREAK)
+    .split(_ENTRY_BREAK)
+    .map((s) => s.replace(/\s+/g, " ").trim());
+}
+
+/**
+ * Split an education list on the form's own separators: semicolons, "//" and
+ * "/" set apart by spaces, and line breaks.
+ */
+export function splitEducationEntries(text) {
+  return text
+    .split(/;|\n|\/\/|\s\/\s/)
+    .map((s) => s.replace(/\s+/g, " ").trim());
+}
+
 /**
  * Parse awards string into structured array
  * Handles // delimiters, "CONT IN BLOCK 18", device counts, etc.
@@ -1111,16 +1317,9 @@ function parseAwardsString(awardsRaw, remarksText) {
   // separator is present at all: confirmed 18s+ at 100k chars. Each
   // segment is .trim()'d below regardless, so a bound tighter than any
   // realistic separator gap is behavior-preserving.
-  const rawAwards = fullAwardsText
-    .split(/\s{0,20}\/\/\s{0,20}/)
-    .map((s) => s.trim())
-    .filter(
-      (s) =>
-        s &&
-        !s.match(/^NOTHING\s*FOLLOWS$/i) &&
-        !s.match(/^CONT/i) &&
-        s.length > 2,
-    );
+  const rawAwards = splitAwardEntries(fullAwardsText).filter(
+    (s) => s && !_isEndMarkerEntry(s) && !s.match(/^CONT/i) && s.length > 2,
+  );
 
   // Parse each award
   const awards = rawAwards.map(parseSingleAward);
@@ -1247,6 +1446,40 @@ function extractSpecialQualifications(text) {
   return quals;
 }
 
+function _guardFullName(token, branch) {
+  const air = /^ANG/i.test(token || "") || (!token && branch === "Air Force");
+  if (air) return "Air National Guard";
+  if (/^ARNG/i.test(token || "") || (!token && branch === "Army")) {
+    return "Army National Guard";
+  }
+  return "National Guard";
+}
+
+const _RESERVE_BY_TOKEN = {
+  USAR: ["USAR", "Army Reserve"],
+  USNR: ["USNR", "Navy Reserve"],
+  USAFR: ["USAFR", "Air Force Reserve"],
+  USMCR: ["USMCR", "Marine Corps Reserve"],
+  USCGR: ["USCGR", "Coast Guard Reserve"],
+};
+const _RESERVE_BY_BRANCH = {
+  Army: "USAR",
+  Navy: "USNR",
+  "Air Force": "USAFR",
+  Marines: "USMCR",
+  "Coast Guard": "USCGR",
+};
+
+function _reserveComponent(text, branch) {
+  const token =
+    /\b(USAR|USNR|USAFR|USMCR|USCGR)\b/i.exec(text)?.[1]?.toUpperCase() ??
+    _RESERVE_BY_BRANCH[branch];
+  const known = _RESERVE_BY_TOKEN[token];
+  return known
+    ? { component: known[0], componentFull: known[1] }
+    : { component: "RESERVE", componentFull: "Reserve" };
+}
+
 /**
  * Parse branch and component from Block 2 text
  */
@@ -1263,16 +1496,19 @@ function parseBranchComponent(text) {
   else if (/COAST\s*GUARD/i.test(text)) result.branch = "Coast Guard";
   else if (/SPACE\s*FORCE/i.test(text)) result.branch = "Space Force";
 
-  // Component detection
-  if (/ARNG|NATIONAL\s*GUARD/i.test(text)) {
-    result.component = "ARNG";
-    result.componentFull = `${result.branch || "Army"} National Guard`;
-  } else if (/USAR|RESERVE/i.test(text)) {
-    result.component = "USAR";
-    result.componentFull = `${result.branch || "Army"} Reserve`;
+  // Component detection. The full name comes from the component printed, or
+  // the branch printed beside it - never from a default branch.
+  const guard = /\b(ARNGUS|ARNG|ANGUS|ANG|NGUS)\b/i.exec(text);
+  if (guard || /NATIONAL\s*GUARD/i.test(text)) {
+    result.component = guard ? guard[1].toUpperCase() : "NG";
+    result.componentFull = _guardFullName(guard?.[1], result.branch);
+  } else if (/USAR|USNR|USAFR|USMCR|USCGR|RESERVE/i.test(text)) {
+    Object.assign(result, _reserveComponent(text, result.branch));
   } else if (/ACTIVE|RA\b|USN\b|USAF\b|USMC\b/i.test(text)) {
     result.component = "RA";
-    result.componentFull = `Regular ${result.branch || "Army"}`;
+    result.componentFull = result.branch
+      ? `Regular ${result.branch}`
+      : "Regular";
   }
 
   return result;
@@ -1324,7 +1560,7 @@ function parseName(fullName) {
 function _processFieldMatch(fieldDef, rawValue) {
   let value = rawValue.trim();
   const { bound } = fieldDef;
-  if (bound) value = _cutAtBlockEnd(value, bound.stopAt);
+  if (bound) value = _cutAtBlockEnd(value, bound.stopAt, bound.endMarker);
 
   if (fieldDef.normalize) {
     value = fieldDef.normalize(value);
@@ -1343,25 +1579,43 @@ function _processFieldMatch(fieldDef, rawValue) {
  * Run every DD214_FIELD_PATTERNS entry against the given text, returning
  * the extracted field values and a per-field confidence map.
  */
+function _readFieldByPattern(fieldDef, text) {
+  for (const [index, pattern] of fieldDef.patterns.entries()) {
+    const match = text.match(pattern);
+    if (!match?.[1]) continue;
+    const value = _processFieldMatch(fieldDef, match[1]);
+    if (value === null) continue; // Skip invalid matches
+    return { value, located: index < (fieldDef.unlocatedFrom ?? Infinity) };
+  }
+  return null;
+}
+
+function _readFieldByReader(fieldDef, text) {
+  const read = fieldDef.read(text);
+  if (!read) return null;
+  const raw = typeof read === "string" ? read : read.value;
+  if (!raw) return null;
+  const value = _processFieldMatch(fieldDef, raw);
+  if (value === null) return null;
+  return { value, located: typeof read === "string" || read.located };
+}
+
 function runFieldPatterns(text) {
   const extractedFields = {};
   const fieldConfidence = {};
+  const unlocated = new Set();
 
   for (const [fieldName, fieldDef] of Object.entries(DD214_FIELD_PATTERNS)) {
-    for (const pattern of fieldDef.patterns) {
-      const match = text.match(pattern);
-      if (!match?.[1]) continue;
-
-      const value = _processFieldMatch(fieldDef, match[1]);
-      if (value === null) continue; // Skip invalid matches
-
-      extractedFields[fieldName] = value;
-      fieldConfidence[fieldName] = "regex_match";
-      break; // First match wins
-    }
+    const found = fieldDef.read
+      ? _readFieldByReader(fieldDef, text)
+      : _readFieldByPattern(fieldDef, text);
+    if (!found) continue;
+    extractedFields[fieldName] = found.value;
+    fieldConfidence[fieldName] = "regex_match";
+    if (!found.located) unlocated.add(fieldName);
   }
 
-  return { extractedFields, fieldConfidence };
+  return { extractedFields, fieldConfidence, unlocated };
 }
 
 function _deriveNameFields(extractedFields) {
@@ -1485,13 +1739,9 @@ function deriveAwardsAndServiceFields(extractedFields, extractionNotes) {
     extractedFields.militaryEducation &&
     typeof extractedFields.militaryEducation === "string"
   ) {
-    const eduText = extractedFields.militaryEducation;
-    extractedFields.militaryEducation = eduText
-      .split(/\/\//)
-      .map((e) => e.trim())
-      .filter(
-        (e) => e && !e.match(/^NOTHING\s*FOLLOWS$/i) && !e.match(/^NONE$/i),
-      );
+    extractedFields.militaryEducation = splitEducationEntries(
+      extractedFields.militaryEducation,
+    ).filter((e) => e && !_isEndMarkerEntry(e) && !e.match(/^NONE$/i));
   }
 
   // Clean up internal-only fields
@@ -1508,6 +1758,37 @@ function deriveAwardsAndServiceFields(extractedFields, extractionNotes) {
 function postProcessExtractedFields(extractedFields, extractionNotes, options) {
   derivePersonAndSpecialtyFields(extractedFields, options);
   deriveAwardsAndServiceFields(extractedFields, extractionNotes);
+}
+
+const _COMPONENT_ROWS = ["branch", "component", "componentFull"];
+const CHECK_NOT_IN_OWN_BOX = "not-read-from-its-own-box";
+const CHECK_PAGE_DISAGREES = "page-disagrees";
+
+/**
+ * Values the parser read but that must not be pre-ticked: one found away from
+ * its own printed box, and a component that the page's own form type or box 9
+ * contradicts (a Guard form whose box 2 reads as the regular component).
+ * key -> reason. The import dialog shows these unticked with a note.
+ */
+function _buildFieldChecks(text, fields, unlocated) {
+  const checks = {};
+  const flag = (keys, reason) => {
+    for (const key of keys) {
+      if (fields[key] !== undefined && fields[key] !== null) {
+        checks[key] = reason;
+      }
+    }
+  };
+  for (const name of unlocated) {
+    flag(
+      name === "departmentComponentBranch" ? _COMPONENT_ROWS : [name],
+      CHECK_NOT_IN_OWN_BOX,
+    );
+  }
+  if (fields.component === "RA" && pageImpliesGuard(text)) {
+    flag(_COMPONENT_ROWS, CHECK_PAGE_DISAGREES);
+  }
+  return checks;
 }
 
 /**
@@ -1529,14 +1810,17 @@ export function extractDD214Fields(rawText, options = {}) {
   const text = rawText.toUpperCase();
   const extractionNotes = [];
 
-  const { extractedFields, fieldConfidence } = runFieldPatterns(text);
+  const { extractedFields, fieldConfidence, unlocated } =
+    runFieldPatterns(text);
 
   postProcessExtractedFields(extractedFields, extractionNotes, options);
+  const fieldChecks = _buildFieldChecks(text, extractedFields, unlocated);
 
   return {
     success: true,
     fields: extractedFields,
     fieldConfidence,
+    fieldChecks,
     extractionNotes,
     fieldsExtracted: Object.keys(extractedFields).length,
     method: "regex",
