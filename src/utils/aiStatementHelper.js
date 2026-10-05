@@ -34,6 +34,7 @@ import {
   buildPTSDStressorTemplate,
   buildPersonalStatementTemplate,
   buildRewordPrompt,
+  formStatementInputs,
   suppliedIn,
 } from "./writerTemplates";
 
@@ -613,45 +614,18 @@ export const generateNexusLetterRequest = async (answers) =>
  * This allows the FormsHelper to call AI enhancement on any generated statement
  */
 export const enhanceFormStatement = async (formType, formData) => {
-  switch (formType) {
-    case "buddy-statement":
-      return enhanceBuddyStatement(
-        {
-          relationship: formData.witnessRelation,
-          knownDuration: formData.knownSince,
-          observations: formData.whatObserved,
-          changesNoticed: formData.specificExamples,
-          dailyImpact: formData.dailyImpact,
-        },
-        formData.conditionName,
-      );
-
-    case "personal-statement":
+  const mapped = formStatementInputs(formType, formData);
+  switch (mapped?.kind) {
+    case "buddy":
+      return enhanceBuddyStatement(mapped.answers, mapped.condition);
+    case "personal":
       return enhancePersonalStatement(
-        {
-          inServiceEvent: formData.inServiceEvent,
-          specificExamples: formData.worstDays,
-          workImpact: formData.workImpact,
-          socialImpact: formData.socialImpact,
-          symptomOnsetDate: formData.onsetDate,
-          // The form asks what treatment, not where: say only that there is
-          // some, and leave a blank when the field was left empty.
-          hasTreatment: isText(formData.currentTreatment) ? "yes" : undefined,
-        },
-        formData.conditionName,
-        formData.primaryCondition,
+        mapped.answers,
+        mapped.condition,
+        mapped.primaryCondition,
       );
-
-    case "ptsd-stressor":
-      return enhancePTSDStatement({
-        stressorType: formData.stressorType,
-        eventDescription: formData.eventDescription,
-        currentSymptoms: Array.isArray(formData.symptoms)
-          ? formData.symptoms.join(", ")
-          : formData.symptomDetails,
-        dailyImpact: formData.symptomDetails,
-      });
-
+    case "ptsd":
+      return enhancePTSDStatement(mapped.answers);
     default:
       return {
         success: false,

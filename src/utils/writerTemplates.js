@@ -311,6 +311,57 @@ export const tdiuAnalysisText = (analysis) =>
     .filter((part) => typeof part === "string")
     .join("\n");
 
+/**
+ * The Forms Helper's field names mapped to the answers each statement
+ * builder reads, or null for a form with no AI wording step.
+ */
+export function formStatementInputs(formType, formData = {}) {
+  switch (formType) {
+    case "buddy-statement":
+      return {
+        kind: "buddy",
+        answers: {
+          relationship: formData.witnessRelation,
+          knownDuration: formData.knownSince,
+          observations: formData.whatObserved,
+          changesNoticed: formData.specificExamples,
+          dailyImpact: formData.dailyImpact,
+        },
+        condition: formData.conditionName,
+      };
+    case "personal-statement":
+      return {
+        kind: "personal",
+        answers: {
+          inServiceEvent: formData.inServiceEvent,
+          specificExamples: formData.worstDays,
+          workImpact: formData.workImpact,
+          socialImpact: formData.socialImpact,
+          symptomOnsetDate: formData.onsetDate,
+          // The form asks what treatment, not where: say only that there is
+          // some, and leave a blank when the field was left empty.
+          hasTreatment: text(formData.currentTreatment) ? "yes" : undefined,
+        },
+        condition: formData.conditionName,
+        primaryCondition: formData.primaryCondition ?? null,
+      };
+    case "ptsd-stressor":
+      return {
+        kind: "ptsd",
+        answers: {
+          stressorType: formData.stressorType,
+          eventDescription: formData.eventDescription,
+          currentSymptoms: Array.isArray(formData.symptoms)
+            ? formData.symptoms.join(", ")
+            : formData.symptomDetails,
+          dailyImpact: formData.symptomDetails,
+        },
+      };
+    default:
+      return null;
+  }
+}
+
 /** The answers that appear, as entered, in `template`. */
 export const suppliedIn = (template, values) =>
   values
