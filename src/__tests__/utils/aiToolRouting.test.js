@@ -124,7 +124,11 @@ describe("aiStatementHelper call sites pass the tool they serve", () => {
     ],
     [
       "enhanceAppealStatement",
-      () => aiStatementHelper.enhanceAppealStatement(ANSWERS),
+      () =>
+        aiStatementHelper.enhanceAppealStatement({
+          ...ANSWERS,
+          whyIncorrect: "The decision did not consider my headache log.",
+        }),
       "appeal-statement",
       "writer",
     ],
@@ -188,7 +192,6 @@ const SOURCES = {
   "components/BlueButtonXRay.jsx": [["blue-button", 2, "auditor"]],
   "components/DenialDecoder.jsx": [["denial-decoder", 1, "auditor"]],
   "components/WitnessBench.jsx": [["buddy-statement", 1, "writer"]],
-  "components/TDIUBuilder.jsx": [["tdiu-narrative", 1, "writer"]],
   "utils/cfileAnalyzer.js": [["cfile-analyzer", 2, "auditor"]],
   "utils/musterCallProcessor.js": [["cfile-analyzer", 1, "auditor"]],
 };

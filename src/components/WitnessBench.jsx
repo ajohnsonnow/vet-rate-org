@@ -30,14 +30,18 @@ import {
   getAIStatus,
 } from "../utils/unifiedAIService";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
-import { draftAfterError, resolveWriterDraft } from "../utils/writerDraftCheck";
+import {
+  draftAfterModelError,
+  resolvePassageDraft,
+  standardDraft,
+} from "../utils/writerDraftCheck";
 import {
   STANDARD_DRAFT_NOTE,
-  buildRewordPrompt,
+  buildPassagePrompt,
   buildWitnessStatementBody,
-  buildWitnessStatementTemplate,
-  suppliedIn,
+  selectPassages,
   witnessRelationshipLabel,
+  witnessStatementPlan,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -398,12 +402,19 @@ export const _compileStatementWithAI = async (
   condition,
   answers,
 ) => {
-  const standard = compileStatementWithoutAI(relationship, condition, answers);
-  const template = buildWitnessStatementTemplate(
-    relationship,
-    condition,
-    answers,
-  );
+  // The statement is always the Bench's standard one, read-before-you-sign
+  // block included. Only the witness's own answers are offered to the model,
+  // and each accepted rewording takes its answer's place.
+  const plan = {
+    ...witnessStatementPlan(relationship, condition, answers),
+    build: (a) => compileStatementWithoutAI(relationship, condition, a),
+  };
+  const asStatement = ({ content, ...draft }) => ({
+    statement: content,
+    ...draft,
+  });
+  const sent = selectPassages(plan);
+  if (sent.length === 0) return asStatement(standardDraft(plan));
 
   let text;
   try {
@@ -415,27 +426,29 @@ export const _compileStatementWithAI = async (
     // Use unified AI service - ADR-009: "context" - the witness's own typed
     // interview answers (their own words about the veteran), not a document
     // upload; PII redaction is handled separately at the ADR-008 boundary.
-    const response = await generateAI(buildRewordPrompt(template), {
-      dataClass: AI_DATA_CLASS.CONTEXT,
-      toolId: "buddy-statement",
-      temperature: 0.3,
-      maxTokens: 2048,
-    });
+    const response = await generateAI(
+      buildPassagePrompt(sent.map((passage) => passage.text)),
+      {
+        dataClass: AI_DATA_CLASS.CONTEXT,
+        toolId: "buddy-statement",
+        temperature: 0.3,
+        maxTokens: 2048,
+      },
+    );
     // generateAI returns { text, mode } object - extract the text content
     text = response?.text || response;
   } catch (error) {
     console.error("Statement generation failed:", error);
-    return { statement: standard, ...draftAfterError(error) };
+    return asStatement(draftAfterModelError(plan, sent, error));
   }
 
-  const { content, ...draft } = resolveWriterDraft({
-    output: typeof text === "string" ? text : JSON.stringify(text),
-    template,
-    inputs: suppliedIn(template, Object.values(answers)),
-    keep: [condition],
-    fallback: standard,
-  });
-  return { statement: content, ...draft };
+  return asStatement(
+    resolvePassageDraft({
+      plan,
+      sent,
+      reply: typeof text === "string" ? text : JSON.stringify(text),
+    }),
+  );
 };
 
 /**

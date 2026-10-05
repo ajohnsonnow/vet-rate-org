@@ -1,62 +1,51 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkWriterDraft } from "../../utils/writerDraftCheck";
 import {
-  buildBuddyStatementTemplate,
-  buildNexusLetterRequestTemplate,
-  buildPersonalStatementTemplate,
-} from "../../utils/writerTemplates";
+  checkPassageRewrite,
+  classifyReplyKind,
+  findNewFacts,
+} from "../../utils/writerDraftCheck";
 import VERDICTS from "./fixtures/writerTranscriptVerdicts.json";
 
 /**
- * The check against every writer answer recorded in the golden-set runs
- * (llm-compiler/logs/golden-set-results). Those runs sent a one-line
- * request and no form inputs, so each answer is judged twice: on its own
- * (is it a draft, does it state facts nobody supplied), and as if it were
- * the reply to its tool's app-built draft for an empty form.
+ * The check's building blocks against every writer answer recorded in the
+ * first golden-set runs (llm-compiler/logs/golden-set-results). Those runs
+ * sent a one-line request with no form inputs, and the model answered with
+ * a refusal, a request for information, or a draft full of facts nobody
+ * supplied. Each answer is judged for what kind of text it is and whether
+ * it states unsupplied facts, and then as if it were offered as a rewording
+ * of the request it answered.
  *
  * The verdicts in the fixture were read against the answers by hand. The
- * recorded runs contain no faithful rewording of an app-built draft, so
- * they pin the reject side only.
+ * recorded runs contain no faithful rewording, so they pin the reject side
+ * only.
  */
 const RESULTS_DIR = join(process.cwd(), "llm-compiler/logs/golden-set-results");
 
-const NEXUS = [buildNexusLetterRequestTemplate({}), true];
-const PERSONAL = [buildPersonalStatementTemplate({}, ""), false];
-const BUDDY = [buildBuddyStatementTemplate({}, ""), false];
-const TEMPLATE_FOR_CASE = {
-  a06: NEXUS,
-  a20: NEXUS,
-  a29: NEXUS,
-  a07: PERSONAL,
-  a08: PERSONAL,
-  a09: BUDDY,
-  a10: BUDDY,
-  a23: BUDDY,
-};
-
 const recorded = Object.entries(VERDICTS).flatMap(([run, byCase]) => {
-  const answers = new Map(
+  const records = new Map(
     readFileSync(join(RESULTS_DIR, `${run}.jsonl`), "utf8")
       .split("\n")
       .filter((line) => line.trim() !== "")
       .map((line) => JSON.parse(line))
       .filter((record) => record.type === "case")
-      .map((record) => [record.id, record.response]),
+      .map((record) => [record.id, record]),
   );
   return Object.entries(byCase).map(([id, verdict]) => ({
     name: `${run.slice(4, 21)} ${run.slice(22, 32)} ${id}`,
-    id,
     verdict,
-    response: answers.get(id),
+    input: records.get(id)?.input,
+    response: records.get(id)?.response,
   }));
 });
 
 const verdictOf = (response) => {
-  const result = checkWriterDraft({ output: response });
-  if (result.kind !== "draft") return result.kind;
-  return result.newFacts.length > 0 ? "draft-with-new-facts" : "draft";
+  const kind = classifyReplyKind(response);
+  if (kind !== "rewording") return kind;
+  return findNewFacts(response, "").length > 0
+    ? "draft-with-new-facts"
+    : "draft";
 };
 
 describe("recorded writer answers", () => {
@@ -75,12 +64,12 @@ describe("recorded writer answers", () => {
     expect(recorded.filter((answer) => answer.verdict === "draft")).toEqual([]);
   });
 
-  it("none would replace its tool's app-built draft", () => {
-    const accepted = recorded.filter(({ id, response }) => {
-      const [template, addressedToReader] = TEMPLATE_FOR_CASE[id];
-      return checkWriterDraft({ output: response, template, addressedToReader })
-        .accepted;
-    });
+  it("none would be accepted as a rewording of the request it answered", () => {
+    const accepted = recorded.filter(
+      ({ input, response }) =>
+        checkPassageRewrite({ original: input, rewrite: response }).status ===
+        "accepted",
+    );
     expect(accepted.map((answer) => answer.name)).toEqual([]);
   });
 });

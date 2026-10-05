@@ -818,6 +818,16 @@ const GENERIC_SALUTATION_WORDS = new Set([
   "madam",
   "friend",
   "claims",
+  // A letter the veteran hands to a clinician is addressed to the role
+  // ("Dear Doctor,", "Dear Healthcare Provider,"). A role word followed by
+  // a surname ("Dear Doctor Okonkwo,") is still redacted: every word of the
+  // greeting has to be generic for it to be left alone.
+  "doctor",
+  "healthcare",
+  "provider",
+  "physician",
+  "clinician",
+  "examiner",
   "or",
   "and",
   ..._TITLE_STOPWORDS,

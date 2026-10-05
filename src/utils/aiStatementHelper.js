@@ -26,16 +26,20 @@ import { loadVKB } from "./veteranKnowledgeBase";
 import { getFullName, getVeteranProfile } from "./veteranProfile";
 import { redactVeteranIdentifiers } from "./piiScrubber";
 import { AI_DATA_CLASS } from "./aiDataClassPolicy";
-import { draftAfterError, resolveWriterDraft } from "./writerDraftCheck";
 import {
-  buildAppealStatementTemplate,
-  buildBuddyStatementTemplate,
-  buildNexusLetterRequestTemplate,
-  buildPTSDStressorTemplate,
-  buildPersonalStatementTemplate,
-  buildRewordPrompt,
+  draftAfterModelError,
+  resolvePassageDraft,
+  standardDraft,
+} from "./writerDraftCheck";
+import {
+  appealStatementPlan,
+  buddyStatementPlan,
+  buildPassagePrompt,
   formStatementInputs,
-  suppliedIn,
+  nexusRequestPlan,
+  personalStatementPlan,
+  ptsdStatementPlan,
+  selectPassages,
 } from "./writerTemplates";
 
 // LocalStorage key for BYOK (Bring Your Own Key)
@@ -43,8 +47,6 @@ const STORAGE_KEY = "vetrate_gemini_key";
 
 // Rewording an existing draft wants fidelity, not variety.
 const REWORD_TEMPERATURE = 0.3;
-
-const isText = (value) => typeof value === "string" && value.trim() !== "";
 
 /**
  * Check if AI features are available (either cloud or local)
@@ -498,28 +500,39 @@ const callGeminiAPI = async (
 };
 
 /**
- * Ask the model to improve the wording of an app-built draft, and return
- * the model's wording only when it passes the acceptance check. Otherwise
- * the veteran gets the app-built draft itself, with a one-line note:
- * also when the model could not answer at all, in which case
- * `draftErrorReason` names the error. `draftPath` on the result records
- * which draft it is ("model" or "template").
+ * Offer the model the passages of a writing plan (the free text someone
+ * typed), and return the app-built draft with each accepted rewording in
+ * its place. Headings, fixed sentences, blanks, greeting and closing are
+ * built by the app and never pass through the model.
  *
- * The check runs against the identifier-redacted draft, the text the model
- * actually saw. The draft handed back on rejection is the unredacted one:
- * it is the veteran's own words and never left the device.
+ * `draftPath` is "model" only when at least one passage was reworded and
+ * accepted. Otherwise the veteran gets the app-built draft with a one-line
+ * note and no claim of AI wording: when the form has no free text (no model
+ * call is made), when every rewording came back unchanged or was rejected,
+ * and when the model could not answer (`draftErrorReason` names the error).
+ * `passages` counts how the passages fared.
+ *
+ * ADR-008: a passage that names the veteran is not sent. The model would
+ * see a redaction marker in its place, and the app could not put the name
+ * back into a rewording; the passage stays as typed.
  */
-async function draftWithModel({
-  template,
-  answers,
-  keep = [],
-  toolId,
-  userInput = null,
-  addressedToReader = false,
-}) {
-  const [safeTemplate, ...safeKeep] = await _redactForAi([template, ...keep]);
+async function draftWithModel(plan, { toolId, userInput = null }) {
+  const crisisBlock = blockIfCrisisDetected(userInput);
+  if (crisisBlock) return crisisBlock;
+
+  const offered = selectPassages(plan);
+  const redacted = await _redactForAi(offered.map((passage) => passage.text));
+  const sent = offered.filter((passage, i) => redacted[i] === passage.text);
+  const withheld = offered.length - sent.length;
+  const settled = (draft) => ({
+    ...draft,
+    passages: { ...draft.passages, withheld },
+  });
+  if (sent.length === 0)
+    return { success: true, ...settled(standardDraft(plan)) };
+
   const result = await callGeminiAPI(
-    buildRewordPrompt(safeTemplate),
+    buildPassagePrompt(sent.map((passage) => passage.text)),
     userInput,
     toolId,
     { temperature: REWORD_TEMPERATURE },
@@ -531,25 +544,13 @@ async function draftWithModel({
   if (!result.success) {
     return {
       success: true,
-      content: template,
       ...(result.errorType ? { errorType: result.errorType } : {}),
-      ...draftAfterError(result.error),
+      ...settled(draftAfterModelError(plan, sent, result.error)),
     };
   }
-
   return {
     ...result,
-    ...resolveWriterDraft({
-      output: result.content,
-      template: safeTemplate,
-      inputs: suppliedIn(
-        safeTemplate,
-        await _redactForAi(Object.values(answers ?? {}).filter(isText)),
-      ),
-      keep: safeKeep.filter((phrase) => safeTemplate.includes(phrase)),
-      addressedToReader,
-      fallback: template,
-    }),
+    ...settled(resolvePassageDraft({ plan, sent, reply: result.content })),
   };
 }
 
@@ -562,16 +563,9 @@ export const enhancePersonalStatement = async (
   condition,
   primaryCondition = null,
 ) =>
-  draftWithModel({
-    template: buildPersonalStatementTemplate(
-      answers,
-      condition,
-      primaryCondition,
-    ),
-    answers,
-    keep: [condition, primaryCondition].filter(isText),
+  draftWithModel(personalStatementPlan(answers, condition, primaryCondition), {
     toolId: "personal-statement",
-    userInput: answers, // for crisis detection
+    userInput: answers,
   });
 
 /**
@@ -579,12 +573,9 @@ export const enhancePersonalStatement = async (
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const enhanceBuddyStatement = async (answers, conditionName) =>
-  draftWithModel({
-    template: buildBuddyStatementTemplate(answers, conditionName),
-    answers,
-    keep: [conditionName].filter(isText),
+  draftWithModel(buddyStatementPlan(answers, conditionName), {
     toolId: "buddy-statement",
-    userInput: answers, // for crisis detection
+    userInput: answers,
   });
 
 /**
@@ -592,11 +583,9 @@ export const enhanceBuddyStatement = async (answers, conditionName) =>
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const enhancePTSDStatement = async (answers) =>
-  draftWithModel({
-    template: buildPTSDStressorTemplate(answers),
-    answers,
+  draftWithModel(ptsdStatementPlan(answers), {
     toolId: "personal-statement",
-    userInput: answers, // for crisis detection
+    userInput: answers,
   });
 
 /**
@@ -604,12 +593,9 @@ export const enhancePTSDStatement = async (answers) =>
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const enhanceAppealStatement = async (answers) =>
-  draftWithModel({
-    template: buildAppealStatementTemplate(answers),
-    answers,
-    keep: [answers.conditionName].filter(isText),
+  draftWithModel(appealStatementPlan(answers), {
     toolId: "appeal-statement",
-    userInput: answers, // for crisis detection
+    userInput: answers,
   });
 
 /**
@@ -617,13 +603,9 @@ export const enhanceAppealStatement = async (answers) =>
  * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
  */
 export const generateNexusLetterRequest = async (answers) =>
-  draftWithModel({
-    template: buildNexusLetterRequestTemplate(answers),
-    answers,
-    keep: [answers.conditionName, answers.primaryCondition].filter(isText),
+  draftWithModel(nexusRequestPlan(answers), {
     toolId: "nexus-builder",
-    userInput: answers, // for crisis detection
-    addressedToReader: true,
+    userInput: answers,
   });
 
 /**

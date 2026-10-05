@@ -56,6 +56,12 @@ function checkOwnSystemPrompt(record) {
 }
 
 export function checkRouting(caseDef, record) {
+  if (caseDef.entry && record.passages?.sent === 0 && !record.error) {
+    return result(
+      NOT_APPLICABLE,
+      "the tool made no model call: nothing typed to reword",
+    );
+  }
   if (TOOL_ENTRIES[caseDef.entry]?.ownSystemPrompt) {
     return checkOwnSystemPrompt(record);
   }
@@ -217,8 +223,8 @@ export function checkNoNewPii(caseDef, record) {
 
 /**
  * For a writing-tool case: the veteran was handed a draft, by either path.
- * The detail says which: the model's wording passed the acceptance check, or
- * the app-built draft was returned and why. Every other case is n/a.
+ * The detail says which, how many typed passages were reworded, left
+ * unchanged or rejected, and why. Every other case is n/a.
  */
 export function checkDraftReturned(caseDef, record) {
   if (!isWritingEntry(caseDef.entry)) {
@@ -228,9 +234,10 @@ export function checkDraftReturned(caseDef, record) {
   if (String(record.response ?? "").trim() === "" || !path) {
     return result(AUTO_FAIL, "the tool returned no draft");
   }
-  if (path === "model") {
-    return result(AUTO_PASS, "model draft accepted", { path });
-  }
+  const counts = record.passages;
+  const tally = counts
+    ? `${counts.accepted} of ${counts.sent} passages reworded, ${counts.unchanged} unchanged, ${counts.rejected} rejected`
+    : "passage counts not recorded";
   const reasons = [
     ...(record.draftErrorReason
       ? [`the model did not answer: ${record.draftErrorReason}`]
@@ -238,7 +245,9 @@ export function checkDraftReturned(caseDef, record) {
     ...(record.draftRejectReasons ?? []),
   ].join("; ");
   const why = reasons ? ` (${reasons})` : "";
-  return result(AUTO_PASS, `app-built draft returned${why}`, { path });
+  const label =
+    path === "model" ? "model rewording placed" : "app-built draft returned";
+  return result(AUTO_PASS, `${label}: ${tally}${why}`, { path });
 }
 
 const AUTHORITY_CITATIONS = [

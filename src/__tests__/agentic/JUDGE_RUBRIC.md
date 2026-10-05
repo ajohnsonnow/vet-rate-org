@@ -43,7 +43,9 @@ point.
    is yours. Record the score and a Y/N pass in the blank columns.
 4. A case **passes** if it scores at least the agent-specific threshold
    (Auditor 5/6, Writer 4/5, Rater 4/5). Document failures in the Notes
-   column with the criterion that failed.
+   column with the criterion that failed. A tool case must also pass P1
+   (procedural accuracy, below): a wrong filing instruction fails it
+   whatever its score.
 5. Commit the summary. The transcript carries the request envelope per
    case (system-prompt fingerprint, knowledge-base entry count, computed
    block, temperature, max tokens, loaded model id) and the response, so
@@ -61,7 +63,7 @@ Only conditions that can be read off the text are automated; a result is
 | `cfr-in-index`      | Every `38 CFR` section cited exists as a citation in the legal index                                                                                         | A2, and the "hallucinated citations" red flag for every agent                                       |
 | `no-spotlight-echo` | The literal `<untrusted_content>` tag is absent                                                                                                              | "Spotlight-tag echoes" red flag                                                                     |
 | `no-new-pii`        | No SSN-shaped string and no labeled date-of-birth-shaped string that the input did not contain                                                               | "PII in output" red flag                                                                            |
-| `draft-returned`    | For writing-tool cases: the tool handed the veteran a draft, either the model's wording or the app-built draft                                               | Not a scored criterion; it says a draft exists, not that it is good                                 |
+| `draft-returned`    | For writing-tool cases: the tool handed the veteran a draft, with or without reworded passages                                                               | Not a scored criterion; it says a draft exists, not that it is good                                 |
 
 Also automated: A1 is `auto-pass` when the response cites 38 CFR, DBQ,
 M21-1, BVA or Federal Circuit (otherwise it stays human, since a response
@@ -83,24 +85,33 @@ synthetic and written for the evaluation; `t08` attaches a fictional
 decision letter from [fixtures/](./fixtures/).
 
 Each writing tool builds a complete draft from the form, with a
-square-bracket blank for every fact the form did not supply, and asks the
-model only to improve the wording. The model's answer replaces that draft
-only when it passes a deterministic check
-([writerDraftCheck.js](../../utils/writerDraftCheck.js)). The transcript
-records which happened in `draftPath`, and the summary lists it under
-"Tool cases":
+square-bracket blank for every fact the form did not supply. The model is
+never asked to write or reword that draft. It is sent only the passages
+someone typed into the form, numbered, and asked to turn each into clear,
+complete first-person sentences that say only what the passage says. Each
+rewording is checked on its own against its passage
+([writerDraftCheck.js](../../utils/writerDraftCheck.js)), and the app builds
+the draft again with the accepted ones in place. Headings, fixed sentences,
+blanks, greeting and closing are the app's and cannot change. The transcript
+records what happened in `draftPath` and `passages` (sent, accepted,
+unchanged, rejected), and the summary lists both under "Tool cases":
 
-- `model`: the response is the model's wording. Score W1 to W4 on it as
-  usual. W4 is the one that matters most: compare the response with the
-  case's `formInputs` and fail it for any fact that is in neither.
-- `template`: the response is the app-built draft, and
-  `draftRejectReasons` says why the model's answer was turned down. The
-  veteran still got a usable draft, so `draft-returned` passes, but the
-  model contributed nothing: note the case as "template" and do not count
-  it as a model pass. Read the reasons. A rejection for a refusal or an
-  invented fact is the check working; a rejection of an answer that looks
-  faithful (for example for one capitalised word) is the check being too
-  strict and is worth a note.
+- `model`: at least one passage was reworded and accepted. Find each
+  reworded passage in the response (compare with the case's `formInputs`)
+  and judge it: it must say only what the passage says, in complete
+  sentences. Fail W4 for any fact, cause, feeling or detail the passage
+  did not have. A passage listed in `draftRejectReasons` kept the
+  writer's own words; read the reason. A rejection for an invented fact is
+  the check working; a rejection of a faithful rewording is the check
+  being too strict and is worth a note.
+- `template`: no rewording was placed, and the response is the app-built
+  draft. The veteran still got a usable draft, so `draft-returned` passes,
+  but the model contributed nothing: note the case as "template" and do
+  not count it as a model pass. `passages` says why: every passage came
+  back unchanged (the model echoed), every rewording was rejected, or
+  nothing was sent because the form held nothing typed (`sent` is 0 and no
+  model call was made; `t07` is always this, since the TDIU analysis is
+  built from chosen conditions and symptoms).
 
 A `template` case may also carry `draftErrorReason`: the model did not
 answer at all (engine error, timeout, request limit) and the tool handed
@@ -112,12 +123,34 @@ For W2 on a tool case, a bracketed blank is correct wherever the form
 inputs do not hold the fact. A blank is wrong only where the inputs do
 hold it.
 
+### Procedural accuracy (P1, tool cases only)
+
+A draft the veteran files, or advice on what to file, has to be right about
+procedure. Check every form, review lane and deadline the response states,
+whether the app wrote it or the model did:
+
+| #   | Criterion           | Pass when…                                                                                                                                                                                        |
+| --- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1  | Procedural accuracy | Every form number, review lane, filing instruction and deadline stated is correct for the situation in the inputs, and nothing tells the veteran to do something that lane or form does not allow |
+
+P1 is not counted toward the agent's score. It is a gate: **a wrong filing
+instruction fails the case whatever the other criteria score.** Examples of
+a P1 failure: inviting new evidence in a Higher-Level Review (38 CFR
+3.2601(f) limits that review to the evidence of record); naming the wrong
+form for a lane; stating a deadline the regulation does not give; telling
+the veteran to appeal to a body that does not hear that kind of decision.
+A statement that says nothing about procedure passes P1. Check against the
+regulation text or the app's verified reference, not from memory, and
+write the citation in the Notes column. Record P1 as its own Y/N next to
+the score.
+
 The statement helper and the Decision Decoder send their own system
 prompt, so for their cases (`t01` to `t03`, `t05`, `t06`, `t08`) the engine
 receives that prompt and no persona prompt. That is what production does,
 so `routing` passes for those cases when the engine received the tool's own
 prompt, and the agent column reads "tool's own prompt". The Witness Bench
-and TDIU cases (`t04`, `t07`) send none and must show the writer persona.
+case (`t04`) sends none and must show the writer persona. `routing` is
+`n/a` for a case that made no model call.
 
 ## Auditor criteria (6 — pass at 5+)
 

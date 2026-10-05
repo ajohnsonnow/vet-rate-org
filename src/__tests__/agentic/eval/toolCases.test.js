@@ -95,13 +95,33 @@ describe("the golden set", () => {
     expect(c.scenario).toMatch(/fictional|synthetic/i);
   });
 
-  it.each(TOOL_CASES.filter((c) => isWritingEntry(c.entry)))(
-    "$id puts its match phrase in the request the tool sends",
-    (c) => {
-      const draft = TOOL_ENTRIES[c.entry].draft(c.formInputs);
-      expect(draft.prompt).toContain(c.match);
+  const drafts = TOOL_CASES.filter((c) => isWritingEntry(c.entry)).map((c) => ({
+    id: c.id,
+    match: c.match,
+    draft: TOOL_ENTRIES[c.entry].draft(c.formInputs),
+  }));
+
+  it.each(drafts.filter((c) => c.draft.prompt !== null))(
+    "$id puts its match phrase in a passage the tool sends",
+    ({ match, draft }) => {
+      expect(draft.passages.some((passage) => passage.includes(match))).toBe(
+        true,
+      );
+      expect(draft.prompt).toContain(match);
     },
   );
+
+  it("only the TDIU case has nothing typed, and so sends nothing", () => {
+    expect(
+      drafts.filter((c) => c.draft.prompt === null).map((c) => c.id),
+    ).toEqual(["t07"]);
+  });
+
+  it("t02 carries a fragment for the model to make into sentences", () => {
+    expect(drafts.find((c) => c.id === "t02").draft.passages).toContain(
+      "Startle at engine noise, Broken sleep",
+    );
+  });
 
   it("leaves blanks in the drafts whose forms were left incomplete", () => {
     const draftOf = (id) =>
@@ -309,6 +329,18 @@ describe("routing for a tool that sends its own system prompt", () => {
     ).toBe(NEEDS_HUMAN);
   });
 
+  it("does not apply when the tool had nothing typed to send", () => {
+    expect(
+      checkRouting(byId("t07"), {
+        actualAgent: null,
+        passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+      }),
+    ).toMatchObject({
+      status: NOT_APPLICABLE,
+      detail: "the tool made no model call: nothing typed to reword",
+    });
+  });
+
   it("still means the persona for a tool that sends none", () => {
     expect(checkRouting(byId("t04"), { actualAgent: "writer" }).status).toBe(
       AUTO_PASS,
@@ -322,21 +354,45 @@ describe("routing for a tool that sends its own system prompt", () => {
 describe("checkDraftReturned", () => {
   const t01 = byId("t01");
 
-  it("passes on either path and says which", () => {
+  it("passes on either path and says which, with the passage counts", () => {
     expect(
-      checkDraftReturned(t01, { response: "draft", draftPath: "model" }),
-    ).toMatchObject({ status: AUTO_PASS, detail: "model draft accepted" });
+      checkDraftReturned(t01, {
+        response: "draft",
+        draftPath: "model",
+        passages: { sent: 3, accepted: 2, unchanged: 1, rejected: 0 },
+      }),
+    ).toMatchObject({
+      status: AUTO_PASS,
+      detail:
+        "model rewording placed: 2 of 3 passages reworded, 1 unchanged, 0 rejected",
+      data: { path: "model" },
+    });
     expect(
       checkDraftReturned(t01, {
         response: "draft",
         draftPath: "template",
-        draftRejectReasons: ["not a draft: refusal"],
+        passages: { sent: 2, accepted: 0, unchanged: 0, rejected: 2 },
+        draftRejectReasons: ["passage 1: not a rewording: refusal"],
       }),
     ).toMatchObject({
       status: AUTO_PASS,
-      detail: "app-built draft returned (not a draft: refusal)",
+      detail:
+        "app-built draft returned: 0 of 2 passages reworded, 0 unchanged, 2 rejected (passage 1: not a rewording: refusal)",
       data: { path: "template" },
     });
+  });
+
+  it("names the error when the model did not answer", () => {
+    expect(
+      checkDraftReturned(t01, {
+        response: "draft",
+        draftPath: "template",
+        passages: { sent: 3, accepted: 0, unchanged: 0, rejected: 0 },
+        draftErrorReason: "WebGPU inference timed out",
+      }).detail,
+    ).toBe(
+      "app-built draft returned: 0 of 3 passages reworded, 0 unchanged, 0 rejected (the model did not answer: WebGPU inference timed out)",
+    );
   });
 
   it("fails when the tool handed back nothing", () => {

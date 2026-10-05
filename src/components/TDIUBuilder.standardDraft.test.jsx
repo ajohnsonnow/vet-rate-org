@@ -1,8 +1,8 @@
 /**
- * TDIU Builder, end to end on the screen: with no AI, after an engine error
- * and after a refused reply the veteran gets the same app-built analysis,
- * with the standard-draft notice, editable in place, and saves what they
- * see. Fixture values are invented for these tests.
+ * TDIU Builder, end to end on the screen: the veteran gets the app-built
+ * analysis with the standard-draft notice, whether or not AI is loaded (the
+ * form has nothing typed to reword, so no model call is made), edits it in
+ * place, and saves what they see. Fixture values are invented.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -75,7 +75,7 @@ beforeEach(() => {
   saveAnalysisResults.mockClear();
 });
 
-describe("TDIU Builder gives one draft, whatever the AI did", () => {
+describe("TDIU Builder gives one draft, AI or no AI", () => {
   it("with no AI loaded", async () => {
     ai.available = false;
     await generate();
@@ -84,34 +84,11 @@ describe("TDIU Builder gives one draft, whatever the AI did", () => {
     expect(generateAI).not.toHaveBeenCalled();
   });
 
-  it("after an engine error", async () => {
-    generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
+  it("with AI loaded: nothing here is typed, so no model call is made", async () => {
     await generate();
 
-    expect(generateAI).toHaveBeenCalledTimes(1);
     expectStandardDraft();
-  });
-
-  it("after the model refuses", async () => {
-    generateAI.mockResolvedValue({
-      text: "I need more details about your work history before I can help.",
-    });
-    await generate();
-
-    expect(generateAI).toHaveBeenCalledTimes(1);
-    expectStandardDraft();
-  });
-
-  it("shows no notice when the model's wording was accepted", async () => {
-    generateAI.mockImplementation(async (prompt) => ({
-      text: /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1],
-    }));
-    await generate();
-
-    expect(
-      screen.queryByRole("status", { name: "Draft notice" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByLabelText(IMPACT).value).toBe(BLANK_IMPACT);
+    expect(generateAI).not.toHaveBeenCalled();
   });
 });
 

@@ -90,8 +90,12 @@ function secondaryLink(answers) {
 
 function directLink(answers) {
   if (text(answers.nexusExplanation)) return sentence(answers.nexusExplanation);
-  const onset = orBlank(answers.symptomOnsetDate, "date the symptoms began");
-  return `My symptoms began ${onset} and have continued since then.`;
+  // The form asks when the symptoms began, not whether they have gone on
+  // since, so that part is the veteran's to state.
+  return [
+    `When my symptoms began: ${orBlank(answers.symptomOnsetDate, "date the symptoms began")}`,
+    `Since then: ${blank("whether the symptoms have continued since then")}`,
+  ].join("\n");
 }
 
 const impactLines = (answers) =>
@@ -152,7 +156,7 @@ export function buildPTSDStressorTemplate(answers = {}) {
     `How it affected me at the time\n${said(answers.immediateImpact, "how the event affected you right afterwards")}`,
     `My symptoms now\n${said(answers.currentSymptoms, "the symptoms you have now")}`,
     `How it affects my life now\n${said(answers.dailyImpact, "how these symptoms affect your daily life, work and relationships")}`,
-    "Recounting these events is difficult for me. I respectfully request an evaluation for this condition.",
+    "I respectfully request an evaluation for this condition.",
   ]);
 }
 
@@ -224,6 +228,59 @@ const APPEAL_TYPE_LABELS = {
   supplemental: "Supplemental Claim with New Evidence",
 };
 
+/*
+ * What each review lane lets the statement say about evidence.
+ *
+ * Higher-Level Review, 38 CFR 3.2601(f): "The evidentiary record in a
+ * higher-level review is limited to the evidence of record as of the date
+ * the agency of original jurisdiction issued notice of the prior decision
+ * under review and the higher-level adjudicator may not consider additional
+ * evidence." So the statement points only at what is already in the file,
+ * and evidence the veteran lists as new is not carried into it.
+ *
+ * Supplemental Claim, 38 CFR 3.2501: "If new and relevant evidence is
+ * presented or secured with respect to the supplemental claim, the agency of
+ * original jurisdiction will readjudicate the claim". The statement asks for
+ * that evidence first.
+ *
+ * Board Appeal, 38 CFR 20.202(b): the claimant chooses direct review, a
+ * hearing, or evidence submission, and that choice sets what evidence the
+ * Board considers. The form does not collect the choice, so it is a blank.
+ */
+function appealEvidenceSections(answers) {
+  const supporting = text(answers.supportingEvidence);
+  const fresh = text(answers.newEvidence);
+  switch (answers.appealType) {
+    case "hlr":
+      return [
+        `Evidence already in my file that supports my appeal\n${said(supporting, "the evidence already in your VA file that supports a different decision")}`,
+        fresh
+          ? blank(
+              "evidence that is not yet in your VA file cannot be considered in a Higher-Level Review; to have it considered, file a Supplemental Claim instead",
+            )
+          : "",
+      ];
+    case "supplemental":
+      return [
+        `New and relevant evidence\n${said(fresh, "the new and relevant evidence you are submitting or asking VA to obtain")}`,
+        supporting
+          ? `Evidence already in my file\n${sentence(supporting)}`
+          : "",
+      ];
+    case "nod":
+      return [
+        `Board review option: ${blank("the option you chose on your Notice of Disagreement: direct review, evidence submission, or a hearing")}`,
+        `Evidence that supports my appeal\n${said(supporting, "the evidence that supports a different decision, as the review option you chose allows")}`,
+        fresh ? `Additional evidence\n${sentence(fresh)}` : "",
+      ];
+    default:
+      return [
+        `Evidence that supports my appeal\n${said(supporting, "the evidence that supports a different decision")}`,
+        fresh ? `Additional evidence\n${sentence(fresh)}` : "",
+      ];
+  }
+}
+
 /** Appeal statement (Board Appeal, Higher-Level Review or Supplemental Claim). */
 export function buildAppealStatementTemplate(answers = {}) {
   const claimed = orBlank(answers.conditionName, "condition under appeal");
@@ -233,6 +290,8 @@ export function buildAppealStatementTemplate(answers = {}) {
       answers.appealType,
       "type of appeal: Board Appeal, Higher-Level Review or Supplemental Claim",
     );
+  const evidence =
+    answers.appealType === "hlr" ? "evidence of record" : "evidence";
   return paragraphs([
     "APPEAL STATEMENT",
     [
@@ -244,12 +303,9 @@ export function buildAppealStatementTemplate(answers = {}) {
     ].join("\n"),
     `I disagree with the decision on my claim for ${claimed}.`,
     `Why the decision is incorrect\n${said(answers.whyIncorrect, "why you believe the decision is wrong")}`,
-    `Evidence that supports my appeal\n${said(answers.supportingEvidence, "the evidence that supports a different decision")}`,
-    text(answers.newEvidence)
-      ? `New evidence\n${sentence(answers.newEvidence)}`
-      : "",
+    ...appealEvidenceSections(answers),
     `What I am asking for\n${said(answers.desiredOutcome, "the outcome you are asking for")}`,
-    "I respectfully ask that the evidence be reviewed against the rating criteria in 38 CFR and that the decision be corrected.",
+    `I respectfully ask that the ${evidence} be reviewed against the rating criteria in 38 CFR and that the decision be corrected.`,
   ]);
 }
 
@@ -264,7 +320,7 @@ export function buildNexusLetterRequestTemplate(answers = {}) {
   return paragraphs([
     "REQUEST FOR A MEDICAL OPINION (NEXUS LETTER)",
     "Dear Doctor,",
-    `I am your patient, [Veteran Name]. I am filing a VA disability claim for ${claimed} and I am asking whether you would write a medical opinion letter, often called a nexus letter. A nexus letter is a doctor's written opinion on whether a condition is connected to military service. It matters because the VA weighs it as medical evidence when it decides the claim.`,
+    `My name is [Veteran Name]. I am filing a VA disability claim for ${claimed} and I am asking whether you would write a medical opinion letter, often called a nexus letter. A nexus letter is a doctor's written opinion on whether a condition is connected to military service. It matters because the VA weighs it as medical evidence when it decides the claim.`,
     `The connection I am asking you to address\n${connection}`,
     `My symptoms\n${said(answers.symptoms, "your current symptoms")}`,
     `Relevant medical history\n${said(answers.medicalHistory, "relevant treatment and medical history")}`,
@@ -292,7 +348,7 @@ export function buildTdiuAnalysisTemplate(disabilities = []) {
         vocational_impact: `Because of this symptom, ${blank("the work tasks this stops you from doing, and how often")}.`,
       })),
     ),
-    combined_effect: `My service-connected conditions (${names}) affect my ability to work together. ${blank("how these conditions combine to limit the work you can do")}`,
+    combined_effect: `My service-connected conditions (${names}) together affect my ability to work. ${blank("how these conditions combine to limit the work you can do")}`,
     summary_argument: `Due to my service-connected disabilities (${names}), I am unable to secure and maintain substantially gainful employment. ${blank("the main reasons you cannot keep a job, in your own words")}`,
     job_types_precluded: [
       blank("types of work you cannot do: Sedentary, Light, Medium or Heavy"),
@@ -414,42 +470,6 @@ export function formStatementInputs(formType, formData = {}) {
   }
 }
 
-/** The answers that appear, as entered, in `template`. */
-export const suppliedIn = (template, values) =>
-  values
-    .map(text)
-    .filter((value) => value.length > 1 && template.includes(value));
-
-const REWORD_RULES = `Rules:
-- Keep every fact exactly as written: every number, date, rating, condition name and described event.
-- Keep every item in square brackets exactly as written, for example [date the symptoms began]. Those are blanks the veteran will fill in. Do not fill them in, remove them or add new ones.
-- Do not add any fact, date, unit, place, diagnosis, name, rating or legal citation that is not already in the draft.
-- Do not add a certification, attestation, date or signature line.
-- Do not ask questions, give advice or explain your changes.`;
-
-/** The request sent to the model: reword this draft, change nothing else. */
-export const buildRewordPrompt = (template) =>
-  `Below is a draft the app built from the veteran's own answers. Improve its wording so it reads clearly and naturally, and reply with the complete improved draft and nothing else.
-
-${REWORD_RULES}
-- Keep the headings and the order of the sections.
-
-=== DRAFT ===
-${template}
-=== END DRAFT ===`;
-
-/** The same request for the TDIU analysis, which the app reads as JSON. */
-export const buildTdiuRewordPrompt = (analysis) =>
-  `Below is a draft TDIU analysis (VA Form 21-8940, Box 18) the app built from the conditions and symptoms the veteran selected. Improve the wording of the "vocational_impact", "combined_effect" and "summary_argument" text so it reads clearly and professionally.
-
-${REWORD_RULES}
-- Keep every "condition" and "symptom" value, the number and order of the limitations, and "job_types_precluded" exactly as given.
-- Reply only with a JSON object in exactly the same shape as the draft.
-
-=== DRAFT ===
-${JSON.stringify(analysis, null, 2)}
-=== END DRAFT ===`;
-
 /** Every blank still standing in a TDIU analysis, one entry per occurrence. */
 export const tdiuUnfilledBlanks = (analysis) =>
   listPlaceholders(tdiuAnalysisText(analysis));
@@ -479,4 +499,150 @@ export function tdiuSavePayload(analysis) {
       ? { vkbMergeData: { aiInsights: insights } }
       : {}),
   };
+}
+
+export const STANDARD_DRAFT_NOTE_NO_BLANKS =
+  "This is the standard draft, built from your answers as you entered them.";
+
+/** The one-line note for an app-built draft, with or without blanks. */
+export const standardDraftNote = (draft) =>
+  listPlaceholders(draft).length > 0
+    ? STANDARD_DRAFT_NOTE
+    : STANDARD_DRAFT_NOTE_NO_BLANKS;
+
+/*
+ * A writing plan: how one tool's draft is built, and which of its answers
+ * are passages, the veteran's (or witness's) own free text. Only passages
+ * are ever offered to the model, one by one, for rewording; the app then
+ * builds the draft again with the accepted rewordings in their place.
+ * Headings, fixed sentences, blanks, labels, greeting and closing are the
+ * builder's and never pass through the model.
+ *
+ *   build(answers)   the draft for a set of answers
+ *   answers          what the form supplied
+ *   passageKeys      the answers that are free-text passages
+ *   keep             phrases a rewording must not lose (condition names)
+ */
+const plan = (build, answers, passageKeys, keep = []) => ({
+  build,
+  answers: answers ?? {},
+  passageKeys,
+  keep: keep.map(text).filter(Boolean),
+});
+
+export const personalStatementPlan = (
+  answers,
+  condition,
+  primaryCondition = null,
+) =>
+  plan(
+    (a) => buildPersonalStatementTemplate(a, condition, primaryCondition),
+    answers,
+    [
+      "inServiceEvent",
+      "specificIncident",
+      "specificExamples",
+      "workImpact",
+      "socialImpact",
+      "nexusExplanation",
+      "aggravationExplanation",
+    ],
+    [condition, primaryCondition],
+  );
+
+export const ptsdStatementPlan = (answers) =>
+  plan(buildPTSDStressorTemplate, answers, [
+    "eventDescription",
+    "immediateImpact",
+    "currentSymptoms",
+    "dailyImpact",
+  ]);
+
+export const buddyStatementPlan = (answers, conditionName) =>
+  plan(
+    (a) => buildBuddyStatementTemplate(a, conditionName),
+    answers,
+    ["observations", "changesNoticed", "dailyImpact"],
+    [conditionName],
+  );
+
+export const appealStatementPlan = (answers) =>
+  plan(
+    buildAppealStatementTemplate,
+    answers,
+    ["whyIncorrect", "supportingEvidence", "newEvidence", "desiredOutcome"],
+    [answers?.conditionName],
+  );
+
+export const nexusRequestPlan = (answers) =>
+  plan(
+    buildNexusLetterRequestTemplate,
+    answers,
+    ["connectionTheory", "inServiceEvent", "symptoms", "medicalHistory"],
+    [answers?.conditionName, answers?.primaryCondition],
+  );
+
+/** Every answer a witness typed is a passage. */
+export const witnessStatementPlan = (relationship, condition, answers) =>
+  plan(
+    (a) => buildWitnessStatementTemplate(relationship, condition, a),
+    answers,
+    Object.keys(answers ?? {}),
+    [condition],
+  );
+
+/** The plan for a Forms Helper form, or null when it has no wording step. */
+export function formStatementPlan(formType, formData) {
+  const mapped = formStatementInputs(formType, formData);
+  switch (mapped?.kind) {
+    case "buddy":
+      return buddyStatementPlan(mapped.answers, mapped.condition);
+    case "personal":
+      return personalStatementPlan(
+        mapped.answers,
+        mapped.condition,
+        mapped.primaryCondition,
+      );
+    case "ptsd":
+      return ptsdStatementPlan(mapped.answers);
+    default:
+      return null;
+  }
+}
+
+// A passage this short ("None", "Daily") has nothing to reword.
+const MIN_PASSAGE_WORDS = 3;
+
+/**
+ * The passages of a plan that are worth offering to the model: answered,
+ * long enough to reword, and actually printed in the draft. Each entry is
+ * { key, text }.
+ */
+export function selectPassages({ build, answers, passageKeys }) {
+  const draft = build(answers);
+  return passageKeys
+    .map((key) => ({ key, text: text(answers[key]) }))
+    .filter(
+      (passage) =>
+        passage.text.split(/\s+/).length >= MIN_PASSAGE_WORDS &&
+        draft.includes(passage.text),
+    );
+}
+
+/** The request sent to the model: reword these passages, add nothing. */
+export function buildPassagePrompt(passages) {
+  const numbered = passages
+    .map((passage, i) => `${i + 1}. ${passage}`)
+    .join("\n");
+  return `Someone typed the numbered passages below into a VA disability claim form. Rewrite each passage as clear, complete sentences in the first person, in plain words.
+
+Rules:
+- Say only what the passage says. Do not add any fact, number, date, place, name, unit, diagnosis, rating, cause, feeling or detail that is not in it.
+- Keep every number, date and name exactly as written.
+- Keep who is speaking, and who is spoken about, the same.
+- If a passage is already clear, complete sentences, return it unchanged.
+- Do not use square brackets. Do not ask questions, give advice, or add a heading, a greeting, a closing or a certification.
+- Reply with the same numbers, one rewritten passage after each number, and nothing else.
+
+${numbered}`;
 }
