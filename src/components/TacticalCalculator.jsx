@@ -1972,7 +1972,10 @@ function CalculationStepDetail({ step }) {
         <div className="ml-8 mt-2 p-2 bg-purple-50 dark:bg-purple-900/30 rounded text-sm">
           <div className="text-purple-700 dark:text-purple-300">
             <div>Combined: {step.combinedBilateral}%</div>
-            <div>Bilateral Factor (+10%): {step.bilateralFactor}%</div>
+            <div>
+              Bilateral Factor (+10%): {step.bilateralFactor}%
+              {step.bilateralFactorCapped && " (group capped at 100%)"}
+            </div>
             <div className="font-bold mt-1">
               Group Rating: {step.bilateralGroupRating}%
             </div>

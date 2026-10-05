@@ -469,9 +469,18 @@ function _formBilateralGroup(conditions) {
 
 function _bilateralGroupValue(ratings, trail = null) {
   const combinedBilateral = combineMultipleRatings(ratings, trail, "bilateral");
-  const bilateralFactor = Math.round(combinedBilateral * 0.1 * 10) / 10;
-  const bilateralGroupRating = Math.round(combinedBilateral + bilateralFactor);
-  return { combinedBilateral, bilateralFactor, bilateralGroupRating };
+  // Whole numbers, half rounded up. A rating cannot exceed 100, so when the
+  // factor would carry the group past it the factor is what is left to 100.
+  const uncapped = Math.floor((combinedBilateral * 11 + 5) / 10);
+  const bilateralFactorCapped = uncapped > 100;
+  return {
+    combinedBilateral,
+    bilateralFactor: bilateralFactorCapped
+      ? 100 - combinedBilateral
+      : combinedBilateral / 10,
+    bilateralGroupRating: Math.min(100, uncapped),
+    bilateralFactorCapped,
+  };
 }
 
 const MAX_EXCEPTION_ARRANGEMENTS = 20000;
@@ -569,8 +578,12 @@ function _sortIntoBilateralGroup(conditions) {
 
 function _calculateBilateralGroup(bilateralConditions, steps, trail) {
   const bilateralRatings = bilateralConditions.map((c) => c.rating);
-  const { combinedBilateral, bilateralFactor, bilateralGroupRating } =
-    _bilateralGroupValue(bilateralRatings, trail);
+  const {
+    combinedBilateral,
+    bilateralFactor,
+    bilateralGroupRating,
+    bilateralFactorCapped,
+  } = _bilateralGroupValue(bilateralRatings, trail);
 
   steps.push({
     step: 2,
@@ -579,6 +592,7 @@ function _calculateBilateralGroup(bilateralConditions, steps, trail) {
     combinedBilateral: combinedBilateral,
     bilateralFactor: bilateralFactor,
     bilateralGroupRating: bilateralGroupRating,
+    bilateralFactorCapped,
   });
 
   return { bilateralFactor, bilateralGroupRating };
@@ -774,7 +788,9 @@ export const checkBilateralFactorCompliance = (conditions) => {
       applicable: true,
       pairedParts: result.bilateralConditions.map((c) => c.name),
       message: `The bilateral factor applies to ${names(result.bilateralConditions)} (38 CFR § 4.26). Check that your rating decision applied it.`,
-      potentialBonus: `Combined, these ratings are ${group.combinedBilateral}%. The factor adds 10% of that (${group.bilateralFactor}), so they count as ${group.bilateralGroupRating}% before combining with your other ratings.`,
+      potentialBonus: group.bilateralFactorCapped
+        ? `Combined, these ratings are ${group.combinedBilateral}%. With the factor they count as 100%, because a rating cannot exceed 100%.`
+        : `Combined, these ratings are ${group.combinedBilateral}%. The factor adds 10% of that (${group.bilateralFactor}), so they count as ${group.bilateralGroupRating}% before combining with your other ratings.`,
     };
   }
 

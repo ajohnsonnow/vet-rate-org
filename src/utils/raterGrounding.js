@@ -143,7 +143,9 @@ export function formatCalculatorWorking(calc) {
     );
     bilateralSteps.forEach((s) => lines.push(`  ${stepLine(s)}`));
     lines.push(
-      `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.bilateralFactor}, so the group rating is ${group.bilateralGroupRating}%`,
+      group.bilateralFactorCapped
+        ? `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.combinedBilateral / 10}, but a rating cannot exceed 100%, so the group rating is 100%`
+        : `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.bilateralFactor}, so the group rating is ${group.bilateralGroupRating}%`,
     );
   }
   if (calc.bilateralExcludedConditions.length > 0) {
