@@ -470,42 +470,6 @@ export function formStatementInputs(formType, formData = {}) {
   }
 }
 
-/** The answers that appear, as entered, in `template`. */
-export const suppliedIn = (template, values) =>
-  values
-    .map(text)
-    .filter((value) => value.length > 1 && template.includes(value));
-
-const REWORD_RULES = `Rules:
-- Keep every fact exactly as written: every number, date, rating, condition name and described event.
-- Keep every item in square brackets exactly as written, for example [date the symptoms began]. Those are blanks the veteran will fill in. Do not fill them in, remove them or add new ones.
-- Do not add any fact, date, unit, place, diagnosis, name, rating or legal citation that is not already in the draft.
-- Do not add a certification, attestation, date or signature line.
-- Do not ask questions, give advice or explain your changes.`;
-
-/** The request sent to the model: reword this draft, change nothing else. */
-export const buildRewordPrompt = (template) =>
-  `Below is a draft the app built from the veteran's own answers. Improve its wording so it reads clearly and naturally, and reply with the complete improved draft and nothing else.
-
-${REWORD_RULES}
-- Keep the headings and the order of the sections.
-
-=== DRAFT ===
-${template}
-=== END DRAFT ===`;
-
-/** The same request for the TDIU analysis, which the app reads as JSON. */
-export const buildTdiuRewordPrompt = (analysis) =>
-  `Below is a draft TDIU analysis (VA Form 21-8940, Box 18) the app built from the conditions and symptoms the veteran selected. Improve the wording of the "vocational_impact", "combined_effect" and "summary_argument" text so it reads clearly and professionally.
-
-${REWORD_RULES}
-- Keep every "condition" and "symptom" value, the number and order of the limitations, and "job_types_precluded" exactly as given.
-- Reply only with a JSON object in exactly the same shape as the draft.
-
-=== DRAFT ===
-${JSON.stringify(analysis, null, 2)}
-=== END DRAFT ===`;
-
 /** Every blank still standing in a TDIU analysis, one entry per occurrence. */
 export const tdiuUnfilledBlanks = (analysis) =>
   listPlaceholders(tdiuAnalysisText(analysis));

@@ -1,6 +1,7 @@
 /**
- * The writing tools in aiStatementHelper hand the model an app-built draft
- * to reword, and return that draft when the model's answer is not usable.
+ * The statement tools in aiStatementHelper offer the model only the
+ * passages someone typed, place each accepted rewording into the app-built
+ * draft, and return that draft unchanged when nothing reworded is usable.
  * Fixture values are invented for these tests.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -15,11 +16,15 @@ import {
 import { saveVeteranProfile } from "../../utils/veteranProfile";
 import {
   STANDARD_DRAFT_NOTE,
-  buildAppealStatementTemplate,
-  buildBuddyStatementTemplate,
-  buildNexusLetterRequestTemplate,
+  appealStatementPlan,
+  buddyStatementPlan,
+  buildPassagePrompt,
   buildPTSDStressorTemplate,
   buildPersonalStatementTemplate,
+  nexusRequestPlan,
+  personalStatementPlan,
+  ptsdStatementPlan,
+  selectPassages,
 } from "../../utils/writerTemplates";
 
 vi.mock("../../utils/unifiedAIService", async (importOriginal) => {
@@ -47,7 +52,7 @@ const PTSD = {
   currentSymptoms: "I startle at engine noise and sleep about four hours",
 };
 const BUDDY = {
-  relationship: "spouse",
+  relationship: "Spouse",
   knownDuration: "since 2015",
   observations: "I see them wake up shouting several nights a week",
 };
@@ -67,40 +72,52 @@ const TOOLS = [
   [
     "enhancePersonalStatement",
     () => enhancePersonalStatement(PERSONAL, "Lumbar strain"),
-    buildPersonalStatementTemplate(PERSONAL, "Lumbar strain"),
+    personalStatementPlan(PERSONAL, "Lumbar strain"),
     "personal-statement",
   ],
   [
     "enhancePTSDStatement",
     () => enhancePTSDStatement(PTSD),
-    buildPTSDStressorTemplate(PTSD),
+    ptsdStatementPlan(PTSD),
     "personal-statement",
   ],
   [
     "enhanceBuddyStatement",
     () => enhanceBuddyStatement(BUDDY, "PTSD"),
-    buildBuddyStatementTemplate(BUDDY, "PTSD"),
+    buddyStatementPlan(BUDDY, "PTSD"),
     "buddy-statement",
   ],
   [
     "enhanceAppealStatement",
     () => enhanceAppealStatement(APPEAL),
-    buildAppealStatementTemplate(APPEAL),
+    appealStatementPlan(APPEAL),
     "appeal-statement",
   ],
   [
     "generateNexusLetterRequest",
     () => generateNexusLetterRequest(NEXUS),
-    buildNexusLetterRequestTemplate(NEXUS),
+    nexusRequestPlan(NEXUS),
     "nexus-builder",
   ],
 ];
 
-const draftIn = (prompt) =>
-  /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1];
+const passagesIn = (prompt) =>
+  prompt
+    .split("\n")
+    .filter((line) => /^\d+\. /.test(line))
+    .map((line) => line.replace(/^\d+\. /, ""));
+const numbered = (passages) =>
+  passages.map((passage, i) => `${i + 1}. ${passage}`).join("\n");
+/** A rewording that changes the wording and adds no fact. */
+const reword = (passage) => {
+  const body = /^I\b/.test(passage)
+    ? passage
+    : passage[0].toLowerCase() + passage.slice(1);
+  return `To put it plainly, ${body}${/[.!?]$/.test(body) ? "" : "."}`;
+};
 const modelReplies = (reply) =>
   generateAI.mockImplementation(async (prompt) => ({
-    text: typeof reply === "function" ? reply(prompt) : reply,
+    text: typeof reply === "function" ? reply(passagesIn(prompt)) : reply,
     mode: "swarm",
   }));
 
@@ -109,39 +126,57 @@ beforeEach(() => {
   generateAI.mockReset();
 });
 
-describe.each(TOOLS)("%s", (_name, run, template, toolId) => {
-  it("asks the model to reword the app-built draft, not to write from nothing", async () => {
-    modelReplies(draftIn);
+describe.each(TOOLS)("%s", (_name, run, plan, toolId) => {
+  const template = plan.build(plan.answers);
+  const sent = selectPassages(plan);
+
+  it("offers the model the typed passages and nothing else of the draft", async () => {
+    modelReplies(numbered);
     await run();
 
     expect(generateAI).toHaveBeenCalledTimes(1);
     const [prompt, options] = generateAI.mock.calls[0];
-    expect(draftIn(prompt)).toBe(template);
-    expect(prompt).toMatch(/Improve (its|the) wording/i);
-    expect(prompt).toMatch(/square brackets/i);
-    expect(prompt).not.toMatch(/Write the (statement|letter request) now/);
+    expect(sent.length).toBeGreaterThan(0);
+    expect(prompt).toBe(buildPassagePrompt(sent.map((p) => p.text)));
+    expect(prompt).not.toMatch(/VA Form|Dear Doctor|38 CFR|\[/);
     expect(options.toolId).toBe(toolId);
     expect(options.dataClass).toBe("context");
   });
 
-  it("returns the model's wording when it passes the check", async () => {
-    modelReplies(
-      (prompt) =>
-        `Certainly! Here is the improved draft:\n\n${draftIn(prompt)}`,
+  it("places the accepted rewordings in the app-built draft", async () => {
+    modelReplies((passages) => numbered(passages.map(reword)));
+    const result = await run();
+
+    const reworded = Object.fromEntries(
+      sent.map((p) => [p.key, reword(p.text)]),
     );
+    expect(result).toMatchObject({
+      success: true,
+      content: plan.build({ ...plan.answers, ...reworded }),
+      draftPath: "model",
+      draftNote: null,
+      passages: { sent: sent.length, accepted: sent.length, rejected: 0 },
+    });
+    expect(result.content).not.toBe(template);
+  });
+
+  it("returns the app draft, with no AI claim, when the model only echoes", async () => {
+    modelReplies(numbered);
     const result = await run();
 
     expect(result).toMatchObject({
       success: true,
       content: template,
-      draftPath: "model",
-      draftNote: null,
+      draftPath: "template",
+      passages: { sent: sent.length, accepted: 0, unchanged: sent.length },
     });
+    expect(result.draftNote).toBeTruthy();
+    expect(result.draftRejectReasons).toEqual([]);
   });
 
-  it("returns the app-built draft with the note when the model asks for information", async () => {
+  it("returns the app draft when the model asks for information", async () => {
     modelReplies(
-      "I can help with that. To make it accurate, please provide the following details: your branch of service, the dates you served, and the name of the provider who treats you.",
+      "I can help with that. To make it accurate, please provide the following details: your branch of service and the dates you served.",
     );
     const result = await run();
 
@@ -149,21 +184,16 @@ describe.each(TOOLS)("%s", (_name, run, template, toolId) => {
       success: true,
       content: template,
       draftPath: "template",
-      draftNote: STANDARD_DRAFT_NOTE,
+      passages: { accepted: 0, rejected: sent.length },
     });
-    // A nexus request is itself a request to its reader, so there the reply
-    // is rejected for being too short to be the draft.
-    expect(result.draftRejectReasons).toEqual([
-      toolId === "nexus-builder"
-        ? "not a draft: empty"
-        : "not a draft: asks-for-information",
-    ]);
+    expect(result.draftRejectReasons).toHaveLength(sent.length);
   });
 
-  it("returns the app-built draft when the model adds a fact", async () => {
-    modelReplies(
-      (prompt) =>
-        `${draftIn(prompt)}\n\nI served in the Navy from 2005 to 2010.`,
+  it("keeps the writer's words where a rewording adds a fact", async () => {
+    modelReplies((passages) =>
+      numbered(
+        passages.map((p) => `${reword(p)} This was in the Navy in 2005.`),
+      ),
     );
     const result = await run();
 
@@ -173,50 +203,64 @@ describe.each(TOOLS)("%s", (_name, run, template, toolId) => {
   });
 });
 
-describe("an empty form", () => {
-  it("still yields a draft made of blanks", async () => {
-    modelReplies("Please provide more details about your service.");
-    const result = await enhancePTSDStatement(undefined);
+describe.each(TOOLS)("%s when the model cannot answer", (_name, run, plan) => {
+  const template = plan.build(plan.answers);
 
-    expect(result.draftPath).toBe("template");
-    expect(result.content).toBe(buildPTSDStressorTemplate({}));
+  it("returns the app draft and names the engine error", async () => {
+    generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
+    const result = await run();
+
+    expect(result).toMatchObject({
+      success: true,
+      content: template,
+      draftPath: "template",
+      draftRejectReasons: [],
+      errorType: "timeout",
+    });
+    expect(result.draftErrorReason).toMatch(/timed out/i);
+  });
+
+  it("returns the app draft during the request cooldown", async () => {
+    modelReplies(numbered);
+    await run();
+    const second = await run();
+
+    expect(generateAI).toHaveBeenCalledTimes(1);
+    expect(second).toMatchObject({
+      success: true,
+      content: template,
+      draftPath: "template",
+    });
+    expect(second.draftErrorReason).toMatch(/cooling down/i);
   });
 });
 
-describe.each(TOOLS)(
-  "%s when the model cannot answer",
-  (_name, run, template) => {
-    it("returns the app-built draft and names the engine error", async () => {
-      generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
-      const result = await run();
+describe("a form with no free text", () => {
+  it("makes no model call, uses no request allowance, and returns the app draft", async () => {
+    const answers = { symptomOnsetDate: "March 2011", hasTreatment: "no" };
+    const first = await enhancePersonalStatement(answers, "Tinnitus");
+    const second = await enhancePersonalStatement(answers, "Tinnitus");
 
+    expect(generateAI).not.toHaveBeenCalled();
+    for (const result of [first, second]) {
       expect(result).toMatchObject({
         success: true,
-        content: template,
+        content: buildPersonalStatementTemplate(answers, "Tinnitus"),
         draftPath: "template",
         draftNote: STANDARD_DRAFT_NOTE,
-        draftRejectReasons: [],
-        errorType: "timeout",
+        passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
       });
-      expect(result.draftErrorReason).toMatch(/timed out/i);
-    });
+      expect(result.draftErrorReason).toBeUndefined();
+    }
+  });
 
-    it("returns the app-built draft during the request cooldown", async () => {
-      modelReplies(draftIn);
-      await run();
-      const second = await run();
-
-      expect(generateAI).toHaveBeenCalledTimes(1);
-      expect(second).toMatchObject({
-        success: true,
-        content: template,
-        draftPath: "template",
-        draftNote: STANDARD_DRAFT_NOTE,
-      });
-      expect(second.draftErrorReason).toMatch(/cooling down/i);
-    });
-  },
-);
+  it("an empty form still yields a draft made of blanks", async () => {
+    const result = await enhancePTSDStatement(undefined);
+    expect(result.draftPath).toBe("template");
+    expect(result.content).toBe(buildPTSDStressorTemplate({}));
+    expect(generateAI).not.toHaveBeenCalled();
+  });
+});
 
 describe("crisis language stops every statement tool before the model", () => {
   const CRISIS = "Some nights I think I want to kill myself";
@@ -242,6 +286,10 @@ describe("crisis language stops every statement tool before the model", () => {
       "generateNexusLetterRequest",
       () => generateNexusLetterRequest({ ...NEXUS, symptoms: CRISIS }),
     ],
+    [
+      "a form whose only text is a short field",
+      () => enhancePTSDStatement({ stressorType: CRISIS }),
+    ],
   ];
 
   it.each(withCrisis)("%s", async (_name, run) => {
@@ -260,56 +308,93 @@ describe("crisis language stops every statement tool before the model", () => {
 });
 
 describe("identifiers stay out of the AI context (ADR-008)", () => {
-  it("redacts a name the veteran typed, and still returns their own words", async () => {
+  const named = {
+    ...BUDDY,
+    observations: "I see Jordan Faketon wake up shouting most nights",
+    changesNoticed: "They stopped going to the weekly card game",
+  };
+
+  it("does not send a passage that names the veteran, and keeps it as typed", async () => {
     saveVeteranProfile({ firstName: "Jordan", lastName: "Faketon" });
-    const answers = {
-      ...BUDDY,
-      observations: "I see Jordan Faketon wake up shouting most nights",
-    };
-    modelReplies("Please provide more details about the veteran.");
-    const result = await enhanceBuddyStatement(answers, "PTSD");
+    modelReplies((passages) => numbered(passages.map(reword)));
+    const result = await enhanceBuddyStatement(named, "PTSD");
 
     const [prompt] = generateAI.mock.calls[0];
-    expect(prompt).not.toContain("Jordan");
-    expect(prompt).not.toContain("Faketon");
-    expect(prompt).toContain("[Veteran]");
-    expect(result.content).toBe(buildBuddyStatementTemplate(answers, "PTSD"));
+    expect(prompt).not.toMatch(/Jordan|Faketon/);
+    expect(passagesIn(prompt)).toEqual([named.changesNoticed]);
+    expect(result.draftPath).toBe("model");
+    expect(result.passages).toMatchObject({
+      sent: 1,
+      accepted: 1,
+      withheld: 1,
+    });
+    expect(result.content).toContain(
+      "I see Jordan Faketon wake up shouting most nights.",
+    );
+    expect(result.content).toContain(reword(named.changesNoticed));
+    expect(result.content).not.toMatch(/REDACTED/);
   });
 
-  it("accepts a rewording of the redacted draft", async () => {
+  it("makes no call when every passage names the veteran", async () => {
     saveVeteranProfile({ firstName: "Jordan", lastName: "Faketon" });
-    modelReplies(draftIn);
     const result = await enhanceBuddyStatement(
-      {
-        ...BUDDY,
-        observations: "I see Jordan Faketon wake up shouting most nights",
-      },
+      { ...BUDDY, observations: named.observations },
       "PTSD",
     );
 
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(result.draftPath).toBe("template");
+    expect(result.passages).toMatchObject({ sent: 0, withheld: 1 });
+    expect(result.content).toContain("Jordan Faketon");
+  });
+});
+
+describe("fixed text never comes back altered", () => {
+  it("the nexus request keeps its greeting when a passage is reworded", async () => {
+    modelReplies((passages) => numbered(passages.map(reword)));
+    const result = await generateNexusLetterRequest(NEXUS);
+
     expect(result.draftPath).toBe("model");
-    expect(result.content).not.toContain("Faketon");
+    expect(result.content).toContain("Dear Doctor,");
+    expect(result.content).toContain("[Veteran Name]");
+    expect(result.content).not.toMatch(/REDACTED/);
+  });
+
+  it("a redaction marker in a rewording is rejected", async () => {
+    modelReplies(
+      () =>
+        "1. To put it plainly, [REDACTED] were first high during my final year.",
+    );
+    const result = await generateNexusLetterRequest(NEXUS);
+
+    expect(result.draftPath).toBe("template");
+    expect(result.content).not.toMatch(/REDACTED/);
+    expect(result.draftRejectReasons[0]).toMatch(/redaction marker/);
   });
 });
 
 describe("enhanceFormStatement", () => {
   it("does not claim VA treatment the veteran did not state", async () => {
-    modelReplies(draftIn);
-    await enhanceFormStatement("personal-statement", {
+    const treated = await enhanceFormStatement("personal-statement", {
       conditionName: "Tinnitus",
       currentTreatment: "Hearing aids from a private audiologist",
     });
-    const treated = draftIn(generateAI.mock.calls[0][0]);
-    expect(treated).toContain("receiving treatment for this condition");
-    expect(treated).not.toContain("from the VA");
-    expect(treated).not.toContain("audiologist");
+    expect(treated.content).toContain("receiving treatment for this condition");
+    expect(treated.content).not.toMatch(/from the VA|audiologist/);
 
-    localStorage.clear();
-    await enhanceFormStatement("personal-statement", {
+    const blank = await enhanceFormStatement("personal-statement", {
       conditionName: "Tinnitus",
     });
-    expect(draftIn(generateAI.mock.calls[1][0])).toContain(
+    expect(blank.content).toContain(
       "[whether you are being treated for this condition, and where]",
     );
+    expect(generateAI).not.toHaveBeenCalled();
+  });
+
+  it("refuses a form with no wording step", async () => {
+    expect(await enhanceFormStatement("intent-to-file", {})).toEqual({
+      success: false,
+      error: "Unsupported form type for AI enhancement",
+    });
   });
 });

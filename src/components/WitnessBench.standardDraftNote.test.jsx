@@ -35,7 +35,17 @@ const ANSWERS = [
   "They leave the room when fireworks start.",
   "They no longer drive at night.",
 ];
-const isStatementRequest = (prompt) => prompt.includes("=== DRAFT ===");
+const isStatementRequest = (prompt) => prompt.includes("Rewrite each passage");
+const passagesIn = (prompt) =>
+  prompt
+    .split("\n")
+    .filter((line) => /^\d+\. /.test(line))
+    .map((line) => line.replace(/^\d+\. /, ""));
+const numbered = (passages) =>
+  passages.map((passage, i) => `${i + 1}. ${passage}`).join("\n");
+/** Rewords a passage without adding a fact. */
+const reword = (passage) =>
+  `To put it plainly, ${/^I\b/.test(passage) ? passage : passage[0].toLowerCase() + passage.slice(1)}`;
 
 /** The interview questions fall back to the built-in set; only the statement request is answered. */
 const modelAnswersStatement = (reply) =>
@@ -72,7 +82,7 @@ async function generateStatement() {
   // The generate button is on the last question; the rest stay unanswered.
   for (let guard = 0; next() && guard < 12; guard++) fireEvent.click(next());
   fireEvent.click(screen.getByRole("button", { name: /generate statement/i }));
-  return screen.findByDisplayValue(/They leave the room when fireworks start/);
+  return screen.findByDisplayValue(/leave the room when fireworks start/);
 }
 
 beforeEach(() => {
@@ -109,14 +119,29 @@ describe("Witness Bench standard-draft notice", () => {
   });
 
   it("is not shown when the model's wording was accepted", async () => {
-    modelAnswersStatement(
-      (prompt) => /=== DRAFT ===\n([\s\S]*)\n=== END DRAFT ===/.exec(prompt)[1],
-    );
+    modelAnswersStatement((prompt) => numbered(passagesIn(prompt).map(reword)));
     const statement = await generateStatement();
 
     expect(
       screen.queryByRole("status", { name: "Draft notice" }),
     ).not.toBeInTheDocument();
-    expect(statement.value).not.toContain("WITNESS ATTESTATION");
+    expect(statement.value).toContain(
+      "To put it plainly, they leave the room when fireworks start.",
+    );
+    expect(statement.value).toContain(
+      "WITNESS ATTESTATION (read before you sign)",
+    );
+  });
+
+  it("is shown when the model only echoes the answers", async () => {
+    modelAnswersStatement((prompt) => numbered(passagesIn(prompt)));
+    const statement = await generateStatement();
+
+    expect(
+      screen.getByRole("status", { name: "Draft notice" }).textContent,
+    ).toBe(STANDARD_DRAFT_NOTE);
+    expect(statement.value).toContain(
+      "They leave the room when fireworks start.",
+    );
   });
 });

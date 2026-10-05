@@ -1,43 +1,36 @@
 /**
- * Vet-Rate.org - acceptance check for a model-worded draft
+ * Vet-Rate.org - acceptance check for model-reworded passages
  * Copyright (c) 2024-2026 Anthony Johnson
  * SPDX-License-Identifier: AGPL-3.0-or-later
  *
- * The writing tools hand the model an app-built draft (writerTemplates.js)
- * and ask it to improve the wording. This decides, from the text alone,
- * whether the model's answer may replace that draft:
+ * The writing tools build each draft themselves (writerTemplates.js). The
+ * model is offered only the passages someone typed, numbered, and asked to
+ * make each into clear, complete sentences that say only what the passage
+ * says. This decides, from the text alone, whether each rewording may take
+ * its passage's place:
  *
- *   1. it is a draft: not empty, a refusal, a request for information, or
- *      advice about what a statement should contain;
- *   2. it keeps what the veteran supplied: every number, every phrase the
- *      caller marks as required, and most of the wording;
- *   3. it adds no number, date, service branch, unit, place, diagnosis,
- *      name or certification wording that is in neither the inputs nor
- *      the app-built draft;
- *   4. it keeps every bracketed blank of the app-built draft;
- *   5. it is a rewording, not new material: not much longer than the
- *      app-built draft, and mostly made of words that draft or the inputs
- *      already use. This is what catches an invented account that happens
- *      to contain no number, name or diagnosis.
+ *   1. it is a rewording: not empty, a refusal, a request for information,
+ *      or advice about what a statement should contain;
+ *   2. it keeps what the passage supplied: every number, every required
+ *      phrase (a condition name) the passage had, and most of its wording;
+ *   3. it adds no number, counted quantity, date, service branch, unit,
+ *      place, diagnosis, name or certification wording the passage lacks;
+ *   4. it carries no bracketed text the passage did not have, and no
+ *      redaction marker: an invented fact in brackets is still invented;
+ *   5. it is not much longer or much newer than the passage. This is what
+ *      catches an invented account that happens to contain no number, name
+ *      or diagnosis.
  *
- * Anything else, and the tool returns the app-built draft unchanged. The
- * check errs toward rejecting: a rejected good answer costs the veteran
- * some polish, an accepted invented fact goes into sworn evidence.
+ * A rewording that fails keeps the writer's own words. The check errs
+ * toward rejecting: a rejected good rewording costs some polish, an
+ * accepted invented fact goes into sworn evidence.
  */
 
-import {
-  STANDARD_DRAFT_NOTE,
-  listPlaceholders,
-  standardDraftNote,
-  tdiuAnalysisText,
-} from "./writerTemplates.js";
+import { standardDraftNote } from "./writerTemplates.js";
 
 export const DRAFT_PATH = { MODEL: "model", TEMPLATE: "template" };
 
-const MIN_DRAFT_CHARS = 150;
-const MIN_SHARE_OF_TEMPLATE = 0.5;
 const MIN_WORDING_KEPT = 0.6;
-const MAX_LENGTH_OF_TEMPLATE = 1.75;
 const MAX_NEW_WORDING = 0.45;
 
 const lower = (value) => String(value ?? "").toLowerCase();
@@ -48,88 +41,6 @@ const anyOf = (alternatives) => `(?:${alternatives.join("|")})`;
 const pattern = (source, flags = "i") => new RegExp(source, flags);
 const WS = String.raw`\s+`;
 const sameSentence = (max) => `[^.\\n]{0,${max}}`;
-
-const OPENERS = [
-  "certainly",
-  "sure",
-  "of course",
-  "absolutely",
-  "here's",
-  "here is",
-  "below is",
-  "i've improved",
-  "i have improved",
-  "i've revised",
-  "i have revised",
-  "i've reworded",
-  "i have reworded",
-];
-const CLOSERS = [
-  "note",
-  "please note",
-  "let me know",
-  "feel free",
-  "i hope this",
-  "if you'd",
-  "if you would",
-  "if you need",
-  "if you have",
-];
-const REMARK_SUBJECT = anyOf(["draft", "version", "statement", "letter"]);
-const REMARK_VERB = anyOf([
-  "keeps",
-  "maintains",
-  "preserves",
-  "should be tailored",
-  "is based on",
-]);
-const CLOSING_REMARK = pattern(
-  String.raw`^this (?:\w+ )?${REMARK_SUBJECT} ${REMARK_VERB}`,
-);
-const RULE_LINE = /^[-*_=]{3,}$/;
-
-const startsWithPhrase = (text, phrases) =>
-  phrases.some(
-    (phrase) =>
-      text.startsWith(phrase) && !/[a-z]/.test(text[phrase.length] ?? ""),
-  );
-
-function isClosingChatter(block) {
-  const text = lower(block).replace(/^[#*\s]+/, "");
-  return (
-    RULE_LINE.test(block) ||
-    startsWithPhrase(text, CLOSERS) ||
-    CLOSING_REMARK.test(text)
-  );
-}
-
-function dropOpeningChatter(draft) {
-  const lineEnd = draft.indexOf("\n");
-  if (lineEnd === -1 || !startsWithPhrase(lower(draft), OPENERS)) return draft;
-  return draft.slice(lineEnd + 1).trimStart();
-}
-
-function dropClosingChatter(draft) {
-  const blocks = draft.split(/\n{2,}/);
-  while (blocks.length > 1 && isClosingChatter(blocks.at(-1).trim())) {
-    blocks.pop();
-  }
-  return blocks.join("\n\n");
-}
-
-/**
- * The draft inside a model reply: without a code fence, an opening line such
- * as "Certainly! Here is the improved draft:", a closing remark to the user,
- * or the rule lines models put around the body.
- */
-export function extractDraft(output) {
-  let draft = straighten(output).trim();
-  const fenced = /^```[a-z]*\n([\s\S]*?)\n```$/i.exec(draft);
-  if (fenced) draft = fenced[1].trim();
-  const blocks = dropClosingChatter(dropOpeningChatter(draft)).split(/\n{2,}/);
-  while (blocks.length > 1 && RULE_LINE.test(blocks[0].trim())) blocks.shift();
-  return blocks.join("\n\n").trim();
-}
 
 const CANNOT = anyOf([
   `i${WS}can't`,
@@ -304,37 +215,18 @@ const sentencesOf = (draft) =>
   draft.split(/(?<=[.!?])\s+|\n+/).filter((part) => part.trim() !== "");
 
 /**
- * "draft", or why the text is not one: "empty", "refusal",
- * "asks-for-information" or "advice".
- *
- * `addressedToReader` is for a document that itself asks its reader for
- * something and says what to include (a nexus-letter request to a doctor):
- * the request and advice rules would misread it, so only the empty and
- * refusal rules apply.
+ * What a piece of model text is: "rewording", or why it is not one:
+ * "empty", "refusal", "asks-for-information" or "advice". A veteran's own
+ * "I cannot stand for long" is not a refusal: a refusal names the task it
+ * declines.
  */
-export function classifyDraftKind(
-  draft,
-  template = "",
-  { addressedToReader = false } = {},
-) {
-  const body = String(draft ?? "").trim();
+export function classifyReplyKind(text) {
+  const body = String(text ?? "").trim();
   if (body.length === 0) return "empty";
 
   const withoutBlanks = body.replace(BLANK, " ");
   const head = withoutBlanks.slice(0, 400);
   if (matchesAny(REFUSALS, head)) return "refusal";
-  const toVeteran = addressedToReader
-    ? "draft"
-    : remarkToVeteran(withoutBlanks, head);
-  if (toVeteran !== "draft") return toVeteran;
-
-  const floor = template
-    ? MIN_SHARE_OF_TEMPLATE * template.length
-    : MIN_DRAFT_CHARS;
-  return body.length < floor ? "empty" : "draft";
-}
-
-function remarkToVeteran(withoutBlanks, head) {
   const questions = sentencesOf(withoutBlanks).filter((part) =>
     /\?\s*$/.test(part),
   ).length;
@@ -345,7 +237,7 @@ function remarkToVeteran(withoutBlanks, head) {
   ) {
     return "asks-for-information";
   }
-  return matchesAny(ADVICE, withoutBlanks) ? "advice" : "draft";
+  return matchesAny(ADVICE, withoutBlanks) ? "advice" : "rewording";
 }
 
 const digitRuns = (value) => String(value ?? "").match(/\d+/g) ?? [];
@@ -693,232 +585,12 @@ export function findMissingFacts(draft, inputs = [], keep = []) {
   return missing;
 }
 
-export function findMissingPlaceholders(draft, template) {
-  const bodyLower = squash(straighten(draft));
-  return [...new Set(listPlaceholders(template))].filter(
-    (placeholder) => !bodyLower.includes(squash(placeholder)),
-  );
-}
-
-/**
- * Why `draft` is new material and not a rewording of `template`, as a list
- * of plain reasons (empty when it is a rewording). Without a template there
- * is nothing to compare against and nothing is reported.
- */
-export function findNewMaterial(draft, template, allowedText) {
-  if (!template) return [];
-  const reasons = [];
-  const ratio = draft.length / template.length;
-  if (ratio > MAX_LENGTH_OF_TEMPLATE) {
-    reasons.push(`${ratio.toFixed(1)} times the length of the app-built draft`);
-  }
-  const words = contentWords(draft.replace(BLANK, " "));
-  if (words.length > 0) {
-    const known = wordSet(allowedText);
-    const share =
-      words.filter((word) => !known.has(word)).length / words.length;
-    if (share > MAX_NEW_WORDING) {
-      reasons.push(`${Math.round(share * 100)}% of its wording is new`);
-    }
-  }
-  return reasons;
-}
-
 const itemise = (items) =>
   items.map((item) => `${item.kind} "${item.value}"`).join(", ");
 
-/**
- * @param {object} args
- * @param {string} args.output   the model's reply
- * @param {string} args.template the app-built draft the model was given
- * @param {string[]} [args.inputs] what the veteran supplied, as entered
- * @param {string[]} [args.keep] phrases that must survive verbatim
- *   (condition names)
- * @param {string[]} [args.reference] other text the model was shown and
- *   may draw on, which the draft need not keep
- * @param {boolean} [args.addressedToReader] see classifyDraftKind
- * @returns {{ accepted: boolean, draft: string, kind: string,
- *   reasons: string[], newFacts: object[], missingFacts: object[],
- *   missingPlaceholders: string[], newMaterial: string[] }}
- */
-export function checkWriterDraft({
-  output,
-  template = "",
-  inputs = [],
-  keep = [],
-  reference = [],
-  addressedToReader = false,
-}) {
-  const draft = extractDraft(output);
-  const kind = classifyDraftKind(draft, template, { addressedToReader });
-  if (kind !== "draft") {
-    return {
-      accepted: false,
-      draft,
-      kind,
-      reasons: [`not a draft: ${kind}`],
-      newFacts: [],
-      missingFacts: [],
-      missingPlaceholders: [],
-      newMaterial: [],
-    };
-  }
-
-  const allowedText = [...inputs, ...keep, ...reference, template].join("\n");
-  const newFacts = findNewFacts(draft, allowedText);
-  const missingFacts = findMissingFacts(draft, inputs, keep);
-  const missingPlaceholders = findMissingPlaceholders(draft, template);
-  const newMaterial = findNewMaterial(draft, template, allowedText);
-  const reasons = [
-    ...(newFacts.length > 0 ? [`adds ${itemise(newFacts)}`] : []),
-    ...(missingFacts.length > 0 ? [`drops ${itemise(missingFacts)}`] : []),
-    ...(missingPlaceholders.length > 0
-      ? [`drops blank ${missingPlaceholders.join(", ")}`]
-      : []),
-    ...newMaterial,
-  ];
-  return {
-    accepted: reasons.length === 0,
-    draft,
-    kind,
-    reasons,
-    newFacts,
-    missingFacts,
-    missingPlaceholders,
-    newMaterial,
-  };
-}
-
-/**
- * The draft a tool returns: the model's wording when it passes the check,
- * otherwise `fallback` (the app-built draft) with the one-line note.
- * `draftPath` records which.
- */
-export function resolveWriterDraft({ fallback, ...args }) {
-  const check = checkWriterDraft(args);
-  return check.accepted
-    ? {
-        content: check.draft,
-        draftPath: DRAFT_PATH.MODEL,
-        draftNote: null,
-        draftRejectReasons: [],
-      }
-    : {
-        content: fallback ?? args.template,
-        draftPath: DRAFT_PATH.TEMPLATE,
-        draftNote: STANDARD_DRAFT_NOTE,
-        draftRejectReasons: check.reasons,
-      };
-}
-
-function parseJsonObject(output) {
-  const reply = String(output ?? "");
-  const first = reply.indexOf("{");
-  const last = reply.lastIndexOf("}");
-  if (first === -1 || last < first) return null;
-  try {
-    return JSON.parse(reply.slice(first, last + 1));
-  } catch {
-    return null;
-  }
-}
-
-const sameText = (a, b) => typeof a === "string" && squash(a) === squash(b);
-
-function tdiuShapeProblems(analysis, template) {
-  const limitations = Array.isArray(analysis.limitations)
-    ? analysis.limitations
-    : [];
-  const problems = [];
-  if (limitations.length !== template.limitations.length) {
-    problems.push(
-      `has ${limitations.length} limitations, the app-built analysis has ${template.limitations.length}`,
-    );
-  } else if (
-    !template.limitations.every(
-      (expected, i) =>
-        sameText(limitations[i]?.condition, expected.condition) &&
-        sameText(limitations[i]?.symptom, expected.symptom) &&
-        typeof limitations[i]?.vocational_impact === "string",
-    )
-  ) {
-    problems.push("changes a condition or symptom");
-  }
-  for (const field of ["combined_effect", "summary_argument"]) {
-    if (typeof analysis[field] !== "string") problems.push(`has no ${field}`);
-  }
-  const jobTypes = Array.isArray(analysis.job_types_precluded)
-    ? analysis.job_types_precluded
-    : [];
-  if (
-    jobTypes.length !== template.job_types_precluded.length ||
-    !template.job_types_precluded.every((type, i) =>
-      sameText(jobTypes[i], type),
-    )
-  ) {
-    problems.push("changes the kinds of work ruled out");
-  }
-  return problems;
-}
-
-/**
- * The TDIU analysis a tool returns: the model's wording of the three text
- * fields when its reply is JSON in the app-built shape and passes the same
- * check as a statement, otherwise the app-built analysis with the note.
- * Conditions, symptoms and the kinds of work ruled out always come from the
- * app-built analysis.
- */
-export function resolveTdiuDraft({ output, template, reference = [] }) {
-  const rejected = (draftRejectReasons) => ({
-    analysis: template,
-    draftPath: DRAFT_PATH.TEMPLATE,
-    draftNote: STANDARD_DRAFT_NOTE,
-    draftRejectReasons,
-  });
-  const parsed = parseJsonObject(output);
-  if (!parsed) return rejected(["not a draft: no JSON object in the reply"]);
-  const shape = tdiuShapeProblems(parsed, template);
-  if (shape.length > 0) return rejected(shape);
-
-  const check = checkWriterDraft({
-    output: tdiuAnalysisText(parsed),
-    template: tdiuAnalysisText(template),
-    keep: template.limitations.flatMap((item) => [
-      item.condition,
-      item.symptom,
-    ]),
-    reference,
-  });
-  if (!check.accepted) return rejected(check.reasons);
-  return {
-    analysis: {
-      limitations: template.limitations.map((item, i) => ({
-        ...item,
-        vocational_impact: parsed.limitations[i].vocational_impact,
-      })),
-      combined_effect: parsed.combined_effect,
-      summary_argument: parsed.summary_argument,
-      job_types_precluded: template.job_types_precluded,
-    },
-    draftPath: DRAFT_PATH.MODEL,
-    draftNote: null,
-    draftRejectReasons: [],
-  };
-}
-
-/**
- * What a tool returns when the model could not answer at all (an engine
- * error, a timeout, the request limit): the app-built draft with the note,
- * and the error named in `draftErrorReason`.
- */
-export const draftAfterError = (error) => ({
-  draftPath: DRAFT_PATH.TEMPLATE,
-  draftNote: STANDARD_DRAFT_NOTE,
-  draftRejectReasons: [],
-  draftErrorReason:
-    (error instanceof Error ? error.message : String(error ?? "")) ||
-    "the AI did not answer",
-});
+export const errorReason = (error) =>
+  (error instanceof Error ? error.message : String(error ?? "")) ||
+  "the AI did not answer";
 
 /*
  * Passage rewording.
@@ -981,8 +653,8 @@ const PASSAGE_GROWTH_ALLOWANCE = 40;
 const MIN_NEW_WORDS_ALLOWED = 2;
 
 function passageProblems(original, rewrite, keep) {
-  const kind = classifyDraftKind(rewrite);
-  if (kind !== "draft" && kind !== "empty") return [`not a rewording: ${kind}`];
+  const kind = classifyReplyKind(rewrite);
+  if (kind !== "rewording") return [`not a rewording: ${kind}`];
 
   const problems = [];
   if (REDACTION_MARKER.test(rewrite))
@@ -1075,6 +747,17 @@ export function standardDraft(plan, extra = {}) {
     ...extra,
   };
 }
+
+/**
+ * The app-built draft when passages were sent and the model could not
+ * answer (engine error, timeout, request limit): `draftErrorReason` names
+ * the error, and `passages.sent` still says how many were asked about.
+ */
+export const draftAfterModelError = (plan, sent, error) =>
+  standardDraft(plan, {
+    passages: { ...NO_PASSAGES, sent: sent.length },
+    draftErrorReason: errorReason(error),
+  });
 
 /**
  * Settle a model reply for the passages that were sent (`sent`, as returned

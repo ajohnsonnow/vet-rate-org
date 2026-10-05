@@ -123,8 +123,12 @@ describe("dry run end to end", () => {
       expect(row.split(/(?<!\\)\|/)).toHaveLength(17);
     }
     expect(md).toContain("| t03 | enhanceFormStatement | template |");
+    expect(md).toMatch(/\| t07 \| writer \/ \? \| n\/a \|/);
     expect(md).toContain(
-      "| t02 | enhanceFormStatement | template | app-built draft returned (the model did not answer: WebGPU inference timed out after 300s) |",
+      "| t02 | enhanceFormStatement | template | app-built draft returned: 0 of 3 passages reworded, 0 unchanged, 0 rejected (the model did not answer: WebGPU inference timed out after 300s) |",
+    );
+    expect(md).toContain(
+      "| t04 | compileWitnessStatement | model | model rewording placed: 1 of 4 passages reworded, 3 unchanged, 0 rejected |",
     );
     expect(md).toContain("| t01 | writer / tool's own prompt | pass |");
     expect(md).toContain("| t04 | writer / writer | pass |");
@@ -153,20 +157,39 @@ describe("dry run tool cases", () => {
       draftPath: "model",
       draftNote: null,
       requestMatch: "matched",
+      passages: { sent: 3, accepted: 3, unchanged: 0, rejected: 0 },
     });
-    expect(byId.get("t03")).toMatchObject({
-      draftPath: "template",
-      draftRejectReasons: ["not a draft: refusal"],
-    });
-    expect(byId.get("t03").response).toContain(
-      "[how you have seen the condition affect the veteran's daily life]",
+    expect(byId.get("t01").response).toContain(
+      "To put it plainly, I miss about two shifts a month at the Placeholder warehouse.",
     );
     expect(byId.get("t02")).toMatchObject({
       draftPath: "template",
       draftErrorReason: "WebGPU inference timed out after 300s",
       error: null,
+      passages: { sent: 3, accepted: 0 },
     });
     expect(byId.get("t02").response).toContain("VA Form 21-0781");
+    expect(byId.get("t03")).toMatchObject({
+      draftPath: "template",
+      passages: { sent: 2, accepted: 0, rejected: 2 },
+    });
+    expect(byId.get("t03").response).toContain(
+      "[how you have seen the condition affect the veteran's daily life]",
+    );
+    expect(byId.get("t04").passages).toEqual({
+      sent: 4,
+      accepted: 1,
+      unchanged: 3,
+      rejected: 0,
+    });
+    expect(byId.get("t05").draftRejectReasons.join(" ")).toMatch(/2021/);
+    expect(byId.get("t05").response).not.toMatch(/2021/);
+    expect(byId.get("t07")).toMatchObject({
+      draftPath: "template",
+      engineRequests: 0,
+      requestMatch: "none",
+      passages: { sent: 0 },
+    });
     expect(byId.get("a07")).not.toHaveProperty("draftPath");
   });
 
