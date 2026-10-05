@@ -1111,7 +1111,8 @@ export const injectCalculatorForRater = (prompt, options) => {
 /**
  * After generation, compare a rater-routed response with the calculator. A
  * response that states a different combined rating, presents a bilateral
- * pair the calculator did not find, or (for a TDIU question) states a
+ * pair the calculator did not find, shows working the calculator did not
+ * produce, calls the computed block wrong, or (for a TDIU question) states a
  * percentage-threshold conclusion that contradicts 38 CFR § 4.16(a) as
  * evaluateTdiuThresholds applies it, is replaced by the calculator's own
  * working in plain language, plus the TDIU threshold paragraph when the
@@ -1153,6 +1154,8 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       stated: check.stated,
       inventedPairs: check.inventedPairs,
       deniedPairs: check.deniedPairs,
+      reworked: check.reworked,
+      disputes: check.disputes,
       ...(tdiuCheck?.contradicted
         ? { tdiuConclusion: tdiuCheck.sentences }
         : {}),
