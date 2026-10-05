@@ -44,7 +44,7 @@ export function checkRouting(caseDef, record) {
 }
 
 const STATED_COMBINED = new RegExp(
-  String.raw`\b(?:combined|overall|final|total)(?:[\s:=*~≈]|\b(?:va|disability|rating|evaluation|is|of|would|be|comes|to|equals|at|rounds|approximately|about|roughly)\b){1,12}?(\d{1,3}(?:\.\d+)?)\s*(?:%|percent)`,
+  String.raw`\b(?:combined|overall|final|total)(?:[\s:=*~≈]|\b(?:va|disability|rating|evaluation|is|of|would|be|comes|to|equals|at|rounds|approximately|about|roughly|percentage|calculation|results|in)\b){1,12}?(\d{1,3}(?:\.\d+)?)\s*(?:%|percent)`,
   "gi",
 );
 

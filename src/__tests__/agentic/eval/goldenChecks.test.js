@@ -106,6 +106,15 @@ describe("extractStatedCombinedRatings", () => {
   });
 });
 
+describe("extractStatedCombinedRatings shared fixture", () => {
+  const FIXTURE = JSON.parse(
+    readFileSync(join(here, "fixtures", "statedCombinedRatings.json"), "utf8"),
+  );
+  it.each(FIXTURE)("$name", ({ text, stated }) => {
+    expect(extractStatedCombinedRatings(text)).toEqual(stated);
+  });
+});
+
 describe("checkCalcMatch", () => {
   const a11 = () => byId("a11");
   const record = (response) => ({ response });

@@ -121,7 +121,7 @@ describe("Agentic harness - system-prompt fingerprints", () => {
     // auditor and rater prompts changed, writer did not.
     auditor: "7bc41250561491594b5db5c9bba70d1617bc0c9960f1454894d55cf6a1bc0f3e",
     writer: "6331e5c37386118743d25769b670bcf98f3d5b26744c2bdc9b80a0fef35df47c",
-    rater: "e2cd9c7b43a34194f5899a8eb08145d68260c5330324b65d02bd3f56b2798e71",
+    rater: "e407a769348acc823e4e2016a8b817292d86a0967389a9e7d825ecc2925984ac",
   };
 
   it("auditor prompt fingerprint is stable", () => {
@@ -200,6 +200,22 @@ describe("Agentic harness - lane rule present in prompts", () => {
     expect(SWARM_AGENTS.AUDITOR.systemPrompt).toMatch(/Rating Calculator/);
     expect(SWARM_AGENTS.AUDITOR.systemPrompt).toMatch(/Nexus Builder/);
     expect(SWARM_AGENTS.RATER.systemPrompt).toMatch(/Nexus Builder/);
+  });
+});
+
+describe("Agentic harness - rater treats the computed result as final", () => {
+  it("restates it exactly, explains it and never recomputes", () => {
+    const p = SWARM_AGENTS.RATER.systemPrompt;
+    expect(p).toMatch(/COMPUTED RESULT block/);
+    expect(p).toMatch(
+      /it is final: restate it exactly, explain it, never recompute it/,
+    );
+  });
+
+  it("rounds each combining step to a whole number and the final rating once", () => {
+    expect(SWARM_AGENTS.RATER.systemPrompt).toMatch(
+      /Round each combining step to a whole number, then the final rating once to the nearest 10%/,
+    );
   });
 });
 

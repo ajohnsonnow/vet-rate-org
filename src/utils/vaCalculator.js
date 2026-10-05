@@ -191,8 +191,15 @@ export const combineTwoRatings = (rating1, rating2) => {
 /**
  * Combine multiple ratings using VA math
  * Must sort descending and apply iteratively
+ *
+ * When `trail` (an array) is passed, each pairwise step is appended to it as
+ * { stage, from, with, result } so callers can show the working.
  */
-export const combineMultipleRatings = (ratings) => {
+export const combineMultipleRatings = (
+  ratings,
+  trail = null,
+  stage = "all",
+) => {
   if (ratings.length === 0) return 0;
   if (ratings.length === 1) return ratings[0];
 
@@ -201,7 +208,9 @@ export const combineMultipleRatings = (ratings) => {
 
   let combined = sorted[0];
   for (let i = 1; i < sorted.length; i++) {
-    combined = combineTwoRatings(combined, sorted[i]);
+    const result = combineTwoRatings(combined, sorted[i]);
+    if (trail) trail.push({ stage, from: combined, with: sorted[i], result });
+    combined = result;
   }
 
   return combined;
@@ -255,9 +264,13 @@ export const calculateBilateralFactor = (bilateralRatings) => {
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none', bodyPart: string }
  * @returns {Object} - Calculation results
  */
-function _calculateBilateralGroup(bilateralConditions, steps) {
+function _calculateBilateralGroup(bilateralConditions, steps, trail) {
   const bilateralRatings = bilateralConditions.map((c) => c.rating);
-  const combinedBilateral = combineMultipleRatings(bilateralRatings);
+  const combinedBilateral = combineMultipleRatings(
+    bilateralRatings,
+    trail,
+    "bilateral",
+  );
 
   // Calculate bilateral factor (10% of combined)
   const bilateralFactor = Math.round(combinedBilateral * 0.1 * 10) / 10;
@@ -330,12 +343,14 @@ export const calculateVARating = (conditions) => {
       bilateralGroupRating: 0,
       nonBilateralConditions: [],
       calculationSteps: [],
+      combineSteps: [],
       gapToNext10: 0,
       ratingNeededFor100: 0,
     };
   }
 
   const steps = [];
+  const combineSteps = [];
 
   // Separate bilateral and non-bilateral conditions.
   // Per §4.26 the bilateral factor requires an actual PAIR of compensable
@@ -373,6 +388,7 @@ export const calculateVARating = (conditions) => {
     ({ bilateralFactor, bilateralGroupRating } = _calculateBilateralGroup(
       bilateralConditions,
       steps,
+      combineSteps,
     ));
 
     // Add bilateral group as single rating
@@ -392,7 +408,7 @@ export const calculateVARating = (conditions) => {
   });
 
   // Calculate combined rating
-  const rawScore = combineMultipleRatings(allRatings);
+  const rawScore = combineMultipleRatings(allRatings, combineSteps, "all");
   const combinedRating = roundToNearest10(rawScore);
 
   steps.push(
@@ -410,6 +426,7 @@ export const calculateVARating = (conditions) => {
     bilateralGroupRating,
     nonBilateralConditions: nonBilateralConditions.map((c) => ({ ...c })),
     calculationSteps: steps,
+    combineSteps,
     gapToNext10: Math.round(gapToNext10 * 10) / 10,
     nextTier,
     ratingNeededFor100,

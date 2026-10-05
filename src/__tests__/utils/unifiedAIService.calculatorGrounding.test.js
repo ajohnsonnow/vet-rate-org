@@ -351,3 +351,108 @@ describe("rater grounding: calculator parity, redaction and wllama", () => {
     expect(countBlocks(wllamaService.chatCompletion.mock.calls[0][0])).toBe(1);
   });
 });
+
+describe("rater grounding: the computed block carries the full working", () => {
+  it("lists each combining step, the raw value and the single final rounding", async () => {
+    await BACKENDS.swarm.setup();
+    await generateAI(
+      "What is my combined rating?",
+      callOptions({
+        toolId: "rating-calculator",
+        conditions: [
+          { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
+          { name: "Tinnitus", rating: 30, side: "none", bodyPart: "ear" },
+          { name: "Back", rating: 20, side: "none", bodyPart: "back" },
+          { name: "Knee", rating: 10, side: "none", bodyPart: "knee" },
+        ],
+      }),
+    );
+
+    const sent = BACKENDS.swarm.sent();
+    expect(sent).toContain("Step 1: 50% combined with 30% = 65%");
+    expect(sent).toContain("Step 2: 65% combined with 20% = 72%");
+    expect(sent).toContain("Step 3: 72% combined with 10% = 75%");
+    expect(sent).toContain("Combined value before final rounding: 75%");
+    expect(sent).toContain("Combined rating: 80%");
+    expect(sent).toContain("Bilateral pair: none");
+  });
+});
+
+describe("rater grounding: a response that contradicts the calculator is replaced", () => {
+  const FOUR = [
+    { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
+    { name: "Tinnitus", rating: 30, side: "none", bodyPart: "ear" },
+    { name: "Back", rating: 20, side: "none", bodyPart: "back" },
+    { name: "Knee", rating: 10, side: "none", bodyPart: "knee" },
+  ];
+  const ask = (text, extra = {}) => {
+    diamondSwarm.generateWithSwarm.mockResolvedValue({ text });
+    return generateAI(
+      "What is my combined rating?",
+      callOptions({ toolId: "rating-calculator", conditions: FOUR, ...extra }),
+    );
+  };
+
+  beforeEach(async () => {
+    await BACKENDS.swarm.setup();
+  });
+
+  it("leaves a response that restates the calculator's figure untouched", async () => {
+    const result = await ask("Your combined rating is 80%. Hope that helps.");
+    expect(result.text).toBe("Your combined rating is 80%. Hope that helps.");
+    expect(result.calculatorReplacement).toBeUndefined();
+    expect(result.validationWarnings).toBeUndefined();
+  });
+
+  it("replaces a different final rating with the calculator's working and records it", async () => {
+    const result = await ask(
+      "Your combined rating is 80%. On reflection, the final combined disability rating is 70%.",
+    );
+    expect(result.text).toContain("Your combined rating is 80%.");
+    expect(result.text).toContain("Step 3: 72% combined with 10% = 75%");
+    expect(result.text).not.toContain("On reflection");
+    expect(result.calculatorReplacement).toMatchObject({
+      expected: 80,
+      stated: [80, 70],
+    });
+    expect(result.validationWarnings).toEqual([
+      expect.stringContaining("replaced with the calculator's working"),
+    ]);
+  });
+
+  it("replaces a response that invents a bilateral pair the calculator did not find", async () => {
+    const result = await ask(
+      "Your combined rating is 80%.\nPTSD (Left Brain) + Tinnitus (Right Ear) is a valid bilateral pair.",
+    );
+    expect(result.text).toContain("No bilateral pair applies");
+    expect(result.calculatorReplacement.inventedPairs).toHaveLength(1);
+    expect(result.validationWarnings[0]).toContain("bilateral pair");
+  });
+
+  it("records the replacement in validationWarnings when response validation is on", async () => {
+    const result = await ask("The final combined rating is 100%.", {
+      skipValidation: false,
+      loadedRegulations: [],
+    });
+    expect(result.calculatorReplacement.expected).toBe(80);
+    expect(Array.isArray(result.validationWarnings)).toBe(true);
+    expect(
+      result.validationWarnings.some((w) => w.includes("calculator's working")),
+    ).toBe(true);
+  });
+
+  it("does not touch a non-rater route even when the figure is wrong", async () => {
+    const result = await ask("The final combined rating is 70%.", {
+      toolId: "cfile-analyzer",
+    });
+    expect(result.text).toBe("The final combined rating is 70%.");
+    expect(result.calculatorReplacement).toBeUndefined();
+  });
+
+  it("does not touch a rater route that has no structured conditions", async () => {
+    const result = await ask("The final combined rating is 70%.", {
+      conditions: undefined,
+    });
+    expect(result.text).toBe("The final combined rating is 70%.");
+  });
+});

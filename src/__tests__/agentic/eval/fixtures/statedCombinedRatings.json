@@ -1,0 +1,47 @@
+[
+  {
+    "name": "stated figure with inputs listed",
+    "text": "Inputs: 50% PTSD, 30% tinnitus. Combined rating: **80%**.",
+    "stated": [80]
+  },
+  {
+    "name": "percent spelled out",
+    "text": "Your combined disability rating is 70 percent",
+    "stated": [70]
+  },
+  {
+    "name": "hedged overall figure",
+    "text": "overall rating of about 60%",
+    "stated": [60]
+  },
+  {
+    "name": "distinct figures once each, in order",
+    "text": "combined rating is 60%. Another tool shows a combined rating of 70%. Combined rating is 60%.",
+    "stated": [60, 70]
+  },
+  {
+    "name": "no figure follows",
+    "text": "combined with the bilateral factor",
+    "stated": []
+  },
+  {
+    "name": "decimal figure",
+    "text": "The final combined rating is 74.8% before rounding.",
+    "stated": [74.8]
+  },
+  {
+    "name": "baseline a11: restates the right figure, then a wrong final",
+    "text": "Based on the data provided, your combined disability rating is 80%. ... The final combined disability rating is **70%**.",
+    "stated": [80, 70]
+  },
+  {
+    "name": "baseline a13: wrong figure phrased as a calculation result and a percentage",
+    "text": "Given that the combined rating calculation results in 100%, ... You are eligible for a TDIU rating with a combined disability percentage of 100%.",
+    "stated": [100]
+  },
+  {
+    "name": "intermediate combine steps carry no trigger word",
+    "text": "50% with 30% gives 65%, then 65% with 20% gives 72%.",
+    "stated": []
+  }
+]

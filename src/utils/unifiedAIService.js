@@ -51,6 +51,12 @@ import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
 import {
+  buildCalculatorExplanation,
+  buildComputedResultBlock,
+  checkRaterResponse,
+  describeMismatch,
+} from "./raterGrounding";
+import {
   AI_DATA_CLASS,
   resolveDataClass,
   isLoopbackHost,
@@ -1090,22 +1096,43 @@ export const injectCalculatorForRater = (prompt, options) => {
     return prompt;
   }
 
-  const result = calculateVARating(options.conditions);
-  const pairSummary = result.bilateralConditions.length
-    ? result.bilateralConditions
-        .map((c) => `${c.name} (${c.side}, ${c.rating}%)`)
-        .join(", ")
-    : "none";
-
   return (
-    prompt +
-    `\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 - already calculated, do not recompute) ===
-Bilateral pair: ${pairSummary}
-Bilateral group rating: ${result.bilateralGroupRating || "n/a"}
-Combined rating: ${result.combinedRating}%
-Restate and explain this result. Do not perform your own bilateral-factor arithmetic or invent a different pairing.
-=== END COMPUTED RESULT ===\n`
+    prompt + buildComputedResultBlock(calculateVARating(options.conditions))
   );
+};
+
+/**
+ * After generation, compare a rater-routed response with the calculator. A
+ * response that states a different combined rating, or presents a bilateral
+ * pair the calculator did not find, is replaced by the calculator's own
+ * working in plain language. The replacement is recorded on the result
+ * (validationWarnings, plus calculatorReplacement) so callers can see it
+ * happened.
+ */
+export const enforceCalculatorOnResult = (result, options) => {
+  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
+    return result;
+  }
+  const calc = calculateVARating(options.conditions);
+  const check = checkRaterResponse(result.text, calc);
+  if (check.ok) return result;
+
+  const reason = describeMismatch(check);
+  console.warn(`🧮 Rater response replaced by calculator working: ${reason}`);
+  return {
+    ...result,
+    text: buildCalculatorExplanation(calc),
+    validationWarnings: [
+      ...(result.validationWarnings || []),
+      `Response replaced with the calculator's working: ${reason}`,
+    ],
+    calculatorReplacement: {
+      reason,
+      expected: check.expected,
+      stated: check.stated,
+      inventedPairs: check.inventedPairs,
+    },
+  };
 };
 
 /**
@@ -2914,6 +2941,25 @@ const generateAIInternal = async (prompt, options = {}) => {
       ? [builtSystemPrompt, builtUserPrompt]
       : await _redactPiecesForSend([builtSystemPrompt, builtUserPrompt]);
 
+  const result = await _dispatchWithRecovery(
+    effectiveMode,
+    systemPrompt,
+    userPrompt,
+    enhancedOptions,
+    options,
+  );
+  return _isRaterRoute(options, effectiveMode)
+    ? enforceCalculatorOnResult(result, options)
+    : result;
+};
+
+async function _dispatchWithRecovery(
+  effectiveMode,
+  systemPrompt,
+  userPrompt,
+  enhancedOptions,
+  options,
+) {
   try {
     const {
       text: dispatchedText,
@@ -2957,7 +3003,7 @@ const generateAIInternal = async (prompt, options = {}) => {
       enhancedOptions,
     );
   }
-};
+}
 
 // Ordered [substring, friendly name] pairs - first match wins, so more
 // specific patterns (e.g. a particular size/variant) must precede their

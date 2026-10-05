@@ -1,0 +1,236 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { calculateVARating } from "../../utils/vaCalculator";
+import {
+  buildCalculatorExplanation,
+  buildComputedResultBlock,
+  checkRaterResponse,
+  extractStatedCombinedRatings,
+  findInventedBilateralClaims,
+  formatCalculatorWorking,
+} from "../../utils/raterGrounding";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const FIXTURE = JSON.parse(
+  readFileSync(
+    join(
+      here,
+      "..",
+      "agentic",
+      "eval",
+      "fixtures",
+      "statedCombinedRatings.json",
+    ),
+    "utf8",
+  ),
+);
+
+const cond = (name, rating, side = "none", bodyPart = name.toLowerCase()) => ({
+  name,
+  rating,
+  side,
+  bodyPart,
+});
+
+const FOUR = [
+  cond("PTSD", 50, "none", "mental"),
+  cond("Tinnitus", 30, "none", "ear"),
+  cond("Back", 20, "none", "back"),
+  cond("Knee", 10, "none", "knee"),
+];
+const KNEES = [
+  cond("Lumbar strain", 40),
+  cond("Left knee strain", 30, "left", "knee"),
+  cond("Right knee strain", 20, "right", "knee"),
+];
+
+describe("extractStatedCombinedRatings (shared fixture with scripts/eval/lib/goldenChecks.js)", () => {
+  it.each(FIXTURE)("$name", ({ text, stated }) => {
+    expect(extractStatedCombinedRatings(text)).toEqual(stated);
+  });
+});
+
+describe("formatCalculatorWorking", () => {
+  it("shows every step, the raw value and the single final rounding for 50/30/20/10", () => {
+    const lines = formatCalculatorWorking(calculateVARating(FOUR));
+    expect(lines).toContain("  Step 1: 50% combined with 30% = 65%");
+    expect(lines).toContain("  Step 2: 65% combined with 20% = 72%");
+    expect(lines).toContain("  Step 3: 72% combined with 10% = 75%");
+    expect(lines).toContain("Combined value before final rounding: 75%");
+    expect(lines.at(-1)).toMatch(/38 CFR § 4\.25\(b\)\): 80%$/);
+  });
+
+  it("shows the bilateral group working and carries the group rating into the combine", () => {
+    const text = formatCalculatorWorking(calculateVARating(KNEES)).join("\n");
+    expect(text).toContain(
+      "Bilateral group (Left knee strain and Right knee strain",
+    );
+    expect(text).toContain("  30% combined with 20% = 44%");
+    expect(text).toContain("10% of 44% = 4.4, so the group rating is 48%");
+    expect(text).toContain("Step 1: 48% combined with 40% = 69%");
+    expect(text).toContain("38 CFR § 4.25(b)): 70%");
+  });
+
+  it("says there is nothing to combine for a single rating", () => {
+    const text = formatCalculatorWorking(
+      calculateVARating([cond("PTSD", 100)]),
+    ).join("\n");
+    expect(text).toContain("nothing to combine");
+    expect(text).toContain("100%");
+  });
+});
+
+describe("buildComputedResultBlock", () => {
+  it("keeps the markers and the existing lines the evaluation runner and tests read", () => {
+    const block = buildComputedResultBlock(calculateVARating(KNEES));
+    expect(block).toContain(
+      "=== COMPUTED RESULT (38 CFR § 4.25/4.26 - already calculated, do not recompute) ===",
+    );
+    expect(block).toContain("=== END COMPUTED RESULT ===");
+    expect(block).toContain(
+      "Bilateral pair: Left knee strain (left, 30%), Right knee strain (right, 20%)",
+    );
+    expect(block).toContain("Bilateral group rating: 48");
+    expect(block).toContain("Combined rating: 70%");
+    expect(block).toContain("This result is final. Restate it exactly");
+    expect(block).toContain("Never recompute it");
+  });
+});
+
+describe("checkRaterResponse", () => {
+  const four = calculateVARating(FOUR);
+
+  it("accepts a response that restates the calculator's figure", () => {
+    expect(checkRaterResponse("Your combined rating is 80%.", four).ok).toBe(
+      true,
+    );
+  });
+
+  it("accepts a response that states no combined figure", () => {
+    expect(
+      checkRaterResponse("Here is how VA combines ratings.", four).ok,
+    ).toBe(true);
+  });
+
+  it("flags a different final rating (baseline a11: 80 restated, then 70)", () => {
+    const out = checkRaterResponse(
+      "Your combined disability rating is 80%. ... The final combined disability rating is **70%**.",
+      four,
+    );
+    expect(out.ok).toBe(false);
+    expect(out.wrongFigures).toEqual([70]);
+  });
+
+  it("flags a final rating phrased as a calculation result (baseline a13)", () => {
+    const rated = calculateVARating([
+      cond("Condition 1", 60),
+      cond("Condition 2", 20),
+      cond("Condition 3", 20),
+      cond("Condition 4", 20),
+    ]);
+    expect(rated.combinedRating).toBe(80);
+    const out = checkRaterResponse(
+      "Given that the combined rating calculation results in 100%, you are eligible.",
+      rated,
+    );
+    expect(out.ok).toBe(false);
+    expect(out.wrongFigures).toEqual([100]);
+  });
+
+  it("flags an unrounded figure that is not part of the working", () => {
+    const out = checkRaterResponse("The final combined rating is 74.8%.", four);
+    expect(out.ok).toBe(false);
+  });
+
+  it("does not treat the calculator's own intermediate values as final claims", () => {
+    expect(
+      checkRaterResponse(
+        "The combined value before rounding is 75%. The final rating is 80%.",
+        four,
+      ).ok,
+    ).toBe(true);
+  });
+
+  it("flags a wrong multiple of 10 even when it equals no working value", () => {
+    const sixty = calculateVARating([cond("A", 40), cond("B", 30)]);
+    expect(sixty.combinedRating).toBe(60);
+    expect(checkRaterResponse("The final rating is 60%.", sixty).ok).toBe(true);
+    expect(checkRaterResponse("The final rating is 50%.", sixty).ok).toBe(
+      false,
+    );
+  });
+
+  it("ignores a sentence that only states a cap", () => {
+    expect(
+      checkRaterResponse(
+        "Your combined rating is 80%. The maximum combined rating is 100%.",
+        four,
+      ).ok,
+    ).toBe(true);
+  });
+});
+
+describe("checkRaterResponse bilateral claims", () => {
+  const four = calculateVARating(FOUR);
+
+  it("flags an invented bilateral pair when the calculator found none (baseline a11)", () => {
+    const out = checkRaterResponse(
+      "Your combined rating is 80%.\n- **PTSD (Left Brain) + Tinnitus (Right Ear):** This would be a valid bilateral pair.",
+      four,
+    );
+    expect(out.ok).toBe(false);
+    expect(out.inventedPairs).toHaveLength(1);
+    expect(out.wrongFigures).toEqual([]);
+  });
+
+  it("does not flag statements that no bilateral pair exists", () => {
+    const text = [
+      "Bilateral pair: none",
+      "Since none of the conditions are paired bilaterally, the bilateral factor does not apply.",
+      "The bilateral factor is not applicable to PTSD or Tinnitus.",
+      "Bilateral means the same body part on both sides.",
+      "Your combined rating is 80%.",
+    ].join("\n");
+    expect(findInventedBilateralClaims(text, four)).toEqual([]);
+    expect(checkRaterResponse(text, four).ok).toBe(true);
+  });
+
+  it("accepts the real pair and flags a pair built from other conditions", () => {
+    const knees = calculateVARating(KNEES);
+    const good =
+      "The bilateral pair is Left knee strain and Right knee strain, giving 48%. Combined rating: 70%.";
+    expect(checkRaterResponse(good, knees).ok).toBe(true);
+    const bad =
+      "The bilateral pair is Lumbar strain and the knees. Combined rating: 70%.";
+    expect(checkRaterResponse(bad, knees).ok).toBe(false);
+  });
+});
+
+describe("buildCalculatorExplanation", () => {
+  it("states the calculator's figure and working, and says the draft was not shown", () => {
+    const text = buildCalculatorExplanation(calculateVARating(FOUR));
+    expect(text).toContain("did not match Vet-Rate's calculator");
+    expect(text).toContain("Your combined rating is 80%.");
+    expect(text).toContain("Step 3: 72% combined with 10% = 75%");
+    expect(text).toContain("No bilateral pair applies");
+  });
+
+  it("names the pair when the calculator found one", () => {
+    const text = buildCalculatorExplanation(calculateVARating(KNEES));
+    expect(text).toContain(
+      "applies to Left knee strain (left, 30%), Right knee strain (right, 20%)",
+    );
+    expect(text).toContain("Your combined rating is 70%.");
+  });
+
+  it("is itself consistent with the check, so it is never replaced again", () => {
+    for (const set of [FOUR, KNEES, [cond("PTSD", 100)]]) {
+      const calc = calculateVARating(set);
+      expect(
+        checkRaterResponse(buildCalculatorExplanation(calc), calc).ok,
+      ).toBe(true);
+    }
+  });
+});
