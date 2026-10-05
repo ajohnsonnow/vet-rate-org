@@ -10,6 +10,8 @@ import {
   BASE_SYSTEM_PROMPT,
   ANTI_HALLUCINATION_SUFFIX,
   buildSystemPrompt,
+  CFILE_ANALYSIS_SYSTEM_PROMPT,
+  RATING_CRITERIA_SYSTEM_PROMPT,
 } from "../../utils/aiSystemPrompts";
 
 describe("buildSystemPrompt - calculated NGB-22 entry date", () => {
@@ -471,5 +473,34 @@ describe("ANTI_HALLUCINATION_SUFFIX - content guarantees", () => {
   it("lists FORBIDDEN responses examples", () => {
     expect(ANTI_HALLUCINATION_SUFFIX).toContain("FORBIDDEN RESPONSES");
     expect(ANTI_HALLUCINATION_SUFFIX).toContain("75% chance");
+  });
+});
+
+describe("buildSystemPrompt - base prompt is sent exactly once", () => {
+  const MARKER = "INSTRUCTION-vs-DATA RULE (LETHAL-TRIFECTA DEFENSE)";
+  const countOf = (text) => text.split(MARKER).length - 1;
+
+  it.each([
+    "general",
+    "cfile",
+    "nexus",
+    "statement",
+    "decision",
+    "buddy",
+    "rating",
+  ])("includes the base prompt once for task=%s", (task) => {
+    const prompt = buildSystemPrompt({ task });
+    expect(countOf(prompt)).toBe(1);
+  });
+
+  it("keeps the task-specific instructions for every task", () => {
+    expect(buildSystemPrompt({ task: "cfile" })).toContain(
+      "ADDITIONAL CONTEXT FOR C-FILE ANALYSIS",
+    );
+  });
+
+  it("leaves the exported task constants standalone (base included)", () => {
+    expect(countOf(CFILE_ANALYSIS_SYSTEM_PROMPT)).toBe(1);
+    expect(countOf(RATING_CRITERIA_SYSTEM_PROMPT)).toBe(1);
   });
 });

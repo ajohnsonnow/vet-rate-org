@@ -896,6 +896,14 @@ function buildVeteranDataPrompt(veteranContext) {
   return prompt;
 }
 
+// Task prompts embed BASE_SYSTEM_PROMPT so they work standalone; buildSystemPrompt
+// already added it, and a small on-device context window can't afford a second copy.
+function withoutBasePrefix(taskPrompt) {
+  return taskPrompt.startsWith(BASE_SYSTEM_PROMPT)
+    ? taskPrompt.slice(BASE_SYSTEM_PROMPT.length)
+    : "\n\n" + taskPrompt;
+}
+
 /**
  * Function to build complete system prompt with veteran's data
  * Now includes full Vet-Rate.org context, key regulations, and veteran's My Packet data
@@ -930,22 +938,22 @@ export function buildSystemPrompt(options = {}) {
   // Add task-specific prompt (append to context, don't replace)
   switch (task) {
     case "cfile":
-      systemPrompt += "\n\n" + CFILE_ANALYSIS_SYSTEM_PROMPT;
+      systemPrompt += withoutBasePrefix(CFILE_ANALYSIS_SYSTEM_PROMPT);
       break;
     case "nexus":
-      systemPrompt += "\n\n" + NEXUS_BUILDER_SYSTEM_PROMPT;
+      systemPrompt += withoutBasePrefix(NEXUS_BUILDER_SYSTEM_PROMPT);
       break;
     case "statement":
-      systemPrompt += "\n\n" + STATEMENT_BUILDER_SYSTEM_PROMPT;
+      systemPrompt += withoutBasePrefix(STATEMENT_BUILDER_SYSTEM_PROMPT);
       break;
     case "decision":
-      systemPrompt += "\n\n" + DECISION_DECODER_SYSTEM_PROMPT;
+      systemPrompt += withoutBasePrefix(DECISION_DECODER_SYSTEM_PROMPT);
       break;
     case "buddy":
-      systemPrompt += "\n\n" + BUDDY_STATEMENT_SYSTEM_PROMPT;
+      systemPrompt += withoutBasePrefix(BUDDY_STATEMENT_SYSTEM_PROMPT);
       break;
     case "rating":
-      systemPrompt += "\n\n" + RATING_CRITERIA_SYSTEM_PROMPT;
+      systemPrompt += withoutBasePrefix(RATING_CRITERIA_SYSTEM_PROMPT);
       break;
   }
 
