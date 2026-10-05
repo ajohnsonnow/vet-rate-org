@@ -404,9 +404,7 @@ describe("the notice and the recorded reason say what fired", () => {
     );
   });
 
-  it("the default notice, with no check supplied, is the combined-rating wording", () => {
-    expect(buildReplacementNotice()).toContain(
-      "did not match Vet-Rate's calculator",
-    );
+  it("with no check supplied there is no notice", () => {
+    expect(buildReplacementNotice()).toBe("");
   });
 });

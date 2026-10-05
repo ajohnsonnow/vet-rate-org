@@ -289,7 +289,10 @@ describe("checkRaterResponse bilateral claims", () => {
 
 describe("buildCalculatorExplanation", () => {
   it("states the calculator's figure and working, and says the draft was not shown", () => {
-    const text = buildCalculatorExplanation(calculateVARating(FOUR));
+    const calc = calculateVARating(FOUR);
+    const text = buildCalculatorExplanation(calc, {
+      check: checkRaterResponse("Your combined rating is 70%.", calc),
+    });
     expect(text).toContain("did not match Vet-Rate's calculator");
     expect(text).toContain("Your combined rating is 80%.");
     expect(text).toContain("Step 3: 72% combined with 10% = 75%");

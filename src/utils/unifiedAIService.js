@@ -1193,7 +1193,6 @@ function leadWithCalculatorWorking(result, calc, asksTdiu, question) {
   const working = buildCalculatorExplanation(calc, {
     tdiu: asksTdiu,
     question,
-    withNotice: false,
   });
   const dropped = _commentaryDropReasons(result, commentary, calc, asksTdiu);
   const commentaryKept =

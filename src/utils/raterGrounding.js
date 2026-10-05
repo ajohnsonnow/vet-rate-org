@@ -418,8 +418,16 @@ const isNotOwnRating = (sentence, calc) =>
  * threshold is not reached or is needed, the 38 CFR § 4.16(a) figures are the
  * threshold, not the veteran's rating.
  */
+// "combined >=70%", "combined at least 70%": a bound, not a rating.
+const isBound = (sentence, v) =>
+  new RegExp(String.raw`(?:>=|≥|>|at least) ?\**${v} ?(?:%|percent)`, "i").test(
+    sentence,
+  );
+
 function statedInSentence(sentence) {
-  const figures = extractStatedCombinedRatings(sentence);
+  const figures = extractStatedCombinedRatings(sentence).filter(
+    (v) => !isBound(sentence, v),
+  );
   const namesThreshold =
     mentionsAny(sentence, RATING_THRESHOLD_WORDS) &&
     (NEGATION.test(sentence) || mentionsAny(sentence, NEED_WORDS));
@@ -683,11 +691,18 @@ function classifyStatedFigures(stated, calc) {
   const working = workingValues(calc);
   const consistent = consistentValues(calc);
   const statesARating = stated.some((v) => v % 10 === 0);
+  const reachesRating = stated.includes(calc.combinedRating);
+  const entered = new Set(calcConditions(calc).map((c) => c.rating));
   const others = stated.filter((v) => v !== calc.combinedRating);
   const steps = others.filter((v) => v % 10 !== 0 && !working.has(v));
+  // "30% combined with the group rating of 21%" names a rating being
+  // combined. In a draft that goes on to state the right rating, that figure
+  // is an input, not the draft's answer.
+  const isInput = (v) => reachesRating && entered.has(v);
   return {
     wrongFigures: others.filter(
-      (v) => v % 10 === 0 || (steps.includes(v) && !statesARating),
+      (v) =>
+        (v % 10 === 0 && !isInput(v)) || (steps.includes(v) && !statesARating),
     ),
     strayStepFigures: statesARating
       ? steps.filter((v) => !consistent.has(v))
@@ -716,13 +731,7 @@ export function checkRaterResponse(text, calc) {
     ]),
   ];
   const disputes = findCalculatorDisputes(text);
-  return {
-    ok:
-      wrongFigures.length === 0 &&
-      inventedPairs.length === 0 &&
-      deniedPairs.length === 0 &&
-      reworked.length === 0 &&
-      disputes.length === 0,
+  const result = {
     expected: calc.combinedRating,
     stated,
     wrongFigures,
@@ -732,71 +741,83 @@ export function checkRaterResponse(text, calc) {
     reworked,
     disputes,
   };
+  const failed = failedRaterChecks(result);
+  return { ok: failed.length === 0, failed, ...result };
 }
 
-export function describeMismatch(check, tdiuCheck = null) {
-  const parts = [];
-  if (check.wrongFigures.length > 0) {
-    const quote = (check.wrongFigureSentences ?? []).find(Boolean);
-    parts.push(
-      `stated combined rating ${check.wrongFigures.join("%, ")}% but the calculator gives ${check.expected}%${
-        quote ? ` (from: "${quote.slice(0, 140)}")` : ""
-      }`,
-    );
-  }
-  if (check.inventedPairs.length > 0) {
-    parts.push("presented a bilateral pair the calculator did not find");
-  }
-  if (check.deniedPairs?.length > 0) {
-    parts.push("denied the bilateral pair the calculator found");
-  }
-  if (check.reworked?.length > 0) {
-    parts.push(
-      `showed working the calculator did not produce (from: "${check.reworked[0].slice(0, 140)}")`,
-    );
-  }
-  if (check.disputes?.length > 0) {
-    parts.push(
-      `disputed the computed result (from: "${check.disputes[0].slice(0, 140)}")`,
-    );
-  }
-  if (tdiuCheck?.contradicted) {
+/**
+ * Every check a rater draft can fail, with the one fixed sentence the veteran
+ * is given for it. The notice is built from this table and from nothing else,
+ * so it cannot give a reason that no check found.
+ */
+export const RATER_CHECK_SENTENCES = Object.freeze({
+  wrongFigure:
+    "stated a combined rating that did not match Vet-Rate's calculator",
+  inventedPair:
+    "described a bilateral pairing that did not match Vet-Rate's calculator",
+  deniedPair: "denied a bilateral pairing that Vet-Rate's calculator found",
+  reworked: "showed working that did not match Vet-Rate's calculator",
+  dispute: "questioned the result from Vet-Rate's calculator",
+  tdiuConclusion:
+    "gave a TDIU conclusion that did not match the percentage thresholds of 38 CFR § 4.16(a) applied to the ratings you entered",
+});
+
+const CHECK_FAILED = {
+  wrongFigure: (check) => check?.wrongFigures?.length > 0,
+  inventedPair: (check) => check?.inventedPairs?.length > 0,
+  deniedPair: (check) => check?.deniedPairs?.length > 0,
+  reworked: (check) => check?.reworked?.length > 0,
+  dispute: (check) => check?.disputes?.length > 0,
+  tdiuConclusion: (_check, tdiuCheck) => tdiuCheck?.contradicted === true,
+};
+
+/**
+ * The ids of the checks that failed, in the order of RATER_CHECK_SENTENCES.
+ * This list is the single source for whether a draft is replaced, for the
+ * notice shown and for the reason recorded.
+ */
+export function failedRaterChecks(check = null, tdiuCheck = null) {
+  return Object.keys(RATER_CHECK_SENTENCES).filter((id) =>
+    CHECK_FAILED[id](check, tdiuCheck),
+  );
+}
+
+const quoted = (text) => (text ? ` (from: "${text.slice(0, 140)}")` : "");
+
+const MISMATCH_DETAIL = {
+  wrongFigure: (check) =>
+    `stated combined rating ${check.wrongFigures.join("%, ")}% but the calculator gives ${check.expected}%${quoted(
+      (check.wrongFigureSentences ?? []).find(Boolean),
+    )}`,
+  inventedPair: () => "presented a bilateral pair the calculator did not find",
+  deniedPair: () => "denied the bilateral pair the calculator found",
+  reworked: (check) =>
+    `showed working the calculator did not produce${quoted(check.reworked[0])}`,
+  dispute: (check) =>
+    `disputed the computed result${quoted(check.disputes[0])}`,
+  tdiuConclusion: (_check, tdiuCheck) => {
     const { eligible, highest, combined } = tdiuCheck.thresholds;
     const said = tdiuCheck.direction === "denies" ? "not met" : "met";
     const is = eligible ? "are met" : "are not met";
-    parts.push(
-      `said the 38 CFR § 4.16(a) percentage thresholds are ${said} but they ${is} (highest rating ${highest}%, combined ${combined}%)`,
-    );
-  }
-  return parts.join("; ");
+    return `said the 38 CFR § 4.16(a) percentage thresholds are ${said} but they ${is} (highest rating ${highest}%, combined ${combined}%)`;
+  },
+};
+
+/** The recorded reason: one detailed clause per failed check. */
+export function describeMismatch(check, tdiuCheck = null) {
+  return failedRaterChecks(check, tdiuCheck)
+    .map((id) => MISMATCH_DETAIL[id](check, tdiuCheck))
+    .join("; ");
 }
 
-const NOTICE_FIGURES =
-  "stated a combined rating that did not match Vet-Rate's calculator";
-const NOTICE_PAIR =
-  "described a bilateral pairing that did not match Vet-Rate's calculator";
-const NOTICE_DENIED_PAIR =
-  "denied a bilateral pairing that Vet-Rate's calculator found";
-const NOTICE_WORKING =
-  "showed working that did not match Vet-Rate's calculator";
-const NOTICE_DISPUTE = "questioned the result from Vet-Rate's calculator";
-const NOTICE_TDIU =
-  "gave a TDIU conclusion that did not match the percentage thresholds of 38 CFR § 4.16(a) applied to the ratings you entered";
-
 /**
- * The sentence shown to the veteran when an answer is replaced. It names only
- * what actually fired. With no check supplied it is the combined-rating
- * wording, the original reason for replacement.
+ * The sentence shown to the veteran when a draft is replaced: the fixed
+ * sentence of each check that failed, and no other. Empty when none failed.
  */
 export function buildReplacementNotice(check = null, tdiuCheck = null) {
-  const reasons = [];
-  if (!check || check.wrongFigures.length > 0) reasons.push(NOTICE_FIGURES);
-  if (check?.inventedPairs.length > 0) reasons.push(NOTICE_PAIR);
-  if (check?.deniedPairs?.length > 0) reasons.push(NOTICE_DENIED_PAIR);
-  if (check?.reworked?.length > 0) reasons.push(NOTICE_WORKING);
-  if (check?.disputes?.length > 0) reasons.push(NOTICE_DISPUTE);
-  if (tdiuCheck?.contradicted) reasons.push(NOTICE_TDIU);
-  if (reasons.length === 0) reasons.push("did not match Vet-Rate's calculator");
+  const failed = failedRaterChecks(check, tdiuCheck);
+  if (failed.length === 0) return "";
+  const reasons = failed.map((id) => RATER_CHECK_SENTENCES[id]);
   return `The AI's draft answer ${reasons.join(" and ")}, so it is not shown. This is the calculator's working for the ratings you entered.`;
 }
 
@@ -1152,21 +1173,15 @@ const pairFindingIsRelevant = (calc, question) =>
 
 /**
  * Plain-language answer built only from the calculator's working: shown in
- * place of a draft that contradicts it (with the notice saying why), and as
- * the lead of every rating answer (`withNotice: false`). For a TDIU question
+ * place of a draft that failed a check (opening with the notice that says
+ * which), and as the lead of every rating answer (no check, so no notice). For a TDIU question
  * the threshold paragraph comes right after the combined rating, ahead of the
  * working, because it is what was asked. `question` is the veteran's text and
  * decides only whether the no-pair finding is worth saying.
  */
 export function buildCalculatorExplanation(
   calc,
-  {
-    tdiu = false,
-    check = null,
-    tdiuCheck = null,
-    question = null,
-    withNotice = true,
-  } = {},
+  { tdiu = false, check = null, tdiuCheck = null, question = null } = {},
 ) {
   const draftRaisedPairing =
     check?.inventedPairs?.length > 0 || check?.deniedPairs?.length > 0;
@@ -1179,7 +1194,7 @@ export function buildCalculatorExplanation(
     .filter(Boolean)
     .join(" ");
   return [
-    withNotice ? buildReplacementNotice(check, tdiuCheck) : "",
+    buildReplacementNotice(check, tdiuCheck),
     `Your combined rating is ${calc.combinedRating}%.`,
     tdiu ? buildTdiuThresholdParagraph(calc) : "",
     "VA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).",
