@@ -175,10 +175,10 @@ const loadMyRatings = (pendingAnnounceRef, setCurrentConditions) => {
   const savedRatings = getMyRatings();
   if (savedRatings && savedRatings.length > 0) {
     const formatted = savedRatings
-      .filter((r) => r.condition && typeof r.rating === "number")
+      .filter((r) => r.name && typeof r.rating === "number")
       .map((r) => ({
-        id: `${r.condition}-${r.rating}-${Date.now()}-${Math.random()}`,
-        name: nameWithSide(r.condition, r.side),
+        id: `${r.name}-${r.rating}-${Date.now()}-${Math.random()}`,
+        name: nameWithSide(r.name, r.side),
         rating: r.rating,
         side: r.side,
         bodyPart: r.bodyPart,
