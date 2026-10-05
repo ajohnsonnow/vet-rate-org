@@ -3,7 +3,8 @@
  * 💎 "The Diamond Standard" - 3-Model Swarm Architecture
  *
  * This service provides a unified interface for AI operations using the
- * Warrant Council - 3 specialized fine-tuned models:
+ * Warrant Council - 3 role personas (stock open models guided by role
+ * prompts and the Vet-Rate knowledge base, not fine-tuned on VA data):
  * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
  * - WRITER: Generates compelling personal statements and nexus letters
  * - RATER: Calculates VA disability ratings using bilateral factor formula
@@ -2962,7 +2963,7 @@ const generateAIInternal = async (prompt, options = {}) => {
 // specific patterns (e.g. a particular size/variant) must precede their
 // generic family fallback (e.g. plain "Llama").
 const LOCAL_MODEL_NAME_PATTERNS = [
-  // Warrant Council agents (fine-tuned VetRate models)
+  // GGUF file names that map to the persona labels; none is fine-tuned on VA data
   ["vetrate-auditor", "🎖️ CW5 Auditor"],
   ["vetrate-writer", "🎖️ CW4 Writer"],
   ["vetrate-rater", "🎖️ CW3 Rater"],
@@ -3129,12 +3130,12 @@ export const getAIDataDisclosure = () => {
     return {
       title: "🎖️ Warrant Council - 100% Private",
       description:
-        "All AI processing uses specialized VetRate agents running directly on your device. No data ever leaves.",
+        "All AI processing uses open models running directly on your device, guided by role prompts and Vet-Rate's knowledge base. No data ever leaves.",
       bullets: [
         "✅ Your data NEVER leaves your device",
-        "✅ 3 specialized agents: Auditor, Writer, Rater",
-        "✅ Fine-tuned on official VA regulations",
-        "✅ Diamond Standard accuracy & privacy",
+        "✅ 3 roles: Auditor, Writer, Rater",
+        "✅ Open models guided by role prompts and the Vet-Rate knowledge base",
+        "✅ Verify important details against official VA sources",
       ],
       isPrivate: true,
       isDiamond: true,
@@ -3180,7 +3181,7 @@ export const getAIDataDisclosure = () => {
     title: "⚠️ No AI Available",
     description: "Configure AI to enable intelligent features.",
     bullets: [
-      "🎖️ Option 1: Enable Warrant Council (recommended - specialized VA agents)",
+      "🎖️ Option 1: Enable Warrant Council (recommended - on-device, three role-guided assistants)",
       "🌐 Option 2: Enable Wllama (browser WASM - works everywhere)",
       "🖥️ Option 3: Start local llama.cpp server (desktop inference)",
       "🔒 Option 4: Enable Local AI (100% private legacy)",

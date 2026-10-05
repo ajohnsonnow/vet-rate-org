@@ -213,7 +213,8 @@ let loadedModelId = null; // Tracks which model was actually loaded
 
 /**
  * GGUF Model configurations for each agent
- * These are the fine-tuned VetRate models
+ * Per-agent GGUF entries; no model here is fine-tuned on VA data. The live
+ * swarm engine loads a stock open model and swaps in the persona prompt.
  */
 export const SWARM_MODELS = {
   auditor: {
