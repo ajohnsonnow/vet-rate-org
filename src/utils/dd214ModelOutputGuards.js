@@ -268,7 +268,7 @@ export const makeScrubber = (sources) => {
       removePersonAndPlaceShapes(base(text), { bare: "short" }),
     scrubProse: (text) =>
       removePersonAndPlaceShapes(base(text), { bare: "prose" }),
-    // Text the local parser read (ADR-009 section 5): SSN, birth date, phone,
+    // Text the local parser read (ADR-009 section 3, final24): SSN, birth date, phone,
     // email, street address and ZIP patterns and every known value, but no
     // wide name or place shapes, so a course, award or unit name is not
     // mistaken for a person.

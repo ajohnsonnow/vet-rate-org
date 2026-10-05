@@ -1,6 +1,6 @@
 /**
  * What the local parser read from a DD-214 is checked before it is shown
- * (ADR-009 decision G and section 5). Every value must pass the check the
+ * (ADR-009 decision G and section 3, final24). Every value must pass the check the
  * model's value for the same key passes: a fixed list or strict shape, a real
  * date in range, a count in range. Free text and lists (education, awards,
  * qualifications, remarks, unit and duty lines, deployments) get a length
@@ -201,7 +201,7 @@ const LIST_KEYS = ["militaryEducation", "specialQualifications"];
 
 // The extractor upper-cases the whole page and reads a box's own text, so a
 // run of capitalised words is a course, an award or a unit and not a person
-// (ADR-009 section 5): parser text is cleaned with the parser rules only.
+// (ADR-009 section 3, final24): parser text is cleaned with the parser rules only.
 function cleanParserStrings(out, scrubParser) {
   for (const key of TEXT_KEYS) {
     if (key in out) {
@@ -240,7 +240,7 @@ function cleanParserDaysLost(value) {
 }
 
 // Every value the parser read must pass the check the model's value for the
-// same key passes (ADR-009 section 5): a real date in range, a count in range,
+// same key passes (ADR-009 section 3, final24): a real date in range, a count in range,
 // a flag, a service time. One that does not is dropped, never shown.
 function cleanParserScalars(out, scrubs) {
   for (const key of DATE_KEYS) {

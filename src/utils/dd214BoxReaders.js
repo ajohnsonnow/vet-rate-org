@@ -1,6 +1,6 @@
 /**
  * Readers for DD-214 boxes whose value an OCR page-order can separate from its
- * printed label (ADR-009 section 4). A scan read in columns can put a box's
+ * printed label (ADR-009 section 3, final24). A scan read in columns can put a box's
  * value lines above its label, or put another box's caption or the form title
  * directly under it. Each reader takes a value only from its own labelled box,
  * bounded at the next printed box label, and never from a default or from the

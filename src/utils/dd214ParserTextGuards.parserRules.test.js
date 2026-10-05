@@ -1,5 +1,5 @@
 /**
- * ADR-009 section 5: a parser value is held to the same check a model's value
+ * ADR-009 section 3, final24: a parser value is held to the same check a model's value
  * for the same key passes, and parser text is cleaned with its own rules (no
  * wide name shapes), unlike model text. Fixtures are synthetic.
  */
