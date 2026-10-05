@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   calculateVARating,
-  calculateBilateralFactor,
   combineMultipleRatings,
   roundToNearest10,
 } from "../../utils/vaCalculator";
@@ -20,10 +19,6 @@ const FIFTY_PLUS_BILATERAL_30 = [
 ];
 
 describe("RT7-2 - bilateral factor applies to the paired set, not the top two", () => {
-  it("calculateBilateralFactor([30,30]) → 56 (51 combined, +10% = 56.1 → 56)", () => {
-    expect(calculateBilateralFactor([30, 30])).toBe(56);
-  });
-
   it("[50 non-bilateral, 30 left, 30 right] → 80 via VA math", () => {
     // 30 + 30 → 51 ; ×1.1 bilateral factor → 56 ; 56 + 50 → 78 ; round → 80
     const result = calculateVARating(FIFTY_PLUS_BILATERAL_30);

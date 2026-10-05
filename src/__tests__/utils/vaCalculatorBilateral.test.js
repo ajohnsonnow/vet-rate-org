@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import {
-  calculateBilateralFactor,
   calculateVARating,
   calculateWhatIf,
   combineMultipleRatings,
@@ -343,6 +342,10 @@ describe("38 CFR 4.26(d) over a grid of inputs", () => {
       ),
     ),
   );
+  const groupWithFactor = (ratings) => {
+    const combined = combineMultipleRatings(ratings);
+    return Math.round(combined + combined / 10);
+  };
   const check = ({ legs, other }) => {
     const result = calculateVARating([
       c("Left knee", legs[0], "left", "knee"),
@@ -351,7 +354,7 @@ describe("38 CFR 4.26(d) over a grid of inputs", () => {
       ...other.map((r, i) => c(`Other ${i}`, r, "none", "back")),
     ]);
     const wholeGroup = roundToNearest10(
-      combineMultipleRatings([calculateBilateralFactor(legs), ...other]),
+      combineMultipleRatings([groupWithFactor(legs), ...other]),
     );
     const noFactor = roundToNearest10(
       combineMultipleRatings([...legs, ...other]),

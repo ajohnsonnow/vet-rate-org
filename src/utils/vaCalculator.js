@@ -233,28 +233,6 @@ export const roundToNearest10 = (value) => {
   return Math.max(0, Math.min(100, rounded)); // Clamp to 0-100
 };
 
-/**
- * Calculate the Bilateral Factor
- * Per 38 CFR § 4.26: Add 10% to the combined bilateral rating
- *
- * @param {Array} bilateralRatings - Array of ratings affecting paired extremities
- * @returns {number} - The bilateral group rating (with 10% factor applied)
- */
-export const calculateBilateralFactor = (bilateralRatings) => {
-  if (bilateralRatings.length === 0) return 0;
-  if (bilateralRatings.length === 1) return bilateralRatings[0];
-
-  // Combine all bilateral ratings first
-  const combined = combineMultipleRatings(bilateralRatings);
-
-  // Add 10% of the combined value (the Bilateral Factor)
-  // This is 10% of the COMBINED value, not 10 percentage points
-  const withBilateralFactor = combined * 1.1;
-
-  // Round to nearest whole number for further calculations
-  return Math.round(withBilateralFactor);
-};
-
 const SIDED = ["left", "right", "bilateral"];
 const LIMBS = ["upper", "lower"];
 const LIMB_BY_BODY_PART = new Map(
@@ -1198,7 +1176,6 @@ export default {
   combineTwoRatings,
   combineMultipleRatings,
   roundToNearest10,
-  calculateBilateralFactor,
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
   detectPyramiding,
