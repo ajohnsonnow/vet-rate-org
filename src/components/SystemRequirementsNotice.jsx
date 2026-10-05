@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { detectDeviceCapabilities } from "../utils/deviceCapabilityDetector";
+import {
+  detectDeviceCapabilities,
+  describeDeviceModel,
+} from "../utils/deviceCapabilityDetector";
+import { formatDownloadSize } from "../utils/localModelLabels";
 import {
   AI_WARMUP,
   AI_REQUIREMENTS,
@@ -98,6 +102,7 @@ export default function SystemRequirementsNotice({
   if (limited) {
     return (
       <LimitedNotice
+        deviceModel={describeDeviceModel(profile)}
         gpuName={gpuName}
         tierRate={tierRate}
         timeEstimate={timeEstimate}
@@ -213,6 +218,7 @@ function BlockedNotice({ profile, toolName, supportsExtractionOnly }) {
 }
 
 function LimitedNotice({
+  deviceModel,
   gpuName,
   tierRate,
   timeEstimate,
@@ -266,7 +272,7 @@ function LimitedNotice({
         open={showReqs}
         onToggle={() => setShowReqs((v) => !v)}
       >
-        <RequirementsList />
+        <RequirementsList deviceModel={deviceModel} />
       </ExpandSection>
     </div>
   );
@@ -283,6 +289,7 @@ function CompatibleNotice({
   setShowReqs,
 }) {
   const isHigh = profile.tier === "desktop-high";
+  const deviceModel = describeDeviceModel(profile);
   return (
     <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4 space-y-2">
       <div className="flex items-start gap-3">
@@ -304,9 +311,10 @@ function CompatibleNotice({
           <p className="text-green-700 dark:text-green-300 text-xs mt-1">
             <strong>First run:</strong> allow {warmup.minMin}-{warmup.maxMin}{" "}
             minutes for one-time browser setup (compiling GPU programs +
-            downloading the AI model; {AI_REQUIREMENTS.model.sizeNote}).{" "}
-            <strong>After that:</strong> {AI_WARMUP.subsequentRun.minMin}-
-            {AI_WARMUP.subsequentRun.maxMin} min to start each session.
+            downloading {deviceModel?.displayName ?? "the AI model"},{" "}
+            {formatDownloadSize(deviceModel)}). <strong>After that:</strong>{" "}
+            {AI_WARMUP.subsequentRun.minMin}-{AI_WARMUP.subsequentRun.maxMin}{" "}
+            min to start each session.
           </p>
           {timeEstimate && (
             <p className="text-green-700 dark:text-green-300 text-xs mt-1 font-medium">
@@ -328,7 +336,7 @@ function CompatibleNotice({
         open={showReqs}
         onToggle={() => setShowReqs((v) => !v)}
       >
-        <RequirementsList />
+        <RequirementsList deviceModel={deviceModel} />
       </ExpandSection>
     </div>
   );
@@ -404,7 +412,7 @@ function WhyExplanation({ warmup }) {
   );
 }
 
-function RequirementsList() {
+function RequirementsList({ deviceModel = null }) {
   return (
     <ul className="space-y-1">
       <li>
@@ -427,8 +435,11 @@ function RequirementsList() {
         <strong>Note:</strong> {AI_REQUIREMENTS.browserNote}
       </li>
       <li>
-        <strong>First-time download:</strong> {AI_REQUIREMENTS.model.sizeNote}-{" "}
-        {AI_REQUIREMENTS.model.note}
+        <strong>First-time download:</strong>{" "}
+        {deviceModel?.downloadGB
+          ? `about ${deviceModel.downloadGB} GB`
+          : "size varies"}{" "}
+        - {AI_REQUIREMENTS.model.note}
       </li>
     </ul>
   );

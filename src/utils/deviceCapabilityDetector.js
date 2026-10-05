@@ -234,22 +234,23 @@ function _configForTier(tier) {
 
 // Approximate footprint of every model _configForTier can recommend.
 // downloadGB is the weights download; vramGB is vram_required_MB from the
-// @mlc-ai/web-llm prebuilt model list, rounded to 0.1 GB. The Qwen3.5 entries
-// have no downloadGB: the config states no download size and none was measured.
+// @mlc-ai/web-llm prebuilt model list, rounded to 0.1 GB. downloadGB for the
+// Qwen3.5 and Qwen2.5 q4f16 entries is the summed file size of the mlc-ai
+// Hugging Face repository (read 2026-10-05); the others are earlier estimates.
 const MODEL_FOOTPRINT = {
   "Qwen3.5-4B-q4f16_1-MLC": {
     displayName: "Qwen 3.5 4B",
-    downloadGB: null,
+    downloadGB: 2.4,
     vramGB: 3.9,
   },
   "Qwen3.5-2B-q4f16_1-MLC": {
     displayName: "Qwen 3.5 2B",
-    downloadGB: null,
+    downloadGB: 1.1,
     vramGB: 2.2,
   },
   "Qwen2.5-3B-Instruct-q4f16_1-MLC": {
     displayName: "Qwen 2.5 3B",
-    downloadGB: 1.7,
+    downloadGB: 1.8,
     vramGB: 2.5,
   },
   "Qwen2.5-3B-Instruct-q4f32_1-MLC": {
@@ -259,7 +260,7 @@ const MODEL_FOOTPRINT = {
   },
   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
     displayName: "Qwen 2.5 1.5B",
-    downloadGB: 1.0,
+    downloadGB: 0.9,
     vramGB: 1.6,
   },
   "Qwen2.5-1.5B-Instruct-q4f32_1-MLC": {

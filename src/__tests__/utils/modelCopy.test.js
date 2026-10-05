@@ -12,9 +12,12 @@ describe("About and User Manual name the on-device models", () => {
 
   it("the manual says which model each device picks, that it is a one-time download kept on the device, and makes no accuracy claim", () => {
     const manual = read("../../components/UserManual.jsx");
-    expect(manual).toMatch(/Qwen 3\.5 4B on desktops/);
-    expect(manual).toMatch(/Qwen 3\.5 2B on laptops/);
+    expect(manual).toMatch(
+      /Qwen 3\.5 4B on desktops \(about 2\.4 GB download\)/,
+    );
+    expect(manual).toMatch(
+      /Qwen 3\.5 2B on laptops \(about 1\.1 GB download\)/,
+    );
     expect(manual).toMatch(/one-time download kept on your device/);
-    expect(manual).toMatch(/size varies/);
   });
 });

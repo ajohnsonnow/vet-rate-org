@@ -102,7 +102,7 @@ describe("on-device model order per tier", () => {
 });
 
 describe("describeDeviceModel for the Qwen3.5 models", () => {
-  it("reports the 4B with the WebLLM memory figure and no invented download size", async () => {
+  it("reports the 4B with its published download size and the WebLLM memory figure", async () => {
     vi.resetModules();
     const { describeDeviceModel } =
       await import("../../utils/deviceCapabilityDetector");
@@ -111,7 +111,7 @@ describe("describeDeviceModel for the Qwen3.5 models", () => {
     ).toEqual({
       modelId: "Qwen3.5-4B-q4f16_1-MLC",
       displayName: "Qwen 3.5 4B",
-      downloadGB: null,
+      downloadGB: 2.4,
       vramGB: 3.9,
     });
   });
@@ -125,7 +125,7 @@ describe("describeDeviceModel for the Qwen3.5 models", () => {
     ).toEqual({
       modelId: "Qwen3.5-2B-q4f16_1-MLC",
       displayName: "Qwen 3.5 2B",
-      downloadGB: null,
+      downloadGB: 1.1,
       vramGB: 2.2,
     });
   });
