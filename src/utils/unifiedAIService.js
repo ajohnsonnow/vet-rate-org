@@ -1245,6 +1245,7 @@ const runWarrantCouncil = async (systemPrompt, userPrompt, options = {}) => {
       ...(options.responseFormat
         ? { responseFormat: options.responseFormat }
         : {}),
+      ...(options.thinking !== undefined ? { thinking: options.thinking } : {}),
     });
 
     // Guard against GPU-level hangs (WebGPU compute never signals completion).

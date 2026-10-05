@@ -27,6 +27,11 @@ import {
   EngineLoadStalledError,
   loadWithStallWatchdog,
 } from "./engineLoadStall";
+import {
+  buildThinkingRequestFields,
+  createReasoningStreamFilter,
+  stripReasoning,
+} from "./reasoningText";
 
 // Errors crossing the WebLLM worker boundary aren't guaranteed to survive as
 // real Error instances - a rejection can arrive with .message undefined,
@@ -858,12 +863,13 @@ async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
 
   let responseText = "";
   const bracketState = { bracketDepth: 0, inString: false, escape: false };
+  const visible = onStream ? createReasoningStreamFilter(onStream) : null;
 
   for await (const piece of jsonStream) {
     const delta = piece.choices[0]?.delta?.content || "";
     if (delta) {
       responseText += delta;
-      onStream?.(delta, responseText);
+      visible?.push(delta);
       _scanDeltaForJSONClose(delta, bracketState, responseText, engine);
     }
 
@@ -885,6 +891,7 @@ async function _runJSONStreamGeneration(engine, generationConfig, onStream) {
     }
   }
 
+  visible?.end();
   return responseText;
 }
 
@@ -896,11 +903,13 @@ async function _runPlainStreamGeneration(engine, generationConfig, onStream) {
   });
 
   let responseText = "";
+  const visible = createReasoningStreamFilter(onStream);
   for await (const chunk of chunks) {
     const delta = chunk.choices[0]?.delta?.content || "";
     responseText += delta;
-    onStream(delta, responseText);
+    visible.push(delta);
   }
+  visible.end();
   return responseText;
 }
 
@@ -918,6 +927,22 @@ async function _runNonStreamGeneration(engine, generationConfig) {
   return result.choices[0]?.message?.content || "";
 }
 
+let lastGeneration = null;
+
+/**
+ * What the engine last returned for a swarm generation: the raw text, the
+ * text callers received, and whether a reasoning block was removed. A
+ * diagnostic read for the evaluation runner; it never reaches the UI.
+ */
+export const getLastSwarmGeneration = () => lastGeneration;
+
+export const clearLastSwarmGeneration = () => {
+  lastGeneration = null;
+};
+
+const EMPTY_AFTER_REASONING_MESSAGE =
+  "Local AI returned an empty response: the model spent its whole token budget reasoning and produced no answer. Try again, raise the token limit, or turn reasoning off.";
+
 async function _runSwarmInference(
   agent,
   finalSystemPrompt,
@@ -926,6 +951,7 @@ async function _runSwarmInference(
   temperature,
   responseFormat,
   onStream,
+  thinking,
 ) {
   const messages = [
     { role: "system", content: finalSystemPrompt },
@@ -937,6 +963,7 @@ async function _runSwarmInference(
     max_tokens: maxTokens,
     temperature,
     stream: !!onStream,
+    ...buildThinkingRequestFields(loadedModelId, thinking),
     // Penalize repeated tokens to break repetition loops in small quantized
     // models. XGrammar masks EOS while grammar expects more tokens, which
     // amplifies loops - frequency_penalty 1.15 breaks them while keeping
@@ -958,25 +985,35 @@ async function _runSwarmInference(
       : {}),
   };
 
-  let responseText;
+  let rawText;
 
   if (responseFormat) {
-    responseText = await _runJSONStreamGeneration(
+    rawText = await _runJSONStreamGeneration(
       webllmEngine,
       generationConfig,
       onStream,
     );
   } else if (onStream) {
-    responseText = await _runPlainStreamGeneration(
+    rawText = await _runPlainStreamGeneration(
       webllmEngine,
       generationConfig,
       onStream,
     );
   } else {
-    responseText = await _runNonStreamGeneration(
-      webllmEngine,
-      generationConfig,
-    );
+    rawText = await _runNonStreamGeneration(webllmEngine, generationConfig);
+  }
+
+  const stripped = stripReasoning(rawText);
+  const responseText = stripped.text;
+  lastGeneration = {
+    raw: rawText,
+    visible: responseText,
+    reasoningRemoved: stripped.hadReasoning,
+    unterminated: stripped.unterminated,
+    thinkingRequested: thinking === true,
+  };
+  if (!stripped.answered) {
+    throw new Error(EMPTY_AFTER_REASONING_MESSAGE);
   }
 
   return {
@@ -986,8 +1023,8 @@ async function _runSwarmInference(
     model: loadedModelId || "diamond-swarm",
     tokens: {
       prompt: prompt.length,
-      completion: responseText.length,
-      total: prompt.length + responseText.length,
+      completion: rawText.length,
+      total: prompt.length + rawText.length,
     },
   };
 }
@@ -1026,6 +1063,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     systemPrompt = null,
     onStream = null,
     responseFormat = null, // JSON Schema object - enables XGrammar per-token constrained decoding
+    thinking = false, // true lets a thinking model reason before answering; off by default
   } = options;
 
   // Resolve effective agent. When a toolId is supplied, derive the agent
@@ -1069,6 +1107,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         temperature,
         responseFormat,
         onStream,
+        thinking,
       );
     } catch (inferenceError) {
       console.error("💎 WebLLM inference failed:", inferenceError);
