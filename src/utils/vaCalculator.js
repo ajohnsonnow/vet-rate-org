@@ -300,6 +300,8 @@ const NAME_PHRASES = [
   { words: "limitation of flexion" },
   { words: "limitation of extension" },
 ];
+// Words that start a second finding; see _nameWords for the punctuation.
+const NAME_BREAK_WORDS = ["with", "and"];
 const NAME_CONDITION_WORDS = new Set([
   "strain",
   "sprain",
@@ -335,7 +337,7 @@ const NAME_CONDITION_WORDS = new Set([
   "degenerative",
   "of",
   "the",
-  "with",
+  ...NAME_BREAK_WORDS,
 ]);
 // The sided body parts that are not limbs (ear, eye, kidney in BODY_PARTS).
 const NAME_NON_LIMB_WORDS = new Set([
@@ -360,9 +362,17 @@ const _visibleName = (name) =>
 // this check it would drop out of the name and the rest would be read alone.
 const ODD_NAME_CHARACTER = /[^\p{L}\p{N}\s,.\-'()/:;&%]/u;
 
+// A semicolon, slash, ampersand or opening parenthesis starts a second
+// finding just as "with" and "and" do, so each becomes the word "and". A
+// parenthesis holding only a side, as in "Knee strain (Left)", is not a break.
+const SIDE_IN_PARENTHESES = /\(\s*(left|right|bilateral|both)\s*\)/g;
+const NAME_BREAK_CHARACTERS = /[;/&(]/g;
+
 const _nameWords = (name) =>
   _visibleName(name)
     .toLowerCase()
+    .replace(SIDE_IN_PARENTHESES, " $1 ")
+    .replace(NAME_BREAK_CHARACTERS, " and ")
     .split(/[^\p{L}\p{N}]+/u)
     .filter(Boolean);
 
@@ -421,7 +431,9 @@ function _nameItems(name) {
  */
 function _readName(name) {
   const items = _nameItems(name);
-  const withAt = items.findIndex((item) => item.word === "with");
+  const withAt = items.findIndex((item) =>
+    NAME_BREAK_WORDS.includes(item.word),
+  );
   const beforeWith = withAt < 0 ? items : items.slice(0, withAt);
   const limbs = new Set(items.filter((i) => i.limb).map((i) => i.limb));
   const sides = new Set(items.filter((i) => i.side).map((i) => i.side));

@@ -219,6 +219,57 @@ describe("a name with a symbol outside ordinary punctuation gives no limb", () =
   );
 });
 
+describe("punctuation and 'and' break a name the way 'with' does", () => {
+  it("degenerative arthritis; left leg radiculopathy 40 + right knee strain 10 give 46, then 50, with no factor", () => {
+    const result = calculateVARating([
+      named("Degenerative arthritis; left leg radiculopathy", 40, "left"),
+      named("Right knee strain", 10, "right"),
+    ]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(46);
+    expect(result.combinedRating).toBe(50);
+  });
+
+  it.each([
+    ["Degenerative arthritis / left leg radiculopathy"],
+    ["Degenerative arthritis & left leg radiculopathy"],
+    ["Degenerative arthritis and left leg radiculopathy"],
+    ["Degenerative arthritis (left leg radiculopathy)"],
+    ["Arthritis/left knee"],
+    ["Strain (left knee)"],
+    ["Knee strain; left"],
+  ])("%s takes no factor and is flagged: 20 + 20 give 36", (name) => {
+    const result = calculateVARating([
+      named(name, 20, "left"),
+      partner("right", "knee"),
+    ]);
+    expect(result.bilateralFactor).toBe(0);
+    expect(result.rawScore).toBe(36);
+    expect(result.bilateralIssues).toEqual([
+      expect.objectContaining({ reason: "limb-unknown", name }),
+    ]);
+  });
+
+  it.each([
+    ["Knee strain (Left)"],
+    ["Pes planus (bilateral)".replace("bilateral", "left")],
+    ["Left knee strain and instability"],
+    ["Left knee strain/instability"],
+    ["Left knee strain (limitation of flexion)"],
+    ["Left knee strain; limitation of extension"],
+  ])(
+    "%s still reads as the left leg: 20 + 20 give 36, plus 3.6 is 40",
+    (name) => {
+      const result = calculateVARating([
+        named(name, 20, "left"),
+        partner("right", "knee"),
+      ]);
+      expect(result.bilateralGroupRating).toBe(40);
+      expect(result.bilateralIssues).toEqual([]);
+    },
+  );
+});
+
 describe("repros from QA", () => {
   it("sciatica of the right leg 20 + left knee strain 10 + PTSD 50 give 60, 64, then 60 (not 70)", () => {
     const list = [
