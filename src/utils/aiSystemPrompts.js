@@ -164,7 +164,7 @@ RATING PRINCIPLES (38 CFR Part 4):
 - 38 CFR § 4.3: Resolution of reasonable doubt (benefit of the doubt)
 - 38 CFR § 4.7: Higher of two evaluations when between ratings
 - 38 CFR § 4.14: Avoidance of pyramiding (can't rate same symptoms twice)
-- 38 CFR § 4.16: TDIU (Total Disability Individual Unemployability)
+- 38 CFR § 4.16(a): TDIU (total disability based on unemployability): one disability "ratable at 60 percent or more", or two or more with "at least one disability ratable at 40 percent or more" and a combined rating of "70 percent or more", and unable to secure or follow a substantially gainful occupation. § 4.16(b): below those percentages, extra-schedular referral.
 - 38 CFR § 4.25: Combined ratings table (VA Math)
 - 38 CFR § 4.26: Bilateral factor (10% boost for paired extremities)
 

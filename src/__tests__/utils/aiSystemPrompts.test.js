@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
 import {
   spotlight,
   untrustedSection,
@@ -13,6 +14,8 @@ import {
   CFILE_ANALYSIS_SYSTEM_PROMPT,
   RATING_CRITERIA_SYSTEM_PROMPT,
 } from "../../utils/aiSystemPrompts";
+
+const ECFR_PATH = "public/legal-index/v0.1.0/chunks/ecfr.jsonl";
 
 describe("buildSystemPrompt - calculated NGB-22 entry date", () => {
   afterEach(() => {
@@ -503,4 +506,46 @@ describe("buildSystemPrompt - base prompt is sent exactly once", () => {
     expect(countOf(CFILE_ANALYSIS_SYSTEM_PROMPT)).toBe(1);
     expect(countOf(RATING_CRITERIA_SYSTEM_PROMPT)).toBe(1);
   });
+});
+
+describe("KEY_REGULATIONS_SUMMARY - 38 CFR 4.16 TDIU thresholds", () => {
+  it("states the 4.16(a) thresholds in the regulation's own words", async () => {
+    const { KEY_REGULATIONS_SUMMARY } =
+      await import("../../utils/aiSystemPrompts");
+    expect(KEY_REGULATIONS_SUMMARY).toContain("38 CFR § 4.16(a)");
+    expect(KEY_REGULATIONS_SUMMARY).toContain(
+      '"ratable at 60 percent or more"',
+    );
+    expect(KEY_REGULATIONS_SUMMARY).toContain(
+      '"at least one disability ratable at 40 percent or more"',
+    );
+    expect(KEY_REGULATIONS_SUMMARY).toContain('"70 percent or more"');
+    expect(KEY_REGULATIONS_SUMMARY).toContain(
+      "substantially gainful occupation",
+    );
+    expect(KEY_REGULATIONS_SUMMARY).toContain("§ 4.16(b)");
+  });
+
+  it.skipIf(!existsSync(ECFR_PATH))(
+    "keeps every threshold phrase verbatim from the eCFR chunk (needs the local legal index)",
+    () => {
+      const chunk = readFileSync(ECFR_PATH, "utf8")
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => JSON.parse(line))
+        .find(
+          (c) =>
+            c.citation === "38 CFR § 4.16" && /60 percent or more/.test(c.text),
+        );
+      expect(chunk).toBeTruthy();
+      const normalized = chunk.text.replace(/\s+/g, " ");
+      for (const phrase of [
+        "ratable at 60 percent or more",
+        "at least one disability ratable at 40 percent or more",
+        "combined rating to 70 percent or more",
+      ]) {
+        expect(normalized).toContain(phrase);
+      }
+    },
+  );
 });
