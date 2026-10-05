@@ -1,0 +1,152 @@
+{
+  "run_2026-10-05_071859_Qwen2.5-3B-Instruct-q4f16_1-MLC": {
+    "a06": "draft-with-new-facts",
+    "a07": "draft-with-new-facts",
+    "a08": "draft-with-new-facts",
+    "a09": "draft-with-new-facts",
+    "a10": "asks-for-information",
+    "a20": "asks-for-information",
+    "a23": "draft-with-new-facts",
+    "a29": "draft-with-new-facts"
+  },
+  "run_2026-10-05_074624_Qwen2.5-3B-Instruct-q4f16_1-MLC": {
+    "a06": "draft-with-new-facts",
+    "a07": "draft-with-new-facts",
+    "a08": "draft-with-new-facts",
+    "a09": "draft-with-new-facts",
+    "a10": "asks-for-information",
+    "a20": "asks-for-information",
+    "a23": "draft-with-new-facts",
+    "a29": "draft-with-new-facts"
+  },
+  "run_2026-10-05_081228_Qwen2.5-3B-Instruct-q4f16_1-MLC": {
+    "a06": "draft-with-new-facts",
+    "a07": "draft-with-new-facts",
+    "a08": "draft-with-new-facts",
+    "a09": "draft",
+    "a10": "draft-with-new-facts",
+    "a20": "asks-for-information",
+    "a23": "draft-with-new-facts",
+    "a29": "draft-with-new-facts"
+  },
+  "run_2026-10-05_090513_Qwen2.5-3B-Instruct-q4f16_1-MLC": {
+    "a06": "draft-with-new-facts",
+    "a07": "draft-with-new-facts",
+    "a08": "asks-for-information",
+    "a09": "draft-with-new-facts",
+    "a10": "asks-for-information",
+    "a20": "asks-for-information",
+    "a23": "asks-for-information",
+    "a29": "draft-with-new-facts"
+  },
+  "run_2026-10-05_094601_Qwen2.5-3B-Instruct-q4f16_1-MLC": {
+    "a06": "draft-with-new-facts",
+    "a07": "draft-with-new-facts",
+    "a08": "asks-for-information",
+    "a09": "draft-with-new-facts",
+    "a10": "asks-for-information",
+    "a20": "asks-for-information",
+    "a23": "asks-for-information",
+    "a29": "draft-with-new-facts"
+  },
+  "run_2026-10-05_105010_Qwen3.5-4B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "asks-for-information",
+    "a08": "refusal",
+    "a09": "refusal",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_110055_Qwen3.5-2B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "refusal",
+    "a08": "refusal",
+    "a09": "refusal",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_110822_Qwen3.5-9B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "asks-for-information",
+    "a08": "asks-for-information",
+    "a09": "asks-for-information",
+    "a10": "asks-for-information",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_122217_Qwen3.5-4B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "asks-for-information",
+    "a08": "asks-for-information",
+    "a09": "asks-for-information",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_123216_Qwen3.5-4B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "asks-for-information",
+    "a08": "asks-for-information",
+    "a09": "asks-for-information",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_124154_Qwen3.5-9B-q4f16_1-MLC": {
+    "a06": "draft-with-new-facts",
+    "a07": "asks-for-information",
+    "a08": "asks-for-information",
+    "a09": "asks-for-information",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_125630_Qwen3.5-2B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "refusal",
+    "a08": "refusal",
+    "a09": "refusal",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_135040_Qwen3.5-4B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "refusal",
+    "a08": "refusal",
+    "a09": "refusal",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_135908_Qwen3.5-9B-q4f16_1-MLC": {
+    "a06": "draft-with-new-facts",
+    "a07": "refusal",
+    "a08": "asks-for-information",
+    "a09": "asks-for-information",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  },
+  "run_2026-10-05_141236_Qwen3.5-2B-q4f16_1-MLC": {
+    "a06": "refusal",
+    "a07": "refusal",
+    "a08": "refusal",
+    "a09": "refusal",
+    "a10": "refusal",
+    "a20": "refusal",
+    "a23": "refusal",
+    "a29": "refusal"
+  }
+}
