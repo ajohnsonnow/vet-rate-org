@@ -724,6 +724,8 @@ const LanguageContext = createContext(null);
 /**
  * useLanguage hook - Access language functionality
  */
+export const useOptionalLanguage = () => useContext(LanguageContext);
+
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (!context) {

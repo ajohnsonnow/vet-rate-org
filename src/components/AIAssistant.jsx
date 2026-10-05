@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { generateAI } from "../utils/unifiedAIService";
+import SmallModelCaveat from "./SmallModelCaveat";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useHelperMode } from "../contexts/HelperModeContext";
@@ -832,6 +833,7 @@ function MessageList({
 }) {
   return (
     <>
+      <SmallModelCaveat />
       {messages.map((msg, idx) => (
         <MessageBubble
           key={idx}
