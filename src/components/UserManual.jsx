@@ -3272,7 +3272,7 @@ Configure AI to power your claims analysis.
 
 ### 🔒 Local AI (100% Private)
 Runs entirely in your browser using WebGPU. Your data NEVER leaves your device.
-- 3 specialized fine-tuned models plus fallback options
+- 3 specialized roles (Auditor, Writer, Rater): stock open models guided by role prompts and our knowledge base, plus fallback options
 - Works offline after initial download
 - Zero internet required during analysis
 

@@ -42,6 +42,8 @@ describe("provenance wording", () => {
     "utils/llmRecommendations.js",
     "utils/unifiedAIService.js",
     "utils/diamondSwarm.js",
+    "components/AboutUs.jsx",
+    "components/UserManual.jsx",
   ])("%s does not describe the agents as fine-tuned on VA data", (file) => {
     const source = readFileSync(resolve(process.cwd(), "src", file), "utf8");
     const claims = source

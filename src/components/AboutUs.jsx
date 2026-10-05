@@ -703,7 +703,8 @@ function LocalAIArsenalBlock() {
         Council agents
       </p>
       <p>
-        <strong>Base Models:</strong> Qwen 2.5 (fine-tuned for VA claims)
+        <strong>Base Models:</strong> Stock open models such as Qwen 2.5, guided
+        by role prompts and our knowledge base
       </p>
       <p>
         <strong>Privacy:</strong> 100% in-browser, zero data leaves device
@@ -749,7 +750,8 @@ function WarrantCouncilBlock() {
         </div>
       </div>
       <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-        🎖️ Fine-tuned on official VA regulations for Diamond Standard accuracy
+        🎖️ Stock open models guided by role prompts and a knowledge base of
+        official VA regulations
       </p>
     </div>
   );
