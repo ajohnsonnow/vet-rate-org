@@ -223,8 +223,7 @@ const MANUAL_ENTRIES = [
   },
   {
     id: "pact-overview",
-    citation:
-      "M21-1 VIII.ii.2.A.1.e, VIII.i.1.A.1.c (who each PACT Act group covers)",
+    citation: "M21-1 VIII.ii.2.A.1.e, VIII.i.1.A.1.c (who each group covers)",
     topics: ["toxic-service", "herbicide-service"],
   },
 ];
