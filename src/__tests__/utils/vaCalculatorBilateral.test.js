@@ -473,16 +473,43 @@ describe("sided entries that are not reported", () => {
   });
 });
 
-describe("calculateWhatIf with a both-sides proposed condition", () => {
-  it("adds the factor only when a leg condition is already rated: 30 + 20 give 44, plus 4.4 is 48; with 50 alone, 65", () => {
-    const withLeg = calculateWhatIf(
-      [c("Left knee", 20, "left", "knee")],
+describe("calculateWhatIf uses the proposed condition's own side and body part", () => {
+  it("pairs a proposed right ankle with a rated left knee: 30 + 20 give 44, plus 4.4 is 48", () => {
+    const result = calculateWhatIf([c("Left knee", 20, "left", "knee")], 30, {
+      side: "right",
+      bodyPart: "ankle",
+    });
+    expect(result.newRaw).toBe(48);
+  });
+
+  it("pairs a proposed right elbow with a rated left shoulder: 30 + 20 give 44, plus 4.4 is 48", () => {
+    const result = calculateWhatIf(
+      [c("Left shoulder", 20, "left", "shoulder")],
       30,
-      true,
+      { side: "right", bodyPart: "elbow" },
     );
-    expect(withLeg.newRaw).toBe(48);
-    const alone = calculateWhatIf([c("PTSD", 50, "none", "mental")], 30, true);
-    expect(alone.newRaw).toBe(65);
+    expect(result.newRaw).toBe(48);
+  });
+
+  it("does not pair a proposed right shoulder with a rated left knee: 30 + 20 give 44", () => {
+    const result = calculateWhatIf([c("Left knee", 20, "left", "knee")], 30, {
+      side: "right",
+      bodyPart: "shoulder",
+    });
+    expect(result.newRaw).toBe(44);
+  });
+
+  it("gives a proposed both-sides rating no factor by itself: 50 + 30 give 65", () => {
+    const result = calculateWhatIf([c("PTSD", 50, "none", "mental")], 30, {
+      side: "bilateral",
+      bodyPart: "foot",
+    });
+    expect(result.newRaw).toBe(65);
+  });
+
+  it("treats a proposed condition with no side as unpaired: 30 + 20 give 44", () => {
+    const result = calculateWhatIf([c("Left knee", 20, "left", "knee")], 30);
+    expect(result.newRaw).toBe(44);
   });
 });
 

@@ -849,11 +849,17 @@ export const calculateCompensation = (rating, dependents = {}) => {
 /**
  * Calculate "What If" scenarios
  * Shows how adding a new rating would change the combined
+ *
+ * @param {Array} existingConditions - Conditions already rated
+ * @param {number} newRating - Rating of the proposed condition
+ * @param {Object} proposed - Where the proposed condition is:
+ *   { side, bodyPart, limb }, read as calculateVARating reads any condition,
+ *   so it takes the bilateral factor only if 38 CFR § 4.26 gives it one.
  */
 export const calculateWhatIf = (
   existingConditions,
   newRating,
-  isBilateral = false,
+  proposed = {},
 ) => {
   // Current combined rating
   const current = calculateVARating(existingConditions);
@@ -862,8 +868,9 @@ export const calculateWhatIf = (
   const newCondition = {
     name: "Proposed Condition",
     rating: newRating,
-    side: isBilateral ? "bilateral" : "none",
-    bodyPart: isBilateral ? "knee" : "other",
+    side: proposed.side ?? "none",
+    bodyPart: proposed.bodyPart ?? "other",
+    limb: proposed.limb,
   };
 
   // Calculate with new condition added

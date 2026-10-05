@@ -3408,19 +3408,12 @@ export const APP_TRANSLATIONS = {
       vi: "Phần Trăm Xếp Hạng Mới",
       ko: "새 등급 비율",
     },
-    wouldBeBilateral: {
-      en: "This would be a bilateral condition",
-      es: "Esta sería una condición bilateral",
-      tl: "Ito ay magiging bilateral condition",
-      vi: "Đây sẽ là tình trạng song phương",
-      ko: "이것은 양측 상태가 될 것입니다",
-    },
-    addsBilateralBoost: {
-      en: "Adds 10% bilateral factor boost",
-      es: "Agrega 10% de impulso de factor bilateral",
-      tl: "Nagdadagdag ng 10% bilateral factor boost",
-      vi: "Thêm 10% hệ số song phương",
-      ko: "10% 양측 요인 부스트 추가",
+    whatIfBilateralRule: {
+      en: "The bilateral factor applies only when both arms or both legs have a compensable rating (38 CFR § 4.26). Choose the body part and side of the new condition so the calculator can check.",
+      es: "El factor bilateral solo se aplica cuando ambos brazos o ambas piernas tienen un rating compensable (38 CFR § 4.26). Elige la parte del cuerpo y el lado de la nueva condición para que la calculadora pueda comprobarlo.",
+      tl: "Ang bilateral factor ay nag-a-apply lamang kapag parehong braso o parehong binti ay may compensable na rating (38 CFR § 4.26). Piliin ang bahagi ng katawan at panig ng bagong kondisyon para ma-check ito ng calculator.",
+      vi: "Hệ số song phương chỉ áp dụng khi cả hai tay hoặc cả hai chân đều có mức đánh giá được bồi thường (38 CFR § 4.26). Hãy chọn bộ phận cơ thể và bên của tình trạng mới để máy tính kiểm tra.",
+      ko: "양측 요인은 양쪽 팔 또는 양쪽 다리 모두에 보상 대상 등급이 있을 때만 적용됩니다 (38 CFR § 4.26). 계산기가 확인할 수 있도록 새 상태의 신체 부위와 측면을 선택하세요.",
     },
     projectedImpact: {
       en: "Projected Impact",

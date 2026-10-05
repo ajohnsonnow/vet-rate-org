@@ -95,3 +95,42 @@ describe("TacticalCalculator", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("TacticalCalculator What-If tab", () => {
+  it("What-If pairs the proposed condition by its own body part and side", async () => {
+    renderCalculator({
+      initialConditions: [
+        {
+          id: "a",
+          name: "Left shoulder",
+          rating: 20,
+          side: "left",
+          bodyPart: "shoulder",
+        },
+      ],
+    });
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: /what-if/i })[0]);
+
+    expect(
+      screen.getByText(/both arms or both legs have a compensable rating/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/bilateral factor boost/i),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/raw score: 44%/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/body part/i), {
+      target: { value: "elbow" },
+    });
+    fireEvent.change(screen.getByLabelText(/^side$/i), {
+      target: { value: "right" },
+    });
+    expect(screen.getByText(/raw score: 48%/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/body part/i), {
+      target: { value: "knee" },
+    });
+    expect(screen.getByText(/raw score: 44%/i)).toBeInTheDocument();
+  });
+});

@@ -149,7 +149,10 @@ function useTacticalCalculatorFormState(
 
   // What-If scenario
   const [whatIfRating, setWhatIfRating] = useState(30);
-  const [whatIfBilateral, setWhatIfBilateral] = useState(false);
+  const [whatIfCondition, setWhatIfCondition] = useState({
+    bodyPart: "",
+    side: "none",
+  });
 
   // View mode
   const [activeTab, setActiveTab] = useState(
@@ -183,8 +186,8 @@ function useTacticalCalculatorFormState(
     setDependents,
     whatIfRating,
     setWhatIfRating,
-    whatIfBilateral,
-    setWhatIfBilateral,
+    whatIfCondition,
+    setWhatIfCondition,
     activeTab,
     setActiveTab,
     showSteps,
@@ -549,7 +552,7 @@ function computeDerivedResults({
   myRatings,
   dependents,
   whatIfRating,
-  whatIfBilateral,
+  whatIfCondition,
 }) {
   const myRatingsResults = calculateVARating(myRatings);
   const myRatingsPyramiding = detectPyramiding(myRatings);
@@ -561,11 +564,10 @@ function computeDerivedResults({
   );
   const pyramiding = detectPyramiding(conditions);
   const tdiu = checkTDIUEligibility(conditions);
-  const whatIfResults = calculateWhatIf(
-    conditions,
-    whatIfRating,
-    whatIfBilateral,
-  );
+  const whatIfResults = calculateWhatIf(conditions, whatIfRating, {
+    side: whatIfCondition.side,
+    bodyPart: whatIfCondition.bodyPart || "other",
+  });
   const ratingNeededFor90 = calculateNeededRating(results.rawScore, 90);
   const ratingNeededFor100 = calculateNeededRating(results.rawScore, 100);
 
@@ -1007,8 +1009,9 @@ function WhatIfScenarioInput({
   t,
   whatIfRating,
   setWhatIfRating,
-  whatIfBilateral,
-  setWhatIfBilateral,
+  whatIfCondition,
+  setWhatIfCondition,
+  allBodyParts,
 }) {
   return (
     <div className="space-y-4">
@@ -1047,23 +1050,25 @@ function WhatIfScenarioInput({
           </div>
         </div>
 
-        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-        <label className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg cursor-pointer">
-          <input
-            type="checkbox"
-            checked={whatIfBilateral}
-            onChange={(e) => setWhatIfBilateral(e.target.checked)}
-            className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+        <div className="space-y-3 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
+          <BodyPartSelectField
+            t={t}
+            newCondition={whatIfCondition}
+            setNewCondition={setWhatIfCondition}
+            allBodyParts={allBodyParts}
           />
-          <div>
-            <span className="font-medium text-purple-800 dark:text-purple-200">
-              🔄 {t("tacticalCalc", "wouldBeBilateral")}
-            </span>
-            <p className="text-xs text-purple-600 dark:text-purple-400">
-              {t("tacticalCalc", "addsBilateralBoost")}
-            </p>
-          </div>
-        </label>
+          {allBodyParts.find((bp) => bp.value === whatIfCondition.bodyPart)
+            ?.canBeBilateral && (
+            <SideSelectField
+              t={t}
+              newCondition={whatIfCondition}
+              setNewCondition={setWhatIfCondition}
+            />
+          )}
+          <p className="text-xs text-purple-700 dark:text-purple-300">
+            {t("tacticalCalc", "whatIfBilateralRule")}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1203,8 +1208,9 @@ function WhatIfTab({
   t,
   whatIfRating,
   setWhatIfRating,
-  whatIfBilateral,
-  setWhatIfBilateral,
+  whatIfCondition,
+  setWhatIfCondition,
+  allBodyParts,
   whatIfResults,
 }) {
   return (
@@ -1213,8 +1219,9 @@ function WhatIfTab({
         t={t}
         whatIfRating={whatIfRating}
         setWhatIfRating={setWhatIfRating}
-        whatIfBilateral={whatIfBilateral}
-        setWhatIfBilateral={setWhatIfBilateral}
+        whatIfCondition={whatIfCondition}
+        setWhatIfCondition={setWhatIfCondition}
+        allBodyParts={allBodyParts}
       />
       <WhatIfResultsPanel
         t={t}
