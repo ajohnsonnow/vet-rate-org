@@ -226,3 +226,41 @@ describe("t08 with the deadline the 22:16 graded run gave", () => {
     expect(container.textContent).toBe("");
   });
 });
+
+describe("t08 with the missing list the final-build run gave", () => {
+  const AGGRAVATION =
+    "Evidence showing the knee condition worsened after the service event (aggravation)";
+  const REPLY = {
+    ...MODEL_REPLY,
+    appeal_options: undefined,
+    action_plan: ["File a Notice of Disagreement (VA Form 10182)."],
+    missing_elements: [
+      "Medical evidence or opinion linking the current left knee strain to the service training march",
+      AGGRAVATION,
+    ],
+  };
+
+  it("notes, beside the missing list, that the letter never mentions aggravation", async () => {
+    const { data } = await decodeT08(REPLY);
+
+    expect(data.missing_elements).toEqual(REPLY.missing_elements);
+    expect(data.review_corrections).toEqual([
+      {
+        field: "missing_elements",
+        rule: "missing-element-not-in-letter",
+        note: `Vet-Rate check: this list names "${AGGRAVATION}" as missing, but the decision letter does not mention aggravation. Read the letter's reasons for the decision before gathering evidence for it.`,
+      },
+    ]);
+
+    render(
+      <FieldCorrections
+        corrections={data.review_corrections}
+        field="missing_elements"
+      />,
+    );
+    expect(
+      screen.getByRole("note", { name: "Correction from Vet-Rate" })
+        .textContent,
+    ).toContain("the decision letter does not mention aggravation");
+  });
+});

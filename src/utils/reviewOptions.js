@@ -11,6 +11,7 @@ import {
   buildContradictionNote,
   findContradictions,
 } from "./contradictionCheck";
+import { findUnmentionedTheories } from "./decoderLetterCheck";
 
 export const REVIEW_OPTIONS = quotes.reviewOptions;
 
@@ -47,9 +48,11 @@ function reviewCorrections(decoded) {
  * A decoded decision with the review options replaced by the verified ones:
  * whatever the model put in `appeal_options` or `review_options` is dropped,
  * `review_options` carries the verified text, and `review_corrections` lists
- * a correction for each contradiction left in the model's other fields.
+ * a correction for each contradiction left in the model's other fields. With
+ * `documentText` (the letter that was decoded), the "missing" list is also
+ * checked against the letter's own words.
  */
-export function withVerifiedReviewOptions(decoded) {
+export function withVerifiedReviewOptions(decoded, { documentText } = {}) {
   if (!decoded || typeof decoded !== "object" || Array.isArray(decoded)) {
     return decoded;
   }
@@ -59,7 +62,10 @@ export function withVerifiedReviewOptions(decoded) {
     review_corrections: _norThese,
     ...rest
   } = decoded;
-  const corrections = reviewCorrections(rest);
+  const corrections = [
+    ...reviewCorrections(rest),
+    ...findUnmentionedTheories(rest, documentText),
+  ];
   return {
     ...rest,
     review_options: REVIEW_OPTIONS,

@@ -1917,9 +1917,15 @@ export const decodeDecision = async (
     );
     // The review options come from the bundled regulation text, never from
     // the model: its own version is dropped and wrong filing instructions in
-    // its other fields are noted.
+    // its other fields are noted. The whole letter, not the truncated copy
+    // the model saw, is what its "missing" list is checked against.
     return decoded.success
-      ? { ...decoded, data: withVerifiedReviewOptions(decoded.data) }
+      ? {
+          ...decoded,
+          data: withVerifiedReviewOptions(decoded.data, {
+            documentText: decisionText,
+          }),
+        }
       : decoded;
   } catch (error) {
     return mapDecodeDecisionError(error);
