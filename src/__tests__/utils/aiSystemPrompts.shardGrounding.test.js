@@ -591,3 +591,131 @@ describe("excludeBoardDecisions in the block text", () => {
     expect(questions).toEqual(["Question 3", "Question 5", "Question 6"]);
   });
 });
+
+const sourcedEntry = (n, source) => ({
+  instruction: `Question ${n}`,
+  output: `Answer ${n}`,
+  metadata: { source },
+});
+const questionsIn = (out) =>
+  [...out.matchAll(/Q: (Question \d+)/g)].map((m) => m[1]);
+
+describe("excludeCourtDecisions", () => {
+  const RANKED = [
+    sourcedEntry(1, "CAVC"),
+    sourcedEntry(2, "ECFR"),
+    sourcedEntry(3, "FEDERAL_CIRCUIT"),
+    sourcedEntry(4, "BVA"),
+    sourcedEntry(5, "M21_1"),
+    sourcedEntry(6, "OGC"),
+  ];
+  beforeEach(() => {
+    searchIndexedDKBMock.mockImplementation(async (_index, _query, topK) =>
+      RANKED.slice(0, topK),
+    );
+  });
+
+  it("recognises CAVC and Federal Circuit entries by their source tag only", async () => {
+    const { isCourtDecisionEntry } =
+      await import("../../utils/aiSystemPrompts");
+    expect(isCourtDecisionEntry(sourcedEntry(1, "CAVC"))).toBe(true);
+    expect(isCourtDecisionEntry(sourcedEntry(1, "FEDERAL_CIRCUIT"))).toBe(true);
+    for (const source of ["ECFR", "38_CFR", "M21_1", "OGC", "BVA"]) {
+      expect(isCourtDecisionEntry(sourcedEntry(1, source))).toBe(false);
+    }
+    expect(isCourtDecisionEntry(undefined)).toBe(false);
+  });
+
+  it("leaves court decisions out and refills in rank order", async () => {
+    const out = await buildDKBContext(nextQuery("court-out"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeCourtDecisions: true,
+    });
+    expect(questionsIn(out)).toEqual([
+      "Question 2",
+      "Question 4",
+      "Question 5",
+    ]);
+    expect(searchIndexedDKBMock.mock.calls[0][2]).toBe(Infinity);
+  });
+
+  it("combines with excludeBoardDecisions", async () => {
+    const out = await buildDKBContext(nextQuery("court-and-board"), {
+      maxEntries: 3,
+      maxChars: 8000,
+      excludeBoardDecisions: true,
+      excludeCourtDecisions: true,
+    });
+    expect(questionsIn(out)).toEqual([
+      "Question 2",
+      "Question 5",
+      "Question 6",
+    ]);
+  });
+
+  it("is off by default", async () => {
+    const out = await buildDKBContext(nextQuery("court-default"), {
+      maxEntries: 3,
+      maxChars: 8000,
+    });
+    expect(questionsIn(out)).toEqual([
+      "Question 1",
+      "Question 2",
+      "Question 3",
+    ]);
+  });
+});
+
+describe("excludeCourtDecisions with full-corpus grounding on", () => {
+  it("on the flag-on path the court shards are not queried and court passages are dropped", async () => {
+    queryCorpusMock.mockResolvedValue({
+      chunks: [
+        shardChunk({
+          citation: "Smith v. Jones",
+          authority_tier: "judicial",
+          text: "A court decision.",
+        }),
+        shardChunk(),
+      ],
+    });
+    const out = await buildDKBContext(
+      nextQuery("court-shards"),
+      opts({ maxEntries: 4, excludeCourtDecisions: true }),
+    );
+    const { only } = queryCorpusMock.mock.calls[0][1];
+    expect(only).toEqual(["ecfr", "m21_1", "m21_5", "ogc"]);
+    expect(out).not.toContain("Smith v. Jones");
+    expect(out).toContain("38 CFR 3.303");
+    expect(questionsIn(out)).not.toContain("Question 1");
+  });
+});
+
+describe("the instruction to disclaim, with verified reference text above", () => {
+  const DISCLAIM = "say so explicitly";
+
+  it("is present when the keyword block stands alone", async () => {
+    const out = await buildDKBContext(nextQuery("alone"), {
+      maxEntries: 2,
+      maxChars: 8000,
+    });
+    expect(out).toContain(DISCLAIM);
+  });
+
+  it("is replaced, on both paths, by one that puts the verified text first", async () => {
+    for (const extra of [{}, { includeShards: true }]) {
+      const out = await buildDKBContext(nextQuery("with-verified"), {
+        maxEntries: 2,
+        maxChars: 8000,
+        withVerifiedReference: true,
+        ...extra,
+      });
+      expect(out).not.toContain(DISCLAIM);
+      expect(out).not.toContain("backed by an entry here");
+      expect(out).toContain(
+        "The VERIFIED REFERENCE text above comes first: where it answers the question, answer from it.",
+      );
+      expect(out).toContain("Q: ");
+    }
+  });
+});

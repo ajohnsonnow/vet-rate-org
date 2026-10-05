@@ -144,6 +144,8 @@ describe("verified reference on the on-device swarm", () => {
       maxEntries: 6,
       maxChars: 4000 - block.length,
       excludeBoardDecisions: true,
+      excludeCourtDecisions: true,
+      withVerifiedReference: true,
     });
   });
 
@@ -185,6 +187,7 @@ describe("verified reference on the on-device swarm", () => {
       maxEntries: 6,
       maxChars: 4000,
       excludeBoardDecisions: true,
+      excludeCourtDecisions: true,
     });
   });
 });

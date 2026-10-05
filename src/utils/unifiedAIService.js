@@ -2363,6 +2363,8 @@ async function _redactPiecesForSend(pieces) {
 // not placed in the block on the small-budget on-device backends, where the
 // model reads a decision-shaped entry as the veteran's own decision. The
 // ranking is unchanged; the next-ranked entries fill the budget.
+// excludeCourtDecisions: the same for CAVC and Federal Circuit entries, which
+// keyword search returned for unrelated questions.
 // maxVerifiedChars: the share of maxChars the verified-reference block may
 // take. It is a share, not an addition, so reference material as a whole
 // never grows past maxChars on a small context window.
@@ -2372,18 +2374,21 @@ const DKB_BUDGET_BY_MODE = {
     maxChars: 4000,
     maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
   },
   [AI_MODES.WLLAMA]: {
     maxEntries: 6,
     maxChars: 4000,
     maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
   },
   [AI_MODES.LOCAL]: {
     maxEntries: 6,
     maxChars: 4000,
     maxVerifiedChars: 3400,
     excludeBoardDecisions: true,
+    excludeCourtDecisions: true,
   },
   [AI_MODES.LOCAL_SERVER]: {
     maxEntries: 8,
@@ -2442,6 +2447,8 @@ async function _injectDKBContext(prompt, systemPrompt, options, usedChars = 0) {
       maxEntries: options.maxDKBEntries || budget.maxEntries,
       maxChars,
       ...(budget.excludeBoardDecisions ? { excludeBoardDecisions: true } : {}),
+      ...(budget.excludeCourtDecisions ? { excludeCourtDecisions: true } : {}),
+      ...(usedChars > 0 ? { withVerifiedReference: true } : {}),
       ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
     });
     if (!dkbContext) return systemPrompt;
