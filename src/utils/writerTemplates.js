@@ -536,3 +536,149 @@ export function tdiuSavePayload(analysis) {
       : {}),
   };
 }
+
+export const STANDARD_DRAFT_NOTE_NO_BLANKS =
+  "This is the standard draft, built from your answers as you entered them.";
+
+/** The one-line note for an app-built draft, with or without blanks. */
+export const standardDraftNote = (draft) =>
+  listPlaceholders(draft).length > 0
+    ? STANDARD_DRAFT_NOTE
+    : STANDARD_DRAFT_NOTE_NO_BLANKS;
+
+/*
+ * A writing plan: how one tool's draft is built, and which of its answers
+ * are passages, the veteran's (or witness's) own free text. Only passages
+ * are ever offered to the model, one by one, for rewording; the app then
+ * builds the draft again with the accepted rewordings in their place.
+ * Headings, fixed sentences, blanks, labels, greeting and closing are the
+ * builder's and never pass through the model.
+ *
+ *   build(answers)   the draft for a set of answers
+ *   answers          what the form supplied
+ *   passageKeys      the answers that are free-text passages
+ *   keep             phrases a rewording must not lose (condition names)
+ */
+const plan = (build, answers, passageKeys, keep = []) => ({
+  build,
+  answers: answers ?? {},
+  passageKeys,
+  keep: keep.map(text).filter(Boolean),
+});
+
+export const personalStatementPlan = (
+  answers,
+  condition,
+  primaryCondition = null,
+) =>
+  plan(
+    (a) => buildPersonalStatementTemplate(a, condition, primaryCondition),
+    answers,
+    [
+      "inServiceEvent",
+      "specificIncident",
+      "specificExamples",
+      "workImpact",
+      "socialImpact",
+      "nexusExplanation",
+      "aggravationExplanation",
+    ],
+    [condition, primaryCondition],
+  );
+
+export const ptsdStatementPlan = (answers) =>
+  plan(buildPTSDStressorTemplate, answers, [
+    "eventDescription",
+    "immediateImpact",
+    "currentSymptoms",
+    "dailyImpact",
+  ]);
+
+export const buddyStatementPlan = (answers, conditionName) =>
+  plan(
+    (a) => buildBuddyStatementTemplate(a, conditionName),
+    answers,
+    ["observations", "changesNoticed", "dailyImpact"],
+    [conditionName],
+  );
+
+export const appealStatementPlan = (answers) =>
+  plan(
+    buildAppealStatementTemplate,
+    answers,
+    ["whyIncorrect", "supportingEvidence", "newEvidence", "desiredOutcome"],
+    [answers?.conditionName],
+  );
+
+export const nexusRequestPlan = (answers) =>
+  plan(
+    buildNexusLetterRequestTemplate,
+    answers,
+    ["connectionTheory", "inServiceEvent", "symptoms", "medicalHistory"],
+    [answers?.conditionName, answers?.primaryCondition],
+  );
+
+/** Every answer a witness typed is a passage. */
+export const witnessStatementPlan = (relationship, condition, answers) =>
+  plan(
+    (a) => buildWitnessStatementTemplate(relationship, condition, a),
+    answers,
+    Object.keys(answers ?? {}),
+    [condition],
+  );
+
+/** The plan for a Forms Helper form, or null when it has no wording step. */
+export function formStatementPlan(formType, formData) {
+  const mapped = formStatementInputs(formType, formData);
+  switch (mapped?.kind) {
+    case "buddy":
+      return buddyStatementPlan(mapped.answers, mapped.condition);
+    case "personal":
+      return personalStatementPlan(
+        mapped.answers,
+        mapped.condition,
+        mapped.primaryCondition,
+      );
+    case "ptsd":
+      return ptsdStatementPlan(mapped.answers);
+    default:
+      return null;
+  }
+}
+
+// A passage this short ("None", "Daily") has nothing to reword.
+const MIN_PASSAGE_WORDS = 3;
+
+/**
+ * The passages of a plan that are worth offering to the model: answered,
+ * long enough to reword, and actually printed in the draft. Each entry is
+ * { key, text }.
+ */
+export function selectPassages({ build, answers, passageKeys }) {
+  const draft = build(answers);
+  return passageKeys
+    .map((key) => ({ key, text: text(answers[key]) }))
+    .filter(
+      (passage) =>
+        passage.text.split(/\s+/).length >= MIN_PASSAGE_WORDS &&
+        draft.includes(passage.text),
+    );
+}
+
+/** The request sent to the model: reword these passages, add nothing. */
+export function buildPassagePrompt(passages) {
+  const numbered = passages
+    .map((passage, i) => `${i + 1}. ${passage}`)
+    .join("\n");
+  return `Someone typed the numbered passages below into a VA disability claim form. Rewrite each passage as clear, complete sentences in the first person, in plain words.
+
+Rules:
+- Say only what the passage says. Do not add any fact, number, date, place, name, unit, diagnosis, rating, cause, feeling or detail that is not in it.
+- Keep every number, date and name exactly as written.
+- Keep who is speaking, and who is spoken about, the same.
+- If a passage is already clear, complete sentences, return it unchanged.
+- Do not use square brackets. Do not ask questions, give advice, or add a heading, a greeting, a closing or a certification.
+- Reply with the same numbers, one rewritten passage after each number, and nothing else.
+
+${numbered}`;
+}

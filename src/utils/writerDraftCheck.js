@@ -28,6 +28,7 @@
 import {
   STANDARD_DRAFT_NOTE,
   listPlaceholders,
+  standardDraftNote,
   tdiuAnalysisText,
 } from "./writerTemplates.js";
 
@@ -563,15 +564,26 @@ const wordSet = (value) =>
       .filter(Boolean),
   );
 
+// Words a sentence may open with without being a name.
+const SENTENCE_OPENERS = new Set(
+  "i my me we our they their them he his she her it its this that these those the a an and but or so because since when while after before during at in on as for from with without to due also now then there here every each some most many all both any no not never always often sometimes usually today still even if although though however additionally because what where who how".split(
+    " ",
+  ),
+);
+
 /**
  * Capitalised words inside a sentence (so, likely names of people, places
  * or units) that the allowed text does not contain. Headings, bold labels,
  * sentence openings and bracketed blanks are skipped.
+ *
+ * With `prose` the text is a passage, not a document: no line is taken for
+ * a heading, and a word that opens a sentence counts too unless it is an
+ * ordinary opener ("I", "My", "When") or one of the allowed words.
  */
-function newNames(draft, allowedWords) {
+function newNames(draft, allowedWords, prose = false) {
   const found = new Set();
   for (const line of draft.split("\n")) {
-    if (isHeadingLine(line)) continue;
+    if (!prose && isHeadingLine(line)) continue;
     const words = line
       .replace(/(\*\*|__)[^*_\n]{1,80}\1:?/g, " . ")
       .split(/\s+/)
@@ -580,9 +592,10 @@ function newNames(draft, allowedWords) {
     for (const word of words) {
       const key = wordKey(word);
       const capitalised = /^["'(]*[A-Z]/.test(word);
+      const skipped = opensSentence && !(prose && !SENTENCE_OPENERS.has(key));
       if (
         capitalised &&
-        !opensSentence &&
+        !skipped &&
         key.length > 1 &&
         !CAPITALISED_ANYWHERE.has(key) &&
         !allowedWords.has(key)
@@ -601,7 +614,7 @@ function newNames(draft, allowedWords) {
  * Facts in `draft` that appear in neither the inputs nor the app-built
  * draft. Each entry is { kind, value }.
  */
-export function findNewFacts(draft, allowedText) {
+export function findNewFacts(draft, allowedText, { prose = false } = {}) {
   const body = straighten(draft).replace(BLANK, " ").replace(LIST_MARKER, " ");
   const allowed = straighten(allowedText);
   const allowedLower = squash(allowed);
@@ -630,7 +643,7 @@ export function findNewFacts(draft, allowedText) {
   add("service", newTerms(SERVICE_TERMS, body, allowed));
   add("diagnosis", newTerms(DIAGNOSES, body, allowed));
   add("attestation", newTerms(ATTESTATIONS, body, allowed));
-  add("name", newNames(body, wordSet(allowed)));
+  add("name", newNames(body, wordSet(allowed), prose));
   return facts;
 }
 
@@ -906,3 +919,208 @@ export const draftAfterError = (error) => ({
     (error instanceof Error ? error.message : String(error ?? "")) ||
     "the AI did not answer",
 });
+
+/*
+ * Passage rewording.
+ *
+ * The model is offered only the passages someone typed, numbered, and asked
+ * for each back reworded under the same number. Each rewording is checked on
+ * its own against the passage it came from, and the app builds the draft
+ * again with the accepted ones in place. A rewording that fails keeps the
+ * writer's own words. Nothing else in the draft passes through the model.
+ */
+
+const PASSAGE_NUMBER = /^(?:\*\*|__)?(\d{1,2})[.):](?:\*\*|__)?/;
+
+const stripWrapping = (value) =>
+  trimTo(String(value ?? "").trim(), /[^\s"'“”*_`]/);
+
+/**
+ * The reworded passages in a model reply, by number: an array of `count`
+ * entries, each the text after "N." up to the next number or blank line, or
+ * null when that number is missing. Anything before the first number is
+ * ignored. A reply to a single passage may come back with no number.
+ */
+export function parsePassageReply(reply, count) {
+  const found = new Array(count).fill(null);
+  let current = -1;
+  let closed = false;
+  for (const line of straighten(reply).split("\n")) {
+    const trimmed = line.trim();
+    const numbered = PASSAGE_NUMBER.exec(trimmed);
+    const index = numbered ? Number(numbered[1]) - 1 : -1;
+    if (numbered && index >= 0 && index < count && found[index] === null) {
+      current = index;
+      closed = false;
+      found[current] = trimmed.slice(numbered[0].length).trim();
+    } else if (trimmed === "") {
+      closed = current !== -1 && found[current] !== "";
+    } else if (current !== -1 && !closed) {
+      found[current] = `${found[current]} ${trimmed}`.trim();
+    }
+  }
+  if (count === 1 && found[0] === null && String(reply ?? "").trim() !== "") {
+    found[0] = String(reply)
+      .trim()
+      .split(/\n\s*\n/)[0];
+  }
+  return found.map((value) => (value ? stripWrapping(value) : null));
+}
+
+const BRACKETED = /\[[^[\]\n]*\]/g;
+const REDACTION_MARKER = /\[[^[\]\n]*(?:redact|removed|withheld)[^[\]\n]*\]/i;
+
+const sameWording = (a, b) => {
+  const plain = (value) =>
+    trimTo(squash(straighten(value)), /[a-z0-9]/).replace(/[.,;:!?]/g, "");
+  return plain(a) === plain(b);
+};
+
+const MAX_PASSAGE_GROWTH = 1.75;
+const PASSAGE_GROWTH_ALLOWANCE = 40;
+const MIN_NEW_WORDS_ALLOWED = 2;
+
+function passageProblems(original, rewrite, keep) {
+  const kind = classifyDraftKind(rewrite);
+  if (kind !== "draft" && kind !== "empty") return [`not a rewording: ${kind}`];
+
+  const problems = [];
+  if (REDACTION_MARKER.test(rewrite))
+    problems.push("contains a redaction marker");
+  const brackets = (rewrite.match(BRACKETED) ?? []).filter(
+    (item) => !original.includes(item),
+  );
+  if (brackets.length > 0) {
+    problems.push(`adds bracketed text ${[...new Set(brackets)].join(", ")}`);
+  }
+
+  // Bracketed text is judged above; the fact rules read the rest, with the
+  // brackets' contents exposed so an invented fact cannot hide in them.
+  const exposed = rewrite.replace(/[[\]]/g, " ");
+  const newFacts = findNewFacts(exposed, original, { prose: true });
+  if (newFacts.length > 0) problems.push(`adds ${itemise(newFacts)}`);
+  const missing = findMissingFacts(
+    rewrite,
+    [original],
+    keep.filter((phrase) => squash(original).includes(squash(phrase))),
+  );
+  if (missing.length > 0) problems.push(`drops ${itemise(missing)}`);
+
+  if (
+    rewrite.length >
+    MAX_PASSAGE_GROWTH * original.length + PASSAGE_GROWTH_ALLOWANCE
+  ) {
+    problems.push("much longer than the passage");
+  }
+  const known = wordSet(original);
+  const words = contentWords(rewrite);
+  const added = words.filter((word) => !known.has(word));
+  if (
+    added.length >
+    Math.max(MIN_NEW_WORDS_ALLOWED, Math.floor(MAX_NEW_WORDING * words.length))
+  ) {
+    problems.push(`${added.length} of its ${words.length} main words are new`);
+  }
+  return problems;
+}
+
+/**
+ * One reworded passage against the passage it came from.
+ *
+ *   "accepted"   a different wording that adds and loses nothing
+ *   "unchanged"  the same words back (case and punctuation aside)
+ *   "rejected"   missing, not a rewording, or failing a fact rule; `reasons`
+ *                says which
+ *
+ * The fact rules are the draft rules applied to the passage alone: no new
+ * number, counted quantity, date, service detail, diagnosis, name or
+ * certification wording; every number and required phrase of the passage
+ * kept, and most of its wording. On top of those: no bracketed text the
+ * passage did not have (an invented fact in brackets is still invented), no
+ * redaction marker, and not much longer or much newer than the passage.
+ */
+export function checkPassageRewrite({ original, rewrite, keep = [] }) {
+  const source = String(original ?? "").trim();
+  const text = String(rewrite ?? "").trim();
+  if (text === "") {
+    return {
+      status: "rejected",
+      text: source,
+      reasons: ["no rewording returned"],
+    };
+  }
+  if (sameWording(source, text)) {
+    return { status: "unchanged", text: source, reasons: [] };
+  }
+  const reasons = passageProblems(source, text, keep);
+  return reasons.length > 0
+    ? { status: "rejected", text: source, reasons }
+    : { status: "accepted", text, reasons: [] };
+}
+
+const NO_PASSAGES = { sent: 0, accepted: 0, unchanged: 0, rejected: 0 };
+
+/**
+ * The app-built draft as a tool result: what the veteran gets when there is
+ * nothing to reword, or nothing reworded was usable. No claim of AI wording.
+ */
+export function standardDraft(plan, extra = {}) {
+  const content = plan.build(plan.answers);
+  return {
+    content,
+    draftPath: DRAFT_PATH.TEMPLATE,
+    draftNote: standardDraftNote(content),
+    draftRejectReasons: [],
+    passages: NO_PASSAGES,
+    ...extra,
+  };
+}
+
+/**
+ * Settle a model reply for the passages that were sent (`sent`, as returned
+ * by selectPassages, in the order they were numbered). The draft is built
+ * again with each accepted rewording in its passage's place. `draftPath` is
+ * "model" only when at least one passage was reworded and accepted;
+ * `passages` counts how each one fared.
+ */
+export function resolvePassageDraft({ plan, sent, reply }) {
+  const rewrites = parsePassageReply(reply, sent.length);
+  const outcomes = sent.map((passage, i) => ({
+    ...passage,
+    number: i + 1,
+    ...checkPassageRewrite({
+      original: passage.text,
+      rewrite: rewrites[i],
+      keep: plan.keep,
+    }),
+  }));
+  const count = (status) =>
+    outcomes.filter((outcome) => outcome.status === status).length;
+  const passages = {
+    sent: sent.length,
+    accepted: count("accepted"),
+    unchanged: count("unchanged"),
+    rejected: count("rejected"),
+  };
+  const draftRejectReasons = outcomes
+    .filter((outcome) => outcome.status === "rejected")
+    .map(
+      (outcome) => `passage ${outcome.number}: ${outcome.reasons.join("; ")}`,
+    );
+
+  if (passages.accepted === 0) {
+    return standardDraft(plan, { passages, draftRejectReasons });
+  }
+  const reworded = Object.fromEntries(
+    outcomes
+      .filter((outcome) => outcome.status === "accepted")
+      .map((outcome) => [outcome.key, outcome.text]),
+  );
+  return {
+    content: plan.build({ ...plan.answers, ...reworded }),
+    draftPath: DRAFT_PATH.MODEL,
+    draftNote: null,
+    draftRejectReasons,
+    passages,
+  };
+}
