@@ -185,12 +185,10 @@ export const combineTwoRatings = (rating1, rating2) => {
     return Math.max(0, Math.min(100, rating1));
   }
 
-  const a = rating1 / 100;
-  const b = rating2 / 100;
-  // Round to WHOLE NUMBER to match VA Combined Ratings Table
-  // The table uses whole numbers, so 88 + 20 = 90 (not 90.4)
-  const result = Math.round((a + b * (1 - a)) * 100);
-  return result;
+  // Whole-number arithmetic, half rounded up, as Table I is built. In floating
+  // point (0.57 + 0.5 * 0.43) * 100 is 78.49999..., which rounds to 78 where
+  // the table gives 79.
+  return Math.floor((rating1 * 100 + rating2 * (100 - rating1) + 50) / 100);
 };
 
 /**
