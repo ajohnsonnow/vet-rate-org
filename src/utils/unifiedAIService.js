@@ -1164,11 +1164,7 @@ const _isRaterRoute = (options, effectiveMode) =>
  * user turn instead of overriding the system turn - so DKB context isn't
  * lost, it's just no longer competing with the agent's persona.
  */
-const generateWithWarrantCouncil = async (
-  systemPrompt,
-  userPrompt,
-  options = {},
-) => {
+const runWarrantCouncil = async (systemPrompt, userPrompt, options = {}) => {
   const {
     taskType = "general",
     toolId = null,
@@ -1244,7 +1240,7 @@ const generateWithWarrantCouncil = async (
       : await inferencePromise;
 
     swarmGenerating = false;
-    return result.text;
+    return { text: result.text, agent: result.agent || agentId };
   } catch (err) {
     swarmGenerating = false;
     throw new Error(
@@ -1252,6 +1248,12 @@ const generateWithWarrantCouncil = async (
     );
   }
 };
+
+const generateWithWarrantCouncil = async (
+  systemPrompt,
+  userPrompt,
+  options = {},
+) => (await runWarrantCouncil(systemPrompt, userPrompt, options)).text;
 
 /**
  * 🌐 Generate text using Wllama (Browser WASM inference)
@@ -2346,12 +2348,12 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
 async function _invokeBackend(mode, systemPrompt, userPrompt, options) {
   switch (mode) {
     case AI_MODES.SWARM: {
-      const text = await generateWithWarrantCouncil(
+      const { text, agent } = await runWarrantCouncil(
         systemPrompt,
         userPrompt,
         options,
       );
-      return { text, agentUsed: getCurrentAgent() || "auditor" };
+      return { text, agentUsed: agent };
     }
     case AI_MODES.WLLAMA: {
       const text = await generateWithWllama(systemPrompt, userPrompt, options);
@@ -2699,7 +2701,7 @@ function _pickDocumentFallbackMode(effectiveMode) {
 
 async function _generateFallback(mode, systemPrompt, userPrompt, options) {
   if (mode === AI_MODES.SWARM) {
-    const text = await generateWithWarrantCouncil(
+    const { text, agent } = await runWarrantCouncil(
       systemPrompt,
       userPrompt,
       options,
@@ -2708,7 +2710,7 @@ async function _generateFallback(mode, systemPrompt, userPrompt, options) {
       text,
       mode,
       onDevice: _isModeOnDevice(mode),
-      agent: getCurrentAgent(),
+      agent,
       fallback: true,
     };
   }
