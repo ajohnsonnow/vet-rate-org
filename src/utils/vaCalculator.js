@@ -342,7 +342,8 @@ const NAME_NON_LIMB_WORDS = new Set([
   "hearing",
   "tinnitus",
   "vision",
-  ...withPlurals(["ear", "eye", "kidney"]),
+  "testicular",
+  ...withPlurals(["ear", "eye", "kidney", "testicle"]),
 ]);
 
 // Words are runs of letters and digits in any script. A word with a digit or a
@@ -724,76 +725,100 @@ function _usableConditions(conditions) {
   return { usable, ignored };
 }
 
+// Read as a side only when deciding what to report, never to grant a factor.
+const REPORT_ONLY_SIDE_WORDS = { l: "left", r: "right" };
+
+const _isPluralLimbPart = (item) =>
+  Boolean(item.part) && (item.word.endsWith("s") || item.word === "feet");
+
+/** Every side a name could mean: side words, a lone "L" or "R", "feet". */
+function _looseNameSides(items) {
+  const sides = new Set();
+  for (const item of items) {
+    if (item.side) sides.add(item.side);
+    else if (REPORT_ONLY_SIDE_WORDS[item.word]) {
+      sides.add(REPORT_ONLY_SIDE_WORDS[item.word]);
+    } else if (_isPluralLimbPart(item)) sides.add("bilateral");
+  }
+  return sides;
+}
+
 /**
- * What an entry might be, read loosely: every limb its name mentions (or the
- * limb the calculator resolved) and every side it could be on. Used only to
- * decide what to report, never to grant a factor.
+ * What an entry might be, read loosely, used only to decide what to report:
+ * the limbs it could be in (empty when nothing says), the sides it could be
+ * on (null when a side is set but not recognised), and whether it is
+ * positively not a limb.
  */
 function _looseReading(condition) {
   const items = _nameItems(condition.name);
   const limb = _limbOf(condition);
-  const limbs = LIMBS.includes(limb)
-    ? new Set([limb])
-    : new Set(items.filter((i) => i.limb).map((i) => i.limb));
-  const nameSides = new Set(items.filter((i) => i.side).map((i) => i.side));
-  const sideSet = condition.side !== "none";
+  const nameLimbs = new Set(items.filter((i) => i.limb).map((i) => i.limb));
+  const limbKnown = LIMBS.includes(limb);
+  const nameSides = _looseNameSides(items);
   let sides = nameSides;
   if (SIDED.includes(condition.side)) sides = new Set([condition.side]);
-  else if (sideSet) sides = null;
+  else if (condition.side !== "none") sides = null;
+
+  const notALimb =
+    condition.limb === "none" ||
+    (!limbKnown &&
+      nameLimbs.size === 0 &&
+      (items.some((i) => NAME_NON_LIMB_WORDS.has(i.word)) ||
+        NON_LIMB_BODY_PARTS.has(condition.bodyPart)));
+  const unsidedLimb = limbKnown && sides !== null && sides.size === 0;
   return {
     condition,
-    limbs,
+    limbs: limbKnown ? new Set([limb]) : nameLimbs,
     sides,
-    mightPair:
+    unsidedLimb,
+    takesPart:
       condition.rating >= COMPENSABLE &&
-      condition.limb !== "none" &&
-      limbs.size > 0 &&
-      (sideSet || nameSides.size > 0),
-    resolved: LIMBS.includes(limb) && SIDED.includes(condition.side),
+      !notALimb &&
+      (sides === null || sides.size > 0 || unsidedLimb),
+    resolved: limbKnown && SIDED.includes(condition.side),
     saysBothSides:
       sides !== null &&
       (sides.has("bilateral") || (sides.has("left") && sides.has("right"))),
-    sided: sideSet || nameSides.size > 0,
   };
 }
 
+/** Whether two loosely read entries could be the two sides of a pair. */
 function _looseCouldPair(one, other) {
+  const bothLimbsKnown = one.limbs.size > 0 && other.limbs.size > 0;
   const sharesLimb = [...one.limbs].some((limb) => other.limbs.has(limb));
-  if (!sharesLimb) return false;
-  if (!one.sides || !other.sides) return true;
-  const sameOneSide =
-    one.sides.size === 1 &&
-    other.sides.size === 1 &&
-    [...one.sides][0] === [...other.sides][0] &&
-    !one.sides.has("bilateral");
-  return !sameOneSide;
+  if (bothLimbsKnown && !sharesLimb) return false;
+  // A form entry with a limb body part and no side pairs only with an entry
+  // known to be in the same limb type.
+  if (one.unsidedLimb || other.unsidedLimb) return bothLimbsKnown;
+  if (one.sides === null || other.sides === null) return true;
+  if (one.saysBothSides || other.saysBothSides) return true;
+  return [...one.sides][0] !== [...other.sides][0];
 }
 
-function _looseReason(condition) {
-  if (condition.side === "none") return "side-not-set";
-  return RECOGNISED_SIDES.includes(condition.side)
-    ? "limb-unknown"
-    : "side-unknown";
+function _looseReason(reading) {
+  const { side } = reading.condition;
+  if (!RECOGNISED_SIDES.includes(side)) return "side-unknown";
+  if (side !== "none") return "limb-unknown";
+  return reading.unsidedLimb ? "side-unspecified" : "side-not-set";
 }
 
 /**
- * Entries that took no factor but might be half of a pair: the name states a
- * side or a side is set, the name mentions a limb or the body part is one,
- * and another compensable entry exists that the same loose reading could pair
- * it with. This does not depend on the name allowlist. Reporting grants
- * nothing, so it errs toward telling the veteran: "Left knee pain" pasted
- * from VA.gov arrives with side "none" and would otherwise combine with no
- * factor and no word of why.
+ * Entries outside the group that might be half of a pair. This grants
+ * nothing, so it does not use the name allowlist or any list of limb words:
+ * among compensable entries that are not positively non-limb, one that says
+ * left and one that says right are reported (as is one that says both sides
+ * beside any other sided entry or any group, 38 CFR § 4.26(b)), unless both
+ * are known to be in different limbs. Two form entries of the same limb type
+ * with no side set are reported so the veteran can set the side. A pasted
+ * "Left meniscal tear" and "Right meniscal tear" would otherwise combine with
+ * no factor and no word of why.
  */
 function _looseIssues(conditions, alreadyReported, group) {
-  const readings = conditions.map(_looseReading).filter((r) => r.mightPair);
-  // 38 CFR § 4.26(b): a both-sides entry would join a group formed by the
-  // other limbs, so it is reported beside any group or any other sided entry,
-  // whatever the limb.
+  const readings = conditions.map(_looseReading).filter((r) => r.takesPart);
   const besideAnotherSided = (reading) =>
     reading.saysBothSides &&
     (group.length > 0 ||
-      readings.some((other) => other !== reading && other.sided));
+      readings.some((other) => other !== reading && !other.unsidedLimb));
   return readings
     .filter(
       (reading) =>
@@ -807,7 +832,7 @@ function _looseIssues(conditions, alreadyReported, group) {
     )
     .map((reading) => ({
       condition: reading.condition,
-      reason: _looseReason(reading.condition),
+      reason: _looseReason(reading),
     }));
 }
 
@@ -933,7 +958,7 @@ function _buildFinalCalculationStep(
  *   group. `bilateralIssues` lists sided entries that got no bilateral factor
  *   for a reason the veteran can fix:
  *   { ...condition, reason: 'limb-unknown'|'side-unknown'|'side-not-set'|
- *     'single-bilateral-evaluation' },
+ *     'side-unspecified'|'single-bilateral-evaluation' },
  *   plus { reason: 'most-favourable-not-checked' } when § 4.26(d) was skipped
  *   because there were too many arrangements to try.
  */
@@ -1035,6 +1060,8 @@ const _NO_CHECK_MESSAGES = {
     `Vet-Rate did not recognise the side entered for ${names}, so it could not check the bilateral factor.`,
   "side-not-set": (names, one) =>
     `${names} ${one ? "names" : "name"} a side, but no side is set, so Vet-Rate could not check the bilateral factor. Set the side and check again.`,
+  "side-unspecified": (names, one) =>
+    `No side is set for ${names}, so Vet-Rate could not tell whether ${one ? "it pairs with another entry" : "they are on different sides"}.`,
   "limb-unknown": (names, one) =>
     `Vet-Rate could not tell whether ${names} ${one ? "is an arm or a leg condition" : "are arm or leg conditions"}, so it could not check the bilateral factor for ${one ? "it" : "them"}.`,
   "single-bilateral-evaluation": (names, one) =>

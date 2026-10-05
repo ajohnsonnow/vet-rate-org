@@ -3805,6 +3805,13 @@ export const APP_TRANSLATIONS = {
       vi: "Tên có nêu một bên, nhưng tình trạng này chưa được chọn bên, nên không áp dụng hệ số song phương. Hãy chỉnh sửa và chọn bộ phận cơ thể và bên.",
       ko: "이름에 측면이 나와 있지만 이 상태에 측면이 설정되지 않아 양측 요인을 적용하지 않았습니다. 편집하여 신체 부위와 측면을 선택하세요.",
     },
+    bilateralIssueSideUnspecified: {
+      en: "No side is set for this condition. If it and another arm or leg condition are on different sides (left and right), edit them and set the side.",
+      es: "Esta condición no tiene lado asignado. Si esta y otra condición de brazo o pierna están en lados distintos (izquierda y derecha), edítalas y elige el lado.",
+      tl: "Walang nakatakdang panig para sa kondisyong ito. Kung ito at ang isa pang kondisyon sa braso o binti ay nasa magkaibang panig (kaliwa at kanan), i-edit ang mga ito at itakda ang panig.",
+      vi: "Tình trạng này chưa được chọn bên. Nếu tình trạng này và một tình trạng khác ở tay hoặc chân nằm ở hai bên khác nhau (trái và phải), hãy chỉnh sửa và chọn bên.",
+      ko: "이 상태에 측면이 설정되지 않았습니다. 이 상태와 다른 팔 또는 다리 상태가 서로 다른 쪽(왼쪽과 오른쪽)에 있다면 편집하여 측면을 설정하세요.",
+    },
     bilateralIssueSingleEvaluation: {
       en: "One rating that already covers both sides gets no bilateral factor by itself. If each side has its own rating, enter them as separate Left and Right conditions.",
       es: "Un solo rating que ya cubre ambos lados no recibe factor bilateral por sí solo. Si cada lado tiene su propio rating, ingrésalos como condiciones separadas de Izquierda y Derecha.",
