@@ -1138,6 +1138,11 @@ const resolveWarrantCouncilAgent = (toolId, taskType) => {
   return "auditor";
 };
 
+const _isRaterRoute = (options, effectiveMode) =>
+  resolveWarrantCouncilAgent(options.toolId, options.taskType) === "rater" ||
+  (effectiveMode === AI_MODES.WLLAMA &&
+    Boolean(wllamaCurrentModel?.startsWith("rater")));
+
 /**
  * Generate text using Warrant Council (Primary AI Engine)
  * Routes to the appropriate specialized agent based on task type
@@ -1202,10 +1207,6 @@ const generateWithWarrantCouncil = async (
         .join("\n\n---\n\n");
 
   const agentId = resolveWarrantCouncilAgent(toolId, taskType);
-  const enhancedPrompt =
-    agentId === "rater"
-      ? injectCalculatorForRater(basePrompt, options)
-      : basePrompt;
 
   // eslint-disable-next-line no-console
   console.log(
@@ -1215,7 +1216,7 @@ const generateWithWarrantCouncil = async (
   try {
     swarmGenerating = true;
 
-    const inferencePromise = generateWithSwarm(enhancedPrompt, {
+    const inferencePromise = generateWithSwarm(basePrompt, {
       agentId,
       toolId,
       maxTokens,
@@ -1302,19 +1303,13 @@ const generateWithWllama = async (systemPrompt, userPrompt, options = {}) => {
     }
   }
 
-  // Ground the Rater model in the deterministic calculator before the LLM
-  // ever sees the prompt - see injectCalculatorForRater for why.
-  const enhancedPrompt = wllamaCurrentModel?.startsWith("rater")
-    ? injectCalculatorForRater(scrubbedPrompt, options)
-    : scrubbedPrompt;
-
   try {
     // eslint-disable-next-line no-console
     console.log(
       `🌐 Wllama: Generating with ${wllamaCurrentModel || "auditor"} model...`,
     );
 
-    const result = await wllamaService.chatCompletion(enhancedPrompt, {
+    const result = await wllamaService.chatCompletion(scrubbedPrompt, {
       maxTokens,
       temperature,
       onToken: onStream ? (token) => onStream(token) : null,
@@ -2337,7 +2332,14 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
     _hadCallerSystemPrompt: hadCallerSystemPrompt,
   };
 
-  return { systemPrompt, userPrompt: prompt, enhancedOptions };
+  // The single grounding point: appended to the user piece before
+  // _redactPiecesForSend, so every backend receives the computed block once
+  // and it is redacted like the rest of the request.
+  const userPrompt = _isRaterRoute(options, effectiveMode)
+    ? injectCalculatorForRater(prompt, options)
+    : prompt;
+
+  return { systemPrompt, userPrompt, enhancedOptions };
 }
 
 // One call site per backend, shared by both the mode-directed dispatch and
