@@ -33,11 +33,12 @@ const textOf = (content) => {
   return "";
 };
 
-const KB_MARKER = "DIAMOND KNOWLEDGE BASE (DKB) CONTEXT";
+const KB_HEADER = String.raw`=== (?:REFERENCE MATERIAL|[^\n]*DIAMOND KNOWLEDGE BASE \(DKB\) CONTEXT) ===`;
+const KB_FOOTER = String.raw`=== END (?:REFERENCE MATERIAL|DKB CONTEXT) ===`;
+const KB_MARKER = new RegExp(KB_HEADER);
 const KB_COUNT =
-  /\[(\d+) relevant (?:DKB|knowledge base) entries provided(?:: (\d+) retrieved from the full corpus)?/;
-const KB_BLOCK =
-  /=== [^\n]*DIAMOND KNOWLEDGE BASE \(DKB\) CONTEXT ===[\s\S]*?=== END DKB CONTEXT ===/;
+  /\[(\d+) (?:reference|relevant (?:DKB|knowledge base)) entries provided(?:: (\d+) retrieved from the full corpus)?/;
+const KB_BLOCK = new RegExp(String.raw`${KB_HEADER}[\s\S]*?${KB_FOOTER}`);
 const COMPUTED_BLOCK =
   /=== COMPUTED RESULT \([\s\S]*?=== END COMPUTED RESULT ===/;
 const COMPUTED_MARKER = "=== COMPUTED RESULT (";
@@ -70,7 +71,7 @@ export function analyzeEngineRequest(captured, personaPrompts) {
   const matched = Object.entries(personaPrompts ?? {}).find(
     ([, prompt]) => prompt === systemText,
   );
-  const kbInjected = allText.includes(KB_MARKER);
+  const kbInjected = KB_MARKER.test(allText);
   const kbCount = KB_COUNT.exec(allText);
   let kbEntryCount = 0;
   if (kbInjected) kbEntryCount = kbCount ? Number(kbCount[1]) : null;

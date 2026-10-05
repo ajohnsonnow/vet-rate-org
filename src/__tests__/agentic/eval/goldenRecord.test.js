@@ -45,26 +45,6 @@ describe("analyzeEngineRequest", () => {
     ).toBe("unknown");
   });
 
-  it("counts knowledge-base entries from the DKB block", () => {
-    const text =
-      "q\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===\nx\n[4 relevant DKB entries provided from BVA]\n=== END DKB CONTEXT ===";
-    const out = analyzeEngineRequest(request(text), personas);
-    expect(out.kbContextInjected).toBe(true);
-    expect(out.kbEntryCount).toBe(4);
-    expect(out.kbShardCount).toBe(0);
-    expect(out.kbContext).toMatch(
-      /^=== .*CONTEXT ===\nx\n\[4 .*=== END DKB CONTEXT ===$/s,
-    );
-  });
-
-  it("counts full-corpus passages from the flag-on block", () => {
-    const text =
-      "q\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===\nx\n[5 relevant knowledge base entries provided: 3 retrieved from the full corpus, 2 curated DKB entries]\n=== END DKB CONTEXT ===";
-    const out = analyzeEngineRequest(request(text), personas);
-    expect(out.kbEntryCount).toBe(5);
-    expect(out.kbShardCount).toBe(3);
-  });
-
   it("detects the computed-result block", () => {
     const text =
       "q\n\n=== COMPUTED RESULT (38 CFR § 4.25/4.26 - already calculated, do not recompute) ===\nCombined rating: 50%\n=== END COMPUTED RESULT ===";
@@ -101,6 +81,56 @@ describe("analyzeEngineRequest", () => {
     const sent = analyzeEngineRequest(request("hi", prompts.writer), prompts);
     expect(sent.actualAgent).toBe("writer");
     expect(sent.systemPromptFingerprint).toBe(fingerprints.writer);
+  });
+});
+
+describe("analyzeEngineRequest reference block", () => {
+  it("counts reference entries from the reference block", () => {
+    const text =
+      "q\n\n=== REFERENCE MATERIAL ===\nx\n[4 reference entries provided from BVA]\n=== END REFERENCE MATERIAL ===";
+    const out = analyzeEngineRequest(request(text), personas);
+    expect(out.kbContextInjected).toBe(true);
+    expect(out.kbEntryCount).toBe(4);
+    expect(out.kbShardCount).toBe(0);
+    expect(out.kbContext).toBe(text.slice(3));
+  });
+
+  it("counts full-corpus passages from the flag-on reference block", () => {
+    const text =
+      "q\n\n=== REFERENCE MATERIAL ===\nx\n[5 reference entries provided: 3 retrieved from the full corpus, 2 curated]\n=== END REFERENCE MATERIAL ===";
+    const out = analyzeEngineRequest(request(text), personas);
+    expect(out.kbEntryCount).toBe(5);
+    expect(out.kbShardCount).toBe(3);
+    expect(out.kbContext).toMatch(
+      /^=== REFERENCE MATERIAL ===.*=== END REFERENCE MATERIAL ===$/s,
+    );
+  });
+
+  it("finds no block in a request without one", () => {
+    const out = analyzeEngineRequest(request("a plain question"), personas);
+    expect(out.kbContextInjected).toBe(false);
+    expect(out.kbEntryCount).toBe(0);
+    expect(out.kbContext).toBeNull();
+  });
+
+  it("still reads a block written with the old markers (transcripts already on disk)", () => {
+    const text =
+      "q\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===\nx\n[4 relevant DKB entries provided from BVA]\n=== END DKB CONTEXT ===";
+    const out = analyzeEngineRequest(request(text), personas);
+    expect(out.kbContextInjected).toBe(true);
+    expect(out.kbEntryCount).toBe(4);
+    expect(out.kbShardCount).toBe(0);
+    expect(out.kbContext).toMatch(
+      /^=== .*CONTEXT ===\nx\n\[4 .*=== END DKB CONTEXT ===$/s,
+    );
+  });
+
+  it("still reads the old flag-on block, with the old markers", () => {
+    const text =
+      "q\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===\nx\n[5 relevant knowledge base entries provided: 3 retrieved from the full corpus, 2 curated DKB entries]\n=== END DKB CONTEXT ===";
+    const out = analyzeEngineRequest(request(text), personas);
+    expect(out.kbEntryCount).toBe(5);
+    expect(out.kbShardCount).toBe(3);
   });
 });
 

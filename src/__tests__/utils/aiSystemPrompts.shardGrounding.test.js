@@ -46,8 +46,8 @@ const shardChunk = (overrides = {}) => ({
   ...overrides,
 });
 
-const LEGACY_HEADER = `\n\n=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===
-General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents, and never call it "DKB" or "Diamond Knowledge Base"; say "VA regulations and guidance".
+const LEGACY_HEADER = `\n\n=== REFERENCE MATERIAL ===
+General legal reference material from Vet-Rate.org. It is not this veteran's records and the user did not provide it. Never describe it as their documents; refer to it as "VA regulations and guidance".
 Sources: 38 CFR, BVA decisions, OGC precedent opinions, PACT Act, M21-1.
 Use this data to provide accurate, regulation-based answers. If none of the
 entries below address the question, say so explicitly instead of answering
@@ -87,7 +87,7 @@ describe("flag off (includeShards absent or false)", () => {
     LEGACY_HEADER +
     `---\n<untrusted_content>\nQ: ${FLAT_ENTRIES[0].instruction}\nA: ${FLAT_ENTRIES[0].output}\n</untrusted_content>\nSource: 38 CFR 3.310\nReference: https://example.test/3-310\n` +
     `---\n<untrusted_content>\nQ: ${FLAT_ENTRIES[1].instruction}\nA: ${FLAT_ENTRIES[1].output}\n</untrusted_content>\nSource: 38 CFR 4.130\n` +
-    `\n[2 relevant DKB entries provided from diamond-flat]\n=== END DKB CONTEXT ===\n`;
+    `\n[2 reference entries provided from diamond-flat]\n=== END REFERENCE MATERIAL ===\n`;
 
   it("produces the exact legacy bytes and never touches the shards", async () => {
     const out = await buildDKBContext(nextQuery("off"), {
@@ -177,7 +177,7 @@ describe("flag on (includeShards true)", () => {
     const out = await buildDKBContext(nextQuery("header"), opts());
 
     expect(out).toContain(
-      "Sources retrieved: eCFR (38 CFR); Vet-Rate.org curated DKB entries.",
+      "Sources retrieved: eCFR (38 CFR); Vet-Rate.org curated entries.",
     );
     expect(out).not.toContain("BVA decisions");
     expect(out).not.toContain("PACT Act");
@@ -193,12 +193,10 @@ describe("flag on (includeShards true)", () => {
     );
     expect(out).toContain("not this veteran's records");
     expect(out).toContain("the user did not provide it");
-    expect(out).toContain('never call it "DKB"');
-    expect(out).not.toContain("Diamond Knowledge Base.");
-    expect(out).toContain("=== 💎 DIAMOND KNOWLEDGE BASE (DKB) CONTEXT ===");
-    expect(out).toContain("=== END DKB CONTEXT ===");
+    expect(out).toContain("=== REFERENCE MATERIAL ===");
+    expect(out).toContain("=== END REFERENCE MATERIAL ===");
     expect(out).toMatch(
-      /\[\d+ relevant knowledge base entries provided: \d+ retrieved from the full corpus, \d+ curated DKB entries\]/,
+      /\[\d+ reference entries provided: \d+ retrieved from the full corpus, \d+ curated\]/,
     );
   });
 
@@ -208,7 +206,22 @@ describe("flag on (includeShards true)", () => {
     const out = await buildDKBContext(nextQuery("header-shard-only"), opts());
 
     expect(out).toContain("Sources retrieved: eCFR (38 CFR).");
-    expect(out).not.toContain("curated DKB entries.");
+    expect(out).not.toContain("curated entries.");
+  });
+});
+
+describe("the block names no internal knowledge base", () => {
+  it("no model-visible line of the block carries the internal name", async () => {
+    queryCorpusMock.mockResolvedValue({ chunks: [shardChunk()] });
+    const sharded = await buildDKBContext(nextQuery("no-name-shard"), opts());
+    const curated = await buildDKBContext(nextQuery("no-name-flat"), {
+      maxEntries: 10,
+      maxChars: 8000,
+    });
+    for (const out of [sharded, curated]) {
+      expect(out).not.toMatch(/DKB/i);
+      expect(out).not.toMatch(/knowledge base/i);
+    }
   });
 });
 
@@ -270,9 +283,7 @@ describe("flag on: budget and de-duplication", () => {
   it("returns flat-file context only, with a truthful header, when no passage comes back", async () => {
     const out = await buildDKBContext(nextQuery("none"), opts());
 
-    expect(out).toContain(
-      "Sources retrieved: Vet-Rate.org curated DKB entries.",
-    );
+    expect(out).toContain("Sources retrieved: Vet-Rate.org curated entries.");
     expect(out).toContain("Q: What is secondary service connection?");
     expect(out).not.toContain("Authority: ");
   });
