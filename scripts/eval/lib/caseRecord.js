@@ -1,5 +1,6 @@
 import { buildCaseRecord } from "./goldenRecord.js";
 import { selectOwnRequest } from "./requestCapture.js";
+import { TOOL_ENTRIES } from "./toolEntries.js";
 
 /**
  * One transcript record from what happened to one case.
@@ -20,7 +21,26 @@ import { selectOwnRequest } from "./requestCapture.js";
  * `draftPath` "model" (the model's wording passed the acceptance check) or
  * "template" (the app-built draft was returned, with `draftRejectReasons`).
  */
-function toolFields(caseDef, outcome) {
+const systemTextOf = (request) => {
+  const content = request?.messages?.find((m) => m?.role === "system")?.content;
+  return typeof content === "string" ? content : null;
+};
+
+/**
+ * For an entry that sends its own system prompt: whether the engine received
+ * it (true or false), or null when no request was captured. Undefined for an
+ * entry that relies on the persona prompt.
+ */
+function ownSystemPromptSeen(caseDef, own) {
+  const expected = TOOL_ENTRIES[caseDef.entry]?.ownSystemPrompt;
+  if (!expected) return {};
+  const system = systemTextOf(own);
+  return {
+    ownSystemPrompt: system === null ? null : system.startsWith(expected),
+  };
+}
+
+function toolFields(caseDef, outcome, own) {
   if (!caseDef.entry) return {};
   const { documentText: _documentText, ...formInputs } =
     caseDef.formInputs ?? {};
@@ -31,6 +51,7 @@ function toolFields(caseDef, outcome) {
     draftPath: outcome.tool?.draftPath ?? null,
     draftNote: outcome.tool?.draftNote ?? null,
     draftRejectReasons: outcome.tool?.draftRejectReasons ?? [],
+    ...ownSystemPromptSeen(caseDef, own),
   };
 }
 
@@ -58,7 +79,7 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
     thinking: run.thinking ?? null,
     engineThinking: own?.extra_body?.enable_thinking ?? null,
     requestMatch: own ? "matched" : "none",
-    ...toolFields(caseDef, outcome),
+    ...toolFields(caseDef, outcome, own),
     ...(typeof outcome.rawResponse === "string" &&
     outcome.rawResponse !== visible
       ? { rawResponse: outcome.rawResponse }

@@ -1,6 +1,6 @@
 import { suppliedText } from "./goldenSet.js";
 import { extractCfrSections } from "./legalSections.js";
-import { isWritingEntry } from "./toolEntries.js";
+import { TOOL_ENTRIES, isWritingEntry } from "./toolEntries.js";
 
 export const AUTO_PASS = "auto-pass";
 export const AUTO_FAIL = "auto-fail";
@@ -30,7 +30,35 @@ const result = (status, detail = "", data = undefined) => ({
   ...(data ? { data } : {}),
 });
 
+/*
+ * A tool that sends its own system prompt is routed correctly when the
+ * engine received that prompt: that is what production does, and no persona
+ * prompt reaches the engine for it.
+ */
+function checkOwnSystemPrompt(record) {
+  if (record.ownSystemPrompt === true) {
+    return result(AUTO_PASS, "the tool's own system prompt, as in production");
+  }
+  if (record.ownSystemPrompt === false) {
+    const received =
+      record.actualAgent === "unknown"
+        ? "another prompt"
+        : `the ${record.actualAgent} persona`;
+    return result(
+      AUTO_FAIL,
+      `expected the tool's own system prompt, engine received ${received}`,
+    );
+  }
+  return result(
+    NEEDS_HUMAN,
+    "the tool's request was not captured at the engine",
+  );
+}
+
 export function checkRouting(caseDef, record) {
+  if (TOOL_ENTRIES[caseDef.entry]?.ownSystemPrompt) {
+    return checkOwnSystemPrompt(record);
+  }
   const actual = record.actualAgent;
   if (!actual || actual === "unknown") {
     return result(

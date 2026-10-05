@@ -33,7 +33,20 @@ import {
  * needs a browser. toolEntries.test.js holds `draft` to what the real
  * functions send and return.
  */
+/*
+ * The statement helper and the Decision Decoder pass generateAI their own
+ * system prompt, which the engine receives in place of a persona prompt
+ * (with any knowledge-base context appended). An entry that does this names
+ * the prompt here, and routing for its cases means: the engine got that
+ * prompt. toolEntries.production.test.js holds these to the real calls.
+ */
+export const HELPER_SYSTEM_PROMPT =
+  "You are a helpful assistant specializing in VA disability claims and veteran benefits. You help veterans write accurate, compelling statements for their claims.";
+export const DECODER_SYSTEM_PROMPT =
+  "You are a VA claims expert. Respond only with valid JSON.";
+
 const helperResult = {
+  ownSystemPrompt: HELPER_SYSTEM_PROMPT,
   text: (result) => result?.content ?? "",
   failure: (result) => (result?.success ? null : (result?.error ?? "failed")),
 };
@@ -168,6 +181,7 @@ export const TOOL_ENTRIES = {
     draft: (i) => tdiuDraft(i.disabilities ?? [], i.veteranContext ?? ""),
   },
   decodeDecision: {
+    ownSystemPrompt: DECODER_SYSTEM_PROMPT,
     args: (i, run) => [i.documentText, { timeout: run?.timeoutMs }],
     text: (result) => (result?.data ? JSON.stringify(result.data) : ""),
     failure: (result) => (result?.success ? null : (result?.error ?? "failed")),

@@ -105,14 +105,11 @@ const GOOD_DECODE = JSON.stringify({
 
 /*
  * The statement helper and the Decision Decoder send their own system
- * prompt, so the engine gets no persona prompt from them. The Witness Bench
- * and the TDIU Builder send none, and get the writer persona.
+ * prompt, and the engine receives it with knowledge-base context appended.
+ * The Witness Bench and the TDIU Builder send none, and get the writer
+ * persona.
  */
-const PERSONA_ENTRIES = new Set([
-  "compileWitnessStatement",
-  "generateVocationalImpact",
-]);
-const TOOL_SYSTEM_PROMPT = "(dry-run stub) the tool's own system prompt";
+const KB_SUFFIX = "\n\n(dry-run stub) knowledge-base context";
 const TOOL_SETTINGS = { max_tokens: 2048, temperature: 0.3 };
 
 /**
@@ -153,14 +150,14 @@ export const DRY_RUN_EXPECTATIONS = {
   a24: { "calc-match": AUTO_PASS },
   a25: { "calc-match": NEEDS_HUMAN },
   a30: { routing: NEEDS_HUMAN },
-  t01: { routing: NEEDS_HUMAN, "draft-returned": AUTO_PASS },
+  t01: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t03: { "draft-returned": AUTO_PASS },
   t04: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t05: { "draft-returned": AUTO_PASS },
   t06: { "draft-returned": AUTO_FAIL },
   t07: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t08: {
-    routing: NEEDS_HUMAN,
+    routing: AUTO_PASS,
     "draft-returned": NOT_APPLICABLE,
     "no-new-pii": AUTO_PASS,
   },
@@ -216,14 +213,15 @@ function toolOutcome(
   override,
   { personaPrompts, resolveAgentForTool },
 ) {
-  const draft = TOOL_ENTRIES[caseDef.entry].draft?.(caseDef.formInputs);
+  const spec = TOOL_ENTRIES[caseDef.entry];
+  const draft = spec.draft?.(caseDef.formInputs);
   const request = {
     messages: [
       {
         role: "system",
-        content: PERSONA_ENTRIES.has(caseDef.entry)
-          ? personaPrompts[resolveAgentForTool(caseDef.toolId)]
-          : TOOL_SYSTEM_PROMPT,
+        content: spec.ownSystemPrompt
+          ? `${spec.ownSystemPrompt}${KB_SUFFIX}`
+          : personaPrompts[resolveAgentForTool(caseDef.toolId)],
       },
       {
         role: "user",

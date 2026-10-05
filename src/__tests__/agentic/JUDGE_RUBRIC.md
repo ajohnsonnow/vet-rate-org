@@ -106,10 +106,12 @@ For W2 on a tool case, a bracketed blank is correct wherever the form
 inputs do not hold the fact. A blank is wrong only where the inputs do
 hold it.
 
-`routing` is `human` for the tool cases that go through the statement
-helper or the Decision Decoder: those tools send their own system prompt,
-so the engine receives no persona prompt to match. The Witness Bench and
-TDIU cases send none and should show the writer persona.
+The statement helper and the Decision Decoder send their own system
+prompt, so for their cases (`t01` to `t03`, `t05`, `t06`, `t08`) the engine
+receives that prompt and no persona prompt. That is what production does,
+so `routing` passes for those cases when the engine received the tool's own
+prompt, and the agent column reads "tool's own prompt". The Witness Bench
+and TDIU cases (`t04`, `t07`) send none and must show the writer persona.
 
 ## Auditor criteria (6 — pass at 5+)
 

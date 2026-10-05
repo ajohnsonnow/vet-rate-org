@@ -91,6 +91,9 @@ describe.each(WRITING_CASES)("$id through $entry", (caseDef) => {
     expect(prompt).toContain(caseDef.match);
     expect(options.toolId).toBe(caseDef.toolId);
     expect(options.dataClass).toBe("context");
+    expect(options.systemPrompt).toBe(
+      TOOL_ENTRIES[caseDef.entry].ownSystemPrompt,
+    );
   });
 
   it("hands back the model's wording when the model returns the draft", async () => {
@@ -134,6 +137,7 @@ describe("t08 through decodeDecision", () => {
     expect(options).toMatchObject({
       toolId: "decision-decoder",
       dataClass: "document",
+      systemPrompt: TOOL_ENTRIES.decodeDecision.ownSystemPrompt,
     });
     expect(outcome.ok).toBe(true);
     expect(JSON.parse(outcome.text)).toEqual(decoded);

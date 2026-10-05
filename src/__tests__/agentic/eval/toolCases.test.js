@@ -12,9 +12,11 @@ import { assembleCaseRecord } from "../../../../scripts/eval/lib/caseRecord.js";
 import {
   AUTO_FAIL,
   AUTO_PASS,
+  NEEDS_HUMAN,
   NOT_APPLICABLE,
   checkDraftReturned,
   checkNoNewPii,
+  checkRouting,
 } from "../../../../scripts/eval/lib/goldenChecks.js";
 import { renderSummary } from "../../../../scripts/eval/lib/goldenReport.js";
 import {
@@ -24,6 +26,7 @@ import {
   parseGoldenSet,
 } from "../../../../scripts/eval/lib/goldenSet.js";
 import {
+  DECODER_SYSTEM_PROMPT,
   TOOL_ENTRIES,
   TOOL_ENTRY_NAMES,
   isWritingEntry,
@@ -214,7 +217,7 @@ describe("assembleCaseRecord on a tool case", () => {
   const caseDef = byId("t08");
   const request = (text) => ({
     messages: [
-      { role: "system", content: "tool prompt" },
+      { role: "system", content: `${DECODER_SYSTEM_PROMPT}\n\nKB context` },
       { role: "user", content: text },
     ],
   });
@@ -237,6 +240,7 @@ describe("assembleCaseRecord on a tool case", () => {
   it("finds its own request by the match phrase, not the empty input", () => {
     expect(record.requestMatch).toBe("matched");
     expect(record.actualAgent).toBe("unknown");
+    expect(record.ownSystemPrompt).toBe(true);
   });
 
   it("names the entry and the document without copying the document text", () => {
@@ -246,6 +250,48 @@ describe("assembleCaseRecord on a tool case", () => {
       draftPath: null,
     });
     expect(JSON.stringify(record.formInputs)).not.toContain("Nowhere");
+  });
+});
+
+describe("routing for a tool that sends its own system prompt", () => {
+  const t01 = byId("t01");
+
+  it("passes when the engine received that prompt", () => {
+    expect(
+      checkRouting(t01, { actualAgent: "unknown", ownSystemPrompt: true }),
+    ).toMatchObject({
+      status: AUTO_PASS,
+      detail: "the tool's own system prompt, as in production",
+    });
+  });
+
+  it("fails when the engine received a persona or another prompt", () => {
+    expect(
+      checkRouting(t01, { actualAgent: "writer", ownSystemPrompt: false }),
+    ).toMatchObject({
+      status: AUTO_FAIL,
+      detail:
+        "expected the tool's own system prompt, engine received the writer persona",
+    });
+    expect(
+      checkRouting(t01, { actualAgent: "unknown", ownSystemPrompt: false })
+        .detail,
+    ).toMatch(/another prompt/);
+  });
+
+  it("is left to a human when the request was not captured", () => {
+    expect(
+      checkRouting(t01, { actualAgent: null, ownSystemPrompt: null }).status,
+    ).toBe(NEEDS_HUMAN);
+  });
+
+  it("still means the persona for a tool that sends none", () => {
+    expect(checkRouting(byId("t04"), { actualAgent: "writer" }).status).toBe(
+      AUTO_PASS,
+    );
+    expect(checkRouting(byId("t04"), { actualAgent: "auditor" }).status).toBe(
+      AUTO_FAIL,
+    );
   });
 });
 

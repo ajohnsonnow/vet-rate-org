@@ -151,6 +151,8 @@ describe("dry run end to end", () => {
       expect(row.split(/(?<!\\)\|/)).toHaveLength(17);
     }
     expect(md).toContain("| t03 | enhanceFormStatement | template |");
+    expect(md).toContain("| t01 | writer / tool's own prompt | pass |");
+    expect(md).toContain("| t04 | writer / writer | pass |");
     expect(md).toContain("| t06 | generateNexusLetterRequest | - |");
   });
 
