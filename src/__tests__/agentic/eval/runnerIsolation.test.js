@@ -200,6 +200,17 @@ describe("assembleCaseRecord: what the guards did to the answer", () => {
     expect(record.response).toBe("The AI's answer is not shown.");
   });
 
+  it("records whether the answer was cut at the length limit", () => {
+    expect(build(ok({ resultFlags: { truncated: true } })).truncated).toBe(
+      true,
+    );
+    expect(build(ok({ resultFlags: { mode: "swarm" } })).truncated).toBe(false);
+    expect(
+      build({ ok: false, error: "timed out", latencyMs: 1, captured: [] })
+        .truncated,
+    ).toBeNull();
+  });
+
   it("records null when the case produced no result", () => {
     const record = build({
       ok: false,

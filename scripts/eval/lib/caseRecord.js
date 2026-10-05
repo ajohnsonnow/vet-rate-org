@@ -5,15 +5,16 @@ import { TOOL_ENTRIES } from "./toolEntries.js";
 /**
  * What the calculator guard and the response validator did to the answer,
  * read from the fields generateAI put on its result (`resultFlags`).
- * `validatorBlocked` is null when the case produced no result (an error or a
- * timeout), so "not blocked" is never confused with "not known".
+ * `validatorBlocked` and `truncated` are null when the case produced no
+ * result (an error or a timeout), so "no" is never confused with "not known".
  */
 function guardOutcome(flags) {
   if (!flags) {
-    return { validatorBlocked: null };
+    return { validatorBlocked: null, truncated: null };
   }
   return {
     validatorBlocked: Boolean(flags.blocked),
+    truncated: Boolean(flags.truncated),
     ...(flags.calculatorLead ? { calculatorLead: flags.calculatorLead } : {}),
     ...(flags.blocked ? { blockedText: flags.blockedText ?? null } : {}),
   };
@@ -45,7 +46,8 @@ function guardOutcome(flags) {
  * `draftRejectReasons` says why each rejected one was, and
  * `draftErrorReason` is set when the model could not answer at all.
  * `calculatorLead` ({ expected, commentaryKept }) says the answer leads with
- * the calculator's working. `validatorBlocked` says the response validator
+ * the calculator's working. `truncated` says the engine stopped the answer
+ * at the length limit (known for WebLLM and Gemini only). `validatorBlocked` says the response validator
  * blocked the answer, in which case `response` is the message shown in its
  * place and `blockedText` is what the model wrote.
  */
