@@ -395,8 +395,8 @@ function useDkbLocalAIListener({ setKbStatus }) {
           dkbEntries: prev.fullDatabaseCount,
           totalEntries: prev.fullDatabaseCount,
           // Use full source counts
-          dkbSources: prev.fullSources,
-          sources: prev.fullSources,
+          dkbSources: prev.fullSources ?? prev.dkbSources,
+          sources: prev.fullSources ?? prev.sources,
         }));
       } else {
         // Local AI unloaded - revert to web-optimized
@@ -643,10 +643,12 @@ function CompactBadgeLabel({ kbStatus }) {
   if (kbStatus.localAIReady && !kbStatus.isWebOptimized && !kbStatus.loading) {
     return (
       <>
-        <span className="text-emerald-600 dark:text-emerald-400">FULL DKB</span>
+        <span className="text-emerald-600 dark:text-emerald-400">
+          EXPANDED DKB
+        </span>
         <span
           className="text-emerald-500 dark:text-emerald-400 ml-1"
-          aria-label="Full DKB active with Local AI"
+          aria-label="Expanded knowledge base active with Local AI"
         >
           🧠
         </span>
@@ -802,12 +804,12 @@ function CompactFullDkbActiveNotice({ kbStatus }) {
         <span className="text-emerald-500 text-lg">🧠</span>
         <div>
           <div className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-            Full Knowledge Base Active
+            Expanded Knowledge Base Active
           </div>
           <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-            Local AI loaded with complete{" "}
-            <strong>{kbStatus.fullDatabaseCount.toLocaleString()}</strong> DKB
-            entries. All official sources available for comprehensive analysis.
+            Answers also draw passages from the eCFR, M21-1, M21-5, CAVC,
+            Federal Circuit and VA General Counsel sources. BVA decisions and
+            the M21-4 manual are not searched.
           </div>
         </div>
       </div>
@@ -1031,7 +1033,7 @@ function FullKnowledgeBaseHeader({ kbStatus, entriesCaption }) {
           !kbStatus.isWebOptimized &&
           !kbStatus.loading ? (
             <span className="flex items-center gap-1">
-              <span>FULL</span>
+              <span>EXPANDED</span>
               <span className="text-lg">🧠</span>
             </span>
           ) : (
@@ -1246,7 +1248,8 @@ function FullKnowledgeBaseStatus({ kbStatus, formatDate }) {
   if (kbStatus.localAIReady && !kbStatus.isWebOptimized) {
     entriesCaption = (
       <span className="text-emerald-500 dark:text-emerald-400 font-semibold">
-        {kbStatus.fullDatabaseCount.toLocaleString()} entries
+        {kbStatus.fullDatabaseCount.toLocaleString()} cached entries (BVA and
+        M21-4 are not searched)
       </span>
     );
   } else if (kbStatus.isWebOptimized) {
