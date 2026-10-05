@@ -328,3 +328,17 @@ describe("a veteran's own 'I cannot' sentences are not refusals", () => {
     expect(classifyDraftKind(statement)).toBe("draft");
   });
 });
+
+describe("reference text", () => {
+  it("may be drawn on without counting as an invented fact", () => {
+    const withPlace = REWORDED.replace(
+      "During a night loading drill",
+      "During a night loading drill at Camp Placeholder",
+    );
+    expect(check(withPlace).accepted).toBe(false);
+    expect(
+      check(withPlace, { reference: ["Stationed at Camp Placeholder."] })
+        .accepted,
+    ).toBe(true);
+  });
+});

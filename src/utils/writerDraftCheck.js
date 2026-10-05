@@ -700,6 +700,8 @@ const itemise = (items) =>
  * @param {string[]} [args.inputs] what the veteran supplied, as entered
  * @param {string[]} [args.keep] phrases that must survive verbatim
  *   (condition names)
+ * @param {string[]} [args.reference] other text the model was shown and
+ *   may draw on, which the draft need not keep
  * @param {boolean} [args.addressedToReader] see classifyDraftKind
  * @returns {{ accepted: boolean, draft: string, kind: string,
  *   reasons: string[], newFacts: object[], missingFacts: object[],
@@ -710,6 +712,7 @@ export function checkWriterDraft({
   template = "",
   inputs = [],
   keep = [],
+  reference = [],
   addressedToReader = false,
 }) {
   const draft = extractDraft(output);
@@ -727,7 +730,7 @@ export function checkWriterDraft({
     };
   }
 
-  const allowedText = [...inputs, ...keep, template].join("\n");
+  const allowedText = [...inputs, ...keep, ...reference, template].join("\n");
   const newFacts = findNewFacts(draft, allowedText);
   const missingFacts = findMissingFacts(draft, inputs, keep);
   const missingPlaceholders = findMissingPlaceholders(draft, template);
@@ -757,21 +760,8 @@ export function checkWriterDraft({
  * otherwise `fallback` (the app-built draft) with the one-line note.
  * `draftPath` records which.
  */
-export function resolveWriterDraft({
-  output,
-  template,
-  inputs = [],
-  keep = [],
-  addressedToReader = false,
-  fallback = template,
-}) {
-  const check = checkWriterDraft({
-    output,
-    template,
-    inputs,
-    keep,
-    addressedToReader,
-  });
+export function resolveWriterDraft({ fallback, ...args }) {
+  const check = checkWriterDraft(args);
   return check.accepted
     ? {
         content: check.draft,
@@ -780,7 +770,7 @@ export function resolveWriterDraft({
         draftRejectReasons: [],
       }
     : {
-        content: fallback,
+        content: fallback ?? args.template,
         draftPath: DRAFT_PATH.TEMPLATE,
         draftNote: STANDARD_DRAFT_NOTE,
         draftRejectReasons: check.reasons,
