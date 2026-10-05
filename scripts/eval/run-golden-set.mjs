@@ -2,7 +2,7 @@
 /**
  * Golden-set evaluation runner for the on-device AI.
  *
- *   node scripts/eval/run-golden-set.mjs --model <WebLLM model id> [--cases a01,a11] [--temperature 0] [--max-tokens 1024]
+ *   node scripts/eval/run-golden-set.mjs --model <WebLLM model id> [--cases a01,a11] [--temperature 0] [--max-tokens 1024] [--thinking on|off]
  *   node scripts/eval/run-golden-set.mjs --dry-run
  *
  * Real mode drives the app in a headed Chromium with WebGPU (Playwright spec
@@ -105,6 +105,7 @@ function runPlaywright(opts, files) {
     EVAL_CASE_IDS: opts.cases.join(","),
     EVAL_TEMPERATURE: String(opts.temperature),
     EVAL_MAX_TOKENS: String(opts.maxTokens),
+    EVAL_THINKING: opts.thinking ? "on" : "off",
     EVAL_TIMEOUT_MS: String(opts.timeoutMs),
     EVAL_FLAGS: opts.flags.join(","),
     ...(opts.contextWindow
@@ -137,6 +138,7 @@ async function main() {
   const settings = {
     temperature: opts.temperature,
     maxTokens: opts.maxTokens,
+    thinking: opts.thinking,
     timeoutMs: opts.timeoutMs,
     flags: opts.flags,
   };

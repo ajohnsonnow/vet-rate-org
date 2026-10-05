@@ -88,6 +88,11 @@ function describeDevice(device) {
   return parts.join("; ") || "unknown";
 }
 
+function describeThinking(thinking) {
+  if (thinking === undefined || thinking === null) return "?";
+  return thinking ? "on" : "off";
+}
+
 function runSection({ meta, runInfo }) {
   const loaded = meta?.modelIdLoaded ?? "unknown";
   const differs = loaded !== "unknown" && loaded !== runInfo.modelId;
@@ -108,7 +113,7 @@ function runSection({ meta, runInfo }) {
     `- Date: ${runInfo.date}`,
     `- Git commit: \`${runInfo.gitCommit}\`${dirty}`,
     `- Device / GPU: ${escapeCell(describeDevice(meta?.device))}`,
-    `- Settings: temperature ${settings.temperature ?? "?"}, max tokens ${settings.maxTokens ?? "?"}, per-case timeout ${settings.timeoutMs ?? "?"} ms; flags: ${settings.flags?.length ? settings.flags.join(", ") : "none"}`,
+    `- Settings: temperature ${settings.temperature ?? "?"}, max tokens ${settings.maxTokens ?? "?"}, thinking ${describeThinking(settings.thinking)}, per-case timeout ${settings.timeoutMs ?? "?"} ms; flags: ${settings.flags?.length ? settings.flags.join(", ") : "none"}`,
     `- 38 CFR index: ${escapeCell(runInfo.legalIndexNote)}`,
     `- Transcript: \`${runInfo.transcriptFile}\``,
     "",

@@ -11,6 +11,8 @@ options:
   --cases <a01,a11,...>  run only these golden-set case ids
   --temperature <n>      sampling temperature (default 0)
   --max-tokens <n>       completion token cap (default 1024)
+  --thinking on|off      let a thinking model reason before it answers
+                         (default off); recorded in the run settings
   --timeout-ms <n>       per-case generation timeout (default 300000)
   --flag <key>           set localStorage[key]="true" in the app (repeatable)
   --context-window <n>   override the device profile's context window size
@@ -39,6 +41,7 @@ export function parseArgs(argv) {
     cases: [],
     temperature: 0,
     maxTokens: 1024,
+    thinking: false,
     timeoutMs: 300_000,
     contextWindow: null,
     outDir: null,
@@ -50,6 +53,7 @@ export function parseArgs(argv) {
     "--cases",
     "--temperature",
     "--max-tokens",
+    "--thinking",
     "--timeout-ms",
     "--context-window",
     "--out-dir",
@@ -89,6 +93,14 @@ function applyValue(opts, flag, raw) {
       break;
     case "--max-tokens":
       opts.maxTokens = toNumber(flag, raw, { integer: true, min: 1 });
+      break;
+    case "--thinking":
+      if (raw !== "on" && raw !== "off") {
+        throw new Error(
+          `--thinking needs on or off, got ${JSON.stringify(raw)}`,
+        );
+      }
+      opts.thinking = raw === "on";
       break;
     case "--timeout-ms":
       opts.timeoutMs = toNumber(flag, raw, { integer: true, min: 1000 });
