@@ -119,9 +119,9 @@ describe("Agentic harness - system-prompt fingerprints", () => {
     // Rotated for S41's bilateral-calculator-grounding hardening (see
     // CALCULATION BOUNDARY / BILATERAL PAIRING clauses in diamondSwarm.js) -
     // auditor and rater prompts changed, writer did not.
-    auditor: "7b899235c5148520cc5007464f37d26d3533eed132dfff959b850357f2dc708f",
-    writer: "97c52df9d11a554fa2e754c93f65c9083a6017cbcacb2e5b75057e5f257c633a",
-    rater: "8e4d2b2326677b4d4ae8f68055fe7d5a9c126ff0d48dbebb4bd25dbd77dbf785",
+    auditor: "1d990dbb79f92b6733fbbd18dadd72619a65371cc6732975345699c4801e6dc4",
+    writer: "1ace5ae71d6dafdd7591cac5134aa0f916b9267fc7a18c4c5422f8bb6e53c366",
+    rater: "c74d0d41843a3761eb56e56152465769787a19aeac778ac930e8a0fe27749cbc",
   };
 
   it("auditor prompt fingerprint is stable", () => {
@@ -166,5 +166,38 @@ describe("Agentic harness - contract clauses present in prompts", () => {
     const p = SWARM_AGENTS.RATER.systemPrompt;
     expect(p).toMatch(/bilateral factor/i);
     expect(p).toMatch(/38 CFR Part 4/);
+  });
+});
+
+describe("Agentic harness - missing-material rule present in prompts", () => {
+  // A model that is told about a document it was not given must say so and
+  // ask for it instead of inventing its contents.
+  it.each(["AUDITOR", "WRITER", "RATER"])(
+    "%s asks for absent material and never invents case facts",
+    (key) => {
+      const p = SWARM_AGENTS[key].systemPrompt;
+      expect(p).toMatch(/is not in the message, say so and ask for it/);
+      expect(p).toMatch(/Never invent/);
+      expect(p).toMatch(/dates/);
+      expect(p).toMatch(/diagnoses/);
+    },
+  );
+
+  it.each(["AUDITOR", "WRITER"])(
+    "%s names the fabricated facts it must not supply",
+    (key) => {
+      const p = SWARM_AGENTS[key].systemPrompt;
+      expect(p).toMatch(/denial reasons or treatment/);
+    },
+  );
+
+  it("writer brackets unknown facts and matches the author to the document", () => {
+    const p = SWARM_AGENTS.WRITER.systemPrompt;
+    expect(p).toMatch(/\[square brackets\]/);
+    expect(p).toMatch(/Use only facts the user gave/);
+    expect(p).toMatch(/the veteran for a personal statement/);
+    expect(p).toMatch(/the witness for a buddy statement/);
+    expect(p).toMatch(/request to the clinician for a nexus letter/);
+    expect(p).toMatch(/never the clinician's own signed opinion/);
   });
 });

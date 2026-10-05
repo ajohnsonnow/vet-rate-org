@@ -126,7 +126,7 @@ describe("dry run end to end", () => {
 
   it("records the real persona fingerprints in the meta line", () => {
     expect(run.meta.personaFingerprints.rater).toBe(
-      "8e4d2b2326677b4d4ae8f68055fe7d5a9c126ff0d48dbebb4bd25dbd77dbf785",
+      "c74d0d41843a3761eb56e56152465769787a19aeac778ac930e8a0fe27749cbc",
     );
   });
 });
