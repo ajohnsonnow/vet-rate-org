@@ -157,6 +157,17 @@ describe("verified reference on the on-device swarm", () => {
     expect(sent).not.toContain(DKB_STUB);
   });
 
+  it("drops a keyword-search block that came back with no entries", async () => {
+    const emptyBlock =
+      "\n\n=== REFERENCE MATERIAL ===\nheader\n\n[0 reference entries provided from official sources]\n=== END REFERENCE MATERIAL ===\n";
+    buildDKBContextSpy.mockResolvedValue(emptyBlock);
+    await generateAI(SECONDARY_QUESTION, callOptions());
+
+    const sent = sentToSwarm();
+    expect(sent).toContain(VERIFIED_MARKER);
+    expect(sent).not.toContain("=== REFERENCE MATERIAL ===");
+  });
+
   it("delivers the PACT lists unaltered by redaction and scrubbing", async () => {
     await generateAI(PACT_QUESTION, callOptions({ toolId: "pact-navigator" }));
 
@@ -176,7 +187,9 @@ describe("verified reference on the on-device swarm", () => {
       excludeBoardDecisions: true,
     });
   });
+});
 
+describe("verified reference and caller options", () => {
   it("adds nothing when the caller turned reference material off", async () => {
     await generateAI(TDIU_QUESTION, callOptions({ useDKB: false }));
 

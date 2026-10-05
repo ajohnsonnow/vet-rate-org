@@ -2427,6 +2427,12 @@ async function _injectDKBContext(prompt, systemPrompt, options, usedChars = 0) {
       ...(isFullDKBGroundingEnabled() ? { includeShards: true } : {}),
     });
     if (!dkbContext) return systemPrompt;
+    // With a reduced budget the search can return its header and no entry.
+    // That header tells the model to say nothing addresses the question,
+    // which would contradict the verified text above it.
+    if (usedChars > 0 && dkbContext.includes("[0 reference entries provided")) {
+      return systemPrompt;
+    }
     // eslint-disable-next-line no-console
     console.log("[AI] 💎 DKB context injected");
     return systemPrompt + dkbContext;
