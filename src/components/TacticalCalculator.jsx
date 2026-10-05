@@ -1681,6 +1681,38 @@ function MainRatingDisplay({ t, results }) {
   );
 }
 
+const BILATERAL_ISSUE_TEXT = {
+  "limb-unknown":
+    "Vet-Rate could not tell whether this is an arm or a leg condition, so it got no bilateral factor. Edit it and choose its body part.",
+  "single-bilateral-evaluation":
+    "One rating that already covers both sides gets no bilateral factor by itself. If each side has its own rating, enter them as separate Left and Right conditions.",
+  "most-favourable-not-checked":
+    "There are too many paired conditions to check whether leaving some out of the bilateral factor would give a higher rating (38 CFR § 4.26(d)).",
+};
+
+function BilateralIssuesNotice({ issues }) {
+  if (!issues || issues.length === 0) return null;
+  return (
+    <div
+      role="status"
+      aria-label="Bilateral factor not applied"
+      className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg text-sm text-amber-800 dark:text-amber-200"
+    >
+      <p className="font-semibold">
+        Bilateral factor not applied (38 CFR § 4.26)
+      </p>
+      <ul className="mt-1 space-y-1 list-disc list-inside">
+        {issues.map((issue, index) => (
+          <li key={issue.id ?? `${issue.reason}-${index}`}>
+            {issue.name && <strong>{issue.name}: </strong>}
+            {BILATERAL_ISSUE_TEXT[issue.reason]}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 const PYRAMIDING_SEVERITY_STYLES = {
   high: {
     container: "bg-red-50 dark:bg-red-900/30 border-red-500",
@@ -1889,6 +1921,12 @@ function CalculationStepDetail({ step }) {
           Non-bilateral: {step.nonBilateral.join(", ")}
         </div>
       )}
+      {step.excludedFromFactor && step.excludedFromFactor.length > 0 && (
+        <div className="ml-8 text-sm text-gray-600 dark:text-gray-400">
+          Left out of the bilateral factor because that gives a higher rating
+          (38 CFR § 4.26(d)): {step.excludedFromFactor.join(", ")}
+        </div>
+      )}
       {step.ratings && (
         <div className="ml-8 text-sm font-mono text-gray-700 dark:text-gray-300">
           Ratings (sorted): [{step.ratings.join("%, ")}%]
@@ -1984,6 +2022,8 @@ function CalculatorResultsSection({
       <ResultsValidationBadge t={t} />
 
       <MainRatingDisplay t={t} results={results} />
+
+      <BilateralIssuesNotice issues={results.bilateralIssues} />
 
       {/* Pyramiding Warnings - NEW */}
       <PyramidingWarningsSection t={t} pyramiding={pyramiding} />
