@@ -5,7 +5,6 @@ import { dirname, join } from "node:path";
 import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildCalculatorSummaryLine,
   buildComputedResultBlock,
   buildTdiuThresholdParagraph,
   mentionsUnemployability,
@@ -129,20 +128,6 @@ describe("extractStatedCombinedRatings phrasings and exclusions", () => {
     ],
   ])("does not count: %s", (_label, text) => {
     expect(extractStatedCombinedRatings(text)).toEqual([]);
-  });
-});
-
-describe("buildCalculatorSummaryLine", () => {
-  it("states only the calculator's figure and its source rule", () => {
-    expect(buildCalculatorSummaryLine(calculateVARating(FOUR))).toBe(
-      "Vet-Rate's calculator result for the ratings you entered: your combined rating is 80% (38 CFR § 4.25).",
-    );
-  });
-  it("is consistent with the check", () => {
-    const calc = calculateVARating(FOUR);
-    expect(
-      checkRaterResponse(buildCalculatorSummaryLine(calc), calc).stated,
-    ).toEqual([80]);
   });
 });
 

@@ -171,26 +171,10 @@ describe("assembleCaseRecord: what the guards did to the answer", () => {
   it("records what the calculator guard and the validator did to the answer", () => {
     const untouched = build(ok({ resultFlags: { mode: "swarm" } }));
     expect(untouched).toMatchObject({
-      calculatorAppended: false,
-      tdiuParagraphAppended: false,
       validatorBlocked: false,
     });
     expect(untouched).not.toHaveProperty("calculatorLead");
     expect(untouched).not.toHaveProperty("blockedText");
-
-    const appended = build(
-      ok({
-        resultFlags: {
-          calculatorAppended: { expected: 80 },
-          tdiuParagraphAppended: true,
-        },
-      }),
-    );
-    expect(appended).toMatchObject({
-      calculatorAppended: true,
-      tdiuParagraphAppended: true,
-      validatorBlocked: false,
-    });
 
     const led = build(
       ok({
@@ -216,7 +200,7 @@ describe("assembleCaseRecord: what the guards did to the answer", () => {
     expect(record.response).toBe("The AI's answer is not shown.");
   });
 
-  it("records null for all three when the case produced no result", () => {
+  it("records null when the case produced no result", () => {
     const record = build({
       ok: false,
       error: "WebGPU inference timed out after 300s",
@@ -224,8 +208,6 @@ describe("assembleCaseRecord: what the guards did to the answer", () => {
       captured: [],
     });
     expect(record).toMatchObject({
-      calculatorAppended: null,
-      tdiuParagraphAppended: null,
       validatorBlocked: null,
     });
   });
@@ -263,10 +245,8 @@ describe("dry run: reasoning, replacement and timeout isolation", () => {
     });
   });
 
-  it("a canned answer records the three guard flags as false, a timeout as null", () => {
+  it("a canned answer records validatorBlocked false, a timeout null", () => {
     expect(byId.get("a24")).toMatchObject({
-      calculatorAppended: false,
-      tdiuParagraphAppended: false,
       validatorBlocked: false,
     });
     expect(byId.get("a14").validatorBlocked).toBeNull();

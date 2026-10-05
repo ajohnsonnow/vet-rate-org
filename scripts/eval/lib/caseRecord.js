@@ -4,21 +4,15 @@ import { TOOL_ENTRIES } from "./toolEntries.js";
 
 /**
  * What the calculator guard and the response validator did to the answer,
- * read from the fields generateAI put on its result (`resultFlags`). All
- * three flags are null when the case produced no result (an error or a
- * timeout), so "not appended" is never confused with "not known".
+ * read from the fields generateAI put on its result (`resultFlags`).
+ * `validatorBlocked` is null when the case produced no result (an error or a
+ * timeout), so "not blocked" is never confused with "not known".
  */
 function guardOutcome(flags) {
   if (!flags) {
-    return {
-      calculatorAppended: null,
-      tdiuParagraphAppended: null,
-      validatorBlocked: null,
-    };
+    return { validatorBlocked: null };
   }
   return {
-    calculatorAppended: Boolean(flags.calculatorAppended),
-    tdiuParagraphAppended: Boolean(flags.tdiuParagraphAppended),
     validatorBlocked: Boolean(flags.blocked),
     ...(flags.calculatorLead ? { calculatorLead: flags.calculatorLead } : {}),
     ...(flags.blocked ? { blockedText: flags.blockedText ?? null } : {}),
@@ -50,8 +44,6 @@ function guardOutcome(flags) {
  * `passages` counts the passages sent, accepted, unchanged and rejected,
  * `draftRejectReasons` says why each rejected one was, and
  * `draftErrorReason` is set when the model could not answer at all.
- * `calculatorAppended` and `tdiuParagraphAppended` say the calculator's line
- * or the TDIU threshold paragraph was appended to a kept answer;
  * `calculatorLead` ({ expected, commentaryKept }) says the answer leads with
  * the calculator's working. `validatorBlocked` says the response validator
  * blocked the answer, in which case `response` is the message shown in its
