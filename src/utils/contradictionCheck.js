@@ -281,9 +281,36 @@ function quoteWithSource(correctionId) {
   return `${quote.citation} says: "${quote.text}"${gloss}`;
 }
 
-/** The plain note appended for one contradiction. */
+/**
+ * The note for one contradiction, shown beside the text it corrects (the
+ * Decision Decoder puts it under the field that carried the sentence).
+ */
 export function buildContradictionNote(hit) {
   return `Vet-Rate check: this answer ${hit.says}. ${quoteWithSource(hit.correction)} Check this point with a Veterans Service Officer before relying on it.`;
+}
+
+const MAX_QUOTED_SENTENCE = 200;
+
+const trimmed = (sentence) =>
+  sentence.length > MAX_QUOTED_SENTENCE
+    ? `${sentence.slice(0, MAX_QUOTED_SENTENCE).trimEnd()}...`
+    : sentence;
+
+/**
+ * The correction placed above a prose answer: one heading, then for each
+ * contradiction the sentence of the answer it applies to and the regulation
+ * sentence that says otherwise. It goes first because a wrong instruction is
+ * acted on by the time a note at the bottom is read.
+ */
+export function buildContradictionLead(hits) {
+  return [
+    "Vet-Rate check: part of the answer below conflicts with the regulation.",
+    ...hits.map(
+      (hit) =>
+        `\nThe answer says: "${trimmed(hit.sentence)}"\nThat ${hit.says}. ${quoteWithSource(hit.correction)}`,
+    ),
+    "\nCheck that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
+  ].join("\n");
 }
 
 const looksStructured = (text) => /^\s*(?:```|[{[])/.test(text);
@@ -292,8 +319,9 @@ const hasConditions = (options) =>
   Array.isArray(options.conditions) && options.conditions.length > 0;
 
 /**
- * Append a correction to a prose answer for each contradiction found, and
- * record them on the result (contradictionsFound, plus validationWarnings).
+ * Put a correction above a prose answer that contradicts the verified text,
+ * leaving the answer itself unaltered below it, and record what was found on
+ * the result (contradictionsFound, plus validationWarnings).
  * Nothing is checked when reference material was turned off for the call,
  * when the answer is structured output, or when the calculator guard already
  * replaced the answer with the app's own text.
@@ -314,7 +342,7 @@ export function flagContradictions(result, options = {}, prompt = "") {
   if (hits.length === 0) return result;
   return {
     ...result,
-    text: [text.trimEnd(), ...hits.map(buildContradictionNote)].join("\n\n"),
+    text: `${buildContradictionLead(hits)}\n\n${text}`,
     validationWarnings: [
       ...(result.validationWarnings || []),
       `Answer contradicts the verified reference: ${hits.map((h) => h.rule).join(", ")}`,
