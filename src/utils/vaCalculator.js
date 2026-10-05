@@ -413,7 +413,9 @@ function _readName(name) {
   const beforeWith = withAt < 0 ? items : items.slice(0, withAt);
   const limbs = new Set(items.filter((i) => i.limb).map((i) => i.limb));
   const sides = new Set(items.filter((i) => i.side).map((i) => i.side));
-  const side = sides.size === 1 ? [...sides][0] : null;
+  // "Bilateral knee strain, left worse than right" is a both-sides rating.
+  let side = sides.size === 1 ? [...sides][0] : null;
+  if (sides.has("bilateral")) side = "bilateral";
 
   const placedBeforeWith = items.every(
     (i) => !(i.limb || i.side) || beforeWith.includes(i),
@@ -736,6 +738,10 @@ function _looseReading(condition) {
       limbs.size > 0 &&
       (sideSet || nameSides.size > 0),
     resolved: LIMBS.includes(limb) && SIDED.includes(condition.side),
+    saysBothSides:
+      sides !== null &&
+      (sides.has("bilateral") || (sides.has("left") && sides.has("right"))),
+    sided: sideSet || nameSides.size > 0,
   };
 }
 
@@ -767,16 +773,25 @@ function _looseReason(condition) {
  * from VA.gov arrives with side "none" and would otherwise combine with no
  * factor and no word of why.
  */
-function _looseIssues(conditions, alreadyReported) {
+function _looseIssues(conditions, alreadyReported, group) {
   const readings = conditions.map(_looseReading).filter((r) => r.mightPair);
+  // 38 CFR § 4.26(b): a both-sides entry would join a group formed by the
+  // other limbs, so it is reported beside any group or any other sided entry,
+  // whatever the limb.
+  const besideAnotherSided = (reading) =>
+    reading.saysBothSides &&
+    (group.length > 0 ||
+      readings.some((other) => other !== reading && other.sided));
   return readings
     .filter(
       (reading) =>
         !reading.resolved &&
+        !group.includes(reading.condition) &&
         !alreadyReported.has(reading.condition) &&
-        readings.some(
-          (other) => other !== reading && _looseCouldPair(reading, other),
-        ),
+        (besideAnotherSided(reading) ||
+          readings.some(
+            (other) => other !== reading && _looseCouldPair(reading, other),
+          )),
     )
     .map((reading) => ({
       condition: reading.condition,
@@ -788,7 +803,7 @@ function _sortIntoBilateralGroup(rawConditions) {
   const conditions = _withNormalisedSide(rawConditions);
   const formed = _formBilateralGroup(conditions);
   const reported = new Map(formed.issues.map((i) => [i.condition, i.reason]));
-  for (const issue of _looseIssues(conditions, reported)) {
+  for (const issue of _looseIssues(conditions, reported, formed.group)) {
     reported.set(issue.condition, issue.reason);
   }
   const issues = conditions
