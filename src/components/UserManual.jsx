@@ -3303,7 +3303,7 @@ Run AI 100% on your device - your data never leaves your computer.
 
 Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browser:
 
-1. **Download Once**: Model downloads to your browser cache (one-time)
+1. **Download Once**: The model is a one-time download kept on your device in browser storage (size varies by model)
 2. **Run Locally**: All processing happens on YOUR GPU
 3. **Stay Private**: Zero data transmission - no internet needed
 
@@ -3312,6 +3312,8 @@ Vet-Rate.org uses **WebLLM** technology to run AI models directly in your browse
 - **Modern Browser**: Chrome, Edge, or Brave (WebGPU support)
 - **GPU with VRAM**: 2-8 GB depending on model size
 - **Storage**: 0.3 GB to 4.8 GB per model
+
+Your device picks the on-device model for you: Qwen 3.5 4B on desktops and Qwen 3.5 2B on laptops, with Qwen 2.5 models used if the first choice cannot load. Tablets use Qwen 2.5 1.5B. These are general-purpose open models, not trained on VA data.
 
 ## First Time Setup
 

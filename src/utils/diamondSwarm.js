@@ -4,7 +4,7 @@
  *
  * This service runs ONE stock open-source model per device (the first usable
  * entry of the device profile's recommendedModels in
- * deviceCapabilityDetector.js - Qwen2.5 1.5B/3B or Llama-3.2-3B MLC builds)
+ * deviceCapabilityDetector.js - Qwen3.5 2B/4B, Qwen2.5 1.5B/3B or Llama-3.2-3B MLC builds)
  * in a WebLLM web worker, and swaps the system prompt between 3 personas:
  * - AUDITOR: Reviews claims for accuracy, compliance, and completeness
  * - WRITER: Generates compelling personal statements and nexus letters

@@ -4,12 +4,12 @@
 
 VetRate now supports **4 local AI inference backends** for 100% private claims assistance:
 
-| Backend            | Technology       | Best For                    | Status                                                               |
-| ------------------ | ---------------- | --------------------------- | -------------------------------------------------------------------- |
-| **Diamond Swarm**  | WebGPU/MLC       | Default on-device inference | ✅ Live (one stock Qwen2.5 / Llama-3.2 model per device, 3 personas) |
-| **Wllama**         | WebAssembly      | Experimental CPU fallback   | ⚠️ Not loaded by any screen; 7B GGUFs exceed its 4 GB WASM heap      |
-| **Local Server**   | llama.cpp API    | Desktop power users         | ✅ Ready                                                             |
-| **Cloud Fallback** | Gemini 2.5 Flash | When local unavailable      | ✅ Ready                                                             |
+| Backend            | Technology       | Best For                    | Status                                                                         |
+| ------------------ | ---------------- | --------------------------- | ------------------------------------------------------------------------------ |
+| **Diamond Swarm**  | WebGPU/MLC       | Default on-device inference | ✅ Live (one stock Qwen3.5 / Qwen2.5 / Llama-3.2 model per device, 3 personas) |
+| **Wllama**         | WebAssembly      | Experimental CPU fallback   | ⚠️ Not loaded by any screen; 7B GGUFs exceed its 4 GB WASM heap                |
+| **Local Server**   | llama.cpp API    | Desktop power users         | ✅ Ready                                                                       |
+| **Cloud Fallback** | Gemini 2.5 Flash | When local unavailable      | ✅ Ready                                                                       |
 
 The Swarm's three agents (auditor, writer, rater) are personas: the same
 stock model with a different system prompt. None of the models the web app
