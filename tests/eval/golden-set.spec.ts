@@ -1,5 +1,7 @@
-import { appendFileSync } from "node:fs";
-import { test, expect, type Page } from "@playwright/test";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test as base, chromium, expect, type Page } from "@playwright/test";
 import { bootStressPage } from "../stress/helpers";
 import {
   loadGoldenSet,
@@ -338,6 +340,33 @@ async function recordCases(
   }
   return recorded;
 }
+
+/*
+ * A persistent browser profile instead of Playwright's default in-memory
+ * context: the in-memory one caps Cache Storage well below a 4B-class model
+ * download (Cache.add fails with "Unexpected internal error"), and it would
+ * re-download every model on every run.
+ */
+const PROFILE_DIR =
+  process.env.EVAL_PROFILE_DIR ?? join(tmpdir(), "vetrate-eval-profile");
+
+const test = base.extend({
+  // eslint-disable-next-line no-empty-pattern -- Playwright requires a destructuring pattern here
+  context: async ({}, use, testInfo) => {
+    mkdirSync(PROFILE_DIR, { recursive: true });
+    const projectUse = testInfo.project.use;
+    const context = await chromium.launchPersistentContext(PROFILE_DIR, {
+      ...projectUse.launchOptions,
+      baseURL: projectUse.baseURL,
+      viewport: projectUse.viewport ?? null,
+    });
+    await use(context);
+    await context.close();
+  },
+  page: async ({ context }, use) => {
+    await use(context.pages()[0] ?? (await context.newPage()));
+  },
+});
 
 test.describe("golden-set evaluation", () => {
   // eslint-disable-next-line sonarjs/no-skipped-tests -- opt-in harness: only the launcher sets EVAL=1

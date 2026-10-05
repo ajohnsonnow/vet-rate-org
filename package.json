@@ -94,7 +94,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
-    "@mlc-ai/web-llm": "^0.2.80",
+    "@mlc-ai/web-llm": "^0.2.85",
     "@wllama/wllama": "^3.4.1",
     "d3-geo": "^3.1.1",
     "docx": "^9.5.1",
