@@ -4431,6 +4431,10 @@ export const saveTimelineEvents = (events) => {
       sourceDocumentId: e.sourceDocumentId
         ? sanitizeString(String(e.sourceDocumentId), 200)
         : null,
+      // The tool that wrote an imported copy, and whether the veteran has
+      // edited it: a re-analysis replaces only unedited copies of its own tool.
+      source: e.source ? sanitizeString(String(e.source), 100) : null,
+      ...(e.userEdited === true ? { userEdited: true } : {}),
     }));
 
     localStorage.setItem(TIMELINE_EVENTS_KEY, JSON.stringify(sanitizedEvents));

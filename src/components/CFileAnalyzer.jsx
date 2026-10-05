@@ -33,6 +33,7 @@ import SmartAILoadButton from "./SmartAILoadButton";
 import ReportBugLink from "./ReportBugLink";
 import { mergeAnalysisIntoVkb } from "../utils/veteranContextProvider";
 import { planCFileSave } from "../utils/cfileSavePlan";
+import { convergeTimelineStoreWithVKB } from "../utils/timelineStoreSync";
 import { getStorageStats } from "../utils/storage";
 import { getPacketIndex } from "../utils/myPacketManager";
 
@@ -173,6 +174,7 @@ export async function _saveCFileToRecords(
     vkbMergeData: plan.vkbMergeData,
     sourceDocumentId: filedRecord?.id ?? null,
   });
+  await convergeTimelineStoreWithVKB({ onlyIfStoreHasEvents: true });
 }
 
 const SAVE_IDLE = { phase: "idle", message: "", saves: 0 };

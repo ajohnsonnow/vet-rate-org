@@ -14,6 +14,7 @@ import {
   timelineEventKey,
   buildImportedTimelineEvent,
   datedVkbEvents,
+  dropStaleCFileCopies,
   freshVkbEvents,
   recordRemovedTimelineEvent,
 } from "../utils/timelineStoreSync";
@@ -357,6 +358,7 @@ function _importConfirmMessage(addedCount, updatedCount) {
 // (date, description) key currently claimed by a service-entry event.
 async function _loadServiceEntryProjection() {
   const vkb = await loadVKB();
+  const loaded = Boolean(vkb);
   const vkbEvents = datedVkbEvents(vkb);
   const projectedEvents = vkbEvents.filter(
     (e) => e.projected && _isServiceEntryEventType(e.eventType),
@@ -371,7 +373,7 @@ async function _loadServiceEntryProjection() {
         }),
       ),
   );
-  return { vkbEvents, projectedEvents, knownServiceEntryKeys };
+  return { loaded, vkbEvents, projectedEvents, knownServiceEntryKeys };
 }
 
 // Pull dated events the C-File analyzer filed into the VKB
@@ -386,9 +388,9 @@ async function performImportFromRecords({
   auto = false,
 }) {
   try {
-    const { vkbEvents, projectedEvents, knownServiceEntryKeys } =
+    const { loaded, vkbEvents, projectedEvents, knownServiceEntryKeys } =
       await _loadServiceEntryProjection();
-    const { kept: workingEvents, removed: staleRemoved } =
+    const { kept: serviceKept, removed: serviceRemoved } =
       projectedEvents.length > 0
         ? _dropStaleServiceEntryEvents(
             timelineEvents,
@@ -396,6 +398,11 @@ async function performImportFromRecords({
             knownServiceEntryKeys,
           )
         : { kept: timelineEvents, removed: 0 };
+    const workingEvents = loaded
+      ? dropStaleCFileCopies(vkbEvents, serviceKept)
+      : serviceKept;
+    const staleRemoved =
+      serviceRemoved + (serviceKept.length - workingEvents.length);
 
     // Dedupe against the (stale-filtered) existing timeline events AND, as
     // items are accepted, against each other - migrateOffSchemaVKB copies

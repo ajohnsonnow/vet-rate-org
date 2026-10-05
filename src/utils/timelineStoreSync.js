@@ -16,7 +16,11 @@
  * description (no text of the event is stored again).
  */
 
-import { eventIdentity } from "./eventIdentity";
+import {
+  eventIdentity,
+  isCFileToolSource,
+  isVeteranEdited,
+} from "./eventIdentity";
 import { loadVKB } from "./veteranKnowledgeBase";
 import {
   getTimelineEvents,
@@ -94,6 +98,7 @@ export function buildImportedTimelineEvent(e, i) {
     title: String(description).substring(0, 50),
     category: "Medical Records",
     sourceDocumentId: e.sourceDocumentId || null,
+    source: e.source || null,
     // D-C: carried through so detectTimelineGaps can still recognize
     // a Guard/Reserve enlistment event after it's imported into this
     // timeline's own persisted event shape.
@@ -113,6 +118,40 @@ export function datedVkbEvents(vkb) {
 }
 
 const _vkbDescription = (e) => e.description || e.text;
+
+const copyKey = (sourceDocumentId, date, description) =>
+  `${sourceDocumentId}|${timelineEventKey({ date, description })}`;
+
+const _isCFileCopy = (e) =>
+  isImportedTimelineEvent(e) &&
+  isCFileToolSource(e.source) &&
+  Boolean(e.sourceDocumentId) &&
+  !isVeteranEdited(e);
+
+/**
+ * Drops the C-File copies in the store that the knowledge base no longer
+ * holds, so the next step writes each document's current set instead of
+ * merging it with the earlier one. A document's copies the knowledge base
+ * still holds word for word stay; a document the knowledge base holds no
+ * C-File events for any more loses its copies too. Hand-added events, events
+ * of other tools or documents, and events the veteran edited are never
+ * dropped. Only call with a knowledge base that loaded.
+ * @param {Array} vkbEvents
+ * @param {Array} storeEvents
+ * @returns {Array} the store events to keep
+ */
+export function dropStaleCFileCopies(vkbEvents, storeEvents) {
+  const current = new Set(
+    vkbEvents
+      .filter((e) => isCFileToolSource(e.source) && e.sourceDocumentId)
+      .map((e) => copyKey(e.sourceDocumentId, e.date, _vkbDescription(e))),
+  );
+  return storeEvents.filter(
+    (e) =>
+      !_isCFileCopy(e) ||
+      current.has(copyKey(e.sourceDocumentId, e.date, _vkbDescription(e))),
+  );
+}
 
 /**
  * The knowledge-base events the store does not yet hold, as [event, index].
@@ -179,14 +218,17 @@ export function freshVkbEvents(
 export async function convergeTimelineStoreWithVKB({
   onlyIfStoreHasEvents = false,
 } = {}) {
-  const vkbEvents = datedVkbEvents(await loadVKB());
-  const current = getTimelineEvents();
-  if (onlyIfStoreHasEvents && current.length === 0) return { added: 0 };
+  const vkb = await loadVKB();
+  const vkbEvents = datedVkbEvents(vkb);
+  const stored = getTimelineEvents();
+  if (onlyIfStoreHasEvents && stored.length === 0) return { added: 0 };
+  const current = vkb ? dropStaleCFileCopies(vkbEvents, stored) : stored;
+  const dropped = stored.length - current.length;
   const removed = readRemovedHashes();
   const fresh = freshVkbEvents(vkbEvents, current, (key) =>
     removed.has(hashKey(key)),
   ).map(([e, i]) => buildImportedTimelineEvent(e, i));
-  if (fresh.length === 0) return { added: 0 };
+  if (fresh.length === 0 && dropped === 0) return { added: 0 };
   if (!saveTimelineEvents([...current, ...fresh])) {
     throw new Error("The timeline could not be saved.");
   }
