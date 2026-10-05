@@ -130,7 +130,7 @@ describe("reference material is sized to the window", () => {
 
   it("8,192 tokens with the default 2,048 output: the keyword block gets what is left, about 3,100 characters", async () => {
     await generateAI("How do I claim sleep apnea?", callOptions());
-    expect(keywordBudget()).toBe(3115);
+    expect(keywordBudget()).toBe(3113);
     expect(sentTokens() + 2048).toBeLessThanOrEqual(8192);
   });
 
@@ -146,7 +146,7 @@ describe("reference material is sized to the window", () => {
   it("an unknown window is treated as 8,192, as the swarm guard does", async () => {
     deviceProfile.contextWindowSize = undefined;
     await generateAI("How do I claim sleep apnea?", callOptions());
-    expect(keywordBudget()).toBe(3115);
+    expect(keywordBudget()).toBe(3113);
   });
 });
 

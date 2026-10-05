@@ -1160,7 +1160,7 @@
   "chronic_fatigue_syndrome": {
     "diagnostic_code": "6354",
     "condition_name": "Chronic Fatigue Syndrome",
-    "cfr_reference": "38 CFR § 4.88",
+    "cfr_reference": "38 CFR § 4.88b",
     "dbq_form_id": "Chronic-Fatigue",
     "dbq_form_path": "/forms/Chronic-Fatigue.pdf",
     "category": "General",
