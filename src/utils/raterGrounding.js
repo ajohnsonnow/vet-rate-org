@@ -1095,31 +1095,66 @@ export function buildTdiuThresholdParagraph(calc) {
   ].join("\n\n");
 }
 
+const ASKS_ABOUT_BILATERAL =
+  /\bbilateral|\bpair(?:ed|s)?\b|\bboth (?:knees|legs|arms|feet|hands|ankles|hips|shoulders|elbows|wrists|sides)\b/i;
+
+const hasSidedEntry = (calc) =>
+  [...calc.nonBilateralConditions, ...calc.bilateralExcludedConditions].some(
+    (c) => c.side && c.side !== "none",
+  );
+
 /**
- * Plain-language answer built only from the calculator's working, used when
- * the model's draft contradicts it.
+ * Whether to say anything about the bilateral factor having no pair. It is
+ * noise when no entry has a side and the question does not ask about it. A
+ * pair the calculator formed, and its notes on entries left out or treated
+ * specially, are always described. With no question given the finding is
+ * stated, since nothing shows it was not asked.
+ */
+const pairFindingIsRelevant = (calc, question) =>
+  question === null ||
+  calc.bilateralConditions.length > 0 ||
+  hasSidedEntry(calc) ||
+  ASKS_ABOUT_BILATERAL.test(question);
+
+/**
+ * Plain-language answer built only from the calculator's working: shown in
+ * place of a draft that contradicts it (with the notice saying why), and as
+ * the lead of every rating answer (`withNotice: false`). For a TDIU question
+ * the threshold paragraph comes right after the combined rating, ahead of the
+ * working, because it is what was asked. `question` is the veteran's text and
+ * decides only whether the no-pair finding is worth saying.
  */
 export function buildCalculatorExplanation(
   calc,
-  { tdiu = false, check = null, tdiuCheck = null } = {},
+  {
+    tdiu = false,
+    check = null,
+    tdiuCheck = null,
+    question = null,
+    withNotice = true,
+  } = {},
 ) {
-  const pairNote = [describePairFinding(calc), ...describeBilateralNotes(calc)]
+  const draftRaisedPairing =
+    check?.inventedPairs?.length > 0 || check?.deniedPairs?.length > 0;
+  const pairNote = [
+    draftRaisedPairing || pairFindingIsRelevant(calc, question)
+      ? describePairFinding(calc)
+      : "",
+    ...describeBilateralNotes(calc),
+  ]
     .filter(Boolean)
     .join(" ");
   return [
-    buildReplacementNotice(check, tdiuCheck),
-    "",
+    withNotice ? buildReplacementNotice(check, tdiuCheck) : "",
     `Your combined rating is ${calc.combinedRating}%.`,
-    "",
+    tdiu ? buildTdiuThresholdParagraph(calc) : "",
     "VA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).",
-    "",
-    ...formatCalculatorWorking(calc),
-    "",
+    formatCalculatorWorking(calc).join("\n"),
     pairNote,
-    "",
-    ...(tdiu ? [buildTdiuThresholdParagraph(calc), ""] : []),
     "Check these figures with a Veterans Service Officer before relying on them.",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function describeGroupBasis(calc) {

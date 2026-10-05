@@ -53,7 +53,6 @@ import { calculateVARating } from "./vaCalculator";
 import {
   buildCalculatorExplanation,
   buildComputedResultBlock,
-  buildReplacementNotice,
   checkRaterResponse,
   checkTdiuConclusion,
   mentionsUnemployability,
@@ -1142,7 +1141,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   const asksTdiu = mentionsUnemployability(prompt);
   const tdiuCheck = asksTdiu ? checkTdiuConclusion(result.text, calc) : null;
   if (check.ok && !tdiuCheck?.contradicted) {
-    return leadWithCalculatorWorking(result, calc, asksTdiu);
+    return leadWithCalculatorWorking(result, calc, asksTdiu, prompt);
   }
 
   const reason = describeMismatch(check, tdiuCheck);
@@ -1153,6 +1152,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       tdiu: asksTdiu,
       check,
       tdiuCheck,
+      question: prompt,
     }),
     calculatorLead: { expected: check.expected, commentaryKept: false },
     validationWarnings: [
@@ -1178,17 +1178,6 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
 export const CALCULATOR_COMMENTARY_LEAD =
   "The AI's comments on this result follow. The figures above come from Vet-Rate's calculator, not from the AI.";
 
-// buildCalculatorExplanation opens with the sentence that says a draft was
-// not shown. Here the draft is shown, below the working, so that sentence
-// would be untrue and is left off.
-function calculatorWorkingText(calc, tdiu) {
-  const explanation = buildCalculatorExplanation(calc, { tdiu });
-  const notice = buildReplacementNotice();
-  return explanation.startsWith(notice)
-    ? explanation.slice(notice.length).trimStart()
-    : explanation;
-}
-
 function _commentaryDropReasons(result, commentary, calc, asksTdiu) {
   if (result.blocked) return [];
   if (result.truncated) return ["cut short"];
@@ -1199,9 +1188,13 @@ function _commentaryDropReasons(result, commentary, calc, asksTdiu) {
 // arithmetic of its own (findCommentaryArithmetic). Otherwise the working
 // stands alone: the draft did not contradict the calculator, so there is no
 // notice to give, and `commentaryDropped` records why it was left out.
-function leadWithCalculatorWorking(result, calc, asksTdiu) {
+function leadWithCalculatorWorking(result, calc, asksTdiu, question) {
   const commentary = String(result.text ?? "").trim();
-  const working = calculatorWorkingText(calc, asksTdiu);
+  const working = buildCalculatorExplanation(calc, {
+    tdiu: asksTdiu,
+    question,
+    withNotice: false,
+  });
   const dropped = _commentaryDropReasons(result, commentary, calc, asksTdiu);
   const commentaryKept =
     commentary !== "" && !result.blocked && dropped.length === 0;
