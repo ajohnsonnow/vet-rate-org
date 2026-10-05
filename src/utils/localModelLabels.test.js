@@ -16,6 +16,13 @@ const DESKTOP_HIGH = {
 };
 const LAPTOP = { recommendedModels: ["Qwen2.5-1.5B-Instruct-q4f16_1-MLC"] };
 const MOBILE = { recommendedModels: [] };
+const DESKTOP_QWEN35 = {
+  recommendedModels: [
+    "Qwen3.5-4B-q4f16_1-MLC",
+    "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+  ],
+};
+const LAPTOP_QWEN35 = { recommendedModels: ["Qwen3.5-2B-q4f16_1-MLC"] };
 
 const FALSE_CLAIMS = /fine-tun|trained|7B|1\.7B|4\.0 GB|GGUF/i;
 const visibleText = (entry) =>
@@ -73,9 +80,22 @@ describe("getLocalModelLabels / getDeviceModelSummary", () => {
     });
   });
 
+  it("says the size varies when no download size is known, and still states memory", () => {
+    const labels = getLocalModelLabels(describeDeviceModel(DESKTOP_QWEN35));
+    expect(labels).toMatchObject({
+      size: "varies",
+      vramRequired: "~3.9 GB",
+      baseModel: "Qwen 3.5 4B",
+    });
+    expect(
+      getLocalModelLabels(describeDeviceModel(LAPTOP_QWEN35)).vramRequired,
+    ).toBe("~2.2 GB");
+  });
+
   it("falls back to a range before the device is probed", () => {
     const labels = getLocalModelLabels(null);
-    expect(labels.size).toBe("~1-2 GB");
+    expect(labels.size).toBe("varies");
+    expect(labels.vramRequired).toBe("varies");
     expect(labels.baseModel).toBe("Chosen for your device");
   });
 
@@ -84,6 +104,16 @@ describe("getLocalModelLabels / getDeviceModelSummary", () => {
       "Qwen 2.5 1.5B (about 1 GB)",
     );
     expect(getDeviceModelSummary(null)).toContain("picked for your device");
+    expect(getDeviceModelSummary(null)).not.toMatch(/\d GB/);
+  });
+
+  it("states a one-time download kept on the device, with no made-up size", () => {
+    const summary = getDeviceModelSummary(describeDeviceModel(DESKTOP_QWEN35));
+    expect(summary).toContain("Qwen 3.5 4B");
+    expect(summary).toMatch(/download size varies/);
+    expect(summary).toMatch(/one-time download/);
+    expect(summary).toMatch(/kept on your device/);
+    expect(summary).not.toMatch(/\d GB/);
   });
 });
 

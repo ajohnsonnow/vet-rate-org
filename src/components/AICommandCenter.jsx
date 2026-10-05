@@ -474,7 +474,7 @@ function ModelPickerButton({ model, isSelected, onSelect }) {
             {model.description}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            {model.size} download • {model.vramRequired} VRAM
+            Download: {model.size} • VRAM: {model.vramRequired}
           </p>
         </div>
         {isSelected && (
