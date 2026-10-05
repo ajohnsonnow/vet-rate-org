@@ -16,6 +16,7 @@
  * never overwritten.
  */
 import { spawnSync } from "node:child_process";
+import { connect } from "node:net";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { runnerImport } from "vite";
@@ -37,6 +38,29 @@ import {
 import { captureRunStart } from "./lib/runStart.js";
 
 const REPO_ROOT = resolve(fileURLToPath(new URL("../..", import.meta.url)));
+const EVAL_PORT = 5199;
+
+/*
+ * An aborted run can leave its dev server behind. Playwright then refuses to
+ * start, and without this check the launcher would still claim run files and
+ * grade an empty transcript.
+ */
+function isPortInUse(port) {
+  return new Promise((done) => {
+    const socket = connect({ port, host: "127.0.0.1" });
+    socket.setTimeout(1500);
+    socket.once("connect", () => {
+      socket.destroy();
+      done(true);
+    });
+    for (const event of ["error", "timeout"]) {
+      socket.once(event, () => {
+        socket.destroy();
+        done(false);
+      });
+    }
+  });
+}
 const GOLDEN_PATH = join(REPO_ROOT, "src/__tests__/agentic/golden-set.jsonl");
 const RESULTS_DIR = join(REPO_ROOT, "llm-compiler/logs/golden-set-results");
 const DRY_RUN_DIR = join(REPO_ROOT, "test-results/golden-set-dry-run");
@@ -126,6 +150,13 @@ async function main() {
   }
   if (!opts.dryRun && !opts.model) {
     console.error(`--model is required for a real run\n\n${USAGE}`);
+    return 2;
+  }
+
+  if (!opts.dryRun && (await isPortInUse(EVAL_PORT))) {
+    console.error(
+      `port ${EVAL_PORT} is already in use, most likely a dev server left by an aborted evaluation run. Stop it (look for "vite --config vite.eval.config.js") and run again. No run files were created.`,
+    );
     return 2;
   }
 
