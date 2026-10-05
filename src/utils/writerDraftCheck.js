@@ -312,16 +312,23 @@ export function classifyDraftKind(
   { addressedToReader = false } = {},
 ) {
   const body = String(draft ?? "").trim();
-  const floor = template
-    ? MIN_SHARE_OF_TEMPLATE * template.length
-    : MIN_DRAFT_CHARS;
-  if (body.length < Math.max(floor, 1)) return "empty";
+  if (body.length === 0) return "empty";
 
   const withoutBlanks = body.replace(BLANK, " ");
   const head = withoutBlanks.slice(0, 400);
   if (matchesAny(REFUSALS, head)) return "refusal";
-  if (addressedToReader) return "draft";
+  const toVeteran = addressedToReader
+    ? "draft"
+    : remarkToVeteran(withoutBlanks, head);
+  if (toVeteran !== "draft") return toVeteran;
 
+  const floor = template
+    ? MIN_SHARE_OF_TEMPLATE * template.length
+    : MIN_DRAFT_CHARS;
+  return body.length < floor ? "empty" : "draft";
+}
+
+function remarkToVeteran(withoutBlanks, head) {
   const questions = sentencesOf(withoutBlanks).filter((part) =>
     /\?\s*$/.test(part),
   ).length;
