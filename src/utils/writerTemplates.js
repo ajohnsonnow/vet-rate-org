@@ -228,6 +228,59 @@ const APPEAL_TYPE_LABELS = {
   supplemental: "Supplemental Claim with New Evidence",
 };
 
+/*
+ * What each review lane lets the statement say about evidence.
+ *
+ * Higher-Level Review, 38 CFR 3.2601(f): "The evidentiary record in a
+ * higher-level review is limited to the evidence of record as of the date
+ * the agency of original jurisdiction issued notice of the prior decision
+ * under review and the higher-level adjudicator may not consider additional
+ * evidence." So the statement points only at what is already in the file,
+ * and evidence the veteran lists as new is not carried into it.
+ *
+ * Supplemental Claim, 38 CFR 3.2501: "If new and relevant evidence is
+ * presented or secured with respect to the supplemental claim, the agency of
+ * original jurisdiction will readjudicate the claim". The statement asks for
+ * that evidence first.
+ *
+ * Board Appeal, 38 CFR 20.202(b): the claimant chooses direct review, a
+ * hearing, or evidence submission, and that choice sets what evidence the
+ * Board considers. The form does not collect the choice, so it is a blank.
+ */
+function appealEvidenceSections(answers) {
+  const supporting = text(answers.supportingEvidence);
+  const fresh = text(answers.newEvidence);
+  switch (answers.appealType) {
+    case "hlr":
+      return [
+        `Evidence already in my file that supports my appeal\n${said(supporting, "the evidence already in your VA file that supports a different decision")}`,
+        fresh
+          ? blank(
+              "evidence that is not yet in your VA file cannot be considered in a Higher-Level Review; to have it considered, file a Supplemental Claim instead",
+            )
+          : "",
+      ];
+    case "supplemental":
+      return [
+        `New and relevant evidence\n${said(fresh, "the new and relevant evidence you are submitting or asking VA to obtain")}`,
+        supporting
+          ? `Evidence already in my file\n${sentence(supporting)}`
+          : "",
+      ];
+    case "nod":
+      return [
+        `Board review option: ${blank("the option you chose on your Notice of Disagreement: direct review, evidence submission, or a hearing")}`,
+        `Evidence that supports my appeal\n${said(supporting, "the evidence that supports a different decision, as the review option you chose allows")}`,
+        fresh ? `Additional evidence\n${sentence(fresh)}` : "",
+      ];
+    default:
+      return [
+        `Evidence that supports my appeal\n${said(supporting, "the evidence that supports a different decision")}`,
+        fresh ? `Additional evidence\n${sentence(fresh)}` : "",
+      ];
+  }
+}
+
 /** Appeal statement (Board Appeal, Higher-Level Review or Supplemental Claim). */
 export function buildAppealStatementTemplate(answers = {}) {
   const claimed = orBlank(answers.conditionName, "condition under appeal");
@@ -237,6 +290,8 @@ export function buildAppealStatementTemplate(answers = {}) {
       answers.appealType,
       "type of appeal: Board Appeal, Higher-Level Review or Supplemental Claim",
     );
+  const evidence =
+    answers.appealType === "hlr" ? "evidence of record" : "evidence";
   return paragraphs([
     "APPEAL STATEMENT",
     [
@@ -248,12 +303,9 @@ export function buildAppealStatementTemplate(answers = {}) {
     ].join("\n"),
     `I disagree with the decision on my claim for ${claimed}.`,
     `Why the decision is incorrect\n${said(answers.whyIncorrect, "why you believe the decision is wrong")}`,
-    `Evidence that supports my appeal\n${said(answers.supportingEvidence, "the evidence that supports a different decision")}`,
-    text(answers.newEvidence)
-      ? `New evidence\n${sentence(answers.newEvidence)}`
-      : "",
+    ...appealEvidenceSections(answers),
     `What I am asking for\n${said(answers.desiredOutcome, "the outcome you are asking for")}`,
-    "I respectfully ask that the evidence be reviewed against the rating criteria in 38 CFR and that the decision be corrected.",
+    `I respectfully ask that the ${evidence} be reviewed against the rating criteria in 38 CFR and that the decision be corrected.`,
   ]);
 }
 

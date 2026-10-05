@@ -207,12 +207,8 @@ describe("appeal and nexus request templates", () => {
     expect(draft).toContain("Appeal type: Higher-Level Review (HLR)");
     expect(draft).toContain("Rating assigned: 10%");
     expect(draft).toContain("Rating I believe is correct: 30%");
-    expect(draft).toContain(
-      "New evidence\nA headache log covering six months.",
-    );
     expect(draft).toContain("rating criteria in 38 CFR");
     expect(draft).not.toMatch(/§|38 CFR \d|Part 4|diagnostic code/i);
-    expect(buildAppealStatementTemplate({})).not.toContain("New evidence");
   });
 
   it("nexus request states the tool's standard of proof and nothing more", () => {
@@ -435,5 +431,80 @@ describe("templates say nothing the veteran did not supply", () => {
     expect(analysis.combined_effect).toContain(
       "My service-connected conditions (Migraines) together affect my ability to work.",
     );
+  });
+});
+
+describe("appeal statement follows the review lane", () => {
+  const base = {
+    conditionName: "Migraines",
+    whyIncorrect: "The decision did not consider my headache log",
+  };
+
+  it("Higher-Level Review speaks only of evidence already in the file", () => {
+    const empty = buildAppealStatementTemplate({ ...base, appealType: "hlr" });
+    expect(empty).toContain(
+      "Evidence already in my file that supports my appeal\n[the evidence already in your VA file that supports a different decision]",
+    );
+    expect(empty).toContain(
+      "I respectfully ask that the evidence of record be reviewed against the rating criteria in 38 CFR",
+    );
+    expect(empty).not.toMatch(/new evidence|additional evidence/i);
+  });
+
+  it("Higher-Level Review does not carry new evidence the veteran listed", () => {
+    const draft = buildAppealStatementTemplate({
+      ...base,
+      appealType: "hlr",
+      supportingEvidence: "My headache log, already submitted",
+      newEvidence: "A note from my employer I have not sent yet",
+    });
+    expect(draft).toContain("My headache log, already submitted.");
+    expect(draft).not.toContain("A note from my employer");
+    expect(draft).toContain(
+      "[evidence that is not yet in your VA file cannot be considered in a Higher-Level Review; to have it considered, file a Supplemental Claim instead]",
+    );
+  });
+
+  it("Supplemental Claim asks for the new and relevant evidence", () => {
+    const empty = buildAppealStatementTemplate({
+      ...base,
+      appealType: "supplemental",
+    });
+    expect(empty).toContain(
+      "New and relevant evidence\n[the new and relevant evidence you are submitting or asking VA to obtain]",
+    );
+    const filled = buildAppealStatementTemplate({
+      ...base,
+      appealType: "supplemental",
+      newEvidence: "A headache log covering six months",
+      supportingEvidence: "My treatment records",
+    });
+    expect(filled).toContain(
+      "New and relevant evidence\nA headache log covering six months.",
+    );
+    expect(filled).toContain(
+      "Evidence already in my file\nMy treatment records.",
+    );
+  });
+
+  it("Board Appeal leaves the docket, and what evidence it allows, as blanks", () => {
+    const empty = buildAppealStatementTemplate({ ...base, appealType: "nod" });
+    expect(empty).toContain(
+      "Board review option: [the option you chose on your Notice of Disagreement: direct review, evidence submission, or a hearing]",
+    );
+    expect(empty).toContain(
+      "Evidence that supports my appeal\n[the evidence that supports a different decision, as the review option you chose allows]",
+    );
+  });
+
+  it("an unstated lane asks for the lane and makes no evidence promise", () => {
+    const draft = buildAppealStatementTemplate(base);
+    expect(draft).toContain(
+      "Appeal type: [type of appeal: Board Appeal, Higher-Level Review or Supplemental Claim]",
+    );
+    expect(draft).toContain(
+      "Evidence that supports my appeal\n[the evidence that supports a different decision]",
+    );
+    expect(draft).not.toMatch(/new evidence/i);
   });
 });
