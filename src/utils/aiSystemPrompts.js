@@ -1018,13 +1018,55 @@ You are helping a veteran who served their country. Your guidance could signific
  * FORBIDDEN PHRASES - These will BLOCK the response
  * If AI generates any of these, the response is rejected entirely
  */
+const CLINICIAN = String.raw`(?:doctor|physician|medical professional|clinician|psychiatrist|psychologist|medical provider|health ?care provider)`;
+const NAMED_CONDITION = String.raw`(?:ptsd|tbi|depression|anxiety|sleep apnea|cancer|diabetes|arthritis|tinnitus|(?:\w+ ){0,3}(?:disorder|disease|syndrome))`;
+const MEDICATION = String.raw`(?:medications?|medicine|dose|dosage|prescription)`;
+
+/**
+ * Medical roleplay means the assistant presenting itself as a clinician, or
+ * itself diagnosing or prescribing for the user. Each pattern needs the
+ * assistant as the speaker or actor ("as a doctor, I", "I diagnose you",
+ * "I am prescribing", "my medical opinion"). Text that mentions a diagnosis
+ * the veteran has ("if you have been diagnosed with"), that refuses ("I
+ * cannot diagnose"), or that is addressed to a physician ("your expertise as
+ * a physician", "As a physician, you ...") does not match.
+ */
+const MEDICAL_ROLEPLAY_PATTERNS = [
+  new RegExp(
+    String.raw`\bas (?:a|an|your|the) ${CLINICIAN},? (?:I|my|we)\b`,
+    "i",
+  ),
+  new RegExp(
+    String.raw`(?:^|[.!?:]\s+)as (?:a|an|your) ${CLINICIAN},(?! (?:you|your|dr)\b)`,
+    "im",
+  ),
+  new RegExp(
+    String.raw`\bas your ${CLINICIAN}\b(?!,? (?:can|could|may|might|will|would|should|must|is|has|to|and)\b)`,
+    "i",
+  ),
+  new RegExp(String.raw`\bspeaking as (?:a|an|your) ${CLINICIAN}\b`, "i"),
+  new RegExp(
+    String.raw`\bI(?:'m| am) (?:a|an|your) (?:licensed |board-certified |practicing |trained )?${CLINICIAN}\b`,
+    "i",
+  ),
+  /\bI(?:'m| am)? (?:hereby |now |can |will |would )?(?:diagnos(?:e|ing)|have diagnosed) (?:you|your|this|him|her|them|the veteran)\b/i,
+  /\bmy diagnosis (?:is that you|for you|of your)\b/i,
+  /\bI(?:'m| am| will| would)? prescrib(?:e|ing)\b/i,
+  /\bI recommend treatment for\b/i,
+  /\bmy (?:professional )?(?:medical|clinical) (?:opinion|judge?ment)\b/i,
+  /this is medical advice/i,
+  new RegExp(
+    String.raw`\byou (?:definitely|clearly|certainly|undoubtedly|obviously) (?:have|suffer from) (?:a |an )?${NAMED_CONDITION}\b`,
+    "i",
+  ),
+  new RegExp(
+    String.raw`\byou should (?:stop|start|discontinue|increase|decrease|reduce|double|skip) (?:taking )?(?:your |the )?${MEDICATION}\b`,
+    "i",
+  ),
+];
+
 export const FORBIDDEN_PHRASES = {
-  MEDICAL_ROLEPLAY: [
-    /as a (doctor|physician|medical professional|clinician)/i,
-    /I (diagnose|prescribe|recommend treatment for)/i,
-    /this is medical advice/i,
-    /you have (been diagnosed|definitely have)/i,
-  ],
+  MEDICAL_ROLEPLAY: MEDICAL_ROLEPLAY_PATTERNS,
   LEGAL_ROLEPLAY: [
     /as (a lawyer|an attorney|legal counsel)/i,
     /this is legal advice/i,

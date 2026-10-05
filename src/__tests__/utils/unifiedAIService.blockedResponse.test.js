@@ -55,11 +55,7 @@ import {
 } from "../../utils/unifiedAIService";
 import * as diamondSwarm from "../../utils/diamondSwarm";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
-import {
-  FORBIDDEN_PHRASES,
-  validateAIResponse,
-} from "../../utils/aiSystemPrompts";
-import { recordedCases } from "./recordedAnswers";
+import { validateAIResponse } from "../../utils/aiSystemPrompts";
 
 const BLOCKED_DRAFT =
   "As a physician, I diagnose this as sleep apnea caused by your service.";
@@ -150,46 +146,5 @@ describe("a blocked answer", () => {
     expect(result.text).not.toContain("diagnose");
     expect(result.blockedText).toBe(BLOCKED_DRAFT);
     expect(result.calculatorLead.commentaryKept).toBe(false);
-  });
-});
-
-describe("the validator over every recorded answer", () => {
-  const cases = recordedCases().filter((c) => c.response);
-  const blocked = cases.filter(
-    (c) => !validateAIResponse(c.response, {}).isValid,
-  );
-  const matched = (text) =>
-    Object.values(FORBIDDEN_PHRASES)
-      .flat()
-      .map((pattern) => pattern.exec(text)?.[0])
-      .filter(Boolean);
-
-  it("blocks 3 of the 482 answers that have text, the same 3 the runs recorded", () => {
-    expect(cases).toHaveLength(482);
-    expect(blocked.map((c) => `${c.run} ${c.id}`)).toEqual([
-      "2026-10-05_094601 a16",
-      "2026-10-05_201248 a27",
-      "2026-10-05_201248 a29",
-    ]);
-    expect(
-      recordedCases()
-        .filter((c) => c.validationErrors?.length)
-        .map((c) => `${c.run} ${c.id}`),
-    ).toEqual(blocked.map((c) => `${c.run} ${c.id}`));
-  });
-
-  it("each was blocked by one phrase that is not the AI acting as a doctor", () => {
-    expect(blocked.map((c) => matched(c.response))).toEqual([
-      ["you have been diagnosed"],
-      ["you have been diagnosed"],
-      ["as a physician"],
-    ]);
-    expect(blocked[0].response).toContain(
-      "medical documentation showing that you have been diagnosed with a condition",
-    );
-    expect(blocked[1].response).toContain("If you have been diagnosed with");
-    expect(blocked[2].response).toContain(
-      "your expertise as a physician can help",
-    );
   });
 });
