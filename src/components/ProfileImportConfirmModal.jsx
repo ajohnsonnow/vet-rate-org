@@ -409,6 +409,10 @@ const SOURCE_NOTES = {
     text: "Read from your document by the app's own parser.",
     className: "text-green-700 dark:text-green-300",
   },
+  [VALUE_SOURCE.PARSER_CHECK]: {
+    text: "Read by the app's own parser, but not from its own printed box, or the rest of the page does not agree with it. Check this against your document before you tick it.",
+    className: "text-amber-700 dark:text-amber-300",
+  },
   [VALUE_SOURCE.MODEL]: {
     text: "Read by the AI. Check it against your document before you tick it.",
     className: "text-amber-700 dark:text-amber-300",

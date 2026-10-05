@@ -892,11 +892,14 @@ export function _applyRegexSafetyNet(
   IDENTIFIER_FIELDS.filter((key) => _hasValue(data[key])).forEach((key) =>
     parserKeys.add(key),
   );
-  scrubModelFreeText(data, [...sources, data]);
+  // A key the parser read was already cleaned with the parser rules; the wide
+  // model-text shapes would only turn ordinary words in it into redaction marks.
+  scrubModelFreeText(data, [...sources, data], { skip: parserKeys });
 
   data.fieldSources = buildValueSources(data, {
     modelKeys,
     parserKeys,
+    checkKeys: new Set(Object.keys(regexResult?.fieldChecks ?? {})),
     rowKeys: [...PARSER_WINS_KEYS, ...IDENTIFIER_FIELDS, "reenlisted"],
   });
   setAnalysisResult({ ...data });

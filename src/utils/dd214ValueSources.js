@@ -9,6 +9,9 @@
 
 export const VALUE_SOURCE = {
   PARSER: "parser",
+  // A parser value read away from its own printed box, or one the rest of the
+  // page contradicts: shown first like any parser value, never pre-selected.
+  PARSER_CHECK: "parser-check",
   MODEL: "model",
   VETERAN: "veteran",
 };
@@ -122,19 +125,20 @@ export function applyParserValues(data, parserFields) {
 /**
  * key -> "parser" | "model" for every shown value that has a row. `modelKeys`
  * are the keys the model filled (after its own guards), `parserKeys` the ones
- * the parser read; the parser wins where both did.
+ * the parser read; the parser wins where both did. `checkKeys` are parser keys
+ * that need the veteran's check before they are ticked.
  */
 export function buildValueSources(
   data,
-  { modelKeys, parserKeys, rowKeys = PARSER_WINS_KEYS },
+  { modelKeys, parserKeys, checkKeys = new Set(), rowKeys = PARSER_WINS_KEYS },
 ) {
   const sources = {};
   const rows = new Set(rowKeys);
   for (const key of new Set([...modelKeys, ...parserKeys])) {
     if (!rows.has(key) || !isReadValue(key, data[key])) continue;
-    sources[key] = parserKeys.has(key)
-      ? VALUE_SOURCE.PARSER
-      : VALUE_SOURCE.MODEL;
+    if (!parserKeys.has(key)) sources[key] = VALUE_SOURCE.MODEL;
+    else if (checkKeys.has(key)) sources[key] = VALUE_SOURCE.PARSER_CHECK;
+    else sources[key] = VALUE_SOURCE.PARSER;
   }
   return sources;
 }
@@ -151,7 +155,9 @@ export function sourcesForImportRows(fieldSources, importData) {
 export function countBySource(sourceByKey) {
   const counts = { parser: 0, model: 0, veteran: 0 };
   for (const source of Object.values(sourceByKey || {})) {
-    if (source in counts) counts[source] += 1;
+    const bucket =
+      source === VALUE_SOURCE.PARSER_CHECK ? VALUE_SOURCE.PARSER : source;
+    if (bucket in counts) counts[bucket] += 1;
   }
   return counts;
 }
