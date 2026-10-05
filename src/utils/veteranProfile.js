@@ -19,6 +19,10 @@ import {
 } from "./dateUtils";
 import { markAsModified } from "./persistentStorage";
 import {
+  PROFILE_CHANGED_EVENT,
+  PROFILE_UNREADABLE_EVENT,
+} from "./profileEvents";
+import {
   _isLaterRecord,
   parsePayGrade,
   _buildProjectedEntryEvents,
@@ -198,21 +202,108 @@ const sanitizeString = (str, maxLength = MAX_STRING_LENGTH) => {
   return sanitized.trim();
 };
 
+export { PROFILE_UNREADABLE_EVENT, PROFILE_CHANGED_EVENT };
+
+const announceProfileChanged = () => {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(PROFILE_CHANGED_EVENT));
+  }
+};
+
+/**
+ * Read the saved profile without ever writing to the console, so code that
+ * runs inside the console capture can use it. A stored value that is not
+ * valid JSON, not an object, or a storage that throws is "unreadable"; the
+ * result carries a neutral code and never any part of the stored value.
+ * @returns {{status: "absent"|"ok"|"unreadable", ok: boolean, profile: Object, raw: (string|null), code: (string|null)}}
+ */
+export const readVeteranProfileQuiet = () => {
+  let raw;
+  try {
+    raw = localStorage.getItem(PROFILE_KEY);
+  } catch {
+    return {
+      status: "unreadable",
+      ok: false,
+      profile: {},
+      raw: null,
+      code: "PROFILE_STORAGE_UNAVAILABLE",
+    };
+  }
+  if (raw === null || raw === undefined || raw === "") {
+    return { status: "absent", ok: true, profile: {}, raw: null, code: null };
+  }
+  const unreadable = (code) => ({
+    status: "unreadable",
+    ok: false,
+    profile: {},
+    raw: typeof raw === "string" ? raw : null,
+    code,
+  });
+  if (typeof raw !== "string") return unreadable("PROFILE_WRONG_TYPE");
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return unreadable("PROFILE_NOT_JSON");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return unreadable("PROFILE_WRONG_TYPE");
+  }
+  return { status: "ok", ok: true, profile: parsed, raw, code: null };
+};
+
+// An unreadable profile is reported once per episode, not once per read: a
+// tool that reads it on every render must not flood the console (and the
+// bug-report capture behind it). Reset as soon as a read succeeds.
+let unreadableProfileReported = false;
+
+const reportUnreadableProfile = (code) => {
+  if (unreadableProfileReported) return;
+  unreadableProfileReported = true;
+  console.error(`The saved profile could not be read (${code}).`);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent(PROFILE_UNREADABLE_EVENT, { detail: { code } }),
+    );
+  }
+};
+
+export const UNREADABLE_PROFILE_COPY_KEY =
+  "vet_rate_veteran_profile_unreadable_copy";
+
+// A save that lands on a profile nobody could read would replace it without
+// the veteran ever choosing to. The unreadable value is kept untouched under
+// its own key first (the first one kept wins: a later bad value never
+// overwrites it).
+const preserveUnreadableProfile = () => {
+  const current = readVeteranProfileQuiet();
+  if (current.ok || current.raw === null) return;
+  try {
+    if (localStorage.getItem(UNREADABLE_PROFILE_COPY_KEY) === null) {
+      localStorage.setItem(UNREADABLE_PROFILE_COPY_KEY, current.raw);
+    }
+  } catch {
+    // Storage is full or blocked: the save itself reports that.
+  }
+};
+
 /**
  * Get the veteran profile from localStorage
  * @returns {Object} The veteran profile or empty object
  */
 export const getVeteranProfile = ({ strict = false } = {}) => {
-  try {
-    const saved = localStorage.getItem(PROFILE_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch (error) {
-    console.error("Error reading veteran profile:", error);
-    // strict: a caller that must know a read failed (it cannot treat an empty
-    // profile as "nothing known") gets the error instead of {}.
-    if (strict) throw error;
-    return {};
+  const result = readVeteranProfileQuiet();
+  if (result.ok) {
+    unreadableProfileReported = false;
+    return result.profile;
   }
+  reportUnreadableProfile(result.code);
+  // strict: a caller that must know a read failed (it cannot treat an empty
+  // profile as "nothing known") gets an error instead of {}.
+  if (strict)
+    throw new Error(`The saved profile could not be read (${result.code}).`);
+  return {};
 };
 
 // Sanitize a single profile field value based on its runtime type.
@@ -292,7 +383,9 @@ export const saveVeteranProfile = (profile) => {
 
     sanitizedProfile.lastUpdated = new Date().toISOString();
 
+    preserveUnreadableProfile();
     localStorage.setItem(PROFILE_KEY, JSON.stringify(sanitizedProfile));
+    announceProfileChanged();
 
     // Trigger auto-save to crash-proof storage
     markAsModified();
@@ -327,11 +420,22 @@ export const updateVeteranProfile = (updates) => {
 export const clearVeteranProfile = () => {
   try {
     localStorage.removeItem(PROFILE_KEY);
+    announceProfileChanged();
     return true;
   } catch (error) {
     console.error("Error clearing veteran profile:", error);
     return false;
   }
+};
+
+/**
+ * The veteran chose to start a new profile in place of one that could not be
+ * read. The unreadable value is kept under its own key, not deleted.
+ * @returns {boolean} Success status
+ */
+export const startNewProfileInPlaceOfUnreadable = () => {
+  preserveUnreadableProfile();
+  return clearVeteranProfile();
 };
 
 /**
@@ -3522,9 +3626,9 @@ function _preserveUnprojectedEntryValues(
 // own chokepoint).
 function _projectProfileMirror(entry) {
   try {
-    const raw = localStorage.getItem(PROFILE_KEY);
-    if (!raw) return;
-    const profile = JSON.parse(raw);
+    const stored = readVeteranProfileQuiet();
+    if (stored.status !== "ok") return;
+    const profile = stored.profile;
     const nextSource = entry.source === "veteran" ? "user" : "document";
     const changed =
       profile.serviceStartDate !== entry.date ||

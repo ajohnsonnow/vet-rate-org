@@ -21,7 +21,7 @@ import {
   redactVeteranIdentifiers,
 } from "./piiScrubber";
 import { deriveCombatService } from "./combatService";
-import { getServiceEntry } from "./veteranProfile";
+import { getServiceEntry, readVeteranProfileQuiet } from "./veteranProfile";
 import { buildDKBIndex, searchIndexedDKB } from "./dkbSearchIndex";
 
 /**
@@ -674,15 +674,9 @@ function loadSavedConditions() {
  * Load the veteran's profile from localStorage.
  */
 function loadVeteranProfile() {
-  const profileJson = localStorage.getItem("vet_rate_veteran_profile");
-  if (!profileJson) return { veteranProfile: null, hasData: false };
-  try {
-    const veteranProfile = JSON.parse(profileJson);
-    return { veteranProfile, hasData: !!veteranProfile };
-  } catch (e) {
-    console.warn("Error parsing veteran profile:", e);
-    return { veteranProfile: null, hasData: false };
-  }
+  const stored = readVeteranProfileQuiet();
+  if (stored.status !== "ok") return { veteranProfile: null, hasData: false };
+  return { veteranProfile: stored.profile, hasData: true };
 }
 
 /**

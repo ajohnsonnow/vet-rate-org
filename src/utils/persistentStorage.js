@@ -581,6 +581,15 @@ function getEmptyPacket() {
   };
 }
 
+// A saved profile is an object; anything else parses but is not a profile.
+function parseProfileObject(raw) {
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new TypeError("not a profile object");
+  }
+  return parsed;
+}
+
 /**
  * Gather all current data into a unified packet structure
  * Pulls from localStorage and current state
@@ -616,10 +625,11 @@ export async function gatherPacketData() {
   // Pull veteran profile
   try {
     const profile = localStorage.getItem("vet_rate_veteran_profile");
-    if (profile) gathered.veteranProfile = JSON.parse(profile);
-  } catch (e) {
+    if (profile) gathered.veteranProfile = parseProfileObject(profile);
+  } catch {
     // Non-fatal: keep the base/default profile if the stored copy is corrupt.
-    console.warn("Could not parse veteran profile from localStorage", e);
+    // The parse error is not logged: its text quotes the stored value.
+    console.warn("Could not read the saved profile from localStorage");
   }
 
   // Pull saved forms

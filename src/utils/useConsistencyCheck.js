@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { readVeteranProfileQuiet } from "./veteranProfile";
 
 // Consistency Rules - Each rule checks for specific types of contradictions
 const CONSISTENCY_RULES = [
@@ -402,8 +403,12 @@ export default function useConsistencyCheck() {
           ? JSON.parse(raw)
           : JSON.parse(fallback);
       };
+      const savedProfile = () => {
+        const stored = readVeteranProfileQuiet();
+        return stored.status === "ok" ? stored.profile : null;
+      };
       const data = {
-        profile: safeParse("vet_rate_veteran_profile", "null"),
+        profile: savedProfile(),
         claims: safeParse("vet_rate_saved_claims", "[]"),
         statements: safeParse("vet_rate_statements", "{}"),
         forms: safeParse("vet_rate_saved_forms", "[]"),
