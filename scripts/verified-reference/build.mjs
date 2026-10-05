@@ -4,6 +4,9 @@
  *
  *   src/data/verifiedReference.json  quoted regulation and manual text
  *   src/data/cfrSections.json        every 38 CFR section the index has text for
+ *   src/__tests__/utils/fixtures/verifiedReferenceSource.json
+ *                                    the manual passages as the shard holds
+ *                                    them, for the word-for-word test
  *
  * Every word of entry text is copied from sources the repo already holds:
  * the eCFR legal index and the M21-1 shard. The specs below only say which
@@ -31,6 +34,8 @@ import {
   sliceTopic,
   stitchChunks,
 } from "./lib/extract.js";
+import { sameWords, structureText } from "./lib/structure.js";
+import { MANUAL_TOPICS } from "./manual-topics.js";
 
 const REPO_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -41,6 +46,8 @@ const M21_FILE = "public/dkb-index/m21_1/chunks.part0.jsonl";
 const FORMS_ALLOWLIST_FILE = "src/data/validVAForms.json";
 const REFERENCE_OUT = "src/data/verifiedReference.json";
 const SECTIONS_OUT = "src/data/cfrSections.json";
+const FLAT_SOURCE_OUT =
+  "src/__tests__/utils/fixtures/verifiedReferenceSource.json";
 
 const CFR_ENTRIES = [
   {
@@ -168,11 +175,6 @@ const CFR_ENTRIES = [
   },
 ];
 
-const TOPIC_TAIL = [" References:", " Reference:"];
-const BPOT_ARTICLE = "M21-1, Part VIII, Subpart ii, Chapter 2, Section A - ";
-const HERBICIDE_ARTICLE =
-  "M21-1, Part VIII, Subpart i, Chapter 1, Section A - ";
-
 const ABBREVIATIONS = [
   { short: "SC", long: "service connection" },
   {
@@ -186,80 +188,40 @@ const MANUAL_ENTRIES = [
     id: "pact-toxic-conditions",
     citation:
       "M21-1 VIII.ii.2.A.1.f-h (PACT Act, 38 U.S.C. 1120; 38 CFR 3.320a, 3.320b)",
-    article: BPOT_ARTICLE,
     topics: [
-      {
-        start: "VIII.ii.2.A.1.f.",
-        end: "VIII.ii.2.A.1.g.",
-        stopAt: TOPIC_TAIL,
-      },
-      {
-        start: "VIII.ii.2.A.1.g.",
-        end: "VIII.ii.2.A.1.h.",
-        stopAt: TOPIC_TAIL,
-      },
-      { start: "VIII.ii.2.A.1.h.", end: " To Top", stopAt: TOPIC_TAIL },
+      "toxic-conditions-1120",
+      "toxic-conditions-3.320a",
+      "toxic-conditions-3.320b",
     ],
   },
   {
     id: "pact-toxic-service",
     citation:
       "M21-1 VIII.ii.2.A.1.e (PACT Act covered Veteran: locations and dates, 38 U.S.C. 1119)",
-    article: BPOT_ARTICLE,
-    topics: [
-      {
-        start: "VIII.ii.2.A.1.e.",
-        end: "VIII.ii.2.A.1.f.",
-        stopAt: [" Important:", ...TOPIC_TAIL],
-      },
-    ],
+    topics: ["toxic-service"],
   },
   {
     id: "pact-toxic-rule",
     citation:
       "M21-1 VIII.ii.2.A.1.d (PACT Act presumption of service connection)",
-    article: BPOT_ARTICLE,
-    topics: [
-      {
-        start: "VIII.ii.2.A.1.d.",
-        end: "VIII.ii.2.A.1.e.",
-        stopAt: TOPIC_TAIL,
-      },
-    ],
+    topics: ["toxic-rule"],
   },
   {
     id: "pact-herbicide-conditions",
     citation:
       "M21-1 VIII.i.1.A.1.f (presumptive herbicide disabilities, 38 CFR 3.309(e); 38 U.S.C. 1116)",
-    article: HERBICIDE_ARTICLE,
-    topics: [
-      { start: "VIII.i.1.A.1.f.", end: "VIII.i.1.A.1.g.", stopAt: TOPIC_TAIL },
-    ],
+    topics: ["herbicide-conditions"],
   },
   {
     id: "pact-herbicide-service",
     citation:
       "M21-1 VIII.i.1.A.1.c (presumed herbicide exposure: locations and dates)",
-    article: HERBICIDE_ARTICLE,
-    topics: [
-      {
-        start: "VIII.i.1.A.1.c.",
-        end: "VIII.i.1.A.1.d.",
-        stopAt: [" Notes:", ...TOPIC_TAIL],
-      },
-    ],
+    topics: ["herbicide-service"],
   },
   {
     id: "pact-herbicide-law-changes",
     citation: "M21-1 VIII.i.1.A.2.a (herbicide law changes, PACT Act)",
-    article: HERBICIDE_ARTICLE,
-    topics: [
-      {
-        start: "VIII.i.1.A.2.a.",
-        end: "VIII.i.1.A.2.b.",
-        stopAt: [" Important:", ...TOPIC_TAIL],
-      },
-    ],
+    topics: ["herbicide-law-changes"],
   },
 ];
 
@@ -326,30 +288,62 @@ function abbreviationsIn(text, article) {
   );
 }
 
-function buildManualEntry(spec, m21) {
-  const records = m21.filter((r) => r.title?.startsWith(spec.article));
+function loadArticle(prefix, m21) {
+  const records = m21.filter((r) => r.title?.startsWith(prefix));
   const urls = [...new Set(records.map((r) => r.source_url))];
   if (urls.length !== 1) {
     throw new Error(
-      `${spec.id}: expected one M21-1 article for "${spec.article}", found ${urls.length}`,
+      `expected one M21-1 article for "${prefix}", found ${urls.length}`,
     );
   }
-  const article = stitchChunks(records);
-  const text = spec.topics
-    .map((topic) => sliceTopic(article, topic))
-    .join("\n");
   return {
-    id: spec.id,
-    citation: spec.citation,
-    sourceLabel: "VA Adjudication Procedures Manual M21-1",
+    title: records[0].title,
+    url: urls[0],
+    retrieved: dateOf(records),
+    text: stitchChunks(records),
+  };
+}
+
+/**
+ * One manual topic: `flat` as the shard holds it and `text` with its tables
+ * and lists broken into lines. Refuses to return text that is not word for
+ * word the source.
+ */
+function buildTopic(key, m21) {
+  const topic = MANUAL_TOPICS[key];
+  const article = loadArticle(topic.article, m21);
+  const flat = sliceTopic(article.text, topic);
+  const text = structureText(flat, topic.structure);
+  if (!sameWords(flat, text)) {
+    throw new Error(`${key}: structured text differs from its source`);
+  }
+  return {
+    flat,
     text,
-    abbreviations: abbreviationsIn(text, `${records[0].title} ${article}`),
-    source: {
-      file: M21_FILE,
-      article: records[0].title,
-      url: urls[0],
-      retrieved: dateOf(records),
-      changeDate: changeDateBefore(article, spec.topics[0].start),
+    article,
+    changeDate: changeDateBefore(article.text, topic.start),
+  };
+}
+
+function buildManualEntry(spec, m21) {
+  const topics = spec.topics.map((key) => buildTopic(key, m21));
+  const [{ article, changeDate }] = topics;
+  const text = topics.map((topic) => topic.text).join("\n\n");
+  return {
+    flat: topics.map((topic) => topic.flat).join("\n"),
+    entry: {
+      id: spec.id,
+      citation: spec.citation,
+      sourceLabel: "VA Adjudication Procedures Manual M21-1",
+      text,
+      abbreviations: abbreviationsIn(text, `${article.title} ${article.text}`),
+      source: {
+        file: M21_FILE,
+        article: article.title,
+        url: article.url,
+        retrieved: article.retrieved,
+        changeDate,
+      },
     },
   };
 }
@@ -402,26 +396,31 @@ export function buildBundle(sourceRoot) {
     readFileSync(path.join(REPO_ROOT, FORMS_ALLOWLIST_FILE), "utf8"),
   );
   const forms = buildFormsEntry(m21, allowlist);
-  const generatedBy = "scripts/verified-reference/build.mjs";
+  const manual = MANUAL_ENTRIES.map((spec) => buildManualEntry(spec, m21));
+  const _generated = {
+    by: "scripts/verified-reference/build.mjs",
+    note: "Generated. Do not edit by hand; change the script and rebuild.",
+  };
   return {
     reference: {
-      _generated: {
-        by: generatedBy,
-        note: "Generated. Do not edit by hand; change the script and rebuild.",
-      },
+      _generated,
       entries: [
         ...CFR_ENTRIES.map((spec) => buildCfrEntry(spec, ecfr)),
-        ...MANUAL_ENTRIES.map((spec) => buildManualEntry(spec, m21)),
+        ...manual.map((built) => built.entry),
         forms.entry,
       ],
     },
     sections: {
-      _generated: {
-        by: generatedBy,
-        note: "Generated. Do not edit by hand; change the script and rebuild.",
-      },
+      _generated,
       source: { file: ECFR_FILE, retrieved: dateOf(ecfr) },
       parts: collectSections(ecfr),
+    },
+    flatSource: {
+      _generated,
+      source: { file: M21_FILE },
+      passages: Object.fromEntries(
+        manual.map((built) => [built.entry.id, built.flat]),
+      ),
     },
     omittedForms: forms.omitted,
   };
@@ -437,6 +436,7 @@ function main(argv) {
   const outputs = [
     [REFERENCE_OUT, serialize(bundle.reference)],
     [SECTIONS_OUT, serialize(bundle.sections)],
+    [FLAT_SOURCE_OUT, serialize(bundle.flatSource)],
   ];
 
   if (argv.includes("--check")) {
