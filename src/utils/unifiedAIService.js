@@ -52,14 +52,12 @@ import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildCalculatorSummaryLine,
   buildComputedResultBlock,
-  buildTdiuThresholdParagraph,
+  buildReplacementNotice,
   checkRaterResponse,
   checkTdiuConclusion,
   mentionsUnemployability,
   describeMismatch,
-  TDIU_PARAGRAPH_LEAD,
 } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import { flagUnverifiedCitations } from "./citationCheck";
@@ -1118,9 +1116,11 @@ export const injectCalculatorForRater = (prompt, options) => {
  * working in plain language, plus the TDIU threshold paragraph when the
  * veteran's prompt asks about TDIU. The replacement is recorded on the result
  * (validationWarnings, plus calculatorReplacement) so callers can see it
- * happened. A response that is kept gets the calculator's one-line result
- * appended when it never states the combined rating, and the TDIU threshold
- * paragraph appended whenever the prompt asks about TDIU.
+ * happened. A response that passes is kept, but only as commentary: the text
+ * returned always leads with the calculator's working, so the figures a
+ * veteran reads first never come from the model's arithmetic. Either way
+ * `calculatorLead` records the calculator's figure and whether the model's
+ * text was kept.
  */
 export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
@@ -1131,7 +1131,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   const asksTdiu = mentionsUnemployability(prompt);
   const tdiuCheck = asksTdiu ? checkTdiuConclusion(result.text, calc) : null;
   if (check.ok && !tdiuCheck?.contradicted) {
-    return keepWithCalculatorAdditions(result, calc, check, asksTdiu);
+    return leadWithCalculatorWorking(result, calc, asksTdiu);
   }
 
   const reason = describeMismatch(check, tdiuCheck);
@@ -1143,6 +1143,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
       check,
       tdiuCheck,
     }),
+    calculatorLead: { expected: check.expected, commentaryKept: false },
     validationWarnings: [
       ...(result.validationWarnings || []),
       `Response replaced with the calculator's working: ${reason}`,
@@ -1163,19 +1164,32 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   };
 };
 
-function keepWithCalculatorAdditions(result, calc, check, asksTdiu) {
-  const appendLine = !check.stated.includes(check.expected);
-  const body = String(result.text ?? "").trimEnd();
-  const appendTdiu = asksTdiu && !body.includes(TDIU_PARAGRAPH_LEAD);
-  if (!appendLine && !appendTdiu) return result;
-  const parts = [body];
-  if (appendLine) parts.push(buildCalculatorSummaryLine(calc));
-  if (appendTdiu) parts.push(buildTdiuThresholdParagraph(calc));
+export const CALCULATOR_COMMENTARY_LEAD =
+  "The AI's comments on this result follow. The figures above come from Vet-Rate's calculator, not from the AI.";
+
+// buildCalculatorExplanation opens with the sentence that says a draft was
+// not shown. Here the draft is shown, below the working, so that sentence
+// would be untrue and is left off.
+function calculatorWorkingText(calc, tdiu) {
+  const explanation = buildCalculatorExplanation(calc, { tdiu });
+  const notice = buildReplacementNotice();
+  return explanation.startsWith(notice)
+    ? explanation.slice(notice.length).trimStart()
+    : explanation;
+}
+
+function leadWithCalculatorWorking(result, calc, asksTdiu) {
+  const commentary = String(result.text ?? "").trim();
+  const working = calculatorWorkingText(calc, asksTdiu);
   return {
     ...result,
-    text: parts.filter(Boolean).join("\n\n"),
-    ...(appendLine ? { calculatorAppended: { expected: check.expected } } : {}),
-    ...(appendTdiu ? { tdiuParagraphAppended: true } : {}),
+    text: commentary
+      ? [working, CALCULATOR_COMMENTARY_LEAD, commentary].join("\n\n")
+      : working,
+    calculatorLead: {
+      expected: calc.combinedRating,
+      commentaryKept: commentary !== "",
+    },
   };
 }
 
@@ -2501,15 +2515,27 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
   const userPrompt = _isRaterRoute(options, effectiveMode)
     ? injectCalculatorForRater(prompt, options)
     : prompt;
+  const offDeviceUserPrompt =
+    options.conditionsOnDeviceOnly && userPrompt !== prompt ? prompt : null;
 
-  return { systemPrompt, userPrompt, enhancedOptions };
+  return { systemPrompt, userPrompt, offDeviceUserPrompt, enhancedOptions };
 }
+
+// conditionsOnDeviceOnly: the ratings in the computed block stay on the
+// device. Every send to a backend goes through here, so a mode that is not
+// on-device (cloud, a local server on another host) gets the veteran's
+// question without the block, whether it was the first choice or a fallback.
+const _userPromptForMode = (mode, userPrompt, options) =>
+  typeof options._offDeviceUserPrompt === "string" && !_isModeOnDevice(mode)
+    ? options._offDeviceUserPrompt
+    : userPrompt;
 
 // One call site per backend, shared by both the mode-directed dispatch and
 // the "whatever's available" fallback chain in _dispatchAiGeneration below -
 // each backend's (systemPrompt, userPrompt, options) argument shape now
 // exists exactly once instead of being repeated per branch.
-async function _invokeBackend(mode, systemPrompt, userPrompt, options) {
+async function _invokeBackend(mode, systemPrompt, sentUserPrompt, options) {
+  const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   switch (mode) {
     case AI_MODES.SWARM: {
       const { text, agent } = await runWarrantCouncil(
@@ -2786,7 +2812,7 @@ async function _handleContextOverflowFallback(
       // here would be exactly the re-assembly this refactor removes.
       const text = await generateWithCloudAI(
         systemPrompt,
-        userPrompt,
+        _userPromptForMode(AI_MODES.CLOUD, userPrompt, enhancedOptions),
         enhancedOptions,
       );
       return {
@@ -2863,7 +2889,8 @@ function _pickDocumentFallbackMode(effectiveMode) {
   return { mode, available: mode !== null };
 }
 
-async function _generateFallback(mode, systemPrompt, userPrompt, options) {
+async function _generateFallback(mode, systemPrompt, sentUserPrompt, options) {
+  const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   if (mode === AI_MODES.SWARM) {
     const { text, agent } = await runWarrantCouncil(
       systemPrompt,
@@ -3058,7 +3085,8 @@ const generateAIInternal = async (prompt, options = {}) => {
   const {
     systemPrompt: builtSystemPrompt,
     userPrompt: builtUserPrompt,
-    enhancedOptions,
+    offDeviceUserPrompt,
+    enhancedOptions: builtOptions,
   } = await _buildFullPrompt(prompt, options, effectiveMode);
 
   // ADR-008: redact both halves of the assembled request before either
@@ -3072,10 +3100,16 @@ const generateAIInternal = async (prompt, options = {}) => {
   // the veteran's machine. Redacting it anyway would feed the on-device model
   // "[REDACTED]" tokens that downstream consumers read as genuine values
   // (identifier fields themselves never come from the model - decision F).
-  const [systemPrompt, userPrompt] =
+  const pieces = [builtSystemPrompt, builtUserPrompt];
+  if (offDeviceUserPrompt !== null) pieces.push(offDeviceUserPrompt);
+  const [systemPrompt, userPrompt, offDevicePrompt] =
     dataClass === AI_DATA_CLASS.DOCUMENT
-      ? [builtSystemPrompt, builtUserPrompt]
-      : await _redactPiecesForSend([builtSystemPrompt, builtUserPrompt]);
+      ? pieces
+      : await _redactPiecesForSend(pieces);
+  const enhancedOptions =
+    offDevicePrompt === undefined
+      ? builtOptions
+      : { ...builtOptions, _offDeviceUserPrompt: offDevicePrompt };
 
   const result = await _dispatchWithRecovery(
     effectiveMode,

@@ -60,6 +60,7 @@ import {
   resetAICircuitBreaker,
   checkLocalServer,
   initializeWllama,
+  CALCULATOR_COMMENTARY_LEAD,
 } from "../../utils/unifiedAIService";
 import * as diamondSwarm from "../../utils/diamondSwarm";
 import * as wllamaService from "../../utils/wllamaService";
@@ -279,6 +280,112 @@ describe("rater-routed generateAI calls are grounded exactly once per backend", 
   });
 });
 
+describe("conditionsOnDeviceOnly: saved ratings are not sent to an off-device backend", () => {
+  const onDeviceOnly = (extra = {}) =>
+    callOptions({
+      toolId: "rating-calculator",
+      conditionsOnDeviceOnly: true,
+      ...extra,
+    });
+
+  it.each(["swarm", "local"])(
+    "%s backend still receives the computed block",
+    async (name) => {
+      await BACKENDS[name].setup();
+      await generateAI("What is my combined rating?", onDeviceOnly());
+      expect(countBlocks(BACKENDS[name].sent())).toBe(1);
+    },
+  );
+
+  it("cloud receives the question without the block or any condition name", async () => {
+    await BACKENDS.cloud.setup();
+    const result = await generateAI(
+      "What is my combined rating?",
+      onDeviceOnly(),
+    );
+    const sent = BACKENDS.cloud.sent();
+    expect(sent).toContain("What is my combined rating?");
+    expect(countBlocks(sent)).toBe(0);
+    expect(sent).not.toContain("knee strain");
+    expect(sent).not.toContain("Lumbar");
+    expect(result.text.startsWith("Your combined rating is 70%.")).toBe(true);
+    expect(result.calculatorLead).toEqual({
+      expected: 70,
+      commentaryKept: true,
+    });
+  });
+
+  it("the question sent to cloud is redacted like any other request (ADR-008)", async () => {
+    await BACKENDS.cloud.setup();
+    await generateAI(
+      "My SSN is 123-45-6789. What is my combined rating?",
+      onDeviceOnly(),
+    );
+    const sent = BACKENDS.cloud.sent();
+    expect(sent).toContain("What is my combined rating?");
+    expect(sent).not.toContain("123-45-6789");
+    expect(countBlocks(sent)).toBe(0);
+  });
+});
+
+describe("conditionsOnDeviceOnly: local server and failover", () => {
+  const onDeviceOnly = () =>
+    callOptions({ toolId: "rating-calculator", conditionsOnDeviceOnly: true });
+
+  it("a local server on another host receives no block", async () => {
+    localServerClient.getServerConfig.mockReturnValue({
+      host: "nas.example.lan",
+      port: 8080,
+    });
+    await BACKENDS["local server"].setup();
+    await generateAI("What is my combined rating?", onDeviceOnly());
+    expect(countBlocks(BACKENDS["local server"].sent())).toBe(0);
+    localServerClient.getServerConfig.mockReturnValue({
+      host: "localhost",
+      port: 8080,
+    });
+  });
+
+  it("a local server on this machine receives the block", async () => {
+    await BACKENDS["local server"].setup();
+    await generateAI("What is my combined rating?", onDeviceOnly());
+    expect(countBlocks(BACKENDS["local server"].sent())).toBe(1);
+  });
+
+  it("the block is left out when an on-device attempt fails over to cloud", async () => {
+    const failingCreate = vi.fn().mockRejectedValue(new Error("GPU lost"));
+    await BACKENDS.cloud.setup();
+    registerLocalAIEngine(
+      { chat: { completions: { create: failingCreate } } },
+      true,
+      false,
+      "test-model",
+      false,
+    );
+    registerSwarmEngine(null, false, false, null);
+    setAIMode(AI_MODES.LOCAL);
+    const result = await generateAI(
+      "What is my combined rating?",
+      onDeviceOnly(),
+    );
+    expect(
+      countBlocks(failingCreate.mock.calls[0][0].messages.at(-1).content),
+    ).toBe(1);
+    expect(result.mode).toBe(AI_MODES.CLOUD);
+    expect(countBlocks(BACKENDS.cloud.sent())).toBe(0);
+    expect(BACKENDS.cloud.sent()).not.toContain("knee strain");
+  });
+
+  it("without the option every backend receives the block, as before", async () => {
+    await BACKENDS.cloud.setup();
+    await generateAI(
+      "What is my combined rating?",
+      callOptions({ toolId: "rating-calculator" }),
+    );
+    expect(countBlocks(BACKENDS.cloud.sent())).toBe(1);
+  });
+});
+
 describe("rater grounding: calculator parity, redaction and wllama", () => {
   it("matches calculateVARating for the bilateral case (48 bilateral group, 70 combined)", async () => {
     await BACKENDS.swarm.setup();
@@ -397,9 +504,21 @@ describe("rater grounding: a response that contradicts the calculator is replace
     await BACKENDS.swarm.setup();
   });
 
-  it("leaves a response that restates the calculator's figure untouched", async () => {
-    const result = await ask("Your combined rating is 80%. Hope that helps.");
-    expect(result.text).toBe("Your combined rating is 80%. Hope that helps.");
+  it("leads with the calculator's working and keeps a consistent answer as commentary", async () => {
+    const draft = "Your combined rating is 80%. Hope that helps.";
+    const result = await ask(draft);
+    expect(
+      result.text.startsWith("Your combined rating is 80%.\n\nVA does"),
+    ).toBe(true);
+    expect(result.text).toContain("Step 3: 72% combined with 10% = 75%");
+    expect(result.text).not.toContain("draft answer");
+    expect(
+      result.text.endsWith(`${CALCULATOR_COMMENTARY_LEAD}\n\n${draft}`),
+    ).toBe(true);
+    expect(result.calculatorLead).toEqual({
+      expected: 80,
+      commentaryKept: true,
+    });
     expect(result.calculatorReplacement).toBeUndefined();
     expect(result.validationWarnings).toBeUndefined();
   });
@@ -411,6 +530,12 @@ describe("rater grounding: a response that contradicts the calculator is replace
     expect(result.text).toContain("Your combined rating is 80%.");
     expect(result.text).toContain("Step 3: 72% combined with 10% = 75%");
     expect(result.text).not.toContain("On reflection");
+    expect(result.text).not.toContain(CALCULATOR_COMMENTARY_LEAD);
+    expect(result.text.startsWith("The AI's draft answer stated")).toBe(true);
+    expect(result.calculatorLead).toEqual({
+      expected: 80,
+      commentaryKept: false,
+    });
     expect(result.calculatorReplacement).toMatchObject({
       expected: 80,
       stated: [80, 70],
@@ -457,48 +582,68 @@ describe("rater grounding: a response that contradicts the calculator is replace
   });
 });
 
-describe("rater grounding: an answer with no combined figure gets the calculator's line", () => {
+describe("rater grounding: the calculator's working always comes first", () => {
   beforeEach(async () => {
     await BACKENDS.swarm.setup();
   });
 
-  it("appends the calculator's line to an answer that never states the combined rating", async () => {
-    const draft = "Here is how VA combines ratings, largest first.";
-    const result = await ask(draft);
-    expect(result.text).toBe(
-      `${draft}
+  const WORKING_START =
+    "Your combined rating is 80%.\n\nVA does not add ratings together.";
 
-Vet-Rate's calculator result for the ratings you entered: your combined rating is 80% (38 CFR § 4.25).`,
-    );
-    expect(result.calculatorAppended).toEqual({ expected: 80 });
-    expect(result.calculatorReplacement).toBeUndefined();
-  });
-
-  it("appends the line when the only figures stated are individual condition ratings", async () => {
-    const result = await ask(
+  it.each([
+    [
+      "never states the combined rating",
+      "Here is how VA combines ratings, largest first.",
+    ],
+    [
+      "states only individual condition ratings",
       "You have a 50% PTSD rating and a 30% tinnitus rating.",
-    );
-    expect(result.text).toMatch(/your combined rating is 80% \(38 CFR/);
-    expect(result.calculatorAppended).toEqual({ expected: 80 });
-  });
+    ],
+    [
+      "states only a working value",
+      "The combined value before rounding is 75%.",
+    ],
+  ])(
+    "an answer that %s follows the working as commentary",
+    async (_n, draft) => {
+      const result = await ask(draft);
+      expect(result.text.startsWith(WORKING_START)).toBe(true);
+      expect(
+        result.text.endsWith(`${CALCULATOR_COMMENTARY_LEAD}\n\n${draft}`),
+      ).toBe(true);
+      expect(result.calculatorLead.commentaryKept).toBe(true);
+      expect(result.calculatorReplacement).toBeUndefined();
+    },
+  );
 
-  it("appends the line when the answer states only a working value, not the final rating", async () => {
-    const result = await ask("The combined value before rounding is 75%.");
-    expect(result.text).toContain("your combined rating is 80%");
-    expect(result.calculatorAppended).toEqual({ expected: 80 });
-  });
-
-  it("returns only the calculator's line when the draft is empty", async () => {
+  it("returns the working alone, with no commentary heading, when the draft is empty", async () => {
     const result = await ask("");
-    expect(result.text).toBe(
-      "Vet-Rate's calculator result for the ratings you entered: your combined rating is 80% (38 CFR § 4.25).",
-    );
+    expect(result.text.startsWith(WORKING_START)).toBe(true);
+    expect(result.text).not.toContain(CALCULATOR_COMMENTARY_LEAD);
+    expect(result.text).not.toContain("draft answer");
+    expect(result.calculatorLead).toEqual({
+      expected: 80,
+      commentaryKept: false,
+    });
   });
 
-  it("does not append the line to a non-rater route", async () => {
+  it("drops an answer that shows its own arithmetic although it ends on the right figure", async () => {
+    const result = await ask(
+      "50% + 30% = 80%\nSo your combined rating is 80%.",
+    );
+    expect(
+      result.text.startsWith(
+        "The AI's draft answer showed working that did not match Vet-Rate's calculator, so it is not shown.",
+      ),
+    ).toBe(true);
+    expect(result.text).not.toContain("50% + 30% = 80%");
+    expect(result.calculatorLead.commentaryKept).toBe(false);
+  });
+
+  it("does not touch a non-rater route", async () => {
     const result = await ask("No figure here.", { toolId: "cfile-analyzer" });
     expect(result.text).toBe("No figure here.");
-    expect(result.calculatorAppended).toBeUndefined();
+    expect(result.calculatorLead).toBeUndefined();
   });
 });
 
@@ -558,24 +703,26 @@ describe("rater grounding: a replaced answer still answers a TDIU question", () 
   });
 });
 
-describe("rater grounding: a kept answer to a TDIU question gets the threshold paragraph", () => {
+describe("rater grounding: a kept answer to a TDIU question follows the threshold paragraph", () => {
   beforeEach(async () => {
     await BACKENDS.swarm.setup();
   });
 
-  it("appends the paragraph to a kept answer when the prompt mentions TDIU", async () => {
+  it("puts the paragraph in the working, once, ahead of the commentary", async () => {
+    const draft =
+      "Yes, the single 60 percent rating meets the TDIU percentage test.";
     const result = await askWith(
       "Can I qualify for TDIU with only one 60% mental health rating?",
-      "Your combined rating is 60%.",
+      draft,
       SIXTY,
     );
     expect(result.calculatorReplacement).toBeUndefined();
-    expect(result.tdiuParagraphAppended).toBe(true);
+    expect(result.calculatorLead).toEqual({
+      expected: 60,
+      commentaryKept: true,
+    });
     expect(result.text.startsWith("Your combined rating is 60%.\n\n")).toBe(
       true,
-    );
-    expect(result.text).toContain(
-      "About your question on individual unemployability (TDIU):",
     );
     expect(result.text).toContain(
       "Mental health is rated 60 percent, which meets the threshold for a single disability.",
@@ -583,30 +730,21 @@ describe("rater grounding: a kept answer to a TDIU question gets the threshold p
     expect(
       result.text.match(/About your question on individual/g),
     ).toHaveLength(1);
-  });
-
-  it("appends both the calculator line and the paragraph when the kept answer states no combined rating", async () => {
-    const result = await askWith(
-      "Can I qualify for TDIU with only one 60% mental health rating?",
-      "Yes, the single 60 percent rating meets the TDIU percentage test.",
-      SIXTY,
-    );
-    expect(result.calculatorAppended).toEqual({ expected: 60 });
-    expect(result.tdiuParagraphAppended).toBe(true);
-    const line = result.text.indexOf("your combined rating is 60%");
     const paragraph = result.text.indexOf("About your question on individual");
-    expect(line).toBeGreaterThan(0);
-    expect(paragraph).toBeGreaterThan(line);
+    const commentary = result.text.indexOf(CALCULATOR_COMMENTARY_LEAD);
+    expect(paragraph).toBeGreaterThan(0);
+    expect(commentary).toBeGreaterThan(paragraph);
+    expect(result.text.endsWith(draft)).toBe(true);
   });
 
-  it("leaves a kept answer alone when the prompt does not mention TDIU", async () => {
+  it("leaves the paragraph out when the prompt does not mention TDIU", async () => {
     const result = await askWith(
       "Calculate my combined rating.",
       "Your combined rating is 60%.",
       SIXTY,
     );
-    expect(result.text).toBe("Your combined rating is 60%.");
-    expect(result.tdiuParagraphAppended).toBeUndefined();
+    expect(result.text).not.toContain("unemployability");
+    expect(result.calculatorLead.commentaryKept).toBe(true);
   });
 });
 
@@ -678,14 +816,15 @@ describe("rater grounding: a TDIU conclusion that contradicts the thresholds is 
     expect(result.text).not.toContain("gave a TDIU conclusion");
   });
 
-  it("keeps a hedged answer that depends on unemployability and appends the paragraph", async () => {
+  it("keeps a hedged answer that depends on unemployability as commentary", async () => {
     const result = await askWith(
       "Can I qualify for TDIU with only one 60% mental health rating?",
       "Your combined rating is 60%. If you are capable of working, you are not eligible for TDIU.",
       SIXTY,
     );
     expect(result.calculatorReplacement).toBeUndefined();
-    expect(result.tdiuParagraphAppended).toBe(true);
+    expect(result.calculatorLead.commentaryKept).toBe(true);
+    expect(result.text).toContain("If you are capable of working");
   });
 });
 
@@ -704,7 +843,7 @@ describe("rater grounding: the bilateral check replaces only a contradicted pair
     const text =
       "The bilateral pair is Left knee and Right knee.\nNext, we combine the bilateral group rating (21%) with your remaining condition (Back, 30%).\nYour combined rating is 50%.";
     const result = await ask(text, { conditions: KNEES_BACK });
-    expect(result.text).toBe(text);
+    expect(result.text.endsWith(text)).toBe(true);
     expect(result.calculatorReplacement).toBeUndefined();
   });
 
@@ -712,7 +851,7 @@ describe("rater grounding: the bilateral check replaces only a contradicted pair
     const text =
       "No bilateral pair applies here (e.g., left knee and right knee would be one). Your combined rating is 80%.";
     const result = await ask(text);
-    expect(result.text).toBe(text);
+    expect(result.text.endsWith(text)).toBe(true);
     expect(result.calculatorReplacement).toBeUndefined();
   });
 
@@ -731,11 +870,11 @@ describe("rater grounding: the bilateral check replaces only a contradicted pair
     expect(result.calculatorReplacement.deniedPairs).toHaveLength(1);
   });
 
-  it("appends the calculator line instead of replacing when a pairing claim names no condition", async () => {
+  it("keeps as commentary, instead of replacing, a pairing claim that names no condition", async () => {
     const result = await ask(
       "Apply the bonus since the highest two are paired.",
     );
     expect(result.calculatorReplacement).toBeUndefined();
-    expect(result.calculatorAppended).toEqual({ expected: 80 });
+    expect(result.calculatorLead.commentaryKept).toBe(true);
   });
 });

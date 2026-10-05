@@ -27,6 +27,10 @@ import IdentifierSourceNotice from "./IdentifierSourceNotice";
 import { useRedditClipboard } from "../hooks/useRedditClipboard";
 import { autoSummarizeIfLong } from "../utils/redditSummarizer";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
+import {
+  describeSavedRatings,
+  savedRatingsGrounding,
+} from "../utils/savedRatingsGrounding";
 
 // Build context-aware system prompt
 function buildSystemPrompt(currentTool, isHelperMode, veteranContext) {
@@ -151,7 +155,9 @@ async function sendMessage({
   try {
     // ADR-009: "context" - the veteran's own typed question plus the
     // allow-listed veteran context, never a document upload.
+    const grounding = savedRatingsGrounding(input.trim());
     const result = await generateAI(input.trim(), {
+      ...grounding,
       dataClass: AI_DATA_CLASS.CONTEXT,
       preset: "LEGAL", // Use LEGAL preset for accurate regulatory guidance
       maxTokens: 2048,
@@ -179,7 +185,10 @@ async function sendMessage({
 
     const assistantMessage = {
       role: "assistant",
-      content: responseText,
+      content:
+        grounding && result.calculatorLead
+          ? `${describeSavedRatings(grounding.conditions)}\n\n${responseText}`
+          : responseText,
       timestamp: new Date(),
       mode: result.mode,
     };
