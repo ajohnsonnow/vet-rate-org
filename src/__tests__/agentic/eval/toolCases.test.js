@@ -186,6 +186,30 @@ describe("normalizeToolOutcome", () => {
     });
   });
 
+  it("asks for an engine reset when the tool returned its draft after an engine error", () => {
+    const outcome = normalizeToolOutcome("enhanceAppealStatement", {
+      ok: true,
+      toolResult: {
+        success: true,
+        content: "the app-built draft",
+        draftPath: "template",
+        draftErrorReason: "WebGPU inference timed out",
+      },
+    });
+    expect(outcome).toMatchObject({
+      ok: true,
+      needsRecovery: true,
+      text: "the app-built draft",
+      tool: { draftErrorReason: "WebGPU inference timed out" },
+    });
+    expect(
+      normalizeToolOutcome("enhanceAppealStatement", {
+        ok: true,
+        toolResult: { success: true, content: "x", draftPath: "model" },
+      }),
+    ).not.toHaveProperty("needsRecovery");
+  });
+
   it("turns a helper failure into a case error", () => {
     expect(
       normalizeToolOutcome("enhanceAppealStatement", {

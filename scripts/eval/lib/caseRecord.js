@@ -19,7 +19,8 @@ import { TOOL_ENTRIES } from "./toolEntries.js";
  * and its record adds the entry point, the form inputs (an attached document
  * by name only) and, for a writing tool, which draft the veteran was handed:
  * `draftPath` "model" (the model's wording passed the acceptance check) or
- * "template" (the app-built draft was returned, with `draftRejectReasons`).
+ * "template" (the app-built draft was returned, with `draftRejectReasons`,
+ * or with `draftErrorReason` when the model could not answer at all).
  */
 const systemTextOf = (request) => {
   const content = request?.messages?.find((m) => m?.role === "system")?.content;
@@ -51,6 +52,7 @@ function toolFields(caseDef, outcome, own) {
     draftPath: outcome.tool?.draftPath ?? null,
     draftNote: outcome.tool?.draftNote ?? null,
     draftRejectReasons: outcome.tool?.draftRejectReasons ?? [],
+    draftErrorReason: outcome.tool?.draftErrorReason ?? null,
     ...ownSystemPromptSeen(caseDef, own),
   };
 }

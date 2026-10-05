@@ -231,7 +231,12 @@ export function checkDraftReturned(caseDef, record) {
   if (path === "model") {
     return result(AUTO_PASS, "model draft accepted", { path });
   }
-  const reasons = (record.draftRejectReasons ?? []).join("; ");
+  const reasons = [
+    ...(record.draftErrorReason
+      ? [`the model did not answer: ${record.draftErrorReason}`]
+      : []),
+    ...(record.draftRejectReasons ?? []),
+  ].join("; ");
   const why = reasons ? ` (${reasons})` : "";
   return result(AUTO_PASS, `app-built draft returned${why}`, { path });
 }

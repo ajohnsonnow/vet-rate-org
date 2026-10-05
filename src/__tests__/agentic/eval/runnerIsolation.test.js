@@ -328,3 +328,22 @@ describe("outputCleanup in the transcript record", () => {
     ).not.toHaveProperty("outputCleanup");
   });
 });
+
+describe("a tool that returned its draft after an engine error", () => {
+  it("is recorded as answered and the engine is reset before the next case", async () => {
+    const h = harness({
+      c1: { ok: true, text: "app-built draft", needsRecovery: true },
+      c2: { ok: true, text: "fine" },
+      c3: { ok: true, text: "fine" },
+    });
+    const out = await h.run();
+    expect(out).toEqual({ recorded: 3, stopped: null });
+    expect(h.events.slice(0, 4)).toEqual([
+      "attempt c1",
+      "write c1",
+      "recover",
+      "attempt c2",
+    ]);
+    expect(h.events.filter((e) => e === "recover")).toHaveLength(1);
+  });
+});

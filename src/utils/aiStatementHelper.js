@@ -26,7 +26,7 @@ import { loadVKB } from "./veteranKnowledgeBase";
 import { getFullName, getVeteranProfile } from "./veteranProfile";
 import { redactVeteranIdentifiers } from "./piiScrubber";
 import { AI_DATA_CLASS } from "./aiDataClassPolicy";
-import { resolveWriterDraft } from "./writerDraftCheck";
+import { draftAfterError, resolveWriterDraft } from "./writerDraftCheck";
 import {
   buildAppealStatementTemplate,
   buildBuddyStatementTemplate,
@@ -500,8 +500,10 @@ const callGeminiAPI = async (
 /**
  * Ask the model to improve the wording of an app-built draft, and return
  * the model's wording only when it passes the acceptance check. Otherwise
- * the veteran gets the app-built draft itself, with a one-line note.
- * `draftPath` on the result records which ("model" or "template").
+ * the veteran gets the app-built draft itself, with a one-line note:
+ * also when the model could not answer at all, in which case
+ * `draftErrorReason` names the error. `draftPath` on the result records
+ * which draft it is ("model" or "template").
  *
  * The check runs against the identifier-redacted draft, the text the model
  * actually saw. The draft handed back on rejection is the unredacted one:
@@ -522,7 +524,18 @@ async function draftWithModel({
     toolId,
     { temperature: REWORD_TEMPERATURE },
   );
-  if (!result.success) return result;
+  // The crisis block stays a block. Any other failure (engine error,
+  // timeout, request limit, no AI loaded) still leaves the veteran with the
+  // app-built draft to work from.
+  if (result.crisisDetected) return result;
+  if (!result.success) {
+    return {
+      success: true,
+      content: template,
+      ...(result.errorType ? { errorType: result.errorType } : {}),
+      ...draftAfterError(result.error),
+    };
+  }
 
   return {
     ...result,

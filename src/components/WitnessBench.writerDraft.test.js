@@ -98,3 +98,23 @@ describe("WitnessBench._compileStatementWithAI", () => {
     expect(result.statement).not.toContain("the foregoing");
   });
 });
+
+describe("WitnessBench._compileStatementWithAI when the model cannot answer", () => {
+  it("returns the standard statement and names the engine error", async () => {
+    generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
+    const result = await _compileStatementWithAI("spouse", "PTSD", ANSWERS);
+
+    expect(result).toMatchObject({
+      draftPath: "template",
+      draftNote: STANDARD_DRAFT_NOTE,
+      draftRejectReasons: [],
+      draftErrorReason: "WebGPU inference timed out",
+    });
+    expect(result.statement).toContain(
+      "They leave the room when fireworks start.",
+    );
+    expect(result.statement).toContain(
+      "WITNESS ATTESTATION (read before you sign)",
+    );
+  });
+});

@@ -183,14 +183,79 @@ describe("an empty form", () => {
   });
 });
 
-describe("failures stay failures", () => {
-  it("an engine error is reported, with no draft path", async () => {
-    generateAI.mockRejectedValue(new Error("Local AI not initialized"));
-    const result = await enhancePersonalStatement(PERSONAL, "Lumbar strain");
+describe.each(TOOLS)(
+  "%s when the model cannot answer",
+  (_name, run, template) => {
+    it("returns the app-built draft and names the engine error", async () => {
+      generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
+      const result = await run();
+
+      expect(result).toMatchObject({
+        success: true,
+        content: template,
+        draftPath: "template",
+        draftNote: STANDARD_DRAFT_NOTE,
+        draftRejectReasons: [],
+        errorType: "timeout",
+      });
+      expect(result.draftErrorReason).toMatch(/timed out/i);
+    });
+
+    it("returns the app-built draft during the request cooldown", async () => {
+      modelReplies(draftIn);
+      await run();
+      const second = await run();
+
+      expect(generateAI).toHaveBeenCalledTimes(1);
+      expect(second).toMatchObject({
+        success: true,
+        content: template,
+        draftPath: "template",
+        draftNote: STANDARD_DRAFT_NOTE,
+      });
+      expect(second.draftErrorReason).toMatch(/cooling down/i);
+    });
+  },
+);
+
+describe("crisis language stops every statement tool before the model", () => {
+  const CRISIS = "Some nights I think I want to kill myself";
+  const withCrisis = [
+    [
+      "enhancePersonalStatement",
+      () =>
+        enhancePersonalStatement({ ...PERSONAL, socialImpact: CRISIS }, "PTSD"),
+    ],
+    [
+      "enhancePTSDStatement",
+      () => enhancePTSDStatement({ ...PTSD, dailyImpact: CRISIS }),
+    ],
+    [
+      "enhanceBuddyStatement",
+      () => enhanceBuddyStatement({ ...BUDDY, observations: CRISIS }, "PTSD"),
+    ],
+    [
+      "enhanceAppealStatement",
+      () => enhanceAppealStatement({ ...APPEAL, whyIncorrect: CRISIS }),
+    ],
+    [
+      "generateNexusLetterRequest",
+      () => generateNexusLetterRequest({ ...NEXUS, symptoms: CRISIS }),
+    ],
+  ];
+
+  it.each(withCrisis)("%s", async (_name, run) => {
+    const seen = vi.fn();
+    window.addEventListener("vetrate:crisis", seen);
+    const result = await run();
+    window.removeEventListener("vetrate:crisis", seen);
 
     expect(result.success).toBe(false);
-    expect(result.errorType).toBe("not_initialized");
+    expect(result.crisisDetected).toBe(true);
+    expect(result.content).toBeUndefined();
     expect(result.draftPath).toBeUndefined();
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(seen).toHaveBeenCalledTimes(1);
   });
 });
 

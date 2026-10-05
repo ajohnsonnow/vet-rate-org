@@ -892,3 +892,17 @@ export function resolveTdiuDraft({ output, template, reference = [] }) {
     draftRejectReasons: [],
   };
 }
+
+/**
+ * What a tool returns when the model could not answer at all (an engine
+ * error, a timeout, the request limit): the app-built draft with the note,
+ * and the error named in `draftErrorReason`.
+ */
+export const draftAfterError = (error) => ({
+  draftPath: DRAFT_PATH.TEMPLATE,
+  draftNote: STANDARD_DRAFT_NOTE,
+  draftRejectReasons: [],
+  draftErrorReason:
+    (error instanceof Error ? error.message : String(error ?? "")) ||
+    "the AI did not answer",
+});

@@ -211,6 +211,10 @@ export function normalizeToolOutcome(entry, outcome) {
       draftPath: result?.draftPath ?? null,
       draftNote: result?.draftNote ?? null,
       draftRejectReasons: result?.draftRejectReasons ?? [],
+      draftErrorReason: result?.draftErrorReason ?? null,
     },
+    // The tool handed back its app-built draft because the engine failed.
+    // The case is answered, but the engine may still be busy or wedged.
+    ...(result?.draftErrorReason ? { needsRecovery: true } : {}),
   };
 }

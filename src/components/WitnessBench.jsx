@@ -30,7 +30,7 @@ import {
   getAIStatus,
 } from "../utils/unifiedAIService";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
-import { resolveWriterDraft } from "../utils/writerDraftCheck";
+import { draftAfterError, resolveWriterDraft } from "../utils/writerDraftCheck";
 import {
   STANDARD_DRAFT_NOTE,
   buildRewordPrompt,
@@ -397,13 +397,7 @@ export const _compileStatementWithAI = async (
   condition,
   answers,
 ) => {
-  // Check if ANY AI is available
-  if (!isAnyAIAvailable()) {
-    throw new Error(
-      "No AI available. Please configure an API key or enable Local AI.",
-    );
-  }
-
+  const standard = compileStatementWithoutAI(relationship, condition, answers);
   const relationshipLabel =
     RELATIONSHIP_TYPES.find((r) => r.value === relationship)?.label ||
     relationship;
@@ -413,24 +407,35 @@ export const _compileStatementWithAI = async (
     answers,
   );
 
-  // Use unified AI service - ADR-009: "context" - the witness's own typed
-  // interview answers (their own words about the veteran), not a document
-  // upload; PII redaction is handled separately at the ADR-008 boundary.
-  const response = await generateAI(buildRewordPrompt(template), {
-    dataClass: AI_DATA_CLASS.CONTEXT,
-    toolId: "buddy-statement",
-    temperature: 0.3,
-    maxTokens: 2048,
-  });
+  let text;
+  try {
+    if (!isAnyAIAvailable()) {
+      throw new Error(
+        "No AI available. Please configure an API key or enable Local AI.",
+      );
+    }
+    // Use unified AI service - ADR-009: "context" - the witness's own typed
+    // interview answers (their own words about the veteran), not a document
+    // upload; PII redaction is handled separately at the ADR-008 boundary.
+    const response = await generateAI(buildRewordPrompt(template), {
+      dataClass: AI_DATA_CLASS.CONTEXT,
+      toolId: "buddy-statement",
+      temperature: 0.3,
+      maxTokens: 2048,
+    });
+    // generateAI returns { text, mode } object - extract the text content
+    text = response?.text || response;
+  } catch (error) {
+    console.error("Statement generation failed:", error);
+    return { statement: standard, ...draftAfterError(error) };
+  }
 
-  // generateAI returns { text, mode } object - extract the text content
-  const text = response?.text || response;
   const { content, ...draft } = resolveWriterDraft({
     output: typeof text === "string" ? text : JSON.stringify(text),
     template,
     inputs: suppliedIn(template, Object.values(answers)),
     keep: [condition],
-    fallback: compileStatementWithoutAI(relationship, condition, answers),
+    fallback: standard,
   });
   return { statement: content, ...draft };
 };

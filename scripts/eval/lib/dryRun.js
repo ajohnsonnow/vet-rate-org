@@ -5,6 +5,7 @@ import {
   NOT_APPLICABLE,
 } from "./goldenChecks.js";
 import { stripReasoning } from "../../../src/utils/reasoningText.js";
+import { draftAfterError } from "../../../src/utils/writerDraftCheck.js";
 import { assembleCaseRecord } from "./caseRecord.js";
 import { buildMetaRecord, fingerprintPersonas } from "./goldenRecord.js";
 import { TOOL_ENTRIES } from "./toolEntries.js";
@@ -74,6 +75,7 @@ const FAILING_OVERRIDES = {
       "The combined rating is 60%. Some calculators show a combined rating of 70% instead.",
   },
   a30: { noCapture: true },
+  t02: { toolError: "WebGPU inference timed out after 300s" },
   t03: {
     toolReply:
       "I cannot draft a buddy statement because you have not provided the specific details of the incident.",
@@ -151,6 +153,7 @@ export const DRY_RUN_EXPECTATIONS = {
   a25: { "calc-match": NEEDS_HUMAN },
   a30: { routing: NEEDS_HUMAN },
   t01: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  t02: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t03: { "draft-returned": AUTO_PASS },
   t04: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t05: { "draft-returned": AUTO_PASS },
@@ -166,7 +169,7 @@ export const DRY_RUN_EXPECTATIONS = {
 /** The draft path each dry-run tool case must record. */
 export const DRY_RUN_DRAFT_PATHS = {
   t01: "model",
-  t02: "model",
+  t02: "template",
   t03: "template",
   t04: "model",
   t05: "template",
@@ -243,6 +246,13 @@ function toolOutcome(
     return done({ text: GOOD_DECODE, tool: noDraft });
   }
   if (override.noDraft) return done({ text: "", tool: noDraft });
+  if (override.toolError) {
+    return done({
+      text: draft.resolve("").content,
+      tool: draftAfterError(override.toolError),
+      needsRecovery: true,
+    });
+  }
   const { content, ...tool } = draft.resolve(
     override.toolReply ?? draft.template,
   );
