@@ -6,6 +6,9 @@ import {
   buildRetroPayAlerts,
   formatBilateralPromptBlock,
   bilateralSaveFields,
+  formatRetroPayFindings,
+  LoadedConditionsNotice,
+  RETRO_PAY_ACTION_STEPS,
 } from "./RetroPayHunter";
 
 const knees = checkBilateralFactorCompliance([
@@ -55,5 +58,33 @@ describe("RetroPayHunter presents the bilateral factor as something to check", (
     expect(bilateralSaveFields(null)).toEqual({
       bilateralFactorApplies: false,
     });
+  });
+});
+
+describe("RetroPayHunter does not say a detection happened", () => {
+  it("the loaded-conditions notice says conditions were loaded, not detected", () => {
+    render(
+      <LoadedConditionsNotice
+        conditions={[
+          { name: "Left knee", rating: 10, side: "left", bodyPart: "knee" },
+          { name: "Right knee", rating: 10, side: "right", bodyPart: "knee" },
+        ]}
+      />,
+    );
+    expect(
+      screen.getByText(/2 conditions loaded for the bilateral factor check/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/detected/i)).not.toBeInTheDocument();
+  });
+
+  it("the saved findings line carries no count of CUE issues", () => {
+    const line = formatRetroPayFindings(24, 1234.5);
+    expect(line).toBe("Analyzed 24 months, est. $1,234.50");
+    expect(line).not.toMatch(/CUE|issue/i);
+  });
+
+  it("the AI is not prompted to suggest filing a CUE claim", () => {
+    expect(RETRO_PAY_ACTION_STEPS).toContain("Action Steps");
+    expect(RETRO_PAY_ACTION_STEPS).not.toMatch(/CUE/);
   });
 });

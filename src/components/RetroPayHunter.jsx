@@ -7,8 +7,10 @@
  *
  * Features:
  * - Compare historical ratings against correct pay tables
- * - Detect missing bilateral factor application
- * - Identify potential Clear and Unmistakable Errors (CUE)
+ * - Say whether the bilateral factor (38 CFR 4.26) applies to the saved
+ *   ratings, so the veteran can check the decision; the tool does not read
+ *   the decision and cannot tell whether the factor was applied
+ * - List common Clear and Unmistakable Error (CUE) patterns for reference
  * - Calculate total missed compensation
  * - AI-powered analysis for action recommendations
  */
@@ -59,6 +61,12 @@ export const formatBilateralPromptBlock = (bilateralCheck) =>
 export const bilateralSaveFields = (bilateralCheck) => ({
   bilateralFactorApplies: bilateralCheck?.applicable || false,
 });
+
+export const RETRO_PAY_ACTION_STEPS =
+  "2. **Action Steps**: What should the veteran do NEXT? (Request a payment review, ask a Veterans Service Officer to check the decision, etc.)";
+
+export const formatRetroPayFindings = (totalMonths, total) =>
+  `Analyzed ${totalMonths || 0} months, est. $${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
 
 const formatCueIssuesBlock = (alerts) => {
   if (alerts.length === 0) return "";
@@ -314,7 +322,7 @@ ${formatCueIssuesBlock(cueAlerts)}
 Provide a veteran-focused analysis covering:
 
 1. **What This Means**: Explain the findings in plain language - no VA jargon
-2. **Action Steps**: What should the veteran do NEXT? (File CUE claim, request payment review, etc.)
+${RETRO_PAY_ACTION_STEPS}
 3. **Timeline**: How long does the process typically take?
 4. **Documentation Needed**: What evidence should they gather?
 5. **Cautions**: Common mistakes to avoid when filing for retroactive pay
@@ -346,7 +354,10 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         },
         vkbMergeData: {
           aiInsights: {
-            retroPayFindings: `Analyzed ${analysis?.totalMonths || 0} months, est. $${computeTotals(analysis).total.toLocaleString("en-US", { minimumFractionDigits: 2 })}; ${cueAlerts?.length || 0} potential CUE issues`,
+            retroPayFindings: formatRetroPayFindings(
+              analysis?.totalMonths,
+              computeTotals(analysis).total,
+            ),
             ...bilateralSaveFields(bilateralCheck),
           },
         },
@@ -647,7 +658,7 @@ function ActualReceivedField({ newEntry, setNewEntry }) {
   );
 }
 
-function LoadedConditionsNotice({ conditions }) {
+export function LoadedConditionsNotice({ conditions }) {
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-700 rounded-lg">
       <div className="flex items-center gap-2 mb-2">
@@ -656,8 +667,8 @@ function LoadedConditionsNotice({ conditions }) {
       </div>
       <p className="text-purple-300 text-sm">
         {conditions.length} condition
-        {conditions.length !== 1 ? "s" : ""} detected for bilateral factor
-        analysis.
+        {conditions.length !== 1 ? "s" : ""} loaded for the bilateral factor
+        check.
         {checkBilateralFactorCompliance(conditions).applicable && (
           <span className="block mt-1 text-purple-400">
             The bilateral factor applies to some of these ratings.
