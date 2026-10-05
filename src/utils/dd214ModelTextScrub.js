@@ -285,6 +285,25 @@ function removeBareNames(text, maxWords) {
   });
 }
 
+// Parser text: a "Last, First M" name is removed only beside the label of a box
+// that holds a person (before it or after it), because an ordinary run of
+// capitalised words in parser text is a course, an award or a unit.
+const PERSON_LABEL = String.raw`(?:NAME|SIGNATURE|NEAREST[ \t]{1,5}RELATIVE|SOCIAL[ \t]{1,5}SECURITY|SSN|DATE[ \t]{1,5}OF[ \t]{1,5}BIRTH)`;
+const LABEL_BEFORE_NAME = new RegExp(
+  String.raw`(${START}${PERSON_LABEL}(?:[ \t]{0,3}\([^)\n]{0,60}\))?[ \t:.-]{0,5})[\p{L}'’-]{2,24},[ \t]+[\p{L}'’-]{2,24}(?:[ \t]+\p{L}\b\.?)?`,
+  "giu",
+);
+const NAME_BEFORE_LABEL = new RegExp(
+  String.raw`${START}[\p{L}'’-]{2,24},[ \t]+[\p{L}'’-]{2,24}(?:[ \t]+\p{L}\b\.?)?([ \t:.-]{0,5}${PERSON_LABEL}(?![\p{L}\p{N}]))`,
+  "giu",
+);
+
+export function removeLabelledNames(text) {
+  return text
+    .replace(LABEL_BEFORE_NAME, (_match, label) => `${label}${MARK}`)
+    .replace(NAME_BEFORE_LABEL, (_match, label) => `${MARK}${label}`);
+}
+
 /**
  * `bare` also removes adjacent capitalized words that are not military, award
  * or place vocabulary ("John Smith"): "prose" at any length (sentences and unit

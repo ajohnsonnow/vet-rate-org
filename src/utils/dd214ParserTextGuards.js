@@ -1,14 +1,24 @@
 /**
- * Free text and lists the local parser read from a DD-214 (education, awards,
- * qualifications, remarks, unit and duty lines, deployments) get the same
- * treatment as text a model wrote (ADR-009 decision G): a length ceiling per
- * entry, SSN and birth-date shapes removed, the PII scrubber, known-value
- * redaction, and person, city and ZIP shapes removed. An entry that is mostly
- * redaction marks, or longer than a real entry of its kind, is dropped. The
- * parser is deterministic but its block matches can still run on into a
+ * What the local parser read from a DD-214 is checked before it is shown
+ * (ADR-009 decision G and section 5). Every value must pass the check the
+ * model's value for the same key passes: a fixed list or strict shape, a real
+ * date in range, a count in range. Free text and lists (education, awards,
+ * qualifications, remarks, unit and duty lines, deployments) get a length
+ * ceiling per entry, SSN and birth-date shapes removed, the PII scrubber,
+ * known-value redaction, and ZIP removal; a name shape is removed only beside
+ * an identifier label, because parser text is a box's own text and a run of
+ * capitalised words in it is a course, award or unit. An entry that is mostly
+ * redaction marks or form label words, or longer than a real entry of its
+ * kind, is dropped. The parser's block matches can still run on into a
  * neighbouring box, so its text is never trusted as read.
  */
-import { makeScrubber } from "./dd214ModelOutputGuards";
+import {
+  cleanCount,
+  cleanDate,
+  cleanFlag,
+  cleanServiceTime,
+  makeScrubber,
+} from "./dd214ModelOutputGuards";
 import { cleanEnumeratedField } from "./dd214EnumeratedFields";
 
 export const PARSER_TEXT_CAPS = {
@@ -68,12 +78,36 @@ function isMostlyRedacted(text) {
   );
 }
 
+// Words printed in the form's own box captions. Words every box and entry
+// uses (OF, AND, FOR ...) count for neither side.
+const LABEL_WORDS = new Set(
+  (
+    "MILITARY EDUCATION DECORATIONS BADGES CITATIONS RIBBONS AWARDED AUTHORIZED " +
+    "NARRATIVE REASON SEPARATION DUTY ASSIGNMENT MAJOR COMMAND MAILING ADDRESS " +
+    "AFTER REMARKS BIRTH SOCIAL SECURITY DEPARTMENT COMPONENT BRANCH VETERANS " +
+    "EDUCATIONAL ASSISTANCE PROGRAM CONTRIBUTED POST VIETNAM ERA HIGH SCHOOL " +
+    "GRADUATE EQUIVALENT SPECIAL ADDITIONAL INFORMATION CHARACTER NOTHING FOLLOWS"
+  ).split(" "),
+);
+const FILLER_WORDS = new Set("OF AND OR THE FOR TO IN A AN".split(" "));
+const MAX_LABEL_SHARE = 0.6;
+
+function isMostlyLabelWords(text) {
+  const words = (text.toUpperCase().match(/[A-Z]+/g) ?? []).filter(
+    (word) => !FILLER_WORDS.has(word),
+  );
+  const labels = words.filter((word) => LABEL_WORDS.has(word)).length;
+  return labels > 0 && labels >= words.length * MAX_LABEL_SHARE;
+}
+
 function cleanItem(value, cap, scrub) {
   if (typeof value !== "string") return undefined;
   const flat = value.replace(/\s+/g, " ").trim();
   if (flat === "" || flat.length > cap) return undefined;
   const text = scrub(removeBirthDateAndSsnShapes(flat));
-  return text === "" || isMostlyRedacted(text) ? undefined : text;
+  return text === "" || isMostlyRedacted(text) || isMostlyLabelWords(text)
+    ? undefined
+    : text;
 }
 
 function cleanList(value, cap, scrub) {
@@ -154,40 +188,75 @@ const set = (out, key, value) => {
   else out[key] = value;
 };
 
-const PROSE_KEYS = [
+const TEXT_KEYS = [
   "lastDutyAssignment",
   "commandTransferredTo",
   "narrativeReason",
   "remarks",
+  "mosTitle",
+  "placeOfEntry",
+  "stationWhereSeparated",
 ];
-const SHORT_TEXT_KEYS = ["mosTitle"];
-const PLAIN_TEXT_KEYS = ["placeOfEntry", "stationWhereSeparated"];
 const LIST_KEYS = ["militaryEducation", "specialQualifications"];
 
-// The extractor upper-cases the whole page, so a run of capitalised words is
-// not a sign of a name the way it is in model text: parser prose is checked
-// for short name-length runs only, like a course or award title.
-function cleanParserStrings(out, scrubs) {
-  const groups = [
-    [PROSE_KEYS, scrubs.scrubShort],
-    [SHORT_TEXT_KEYS, scrubs.scrubShort],
-    [PLAIN_TEXT_KEYS, scrubs.scrub],
-  ];
-  for (const [keys, scrub] of groups) {
-    for (const key of keys) {
-      if (key in out) {
-        set(out, key, cleanItem(out[key], PARSER_TEXT_CAPS[key], scrub));
-      }
+// The extractor upper-cases the whole page and reads a box's own text, so a
+// run of capitalised words is a course, an award or a unit and not a person
+// (ADR-009 section 5): parser text is cleaned with the parser rules only.
+function cleanParserStrings(out, scrubParser) {
+  for (const key of TEXT_KEYS) {
+    if (key in out) {
+      set(out, key, cleanItem(out[key], PARSER_TEXT_CAPS[key], scrubParser));
     }
   }
   for (const key of LIST_KEYS) {
     if (key in out) {
-      set(
-        out,
-        key,
-        cleanList(out[key], PARSER_TEXT_CAPS[key], scrubs.scrubShort),
-      );
+      set(out, key, cleanList(out[key], PARSER_TEXT_CAPS[key], scrubParser));
     }
+  }
+}
+
+const DATE_KEYS = [
+  "dateOfRank",
+  "entryDate",
+  "separationDate",
+  "reserveObligationDate",
+];
+const COUNT_KEYS = ["yearsService", "monthsService", "daysService"];
+const SERVICE_TIME_KEYS = [
+  "netActiveService",
+  "totalPriorActiveService",
+  "totalPriorInactiveService",
+  "foreignServiceTime",
+  "seaServiceTime",
+];
+const NONE_WORDING = /^NONE$/i;
+
+// Box 29 holds a count of days or the word NONE; nothing else is a value.
+function cleanParserDaysLost(value) {
+  if (typeof value === "string" && NONE_WORDING.test(value.trim())) {
+    return "NONE";
+  }
+  return cleanCount(value);
+}
+
+// Every value the parser read must pass the check the model's value for the
+// same key passes (ADR-009 section 5): a real date in range, a count in range,
+// a flag, a service time. One that does not is dropped, never shown.
+function cleanParserScalars(out, scrubs) {
+  for (const key of DATE_KEYS) {
+    if (key in out) set(out, key, cleanDate(out[key], scrubs));
+  }
+  for (const key of COUNT_KEYS) {
+    if (key in out) set(out, key, cleanCount(out[key]));
+  }
+  for (const key of SERVICE_TIME_KEYS) {
+    if (key in out) set(out, key, cleanServiceTime(out[key]));
+  }
+  if ("foreignService" in out) {
+    set(out, "foreignService", cleanFlag(out.foreignService));
+  }
+  if ("daysLost" in out) {
+    set(out, "daysLost", cleanParserDaysLost(out.daysLost));
   }
 }
 
@@ -211,6 +280,7 @@ const CODED_KEYS = [
   "separationType",
   "characterOfService",
   "securityClearance",
+  "mos",
 ];
 
 function cleanParserCodedFields(out) {
@@ -256,7 +326,8 @@ export function sanitizeParserFields(fields, sources = []) {
   const scrubs = makeScrubber(sources);
   const out = { ...fields };
   cleanParserCodedFields(out);
-  cleanParserStrings(out, scrubs);
-  cleanParserStructures(out, scrubs.scrubShort);
+  cleanParserScalars(out, scrubs);
+  cleanParserStrings(out, scrubs.scrubParser);
+  cleanParserStructures(out, scrubs.scrubParser);
   return out;
 }

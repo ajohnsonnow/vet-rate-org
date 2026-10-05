@@ -25,7 +25,9 @@ import {
 } from "./dd214EnumeratedFields";
 import {
   normaliseModelText,
+  removeLabelledNames,
   removePersonAndPlaceShapes,
+  removeZipCodes,
 } from "./dd214ModelTextScrub";
 
 export const FREE_TEXT_FIELDS = [
@@ -266,6 +268,14 @@ export const makeScrubber = (sources) => {
       removePersonAndPlaceShapes(base(text), { bare: "short" }),
     scrubProse: (text) =>
       removePersonAndPlaceShapes(base(text), { bare: "prose" }),
+    // Text the local parser read (ADR-009 section 5): SSN, birth date, phone,
+    // email, street address and ZIP patterns and every known value, but no
+    // wide name or place shapes, so a course, award or unit name is not
+    // mistaken for a person.
+    scrubParser: (text) =>
+      removeZipCodes(removeLabelledNames(base(text)))
+        .replace(/[ \t]+/g, " ")
+        .trim(),
   };
 };
 
@@ -274,13 +284,15 @@ export const makeScrubber = (sources) => {
  * holding values the app already knows are identifiers (the saved profile, the
  * knowledge base, the identifiers read by the local parser); each one is
  * redacted by value on top of the pattern scrubber, and person-, city- and
- * ZIP-shaped text is removed whether or not the app knew it.
+ * ZIP-shaped text is removed whether or not the app knew it. `skip` names keys
+ * whose value the local parser read and already cleaned with the parser rules;
+ * the wide model-text shapes would only remove ordinary words from them.
  */
-export function scrubModelFreeText(data, sources = []) {
+export function scrubModelFreeText(data, sources = [], { skip } = {}) {
   const { scrub } = makeScrubber(sources);
 
   for (const key of FREE_TEXT_FIELDS) {
-    if (!(key in data)) continue;
+    if (!(key in data) || skip?.has(key)) continue;
     const cleaned = cleanTextOrList(data[key], scrub);
     if (cleaned === undefined) delete data[key];
     else data[key] = cleaned;
@@ -349,7 +361,7 @@ function cleanText(value, scrub, max) {
 // A date a model wrote is kept only when it is a real calendar date in a
 // plausible range and is not a birth date the app knows in any source, in any
 // format or reading (a birth date filed under a service date).
-function cleanDate(value, { known, birthDates }) {
+export function cleanDate(value, { known, birthDates }) {
   if (typeof value !== "string") return undefined;
   const text = value.trim();
   if (!DATE_SHAPE.test(text)) return undefined;
@@ -359,7 +371,7 @@ function cleanDate(value, { known, birthDates }) {
   return redactKnownValues(text, known) === text ? text : undefined;
 }
 
-function cleanCount(value) {
+export function cleanCount(value) {
   if (typeof value === "number") {
     return Number.isFinite(value) && value >= 0 && value <= MAX_COUNT
       ? value
@@ -370,7 +382,7 @@ function cleanCount(value) {
     : undefined;
 }
 
-function cleanFlag(value) {
+export function cleanFlag(value) {
   if (typeof value === "boolean") return value;
   if (typeof value !== "string") return undefined;
   const text = value.trim().toLowerCase();
@@ -378,7 +390,7 @@ function cleanFlag(value) {
   return text === "false" ? false : undefined;
 }
 
-function cleanServiceTime(value) {
+export function cleanServiceTime(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return undefined;
   }
