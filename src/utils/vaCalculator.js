@@ -287,6 +287,12 @@ const LOWER_LIMB_TERMS = [
   "plantar",
   ...withPlurals(["hip", "thigh", "knee", "leg", "ankle", "toe", "heel"]),
 ];
+const NON_LIMB_TERMS = [
+  "hearing",
+  "tinnitus",
+  "vision",
+  ...withPlurals(["ear", "eye", "kidney"]),
+];
 
 const mentionsTerm = (name, terms) => {
   const text = ` ${String(name ?? "")
@@ -300,7 +306,9 @@ const mentionsTerm = (name, terms) => {
  * Which extremity a condition affects: "upper", "lower", "none" (not a limb)
  * or "unknown". An explicit `limb` wins, then a recognised `bodyPart`, then
  * limb words in the name (ratings imported from a decision letter carry only a
- * name and a side). A name that points at both an arm and a leg is "unknown".
+ * name and a side). A name that points at both an arm and a leg is "unknown";
+ * a name about hearing, eyes or kidneys, the sided parts that are not limbs,
+ * is "none".
  */
 function _limbOf(condition) {
   if ([...LIMBS, "none"].includes(condition.limb)) return condition.limb;
@@ -310,8 +318,9 @@ function _limbOf(condition) {
   if (NON_LIMB_BODY_PARTS.has(condition.bodyPart)) return "none";
   const upper = mentionsTerm(condition.name, UPPER_LIMB_TERMS);
   const lower = mentionsTerm(condition.name, LOWER_LIMB_TERMS);
-  if (upper === lower) return "unknown";
-  return upper ? "upper" : "lower";
+  if (upper !== lower) return upper ? "upper" : "lower";
+  if (upper) return "unknown";
+  return mentionsTerm(condition.name, NON_LIMB_TERMS) ? "none" : "unknown";
 }
 
 /**
@@ -326,8 +335,9 @@ function _limbOf(condition) {
  * the other two limbs form a pair (M21-1 V.iv.1.C.4.b).
  *
  * Returns { group, limbs, issues }. `issues` lists sided entries left out
- * because their limb is unknown, or because they are a both-sides evaluation
- * with nothing to pair with.
+ * because their limb is unknown (only when knowing it could have changed the
+ * group), or because they are a both-sides evaluation with nothing to pair
+ * with.
  */
 function _formBilateralGroup(conditions) {
   const candidates = conditions
@@ -367,9 +377,20 @@ function _formBilateralGroup(conditions) {
     ),
   );
 
+  const couldPair = (entry) =>
+    inGroup.size > 0 ||
+    candidates.some(
+      (other) =>
+        other !== entry &&
+        (entry.condition.side === "bilateral" ||
+          other.condition.side === "bilateral" ||
+          other.condition.side !== entry.condition.side),
+    );
+
   const issues = [];
-  for (const { condition, limb } of candidates) {
-    if (limb === "unknown" && candidates.length > 1) {
+  for (const entry of candidates) {
+    const { condition, limb } = entry;
+    if (limb === "unknown" && couldPair(entry)) {
       issues.push({ ...condition, reason: "limb-unknown" });
     } else if (alone.has(condition)) {
       issues.push({ ...condition, reason: "single-bilateral-evaluation" });

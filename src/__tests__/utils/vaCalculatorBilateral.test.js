@@ -447,6 +447,29 @@ describe("limb type of a sided entry", () => {
   });
 });
 
+describe("sided entries that are not reported", () => {
+  it("does not report an undetermined entry on the same side as the only other sided entry: 20 + 10 give 28", () => {
+    const result = calculateVARating([
+      c("Left knee", 20, "left", "knee"),
+      c("Neuropathy", 10, "left", "other"),
+    ]);
+    expect(result.bilateralIssues).toEqual([]);
+    expect(result.rawScore).toBe(28);
+  });
+
+  it("reads hearing, eye and kidney names as not a limb: knees 21, with 10 gives 29, and nothing to report", () => {
+    const result = calculateVARating([
+      c("Left knee", 10, "left", "knee"),
+      c("Right knee", 10, "right", "knee"),
+      c("Bilateral hearing loss", 10, "bilateral", "other"),
+      c("Left eye cataract", 0, "left", "other"),
+    ]);
+    expect(result.bilateralConditions).toHaveLength(2);
+    expect(result.rawScore).toBe(29);
+    expect(result.bilateralIssues).toEqual([]);
+  });
+});
+
 describe("calculateWhatIf with a both-sides proposed condition", () => {
   it("adds the factor only when a leg condition is already rated: 30 + 20 give 44, plus 4.4 is 48; with 50 alone, 65", () => {
     const withLeg = calculateWhatIf(
