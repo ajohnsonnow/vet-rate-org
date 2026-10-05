@@ -235,3 +235,43 @@ describe("calculateWhatIf input handling", () => {
     );
   });
 });
+
+describe("entries the calculator could not use are listed, not dropped silently", () => {
+  it("lists an unreadable rating and a non-object entry: 50 + 30 still give 65", () => {
+    const result = calculateVARating([
+      c("PTSD", 50, "none", "mental"),
+      c("Words", "severe"),
+      c("Negative", -10),
+      null,
+      42,
+      c("Back", 30, "none", "back"),
+    ]);
+    expect(result.rawScore).toBe(65);
+    expect(result.ignoredEntries).toEqual([
+      expect.objectContaining({ name: "Words", reason: "rating-unreadable" }),
+      expect.objectContaining({
+        name: "Negative",
+        reason: "rating-unreadable",
+      }),
+      { value: null, reason: "not-a-condition" },
+      { value: 42, reason: "not-a-condition" },
+    ]);
+  });
+
+  it("is empty when every entry is usable, and present on the zero result", () => {
+    expect(calculateVARating([c("PTSD", 50)]).ignoredEntries).toEqual([]);
+    expect(calculateVARating([]).ignoredEntries).toEqual([]);
+    expect(calculateVARating([c("Bad", "n/a")]).ignoredEntries).toEqual([
+      expect.objectContaining({ name: "Bad", reason: "rating-unreadable" }),
+    ]);
+  });
+
+  it("the explanation names an entry that was left out", () => {
+    const text = buildCalculatorExplanation(
+      calculateVARating([c("PTSD", 50), c("Knee", "severe")]),
+    );
+    expect(text).toContain(
+      "Vet-Rate could not read the rating entered for Knee, so it is not in this result",
+    );
+  });
+});

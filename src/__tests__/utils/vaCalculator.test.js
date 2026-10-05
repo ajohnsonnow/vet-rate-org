@@ -126,6 +126,7 @@ describe("calculateVARating combineSteps (the per-step working)", () => {
         "combinedRating",
         "currentEfficiency",
         "gapToNext10",
+        "ignoredEntries",
         "nextTier",
         "nonBilateralConditions",
         "ratingNeededFor100",

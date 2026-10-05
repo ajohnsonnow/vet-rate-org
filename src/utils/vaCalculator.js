@@ -677,21 +677,37 @@ function _ratingValue(rating) {
 }
 
 /**
- * The entries calculateVARating can use: objects whose rating is a number or a
- * numeric string ("50", "50%") of 0 or more, capped at 100. Anything else (a
- * null entry, a missing, negative or non-numeric rating) is left out, so one
- * bad entry cannot turn the result into NaN.
+ * A rating as the calculator reads it: a number, or a string of decimal digits
+ * with an optional percent sign, of 0 or more, capped at 100. Anything else
+ * (missing, negative, not numeric) is null.
+ */
+export function readRating(value) {
+  const rating = _ratingValue(value);
+  if (typeof rating !== "number" || !Number.isFinite(rating) || rating < 0) {
+    return null;
+  }
+  return Math.min(100, rating);
+}
+
+/**
+ * Splits the input into the entries calculateVARating can use (objects with a
+ * readable rating) and the ones it cannot, so one bad entry cannot turn the
+ * result into NaN and none is dropped without a record.
  */
 function _usableConditions(conditions) {
-  if (!Array.isArray(conditions)) return [];
-  return conditions.flatMap((c) => {
-    if (c === null || typeof c !== "object") return [];
-    const rating = _ratingValue(c.rating);
-    if (typeof rating !== "number" || !Number.isFinite(rating) || rating < 0) {
-      return [];
+  const usable = [];
+  const ignored = [];
+  for (const c of Array.isArray(conditions) ? conditions : []) {
+    const rating = readRating(c?.rating);
+    if (c === null || typeof c !== "object") {
+      ignored.push({ value: c, reason: "not-a-condition" });
+    } else if (rating === null) {
+      ignored.push({ ...c, reason: "rating-unreadable" });
+    } else {
+      usable.push({ ...c, rating });
     }
-    return [{ ...c, rating: Math.min(100, rating) }];
-  });
+  }
+  return { usable, ignored };
 }
 
 /**
@@ -882,7 +898,9 @@ function _buildFinalCalculationStep(
  *   _usableConditions for what is read and what is left out):
  *   { name: string, rating: number, side: 'left'|'right'|'bilateral'|'none',
  *     bodyPart: string, limb?: 'upper'|'lower'|'none' }
- * @returns {Object} - Calculation results. `bilateralExcludedConditions` are
+ * @returns {Object} - Calculation results. `ignoredEntries` lists input the
+ *   calculator left out: { ...entry, reason: 'rating-unreadable' } or
+ *   { value, reason: 'not-a-condition' }. `bilateralExcludedConditions` are
  *   the bilateral disabilities left out of the factor under § 4.26(d); they are
  *   also in `nonBilateralConditions`, which is everything combined outside the
  *   group. `bilateralIssues` lists sided entries that got no bilateral factor
@@ -893,8 +911,9 @@ function _buildFinalCalculationStep(
  *   because there were too many arrangements to try.
  */
 export const calculateVARating = (rawConditions) => {
-  const conditions = _usableConditions(rawConditions);
-  if (conditions.length === 0) return _emptyResult();
+  const { usable: conditions, ignored: ignoredEntries } =
+    _usableConditions(rawConditions);
+  if (conditions.length === 0) return { ..._emptyResult(), ignoredEntries };
 
   const steps = [];
   const combineSteps = [];
@@ -967,6 +986,7 @@ export const calculateVARating = (rawConditions) => {
     })),
     bilateralLimbs,
     bilateralIssues,
+    ignoredEntries,
     calculationSteps: steps,
     combineSteps,
     gapToNext10: Math.round(gapToNext10 * 10) / 10,
@@ -1521,6 +1541,7 @@ export default {
   calculatePaymentEffectiveDate,
   calculateBackpayMonths,
   detectPyramiding,
+  readRating,
   sideFromName,
   checkBilateralFactorCompliance,
   getAmputationMinimumRating,

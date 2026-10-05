@@ -121,8 +121,20 @@ function describeIssues(issues) {
   return notes;
 }
 
+function describeIgnored(ignored) {
+  const unread = namesWhere(
+    ignored,
+    (entry) => entry.reason === "rating-unreadable" && entry.name,
+  );
+  if (unread.length === 0) return [];
+  return [
+    `Vet-Rate could not read the rating entered for ${joinList(unread)}, so ${unread.length === 1 ? "it is" : "they are"} not in this result.`,
+  ];
+}
+
 /**
- * Plain sentences about entries the bilateral factor treated specially: left
+ * Plain sentences about entries left out of the result, and about entries the
+ * bilateral factor treated specially: left
  * out under 38 CFR § 4.26(d), in the group as one evaluation covering both
  * sides, or given no factor because of a calculator `bilateralIssues` entry.
  */
@@ -131,6 +143,7 @@ export function describeBilateralNotes(calc) {
     ...describeExcluded(calc),
     ...describeBothSidesMembers(calc),
     ...describeIssues(calc.bilateralIssues),
+    ...describeIgnored(calc.ignoredEntries),
   ];
 }
 
