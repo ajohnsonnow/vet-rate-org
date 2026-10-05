@@ -229,15 +229,25 @@ describe("flagContradictions", () => {
   const wrong =
     "Since no such mechanism exists between PTSD and sleep apnea, a clinician cannot provide a valid opinion on this connection.";
 
-  it("appends the correction and marks the result without rewriting the answer", () => {
+  it("puts the correction before the answer and leaves the answer unaltered below it", () => {
     const out = flagContradictions(
       { text: wrong, usedMode: "swarm" },
       { toolId: "nexus-builder" },
       SECONDARY_PROMPT,
     );
-    expect(out.text.startsWith(wrong)).toBe(true);
-    expect(out.text).toContain("\n\nVet-Rate check: this answer says");
-    expect(out.text).toContain(quotes.corrections.secondary.text);
+    expect(out.text).toBe(
+      [
+        "Vet-Rate check: part of the answer below conflicts with the regulation.",
+        "",
+        `The answer says: "${wrong}"`,
+        `That says a secondary connection cannot be made. 38 CFR § 3.310(a) says: "${quotes.corrections.secondary.text}"`,
+        "",
+        "Check that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
+        "",
+        wrong,
+      ].join("\n"),
+    );
+    expect(out.text.endsWith(wrong)).toBe(true);
     expect(out.contradictionsFound).toEqual([
       { rule: "secondary-barred", sentence: wrong },
     ]);

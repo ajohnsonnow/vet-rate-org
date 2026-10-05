@@ -52,12 +52,18 @@ function shownAnswers() {
 const conditionsOf = (record) => golden[record.id]?.conditions ?? null;
 const isDecoderCase = (record) => golden[record.id]?.entry === "decodeDecision";
 
+// The rule that runs on every answer is measured over every response, with
+// its own pinned list, in contradictionCheck.ratings.test.js.
+const EVERY_ANSWER_RULE = "ratings-added-together";
+
 function hitsFor(record, topics) {
   const conditions = conditionsOf(record);
   return findContradictions(record.response, {
     topics,
     hasConditions: Array.isArray(conditions) && conditions.length > 0,
-  }).map((hit) => `${record.run} ${record.id} ${hit.rule}`);
+  })
+    .filter((hit) => hit.rule !== EVERY_ANSWER_RULE)
+    .map((hit) => `${record.run} ${record.id} ${hit.rule}`);
 }
 
 function decoderFieldHits(record) {

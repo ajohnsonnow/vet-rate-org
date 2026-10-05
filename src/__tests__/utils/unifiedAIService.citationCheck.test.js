@@ -156,27 +156,33 @@ describe("generateAI contradiction check", () => {
       callOptions({ toolId: "nexus-builder" }),
     );
 
-    expect(result.text.startsWith(WRONG)).toBe(true);
+    expect(
+      result.text.startsWith(
+        "Vet-Rate check: part of the answer below conflicts with the regulation.",
+      ),
+    ).toBe(true);
     expect(result.text).toContain(
-      'Vet-Rate check: this answer says a secondary connection cannot be made. 38 CFR § 3.310(a) says: "(a) General. Except as provided in § 3.300(c), disability which is proximately due to or the result of a service-connected disease or injury shall be service connected."',
+      `The answer says: "${WRONG}"\nThat says a secondary connection cannot be made. 38 CFR § 3.310(a) says: "(a) General. Except as provided in § 3.300(c), disability which is proximately due to or the result of a service-connected disease or injury shall be service connected."`,
     );
+    expect(result.text.endsWith(`\n\n${WRONG}`)).toBe(true);
     expect(result.contradictionsFound).toEqual([
       { rule: "secondary-barred", sentence: WRONG },
     ]);
   });
 
-  it("puts the citation notice before the correction when an answer earns both", async () => {
-    modelSays(`${WRONG} See 38 CFR § 4.37.`);
+  it("leads with the correction and keeps the citation notice under the answer", async () => {
+    const answer = `${WRONG} See 38 CFR § 4.37.`;
+    modelSays(answer);
 
     const result = await generateAI(
       SECONDARY_QUESTION,
       callOptions({ toolId: "nexus-builder" }),
     );
 
-    const notice = result.text.indexOf(buildCitationNotice(["4.37"]));
-    const correction = result.text.indexOf("Vet-Rate check:");
-    expect(notice).toBeGreaterThan(-1);
-    expect(correction).toBeGreaterThan(notice);
+    expect(result.text.indexOf("Vet-Rate check:")).toBe(0);
+    expect(
+      result.text.endsWith(`${answer}\n\n${buildCitationNotice(["4.37"])}`),
+    ).toBe(true);
   });
 
   it("leaves an answer on another topic alone", async () => {

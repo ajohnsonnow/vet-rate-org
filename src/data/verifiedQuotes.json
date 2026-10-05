@@ -167,6 +167,14 @@
         "retrieved": "2026-07-10"
       }
     },
+    "ratings-combined": {
+      "citation": "38 CFR § 4.25",
+      "text": "Thus, a person having a 60 percent disability is considered 40 percent efficient. Proceeding from this 40 percent efficiency, the effect of a further 30 percent disability is to leave only 70 percent of the efficiency remaining after consideration of the first disability, or 28 percent efficiency altogether. The individual is thus 72 percent disabled, as shown in table I opposite 60 percent and under 30 percent.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
     "supplemental-any-time": {
       "citation": "38 CFR § 3.2500(a)(2)",
       "text": "(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501.",

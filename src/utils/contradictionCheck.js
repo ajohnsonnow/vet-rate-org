@@ -100,18 +100,75 @@ const FOR_PENDING_CLAIMS = /\bfor (?:\w+ ){0,5}(?:pending|existing) claims?\b/i;
 const FOR_CLAIMS_ALREADY_FILED =
   /\bfor (?:\w+ )?claims? (?:\w+ ){0,3}already (?:filed|pending)\b/i;
 
+const BY_ADDING_RATINGS =
+  /\bby (?:simply )?adding (?:up )?(?:all )?(?:of )?(?:the |your )?(?:individual |separate )?ratings\b/i;
+const ADD_RATINGS_TOGETHER =
+  /\badd(?:s|ed|ing)? (?:up )?(?:the |your |all )?(?:individual )?ratings (?:of [^.]{0,40} )?together\b/i;
+const RATINGS_ARE_ADDED =
+  /\bratings (?:are|get) (?:simply |just )?added (?:together|up)\b/i;
+// An answer that explains combining, or says adding is wrong, uses the same
+// words. Any of these in the sentence means it is not the addition myth.
+const NOT_PLAIN_ADDITION =
+  /\bnot\b|n't\b|\bnever\b|\brather than\b|\binstead of\b|\bsequential|\bone by one\b|\bone at a time\b|\bremaining\b|\bmyth\b|\bwrong\b|\bincorrect\b|\bexpect\b|\bthink\b/i;
+
+const PERCENT = String.raw`(\d{1,3}) ?\\?%\)?`;
+const LABEL_AFTER = String.raw`(?: ?\([^)]{0,30}\))?`;
+const LABEL_BEFORE = String.raw`(?:[A-Za-z ]{0,25}\()?`;
+const TWO_RATINGS_SUMMED = new RegExp(
+  String.raw`(?<![\d.])${PERCENT}${LABEL_AFTER} ?\+ ?${LABEL_BEFORE}${PERCENT}${LABEL_AFTER} ?= ?${PERCENT}`,
+  "g",
+);
+
+const isRating = (value) => value > 0 && value <= 100 && value % 10 === 0;
+
+/**
+ * Whether a sentence shows two ratings added to a figure that is their plain
+ * sum ("50% + 30% = 80%"). Combining never gives the sum, so the figure is
+ * wrong whenever both operands are ratings. A bilateral factor being added
+ * ("20% + 2% = 22%") is not two ratings.
+ */
+function showsRatingsSummed(sentence) {
+  return [...sentence.matchAll(TWO_RATINGS_SUMMED)].some(([, a, b, total]) => {
+    const first = Number(a);
+    const second = Number(b);
+    return (
+      isRating(first) && isRating(second) && Number(total) === first + second
+    );
+  });
+}
+
 const PACT_TOPICS = ["toxic-exposure", "herbicide", "pact-act"];
 const REVIEW_TOPICS = ["decision-review", "supplemental", "next-claim-step"];
 const FILING_TOPICS = [...REVIEW_TOPICS, "intent-to-file"];
 
+const EVERY_ANSWER = null;
+
 /**
  * One rule per contradiction. `topics` are the verified-reference topics the
- * rule belongs to, `matches(sentence, { next, text, hasConditions })` decides
- * one sentence (`next` is the sentence after it, `text` the whole answer),
- * `says` is what the note tells the reader the answer said, and
- * `correction` names the quotation in verifiedQuotes.json.
+ * rule belongs to (EVERY_ANSWER for the one rule that is not tied to a
+ * topic), `matches(sentence, { next, text, hasConditions })` decides one
+ * sentence (`next` is the sentence after it, `text` the whole answer), `says`
+ * is what the note tells the reader the answer said, and `correction` names
+ * the quotation in verifiedQuotes.json.
  */
 const RULES = [
+  {
+    // The rating guards run on the rater route only. Any tool can repeat the
+    // most common false belief about VA ratings, so this one runs everywhere.
+    id: "ratings-added-together",
+    topics: EVERY_ANSWER,
+    matches: (sentence) =>
+      !NOT_PLAIN_ADDITION.test(sentence) &&
+      (anyMatch(
+        sentence,
+        BY_ADDING_RATINGS,
+        ADD_RATINGS_TOGETHER,
+        RATINGS_ARE_ADDED,
+      ) ||
+        showsRatingsSummed(sentence)),
+    says: "adds VA ratings together",
+    correction: () => "ratings-combined",
+  },
   {
     id: "secondary-barred",
     topics: ["secondary"],
@@ -257,7 +314,10 @@ export function findContradictions(
   const context = { hasConditions, text: String(text ?? "") };
   const hits = [];
   for (const rule of RULES) {
-    if (!rule.topics.some((topic) => topics.includes(topic))) continue;
+    const applies =
+      rule.topics === EVERY_ANSWER ||
+      rule.topics.some((topic) => topics.includes(topic));
+    if (!applies) continue;
     const sentence = sentences.find((s, i) =>
       rule.matches(s, { ...context, next: sentences[i + 1] ?? "" }),
     );
@@ -281,9 +341,36 @@ function quoteWithSource(correctionId) {
   return `${quote.citation} says: "${quote.text}"${gloss}`;
 }
 
-/** The plain note appended for one contradiction. */
+/**
+ * The note for one contradiction, shown beside the text it corrects (the
+ * Decision Decoder puts it under the field that carried the sentence).
+ */
 export function buildContradictionNote(hit) {
   return `Vet-Rate check: this answer ${hit.says}. ${quoteWithSource(hit.correction)} Check this point with a Veterans Service Officer before relying on it.`;
+}
+
+const MAX_QUOTED_SENTENCE = 200;
+
+const trimmed = (sentence) =>
+  sentence.length > MAX_QUOTED_SENTENCE
+    ? `${sentence.slice(0, MAX_QUOTED_SENTENCE).trimEnd()}...`
+    : sentence;
+
+/**
+ * The correction placed above a prose answer: one heading, then for each
+ * contradiction the sentence of the answer it applies to and the regulation
+ * sentence that says otherwise. It goes first because a wrong instruction is
+ * acted on by the time a note at the bottom is read.
+ */
+export function buildContradictionLead(hits) {
+  return [
+    "Vet-Rate check: part of the answer below conflicts with the regulation.",
+    ...hits.map(
+      (hit) =>
+        `\nThe answer says: "${trimmed(hit.sentence)}"\nThat ${hit.says}. ${quoteWithSource(hit.correction)}`,
+    ),
+    "\nCheck that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
+  ].join("\n");
 }
 
 const looksStructured = (text) => /^\s*(?:```|[{[])/.test(text);
@@ -292,21 +379,26 @@ const hasConditions = (options) =>
   Array.isArray(options.conditions) && options.conditions.length > 0;
 
 /**
- * Append a correction to a prose answer for each contradiction found, and
- * record them on the result (contradictionsFound, plus validationWarnings).
- * Nothing is checked when reference material was turned off for the call,
- * when the answer is structured output, or when the calculator guard already
- * replaced the answer with the app's own text.
+ * Put a correction above a prose answer that contradicts the verified text,
+ * leaving the answer itself unaltered below it, and record what was found on
+ * the result (contradictionsFound, plus validationWarnings).
+ * Nothing is checked when the answer is structured output or when the
+ * calculator guard already replaced it with the app's own text. A call with
+ * reference material turned off raises no topic, so only the rule that
+ * applies to every answer runs on it.
  */
 export function flagContradictions(result, options = {}, prompt = "") {
   const text = result?.text;
   if (typeof text !== "string" || text === "") return result;
-  if (options.useDKB === false || result.calculatorReplacement) return result;
+  if (result.calculatorReplacement) return result;
   if (options.responseFormat || looksStructured(text)) return result;
-  const topics = detectReferenceTopics(prompt, options.toolId, {
-    conditions: options.conditions,
-    dataClass: options.dataClass,
-  });
+  const topics =
+    options.useDKB === false
+      ? []
+      : detectReferenceTopics(prompt, options.toolId, {
+          conditions: options.conditions,
+          dataClass: options.dataClass,
+        });
   const hits = findContradictions(text, {
     topics,
     hasConditions: hasConditions(options),
@@ -314,7 +406,7 @@ export function flagContradictions(result, options = {}, prompt = "") {
   if (hits.length === 0) return result;
   return {
     ...result,
-    text: [text.trimEnd(), ...hits.map(buildContradictionNote)].join("\n\n"),
+    text: `${buildContradictionLead(hits)}\n\n${text}`,
     validationWarnings: [
       ...(result.validationWarnings || []),
       `Answer contradicts the verified reference: ${hits.map((h) => h.rule).join(", ")}`,

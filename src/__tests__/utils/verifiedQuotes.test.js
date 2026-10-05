@@ -70,6 +70,7 @@ describe("correction quotes", () => {
       "presumptive-toxic",
       "presumed-toxic-exposure",
       "higher-level-review-evidence",
+      "ratings-combined",
       "supplemental-any-time",
       "new-and-relevant",
       "intent-to-file-purpose",
