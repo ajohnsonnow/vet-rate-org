@@ -150,7 +150,13 @@ export async function needsMigration() {
   ];
 
   for (const key of veteranProfileKeys) {
-    if (localStorage.getItem(key) !== null) {
+    let stored = null;
+    try {
+      stored = localStorage.getItem(key);
+    } catch {
+      // A key that cannot be read has nothing this migration can move.
+    }
+    if (stored !== null) {
       return true; // Found data that needs migration
     }
   }

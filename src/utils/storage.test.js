@@ -149,3 +149,14 @@ describe("migrateFromLocalStorage: shouldAbort (maintenance-mode kill switch)", 
     expect(await needsMigration()).toBe(false);
   });
 });
+
+describe("needsMigration when local storage throws on read", () => {
+  it("answers false instead of throwing", async () => {
+    vi.spyOn(localStorage, "getItem").mockImplementation(() => {
+      throw new DOMException("denied", "SecurityError");
+    });
+
+    await expect(needsMigration()).resolves.toBe(false);
+    vi.restoreAllMocks();
+  });
+});

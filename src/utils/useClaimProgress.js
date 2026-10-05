@@ -431,6 +431,15 @@ const _setManualProgress = (milestoneId, completed, notes = "") => {
   );
 };
 
+// A storage that throws on read means "nothing saved here", not a crash.
+const readStored = (key) => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Check if a milestone is completed (automatic or manual)
  */
@@ -442,13 +451,12 @@ const checkMilestoneCompletion = (milestone) => {
   }
 
   // Check primary storage key
-  const primaryData = localStorage.getItem(milestone.storageKey);
+  const primaryData = readStored(milestone.storageKey);
 
   // Gather alternate key data
   const altData =
-    milestone.alternateKeys
-      ?.map((key) => localStorage.getItem(key))
-      .filter(Boolean) || [];
+    milestone.alternateKeys?.map((key) => readStored(key)).filter(Boolean) ||
+    [];
 
   // Run the completion check
   const autoCompleted = milestone.checkCompleted(primaryData, altData);

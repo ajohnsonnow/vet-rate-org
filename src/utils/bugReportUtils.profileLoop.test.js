@@ -112,6 +112,22 @@ describe.each(UNREADABLE)(
       expect(entry.scrubMode).toBe("pattern-only");
       expect(JSON.stringify(capture.getConsoleErrors())).not.toContain(SSN);
     });
+
+    it("leaves lines that were only pattern-scrubbed out of a bug report, and says why", () => {
+      console.error("Veteran Zebulon Quartermain lookup failed");
+
+      const report = capture.formatBugReport({
+        userDescription: "it broke",
+        severity: capture.BUG_SEVERITY.LOW,
+        systemInfo: capture.getSystemInfo(),
+        appState: capture.getAppState(),
+        storageInfo: capture.getStorageInfo(),
+        consoleErrors: capture.getConsoleErrors(),
+      });
+
+      expect(report).not.toContain("Zebulon");
+      expect(report).toContain("saved profile could not be read");
+    });
   },
 );
 

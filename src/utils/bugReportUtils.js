@@ -739,7 +739,18 @@ const entryNote = (entry) =>
   (entry.count > 1 ? ` (repeated ${entry.count} times)` : "") +
   (entry.scrubMode === PATTERN_ONLY_SCRUB ? " [pattern scrubbing only]" : "");
 
-const buildConsoleLogsSection = (consoleErrors, divider) => {
+const WITHHELD_MESSAGE =
+  "[withheld: the saved profile could not be read, so the veteran's own details could not be removed from this line]";
+
+// A line that was only pattern-scrubbed may still hold a name or address; a
+// report carries no identifier, so its text is left out of the report.
+const withholdUnverified = (entry) =>
+  entry.scrubMode === PATTERN_ONLY_SCRUB
+    ? { ...entry, message: WITHHELD_MESSAGE, stack: "" }
+    : entry;
+
+const buildConsoleLogsSection = (capturedErrors, divider) => {
+  const consoleErrors = capturedErrors?.map(withholdUnverified);
   if (!consoleErrors || consoleErrors.length === 0) {
     return `
 ${divider}
