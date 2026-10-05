@@ -9,6 +9,7 @@
  */
 
 import reference from "../data/verifiedReference.json";
+import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 
 const ENTRIES = new Map(reference.entries.map((entry) => [entry.id, entry]));
 
@@ -115,9 +116,7 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
   },
   {
     id: "decision-review",
-    when: (text, toolId) =>
-      anyMatch(text, REVIEW_TERMS, APPEAL_WORDS) ||
-      toolId === "decision-decoder",
+    when: (text) => anyMatch(text, REVIEW_TERMS, APPEAL_WORDS),
     entries: [
       "cfr-3.2500-a",
       "review-forms",
@@ -182,15 +181,27 @@ export const VERIFIED_REFERENCE_TOPICS = Object.freeze([
 const topicApplies = (topic, text, toolId, context) =>
   topic.when ? topic.when(text, toolId, context) : topic.pattern.test(text);
 
+// A call declared as carrying a document sends the document and the tool's
+// own instructions, not a question. Their wording says nothing reliable about
+// what the veteran needs ("effective date" in a prompt template is not a
+// question about Intent to File), so only the tool decides the topic.
+const DOCUMENT_TOOL_TOPICS = Object.freeze({
+  "decision-decoder": ["decision-review"],
+});
+
 /**
  * Ids of the topics a request raises, in priority order. `conditions` are
- * the structured ratings a call carries, when it carries any.
+ * the structured ratings a call carries, when it carries any; `dataClass` is
+ * the call's declared data class.
  */
 export function detectReferenceTopics(
   question,
   toolId = null,
-  { conditions = null } = {},
+  { conditions = null, dataClass = null } = {},
 ) {
+  if (dataClass === AI_DATA_CLASS.DOCUMENT) {
+    return [...(DOCUMENT_TOOL_TOPICS[toolId] ?? [])];
+  }
   const text = String(question ?? "");
   return VERIFIED_REFERENCE_TOPICS.filter((topic) =>
     topicApplies(topic, text, toolId, { conditions }),
@@ -245,11 +256,14 @@ function formatEntry(entry) {
  */
 export function selectVerifiedEntries(
   question,
-  { toolId = null, maxChars, conditions = null },
+  { toolId = null, maxChars, conditions = null, dataClass = null },
 ) {
   let remaining = maxChars - HEADER.length - FOOTER.length;
   const picked = [];
-  const topics = detectReferenceTopics(question, toolId, { conditions });
+  const topics = detectReferenceTopics(question, toolId, {
+    conditions,
+    dataClass,
+  });
   for (const id of rankEntryIds(topics)) {
     const entry = ENTRIES.get(id);
     const size = formatEntry(entry).length;

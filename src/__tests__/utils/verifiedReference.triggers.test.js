@@ -141,9 +141,50 @@ describe("decision review wording", () => {
     expect(detectReferenceTopics(question)).toContain("decision-review");
   });
 
-  it("applies to everything the Decision Decoder is asked", () => {
-    expect(topicsFor("a04")).toEqual(["decision-review"]);
-    expect(topicsFor("t08")).toEqual(["decision-review"]);
+  it("does not follow the Decision Decoder's tool id when no decision is attached", () => {
+    expect(topicsFor("a04")).toEqual([]);
+    expect(
+      detectReferenceTopics("How do I appeal this?", "decision-decoder"),
+    ).toEqual(["decision-review"]);
+  });
+});
+
+describe("a call that carries a document", () => {
+  const LETTER =
+    "Service connection for a left knee strain, claimed as secondary to a back condition, is denied. This protects your effective date. TDIU is deferred. Burn pit exposure is conceded.";
+  const withDocument = (toolId) =>
+    detectReferenceTopics(LETTER, toolId, { dataClass: "document" });
+
+  it("gives the Decision Decoder the review options and nothing else", () => {
+    expect(withDocument("decision-decoder")).toEqual(["decision-review"]);
+    expect(
+      selectVerifiedEntries(LETTER, {
+        toolId: "decision-decoder",
+        dataClass: "document",
+        maxChars: 3400,
+      }).map((e) => e.id),
+    ).toEqual([
+      "cfr-3.2500-a",
+      "review-forms",
+      "cfr-3.2601-f",
+      "cfr-20.203",
+      "cfr-20.202-a-b",
+    ]);
+  });
+
+  it("does not read the document's own words as the veteran's question", () => {
+    expect(withDocument("denial-decoder")).toEqual([]);
+    expect(withDocument("cfile-analyzer")).toEqual([]);
+    expect(withDocument(null)).toEqual([]);
+  });
+
+  it("still reads the same words as a question when no document is attached", () => {
+    expect(detectReferenceTopics(LETTER, "denial-decoder")).toEqual([
+      "intent-to-file",
+      "secondary",
+      "tdiu",
+      "toxic-exposure",
+    ]);
   });
 
   it("gives the three lanes, their forms and the Higher-Level Review evidence rule on device", () => {

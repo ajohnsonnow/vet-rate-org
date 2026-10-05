@@ -2428,6 +2428,7 @@ function _buildVerifiedReference(prompt, options, effectiveMode, roomChars) {
   return buildVerifiedReferenceBlock(prompt, {
     toolId: options.toolId,
     conditions: options.conditions,
+    dataClass: options.dataClass,
     maxChars: Math.min(budget.maxVerifiedChars, budget.maxChars, roomChars),
   });
 }

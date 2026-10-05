@@ -235,6 +235,35 @@ describe("combined-rating text follows the request, not the tool", () => {
   });
 });
 
+describe("verified reference for the Decision Decoder", () => {
+  const LETTER =
+    "Service connection for a left knee strain, claimed as secondary to a back condition, is denied. This protects your effective date.";
+
+  it("gets the review options, and only those, when a decision is attached", async () => {
+    await generateAI(
+      LETTER,
+      callOptions({
+        toolId: "decision-decoder",
+        dataClass: AI_DATA_CLASS.DOCUMENT,
+      }),
+    );
+
+    const sent = sentToSwarm();
+    expect(sent).toContain(entryText("cfr-3.2500-a"));
+    expect(sent).not.toContain(entryText("cfr-3.310-a"));
+    expect(sent).not.toContain(entryText("cfr-3.155-b"));
+  });
+
+  it("gets nothing on the tool id alone when no decision is attached", async () => {
+    await generateAI(
+      "Decode this rating decision and explain why my tinnitus was denied.",
+      callOptions({ toolId: "decision-decoder" }),
+    );
+
+    expect(sentToSwarm()).not.toContain(VERIFIED_MARKER);
+  });
+});
+
 describe("verified reference and caller options", () => {
   it("adds nothing when the caller turned reference material off", async () => {
     await generateAI(TDIU_QUESTION, callOptions({ useDKB: false }));

@@ -305,6 +305,7 @@ export function flagContradictions(result, options = {}, prompt = "") {
   if (options.responseFormat || looksStructured(text)) return result;
   const topics = detectReferenceTopics(prompt, options.toolId, {
     conditions: options.conditions,
+    dataClass: options.dataClass,
   });
   const hits = findContradictions(text, {
     topics,
