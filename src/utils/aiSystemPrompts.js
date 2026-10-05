@@ -173,7 +173,7 @@ EVIDENCE & PROCEDURES:
 - 38 CFR § 3.103: Procedural due process and appellate rights
 - 38 CFR § 3.104: Finality of decisions (favorable findings are binding)
 - 38 CFR § 3.105: Clear and unmistakable error (CUE) for past decisions
-- 38 CFR § 3.156: New and material evidence to reopen claims
+- 38 CFR § 3.156: New and material evidence reopens only legacy claims decided before the § 19.2(a) effective date; since then a supplemental claim needs new and relevant evidence (38 CFR § 3.2501)
 - 38 CFR § 3.159: VA's duty to assist
 
 APPEALS:

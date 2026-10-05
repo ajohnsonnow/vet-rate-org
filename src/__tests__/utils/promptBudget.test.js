@@ -18,8 +18,8 @@ const FIXED = PERSONA + BASE + QUESTION;
 const COMPUTED = 800;
 
 describe("the real sizes this budget works with", () => {
-  it("the default system prompt is 12,179 characters and the longest persona 2,906", () => {
-    expect(BASE).toBe(12179);
+  it("the default system prompt is 12,316 characters and the longest persona 2,906", () => {
+    expect(BASE).toBe(12316);
     expect(PERSONA).toBe(2906);
   });
 
@@ -48,7 +48,7 @@ describe("planPromptFit", () => {
       keepComputed: true,
       referenceChars: 8192 * 3 - 2048 * 3 - FIXED - 200,
     });
-    expect(plan(8192, 2048).referenceChars).toBe(3047);
+    expect(plan(8192, 2048).referenceChars).toBe(2910);
   });
 
   it("8,192 with 1,024 output tokens (the evaluation setting) fits the whole budget", () => {
@@ -58,13 +58,13 @@ describe("planPromptFit", () => {
   it("the computed block is charged before reference material, so it is the last to go", () => {
     const out = plan(8192, 2048, COMPUTED);
     expect(out.keepComputed).toBe(true);
-    expect(out.referenceChars).toBe(3047 - COMPUTED);
+    expect(out.referenceChars).toBe(2910 - COMPUTED);
   });
 
   it("drops the computed block only when it cannot fit even with no reference material", () => {
     expect(plan(8192, 2048, 4000)).toEqual({
       keepComputed: false,
-      referenceChars: 3047,
+      referenceChars: 2910,
     });
   });
 

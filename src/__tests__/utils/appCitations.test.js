@@ -99,3 +99,28 @@ describe("the model is not asked to look for a missing bilateral factor", () => 
     expect(prompt).toContain("pyramiding");
   });
 });
+
+describe("the evidence standard for reopening in the regulations summary", () => {
+  const line = KEY_REGULATIONS_SUMMARY.split("\n").find((l) =>
+    l.includes("§ 3.156"),
+  );
+
+  it("limits new and material evidence to legacy claims, as § 3.156(a) does", () => {
+    expect(line).toBe(
+      "- 38 CFR § 3.156: New and material evidence reopens only legacy claims decided before the § 19.2(a) effective date; since then a supplemental claim needs new and relevant evidence (38 CFR § 3.2501)",
+    );
+  });
+
+  it("no line of the summary gives new and material evidence as the way to reopen a claim", () => {
+    expect(KEY_REGULATIONS_SUMMARY).not.toContain(
+      "New and material evidence to reopen claims",
+    );
+    const material = KEY_REGULATIONS_SUMMARY.split("\n").filter((l) =>
+      /new and material/i.test(l),
+    );
+    expect(material).toEqual([line]);
+    expect(KEY_REGULATIONS_SUMMARY).toContain(
+      "- Supplemental Claim: New and relevant evidence",
+    );
+  });
+});
