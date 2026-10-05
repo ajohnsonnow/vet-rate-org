@@ -94,7 +94,7 @@ describe("context window per device tier", () => {
     "%s holds the persona and the default prompt beside the output reserve, with room for the computed block",
     async (tier) => {
       const { contextWindowSize } = await profileFor(DEVICES[tier]);
-      expect(ALWAYS_SENT).toBe(2906 + 12179);
+      expect(ALWAYS_SENT).toBe(2906 + 12316);
       expect(
         (contextWindowSize - OUTPUT_RESERVE_TOKENS) * CHARS_PER_TOKEN,
       ).toBeGreaterThan(ALWAYS_SENT);
