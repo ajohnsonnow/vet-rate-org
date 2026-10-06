@@ -80,6 +80,17 @@ const downloadText = (statement, doctorNote) =>
 // Reusable "AI Help" trigger button (with loading spinner), split out of the
 // per-field JSX blocks purely to keep the enclosing function bodies under
 // the line-count/complexity limits. Same markup, same behavior.
+// AI help writes a model's words into the veteran's own field. A small
+// on-device model is not asked to do that, so while one would answer the
+// button is not offered and one line near the first field says why.
+const smallModelWouldAnswer = () =>
+  isAIAvailable() && smallModelAnswering(getAIStatus());
+
+const FieldHelpOffNote = ({ t }) =>
+  smallModelWouldAnswer() ? (
+    <RewordingOffNote text={t("smallModelCaveat.rewordingOff")} />
+  ) : null;
+
 const AIHelpButton = ({ fieldName, fieldHelping, onClick, t }) => (
   <button
     type="button"
@@ -134,7 +145,7 @@ const NexusTextareaField = ({
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
       </label>
-      {isAIAvailable() && (
+      {isAIAvailable() && !smallModelWouldAnswer() && (
         <AIHelpButton
           fieldName={fieldName}
           fieldHelping={fieldHelping}
@@ -297,6 +308,7 @@ const NexusStepBridge = ({
     <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
       {t("nexusBuilder.connectionTitle")}
     </h3>
+    <FieldHelpOffNote t={t} />
 
     <NexusMechanismList
       answers={answers}
@@ -366,6 +378,7 @@ const NexusStepSeverity = ({
     <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
       {t("nexusBuilder.severityTitle")}
     </h3>
+    <FieldHelpOffNote t={t} />
 
     <NexusTextareaField
       label={t("nexusBuilder.howAffectsWork", { condition })}
@@ -1118,6 +1131,8 @@ function createFieldHelpHandler({
       );
       return;
     }
+
+    if (smallModelWouldAnswer()) return;
 
     setFieldHelping(fieldName);
     setAiError(null);
