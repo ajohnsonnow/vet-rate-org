@@ -20,6 +20,22 @@ export function wrongSingleDisabilityThreshold(sentence) {
   return percent === SINGLE_DISABILITY_PERCENT ? null : percent;
 }
 
+// "60% or more, or a combined rating of 70% or more" for TDIU, with no word
+// of the 40 percent one disability must reach. The sentence has to name TDIU
+// itself, which is what lets the rule run without a topic.
+const SIXTY_OR_COMBINED_SEVENTY =
+  /\b60 ?(?:%|percent) or (?:more|higher),? or (?:a )?combined (?:rating|total)(?: of)? 70 ?(?:%|percent)/i;
+const NAMES_TDIU = /\btdiu\b|unemployab/i;
+
+export function givesTdiuThresholdsWithoutForty(sentence) {
+  return (
+    SIXTY_OR_COMBINED_SEVENTY.test(sentence) &&
+    NAMES_TDIU.test(sentence) &&
+    !/\b40\b/.test(sentence) &&
+    !/\bnot\b|n't\b|\bnever\b/i.test(sentence)
+  );
+}
+
 const INTENT_PARAGRAPH = /\b3\.155\(b\)/;
 const SUPPLEMENTAL_CLAIM_CALLED_FOR =
   /\bsupplemental claims?\b[^.;]{0,20}\b(?:is|are) required\b|\b(?:should|must|need to|have to) (?:file|submit) a supplemental claim\b/i;

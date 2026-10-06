@@ -19,6 +19,7 @@ import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
 import {
   citesIntentParagraphForSupplementalClaim,
+  givesTdiuThresholdsWithoutForty,
   takesHigherOfTwoAsCombined,
   wrongSingleDisabilityThreshold,
 } from "./wrongLawPatterns";
@@ -313,6 +314,13 @@ const RULES = [
     describe: (sentence) => ({
       says: `gives ${wrongSingleDisabilityThreshold(sentence)} percent as the rating one disability needs for TDIU`,
     }),
+    correction: () => "tdiu-judgment",
+  },
+  {
+    id: "tdiu-threshold-omits-forty",
+    topics: EVERY_ANSWER,
+    matches: givesTdiuThresholdsWithoutForty,
+    says: "gives a combined 70 percent for TDIU and leaves out that one disability must be ratable at 40 percent or more",
     correction: () => "tdiu-judgment",
   },
   {
