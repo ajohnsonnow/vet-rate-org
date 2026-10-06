@@ -143,3 +143,11 @@ export const STABILITY_RUN_B_FILE =
 
 export const stabilityRunBCase = (id) =>
   casesIn([STABILITY_RUN_B_FILE]).find((record) => record.id === id);
+
+// The graded laptop-model run whose a25 commentary said "you are eligible
+// for TDIU" under the calculator's threshold paragraph.
+export const LAPTOP_RUN_FILE =
+  "run_2026-10-06_021103_Qwen3.5-2B-q4f16_1-MLC.jsonl";
+
+export const laptopRunCase = (id) =>
+  casesIn([LAPTOP_RUN_FILE]).find((record) => record.id === id);

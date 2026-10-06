@@ -59,7 +59,10 @@ import {
   describeMismatch,
   findCommentaryArithmetic,
 } from "./raterGrounding";
-import { buildVerifiedReferenceBlock } from "./verifiedReference";
+import {
+  buildVerifiedReferenceBlock,
+  detectReferenceTopics,
+} from "./verifiedReference";
 import {
   MIN_OUTPUT_TOKENS,
   cannotFit,
@@ -69,7 +72,7 @@ import {
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
 import { flagUnverifiedForms } from "./formCheck";
 import { trimToLastSentence } from "./outputCleanup";
-import { flagContradictions } from "./contradictionCheck";
+import { findContradictions, flagContradictions } from "./contradictionCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -1142,7 +1145,7 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
   const asksTdiu = mentionsUnemployability(prompt);
   const tdiuCheck = asksTdiu ? checkTdiuConclusion(result.text, calc) : null;
   if (check.ok && !tdiuCheck?.contradicted) {
-    return leadWithCalculatorWorking(result, calc, asksTdiu, prompt);
+    return leadWithCalculatorWorking(result, calc, asksTdiu, prompt, options);
   }
 
   const reason = describeMismatch(check, tdiuCheck);
@@ -1179,23 +1182,45 @@ export const enforceCalculatorOnResult = (result, options, prompt = "") => {
 export const CALCULATOR_COMMENTARY_LEAD =
   "The AI's comments on this result follow. The figures above come from Vet-Rate's calculator, not from the AI.";
 
-function _commentaryDropReasons(result, commentary, calc, asksTdiu) {
+// The contradiction check runs later on the whole answer, and would put its
+// correction above the calculator's working. Commentary that would trigger it
+// is dropped here instead, checked on its own with the same topics.
+function _commentaryContradictions(commentary, options, question) {
+  const topics =
+    options.useDKB === false
+      ? []
+      : detectReferenceTopics(question, options.toolId, {
+          conditions: options.conditions,
+          dataClass: options.dataClass,
+        });
+  return findContradictions(commentary, { topics, hasConditions: true }).map(
+    (hit) => `contradiction: ${hit.rule}`,
+  );
+}
+
+function _commentaryDropReasons(result, commentary, calc, asksTdiu, context) {
   if (result.blocked) return [];
   if (result.truncated) return ["cut short"];
-  return findCommentaryArithmetic(commentary, calc, { tdiu: asksTdiu });
+  return [
+    ...findCommentaryArithmetic(commentary, calc, { tdiu: asksTdiu }),
+    ..._commentaryContradictions(commentary, context.options, context.question),
+  ];
 }
 
 // The model's text is kept under the working only when it adds words and no
 // arithmetic of its own (findCommentaryArithmetic). Otherwise the working
 // stands alone: the draft did not contradict the calculator, so there is no
 // notice to give, and `commentaryDropped` records why it was left out.
-function leadWithCalculatorWorking(result, calc, asksTdiu, question) {
+function leadWithCalculatorWorking(result, calc, asksTdiu, question, options) {
   const commentary = String(result.text ?? "").trim();
   const working = buildCalculatorExplanation(calc, {
     tdiu: asksTdiu,
     question,
   });
-  const dropped = _commentaryDropReasons(result, commentary, calc, asksTdiu);
+  const dropped = _commentaryDropReasons(result, commentary, calc, asksTdiu, {
+    options,
+    question,
+  });
   const commentaryKept =
     commentary !== "" && !result.blocked && dropped.length === 0;
   const parts = [working];

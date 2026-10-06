@@ -823,15 +823,15 @@ describe("rater grounding: a TDIU conclusion that contradicts the thresholds is 
     expect(result.text).not.toContain("gave a TDIU conclusion");
   });
 
-  it("keeps a hedged answer that depends on unemployability as commentary", async () => {
+  it("does not replace a hedged answer that depends on unemployability, but drops it: it speaks to entitlement", async () => {
     const result = await askWith(
       "Can I qualify for TDIU with only one 60% mental health rating?",
       "If you are capable of working, you are not eligible for TDIU.",
       SIXTY,
     );
     expect(result.calculatorReplacement).toBeUndefined();
-    expect(result.calculatorLead.commentaryKept).toBe(true);
-    expect(result.text).toContain("If you are capable of working");
+    expect(result.calculatorLead.commentaryDropped).toEqual(["entitlement"]);
+    expect(result.text).not.toContain("If you are capable of working");
   });
 });
 

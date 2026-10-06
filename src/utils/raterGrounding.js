@@ -602,6 +602,11 @@ const PERCENT_FIGURE = /(\d{1,3}(?:\.\d+)?) ?(?:%|percent\b)/gi;
 const REFUSAL =
   /\bI (?:do not|don't|cannot|can't) (?:have|calculate|determine|access)\b|\bplease provide\b/i;
 const TDIU_THRESHOLD_PERCENTS = [40, 60, 70];
+// Any position on getting TDIU, asserted or denied, hedged or not. Meeting
+// the 38 CFR § 4.16(a) percentages is not entitlement, and the threshold
+// paragraph above the commentary is the only statement made on the point.
+const ENTITLEMENT_WORD =
+  /\b(?:eligib|ineligib|qualif|entitle|grant|award|approv|deny|denie|denia)/i;
 
 /**
  * Why a model's commentary may not be shown under the calculator's working,
@@ -610,8 +615,10 @@ const TDIU_THRESHOLD_PERCENTS = [40, 60, 70];
  * "decimal" (74.8), "rounding" (any talk of rounding), "equation" (an equals
  * sign or an operator between numbers), "figure" (a percentage that is not a
  * rating entered, a step of the working, the 10 percent factor or 100), and
- * "result" (the combined rating stated again), and "refusal" (it says it has
- * no ratings or cannot calculate, under working that just did). Section
+ * "result" (the combined rating stated again), "refusal" (it says it has no
+ * ratings or cannot calculate, under working that just did), and
+ * "entitlement" (on a TDIU question, or wherever the text raises TDIU, any
+ * word about being eligible, qualifying, entitled, granted or denied). Section
  * numbers in citations
  * are not figures. For a TDIU question the 38 CFR § 4.16(a) thresholds (40,
  * 60, 70) are allowed. Deliberately strict: when in doubt the commentary is
@@ -632,6 +639,8 @@ export function findCommentaryArithmetic(text, calc, { tdiu = false } = {}) {
     figure: strayFigure,
     result: extractStatedCombinedRatings(body).length > 0,
     refusal: REFUSAL.test(body),
+    entitlement:
+      ENTITLEMENT_WORD.test(body) && (tdiu || mentionsUnemployability(body)),
   };
   return Object.keys(found).filter((reason) => found[reason]);
 }
