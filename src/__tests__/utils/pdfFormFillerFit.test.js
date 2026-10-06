@@ -110,19 +110,131 @@ describe("21-0781 event boxes", () => {
     expect(_lastFillReport().overflow).toBe("");
     expectInsideItsBox("21-0781", form);
   });
+});
 
-  it("reports what Remarks cannot hold either, and drops no word", async () => {
-    const eventDescription = words("HAP", 900);
+// What QA's sixth pass typed: a 740-character event, a 149-character
+// place and a 92-character date, with short answers everywhere else.
+const chars = (prefix, length) => words(prefix, 200).slice(0, length).trimEnd();
+const OTHERS = {
+  veteranName: "Marlow Q Testwright",
+  branch: "Army",
+  serviceDates: "06/2009 to 08/2013",
+  stressorType: "combat",
+  unitInfo: "9th Fictional Support Company",
+  witnesses: "SPC Imaginary Person",
+  documentation: "Unit log",
+  reportedTo: "Platoon sergeant",
+  symptoms: ["Nightmares or disturbing dreams"],
+  symptomDetails: "I wake three nights a week.",
+};
+const CARRIED = [
+  [
+    "stressor1Description",
+    "eventDescription",
+    "Description of the traumatic event (item 9A)",
+  ],
+  [
+    "stressor1Location",
+    "eventLocation",
+    "Location of the traumatic event (item 9B)",
+  ],
+  ["stressor1Dates", "eventDate", "Date of the traumatic event (item 9C)"],
+];
+const flat = (text) => text.replace(/\s+/g, " ");
+
+describe("21-0781 Remarks with answers carried from their boxes", () => {
+  it("holds each carried answer in Remarks in full, under its name", async () => {
+    const data = {
+      ...OTHERS,
+      eventDescription: chars("HAP", 740),
+      eventLocation: chars("LOC", 149),
+      eventDate: chars("DAT", 92),
+    };
+    const form = await fillSyntheticForm("21-0781", fillForm21_0781, data);
+    const remarks = flat(form.text("remarks"));
+
+    for (const [box, answer, label] of CARRIED) {
+      expect(remarks).toContain(`${label}: ${data[answer]}`);
+      expect(form.text(box)).toBe("See Section 5, Remarks.");
+    }
+    expect(_lastFillReport().moved).toEqual(
+      CARRIED.map(([, , label]) => label),
+    );
+    expect(_lastFillReport().textOnly).toEqual([]);
+    expect(remarks).toContain(
+      "Unit at the time of the event: 9th Fictional Support Company",
+    );
+    expect(remarks).toContain(
+      "My most severe symptoms: I wake three nights a week.",
+    );
+    expect(_lastFillReport().overflow).toBe("");
+    expectInsideItsBox("21-0781", form);
+  });
+
+  it("uses the Remarks box to its last lines before saying anything is left over", async () => {
     const form = await fillSyntheticForm("21-0781", fillForm21_0781, {
-      eventDescription,
+      ...OTHERS,
+      symptomDetails: words("SYM", 900),
     });
-    const { overflow } = _lastFillReport();
+    const [, , , height] = realFields("21-0781").get(
+      _VA_FORM_FIELDS["21-0781"].remarks,
+    ).box;
+    const lines = form.text("remarks").split("\n").length;
 
-    expect(overflow.length).toBeGreaterThan(500);
-    expect(form.text("remarks")).toMatch(/\(continued in the text download\)$/);
-    expect(
-      [...wordsOf(form.text("remarks")), ...wordsOf(overflow)].join(" "),
-    ).toContain(eventDescription);
+    expect(_lastFillReport().overflow.length).toBeGreaterThan(500);
+    expect(lines * 9 * 1.11).toBeGreaterThan(height * 0.9);
+    expectInsideItsBox("21-0781", form);
+  });
+});
+
+describe("21-0781 Remarks that cannot hold everything", () => {
+  it("leaves an answer Remarks cannot hold either off the form, and no box points to it", async () => {
+    const data = {
+      ...OTHERS,
+      eventDescription: words("HAP", 900),
+      eventLocation: chars("LOC", 149),
+    };
+    const form = await fillSyntheticForm("21-0781", fillForm21_0781, data);
+    const remarks = flat(form.text("remarks"));
+
+    expect(form.text("stressor1Description")).toBe("");
+    expect(remarks).not.toContain("HAP");
+    expect(remarks).not.toContain("item 9A");
+    expect(_lastFillReport().textOnly).toEqual([
+      "Description of the traumatic event (item 9A)",
+    ]);
+    expect(form.text("stressor1Location")).toBe("See Section 5, Remarks.");
+    expect(remarks).toContain(
+      `Location of the traumatic event (item 9B): ${data.eventLocation}`,
+    );
+    expect(_lastFillReport().moved).toEqual([
+      "Location of the traumatic event (item 9B)",
+    ]);
+    expect(remarks).toContain("Branch of service: Army");
+    expectInsideItsBox("21-0781", form);
+  });
+
+  it("cuts only the other answers when the carried ones leave too little room, and reports the rest", async () => {
+    const data = {
+      ...OTHERS,
+      eventDescription: chars("HAP", 740),
+      eventLocation: chars("LOC", 149),
+      eventDate: chars("DAT", 92),
+      symptomDetails: words("SYM", 400),
+    };
+    const form = await fillSyntheticForm("21-0781", fillForm21_0781, data);
+    const remarks = form.text("remarks");
+    const { overflow, moved, textOnly } = _lastFillReport();
+
+    for (const [, answer, label] of CARRIED) {
+      expect(flat(remarks)).toContain(`${label}: ${data[answer]}`);
+    }
+    expect(moved).toHaveLength(3);
+    expect(textOnly).toEqual([]);
+    expect(remarks).toMatch(/\(continued in the text download\)$/);
+    expect([...wordsOf(remarks), ...wordsOf(overflow)].join(" ")).toContain(
+      data.symptomDetails,
+    );
     expectInsideItsBox("21-0781", form);
   });
 });
@@ -233,6 +345,8 @@ describe("the country box", () => {
       expect(_lastFillReport()).toEqual({
         leftBlank: [],
         moved: [],
+        textOnly: [],
+        notPlaced: [],
         overflow: "",
       });
     }
