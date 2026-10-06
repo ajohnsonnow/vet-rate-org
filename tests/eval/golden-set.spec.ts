@@ -40,6 +40,8 @@ interface CapturedRequest {
   messages: { role: string; content: unknown }[];
   max_tokens?: number;
   temperature?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
   extra_body?: { enable_thinking?: boolean };
 }
 
@@ -136,6 +138,8 @@ async function installEngineRequestTap(page: Page): Promise<void> {
             messages: JSON.parse(JSON.stringify(request.messages)),
             max_tokens: request.max_tokens,
             temperature: request.temperature,
+            frequency_penalty: request.frequency_penalty,
+            presence_penalty: request.presence_penalty,
             extra_body: request.extra_body,
           });
         }
