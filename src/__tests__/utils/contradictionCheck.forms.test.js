@@ -101,7 +101,7 @@ describe("a filing paired with another filing's form", () => {
 
 describe("the rule over every recorded answer", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
   const responses = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(
@@ -128,8 +128,8 @@ describe("the rule over every recorded answer", () => {
     }
   };
 
-  it("fires three times in 920 responses, each a real mix-up, with the topic gate off", () => {
-    expect(responses).toHaveLength(920);
+  it("fires eight times in 1160 responses, each a real mix-up, with the topic gate off", () => {
+    expect(responses).toHaveLength(1160);
     const hits = responses.flatMap((r) =>
       textsOf(r.response)
         .flatMap((text) => findContradictions(text, { topics: FILING }))
@@ -140,6 +140,11 @@ describe("the rule over every recorded answer", () => {
       "074624 a18 | gives VA Form 21-527C as the form for a Supplemental Claim",
       "231514 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
       "000014 a26 | gives VA Form 21-0966 as the form for a Supplemental Claim",
+      "021103 a26 | gives VA Form 21-0966 as the form for a Supplemental Claim",
+      "021103 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
+      "022302 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
+      "032917 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
+      "034657 a04 | gives VA Form 22-0966 as the form for a Supplemental Claim",
     ]);
   });
 });

@@ -11,7 +11,7 @@ import { findContradictions } from "../../utils/contradictionCheck";
 import { detectReferenceTopics } from "../../utils/verifiedReference";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
-const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
+const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
 const ALL_TOPICS = [
   "secondary",
   "toxic-exposure",
@@ -82,8 +82,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
   const prose = answers.filter((record) => !isDecoderCase(record));
 
   it("reads every answer that was shown to the user", () => {
-    expect(answers).toHaveLength(884);
-    expect(prose).toHaveLength(873);
+    expect(answers).toHaveLength(1120);
+    expect(prose).toHaveLength(1103);
   });
 
   it("flags only real contradictions, each on the topic of its own question", () => {
@@ -134,6 +134,11 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "002046 a29 secondary-barred",
       "013549 a26 intent-to-file-for-filed-claim",
       "015232 a26 intent-to-file-for-filed-claim",
+      "021103 a26 form-for-another-filing",
+      "021103 a26 intent-to-file-for-filed-claim",
+      "031715 a26 intent-to-file-for-filed-claim",
+      "033751 a26 intent-to-file-for-filed-claim",
+      "033751 a29 secondary-barred",
     ]);
   });
 });
@@ -178,6 +183,10 @@ describe("contradiction rules outside the topic of the question", () => {
       "002046 t08 action_plan higher-level-review-new-evidence",
       "002046 t08 action_plan higher-level-review-hearing",
       "014319 t08 action_plan review-period-from-wrong-day",
+      "021103 t08 action_plan form-for-another-filing",
+      "022302 t08 action_plan form-for-another-filing",
+      "032917 t08 action_plan form-for-another-filing",
+      "033751 t08 action_plan higher-level-review-new-evidence",
     ]);
   });
 });

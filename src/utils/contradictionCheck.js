@@ -14,6 +14,7 @@
 
 import quotes from "../data/verifiedQuotes.json";
 import { findWrongCoverageDate } from "./coverageDates";
+import { submitsNewMaterialInReview } from "./reviewSubmissions";
 import { findFormMismatch } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
 
@@ -300,10 +301,15 @@ const RULES = [
   {
     id: "higher-level-review-new-evidence",
     topics: REVIEW_TOPICS,
-    matches: (sentence) =>
-      HIGHER_LEVEL_REVIEW.test(sentence) &&
-      ADDS_EVIDENCE.test(sentence) &&
-      !NOT_ABOUT_ADDING.test(withoutLikelihoodWording(sentence)),
+    matches: (sentence) => {
+      const plain = withoutLikelihoodWording(sentence);
+      return (
+        (HIGHER_LEVEL_REVIEW.test(plain) &&
+          ADDS_EVIDENCE.test(plain) &&
+          !NOT_ABOUT_ADDING.test(plain)) ||
+        submitsNewMaterialInReview(plain)
+      );
+    },
     says: "has you send new evidence with a higher-level review",
     correction: () => "higher-level-review-evidence",
   },
