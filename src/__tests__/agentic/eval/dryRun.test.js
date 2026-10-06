@@ -222,6 +222,23 @@ describe("dry run tool cases", () => {
   });
 });
 
+describe("dry run fragment cases", () => {
+  it("records t09 reworded throughout and t10 echoed", () => {
+    const run = dryRun(makeTmp());
+    const byId = new Map(run.cases.map((c) => [c.id, c]));
+    expect(byId.get("t09").passages).toEqual({
+      sent: 5,
+      accepted: 5,
+      unchanged: 0,
+      rejected: 0,
+    });
+    expect(byId.get("t10")).toMatchObject({
+      draftPath: "template",
+      passages: { sent: 3, accepted: 0, unchanged: 3, rejected: 0 },
+    });
+  });
+});
+
 describe("dry run expectations bite", () => {
   it("reports a problem when a check stops detecting its failure", () => {
     const run = dryRun(makeTmp());

@@ -464,3 +464,68 @@ describe("run summary", () => {
     expect(md).toContain("| t01 | enhancePersonalStatement | not run |");
   });
 });
+
+describe("fragment cases t09 and t10", () => {
+  const passagesOf = (id) =>
+    TOOL_ENTRIES[byId(id).entry].draft(byId(id).formInputs).passages;
+
+  it("t01 to t08 are still byte for byte what the recorded runs used", () => {
+    const first38 = readFileSync(GOLDEN_PATH, "utf8")
+      .split("\n")
+      .slice(0, 38)
+      .map((l) => `${l}\n`)
+      .join("");
+    expect(createHash("sha256").update(first38, "utf8").digest("hex")).toBe(
+      "c40f80c90f03dcc4144f458c8d72f2b108d51b92fa4e89f7aebe52bef30d61c8",
+    );
+    expect(GOLDEN.map((c) => c.id).slice(30)).toEqual([
+      "t01",
+      "t02",
+      "t03",
+      "t04",
+      "t05",
+      "t06",
+      "t07",
+      "t08",
+      "t09",
+      "t10",
+    ]);
+  });
+
+  it("t09 goes through the Nexus Builder entry with four fragments and one full sentence", () => {
+    expect(byId("t09")).toMatchObject({
+      entry: "enhancePersonalStatement",
+      toolId: "personal-statement",
+    });
+    expect(passagesOf("t09")).toEqual([
+      "14 June 2019 - shoulder gave out lifting a crate, neck locked for three days",
+      "Numb fingers, dropping tools, trouble with buttons",
+      "Slower on the assembly line at the Placeholder plant",
+      "I no longer play catch with my daughter.",
+      "Favouring the bad shoulder, so the neck takes the strain",
+    ]);
+  });
+
+  it("t10 goes through the Forms Helper entry with three fragments", () => {
+    expect(byId("t10")).toMatchObject({
+      entry: "enhanceFormStatement",
+      toolId: "buddy-statement",
+    });
+    expect(byId("t10").formInputs.formType).toBe("buddy-statement");
+    expect(passagesOf("t10")).toEqual([
+      "Lights off at the desk, sunglasses indoors, head down on the bench",
+      "Fewer shifts and no overtime since the spring",
+      "3 March 2022 - left the line mid-shift, sick in the car park, driven home by me",
+    ]);
+  });
+
+  it("each sends the request for its own voice", () => {
+    const draft = (id) =>
+      TOOL_ENTRIES[byId(id).entry].draft(byId(id).formInputs);
+    expect(draft("t09").voice).toBe("veteran");
+    expect(draft("t10").voice).toBe("witness");
+    expect(draft("t10").prompt).toContain(
+      '"they" for the person the writer is describing',
+    );
+  });
+});

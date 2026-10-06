@@ -97,6 +97,8 @@ describe("every entry name has a production function", () => {
       "t04",
       "t05",
       "t06",
+      "t09",
+      "t10",
     ]);
     expect(SILENT_CASES.map((c) => c.id)).toEqual(["t07"]);
   });

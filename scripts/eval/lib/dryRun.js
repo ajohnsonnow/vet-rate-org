@@ -83,6 +83,7 @@ const FAILING_OVERRIDES = {
   t04: { reword: "first" },
   t05: { reword: "all", rewordAdds: " This was decided on March 3, 2021." },
   t06: { noDraft: true },
+  t09: { reword: "all" },
 };
 
 const GOOD_DECODE = JSON.stringify({
@@ -154,6 +155,8 @@ export const DRY_RUN_EXPECTATIONS = {
     "draft-returned": NOT_APPLICABLE,
     "no-new-pii": AUTO_PASS,
   },
+  t09: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  t10: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
 };
 
 /** The draft path each dry-run tool case must record. */
@@ -166,6 +169,8 @@ export const DRY_RUN_DRAFT_PATHS = {
   t06: null,
   t07: "template",
   t08: null,
+  t09: "model",
+  t10: "template",
 };
 
 function cannedResponse(caseDef, override, calculateVARating) {

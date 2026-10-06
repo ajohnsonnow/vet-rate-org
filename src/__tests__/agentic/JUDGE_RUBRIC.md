@@ -125,6 +125,41 @@ For W2 on a tool case, a bracketed blank is correct wherever the form
 inputs do not hold the fact. A blank is wrong only where the inputs do
 hold it.
 
+### Fragment cases (t09, t10): what each passage should become
+
+`t01` to `t08` hold two fragments between them. `t09` and `t10` are there
+so a change to the rewording request can be compared on more than that.
+Read `passageOutcomes` for each passage. The expected outcome is the same
+for every fragment: **one or more full sentences that state exactly the
+facts of the passage, in the writer's own person**; and for a passage that
+is already a full sentence: **returned unchanged**. A fragment returned as
+a fragment is a miss for the model (not a fault in the draft: the writer's
+words stand). A rewording that adds, drops or changes a fact, date or
+number, or changes how a person is referred to, must show as `rejected`.
+
+`t09`, Nexus Builder personal statement, the veteran writing ("I"):
+
+| Passage | Typed                                                                        | Kind                   | Expected                                                                                             |
+| ------- | ---------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1       | 14 June 2019 - shoulder gave out lifting a crate, neck locked for three days | dated note             | Sentences with "I"/"my"; keeps 14 June 2019, the crate, the neck locking, three days; nothing else   |
+| 2       | Numb fingers, dropping tools, trouble with buttons                           | comma list             | A sentence with "I" naming all three and nothing else                                                |
+| 3       | Slower on the assembly line at the Placeholder plant                         | phrase with no verb    | A sentence with "I"; keeps the assembly line and the Placeholder plant                               |
+| 4       | I no longer play catch with my daughter.                                     | full sentence          | Returned unchanged                                                                                   |
+| 5       | Favouring the bad shoulder, so the neck takes the strain                     | clause with no subject | A sentence with "I"; keeps favouring the shoulder and the neck taking the strain; no medical opinion |
+
+`t10`, Forms Helper buddy statement, a coworker writing ("I" for
+themselves, "they" for the veteran):
+
+| Passage | Typed                                                                           | Kind                | Expected                                                                                                       |
+| ------- | ------------------------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 1       | Lights off at the desk, sunglasses indoors, head down on the bench              | comma list          | Sentences about "they" naming all three and nothing else                                                       |
+| 2       | Fewer shifts and no overtime since the spring                                   | phrase with no verb | A sentence about "they"; keeps fewer shifts, no overtime, since the spring                                     |
+| 3       | 3 March 2022 - left the line mid-shift, sick in the car park, driven home by me | dated note          | Sentences with "they" for the veteran and "I"/"me" for the writer; keeps 3 March 2022 and all three happenings |
+
+`t10` has no full-sentence passage: the buddy form feeds three typed fields
+to the draft and all three are fragments here. `t03`, the same entry with
+full sentences, is its control.
+
 ### Procedural accuracy (P1, tool cases only)
 
 A draft the veteran files, or advice on what to file, has to be right about
