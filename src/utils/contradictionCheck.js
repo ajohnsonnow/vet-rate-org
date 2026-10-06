@@ -15,7 +15,7 @@
 import quotes from "../data/verifiedQuotes.json";
 import { findWrongCoverageDate } from "./coverageDates";
 import { submitsNewMaterialInReview } from "./reviewSubmissions";
-import { findFormMismatch } from "./vaForms";
+import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
 
 const anyMatch = (text, ...patterns) =>
@@ -381,6 +381,18 @@ const RULES = [
       const { label, number, quote } = findFormMismatch(sentence);
       return {
         says: `gives VA Form ${number} as the form for ${label}`,
+        quote,
+      };
+    },
+  },
+  {
+    id: "intent-form-as-application",
+    topics: FILING_TOPICS,
+    matches: (sentence) => findIntentFormAsApplication(sentence) !== null,
+    describe: (sentence) => {
+      const { number, quote } = findIntentFormAsApplication(sentence);
+      return {
+        says: `gives VA Form ${number} as the application form, but that is the Intent to File form`,
         quote,
       };
     },

@@ -126,6 +126,7 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "221648 a26 new-and-material-standard",
       "221648 a26 intent-to-file-for-filed-claim",
       "230321 a26 intent-to-file-for-filed-claim",
+      "231514 a26 intent-form-as-application",
       "000014 a26 form-for-another-filing",
       "000820 a16 coverage-date-for-wrong-place",
       "000820 a26 intent-to-file-for-filed-claim",
@@ -133,14 +134,19 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "002046 a26 intent-to-file-for-filed-claim",
       "002046 a27 presumptive-needs-exposure-proof",
       "002046 a29 secondary-barred",
+      "012539 a30 intent-form-as-application",
       "013549 a26 intent-to-file-for-filed-claim",
+      "013549 a30 intent-form-as-application",
       "015232 a26 intent-to-file-for-filed-claim",
       "021103 a26 form-for-another-filing",
+      "021103 a26 intent-form-as-application",
       "021103 a26 intent-to-file-for-filed-claim",
       "031715 a26 intent-to-file-for-filed-claim",
+      "032917 a30 intent-form-as-application",
       "033751 a26 intent-to-file-for-filed-claim",
       "033751 a29 secondary-barred",
       "034657 a16 coverage-date-for-wrong-place",
+      "034657 a30 intent-form-as-application",
     ]);
   });
 });
