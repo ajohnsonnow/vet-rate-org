@@ -191,7 +191,7 @@ function TimeMachineInputSection({
             onChange={(e) =>
               setEstimatedRating(Number.parseInt(e.target.value))
             }
-            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white text-lg"
+            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:text-white text-lg"
           >
             {Object.keys(VA_MONTHLY_RATES).map((rating) => (
               <option key={rating} value={rating}>
