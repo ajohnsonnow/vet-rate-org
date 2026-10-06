@@ -120,10 +120,35 @@ function describeBilateralNotes(calc) {
   ];
 }
 
-const groupCappedLine = (group) =>
-  group.combinedBilateral >= 100
-    ? "  Bilateral factor: the group already combines to 100%, so the factor adds nothing and the group rating is 100%"
-    : `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.combinedBilateral / 10}, but a rating cannot exceed 100%, so the group rating is 100%`;
+/*
+ * The factor in the order 38 CFR § 4.26 gives it: 10 percent of the group's
+ * combined value, that amount added to the value, then the result. The sum is
+ * shown before it is rounded so no step is left for the reader to work out.
+ */
+function bilateralFactorLines(group) {
+  const value = group.combinedBilateral;
+  if (value >= 100) {
+    return [
+      "  Bilateral factor: the group already combines to 100%, so the factor adds nothing and the group rating is 100%",
+    ];
+  }
+  const added = value / 10;
+  const sum = (value * 11) / 10;
+  const factor = `  Bilateral factor: 10% of ${value} = ${added}, added to the ${value}: ${value} + ${added} = ${sum}`;
+  if (group.bilateralFactorCapped) {
+    return [
+      factor,
+      "  Group rating: a rating cannot exceed 100%, so the group rating is 100%",
+    ];
+  }
+  const rating = group.bilateralGroupRating;
+  return [
+    factor,
+    sum === rating
+      ? `  Group rating: ${rating}%`
+      : `  Group rating: ${sum} rounds to ${rating}%`,
+  ];
+}
 
 const stepLine = (s) => `${s.from}% combined with ${s.with}% = ${s.result}%`;
 
@@ -152,11 +177,7 @@ export function formatCalculatorWorking(calc) {
       `Bilateral group (${pairNames(calc).join(" and ")}, 38 CFR § 4.26):`,
     );
     bilateralSteps.forEach((s) => lines.push(`  ${stepLine(s)}`));
-    lines.push(
-      group.bilateralFactorCapped
-        ? groupCappedLine(group)
-        : `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.bilateralFactor}, so the group rating is ${group.bilateralGroupRating}%`,
-    );
+    lines.push(...bilateralFactorLines(group));
   }
   if (calc.bilateralExcludedConditions.length > 0) {
     lines.push(

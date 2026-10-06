@@ -44,7 +44,7 @@ describe("formatCalculatorWorking", () => {
       "Bilateral group (Left knee strain and Right knee strain",
     );
     expect(text).toContain("  30% combined with 20% = 44%");
-    expect(text).toContain("10% of 44% = 4.4, so the group rating is 48%");
+    expect(text).toContain("  Group rating: 48.4 rounds to 48%");
     expect(text).toContain("Step 1: 48% combined with 40% = 69%");
     expect(text).toContain("38 CFR § 4.25(b)): 70%");
   });
