@@ -107,6 +107,9 @@ async function writeDryRunTranscript(
   const { resolveAgentForTool } = await loadFromSrc(
     "src/utils/agentBoundaries.js",
   );
+  const { buildCalculatorAnswer } = await loadFromSrc(
+    "src/utils/raterGrounding.js",
+  );
   const personaPrompts = Object.fromEntries(
     Object.values(SWARM_AGENTS).map((agent) => [agent.id, agent.systemPrompt]),
   );
@@ -117,6 +120,7 @@ async function writeDryRunTranscript(
       personaPrompts,
       resolveAgentForTool,
       calculateVARating,
+      buildCalculatorAnswer,
       settings,
     }),
   );

@@ -50,11 +50,7 @@ import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
-import {
-  ASK_SEPARATELY_SENTENCE,
-  buildCalculatorExplanation,
-  mentionsUnemployability,
-} from "./raterGrounding";
+import { buildCalculatorAnswer } from "./raterGrounding";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import {
   MIN_OUTPUT_TOKENS,
@@ -3197,12 +3193,8 @@ function _answerFromCalculator(prompt, options) {
   const used =
     calc.bilateralConditions.length + calc.nonBilateralConditions.length;
   if (used === 0) return null;
-  const explanation = buildCalculatorExplanation(calc, {
-    tdiu: mentionsUnemployability(prompt),
-    question: prompt,
-  });
   return {
-    text: [explanation, ASK_SEPARATELY_SENTENCE].join("\n\n"),
+    text: buildCalculatorAnswer(calc, prompt),
     onDevice: true,
     modelCalled: false,
     calculatorLead: { expected: calc.combinedRating },

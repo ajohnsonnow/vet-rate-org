@@ -305,6 +305,18 @@ export function buildCalculatorExplanation(
     .join("\n\n");
 }
 
+/**
+ * The whole text a veteran is shown when the calculator answers in place of a
+ * model: the explanation for their question, then the closing sentence.
+ */
+export function buildCalculatorAnswer(calc, question) {
+  const explanation = buildCalculatorExplanation(calc, {
+    tdiu: mentionsUnemployability(question),
+    question,
+  });
+  return [explanation, ASK_SEPARATELY_SENTENCE].join("\n\n");
+}
+
 function describeGroupBasis(calc) {
   if (calc.bilateralLimbs.length > 1) {
     return "compensable disabilities of both arms and both legs, whose ratings are combined together before the factor is added once (38 CFR § 4.26(b))";

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { calculateVARating } from "../../../utils/vaCalculator";
 import { resolveAgentForTool } from "../../../utils/agentBoundaries";
 import { SWARM_AGENTS } from "../../../utils/diamondSwarm";
+import { buildCalculatorAnswer } from "../../../utils/raterGrounding";
 import {
   AUTOMATED_CHECK_IDS,
   AUTO_FAIL,
@@ -73,6 +74,7 @@ function dryRun(dir) {
       personaPrompts,
       resolveAgentForTool,
       calculateVARating,
+      buildCalculatorAnswer,
       settings,
     }),
   );

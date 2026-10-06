@@ -45,11 +45,6 @@ interface CapturedRequest {
   extra_body?: { enable_thinking?: boolean };
 }
 
-interface CalculatorReplacement {
-  reason?: string;
-  draft?: string;
-}
-
 interface EvalWindow {
   __evalCaptured: CapturedRequest[];
   __evalMods?: {
@@ -78,7 +73,6 @@ interface EvalWindow {
             text?: string;
             validationErrors?: unknown;
             validationWarnings?: unknown;
-            calculatorReplacement?: CalculatorReplacement;
             citationsUnverified?: unknown;
             formsUnverified?: unknown;
             contradictionsFound?: unknown;
@@ -242,7 +236,6 @@ interface CaseOutcome {
   latencyMs: number;
   validationErrors?: unknown;
   validationWarnings?: unknown;
-  calculatorReplacement?: CalculatorReplacement;
   citationsUnverified?: unknown;
   formsUnverified?: unknown;
   contradictionsFound?: unknown;
@@ -294,10 +287,6 @@ function runCase(
         rawResponse: mods.swarm.getLastSwarmGeneration()?.raw,
         outputCleanup:
           mods.swarm.getLastSwarmGeneration()?.outputCleanup ?? undefined,
-        calculatorReplacement:
-          typeof result === "string"
-            ? undefined
-            : result?.calculatorReplacement,
         citationsUnverified:
           typeof result === "string" ? undefined : result?.citationsUnverified,
         formsUnverified:

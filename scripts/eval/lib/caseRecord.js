@@ -3,8 +3,9 @@ import { selectOwnRequest } from "./requestCapture.js";
 import { TOOL_ENTRIES } from "./toolEntries.js";
 
 /**
- * What the calculator guard and the response validator did to the answer,
- * read from the fields generateAI put on its result (`resultFlags`).
+ * Whether the calculator answered in place of a model, and what the response
+ * validator did to the answer, read from the fields generateAI put on its
+ * result (`resultFlags`).
  * `validatorBlocked` and `truncated` are null when the case produced no
  * result (an error or a timeout), so "no" is never confused with "not known".
  */
@@ -15,6 +16,7 @@ function guardOutcome(flags) {
   return {
     validatorBlocked: Boolean(flags.blocked),
     truncated: Boolean(flags.truncated),
+    ...(flags.modelCalled === false ? { modelCalled: false } : {}),
     ...(flags.calculatorLead ? { calculatorLead: flags.calculatorLead } : {}),
     ...(flags.blocked ? { blockedText: flags.blockedText ?? null } : {}),
   };
@@ -24,15 +26,14 @@ function guardOutcome(flags) {
  * One transcript record from what happened to one case.
  *
  * outcome: { ok, text, error, latencyMs, captured: request[], rawResponse,
- *            calculatorReplacement, citationsUnverified, formsUnverified,
+ *            citationsUnverified, formsUnverified,
  *            validationErrors,
  *            validationWarnings, resultFlags }
  *
  * `response` is the visible text, the field graders score. `rawResponse` is
  * the engine's reply before any reasoning block was removed, present only when
  * it differs. `outputCleanup` says the wrapper tags were removed or a runaway
- * repeat was cut ({ echoRemoved, trimmed }). `calculatorReplacement` carries the reason and the replaced
- * draft when the calculator guard swapped the answer. `citationsUnverified`
+ * repeat was cut ({ echoRemoved, trimmed }). `citationsUnverified`
  * lists the 38 CFR sections the answer cited that do not exist,
  * `formsUnverified` the VA form numbers it named that are in neither forms
  * list, and
@@ -50,8 +51,10 @@ function guardOutcome(flags) {
  * it, the verdict and the reasons) so a rejected rewording can be read,
  * `draftRejectReasons` says why each rejected one was, and
  * `draftErrorReason` is set when the model could not answer at all.
- * `calculatorLead` ({ expected, commentaryKept }) says the answer leads with
- * the calculator's working. `truncated` says the engine stopped the answer
+ * `modelCalled: false` with `calculatorLead` ({ expected }) says the
+ * calculator answered a rating question that came with structured conditions:
+ * no engine was called, so the record has no request, no agent and
+ * `engineRequests` 0, and `response` is the calculator's text. `truncated` says the engine stopped the answer
  * at the length limit (known for WebLLM and Gemini only). `validatorBlocked` says the response validator
  * blocked the answer, in which case `response` is the message shown in its
  * place and `blockedText` is what the model wrote.
@@ -111,7 +114,6 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
       validationWarnings: outcome.validationWarnings,
     },
   });
-  const replacement = outcome.calculatorReplacement;
   return {
     ...record,
     thinking: run.thinking ?? null,
@@ -124,14 +126,6 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
       ? { rawResponse: outcome.rawResponse }
       : {}),
     ...(outcome.outputCleanup ? { outputCleanup: outcome.outputCleanup } : {}),
-    ...(replacement
-      ? {
-          calculatorReplacement: {
-            reason: replacement.reason ?? null,
-            draft: replacement.draft ?? null,
-          },
-        }
-      : {}),
     ...(outcome.citationsUnverified
       ? { citationsUnverified: outcome.citationsUnverified }
       : {}),
