@@ -1393,7 +1393,7 @@ function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
           </p>
         )}
       </div>
-      <div className="flex w-full gap-2 sm:w-auto">
+      <div className="flex w-full flex-shrink-0 gap-2 sm:w-auto">
         <button
           type="button"
           onClick={() => setEditingRating({ ...rating })}
