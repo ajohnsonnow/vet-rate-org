@@ -391,3 +391,29 @@ describe("calls that are not calculations still go to the model", () => {
     expect(result.text).not.toContain(ASK_SEPARATELY_SENTENCE);
   });
 });
+
+describe("text the app wrote is returned as it is", () => {
+  it("carries no correction, citation or form notice from the model-answer checks", async () => {
+    BACKENDS.swarm();
+    for (const [question, options] of [
+      [
+        GOLDEN.a13.input,
+        { toolId: "tdiu-builder", conditions: GOLDEN.a13.conditions },
+      ],
+      [GOLDEN.a14.input, { toolId: "rating-analyzer", conditions: undefined }],
+    ]) {
+      const result = await generateAI(question, callOptions(options));
+      expect(Object.keys(result).sort()).toEqual(
+        result.needsRatings
+          ? ["modelCalled", "needsRatings", "onDevice", "text"]
+          : [
+              "calculatorLead",
+              "modelCalled",
+              "onDevice",
+              "ratingsSource",
+              "text",
+            ],
+      );
+    }
+  });
+});

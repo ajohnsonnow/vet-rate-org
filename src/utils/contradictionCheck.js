@@ -471,15 +471,15 @@ const looksStructured = (text) => /^\s*(?:```|[{[])/.test(text);
  * Put a correction above a prose answer that contradicts the verified text,
  * leaving the answer itself unaltered below it, and record what was found on
  * the result (contradictionsFound, plus validationWarnings).
- * Nothing is checked when the answer is structured output or when it is the
- * calculator's own text, written without a model (`modelCalled: false`). A call with
- * reference material turned off raises no topic, so only the rule that
- * applies to every answer runs on it.
+ * Nothing is checked when the answer is structured output. Text the app wrote
+ * without a model (the calculator's answer, the request for ratings) never
+ * comes here: generateAI returns it before any model answer is checked. A
+ * call with reference material turned off raises no topic, so only the rule
+ * that applies to every answer runs on it.
  */
 export function flagContradictions(result, options = {}, prompt = "") {
   const text = result?.text;
   if (typeof text !== "string" || text === "") return result;
-  if (result.modelCalled === false) return result;
   if (options.responseFormat || looksStructured(text)) return result;
   const topics =
     options.useDKB === false
