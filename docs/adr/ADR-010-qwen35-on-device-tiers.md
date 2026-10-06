@@ -169,13 +169,94 @@ Decision: while a small-class on-device model is the one that would answer, the 
 
 1. A rating question (combined rating, bilateral factor, TDIU percentage thresholds) is answered from the calculator, as on every device.
 2. Any other question gets a fixed message (`OPEN_ADVICE_HELD_MESSAGE` in `src/utils/openAdviceHold.js`): that this device's model is too small to answer open questions reliably and was not used; what the device can still do (the calculator, the form and statement tools, the Decision Decoder's rule-based reading, searching the regulations); that a document goes to the document tools, named as the app names them; that an AI answer needs a device that can run the larger on-device model, or the cloud option if one is set up; and how to reach a Veterans Service Officer.
-3. Under that message the assistant shows any regulation text a search of the bundled regulations finds for the question, each passage quoted under its citation and labelled as not written by AI. No language model reads or rewords it.
-4. Ask the Regs does the same on such a device: it runs its search and shows the passages found with their citations, with a note that the model was not used, in place of a synthesised answer.
+3. Nothing is shown under that message. An earlier version showed regulation text from a search of the bundled regulations under it; section 13 records why that was removed. The message points to Ask the Regs.
+4. Ask the Regs, on such a device, runs its search and shows the passages found in place of a synthesised answer, labelled as search results (section 14).
 
 What does not change: the larger on-device model, cloud answers, the wllama and local-server paths, and every tool that is not open advice. The writing tools and the Decision Decoder keep their own small-model handling (section 9 and `aiStatementHelper.js`). The Pathfinder and Red Team screens still call the small model, with the caveat of section 8; they and the other free-text tools were not part of this decision.
 
 Reversal: one condition, in `generateAIInternal` (`src/utils/unifiedAIService.js`): `if (options.openAdvice && smallModelAnswering(getAIStatus()))`. The assistant sets `openAdvice`. Ask the Regs has the matching condition in `handleAsk` (`src/components/AskTheRegs.jsx`). **Reverse it when a small-class model, on the golden questions, goes two consecutive graded runs with no answer that states wrong law or invents a fact, on a real laptop.** Nothing else reverses it.
 
-Consequences: on those devices the assistant answers rating questions and nothing else, which is less than the model's best answers offered (up to two a run). The regulation search can return a passage that is about the right subject and not the veteran's point; it is labelled as a search result for that reason. In the evaluation, a run on a small-class model records the fixed message for every a-case with a question (`modelCalled: false`, `openAdviceHeld: true`); the passages shown under it are not in the transcript, because the runner calls `generateAI` and the search is added by the assistant.
+Consequences: on those devices the assistant answers rating questions and nothing else, which is less than the model's best answers offered (up to two a run). In the evaluation, a run on a small-class model records the fixed message for every a-case with a question (`modelCalled: false`, `openAdviceHeld: true`), which is also exactly what the assistant shows.
 
 This closes the general-assistant part of open decision 1 in section 8.
+
+## 12. A fallback model is announced, and the Qwen2.5-3B is held back like the small models
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible.
+
+When the first model in a tier's list fails to load (a browser cache error, GPU memory) and a later one loads, the swarm loads it without a word. The AI Command Center said "Your device will load Qwen 3.5 4B" while Qwen 2.5 3B was answering. Two changes:
+
+1. **The fallback is announced.** `describeModelFallback` (`src/utils/modelFallback.js`) compares the model actually loaded (the swarm status) with the first model of the device profile's list. If they differ it returns the words shown by `FallbackModelNotice` in the AI Command Center: which model was meant, that it could not be loaded, which is loaded instead, and that the loaded one is an older model. The "weaker in our tests" clause is shown only for models marked `gradedWeaker` in the per-model table (the Qwen2.5 rows); any other fallback says it has not been tested.
+2. **The Qwen2.5-3B is in the held-back class.** `isSmallModel` now returns true for both Qwen2.5-3B rows, so the small-model caveat (section 8), the Decision Decoder's rule-based path (section 9), the writing tools' rewording switch-off and the open-advice hold (section 11) all apply when it is the loaded model. Evidence: section 2's desktop run, 7 of 30 passing with invented case facts in 15 cases, worse on both counts than the Qwen3.5-2B that section 11 holds back. The flag name `smallModel` now means "held back from open advice", not "2B or under"; the Qwen2.5-1.5B (6 of 30, invented facts in 14 cases) was already in it. The Llama-3.2-3B is not graded and is not in the class.
+
+Every one of those consumers reads the loaded model through `smallModelAnswering(getAIStatus())`, never the profile's first choice, so a fallback triggers them. `src/__tests__/utils/unifiedAIService.openAdviceHold.test.js` holds an open question when the 4B failed and the Qwen2.5-3B loaded; `src/utils/smallModelAnswering.test.js` covers the status cases.
+
+Reversal: remove `smallModel: true` from the two Qwen2.5-3B rows in `MODEL_FOOTPRINT`.
+
+## 13. Regulation passages are not shown under the held-question message
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible.
+
+Under the fixed open-advice message (section 11) the assistant showed regulation text from a search of the bundled eCFR index. For a question about service connection for sleep apnea it showed 38 CFR 3.309 (tropical diseases), under a label that reads as official.
+
+**What the search returns.** `retrieveRegulationText` calls `legalRag.query` (hybrid dense and BM25 ranking, then diversity re-ranking). Each passage carries `score`, the dense cosine similarity between the question and the passage. The search already used a threshold of 0.35, but hybrid ranking lets lexical matches in below it, and 0.35 passes nearly everything: the bge-small similarities of a question and a regulation fall between about 0.54 and 0.75 whether or not they are related.
+
+**Measured.** The 29 golden `a` questions that have text (a22 is empty) and four sleep apnea questions (x1 to x4), run through the real search offline on 2026-10-06, top passage each. "On the question" is one reader's judgement of the section against the question. Data: `src/__tests__/utils/fixtures/regulationSearchRelevance.json`.
+
+| Question | Score | Top passage                                       | On the question |
+| -------- | ----- | ------------------------------------------------- | --------------- |
+| a01      | 0.606 | § 3.203 Service records as evidence of service a  | yes             |
+| a02      | 0.666 | § 3.304 Direct service connection; wartime and p  | yes             |
+| a03      | 0.696 | § 3.159 Department of Veterans Affairs assistanc  | yes             |
+| a04      | 0.605 | § 4.87 Schedule of ratings—ear.                   | yes             |
+| a05      | 0.651 | § 20.1000 Rule 1000. Vacating a decision.         | no              |
+| a06      | 0.586 | § 3.309 Disease subject to presumptive service c  | yes             |
+| a07      | 0.572 | § 4.130 Schedule of ratings—Mental disorders.     | yes             |
+| a08      | 0.621 | § 19.26 Action by agency of original jurisdictio  | no              |
+| a09      | 0.647 | § 3.304 Direct service connection; wartime and p  | yes             |
+| a10      | 0.617 | § 3.103 Procedural due process and other rights.  | no              |
+| a11      | 0.641 | § 4.68 Amputation rule.                           | no              |
+| a12      | 0.754 | § 4.26 Bilateral factor.                          | yes             |
+| a13      | 0.630 | § 4.16 Total disability ratings for compensatio   | yes             |
+| a14      | 0.605 | § 4.25 Combined ratings table.                    | yes             |
+| a15      | 0.612 | § 3.105 Revision of decisions.                    | no              |
+| a16      | 0.671 | § 3.13 Discharge to change status.                | no              |
+| a17      | 0.648 | § 3.155 How to file a claim.                      | no              |
+| a18      | 0.638 | § 3.103 Procedural due process and other rights.  | no              |
+| a19      | 0.568 | § 4.47-4.54 §§ 4.47-4.54 [Reserved]               | no              |
+| a20      | 0.620 | § 4.25 Combined ratings table.                    | yes             |
+| a21      | 0.577 | § 3.213 Change of status affecting entitlement.   | no              |
+| a23      | 0.575 | § 3.7 Individuals and groups considered to hav    | no              |
+| a24      | 0.613 | § 4.28 Prestabilization rating from date of dis   | no              |
+| a25      | 0.662 | § 4.16 Total disability ratings for compensatio   | yes             |
+| a26      | 0.615 | § 3.1010 Substitution under 38 U.S.C. 5121A follo | no              |
+| a27      | 0.702 | § 3.317 Compensation for certain disabilities oc  | yes             |
+| a28      | 0.663 | § 20.1000 Rule 1000. Vacating a decision.         | no              |
+| a29      | 0.563 | § 3.310 Disabilities that are proximately due to  | yes             |
+| a30      | 0.601 | § 3.155 How to file a claim.                      | yes             |
+| x1       | 0.625 | § 4.87a Schedule of ratings—other sense organs.   | no              |
+| x2       | 0.540 | § 3.309 Disease subject to presumptive service c  | no              |
+| x3       | 0.543 | § 4.97 Schedule of ratings—respiratory system.    | yes             |
+| x4       | 0.570 | § 4.97 Schedule of ratings—respiratory system.    | yes             |
+
+**Finding.** No score cutoff separates the passages that were on the question from those that were not. Passages not on the question score from 0.540 to 0.671; passages on it from 0.543 to 0.754. The lexical (BM25) score does not separate them either. A score is a weak guard here.
+
+**Decision: no passages are shown under the held message.** A score floor of 0.58 was tried first (`PASSAGE_RELEVANCE_FLOOR`): it dropped 8 of the 33 top hits, 4 not on the question (a19, a reserved placeholder; a21; a23; x2, the sleep apnea passage that prompted this) and 4 that were (a07, a29, x3, x4), and a higher floor would lose most good passages while a05, a16 and a28 (above 0.65) stayed. 16 of the 33 top passages are not on the question and no score separates them, so regulation text under an official-looking message is not shown automatically. The floor, its "No closely matching regulation text" line and the assistant's search call were removed. The fixed message already points to Ask the Regs, where the veteran asks for a search and sees the results labelled as search results (section 14).
+
+**Not solved.** A better signal (a cross-encoder, or a rule on whether the question's own terms appear in the passage title) would be needed to show passages unasked; neither was tried.
+
+**What the search sends.** The question is scrubbed of identifiers (`scrubPII`), embedded in the page by the bge-small model (`@huggingface/transformers`, `pipeline("feature-extraction", "Xenova/bge-small-en-v1.5")`) and compared with the index vectors in the page. The page fetches only same-origin `/legal-index/...` files and, on first use, the model files from the Hugging Face hub (huggingface.co), a third-party host. The question is not in any request; `src/services/legalRag.privacy.test.js` records every fetch and the text the embedder receives. The search now runs only from Ask the Regs, where the first-use download is disclosed beside the results: "about 34 MB", the size of the quantized model file in the Hugging Face repository listing (`onnx/model_quantized.onnx`, 34,014,426 bytes). That the browser fetches that file, not the full-precision one (133 MB), follows the library's documented default for the WebAssembly backend and was not observed in a browser here.
+
+Reversal: none needed; showing passages again would need a relevance signal that separates them, which this table says the score is not.
+
+## 14. Ask the Regs on a small-class model: search results, labelled as such
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible.
+
+Section 13 removed regulation text from under the assistant's fixed message because the search returns unrelated sections and no score separates them. Ask the Regs is different: the veteran types a question into a regulations search and expects regulation text back, so on a small-class model it still shows the search results instead of a synthesised answer. They are labelled honestly (`SEARCH_RESULTS_LABEL` in `src/utils/regulationSearchNotes.js`): "Search results from the regulations. These are the closest text matches and may not be about your question. Read the section heading before relying on one."
+
+- Each passage is shown under its section number and heading, above its text, so a reader can see at once when it is not about the question.
+- A [Reserved] section is never shown (title marked reserved, or text that is only "[Reserved]"). If nothing else is left the view says no regulation text was found.
+- The first-use download of the search model (Hugging Face, about 34 MB; section 13 has the basis of that figure and the privacy test) is disclosed in the label box.
+
+When a larger model answers, the answer is shown with its sources: each cited section is listed under the answer with its citation and the date it was fetched (`LegalCitationList`). The search-result framing is for text shown as found, not for a cited answer, so that path is unchanged.

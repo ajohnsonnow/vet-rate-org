@@ -8,6 +8,12 @@ import {
   isAnyAIAvailable,
 } from "../utils/unifiedAIService";
 import { smallModelAnswering } from "../utils/smallModelAnswering";
+import {
+  REGULATION_SEARCH_DISCLOSURE,
+  SEARCH_RESULTS_LABEL,
+  isReservedPassage,
+  passageHeading,
+} from "../utils/regulationSearchNotes";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import {
@@ -96,11 +102,14 @@ function AskTheRegsQuestionForm({
   );
 }
 
-const SEARCH_ONLY_TITLE = "Regulation text, not an AI answer";
+const SEARCH_ONLY_TITLE = "Search results, not an AI answer";
 
-// ADR-010 section 11: a small-class model is not asked to answer. The search
-// result is shown as it was found, each passage with its citation.
+// ADR-010 sections 11 and 14: a small-class model is not asked to answer. The
+// veteran asked for this search, so it is shown, labelled as a search. Every
+// passage sits under its section number and heading, a reserved section is
+// never shown, and the first-use download of the search model is disclosed.
 function SearchOnlyResult({ passages }) {
+  const shown = passages.filter((passage) => !isReservedPassage(passage));
   return (
     <div className="space-y-3">
       <div
@@ -108,25 +117,23 @@ function SearchOnlyResult({ passages }) {
         aria-label={SEARCH_ONLY_TITLE}
         className="rounded-lg border-2 border-blue-700 bg-blue-50 p-3 text-sm text-blue-950 dark:border-blue-400 dark:bg-blue-950 dark:text-blue-50"
       >
-        <p className="min-w-0">
-          <strong>{SEARCH_ONLY_TITLE}.</strong> This device&apos;s AI model is
-          too small to answer questions about the regulations reliably, so it
-          was not used. Below is the regulation text a search found for your
-          question. Read it against your own situation, and check with an
-          accredited VSO before relying on it.
-        </p>
+        <p className="min-w-0">{SEARCH_RESULTS_LABEL}</p>
+        <p className="mt-2 min-w-0 text-xs">{REGULATION_SEARCH_DISCLOSURE}</p>
       </div>
-      {passages.length === 0 && (
+      {shown.length === 0 && (
         <p className="text-sm text-gray-800 dark:text-gray-200">
           The search found no regulation text for that question. Try naming the
           condition or the rule you are asking about.
         </p>
       )}
-      {passages.map((passage) => (
+      {shown.map((passage) => (
         <div
           key={`${passage.citation}-${passage.text.slice(0, 40)}`}
           className="space-y-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
         >
+          <h3 className="min-w-0 break-words text-base font-bold text-gray-900 dark:text-white">
+            {passageHeading(passage)}
+          </h3>
           <p className="min-w-0 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-gray-200">
             {passage.text}
           </p>

@@ -35,7 +35,8 @@ describe("isSmallModel reads the per-model table", () => {
     ["Qwen2.5-1.5B-Instruct-q4f16_1-MLC", true],
     ["Qwen2.5-1.5B-Instruct-q4f32_1-MLC", true],
     ["Qwen3.5-4B-q4f16_1-MLC", false],
-    ["Qwen2.5-3B-Instruct-q4f16_1-MLC", false],
+    ["Qwen2.5-3B-Instruct-q4f16_1-MLC", true],
+    ["Qwen2.5-3B-Instruct-q4f32_1-MLC", true],
     ["Llama-3.2-3B-Instruct-q4f32_1-MLC", false],
     ["Some-New-Model-MLC", false],
     [null, false],
@@ -84,8 +85,14 @@ describe("SmallModelCaveat", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("follows the model actually loaded, not a profile's first model", () => {
+  it("shows for a fallback to the Qwen2.5-3B: it follows the model actually loaded, not the first choice", () => {
     status.value = swarm("Qwen2.5-3B-Instruct-q4f16_1-MLC");
+    render(<SmallModelCaveat />);
+    expect(screen.getByRole("note")).toBeTruthy();
+  });
+
+  it("shows nothing for a loaded model that is not in the small class", () => {
+    status.value = swarm("Llama-3.2-3B-Instruct-q4f32_1-MLC");
     const { container } = render(<SmallModelCaveat />);
     expect(container.firstChild).toBeNull();
   });

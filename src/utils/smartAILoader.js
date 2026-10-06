@@ -75,78 +75,35 @@ export const getRecommendedModelForDevice = (toolId) => {
 };
 
 /**
- * Check if the correct model is loaded for this tool and device. "Loaded" is
- * the on-device swarm being ready, and "correct" is its model being the one
- * the device profile recommends (recommended.deviceModel), since every role
- * runs on that one model. When either model is unknown there is nothing to
- * compare, and a ready swarm counts as correct.
+ * What the load panel offers. Every caller shows the panel only while no AI is
+ * available, so it has one job: offer to load. There is no "ready" or "switch"
+ * state; a loaded model is never unloaded from here.
  * @param {string} toolId - The tool being used
- * @returns {Object} { isCorrect, currentModel, recommendedModel, action }
+ * @returns {Object} { recommendedModel, action: "load", message }
  */
 export const checkModelMatch = (toolId) => {
-  const aiStatus = getAIStatus();
   const recommended = getRecommendedModelForDevice(toolId);
-
-  if (!aiStatus.swarmAvailable) {
-    return {
-      isCorrect: false,
-      currentModel: null,
-      recommendedModel: recommended,
-      action: "load",
-      message: `Load ${recommended.name} for this tool`,
-    };
-  }
-
-  const currentModel = aiStatus.swarmStatus?.model ?? null;
-  const wanted = recommended.deviceModel?.modelId ?? null;
-  const isMatch = !currentModel || !wanted || currentModel === wanted;
-
-  if (isMatch) {
-    return {
-      isCorrect: true,
-      currentModel,
-      recommendedModel: recommended,
-      action: "none",
-      message: `✓ ${recommended.name} ready`,
-    };
-  }
-
-  // Wrong model loaded
   return {
-    isCorrect: false,
-    currentModel,
     recommendedModel: recommended,
-    action: "switch",
-    message: `Switch to ${recommended.name} for better performance`,
+    action: "load",
+    message: `Load ${recommended.name} for this tool`,
   };
 };
 
 /**
- * Smart loader: Automatically handle model loading/switching
+ * Load the model this device recommends. If a model is already loaded it is
+ * left alone: nothing is unloaded or reloaded.
  * @param {string} toolId - The tool being used
  * @param {Function} onProgress - Progress callback (progress, text)
  * @returns {Promise<boolean>} Success status
  */
 export const smartLoadAI = async (toolId, onProgress = null) => {
-  const check = checkModelMatch(toolId);
-  const recommended = check.recommendedModel;
+  const recommended = checkModelMatch(toolId).recommendedModel;
 
   try {
-    // Already correct model
-    if (check.isCorrect) {
+    if (getAIStatus().swarmAvailable) {
       onProgress?.(100, `${recommended.name} ready`);
       return true;
-    }
-
-    // Need to unload current model first
-    if (check.action === "switch") {
-      onProgress?.(10, "Unloading current model...");
-
-      const { unloadSwarm } = await import("./diamondSwarm");
-      await unloadSwarm();
-
-      // Wait a moment for cleanup
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     // Load recommended model

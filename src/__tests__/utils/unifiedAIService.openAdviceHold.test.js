@@ -76,6 +76,7 @@ import { OPEN_ADVICE_HELD_MESSAGE } from "../../utils/openAdviceHold";
 
 const SMALL = "Qwen3.5-2B-q4f16_1-MLC";
 const LARGER = "Qwen3.5-4B-q4f16_1-MLC";
+const FALLBACK_3B = "Qwen2.5-3B-Instruct-q4f16_1-MLC";
 const OPEN_QUESTION = "Can I file a supplemental claim after a denial?";
 
 const assistantOptions = (overrides = {}) => ({
@@ -144,6 +145,15 @@ describe("an open question while a small-class model would answer", () => {
     expect(diamondSwarm.generateWithSwarm).not.toHaveBeenCalled();
     expect(result.calculatorLead).toEqual({ expected: 70 });
     expect(result.openAdviceHeld).toBeUndefined();
+  });
+});
+
+describe("a fallback model counts by the model actually loaded", () => {
+  it("holds an open question when the 4B failed and the Qwen2.5-3B loaded instead", async () => {
+    swarmWith(FALLBACK_3B);
+    const result = await generateAI(OPEN_QUESTION, assistantOptions());
+    expect(diamondSwarm.generateWithSwarm).not.toHaveBeenCalled();
+    expect(result.openAdviceHeld).toBe(true);
   });
 });
 

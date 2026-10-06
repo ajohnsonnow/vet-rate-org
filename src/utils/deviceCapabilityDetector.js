@@ -240,8 +240,13 @@ function _configForTier(tier) {
 // @mlc-ai/web-llm prebuilt model list, rounded to 0.1 GB. downloadGB for the
 // Qwen3.5 and Qwen2.5 q4f16 entries is the summed file size of the mlc-ai
 // Hugging Face repository (read 2026-10-05); the others are earlier estimates.
-// smallModel marks the 2B-and-under models (laptop and tablet class); the UI
-// shows a plain caveat on AI answers when the device loads one.
+// smallModel marks the models that are held back from open advice, the
+// Decision Decoder's reading and the writing tools' rewording (ADR-010 sections
+// 8 to 11): the 2B-and-under models, and the Qwen2.5-3B, which graded 7 of 30
+// with invented case facts in 15 cases. The UI shows a plain caveat on AI
+// answers when the device has one loaded.
+// gradedWeaker marks the older Qwen2.5 models that graded below the Qwen3.5
+// models on the golden questions.
 // frequencyPenalty, when a row has one, is sent with plain-text on-device
 // requests; absent means 0. No row has one: the 2B is at 0 on purpose (ADR-010 §7).
 
@@ -259,23 +264,29 @@ const MODEL_FOOTPRINT = {
   },
   "Qwen2.5-3B-Instruct-q4f16_1-MLC": {
     displayName: "Qwen 2.5 3B",
+    smallModel: true,
+    gradedWeaker: true,
     downloadGB: 1.8,
     vramGB: 2.5,
   },
   "Qwen2.5-3B-Instruct-q4f32_1-MLC": {
     displayName: "Qwen 2.5 3B",
+    smallModel: true,
+    gradedWeaker: true,
     downloadGB: 2.0,
     vramGB: 2.9,
   },
   "Qwen2.5-1.5B-Instruct-q4f16_1-MLC": {
     displayName: "Qwen 2.5 1.5B",
     smallModel: true,
+    gradedWeaker: true,
     downloadGB: 0.9,
     vramGB: 1.6,
   },
   "Qwen2.5-1.5B-Instruct-q4f32_1-MLC": {
     displayName: "Qwen 2.5 1.5B",
     smallModel: true,
+    gradedWeaker: true,
     downloadGB: 1.0,
     vramGB: 1.9,
   },
@@ -305,6 +316,10 @@ export function describeDeviceModel(profile) {
 
 export function isSmallModel(modelId) {
   return MODEL_FOOTPRINT[modelId]?.smallModel === true;
+}
+
+export function isGradedWeaker(modelId) {
+  return MODEL_FOOTPRINT[modelId]?.gradedWeaker === true;
 }
 
 export function getModelFrequencyPenalty(modelId) {

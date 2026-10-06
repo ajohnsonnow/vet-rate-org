@@ -19,6 +19,7 @@ import {
   DEVICE_TIERS,
 } from "../utils/useDeviceCapability";
 import DeviceCapabilityCard from "./DeviceCapabilityCard";
+import FallbackModelNotice from "./FallbackModelNotice";
 import GeminiApiKeyForm from "./GeminiApiKeyForm";
 import TokenLimitConfig from "./TokenLimitConfig";
 import PresetSelector from "./PresetSelector";
@@ -500,6 +501,7 @@ function ModelSelectionPanel({
       <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
         {getDeviceModelSummary(deviceModel)}
       </p>
+      <FallbackModelNotice />
       <div className="grid gap-2">
         {models.map((model) => (
           <ModelPickerButton
