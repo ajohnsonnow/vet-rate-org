@@ -17,7 +17,8 @@ import { buildDocumentOffDeviceNotice } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
-import SmallModelCaveat, { smallModelAnswering } from "./SmallModelCaveat";
+import SmallModelCaveat from "./SmallModelCaveat";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
 import { useVaBenefitsRef } from "../hooks/useVaBenefitsRef";
 import {
   analyzePDF,
@@ -1749,9 +1750,7 @@ const DecisionDecoderResultsSection = ({
   <div>
     <ResultsErrorNotice error={error} onRetry={onRetry} isLoading={isLoading} />
 
-    {results && results._fallbackReason !== "small_model" && (
-      <SmallModelCaveat className="mb-4" />
-    )}
+    {results && <SmallModelCaveat className="mb-4" />}
     <ResultsContent results={results} />
 
     {/* Loading State - Shows progress while AI is working */}
