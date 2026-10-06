@@ -278,6 +278,17 @@ describe("a denial inside the sentence, read clause by clause", () => {
     expect(withoutDenyingClauses("VA does not add ratings together.")).toBe("");
   });
 
+  it("removes examiner wording until none is left, not just one pass of it", () => {
+    // One pass over "not not previously" removes the second "not " and
+    // leaves "not previously", which is the wording it was meant to remove.
+    expect(withoutDenyingClauses("It was not not previously rated.")).toBe(
+      "It was previously rated.",
+    );
+    expect(withoutDenyingClauses("It was not previously rated.")).toBe(
+      "It was previously rated.",
+    );
+  });
+
   it("is left to a rule whose error is itself a denial", () => {
     const sentence = "You cannot appeal the denial without new evidence.";
     const matches = mentions(/cannot appeal/i);
