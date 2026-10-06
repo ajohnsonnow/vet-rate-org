@@ -18,6 +18,7 @@ import {
   useDeviceCapability,
   DEVICE_TIERS,
 } from "../utils/useDeviceCapability";
+import DeviceCapabilityCard from "./DeviceCapabilityCard";
 import TokenLimitConfig from "./TokenLimitConfig";
 import PresetSelector from "./PresetSelector";
 import ReportBugLink from "./ReportBugLink";
@@ -56,13 +57,6 @@ const getLocalAICardBorderClass = (aiStatus, webGPUStatus) => {
     return "border-gray-200 bg-gray-50 hover:border-cyan-500/50 dark:border-gray-700 dark:bg-gray-800/50";
   }
   return "border-gray-200 bg-gray-50 opacity-60 dark:border-gray-700 dark:bg-gray-800/30";
-};
-
-const getDeviceTierLabel = (tier) => {
-  if (tier === DEVICE_TIERS.HIGH_END) return "🚀 High-End";
-  if (tier === DEVICE_TIERS.MID_RANGE) return "⚡ Mid-Range";
-  if (tier === DEVICE_TIERS.LEGACY) return "📱 Legacy";
-  return "❓ Unknown";
 };
 
 async function checkWebGPU(setWebGPUStatus) {
@@ -999,46 +993,7 @@ function SetupTab({
   );
 }
 
-function DeviceCapabilityCard({ deviceCapability, webGPUStatus }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-      <h4 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
-        <span>📱</span> Device Capability
-      </h4>
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
-          <p className="text-xs text-gray-500">Device Tier</p>
-          <p className="font-semibold text-gray-900 dark:text-white">
-            {getDeviceTierLabel(deviceCapability.tier)}
-          </p>
-        </div>
-        <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
-          <p className="text-xs text-gray-500">WebGPU</p>
-          <p
-            className={`font-semibold ${webGPUStatus.supported ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-          >
-            {webGPUStatus.supported ? "✅ Supported" : "❌ Not Available"}
-          </p>
-        </div>
-        {webGPUStatus.supported && webGPUStatus.device && (
-          <div className="col-span-2 rounded-lg bg-white p-3 dark:bg-gray-900/50">
-            <p className="text-xs text-gray-500">Active GPU</p>
-            <p className="font-semibold text-cyan-600 dark:text-cyan-400">
-              {webGPUStatus.device}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AdvancedTab({
-  selectedPreset,
-  onPresetChange,
-  webGPUStatus,
-  deviceCapability,
-}) {
+function AdvancedTab({ selectedPreset, onPresetChange, webGPUStatus }) {
   return (
     <>
       {/* Token Limit */}
@@ -1093,10 +1048,7 @@ function AdvancedTab({
       </div>
 
       {/* Device Info */}
-      <DeviceCapabilityCard
-        deviceCapability={deviceCapability}
-        webGPUStatus={webGPUStatus}
-      />
+      <DeviceCapabilityCard webGPUStatus={webGPUStatus} />
     </>
   );
 }
@@ -1204,7 +1156,6 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
             selectedPreset={selectedPreset}
             onPresetChange={handlePresetChange}
             webGPUStatus={webGPUStatus}
-            deviceCapability={deviceCapability}
           />
         )}
       </div>

@@ -4,6 +4,7 @@ import {
   describeDeviceModel,
 } from "../utils/deviceCapabilityDetector";
 import { formatDownloadSize } from "../utils/localModelLabels";
+import { describeDeviceClass } from "../utils/deviceLabels";
 import {
   AI_WARMUP,
   AI_REQUIREMENTS,
@@ -298,7 +299,7 @@ function CompatibleNotice({
         </span>
         <div className="flex-1">
           <p className="font-semibold text-green-800 dark:text-green-200 text-sm">
-            Compatible{isHigh ? " - high-performance GPU" : " - mid-range GPU"}
+            Compatible - {describeDeviceClass(profile).gpuClass}
             {gpuName && (
               <span className="font-normal ml-2 text-green-700 dark:text-green-400">
                 ({gpuName})
