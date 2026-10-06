@@ -8015,11 +8015,8 @@ function _buildFormsHelperAIHandlers(ctx) {
 
   // Check if current form type supports AI enhancement
   const isAIEnabledFormType = () => {
-    const aiEnabledForms = [
-      "buddy-statement",
-      "personal-statement",
-      "ptsd-stressor",
-    ];
+    // The buddy statement is a witness's: its words are never reworded.
+    const aiEnabledForms = ["personal-statement", "ptsd-stressor"];
     return aiEnabledForms.includes(selectedForm?.id);
   };
 
@@ -8267,7 +8264,8 @@ function FormsHelperReviewStep({ state, handlers }) {
   if (!generatedContent) return null;
 
   const displayContent = getDisplayContent();
-  const isStatement = isAIEnabledFormType();
+  const plan = formStatementPlan(state.selectedForm?.id, {});
+  const isStatement = Boolean(plan);
   const showingAIDraft = Boolean(showAIVersion && aiEnhancedContent);
   // The notice follows the text on screen: it stops asking for blanks to be
   // filled once the veteran has filled them.
@@ -8296,6 +8294,8 @@ function FormsHelperReviewStep({ state, handlers }) {
         onOpenAISettings={state.onOpenAISettings}
         t={t}
       />
+
+      {plan?.note && <StandardDraftNotice note={plan.note} />}
 
       {isStatement && (
         <StatementDraftEditor

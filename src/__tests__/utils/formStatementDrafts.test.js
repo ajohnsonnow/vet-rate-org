@@ -7,6 +7,7 @@
 import { describe, it, expect } from "vitest";
 import { _getFormStepsForForm } from "../../components/FormsHelper.jsx";
 import {
+  WITNESS_DRAFT_NOTE,
   formStatementPlan,
   listPlaceholders,
   selectPassages,
@@ -238,13 +239,16 @@ describe("what the model is offered", () => {
       ptsd.symptoms.join(", "),
       ptsd.symptomDetails,
     ]);
+  });
 
-    const buddy = filled("buddy-statement");
-    expect(passages("buddy-statement", buddy)).toEqual([
-      buddy.whatObserved,
-      buddy.specificExamples,
-      buddy.dailyImpact,
-    ]);
+  it("is nothing for a buddy statement: a witness's words are never sent", () => {
+    const buddy = fillEveryField(stepsOf("buddy-statement")).formData;
+    const plan = formStatementPlan("buddy-statement", buddy);
+
+    expect(selectPassages(plan)).toEqual([]);
+    expect(plan.passageKeys).toEqual([]);
+    expect(plan.note).toBe(WITNESS_DRAFT_NOTE);
+    expect(plan.build(plan.answers)).toContain(buddy.whatObserved);
   });
 
   it("never includes a name, a contact detail, a date or a place field", () => {

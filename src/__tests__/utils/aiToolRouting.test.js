@@ -117,12 +117,6 @@ describe("aiStatementHelper call sites pass the tool they serve", () => {
       "writer",
     ],
     [
-      "enhanceBuddyStatement",
-      () => aiStatementHelper.enhanceBuddyStatement(ANSWERS, "PTSD"),
-      "buddy-statement",
-      "writer",
-    ],
-    [
       "enhanceAppealStatement",
       () =>
         aiStatementHelper.enhanceAppealStatement({
@@ -191,7 +185,9 @@ const SOURCES = {
   "components/MyPacket.jsx": [["dd214-analyzer", 1, "auditor"]],
   "components/BlueButtonXRay.jsx": [["blue-button", 2, "auditor"]],
   "components/DenialDecoder.jsx": [["denial-decoder", 1, "auditor"]],
-  "components/WitnessBench.jsx": [["buddy-statement", 1, "writer"]],
+  // A witness's words are never sent for rewording, so the Witness Bench
+  // has no call that carries the buddy-statement tool.
+  "components/WitnessBench.jsx": [["buddy-statement", 0, "writer"]],
   "utils/cfileAnalyzer.js": [["cfile-analyzer", 2, "auditor"]],
   "utils/musterCallProcessor.js": [["cfile-analyzer", 1, "auditor"]],
 };

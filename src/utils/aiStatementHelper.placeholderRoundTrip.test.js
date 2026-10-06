@@ -12,7 +12,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  enhanceBuddyStatement,
+  enhanceFormStatement,
   substituteVeteranNamePlaceholder,
   resolveVeteranDisplayName,
 } from "./aiStatementHelper";
@@ -38,43 +38,26 @@ beforeEach(() => {
 });
 
 describe("buddy statement placeholder round-trip", () => {
-  it("never offers the veteran's real name to the AI provider call", async () => {
+  it("makes no AI provider call at all for a buddy statement", async () => {
     const { generateAI } = await import("./unifiedAIService");
 
-    await enhanceBuddyStatement(
-      {
-        relationship: "Spouse",
-        knownDuration: "10 years",
-        observations:
-          "I have watched them struggle to get out of bed most mornings.",
-        changesNoticed: "They used to be very social and now avoid gatherings.",
-        dailyImpact: "They can no longer manage household chores alone.",
-      },
-      "PTSD",
-    );
+    const result = await enhanceFormStatement("buddy-statement", {
+      veteranName: REAL_NAME,
+      conditionName: "PTSD",
+      whatObserved:
+        "I have watched them struggle to get out of bed most mornings.",
+      specificExamples: "They used to be very social and now avoid gatherings.",
+      dailyImpact: "They can no longer manage household chores alone.",
+    });
 
-    const [prompt] = generateAI.mock.calls[0];
-    expect(prompt).not.toContain(REAL_NAME);
-    expect(prompt).not.toContain("Jordan");
-    expect(prompt).not.toContain("Faketon");
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(result.content).toContain(`Veteran's Full Name: ${REAL_NAME}`);
   });
 
-  it("substitutes the placeholder back to the real name for the veteran-visible result only", async () => {
-    const result = await enhanceBuddyStatement(
-      {
-        relationship: "Spouse",
-        knownDuration: "10 years",
-        observations:
-          "I have watched them struggle to get out of bed most mornings.",
-      },
-      "PTSD",
-    );
-
-    expect(result.success).toBe(true);
-    expect(result.content).toContain("[Veteran]");
-
+  it("substitutes the placeholder with the real name on the device", () => {
     const finalStatement = substituteVeteranNamePlaceholder(
-      result.content,
+      "I am writing about [Veteran].",
       REAL_NAME,
     );
     expect(finalStatement).toContain(REAL_NAME);

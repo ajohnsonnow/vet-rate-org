@@ -742,13 +742,11 @@ function peopleIn(value) {
  * into third or third into first.
  *
  * One thing is allowed: a passage with no subject at all ("Startle at
- * engine noise") may be given the writer's. That is "I" for anyone, and for
- * a witness also "they", the person they are describing.
+ * engine noise") may be given the writer's, "I".
  */
-function peopleProblems(original, rewrite, voice) {
+function peopleProblems(original, rewrite) {
   const before = peopleIn(original);
   const after = peopleIn(rewrite);
-  const noOneNamed = before.pronouns.length === 0 && before.nouns.length === 0;
   const changes = [
     ...before.pronouns
       .filter((family) => !after.pronouns.includes(family))
@@ -762,9 +760,7 @@ function peopleProblems(original, rewrite, voice) {
     ...after.pronouns
       .filter(
         (family) =>
-          THIRD_PERSON.includes(family) &&
-          !before.pronouns.includes(family) &&
-          !(noOneNamed && voice === "witness"),
+          THIRD_PERSON.includes(family) && !before.pronouns.includes(family),
       )
       .map((family) => `"${family}" is new`),
   ];
@@ -773,11 +769,11 @@ function peopleProblems(original, rewrite, voice) {
     : [];
 }
 
-function passageProblems(original, rewrite, keep, voice) {
+function passageProblems(original, rewrite, keep) {
   const kind = classifyReplyKind(rewrite);
   if (kind !== "rewording") return [`not a rewording: ${kind}`];
 
-  const problems = peopleProblems(original, rewrite, voice);
+  const problems = peopleProblems(original, rewrite);
   if (REDACTION_MARKER.test(rewrite))
     problems.push("contains a redaction marker");
   const brackets = (rewrite.match(BRACKETED) ?? []).filter(
@@ -831,15 +827,9 @@ function passageProblems(original, rewrite, keep, voice) {
  * kept, and most of its wording. On top of those: no bracketed text the
  * passage did not have (an invented fact in brackets is still invented), no
  * redaction marker, not much longer or much newer than the passage, and the
- * same way of referring to people (see peopleProblems). `voice` is the
- * plan's: who is writing.
+ * same way of referring to people (see peopleProblems).
  */
-export function checkPassageRewrite({
-  original,
-  rewrite,
-  keep = [],
-  voice = "veteran",
-}) {
+export function checkPassageRewrite({ original, rewrite, keep = [] }) {
   const source = String(original ?? "").trim();
   const text = String(rewrite ?? "").trim();
   if (text === "") {
@@ -852,7 +842,7 @@ export function checkPassageRewrite({
   if (sameWording(source, text)) {
     return { status: "unchanged", text: source, reasons: [] };
   }
-  const reasons = passageProblems(source, text, keep, voice);
+  const reasons = passageProblems(source, text, keep);
   return reasons.length > 0
     ? { status: "rejected", text: source, reasons }
     : { status: "accepted", text, reasons: [] };
@@ -869,7 +859,7 @@ export function standardDraft(plan, extra = {}) {
   return {
     content,
     draftPath: DRAFT_PATH.TEMPLATE,
-    draftNote: standardDraftNote(content),
+    draftNote: plan.note ?? standardDraftNote(content),
     draftRejectReasons: [],
     passages: NO_PASSAGES,
     passageOutcomes: [],
@@ -905,7 +895,6 @@ export function resolvePassageDraft({ plan, sent, reply }) {
       original: passage.text,
       rewrite: rewrites[i],
       keep: plan.keep,
-      voice: plan.voice,
     }),
   }));
   const count = (status) =>

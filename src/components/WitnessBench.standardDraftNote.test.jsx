@@ -7,7 +7,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext.jsx";
-import { STANDARD_DRAFT_NOTE } from "../utils/writerTemplates";
 
 const ai = vi.hoisted(() => ({ available: true }));
 
@@ -30,6 +29,7 @@ vi.mock("../utils/veteranContextProvider", async (importOriginal) => {
 });
 
 const { generateAI } = await import("../utils/unifiedAIService");
+const { WITNESS_DRAFT_NOTE } = await import("../utils/writerTemplates");
 const { default: WitnessBench } = await import("./WitnessBench.jsx");
 
 const ANSWERS = [
@@ -93,91 +93,57 @@ beforeEach(() => {
   generateAI.mockReset();
 });
 
-describe("Witness Bench standard-draft notice", () => {
-  it("is shown, by name and in words, when the model refuses", async () => {
+describe("Witness Bench notice above the statement", () => {
+  it("tells the witness these are their words to finish, with AI set up", async () => {
     modelAnswersStatement(
-      () =>
-        "I cannot draft a buddy statement because you have not provided the specific details.",
+      (prompt) =>
+        `1. ${passagesIn(prompt)[0] ?? "I did what the veteran did."}`,
     );
     const statement = await generateStatement();
 
     const notice = screen.getByRole("status", { name: "Draft notice" });
-    expect(notice.textContent).toBe(STANDARD_DRAFT_NOTE);
+    expect(notice.textContent).toBe(WITNESS_DRAFT_NOTE);
     expect(statement.value).toContain("Witness Type: Spouse / Partner");
-    expect(statement.value).not.toMatch(/\bAI\b/);
     expect(statement.value).toContain("Sam Example");
+    expect(statement.value).not.toMatch(/\bAI\b/);
     expect(statement.value).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );
   });
 
-  it("is shown with no AI set up, on a statement that never mentions AI", async () => {
+  it("never asks the model to reword the witness's answers", async () => {
+    modelAnswersStatement((prompt) => numbered(passagesIn(prompt).map(reword)));
+    const statement = await generateStatement();
+
+    expect(
+      generateAI.mock.calls.filter(([prompt]) => isStatementRequest(prompt)),
+    ).toEqual([]);
+    for (const answer of ANSWERS) expect(statement.value).toContain(answer);
+    expect(statement.value).not.toContain("To put it plainly");
+    expect(
+      screen.queryByRole("button", { name: "Try the AI again" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("is the same with no AI set up", async () => {
     ai.available = false;
     const statement = await generateStatement();
 
     expect(generateAI).not.toHaveBeenCalled();
     expect(
       screen.getByRole("status", { name: "Draft notice" }).textContent,
-    ).toBe(STANDARD_DRAFT_NOTE);
+    ).toBe(WITNESS_DRAFT_NOTE);
     expect(statement.value).toContain(
       "They leave the room when fireworks start.",
     );
     expect(statement.value).toContain("[Witness Signature]");
-    expect(statement.value).toContain("Sam Example");
-    expect(statement.value).not.toMatch(/\bAI\b/);
   });
 
   it("the statement text box has an accessible name", async () => {
-    modelAnswersStatement((prompt) => numbered(passagesIn(prompt)));
     const statement = await generateStatement();
 
     expect(screen.getByRole("textbox", { name: "Your Buddy Statement" })).toBe(
       statement,
-    );
-  });
-
-  it("is shown after an engine error", async () => {
-    modelAnswersStatement(() => {
-      throw new Error("WebGPU inference timed out");
-    });
-    const statement = await generateStatement();
-
-    expect(
-      screen.getByRole("status", { name: "Draft notice" }).textContent,
-    ).toBe(STANDARD_DRAFT_NOTE);
-    expect(statement.value).toContain("They no longer drive at night.");
-  });
-
-  it("is not shown when the model's wording was accepted", async () => {
-    modelAnswersStatement((prompt) => numbered(passagesIn(prompt).map(reword)));
-    const statement = await generateStatement();
-
-    expect(
-      screen.queryByRole("status", { name: "Draft notice" }),
-    ).not.toBeInTheDocument();
-    expect(statement.value).toContain(
-      "To put it plainly, they leave the room when fireworks start.",
-    );
-    expect(statement.value).toContain("was suggested by AI");
-    expect(statement.value).toContain("Sam Example");
-    expect(statement.value).not.toContain("[Witness Printed Name]");
-    for (const [prompt] of generateAI.mock.calls) {
-      expect(prompt).not.toContain("Sam Example");
-    }
-    expect(statement.value).toContain(
-      "WITNESS ATTESTATION (read before you sign)",
-    );
-  });
-
-  it("is shown when the model only echoes the answers", async () => {
-    modelAnswersStatement((prompt) => numbered(passagesIn(prompt)));
-    const statement = await generateStatement();
-
-    expect(
-      screen.getByRole("status", { name: "Draft notice" }).textContent,
-    ).toBe(STANDARD_DRAFT_NOTE);
-    expect(statement.value).toContain(
-      "They leave the room when fireworks start.",
     );
   });
 });

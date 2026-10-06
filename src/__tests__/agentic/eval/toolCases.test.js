@@ -111,10 +111,10 @@ describe("the golden set", () => {
     },
   );
 
-  it("only the TDIU case has nothing typed, and so sends nothing", () => {
+  it("the witness cases and the TDIU case send the model nothing", () => {
     expect(
       drafts.filter((c) => c.draft.prompt === null).map((c) => c.id),
-    ).toEqual(["t07"]);
+    ).toEqual(["t03", "t04", "t07", "t10"]);
   });
 
   it("t02 carries a fragment for the model to make into sentences", () => {
@@ -506,26 +506,29 @@ describe("fragment cases t09 and t10", () => {
     ]);
   });
 
-  it("t10 goes through the Forms Helper entry with three fragments", () => {
+  it("t10 goes through the Forms Helper entry and offers the model nothing", () => {
     expect(byId("t10")).toMatchObject({
       entry: "enhanceFormStatement",
       toolId: "buddy-statement",
     });
     expect(byId("t10").formInputs.formType).toBe("buddy-statement");
-    expect(passagesOf("t10")).toEqual([
+    expect(passagesOf("t10")).toEqual([]);
+  });
+
+  it("a witness's fragments stay in the draft as typed", () => {
+    const draft = (id) =>
+      TOOL_ENTRIES[byId(id).entry].draft(byId(id).formInputs);
+    for (const fragment of [
       "Lights off at the desk, sunglasses indoors, head down on the bench",
       "Fewer shifts and no overtime since the spring",
       "3 March 2022 - left the line mid-shift, sick in the car park, driven home by me",
-    ]);
-  });
-
-  it("each sends the request for its own voice", () => {
-    const draft = (id) =>
-      TOOL_ENTRIES[byId(id).entry].draft(byId(id).formInputs);
-    expect(draft("t09").voice).toBe("veteran");
-    expect(draft("t10").voice).toBe("witness");
-    expect(draft("t10").prompt).toContain(
-      '"they" for the person the writer is describing',
-    );
+    ]) {
+      expect(draft("t10").template).toContain(fragment);
+    }
+    expect(draft("t10").prompt).toBeNull();
+    expect(draft("t04").prompt).toBeNull();
+    expect(draft("t09").prompt).toContain('for example "I"');
+    expect(draft("t09").prompt).not.toMatch(/"they" for the person/);
+    expect(draft("t09")).not.toHaveProperty("voice");
   });
 });

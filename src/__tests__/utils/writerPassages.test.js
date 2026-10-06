@@ -14,7 +14,6 @@ import {
   STANDARD_DRAFT_NOTE,
   STANDARD_DRAFT_NOTE_NO_BLANKS,
   appealStatementPlan,
-  buddyStatementPlan,
   buildPassagePrompt,
   buildPTSDStressorTemplate,
   nexusRequestPlan,
@@ -22,7 +21,6 @@ import {
   ptsdStatementPlan,
   selectPassages,
   standardDraftNote,
-  witnessStatementPlan,
 } from "../../utils/writerTemplates";
 
 const FRAGMENT = "Startle at engine noise, Broken sleep.";
@@ -247,27 +245,22 @@ describe("buildPassagePrompt", () => {
     expect(prompt).not.toMatch(/already clear, complete sentences/);
   });
 
+  it("has no instruction for a witness: a witness's words are never sent", () => {
+    const prompt = buildPassagePrompt([FRAGMENT]);
+    expect(prompt).not.toMatch(/witness|"they" for the person/);
+    for (const plan of [
+      ptsdStatementPlan({}),
+      personalStatementPlan({}, "Tinnitus"),
+      appealStatementPlan({}),
+      nexusRequestPlan({}),
+    ]) {
+      expect(plan).not.toHaveProperty("voice");
+    }
+  });
+
   it('gives a veteran\'s own statement "I" as the subject', () => {
-    const prompt = buildPassagePrompt([FRAGMENT], "veteran");
+    const prompt = buildPassagePrompt([FRAGMENT]);
     expect(prompt).toContain('beginning with its subject, for example "I".');
-    expect(buildPassagePrompt([FRAGMENT])).toBe(prompt);
-  });
-
-  it('gives a witness "I" for themselves and "they" for the veteran', () => {
-    const prompt = buildPassagePrompt([FRAGMENT], "witness");
-    expect(prompt).toContain(
-      'beginning with its subject: "I" for what the writer did or saw, "they" for the person the writer is describing.',
-    );
-    expect(prompt).not.toContain('for example "I".');
-  });
-
-  it("each plan names who is writing", () => {
-    expect(ptsdStatementPlan({}).voice).toBe("veteran");
-    expect(personalStatementPlan({}, "Tinnitus").voice).toBe("veteran");
-    expect(appealStatementPlan({}).voice).toBe("veteran");
-    expect(nexusRequestPlan({}).voice).toBe("veteran");
-    expect(buddyStatementPlan({}, "PTSD").voice).toBe("witness");
-    expect(witnessStatementPlan("spouse", "PTSD", {}).voice).toBe("witness");
   });
 });
 
@@ -360,25 +353,6 @@ describe("fixed text never changes, whatever the model returns", () => {
     expect(result.content).toContain("Dear Doctor,");
     expect(result.content).not.toMatch(/REDACTED/);
   });
-
-  it("a witness statement is rebuilt from the witness's answers", () => {
-    const answers = {
-      relationship_context: "I have been married to the veteran since 2012.",
-      q1: "leave the room when fireworks start, dont come back all evening",
-    };
-    const plan = witnessStatementPlan("spouse", "PTSD", answers);
-    const result = resolvePassageDraft({
-      plan,
-      sent: selectPassages(plan),
-      reply:
-        "1. I have been married to the veteran since 2012.\n2. They leave the room when fireworks start and do not come back all evening.",
-    });
-    expect(result.passages).toMatchObject({ accepted: 1, unchanged: 1 });
-    expect(result.content).toContain("Witness Type: Spouse / Partner");
-    expect(result.content).toContain(
-      "They leave the room when fireworks start and do not come back all evening.",
-    );
-  });
 });
 
 describe("standardDraft", () => {
@@ -409,9 +383,11 @@ describe("rewordings the real model produced (Witness Bench, t04)", () => {
   it("accepts a change of verb and word order that keeps 'they'", () => {
     const rewrite =
       "When the fireworks start, they leave the room and do not return for the evening.";
-    expect(
-      checkPassageRewrite({ original, rewrite, voice: "witness" }),
-    ).toEqual({ status: "accepted", text: rewrite, reasons: [] });
+    expect(checkPassageRewrite({ original, rewrite })).toEqual({
+      status: "accepted",
+      text: rewrite,
+      reasons: [],
+    });
   });
 
   it.each([
@@ -420,9 +396,7 @@ describe("rewordings the real model produced (Witness Bench, t04)", () => {
   ])(
     "rejects 'they' turned into 'the veteran', and for that alone: %s",
     (rewrite) => {
-      expect(
-        checkPassageRewrite({ original, rewrite, voice: "witness" }),
-      ).toEqual({
+      expect(checkPassageRewrite({ original, rewrite })).toEqual({
         status: "rejected",
         text: original,
         reasons: [
@@ -521,7 +495,7 @@ describe("a rewording refers to people the way its passage does", () => {
       "When fireworks start, the veteran leaves the room and does not return for the evening.",
     ],
   ])("rejects a pronoun replaced by a noun: %s", (original, rewrite) => {
-    expect(reject({ original, rewrite, voice: "witness" })).toMatch(
+    expect(reject({ original, rewrite })).toMatch(
       /refers to people differently/,
     );
   });
@@ -532,7 +506,6 @@ describe("a rewording refers to people the way its passage does", () => {
         original:
           "The veteran checks the door locks three or four times before bed",
         rewrite: "They check the door locks three or four times before bed.",
-        voice: "witness",
       }),
     ).toMatch(/refers to people differently/);
   });
@@ -542,7 +515,6 @@ describe("a rewording refers to people the way its passage does", () => {
       reject({
         original: "They leave the room when the fireworks start",
         rewrite: "He leaves the room when the fireworks start.",
-        voice: "witness",
       }),
     ).toMatch(/refers to people differently/);
   });
@@ -558,7 +530,6 @@ describe("a rewording refers to people the way its passage does", () => {
       reject({
         original: "They miss about two shifts a month at the warehouse",
         rewrite: "I miss about two shifts a month at the warehouse.",
-        voice: "witness",
       }),
     ).toMatch(/refers to people differently/);
   });
@@ -568,7 +539,6 @@ describe("a rewording refers to people the way its passage does", () => {
       reject({
         original: FRAGMENT,
         rewrite: "They startle at engine noise and have broken sleep.",
-        voice: "veteran",
       }),
     ).toMatch(/refers to people differently/);
   });
@@ -580,7 +550,6 @@ describe("a rewording that keeps the passage's way of referring to people", () =
       checkPassageRewrite({
         original: FRAGMENT,
         rewrite: SENTENCES,
-        voice: "veteran",
       }).status,
     ).toBe("accepted");
     expect(
@@ -589,9 +558,8 @@ describe("a rewording that keeps the passage's way of referring to people", () =
           "Lights off at the desk, sunglasses indoors, head down on the bench",
         rewrite:
           "They keep the lights off at the desk, wear sunglasses indoors and put their head down on the bench.",
-        voice: "witness",
       }).status,
-    ).toBe("accepted");
+    ).toBe("rejected");
   });
 
   it("accepts a rewording that keeps every pronoun the writer used", () => {
@@ -601,14 +569,12 @@ describe("a rewording that keeps the passage's way of referring to people", () =
           "They leave the room when the fireworks start and do not come back for the evening.",
         rewrite:
           "When the fireworks start, they leave the room and do not return for the evening.",
-        voice: "witness",
       }).status,
     ).toBe("accepted");
     expect(
       checkPassageRewrite({
         original: "I see them wake up shouting several nights a week",
         rewrite: "Several nights a week, I see them wake up shouting.",
-        voice: "witness",
       }).status,
     ).toBe("accepted");
   });

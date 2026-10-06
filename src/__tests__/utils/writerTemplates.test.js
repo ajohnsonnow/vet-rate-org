@@ -3,13 +3,11 @@ import { APP_TRANSLATIONS } from "../../i18n/translations";
 import {
   STANDARD_DRAFT_NOTE,
   buildAppealStatementTemplate,
-  buildBuddyStatementTemplate,
   buildNexusLetterRequestTemplate,
   buildPTSDStressorTemplate,
   buildPersonalStatementTemplate,
   buildTdiuAnalysisTemplate,
   buildWitnessStatementBody,
-  buildWitnessStatementTemplate,
   listPlaceholders,
   witnessRelationshipLabel,
   tdiuAnalysisText,
@@ -32,8 +30,7 @@ const EMPTY_BUILDS = {
   personal: () => buildPersonalStatementTemplate({}, ""),
   secondary: () => buildPersonalStatementTemplate({}, "", "Left knee strain"),
   ptsd: () => buildPTSDStressorTemplate({}),
-  buddy: () => buildBuddyStatementTemplate({}, ""),
-  witness: () => buildWitnessStatementTemplate("", "", {}),
+  witness: () => buildWitnessStatementBody({}),
   appeal: () => buildAppealStatementTemplate({}),
   nexus: () => buildNexusLetterRequestTemplate({}),
   tdiu: () => tdiuAnalysisText(buildTdiuAnalysisTemplate([])),
@@ -159,24 +156,6 @@ describe("other statement templates", () => {
     expect(draft).toContain("[the symptoms you have now]");
   });
 
-  it("buddy statement keeps the [Veteran] token and never a name", () => {
-    const draft = buildBuddyStatementTemplate(
-      {
-        relationship: "spouse",
-        knownDuration: "since 2015",
-        observations: "I see them wake up shouting several nights a week",
-      },
-      "PTSD",
-    );
-    expect(draft).toContain("Regarding: [Veteran]'s PTSD");
-    expect(draft).toContain("My relationship to [Veteran]: spouse");
-    expect(draft).toContain("How long I have known [Veteran]: since 2015");
-    expect(draft).toContain(
-      "[changes you have noticed in the veteran over time]",
-    );
-    expect(draft).toContain("true to the best of my knowledge");
-  });
-
   it("witness statement lists the witness's answers in order", () => {
     const answers = {
       relationship_context: "I have been married to the veteran since 2012.",
@@ -194,10 +173,7 @@ describe("other statement templates", () => {
         "They no longer drive at night.",
       ].join("\n\n"),
     );
-    const draft = buildWitnessStatementTemplate("Spouse", "PTSD", answers);
-    expect(draft).toContain("Witness Type: Spouse");
-    expect(draft).toContain(body);
-    expect(draft).not.toMatch(/certify|true and correct|Date:/i);
+    expect(body).not.toMatch(/certify|true and correct|Date:/i);
   });
 });
 
@@ -283,8 +259,9 @@ describe("standard draft note", () => {
 
 describe("stored codes are printed as the form's own labels", () => {
   it("Witness Bench relationship, in the app's English wording", () => {
-    const draft = buildWitnessStatementTemplate("buddy", "PTSD", {});
-    expect(draft).toContain("Witness Type: Battle Buddy / Fellow Veteran");
+    expect(witnessRelationshipLabel("buddy")).toBe(
+      "Battle Buddy / Fellow Veteran",
+    );
     expect(witnessRelationshipLabel("unlisted")).toBe("unlisted");
     for (const [value, key] of [
       ["spouse", "relationshipSpouse"],

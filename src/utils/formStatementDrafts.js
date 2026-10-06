@@ -13,6 +13,11 @@
  * are printed here and go nowhere (ADR-008).
  */
 
+// Above a witness's draft. A witness's words are never reworded by a model:
+// they go in as typed, and the witness makes each line a sentence.
+export const WITNESS_DRAFT_NOTE =
+  "These are your own words, as you typed them. Read every line, make each one a full sentence in your own words, and replace each [bracketed] item before you sign.";
+
 export const WITNESS_RELATION_LABELS = {
   "fellow-service-member": "Fellow Service Member",
   supervisor: "Military Supervisor/NCO/Officer",
@@ -237,7 +242,7 @@ const joined = (value) =>
 /*
  * Per form: how its draft is built, which answers are passages (the same
  * free text the form has always offered to the model, and no other), the
- * phrases a rewording must keep, who is writing, and the tool it runs as.
+ * phrases a rewording must keep, and the tool it runs as.
  */
 const FORM_DRAFTS = {
   "personal-statement": (formData) => ({
@@ -256,7 +261,6 @@ const FORM_DRAFTS = {
       formData.conditionName,
       formData.claimType === "secondary" ? formData.primaryCondition : "",
     ],
-    voice: "veteran",
     toolId: "personal-statement",
   }),
   "ptsd-stressor": (formData) => ({
@@ -264,15 +268,17 @@ const FORM_DRAFTS = {
     answers: { ...formData, currentSymptoms: joined(formData.symptoms) },
     passageKeys: ["eventDescription", "currentSymptoms", "symptomDetails"],
     keep: [],
-    voice: "veteran",
     toolId: "personal-statement",
   }),
   "buddy-statement": (formData) => ({
     build: buildBuddyFormDraft,
     answers: formData,
-    passageKeys: ["whatObserved", "specificExamples", "dailyImpact"],
-    keep: [formData.conditionName],
-    voice: "witness",
+    // No passages: nothing a witness typed is offered to a model. A model
+    // rewording a witness's note about the veteran wrote it as the witness's
+    // own act, which a sworn statement cannot carry.
+    passageKeys: [],
+    keep: [],
+    note: WITNESS_DRAFT_NOTE,
     toolId: "buddy-statement",
   }),
 };

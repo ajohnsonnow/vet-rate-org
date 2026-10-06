@@ -34,7 +34,6 @@ import {
 } from "./writerDraftCheck";
 import {
   appealStatementPlan,
-  buddyStatementPlan,
   buildPassagePrompt,
   formStatementPlan,
   nexusRequestPlan,
@@ -533,10 +532,7 @@ async function draftWithModel(plan, { toolId, userInput = null }) {
     return { success: true, ...settled(standardDraft(plan)) };
 
   const result = await callGeminiAPI(
-    buildPassagePrompt(
-      sent.map((passage) => passage.text),
-      plan.voice,
-    ),
+    buildPassagePrompt(sent.map((passage) => passage.text)),
     userInput,
     toolId,
     { temperature: REWORD_TEMPERATURE },
@@ -569,16 +565,6 @@ export const enhancePersonalStatement = async (
 ) =>
   draftWithModel(personalStatementPlan(answers, condition, primaryCondition), {
     toolId: "personal-statement",
-    userInput: answers,
-  });
-
-/**
- * Enhance a buddy/lay statement using AI
- * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
- */
-export const enhanceBuddyStatement = async (answers, conditionName) =>
-  draftWithModel(buddyStatementPlan(answers, conditionName), {
-    toolId: "buddy-statement",
     userInput: answers,
   });
 
@@ -1936,7 +1922,6 @@ export {
 export default {
   isAIAvailable,
   enhancePersonalStatement,
-  enhanceBuddyStatement,
   enhancePTSDStatement,
   enhanceAppealStatement,
   generateNexusLetterRequest,

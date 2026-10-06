@@ -30,7 +30,7 @@ vi.mock("../../../utils/unifiedAIService", async (importOriginal) => {
 });
 const { generateAI } = await import("../../../utils/unifiedAIService");
 const helper = await import("../../../utils/aiStatementHelper");
-const { _compileStatementWithAI } =
+const { _compileWitnessStatement } =
   await import("../../../components/WitnessBench.jsx");
 const { _generateVocationalImpact } =
   await import("../../../components/TDIUBuilder.jsx");
@@ -41,7 +41,7 @@ const PRODUCTION = {
   enhanceFormStatement: helper.enhanceFormStatement,
   enhanceAppealStatement: helper.enhanceAppealStatement,
   generateNexusLetterRequest: helper.generateNexusLetterRequest,
-  compileWitnessStatement: _compileStatementWithAI,
+  compileWitnessStatement: _compileWitnessStatement,
   generateVocationalImpact: _generateVocationalImpact,
   decodeDecision: helper.decodeDecision,
 };
@@ -93,14 +93,11 @@ describe("every entry name has a production function", () => {
     expect(CALLING_CASES.map((c) => c.id)).toEqual([
       "t01",
       "t02",
-      "t03",
-      "t04",
       "t05",
       "t06",
       "t09",
-      "t10",
     ]);
-    expect(SILENT_CASES.map((c) => c.id)).toEqual(["t07"]);
+    expect(SILENT_CASES.map((c) => c.id)).toEqual(["t03", "t04", "t07", "t10"]);
   });
 });
 
@@ -178,7 +175,10 @@ describe.each(SILENT_CASES)("$id through $entry", (caseDef) => {
       draftPath: "template",
       passages: { sent: 0 },
     });
-    expect(outcome.text).toBe(caseDef.draft.resolve("").content);
+    expect(outcome.tool.passageOutcomes).toEqual([]);
+    for (const part of caseDef.draft.resolve("").content.split("\n\n")) {
+      expect(outcome.text).toContain(part);
+    }
   });
 });
 
