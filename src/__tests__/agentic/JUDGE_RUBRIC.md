@@ -245,9 +245,12 @@ call.
 Do not score the fixed message against the auditor, writer or rater
 criteria: no model wrote it, and it is the same in every row. Check it once
 per run as app text. It passes when it says plainly that the model was not
-used and why, names what the device can still do, says what an AI answer
-needs, tells the veteran how to reach a Veterans Service Officer, and states
-nothing about the veteran's case or the law. In the app the assistant also
+used and why, names what the device can still do (including what the
+Decision Decoder's rule-based reading does and does not do), points a
+request to read a document to the document tools by name, says what an AI
+answer needs without promising a kind of computer, tells the veteran how to
+reach a Veterans Service Officer, and states nothing about the veteran's
+case or the law. In the app the assistant also
 shows, under the message, regulation text found by search; that text is not
 in the transcript. Report the run as "N of 30 app text, 0 model answers"
 and do not compare its pass count with a run where a model answered. A
