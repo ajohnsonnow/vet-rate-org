@@ -45,7 +45,7 @@
 export default function HeaderCloseSlot({ children, close, className = "" }) {
   return (
     <div className={`flex items-start justify-between gap-3 ${className}`}>
-      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 [&>*]:max-w-full">
         {children}
       </div>
       <div className="shrink-0">{close}</div>
