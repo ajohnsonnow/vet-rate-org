@@ -10,7 +10,7 @@ import { evaluateTdiuThresholds } from "./smcDetector";
 
 const pairNames = (calc) => calc.bilateralConditions.map((c) => c.name);
 
-export const describeBilateralPair = (calc) =>
+const describeBilateralPair = (calc) =>
   calc.bilateralConditions.length
     ? calc.bilateralConditions
         .map((c) => `${c.name} (${c.side}, ${c.rating}%)`)
@@ -111,7 +111,7 @@ function describeIgnored(ignored) {
  * out under 38 CFR § 4.26(d), in the group as one evaluation covering both
  * sides, or given no factor because of a calculator `bilateralIssues` entry.
  */
-export function describeBilateralNotes(calc) {
+function describeBilateralNotes(calc) {
   return [
     ...describeExcluded(calc),
     ...describeBothSidesMembers(calc),
@@ -230,7 +230,7 @@ function describeTdiuResult(calc, conditions) {
  * percentage thresholds of 38 CFR § 4.16(a) are met for the supplied
  * conditions, quoting the regulation, and what the percentage cannot settle.
  */
-export const TDIU_PARAGRAPH_LEAD =
+const TDIU_PARAGRAPH_LEAD =
   "About your question on individual unemployability (TDIU):";
 
 export function buildTdiuThresholdParagraph(calc) {
