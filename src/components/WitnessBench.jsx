@@ -13,6 +13,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
 import { UnsavedEditDialog } from "./common/ChoiceDialog";
 import useAskBeforeClose from "../hooks/useAskBeforeClose";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
@@ -584,6 +585,7 @@ function useWizardStepState() {
 
 function useInterviewQAState() {
   const [questions, setQuestions] = useState([]);
+  const [questionsNote, setQuestionsNote] = useState(null);
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
@@ -594,6 +596,8 @@ function useInterviewQAState() {
   return {
     questions,
     setQuestions,
+    questionsNote,
+    setQuestionsNote,
     answers,
     setAnswers,
     updateAnswer,
@@ -650,6 +654,9 @@ function useOutputState() {
   };
 }
 
+const SMALL_MODEL_QUESTIONS_NOTE =
+  "The AI on this device is a small one, so it is not asked to write questions. These are the built-in questions.";
+
 /**
  * Move to interview step - load questions
  */
@@ -663,6 +670,7 @@ function useStartInterview({
   setConditionCategory,
   setIsLoadingQuestions,
   setQuestions,
+  setQuestionsNote,
   setStep,
 }) {
   return useCallback(async () => {
@@ -675,8 +683,13 @@ function useStartInterview({
     const category = detectConditionCategory(condition);
     setConditionCategory(category);
 
+    // A small on-device model is not asked to write questions.
+    const smallModel =
+      useAI && aiAvailable && smallModelAnswering(getAIStatus());
+    setQuestionsNote(smallModel ? SMALL_MODEL_QUESTIONS_NOTE : null);
+
     // Try AI questions first if available and enabled
-    if (useAI && aiAvailable) {
+    if (useAI && aiAvailable && !smallModel) {
       setIsLoadingQuestions(true);
       try {
         // Load veteran context for smarter questions
@@ -766,6 +779,7 @@ function useWitnessBench(t) {
     setConditionCategory: wizard.setConditionCategory,
     setIsLoadingQuestions: ai.setIsLoadingQuestions,
     setQuestions: interview.setQuestions,
+    setQuestionsNote: interview.setQuestionsNote,
     setStep: wizard.setStep,
   });
 
@@ -785,6 +799,7 @@ function useWitnessBench(t) {
     wizard.setRelationship("");
     wizard.setCondition("");
     interview.setQuestions([]);
+    interview.setQuestionsNote(null);
     interview.setAnswers({});
     interview.setCurrentQuestionIndex(0);
     output.setGeneratedStatement("");
@@ -1263,6 +1278,7 @@ const QuestionJumpNav = ({
 const InterviewStep = ({
   t,
   questions,
+  questionsNote,
   currentQuestionIndex,
   onSetCurrentQuestionIndex,
   answers,
@@ -1286,6 +1302,15 @@ const InterviewStep = ({
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {questionsNote && (
+        <p
+          role="note"
+          aria-label="About these questions"
+          className="text-sm text-gray-800 dark:text-gray-200"
+        >
+          {questionsNote}
+        </p>
+      )}
       <InterviewProgressBar
         t={t}
         currentQuestionIndex={currentQuestionIndex}
@@ -1646,6 +1671,7 @@ const WitnessBenchStepContent = ({ t, wb, onOpenAISettings }) => {
       <InterviewStep
         t={t}
         questions={wb.interview.questions}
+        questionsNote={wb.interview.questionsNote}
         currentQuestionIndex={wb.interview.currentQuestionIndex}
         onSetCurrentQuestionIndex={wb.interview.setCurrentQuestionIndex}
         answers={wb.interview.answers}
