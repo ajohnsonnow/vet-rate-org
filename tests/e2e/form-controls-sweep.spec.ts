@@ -5,6 +5,7 @@ import {
   describeFindings,
   recordFindings,
   sweep,
+  sweepStates,
 } from "./sweep";
 
 /**
@@ -18,7 +19,9 @@ async function tickBoxProblems(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const problems = new Set<string>();
     const dialogs = [
-      ...document.querySelectorAll('[role="dialog"], [aria-modal="true"]'),
+      ...document.querySelectorAll(
+        '[role="dialog"], [aria-modal="true"], [role="alertdialog"]',
+      ),
     ].filter((el) => el.getBoundingClientRect().height > 1);
     const scope: Element = dialogs.at(-1) ?? document.body;
     const inputs = scope.querySelectorAll<HTMLInputElement>(
@@ -86,6 +89,26 @@ for (const viewport of WIDTHS) {
         screens: result.screens,
       });
       expect(seen).toBeGreaterThan(10);
+      expect(describeFindings(result.findings)).toBe("");
+    });
+
+    test("the same holds in the states behind input", async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(900_000);
+      await bootForSweep(page);
+      let seen = 0;
+      const result = await sweepStates(page, async (p) => {
+        seen += await countTickBoxes(p);
+        return tickBoxProblems(p);
+      });
+      recordFindings(
+        "form-controls-states",
+        viewport.width,
+        testInfo.project.name,
+        result,
+      );
+      expect(seen).toBeGreaterThan(3);
       expect(describeFindings(result.findings)).toBe("");
     });
   });
