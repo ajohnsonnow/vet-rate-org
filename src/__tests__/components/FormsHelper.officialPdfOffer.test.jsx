@@ -144,7 +144,7 @@ describe("after the official PDF is made", () => {
     });
 
     expect((await press()).textContent).toMatch(
-      /too long for the Remarks boxes.*The rest is not on the form.*\.TXT, \.DOCX or \.PDF/,
+      /too long for the boxes the form has for it.*The rest is not on the form.*\.TXT, \.DOCX or \.PDF/,
     );
   });
 
@@ -159,6 +159,35 @@ describe("after the official PDF is made", () => {
     expect((await press()).textContent).toMatch(
       /left blank for you to write in: Bartholomew-James/,
     );
+  });
+
+  it("says which answers went to Remarks instead of their boxes", async () => {
+    fillAndDownloadForm.mockResolvedValue({
+      success: true,
+      fileName: "x.pdf",
+      leftBlank: [],
+      moved: ["Description of the traumatic event (item 9A)"],
+      overflow: "",
+    });
+
+    expect((await press()).textContent).toMatch(
+      /written in full in the Remarks section.*Description of the traumatic event \(item 9A\)/,
+    );
+  });
+
+  it("quotes only the start of a long answer it left blank", async () => {
+    fillAndDownloadForm.mockResolvedValue({
+      success: true,
+      fileName: "x.pdf",
+      leftBlank: [`${"word ".repeat(40)}end`],
+      moved: [],
+      overflow: "",
+    });
+    const text = (await press()).textContent;
+
+    expect(text).toMatch(/left blank for you to write in: word word/);
+    expect(text).toContain("...");
+    expect(text.length).toBeLessThan(260);
   });
 
   it("says nothing when everything fitted", async () => {

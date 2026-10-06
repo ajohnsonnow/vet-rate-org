@@ -5028,8 +5028,10 @@ const OFFICIAL_PDF_REST =
   "For you to complete on the form: anything still blank, any boxes to tick, your signature and the date.";
 const OFFICIAL_PDF_NOTES = {
   "personal-statement": `Filled in from your answers: your name and contact details, and your statement goes in Remarks and carries over to the page 2 box when it is long. If it is too long for both boxes, this screen tells you and the rest is in the text downloads. ${OFFICIAL_PDF_REST}`,
-  "ptsd-stressor": `Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.`,
-  "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
+  "ptsd-stressor": `Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. An answer too long for its box is written in full in Remarks, and its box says to look there. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.`,
+  "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box and carries over to the box on the next page when it is long. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
+  "vso-appointment": `Filled in from your answers: your name, contact details and address in the veteran's section, and the organization's name. For you to complete on the form: the claimant section if the claimant is not you, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
+  "vso-appointment-individual": `Filled in from your answers: your name, contact details and address in the veteran's section, and your representative's name and address. The firm or organization name is not written on the form, because its organization line is only for a service organization representative. For you to complete on the form: the claimant section if the claimant is not you, the type of representative, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
 };
 const OFFICIAL_PDF_NOTE_OTHER = `Filled in from your answers where the form has a place for them. ${OFFICIAL_PDF_REST}`;
 const OFFICIAL_PDF_EDITS =
@@ -5038,16 +5040,23 @@ const OFFICIAL_PDF_EDITS =
 const TEXT_ONLY_NOTE =
   "The app cannot fill in the official form for this one. These downloads are a text draft of your answers, not the official VA form. Get the official form from VA.gov and copy your answers onto it.";
 const OFFICIAL_PDF_OVERFLOW =
-  "Your statement was too long for the Remarks boxes on the form. The official PDF holds the first part and says where it stops. The rest is not on the form: download the full statement as text (.TXT, .DOCX or .PDF) and attach it.";
+  "Your statement was too long for the boxes the form has for it. The official PDF holds the first part and says where it stops. The rest is not on the form: download the full statement as text (.TXT, .DOCX or .PDF) and attach it.";
 const OFFICIAL_PDF_FAILED =
   "The official PDF could not be made. Use one of the text downloads instead.";
+
+// Enough of a long answer for the veteran to know which one is meant.
+const shortQuote = (answer) =>
+  answer.length > 60 ? `${answer.slice(0, 57).trimEnd()}...` : answer;
 
 /** What to tell the veteran about the official PDF just made, or "". */
 function officialPdfProblems(result) {
   return [
     result?.overflow ? OFFICIAL_PDF_OVERFLOW : "",
+    result?.moved?.length > 0
+      ? `Some answers were too long for their boxes on the form, so they are written in full in the Remarks section and their boxes point there: ${result.moved.join("; ")}.`
+      : "",
     result?.leftBlank?.length > 0
-      ? `Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in: ${result.leftBlank.join("; ")}.`
+      ? `Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in: ${result.leftBlank.map(shortQuote).join("; ")}.`
       : "",
   ]
     .filter(Boolean)
