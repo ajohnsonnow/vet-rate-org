@@ -1153,92 +1153,6 @@ export const generateWithSwarm = async (prompt, options = {}) => {
 };
 
 /**
- * Process a complete VA claim through the full swarm (all 3 agents)
- * This is the "Diamond Standard" workflow
- */
-export const processClaimWithSwarm = async (claimData, callbacks = {}) => {
-  const { onProgress, onStepComplete, onComplete, onError } = callbacks;
-
-  try {
-    const results = {
-      audit: null,
-      statement: null,
-      rating: null,
-      combined: null,
-      recommendations: [],
-    };
-
-    // Step 1: AUDITOR reviews claim
-    onProgress?.({
-      step: 1,
-      total: 3,
-      agent: "auditor",
-      message: "Auditor reviewing claim accuracy...",
-    });
-
-    const auditResult = await generateWithSwarm(
-      `Review this VA disability claim for accuracy and completeness:\n\n${JSON.stringify(claimData, null, 2)}`,
-      { agentId: "auditor" },
-    );
-    results.audit = auditResult.text;
-    onStepComplete?.({ step: 1, agent: "auditor", result: auditResult });
-
-    // Step 2: WRITER creates statement
-    onProgress?.({
-      step: 2,
-      total: 3,
-      agent: "writer",
-      message: "Writer drafting personal statement...",
-    });
-
-    const statementResult = await generateWithSwarm(
-      `Write a compelling personal statement for this claim:\n\nConditions: ${claimData.conditions?.map((c) => c.name).join(", ")}\nEvidence: ${claimData.evidence || "See attached documentation"}`,
-      { agentId: "writer" },
-    );
-    results.statement = statementResult.text;
-    onStepComplete?.({ step: 2, agent: "writer", result: statementResult });
-
-    // Step 3: RATER calculates rating
-    onProgress?.({
-      step: 3,
-      total: 3,
-      agent: "rater",
-      message: "Rater calculating combined rating...",
-    });
-
-    const conditionRatingLines = claimData.conditions
-      ?.map((c) => `- ${c.name}: ${c.rating || "TBD"}%`)
-      .join("\n");
-    const ratingResult = await generateWithSwarm(
-      `Calculate the combined VA disability rating for:\n\n${conditionRatingLines}`,
-      { agentId: "rater" },
-    );
-    results.rating = ratingResult.text;
-    onStepComplete?.({ step: 3, agent: "rater", result: ratingResult });
-
-    // Generate recommendations
-    results.recommendations = [
-      "Submit all medical records from service-connected treatment",
-      "Include buddy statements from fellow service members",
-      "Request Compensation & Pension (C&P) exam",
-      "Review audit findings for any missing documentation",
-    ];
-
-    // Calculate combined rating (placeholder - actual math in vaCalculations.js)
-    results.combined = claimData.conditions?.reduce(
-      (acc, c) => Math.max(acc, c.rating || 0),
-      0,
-    );
-
-    onComplete?.(results);
-    return results;
-  } catch (error) {
-    onError?.(error);
-    throw error;
-  }
-};
-
-/**
  * Unload Warrant Council and free resources
  */
 export const unloadSwarm = async () => {
@@ -1323,7 +1237,6 @@ export default {
   initializeSwarm,
   switchAgent,
   generateWithSwarm,
-  processClaimWithSwarm,
   unloadSwarm,
   getSwarmConfig,
   saveSwarmConfig,
