@@ -40,9 +40,34 @@ function quotePassage({ citation, title, text }) {
   return [`**${heading}**`, body];
 }
 
+// The search ranks by cosine similarity of small-model embeddings, which sit
+// between about 0.54 and 0.75 for every question, relevant or not. Measured on
+// the 29 golden questions with text and four sleep apnea questions
+// (src/__tests__/utils/fixtures/regulationSearchRelevance.json): no cutoff
+// separates the passages that were on the question from those that were not.
+// 0.58 drops the lowest-scoring hits (4 that were not on the question, 4 that
+// were) and, since a misleading passage costs more than a missing one, is where
+// this guard stops. ADR-010 section 13.
+export const PASSAGE_RELEVANCE_FLOOR = 0.58;
+
+export const NO_MATCHING_REGULATION_TEXT =
+  "No closely matching regulation text was found; try Ask the Regs with the regulation's words.";
+
+export const REGULATION_SEARCH_DISCLOSURE =
+  "The first time you search, your device downloads a search model (about 34 MB) from Hugging Face and keeps it. The search runs on your device; your question is not sent there.";
+
+const isRelevant = (passage) =>
+  Number.isFinite(passage.score) &&
+  passage.score >= PASSAGE_RELEVANCE_FLOOR &&
+  !/\[Reserved\]/i.test(`${passage.title ?? ""} ${passage.text ?? ""}`);
+
 /** The retrieved regulation passages as chat text, each under its citation. */
 export const describeRegulationPassages = (passages) =>
-  [REGULATION_TEXT_LEAD, ...passages.flatMap(quotePassage)].join("\n\n");
+  [
+    REGULATION_TEXT_LEAD,
+    ...passages.flatMap(quotePassage),
+    REGULATION_SEARCH_DISCLOSURE,
+  ].join("\n\n");
 
 /**
  * What the assistant shows for a held question: the fixed message, then any
@@ -53,11 +78,12 @@ export const describeRegulationPassages = (passages) =>
 export async function buildHeldAnswerContent(question, retrieve) {
   let passages = [];
   try {
-    passages = await retrieve(question);
+    passages = (await retrieve(question)).filter(isRelevant);
   } catch (error) {
     console.error("Regulation search for a held question failed:", error);
+    return OPEN_ADVICE_HELD_MESSAGE;
   }
   return passages.length > 0
     ? `${OPEN_ADVICE_HELD_MESSAGE}\n\n${describeRegulationPassages(passages)}`
-    : OPEN_ADVICE_HELD_MESSAGE;
+    : `${OPEN_ADVICE_HELD_MESSAGE}\n\n${NO_MATCHING_REGULATION_TEXT}`;
 }

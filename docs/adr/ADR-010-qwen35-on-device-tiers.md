@@ -192,3 +192,59 @@ When the first model in a tier's list fails to load (a browser cache error, GPU 
 Every one of those consumers reads the loaded model through `smallModelAnswering(getAIStatus())`, never the profile's first choice, so a fallback triggers them. `src/__tests__/utils/unifiedAIService.openAdviceHold.test.js` holds an open question when the 4B failed and the Qwen2.5-3B loaded; `src/utils/smallModelAnswering.test.js` covers the status cases.
 
 Reversal: remove `smallModel: true` from the two Qwen2.5-3B rows in `MODEL_FOOTPRINT`.
+
+## 13. The regulation passages under the held-question message: a score floor, and what the search sends
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible.
+
+Under the fixed open-advice message (section 11) the assistant shows regulation text from a search of the bundled eCFR index. For a question about service connection for sleep apnea it showed 38 CFR 3.309 (tropical diseases), under a label that reads as official.
+
+**What the search returns.** `retrieveRegulationText` calls `legalRag.query` (hybrid dense and BM25 ranking, then diversity re-ranking). Each passage carries `score`, the dense cosine similarity between the question and the passage. The search already used a threshold of 0.35, but hybrid ranking lets lexical matches in below it, and 0.35 passes nearly everything: the bge-small similarities of a question and a regulation fall between about 0.54 and 0.75 whether or not they are related.
+
+**Measured.** The 29 golden `a` questions that have text (a22 is empty) and four sleep apnea questions (x1 to x4), run through the real search offline on 2026-10-06, top passage each. "On the question" is one reader's judgement of the section against the question. Data: `src/__tests__/utils/fixtures/regulationSearchRelevance.json`.
+
+| Question | Score | Top passage                                       | On the question |
+| -------- | ----- | ------------------------------------------------- | --------------- |
+| a01      | 0.606 | § 3.203 Service records as evidence of service a  | yes             |
+| a02      | 0.666 | § 3.304 Direct service connection; wartime and p  | yes             |
+| a03      | 0.696 | § 3.159 Department of Veterans Affairs assistanc  | yes             |
+| a04      | 0.605 | § 4.87 Schedule of ratings—ear.                   | yes             |
+| a05      | 0.651 | § 20.1000 Rule 1000. Vacating a decision.         | no              |
+| a06      | 0.586 | § 3.309 Disease subject to presumptive service c  | yes             |
+| a07      | 0.572 | § 4.130 Schedule of ratings—Mental disorders.     | yes             |
+| a08      | 0.621 | § 19.26 Action by agency of original jurisdictio  | no              |
+| a09      | 0.647 | § 3.304 Direct service connection; wartime and p  | yes             |
+| a10      | 0.617 | § 3.103 Procedural due process and other rights.  | no              |
+| a11      | 0.641 | § 4.68 Amputation rule.                           | no              |
+| a12      | 0.754 | § 4.26 Bilateral factor.                          | yes             |
+| a13      | 0.630 | § 4.16 Total disability ratings for compensatio   | yes             |
+| a14      | 0.605 | § 4.25 Combined ratings table.                    | yes             |
+| a15      | 0.612 | § 3.105 Revision of decisions.                    | no              |
+| a16      | 0.671 | § 3.13 Discharge to change status.                | no              |
+| a17      | 0.648 | § 3.155 How to file a claim.                      | no              |
+| a18      | 0.638 | § 3.103 Procedural due process and other rights.  | no              |
+| a19      | 0.568 | § 4.47-4.54 §§ 4.47-4.54 [Reserved]               | no              |
+| a20      | 0.620 | § 4.25 Combined ratings table.                    | yes             |
+| a21      | 0.577 | § 3.213 Change of status affecting entitlement.   | no              |
+| a23      | 0.575 | § 3.7 Individuals and groups considered to hav    | no              |
+| a24      | 0.613 | § 4.28 Prestabilization rating from date of dis   | no              |
+| a25      | 0.662 | § 4.16 Total disability ratings for compensatio   | yes             |
+| a26      | 0.615 | § 3.1010 Substitution under 38 U.S.C. 5121A follo | no              |
+| a27      | 0.702 | § 3.317 Compensation for certain disabilities oc  | yes             |
+| a28      | 0.663 | § 20.1000 Rule 1000. Vacating a decision.         | no              |
+| a29      | 0.563 | § 3.310 Disabilities that are proximately due to  | yes             |
+| a30      | 0.601 | § 3.155 How to file a claim.                      | yes             |
+| x1       | 0.625 | § 4.87a Schedule of ratings—other sense organs.   | no              |
+| x2       | 0.540 | § 3.309 Disease subject to presumptive service c  | no              |
+| x3       | 0.543 | § 4.97 Schedule of ratings—respiratory system.    | yes             |
+| x4       | 0.570 | § 4.97 Schedule of ratings—respiratory system.    | yes             |
+
+**Finding.** No score cutoff separates the passages that were on the question from those that were not. Passages not on the question score from 0.540 to 0.671; passages on it from 0.543 to 0.754. The lexical (BM25) score does not separate them either. A score is a weak guard here.
+
+**Floor chosen: 0.58** (`PASSAGE_RELEVANCE_FLOOR` in `src/utils/openAdviceHold.js`). It drops 8 of the 33 top hits: 4 that were not on the question (a19, a reserved placeholder; a21; a23; x2, the sleep apnea passage that prompted this) and 4 that were (a07, a29, x3, x4). It is as high as it can go before it loses more good passages than bad ones. The choice rests on cost: a wrong passage under an official-looking label misleads, a missing one sends the veteran to Ask the Regs. A higher floor would lose most good passages and still leave many wrong ones (a05, a16 and a28 score above 0.65). Passages with no score, and any marked [Reserved], are dropped. Below the floor the assistant shows no passages and says: "No closely matching regulation text was found; try Ask the Regs with the regulation's words."
+
+**Not solved.** x1 (rating for sleep apnea) still shows 4.87a (ears) at 0.625; a05, a08, a16 and others still show unrelated sections. A better signal (a cross-encoder, or a rule on whether the question's own terms appear in the passage title) would be needed; neither was tried. The lead line already says the text "may not be the part that applies to you".
+
+**What the search sends.** The question is scrubbed of identifiers (`scrubPII`), embedded in the page by the bge-small model (`@huggingface/transformers`, `pipeline("feature-extraction", "Xenova/bge-small-en-v1.5")`) and compared with the index vectors in the page. The page fetches only same-origin `/legal-index/...` files and, on first use, the model files from the Hugging Face hub (huggingface.co), a third-party host. The question is not in any request; `src/services/legalRag.privacy.test.js` records every fetch and the text the embedder receives. The first-use download is now disclosed where the passages appear (`REGULATION_SEARCH_DISCLOSURE`): "about 34 MB", the size of the quantized model file in the Hugging Face repository listing (`onnx/model_quantized.onnx`, 34,014,426 bytes). That the browser fetches that file, not the full-precision one (133 MB), follows the library's documented default for the WebAssembly backend and was not observed in a browser here.
+
+Reversal: set `PASSAGE_RELEVANCE_FLOOR` to 0.
