@@ -517,3 +517,33 @@ describe("appeal statement follows the review lane", () => {
     expect(draft).not.toMatch(/new evidence/i);
   });
 });
+
+describe("Forms Helper personal statement and the claim type", () => {
+  const form = (claimType) =>
+    formStatementInputs("personal-statement", {
+      claimType,
+      conditionName: "Sleep apnea",
+      primaryCondition: "Tinnitus",
+    });
+  const draft = (claimType) => {
+    const { answers, condition, primaryCondition } = form(claimType);
+    return buildPersonalStatementTemplate(answers, condition, primaryCondition);
+  };
+
+  it.each(["initial", "increase", "reopened", "", undefined])(
+    "claim type %s is not written as secondary, whatever the optional field holds",
+    (claimType) => {
+      expect(form(claimType).primaryCondition).toBeNull();
+      expect(draft(claimType)).not.toMatch(/secondary|Tinnitus/);
+      expect(draft(claimType)).toContain(
+        "my claim for service connection for Sleep apnea.",
+      );
+    },
+  );
+
+  it("a secondary claim names its primary condition", () => {
+    expect(draft("secondary")).toContain(
+      "Sleep apnea as secondary to my service-connected Tinnitus",
+    );
+  });
+});

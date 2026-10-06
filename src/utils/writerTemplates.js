@@ -451,7 +451,12 @@ export function formStatementInputs(formType, formData = {}) {
           hasTreatment: text(formData.currentTreatment) ? "yes" : undefined,
         },
         condition: formData.conditionName,
-        primaryCondition: formData.primaryCondition ?? null,
+        // The primary-condition field is optional and shown for every claim
+        // type; it makes the claim secondary only when the veteran said so.
+        primaryCondition:
+          formData.claimType === "secondary"
+            ? (formData.primaryCondition ?? null)
+            : null,
       };
     case "ptsd-stressor":
       return {
