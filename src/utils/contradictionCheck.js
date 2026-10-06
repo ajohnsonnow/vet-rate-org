@@ -49,7 +49,15 @@ const NEEDS_SERVICE_PROOF =
   /\b(?:requires?|needs?|must|have to|has to)\b[^.]{0,100}\b(?:nexus|in-service (?:incurrence|event|injury|aggravation)|incurred in service)\b/i;
 const NEEDS_EXPOSURE_PROOF =
   /\b(?:need to|needs to|must|have to|has to) (?:demonstrate|prove|show|establish) that (?:you were|they were|the veteran was) exposed\b/i;
-const PACT_ACT = /\bpact\b/i;
+const ASKS_FOR =
+  /\b(?:need|needs|must|requires?|required|provide|show|ensure|gather|submit)\b/i;
+const EVIDENCE_OF_EXPOSURE =
+  /\b(?:evidence|documentation|proof|records?)(?: \([^)]{0,90}\))? (?:of|regarding|showing|confirming|noting|detailing) (?:\w+ ){0,3}exposures?\b/i;
+const EXPOSURE_PAPERWORK = /\bexposure (?:documentation|records|history)\b/i;
+// Asking for a medical link is a different demand, and outside a presumption
+// it is the right one.
+const ABOUT_THE_LINK =
+  /\brelationship\b|\bnexus\b|\blink(?:s|ed|ing)?\b|\bcaus|\bwithout\b|\bno (?:evidence|documentation|proof)\b/i;
 
 const TDIU_SUBJECT = /\btdiu\b|\bunemployab|\b4\.16\b/i;
 const YOU_ARE_ELIGIBLE =
@@ -201,13 +209,22 @@ const RULES = [
   },
   {
     id: "presumptive-needs-exposure-proof",
-    topics: ["toxic-exposure"],
+    topics: ["toxic-exposure", "herbicide"],
     matches: (sentence) =>
-      anyMatch(sentence, PRESUMPTIVE, PACT_ACT) &&
-      NEEDS_EXPOSURE_PROOF.test(sentence) &&
-      !anyMatch(sentence, OUTSIDE_THE_PRESUMPTION, NO_PROOF_NEEDED),
-    says: "says you must prove you were exposed",
-    correction: () => "presumed-toxic-exposure",
+      (NEEDS_EXPOSURE_PROOF.test(sentence) ||
+        (ASKS_FOR.test(sentence) &&
+          anyMatch(sentence, EVIDENCE_OF_EXPOSURE, EXPOSURE_PAPERWORK))) &&
+      !anyMatch(
+        sentence,
+        OUTSIDE_THE_PRESUMPTION,
+        NO_PROOF_NEEDED,
+        ABOUT_THE_LINK,
+      ),
+    says: "asks you to prove you were exposed",
+    correction: (topics) =>
+      topics.includes("toxic-exposure")
+        ? "presumed-toxic-exposure"
+        : "presumed-herbicide-exposure",
   },
   {
     id: "coverage-date-for-wrong-place",

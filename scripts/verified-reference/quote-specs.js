@@ -149,6 +149,11 @@ export const CORRECTION_SPECS = {
     topic: "toxic-service",
     line: "VA will presume BPOT exposure",
   },
+  "presumed-herbicide-exposure": {
+    citation: "VA manual M21-1 VIII.i.1.A.1.c",
+    topic: "herbicide-service",
+    line: "Currently, the Department of Veterans Affairs",
+  },
   "higher-level-review-evidence": {
     citation: "38 CFR § 3.2601(f)",
     section: "3.2601",
