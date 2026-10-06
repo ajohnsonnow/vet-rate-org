@@ -184,6 +184,25 @@ describe("dry run tool cases", () => {
     });
     expect(byId.get("t05").draftRejectReasons.join(" ")).toMatch(/2021/);
     expect(byId.get("t05").response).not.toMatch(/2021/);
+    expect(byId.get("t05").passageOutcomes[0]).toMatchObject({
+      number: 1,
+      before:
+        "The decision did not consider the headache log I kept, which shows attacks that put me in bed",
+      verdict: "rejected",
+    });
+    expect(byId.get("t05").passageOutcomes[0].after).toMatch(
+      /This was decided on March 3, 2021\.$/,
+    );
+    expect(byId.get("t05").passageOutcomes[0].reasons.join(" ")).toMatch(
+      /2021/,
+    );
+    expect(byId.get("t04").passageOutcomes.map((p) => p.verdict)).toEqual([
+      "accepted",
+      "unchanged",
+      "unchanged",
+      "unchanged",
+    ]);
+    expect(byId.get("t07").passageOutcomes).toEqual([]);
     expect(byId.get("t07")).toMatchObject({
       draftPath: "template",
       engineRequests: 0,

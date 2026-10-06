@@ -100,7 +100,9 @@ unchanged, rejected), and the summary lists both under "Tool cases":
   reworded passage in the response (compare with the case's `formInputs`)
   and judge it: it must say only what the passage says, in complete
   sentences. Fail W4 for any fact, cause, feeling or detail the passage
-  did not have. A passage listed in `draftRejectReasons` kept the
+  did not have. `passageOutcomes` lists every passage sent: the passage,
+  what the model returned for it, the verdict and the reasons. A passage
+  listed in `draftRejectReasons` kept the
   writer's own words; read the reason. A rejection for an invented fact is
   the check working; a rejection of a faithful rewording is the check
   being too strict and is worth a note.

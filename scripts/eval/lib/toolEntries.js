@@ -166,6 +166,7 @@ export function normalizeToolOutcome(entry, outcome) {
       draftRejectReasons: result?.draftRejectReasons ?? [],
       draftErrorReason: result?.draftErrorReason ?? null,
       passages: result?.passages ?? null,
+      passageOutcomes: result?.passageOutcomes ?? [],
     },
     // The tool handed back its app-built draft because the engine failed.
     // The case is answered, but the engine may still be busy or wedged.

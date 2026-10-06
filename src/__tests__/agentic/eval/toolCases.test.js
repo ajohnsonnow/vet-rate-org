@@ -222,6 +222,7 @@ describe("normalizeToolOutcome", () => {
       text: "the app-built draft",
       tool: { draftErrorReason: "WebGPU inference timed out" },
     });
+    expect(outcome.tool.passageOutcomes).toEqual([]);
     expect(
       normalizeToolOutcome("enhanceAppealStatement", {
         ok: true,
