@@ -95,3 +95,31 @@ describe("chat request frequency_penalty", () => {
     expect(sentRequest().frequency_penalty).toBeCloseTo(1.15, 5);
   });
 });
+
+describe("evaluation override", () => {
+  it("replaces the model's value when the caller passes one", async () => {
+    await loadModel("Qwen3.5-2B-q4f16_1-MLC");
+    await generateWithSwarm("q", { agentId: "auditor", frequencyPenalty: 0 });
+    expect(sentRequest().frequency_penalty).toBe(0);
+    await generateWithSwarm("q", { agentId: "auditor", frequencyPenalty: 0.7 });
+    expect(sentRequest().frequency_penalty).toBeCloseTo(0.7, 5);
+  });
+
+  it("applies to the 4B as well", async () => {
+    await loadModel("Qwen3.5-4B-q4f16_1-MLC");
+    await generateWithSwarm("q", { agentId: "auditor", frequencyPenalty: 0.5 });
+    expect(sentRequest().frequency_penalty).toBeCloseTo(0.5, 5);
+  });
+
+  it.each([undefined, null, "0.5", Number.NaN, -1, 3])(
+    "ignores %j and keeps the per-model value",
+    async (bad) => {
+      await loadModel("Qwen3.5-2B-q4f16_1-MLC");
+      await generateWithSwarm("q", {
+        agentId: "auditor",
+        frequencyPenalty: bad,
+      });
+      expect(sentRequest().frequency_penalty).toBeCloseTo(0.3, 5);
+    },
+  );
+});

@@ -258,6 +258,7 @@ function runCase(
     conditions: unknown;
     temperature: number;
     maxTokens: number;
+    frequencyPenalty: number | null;
     thinking: boolean;
     timeoutMs: number;
   },
@@ -277,6 +278,9 @@ function runCase(
       thinking: a.thinking,
       timeout: a.timeoutMs,
     };
+    if (a.frequencyPenalty !== null) {
+      options.frequencyPenalty = a.frequencyPenalty;
+    }
     if (a.conditions) options.conditions = a.conditions;
     try {
       const result = await mods.ai.generateAI(a.input, options);
@@ -374,6 +378,7 @@ function withNodeTimeout<T>(
 interface RunSettings {
   temperature: number;
   maxTokens: number;
+  frequencyPenalty: number | null;
   thinking: boolean;
   timeoutMs: number;
   flags: string[];
@@ -383,6 +388,10 @@ function readSettings(): RunSettings {
   return {
     temperature: Number(process.env.EVAL_TEMPERATURE ?? 0),
     maxTokens: Number(process.env.EVAL_MAX_TOKENS ?? 1024),
+    frequencyPenalty:
+      process.env.EVAL_FREQUENCY_PENALTY === undefined
+        ? null
+        : Number(process.env.EVAL_FREQUENCY_PENALTY),
     thinking: process.env.EVAL_THINKING === "on",
     timeoutMs: Number(process.env.EVAL_TIMEOUT_MS ?? 300_000),
     flags: (process.env.EVAL_FLAGS ?? "").split(",").filter(Boolean),
