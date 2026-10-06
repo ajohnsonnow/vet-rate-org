@@ -112,6 +112,9 @@ for (const viewport of VIEWPORTS) {
       // A name squeezed to nothing wraps one letter per line.
       expect(nameBox!.width).toBeGreaterThanOrEqual(80);
       expect(nameBox!.height).toBeLessThanOrEqual(60);
+      const rootFont = await page.evaluate(() =>
+        Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+      );
       for (const label of ["Edit", "Remove"]) {
         const box = await dialog
           .getByRole("button", { name: label, exact: true })
@@ -119,7 +122,9 @@ for (const viewport of VIEWPORTS) {
           .boundingBox();
         expect(box).not.toBeNull();
         expect(box!.width).toBeGreaterThanOrEqual(44);
-        expect(box!.width).toBeLessThanOrEqual(60);
+        // An icon button, not a 120px action button; rem-sized, so the
+        // limit follows the root font size (which grows above 2560px).
+        expect(box!.width).toBeLessThanOrEqual(3.75 * rootFont);
         expect(box!.height).toBeGreaterThanOrEqual(44);
       }
     });
