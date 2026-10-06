@@ -10,7 +10,7 @@ const POLL_MS = 1000;
 // answering: the swarm is ready, it is the effective mode, and the model that
 // is actually loaded is in the small class. Cloud answers, no AI, and a model
 // that is not loaded all give false.
-const smallModelAnswering = (status) =>
+export const smallModelAnswering = (status) =>
   status?.effectiveMode === "swarm" &&
   Boolean(status.swarmAvailable) &&
   isSmallModel(status.swarmStatus?.model);

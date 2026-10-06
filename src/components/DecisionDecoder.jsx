@@ -17,7 +17,7 @@ import { buildDocumentOffDeviceNotice } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
 import SmartAILoadButton from "./SmartAILoadButton";
-import SmallModelCaveat from "./SmallModelCaveat";
+import SmallModelCaveat, { smallModelAnswering } from "./SmallModelCaveat";
 import { useVaBenefitsRef } from "../hooks/useVaBenefitsRef";
 import {
   analyzePDF,
@@ -408,6 +408,27 @@ export function applyOffDeviceFallback(denialText, providerLabel, setResults) {
   });
 }
 
+// ADR-010 section 9: a small-class on-device model misread the test decision
+// letter in every graded run, and a misreading cannot be corrected after the
+// fact. While such a model is the one that would answer, the letter is not
+// sent to it. This one condition is the whole decision; remove the call in
+// handleDecode to reverse it.
+export const SMALL_MODEL_FALLBACK_NOTE =
+  "This device's AI model is too small to read a decision letter reliably, so it was not used. Below is what the app can match by pattern in the text you gave, and the review options as the regulations state them.";
+
+const NOTHING_MATCHED_MESSAGE =
+  "The built-in reader found no decision language in this text, so there is nothing to translate yet. If this is a VA decision letter, paste the Decision and Reasons for Decision sections.";
+
+function applySmallModelFallback(denialText, setResults) {
+  const matched = patternMatchDenial(denialText);
+  setResults({
+    ...(matched || { plain_english: NOTHING_MATCHED_MESSAGE }),
+    _usedFallback: true,
+    _fallbackReason: "small_model",
+    _fallbackNote: SMALL_MODEL_FALLBACK_NOTE,
+  });
+}
+
 const RESULT_FIELDS = [
   "decision_type",
   "plain_english",
@@ -556,6 +577,12 @@ export function useDecisionDecode() {
 
     if (!isAIAvailable()) {
       applyPatternMatchFallback(denialText, setResults, setError);
+      return;
+    }
+
+    if (smallModelAnswering(getAIStatus())) {
+      setError(null);
+      applySmallModelFallback(denialText, setResults);
       return;
     }
 
@@ -1307,6 +1334,23 @@ const ResultsErrorNotice = ({ error, onRetry, isLoading }) => {
   );
 };
 
+const SMALL_MODEL_NOTICE_TITLE =
+  "Pattern-match reading: this device's AI model was not used";
+
+const SmallModelFallbackNotice = ({ results }) => {
+  if (results._fallbackReason !== "small_model") return null;
+  return (
+    <div
+      role="note"
+      aria-label={SMALL_MODEL_NOTICE_TITLE}
+      className="rounded-lg border-2 border-amber-700 bg-amber-50 p-3 text-amber-950 dark:border-amber-400 dark:bg-amber-950 dark:text-amber-50"
+    >
+      <p className="text-sm font-semibold">{SMALL_MODEL_NOTICE_TITLE}</p>
+      <p className="mt-1 text-sm">{results._fallbackNote}</p>
+    </div>
+  );
+};
+
 const PatternMatchFallbackNotice = ({ results }) => {
   if (!results._usedFallback || results._fallbackReason !== "pattern_match") {
     return null;
@@ -1582,13 +1626,15 @@ const DeadlineWarningSection = ({ results }) => {
   );
 };
 
-const ResultsContent = ({ results }) => {
+export const ResultsContent = ({ results }) => {
   if (!results) return null;
 
   return (
     <div className="space-y-4">
       {/* Pattern-Match Fallback Notice (when AI is not loaded) */}
       <PatternMatchFallbackNotice results={results} />
+
+      <SmallModelFallbackNotice results={results} />
 
       {/* On-Device-Only Fallback Notice (when only an off-device AI is configured) */}
       <OffDeviceFallbackNotice results={results} />
@@ -1703,7 +1749,9 @@ const DecisionDecoderResultsSection = ({
   <div>
     <ResultsErrorNotice error={error} onRetry={onRetry} isLoading={isLoading} />
 
-    {results && <SmallModelCaveat className="mb-4" />}
+    {results && results._fallbackReason !== "small_model" && (
+      <SmallModelCaveat className="mb-4" />
+    )}
     <ResultsContent results={results} />
 
     {/* Loading State - Shows progress while AI is working */}

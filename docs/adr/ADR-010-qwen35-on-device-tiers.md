@@ -98,3 +98,19 @@ Open owner decisions and conditions, not decided here:
 1. QA's stricter recommendation: turn the Decision Decoder off on the 2B until its document case repeats clean (on the 2B it misread the fictional test letter and said no money for a condition the letter granted), and turn the free-text tools (War Room, PACT Navigator, Pathfinder, the general assistant) off, or show them with corrections firing; their long answers were usually wrong. Removing a tool from laptops is the owner's decision.
 2. A real laptop run before release: nothing has been measured on a laptop or tablet.
 3. The comparison model (Qwen2.5-1.5B) was never run on the final build, so the 6 of 30 and 14-case figures come from an earlier build.
+
+## 9. Decision Decoder does not use a small-class model
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible.
+
+Evidence: QA graded the fictional mixed-decision letter (golden-set case t08) on six laptop-model (Qwen3.5-2B) runs and failed all six. In the two closing runs (`run_2026-10-06_032917` and `run_2026-10-06_034657`) the model listed the denial under favourable findings in both, said a current diagnosis was missing where the letter gives one, said the knee pain "happened after your service" where the letter records the visit in service, and gave the Board appeal form for a Supplemental Claim. The same limits as section 2 apply: one desktop GPU, one fictional letter, advisory grades, nothing measured on a laptop.
+
+Why a guard is not the answer: the app's corrections quote a regulation against a sentence that contradicts it. A misread letter contradicts the letter, not a regulation, and the app has no second reading of the letter to check against. The one check of that kind that exists (`decoderLetterCheck.js`) covers a single pattern.
+
+Decision: while a small-class on-device model is the one that would answer, the Decision Decoder does not send it the letter. It shows the existing pattern-match reading, the review options built from 38 CFR 3.2500, 3.2601, 20.202 and 20.203, and a plain notice: this device's AI model is too small to read a decision letter reliably, so it was not used. "Small-class" is the same test the small-model note uses (`smallModelAnswering` in `src/components/SmallModelCaveat.jsx`: the swarm is ready and effective and the loaded model has `smallModel: true` in the per-model table); no model id is named in the decoder. The larger on-device model and every other path (no AI, off-device AI blocked under ADR-009) are unchanged. The small-model caveat is not shown on this path because no model answered.
+
+Reversal: the decision is one condition in `useDecisionDecode` (`src/components/DecisionDecoder.jsx`), `if (smallModelAnswering(getAIStatus()))`. Removing it restores the model path. Reverse it when the 2B, or its successor, reads the test letter correctly in repeated runs, including on a real laptop.
+
+Consequences: on those devices the decoder gives a keyword reading, which finds less than a correct model reading would and cannot quote the letter's reasons. The golden-set runner calls `decodeDecision` directly, so its t08 line still records what the 2B writes, not what the app shows on such a device.
+
+This closes the Decision Decoder half of open decision 1 in section 8. The free-text tools on the small model remain an owner decision.
