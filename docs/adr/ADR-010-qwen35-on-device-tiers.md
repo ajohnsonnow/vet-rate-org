@@ -179,3 +179,16 @@ Reversal: one condition, in `generateAIInternal` (`src/utils/unifiedAIService.js
 Consequences: on those devices the assistant answers rating questions and nothing else, which is less than the model's best answers offered (up to two a run). The regulation search can return a passage that is about the right subject and not the veteran's point; it is labelled as a search result for that reason. In the evaluation, a run on a small-class model records the fixed message for every a-case with a question (`modelCalled: false`, `openAdviceHeld: true`); the passages shown under it are not in the transcript, because the runner calls `generateAI` and the search is added by the assistant.
 
 This closes the general-assistant part of open decision 1 in section 8.
+
+## 12. A fallback model is announced, and the Qwen2.5-3B is held back like the small models
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible.
+
+When the first model in a tier's list fails to load (a browser cache error, GPU memory) and a later one loads, the swarm loads it without a word. The AI Command Center said "Your device will load Qwen 3.5 4B" while Qwen 2.5 3B was answering. Two changes:
+
+1. **The fallback is announced.** `describeModelFallback` (`src/utils/modelFallback.js`) compares the model actually loaded (the swarm status) with the first model of the device profile's list. If they differ it returns the words shown by `FallbackModelNotice` in the AI Command Center: which model was meant, that it could not be loaded, which is loaded instead, and that the loaded one is an older model. The "weaker in our tests" clause is shown only for models marked `gradedWeaker` in the per-model table (the Qwen2.5 rows); any other fallback says it has not been tested.
+2. **The Qwen2.5-3B is in the held-back class.** `isSmallModel` now returns true for both Qwen2.5-3B rows, so the small-model caveat (section 8), the Decision Decoder's rule-based path (section 9), the writing tools' rewording switch-off and the open-advice hold (section 11) all apply when it is the loaded model. Evidence: section 2's desktop run, 7 of 30 passing with invented case facts in 15 cases, worse on both counts than the Qwen3.5-2B that section 11 holds back. The flag name `smallModel` now means "held back from open advice", not "2B or under"; the Qwen2.5-1.5B (6 of 30, invented facts in 14 cases) was already in it. The Llama-3.2-3B is not graded and is not in the class.
+
+Every one of those consumers reads the loaded model through `smallModelAnswering(getAIStatus())`, never the profile's first choice, so a fallback triggers them. `src/__tests__/utils/unifiedAIService.openAdviceHold.test.js` holds an open question when the 4B failed and the Qwen2.5-3B loaded; `src/utils/smallModelAnswering.test.js` covers the status cases.
+
+Reversal: remove `smallModel: true` from the two Qwen2.5-3B rows in `MODEL_FOOTPRINT`.
