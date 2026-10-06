@@ -114,6 +114,7 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "135908 a26 new-and-material-standard",
       "201248 a13 tdiu-from-percentages",
       "210108 a13 tdiu-from-percentages",
+      "210108 a16 coverage-date-for-wrong-place",
       "210108 a26 new-and-material-standard",
       "210108 a26 intent-to-file-for-filed-claim",
       "210108 a27 presumptive-needs-proof",
