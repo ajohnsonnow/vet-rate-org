@@ -199,28 +199,28 @@ describe("wllama: a request that can fit is sized to the window", () => {
   });
 });
 
-describe("a fallback result is checked like a primary one", () => {
-  const BLOCKED = "As a doctor, I diagnose you with sleep apnea.";
-  const failingLocal = () => {
-    registerLocalAIEngine(
-      {
-        chat: {
-          completions: {
-            create: vi.fn().mockRejectedValue(new Error("GPU lost")),
-          },
+const failingLocal = () => {
+  registerLocalAIEngine(
+    {
+      chat: {
+        completions: {
+          create: vi.fn().mockRejectedValue(new Error("GPU lost")),
         },
       },
-      true,
-      false,
-      "test-model",
-      false,
-    );
-    registerSwarmEngine(null, false, false, null);
-    setAIMode(AI_MODES.LOCAL);
-  };
-  const validated = (extra = {}) =>
-    callOptions({ skipValidation: false, useDKB: false, ...extra });
+    },
+    true,
+    false,
+    "test-model",
+    false,
+  );
+  registerSwarmEngine(null, false, false, null);
+  setAIMode(AI_MODES.LOCAL);
+};
+const validated = (extra = {}) =>
+  callOptions({ skipValidation: false, useDKB: false, ...extra });
 
+describe("a fallback result is checked like a primary one", () => {
+  const BLOCKED = "As a doctor, I diagnose you with sleep apnea.";
   it("a blocked answer from the fallback backend is replaced by the message", async () => {
     cloudReplies(BLOCKED);
     failingLocal();
@@ -254,6 +254,23 @@ describe("a fallback result is checked like a primary one", () => {
     });
     expect(result.citationsUnverified).toEqual({ sections: ["4.9999"] });
     expect(result.text).toContain("Vet-Rate could not verify a citation");
+  });
+
+  it("a cloud answer gets the two lookups and no contradiction block", async () => {
+    const answer =
+      "VA adds the ratings together under 38 CFR § 4.9999, so file VA Form 22-5388.";
+    cloudReplies(answer);
+    failingLocal();
+    const result = await generateAI(QUESTION, {
+      ...validated(),
+      answerChecks: true,
+    });
+    expect(result.onDevice).toBe(false);
+    expect(result.citationsUnverified).toEqual({ sections: ["4.9999"] });
+    expect(result.formsUnverified).toEqual({ forms: ["22-5388"] });
+    expect(result.contradictionsFound).toBeUndefined();
+    expect(result.text.startsWith(answer)).toBe(true);
+    expect(result.text).not.toContain("Vet-Rate check:");
   });
 
   it("a blocked answer from the context-overflow fallback is replaced too", async () => {

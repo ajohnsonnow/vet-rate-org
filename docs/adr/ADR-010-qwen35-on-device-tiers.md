@@ -114,3 +114,23 @@ Reversal: the decision is one condition in `useDecisionDecode` (`src/components/
 Consequences: on those devices the decoder gives a keyword reading, which finds less than a correct model reading would and cannot quote the letter's reasons. The golden-set runner calls `decodeDecision` directly, so its t08 line still records what the 2B writes, not what the app shows on such a device.
 
 This closes the Decision Decoder half of open decision 1 in section 8. The free-text tools on the small model remain an owner decision.
+
+## 10. The contradiction block runs only on answers an on-device model produced
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible.
+
+Context: after an answer on an advice route, the app can put a block above it ("Vet-Rate check: part of the answer below may not match the regulation ...") when a sentence matches one of the contradiction rules in `src/utils/contradictionCheck.js`. The rules are sentence patterns. They were written from, and measured against, the recorded answers of the small on-device models.
+
+Evidence:
+
+- On recorded on-device text QA replayed every model-written answer in the 37 transcripts through the rules: 569 answers on an advice route, 85 blocks, none judged false.
+- On adversarial text QA wrote 90 true sentences in the forms a careful explainer uses ("Myth: ...", "A common mistake is ...", "Some say ..., in fact ..."); 72 drew a block. QA's judgement is that the recorded 2B and 4B models do not write these forms and a larger or cloud model in the assistant chat is more likely to.
+- There are no recorded cloud runs. Nothing is known about how the rules behave on cloud answers.
+
+Limits of that evidence: one desktop GPU, the golden questions only, sentences judged by one reader, and the adversarial sentences are QA's own, not model output.
+
+Decision: the contradiction block is added only when the result says an on-device model produced the answer (`onDevice === true` on the result of `generateAI`, tested by `contradictionRulesApply` in `src/utils/answerCheckRoutes.js`). A cloud answer, including the cloud fallback after a context overflow, gets no block. A result that does not say who answered gets none. The citation notice and the form notice still run on every advice-route answer, cloud or not: they look a number up in a bundled list and do not read the sentence.
+
+Reversal: one function, `contradictionRulesApply`. Widen it when there are recorded cloud answers on the golden questions and the rules have been measured on them with no false block.
+
+Consequences: a cloud answer that states wrong law is shown with no correction. That was already true of every route outside the advice list. A false correction above a true answer was judged the worse failure, because it tells a veteran to distrust something true.

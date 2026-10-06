@@ -59,7 +59,10 @@ import {
 } from "./promptBudget";
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
 import { flagUnverifiedForms } from "./formCheck";
-import { answerChecksApply } from "./answerCheckRoutes";
+import {
+  answerChecksApply,
+  contradictionRulesApply,
+} from "./answerCheckRoutes";
 import { trimToLastSentence } from "./outputCleanup";
 import { flagContradictions } from "./contradictionCheck";
 import {
@@ -3266,11 +3269,13 @@ const generateAIInternal = async (prompt, options = {}) => {
   );
   const result = _settleTruncation(dispatched, finish, options);
   if (!answerChecksApply(options)) return result;
-  return flagContradictions(
-    flagUnverifiedForms(flagUnverifiedCitations(result, options), options),
+  const looked = flagUnverifiedForms(
+    flagUnverifiedCitations(result, options),
     options,
-    prompt,
   );
+  return contradictionRulesApply(result)
+    ? flagContradictions(looked, options, prompt)
+    : looked;
 };
 
 async function _dispatchWithRecovery(

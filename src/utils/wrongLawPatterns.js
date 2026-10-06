@@ -30,19 +30,27 @@ export function wrongSingleDisabilityThreshold(sentence) {
 }
 
 // "60% or more, or a combined rating of 70% or more" for TDIU, with no word
-// of the 40 percent one disability must reach, in this sentence or the next.
-// The sentence has to name TDIU itself.
+// of the 40 percent one disability must reach, in this sentence or the ones
+// on either side of it. The sentence has to name TDIU itself, and must not
+// be offering the figures as a shorthand it says is incomplete.
 const SIXTY_OR_COMBINED_SEVENTY =
   /\b60 ?(?:%|percent) or (?:more|higher),? or (?:a )?combined (?:rating|total)(?: of)? 70 ?(?:%|percent)/i;
 const NAMES_TDIU = /\btdiu\b|unemployab/i;
 const GIVES_THE_FORTY = /\b40\b|\bforty\b/i;
+const CALLS_IT_INCOMPLETE =
+  /\bleft out\b|\bleaves? out\b|\bshorthand\b|\bincomplete\b|\bdrops?\b|\bhalf the rule\b/i;
 
-export function givesTdiuThresholdsWithoutForty(sentence, { next = "" } = {}) {
+export function givesTdiuThresholdsWithoutForty(
+  sentence,
+  { next = "", previous = "" } = {},
+) {
   return (
     SIXTY_OR_COMBINED_SEVENTY.test(sentence) &&
     NAMES_TDIU.test(sentence) &&
     !GIVES_THE_FORTY.test(sentence) &&
-    !GIVES_THE_FORTY.test(next)
+    !GIVES_THE_FORTY.test(next) &&
+    !GIVES_THE_FORTY.test(previous) &&
+    !CALLS_IT_INCOMPLETE.test(sentence)
   );
 }
 
@@ -52,13 +60,20 @@ export function givesTdiuThresholdsWithoutForty(sentence, { next = "" } = {}) {
 // would then send the reader to a lane that is closed.
 const CANNOT_APPEAL_WITHOUT_NEW_EVIDENCE =
   /\b(?:cannot|can't|can not|may not)\b (?:\w+ ){0,2}(?:appeal|challenge)\b[^.;]{0,40}\b(?:without|unless you have|unless there is)\b[^.;]{0,15}\bnew\b[^.;]{0,20}\bevidence\b/i;
-const TRUE_OF_THESE =
-  /\bfinal\b|\bsupplemental\b|\bhigher[- ]level review\b|\b(?:a|one|1)[- ]year\b|\bwindow\b|\bdeadline\b|\btoo late\b/i;
+const TRUE_OF_THESE = /\bfinal\b|\bsupplemental\b|\bhigher[- ]level review\b/i;
+// Any word of time in the sentence: it may be about a decision whose review
+// period has run, and no list of ways to say that is complete.
+const TIME_WORDS = [
+  "years?|months?|days?|period|window|deadline",
+  "late|expired?|lapsed?|passed|ago|long|old|older",
+].join("|");
+const SPEAKS_OF_TIME = new RegExp(String.raw`\b(?:${TIME_WORDS})\b`, "i");
 
 export function saysAppealNeedsNewEvidence(sentence) {
   return (
     CANNOT_APPEAL_WITHOUT_NEW_EVIDENCE.test(sentence) &&
-    !TRUE_OF_THESE.test(sentence)
+    !TRUE_OF_THESE.test(sentence) &&
+    !SPEAKS_OF_TIME.test(sentence)
   );
 }
 
@@ -83,7 +98,7 @@ export function putsBilateralOnOneSide(sentence) {
 // "File ... within 1 year of receiving that form" starts it when the veteran
 // is sent an application form. Where VA is the one receiving, it is right.
 const FILE_WITHIN_A_YEAR_OF_RECEIVING_THAT_FORM =
-  /\bfiled?\b[^.;]{0,50}\bwithin (?:1|one) year of receiving that form\b(?! from you\b| at\b)/i;
+  /\b(?:must|can|should|have to|need to)\b (?:then )?(?:file|be filed)\b[^.;]{0,50}\bwithin (?:1|one) year of receiving that form\b(?! from you\b| at\b)/i;
 
 export function countsYearFromReceivingAForm(sentence) {
   return FILE_WITHIN_A_YEAR_OF_RECEIVING_THAT_FORM.test(sentence);
@@ -93,7 +108,8 @@ export function countsYearFromReceivingAForm(sentence) {
 // abandoned or withdrawn claim, and a claim for increase, do take a new one.
 const NEW_CLAIM_TO_REOPEN =
   /\breopen(?:ing|ed|s)?\b[^.]{0,50}\bclaim\b[^.]{0,30}\b(?:must|should|need to|have to) file a new claim\b/i;
-const TAKES_A_NEW_CLAIM = /\babandon|\bwithdr[ae]w|\bincrease\b|\bworse/i;
+const TAKES_A_NEW_CLAIM =
+  /\babandon|\bwithdr[ae]w|\bincrease\b|\bworse|\bnever (?:decided|claimed)\b/i;
 
 export function filesNewClaimToReopen(sentence) {
   return (
@@ -107,7 +123,7 @@ export function filesNewClaimToReopen(sentence) {
 const EMPLOYED_SO_NO_TDIU =
   /\bemployed\b[^.;]{0,40}\byou (?:cannot|can't|will not|won't) (?:receive|get|qualify for|be eligible for) TDIU\b/i;
 const SUBSTANTIALLY_GAINFUL = /\bsubstantially gainful\b/i;
-const MARGINAL = /\bmarginal\b/i;
+const MARGINAL = /\bmarginal\b|\bfull[- ]time\b|\bliving wage\b/i;
 
 export function saysEmploymentBarsTdiu(sentence) {
   const stated = EMPLOYED_SO_NO_TDIU.exec(sentence);
@@ -121,7 +137,8 @@ export function saysEmploymentBarsTdiu(sentence) {
 // 38 CFR 3.155(b) given as the rule that calls for a Supplemental Claim. A
 // sentence that says what the paragraph is for, the intent to file, and then
 // sends a denial to a Supplemental Claim is drawing the right distinction.
-const INTENT_PARAGRAPH = /\b3\.155\(b\)/;
+const INTENT_PARAGRAPH =
+  /\b(?:per|under|according to|pursuant to)\b[^.,;]{0,12}\b3\.155\(b\)/i;
 const SUPPLEMENTAL_CLAIM_CALLED_FOR =
   /\bsupplemental claims?\b[^.;]{0,20}\b(?:is|are) required\b|\b(?:should|must|need to|have to) (?:file|submit) a supplemental claim\b/i;
 const SAYS_WHAT_THE_PARAGRAPH_IS_FOR = /\bintent[- ]to[- ]file\b|\bITF\b/i;
@@ -152,6 +169,13 @@ const HIGHER_OF_TWO_AS_COMBINING = [
   /\breceives? the higher of the two (?:ratings|percentages|evaluations)\b/i,
 ];
 
+// "More than the higher of the two and less than their sum" is the true rule.
+const ABOVE_THE_HIGHER =
+  /\b(?:more than|above|greater than|higher than|exceeds?) the higher of\b/i;
+
 export function takesHigherOfTwoAsCombined(sentence) {
-  return HIGHER_OF_TWO_AS_COMBINING.some((pattern) => pattern.test(sentence));
+  return (
+    HIGHER_OF_TWO_AS_COMBINING.some((pattern) => pattern.test(sentence)) &&
+    !ABOVE_THE_HIGHER.test(sentence)
+  );
 }
