@@ -16,6 +16,18 @@ vi.mock("../utils/smartAILoader", () => ({
   getDeviceType: () => "desktop",
 }));
 
+vi.mock("../utils/deviceLabels", async (importOriginal) => ({
+  ...(await importOriginal()),
+  useDeviceProfile: () => ({
+    tier: "desktop-high",
+    hasWebGPU: true,
+    gpuTier: "high",
+    isMobile: false,
+    isTablet: false,
+    canUseWebLLM: true,
+  }),
+}));
+
 const SmartAILoadButton = (await import("./SmartAILoadButton.jsx")).default;
 
 const NEEDS_LOAD = {

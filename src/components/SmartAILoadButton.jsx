@@ -4,7 +4,11 @@
  * Automatically detects device, recommends best model, handles switching
  */
 
-import { describeDeviceClass, useDeviceProfile } from "../utils/deviceLabels";
+import {
+  describeDeviceClass,
+  describeOnDeviceSupport,
+  useDeviceProfile,
+} from "../utils/deviceLabels";
 import { useState, useEffect } from "react";
 import { checkModelMatch, smartLoadAI } from "../utils/smartAILoader";
 
@@ -132,7 +136,9 @@ const SmartAILoadButton = ({
   const [check, setCheck] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ value: 0, text: "" });
-  const deviceType = describeDeviceClass(useDeviceProfile()).label;
+  const profile = useDeviceProfile();
+  const deviceType = describeDeviceClass(profile).label;
+  const support = describeOnDeviceSupport(profile);
   const [loadError, setLoadError] = useState(null);
 
   // Check AI status on mount and periodically
@@ -181,6 +187,17 @@ const SmartAILoadButton = ({
       check,
     );
     return <ConfigErrorNotice toolId={toolId} />;
+  }
+
+  if (!support.canRun) {
+    return (
+      <div className="p-4 bg-gray-800/40 border border-gray-600 rounded-xl text-xs text-gray-300">
+        <p>
+          Device: <span className="font-medium">{deviceType}</span>
+        </p>
+        <p className="mt-1">{support.reason}</p>
+      </div>
+    );
   }
 
   // Already loaded and correct

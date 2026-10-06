@@ -28,6 +28,7 @@ vi.mock("./diamondSwarm", () => ({
 
 const { getRecommendedModelForDevice, smartLoadAI } =
   await import("./smartAILoader");
+const { TABLET_UNTESTED_SENTENCE } = await import("./deviceLabels");
 
 const DESKTOP = {
   hasWebGPU: true,
@@ -90,5 +91,20 @@ describe("smartAILoader takes its model from the device profile", () => {
     const rec = getRecommendedModelForDevice("no-such-tool");
     expect(rec.deviceModel).toBeNull();
     expect(rec.reason).not.toMatch(/Qwen|\d GB/);
+  });
+
+  it("adds the untested-on-tablets sentence for a tablet with WebGPU, from the shared source", () => {
+    mocks.cachedProfile.mockReturnValue({
+      hasWebGPU: true,
+      isTablet: true,
+      recommendedModels: ["Qwen2.5-1.5B-Instruct-q4f16_1-MLC"],
+    });
+    const rec = getRecommendedModelForDevice("no-such-tool");
+    expect(rec.reason).toContain(TABLET_UNTESTED_SENTENCE);
+  });
+
+  it("does not add it on a desktop", () => {
+    const rec = getRecommendedModelForDevice("no-such-tool");
+    expect(rec.reason).not.toMatch(/tablet/i);
   });
 });
