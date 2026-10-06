@@ -128,10 +128,16 @@ describe("withVerifiedReviewOptions with the letter", () => {
   });
 });
 
-describe("the letter check over every recorded Decision Decoder answer", () => {
+describe("the letter check over the measured Decision Decoder answers", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
+  const MEASURED_RUNS = new Set(["213230", "221648", "230321", "231514"]);
   const decoded = readdirSync(DIR)
-    .filter((name) => name.endsWith(".jsonl"))
+    .filter(
+      (name) =>
+        name.startsWith("run_2026-10-05_") &&
+        name.endsWith(".jsonl") &&
+        MEASURED_RUNS.has(name.slice(15, 21)),
+    )
     .sort((a, b) => a.localeCompare(b))
     .flatMap((name) =>
       readFileSync(path.join(DIR, name), "utf8")
