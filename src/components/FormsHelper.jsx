@@ -939,7 +939,7 @@ const intentToFileSteps = [
         label: "Mailing Address",
         type: "textarea",
         required: true,
-        placeholder: "123 Main St\nCity, State ZIP",
+        placeholder: "123 Main St\nCity, ST 12345",
         rows: 3,
       },
       {
@@ -1066,7 +1066,7 @@ const medicalReleaseSteps = [
         label: "Current Mailing Address",
         type: "textarea",
         required: true,
-        placeholder: "123 Main St\nCity, State ZIP",
+        placeholder: "123 Main St\nCity, ST 12345",
         rows: 3,
       },
     ],
@@ -1088,7 +1088,7 @@ const medicalReleaseSteps = [
         label: "Provider Address",
         type: "textarea",
         required: true,
-        placeholder: "456 Medical Blvd\nCity, State ZIP",
+        placeholder: "456 Medical Blvd\nCity, ST 12345",
         rows: 3,
       },
       {
@@ -1134,7 +1134,7 @@ const medicalReleaseSteps = [
         name: "provider2Address",
         label: "Provider Address",
         type: "textarea",
-        placeholder: "Address",
+        placeholder: "456 Medical Blvd\nCity, ST 12345",
         rows: 3,
       },
       {
@@ -1172,7 +1172,7 @@ const medicalReleaseSteps = [
         name: "provider3Address",
         label: "Provider Address",
         type: "textarea",
-        placeholder: "Address",
+        placeholder: "456 Medical Blvd\nCity, ST 12345",
         rows: 3,
       },
       {

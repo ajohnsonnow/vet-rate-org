@@ -17,6 +17,7 @@ import {
   rgb,
 } from "pdf-lib";
 import { officialFormNarrative } from "./formStatementDrafts";
+import { stateCode } from "./usStates";
 
 // Local copies of VA forms
 const LOCAL_FORM_PATHS = {
@@ -729,18 +730,6 @@ export async function getFormFieldNames(formNumber) {
   }));
 }
 
-/**
- * Parse a raw phone string into area/prefix/line digit groups
- */
-function parsePhoneParts(phone) {
-  const digits = (phone || "").replace(/\D/g, "");
-  return {
-    area: digits.substring(0, 3),
-    prefix: digits.substring(3, 6),
-    line: digits.substring(6, 10),
-  };
-}
-
 /*
  * What the last fill could not put on the form as given, so the screen can
  * say so instead of the text vanishing or being cut off:
@@ -822,6 +811,30 @@ const reportNotPlaced = (label) => {
 const given = (value) => String(value ?? "").trim() !== "";
 
 /**
+ * A telephone number as the form's three boxes: ten digits, or eleven with
+ * a leading 1. Anything else fills nothing and is reported; part of a
+ * number is not written.
+ */
+function parsePhoneParts(phone, label = "Telephone number") {
+  const typed = String(phone || "").replace(/\D/g, "");
+  const digits =
+    typed.length === 11 && typed.startsWith("1") ? typed.slice(1) : typed;
+  if (digits.length !== 10) {
+    if (given(phone)) reportNotPlaced(label);
+    return { area: "", prefix: "", line: "" };
+  }
+  return {
+    area: digits.substring(0, 3),
+    prefix: digits.substring(3, 6),
+    line: digits.substring(6, 10),
+  };
+}
+
+// A state typed in full is written as its two-letter code; anything that is
+// not a state is left as typed for the box's own limit to judge.
+const stateForBox = (state) => stateCode(state) || String(state ?? "").trim();
+
+/**
  * A Social Security number as the form's three boxes. Nine digits fill all
  * three. Four digits are the last four (several wizards ask only for
  * those) and go in the last box alone. Anything else fills nothing and is
@@ -901,10 +914,31 @@ const aptForBox = (apt) =>
 const MAILING_ADDRESS = "Mailing address";
 
 /**
+ * The state at the end of `words`, as its code, with the words before it:
+ * a two-letter code or a full name of up to three words ("District of
+ * Columbia"). Null when there is none, or when the words can be read two
+ * ways ("Sample West Virginia" is a town in West Virginia or a town called
+ * "Sample West" in Virginia).
+ */
+function stateAtEnd(words) {
+  const readings = [3, 2, 1]
+    .filter((count) => count <= words.length)
+    .map((count) => ({
+      code: stateCode(words.slice(-count).join(" ")),
+      before: words.slice(0, -count),
+    }))
+    .filter((reading) => reading.code);
+  const certain =
+    readings.length === 1 ||
+    (readings.length > 1 && readings[0].before.length === 0);
+  return certain ? readings[0] : null;
+}
+
+/**
  * A typed mailing address as the form's boxes, or null when it cannot be
- * split with certainty. It must end "City, ST 12345" (or 12345-6789), with
- * the street before it on its own line or before a comma, and at most one
- * apartment or unit part between them.
+ * split with certainty. It must end "City, ST 12345" (or 12345-6789; the
+ * state may be spelled out), with the street before it on its own line or
+ * before a comma, and at most one apartment or unit part between them.
  */
 function splitAddress(address) {
   const parts = String(address ?? "")
@@ -913,15 +947,16 @@ function splitAddress(address) {
     .filter(Boolean);
   const tail = (parts.pop() ?? "").split(/\s+/);
   const zip = /^(\d{5})(?:-(\d{4}))?$/.exec(tail.pop() ?? "");
-  const state = tail.pop() ?? parts.pop() ?? "";
-  const city = tail.join(" ") || (parts.pop() ?? "");
-  if (!zip || !/^[A-Za-z]{2}$/.test(state) || !city) return null;
-  if (parts.length < 1 || parts.length > 2) return null;
+  // The state is with the ZIP code, or is the part before it.
+  const state = stateAtEnd(tail.length > 0 ? tail : [parts.pop() ?? ""]);
+  if (!zip || !state) return null;
+  const city = state.before.join(" ") || (parts.pop() ?? "");
+  if (!city || parts.length < 1 || parts.length > 2) return null;
   return {
     street: parts[0],
     apt: aptForBox(parts[1]),
     city,
-    state: state.toUpperCase(),
+    state: state.code,
     zip5: zip[1],
     zip4: zip[2] ?? "",
     country: "",
@@ -946,7 +981,7 @@ function mailingAddressFrom(data) {
     street: data.street || data.veteranStreet,
     apt: aptForBox(data.apt),
     city: data.city || data.veteranCity || "",
-    state: data.state || data.veteranState || "",
+    state: stateForBox(data.state || data.veteranState),
     zip5: zip.five,
     zip4: zip.four,
     country: countryCode(data.country),
@@ -1281,7 +1316,7 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranStreet, data.veteranStreet || "");
   setTextField(fieldMap.veteranApt, aptForBox(data.veteranApt));
   setTextField(fieldMap.veteranCity, data.veteranCity || "");
-  setTextField(fieldMap.veteranState, data.veteranState || "");
+  setTextField(fieldMap.veteranState, stateForBox(data.veteranState));
   setTextField(fieldMap.veteranZip5, vetZip.five);
   setTextField(fieldMap.veteranZip4, vetZip.four);
   setTextField(fieldMap.veteranCountry, countryCode(data.veteranCountry));
@@ -1299,7 +1334,10 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
 // their own and is never entered here.
 function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
   const claimantNameParts = (data.claimantName || "").split(" ");
-  const claimantPhone = parsePhoneParts(data.claimantPhone);
+  const claimantPhone = parsePhoneParts(
+    data.claimantPhone,
+    "Claimant's telephone number",
+  );
   const claimantZip = parseZipParts(data.claimantZip, "Claimant's ZIP code");
 
   setTextField(fieldMap.claimantFirstName, claimantNameParts[0]);
@@ -1313,7 +1351,7 @@ function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
   );
   setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
-  setTextField(fieldMap.claimantState, data.claimantState || "");
+  setTextField(fieldMap.claimantState, stateForBox(data.claimantState));
   setTextField(fieldMap.claimantZip5, claimantZip.five);
   setTextField(fieldMap.claimantPhone1, claimantPhone.area);
   setTextField(fieldMap.claimantPhone2, claimantPhone.prefix);
@@ -1358,7 +1396,10 @@ function fill21_10210_WitnessSection(
   data,
 ) {
   const witnessNameParts = (data.witnessName || "").split(" ");
-  const witnessPhone = parsePhoneParts(data.witnessPhone);
+  const witnessPhone = parsePhoneParts(
+    data.witnessPhone,
+    "Witness's telephone number",
+  );
 
   setTextField(fieldMap.witnessFirstName, witnessNameParts[0]);
   setTextField(
@@ -1604,7 +1645,7 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.street, data.street || data.veteranStreet || "");
   setTextField(fieldMap.apt, aptForBox(data.apt || data.veteranApt));
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
-  setTextField(fieldMap.state, data.state || data.veteranState || "");
+  setTextField(fieldMap.state, stateForBox(data.state || data.veteranState));
   setTextField(fieldMap.country, countryCode(data.country));
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
@@ -2602,7 +2643,10 @@ function fill21_22_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranStreet, data.street || data.veteranStreet || "");
   setTextField(fieldMap.veteranApt, aptForBox(data.apt));
   setTextField(fieldMap.veteranCity, data.city || data.veteranCity || "");
-  setTextField(fieldMap.veteranState, data.state || data.veteranState || "");
+  setTextField(
+    fieldMap.veteranState,
+    stateForBox(data.state || data.veteranState),
+  );
   setTextField(fieldMap.veteranCountry, countryCode(data.country));
   setTextField(fieldMap.veteranZip5, zip.five);
   setTextField(fieldMap.veteranZip4, zip.four);
@@ -2629,7 +2673,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
   setTextField(fieldMap.claimantApt, aptForBox(data.claimantApt));
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
-  setTextField(fieldMap.claimantState, data.claimantState || "");
+  setTextField(fieldMap.claimantState, stateForBox(data.claimantState));
   setTextField(fieldMap.claimantCountry, countryCode(data.claimantCountry));
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
@@ -2804,7 +2848,10 @@ function _fillForm2122aVeteranInfo(setTextField, fieldMap, data, parsed) {
   setTextField(fieldMap.veteranStreet, data.street || data.veteranStreet || "");
   setTextField(fieldMap.veteranApt, aptForBox(data.apt));
   setTextField(fieldMap.veteranCity, data.city || data.veteranCity || "");
-  setTextField(fieldMap.veteranState, data.state || data.veteranState || "");
+  setTextField(
+    fieldMap.veteranState,
+    stateForBox(data.state || data.veteranState),
+  );
   setTextField(fieldMap.veteranCountry, countryCode(data.country));
   setTextField(fieldMap.veteranZip5, zip.five);
   setTextField(fieldMap.veteranZip4, zip.four);
@@ -2840,7 +2887,7 @@ function _fillForm2122aClaimantContact(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
   setTextField(fieldMap.claimantApt, aptForBox(data.claimantApt));
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
-  setTextField(fieldMap.claimantState, data.claimantState || "");
+  setTextField(fieldMap.claimantState, stateForBox(data.claimantState));
   setTextField(fieldMap.claimantCountry, countryCode(data.claimantCountry));
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
@@ -2896,7 +2943,7 @@ function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   setTextField(fieldMap.repStreet, data.repStreet || data.repAddress || "");
   setTextField(fieldMap.repApt, aptForBox(data.repApt));
   setTextField(fieldMap.repCity, data.repCity || "");
-  setTextField(fieldMap.repState, data.repState || "");
+  setTextField(fieldMap.repState, stateForBox(data.repState));
   setTextField(fieldMap.repCountry, countryCode(data.repCountry));
   const repZip = (data.repZip || "").replace(/\D/g, "");
   setTextField(fieldMap.repZip5, repZip.substring(0, 5));
