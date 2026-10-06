@@ -61,6 +61,7 @@ function hitsFor(record, topics) {
   return findContradictions(record.response, {
     topics,
     hasConditions: Array.isArray(conditions) && conditions.length > 0,
+    question: record.input,
   })
     .filter((hit) => hit.rule !== EVERY_ANSWER_RULE)
     .map((hit) => `${record.run} ${record.id} ${hit.rule}`);
@@ -139,6 +140,7 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "031715 a26 intent-to-file-for-filed-claim",
       "033751 a26 intent-to-file-for-filed-claim",
       "033751 a29 secondary-barred",
+      "034657 a16 coverage-date-for-wrong-place",
     ]);
   });
 });

@@ -247,9 +247,12 @@ const RULES = [
   {
     id: "coverage-date-for-wrong-place",
     topics: ["toxic-exposure"],
-    matches: (sentence) => findWrongCoverageDate(sentence) !== null,
-    describe: (sentence) => {
-      const { wrongDate, quote } = findWrongCoverageDate(sentence);
+    matches: (sentence, { question }) =>
+      findWrongCoverageDate(sentence, { question }) !== null,
+    describe: (sentence, { question }) => {
+      const { wrongDate, quote } = findWrongCoverageDate(sentence, {
+        question,
+      });
       const rightDate = quote.text.slice(
         "Active service on or after ".length,
         quote.text.indexOf(":"),
@@ -405,10 +408,10 @@ export const CONTRADICTION_RULE_IDS = RULES.map((rule) => rule.id);
  */
 export function findContradictions(
   text,
-  { topics = [], hasConditions = false } = {},
+  { topics = [], hasConditions = false, question = "" } = {},
 ) {
   const sentences = sentencesOf(text);
-  const context = { hasConditions, text: String(text ?? "") };
+  const context = { hasConditions, question, text: String(text ?? "") };
   const hits = [];
   for (const rule of RULES) {
     const applies =
@@ -424,7 +427,7 @@ export function findContradictions(
       sentence,
       says: rule.says,
       ...(rule.correction ? { correction: rule.correction(topics) } : {}),
-      ...(rule.describe ? rule.describe(sentence) : {}),
+      ...(rule.describe ? rule.describe(sentence, context) : {}),
     });
   }
   return hits;
@@ -494,7 +497,7 @@ export function flagContradictions(result, options = {}, prompt = "") {
           conditions: options.conditions,
           dataClass: options.dataClass,
         });
-  const hits = findContradictions(text, { topics });
+  const hits = findContradictions(text, { topics, question: prompt });
   if (hits.length === 0) return result;
   return {
     ...result,

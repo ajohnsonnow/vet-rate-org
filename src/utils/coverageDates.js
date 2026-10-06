@@ -110,16 +110,18 @@ const CITATION = `VA manual ${ENTRY.citation.split(" (")[0]}`;
 const statesYearOf = (sentence, block) =>
   new RegExp(String.raw`\b${block.iso.slice(0, 4)}\b`).test(sentence);
 
-/**
- * A sentence that gives a place the other row's date and not its own:
- * { place, wrongDate, quote }, where `quote` is the table line that carries
- * the right date for that place. Null when the sentence is consistent with
- * the table, or names no place from it. A sentence that also names a place
- * from the other row is left alone: the date may belong to that place, and
- * a sentence is not parsed finely enough to say which.
- */
-export function findWrongCoverageDate(sentence) {
-  const text = String(sentence ?? "");
+const found = (block, place, wrongDate) => ({
+  place,
+  wrongDate,
+  quote: {
+    citation: CITATION,
+    text: `Active service on or after ${block.date}: ${block.lines.find(
+      (line) => properNouns(line).includes(place),
+    )}`,
+  },
+});
+
+function swappedDate(text) {
   const written = datesIn(text);
   const named = properNouns(text);
   for (const block of COVERAGE_BLOCKS) {
@@ -132,16 +134,63 @@ export function findWrongCoverageDate(sentence) {
         written.includes(other.iso) &&
         !other.places.some((word) => named.includes(word)),
     );
-    if (!wrong) continue;
-    const line = block.lines.find((text) => properNouns(text).includes(place));
-    return {
-      place,
-      wrongDate: wrong.date,
-      quote: {
-        citation: CITATION,
-        text: `Active service on or after ${block.date}: ${line}`,
-      },
-    };
+    if (wrong) return found(block, place, wrong.date);
   }
   return null;
+}
+
+// "You must have served on or after <date>": a date service has to start by.
+// A claim filed, or a law taking effect, on or after a date is something else.
+const REQUIRED = String.raw`\b(?:must|needs? to|have to|has to|required?|requires|only if)\b`;
+const SERVICE = String.raw`\b(?:served?|service|deployed|duty)\b`;
+const NOT_A_FILING = String.raw`(?:(?!fil|claim|appl)[^.;]){0,30}?`;
+const SERVICE_MUST_START = new RegExp(
+  String.raw`${REQUIRED}[^.;]{0,40}${SERVICE}${NOT_A_FILING}\bon or after\b`,
+  "i",
+);
+
+const written = (iso) => {
+  const [year, month, day] = iso.split("-").map(Number);
+  const name = MONTHS[month - 1];
+  return `${name[0].toUpperCase()}${name.slice(1)} ${day}, ${year}`;
+};
+
+const rowsNamedIn = (text) => {
+  const named = properNouns(String(text ?? ""));
+  return COVERAGE_BLOCKS.map((block) => ({
+    block,
+    place: block.places.find((word) => named.includes(word)),
+  })).filter((row) => row.place);
+};
+
+// The place is the one the sentence names, or failing that the one the
+// veteran asked about. Places from both rows leave no single right date.
+function dateOutsideTheTable(text, question) {
+  if (!SERVICE_MUST_START.test(text)) return null;
+  const dates = datesIn(text);
+  const tableDates = COVERAGE_BLOCKS.map((block) => block.iso);
+  if (dates.length === 0 || dates.some((date) => tableDates.includes(date))) {
+    return null;
+  }
+  const inSentence = rowsNamedIn(text);
+  const rows = inSentence.length > 0 ? inSentence : rowsNamedIn(question);
+  if (rows.length !== 1) return null;
+  const [{ block, place }] = rows;
+  if (statesYearOf(text, block)) return null;
+  return found(block, place, written(dates[0]));
+}
+
+/**
+ * A sentence that gives a place a start date the table does not give it:
+ * the other row's date, or a date service is said to have to start by that
+ * is neither row's. { place, wrongDate, quote }, where `quote` is the table
+ * line that carries the right date for that place; null when the sentence is
+ * consistent with the table. A sentence that names places from both rows is
+ * left alone: the date may belong to either, and a sentence is not parsed
+ * finely enough to say which. `question` is what the veteran asked, used for
+ * the place only when the sentence names none.
+ */
+export function findWrongCoverageDate(sentence, { question } = {}) {
+  const text = String(sentence ?? "");
+  return swappedDate(text) ?? dateOutsideTheTable(text, question);
 }
