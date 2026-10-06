@@ -198,7 +198,7 @@ export async function fetchNpmLatest(name, { fetchImpl }) {
   const source = `npm:${name}`;
   const { text } = await getText(
     source,
-    `https://registry.npmjs.org/${name.replace("/", "%2F")}/latest`,
+    `https://registry.npmjs.org/${name.replaceAll("/", "%2F")}/latest`,
     fetchImpl,
   );
   return parseNpmLatest(parseJson(source, text), source);
