@@ -50,7 +50,27 @@ async function checkBoxNamesAskedFor(fill) {
  * and return a reader over the result: `text(key)`, `checked(key)` by the
  * field map's keys, `allText()` and `checkedKeys()`.
  */
-export async function fillSyntheticForm(formNumber, fill, data) {
+// The real forms give their digit boxes a maximum length, and pdf-lib
+// refuses a value that is longer. The stand-in does the same.
+const boxLength = (key) => {
+  if (/SSN1$/i.test(key)) return 3;
+  if (/SSN2$/i.test(key)) return 2;
+  if (/SSN3$/i.test(key) || /Year$/.test(key)) return 4;
+  if (/(Month|Day)$/.test(key)) return 2;
+  return null;
+};
+
+/**
+ * `options.sizes` gives a text field a width and height in points (and a
+ * 10pt font), for tests of text that has to fit a box:
+ * `{ remarks: { width: 300, height: 60 } }`. `options.maxLengths` adds a
+ * maximum length by field-map key.
+ */
+export async function fillSyntheticForm(formNumber, fill, data, options = {}) {
+  const keyOf = (name) =>
+    Object.keys(_VA_FORM_FIELDS[formNumber]).find(
+      (key) => _VA_FORM_FIELDS[formNumber][key] === name,
+    );
   const fieldMap = _VA_FORM_FIELDS[formNumber];
   const checkBoxes = await checkBoxNamesAskedFor(fill);
 
@@ -62,9 +82,20 @@ export async function fillSyntheticForm(formNumber, fill, data) {
     if (checkBoxes.has(name)) {
       form.createCheckBox(name).addToPage(page, { ...place, width: 9 });
     } else {
+      const key = keyOf(name);
+      const size = options.sizes?.[key];
+      const max = options.maxLengths?.[key] ?? boxLength(key);
       const field = form.createTextField(name);
-      field.enableMultiline();
-      field.addToPage(page, place);
+      if (max) field.setMaxLength(max);
+      else field.enableMultiline();
+      // A multi-line box is tall enough for a statement unless a test
+      // gives it a size of its own.
+      field.addToPage(page, {
+        ...place,
+        ...(max ? {} : { height: 600 }),
+        ...size,
+      });
+      if (!max) field.setFontSize(10);
     }
   });
   const templateBytes = await template.save();

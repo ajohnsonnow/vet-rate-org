@@ -135,7 +135,8 @@ describe("dry run end to end", () => {
       "| t02 | enhanceFormStatement | template | app-built draft returned: 0 of 3 passages reworded, 0 unchanged, 0 rejected (the model did not answer: WebGPU inference timed out after 300s) |",
     );
     expect(md).toContain("| t04 | compileWitnessStatement | template |");
-    expect(md).toContain("| t01 | writer / tool's own prompt | pass |");
+    expect(md).toContain("| t09 | writer / tool's own prompt | pass |");
+    expect(md).toMatch(/\| t01 \| writer \/ \? \| n\/a \|/);
     expect(md).toMatch(/\| t04 \| writer \/ \? \| n\/a \|/);
     expect(md).toContain("| t06 | generateNexusLetterRequest | - |");
   });
@@ -157,16 +158,6 @@ describe("dry run tool cases", () => {
   it("records the draft path each tool case took", () => {
     expect(assertDryRunDraftPaths(run.cases)).toEqual([]);
     const byId = new Map(run.cases.map((c) => [c.id, c]));
-    expect(byId.get("t01")).toMatchObject({
-      entry: "enhancePersonalStatement",
-      draftPath: "model",
-      draftNote: null,
-      requestMatch: "matched",
-      passages: { sent: 3, accepted: 3, unchanged: 0, rejected: 0 },
-    });
-    expect(byId.get("t01").response).toContain(
-      "And I miss about two shifts a month at the Placeholder warehouse.",
-    );
     expect(byId.get("t02")).toMatchObject({
       draftPath: "template",
       draftErrorReason: "WebGPU inference timed out after 300s",
@@ -226,6 +217,37 @@ describe("dry run tool cases", () => {
     expect(assertDryRunDraftPaths(flipped)).toEqual([
       "t03 draft path: expected template, got model",
     ]);
+  });
+});
+
+describe("dry run on a small on-device model", () => {
+  it("records no model call, the app-built draft and the reason", () => {
+    const run = dryRun(makeTmp());
+    const byId = new Map(run.cases.map((c) => [c.id, c]));
+    // t01 stands for a run on a small on-device model: no model call, the
+    // app-built draft, and the reason on the record.
+    expect(byId.get("t01")).toMatchObject({
+      entry: "enhancePersonalStatement",
+      draftPath: "template",
+      rewordingOff: "small-model",
+      engineRequests: 0,
+      requestMatch: "none",
+      passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+      passageOutcomes: [],
+    });
+    expect(byId.get("t01").draftNote).toMatch(
+      /^The AI on this device is a small one/,
+    );
+    expect(byId.get("t01").response).toContain(
+      "I miss about two shifts a month at the Placeholder warehouse.",
+    );
+    expect(byId.get("t01").response).not.toContain("And I miss");
+    for (const [id, record] of byId) {
+      if (/^t/.test(id) && id !== "t01") {
+        expect([id, record.rewordingOff]).toEqual([id, null]);
+      }
+    }
+    expect(byId.get("a07")).not.toHaveProperty("rewordingOff");
   });
 });
 

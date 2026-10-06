@@ -53,6 +53,8 @@ function guardOutcome(flags) {
  * it, the verdict and the reasons) so a rejected rewording can be read,
  * `draftRejectReasons` says why each rejected one was, and
  * `draftErrorReason` is set when the model could not answer at all.
+ * `rewordingOff` is "small-model" when the tool made no model call because
+ * a small on-device model would have answered.
  * `modelCalled: false` says the app answered a rating question itself: no
  * engine was called, so the record has no request, no agent and
  * `engineRequests` 0. With `calculatorLead` ({ expected }) `response` is the
@@ -96,6 +98,7 @@ function toolFields(caseDef, outcome, own) {
     draftErrorReason: outcome.tool?.draftErrorReason ?? null,
     passages: outcome.tool?.passages ?? null,
     passageOutcomes: outcome.tool?.passageOutcomes ?? [],
+    rewordingOff: outcome.tool?.rewordingOff ?? null,
     ...ownSystemPromptSeen(caseDef, own),
   };
 }

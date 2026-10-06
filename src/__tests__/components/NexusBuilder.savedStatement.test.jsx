@@ -89,6 +89,7 @@ describe("Nexus Builder with a saved statement for the condition", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Continue from my saved statement" }),
     );
+    expect(document.body).not.toHaveFocus();
     toReview();
 
     expect(statement().value).toBe(SAVED_TEXT);
@@ -122,6 +123,7 @@ describe("Nexus Builder with a saved statement for the condition", () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(dialog()).not.toBeInTheDocument();
     expect(statement().value).toBe(fresh);
+    expect(document.body).not.toHaveFocus();
   });
 
   it("replaces the saved one only when the veteran says so", () => {

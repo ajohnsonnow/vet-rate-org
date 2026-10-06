@@ -19,12 +19,22 @@ import {
   normalizeToolOutcome,
 } from "../../../../scripts/eval/lib/toolEntries.js";
 
+const smallModel = vi.hoisted(() => ({ answering: false }));
+
 vi.mock("../../../utils/unifiedAIService", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
     isAnyAIAvailable: () => true,
-    getAIStatus: () => ({ statusText: "Local AI" }),
+    getAIStatus: () =>
+      smallModel.answering
+        ? {
+            statusText: "Local AI",
+            effectiveMode: "swarm",
+            swarmAvailable: true,
+            swarmStatus: { model: "Qwen3.5-2B-q4f16_1-MLC" },
+          }
+        : { statusText: "Local AI" },
     generateAI: vi.fn(),
   };
 });
@@ -210,4 +220,25 @@ describe("t08 through decodeDecision", () => {
     ]);
     expect(outcome.tool.draftPath).toBeNull();
   });
+});
+
+describe("a run on a small on-device model", () => {
+  it.each(CALLING_CASES)(
+    "$id: the dry run's small-model draft is what production returns",
+    async (caseDef) => {
+      smallModel.answering = true;
+      const outcome = await runThroughProduction(caseDef, "1. unused");
+      smallModel.answering = false;
+      const expected = caseDef.draft.smallModel();
+
+      expect(generateAI).not.toHaveBeenCalled();
+      expect(outcome.tool).toMatchObject({
+        draftPath: "template",
+        draftNote: expected.draftNote,
+        rewordingOff: "small-model",
+        passages: expected.passages,
+      });
+      expect(outcome.text).toBe(expected.content);
+    },
+  );
 });

@@ -1056,7 +1056,8 @@ function createAIConsentHandler({
         setDraftNote(
           result.draftErrorReason
             ? null
-            : (rewordingOffNote(result) ?? AI_NO_CHANGE_NOTE),
+            : (rewordingOffNote(result, t("smallModelCaveat.rewordingOff")) ??
+                AI_NO_CHANGE_NOTE),
         );
       } else {
         setAiError(plainAIError(result.error, t));
@@ -1340,6 +1341,7 @@ const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
         <EditedDraftDialog
           onKeep={output.keepEditedStatement}
           onRebuild={output.rebuildStatement}
+          returnFocusTo="nexus-statement-text"
         />
       )}
       {output.askReplace && (
@@ -1349,6 +1351,7 @@ const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
           onKeep={output.keepSavedStatement}
           replaceLabel="Replace it with this statement"
           onReplace={output.saveStatementNow}
+          returnFocusTo="nexus-statement-text"
         >
           You already have a saved statement for this condition. Saving this one
           replaces it. To keep both, download the statement on screen first.

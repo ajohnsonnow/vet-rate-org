@@ -43,14 +43,16 @@ const REQUIRED = {
   dailyImpact: "I cannot use the phone",
 };
 
+const draft = () => screen.getByRole("textbox", { name: /^Your statement/ });
+const next = () => screen.queryByRole("button", { name: /^next$/i });
+const outOfStep = () =>
+  screen.queryByRole("note", { name: "Draft and answers differ" });
+
 beforeEach(() => {
   localStorage.clear();
 });
 
 describe("Forms Helper", () => {
-  const draft = () => screen.getByRole("textbox", { name: /^Your statement/ });
-  const next = () => screen.queryByRole("button", { name: /^next$/i });
-
   function walkToResult(change = {}) {
     for (let guard = 0; guard < 12; guard++) {
       for (const [name, value] of Object.entries({ ...REQUIRED, ...change })) {
@@ -95,6 +97,11 @@ describe("Forms Helper", () => {
 
     expect(dialog()).not.toBeInTheDocument();
     expect(draft().value).toBe(edited);
+    expect(draft()).toHaveFocus();
+    expect(outOfStep().textContent).toMatch(
+      /does not include the answer you changed.*official PDF uses your current answers/i,
+    );
+    expect(draft()).toHaveAccessibleDescription(/does not include the answer/);
   });
 
   it("rebuilds from the answers when the veteran says so", () => {
@@ -105,6 +112,8 @@ describe("Forms Helper", () => {
     expect(dialog()).not.toBeInTheDocument();
     expect(draft().value).toContain("I lost my job in May.");
     expect(draft().value).not.toContain(EDIT);
+    expect(draft()).toHaveFocus();
+    expect(outOfStep()).not.toBeInTheDocument();
   });
 
   it("does not ask when no answer changed: the edit simply stays", () => {
@@ -113,6 +122,7 @@ describe("Forms Helper", () => {
 
     expect(dialog()).not.toBeInTheDocument();
     expect(draft().value).toBe(edited);
+    expect(outOfStep()).not.toBeInTheDocument();
   });
 
   it("does not ask when the draft was never edited", () => {
@@ -172,6 +182,7 @@ describe("Nexus Builder", () => {
     fireEvent.click(screen.getByRole("button", { name: KEEP }));
     expect(dialog()).not.toBeInTheDocument();
     expect(statement().value).toBe(edited);
+    expect(statement()).toHaveFocus();
   });
 
   it("rebuilds from the answers when the veteran says so", () => {
@@ -184,6 +195,7 @@ describe("Nexus Builder", () => {
 
     expect(statement().value).toContain("I lost my job in May.");
     expect(statement().value).not.toContain(EDIT);
+    expect(statement()).toHaveFocus();
   });
 
   it("does not ask when no answer changed", () => {

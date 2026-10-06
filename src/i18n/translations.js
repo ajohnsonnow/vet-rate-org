@@ -2059,6 +2059,13 @@ export const APP_TRANSLATIONS = {
       vi: "Hãy đối chiếu mọi nhận định với tài liệu của chính bạn, và xác nhận các bước nộp hồ sơ với nhân viên VSO được công nhận hoặc trên VA.gov trước khi thực hiện.",
       ko: "모든 내용을 본인의 문서와 대조하고, 조치하기 전에 공인 VSO 또는 VA.gov에서 신청 절차를 확인하세요.",
     },
+    rewordingOff: {
+      en: "The AI on this device is a small one, and small ones changed the meaning of what people wrote, so it is not used to reword statements. Your draft is in your own words, as you typed them.",
+      es: "La IA de este dispositivo es pequeña, y las IA pequeñas cambiaron el sentido de lo que la gente escribió, así que no se usa para reformular declaraciones. Su borrador está en sus propias palabras, tal como las escribió.",
+      tl: "Maliit ang AI sa device na ito, at binago ng maliliit na AI ang kahulugan ng isinulat ng mga tao, kaya hindi ito ginagamit para baguhin ang pananalita ng mga pahayag. Ang draft mo ay nasa sarili mong mga salita, gaya ng pagkaka-type mo.",
+      vi: "AI trên thiết bị này là loại nhỏ, và các AI nhỏ đã làm thay đổi ý nghĩa những gì người dùng viết, nên nó không được dùng để viết lại lời khai. Bản nháp của bạn giữ nguyên lời của chính bạn, đúng như bạn đã gõ.",
+      ko: "이 기기의 AI는 소형 모델이며, 소형 모델은 사람들이 쓴 글의 의미를 바꾼 적이 있어 진술서 문장을 고쳐 쓰는 데 사용하지 않습니다. 초안은 입력하신 그대로 본인의 말로 되어 있습니다.",
+    },
   },
   ai: {
     selectNeuralEngine: {
@@ -9945,11 +9952,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "명세서가 생성되었습니다!",
     },
     reviewStatementDesc: {
-      en: "Review your statement below, then download. You can get a ready-to-sign PDF or text formats.",
-      es: "Revisa tu declaración abajo, luego descarga. Puedes obtener un PDF listo para firmar o formatos de texto.",
-      tl: "Suriin ang statement mo sa ibaba, pagkatapos i-download. Makukuha mo ang ready-to-sign PDF o text formats.",
-      vi: "Xem lại tuyên bố bên dưới, sau đó tải xuống. Bạn có thể nhận PDF sẵn sàng ký hoặc định dạng văn bản.",
-      ko: "아래에서 명세서를 검토한 후 다운로드하세요. 서명 준비된 PDF 또는 텍스트 형식을 받을 수 있습니다.",
+      en: "Review your draft below, then download it. Read every line before you sign anything.",
+      es: "Revisa tu borrador abajo y luego descárgalo. Lee cada línea antes de firmar.",
+      tl: "Suriin ang draft mo sa ibaba, pagkatapos i-download. Basahin ang bawat linya bago pumirma.",
+      vi: "Xem lại bản nháp bên dưới, sau đó tải xuống. Hãy đọc từng dòng trước khi ký.",
+      ko: "아래 초안을 검토한 후 다운로드하세요. 서명하기 전에 모든 줄을 읽어 보세요.",
     },
 
     // AI Enhancement
@@ -10249,11 +10256,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
     // Statement Generated
     statementGeneratedDesc: {
-      en: "Review your statement below, then download. You can get a ready-to-sign PDF or text formats.",
-      es: "Revisa tu declaración abajo, luego descarga. Puedes obtener un PDF listo para firmar o formatos de texto.",
-      tl: "Suriin ang statement mo sa ibaba, pagkatapos i-download. Makukuha mo ang ready-to-sign PDF o text formats.",
-      vi: "Xem lại tuyên bố bên dưới, sau đó tải xuống. Bạn có thể nhận PDF sẵn sàng ký hoặc định dạng văn bản.",
-      ko: "아래에서 명세서를 검토한 후 다운로드하세요. 서명 준비된 PDF 또는 텍스트 형식을 받을 수 있습니다.",
+      en: "Review your draft below, then download it. Read every line before you sign anything.",
+      es: "Revisa tu borrador abajo y luego descárgalo. Lee cada línea antes de firmar.",
+      tl: "Suriin ang draft mo sa ibaba, pagkatapos i-download. Basahin ang bawat linya bago pumirma.",
+      vi: "Xem lại bản nháp bên dưới, sau đó tải xuống. Hãy đọc từng dòng trước khi ký.",
+      ko: "아래 초안을 검토한 후 다운로드하세요. 서명하기 전에 모든 줄을 읽어 보세요.",
     },
     yourGeneratedStatement: {
       en: "Your Generated Statement",

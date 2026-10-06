@@ -18,7 +18,7 @@ import {
 import { downloadDraft } from "../utils/draftExport";
 import { plainAIError } from "../utils/writerErrorMessage";
 import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
-import { fillAndDownloadForm } from "../utils/pdfFormFiller";
+import { fillAndDownloadForm, hasOfficialPdf } from "../utils/pdfFormFiller";
 import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -4146,6 +4146,12 @@ ${limitationsText}`;
 
 const fieldId = (name) => `forms-helper-field-${name}`;
 
+// index.css sets `appearance: none` on every input, which leaves a check
+// box with no box at all. These give it back on the box itself: the native
+// box and tick, a fixed size, and a focus ring.
+const TICK_BOX =
+  "[appearance:auto] h-5 w-5 shrink-0 accent-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700";
+
 // A required answer is missing when it is empty, blank, unticked or has
 // nothing chosen.
 function isMissing(value) {
@@ -4200,7 +4206,7 @@ function ChecklistField({ field, formData, handleChecklistChange, hasError }) {
         {field.options.map((option, optionIndex) => (
           <label
             key={option}
-            className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            className="flex items-center gap-3 min-h-[44px] p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
           >
             <input
               id={optionIndex === 0 ? fieldId(field.name) : undefined}
@@ -4209,7 +4215,7 @@ function ChecklistField({ field, formData, handleChecklistChange, hasError }) {
               onChange={(e) =>
                 handleChecklistChange(field.name, option, e.target.checked)
               }
-              className="mt-1 rounded border-gray-300 text-va-blue focus:ring-va-blue"
+              className={TICK_BOX}
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
               {option}
@@ -4286,12 +4292,37 @@ function SelectField({ field, value, onChange, hasError }) {
         required={field.required}
         {...invalidProps(field.name, hasError)}
       >
+        {/* A list with no blank entry would show its first option as if it
+            had been chosen while no answer is recorded. */}
+        {!field.options.some((opt) => opt.value === "") && (
+          <option value="">Select...</option>
+        )}
         {field.options.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>
         ))}
       </select>
+      <FieldError name={field.name} hasError={hasError} />
+    </div>
+  );
+}
+
+function TickBoxField({ field, formData, handleFieldChange, hasError }) {
+  return (
+    <div key={field.name} className="mb-4">
+      <label className="flex items-center gap-3 min-h-[44px] p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
+        <input
+          id={fieldId(field.name)}
+          type="checkbox"
+          checked={formData[field.name] || false}
+          onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+          className={TICK_BOX}
+          required={field.required}
+          {...invalidProps(field.name, hasError)}
+        />
+        <span className="text-gray-700 dark:text-gray-300">{field.label}</span>
+      </label>
       <FieldError name={field.name} hasError={hasError} />
     </div>
   );
@@ -4317,22 +4348,12 @@ function FormField({
 
   if (field.type === "checkbox") {
     return (
-      <div key={field.name} className="mb-4">
-        <label className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
-          <input
-            id={fieldId(field.name)}
-            type="checkbox"
-            checked={formData[field.name] || false}
-            onChange={(e) => handleFieldChange(field.name, e.target.checked)}
-            className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
-            {...invalidProps(field.name, hasError)}
-          />
-          <span className="text-gray-700 dark:text-gray-300">
-            {field.label}
-          </span>
-        </label>
-        <FieldError name={field.name} hasError={hasError} />
-      </div>
+      <TickBoxField
+        field={field}
+        formData={formData}
+        handleFieldChange={handleFieldChange}
+        hasError={hasError}
+      />
     );
   }
 
@@ -5006,7 +5027,7 @@ function AIEnhancementSection({
 const OFFICIAL_PDF_REST =
   "For you to complete on the form: anything still blank, any boxes to tick, your signature and the date.";
 const OFFICIAL_PDF_NOTES = {
-  "personal-statement": `Filled in from your answers: your name and contact details, and your statement goes in Remarks (it carries over to page 2 if it is long). ${OFFICIAL_PDF_REST}`,
+  "personal-statement": `Filled in from your answers: your name and contact details, and your statement goes in Remarks and carries over to the page 2 box when it is long. If it is too long for both boxes, this screen tells you and the rest is in the text downloads. ${OFFICIAL_PDF_REST}`,
   "ptsd-stressor": `Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.`,
   "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
 };
@@ -5014,7 +5035,37 @@ const OFFICIAL_PDF_NOTE_OTHER = `Filled in from your answers where the form has 
 const OFFICIAL_PDF_EDITS =
   "The official PDF is built from the answers you gave in the steps, not from edits typed into the statement box.";
 
+const TEXT_ONLY_NOTE =
+  "The app cannot fill in the official form for this one. These downloads are a text draft of your answers, not the official VA form. Get the official form from VA.gov and copy your answers onto it.";
+const OFFICIAL_PDF_OVERFLOW =
+  "Your statement was too long for the Remarks boxes on the form. The official PDF holds the first part and says where it stops. The rest is not on the form: download the full statement as text (.TXT, .DOCX or .PDF) and attach it.";
+const OFFICIAL_PDF_FAILED =
+  "The official PDF could not be made. Use one of the text downloads instead.";
+
+/** What to tell the veteran about the official PDF just made, or "". */
+function officialPdfProblems(result) {
+  return [
+    result?.overflow ? OFFICIAL_PDF_OVERFLOW : "",
+    result?.leftBlank?.length > 0
+      ? `Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in: ${result.leftBlank.join("; ")}.`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function OfficialPdfNote({ formType, isStatement }) {
+  if (!hasOfficialPdf(formType)) {
+    return (
+      <p
+        role="note"
+        aria-label="About these downloads"
+        className="mt-3 text-sm text-gray-700 dark:text-gray-300"
+      >
+        {TEXT_ONLY_NOTE}
+      </p>
+    );
+  }
   return (
     <p
       role="note"
@@ -5027,12 +5078,32 @@ function OfficialPdfNote({ formType, isStatement }) {
   );
 }
 
+// Offered only for a form the app can fill.
+function OfficialPdfButton({ onClick, t }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onClick()}
+      className="flex items-center gap-3 p-4 bg-gradient-to-r from-va-blue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
+    >
+      <span className="text-2xl">📋</span>
+      <div className="text-left">
+        <div className="font-bold">{t("formsHelper", "officialVAFormPdf")}</div>
+        <div className="text-sm text-blue-100">
+          {t("formsHelper", "readyToSign")}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function DownloadOptionsCard({
   t,
   handleDownloadOfficialPdf,
   handleDownload,
   formType,
   isStatement,
+  officialPdfNotice,
 }) {
   return (
     <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
@@ -5040,23 +5111,12 @@ function DownloadOptionsCard({
         <span className="text-xl">📥</span>{" "}
         {t("formsHelper", "downloadYourForm")}
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Primary: Official PDF */}
-        <button
-          type="button"
-          onClick={() => handleDownloadOfficialPdf()}
-          className="flex items-center gap-3 p-4 bg-gradient-to-r from-va-blue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all shadow-md hover:shadow-lg"
-        >
-          <span className="text-2xl">📋</span>
-          <div className="text-left">
-            <div className="font-bold">
-              {t("formsHelper", "officialVAFormPdf")}
-            </div>
-            <div className="text-sm text-blue-100">
-              {t("formsHelper", "readyToSign")}
-            </div>
-          </div>
-        </button>
+      <div
+        className={`grid grid-cols-1 gap-3 ${hasOfficialPdf(formType) ? "sm:grid-cols-2" : ""}`}
+      >
+        {hasOfficialPdf(formType) && (
+          <OfficialPdfButton onClick={handleDownloadOfficialPdf} t={t} />
+        )}
 
         {/* Secondary options */}
         <div className="flex gap-2">
@@ -5093,6 +5153,14 @@ function DownloadOptionsCard({
         </div>
       </div>
       <OfficialPdfNote formType={formType} isStatement={isStatement} />
+      {officialPdfNotice && (
+        <p
+          role="alert"
+          className="mt-3 p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm text-red-900 dark:text-red-100"
+        >
+          {officialPdfNotice}
+        </p>
+      )}
     </div>
   );
 }
@@ -5160,6 +5228,7 @@ function ReviewDownloadSection({
   isStatement,
   savedItem,
   isSavedNow,
+  officialPdfNotice,
 }) {
   return (
     <>
@@ -5169,6 +5238,7 @@ function ReviewDownloadSection({
         handleDownload={handleDownload}
         formType={formType}
         isStatement={isStatement}
+        officialPdfNotice={officialPdfNotice}
       />
 
       <SaveToPacketCard
@@ -5195,7 +5265,10 @@ function ReviewDownloadSection({
   );
 }
 
-function StatementDraftEditor({ versionLabel, value, onChange }) {
+const DRAFT_OUT_OF_STEP =
+  "You kept your edited draft, so it does not include the answer you changed. The official PDF uses your current answers. Edit the draft here if it should say the same.";
+
+function StatementDraftEditor({ versionLabel, value, onChange, outOfStep }) {
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <label
@@ -5211,9 +5284,23 @@ function StatementDraftEditor({ versionLabel, value, onChange }) {
         You can edit the text here. Downloads and Save to Packet use exactly
         what this box shows.
       </p>
+      {outOfStep && (
+        <p
+          id="forms-helper-draft-out-of-step"
+          role="note"
+          aria-label="Draft and answers differ"
+          className="mx-4 mt-3 p-3 rounded-lg border border-amber-700 bg-amber-50 dark:bg-amber-900/30 text-sm text-amber-950 dark:text-amber-100"
+        >
+          {DRAFT_OUT_OF_STEP}
+        </p>
+      )}
       <textarea
         id="forms-helper-draft"
-        aria-describedby="forms-helper-draft-hint"
+        aria-describedby={
+          outOfStep
+            ? "forms-helper-draft-hint forms-helper-draft-out-of-step"
+            : "forms-helper-draft-hint"
+        }
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={18}
@@ -5261,6 +5348,9 @@ function ReviewPreviewSection({ displayContent, t }) {
   );
 }
 
+const TEXT_ONLY_NEXT_STEP =
+  "the text draft above. It is not the official VA form: get that from VA.gov and copy your answers onto it.";
+
 function ReviewNextSteps({ selectedForm, t }) {
   return (
     <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
@@ -5270,7 +5360,9 @@ function ReviewNextSteps({ selectedForm, t }) {
       <ol className="list-decimal list-inside text-sm text-yellow-800 dark:text-yellow-300 space-y-1">
         <li>
           <strong>{t("formsHelper", "download")}</strong>{" "}
-          {t("formsHelper", "nextStepDownload")}
+          {hasOfficialPdf(selectedForm?.id)
+            ? t("formsHelper", "nextStepDownload")
+            : TEXT_ONLY_NEXT_STEP}
         </li>
         <li>
           <strong>{t("formsHelper", "review")}</strong>{" "}
@@ -7499,7 +7591,9 @@ function useFormsHelperAIState() {
   const [draftEdit, setDraftEdit] = useState(null);
   const [keptDraft, setKeptDraft] = useState(null);
   const [savedItem, setSavedItem] = useState(null);
+  const [officialPdfNotice, setOfficialPdfNotice] = useState("");
   const [askRebuild, setAskRebuild] = useState(false);
+  const [draftOutOfStep, setDraftOutOfStep] = useState(false);
 
   return {
     draftEdit,
@@ -7508,8 +7602,12 @@ function useFormsHelperAIState() {
     setKeptDraft,
     savedItem,
     setSavedItem,
+    officialPdfNotice,
+    setOfficialPdfNotice,
     askRebuild,
     setAskRebuild,
+    draftOutOfStep,
+    setDraftOutOfStep,
     aiDraftNote,
     setAiDraftNote,
     showAIConsent,
@@ -7922,6 +8020,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     ctx.setDraftEdit(null);
     ctx.setKeptDraft(null);
     ctx.setAskRebuild(false);
+    ctx.setDraftOutOfStep(false);
   };
 
   // Going back to the answers keeps what is in the box when the veteran
@@ -7963,8 +8062,16 @@ function _buildFormsHelperGenerationHandlers(ctx) {
 
   const handleRebuildFromAnswers = () => clearDraftState();
 
+  // Kept after an answer changed: the draft and the answers now differ,
+  // and the screen says so.
+  const handleKeepEditedDraft = () => {
+    ctx.setAskRebuild(false);
+    ctx.setDraftOutOfStep(true);
+  };
+
   const handleStartNewForm = () => {
     clearDraftState();
+    ctx.setOfficialPdfNotice("");
     ctx.setSavedItem(null);
     ctx.setSelectedForm(null);
     ctx.setFormData({});
@@ -7977,6 +8084,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     handleFinishWizard,
     handleEditAnswers,
     handleRebuildFromAnswers,
+    handleKeepEditedDraft,
     handleStartNewForm,
   };
 }
@@ -7995,7 +8103,8 @@ function showAIOutcome(ctx, result) {
   ctx.setAiDraftNote(
     reworded || result.draftErrorReason
       ? null
-      : (rewordingOffNote(result) ?? AI_NO_CHANGE_NOTE),
+      : (rewordingOffNote(result, ctx.t("smallModelCaveat", "rewordingOff")) ??
+          AI_NO_CHANGE_NOTE),
   );
   ctx.setAiError(
     result.draftErrorReason
@@ -8126,20 +8235,16 @@ function _buildFormsHelperDownloadHandlers(ctx) {
     }
   };
 
+  // The official PDF is filled from the answers. Anything that did not fit
+  // the form is said on screen, never dropped in silence.
   const handleDownloadOfficialPdf = async () => {
+    ctx.setOfficialPdfNotice("");
     try {
-      // Show loading state
       const result = await fillAndDownloadForm(selectedForm?.id, formData);
-      if (result.success) {
-        // eslint-disable-next-line no-console
-        console.log(`Downloaded: ${result.fileName}`);
-      }
+      ctx.setOfficialPdfNotice(officialPdfProblems(result));
     } catch (error) {
       console.error("Error generating official PDF:", error);
-      alert(
-        "Error generating official PDF form. Downloading text version instead.",
-      );
-      handleDownload("pdf");
+      ctx.setOfficialPdfNotice(OFFICIAL_PDF_FAILED);
     }
   };
 
@@ -8255,18 +8360,9 @@ function ReviewSuccessMessage({ t }) {
 
 function FormsHelperReviewStep({ state, handlers }) {
   const { generatedContent, t, aiEnhancedContent, showAIVersion } = state;
-  const {
-    isAIEnabledFormType,
-    handleDownloadOfficialPdf,
-    handleDownload,
-    handleSaveToPacket,
-    getDisplayContent,
-    editDraft,
-  } = handlers;
-
   if (!generatedContent) return null;
 
-  const displayContent = getDisplayContent();
+  const displayContent = handlers.getDisplayContent();
   const plan = formStatementPlan(state.selectedForm?.id, {});
   const isStatement = Boolean(plan);
   const showingAIDraft = Boolean(showAIVersion && aiEnhancedContent);
@@ -8285,7 +8381,7 @@ function FormsHelperReviewStep({ state, handlers }) {
       <ClaimPrepDisclaimer />
 
       <AIEnhancementSection
-        isAIEnabledFormType={isAIEnabledFormType}
+        isAIEnabledFormType={handlers.isAIEnabledFormType}
         aiStatus={state.aiStatus}
         aiEnhancedContent={aiEnhancedContent}
         handleAIEnhanceClick={handlers.handleAIEnhanceClick}
@@ -8308,20 +8404,22 @@ function FormsHelperReviewStep({ state, handlers }) {
               : STANDARD_DRAFT_LABEL
           }
           value={displayContent}
-          onChange={editDraft}
+          onChange={handlers.editDraft}
+          outOfStep={state.draftOutOfStep}
         />
       )}
 
       <ReviewDownloadSection
         t={t}
-        handleDownloadOfficialPdf={handleDownloadOfficialPdf}
-        handleDownload={handleDownload}
-        handleSaveToPacket={handleSaveToPacket}
+        handleDownloadOfficialPdf={handlers.handleDownloadOfficialPdf}
+        handleDownload={handlers.handleDownload}
+        handleSaveToPacket={handlers.handleSaveToPacket}
         importStatus={state.importStatus}
         formType={state.selectedForm?.id}
         isStatement={isStatement}
         savedItem={state.savedItem}
         isSavedNow={state.savedItem?.text === displayContent}
+        officialPdfNotice={state.officialPdfNotice}
       />
 
       {!isStatement && (
@@ -8339,8 +8437,9 @@ function FormsHelperReviewStep({ state, handlers }) {
 
       {state.askRebuild && (
         <EditedDraftDialog
-          onKeep={() => state.setAskRebuild(false)}
+          onKeep={handlers.handleKeepEditedDraft}
           onRebuild={handlers.handleRebuildFromAnswers}
+          returnFocusTo="forms-helper-draft"
         />
       )}
     </div>

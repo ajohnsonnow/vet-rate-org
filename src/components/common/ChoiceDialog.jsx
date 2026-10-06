@@ -5,8 +5,10 @@
  *
  * Asked before the app would replace something the veteran wrote. Focus
  * moves to the first choice, which is always the one that keeps their
- * words; Tab stays inside the dialog; Escape takes the first choice; focus
- * goes back to where it was when the dialog closes.
+ * words; Tab stays inside the dialog; Escape takes the first choice. When
+ * the dialog closes, focus goes to the element named by `returnFocusTo`
+ * (the draft the question was about) or, when none is named, back to the
+ * control that opened the dialog. It never drops to the page body.
  */
 import { useEffect, useId, useRef } from "react";
 
@@ -20,6 +22,7 @@ export default function ChoiceDialog({
   onKeep,
   replaceLabel,
   onReplace,
+  returnFocusTo,
 }) {
   const id = useId();
   const keepRef = useRef(null);
@@ -28,8 +31,13 @@ export default function ChoiceDialog({
   useEffect(() => {
     const before = document.activeElement;
     keepRef.current?.focus();
-    return () => before?.focus?.();
-  }, []);
+    return () => {
+      const usable = (element) =>
+        element?.isConnected && element !== document.body && !element.disabled;
+      const named = document.getElementById(returnFocusTo ?? "");
+      (named ?? (usable(before) ? before : null))?.focus?.();
+    };
+  }, [returnFocusTo]);
 
   const onKeyDown = (event) => {
     if (event.key === "Escape") {
@@ -90,7 +98,7 @@ export default function ChoiceDialog({
 }
 
 /** Asked when regenerating would replace a draft the veteran edited. */
-export function EditedDraftDialog({ onKeep, onRebuild }) {
+export function EditedDraftDialog({ onKeep, onRebuild, returnFocusTo }) {
   return (
     <ChoiceDialog
       title="You edited this draft"
@@ -98,6 +106,7 @@ export function EditedDraftDialog({ onKeep, onRebuild }) {
       onKeep={onKeep}
       replaceLabel="Rebuild from my answers"
       onReplace={onRebuild}
+      returnFocusTo={returnFocusTo}
     >
       You changed an answer after editing this draft. Your edited draft is still
       here. Rebuilding makes a new draft from your answers and removes your
