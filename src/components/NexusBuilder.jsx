@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -19,7 +19,7 @@ import {
   standardDraftNote,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
-import { EditedDraftDialog } from "./common/ChoiceDialog";
+import ChoiceDialog, { EditedDraftDialog } from "./common/ChoiceDialog";
 import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
 import {
@@ -32,7 +32,11 @@ import { LLMRecommendationBadge } from "./LLMRecommendation";
 import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import SmartAILoadButton from "./SmartAILoadButton";
 import { getMyRatings } from "../utils/veteranProfile";
-import { getSavedClaims, getStatement } from "../utils/claimsStorage";
+import {
+  getSavedClaims,
+  getStatement,
+  getStatementForCondition,
+} from "../utils/claimsStorage";
 import { normalizeConditionName } from "../utils/conditionName";
 
 // Pure doctor-note generator, split out of NexusBuilder purely to keep its
@@ -1325,6 +1329,18 @@ const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
           onRebuild={output.rebuildStatement}
         />
       )}
+      {output.askReplace && (
+        <ChoiceDialog
+          title="Replace your saved statement?"
+          keepLabel="Keep my saved statement"
+          onKeep={output.keepSavedStatement}
+          replaceLabel="Replace it with this statement"
+          onReplace={output.saveStatementNow}
+        >
+          You already have a saved statement for this condition. Saving this one
+          replaces it. To keep both, download the statement on screen first.
+        </ChoiceDialog>
+      )}
       {wizard.step === wizard.totalSteps && (
         <NexusFinishControls
           isCertified={modalState.isCertified}
@@ -1404,9 +1420,14 @@ function useNexusModalState() {
 // changes after the standard statement was edited, the edited statement
 // stays in the box and the veteran is asked whether to keep it or rebuild
 // from the answers.
-function useStatementEdits(baseStatement, standardStatement) {
+function useStatementEdits(baseStatement, standardStatement, savedText) {
   const version = baseStatement === standardStatement ? "standard" : "ai";
-  const [edits, setEdits] = useState({});
+  // A statement being continued starts as the veteran saved it.
+  const [edits, setEdits] = useState(() =>
+    savedText && savedText !== standardStatement
+      ? { standard: { base: standardStatement, text: savedText } }
+      : {},
+  );
   const edit = edits[version];
   const isEdited = Boolean(edit) && edit.text !== edit.base;
   const setEdit = (next) => setEdits((all) => ({ ...all, [version]: next }));
@@ -1421,6 +1442,21 @@ function useStatementEdits(baseStatement, standardStatement) {
   };
 }
 
+// Saving the statement. A new statement for a condition that already has a
+// saved one asks before it replaces it.
+function useSaveStatement({ replacesSaved, onSave, setOutputError, build }) {
+  const [askReplace, setAskReplace] = useState(false);
+  const saveStatementNow = () => {
+    setAskReplace(false);
+    setOutputError(onSave(build()) === false ? SAVE_FAILED : "");
+  };
+  const handleFinish = () => {
+    if (replacesSaved) setAskReplace(true);
+    else saveStatementNow();
+  };
+  return { askReplace, setAskReplace, handleFinish, saveStatementNow };
+}
+
 // Owns the statement/doctor-note derivation and the finish/download
 // handlers. Split out of NexusBuilder purely to keep its function body
 // under the line-count/complexity limits. Same logic, same order of
@@ -1432,6 +1468,8 @@ function useNexusDocumentOutput({
   isSecondary,
   useAIVersion,
   aiEnhancedStatement,
+  savedText,
+  replacesSaved,
   onSave,
   setShowDownloadMenu,
   setNexusDownloaded,
@@ -1455,28 +1493,8 @@ function useNexusDocumentOutput({
     editIsStale,
     keepEditedStatement,
     rebuildStatement,
-  } = useStatementEdits(baseStatement, standardStatement);
+  } = useStatementEdits(baseStatement, standardStatement, savedText);
   const [outputError, setOutputError] = useState("");
-
-  const handleFinish = () => {
-    const statement = currentStatement;
-    const doctorNote = generateDoctorNote({
-      answers,
-      condition,
-      primaryCondition,
-      isSecondary,
-    });
-
-    const saved = onSave({
-      condition,
-      primaryCondition,
-      answers,
-      statement,
-      doctorNote,
-      generatedDate: new Date().toISOString(),
-    });
-    setOutputError(saved === false ? SAVE_FAILED : "");
-  };
 
   const currentDoctorNote = generateDoctorNote({
     answers,
@@ -1484,6 +1502,20 @@ function useNexusDocumentOutput({
     primaryCondition,
     isSecondary,
   });
+  const { askReplace, setAskReplace, handleFinish, saveStatementNow } =
+    useSaveStatement({
+      replacesSaved,
+      onSave,
+      setOutputError,
+      build: () => ({
+        condition,
+        primaryCondition,
+        answers,
+        statement: currentStatement,
+        doctorNote: currentDoctorNote,
+        generatedDate: new Date().toISOString(),
+      }),
+    });
 
   const handleDownload = async (format = "txt") => {
     setShowDownloadMenu(false);
@@ -1502,6 +1534,9 @@ function useNexusDocumentOutput({
   };
 
   return {
+    askReplace,
+    keepSavedStatement: () => setAskReplace(false),
+    saveStatementNow,
     editIsStale,
     keepEditedStatement,
     rebuildStatement,
@@ -1856,6 +1891,7 @@ const NexusBuilderWizard = ({
   condition,
   primaryCondition,
   existingStatement,
+  replacesSaved,
   onClose,
   onSave,
   onReportBug,
@@ -1880,6 +1916,8 @@ const NexusBuilderWizard = ({
     isSecondary,
     useAIVersion: ai.useAIVersion,
     aiEnhancedStatement: ai.aiEnhancedStatement,
+    savedText: existingStatement?.statement,
+    replacesSaved,
     onSave,
     setShowDownloadMenu: modalState.setShowDownloadMenu,
     setNexusDownloaded: modalState.setNexusDownloaded,
@@ -1938,8 +1976,24 @@ const NexusBuilder = ({
   const effectiveCondition = condition || picked?.name || "";
   const effectivePrimaryCondition =
     primaryCondition ?? picked?.parentCondition ?? null;
-  const effectiveExistingStatement =
-    existingStatement ?? picked?.existingStatement ?? null;
+  // A statement already saved for this condition. Resumed from My Packet,
+  // it is continued. Found on opening the builder some other way, it is
+  // offered: continue from it, or start a new one (which then asks before
+  // replacing it on save).
+  const savedStatement = useMemo(
+    () =>
+      existingStatement ??
+      (effectiveCondition
+        ? getStatementForCondition(
+            effectiveCondition,
+            effectivePrimaryCondition,
+          )
+        : null),
+    [existingStatement, effectiveCondition, effectivePrimaryCondition],
+  );
+  const [savedChoice, setSavedChoice] = useState(null);
+  const continuing = Boolean(existingStatement) || savedChoice === "continue";
+  const effectiveExistingStatement = continuing ? savedStatement : null;
 
   if (!effectiveCondition) {
     return (
@@ -1951,11 +2005,28 @@ const NexusBuilder = ({
     );
   }
 
+  if (savedStatement?.statement && !continuing && savedChoice !== "new") {
+    return (
+      <ChoiceDialog
+        title={`You have a saved statement for ${effectiveCondition}`}
+        keepLabel="Continue from my saved statement"
+        onKeep={() => setSavedChoice("continue")}
+        replaceLabel="Start a new statement"
+        onReplace={() => setSavedChoice("new")}
+      >
+        Continuing opens your saved statement and answers so you can carry on.
+        Starting a new one leaves the saved statement as it is unless you choose
+        to replace it when you save.
+      </ChoiceDialog>
+    );
+  }
+
   return (
     <NexusBuilderWizard
       condition={effectiveCondition}
       primaryCondition={effectivePrimaryCondition}
       existingStatement={effectiveExistingStatement}
+      replacesSaved={savedChoice === "new" && Boolean(savedStatement)}
       onClose={onClose}
       onSave={onSave}
       onReportBug={onReportBug}

@@ -198,6 +198,16 @@ export const saveStatementForCondition = (statementData) => {
   return claim ? saveStatement(claim.id, statementData) : false;
 };
 
+// The statement saved for a condition, or null when there is none.
+export const getStatementForCondition = (condition, primaryCondition) => {
+  const claim = getSavedClaims().find(
+    (c) =>
+      c.conditionName === condition &&
+      (c.parentCondition || null) === (primaryCondition || null),
+  );
+  return claim ? getStatement(claim.id) : null;
+};
+
 // Get statement for a claim
 export const getStatement = (claimId) => {
   try {
