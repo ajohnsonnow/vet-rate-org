@@ -67,11 +67,30 @@ input[type="submit"] {
   -webkit-tap-highlight-color: rgb(59 130 246 / 10%);
 }
 
-/* Remove default mobile input styling */
-input,
+/* Remove default mobile input styling. Checkboxes and radios are excluded:
+   with no native appearance they draw no box and no tick at all (0px wide
+   unless a component sized them, and blank even then). */
+input:not([type="checkbox"], [type="radio"]),
 textarea,
 select {
   appearance: none;
+}
+
+/* A visible default for every checkbox and radio: the native box and tick, a
+   size that can be seen and hit, and a focus ring. :where() keeps the
+   specificity at zero so a component's own size, colour or sr-only classes
+   still win. */
+:where(input[type="checkbox"], input[type="radio"]) {
+  appearance: auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  accent-color: rgb(var(--brand-700));
+}
+
+:where(input[type="checkbox"], input[type="radio"]):focus-visible {
+  outline: 2px solid rgb(var(--brand-700));
+  outline-offset: 2px;
 }
 
 * {
