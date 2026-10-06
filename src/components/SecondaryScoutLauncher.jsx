@@ -1855,7 +1855,7 @@ function MyRatingsHeader({ savedRatings, calculateCombinedRating }) {
           <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
             Combined Rating:
           </span>
-          <span className="px-3 py-1 bg-yellow-600 text-white font-bold rounded-full">
+          <span className="px-3 py-1 bg-yellow-700 text-white font-bold rounded-full">
             {calculateCombinedRating(savedRatings)}%
           </span>
         </div>
