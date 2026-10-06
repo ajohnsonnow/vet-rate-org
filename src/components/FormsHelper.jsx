@@ -4641,10 +4641,10 @@ function WizardStepPanel({
 function AIUnavailableNotice({ onOpenAISettings, t }) {
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-xl p-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-start gap-3 min-w-0">
           <span className="text-2xl">✨</span>
-          <div>
+          <div className="min-w-0">
             <h3 className="font-bold text-amber-900 dark:text-amber-200">
               {t("formsHelper", "aiEnhancementAvailable")}
             </h3>
@@ -4656,7 +4656,7 @@ function AIUnavailableNotice({ onOpenAISettings, t }) {
         <button
           type="button"
           onClick={onOpenAISettings}
-          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold whitespace-nowrap transition-colors"
+          className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-colors"
         >
           ⚙️ {t("formsHelper", "configureAI")}
         </button>

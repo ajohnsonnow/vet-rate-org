@@ -61,3 +61,16 @@ describe("Forms Helper accessibility", () => {
     expect(preview.className).toMatch(/focus-visible:ring/);
   });
 });
+describe("Forms Helper on a 390px screen", () => {
+  it("stacks the Configure AI button under its text, like its neighbours", () => {
+    openResult();
+    const button = screen.getByRole("button", { name: /configure ai/i });
+
+    expect(button.className).toMatch(/w-full/);
+    expect(button.className).toMatch(/sm:w-auto/);
+    expect(button.className).toMatch(/min-h-\[44px\]/);
+    expect(button.className).not.toMatch(/whitespace-nowrap/);
+    expect(button.parentElement.className).toMatch(/flex-col/);
+    expect(button.parentElement.className).toMatch(/sm:flex-row/);
+  });
+});
