@@ -8,6 +8,7 @@ import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import StandardDraftNotice from "./common/StandardDraftNotice";
+import { EditedDraftDialog } from "./common/ChoiceDialog";
 import {
   AI_NO_CHANGE_NOTE,
   formStatementPlan,
@@ -5185,38 +5186,22 @@ function ReviewNextSteps({ selectedForm, t }) {
 
 function ReviewActionButtons({
   selectedForm,
-  setCurrentStep,
-  setGeneratedContent,
-  setAiEnhancedContent,
-  setShowAIVersion,
-  setSelectedForm,
-  setFormData,
+  onEditAnswers,
+  onStartNewForm,
   t,
 }) {
   return (
     <div className="flex flex-wrap gap-3">
       <button
         type="button"
-        onClick={() => {
-          setCurrentStep(1);
-          setGeneratedContent(null);
-          setAiEnhancedContent(null);
-          setShowAIVersion(false);
-        }}
+        onClick={onEditAnswers}
         className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
       >
         ← {t("formsHelper", "editAnswers")}
       </button>
       <button
         type="button"
-        onClick={() => {
-          setSelectedForm(null);
-          setFormData({});
-          setCurrentStep(0);
-          setGeneratedContent(null);
-          setAiEnhancedContent(null);
-          setShowAIVersion(false);
-        }}
+        onClick={onStartNewForm}
         className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium"
       >
         {t("formsHelper", "startNewForm")}
@@ -7394,10 +7379,16 @@ function useFormsHelperAIState() {
   const [aiError, setAiError] = useState(null);
   const [aiDraftNote, setAiDraftNote] = useState(null);
   const [draftEdit, setDraftEdit] = useState(null);
+  const [keptDraft, setKeptDraft] = useState(null);
+  const [askRebuild, setAskRebuild] = useState(false);
 
   return {
     draftEdit,
     setDraftEdit,
+    keptDraft,
+    setKeptDraft,
+    askRebuild,
+    setAskRebuild,
     aiDraftNote,
     setAiDraftNote,
     showAIConsent,
@@ -7792,16 +7783,70 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     return content;
   };
 
-  const handleFinishWizard = () => {
-    generateContent();
-    setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
+  const clearDraftState = () => {
     setAiError(null);
     setAiEnhancedContent(null);
     setShowAIVersion(false);
     setAiDraftNote(null);
+    ctx.setDraftEdit(null);
+    ctx.setKeptDraft(null);
+    ctx.setAskRebuild(false);
   };
 
-  return { generateContent, handleFinishWizard };
+  // Going back to the answers keeps what is in the box when the veteran
+  // changed it (by hand, or by taking the AI's wording), so regenerating
+  // can put it back instead of replacing it.
+  const handleEditAnswers = () => {
+    const box = shownDraft(ctx);
+    const changed = box.text !== ctx.generatedContent;
+    clearDraftState();
+    ctx.setKeptDraft(
+      changed
+        ? {
+            text: box.text,
+            builtFrom: ctx.generatedContent,
+            isAIVersion: box.base !== ctx.generatedContent,
+          }
+        : null,
+    );
+    setGeneratedContent(null);
+    setCurrentStep(1);
+  };
+
+  const handleFinishWizard = () => {
+    const kept = ctx.keptDraft;
+    const content = generateContent();
+    setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
+    clearDraftState();
+    if (!kept) return;
+    // The kept draft goes back in the box. If an answer changed since it
+    // was built, the veteran is asked whether to keep it or rebuild.
+    if (kept.isAIVersion) {
+      setAiEnhancedContent(kept.text);
+      setShowAIVersion(true);
+    } else {
+      ctx.setDraftEdit({ base: content, text: kept.text });
+    }
+    ctx.setAskRebuild(content !== kept.builtFrom);
+  };
+
+  const handleRebuildFromAnswers = () => clearDraftState();
+
+  const handleStartNewForm = () => {
+    clearDraftState();
+    ctx.setSelectedForm(null);
+    ctx.setFormData({});
+    setCurrentStep(0);
+    setGeneratedContent(null);
+  };
+
+  return {
+    generateContent,
+    handleFinishWizard,
+    handleEditAnswers,
+    handleRebuildFromAnswers,
+    handleStartNewForm,
+  };
 }
 
 // Only a draft the AI reworded is an AI version. Its accepted rewordings go
@@ -8130,14 +8175,17 @@ function FormsHelperReviewStep({ state, handlers }) {
 
       <ReviewActionButtons
         selectedForm={state.selectedForm}
-        setCurrentStep={state.setCurrentStep}
-        setGeneratedContent={state.setGeneratedContent}
-        setAiEnhancedContent={state.setAiEnhancedContent}
-        setShowAIVersion={state.setShowAIVersion}
-        setSelectedForm={state.setSelectedForm}
-        setFormData={state.setFormData}
+        onEditAnswers={handlers.handleEditAnswers}
+        onStartNewForm={handlers.handleStartNewForm}
         t={t}
       />
+
+      {state.askRebuild && (
+        <EditedDraftDialog
+          onKeep={() => state.setAskRebuild(false)}
+          onRebuild={handlers.handleRebuildFromAnswers}
+        />
+      )}
     </div>
   );
 }

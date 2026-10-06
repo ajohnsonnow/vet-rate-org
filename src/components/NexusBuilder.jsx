@@ -19,6 +19,7 @@ import {
   standardDraftNote,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
+import { EditedDraftDialog } from "./common/ChoiceDialog";
 import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
 import {
@@ -1318,6 +1319,12 @@ const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
         </button>
       )}
 
+      {wizard.step === wizard.totalSteps && output.editIsStale && (
+        <EditedDraftDialog
+          onKeep={output.keepEditedStatement}
+          onRebuild={output.rebuildStatement}
+        />
+      )}
       {wizard.step === wizard.totalSteps && (
         <NexusFinishControls
           isCertified={modalState.isCertified}
@@ -1393,6 +1400,27 @@ function useNexusModalState() {
   };
 }
 
+// The statement in the box. An edit is kept per version. When an answer
+// changes after the standard statement was edited, the edited statement
+// stays in the box and the veteran is asked whether to keep it or rebuild
+// from the answers.
+function useStatementEdits(baseStatement, standardStatement) {
+  const version = baseStatement === standardStatement ? "standard" : "ai";
+  const [edits, setEdits] = useState({});
+  const edit = edits[version];
+  const isEdited = Boolean(edit) && edit.text !== edit.base;
+  const setEdit = (next) => setEdits((all) => ({ ...all, [version]: next }));
+  return {
+    currentStatement: isEdited ? edit.text : baseStatement,
+    editIsStale:
+      isEdited && edit.base !== baseStatement && version === "standard",
+    editStatement: (text) => setEdit({ base: baseStatement, text }),
+    keepEditedStatement: () =>
+      setEdit({ base: baseStatement, text: edit.text }),
+    rebuildStatement: () => setEdit(null),
+  };
+}
+
 // Owns the statement/doctor-note derivation and the finish/download
 // handlers. Split out of NexusBuilder purely to keep its function body
 // under the line-count/complexity limits. Same logic, same order of
@@ -1421,10 +1449,13 @@ function useNexusDocumentOutput({
     useAIVersion && aiEnhancedStatement
       ? aiEnhancedStatement
       : standardStatement;
-  const [edit, setEdit] = useState({ base: null, text: "" });
-  const currentStatement =
-    edit.base === baseStatement ? edit.text : baseStatement;
-  const editStatement = (text) => setEdit({ base: baseStatement, text });
+  const {
+    currentStatement,
+    editStatement,
+    editIsStale,
+    keepEditedStatement,
+    rebuildStatement,
+  } = useStatementEdits(baseStatement, standardStatement);
   const [outputError, setOutputError] = useState("");
 
   const handleFinish = () => {
@@ -1471,6 +1502,9 @@ function useNexusDocumentOutput({
   };
 
   return {
+    editIsStale,
+    keepEditedStatement,
+    rebuildStatement,
     outputError,
     handleFinish,
     handleDownload,
