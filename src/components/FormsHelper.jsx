@@ -5038,60 +5038,51 @@ function AIEnhancementSection({
 }
 
 // What the official PDF holds for each form and what it leaves to the
-// veteran. It is never described as filled out or ready to sign.
-const OFFICIAL_PDF_REST =
-  "For you to complete on the form: anything still blank, any boxes to tick, your signature and the date.";
-const OFFICIAL_PDF_NOTES = {
-  "personal-statement": `Filled in from your answers: your name and contact details, and your statement goes in Remarks and carries over to the page 2 box when it is long. If it is too long for both boxes, this screen tells you and the rest is in the text downloads. ${OFFICIAL_PDF_REST}`,
-  "ptsd-stressor": `Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. An answer too long for its box is written in full in Remarks, and its box says to look there. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.`,
-  "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box and carries over to the box on the next page when it is long. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
-  "vso-appointment": `Filled in from your answers: your name, contact details and address in the veteran's section, and the organization's name. The organization's address has no place on this form and is not on it. For you to complete on the form: the claimant section if the claimant is not you, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
-  "intent-to-file": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone, e-mail and the type of benefit. Your list of conditions has no place on this form and is not on it. For you to complete on the form: anything still blank, your signature and the date.`,
-  "medical-release": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address and phone, and for each provider its name, address, dates of treatment and the conditions treated. The form has no box for a provider's phone or fax number, so those are not on it. For you to complete on the form: the kinds of records and any instructions, which are in the text downloads to copy from, then anything still blank, your signature and the date.`,
-  "priority-processing": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone and e-mail, and a box in item 17 for each of these reasons you chose: former prisoner of war, very seriously or seriously injured or ill, ALS, extreme financial hardship, terminal illness, Medal of Honor or Purple Heart, age 85 or older. For you to complete on the form: the housing questions in item 16 if you are homeless or at risk, the dates of confinement if you were a prisoner of war, the medical treatment section, anything still blank, your signature and the date. Your other reasons, the details of your pending claim, your explanation, your supporting documents and your urgent contact have no place on this form; they are in the text downloads to attach.`,
-  "vso-appointment-individual": `Filled in from your answers: your name, contact details and address in the veteran's section, and your representative's name and address. The firm or organization name is not written on the form, because its organization line is only for a service organization representative. For you to complete on the form: the claimant section if the claimant is not you, the type of representative, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
+// veteran. It is never described as filled out or ready to sign. The words
+// are in the formsHelper translations under these keys.
+const OFFICIAL_PDF_NOTE_KEYS = {
+  "personal-statement": "officialPdfNotePersonal",
+  "ptsd-stressor": "officialPdfNotePtsd",
+  "buddy-statement": "officialPdfNoteBuddy",
+  "vso-appointment": "officialPdfNoteVso",
+  "intent-to-file": "officialPdfNoteIntentToFile",
+  "medical-release": "officialPdfNoteMedicalRelease",
+  "priority-processing": "officialPdfNotePriority",
+  "vso-appointment-individual": "officialPdfNoteIndividualRep",
 };
-const OFFICIAL_PDF_NOTE_OTHER = `Filled in from your answers where the form has a place for them. ${OFFICIAL_PDF_REST}`;
-const OFFICIAL_PDF_EDITS =
-  "The official PDF is built from the answers you gave in the steps, not from edits typed into the statement box.";
+// These two end with the general list of what is left to complete.
+const NOTES_ENDING_WITH_REST = new Set([
+  "officialPdfNotePersonal",
+  "officialPdfNoteOther",
+]);
 
-const TEXT_ONLY_NOTE =
-  "The app cannot fill in the official form for this one. These downloads are a text draft of your answers, not the official VA form. Get the official form from VA.gov and copy your answers onto it.";
-const OFFICIAL_PDF_OVERFLOW =
-  "Your statement was too long for the boxes the form has for it. The official PDF holds the first part and says where it stops. The rest is not on the form: download the full statement as text (.TXT, .DOCX or .PDF) and attach it.";
-const OFFICIAL_PDF_FAILED =
-  "The official PDF could not be made. Use one of the text downloads instead.";
+function officialPdfNoteText(formType, t) {
+  const key = OFFICIAL_PDF_NOTE_KEYS[formType] ?? "officialPdfNoteOther";
+  const note = t("formsHelper", key);
+  return NOTES_ENDING_WITH_REST.has(key)
+    ? `${note} ${t("formsHelper", "officialPdfRest")}`
+    : note;
+}
 
 // `sentence` about the answers in `list`, or "" when there are none.
 const aboutAnswers = (list, sentence) =>
   list?.length > 0 ? `${sentence} ${list.join("; ")}.` : "";
 
 /** What to tell the veteran about the official PDF just made, or "". */
-function officialPdfProblems(result) {
+function officialPdfProblems(result, t) {
   return [
-    result?.overflow ? OFFICIAL_PDF_OVERFLOW : "",
-    aboutAnswers(
-      result?.moved,
-      "Some answers were too long for their boxes on the form, so they are written in full in the Remarks section and their boxes point there:",
-    ),
-    aboutAnswers(
-      result?.textOnly,
-      "Some answers were too long for their boxes and for the Remarks section, so they are not on the official PDF. They are in the text downloads (.TXT, .DOCX or .PDF): attach one, or write the answer on the form. Not on the form:",
-    ),
-    aboutAnswers(
-      result?.leftBlank,
-      "Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in:",
-    ),
-    aboutAnswers(
-      result?.notPlaced,
-      "The app could not put these answers into the form's boxes as you typed them, so their boxes are blank for you to write in:",
-    ),
+    result?.overflow ? t("formsHelper", "officialPdfOverflow") : "",
+    aboutAnswers(result?.moved, t("formsHelper", "officialPdfMoved")),
+    aboutAnswers(result?.textOnly, t("formsHelper", "officialPdfTextOnly")),
+    aboutAnswers(result?.leftBlank, t("formsHelper", "officialPdfLeftBlank")),
+    aboutAnswers(result?.notPlaced, t("formsHelper", "officialPdfNotPlaced")),
   ]
     .filter(Boolean)
     .join(" ");
 }
 
 function OfficialPdfNote({ formType, isStatement }) {
+  const { t } = useLanguage();
   if (!hasOfficialPdf(formType)) {
     return (
       <p
@@ -5099,7 +5090,7 @@ function OfficialPdfNote({ formType, isStatement }) {
         aria-label="About these downloads"
         className="mt-3 text-sm text-gray-700 dark:text-gray-300"
       >
-        {TEXT_ONLY_NOTE}
+        {t("formsHelper", "textOnlyNote")}
       </p>
     );
   }
@@ -5109,8 +5100,8 @@ function OfficialPdfNote({ formType, isStatement }) {
       aria-label="About the official PDF"
       className="mt-3 text-sm text-gray-700 dark:text-gray-300"
     >
-      {OFFICIAL_PDF_NOTES[formType] ?? OFFICIAL_PDF_NOTE_OTHER}
-      {isStatement ? ` ${OFFICIAL_PDF_EDITS}` : ""}
+      {officialPdfNoteText(formType, t)}
+      {isStatement ? ` ${t("formsHelper", "officialPdfEdits")}` : ""}
     </p>
   );
 }
@@ -5302,10 +5293,8 @@ function ReviewDownloadSection({
   );
 }
 
-const DRAFT_OUT_OF_STEP =
-  "You kept your edited draft, so it does not include the answer you changed. The official PDF uses your current answers. Edit the draft here if it should say the same.";
-
 function StatementDraftEditor({ versionLabel, value, onChange, outOfStep }) {
+  const { t } = useLanguage();
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <label
@@ -5328,7 +5317,7 @@ function StatementDraftEditor({ versionLabel, value, onChange, outOfStep }) {
           aria-label="Draft and answers differ"
           className="mx-4 mt-3 p-3 rounded-lg border border-amber-700 bg-amber-50 dark:bg-amber-900/30 text-sm text-amber-950 dark:text-amber-100"
         >
-          {DRAFT_OUT_OF_STEP}
+          {t("formsHelper", "draftOutOfStep")}
         </p>
       )}
       <textarea
@@ -8210,10 +8199,10 @@ function _buildFormsHelperDownloadHandlers(ctx) {
     ctx.setOfficialPdfNotice("");
     try {
       const result = await fillAndDownloadForm(selectedForm?.id, formData);
-      ctx.setOfficialPdfNotice(officialPdfProblems(result));
+      ctx.setOfficialPdfNotice(officialPdfProblems(result, ctx.t));
     } catch (error) {
       console.error("Error generating official PDF:", error);
-      ctx.setOfficialPdfNotice(OFFICIAL_PDF_FAILED);
+      ctx.setOfficialPdfNotice(ctx.t("formsHelper", "officialPdfFailed"));
     }
   };
 

@@ -9,6 +9,34 @@
 export const APP_TRANSLATIONS = {
   // Navigation & Common UI
   common: {
+    unsavedEditTitle: {
+      en: "Close without saving?",
+      es: "¿Cerrar sin guardar?",
+      tl: "Isara nang hindi sine-save?",
+      vi: "Đóng mà không lưu?",
+      ko: "저장하지 않고 닫으시겠습니까?",
+    },
+    unsavedEditStay: {
+      en: "Stay and keep my edits",
+      es: "Quedarme y conservar mis cambios",
+      tl: "Manatili at panatilihin ang mga edit ko",
+      vi: "Ở lại và giữ các chỉnh sửa của tôi",
+      ko: "머물러서 수정 내용 유지",
+    },
+    unsavedEditClose: {
+      en: "Close and lose my edits",
+      es: "Cerrar y perder mis cambios",
+      tl: "Isara at mawala ang mga edit ko",
+      vi: "Đóng và bỏ các chỉnh sửa của tôi",
+      ko: "닫고 수정 내용 버리기",
+    },
+    unsavedEditBody: {
+      en: "You edited this draft and have not saved it. Closing now loses your edits. To keep them, stay, then save or download the draft.",
+      es: "Usted editó este borrador y no lo ha guardado. Si cierra ahora, perderá sus cambios. Para conservarlos, quédese y luego guarde o descargue el borrador.",
+      tl: "In-edit mo ang draft na ito at hindi mo pa ito nase-save. Mawawala ang mga edit mo kapag isinara ngayon. Para mapanatili ang mga ito, manatili, saka i-save o i-download ang draft.",
+      vi: "Bạn đã chỉnh sửa bản nháp này và chưa lưu. Đóng bây giờ sẽ làm mất các chỉnh sửa của bạn. Để giữ lại, hãy ở lại, rồi lưu hoặc tải bản nháp xuống.",
+      ko: "이 초안을 수정하셨지만 아직 저장하지 않으셨습니다. 지금 닫으면 수정 내용이 사라집니다. 유지하려면 머물러서 초안을 저장하거나 내려받으세요.",
+    },
     close: { en: "Close", es: "Cerrar", tl: "Isara", vi: "Đóng", ko: "닫기" },
     save: { en: "Save", es: "Guardar", tl: "I-save", vi: "Lưu", ko: "저장" },
     cancel: {
@@ -8545,6 +8573,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // Nexus Builder Component
   nexusBuilder: {
+    statementOutOfStep: {
+      en: "You kept your edited statement, so it does not include the answer you changed. The notes for your doctor below use your current answers. Edit the statement here if it should say the same.",
+      es: "Usted conservó su declaración editada, así que no incluye la respuesta que cambió. Las notas para su médico que aparecen abajo usan sus respuestas actuales. Edite aquí la declaración si debe decir lo mismo.",
+      tl: "Pinanatili mo ang in-edit mong pahayag, kaya wala rito ang sagot na binago mo. Ginagamit ng mga tala para sa doktor mo sa ibaba ang kasalukuyan mong mga sagot. I-edit dito ang pahayag kung dapat pareho ang sinasabi nito.",
+      vi: "Bạn đã giữ lời khai đã chỉnh sửa, nên nó không có câu trả lời bạn vừa thay đổi. Phần ghi chú cho bác sĩ của bạn bên dưới dùng các câu trả lời hiện tại của bạn. Hãy sửa lời khai tại đây nếu nó cần nói giống như vậy.",
+      ko: "수정하신 진술서를 유지하셨으므로, 바꾸신 답변은 진술서에 반영되어 있지 않습니다. 아래의 의사용 메모는 현재 답변을 사용합니다. 진술서도 같은 내용이어야 한다면 여기에서 수정하세요.",
+    },
     // Header
     title: {
       en: "Nexus Builder",
@@ -9463,6 +9498,139 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // Forms Helper Component
   formsHelper: {
+    officialPdfRest: {
+      en: "For you to complete on the form: anything still blank, any boxes to tick, your signature and the date.",
+      es: "Lo que le queda por completar en el formulario: todo lo que siga en blanco, las casillas que deba marcar, su firma y la fecha.",
+      tl: "Ikaw ang kukumpleto sa form: anumang blangko pa, anumang kahong dapat i-tsek, ang iyong pirma at ang petsa.",
+      vi: "Phần bạn cần tự hoàn tất trên biểu mẫu: mọi chỗ còn trống, các ô cần đánh dấu, chữ ký của bạn và ngày tháng.",
+      ko: "양식에서 직접 작성하실 부분: 아직 비어 있는 칸, 체크해야 할 칸, 서명과 날짜.",
+    },
+    officialPdfNotePersonal: {
+      en: "Filled in from your answers: your name and contact details, and your statement goes in Remarks and carries over to the page 2 box when it is long. If it is too long for both boxes, this screen tells you and the rest is in the text downloads.",
+      es: "Se completó con sus respuestas: su nombre y sus datos de contacto; su declaración va en Remarks (Observaciones) y continúa en el recuadro de la página 2 cuando es larga. Si es demasiado larga para ambos recuadros, esta pantalla se lo indica y el resto queda en las descargas de texto.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan at contact details mo, at ang pahayag mo ay nasa Remarks at itutuloy sa kahon sa pahina 2 kapag mahaba. Kung masyadong mahaba para sa dalawang kahon, sasabihin ito ng screen na ito at ang natitira ay nasa mga text download.",
+      vi: "Đã điền từ câu trả lời của bạn: tên và thông tin liên lạc của bạn; lời khai của bạn nằm trong mục Remarks (Ghi chú) và chuyển tiếp sang ô ở trang 2 khi dài. Nếu quá dài so với cả hai ô, màn hình này sẽ báo cho bạn và phần còn lại nằm trong các bản tải xuống dạng văn bản.",
+      ko: "답변으로 채워진 부분: 이름과 연락처. 진술서는 Remarks(비고) 칸에 들어가며, 길면 2쪽의 칸으로 이어집니다. 두 칸에 모두 넣기에도 너무 길면 이 화면에서 알려 드리며, 나머지는 텍스트 다운로드에 있습니다.",
+    },
+    officialPdfNotePtsd: {
+      en: "Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. An answer too long for its box is written in full in Remarks, and its box says to look there. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre y sus datos de contacto, el suceso, su fecha y su lugar, y el tipo de suceso cuando el formulario tiene una casilla que corresponde. Sus demás respuestas van en Remarks (Observaciones). Una respuesta demasiado larga para su recuadro se escribe completa en Remarks, y su recuadro indica que se consulte allí. Lo que le queda por completar en el formulario: las casillas de consentimiento sobre el aviso a la VHA (no se marca ninguna por usted), las secciones sobre cambios de conducta, informes y tratamiento, todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan at contact details mo, ang pangyayari, ang petsa at lugar nito, at ang uri ng pangyayari kapag may katugmang kahon ang form. Ang iba mo pang sagot ay nasa Remarks. Ang sagot na masyadong mahaba para sa kahon nito ay isinusulat nang buo sa Remarks, at sinasabi ng kahon nito na doon tumingin. Ikaw ang kukumpleto sa form: ang mga kahon ng pahintulot tungkol sa pag-abiso sa VHA (walang naka-tsek para sa iyo), ang mga seksyon tungkol sa mga pagbabago sa ugali, mga ulat at paggamot, anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên và thông tin liên lạc của bạn, sự việc, ngày và nơi xảy ra, và loại sự việc khi biểu mẫu có ô tương ứng. Các câu trả lời khác của bạn nằm trong mục Remarks (Ghi chú). Câu trả lời quá dài so với ô của nó được ghi đầy đủ trong Remarks, và ô đó ghi chú là xem ở đó. Phần bạn cần tự hoàn tất trên biểu mẫu: các ô đồng ý về việc thông báo cho VHA (không ô nào được đánh dấu thay bạn), các mục về thay đổi hành vi, báo cáo và điều trị, mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 이름과 연락처, 사건, 사건의 날짜와 장소, 그리고 양식에 해당하는 칸이 있는 경우 사건 유형. 그 밖의 답변은 Remarks(비고)에 들어갑니다. 칸에 넣기에 너무 긴 답변은 Remarks에 전체가 적히고, 해당 칸에는 그곳을 보라고 적힙니다. 양식에서 직접 작성하실 부분: VHA 통지에 관한 동의 칸(대신 체크된 칸은 없습니다), 행동 변화·신고·치료에 관한 부분, 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteBuddy: {
+      en: "Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box and carries over to the box on the next page when it is long. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.",
+      es: "Se completó con sus respuestas: los nombres y datos de contacto del veterano y del testigo, la casilla de relación, y la declaración va en el recuadro de la declaración y continúa en el recuadro de la página siguiente cuando es larga. Lo que queda por completar en el formulario: la sección del reclamante si el reclamante no es el veterano, todo lo que siga en blanco, la firma del testigo y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang mga pangalan at contact details ng beterano at ng saksi, ang kahon ng relasyon, at ang pahayag ay nasa kahon ng pahayag at itutuloy sa kahon sa susunod na pahina kapag mahaba. Kukumpletuhin sa form: ang seksyon ng claimant kung hindi ang beterano ang claimant, anumang blangko pa, ang pirma ng saksi at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên và thông tin liên lạc của cựu chiến binh và của nhân chứng, ô quan hệ, và lời khai nằm trong ô lời khai, chuyển tiếp sang ô ở trang sau khi dài. Phần cần tự hoàn tất trên biểu mẫu: mục người yêu cầu nếu người yêu cầu không phải là cựu chiến binh, mọi chỗ còn trống, chữ ký của nhân chứng và ngày tháng.",
+      ko: "답변으로 채워진 부분: 재향군인과 증인의 이름 및 연락처, 관계 칸. 진술서는 진술 칸에 들어가며, 길면 다음 쪽의 칸으로 이어집니다. 양식에서 직접 작성하실 부분: 청구인이 재향군인이 아닌 경우 청구인 부분, 아직 비어 있는 칸, 증인의 서명과 날짜.",
+    },
+    officialPdfNoteVso: {
+      en: "Filled in from your answers: your name, contact details and address in the veteran's section, and the organization's name. The organization's address has no place on this form and is not on it. For you to complete on the form: the claimant section if the claimant is not you, every authorization box (none is ticked for you), anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, sus datos de contacto y su dirección en la sección del veterano, y el nombre de la organización. La dirección de la organización no tiene lugar en este formulario y no figura en él. Lo que le queda por completar en el formulario: la sección del reclamante si el reclamante no es usted, todas las casillas de autorización (no se marca ninguna por usted), todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan, contact details at address mo sa seksyon ng beterano, at ang pangalan ng organisasyon. Walang lugar sa form na ito para sa address ng organisasyon kaya wala ito roon. Ikaw ang kukumpleto sa form: ang seksyon ng claimant kung hindi ikaw ang claimant, bawat kahon ng awtorisasyon (walang naka-tsek para sa iyo), anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, thông tin liên lạc và địa chỉ của bạn trong mục dành cho cựu chiến binh, và tên của tổ chức. Biểu mẫu này không có chỗ cho địa chỉ của tổ chức nên địa chỉ đó không có trên biểu mẫu. Phần bạn cần tự hoàn tất trên biểu mẫu: mục người yêu cầu nếu người yêu cầu không phải là bạn, mọi ô ủy quyền (không ô nào được đánh dấu thay bạn), mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 재향군인 부분의 이름, 연락처, 주소와 단체 이름. 이 양식에는 단체 주소를 적는 곳이 없어 주소는 들어가지 않습니다. 양식에서 직접 작성하실 부분: 청구인이 본인이 아닌 경우 청구인 부분, 모든 위임 동의 칸(대신 체크된 칸은 없습니다), 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteIntentToFile: {
+      en: "Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone, e-mail and the type of benefit. Your list of conditions has no place on this form and is not on it. For you to complete on the form: anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, número de Seguro Social, fecha de nacimiento, número de expediente del VA, dirección postal, teléfono, correo electrónico y el tipo de beneficio. Su lista de afecciones no tiene lugar en este formulario y no figura en él. Lo que le queda por completar en el formulario: todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan mo, Social Security number, petsa ng kapanganakan, VA file number, mailing address, telepono, e-mail at ang uri ng benepisyo. Walang lugar sa form na ito para sa listahan mo ng mga kondisyon kaya wala ito roon. Ikaw ang kukumpleto sa form: anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, số An sinh Xã hội, ngày sinh, số hồ sơ VA, địa chỉ gửi thư, điện thoại, e-mail và loại quyền lợi. Biểu mẫu này không có chỗ cho danh sách tình trạng bệnh của bạn nên danh sách đó không có trên biểu mẫu. Phần bạn cần tự hoàn tất trên biểu mẫu: mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 이름, 사회보장번호, 생년월일, VA 파일 번호, 우편 주소, 전화번호, 이메일, 혜택 유형. 이 양식에는 질환 목록을 적는 곳이 없어 목록은 들어가지 않습니다. 양식에서 직접 작성하실 부분: 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteMedicalRelease: {
+      en: "Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address and phone, and for each provider its name, address, dates of treatment and the conditions treated. The form has no box for a provider's phone or fax number, so those are not on it. For you to complete on the form: the kinds of records and any instructions, which are in the text downloads to copy from, then anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, número de Seguro Social, fecha de nacimiento, número de expediente del VA, dirección postal y teléfono, y de cada proveedor su nombre, dirección, fechas de tratamiento y las afecciones tratadas. El formulario no tiene recuadro para el teléfono ni el fax de un proveedor, así que no figuran en él. Lo que le queda por completar en el formulario: los tipos de expedientes y las instrucciones, que están en las descargas de texto para copiarlos, y luego todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan mo, Social Security number, petsa ng kapanganakan, VA file number, mailing address at telepono, at para sa bawat provider ang pangalan, address, mga petsa ng paggamot at ang mga kondisyong ginamot. Walang kahon ang form para sa telepono o fax ng provider kaya wala ang mga iyon doon. Ikaw ang kukumpleto sa form: ang mga uri ng rekord at anumang tagubilin, na nasa mga text download para makopya mo, saka ang anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, số An sinh Xã hội, ngày sinh, số hồ sơ VA, địa chỉ gửi thư và điện thoại, và với mỗi nơi điều trị là tên, địa chỉ, thời gian điều trị và các tình trạng được điều trị. Biểu mẫu không có ô cho số điện thoại hoặc số fax của nơi điều trị nên các số đó không có trên biểu mẫu. Phần bạn cần tự hoàn tất trên biểu mẫu: các loại hồ sơ và mọi chỉ dẫn, có sẵn trong các bản tải xuống dạng văn bản để bạn chép lại, sau đó là mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 이름, 사회보장번호, 생년월일, VA 파일 번호, 우편 주소, 전화번호, 그리고 각 의료기관의 이름, 주소, 치료 기간, 치료받은 질환. 양식에는 의료기관의 전화번호나 팩스 번호를 적는 칸이 없어 그 번호들은 들어가지 않습니다. 양식에서 직접 작성하실 부분: 기록의 종류와 지시 사항(옮겨 적으실 수 있도록 텍스트 다운로드에 있습니다), 그다음 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNotePriority: {
+      en: "Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone and e-mail, and a box in item 17 for each of these reasons you chose: former prisoner of war, very seriously or seriously injured or ill, ALS, extreme financial hardship, terminal illness, Medal of Honor or Purple Heart, age 85 or older. For you to complete on the form: the housing questions in item 16 if you are homeless or at risk, the dates of confinement if you were a prisoner of war, the medical treatment section, anything still blank, your signature and the date. Your other reasons, the details of your pending claim, your explanation, your supporting documents and your urgent contact have no place on this form; they are in the text downloads to attach.",
+      es: "Se completó con sus respuestas: su nombre, número de Seguro Social, fecha de nacimiento, número de expediente del VA, dirección postal, teléfono y correo electrónico, y una casilla del punto 17 por cada uno de estos motivos que haya elegido: ex prisionero de guerra, herido o enfermo grave o muy grave, ELA (ALS), dificultad económica extrema, enfermedad terminal, Medalla de Honor o Corazón Púrpura, 85 años o más. Lo que le queda por completar en el formulario: las preguntas sobre vivienda del punto 16 si no tiene hogar o está en riesgo de perderlo, las fechas de cautiverio si fue prisionero de guerra, la sección de tratamiento médico, todo lo que siga en blanco, su firma y la fecha. Sus demás motivos, los datos de su reclamación pendiente, su explicación, sus documentos de respaldo y su contacto urgente no tienen lugar en este formulario; están en las descargas de texto para adjuntarlos.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan mo, Social Security number, petsa ng kapanganakan, VA file number, mailing address, telepono at e-mail, at isang kahon sa item 17 para sa bawat isa sa mga dahilang ito na pinili mo: dating bihag ng digmaan, malubha o napakalubhang nasugatan o nagkasakit, ALS, matinding kahirapan sa pananalapi, sakit na wala nang lunas, Medal of Honor o Purple Heart, edad 85 pataas. Ikaw ang kukumpleto sa form: ang mga tanong tungkol sa tirahan sa item 16 kung wala kang tirahan o nanganganib mawalan, ang mga petsa ng pagkakabihag kung naging bihag ka ng digmaan, ang seksyon ng medikal na paggamot, anumang blangko pa, ang iyong pirma at ang petsa. Ang iba mo pang dahilan, ang mga detalye ng nakabinbin mong claim, ang paliwanag mo, ang mga sumusuporta mong dokumento at ang contact mo para sa agarang bagay ay walang lugar sa form na ito; nasa mga text download ang mga ito para mailakip mo.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, số An sinh Xã hội, ngày sinh, số hồ sơ VA, địa chỉ gửi thư, điện thoại và e-mail, và một ô ở mục 17 cho mỗi lý do sau mà bạn đã chọn: cựu tù binh chiến tranh, bị thương hoặc bệnh nặng hay rất nặng, ALS, khó khăn tài chính nghiêm trọng, bệnh giai đoạn cuối, Huân chương Danh dự hoặc Trái tim Tím, từ 85 tuổi trở lên. Phần bạn cần tự hoàn tất trên biểu mẫu: các câu hỏi về nhà ở tại mục 16 nếu bạn vô gia cư hoặc có nguy cơ, thời gian bị giam giữ nếu bạn từng là tù binh chiến tranh, mục điều trị y tế, mọi chỗ còn trống, chữ ký của bạn và ngày tháng. Các lý do khác của bạn, chi tiết về yêu cầu đang chờ xử lý, lời giải thích, tài liệu hỗ trợ và người liên lạc khẩn cấp của bạn không có chỗ trên biểu mẫu này; chúng nằm trong các bản tải xuống dạng văn bản để bạn đính kèm.",
+      ko: "답변으로 채워진 부분: 이름, 사회보장번호, 생년월일, VA 파일 번호, 우편 주소, 전화번호, 이메일, 그리고 선택하신 다음 사유마다 17번 항목의 칸 하나: 전쟁 포로 경력, 중상·중증 또는 매우 심한 부상·질병, ALS, 극심한 재정적 어려움, 말기 질환, 명예훈장 또는 퍼플 하트, 85세 이상. 양식에서 직접 작성하실 부분: 노숙 상태이거나 그럴 위험이 있는 경우 16번 항목의 주거 질문, 전쟁 포로였던 경우 억류 기간, 의료 치료 부분, 아직 비어 있는 칸, 서명과 날짜. 그 밖의 사유, 진행 중인 청구의 세부 내용, 설명, 증빙 서류, 긴급 연락처는 이 양식에 적는 곳이 없으며, 첨부하실 수 있도록 텍스트 다운로드에 있습니다.",
+    },
+    officialPdfNoteIndividualRep: {
+      en: "Filled in from your answers: your name, contact details and address in the veteran's section, and your representative's name and address. The firm or organization name is not written on the form, because its organization line is only for a service organization representative. For you to complete on the form: the claimant section if the claimant is not you, the type of representative, every authorization box (none is ticked for you), anything still blank, your signature and the date.",
+      es: "Se completó con sus respuestas: su nombre, sus datos de contacto y su dirección en la sección del veterano, y el nombre y la dirección de su representante. El nombre del bufete u organización no se escribe en el formulario, porque su línea de organización es solo para un representante de una organización de servicio. Lo que le queda por completar en el formulario: la sección del reclamante si el reclamante no es usted, el tipo de representante, todas las casillas de autorización (no se marca ninguna por usted), todo lo que siga en blanco, su firma y la fecha.",
+      tl: "Napunan mula sa mga sagot mo: ang pangalan, contact details at address mo sa seksyon ng beterano, at ang pangalan at address ng kinatawan mo. Hindi isinusulat sa form ang pangalan ng firm o organisasyon, dahil ang linya nito para sa organisasyon ay para lang sa kinatawan ng isang service organization. Ikaw ang kukumpleto sa form: ang seksyon ng claimant kung hindi ikaw ang claimant, ang uri ng kinatawan, bawat kahon ng awtorisasyon (walang naka-tsek para sa iyo), anumang blangko pa, ang iyong pirma at ang petsa.",
+      vi: "Đã điền từ câu trả lời của bạn: tên, thông tin liên lạc và địa chỉ của bạn trong mục dành cho cựu chiến binh, cùng tên và địa chỉ của người đại diện của bạn. Tên công ty luật hoặc tổ chức không được ghi trên biểu mẫu, vì dòng tổ chức của biểu mẫu chỉ dành cho người đại diện của một tổ chức phục vụ cựu chiến binh. Phần bạn cần tự hoàn tất trên biểu mẫu: mục người yêu cầu nếu người yêu cầu không phải là bạn, loại người đại diện, mọi ô ủy quyền (không ô nào được đánh dấu thay bạn), mọi chỗ còn trống, chữ ký của bạn và ngày tháng.",
+      ko: "답변으로 채워진 부분: 재향군인 부분의 이름, 연락처, 주소와 대리인의 이름 및 주소. 법률사무소나 단체의 이름은 양식에 적히지 않습니다. 양식의 단체 기재란은 봉사 단체 소속 대리인만을 위한 것이기 때문입니다. 양식에서 직접 작성하실 부분: 청구인이 본인이 아닌 경우 청구인 부분, 대리인 유형, 모든 위임 동의 칸(대신 체크된 칸은 없습니다), 아직 비어 있는 칸, 서명과 날짜.",
+    },
+    officialPdfNoteOther: {
+      en: "Filled in from your answers where the form has a place for them.",
+      es: "Se completó con sus respuestas donde el formulario tiene lugar para ellas.",
+      tl: "Napunan mula sa mga sagot mo kung saan may lugar ang form para sa mga ito.",
+      vi: "Đã điền từ câu trả lời của bạn ở những chỗ biểu mẫu có chỗ cho chúng.",
+      ko: "양식에 적는 곳이 있는 답변은 채워졌습니다.",
+    },
+    officialPdfEdits: {
+      en: "The official PDF is built from the answers you gave in the steps, not from edits typed into the statement box.",
+      es: "El PDF oficial se arma con las respuestas que dio en los pasos, no con los cambios escritos en el recuadro de la declaración.",
+      tl: "Ang opisyal na PDF ay binubuo mula sa mga sagot na ibinigay mo sa mga hakbang, hindi mula sa mga pagbabagong tinype sa kahon ng pahayag.",
+      vi: "Bản PDF chính thức được tạo từ các câu trả lời bạn đã nhập ở các bước, không phải từ những chỉnh sửa gõ vào ô lời khai.",
+      ko: "공식 PDF는 각 단계에서 입력하신 답변으로 만들어지며, 진술서 칸에 직접 입력한 수정 내용은 반영되지 않습니다.",
+    },
+    textOnlyNote: {
+      en: "The app cannot fill in the official form for this one. These downloads are a text draft of your answers, not the official VA form. Get the official form from VA.gov and copy your answers onto it.",
+      es: "La aplicación no puede completar el formulario oficial en este caso. Estas descargas son un borrador de texto con sus respuestas, no el formulario oficial del VA. Obtenga el formulario oficial en VA.gov y copie en él sus respuestas.",
+      tl: "Hindi kayang punan ng app ang opisyal na form para dito. Ang mga download na ito ay text draft ng mga sagot mo, hindi ang opisyal na form ng VA. Kunin ang opisyal na form sa VA.gov at kopyahin doon ang mga sagot mo.",
+      vi: "Ứng dụng không thể điền biểu mẫu chính thức cho mục này. Các bản tải xuống này là bản nháp văn bản các câu trả lời của bạn, không phải biểu mẫu chính thức của VA. Hãy lấy biểu mẫu chính thức trên VA.gov và chép các câu trả lời của bạn vào đó.",
+      ko: "이 항목은 앱이 공식 양식을 작성해 드릴 수 없습니다. 이 다운로드는 답변을 정리한 텍스트 초안이며 공식 VA 양식이 아닙니다. VA.gov에서 공식 양식을 받아 답변을 옮겨 적으세요.",
+    },
+    officialPdfOverflow: {
+      en: "Your statement was too long for the boxes the form has for it. The official PDF holds the first part and says where it stops. The rest is not on the form: download the full statement as text (.TXT, .DOCX or .PDF) and attach it.",
+      es: "Su declaración era demasiado larga para los recuadros que el formulario le destina. El PDF oficial contiene la primera parte e indica dónde se interrumpe. El resto no está en el formulario: descargue la declaración completa como texto (.TXT, .DOCX o .PDF) y adjúntela.",
+      tl: "Masyadong mahaba ang pahayag mo para sa mga kahong inilaan ng form. Nasa opisyal na PDF ang unang bahagi at sinasabi nito kung saan ito huminto. Wala sa form ang natitira: i-download ang buong pahayag bilang text (.TXT, .DOCX o .PDF) at ilakip ito.",
+      vi: "Lời khai của bạn quá dài so với các ô mà biểu mẫu dành cho nó. Bản PDF chính thức chứa phần đầu và ghi rõ chỗ dừng. Phần còn lại không có trên biểu mẫu: hãy tải toàn bộ lời khai dưới dạng văn bản (.TXT, .DOCX hoặc .PDF) và đính kèm.",
+      ko: "진술서가 양식에 마련된 칸에 넣기에 너무 깁니다. 공식 PDF에는 앞부분이 들어가며 어디에서 끊겼는지 표시됩니다. 나머지는 양식에 없습니다. 전체 진술서를 텍스트(.TXT, .DOCX 또는 .PDF)로 내려받아 첨부하세요.",
+    },
+    officialPdfFailed: {
+      en: "The official PDF could not be made. Use one of the text downloads instead.",
+      es: "No se pudo crear el PDF oficial. Use en su lugar una de las descargas de texto.",
+      tl: "Hindi nagawa ang opisyal na PDF. Gamitin na lang ang isa sa mga text download.",
+      vi: "Không thể tạo bản PDF chính thức. Hãy dùng một trong các bản tải xuống dạng văn bản.",
+      ko: "공식 PDF를 만들 수 없었습니다. 대신 텍스트 다운로드 중 하나를 사용하세요.",
+    },
+    officialPdfMoved: {
+      en: "Some answers were too long for their boxes on the form, so they are written in full in the Remarks section and their boxes point there:",
+      es: "Algunas respuestas eran demasiado largas para sus recuadros del formulario, así que están escritas completas en la sección Remarks (Observaciones) y sus recuadros remiten allí:",
+      tl: "May mga sagot na masyadong mahaba para sa mga kahon nito sa form, kaya isinulat nang buo ang mga ito sa seksyong Remarks at itinuturo roon ng mga kahon nito:",
+      vi: "Một số câu trả lời quá dài so với ô của chúng trên biểu mẫu, nên được ghi đầy đủ trong mục Remarks (Ghi chú) và các ô đó chỉ dẫn đến mục ấy:",
+      ko: "일부 답변은 양식의 해당 칸에 넣기에 너무 길어 Remarks(비고) 부분에 전체가 적혔으며, 해당 칸에는 그곳을 보라고 적혀 있습니다:",
+    },
+    officialPdfTextOnly: {
+      en: "Some answers were too long for their boxes and for the Remarks section, so they are not on the official PDF. They are in the text downloads (.TXT, .DOCX or .PDF): attach one, or write the answer on the form. Not on the form:",
+      es: "Algunas respuestas eran demasiado largas para sus recuadros y para la sección Remarks (Observaciones), así que no están en el PDF oficial. Están en las descargas de texto (.TXT, .DOCX o .PDF): adjunte una, o escriba la respuesta en el formulario. No están en el formulario:",
+      tl: "May mga sagot na masyadong mahaba para sa mga kahon nito at para sa seksyong Remarks, kaya wala ang mga ito sa opisyal na PDF. Nasa mga text download ang mga ito (.TXT, .DOCX o .PDF): ilakip ang isa, o isulat ang sagot sa form. Wala sa form:",
+      vi: "Một số câu trả lời quá dài so với ô của chúng và cả mục Remarks (Ghi chú), nên không có trên bản PDF chính thức. Chúng nằm trong các bản tải xuống dạng văn bản (.TXT, .DOCX hoặc .PDF): hãy đính kèm một bản, hoặc viết câu trả lời lên biểu mẫu. Không có trên biểu mẫu:",
+      ko: "일부 답변은 해당 칸과 Remarks(비고) 부분에 넣기에도 너무 길어 공식 PDF에 들어가지 않았습니다. 텍스트 다운로드(.TXT, .DOCX 또는 .PDF)에 있으니 하나를 첨부하거나 양식에 직접 적으세요. 양식에 없는 답변:",
+    },
+    officialPdfLeftBlank: {
+      en: "Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in:",
+      es: "Algunas respuestas eran demasiado largas para sus recuadros del formulario. Esos recuadros se dejaron en blanco para que usted los complete a mano:",
+      tl: "May mga sagot na masyadong mahaba para sa mga kahon nito sa form. Iniwang blangko ang mga kahong iyon para ikaw ang magsulat:",
+      vi: "Một số câu trả lời quá dài so với ô của chúng trên biểu mẫu. Các ô đó được để trống để bạn tự viết vào:",
+      ko: "일부 답변은 양식의 해당 칸에 넣기에 너무 깁니다. 직접 적으실 수 있도록 다음 칸은 비워 두었습니다:",
+    },
+    officialPdfNotPlaced: {
+      en: "The app could not put these answers into the form's boxes as you typed them, so their boxes are blank for you to write in:",
+      es: "La aplicación no pudo poner estas respuestas en los recuadros del formulario tal como usted las escribió, así que sus recuadros quedan en blanco para que los complete a mano:",
+      tl: "Hindi nailagay ng app ang mga sagot na ito sa mga kahon ng form ayon sa pagkaka-type mo, kaya blangko ang mga kahon nito para ikaw ang magsulat:",
+      vi: "Ứng dụng không thể đưa các câu trả lời này vào các ô của biểu mẫu theo đúng cách bạn đã gõ, nên các ô đó được để trống để bạn tự viết vào:",
+      ko: "다음 답변은 입력하신 형태로는 양식의 칸에 넣을 수 없어, 직접 적으실 수 있도록 해당 칸을 비워 두었습니다:",
+    },
+    draftOutOfStep: {
+      en: "You kept your edited draft, so it does not include the answer you changed. The official PDF uses your current answers. Edit the draft here if it should say the same.",
+      es: "Usted conservó su borrador editado, así que no incluye la respuesta que cambió. El PDF oficial usa sus respuestas actuales. Edite aquí el borrador si debe decir lo mismo.",
+      tl: "Pinanatili mo ang in-edit mong draft, kaya wala rito ang sagot na binago mo. Ginagamit ng opisyal na PDF ang kasalukuyan mong mga sagot. I-edit dito ang draft kung dapat pareho ang sinasabi nito.",
+      vi: "Bạn đã giữ bản nháp đã chỉnh sửa, nên nó không có câu trả lời bạn vừa thay đổi. Bản PDF chính thức dùng các câu trả lời hiện tại của bạn. Hãy sửa bản nháp tại đây nếu nó cần nói giống như vậy.",
+      ko: "수정하신 초안을 유지하셨으므로, 바꾸신 답변은 초안에 반영되어 있지 않습니다. 공식 PDF는 현재 답변을 사용합니다. 초안도 같은 내용이어야 한다면 여기에서 수정하세요.",
+    },
     // Header
     title: {
       en: "VA Forms Helper",
@@ -11627,6 +11795,13 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // Witness Bench (Buddy Letter Wizard)
   witnessBench: {
+    smallModelQuestionsNote: {
+      en: "The AI on this device is a small one, so it is not asked to write questions. These are the built-in questions.",
+      es: "La IA de este dispositivo es pequeña, así que no se le pide que escriba preguntas. Estas son las preguntas incorporadas.",
+      tl: "Maliit ang AI sa device na ito, kaya hindi ito hinihilingang sumulat ng mga tanong. Ito ang mga nakahandang tanong.",
+      vi: "AI trên thiết bị này là loại nhỏ, nên nó không được yêu cầu soạn câu hỏi. Đây là các câu hỏi có sẵn.",
+      ko: "이 기기의 AI는 소형 모델이므로 질문 작성을 맡기지 않습니다. 아래는 기본으로 준비된 질문입니다.",
+    },
     // Header
     title: {
       en: "The Witness Bench",

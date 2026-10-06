@@ -654,9 +654,6 @@ function useOutputState() {
   };
 }
 
-const SMALL_MODEL_QUESTIONS_NOTE =
-  "The AI on this device is a small one, so it is not asked to write questions. These are the built-in questions.";
-
 /**
  * Move to interview step - load questions
  */
@@ -686,7 +683,9 @@ function useStartInterview({
     // A small on-device model is not asked to write questions.
     const smallModel =
       useAI && aiAvailable && smallModelAnswering(getAIStatus());
-    setQuestionsNote(smallModel ? SMALL_MODEL_QUESTIONS_NOTE : null);
+    setQuestionsNote(
+      smallModel ? t("witnessBench", "smallModelQuestionsNote") : null,
+    );
 
     // Try AI questions first if available and enabled
     if (useAI && aiAvailable && !smallModel) {
