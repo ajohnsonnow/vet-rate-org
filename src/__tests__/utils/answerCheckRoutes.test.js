@@ -11,6 +11,7 @@ import path from "node:path";
 import {
   ADVICE_TOOL_IDS,
   answerChecksApply,
+  contradictionRulesApply,
 } from "../../utils/answerCheckRoutes";
 import { TOOL_AGENT_MAP } from "../../utils/diamondSwarm";
 
@@ -62,6 +63,19 @@ describe("answerChecksApply", () => {
     [{ toolId: "pact-navigator", answerChecks: false }],
   ])("does not run by default: %j", (options) => {
     expect(answerChecksApply(options)).toBe(false);
+  });
+});
+
+describe("contradictionRulesApply", () => {
+  it("is true only for an answer an on-device model produced", () => {
+    expect(contradictionRulesApply({ text: "x", onDevice: true })).toBe(true);
+    expect(contradictionRulesApply({ text: "x", onDevice: false })).toBe(false);
+  });
+
+  it("is false when the result does not say who answered", () => {
+    expect(contradictionRulesApply({ text: "x" })).toBe(false);
+    expect(contradictionRulesApply("x")).toBe(false);
+    expect(contradictionRulesApply(null)).toBe(false);
   });
 });
 

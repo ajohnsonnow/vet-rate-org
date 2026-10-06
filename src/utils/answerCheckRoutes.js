@@ -29,6 +29,20 @@ export const ADVICE_TOOL_IDS = Object.freeze([
   "rating-analyzer",
 ]);
 
+/**
+ * Whether the contradiction rules may run on a result, beyond the route. The
+ * rules are sentence patterns built on, and measured against, what the small
+ * on-device models write. A larger or cloud model explains in other forms
+ * ("Myth: ...", "A common mistake is ...") that the patterns misread, and
+ * there is no recorded cloud answer to measure against (ADR-010 section 10).
+ * So they run only where an on-device model produced the answer. The
+ * citation and form notices are lookups, not patterns, and run either way. A
+ * result that does not say who answered gets no block.
+ */
+export function contradictionRulesApply(result) {
+  return result?.onDevice === true;
+}
+
 export function answerChecksApply(options) {
   const { toolId, answerChecks } = options ?? {};
   if (TOOL_AGENT_MAP[toolId] === "writer") return false;
