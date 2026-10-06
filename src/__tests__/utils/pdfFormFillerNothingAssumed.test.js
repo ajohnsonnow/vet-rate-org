@@ -63,7 +63,13 @@ describe.each(FORMS)("official form %s", (formNumber, fill) => {
 describe("a consent or authorization box is ticked only on an explicit yes", () => {
   it.each([
     ["21-0781", fillForm21_0781, "consentVBA", "consentVBA"],
-    ["21-22", fillForm21_22, "authorizeDisclosure", "authorizeDisclosure"],
+    ["21-22", fillForm21_22, "authorizeRecordAccess", "authorizeRecordAccess"],
+    [
+      "21-22",
+      fillForm21_22,
+      "authorizeAddressChange",
+      "authorizeAddressChange",
+    ],
     [
       "21-22a",
       fillForm21_22a,
