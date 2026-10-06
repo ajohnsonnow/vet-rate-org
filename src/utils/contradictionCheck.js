@@ -13,6 +13,8 @@
  */
 
 import quotes from "../data/verifiedQuotes.json";
+import { findWrongCoverageDate } from "./coverageDates";
+import { findFormMismatch } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
 
 const anyMatch = (text, ...patterns) =>
@@ -48,7 +50,15 @@ const NEEDS_SERVICE_PROOF =
   /\b(?:requires?|needs?|must|have to|has to)\b[^.]{0,100}\b(?:nexus|in-service (?:incurrence|event|injury|aggravation)|incurred in service)\b/i;
 const NEEDS_EXPOSURE_PROOF =
   /\b(?:need to|needs to|must|have to|has to) (?:demonstrate|prove|show|establish) that (?:you were|they were|the veteran was) exposed\b/i;
-const PACT_ACT = /\bpact\b/i;
+const ASKS_FOR =
+  /\b(?:need|needs|must|requires?|required|provide|show|ensure|gather|submit)\b/i;
+const EVIDENCE_OF_EXPOSURE =
+  /\b(?:evidence|documentation|proof|records?)(?: \([^)]{0,90}\))? (?:of|regarding|showing|confirming|noting|detailing) (?:\w+ ){0,3}exposures?\b/i;
+const EXPOSURE_PAPERWORK = /\bexposure (?:documentation|records|history)\b/i;
+// Asking for a medical link is a different demand, and outside a presumption
+// it is the right one.
+const ABOUT_THE_LINK =
+  /\brelationship\b|\bnexus\b|\blink(?:s|ed|ing)?\b|\bcaus|\bwithout\b|\bno (?:evidence|documentation|proof)\b/i;
 
 const TDIU_SUBJECT = /\btdiu\b|\bunemployab|\b4\.16\b/i;
 const YOU_ARE_ELIGIBLE =
@@ -63,6 +73,22 @@ const HIGHER_LEVEL_REVIEW = /\bhigher[- ]level review\b|\bHLR\b/i;
 const ADDS_EVIDENCE = /\b(?:new|additional) evidence\b/i;
 const NOT_ABOUT_ADDING =
   /\bno\b|\bnot\b|n't\b|\bwithout\b|\bcannot\b|\bsame evidence\b|\bsupplemental\b|\bexisting\b/i;
+// "Less likely than not" is the examiner's wording, not a denial of anything.
+const LIKELIHOOD_WORDING = /\bas likely as not\b|\bless likely than not\b/gi;
+const withoutLikelihoodWording = (sentence) =>
+  sentence.replace(LIKELIHOOD_WORDING, "");
+
+const HEARING_INSIDE_REVIEW =
+  /\b(?:in|during|as part of|at|with) (?:the|your|a) higher[- ]level review\b(?:(?! or )[^.;]){0,80}\bhearing\b/i;
+const HEARING_THEN_REVIEW =
+  /\bhearing\b(?:(?! or )[^.;]){0,40}\b(?:in|during|as part of|at|with|for) (?:the|your|a) higher[- ]level review\b/i;
+const REVIEW_HEARING = /\bhigher[- ]level review hearing\b/i;
+const NO_HEARING = /\bno\b|\bnot\b|n't\b|\bcannot\b|\bwithout\b|\binstead\b/i;
+
+const YEAR_FROM_TODAY =
+  /\b(?:one|1|a)[- ]year(?: period)? (?:from|after|of|starting) (?:today|now|right now|this moment)\b/i;
+const ABOUT_A_REVIEW = /\breview\b|\bappeal|\bdecision\b|\bboard\b|\bdisagree/i;
+
 const DENIES_ENTITLEMENT =
   /\byou (?:cannot|can't|do not|don't|would not|will not) (?:currently )?qualify for\b|\byou are not (?:currently )?(?:eligible|entitled) (?:for|to)\b/i;
 const NEGATED = /\bnot\b|n't\b|\bcannot\b/i;
@@ -200,13 +226,38 @@ const RULES = [
   },
   {
     id: "presumptive-needs-exposure-proof",
-    topics: ["toxic-exposure"],
+    topics: ["toxic-exposure", "herbicide"],
     matches: (sentence) =>
-      anyMatch(sentence, PRESUMPTIVE, PACT_ACT) &&
-      NEEDS_EXPOSURE_PROOF.test(sentence) &&
-      !anyMatch(sentence, OUTSIDE_THE_PRESUMPTION, NO_PROOF_NEEDED),
-    says: "says you must prove you were exposed",
-    correction: () => "presumed-toxic-exposure",
+      (NEEDS_EXPOSURE_PROOF.test(sentence) ||
+        (ASKS_FOR.test(sentence) &&
+          anyMatch(sentence, EVIDENCE_OF_EXPOSURE, EXPOSURE_PAPERWORK))) &&
+      !anyMatch(
+        sentence,
+        OUTSIDE_THE_PRESUMPTION,
+        NO_PROOF_NEEDED,
+        ABOUT_THE_LINK,
+      ),
+    says: "asks you to prove you were exposed",
+    correction: (topics) =>
+      topics.includes("toxic-exposure")
+        ? "presumed-toxic-exposure"
+        : "presumed-herbicide-exposure",
+  },
+  {
+    id: "coverage-date-for-wrong-place",
+    topics: ["toxic-exposure"],
+    matches: (sentence) => findWrongCoverageDate(sentence) !== null,
+    describe: (sentence) => {
+      const { wrongDate, quote } = findWrongCoverageDate(sentence);
+      const rightDate = quote.text.slice(
+        "Active service on or after ".length,
+        quote.text.indexOf(":"),
+      );
+      return {
+        says: `gives ${wrongDate} as the start date for a place the table lists under ${rightDate}`,
+        quote,
+      };
+    },
   },
   {
     id: "tdiu-from-percentages",
@@ -250,9 +301,22 @@ const RULES = [
     matches: (sentence) =>
       HIGHER_LEVEL_REVIEW.test(sentence) &&
       ADDS_EVIDENCE.test(sentence) &&
-      !NOT_ABOUT_ADDING.test(sentence),
+      !NOT_ABOUT_ADDING.test(withoutLikelihoodWording(sentence)),
     says: "has you send new evidence with a higher-level review",
     correction: () => "higher-level-review-evidence",
+  },
+  {
+    id: "higher-level-review-hearing",
+    topics: REVIEW_TOPICS,
+    matches: (sentence) =>
+      anyMatch(
+        sentence,
+        HEARING_INSIDE_REVIEW,
+        HEARING_THEN_REVIEW,
+        REVIEW_HEARING,
+      ) && !NO_HEARING.test(withoutLikelihoodWording(sentence)),
+    says: "asks for a hearing in a higher-level review, where the regulation provides for an informal conference",
+    correction: () => "higher-level-review-conference",
   },
   {
     id: "higher-level-review-at-the-board",
@@ -280,6 +344,17 @@ const RULES = [
     correction: () => "supplemental-any-time",
   },
   {
+    // An Intent to File does run for a year from the day it is filed.
+    id: "review-period-from-wrong-day",
+    topics: REVIEW_TOPICS,
+    matches: (sentence) =>
+      YEAR_FROM_TODAY.test(sentence) &&
+      ABOUT_A_REVIEW.test(sentence) &&
+      !INTENT_TO_FILE.test(sentence),
+    says: "counts the year for asking for a review from today, but it runs from the date of the decision notice",
+    correction: () => "review-period-start",
+  },
+  {
     id: "new-and-material-standard",
     topics: REVIEW_TOPICS,
     matches: (sentence) =>
@@ -288,14 +363,26 @@ const RULES = [
     correction: () => "new-and-relevant",
   },
   {
+    id: "form-for-another-filing",
+    topics: FILING_TOPICS,
+    matches: (sentence) => findFormMismatch(sentence) !== null,
+    describe: (sentence) => {
+      const { label, number, quote } = findFormMismatch(sentence);
+      return {
+        says: `gives VA Form ${number} as the form for ${label}`,
+        quote,
+      };
+    },
+  },
+  {
     id: "intent-to-file-for-filed-claim",
     topics: FILING_TOPICS,
     matches: (sentence) =>
       INTENT_TO_FILE.test(sentence) &&
       anyMatch(sentence, FOR_PENDING_CLAIMS, FOR_CLAIMS_ALREADY_FILED) &&
       !NEGATED.test(sentence.replace(/\bnot yet filed an intent\b/i, "")),
-    says: "recommends an Intent to File for a claim that is already filed",
-    correction: () => "intent-to-file-purpose",
+    says: "recommends an Intent to File for a claim that is already filed, and a filed claim already has its own filing date",
+    correction: () => "claim-has-its-own-date",
   },
 ];
 
@@ -303,8 +390,10 @@ export const CONTRADICTION_RULE_IDS = RULES.map((rule) => rule.id);
 
 /**
  * The contradictions in an answer, at most one per rule: { rule, sentence,
- * says, correction }. `topics` are the verified-reference topics of the
- * request; rules of other topics are not applied.
+ * says, correction } (or `quote` in place of `correction` when the rule
+ * takes its quotation from the bundled entry itself). `topics` are the
+ * verified-reference topics of the request; rules of other topics are not
+ * applied.
  */
 export function findContradictions(
   text,
@@ -326,14 +415,15 @@ export function findContradictions(
       rule: rule.id,
       sentence,
       says: rule.says,
-      correction: rule.correction(topics),
+      ...(rule.correction ? { correction: rule.correction(topics) } : {}),
+      ...(rule.describe ? rule.describe(sentence) : {}),
     });
   }
   return hits;
 }
 
-function quoteWithSource(correctionId) {
-  const quote = quotes.corrections[correctionId];
+function quoteWithSource(hit) {
+  const quote = hit.quote ?? quotes.corrections[hit.correction];
   const meanings = (quote.abbreviations ?? [])
     .map((a) => `${a.short} means ${a.long}`)
     .join("; ");
@@ -346,7 +436,7 @@ function quoteWithSource(correctionId) {
  * Decision Decoder puts it under the field that carried the sentence).
  */
 export function buildContradictionNote(hit) {
-  return `Vet-Rate check: this answer ${hit.says}. ${quoteWithSource(hit.correction)} Check this point with a Veterans Service Officer before relying on it.`;
+  return `Vet-Rate check: this answer ${hit.says}. ${quoteWithSource(hit)} Check this point with a Veterans Service Officer before relying on it.`;
 }
 
 const MAX_QUOTED_SENTENCE = 200;
@@ -367,7 +457,7 @@ export function buildContradictionLead(hits) {
     "Vet-Rate check: part of the answer below conflicts with the regulation.",
     ...hits.map(
       (hit) =>
-        `\nThe answer says: "${trimmed(hit.sentence)}"\nThat ${hit.says}. ${quoteWithSource(hit.correction)}`,
+        `\nThe answer says: "${trimmed(hit.sentence)}"\nThat ${hit.says}. ${quoteWithSource(hit)}`,
     ),
     "\nCheck that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
   ].join("\n");

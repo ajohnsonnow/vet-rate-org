@@ -149,10 +149,25 @@ export const CORRECTION_SPECS = {
     topic: "toxic-service",
     line: "VA will presume BPOT exposure",
   },
+  "presumed-herbicide-exposure": {
+    citation: "VA manual M21-1 VIII.i.1.A.1.c",
+    topic: "herbicide-service",
+    line: "Currently, the Department of Veterans Affairs",
+  },
   "higher-level-review-evidence": {
     citation: "38 CFR § 3.2601(f)",
     section: "3.2601",
     select: [{ start: "(f) Evidentiary record.", firstSentences: 2 }],
+  },
+  "higher-level-review-conference": {
+    citation: "38 CFR § 3.2601(h)",
+    section: "3.2601",
+    select: [{ start: "(h) Informal conferences.", firstSentences: 3 }],
+  },
+  "review-period-start": {
+    citation: "38 CFR § 3.2500(a)(1)",
+    section: "3.2500",
+    select: [LANES_OPENING],
   },
   "ratings-combined": {
     citation: "38 CFR § 4.25",
@@ -174,10 +189,10 @@ export const CORRECTION_SPECS = {
     section: "3.2501",
     select: ["(a) New and relevant evidence."],
   },
-  "intent-to-file-purpose": {
-    citation: "38 CFR § 3.155(b)",
+  "claim-has-its-own-date": {
+    citation: "38 CFR § 3.155(d)(1)",
     section: "3.155",
-    select: [{ start: "(b) Intent to file a claim.", firstSentences: 2 }],
+    select: ["(1) Requirement for complete claim and date of claim."],
   },
   "review-filing": {
     citation: "38 CFR § 3.2500(a)",

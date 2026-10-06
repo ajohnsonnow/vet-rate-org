@@ -24,7 +24,8 @@ function guardOutcome(flags) {
  * One transcript record from what happened to one case.
  *
  * outcome: { ok, text, error, latencyMs, captured: request[], rawResponse,
- *            calculatorReplacement, citationsUnverified, validationErrors,
+ *            calculatorReplacement, citationsUnverified, formsUnverified,
+ *            validationErrors,
  *            validationWarnings, resultFlags }
  *
  * `response` is the visible text, the field graders score. `rawResponse` is
@@ -32,7 +33,9 @@ function guardOutcome(flags) {
  * it differs. `outputCleanup` says the wrapper tags were removed or a runaway
  * repeat was cut ({ echoRemoved, trimmed }). `calculatorReplacement` carries the reason and the replaced
  * draft when the calculator guard swapped the answer. `citationsUnverified`
- * lists the 38 CFR sections the answer cited that do not exist, and
+ * lists the 38 CFR sections the answer cited that do not exist,
+ * `formsUnverified` the VA form numbers it named that are in neither forms
+ * list, and
  * `contradictionsFound` the rules and sentences where the answer contradicted
  * the verified text.
  *
@@ -131,6 +134,9 @@ export function assembleCaseRecord({ caseDef, run, personaPrompts, outcome }) {
       : {}),
     ...(outcome.citationsUnverified
       ? { citationsUnverified: outcome.citationsUnverified }
+      : {}),
+    ...(outcome.formsUnverified
+      ? { formsUnverified: outcome.formsUnverified }
       : {}),
     ...(outcome.contradictionsFound
       ? { contradictionsFound: outcome.contradictionsFound }

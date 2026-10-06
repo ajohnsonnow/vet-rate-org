@@ -11,7 +11,7 @@ import { findContradictions } from "../../utils/contradictionCheck";
 import { detectReferenceTopics } from "../../utils/verifiedReference";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
-const LAST_REVIEWED_RUN = "run_2026-10-05_221648";
+const LAST_REVIEWED_RUN = "run_2026-10-06_002046";
 const ALL_TOPICS = [
   "secondary",
   "toxic-exposure",
@@ -82,8 +82,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
   const prose = answers.filter((record) => !isDecoderCase(record));
 
   it("reads every answer that was shown to the user", () => {
-    expect(answers).toHaveLength(551);
-    expect(prose).toHaveLength(549);
+    expect(answers).toHaveLength(730);
+    expect(prose).toHaveLength(723);
   });
 
   it("flags only real contradictions, each on the topic of its own question", () => {
@@ -99,6 +99,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "071859 a13 tdiu-from-percentages",
       "071859 a16 presumptive-needs-exposure-proof",
       "074624 a13 tdiu-from-percentages",
+      "074624 a27 presumptive-needs-exposure-proof",
+      "081228 a16 presumptive-needs-exposure-proof",
       "081228 a25 tdiu-from-percentages",
       "090513 a16 presumptive-needs-exposure-proof",
       "094601 a16 presumptive-needs-exposure-proof",
@@ -108,27 +110,43 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "125630 a25 tdiu-from-percentages",
       "125630 a26 new-and-material-standard",
       "135040 a13 tdiu-from-percentages",
+      "135040 a16 presumptive-needs-exposure-proof",
       "135040 a26 new-and-material-standard",
       "135040 a26 intent-to-file-for-filed-claim",
       "135040 a29 secondary-barred",
       "135908 a26 new-and-material-standard",
       "201248 a13 tdiu-from-percentages",
       "210108 a13 tdiu-from-percentages",
+      "210108 a16 coverage-date-for-wrong-place",
       "210108 a26 new-and-material-standard",
       "210108 a26 intent-to-file-for-filed-claim",
       "210108 a27 presumptive-needs-proof",
       "210108 a29 secondary-barred",
       "221648 a26 new-and-material-standard",
       "221648 a26 intent-to-file-for-filed-claim",
+      "230321 a26 intent-to-file-for-filed-claim",
+      "000014 a26 form-for-another-filing",
+      "000820 a16 coverage-date-for-wrong-place",
+      "000820 a26 intent-to-file-for-filed-claim",
+      "000820 a27 presumptive-needs-exposure-proof",
+      "002046 a26 intent-to-file-for-filed-claim",
+      "002046 a27 presumptive-needs-exposure-proof",
+      "002046 a29 secondary-barred",
     ]);
   });
+});
 
-  it("no longer reaches three real a18 contradictions, because a18 raises no topic", () => {
+describe("contradiction rules outside the topic of the question", () => {
+  const answers = shownAnswers();
+  const prose = answers.filter((record) => !isDecoderCase(record));
+
+  it("no longer reaches four real a18 contradictions, because a18 raises no topic", () => {
     const a18 = prose
       .filter((record) => record.id === "a18")
       .flatMap((record) => hitsFor(record, ALL_TOPICS));
     expect(a18).toEqual([
       "071859 a18 higher-level-review-new-evidence",
+      "074624 a18 form-for-another-filing",
       "105010 a18 new-and-material-standard",
       "110822 a18 new-and-material-standard",
     ]);
@@ -153,6 +171,10 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "213230 t08 action_plan higher-level-review-at-the-board",
       "213230 t08 appeal_options files-statement-of-the-case",
       "221648 t08 deadline_warning supplemental-claim-deadline",
+      "231514 t08 action_plan form-for-another-filing",
+      "000014 t08 deadline_warning review-period-from-wrong-day",
+      "002046 t08 action_plan higher-level-review-new-evidence",
+      "002046 t08 action_plan higher-level-review-hearing",
     ]);
   });
 });

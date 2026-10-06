@@ -67,6 +67,7 @@ import {
   planPromptFit,
 } from "./promptBudget";
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
+import { flagUnverifiedForms } from "./formCheck";
 import { trimToLastSentence } from "./outputCleanup";
 import { flagContradictions } from "./contradictionCheck";
 import {
@@ -3408,7 +3409,7 @@ const generateAIInternal = async (prompt, options = {}) => {
     ? enforceCalculatorOnResult(result, options, prompt)
     : result;
   return flagContradictions(
-    flagUnverifiedCitations(grounded, options),
+    flagUnverifiedForms(flagUnverifiedCitations(grounded, options), options),
     options,
     prompt,
   );

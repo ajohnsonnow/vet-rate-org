@@ -159,9 +159,34 @@
         "retrieved": "2026-07-19"
       }
     },
+    "presumed-herbicide-exposure": {
+      "citation": "VA manual M21-1 VIII.i.1.A.1.c",
+      "text": "Currently, the Department of Veterans Affairs (VA) recognizes a presumption of exposure to herbicides in specific locations and military service experiences as listed in the table below.",
+      "abbreviations": [],
+      "source": {
+        "file": "public/dkb-index/m21_1/chunks.part0.jsonl",
+        "retrieved": "2026-07-19"
+      }
+    },
     "higher-level-review-evidence": {
       "citation": "38 CFR § 3.2601(f)",
       "text": "(f) Evidentiary record. The evidentiary record in a higher-level review is limited to the evidence of record as of the date the agency of original jurisdiction issued notice of the prior decision under review and the higher-level adjudicator may not consider additional evidence.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "higher-level-review-conference": {
+      "citation": "38 CFR § 3.2601(h)",
+      "text": "(h) Informal conferences. A claimant or his or her representative may include a request for an informal conference with a request for higher-level review. For purposes of this section, informal conference means contact with a claimant's representative or, if not represented, with the claimant, telephonically, or as otherwise determined by VA, for the sole purpose of allowing the claimant or representative to identify any errors of law or fact in a prior decision based on the record at the time the decision was issued.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "review-period-start": {
+      "citation": "38 CFR § 3.2500(a)(1)",
+      "text": "(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary:",
       "source": {
         "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
         "retrieved": "2026-07-10"
@@ -191,9 +216,9 @@
         "retrieved": "2026-07-10"
       }
     },
-    "intent-to-file-purpose": {
-      "citation": "38 CFR § 3.155(b)",
-      "text": "(b) Intent to file a claim. A claimant, his or her duly authorized representative, a Member of Congress, or some person acting as next friend of claimant who is not of full age or capacity may indicate a claimant's desire to file a claim for benefits by submitting an intent to file a claim to VA.",
+    "claim-has-its-own-date": {
+      "citation": "38 CFR § 3.155(d)(1)",
+      "text": "(1) Requirement for complete claim and date of claim. A complete claim is required for all types of claims, and will generally be considered filed as of the date it was received by VA for an evaluation or award of benefits under the laws administered by the Department of Veterans Affairs.",
       "source": {
         "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
         "retrieved": "2026-07-10"

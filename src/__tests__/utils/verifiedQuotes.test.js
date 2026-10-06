@@ -69,11 +69,14 @@ describe("correction quotes", () => {
       "presumptive-herbicide",
       "presumptive-toxic",
       "presumed-toxic-exposure",
+      "presumed-herbicide-exposure",
       "higher-level-review-evidence",
+      "higher-level-review-conference",
+      "review-period-start",
       "ratings-combined",
       "supplemental-any-time",
       "new-and-relevant",
-      "intent-to-file-purpose",
+      "claim-has-its-own-date",
       "review-filing",
     ]);
   });
@@ -96,7 +99,7 @@ describe("correction quotes", () => {
     "presumed-toxic-exposure",
     "supplemental-any-time",
     "new-and-relevant",
-    "intent-to-file-purpose",
+
     "review-filing",
   ])("%s is word for word in the text the model was given", (id) => {
     expect(allEntryText).toContain(quotes.corrections[id].text);

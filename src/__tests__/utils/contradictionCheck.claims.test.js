@@ -105,14 +105,17 @@ describe("an Intent to File recommended for a claim already filed", () => {
     expect(rules(sentence, TOPICS)).toEqual([]);
   });
 
-  it("quotes what an intent to file is for", () => {
+  it("quotes the sentence that gives a filed claim its own date", () => {
     const [hit] = findContradictions(
       "File an Intent to File for any pending claims.",
       { topics: TOPICS },
     );
-    expect(hit.correction).toBe("intent-to-file-purpose");
-    expect(quotes.corrections["intent-to-file-purpose"].text).toContain(
-      "may indicate a claimant's desire to file a claim for benefits by submitting an intent to file a claim to VA",
+    expect(hit.correction).toBe("claim-has-its-own-date");
+    expect(hit.says).toBe(
+      "recommends an Intent to File for a claim that is already filed, and a filed claim already has its own filing date",
+    );
+    expect(quotes.corrections["claim-has-its-own-date"].text).toContain(
+      "will generally be considered filed as of the date it was received by VA",
     );
   });
 
