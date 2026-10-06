@@ -21,6 +21,7 @@ import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { downloadDraft } from "../utils/draftExport";
+import { updatePacketDocument } from "../utils/myPacketManager";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import {
   STANDARD_DRAFT_NOTE,
@@ -36,6 +37,7 @@ import ShareButton from "./ShareButton";
 import VoiceInputButton from "./VoiceInput";
 import {
   saveAnalysisResults,
+  mergeAnalysisIntoVkb,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
 import { getMyRatings } from "../utils/veteranProfile";
@@ -428,28 +430,58 @@ async function copyBox18Statement(vocationalAnalysis) {
 }
 
 /**
+ * Save the analysis and work history as one My Packet item. Saving again
+ * updates the item already saved; it never makes a second.
+ */
+async function fileTdiuStatement(payload, earlierId) {
+  const { vkbMergeData, ...document } = payload;
+  if (!earlierId) {
+    const filed = await saveAnalysisResults({
+      toolName: "TDIU Builder",
+      classification: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
+      ...payload,
+    });
+    return filed?.documentId ?? null;
+  }
+  await updatePacketDocument(earlierId, document);
+  if (vkbMergeData) {
+    await mergeAnalysisIntoVkb({
+      toolName: "TDIU Builder",
+      vkbMergeData,
+      sourceDocumentId: earlierId,
+    });
+  }
+  return earlierId;
+}
+
+/**
  * The result step's state: the analysis as edited, its draft note, saving
- * and downloads. The veteran saves what is on screen; any change to the
- * analysis clears the last save message.
+ * and downloads. The veteran saves what is on screen. The save button says
+ * when that was last saved, and offers to save changes after an edit.
  */
 function useTdiuResults(workHistory) {
   const [vocationalAnalysis, setAnalysis] = useState(null);
   const [draftNote, setDraftNote] = useState(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [saveState, setSaveState] = useState(null);
+  const [savedItem, setSavedItem] = useState(null);
   const [downloadError, setDownloadError] = useState(null);
 
+  const history = workHistoryEntries(workHistory);
+  const onScreen = JSON.stringify([vocationalAnalysis, history]);
   const setVocationalAnalysis = (next) => {
     setAnalysis(next);
     setSaveState(null);
   };
   const saveToPacket = () =>
-    saveAnalysisResults({
-      toolName: "TDIU Builder",
-      classification: PACKET_DOC_TYPES.PERSONAL_STATEMENT,
-      ...tdiuSavePayload(vocationalAnalysis),
-    }).then(
-      () => setSaveState("saved"),
+    fileTdiuStatement(
+      tdiuSavePayload(vocationalAnalysis, history),
+      savedItem?.documentId,
+    ).then(
+      (documentId) => {
+        setSavedItem({ saved: onScreen, at: new Date(), documentId });
+        setSaveState("saved");
+      },
       (err) => {
         console.warn("Failed to save TDIU results:", err);
         setSaveState("failed");
@@ -477,6 +509,8 @@ function useTdiuResults(workHistory) {
     setDraftNote,
     saveToPacket,
     saveState,
+    savedAt: savedItem?.at ?? null,
+    isSavedNow: savedItem?.saved === onScreen,
     showDownloadMenu,
     setShowDownloadMenu,
     workHistory,
@@ -744,8 +778,8 @@ function TDIUSupportCTA() {
           <p className="text-green-300/70 text-sm">
             TDIU claims are complex. Most veterans hire expensive consultants
             just to translate their symptoms into &quot;occupational
-            limitations.&quot; You just did it for free. Help keep this tool
-            available for every veteran fighting for 100%.
+            limitations.&quot; This tool is free. Help keep it available for
+            every veteran fighting for 100%.
           </p>
         </div>
       </div>
@@ -1446,8 +1480,8 @@ function WorkHistorySummary({ workHistory }) {
         Your work history
       </h3>
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-        These answers go in the downloaded report as you typed them. Use Start
-        Over to change them.
+        These answers go in the downloaded report and in what you save to My
+        Packet, as you typed them. Use Start Over to change them.
       </p>
       <dl className="space-y-2 text-sm text-gray-800 dark:text-gray-200">
         {entries.map(([label, answer]) => (
@@ -1557,6 +1591,8 @@ function ResultsStep({
   copyToClipboard,
   saveToPacket,
   saveState,
+  savedAt,
+  isSavedNow,
   showDownloadMenu,
   setShowDownloadMenu,
   downloadPDF,
@@ -1574,6 +1610,8 @@ function ResultsStep({
         onCopy={copyToClipboard}
         onSave={saveToPacket}
         saveState={saveState}
+        savedAt={savedAt}
+        isSavedNow={isSavedNow}
       />
       <WorkHistorySummary workHistory={workHistory} />
       {downloadError && (

@@ -387,7 +387,7 @@ const hasBlank = (value) =>
  * blank left in them. A bracketed blank is a prompt to the veteran, not
  * something the app has learned.
  */
-export function tdiuSavePayload(analysis) {
+export function tdiuSavePayload(analysis, workHistory = []) {
   const insights = {
     ...(hasBlank(analysis.summary_argument)
       ? {}
@@ -396,9 +396,22 @@ export function tdiuSavePayload(analysis) {
       ? {}
       : { tdiuJobsPrecluded: analysis.job_types_precluded }),
   };
+  // Work history is part of the saved item as the veteran typed it. It is
+  // not an insight: nothing here adds it to what other tools draw on.
+  const history = workHistory
+    .map(([label, answer]) => `${label}: ${answer}`)
+    .join("\n");
   return {
-    rawText: analysis.summary_argument || "",
-    extractedData: analysis,
+    rawText: [
+      analysis.summary_argument || "",
+      history && `Work history\n${history}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+    extractedData:
+      workHistory.length > 0
+        ? { ...analysis, workHistory: Object.fromEntries(workHistory) }
+        : analysis,
     ...(Object.keys(insights).length > 0
       ? { vkbMergeData: { aiInsights: insights } }
       : {}),

@@ -109,7 +109,7 @@ describe("TDIU Builder saves what the veteran sees", () => {
     ).toMatch(/3 blanks are still to be filled in/);
 
     fireEvent.click(screen.getByRole("button", { name: "Save to My Packet" }));
-    await screen.findByText("Saved to My Packet.");
+    await screen.findByRole("button", { name: /^Saved to My Packet at \d/ });
 
     const saved = saveAnalysisResults.mock.calls[0][0];
     expect(saved.toolName).toBe("TDIU Builder");

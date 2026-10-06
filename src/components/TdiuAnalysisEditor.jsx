@@ -78,12 +78,27 @@ function WorkTypes({ selected, onChange }) {
   );
 }
 
-const SAVE_MESSAGES = {
-  saved: "Saved to My Packet.",
-  failed: "Could not save to My Packet. Please try again.",
-};
+const SAVE_FAILED = "Could not save to My Packet. Please try again.";
+const savedTime = (date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 
-function SaveControl({ unfilled, workTypesChosen, onSave, saveState }) {
+// Says what the button will do: save, save changes to what is already
+// saved, or nothing because what is on screen was saved (and when).
+function saveLabel(savedAt, isSavedNow) {
+  if (savedAt && isSavedNow)
+    return `Saved to My Packet at ${savedTime(savedAt)}`;
+  return savedAt ? "Save changes to My Packet" : "Save to My Packet";
+}
+
+function SaveControl({
+  unfilled,
+  workTypesChosen,
+  onSave,
+  saveState,
+  savedAt,
+  isSavedNow,
+}) {
+  const savedNow = Boolean(savedAt) && isSavedNow;
   return (
     <div className={CARD_CLASS}>
       {(unfilled > 0 || !workTypesChosen) && (
@@ -105,19 +120,21 @@ function SaveControl({ unfilled, workTypesChosen, onSave, saveState }) {
       <button
         type="button"
         onClick={onSave}
-        className={`${BUTTON_CLASS} w-full sm:w-auto bg-blue-700 hover:bg-blue-800`}
+        disabled={savedNow}
+        className={`${BUTTON_CLASS} w-full sm:w-auto bg-blue-700 hover:bg-blue-800 disabled:cursor-default`}
       >
-        Save to My Packet
+        {saveLabel(savedAt, isSavedNow)}
       </button>
-      {SAVE_MESSAGES[saveState] && (
-        <p
-          role="status"
-          aria-label="Save result"
-          className="text-sm text-gray-900 dark:text-gray-100 mt-3"
-        >
-          {SAVE_MESSAGES[saveState]}
-        </p>
-      )}
+      <p
+        role="status"
+        aria-label="Save result"
+        className="text-sm text-gray-900 dark:text-gray-100 mt-3 empty:hidden"
+      >
+        {saveState === "failed" && SAVE_FAILED}
+        {saveState !== "failed" &&
+          savedNow &&
+          `Saved to My Packet at ${savedTime(savedAt)}.`}
+      </p>
     </div>
   );
 }
@@ -128,6 +145,8 @@ export default function TdiuAnalysisEditor({
   onCopy,
   onSave,
   saveState,
+  savedAt,
+  isSavedNow,
 }) {
   if (!analysis) return null;
   const set = (field) => (value) => onChange({ ...analysis, [field]: value });
@@ -189,6 +208,8 @@ export default function TdiuAnalysisEditor({
         workTypesChosen={tdiuWorkTypesChosen(analysis)}
         onSave={onSave}
         saveState={saveState}
+        savedAt={savedAt}
+        isSavedNow={isSavedNow}
       />
     </div>
   );
