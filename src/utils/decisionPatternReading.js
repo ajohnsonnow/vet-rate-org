@@ -90,7 +90,7 @@ const DENIAL_PATTERNS = [
     missing_elements: [],
     action_plan: [
       "Review your rating decision carefully - ensure each condition is rated correctly",
-      "If you believe the rating percentage is too low, file a Supplemental Claim or Higher-Level Review",
+      "If you believe a rating percentage is too low, you can ask for a review of that issue. The three review options are set out below",
       "Consider secondary conditions that may be caused or aggravated by your service-connected condition",
       "File an Intent to File immediately if you plan to claim additional conditions",
     ],
@@ -119,44 +119,105 @@ const DENIAL_PATTERNS = [
   },
 ];
 
-// Counts per-issue outcome verbs ("is granted", "is increased", "is
-// continued", "is denied") so a letter with both grants and denials isn't
-// misclassified as a "Full Denial" just because one denial phrase appears
-// somewhere in the text.
-function countDecisionOutcomes(text) {
-  const granted = (text.match(/\bis (?:granted|increased|continued)\b/gi) || [])
-    .length;
-  const denied = (text.match(/\bis denied\b/gi) || []).length;
-  return { granted, denied };
-}
+/*
+ * Which kinds of outcome the letter's own verbs show. Only whether a kind
+ * appears, never how many issues: a letter says "is granted" in its Decision
+ * section and again in its reasons for the same issue, so counting phrases
+ * overstates, and a wrong count on a decision letter is worse than none.
+ */
+const OUTCOME_KINDS = [
+  {
+    kind: "granted",
+    pattern: /\bis (?:granted|increased)\b/i,
+    says: "grants or increases at least one issue",
+  },
+  {
+    kind: "continued",
+    pattern: /\bis continued\b/i,
+    says: "continues at least one rating at its current level",
+  },
+  {
+    kind: "denied",
+    pattern: /\bis denied\b/i,
+    says: "denies at least one issue",
+  },
+  {
+    kind: "deferred",
+    pattern: /\b(?:is|are) deferred\b/i,
+    says: "defers at least one issue",
+  },
+];
 
-function buildMixedDecisionResult(granted, denied) {
+const outcomesShown = (text) =>
+  OUTCOME_KINDS.filter(({ pattern }) => pattern.test(text));
+
+const joinWithAnd = (items) =>
+  items.length < 2
+    ? items.join("")
+    : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+
+// The screen shows all three review options, with their forms, under every
+// reading. The plan points there, so it never lists only some of them.
+const REVIEW_STEP =
+  "If you disagree with an issue that was denied or continued, you can ask for a review of just that issue. The three review options are set out below.";
+const REVIEW_DEADLINE =
+  "You have 1 year from the date of this decision to ask for a review of an issue that was denied or continued while keeping your effective date.";
+const VSO_STEP =
+  "Contact a VSO to confirm which parts of the decision are final and which can be reviewed";
+
+const STEPS_BY_KIND = {
+  granted: [
+    "Confirm the rating and effective date for each issue that was granted or increased",
+  ],
+  denied: ["For a denied issue, note the evidence the letter says is missing"],
+  deferred: [
+    "For a deferred issue, attend any examination VA schedules and send what it asks for. No decision has been made on that issue yet",
+  ],
+};
+
+function buildMixedDecisionResult(outcomes) {
+  const kinds = new Set(outcomes.map(({ kind }) => kind));
+  const reviewable = kinds.has("denied") || kinds.has("continued");
   return {
     decision_type: "Mixed Decision",
-    plain_english: `This decision is a mix of outcomes: ${granted} issue(s) granted or increased, and ${denied} issue(s) denied. Read each numbered item in your letter carefully - you don't need to appeal the parts that were already granted.`,
+    plain_english: `This decision appears to do more than one thing: it ${joinWithAnd(outcomes.map(({ says }) => says))}. The built-in reader cannot count the issues or tell you which is which, so read each numbered item in your letter. You do not need to ask for a review of anything that was granted.`,
     va_reasoning:
-      "The VA evaluated each claimed condition separately. Some had enough evidence to grant or increase; others did not.",
-    missing_elements: [
-      "Review the letter to identify exactly which issue(s) were denied - do not assume the whole claim was denied",
-    ],
+      "VA decides each claimed condition separately, so one letter can hold different outcomes.",
+    missing_elements: kinds.has("denied")
+      ? [
+          "Find in the letter exactly which issue or issues were denied - do not assume the whole claim was denied",
+        ]
+      : [],
     action_plan: [
-      "Confirm your new combined rating and effective date for the granted/increased issues",
-      "For the denied issue(s) only, gather the specific evidence VA says is missing",
-      "File a Supplemental Claim or Higher-Level Review for just the denied issue(s) if you disagree",
-      "Contact a VSO to confirm you understand which parts of the decision are final vs. appealable",
+      ...["granted", "denied", "deferred"].flatMap((kind) =>
+        kinds.has(kind) ? STEPS_BY_KIND[kind] : [],
+      ),
+      ...(reviewable ? [REVIEW_STEP] : []),
+      VSO_STEP,
     ],
-    deadline_warning:
-      "You have 1 year from this decision date to appeal the denied issue(s) while preserving your effective date.",
+    deadline_warning: reviewable ? REVIEW_DEADLINE : null,
   };
 }
 
-export function patternMatchDenial(text) {
+const CONTINUED_RESULT = {
+  decision_type: "Rating Continued",
+  plain_english:
+    "This decision appears to continue at least one rating at its current level: VA did not raise it or lower it. The built-in reader cannot tell you the reasons, so read the Reasons for Decision section of your letter.",
+  va_reasoning:
+    "VA continues a rating when it finds the evidence does not meet the criteria for a different evaluation.",
+  missing_elements: [],
+  action_plan: [REVIEW_STEP, VSO_STEP],
+  deadline_warning: REVIEW_DEADLINE,
+};
+
+export function patternMatchDenial(letterText) {
+  // A letter breaks lines mid-phrase ("Service connection is\ndenied").
+  const text = String(letterText ?? "").replace(/\s+/g, " ");
   const t = text.toLowerCase();
 
-  const { granted, denied } = countDecisionOutcomes(text);
-  if (granted > 0 && denied > 0) {
-    return buildMixedDecisionResult(granted, denied);
-  }
+  const outcomes = outcomesShown(text);
+  if (outcomes.length > 1) return buildMixedDecisionResult(outcomes);
+  if (outcomes[0]?.kind === "continued") return CONTINUED_RESULT;
 
   for (const pattern of DENIAL_PATTERNS) {
     if (pattern.test(text, t)) {
