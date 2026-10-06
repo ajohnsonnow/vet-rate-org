@@ -32,6 +32,7 @@ const SECTIONS = {
   "21-4138": { veteran: [1, 8] },
   "21-0781": { veteran: [1, 7] },
   "21-10210": { veteran: [1, 8], claimant: [9, 16], witness: [18, 22] },
+  "20-10207": { veteran: [1, 8], claimant: [9, 15] },
 };
 // Keys with no person in their name, on the forms where every identity
 // field is the veteran's.

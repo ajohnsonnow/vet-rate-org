@@ -223,41 +223,54 @@ const VA_FORM_FIELDS = {
 
   // VA Form 20-10207 - Priority Processing
   "20-10207": {
-    veteranFirstName: "form1[0].#subform[2].Veterans_Claimants_First_Name[0]",
-    veteranMiddleInitial: "form1[0].#subform[2].Middle_Initial1[0]",
-    veteranLastName: "form1[0].#subform[2].Last_Name[0]",
+    veteranFirstName: "form1[0].#subform[3].Veterans_First_Name[0]",
+    veteranMiddleInitial: "form1[0].#subform[3].Middle_Initial1[0]",
+    veteranLastName: "form1[0].#subform[3].Last_Name[0]",
     veteranSSN1:
-      "form1[0].#subform[2].VeteransSocialSecurityNumber_FirstThreeNumbers[0]",
+      "form1[0].#subform[3].Veterans_SocialSecurityNumber_FirstThreeNumbers[0]",
     veteranSSN2:
-      "form1[0].#subform[2].VeteransSocialSecurityNumber_SecondTwoNumbers[0]",
+      "form1[0].#subform[3].Veterans_SocialSecurityNumber_SecondTwoNumbers[0]",
     veteranSSN3:
-      "form1[0].#subform[2].VeteransSocialSecurityNumber_LastFourNumbers[0]",
-    dobMonth: "form1[0].#subform[2].Month[1]",
-    dobDay: "form1[0].#subform[2].Day[1]",
-    dobYear: "form1[0].#subform[2].Year[1]",
-    vaFileNumber: "form1[0].#subform[2].VA_File_Number_If_Applicable[0]",
-    street: "form1[0].#subform[2].CurrentMailingAddress_NumberAndStreet[0]",
-    apt: "form1[0].#subform[2].CurrentMailingAddress_ApartmentOrUnitNumber[0]",
-    city: "form1[0].#subform[2].CurrentMailingAddress_City[0]",
-    state: "form1[0].#subform[2].CurrentMailingAddress_StateOrProvince[0]",
-    zip5: "form1[0].#subform[2].CurrentMailingAddress_ZIPOrPostalCode_FirstFiveNumbers[0]",
-    zip4: "form1[0].#subform[2].CurrentMailingAddress_ZIPOrPostalCode_LastFourNumbers[0]",
-    country: "form1[0].#subform[2].CurrentMailingAddress_Country[0]",
-    phone1: "form1[0].#subform[2].TelephoneNumber_FirstThreeNumbers[0]",
-    phone2: "form1[0].#subform[2].TelephoneNumber_SecondThreeNumbers[0]",
-    phone3: "form1[0].#subform[2].TelephoneNumber_LastFourNumbers[0]",
-    email: "form1[0].#subform[2].E_Mail_Address_If_Applicable[0]",
-    // Reason checkboxes
-    advancedIllness: "form1[0].#subform[3].Advance_Illness[0]",
-    financialHardship: "form1[0].#subform[3].Financial_Hardship[0]",
-    alsDisease: "form1[0].#subform[3].ALS_Disease[0]",
-    over85: "form1[0].#subform[3].Over85YearsOld[0]",
-    homelessAtRisk:
-      "form1[0].#subform[3].ExperiencingOrAtRiskOfExperiencingHomelessness[0]",
-    extremeFinancial: "form1[0].#subform[3].ExtremeFinancialHardship[0]",
-    dateMonth: "form1[0].#subform[3].Month[2]",
-    dateDay: "form1[0].#subform[3].Day[2]",
-    dateYear: "form1[0].#subform[3].Year[2]",
+      "form1[0].#subform[3].Veterans_SocialSecurityNumber_LastFourNumbers[0]",
+    dobMonth: "form1[0].#subform[3].DOBmonth[0]",
+    dobDay: "form1[0].#subform[3].DOBday[0]",
+    dobYear: "form1[0].#subform[3].DOByear[0]",
+    // [1] is the veteran's (item 4); [0] is the claimant's (item 11).
+    vaFileNumber: "form1[0].#subform[3].VA_File_Number_If_Applicable[1]",
+    street: "form1[0].#subform[3].CurrentMailingAddress_NumberAndStreet[0]",
+    apt: "form1[0].#subform[3].CurrentMailingAddress_ApartmentOrUnitNumber[0]",
+    city: "form1[0].#subform[3].CurrentMailingAddress_City[0]",
+    state: "form1[0].#subform[3].CurrentMailingAddress_StateOrProvince[0]",
+    zip5: "form1[0].#subform[3].CurrentMailingAddress_ZIPOrPostalCode_FirstFiveNumbers[0]",
+    zip4: "form1[0].#subform[3].CurrentMailingAddress_ZIPOrPostalCode_LastFourNumbers[0]",
+    country: "form1[0].#subform[3].CurrentMailingAddress_Country[0]",
+    phone1: "form1[0].#subform[3].TelephoneNumber_FirstThreeNumbers[0]",
+    phone2: "form1[0].#subform[3].TelephoneNumber_SecondThreeNumbers[0]",
+    phone3: "form1[0].#subform[3].TelephoneNumber_LastFourNumbers[0]",
+    email: "form1[0].#subform[3].Email_Address[0]",
+    emailLine2: "form1[0].#subform[3].Email_Address[1]",
+    page4SSN1:
+      "form1[0].#subform[4].Veterans_SocialSecurityNumber_FirstThreeNumbers[1]",
+    page4SSN2:
+      "form1[0].#subform[4].Veterans_SocialSecurityNumber_SecondTwoNumbers[1]",
+    page4SSN3:
+      "form1[0].#subform[4].Veterans_SocialSecurityNumber_LastFourNumbers[1]",
+    page5SSN1:
+      "form1[0].#subform[5].Veterans_SocialSecurityNumber_FirstThreeNumbers[2]",
+    page5SSN2:
+      "form1[0].#subform[5].Veterans_SocialSecurityNumber_SecondTwoNumbers[2]",
+    page5SSN3:
+      "form1[0].#subform[5].Veterans_SocialSecurityNumber_LastFourNumbers[2]",
+    // Item 17, other reasons for the request.
+    reasonFormerPOW: "form1[0].#subform[4].OtherReasonsForRequest[0]",
+    reasonSeriouslyInjured: "form1[0].#subform[4].OtherReasonsForRequest[1]",
+    reasonALS: "form1[0].#subform[4].OtherReasonsForRequest[2]",
+    reasonExtremeFinancialHardship:
+      "form1[0].#subform[4].OtherReasonsForRequest[3]",
+    reasonTerminallyIll: "form1[0].#subform[4].OtherReasonsForRequest[4]",
+    reasonMedalOfHonorOrPurpleHeart:
+      "form1[0].#subform[4].OtherReasonsForRequest[5]",
+    reason85OrOlder: "form1[0].#subform[4].OtherReasonsForRequest[6]",
   },
 
   // VA Form 21-0781 - PTSD Stressor Statement
@@ -2211,32 +2224,23 @@ async function createMedicalReleasePdf(data) {
  * Fill VA Form 20-10207 (Priority Processing) with actual field mappings
  */
 function fill20_10207_VeteranInfo(setTextField, fieldMap, data) {
-  const nameParts = (data.veteranName || data.name || "").split(" ");
+  const { firstName, middleInitial, lastName } = veteranNameParts(data);
   const phone = parsePhoneParts(data.phone || data.veteranPhone);
   const ssn = parseSSNParts(data.ssn || data.veteranSSN);
   const dob = parseDOBParts(data.dob || data.veteranDOB);
-  const zipParts = parseZipParts(data.zip || data.veteranZip);
 
-  setTextField(fieldMap.veteranFirstName, nameParts[0]);
-  setTextField(
-    fieldMap.veteranMiddleInitial,
-    nameParts.length > 2 ? nameParts[1]?.[0] : "",
-  );
-  setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
-  setTextField(fieldMap.veteranSSN1, ssn.first);
-  setTextField(fieldMap.veteranSSN2, ssn.middle);
-  setTextField(fieldMap.veteranSSN3, ssn.last);
+  setTextField(fieldMap.veteranFirstName, firstName);
+  setTextField(fieldMap.veteranMiddleInitial, middleInitial);
+  setTextField(fieldMap.veteranLastName, lastName);
+  for (const boxes of ["veteranSSN", "page4SSN", "page5SSN"]) {
+    setTextField(fieldMap[`${boxes}1`], ssn.first);
+    setTextField(fieldMap[`${boxes}2`], ssn.middle);
+    setTextField(fieldMap[`${boxes}3`], ssn.last);
+  }
   setTextField(fieldMap.dobMonth, dob.month);
   setTextField(fieldMap.dobDay, dob.day);
   setTextField(fieldMap.dobYear, dob.year);
   setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
-  setTextField(fieldMap.street, data.street || data.veteranStreet || "");
-  setTextField(fieldMap.apt, aptForBox(data.apt));
-  setTextField(fieldMap.city, data.city || data.veteranCity || "");
-  setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, countryCode(data.country));
-  setTextField(fieldMap.zip5, zipParts.five);
-  setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
   setTextField(fieldMap.phone2, phone.prefix);
   setTextField(fieldMap.phone3, phone.line);
@@ -2247,21 +2251,33 @@ function fill20_10207_VeteranInfo(setTextField, fieldMap, data) {
   );
 }
 
+// The wizard's reasons that are one of the form's item 17 boxes, by the
+// wizard's exact wording. The other reasons (a serious illness, financial
+// hardship short of "extreme", homelessness or its risk, a pending MST
+// claim, "other") have no box that means the same, so none is ticked for
+// them and the veteran completes the form's own items.
+const PRIORITY_REASON_BOXES = {
+  "Former Prisoner of War (POW)": "reasonFormerPOW",
+  "Very Seriously Injured/Ill (VSI) or Seriously Injured/Ill (SI)":
+    "reasonSeriouslyInjured",
+  "ALS (Amyotrophic Lateral Sclerosis) diagnosis": "reasonALS",
+  "Experiencing extreme financial hardship": "reasonExtremeFinancialHardship",
+  "Terminal illness (life expectancy of 6 months or less)":
+    "reasonTerminallyIll",
+  "Medal of Honor recipient": "reasonMedalOfHonorOrPurpleHeart",
+  "Purple Heart recipient": "reasonMedalOfHonorOrPurpleHeart",
+  "Age 85 or older": "reason85OrOlder",
+};
+
 function fill20_10207_PriorityCheckboxes(setCheckbox, fieldMap, data) {
-  const reasons = data.priorityReasons || [];
-  const reasonStr = reasons.join(",").toLowerCase();
-  if (reasonStr.includes("illness") || reasonStr.includes("terminal"))
-    setCheckbox(fieldMap.advancedIllness, true);
-  if (reasonStr.includes("financial") && !reasonStr.includes("extreme"))
-    setCheckbox(fieldMap.financialHardship, true);
-  if (reasonStr.includes("als") || reasonStr.includes("amyotrophic"))
-    setCheckbox(fieldMap.alsDisease, true);
-  if (reasonStr.includes("85") || reasonStr.includes("age"))
-    setCheckbox(fieldMap.over85, true);
-  if (reasonStr.includes("homeless"))
-    setCheckbox(fieldMap.homelessAtRisk, true);
-  if (reasonStr.includes("extreme"))
-    setCheckbox(fieldMap.extremeFinancial, true);
+  const reasons = Array.isArray(data.priorityReasons)
+    ? data.priorityReasons
+    : [];
+  for (const reason of reasons) {
+    if (Object.hasOwn(PRIORITY_REASON_BOXES, reason)) {
+      setCheckbox(fieldMap[PRIORITY_REASON_BOXES[reason]], true);
+    }
+  }
 }
 
 export async function fillForm20_10207(data) {
@@ -2280,6 +2296,7 @@ export async function fillForm20_10207(data) {
         setPdfCheckbox(form, fieldName, checked);
 
       fill20_10207_VeteranInfo(setTextField, fieldMap, data);
+      setWholeAddress(form, fieldMap, mailingAddressFrom(data));
       fill20_10207_PriorityCheckboxes(setCheckbox, fieldMap, data);
 
       return await pdfDoc.save();
@@ -2871,6 +2888,7 @@ async function createIndividualRepPdf(data) {
  * form before it is offered again.
  */
 const OFFICIAL_PDF_FORMS = new Set([
+  "priority-processing",
   "buddy-statement",
   "personal-statement",
   "ptsd-stressor",
@@ -2910,6 +2928,10 @@ export async function fillAndDownloadForm(formType, data) {
     case "medical-release":
       pdfBytes = await fillForm21_4142(data);
       fileName = "VA_Form_21-4142_Medical_Release.pdf";
+      break;
+    case "priority-processing":
+      pdfBytes = await fillForm20_10207(data);
+      fileName = "VA_Form_20-10207_Priority_Processing.pdf";
       break;
     case "vso-appointment":
       pdfBytes = await fillForm21_22(data);

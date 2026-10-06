@@ -35,9 +35,9 @@ const WITH_FILLER = [
   "PTSD Stressor Statement",
   "VSO Appointment",
   "Individual Representative",
+  "Priority Processing Request",
 ];
 const WITHOUT_FILLER = [
-  "Priority Processing Request",
   "Third Party Authorization",
   "Freedom of Information Act (FOIA) Request",
   "Alternate Signer Certification",
@@ -73,13 +73,14 @@ beforeEach(() => {
 });
 
 describe("which forms have an official PDF", () => {
-  it("is the seven the app can fill, and not the Priority Processing Request", () => {
+  it("is the eight the app can fill", () => {
     expect(
       [
         "buddy-statement",
         "intent-to-file",
         "medical-release",
         "personal-statement",
+        "priority-processing",
         "ptsd-stressor",
         "vso-appointment",
         "vso-appointment-individual",
@@ -87,7 +88,6 @@ describe("which forms have an official PDF", () => {
     ).toBe(true);
     expect(
       [
-        "priority-processing",
         "third-party-authorization",
         "personal-records-request",
         "alternate-signer",

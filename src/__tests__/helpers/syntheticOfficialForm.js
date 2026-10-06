@@ -1,14 +1,13 @@
 /**
  * A stand-in for an official VA form PDF, for tests that read back what the
- * filler set. For the seven forms the app offers it is built from the real
- * forms' own field list (fixtures/officialFormFields.json): the real field
- * names, kinds, pages, box sizes, maximum lengths, font sizes and tooltips.
- * It is not the VA's file and nothing is rendered, but a value the real
- * form would refuse or could not show in its box behaves the same here.
- * A form with no fixture gets one field per name in the filler's map.
+ * filler set. It is built from the real form's own field list
+ * (fixtures/officialFormFields.json): the real field names, kinds, pages,
+ * box sizes, maximum lengths, font sizes and tooltips. It is not the VA's
+ * file and nothing is rendered, but a value the real form would refuse or
+ * could not show in its box behaves the same here.
  */
 import { vi } from "vitest";
-import { PDFDocument, PDFForm } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import { _VA_FORM_FIELDS } from "../../utils/pdfFormFiller";
 import REAL from "../utils/fixtures/officialFormFields.json";
 
@@ -50,53 +49,6 @@ async function realTemplate(formNumber) {
   return template.save();
 }
 
-// Answers that make the filler reach for every check box it can set.
-const CHECK_BOX_PROBES = [
-  {},
-  { benefitTypes: ["compensation", "pension", "dic"] },
-  { priorityReasons: ["illness financial als 85 homeless", "extreme"] },
-  { priorityReasons: ["financial"] },
-];
-
-async function mapTemplate(formNumber, fill) {
-  const blank = await PDFDocument.create();
-  blank.addPage();
-  const bytes = await blank.save();
-  const asked = new Set();
-  const spy = vi
-    .spyOn(PDFForm.prototype, "getCheckBox")
-    .mockImplementation((name) => {
-      asked.add(name);
-      throw new Error("no such field");
-    });
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async () => ({ ok: true, arrayBuffer: async () => bytes })),
-  );
-  try {
-    for (const probe of CHECK_BOX_PROBES) await fill(probe);
-  } finally {
-    spy.mockRestore();
-  }
-  const template = await PDFDocument.create();
-  const page = template.addPage();
-  const form = template.getForm();
-  [...new Set(Object.values(_VA_FORM_FIELDS[formNumber]))].forEach(
-    (name, i) => {
-      const place = { x: 10, y: 10 + (i % 70) * 10, width: 200, height: 9 };
-      if (asked.has(name)) {
-        form.createCheckBox(name).addToPage(page, { ...place, width: 9 });
-      } else {
-        const field = form.createTextField(name);
-        field.enableMultiline();
-        field.addToPage(page, { ...place, height: 600 });
-        field.setFontSize(10);
-      }
-    },
-  );
-  return template.save();
-}
-
 /**
  * Fill `formNumber` with `data` through `fill` (the filler's own function)
  * and return a reader over the result, by the field map's keys: `text(key)`,
@@ -104,9 +56,7 @@ async function mapTemplate(formNumber, fill) {
  */
 export async function fillSyntheticForm(formNumber, fill, data) {
   const fieldMap = _VA_FORM_FIELDS[formNumber];
-  const templateBytes = REAL.forms[formNumber]
-    ? await realTemplate(formNumber)
-    : await mapTemplate(formNumber, fill);
+  const templateBytes = await realTemplate(formNumber);
   vi.stubGlobal(
     "fetch",
     vi.fn(async () => ({ ok: true, arrayBuffer: async () => templateBytes })),
@@ -125,6 +75,7 @@ export async function fillSyntheticForm(formNumber, fill, data) {
   return {
     text,
     checked,
+    fieldName: (key) => fieldMap[key],
     checkBoxKeys: () => keys.filter(isCheckBox),
     checkedKeys: () => keys.filter((key) => isCheckBox(key) && checked(key)),
     filledTextKeys: () => keys.filter((key) => isText(key) && text(key) !== ""),
