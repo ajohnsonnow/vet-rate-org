@@ -25,6 +25,7 @@ async function generateAIText(prompt, options) {
   const result = await generateAI(prompt, {
     ...options,
     dataClass: AI_DATA_CLASS.CONTEXT,
+    answerChecks: options?.taskType !== "extraction",
   });
   if (typeof result === "string") return result;
   return result?.text ?? "";

@@ -248,7 +248,10 @@ describe("a fallback result is checked like a primary one", () => {
   it("an unverifiable citation in a fallback answer gets the notice", async () => {
     cloudReplies("See 38 CFR § 4.9999 for the rule.");
     failingLocal();
-    const result = await generateAI(QUESTION, validated());
+    const result = await generateAI(QUESTION, {
+      ...validated(),
+      answerChecks: true,
+    });
     expect(result.citationsUnverified).toEqual({ sections: ["4.9999"] });
     expect(result.text).toContain("Vet-Rate could not verify a citation");
   });

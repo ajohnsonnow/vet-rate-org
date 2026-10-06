@@ -59,6 +59,7 @@ import {
 } from "./promptBudget";
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
 import { flagUnverifiedForms } from "./formCheck";
+import { answerChecksApply } from "./answerCheckRoutes";
 import { trimToLastSentence } from "./outputCleanup";
 import { flagContradictions } from "./contradictionCheck";
 import {
@@ -3264,6 +3265,7 @@ const generateAIInternal = async (prompt, options = {}) => {
     options,
   );
   const result = _settleTruncation(dispatched, finish, options);
+  if (!answerChecksApply(options)) return result;
   return flagContradictions(
     flagUnverifiedForms(flagUnverifiedCitations(result, options), options),
     options,

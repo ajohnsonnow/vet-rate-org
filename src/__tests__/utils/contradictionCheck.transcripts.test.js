@@ -9,6 +9,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { findContradictions } from "../../utils/contradictionCheck";
 import { detectReferenceTopics } from "../../utils/verifiedReference";
+import { answerChecksApply } from "../../utils/answerCheckRoutes";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
 const LAST_REVIEWED_RUN = "run_2026-10-06_045832";
@@ -78,6 +79,18 @@ function decoderFieldHits(record) {
   );
 }
 
+// True contradictions, all recorded with the Nexus Builder's tool id (cases
+// a20 and a29 put a question to a writer tool). In the app that tool's text
+// is a draft, so no block is added to it.
+const WRITER_ROUTE_HITS = [
+  "135040 a29 secondary-barred",
+  "210108 a29 secondary-barred",
+  "002046 a29 secondary-barred",
+  "022302 a29 ratings-higher-of-two",
+  "033751 a29 secondary-barred",
+  "034657 a20 ratings-higher-of-two",
+];
+
 const PROSE_HITS = [
   "071859 a11 bilateral-same-side",
   "071859 a13 tdiu-from-percentages",
@@ -104,7 +117,6 @@ const PROSE_HITS = [
   "135040 a16 presumptive-needs-exposure-proof",
   "135040 a26 new-and-material-standard",
   "135040 a26 intent-to-file-for-filed-claim",
-  "135040 a29 secondary-barred",
   "135908 a15 bilateral-same-side",
   "135908 a26 new-and-material-standard",
   "201248 a13 tdiu-from-percentages",
@@ -113,7 +125,6 @@ const PROSE_HITS = [
   "210108 a26 new-and-material-standard",
   "210108 a26 intent-to-file-for-filed-claim",
   "210108 a27 presumptive-needs-proof",
-  "210108 a29 secondary-barred",
   "221648 a26 new-and-material-standard",
   "221648 a26 intent-to-file-for-filed-claim",
   "230321 a26 intent-to-file-for-filed-claim",
@@ -127,7 +138,6 @@ const PROSE_HITS = [
   "000820 a27 presumptive-needs-exposure-proof",
   "002046 a26 intent-to-file-for-filed-claim",
   "002046 a27 presumptive-needs-exposure-proof",
-  "002046 a29 secondary-barred",
   "012539 a30 intent-form-as-application",
   "013549 a26 intent-to-file-for-filed-claim",
   "013549 a30 intent-form-as-application",
@@ -135,17 +145,14 @@ const PROSE_HITS = [
   "021103 a26 form-for-another-filing",
   "021103 a26 intent-form-as-application",
   "021103 a26 intent-to-file-for-filed-claim",
-  "022302 a29 ratings-higher-of-two",
   "031715 a15 intent-paragraph-for-supplemental-claim",
   "031715 a26 intent-to-file-for-filed-claim",
   "032917 a26 intent-paragraph-for-supplemental-claim",
   "032917 a30 intent-form-as-application",
   "033751 a26 intent-to-file-for-filed-claim",
-  "033751 a29 secondary-barred",
   "034657 a04 form-for-another-filing",
   "034657 a15 tdiu-wrong-single-threshold",
   "034657 a16 coverage-date-for-wrong-place",
-  "034657 a20 ratings-higher-of-two",
   "034657 a30 intent-form-as-application",
   "045147 a15 new-claim-to-reopen",
   "045147 a15 new-and-material-standard",
@@ -169,16 +176,23 @@ describe("contradiction rules over the recorded evaluation answers", () => {
     expect(prose).toHaveLength(1181);
   });
 
+  const topicsOf = (record) =>
+    detectReferenceTopics(record.input, record.toolId, {
+      conditions: conditionsOf(record),
+    });
+
   it("flags only real contradictions, each on the topic of its own question", () => {
-    const flagged = prose.flatMap((record) =>
-      hitsFor(
-        record,
-        detectReferenceTopics(record.input, record.toolId, {
-          conditions: conditionsOf(record),
-        }),
-      ),
-    );
+    const flagged = prose
+      .filter((record) => answerChecksApply({ toolId: record.toolId }))
+      .flatMap((record) => hitsFor(record, topicsOf(record)));
     expect(flagged).toEqual(PROSE_HITS);
+  });
+
+  it("no longer corrects these, because the tool they ran in writes drafts", () => {
+    const off = prose
+      .filter((record) => !answerChecksApply({ toolId: record.toolId }))
+      .flatMap((record) => hitsFor(record, topicsOf(record)));
+    expect(off).toEqual(WRITER_ROUTE_HITS);
   });
 });
 
