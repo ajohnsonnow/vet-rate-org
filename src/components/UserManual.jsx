@@ -1645,7 +1645,7 @@ VA Form 21-0781 - describes the traumatic event(s) that caused your PTSD.
 ## Types of Stressors
 
 - Combat-related
-- Personal assault (MST) - use 21-0781a
+- Personal assault (MST) - also on VA Form 21-0781, which has its own section for it
 - Non-combat trauma
 - Fear of hostile activity
 
@@ -3687,7 +3687,6 @@ Common VA claims terminology. Auto-generated from vaGlossary.js (195 terms).
 - **VA Form 20-0995** - Decision Review Request: Supplemental Claim - Used to submit new evidence on a denied claim
 - **VA Form 20-0996** - Decision Review Request: Higher-Level Review - Used to request senior reviewer look at your claim
 - **VA Form 21-0781** - Statement in Support of Claim for PTSD - Specialized form for describing PTSD stressors
-- **VA Form 21-0781a** - Statement in Support of Claim for PTSD Secondary to Personal Assault - Specialized form for PTSD from MST or personal...
 - **VA Form 21-0966** - Intent to File - Locks in your effective date for up to 1 year while you gather evidence
 - **VA Form 21-10210** - Lay/Witness Statement - Form for buddy statements from people who observed your condition
 - **VA Form 21-22** - Appointment of Veterans Service Organization as Claimant Representative
