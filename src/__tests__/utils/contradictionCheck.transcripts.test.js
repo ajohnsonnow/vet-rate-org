@@ -125,6 +125,7 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "221648 a26 new-and-material-standard",
       "221648 a26 intent-to-file-for-filed-claim",
       "230321 a26 intent-to-file-for-filed-claim",
+      "000014 a26 form-for-another-filing",
       "000820 a16 coverage-date-for-wrong-place",
       "000820 a26 intent-to-file-for-filed-claim",
       "000820 a27 presumptive-needs-exposure-proof",
@@ -139,12 +140,13 @@ describe("contradiction rules outside the topic of the question", () => {
   const answers = shownAnswers();
   const prose = answers.filter((record) => !isDecoderCase(record));
 
-  it("no longer reaches three real a18 contradictions, because a18 raises no topic", () => {
+  it("no longer reaches four real a18 contradictions, because a18 raises no topic", () => {
     const a18 = prose
       .filter((record) => record.id === "a18")
       .flatMap((record) => hitsFor(record, ALL_TOPICS));
     expect(a18).toEqual([
       "071859 a18 higher-level-review-new-evidence",
+      "074624 a18 form-for-another-filing",
       "105010 a18 new-and-material-standard",
       "110822 a18 new-and-material-standard",
     ]);
@@ -169,6 +171,7 @@ describe("contradiction rules outside the topic of the question", () => {
       "213230 t08 action_plan higher-level-review-at-the-board",
       "213230 t08 appeal_options files-statement-of-the-case",
       "221648 t08 deadline_warning supplemental-claim-deadline",
+      "231514 t08 action_plan form-for-another-filing",
       "000014 t08 deadline_warning review-period-from-wrong-day",
       "002046 t08 action_plan higher-level-review-new-evidence",
       "002046 t08 action_plan higher-level-review-hearing",

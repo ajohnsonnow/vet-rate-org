@@ -14,6 +14,7 @@
 
 import quotes from "../data/verifiedQuotes.json";
 import { findWrongCoverageDate } from "./coverageDates";
+import { findFormMismatch } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
 
 const anyMatch = (text, ...patterns) =>
@@ -360,6 +361,18 @@ const RULES = [
       NEW_AND_MATERIAL.test(sentence) && !FORMER_STANDARD.test(sentence),
     says: 'gives "new and material" evidence as the test, which is the previous standard',
     correction: () => "new-and-relevant",
+  },
+  {
+    id: "form-for-another-filing",
+    topics: FILING_TOPICS,
+    matches: (sentence) => findFormMismatch(sentence) !== null,
+    describe: (sentence) => {
+      const { label, number, quote } = findFormMismatch(sentence);
+      return {
+        says: `gives VA Form ${number} as the form for ${label}`,
+        quote,
+      };
+    },
   },
   {
     id: "intent-to-file-for-filed-claim",
