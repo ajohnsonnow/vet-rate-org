@@ -102,9 +102,7 @@ describe("text that only mentions medicine is not blocked", () => {
 
 describe("blocks over the 482 labelled recorded answers", () => {
   const answers = recordedCases().filter((c) => c.response);
-  const blocked = answers.filter(
-    (c) => !validateAIResponse(c.response).isValid,
-  );
+  const blocked = answers.filter((c) => blocksAsMedical(c.response));
 
   it("before: 3 of the answers, all false positives; after: none", () => {
     expect(answers).toHaveLength(482);
@@ -114,13 +112,16 @@ describe("blocks over the 482 labelled recorded answers", () => {
     expect(blocked).toEqual([]);
   });
 
-  it("no rule of any kind matches a recorded answer", () => {
-    const matches = Object.entries(FORBIDDEN_PHRASES).flatMap(
-      ([category, patterns]) =>
+  // The nexus rule does block recorded answers, rightly: see
+  // aiSystemPrompts.nexusImpersonation.test.js.
+  it("no other rule matches a recorded answer", () => {
+    const matches = Object.entries(FORBIDDEN_PHRASES)
+      .filter(([category]) => category !== "NEXUS_IMPERSONATION")
+      .flatMap(([category, patterns]) =>
         answers
           .filter((c) => patterns.some((p) => p.test(c.response)))
           .map((c) => `${category} ${c.run} ${c.id}`),
-    );
+      );
     expect(matches).toEqual([]);
   });
 });
