@@ -75,7 +75,11 @@ export const getRecommendedModelForDevice = (toolId) => {
 };
 
 /**
- * Check if the correct model is loaded for this tool and device
+ * Check if the correct model is loaded for this tool and device. "Loaded" is
+ * the on-device swarm being ready, and "correct" is its model being the one
+ * the device profile recommends (recommended.deviceModel), since every role
+ * runs on that one model. When either model is unknown there is nothing to
+ * compare, and a ready swarm counts as correct.
  * @param {string} toolId - The tool being used
  * @returns {Object} { isCorrect, currentModel, recommendedModel, action }
  */
@@ -83,8 +87,7 @@ export const checkModelMatch = (toolId) => {
   const aiStatus = getAIStatus();
   const recommended = getRecommendedModelForDevice(toolId);
 
-  // No AI loaded
-  if (!aiStatus.isLocal || !aiStatus.modelId) {
+  if (!aiStatus.swarmAvailable) {
     return {
       isCorrect: false,
       currentModel: null,
@@ -94,13 +97,14 @@ export const checkModelMatch = (toolId) => {
     };
   }
 
-  // Check if current model matches recommendation
-  const isMatch = aiStatus.modelId === recommended.id;
+  const currentModel = aiStatus.swarmStatus?.model ?? null;
+  const wanted = recommended.deviceModel?.modelId ?? null;
+  const isMatch = !currentModel || !wanted || currentModel === wanted;
 
   if (isMatch) {
     return {
       isCorrect: true,
-      currentModel: aiStatus.modelId,
+      currentModel,
       recommendedModel: recommended,
       action: "none",
       message: `✓ ${recommended.name} ready`,
@@ -110,7 +114,7 @@ export const checkModelMatch = (toolId) => {
   // Wrong model loaded
   return {
     isCorrect: false,
-    currentModel: aiStatus.modelId,
+    currentModel,
     recommendedModel: recommended,
     action: "switch",
     message: `Switch to ${recommended.name} for better performance`,
