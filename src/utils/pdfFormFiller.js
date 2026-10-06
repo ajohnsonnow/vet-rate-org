@@ -210,6 +210,15 @@ const VA_FORM_FIELDS = {
     dobYear: "F[0].Page_1[0].DOByear[0]",
     serviceNumber: "F[0].Page_1[0].VeteransServiceNumber_If_Applicable[0]",
     street: "F[0].Page_1[0].MailingAddress_NumberAndStreet[0]",
+    apt: "F[0].Page_1[0].MailingAddress_ApartmentOrUnitNumber[0]",
+    city: "F[0].Page_1[0].MailingAddress_City[0]",
+    state: "F[0].Page_1[0].MailingAddress_StateOrProvince[0]",
+    country: "F[0].Page_1[0].MailingAddress_Country[0]",
+    zip5: "F[0].Page_1[0].MailingAddress_ZIPOrPostalCode_FirstFiveNumbers[0]",
+    zip4: "F[0].Page_1[0].MailingAddress_ZIPOrPostalCode_LastFourNumbers[0]",
+    phone1: "F[0].Page_1[0].TelephoneNumber_AreaCode[0]",
+    phone2: "F[0].Page_1[0].TelephoneNumber_SecondThreeNumbers[0]",
+    phone3: "F[0].Page_1[0].TelephoneNumber_LastFourNumbers[0]",
   },
 
   // VA Form 20-10207 - Priority Processing
@@ -660,13 +669,45 @@ function parsePhoneParts(phone) {
   };
 }
 
+/*
+ * What the last fill could not put on the form as given, so the screen can
+ * say so instead of the text vanishing or being cut off:
+ *   leftBlank  answers that do not fit their box (too many characters, or
+ *              too wide or too long for it at the form's font size); the
+ *              box is left empty for the veteran to write in
+ *   moved      answers too long for their own box that are in the form's
+ *              remarks section instead, in full (their names)
+ *   textOnly   answers too long for their own box that the remarks section
+ *              could not hold in full either; they are not on the form
+ *              (their names)
+ *   notPlaced  answers the app could not turn into the form's boxes as
+ *              typed, such as part of a date or an address it cannot split;
+ *              their boxes are blank (their names, never their values)
+ *   overflow   the part of a statement that fits no box on the form
+ */
+const newFillReport = () => ({
+  leftBlank: [],
+  moved: [],
+  textOnly: [],
+  notPlaced: [],
+  overflow: "",
+});
+let fillReport = newFillReport();
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export const _lastFillReport = () => fillReport;
+
+const reportNotPlaced = (label) => {
+  if (!fillReport.notPlaced.includes(label)) fillReport.notPlaced.push(label);
+};
+const given = (value) => String(value ?? "").trim() !== "";
+
 /**
  * A Social Security number as the form's three boxes. Nine digits fill all
  * three. Four digits are the last four (several wizards ask only for
- * those) and go in the last box alone. Anything else fills nothing: the
- * app does not guess which digits it was given.
+ * those) and go in the last box alone. Anything else fills nothing and is
+ * reported: the app does not guess which digits it was given.
  */
-function parseSSNParts(ssn) {
+function parseSSNParts(ssn, label = "Social Security number") {
   const digits = String(ssn || "").replace(/\D/g, "");
   if (digits.length === 9) {
     return {
@@ -675,24 +716,27 @@ function parseSSNParts(ssn) {
       last: digits.substring(5, 9),
     };
   }
+  if (given(ssn) && digits.length !== 4) reportNotPlaced(label);
   return { first: "", middle: "", last: digits.length === 4 ? digits : "" };
 }
 
 /**
  * A date as month, day and year boxes, from a date picker's YYYY-MM-DD or
- * a typed MM/DD/YYYY. Anything that is not a full date fills nothing.
+ * a typed MM/DD/YYYY. Anything that is not a full date fills nothing and is
+ * reported.
  */
-function parseDOBParts(dob) {
-  const none = { month: "", day: "", year: "" };
-  const parts = String(dob || "")
+function fullDateParts(date) {
+  const parts = String(date || "")
     .trim()
     .split(/[-/]/);
   if (parts.length !== 3 || !parts.every((part) => /^\d{1,4}$/.test(part))) {
-    return none;
+    return null;
   }
   const [year, month, day] =
     parts[0].length === 4 ? parts : [parts[2], parts[0], parts[1]];
-  if (year.length !== 4 || month.length > 2 || day.length > 2) return none;
+  if (year.length !== 4 || month.length > 2 || day.length > 2) return null;
+  if (Number(month) < 1 || Number(month) > 12) return null;
+  if (Number(day) < 1 || Number(day) > 31) return null;
   return {
     month: month.padStart(2, "0"),
     day: day.padStart(2, "0"),
@@ -700,30 +744,93 @@ function parseDOBParts(dob) {
   };
 }
 
+function parseDOBParts(dob, label = "Date of birth") {
+  const parts = fullDateParts(dob);
+  if (!parts && given(dob)) reportNotPlaced(label);
+  return parts ?? { month: "", day: "", year: "" };
+}
+
 /**
- * Parse a raw ZIP code string into 5-digit/4-digit groups
+ * A ZIP code as the form's two boxes. Five digits or nine: anything else
+ * fills nothing and is reported.
  */
-function parseZipParts(zip) {
-  const digits = (zip || "").replace(/\D/g, "");
+function parseZipParts(zip, label = "ZIP code") {
+  const digits = String(zip || "").replace(/\D/g, "");
+  if (digits.length !== 5 && digits.length !== 9) {
+    if (given(zip)) reportNotPlaced(label);
+    return { five: "", four: "" };
+  }
   return { five: digits.substring(0, 5), four: digits.substring(5, 9) };
 }
 
-/*
- * What the last fill could not put on the form as given, so the screen can
- * say so instead of the text vanishing or being cut off:
- *   leftBlank  answers that do not fit their box (too many characters, or
- *              too wide or too long for it at the form's font size); the
- *              box is left empty for the veteran to write in
- *   moved      answers too long for their own box that were put in the
- *              form's remarks section instead (their names)
- *   overflow   the part of a statement that fits no box on the form
- */
-const newFillReport = () => ({ leftBlank: [], moved: [], overflow: "" });
-let fillReport = newFillReport();
-// Exported (test-only, per this codebase's underscore-prefix convention).
-export const _lastFillReport = () => fillReport;
+// The form's apartment box holds five characters and is already labelled,
+// so "Apt 4B" is written as "4B".
+const APT_WORD = /^(?:apt(?![a-z])\.?|unit(?![a-z])|#)\s*/i;
+const aptForBox = (apt) =>
+  String(apt ?? "")
+    .trim()
+    .replace(APT_WORD, "")
+    .replace(APT_WORD, "");
 
-const FIELD_LINE_HEIGHT = 1.2;
+const MAILING_ADDRESS = "Mailing address";
+
+/**
+ * A typed mailing address as the form's boxes, or null when it cannot be
+ * split with certainty. It must end "City, ST 12345" (or 12345-6789), with
+ * the street before it on its own line or before a comma, and at most one
+ * apartment or unit part between them.
+ */
+function splitAddress(address) {
+  const parts = String(address ?? "")
+    .split(/[\n,]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const tail = (parts.pop() ?? "").split(/\s+/);
+  const zip = /^(\d{5})(?:-(\d{4}))?$/.exec(tail.pop() ?? "");
+  const state = tail.pop() ?? parts.pop() ?? "";
+  const city = tail.join(" ") || (parts.pop() ?? "");
+  if (!zip || !/^[A-Za-z]{2}$/.test(state) || !city) return null;
+  if (parts.length < 1 || parts.length > 2) return null;
+  return {
+    street: parts[0],
+    apt: aptForBox(parts[1]),
+    city,
+    state: state.toUpperCase(),
+    zip5: zip[1],
+    zip4: zip[2] ?? "",
+    country: "",
+  };
+}
+
+/**
+ * The mailing address for a form whose wizard asks for it as one answer.
+ * The wizard's answer wins over the saved profile. One that cannot be
+ * split is not replaced by the profile's address: the boxes stay blank and
+ * the answer is reported.
+ */
+function mailingAddressFrom(data) {
+  if (given(data.address)) {
+    const split = splitAddress(data.address);
+    if (!split) reportNotPlaced(MAILING_ADDRESS);
+    return split;
+  }
+  if (!given(data.street || data.veteranStreet)) return null;
+  const zip = parseZipParts(data.zip || data.veteranZip);
+  return {
+    street: data.street || data.veteranStreet,
+    apt: aptForBox(data.apt),
+    city: data.city || data.veteranCity || "",
+    state: data.state || data.veteranState || "",
+    zip5: zip.five,
+    zip4: zip.four,
+    country: countryCode(data.country),
+  };
+}
+
+// pdf-lib sets a field's lines 1.11 times the font size apart. A little
+// more is allowed for, so a viewer that redraws the field still shows the
+// last line.
+const FIELD_LINE_HEIGHT = 1.15;
 // pdf-lib draws a field's text 1pt in from each side. A viewer may show it
 // in a font a little wider than the one measured here, so lines are kept
 // short of the full width.
@@ -854,7 +961,38 @@ function setPdfTextField(form, fieldName, value, secondLine) {
   field.setText(fitted);
 }
 
+/**
+ * A whole mailing address or none of it: when any part does not fit its
+ * box, no part is written and the address is reported.
+ */
+function setWholeAddress(form, fieldMap, address) {
+  if (!address) return;
+  const boxes = ["street", "apt", "city", "state", "country", "zip5", "zip4"]
+    .filter((key) => address[key])
+    .map((key) => [textFieldNamed(form, fieldMap[key]), address[key]]);
+  const fits = ([field, value]) => {
+    if (!field) return false;
+    const max = field.getMaxLength();
+    if (max !== undefined && value.length > max) return false;
+    return textThatFits(form, field, value) !== null;
+  };
+  const whole = address.street && address.city && address.state && address.zip5;
+  if (!whole || !boxes.every(fits)) {
+    reportNotPlaced(MAILING_ADDRESS);
+    return;
+  }
+  for (const [field, value] of boxes) field.setText(value);
+}
+
 const CONTINUED_IN_DOWNLOAD = "(continued in the text download)";
+
+/** The room in a statement box, giving a box that sizes its own text 10pt. */
+function statementRoom(field) {
+  const room = roomIn(field);
+  if (room.size !== 0) return room;
+  field.setFontSize(10);
+  return roomIn(field);
+}
 
 /**
  * A statement across the form's boxes for it, in order. What does not fit
@@ -870,19 +1008,7 @@ function setStatementAcross(form, fieldNames, text, continuedNote) {
     .filter(Boolean);
   boxes.forEach((field, i) => {
     if (!rest) return;
-    const room = roomIn(field);
-    if (room.size === 0) {
-      room.size = 10;
-      field.setFontSize(10);
-      room.lines = Math.max(
-        1,
-        Math.floor(
-          (field.acroField.getWidgets()[0].getRectangle().height -
-            FIELD_INSET * 2) /
-            (room.size * FIELD_LINE_HEIGHT),
-        ),
-      );
-    }
+    const room = statementRoom(field);
     const lines = wrapToRoom(rest, font, room);
     if (lines.length <= room.lines) {
       field.setText(lines.map((line) => line.text).join("\n"));
@@ -1027,7 +1153,7 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranDOBYear, vetDOB.year);
   setTextField(fieldMap.veteranFileNumber, data.vaFileNumber || "");
   setTextField(fieldMap.veteranStreet, data.veteranStreet || "");
-  setTextField(fieldMap.veteranApt, data.veteranApt || "");
+  setTextField(fieldMap.veteranApt, aptForBox(data.veteranApt));
   setTextField(fieldMap.veteranCity, data.veteranCity || "");
   setTextField(fieldMap.veteranState, data.veteranState || "");
   setTextField(fieldMap.veteranZip5, vetZip.five);
@@ -1048,7 +1174,7 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
 function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
   const claimantNameParts = (data.claimantName || "").split(" ");
   const claimantPhone = parsePhoneParts(data.claimantPhone);
-  const claimantZip = parseZipParts(data.claimantZip);
+  const claimantZip = parseZipParts(data.claimantZip, "Claimant's ZIP code");
 
   setTextField(fieldMap.claimantFirstName, claimantNameParts[0]);
   setTextField(
@@ -1350,7 +1476,7 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   const zipParts = parseZipParts(data.zip || data.veteranZip);
 
   setTextField(fieldMap.street, data.street || data.veteranStreet || "");
-  setTextField(fieldMap.apt, data.apt || data.veteranApt || "");
+  setTextField(fieldMap.apt, aptForBox(data.apt || data.veteranApt));
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
   setTextField(fieldMap.country, countryCode(data.country));
@@ -1559,8 +1685,8 @@ const SEE_REMARKS = "See Section 5, Remarks.";
 
 /**
  * The event's description, place and date in their own small boxes when
- * they fit. One that does not fit is not cut off: its box points to Remarks
- * and it is returned, with its name, to be written there in full.
+ * they fit. One that does not fit is returned, with its box and its name,
+ * to be written in Remarks in full.
  */
 function fill21_0781_StressorEvents(form, fieldMap, data) {
   const first = data.stressors?.[0] ?? {};
@@ -1581,20 +1707,73 @@ function fill21_0781_StressorEvents(form, fieldMap, data) {
       first.dates || data.incidentDate || data.eventDate,
     ],
   ];
-  const carried = [];
+  const tooLong = [];
   for (const [key, label, value] of answers) {
     const field = value ? textFieldNamed(form, fieldMap[key]) : null;
     if (!field) continue;
     const fitted = textThatFits(form, field, String(value));
-    if (fitted === null) {
-      field.setText(SEE_REMARKS);
-      carried.push(`${label}: ${value}`);
-      fillReport.moved.push(label);
-    } else {
-      field.setText(fitted);
-    }
+    if (fitted === null) tooLong.push({ field, label, value: String(value) });
+    else field.setText(fitted);
   }
-  return carried;
+  return tooLong;
+}
+
+/**
+ * Remarks text from the carried answers and the other answers, from the
+ * most open layout to the tightest: a blank line between answers, one
+ * answer to a line, then the other answers run together after the carried
+ * ones. No layout changes a word.
+ */
+function remarksLayouts(carried, others) {
+  const tight = (text) => text.replace(/\n{2,}/g, "\n");
+  const join = (parts, gap) => parts.filter(Boolean).join(gap);
+  return [
+    join([...carried, others], "\n\n"),
+    tight(join([...carried, others], "\n")),
+    join([tight(carried.join("\n")), others.replace(/\n{2,}/g, "; ")], "\n"),
+  ];
+}
+
+/**
+ * Remarks on 21-0781: first, in full and under its name, each answer that
+ * was too long for its own box, then the answers the form has no box for.
+ * A box says "See Section 5, Remarks." only when all of its answer is
+ * there. An answer Remarks cannot hold in full either is not on the form
+ * at all, and is reported as such.
+ */
+function fill21_0781_Remarks(form, fieldMap, data, tooLong) {
+  const others =
+    data.remarks ||
+    data.additionalInfo ||
+    officialFormNarrative("ptsd-stressor", data);
+  const field = textFieldNamed(form, fieldMap.remarks);
+  if (!field) {
+    fillReport.textOnly.push(...tooLong.map((answer) => answer.label));
+    return;
+  }
+  const room = statementRoom(field);
+  const font = measuringFont(form);
+  const linesOf = (text) => wrapToRoom(text, font, room).length;
+  const entry = (answer) => `${answer.label}: ${answer.value}`;
+  const fits = (text) => linesOf(text) <= room.lines;
+
+  let carried = tooLong;
+  let text = remarksLayouts(tooLong.map(entry), others).find(fits);
+  if (text === undefined) {
+    // Leave the last line for the note that the other answers go on.
+    carried = [];
+    for (const answer of tooLong) {
+      const withIt = [...carried, answer].map(entry).join("\n");
+      if (linesOf(withIt) < room.lines) carried.push(answer);
+      else fillReport.textOnly.push(answer.label);
+    }
+    text = remarksLayouts(carried.map(entry), others).pop();
+  }
+  for (const answer of carried) {
+    answer.field.setText(SEE_REMARKS);
+    fillReport.moved.push(answer.label);
+  }
+  setStatementAcross(form, [fieldMap.remarks], text, "");
 }
 
 function fill21_0781_BehavioralInfo(setTextField, setCheckbox, fieldMap, data) {
@@ -1665,23 +1844,7 @@ function fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data) {
   setTextField(fieldMap.treatmentFacility3, data.treatmentFacility3);
 }
 
-function fill21_0781_RemarksAndConsent(
-  form,
-  setCheckbox,
-  fieldMap,
-  data,
-  carried,
-) {
-  const remarks = [
-    data.remarks ||
-      data.additionalInfo ||
-      officialFormNarrative("ptsd-stressor", data),
-    ...carried,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
-  setStatementAcross(form, [fieldMap.remarks], remarks, "");
-
+function fill21_0781_Consent(setCheckbox, fieldMap, data) {
   setCheckbox(fieldMap.consentVBA, data.consentVBA);
   setCheckbox(fieldMap.noConsentVBA, data.noConsentVBA);
   setCheckbox(fieldMap.revokeConsent, data.revokeConsent);
@@ -1705,11 +1868,12 @@ export async function fillForm21_0781(data) {
 
       fill21_0781_VeteranInfo(setTextField, fieldMap, data);
       fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data);
-      const carried = fill21_0781_StressorEvents(form, fieldMap, data);
+      const tooLong = fill21_0781_StressorEvents(form, fieldMap, data);
       fill21_0781_BehavioralInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_ReportsInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data);
-      fill21_0781_RemarksAndConsent(form, setCheckbox, fieldMap, data, carried);
+      fill21_0781_Remarks(form, fieldMap, data, tooLong);
+      fill21_0781_Consent(setCheckbox, fieldMap, data);
 
       // Flatten to make form read-only if desired
       // form.flatten();
@@ -1805,7 +1969,6 @@ function fill21_0966_VeteranInfo(setTextField, fieldMap, data) {
   const phone = parsePhoneParts(data.phone || data.veteranPhone);
   const ssn = parseSSNParts(data.ssn || data.veteranSSN);
   const dob = parseDOBParts(data.dob || data.veteranDOB);
-  const zipParts = parseZipParts(data.zip || data.veteranZip);
 
   setTextField(fieldMap.veteranFirstName, nameParts[0]);
   setTextField(
@@ -1821,13 +1984,6 @@ function fill21_0966_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranDOBYear, dob.year);
   setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
   setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
-  setTextField(fieldMap.street, data.street || data.veteranStreet || "");
-  setTextField(fieldMap.apt, data.apt || "");
-  setTextField(fieldMap.city, data.city || data.veteranCity || "");
-  setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, countryCode(data.country));
-  setTextField(fieldMap.zip5, zipParts.five);
-  setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
   setTextField(fieldMap.phone2, phone.prefix);
   setTextField(fieldMap.phone3, phone.line);
@@ -1865,6 +2021,7 @@ export async function fillForm21_0966(data) {
         setPdfCheckbox(form, fieldName, checked);
 
       fill21_0966_VeteranInfo(setTextField, fieldMap, data);
+      setWholeAddress(form, fieldMap, mailingAddressFrom(data));
       fill21_0966_BenefitCheckboxes(setCheckbox, fieldMap, data);
 
       return await pdfDoc.save();
@@ -1943,6 +2100,7 @@ function fill21_4142_VeteranInfo(setTextField, fieldMap, data) {
   const nameParts = (data.veteranName || data.name || "").split(" ");
   const ssn = parseSSNParts(data.ssn || data.veteranSSN);
   const dob = parseDOBParts(data.dob || data.veteranDOB);
+  const phone = parsePhoneParts(data.phone || data.veteranPhone);
 
   setTextField(fieldMap.veteranFirstName, nameParts[0]);
   setTextField(
@@ -1958,7 +2116,9 @@ function fill21_4142_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.dobDay, dob.day);
   setTextField(fieldMap.dobYear, dob.year);
   setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
-  setTextField(fieldMap.street, data.street || data.veteranStreet || "");
+  setTextField(fieldMap.phone1, phone.area);
+  setTextField(fieldMap.phone2, phone.prefix);
+  setTextField(fieldMap.phone3, phone.line);
 }
 
 export async function fillForm21_4142(data) {
@@ -1975,6 +2135,7 @@ export async function fillForm21_4142(data) {
         setPdfTextField(form, fieldName, value, secondLine);
 
       fill21_4142_VeteranInfo(setTextField, fieldMap, data);
+      setWholeAddress(form, fieldMap, mailingAddressFrom(data));
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2070,7 +2231,7 @@ function fill20_10207_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.dobYear, dob.year);
   setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
   setTextField(fieldMap.street, data.street || data.veteranStreet || "");
-  setTextField(fieldMap.apt, data.apt || "");
+  setTextField(fieldMap.apt, aptForBox(data.apt));
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
   setTextField(fieldMap.country, countryCode(data.country));
@@ -2237,7 +2398,7 @@ function fill21_22_VeteranInfo(setTextField, fieldMap, data) {
 
   const zip = parseZipParts(data.zip || data.veteranZip);
   setTextField(fieldMap.veteranStreet, data.street || data.veteranStreet || "");
-  setTextField(fieldMap.veteranApt, data.apt || "");
+  setTextField(fieldMap.veteranApt, aptForBox(data.apt));
   setTextField(fieldMap.veteranCity, data.city || data.veteranCity || "");
   setTextField(fieldMap.veteranState, data.state || data.veteranState || "");
   setTextField(fieldMap.veteranCountry, countryCode(data.country));
@@ -2264,7 +2425,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   );
   setTextField(fieldMap.claimantRelationship, data.claimantRelationship || "");
   setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
-  setTextField(fieldMap.claimantApt, data.claimantApt || "");
+  setTextField(fieldMap.claimantApt, aptForBox(data.claimantApt));
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
   setTextField(fieldMap.claimantCountry, countryCode(data.claimantCountry));
@@ -2439,7 +2600,7 @@ function _fillForm2122aVeteranInfo(setTextField, fieldMap, data, parsed) {
 
   const zip = parseZipParts(data.zip || data.veteranZip);
   setTextField(fieldMap.veteranStreet, data.street || data.veteranStreet || "");
-  setTextField(fieldMap.veteranApt, data.apt || "");
+  setTextField(fieldMap.veteranApt, aptForBox(data.apt));
   setTextField(fieldMap.veteranCity, data.city || data.veteranCity || "");
   setTextField(fieldMap.veteranState, data.state || data.veteranState || "");
   setTextField(fieldMap.veteranCountry, countryCode(data.country));
@@ -2464,7 +2625,10 @@ function _fillForm2122aClaimantIdentity(setTextField, fieldMap, data) {
   );
   setTextField(fieldMap.claimantRelationship, data.claimantRelationship || "");
 
-  const claimantDob = parseDOBParts(data.claimantDOB);
+  const claimantDob = parseDOBParts(
+    data.claimantDOB,
+    "Claimant's date of birth",
+  );
   setTextField(fieldMap.claimantDOBMonth, claimantDob.month);
   setTextField(fieldMap.claimantDOBDay, claimantDob.day);
   setTextField(fieldMap.claimantDOBYear, claimantDob.year);
@@ -2472,7 +2636,7 @@ function _fillForm2122aClaimantIdentity(setTextField, fieldMap, data) {
 
 function _fillForm2122aClaimantContact(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
-  setTextField(fieldMap.claimantApt, data.claimantApt || "");
+  setTextField(fieldMap.claimantApt, aptForBox(data.claimantApt));
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
   setTextField(fieldMap.claimantCountry, countryCode(data.claimantCountry));
@@ -2528,7 +2692,7 @@ function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   setTextField(fieldMap.additionalReps, data.additionalReps || "");
 
   setTextField(fieldMap.repStreet, data.repStreet || data.repAddress || "");
-  setTextField(fieldMap.repApt, data.repApt || "");
+  setTextField(fieldMap.repApt, aptForBox(data.repApt));
   setTextField(fieldMap.repCity, data.repCity || "");
   setTextField(fieldMap.repState, data.repState || "");
   setTextField(fieldMap.repCountry, countryCode(data.repCountry));

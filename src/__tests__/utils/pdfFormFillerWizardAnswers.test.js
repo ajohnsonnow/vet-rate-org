@@ -213,6 +213,8 @@ describe("an answer too long for its box", () => {
     expect(_lastFillReport()).toEqual({
       leftBlank: [],
       moved: [],
+      textOnly: [],
+      notPlaced: [],
       overflow: "",
     });
   });

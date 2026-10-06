@@ -28,7 +28,7 @@ const SECTIONS = {
   "21-22": { veteran: [1, 9], claimant: [10, 14], organization: [15, 18] },
   "21-22a": { veteran: [1, 9], claimant: [10, 15], rep: [16, 16] },
   "21-0966": { veteran: [1, 9] },
-  "21-4142": { veteran: [1, 6] },
+  "21-4142": { veteran: [1, 8] },
   "21-4138": { veteran: [1, 8] },
   "21-0781": { veteran: [1, 7] },
   "21-10210": { veteran: [1, 8], claimant: [9, 16], witness: [18, 22] },
