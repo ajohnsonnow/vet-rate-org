@@ -23,14 +23,17 @@ import {
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import {
   DRAFT_PATH,
+  applyAcceptedRewordings,
   draftAfterModelError,
   resolvePassageDraft,
   standardDraft,
 } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
 import {
+  AI_NO_CHANGE_NOTE,
   STANDARD_DRAFT_NOTE,
   buildPassagePrompt,
+  standardDraftNote,
   buildWitnessStatementBody,
   selectPassages,
   witnessRelationshipLabel,
@@ -829,6 +832,59 @@ function useGenerateStatement({
   }, [relationship, condition, witnessName, answers, useAI]);
 }
 
+/** `text` with the line saying AI suggested some wording, said once. */
+function withAIDisclosure(text) {
+  if (text.includes(AI_WORDING_DISCLOSURE)) return text;
+  return text.includes(ATTESTATION_WARNING)
+    ? text.replace(
+        ATTESTATION_WARNING,
+        `${AI_WORDING_DISCLOSURE} ${ATTESTATION_WARNING}`,
+      )
+    : `${text}\n\n${AI_WORDING_DISCLOSURE}`;
+}
+
+/**
+ * Ask the AI again after it failed. The statement in the box is the
+ * witness's by now: accepted rewordings go into that text, an answer the
+ * witness has since rewritten there is left alone, and a second failure
+ * changes nothing in the box.
+ */
+function useRetryAI({
+  relationship,
+  condition,
+  answers,
+  setIsGeneratingStatement,
+  output,
+}) {
+  return async () => {
+    setIsGeneratingStatement(true);
+    const drafted = await _compileStatementWithAI(
+      relationship,
+      condition,
+      answers,
+    ).catch((err) => ({ draftErrorReason: String(err?.message ?? err) }));
+    setIsGeneratingStatement(false);
+
+    if (drafted.draftErrorReason) {
+      output.setAiFailure(drafted.draftErrorReason);
+      return;
+    }
+    const box = output.generatedStatement;
+    const { text, applied } = applyAcceptedRewordings(
+      box,
+      drafted.passageOutcomes,
+    );
+    output.setAiFailure(null);
+    if (applied === 0) {
+      output.setDraftNote(`${AI_NO_CHANGE_NOTE} ${standardDraftNote(box)}`);
+      return;
+    }
+    output.setGeneratedStatement(withAIDisclosure(text));
+    output.setDraftPath(DRAFT_PATH.MODEL);
+    output.setDraftNote(null);
+  };
+}
+
 function useWitnessBench(t) {
   const wizard = useWizardStepState();
   const interview = useInterviewQAState();
@@ -861,6 +917,14 @@ function useWitnessBench(t) {
     setStep: wizard.setStep,
   });
 
+  const retryAI = useRetryAI({
+    relationship: wizard.relationship,
+    condition: wizard.condition,
+    answers: interview.answers,
+    setIsGeneratingStatement: ai.setIsGeneratingStatement,
+    output,
+  });
+
   const startOver = () => {
     wizard.setStep(1);
     wizard.setRelationship("");
@@ -882,6 +946,7 @@ function useWitnessBench(t) {
     output,
     startInterview,
     generateStatement,
+    retryAI,
     startOver,
   };
 }
@@ -1694,7 +1759,7 @@ const WitnessOutput = ({ t, wb }) => {
       t={t}
       draftNote={output.draftNote}
       aiFailure={output.aiFailure}
-      onRetryAI={wb.generateStatement}
+      onRetryAI={wb.retryAI}
       isRetryingAI={wb.ai.isGeneratingStatement}
       outputError={output.outputError}
       generatedStatement={output.generatedStatement}

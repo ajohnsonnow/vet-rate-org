@@ -19,6 +19,7 @@ import {
   standardDraftNote,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
+import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
 import {
   isAIAvailable,
@@ -1014,7 +1015,9 @@ function createAIConsentHandler({
   setDraftNote,
   setUseAIVersion,
 }) {
-  return async () => {
+  // `boxText` is the statement as it stands on screen. The AI's accepted
+  // rewordings go into that text; a failure leaves it as it is.
+  return async (boxText) => {
     setShowAIConsent(false);
     setIsEnhancing(true);
     setAiError(null);
@@ -1027,10 +1030,12 @@ function createAIConsentHandler({
         primaryCondition,
       );
 
-      if (result.success && result.draftPath === "model") {
-        setAiEnhancedStatement(
-          result.content.replaceAll("[Date]", new Date().toLocaleDateString()),
-        );
+      const reworded =
+        result.success && result.draftPath === "model"
+          ? applyAcceptedRewordings(boxText, result.passageOutcomes)
+          : { applied: 0 };
+      if (reworded.applied > 0) {
+        setAiEnhancedStatement(reworded.text);
         setUseAIVersion(true);
       } else if (result.success) {
         // Nothing was reworded, so the standard draft stays on screen under
@@ -1847,6 +1852,10 @@ const NexusBuilderWizard = ({
   });
 
   const wizard = { ...wizardState, totalSteps, isSecondary };
+  const aiOnBox = {
+    ...ai,
+    handleAIConsent: () => ai.handleAIConsent(output.currentStatement),
+  };
 
   return (
     <NexusBuilderView
@@ -1858,7 +1867,7 @@ const NexusBuilderWizard = ({
       onOpenAISettings={onOpenAISettings}
       wizard={wizard}
       modalState={modalState}
-      ai={ai}
+      ai={aiOnBox}
       output={output}
       t={t}
     />

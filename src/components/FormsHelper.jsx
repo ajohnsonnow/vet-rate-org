@@ -14,6 +14,7 @@ import {
   standardDraftNote,
 } from "../utils/writerTemplates";
 import { downloadDraft } from "../utils/draftExport";
+import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
@@ -7803,15 +7804,30 @@ function _buildFormsHelperGenerationHandlers(ctx) {
   return { generateContent, handleFinishWizard };
 }
 
+// Only a draft the AI reworded is an AI version. Its accepted rewordings go
+// into the text in the box, so an edit made there is kept. Otherwise the
+// box is left as it is, with the reason beside it.
+function showAIOutcome(ctx, result) {
+  const { text, applied } =
+    result.draftPath === "model"
+      ? applyAcceptedRewordings(shownDraft(ctx).text, result.passageOutcomes)
+      : { applied: 0 };
+  const reworded = applied > 0;
+  ctx.setAiEnhancedContent(reworded ? text : null);
+  ctx.setShowAIVersion(reworded);
+  ctx.setAiDraftNote(
+    reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
+  );
+  ctx.setAiError(result.draftErrorReason ?? null);
+}
+
 function _buildFormsHelperAIHandlers(ctx) {
   const {
     selectedForm,
     setShowAIConsent,
     setIsEnhancingWithAI,
     setAiError,
-    setAiDraftNote,
     formData,
-    setAiEnhancedContent,
     setShowAIVersion,
     showAIVersion,
     setDraftEdit,
@@ -7852,15 +7868,7 @@ function _buildFormsHelperAIHandlers(ctx) {
       const result = await enhanceFormStatement(selectedForm?.id, formData);
 
       if (result.success) {
-        // Only a draft the AI reworded is an AI version. Otherwise the
-        // app-built draft stays on screen, with the reason beside it.
-        const reworded = result.draftPath === "model";
-        setAiEnhancedContent(reworded ? result.content : null);
-        setShowAIVersion(reworded);
-        setAiDraftNote(
-          reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
-        );
-        setAiError(result.draftErrorReason ?? null);
+        showAIOutcome(ctx, result);
       } else {
         setAiError(result.error || "Failed to enhance statement with AI.");
       }

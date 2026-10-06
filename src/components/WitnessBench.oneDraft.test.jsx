@@ -278,3 +278,75 @@ describe("Witness Bench, with the AI asked", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("Witness Bench, asking the AI again after it failed", () => {
+  beforeEach(() => {
+    ai.available = true;
+  });
+
+  it("leaves an edited statement untouched when the retry fails too", async () => {
+    modelAnswersStatement(() => {
+      throw new Error("WebGPU inference timed out");
+    });
+    await answerEverything();
+    const edited = typeAnEdit();
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+
+    await waitFor(() =>
+      expect(generateAI.mock.calls.length).toBeGreaterThan(2),
+    );
+    await screen.findByRole("button", { name: "Try the AI again" });
+    expect(statementField().value).toBe(edited);
+    expect(screen.getByText(/WebGPU inference timed out/)).toBeInTheDocument();
+  });
+
+  it("rewords the statement in the box on a retry that works, keeping the edit", async () => {
+    modelAnswersStatement(() => {
+      throw new Error("WebGPU inference timed out");
+    });
+    const printed = await answerEverything();
+    const edited = typeAnEdit();
+    modelAnswersStatement((prompt) =>
+      numbered(
+        passagesIn(prompt).map(
+          (passage) =>
+            `To put it plainly, ${passage[0].toLowerCase()}${passage.slice(1)}`,
+        ),
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+
+    await waitFor(() =>
+      expect(statementField().value).toContain("To put it plainly,"),
+    );
+    const box = statementField().value;
+    expect(occurrences(box, EDIT)).toBe(1);
+    expect(box).toContain("was suggested by AI");
+    expect(box.length).toBeGreaterThan(edited.length);
+    expect(counts(box, printed.slice(0, 3))).toEqual([1, 1, 1]);
+  });
+
+  it("keeps an answer the witness rewrote in the box, and says nothing changed", async () => {
+    modelAnswersStatement(() => {
+      throw new Error("WebGPU inference timed out");
+    });
+    await answerEverything();
+    const mine = statementField().value.replaceAll(
+      /They did the thing in marker\d+ that I saw\./g,
+      "My own words now.",
+    );
+    fireEvent.change(statementField(), { target: { value: mine } });
+    modelAnswersStatement((prompt) =>
+      numbered(
+        passagesIn(prompt).map(
+          (passage) =>
+            `To put it plainly, ${passage[0].toLowerCase()}${passage.slice(1)}`,
+        ),
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+
+    await screen.findByText(/did not change the wording/i);
+    expect(statementField().value).toBe(mine);
+  });
+});

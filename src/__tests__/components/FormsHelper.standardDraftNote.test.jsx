@@ -6,7 +6,7 @@
  * the model reworded. Fixture values are invented.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
 import {
   AI_NO_CHANGE_NOTE,
@@ -232,5 +232,50 @@ describe("Forms Helper with AI set up", () => {
     expect(draft().value).toContain(`${EVENT}.`);
     expect(draft().value).not.toContain(EVENT_REWORDED);
     expect(notice().textContent).toBe(STANDARD_DRAFT_NOTE);
+  });
+});
+
+describe("Forms Helper, an edited draft and the AI", () => {
+  it("leaves an edited draft untouched when the AI fails, and when it fails again", async () => {
+    generateAI.mockRejectedValue(new Error("WebGPU inference timed out"));
+    openResult();
+    const edited = `${draft().value}\n\nA line I typed myself.`;
+    fireEvent.change(draft(), { target: { value: edited } });
+    fireEvent.click(
+      await screen.findByRole("button", { name: /enhance with ai/i }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /i understand, enhance/i }),
+    );
+    await screen.findByText(/timed out/i);
+    expect(draft().value).toBe(edited);
+
+    localStorage.removeItem("vetrate_ai_ratelimit");
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /i understand, enhance/i }),
+    );
+    await waitFor(() => expect(generateAI).toHaveBeenCalledTimes(2));
+    await screen.findByText(/timed out/i);
+    expect(draft().value).toBe(edited);
+  });
+
+  it("puts the AI's wording into the edited draft, keeping the edit", async () => {
+    modelRewords();
+    openResult();
+    fireEvent.change(draft(), {
+      target: { value: `${draft().value}\n\nA line I typed myself.` },
+    });
+    fireEvent.click(
+      await screen.findByRole("button", { name: /enhance with ai/i }),
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: /i understand, enhance/i }),
+    );
+
+    await screen.findByText(/viewing ai/i);
+    expect(draft().value).toContain(EVENT_REWORDED);
+    expect(draft().value).toContain("A line I typed myself.");
+    expect(draft().value).not.toContain(`${EVENT}.`);
   });
 });
