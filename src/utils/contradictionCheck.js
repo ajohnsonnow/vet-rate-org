@@ -20,6 +20,7 @@ import { detectReferenceTopics } from "./verifiedReference";
 import {
   citesIntentParagraphForSupplementalClaim,
   givesTdiuThresholdsWithoutForty,
+  saysAppealNeedsNewEvidence,
   takesHigherOfTwoAsCombined,
   wrongSingleDisabilityThreshold,
 } from "./wrongLawPatterns";
@@ -366,6 +367,13 @@ const RULES = [
       ) && !NO_HEARING.test(withoutLikelihoodWording(sentence)),
     says: "asks for a hearing in a higher-level review, where the regulation provides for an informal conference",
     correction: () => "higher-level-review-conference",
+  },
+  {
+    id: "appeal-said-to-need-new-evidence",
+    topics: REVIEW_TOPICS,
+    matches: saysAppealNeedsNewEvidence,
+    says: "says a denial cannot be appealed without new evidence, but a higher-level review is decided on the evidence already in the file",
+    correction: () => "higher-level-review-evidence",
   },
   {
     id: "higher-level-review-at-the-board",

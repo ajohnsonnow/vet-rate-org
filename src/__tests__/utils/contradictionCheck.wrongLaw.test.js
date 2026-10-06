@@ -92,6 +92,49 @@ describe("the TDIU percentages with the 40 percent condition left out", () => {
   });
 });
 
+describe("a denial said to be unappealable without new evidence", () => {
+  const RULE = "appeal-said-to-need-new-evidence";
+  const REVIEW = ["next-claim-step"];
+
+  // Run D3 (2026-10-06 04:51, 4B) a26, both sentences.
+  it.each([
+    "If the denial was based on a lack of evidence, you generally cannot appeal it unless you have new evidence.",
+    "If you do not have new evidence, you cannot appeal the denial without new evidence.",
+    "You can't appeal a denial without new and relevant evidence.",
+  ])("flags: %s", (sentence) => {
+    expect(rules(sentence, REVIEW)).toEqual([RULE]);
+  });
+
+  it.each([
+    "If the decision is final: You cannot appeal a final decision without new evidence.",
+    "You cannot file a Supplemental Claim without new and relevant evidence.",
+    "You can appeal the denial without new evidence by requesting a Higher-Level Review.",
+    "A Higher-Level Review cannot consider new evidence.",
+    "You cannot appeal a rating you have not yet received.",
+  ])("leaves alone: %s", (sentence) => {
+    expect(rules(sentence, REVIEW)).toEqual([]);
+  });
+
+  it("points to the review that needs none, quoting 38 CFR 3.2601(f)", () => {
+    const [hit] = findContradictions(
+      "You cannot appeal the denial without new evidence.",
+      { topics: REVIEW },
+    );
+    expect(hit.says).toBe(
+      "says a denial cannot be appealed without new evidence, but a higher-level review is decided on the evidence already in the file",
+    );
+    expect(quotes.corrections[hit.correction]).toMatchObject({
+      citation: "38 CFR § 3.2601(f)",
+    });
+  });
+
+  it("is a review rule only", () => {
+    expect(
+      rules("You cannot appeal the denial without new evidence.", ["tdiu"]),
+    ).toEqual([]);
+  });
+});
+
 describe("the intent-to-file paragraph cited for a Supplemental Claim", () => {
   const RULE = "intent-paragraph-for-supplemental-claim";
   const FILING = ["next-claim-step"];

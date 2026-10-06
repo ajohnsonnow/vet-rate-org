@@ -36,6 +36,19 @@ export function givesTdiuThresholdsWithoutForty(sentence) {
   );
 }
 
+// "You cannot appeal the denial without new evidence." True of a Supplemental
+// Claim and of a decision that has become final, so both are left alone.
+const CANNOT_APPEAL_WITHOUT_NEW_EVIDENCE =
+  /\b(?:cannot|can't|can not|may not)\b (?:\w+ ){0,2}(?:appeal|challenge)\b[^.;]{0,40}\b(?:without|unless you have|unless there is)\b[^.;]{0,15}\bnew\b[^.;]{0,20}\bevidence\b/i;
+const TRUE_OF_THESE = /\bfinal\b|\bsupplemental\b/i;
+
+export function saysAppealNeedsNewEvidence(sentence) {
+  return (
+    CANNOT_APPEAL_WITHOUT_NEW_EVIDENCE.test(sentence) &&
+    !TRUE_OF_THESE.test(sentence)
+  );
+}
+
 const INTENT_PARAGRAPH = /\b3\.155\(b\)/;
 const SUPPLEMENTAL_CLAIM_CALLED_FOR =
   /\bsupplemental claims?\b[^.;]{0,20}\b(?:is|are) required\b|\b(?:should|must|need to|have to) (?:file|submit) a supplemental claim\b/i;

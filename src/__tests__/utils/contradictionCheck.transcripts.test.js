@@ -137,6 +137,7 @@ const PROSE_HITS = [
   "034657 a30 intent-form-as-application",
   "045147 a15 new-and-material-standard",
   "045147 a16 coverage-date-for-wrong-place",
+  "045147 a26 appeal-said-to-need-new-evidence",
   "045147 a27 coverage-date-for-wrong-place",
   "045832 a21 tdiu-threshold-omits-forty",
   "045832 a30 intent-form-as-application",
