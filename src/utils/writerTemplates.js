@@ -519,6 +519,9 @@ export function tdiuSavePayload(analysis) {
 export const STANDARD_DRAFT_NOTE_NO_BLANKS =
   "This is the standard draft, built from your answers as you entered them.";
 
+export const AI_NO_CHANGE_NOTE =
+  "The AI did not change the wording, so this is still the standard draft.";
+
 /** The one-line note for an app-built draft, with or without blanks. */
 export const standardDraftNote = (draft) =>
   listPlaceholders(draft).length > 0

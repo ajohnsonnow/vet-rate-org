@@ -11,8 +11,11 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import {
+  AI_NO_CHANGE_NOTE,
   STRESSOR_TYPE_LABELS,
   WITNESS_RELATION_LABELS,
+  formStatementPlan,
+  standardDraftNote,
 } from "../utils/writerTemplates";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import {
@@ -4638,6 +4641,21 @@ function WizardStepPanel({
   );
 }
 
+// The app-built draft, as opposed to the full form text ("Original") and to
+// a draft the AI reworded.
+const STANDARD_DRAFT_LABEL = "Standard draft";
+
+/** The label for the version on screen, or "" for the full form text. */
+function draftVersionLabel({
+  showAIVersion,
+  aiEnhancedContent,
+  aiDraftNote,
+  t,
+}) {
+  if (!showAIVersion || !aiEnhancedContent) return "";
+  return aiDraftNote ? STANDARD_DRAFT_LABEL : t("formsHelper", "aiEnhanced");
+}
+
 function AIUnavailableNotice({ onOpenAISettings, t }) {
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-xl p-4">
@@ -4714,51 +4732,56 @@ function AIEnhanceButtonLabel({ isEnhancingWithAI, t }) {
 }
 
 function AIEnhanceControls({
+  aiReady,
   aiEnhancedContent,
+  isModelDraft,
   handleAIEnhanceClick,
   isEnhancingWithAI,
   toggleAIVersion,
   showAIVersion,
   t,
 }) {
-  if (!aiEnhancedContent) {
-    return (
-      <button
-        type="button"
-        onClick={handleAIEnhanceClick}
-        disabled={isEnhancingWithAI}
-        className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
-      >
-        <AIEnhanceButtonLabel isEnhancingWithAI={isEnhancingWithAI} t={t} />
-      </button>
-    );
-  }
-
+  const versionClass = (active) =>
+    `min-h-[44px] px-4 py-2 rounded-lg font-medium transition-all ${
+      active
+        ? "bg-purple-600 text-white"
+        : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
+    }`;
   return (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={toggleAIVersion}
-        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-          showAIVersion
-            ? "bg-purple-600 text-white"
-            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
-        }`}
-      >
-        ✨ {t("formsHelper", "aiVersion")}
-      </button>
-      <button
-        type="button"
-        onClick={toggleAIVersion}
-        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-          !showAIVersion
-            ? "bg-purple-600 text-white"
-            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
-        }`}
-      >
-        📝 {t("formsHelper", "original")}
-      </button>
-    </div>
+    <>
+      {aiReady && !isModelDraft && (
+        <button
+          type="button"
+          onClick={handleAIEnhanceClick}
+          disabled={isEnhancingWithAI}
+          className="px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+        >
+          <AIEnhanceButtonLabel isEnhancingWithAI={isEnhancingWithAI} t={t} />
+        </button>
+      )}
+      {aiEnhancedContent && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={toggleAIVersion}
+            aria-pressed={Boolean(showAIVersion)}
+            className={versionClass(showAIVersion)}
+          >
+            {isModelDraft
+              ? `✨ ${t("formsHelper", "aiVersion")}`
+              : STANDARD_DRAFT_LABEL}
+          </button>
+          <button
+            type="button"
+            onClick={toggleAIVersion}
+            aria-pressed={!showAIVersion}
+            className={versionClass(!showAIVersion)}
+          >
+            📝 {t("formsHelper", "original")}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -4834,19 +4857,23 @@ function AIEnhancementSection({
   t,
 }) {
   if (!isAIEnabledFormType()) return null;
-
-  if (!isAnyAIAvailable()) {
-    return <AIUnavailableNotice onOpenAISettings={onOpenAISettings} t={t} />;
-  }
+  const aiReady = isAnyAIAvailable();
 
   return (
     <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl p-5">
+      {!aiReady && (
+        <div className="mb-4">
+          <AIUnavailableNotice onOpenAISettings={onOpenAISettings} t={t} />
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <AIEnhancementHeader aiStatus={aiStatus} t={t} />
+        {aiReady && <AIEnhancementHeader aiStatus={aiStatus} t={t} />}
 
         <div className="flex flex-col gap-2">
           <AIEnhanceControls
+            aiReady={aiReady}
             aiEnhancedContent={aiEnhancedContent}
+            isModelDraft={Boolean(aiEnhancedContent) && !aiDraftNote}
             handleAIEnhanceClick={handleAIEnhanceClick}
             isEnhancingWithAI={isEnhancingWithAI}
             toggleAIVersion={toggleAIVersion}
@@ -4882,23 +4909,12 @@ function AIEnhancementSection({
   );
 }
 
-function DownloadOptionsCard({
-  t,
-  showAIVersion,
-  aiEnhancedContent,
-  handleDownloadOfficialPdf,
-  handleDownload,
-}) {
+function DownloadOptionsCard({ t, handleDownloadOfficialPdf, handleDownload }) {
   return (
     <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
       <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
         <span className="text-xl">📥</span>{" "}
         {t("formsHelper", "downloadYourForm")}
-        {showAIVersion && aiEnhancedContent && (
-          <span className="text-sm font-normal text-purple-600 dark:text-purple-400">
-            ({t("formsHelper", "aiEnhanced")})
-          </span>
-        )}
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Primary: Official PDF */}
@@ -4998,8 +5014,6 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
 
 function ReviewDownloadSection({
   t,
-  showAIVersion,
-  aiEnhancedContent,
   handleDownloadOfficialPdf,
   handleDownload,
   handleSaveToPacket,
@@ -5009,8 +5023,6 @@ function ReviewDownloadSection({
     <>
       <DownloadOptionsCard
         t={t}
-        showAIVersion={showAIVersion}
-        aiEnhancedContent={aiEnhancedContent}
         handleDownloadOfficialPdf={handleDownloadOfficialPdf}
         handleDownload={handleDownload}
       />
@@ -5036,19 +5048,24 @@ function ReviewDownloadSection({
 function ReviewPreviewSection({
   showAIVersion,
   aiEnhancedContent,
+  aiDraftNote,
   displayContent,
   t,
 }) {
+  const versionLabel = draftVersionLabel({
+    showAIVersion,
+    aiEnhancedContent,
+    aiDraftNote,
+    t,
+  });
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <details className="group" open={showAIVersion && aiEnhancedContent}>
         <summary className="bg-gray-50 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600 cursor-pointer flex items-center justify-between">
           <span className="font-medium text-gray-700 dark:text-gray-300">
             📄 {t("formsHelper", "textPreview")}{" "}
-            {showAIVersion && aiEnhancedContent
-              ? `(${t("formsHelper", "aiEnhanced")})`
-              : ""}{" "}
-            ({t("formsHelper", "clickToExpand")})
+            {versionLabel ? `(${versionLabel})` : ""} (
+            {t("formsHelper", "clickToExpand")})
           </span>
           <svg
             className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform"
@@ -8288,14 +8305,37 @@ function _buildFormsHelperGenerationHandlers(ctx) {
   const handleFinishWizard = () => {
     generateContent();
     setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
-    // Reset AI state when generating new content
-    setAiEnhancedContent(null);
-    setShowAIVersion(false);
     setAiError(null);
-    setAiDraftNote(null);
+    // A form with a wording step shows its app-built draft straight away,
+    // AI set up or not. The AI, when asked, only rewords typed passages.
+    const plan = formStatementPlan(selectedForm?.id, formData);
+    if (!plan) {
+      setAiEnhancedContent(null);
+      setShowAIVersion(false);
+      setAiDraftNote(null);
+      return;
+    }
+    const draft = plan.build(plan.answers);
+    setAiEnhancedContent(draft);
+    setAiDraftNote(standardDraftNote(draft));
+    setShowAIVersion(true);
+    resolveVeteranDisplayName().then((name) =>
+      setAiEnhancedContent((shown) =>
+        shown === draft ? substituteVeteranNamePlaceholder(draft, name) : shown,
+      ),
+    );
   };
 
   return { generateContent, handleFinishWizard };
+}
+
+// The note beside the draft after the AI was asked: none for a reworded
+// draft; the standard note when the AI failed (the error is shown apart);
+// and, when it answered but changed nothing usable, a line saying so.
+function aiOutcomeNote(result) {
+  if (result.draftPath === "model") return null;
+  const note = result.draftNote ?? standardDraftNote(result.content);
+  return result.draftErrorReason ? note : `${AI_NO_CHANGE_NOTE} ${note}`;
 }
 
 function _buildFormsHelperAIHandlers(ctx) {
@@ -8357,7 +8397,7 @@ function _buildFormsHelperAIHandlers(ctx) {
         setAiEnhancedContent(
           substituteVeteranNamePlaceholder(result.content, veteranName),
         );
-        setAiDraftNote(result.draftNote ?? null);
+        setAiDraftNote(aiOutcomeNote(result));
         setAiError(result.draftErrorReason ?? null);
         setShowAIVersion(true);
       } else {
@@ -8608,8 +8648,6 @@ function FormsHelperReviewStep({ state, handlers }) {
 
       <ReviewDownloadSection
         t={t}
-        showAIVersion={showAIVersion}
-        aiEnhancedContent={aiEnhancedContent}
         handleDownloadOfficialPdf={handleDownloadOfficialPdf}
         handleDownload={handleDownload}
         handleSaveToPacket={handleSaveToPacket}
@@ -8619,6 +8657,7 @@ function FormsHelperReviewStep({ state, handlers }) {
       <ReviewPreviewSection
         showAIVersion={showAIVersion}
         aiEnhancedContent={aiEnhancedContent}
+        aiDraftNote={aiDraftNote}
         displayContent={displayContent}
         t={t}
       />

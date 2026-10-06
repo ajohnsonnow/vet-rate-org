@@ -23,6 +23,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   AGGRAVATION_OPTIONS,
+  AI_NO_CHANGE_NOTE,
   buildPersonalStatementTemplate,
   standardDraftNote,
 } from "../utils/writerTemplates";
@@ -39,9 +40,6 @@ import SmartAILoadButton from "./SmartAILoadButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims, getStatement } from "../utils/claimsStorage";
 import { normalizeConditionName } from "../utils/conditionName";
-
-const AI_NO_CHANGE_NOTE =
-  "The AI did not change the wording, so this is still the standard draft.";
 
 // Pure doctor-note generator, split out of NexusBuilder purely to keep its
 // function body under the line-count/complexity limits. Same logic, same
