@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { lfsFile } from "../helpers/lfsFile";
 import { calculateVARating } from "../../utils/vaCalculator";
 import {
   buildCalculatorExplanation,
@@ -218,31 +219,31 @@ describe("buildCalculatorExplanation with a TDIU question", () => {
   });
 });
 
-const ECFR = "public/legal-index/v0.1.0/chunks/ecfr.jsonl";
-const ecfrText = existsSync(ECFR) ? readFileSync(ECFR, "utf8") : "";
-const ecfrAvailable =
-  ecfrText.length > 0 && !ecfrText.startsWith("version https://git-lfs");
+const ECFR = lfsFile("public/legal-index/v0.1.0/chunks/ecfr.jsonl");
 
-describe.skipIf(!ecfrAvailable)("TDIU quotes against the eCFR index", () => {
-  const section416 = ecfrAvailable
-    ? ecfrText
-        .split("\n")
-        .filter(Boolean)
-        .map((line) => JSON.parse(line))
-        .filter((chunk) => chunk.citation === "38 CFR § 4.16")
-        .map((chunk) => chunk.text)
-        .join(" ")
-        .replace(/\s+/g, " ")
-    : "";
+describe.skipIf(!ECFR.available)(
+  ECFR.name("TDIU quotes against the eCFR index"),
+  () => {
+    const section416 = ECFR.available
+      ? readFileSync(ECFR.path, "utf8")
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => JSON.parse(line))
+          .filter((chunk) => chunk.citation === "38 CFR § 4.16")
+          .map((chunk) => chunk.text)
+          .join(" ")
+          .replace(/\s+/g, " ")
+      : "";
 
-  it("finds section 4.16 in the index", () => {
-    expect(section416).toContain("Total disability ratings for compensation");
-  });
+    it("finds section 4.16 in the index", () => {
+      expect(section416).toContain("Total disability ratings for compensation");
+    });
 
-  it.each(Object.entries(TDIU_REGULATION_QUOTES))(
-    "%s is verbatim in 38 CFR § 4.16",
-    (_key, quote) => {
-      expect(section416).toContain(quote);
-    },
-  );
-});
+    it.each(Object.entries(TDIU_REGULATION_QUOTES))(
+      "%s is verbatim in 38 CFR § 4.16",
+      (_key, quote) => {
+        expect(section416).toContain(quote);
+      },
+    );
+  },
+);
