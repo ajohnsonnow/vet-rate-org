@@ -88,12 +88,12 @@ describe("a filing paired with another filing's form", () => {
     const hits = findContradictions(RUN_C_A26, { topics: FILING });
     expect(buildContradictionLead(hits)).toBe(
       [
-        "Vet-Rate check: part of the answer below conflicts with the regulation.",
+        "Vet-Rate check: part of the answer below may not match the regulation.",
         "",
         'The answer says: "Action: You must submit supplemental claims for the three denied claims using VA Form 21-0966 (or via electronic submission if available)."',
-        'That gives VA Form 21-0966 as the form for a Supplemental Claim. The list of VA claim forms (titles as cited in VA Adjudication Procedures Manual M21-1) says: "VA Form 20-0995: Decision Review Request: Supplemental Claim"',
+        'This reads as if it gives VA Form 21-0966 as the form for a Supplemental Claim. Compare it with the list of VA claim forms (titles as cited in VA Adjudication Procedures Manual M21-1): "VA Form 20-0995: Decision Review Request: Supplemental Claim"',
         "",
-        "Check that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
+        "This check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. The answer follows, unchanged.",
       ].join("\n"),
     );
   });
@@ -139,7 +139,7 @@ describe("the Intent to File form given as the application form", () => {
     );
     expect(hit.quote).toEqual({
       citation:
-        "The list of VA claim forms (titles as cited in VA Adjudication Procedures Manual M21-1)",
+        "the list of VA claim forms (titles as cited in VA Adjudication Procedures Manual M21-1)",
       text: "VA Form 21-526EZ: Application for Disability Compensation and Related Compensation Benefits",
     });
   });

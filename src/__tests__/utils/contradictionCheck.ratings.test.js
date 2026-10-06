@@ -84,7 +84,7 @@ describe("flagContradictions for a20 in the final-build run", () => {
       "ratings-added-together",
     ]);
     expect(out.text).toContain(
-      `That adds VA ratings together. 38 CFR § 4.25 says: "${quotes.corrections["ratings-combined"].text}"`,
+      `This reads as if it adds VA ratings together. Compare it with 38 CFR § 4.25: "${quotes.corrections["ratings-combined"].text}"`,
     );
     expect(out.text.endsWith(ANSWER)).toBe(true);
   });

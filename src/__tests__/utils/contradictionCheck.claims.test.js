@@ -41,7 +41,7 @@ describe("a deadline stated for a supplemental claim", () => {
       { topics: REVIEW },
     );
     expect(buildContradictionNote(hit)).toBe(
-      `Vet-Rate check: this answer puts a deadline on filing a Supplemental Claim. 38 CFR § 3.2500(a)(2) says: "${quotes.corrections["supplemental-any-time"].text}" Check this point with a Veterans Service Officer before relying on it.`,
+      `Vet-Rate check: this reads as if it puts a deadline on filing a Supplemental Claim. Compare it with 38 CFR § 3.2500(a)(2): "${quotes.corrections["supplemental-any-time"].text}" This check is automatic and can be wrong; confirm the point with a Veterans Service Officer.`,
     );
     expect(quotes.corrections["supplemental-any-time"].text).toContain(
       "At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim",

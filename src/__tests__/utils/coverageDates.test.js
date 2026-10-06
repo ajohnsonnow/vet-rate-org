@@ -97,7 +97,7 @@ describe("the coverage-date rule", () => {
       "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
     );
     expect(out.text).toContain(
-      `The answer says: "${WRONG}"\nThat gives September 11, 2001 as the start date for a place the table lists under August 2, 1990. VA manual M21-1 VIII.ii.2.A.1.e-h says: "${EARLY_LINE}"\n`,
+      `The answer says: "${WRONG}"\nThis reads as if it gives September 11, 2001 as the start date for a place the table lists under August 2, 1990. Compare it with VA manual M21-1 VIII.ii.2.A.1.e-h: "${EARLY_LINE}"\n`,
     );
     expect(out.contradictionsFound).toEqual([
       { rule: "coverage-date-for-wrong-place", sentence: WRONG },

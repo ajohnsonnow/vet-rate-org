@@ -167,7 +167,7 @@ export function findIntentFormAsApplication(sentence) {
     return {
       number: mention.number,
       quote: {
-        citation: `The list of VA claim forms (${TABLE.sourceLabel})`,
+        citation: `the list of VA claim forms (${TABLE.sourceLabel})`,
         text: tableLine(APPLICATION_FORM),
       },
     };
@@ -192,7 +192,7 @@ export function findFormMismatch(sentence) {
       label: lane.label,
       number: mention.number,
       quote: {
-        citation: `The list of VA claim forms (${TABLE.sourceLabel})`,
+        citation: `the list of VA claim forms (${TABLE.sourceLabel})`,
         text: tableLine(LANE_FORMS[lane.id]),
       },
     };

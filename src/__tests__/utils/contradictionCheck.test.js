@@ -208,7 +208,7 @@ describe("buildContradictionNote", () => {
     );
     const note = buildContradictionNote(hit);
     expect(note).toBe(
-      `Vet-Rate check: this answer says a secondary connection cannot be made. 38 CFR § 3.310(a) says: "${quotes.corrections.secondary.text}" Check this point with a Veterans Service Officer before relying on it.`,
+      `Vet-Rate check: this reads as if it says a secondary connection cannot be made. Compare it with 38 CFR § 3.310(a): "${quotes.corrections.secondary.text}" This check is automatic and can be wrong; confirm the point with a Veterans Service Officer.`,
     );
   });
 
@@ -237,12 +237,12 @@ describe("flagContradictions", () => {
     );
     expect(out.text).toBe(
       [
-        "Vet-Rate check: part of the answer below conflicts with the regulation.",
+        "Vet-Rate check: part of the answer below may not match the regulation.",
         "",
         `The answer says: "${wrong}"`,
-        `That says a secondary connection cannot be made. 38 CFR § 3.310(a) says: "${quotes.corrections.secondary.text}"`,
+        `This reads as if it says a secondary connection cannot be made. Compare it with 38 CFR § 3.310(a): "${quotes.corrections.secondary.text}"`,
         "",
-        "Check that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
+        "This check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. The answer follows, unchanged.",
         "",
         wrong,
       ].join("\n"),

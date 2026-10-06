@@ -570,7 +570,7 @@ function quoteWithSource(hit) {
     .map((a) => `${a.short} means ${a.long}`)
     .join("; ");
   const gloss = meanings ? ` (${meanings})` : "";
-  return `${quote.citation} says: "${quote.text}"${gloss}`;
+  return `Compare it with ${quote.citation}: "${quote.text}"${gloss}`;
 }
 
 /**
@@ -578,7 +578,7 @@ function quoteWithSource(hit) {
  * Decision Decoder puts it under the field that carried the sentence).
  */
 export function buildContradictionNote(hit) {
-  return `Vet-Rate check: this answer ${hit.says}. ${quoteWithSource(hit)} Check this point with a Veterans Service Officer before relying on it.`;
+  return `Vet-Rate check: this reads as if it ${hit.says}. ${quoteWithSource(hit)} This check is automatic and can be wrong; confirm the point with a Veterans Service Officer.`;
 }
 
 const MAX_QUOTED_SENTENCE = 200;
@@ -596,12 +596,12 @@ const trimmed = (sentence) =>
  */
 export function buildContradictionLead(hits) {
   return [
-    "Vet-Rate check: part of the answer below conflicts with the regulation.",
+    "Vet-Rate check: part of the answer below may not match the regulation.",
     ...hits.map(
       (hit) =>
-        `\nThe answer says: "${trimmed(hit.sentence)}"\nThat ${hit.says}. ${quoteWithSource(hit)}`,
+        `\nThe answer says: "${trimmed(hit.sentence)}"\nThis reads as if it ${hit.says}. ${quoteWithSource(hit)}`,
     ),
-    "\nCheck that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
+    "\nThis check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. The answer follows, unchanged.",
   ].join("\n");
 }
 

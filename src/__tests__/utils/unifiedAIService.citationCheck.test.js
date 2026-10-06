@@ -247,11 +247,11 @@ describe("generateAI contradiction check", () => {
 
     expect(
       result.text.startsWith(
-        "Vet-Rate check: part of the answer below conflicts with the regulation.",
+        "Vet-Rate check: part of the answer below may not match the regulation.",
       ),
     ).toBe(true);
     expect(result.text).toContain(
-      `The answer says: "${WRONG}"\nThat says a secondary connection cannot be made. 38 CFR § 3.310(a) says: "(a) General. Except as provided in § 3.300(c), disability which is proximately due to or the result of a service-connected disease or injury shall be service connected."`,
+      `The answer says: "${WRONG}"\nThis reads as if it says a secondary connection cannot be made. Compare it with 38 CFR § 3.310(a): "(a) General. Except as provided in § 3.300(c), disability which is proximately due to or the result of a service-connected disease or injury shall be service connected."`,
     );
     expect(result.text.endsWith(`\n\n${WRONG}`)).toBe(true);
     expect(result.contradictionsFound).toEqual([
