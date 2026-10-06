@@ -169,7 +169,7 @@ const applyHighEndAdvice = (advice) => {
   advice.localAI.label = "🔒 Local AI (Privacy Focused)";
   advice.localAI.badge = "✨ Recommended for your device";
   advice.localAI.description =
-    "Runs entirely on your device. No data leaves your phone.";
+    "Runs entirely on your device. No data leaves your device.";
   advice.cloudAI.description =
     "Fast but sends data to Google. Use Local AI for privacy.";
 };
