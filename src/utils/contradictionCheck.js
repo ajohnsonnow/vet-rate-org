@@ -113,6 +113,10 @@ const EVIDENCE_VA_GATHERS =
 
 const HIGHER_LEVEL_REVIEW = /\bhigher[- ]level review\b|\bHLR\b/i;
 const ADDS_EVIDENCE = /\b(?:new|additional) evidence\b/i;
+// "Choose the Board evidence docket over a Higher-Level Review": the new
+// evidence is sent somewhere else.
+const ANOTHER_LANE_OVER_THE_REVIEW =
+  /\bover an? (?:higher[- ]level review|HLR)\b|\bevidence docket\b/i;
 const NOT_ABOUT_ADDING =
   /\bno\b|\bnot\b|n't\b|\bwithout\b|\bcannot\b|\bsame evidence\b|\bsupplemental\b|\bexisting\b/i;
 // "Less likely than not" is the examiner's wording, not a denial of anything.
@@ -431,6 +435,7 @@ const RULES = [
     matches: (sentence) => {
       const plain = withoutLikelihoodWording(sentence);
       if (EVIDENCE_VA_GATHERS.test(plain)) return false;
+      if (ANOTHER_LANE_OVER_THE_REVIEW.test(plain)) return false;
       return (
         (HIGHER_LEVEL_REVIEW.test(plain) &&
           ADDS_EVIDENCE.test(plain) &&

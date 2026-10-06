@@ -12,9 +12,7 @@ const rules = (text, topics) =>
 
 describe("exposure said to need proving, herbicide service", () => {
   it.each([
-    "Action Required: Please provide the veteran's MOS and any documentation regarding toxic exposure (e.g., service in a specific location, MOS hazardous to health, or service in a specific theater).",
     "However, for PACT Act conditions, we need evidence of exposure to a specific toxic agent, not just general herbicide exposure.",
-    "Please provide the veteran's service dates and locations or any specific toxic exposure documentation (e.g., DD Form 2799).",
     "- Show documentation of exposure to Agent Orange during service in Vietnam.",
     "To determine which PACT Act conditions apply, the veteran needs to provide evidence of toxic exposure (Agent Orange or other covered substances) and establish a connection to the condition.",
     "To be eligible for presumptive conditions, you must prove that you were exposed.",
@@ -54,6 +52,8 @@ describe("exposure said to need proving, herbicide service", () => {
     "For conditions not covered by the presumption, you would need to prove the condition was caused by toxic exposure.",
     "- Documentation of exposure to other toxic substances",
     "Please provide your service dates and locations.",
+    "Action Required: Please provide the veteran's MOS and any documentation regarding toxic exposure (e.g., service in a specific location, MOS hazardous to health, or service in a specific theater).",
+    "Please provide the veteran's service dates and locations or any specific toxic exposure documentation (e.g., DD Form 2799).",
     "The provided text only covers herbicide exposure (38 CFR 3.307 and 3.309).",
   ])("leaves alone: %s", (sentence) => {
     expect(rules(sentence, ["herbicide", "toxic-exposure"])).toEqual([]);

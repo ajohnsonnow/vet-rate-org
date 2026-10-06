@@ -65,7 +65,7 @@ const TRUE_OF_THESE = /\bfinal\b|\bsupplemental\b|\bhigher[- ]level review\b/i;
 // period has run, and no list of ways to say that is complete.
 const TIME_WORDS = [
   "years?|months?|days?|period|window|deadline",
-  "late|expired?|lapsed?|passed|ago|long|old|older",
+  "late|expired?|lapsed?|passed|ago|long|longer|old|older|open|closed",
 ].join("|");
 const SPEAKS_OF_TIME = new RegExp(String.raw`\b(?:${TIME_WORDS})\b`, "i");
 
@@ -86,7 +86,8 @@ const FACTOR_FOR_THE_SAME_SIDE = new RegExp(
   String.raw`${BILATERAL_RULE}[^;]{0,120}${SAME_SIDE}|${SAME_SIDE}[^;]{0,120}${BILATERAL_RULE}|\bbilateral \(same side\b`,
   "i",
 );
-const NAMES_BOTH_SIDES = /\beach side\b|\bboth sides\b|\bopposite sides?\b/i;
+const NAMES_BOTH_SIDES =
+  /\beach side\b|\bboth sides\b|\bopposite sides?\b|\bother side\b|\b(?:right|left)-side\b/i;
 
 export function putsBilateralOnOneSide(sentence) {
   return (
@@ -124,13 +125,18 @@ const EMPLOYED_SO_NO_TDIU =
   /\bemployed\b[^.;]{0,40}\byou (?:cannot|can't|will not|won't) (?:receive|get|qualify for|be eligible for) TDIU\b/i;
 const SUBSTANTIALLY_GAINFUL = /\bsubstantially gainful\b/i;
 const MARGINAL = /\bmarginal\b|\bfull[- ]time\b|\bliving wage\b/i;
+// "Being employed does not automatically mean you cannot receive TDIU" says
+// the opposite of the error, with the error's words inside it.
+const DENIES_THAT_IT_FOLLOWS =
+  /\b(?:not|n't|never)\b (?:\w+ ){0,2}(?:mean|follow|true|the case)\b/i;
 
 export function saysEmploymentBarsTdiu(sentence) {
   const stated = EMPLOYED_SO_NO_TDIU.exec(sentence);
   return (
     stated !== null &&
     !SUBSTANTIALLY_GAINFUL.test(stated[0]) &&
-    !MARGINAL.test(sentence)
+    !MARGINAL.test(sentence) &&
+    !DENIES_THAT_IT_FOLLOWS.test(sentence)
   );
 }
 
@@ -170,12 +176,16 @@ const HIGHER_OF_TWO_AS_COMBINING = [
 ];
 
 // "More than the higher of the two and less than their sum" is the true rule.
+// "... while the higher of two evaluations applies within one disability"
+// sets the two rules apart, which is right.
+const WITHIN_ONE_DISABILITY = /\b(?:one|a single|the same) disability\b/i;
 const ABOVE_THE_HIGHER =
   /\b(?:more than|above|greater than|higher than|exceeds?) the higher of\b/i;
 
 export function takesHigherOfTwoAsCombined(sentence) {
   return (
     HIGHER_OF_TWO_AS_COMBINING.some((pattern) => pattern.test(sentence)) &&
-    !ABOVE_THE_HIGHER.test(sentence)
+    !ABOVE_THE_HIGHER.test(sentence) &&
+    !WITHIN_ONE_DISABILITY.test(sentence)
   );
 }
