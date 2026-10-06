@@ -545,10 +545,46 @@ const STOP_WORDS = new Set(
   ),
 );
 
-const contentWords = (value) =>
-  [...wordSet(value)].filter(
-    (word) => word.length >= 4 && !STOP_WORDS.has(word),
-  );
+/*
+ * Words that carry no fact of their own in a statement about a veteran. A
+ * rewording that turns "They leave" into "The veteran leaves ... and does
+ * not" adds "veteran" and "does" and has said nothing new: every statement
+ * here is by or about the veteran, and "does" only carries the tense.
+ */
+const NO_FACT_WORDS = new Set(
+  "veteran veterans does doing done didn't doesn't".split(" "),
+);
+
+/*
+ * A word's stem, so that a change of form is not a change of wording:
+ * "leave" and "leaves", "drive", "drives" and "driving", "stop" and
+ * "stopped" compare equal. Deliberately crude. It only has to make
+ * inflections of one word meet; two different words that happen to share a
+ * stem are still two words the passage did or did not use.
+ */
+function stemOf(word) {
+  const base = word
+    .replace(/ies$/, "y")
+    .replace(/(?:ing|ed|es|s)$/, (ending, at) => (at >= 3 ? "" : ending));
+  const undoubled = /([b-df-hj-np-tv-z])\1$/.test(base)
+    ? base.slice(0, -1)
+    : base;
+  return undoubled.length > 3 ? undoubled.replace(/e$/, "") : undoubled;
+}
+
+const stemSet = (value) => new Set([...wordSet(value)].map(stemOf));
+
+/** The stems of the words that carry a passage's content. */
+const contentWords = (value) => [
+  ...new Set(
+    [...wordSet(value)]
+      .filter(
+        (word) =>
+          word.length >= 4 && !STOP_WORDS.has(word) && !NO_FACT_WORDS.has(word),
+      )
+      .map(stemOf),
+  ),
+];
 
 /**
  * What the veteran supplied that the draft no longer has: numbers, phrases
@@ -572,7 +608,7 @@ export function findMissingFacts(draft, inputs = [], keep = []) {
   }
   const words = [...new Set(supplied.flatMap(contentWords))];
   if (words.length > 0) {
-    const bodyWords = wordSet(body);
+    const bodyWords = stemSet(body);
     const kept = words.filter((word) => bodyWords.has(word)).length;
     const share = kept / words.length;
     if (share < MIN_WORDING_KEPT) {
@@ -607,11 +643,25 @@ const PASSAGE_NUMBER = /^(?:\*\*|__)?(\d{1,2})[.):](?:\*\*|__)?/;
 const stripWrapping = (value) =>
   trimTo(String(value ?? "").trim(), /[^\s"'“”*_`]/);
 
+/*
+ * The smaller model drops the numbers and returns one line per passage.
+ * Taken in order, but only when the line count matches exactly: a refusal
+ * or a preamble does not. Null when it does not match.
+ */
+function onePerLine(reply, count) {
+  const lines = straighten(reply)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines.length === count ? lines.map(stripWrapping) : null;
+}
+
 /**
  * The reworded passages in a model reply, by number: an array of `count`
  * entries, each the text after "N." up to the next number or blank line, or
  * null when that number is missing. Anything before the first number is
- * ignored. A reply to a single passage may come back with no number.
+ * ignored. A reply to a single passage may come back with no number, and
+ * so may a reply to several when it has exactly one line for each.
  */
 export function parsePassageReply(reply, count) {
   const found = new Array(count).fill(null);
@@ -635,6 +685,9 @@ export function parsePassageReply(reply, count) {
     found[0] = String(reply)
       .trim()
       .split(/\n\s*\n/)[0];
+  }
+  if (count > 1 && found.every((value) => value === null)) {
+    return onePerLine(reply, count) ?? found;
   }
   return found.map((value) => (value ? stripWrapping(value) : null));
 }
@@ -684,7 +737,7 @@ function passageProblems(original, rewrite, keep) {
   ) {
     problems.push("much longer than the passage");
   }
-  const known = wordSet(original);
+  const known = stemSet(original);
   const words = contentWords(rewrite);
   const added = words.filter((word) => !known.has(word));
   if (
@@ -744,6 +797,7 @@ export function standardDraft(plan, extra = {}) {
     draftNote: standardDraftNote(content),
     draftRejectReasons: [],
     passages: NO_PASSAGES,
+    passageOutcomes: [],
     ...extra,
   };
 }
@@ -764,7 +818,8 @@ export const draftAfterModelError = (plan, sent, error) =>
  * by selectPassages, in the order they were numbered). The draft is built
  * again with each accepted rewording in its passage's place. `draftPath` is
  * "model" only when at least one passage was reworded and accepted;
- * `passages` counts how each one fared.
+ * `passages` counts how each one fared and `passageOutcomes` lists them:
+ * the passage, what the model returned for it, the verdict and the reasons.
  */
 export function resolvePassageDraft({ plan, sent, reply }) {
   const rewrites = parsePassageReply(reply, sent.length);
@@ -791,8 +846,22 @@ export function resolvePassageDraft({ plan, sent, reply }) {
       (outcome) => `passage ${outcome.number}: ${outcome.reasons.join("; ")}`,
     );
 
+  // What was asked and what came back, passage by passage, so a transcript
+  // shows the rewording that was turned down and not only that one was.
+  const passageOutcomes = outcomes.map((outcome, i) => ({
+    number: outcome.number,
+    before: sent[i].text,
+    after: rewrites[i],
+    verdict: outcome.status,
+    reasons: outcome.reasons,
+  }));
+
   if (passages.accepted === 0) {
-    return standardDraft(plan, { passages, draftRejectReasons });
+    return standardDraft(plan, {
+      passages,
+      draftRejectReasons,
+      passageOutcomes,
+    });
   }
   const reworded = Object.fromEntries(
     outcomes
@@ -805,5 +874,6 @@ export function resolvePassageDraft({ plan, sent, reply }) {
     draftNote: null,
     draftRejectReasons,
     passages,
+    passageOutcomes,
   };
 }

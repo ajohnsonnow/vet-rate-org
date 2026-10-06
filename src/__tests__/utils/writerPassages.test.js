@@ -362,6 +362,93 @@ describe("standardDraft", () => {
       draftNote: STANDARD_DRAFT_NOTE,
       draftRejectReasons: [],
       passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+      passageOutcomes: [],
     });
+  });
+});
+
+describe("rewordings the real model produced (Witness Bench, t04)", () => {
+  const original =
+    "They leave the room when the fireworks start and do not come back for the evening.";
+
+  it.each([
+    "The veteran leaves the room when the fireworks start and does not return for the evening.",
+    "When fireworks start, the veteran leaves the room and does not return for the evening.",
+    "When the fireworks start, they leave the room and do not return for the evening.",
+  ])(
+    "accepts a change of verb form and of 'they' to 'the veteran': %s",
+    (rewrite) => {
+      expect(checkPassageRewrite({ original, rewrite })).toEqual({
+        status: "accepted",
+        text: rewrite,
+        reasons: [],
+      });
+    },
+  );
+
+  it.each([
+    [
+      "a different place and a new act",
+      "The veteran leaves the house when the fireworks start and sleeps in the garage for the evening.",
+    ],
+    [
+      "an added cause",
+      "The veteran leaves the room when the fireworks start because the explosions remind them of mortar attacks, and does not return for the evening.",
+    ],
+    ["a dropped half", "The veteran leaves the room when the fireworks start."],
+  ])("still rejects %s", (_what, rewrite) => {
+    expect(checkPassageRewrite({ original, rewrite }).status).toBe("rejected");
+  });
+});
+
+describe("parsePassageReply with no numbers", () => {
+  it("takes one line per passage, in order, when the count matches", () => {
+    expect(
+      parsePassageReply(
+        "I see them wake up shouting several nights a week.\nThey used to host game nights.",
+        2,
+      ),
+    ).toEqual([
+      "I see them wake up shouting several nights a week.",
+      "They used to host game nights.",
+    ]);
+  });
+
+  it("does not guess when the line count does not match", () => {
+    expect(
+      parsePassageReply("I need more details before I can help.", 2),
+    ).toEqual([null, null]);
+    expect(parsePassageReply("One.\nTwo.\nThree.", 2)).toEqual([null, null]);
+  });
+});
+
+describe("resolvePassageDraft records each passage", () => {
+  it("before, after, verdict and reasons, in the order sent", () => {
+    const plan = ptsdStatementPlan({
+      eventDescription: "A vehicle rolled over beside me on the range",
+      currentSymptoms: FRAGMENT,
+    });
+    const result = resolvePassageDraft({
+      plan,
+      sent: selectPassages(plan),
+      reply: `1. In 2009 a vehicle rolled over beside me on the range.\n2. ${SENTENCES}`,
+    });
+    expect(result.passageOutcomes).toEqual([
+      {
+        number: 1,
+        before: "A vehicle rolled over beside me on the range",
+        after: "In 2009 a vehicle rolled over beside me on the range.",
+        verdict: "rejected",
+        reasons: ['adds number "2009"'],
+      },
+      {
+        number: 2,
+        before: FRAGMENT,
+        after: SENTENCES,
+        verdict: "accepted",
+        reasons: [],
+      },
+    ]);
+    expect(standardDraft(plan).passageOutcomes).toEqual([]);
   });
 });
