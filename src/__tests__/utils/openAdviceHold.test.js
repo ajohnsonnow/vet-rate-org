@@ -1,173 +1,51 @@
 /**
- * What the assistant shows under the fixed message when an open question is
- * held: regulation text found by search, quoted with its citation.
+ * ADR-010 sections 11 and 13: an open question held from a small-class model
+ * gets the fixed message and nothing else. The regulation search is not run
+ * and no passage is shown under it: on the measured golden questions 16 of
+ * the 33 top passages were not on the question and no score separated them.
  */
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import * as hold from "../../utils/openAdviceHold";
 import relevance from "./fixtures/regulationSearchRelevance.json";
-import {
-  OPEN_ADVICE_HELD_MESSAGE,
-  NO_MATCHING_REGULATION_TEXT,
-  PASSAGE_RELEVANCE_FLOOR,
-  REGULATION_SEARCH_DISCLOSURE,
-  REGULATION_TEXT_LEAD,
-  buildHeldAnswerContent,
-  describeRegulationPassages,
-} from "../../utils/openAdviceHold";
 
-const PASSAGES = [
-  {
-    citation: "38 CFR § 3.2500",
-    title: "Review of decisions",
-    text: "A claimant may request one of the three review options.",
-    score: 0.7,
-  },
-  {
-    citation: "38 CFR § 3.2501",
-    title: "",
-    text: "Supplemental claims.",
-    score: 0.65,
-  },
-];
+const read = (...parts) => readFileSync(join(process.cwd(), ...parts), "utf8");
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
-describe("describeRegulationPassages", () => {
-  it("quotes each passage under its citation and says no AI wrote it", () => {
-    expect(REGULATION_TEXT_LEAD).toBe(
-      "Regulation text found by searching for your question. It is quoted from the regulations, not written by AI, and it may not be the part that applies to you:",
-    );
-    expect(describeRegulationPassages(PASSAGES)).toBe(
-      [
-        REGULATION_TEXT_LEAD,
-        "**38 CFR § 3.2500 - Review of decisions**",
-        "A claimant may request one of the three review options.",
-        "**38 CFR § 3.2501**",
-        "Supplemental claims.",
-        REGULATION_SEARCH_DISCLOSURE,
-      ].join("\n\n"),
-    );
-  });
-
-  it("cuts a very long passage and says the text continues", () => {
-    const long = {
-      citation: "38 CFR § 4.71a",
-      title: "",
-      text: "x".repeat(4000),
-    };
-    const out = describeRegulationPassages([long]);
-    expect(out.length).toBeLessThan(2000);
-    expect(out).toContain("(The text continues in the regulation.)");
-    expect(out.endsWith(REGULATION_SEARCH_DISCLOSURE)).toBe(true);
-  });
-});
-
-describe("buildHeldAnswerContent", () => {
-  it("puts the regulation text under the fixed message", async () => {
-    const retrieve = vi.fn().mockResolvedValue(PASSAGES);
-    const content = await buildHeldAnswerContent("Can I appeal?", retrieve);
-    expect(retrieve).toHaveBeenCalledWith("Can I appeal?");
-    expect(content).toBe(
-      `${OPEN_ADVICE_HELD_MESSAGE}\n\n${describeRegulationPassages(PASSAGES)}`,
-    );
-  });
-
-  it("says no closely matching text was found when the search finds nothing", async () => {
-    const content = await buildHeldAnswerContent("x", async () => []);
-    expect(content).toBe(
-      `${OPEN_ADVICE_HELD_MESSAGE}
-
-${NO_MATCHING_REGULATION_TEXT}`,
-    );
-  });
-
-  it("shows the fixed message alone, and logs, when the search fails", async () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
-    const content = await buildHeldAnswerContent("x", async () => {
-      throw new Error("index not loaded");
+describe("the held answer", () => {
+  it("is the fixed message, flagged as held, and points to Ask the Regs", () => {
+    expect(hold.openAdviceHeldAnswer()).toEqual({
+      text: hold.OPEN_ADVICE_HELD_MESSAGE,
+      openAdviceHeld: true,
     });
-    expect(content).toBe(OPEN_ADVICE_HELD_MESSAGE);
-    expect(logged).toHaveBeenCalledTimes(1);
+    expect(hold.OPEN_ADVICE_HELD_MESSAGE).toMatch(/Ask the Regs/);
+  });
+
+  it("carries no search, passage builder, relevance floor or download line", () => {
+    expect(Object.keys(hold).sort()).toEqual([
+      "OPEN_ADVICE_HELD_MESSAGE",
+      "openAdviceHeldAnswer",
+    ]);
+  });
+
+  it("is what the assistant shows: it does not load the regulation search", () => {
+    const assistant = read("src", "components", "AIAssistant.jsx");
+    expect(assistant).not.toMatch(/retrieveRegulationText|legalAnswerer/);
+    expect(assistant).not.toMatch(/buildHeldAnswerContent/);
+    expect(assistant).toMatch(/OPEN_ADVICE_HELD_MESSAGE/);
   });
 });
 
-describe("the relevance floor", () => {
-  const passage = (score, over = {}) => ({
-    citation: `38 CFR § ${score}`,
-    title: "T",
-    text: "Some regulation text.",
-    score,
-    ...over,
-  });
-
-  it("is the value chosen from the measured scores", () => {
-    expect(PASSAGE_RELEVANCE_FLOOR).toBeCloseTo(0.58, 5);
-  });
-
-  it("drops passages below the floor and keeps the rest", async () => {
-    const content = await buildHeldAnswerContent("q", async () => [
-      passage(0.54),
-      passage(0.7),
-      passage(0.5799),
-      passage(PASSAGE_RELEVANCE_FLOOR),
-    ]);
-    expect(content).toContain("§ 0.7");
-    expect(content).toContain(`§ ${PASSAGE_RELEVANCE_FLOOR}`);
-    expect(content).not.toContain("§ 0.54");
-    expect(content).not.toContain("§ 0.5799");
-  });
-
-  it("shows no passages, and the fixed sentence, when every hit is below the floor", async () => {
-    const content = await buildHeldAnswerContent("q", async () => [
-      passage(0.5405, { citation: "38 CFR § 3.309" }),
-    ]);
-    expect(content).toBe(
-      `${OPEN_ADVICE_HELD_MESSAGE}
-
-${NO_MATCHING_REGULATION_TEXT}`,
-    );
-    expect(content).not.toContain("3.309");
-    expect(NO_MATCHING_REGULATION_TEXT).toBe(
-      "No closely matching regulation text was found; try Ask the Regs with the regulation's words.",
-    );
-  });
-
-  it("drops a [Reserved] placeholder however well it scores", async () => {
-    const content = await buildHeldAnswerContent("q", async () => [
-      passage(0.9, { title: "[Reserved]", citation: "38 CFR § 4.47-4.54" }),
-    ]);
-    expect(content).not.toContain("4.47-4.54");
-    expect(content).toContain(NO_MATCHING_REGULATION_TEXT);
-  });
-
-  it("drops a passage with no score rather than trusting it", async () => {
-    const content = await buildHeldAnswerContent("q", async () => [
-      { citation: "38 CFR § 1", title: "", text: "x" },
-    ]);
-    expect(content).toContain(NO_MATCHING_REGULATION_TEXT);
-  });
-
-  it("applies to what the recorded search measured: it drops the lowest-scoring hits, which are mostly not on the question, and also some that were", () => {
-    const below = relevance.rows.filter(
-      (r) => r.score < PASSAGE_RELEVANCE_FLOOR,
-    );
-    expect(below.map((r) => r.id).sort()).toEqual(
-      ["a07", "a19", "a21", "a23", "a29", "x2", "x3", "x4"].sort(),
-    );
-    expect(below.filter((r) => r.relevant === "n")).toHaveLength(4);
-    expect(below.filter((r) => r.relevant === "y")).toHaveLength(4);
-    expect(relevance.rows).toHaveLength(33);
-  });
-});
-
-describe("what the veteran is told about the search", () => {
-  it("says a search model downloads on first use, from where, and that the question stays on the device", () => {
-    expect(REGULATION_SEARCH_DISCLOSURE).toMatch(/first time/i);
-    expect(REGULATION_SEARCH_DISCLOSURE).toMatch(/Hugging Face/);
-    expect(REGULATION_SEARCH_DISCLOSURE).toMatch(/about 34 MB/);
-    expect(REGULATION_SEARCH_DISCLOSURE).toMatch(
-      /your question is not sent there/i,
-    );
+describe("the evidence kept for the decision", () => {
+  it("is the measured table: 33 top passages, 16 not on the question, overlapping scores", () => {
+    const rows = relevance.rows;
+    expect(rows).toHaveLength(33);
+    const off = rows.filter((r) => r.relevant === "n");
+    const on = rows.filter((r) => r.relevant === "y");
+    expect(off).toHaveLength(16);
+    expect(on).toHaveLength(17);
+    const highestOff = Math.max(...off.map((r) => r.score));
+    const lowestOn = Math.min(...on.map((r) => r.score));
+    expect(highestOff).toBeGreaterThan(lowestOn);
   });
 });
