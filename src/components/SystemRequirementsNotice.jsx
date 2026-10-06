@@ -58,9 +58,10 @@ export default function SystemRequirementsNotice({
 
   if (!profile) return null;
 
-  const blocked = profile.isMobile || profile.isTablet || !profile.hasWebGPU;
+  const blocked = profile.isMobile || !profile.hasWebGPU;
+  const tablet = profile.isTablet && profile.hasWebGPU;
   const limited = !blocked && profile.tier === "laptop";
-  const noWebGpu = !profile.hasWebGPU && !profile.isMobile && !profile.isTablet;
+  const noWebGpu = !profile.hasWebGPU && !profile.isMobile;
 
   const gpuName = friendlyGpuName(profile.gpuDescription);
   const tierRate =
@@ -79,6 +80,7 @@ export default function SystemRequirementsNotice({
       <CompactNotice
         profile={profile}
         noWebGpu={noWebGpu}
+        tablet={tablet}
         limited={limited}
         gpuName={gpuName}
       />
@@ -87,7 +89,7 @@ export default function SystemRequirementsNotice({
 
   // ── Full card variant ────────────────────────────────────────────────────
 
-  // Blocked: mobile / tablet / no WebGPU
+  // Blocked: phone / no WebGPU
   if (blocked) {
     return (
       <BlockedNotice
@@ -97,6 +99,9 @@ export default function SystemRequirementsNotice({
       />
     );
   }
+
+  if (tablet)
+    return <TabletNotice deviceModel={describeDeviceModel(profile)} />;
 
   // Warning: laptop / integrated GPU
   if (limited) {
@@ -129,15 +134,21 @@ export default function SystemRequirementsNotice({
   );
 }
 
-function CompactNotice({ profile, noWebGpu, limited, gpuName }) {
-  if (profile.isMobile || profile.isTablet) {
+function CompactNotice({ profile, noWebGpu, limited, gpuName, tablet }) {
+  const deviceModel = describeDeviceModel(profile);
+  if (profile.isMobile) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
         <span aria-hidden="true">🚫</span>
-        <span>
-          On-device AI requires a desktop or laptop with a dedicated GPU. Phones
-          and tablets are not supported.
-        </span>
+        <span>On-device AI is not available on phones.</span>
+      </div>
+    );
+  }
+  if (tablet) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-300">
+        <span aria-hidden="true">⚠</span>
+        <span>{tabletSummary(deviceModel)}</span>
       </div>
     );
   }
@@ -173,11 +184,28 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName }) {
   );
 }
 
+function tabletSummary(deviceModel) {
+  const model = deviceModel
+    ? `${deviceModel.displayName} (${formatDownloadSize(deviceModel)})`
+    : "a smaller AI model";
+  return `Tablet detected. On-device AI loads ${model} when your browser has WebGPU. It has not been tested on tablets, and large files will be slow.`;
+}
+
+function TabletNotice({ deviceModel }) {
+  return (
+    <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 p-4 space-y-2">
+      <p className="text-yellow-800 dark:text-yellow-200 text-sm font-semibold">
+        {tabletSummary(deviceModel)}
+      </p>
+      <RequirementsList deviceModel={deviceModel} />
+    </div>
+  );
+}
+
 function BlockedNotice({ profile, toolName, supportsExtractionOnly }) {
-  const reason =
-    profile.isMobile || profile.isTablet
-      ? "Phone and tablet detected - on-device AI requires a desktop or laptop computer with a dedicated GPU."
-      : "Your browser does not expose a WebGPU adapter. On-device AI requires Chrome 113+ or Edge 113+.";
+  const reason = profile.isMobile
+    ? "Phone detected - on-device AI is not available on phones."
+    : "Your browser does not expose a WebGPU adapter. On-device AI requires Chrome 113+ or Edge 113+.";
 
   return (
     <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 space-y-2">
