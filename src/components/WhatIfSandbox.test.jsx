@@ -11,7 +11,13 @@
  * on it.
  */
 import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import WhatIfSandbox from "./WhatIfSandbox";
 import { saveMyRatings } from "../utils/veteranProfile";
@@ -142,5 +148,62 @@ describe("WhatIfSandbox follows the shared 38 CFR 4.26 rules", () => {
     }
     await waitFor(() => expect(combined()).toBe("20%"));
     expect(indicator()).toBeInTheDocument();
+  });
+});
+
+describe("WhatIfSandbox names and custom conditions", () => {
+  const scenario = () =>
+    within(screen.getByRole("region", { name: "Current scenario" }));
+
+  it("does not repeat a side the saved name already carries", async () => {
+    saveMyRatings([
+      { name: "Knee (Left)", rating: 10, side: "left", bodyPart: "knee" },
+      { name: "Ankle strain", rating: 10, side: "right", bodyPart: "ankle" },
+    ]);
+    renderSandbox();
+    fireEvent.click(
+      await screen.findByRole("button", { name: /load my ratings/i }),
+    );
+    expect(await scenario().findByText("Knee (Left)")).toBeInTheDocument();
+    expect(screen.queryByText(/\(Left\) \(Left\)/)).toBeNull();
+    expect(scenario().getByText("Ankle strain (Right)")).toBeInTheDocument();
+  });
+
+  it("lets a veteran add a condition with its own body part and side: shoulder 20 (left) + elbow 20 (right) give 36, plus 3.6 is 40", async () => {
+    renderSandbox();
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(
+      screen.getByText(/both arms or both legs have a compensable rating/i),
+    ).toBeInTheDocument();
+
+    const add = (bodyPart, side) => {
+      fireEvent.change(screen.getByLabelText(/body part/i), {
+        target: { value: bodyPart },
+      });
+      fireEvent.change(screen.getByLabelText(/^side$/i), {
+        target: { value: side },
+      });
+      fireEvent.change(screen.getByLabelText(/^rating %$/i), {
+        target: { value: "20" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /add to scenario/i }));
+    };
+    add("shoulder", "left");
+    add("elbow", "right");
+
+    expect(await scenario().findByText("Shoulder (Left)")).toBeInTheDocument();
+    expect(scenario().getByText("Elbow (Right)")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId("combined-rating").textContent).toBe("40%"),
+    );
+    expect(screen.getByText(/bilateral factor applied/i)).toBeInTheDocument();
+  });
+
+  it("keeps the add button off until a body part is chosen", async () => {
+    renderSandbox();
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /add to scenario/i }),
+    ).toBeDisabled();
   });
 });
