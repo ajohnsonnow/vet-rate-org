@@ -168,6 +168,10 @@ describe("a service date that is neither of the table's dates", () => {
       IRAQ_QUESTION,
     ],
     ["I served on or after June 1, 2008 in Iraq.", IRAQ_QUESTION],
+    [
+      "Under 38 CFR 3.320 you must have served in Afghanistan on or after September 19, 2001.",
+      "Am I covered for Afghanistan?",
+    ],
   ])("leaves alone: %s (asked: %s)", (sentence, question) => {
     expect(findWrongCoverageDate(sentence, { question })).toBeNull();
   });
