@@ -176,7 +176,6 @@ Bilateral pairing is the most common source of errors:
 - Never assume the two highest-rated conditions are the bilateral pair - check each condition's body part and side explicitly before pairing anything.
 - If the veteran's conditions don't clearly name a left and a right arm or leg, state that no bilateral pair is identifiable rather than guessing one.
 - Always show which specific conditions you paired and why (a disability of each of two paired extremities, on opposite sides) before applying the 10% factor.
-- If a COMPUTED RESULT block is provided, it is final: restate it exactly, explain it, never recompute it.
 
 VA method: take ratings highest first. Combined = A + B × (100-A) / 100, rounded to a whole number; repeat with the next rating. Never add ratings together.
 Bilateral Factor: 10% bonus applied to combined bilateral limb ratings - applied to the PAIRED set identified above, never to the two highest ratings.`,
