@@ -8,6 +8,7 @@ import {
   SourceError,
   cleanMessage,
   fetchHfOrg,
+  fetchNpmLatest,
   gatherAll,
   parseAppModels,
   parseDeclaredVersions,
@@ -16,6 +17,8 @@ import {
   parseSnapshot,
   parseWebLlmConfig,
 } from "../../../../scripts/eval/lib/modelWatchSources.js";
+
+const hostOf = (url) => new URL(url).hostname;
 
 const here = (rel) => new URL(rel, import.meta.url);
 const repo = (rel) =>
@@ -299,8 +302,9 @@ describe("gatherAll", () => {
       ? '{"models":["Qwen2.5-3B-Instruct-q4f16_1-MLC"]}'
       : repo(rel);
   const okFetch = async (url) => {
-    if (url.includes("raw.githubusercontent.com")) return new Response(CONFIG);
-    if (url.includes("huggingface.co")) {
+    if (hostOf(url) === "raw.githubusercontent.com")
+      return new Response(CONFIG);
+    if (hostOf(url) === "huggingface.co") {
       return page(url.includes("author=mlc-ai") ? MLC : ONNX);
     }
     return new Response(JSON.stringify(NPM));
@@ -316,7 +320,7 @@ describe("gatherAll", () => {
   });
 
   it.each([
-    ["webllm-config", (u) => u.includes("raw.githubusercontent.com")],
+    ["webllm-config", (u) => hostOf(u) === "raw.githubusercontent.com"],
     ["huggingface:mlc-ai", (u) => u.includes("author=mlc-ai")],
     ["huggingface:onnx-community", (u) => u.includes("author=onnx-community")],
     ["npm:tesseract.js", (u) => u.includes("tesseract.js")],
@@ -333,7 +337,7 @@ describe("gatherAll", () => {
 
   it("records a parse failure of the WebLLM config against its source", async () => {
     const fetchImpl = async (url) =>
-      url.includes("raw.githubusercontent.com")
+      hostOf(url) === "raw.githubusercontent.com"
         ? new Response("export const prebuiltAppConfig = {}")
         : okFetch(url);
     const out = await gatherAll({ fetchImpl, readText, now: NOW });
@@ -365,5 +369,20 @@ describe("cleanMessage", () => {
       /[\n`${}#]/,
     );
     expect(cleanMessage("a".repeat(500))).toHaveLength(200);
+  });
+});
+
+describe("fetchNpmLatest encodes every slash in the package name", () => {
+  it("requests a name with two slashes with both encoded", async () => {
+    let requested = "";
+    const fetchImpl = async (url) => {
+      requested = url;
+      return new Response(JSON.stringify({ version: "1.2.3" }));
+    };
+    await fetchNpmLatest("@scope/pkg/extra", { fetchImpl });
+    expect(new URL(requested).hostname).toBe("registry.npmjs.org");
+    expect(requested).toBe(
+      "https://registry.npmjs.org/@scope%2Fpkg%2Fextra/latest",
+    );
   });
 });
