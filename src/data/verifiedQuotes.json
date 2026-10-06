@@ -192,6 +192,14 @@
         "retrieved": "2026-07-10"
       }
     },
+    "bilateral-both-sides": {
+      "citation": "38 CFR § 4.26",
+      "text": "Except as provided in paragraph (d) of this section, when a partial disability results from disease or injury of both arms, or of both legs, or of paired skeletal muscles, the ratings for the disabilities of the right and left sides will be combined as usual, and 10 percent of this value will be added (i.e., not combined) before proceeding with further combinations, or converting to degree of disability.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
     "ratings-combined": {
       "citation": "38 CFR § 4.25",
       "text": "Thus, a person having a 60 percent disability is considered 40 percent efficient. Proceeding from this 40 percent efficiency, the effect of a further 30 percent disability is to leave only 70 percent of the efficiency remaining after consideration of the first disability, or 28 percent efficiency altogether. The individual is thus 72 percent disabled, as shown in table I opposite 60 percent and under 30 percent.",
@@ -219,6 +227,22 @@
     "claim-has-its-own-date": {
       "citation": "38 CFR § 3.155(d)(1)",
       "text": "(1) Requirement for complete claim and date of claim. A complete claim is required for all types of claims, and will generally be considered filed as of the date it was received by VA for an evaluation or award of benefits under the laws administered by the Department of Veterans Affairs.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "intent-year-from-receipt": {
+      "citation": "38 CFR § 3.155(b)",
+      "text": "If VA receives a complete application form prescribed by the Secretary, as defined in paragraph (a) of § 3.160, appropriate to the benefit sought within 1 year of receipt of the intent to file a claim, VA will consider the complete claim filed as of the date the intent to file a claim was received.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "marginal-employment": {
+      "citation": "38 CFR § 4.16(a)",
+      "text": "Marginal employment shall not be considered substantially gainful employment.",
       "source": {
         "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
         "retrieved": "2026-07-10"

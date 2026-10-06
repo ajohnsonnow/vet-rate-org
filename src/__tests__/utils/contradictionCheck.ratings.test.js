@@ -140,7 +140,9 @@ describe("the all-answers rule over every recorded response", () => {
 
   it("flags only answers that add ratings", () => {
     const flagged = responses
-      .filter((r) => rules(String(r.text ?? "")).length > 0)
+      .filter((r) =>
+        rules(String(r.text ?? "")).includes("ratings-added-together"),
+      )
       .map((r) => `${r.run} ${r.id}`);
     expect(flagged).toEqual([
       "071859 a11",

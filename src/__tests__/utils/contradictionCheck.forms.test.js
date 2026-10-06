@@ -98,8 +98,9 @@ describe("a filing paired with another filing's form", () => {
     );
   });
 
-  it("is not applied to a question about something other than filing", () => {
-    expect(rules(RUN_C_A26, ["secondary"])).toEqual([]);
+  it("applies whatever was asked, since the forms table settles it", () => {
+    expect(rules(RUN_C_A26, ["secondary"])).toEqual([RULE]);
+    expect(rules(RUN_C_A26, [])).toEqual([RULE]);
   });
 });
 
@@ -146,7 +147,7 @@ describe("the Intent to File form given as the application form", () => {
 
 describe("the rule over every recorded answer", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_045832";
   const responses = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(
@@ -173,8 +174,8 @@ describe("the rule over every recorded answer", () => {
     }
   };
 
-  it("fires eight times in 1160 responses, each a real mix-up, with the topic gate off", () => {
-    expect(responses).toHaveLength(1160);
+  it("fires nine times in 1240 responses, each a real mix-up, with the topic gate off", () => {
+    expect(responses).toHaveLength(1240);
     const hits = responses.flatMap((r) =>
       textsOf(r.response)
         .flatMap((text) => findContradictions(text, { topics: FILING }))
@@ -190,6 +191,7 @@ describe("the rule over every recorded answer", () => {
       "022302 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
       "032917 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
       "034657 a04 | gives VA Form 22-0966 as the form for a Supplemental Claim",
+      "045832 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
     ]);
   });
 });

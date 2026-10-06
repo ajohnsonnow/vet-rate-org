@@ -73,10 +73,13 @@ describe("correction quotes", () => {
       "higher-level-review-evidence",
       "higher-level-review-conference",
       "review-period-start",
+      "bilateral-both-sides",
       "ratings-combined",
       "supplemental-any-time",
       "new-and-relevant",
       "claim-has-its-own-date",
+      "intent-year-from-receipt",
+      "marginal-employment",
       "intent-paragraph-scope",
       "review-filing",
     ]);

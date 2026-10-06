@@ -122,6 +122,17 @@ function resolveSelector(paragraphs, selector) {
       .map((text, offset) => ({ index: first + offset, text }));
   }
   const index = uniqueIndex(paragraphs, selector.start);
+  if (
+    selector.afterSentences !== undefined &&
+    selector.firstSentences !== undefined
+  ) {
+    const [, tail] = splitAtSentence(
+      paragraphs[index],
+      selector.afterSentences,
+    );
+    const [head] = splitAtSentence(tail, selector.firstSentences);
+    return [{ index, text: head, cutBefore: true, cutAfter: true }];
+  }
   if (selector.firstSentences !== undefined) {
     const [head] = splitAtSentence(paragraphs[index], selector.firstSentences);
     return [{ index, text: head, cutAfter: true }];

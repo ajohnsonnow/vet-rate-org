@@ -169,6 +169,17 @@ export const CORRECTION_SPECS = {
     section: "3.2500",
     select: [LANES_OPENING],
   },
+  "bilateral-both-sides": {
+    citation: "38 CFR § 4.26",
+    section: "4.26",
+    select: [
+      {
+        start:
+          "Except as provided in paragraph (d) of this section, when a partial",
+        firstSentences: 1,
+      },
+    ],
+  },
   "ratings-combined": {
     citation: "38 CFR § 4.25",
     section: "4.25",
@@ -193,6 +204,22 @@ export const CORRECTION_SPECS = {
     citation: "38 CFR § 3.155(d)(1)",
     section: "3.155",
     select: ["(1) Requirement for complete claim and date of claim."],
+  },
+  "intent-year-from-receipt": {
+    citation: "38 CFR § 3.155(b)",
+    section: "3.155",
+    select: [{ start: "(b) Intent to file a claim.", afterSentences: 4 }],
+  },
+  "marginal-employment": {
+    citation: "38 CFR § 4.16(a)",
+    section: "4.16",
+    select: [
+      {
+        start: "(5) multiple disabilities incurred",
+        afterSentences: 2,
+        firstSentences: 1,
+      },
+    ],
   },
   "intent-paragraph-scope": {
     citation: "38 CFR § 3.155",

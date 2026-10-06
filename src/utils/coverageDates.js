@@ -163,21 +163,52 @@ const rowsNamedIn = (text) => {
   })).filter((row) => row.place);
 };
 
+// "PACT conditions apply to service in specific locations after <date>".
+const APPLIES_TO_SERVICE_AFTER =
+  /\b(?:appl(?:y|ies)|limited|restricted)\b[^.;]{0,40}\bservice\b[^.;]{0,40}\b(?:on or after|after|since)\b/i;
+
 // The place is the one the sentence names, or failing that the one the
-// veteran asked about. Places from both rows leave no single right date.
+// veteran asked about. A date in neither row is wrong for every place in the
+// table, so places from both rows do not make it uncertain; the line quoted
+// is the one for the first place named.
+const firstNamed = (text, rows) =>
+  [...rows].sort((a, b) => text.indexOf(a.place) - text.indexOf(b.place))[0];
+
 function dateOutsideTheTable(text, question) {
-  if (!SERVICE_MUST_START.test(text)) return null;
+  if (!SERVICE_MUST_START.test(text) && !APPLIES_TO_SERVICE_AFTER.test(text)) {
+    return null;
+  }
   const dates = datesIn(text);
   const tableDates = COVERAGE_BLOCKS.map((block) => block.iso);
   if (dates.length === 0 || dates.some((date) => tableDates.includes(date))) {
     return null;
   }
   const inSentence = rowsNamedIn(text);
+  const source = inSentence.length > 0 ? text : String(question ?? "");
   const rows = inSentence.length > 0 ? inSentence : rowsNamedIn(question);
-  if (rows.length !== 1) return null;
-  const [{ block, place }] = rows;
-  if (statesYearOf(text, block)) return null;
+  if (rows.length === 0) return null;
+  if (rows.some(({ block }) => statesYearOf(text, block))) return null;
+  const { block, place } = firstNamed(source, rows);
   return found(block, place, written(dates[0]));
+}
+
+const ENDS_AS_A_HEADING = /:\)?$/;
+const DENIES = /\bnot\b|n't\b|\bnever\b/i;
+
+// "... (Active service on or after September 11, 2001):" with the places in
+// the line under it. Only a line that ends as a heading and names no place
+// itself lends its date to the next line.
+function headingDateForNextLine(text, next) {
+  if (!next || !ENDS_AS_A_HEADING.test(text.trim())) return null;
+  if (rowsNamedIn(text).length > 0 || DENIES.test(next)) return null;
+  const dates = datesIn(text);
+  const heading = COVERAGE_BLOCKS.filter((block) => dates.includes(block.iso));
+  const under = rowsNamedIn(next);
+  if (heading.length !== 1 || under.length !== 1) return null;
+  const [{ block, place }] = under;
+  if (block === heading[0]) return null;
+  if (statesYearOf(text, block) || statesYearOf(next, block)) return null;
+  return { ...found(block, place, heading[0].date), shownWith: next };
 }
 
 /**
@@ -185,12 +216,19 @@ function dateOutsideTheTable(text, question) {
  * the other row's date, or a date service is said to have to start by that
  * is neither row's. { place, wrongDate, quote }, where `quote` is the table
  * line that carries the right date for that place; null when the sentence is
- * consistent with the table. A sentence that names places from both rows is
- * left alone: the date may belong to either, and a sentence is not parsed
- * finely enough to say which. `question` is what the veteran asked, used for
- * the place only when the sentence names none.
+ * consistent with the table. With one of the table's two dates, a sentence
+ * that names places from both rows is left alone: the date may belong to
+ * either, and a sentence is not parsed finely enough to say which.
+ * `question` is what the veteran asked, used for the place only when the
+ * sentence names none. `next` is the sentence after this one, read only
+ * when this one is a heading that carries the date (the result then has
+ * `shownWith`, the line that names the place).
  */
-export function findWrongCoverageDate(sentence, { question } = {}) {
+export function findWrongCoverageDate(sentence, { question, next } = {}) {
   const text = String(sentence ?? "");
-  return swappedDate(text) ?? dateOutsideTheTable(text, question);
+  return (
+    swappedDate(text) ??
+    dateOutsideTheTable(text, question) ??
+    headingDateForNextLine(text, next)
+  );
 }
