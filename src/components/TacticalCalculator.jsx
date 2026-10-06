@@ -117,6 +117,12 @@ const ProgressRing = ({ percentage, size = 200, strokeWidth = 12 }) => {
  * All TacticalCalculator useState/useRef/useEffect declarations, grouped
  * into a single hook so the component body stays under the line budget.
  */
+// index.css turns every table into its own horizontal scroller on a phone
+// ("table { display: block; overflow-x: auto }"). A table cannot take focus,
+// so the rate tables stay real tables and overflow into their ScrollRegion,
+// which is the named, focusable element a keyboard can scroll.
+const RATE_TABLE_CLASSES = "table w-full overflow-visible text-sm";
+
 function useTacticalCalculatorFormState(
   initialConditions,
   capSimulatorResults,
@@ -2889,7 +2895,7 @@ function VeteranAloneRatesTable({ t }) {
         {t("tacticalCalc", "veteranAlone")}
       </h4>
       <ScrollRegion label={t("tacticalCalc", "veteranAlone")}>
-        <table className="w-full text-sm">
+        <table className={RATE_TABLE_CLASSES}>
           <thead>
             <tr className="border-b dark:border-gray-700">
               <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
@@ -2946,7 +2952,7 @@ function WithSpouseRatesTable({ t }) {
         {t("tacticalCalc", "withSpouse")}
       </h4>
       <ScrollRegion label={t("tacticalCalc", "withSpouse")}>
-        <table className="w-full text-sm">
+        <table className={RATE_TABLE_CLASSES}>
           <thead>
             <tr className="border-b dark:border-gray-700">
               <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
@@ -3033,7 +3039,7 @@ function AddedAmountsTable({ t }) {
         {t("tacticalCalc", "additionalAmountsNote")}
       </p>
       <ScrollRegion label={t("tacticalCalc", "additionalAmounts")}>
-        <table className="w-full text-sm">
+        <table className={RATE_TABLE_CLASSES}>
           <thead>
             <tr className="border-b dark:border-gray-700">
               <th className="text-left py-2 px-3 text-gray-600 dark:text-gray-400">
