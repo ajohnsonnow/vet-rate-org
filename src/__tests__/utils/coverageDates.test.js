@@ -68,6 +68,11 @@ describe("findWrongCoverageDate", () => {
     "Iraq is covered from August 2, 1990, and Afghanistan from September 11, 2001.",
     "Afghanistan, Djibouti, Syria and Uzbekistan count on or after September 11, 2001.",
     "I served in Iraq from 2008 to 2009.",
+    "Whether you were assigned to a duty station in Somalia (for August 1990 timeframe) or Afghanistan/Djibouti/Syria/Uzbekistan (for September 11, 2001 timeframe).",
+    "Iraq service counts from August 1990, and Afghanistan from September 11, 2001.",
+    "Somalia has been covered since 1990; the later row starts September 11, 2001.",
+    "You served in Iraq or Afghanistan on or after September 11, 2001.",
+    "Service on or after September 11, 2001 in Afghanistan, or any service in Iraq, qualifies.",
     "The United States was attacked on September 11, 2001.",
     "The Red Cross opened on September 11, 2001.",
     "You filed your claim on September 11, 2001.",
@@ -104,9 +109,35 @@ describe("the coverage-date rule", () => {
   });
 });
 
+// Run 2026-10-06 01:35 (2B), case a16, as the model wrote it. The check put a
+// correction above it for Somalia, whose date the answer had right.
+const RUN_013549_A16 = [
+  "I cannot answer your question about PACT Act presumptive conditions based on your Iraq deployment. My instructions prohibit me from making up information, fabricating legal/regulatory information, or providing medical diagnoses.",
+  "",
+  "To answer this accurately, I would need to know the specific details of your service record, such as:",
+  "1. Your specific dates of service (to confirm if you served during the applicable time periods listed in 38 CFR § 3.320).",
+  "2. Whether you were assigned to a duty station in the Gulf of Aden, Persian Gulf, Arabian Sea, or other specified locations during that time.",
+  "3. Whether you were assigned to a duty station in Somalia (for August 1990 timeframe) or Afghanistan/Djibouti/Syria/Uzbekistan (for September 11, 2001 timeframe).",
+  "",
+  "Please provide these details so I can check against the official eCFR regulations regarding PACT Act presumptive conditions for you.",
+].join("\n");
+
+describe("an answer that gives each place its own date", () => {
+  it("is returned as written, with no correction above it", () => {
+    const result = { text: RUN_013549_A16 };
+    const out = flagContradictions(
+      result,
+      { toolId: "pact-navigator", dataClass: "context" },
+      "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
+    );
+    expect(out.text).toBe(RUN_013549_A16);
+    expect(out.contradictionsFound).toBeUndefined();
+  });
+});
+
 describe("the coverage-date rule over every recorded response", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_002046";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
   const hits = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(

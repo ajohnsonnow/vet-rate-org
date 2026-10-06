@@ -105,21 +105,32 @@ export const COVERAGE_BLOCKS = withPlaces(readBlocks(ENTRY.text));
 
 const CITATION = `VA manual ${ENTRY.citation.split(" (")[0]}`;
 
+// "August 1990" and "since 1990" give a place its own date as surely as the
+// full date does, so the row's year anywhere in the sentence counts.
+const statesYearOf = (sentence, block) =>
+  new RegExp(String.raw`\b${block.iso.slice(0, 4)}\b`).test(sentence);
+
 /**
  * A sentence that gives a place the other row's date and not its own:
  * { place, wrongDate, quote }, where `quote` is the table line that carries
  * the right date for that place. Null when the sentence is consistent with
- * the table, or names no place from it.
+ * the table, or names no place from it. A sentence that also names a place
+ * from the other row is left alone: the date may belong to that place, and
+ * a sentence is not parsed finely enough to say which.
  */
 export function findWrongCoverageDate(sentence) {
-  const written = datesIn(sentence);
-  const named = properNouns(String(sentence ?? ""));
+  const text = String(sentence ?? "");
+  const written = datesIn(text);
+  const named = properNouns(text);
   for (const block of COVERAGE_BLOCKS) {
-    if (written.includes(block.iso)) continue;
+    if (statesYearOf(text, block)) continue;
     const place = block.places.find((word) => named.includes(word));
     if (!place) continue;
     const wrong = COVERAGE_BLOCKS.find(
-      (other) => other !== block && written.includes(other.iso),
+      (other) =>
+        other !== block &&
+        written.includes(other.iso) &&
+        !other.places.some((word) => named.includes(word)),
     );
     if (!wrong) continue;
     const line = block.lines.find((text) => properNouns(text).includes(place));
