@@ -128,13 +128,13 @@ describe.each(WITH_FILLER)("%s", (formName) => {
   });
 });
 
-describe("after the official PDF is made", () => {
-  const press = async () => {
-    openResult("Statement in Support of Claim");
-    fireEvent.click(officialButton());
-    return screen.findByRole("alert");
-  };
+const press = async () => {
+  openResult("Statement in Support of Claim");
+  fireEvent.click(officialButton());
+  return screen.findByRole("alert");
+};
 
+describe("after the official PDF is made", () => {
   it("says when the statement was too long for the form and where the rest is", async () => {
     fillAndDownloadForm.mockResolvedValue({
       success: true,
@@ -172,6 +172,44 @@ describe("after the official PDF is made", () => {
 
     expect((await press()).textContent).toMatch(
       /written in full in the Remarks section.*Description of the traumatic event \(item 9A\)/,
+    );
+  });
+});
+
+describe("after the official PDF is made, answers that are not on it", () => {
+  it("says which answers are only in the text downloads", async () => {
+    fillAndDownloadForm.mockResolvedValue({
+      success: true,
+      fileName: "x.pdf",
+      leftBlank: [],
+      moved: ["Location of the traumatic event (item 9B)"],
+      textOnly: ["Description of the traumatic event (item 9A)"],
+      notPlaced: [],
+      overflow: "",
+    });
+    const text = (await press()).textContent;
+
+    expect(text).toMatch(
+      /written in full in the Remarks section and their boxes point there: Location of the traumatic event \(item 9B\)\./,
+    );
+    expect(text).toMatch(
+      /not on the official PDF\. They are in the text downloads.*Not on the form: Description of the traumatic event \(item 9A\)\./,
+    );
+  });
+
+  it("names the answers it could not put into the form's boxes", async () => {
+    fillAndDownloadForm.mockResolvedValue({
+      success: true,
+      fileName: "x.pdf",
+      leftBlank: [],
+      moved: [],
+      textOnly: [],
+      notPlaced: ["Mailing address", "ZIP code"],
+      overflow: "",
+    });
+
+    expect((await press()).textContent).toMatch(
+      /could not put these answers into the form's boxes as you typed them.*blank for you to write in: Mailing address; ZIP code\./,
     );
   });
 

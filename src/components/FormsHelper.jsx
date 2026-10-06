@@ -5048,16 +5048,30 @@ const OFFICIAL_PDF_FAILED =
 const shortQuote = (answer) =>
   answer.length > 60 ? `${answer.slice(0, 57).trimEnd()}...` : answer;
 
+// `sentence` about the answers in `list`, or "" when there are none.
+const aboutAnswers = (list, sentence) =>
+  list?.length > 0 ? `${sentence} ${list.join("; ")}.` : "";
+
 /** What to tell the veteran about the official PDF just made, or "". */
 function officialPdfProblems(result) {
   return [
     result?.overflow ? OFFICIAL_PDF_OVERFLOW : "",
-    result?.moved?.length > 0
-      ? `Some answers were too long for their boxes on the form, so they are written in full in the Remarks section and their boxes point there: ${result.moved.join("; ")}.`
-      : "",
-    result?.leftBlank?.length > 0
-      ? `Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in: ${result.leftBlank.map(shortQuote).join("; ")}.`
-      : "",
+    aboutAnswers(
+      result?.moved,
+      "Some answers were too long for their boxes on the form, so they are written in full in the Remarks section and their boxes point there:",
+    ),
+    aboutAnswers(
+      result?.textOnly,
+      "Some answers were too long for their boxes and for the Remarks section, so they are not on the official PDF. They are in the text downloads (.TXT, .DOCX or .PDF): attach one, or write the answer on the form. Not on the form:",
+    ),
+    aboutAnswers(
+      result?.leftBlank?.map(shortQuote),
+      "Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in:",
+    ),
+    aboutAnswers(
+      result?.notPlaced,
+      "The app could not put these answers into the form's boxes as you typed them, so their boxes are blank for you to write in:",
+    ),
   ]
     .filter(Boolean)
     .join(" ");
