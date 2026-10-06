@@ -159,6 +159,16 @@ export const CORRECTION_SPECS = {
     section: "3.2601",
     select: [{ start: "(f) Evidentiary record.", firstSentences: 2 }],
   },
+  "higher-level-review-conference": {
+    citation: "38 CFR § 3.2601(h)",
+    section: "3.2601",
+    select: [{ start: "(h) Informal conferences.", firstSentences: 3 }],
+  },
+  "review-period-start": {
+    citation: "38 CFR § 3.2500(a)(1)",
+    section: "3.2500",
+    select: [LANES_OPENING],
+  },
   "ratings-combined": {
     citation: "38 CFR § 4.25",
     section: "4.25",

@@ -71,6 +71,8 @@ describe("correction quotes", () => {
       "presumed-toxic-exposure",
       "presumed-herbicide-exposure",
       "higher-level-review-evidence",
+      "higher-level-review-conference",
+      "review-period-start",
       "ratings-combined",
       "supplemental-any-time",
       "new-and-relevant",

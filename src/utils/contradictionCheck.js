@@ -72,6 +72,22 @@ const HIGHER_LEVEL_REVIEW = /\bhigher[- ]level review\b|\bHLR\b/i;
 const ADDS_EVIDENCE = /\b(?:new|additional) evidence\b/i;
 const NOT_ABOUT_ADDING =
   /\bno\b|\bnot\b|n't\b|\bwithout\b|\bcannot\b|\bsame evidence\b|\bsupplemental\b|\bexisting\b/i;
+// "Less likely than not" is the examiner's wording, not a denial of anything.
+const LIKELIHOOD_WORDING = /\bas likely as not\b|\bless likely than not\b/gi;
+const withoutLikelihoodWording = (sentence) =>
+  sentence.replace(LIKELIHOOD_WORDING, "");
+
+const HEARING_INSIDE_REVIEW =
+  /\b(?:in|during|as part of|at|with) (?:the|your|a) higher[- ]level review\b(?:(?! or )[^.;]){0,80}\bhearing\b/i;
+const HEARING_THEN_REVIEW =
+  /\bhearing\b(?:(?! or )[^.;]){0,40}\b(?:in|during|as part of|at|with|for) (?:the|your|a) higher[- ]level review\b/i;
+const REVIEW_HEARING = /\bhigher[- ]level review hearing\b/i;
+const NO_HEARING = /\bno\b|\bnot\b|n't\b|\bcannot\b|\bwithout\b|\binstead\b/i;
+
+const YEAR_FROM_TODAY =
+  /\b(?:one|1|a)[- ]year(?: period)? (?:from|after|of|starting) (?:today|now|right now|this moment)\b/i;
+const ABOUT_A_REVIEW = /\breview\b|\bappeal|\bdecision\b|\bboard\b|\bdisagree/i;
+
 const DENIES_ENTITLEMENT =
   /\byou (?:cannot|can't|do not|don't|would not|will not) (?:currently )?qualify for\b|\byou are not (?:currently )?(?:eligible|entitled) (?:for|to)\b/i;
 const NEGATED = /\bnot\b|n't\b|\bcannot\b/i;
@@ -284,9 +300,22 @@ const RULES = [
     matches: (sentence) =>
       HIGHER_LEVEL_REVIEW.test(sentence) &&
       ADDS_EVIDENCE.test(sentence) &&
-      !NOT_ABOUT_ADDING.test(sentence),
+      !NOT_ABOUT_ADDING.test(withoutLikelihoodWording(sentence)),
     says: "has you send new evidence with a higher-level review",
     correction: () => "higher-level-review-evidence",
+  },
+  {
+    id: "higher-level-review-hearing",
+    topics: REVIEW_TOPICS,
+    matches: (sentence) =>
+      anyMatch(
+        sentence,
+        HEARING_INSIDE_REVIEW,
+        HEARING_THEN_REVIEW,
+        REVIEW_HEARING,
+      ) && !NO_HEARING.test(withoutLikelihoodWording(sentence)),
+    says: "asks for a hearing in a higher-level review, where the regulation provides for an informal conference",
+    correction: () => "higher-level-review-conference",
   },
   {
     id: "higher-level-review-at-the-board",
@@ -312,6 +341,17 @@ const RULES = [
       !DATE_NOT_DEADLINE.test(sentence),
     says: "puts a deadline on filing a Supplemental Claim",
     correction: () => "supplemental-any-time",
+  },
+  {
+    // An Intent to File does run for a year from the day it is filed.
+    id: "review-period-from-wrong-day",
+    topics: REVIEW_TOPICS,
+    matches: (sentence) =>
+      YEAR_FROM_TODAY.test(sentence) &&
+      ABOUT_A_REVIEW.test(sentence) &&
+      !INTENT_TO_FILE.test(sentence),
+    says: "counts the year for asking for a review from today, but it runs from the date of the decision notice",
+    correction: () => "review-period-start",
   },
   {
     id: "new-and-material-standard",

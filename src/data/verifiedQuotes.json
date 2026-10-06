@@ -176,6 +176,22 @@
         "retrieved": "2026-07-10"
       }
     },
+    "higher-level-review-conference": {
+      "citation": "38 CFR § 3.2601(h)",
+      "text": "(h) Informal conferences. A claimant or his or her representative may include a request for an informal conference with a request for higher-level review. For purposes of this section, informal conference means contact with a claimant's representative or, if not represented, with the claimant, telephonically, or as otherwise determined by VA, for the sole purpose of allowing the claimant or representative to identify any errors of law or fact in a prior decision based on the record at the time the decision was issued.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "review-period-start": {
+      "citation": "38 CFR § 3.2500(a)(1)",
+      "text": "(1) Within one year from the date on which the agency of original jurisdiction issues a notice of a decision on a claim or issue as defined in § 3.151(c), except as otherwise provided in paragraphs (c), (e), and (f) of this section, a claimant may elect one of the following administrative review options by timely filing the appropriate form prescribed by the Secretary:",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
     "ratings-combined": {
       "citation": "38 CFR § 4.25",
       "text": "Thus, a person having a 60 percent disability is considered 40 percent efficient. Proceeding from this 40 percent efficiency, the effect of a further 30 percent disability is to leave only 70 percent of the efficiency remaining after consideration of the first disability, or 28 percent efficiency altogether. The individual is thus 72 percent disabled, as shown in table I opposite 60 percent and under 30 percent.",
