@@ -3892,7 +3892,7 @@ function _flushList(state) {
         className="list-disc pl-6 mb-4 space-y-1"
       >
         {state.listItems.map((item, i) => (
-          <li key={i} className="text-gray-700 dark:text-gray-300">
+          <li key={i} className="text-gray-700 dark:text-gray-300 max-w-prose">
             {_renderInline(item)}
           </li>
         ))}

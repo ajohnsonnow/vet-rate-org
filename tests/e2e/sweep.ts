@@ -69,7 +69,7 @@ export async function bootForSweep(
     },
     {
       version: APP_VERSION,
-      claims: FIXTURE.claims,
+      claims: FIXTURE.data.claims,
       ratings: SAVED_RATINGS,
       themeName: theme,
     },
@@ -162,6 +162,317 @@ export async function sweep(
       await inspect(`${tool.name} › ${label || `tab ${i + 1}`}`);
     }
     await closeDialog(page);
+  }
+  return { findings, screens };
+}
+
+// ── States behind input ─────────────────────────────────────────────────
+// The sweep above sees each screen as it opens. These are the states QA
+// reached by hand that only exist after a veteran has typed or clicked, so
+// they stay covered: none needs an AI model.
+
+const ANY_DIALOG = `${DIALOG}, [role="alertdialog"]`;
+const tool = (page: Page) => page.locator('[role="dialog"]').last();
+
+async function openTool(page: Page, event: string) {
+  await page.evaluate(
+    (name) => window.dispatchEvent(new CustomEvent(name)),
+    event,
+  );
+  await tool(page).waitFor({ state: "visible", timeout: 15000 });
+  await settle(page);
+  return tool(page);
+}
+
+/** Gives every empty visible text field, date and select in the dialog a value. */
+async function fillVisibleFields(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const root = [...document.querySelectorAll('[role="dialog"]')].pop();
+    if (!root) return;
+    const fields = root.querySelectorAll<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >("input, textarea, select");
+    for (const el of fields) {
+      if (!el.getBoundingClientRect().width) continue;
+      if (el instanceof HTMLSelectElement) {
+        if (!el.value) {
+          el.selectedIndex = 1;
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        continue;
+      }
+      if (el.type === "checkbox" || el.type === "radio" || el.value) continue;
+      const values: Record<string, string> = {
+        email: "qa@example.invalid",
+        date: "2015-06-15",
+        tel: "555-010-0199",
+      };
+      const proto =
+        el instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : HTMLInputElement.prototype;
+      Object.getOwnPropertyDescriptor(proto, "value")!.set!.call(
+        el,
+        values[el.type] ?? "Fictional answer",
+      );
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  });
+}
+
+const visibleButton = (page: Page, text: RegExp) =>
+  tool(page).locator("button:visible").filter({ hasText: text });
+
+async function startGuidedForm(page: Page, form: RegExp) {
+  await openTool(page, "openFormsHelper");
+  await tool(page).getByRole("button", { name: form }).first().click();
+  await visibleButton(page, /Start Guided Builder/).click();
+  await settle(page);
+}
+
+async function generateFormsStatement(page: Page) {
+  await startGuidedForm(page, /Statement in Support of Claim/);
+  for (let step = 0; step < 8; step++) {
+    await fillVisibleFields(page);
+    const generate = tool(page)
+      .locator("button:visible:not([disabled])")
+      .filter({ hasText: /Generate Statement/ });
+    if (await generate.count()) {
+      await generate.last().click();
+      break;
+    }
+    await visibleButton(page, /^Next$/)
+      .last()
+      .click();
+    await settle(page);
+  }
+  await tool(page)
+    .getByText("Statement Generated!")
+    .waitFor({ timeout: 20000 });
+}
+
+const FICTIONAL_LETTER =
+  "FICTIONAL TEST LETTER. Service connection for tinnitus is denied. The evidence does not show a nexus between the claimed condition and service. The examiner opined it is less likely than not related to service.";
+
+const CALCULATOR_CONDITIONS = [
+  ["knee", "left", "40"],
+  ["knee", "right", "20"],
+  ["mental", null, "50"],
+  ["back", null, "20"],
+  ["ear", null, "10"],
+] as const;
+
+export const STATES: { name: string; reach: (page: Page) => Promise<void> }[] =
+  [
+    {
+      name: "Calculator with five conditions and a bilateral pair",
+      reach: async (page) => {
+        const dialog = await openTool(page, "openTacticalCalculator");
+        await dialog
+          .locator("nav button")
+          .filter({ hasText: /Calculator/ })
+          .first()
+          .click();
+        for (const [bodyPart, side, rating] of CALCULATOR_CONDITIONS) {
+          await dialog
+            .getByLabel("Body Part / Condition Type")
+            .selectOption(bodyPart);
+          if (side)
+            await dialog.getByLabel("Side", { exact: true }).selectOption(side);
+          await dialog.getByLabel("Rating %").selectOption(rating);
+          await dialog
+            .getByRole("button", { name: /Add to Calculator/i })
+            .click();
+        }
+        await dialog
+          .getByText(`Your Rated Conditions (${CALCULATOR_CONDITIONS.length})`)
+          .waitFor({ timeout: 5000 });
+      },
+    },
+    {
+      name: "Calculator Rates tab",
+      reach: async (page) => {
+        const dialog = await openTool(page, "openTacticalCalculator");
+        await dialog
+          .locator("nav button")
+          .filter({ hasText: /Rates/ })
+          .first()
+          .click();
+      },
+    },
+    {
+      name: "Forms Helper at a checklist step",
+      reach: async (page) => {
+        await startGuidedForm(page, /PTSD Stressor Statement/);
+        for (let step = 0; step < 8; step++) {
+          if (await tool(page).locator('input[type="checkbox"]').count()) break;
+          await fillVisibleFields(page);
+          await visibleButton(page, /^Next$/)
+            .last()
+            .click();
+          await settle(page);
+        }
+        await tool(page)
+          .locator('input[type="checkbox"]')
+          .first()
+          .waitFor({ state: "attached", timeout: 5000 });
+      },
+    },
+    {
+      name: "Forms Helper result view",
+      reach: generateFormsStatement,
+    },
+    {
+      name: "Unsaved-edit dialog",
+      reach: async (page) => {
+        await generateFormsStatement(page);
+        const draft = tool(page).locator("textarea:visible").last();
+        await draft.focus();
+        await page.keyboard.type(" An edit that has not been saved.");
+        await page.keyboard.press("Escape");
+        await page
+          .locator('[role="alertdialog"]')
+          .waitFor({ state: "visible", timeout: 5000 });
+      },
+    },
+    {
+      name: "Decision Decoder with the fictional letter",
+      reach: async (page) => {
+        const dialog = await openTool(page, "openDecisionDecoder");
+        await dialog.locator("textarea").first().fill(FICTIONAL_LETTER);
+        const decode = dialog.getByRole("button", {
+          name: /Decode This Decision/,
+        });
+        if (!(await decode.isDisabled())) {
+          await decode.click();
+          await dialog
+            .getByText(/Supplemental Claim|Higher-Level Review|Board Appeal/i)
+            .first()
+            .waitFor({ timeout: 15000 });
+        }
+      },
+    },
+    {
+      name: "My Packet with one saved statement",
+      reach: async (page) => {
+        await generateFormsStatement(page);
+        await visibleButton(page, /Save to Packet/)
+          .first()
+          .click();
+        await tool(page)
+          .getByText(/Saved to My Packet/)
+          .first()
+          .waitFor({ timeout: 10000 });
+        await closeEverything(page);
+        const packet = await openTool(page, "openMyPacket");
+        const statements = packet
+          .locator("nav button")
+          .filter({ hasText: /Forms/ })
+          .first();
+        if (await statements.count()) await statements.click();
+        await settle(page);
+      },
+    },
+    {
+      name: "Million Dollar Dashboard with saved ratings",
+      reach: async (page) => {
+        await openTool(page, "openMillionDollarDashboard");
+        await page
+          .getByRole("link", { name: /Buy Luna a Treat/ })
+          .waitFor({ timeout: 10000 });
+      },
+    },
+    {
+      name: "AI Command Center Advanced tab",
+      reach: async (page) => {
+        const dialog = await openTool(page, "openAISettings");
+        await dialog
+          .getByRole("button", { name: /Advanced/ })
+          .first()
+          .click();
+        await settle(page);
+      },
+    },
+    {
+      name: "Assistant after one message with no AI set up",
+      reach: async (page) => {
+        await page.getByRole("button", { name: /Open AI Navigator/ }).click();
+        const input = page.locator("textarea:visible").last();
+        await input.waitFor({ state: "visible", timeout: 10000 });
+        await input.fill("What is a nexus letter?");
+        await input.press("Enter");
+        await page
+          .getByText("What is a nexus letter?")
+          .last()
+          .waitFor({ timeout: 10000 });
+        await page.waitForTimeout(3000);
+      },
+    },
+  ];
+
+/** Closes whatever is open, discarding an unsaved-edit prompt if one appears. */
+async function closeEverything(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const prompt = page.locator('[role="alertdialog"]');
+    if (await prompt.isVisible().catch(() => false)) {
+      await prompt
+        .locator("button")
+        .nth(1)
+        .click()
+        .catch(() => {});
+      await settle(page);
+      continue;
+    }
+    if (
+      !(await page
+        .locator(ANY_DIALOG)
+        .first()
+        .isVisible()
+        .catch(() => false))
+    ) {
+      break;
+    }
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+  }
+  const assistantClose = page
+    .locator('button[aria-label*="Close" i]:visible')
+    .last();
+  if (await assistantClose.isVisible().catch(() => false)) {
+    await assistantClose.click().catch(() => {});
+  }
+  await settle(page);
+}
+
+/**
+ * Reaches each state in STATES and inspects it. A state that cannot be
+ * reached is itself a finding, so a broken flow cannot pass by being skipped.
+ */
+export async function sweepStates(
+  page: Page,
+  visit: Visit,
+): Promise<{ findings: Finding[]; screens: number }> {
+  const findings: Finding[] = [];
+  let screens = 0;
+  // Actions have no timeout by default; without one a missing button would
+  // hang until the whole test timed out instead of being reported.
+  page.setDefaultTimeout(12_000);
+  for (const state of STATES) {
+    try {
+      await state.reach(page);
+      await settle(page);
+      screens += 1;
+      for (const problem of await visit(page, state.name)) {
+        findings.push({ screen: state.name, problem });
+      }
+    } catch (error) {
+      findings.push({
+        screen: state.name,
+        problem: `could not reach this state: ${String(error).split("\n")[0].slice(0, 160)}`,
+      });
+    }
+    await closeEverything(page);
   }
   return { findings, screens };
 }

@@ -728,7 +728,7 @@ function MyPacketBackupGuideBanner({
             <button
               type="button"
               onClick={handleBackupPacket}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors text-sm shadow-md"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-lg font-medium hover:bg-emerald-800 transition-colors text-sm shadow-md"
             >
               <svg
                 className="w-4 h-4"
@@ -797,7 +797,7 @@ function BackupRestoreButtons({
         type="button"
         onClick={handleBackupPacket}
         disabled={claims.length === 0}
-        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+        className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-700 text-white rounded-lg font-medium hover:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
       >
         <svg
           className="w-4 h-4"
@@ -1174,7 +1174,7 @@ function MyPacketTabNavSecondary({
         {...myPacketTabProps("forms", activeTab)}
         className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
           activeTab === "forms"
-            ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
+            ? "border-purple-700 text-purple-700 dark:border-purple-400 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-t-lg"
             : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
         }`}
       >

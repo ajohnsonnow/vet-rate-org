@@ -6,6 +6,7 @@ import {
   describeFindings,
   recordFindings,
   sweep,
+  sweepStates,
 } from "./sweep";
 
 /**
@@ -20,22 +21,34 @@ import {
 
 const DIALOG = '[role="dialog"], [aria-modal="true"]';
 
-async function contrastProblems(page: Page): Promise<string[]> {
+// In the states sweep the whole page is scanned, so anything still painted
+// around or behind a dialog (a floating badge at 3840px) is checked too.
+const contrastProblemsWholePage = (page: Page) => contrastProblems(page, true);
+
+async function contrastProblems(
+  page: Page,
+  wholePage = false,
+): Promise<string[]> {
   // A tab that has just lost its active state can still be mid-transition;
   // wait for every running animation and transition to finish before reading
   // colours.
+  // Bounded: an animation that repeats for ever would otherwise hold the sweep
+  // until the test times out.
   await page.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
-        .map((animation) =>
-          animation.playState === "running"
-            ? animation.finished.catch(() => undefined)
-            : undefined,
-        ),
-    ),
+    Promise.race([
+      Promise.all(
+        document
+          .getAnimations()
+          .map((animation) =>
+            animation.playState === "running"
+              ? animation.finished.catch(() => undefined)
+              : undefined,
+          ),
+      ),
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]),
   );
-  const inDialog = (await page.locator(DIALOG).count()) > 0;
+  const inDialog = !wholePage && (await page.locator(DIALOG).count()) > 0;
   let builder = new AxeBuilder({ page }).withRules(["color-contrast"]);
   if (inDialog) builder = builder.include(DIALOG);
   const { violations } = await builder.analyze();
@@ -54,7 +67,31 @@ async function contrastProblems(page: Page): Promise<string[]> {
       );
     }
   }
+  if (wholePage) {
+    for (const pulsing of await pulsingText(page)) problems.add(pulsing);
+  }
   return [...problems];
+}
+
+/**
+ * Text inside an element that fades in and out. The sweep runs with reduced
+ * motion, so axe reads such text at full strength; with motion on, its
+ * contrast falls well below the minimum halfway through each pulse.
+ */
+async function pulsingText(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>("body *")]
+      .filter(
+        (el) =>
+          getComputedStyle(el).animationName.split(", ").includes("pulse") &&
+          (el.textContent ?? "").trim() !== "" &&
+          el.getBoundingClientRect().width > 1,
+      )
+      .map(
+        (el) =>
+          `text fades with a pulse animation | ${el.outerHTML.replace(/\s+/g, " ").slice(0, 110)}`,
+      ),
+  );
 }
 
 for (const theme of ["light", "dark"] as const) {
@@ -72,7 +109,7 @@ for (const theme of ["light", "dark"] as const) {
       }, testInfo) => {
         test.setTimeout(1_800_000);
         await bootForSweep(page, theme);
-        const result = await sweep(page, contrastProblems);
+        const result = await sweep(page, (p) => contrastProblems(p));
         recordFindings(
           `contrast-${theme}`,
           viewport.width,
@@ -80,6 +117,21 @@ for (const theme of ["light", "dark"] as const) {
           result,
         );
         expect(result.screens).toBeGreaterThan(48);
+        expect(describeFindings(result.findings)).toBe("");
+      });
+
+      test("no colour-contrast failure in the states behind input", async ({
+        page,
+      }, testInfo) => {
+        test.setTimeout(1_800_000);
+        await bootForSweep(page, theme);
+        const result = await sweepStates(page, contrastProblemsWholePage);
+        recordFindings(
+          `contrast-states-${theme}`,
+          viewport.width,
+          testInfo.project.name,
+          result,
+        );
         expect(describeFindings(result.findings)).toBe("");
       });
     });

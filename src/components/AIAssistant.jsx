@@ -719,7 +719,7 @@ function MessageBubble({
         </div>
 
         <div className={v.footerClass}>
-          <span className="text-xs opacity-70">
+          <span className="text-xs">
             {msg.timestamp.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",

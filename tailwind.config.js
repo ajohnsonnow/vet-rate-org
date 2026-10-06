@@ -135,6 +135,8 @@ module.exports = {
         "luna-fade-zoom": "lunaFadeZoom 0.5s ease-out",
         wiggle: "wiggle 1s ease-in-out infinite",
         "pulse-subtle": "pulseSubtle 2s ease-in-out infinite",
+        // Draws the eye with a ring, so the text itself never fades
+        attention: "attentionRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         // Toast notifications
         "slide-in-right": "slideInRight 0.3s ease-out",
         "slide-out-right": "slideOutRight 0.3s ease-in",
@@ -201,6 +203,10 @@ module.exports = {
         pulseSubtle: {
           "0%, 100%": { boxShadow: "0 0 0 0 rgba(168, 85, 247, 0.4)" },
           "50%": { boxShadow: "0 0 0 8px rgba(168, 85, 247, 0)" },
+        },
+        attentionRing: {
+          "0%, 100%": { boxShadow: "0 0 0 0 currentColor" },
+          "50%": { boxShadow: "0 0 0 0.3rem transparent" },
         },
         // Toast slide animations
         slideInRight: {

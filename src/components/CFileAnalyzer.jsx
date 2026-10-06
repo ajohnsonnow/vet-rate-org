@@ -1883,7 +1883,7 @@ function CFileAnalyzerView({ state }) {
         size="full"
         labelledBy="cfile-analyzer-title"
         footer={
-          <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-4xl mx-auto">
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400 max-w-prose mx-auto">
             ⚠️ {t("cfileAnalyzer", "footerDisclaimer")}
           </p>
         }

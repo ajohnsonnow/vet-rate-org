@@ -25,16 +25,20 @@
    iOS auto-zoom prevention, touch targets, safe areas
    ============================================ */
 
-/* Prevent iOS auto-zoom on focus - must be 16px minimum */
+/* Prevent iOS auto-zoom on focus - must be 16px minimum. The rem term lets
+   typed text follow the root size, which grows on very large screens. */
+input:not([type]),
 input[type="text"],
 input[type="email"],
 input[type="tel"],
 input[type="number"],
 input[type="search"],
 input[type="url"],
+input[type="date"],
+input[type="password"],
 textarea,
 select {
-  font-size: 16px !important;
+  font-size: max(16px, 1rem) !important;
 }
 
 /* Mobile-friendly touch targets - minimum 44x44px per Apple HIG */
@@ -977,6 +981,19 @@ html.font-xlarge {
 
   html.font-xlarge {
     font-size: clamp(20px, calc(100vw / 128), 30px);
+  }
+
+  /* Reading measure. Dialogs are wide enough here for lines of 130-200
+     characters. A max-w-* class on the element still wins; list items that
+     carry classes are layout rows, not prose, and are left alone. */
+  p,
+  li:not([class]) {
+    max-width: 70ch;
+  }
+
+  .text-center p,
+  p.text-center {
+    margin-inline: auto;
   }
 }
 
@@ -2137,9 +2154,9 @@ a {
   input[type="date"],
   select,
   textarea {
-    min-height: 44px;
-    font-size: 16px;
-    padding: 10px 14px;
+    min-height: max(44px, 2.75rem);
+    font-size: max(16px, 1rem);
+    padding: 0.625rem 0.875rem;
   }
 
   /* Better scrolling on touch devices */

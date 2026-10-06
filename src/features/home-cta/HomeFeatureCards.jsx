@@ -18,7 +18,7 @@ function TacticalCalculatorCta() {
         <div className="flex-1 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
             <h3 className="text-3xl font-bold">Tactical Calculator</h3>
-            <span className="px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full animate-pulse">
+            <span className="px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full animate-attention">
               CORE FEATURE
             </span>
           </div>
@@ -696,7 +696,7 @@ function SymptomLoggerCta() {
             <h3 className="text-2xl font-black text-gray-900 dark:text-gray-100">
               Symptom Logger
             </h3>
-            <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full animate-pulse">
+            <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold rounded-full animate-attention">
               ⭐ KEY TOOL
             </span>
           </div>
@@ -981,7 +981,7 @@ function StateBenefitHunterCta() {
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
             State Benefit Hunter{" "}
-            <span className="px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full animate-pulse">
+            <span className="px-2 py-0.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white text-xs font-bold rounded-full animate-attention">
               $$$
             </span>
           </h3>
@@ -1088,7 +1088,7 @@ function MillionDollarDashboardCta() {
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
             Million Dollar Dashboard{" "}
-            <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold rounded-full animate-pulse">
+            <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-black text-xs font-bold rounded-full animate-attention">
               WOW
             </span>
           </h3>
@@ -1193,7 +1193,7 @@ function RetroPayHunterCta() {
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 flex-wrap justify-center">
             Retro Pay Hunter{" "}
-            <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold rounded-full animate-pulse">
+            <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold rounded-full animate-attention">
               💰 MONEY
             </span>
           </h3>

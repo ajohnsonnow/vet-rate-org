@@ -5,6 +5,7 @@ import {
   describeFindings,
   recordFindings,
   sweep,
+  sweepStates,
 } from "./sweep";
 
 /**
@@ -45,7 +46,9 @@ async function layoutProblems(page: Page): Promise<string[]> {
       problems.push(`page scrolls sideways by ${pageOverflow}px`);
 
     const dialogs = [
-      ...document.querySelectorAll('[role="dialog"], [aria-modal="true"]'),
+      ...document.querySelectorAll(
+        '[role="dialog"], [aria-modal="true"], [role="alertdialog"]',
+      ),
     ].filter(visible);
     const scope: Element = dialogs.at(-1) ?? document.body;
 
@@ -108,6 +111,21 @@ for (const viewport of WIDTHS) {
       const result = await sweep(page, layoutProblems);
       recordFindings("layout", viewport.width, testInfo.project.name, result);
       expect(result.screens).toBeGreaterThan(48);
+      expect(describeFindings(result.findings)).toBe("");
+    });
+
+    test("the same holds in the states behind input", async ({
+      page,
+    }, testInfo) => {
+      test.setTimeout(900_000);
+      await bootForSweep(page);
+      const result = await sweepStates(page, layoutProblems);
+      recordFindings(
+        "layout-states",
+        viewport.width,
+        testInfo.project.name,
+        result,
+      );
       expect(describeFindings(result.findings)).toBe("");
     });
   });
