@@ -4108,7 +4108,7 @@ Address:
 ${formData.street || "________________________________________"}
 ${formData.apt ? `Apt/Unit: ${formData.apt}` : ""}
 ${formData.city || "_____________"}, ${formData.state || "__"} ${formData.zip || "_____"}
-${formData.country || "United States"}`;
+${formData.country || ""}`;
 }
 
 function _vsoAppointmentOrgSection(formData, vsoName) {
@@ -5832,7 +5832,7 @@ function ProfileAddressFieldsB({ veteranProfile, handleProfileChange, t }) {
         </label>
         <input
           type="text"
-          value={veteranProfile.country || "United States"}
+          value={veteranProfile.country || ""}
           onChange={(e) => handleProfileChange("country", e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
         />
@@ -7720,7 +7720,8 @@ export function buildFormsHelperPrefillDefaults() {
     city: profile.city,
     state: profile.state,
     zip: profile.zip,
-    country: profile.country || "United States",
+    // No default: a country the veteran did not give is not put on a form.
+    country: profile.country || "",
     homeOfRecord: profile.homeOfRecord,
 
     // Military Service

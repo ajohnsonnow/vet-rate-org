@@ -151,3 +151,14 @@ describe("FormsHelper prefill from records", () => {
     expect(conditionNameField()).toHaveValue("PTSD");
   });
 });
+
+describe("FormsHelper prefill country", () => {
+  it("is empty unless the veteran's profile gives one", async () => {
+    const { buildFormsHelperPrefillDefaults } =
+      await import("../../components/FormsHelper.jsx");
+
+    expect(buildFormsHelperPrefillDefaults().country).toBe("");
+    updateVeteranProfile({ country: "Canada" });
+    expect(buildFormsHelperPrefillDefaults().country).toBe("Canada");
+  });
+});
