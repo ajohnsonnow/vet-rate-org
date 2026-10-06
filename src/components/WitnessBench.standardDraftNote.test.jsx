@@ -108,6 +108,15 @@ describe("Witness Bench standard-draft notice", () => {
     );
   });
 
+  it("the statement text box has an accessible name", async () => {
+    modelAnswersStatement((prompt) => numbered(passagesIn(prompt)));
+    const statement = await generateStatement();
+
+    expect(screen.getByRole("textbox", { name: "Your Buddy Statement" })).toBe(
+      statement,
+    );
+  });
+
   it("is shown after an engine error", async () => {
     modelAnswersStatement(() => {
       throw new Error("WebGPU inference timed out");

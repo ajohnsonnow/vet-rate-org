@@ -4212,6 +4212,35 @@ function TextareaField({ field, formData, handleFieldChange }) {
   );
 }
 
+// A select with its label tied to it, so it has an accessible name.
+function SelectField({ field, value, onChange }) {
+  const id = `forms-helper-field-${field.name}`;
+  return (
+    <div className="mb-4">
+      <label
+        htmlFor={id}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+      >
+        {field.label}{" "}
+        {field.required && <span className="text-red-500">*</span>}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
+        required={field.required}
+      >
+        {field.options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function FormField({
   field,
   formData,
@@ -4247,24 +4276,11 @@ function FormField({
 
   if (field.type === "select") {
     return (
-      <div key={field.name} className="mb-4">
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-          {field.label}{" "}
-          {field.required && <span className="text-red-500">*</span>}
-        </label>
-        <select
-          value={formData[field.name] || ""}
-          onChange={(e) => handleFieldChange(field.name, e.target.value)}
-          className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
-          required={field.required}
-        >
-          {field.options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <SelectField
+        field={field}
+        value={formData[field.name] || ""}
+        onChange={(value) => handleFieldChange(field.name, value)}
+      />
     );
   }
 
@@ -5048,7 +5064,14 @@ function ReviewPreviewSection({
             />
           </svg>
         </summary>
-        <pre className="p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono overflow-auto max-h-72">
+        {/* Scrolls, so it has to be reachable and scrollable by keyboard. */}
+        <pre
+          role="region"
+          aria-label="Statement text preview"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          className="p-4 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-mono overflow-auto max-h-72 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600"
+        >
           {displayContent}
         </pre>
       </details>

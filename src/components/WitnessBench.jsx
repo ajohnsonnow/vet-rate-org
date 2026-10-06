@@ -1648,6 +1648,7 @@ const StatementPreviewPanel = ({
 
     <div className="p-6">
       <textarea
+        aria-label={t("witnessBench", "yourBuddyStatement")}
         value={generatedStatement}
         onChange={(e) => onGeneratedStatementChange(e.target.value)}
         rows={20}
