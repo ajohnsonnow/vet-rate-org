@@ -3522,10 +3522,10 @@ ${
   Array.isArray(formData.feeUnderstanding) &&
   formData.feeUnderstanding.length > 0
     ? formData.feeUnderstanding.map((f) => `[X] ${f}`).join("\n")
-    : `[X] Attorneys/agents may only charge fees AFTER VA issues an initial decision
-[X] VA limits fees to 33.3% of past-due benefits (unless higher approved)
-[X] The fee agreement must be filed with the VA
-[X] I can revoke this appointment at any time by filing a new form`
+    : `[ ] Attorneys/agents may only charge fees AFTER VA issues an initial decision
+[ ] VA limits fees to 33.3% of past-due benefits (unless higher approved)
+[ ] The fee agreement must be filed with the VA
+[ ] I can revoke this appointment at any time by filing a new form`
 }`;
 
 const _buildIndividualRepAuthorizationSection = (
@@ -3537,10 +3537,10 @@ ${
   Array.isArray(formData.authorizationScope) &&
   formData.authorizationScope.length > 0
     ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-    : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence on my behalf
-[X] File appeals on my behalf`
+    : `[ ] Access my VA records
+[ ] Represent me in all VA claims matters
+[ ] Submit evidence on my behalf
+[ ] File appeals on my behalf`
 }`;
 
 const _buildMedicalReleaseVeteranSection = (
@@ -4120,10 +4120,10 @@ function _vsoAppointmentAuthorizationSection(formData) {
     Array.isArray(formData.authorizationScope) &&
     formData.authorizationScope.length > 0
       ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-      : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence and documentation on my behalf
-[X] Appeal decisions on my behalf`;
+      : `[ ] Access my VA records
+[ ] Represent me in all VA claims matters
+[ ] Submit evidence and documentation on my behalf
+[ ] Appeal decisions on my behalf`;
   const recordAccess =
     formData.limitAccess === "yes"
       ? "LIMITED (see restrictions below)"
