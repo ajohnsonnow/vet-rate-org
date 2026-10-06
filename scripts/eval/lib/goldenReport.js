@@ -281,6 +281,7 @@ const NOTES = [
   "- `draft-returned`: writing-tool cases only; the tool handed back a draft, with or without reworded passages. It says a draft exists, not that it is good: score the response as usual.",
   "- `routing` is `n/a` for a tool case that made no model call because the form held nothing typed to reword.",
   "- `routing` is `n/a` for a rating question on a rater tool: the app answers it from the calculator, or asks for the ratings it needs, and no model is called. A model call on such a case is a `routing` FAIL.",
+  "- On a small-class model (the laptop and tablet tiers) `routing` is `n/a` for every a-case with a question: the app shows a fixed message in place of an open answer and no model is called (ADR-010 section 11). Those rows record that message. A model call on such a case is a `routing` FAIL.",
   "- `calc-match` on the calculator's answers reads the sentence in which the calculator's answer states the combined rating. The text is the calculator's, so grade it on whether the working is correct and clear, not on model behaviour.",
   "- `routing` on tool cases: the statement helper and the Decision Decoder send their own system prompt, so the engine receives that and no persona prompt. For those cases routing passes when the engine received the tool's own prompt, and the agent column says so.",
 ];

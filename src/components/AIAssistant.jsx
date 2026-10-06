@@ -18,6 +18,7 @@ import { generateAI } from "../utils/unifiedAIService";
 import { mapAssistantErrorMessage } from "../utils/assistantErrorMessage";
 import AssistantMarkdown from "./AssistantMarkdown";
 import SmallModelCaveat from "./SmallModelCaveat";
+import { buildHeldAnswerContent } from "../utils/openAdviceHold";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import ResponsiveModal from "./common/ResponsiveModal";
 import { useHelperMode } from "../contexts/HelperModeContext";
@@ -104,6 +105,23 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
   return basePrompt;
 }
 
+// What the bubble shows: the saved ratings a calculator answer used, or,
+// for a question held from a small model (ADR-010 section 11), the fixed
+// message with any regulation text a search finds.
+async function assistantContent(result, responseText, { grounding, question }) {
+  if (result.openAdviceHeld) {
+    // Loaded on demand: the search service is not needed for any other answer.
+    return buildHeldAnswerContent(question, async (text) => {
+      const { retrieveRegulationText } =
+        await import("../services/legalAnswerer");
+      return retrieveRegulationText(text);
+    });
+  }
+  return grounding?.conditions && result.calculatorLead
+    ? `${describeSavedRatings(grounding.conditions)}\n\n${responseText}`
+    : responseText;
+}
+
 // Handle sending a message
 async function sendMessage({
   input,
@@ -146,6 +164,7 @@ async function sendMessage({
       ),
       taskType: "assistant",
       answerChecks: true,
+      openAdvice: true,
       context: {
         currentTool,
         isHelperMode,
@@ -163,10 +182,10 @@ async function sendMessage({
 
     const assistantMessage = {
       role: "assistant",
-      content:
-        grounding?.conditions && result.calculatorLead
-          ? `${describeSavedRatings(grounding.conditions)}\n\n${responseText}`
-          : responseText,
+      content: await assistantContent(result, responseText, {
+        grounding,
+        question: input.trim(),
+      }),
       timestamp: new Date(),
       mode: result.mode,
     };

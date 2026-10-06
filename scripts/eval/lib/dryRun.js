@@ -3,6 +3,7 @@ import {
   AUTO_PASS,
   NEEDS_HUMAN,
   NOT_APPLICABLE,
+  checkRouting,
 } from "./goldenChecks.js";
 import { stripReasoning } from "../../../src/utils/reasoningText.js";
 import { assembleCaseRecord } from "./caseRecord.js";
@@ -40,7 +41,7 @@ const GOOD_WRITER =
  * simulated engine error and a missing engine capture. Everything else gets a
  * clean per-agent response.
  */
-const FAILING_OVERRIDES = {
+const CANNED_OVERRIDES = {
   a02: { response: "Under 38 CFR § 99.999 your claim is fully supported." },
   a03: {
     response:
@@ -314,6 +315,7 @@ export function createStubEngine({
   resolveAgentForTool,
   answerWithoutModel,
   settings,
+  overrides = CANNED_OVERRIDES,
 }) {
   let lateRequest = null;
   const personas = { personaPrompts, resolveAgentForTool };
@@ -363,7 +365,7 @@ export function createStubEngine({
   }
 
   return function run(caseDef) {
-    const override = FAILING_OVERRIDES[caseDef.id] ?? {};
+    const override = overrides[caseDef.id] ?? {};
     if (caseDef.entry) return toolOutcome(caseDef, override, personas);
     const answer =
       Object.keys(override).length === 0 ? answerWithoutModel(caseDef) : null;
@@ -389,12 +391,14 @@ export function buildDryRunTranscript({
   resolveAgentForTool,
   answerWithoutModel,
   settings,
+  overrides = CANNED_OVERRIDES,
 }) {
   const engine = createStubEngine({
     personaPrompts,
     resolveAgentForTool,
     answerWithoutModel,
     settings,
+    overrides,
   });
   const run = {
     modelIdRequested: DRY_RUN_MODEL_ID,
@@ -418,6 +422,59 @@ export function buildDryRunTranscript({
     });
   });
   return [meta, ...records];
+}
+
+const isOpenQuestion = (caseDef) =>
+  !caseDef.entry && String(caseDef.input ?? "").trim() !== "";
+
+/**
+ * The dry run again as it goes on a small-class model (ADR-010 section 11):
+ * `answerWithoutModel` is the small-model answerer, and no a-case carries a
+ * canned model reply. Every a-case with a question must record app text with
+ * no model call and no routing to check. Returns the problems found and how
+ * many cases got each kind of app answer.
+ */
+export function runSmallModelDryRun({
+  cases,
+  personaPrompts,
+  resolveAgentForTool,
+  answerWithoutModel,
+  settings,
+  ctx,
+}) {
+  const [, ...records] = buildDryRunTranscript({
+    cases,
+    personaPrompts,
+    resolveAgentForTool,
+    answerWithoutModel,
+    settings,
+    overrides: {},
+  });
+  const byId = new Map(records.map((record) => [record.id, record]));
+  const open = cases.filter(isOpenQuestion);
+  const answered = open.map((caseDef) => byId.get(caseDef.id));
+  const problems = open.flatMap((caseDef) => {
+    const record = byId.get(caseDef.id);
+    if (record.modelCalled !== false || record.engineRequests !== 0) {
+      return [`${caseDef.id}: a model was called on the small-model pass`];
+    }
+    const routing = checkRouting(caseDef, record, {
+      ...ctx,
+      answerWithoutModel,
+    });
+    return routing.status === NOT_APPLICABLE
+      ? []
+      : [
+          `${caseDef.id} routing: expected ${NOT_APPLICABLE}, got ${routing.status}`,
+        ];
+  });
+  const count = (field) => answered.filter((record) => record[field]).length;
+  return {
+    problems,
+    held: count("openAdviceHeld"),
+    calculator: count("calculatorLead"),
+    needsRatings: count("needsRatings"),
+  };
 }
 
 function compareExpectation(id, grade, key, want) {

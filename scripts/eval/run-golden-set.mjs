@@ -29,6 +29,7 @@ import {
   assertDryRunDraftPaths,
   assertDryRunExpectations,
   buildDryRunTranscript,
+  runSmallModelDryRun,
 } from "./lib/dryRun.js";
 import { loadGoldenSet, selectCases } from "./lib/goldenSet.js";
 import { noModelAnswerer } from "./lib/noModelCases.js";
@@ -98,19 +99,34 @@ function legalContext(opts) {
   return { legalSections: null, legalIndexNote: `unavailable: ${reason}` };
 }
 
-async function loadRouting() {
+/*
+ * What the app answers without a model, for the model this run loads and for
+ * a small-class model. Both come from the production functions.
+ */
+async function loadRouting(modelId) {
   const { resolveAgentForTool } = await loadFromSrc(
     "src/utils/agentBoundaries.js",
   );
   const { answerRatingQuestion } = await loadFromSrc(
     "src/utils/ratingQuestion.js",
   );
-  return {
-    resolveAgentForTool,
-    answerWithoutModel: noModelAnswerer({
+  const { openAdviceHeldAnswer } = await loadFromSrc(
+    "src/utils/openAdviceHold.js",
+  );
+  const { isSmallModel } = await loadFromSrc(
+    "src/utils/deviceCapabilityDetector.js",
+  );
+  const answerer = (smallModel) =>
+    noModelAnswerer({
       resolveAgentForTool,
       answerRatingQuestion,
-    }),
+      openAdviceHeldAnswer,
+      smallModel,
+    });
+  return {
+    resolveAgentForTool,
+    answerWithoutModel: answerer(isSmallModel(modelId)),
+    answerWithoutModelOnSmall: answerer(true),
   };
 }
 
@@ -134,6 +150,7 @@ async function writeDryRunTranscript(
       settings,
     }),
   );
+  return personaPrompts;
 }
 
 function runPlaywright(opts, files) {
@@ -184,7 +201,7 @@ async function main() {
   const modelId = opts.dryRun ? DRY_RUN_MODEL_ID : opts.model;
   const goldenCases = selectCases(loadGoldenSet(GOLDEN_PATH), opts.cases);
   const { calculateVARating } = await loadFromSrc("src/utils/vaCalculator.js");
-  const routing = await loadRouting();
+  const routing = await loadRouting(modelId);
   const outDir = opts.outDir ?? (opts.dryRun ? DRY_RUN_DIR : RESULTS_DIR);
   const files = claimRunFiles(outDir, modelId, start.startedAt);
   const settings = {
@@ -197,8 +214,22 @@ async function main() {
   };
 
   let exitCode = 0;
+  let smallModelPass = null;
   if (opts.dryRun) {
-    await writeDryRunTranscript(files, goldenCases, settings, routing);
+    const personaPrompts = await writeDryRunTranscript(
+      files,
+      goldenCases,
+      settings,
+      routing,
+    );
+    smallModelPass = runSmallModelDryRun({
+      cases: goldenCases,
+      personaPrompts,
+      resolveAgentForTool: routing.resolveAgentForTool,
+      answerWithoutModel: routing.answerWithoutModelOnSmall,
+      settings,
+      ctx: { calculateVARating },
+    });
   } else {
     exitCode = runPlaywrightStep(opts, files);
   }
@@ -228,7 +259,7 @@ async function main() {
   console.log(`cases recorded: ${cases.length} of ${goldenCases.length}`);
 
   const verdict = opts.dryRun
-    ? checkDryRun(grades, goldenCases, cases)
+    ? checkDryRun(grades, goldenCases, cases, smallModelPass)
     : checkLoadedModel(meta, modelId);
   return exitCode || verdict;
 }
@@ -250,14 +281,18 @@ function checkLoadedModel(meta, modelId) {
   return 1;
 }
 
-function checkDryRun(grades, goldenCases, records) {
+function checkDryRun(grades, goldenCases, records, smallModelPass) {
   const present = new Set(goldenCases.map((c) => c.id));
   const forThisRun = (table) =>
     Object.fromEntries(Object.entries(table).filter(([id]) => present.has(id)));
   const problems = [
     ...assertDryRunExpectations(grades, forThisRun(DRY_RUN_EXPECTATIONS)),
     ...assertDryRunDraftPaths(records, forThisRun(DRY_RUN_DRAFT_PATHS)),
+    ...smallModelPass.problems,
   ];
+  console.log(
+    `small-model pass: ${smallModelPass.held} open questions held with the fixed message, ${smallModelPass.calculator} answered by the calculator, ${smallModelPass.needsRatings} asked for ratings, no model call`,
+  );
   if (problems.length === 0) {
     console.log("DRY RUN PASSED: every canned failure was caught by its check");
     return 0;

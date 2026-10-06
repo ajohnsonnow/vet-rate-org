@@ -145,3 +145,37 @@ QA's third check passed the block for on-device answers with these limits. They 
 4. **It runs only where the model ran on the device.** That includes a local server on the same machine with any model loaded, which may be larger than the models the rules were measured on. It does not run on cloud answers or on a server on another machine; those get only the citation and form notices.
 5. **It runs only on prose shown as advice:** the assistant chat and Ask the Regs. It never runs on the statement tools or on text placed in a field, and it does nothing on screens that parse JSON (Denial Decoder, Red Team, Pathfinder).
 6. **The evidence is narrow.** 575 recorded answers from 1.5B to 9B models, on the thirty golden questions, on one machine: 86 blocks, none judged false, three judged questionable (requests, since exempted). Real veterans' questions, and how those models answer them, are not in it.
+
+## 11. Open-advice chat does not use a small-class model
+
+**Date:** 2026-10-06. **Status:** Accepted, reversible. Decided by the owner.
+
+Evidence: four graded runs of the laptop model (Qwen3.5-2B) on the thirty golden questions, temperature 0.3, frequency penalty 0, transcripts in `llm-compiler/logs/golden-set-results/` (`run_2026-10-06_032917`, `034657`, `045832`, `071544`; L1 to L4 in the graders' notes).
+
+| Run | Passing of 30 | Of those, app text | Correct substantive answers the model wrote | Answers with invented or changed case facts | Answers with wrong law, uncorrected and material |
+| --- | ------------- | ------------------ | ------------------------------------------- | ------------------------------------------- | ------------------------------------------------ |
+| L1  | 23            | 6                  | 0                                           | 0                                           | 4                                                |
+| L2  | 23            | 6                  | 2                                           | 2                                           | 6                                                |
+| L3  | 24            | 7                  | 2                                           | 1                                           | 2                                                |
+| L4  | 24            | 7                  | 2                                           | 2                                           | 3                                                |
+
+Every run has at least two answers with invented facts or wrong law. Most of the passes are the app's own text, a request for input, or a refusal; the model wrote at most two correct substantive answers a run. Examples the graders recorded: an Iraq veteran told he must have served on or after August 10, 2022 to be covered by the PACT Act; a list of thirteen invented presumptive conditions for a Vietnam veteran; tinnitus said to need a 40 percent rating; "you must wait to receive the application form before filing". A correction block (section 10) stood above none of the wrong answers in L1 and L2, one in L3 and two in L4. Section 7 already recorded that these routes "remained unsafe at every setting".
+
+Limits of that evidence: one desktop GPU, the golden questions only, one reader's advisory grades, one run per transcript, and nothing measured on a laptop or tablet.
+
+Why a guard is not the answer: the corrections are a short list of known wrong sentences (section 10, limits 1 and 2). A wrong statement in other words passes, and an invented fact about the veteran's own case contradicts no regulation at all.
+
+Decision: while a small-class on-device model is the one that would answer, the assistant chat does not send it an open question about VA law or claims. The test is the one sections 8 and 9 use, `smallModelAnswering` in `src/utils/smallModelAnswering.js`. What the veteran gets instead:
+
+1. A rating question (combined rating, bilateral factor, TDIU percentage thresholds) is answered from the calculator, as on every device.
+2. Any other question gets a fixed message (`OPEN_ADVICE_HELD_MESSAGE` in `src/utils/openAdviceHold.js`): that this device's model is too small to answer open questions reliably and was not used; what the device can still do (the calculator, the form and statement tools, the Decision Decoder's rule-based reading, searching the regulations); that an AI answer needs a larger device or the cloud option if one is set up; and how to reach a Veterans Service Officer.
+3. Under that message the assistant shows any regulation text a search of the bundled regulations finds for the question, each passage quoted under its citation and labelled as not written by AI. No language model reads or rewords it.
+4. Ask the Regs does the same on such a device: it runs its search and shows the passages found with their citations, with a note that the model was not used, in place of a synthesised answer.
+
+What does not change: the larger on-device model, cloud answers, the wllama and local-server paths, and every tool that is not open advice. The writing tools and the Decision Decoder keep their own small-model handling (section 9 and `aiStatementHelper.js`). The Pathfinder and Red Team screens still call the small model, with the caveat of section 8; they and the other free-text tools were not part of this decision.
+
+Reversal: one condition, in `generateAIInternal` (`src/utils/unifiedAIService.js`): `if (options.openAdvice && smallModelAnswering(getAIStatus()))`. The assistant sets `openAdvice`. Ask the Regs has the matching condition in `handleAsk` (`src/components/AskTheRegs.jsx`). **Reverse it when a small-class model, on the golden questions, goes two consecutive graded runs with no answer that states wrong law or invents a fact, on a real laptop.** Nothing else reverses it.
+
+Consequences: on those devices the assistant answers rating questions and nothing else, which is less than the model's best answers offered (up to two a run). The regulation search can return a passage that is about the right subject and not the veteran's point; it is labelled as a search result for that reason. In the evaluation, a run on a small-class model records the fixed message for every a-case with a question (`modelCalled: false`, `openAdviceHeld: true`); the passages shown under it are not in the transcript, because the runner calls `generateAI` and the search is added by the assistant.
+
+This closes the general-assistant part of open decision 1 in section 8.

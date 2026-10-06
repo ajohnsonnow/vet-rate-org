@@ -269,6 +269,7 @@ function runCase(
     const options: Record<string, unknown> = {
       toolId: a.toolId,
       dataClass: "context",
+      openAdvice: true,
       temperature: a.temperature,
       maxTokens: a.maxTokens,
       thinking: a.thinking,
