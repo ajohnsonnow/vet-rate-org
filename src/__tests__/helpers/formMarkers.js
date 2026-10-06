@@ -58,13 +58,26 @@ export function fillEveryField(steps) {
  * Give every required control on screen that has no answer one, so a test
  * about something else can walk through a wizard step.
  */
+const REQUIRED_VALUES = {
+  date: "2015-06-15",
+  email: "someone@example.invalid",
+  tel: "5550100200",
+  number: "1",
+};
+
 export function fillRequiredOnScreen(fireChange, fireClick) {
   for (const control of document.querySelectorAll(
     "input[required], textarea[required], select[required]",
   )) {
+    if (control.type === "checkbox") {
+      if (!control.checked) fireClick(control);
+      continue;
+    }
     if (control.value.trim() !== "") continue;
     const value =
-      control.tagName === "SELECT" ? control.options[1].value : "Answer";
+      control.tagName === "SELECT"
+        ? control.options[1].value
+        : (REQUIRED_VALUES[control.type] ?? "Answer");
     fireChange(control, { target: { value } });
   }
   for (const group of document.querySelectorAll('[role="group"]')) {

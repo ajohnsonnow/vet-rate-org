@@ -121,3 +121,20 @@ describe("Forms Helper required answers", () => {
     expect(screen.getByText("Basic Information")).toBeInTheDocument();
   });
 });
+
+describe("Forms Helper select with no blank entry of its own", () => {
+  it("shows nothing as chosen until the veteran chooses", () => {
+    openBuilder("VSO Appointment");
+    for (let guard = 0; guard < 8; guard++) {
+      const select = field("limitAccess");
+      if (select) {
+        expect(select.value).toBe("");
+        expect(select.options[0].textContent).toBe("Select...");
+        return;
+      }
+      fillRequiredOnScreen(fireEvent.change, fireEvent.click);
+      fireEvent.click(next());
+    }
+    throw new Error("the limit-access question was never shown");
+  });
+});

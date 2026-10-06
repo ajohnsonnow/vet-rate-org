@@ -9945,11 +9945,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "명세서가 생성되었습니다!",
     },
     reviewStatementDesc: {
-      en: "Review your statement below, then download. You can get a ready-to-sign PDF or text formats.",
-      es: "Revisa tu declaración abajo, luego descarga. Puedes obtener un PDF listo para firmar o formatos de texto.",
-      tl: "Suriin ang statement mo sa ibaba, pagkatapos i-download. Makukuha mo ang ready-to-sign PDF o text formats.",
-      vi: "Xem lại tuyên bố bên dưới, sau đó tải xuống. Bạn có thể nhận PDF sẵn sàng ký hoặc định dạng văn bản.",
-      ko: "아래에서 명세서를 검토한 후 다운로드하세요. 서명 준비된 PDF 또는 텍스트 형식을 받을 수 있습니다.",
+      en: "Review your draft below, then download it. Read every line before you sign anything.",
+      es: "Revisa tu borrador abajo y luego descárgalo. Lee cada línea antes de firmar.",
+      tl: "Suriin ang draft mo sa ibaba, pagkatapos i-download. Basahin ang bawat linya bago pumirma.",
+      vi: "Xem lại bản nháp bên dưới, sau đó tải xuống. Hãy đọc từng dòng trước khi ký.",
+      ko: "아래 초안을 검토한 후 다운로드하세요. 서명하기 전에 모든 줄을 읽어 보세요.",
     },
 
     // AI Enhancement
@@ -10249,11 +10249,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
     // Statement Generated
     statementGeneratedDesc: {
-      en: "Review your statement below, then download. You can get a ready-to-sign PDF or text formats.",
-      es: "Revisa tu declaración abajo, luego descarga. Puedes obtener un PDF listo para firmar o formatos de texto.",
-      tl: "Suriin ang statement mo sa ibaba, pagkatapos i-download. Makukuha mo ang ready-to-sign PDF o text formats.",
-      vi: "Xem lại tuyên bố bên dưới, sau đó tải xuống. Bạn có thể nhận PDF sẵn sàng ký hoặc định dạng văn bản.",
-      ko: "아래에서 명세서를 검토한 후 다운로드하세요. 서명 준비된 PDF 또는 텍스트 형식을 받을 수 있습니다.",
+      en: "Review your draft below, then download it. Read every line before you sign anything.",
+      es: "Revisa tu borrador abajo y luego descárgalo. Lee cada línea antes de firmar.",
+      tl: "Suriin ang draft mo sa ibaba, pagkatapos i-download. Basahin ang bawat linya bago pumirma.",
+      vi: "Xem lại bản nháp bên dưới, sau đó tải xuống. Hãy đọc từng dòng trước khi ký.",
+      ko: "아래 초안을 검토한 후 다운로드하세요. 서명하기 전에 모든 줄을 읽어 보세요.",
     },
     yourGeneratedStatement: {
       en: "Your Generated Statement",
