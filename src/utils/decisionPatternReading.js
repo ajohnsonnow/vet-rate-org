@@ -210,7 +210,58 @@ const CONTINUED_RESULT = {
   deadline_warning: REVIEW_DEADLINE,
 };
 
-export function patternMatchDenial(letterText) {
+const GENERIC_DENIAL_DEADLINE =
+  "You have 1 year from this decision date to file an appeal. Do not let the deadline pass.";
+
+// A denial the patterns recognise but cannot explain. It sends the veteran
+// to the AI for the reasons.
+const GENERIC_DENIAL = {
+  decision_type: "Full Denial",
+  plain_english:
+    "The VA denied your claim. Load the Warrant Council AI for a detailed analysis of the specific reasons.",
+  va_reasoning:
+    "Pattern matching identified a denial but could not determine the specific reason. AI analysis will provide more detail.",
+  missing_elements: [
+    "Specific denial reason not detected - load AI for full analysis",
+  ],
+  action_plan: [
+    "Load the Warrant Council AI (button above) for a full plain-English translation",
+    "Contact a VSO for free claim assistance",
+    "Request a copy of your C-File to understand what evidence VA used",
+    "You have 1 year from this decision to file an appeal",
+  ],
+  deadline_warning: GENERIC_DENIAL_DEADLINE,
+};
+
+// The same denial when the device's model was held back from the letter
+// (ADR-010 section 9): "load the AI" would point at that model, so it sends
+// the veteran to the letter, a Veterans Service Officer and the review
+// options instead.
+const DENIAL_WITH_MODEL_HELD = {
+  decision_type: "Full Denial",
+  plain_english:
+    "The VA denied your claim. The built-in reader cannot tell you the specific reasons, so read the Reasons for Decision section of your letter. A Veterans Service Officer can go through it with you at no cost, and the review options are set out below.",
+  va_reasoning:
+    "Pattern matching identified a denial but could not determine the specific reason.",
+  missing_elements: [
+    "Specific denial reason not detected - the Reasons for Decision section of your letter gives it",
+  ],
+  action_plan: [
+    "Ask a Veterans Service Officer to go through the letter with you; their help is free",
+    "Request a copy of your C-File to understand what evidence VA used",
+    "If you disagree, you can ask for a review. The three review options are set out below",
+    "You have 1 year from this decision to file an appeal",
+  ],
+  deadline_warning: GENERIC_DENIAL_DEADLINE,
+};
+
+/**
+ * The rule-based reading of a decision letter, or null when the text holds
+ * no decision language. `modelHeld` says the reading is shown because the
+ * device's AI model was kept from the letter, so no line may send the
+ * veteran to that model.
+ */
+export function patternMatchDenial(letterText, { modelHeld = false } = {}) {
   // A letter breaks lines mid-phrase ("Service connection is\ndenied").
   const text = String(letterText ?? "").replace(/\s+/g, " ");
   const t = text.toLowerCase();
@@ -229,26 +280,7 @@ export function patternMatchDenial(letterText) {
   const isDenied = /denied|denial|not.*granted|not.*service.connected/i.test(
     text,
   );
-  if (isDenied) {
-    return {
-      decision_type: "Full Denial",
-      plain_english:
-        "The VA denied your claim. Load the Warrant Council AI for a detailed analysis of the specific reasons.",
-      va_reasoning:
-        "Pattern matching identified a denial but could not determine the specific reason. AI analysis will provide more detail.",
-      missing_elements: [
-        "Specific denial reason not detected - load AI for full analysis",
-      ],
-      action_plan: [
-        "Load the Warrant Council AI (button above) for a full plain-English translation",
-        "Contact a VSO for free claim assistance",
-        "Request a copy of your C-File to understand what evidence VA used",
-        "You have 1 year from this decision to file an appeal",
-      ],
-      deadline_warning:
-        "You have 1 year from this decision date to file an appeal. Do not let the deadline pass.",
-    };
-  }
+  if (isDenied) return modelHeld ? DENIAL_WITH_MODEL_HELD : GENERIC_DENIAL;
 
   return null;
 }
@@ -261,7 +293,7 @@ const NOTHING_MATCHED_MESSAGE =
 
 /** What the Decision Decoder shows in place of a small-class model's reading. */
 export function smallModelReading(denialText) {
-  const matched = patternMatchDenial(denialText);
+  const matched = patternMatchDenial(denialText, { modelHeld: true });
   return {
     ...(matched || { plain_english: NOTHING_MATCHED_MESSAGE }),
     _usedFallback: true,

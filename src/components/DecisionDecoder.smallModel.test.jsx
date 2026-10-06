@@ -144,3 +144,42 @@ describe("Decision Decoder with other AI", () => {
     expect(results.plain_english).toBe("Denied.");
   });
 });
+
+describe("the decision type badge", () => {
+  const badgeFor = (decisionType) => {
+    const { container } = render(
+      <ResultsContent
+        results={{ decision_type: decisionType, plain_english: "x" }}
+      />,
+    );
+    return [...container.querySelectorAll("div")].find(
+      (el) =>
+        el.className.includes("rounded-full") &&
+        el.textContent.includes(decisionType),
+    );
+  };
+
+  it("gives a continued rating its own icon and an information colour, not the denial styling", () => {
+    const badge = badgeFor("Rating Continued");
+    expect(badge.textContent).toBe("↔️Rating Continued");
+    expect(badge.className).toContain("bg-sky-100");
+    expect(badge.className).toContain("text-sky-900");
+    expect(badge.className).not.toMatch(/red|gray/);
+  });
+
+  it("leaves the other types as they were", () => {
+    expect(badgeFor("Full Denial").className).toContain("bg-red-100");
+    expect(badgeFor("Full Denial").textContent).toBe("❌Full Denial");
+    expect(badgeFor("Granted").className).toContain("bg-green-100");
+  });
+
+  it("shows the small-model reading of a continued rating with that badge", async () => {
+    status.value = swarm(SMALL);
+    const { results } = await decode(
+      "SYNTHETIC TEST DECISION LETTER. The evaluation of migraine headaches, currently 30 percent disabling, is continued.",
+    );
+    expect(results.decision_type).toBe("Rating Continued");
+    render(<ResultsContent results={results} />);
+    expect(screen.getByText(/Rating Continued/)).toBeTruthy();
+  });
+});

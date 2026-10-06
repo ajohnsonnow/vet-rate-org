@@ -7,7 +7,10 @@
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { patternMatchDenial } from "../../utils/decisionPatternReading";
+import {
+  patternMatchDenial,
+  smallModelReading,
+} from "../../utils/decisionPatternReading";
 import {
   ALL_DENIED,
   ALL_GRANTED,
@@ -142,5 +145,50 @@ describe("other letter shapes", () => {
 describe("text that is not a decision", () => {
   it("is still not read as one", () => {
     expect(patternMatchDenial("Nothing of the kind here.")).toBeNull();
+  });
+});
+
+describe("a reading shown because the small model was held back", () => {
+  const POINTS_AT_THE_MODEL = /Warrant Council|load AI|AI analysis|Load the/i;
+
+  it("does not tell the veteran to load the AI that was just held back", () => {
+    const reading = smallModelReading(ALL_DENIED);
+    expect(reading._fallbackReason).toBe("small_model");
+    expect(reading.decision_type).toBe("Full Denial");
+    expect(reading.plain_english).toBe(
+      "The VA denied your claim. The built-in reader cannot tell you the specific reasons, so read the Reasons for Decision section of your letter. A Veterans Service Officer can go through it with you at no cost, and the review options are set out below.",
+    );
+    expect(reading.va_reasoning).toBe(
+      "Pattern matching identified a denial but could not determine the specific reason.",
+    );
+    expect(reading.missing_elements).toEqual([
+      "Specific denial reason not detected - the Reasons for Decision section of your letter gives it",
+    ]);
+    expect(reading.action_plan).toEqual([
+      "Ask a Veterans Service Officer to go through the letter with you; their help is free",
+      "Request a copy of your C-File to understand what evidence VA used",
+      "If you disagree, you can ask for a review. The three review options are set out below",
+      "You have 1 year from this decision to file an appeal",
+    ]);
+  });
+
+  it.each(Object.entries(LETTERS))(
+    "%s: no line points at the AI model",
+    (_name, letter) => {
+      for (const text of everyString(smallModelReading(letter))) {
+        if (text === smallModelReading(letter)._fallbackNote) continue;
+        expect(text).not.toMatch(POINTS_AT_THE_MODEL);
+      }
+    },
+  );
+
+  it("keeps the pointer to the AI when no model was held back", () => {
+    const reading = patternMatchDenial(ALL_DENIED);
+    expect(reading.plain_english).toBe(
+      "The VA denied your claim. Load the Warrant Council AI for a detailed analysis of the specific reasons.",
+    );
+    expect(reading.action_plan[0]).toBe(
+      "Load the Warrant Council AI (button above) for a full plain-English translation",
+    );
   });
 });
