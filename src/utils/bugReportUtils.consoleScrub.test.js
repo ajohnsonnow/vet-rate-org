@@ -122,6 +122,9 @@ describe("console interceptor: identifiers never reach storage or a report", () 
   });
 
   it("scrubs an address and claim number in a keyword-matched console.log", () => {
+    // The capture of console.log is what this test exercises, so it has to
+    // call it. Every value in the message is planted test data.
+    // nosemgrep: semgrep.no-console-log-production
     console.log(
       `request failed at ${PLANTED.street} for claim ${PLANTED.claimNumber}`,
     );

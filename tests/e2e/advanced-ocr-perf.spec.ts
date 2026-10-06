@@ -234,9 +234,8 @@ test.describe("advancedOCR.js preprocessing: main-thread cost during a scanned-i
 
     const { count, longest } =
       await measureSeverelyAgedPreprocessingLongTasks(page);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[ocr-perf] SEVERELY_AGED @ ${PREPROCESS_WIDTH}x${PREPROCESS_HEIGHT}: taskCount=${count} longestTaskMs=${longest.toFixed(1)}`,
+    process.stdout.write(
+      `[ocr-perf] SEVERELY_AGED @ ${PREPROCESS_WIDTH}x${PREPROCESS_HEIGHT}: taskCount=${count} longestTaskMs=${longest.toFixed(1)}\n`,
     );
 
     expect(longest).toBeLessThan(LONGTASK_TRIGGER_MS);
@@ -255,9 +254,8 @@ test.describe("advancedOCR.js preprocessing: main-thread cost during a scanned-i
 
     await startBackgroundSeverelyAgedPreprocessing(page);
     const latencyMs = await measureKeydownToNavigation(page);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[ocr-perf] triple-Escape during SEVERELY_AGED preprocessing: latency=${latencyMs}ms`,
+    process.stdout.write(
+      `[ocr-perf] triple-Escape during SEVERELY_AGED preprocessing: latency=${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -282,9 +280,8 @@ test.describe("advancedOCR.js preprocessing: main-thread cost during a scanned-i
 
     await startBackgroundSeverelyAgedPreprocessing(page);
     const latencyMs = await measureClickToNavigation(page, box);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[ocr-perf] Quick Exit during SEVERELY_AGED preprocessing: latency=${latencyMs}ms`,
+    process.stdout.write(
+      `[ocr-perf] Quick Exit during SEVERELY_AGED preprocessing: latency=${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);

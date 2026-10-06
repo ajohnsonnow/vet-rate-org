@@ -11,6 +11,8 @@
  * This manager does the best it can within browser constraints.
  */
 
+import { logger } from "./logger";
+
 // Helper: Get GPU info from WebGL (more reliable than WebGPU for name detection)
 function getWebGLGPUInfo() {
   try {
@@ -622,8 +624,7 @@ class GPUDiscoveryEngine {
     const savedId = localStorage.getItem("vet_rate_selected_gpu");
     if (!savedId || !this.adapters.has(savedId)) return null;
 
-    // eslint-disable-next-line no-console
-    console.log("🎮 Restoring previous GPU selection");
+    logger.info("🎮 Restoring previous GPU selection");
     try {
       return { device: await this.selectAdapter(savedId) };
     } catch (err) {
@@ -644,8 +645,7 @@ class GPUDiscoveryEngine {
       adapters.find((a) => a.tier === "High Performance") || adapters[0];
     if (!best) return null;
 
-    // eslint-disable-next-line no-console
-    console.log("🎮 Auto-selecting best available GPU");
+    logger.info("🎮 Auto-selecting best available GPU");
     try {
       return await this.selectAdapter(best.id);
     } catch (err) {

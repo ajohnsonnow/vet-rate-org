@@ -10,6 +10,7 @@
  * / complexity budget.
  */
 
+import { logger } from "../utils/logger";
 import { useRef, useState } from "react";
 import {
   processFormationDocument,
@@ -130,8 +131,7 @@ function scheduleNextDocument(nextEntry, formation, predicate, delay, ctx) {
 function handleProgressUpdate(progressData, entry, file, ctx) {
   const { setCurrentProgress, updateEntry } = ctx;
 
-  // eslint-disable-next-line no-console
-  console.log("📊 Progress update received:", {
+  logger.info("📊 Progress update received:", {
     stage: progressData.stage,
     state: progressData.state,
     progress: progressData.progress,
@@ -184,8 +184,7 @@ async function runDocumentProcessing(entry, ctx) {
   }
 
   const file = entry.file;
-  // eslint-disable-next-line no-console
-  console.log(`🎖️ Processing ${entryLabel(entry, ctx)}`);
+  logger.info(`🎖️ Processing ${entryLabel(entry, ctx)}`);
 
   setActiveEntry(entry);
   updateEntry(entry.id, { status: "CALLED" });
@@ -206,8 +205,7 @@ async function runDocumentProcessing(entry, ctx) {
       { returnIncompleteSave: true },
     );
 
-    // eslint-disable-next-line no-console
-    console.log("✅ Document processed:", {
+    logger.info("✅ Document processed:", {
       status: result.status,
       classification: result.classification?.type,
     });
@@ -435,8 +433,7 @@ async function runVerifyAndSave(verifyPayload, ctx) {
     setActiveEntry,
   } = ctx;
 
-  // eslint-disable-next-line no-console
-  console.log("✅ User verified data:", {
+  logger.info("✅ User verified data:", {
     fieldCount: Object.keys(verifyPayload?.verifiedData || {}).length,
     saveToVKB: verifyPayload?.saveToVKB,
     updateProfile: verifyPayload?.updateProfile,
@@ -587,8 +584,7 @@ function runSkipDocument(ctx) {
     setActiveEntry,
   } = ctx;
 
-  // eslint-disable-next-line no-console
-  console.log("⏭️ Skipping", entryLabel(activeEntry, ctx));
+  logger.info(`⏭️ Skipping ${entryLabel(activeEntry, ctx)}`);
 
   const nextEntry = skipCurrentAndNext("User skipped");
   setShowIntelBriefing(false);
@@ -609,8 +605,7 @@ function runStartSequentialProcessing(ctx) {
   // eslint-disable-next-line no-console
   console.log("🚩 Starting sequential formation processing...");
   const firstEntry = ctx.startFormation();
-  // eslint-disable-next-line no-console
-  console.log("🚩 First entry:", firstEntry?.id);
+  logger.info("🚩 First entry", { id: firstEntry?.id });
 
   if (firstEntry) {
     startImportMarker(

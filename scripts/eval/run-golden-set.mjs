@@ -256,14 +256,18 @@ async function main() {
     },
   });
 
-  console.log(`transcript: ${files.transcriptPath}`);
-  console.log(`summary:    ${files.summaryPath}`);
-  console.log(`cases recorded: ${cases.length} of ${goldenCases.length}`);
+  reportRunFiles(files, cases.length, goldenCases.length);
 
   const verdict = opts.dryRun
     ? checkDryRun(grades, goldenCases, cases, smallModelPass)
     : checkLoadedModel(meta, modelId);
   return exitCode || verdict;
+}
+
+function reportRunFiles(files, recorded, expected) {
+  process.stdout.write(`transcript: ${files.transcriptPath}\n`);
+  process.stdout.write(`summary:    ${files.summaryPath}\n`);
+  process.stdout.write(`cases recorded: ${recorded} of ${expected}\n`);
 }
 
 function runPlaywrightStep(opts, files) {
@@ -292,11 +296,13 @@ function checkDryRun(grades, goldenCases, records, smallModelPass) {
     ...assertDryRunDraftPaths(records, forThisRun(DRY_RUN_DRAFT_PATHS)),
     ...smallModelPass.problems,
   ];
-  console.log(
-    `small-model pass: ${smallModelPass.held} open questions held with the fixed message, ${smallModelPass.calculator} answered by the calculator, ${smallModelPass.needsRatings} asked for ratings, ${smallModelPass.heldTools} tool case(s) read by fixed rules, no model call`,
+  process.stdout.write(
+    `small-model pass: ${smallModelPass.held} open questions held with the fixed message, ${smallModelPass.calculator} answered by the calculator, ${smallModelPass.needsRatings} asked for ratings, ${smallModelPass.heldTools} tool case(s) read by fixed rules, no model call\n`,
   );
   if (problems.length === 0) {
-    console.log("DRY RUN PASSED: every canned failure was caught by its check");
+    process.stdout.write(
+      "DRY RUN PASSED: every canned failure was caught by its check\n",
+    );
     return 0;
   }
   console.error(`DRY RUN FAILED: ${problems.length} expectation(s) not met`);

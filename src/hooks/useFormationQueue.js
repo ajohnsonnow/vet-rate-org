@@ -6,6 +6,7 @@
  * React hook for managing formation queue state
  */
 
+import { logger } from "../utils/logger";
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
   buildFormation,
@@ -37,8 +38,7 @@ function logFormationInitialized(count) {
 }
 
 function logFormationStatsUpdated(newStats, current, formation) {
-  // eslint-disable-next-line no-console
-  console.log("📊 Formation stats updated:", {
+  logger.info("📊 Formation stats updated:", {
     total: newStats.total,
     waiting: newStats.waiting,
     inProgress: newStats.inProgress,

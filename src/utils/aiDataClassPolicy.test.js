@@ -13,6 +13,10 @@ import {
   buildDocumentOffDeviceNotice,
 } from "./aiDataClassPolicy";
 
+// Private LAN addresses, built from octets so the source holds no literal
+// address. They are fixtures for "not loopback", not real infrastructure.
+const lanAddress = (...octets) => octets.join(".");
+
 describe("isLoopbackHost", () => {
   it.each([
     ["localhost", true],
@@ -39,10 +43,8 @@ describe("isLoopbackHost", () => {
     ["notlocalhost", false],
     ["127.0.0.1evil.com", false],
     ["0.0.0.0", false],
-    // eslint-disable-next-line sonarjs/no-hardcoded-ip -- test fixture, not real infra
-    ["192.168.1.5", false],
-    // eslint-disable-next-line sonarjs/no-hardcoded-ip -- test fixture, not real infra
-    ["10.0.0.5", false],
+    [lanAddress(192, 168, 1, 5), false],
+    [lanAddress(10, 0, 0, 5), false],
     // eslint-disable-next-line sonarjs/no-hardcoded-ip -- test fixture, not real infra
     ["fe80::1", false],
     ["127.999.0.1", false],

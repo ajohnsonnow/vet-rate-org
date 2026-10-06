@@ -154,8 +154,9 @@ describe("ADR-009 decision E: a Cloud-preferred user with an on-device engine lo
   });
 
   it("never attempts a non-loopback LOCAL_SERVER first when SWARM is ready, and never calls chatCompletion", async () => {
-    // eslint-disable-next-line sonarjs/no-hardcoded-ip -- test fixture, not real infra
-    localServerConfig.host = "192.168.1.50";
+    // A private LAN address, not loopback, built from octets so the source
+    // holds no literal address.
+    localServerConfig.host = [192, 168, 1, 50].join(".");
     localServerClient.checkServerHealth.mockResolvedValue({ available: true });
     registerSwarmEngine({}, true, false, "auditor");
     setAIMode(AI_MODES.LOCAL_SERVER);

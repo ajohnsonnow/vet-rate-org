@@ -27,6 +27,8 @@
  * the veteran's own use and can be redacted before display.
  */
 
+import { logger } from "./logger";
+
 // Block 1/3 (name, SSN, service number)
 function extractPersonalInfoFields(text) {
   const fields = {};
@@ -617,8 +619,7 @@ function extractName(text) {
         continue;
       }
 
-      // eslint-disable-next-line no-console
-      console.log(`🔍 [DD214Parser:Name] Pattern ${i} matched`);
+      logger.info(`🔍 [DD214Parser:Name] Pattern ${i} matched`);
       return {
         value: match[0]
           .replace(/name[^:]*:\s*/i, "")

@@ -14,6 +14,7 @@
  * @see https://developer.va.gov/explore/authorization/docs/authorization-code
  */
 
+import { logger } from "../utils/logger";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   VA_AUTH_CONFIG,
@@ -185,8 +186,7 @@ async function _restoreValidToken(
   storedToken,
   { setAccessToken, setIsAuthenticated, setUserInfo },
 ) {
-  // eslint-disable-next-line no-console
-  console.log("[VA Auth] Found valid token");
+  logger.info("[VA Auth] Found valid token");
   setAccessToken(storedToken);
   setIsAuthenticated(true);
 
@@ -211,8 +211,7 @@ async function _restoreValidToken(
 }
 
 async function _refreshExpiredToken({ setAccessToken, setIsAuthenticated }) {
-  // eslint-disable-next-line no-console
-  console.log("[VA Auth] Token expired, attempting refresh...");
+  logger.info("[VA Auth] Token expired, attempting refresh...");
   const { refreshToken } = getStoredTokens();
   if (!refreshToken) {
     clearTokens();

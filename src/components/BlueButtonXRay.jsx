@@ -9,6 +9,7 @@
  * Privacy: Text extraction happens locally. AI analysis uses your configured AI (Local or Cloud).
  */
 
+import { logger } from "../utils/logger";
 import { useState, useCallback, useRef, useEffect } from "react";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
@@ -486,13 +487,11 @@ function _tryTextFallbackExtraction(rawText) {
     return null;
   }
 
-  // eslint-disable-next-line no-console
-  console.log("💡 Attempting text fallback extraction...");
+  logger.info("💡 Attempting text fallback extraction...");
   const extractedConditions = extractConditionsFromText(rawText);
   if (extractedConditions.length === 0) return null;
 
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `✅ Fallback extracted ${extractedConditions.length} conditions from text`,
   );
   return {
@@ -1891,16 +1890,14 @@ async function _attemptChunkExtraction(
 // Last-resort regex extraction for a chunk after every AI strategy has
 // failed. Returns the fallback result, or null if it found nothing either.
 function _tryRegexFallbackForChunk(chunkText, chunkIndex) {
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `🔧 Section ${chunkIndex + 1}: Trying regex fallback extraction...`,
   );
   const fallbackConditions = extractConditionsFromText(chunkText);
 
   if (fallbackConditions.length === 0) return null;
 
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `✅ Section ${chunkIndex + 1} RECOVERED via regex fallback (${fallbackConditions.length} conditions)`,
   );
   return {

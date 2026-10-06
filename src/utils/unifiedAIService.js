@@ -13,6 +13,7 @@
  * 100% private local inference - no data leaves the device.
  */
 
+import { logger } from "./logger";
 import { interceptBeforeAICall } from "./crisisInterceptor";
 import {
   scrubPII,
@@ -1619,13 +1620,10 @@ const runLocalAINonStreaming = async (
   // Model input and output are never logged: bugReportUtils captures console
   // output into reports a veteran can send off-device, and DD-214 text and
   // model JSON carry identifiers. Shape and length only.
-  // eslint-disable-next-line no-console
-  console.log(
-    "🔧 Local AI generation: messages =",
-    generationConfig.messages?.length ?? 0,
-    "max_tokens =",
-    generationConfig.max_tokens,
-  );
+  logger.info("🔧 Local AI generation", {
+    messages: generationConfig.messages?.length ?? 0,
+    max_tokens: generationConfig.max_tokens,
+  });
   const response =
     await localAIEngine.chat.completions.create(generationConfig);
 
@@ -1646,8 +1644,7 @@ const runLocalAINonStreaming = async (
   }
 
   _noteStoppedForLength(options, finishReason === "length");
-  // eslint-disable-next-line no-console
-  console.log("🔧 Local AI response length:", rawContent.length);
+  logger.info("🔧 Local AI response", { length: rawContent.length });
   releaseLock();
   return cleanLocalAIResponse(rawContent);
 };
@@ -1909,8 +1906,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
 
   const images = normalizeVisionImages(imageUrls);
 
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `🖼️ generateAIWithImage: ${images.length} image(s), prompt length: ${prompt.length}`,
   );
 
@@ -1938,8 +1934,7 @@ export const generateAIWithImage = async (prompt, imageUrls, options = {}) => {
 
     localAIGenerating = false;
     const rawContent = response.choices[0]?.message?.content || "";
-    // eslint-disable-next-line no-console
-    console.log("🖼️ Vision model response length:", rawContent.length);
+    logger.info("🖼️ Vision model response", { length: rawContent.length });
 
     // Check for empty response - this indicates the model failed to process the image
     if (!rawContent || rawContent.trim().length === 0) {
@@ -2491,8 +2486,7 @@ async function _injectDKBContext(
     if (usedChars > 0 && dkbContext.includes("[0 reference entries provided")) {
       return systemPrompt;
     }
-    // eslint-disable-next-line no-console
-    console.log("[AI] 💎 DKB context injected");
+    logger.info("[AI] 💎 DKB context injected");
     return systemPrompt + dkbContext;
   } catch (dkbError) {
     console.warn(
@@ -2690,8 +2684,7 @@ const _BACKEND_USED_LOG = {
 function _logBackendUsed(mode, agentUsed) {
   const buildMessage = _BACKEND_USED_LOG[mode];
   if (!buildMessage) return;
-  // eslint-disable-next-line no-console
-  console.log(buildMessage(agentUsed));
+  logger.info(buildMessage(agentUsed));
 }
 
 // ADR-009: a document-classed call is dispatched straight to whichever

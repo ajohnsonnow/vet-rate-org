@@ -554,12 +554,14 @@ function main(argv) {
     writeFileSync(path.join(REPO_ROOT, file), text);
   }
   for (const entry of bundle.reference.entries) {
-    console.log(`${String(entry.text.length).padStart(5)}  ${entry.id}`);
+    process.stdout.write(
+      `${String(entry.text.length).padStart(5)}  ${entry.id}\n`,
+    );
   }
-  console.log(
+  process.stdout.write(
     `sections: ${Object.entries(bundle.sections.parts)
       .map(([part, list]) => `Part ${part} ${list.length}`)
-      .join(", ")}`,
+      .join(", ")}\n`,
   );
   if (bundle.omittedForms.length > 0) {
     console.warn(

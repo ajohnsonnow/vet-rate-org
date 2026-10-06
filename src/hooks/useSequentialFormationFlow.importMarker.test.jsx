@@ -61,7 +61,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   sessionStorage.clear();
   localStorage.clear();
-  for (const method of ["log", "warn", "error"]) {
+  for (const method of ["log", "info", "warn", "error"]) {
     vi.spyOn(console, method).mockImplementation(() => {});
   }
   processFormationDocument.mockResolvedValue({

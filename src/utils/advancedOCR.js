@@ -20,6 +20,7 @@
  * - C-Files (scanned historical documents)
  */
 
+import { logger } from "./logger";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import Tesseract from "tesseract.js";
@@ -509,8 +510,7 @@ async function ocrImageOnlyPages(
       ? { pagesToOcr: [], skippedPages: imageOnlyPages }
       : computeOcrPageSets(imageOnlyPages, requested, config.MAX_OCR_PAGES);
 
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `📷 ${imageOnlyPages.length} page(s) lack a usable text layer (${blankPages.length} blank). OCR-ing ${pagesToOcr.length}, skipping ${skippedPages.length}.`,
   );
 

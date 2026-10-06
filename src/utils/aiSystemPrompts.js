@@ -13,6 +13,7 @@
  *   - The BASE_SYSTEM_PROMPT carries the instruction-vs-data rule so every
  *     prompt that extends it inherits the defense.
  */
+import { logger } from "./logger";
 import { getTotalToolCount } from "../data/toolkitData";
 import { getConditionCount as getDisabilityCount } from "../services/knowledgeQuery";
 import { getFormsCount } from "./formsCount";
@@ -1486,8 +1487,7 @@ export async function searchDKB(query, topK = 10) {
   // fetch/build - see its own doc comment), this fires immediately before
   // scoring - a precise anchor a fixed sleep can't be, and the pod's
   // "condition-based waits only in e2e" rule requires one.
-  // eslint-disable-next-line no-console
-  console.log("[DKB] 🔍 searchDKB called");
+  logger.info("[DKB] 🔍 searchDKB called");
   const index = await loadDKBIndex();
   if (!index) return [];
 

@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 import { useState, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -319,11 +320,9 @@ async function runTimedDecode(denialText, timeoutMs) {
       timeoutPromise,
     ]);
     // Model output is identifier-bearing free text: log its shape only.
-    // eslint-disable-next-line no-console
-    console.log(
-      "[DecisionDecoder] AI response: success =",
-      Boolean(response?.success),
-    );
+    logger.info("[DecisionDecoder] AI response", {
+      success: Boolean(response?.success),
+    });
     if (response?.success && !response.usedFallback) {
       recordDecodeDuration(Date.now() - startedAt);
     } else if (TIMED_OUT_RE.test(response?.error || "")) {
@@ -1862,8 +1861,9 @@ const DecisionDecoder = ({ onClose, onReportBug, onOpenAISettings }) => {
           <SmartAILoadButton
             toolId="decision-decoder"
             onLoadComplete={(model) => {
-              // eslint-disable-next-line no-console
-              console.log("Smart AI loaded for Decision Decoder:", model?.name);
+              logger.info("Smart AI loaded for Decision Decoder", {
+                model: model?.name,
+              });
               setAIStatus(getAIStatus());
             }}
           />

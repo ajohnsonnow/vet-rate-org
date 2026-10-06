@@ -17,6 +17,7 @@
  * All data stays 100% on the veteran's device - never sent to servers.
  */
 
+import { logger } from "./logger";
 import { markAsModified } from "./persistentStorage";
 import { ensureQuota } from "./storage";
 import { awardDisplayName } from "./combatService";
@@ -346,8 +347,7 @@ export const saveDocumentToPacket = async (doc) => {
     await updatePacketMetadata();
     markAsModified();
 
-    // eslint-disable-next-line no-console
-    console.log(`📁 Saved to My Packet: ${document.classification} (${id})`);
+    logger.info(`📁 Saved to My Packet: ${document.classification} (${id})`);
     const result = { success: true, documentId: id };
     if (!quota.ok) result.quotaWarning = quota.message;
     return result;

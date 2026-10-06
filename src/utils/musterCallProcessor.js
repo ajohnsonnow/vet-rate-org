@@ -23,6 +23,7 @@
  * All processing is 100% client-side for maximum privacy.
  */
 
+import { logger } from "./logger";
 import { analyzeDocument, isFileSupported } from "./documentAnalyzer";
 import { processLargePDF } from "./pdfExtractor";
 import { formatFileSize } from "./ocr";
@@ -312,8 +313,7 @@ RULES: Only include findings present in text. Be concise.`;
   if (!result) return null;
 
   const rejectedCodes = enforceValidDiagnosticCodes(result);
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `✅ AI C-File analysis complete: ${result.potential_claims?.length || 0} potential claims found`,
   );
   return {
@@ -483,8 +483,7 @@ async function _readLargePdfBounded(start) {
 }
 
 async function _extractLargePdfText(file, onProgress, options) {
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `📦 Large PDF detected (${(file.size / 1024 / 1024).toFixed(1)} MB) - using streaming extraction...`,
   );
   const etaTracker = createEtaTracker();
@@ -868,8 +867,7 @@ const archiveDocumentInPacket = async (file, result) => {
     return;
   }
   requireSaved(saved);
-  // eslint-disable-next-line no-console
-  console.log(`📁 Archived this document in My Packet`);
+  logger.info(`📁 Archived this document in My Packet`);
 };
 
 // Box 12b (NET ACTIVE SERVICE THIS PERIOD) is stored as a formatted string by
@@ -1113,8 +1111,7 @@ function _savePrimaryServicePeriod(file, result, candidate) {
       },
       { sourceDocument: file.name, confidence: candidate.confidence },
     );
-    // eslint-disable-next-line no-console
-    console.log(`✅ Saved service period for this document`);
+    logger.info(`✅ Saved service period for this document`);
   } catch (periodErr) {
     console.warn(
       `Service period save failed for this document (non-fatal):`,
@@ -1262,8 +1259,7 @@ export const saveServiceRecordToProfile = (file, result) => {
   try {
     const existing = getServiceHistory().dd214Data;
     saveDD214Data(_mergeDD214Record(existing, candidate));
-    // eslint-disable-next-line no-console
-    console.log(`✅ Saved DD214 data to Service tab for this document`);
+    logger.info(`✅ Saved DD214 data to Service tab for this document`);
   } catch (dd214Err) {
     console.warn(
       `Service history save failed for this document (non-fatal):`,
@@ -1348,8 +1344,7 @@ const saveAwardsToProfile = (file, result) => {
         devices: normalized.devices,
       });
     });
-    // eslint-disable-next-line no-console
-    console.log(
+    logger.info(
       `✅ Saved ${awards.length} award(s) to Ribbon Rack for this document`,
     );
   } catch (awardErr) {
@@ -1442,8 +1437,7 @@ export const saveDeploymentsToProfile = (file, result) => {
         combat: !!dep.combatZone,
       });
     });
-    // eslint-disable-next-line no-console
-    console.log(
+    logger.info(
       `✅ Saved ${deployments.length} deployment(s) to Service tab for this document`,
     );
   } catch (deploymentErr) {
@@ -1526,8 +1520,7 @@ const mergeServiceRecordIntoVKB = async (file, result) => {
     const dd214Data = buildVKBDD214Data(result);
     mergeDD214IntoVKB(vkb, dd214Data, { fileName: file.name });
     requireSaved(await saveVKB(vkb));
-    // eslint-disable-next-line no-console
-    console.log(`✅ Merged DD214 data into VKB for this document`);
+    logger.info(`✅ Merged DD214 data into VKB for this document`);
   } catch (vkbErr) {
     warnNonFatalStep("VKB merge", vkbErr);
   }
@@ -1568,8 +1561,7 @@ const mergeCFileDeploymentsIntoVKB = async (file, result) => {
     mergeDD214Deployments(vkb, dd214Data, { fileName: file.name });
     mergeDD214EvidenceTimeline(vkb, dd214Data, { fileName: file.name });
     requireSaved(await saveVKB(vkb));
-    // eslint-disable-next-line no-console
-    console.log(`✅ Merged C-File deployments into VKB for this document`);
+    logger.info(`✅ Merged C-File deployments into VKB for this document`);
   } catch (vkbErr) {
     warnNonFatalStep("VKB merge", vkbErr);
   }
@@ -1846,8 +1838,7 @@ const saveRatingDecisionToProfile = (file, result) => {
     }
     if (dropSupersededConditions(ratings, (r) => r.name) > 0) changed = true;
     if (changed) saveMyRatings(ratings);
-    // eslint-disable-next-line no-console
-    console.log(
+    logger.info(
       `✅ Saved ${rated.length} rated condition(s) from this document to My Ratings`,
     );
   } catch (ratingErr) {
@@ -1894,8 +1885,7 @@ const mergeRatingDecisionIntoVKBForFile = async (file, result) => {
       fileName: file.name,
     });
     requireSaved(await saveVKB(vkb));
-    // eslint-disable-next-line no-console
-    console.log(`✅ Merged rating decision into VKB for this document`);
+    logger.info(`✅ Merged rating decision into VKB for this document`);
   } catch (vkbErr) {
     warnNonFatalStep("VKB rating-decision merge", vkbErr);
   }
@@ -2260,8 +2250,7 @@ export const processFormationDocument = async (
   onProgress,
   { returnIncompleteSave = false, ...extractionOptions } = {},
 ) => {
-  // eslint-disable-next-line no-console
-  console.log(`🎖️ Platoon Sergeant inspecting: this document`);
+  logger.info(`🎖️ Platoon Sergeant inspecting: this document`);
 
   // Use enhanced single document processor
   const result = await processSingleDocument(
@@ -2439,8 +2428,7 @@ const selectBestDD214Segment = (segments, filename) => {
   if (segments.length === 0) return null;
   if (segments.length === 1) return segments[0];
 
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `🎯 Multiple DD214s found (${segments.length}), selecting best match`,
   );
 
@@ -2515,8 +2503,7 @@ const selectBestDD214Segment = (segments, filename) => {
       score += segments.length - index;
     }
 
-    // eslint-disable-next-line no-console
-    console.log(
+    logger.info(
       `  Segment ${index + 1} (pages ${segment.pages}): score=${score}, reason="${matchReason}"`,
     );
 
@@ -2527,8 +2514,7 @@ const selectBestDD214Segment = (segments, filename) => {
   scoredSegments.sort((a, b) => b.score - a.score);
 
   const best = scoredSegments[0];
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `✅ Selected segment ${segments.indexOf(best) + 1} (pages ${best.pages}) - ${best.matchReason}`,
   );
 
@@ -2588,8 +2574,7 @@ const buildVisionParsedServiceRecord = (text, visionParsedData) => {
     raw: text.substring(0, 1000),
   };
 
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `✅ Vision-parsed DD214: fields [${presentFieldNames(visionData).join(", ")}], ${visionData.awards?.length || 0} award(s)`,
   );
 
@@ -5439,8 +5424,7 @@ export const parseServiceRecord = async (text, formType = "DD214") => {
     _extractNGB22PeriodDates(ctx);
     // After the deployment extractor, so the determination carries them.
     _deriveCombatServiceField(ctx);
-    // eslint-disable-next-line no-console
-    console.log("📋 DD214 parsed fields:", {
+    logger.info("📋 DD214 parsed fields:", {
       fields: presentFieldNames(data),
       awardsCount: data.awards?.length || 0,
       deploymentsCount: data.deployments?.length || 0,
@@ -6403,8 +6387,7 @@ export const processMusterCallBatch = async (files, options = {}) => {
 // parseServiceRecord - the profile silently never got auto-populated.
 // Accept both naming conventions.
 const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
-  // eslint-disable-next-line no-console
-  console.log("📝 Found service record");
+  logger.info("📝 Found service record");
 
   // FIX-17: extractedData.veteranName/lastName/firstName/middleName were
   // extracted correctly (see _assignParsedName) but never mapped onto the
@@ -6445,8 +6428,7 @@ const applyServiceRecordToProfileUpdates = (updates, extractedData) => {
 };
 
 const applyRatingDecisionToProfileUpdates = (updates, extractedData) => {
-  // eslint-disable-next-line no-console
-  console.log("📊 Found rating decision");
+  logger.info("📊 Found rating decision");
   if (extractedData.combinedRating)
     updates.currentCombinedRating = extractedData.combinedRating;
   if (extractedData.effectiveDate)
@@ -6454,8 +6436,7 @@ const applyRatingDecisionToProfileUpdates = (updates, extractedData) => {
 };
 
 const applyClaimLetterToProfileUpdates = (updates, extractedData) => {
-  // eslint-disable-next-line no-console
-  console.log("📬 Found claim letter");
+  logger.info("📬 Found claim letter");
   if (extractedData.claimNumber)
     updates.claimNumber = extractedData.claimNumber;
   if (extractedData.vaFileNumber)
@@ -6500,8 +6481,7 @@ export const autoPopulateProfile = async (processedResults) => {
   let updateCount = 0;
 
   for (const result of processedResults) {
-    // eslint-disable-next-line no-console
-    console.log(`📄 Checking this document:`, {
+    logger.info(`📄 Checking this document:`, {
       status: result.status,
       hasExtractedData: !!result.extractedData,
       extractedDataType: result.extractedData?.type,
@@ -6517,8 +6497,7 @@ export const autoPopulateProfile = async (processedResults) => {
     }
 
     const { type } = result.extractedData;
-    // eslint-disable-next-line no-console
-    console.log(`🔍 Processing this document with type: ${type}`);
+    logger.info(`🔍 Processing this document with type: ${type}`);
 
     const documentUpdates = {};
     switch (type) {
@@ -6549,8 +6528,7 @@ export const autoPopulateProfile = async (processedResults) => {
         break;
 
       default:
-        // eslint-disable-next-line no-console
-        console.log(`⚠️ Unknown document type: ${type} for this document`);
+        logger.info(`⚠️ Unknown document type: ${type} for this document`);
         continue;
     }
 
@@ -6612,8 +6590,9 @@ export const autoPopulateProfile = async (processedResults) => {
 
   // eslint-disable-next-line no-console
   console.log(`📊 Auto-populate complete: ${updateCount} documents processed`);
-  // eslint-disable-next-line no-console
-  console.log("📝 Profile fields updated:", presentFieldNames(updates));
+  logger.info("📝 Profile fields updated", {
+    fields: presentFieldNames(updates),
+  });
 
   if (updateCount > 0) {
     const success = updateVeteranProfile(updates);
@@ -6628,8 +6607,9 @@ export const autoPopulateProfile = async (processedResults) => {
 };
 
 const applyServiceRecordToBriefing = (briefingData, serviceData) => {
-  // eslint-disable-next-line no-console
-  console.log("📝 Extracting service record:", presentFieldNames(serviceData));
+  logger.info("📝 Extracting service record", {
+    fields: presentFieldNames(serviceData),
+  });
 
   // Handle array-structured data (indexed 0, 1, 2, etc.)
   if (serviceData[0]) {
@@ -6662,8 +6642,7 @@ const applyServiceRecordToBriefing = (briefingData, serviceData) => {
 };
 
 const applyRatingDecisionToBriefing = (briefingData, extractedData) => {
-  // eslint-disable-next-line no-console
-  console.log("📊 Extracting rating decision");
+  logger.info("📊 Extracting rating decision");
   if (extractedData.combinedRating) {
     briefingData.currentCombinedRating = extractedData.combinedRating;
   }
@@ -6687,8 +6666,7 @@ const applyRatingDecisionToBriefing = (briefingData, extractedData) => {
 };
 
 const applyClaimLetterToBriefing = (briefingData, extractedData) => {
-  // eslint-disable-next-line no-console
-  console.log("📬 Extracting claim letter");
+  logger.info("📬 Extracting claim letter");
   if (
     extractedData.claimNumber &&
     !briefingData.claimNumbers.includes(extractedData.claimNumber)
@@ -6761,8 +6739,7 @@ export const extractIntelligenceBriefingData = (processedResults) => {
     }
   }
 
-  // eslint-disable-next-line no-console
-  console.log("✅ Intelligence Briefing data extracted:", {
+  logger.info("✅ Intelligence Briefing data extracted:", {
     fields: presentFieldNames(briefingData),
     conditionCount: briefingData.conditions.length,
     claimNumberCount: briefingData.claimNumbers.length,
@@ -6778,8 +6755,7 @@ export const extractIntelligenceBriefingData = (processedResults) => {
  * Identifies potential "Duty to Assist" violations under 38 CFR § 3.159
  */
 const analyzeDecisionLetterGaps = (decision, evidenceDocs, allGaps) => {
-  // eslint-disable-next-line no-console
-  console.log(`📋 Analyzing Decision: this document`);
+  logger.info(`📋 Analyzing Decision: this document`);
 
   // Combine all non-decision text as the "C-File equivalent"
   const combinedEvidence = evidenceDocs
