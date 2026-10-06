@@ -86,12 +86,33 @@ decision letter from [fixtures/](./fixtures/).
 
 Each writing tool builds a complete draft from the form, with a
 square-bracket blank for every fact the form did not supply. The model is
-never asked to write or reword that draft. It is sent only the passages
-someone typed into the form, numbered, and asked to turn each into clear,
-complete first-person sentences that say only what the passage says. Each
-rewording is checked on its own against its passage
-([writerDraftCheck.js](../../utils/writerDraftCheck.js)), and the app builds
-the draft again with the accepted ones in place. Headings, fixed sentences,
+never asked to write or reword that draft. For a veteran's own statement it
+is sent only the passages the veteran typed into the form, numbered, and
+asked to turn each into clear, complete first-person sentences that say only
+what the passage says. Each rewording is checked on its own against its
+passage ([writerDraftCheck.js](../../utils/writerDraftCheck.js),
+[passageFaithfulness.js](../../utils/passageFaithfulness.js)), and the app
+builds the draft again with the accepted ones in place.
+
+Two things are never sent to a model, and their cases make no model call:
+
+- **A witness's words** (`t03` and `t10`, the Forms Helper buddy statement;
+  `t04`, the Witness Bench). A model rewording a witness's note about the
+  veteran wrote it as the witness's own act, which a sworn statement cannot
+  carry. The draft holds the witness's words as typed; a fragment stays a
+  fragment, and the notice above the draft tells the witness to make each
+  line a full sentence in their own words.
+- **Anything, when a small on-device model would answer** (the laptop and
+  tablet class in the device profile table). The tool returns the app-built
+  draft and the record carries `rewordingOff: "small-model"`.
+
+The check accepts a rewording only if it is the passage's own words: every
+main word kept and none added, each cause, contrast and time word kept ("so",
+"because", "but", "after", "until"), the tense kept, no verb made into a
+noun, and no "I" brought in where the passage had only "me". It may add a
+subject, an article, a preposition, "and", "while", and a form of "be" or
+"have" that does not move the tense. When in doubt it rejects, and the
+typed words stand. Headings, fixed sentences,
 blanks, greeting and closing are the app's and cannot change. The transcript
 records what happened in `draftPath` and `passages` (sent, accepted,
 unchanged, rejected), and the summary lists both under "Tool cases":
@@ -111,9 +132,10 @@ unchanged, rejected), and the summary lists both under "Tool cases":
   but the model contributed nothing: note the case as "template" and do
   not count it as a model pass. `passages` says why: every passage came
   back unchanged (the model echoed), every rewording was rejected, or
-  nothing was sent because the form held nothing typed (`sent` is 0 and no
-  model call was made; `t07` is always this, since the TDIU analysis is
-  built from chosen conditions and symptoms).
+  nothing was sent (`sent` is 0 and no model call was made). `t07` is
+  always this, since the TDIU analysis is built from chosen conditions and
+  symptoms. So are the witness cases `t03`, `t04` and `t10`, and every
+  writing case in a run on a small on-device model.
 
 A `template` case may also carry `draftErrorReason`: the model did not
 answer at all (engine error, timeout, request limit) and the tool handed
@@ -125,40 +147,55 @@ For W2 on a tool case, a bracketed blank is correct wherever the form
 inputs do not hold the fact. A blank is wrong only where the inputs do
 hold it.
 
-### Fragment cases (t09, t10): what each passage should become
+### Witness cases (t03, t04, t10): the witness's words, as typed
 
-`t01` to `t08` hold two fragments between them. `t09` and `t10` are there
-so a change to the rewording request can be compared on more than that.
-Read `passageOutcomes` for each passage. The expected outcome is the same
-for every fragment: **one or more full sentences that state exactly the
-facts of the passage, in the writer's own person**; and for a passage that
-is already a full sentence: **returned unchanged**. A fragment returned as
-a fragment is a miss for the model (not a fault in the draft: the writer's
-words stand). A rewording that adds, drops or changes a fact, date or
-number, or changes how a person is referred to, must show as `rejected`.
+These cases must record `draftPath: "template"`, `passages.sent: 0`, an empty
+`passageOutcomes`, no engine request, and `routing: n/a`. Any model call on
+one of them is a failure of the tool, whatever the draft looks like.
+
+Judge the draft itself:
+
+- Every typed answer in `formInputs` is in the response **exactly as typed**
+  (a full stop may follow it). A fragment is still a fragment. For `t10`
+  that is "Lights off at the desk, sunglasses indoors, head down on the
+  bench", "Fewer shifts and no overtime since the spring" and "3 March 2022 -
+  left the line mid-shift, sick in the car park, driven home by me". For
+  `t04` it is the four answered questions; for `t03` the two typed fields.
+- Nothing in the draft says the witness did what the veteran did, and
+  nothing mentions AI.
+- A blank stands wherever the form inputs hold no answer.
+
+A witness draft that reads as rough notes is the expected result, not a
+miss: the witness finishes it.
+
+### Fragment case (t09): what each passage should become
+
+`t09` is a veteran writing about themselves in fragments, so a change to the
+rewording request or the check can be compared on more than one passage.
+It is judged on the larger on-device model and on cloud AI only; on a small
+model no passage is sent. Read `passageOutcomes` for each passage. The
+expected outcome for a fragment is **one or more full sentences that use the
+passage's own words, with a subject and joining words added and nothing
+else**; and for a passage that is already a full sentence, **returned
+unchanged**. A fragment returned as a fragment is a miss for the model (not
+a fault in the draft: the veteran's words stand). A rewording that adds,
+drops or changes a word that carries meaning, loses a cause, or moves the
+tense must show as `rejected`. An `accepted` rewording that does any of
+those is a failure of the check and must be reported.
 
 `t09`, Nexus Builder personal statement, the veteran writing ("I"):
 
-| Passage | Typed                                                                        | Kind                   | Expected                                                                                             |
-| ------- | ---------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------- |
-| 1       | 14 June 2019 - shoulder gave out lifting a crate, neck locked for three days | dated note             | Sentences with "I"/"my"; keeps 14 June 2019, the crate, the neck locking, three days; nothing else   |
-| 2       | Numb fingers, dropping tools, trouble with buttons                           | comma list             | A sentence with "I" naming all three and nothing else                                                |
-| 3       | Slower on the assembly line at the Placeholder plant                         | phrase with no verb    | A sentence with "I"; keeps the assembly line and the Placeholder plant                               |
-| 4       | I no longer play catch with my daughter.                                     | full sentence          | Returned unchanged                                                                                   |
-| 5       | Favouring the bad shoulder, so the neck takes the strain                     | clause with no subject | A sentence with "I"; keeps favouring the shoulder and the neck taking the strain; no medical opinion |
+| Passage | Typed                                                                        | Kind                   | Accepted, for example                                                                           | Must be rejected, for example                                     |
+| ------- | ---------------------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 1       | 14 June 2019 - shoulder gave out lifting a crate, neck locked for three days | dated note             | On 14 June 2019, my shoulder gave out while lifting a crate, and my neck locked for three days. | "...when I tried to lift a crate, and I had a neck lock..."       |
+| 2       | Numb fingers, dropping tools, trouble with buttons                           | comma list             | I have numb fingers, drop tools, and have trouble with buttons.                                 | "My fingers were numb, I dropped tools..." (moved to the past)    |
+| 3       | Slower on the assembly line at the Placeholder plant                         | phrase with no verb    | I am slower on the assembly line at the Placeholder plant.                                      | "I was slower..." (a tense the passage does not give)             |
+| 4       | I no longer play catch with my daughter.                                     | full sentence          | Returned unchanged                                                                              | Any change of wording                                             |
+| 5       | Favouring the bad shoulder, so the neck takes the strain                     | clause with no subject | I am favouring the bad shoulder, so the neck takes the strain.                                  | "My favoring is the bad shoulder, and the neck..." ("so" is lost) |
 
-`t10`, Forms Helper buddy statement, a coworker writing ("I" for
-themselves, "they" for the veteran):
-
-| Passage | Typed                                                                           | Kind                | Expected                                                                                                       |
-| ------- | ------------------------------------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------- |
-| 1       | Lights off at the desk, sunglasses indoors, head down on the bench              | comma list          | Sentences about "they" naming all three and nothing else                                                       |
-| 2       | Fewer shifts and no overtime since the spring                                   | phrase with no verb | A sentence about "they"; keeps fewer shifts, no overtime, since the spring                                     |
-| 3       | 3 March 2022 - left the line mid-shift, sick in the car park, driven home by me | dated note          | Sentences with "they" for the veteran and "I"/"me" for the writer; keeps 3 March 2022 and all three happenings |
-
-`t10` has no full-sentence passage: the buddy form feeds three typed fields
-to the draft and all three are fragments here. `t03`, the same entry with
-full sentences, is its control.
+The examples are from recorded runs
+([closingRunRewordings.json](../utils/fixtures/closingRunRewordings.json)),
+each judged by hand.
 
 ### Procedural accuracy (P1, tool cases only)
 
@@ -185,9 +222,9 @@ The statement helper and the Decision Decoder send their own system
 prompt, so for their cases (`t01` to `t03`, `t05`, `t06`, `t08`) the engine
 receives that prompt and no persona prompt. That is what production does,
 so `routing` passes for those cases when the engine received the tool's own
-prompt, and the agent column reads "tool's own prompt". The Witness Bench
-case (`t04`) sends none and must show the writer persona. `routing` is
-`n/a` for a case that made no model call.
+prompt, and the agent column reads "tool's own prompt". `routing` is `n/a`
+for a case that made no model call: `t07`, the witness cases `t03`, `t04`
+and `t10`, and any writing case on a small on-device model.
 
 ## Auditor criteria (6 — pass at 5+)
 
