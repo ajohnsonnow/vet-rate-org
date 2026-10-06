@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   cachedProfile: vi.fn(),
   initializeSwarm: vi.fn(),
+  unloadSwarm: vi.fn(),
   getAIStatus: vi.fn(),
 }));
 
@@ -20,7 +21,7 @@ vi.mock("./unifiedAIService", () => ({
 }));
 vi.mock("./diamondSwarm", () => ({
   initializeSwarm: mocks.initializeSwarm,
-  unloadSwarm: vi.fn(),
+  unloadSwarm: mocks.unloadSwarm,
   generateWithSwarm: vi.fn(),
   isSwarmReady: () => true,
   getSwarmStatus: () => ({}),
@@ -109,60 +110,32 @@ describe("smartAILoader takes its model from the device profile", () => {
   });
 });
 
-// getAIStatus has no isLocal or modelId field. checkModelMatch read both, so
-// it answered "load" whatever was loaded and the button never showed ready.
-describe("checkModelMatch reads the fields getAIStatus has", () => {
+// Every caller shows this panel only while no AI is available, so it has one
+// job: offer to load. There is no "ready" or "switch" state, and a loaded model
+// is never unloaded from here.
+describe("the load panel only ever offers to load", () => {
   const swarm = (model) => ({
     effectiveMode: "swarm",
     swarmAvailable: true,
     swarmStatus: { model },
   });
 
-  it("says ready when the swarm holds the model this device should run", () => {
-    mocks.getAIStatus.mockReturnValue(swarm("Qwen3.5-4B-q4f16_1-MLC"));
-    expect(checkModelMatch("no-such-tool")).toMatchObject({
-      isCorrect: true,
-      action: "none",
-      currentModel: "Qwen3.5-4B-q4f16_1-MLC",
-    });
-  });
-
-  it("asks to switch when the swarm holds a different model", () => {
-    mocks.getAIStatus.mockReturnValue(swarm("Qwen3.5-2B-q4f16_1-MLC"));
-    expect(checkModelMatch("no-such-tool")).toMatchObject({
-      isCorrect: false,
-      action: "switch",
-      currentModel: "Qwen3.5-2B-q4f16_1-MLC",
-    });
-  });
-
   it.each([
-    ["nothing is loaded", {}],
-    ["the swarm is not ready", { swarmAvailable: false, swarmStatus: {} }],
-    [
-      "only the cloud is available",
-      { effectiveMode: "cloud", cloudAvailable: true, swarmAvailable: false },
-    ],
-  ])("asks to load when %s", (_name, status) => {
+    ["nothing loaded", {}],
+    ["the intended model loaded", swarm("Qwen3.5-4B-q4f16_1-MLC")],
+    ["a different model loaded", swarm("Qwen2.5-3B-Instruct-q4f16_1-MLC")],
+  ])("checkModelMatch asks to load when %s", (_name, status) => {
     mocks.getAIStatus.mockReturnValue(status);
-    expect(checkModelMatch("no-such-tool")).toMatchObject({
-      isCorrect: false,
-      action: "load",
-      currentModel: null,
-    });
+    const check = checkModelMatch("no-such-tool");
+    expect(check.action).toBe("load");
+    expect(check).not.toHaveProperty("isCorrect");
+    expect(check.recommendedModel.id).toMatch(/^diamond-/);
   });
 
-  it("says ready, and does not guess a switch, when it cannot compare models", () => {
-    mocks.getAIStatus.mockReturnValue(swarm(null));
-    expect(checkModelMatch("no-such-tool").isCorrect).toBe(true);
-    mocks.cachedProfile.mockReturnValue(null);
-    mocks.getAIStatus.mockReturnValue(swarm("Qwen3.5-4B-q4f16_1-MLC"));
-    expect(checkModelMatch("no-such-tool").isCorrect).toBe(true);
-  });
-
-  it("does not reload a model that is already the right one", async () => {
-    mocks.getAIStatus.mockReturnValue(swarm("Qwen3.5-4B-q4f16_1-MLC"));
+  it("never unloads or reloads a model that is already loaded", async () => {
+    mocks.getAIStatus.mockReturnValue(swarm("Qwen2.5-3B-Instruct-q4f16_1-MLC"));
     await expect(smartLoadAI("no-such-tool")).resolves.toBe(true);
     expect(mocks.initializeSwarm).not.toHaveBeenCalled();
+    expect(mocks.unloadSwarm).not.toHaveBeenCalled();
   });
 });
