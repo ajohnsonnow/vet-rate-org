@@ -17,6 +17,11 @@ import { findWrongCoverageDate } from "./coverageDates";
 import { submitsNewMaterialInReview } from "./reviewSubmissions";
 import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
+import {
+  citesIntentParagraphForSupplementalClaim,
+  takesHigherOfTwoAsCombined,
+  wrongSingleDisabilityThreshold,
+} from "./wrongLawPatterns";
 
 const anyMatch = (text, ...patterns) =>
   patterns.some((pattern) => pattern.test(text));
@@ -197,6 +202,13 @@ const RULES = [
     correction: () => "ratings-combined",
   },
   {
+    id: "ratings-higher-of-two",
+    topics: EVERY_ANSWER,
+    matches: takesHigherOfTwoAsCombined,
+    says: "takes the higher of two ratings as the combined rating",
+    correction: () => "ratings-combined",
+  },
+  {
     id: "secondary-barred",
     topics: ["secondary"],
     matches: (sentence) =>
@@ -291,6 +303,22 @@ const RULES = [
       !MENTIONS_EXTRA_SCHEDULAR.test(text),
     says: "says you cannot get TDIU because of the percentages",
     correction: () => "tdiu-extra-schedular",
+  },
+  {
+    id: "tdiu-wrong-single-threshold",
+    topics: ["tdiu"],
+    matches: (sentence) => wrongSingleDisabilityThreshold(sentence) !== null,
+    describe: (sentence) => ({
+      says: `gives ${wrongSingleDisabilityThreshold(sentence)} percent as the rating one disability needs for TDIU`,
+    }),
+    correction: () => "tdiu-judgment",
+  },
+  {
+    id: "intent-paragraph-for-supplemental-claim",
+    topics: FILING_TOPICS,
+    matches: citesIntentParagraphForSupplementalClaim,
+    says: "cites 38 CFR 3.155(b), the intent-to-file paragraph, as the rule for a Supplemental Claim",
+    correction: () => "intent-paragraph-scope",
   },
   {
     id: "files-statement-of-the-case",

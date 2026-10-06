@@ -194,6 +194,11 @@ export const CORRECTION_SPECS = {
     section: "3.155",
     select: ["(1) Requirement for complete claim and date of claim."],
   },
+  "intent-paragraph-scope": {
+    citation: "38 CFR § 3.155",
+    section: "3.155",
+    select: [{ start: "The following paragraphs describe", afterSentences: 1 }],
+  },
   "review-filing": {
     citation: "38 CFR § 3.2500(a)",
     section: "3.2500",
