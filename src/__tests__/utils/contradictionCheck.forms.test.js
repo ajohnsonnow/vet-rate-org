@@ -147,7 +147,7 @@ describe("the Intent to File form given as the application form", () => {
 
 describe("the rule over every recorded answer", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_045832";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_071544";
   const responses = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(
@@ -174,8 +174,8 @@ describe("the rule over every recorded answer", () => {
     }
   };
 
-  it("fires nine times in 1240 responses, each a real mix-up, with the topic gate off", () => {
-    expect(responses).toHaveLength(1240);
+  it("fires ten times in 1320 responses, each a real mix-up, with the topic gate off", () => {
+    expect(responses).toHaveLength(1320);
     const hits = responses.flatMap((r) =>
       textsOf(r.response)
         .flatMap((text) => findContradictions(text, { topics: FILING }))
@@ -192,6 +192,7 @@ describe("the rule over every recorded answer", () => {
       "032917 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
       "034657 a04 | gives VA Form 22-0966 as the form for a Supplemental Claim",
       "045832 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
+      "071544 a18 | gives VA Form 21-0966 as the form for a Supplemental Claim",
     ]);
   });
 });

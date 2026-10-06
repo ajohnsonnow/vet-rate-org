@@ -12,7 +12,7 @@ import { detectReferenceTopics } from "../../utils/verifiedReference";
 import { answerChecksApply } from "../../utils/answerCheckRoutes";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
-const LAST_REVIEWED_RUN = "run_2026-10-06_045832";
+const LAST_REVIEWED_RUN = "run_2026-10-06_071544";
 const ALL_TOPICS = [
   "secondary",
   "toxic-exposure",
@@ -177,6 +177,10 @@ const PROSE_HITS = [
   "045832 a21 tdiu-threshold-omits-forty",
   "045832 a30 year-from-receiving-a-form",
   "045832 a30 intent-form-as-application",
+  "070838 a15 new-and-material-standard",
+  "070838 a26 intent-to-file-for-filed-claim",
+  "071544 a18 form-for-another-filing",
+  "071544 a30 intent-form-as-application",
 ];
 
 describe("contradiction rules over the recorded evaluation answers", () => {
@@ -184,8 +188,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
   const prose = answers.filter((record) => !isDecoderCase(record));
 
   it("reads every answer that was shown to the user", () => {
-    expect(answers).toHaveLength(1200);
-    expect(prose).toHaveLength(1181);
+    expect(answers).toHaveLength(1280);
+    expect(prose).toHaveLength(1259);
   });
 
   const topicsOf = (record) =>
@@ -225,6 +229,7 @@ describe("contradiction rules outside the topic of the question", () => {
       "074624 a18 form-for-another-filing",
       "105010 a18 new-and-material-standard",
       "110822 a18 new-and-material-standard",
+      "071544 a18 form-for-another-filing",
     ]);
   });
 
