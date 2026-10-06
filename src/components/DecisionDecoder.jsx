@@ -1272,6 +1272,7 @@ const DecisionTypeBadge = ({ results }) => {
       {results.decision_type === "Reduction" && "📉"}
       {results.decision_type === "Deferred" && "⏳"}
       {results.decision_type === "Granted" && "✅"}
+      {results.decision_type === "Rating Continued" && "↔️"}
       {results.decision_type}
     </div>
   );
@@ -1596,6 +1597,8 @@ function getDecisionTypeColor(type) {
       return "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700";
     case "granted":
       return "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700";
+    case "rating continued":
+      return "bg-sky-100 dark:bg-sky-900/50 text-sky-900 dark:text-sky-100 border-sky-300 dark:border-sky-600";
     default:
       return "bg-gray-100 dark:bg-gray-900/50 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700";
   }
