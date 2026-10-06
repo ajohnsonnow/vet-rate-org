@@ -155,14 +155,14 @@ async function exposeAppModules(page: Page): Promise<void> {
       import * as swarm from "/src/utils/diamondSwarm.js";
       import * as ai from "/src/utils/unifiedAIService.js";
       import * as helper from "/src/utils/aiStatementHelper.js";
-      import { _compileStatementWithAI } from "/src/components/WitnessBench.jsx";
+      import { _compileWitnessStatement } from "/src/components/WitnessBench.jsx";
       import { _generateVocationalImpact } from "/src/components/TDIUBuilder.jsx";
       const tools = {
         enhancePersonalStatement: helper.enhancePersonalStatement,
         enhanceFormStatement: helper.enhanceFormStatement,
         enhanceAppealStatement: helper.enhanceAppealStatement,
         generateNexusLetterRequest: helper.generateNexusLetterRequest,
-        compileWitnessStatement: _compileStatementWithAI,
+        compileWitnessStatement: _compileWitnessStatement,
         generateVocationalImpact: _generateVocationalImpact,
         decodeDecision: helper.decodeDecision,
       };

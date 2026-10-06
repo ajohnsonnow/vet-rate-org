@@ -5,14 +5,15 @@ import {
 } from "../../../src/utils/writerDraftCheck.js";
 import {
   STANDARD_DRAFT_NOTE,
+  WITNESS_DRAFT_NOTE,
   appealStatementPlan,
   buildPassagePrompt,
   buildTdiuAnalysisTemplate,
+  buildWitnessStatementBody,
   formStatementPlan,
   nexusRequestPlan,
   personalStatementPlan,
   selectPassages,
-  witnessStatementPlan,
 } from "../../../src/utils/writerTemplates.js";
 
 /**
@@ -59,8 +60,7 @@ function planDraft(plan) {
   return {
     template: plan.build(plan.answers),
     passages,
-    prompt: sent.length > 0 ? buildPassagePrompt(passages, plan.voice) : null,
-    voice: plan.voice,
+    prompt: sent.length > 0 ? buildPassagePrompt(passages) : null,
     resolve: (reply) =>
       sent.length > 0
         ? resolvePassageDraft({ plan, sent, reply })
@@ -75,21 +75,37 @@ function formDraft(formType, formData) {
   return planDraft(plan);
 }
 
-function tdiuDraft(disabilities) {
-  const template = JSON.stringify(buildTdiuAnalysisTemplate(disabilities));
-  return {
-    template,
-    passages: [],
-    prompt: null,
-    resolve: () => ({
-      content: template,
-      draftPath: "template",
-      draftNote: STANDARD_DRAFT_NOTE,
-      draftRejectReasons: [],
-      passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
-    }),
-  };
-}
+// A tool that makes no model call: the app-built draft is the answer.
+const noModelDraft = (template, draftNote) => ({
+  template,
+  passages: [],
+  prompt: null,
+  resolve: () => ({
+    content: template,
+    draftPath: "template",
+    draftNote,
+    draftRejectReasons: [],
+    passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+  }),
+});
+
+const tdiuDraft = (disabilities) =>
+  noModelDraft(
+    JSON.stringify(buildTdiuAnalysisTemplate(disabilities)),
+    STANDARD_DRAFT_NOTE,
+  );
+
+// The Witness Bench statement is the witness's answers as typed; no model
+// is asked to reword them. This is its narrative, for the dry run: the
+// heading and the attestation block are the component's.
+const witnessDraft = (i) =>
+  noModelDraft(
+    [
+      `Regarding: ${i.condition}`,
+      buildWitnessStatementBody(i.answers ?? {}),
+    ].join("\n\n"),
+    WITNESS_DRAFT_NOTE,
+  );
 
 export const TOOL_ENTRIES = {
   enhancePersonalStatement: {
@@ -123,10 +139,7 @@ export const TOOL_ENTRIES = {
     args: (i) => [i.relationship, i.condition, i.answers ?? {}],
     text: (result) => result?.statement ?? "",
     failure: () => null,
-    draft: (i) =>
-      planDraft(
-        witnessStatementPlan(i.relationship, i.condition, i.answers ?? {}),
-      ),
+    draft: witnessDraft,
   },
   generateVocationalImpact: {
     args: (i) => [i.disabilities ?? []],
@@ -168,6 +181,7 @@ export function normalizeToolOutcome(entry, outcome) {
       draftErrorReason: result?.draftErrorReason ?? null,
       passages: result?.passages ?? null,
       passageOutcomes: result?.passageOutcomes ?? [],
+      rewordingOff: result?.rewordingOff ?? null,
     },
     // The tool handed back its app-built draft because the engine failed.
     // The case is answered, but the engine may still be busy or wedged.

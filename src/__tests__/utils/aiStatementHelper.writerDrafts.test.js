@@ -7,7 +7,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   enhanceAppealStatement,
-  enhanceBuddyStatement,
   enhanceFormStatement,
   enhancePTSDStatement,
   enhancePersonalStatement,
@@ -16,8 +15,8 @@ import {
 import { saveVeteranProfile } from "../../utils/veteranProfile";
 import {
   STANDARD_DRAFT_NOTE,
+  WITNESS_DRAFT_NOTE,
   appealStatementPlan,
-  buddyStatementPlan,
   buildPassagePrompt,
   buildPTSDStressorTemplate,
   buildPersonalStatementTemplate,
@@ -51,11 +50,6 @@ const PTSD = {
   eventDescription: "A vehicle rolled over beside me on the range",
   currentSymptoms: "I startle at engine noise and sleep about four hours",
 };
-const BUDDY = {
-  relationship: "Spouse",
-  knownDuration: "since 2015",
-  observations: "I see them wake up shouting several nights a week",
-};
 const APPEAL = {
   appealType: "hlr",
   conditionName: "Migraines",
@@ -80,12 +74,6 @@ const TOOLS = [
     () => enhancePTSDStatement(PTSD),
     ptsdStatementPlan(PTSD),
     "personal-statement",
-  ],
-  [
-    "enhanceBuddyStatement",
-    () => enhanceBuddyStatement(BUDDY, "PTSD"),
-    buddyStatementPlan(BUDDY, "PTSD"),
-    "buddy-statement",
   ],
   [
     "enhanceAppealStatement",
@@ -113,7 +101,7 @@ const reword = (passage) => {
   const body = /^I\b/.test(passage)
     ? passage
     : passage[0].toLowerCase() + passage.slice(1);
-  return `To put it plainly, ${body}${/[.!?]$/.test(body) ? "" : "."}`;
+  return `And ${body}${/[.!?]$/.test(body) ? "" : "."}`;
 };
 const modelReplies = (reply) =>
   generateAI.mockImplementation(async (prompt) => ({
@@ -280,10 +268,6 @@ describe("crisis language stops every statement tool before the model", () => {
       () => enhancePTSDStatement({ ...PTSD, dailyImpact: CRISIS }),
     ],
     [
-      "enhanceBuddyStatement",
-      () => enhanceBuddyStatement({ ...BUDDY, observations: CRISIS }, "PTSD"),
-    ],
-    [
       "enhanceAppealStatement",
       () => enhanceAppealStatement({ ...APPEAL, whyIncorrect: CRISIS }),
     ],
@@ -314,38 +298,33 @@ describe("crisis language stops every statement tool before the model", () => {
 
 describe("identifiers stay out of the AI context (ADR-008)", () => {
   const named = {
-    ...BUDDY,
-    observations: "I see Jordan Faketon wake up shouting most nights",
-    changesNoticed: "They stopped going to the weekly card game",
+    ...PTSD,
+    eventDescription:
+      "Jordan Faketon and I were beside the vehicle when it rolled",
+    currentSymptoms: "I stopped going to the weekly card game",
   };
 
   it("does not send a passage that names the veteran, and keeps it as typed", async () => {
     saveVeteranProfile({ firstName: "Jordan", lastName: "Faketon" });
     modelReplies((passages) => numbered(passages.map(reword)));
-    const result = await enhanceBuddyStatement(named, "PTSD");
+    const result = await enhancePTSDStatement(named);
 
     const [prompt] = generateAI.mock.calls[0];
     expect(prompt).not.toMatch(/Jordan|Faketon/);
-    expect(passagesIn(prompt)).toEqual([named.changesNoticed]);
-    expect(result.draftPath).toBe("model");
-    expect(result.passages).toMatchObject({
-      sent: 1,
-      accepted: 1,
-      withheld: 1,
-    });
+    expect(passagesIn(prompt)).toEqual([named.currentSymptoms]);
+    expect(result.passages).toMatchObject({ sent: 1, withheld: 1 });
     expect(result.content).toContain(
-      "I see Jordan Faketon wake up shouting most nights.",
+      "Jordan Faketon and I were beside the vehicle when it rolled.",
     );
-    expect(result.content).toContain(reword(named.changesNoticed));
     expect(result.content).not.toMatch(/REDACTED/);
   });
 
   it("makes no call when every passage names the veteran", async () => {
     saveVeteranProfile({ firstName: "Jordan", lastName: "Faketon" });
-    const result = await enhanceBuddyStatement(
-      { ...BUDDY, observations: named.observations },
-      "PTSD",
-    );
+    const result = await enhancePTSDStatement({
+      stressorType: PTSD.stressorType,
+      eventDescription: named.eventDescription,
+    });
 
     expect(generateAI).not.toHaveBeenCalled();
     expect(result.draftPath).toBe("template");
@@ -398,41 +377,60 @@ describe("enhanceFormStatement", () => {
     expect(generateAI).not.toHaveBeenCalled();
   });
 
-  it("sends the model the typed passages and nothing else the form holds", async () => {
+  it("makes no model call for a buddy statement: the witness's words stand", async () => {
     const formData = {
       witnessName: "Sam Placeholder",
-      witnessPhone: "555-0100",
-      witnessEmail: "sam@example.invalid",
       veteranName: "Jordan Placeholder",
       conditionName: "Migraines",
       witnessRelation: "coworker",
-      knownSince: "since 2016",
-      howKnown: "We worked the same line at the Placeholder plant",
-      whatObserved: "Lights off at the desk, sunglasses indoors",
-      whenObserved: "Spring 2022",
-      whereObserved: "The Placeholder plant",
-      workImpact: "Fewer shifts and no overtime",
-      additionalInfo: "Happy to answer questions",
+      whatObserved:
+        "Lights off at the desk, sunglasses indoors, head down on the bench",
+      specificExamples: "Fewer shifts and no overtime since the spring",
+      dailyImpact:
+        "3 March 2022 - left the line mid-shift, sick in the car park, driven home by me",
     };
     generateAI.mockResolvedValue({
-      text: "1. They sat at the desk with the lights off and wore sunglasses indoors.",
+      text: "1. I turned off the lights at the desk, wore sunglasses indoors, and put my head down on the bench.",
       mode: "swarm",
     });
     const result = await enhanceFormStatement("buddy-statement", formData);
 
-    const [prompt, options] = generateAI.mock.calls[0];
-    expect(prompt).toContain("1. Lights off at the desk, sunglasses indoors");
-    expect(prompt).not.toMatch(
-      /Placeholder|555-0100|example\.invalid|2016|Spring 2022|Fewer shifts|Happy to answer/,
-    );
-    expect(options.toolId).toBe("buddy-statement");
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      success: true,
+      draftPath: "template",
+      draftNote: WITNESS_DRAFT_NOTE,
+      passages: { sent: 0, accepted: 0, withheld: 0 },
+    });
+    for (const typed of [
+      formData.whatObserved,
+      formData.specificExamples,
+      formData.dailyImpact,
+    ]) {
+      expect(result.content).toContain(typed);
+    }
+    expect(result.content).not.toMatch(/I turned off|\bAI\b/);
+  });
 
-    expect(result.draftPath).toBe("model");
-    expect(result.content).toContain(
-      "They sat at the desk with the lights off and wore sunglasses indoors.",
+  it("sends the model only the veteran's typed passages from a personal statement", async () => {
+    const formData = {
+      veteranName: "Jordan Placeholder",
+      conditionName: "Migraines",
+      claimType: "initial",
+      onsetDate: "Spring 2016",
+      inServiceEvent: "A blast near the motor pool left my ears ringing",
+      medications: "Sumatriptan 50mg",
+      firstTreatment: "Sick call in 2016",
+    };
+    generateAI.mockResolvedValue({ text: "1. unchanged", mode: "swarm" });
+    await enhanceFormStatement("personal-statement", formData);
+
+    const [prompt, options] = generateAI.mock.calls[0];
+    expect(prompt).toContain(
+      "1. A blast near the motor pool left my ears ringing",
     );
-    expect(result.content).toContain("Veteran's Full Name: Jordan Placeholder");
-    expect(result.content).toContain("Contact Phone: 555-0100");
+    expect(prompt).not.toMatch(/Placeholder|Spring 2016|Sumatriptan|Sick call/);
+    expect(options.toolId).toBe("personal-statement");
   });
 
   it("refuses a form with no wording step", async () => {

@@ -15,6 +15,7 @@ import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import {
   AGGRAVATION_OPTIONS,
   AI_NO_CHANGE_NOTE,
+  rewordingOffNote,
   buildPersonalStatementTemplate,
   standardDraftNote,
 } from "../utils/writerTemplates";
@@ -1052,7 +1053,11 @@ function createAIConsentHandler({
             ? plainAIError(result.draftErrorReason, t)
             : null,
         );
-        setDraftNote(result.draftErrorReason ? null : AI_NO_CHANGE_NOTE);
+        setDraftNote(
+          result.draftErrorReason
+            ? null
+            : (rewordingOffNote(result) ?? AI_NO_CHANGE_NOTE),
+        );
       } else {
         setAiError(plainAIError(result.error, t));
       }

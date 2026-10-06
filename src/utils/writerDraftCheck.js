@@ -22,18 +22,23 @@
  *      or diagnosis;
  *   6. it refers to people the way the passage does: the same pronouns, no
  *      "the veteran" for "they", no first person turned into third.
+ *   7. it is the passage's own words (passageFaithfulness.js): every main
+ *      word kept, none added, cause and contrast words kept, no change of
+ *      tense, no verb made into a noun, no "I" where the passage had only
+ *      "me". Only a veteran's own passages are ever sent; a witness's are
+ *      not, and a small on-device model is not asked at all.
  *
  * A rewording that fails keeps the writer's own words. The check errs
  * toward rejecting: a rejected good rewording costs some polish, an
  * accepted invented fact goes into sworn evidence.
  */
 
+import { faithfulnessProblems } from "./passageFaithfulness.js";
 import { standardDraftNote } from "./writerTemplates.js";
 
 export const DRAFT_PATH = { MODEL: "model", TEMPLATE: "template" };
 
 const MIN_WORDING_KEPT = 0.6;
-const MAX_NEW_WORDING = 0.45;
 
 const lower = (value) => String(value ?? "").toLowerCase();
 const squash = (value) => lower(value).replace(/\s+/g, " ").trim();
@@ -705,7 +710,6 @@ const sameWording = (a, b) => {
 
 const MAX_PASSAGE_GROWTH = 1.75;
 const PASSAGE_GROWTH_ALLOWANCE = 40;
-const MIN_NEW_WORDS_ALLOWED = 2;
 
 const PRONOUN_FAMILIES = {
   I: "i me my mine myself i'm i've i'd i'll we us our ours".split(" "),
@@ -742,13 +746,11 @@ function peopleIn(value) {
  * into third or third into first.
  *
  * One thing is allowed: a passage with no subject at all ("Startle at
- * engine noise") may be given the writer's. That is "I" for anyone, and for
- * a witness also "they", the person they are describing.
+ * engine noise") may be given the writer's, "I".
  */
-function peopleProblems(original, rewrite, voice) {
+function peopleProblems(original, rewrite) {
   const before = peopleIn(original);
   const after = peopleIn(rewrite);
-  const noOneNamed = before.pronouns.length === 0 && before.nouns.length === 0;
   const changes = [
     ...before.pronouns
       .filter((family) => !after.pronouns.includes(family))
@@ -762,9 +764,7 @@ function peopleProblems(original, rewrite, voice) {
     ...after.pronouns
       .filter(
         (family) =>
-          THIRD_PERSON.includes(family) &&
-          !before.pronouns.includes(family) &&
-          !(noOneNamed && voice === "witness"),
+          THIRD_PERSON.includes(family) && !before.pronouns.includes(family),
       )
       .map((family) => `"${family}" is new`),
   ];
@@ -773,11 +773,11 @@ function peopleProblems(original, rewrite, voice) {
     : [];
 }
 
-function passageProblems(original, rewrite, keep, voice) {
+function passageProblems(original, rewrite, keep) {
   const kind = classifyReplyKind(rewrite);
   if (kind !== "rewording") return [`not a rewording: ${kind}`];
 
-  const problems = peopleProblems(original, rewrite, voice);
+  const problems = peopleProblems(original, rewrite);
   if (REDACTION_MARKER.test(rewrite))
     problems.push("contains a redaction marker");
   const brackets = (rewrite.match(BRACKETED) ?? []).filter(
@@ -805,15 +805,7 @@ function passageProblems(original, rewrite, keep, voice) {
   ) {
     problems.push("much longer than the passage");
   }
-  const known = stemSet(original);
-  const words = contentWords(rewrite);
-  const added = words.filter((word) => !known.has(word));
-  if (
-    added.length >
-    Math.max(MIN_NEW_WORDS_ALLOWED, Math.floor(MAX_NEW_WORDING * words.length))
-  ) {
-    problems.push(`${added.length} of its ${words.length} main words are new`);
-  }
+  problems.push(...faithfulnessProblems(original, rewrite));
   return problems;
 }
 
@@ -831,15 +823,9 @@ function passageProblems(original, rewrite, keep, voice) {
  * kept, and most of its wording. On top of those: no bracketed text the
  * passage did not have (an invented fact in brackets is still invented), no
  * redaction marker, not much longer or much newer than the passage, and the
- * same way of referring to people (see peopleProblems). `voice` is the
- * plan's: who is writing.
+ * same way of referring to people (see peopleProblems).
  */
-export function checkPassageRewrite({
-  original,
-  rewrite,
-  keep = [],
-  voice = "veteran",
-}) {
+export function checkPassageRewrite({ original, rewrite, keep = [] }) {
   const source = String(original ?? "").trim();
   const text = String(rewrite ?? "").trim();
   if (text === "") {
@@ -852,7 +838,7 @@ export function checkPassageRewrite({
   if (sameWording(source, text)) {
     return { status: "unchanged", text: source, reasons: [] };
   }
-  const reasons = passageProblems(source, text, keep, voice);
+  const reasons = passageProblems(source, text, keep);
   return reasons.length > 0
     ? { status: "rejected", text: source, reasons }
     : { status: "accepted", text, reasons: [] };
@@ -869,7 +855,7 @@ export function standardDraft(plan, extra = {}) {
   return {
     content,
     draftPath: DRAFT_PATH.TEMPLATE,
-    draftNote: standardDraftNote(content),
+    draftNote: plan.note ?? standardDraftNote(content),
     draftRejectReasons: [],
     passages: NO_PASSAGES,
     passageOutcomes: [],
@@ -905,7 +891,6 @@ export function resolvePassageDraft({ plan, sent, reply }) {
       original: passage.text,
       rewrite: rewrites[i],
       keep: plan.keep,
-      voice: plan.voice,
     }),
   }));
   const count = (status) =>

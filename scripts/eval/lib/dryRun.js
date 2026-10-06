@@ -66,11 +66,6 @@ const FAILING_OVERRIDES = {
   a30: { noCapture: true },
   t01: { reword: "all" },
   t02: { toolError: "WebGPU inference timed out after 300s" },
-  t03: {
-    toolReply:
-      "I cannot draft a buddy statement because you have not provided the specific details of the incident.",
-  },
-  t04: { reword: "first" },
   t05: { reword: "all", rewordAdds: " This was decided on March 3, 2021." },
   t06: { noDraft: true },
   t09: { reword: "all" },
@@ -146,8 +141,9 @@ export const DRY_RUN_EXPECTATIONS = {
   a30: { routing: NEEDS_HUMAN },
   t01: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   t02: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
-  t03: { "draft-returned": AUTO_PASS },
-  t04: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  // Witness statements make no model call: the witness's words stand.
+  t03: { routing: NOT_APPLICABLE, "draft-returned": AUTO_PASS },
+  t04: { routing: NOT_APPLICABLE, "draft-returned": AUTO_PASS },
   t05: { "draft-returned": AUTO_PASS },
   t06: { "draft-returned": AUTO_FAIL },
   t07: { routing: NOT_APPLICABLE, "draft-returned": AUTO_PASS },
@@ -157,7 +153,7 @@ export const DRY_RUN_EXPECTATIONS = {
     "no-new-pii": AUTO_PASS,
   },
   t09: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
-  t10: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  t10: { routing: NOT_APPLICABLE, "draft-returned": AUTO_PASS },
 };
 
 /** The draft path each dry-run tool case must record. */
@@ -165,7 +161,7 @@ export const DRY_RUN_DRAFT_PATHS = {
   t01: "model",
   t02: "template",
   t03: "template",
-  t04: "model",
+  t04: "template",
   t05: "template",
   t06: null,
   t07: "template",
@@ -262,7 +258,7 @@ function cannedRewording(draft, override) {
       ? passage
       : passage[0].toLowerCase() + passage.slice(1);
     const stop = /[.!?]$/.test(body) ? "" : ".";
-    return `To put it plainly, ${body}${stop}${override.rewordAdds ?? ""}`;
+    return `And ${body}${stop}${override.rewordAdds ?? ""}`;
   };
   return draft.passages
     .map((passage, i) => {

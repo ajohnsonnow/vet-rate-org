@@ -11,6 +11,7 @@ import StandardDraftNotice from "./common/StandardDraftNotice";
 import { EditedDraftDialog } from "./common/ChoiceDialog";
 import {
   AI_NO_CHANGE_NOTE,
+  rewordingOffNote,
   formStatementPlan,
   standardDraftNote,
 } from "../utils/writerTemplates";
@@ -7992,7 +7993,9 @@ function showAIOutcome(ctx, result) {
   ctx.setAiEnhancedContent(reworded ? text : null);
   ctx.setShowAIVersion(reworded);
   ctx.setAiDraftNote(
-    reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
+    reworded || result.draftErrorReason
+      ? null
+      : (rewordingOffNote(result) ?? AI_NO_CHANGE_NOTE),
   );
   ctx.setAiError(
     result.draftErrorReason
@@ -8015,11 +8018,8 @@ function _buildFormsHelperAIHandlers(ctx) {
 
   // Check if current form type supports AI enhancement
   const isAIEnabledFormType = () => {
-    const aiEnabledForms = [
-      "buddy-statement",
-      "personal-statement",
-      "ptsd-stressor",
-    ];
+    // The buddy statement is a witness's: its words are never reworded.
+    const aiEnabledForms = ["personal-statement", "ptsd-stressor"];
     return aiEnabledForms.includes(selectedForm?.id);
   };
 
@@ -8267,7 +8267,8 @@ function FormsHelperReviewStep({ state, handlers }) {
   if (!generatedContent) return null;
 
   const displayContent = getDisplayContent();
-  const isStatement = isAIEnabledFormType();
+  const plan = formStatementPlan(state.selectedForm?.id, {});
+  const isStatement = Boolean(plan);
   const showingAIDraft = Boolean(showAIVersion && aiEnhancedContent);
   // The notice follows the text on screen: it stops asking for blanks to be
   // filled once the veteran has filled them.
@@ -8296,6 +8297,8 @@ function FormsHelperReviewStep({ state, handlers }) {
         onOpenAISettings={state.onOpenAISettings}
         t={t}
       />
+
+      {plan?.note && <StandardDraftNotice note={plan.note} />}
 
       {isStatement && (
         <StatementDraftEditor

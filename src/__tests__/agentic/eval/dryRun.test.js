@@ -134,11 +134,9 @@ describe("dry run end to end", () => {
     expect(md).toContain(
       "| t02 | enhanceFormStatement | template | app-built draft returned: 0 of 3 passages reworded, 0 unchanged, 0 rejected (the model did not answer: WebGPU inference timed out after 300s) |",
     );
-    expect(md).toContain(
-      "| t04 | compileWitnessStatement | model | model rewording placed: 1 of 4 passages reworded, 3 unchanged, 0 rejected |",
-    );
+    expect(md).toContain("| t04 | compileWitnessStatement | template |");
     expect(md).toContain("| t01 | writer / tool's own prompt | pass |");
-    expect(md).toContain("| t04 | writer / writer | pass |");
+    expect(md).toMatch(/\| t04 \| writer \/ \? \| n\/a \|/);
     expect(md).toContain("| t06 | generateNexusLetterRequest | - |");
   });
 
@@ -167,7 +165,7 @@ describe("dry run tool cases", () => {
       passages: { sent: 3, accepted: 3, unchanged: 0, rejected: 0 },
     });
     expect(byId.get("t01").response).toContain(
-      "To put it plainly, I miss about two shifts a month at the Placeholder warehouse.",
+      "And I miss about two shifts a month at the Placeholder warehouse.",
     );
     expect(byId.get("t02")).toMatchObject({
       draftPath: "template",
@@ -176,19 +174,27 @@ describe("dry run tool cases", () => {
       passages: { sent: 3, accepted: 0 },
     });
     expect(byId.get("t02").response).toContain("VA Form 21-0781");
-    expect(byId.get("t03")).toMatchObject({
-      draftPath: "template",
-      passages: { sent: 2, accepted: 0, rejected: 2 },
-    });
+    for (const witnessCase of ["t03", "t04", "t10"]) {
+      expect([witnessCase, byId.get(witnessCase)]).toMatchObject([
+        witnessCase,
+        {
+          draftPath: "template",
+          engineRequests: 0,
+          requestMatch: "none",
+          passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+          passageOutcomes: [],
+        },
+      ]);
+    }
     expect(byId.get("t03").response).toContain(
       "[how you have seen the condition affect the veteran's daily activities]",
     );
-    expect(byId.get("t04").passages).toEqual({
-      sent: 4,
-      accepted: 1,
-      unchanged: 3,
-      rejected: 0,
-    });
+    expect(byId.get("t04").response).toContain(
+      "They leave the room when the fireworks start and do not come back for the evening.",
+    );
+    expect(byId.get("t10").response).toContain(
+      "Lights off at the desk, sunglasses indoors, head down on the bench.",
+    );
     expect(byId.get("t05").draftRejectReasons.join(" ")).toMatch(/2021/);
     expect(byId.get("t05").response).not.toMatch(/2021/);
     expect(byId.get("t05").passageOutcomes[0]).toMatchObject({
@@ -203,12 +209,6 @@ describe("dry run tool cases", () => {
     expect(byId.get("t05").passageOutcomes[0].reasons.join(" ")).toMatch(
       /2021/,
     );
-    expect(byId.get("t04").passageOutcomes.map((p) => p.verdict)).toEqual([
-      "accepted",
-      "unchanged",
-      "unchanged",
-      "unchanged",
-    ]);
     expect(byId.get("t07").passageOutcomes).toEqual([]);
     expect(byId.get("t07")).toMatchObject({
       draftPath: "template",
@@ -230,7 +230,7 @@ describe("dry run tool cases", () => {
 });
 
 describe("dry run fragment cases", () => {
-  it("records t09 reworded throughout and t10 echoed", () => {
+  it("records t09 reworded throughout", () => {
     const run = dryRun(makeTmp());
     const byId = new Map(run.cases.map((c) => [c.id, c]));
     expect(byId.get("t09").passages).toEqual({
@@ -238,10 +238,6 @@ describe("dry run fragment cases", () => {
       accepted: 5,
       unchanged: 0,
       rejected: 0,
-    });
-    expect(byId.get("t10")).toMatchObject({
-      draftPath: "template",
-      passages: { sent: 3, accepted: 0, unchanged: 3, rejected: 0 },
     });
   });
 });

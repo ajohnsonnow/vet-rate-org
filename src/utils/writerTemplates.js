@@ -18,6 +18,7 @@
 
 export {
   STRESSOR_TYPE_LABELS,
+  WITNESS_DRAFT_NOTE,
   WITNESS_RELATION_LABELS,
   formStatementPlan,
 } from "./formStatementDrafts.js";
@@ -170,22 +171,6 @@ export function buildPTSDStressorTemplate(answers = {}) {
   ]);
 }
 
-/** Buddy / lay statement (VA Form 21-10210) from the Forms Helper fields. */
-export function buildBuddyStatementTemplate(answers = {}, conditionName = "") {
-  return paragraphs([
-    "STATEMENT IN SUPPORT OF CLAIM (VA Form 21-10210)",
-    `Regarding: [Veteran]'s ${orBlank(conditionName, "the veteran's condition")}`,
-    [
-      `My relationship to [Veteran]: ${orBlank(answers.relationship, "your relationship to the veteran")}`,
-      `How long I have known [Veteran]: ${orBlank(answers.knownDuration, "how long you have known the veteran")}`,
-    ].join("\n"),
-    `What I have personally observed\n${said(answers.observations, "what you have personally seen or heard, with specific examples")}`,
-    `Changes I have noticed\n${said(answers.changesNoticed, "changes you have noticed in the veteran over time")}`,
-    `Effect on daily life that I have witnessed\n${said(answers.dailyImpact, "how you have seen the condition affect the veteran's daily life")}`,
-    "This statement describes only what I have personally observed. It is true to the best of my knowledge.",
-  ]);
-}
-
 /**
  * The narrative part of a Witness Bench statement: the witness's own
  * answers, in the order given. `relationship_context` leads; every other
@@ -208,26 +193,6 @@ export function buildWitnessStatementBody(answers = {}) {
             "what you have personally seen or heard, with specific examples",
           ),
         ]),
-  ]);
-}
-
-/**
- * Witness Bench statement as offered to the model: heading plus narrative.
- * `relationship` is the stored choice ("spouse"); its label is printed.
- */
-export function buildWitnessStatementTemplate(
-  relationship = "",
-  condition = "",
-  answers = {},
-) {
-  const relationshipLabel = witnessRelationshipLabel(relationship);
-  return paragraphs([
-    [
-      "STATEMENT IN SUPPORT OF CLAIM (VA FORM 21-10210)",
-      `Witness Type: ${orBlank(relationshipLabel, "your relationship to the veteran")}`,
-      `Regarding: ${orBlank(condition, "the veteran's condition")}`,
-    ].join("\n"),
-    buildWitnessStatementBody(answers),
   ]);
 }
 
@@ -446,6 +411,16 @@ export const STANDARD_DRAFT_NOTE_NO_BLANKS =
 export const AI_NO_CHANGE_NOTE =
   "The AI did not change the wording, so this is still the standard draft.";
 
+// Said when the veteran asks for AI wording and the model that would answer
+// is in the small class. Small on-device models changed the meaning of what
+// people typed, so they are not asked to reword anything.
+export const SMALL_MODEL_REWORDING_OFF =
+  "The AI on this device is a small one, and small ones changed the meaning of what people wrote, so it is not used to reword statements. Your draft is in your own words, as you typed them.";
+
+/** Why a tool result was not reworded on purpose, or null when it was asked. */
+export const rewordingOffNote = (result) =>
+  result?.rewordingOff === "small-model" ? SMALL_MODEL_REWORDING_OFF : null;
+
 /** The one-line note for an app-built draft, with or without blanks. */
 export const standardDraftNote = (draft) =>
   listPlaceholders(draft).length > 0
@@ -464,15 +439,15 @@ export const standardDraftNote = (draft) =>
  *   answers          what the form supplied
  *   passageKeys      the answers that are free-text passages
  *   keep             phrases a rewording must not lose (condition names)
- *   voice            who is writing: "veteran" (their own statement) or
- *                    "witness" (someone describing the veteran)
+ *
+ * Every plan is a veteran writing their own statement. A witness's words
+ * are never offered to a model (see WITNESS_DRAFT_NOTE).
  */
-const plan = (build, answers, passageKeys, keep = [], voice = "veteran") => ({
+const plan = (build, answers, passageKeys, keep = []) => ({
   build,
   answers: answers ?? {},
   passageKeys,
   keep: keep.map(text).filter(Boolean),
-  voice,
 });
 
 export const personalStatementPlan = (
@@ -503,15 +478,6 @@ export const ptsdStatementPlan = (answers) =>
     "dailyImpact",
   ]);
 
-export const buddyStatementPlan = (answers, conditionName) =>
-  plan(
-    (a) => buildBuddyStatementTemplate(a, conditionName),
-    answers,
-    ["observations", "changesNoticed", "dailyImpact"],
-    [conditionName],
-    "witness",
-  );
-
 export const appealStatementPlan = (answers) =>
   plan(
     buildAppealStatementTemplate,
@@ -526,16 +492,6 @@ export const nexusRequestPlan = (answers) =>
     answers,
     ["connectionTheory", "inServiceEvent", "symptoms", "medicalHistory"],
     [answers?.conditionName, answers?.primaryCondition],
-  );
-
-/** Every answer a witness typed is a passage. */
-export const witnessStatementPlan = (relationship, condition, answers) =>
-  plan(
-    (a) => buildWitnessStatementTemplate(relationship, condition, a),
-    answers,
-    Object.keys(answers ?? {}),
-    [condition],
-    "witness",
   );
 
 // A passage this short ("None", "Daily") has nothing to reword.
@@ -557,18 +513,8 @@ export function selectPassages({ build, answers, passageKeys }) {
     );
 }
 
-// The subject a fragment is to be given, by who is writing.
-const SUBJECT_FOR_VOICE = {
-  veteran: 'beginning with its subject, for example "I".',
-  witness:
-    'beginning with its subject: "I" for what the writer did or saw, "they" for the person the writer is describing.',
-};
-
-/**
- * The request sent to the model: reword these passages, add nothing.
- * `voice` is the plan's: it sets the subject a fragment should be given.
- */
-export function buildPassagePrompt(passages, voice = "veteran") {
+/** The request sent to the model: reword these passages, add nothing. */
+export function buildPassagePrompt(passages) {
   const numbered = passages
     .map((passage, i) => `${i + 1}. ${passage}`)
     .join("\n");
@@ -578,7 +524,7 @@ Rules:
 - Say only what the passage says. Do not add any fact, number, date, place, name, unit, diagnosis, rating, cause, feeling or detail that is not in it.
 - Keep every number, date and name exactly as written.
 - Keep who is speaking, and who is spoken about, the same. Keep "I", "they", "he" and "she" exactly as the writer used them. Do not replace one with a name or with a description such as "the veteran", or the other way round.
-- A passage that is not a full sentence (a list, a phrase with no subject or no verb) must be rewritten as one or more full sentences ${SUBJECT_FOR_VOICE[voice] ?? SUBJECT_FOR_VOICE.veteran}
+- A passage that is not a full sentence (a list, a phrase with no subject or no verb) must be rewritten as one or more full sentences beginning with its subject, for example "I".
 - Return a passage unchanged only if every part of it is already a full sentence.
 - Do not use square brackets. Do not ask questions, give advice, or add a heading, a greeting, a closing or a certification.
 - Reply with the same numbers, one rewritten passage after each number, and nothing else.

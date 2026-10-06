@@ -21,24 +21,12 @@ import {
   getAIStatus,
 } from "../utils/unifiedAIService";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
-import {
-  DRAFT_PATH,
-  applyAcceptedRewordings,
-  draftAfterModelError,
-  resolvePassageDraft,
-  standardDraft,
-} from "../utils/writerDraftCheck";
+import { DRAFT_PATH } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
-import { plainAIError } from "../utils/writerErrorMessage";
 import {
-  AI_NO_CHANGE_NOTE,
-  STANDARD_DRAFT_NOTE,
-  buildPassagePrompt,
-  standardDraftNote,
+  WITNESS_DRAFT_NOTE,
   buildWitnessStatementBody,
-  selectPassages,
   witnessRelationshipLabel,
-  witnessStatementPlan,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import { AIStatusBadge } from "./AIModeSelector";
@@ -390,84 +378,27 @@ Return EXACTLY 4 questions in this JSON format:
 };
 
 /**
- * Compile answers into a formal buddy statement using AI
+ * The witness statement and how it was built, in the shape the writing
+ * tools share. It is the witness's own answers, as typed, in the Bench's
+ * standard statement. No model is asked to reword them: a model rewording a
+ * witness's note about the veteran ("Lights off at the desk") wrote it as
+ * the witness's own act ("I turned off the lights"), and a witness signs
+ * this under penalty of law. A fragment stays a fragment for the witness to
+ * finish.
  */
 // Exported (test-only, per this codebase's underscore-prefix convention) so
-// a direct test can assert on the real prompt this builds, without
-// rendering the whole component.
-export const _compileStatementWithAI = async (
-  relationship,
-  condition,
-  answers,
-) => {
-  // The statement is always the Bench's standard one, read-before-you-sign
-  // block included. Only the witness's own answers are offered to the model,
-  // and each accepted rewording takes its answer's place.
-  const plan = {
-    ...witnessStatementPlan(relationship, condition, answers),
-    build: (a) => compileStatementWithoutAI(relationship, condition, a),
-  };
-  const asStatement = ({ content, ...draft }) => ({
-    statement: content,
-    ...draft,
-  });
-  const sent = selectPassages(plan);
-  if (sent.length === 0) return asStatement(standardDraft(plan));
-
-  let text;
-  try {
-    if (!isAnyAIAvailable()) {
-      throw new Error(
-        "No AI available. Please configure an API key or enable Local AI.",
-      );
-    }
-    // Use unified AI service - ADR-009: "context" - the witness's own typed
-    // interview answers (their own words about the veteran), not a document
-    // upload; PII redaction is handled separately at the ADR-008 boundary.
-    const response = await generateAI(
-      buildPassagePrompt(
-        sent.map((passage) => passage.text),
-        plan.voice,
-      ),
-      {
-        dataClass: AI_DATA_CLASS.CONTEXT,
-        toolId: "buddy-statement",
-        temperature: 0.3,
-        maxTokens: 2048,
-      },
-    );
-    // generateAI returns { text, mode } object - extract the text content
-    text = response?.text || response;
-  } catch (error) {
-    console.error("Statement generation failed:", error);
-    return asStatement(draftAfterModelError(plan, sent, error));
-  }
-
-  const drafted = asStatement(
-    resolvePassageDraft({
-      plan,
-      sent,
-      reply: typeof text === "string" ? text : JSON.stringify(text),
-    }),
-  );
-  return drafted.draftPath === "model"
-    ? {
-        ...drafted,
-        statement: drafted.statement.replace(
-          ATTESTATION_WARNING,
-          `${AI_WORDING_DISCLOSURE} ${ATTESTATION_WARNING}`,
-        ),
-      }
-    : drafted;
-};
+// tests and the golden-set evaluation call the function the Bench calls.
+export const _compileWitnessStatement = (relationship, condition, answers) => ({
+  statement: compileStatementWithoutAI(relationship, condition, answers),
+  draftPath: DRAFT_PATH.TEMPLATE,
+  draftNote: WITNESS_DRAFT_NOTE,
+  draftRejectReasons: [],
+  passages: { sent: 0, accepted: 0, unchanged: 0, rejected: 0 },
+  passageOutcomes: [],
+});
 
 const ATTESTATION_WARNING =
   "Before signing, read every sentence and confirm it describes something YOU personally witnessed and know to be true. A buddy/lay statement is submitted to the VA under penalty of law (18 U.S.C. § 1001) - a knowingly false statement is a federal crime. Edit anything that is not accurate.";
-// Said only when the model reworded at least one answer. The statement is
-// never described as drafted by AI: the witness's answers are its content.
-const AI_WORDING_DISCLOSURE =
-  "The wording of some passages in this statement was suggested by AI. Review each one: it is your statement.";
-
 const WITNESS_NAME_BLANK = "[Witness Printed Name]";
 
 /**
@@ -605,16 +536,9 @@ const saveWitnessStatementToPacket = (
 const SIGNING_NOTICE =
   "The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of law (18 U.S.C. 1001 - knowingly false statements are a federal crime).";
 
-/**
- * The line a downloaded statement opens with, so the warning travels with
- * the file. It mentions AI only when the model reworded a passage. ASCII
- * only: the PDF's standard font has no section sign.
- */
-// Exported (test-only, per this codebase's underscore-prefix convention).
-export const _witnessFileBanner = (draftPath) =>
-  draftPath === DRAFT_PATH.MODEL
-    ? `DRAFT - not a sworn statement. The wording of some passages was suggested by AI. ${SIGNING_NOTICE}`
-    : `DRAFT - not a sworn statement. ${SIGNING_NOTICE}`;
+// The line a downloaded statement opens with, so the warning travels with
+// the file. ASCII only: the PDF's standard font has no section sign.
+const WITNESS_FILE_BANNER = `DRAFT - not a sworn statement. ${SIGNING_NOTICE}`;
 
 /**
  * Copy to clipboard
@@ -704,8 +628,6 @@ function useOutputState() {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [savedItem, setSavedItem] = useState(null);
   const [draftNote, setDraftNote] = useState(null);
-  const [draftPath, setDraftPath] = useState(DRAFT_PATH.TEMPLATE);
-  const [aiFailure, setAiFailure] = useState(null);
   const [outputError, setOutputError] = useState(null);
 
   return {
@@ -713,10 +635,6 @@ function useOutputState() {
     setGeneratedStatement,
     draftNote,
     setDraftNote,
-    draftPath,
-    setDraftPath,
-    aiFailure,
-    setAiFailure,
     outputError,
     setOutputError,
     showDownloadMenu,
@@ -794,15 +712,14 @@ function useStartInterview({
 }
 
 /**
- * Generate the final statement
+ * Generate the final statement: the witness's answers as typed, with the
+ * names the app and the witness already hold filled in on the device.
  */
 function useGenerateStatement({
   relationship,
   condition,
   witnessName,
   answers,
-  useAI,
-  aiAvailable,
   setError,
   setIsGeneratingStatement,
   output,
@@ -810,93 +727,21 @@ function useGenerateStatement({
 }) {
   return useCallback(async () => {
     setError(null);
-    output.setDraftNote(null);
-    output.setAiFailure(null);
     output.setOutputError(null);
     setIsGeneratingStatement(true);
 
-    const standard = () => ({
-      statement: compileStatementWithoutAI(relationship, condition, answers),
-      draftPath: DRAFT_PATH.TEMPLATE,
-      draftNote: STANDARD_DRAFT_NOTE,
-    });
-    let drafted;
-    try {
-      drafted =
-        useAI && aiAvailable
-          ? await _compileStatementWithAI(relationship, condition, answers)
-          : standard();
-    } catch (err) {
-      console.error("Statement generation failed:", err);
-      drafted = standard();
-    }
-
+    const drafted = _compileWitnessStatement(relationship, condition, answers);
     output.setGeneratedStatement(
       _finishWitnessStatement(drafted.statement, {
         veteranName: await resolveVeteranDisplayName(),
         witnessName,
       }),
     );
-    output.setDraftPath(drafted.draftPath);
     output.setDraftNote(drafted.draftNote);
-    output.setAiFailure(drafted.draftErrorReason ?? null);
     setStep(3);
     setIsGeneratingStatement(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relationship, condition, witnessName, answers, useAI]);
-}
-
-/** `text` with the line saying AI suggested some wording, said once. */
-function withAIDisclosure(text) {
-  if (text.includes(AI_WORDING_DISCLOSURE)) return text;
-  return text.includes(ATTESTATION_WARNING)
-    ? text.replace(
-        ATTESTATION_WARNING,
-        `${AI_WORDING_DISCLOSURE} ${ATTESTATION_WARNING}`,
-      )
-    : `${text}\n\n${AI_WORDING_DISCLOSURE}`;
-}
-
-/**
- * Ask the AI again after it failed. The statement in the box is the
- * witness's by now: accepted rewordings go into that text, an answer the
- * witness has since rewritten there is left alone, and a second failure
- * changes nothing in the box.
- */
-function useRetryAI({
-  relationship,
-  condition,
-  answers,
-  setIsGeneratingStatement,
-  output,
-}) {
-  return async () => {
-    setIsGeneratingStatement(true);
-    const drafted = await _compileStatementWithAI(
-      relationship,
-      condition,
-      answers,
-    ).catch((err) => ({ draftErrorReason: String(err?.message ?? err) }));
-    setIsGeneratingStatement(false);
-
-    if (drafted.draftErrorReason) {
-      output.setAiFailure(drafted.draftErrorReason);
-      return;
-    }
-    const box = output.generatedStatement;
-    const { text, applied } = applyAcceptedRewordings(
-      box,
-      drafted.passageOutcomes,
-    );
-    output.setAiFailure(null);
-    if (applied === 0) {
-      output.setDraftNote(`${AI_NO_CHANGE_NOTE} ${standardDraftNote(box)}`);
-      return;
-    }
-    output.setGeneratedStatement(withAIDisclosure(text));
-    output.setDraftPath(DRAFT_PATH.MODEL);
-    output.setDraftNote(null);
-  };
+  }, [relationship, condition, witnessName, answers]);
 }
 
 function useWitnessBench(t) {
@@ -923,20 +768,10 @@ function useWitnessBench(t) {
     condition: wizard.condition,
     witnessName: wizard.witnessName,
     answers: interview.answers,
-    useAI: ai.useAI,
-    aiAvailable: ai.aiAvailable,
     setError: ai.setError,
     setIsGeneratingStatement: ai.setIsGeneratingStatement,
     output,
     setStep: wizard.setStep,
-  });
-
-  const retryAI = useRetryAI({
-    relationship: wizard.relationship,
-    condition: wizard.condition,
-    answers: interview.answers,
-    setIsGeneratingStatement: ai.setIsGeneratingStatement,
-    output,
   });
 
   const startOver = () => {
@@ -948,8 +783,6 @@ function useWitnessBench(t) {
     interview.setCurrentQuestionIndex(0);
     output.setGeneratedStatement("");
     output.setDraftNote(null);
-    output.setDraftPath(DRAFT_PATH.TEMPLATE);
-    output.setAiFailure(null);
     output.setOutputError(null);
     output.setSavedItem(null);
   };
@@ -961,7 +794,6 @@ function useWitnessBench(t) {
     output,
     startInterview,
     generateStatement,
-    retryAI,
     startOver,
   };
 }
@@ -1656,28 +1488,9 @@ const NextStepsPanel = ({ t }) => (
   </div>
 );
 
-// Why the statement is the standard one after the AI was asked and failed,
-// with a way to ask again.
-const AIFailureNotice = ({ reason, onRetry, isRetrying }) => (
-  <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-800 dark:text-red-200 text-sm">
-    <p>{reason}</p>
-    <button
-      type="button"
-      onClick={onRetry}
-      disabled={isRetrying}
-      className="block mt-2 min-h-[44px] px-3 underline font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded disabled:opacity-60"
-    >
-      Try the AI again
-    </button>
-  </div>
-);
-
 const OutputStep = ({
   t,
   draftNote,
-  aiFailure,
-  onRetryAI,
-  isRetryingAI,
   outputError,
   generatedStatement,
   onGeneratedStatementChange,
@@ -1693,13 +1506,6 @@ const OutputStep = ({
 }) => (
   <div className="max-w-3xl mx-auto space-y-6">
     <OutputSuccessBanner t={t} />
-    {aiFailure && (
-      <AIFailureNotice
-        reason={aiFailure}
-        onRetry={onRetryAI}
-        isRetrying={isRetryingAI}
-      />
-    )}
     <StandardDraftNotice note={draftNote} />
     {outputError && (
       <p
@@ -1748,7 +1554,7 @@ const WitnessOutput = ({ t, wb }) => {
         output.generatedStatement,
         `Buddy_Statement_${wizard.condition.replace(/\s+/g, "_")}`,
         format,
-        { banner: _witnessFileBanner(output.draftPath) },
+        { banner: WITNESS_FILE_BANNER },
       );
     } catch (error) {
       console.error("Witness Bench download failed:", error);
@@ -1781,9 +1587,6 @@ const WitnessOutput = ({ t, wb }) => {
     <OutputStep
       t={t}
       draftNote={output.draftNote}
-      aiFailure={output.aiFailure && plainAIError(output.aiFailure, t)}
-      onRetryAI={wb.retryAI}
-      isRetryingAI={wb.ai.isGeneratingStatement}
       outputError={output.outputError}
       generatedStatement={output.generatedStatement}
       onGeneratedStatementChange={output.setGeneratedStatement}

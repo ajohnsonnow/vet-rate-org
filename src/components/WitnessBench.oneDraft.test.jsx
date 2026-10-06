@@ -204,159 +204,6 @@ describe("Witness Bench, standard statement", () => {
   });
 });
 
-describe("Witness Bench, with the AI asked", () => {
-  beforeEach(() => {
-    ai.available = true;
-  });
-
-  it.each(FILES)(
-    "says in the %s that AI suggested wording when it did",
-    async (format, label) => {
-      modelAnswersStatement((prompt) =>
-        numbered(
-          passagesIn(prompt).map((passage) => `To put it plainly, ${passage}`),
-        ),
-      );
-      await answerEverything();
-      const onScreen = statementField().value;
-      expect(onScreen).toContain("was suggested by AI");
-      fireEvent.click(screen.getByRole("button", { name: /download/i }));
-      fireEvent.click(screen.getByRole("button", { name: new RegExp(label) }));
-
-      await waitFor(() => expect(downloadDraft).toHaveBeenCalledTimes(1));
-      const { bytes } = await downloadDraft.mock.results[0].value;
-      const text = flat(await draftFileText(bytes, format));
-      expect(text).toMatch(
-        /^DRAFT - not a sworn statement\. The wording of some passages was suggested by AI\./,
-      );
-      expect(text.endsWith(flat(onScreen))).toBe(true);
-    },
-  );
-
-  it.each(FILES)(
-    "does not mention AI in the %s when the model changed nothing",
-    async (format, label) => {
-      modelAnswersStatement((prompt) => numbered(passagesIn(prompt)));
-      await answerEverything();
-      fireEvent.click(screen.getByRole("button", { name: /download/i }));
-      fireEvent.click(screen.getByRole("button", { name: new RegExp(label) }));
-
-      await waitFor(() => expect(downloadDraft).toHaveBeenCalledTimes(1));
-      const { bytes } = await downloadDraft.mock.results[0].value;
-      expect(flat(await draftFileText(bytes, format))).not.toMatch(/\bAI\b/);
-    },
-  );
-
-  it("names the error behind a standard statement and offers another try", async () => {
-    modelAnswersStatement(() => {
-      throw new Error("WebGPU inference timed out");
-    });
-    const printed = await answerEverything();
-
-    expect(screen.getByText(/took too long to answer/)).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/WebGPU/);
-    expect(counts(statementField().value, printed)).toEqual(once(printed));
-    expect(statementField().value).not.toMatch(/\bAI\b/);
-
-    modelAnswersStatement((prompt) =>
-      numbered(
-        passagesIn(prompt).map((passage) => `To put it plainly, ${passage}`),
-      ),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
-
-    await waitFor(() =>
-      expect(statementField().value).toContain("To put it plainly,"),
-    );
-    expect(screen.queryByText(/took too long/)).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Try the AI again" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("offers no retry when the AI was never asked or simply changed nothing", async () => {
-    modelAnswersStatement((prompt) => numbered(passagesIn(prompt)));
-    await answerEverything();
-
-    expect(
-      screen.queryByRole("button", { name: "Try the AI again" }),
-    ).not.toBeInTheDocument();
-  });
-});
-
-describe("Witness Bench, asking the AI again after it failed", () => {
-  beforeEach(() => {
-    ai.available = true;
-  });
-
-  it("leaves an edited statement untouched when the retry fails too", async () => {
-    modelAnswersStatement(() => {
-      throw new Error("WebGPU inference timed out");
-    });
-    await answerEverything();
-    const edited = typeAnEdit();
-    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
-
-    await waitFor(() =>
-      expect(generateAI.mock.calls.length).toBeGreaterThan(2),
-    );
-    await screen.findByRole("button", { name: "Try the AI again" });
-    expect(statementField().value).toBe(edited);
-    expect(screen.getByText(/took too long to answer/)).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/WebGPU/);
-  });
-
-  it("rewords the statement in the box on a retry that works, keeping the edit", async () => {
-    modelAnswersStatement(() => {
-      throw new Error("WebGPU inference timed out");
-    });
-    const printed = await answerEverything();
-    const edited = typeAnEdit();
-    modelAnswersStatement((prompt) =>
-      numbered(
-        passagesIn(prompt).map(
-          (passage) =>
-            `To put it plainly, ${passage[0].toLowerCase()}${passage.slice(1)}`,
-        ),
-      ),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
-
-    await waitFor(() =>
-      expect(statementField().value).toContain("To put it plainly,"),
-    );
-    const box = statementField().value;
-    expect(occurrences(box, EDIT)).toBe(1);
-    expect(box).toContain("was suggested by AI");
-    expect(box.length).toBeGreaterThan(edited.length);
-    expect(counts(box, printed.slice(0, 3))).toEqual([1, 1, 1]);
-  });
-
-  it("keeps an answer the witness rewrote in the box, and says nothing changed", async () => {
-    modelAnswersStatement(() => {
-      throw new Error("WebGPU inference timed out");
-    });
-    await answerEverything();
-    const mine = statementField().value.replaceAll(
-      /They did the thing in marker\d+ that I saw\./g,
-      "My own words now.",
-    );
-    fireEvent.change(statementField(), { target: { value: mine } });
-    modelAnswersStatement((prompt) =>
-      numbered(
-        passagesIn(prompt).map(
-          (passage) =>
-            `To put it plainly, ${passage[0].toLowerCase()}${passage.slice(1)}`,
-        ),
-      ),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
-
-    await screen.findByText(/did not change the wording/i);
-    expect(statementField().value).toBe(mine);
-  });
-});
-
 describe("Witness Bench saving the same statement again", () => {
   const saveButton = () => screen.getByRole("button", { name: /my packet/i });
 
@@ -402,22 +249,33 @@ describe("Witness Bench saving the same statement again", () => {
   });
 });
 
-describe("Witness Bench, an internal error code", () => {
-  it("never reaches the witness", async () => {
-    ai.available = true;
-    modelAnswersStatement(() => {
-      throw new Error(
-        "AI_CIRCUIT_OPEN: AI generation has failed 4 times in a row; paused",
+describe("Witness Bench, with AI set up", () => {
+  it.each(FILES)(
+    "asks the model to reword nothing, and the %s never mentions AI",
+    async (format, label) => {
+      ai.available = true;
+      modelAnswersStatement((prompt) =>
+        numbered(
+          passagesIn(prompt).map((passage) => `To put it plainly, ${passage}`),
+        ),
       );
-    });
-    await answerEverything();
+      const printed = await answerEverything();
+      const onScreen = statementField().value;
+      fireEvent.click(screen.getByRole("button", { name: /download/i }));
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(label) }));
 
-    expect(
-      screen.getByText(/stopped answering after several failed tries/),
-    ).toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/AI_CIRCUIT_OPEN|4 times/);
-    expect(
-      screen.getByRole("button", { name: "Try the AI again" }),
-    ).toBeInTheDocument();
-  });
+      await waitFor(() => expect(downloadDraft).toHaveBeenCalledTimes(1));
+      const { bytes } = await downloadDraft.mock.results[0].value;
+      const text = flat(await draftFileText(bytes, format));
+      expect(text.startsWith("DRAFT - not a sworn statement.")).toBe(true);
+      expect(text.endsWith(flat(onScreen))).toBe(true);
+      expect(text).not.toMatch(/\bAI\b|To put it plainly/);
+      expect(counts(onScreen, printed)).toEqual(once(printed));
+      expect(
+        generateAI.mock.calls.filter(([prompt]) =>
+          prompt.includes("Rewrite each passage"),
+        ),
+      ).toEqual([]);
+    },
+  );
 });

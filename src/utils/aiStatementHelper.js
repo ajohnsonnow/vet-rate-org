@@ -32,9 +32,10 @@ import {
   resolvePassageDraft,
   standardDraft,
 } from "./writerDraftCheck";
+import { smallModelAnswering } from "./smallModelAnswering";
 import {
+  SMALL_MODEL_REWORDING_OFF,
   appealStatementPlan,
-  buddyStatementPlan,
   buildPassagePrompt,
   formStatementPlan,
   nexusRequestPlan,
@@ -521,6 +522,18 @@ async function draftWithModel(plan, { toolId, userInput = null }) {
   const crisisBlock = blockIfCrisisDetected(userInput);
   if (crisisBlock) return crisisBlock;
 
+  // A small on-device model is never asked to reword: the app-built draft
+  // is returned with no model call.
+  if (smallModelAnswering(getAIStatus())) {
+    const draft = standardDraft(plan);
+    return {
+      success: true,
+      ...draft,
+      draftNote: `${SMALL_MODEL_REWORDING_OFF} ${draft.draftNote}`,
+      rewordingOff: "small-model",
+    };
+  }
+
   const offered = selectPassages(plan);
   const redacted = await _redactForAi(offered.map((passage) => passage.text));
   const sent = offered.filter((passage, i) => redacted[i] === passage.text);
@@ -533,10 +546,7 @@ async function draftWithModel(plan, { toolId, userInput = null }) {
     return { success: true, ...settled(standardDraft(plan)) };
 
   const result = await callGeminiAPI(
-    buildPassagePrompt(
-      sent.map((passage) => passage.text),
-      plan.voice,
-    ),
+    buildPassagePrompt(sent.map((passage) => passage.text)),
     userInput,
     toolId,
     { temperature: REWORD_TEMPERATURE },
@@ -569,16 +579,6 @@ export const enhancePersonalStatement = async (
 ) =>
   draftWithModel(personalStatementPlan(answers, condition, primaryCondition), {
     toolId: "personal-statement",
-    userInput: answers,
-  });
-
-/**
- * Enhance a buddy/lay statement using AI
- * SAFETY-CRITICAL: User input is scanned for crisis language before AI call
- */
-export const enhanceBuddyStatement = async (answers, conditionName) =>
-  draftWithModel(buddyStatementPlan(answers, conditionName), {
-    toolId: "buddy-statement",
     userInput: answers,
   });
 
@@ -1936,7 +1936,6 @@ export {
 export default {
   isAIAvailable,
   enhancePersonalStatement,
-  enhanceBuddyStatement,
   enhancePTSDStatement,
   enhanceAppealStatement,
   generateNexusLetterRequest,

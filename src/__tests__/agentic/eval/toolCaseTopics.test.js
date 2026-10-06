@@ -28,7 +28,7 @@ vi.mock("../../../utils/unifiedAIService", async (importOriginal) => {
 });
 const { generateAI } = await import("../../../utils/unifiedAIService");
 const helper = await import("../../../utils/aiStatementHelper");
-const { _compileStatementWithAI } =
+const { _compileWitnessStatement } =
   await import("../../../components/WitnessBench.jsx");
 const { _generateVocationalImpact } =
   await import("../../../components/TDIUBuilder.jsx");
@@ -38,7 +38,7 @@ const PRODUCTION = {
   enhanceFormStatement: helper.enhanceFormStatement,
   enhanceAppealStatement: helper.enhanceAppealStatement,
   generateNexusLetterRequest: helper.generateNexusLetterRequest,
-  compileWitnessStatement: _compileStatementWithAI,
+  compileWitnessStatement: _compileWitnessStatement,
   generateVocationalImpact: _generateVocationalImpact,
   decodeDecision: helper.decodeDecision,
 };
@@ -83,7 +83,7 @@ describe("topics raised by what the tools really send", () => {
     ]);
   });
 
-  it.each(TOOL_CASES.filter((c) => /^t(?:0[1-6]|09|10)$/.test(c.id)))(
+  it.each(TOOL_CASES.filter((c) => /^t(?:0[1256]|09)$/.test(c.id)))(
     "$id ($toolId): a rewording request raises no topic",
     async (caseDef) => {
       const requests = await requestsSentBy(caseDef);
@@ -94,6 +94,13 @@ describe("topics raised by what the tools really send", () => {
       expect(requests[0].prompt).toContain("Rewrite each passage");
       expect(requests[0].topics).toEqual([]);
       expect(requests[0].entries).toEqual([]);
+    },
+  );
+
+  it.each(TOOL_CASES.filter((c) => /^t(?:03|04|10)$/.test(c.id)))(
+    "$id ($toolId): a witness statement makes no model call",
+    async (caseDef) => {
+      expect(await requestsSentBy(caseDef)).toEqual([]);
     },
   );
 
