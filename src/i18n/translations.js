@@ -10427,11 +10427,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
     },
     aiTip: { en: "Tip:", es: "Consejo:", tl: "Tip:", vi: "Mẹo:", ko: "팁:" },
     aiTipText: {
-      en: "All AI models analyze your ratings quickly. Strategy generation takes just seconds!",
-      es: "Todos los modelos de IA analizan tus calificaciones rápidamente. ¡La generación de estrategia toma solo segundos!",
-      tl: "Lahat ng AI models ay nag-aanalyze ng iyong ratings nang mabilis. Ang strategy generation ay ilang segundo lang!",
-      vi: "Tất cả các mô hình AI phân tích xếp hạng của bạn nhanh chóng. Việc tạo chiến lược chỉ mất vài giây!",
-      ko: "모든 AI 모델은 등급을 빠르게 분석합니다. 전략 생성은 몇 초면 됩니다!",
+      en: "Every AI model can analyze your ratings. How long a strategy takes depends on your device.",
+      es: "Todos los modelos de IA analizan tus calificaciones rápidamente.",
+      tl: "Lahat ng AI models ay nag-aanalyze ng iyong ratings nang mabilis.",
+      vi: "Tất cả các mô hình AI phân tích xếp hạng của bạn nhanh chóng.",
+      ko: "모든 AI 모델은 등급을 빠르게 분석합니다.",
     },
 
     // Input Section
@@ -12369,11 +12369,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "{total}개 청크를 최종 보고서로 병합 중...",
     },
     largeFileDetected: {
-      en: "Large file detected! Processing in {total} chunks. On-device AI takes ~2 min per section - see the time estimate above. Please keep this tab open.",
-      es: "¡Archivo grande detectado! Procesando en {total} fragmentos. La IA local toma ~2 min por sección. Por favor mantén esta pestaña abierta.",
-      tl: "Malaking file ang na-detect! Pinoproseso sa {total} chunks. Ang on-device AI ay tumatagal ng ~2 min bawat seksyon. Mangyaring panatilihing bukas ang tab na ito.",
-      vi: "Phát hiện tệp lớn! Đang xử lý trong {total} phần. AI trên thiết bị mất ~2 phút mỗi phần. Vui lòng giữ tab này mở.",
-      ko: "큰 파일이 감지되었습니다! {total}개 청크로 처리 중. 온디바이스 AI는 섹션당 약 2분 소요됩니다. 이 탭을 열어두세요.",
+      en: "Large file detected! Processing in {total} chunks, one at a time - see the time estimate above. Please keep this tab open.",
+      es: "¡Archivo grande detectado! Procesando en {total} fragmentos. Por favor mantén esta pestaña abierta.",
+      tl: "Malaking file ang na-detect! Pinoproseso sa {total} chunks. Mangyaring panatilihing bukas ang tab na ito.",
+      vi: "Phát hiện tệp lớn! Đang xử lý trong {total} phần. Vui lòng giữ tab này mở.",
+      ko: "큰 파일이 감지되었습니다! {total}개 청크로 처리 중. 이 탭을 열어두세요.",
     },
     largeFileMayTake: {
       en: "Large files may take several minutes. Please keep this tab open.",

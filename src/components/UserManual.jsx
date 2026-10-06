@@ -3320,8 +3320,8 @@ Your device picks the on-device model for you: Qwen 3.5 4B on desktops (about 2.
 1. Click the 🤖 AI Settings button in the header
 2. Select "Local AI" mode
 3. Choose a model (start with VetRate models)
-4. Click "Initialize" - model downloads (~2 min)
-5. You're ready! Model stays cached for instant loading
+4. Click "Initialize" - the model downloads once; how long depends on its size and your connection
+5. You're ready! The model stays on your device, so it is not downloaded again
 
 ## GPU Selection (Dual-GPU Laptops)
 
