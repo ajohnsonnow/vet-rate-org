@@ -15,6 +15,7 @@ import {
   standardDraftNote,
 } from "../utils/writerTemplates";
 import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
 import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import { enhanceFormStatement } from "../utils/aiStatementHelper";
@@ -7898,7 +7899,11 @@ function showAIOutcome(ctx, result) {
   ctx.setAiDraftNote(
     reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
   );
-  ctx.setAiError(result.draftErrorReason ?? null);
+  ctx.setAiError(
+    result.draftErrorReason
+      ? plainAIError(result.draftErrorReason, ctx.t)
+      : null,
+  );
 }
 
 function _buildFormsHelperAIHandlers(ctx) {
@@ -7950,7 +7955,7 @@ function _buildFormsHelperAIHandlers(ctx) {
       if (result.success) {
         showAIOutcome(ctx, result);
       } else {
-        setAiError(result.error || "Failed to enhance statement with AI.");
+        setAiError(plainAIError(result.error, ctx.t));
       }
     } catch (error) {
       console.error("AI enhancement error:", error);

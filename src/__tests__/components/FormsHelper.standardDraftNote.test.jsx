@@ -196,7 +196,7 @@ describe("Forms Helper with AI set up", () => {
     generateAI.mockRejectedValueOnce(new Error("WebGPU inference timed out"));
     await enhance();
 
-    await screen.findByText(/timed out/i);
+    await screen.findByText(/took too long to answer/i);
     expect(notice().textContent).toBe(STANDARD_DRAFT_NOTE);
     expect(draft()).toHaveAccessibleName(STANDARD);
     expect(document.body.textContent).not.toMatch(
@@ -212,7 +212,7 @@ describe("Forms Helper with AI set up", () => {
 
     await screen.findByText(/viewing ai/i);
     expect(notice()).not.toBeInTheDocument();
-    expect(document.body.textContent).not.toMatch(/timed out/i);
+    expect(document.body.textContent).not.toMatch(/took too long|WebGPU/i);
   });
 
   it("uses the AI labels only for a draft the model reworded", async () => {
@@ -247,7 +247,7 @@ describe("Forms Helper, an edited draft and the AI", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: /i understand, enhance/i }),
     );
-    await screen.findByText(/timed out/i);
+    await screen.findByText(/took too long to answer/i);
     expect(draft().value).toBe(edited);
 
     localStorage.removeItem("vetrate_ai_ratelimit");
@@ -256,7 +256,7 @@ describe("Forms Helper, an edited draft and the AI", () => {
       await screen.findByRole("button", { name: /i understand, enhance/i }),
     );
     await waitFor(() => expect(generateAI).toHaveBeenCalledTimes(2));
-    await screen.findByText(/timed out/i);
+    await screen.findByText(/took too long to answer/i);
     expect(draft().value).toBe(edited);
   });
 

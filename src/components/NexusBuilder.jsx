@@ -22,6 +22,7 @@ import StandardDraftNotice from "./common/StandardDraftNotice";
 import ChoiceDialog, { EditedDraftDialog } from "./common/ChoiceDialog";
 import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
 import {
   isAIAvailable,
   enhancePersonalStatement,
@@ -1019,6 +1020,7 @@ function createAIConsentHandler({
   setAiEnhancedStatement,
   setDraftNote,
   setUseAIVersion,
+  t,
 }) {
   // `boxText` is the statement as it stands on screen. The AI's accepted
   // rewordings go into that text; a failure leaves it as it is.
@@ -1045,10 +1047,14 @@ function createAIConsentHandler({
       } else if (result.success) {
         // Nothing was reworded, so the standard draft stays on screen under
         // its own label. Say why: the AI failed, or changed nothing usable.
-        setAiError(result.draftErrorReason ?? null);
+        setAiError(
+          result.draftErrorReason
+            ? plainAIError(result.draftErrorReason, t)
+            : null,
+        );
         setDraftNote(result.draftErrorReason ? null : AI_NO_CHANGE_NOTE);
       } else {
-        setAiError(result.error);
+        setAiError(plainAIError(result.error, t));
       }
     } catch (error) {
       console.error("AI enhancement error:", error);
@@ -1113,6 +1119,7 @@ function useNexusAIEnhancement({
   condition,
   primaryCondition,
   updateAnswer,
+  t,
 }) {
   const [showAIConsent, setShowAIConsent] = useState(false);
   const [aiEnhancedStatement, setAiEnhancedStatement] = useState(null);
@@ -1136,6 +1143,7 @@ function useNexusAIEnhancement({
     setAiEnhancedStatement,
     setDraftNote,
     setUseAIVersion,
+    t,
   });
 
   const handleAICancel = () => {
@@ -1908,6 +1916,7 @@ const NexusBuilderWizard = ({
     condition,
     primaryCondition,
     updateAnswer: wizardState.updateAnswer,
+    t,
   });
   const output = useNexusDocumentOutput({
     answers: wizardState.answers,

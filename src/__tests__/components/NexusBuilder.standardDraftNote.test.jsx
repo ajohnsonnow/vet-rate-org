@@ -223,7 +223,8 @@ describe("NexusBuilder, an edited statement and the AI", () => {
     });
     await enhanceOnReviewStep("A line I typed myself.");
 
-    await screen.findByText("WebGPU inference timed out");
+    await screen.findByText(/took too long to answer/);
+    expect(document.body.textContent).not.toMatch(/WebGPU inference/);
     expect(statementField().value).toBe(
       `${TEMPLATE}\n\nA line I typed myself.`,
     );

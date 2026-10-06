@@ -253,7 +253,8 @@ describe("Witness Bench, with the AI asked", () => {
     });
     const printed = await answerEverything();
 
-    expect(screen.getByText(/WebGPU inference timed out/)).toBeInTheDocument();
+    expect(screen.getByText(/took too long to answer/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/WebGPU/);
     expect(counts(statementField().value, printed)).toEqual(once(printed));
     expect(statementField().value).not.toMatch(/\bAI\b/);
 
@@ -267,7 +268,7 @@ describe("Witness Bench, with the AI asked", () => {
     await waitFor(() =>
       expect(statementField().value).toContain("To put it plainly,"),
     );
-    expect(screen.queryByText(/timed out/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/took too long/)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Try the AI again" }),
     ).not.toBeInTheDocument();
@@ -301,7 +302,8 @@ describe("Witness Bench, asking the AI again after it failed", () => {
     );
     await screen.findByRole("button", { name: "Try the AI again" });
     expect(statementField().value).toBe(edited);
-    expect(screen.getByText(/WebGPU inference timed out/)).toBeInTheDocument();
+    expect(screen.getByText(/took too long to answer/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/WebGPU/);
   });
 
   it("rewords the statement in the box on a retry that works, keeping the edit", async () => {
@@ -397,5 +399,25 @@ describe("Witness Bench saving the same statement again", () => {
     expect(updatePacketDocument).toHaveBeenCalledTimes(1);
     expect(updatePacketDocument.mock.calls[0][0]).toBe("doc-1");
     expect(updatePacketDocument.mock.calls[0][1].rawText).toBe(changed);
+  });
+});
+
+describe("Witness Bench, an internal error code", () => {
+  it("never reaches the witness", async () => {
+    ai.available = true;
+    modelAnswersStatement(() => {
+      throw new Error(
+        "AI_CIRCUIT_OPEN: AI generation has failed 4 times in a row; paused",
+      );
+    });
+    await answerEverything();
+
+    expect(
+      screen.getByText(/stopped answering after several failed tries/),
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/AI_CIRCUIT_OPEN|4 times/);
+    expect(
+      screen.getByRole("button", { name: "Try the AI again" }),
+    ).toBeInTheDocument();
   });
 });

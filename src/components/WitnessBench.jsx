@@ -29,6 +29,7 @@ import {
   standardDraft,
 } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
 import {
   AI_NO_CHANGE_NOTE,
   STANDARD_DRAFT_NOTE,
@@ -1659,10 +1660,7 @@ const NextStepsPanel = ({ t }) => (
 // with a way to ask again.
 const AIFailureNotice = ({ reason, onRetry, isRetrying }) => (
   <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-800 dark:text-red-200 text-sm">
-    <p>
-      The AI could not reword this statement: {reason} This is the standard
-      statement, built from your answers.
-    </p>
+    <p>{reason}</p>
     <button
       type="button"
       onClick={onRetry}
@@ -1783,7 +1781,7 @@ const WitnessOutput = ({ t, wb }) => {
     <OutputStep
       t={t}
       draftNote={output.draftNote}
-      aiFailure={output.aiFailure}
+      aiFailure={output.aiFailure && plainAIError(output.aiFailure, t)}
       onRetryAI={wb.retryAI}
       isRetryingAI={wb.ai.isGeneratingStatement}
       outputError={output.outputError}
