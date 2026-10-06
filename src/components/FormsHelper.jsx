@@ -6443,21 +6443,11 @@ VA Benefits Hotline: 1-800-827-1000
 `;
 }
 
+// The signer writes the date on the day they sign. No document prints
+// today's date for them.
+const BLANK_DATE_LINE = "________________";
+
 function generateMedicalRelease(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const expirationDate = new Date(
-    Date.now() + 180 * 24 * 60 * 60 * 1000,
-  ).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   let statement = `AUTHORIZATION TO DISCLOSE INFORMATION TO VA
 Reference Worksheet for VA Forms 21-4142 & 21-4142a
 
@@ -6499,15 +6489,14 @@ information pertaining to the conditions listed to the Department of
 Veterans Affairs. This information is needed to evaluate my claim for
 VA disability benefits.
 
-EXPIRATION: This authorization expires ${expirationDate}
-            (180 days from the date of signature)
+EXPIRATION: This authorization expires 180 days from the date of signature.
 
 
 Signature: ________________________________________
 
 Printed Name: ${formData.veteranName || "________________________________________"}
 
-Date Signed: ${currentDate}
+Date Signed: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6552,12 +6541,6 @@ Before submitting, contact each provider to confirm:
 }
 
 function generatePriorityProcessing(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const statement = `REQUEST FOR PRIORITY PROCESSING
 (To Be Submitted with VA Form 20-10207)
 
@@ -6626,7 +6609,7 @@ Signature: ________________________________________
 
 Printed Name: ${formData.veteranName || "________________________________________"}
 
-Date Signed: ${currentDate}
+Date Signed: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6677,12 +6660,6 @@ VA Benefits Hotline: 1-800-827-1000
 }
 
 function generateVSOAppointment(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const vsoName =
     formData.vsoName === "Other" ? formData.vsoOther : formData.vsoName;
 
@@ -6739,7 +6716,7 @@ Signature: ________________________________________
 
 Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6784,12 +6761,6 @@ VA Benefits Hotline: 1-800-827-1000
 }
 
 function generateIndividualRepAppointment(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const repTypeLabel =
     formData.repType === "attorney" ? "Attorney" : "Accredited Claims Agent";
 
@@ -6842,7 +6813,7 @@ Veteran Signature: ________________________________________
 
 Printed Name: ${formData.veteranFirstName || ""} ${formData.veteranLastName || ""}
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 ================================================================================
 
@@ -6897,11 +6868,6 @@ Phone: 1-202-461-7699
 }
 
 function generateThirdPartyAuth(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._thirdPartyAuthVeteranFields(formData),
     ..._thirdPartyAuthPartyFields(formData),
@@ -6949,7 +6915,7 @@ ${f.specificClaimDetailsLine}
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
 
@@ -6958,11 +6924,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0845/
 }
 
 function generateFOIARequest(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const branchLabels = {
     army: "U.S. Army",
     navy: "U.S. Navy",
@@ -7019,7 +6980,7 @@ IMPORTANT NOTES:
 - Some records may require redaction of third-party information
 - There is no fee for veterans requesting their own records
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-20-10206/
 
@@ -7028,11 +6989,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-20-10206/
 }
 
 function generateAlternateSigner(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const reasonLabels = {
     "physical-disability": "Physical Disability",
     hospitalized: "Hospitalized",
@@ -7094,7 +7050,7 @@ ${formData.witnessStatement ? `Additional Statement: ${formData.witnessStatement
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
 
@@ -7103,11 +7059,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0972/
 }
 
 function generateNursingHome(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._nursingHomeVeteranFields(formData),
     ..._nursingHomeFacilityFields(formData),
@@ -7159,7 +7110,7 @@ ${f.additionalInfoLine}
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
 
@@ -7168,11 +7119,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-0779/
 }
 
 function generateSubstitutionRequest(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._substitutionRequestVeteranFields(formData),
     ..._substitutionRequestClaimantFields(formData),
@@ -7226,7 +7172,7 @@ ${f.acknowledgmentsText}
 
 IMPORTANT: Request must be filed within 1 YEAR of the veteran's death.
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
 
@@ -7235,11 +7181,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-0847/
 }
 
 function generateIncomeAsset(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._incomeAssetClaimantFields(formData),
     ..._incomeAssetMonthlyIncomeFields(formData),
@@ -7304,7 +7245,7 @@ ${f.medicalExpenseNoteLine}
 
 ================================================================================
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
 
@@ -7313,11 +7254,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-0969/
 }
 
 function generateMedicalExpenseReport(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._medicalExpenseReportClaimantFields(formData),
     ..._medicalExpenseReportPeriodFields(formData),
@@ -7377,7 +7313,7 @@ ${f.otherDescriptionLine}
 
 KEEP YOUR RECEIPTS - VA may request documentation.
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
 
@@ -7386,11 +7322,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21p-8416/
 }
 
 function generateEmploymentInfo(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   const f = {
     ..._employmentInfoVeteranFields(formData),
     ..._employmentInfoEmployerFields(formData),
@@ -7457,7 +7388,7 @@ IMPORTANT FOR TDIU CLAIMS:
 - Send to your last employer(s) with a cover letter
 - Employer should complete the employer section and return to VA
 
-Date: ${currentDate}
+Date: ${BLANK_DATE_LINE}
 
 Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 
