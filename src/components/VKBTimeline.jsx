@@ -201,14 +201,16 @@ const TimelineHeaderFilters = ({
   selectedDocs,
   onCompare,
 }) => (
-  <div className="flex items-center space-x-4">
-    <div className="flex items-center space-x-2">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="text-sm text-slate-400">Filter:</label>
+  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div className="flex min-w-0 items-center space-x-2">
+      <label htmlFor="vkb-timeline-filter" className="text-sm text-slate-400">
+        Filter:
+      </label>
       <select
+        id="vkb-timeline-filter"
         value={filterCategory}
         onChange={(e) => setFilterCategory(e.target.value)}
-        className="bg-slate-700 text-white rounded px-3 py-1 text-sm border border-slate-600 focus:border-blue-500 focus:outline-none"
+        className="min-w-0 max-w-full bg-slate-700 text-white rounded px-3 py-1 text-sm border border-slate-600 focus:border-blue-500 focus:outline-none"
       >
         <option value="all">All Documents ({totalDocs})</option>
         {documentsByCategory &&
@@ -221,9 +223,11 @@ const TimelineHeaderFilters = ({
     </div>
 
     <div className="flex items-center space-x-2">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="text-sm text-slate-400">Sort:</label>
+      <label htmlFor="vkb-timeline-sort" className="text-sm text-slate-400">
+        Sort:
+      </label>
       <select
+        id="vkb-timeline-sort"
         value={sortOrder}
         onChange={(e) => setSortOrder(e.target.value)}
         className="bg-slate-700 text-white rounded px-3 py-1 text-sm border border-slate-600 focus:border-blue-500 focus:outline-none"

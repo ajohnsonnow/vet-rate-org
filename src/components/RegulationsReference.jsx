@@ -25,6 +25,7 @@ const cfr3Regulations = getCfr3Regulations();
 const title38Regulations = getTitle38Regulations();
 import { sanitizeUrl } from "../utils/sanitize";
 import ResponsiveModal from "./common/ResponsiveModal";
+import ScrollRegion from "./common/ScrollRegion";
 
 // Pre-sanitize all eCFR URLs from static JSON at module load time - fully outside any
 // user-input (searchTerm) taint flow. Build a Map for O(1) safe URL lookups at render.
@@ -578,45 +579,47 @@ const AppealsTab = ({
 const PensionComparisonTable = () => {
   if (!title38Regulations.pension?.comparisonChart) return null;
   return (
-    <div className="mb-6 overflow-x-auto">
+    <div className="mb-6">
       <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-3">
         {title38Regulations.pension.comparisonChart.title}
       </h3>
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="bg-gray-100 dark:bg-gray-700">
-            {title38Regulations.pension.comparisonChart.columns.map((col) => (
-              <th
-                key={col}
-                className="p-2 text-left border border-gray-300 dark:border-gray-600 font-bold"
-              >
-                {col}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {title38Regulations.pension.comparisonChart.rows.map((row, i) => (
-            <tr
-              key={row[0]}
-              className={
-                i % 2 === 0
-                  ? "bg-white dark:bg-gray-800"
-                  : "bg-gray-50 dark:bg-gray-750"
-              }
-            >
-              {row.map((cell, j) => (
-                <td
-                  key={j}
-                  className={`p-2 border border-gray-300 dark:border-gray-600 ${j === 0 ? "font-semibold" : ""}`}
+      <ScrollRegion label={title38Regulations.pension.comparisonChart.title}>
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-gray-100 dark:bg-gray-700">
+              {title38Regulations.pension.comparisonChart.columns.map((col) => (
+                <th
+                  key={col}
+                  className="p-2 text-left border border-gray-300 dark:border-gray-600 font-bold"
                 >
-                  {cell}
-                </td>
+                  {col}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {title38Regulations.pension.comparisonChart.rows.map((row, i) => (
+              <tr
+                key={row[0]}
+                className={
+                  i % 2 === 0
+                    ? "bg-white dark:bg-gray-800"
+                    : "bg-gray-50 dark:bg-gray-750"
+                }
+              >
+                {row.map((cell, j) => (
+                  <td
+                    key={j}
+                    className={`p-2 border border-gray-300 dark:border-gray-600 ${j === 0 ? "font-semibold" : ""}`}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollRegion>
     </div>
   );
 };

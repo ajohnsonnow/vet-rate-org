@@ -3,6 +3,7 @@ import PDFButton from "./PDFButton";
 import { saveClaim, isClaimSaved } from "../utils/claimsStorage";
 import { PACTActInfoCard, PACTActBadge } from "./PACTActIndicator";
 import StaleDataIndicator from "./StaleDataIndicator";
+import ScrollRegion from "./common/ScrollRegion";
 
 const VAResources = {
   emergency: [
@@ -263,7 +264,7 @@ const RatingCriteriaBadges = ({ result }) => (
 const RatingCriteriaTable = ({ result }) =>
   result.ratingCriteria.ratings &&
   Object.keys(result.ratingCriteria.ratings).length > 0 && (
-    <div className="overflow-x-auto">
+    <ScrollRegion label="Rating criteria by percentage">
       <table className="w-full">
         <thead>
           <tr className="bg-va-blue text-white">
@@ -296,7 +297,7 @@ const RatingCriteriaTable = ({ result }) =>
             ))}
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
   );
 
 const RatingCriteriaNotes = ({ result }) =>

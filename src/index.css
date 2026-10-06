@@ -1885,7 +1885,7 @@ a {
   /* Optimal 2-column grid for tablet portrait */
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3,
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 16px;
   }
 
@@ -1920,11 +1920,11 @@ a {
 @media (width >= 1024px) and (width <= 1366px) and (orientation: landscape) {
   /* 3-column grid for tablet landscape */
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
   /* Modal slightly narrower in landscape */
@@ -2060,12 +2060,11 @@ a {
     line-height: 1.7;
   }
 
-  /* Scrollable tables on mobile */
-  table {
-    display: block;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-  }
+  /* No rule makes a bare <table> its own scroller here. "display: block;
+     overflow-x: auto" on the table took the scrolling away from its wrapper,
+     and a table cannot take keyboard focus, so wide tables could not be
+     scrolled without a pointer. A wide table goes inside
+     components/common/ScrollRegion, which is named and focusable. */
 }
 
 /* Progressive Disclosure - Collapsible Sections */
@@ -2139,10 +2138,14 @@ body {
   }
 }
 
-/* Optimize Grid Layouts for Mobile */
+/* Optimize Grid Layouts for Mobile.
+   Every forced track is minmax(0, 1fr), never a bare 1fr: 1fr means
+   minmax(auto, 1fr), which will not let a grid child be narrower than its
+   widest unwrappable content, so one long row made a whole dialog scroll
+   sideways (the calculator's columns were 501px wide in a 358px body). */
 @media (width <= 640px) {
   .grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 16px;
   }
 
@@ -2150,7 +2153,7 @@ body {
   .grid-cols-2,
   .grid-cols-3,
   .grid-cols-4 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }
 
@@ -2315,7 +2318,7 @@ body {
 /* Stat Cards in Modals - Stack nicely on mobile */
 @media (width <= 640px) {
   .grid.grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px;
   }
 
@@ -2323,7 +2326,7 @@ body {
   @media (width <= 360px) {
     .grid.grid-cols-4,
     .grid.grid-cols-3 {
-      grid-template-columns: 1fr !important;
+      grid-template-columns: minmax(0, 1fr) !important;
     }
   }
 }
@@ -2337,8 +2340,10 @@ body {
 @media (width <= 640px) {
   .modal-content .flex.gap-2 > button:not(.modal-header *),
   .modal-content .flex.gap-3 > button:not(.modal-header *) {
+    /* No min-width: a 120px floor also caught icon buttons in "flex gap-2"
+       rows and pushed their neighbours off a 390px screen. Each button still
+       grows to share the row and cannot shrink below its own content. */
     flex: 1;
-    min-width: 120px;
   }
 
   /* If too many buttons, stack them */

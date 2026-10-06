@@ -44,6 +44,7 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import ToolCardButton from "./ToolCardButton";
 import DeviceKeystorePanel from "./DeviceKeystorePanel";
+import ScrollRegion from "./common/ScrollRegion";
 
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString();
@@ -1522,7 +1523,7 @@ const ProviderComparisonTable = () => (
     <h4 className="mb-3 font-semibold text-gray-900 dark:text-white">
       Cloud Provider Security
     </h4>
-    <div className="overflow-x-auto">
+    <ScrollRegion label="Cloud provider security comparison">
       <table className="w-full text-sm">
         <ProviderComparisonTableHead />
         <tbody>
@@ -1580,7 +1581,7 @@ const ProviderComparisonTable = () => (
           </tr>
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
     <p className="mt-3 text-xs text-gray-600 dark:text-gray-400">
       ~ Google Drive can be HIPAA compliant with Workspace + BAA. Personal
       accounts are not.
