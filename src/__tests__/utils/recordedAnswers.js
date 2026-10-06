@@ -135,3 +135,11 @@ export function allRaterAnswers() {
       calc: calculateVARating(GOLDEN[record.id].conditions),
     }));
 }
+
+// Run B of the stability grade, whose a12 and a13 notices named a stated
+// rating neither draft gave; read only by the stated-rating tests.
+export const STABILITY_RUN_B_FILE =
+  "run_2026-10-06_002046_Qwen3.5-4B-q4f16_1-MLC.jsonl";
+
+export const stabilityRunBCase = (id) =>
+  casesIn([STABILITY_RUN_B_FILE]).find((record) => record.id === id);

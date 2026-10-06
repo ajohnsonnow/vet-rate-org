@@ -192,11 +192,6 @@ describe("recorded Rater answers that dispute or re-derive the computed block", 
       accepted,
     ]),
   );
-  const figuresAndPairsOk = (check) =>
-    check.wrongFigures.length === 0 &&
-    check.inventedPairs.length === 0 &&
-    check.deniedPairs.length === 0;
-
   it("covers the 83 recorded answers to the five cases with structured conditions", () => {
     expect(answers).toHaveLength(83);
     for (const key of labelled.keys()) {
@@ -204,31 +199,32 @@ describe("recorded Rater answers that dispute or re-derive the computed block", 
     }
   });
 
-  it("before: 14 of the 26 were accepted on figures and pairs alone", () => {
-    const accepted = answers.filter(
-      (a) =>
-        labelled.has(keyOf(a)) &&
-        figuresAndPairsOk(checkRaterResponse(a.text, a.calc)),
-    );
-    expect(accepted.map(keyOf).sort()).toEqual(
-      [...labelled]
-        .filter(([, was]) => was)
-        .map(([key]) => key)
-        .sort(),
-    );
-    expect(accepted).toHaveLength(14);
-  });
+  // One of the 26 writes its sums in words ("which equals 38%"), so no line
+  // of arithmetic is found. It fails no check, gets no notice, and is still
+  // not shown: it is dropped as commentary under the calculator's working.
+  const IN_PROSE = "2026-10-05_201248 a12";
 
-  it("after: all 26 are caught, none accepted, and no other answer is caught", () => {
+  it("25 of the 26 are caught as different working or a dispute, and no other answer is", () => {
     const caught = answers.filter((a) => {
       const check = checkRaterResponse(a.text, a.calc);
       return check.reworked.length > 0 || check.disputes.length > 0;
     });
-    expect(caught.map(keyOf).sort()).toEqual([...labelled.keys()].sort());
-    const accepted = answers.filter(
-      (a) => labelled.has(keyOf(a)) && checkRaterResponse(a.text, a.calc).ok,
+    expect(caught.map(keyOf).sort()).toEqual(
+      [...labelled.keys()].filter((key) => key !== IN_PROSE).sort(),
     );
-    expect(accepted).toEqual([]);
+  });
+
+  it("the one in prose is not shown either", () => {
+    const answer = answers.find((a) => keyOf(a) === IN_PROSE);
+    expect(checkRaterResponse(answer.text, answer.calc).ok).toBe(true);
+    const out = enforceCalculatorOnResult(
+      { text: answer.text },
+      { conditions: GOLDEN.a12.conditions },
+      GOLDEN.a12.input,
+    );
+    expect(out.text.startsWith("Your combined rating is 50%.")).toBe(true);
+    expect(out.text).not.toContain("which equals 38%");
+    expect(out.calculatorLead.commentaryKept).toBe(false);
   });
 
   it("case a12 in run 135040 lands on 50% and is now replaced", () => {

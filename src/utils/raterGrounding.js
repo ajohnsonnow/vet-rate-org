@@ -381,12 +381,6 @@ const CAP_WORDS =
 
 const WHAT_IF =
   /\b(?:adding (?:a|an|another)|if you (?:had|add|added|were|get|got))\b/i;
-const NEED_WORDS = {
-  words: ["need", "needs", "needed", "require", "requires", "required", "must"],
-};
-const RATING_THRESHOLD_WORDS = { words: ["threshold", "thresholds"] };
-const TDIU_THRESHOLD_FIGURES = new Set([40, 60, 70]);
-
 /** "50% for PTSD, 30% for tinnitus": two or more of the ratings entered. */
 function listsEnteredRatings(sentence, calc) {
   const listed = [
@@ -412,29 +406,6 @@ const isNotOwnRating = (sentence, calc) =>
   WHAT_IF.test(sentence) ||
   mentionsAny(sentence, EXAMPLE_WORDS) ||
   listsEnteredRatings(sentence, calc);
-
-/**
- * The combined ratings one sentence states. In a sentence that says a
- * threshold is not reached or is needed, the 38 CFR § 4.16(a) figures are the
- * threshold, not the veteran's rating.
- */
-// "combined >=70%", "combined at least 70%": a bound, not a rating.
-const isBound = (sentence, v) =>
-  new RegExp(String.raw`(?:>=|≥|>|at least) ?\**${v} ?(?:%|percent)`, "i").test(
-    sentence,
-  );
-
-function statedInSentence(sentence) {
-  const figures = extractStatedCombinedRatings(sentence).filter(
-    (v) => !isBound(sentence, v),
-  );
-  const namesThreshold =
-    mentionsAny(sentence, RATING_THRESHOLD_WORDS) &&
-    (NEGATION.test(sentence) || mentionsAny(sentence, NEED_WORDS));
-  return namesThreshold
-    ? figures.filter((v) => !TDIU_THRESHOLD_FIGURES.has(v))
-    : figures;
-}
 
 function workingValues(calc) {
   const values = new Set(calc.combineSteps.map((s) => s.result));
@@ -678,58 +649,134 @@ export function findCommentaryArithmetic(text, calc, { tdiu = false } = {}) {
  * working the calculator did not produce (`reworked`) or calls the computed
  * block wrong (`disputes`).
  */
+const RATING_SUBJECT = String.raw`\b(?:(?:final|overall|total|combined|correct|resulting)\s+){1,3}(?:disability\s+|va\s+)?(?:rating|evaluation)(?:\s+calculation)?`;
+const RATING_FIGURE = String.raw`[\s*_$\\(]*(?:(?:approximately|about|roughly|around|now|still)\s+)?[*_]*(\d{1,3}(?:\.\d+)?)\s*\\?(?:%|percent)(?!\**\s*(?:\([^)]*\)\s*)?(?:[-+×*/÷=]\s*\(?\d|or\s+(?:more|higher|greater|above)))`;
+const RATING_VERB = String.raw`\b(?:is|was|would be|will be|comes to|equals|totals|results in|remains)\b`;
+// "Your combined rating is 40%", "Final Combined Rating: 60%",
+// "the combined rating, considering X, is 70%".
+const SUBJECT_THEN_FIGURE = new RegExp(
+  String.raw`(${RATING_SUBJECT})[\s*_}\])]*(?:([:=≈]|\\approx)|(,?[^\d.!?\n:=]{0,120}?)${RATING_VERB})${RATING_FIGURE}`,
+  "gi",
+);
+// "gives you a combined rating of 40%", "result in a total combined rating of 60%".
+const VERB_THEN_SUBJECT = new RegExp(
+  String.raw`\b(?:is|are|have|has|gives?(?:\s+(?:you|us))?|yields?|results?\s+in|resulting\s+in|comes?\s+to|for)\s+(?:a|an|the|your)\s+${RATING_SUBJECT}\s+of${RATING_FIGURE}`,
+  "gi",
+);
+const NEW_CLAUSE =
+  /\b(?:which|that|than|because|since|while|when|where|whereas|but)\b/i;
+const WHOLE_RATING_LABEL = /\b(?:final|overall|total)\b/i;
+const ABOUT_A_PART = /\b(?:pair|group|knees?|limbs?|extremit(?:y|ies))\b/i;
+const PART_OWNER = /\b(?:their|its|group|pair|pair's|bilateral)\s+$/i;
+const THRESHOLD_TALK = {
+  words: [
+    "threshold",
+    "thresholds",
+    "need",
+    "needs",
+    "needed",
+    "needing",
+    "require",
+    "requires",
+    "required",
+    "requirement",
+    "requirements",
+    "must",
+    "minimum",
+  ],
+  phrases: ["at least", "or more", "or higher"],
+};
+const BOUND_SIGN = /[<>]=|[≥≤]|\\[gl]e\b/;
+
 /**
- * Sort the figures a draft labels "combined" or "total" that are not the
- * calculator's rating. A final rating is always a multiple of 10, so one of
- * those is a wrong rating. Any other figure is a step. In a draft that also
- * states a rating, right or wrong, a step is not its answer: the calculator's
- * own unrounded value is fine and one the calculator did not take is
- * different working (`strayStepFigures`). In a draft that states no rating
- * at all, a step outside the calculator's rounded working is its answer.
+ * Sentences that are not statements about this veteran's rating: a cap, an
+ * example, a what-if or condition, a list of the ratings entered, or anything
+ * about a threshold, a requirement or a bound.
  */
-function classifyStatedFigures(stated, calc) {
-  const working = workingValues(calc);
-  const consistent = consistentValues(calc);
-  const statesARating = stated.some((v) => v % 10 === 0);
-  const reachesRating = stated.includes(calc.combinedRating);
+const isNotAStatement = (sentence, calc) =>
+  isNotOwnRating(sentence, calc) ||
+  mentionsAny(sentence, HYPOTHETICAL_WORDS) ||
+  mentionsAny(sentence, THRESHOLD_TALK) ||
+  BOUND_SIGN.test(sentence);
+
+function assertedInSentence(sentence) {
+  const values = [];
+  for (const m of sentence.matchAll(SUBJECT_THEN_FIGURE)) {
+    const [, subject, label, between = "", figure] = m;
+    const owner = sentence.slice(0, m.index);
+    if (PART_OWNER.test(owner) || ABOUT_A_PART.test(between)) continue;
+    // "the combined rating is lower than the sum, which is 60%": after a
+    // new clause the figure belongs to something else.
+    if (NEW_CLAUSE.test(between)) continue;
+    // A bare "Combined Rating: 20%" label is as often a pair's subtotal in a
+    // list of steps as it is the answer; a label counts only when it says
+    // final, overall or total.
+    if (label && !WHOLE_RATING_LABEL.test(subject)) continue;
+    values.push(Number(figure));
+  }
+  for (const m of sentence.matchAll(VERB_THEN_SUBJECT)) {
+    values.push(Number(m[1]));
+  }
+  return values;
+}
+
+/**
+ * The values the calculator's own steps produce, rounded and unrounded: each
+ * step result, the bilateral group figures and the raw value.
+ */
+function calculatorStepValues(calc) {
+  const values = workingValues(calc);
+  for (const { from, with: next } of calc.combineSteps) {
+    values.add(round2(from + (next * (100 - from)) / 100));
+  }
+  const group = bilateralGroupStep(calc);
+  if (group) {
+    values.add(group.combinedBilateral);
+    values.add(round2(group.combinedBilateral + group.bilateralFactor));
+  }
+  return values;
+}
+
+/**
+ * The figures a draft explicitly presents as the veteran's combined rating,
+ * each with the sentence it came from: a subject ("your combined rating",
+ * "the final combined disability rating") followed by a verb or a label
+ * colon and then the figure. Being near the word "combined" or "total" is
+ * not enough. A figure does not count when it is an operand of arithmetic, a
+ * rating the veteran entered, a value from the calculator's own steps, or
+ * the rating of a pair or group; nor does any figure in a sentence that is a
+ * threshold, a bound, a cap, an example or a what-if. Deliberately narrow:
+ * a wrong rating stated some other way is missed here, and the draft is
+ * still not shown, because any restated result is dropped as commentary.
+ */
+export function findAssertedCombinedRatings(text, calc) {
   const entered = new Set(calcConditions(calc).map((c) => c.rating));
-  const others = stated.filter((v) => v !== calc.combinedRating);
-  const steps = others.filter((v) => v % 10 !== 0 && !working.has(v));
-  // "30% combined with the group rating of 21%" names a rating being
-  // combined. In a draft that goes on to state the right rating, that figure
-  // is an input, not the draft's answer.
-  const isInput = (v) => reachesRating && entered.has(v);
-  return {
-    wrongFigures: others.filter(
-      (v) =>
-        (v % 10 === 0 && !isInput(v)) || (steps.includes(v) && !statesARating),
-    ),
-    strayStepFigures: statesARating
-      ? steps.filter((v) => !consistent.has(v))
-      : [],
-  };
+  const steps = calculatorStepValues(calc);
+  const isTheRating = (v) => v === calc.combinedRating;
+  const hits = [];
+  for (const raw of splitSentences(text)) {
+    const sentence = raw.trim();
+    if (isNotAStatement(sentence, calc)) continue;
+    for (const value of assertedInSentence(sentence)) {
+      const isInputOrStep = entered.has(value) || steps.has(value);
+      if (!isTheRating(value) && isInputOrStep) continue;
+      if (!hits.some((hit) => hit.value === value)) {
+        hits.push({ value, sentence });
+      }
+    }
+  }
+  return hits;
 }
 
 export function checkRaterResponse(text, calc) {
-  const sentences = splitSentences(text).filter(
-    (sentence) => !isNotOwnRating(sentence, calc),
-  );
-  const stated = [...new Set(sentences.flatMap(statedInSentence))];
-  const sentenceStating = (v) =>
-    sentences.find((s) => statedInSentence(s).includes(v))?.trim() ?? null;
-  const { wrongFigures, strayStepFigures } = classifyStatedFigures(
-    stated,
-    calc,
-  );
-  const wrongFigureSentences = wrongFigures.map(sentenceStating);
+  const asserted = findAssertedCombinedRatings(text, calc);
+  const stated = asserted.map((hit) => hit.value);
+  const wrong = asserted.filter((hit) => hit.value !== calc.combinedRating);
+  const wrongFigures = wrong.map((hit) => hit.value);
+  const wrongFigureSentences = wrong.map((hit) => hit.sentence);
   const inventedPairs = findInventedBilateralClaims(text, calc);
   const deniedPairs = findDeniedBilateralClaims(text, calc);
-  const reworked = [
-    ...new Set([
-      ...findReworkedFigures(text, calc),
-      ...strayStepFigures.map(sentenceStating).filter(Boolean),
-    ]),
-  ];
+  const reworked = findReworkedFigures(text, calc);
   const disputes = findCalculatorDisputes(text);
   const result = {
     expected: calc.combinedRating,

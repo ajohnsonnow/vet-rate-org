@@ -291,28 +291,27 @@ describe("denying the pair the calculator formed", () => {
 });
 
 describe("the recorded reason names the sentence a stated figure came from", () => {
-  it("quotes the aside that produced the figure", () => {
+  it("quotes the sentence that stated the figure", () => {
     const text =
-      "Bilateral adds 10%. Total 30%.\nThe calculator block says the group rating is 21%.";
+      "Bilateral adds 10%.\nYour combined rating is 40%.\nThe calculator block says the group rating is 21%.";
     const out = checkRaterResponse(text, KNEES);
-    expect(out.wrongFigures).toEqual([30]);
+    expect(out.wrongFigures).toEqual([40]);
     expect(describeMismatch(out)).toBe(
-      'stated combined rating 30% but the calculator gives 50% (from: "Total 30%.")',
+      'stated combined rating 40% but the calculator gives 50% (from: "Your combined rating is 40%.")',
     );
   });
 
-  it("the real aside in the 4B transcript is quoted, not just the number", () => {
+  it("a bare total in the 4B transcript is not read as the stated rating", () => {
     const row = FIXTURE.find(
       (e) =>
         e.transcript.includes("123216") &&
         e.caseId === "a12" &&
         e.kind === "replaced draft",
     );
+    expect(row.text).toContain("Total 30%.");
     const out = checkRaterResponse(row.text, KNEES);
-    expect(
-      describeMismatch(out).startsWith(
-        'stated combined rating 30% but the calculator gives 50% (from: "Total 30%.");',
-      ),
-    ).toBe(true);
+    expect(out.wrongFigures).toEqual([]);
+    expect(describeMismatch(out)).not.toContain("stated combined rating");
+    expect(out.failed).toContain("reworked");
   });
 });
