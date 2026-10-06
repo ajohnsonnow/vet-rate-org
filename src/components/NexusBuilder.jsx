@@ -1,14 +1,5 @@
 import { useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from "docx";
-import jsPDF from "jspdf";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
 import AIConsentModal from "./AIConsentModal";
@@ -28,6 +19,7 @@ import {
   standardDraftNote,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
+import { downloadDraft } from "../utils/draftExport";
 import {
   isAIAvailable,
   enhancePersonalStatement,
@@ -66,153 +58,11 @@ Sincerely,
 [Your Name]`;
 }
 
-// Pure txt-download helper, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits.
-function downloadAsTxt(statement, doctorNote, fileName) {
-  const content =
-    statement + "\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n" + doctorNote;
-  const blob = new Blob([content], { type: "text/plain" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileName}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+const DOWNLOAD_FAILED =
+  "The download did not work. Your statement is still here. Try another format, or copy the text.";
 
-// Pure docx-download helper, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits.
-async function downloadAsDocx(statement, doctorNote, fileName) {
-  try {
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            new Paragraph({
-              text: "STATEMENT IN SUPPORT OF CLAIM",
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-            new Paragraph({
-              text: `Condition: ${condition}`,
-              spacing: { after: 200 },
-            }),
-            ...statement.split("\n").map(
-              (line) =>
-                new Paragraph({
-                  children: [new TextRun(line)],
-                  spacing: { after: 100 },
-                }),
-            ),
-            new Paragraph({
-              text: "",
-              spacing: { after: 400 },
-            }),
-            new Paragraph({
-              text: "DOCTOR'S CHEAT SHEET",
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.CENTER,
-              spacing: { after: 400 },
-            }),
-            ...doctorNote.split("\n").map(
-              (line) =>
-                new Paragraph({
-                  children: [new TextRun(line)],
-                  spacing: { after: 100 },
-                }),
-            ),
-          ],
-        },
-      ],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}.docx`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Error generating DOCX:", error);
-    alert("Error generating Word document. Please try another format.");
-  }
-}
-
-// Pure pdf-download helper, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits.
-function downloadAsPdf(statement, doctorNote, fileName) {
-  try {
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-    let yPosition = 20;
-
-    // Title
-    pdf.setFontSize(16);
-    pdf.setFont(undefined, "bold");
-    pdf.text("STATEMENT IN SUPPORT OF CLAIM", pageWidth / 2, yPosition, {
-      align: "center",
-    });
-    yPosition += 15;
-
-    // Condition
-    pdf.setFontSize(11);
-    pdf.text(`Condition: ${condition}`, margin, yPosition);
-    yPosition += 10;
-
-    // Statement content
-    pdf.setFont(undefined, "normal");
-    pdf.setFontSize(10);
-    const statementLines = pdf.splitTextToSize(statement, maxWidth);
-    statementLines.forEach((line) => {
-      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      pdf.text(line, margin, yPosition);
-      yPosition += 5;
-    });
-
-    // Doctor's note section
-    yPosition += 10;
-    if (yPosition > pdf.internal.pageSize.getHeight() - 40) {
-      pdf.addPage();
-      yPosition = 20;
-    }
-
-    pdf.setFontSize(14);
-    pdf.setFont(undefined, "bold");
-    pdf.text("DOCTOR'S CHEAT SHEET", pageWidth / 2, yPosition, {
-      align: "center",
-    });
-    yPosition += 10;
-
-    pdf.setFont(undefined, "normal");
-    pdf.setFontSize(10);
-    const doctorLines = pdf.splitTextToSize(doctorNote, maxWidth);
-    doctorLines.forEach((line) => {
-      if (yPosition > pdf.internal.pageSize.getHeight() - 20) {
-        pdf.addPage();
-        yPosition = 20;
-      }
-      pdf.text(line, margin, yPosition);
-      yPosition += 5;
-    });
-
-    pdf.save(`${fileName}.pdf`);
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert("Error generating PDF. Please try another format.");
-  }
-}
+const downloadText = (statement, doctorNote) =>
+  `${statement}\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n${doctorNote}`;
 
 // Reusable "AI Help" trigger button (with loading spinner), split out of the
 // per-field JSX blocks purely to keep the enclosing function bodies under
@@ -1433,7 +1283,15 @@ const NexusFinishControls = ({
 // its function body under the line-count/complexity limits. Same markup,
 // same behavior.
 const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
-  <div className="flex justify-between mt-8 pt-6 border-t dark:border-gray-700">
+  <div className="flex flex-wrap justify-between gap-y-3 mt-8 pt-6 border-t dark:border-gray-700">
+    {output.outputError && (
+      <p
+        role="alert"
+        className="w-full p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm text-red-900 dark:text-red-100"
+      >
+        {output.outputError}
+      </p>
+    )}
     <button
       onClick={wizard.handleBack}
       disabled={wizard.step === 1}
@@ -1559,6 +1417,7 @@ function useNexusDocumentOutput({
   const currentStatement =
     edit.base === baseStatement ? edit.text : baseStatement;
   const editStatement = (text) => setEdit({ base: baseStatement, text });
+  const [outputError, setOutputError] = useState("");
 
   const handleFinish = () => {
     const statement = currentStatement;
@@ -1579,34 +1438,6 @@ function useNexusDocumentOutput({
     });
   };
 
-  const handleDownload = (format = "txt") => {
-    const statement = currentStatement;
-    const doctorNote = generateDoctorNote({
-      answers,
-      condition,
-      primaryCondition,
-      isSecondary,
-    });
-    const fileName = `VA-Statement-${condition.replace(/\s+/g, "-")}`;
-
-    switch (format) {
-      case "txt":
-        downloadAsTxt(statement, doctorNote, fileName);
-        break;
-      case "docx":
-        downloadAsDocx(statement, doctorNote, fileName);
-        break;
-      case "pdf":
-        downloadAsPdf(statement, doctorNote, fileName);
-        break;
-      default:
-        downloadAsTxt(statement, doctorNote, fileName);
-    }
-
-    setShowDownloadMenu(false);
-    setNexusDownloaded(true);
-  };
-
   const currentDoctorNote = generateDoctorNote({
     answers,
     condition,
@@ -1614,7 +1445,24 @@ function useNexusDocumentOutput({
     isSecondary,
   });
 
+  const handleDownload = async (format = "txt") => {
+    setShowDownloadMenu(false);
+    setOutputError("");
+    try {
+      await downloadDraft(
+        downloadText(currentStatement, currentDoctorNote),
+        `VA-Statement-${condition.replace(/\s+/g, "-")}`,
+        format,
+      );
+      setNexusDownloaded(true);
+    } catch (error) {
+      console.error("Nexus Builder download failed:", error);
+      setOutputError(DOWNLOAD_FAILED);
+    }
+  };
+
   return {
+    outputError,
     handleFinish,
     handleDownload,
     currentStatement,
