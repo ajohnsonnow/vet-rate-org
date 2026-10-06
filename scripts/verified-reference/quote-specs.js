@@ -174,10 +174,10 @@ export const CORRECTION_SPECS = {
     section: "3.2501",
     select: ["(a) New and relevant evidence."],
   },
-  "intent-to-file-purpose": {
-    citation: "38 CFR § 3.155(b)",
+  "claim-has-its-own-date": {
+    citation: "38 CFR § 3.155(d)(1)",
     section: "3.155",
-    select: [{ start: "(b) Intent to file a claim.", firstSentences: 2 }],
+    select: ["(1) Requirement for complete claim and date of claim."],
   },
   "review-filing": {
     citation: "38 CFR § 3.2500(a)",

@@ -294,8 +294,8 @@ const RULES = [
       INTENT_TO_FILE.test(sentence) &&
       anyMatch(sentence, FOR_PENDING_CLAIMS, FOR_CLAIMS_ALREADY_FILED) &&
       !NEGATED.test(sentence.replace(/\bnot yet filed an intent\b/i, "")),
-    says: "recommends an Intent to File for a claim that is already filed",
-    correction: () => "intent-to-file-purpose",
+    says: "recommends an Intent to File for a claim that is already filed, and a filed claim already has its own filing date",
+    correction: () => "claim-has-its-own-date",
   },
 ];
 

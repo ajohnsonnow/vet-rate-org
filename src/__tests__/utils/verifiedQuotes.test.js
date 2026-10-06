@@ -73,7 +73,7 @@ describe("correction quotes", () => {
       "ratings-combined",
       "supplemental-any-time",
       "new-and-relevant",
-      "intent-to-file-purpose",
+      "claim-has-its-own-date",
       "review-filing",
     ]);
   });
@@ -96,7 +96,7 @@ describe("correction quotes", () => {
     "presumed-toxic-exposure",
     "supplemental-any-time",
     "new-and-relevant",
-    "intent-to-file-purpose",
+
     "review-filing",
   ])("%s is word for word in the text the model was given", (id) => {
     expect(allEntryText).toContain(quotes.corrections[id].text);

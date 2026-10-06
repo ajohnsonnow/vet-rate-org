@@ -23,7 +23,7 @@ const MODEL_ANSWER = a26.response.split("\n\nVet-Rate check:")[0];
 const A26_LEAD = `Vet-Rate check: part of the answer below conflicts with the regulation.
 
 The answer says: "Immediate Action: File an Intent to File (ITF) for Pending Claims"
-That recommends an Intent to File for a claim that is already filed. 38 CFR § 3.155(b) says: "(b) Intent to file a claim. A claimant, his or her duly authorized representative, a Member of Congress, or some person acting as next friend of claimant who is not of full age or capacity may indicate a claimant's desire to file a claim for benefits by submitting an intent to file a claim to VA."
+That recommends an Intent to File for a claim that is already filed, and a filed claim already has its own filing date. 38 CFR § 3.155(d)(1) says: "(1) Requirement for complete claim and date of claim. A complete claim is required for all types of claims, and will generally be considered filed as of the date it was received by VA for an evaluation or award of benefits under the laws administered by the Department of Veterans Affairs."
 
 Check that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.`;
 
