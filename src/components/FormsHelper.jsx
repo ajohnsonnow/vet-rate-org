@@ -1510,7 +1510,7 @@ const vsoAppointmentSteps = [
         label: "Apt/Unit Number",
         type: "text",
         required: false,
-        placeholder: "Apt 4B",
+        placeholder: "4B",
       },
       {
         name: "city",
@@ -1698,7 +1698,7 @@ const individualRepSteps = [
         label: "Apt/Unit Number",
         type: "text",
         required: false,
-        placeholder: "Apt 4B",
+        placeholder: "4B",
       },
       {
         name: "city",
@@ -5030,7 +5030,9 @@ const OFFICIAL_PDF_NOTES = {
   "personal-statement": `Filled in from your answers: your name and contact details, and your statement goes in Remarks and carries over to the page 2 box when it is long. If it is too long for both boxes, this screen tells you and the rest is in the text downloads. ${OFFICIAL_PDF_REST}`,
   "ptsd-stressor": `Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. An answer too long for its box is written in full in Remarks, and its box says to look there. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.`,
   "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box and carries over to the box on the next page when it is long. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
-  "vso-appointment": `Filled in from your answers: your name, contact details and address in the veteran's section, and the organization's name. For you to complete on the form: the claimant section if the claimant is not you, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
+  "vso-appointment": `Filled in from your answers: your name, contact details and address in the veteran's section, and the organization's name. The organization's address has no place on this form and is not on it. For you to complete on the form: the claimant section if the claimant is not you, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
+  "intent-to-file": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone, e-mail and the type of benefit. Your list of conditions has no place on this form and is not on it. For you to complete on the form: anything still blank, your signature and the date.`,
+  "medical-release": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address and phone. For you to complete on the form: each provider you listed (name, address, phone, dates of treatment and conditions), the kinds of records and any instructions, which are in the text downloads to copy from, then anything still blank, your signature and the date.`,
   "vso-appointment-individual": `Filled in from your answers: your name, contact details and address in the veteran's section, and your representative's name and address. The firm or organization name is not written on the form, because its organization line is only for a service organization representative. For you to complete on the form: the claimant section if the claimant is not you, the type of representative, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
 };
 const OFFICIAL_PDF_NOTE_OTHER = `Filled in from your answers where the form has a place for them. ${OFFICIAL_PDF_REST}`;
@@ -5782,7 +5784,7 @@ function ProfileAddressFieldsA({ veteranProfile, handleProfileChange, t }) {
           value={veteranProfile.apt || ""}
           onChange={(e) => handleProfileChange("apt", e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-va-blue focus:border-va-blue"
-          placeholder="Apt 4B"
+          placeholder="4B"
         />
       </div>
       <div>

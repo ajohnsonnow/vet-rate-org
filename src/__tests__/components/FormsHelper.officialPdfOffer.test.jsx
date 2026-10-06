@@ -128,6 +128,23 @@ describe.each(WITH_FILLER)("%s", (formName) => {
   });
 });
 
+describe("answers the form has no place for", () => {
+  it.each([
+    ["Intent to File", /list of conditions has no place on this form/],
+    [
+      "Medical Records Release",
+      /For you to complete on the form: each provider you listed.*kinds of records.*instructions/,
+    ],
+    ["VSO Appointment", /organization's address has no place on this form/],
+  ])("%s: the note about the official PDF names them", (formName, named) => {
+    openResult(formName);
+
+    expect(
+      screen.getByRole("note", { name: "About the official PDF" }).textContent,
+    ).toMatch(named);
+  });
+});
+
 const press = async () => {
   openResult("Statement in Support of Claim");
   fireEvent.click(officialButton());
