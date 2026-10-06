@@ -376,7 +376,7 @@ function ExpandSection({ label, open, onToggle, children }) {
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center gap-1 text-xs font-medium opacity-70 hover:opacity-100 transition-opacity"
+        className="flex min-h-[44px] items-center gap-1 text-xs font-medium opacity-70 hover:opacity-100 transition-opacity"
         aria-expanded={open}
       >
         <span
