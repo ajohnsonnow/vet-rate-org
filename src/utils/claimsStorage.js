@@ -45,10 +45,12 @@ function findExistingClaimIndex(claims, claim) {
   if (claim.vaAppealId) {
     return claims.findIndex((c) => c.vaAppealId === claim.vaAppealId);
   }
+  // A claim saved with no parent condition is stored with null; one passed
+  // in without the field has undefined. They are the same claim.
   return claims.findIndex(
     (c) =>
       c.conditionName === claim.conditionName &&
-      c.parentCondition === claim.parentCondition,
+      (c.parentCondition || null) === (claim.parentCondition || null),
   );
 }
 
@@ -196,6 +198,16 @@ export const saveStatementForCondition = (statementData) => {
     claim = getSavedClaims().find(matches);
   }
   return claim ? saveStatement(claim.id, statementData) : false;
+};
+
+// The statement saved for a condition, or null when there is none.
+export const getStatementForCondition = (condition, primaryCondition) => {
+  const claim = getSavedClaims().find(
+    (c) =>
+      c.conditionName === condition &&
+      (c.parentCondition || null) === (primaryCondition || null),
+  );
+  return claim ? getStatement(claim.id) : null;
 };
 
 // Get statement for a claim

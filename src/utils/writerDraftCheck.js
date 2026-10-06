@@ -953,3 +953,32 @@ export function resolvePassageDraft({ plan, sent, reply }) {
     passageOutcomes,
   };
 }
+
+const ENDS_SENTENCE = /[.!?]["')\]]?$/;
+
+/**
+ * Put each accepted rewording into `text` (what is on screen, edits and
+ * all) in place of the passage it rewords. A passage that is no longer in
+ * the text as typed, because it was edited there, is left alone. Returns
+ * the new text and how many rewordings went in.
+ */
+export function applyAcceptedRewordings(text, passageOutcomes = []) {
+  let out = String(text ?? "");
+  let applied = 0;
+  for (const { before, after, verdict } of passageOutcomes) {
+    const at =
+      verdict === "accepted" && before && after ? out.indexOf(before) : -1;
+    if (at === -1) continue;
+    // The draft closed the passage with a full stop of its own.
+    const ownStop =
+      out[at + before.length] === "." &&
+      !ENDS_SENTENCE.test(before) &&
+      ENDS_SENTENCE.test(after);
+    out =
+      out.slice(0, at) +
+      after +
+      out.slice(at + before.length + (ownStop ? 1 : 0));
+    applied += 1;
+  }
+  return { text: out, applied };
+}

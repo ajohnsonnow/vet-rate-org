@@ -39,12 +39,17 @@ vi.mock("../utils/unifiedAIService", async (importOriginal) => ({
 vi.mock("../utils/veteranContextProvider", async (importOriginal) => ({
   ...(await importOriginal()),
   getVeteranAIContext: vi.fn(async () => ""),
-  saveAnalysisResults: vi.fn(async () => ({})),
+  saveAnalysisResults: vi.fn(async () => ({ documentId: "doc-1" })),
+}));
+vi.mock("../utils/myPacketManager", async (importOriginal) => ({
+  ...(await importOriginal()),
+  updatePacketDocument: vi.fn(async () => ({ success: true })),
 }));
 
 const { downloadDraft } = await import("../utils/draftExport");
 const { generateAI } = await import("../utils/unifiedAIService");
 const { saveAnalysisResults } = await import("../utils/veteranContextProvider");
+const { updatePacketDocument } = await import("../utils/myPacketManager");
 const { default: WitnessBench } = await import("./WitnessBench.jsx");
 
 const CONDITION = "Marker10 condition";
@@ -124,6 +129,7 @@ beforeEach(() => {
   generateAI.mockReset();
   downloadDraft.mockClear();
   saveAnalysisResults.mockClear();
+  updatePacketDocument.mockClear();
 });
 
 describe("Witness Bench, standard statement", () => {
@@ -172,7 +178,6 @@ describe("Witness Bench, standard statement", () => {
     const printed = [...(await answerEverything()), EDIT];
     expect(saveAnalysisResults).not.toHaveBeenCalled();
     const onScreen = typeAnEdit();
-    fireEvent.click(screen.getByRole("button", { name: /download/i }));
     fireEvent.click(screen.getByRole("button", { name: /save to my packet/i }));
 
     const [claim] = getSavedClaims();
@@ -188,7 +193,6 @@ describe("Witness Bench, standard statement", () => {
     vi.spyOn(localStorage, "setItem").mockImplementation(() => {
       throw new Error("QuotaExceededError");
     });
-    fireEvent.click(screen.getByRole("button", { name: /download/i }));
     fireEvent.click(screen.getByRole("button", { name: /save to my packet/i }));
 
     expect((await screen.findByRole("alert")).textContent).toMatch(
@@ -249,7 +253,8 @@ describe("Witness Bench, with the AI asked", () => {
     });
     const printed = await answerEverything();
 
-    expect(screen.getByText(/WebGPU inference timed out/)).toBeInTheDocument();
+    expect(screen.getByText(/took too long to answer/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/WebGPU/);
     expect(counts(statementField().value, printed)).toEqual(once(printed));
     expect(statementField().value).not.toMatch(/\bAI\b/);
 
@@ -263,7 +268,7 @@ describe("Witness Bench, with the AI asked", () => {
     await waitFor(() =>
       expect(statementField().value).toContain("To put it plainly,"),
     );
-    expect(screen.queryByText(/timed out/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/took too long/)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Try the AI again" }),
     ).not.toBeInTheDocument();
@@ -276,5 +281,143 @@ describe("Witness Bench, with the AI asked", () => {
     expect(
       screen.queryByRole("button", { name: "Try the AI again" }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("Witness Bench, asking the AI again after it failed", () => {
+  beforeEach(() => {
+    ai.available = true;
+  });
+
+  it("leaves an edited statement untouched when the retry fails too", async () => {
+    modelAnswersStatement(() => {
+      throw new Error("WebGPU inference timed out");
+    });
+    await answerEverything();
+    const edited = typeAnEdit();
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+
+    await waitFor(() =>
+      expect(generateAI.mock.calls.length).toBeGreaterThan(2),
+    );
+    await screen.findByRole("button", { name: "Try the AI again" });
+    expect(statementField().value).toBe(edited);
+    expect(screen.getByText(/took too long to answer/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/WebGPU/);
+  });
+
+  it("rewords the statement in the box on a retry that works, keeping the edit", async () => {
+    modelAnswersStatement(() => {
+      throw new Error("WebGPU inference timed out");
+    });
+    const printed = await answerEverything();
+    const edited = typeAnEdit();
+    modelAnswersStatement((prompt) =>
+      numbered(
+        passagesIn(prompt).map(
+          (passage) =>
+            `To put it plainly, ${passage[0].toLowerCase()}${passage.slice(1)}`,
+        ),
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+
+    await waitFor(() =>
+      expect(statementField().value).toContain("To put it plainly,"),
+    );
+    const box = statementField().value;
+    expect(occurrences(box, EDIT)).toBe(1);
+    expect(box).toContain("was suggested by AI");
+    expect(box.length).toBeGreaterThan(edited.length);
+    expect(counts(box, printed.slice(0, 3))).toEqual([1, 1, 1]);
+  });
+
+  it("keeps an answer the witness rewrote in the box, and says nothing changed", async () => {
+    modelAnswersStatement(() => {
+      throw new Error("WebGPU inference timed out");
+    });
+    await answerEverything();
+    const mine = statementField().value.replaceAll(
+      /They did the thing in marker\d+ that I saw\./g,
+      "My own words now.",
+    );
+    fireEvent.change(statementField(), { target: { value: mine } });
+    modelAnswersStatement((prompt) =>
+      numbered(
+        passagesIn(prompt).map(
+          (passage) =>
+            `To put it plainly, ${passage[0].toLowerCase()}${passage.slice(1)}`,
+        ),
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try the AI again" }));
+
+    await screen.findByText(/did not change the wording/i);
+    expect(statementField().value).toBe(mine);
+  });
+});
+
+describe("Witness Bench saving the same statement again", () => {
+  const saveButton = () => screen.getByRole("button", { name: /my packet/i });
+
+  it("has a Save button beside Download, outside the menu", async () => {
+    await answerEverything();
+
+    expect(saveButton()).toBeVisible();
+    expect(saveButton().textContent).toMatch(/Save to My Packet/);
+    fireEvent.click(screen.getByRole("button", { name: /download/i }));
+    expect(screen.getAllByRole("button", { name: /my packet/i })).toHaveLength(
+      1,
+    );
+  });
+
+  it("says it was saved and when, and does not offer to save the same text twice", async () => {
+    await answerEverything();
+    fireEvent.click(saveButton());
+
+    await waitFor(() => expect(saveButton()).toBeDisabled());
+    expect(saveButton().textContent).toMatch(/Saved to My Packet at \d/);
+    expect(getSavedClaims()).toHaveLength(1);
+  });
+
+  it("updates the same claim and the same packet document when the statement changes", async () => {
+    await answerEverything();
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveButton()).toBeDisabled());
+
+    const changed = typeAnEdit();
+    expect(saveButton()).toBeEnabled();
+    expect(saveButton().textContent).toMatch(/Save changes to My Packet/);
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveButton()).toBeDisabled());
+
+    const claims = getSavedClaims();
+    expect(claims).toHaveLength(1);
+    expect(claims[0].evidence).toHaveLength(1);
+    expect(claims[0].evidence[0].statement).toBe(changed);
+    expect(saveAnalysisResults).toHaveBeenCalledTimes(1);
+    expect(updatePacketDocument).toHaveBeenCalledTimes(1);
+    expect(updatePacketDocument.mock.calls[0][0]).toBe("doc-1");
+    expect(updatePacketDocument.mock.calls[0][1].rawText).toBe(changed);
+  });
+});
+
+describe("Witness Bench, an internal error code", () => {
+  it("never reaches the witness", async () => {
+    ai.available = true;
+    modelAnswersStatement(() => {
+      throw new Error(
+        "AI_CIRCUIT_OPEN: AI generation has failed 4 times in a row; paused",
+      );
+    });
+    await answerEverything();
+
+    expect(
+      screen.getByText(/stopped answering after several failed tries/),
+    ).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/AI_CIRCUIT_OPEN|4 times/);
+    expect(
+      screen.getByRole("button", { name: "Try the AI again" }),
+    ).toBeInTheDocument();
   });
 });

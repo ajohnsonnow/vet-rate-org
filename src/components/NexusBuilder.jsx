@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -19,7 +19,10 @@ import {
   standardDraftNote,
 } from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
+import ChoiceDialog, { EditedDraftDialog } from "./common/ChoiceDialog";
+import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
 import {
   isAIAvailable,
   enhancePersonalStatement,
@@ -30,7 +33,11 @@ import { LLMRecommendationBadge } from "./LLMRecommendation";
 import { isAnyAIAvailable } from "../utils/unifiedAIService";
 import SmartAILoadButton from "./SmartAILoadButton";
 import { getMyRatings } from "../utils/veteranProfile";
-import { getSavedClaims, getStatement } from "../utils/claimsStorage";
+import {
+  getSavedClaims,
+  getStatement,
+  getStatementForCondition,
+} from "../utils/claimsStorage";
 import { normalizeConditionName } from "../utils/conditionName";
 
 // Pure doctor-note generator, split out of NexusBuilder purely to keep its
@@ -1013,8 +1020,11 @@ function createAIConsentHandler({
   setAiEnhancedStatement,
   setDraftNote,
   setUseAIVersion,
+  t,
 }) {
-  return async () => {
+  // `boxText` is the statement as it stands on screen. The AI's accepted
+  // rewordings go into that text; a failure leaves it as it is.
+  return async (boxText) => {
     setShowAIConsent(false);
     setIsEnhancing(true);
     setAiError(null);
@@ -1027,18 +1037,24 @@ function createAIConsentHandler({
         primaryCondition,
       );
 
-      if (result.success && result.draftPath === "model") {
-        setAiEnhancedStatement(
-          result.content.replaceAll("[Date]", new Date().toLocaleDateString()),
-        );
+      const reworded =
+        result.success && result.draftPath === "model"
+          ? applyAcceptedRewordings(boxText, result.passageOutcomes)
+          : { applied: 0 };
+      if (reworded.applied > 0) {
+        setAiEnhancedStatement(reworded.text);
         setUseAIVersion(true);
       } else if (result.success) {
         // Nothing was reworded, so the standard draft stays on screen under
         // its own label. Say why: the AI failed, or changed nothing usable.
-        setAiError(result.draftErrorReason ?? null);
+        setAiError(
+          result.draftErrorReason
+            ? plainAIError(result.draftErrorReason, t)
+            : null,
+        );
         setDraftNote(result.draftErrorReason ? null : AI_NO_CHANGE_NOTE);
       } else {
-        setAiError(result.error);
+        setAiError(plainAIError(result.error, t));
       }
     } catch (error) {
       console.error("AI enhancement error:", error);
@@ -1103,6 +1119,7 @@ function useNexusAIEnhancement({
   condition,
   primaryCondition,
   updateAnswer,
+  t,
 }) {
   const [showAIConsent, setShowAIConsent] = useState(false);
   const [aiEnhancedStatement, setAiEnhancedStatement] = useState(null);
@@ -1126,6 +1143,7 @@ function useNexusAIEnhancement({
     setAiEnhancedStatement,
     setDraftNote,
     setUseAIVersion,
+    t,
   });
 
   const handleAICancel = () => {
@@ -1313,6 +1331,24 @@ const NexusNavigationButtons = ({ wizard, modalState, output, t }) => (
         </button>
       )}
 
+      {wizard.step === wizard.totalSteps && output.editIsStale && (
+        <EditedDraftDialog
+          onKeep={output.keepEditedStatement}
+          onRebuild={output.rebuildStatement}
+        />
+      )}
+      {output.askReplace && (
+        <ChoiceDialog
+          title="Replace your saved statement?"
+          keepLabel="Keep my saved statement"
+          onKeep={output.keepSavedStatement}
+          replaceLabel="Replace it with this statement"
+          onReplace={output.saveStatementNow}
+        >
+          You already have a saved statement for this condition. Saving this one
+          replaces it. To keep both, download the statement on screen first.
+        </ChoiceDialog>
+      )}
       {wizard.step === wizard.totalSteps && (
         <NexusFinishControls
           isCertified={modalState.isCertified}
@@ -1388,6 +1424,47 @@ function useNexusModalState() {
   };
 }
 
+// The statement in the box. An edit is kept per version. When an answer
+// changes after the standard statement was edited, the edited statement
+// stays in the box and the veteran is asked whether to keep it or rebuild
+// from the answers.
+function useStatementEdits(baseStatement, standardStatement, savedText) {
+  const version = baseStatement === standardStatement ? "standard" : "ai";
+  // A statement being continued starts as the veteran saved it.
+  const [edits, setEdits] = useState(() =>
+    savedText && savedText !== standardStatement
+      ? { standard: { base: standardStatement, text: savedText } }
+      : {},
+  );
+  const edit = edits[version];
+  const isEdited = Boolean(edit) && edit.text !== edit.base;
+  const setEdit = (next) => setEdits((all) => ({ ...all, [version]: next }));
+  return {
+    currentStatement: isEdited ? edit.text : baseStatement,
+    editIsStale:
+      isEdited && edit.base !== baseStatement && version === "standard",
+    editStatement: (text) => setEdit({ base: baseStatement, text }),
+    keepEditedStatement: () =>
+      setEdit({ base: baseStatement, text: edit.text }),
+    rebuildStatement: () => setEdit(null),
+  };
+}
+
+// Saving the statement. A new statement for a condition that already has a
+// saved one asks before it replaces it.
+function useSaveStatement({ replacesSaved, onSave, setOutputError, build }) {
+  const [askReplace, setAskReplace] = useState(false);
+  const saveStatementNow = () => {
+    setAskReplace(false);
+    setOutputError(onSave(build()) === false ? SAVE_FAILED : "");
+  };
+  const handleFinish = () => {
+    if (replacesSaved) setAskReplace(true);
+    else saveStatementNow();
+  };
+  return { askReplace, setAskReplace, handleFinish, saveStatementNow };
+}
+
 // Owns the statement/doctor-note derivation and the finish/download
 // handlers. Split out of NexusBuilder purely to keep its function body
 // under the line-count/complexity limits. Same logic, same order of
@@ -1399,6 +1476,8 @@ function useNexusDocumentOutput({
   isSecondary,
   useAIVersion,
   aiEnhancedStatement,
+  savedText,
+  replacesSaved,
   onSave,
   setShowDownloadMenu,
   setNexusDownloaded,
@@ -1416,31 +1495,14 @@ function useNexusDocumentOutput({
     useAIVersion && aiEnhancedStatement
       ? aiEnhancedStatement
       : standardStatement;
-  const [edit, setEdit] = useState({ base: null, text: "" });
-  const currentStatement =
-    edit.base === baseStatement ? edit.text : baseStatement;
-  const editStatement = (text) => setEdit({ base: baseStatement, text });
+  const {
+    currentStatement,
+    editStatement,
+    editIsStale,
+    keepEditedStatement,
+    rebuildStatement,
+  } = useStatementEdits(baseStatement, standardStatement, savedText);
   const [outputError, setOutputError] = useState("");
-
-  const handleFinish = () => {
-    const statement = currentStatement;
-    const doctorNote = generateDoctorNote({
-      answers,
-      condition,
-      primaryCondition,
-      isSecondary,
-    });
-
-    const saved = onSave({
-      condition,
-      primaryCondition,
-      answers,
-      statement,
-      doctorNote,
-      generatedDate: new Date().toISOString(),
-    });
-    setOutputError(saved === false ? SAVE_FAILED : "");
-  };
 
   const currentDoctorNote = generateDoctorNote({
     answers,
@@ -1448,6 +1510,20 @@ function useNexusDocumentOutput({
     primaryCondition,
     isSecondary,
   });
+  const { askReplace, setAskReplace, handleFinish, saveStatementNow } =
+    useSaveStatement({
+      replacesSaved,
+      onSave,
+      setOutputError,
+      build: () => ({
+        condition,
+        primaryCondition,
+        answers,
+        statement: currentStatement,
+        doctorNote: currentDoctorNote,
+        generatedDate: new Date().toISOString(),
+      }),
+    });
 
   const handleDownload = async (format = "txt") => {
     setShowDownloadMenu(false);
@@ -1466,6 +1542,12 @@ function useNexusDocumentOutput({
   };
 
   return {
+    askReplace,
+    keepSavedStatement: () => setAskReplace(false),
+    saveStatementNow,
+    editIsStale,
+    keepEditedStatement,
+    rebuildStatement,
     outputError,
     handleFinish,
     handleDownload,
@@ -1817,6 +1899,7 @@ const NexusBuilderWizard = ({
   condition,
   primaryCondition,
   existingStatement,
+  replacesSaved,
   onClose,
   onSave,
   onReportBug,
@@ -1833,6 +1916,7 @@ const NexusBuilderWizard = ({
     condition,
     primaryCondition,
     updateAnswer: wizardState.updateAnswer,
+    t,
   });
   const output = useNexusDocumentOutput({
     answers: wizardState.answers,
@@ -1841,12 +1925,18 @@ const NexusBuilderWizard = ({
     isSecondary,
     useAIVersion: ai.useAIVersion,
     aiEnhancedStatement: ai.aiEnhancedStatement,
+    savedText: existingStatement?.statement,
+    replacesSaved,
     onSave,
     setShowDownloadMenu: modalState.setShowDownloadMenu,
     setNexusDownloaded: modalState.setNexusDownloaded,
   });
 
   const wizard = { ...wizardState, totalSteps, isSecondary };
+  const aiOnBox = {
+    ...ai,
+    handleAIConsent: () => ai.handleAIConsent(output.currentStatement),
+  };
 
   return (
     <NexusBuilderView
@@ -1858,7 +1948,7 @@ const NexusBuilderWizard = ({
       onOpenAISettings={onOpenAISettings}
       wizard={wizard}
       modalState={modalState}
-      ai={ai}
+      ai={aiOnBox}
       output={output}
       t={t}
     />
@@ -1895,8 +1985,24 @@ const NexusBuilder = ({
   const effectiveCondition = condition || picked?.name || "";
   const effectivePrimaryCondition =
     primaryCondition ?? picked?.parentCondition ?? null;
-  const effectiveExistingStatement =
-    existingStatement ?? picked?.existingStatement ?? null;
+  // A statement already saved for this condition. Resumed from My Packet,
+  // it is continued. Found on opening the builder some other way, it is
+  // offered: continue from it, or start a new one (which then asks before
+  // replacing it on save).
+  const savedStatement = useMemo(
+    () =>
+      existingStatement ??
+      (effectiveCondition
+        ? getStatementForCondition(
+            effectiveCondition,
+            effectivePrimaryCondition,
+          )
+        : null),
+    [existingStatement, effectiveCondition, effectivePrimaryCondition],
+  );
+  const [savedChoice, setSavedChoice] = useState(null);
+  const continuing = Boolean(existingStatement) || savedChoice === "continue";
+  const effectiveExistingStatement = continuing ? savedStatement : null;
 
   if (!effectiveCondition) {
     return (
@@ -1908,11 +2014,28 @@ const NexusBuilder = ({
     );
   }
 
+  if (savedStatement?.statement && !continuing && savedChoice !== "new") {
+    return (
+      <ChoiceDialog
+        title={`You have a saved statement for ${effectiveCondition}`}
+        keepLabel="Continue from my saved statement"
+        onKeep={() => setSavedChoice("continue")}
+        replaceLabel="Start a new statement"
+        onReplace={() => setSavedChoice("new")}
+      >
+        Continuing opens your saved statement and answers so you can carry on.
+        Starting a new one leaves the saved statement as it is unless you choose
+        to replace it when you save.
+      </ChoiceDialog>
+    );
+  }
+
   return (
     <NexusBuilderWizard
       condition={effectiveCondition}
       primaryCondition={effectivePrimaryCondition}
       existingStatement={effectiveExistingStatement}
+      replacesSaved={savedChoice === "new" && Boolean(savedStatement)}
       onClose={onClose}
       onSave={onSave}
       onReportBug={onReportBug}

@@ -8,12 +8,15 @@ import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import StandardDraftNotice from "./common/StandardDraftNotice";
+import { EditedDraftDialog } from "./common/ChoiceDialog";
 import {
   AI_NO_CHANGE_NOTE,
   formStatementPlan,
   standardDraftNote,
 } from "../utils/writerTemplates";
 import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
+import { applyAcceptedRewordings } from "../utils/writerDraftCheck";
 import { fillAndDownloadForm } from "../utils/pdfFormFiller";
 import { enhanceFormStatement } from "../utils/aiStatementHelper";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
@@ -27,6 +30,7 @@ import {
   saveVeteranProfile,
   hasVeteranProfile,
   saveForm,
+  updateSavedForm,
   exportAllVeteranData,
   importVeteranData,
   getMyRatings,
@@ -3522,10 +3526,10 @@ ${
   Array.isArray(formData.feeUnderstanding) &&
   formData.feeUnderstanding.length > 0
     ? formData.feeUnderstanding.map((f) => `[X] ${f}`).join("\n")
-    : `[X] Attorneys/agents may only charge fees AFTER VA issues an initial decision
-[X] VA limits fees to 33.3% of past-due benefits (unless higher approved)
-[X] The fee agreement must be filed with the VA
-[X] I can revoke this appointment at any time by filing a new form`
+    : `[ ] Attorneys/agents may only charge fees AFTER VA issues an initial decision
+[ ] VA limits fees to 33.3% of past-due benefits (unless higher approved)
+[ ] The fee agreement must be filed with the VA
+[ ] I can revoke this appointment at any time by filing a new form`
 }`;
 
 const _buildIndividualRepAuthorizationSection = (
@@ -3537,10 +3541,10 @@ ${
   Array.isArray(formData.authorizationScope) &&
   formData.authorizationScope.length > 0
     ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-    : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence on my behalf
-[X] File appeals on my behalf`
+    : `[ ] Access my VA records
+[ ] Represent me in all VA claims matters
+[ ] Submit evidence on my behalf
+[ ] File appeals on my behalf`
 }`;
 
 const _buildMedicalReleaseVeteranSection = (
@@ -4120,10 +4124,10 @@ function _vsoAppointmentAuthorizationSection(formData) {
     Array.isArray(formData.authorizationScope) &&
     formData.authorizationScope.length > 0
       ? formData.authorizationScope.map((a) => `[X] ${a}`).join("\n")
-      : `[X] Access my VA records
-[X] Represent me in all VA claims matters
-[X] Submit evidence and documentation on my behalf
-[X] Appeal decisions on my behalf`;
+      : `[ ] Access my VA records
+[ ] Represent me in all VA claims matters
+[ ] Submit evidence and documentation on my behalf
+[ ] Appeal decisions on my behalf`;
   const recordAccess =
     formData.limitAccess === "yes"
       ? "LIMITED (see restrictions below)"
@@ -4139,20 +4143,66 @@ Record Access: ${recordAccess}
 ${limitationsText}`;
 }
 
-function ChecklistField({ field, formData, handleChecklistChange }) {
+const fieldId = (name) => `forms-helper-field-${name}`;
+
+// A required answer is missing when it is empty, blank, unticked or has
+// nothing chosen.
+function isMissing(value) {
+  if (Array.isArray(value)) return value.length === 0;
+  return typeof value === "string" ? value.trim() === "" : !value;
+}
+
+const missingRequired = (step, formData) =>
+  step.fields
+    .filter((field) => field.required && isMissing(formData[field.name]))
+    .map((field) => field.name);
+
+// What ties a field to its "required" message for assistive technology.
+const invalidProps = (name, hasError) =>
+  hasError
+    ? { "aria-invalid": "true", "aria-describedby": `${fieldId(name)}-error` }
+    : {};
+
+// The message under a required field left empty. Words and a symbol, not
+// colour alone.
+function FieldError({ name, hasError }) {
+  if (!hasError) return null;
   return (
-    <div key={field.name} className="mb-6">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+    <p
+      id={`${fieldId(name)}-error`}
+      className="mt-1 text-sm font-semibold text-red-800 dark:text-red-200"
+    >
+      <span aria-hidden="true">⚠ </span>
+      This answer is required. Fill it in to continue.
+    </p>
+  );
+}
+
+function ChecklistField({ field, formData, handleChecklistChange, hasError }) {
+  return (
+    <div
+      key={field.name}
+      role="group"
+      aria-labelledby={`${fieldId(field.name)}-label`}
+      {...invalidProps(field.name, hasError)}
+      className="mb-6"
+    >
+      <span
+        id={`${fieldId(field.name)}-label`}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"
+      >
         {field.label}{" "}
         {field.required && <span className="text-red-500">*</span>}
-      </label>
+      </span>
+      <FieldError name={field.name} hasError={hasError} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {field.options.map((option) => (
+        {field.options.map((option, optionIndex) => (
           <label
             key={option}
             className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
           >
             <input
+              id={optionIndex === 0 ? fieldId(field.name) : undefined}
               type="checkbox"
               checked={(formData[field.name] || []).includes(option)}
               onChange={(e) =>
@@ -4170,8 +4220,8 @@ function ChecklistField({ field, formData, handleChecklistChange }) {
   );
 }
 
-function TextareaField({ field, formData, handleFieldChange }) {
-  const id = `forms-helper-field-${field.name}`;
+function TextareaField({ field, formData, handleFieldChange, hasError }) {
+  const id = fieldId(field.name);
   return (
     <div key={field.name} className="mb-4">
       <label
@@ -4190,6 +4240,7 @@ function TextareaField({ field, formData, handleFieldChange }) {
           rows={field.rows || 4}
           className="w-full pr-12 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
           required={field.required}
+          {...invalidProps(field.name, hasError)}
         />
         {isSpeechRecognitionSupported() && (
           <div
@@ -4209,13 +4260,14 @@ function TextareaField({ field, formData, handleFieldChange }) {
           </div>
         )}
       </div>
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
 
 // A select with its label tied to it, so it has an accessible name.
-function SelectField({ field, value, onChange }) {
-  const id = `forms-helper-field-${field.name}`;
+function SelectField({ field, value, onChange, hasError }) {
+  const id = fieldId(field.name);
   return (
     <div className="mb-4">
       <label
@@ -4231,6 +4283,7 @@ function SelectField({ field, value, onChange }) {
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
         required={field.required}
+        {...invalidProps(field.name, hasError)}
       >
         {field.options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -4238,6 +4291,7 @@ function SelectField({ field, value, onChange }) {
           </option>
         ))}
       </select>
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
@@ -4247,6 +4301,7 @@ function FormField({
   formData,
   handleFieldChange,
   handleChecklistChange,
+  hasError,
 }) {
   if (field.type === "checklist") {
     return (
@@ -4254,24 +4309,29 @@ function FormField({
         field={field}
         formData={formData}
         handleChecklistChange={handleChecklistChange}
+        hasError={hasError}
       />
     );
   }
 
   if (field.type === "checkbox") {
     return (
-      <label
-        key={field.name}
-        className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer mb-4"
-      >
-        <input
-          type="checkbox"
-          checked={formData[field.name] || false}
-          onChange={(e) => handleFieldChange(field.name, e.target.checked)}
-          className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
-        />
-        <span className="text-gray-700 dark:text-gray-300">{field.label}</span>
-      </label>
+      <div key={field.name} className="mb-4">
+        <label className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
+          <input
+            id={fieldId(field.name)}
+            type="checkbox"
+            checked={formData[field.name] || false}
+            onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+            className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
+            {...invalidProps(field.name, hasError)}
+          />
+          <span className="text-gray-700 dark:text-gray-300">
+            {field.label}
+          </span>
+        </label>
+        <FieldError name={field.name} hasError={hasError} />
+      </div>
     );
   }
 
@@ -4281,6 +4341,7 @@ function FormField({
         field={field}
         value={formData[field.name] || ""}
         onChange={(value) => handleFieldChange(field.name, value)}
+        hasError={hasError}
       />
     );
   }
@@ -4291,6 +4352,7 @@ function FormField({
         field={field}
         formData={formData}
         handleFieldChange={handleFieldChange}
+        hasError={hasError}
       />
     );
   }
@@ -4312,7 +4374,9 @@ function FormField({
         placeholder={field.placeholder}
         className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
         required={field.required}
+        {...invalidProps(field.name, hasError)}
       />
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
@@ -4503,7 +4567,8 @@ function WizardStepNavigation({
   currentStep,
   setCurrentStep,
   isLastStep,
-  handleFinishWizard,
+  onNext,
+  onFinish,
   t,
 }) {
   return (
@@ -4525,7 +4590,7 @@ function WizardStepNavigation({
       {isLastStep ? (
         <button
           type="button"
-          onClick={handleFinishWizard}
+          onClick={onFinish}
           className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2"
         >
           {t("formsHelper", "generateStatement")}
@@ -4546,7 +4611,7 @@ function WizardStepNavigation({
       ) : (
         <button
           type="button"
-          onClick={() => setCurrentStep((prev) => prev + 1)}
+          onClick={onNext}
           className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
         >
           {t("formsHelper", "next")}
@@ -4569,6 +4634,25 @@ function WizardStepNavigation({
   );
 }
 
+// Required means required: moving on with a required answer missing is
+// stopped, each missing field says so, and focus goes to the first one.
+function useRequiredAnswers(currentStep, formData) {
+  const [asked, setAsked] = useState({ step: 0, names: [] });
+  const forStep = (step) => ({
+    flagged:
+      asked.step === currentStep
+        ? asked.names.filter((name) => isMissing(formData[name]))
+        : [],
+    ifComplete: (go) => () => {
+      const names = missingRequired(step, formData);
+      setAsked({ step: currentStep, names });
+      if (names.length === 0) go();
+      else document.getElementById(fieldId(names[0]))?.focus();
+    },
+  });
+  return { forStep };
+}
+
 function WizardStepPanel({
   selectedForm,
   currentStep,
@@ -4581,6 +4665,7 @@ function WizardStepPanel({
 }) {
   const steps = _getFormStepsForForm(selectedForm);
   const stepHeadingRef = useRef(null);
+  const required = useRequiredAnswers(currentStep, formData);
 
   // "Start Guided Builder" (setCurrentStep(1)) and every Next/Back removes
   // the button that had focus from the DOM - the step content it belonged
@@ -4595,6 +4680,7 @@ function WizardStepPanel({
 
   const step = steps[currentStep - 1];
   const isLastStep = currentStep === steps.length;
+  const { flagged, ifComplete } = required.forStep(step);
 
   return (
     <div className="space-y-6">
@@ -4628,16 +4714,29 @@ function WizardStepPanel({
               formData={formData}
               handleFieldChange={handleFieldChange}
               handleChecklistChange={handleChecklistChange}
+              hasError={flagged.includes(field.name)}
             />
           ))}
         </div>
       </div>
 
+      {flagged.length > 0 && (
+        <p
+          role="alert"
+          className="p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm font-semibold text-red-900 dark:text-red-100"
+        >
+          {flagged.length === 1
+            ? "1 required answer is missing on this step."
+            : `${flagged.length} required answers are missing on this step.`}
+        </p>
+      )}
+
       <WizardStepNavigation
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
         isLastStep={isLastStep}
-        handleFinishWizard={handleFinishWizard}
+        onNext={ifComplete(() => setCurrentStep((prev) => prev + 1))}
+        onFinish={ifComplete(handleFinishWizard)}
         t={t}
       />
     </div>
@@ -4901,7 +5000,39 @@ function AIEnhancementSection({
   );
 }
 
-function DownloadOptionsCard({ t, handleDownloadOfficialPdf, handleDownload }) {
+// What the official PDF holds for each form and what it leaves to the
+// veteran. It is never described as filled out or ready to sign.
+const OFFICIAL_PDF_REST =
+  "For you to complete on the form: anything still blank, any boxes to tick, your signature and the date.";
+const OFFICIAL_PDF_NOTES = {
+  "personal-statement": `Filled in from your answers: your name and contact details, and your statement goes in Remarks (it carries over to page 2 if it is long). ${OFFICIAL_PDF_REST}`,
+  "ptsd-stressor": `Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.`,
+  "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
+};
+const OFFICIAL_PDF_NOTE_OTHER = `Filled in from your answers where the form has a place for them. ${OFFICIAL_PDF_REST}`;
+const OFFICIAL_PDF_EDITS =
+  "The official PDF is built from the answers you gave in the steps, not from edits typed into the statement box.";
+
+function OfficialPdfNote({ formType, isStatement }) {
+  return (
+    <p
+      role="note"
+      aria-label="About the official PDF"
+      className="mt-3 text-sm text-gray-700 dark:text-gray-300"
+    >
+      {OFFICIAL_PDF_NOTES[formType] ?? OFFICIAL_PDF_NOTE_OTHER}
+      {isStatement ? ` ${OFFICIAL_PDF_EDITS}` : ""}
+    </p>
+  );
+}
+
+function DownloadOptionsCard({
+  t,
+  handleDownloadOfficialPdf,
+  handleDownload,
+  formType,
+  isStatement,
+}) {
   return (
     <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
       <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -4960,11 +5091,24 @@ function DownloadOptionsCard({ t, handleDownloadOfficialPdf, handleDownload }) {
           </button>
         </div>
       </div>
+      <OfficialPdfNote formType={formType} isStatement={isStatement} />
     </div>
   );
 }
 
-function SaveToPacketCard({ t, handleSaveToPacket }) {
+const savedTime = (date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// The save button says what it will do: save, save changes to the item
+// already saved, or nothing because this text was saved (and when).
+function savePacketLabel({ savedItem, isSavedNow, t }) {
+  if (isSavedNow) return `Saved to My Packet at ${savedTime(savedItem.at)}`;
+  return savedItem
+    ? "Save changes to Packet"
+    : t("formsHelper", "saveToPacketBtn");
+}
+
+function SaveToPacketCard({ t, handleSaveToPacket, savedItem, isSavedNow }) {
   return (
     <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -4982,7 +5126,8 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
         <button
           type="button"
           onClick={handleSaveToPacket}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
+          disabled={isSavedNow}
+          className="min-h-[44px] px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-default text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
         >
           <svg
             className="w-5 h-5"
@@ -4997,7 +5142,7 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
               d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
             />
           </svg>
-          {t("formsHelper", "saveToPacketBtn")}
+          {savePacketLabel({ savedItem, isSavedNow, t })}
         </button>
       </div>
     </div>
@@ -5010,6 +5155,10 @@ function ReviewDownloadSection({
   handleDownload,
   handleSaveToPacket,
   importStatus,
+  formType,
+  isStatement,
+  savedItem,
+  isSavedNow,
 }) {
   return (
     <>
@@ -5017,9 +5166,16 @@ function ReviewDownloadSection({
         t={t}
         handleDownloadOfficialPdf={handleDownloadOfficialPdf}
         handleDownload={handleDownload}
+        formType={formType}
+        isStatement={isStatement}
       />
 
-      <SaveToPacketCard t={t} handleSaveToPacket={handleSaveToPacket} />
+      <SaveToPacketCard
+        t={t}
+        handleSaveToPacket={handleSaveToPacket}
+        savedItem={savedItem}
+        isSavedNow={isSavedNow}
+      />
 
       {/* Import Status Message */}
       {importStatus && (
@@ -5147,38 +5303,22 @@ function ReviewNextSteps({ selectedForm, t }) {
 
 function ReviewActionButtons({
   selectedForm,
-  setCurrentStep,
-  setGeneratedContent,
-  setAiEnhancedContent,
-  setShowAIVersion,
-  setSelectedForm,
-  setFormData,
+  onEditAnswers,
+  onStartNewForm,
   t,
 }) {
   return (
     <div className="flex flex-wrap gap-3">
       <button
         type="button"
-        onClick={() => {
-          setCurrentStep(1);
-          setGeneratedContent(null);
-          setAiEnhancedContent(null);
-          setShowAIVersion(false);
-        }}
+        onClick={onEditAnswers}
         className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
       >
         ← {t("formsHelper", "editAnswers")}
       </button>
       <button
         type="button"
-        onClick={() => {
-          setSelectedForm(null);
-          setFormData({});
-          setCurrentStep(0);
-          setGeneratedContent(null);
-          setAiEnhancedContent(null);
-          setShowAIVersion(false);
-        }}
+        onClick={onStartNewForm}
         className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium"
       >
         {t("formsHelper", "startNewForm")}
@@ -7356,10 +7496,19 @@ function useFormsHelperAIState() {
   const [aiError, setAiError] = useState(null);
   const [aiDraftNote, setAiDraftNote] = useState(null);
   const [draftEdit, setDraftEdit] = useState(null);
+  const [keptDraft, setKeptDraft] = useState(null);
+  const [savedItem, setSavedItem] = useState(null);
+  const [askRebuild, setAskRebuild] = useState(false);
 
   return {
     draftEdit,
     setDraftEdit,
+    keptDraft,
+    setKeptDraft,
+    savedItem,
+    setSavedItem,
+    askRebuild,
+    setAskRebuild,
     aiDraftNote,
     setAiDraftNote,
     showAIConsent,
@@ -7678,17 +7827,27 @@ function _buildFormsHelperFormDataHandlers(ctx) {
   };
 
   const handleSaveToPacket = () => {
-    const formId = saveForm({
-      formType: selectedForm?.id,
-      formNumber: selectedForm?.formNumber,
-      formName: selectedForm?.name,
+    // Saving again updates the item already saved; it never makes a second.
+    const text = shownDraft(ctx).text;
+    const fields = {
       title: formData.conditionName || selectedForm?.name,
       formData: formData,
-      generatedContent: shownDraft(ctx).text,
-      status: "Draft",
-    });
+      generatedContent: text,
+    };
+    const earlier = ctx.savedItem?.id;
+    const formId =
+      earlier && updateSavedForm(earlier, fields)
+        ? earlier
+        : saveForm({
+            formType: selectedForm?.id,
+            formNumber: selectedForm?.formNumber,
+            formName: selectedForm?.name,
+            status: "Draft",
+            ...fields,
+          });
 
     if (formId) {
+      ctx.setSavedItem({ id: formId, text, at: new Date() });
       setImportStatus({ type: "success", message: "Form saved to My Packet!" });
       setTimeout(() => setImportStatus(null), 3000);
     } else {
@@ -7754,16 +7913,92 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     return content;
   };
 
-  const handleFinishWizard = () => {
-    generateContent();
-    setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
+  const clearDraftState = () => {
     setAiError(null);
     setAiEnhancedContent(null);
     setShowAIVersion(false);
     setAiDraftNote(null);
+    ctx.setDraftEdit(null);
+    ctx.setKeptDraft(null);
+    ctx.setAskRebuild(false);
   };
 
-  return { generateContent, handleFinishWizard };
+  // Going back to the answers keeps what is in the box when the veteran
+  // changed it (by hand, or by taking the AI's wording), so regenerating
+  // can put it back instead of replacing it.
+  const handleEditAnswers = () => {
+    const box = shownDraft(ctx);
+    const changed = box.text !== ctx.generatedContent;
+    clearDraftState();
+    ctx.setKeptDraft(
+      changed
+        ? {
+            text: box.text,
+            builtFrom: ctx.generatedContent,
+            isAIVersion: box.base !== ctx.generatedContent,
+          }
+        : null,
+    );
+    setGeneratedContent(null);
+    setCurrentStep(1);
+  };
+
+  const handleFinishWizard = () => {
+    const kept = ctx.keptDraft;
+    const content = generateContent();
+    setCurrentStep(_getFormStepsForForm(selectedForm).length + 1);
+    clearDraftState();
+    if (!kept) return;
+    // The kept draft goes back in the box. If an answer changed since it
+    // was built, the veteran is asked whether to keep it or rebuild.
+    if (kept.isAIVersion) {
+      setAiEnhancedContent(kept.text);
+      setShowAIVersion(true);
+    } else {
+      ctx.setDraftEdit({ base: content, text: kept.text });
+    }
+    ctx.setAskRebuild(content !== kept.builtFrom);
+  };
+
+  const handleRebuildFromAnswers = () => clearDraftState();
+
+  const handleStartNewForm = () => {
+    clearDraftState();
+    ctx.setSavedItem(null);
+    ctx.setSelectedForm(null);
+    ctx.setFormData({});
+    setCurrentStep(0);
+    setGeneratedContent(null);
+  };
+
+  return {
+    generateContent,
+    handleFinishWizard,
+    handleEditAnswers,
+    handleRebuildFromAnswers,
+    handleStartNewForm,
+  };
+}
+
+// Only a draft the AI reworded is an AI version. Its accepted rewordings go
+// into the text in the box, so an edit made there is kept. Otherwise the
+// box is left as it is, with the reason beside it.
+function showAIOutcome(ctx, result) {
+  const { text, applied } =
+    result.draftPath === "model"
+      ? applyAcceptedRewordings(shownDraft(ctx).text, result.passageOutcomes)
+      : { applied: 0 };
+  const reworded = applied > 0;
+  ctx.setAiEnhancedContent(reworded ? text : null);
+  ctx.setShowAIVersion(reworded);
+  ctx.setAiDraftNote(
+    reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
+  );
+  ctx.setAiError(
+    result.draftErrorReason
+      ? plainAIError(result.draftErrorReason, ctx.t)
+      : null,
+  );
 }
 
 function _buildFormsHelperAIHandlers(ctx) {
@@ -7772,9 +8007,7 @@ function _buildFormsHelperAIHandlers(ctx) {
     setShowAIConsent,
     setIsEnhancingWithAI,
     setAiError,
-    setAiDraftNote,
     formData,
-    setAiEnhancedContent,
     setShowAIVersion,
     showAIVersion,
     setDraftEdit,
@@ -7815,17 +8048,9 @@ function _buildFormsHelperAIHandlers(ctx) {
       const result = await enhanceFormStatement(selectedForm?.id, formData);
 
       if (result.success) {
-        // Only a draft the AI reworded is an AI version. Otherwise the
-        // app-built draft stays on screen, with the reason beside it.
-        const reworded = result.draftPath === "model";
-        setAiEnhancedContent(reworded ? result.content : null);
-        setShowAIVersion(reworded);
-        setAiDraftNote(
-          reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
-        );
-        setAiError(result.draftErrorReason ?? null);
+        showAIOutcome(ctx, result);
       } else {
-        setAiError(result.error || "Failed to enhance statement with AI.");
+        setAiError(plainAIError(result.error, ctx.t));
       }
     } catch (error) {
       console.error("AI enhancement error:", error);
@@ -7860,6 +8085,23 @@ function _buildFormsHelperAIHandlers(ctx) {
   };
 }
 
+/**
+ * The download name for a form's draft: its form number (which already
+ * begins "VA") and the condition, when this form asks for one. A condition
+ * left in the form data by another form is not used.
+ */
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export function _draftFileName(selectedForm, formData) {
+  const asksCondition = _getFormStepsForForm(selectedForm).some((step) =>
+    step.fields.some((field) => field.name === "conditionName"),
+  );
+  const condition = asksCondition ? (formData?.conditionName ?? "").trim() : "";
+  return [selectedForm?.formNumber ?? "VA Form", condition]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, "-");
+}
+
 function _buildFormsHelperDownloadHandlers(ctx) {
   const {
     selectedForm,
@@ -7871,7 +8113,7 @@ function _buildFormsHelperDownloadHandlers(ctx) {
 
   const handleDownload = async (format) => {
     setShowDownloadMenu(false);
-    const fileName = `VA-${selectedForm?.formNumber?.replace(/\s+/g, "-")}-${formData.conditionName?.replace(/\s+/g, "-") || "Statement"}`;
+    const fileName = _draftFileName(selectedForm, formData);
     try {
       await downloadDraft(
         shownDraft(ctx).text || generateContent(),
@@ -8073,6 +8315,10 @@ function FormsHelperReviewStep({ state, handlers }) {
         handleDownload={handleDownload}
         handleSaveToPacket={handleSaveToPacket}
         importStatus={state.importStatus}
+        formType={state.selectedForm?.id}
+        isStatement={isStatement}
+        savedItem={state.savedItem}
+        isSavedNow={state.savedItem?.text === displayContent}
       />
 
       {!isStatement && (
@@ -8083,14 +8329,17 @@ function FormsHelperReviewStep({ state, handlers }) {
 
       <ReviewActionButtons
         selectedForm={state.selectedForm}
-        setCurrentStep={state.setCurrentStep}
-        setGeneratedContent={state.setGeneratedContent}
-        setAiEnhancedContent={state.setAiEnhancedContent}
-        setShowAIVersion={state.setShowAIVersion}
-        setSelectedForm={state.setSelectedForm}
-        setFormData={state.setFormData}
+        onEditAnswers={handlers.handleEditAnswers}
+        onStartNewForm={handlers.handleStartNewForm}
         t={t}
       />
+
+      {state.askRebuild && (
+        <EditedDraftDialog
+          onKeep={() => state.setAskRebuild(false)}
+          onRebuild={handlers.handleRebuildFromAnswers}
+        />
+      )}
     </div>
   );
 }

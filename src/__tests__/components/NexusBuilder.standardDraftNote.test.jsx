@@ -43,6 +43,11 @@ const TEMPLATE = buildPersonalStatementTemplate(
   "Tinnitus",
   null,
 );
+const REWORDING = {
+  before: "Effect on my work:",
+  after: "Effect on my work: To put it plainly,",
+  verdict: "accepted",
+};
 const statementField = () => screen.getByRole("textbox", { name: LABEL });
 const notice = () => screen.queryByRole("status", { name: "Draft notice" });
 
@@ -59,8 +64,13 @@ function openReviewStep(onSave = () => {}) {
   }
 }
 
-async function enhanceOnReviewStep() {
+async function enhanceOnReviewStep(edit = null) {
   openReviewStep();
+  if (edit) {
+    fireEvent.change(statementField(), {
+      target: { value: `${statementField().value}\n\n${edit}` },
+    });
+  }
   fireEvent.click(screen.getByRole("button", { name: /enhance with ai/i }));
   fireEvent.click(
     await screen.findByRole("button", { name: /i understand, enhance/i }),
@@ -173,6 +183,7 @@ describe("NexusBuilder after asking the AI", () => {
       content: reworded,
       draftPath: "model",
       draftNote: null,
+      passageOutcomes: [REWORDING],
     });
     await enhanceOnReviewStep();
 
@@ -186,9 +197,10 @@ describe("NexusBuilder after asking the AI", () => {
   it("goes back to the standard draft, notice and all, when Standard is chosen", async () => {
     enhancePersonalStatement.mockResolvedValue({
       success: true,
-      content: `${TEMPLATE}\n\nReworded.`,
+      content: TEMPLATE,
       draftPath: "model",
       draftNote: null,
+      passageOutcomes: [REWORDING],
     });
     await enhanceOnReviewStep();
     await screen.findByText(/AI-enhanced statement/);
@@ -197,5 +209,41 @@ describe("NexusBuilder after asking the AI", () => {
     expect(statementField().value).toBe(TEMPLATE);
     expect(notice().textContent).toBe(STANDARD_DRAFT_NOTE);
     expect(document.body.textContent).not.toMatch(/AI-generated literature/);
+  });
+});
+
+describe("NexusBuilder, an edited statement and the AI", () => {
+  it("leaves an edited statement untouched when the AI fails", async () => {
+    enhancePersonalStatement.mockResolvedValue({
+      success: true,
+      content: TEMPLATE,
+      draftPath: "template",
+      draftNote: STANDARD_DRAFT_NOTE,
+      draftErrorReason: "WebGPU inference timed out",
+    });
+    await enhanceOnReviewStep("A line I typed myself.");
+
+    await screen.findByText(/took too long to answer/);
+    expect(document.body.textContent).not.toMatch(/WebGPU inference/);
+    expect(statementField().value).toBe(
+      `${TEMPLATE}\n\nA line I typed myself.`,
+    );
+  });
+
+  it("puts the AI's wording into the edited statement, keeping the edit", async () => {
+    enhancePersonalStatement.mockResolvedValue({
+      success: true,
+      content: TEMPLATE,
+      draftPath: "model",
+      draftNote: null,
+      passageOutcomes: [REWORDING],
+    });
+    await enhanceOnReviewStep("A line I typed myself.");
+
+    await screen.findByText(/AI-enhanced statement/);
+    expect(statementField().value).toContain(
+      "Effect on my work: To put it plainly,",
+    );
+    expect(statementField().value).toContain("A line I typed myself.");
   });
 });

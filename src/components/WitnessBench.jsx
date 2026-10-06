@@ -23,14 +23,18 @@ import {
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import {
   DRAFT_PATH,
+  applyAcceptedRewordings,
   draftAfterModelError,
   resolvePassageDraft,
   standardDraft,
 } from "../utils/writerDraftCheck";
 import { downloadDraft } from "../utils/draftExport";
+import { plainAIError } from "../utils/writerErrorMessage";
 import {
+  AI_NO_CHANGE_NOTE,
   STANDARD_DRAFT_NOTE,
   buildPassagePrompt,
+  standardDraftNote,
   buildWitnessStatementBody,
   selectPassages,
   witnessRelationshipLabel,
@@ -48,6 +52,7 @@ import {
   saveAnalysisResults,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
+import { updatePacketDocument } from "../utils/myPacketManager";
 import {
   substituteVeteranNamePlaceholder,
   resolveVeteranDisplayName,
@@ -549,14 +554,18 @@ const DOWNLOAD_FAILED =
 /**
  * Save the statement as it stands on screen to My Packet. Nothing is saved
  * until the witness asks, so My Packet never holds a copy without their
- * edits. Returns whether it was saved.
+ * edits. Saving again updates the same claim and the same packet document
+ * (`documentId`, from the first save); it never makes a second. Returns
+ * null when it could not be saved, otherwise a promise of the document id.
  */
 const saveWitnessStatementToPacket = (
   { condition, relationship, generatedStatement, witnessName, answers },
   t,
+  documentId,
 ) => {
   const saved = saveClaim({
     conditionName: condition,
+    parentCondition: null,
     status: "Evidence Gathered",
     evidence: [
       {
@@ -570,10 +579,8 @@ const saveWitnessStatementToPacket = (
     ],
     notes: `Buddy statement from ${getRelationshipLabel(relationship, t)} regarding observable behaviors and functional impacts.`,
   });
-  if (!saved) return false;
-  saveAnalysisResults({
-    toolName: "Witness Bench",
-    classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+  if (!saved) return null;
+  const document = {
     rawText: generatedStatement,
     extractedData: {
       relationship,
@@ -581,8 +588,18 @@ const saveWitnessStatementToPacket = (
       answers,
       statementLength: generatedStatement.length,
     },
-  }).catch((err) => console.warn("Failed to save buddy statement:", err));
-  return true;
+  };
+  const filed = documentId
+    ? updatePacketDocument(documentId, document).then(() => documentId)
+    : saveAnalysisResults({
+        toolName: "Witness Bench",
+        classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+        ...document,
+      }).then((result) => result?.documentId ?? null);
+  return filed.catch((err) => {
+    console.warn("Failed to save buddy statement:", err);
+    return documentId ?? null;
+  });
 };
 
 const SIGNING_NOTICE =
@@ -685,7 +702,7 @@ function useAIFlowState() {
 function useOutputState() {
   const [generatedStatement, setGeneratedStatement] = useState("");
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-  const [savedToPacket, setSavedToPacket] = useState(false);
+  const [savedItem, setSavedItem] = useState(null);
   const [draftNote, setDraftNote] = useState(null);
   const [draftPath, setDraftPath] = useState(DRAFT_PATH.TEMPLATE);
   const [aiFailure, setAiFailure] = useState(null);
@@ -704,8 +721,8 @@ function useOutputState() {
     setOutputError,
     showDownloadMenu,
     setShowDownloadMenu,
-    savedToPacket,
-    setSavedToPacket,
+    savedItem,
+    setSavedItem,
   };
 }
 
@@ -829,6 +846,59 @@ function useGenerateStatement({
   }, [relationship, condition, witnessName, answers, useAI]);
 }
 
+/** `text` with the line saying AI suggested some wording, said once. */
+function withAIDisclosure(text) {
+  if (text.includes(AI_WORDING_DISCLOSURE)) return text;
+  return text.includes(ATTESTATION_WARNING)
+    ? text.replace(
+        ATTESTATION_WARNING,
+        `${AI_WORDING_DISCLOSURE} ${ATTESTATION_WARNING}`,
+      )
+    : `${text}\n\n${AI_WORDING_DISCLOSURE}`;
+}
+
+/**
+ * Ask the AI again after it failed. The statement in the box is the
+ * witness's by now: accepted rewordings go into that text, an answer the
+ * witness has since rewritten there is left alone, and a second failure
+ * changes nothing in the box.
+ */
+function useRetryAI({
+  relationship,
+  condition,
+  answers,
+  setIsGeneratingStatement,
+  output,
+}) {
+  return async () => {
+    setIsGeneratingStatement(true);
+    const drafted = await _compileStatementWithAI(
+      relationship,
+      condition,
+      answers,
+    ).catch((err) => ({ draftErrorReason: String(err?.message ?? err) }));
+    setIsGeneratingStatement(false);
+
+    if (drafted.draftErrorReason) {
+      output.setAiFailure(drafted.draftErrorReason);
+      return;
+    }
+    const box = output.generatedStatement;
+    const { text, applied } = applyAcceptedRewordings(
+      box,
+      drafted.passageOutcomes,
+    );
+    output.setAiFailure(null);
+    if (applied === 0) {
+      output.setDraftNote(`${AI_NO_CHANGE_NOTE} ${standardDraftNote(box)}`);
+      return;
+    }
+    output.setGeneratedStatement(withAIDisclosure(text));
+    output.setDraftPath(DRAFT_PATH.MODEL);
+    output.setDraftNote(null);
+  };
+}
+
 function useWitnessBench(t) {
   const wizard = useWizardStepState();
   const interview = useInterviewQAState();
@@ -861,6 +931,14 @@ function useWitnessBench(t) {
     setStep: wizard.setStep,
   });
 
+  const retryAI = useRetryAI({
+    relationship: wizard.relationship,
+    condition: wizard.condition,
+    answers: interview.answers,
+    setIsGeneratingStatement: ai.setIsGeneratingStatement,
+    output,
+  });
+
   const startOver = () => {
     wizard.setStep(1);
     wizard.setRelationship("");
@@ -873,6 +951,7 @@ function useWitnessBench(t) {
     output.setDraftPath(DRAFT_PATH.TEMPLATE);
     output.setAiFailure(null);
     output.setOutputError(null);
+    output.setSavedItem(null);
   };
 
   return {
@@ -882,6 +961,7 @@ function useWitnessBench(t) {
     output,
     startInterview,
     generateStatement,
+    retryAI,
     startOver,
   };
 }
@@ -1428,8 +1508,6 @@ const DownloadMenu = ({
   t,
   showDownloadMenu,
   onToggle,
-  onSaveToMyPacket,
-  savedToPacket,
   onDownloadPDF,
   onDownloadDOCX,
   onCloseMenu,
@@ -1461,22 +1539,6 @@ const DownloadMenu = ({
         <button
           type="button"
           onClick={() => {
-            onSaveToMyPacket();
-            onCloseMenu();
-          }}
-          className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors rounded-t-lg ${
-            savedToPacket
-              ? "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30"
-              : "text-gray-700 dark:text-gray-200"
-          }`}
-        >
-          {savedToPacket
-            ? `✅ ${t("witnessBench", "savedToMyPacket")}`
-            : `📁 ${t("witnessBench", "saveToMyPacket")}`}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
             onDownloadPDF();
             onCloseMenu();
           }}
@@ -1499,6 +1561,27 @@ const DownloadMenu = ({
   </div>
 );
 
+const savedTime = (date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// Says what it will do: save, save changes to what is already saved, or
+// nothing because this text was saved (and when).
+const SaveToPacketButton = ({ t, onSave, savedItem, isSavedNow }) => {
+  let label = `📁 ${t("witnessBench", "saveToMyPacket")}`;
+  if (isSavedNow) label = `✅ Saved to My Packet at ${savedTime(savedItem.at)}`;
+  else if (savedItem) label = "📁 Save changes to My Packet";
+  return (
+    <button
+      type="button"
+      onClick={onSave}
+      disabled={isSavedNow}
+      className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 disabled:cursor-default transition-colors"
+    >
+      {label}
+    </button>
+  );
+};
+
 const StatementPreviewPanel = ({
   t,
   generatedStatement,
@@ -1508,7 +1591,7 @@ const StatementPreviewPanel = ({
   onToggleDownloadMenu,
   onCloseDownloadMenu,
   onSaveToMyPacket,
-  savedToPacket,
+  savedItem,
   onDownloadPDF,
   onDownloadDOCX,
 }) => (
@@ -1525,12 +1608,16 @@ const StatementPreviewPanel = ({
         >
           📋 {t("witnessBench", "copy")}
         </button>
+        <SaveToPacketButton
+          t={t}
+          onSave={onSaveToMyPacket}
+          savedItem={savedItem}
+          isSavedNow={savedItem?.text === generatedStatement}
+        />
         <DownloadMenu
           t={t}
           showDownloadMenu={showDownloadMenu}
           onToggle={onToggleDownloadMenu}
-          onSaveToMyPacket={onSaveToMyPacket}
-          savedToPacket={savedToPacket}
           onDownloadPDF={onDownloadPDF}
           onDownloadDOCX={onDownloadDOCX}
           onCloseMenu={onCloseDownloadMenu}
@@ -1573,10 +1660,7 @@ const NextStepsPanel = ({ t }) => (
 // with a way to ask again.
 const AIFailureNotice = ({ reason, onRetry, isRetrying }) => (
   <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-800 dark:text-red-200 text-sm">
-    <p>
-      The AI could not reword this statement: {reason} This is the standard
-      statement, built from your answers.
-    </p>
+    <p>{reason}</p>
     <button
       type="button"
       onClick={onRetry}
@@ -1602,7 +1686,7 @@ const OutputStep = ({
   onToggleDownloadMenu,
   onCloseDownloadMenu,
   onSaveToMyPacket,
-  savedToPacket,
+  savedItem,
   onDownloadPDF,
   onDownloadDOCX,
   onStartOver,
@@ -1635,7 +1719,7 @@ const OutputStep = ({
       onToggleDownloadMenu={onToggleDownloadMenu}
       onCloseDownloadMenu={onCloseDownloadMenu}
       onSaveToMyPacket={onSaveToMyPacket}
-      savedToPacket={savedToPacket}
+      savedItem={savedItem}
       onDownloadPDF={onDownloadPDF}
       onDownloadDOCX={onDownloadDOCX}
     />
@@ -1672,29 +1756,33 @@ const WitnessOutput = ({ t, wb }) => {
     }
   };
   const save = () => {
-    const saved = saveWitnessStatementToPacket(
+    const text = output.generatedStatement;
+    const filed = saveWitnessStatementToPacket(
       {
         condition: wizard.condition,
         relationship: wizard.relationship,
-        generatedStatement: output.generatedStatement,
+        generatedStatement: text,
         witnessName: wizard.witnessName,
         answers: wb.interview.answers,
       },
       t,
+      output.savedItem?.documentId,
     );
-    output.setOutputError(saved ? null : SAVE_FAILED);
-    if (saved) {
-      output.setSavedToPacket(true);
-      setTimeout(() => output.setSavedToPacket(false), 3000);
-    }
+    output.setOutputError(filed ? null : SAVE_FAILED);
+    if (!filed) return;
+    const at = new Date();
+    output.setSavedItem((earlier) => ({ ...earlier, text, at }));
+    filed.then((documentId) =>
+      output.setSavedItem((item) => (item ? { ...item, documentId } : item)),
+    );
   };
 
   return (
     <OutputStep
       t={t}
       draftNote={output.draftNote}
-      aiFailure={output.aiFailure}
-      onRetryAI={wb.generateStatement}
+      aiFailure={output.aiFailure && plainAIError(output.aiFailure, t)}
+      onRetryAI={wb.retryAI}
       isRetryingAI={wb.ai.isGeneratingStatement}
       outputError={output.outputError}
       generatedStatement={output.generatedStatement}
@@ -1708,7 +1796,7 @@ const WitnessOutput = ({ t, wb }) => {
       }
       onCloseDownloadMenu={() => output.setShowDownloadMenu(false)}
       onSaveToMyPacket={save}
-      savedToPacket={output.savedToPacket}
+      savedItem={output.savedItem}
       onDownloadPDF={() => download("pdf")}
       onDownloadDOCX={() => download("docx")}
       onStartOver={wb.startOver}

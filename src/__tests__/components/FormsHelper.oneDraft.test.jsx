@@ -139,7 +139,7 @@ describe.each(FORMS)("Forms Helper %s", (formType, formName) => {
         1,
       ]);
     }
-    expect(screen.getByText(/saved to my packet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Form saved to My Packet!/)).toBeInTheDocument();
   });
 });
 
@@ -160,5 +160,36 @@ describe("Forms Helper when a download or a save does not work", () => {
     await screen.findByText(/could not be saved/i);
     expect(draft().value).toBe(onScreen);
     vi.restoreAllMocks();
+  });
+});
+
+describe("Forms Helper saving the same draft again", () => {
+  const saveButton = () => screen.getByRole("button", { name: /packet/i });
+
+  it("says it was saved and when, and does not offer to save the same text twice", () => {
+    fillAndGenerate(...FORMS[0]);
+    fireEvent.click(saveButton());
+
+    expect(saveButton()).toBeDisabled();
+    expect(saveButton().textContent).toMatch(/Saved to My Packet at \d/);
+    expect(getSavedForms()).toHaveLength(1);
+  });
+
+  it("updates the same saved item when the draft changes, never a second one", () => {
+    fillAndGenerate(...FORMS[0]);
+    fireEvent.click(saveButton());
+    const [first] = getSavedForms();
+
+    const changed = `${draft().value}\n\nOne more line after saving.`;
+    fireEvent.change(draft(), { target: { value: changed } });
+    expect(saveButton()).toBeEnabled();
+    expect(saveButton().textContent).toMatch(/Save changes to Packet/);
+    fireEvent.click(saveButton());
+
+    const saved = getSavedForms();
+    expect(saved).toHaveLength(1);
+    expect(saved[0].id).toBe(first.id);
+    expect(saved[0].generatedContent).toBe(changed);
+    expect(saveButton()).toBeDisabled();
   });
 });

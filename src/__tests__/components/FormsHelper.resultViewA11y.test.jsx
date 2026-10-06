@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
+import { fillRequiredOnScreen } from "../helpers/formMarkers";
 
 vi.mock("../../utils/unifiedAIService", async (importOriginal) => {
   const actual = await importOriginal();
@@ -33,7 +34,11 @@ function openBuilder() {
 function openResult() {
   openBuilder();
   const next = () => screen.queryByRole("button", { name: /^next$/i });
-  for (let guard = 0; next() && guard < 12; guard++) fireEvent.click(next());
+  for (let guard = 0; next() && guard < 12; guard++) {
+    fillRequiredOnScreen(fireEvent.change, fireEvent.click);
+    fireEvent.click(next());
+  }
+  fillRequiredOnScreen(fireEvent.change, fireEvent.click);
   fireEvent.click(screen.getByRole("button", { name: /generate statement/i }));
 }
 
@@ -69,6 +74,7 @@ describe("Forms Helper accessibility", () => {
     expect(
       screen.getByRole("textbox", { name: /Your Full Name/ }),
     ).toBeInTheDocument();
+    fillRequiredOnScreen(fireEvent.change, fireEvent.click);
     fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
     expect(
       screen.getByRole("textbox", { name: /What in-service event/ }),

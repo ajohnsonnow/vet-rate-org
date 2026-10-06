@@ -9,6 +9,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { officialFormNarrative } from "./formStatementDrafts";
 
 // Local copies of VA forms
 const LOCAL_FORM_PATHS = {
@@ -588,6 +589,9 @@ const VA_FORM_FIELDS = {
   },
 };
 
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export const _VA_FORM_FIELDS = VA_FORM_FIELDS;
+
 /**
  * Load a PDF form from the copy the app ships. The official files on
  * www.vba.va.gov cannot be fetched from the page: the Content Security
@@ -675,18 +679,6 @@ function parseZipParts(zip) {
 }
 
 /**
- * Get today's date split into padded month/day/year parts
- */
-function getTodayParts() {
-  const today = new Date();
-  return {
-    month: String(today.getMonth() + 1).padStart(2, "0"),
-    day: String(today.getDate()).padStart(2, "0"),
-    year: String(today.getFullYear()),
-  };
-}
-
-/**
  * Safely set a PDF text field's value, ignoring fields that don't exist
  */
 function setPdfTextField(form, fieldName, value) {
@@ -701,12 +693,15 @@ function setPdfTextField(form, fieldName, value) {
 }
 
 /**
- * Safely check a PDF checkbox, ignoring fields that don't exist
+ * Tick a PDF checkbox, ignoring fields that don't exist. A box on an
+ * official form is ticked only for an explicit yes (`true`), never for a
+ * default, a missing answer or any other value: the veteran signs what the
+ * form says.
  */
 function setPdfCheckbox(form, fieldName, checked) {
   try {
     const field = form.getCheckBox(fieldName);
-    if (field && checked) field.check();
+    if (field && checked === true) field.check();
   } catch {
     // eslint-disable-next-line no-console
     console.log(`Checkbox not found: ${fieldName}`);
@@ -815,21 +810,19 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranState, data.veteranState || "");
   setTextField(fieldMap.veteranZip5, vetZip.five);
   setTextField(fieldMap.veteranZip4, vetZip.four);
-  setTextField(fieldMap.veteranCountry, data.veteranCountry || "USA");
+  setTextField(fieldMap.veteranCountry, data.veteranCountry || "");
   setTextField(fieldMap.veteranPhone1, vetPhone.area);
   setTextField(fieldMap.veteranPhone2, vetPhone.prefix);
   setTextField(fieldMap.veteranPhone3, vetPhone.line);
   setTextField(fieldMap.veteranEmail, data.veteranEmail || "");
 }
 
+// The claimant section is the claimant's. The witness has a section of
+// their own and is never entered here.
 function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
-  const claimantNameParts = (data.claimantName || data.witnessName || "").split(
-    " ",
-  );
-  const claimantPhone = parsePhoneParts(
-    data.claimantPhone || data.witnessPhone,
-  );
-  const claimantZip = parseZipParts(data.claimantZip || data.witnessZip);
+  const claimantNameParts = (data.claimantName || "").split(" ");
+  const claimantPhone = parsePhoneParts(data.claimantPhone);
+  const claimantZip = parseZipParts(data.claimantZip);
 
   setTextField(fieldMap.claimantFirstName, claimantNameParts[0]);
   setTextField(
@@ -840,44 +833,28 @@ function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
     fieldMap.claimantLastName,
     claimantNameParts[claimantNameParts.length - 1],
   );
-  setTextField(
-    fieldMap.claimantStreet,
-    data.claimantStreet || data.witnessStreet || "",
-  );
-  setTextField(
-    fieldMap.claimantCity,
-    data.claimantCity || data.witnessCity || "",
-  );
-  setTextField(
-    fieldMap.claimantState,
-    data.claimantState || data.witnessState || "",
-  );
+  setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
+  setTextField(fieldMap.claimantCity, data.claimantCity || "");
+  setTextField(fieldMap.claimantState, data.claimantState || "");
   setTextField(fieldMap.claimantZip5, claimantZip.five);
   setTextField(fieldMap.claimantPhone1, claimantPhone.area);
   setTextField(fieldMap.claimantPhone2, claimantPhone.prefix);
   setTextField(fieldMap.claimantPhone3, claimantPhone.line);
-  setTextField(
-    fieldMap.claimantEmail,
-    data.claimantEmail || data.witnessEmail || "",
-  );
+  setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
 }
 
-function build21_10210_Statement(data) {
-  let fullStatement = "";
-  if (data.howKnown)
-    fullStatement += `HOW I KNOW THE VETERAN:\n${data.howKnown}\n\n`;
-  if (data.whatObserved)
-    fullStatement += `WHAT I PERSONALLY OBSERVED:\n${data.whatObserved}\n\n`;
-  if (data.whenObserved) fullStatement += `WHEN: ${data.whenObserved}\n`;
-  if (data.whereObserved) fullStatement += `WHERE: ${data.whereObserved}\n\n`;
-  if (data.dailyImpact)
-    fullStatement += `IMPACT ON DAILY LIFE:\n${data.dailyImpact}\n\n`;
-  if (data.workImpact)
-    fullStatement += `IMPACT ON WORK:\n${data.workImpact}\n\n`;
-  if (data.additionalInfo)
-    fullStatement += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
-  return fullStatement.trim();
-}
+// The wizard's relationship choices and the box each one ticks. A choice
+// with no box of its own ticks "Other", with its label where it has one.
+const WITNESS_RELATION_BOXES = {
+  "fellow-service-member": ["relationServedWith"],
+  supervisor: ["relationServedWith"],
+  spouse: ["relationFamilyFriend"],
+  family: ["relationFamilyFriend"],
+  friend: ["relationFamilyFriend"],
+  coworker: ["relationCoworker"],
+  caregiver: ["relationOther", "Caregiver"],
+  other: ["relationOther"],
+};
 
 function fill21_10210_RelationshipCheckbox(
   setTextField,
@@ -885,30 +862,11 @@ function fill21_10210_RelationshipCheckbox(
   fieldMap,
   data,
 ) {
-  const relation = (data.witnessRelation || "").toLowerCase();
-  if (
-    relation.includes("served") ||
-    relation.includes("military") ||
-    relation.includes("unit")
-  ) {
-    setCheckbox(fieldMap.relationServedWith, true);
-  } else if (
-    relation.includes("family") ||
-    relation.includes("friend") ||
-    relation.includes("spouse") ||
-    relation.includes("parent")
-  ) {
-    setCheckbox(fieldMap.relationFamilyFriend, true);
-  } else if (
-    relation.includes("coworker") ||
-    relation.includes("supervisor") ||
-    relation.includes("work")
-  ) {
-    setCheckbox(fieldMap.relationCoworker, true);
-  } else if (relation) {
-    setCheckbox(fieldMap.relationOther, true);
-    setTextField(fieldMap.relationOtherText, data.witnessRelation);
-  }
+  const relation = data.witnessRelation ?? "";
+  if (!Object.hasOwn(WITNESS_RELATION_BOXES, relation)) return;
+  const [box, otherText] = WITNESS_RELATION_BOXES[relation];
+  setCheckbox(fieldMap[box], true);
+  setTextField(fieldMap.relationOtherText, otherText);
 }
 
 function fill21_10210_WitnessSection(
@@ -919,7 +877,6 @@ function fill21_10210_WitnessSection(
 ) {
   const witnessNameParts = (data.witnessName || "").split(" ");
   const witnessPhone = parsePhoneParts(data.witnessPhone);
-  const todayParts = getTodayParts();
 
   setTextField(fieldMap.witnessFirstName, witnessNameParts[0]);
   setTextField(
@@ -934,9 +891,6 @@ function fill21_10210_WitnessSection(
   setTextField(fieldMap.witnessPhone2, witnessPhone.prefix);
   setTextField(fieldMap.witnessPhone3, witnessPhone.line);
   setTextField(fieldMap.witnessEmail, data.witnessEmail || "");
-  setTextField(fieldMap.witnessDateMonth, todayParts.month);
-  setTextField(fieldMap.witnessDateDay, todayParts.day);
-  setTextField(fieldMap.witnessDateYear, todayParts.year);
 
   fill21_10210_RelationshipCheckbox(setTextField, setCheckbox, fieldMap, data);
 }
@@ -958,7 +912,10 @@ export async function fillForm21_10210(data) {
 
       fill21_10210_VeteranSection(setTextField, fieldMap, data);
       fill21_10210_ClaimantSection(setTextField, fieldMap, data);
-      setTextField(fieldMap.statementContent, build21_10210_Statement(data));
+      setTextField(
+        fieldMap.statementContent,
+        officialFormNarrative("buddy-statement", data),
+      );
       fill21_10210_WitnessSection(setTextField, setCheckbox, fieldMap, data);
 
       return await pdfDoc.save();
@@ -1058,7 +1015,7 @@ function drawBuddyStatementCertification(
   drawText("Signature: _______________________________________");
   adjustY(-5);
   drawText(`Printed Name: ${data.witnessName || "_______________________"}`);
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 }
 
 /**
@@ -1160,7 +1117,7 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || data.veteranApt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.country, data.country || "");
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
@@ -1169,21 +1126,28 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.email, data.email || data.veteranEmail || "");
 }
 
-function build21_4138_Remarks(data) {
-  let remarks = "";
-  if (data.conditionName) remarks += `CONDITION: ${data.conditionName}\n\n`;
-  if (data.serviceConnection)
-    remarks += `SERVICE CONNECTION:\n${data.serviceConnection}\n\n`;
-  if (data.currentSymptoms)
-    remarks += `CURRENT SYMPTOMS:\n${data.currentSymptoms}\n\n`;
-  if (data.dailyImpact) remarks += `DAILY IMPACT:\n${data.dailyImpact}\n\n`;
-  if (data.workImpact) remarks += `WORK IMPACT:\n${data.workImpact}\n\n`;
-  if (data.treatmentHistory)
-    remarks += `TREATMENT HISTORY:\n${data.treatmentHistory}\n\n`;
-  if (data.additionalInfo)
-    remarks += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
-  if (data.remarks) remarks = data.remarks;
-  return remarks.trim();
+// Roughly what the first remarks box shows at a readable size; the rest
+// goes to the continuation box on page 2.
+const REMARKS_FIRST_BOX_CHARS = 1800;
+const REMARKS_CONTINUED = "(continued on the next page)";
+
+/** The remarks split across the form's two boxes, at a paragraph break. */
+function split21_4138_Remarks(data) {
+  const remarks =
+    data.remarks || officialFormNarrative("personal-statement", data);
+  if (remarks.length <= REMARKS_FIRST_BOX_CHARS) return [remarks, ""];
+
+  const first = [];
+  const rest = remarks.split("\n\n");
+  let used = 0;
+  while (
+    rest.length > 1 &&
+    (first.length === 0 || used + rest[0].length <= REMARKS_FIRST_BOX_CHARS)
+  ) {
+    used += rest[0].length + 2;
+    first.push(rest.shift());
+  }
+  return [[...first, REMARKS_CONTINUED].join("\n\n"), rest.join("\n\n")];
 }
 
 export async function fillForm21_4138(data) {
@@ -1202,14 +1166,9 @@ export async function fillForm21_4138(data) {
       fill21_4138_IdentityInfo(setTextField, fieldMap, data);
       fill21_4138_ContactInfo(setTextField, fieldMap, data);
 
-      setTextField(fieldMap.remarks, build21_4138_Remarks(data));
-      setTextField(fieldMap.remarksPage2, ""); // Page 2 continuation if needed
-
-      // Signature date
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.dateMonth, todayParts.month);
-      setTextField(fieldMap.dateDay, todayParts.day);
-      setTextField(fieldMap.dateYear, todayParts.year);
+      const [remarks, continuation] = split21_4138_Remarks(data);
+      setTextField(fieldMap.remarks, remarks);
+      setTextField(fieldMap.remarksPage2, continuation);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -1278,7 +1237,7 @@ function drawPersonalStatementSignature(
   adjustY(-20);
   drawText("Signature: _______________________________________");
   drawText(`Printed Name: ${data.veteranName || ""}`);
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 }
 
 /**
@@ -1355,33 +1314,38 @@ function fill21_0781_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.email, data.email || data.veteranEmail);
 }
 
+// The wizard's stressor types that match one of the form's four boxes.
+// The others (accident, witnessing death, fear of hostile activity) could
+// belong under more than one box, so none is ticked for them: the label
+// goes in Remarks and the veteran ticks the box that fits.
+const STRESSOR_TYPE_BOXES = {
+  combat: "combatTraumatic",
+  mst: "personalTraumaticMST",
+  "personal-assault": "personalTraumaticNonMST",
+  other: "otherTraumatic",
+};
+
 function fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data) {
-  setCheckbox(
-    fieldMap.combatTraumatic,
-    data.stressorType === "combat" || data.combatTraumatic,
-  );
-  setCheckbox(
-    fieldMap.personalTraumaticNonMST,
-    data.stressorType === "personal_non_mst" || data.personalTraumaticNonMST,
-  );
-  setCheckbox(
-    fieldMap.personalTraumaticMST,
-    data.stressorType === "personal_mst" || data.personalTraumaticMST,
-  );
-  setCheckbox(
-    fieldMap.otherTraumatic,
-    data.stressorType === "other" || data.otherTraumatic,
-  );
+  const chosen = Object.hasOwn(STRESSOR_TYPE_BOXES, data.stressorType ?? "")
+    ? STRESSOR_TYPE_BOXES[data.stressorType]
+    : null;
+  for (const box of Object.values(STRESSOR_TYPE_BOXES)) {
+    setCheckbox(fieldMap[box], box === chosen || data[box] === true);
+  }
 }
 
 function fill21_0781_StressorEvents(setTextField, fieldMap, data) {
   // Stressor events - support both single incident and multiple incidents
   // For single incident data format
-  if (data.incidentDescription || data.incidentLocation || data.incidentDate) {
-    setTextField(fieldMap.stressor1Description, data.incidentDescription);
-    setTextField(fieldMap.stressor1Location, data.incidentLocation);
-    setTextField(fieldMap.stressor1Dates, data.incidentDate);
-  }
+  setTextField(
+    fieldMap.stressor1Description,
+    data.incidentDescription || data.eventDescription,
+  );
+  setTextField(
+    fieldMap.stressor1Location,
+    data.incidentLocation || data.eventLocation,
+  );
+  setTextField(fieldMap.stressor1Dates, data.incidentDate || data.eventDate);
 
   // For multiple stressor format (stressors array)
   if (data.stressors && Array.isArray(data.stressors)) {
@@ -1486,9 +1450,14 @@ function fill21_0781_RemarksAndConsent(
   fieldMap,
   data,
 ) {
-  setTextField(fieldMap.remarks, data.remarks || data.additionalInfo);
+  setTextField(
+    fieldMap.remarks,
+    data.remarks ||
+      data.additionalInfo ||
+      officialFormNarrative("ptsd-stressor", data),
+  );
 
-  setCheckbox(fieldMap.consentVBA, data.consentVBA !== false); // Default to consent
+  setCheckbox(fieldMap.consentVBA, data.consentVBA);
   setCheckbox(fieldMap.noConsentVBA, data.noConsentVBA);
   setCheckbox(fieldMap.revokeConsent, data.revokeConsent);
   setCheckbox(fieldMap.notEnrolledVHA, data.notEnrolledVHA);
@@ -1516,12 +1485,6 @@ export async function fillForm21_0781(data) {
       fill21_0781_ReportsInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_RemarksAndConsent(setTextField, setCheckbox, fieldMap, data);
-
-      // Today's date for signature
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.signDateMonth, todayParts.month);
-      setTextField(fieldMap.signDateDay, todayParts.day);
-      setTextField(fieldMap.signDateYear, todayParts.year);
 
       // Flatten to make form read-only if desired
       // form.flatten();
@@ -1604,7 +1567,7 @@ async function createPTSDStatementPdfFallback(data) {
 
   adjustY(-20);
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -1637,7 +1600,7 @@ function fill21_0966_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.country, data.country || "");
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
@@ -1674,12 +1637,6 @@ export async function fillForm21_0966(data) {
 
       fill21_0966_VeteranInfo(setTextField, fieldMap, data);
       fill21_0966_BenefitCheckboxes(setCheckbox, fieldMap, data);
-
-      // Signature date
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.dateMonth, todayParts.month);
-      setTextField(fieldMap.dateDay, todayParts.day);
-      setTextField(fieldMap.dateYear, todayParts.year);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -1745,7 +1702,7 @@ async function createIntentToFilePdf(data) {
   );
 
   adjustY(-30);
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -1855,7 +1812,7 @@ async function createMedicalReleasePdf(data) {
   drawText(`This authorization expires: ${expDate}`, { bold: true });
   adjustY(-20);
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -1887,7 +1844,7 @@ function fill20_10207_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.country, data.country || "");
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
@@ -1930,12 +1887,6 @@ export async function fillForm20_10207(data) {
 
       fill20_10207_VeteranInfo(setTextField, fieldMap, data);
       fill20_10207_PriorityCheckboxes(setCheckbox, fieldMap, data);
-
-      // Signature date
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.dateMonth, todayParts.month);
-      setTextField(fieldMap.dateDay, todayParts.day);
-      setTextField(fieldMap.dateYear, todayParts.year);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2007,7 +1958,7 @@ async function createPriorityProcessingPdf(data) {
 
   adjustY(-20);
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -2069,7 +2020,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantApt, data.claimantApt || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
-  setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
+  setTextField(fieldMap.claimantCountry, data.claimantCountry || "");
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
   setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
@@ -2077,7 +2028,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
 }
 
-function fill21_22_OrganizationInfo(setTextField, fieldMap, data, today) {
+function fill21_22_OrganizationInfo(setTextField, fieldMap, data) {
   setTextField(
     fieldMap.organizationName,
     data.vsoName || data.organizationName || "",
@@ -2099,12 +2050,12 @@ function fill21_22_OrganizationInfo(setTextField, fieldMap, data, today) {
     fieldMap.organizationState,
     data.organizationState || data.vsoState || "",
   );
-  setTextField(fieldMap.organizationCountry, data.organizationCountry || "USA");
+  setTextField(fieldMap.organizationCountry, data.organizationCountry || "");
   const orgZip = (data.organizationZip || data.vsoZip || "").replace(/\D/g, "");
   setTextField(fieldMap.organizationZip5, orgZip.substring(0, 5));
   setTextField(fieldMap.organizationZip4, orgZip.substring(5, 9));
 
-  setTextField(fieldMap.appointmentDate, data.appointmentDate || today);
+  setTextField(fieldMap.appointmentDate, data.appointmentDate);
 }
 
 function fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data) {
@@ -2113,7 +2064,7 @@ function fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data) {
   setCheckbox(fieldMap.lgFile, data.lgFile || data.authLoanGuaranty);
   setCheckbox(fieldMap.insuranceFile, data.insuranceFile || data.authInsurance);
 
-  setCheckbox(fieldMap.authorizeDisclosure, data.authorizeDisclosure !== false);
+  setCheckbox(fieldMap.authorizeDisclosure, data.authorizeDisclosure);
   setCheckbox(fieldMap.drugAbuse, data.discloseDrugAbuse);
   setCheckbox(fieldMap.alcoholism, data.discloseAlcoholism);
   setCheckbox(fieldMap.hivInfection, data.discloseHIV);
@@ -2136,24 +2087,19 @@ export async function fillForm21_22(data) {
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
 
-      const today = new Date().toLocaleDateString("en-US");
-
       fill21_22_VeteranInfo(setTextField, fieldMap, data);
       fill21_22_ClaimantInfo(setTextField, fieldMap, data);
-      fill21_22_OrganizationInfo(setTextField, fieldMap, data, today);
+      fill21_22_OrganizationInfo(setTextField, fieldMap, data);
       fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data);
 
       // Signature dates
-      setTextField(fieldMap.claimantSignDate, data.signDate || today);
+      setTextField(fieldMap.claimantSignDate, data.signDate);
 
       // Page 2 SSN
       const ssn = parseSSNParts(data.ssn || data.veteranSSN);
       setTextField(fieldMap.page2SSN1, ssn.first);
       setTextField(fieldMap.page2SSN2, ssn.middle);
       setTextField(fieldMap.page2SSN3, ssn.last);
-
-      // Flatten form to prevent further editing (optional)
-      form.flatten();
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2224,7 +2170,7 @@ async function createVSOAppointmentPdf(data) {
   adjustY(-20);
 
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -2237,7 +2183,6 @@ function _parseForm2122aFields(data) {
   const ssnRaw = (data.ssn || data.veteranSSN || "").replace(/\D/g, "");
   const dobParts = (data.dob || data.veteranDOB || "").split(/[/-]/);
   const phoneRaw = (data.phone || data.veteranPhone || "").replace(/\D/g, "");
-  const today = new Date();
 
   return {
     firstName: nameParts[0] || "",
@@ -2257,11 +2202,6 @@ function _parseForm2122aFields(data) {
       area: phoneRaw.substring(0, 3),
       prefix: phoneRaw.substring(3, 6),
       line: phoneRaw.substring(6, 10),
-    },
-    todayParts: {
-      month: String(today.getMonth() + 1).padStart(2, "0"),
-      day: String(today.getDate()).padStart(2, "0"),
-      year: String(today.getFullYear()),
     },
   };
 }
@@ -2313,7 +2253,7 @@ function _fillForm2122aClaimantContact(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantApt, data.claimantApt || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
-  setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
+  setTextField(fieldMap.claimantCountry, data.claimantCountry || "");
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
   setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
@@ -2360,7 +2300,7 @@ function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   setTextField(fieldMap.repApt, data.repApt || "");
   setTextField(fieldMap.repCity, data.repCity || "");
   setTextField(fieldMap.repState, data.repState || "");
-  setTextField(fieldMap.repCountry, data.repCountry || "USA");
+  setTextField(fieldMap.repCountry, data.repCountry || "");
   const repZip = (data.repZip || "").replace(/\D/g, "");
   setTextField(fieldMap.repZip5, repZip.substring(0, 5));
   setTextField(fieldMap.repZip4, repZip.substring(5, 9));
@@ -2379,41 +2319,23 @@ function _fillForm2122aAuthorizationAndSignature(
   data,
   parsed,
 ) {
-  setCheckbox(
-    fieldMap.authorizeRecordAccess,
-    data.authorizeRecordAccess !== false,
-  );
-  setCheckbox(
-    fieldMap.authorizeActOnBehalf,
-    data.authorizeActOnBehalf !== false,
-  );
-  setCheckbox(
-    fieldMap.authorizeDisclosure1,
-    data.authorizeDisclosure !== false,
-  );
+  setCheckbox(fieldMap.authorizeRecordAccess, data.authorizeRecordAccess);
+  setCheckbox(fieldMap.authorizeActOnBehalf, data.authorizeActOnBehalf);
+  setCheckbox(fieldMap.authorizeDisclosure1, data.authorizeDisclosure);
   setCheckbox(fieldMap.authorizeDisclosure2, data.authorizeDisclosure2);
 
-  setTextField(
-    fieldMap.claimantSignDateMonth,
-    data.signDateMonth || parsed.todayParts.month,
-  );
-  setTextField(
-    fieldMap.claimantSignDateDay,
-    data.signDateDay || parsed.todayParts.day,
-  );
-  setTextField(
-    fieldMap.claimantSignDateYear,
-    data.signDateYear || parsed.todayParts.year,
-  );
+  setTextField(fieldMap.claimantSignDateMonth, data.signDateMonth);
+  setTextField(fieldMap.claimantSignDateDay, data.signDateDay);
+  setTextField(fieldMap.claimantSignDateYear, data.signDateYear);
 
   if (!data.limitations) return;
   setTextField(fieldMap.limitations, data.limitations);
   setTextField(fieldMap.page3SSN1, parsed.ssn.first);
   setTextField(fieldMap.page3SSN2, parsed.ssn.middle);
   setTextField(fieldMap.page3SSN3, parsed.ssn.last);
-  setTextField(fieldMap.page3SignDateMonth, parsed.todayParts.month);
-  setTextField(fieldMap.page3SignDateDay, parsed.todayParts.day);
-  setTextField(fieldMap.page3SignDateYear, parsed.todayParts.year);
+  setTextField(fieldMap.page3SignDateMonth, data.signDateMonth);
+  setTextField(fieldMap.page3SignDateDay, data.signDateDay);
+  setTextField(fieldMap.page3SignDateYear, data.signDateYear);
 }
 
 export async function fillForm21_22a(data) {
@@ -2438,15 +2360,8 @@ export async function fillForm21_22a(data) {
         }
       };
 
-      const setCheckbox = (fieldName, checked) => {
-        try {
-          const field = form.getCheckBox(fieldName);
-          if (field && checked) field.check();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`, e.message);
-        }
-      };
+      const setCheckbox = (fieldName, checked) =>
+        setPdfCheckbox(form, fieldName, checked);
 
       const parsed = _parseForm2122aFields(data);
       _fillForm2122aVeteranInfo(setTextField, fieldMap, data, parsed);
@@ -2464,8 +2379,6 @@ export async function fillForm21_22a(data) {
         data,
         parsed,
       );
-
-      form.flatten();
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2556,10 +2469,10 @@ async function createIndividualRepPdf(data) {
   y -= 20;
 
   drawText("Claimant Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
   y -= 20;
   drawText("Representative Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }

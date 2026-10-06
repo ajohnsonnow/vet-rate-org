@@ -283,3 +283,79 @@ export function formStatementPlan(formType, formData = {}) {
   const draft = FORM_DRAFTS[formType](formData ?? {});
   return { ...draft, keep: draft.keep.map(text).filter(Boolean) };
 }
+
+const answered = (pairs) =>
+  pairs
+    .map(([label, value]) => [label, text(value)])
+    .filter(([, value]) => value)
+    .map(([label, value]) => `${label}: ${value}`)
+    .join("\n\n");
+
+const labelOf = (labels, value) => {
+  const chosen = text(value);
+  return Object.hasOwn(labels, chosen) ? labels[chosen] : chosen;
+};
+
+/*
+ * For the official PDF: the answers that have no box of their own on the
+ * form, as labelled paragraphs for its remarks or statement area. Only
+ * what was answered is printed; there are no blanks here, because the
+ * veteran completes the official form by hand.
+ */
+const OFFICIAL_FORM_NARRATIVES = {
+  "personal-statement": (a) => [
+    ["Claim type", labelOf(CLAIM_TYPE_LABELS, a.claimType)],
+    ["Condition claimed", a.conditionName],
+    ["Secondary to", a.claimType === "secondary" ? a.primaryCondition : ""],
+    ["When my symptoms first began", a.onsetDate],
+    ["In-service event, injury or exposure", a.inServiceEvent],
+    ["When I first sought treatment", a.firstTreatment],
+    ["My symptoms", a.symptoms],
+    ["My worst days", a.worstDays],
+    ["Flare-ups", a.flareUps],
+    ["Effect on my work", a.workImpact],
+    ["Effect on my daily activities", a.dailyImpact],
+    ["Effect on my relationships and social life", a.socialImpact],
+    ["Current treatment", a.currentTreatment],
+    ["Current medications", a.medications],
+    ["How well treatment has worked", a.treatmentEffectiveness],
+  ],
+  "ptsd-stressor": (a) => [
+    ["Branch of service", a.branch],
+    ["Dates of military service", a.serviceDates],
+    ["Type of stressor", labelOf(STRESSOR_TYPE_LABELS, a.stressorType)],
+    ["Unit at the time of the event", a.unitInfo],
+    ["Witnesses to the event", a.witnesses],
+    ["Supporting documentation", a.documentation],
+    ["Who I reported the event to", a.reportedTo],
+    ["Symptoms I have now", joined(a.symptoms)],
+    ["My most severe symptoms", a.symptomDetails],
+  ],
+  "buddy-statement": (a) => [
+    ["Condition this statement is about", a.conditionName],
+    ["Veteran's branch of service", a.veteranBranch],
+    ["Type of statement", labelOf(STATEMENT_TYPE_LABELS, a.conditionType)],
+    ["How I know the veteran", a.howKnown],
+    ["Length of acquaintance", a.knownSince],
+    ["What I personally witnessed or observed", a.whatObserved],
+    ["When", a.whenObserved],
+    ["Where", a.whereObserved],
+    ["Effect on the veteran's daily activities", a.dailyImpact],
+    ["Effect on the veteran's work", a.workImpact],
+    ["Specific incidents or examples", a.specificExamples],
+    ["Additional information", a.additionalInfo],
+    [
+      "Further testimony",
+      a.willingToTestify === true
+        ? "I am willing to provide additional testimony or clarification if requested."
+        : "",
+    ],
+  ],
+};
+
+/** The narrative for a statement form's official PDF, or "" for others. */
+export function officialFormNarrative(formType, formData = {}) {
+  return Object.hasOwn(OFFICIAL_FORM_NARRATIVES, formType ?? "")
+    ? answered(OFFICIAL_FORM_NARRATIVES[formType](formData ?? {}))
+    : "";
+}

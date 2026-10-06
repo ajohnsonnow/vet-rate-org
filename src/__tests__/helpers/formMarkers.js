@@ -53,3 +53,23 @@ export function fillEveryField(steps) {
     });
   return { formData, markers };
 }
+
+/**
+ * Give every required control on screen that has no answer one, so a test
+ * about something else can walk through a wizard step.
+ */
+export function fillRequiredOnScreen(fireChange, fireClick) {
+  for (const control of document.querySelectorAll(
+    "input[required], textarea[required], select[required]",
+  )) {
+    if (control.value.trim() !== "") continue;
+    const value =
+      control.tagName === "SELECT" ? control.options[1].value : "Answer";
+    fireChange(control, { target: { value } });
+  }
+  for (const group of document.querySelectorAll('[role="group"]')) {
+    const boxes = [...group.querySelectorAll('input[type="checkbox"]')];
+    const required = group.textContent.includes("*");
+    if (required && !boxes.some((box) => box.checked)) fireClick(boxes[0]);
+  }
+}
