@@ -1094,7 +1094,7 @@ function DocumentsTabButton({ activeTab, setActiveTab, documents }) {
       {...myPacketTabProps("documents", activeTab)}
       className={`py-2.5 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex items-center gap-1.5 ${
         activeTab === "documents"
-          ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 rounded-t-lg"
+          ? "border-teal-700 text-teal-700 dark:border-teal-400 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20 rounded-t-lg"
           : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
       }`}
     >
@@ -6020,7 +6020,7 @@ function DocumentsEmptyState({ onClose, t }) {
       <button
         type="button"
         onClick={onClose}
-        className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors"
+        className="px-6 py-3 bg-teal-700 text-white rounded-lg font-semibold hover:bg-teal-800 transition-colors"
       >
         {t("common.close") || "Close"}
       </button>
