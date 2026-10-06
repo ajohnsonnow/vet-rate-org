@@ -7688,12 +7688,10 @@ INSTRUCTIONS:
 1. This statement should accompany VA Form 21-0781 (Statement in Support of
    Claim for Service Connection for PTSD).
 
-2. For MST claims, use VA Form 21-0781a instead.
-
-3. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
+2. Submit online at: https://www.va.gov/disability/file-disability-claim-form-21-526ez/
    Or mail to your VA Regional Office.
 
-4. Retain a copy for your records.
+3. Retain a copy for your records.
 
 IMPORTANT NOTES:
 
@@ -8205,7 +8203,8 @@ function _buildFormsHelperFormDataHandlers(ctx) {
   return { handleFieldChange, handleChecklistChange, handleSaveToPacket };
 }
 
-function _generateFormsHelperContent(selectedForm, formData) {
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export function _generateFormsHelperContent(selectedForm, formData) {
   switch (selectedForm?.id) {
     case "buddy-statement":
       return generateBuddyStatement(formData);
