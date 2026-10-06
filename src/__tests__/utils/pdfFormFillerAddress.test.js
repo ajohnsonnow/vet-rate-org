@@ -189,7 +189,9 @@ describe("the apartment box", () => {
     });
 
     expect(form.text("apt")).toBe("");
-    expect(_lastFillReport().leftBlank).toEqual(["1204-B"]);
+    expect(_lastFillReport().leftBlank).toEqual([
+      "Apartment or unit number (item 8)",
+    ]);
   });
 });
 

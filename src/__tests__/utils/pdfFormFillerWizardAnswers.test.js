@@ -202,7 +202,7 @@ describe("an answer too long for its box", () => {
 
     expect(form.text("veteranFirstName")).toBe("");
     expect(form.text("veteranLastName")).toBe("Testwright");
-    expect(_lastFillReport().leftBlank).toEqual(["Bartholomew-James"]);
+    expect(_lastFillReport().leftBlank).toEqual(["Veteran first name"]);
   });
 
   it("reports nothing when everything fitted", async () => {
@@ -222,18 +222,33 @@ describe("an answer too long for its box", () => {
 
 describe("an e-mail address on a form with two short lines for it", () => {
   it.each([
-    ["21-4138", fillForm21_4138, "email", "email", "emailLine2"],
-    ["21-0966", fillForm21_0966, "email", "email", "emailLine2"],
+    [
+      "21-4138",
+      fillForm21_4138,
+      "email",
+      "email",
+      "emailLine2",
+      "E-mail address (item 7)",
+    ],
+    [
+      "21-0966",
+      fillForm21_0966,
+      "email",
+      "email",
+      "emailLine2",
+      "E-mail address (item 9)",
+    ],
     [
       "21-10210",
       fillForm21_10210,
       "witnessEmail",
       "witnessEmail",
       "witnessEmailLine2",
+      "Witness e-mail address (item 21)",
     ],
   ])(
     "%s: fits line 1, runs on to line 2, or is left blank and reported",
-    async (formNumber, fill, answer, line1, line2) => {
+    async (formNumber, fill, answer, line1, line2, label) => {
       const short = await fillSyntheticForm(formNumber, fill, {
         [answer]: "qa@example.invalid",
       });
@@ -252,7 +267,8 @@ describe("an e-mail address on a form with two short lines for it", () => {
         [answer]: tooLong,
       });
       expect(values(blank, [line1, line2])).toEqual(["", ""]);
-      expect(_lastFillReport().leftBlank).toEqual([tooLong]);
+      expect(_lastFillReport().leftBlank).toEqual([label]);
+      expect(JSON.stringify(_lastFillReport())).not.toContain("aaaa");
     },
   );
 });

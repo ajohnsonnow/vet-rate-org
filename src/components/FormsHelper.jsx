@@ -5062,10 +5062,6 @@ const OFFICIAL_PDF_OVERFLOW =
 const OFFICIAL_PDF_FAILED =
   "The official PDF could not be made. Use one of the text downloads instead.";
 
-// Enough of a long answer for the veteran to know which one is meant.
-const shortQuote = (answer) =>
-  answer.length > 60 ? `${answer.slice(0, 57).trimEnd()}...` : answer;
-
 // `sentence` about the answers in `list`, or "" when there are none.
 const aboutAnswers = (list, sentence) =>
   list?.length > 0 ? `${sentence} ${list.join("; ")}.` : "";
@@ -5083,7 +5079,7 @@ function officialPdfProblems(result) {
       "Some answers were too long for their boxes and for the Remarks section, so they are not on the official PDF. They are in the text downloads (.TXT, .DOCX or .PDF): attach one, or write the answer on the form. Not on the form:",
     ),
     aboutAnswers(
-      result?.leftBlank?.map(shortQuote),
+      result?.leftBlank,
       "Some answers were too long for their boxes on the form. Those boxes were left blank for you to write in:",
     ),
     aboutAnswers(

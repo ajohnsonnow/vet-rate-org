@@ -8,7 +8,14 @@
  * Field mappings extracted from actual VA PDF forms using pdf-lib.
  */
 
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import {
+  PDFDocument,
+  PDFHexString,
+  PDFName,
+  PDFString,
+  StandardFonts,
+  rgb,
+} from "pdf-lib";
 import { officialFormNarrative } from "./formStatementDrafts";
 
 // Local copies of VA forms
@@ -689,6 +696,7 @@ export const _VA_FORM_FIELDS = VA_FORM_FIELDS;
 async function fetchPdfForm(formNumber) {
   // Every fill starts by loading its form, so its report starts here too.
   fillReport = newFillReport();
+  fieldsBeingFilled = VA_FORM_FIELDS[formNumber] ?? {};
   const localPath = LOCAL_FORM_PATHS[formNumber];
   if (!localPath) return null;
   try {
@@ -738,7 +746,8 @@ function parsePhoneParts(phone) {
  * say so instead of the text vanishing or being cut off:
  *   leftBlank  answers that do not fit their box (too many characters, or
  *              too wide or too long for it at the form's font size); the
- *              box is left empty for the veteran to write in
+ *              box is left empty for the veteran to write in (their names,
+ *              never their values)
  *   moved      answers too long for their own box that are in the form's
  *              remarks section instead, in full (their names)
  *   textOnly   answers too long for their own box that the remarks section
@@ -759,6 +768,53 @@ const newFillReport = () => ({
 let fillReport = newFillReport();
 // Exported (test-only, per this codebase's underscore-prefix convention).
 export const _lastFillReport = () => fillReport;
+
+// The field map of the form being filled, to name a box by its key.
+let fieldsBeingFilled = {};
+
+const LABEL_WORDS = {
+  apt: "apartment or unit number",
+  dob: "date of birth",
+  email: "e-mail address",
+  ssn: "Social Security number",
+  va: "VA",
+  zip4: "ZIP code, last four digits",
+  zip5: "ZIP code",
+};
+
+/** The form's item number for a field, from the form's own tooltip. */
+function itemNumberOf(field) {
+  const tip = field.acroField.dict.lookup(PDFName.of("TU"));
+  if (!(tip instanceof PDFString) && !(tip instanceof PDFHexString)) return "";
+  const text = tip.decodeText().replace(/SECTION \d+/gi, "");
+  return /(?:^|[\s.:])(\d{1,2})\. ?[A-Za-z]/.exec(text)?.[1] ?? "";
+}
+
+/**
+ * A name for a box, for the screen: its key in the field map in plain
+ * words, with the form's item number when the form gives one, such as
+ * "Organization name (item 15)". Never the answer itself.
+ */
+function boxLabel(field, fieldName) {
+  const key =
+    Object.keys(fieldsBeingFilled).find(
+      (candidate) => fieldsBeingFilled[candidate] === fieldName,
+    ) ?? "answer";
+  const words = key
+    .replace(/([a-z])([A-Z0-9])/g, "$1 $2")
+    .replace(/(\d)([A-Za-z])/g, "$1 $2")
+    .split(" ")
+    .map((word) => LABEL_WORDS[word.toLowerCase()] ?? word.toLowerCase())
+    .join(" ");
+  const item = itemNumberOf(field);
+  const name = words.charAt(0).toUpperCase() + words.slice(1);
+  return item ? `${name} (item ${item})` : name;
+}
+
+const reportLeftBlank = (field, fieldName) => {
+  const label = boxLabel(field, fieldName);
+  if (!fillReport.leftBlank.includes(label)) fillReport.leftBlank.push(label);
+};
 
 const reportNotPlaced = (label) => {
   if (!fillReport.notPlaced.includes(label)) fillReport.notPlaced.push(label);
@@ -1000,7 +1056,7 @@ function textFieldNamed(form, fieldName) {
 /**
  * Set a PDF text field's value, ignoring fields that don't exist. A value
  * that does not fit its box is not cut short or left to be cut off on the
- * page: the box is left blank and the value is reported.
+ * page: the box is left blank and reported by name.
  */
 function setPdfTextField(form, fieldName, value, secondLine) {
   if (!value) return;
@@ -1013,7 +1069,7 @@ function setPdfTextField(form, fieldName, value, secondLine) {
   const second = secondLine ? textFieldNamed(form, secondLine) : null;
   if (second && max !== undefined && text.length > max) {
     if (text.length > max + (second.getMaxLength() ?? 0)) {
-      fillReport.leftBlank.push(text);
+      reportLeftBlank(field, fieldName);
       return;
     }
     field.setText(text.slice(0, max));
@@ -1025,7 +1081,7 @@ function setPdfTextField(form, fieldName, value, secondLine) {
       ? null
       : textThatFits(form, field, text);
   if (fitted === null) {
-    fillReport.leftBlank.push(text);
+    reportLeftBlank(field, fieldName);
     return;
   }
   field.setText(fitted);

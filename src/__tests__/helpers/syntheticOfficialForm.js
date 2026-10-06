@@ -7,7 +7,7 @@
  * could not show in its box behaves the same here.
  */
 import { vi } from "vitest";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFHexString, PDFName } from "pdf-lib";
 import { _VA_FORM_FIELDS } from "../../utils/pdfFormFiller";
 import REAL from "../utils/fixtures/officialFormFields.json";
 
@@ -36,10 +36,14 @@ async function realTemplate(formNumber) {
     const [x, y, width, height] = field.box;
     const place = { x, y, width, height };
     const page = sheets[field.page - 1];
+    const tip = PDFHexString.fromText(field.tip);
     if (field.kind === "CheckBox") {
-      form.createCheckBox(field.name).addToPage(page, place);
+      const box = form.createCheckBox(field.name);
+      box.acroField.dict.set(PDFName.of("TU"), tip);
+      box.addToPage(page, place);
     } else if (field.kind === "Text") {
       const text = form.createTextField(field.name);
+      text.acroField.dict.set(PDFName.of("TU"), tip);
       if (field.max) text.setMaxLength(field.max);
       if (field.multiline) text.enableMultiline();
       text.addToPage(page, place);

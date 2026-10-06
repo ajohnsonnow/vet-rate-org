@@ -169,12 +169,12 @@ describe("after the official PDF is made", () => {
     fillAndDownloadForm.mockResolvedValue({
       success: true,
       fileName: "x.pdf",
-      leftBlank: ["Bartholomew-James"],
+      leftBlank: ["Veteran first name", "Organization name (item 15)"],
       overflow: "",
     });
 
     expect((await press()).textContent).toMatch(
-      /left blank for you to write in: Bartholomew-James/,
+      /left blank for you to write in: Veteran first name; Organization name \(item 15\)\./,
     );
   });
 
@@ -228,21 +228,6 @@ describe("after the official PDF is made, answers that are not on it", () => {
     expect((await press()).textContent).toMatch(
       /could not put these answers into the form's boxes as you typed them.*blank for you to write in: Mailing address; ZIP code\./,
     );
-  });
-
-  it("quotes only the start of a long answer it left blank", async () => {
-    fillAndDownloadForm.mockResolvedValue({
-      success: true,
-      fileName: "x.pdf",
-      leftBlank: [`${"word ".repeat(40)}end`],
-      moved: [],
-      overflow: "",
-    });
-    const text = (await press()).textContent;
-
-    expect(text).toMatch(/left blank for you to write in: word word/);
-    expect(text).toContain("...");
-    expect(text.length).toBeLessThan(260);
   });
 
   it("says nothing when everything fitted", async () => {

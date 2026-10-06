@@ -129,7 +129,7 @@ describe("21-4142 provider answers the form takes in boxes", () => {
     const form = await filled(provider(1, { provider1Name: long }));
 
     expect(form.text("provider1Name")).toBe("");
-    expect(_lastFillReport().leftBlank).toHaveLength(1);
+    expect(_lastFillReport().leftBlank).toEqual(["Provider 1 name (item 9)"]);
   });
 
   it("writes nothing in the provider items when no provider was given", async () => {
