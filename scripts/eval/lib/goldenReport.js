@@ -93,7 +93,23 @@ function describeThinking(thinking) {
   return thinking ? "on" : "off";
 }
 
-function runSection({ meta, runInfo }) {
+function describePenalty(settings, cases) {
+  if (typeof settings.frequencyPenalty === "number") {
+    return `${settings.frequencyPenalty} (set by --frequency-penalty)`;
+  }
+  const sent = [
+    ...new Set(
+      (cases ?? [])
+        .map((c) => c.frequencyPenalty)
+        .filter((v) => typeof v === "number"),
+    ),
+  ];
+  return sent.length
+    ? `per-model default (sent ${sent.join(", ")})`
+    : "per-model default";
+}
+
+function runSection({ meta, runInfo, cases }) {
   const loaded = meta?.modelIdLoaded ?? "unknown";
   const differs = loaded !== "unknown" && loaded !== runInfo.modelId;
   const dirty = runInfo.gitDirty
@@ -113,7 +129,7 @@ function runSection({ meta, runInfo }) {
     `- Date: ${runInfo.date}`,
     `- Git commit: \`${runInfo.gitCommit}\`${dirty}`,
     `- Device / GPU: ${escapeCell(describeDevice(meta?.device))}`,
-    `- Settings: temperature ${settings.temperature ?? "?"}, max tokens ${settings.maxTokens ?? "?"}, thinking ${describeThinking(settings.thinking)}, per-case timeout ${settings.timeoutMs ?? "?"} ms; flags: ${settings.flags?.length ? settings.flags.join(", ") : "none"}`,
+    `- Settings: temperature ${settings.temperature ?? "?"}, max tokens ${settings.maxTokens ?? "?"}, frequency penalty ${describePenalty(settings, cases)}, thinking ${describeThinking(settings.thinking)}, per-case timeout ${settings.timeoutMs ?? "?"} ms; flags: ${settings.flags?.length ? settings.flags.join(", ") : "none"}`,
     `- 38 CFR index: ${escapeCell(runInfo.legalIndexNote)}`,
     `- Transcript: \`${runInfo.transcriptFile}\``,
     "",
@@ -263,7 +279,7 @@ const NOTES = [
 
 export function renderSummary({ meta, runInfo, goldenCases, cases, grades }) {
   return [
-    ...runSection({ meta, runInfo }),
+    ...runSection({ meta, runInfo, cases }),
     ...totalsSection({ goldenCases, cases, grades }),
     ...casesSection({ goldenCases, cases, grades }),
     ...toolCasesSection({ goldenCases, cases, grades }),
