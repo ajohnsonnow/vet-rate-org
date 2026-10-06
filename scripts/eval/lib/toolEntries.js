@@ -150,8 +150,12 @@ export const TOOL_ENTRIES = {
     failure: () => null,
     draft: (i) => tdiuDraft(i.disabilities ?? []),
   },
+  // The runner calls decodeDecisionAsShown, the function the Decision
+  // Decoder screen follows: on a small-class model it returns the rule-based
+  // reading and calls no model (ADR-010 section 9).
   decodeDecision: {
     ownSystemPrompt: DECODER_SYSTEM_PROMPT,
+    heldOnSmallModel: true,
     args: (i, run) => [i.documentText, { timeout: run?.timeoutMs }],
     text: (result) => (result?.data ? JSON.stringify(result.data) : ""),
     failure: (result) => (result?.success ? null : (result?.error ?? "failed")),
@@ -185,6 +189,7 @@ export function normalizeToolOutcome(entry, outcome) {
       passages: result?.passages ?? null,
       passageOutcomes: result?.passageOutcomes ?? [],
       rewordingOff: result?.rewordingOff ?? null,
+      ...(result?.modelCalled === false ? { modelCalled: false } : {}),
     },
     // The tool handed back its app-built draft because the engine failed.
     // The case is answered, but the engine may still be busy or wedged.

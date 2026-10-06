@@ -9,6 +9,7 @@ import { stripReasoning } from "../../../src/utils/reasoningText.js";
 import { assembleCaseRecord } from "./caseRecord.js";
 import { buildMetaRecord, fingerprintPersonas } from "./goldenRecord.js";
 import { TOOL_ENTRIES } from "./toolEntries.js";
+import { smallModelReading } from "../../../src/utils/decisionPatternReading.js";
 
 export const DRY_RUN_MODEL_ID = "dry-run-stub";
 
@@ -231,6 +232,16 @@ function toolOutcome(
     latencyMs: 5,
     captured,
   });
+  if (!draft && override.smallModel) {
+    const reading = smallModelReading(caseDef.formInputs.documentText);
+    return done(
+      {
+        text: JSON.stringify(reading),
+        tool: { ...noDraft, modelCalled: false },
+      },
+      [],
+    );
+  }
   if (!draft) {
     return done({ text: GOOD_DECODE, tool: noDraft });
   }
@@ -448,7 +459,11 @@ export function runSmallModelDryRun({
     resolveAgentForTool,
     answerWithoutModel,
     settings,
-    overrides: {},
+    overrides: Object.fromEntries(
+      cases
+        .filter((caseDef) => caseDef.entry)
+        .map((caseDef) => [caseDef.id, { smallModel: true }]),
+    ),
   });
   const byId = new Map(records.map((record) => [record.id, record]));
   const open = cases.filter(isOpenQuestion);
@@ -468,9 +483,22 @@ export function runSmallModelDryRun({
           `${caseDef.id} routing: expected ${NOT_APPLICABLE}, got ${routing.status}`,
         ];
   });
+  const heldTools = cases.filter(
+    (caseDef) => TOOL_ENTRIES[caseDef.entry]?.heldOnSmallModel,
+  );
+  for (const caseDef of heldTools) {
+    const record = byId.get(caseDef.id);
+    const routing = checkRouting(caseDef, record, { ...ctx, smallModel: true });
+    if (record.modelCalled !== false || routing.status !== NOT_APPLICABLE) {
+      problems.push(
+        `${caseDef.id}: the tool sent its document to a model on the small-model pass`,
+      );
+    }
+  }
   const count = (field) => answered.filter((record) => record[field]).length;
   return {
     problems,
+    heldTools: heldTools.length,
     held: count("openAdviceHeld"),
     calculator: count("calculatorLead"),
     needsRatings: count("needsRatings"),

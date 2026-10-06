@@ -125,6 +125,7 @@ async function loadRouting(modelId) {
     });
   return {
     resolveAgentForTool,
+    smallModel: isSmallModel(modelId),
     answerWithoutModel: answerer(isSmallModel(modelId)),
     answerWithoutModelOnSmall: answerer(true),
   };
@@ -242,6 +243,7 @@ async function main() {
     ctx: {
       calculateVARating,
       answerWithoutModel: routing.answerWithoutModel,
+      smallModel: routing.smallModel,
       ...legal,
     },
     runInfo: {
@@ -291,7 +293,7 @@ function checkDryRun(grades, goldenCases, records, smallModelPass) {
     ...smallModelPass.problems,
   ];
   console.log(
-    `small-model pass: ${smallModelPass.held} open questions held with the fixed message, ${smallModelPass.calculator} answered by the calculator, ${smallModelPass.needsRatings} asked for ratings, no model call`,
+    `small-model pass: ${smallModelPass.held} open questions held with the fixed message, ${smallModelPass.calculator} answered by the calculator, ${smallModelPass.needsRatings} asked for ratings, ${smallModelPass.heldTools} tool case(s) read by fixed rules, no model call`,
   );
   if (problems.length === 0) {
     console.log("DRY RUN PASSED: every canned failure was caught by its check");

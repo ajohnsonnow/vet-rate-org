@@ -92,7 +92,31 @@ function noModelDetail(record) {
     : "the calculator answered: no model was called";
 }
 
+/*
+ * A tool the app keeps from a small-class model (the Decision Decoder,
+ * ADR-010 section 9) shows its rule-based reading there and calls no model.
+ * `ctx.smallModel` says whether this run loaded such a model.
+ */
+function checkHeldTool(record, ctx) {
+  if (record.modelCalled === false) {
+    return result(
+      NOT_APPLICABLE,
+      "small-class model: the tool showed its rule-based reading, no model was called",
+    );
+  }
+  return ctx.smallModel
+    ? result(
+        AUTO_FAIL,
+        "a small-class model was sent a document the app keeps from it",
+      )
+    : null;
+}
+
 export function checkRouting(caseDef, record, ctx = {}) {
+  if (TOOL_ENTRIES[caseDef.entry]?.heldOnSmallModel && !record.error) {
+    const held = checkHeldTool(record, ctx);
+    if (held) return held;
+  }
   if (expectsNoModel(caseDef, ctx) && !record.error) {
     return checkNoModelRouting(record);
   }

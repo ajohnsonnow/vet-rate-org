@@ -144,6 +144,7 @@ describe("the dry run's small-model pass", () => {
     expect(out.held).toBe(23);
     expect(out.calculator).toBe(5);
     expect(out.needsRatings).toBe(1);
+    expect(out.heldTools).toBe(1);
   });
 
   it("reports a case that reached the model", () => {
@@ -151,5 +152,57 @@ describe("the dry run's small-model pass", () => {
     expect(run(leaky).problems).toEqual([
       "a05: a model was called on the small-model pass",
     ]);
+  });
+});
+
+describe("the Decision Decoder case on a small-class model", () => {
+  const caseDef = byId("t08");
+  const shown = recordOf(caseDef, {
+    ok: true,
+    text: "{}",
+    latencyMs: 2,
+    captured: [],
+    tool: { draftPath: null, modelCalled: false },
+  });
+  const sentToModel = recordOf(caseDef, {
+    ok: true,
+    text: "{}",
+    latencyMs: 900,
+    captured: [],
+    tool: { draftPath: null },
+  });
+
+  it("records that no model was called", () => {
+    expect(shown.modelCalled).toBe(false);
+    expect(shown.engineRequests).toBe(0);
+    expect(sentToModel).not.toHaveProperty("modelCalled");
+  });
+
+  it("has no routing to check when the rule-based reading was shown", () => {
+    const out = checkRouting(caseDef, shown, { smallModel: true });
+    expect(out.status).toBe(NOT_APPLICABLE);
+    expect(out.detail).toBe(
+      "small-class model: the tool showed its rule-based reading, no model was called",
+    );
+  });
+
+  it("fails routing when a small-class model was sent the letter", () => {
+    const out = checkRouting(caseDef, sentToModel, { smallModel: true });
+    expect(out.status).toBe(AUTO_FAIL);
+    expect(out.detail).toBe(
+      "a small-class model was sent a document the app keeps from it",
+    );
+  });
+
+  it("is checked as before on a larger model", () => {
+    expect(
+      checkRouting(
+        caseDef,
+        { ...sentToModel, ownSystemPrompt: true },
+        {
+          smallModel: false,
+        },
+      ).status,
+    ).toBe(AUTO_PASS);
   });
 });

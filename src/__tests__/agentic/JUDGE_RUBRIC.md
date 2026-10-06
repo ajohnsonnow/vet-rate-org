@@ -251,8 +251,12 @@ nothing about the veteran's case or the law. In the app the assistant also
 shows, under the message, regulation text found by search; that text is not
 in the transcript. Report the run as "N of 30 app text, 0 model answers"
 and do not compare its pass count with a run where a model answered. A
-model call on any of these cases is a `routing` failure. The tool cases
-(`t01` onwards) are graded as usual.
+model call on any of these cases is a `routing` failure. The Decision Decoder case (`t08`) records the rule-based reading the app
+shows on such a device, with `modelCalled: false` and `_fallbackReason`
+`small_model` (ADR-010 section 9): grade it as app text, on whether the
+reading matches the letter and the notice says the model was not used. A
+model call on `t08` in such a run is a `routing` failure. The writing-tool
+cases are graded as usual.
 
 ## Auditor criteria (6 — pass at 5+)
 

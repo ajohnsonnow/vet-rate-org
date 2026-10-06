@@ -44,6 +44,10 @@ const { _compileWitnessStatement } =
   await import("../../../components/WitnessBench.jsx");
 const { _generateVocationalImpact } =
   await import("../../../components/TDIUBuilder.jsx");
+const { decodeDecisionAsShown } =
+  await import("../../../utils/decisionDecodeAsShown");
+const { smallModelReading } =
+  await import("../../../utils/decisionPatternReading");
 
 // The same table tests/eval/golden-set.spec.ts builds in the page.
 const PRODUCTION = {
@@ -53,7 +57,7 @@ const PRODUCTION = {
   generateNexusLetterRequest: helper.generateNexusLetterRequest,
   compileWitnessStatement: _compileWitnessStatement,
   generateVocationalImpact: _generateVocationalImpact,
-  decodeDecision: helper.decodeDecision,
+  decodeDecision: decodeDecisionAsShown,
 };
 
 const GOLDEN = loadGoldenSet(
@@ -241,4 +245,22 @@ describe("a run on a small on-device model", () => {
       expect(outcome.text).toBe(expected.content);
     },
   );
+});
+
+describe("t08 on a small on-device model (ADR-010 section 9)", () => {
+  const caseDef = GOLDEN.find((c) => c.id === "t08");
+
+  it("records the rule-based reading the app shows, and no model call", async () => {
+    smallModel.answering = true;
+    const outcome = await runThroughProduction(caseDef, "unused");
+    smallModel.answering = false;
+
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(outcome.ok).toBe(true);
+    expect(outcome.tool.modelCalled).toBe(false);
+    const shown = JSON.parse(outcome.text);
+    expect(shown).toEqual(smallModelReading(caseDef.formInputs.documentText));
+    expect(shown._fallbackReason).toBe("small_model");
+    expect(shown.decision_type).toBe("Mixed Decision");
+  });
 });

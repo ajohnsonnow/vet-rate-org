@@ -102,6 +102,7 @@ function toolFields(caseDef, outcome, own) {
     passages: outcome.tool?.passages ?? null,
     passageOutcomes: outcome.tool?.passageOutcomes ?? [],
     rewordingOff: outcome.tool?.rewordingOff ?? null,
+    ...(outcome.tool?.modelCalled === false ? { modelCalled: false } : {}),
     ...ownSystemPromptSeen(caseDef, own),
   };
 }
