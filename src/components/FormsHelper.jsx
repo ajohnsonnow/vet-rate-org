@@ -10,6 +10,8 @@ import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import { EditedDraftDialog, UnsavedEditDialog } from "./common/ChoiceDialog";
 import useAskBeforeClose from "../hooks/useAskBeforeClose";
+import RewordingOffNote from "./common/RewordingOffNote";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
 import {
   AI_NO_CHANGE_NOTE,
   rewordingOffNote,
@@ -4994,6 +4996,16 @@ function AIEnhancementSection({
 }) {
   if (!isAIEnabledFormType()) return null;
   const aiReady = isAnyAIAvailable();
+  // A small on-device model is not asked to reword, so rewording is not
+  // offered: no button, and so no consent dialog.
+  if (aiReady && !aiEnhancedContent && smallModelAnswering(aiStatus)) {
+    return (
+      <div className="border-2 border-gray-400 dark:border-gray-500 rounded-xl p-5">
+        <RewordingOffNote text={t("smallModelCaveat", "rewordingOff")} />
+        {aiDraftNote && <AIVersionIndicator aiDraftNote={aiDraftNote} t={t} />}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl p-5">

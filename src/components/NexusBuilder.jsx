@@ -31,7 +31,9 @@ import {
 } from "../utils/aiStatementHelper";
 import { AIStatusBadge } from "./AIModeSelector";
 import { LLMRecommendationBadge } from "./LLMRecommendation";
-import { isAnyAIAvailable } from "../utils/unifiedAIService";
+import { getAIStatus, isAnyAIAvailable } from "../utils/unifiedAIService";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
+import RewordingOffNote from "./common/RewordingOffNote";
 import SmartAILoadButton from "./SmartAILoadButton";
 import { getMyRatings } from "../utils/veteranProfile";
 import {
@@ -586,33 +588,42 @@ const NexusReviewEnhanceButton = ({
   isEnhancing,
   handleRequestAIEnhance,
   t,
-}) => (
-  <div className="flex items-center gap-2 flex-wrap">
-    {isAIAvailable() && <AIStatusBadge showLabel={true} className="text-xs" />}
+}) =>
+  // A small on-device model is not asked to reword, so rewording is not
+  // offered: no button, and so no consent dialog.
+  isAIAvailable() &&
+  !aiEnhancedStatement &&
+  smallModelAnswering(getAIStatus()) ? (
+    <RewordingOffNote text={t("smallModelCaveat.rewordingOff")} />
+  ) : (
+    <div className="flex items-center gap-2 flex-wrap">
+      {isAIAvailable() && (
+        <AIStatusBadge showLabel={true} className="text-xs" />
+      )}
 
-    {isAIAvailable() && !aiEnhancedStatement && !isEnhancing && (
-      <button
-        onClick={handleRequestAIEnhance}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {isAIAvailable() && !aiEnhancedStatement && !isEnhancing && (
+        <button
+          onClick={handleRequestAIEnhance}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-          />
-        </svg>
-        ✨ {t("nexusBuilder.enhanceWithAI")}
-      </button>
-    )}
-  </div>
-);
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            />
+          </svg>
+          ✨ {t("nexusBuilder.enhanceWithAI")}
+        </button>
+      )}
+    </div>
+  );
 
 // Review-step "enhancing spinner + standard/AI-version toggle" cluster.
 // Split out of NexusReviewControls purely to keep its function body under
