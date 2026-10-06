@@ -523,16 +523,18 @@ async function draftWithModel(plan, { toolId, userInput = null }) {
   const crisisBlock = blockIfCrisisDetected(userInput);
   if (crisisBlock) return crisisBlock;
 
+  const offered = selectPassages(plan);
   // A small on-device model is never asked to reword: the app-built draft
-  // is returned with no model call.
-  if (smallModelAnswering(getAIStatus())) {
+  // is returned with no model call, and the note says why. A draft with
+  // nothing to reword (a witness's, or nothing typed) keeps its own note:
+  // the model's size is not the reason there.
+  if (offered.length > 0 && smallModelAnswering(getAIStatus())) {
     return {
       success: true,
       ...smallModelDraft(plan, SMALL_MODEL_REWORDING_OFF),
     };
   }
 
-  const offered = selectPassages(plan);
   const redacted = await _redactForAi(offered.map((passage) => passage.text));
   const sent = offered.filter((passage, i) => redacted[i] === passage.text);
   const withheld = offered.length - sent.length;

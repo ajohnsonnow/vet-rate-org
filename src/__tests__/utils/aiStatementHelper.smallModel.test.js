@@ -10,6 +10,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { APP_TRANSLATIONS } from "../../i18n/translations";
 import {
   SMALL_MODEL_REWORDING_OFF,
+  WITNESS_DRAFT_NOTE,
   rewordingOffNote,
 } from "../../utils/writerTemplates";
 
@@ -135,5 +136,54 @@ describe("the small-model reason", () => {
     expect(rewordingOffNote({ rewordingOff: "small-model" }, "")).toBe(
       SMALL_MODEL_REWORDING_OFF,
     );
+  });
+});
+
+describe("a witness's draft on a small model", () => {
+  const BUDDY = {
+    conditionName: "Migraines",
+    whatObserved: "Lights off at the desk, sunglasses indoors",
+  };
+
+  it("carries the witness note alone, and says 'as you typed them' once", async () => {
+    status.value = onDevice("Qwen3.5-2B-q4f16_1-MLC");
+    const result = await enhanceFormStatement("buddy-statement", BUDDY);
+
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(result.draftNote).toBe(WITNESS_DRAFT_NOTE);
+    expect(result.draftNote.split("as you typed them")).toHaveLength(2);
+    expect(result).not.toHaveProperty("rewordingOff");
+  });
+
+  it("is the same note as on a larger model", async () => {
+    status.value = onDevice("Qwen3.5-4B-q4f16_1-MLC");
+    const result = await enhanceFormStatement("buddy-statement", BUDDY);
+
+    expect(result.draftNote).toBe(WITNESS_DRAFT_NOTE);
+  });
+});
+
+describe("no draft note says the same thing twice", () => {
+  it.each([
+    ["a statement with blanks", { worstDays: TYPED }],
+    ["a statement with nothing typed", {}],
+  ])("small model, %s", async (_name, formData) => {
+    status.value = onDevice("Qwen3.5-2B-q4f16_1-MLC");
+    const { draftNote } = await enhanceFormStatement(
+      "personal-statement",
+      formData,
+    );
+
+    for (const phrase of [
+      "as you typed them",
+      "in your own words",
+      "standard draft",
+    ]) {
+      expect([phrase, draftNote.split(phrase).length - 1]).toEqual([
+        phrase,
+        expect.any(Number),
+      ]);
+      expect(draftNote.split(phrase).length - 1).toBeLessThanOrEqual(1);
+    }
   });
 });
