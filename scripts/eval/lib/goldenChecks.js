@@ -61,26 +61,41 @@ const calculatorAnswers = (caseDef) =>
   caseDef.conditions.length > 0;
 
 /*
- * A rater case with structured conditions is answered by the calculator and
- * no model is called, so there is no routing to check. A model call on such a
- * case means the calculator path was not taken.
+ * A rating question on a rater tool is answered by the app, from the
+ * calculator or with a fixed request for the ratings, and no model is called,
+ * so there is no routing to check. A model call on such a case means that
+ * path was not taken. `ctx.answerWithoutModel` says which cases those are;
+ * without it, they are the rater cases with structured conditions.
  */
-function checkCalculatorRouting(record) {
-  if (record.modelCalled === false) {
+const expectsNoModel = (caseDef, ctx) =>
+  typeof ctx.answerWithoutModel === "function"
+    ? Boolean(ctx.answerWithoutModel(caseDef))
+    : calculatorAnswers(caseDef);
+
+function checkNoModelRouting(record) {
+  if (record.modelCalled !== false) {
     return result(
-      NOT_APPLICABLE,
-      "the calculator answered: no model was called",
+      AUTO_FAIL,
+      `expected the app's own answer with no model call; a model was called (${record.actualAgent ?? "unknown"} persona)`,
     );
   }
   return result(
-    AUTO_FAIL,
-    `expected the calculator's answer with no model call; a model was called (${record.actualAgent ?? "unknown"} persona)`,
+    NOT_APPLICABLE,
+    record.needsRatings
+      ? "the app asked for the ratings: no model was called"
+      : "the calculator answered: no model was called",
   );
 }
 
-export function checkRouting(caseDef, record) {
-  if (calculatorAnswers(caseDef) && !record.error) {
-    return checkCalculatorRouting(record);
+export function checkRouting(caseDef, record, ctx = {}) {
+  if (expectsNoModel(caseDef, ctx) && !record.error) {
+    return checkNoModelRouting(record);
+  }
+  if (record.modelCalled === false && !record.error) {
+    return result(
+      NEEDS_HUMAN,
+      "no model was called, though this case was expected to reach one",
+    );
   }
   if (caseDef.entry && record.passages?.sent === 0 && !record.error) {
     return result(
@@ -345,7 +360,7 @@ export function gradeRecord(caseDef, record, ctx = {}) {
         result(NOT_APPLICABLE, "case ended in an error"),
       ]),
     );
-    skipped.routing = checkRouting(caseDef, record);
+    skipped.routing = checkRouting(caseDef, record, ctx);
     return {
       id: caseDef.id,
       checks: skipped,
@@ -354,7 +369,7 @@ export function gradeRecord(caseDef, record, ctx = {}) {
   }
 
   const checks = {
-    routing: checkRouting(caseDef, record),
+    routing: checkRouting(caseDef, record, ctx),
     "calc-match": checkCalcMatch(caseDef, record, ctx),
     "cfr-in-index": checkCfrCitations(record, ctx),
     "no-spotlight-echo": checkNoSpotlightEcho(record),

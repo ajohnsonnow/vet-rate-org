@@ -60,7 +60,7 @@ const FAILING_OVERRIDES = {
     modelCalled: true,
     response: "Using the VA combined ratings method, my result: 75%.",
   },
-  a14: { timeout: true },
+  a15: { timeout: true },
   a20: { agentOverride: "rater", response: "Combined rating: 50%." },
   a22: { error: "AI_TIMEOUT: simulated engine timeout" },
   a30: { noCapture: true },
@@ -131,8 +131,8 @@ export const DRY_RUN_EXPECTATIONS = {
   },
   a12: CALCULATOR_ANSWERED,
   a13: CALCULATOR_ANSWERED,
-  a14: { routing: AUTO_PASS, "calc-match": NOT_APPLICABLE },
-  a15: { routing: AUTO_PASS },
+  a14: { routing: NOT_APPLICABLE, "calc-match": NOT_APPLICABLE },
+  a15: { routing: AUTO_PASS, "calc-match": NOT_APPLICABLE },
   a20: { routing: AUTO_FAIL },
   a22: {
     routing: NEEDS_HUMAN,
@@ -297,9 +297,10 @@ function rawReplyOutcome(rawReply) {
  * would receive (persona system prompt and user turn) and returns a canned
  * outcome. No browser, no GPU, no model.
  *
- * A rater case with structured conditions gets what production gives it: the
- * calculator's own answer, with no engine request. `modelCalled` on a case's
- * override stands in for a regression where a model was called instead.
+ * A case the app answers without a model gets what production gives it, with
+ * no engine request: the calculator's own answer, or the fixed request for
+ * ratings. Any override on a case sends it to the stub model instead;
+ * `modelCalled` stands in for a regression where a model was called.
  *
  * A case marked `timeout` fails the way a real timeout does, and its request
  * keeps arriving after the case has ended: it shows up, after the next case's
@@ -309,8 +310,7 @@ function rawReplyOutcome(rawReply) {
 export function createStubEngine({
   personaPrompts,
   resolveAgentForTool,
-  calculateVARating,
-  buildCalculatorAnswer,
+  answerWithoutModel,
   settings,
 }) {
   let lateRequest = null;
@@ -350,17 +350,12 @@ export function createStubEngine({
     };
   }
 
-  function calculatorOutcome(caseDef) {
-    const calc = calculateVARating(caseDef.conditions);
+  function noModelOutcome({ text, ...flags }) {
     return {
       ok: true,
-      text: buildCalculatorAnswer(calc, caseDef.input),
+      text,
       latencyMs: 1,
-      resultFlags: {
-        onDevice: true,
-        modelCalled: false,
-        calculatorLead: { expected: calc.combinedRating },
-      },
+      resultFlags: { ...flags, onDevice: true, modelCalled: false },
       captured: [lateRequest].filter(Boolean),
     };
   }
@@ -368,8 +363,10 @@ export function createStubEngine({
   return function run(caseDef) {
     const override = FAILING_OVERRIDES[caseDef.id] ?? {};
     if (caseDef.entry) return toolOutcome(caseDef, override, personas);
-    if (caseDef.conditions && !override.modelCalled) {
-      const outcome = calculatorOutcome(caseDef);
+    const answer =
+      Object.keys(override).length === 0 ? answerWithoutModel(caseDef) : null;
+    if (answer) {
+      const outcome = noModelOutcome(answer);
       lateRequest = null;
       return outcome;
     }
@@ -388,15 +385,13 @@ export function buildDryRunTranscript({
   cases,
   personaPrompts,
   resolveAgentForTool,
-  calculateVARating,
-  buildCalculatorAnswer,
+  answerWithoutModel,
   settings,
 }) {
   const engine = createStubEngine({
     personaPrompts,
     resolveAgentForTool,
-    calculateVARating,
-    buildCalculatorAnswer,
+    answerWithoutModel,
     settings,
   });
   const run = {

@@ -17,6 +17,8 @@ function guardOutcome(flags) {
     validatorBlocked: Boolean(flags.blocked),
     truncated: Boolean(flags.truncated),
     ...(flags.modelCalled === false ? { modelCalled: false } : {}),
+    ...(flags.needsRatings ? { needsRatings: true } : {}),
+    ...(flags.ratingsSource ? { ratingsSource: flags.ratingsSource } : {}),
     ...(flags.calculatorLead ? { calculatorLead: flags.calculatorLead } : {}),
     ...(flags.blocked ? { blockedText: flags.blockedText ?? null } : {}),
   };
@@ -51,10 +53,12 @@ function guardOutcome(flags) {
  * it, the verdict and the reasons) so a rejected rewording can be read,
  * `draftRejectReasons` says why each rejected one was, and
  * `draftErrorReason` is set when the model could not answer at all.
- * `modelCalled: false` with `calculatorLead` ({ expected }) says the
- * calculator answered a rating question that came with structured conditions:
- * no engine was called, so the record has no request, no agent and
- * `engineRequests` 0, and `response` is the calculator's text. `truncated` says the engine stopped the answer
+ * `modelCalled: false` says the app answered a rating question itself: no
+ * engine was called, so the record has no request, no agent and
+ * `engineRequests` 0. With `calculatorLead` ({ expected }) `response` is the
+ * calculator's text, and `ratingsSource` says whether the ratings were
+ * "supplied" as structured conditions or read from the "question". With
+ * `needsRatings` it is the fixed answer that asks for the ratings. `truncated` says the engine stopped the answer
  * at the length limit (known for WebLLM and Gemini only). `validatorBlocked` says the response validator
  * blocked the answer, in which case `response` is the message shown in its
  * place and `blockedText` is what the model wrote.

@@ -156,7 +156,7 @@ describe("verified reference on the on-device swarm", () => {
   });
 
   it("skips the keyword search when the verified text leaves it no room", async () => {
-    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-builder" }));
+    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-narrative" }));
 
     expect(buildDKBContextSpy).not.toHaveBeenCalled();
     const sent = sentToSwarm();

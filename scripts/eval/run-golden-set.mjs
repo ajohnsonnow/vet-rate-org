@@ -31,6 +31,7 @@ import {
   buildDryRunTranscript,
 } from "./lib/dryRun.js";
 import { loadGoldenSet, selectCases } from "./lib/goldenSet.js";
+import { noModelAnswerer } from "./lib/noModelCases.js";
 import { USAGE, parseArgs } from "./lib/cliArgs.js";
 import { loadLegalSections } from "./lib/legalSections.js";
 import {
@@ -97,19 +98,29 @@ function legalContext(opts) {
   return { legalSections: null, legalIndexNote: `unavailable: ${reason}` };
 }
 
+async function loadRouting() {
+  const { resolveAgentForTool } = await loadFromSrc(
+    "src/utils/agentBoundaries.js",
+  );
+  const { answerRatingQuestion } = await loadFromSrc(
+    "src/utils/ratingQuestion.js",
+  );
+  return {
+    resolveAgentForTool,
+    answerWithoutModel: noModelAnswerer({
+      resolveAgentForTool,
+      answerRatingQuestion,
+    }),
+  };
+}
+
 async function writeDryRunTranscript(
   files,
   cases,
   settings,
-  calculateVARating,
+  { resolveAgentForTool, answerWithoutModel },
 ) {
   const { SWARM_AGENTS } = await loadFromSrc("src/utils/diamondSwarm.js");
-  const { resolveAgentForTool } = await loadFromSrc(
-    "src/utils/agentBoundaries.js",
-  );
-  const { buildCalculatorAnswer } = await loadFromSrc(
-    "src/utils/raterGrounding.js",
-  );
   const personaPrompts = Object.fromEntries(
     Object.values(SWARM_AGENTS).map((agent) => [agent.id, agent.systemPrompt]),
   );
@@ -119,8 +130,7 @@ async function writeDryRunTranscript(
       cases,
       personaPrompts,
       resolveAgentForTool,
-      calculateVARating,
-      buildCalculatorAnswer,
+      answerWithoutModel,
       settings,
     }),
   );
@@ -174,6 +184,7 @@ async function main() {
   const modelId = opts.dryRun ? DRY_RUN_MODEL_ID : opts.model;
   const goldenCases = selectCases(loadGoldenSet(GOLDEN_PATH), opts.cases);
   const { calculateVARating } = await loadFromSrc("src/utils/vaCalculator.js");
+  const routing = await loadRouting();
   const outDir = opts.outDir ?? (opts.dryRun ? DRY_RUN_DIR : RESULTS_DIR);
   const files = claimRunFiles(outDir, modelId, start.startedAt);
   const settings = {
@@ -187,12 +198,7 @@ async function main() {
 
   let exitCode = 0;
   if (opts.dryRun) {
-    await writeDryRunTranscript(
-      files,
-      goldenCases,
-      settings,
-      calculateVARating,
-    );
+    await writeDryRunTranscript(files, goldenCases, settings, routing);
   } else {
     exitCode = runPlaywrightStep(opts, files);
   }
@@ -202,7 +208,11 @@ async function main() {
     transcriptPath: files.transcriptPath,
     summaryPath: files.summaryPath,
     goldenCases,
-    ctx: { calculateVARating, ...legal },
+    ctx: {
+      calculateVARating,
+      answerWithoutModel: routing.answerWithoutModel,
+      ...legal,
+    },
     runInfo: {
       modelId,
       date: start.date,

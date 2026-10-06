@@ -215,11 +215,13 @@ case (`t04`) sends none and must show the writer persona. `routing` is
 ### Cases the calculator answers (a11, a12, a13, a24, a25)
 
 A rating question that comes with structured conditions is not sent to a
-model. The app's calculator answers it: the combined rating, the 38 CFR
-§ 4.16(a) threshold paragraph first when the question is about TDIU, the
-working step by step, the bilateral notes when they apply, and notes on any
-entry it left out. The answer ends by asking the veteran to put anything
-else as a separate question.
+model. The app's calculator answers it: for a TDIU question, first one
+sentence saying whether the 38 CFR § 4.16(a) percentage thresholds are met
+and that this does not settle entitlement; then the combined rating, the
+threshold paragraph for a TDIU question, the working step by step, the
+bilateral notes when they apply, and notes on any entry it left out. The
+answer ends by saying what it covered and asking the veteran to put
+anything else as a separate question.
 
 For these cases the transcript records `modelCalled: false`, no engine
 request (`engineRequests` 0), no agent and the time taken; `routing` is
@@ -234,8 +236,24 @@ the app's code to be fixed there, not a reason to prefer one model over
 another. A model call on one of these cases is a `routing` failure: the
 calculator path was not taken.
 
-The rater cases without conditions (`a14`, `a21`) still go to the model
-and are graded as before.
+### A rating question with no ratings the app can use (a14)
+
+Rating arithmetic never comes from a model. A question on a rater tool that
+asks for a combined rating, a bilateral factor result or the TDIU percentage
+thresholds, and comes without structured conditions, is answered in one of
+two ways, both without a model call. If the question itself lists ratings
+unambiguously ("50% PTSD, 30% migraines and 10% tinnitus"), the calculator
+answers from those, and the answer opens by saying exactly which ratings
+were read from the question. Otherwise the app gives a fixed answer that
+says it needs the ratings and points to the Rating Calculator; `a14` gets
+this one, because "my 80% combined rating" is not a list of ratings. The
+transcript records `modelCalled: false` and `needsRatings: true`, and
+`routing` is `n/a`. Grade the fixed answer as app text: it passes when it
+states no figure of the veteran's, works nothing out, and tells the veteran
+plainly what to do next. A model call on `a14` is a `routing` failure.
+
+`a21` asks for no calculation, so it still goes to the model and is graded
+as before (R5).
 
 | #   | Criterion            | Pass when…                                                                                                                                                                                                                                                               |
 | --- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
