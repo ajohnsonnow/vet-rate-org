@@ -258,12 +258,13 @@ const RULES = [
   },
   {
     id: "coverage-date-for-wrong-place",
-    topics: ["toxic-exposure"],
-    matches: (sentence, { question }) =>
-      findWrongCoverageDate(sentence, { question }) !== null,
-    describe: (sentence, { question }) => {
-      const { wrongDate, quote } = findWrongCoverageDate(sentence, {
+    topics: PACT_TOPICS,
+    matches: (sentence, { question, next }) =>
+      findWrongCoverageDate(sentence, { question, next }) !== null,
+    describe: (sentence, { question, next }) => {
+      const { wrongDate, quote, shownWith } = findWrongCoverageDate(sentence, {
         question,
+        next,
       });
       const rightDate = quote.text.slice(
         "Active service on or after ".length,
@@ -272,6 +273,7 @@ const RULES = [
       return {
         says: `gives ${wrongDate} as the start date for a place the table lists under ${rightDate}`,
         quote,
+        ...(shownWith ? { sentence: `${sentence} ${shownWith}` } : {}),
       };
     },
   },
@@ -458,16 +460,16 @@ export function findContradictions(
       rule.topics === EVERY_ANSWER ||
       rule.topics.some((topic) => topics.includes(topic));
     if (!applies) continue;
-    const sentence = sentences.find((s, i) =>
-      rule.matches(s, { ...context, next: sentences[i + 1] ?? "" }),
-    );
-    if (!sentence) continue;
+    const around = (i) => ({ ...context, next: sentences[i + 1] ?? "" });
+    const at = sentences.findIndex((s, i) => rule.matches(s, around(i)));
+    if (at < 0) continue;
+    const sentence = sentences[at];
     hits.push({
       rule: rule.id,
       sentence,
       says: rule.says,
       ...(rule.correction ? { correction: rule.correction(topics) } : {}),
-      ...(rule.describe ? rule.describe(sentence, context) : {}),
+      ...(rule.describe ? rule.describe(sentence, around(at)) : {}),
     });
   }
   return hits;

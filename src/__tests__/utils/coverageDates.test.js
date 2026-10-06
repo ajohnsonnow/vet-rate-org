@@ -105,7 +105,7 @@ describe("the coverage-date rule", () => {
   });
 
   it("does not apply to another topic", () => {
-    expect(findContradictions(WRONG, { topics: ["herbicide"] })).toEqual([]);
+    expect(findContradictions(WRONG, { topics: ["secondary"] })).toEqual([]);
   });
 });
 
@@ -149,7 +149,6 @@ describe("a service date that is neither of the table's dates", () => {
 
   it.each([
     [RUN_L2_A16, undefined],
-    [RUN_L2_A16, "Am I covered for my Iraq and Afghanistan deployments?"],
     [RUN_L2_A16, "What does the PACT Act cover?"],
     [
       "Effective August 10, 2022, the PACT Act created 38 U.S.C. 1120.",
@@ -163,10 +162,6 @@ describe("a service date that is neither of the table's dates", () => {
       "You must have served on or after August 2, 1990; the law itself took effect August 10, 2022.",
       IRAQ_QUESTION,
     ],
-    [
-      "You must have served in Iraq or Afghanistan on or after August 10, 2022.",
-      IRAQ_QUESTION,
-    ],
     ["I served on or after June 1, 2008 in Iraq.", IRAQ_QUESTION],
     [
       "Under 38 CFR 3.320 you must have served in Afghanistan on or after September 19, 2001.",
@@ -174,6 +169,98 @@ describe("a service date that is neither of the table's dates", () => {
     ],
   ])("leaves alone: %s (asked: %s)", (sentence, question) => {
     expect(findWrongCoverageDate(sentence, { question })).toBeNull();
+  });
+});
+
+// Run D3 (2026-10-06 04:51, 4B). a16 puts the date in a heading and the
+// place in the line under it; a27 gives a date that is in neither row for
+// places from both.
+const RUN_D3_A16_HEADING =
+  '3. If your duty station was in the "Global War on Terror" locations (Active service on or after September 11, 2001):';
+const RUN_D3_A16_UNDER = "If you served in Somalia, you are covered.";
+const RUN_D3_A27 =
+  "PACT Act presumptive conditions (38 CFR § 3.320) generally apply to service in specific locations after October 1, 2013 (e.g., Iraq, Afghanistan, Syria, Afghanistan, etc.), which is outside the scope of the provided Vietnam-era herbicide table.";
+
+describe("a date in a heading and the place in the line under it", () => {
+  it("is corrected, and the correction shows both lines", () => {
+    const found = findWrongCoverageDate(RUN_D3_A16_HEADING, {
+      next: RUN_D3_A16_UNDER,
+    });
+    expect(found).toMatchObject({
+      place: "Somalia",
+      wrongDate: "September 11, 2001",
+      shownWith: RUN_D3_A16_UNDER,
+    });
+    expect(found.quote.text).toBe(
+      "Active service on or after August 2, 1990: Duty station in, including airspace above, Somalia.",
+    );
+    const [hit] = findContradictions(
+      [RUN_D3_A16_HEADING, RUN_D3_A16_UNDER].join(String.fromCharCode(10)),
+      { topics: ["toxic-exposure"] },
+    );
+    expect(hit.sentence).toBe(
+      `${RUN_D3_A16_HEADING.slice("3. ".length)} ${RUN_D3_A16_UNDER}`,
+    );
+  });
+
+  it.each([
+    [
+      '1. If your duty station was in the "Gulf War" locations (Active service on or after August 2, 1990):',
+      "If you served in Bahrain, Iraq, Kuwait, Oman, Qatar, Saudi Arabia, or the Red Sea, you are covered.",
+    ],
+    [
+      '2. If your duty station was in "Afghanistan War" locations (Active service on or after September 11, 2001):',
+      "If you served in Afghanistan, Djibouti, Syria, or Uzbekistan, or in Egypt, Jordan, Lebanon, or Yemen, you are covered.",
+    ],
+    [
+      "Active service on or after September 11, 2001:",
+      "Your Iraq deployment does not fall under this row.",
+    ],
+    [
+      "Active service on or after September 11, 2001:",
+      "Afghanistan and, from August 2, 1990, Iraq.",
+    ],
+    [
+      "The second row starts on September 11, 2001.",
+      "If you served in Somalia, you are covered.",
+    ],
+  ])("leaves alone: %s / %s", (heading, next) => {
+    expect(findWrongCoverageDate(heading, { next })).toBeNull();
+  });
+});
+
+describe("a date in neither row, for places from both rows", () => {
+  it("is corrected with the line for the first place named", () => {
+    const found = findWrongCoverageDate(RUN_D3_A27);
+    expect(found).toMatchObject({
+      place: "Iraq",
+      wrongDate: "October 1, 2013",
+    });
+    expect(found.quote.text).toBe(EARLY_LINE);
+  });
+
+  it("is corrected when the question names both and the sentence none", () => {
+    expect(
+      findWrongCoverageDate(RUN_L2_A16, {
+        question: "Am I covered for my Iraq and Afghanistan deployments?",
+      }),
+    ).toMatchObject({ place: "Iraq", wrongDate: "August 10, 2022" });
+  });
+
+  it("applies on a herbicide question too, where run D3 a27 said it", () => {
+    expect(
+      findContradictions(RUN_D3_A27, { topics: ["herbicide"] }).map(
+        (hit) => hit.rule,
+      ),
+    ).toEqual(["coverage-date-for-wrong-place"]);
+  });
+
+  it("still leaves the two table dates alone when both rows are named", () => {
+    expect(
+      findWrongCoverageDate(
+        "The rule applies to service in Iraq or Afghanistan after September 11, 2001.",
+      ),
+    ).toBeNull();
   });
 });
 
@@ -205,7 +292,7 @@ describe("an answer that gives each place its own date", () => {
 
 describe("the coverage-date rule over every recorded response", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_045832";
   const hits = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(
@@ -227,11 +314,13 @@ describe("the coverage-date rule over every recorded response", () => {
         .map((r) => `${name.slice(4, 21)} ${r.id}`),
     );
 
-  it("flags the three answers that misdated Iraq and nothing else", () => {
+  it("flags the five answers that misdated a place and nothing else", () => {
     expect(hits).toEqual([
       "2026-10-05_210108 a16",
       "2026-10-06_000820 a16",
       "2026-10-06_034657 a16",
+      "2026-10-06_045147 a16",
+      "2026-10-06_045147 a27",
     ]);
   });
 });

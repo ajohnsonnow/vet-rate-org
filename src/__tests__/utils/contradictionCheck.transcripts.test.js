@@ -11,7 +11,7 @@ import { findContradictions } from "../../utils/contradictionCheck";
 import { detectReferenceTopics } from "../../utils/verifiedReference";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
-const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
+const LAST_REVIEWED_RUN = "run_2026-10-06_045832";
 const ALL_TOPICS = [
   "secondary",
   "toxic-exposure",
@@ -83,8 +83,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
   const prose = answers.filter((record) => !isDecoderCase(record));
 
   it("reads every answer that was shown to the user", () => {
-    expect(answers).toHaveLength(1120);
-    expect(prose).toHaveLength(1103);
+    expect(answers).toHaveLength(1200);
+    expect(prose).toHaveLength(1181);
   });
 
   it("flags only real contradictions, each on the topic of its own question", () => {
@@ -153,6 +153,10 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "034657 a16 coverage-date-for-wrong-place",
       "034657 a20 ratings-higher-of-two",
       "034657 a30 intent-form-as-application",
+      "045147 a15 new-and-material-standard",
+      "045147 a16 coverage-date-for-wrong-place",
+      "045147 a27 coverage-date-for-wrong-place",
+      "045832 a30 intent-form-as-application",
     ]);
   });
 });
@@ -201,6 +205,7 @@ describe("contradiction rules outside the topic of the question", () => {
       "022302 t08 action_plan form-for-another-filing",
       "032917 t08 action_plan form-for-another-filing",
       "033751 t08 action_plan higher-level-review-new-evidence",
+      "045832 t08 action_plan form-for-another-filing",
     ]);
   });
 });
