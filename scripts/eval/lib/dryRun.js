@@ -64,7 +64,7 @@ const FAILING_OVERRIDES = {
   a20: { agentOverride: "rater", response: "Combined rating: 50%." },
   a22: { error: "AI_TIMEOUT: simulated engine timeout" },
   a30: { noCapture: true },
-  t01: { reword: "all" },
+  t01: { smallModel: true },
   t02: { toolError: "WebGPU inference timed out after 300s" },
   t05: { reword: "all", rewordAdds: " This was decided on March 3, 2021." },
   t06: { noDraft: true },
@@ -139,7 +139,8 @@ export const DRY_RUN_EXPECTATIONS = {
   a24: CALCULATOR_ANSWERED,
   a25: CALCULATOR_ANSWERED,
   a30: { routing: NEEDS_HUMAN },
-  t01: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
+  // A run on a small on-device model: the tool makes no model call.
+  t01: { routing: NOT_APPLICABLE, "draft-returned": AUTO_PASS },
   t02: { routing: AUTO_PASS, "draft-returned": AUTO_PASS },
   // Witness statements make no model call: the witness's words stand.
   t03: { routing: NOT_APPLICABLE, "draft-returned": AUTO_PASS },
@@ -158,7 +159,7 @@ export const DRY_RUN_EXPECTATIONS = {
 
 /** The draft path each dry-run tool case must record. */
 export const DRY_RUN_DRAFT_PATHS = {
-  t01: "model",
+  t01: "template",
   t02: "template",
   t03: "template",
   t04: "template",
@@ -238,6 +239,11 @@ function toolOutcome(
   };
   // No free-text passage: the tool makes no model call at all.
   if (draft.prompt === null) return done(settle(""), []);
+  // A small on-device model would answer: no model call either.
+  if (override.smallModel) {
+    const { content, ...tool } = draft.smallModel();
+    return done({ text: content, tool }, []);
+  }
   if (override.noDraft) return done({ text: "", tool: noDraft });
   if (override.toolError) {
     const { content, ...tool } = draft.afterError(override.toolError);

@@ -864,6 +864,19 @@ export function standardDraft(plan, extra = {}) {
 }
 
 /**
+ * The app-built draft when the model that would answer is a small on-device
+ * one: it is never asked to reword. `reason` is said above the draft.
+ */
+export function smallModelDraft(plan, reason) {
+  const draft = standardDraft(plan);
+  return {
+    ...draft,
+    draftNote: `${reason} ${draft.draftNote}`,
+    rewordingOff: "small-model",
+  };
+}
+
+/**
  * The app-built draft when passages were sent and the model could not
  * answer (engine error, timeout, request limit): `draftErrorReason` names
  * the error, and `passages.sent` still says how many were asked about.

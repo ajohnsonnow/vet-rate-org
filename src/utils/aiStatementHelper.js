@@ -30,6 +30,7 @@ import { AI_DATA_CLASS } from "./aiDataClassPolicy";
 import {
   draftAfterModelError,
   resolvePassageDraft,
+  smallModelDraft,
   standardDraft,
 } from "./writerDraftCheck";
 import { smallModelAnswering } from "./smallModelAnswering";
@@ -525,12 +526,9 @@ async function draftWithModel(plan, { toolId, userInput = null }) {
   // A small on-device model is never asked to reword: the app-built draft
   // is returned with no model call.
   if (smallModelAnswering(getAIStatus())) {
-    const draft = standardDraft(plan);
     return {
       success: true,
-      ...draft,
-      draftNote: `${SMALL_MODEL_REWORDING_OFF} ${draft.draftNote}`,
-      rewordingOff: "small-model",
+      ...smallModelDraft(plan, SMALL_MODEL_REWORDING_OFF),
     };
   }
 

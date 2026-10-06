@@ -1,9 +1,11 @@
 import {
   draftAfterModelError,
   resolvePassageDraft,
+  smallModelDraft,
   standardDraft,
 } from "../../../src/utils/writerDraftCheck.js";
 import {
+  SMALL_MODEL_REWORDING_OFF,
   STANDARD_DRAFT_NOTE,
   WITNESS_DRAFT_NOTE,
   appealStatementPlan,
@@ -66,6 +68,7 @@ function planDraft(plan) {
         ? resolvePassageDraft({ plan, sent, reply })
         : standardDraft(plan),
     afterError: (error) => draftAfterModelError(plan, sent, error),
+    smallModel: () => smallModelDraft(plan, SMALL_MODEL_REWORDING_OFF),
   };
 }
 

@@ -104,7 +104,9 @@ Two things are never sent to a model, and their cases make no model call:
   line a full sentence in their own words.
 - **Anything, when a small on-device model would answer** (the laptop and
   tablet class in the device profile table). The tool returns the app-built
-  draft and the record carries `rewordingOff: "small-model"`.
+  draft and the record carries `rewordingOff: "small-model"`, for every
+  case that had a passage to send. A witness case carries no such field on
+  any model: nothing of a witness's is ever sent.
 
 The check accepts a rewording only if it is the passage's own words: every
 main word kept and none added, each cause, contrast and time word kept ("so",
