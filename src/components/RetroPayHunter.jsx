@@ -488,8 +488,10 @@ function DateTerminologyInfo() {
 function EffectiveDateField({ newEntry, setNewEntry }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+      <label
+        htmlFor="retro-pay-effective-date"
+        className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2"
+      >
         Effective Date *{" "}
         <span className="group relative">
           <span className="text-blue-400 cursor-help text-xs">ℹ️</span>
@@ -510,6 +512,7 @@ function EffectiveDateField({ newEntry, setNewEntry }) {
         </span>
       </label>
       <input
+        id="retro-pay-effective-date"
         type="date"
         value={newEntry.effectiveDate}
         onChange={(e) =>
@@ -531,11 +534,14 @@ function EffectiveDateField({ newEntry, setNewEntry }) {
 function RatingSelectField({ newEntry, setNewEntry }) {
   return (
     <div>
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-semibold text-gray-300 mb-2">
+      <label
+        htmlFor="retro-pay-rating"
+        className="block text-sm font-semibold text-gray-300 mb-2"
+      >
         Combined Rating *
       </label>
       <select
+        id="retro-pay-rating"
         value={newEntry.rating}
         onChange={(e) =>
           setNewEntry({
@@ -579,6 +585,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
             type="number"
             min="0"
             max="10"
+            aria-label="Children under 18"
             value={newEntry.childrenUnder18}
             onChange={(e) =>
               setNewEntry({
@@ -596,6 +603,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
             type="number"
             min="0"
             max="10"
+            aria-label="Children in school, 18 or older"
             value={newEntry.childrenSchool}
             onChange={(e) =>
               setNewEntry({
@@ -613,6 +621,7 @@ function DependentsFields({ newEntry, setNewEntry }) {
             type="number"
             min="0"
             max="2"
+            aria-label="Dependent parents"
             value={newEntry.dependentParents}
             onChange={(e) =>
               setNewEntry({
@@ -632,11 +641,14 @@ function DependentsFields({ newEntry, setNewEntry }) {
 function ActualReceivedField({ newEntry, setNewEntry }) {
   return (
     <div className="mt-4">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm font-semibold text-gray-300 mb-2">
+      <label
+        htmlFor="retro-pay-actual-received"
+        className="block text-sm font-semibold text-gray-300 mb-2"
+      >
         What you actually received per month (optional)
       </label>
       <input
+        id="retro-pay-actual-received"
         type="number"
         min="0"
         step="0.01"
@@ -748,6 +760,7 @@ function RatingTimelineEntry({ period, onRemove }) {
           <button
             type="button"
             onClick={() => onRemove(period.id)}
+            aria-label="Remove rating period"
             className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded"
           >
             <svg

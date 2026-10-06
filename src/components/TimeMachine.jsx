@@ -132,6 +132,16 @@ function TimeMachineHeader({ countdown, onReportBug, onClose }) {
   );
 }
 
+const CancelEditButton = ({ onCancel }) => (
+  <button
+    type="button"
+    onClick={onCancel}
+    className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-semibold transition-colors"
+  >
+    Cancel
+  </button>
+);
+
 function TimeMachineInputSection({
   itfDate,
   setItfDate,
@@ -151,26 +161,32 @@ function TimeMachineInputSection({
 
       <div className="space-y-4">
         <div>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="time-machine-itf-date"
+            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+          >
             When did you file your Intent to File? *
           </label>
           <input
+            id="time-machine-itf-date"
             type="date"
             value={itfDate}
             onChange={(e) => setItfDate(e.target.value)}
             max={new Date().toISOString().split("T")[0]}
-            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:bg-gray-700 dark:text-white text-lg"
+            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:text-white text-lg"
           />
         </div>
 
         <div>
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label
+            htmlFor="time-machine-estimated-rating"
+            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+          >
             Estimated Combined Rating (from Tactical Calculator):
           </label>
           <BilateralIssuesSummary />
           <select
+            id="time-machine-estimated-rating"
             value={estimatedRating}
             onChange={(e) =>
               setEstimatedRating(Number.parseInt(e.target.value))
@@ -198,13 +214,7 @@ function TimeMachineInputSection({
             Start Countdown
           </button>
           {countdown && (
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-semibold transition-colors"
-            >
-              Cancel
-            </button>
+            <CancelEditButton onCancel={() => setIsEditing(false)} />
           )}
         </div>
       </div>
