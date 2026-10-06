@@ -10,17 +10,6 @@
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
-// VA Form URLs - these are the official PDF download links (kept for reference)
-const VA_FORM_URLS = {
-  "21-10210": "https://www.vba.va.gov/pubs/forms/VBA-21-10210-ARE.pdf", // Lay/Witness Statement
-  "21-0966": "https://www.vba.va.gov/pubs/forms/VBA-21-0966-ARE.pdf", // Intent to File
-  "21-4142": "https://www.vba.va.gov/pubs/forms/VBA-21-4142-ARE.pdf", // Medical Release
-  "21-4142a": "https://www.vba.va.gov/pubs/forms/VBA-21-4142a-ARE.pdf", // General Release
-  "21-4138": "https://www.vba.va.gov/pubs/forms/VBA-21-4138-ARE.pdf", // Statement in Support
-  "21-0781": "https://www.vba.va.gov/pubs/forms/VBA-21-0781-ARE.pdf", // PTSD Stressor
-  "20-10207": "https://www.vba.va.gov/pubs/forms/VBA-20-10207-ARE.pdf", // Priority Processing
-};
-
 // Local copies of VA forms
 const LOCAL_FORM_PATHS = {
   "21-10210": "/forms/vba-21-10210-are.pdf", // Lay/Witness Statement (lowercase)
@@ -600,36 +589,21 @@ const VA_FORM_FIELDS = {
 };
 
 /**
- * Fetch a PDF form from VA.gov or local fallback
+ * Load a PDF form from the copy the app ships. The official files on
+ * www.vba.va.gov cannot be fetched from the page: the Content Security
+ * Policy does not list that host, and it sends no cross-origin headers.
  */
 async function fetchPdfForm(formNumber) {
-  const vaUrl = VA_FORM_URLS[formNumber];
   const localPath = LOCAL_FORM_PATHS[formNumber];
-
-  // Try VA.gov first
-  try {
-    const response = await fetch(vaUrl);
-    if (response.ok) {
-      return await response.arrayBuffer();
-    }
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `Could not fetch from VA.gov (${error.message}), trying local fallback...`,
-    );
-  }
-
-  // Try local fallback
+  if (!localPath) return null;
   try {
     const response = await fetch(localPath);
     if (response.ok) {
       return await response.arrayBuffer();
     }
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log(`Local fallback also failed: ${error.message}`);
+    console.error(`Could not load form ${formNumber}:`, error);
   }
-
   return null;
 }
 
