@@ -202,6 +202,18 @@ describe("the law as it used to be", () => {
   });
 });
 
+describe("the answer saying what it lacks", () => {
+  // Run 2026-10-05 12:56 a13: a request for details, which the bilateral rule
+  // read as a statement once a bare "me" stopped silencing it.
+  it("is a request, not a rule", () => {
+    expect(
+      addressesTheReader(
+        "I do not have your specific medical records, current diagnoses, or the specific body parts (e.g., which fingers are involved, or if the hands are on the same side) that would allow me to determine if you are eligible for a Bilateral Pair rating.",
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("a sentence that is corrected straight away", () => {
   it("is not asserted when the next sentence gives the right rule", () => {
     expect(

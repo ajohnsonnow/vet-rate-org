@@ -91,6 +91,12 @@ const describesTheOldLaw = any([
 const DATED_BEFORE_2019 =
   /\b(?:in|of|from|during|until|before|dated) (?:\w+ )?(?:19\d\d|200\d|201[0-8])\b/i;
 
+// The answer saying what it lacks in order to decide: a request, not a rule.
+const saysWhatItLacks = any([
+  /\bI (?:do not|don't) have\b|\bwould allow me to\b/,
+  /\bI (?:cannot|can't) (?:determine|tell|say) (?:if|whether)\b/,
+]);
+
 // The sentence, or the one after it, goes on to give the right rule.
 const givesTheRightRule = any([
   /\bthe (?:real|right|correct|actual|current) (?:answer|rule|number|form|figure|term|test) is\b/i,
@@ -120,6 +126,7 @@ export function addressesTheReader(
   if (underDenyingHeading) return false;
   if (framedAsAnError(text) || saysWhatIsExcluded(text)) return false;
   if (attributedToSomeoneElse(text) || tellsOwnPast(text)) return false;
+  if (saysWhatItLacks(text)) return false;
   if (describesTheOldLaw(text)) return false;
   if (!datedClaim && DATED_BEFORE_2019.test(text)) return false;
   return !givesTheRightRule(text) && !givesTheRightRule(plain(next));
