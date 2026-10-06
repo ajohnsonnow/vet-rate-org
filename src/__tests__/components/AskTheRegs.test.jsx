@@ -201,10 +201,10 @@ describe("AskTheRegs while a small-class model would answer (ADR-010 section 11)
     expect(mockGenerateAI).not.toHaveBeenCalled();
     expect(screen.getByText("38 CFR § 4.25")).toBeInTheDocument();
     const note = screen.getByRole("note", {
-      name: "Regulation text, not an AI answer",
+      name: "Search results, not an AI answer",
     });
     expect(note).toHaveTextContent(
-      "This device's AI model is too small to answer questions about the regulations reliably, so it was not used. Below is the regulation text a search found for your question. Read it against your own situation, and check with an accredited VSO before relying on it.",
+      "Search results from the regulations. These are the closest text matches and may not be about your question. Read the section heading before relying on one.",
     );
   });
 
