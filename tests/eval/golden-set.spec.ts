@@ -65,6 +65,7 @@ interface EvalWindow {
         outputCleanup?: unknown;
       } | null;
       clearLastSwarmGeneration(): void;
+      setFrequencyPenaltyOverride(value: number | null): void;
       SWARM_AGENTS: Record<string, { id: string; systemPrompt: string }>;
     };
     ai: {
@@ -556,6 +557,12 @@ test.describe("golden-set evaluation", () => {
     expect(load.loaded, `initializeSwarm failed for ${modelId}`).toBe(true);
     expect(load.modelIdLoaded, "model actually loaded").toBe(modelId);
     expect(load.ready, "generateAI sees the swarm as ready").toBe(true);
+
+    await page.evaluate((value) => {
+      (
+        window as unknown as EvalWindow
+      ).__evalMods!.swarm.setFrequencyPenaltyOverride(value);
+    }, settings.frequencyPenalty);
 
     const personaPrompts = load.personaPrompts as Record<string, string>;
     appendFileSync(

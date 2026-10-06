@@ -242,10 +242,8 @@ function _configForTier(tier) {
 // Hugging Face repository (read 2026-10-05); the others are earlier estimates.
 // smallModel marks the 2B-and-under models (laptop and tablet class); the UI
 // shows a plain caveat on AI answers when the device loads one.
-// frequencyPenalty is sent with plain-text on-device requests; absent means 0.
-// A starting value for the 2B, chosen conservatively after it ran answers into
-// repetition loops in evaluation (ADR-010); tune by evaluation, not measured.
-export const SMALL_MODEL_FREQUENCY_PENALTY = 0.3;
+// frequencyPenalty, when a row has one, is sent with plain-text on-device
+// requests; absent means 0. No row has one: the 2B is at 0 on purpose (ADR-010 §7).
 
 const MODEL_FOOTPRINT = {
   "Qwen3.5-4B-q4f16_1-MLC": {
@@ -257,7 +255,6 @@ const MODEL_FOOTPRINT = {
     displayName: "Qwen 3.5 2B",
     downloadGB: 1.1,
     vramGB: 2.2,
-    frequencyPenalty: SMALL_MODEL_FREQUENCY_PENALTY,
     smallModel: true,
   },
   "Qwen2.5-3B-Instruct-q4f16_1-MLC": {

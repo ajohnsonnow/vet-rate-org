@@ -3,7 +3,7 @@
  * loaded model's row in the device profile table: the 2B (which ran answers
  * into repetition loops in evaluation) gets a modest penalty, the 4B none.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const engineState = vi.hoisted(() => ({ create: vi.fn() }));
 vi.mock("@mlc-ai/web-llm", () => ({
@@ -19,11 +19,12 @@ vi.mock("../../utils/deviceCapabilityDetector", async (importOriginal) => ({
   detectDeviceCapabilities: vi.fn(async () => profile.value),
 }));
 
-import { generateWithSwarm, initializeSwarm } from "../../utils/diamondSwarm";
 import {
-  SMALL_MODEL_FREQUENCY_PENALTY,
-  getModelFrequencyPenalty,
-} from "../../utils/deviceCapabilityDetector";
+  generateWithSwarm,
+  initializeSwarm,
+  setFrequencyPenaltyOverride,
+} from "../../utils/diamondSwarm";
+import { getModelFrequencyPenalty } from "../../utils/deviceCapabilityDetector";
 
 class FakeWorker {
   terminate() {}
@@ -55,26 +56,25 @@ beforeEach(() => {
 });
 
 describe("per-model frequency penalty table", () => {
-  it("starts the 2B at a modest named value and leaves the others at 0", () => {
-    expect(SMALL_MODEL_FREQUENCY_PENALTY).toBeCloseTo(0.3, 5);
-    expect(getModelFrequencyPenalty("Qwen3.5-2B-q4f16_1-MLC")).toBeCloseTo(
-      0.3,
-      5,
-    );
-    expect(getModelFrequencyPenalty("Qwen3.5-4B-q4f16_1-MLC")).toBe(0);
-    expect(getModelFrequencyPenalty("Qwen2.5-1.5B-Instruct-q4f16_1-MLC")).toBe(
-      0,
-    );
-    expect(getModelFrequencyPenalty("Some-New-Model-MLC")).toBe(0);
-    expect(getModelFrequencyPenalty(null)).toBe(0);
+  it("is 0 for every model: the evaluation found a penalty on the 2B cost more than it saved", () => {
+    for (const id of [
+      "Qwen3.5-2B-q4f16_1-MLC",
+      "Qwen3.5-4B-q4f16_1-MLC",
+      "Qwen2.5-1.5B-Instruct-q4f16_1-MLC",
+      "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+      "Some-New-Model-MLC",
+      null,
+    ]) {
+      expect(getModelFrequencyPenalty(id)).toBe(0);
+    }
   });
 });
 
 describe("chat request frequency_penalty", () => {
-  it("is the 2B's penalty for a plain-text answer", async () => {
+  it("is 0 on the 2B for a plain-text answer", async () => {
     await loadModel("Qwen3.5-2B-q4f16_1-MLC");
     await generateWithSwarm("q", { agentId: "auditor" });
-    expect(sentRequest().frequency_penalty).toBeCloseTo(0.3, 5);
+    expect(sentRequest().frequency_penalty).toBe(0);
   });
 
   it("is 0 on the 4B", async () => {
@@ -112,14 +112,42 @@ describe("evaluation override", () => {
   });
 
   it.each([undefined, null, "0.5", Number.NaN, -1, 3])(
-    "ignores %j and keeps the per-model value",
+    "ignores %j and keeps the production value of 0",
     async (bad) => {
       await loadModel("Qwen3.5-2B-q4f16_1-MLC");
       await generateWithSwarm("q", {
         agentId: "auditor",
         frequencyPenalty: bad,
       });
-      expect(sentRequest().frequency_penalty).toBeCloseTo(0.3, 5);
+      expect(sentRequest().frequency_penalty).toBe(0);
     },
   );
+});
+
+describe("evaluation override for every call, including tool functions", () => {
+  afterEach(() => setFrequencyPenaltyOverride(null));
+
+  it("applies to a call that passes no option, as the writing tools' own calls do", async () => {
+    await loadModel("Qwen3.5-2B-q4f16_1-MLC");
+    setFrequencyPenaltyOverride(0.4);
+    await generateWithSwarm("q", { agentId: "auditor" });
+    expect(sentRequest().frequency_penalty).toBeCloseTo(0.4, 5);
+  });
+
+  it("is beaten by an explicit option and cleared by null", async () => {
+    await loadModel("Qwen3.5-2B-q4f16_1-MLC");
+    setFrequencyPenaltyOverride(0.4);
+    await generateWithSwarm("q", { agentId: "auditor", frequencyPenalty: 0.1 });
+    expect(sentRequest().frequency_penalty).toBeCloseTo(0.1, 5);
+    setFrequencyPenaltyOverride(null);
+    await generateWithSwarm("q", { agentId: "auditor" });
+    expect(sentRequest().frequency_penalty).toBe(0);
+  });
+
+  it.each(["0.5", Number.NaN, -1, 3])("ignores %j", async (bad) => {
+    await loadModel("Qwen3.5-2B-q4f16_1-MLC");
+    setFrequencyPenaltyOverride(bad);
+    await generateWithSwarm("q", { agentId: "auditor" });
+    expect(sentRequest().frequency_penalty).toBe(0);
+  });
 });
