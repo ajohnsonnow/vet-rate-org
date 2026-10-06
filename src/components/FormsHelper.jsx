@@ -8103,7 +8103,8 @@ function showAIOutcome(ctx, result) {
   ctx.setAiDraftNote(
     reworded || result.draftErrorReason
       ? null
-      : (rewordingOffNote(result) ?? AI_NO_CHANGE_NOTE),
+      : (rewordingOffNote(result, ctx.t("smallModelCaveat", "rewordingOff")) ??
+          AI_NO_CHANGE_NOTE),
   );
   ctx.setAiError(
     result.draftErrorReason

@@ -7,6 +7,7 @@
  * model call. A larger on-device model and cloud AI are still asked.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { APP_TRANSLATIONS } from "../../i18n/translations";
 import {
   SMALL_MODEL_REWORDING_OFF,
   rewordingOffNote,
@@ -118,5 +119,21 @@ describe("the small-model reason", () => {
       SMALL_MODEL_REWORDING_OFF,
     );
     expect(rewordingOffNote({ draftPath: "template" })).toBeNull();
+  });
+
+  it("is in every language the app ships, and English matches the source", () => {
+    const { rewordingOff } = APP_TRANSLATIONS.smallModelCaveat;
+
+    expect(rewordingOff.en).toBe(SMALL_MODEL_REWORDING_OFF);
+    for (const lang of ["es", "tl", "vi", "ko"]) {
+      expect(rewordingOff[lang].length).toBeGreaterThan(40);
+      expect(rewordingOff[lang]).not.toBe(rewordingOff.en);
+    }
+    expect(
+      rewordingOffNote({ rewordingOff: "small-model" }, rewordingOff.es),
+    ).toBe(rewordingOff.es);
+    expect(rewordingOffNote({ rewordingOff: "small-model" }, "")).toBe(
+      SMALL_MODEL_REWORDING_OFF,
+    );
   });
 });

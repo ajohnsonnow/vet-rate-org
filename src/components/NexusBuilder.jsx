@@ -1056,7 +1056,8 @@ function createAIConsentHandler({
         setDraftNote(
           result.draftErrorReason
             ? null
-            : (rewordingOffNote(result) ?? AI_NO_CHANGE_NOTE),
+            : (rewordingOffNote(result, t("smallModelCaveat.rewordingOff")) ??
+                AI_NO_CHANGE_NOTE),
         );
       } else {
         setAiError(plainAIError(result.error, t));

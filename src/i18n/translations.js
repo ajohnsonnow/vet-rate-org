@@ -2059,6 +2059,13 @@ export const APP_TRANSLATIONS = {
       vi: "Hãy đối chiếu mọi nhận định với tài liệu của chính bạn, và xác nhận các bước nộp hồ sơ với nhân viên VSO được công nhận hoặc trên VA.gov trước khi thực hiện.",
       ko: "모든 내용을 본인의 문서와 대조하고, 조치하기 전에 공인 VSO 또는 VA.gov에서 신청 절차를 확인하세요.",
     },
+    rewordingOff: {
+      en: "The AI on this device is a small one, and small ones changed the meaning of what people wrote, so it is not used to reword statements. Your draft is in your own words, as you typed them.",
+      es: "La IA de este dispositivo es pequeña, y las IA pequeñas cambiaron el sentido de lo que la gente escribió, así que no se usa para reformular declaraciones. Su borrador está en sus propias palabras, tal como las escribió.",
+      tl: "Maliit ang AI sa device na ito, at binago ng maliliit na AI ang kahulugan ng isinulat ng mga tao, kaya hindi ito ginagamit para baguhin ang pananalita ng mga pahayag. Ang draft mo ay nasa sarili mong mga salita, gaya ng pagkaka-type mo.",
+      vi: "AI trên thiết bị này là loại nhỏ, và các AI nhỏ đã làm thay đổi ý nghĩa những gì người dùng viết, nên nó không được dùng để viết lại lời khai. Bản nháp của bạn giữ nguyên lời của chính bạn, đúng như bạn đã gõ.",
+      ko: "이 기기의 AI는 소형 모델이며, 소형 모델은 사람들이 쓴 글의 의미를 바꾼 적이 있어 진술서 문장을 고쳐 쓰는 데 사용하지 않습니다. 초안은 입력하신 그대로 본인의 말로 되어 있습니다.",
+    },
   },
   ai: {
     selectNeuralEngine: {
