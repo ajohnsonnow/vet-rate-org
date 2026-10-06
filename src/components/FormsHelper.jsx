@@ -8085,6 +8085,23 @@ function _buildFormsHelperAIHandlers(ctx) {
   };
 }
 
+/**
+ * The download name for a form's draft: its form number (which already
+ * begins "VA") and the condition, when this form asks for one. A condition
+ * left in the form data by another form is not used.
+ */
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export function _draftFileName(selectedForm, formData) {
+  const asksCondition = _getFormStepsForForm(selectedForm).some((step) =>
+    step.fields.some((field) => field.name === "conditionName"),
+  );
+  const condition = asksCondition ? (formData?.conditionName ?? "").trim() : "";
+  return [selectedForm?.formNumber ?? "VA Form", condition]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, "-");
+}
+
 function _buildFormsHelperDownloadHandlers(ctx) {
   const {
     selectedForm,
@@ -8096,7 +8113,7 @@ function _buildFormsHelperDownloadHandlers(ctx) {
 
   const handleDownload = async (format) => {
     setShowDownloadMenu(false);
-    const fileName = `VA-${selectedForm?.formNumber?.replace(/\s+/g, "-")}-${formData.conditionName?.replace(/\s+/g, "-") || "Statement"}`;
+    const fileName = _draftFileName(selectedForm, formData);
     try {
       await downloadDraft(
         shownDraft(ctx).text || generateContent(),
