@@ -893,6 +893,7 @@ function useGenerateStatement({
         setDraftNote(drafted.draftNote);
       } else {
         statement = compileStatementWithoutAI(relationship, condition, answers);
+        setDraftNote(STANDARD_DRAFT_NOTE);
       }
 
       statement = _finishWitnessStatement(statement, {
