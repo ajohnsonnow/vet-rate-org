@@ -8,6 +8,10 @@ import VAGovRatingPaster from "./VAGovRatingPaster";
 import { useLanguage } from "../contexts/LanguageContext";
 import IgnoredRatingsNotice from "./IgnoredRatingsNotice";
 import {
+  BodyPartSelectField,
+  SideSelectField,
+} from "./ConditionLocationFields";
+import {
   calculateVARating,
   calculateCompensation,
   calculateWhatIf,
@@ -1256,77 +1260,6 @@ function QuickLoadRatingsBanner({
   );
 }
 
-function BodyPartSelectField({
-  t,
-  newCondition,
-  setNewCondition,
-  allBodyParts,
-}) {
-  return (
-    <div className="sm:col-span-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        {t("tacticalCalc", "bodyPartConditionType")}
-      </label>
-      <select
-        aria-label={t("tacticalCalc", "bodyPartConditionType")}
-        value={newCondition.bodyPart}
-        onChange={(e) => {
-          const bp = e.target.value;
-          const info = allBodyParts.find((p) => p.value === bp);
-          setNewCondition((prev) => ({
-            ...prev,
-            bodyPart: bp,
-            side: info?.canBeBilateral ? prev.side : "none",
-          }));
-        }}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-      >
-        <option value="">{t("tacticalCalc", "select")}</option>
-        <optgroup label={t("tacticalCalc", "extremitiesBilateral")}>
-          {BODY_PARTS.extremities.map((bp) => (
-            <option key={bp.value} value={bp.value}>
-              {bp.label}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label={t("tacticalCalc", "otherBodySystems")}>
-          {BODY_PARTS.other.map((bp) => (
-            <option key={bp.value} value={bp.value}>
-              {bp.label}
-            </option>
-          ))}
-        </optgroup>
-      </select>
-    </div>
-  );
-}
-
-function SideSelectField({ t, newCondition, setNewCondition }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        {t("tacticalCalc", "side")}
-      </label>
-      <select
-        aria-label={t("tacticalCalc", "side")}
-        value={newCondition.side}
-        onChange={(e) =>
-          setNewCondition((prev) => ({
-            ...prev,
-            side: e.target.value,
-          }))
-        }
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-      >
-        <option value="none">{t("tacticalCalc", "notBilateral")}</option>
-        <option value="left">{t("tacticalCalc", "left")}</option>
-        <option value="right">{t("tacticalCalc", "right")}</option>
-        <option value="bilateral">{t("tacticalCalc", "bothBilateral")}</option>
-      </select>
-    </div>
-  );
-}
-
 function RatingSelectField({ t, newCondition, setNewCondition }) {
   return (
     <div>
@@ -1488,18 +1421,18 @@ function ConditionRow({
 }) {
   return (
     <div
-      className={`flex items-center justify-between p-3 rounded-lg border ${
+      className={`flex items-center justify-between gap-2 p-3 rounded-lg border ${
         inBilateralGroup
           ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700"
           : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
       }`}
     >
-      <div className="flex items-center gap-3">
-        <span className="w-12 h-12 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span className="w-12 h-12 shrink-0 flex items-center justify-center bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold rounded-lg">
           {condition.rating}%
         </span>
-        <div>
-          <p className="font-medium text-gray-800 dark:text-gray-200">
+        <div className="min-w-0">
+          <p className="break-words font-medium text-gray-800 dark:text-gray-200">
             {condition.name}
           </p>
           <ConditionSideBadge
@@ -1663,9 +1596,11 @@ function CalculatorInputSection({
 function ResultsValidationBadge({ t }) {
   return (
     <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg p-3 border border-green-200 dark:border-green-700">
-      <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
+      <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-green-700 dark:text-green-300">
         <span className="text-lg">✓</span>
-        <span className="font-medium">{t("tacticalCalc", "verifiedPer")}</span>
+        <span className="min-w-0 font-medium">
+          {t("tacticalCalc", "verifiedPer")}
+        </span>
         <span className="text-xs px-2 py-1 bg-green-200 dark:bg-green-800 rounded-full">
           {t("tacticalCalc", "matchesVAGov")}
         </span>
@@ -1676,8 +1611,8 @@ function ResultsValidationBadge({ t }) {
 
 function MainRatingDisplay({ t, results }) {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-6 border border-blue-200 dark:border-blue-700">
-      <div className="flex items-center justify-center gap-6">
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-700">
+      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
         {/* Progress Ring */}
         <div className="relative">
           <ProgressRing
@@ -3334,7 +3269,7 @@ function TacticalCalculatorTabButton({ tab, activeTab, setActiveTab }) {
     <button
       type="button"
       onClick={() => setActiveTab(tab.id)}
-      className={`min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
+      className={`flex-1 sm:flex-none min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 text-xs sm:text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 min-h-[44px] ${getTabButtonClasses(activeTab, tab.id)}`}
     >
       <span className="hidden sm:inline">{tab.label}</span>
       <span className="inline sm:hidden">{tab.shortLabel}</span>
@@ -3356,8 +3291,15 @@ function TacticalCalculatorTabButton({ tab, activeTab, setActiveTab }) {
 function TacticalCalculatorTabNav({ t, activeTab, setActiveTab, capResults }) {
   const tabs = getTacticalCalculatorTabs(t, capResults);
   return (
-    <div className="px-2 sm:px-3 md:px-6 pt-2 sm:pt-3 md:pt-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky top-0 z-10">
-      <nav className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
+    <div
+      data-calculator-tab-bar
+      className="-mx-4 -mt-4 px-6 sm:px-7 md:px-10 pt-6 sm:pt-7 md:pt-8 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 sticky -top-4 z-10"
+    >
+      {/* The dialog body has 16px of padding and a sticky child pins inside
+          it, so the bar is pulled over that padding (-mx-4 -mt-4 -top-4) to
+          keep scrolled rows from showing above and beside it. Tabs wrap on a
+          phone instead of scrolling sideways out of sight. */}
+      <nav className="flex flex-wrap gap-1 pb-1">
         {tabs.map((tab) => (
           <TacticalCalculatorTabButton
             key={tab.id}
@@ -3600,7 +3542,7 @@ function TacticalCalculatorMainModal({
         />
       }
     >
-      <div ref={calculatorContentRef}>
+      <div ref={calculatorContentRef} className="min-w-0">
         {/* Tab Navigation - Sticky */}
         <TacticalCalculatorTabNav
           t={t}

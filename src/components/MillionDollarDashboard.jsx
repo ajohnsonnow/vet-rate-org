@@ -415,9 +415,14 @@ const TheBigNumber = ({ animatedTotal, currentAge }) => (
 // Current Age input field
 const AgeInputField = ({ ageInputValue, setAgeInputValue, setCurrentAge }) => (
   <div>
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm text-gray-400 mb-1">Current Age</label>
+    <label
+      htmlFor="mdd-current-age"
+      className="block text-sm text-gray-400 mb-1"
+    >
+      Current Age
+    </label>
     <input
+      id="mdd-current-age"
       type="number"
       value={ageInputValue}
       onChange={(e) => {
@@ -448,8 +453,9 @@ const AgeInputField = ({ ageInputValue, setAgeInputValue, setCurrentAge }) => (
 const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
   <div className="col-span-2 md:col-span-1">
     <div className="flex justify-between items-center mb-1">
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-      <label className="block text-sm text-gray-400">VA Rating %</label>
+      <label htmlFor="mdd-va-rating" className="block text-sm text-gray-400">
+        VA Rating %
+      </label>
       {hasMyRatings() && (
         <button
           type="button"
@@ -462,13 +468,14 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
       )}
     </div>
     <input
+      id="mdd-va-rating"
       type="range"
       min="0"
       max="100"
       step="10"
       value={rating}
       onChange={(e) => setRating(Number.parseInt(e.target.value))}
-      className="w-full"
+      className="w-full min-h-[44px]"
     />
     <div className="text-center text-2xl font-bold text-white mt-2">
       {rating}%
@@ -480,11 +487,11 @@ const RatingRangeField = ({ rating, setRating, handleLoadMyRatings }) => (
 // State dropdown select (for property tax exemption lookup)
 const StateSelectField = ({ state, setState }) => (
   <div className="col-span-2">
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm text-gray-400 mb-1">
+    <label htmlFor="mdd-state" className="block text-sm text-gray-400 mb-1">
       State (for Property Tax)
     </label>
     <select
+      id="mdd-state"
       value={state}
       onChange={(e) => setState(e.target.value)}
       className="w-full p-3 bg-gray-700 border border-gray-600 rounded-xl text-white"
@@ -522,9 +529,11 @@ const SpouseToggleField = ({ hasSpouse, setHasSpouse }) => (
 // Number of children input
 const ChildrenInputField = ({ numChildren, setNumChildren }) => (
   <div>
-    {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-    <label className="block text-sm text-gray-400 mb-1"># Children</label>
+    <label htmlFor="mdd-children" className="block text-sm text-gray-400 mb-1">
+      # Children
+    </label>
     <input
+      id="mdd-children"
       type="number"
       value={numChildren}
       onChange={(e) =>

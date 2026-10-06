@@ -13,8 +13,18 @@ import ResponsiveModal from "./common/ResponsiveModal";
 import { getMyRatings, hasMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims } from "../utils/claimsStorage";
 import { getCurrentYearRates } from "../data/vaPayRatesHistorical";
-import { calculateVARating, readRating } from "../utils/vaCalculator";
+import {
+  BODY_PARTS,
+  calculateVARating,
+  readRating,
+  sideFromName,
+} from "../utils/vaCalculator";
 import BilateralIssuesSummary from "./BilateralIssuesSummary";
+import {
+  BodyPartSelectField,
+  SideSelectField,
+} from "./ConditionLocationFields";
+import { APP_TRANSLATIONS } from "../i18n/translations";
 
 // Common VA disabilities with typical ratings
 const commonConditions = [
@@ -143,9 +153,87 @@ const runScenarioCalculation = (
 
 // Display name only: the side itself travels in the `side` field.
 const nameWithSide = (condition, side) => {
+  if (sideFromName(condition) === side) return condition;
   if (side === "left") return `${condition} (Left)`;
   if (side === "right") return `${condition} (Right)`;
   return condition;
+};
+
+const ALL_BODY_PARTS = [...BODY_PARTS.extremities, ...BODY_PARTS.other];
+const CUSTOM_RATINGS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+const EMPTY_CUSTOM_CONDITION = { bodyPart: "", side: "none", rating: 10 };
+const englishText = (section, key) => APP_TRANSLATIONS[section]?.[key]?.en;
+
+// A scenario condition of the veteran's own, with the body part and side the
+// calculator needs to decide whether 38 CFR § 4.26 pairs it with another.
+const CustomConditionForm = ({ onAddCondition }) => {
+  const [custom, setCustom] = useState(EMPTY_CUSTOM_CONDITION);
+  const part = ALL_BODY_PARTS.find((bp) => bp.value === custom.bodyPart);
+  const add = () => {
+    onAddCondition({
+      name: nameWithSide(part.label, custom.side),
+      rating: custom.rating,
+      side: custom.side,
+      bodyPart: custom.bodyPart,
+      category: "user",
+    });
+    setCustom(EMPTY_CUSTOM_CONDITION);
+  };
+  return (
+    <div className="mb-4 space-y-3 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-700 dark:bg-purple-900/30">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <BodyPartSelectField
+          t={englishText}
+          newCondition={custom}
+          setNewCondition={setCustom}
+          allBodyParts={ALL_BODY_PARTS}
+        />
+        {part?.canBeBilateral && (
+          <SideSelectField
+            t={englishText}
+            newCondition={custom}
+            setNewCondition={setCustom}
+          />
+        )}
+        <div className="min-w-0">
+          <label
+            htmlFor="sandbox-custom-rating"
+            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            {englishText("tacticalCalc", "ratingPercent")}
+          </label>
+          <select
+            id="sandbox-custom-rating"
+            value={custom.rating}
+            onChange={(e) =>
+              setCustom((prev) => ({
+                ...prev,
+                rating: Number.parseInt(e.target.value),
+              }))
+            }
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+          >
+            {CUSTOM_RATINGS.map((r) => (
+              <option key={r} value={r}>
+                {r}%
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <p className="text-xs text-purple-700 dark:text-purple-300">
+        {englishText("tacticalCalc", "whatIfBilateralRule")}
+      </p>
+      <button
+        type="button"
+        onClick={add}
+        disabled={!part}
+        className="min-h-[44px] rounded bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-500"
+      >
+        Add to scenario
+      </button>
+    </div>
+  );
 };
 
 const loadCurrentClaims = (setCurrentConditions) => {
@@ -414,7 +502,7 @@ const BilateralBonusIndicator = ({ bilateralNames }) => {
       <p className="text-sm text-green-700 dark:text-green-300">
         Applied to {joinNames(bilateralNames)}.
       </p>
-      <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+      <p className="mt-1 text-xs text-green-800 dark:text-green-300">
         38 CFR § 4.26: these ratings are combined first, and 10% of that
         combined value is added before combining with the rest.
       </p>
@@ -449,6 +537,7 @@ const ScenarioCanvas = ({
   onRemoveCondition,
   onLoadMyRatings,
   onClearAll,
+  onAddCondition,
   bilateralNames,
   ratesYear,
 }) => (
@@ -482,6 +571,8 @@ const ScenarioCanvas = ({
         )}
       </div>
     </div>
+
+    <CustomConditionForm onAddCondition={onAddCondition} />
 
     <ScenarioConditions
       currentConditions={currentConditions}
@@ -749,6 +840,7 @@ export default function WhatIfSandbox({ onClose }) {
             loadMyRatings(pendingAnnounceRef, setCurrentConditions)
           }
           onClearAll={clearAll}
+          onAddCondition={addCondition}
           bilateralNames={bilateralNames}
           ratesYear={ratesYear}
         />
