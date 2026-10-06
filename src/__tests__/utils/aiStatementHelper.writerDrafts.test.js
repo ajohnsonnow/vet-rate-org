@@ -101,7 +101,7 @@ const reword = (passage) => {
   const body = /^I\b/.test(passage)
     ? passage
     : passage[0].toLowerCase() + passage.slice(1);
-  return `To put it plainly, ${body}${/[.!?]$/.test(body) ? "" : "."}`;
+  return `And ${body}${/[.!?]$/.test(body) ? "" : "."}`;
 };
 const modelReplies = (reply) =>
   generateAI.mockImplementation(async (prompt) => ({

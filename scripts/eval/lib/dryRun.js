@@ -258,7 +258,7 @@ function cannedRewording(draft, override) {
       ? passage
       : passage[0].toLowerCase() + passage.slice(1);
     const stop = /[.!?]$/.test(body) ? "" : ".";
-    return `To put it plainly, ${body}${stop}${override.rewordAdds ?? ""}`;
+    return `And ${body}${stop}${override.rewordAdds ?? ""}`;
   };
   return draft.passages
     .map((passage, i) => {

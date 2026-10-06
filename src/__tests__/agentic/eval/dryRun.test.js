@@ -160,7 +160,7 @@ describe("dry run tool cases", () => {
       passages: { sent: 3, accepted: 3, unchanged: 0, rejected: 0 },
     });
     expect(byId.get("t01").response).toContain(
-      "To put it plainly, I miss about two shifts a month at the Placeholder warehouse.",
+      "And I miss about two shifts a month at the Placeholder warehouse.",
     );
     expect(byId.get("t02")).toMatchObject({
       draftPath: "template",

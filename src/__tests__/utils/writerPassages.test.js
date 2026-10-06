@@ -73,11 +73,24 @@ describe("checkPassageRewrite accepts", () => {
 
   it("a tidier sentence that keeps its numbers", () => {
     const result = checkPassageRewrite({
-      original: "miss about 2 shifts a month at the warehouse cause of my back",
+      original:
+        "miss about 2 shifts a month at the warehouse because of my back",
       rewrite:
         "I miss about 2 shifts a month at the warehouse because of my back.",
     });
     expect(result.status).toBe("accepted");
+  });
+
+  it("leaves the typed words when a tidier sentence changes a word", () => {
+    const original =
+      "miss about 2 shifts a month at the warehouse cause of my back";
+    const result = checkPassageRewrite({
+      original,
+      rewrite:
+        "I miss about 2 shifts a month at the warehouse because of my back.",
+    });
+    expect(result).toMatchObject({ status: "rejected", text: original });
+    expect(result.reasons.join("; ")).toMatch(/drops "cause"; adds "because"/);
   });
 });
 
@@ -337,13 +350,11 @@ describe("fixed text never changes, whatever the model returns", () => {
     const answers = {
       conditionName: "Sleep apnea",
       primaryCondition: "PTSD",
-      connectionTheory:
-        "nightmares wake me, stop breathing more often those nights",
+      connectionTheory: "stop breathing more often on nights with nightmares",
     };
     const plan = nexusRequestPlan(answers);
     const sent = selectPassages(plan);
-    const reworded =
-      "Nightmares wake me, and I stop breathing more often on those nights.";
+    const reworded = "I stop breathing more often on nights with nightmares.";
     const result = resolvePassageDraft({ plan, sent, reply: `1. ${reworded}` });
 
     expect(result.draftPath).toBe("model");
@@ -380,9 +391,9 @@ describe("rewordings the real model produced (Witness Bench, t04)", () => {
   const original =
     "They leave the room when the fireworks start and do not come back for the evening.";
 
-  it("accepts a change of verb and word order that keeps 'they'", () => {
+  it("accepts a change of word order that keeps every word and 'they'", () => {
     const rewrite =
-      "When the fireworks start, they leave the room and do not return for the evening.";
+      "When the fireworks start, they leave the room and do not come back for the evening.";
     expect(checkPassageRewrite({ original, rewrite })).toEqual({
       status: "accepted",
       text: rewrite,
@@ -393,18 +404,13 @@ describe("rewordings the real model produced (Witness Bench, t04)", () => {
   it.each([
     "The veteran leaves the room when the fireworks start and does not return for the evening.",
     "When fireworks start, the veteran leaves the room and does not return for the evening.",
-  ])(
-    "rejects 'they' turned into 'the veteran', and for that alone: %s",
-    (rewrite) => {
-      expect(checkPassageRewrite({ original, rewrite })).toEqual({
-        status: "rejected",
-        text: original,
-        reasons: [
-          'refers to people differently from the passage: "they" is gone, "veteran" is new',
-        ],
-      });
-    },
-  );
+  ])("rejects 'they' turned into 'the veteran': %s", (rewrite) => {
+    const result = checkPassageRewrite({ original, rewrite });
+    expect(result).toMatchObject({ status: "rejected", text: original });
+    expect(result.reasons).toContain(
+      'refers to people differently from the passage: "they" is gone, "veteran" is new',
+    );
+  });
 
   it.each([
     [
@@ -459,7 +465,7 @@ describe("resolvePassageDraft records each passage", () => {
         before: "A vehicle rolled over beside me on the range",
         after: "In 2009 a vehicle rolled over beside me on the range.",
         verdict: "rejected",
-        reasons: ['adds number "2009"'],
+        reasons: ['adds number "2009"', 'adds "2009"'],
       },
       {
         number: 2,
@@ -568,7 +574,7 @@ describe("a rewording that keeps the passage's way of referring to people", () =
         original:
           "They leave the room when the fireworks start and do not come back for the evening.",
         rewrite:
-          "When the fireworks start, they leave the room and do not return for the evening.",
+          "When the fireworks start, they leave the room and do not come back for the evening.",
       }).status,
     ).toBe("accepted");
     expect(

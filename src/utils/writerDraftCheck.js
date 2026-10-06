@@ -22,18 +22,23 @@
  *      or diagnosis;
  *   6. it refers to people the way the passage does: the same pronouns, no
  *      "the veteran" for "they", no first person turned into third.
+ *   7. it is the passage's own words (passageFaithfulness.js): every main
+ *      word kept, none added, cause and contrast words kept, no change of
+ *      tense, no verb made into a noun, no "I" where the passage had only
+ *      "me". Only a veteran's own passages are ever sent; a witness's are
+ *      not, and a small on-device model is not asked at all.
  *
  * A rewording that fails keeps the writer's own words. The check errs
  * toward rejecting: a rejected good rewording costs some polish, an
  * accepted invented fact goes into sworn evidence.
  */
 
+import { faithfulnessProblems } from "./passageFaithfulness.js";
 import { standardDraftNote } from "./writerTemplates.js";
 
 export const DRAFT_PATH = { MODEL: "model", TEMPLATE: "template" };
 
 const MIN_WORDING_KEPT = 0.6;
-const MAX_NEW_WORDING = 0.45;
 
 const lower = (value) => String(value ?? "").toLowerCase();
 const squash = (value) => lower(value).replace(/\s+/g, " ").trim();
@@ -705,7 +710,6 @@ const sameWording = (a, b) => {
 
 const MAX_PASSAGE_GROWTH = 1.75;
 const PASSAGE_GROWTH_ALLOWANCE = 40;
-const MIN_NEW_WORDS_ALLOWED = 2;
 
 const PRONOUN_FAMILIES = {
   I: "i me my mine myself i'm i've i'd i'll we us our ours".split(" "),
@@ -801,15 +805,7 @@ function passageProblems(original, rewrite, keep) {
   ) {
     problems.push("much longer than the passage");
   }
-  const known = stemSet(original);
-  const words = contentWords(rewrite);
-  const added = words.filter((word) => !known.has(word));
-  if (
-    added.length >
-    Math.max(MIN_NEW_WORDS_ALLOWED, Math.floor(MAX_NEW_WORDING * words.length))
-  ) {
-    problems.push(`${added.length} of its ${words.length} main words are new`);
-  }
+  problems.push(...faithfulnessProblems(original, rewrite));
   return problems;
 }
 
