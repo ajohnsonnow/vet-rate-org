@@ -133,7 +133,7 @@ describe("answers the form has no place for", () => {
     ["Intent to File", /list of conditions has no place on this form/],
     [
       "Medical Records Release",
-      /For you to complete on the form: each provider you listed.*kinds of records.*instructions/,
+      /no box for a provider's phone or fax number.*For you to complete on the form: the kinds of records and any instructions/,
     ],
     ["VSO Appointment", /organization's address has no place on this form/],
   ])("%s: the note about the official PDF names them", (formName, named) => {

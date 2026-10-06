@@ -43,6 +43,32 @@ const LOCAL_FORM_PATHS = {
  * pdfFormFillerFieldOwners.test.js holds every key here to it. Check the
  * tooltip before adding or moving a key.
  */
+// Items 9 to 13 of 21-4142's provider pages repeat one set of fields. The
+// form has no box for a provider's telephone or fax number.
+function provider4142Fields(n) {
+  const i = n - 1;
+  const at = `F[0].#subform[${n <= 2 ? 14 : 15}].`;
+  const address = `${at}Provider_Facility_Address_`;
+  const key = (name) => `provider${n}${name}`;
+  return {
+    [key("Name")]: `${at}Provider_Or_Facility_Name[${i}]`,
+    [key("Conditions")]: `${at}Conditions_You_Are_Being_Treated_For[${i}]`,
+    [key("FromMonth")]: `${at}Month[${2 * i + 1}]`,
+    [key("FromDay")]: `${at}Day[${2 * i + 1}]`,
+    [key("FromYear")]: `${at}Year[${2 * i + 1}]`,
+    [key("ToMonth")]: `${at}Month[${2 * i + 2}]`,
+    [key("ToDay")]: `${at}Day[${2 * i + 2}]`,
+    [key("ToYear")]: `${at}Year[${2 * i + 2}]`,
+    [key("Street")]:
+      `${at}Provider_Facility_Street_Address_NumberAndStreet[${i}]`,
+    [key("Apt")]: `${at}MailingAddress_ApartmentOrUnitNumber[${i}]`,
+    [key("City")]: `${address}City[${i}]`,
+    [key("State")]: `${address}StateOrProvince[${i}]`,
+    [key("Zip5")]: `${address}ZIPOrPostalCode_FirstFiveNumbers[${i}]`,
+    [key("Zip4")]: `${address}ZIPOrPostalCode_LastFourNumbers[${i}]`,
+  };
+}
+
 const VA_FORM_FIELDS = {
   // VA Form 21-10210 - Lay/Witness Statement
   "21-10210": {
@@ -219,6 +245,31 @@ const VA_FORM_FIELDS = {
     phone1: "F[0].Page_1[0].TelephoneNumber_AreaCode[0]",
     phone2: "F[0].Page_1[0].TelephoneNumber_SecondThreeNumbers[0]",
     phone3: "F[0].Page_1[0].TelephoneNumber_LastFourNumbers[0]",
+    page2SSN1:
+      "F[0].#subform[1].VeteransSocialSecurityNumber_FirstThreeNumbers[0]",
+    page2SSN2:
+      "F[0].#subform[1].VeteransSocialSecurityNumber_SecondTwoNumbers[0]",
+    page2SSN3:
+      "F[0].#subform[1].VeteransSocialSecurityNumber_LastFourNumbers[0]",
+    // The provider pages open with the veteran's identification again.
+    page4FirstName: "F[0].#subform[14].VeteranFirstName[0]",
+    page4MiddleInitial: "F[0].#subform[14].VeteranMiddleInitial1[0]",
+    page4LastName: "F[0].#subform[14].VeteranLastName[0]",
+    page4SSN1: "F[0].#subform[14].SSN1[0]",
+    page4SSN2: "F[0].#subform[14].SSN2[0]",
+    page4SSN3: "F[0].#subform[14].SSN3[0]",
+    page4FileNumber: "F[0].#subform[14].VAFileNumber[0]",
+    page4DobMonth: "F[0].#subform[14].Month[0]",
+    page4DobDay: "F[0].#subform[14].Day[0]",
+    page4DobYear: "F[0].#subform[14].Year[0]",
+    page4ServiceNumber:
+      "F[0].#subform[14].VeteransServiceNumber_If_Applicable[0]",
+    page5SSN1: "F[0].#subform[15].SSN1[1]",
+    page5SSN2: "F[0].#subform[15].SSN2[1]",
+    page5SSN3: "F[0].#subform[15].SSN3[1]",
+    ...provider4142Fields(1),
+    ...provider4142Fields(2),
+    ...provider4142Fields(3),
   },
 
   // VA Form 20-10207 - Priority Processing
@@ -777,13 +828,19 @@ function parseZipParts(zip, label = "ZIP code") {
 }
 
 // The form's apartment box holds five characters and is already labelled,
-// so "Apt 4B" is written as "4B".
-const APT_WORD = /^(?:apt(?![a-z])\.?|unit(?![a-z])|#)\s*/i;
+// so "Apt 4B" is written as "4B" and "Suite 4" as "4".
+const APT_WORDS = ["apt.", "apt", "unit", "suite", "ste.", "ste", "#"];
+function withoutAptWord(text) {
+  const lower = text.toLowerCase();
+  const word = APT_WORDS.find(
+    (candidate) =>
+      lower.startsWith(candidate) &&
+      (candidate === "#" || !/^[a-z]/.test(lower.slice(candidate.length))),
+  );
+  return word ? text.slice(word.length).trim() : text;
+}
 const aptForBox = (apt) =>
-  String(apt ?? "")
-    .trim()
-    .replace(APT_WORD, "")
-    .replace(APT_WORD, "");
+  withoutAptWord(withoutAptWord(String(apt ?? "").trim()));
 
 const MAILING_ADDRESS = "Mailing address";
 
@@ -978,11 +1035,11 @@ function setPdfTextField(form, fieldName, value, secondLine) {
  * A whole mailing address or none of it: when any part does not fit its
  * box, no part is written and the address is reported.
  */
-function setWholeAddress(form, fieldMap, address) {
+function setWholeAddress(form, boxNames, address, label = MAILING_ADDRESS) {
   if (!address) return;
   const boxes = ["street", "apt", "city", "state", "country", "zip5", "zip4"]
     .filter((key) => address[key])
-    .map((key) => [textFieldNamed(form, fieldMap[key]), address[key]]);
+    .map((key) => [textFieldNamed(form, boxNames[key]), address[key]]);
   const fits = ([field, value]) => {
     if (!field) return false;
     const max = field.getMaxLength();
@@ -991,7 +1048,7 @@ function setWholeAddress(form, fieldMap, address) {
   };
   const whole = address.street && address.city && address.state && address.zip5;
   if (!whole || !boxes.every(fits)) {
-    reportNotPlaced(MAILING_ADDRESS);
+    reportNotPlaced(label);
     return;
   }
   for (const [field, value] of boxes) field.setText(value);
@@ -2114,24 +2171,93 @@ function fill21_4142_VeteranInfo(setTextField, fieldMap, data) {
   const ssn = parseSSNParts(data.ssn || data.veteranSSN);
   const dob = parseDOBParts(data.dob || data.veteranDOB);
   const phone = parsePhoneParts(data.phone || data.veteranPhone);
+  const middle = nameParts.length > 2 ? nameParts[1]?.[0] : "";
+  const last = nameParts[nameParts.length - 1];
 
   setTextField(fieldMap.veteranFirstName, nameParts[0]);
-  setTextField(
-    fieldMap.veteranMiddleInitial,
-    nameParts.length > 2 ? nameParts[1]?.[0] : "",
-  );
-  setTextField(fieldMap.veteranLastName, nameParts[nameParts.length - 1]);
-  setTextField(fieldMap.veteranSSN1, ssn.first);
-  setTextField(fieldMap.veteranSSN2, ssn.middle);
-  setTextField(fieldMap.veteranSSN3, ssn.last);
+  setTextField(fieldMap.veteranMiddleInitial, middle);
+  setTextField(fieldMap.veteranLastName, last);
+  setTextField(fieldMap.page4FirstName, nameParts[0]);
+  setTextField(fieldMap.page4MiddleInitial, middle);
+  setTextField(fieldMap.page4LastName, last);
+  for (const boxes of ["veteranSSN", "page2SSN", "page4SSN", "page5SSN"]) {
+    setTextField(fieldMap[`${boxes}1`], ssn.first);
+    setTextField(fieldMap[`${boxes}2`], ssn.middle);
+    setTextField(fieldMap[`${boxes}3`], ssn.last);
+  }
   setTextField(fieldMap.vaFileNumber, data.vaFileNumber || "");
+  setTextField(fieldMap.page4FileNumber, data.vaFileNumber || "");
   setTextField(fieldMap.dobMonth, dob.month);
   setTextField(fieldMap.dobDay, dob.day);
   setTextField(fieldMap.dobYear, dob.year);
+  setTextField(fieldMap.page4DobMonth, dob.month);
+  setTextField(fieldMap.page4DobDay, dob.day);
+  setTextField(fieldMap.page4DobYear, dob.year);
   setTextField(fieldMap.serviceNumber, data.serviceNumber || "");
+  setTextField(fieldMap.page4ServiceNumber, data.serviceNumber || "");
   setTextField(fieldMap.phone1, phone.area);
   setTextField(fieldMap.phone2, phone.prefix);
   setTextField(fieldMap.phone3, phone.line);
+}
+
+const DATE_JOINERS = new Set(["-", "–", "to", "through"]);
+const ONGOING = new Set(["", "present", "now", "current", "ongoing"]);
+
+/**
+ * Dates of treatment typed as one answer, as the form's from and to boxes:
+ * "03/15/2019 - 06/30/2022", or a from date alone or followed by "present".
+ * Anything else is null: the app does not make a day or a month up.
+ */
+function treatmentDates(typed) {
+  const sides = [""];
+  for (const word of String(typed).trim().split(/\s+/)) {
+    if (DATE_JOINERS.has(word.toLowerCase())) sides.push("");
+    else sides[sides.length - 1] = `${sides[sides.length - 1]} ${word}`.trim();
+  }
+  if (sides.length > 2) return null;
+  const start = fullDateParts(sides[0]);
+  const to = (sides[1] ?? "").toLowerCase();
+  const end = ONGOING.has(to)
+    ? { month: "", day: "", year: "" }
+    : fullDateParts(to);
+  return start && end ? { start, end } : null;
+}
+
+/** One provider the wizard asked about, in the form's item for it. */
+function fill21_4142_Provider(form, setTextField, fieldMap, data, n) {
+  const key = (name) => `provider${n}${name}`;
+  const box = (name) => fieldMap[key(name)];
+  setTextField(box("Name"), data[key("Name")]);
+  setTextField(box("Conditions"), data[key("Conditions")]);
+
+  if (given(data[key("Dates")])) {
+    const dates = treatmentDates(data[key("Dates")]);
+    if (dates) {
+      setTextField(box("FromMonth"), dates.start.month);
+      setTextField(box("FromDay"), dates.start.day);
+      setTextField(box("FromYear"), dates.start.year);
+      setTextField(box("ToMonth"), dates.end.month);
+      setTextField(box("ToDay"), dates.end.day);
+      setTextField(box("ToYear"), dates.end.year);
+    } else {
+      reportNotPlaced(`Provider ${n} dates of treatment`);
+    }
+  }
+
+  if (given(data[key("Address")])) {
+    const label = `Provider ${n} address`;
+    const address = splitAddress(data[key("Address")]);
+    if (!address) reportNotPlaced(label);
+    const boxNames = {
+      street: box("Street"),
+      apt: box("Apt"),
+      city: box("City"),
+      state: box("State"),
+      zip5: box("Zip5"),
+      zip4: box("Zip4"),
+    };
+    setWholeAddress(form, boxNames, address, label);
+  }
 }
 
 export async function fillForm21_4142(data) {
@@ -2149,6 +2275,9 @@ export async function fillForm21_4142(data) {
 
       fill21_4142_VeteranInfo(setTextField, fieldMap, data);
       setWholeAddress(form, fieldMap, mailingAddressFrom(data));
+      for (const n of [1, 2, 3]) {
+        fill21_4142_Provider(form, setTextField, fieldMap, data, n);
+      }
 
       return await pdfDoc.save();
     } catch (error) {

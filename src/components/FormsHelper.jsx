@@ -1107,7 +1107,7 @@ const medicalReleaseSteps = [
         label: "Dates of Treatment",
         type: "text",
         required: true,
-        placeholder: "January 2020 - Present / 03/2019 - 06/2022",
+        placeholder: "03/15/2019 - 06/30/2022, or 03/15/2019 - Present",
       },
       {
         name: "provider1Conditions",
@@ -1146,7 +1146,7 @@ const medicalReleaseSteps = [
         name: "provider2Dates",
         label: "Dates of Treatment",
         type: "text",
-        placeholder: "January 2020 - Present",
+        placeholder: "03/15/2019 - 06/30/2022",
       },
       {
         name: "provider2Conditions",
@@ -1184,7 +1184,7 @@ const medicalReleaseSteps = [
         name: "provider3Dates",
         label: "Dates of Treatment",
         type: "text",
-        placeholder: "January 2020 - Present",
+        placeholder: "03/15/2019 - 06/30/2022",
       },
       {
         name: "provider3Conditions",
@@ -5032,7 +5032,7 @@ const OFFICIAL_PDF_NOTES = {
   "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box and carries over to the box on the next page when it is long. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
   "vso-appointment": `Filled in from your answers: your name, contact details and address in the veteran's section, and the organization's name. The organization's address has no place on this form and is not on it. For you to complete on the form: the claimant section if the claimant is not you, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
   "intent-to-file": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone, e-mail and the type of benefit. Your list of conditions has no place on this form and is not on it. For you to complete on the form: anything still blank, your signature and the date.`,
-  "medical-release": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address and phone. For you to complete on the form: each provider you listed (name, address, phone, dates of treatment and conditions), the kinds of records and any instructions, which are in the text downloads to copy from, then anything still blank, your signature and the date.`,
+  "medical-release": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address and phone, and for each provider its name, address, dates of treatment and the conditions treated. The form has no box for a provider's phone or fax number, so those are not on it. For you to complete on the form: the kinds of records and any instructions, which are in the text downloads to copy from, then anything still blank, your signature and the date.`,
   "priority-processing": `Filled in from your answers: your name, Social Security number, date of birth, VA file number, mailing address, phone and e-mail, and a box in item 17 for each of these reasons you chose: former prisoner of war, very seriously or seriously injured or ill, ALS, extreme financial hardship, terminal illness, Medal of Honor or Purple Heart, age 85 or older. For you to complete on the form: the housing questions in item 16 if you are homeless or at risk, the dates of confinement if you were a prisoner of war, the medical treatment section, anything still blank, your signature and the date. Your other reasons, the details of your pending claim, your explanation, your supporting documents and your urgent contact have no place on this form; they are in the text downloads to attach.`,
   "vso-appointment-individual": `Filled in from your answers: your name, contact details and address in the veteran's section, and your representative's name and address. The firm or organization name is not written on the form, because its organization line is only for a service organization representative. For you to complete on the form: the claimant section if the claimant is not you, the type of representative, every authorization box (none is ticked for you), anything still blank, your signature and the date.`,
 };

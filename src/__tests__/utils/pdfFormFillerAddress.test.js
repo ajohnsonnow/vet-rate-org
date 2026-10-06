@@ -171,6 +171,9 @@ describe("the apartment box", () => {
     ["Unit 7", "7"],
     ["#3C", "3C"],
     ["Apt #9", "9"],
+    ["Suite 4", "4"],
+    ["Ste. 12", "12"],
+    ["Stern", "Stern"],
     ["4B", "4B"],
     ["Upper", "Upper"],
   ])("takes %s as %s", async (apt, written) => {
