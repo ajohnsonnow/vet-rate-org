@@ -19,3 +19,13 @@ describe("on-device model size copy", () => {
     }
   });
 });
+
+describe("warm-up copy states no unmeasured minutes", () => {
+  it("carries no minute ranges, only the reasons", () => {
+    for (const phase of Object.values(AI_WARMUP)) {
+      expect(phase.minMin).toBeUndefined();
+      expect(phase.maxMin).toBeUndefined();
+      expect(phase.reason).not.toMatch(/\d{1,3}-\d{1,3} min/);
+    }
+  });
+});

@@ -18,6 +18,8 @@ import {
   useDeviceCapability,
   DEVICE_TIERS,
 } from "../utils/useDeviceCapability";
+import DeviceCapabilityCard from "./DeviceCapabilityCard";
+import GeminiApiKeyForm from "./GeminiApiKeyForm";
 import TokenLimitConfig from "./TokenLimitConfig";
 import PresetSelector from "./PresetSelector";
 import ReportBugLink from "./ReportBugLink";
@@ -56,13 +58,6 @@ const getLocalAICardBorderClass = (aiStatus, webGPUStatus) => {
     return "border-gray-200 bg-gray-50 hover:border-cyan-500/50 dark:border-gray-700 dark:bg-gray-800/50";
   }
   return "border-gray-200 bg-gray-50 opacity-60 dark:border-gray-700 dark:bg-gray-800/30";
-};
-
-const getDeviceTierLabel = (tier) => {
-  if (tier === DEVICE_TIERS.HIGH_END) return "🚀 High-End";
-  if (tier === DEVICE_TIERS.MID_RANGE) return "⚡ Mid-Range";
-  if (tier === DEVICE_TIERS.LEGACY) return "📱 Legacy";
-  return "❓ Unknown";
 };
 
 async function checkWebGPU(setWebGPUStatus) {
@@ -771,64 +766,6 @@ function LocalAICard({
   );
 }
 
-function GeminiApiKeyForm({
-  apiKey,
-  setApiKey,
-  showApiKey,
-  setShowApiKey,
-  apiKeySaved,
-  onSave,
-  onClear,
-}) {
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="relative">
-        <input
-          type={showApiKey ? "text" : "password"}
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="Enter Gemini API key..."
-          className="w-full rounded-lg border-2 border-gray-300 bg-white px-4 py-2 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-        />
-        <button
-          type="button"
-          onClick={() => setShowApiKey(!showApiKey)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-white"
-        >
-          {showApiKey ? "👁️" : "👁️‍🗨️"}
-        </button>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          onClick={onSave}
-          disabled={!apiKey.trim()}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-        >
-          {apiKeySaved ? "✓ Saved!" : "💾 Save Key"}
-        </button>
-        {apiKey && (
-          <button
-            onClick={onClear}
-            className="rounded-lg bg-red-100 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/30"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-
-      <a
-        href="https://aistudio.google.com/app/apikey"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
-      >
-        🔗 Get free API key from Google AI Studio →
-      </a>
-    </div>
-  );
-}
-
 function CloudAICard({
   aiStatus,
   deviceCapability,
@@ -999,46 +936,7 @@ function SetupTab({
   );
 }
 
-function DeviceCapabilityCard({ deviceCapability, webGPUStatus }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-      <h4 className="mb-3 flex items-center gap-2 font-bold text-gray-900 dark:text-white">
-        <span>📱</span> Device Capability
-      </h4>
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
-          <p className="text-xs text-gray-500">Device Tier</p>
-          <p className="font-semibold text-gray-900 dark:text-white">
-            {getDeviceTierLabel(deviceCapability.tier)}
-          </p>
-        </div>
-        <div className="rounded-lg bg-white p-3 dark:bg-gray-900/50">
-          <p className="text-xs text-gray-500">WebGPU</p>
-          <p
-            className={`font-semibold ${webGPUStatus.supported ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-          >
-            {webGPUStatus.supported ? "✅ Supported" : "❌ Not Available"}
-          </p>
-        </div>
-        {webGPUStatus.supported && webGPUStatus.device && (
-          <div className="col-span-2 rounded-lg bg-white p-3 dark:bg-gray-900/50">
-            <p className="text-xs text-gray-500">Active GPU</p>
-            <p className="font-semibold text-cyan-600 dark:text-cyan-400">
-              {webGPUStatus.device}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AdvancedTab({
-  selectedPreset,
-  onPresetChange,
-  webGPUStatus,
-  deviceCapability,
-}) {
+function AdvancedTab({ selectedPreset, onPresetChange, webGPUStatus }) {
   return (
     <>
       {/* Token Limit */}
@@ -1093,10 +991,7 @@ function AdvancedTab({
       </div>
 
       {/* Device Info */}
-      <DeviceCapabilityCard
-        deviceCapability={deviceCapability}
-        webGPUStatus={webGPUStatus}
-      />
+      <DeviceCapabilityCard webGPUStatus={webGPUStatus} />
     </>
   );
 }
@@ -1204,7 +1099,6 @@ const AICommandCenter = ({ onClose, onReportBug }) => {
             selectedPreset={selectedPreset}
             onPresetChange={handlePresetChange}
             webGPUStatus={webGPUStatus}
-            deviceCapability={deviceCapability}
           />
         )}
       </div>

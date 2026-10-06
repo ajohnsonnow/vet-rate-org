@@ -9,7 +9,7 @@
  * - BALANCED: General purpose (temp 0.7)
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { AI_PRESETS } from "../utils/unifiedAIService";
 
 const CurrentPresetDetails = ({
@@ -138,6 +138,7 @@ const PresetExplanations = () => (
 const PresetSelector = ({ value, onChange, className = "" }) => {
   const [selectedPreset, setSelectedPreset] = useState(value || "BALANCED");
   const [showDetails, setShowDetails] = useState(false);
+  const selectId = useId();
 
   useEffect(() => {
     if (value) setSelectedPreset(value);
@@ -156,12 +157,15 @@ const PresetSelector = ({ value, onChange, className = "" }) => {
     <div className={`space-y-3 ${className}`}>
       {/* Preset Selector */}
       <div>
-        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          htmlFor={selectId}
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           AI Configuration Preset
         </label>
 
         <select
+          id={selectId}
           value={selectedPreset}
           onChange={(e) => handleChange(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"

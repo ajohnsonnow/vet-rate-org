@@ -4,12 +4,9 @@
  * Automatically detects device, recommends best model, handles switching
  */
 
+import { describeDeviceClass, useDeviceProfile } from "../utils/deviceLabels";
 import { useState, useEffect } from "react";
-import {
-  checkModelMatch,
-  smartLoadAI,
-  getDeviceType,
-} from "../utils/smartAILoader";
+import { checkModelMatch, smartLoadAI } from "../utils/smartAILoader";
 
 const ConfigErrorNotice = ({ toolId }) => (
   <div className="p-4 bg-red-900/20 border border-red-700 rounded-xl">
@@ -45,7 +42,7 @@ const AIReadyNotice = ({ compact, check, deviceType }) => {
         <div>
           <h4 className="text-green-300 font-semibold text-sm">AI Ready</h4>
           <p className="text-green-400 text-xs mt-1">
-            {check.recommendedModel.name} loaded for {deviceType} device
+            {check.recommendedModel.name} loaded ({deviceType})
           </p>
           <p className="text-green-500/70 text-xs mt-1">
             {check.recommendedModel.reason}
@@ -95,7 +92,7 @@ const AILoadPrompt = ({ check, deviceType, onLoad, loadError }) => (
             : "Load AI for This Tool"}
         </h4>
         <p className="text-cyan-400 text-xs mt-1">
-          Device: <span className="font-medium capitalize">{deviceType}</span>
+          Device: <span className="font-medium">{deviceType}</span>
         </p>
         <p className="text-cyan-400 text-xs">
           Recommended:{" "}
@@ -135,14 +132,13 @@ const SmartAILoadButton = ({
   const [check, setCheck] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState({ value: 0, text: "" });
-  const [deviceType, setDeviceType] = useState("");
+  const deviceType = describeDeviceClass(useDeviceProfile()).label;
   const [loadError, setLoadError] = useState(null);
 
   // Check AI status on mount and periodically
   useEffect(() => {
     const updateStatus = () => {
       setCheck(checkModelMatch(toolId));
-      setDeviceType(getDeviceType());
     };
 
     updateStatus();

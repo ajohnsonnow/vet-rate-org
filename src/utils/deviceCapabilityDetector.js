@@ -318,16 +318,3 @@ export function getModelFrequencyPenalty(modelId) {
 export function getCachedDeviceProfile() {
   return _cachedProfile;
 }
-
-/** Human-readable summary of the device tier for display in the UI. */
-export function getDeviceTierLabel(profile) {
-  if (!profile) return "Unknown device";
-  const labels = {
-    "desktop-high": "High-end desktop",
-    "desktop-mid": "Mid-range desktop",
-    laptop: "Laptop / integrated GPU",
-    tablet: "Tablet",
-    mobile: "Mobile device",
-  };
-  return labels[profile.tier] ?? profile.tier;
-}

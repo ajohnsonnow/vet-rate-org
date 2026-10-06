@@ -4,6 +4,7 @@ import {
   describeDeviceModel,
 } from "../utils/deviceCapabilityDetector";
 import { formatDownloadSize } from "../utils/localModelLabels";
+import { describeDeviceClass } from "../utils/deviceLabels";
 import {
   AI_WARMUP,
   AI_REQUIREMENTS,
@@ -80,7 +81,6 @@ export default function SystemRequirementsNotice({
         noWebGpu={noWebGpu}
         limited={limited}
         gpuName={gpuName}
-        warmup={warmup}
       />
     );
   }
@@ -120,7 +120,6 @@ export default function SystemRequirementsNotice({
     <CompatibleNotice
       profile={profile}
       gpuName={gpuName}
-      warmup={warmup}
       timeEstimate={timeEstimate}
       showWhy={showWhy}
       setShowWhy={setShowWhy}
@@ -130,7 +129,7 @@ export default function SystemRequirementsNotice({
   );
 }
 
-function CompactNotice({ profile, noWebGpu, limited, gpuName, warmup }) {
+function CompactNotice({ profile, noWebGpu, limited, gpuName }) {
   if (profile.isMobile || profile.isTablet) {
     return (
       <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
@@ -168,7 +167,7 @@ function CompactNotice({ profile, noWebGpu, limited, gpuName, warmup }) {
       <span aria-hidden="true">✓</span>
       <span>
         {gpuName ? `Compatible - ${gpuName}` : "Compatible GPU detected"}
-        {" · "}First run: {warmup.minMin}-{warmup.maxMin} min browser setup
+        {" · "}First run: one-time download and browser setup
       </span>
     </div>
   );
@@ -281,7 +280,6 @@ function LimitedNotice({
 function CompatibleNotice({
   profile,
   gpuName,
-  warmup,
   timeEstimate,
   showWhy,
   setShowWhy,
@@ -298,7 +296,7 @@ function CompatibleNotice({
         </span>
         <div className="flex-1">
           <p className="font-semibold text-green-800 dark:text-green-200 text-sm">
-            Compatible{isHigh ? " - high-performance GPU" : " - mid-range GPU"}
+            Compatible - {describeDeviceClass(profile).gpuClass}
             {gpuName && (
               <span className="font-normal ml-2 text-green-700 dark:text-green-400">
                 ({gpuName})
@@ -309,12 +307,12 @@ function CompatibleNotice({
             On-device AI is supported. No data leaves your device.
           </p>
           <p className="text-green-700 dark:text-green-300 text-xs mt-1">
-            <strong>First run:</strong> allow {warmup.minMin}-{warmup.maxMin}{" "}
-            minutes for one-time browser setup (compiling GPU programs +
-            downloading {deviceModel?.displayName ?? "the AI model"},{" "}
-            {formatDownloadSize(deviceModel)}). <strong>After that:</strong>{" "}
-            {AI_WARMUP.subsequentRun.minMin}-{AI_WARMUP.subsequentRun.maxMin}{" "}
-            min to start each session.
+            <strong>First run:</strong> a one-time download of{" "}
+            {deviceModel?.displayName ?? "the AI model"} (
+            {formatDownloadSize(deviceModel)}) and one-time browser setup
+            (compiling GPU programs). This can take several minutes, or longer
+            on slower devices. <strong>After that:</strong> the model loads from
+            your device each session, with no new download.
           </p>
           {timeEstimate && (
             <p className="text-green-700 dark:text-green-300 text-xs mt-1 font-medium">
@@ -388,18 +386,11 @@ function WhyExplanation({ warmup }) {
         your documents never leave your device.
       </p>
       <p>
-        <strong>
-          First-run setup ({warmup.minMin}-{warmup.maxMin} min, one time only):
-        </strong>{" "}
-        {warmup.reason} After this, subsequent sessions skip compilation
-        entirely.
+        <strong>First-run setup (one time only):</strong> {warmup.reason} After
+        this, subsequent sessions skip compilation entirely.
       </p>
       <p>
-        <strong>
-          Per-session load ({AI_WARMUP.subsequentRun.minMin}-
-          {AI_WARMUP.subsequentRun.maxMin} min):
-        </strong>{" "}
-        {AI_WARMUP.subsequentRun.reason}
+        <strong>Loading each session:</strong> {AI_WARMUP.subsequentRun.reason}
       </p>
       <p>
         Large C-Files are split into sections (chunks) and analyzed one at a
