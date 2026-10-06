@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { checkBilateralFactorCompliance } from "../utils/vaCalculator";
 import {
   BilateralCheckCard,
-  buildRetroPayAlerts,
   formatBilateralPromptBlock,
   bilateralSaveFields,
   formatRetroPayFindings,
@@ -38,8 +39,28 @@ describe("RetroPayHunter presents the bilateral factor as something to check", (
     ).toBeInTheDocument();
   });
 
-  it("keeps the bilateral check out of the issues list", () => {
-    expect(buildRetroPayAlerts()).toEqual([]);
+  it("has no alert list at all: the tool reads no decision, so it can establish no error", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src", "components", "RetroPayHunter.jsx"),
+      "utf8",
+    );
+    for (const gone of [
+      "Potential Issues Detected",
+      "Potential CUE Issues",
+      "cueAlerts",
+      "severity:",
+      "🚨",
+    ]) {
+      expect(source).not.toContain(gone);
+    }
+  });
+
+  it("shows the bilateral check as information, not as a warning or an error", () => {
+    const { container } = render(<BilateralCheckCard bilateralCheck={knees} />);
+    const card = container.firstChild;
+    expect(card.className).toMatch(/blue/);
+    expect(card.className).not.toMatch(/red|yellow|amber/);
+    expect(card).not.toHaveAttribute("role", "alert");
   });
 
   it("gives the AI a block that says to check, with no issue or CUE wording", () => {
