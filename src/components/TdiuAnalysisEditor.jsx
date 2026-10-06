@@ -14,6 +14,7 @@ import {
   TDIU_WORK_TYPES,
   buildTdiuAnalysisTemplate,
   tdiuUnfilledBlanks,
+  tdiuWorkTypesChosen,
 } from "../utils/writerTemplates";
 
 const FIELD_CLASS =
@@ -82,21 +83,23 @@ const SAVE_MESSAGES = {
   failed: "Could not save to My Packet. Please try again.",
 };
 
-function SaveControl({ unfilled, onSave, saveState }) {
+function SaveControl({ unfilled, workTypesChosen, onSave, saveState }) {
   return (
     <div className={CARD_CLASS}>
-      {unfilled > 0 && (
+      {(unfilled > 0 || !workTypesChosen) && (
         <p
           role="status"
-          aria-label="Blanks to fill in"
+          aria-label="Still to do"
           className="text-sm text-gray-900 dark:text-gray-100 mb-3"
         >
-          {unfilled === 1
-            ? "1 blank is still to be filled in."
-            : `${unfilled} blanks are still to be filled in.`}{" "}
-          Replace each [bracketed] item above with your own words. You can save
-          now: the text is saved as you see it, and anything with a blank is
-          left out of your saved insights.
+          {unfilled === 1 && "1 blank is still to be filled in. "}
+          {unfilled > 1 && `${unfilled} blanks are still to be filled in. `}
+          {unfilled > 0 &&
+            "Replace each [bracketed] item above with your own words. "}
+          {!workTypesChosen &&
+            "Choose at least one kind of work you cannot do. "}
+          You can save now: the text is saved as you see it, and anything not
+          yet filled in is left out of your saved insights.
         </p>
       )}
       <button
@@ -183,6 +186,7 @@ export default function TdiuAnalysisEditor({
 
       <SaveControl
         unfilled={tdiuUnfilledBlanks(analysis).length}
+        workTypesChosen={tdiuWorkTypesChosen(analysis)}
         onSave={onSave}
         saveState={saveState}
       />

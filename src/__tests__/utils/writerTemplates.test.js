@@ -16,6 +16,7 @@ import {
   tdiuAnalysisText,
   tdiuSavePayload,
   tdiuUnfilledBlanks,
+  tdiuWorkTypesChosen,
 } from "../../utils/writerTemplates";
 
 // Every value below is invented for these tests.
@@ -349,9 +350,17 @@ describe("saving a TDIU analysis", () => {
     job_types_precluded: ["Medium", "Heavy"],
   };
 
-  it("counts every blank still standing", () => {
-    expect(tdiuUnfilledBlanks(template)).toHaveLength(4);
+  it("counts the bracketed blanks in the text, and the work types apart", () => {
+    expect(tdiuUnfilledBlanks(template)).toHaveLength(3);
+    expect(tdiuWorkTypesChosen(template)).toBe(false);
     expect(tdiuUnfilledBlanks(filled)).toEqual([]);
+    expect(tdiuWorkTypesChosen(filled)).toBe(true);
+    expect(
+      tdiuUnfilledBlanks({
+        ...filled,
+        job_types_precluded: template.job_types_precluded,
+      }),
+    ).toEqual([]);
   });
 
   it("saves what the veteran sees, and all insights once nothing is blank", () => {

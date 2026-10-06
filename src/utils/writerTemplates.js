@@ -470,9 +470,19 @@ export function formStatementInputs(formType, formData = {}) {
   }
 }
 
-/** Every blank still standing in a TDIU analysis, one entry per occurrence. */
+/**
+ * Every bracketed blank still standing in the text of a TDIU analysis, one
+ * entry per occurrence. The kinds of work ruled out are ticked, not typed,
+ * so they are reported apart (tdiuWorkTypesChosen).
+ */
 export const tdiuUnfilledBlanks = (analysis) =>
-  listPlaceholders(tdiuAnalysisText(analysis));
+  listPlaceholders(tdiuAnalysisText({ ...analysis, job_types_precluded: [] }));
+
+/** Whether at least one kind of work has been ticked. */
+export const tdiuWorkTypesChosen = (analysis) =>
+  (analysis?.job_types_precluded ?? []).some((type) =>
+    TDIU_WORK_TYPES.includes(type),
+  );
 
 const hasBlank = (value) =>
   listPlaceholders([value].flat().join("\n")).length > 0;
