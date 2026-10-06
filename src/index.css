@@ -73,11 +73,16 @@ input[type="submit"] {
 
 /* Remove default mobile input styling. Checkboxes and radios are excluded:
    with no native appearance they draw no box and no tick at all (0px wide
-   unless a component sized them, and blank even then). */
-input:not([type="checkbox"], [type="radio"]),
+   unless a component sized them, and blank even then). Sliders are excluded
+   too: without it they lose their track and show as a blank filled box. */
+input:not([type="checkbox"], [type="radio"], [type="range"]),
 textarea,
 select {
   appearance: none;
+}
+
+:where(input[type="range"]) {
+  accent-color: rgb(var(--brand-700));
 }
 
 /* A visible default for every checkbox and radio: the native box and tick, a

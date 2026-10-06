@@ -52,10 +52,37 @@ async function settle(page: Page): Promise<void> {
   );
 }
 
+// What a veteran would see as a crash: an uncaught error, or a console error
+// from an error boundary or a null dereference. Layout and contrast checks
+// pass on a screen that recovered from one, so the sweeps collect these and
+// report them against the screen that was open.
+const CRASH_TEXT = /Unhandled error|error boundary|Cannot read properties/i;
+const crashes = new WeakMap<Page, string[]>();
+
+function watchForCrashes(page: Page): void {
+  if (crashes.has(page)) return;
+  const seen: string[] = [];
+  crashes.set(page, seen);
+  page.on("pageerror", (error) => {
+    seen.push(
+      `uncaught error: ${(error.stack ?? error.message).slice(0, 700)}`,
+    );
+  });
+  page.on("console", (message) => {
+    if (message.type() === "error" && CRASH_TEXT.test(message.text())) {
+      seen.push(`console error: ${message.text().slice(0, 700)}`);
+    }
+  });
+}
+
+const takeCrashes = (page: Page, screen: string): Finding[] =>
+  (crashes.get(page)?.splice(0) ?? []).map((problem) => ({ screen, problem }));
+
 export async function bootForSweep(
   page: Page,
   theme: "light" | "dark" = "light",
 ): Promise<void> {
+  watchForCrashes(page);
   await page.addInitScript(
     ({ version, claims, ratings, themeName }) => {
       localStorage.setItem("vet-rate-tos-accepted", "true");
@@ -129,6 +156,7 @@ export async function sweep(
     for (const problem of await visit(page, screen)) {
       findings.push({ screen, problem });
     }
+    findings.push(...takeCrashes(page, screen));
   };
 
   await inspect("Home");
@@ -162,6 +190,7 @@ export async function sweep(
       await inspect(`${tool.name} › ${label || `tab ${i + 1}`}`);
     }
     await closeDialog(page);
+    findings.push(...takeCrashes(page, `${tool.name} (closing)`));
   }
   return { findings, screens };
 }
@@ -458,6 +487,7 @@ export async function sweepStates(
   // Actions have no timeout by default; without one a missing button would
   // hang until the whole test timed out instead of being reported.
   page.setDefaultTimeout(12_000);
+  findings.push(...takeCrashes(page, "Home"));
   for (const state of STATES) {
     try {
       await state.reach(page);
@@ -472,7 +502,9 @@ export async function sweepStates(
         problem: `could not reach this state: ${String(error).split("\n")[0].slice(0, 160)}`,
       });
     }
+    findings.push(...takeCrashes(page, state.name));
     await closeEverything(page);
+    findings.push(...takeCrashes(page, `${state.name} (closing)`));
   }
   return { findings, screens };
 }

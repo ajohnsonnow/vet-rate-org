@@ -825,7 +825,13 @@ const VALID_BODY_PARTS = new Set([
 export const getMyRatings = () => {
   try {
     const saved = localStorage.getItem(RATINGS_KEY);
-    return saved ? JSON.parse(saved) : [];
+    const parsed = saved ? JSON.parse(saved) : [];
+    if (!Array.isArray(parsed)) return [];
+    // A restored backup is written to storage as it is, so entries can be
+    // missing an id or not be objects at all. Screens pick an entry by id.
+    return parsed
+      .filter((r) => r !== null && typeof r === "object" && !Array.isArray(r))
+      .map((r, index) => (r.id ? r : { ...r, id: `rating_restored_${index}` }));
   } catch (error) {
     console.error("Error reading ratings:", error);
     return [];
