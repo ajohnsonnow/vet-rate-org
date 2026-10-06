@@ -791,9 +791,6 @@ const NexusReviewBanners = ({
 // Review-step statement display + doctor's cheat sheet. Split out of
 // NexusStepReview purely to keep its function body under the
 // line-count/complexity limits. Same markup, same behavior.
-const STATEMENT_OUT_OF_STEP =
-  "You kept your edited statement, so it does not include the answer you changed. The notes for your doctor below use your current answers. Edit the statement here if it should say the same.";
-
 const NexusStatementPanels = ({
   useAIVersion,
   aiEnhancedStatement,
@@ -827,7 +824,7 @@ const NexusStatementPanels = ({
           aria-label="Statement and answers differ"
           className="mb-3 p-3 text-sm rounded-lg border-2 border-amber-700 bg-amber-50 dark:bg-amber-900/30 text-gray-900 dark:text-gray-100"
         >
-          {STATEMENT_OUT_OF_STEP}
+          {t("nexusBuilder.statementOutOfStep")}
         </p>
       )}
       <textarea

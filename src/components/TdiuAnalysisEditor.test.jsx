@@ -171,14 +171,41 @@ describe("TdiuAnalysisEditor save control", () => {
     expect(stillToDo()).not.toBeInTheDocument();
   });
 
-  it.each([
-    ["saved", "Saved to My Packet."],
-    ["failed", "Could not save to My Packet. Please try again."],
-  ])("reports a %s save in words", (saveState, message) => {
-    renderEditor(FILLED, { saveState });
+  it("reports a failed save in words", () => {
+    renderEditor(FILLED, { saveState: "failed" });
     expect(
       screen.getByRole("status", { name: "Save result" }).textContent,
-    ).toBe(message);
+    ).toBe("Could not save to My Packet. Please try again.");
+  });
+
+  it("says when what is on screen was saved, on the button and in words", () => {
+    renderEditor(FILLED, {
+      saveState: "saved",
+      savedAt: new Date(2031, 6, 4, 15, 5),
+      isSavedNow: true,
+    });
+
+    const button = screen.getByRole("button", {
+      name: /^Saved to My Packet at 3:05/,
+    });
+    expect(button).toBeDisabled();
+    expect(
+      screen.getByRole("status", { name: "Save result" }).textContent,
+    ).toMatch(/^Saved to My Packet at 3:05.*\.$/);
+  });
+
+  it("offers to save changes once the saved analysis has been edited", () => {
+    renderEditor(FILLED, {
+      savedAt: new Date(2031, 6, 4, 15, 5),
+      isSavedNow: false,
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Save changes to My Packet" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("status", { name: "Save result" }).textContent,
+    ).toBe("");
   });
 
   it("gives controls a 44px touch target and a visible focus style", () => {

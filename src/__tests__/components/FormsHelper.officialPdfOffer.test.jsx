@@ -35,9 +35,9 @@ const WITH_FILLER = [
   "PTSD Stressor Statement",
   "VSO Appointment",
   "Individual Representative",
+  "Priority Processing Request",
 ];
 const WITHOUT_FILLER = [
-  "Priority Processing Request",
   "Third Party Authorization",
   "Freedom of Information Act (FOIA) Request",
   "Alternate Signer Certification",
@@ -73,13 +73,14 @@ beforeEach(() => {
 });
 
 describe("which forms have an official PDF", () => {
-  it("is the seven the app can fill, and not the Priority Processing Request", () => {
+  it("is the eight the app can fill", () => {
     expect(
       [
         "buddy-statement",
         "intent-to-file",
         "medical-release",
         "personal-statement",
+        "priority-processing",
         "ptsd-stressor",
         "vso-appointment",
         "vso-appointment-individual",
@@ -87,7 +88,6 @@ describe("which forms have an official PDF", () => {
     ).toBe(true);
     expect(
       [
-        "priority-processing",
         "third-party-authorization",
         "personal-records-request",
         "alternate-signer",
@@ -133,7 +133,7 @@ describe("answers the form has no place for", () => {
     ["Intent to File", /list of conditions has no place on this form/],
     [
       "Medical Records Release",
-      /For you to complete on the form: each provider you listed.*kinds of records.*instructions/,
+      /no box for a provider's phone or fax number.*For you to complete on the form: the kinds of records and any instructions/,
     ],
     ["VSO Appointment", /organization's address has no place on this form/],
   ])("%s: the note about the official PDF names them", (formName, named) => {
@@ -169,12 +169,12 @@ describe("after the official PDF is made", () => {
     fillAndDownloadForm.mockResolvedValue({
       success: true,
       fileName: "x.pdf",
-      leftBlank: ["Bartholomew-James"],
+      leftBlank: ["Veteran first name", "Organization name (item 15)"],
       overflow: "",
     });
 
     expect((await press()).textContent).toMatch(
-      /left blank for you to write in: Bartholomew-James/,
+      /left blank for you to write in: Veteran first name; Organization name \(item 15\)\./,
     );
   });
 
@@ -228,21 +228,6 @@ describe("after the official PDF is made, answers that are not on it", () => {
     expect((await press()).textContent).toMatch(
       /could not put these answers into the form's boxes as you typed them.*blank for you to write in: Mailing address; ZIP code\./,
     );
-  });
-
-  it("quotes only the start of a long answer it left blank", async () => {
-    fillAndDownloadForm.mockResolvedValue({
-      success: true,
-      fileName: "x.pdf",
-      leftBlank: [`${"word ".repeat(40)}end`],
-      moved: [],
-      overflow: "",
-    });
-    const text = (await press()).textContent;
-
-    expect(text).toMatch(/left blank for you to write in: word word/);
-    expect(text).toContain("...");
-    expect(text.length).toBeLessThan(260);
   });
 
   it("says nothing when everything fitted", async () => {

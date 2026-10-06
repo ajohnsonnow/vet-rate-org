@@ -406,9 +406,8 @@ describe("every free-text box on every form", () => {
       const report = _lastFillReport();
 
       expectInsideItsBox(formNumber, form);
-      for (const value of report.leftBlank) {
-        expect(form.allText()).not.toContain(value);
-      }
+      // Reported by name: none of the long answers is quoted.
+      expect(report.leftBlank.join(" ")).not.toMatch(/[A-Z]{3}\d\d/);
     },
   );
 
@@ -416,6 +415,8 @@ describe("every free-text box on every form", () => {
     const form = await fillSyntheticForm("21-22", fillForm21_22, LONG);
 
     expect(form.text("organizationName")).toBe("");
-    expect(_lastFillReport().leftBlank).toContain(LONG.vsoName);
+    expect(_lastFillReport().leftBlank).toContain(
+      "Organization name (item 15)",
+    );
   });
 });

@@ -11,6 +11,7 @@
  * control that opened the dialog. It never drops to the page body.
  */
 import { useEffect, useId, useRef } from "react";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const BUTTON =
   "min-h-[44px] px-4 py-2 rounded-lg font-semibold border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-700";
@@ -111,6 +112,23 @@ export function EditedDraftDialog({ onKeep, onRebuild, returnFocusTo }) {
       You changed an answer after editing this draft. Your edited draft is still
       here. Rebuilding makes a new draft from your answers and removes your
       edits.
+    </ChoiceDialog>
+  );
+}
+
+/** Asked before a tool closes with an edit that has not been saved. */
+export function UnsavedEditDialog({ onStay, onClose, returnFocusTo }) {
+  const { t } = useLanguage();
+  return (
+    <ChoiceDialog
+      title={t("common", "unsavedEditTitle")}
+      keepLabel={t("common", "unsavedEditStay")}
+      onKeep={onStay}
+      replaceLabel={t("common", "unsavedEditClose")}
+      onReplace={onClose}
+      returnFocusTo={returnFocusTo}
+    >
+      {t("common", "unsavedEditBody")}
     </ChoiceDialog>
   );
 }

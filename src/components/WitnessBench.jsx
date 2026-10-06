@@ -13,6 +13,9 @@
 import { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
+import { UnsavedEditDialog } from "./common/ChoiceDialog";
+import useAskBeforeClose from "../hooks/useAskBeforeClose";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { saveClaim } from "../utils/claimsStorage";
 import {
@@ -582,6 +585,7 @@ function useWizardStepState() {
 
 function useInterviewQAState() {
   const [questions, setQuestions] = useState([]);
+  const [questionsNote, setQuestionsNote] = useState(null);
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
@@ -592,6 +596,8 @@ function useInterviewQAState() {
   return {
     questions,
     setQuestions,
+    questionsNote,
+    setQuestionsNote,
     answers,
     setAnswers,
     updateAnswer,
@@ -625,6 +631,8 @@ function useAIFlowState() {
 
 function useOutputState() {
   const [generatedStatement, setGeneratedStatement] = useState("");
+  // The statement as the app built it, to tell when the witness changed it.
+  const [builtStatement, setBuiltStatement] = useState("");
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [savedItem, setSavedItem] = useState(null);
   const [draftNote, setDraftNote] = useState(null);
@@ -633,6 +641,8 @@ function useOutputState() {
   return {
     generatedStatement,
     setGeneratedStatement,
+    builtStatement,
+    setBuiltStatement,
     draftNote,
     setDraftNote,
     outputError,
@@ -657,6 +667,7 @@ function useStartInterview({
   setConditionCategory,
   setIsLoadingQuestions,
   setQuestions,
+  setQuestionsNote,
   setStep,
 }) {
   return useCallback(async () => {
@@ -669,8 +680,15 @@ function useStartInterview({
     const category = detectConditionCategory(condition);
     setConditionCategory(category);
 
+    // A small on-device model is not asked to write questions.
+    const smallModel =
+      useAI && aiAvailable && smallModelAnswering(getAIStatus());
+    setQuestionsNote(
+      smallModel ? t("witnessBench", "smallModelQuestionsNote") : null,
+    );
+
     // Try AI questions first if available and enabled
-    if (useAI && aiAvailable) {
+    if (useAI && aiAvailable && !smallModel) {
       setIsLoadingQuestions(true);
       try {
         // Load veteran context for smarter questions
@@ -731,12 +749,12 @@ function useGenerateStatement({
     setIsGeneratingStatement(true);
 
     const drafted = _compileWitnessStatement(relationship, condition, answers);
-    output.setGeneratedStatement(
-      _finishWitnessStatement(drafted.statement, {
-        veteranName: await resolveVeteranDisplayName(),
-        witnessName,
-      }),
-    );
+    const built = _finishWitnessStatement(drafted.statement, {
+      veteranName: await resolveVeteranDisplayName(),
+      witnessName,
+    });
+    output.setGeneratedStatement(built);
+    output.setBuiltStatement(built);
     output.setDraftNote(drafted.draftNote);
     setStep(3);
     setIsGeneratingStatement(false);
@@ -760,6 +778,7 @@ function useWitnessBench(t) {
     setConditionCategory: wizard.setConditionCategory,
     setIsLoadingQuestions: ai.setIsLoadingQuestions,
     setQuestions: interview.setQuestions,
+    setQuestionsNote: interview.setQuestionsNote,
     setStep: wizard.setStep,
   });
 
@@ -779,9 +798,11 @@ function useWitnessBench(t) {
     wizard.setRelationship("");
     wizard.setCondition("");
     interview.setQuestions([]);
+    interview.setQuestionsNote(null);
     interview.setAnswers({});
     interview.setCurrentQuestionIndex(0);
     output.setGeneratedStatement("");
+    output.setBuiltStatement("");
     output.setDraftNote(null);
     output.setOutputError(null);
     output.setSavedItem(null);
@@ -1256,6 +1277,7 @@ const QuestionJumpNav = ({
 const InterviewStep = ({
   t,
   questions,
+  questionsNote,
   currentQuestionIndex,
   onSetCurrentQuestionIndex,
   answers,
@@ -1279,6 +1301,15 @@ const InterviewStep = ({
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {questionsNote && (
+        <p
+          role="note"
+          aria-label="About these questions"
+          className="text-sm text-gray-800 dark:text-gray-200"
+        >
+          {questionsNote}
+        </p>
+      )}
       <InterviewProgressBar
         t={t}
         currentQuestionIndex={currentQuestionIndex}
@@ -1462,6 +1493,7 @@ const StatementPreviewPanel = ({
 
     <div className="p-6">
       <textarea
+        id="witness-bench-statement"
         aria-label={t("witnessBench", "yourBuddyStatement")}
         value={generatedStatement}
         onChange={(e) => onGeneratedStatementChange(e.target.value)}
@@ -1638,6 +1670,7 @@ const WitnessBenchStepContent = ({ t, wb, onOpenAISettings }) => {
       <InterviewStep
         t={t}
         questions={wb.interview.questions}
+        questionsNote={wb.interview.questionsNote}
         currentQuestionIndex={wb.interview.currentQuestionIndex}
         onSetCurrentQuestionIndex={wb.interview.setCurrentQuestionIndex}
         answers={wb.interview.answers}
@@ -1663,17 +1696,24 @@ export default function WitnessBench({
   const { t } = useLanguage();
   const witnessContentRef = useRef(null);
   const wb = useWitnessBench(t);
+  const { generatedStatement, builtStatement, savedItem } = wb.output;
+  const closing = useAskBeforeClose(
+    wb.wizard.step === 3 &&
+      generatedStatement !== builtStatement &&
+      generatedStatement !== savedItem?.text,
+    onClose,
+  );
 
   return (
     <ResponsiveModal
       isOpen
-      onClose={onClose}
+      onClose={closing.requestClose}
       size="2xl"
       labelledBy="witness-bench-title"
       header={
         <WitnessBenchHeader
           t={t}
-          onClose={onClose}
+          onClose={closing.requestClose}
           onOpenAISettings={onOpenAISettings}
           onReportBug={onReportBug}
           contentRef={witnessContentRef}
@@ -1693,6 +1733,13 @@ export default function WitnessBench({
           />
         </div>
       </div>
+      {closing.asking && (
+        <UnsavedEditDialog
+          onStay={closing.stay}
+          onClose={closing.closeAnyway}
+          returnFocusTo="witness-bench-statement"
+        />
+      )}
     </ResponsiveModal>
   );
 }
