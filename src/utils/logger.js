@@ -43,7 +43,9 @@ let minLevel = LEVELS.info;
  */
 let consolePassthrough = (() => {
   try {
-    return Boolean(import.meta?.env?.DEV);
+    // Not optional-chained: Vite only defines import.meta.env in a module
+    // whose source contains that exact text.
+    return Boolean(import.meta.env.DEV);
   } catch {
     return false;
   }
