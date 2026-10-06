@@ -105,3 +105,41 @@ describe("ChoiceDialog", () => {
     expect(opener).toHaveFocus();
   });
 });
+
+describe("ChoiceDialog with a place to return focus to", () => {
+  it("goes to the named element when the control that opened it is gone", () => {
+    function Regenerate() {
+      const [step, setStep] = useState("answers");
+      return (
+        <>
+          {step === "answers" && (
+            <button type="button" onClick={() => setStep("asking")}>
+              Generate
+            </button>
+          )}
+          <textarea id="the-draft" aria-label="Draft" />
+          {step === "asking" && (
+            <ChoiceDialog
+              title="You edited this draft"
+              keepLabel="Keep"
+              onKeep={() => setStep("done")}
+              replaceLabel="Rebuild"
+              onReplace={() => setStep("done")}
+              returnFocusTo="the-draft"
+            >
+              Body
+            </ChoiceDialog>
+          )}
+        </>
+      );
+    }
+    render(<Regenerate />);
+    const opener = screen.getByRole("button", { name: "Generate" });
+    opener.focus();
+    fireEvent.click(opener);
+    fireEvent.click(screen.getByRole("button", { name: "Rebuild" }));
+
+    expect(screen.getByRole("textbox", { name: "Draft" })).toHaveFocus();
+    expect(document.body).not.toHaveFocus();
+  });
+});

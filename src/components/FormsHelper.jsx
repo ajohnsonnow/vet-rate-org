@@ -5265,7 +5265,10 @@ function ReviewDownloadSection({
   );
 }
 
-function StatementDraftEditor({ versionLabel, value, onChange }) {
+const DRAFT_OUT_OF_STEP =
+  "You kept your edited draft, so it does not include the answer you changed. The official PDF uses your current answers. Edit the draft here if it should say the same.";
+
+function StatementDraftEditor({ versionLabel, value, onChange, outOfStep }) {
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <label
@@ -5281,9 +5284,23 @@ function StatementDraftEditor({ versionLabel, value, onChange }) {
         You can edit the text here. Downloads and Save to Packet use exactly
         what this box shows.
       </p>
+      {outOfStep && (
+        <p
+          id="forms-helper-draft-out-of-step"
+          role="note"
+          aria-label="Draft and answers differ"
+          className="mx-4 mt-3 p-3 rounded-lg border border-amber-700 bg-amber-50 dark:bg-amber-900/30 text-sm text-amber-950 dark:text-amber-100"
+        >
+          {DRAFT_OUT_OF_STEP}
+        </p>
+      )}
       <textarea
         id="forms-helper-draft"
-        aria-describedby="forms-helper-draft-hint"
+        aria-describedby={
+          outOfStep
+            ? "forms-helper-draft-hint forms-helper-draft-out-of-step"
+            : "forms-helper-draft-hint"
+        }
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={18}
@@ -7576,6 +7593,7 @@ function useFormsHelperAIState() {
   const [savedItem, setSavedItem] = useState(null);
   const [officialPdfNotice, setOfficialPdfNotice] = useState("");
   const [askRebuild, setAskRebuild] = useState(false);
+  const [draftOutOfStep, setDraftOutOfStep] = useState(false);
 
   return {
     draftEdit,
@@ -7588,6 +7606,8 @@ function useFormsHelperAIState() {
     setOfficialPdfNotice,
     askRebuild,
     setAskRebuild,
+    draftOutOfStep,
+    setDraftOutOfStep,
     aiDraftNote,
     setAiDraftNote,
     showAIConsent,
@@ -8000,6 +8020,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     ctx.setDraftEdit(null);
     ctx.setKeptDraft(null);
     ctx.setAskRebuild(false);
+    ctx.setDraftOutOfStep(false);
   };
 
   // Going back to the answers keeps what is in the box when the veteran
@@ -8041,6 +8062,13 @@ function _buildFormsHelperGenerationHandlers(ctx) {
 
   const handleRebuildFromAnswers = () => clearDraftState();
 
+  // Kept after an answer changed: the draft and the answers now differ,
+  // and the screen says so.
+  const handleKeepEditedDraft = () => {
+    ctx.setAskRebuild(false);
+    ctx.setDraftOutOfStep(true);
+  };
+
   const handleStartNewForm = () => {
     clearDraftState();
     ctx.setOfficialPdfNotice("");
@@ -8056,6 +8084,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
     handleFinishWizard,
     handleEditAnswers,
     handleRebuildFromAnswers,
+    handleKeepEditedDraft,
     handleStartNewForm,
   };
 }
@@ -8330,18 +8359,9 @@ function ReviewSuccessMessage({ t }) {
 
 function FormsHelperReviewStep({ state, handlers }) {
   const { generatedContent, t, aiEnhancedContent, showAIVersion } = state;
-  const {
-    isAIEnabledFormType,
-    handleDownloadOfficialPdf,
-    handleDownload,
-    handleSaveToPacket,
-    getDisplayContent,
-    editDraft,
-  } = handlers;
-
   if (!generatedContent) return null;
 
-  const displayContent = getDisplayContent();
+  const displayContent = handlers.getDisplayContent();
   const plan = formStatementPlan(state.selectedForm?.id, {});
   const isStatement = Boolean(plan);
   const showingAIDraft = Boolean(showAIVersion && aiEnhancedContent);
@@ -8360,7 +8380,7 @@ function FormsHelperReviewStep({ state, handlers }) {
       <ClaimPrepDisclaimer />
 
       <AIEnhancementSection
-        isAIEnabledFormType={isAIEnabledFormType}
+        isAIEnabledFormType={handlers.isAIEnabledFormType}
         aiStatus={state.aiStatus}
         aiEnhancedContent={aiEnhancedContent}
         handleAIEnhanceClick={handlers.handleAIEnhanceClick}
@@ -8383,15 +8403,16 @@ function FormsHelperReviewStep({ state, handlers }) {
               : STANDARD_DRAFT_LABEL
           }
           value={displayContent}
-          onChange={editDraft}
+          onChange={handlers.editDraft}
+          outOfStep={state.draftOutOfStep}
         />
       )}
 
       <ReviewDownloadSection
         t={t}
-        handleDownloadOfficialPdf={handleDownloadOfficialPdf}
-        handleDownload={handleDownload}
-        handleSaveToPacket={handleSaveToPacket}
+        handleDownloadOfficialPdf={handlers.handleDownloadOfficialPdf}
+        handleDownload={handlers.handleDownload}
+        handleSaveToPacket={handlers.handleSaveToPacket}
         importStatus={state.importStatus}
         formType={state.selectedForm?.id}
         isStatement={isStatement}
@@ -8415,8 +8436,9 @@ function FormsHelperReviewStep({ state, handlers }) {
 
       {state.askRebuild && (
         <EditedDraftDialog
-          onKeep={() => state.setAskRebuild(false)}
+          onKeep={handlers.handleKeepEditedDraft}
           onRebuild={handlers.handleRebuildFromAnswers}
+          returnFocusTo="forms-helper-draft"
         />
       )}
     </div>
