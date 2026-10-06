@@ -170,7 +170,7 @@ function BvaStatsBanner() {
         <div className="text-xs text-gray-500 dark:text-gray-400">Granted</div>
       </div>
       <div>
-        <div className="text-3xl font-bold text-yellow-600">
+        <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-300">
           {BVA_OVERALL_OUTCOMES.remanded}%
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400">Remanded</div>
@@ -182,7 +182,7 @@ function BvaStatsBanner() {
         <div className="text-xs text-gray-500 dark:text-gray-400">Denied</div>
       </div>
       <div>
-        <div className="text-3xl font-bold text-indigo-600">
+        <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-200">
           {BVA_OVERALL_OUTCOMES.favorableRate}%
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400">

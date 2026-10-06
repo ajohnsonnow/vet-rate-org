@@ -76,7 +76,7 @@ function MusterCallDropZoneTarget({
 
       {/* DROP ZONE Header */}
       <div className="mb-4">
-        <div className="inline-block bg-amber-500 dark:bg-amber-600 text-black dark:text-white px-6 py-2 rounded font-bold text-lg tracking-widest shadow-md">
+        <div className="inline-block bg-amber-500 dark:bg-amber-700 text-black dark:text-white px-6 py-2 rounded font-bold text-lg tracking-widest shadow-md">
           ⬇️ DROP ZONE ⬇️
         </div>
       </div>

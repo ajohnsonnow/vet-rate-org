@@ -31,12 +31,12 @@ function ReportBugLink({ onClick, variant = "light", moduleName = "" }) {
   };
 
   const baseStyles =
-    "inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded transition-all opacity-80 hover:opacity-100";
+    "inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded transition-all";
 
   const variantStyles =
     variant === "light"
-      ? "text-white/90 hover:text-white hover:bg-white/10"
-      : "text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700";
+      ? "text-white hover:bg-white/10"
+      : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700";
 
   const ariaLabel = moduleName
     ? `Report a bug in ${moduleName}`

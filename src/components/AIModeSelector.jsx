@@ -60,7 +60,7 @@ function useAIStatusBadgeMeta(status) {
       "bg-blue-500/30 text-blue-300 border-blue-400 shadow-blue-500/50 shadow-md";
   } else {
     badgeStyle =
-      "bg-yellow-500/30 text-yellow-300 border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse";
+      "bg-yellow-700 text-white border-yellow-400 shadow-yellow-500/50 shadow-md animate-pulse";
   }
 
   // DKB coverage is currently identical across every mode - Local and Cloud

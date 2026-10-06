@@ -302,18 +302,18 @@ const TimelineDocumentInfo = ({ doc, categoryData }) => (
 
     <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm mt-3">
       <div className="text-slate-400">
-        <span className="text-slate-500">Size:</span>{" "}
+        <span className="text-slate-300">Size:</span>{" "}
         {formatFileSize(doc.fileSize)}
       </div>
       <div className="text-slate-400">
-        <span className="text-slate-500">Pages:</span> {doc.pageCount || 1}
+        <span className="text-slate-300">Pages:</span> {doc.pageCount || 1}
       </div>
       <div className="text-slate-400">
-        <span className="text-slate-500">Method:</span>{" "}
+        <span className="text-slate-300">Method:</span>{" "}
         {doc.method === "ocr" ? "🔍 OCR" : "📝 Text"}
       </div>
       <div className="text-slate-400">
-        <span className="text-slate-500">Fields:</span>{" "}
+        <span className="text-slate-300">Fields:</span>{" "}
         {Object.keys(doc.extractedData || {}).length}
       </div>
     </div>
@@ -529,7 +529,7 @@ const TimelineDocumentList = ({
       <p className="text-slate-400 text-lg">
         No documents in this category yet.
       </p>
-      <p className="text-slate-500 text-sm mt-2">
+      <p className="text-slate-300 text-sm mt-2">
         Drop documents through Muster Call to build your Knowledge Base.
       </p>
     </div>

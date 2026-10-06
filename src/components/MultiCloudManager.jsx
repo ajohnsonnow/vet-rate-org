@@ -797,7 +797,7 @@ const MultiCloudHeader = ({ onClose, activeTab, setActiveTab }) => (
           }`}
         >
           <div>{tab.label}</div>
-          <div className="text-xs opacity-60">{tab.desc}</div>
+          <div className="text-xs font-normal">{tab.desc}</div>
         </button>
       ))}
     </div>

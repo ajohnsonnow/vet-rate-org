@@ -89,6 +89,12 @@ function ModalHeader({ header, title, titleId, showClose, onClose }) {
   );
 }
 
+// A dialog that brings its own surface (a dark tool passes "!bg-gray-900")
+// must not also carry bg-white: the light theme repaints every .bg-white
+// with !important, which left dark-styled content on a cream panel.
+const surfaceFor = (className) =>
+  /(?:^|\s)!?bg-/.test(className) ? "" : "bg-white dark:bg-gray-900";
+
 export default function ResponsiveModal({
   isOpen,
   onClose,
@@ -110,6 +116,7 @@ export default function ResponsiveModal({
   const generatedId = useId();
   const titleId = labelledBy || `responsive-modal-${generatedId}`;
   const bodyScrollable = useBodyScrollable(bodyRef, isOpen, children);
+  const surface = surfaceFor(className);
 
   useBodyScrollLock(isOpen);
   useFocusTrap(panelRef, {
@@ -168,7 +175,7 @@ export default function ResponsiveModal({
         // cost but needs each dialog's real height at render time, which the
         // shared shell doesn't have; a flat, always-on offset is the
         // fewest-touch fix that still guarantees the whole 640-1920 sweep.
-        className={`modal-content relative !mt-20 flex w-full max-w-full flex-col overflow-hidden bg-white shadow-2xl dark:bg-gray-900 h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] sm:!mt-16 sm:h-auto sm:max-h-[calc(90dvh-4rem)] sm:rounded-2xl ${
+        className={`modal-content relative !mt-20 flex w-full max-w-full flex-col overflow-hidden ${surface} shadow-2xl h-[calc(100dvh-5rem)] max-h-[calc(100dvh-5rem)] sm:!mt-16 sm:h-auto sm:max-h-[calc(90dvh-4rem)] sm:rounded-2xl ${
           SIZE[size] || SIZE.lg
         } ${className}`}
       >

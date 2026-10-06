@@ -409,6 +409,137 @@ html:not(.dark) .bg-indigo-50 {
   background-color: #e8e6eb !important;
 }
 
+/* Text on the light theme's surfaces. The overrides above replace white and
+   the -50 tints with cream and sage, which are darker, so the 500-700 text
+   utilities that reach 4.5:1 on white fall short on them (green-600 is 2.7:1,
+   amber-700 4.2:1). In the light theme each family takes the step that
+   reaches 4.5:1 on the darkest of those surfaces.
+
+   A dark tool shown in the light theme (a dialog or panel with a gray-900,
+   gray-800 or slate-800 fill) is the opposite case: there the original,
+   lighter steps are the readable ones, so the same variables are set back,
+   and the muted gray used for .text-gray-500 becomes gray-400. */
+html:not(.dark) {
+  --on-light-green: #166534; /* green-800 */
+  --on-light-emerald: #065f46; /* emerald-800 */
+  --on-light-amber: #92400e; /* amber-800 */
+  --on-light-yellow: #854d0e; /* yellow-800 */
+  --on-light-orange: #9a3412; /* orange-800 */
+  --on-light-red: #b91c1c; /* red-700 */
+  --on-light-blue: rgb(var(--brand-700));
+}
+
+html:not(.dark)
+  :is(
+    .bg-gray-900,
+    .bg-gray-800,
+    .bg-slate-900,
+    .bg-slate-800,
+    .bg-gray-900\/50,
+    .bg-gray-800\/50,
+    .bg-slate-900\/50,
+    .bg-slate-800\/50,
+    .\!bg-gray-900,
+    .\!bg-gray-800,
+    .\!bg-slate-900,
+    .\!bg-slate-800
+  ) {
+  --on-light-green: #4ade80; /* green-400 */
+  --on-light-emerald: #34d399; /* emerald-400 */
+  --on-light-amber: #fbbf24; /* amber-400 */
+  --on-light-yellow: #facc15; /* yellow-400 */
+  --on-light-orange: #fb923c; /* orange-400 */
+  --on-light-red: #f87171; /* red-400 */
+  --on-light-blue: rgb(var(--brand-300));
+  --text-muted: #9ca3af; /* gray-400 */
+}
+
+html:not(.dark) :is(.text-green-600, .text-green-700) {
+  color: var(--on-light-green);
+}
+
+html:not(.dark) :is(.text-emerald-600, .text-emerald-700) {
+  color: var(--on-light-emerald);
+}
+
+html:not(.dark) :is(.text-amber-500, .text-amber-600, .text-amber-700) {
+  color: var(--on-light-amber);
+}
+
+html:not(.dark) :is(.text-yellow-600, .text-yellow-700) {
+  color: var(--on-light-yellow);
+}
+
+html:not(.dark) :is(.text-orange-600, .text-orange-700) {
+  color: var(--on-light-orange);
+}
+
+html:not(.dark) .text-red-600 {
+  color: var(--on-light-red);
+}
+
+/* blue, indigo, sky and cyan all resolve to the brand ramp (tailwind.config.js) */
+html:not(.dark)
+  :is(.text-blue-600, .text-indigo-600, .text-sky-600, .text-cyan-600) {
+  color: var(--on-light-blue);
+}
+
+/* White text on a mid-tone fill. Tailwind's 500 and 600 fills are too light
+   for white text (green-600 is 3.3:1, amber-600 3.2:1, yellow-500 1.9:1). An
+   element that sets both takes the first step of the same family that
+   reaches 4.5:1, in both themes, and its hover step moves with it. */
+.text-white:is(.bg-green-500, .bg-green-600) {
+  background-color: #15803d; /* green-700 */
+}
+
+.text-white:is(.hover\:bg-green-600, .hover\:bg-green-700):hover {
+  background-color: #166534; /* green-800 */
+}
+
+.text-white:is(.bg-amber-500, .bg-amber-600) {
+  background-color: #b45309; /* amber-700 */
+}
+
+.text-white:is(.hover\:bg-amber-600, .hover\:bg-amber-700):hover {
+  background-color: #92400e; /* amber-800 */
+}
+
+.text-white.bg-orange-500 {
+  background-color: #c2410c; /* orange-700 */
+}
+
+.text-white.bg-yellow-500 {
+  background-color: #a16207; /* yellow-700 */
+}
+
+.text-white.bg-teal-500 {
+  background-color: #0f766e; /* teal-700 */
+}
+
+.text-white.bg-red-500 {
+  background-color: #dc2626; /* red-600 */
+}
+
+.text-white.bg-violet-500 {
+  background-color: #7c3aed; /* violet-600 */
+}
+
+.text-white.bg-blue-500 {
+  background-color: rgb(var(--brand-600));
+}
+
+.text-white.bg-gray-400 {
+  background-color: #6b7280; /* gray-500 */
+}
+
+.text-white.bg-purple-500 {
+  background-color: #9333ea; /* purple-600 */
+}
+
+.text-white.hover\:bg-purple-600:hover {
+  background-color: #7e22ce; /* purple-700 */
+}
+
 /* ============================================
    FOCUS MODE - TBI/ADHD Cognitive Load Reduction
    Dims distracting elements while keeping core UI visible
@@ -1410,9 +1541,11 @@ html.dark
     .bg-blue-600,
     .bg-green-600,
     .bg-sky-600,
-    .bg-amber-700
+    .bg-amber-700,
+    .text-white
   ) {
-  color: #93c5fd;
+  /* blue-200: blue-300 was 4.48:1 on the dark theme's lighter green panels */
+  color: #bfdbfe;
 }
 
 html.dark
@@ -1422,9 +1555,10 @@ html.dark
     .bg-blue-600,
     .bg-green-600,
     .bg-sky-600,
-    .bg-amber-700
+    .bg-amber-700,
+    .text-white
   ):hover {
-  color: #bfdbfe;
+  color: #dbeafe;
 }
 
 /* Dark scrollbar */

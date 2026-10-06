@@ -1957,7 +1957,7 @@ const ClaimPhaseExplainer = ({
     >
       <h4 className="font-semibold text-teal-800 dark:text-teal-200 flex items-center gap-2">
         <span>📊</span> Claim Status Phase Explainer{""}
-        <span className="text-xs bg-teal-200 dark:bg-teal-800 text-teal-700 dark:text-teal-300 px-2 py-0.5 rounded-full">
+        <span className="text-xs bg-teal-200 dark:bg-teal-800 text-teal-900 dark:text-teal-100 px-2 py-0.5 rounded-full">
           VA Reference Data
         </span>
       </h4>
