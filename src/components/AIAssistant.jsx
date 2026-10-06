@@ -15,6 +15,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { generateAI } from "../utils/unifiedAIService";
+import { mapAssistantErrorMessage } from "../utils/assistantErrorMessage";
+import AssistantMarkdown from "./AssistantMarkdown";
 import SmallModelCaveat from "./SmallModelCaveat";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -100,32 +102,6 @@ TONE: ${isHelperMode ? "Extra supportive and patient - user may be a caregiver u
   }
 
   return basePrompt;
-}
-
-// Map a failed AI request into the localized error message to display
-function mapAssistantErrorMessage(error, t) {
-  const errMsg = error?.message ?? "";
-  console.error("Navigator AI error:", errMsg || error);
-  let errorMessage = t("aiAssistant", "errorGeneric");
-
-  if (errMsg === "CRISIS_DETECTED") {
-    errorMessage = t("aiAssistant", "errorCrisis");
-  } else if (errMsg.includes("No AI available")) {
-    errorMessage = t("aiAssistant", "errorNoAI");
-  } else if (errMsg.includes("temporarily disabled")) {
-    errorMessage = t("aiAssistant", "errorDisabled");
-  } else if (errMsg.includes("empty response")) {
-    errorMessage = t("aiAssistant", "errorEmptyResponse");
-  } else if (
-    errMsg.includes("not initialized") ||
-    errMsg.includes("not loaded")
-  ) {
-    errorMessage = t("aiAssistant", "errorNotReady");
-  } else if (errMsg) {
-    errorMessage = `⚠️ ${errMsg}`;
-  }
-
-  return errorMessage;
 }
 
 // Handle sending a message
@@ -350,13 +326,16 @@ function useVeteranContext() {
   return veteranContext;
 }
 
+// w-96, but never wider than the viewport less a 16px margin each side.
+const dockedWidth = () => Math.min(384, window.innerWidth - 32);
+
 function useDraggablePosition(isMinimized) {
   const [position, setPosition] = useState(() => {
     const saved = localStorage.getItem("vet_rate_navigator_position");
     return saved
       ? JSON.parse(saved)
       : {
-          x: (window.innerWidth - 384) / 2, // Centered horizontally (w-96 = 384px)
+          x: (window.innerWidth - dockedWidth()) / 2, // Centered horizontally
           y: (window.innerHeight - 600) / 2, // Centered vertically
         };
   });
@@ -383,7 +362,7 @@ function useDraggablePosition(isMinimized) {
       const newY = e.clientY - dragOffset.y;
 
       // Keep within viewport bounds - use smaller bounds for minimized button
-      const width = isMinimized ? 72 : 384; // p-4 rounded-full ~= 72px, w-96 = 384px
+      const width = isMinimized ? 72 : dockedWidth(); // p-4 rounded-full ~= 72px
       const height = isMinimized ? 72 : 600;
       const maxX = window.innerWidth - width;
       const maxY = window.innerHeight - height;
@@ -562,36 +541,6 @@ function useNavigatorConversation({
   return { messages, input, setInput, isLoading, handleSend, handleKeyDown };
 }
 
-function MarkdownLines({ content, spacingClass }) {
-  return content.split("\n").map((line, i) => {
-    // Bold
-    if (line.startsWith("**") && line.endsWith("**")) {
-      return (
-        <p key={i} className={`font-bold ${spacingClass}`}>
-          {line.slice(2, -2)}
-        </p>
-      );
-    }
-    // Bullet point
-    if (line.startsWith("• ") || line.startsWith("- ")) {
-      return (
-        <li key={i} className="ml-4">
-          {line.slice(2)}
-        </li>
-      );
-    }
-    // Regular text
-    if (line.trim()) {
-      return (
-        <p key={i} className={spacingClass}>
-          {line}
-        </p>
-      );
-    }
-    return <br key={i} />;
-  });
-}
-
 function RedditCopyButton({ content, idx, copiedMessageIdx, onCopy }) {
   return (
     <button
@@ -752,7 +701,10 @@ function MessageBubble({
       >
         {/* Markdown-style formatting */}
         <div className="prose prose-sm dark:prose-invert max-w-none">
-          <MarkdownLines content={msg.content} spacingClass={v.textSpacing} />
+          <AssistantMarkdown
+            content={msg.content}
+            spacingClass={v.textSpacing}
+          />
         </div>
 
         <div className={v.footerClass}>
@@ -1103,14 +1055,16 @@ function DockedHeaderIconButton({ onClick, label, d }) {
 
 function DockedHeader({ onOpenAISettings, onExpand, onMinimize, onClose, t }) {
   return (
-    <div className="drag-handle bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-t-xl flex items-center justify-between cursor-move select-none">
-      <div className="flex items-center gap-3 pointer-events-none">
-        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+    <div className="drag-handle bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 sm:p-4 gap-2 rounded-t-xl flex items-center justify-between cursor-move select-none">
+      <div className="flex min-w-0 items-center gap-3 pointer-events-none">
+        <div className="hidden sm:flex w-10 h-10 shrink-0 bg-white/20 rounded-lg items-center justify-center">
           <span className="text-2xl">🧭</span>
         </div>
-        <div>
-          <h3 className="font-bold text-lg">{t("aiAssistant", "title")}</h3>
-          <p className="text-xs text-blue-100 flex items-center gap-1">
+        <div className="min-w-0">
+          <h3 className="font-bold text-lg truncate">
+            {t("aiAssistant", "title")}
+          </h3>
+          <p className="hidden text-xs text-blue-100 sm:flex items-center gap-1">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
             </svg>
@@ -1119,7 +1073,7 @@ function DockedHeader({ onOpenAISettings, onExpand, onMinimize, onClose, t }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 pointer-events-auto">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2 pointer-events-auto">
         {/* AI Status Button */}
         {onOpenAISettings && (
           <div /* eslint-disable-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
@@ -1326,9 +1280,10 @@ function DockedView({
   return (
     <div /* eslint-disable-line jsx-a11y/no-static-element-interactions */
       id="tour-ai-navigator-expanded"
+      data-docked-assistant
       ref={containerRef}
       style={{ left: `${position.x}px`, top: `${position.y}px` }}
-      className="fixed z-50 w-96 h-[600px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col"
+      className="fixed z-50 w-96 max-w-[calc(100vw-2rem)] h-[600px] max-h-[calc(100dvh-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col"
       onMouseDown={handleMouseDown}
     >
       {/* Header */}

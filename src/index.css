@@ -2474,6 +2474,16 @@ body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
   display: none;
 }
 
+/* The docked AI assistant spans the phone width, so the floating privacy
+   badge and the AI launcher would sit on its Send button. They step aside
+   while it is open. */
+@media (width <= 767px) {
+  body:has([data-docked-assistant]) .above-mobile-nav,
+  body:has([data-docked-assistant]) .above-mobile-nav-stacked {
+    display: none;
+  }
+}
+
 /* Print Styles */
 
 /* ═══════════════════════════════════════════════════════════════════════════
