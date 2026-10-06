@@ -132,6 +132,34 @@ function laneAfter(sentence, mention) {
 const couldBeAttachment = (number) =>
   isKnownForm(number) && !Object.values(LANE_FORMS).includes(number);
 
+const APPLICATION_TITLE = /^Application for Disability Compensation\b/;
+const APPLICATION_FORM = TABLE.forms.find((form) =>
+  APPLICATION_TITLE.test(form.title),
+).number;
+const CALLED_THE_APPLICATION =
+  /(?<!\b(?:intent to file|ITF) (?:a claim )?)\b(?:application(?: form)?|complete claim)\s*\($/i;
+
+/**
+ * The Intent to File form named as the application form ("the appropriate
+ * application form (VA Form 21-0966)"): { number, quote }, or null. The
+ * quote is the table's line for the disability application.
+ */
+export function findIntentFormAsApplication(sentence) {
+  for (const mention of formMentions(sentence)) {
+    if (mention.number !== LANE_FORMS["intent-to-file"]) continue;
+    const before = sentence.slice(0, mention.start);
+    if (DENIES.test(before) || !CALLED_THE_APPLICATION.test(before)) continue;
+    return {
+      number: mention.number,
+      quote: {
+        citation: `The list of VA claim forms (${TABLE.sourceLabel})`,
+        text: tableLine(APPLICATION_FORM),
+      },
+    };
+  }
+  return null;
+}
+
 /**
  * A filing given a form number that the forms table gives to something
  * else, or to nothing: { lane, label, number, quote }, or null. The quote is

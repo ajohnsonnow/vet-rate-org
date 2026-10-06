@@ -10,7 +10,11 @@ import {
   buildContradictionLead,
   findContradictions,
 } from "../../utils/contradictionCheck";
-import { LANE_FORMS, findFormMismatch } from "../../utils/vaForms";
+import {
+  LANE_FORMS,
+  findFormMismatch,
+  findIntentFormAsApplication,
+} from "../../utils/vaForms";
 import reference from "../../data/verifiedReference.json";
 
 const RULE = "form-for-another-filing";
@@ -99,9 +103,50 @@ describe("a filing paired with another filing's form", () => {
   });
 });
 
+describe("the Intent to File form given as the application form", () => {
+  const APPLICATION_RULE = "intent-form-as-application";
+  const INTENT = ["intent-to-file"];
+
+  it.each([
+    "According to 38 CFR § 3.155(b), once you receive an Intent to File a Claim, VA will furnish you with the appropriate application form (VA Form 21-0966, 38 CFR § 3.160(a)).",
+    "Receive the Application: Upon receipt of the Intent, VA will furnish you with the appropriate Application Form (VA Form 21-0966).",
+    "Action: Submit a complete application (VA Form 21-0966) for the three denied claims.",
+    "Then file your complete claim (Form 21-0966) within one year.",
+  ])("flags: %s", (sentence) => {
+    expect(findIntentFormAsApplication(sentence)).not.toBeNull();
+    expect(rules(sentence, INTENT)).toEqual([APPLICATION_RULE]);
+  });
+
+  it.each([
+    "You can start by submitting an Intent to File a Claim (VA Form 21-0966) to the VA.",
+    "Submit the Intent to File application (VA Form 21-0966) first.",
+    "File the application (VA Form 21-526EZ) within one year of your Intent to File (VA Form 21-0966).",
+    "The application form is not VA Form 21-0966; that is the Intent to File.",
+    "VA Form 21-0966 holds your date while you prepare the application.",
+  ])("leaves alone: %s", (sentence) => {
+    expect(findIntentFormAsApplication(sentence)).toBeNull();
+    expect(rules(sentence, INTENT)).toEqual([]);
+  });
+
+  it("says what the form is and quotes the application's line from the table", () => {
+    const [hit] = findContradictions(
+      "VA will furnish you with the appropriate Application Form (VA Form 21-0966).",
+      { topics: INTENT },
+    );
+    expect(hit.says).toBe(
+      "gives VA Form 21-0966 as the application form, but that is the Intent to File form",
+    );
+    expect(hit.quote).toEqual({
+      citation:
+        "The list of VA claim forms (titles as cited in VA Adjudication Procedures Manual M21-1)",
+      text: "VA Form 21-526EZ: Application for Disability Compensation and Related Compensation Benefits",
+    });
+  });
+});
+
 describe("the rule over every recorded answer", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
   const responses = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(
@@ -128,8 +173,8 @@ describe("the rule over every recorded answer", () => {
     }
   };
 
-  it("fires three times in 920 responses, each a real mix-up, with the topic gate off", () => {
-    expect(responses).toHaveLength(920);
+  it("fires eight times in 1160 responses, each a real mix-up, with the topic gate off", () => {
+    expect(responses).toHaveLength(1160);
     const hits = responses.flatMap((r) =>
       textsOf(r.response)
         .flatMap((text) => findContradictions(text, { topics: FILING }))
@@ -140,6 +185,11 @@ describe("the rule over every recorded answer", () => {
       "074624 a18 | gives VA Form 21-527C as the form for a Supplemental Claim",
       "231514 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
       "000014 a26 | gives VA Form 21-0966 as the form for a Supplemental Claim",
+      "021103 a26 | gives VA Form 21-0966 as the form for a Supplemental Claim",
+      "021103 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
+      "022302 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
+      "032917 t08 | gives VA Form 10182 as the form for a Supplemental Claim",
+      "034657 a04 | gives VA Form 22-0966 as the form for a Supplemental Claim",
     ]);
   });
 });

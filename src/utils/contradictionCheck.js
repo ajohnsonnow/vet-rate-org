@@ -14,8 +14,14 @@
 
 import quotes from "../data/verifiedQuotes.json";
 import { findWrongCoverageDate } from "./coverageDates";
-import { findFormMismatch } from "./vaForms";
+import { submitsNewMaterialInReview } from "./reviewSubmissions";
+import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
+import {
+  citesIntentParagraphForSupplementalClaim,
+  takesHigherOfTwoAsCombined,
+  wrongSingleDisabilityThreshold,
+} from "./wrongLawPatterns";
 
 const anyMatch = (text, ...patterns) =>
   patterns.some((pattern) => pattern.test(text));
@@ -196,6 +202,13 @@ const RULES = [
     correction: () => "ratings-combined",
   },
   {
+    id: "ratings-higher-of-two",
+    topics: EVERY_ANSWER,
+    matches: takesHigherOfTwoAsCombined,
+    says: "takes the higher of two ratings as the combined rating",
+    correction: () => "ratings-combined",
+  },
+  {
     id: "secondary-barred",
     topics: ["secondary"],
     matches: (sentence) =>
@@ -246,9 +259,12 @@ const RULES = [
   {
     id: "coverage-date-for-wrong-place",
     topics: ["toxic-exposure"],
-    matches: (sentence) => findWrongCoverageDate(sentence) !== null,
-    describe: (sentence) => {
-      const { wrongDate, quote } = findWrongCoverageDate(sentence);
+    matches: (sentence, { question }) =>
+      findWrongCoverageDate(sentence, { question }) !== null,
+    describe: (sentence, { question }) => {
+      const { wrongDate, quote } = findWrongCoverageDate(sentence, {
+        question,
+      });
       const rightDate = quote.text.slice(
         "Active service on or after ".length,
         quote.text.indexOf(":"),
@@ -289,6 +305,22 @@ const RULES = [
     correction: () => "tdiu-extra-schedular",
   },
   {
+    id: "tdiu-wrong-single-threshold",
+    topics: ["tdiu"],
+    matches: (sentence) => wrongSingleDisabilityThreshold(sentence) !== null,
+    describe: (sentence) => ({
+      says: `gives ${wrongSingleDisabilityThreshold(sentence)} percent as the rating one disability needs for TDIU`,
+    }),
+    correction: () => "tdiu-judgment",
+  },
+  {
+    id: "intent-paragraph-for-supplemental-claim",
+    topics: FILING_TOPICS,
+    matches: citesIntentParagraphForSupplementalClaim,
+    says: "cites 38 CFR 3.155(b), the intent-to-file paragraph, as the rule for a Supplemental Claim",
+    correction: () => "intent-paragraph-scope",
+  },
+  {
     id: "files-statement-of-the-case",
     topics: REVIEW_TOPICS,
     matches: (sentence) =>
@@ -300,10 +332,15 @@ const RULES = [
   {
     id: "higher-level-review-new-evidence",
     topics: REVIEW_TOPICS,
-    matches: (sentence) =>
-      HIGHER_LEVEL_REVIEW.test(sentence) &&
-      ADDS_EVIDENCE.test(sentence) &&
-      !NOT_ABOUT_ADDING.test(withoutLikelihoodWording(sentence)),
+    matches: (sentence) => {
+      const plain = withoutLikelihoodWording(sentence);
+      return (
+        (HIGHER_LEVEL_REVIEW.test(plain) &&
+          ADDS_EVIDENCE.test(plain) &&
+          !NOT_ABOUT_ADDING.test(plain)) ||
+        submitsNewMaterialInReview(plain)
+      );
+    },
     says: "has you send new evidence with a higher-level review",
     correction: () => "higher-level-review-evidence",
   },
@@ -377,6 +414,18 @@ const RULES = [
     },
   },
   {
+    id: "intent-form-as-application",
+    topics: FILING_TOPICS,
+    matches: (sentence) => findIntentFormAsApplication(sentence) !== null,
+    describe: (sentence) => {
+      const { number, quote } = findIntentFormAsApplication(sentence);
+      return {
+        says: `gives VA Form ${number} as the application form, but that is the Intent to File form`,
+        quote,
+      };
+    },
+  },
+  {
     id: "intent-to-file-for-filed-claim",
     topics: FILING_TOPICS,
     matches: (sentence) =>
@@ -399,10 +448,10 @@ export const CONTRADICTION_RULE_IDS = RULES.map((rule) => rule.id);
  */
 export function findContradictions(
   text,
-  { topics = [], hasConditions = false } = {},
+  { topics = [], hasConditions = false, question = "" } = {},
 ) {
   const sentences = sentencesOf(text);
-  const context = { hasConditions, text: String(text ?? "") };
+  const context = { hasConditions, question, text: String(text ?? "") };
   const hits = [];
   for (const rule of RULES) {
     const applies =
@@ -418,7 +467,7 @@ export function findContradictions(
       sentence,
       says: rule.says,
       ...(rule.correction ? { correction: rule.correction(topics) } : {}),
-      ...(rule.describe ? rule.describe(sentence) : {}),
+      ...(rule.describe ? rule.describe(sentence, context) : {}),
     });
   }
   return hits;
@@ -488,7 +537,7 @@ export function flagContradictions(result, options = {}, prompt = "") {
           conditions: options.conditions,
           dataClass: options.dataClass,
         });
-  const hits = findContradictions(text, { topics });
+  const hits = findContradictions(text, { topics, question: prompt });
   if (hits.length === 0) return result;
   return {
     ...result,

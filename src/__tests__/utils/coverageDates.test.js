@@ -109,6 +109,74 @@ describe("the coverage-date rule", () => {
   });
 });
 
+const IRAQ_QUESTION =
+  "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?";
+// Run 2026-10-06 03:46 (2B), case a16: the Act's enactment date given as the
+// date service must start, to a veteran who asked about Iraq.
+const RUN_L2_A16 =
+  "Service Connection (SC): You must have served on or after the effective date of the specific regulation (e.g., August 10, 2022, for the PACT Act).";
+
+describe("a service date that is neither of the table's dates", () => {
+  it("is corrected with the line for the place the veteran asked about", () => {
+    const found = findWrongCoverageDate(RUN_L2_A16, {
+      question: IRAQ_QUESTION,
+    });
+    expect(found).toMatchObject({
+      place: "Iraq",
+      wrongDate: "August 10, 2022",
+    });
+    expect(found.quote.text).toBe(EARLY_LINE);
+  });
+
+  it("is corrected when the sentence names the place itself", () => {
+    expect(
+      findWrongCoverageDate(
+        "For Afghanistan, you must have served on or after 10 August 2022.",
+      ),
+    ).toMatchObject({ place: "Afghanistan", wrongDate: "August 10, 2022" });
+  });
+
+  it("puts the correction above the answer through the answer check", () => {
+    const out = flagContradictions(
+      { text: RUN_L2_A16 },
+      { toolId: "pact-navigator", dataClass: "context" },
+      IRAQ_QUESTION,
+    );
+    expect(out.text).toContain(
+      `That gives August 10, 2022 as the start date for a place the table lists under August 2, 1990. VA manual M21-1 VIII.ii.2.A.1.e-h says: "${EARLY_LINE}"`,
+    );
+  });
+
+  it.each([
+    [RUN_L2_A16, undefined],
+    [RUN_L2_A16, "Am I covered for my Iraq and Afghanistan deployments?"],
+    [RUN_L2_A16, "What does the PACT Act cover?"],
+    [
+      "Effective August 10, 2022, the PACT Act created 38 U.S.C. 1120.",
+      IRAQ_QUESTION,
+    ],
+    [
+      "Veterans who served in Iraq and filed a claim on or after August 10, 2022 may get an earlier effective date.",
+      IRAQ_QUESTION,
+    ],
+    [
+      "You must have served on or after August 2, 1990; the law itself took effect August 10, 2022.",
+      IRAQ_QUESTION,
+    ],
+    [
+      "You must have served in Iraq or Afghanistan on or after August 10, 2022.",
+      IRAQ_QUESTION,
+    ],
+    ["I served on or after June 1, 2008 in Iraq.", IRAQ_QUESTION],
+    [
+      "Under 38 CFR 3.320 you must have served in Afghanistan on or after September 19, 2001.",
+      "Am I covered for Afghanistan?",
+    ],
+  ])("leaves alone: %s (asked: %s)", (sentence, question) => {
+    expect(findWrongCoverageDate(sentence, { question })).toBeNull();
+  });
+});
+
 // Run 2026-10-06 01:35 (2B), case a16, as the model wrote it. The check put a
 // correction above it for Somalia, whose date the answer had right.
 const RUN_013549_A16 = [
@@ -137,7 +205,7 @@ describe("an answer that gives each place its own date", () => {
 
 describe("the coverage-date rule over every recorded response", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
   const hits = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(
@@ -153,12 +221,17 @@ describe("the coverage-date rule over every recorded response", () => {
         .filter((r) =>
           findContradictions(String(r.response ?? ""), {
             topics: ["toxic-exposure"],
+            question: r.input,
           }).some((h) => h.rule === "coverage-date-for-wrong-place"),
         )
         .map((r) => `${name.slice(4, 21)} ${r.id}`),
     );
 
-  it("flags the two answers that misdated Iraq and nothing else", () => {
-    expect(hits).toEqual(["2026-10-05_210108 a16", "2026-10-06_000820 a16"]);
+  it("flags the three answers that misdated Iraq and nothing else", () => {
+    expect(hits).toEqual([
+      "2026-10-05_210108 a16",
+      "2026-10-06_000820 a16",
+      "2026-10-06_034657 a16",
+    ]);
   });
 });

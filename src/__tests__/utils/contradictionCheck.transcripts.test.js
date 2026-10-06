@@ -11,7 +11,7 @@ import { findContradictions } from "../../utils/contradictionCheck";
 import { detectReferenceTopics } from "../../utils/verifiedReference";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
-const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
+const LAST_REVIEWED_RUN = "run_2026-10-06_034657";
 const ALL_TOPICS = [
   "secondary",
   "toxic-exposure",
@@ -61,6 +61,7 @@ function hitsFor(record, topics) {
   return findContradictions(record.response, {
     topics,
     hasConditions: Array.isArray(conditions) && conditions.length > 0,
+    question: record.input,
   })
     .filter((hit) => hit.rule !== EVERY_ANSWER_RULE)
     .map((hit) => `${record.run} ${record.id} ${hit.rule}`);
@@ -82,8 +83,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
   const prose = answers.filter((record) => !isDecoderCase(record));
 
   it("reads every answer that was shown to the user", () => {
-    expect(answers).toHaveLength(884);
-    expect(prose).toHaveLength(873);
+    expect(answers).toHaveLength(1120);
+    expect(prose).toHaveLength(1103);
   });
 
   it("flags only real contradictions, each on the topic of its own question", () => {
@@ -125,6 +126,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "221648 a26 new-and-material-standard",
       "221648 a26 intent-to-file-for-filed-claim",
       "230321 a26 intent-to-file-for-filed-claim",
+      "231514 a26 intent-form-as-application",
+      "000014 a15 tdiu-wrong-single-threshold",
       "000014 a26 form-for-another-filing",
       "000820 a16 coverage-date-for-wrong-place",
       "000820 a26 intent-to-file-for-filed-claim",
@@ -132,8 +135,24 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "002046 a26 intent-to-file-for-filed-claim",
       "002046 a27 presumptive-needs-exposure-proof",
       "002046 a29 secondary-barred",
+      "012539 a30 intent-form-as-application",
       "013549 a26 intent-to-file-for-filed-claim",
+      "013549 a30 intent-form-as-application",
       "015232 a26 intent-to-file-for-filed-claim",
+      "021103 a26 form-for-another-filing",
+      "021103 a26 intent-form-as-application",
+      "021103 a26 intent-to-file-for-filed-claim",
+      "022302 a29 ratings-higher-of-two",
+      "031715 a15 intent-paragraph-for-supplemental-claim",
+      "031715 a26 intent-to-file-for-filed-claim",
+      "032917 a26 intent-paragraph-for-supplemental-claim",
+      "032917 a30 intent-form-as-application",
+      "033751 a26 intent-to-file-for-filed-claim",
+      "033751 a29 secondary-barred",
+      "034657 a15 tdiu-wrong-single-threshold",
+      "034657 a16 coverage-date-for-wrong-place",
+      "034657 a20 ratings-higher-of-two",
+      "034657 a30 intent-form-as-application",
     ]);
   });
 });
@@ -178,6 +197,10 @@ describe("contradiction rules outside the topic of the question", () => {
       "002046 t08 action_plan higher-level-review-new-evidence",
       "002046 t08 action_plan higher-level-review-hearing",
       "014319 t08 action_plan review-period-from-wrong-day",
+      "021103 t08 action_plan form-for-another-filing",
+      "022302 t08 action_plan form-for-another-filing",
+      "032917 t08 action_plan form-for-another-filing",
+      "033751 t08 action_plan higher-level-review-new-evidence",
     ]);
   });
 });

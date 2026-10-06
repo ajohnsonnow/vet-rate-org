@@ -64,6 +64,18 @@ describe("findUnverifiedCitations", () => {
     ).toEqual([]);
   });
 
+  // Known miss, run 2026-10-06 03:29 (2B) a27: an invented list of lung
+  // conditions under "38 CFR § 3.320 ... (Section 3.320(a)(2))" for a Vietnam
+  // veteran. The section and the paragraph both exist, so there is nothing
+  // for an existence check to find; what is invented is the list.
+  it("cannot flag a real section cited for content it does not hold", () => {
+    expect(
+      findUnverifiedCitations(
+        "Veterans with chronic respiratory conditions are eligible for a presumptive service connection under 38 CFR § 3.320. Chronic Lung Conditions (Section 3.320(a)(2)): Chronic Pulmonary Hypoplasia.",
+      ),
+    ).toEqual([]);
+  });
+
   it("handles empty input", () => {
     expect(findUnverifiedCitations("")).toEqual([]);
     expect(findUnverifiedCitations(undefined)).toEqual([]);

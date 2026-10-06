@@ -77,6 +77,7 @@ describe("correction quotes", () => {
       "supplemental-any-time",
       "new-and-relevant",
       "claim-has-its-own-date",
+      "intent-paragraph-scope",
       "review-filing",
     ]);
   });
