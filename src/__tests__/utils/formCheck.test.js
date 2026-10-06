@@ -95,7 +95,7 @@ describe("flagUnverifiedForms", () => {
 
 describe("the check over every recorded answer", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_002046";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
   const responses = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(
@@ -111,8 +111,8 @@ describe("the check over every recorded answer", () => {
         .map((r) => ({ run: name.slice(15, 21), ...r })),
     );
 
-  it("flags 17 of 760 responses, each naming a number in neither list", () => {
-    expect(responses).toHaveLength(760);
+  it("flags 19 of 920 responses, each naming a number in neither list", () => {
+    expect(responses).toHaveLength(920);
     const hits = responses
       .map((r) => [r, findUnverifiedForms(String(r.response ?? ""))])
       .filter(([, forms]) => forms.length > 0)
@@ -135,6 +135,8 @@ describe("the check over every recorded answer", () => {
       "201248 a30 21-5473",
       "000014 a15 22-5388",
       "000014 a30 22-5300",
+      "013549 a26 22-5280",
+      "015232 a30 22-0966",
     ]);
   });
 });

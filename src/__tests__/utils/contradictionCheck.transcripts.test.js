@@ -11,7 +11,7 @@ import { findContradictions } from "../../utils/contradictionCheck";
 import { detectReferenceTopics } from "../../utils/verifiedReference";
 
 const TRANSCRIPT_DIR = "llm-compiler/logs/golden-set-results";
-const LAST_REVIEWED_RUN = "run_2026-10-06_002046";
+const LAST_REVIEWED_RUN = "run_2026-10-06_015232";
 const ALL_TOPICS = [
   "secondary",
   "toxic-exposure",
@@ -82,8 +82,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
   const prose = answers.filter((record) => !isDecoderCase(record));
 
   it("reads every answer that was shown to the user", () => {
-    expect(answers).toHaveLength(730);
-    expect(prose).toHaveLength(723);
+    expect(answers).toHaveLength(884);
+    expect(prose).toHaveLength(873);
   });
 
   it("flags only real contradictions, each on the topic of its own question", () => {
@@ -132,6 +132,8 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       "002046 a26 intent-to-file-for-filed-claim",
       "002046 a27 presumptive-needs-exposure-proof",
       "002046 a29 secondary-barred",
+      "013549 a26 intent-to-file-for-filed-claim",
+      "015232 a26 intent-to-file-for-filed-claim",
     ]);
   });
 });
@@ -175,6 +177,7 @@ describe("contradiction rules outside the topic of the question", () => {
       "000014 t08 deadline_warning review-period-from-wrong-day",
       "002046 t08 action_plan higher-level-review-new-evidence",
       "002046 t08 action_plan higher-level-review-hearing",
+      "014319 t08 action_plan review-period-from-wrong-day",
     ]);
   });
 });
