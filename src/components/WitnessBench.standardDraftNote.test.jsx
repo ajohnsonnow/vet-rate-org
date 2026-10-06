@@ -101,6 +101,8 @@ describe("Witness Bench standard-draft notice", () => {
     const notice = screen.getByRole("status", { name: "Draft notice" });
     expect(notice.textContent).toBe(STANDARD_DRAFT_NOTE);
     expect(statement.value).toContain("Witness Type: Spouse / Partner");
+    expect(statement.value).not.toMatch(/\bAI\b/);
+    expect(statement.value).toContain("Sam Example");
     expect(statement.value).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );
@@ -128,6 +130,12 @@ describe("Witness Bench standard-draft notice", () => {
     expect(statement.value).toContain(
       "To put it plainly, they leave the room when fireworks start.",
     );
+    expect(statement.value).toContain("was suggested by AI");
+    expect(statement.value).toContain("Sam Example");
+    expect(statement.value).not.toContain("[Witness Printed Name]");
+    for (const [prompt] of generateAI.mock.calls) {
+      expect(prompt).not.toContain("Sam Example");
+    }
     expect(statement.value).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );

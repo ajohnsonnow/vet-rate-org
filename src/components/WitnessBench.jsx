@@ -442,13 +442,47 @@ export const _compileStatementWithAI = async (
     return asStatement(draftAfterModelError(plan, sent, error));
   }
 
-  return asStatement(
+  const drafted = asStatement(
     resolvePassageDraft({
       plan,
       sent,
       reply: typeof text === "string" ? text : JSON.stringify(text),
     }),
   );
+  return drafted.draftPath === "model"
+    ? {
+        ...drafted,
+        statement: drafted.statement.replace(
+          ATTESTATION_WARNING,
+          `${AI_WORDING_DISCLOSURE} ${ATTESTATION_WARNING}`,
+        ),
+      }
+    : drafted;
+};
+
+const ATTESTATION_WARNING =
+  "Before signing, read every sentence and confirm it describes something YOU personally witnessed and know to be true. A buddy/lay statement is submitted to the VA under penalty of law (18 U.S.C. § 1001) - a knowingly false statement is a federal crime. Edit anything that is not accurate.";
+// Said only when the model reworded at least one answer. The statement is
+// never described as drafted by AI: the witness's answers are its content.
+const AI_WORDING_DISCLOSURE =
+  "The wording of some passages in this statement was suggested by AI. Review each one: it is your statement.";
+
+const WITNESS_NAME_BLANK = "[Witness Printed Name]";
+
+/**
+ * Fill in, on the device and after any model call, the names the app and
+ * the witness already hold: the veteran's for "[Veteran]", and the name the
+ * witness typed for the printed-name line. Neither is ever offered to the
+ * model.
+ */
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export const _finishWitnessStatement = (
+  statement,
+  { veteranName, witnessName } = {},
+) => {
+  const named = substituteVeteranNamePlaceholder(statement, veteranName);
+  const printed = (witnessName ?? "").trim();
+  return printed ? named.replace(WITNESS_NAME_BLANK, printed) : named;
 };
 
 /**
@@ -475,13 +509,13 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
   // Make the attestation contingent on the witness reading, verifying, and signing,
   // and warn about the federal false-statement statute the witness signs under.
   statement += `--- WITNESS ATTESTATION (read before you sign) ---\n`;
-  statement += `This statement was drafted with AI assistance. Before signing, read every sentence and confirm it describes something YOU personally witnessed and know to be true. A buddy/lay statement is submitted to the VA under penalty of law (18 U.S.C. § 1001) - a knowingly false statement is a federal crime. Edit anything that is not accurate.\n\n`;
+  statement += `${ATTESTATION_WARNING}\n\n`;
   statement += `By signing below, I attest that I have read the statement above, that it reflects my own personal knowledge, and that it is true and correct to the best of my knowledge and belief:\n\n`;
   statement += `Respectfully submitted,\n\n`;
   statement += `_______________________________\n`;
   statement += `[Witness Signature]\n\n`;
   statement += `_______________________________\n`;
-  statement += `[Witness Printed Name]\n\n`;
+  statement += `${WITNESS_NAME_BLANK}\n\n`;
   statement += `_______________________________\n`;
   statement += `[Date]\n\n`;
   statement += `Contact Information:\n`;
@@ -831,6 +865,7 @@ function useStartInterview({
 function useGenerateStatement({
   relationship,
   condition,
+  witnessName,
   answers,
   useAI,
   aiAvailable,
@@ -860,8 +895,10 @@ function useGenerateStatement({
         statement = compileStatementWithoutAI(relationship, condition, answers);
       }
 
-      const veteranName = await resolveVeteranDisplayName();
-      statement = substituteVeteranNamePlaceholder(statement, veteranName);
+      statement = _finishWitnessStatement(statement, {
+        veteranName: await resolveVeteranDisplayName(),
+        witnessName,
+      });
       setGeneratedStatement(statement);
       setStep(3);
 
@@ -880,10 +917,9 @@ function useGenerateStatement({
     } catch (err) {
       console.error("Statement generation failed:", err);
       // Fall back to template
-      const veteranName = await resolveVeteranDisplayName();
-      const statement = substituteVeteranNamePlaceholder(
+      const statement = _finishWitnessStatement(
         compileStatementWithoutAI(relationship, condition, answers),
-        veteranName,
+        { veteranName: await resolveVeteranDisplayName(), witnessName },
       );
       setGeneratedStatement(statement);
       setDraftNote(STANDARD_DRAFT_NOTE);
@@ -900,7 +936,7 @@ function useGenerateStatement({
       setIsGeneratingStatement(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relationship, condition, answers, useAI]);
+  }, [relationship, condition, witnessName, answers, useAI]);
 }
 
 function useWitnessBench(t) {
@@ -925,6 +961,7 @@ function useWitnessBench(t) {
   const generateStatement = useGenerateStatement({
     relationship: wizard.relationship,
     condition: wizard.condition,
+    witnessName: wizard.witnessName,
     answers: interview.answers,
     useAI: ai.useAI,
     aiAvailable: ai.aiAvailable,

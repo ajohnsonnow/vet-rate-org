@@ -19,7 +19,8 @@ vi.mock("../utils/unifiedAIService", async (importOriginal) => {
   };
 });
 const { generateAI } = await import("../utils/unifiedAIService");
-const { _compileStatementWithAI } = await import("./WitnessBench.jsx");
+const { _compileStatementWithAI, _finishWitnessStatement } =
+  await import("./WitnessBench.jsx");
 
 const ANSWERS = {
   relationship_context: "I have been married to the veteran since 2012.",
@@ -75,6 +76,10 @@ describe("WitnessBench._compileStatementWithAI", () => {
       "WITNESS ATTESTATION (read before you sign)",
     );
     expect(result.statement).toContain("18 U.S.C. § 1001");
+    expect(result.statement).toContain(
+      "The wording of some passages in this statement was suggested by AI. Review each one: it is your statement.",
+    );
+    expect(result.statement).not.toMatch(/drafted with AI/i);
   });
 
   it("returns the standard statement, with no AI claim, when the model only echoes", async () => {
@@ -85,6 +90,7 @@ describe("WitnessBench._compileStatementWithAI", () => {
     expect(result.draftNote).toBe(STANDARD_DRAFT_NOTE);
     expect(result.passages).toMatchObject({ accepted: 0, unchanged: 3 });
     expect(result.statement).toContain(ANSWERS.q1);
+    expect(result.statement).not.toMatch(/\bAI\b/);
   });
 
   it("returns the standard statement when the model refuses", async () => {
@@ -116,7 +122,9 @@ describe("WitnessBench._compileStatementWithAI", () => {
     expect(result.statement).toContain(ANSWERS.q1);
     expect(result.statement).not.toMatch(/I certify that this|2019/);
   });
+});
 
+describe("WitnessBench._compileStatementWithAI with nothing typed", () => {
   it("makes no model call when the witness answered nothing", async () => {
     const result = await _compileStatementWithAI("spouse", "PTSD", {});
 
@@ -144,5 +152,27 @@ describe("WitnessBench._compileStatementWithAI when the model cannot answer", ()
     expect(result.statement).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );
+    expect(result.statement).not.toMatch(/\bAI\b/);
+  });
+});
+
+describe("WitnessBench._finishWitnessStatement", () => {
+  const draft =
+    "I have observed [Veteran] at home." +
+    "\n[Witness Signature]\n[Witness Printed Name]\n[Date]";
+
+  it("fills in the names the witness and the app already hold, locally", () => {
+    expect(
+      _finishWitnessStatement(draft, {
+        veteranName: "Jordan Faketon",
+        witnessName: "  Sam Example ",
+      }),
+    ).toBe(
+      "I have observed Jordan Faketon at home.\n[Witness Signature]\nSam Example\n[Date]",
+    );
+  });
+
+  it("leaves the blanks when a name is not known", () => {
+    expect(_finishWitnessStatement(draft, {})).toBe(draft);
   });
 });
