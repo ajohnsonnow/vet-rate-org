@@ -17,7 +17,7 @@ const row = source.slice(
 describe("My Ratings row actions on a phone", () => {
   it("wraps under the rating on a narrow screen instead of pinning Remove to the right edge, where the floating buttons cover it", () => {
     expect(row).toMatch(/flex flex-wrap items-center justify-between gap-2/);
-    expect(row).toMatch(/flex w-full gap-2 sm:w-auto/);
+    expect(row).toMatch(/flex w-full flex-shrink-0 gap-2 sm:w-auto/);
   });
 
   it("gives Edit and Remove 44px targets", () => {
