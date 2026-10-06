@@ -293,6 +293,36 @@ export async function answer(question, deps, opts = {}) {
   };
 }
 
+/**
+ * Search the regulations for a question and return the text found, with no
+ * language model involved: nothing is extracted, judged or reworded. The
+ * question is scrubbed of identifiers before it is embedded, as in answer().
+ *
+ * @param {string} question
+ * @param {Object} [deps]
+ * @param {(text: string, opts?: Object) => Promise<{chunks: Array<Object>}>} [deps.retrieve]
+ * @param {Object} [opts]
+ * @param {number} [opts.topK=3]
+ * @param {number} [opts.threshold=0.35]
+ * @returns {Promise<Array<{citation: string, title: string, text: string, source_url: string, fetched_at: string, score: number}>>}
+ */
+export async function retrieveRegulationText(question, deps = {}, opts = {}) {
+  const { topK = 3, threshold = 0.35 } = opts;
+  const retrieve = deps.retrieve || ragQuery;
+  const cleanQuery = scrubPII(question || "", {
+    aggressive: true,
+  }).scrubbedText;
+  const { chunks } = await retrieve(cleanQuery, { topK, threshold });
+  return (chunks ?? []).map((c) => ({
+    citation: c.citation,
+    title: c.title,
+    text: c.text,
+    source_url: c.source_url,
+    fetched_at: c.fetched_at,
+    score: c.score,
+  }));
+}
+
 export const _internals = {
   EXTRACTOR_SCHEMA,
   SYNTHESIZER_INSTRUCTIONS,

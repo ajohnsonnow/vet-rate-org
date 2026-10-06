@@ -18,6 +18,7 @@ function guardOutcome(flags) {
     truncated: Boolean(flags.truncated),
     ...(flags.modelCalled === false ? { modelCalled: false } : {}),
     ...(flags.needsRatings ? { needsRatings: true } : {}),
+    ...(flags.openAdviceHeld ? { openAdviceHeld: true } : {}),
     ...(flags.ratingsSource ? { ratingsSource: flags.ratingsSource } : {}),
     ...(flags.calculatorLead ? { calculatorLead: flags.calculatorLead } : {}),
     ...(flags.blocked ? { blockedText: flags.blockedText ?? null } : {}),
@@ -60,7 +61,9 @@ function guardOutcome(flags) {
  * `engineRequests` 0. With `calculatorLead` ({ expected }) `response` is the
  * calculator's text, and `ratingsSource` says whether the ratings were
  * "supplied" as structured conditions or read from the "question". With
- * `needsRatings` it is the fixed answer that asks for the ratings. `truncated` says the engine stopped the answer
+ * `needsRatings` it is the fixed answer that asks for the ratings. With
+ * `openAdviceHeld` it is the fixed message shown in place of an answer while
+ * a small-class model is loaded (ADR-010 section 11). `truncated` says the engine stopped the answer
  * at the length limit (known for WebLLM and Gemini only). `validatorBlocked` says the response validator
  * blocked the answer, in which case `response` is the message shown in its
  * place and `blockedText` is what the model wrote.
@@ -99,6 +102,7 @@ function toolFields(caseDef, outcome, own) {
     passages: outcome.tool?.passages ?? null,
     passageOutcomes: outcome.tool?.passageOutcomes ?? [],
     rewordingOff: outcome.tool?.rewordingOff ?? null,
+    ...(outcome.tool?.modelCalled === false ? { modelCalled: false } : {}),
     ...ownSystemPromptSeen(caseDef, own),
   };
 }

@@ -62,7 +62,8 @@ const calculatorAnswers = (caseDef) =>
 
 /*
  * A rating question on a rater tool is answered by the app, from the
- * calculator or with a fixed request for the ratings, and no model is called,
+ * calculator or with a fixed request for the ratings, and on a small-class
+ * model every open question gets the app's fixed message. No model is called,
  * so there is no routing to check. A model call on such a case means that
  * path was not taken. `ctx.answerWithoutModel` says which cases those are;
  * without it, they are the rater cases with structured conditions.
@@ -79,15 +80,43 @@ function checkNoModelRouting(record) {
       `expected the app's own answer with no model call; a model was called (${record.actualAgent ?? "unknown"} persona)`,
     );
   }
-  return result(
-    NOT_APPLICABLE,
-    record.needsRatings
-      ? "the app asked for the ratings: no model was called"
-      : "the calculator answered: no model was called",
-  );
+  return result(NOT_APPLICABLE, noModelDetail(record));
+}
+
+function noModelDetail(record) {
+  if (record.openAdviceHeld) {
+    return "small-class model: the app showed its fixed message, no model was called";
+  }
+  return record.needsRatings
+    ? "the app asked for the ratings: no model was called"
+    : "the calculator answered: no model was called";
+}
+
+/*
+ * A tool the app keeps from a small-class model (the Decision Decoder,
+ * ADR-010 section 9) shows its rule-based reading there and calls no model.
+ * `ctx.smallModel` says whether this run loaded such a model.
+ */
+function checkHeldTool(record, ctx) {
+  if (record.modelCalled === false) {
+    return result(
+      NOT_APPLICABLE,
+      "small-class model: the tool showed its rule-based reading, no model was called",
+    );
+  }
+  return ctx.smallModel
+    ? result(
+        AUTO_FAIL,
+        "a small-class model was sent a document the app keeps from it",
+      )
+    : null;
 }
 
 export function checkRouting(caseDef, record, ctx = {}) {
+  if (TOOL_ENTRIES[caseDef.entry]?.heldOnSmallModel && !record.error) {
+    const held = checkHeldTool(record, ctx);
+    if (held) return held;
+  }
   if (expectsNoModel(caseDef, ctx) && !record.error) {
     return checkNoModelRouting(record);
   }

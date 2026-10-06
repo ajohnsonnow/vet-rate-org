@@ -2189,9 +2189,7 @@ async function handleProcessFile(
       );
     }
 
-    setProcessingStage(
-      "AI analyzing diagnoses (this may take 30-60 seconds)...",
-    );
+    setProcessingStage("AI analyzing diagnoses (this can take a while)...");
     const result = await analyzeWithAI(text, setProcessingStage);
 
     if (result.offDeviceBlocked) {

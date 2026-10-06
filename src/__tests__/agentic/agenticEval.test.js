@@ -121,7 +121,7 @@ describe("Agentic harness - system-prompt fingerprints", () => {
     // Writer, Auditor and Rater behaviour rules were restated.
     auditor: "ea2f4bdf03b474a07de8b13fe52f230de177249ad904a4b9fb8ed98c676d3d40",
     writer: "532a8a6b9a07b5428849dc498953d29ae93c9ad64e083d05b35754fa6cd2fa17",
-    rater: "7584c59adf89a44ad3bb0dd64887c409f8cbd71568286f6d25aaa03c5738a057",
+    rater: "ab5c251836dfe3d92f5244a62df7a67417350495995c4d665caad1a0fe7c7cdd",
   };
 
   it("auditor prompt fingerprint is stable", () => {
@@ -192,10 +192,9 @@ describe("Agentic harness - bilateral clause matches 38 CFR § 4.26", () => {
     },
   );
 
-  it("rater still tells the model to show the pair and the calculator result is final", () => {
+  it("rater still tells the model to show the pair", () => {
     const p = SWARM_AGENTS.RATER.systemPrompt;
     expect(p).toMatch(/Always show which specific conditions you paired/);
-    expect(p).toMatch(/If a COMPUTED RESULT block is provided, it is final/);
   });
 });
 
@@ -270,12 +269,12 @@ describe("Agentic harness - lane rule present in prompts", () => {
   });
 });
 
-describe("Agentic harness - rater treats the computed result as final", () => {
-  it("restates it exactly, explains it and never recomputes", () => {
+describe("Agentic harness - rater prompt names nothing the app no longer sends", () => {
+  it("does not mention a COMPUTED RESULT block: none is injected any more", () => {
     const p = SWARM_AGENTS.RATER.systemPrompt;
-    expect(p).toMatch(/COMPUTED RESULT block/);
-    expect(p).toMatch(
-      /it is final: restate it exactly, explain it, never recompute it/,
+    expect(p).not.toMatch(/COMPUTED RESULT/);
+    expect(p).toContain(
+      "before applying the 10% factor.\n\nVA method: take ratings highest first.",
     );
   });
 

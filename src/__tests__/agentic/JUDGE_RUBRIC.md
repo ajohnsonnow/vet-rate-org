@@ -228,6 +228,36 @@ prompt, and the agent column reads "tool's own prompt". `routing` is `n/a`
 for a case that made no model call: `t07`, the witness cases `t03`, `t04`
 and `t10`, and any writing case on a small on-device model.
 
+## Runs on a small-class model (laptop and tablet tiers)
+
+While a small-class model is loaded, the assistant does not send it an open
+question about VA law or claims (ADR-010 section 11). The runner follows the
+app: every a-case with a question records the app's own text and no model
+call.
+
+- Rating questions (`a11` to `a14`, `a24`, `a25`) record the calculator's
+  answer or the fixed request for ratings, as on every model.
+- Every other a-case records the fixed message, with `modelCalled: false`,
+  `openAdviceHeld: true`, `engineRequests` 0 and no agent. `routing` is `n/a`
+  and the agent column reads "no model called".
+- `a22` (an empty question) records the app's empty-question reply.
+
+Do not score the fixed message against the auditor, writer or rater
+criteria: no model wrote it, and it is the same in every row. Check it once
+per run as app text. It passes when it says plainly that the model was not
+used and why, names what the device can still do, says what an AI answer
+needs, tells the veteran how to reach a Veterans Service Officer, and states
+nothing about the veteran's case or the law. In the app the assistant also
+shows, under the message, regulation text found by search; that text is not
+in the transcript. Report the run as "N of 30 app text, 0 model answers"
+and do not compare its pass count with a run where a model answered. A
+model call on any of these cases is a `routing` failure. The Decision Decoder case (`t08`) records the rule-based reading the app
+shows on such a device, with `modelCalled: false` and `_fallbackReason`
+`small_model` (ADR-010 section 9): grade it as app text, on whether the
+reading matches the letter and the notice says the model was not used. A
+model call on `t08` in such a run is a `routing` failure. The writing-tool
+cases are graded as usual.
+
 ## Auditor criteria (6 — pass at 5+)
 
 | #   | Criterion                   | Pass when…                                                                                                                     |

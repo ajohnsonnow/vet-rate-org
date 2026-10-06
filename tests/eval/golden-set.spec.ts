@@ -157,6 +157,7 @@ async function exposeAppModules(page: Page): Promise<void> {
       import * as helper from "/src/utils/aiStatementHelper.js";
       import { _compileWitnessStatement } from "/src/components/WitnessBench.jsx";
       import { _generateVocationalImpact } from "/src/components/TDIUBuilder.jsx";
+      import { decodeDecisionAsShown } from "/src/utils/decisionDecodeAsShown.js";
       const tools = {
         enhancePersonalStatement: helper.enhancePersonalStatement,
         enhanceFormStatement: helper.enhanceFormStatement,
@@ -164,7 +165,7 @@ async function exposeAppModules(page: Page): Promise<void> {
         generateNexusLetterRequest: helper.generateNexusLetterRequest,
         compileWitnessStatement: _compileWitnessStatement,
         generateVocationalImpact: _generateVocationalImpact,
-        decodeDecision: helper.decodeDecision,
+        decodeDecision: decodeDecisionAsShown,
       };
       window.__evalMods = { dc, swarm, ai, tools };
     `,
@@ -269,6 +270,7 @@ function runCase(
     const options: Record<string, unknown> = {
       toolId: a.toolId,
       dataClass: "context",
+      openAdvice: true,
       temperature: a.temperature,
       maxTokens: a.maxTokens,
       thinking: a.thinking,

@@ -50,6 +50,8 @@ import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { answerRatingQuestion } from "./ratingQuestion";
+import { openAdviceHeldAnswer } from "./openAdviceHold";
+import { smallModelAnswering } from "./smallModelAnswering";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import {
   MIN_OUTPUT_TOKENS,
@@ -3213,6 +3215,12 @@ const generateAIInternal = async (prompt, options = {}) => {
 
   const withoutModel = _answerWithoutModel(prompt, options);
   if (withoutModel) return withoutModel;
+
+  // ADR-010 section 11: an open-advice caller (the assistant chat) is not
+  // answered by a small-class on-device model. Reversal is this condition.
+  if (options.openAdvice && smallModelAnswering(getAIStatus())) {
+    return { ...openAdviceHeldAnswer(), onDevice: true, modelCalled: false };
+  }
 
   const effectiveMode = getEffectiveAIMode();
 
