@@ -67,6 +67,8 @@ export function analyzeEngineRequest(captured, personaPrompts) {
       verifiedReference: null,
       temperature: null,
       maxTokens: null,
+      frequencyPenalty: null,
+      presencePenalty: null,
     };
   }
   const system = captured.messages.find((m) => m?.role === "system");
@@ -96,6 +98,8 @@ export function analyzeEngineRequest(captured, personaPrompts) {
     verifiedReference: VERIFIED_BLOCK.exec(allText)?.[0] ?? null,
     temperature: captured.temperature ?? null,
     maxTokens: captured.max_tokens ?? null,
+    frequencyPenalty: captured.frequency_penalty ?? null,
+    presencePenalty: captured.presence_penalty ?? null,
   };
 }
 
@@ -131,6 +135,8 @@ export function buildCaseRecord({
     verifiedReference: observed.verifiedReference,
     temperature: observed.temperature ?? run.temperature ?? null,
     maxTokens: observed.maxTokens ?? run.maxTokens ?? null,
+    frequencyPenalty: observed.frequencyPenalty,
+    presencePenalty: observed.presencePenalty,
     engineRequests: extra.engineRequests ?? (captured ? 1 : 0),
     response: response ?? "",
     latencyMs: latencyMs ?? null,

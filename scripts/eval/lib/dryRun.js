@@ -326,6 +326,7 @@ export function createStubEngine({
       ],
       max_tokens: settings.maxTokens,
       temperature: settings.temperature,
+      frequency_penalty: settings.frequencyPenalty ?? 0,
     };
   }
 

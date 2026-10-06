@@ -133,6 +133,9 @@ function runPlaywright(opts, files) {
     EVAL_TEMPERATURE: String(opts.temperature),
     EVAL_MAX_TOKENS: String(opts.maxTokens),
     EVAL_THINKING: opts.thinking ? "on" : "off",
+    ...(opts.frequencyPenalty === null
+      ? {}
+      : { EVAL_FREQUENCY_PENALTY: String(opts.frequencyPenalty) }),
     EVAL_TIMEOUT_MS: String(opts.timeoutMs),
     EVAL_FLAGS: opts.flags.join(","),
     ...(opts.contextWindow
@@ -172,6 +175,7 @@ async function main() {
   const settings = {
     temperature: opts.temperature,
     maxTokens: opts.maxTokens,
+    frequencyPenalty: opts.frequencyPenalty,
     thinking: opts.thinking,
     timeoutMs: opts.timeoutMs,
     flags: opts.flags,

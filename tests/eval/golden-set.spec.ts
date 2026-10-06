@@ -40,6 +40,8 @@ interface CapturedRequest {
   messages: { role: string; content: unknown }[];
   max_tokens?: number;
   temperature?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
   extra_body?: { enable_thinking?: boolean };
 }
 
@@ -136,6 +138,8 @@ async function installEngineRequestTap(page: Page): Promise<void> {
             messages: JSON.parse(JSON.stringify(request.messages)),
             max_tokens: request.max_tokens,
             temperature: request.temperature,
+            frequency_penalty: request.frequency_penalty,
+            presence_penalty: request.presence_penalty,
             extra_body: request.extra_body,
           });
         }
@@ -254,6 +258,7 @@ function runCase(
     conditions: unknown;
     temperature: number;
     maxTokens: number;
+    frequencyPenalty: number | null;
     thinking: boolean;
     timeoutMs: number;
   },
@@ -273,6 +278,9 @@ function runCase(
       thinking: a.thinking,
       timeout: a.timeoutMs,
     };
+    if (a.frequencyPenalty !== null) {
+      options.frequencyPenalty = a.frequencyPenalty;
+    }
     if (a.conditions) options.conditions = a.conditions;
     try {
       const result = await mods.ai.generateAI(a.input, options);
@@ -370,6 +378,7 @@ function withNodeTimeout<T>(
 interface RunSettings {
   temperature: number;
   maxTokens: number;
+  frequencyPenalty: number | null;
   thinking: boolean;
   timeoutMs: number;
   flags: string[];
@@ -379,6 +388,10 @@ function readSettings(): RunSettings {
   return {
     temperature: Number(process.env.EVAL_TEMPERATURE ?? 0),
     maxTokens: Number(process.env.EVAL_MAX_TOKENS ?? 1024),
+    frequencyPenalty:
+      process.env.EVAL_FREQUENCY_PENALTY === undefined
+        ? null
+        : Number(process.env.EVAL_FREQUENCY_PENALTY),
     thinking: process.env.EVAL_THINKING === "on",
     timeoutMs: Number(process.env.EVAL_TIMEOUT_MS ?? 300_000),
     flags: (process.env.EVAL_FLAGS ?? "").split(",").filter(Boolean),

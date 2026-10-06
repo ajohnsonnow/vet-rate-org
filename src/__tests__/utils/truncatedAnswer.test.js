@@ -307,3 +307,20 @@ describe("the other engines and the rating answer", () => {
     });
   });
 });
+
+describe("the evaluation's frequency penalty reaches the swarm", () => {
+  it("is passed through when generateAI is given one, and absent otherwise", async () => {
+    swarmReplies({ text: CUT, truncated: false });
+    await generateAI("How do I start a claim?", callOptions());
+    expect(
+      diamondSwarm.generateWithSwarm.mock.calls.at(-1)[1],
+    ).not.toHaveProperty("frequencyPenalty");
+    await generateAI(
+      "How do I start a claim?",
+      callOptions({ frequencyPenalty: 0.6 }),
+    );
+    expect(diamondSwarm.generateWithSwarm.mock.calls.at(-1)[1]).toMatchObject({
+      frequencyPenalty: 0.6,
+    });
+  });
+});

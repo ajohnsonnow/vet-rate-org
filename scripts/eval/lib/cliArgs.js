@@ -10,6 +10,9 @@ options:
   --dry-run              stubbed engine, canned responses, no browser or GPU
   --cases <a01,a11,...>  run only these golden-set case ids
   --temperature <n>      sampling temperature (default 0)
+  --frequency-penalty <n> evaluation only: override the frequency penalty sent
+                         with plain-text requests, 0 to 2 (default: the loaded
+                         model's own value from the device profile)
   --max-tokens <n>       completion token cap (default 1024)
   --thinking on|off      let a thinking model reason before it answers
                          (default off); recorded in the run settings
@@ -41,6 +44,7 @@ export function parseArgs(argv) {
     cases: [],
     temperature: 0,
     maxTokens: 1024,
+    frequencyPenalty: null,
     thinking: false,
     timeoutMs: 300_000,
     contextWindow: null,
@@ -53,6 +57,7 @@ export function parseArgs(argv) {
     "--cases",
     "--temperature",
     "--max-tokens",
+    "--frequency-penalty",
     "--thinking",
     "--timeout-ms",
     "--context-window",
@@ -91,6 +96,16 @@ function applyValue(opts, flag, raw) {
     case "--temperature":
       opts.temperature = toNumber(flag, raw);
       break;
+    case "--frequency-penalty": {
+      const value = raw.trim() === "" ? Number.NaN : Number(raw);
+      if (!Number.isFinite(value) || value < 0 || value > 2) {
+        throw new Error(
+          `--frequency-penalty needs a number from 0 to 2, got ${JSON.stringify(raw)}`,
+        );
+      }
+      opts.frequencyPenalty = value;
+      break;
+    }
     case "--max-tokens":
       opts.maxTokens = toNumber(flag, raw, { integer: true, min: 1 });
       break;

@@ -944,8 +944,26 @@ export const clearLastSwarmGeneration = () => {
 const EMPTY_AFTER_REASONING_MESSAGE =
   "Local AI returned an empty response: the model spent its whole token budget reasoning and produced no answer. Try again, raise the token limit, or turn reasoning off.";
 
-const _frequencyPenalty = (responseFormat) =>
-  responseFormat ? 1.15 : getModelFrequencyPenalty(loadedModelId);
+// XGrammar per-token constrained decoding - guarantees valid JSON,
+// eliminates repair retries. Keep one constant schema per engine
+// instance (WebLLM issue #560: changing schemas disposes the matcher).
+const _structuredOutputFields = (responseFormat) =>
+  responseFormat
+    ? {
+        response_format: {
+          type: "json_object",
+          schema: JSON.stringify(responseFormat),
+        },
+      }
+    : {};
+
+// An explicit penalty from the caller wins; only the evaluation passes one.
+const _frequencyPenalty = (responseFormat, override) => {
+  if (Number.isFinite(override) && override >= 0 && override <= 2) {
+    return override;
+  }
+  return responseFormat ? 1.15 : getModelFrequencyPenalty(loadedModelId);
+};
 
 async function _runSwarmInference(
   agent,
@@ -956,41 +974,27 @@ async function _runSwarmInference(
   responseFormat,
   onStream,
   thinking,
+  frequencyPenalty,
 ) {
   const messages = [
     { role: "system", content: finalSystemPrompt },
     { role: "user", content: prompt },
   ];
-
   const generationConfig = {
     messages,
     max_tokens: maxTokens,
     temperature,
     stream: !!onStream,
     ...buildThinkingRequestFields(loadedModelId, thinking),
-    // Penalize repeated tokens to break repetition loops in small quantized
-    // models. XGrammar masks EOS while grammar expects more tokens, which
-    // amplifies loops - frequency_penalty 1.15 breaks them while keeping
-    // factual field values intact (vLLM issue #40080). top_k/top_p narrow
-    // the token distribution for deterministic extraction (Qwen2.5 docs).
-    frequency_penalty: _frequencyPenalty(responseFormat),
+    // Penalize repeated tokens to break loops in small quantized models;
+    // XGrammar masks EOS and amplifies them, 1.15 breaks them (vLLM #40080).
+    // top_k/top_p narrow the distribution for extraction.
+    frequency_penalty: _frequencyPenalty(responseFormat, frequencyPenalty),
     top_p: responseFormat ? 0.8 : 1,
     top_k: responseFormat ? 20 : -1,
-    // XGrammar per-token constrained decoding - guarantees valid JSON,
-    // eliminates repair retries. Keep one constant schema per engine
-    // instance (WebLLM issue #560: changing schemas disposes the matcher).
-    ...(responseFormat
-      ? {
-          response_format: {
-            type: "json_object",
-            schema: JSON.stringify(responseFormat),
-          },
-        }
-      : {}),
+    ..._structuredOutputFields(responseFormat),
   };
-
   let generated;
-
   if (responseFormat) {
     generated = await _runJSONStreamGeneration(
       webllmEngine,
@@ -1077,6 +1081,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
     onStream = null,
     responseFormat = null, // JSON Schema object - enables XGrammar per-token constrained decoding
     thinking = false, // true lets a thinking model reason before answering; off by default
+    frequencyPenalty = null,
   } = options;
 
   // Resolve effective agent. When a toolId is supplied, derive the agent
@@ -1121,6 +1126,7 @@ export const generateWithSwarm = async (prompt, options = {}) => {
         responseFormat,
         onStream,
         thinking,
+        frequencyPenalty,
       );
     } catch (inferenceError) {
       console.error("💎 WebLLM inference failed:", inferenceError);
