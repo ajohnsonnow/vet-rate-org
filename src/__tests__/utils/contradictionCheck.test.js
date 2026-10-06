@@ -269,17 +269,13 @@ describe("flagContradictions", () => {
     );
   });
 
-  it("leaves structured output, opted-out calls and calculator text alone", () => {
+  it("leaves structured output and opted-out calls alone", () => {
     const json = { text: `{"note": "${wrong}"}` };
     expect(flagContradictions(json, {}, SECONDARY_PROMPT)).toBe(json);
     const optedOut = { text: wrong };
     expect(
       flagContradictions(optedOut, { useDKB: false }, SECONDARY_PROMPT),
     ).toBe(optedOut);
-    const calculatorText = { text: wrong, modelCalled: false };
-    expect(flagContradictions(calculatorText, {}, SECONDARY_PROMPT)).toBe(
-      calculatorText,
-    );
   });
 
   it("checks a TDIU denial in a model answer whether or not the call carried conditions", () => {

@@ -280,8 +280,8 @@ const NOTES = [
   "- `no-new-pii`: no SSN-shaped string and no labeled date-of-birth-shaped string that is absent from the case input (for a tool case, its form inputs and attached document). Unlabeled dates are not flagged.",
   "- `draft-returned`: writing-tool cases only; the tool handed back a draft, with or without reworded passages. It says a draft exists, not that it is good: score the response as usual.",
   "- `routing` is `n/a` for a tool case that made no model call because the form held nothing typed to reword.",
-  "- `routing` is `n/a` for a rater case with structured conditions: the calculator answers it and no model is called. A model call on such a case is a `routing` FAIL.",
-  "- `calc-match` on those cases reads the rating the calculator's answer opens with. The text is the calculator's, so grade it on whether the working is correct and clear, not on model behaviour.",
+  "- `routing` is `n/a` for a rating question on a rater tool: the app answers it from the calculator, or asks for the ratings it needs, and no model is called. A model call on such a case is a `routing` FAIL.",
+  "- `calc-match` on the calculator's answers reads the sentence in which the calculator's answer states the combined rating. The text is the calculator's, so grade it on whether the working is correct and clear, not on model behaviour.",
   "- `routing` on tool cases: the statement helper and the Decision Decoder send their own system prompt, so the engine receives that and no persona prompt. For those cases routing passes when the engine received the tool's own prompt, and the agent column says so.",
 ];
 

@@ -32,7 +32,7 @@ import { autoSummarizeIfLong } from "../utils/redditSummarizer";
 import { getVeteranAIContext } from "../utils/veteranContextProvider";
 import {
   describeSavedRatings,
-  savedRatingsGrounding,
+  ratingQuestionGrounding,
 } from "../utils/savedRatingsGrounding";
 
 // Build context-aware system prompt
@@ -132,7 +132,7 @@ async function sendMessage({
   try {
     // ADR-009: "context" - the veteran's own typed question plus the
     // allow-listed veteran context, never a document upload.
-    const grounding = savedRatingsGrounding(input.trim());
+    const grounding = ratingQuestionGrounding(input.trim());
     const result = await generateAI(input.trim(), {
       ...grounding,
       dataClass: AI_DATA_CLASS.CONTEXT,
@@ -163,7 +163,7 @@ async function sendMessage({
     const assistantMessage = {
       role: "assistant",
       content:
-        grounding && result.calculatorLead
+        grounding?.conditions && result.calculatorLead
           ? `${describeSavedRatings(grounding.conditions)}\n\n${responseText}`
           : responseText,
       timestamp: new Date(),

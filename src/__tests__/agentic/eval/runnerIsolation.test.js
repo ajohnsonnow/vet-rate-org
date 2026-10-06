@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { calculateVARating } from "../../../utils/vaCalculator";
 import { resolveAgentForTool } from "../../../utils/agentBoundaries";
 import { SWARM_AGENTS } from "../../../utils/diamondSwarm";
-import { buildCalculatorAnswer } from "../../../utils/raterGrounding";
+import { answerRatingQuestion } from "../../../utils/ratingQuestion";
+import { noModelAnswerer } from "../../../../scripts/eval/lib/noModelCases.js";
 import { buildDryRunTranscript } from "../../../../scripts/eval/lib/dryRun.js";
 import { loadGoldenSet } from "../../../../scripts/eval/lib/goldenSet.js";
 import { fingerprintPersonas } from "../../../../scripts/eval/lib/goldenRecord.js";
@@ -22,14 +22,17 @@ const personaPrompts = Object.fromEntries(
   Object.values(SWARM_AGENTS).map((a) => [a.id, a.systemPrompt]),
 );
 const fingerprints = fingerprintPersonas(personaPrompts);
+const answerWithoutModel = noModelAnswerer({
+  resolveAgentForTool,
+  answerRatingQuestion,
+});
 
 const records = (settings = { temperature: 0, maxTokens: 1024 }) => {
   const [meta, ...cases] = buildDryRunTranscript({
     cases: goldenCases,
     personaPrompts,
     resolveAgentForTool,
-    calculateVARating,
-    buildCalculatorAnswer,
+    answerWithoutModel,
     settings,
   });
   return { meta, byId: new Map(cases.map((r) => [r.id, r])) };
@@ -246,21 +249,21 @@ describe("dry run: reasoning and timeout isolation", () => {
     expect(byId.get("a24")).toMatchObject({
       validatorBlocked: false,
     });
-    expect(byId.get("a14").validatorBlocked).toBeNull();
+    expect(byId.get("a15").validatorBlocked).toBeNull();
   });
 
   it("a case after a timeout does not inherit the timed-out case's request", () => {
-    const a14 = byId.get("a14");
     const a15 = byId.get("a15");
-    expect(a14.error).toMatch(/timed out/);
-    expect(a14.actualAgent).toBe("rater");
-
-    expect(a15.engineRequests).toBe(2);
+    const a16 = byId.get("a16");
+    expect(a15.error).toMatch(/timed out/);
     expect(a15.actualAgent).toBe("auditor");
-    expect(a15.systemPromptFingerprint).toBe(fingerprints.auditor);
-    expect(a15.computedResultInjected).toBe(false);
-    expect(a15.kbContextInjected).toBe(true);
-    expect(a15.requestMatch).toBe("matched");
+
+    expect(a16.engineRequests).toBe(2);
+    expect(a16.actualAgent).toBe("auditor");
+    expect(a16.systemPromptFingerprint).toBe(fingerprints.auditor);
+    expect(a16.computedResultInjected).toBe(false);
+    expect(a16.kbContextInjected).toBe(true);
+    expect(a16.requestMatch).toBe("matched");
   });
 
   it("a case with no capture still records nulls", () => {

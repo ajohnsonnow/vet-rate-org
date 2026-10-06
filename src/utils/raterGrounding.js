@@ -120,10 +120,35 @@ function describeBilateralNotes(calc) {
   ];
 }
 
-const groupCappedLine = (group) =>
-  group.combinedBilateral >= 100
-    ? "  Bilateral factor: the group already combines to 100%, so the factor adds nothing and the group rating is 100%"
-    : `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.combinedBilateral / 10}, but a rating cannot exceed 100%, so the group rating is 100%`;
+/*
+ * The factor in the order 38 CFR § 4.26 gives it: 10 percent of the group's
+ * combined value, that amount added to the value, then the result. The sum is
+ * shown before it is rounded so no step is left for the reader to work out.
+ */
+function bilateralFactorLines(group) {
+  const value = group.combinedBilateral;
+  if (value >= 100) {
+    return [
+      "  Bilateral factor: the group already combines to 100%, so the factor adds nothing and the group rating is 100%",
+    ];
+  }
+  const added = value / 10;
+  const sum = (value * 11) / 10;
+  const factor = `  Bilateral factor: 10% of ${value} = ${added}, added to the ${value}: ${value} + ${added} = ${sum}`;
+  if (group.bilateralFactorCapped) {
+    return [
+      factor,
+      "  Group rating: a rating cannot exceed 100%, so the group rating is 100%",
+    ];
+  }
+  const rating = group.bilateralGroupRating;
+  return [
+    factor,
+    sum === rating
+      ? `  Group rating: ${rating}%`
+      : `  Group rating: ${sum} rounds to ${rating}%`,
+  ];
+}
 
 const stepLine = (s) => `${s.from}% combined with ${s.with}% = ${s.result}%`;
 
@@ -152,11 +177,7 @@ export function formatCalculatorWorking(calc) {
       `Bilateral group (${pairNames(calc).join(" and ")}, 38 CFR § 4.26):`,
     );
     bilateralSteps.forEach((s) => lines.push(`  ${stepLine(s)}`));
-    lines.push(
-      group.bilateralFactorCapped
-        ? groupCappedLine(group)
-        : `  Bilateral factor: 10% of ${group.combinedBilateral}% = ${group.bilateralFactor}, so the group rating is ${group.bilateralGroupRating}%`,
-    );
+    lines.push(...bilateralFactorLines(group));
   }
   if (calc.bilateralExcludedConditions.length > 0) {
     lines.push(
@@ -233,11 +254,26 @@ function describeTdiuResult(calc, conditions) {
 const TDIU_PARAGRAPH_LEAD =
   "About your question on individual unemployability (TDIU):";
 
+const ratedConditions = (calc) => [
+  ...calc.bilateralConditions,
+  ...calc.nonBilateralConditions,
+];
+
+/**
+ * The result of a TDIU question in one sentence, so it is read before the
+ * detail: whether the percentage thresholds are met, and that the percentages
+ * do not settle entitlement either way.
+ */
+function describeTdiuOutcome(calc) {
+  const highest = Math.max(...ratedConditions(calc).map((c) => c.rating));
+  const { eligible } = evaluateTdiuThresholds(highest, calc.combinedRating);
+  return eligible
+    ? "On these ratings, the percentage thresholds for TDIU in 38 CFR § 4.16(a) are met. Meeting them is not by itself entitlement to TDIU: VA must also find that you are unable to secure or follow a substantially gainful occupation because of your service-connected disabilities."
+    : "On these ratings, the percentage thresholds for TDIU in 38 CFR § 4.16(a) are not met. That does not by itself rule TDIU out: 38 CFR § 4.16(b) provides for extra-schedular consideration of veterans who are unemployable because of service-connected disabilities but do not meet the percentages.";
+}
+
 export function buildTdiuThresholdParagraph(calc) {
-  const conditions = [
-    ...calc.bilateralConditions,
-    ...calc.nonBilateralConditions,
-  ];
+  const conditions = ratedConditions(calc);
   const q = TDIU_REGULATION_QUOTES;
   return [
     TDIU_PARAGRAPH_LEAD,
@@ -277,10 +313,16 @@ const pairFindingIsRelevant = (calc, question) =>
 export const ASK_SEPARATELY_SENTENCE =
   "This answer covers the rating calculation only. If you also asked about something else, such as monthly pay or how to file, please ask it as a separate question.";
 
+// After the TDIU paragraphs, "the rating calculation only" reads as if the
+// TDIU question went unanswered, so a TDIU answer names what it did cover.
+export const TDIU_ASK_SEPARATELY_SENTENCE =
+  "This answer covers your combined rating and the 38 CFR § 4.16(a) percentage thresholds. It does not say whether you are unemployable, which VA decides. If you also asked about something else, such as how to apply or monthly pay, please ask it as a separate question.";
+
 /**
  * The answer to a rating question, built only from the calculator's result.
- * For a TDIU question the threshold paragraph comes right after the combined
- * rating, ahead of the working, because it is what was asked. `question` is the veteran's text and
+ * A TDIU answer opens with the result in one sentence, and its threshold
+ * paragraph comes right after the combined rating, ahead of the working,
+ * because that is what was asked. `question` is the veteran's text and
  * decides only whether the no-pair finding is worth saying.
  */
 export function buildCalculatorExplanation(
@@ -294,6 +336,7 @@ export function buildCalculatorExplanation(
     .filter(Boolean)
     .join(" ");
   return [
+    tdiu ? describeTdiuOutcome(calc) : "",
     `Your combined rating is ${calc.combinedRating}%.`,
     tdiu ? buildTdiuThresholdParagraph(calc) : "",
     "VA does not add ratings together. It combines them one at a time, so each new rating applies only to the efficiency left after the earlier ones (38 CFR § 4.25).",
@@ -310,11 +353,10 @@ export function buildCalculatorExplanation(
  * model: the explanation for their question, then the closing sentence.
  */
 export function buildCalculatorAnswer(calc, question) {
-  const explanation = buildCalculatorExplanation(calc, {
-    tdiu: mentionsUnemployability(question),
-    question,
-  });
-  return [explanation, ASK_SEPARATELY_SENTENCE].join("\n\n");
+  const tdiu = mentionsUnemployability(question);
+  const explanation = buildCalculatorExplanation(calc, { tdiu, question });
+  const closing = tdiu ? TDIU_ASK_SEPARATELY_SENTENCE : ASK_SEPARATELY_SENTENCE;
+  return [explanation, closing].join("\n\n");
 }
 
 function describeGroupBasis(calc) {

@@ -71,7 +71,8 @@ import {
   buildCalculatorExplanation,
   ASK_SEPARATELY_SENTENCE,
 } from "../../utils/raterGrounding";
-import { savedRatingsGrounding } from "../../utils/savedRatingsGrounding";
+import { ratingQuestionGrounding } from "../../utils/savedRatingsGrounding";
+import { buildNeedsRatingsAnswer } from "../../utils/ratingQuestion";
 import { GOLDEN } from "./recordedAnswers";
 
 const QUESTION = "What is my combined rating?";
@@ -182,9 +183,12 @@ describe("what the calculator's answer covers", () => {
     noEngineWasCalled();
     expect(
       result.text.startsWith(
-        "Your combined rating is 80%.\n\nAbout your question on individual unemployability (TDIU):",
+        "On these ratings, the percentage thresholds for TDIU in 38 CFR § 4.16(a) are met.",
       ),
     ).toBe(true);
+    expect(result.text).toContain(
+      "Your combined rating is 80%.\n\nAbout your question on individual unemployability (TDIU):",
+    );
     expect(result.text).toContain("Vet-Rate cannot determine that.");
     expect(result.text).not.toContain("No bilateral pair applies");
   });
@@ -236,7 +240,7 @@ describe("what the calculator's answer covers", () => {
 
   it("is what the assistant's saved-ratings grounding gets, at once", async () => {
     BACKENDS.swarm();
-    const grounding = savedRatingsGrounding(QUESTION, GOLDEN.a12.conditions);
+    const grounding = ratingQuestionGrounding(QUESTION, GOLDEN.a12.conditions);
     const result = await generateAI(QUESTION, {
       ...grounding,
       dataClass: AI_DATA_CLASS.CONTEXT,
@@ -250,7 +254,105 @@ describe("what the calculator's answer covers", () => {
   });
 });
 
-describe("calls the calculator cannot answer still go to the model", () => {
+describe("a rating question with no usable structured ratings", () => {
+  it.each(Object.keys(BACKENDS))(
+    "is answered from the ratings the question lists, with no engine call (%s)",
+    async (name) => {
+      await BACKENDS[name]();
+      const result = await generateAI(
+        GOLDEN.a11.input,
+        callOptions({ toolId: "calculator", conditions: undefined }),
+      );
+      noEngineWasCalled();
+      expect(result).toMatchObject({
+        modelCalled: false,
+        onDevice: true,
+        calculatorLead: { expected: 80 },
+        ratingsSource: "question",
+      });
+      expect(
+        result.text.startsWith(
+          "This uses the ratings read from your question: PTSD 50%, tinnitus 30%, back 20% and knee 10%.",
+        ),
+      ).toBe(true);
+      expect(result.mode).toBeUndefined();
+      expect(auditSpy).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(Object.keys(BACKENDS))(
+    "gets the fixed request for ratings when none can be read, with no engine call (%s)",
+    async (name) => {
+      await BACKENDS[name]();
+      const result = await generateAI(
+        GOLDEN.a14.input,
+        callOptions({ toolId: "rating-analyzer", conditions: undefined }),
+      );
+      noEngineWasCalled();
+      expect(result).toEqual({
+        text: buildNeedsRatingsAnswer(GOLDEN.a14.input),
+        onDevice: true,
+        modelCalled: false,
+        needsRatings: true,
+      });
+    },
+  );
+
+  it.each([
+    ["an empty list", { conditions: [] }],
+    [
+      "no entry with a readable rating",
+      { conditions: [{ name: "Sinusitis", rating: "unknown", side: "none" }] },
+    ],
+  ])("asks for the ratings when given %s", async (_name, overrides) => {
+    BACKENDS.swarm();
+    const result = await generateAI(QUESTION, callOptions(overrides));
+    noEngineWasCalled();
+    expect(result.needsRatings).toBe(true);
+    expect(result.calculatorLead).toBeUndefined();
+  });
+});
+
+describe("a rating question asked in the assistant", () => {
+  const assistantCall = (question, saved) =>
+    generateAI(question, {
+      ...ratingQuestionGrounding(question, saved),
+      dataClass: AI_DATA_CLASS.CONTEXT,
+      skipFeatureCheck: true,
+      systemPrompt: "You are the Navigator.",
+      taskType: "assistant",
+    });
+
+  it("the assistant: ratings typed in the question are used, not the saved ones", async () => {
+    BACKENDS.swarm();
+    const result = await assistantCall(
+      "What is my combined rating with 70% PTSD and 30% migraines?",
+      GOLDEN.a12.conditions,
+    );
+    noEngineWasCalled();
+    expect(result.calculatorLead).toEqual({ expected: 80 });
+    expect(result.ratingsSource).toBe("question");
+  });
+
+  it("the assistant: with nothing saved and nothing listed, the fixed request", async () => {
+    BACKENDS.swarm();
+    const result = await assistantCall("What is my combined rating?", []);
+    noEngineWasCalled();
+    expect(result.needsRatings).toBe(true);
+  });
+
+  it("the assistant: a hypothetical is not worked out from the saved ratings", async () => {
+    BACKENDS.swarm();
+    const result = await assistantCall(
+      "What would my combined rating be if my PTSD went to 70%?",
+      GOLDEN.a12.conditions,
+    );
+    noEngineWasCalled();
+    expect(result.needsRatings).toBe(true);
+  });
+});
+
+describe("calls that are not calculations still go to the model", () => {
   beforeEach(() => {
     BACKENDS.swarm();
     diamondSwarm.generateWithSwarm.mockResolvedValue({
@@ -259,16 +361,24 @@ describe("calls the calculator cannot answer still go to the model", () => {
   });
 
   it.each([
-    ["no conditions", { conditions: undefined }],
-    ["an empty list", { conditions: [] }],
     [
-      "no entry with a readable rating",
-      { conditions: [{ name: "Sinusitis", rating: "unknown", side: "none" }] },
+      "a rater question that asks for no calculation",
+      GOLDEN.a21.input,
+      { toolId: "calculator", conditions: undefined },
     ],
-    ["a route that is not the rater's", { toolId: "cfile-analyzer" }],
-  ])("%s", async (_name, overrides) => {
-    const result = await generateAI(
+    [
+      "a rating question on a route that is not the rater's",
       QUESTION,
+      { toolId: "cfile-analyzer" },
+    ],
+    [
+      "a rating question on another route with no conditions",
+      GOLDEN.a11.input,
+      { toolId: "nexus-builder", conditions: undefined },
+    ],
+  ])("%s", async (_name, question, overrides) => {
+    const result = await generateAI(
+      question,
       callOptions({ useDKB: false, skipValidation: true, ...overrides }),
     );
     expect(diamondSwarm.generateWithSwarm).toHaveBeenCalledTimes(1);
@@ -279,5 +389,31 @@ describe("calls the calculator cannot answer still go to the model", () => {
     expect(sent).not.toContain("=== COMPUTED RESULT");
     expect(sent).not.toContain(ASK_SEPARATELY_SENTENCE);
     expect(result.text).not.toContain(ASK_SEPARATELY_SENTENCE);
+  });
+});
+
+describe("text the app wrote is returned as it is", () => {
+  it("carries no correction, citation or form notice from the model-answer checks", async () => {
+    BACKENDS.swarm();
+    for (const [question, options] of [
+      [
+        GOLDEN.a13.input,
+        { toolId: "tdiu-builder", conditions: GOLDEN.a13.conditions },
+      ],
+      [GOLDEN.a14.input, { toolId: "rating-analyzer", conditions: undefined }],
+    ]) {
+      const result = await generateAI(question, callOptions(options));
+      expect(Object.keys(result).sort()).toEqual(
+        result.needsRatings
+          ? ["modelCalled", "needsRatings", "onDevice", "text"]
+          : [
+              "calculatorLead",
+              "modelCalled",
+              "onDevice",
+              "ratingsSource",
+              "text",
+            ],
+      );
+    }
   });
 });

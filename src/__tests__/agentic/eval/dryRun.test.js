@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 import { calculateVARating } from "../../../utils/vaCalculator";
 import { resolveAgentForTool } from "../../../utils/agentBoundaries";
 import { SWARM_AGENTS } from "../../../utils/diamondSwarm";
-import { buildCalculatorAnswer } from "../../../utils/raterGrounding";
+import { answerRatingQuestion } from "../../../utils/ratingQuestion";
+import { noModelAnswerer } from "../../../../scripts/eval/lib/noModelCases.js";
 import {
   AUTOMATED_CHECK_IDS,
   AUTO_FAIL,
@@ -40,8 +41,13 @@ const personaPrompts = Object.fromEntries(
   Object.values(SWARM_AGENTS).map((a) => [a.id, a.systemPrompt]),
 );
 const settings = { temperature: 0, maxTokens: 1024, timeoutMs: 1000 };
+const answerWithoutModel = noModelAnswerer({
+  resolveAgentForTool,
+  answerRatingQuestion,
+});
 const ctx = {
   calculateVARating,
+  answerWithoutModel,
   legalSections: DRY_RUN_LEGAL_SECTIONS,
   legalIndexNote: "fixture",
 };
@@ -73,8 +79,7 @@ function dryRun(dir) {
       cases: goldenCases,
       personaPrompts,
       resolveAgentForTool,
-      calculateVARating,
-      buildCalculatorAnswer,
+      answerWithoutModel,
       settings,
     }),
   );

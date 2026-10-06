@@ -49,8 +49,7 @@ import {
 import * as wllamaService from "./wllamaService";
 import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
-import { calculateVARating } from "./vaCalculator";
-import { buildCalculatorAnswer } from "./raterGrounding";
+import { answerRatingQuestion } from "./ratingQuestion";
 import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import {
   MIN_OUTPUT_TOKENS,
@@ -3174,31 +3173,28 @@ export const getDocumentAIRouting = () => {
 };
 
 /**
- * A rating question that comes with the veteran's ratings as structured
- * conditions is answered by the calculator: its working, the TDIU threshold
- * paragraph when the question asks about TDIU, and its notes on the bilateral
- * factor and on entries it left out. No engine is called, on-device or cloud,
- * and nothing leaves the device. Recorded runs showed that a model's text on
- * these questions was either wrong and replaced, or redundant, or its own
- * system prompt recited; none of it was worth showing. Returns null when the
- * call is not a rater route or no entry has a rating the calculator can use,
- * and the call then goes to the model like any other.
+ * Rating arithmetic never comes from a model. A call that brings the
+ * veteran's ratings as structured conditions on a rater route is answered by
+ * the calculator. A question on a rater tool or task that asks for a combined
+ * rating, a bilateral factor result or the TDIU percentage thresholds is
+ * answered from the ratings it lists when they can be read with certainty,
+ * and otherwise by a fixed answer that asks for them. No engine is called,
+ * on-device or cloud, and nothing leaves the device. Recorded runs showed a
+ * model's text on these questions was wrong and replaced, or redundant, or
+ * invented arithmetic when it had no ratings. Returns null for any other
+ * call, which then goes to the model.
+ *
+ * Questions are recognised only on a rater tool or task, not when a rater
+ * model merely happens to be loaded: that would catch other tools' prompts.
  */
-function _answerFromCalculator(prompt, options) {
-  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
-    return null;
-  }
-  if (!_isRaterRoute(options, getEffectiveAIMode())) return null;
-  const calc = calculateVARating(options.conditions);
-  const used =
-    calc.bilateralConditions.length + calc.nonBilateralConditions.length;
-  if (used === 0) return null;
-  return {
-    text: buildCalculatorAnswer(calc, prompt),
-    onDevice: true,
-    modelCalled: false,
-    calculatorLead: { expected: calc.combinedRating },
-  };
+function _answerWithoutModel(prompt, options) {
+  const raterTool =
+    resolveWarrantCouncilAgent(options.toolId, options.taskType) === "rater";
+  if (!raterTool && !_isRaterRoute(options, getEffectiveAIMode())) return null;
+  const answer = answerRatingQuestion(prompt, options.conditions, {
+    recognise: raterTool,
+  });
+  return answer && { ...answer, onDevice: true, modelCalled: false };
 }
 
 /**
@@ -3211,8 +3207,8 @@ const generateAIInternal = async (prompt, options = {}) => {
   // Crisis safety check (unless explicitly skipped)
   await _checkCrisisSafety(prompt, options);
 
-  const calculatorAnswer = _answerFromCalculator(prompt, options);
-  if (calculatorAnswer) return calculatorAnswer;
+  const withoutModel = _answerWithoutModel(prompt, options);
+  if (withoutModel) return withoutModel;
 
   const effectiveMode = getEffectiveAIMode();
 

@@ -145,7 +145,7 @@ describe("reference material is sized to the window", () => {
 
 describe("what gives way first", () => {
   it("the keyword block goes before the verified block", async () => {
-    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-builder" }));
+    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-narrative" }));
     const { text } = swarmCall();
     expect(text).toContain(VERIFIED);
     expect(text).not.toContain(KEYWORD);
@@ -154,7 +154,7 @@ describe("what gives way first", () => {
 
   it("the verified block goes next, and the question is always sent", async () => {
     deviceProfile.contextWindowSize = 7150;
-    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-builder" }));
+    await generateAI(TDIU_QUESTION, callOptions({ toolId: "tdiu-narrative" }));
     const { text, prompt } = swarmCall();
     expect(text).not.toContain(VERIFIED);
     expect(text).not.toContain(KEYWORD);
@@ -189,7 +189,7 @@ describe("the output limit sent fits beside the prompt", () => {
       await generateAI(
         TDIU_QUESTION,
         callOptions({
-          toolId: "tdiu-builder",
+          toolId: "tdiu-narrative",
           maxTokens,
         }),
       );
