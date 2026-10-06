@@ -52,7 +52,7 @@ const EMBEDDED_CSS = `
     }
 
     .header-content {
-      max-width: 1200px;
+      max-width: 72ch;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -70,8 +70,9 @@ const EMBEDDED_CSS = `
       margin-top: 0.25rem;
     }
 
+    /* 72ch less the side padding leaves a reading measure near 65 characters. */
     .container {
-      max-width: 1200px;
+      max-width: 72ch;
       margin: 0 auto;
       padding: 2rem 1.5rem;
       background: white;
@@ -301,6 +302,15 @@ const EMBEDDED_CSS = `
 
     a:hover {
       text-decoration: underline;
+    }
+
+    /* Very large screens: every size on this page is in rem, so the root size
+       grows with the viewport above 2560px, bounded at 1.5x at 3840px, the
+       same scale the app uses. */
+    @media (min-width: 2560px) {
+      html {
+        font-size: clamp(16px, calc(100vw / 160), 24px);
+      }
     }
 
     @media (max-width: 768px) {
@@ -691,7 +701,7 @@ function convertSectionToHTML(jsxSection) {
   html = html.replaceAll("<>", "").replaceAll("</>", "");
 
   // Convert self-closing JSX tags
-  // eslint-disable-next-line sonarjs/slow-regex -- fuzz-tested: `\s*` after `[^>]*` was redundant ambiguity (both can match whitespace), a confirmed 13.5s hang at 80k adversarial chars; removing it is a no-op on matched content (verified) and drops it to 0ms
+  // eslint-disable-next-line sonarjs/slow-regex, sonarjs/super-linear-regex -- fuzz-tested: `\s*` after `[^>]*` was redundant ambiguity (both can match whitespace), a confirmed 13.5s hang at 80k adversarial chars; removing it is a no-op on matched content (verified) and drops it to 0ms
   html = html.replace(/<(\w+)([^>]*)\/>/g, "<$1$2></$1>");
 
   // Remove React-specific attributes (bounded: fuzz-tested, unbounded leading
