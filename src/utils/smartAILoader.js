@@ -12,6 +12,7 @@ import {
   getCachedDeviceProfile,
 } from "./deviceCapabilityDetector";
 import { formatDownloadSize } from "./localModelLabels";
+import { describeOnDeviceSupport } from "./deviceLabels";
 
 /**
  * Get device type
@@ -28,10 +29,12 @@ const FALLBACK_ROLE = {
   reason: "Balanced performance for general tasks",
 };
 
-const describeLoadedModel = (deviceModel) =>
-  deviceModel
-    ? ` On this device it runs ${deviceModel.displayName} (${formatDownloadSize(deviceModel)}). It is a one-time download kept on your device.`
-    : "";
+const describeLoadedModel = (deviceModel, tabletNote) => {
+  if (!deviceModel) return "";
+  const size = formatDownloadSize(deviceModel);
+  const base = ` On this device it runs ${deviceModel.displayName} (${size}). It is a one-time download kept on your device.`;
+  return tabletNote ? `${base} ${tabletNote}` : base;
+};
 
 /**
  * Get the role and on-device model for this device and tool.
@@ -46,11 +49,15 @@ export const getRecommendedModelForDevice = (toolId) => {
   const primaryModel = toolRec?.primary;
   const profile = getCachedDeviceProfile();
   const deviceModel = profile?.hasWebGPU ? describeDeviceModel(profile) : null;
+  const { tabletNote } = describeOnDeviceSupport(profile);
 
   if (!primaryModel?.modelId) {
     return {
       ...FALLBACK_ROLE,
-      reason: FALLBACK_ROLE.reason + "." + describeLoadedModel(deviceModel),
+      reason:
+        FALLBACK_ROLE.reason +
+        "." +
+        describeLoadedModel(deviceModel, tabletNote),
       deviceModel,
     };
   }
@@ -62,7 +69,7 @@ export const getRecommendedModelForDevice = (toolId) => {
   return {
     id: primaryModel.modelId,
     name: primaryModel.modelName || primaryModel.modelId,
-    reason: `${prefix} ${toolRec.name}: ${primaryModel.reason || fallbackReason}${describeLoadedModel(deviceModel)}`,
+    reason: `${prefix} ${toolRec.name}: ${primaryModel.reason || fallbackReason}${describeLoadedModel(deviceModel, tabletNote)}`,
     deviceModel,
   };
 };

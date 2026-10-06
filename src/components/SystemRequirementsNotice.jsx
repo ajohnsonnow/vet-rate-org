@@ -4,7 +4,10 @@ import {
   describeDeviceModel,
 } from "../utils/deviceCapabilityDetector";
 import { formatDownloadSize } from "../utils/localModelLabels";
-import { describeDeviceClass } from "../utils/deviceLabels";
+import {
+  describeDeviceClass,
+  TABLET_UNTESTED_SENTENCE,
+} from "../utils/deviceLabels";
 import {
   AI_WARMUP,
   AI_REQUIREMENTS,
@@ -188,7 +191,7 @@ function tabletSummary(deviceModel) {
   const model = deviceModel
     ? `${deviceModel.displayName} (${formatDownloadSize(deviceModel)})`
     : "a smaller AI model";
-  return `Tablet detected. On-device AI loads ${model} when your browser has WebGPU. It has not been tested on tablets, and large files will be slow.`;
+  return `Tablet detected. On-device AI loads ${model} when your browser has WebGPU. ${TABLET_UNTESTED_SENTENCE}`;
 }
 
 function TabletNotice({ deviceModel }) {
