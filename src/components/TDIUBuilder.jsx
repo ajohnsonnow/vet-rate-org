@@ -22,6 +22,7 @@ import BuyMeCoffee from "./BuyMeCoffee";
 import ReportBugLink from "./ReportBugLink";
 import { downloadDraft } from "../utils/draftExport";
 import { updatePacketDocument } from "../utils/myPacketManager";
+import { saveForm, updateSavedForm } from "../utils/veteranProfile";
 import { isAnyAIAvailable, getAIStatus } from "../utils/unifiedAIService";
 import {
   STANDARD_DRAFT_NOTE,
@@ -430,6 +431,25 @@ async function copyBox18Statement(vocationalAnalysis) {
 }
 
 /**
+ * List the statement on My Packet's Forms tab, where the veteran finds
+ * saved forms and statements. Returns the entry's id, or null when it
+ * could not be stored.
+ */
+function listTdiuStatement(text, earlierFormId) {
+  const fields = { title: "TDIU statement", generatedContent: text };
+  if (earlierFormId && updateSavedForm(earlierFormId, fields)) {
+    return earlierFormId;
+  }
+  return saveForm({
+    formType: "tdiu-statement",
+    formNumber: "VA Form 21-8940",
+    formName: "Statement of unemployability (Box 18)",
+    status: "Draft",
+    ...fields,
+  });
+}
+
+/**
  * Save the analysis and work history as one My Packet item. Saving again
  * updates the item already saved; it never makes a second.
  */
@@ -473,13 +493,24 @@ function useTdiuResults(workHistory) {
     setAnalysis(next);
     setSaveState(null);
   };
-  const saveToPacket = () =>
-    fileTdiuStatement(
+  const saveToPacket = () => {
+    // The statement as downloaded goes on My Packet's Forms tab. Without
+    // that entry there is nothing for the veteran to find, so it is not
+    // reported as saved.
+    const formId = listTdiuStatement(
+      buildFullStatement(vocationalAnalysis, workHistory),
+      savedItem?.formId,
+    );
+    if (!formId) {
+      setSaveState("failed");
+      return Promise.resolve();
+    }
+    return fileTdiuStatement(
       tdiuSavePayload(vocationalAnalysis, history),
       savedItem?.documentId,
     ).then(
       (documentId) => {
-        setSavedItem({ saved: onScreen, at: new Date(), documentId });
+        setSavedItem({ saved: onScreen, at: new Date(), documentId, formId });
         setSaveState("saved");
       },
       (err) => {
@@ -487,6 +518,7 @@ function useTdiuResults(workHistory) {
         setSaveState("failed");
       },
     );
+  };
   const download = async (format) => {
     setDownloadError(null);
     try {
