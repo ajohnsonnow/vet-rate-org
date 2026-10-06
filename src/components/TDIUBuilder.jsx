@@ -786,7 +786,6 @@ function TDIUProgressAndAILoad({ step }) {
 function TDIUSupportCTA() {
   return (
     <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-2xl p-6 border border-amber-700/50 mt-6">
-      \n{" "}
       <div className="flex items-center gap-4">
         <img
           src="/images/Anth.jpg"

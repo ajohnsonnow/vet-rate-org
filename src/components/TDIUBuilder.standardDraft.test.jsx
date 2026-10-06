@@ -66,6 +66,8 @@ const expectStandardDraft = () => {
   expect(document.body.textContent).not.toMatch(
     /exceed employer tolerance|No reasonable accommodations|8-hour workday/,
   );
+  // A stray escape sequence once printed as text above the support banner.
+  expect(document.body.textContent).not.toContain("\\n");
 };
 
 beforeEach(() => {
