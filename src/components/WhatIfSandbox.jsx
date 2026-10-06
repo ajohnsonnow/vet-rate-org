@@ -502,7 +502,7 @@ const BilateralBonusIndicator = ({ bilateralNames }) => {
       <p className="text-sm text-green-700 dark:text-green-300">
         Applied to {joinNames(bilateralNames)}.
       </p>
-      <p className="mt-1 text-xs text-green-600 dark:text-green-400">
+      <p className="mt-1 text-xs text-green-800 dark:text-green-300">
         38 CFR § 4.26: these ratings are combined first, and 10% of that
         combined value is added before combining with the rest.
       </p>
