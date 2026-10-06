@@ -34,7 +34,14 @@ const LOCAL_FORM_PATHS = {
 
 /**
  * Actual PDF field names extracted from VA forms
- * These are the real field identifiers used in the official VA PDFs
+ * These are the real field identifiers used in the official VA PDFs.
+ *
+ * A field's name does not say whose it is: on 21-22 the fields named
+ * "Claimants_MailingAddress...[1]" are the VETERAN's address (item 7) and
+ * "TelephoneNumber...[0]" is the CLAIMANT's phone (item 12). Each form's own
+ * tooltip for the field does say (its item number), and
+ * pdfFormFillerFieldOwners.test.js holds every key here to it. Check the
+ * tooltip before adding or moving a key.
  */
 const VA_FORM_FIELDS = {
   // VA Form 21-10210 - Lay/Witness Statement
@@ -66,6 +73,7 @@ const VA_FORM_FIELDS = {
     veteranPhone2: "vba210304[0].#subform[0].FirstThreeNumbers[0]",
     veteranPhone3: "vba210304[0].#subform[0].LastFourNumbers[0]",
     veteranEmail: "vba210304[0].#subform[0].EMAIL_ADDRESS[0]",
+    veteranEmailLine2: "vba210304[0].#subform[0].EMAIL_ADDRESS[1]",
     // Witness/Claimant info (Section 2)
     claimantFirstName: "vba210304[0].#subform[0].Veterans_First_Name[1]",
     claimantMiddleInitial: "vba210304[0].#subform[0].Middle_Initial1[1]",
@@ -87,8 +95,10 @@ const VA_FORM_FIELDS = {
     claimantPhone2: "vba210304[0].#subform[0].FirstThreeNumbers[2]",
     claimantPhone3: "vba210304[0].#subform[0].LastFourNumbers[2]",
     claimantEmail: "vba210304[0].#subform[0].EMAIL_ADDRESS[2]",
+    claimantEmailLine2: "vba210304[0].#subform[0].EMAIL_ADDRESS[3]",
     // Statement content (Page 2)
     statementContent: "vba210304[0].#subform[1].TextField1[0]",
+    statementContinued: "vba210304[0].#subform[2].TextField1[1]",
     // Witness info (Page 3)
     witnessFirstName: "vba210304[0].#subform[2].WITNESS_FIRST_NAME[0]",
     witnessMiddleInitial: "vba210304[0].#subform[2].Middle_Initial1[2]",
@@ -97,6 +107,7 @@ const VA_FORM_FIELDS = {
     witnessPhone2: "vba210304[0].#subform[2].FirstThreeNumbers[3]",
     witnessPhone3: "vba210304[0].#subform[2].LastFourNumbers[3]",
     witnessEmail: "vba210304[0].#subform[2].EMAIL_ADDRESS[4]",
+    witnessEmailLine2: "vba210304[0].#subform[2].EMAIL_ADDRESS[5]",
     witnessDateMonth: "vba210304[0].#subform[2].Month[5]",
     witnessDateDay: "vba210304[0].#subform[2].Day[5]",
     witnessDateYear: "vba210304[0].#subform[2].Year[5]",
@@ -131,10 +142,11 @@ const VA_FORM_FIELDS = {
     country: "form1[0].#subform[0].MailingAddress_Country[0]",
     zip5: "form1[0].#subform[0].MailingAddress_ZIPOrPostalCode_FirstFiveNumbers[0]",
     zip4: "form1[0].#subform[0].MailingAddress_ZIPOrPostalCode_LastFourNumbers[0]",
-    phone1: "form1[0].#subform[0].TelephoneNumber_SecondThreeNumbers[0]",
-    phone2: "form1[0].#subform[0].TelephoneNumber_FirstThreeNumbers[0]",
+    phone1: "form1[0].#subform[0].TelephoneNumber_FirstThreeNumbers[0]",
+    phone2: "form1[0].#subform[0].TelephoneNumber_SecondThreeNumbers[0]",
     phone3: "form1[0].#subform[0].TelephoneNumber_LastFourNumbers[0]",
     email: "form1[0].#subform[0].EMAIL_ADDRESS[0]",
+    emailLine2: "form1[0].#subform[0].EMAIL_ADDRESS[1]",
     remarks: "form1[0].#subform[0].REMARKS[0]",
     remarksPage2: "form1[0].#subform[1].REMARKS[1]",
     dateMonth: "form1[0].#subform[1].Date_Signed_Month[0]",
@@ -168,7 +180,8 @@ const VA_FORM_FIELDS = {
     phone1: "F[0].Page_1[0].Telephone_Number_FirstThreeNumbers[0]",
     phone2: "F[0].Page_1[0].Telephone_Number_SecondThreeNumbers[0]",
     phone3: "F[0].Page_1[0].Telephone_Number_LastFourNumbers[0]",
-    email: "F[0].Page_1[0].EMAIL_ADDRESS[0]",
+    email: "F[0].Page_1[0].EMAIL_ADDRESS[1]",
+    emailLine2: "F[0].Page_1[0].EMAIL_ADDRESS[0]",
     // Benefit type checkboxes
     compensationCheckbox: "F[0].#subform[1].COMPENSATION[0]",
     pensionCheckbox: "F[0].#subform[1].PENSION[0]",
@@ -400,7 +413,7 @@ const VA_FORM_FIELDS = {
     serviceNumber:
       "form1[0].#subform[0].VeteransServiceNumber_If_Applicable[0]",
     insuranceNumber: "form1[0].#subform[0].InsuranceNumber_s[0]",
-    veteranPhone: "form1[0].#subform[0].TelephoneNumber_IncludeAreaCode[0]",
+    veteranPhone: "form1[0].#subform[0].TelephoneNumber_IncludeAreaCode[1]",
     veteranEmail: "form1[0].#subform[0].EmailAddress_Optional[0]",
 
     // Claimant Information (Section 8-13) - if different from veteran
@@ -420,7 +433,7 @@ const VA_FORM_FIELDS = {
       "form1[0].#subform[0].Claimants_MailingAddress_ZIPOrPostalCode_FirstFiveNumbers[0]",
     claimantZip4:
       "form1[0].#subform[0].Claimants_MailingAddress_ZIPOrPostalCode_LastFourNumbers[0]",
-    claimantPhone: "form1[0].#subform[0].TelephoneNumber_IncludeAreaCode[1]",
+    claimantPhone: "form1[0].#subform[0].TelephoneNumber_IncludeAreaCode[0]",
     claimantEmail: "form1[0].#subform[0].Claimants_EmailAddress_Optional[0]",
 
     // Service Organization Information (Section 14-16)
@@ -430,35 +443,30 @@ const VA_FORM_FIELDS = {
     representativeTitle:
       "form1[0].#subform[0].Job_Title_Of_Person_Named_In_Item15A[0]",
     representativeEmail: "form1[0].#subform[0].Email_Address[0]",
-    organizationStreet:
+    veteranStreet:
       "form1[0].#subform[0].Claimants_MailingAddress_NumberAndStreet[1]",
-    organizationApt:
+    veteranApt:
       "form1[0].#subform[0].Claimants_MailingAddress_ApartmentOrUnitNumber[1]",
-    organizationCity: "form1[0].#subform[0].Claimants_MailingAddress_City[1]",
-    organizationState:
+    veteranCity: "form1[0].#subform[0].Claimants_MailingAddress_City[1]",
+    veteranState:
       "form1[0].#subform[0].Claimants_MailingAddress_StateOrProvince[1]",
-    organizationCountry:
-      "form1[0].#subform[0].Claimants_MailingAddress_Country[1]",
-    organizationZip5:
+    veteranCountry: "form1[0].#subform[0].Claimants_MailingAddress_Country[1]",
+    veteranZip5:
       "form1[0].#subform[0].Claimants_MailingAddress_ZIPOrPostalCode_FirstFiveNumbers[1]",
-    organizationZip4:
+    veteranZip4:
       "form1[0].#subform[0].Claimants_MailingAddress_ZIPOrPostalCode_LastFourNumbers[1]",
     appointmentDate: "form1[0].#subform[0].DateAppt[0]",
 
     // Page 2 - Authorization checkboxes
-    vrAndEFile: "form1[0].#subform[1].V_R_And_E_FILE[0]",
-    eduFile: "form1[0].#subform[1].EDU_FILE[0]",
-    lgFile: "form1[0].#subform[1].LG_File[0]",
-    insuranceFile: "form1[0].#subform[1].Insurance_File[0]",
 
     // Disclosure authorization
-    authorizeDisclosure: "form1[0].#subform[1].I_Authorize[0]",
+    authorizeAddressChange: "form1[0].#subform[1].I_Authorize[0]",
     drugAbuse: "form1[0].#subform[1].Drug_Abuse[0]",
     alcoholism: "form1[0].#subform[1].Alcoholism_Or_Alcohol_Abuse[0]",
     hivInfection:
       "form1[0].#subform[1].Infection_With_The_Human_Immunodeficiency_Virus_HIV[0]",
     sickleCellAnemia: "form1[0].#subform[1].sicklecellanemia[0]",
-    authorizeChange: "form1[0].#subform[1].I_Authorize[1]",
+    authorizeRecordAccess: "form1[0].#subform[1].I_Authorize[1]",
 
     // Signatures and dates
     claimantSignDate: "form1[0].#subform[1].DateSigned[0]",
@@ -489,15 +497,15 @@ const VA_FORM_FIELDS = {
     veteranDOBDay: "form1[0].#subform[0].Date_Of_Birth_Day[0]",
     veteranDOBYear: "form1[0].#subform[0].Date_Of_Birth_Year[0]",
     vaFileNumber:
-      "form1[0].#subform[0].Veterans_Service_Number_If_Applicable[1]",
-    serviceNumber:
       "form1[0].#subform[0].Veterans_Service_Number_If_Applicable[0]",
-    veteranPhone1: "form1[0].#subform[0].Telephone_Number_Area_Code[0]",
-    veteranPhone2: "form1[0].#subform[0].Telphone_Middle_Three_Numbers[0]",
-    veteranPhone3: "form1[0].#subform[0].Telephone_Last_Four_Numbers[0]",
+    serviceNumber:
+      "form1[0].#subform[0].Veterans_Service_Number_If_Applicable[1]",
+    veteranPhone1: "form1[0].#subform[0].Telephone_Number_Area_Code[1]",
+    veteranPhone2: "form1[0].#subform[0].Telephone_Middle_Three_Numbers[0]",
+    veteranPhone3: "form1[0].#subform[0].Telephone_Last_Four_Numbers[1]",
     veteranIntlPhone:
       "form1[0].#subform[0].International_Telephone_Number_If_Applicable[0]",
-    veteranEmail: "form1[0].#subform[0].E_Mail_Address_Optional[0]",
+    veteranEmail: "form1[0].#subform[0].E_Mail_Address_Optional[1]",
 
     // Claimant Information (if not the veteran)
     claimantFirstName: "form1[0].#subform[0].Claimants_First_Name[0]",
@@ -507,21 +515,30 @@ const VA_FORM_FIELDS = {
     claimantDOBMonth: "form1[0].#subform[0].Claimants_Date_Of_Birth_Month[0]",
     claimantDOBDay: "form1[0].#subform[0].Date_Of_Birth_Day[1]",
     claimantDOBYear: "form1[0].#subform[0].Date_Of_Birth_Year[1]",
-    claimantStreet: "form1[0].#subform[0].MailingAddress_NumberAndStreet[0]",
-    claimantApt: "form1[0].#subform[0].MailingAddress_ApartmentOrUnitNumber[0]",
-    claimantCity: "form1[0].#subform[0].MailingAddress_City[0]",
-    claimantState: "form1[0].#subform[0].MailingAddress_StateOrProvince[0]",
-    claimantCountry: "form1[0].#subform[0].MailingAddress_Country[0]",
-    claimantZip5:
+    veteranStreet: "form1[0].#subform[0].MailingAddress_NumberAndStreet[0]",
+    veteranApt: "form1[0].#subform[0].MailingAddress_ApartmentOrUnitNumber[0]",
+    veteranCity: "form1[0].#subform[0].MailingAddress_City[0]",
+    veteranState: "form1[0].#subform[0].MailingAddress_StateOrProvince[0]",
+    veteranCountry: "form1[0].#subform[0].MailingAddress_Country[0]",
+    veteranZip5:
       "form1[0].#subform[0].MailingAddress_ZIPOrPostalCode_FirstFiveNumbers[0]",
-    claimantZip4:
+    veteranZip4:
       "form1[0].#subform[0].MailingAddress_ZIPOrPostalCode_LastFourNumbers[0]",
-    claimantPhone1: "form1[0].#subform[0].Telephone_Number_Area_Code[1]",
-    claimantPhone2: "form1[0].#subform[0].Telephone_Middle_Three_Numbers[0]",
-    claimantPhone3: "form1[0].#subform[0].Telephone_Last_Four_Numbers[1]",
+    claimantStreet: "form1[0].#subform[0].MailingAddress_NumberAndStreet[1]",
+    claimantApt: "form1[0].#subform[0].MailingAddress_ApartmentOrUnitNumber[1]",
+    claimantCity: "form1[0].#subform[0].MailingAddress_City[1]",
+    claimantState: "form1[0].#subform[0].MailingAddress_StateOrProvince[1]",
+    claimantCountry: "form1[0].#subform[0].MailingAddress_Country[1]",
+    claimantZip5:
+      "form1[0].#subform[0].MailingAddress_ZIPOrPostalCode_FirstFiveNumbers[1]",
+    claimantZip4:
+      "form1[0].#subform[0].MailingAddress_ZIPOrPostalCode_LastFourNumbers[1]",
+    claimantPhone1: "form1[0].#subform[0].Telephone_Number_Area_Code[0]",
+    claimantPhone2: "form1[0].#subform[0].Telphone_Middle_Three_Numbers[0]",
+    claimantPhone3: "form1[0].#subform[0].Telephone_Last_Four_Numbers[0]",
     claimantIntlPhone:
       "form1[0].#subform[0].International_Telephone_Number_If_Applicable[1]",
-    claimantEmail: "form1[0].#subform[0].E_Mail_Address_Optional[1]",
+    claimantEmail: "form1[0].#subform[0].E_Mail_Address_Optional[0]",
 
     // Representative Information
     representativeFirstName:
@@ -530,7 +547,6 @@ const VA_FORM_FIELDS = {
     representativeLastName: "form1[0].#subform[0].Last_Name[0]",
     representativeOrganization: "form1[0].#subform[0].Specify_Organization[0]",
     representativeType: "form1[0].#subform[0].RadioButtonList[0]", // Attorney or Claims Agent
-    representativeLicensed: "form1[0].#subform[0].RadioButtonList[1]", // Licensed in US
 
     // Page 2 - Representative Address and Authorization
     page2SSN1: "form1[0].#subform[1].SocialSecurityNumber_FirstThreeNumbers[1]",
@@ -599,7 +615,7 @@ export const _VA_FORM_FIELDS = VA_FORM_FIELDS;
  */
 async function fetchPdfForm(formNumber) {
   // Every fill starts by loading its form, so its report starts here too.
-  fillReport = { leftBlank: [], overflow: "" };
+  fillReport = newFillReport();
   const localPath = LOCAL_FORM_PATHS[formNumber];
   if (!localPath) return null;
   try {
@@ -693,39 +709,210 @@ function parseZipParts(zip) {
 }
 
 /*
- * What the last fill could not put on the form, so the screen can say so
- * instead of the text vanishing: `leftBlank` holds answers longer than
- * their box allows (the box is left empty for the veteran to write in),
- * and `overflow` holds the part of a statement that did not fit the form's
- * remarks boxes.
+ * What the last fill could not put on the form as given, so the screen can
+ * say so instead of the text vanishing or being cut off:
+ *   leftBlank  answers that do not fit their box (too many characters, or
+ *              too wide or too long for it at the form's font size); the
+ *              box is left empty for the veteran to write in
+ *   moved      answers too long for their own box that were put in the
+ *              form's remarks section instead (their names)
+ *   overflow   the part of a statement that fits no box on the form
  */
-let fillReport = { leftBlank: [], overflow: "" };
+const newFillReport = () => ({ leftBlank: [], moved: [], overflow: "" });
+let fillReport = newFillReport();
 // Exported (test-only, per this codebase's underscore-prefix convention).
 export const _lastFillReport = () => fillReport;
 
+const FIELD_LINE_HEIGHT = 1.2;
+// pdf-lib draws a field's text 1pt in from each side. A viewer may show it
+// in a font a little wider than the one measured here, so lines are kept
+// short of the full width.
+const FIELD_INSET = 1;
+const FIELD_WIDTH_USED = 0.94;
+
+const measuringFonts = new WeakMap();
+const measuringFont = (form) => {
+  if (!measuringFonts.has(form)) {
+    measuringFonts.set(
+      form,
+      form.doc.embedStandardFont(StandardFonts.Helvetica),
+    );
+  }
+  return measuringFonts.get(form);
+};
+
+/** A text field's font size, usable width and number of lines. */
+function roomIn(field) {
+  const { width, height } = field.acroField.getWidgets()[0].getRectangle();
+  const tokens = (field.acroField.getDefaultAppearance() ?? "")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+  const size = Number(tokens[tokens.indexOf("Tf") - 1]) || 0;
+  return {
+    size,
+    width: (width - FIELD_INSET * 2) * FIELD_WIDTH_USED,
+    lines: field.isMultiline()
+      ? Math.max(
+          1,
+          Math.floor((height - FIELD_INSET * 2) / (size * FIELD_LINE_HEIGHT)),
+        )
+      : 1,
+  };
+}
+
+/** `text` as the lines a box of `room` shows: `[{ start, text }]`. */
+function wrapToRoom(text, font, room) {
+  const lines = [];
+  let offset = 0;
+  for (const paragraph of text.split("\n")) {
+    let line = { start: offset, text: "" };
+    lines.push(line);
+    for (const match of paragraph.matchAll(/\S+/g)) {
+      const word = match[0];
+      const candidate = line.text ? `${line.text} ${word}` : word;
+      if (
+        line.text &&
+        font.widthOfTextAtSize(candidate, room.size) > room.width
+      ) {
+        line = { start: offset + match.index, text: word };
+        lines.push(line);
+      } else {
+        line.text = candidate;
+      }
+    }
+    offset += paragraph.length + 1;
+  }
+  return lines;
+}
+
+const widestLine = (lines, font, room) =>
+  Math.max(
+    0,
+    ...lines.map((line) => font.widthOfTextAtSize(line.text, room.size)),
+  );
+
 /**
- * Set a PDF text field's value, ignoring fields that don't exist. A value
- * longer than the box allows is not cut short: the box is left blank and
- * the value is reported.
+ * `text` as it should be written into `field` so that all of it shows, or
+ * null when it does not fit the box at the form's font size. A multi-line
+ * box gets its line breaks written in, so a viewer cannot wrap a line past
+ * the edge. A box with a character limit, or one that sizes its own text,
+ * is not measured.
  */
-function setPdfTextField(form, fieldName, value) {
-  if (!value) return;
-  let field;
+function textThatFits(form, field, text) {
+  if (field.getMaxLength() !== undefined) return text;
+  const room = roomIn(field);
+  if (room.size === 0) return text;
+  const font = measuringFont(form);
+  const lines = wrapToRoom(text, font, room);
+  if (lines.length > room.lines) return null;
+  if (widestLine(lines, font, room) > room.width) return null;
+  return room.lines === 1 ? text : lines.map((line) => line.text).join("\n");
+}
+
+function textFieldNamed(form, fieldName) {
   try {
-    field = form.getTextField(fieldName);
+    return form.getTextField(fieldName);
   } catch {
     // eslint-disable-next-line no-console
     console.log(`Field not found: ${fieldName}`);
-    return;
+    return null;
   }
+}
+
+/**
+ * Set a PDF text field's value, ignoring fields that don't exist. A value
+ * that does not fit its box is not cut short or left to be cut off on the
+ * page: the box is left blank and the value is reported.
+ */
+function setPdfTextField(form, fieldName, value, secondLine) {
+  if (!value) return;
+  const field = textFieldNamed(form, fieldName);
+  if (!field) return;
   const text = String(value);
   const max = field.getMaxLength();
-  if (max !== undefined && text.length > max) {
+  // An e-mail address has two short boxes on some forms, "Line 1 of 2" and
+  // "Line 2 of 2". One too long for the first goes on in the second.
+  const second = secondLine ? textFieldNamed(form, secondLine) : null;
+  if (second && max !== undefined && text.length > max) {
+    if (text.length > max + (second.getMaxLength() ?? 0)) {
+      fillReport.leftBlank.push(text);
+      return;
+    }
+    field.setText(text.slice(0, max));
+    second.setText(text.slice(max));
+    return;
+  }
+  const fitted =
+    max !== undefined && text.length > max
+      ? null
+      : textThatFits(form, field, text);
+  if (fitted === null) {
     fillReport.leftBlank.push(text);
     return;
   }
-  field.setText(text);
+  field.setText(fitted);
 }
+
+const CONTINUED_IN_DOWNLOAD = "(continued in the text download)";
+
+/**
+ * A statement across the form's boxes for it, in order. What does not fit
+ * one box goes on in the next, with a line saying so (`continuedNote`), and
+ * what fits none is reported as overflow, never dropped. Lines are measured
+ * against each box and written with their breaks.
+ */
+function setStatementAcross(form, fieldNames, text, continuedNote) {
+  const font = measuringFont(form);
+  let rest = text;
+  const boxes = fieldNames
+    .map((name) => textFieldNamed(form, name))
+    .filter(Boolean);
+  boxes.forEach((field, i) => {
+    if (!rest) return;
+    const room = roomIn(field);
+    if (room.size === 0) {
+      room.size = 10;
+      field.setFontSize(10);
+      room.lines = Math.max(
+        1,
+        Math.floor(
+          (field.acroField.getWidgets()[0].getRectangle().height -
+            FIELD_INSET * 2) /
+            (room.size * FIELD_LINE_HEIGHT),
+        ),
+      );
+    }
+    const lines = wrapToRoom(rest, font, room);
+    if (lines.length <= room.lines) {
+      field.setText(lines.map((line) => line.text).join("\n"));
+      rest = "";
+      return;
+    }
+    const keep = Math.max(1, room.lines - 1);
+    const note = i < boxes.length - 1 ? continuedNote : CONTINUED_IN_DOWNLOAD;
+    field.setText(
+      [...lines.slice(0, keep).map((line) => line.text), note].join("\n"),
+    );
+    rest = rest.slice(lines[keep].start).trimStart();
+  });
+  fillReport.overflow = rest;
+}
+
+// The form's country box takes two characters. The usual ways of writing
+// the United States become "US"; anything else is written as given.
+const UNITED_STATES = new Set([
+  "us",
+  "usa",
+  "u.s.",
+  "u.s.a.",
+  "united states",
+  "united states of america",
+]);
+const countryCode = (country) => {
+  const given = String(country ?? "").trim();
+  return UNITED_STATES.has(given.toLowerCase()) ? "US" : given;
+};
 
 /**
  * Tick a PDF checkbox, ignoring fields that don't exist. A box on an
@@ -845,11 +1032,15 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranState, data.veteranState || "");
   setTextField(fieldMap.veteranZip5, vetZip.five);
   setTextField(fieldMap.veteranZip4, vetZip.four);
-  setTextField(fieldMap.veteranCountry, data.veteranCountry || "");
+  setTextField(fieldMap.veteranCountry, countryCode(data.veteranCountry));
   setTextField(fieldMap.veteranPhone1, vetPhone.area);
   setTextField(fieldMap.veteranPhone2, vetPhone.prefix);
   setTextField(fieldMap.veteranPhone3, vetPhone.line);
-  setTextField(fieldMap.veteranEmail, data.veteranEmail || "");
+  setTextField(
+    fieldMap.veteranEmail,
+    data.veteranEmail || "",
+    fieldMap.veteranEmailLine2,
+  );
 }
 
 // The claimant section is the claimant's. The witness has a section of
@@ -875,7 +1066,11 @@ function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantPhone1, claimantPhone.area);
   setTextField(fieldMap.claimantPhone2, claimantPhone.prefix);
   setTextField(fieldMap.claimantPhone3, claimantPhone.line);
-  setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
+  setTextField(
+    fieldMap.claimantEmail,
+    data.claimantEmail || "",
+    fieldMap.claimantEmailLine2,
+  );
 }
 
 // The wizard's relationship choices and the box each one ticks. A choice
@@ -925,7 +1120,11 @@ function fill21_10210_WitnessSection(
   setTextField(fieldMap.witnessPhone1, witnessPhone.area);
   setTextField(fieldMap.witnessPhone2, witnessPhone.prefix);
   setTextField(fieldMap.witnessPhone3, witnessPhone.line);
-  setTextField(fieldMap.witnessEmail, data.witnessEmail || "");
+  setTextField(
+    fieldMap.witnessEmail,
+    data.witnessEmail || "",
+    fieldMap.witnessEmailLine2,
+  );
 
   fill21_10210_RelationshipCheckbox(setTextField, setCheckbox, fieldMap, data);
 }
@@ -940,16 +1139,18 @@ export async function fillForm21_10210(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
-      const setTextField = (fieldName, value) =>
-        setPdfTextField(form, fieldName, value);
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
 
       fill21_10210_VeteranSection(setTextField, fieldMap, data);
       fill21_10210_ClaimantSection(setTextField, fieldMap, data);
-      setTextField(
-        fieldMap.statementContent,
+      setStatementAcross(
+        form,
+        [fieldMap.statementContent, fieldMap.statementContinued],
         officialFormNarrative("buddy-statement", data),
+        "(continued on the next page)",
       );
       fill21_10210_WitnessSection(setTextField, setCheckbox, fieldMap, data);
 
@@ -1152,116 +1353,20 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || data.veteranApt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "");
+  setTextField(fieldMap.country, countryCode(data.country));
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
   setTextField(fieldMap.phone2, phone.prefix);
   setTextField(fieldMap.phone3, phone.line);
-  setTextField(fieldMap.email, data.email || data.veteranEmail || "");
+  setTextField(
+    fieldMap.email,
+    data.email || data.veteranEmail || "",
+    fieldMap.emailLine2,
+  );
 }
 
 const REMARKS_ON_PAGE_2 = "(continued on page 2)";
-const REMARKS_IN_DOWNLOAD = "(continued in the text download)";
-const DEFAULT_FIELD_FONT_SIZE = 10;
-const FIELD_LINE_HEIGHT = 1.2;
-const FIELD_PADDING = 4;
-
-/** How many lines of what width a text field shows, at its font size. */
-function fieldRoom(form, fieldName) {
-  let field;
-  try {
-    field = form.getTextField(fieldName);
-  } catch {
-    return null;
-  }
-  const { width, height } = field.acroField.getWidgets()[0].getRectangle();
-  const appearance = field.acroField.getDefaultAppearance() ?? "";
-  const tokens = appearance.trim().split(" ").filter(Boolean);
-  let size = Number(tokens[tokens.indexOf("Tf") - 1]) || 0;
-  if (size === 0) {
-    // An auto-sized box shrinks its text to fit. Give it a size so what
-    // fits can be counted and stays readable.
-    size = DEFAULT_FIELD_FONT_SIZE;
-    field.setFontSize(size);
-  }
-  return {
-    size,
-    width: width - FIELD_PADDING * 2,
-    lines: Math.max(
-      1,
-      Math.floor((height - FIELD_PADDING) / (size * FIELD_LINE_HEIGHT)),
-    ),
-  };
-}
-
-/** Where each shown line of `text` starts, wrapped to `room`. */
-function lineStarts(text, font, room) {
-  const starts = [];
-  let offset = 0;
-  for (const paragraph of text.split("\n")) {
-    let lineStart = offset;
-    let line = "";
-    starts.push(lineStart);
-    for (const match of paragraph.matchAll(/\S+/g)) {
-      const word = match[0];
-      const candidate = line ? `${line} ${word}` : word;
-      if (line && font.widthOfTextAtSize(candidate, room.size) > room.width) {
-        lineStart = offset + match.index;
-        starts.push(lineStart);
-        line = word;
-      } else {
-        line = candidate;
-      }
-    }
-    offset += paragraph.length + 1;
-  }
-  return starts;
-}
-
-/** `text` cut where its line `lines + 1` begins: [what fits, the rest]. */
-function cutAtLine(text, font, room, lines) {
-  const starts = lineStarts(text, font, room);
-  if (starts.length <= lines) return [text, ""];
-  const at = starts[lines];
-  return [text.slice(0, at).trimEnd(), text.slice(at).trimStart()];
-}
-
-/**
- * The statement across the form's two remarks boxes. What does not fit the
- * first box goes to the page 2 box; what fits neither is returned as the
- * third item and never dropped. Each cut leaves a line saying where the
- * statement goes on.
- */
-function fitRemarks(form, fieldMap, text, font) {
-  const firstRoom = fieldRoom(form, fieldMap.remarks);
-  if (!firstRoom) return [text, "", ""];
-  if (lineStarts(text, font, firstRoom).length <= firstRoom.lines) {
-    return [text, "", ""];
-  }
-  const secondRoom = fieldRoom(form, fieldMap.remarksPage2);
-  const [first, rest] = cutAtLine(
-    text,
-    font,
-    firstRoom,
-    Math.max(1, firstRoom.lines - 1),
-  );
-  if (!secondRoom) return [`${first}\n${REMARKS_IN_DOWNLOAD}`, "", rest];
-  if (lineStarts(rest, font, secondRoom).length <= secondRoom.lines) {
-    return [`${first}\n${REMARKS_ON_PAGE_2}`, rest, ""];
-  }
-  const [second, overflow] = cutAtLine(
-    rest,
-    font,
-    secondRoom,
-    Math.max(1, secondRoom.lines - 1),
-  );
-  return [
-    `${first}\n${REMARKS_ON_PAGE_2}`,
-    `${second}\n${REMARKS_IN_DOWNLOAD}`,
-    overflow,
-  ];
-}
 
 export async function fillForm21_4138(data) {
   const pdfBytes = await fetchPdfForm("21-4138");
@@ -1273,21 +1378,18 @@ export async function fillForm21_4138(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
-      const setTextField = (fieldName, value) =>
-        setPdfTextField(form, fieldName, value);
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
 
       fill21_4138_IdentityInfo(setTextField, fieldMap, data);
       fill21_4138_ContactInfo(setTextField, fieldMap, data);
 
-      const [remarks, continuation, overflow] = fitRemarks(
+      setStatementAcross(
         form,
-        fieldMap,
+        [fieldMap.remarks, fieldMap.remarksPage2],
         data.remarks || officialFormNarrative("personal-statement", data),
-        await pdfDoc.embedFont(StandardFonts.Helvetica),
+        REMARKS_ON_PAGE_2,
       );
-      setTextField(fieldMap.remarks, remarks);
-      setTextField(fieldMap.remarksPage2, continuation);
-      fillReport.overflow = overflow;
 
       return await pdfDoc.save();
     } catch (error) {
@@ -1453,46 +1555,46 @@ function fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data) {
   }
 }
 
-function fill21_0781_StressorEvents(setTextField, fieldMap, data) {
-  // Stressor events - support both single incident and multiple incidents
-  // For single incident data format
-  setTextField(
-    fieldMap.stressor1Description,
-    data.incidentDescription || data.eventDescription,
-  );
-  setTextField(
-    fieldMap.stressor1Location,
-    data.incidentLocation || data.eventLocation,
-  );
-  setTextField(fieldMap.stressor1Dates, data.incidentDate || data.eventDate);
+const SEE_REMARKS = "See Section 5, Remarks.";
 
-  // For multiple stressor format (stressors array)
-  if (data.stressors && Array.isArray(data.stressors)) {
-    if (data.stressors[0]) {
-      setTextField(
-        fieldMap.stressor1Description,
-        data.stressors[0].description,
-      );
-      setTextField(fieldMap.stressor1Location, data.stressors[0].location);
-      setTextField(fieldMap.stressor1Dates, data.stressors[0].dates);
-    }
-    if (data.stressors[1]) {
-      setTextField(
-        fieldMap.stressor2Description,
-        data.stressors[1].description,
-      );
-      setTextField(fieldMap.stressor2Location, data.stressors[1].location);
-      setTextField(fieldMap.stressor2Dates, data.stressors[1].dates);
-    }
-    if (data.stressors[2]) {
-      setTextField(
-        fieldMap.stressor3Description,
-        data.stressors[2].description,
-      );
-      setTextField(fieldMap.stressor3Location, data.stressors[2].location);
-      setTextField(fieldMap.stressor3Dates, data.stressors[2].dates);
+/**
+ * The event's description, place and date in their own small boxes when
+ * they fit. One that does not fit is not cut off: its box points to Remarks
+ * and it is returned, with its name, to be written there in full.
+ */
+function fill21_0781_StressorEvents(form, fieldMap, data) {
+  const first = data.stressors?.[0] ?? {};
+  const answers = [
+    [
+      "stressor1Description",
+      "Description of the traumatic event (item 9A)",
+      first.description || data.incidentDescription || data.eventDescription,
+    ],
+    [
+      "stressor1Location",
+      "Location of the traumatic event (item 9B)",
+      first.location || data.incidentLocation || data.eventLocation,
+    ],
+    [
+      "stressor1Dates",
+      "Date of the traumatic event (item 9C)",
+      first.dates || data.incidentDate || data.eventDate,
+    ],
+  ];
+  const carried = [];
+  for (const [key, label, value] of answers) {
+    const field = value ? textFieldNamed(form, fieldMap[key]) : null;
+    if (!field) continue;
+    const fitted = textThatFits(form, field, String(value));
+    if (fitted === null) {
+      field.setText(SEE_REMARKS);
+      carried.push(`${label}: ${value}`);
+      fillReport.moved.push(label);
+    } else {
+      field.setText(fitted);
     }
   }
+  return carried;
 }
 
 function fill21_0781_BehavioralInfo(setTextField, setCheckbox, fieldMap, data) {
@@ -1564,17 +1666,21 @@ function fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data) {
 }
 
 function fill21_0781_RemarksAndConsent(
-  setTextField,
+  form,
   setCheckbox,
   fieldMap,
   data,
+  carried,
 ) {
-  setTextField(
-    fieldMap.remarks,
+  const remarks = [
     data.remarks ||
       data.additionalInfo ||
       officialFormNarrative("ptsd-stressor", data),
-  );
+    ...carried,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  setStatementAcross(form, [fieldMap.remarks], remarks, "");
 
   setCheckbox(fieldMap.consentVBA, data.consentVBA);
   setCheckbox(fieldMap.noConsentVBA, data.noConsentVBA);
@@ -1592,18 +1698,18 @@ export async function fillForm21_0781(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
-      const setTextField = (fieldName, value) =>
-        setPdfTextField(form, fieldName, value);
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
 
       fill21_0781_VeteranInfo(setTextField, fieldMap, data);
       fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data);
-      fill21_0781_StressorEvents(setTextField, fieldMap, data);
+      const carried = fill21_0781_StressorEvents(form, fieldMap, data);
       fill21_0781_BehavioralInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_ReportsInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data);
-      fill21_0781_RemarksAndConsent(setTextField, setCheckbox, fieldMap, data);
+      fill21_0781_RemarksAndConsent(form, setCheckbox, fieldMap, data, carried);
 
       // Flatten to make form read-only if desired
       // form.flatten();
@@ -1719,13 +1825,17 @@ function fill21_0966_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "");
+  setTextField(fieldMap.country, countryCode(data.country));
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
   setTextField(fieldMap.phone2, phone.prefix);
   setTextField(fieldMap.phone3, phone.line);
-  setTextField(fieldMap.email, data.email || data.veteranEmail || "");
+  setTextField(
+    fieldMap.email,
+    data.email || data.veteranEmail || "",
+    fieldMap.emailLine2,
+  );
 }
 
 function fill21_0966_BenefitCheckboxes(setCheckbox, fieldMap, data) {
@@ -1749,8 +1859,8 @@ export async function fillForm21_0966(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
-      const setTextField = (fieldName, value) =>
-        setPdfTextField(form, fieldName, value);
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
 
@@ -1861,8 +1971,8 @@ export async function fillForm21_4142(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
-      const setTextField = (fieldName, value) =>
-        setPdfTextField(form, fieldName, value);
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
 
       fill21_4142_VeteranInfo(setTextField, fieldMap, data);
 
@@ -1963,13 +2073,17 @@ function fill20_10207_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "");
+  setTextField(fieldMap.country, countryCode(data.country));
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
   setTextField(fieldMap.phone2, phone.prefix);
   setTextField(fieldMap.phone3, phone.line);
-  setTextField(fieldMap.email, data.email || data.veteranEmail || "");
+  setTextField(
+    fieldMap.email,
+    data.email || data.veteranEmail || "",
+    fieldMap.emailLine2,
+  );
 }
 
 function fill20_10207_PriorityCheckboxes(setCheckbox, fieldMap, data) {
@@ -1999,8 +2113,8 @@ export async function fillForm20_10207(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
-      const setTextField = (fieldName, value) =>
-        setPdfTextField(form, fieldName, value);
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
 
@@ -2120,6 +2234,15 @@ function fill21_22_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.insuranceNumber, data.insuranceNumber || "");
   setTextField(fieldMap.veteranPhone, data.veteranPhone || data.phone || "");
   setTextField(fieldMap.veteranEmail, data.veteranEmail || data.email || "");
+
+  const zip = parseZipParts(data.zip || data.veteranZip);
+  setTextField(fieldMap.veteranStreet, data.street || data.veteranStreet || "");
+  setTextField(fieldMap.veteranApt, data.apt || "");
+  setTextField(fieldMap.veteranCity, data.city || data.veteranCity || "");
+  setTextField(fieldMap.veteranState, data.state || data.veteranState || "");
+  setTextField(fieldMap.veteranCountry, countryCode(data.country));
+  setTextField(fieldMap.veteranZip5, zip.five);
+  setTextField(fieldMap.veteranZip4, zip.four);
 }
 
 function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
@@ -2144,7 +2267,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantApt, data.claimantApt || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
-  setTextField(fieldMap.claimantCountry, data.claimantCountry || "");
+  setTextField(fieldMap.claimantCountry, countryCode(data.claimantCountry));
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
   setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
@@ -2152,6 +2275,8 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
 }
 
+// Section 3. The form has no address boxes for the organization: the ones
+// once mapped here are the veteran's (item 7).
 function fill21_22_OrganizationInfo(setTextField, fieldMap, data) {
   setTextField(
     fieldMap.organizationName,
@@ -2160,40 +2285,17 @@ function fill21_22_OrganizationInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.representativeName, data.representativeName || "");
   setTextField(fieldMap.representativeTitle, data.representativeTitle || "");
   setTextField(fieldMap.representativeEmail, data.representativeEmail || "");
-
-  setTextField(
-    fieldMap.organizationStreet,
-    data.organizationStreet || data.vsoStreet || "",
-  );
-  setTextField(fieldMap.organizationApt, data.organizationApt || "");
-  setTextField(
-    fieldMap.organizationCity,
-    data.organizationCity || data.vsoCity || "",
-  );
-  setTextField(
-    fieldMap.organizationState,
-    data.organizationState || data.vsoState || "",
-  );
-  setTextField(fieldMap.organizationCountry, data.organizationCountry || "");
-  const orgZip = (data.organizationZip || data.vsoZip || "").replace(/\D/g, "");
-  setTextField(fieldMap.organizationZip5, orgZip.substring(0, 5));
-  setTextField(fieldMap.organizationZip4, orgZip.substring(5, 9));
-
   setTextField(fieldMap.appointmentDate, data.appointmentDate);
 }
 
+// Items 19 to 21. The four "VA USE ONLY" boxes on the form are never set.
 function fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data) {
-  setCheckbox(fieldMap.vrAndEFile, data.vrAndEFile || data.authVRE);
-  setCheckbox(fieldMap.eduFile, data.eduFile || data.authEducation);
-  setCheckbox(fieldMap.lgFile, data.lgFile || data.authLoanGuaranty);
-  setCheckbox(fieldMap.insuranceFile, data.insuranceFile || data.authInsurance);
-
-  setCheckbox(fieldMap.authorizeDisclosure, data.authorizeDisclosure);
+  setCheckbox(fieldMap.authorizeRecordAccess, data.authorizeRecordAccess);
   setCheckbox(fieldMap.drugAbuse, data.discloseDrugAbuse);
   setCheckbox(fieldMap.alcoholism, data.discloseAlcoholism);
   setCheckbox(fieldMap.hivInfection, data.discloseHIV);
   setCheckbox(fieldMap.sickleCellAnemia, data.discloseSickleCell);
-  setCheckbox(fieldMap.authorizeChange, data.authorizeChange);
+  setCheckbox(fieldMap.authorizeAddressChange, data.authorizeAddressChange);
 }
 
 export async function fillForm21_22(data) {
@@ -2206,8 +2308,8 @@ export async function fillForm21_22(data) {
         ignoreEncryption: true,
       });
       const form = pdfDoc.getForm();
-      const setTextField = (fieldName, value) =>
-        setPdfTextField(form, fieldName, value);
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
 
@@ -2334,6 +2436,15 @@ function _fillForm2122aVeteranInfo(setTextField, fieldMap, data, parsed) {
   setTextField(fieldMap.veteranPhone3, parsed.phone.line);
   setTextField(fieldMap.veteranIntlPhone, data.veteranIntlPhone || "");
   setTextField(fieldMap.veteranEmail, data.email || data.veteranEmail || "");
+
+  const zip = parseZipParts(data.zip || data.veteranZip);
+  setTextField(fieldMap.veteranStreet, data.street || data.veteranStreet || "");
+  setTextField(fieldMap.veteranApt, data.apt || "");
+  setTextField(fieldMap.veteranCity, data.city || data.veteranCity || "");
+  setTextField(fieldMap.veteranState, data.state || data.veteranState || "");
+  setTextField(fieldMap.veteranCountry, countryCode(data.country));
+  setTextField(fieldMap.veteranZip5, zip.five);
+  setTextField(fieldMap.veteranZip4, zip.four);
 }
 
 function _fillForm2122aClaimantIdentity(setTextField, fieldMap, data) {
@@ -2364,7 +2475,7 @@ function _fillForm2122aClaimantContact(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantApt, data.claimantApt || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
-  setTextField(fieldMap.claimantCountry, data.claimantCountry || "");
+  setTextField(fieldMap.claimantCountry, countryCode(data.claimantCountry));
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
   setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
@@ -2415,7 +2526,7 @@ function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   setTextField(fieldMap.repApt, data.repApt || "");
   setTextField(fieldMap.repCity, data.repCity || "");
   setTextField(fieldMap.repState, data.repState || "");
-  setTextField(fieldMap.repCountry, data.repCountry || "");
+  setTextField(fieldMap.repCountry, countryCode(data.repCountry));
   const repZip = (data.repZip || "").replace(/\D/g, "");
   setTextField(fieldMap.repZip5, repZip.substring(0, 5));
   setTextField(fieldMap.repZip4, repZip.substring(5, 9));
@@ -2464,16 +2575,8 @@ export async function fillForm21_22a(data) {
       });
       const form = pdfDoc.getForm();
 
-      const setTextField = (fieldName, value) => {
-        if (!value) return;
-        try {
-          const field = form.getTextField(fieldName);
-          if (field) field.setText(String(value));
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Field not found: ${fieldName}`, e.message);
-        }
-      };
+      const setTextField = (fieldName, value, secondLine) =>
+        setPdfTextField(form, fieldName, value, secondLine);
 
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
@@ -2563,7 +2666,7 @@ async function createIndividualRepPdf(data) {
 
   drawText("INDIVIDUAL REPRESENTATIVE", { bold: true });
   drawText(`Name: ${data.representativeName || ""}`);
-  drawText(`Type: ${data.representativeType || "Attorney / Claims Agent"}`);
+  drawText(`Type: ${data.representativeType || data.repType || ""}`);
   drawText(`Organization/Firm: ${data.firmName || data.repOrganization || ""}`);
   drawText(`Phone: ${data.repPhone || ""}`);
   drawText(`Email: ${data.repEmail || ""}`);

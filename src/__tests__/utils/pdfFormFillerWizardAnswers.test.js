@@ -195,12 +195,10 @@ describe("names and addresses the wizards collect in parts", () => {
 
 describe("an answer too long for its box", () => {
   it("is left blank for the veteran to write in, and reported, not dropped in silence", async () => {
-    const form = await fillSyntheticForm(
-      "21-22",
-      fillForm21_22,
-      { veteranFirstName: "Bartholomew-James", veteranLastName: "Testwright" },
-      { maxLengths: { veteranFirstName: 12 } },
-    );
+    const form = await fillSyntheticForm("21-22", fillForm21_22, {
+      veteranFirstName: "Bartholomew-James",
+      veteranLastName: "Testwright",
+    });
 
     expect(form.text("veteranFirstName")).toBe("");
     expect(form.text("veteranLastName")).toBe("Testwright");
@@ -212,66 +210,47 @@ describe("an answer too long for its box", () => {
       veteranFirstName: "Marlow",
     });
 
-    expect(_lastFillReport()).toEqual({ leftBlank: [], overflow: "" });
+    expect(_lastFillReport()).toEqual({
+      leftBlank: [],
+      moved: [],
+      overflow: "",
+    });
   });
 });
 
-describe("21-4138 remarks that do not fit the first box", () => {
-  const sentence = (n) =>
-    `Answer ${n} is a sentence long enough to take most of one line here.`;
-  const statement = Array.from({ length: 30 }, (_, i) => sentence(i + 1));
-  const wordsOf = (text) =>
-    text.replace(/\(continued[^)]*\)/g, "").match(/\S+/g) ?? [];
-  const BOX = { width: 320, height: 70 };
+describe("an e-mail address on a form with two short lines for it", () => {
+  it.each([
+    ["21-4138", fillForm21_4138, "email", "email", "emailLine2"],
+    ["21-0966", fillForm21_0966, "email", "email", "emailLine2"],
+    [
+      "21-10210",
+      fillForm21_10210,
+      "witnessEmail",
+      "witnessEmail",
+      "witnessEmailLine2",
+    ],
+  ])(
+    "%s: fits line 1, runs on to line 2, or is left blank and reported",
+    async (formNumber, fill, answer, line1, line2) => {
+      const short = await fillSyntheticForm(formNumber, fill, {
+        [answer]: "qa@example.invalid",
+      });
+      expect(values(short, [line1, line2])).toEqual(["qa@example.invalid", ""]);
 
-  it("carries over to the page 2 box, losing nothing", async () => {
-    const remarks = statement.slice(0, 8).join(" ");
-    const form = await fillSyntheticForm(
-      "21-4138",
-      fillForm21_4138,
-      { remarks },
-      { sizes: { remarks: BOX, remarksPage2: { width: 320, height: 400 } } },
-    );
-    const first = form.text("remarks");
-    const second = form.text("remarksPage2");
+      const longer = await fillSyntheticForm(formNumber, fill, {
+        [answer]: "marlow.testwright@example.invalid",
+      });
+      expect(values(longer, [line1, line2])).toEqual([
+        "marlow.testwright@ex",
+        "ample.invalid",
+      ]);
 
-    expect(first.split("\n").length).toBeLessThanOrEqual(5);
-    expect(first).toMatch(/\(continued on page 2\)$/);
-    expect(second.length).toBeGreaterThan(50);
-    expect([...wordsOf(first), ...wordsOf(second)]).toEqual(wordsOf(remarks));
-    expect(_lastFillReport().overflow).toBe("");
-  });
-
-  it("leaves page 2 empty when the statement fits the first box", async () => {
-    const form = await fillSyntheticForm(
-      "21-4138",
-      fillForm21_4138,
-      { remarks: statement[0] },
-      { sizes: { remarks: BOX, remarksPage2: BOX } },
-    );
-
-    expect(form.text("remarks")).toBe(statement[0]);
-    expect(form.text("remarksPage2")).toBe("");
-  });
-
-  it("reports what neither box could hold, and drops no word", async () => {
-    const remarks = statement.join(" ");
-    const form = await fillSyntheticForm(
-      "21-4138",
-      fillForm21_4138,
-      { remarks },
-      { sizes: { remarks: BOX, remarksPage2: BOX } },
-    );
-    const { overflow } = _lastFillReport();
-
-    expect(overflow.length).toBeGreaterThan(100);
-    expect(form.text("remarksPage2")).toMatch(
-      /\(continued in the text download\)$/,
-    );
-    expect([
-      ...wordsOf(form.text("remarks")),
-      ...wordsOf(form.text("remarksPage2")),
-      ...wordsOf(overflow),
-    ]).toEqual(wordsOf(remarks));
-  });
+      const tooLong = `${"a".repeat(40)}@example.invalid`;
+      const blank = await fillSyntheticForm(formNumber, fill, {
+        [answer]: tooLong,
+      });
+      expect(values(blank, [line1, line2])).toEqual(["", ""]);
+      expect(_lastFillReport().leftBlank).toEqual([tooLong]);
+    },
+  );
 });

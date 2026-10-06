@@ -46,6 +46,11 @@ export function fillEveryField(steps) {
       } else if (field.type === "checkbox") {
         formData[field.name] = true;
         markers.push({ name: field.name, printed: CHECKBOX_TEXT[field.name] });
+      } else if (field.type === "email") {
+        // A real address: the official forms give it two 20-character lines.
+        const address = `m${100 + i}@example.invalid`;
+        formData[field.name] = address;
+        markers.push({ name: field.name, printed: address });
       } else {
         formData[field.name] = marker;
         markers.push({ name: field.name, printed: marker });
