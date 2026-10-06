@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { describeDeviceClass } from "./deviceLabels";
+import {
+  describeDeviceClass,
+  describeOnDeviceSupport,
+  TABLET_UNTESTED_SENTENCE,
+} from "./deviceLabels";
 
 const base = {
   hasWebGPU: true,
@@ -62,5 +66,63 @@ describe("describeDeviceClass renders one label from the device profile", () => 
     expect(describeDeviceClass({ ...base, tier: "desktop-mid" }).gpuClass).toBe(
       "high-performance GPU",
     );
+  });
+});
+
+describe("describeOnDeviceSupport", () => {
+  const profile = (extra) => ({ ...base, tier: "desktop-high", ...extra });
+
+  it("a device that can run on-device AI says nothing against it", () => {
+    expect(describeOnDeviceSupport(profile({ canUseWebLLM: true }))).toEqual({
+      canRun: true,
+      reason: null,
+      tabletNote: null,
+    });
+  });
+
+  it("a tablet with WebGPU can run it, with the untested sentence from one source", () => {
+    const out = describeOnDeviceSupport(
+      profile({ tier: "tablet", isTablet: true, canUseWebLLM: true }),
+    );
+    expect(out.canRun).toBe(true);
+    expect(out.tabletNote).toBe(TABLET_UNTESTED_SENTENCE);
+    expect(TABLET_UNTESTED_SENTENCE).toMatch(/not been tested on tablets/);
+  });
+
+  it.each([
+    [
+      "no WebGPU, on any tier",
+      profile({ hasWebGPU: false, gpuTier: "none", canUseWebLLM: true }),
+      /needs a browser with WebGPU/,
+    ],
+    [
+      "a tablet without WebGPU",
+      profile({
+        tier: "tablet",
+        isTablet: true,
+        hasWebGPU: false,
+        canUseWebLLM: true,
+      }),
+      /needs a browser with WebGPU/,
+    ],
+    [
+      "a phone",
+      profile({ tier: "mobile", isMobile: true, canUseWebLLM: false }),
+      /not available on phones/,
+    ],
+    [
+      "a tier the profile says cannot use WebLLM",
+      profile({ canUseWebLLM: false }),
+      /not available on this device/,
+    ],
+  ])("%s cannot run it and says why in one sentence", (_n, p, reason) => {
+    const out = describeOnDeviceSupport(p);
+    expect(out.canRun).toBe(false);
+    expect(out.reason).toMatch(reason);
+    expect(out.reason.match(/\./g)).toHaveLength(1);
+  });
+
+  it("an unprobed device is not ruled out", () => {
+    expect(describeOnDeviceSupport(null).canRun).toBe(true);
   });
 });

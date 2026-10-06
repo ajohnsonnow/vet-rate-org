@@ -2470,6 +2470,8 @@ body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
 body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
   .above-mobile-nav-stacked,
 body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
+  .hide-when-dialog-open,
+body:has([role="dialog"], [role="alertdialog"], [aria-modal="true"])
   .luna-toast {
   display: none;
 }

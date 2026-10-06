@@ -173,7 +173,7 @@ function TimeMachineInputSection({
             value={itfDate}
             onChange={(e) => setItfDate(e.target.value)}
             max={new Date().toISOString().split("T")[0]}
-            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:bg-gray-700 dark:text-white text-lg"
+            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] text-lg"
           />
         </div>
 

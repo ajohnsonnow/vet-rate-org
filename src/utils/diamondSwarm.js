@@ -957,11 +957,21 @@ const _structuredOutputFields = (responseFormat) =>
       }
     : {};
 
-// An explicit penalty from the caller wins; only the evaluation passes one.
-const _frequencyPenalty = (responseFormat, override) => {
-  if (Number.isFinite(override) && override >= 0 && override <= 2) {
-    return override;
-  }
+// Evaluation only: a penalty for every request, set by the runner, so tool
+// functions that call generateAI themselves are covered. Null in production.
+let frequencyPenaltyOverride = null;
+const _validPenalty = (value) =>
+  Number.isFinite(value) && value >= 0 && value <= 2;
+
+export const setFrequencyPenaltyOverride = (value) => {
+  frequencyPenaltyOverride = _validPenalty(value) ? value : null;
+};
+
+// An explicit option wins, then the runner's override; only the evaluation
+// supplies either.
+const _frequencyPenalty = (responseFormat, option) => {
+  if (_validPenalty(option)) return option;
+  if (frequencyPenaltyOverride !== null) return frequencyPenaltyOverride;
   return responseFormat ? 1.15 : getModelFrequencyPenalty(loadedModelId);
 };
 

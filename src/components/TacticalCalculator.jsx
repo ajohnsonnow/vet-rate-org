@@ -1,3 +1,4 @@
+import ScrollRegion from "./common/ScrollRegion";
 import { useState, useEffect, useRef } from "react";
 import ReportBugLink from "./ReportBugLink";
 import BuyMeCoffee from "./BuyMeCoffee";
@@ -2887,7 +2888,7 @@ function VeteranAloneRatesTable({ t }) {
         </span>
         {t("tacticalCalc", "veteranAlone")}
       </h4>
-      <div className="overflow-x-auto">
+      <ScrollRegion label={t("tacticalCalc", "veteranAlone")}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b dark:border-gray-700">
@@ -2930,7 +2931,7 @@ function VeteranAloneRatesTable({ t }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }
@@ -2944,7 +2945,7 @@ function WithSpouseRatesTable({ t }) {
         </span>
         {t("tacticalCalc", "withSpouse")}
       </h4>
-      <div className="overflow-x-auto">
+      <ScrollRegion label={t("tacticalCalc", "withSpouse")}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b dark:border-gray-700">
@@ -2984,7 +2985,7 @@ function WithSpouseRatesTable({ t }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }
@@ -3031,7 +3032,7 @@ function AddedAmountsTable({ t }) {
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
         {t("tacticalCalc", "additionalAmountsNote")}
       </p>
-      <div className="overflow-x-auto">
+      <ScrollRegion label={t("tacticalCalc", "additionalAmounts")}>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b dark:border-gray-700">
@@ -3059,7 +3060,7 @@ function AddedAmountsTable({ t }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }

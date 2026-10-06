@@ -67,11 +67,25 @@ Measure the 2B and 4B on a real laptop and tablet before trusting those tiers.
 
 ## 7. Repetition loops on the 2B: frequency penalty
 
-On the final build the 2B ran 5 of 38 answers (a04, a06, a18, and the drafts of a12 and a13) in a loop to the output limit, about 30 seconds each, and the answers were trimmed afterwards. The 4B had none.
+On the final build the 2B ran 5 of 38 answers (a04, a06, a18, and the drafts of a12 and a13) in a loop to the output limit, about 30 seconds each, and the answers were trimmed afterwards. The 4B had none. A frequency penalty of 0.3 was tried to stop this, then graded against 0.15 and 0.
 
-- `SMALL_MODEL_FREQUENCY_PENALTY = 0.3` in `src/utils/deviceCapabilityDetector.js` is set on the 2B's row of the per-model table and sent as `frequency_penalty` with plain-text on-device requests. Every other model, including the 4B, stays at 0. Schema-constrained requests keep their existing 1.15.
-- **0.3 is a conservative starting point to be tuned by evaluation, not a measured optimum.** It has not been run against the engine yet.
-- The evaluation runs at temperature 0. Production tool calls pass 0.1 to 0.7 (most of the on-device tools use 0.2 to 0.4; the general default is 0.7), so loops at temperature 0 may overstate how often production sees them. How often they occur at the production temperatures is not measured.
+Six graded runs of Qwen3.5-2B at temperature 0.3, two per setting (transcripts in `llm-compiler/logs/golden-set-results/`: run_2026-10-06_012539, 013549, 014319, 015232, 021103, 022302). Each cell gives the two runs.
+
+| Setting | Passing of 30 | Cases with wrong legal statements shown | Invented form numbers | Trimmed loops that help nobody | Length stops |
+| ------- | ------------- | --------------------------------------- | --------------------- | ------------------------------ | ------------ |
+| 0       | 24, 24        | 4, 2                                    | 0, 0                  | 2, 3                           | 6, 7         |
+| 0.15    | 23, 21        | 5, 5                                    | 0, 1                  | 0, 0                           | 1, 3         |
+| 0.3     | 22, 21        | 7, 6                                    | 1, 1                  | 0, 0                           | 1, 1         |
+
+**Decision: the 2B's production frequency penalty is 0.** Wrong legal statements and invented form numbers rise with the penalty at each step while pass counts fall. The cost of 0 is two or three answers per run that loop, are cut, and are shown with a note saying the answer started repeating and suggesting a rephrase. A dead answer that is labelled is a safer failure than confident wrong content. At penalty 0 and temperature 0.3 the 2B scored 24 and 24 of 30.
+
+**Dissent:** the grader recommended 0.15, with low to moderate confidence, because verdicts at 0 and 0.15 were indistinguishable and 0.15 removes the dead answers.
+
+Limits: two runs per setting; one desktop GPU; model-graded, advisory scores. The writing-tool cases were not part of the comparison: they always sent the per-model production value because the override did not reach them. That is fixed (the runner now sets an evaluation-only override for every request, so `--frequency-penalty` reaches the tool cases and they send the production value, 0, otherwise). The evaluation ran at temperature 0.3, which matches the general assistant (0.3) and the writing tools' rewording step (0.3); the other call sites use 0.1 to 0.7.
+
+The open-advice routes remained unsafe at every setting: one case failed in all six runs. This bears on the open owner decision in §8 about limiting those routes on small models.
+
+What stays: `getModelFrequencyPenalty` and the per-model table (no row sets a penalty now), the runner's `--frequency-penalty` override and the recording of the penalty sent, and the "started repeating" note, which matters more at 0. Structured (JSON) requests keep their existing 1.15.
 
 ## 8. Laptop model on the final build, the small-model caveat, and open owner decisions
 
