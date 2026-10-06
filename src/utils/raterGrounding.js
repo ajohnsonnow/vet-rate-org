@@ -270,6 +270,14 @@ const pairFindingIsRelevant = (calc, question) =>
   ASKS_ABOUT_BILATERAL.test(question);
 
 /**
+ * Closes an answer the calculator gave in place of a model. A question may
+ * have asked for more than the calculation; nothing tries to detect that, so
+ * the answer always says what it covers and how to ask the rest.
+ */
+export const ASK_SEPARATELY_SENTENCE =
+  "This answer covers the rating calculation only. If you also asked about something else, such as monthly pay or how to file, please ask it as a separate question.";
+
+/**
  * The answer to a rating question, built only from the calculator's result.
  * For a TDIU question the threshold paragraph comes right after the combined
  * rating, ahead of the working, because it is what was asked. `question` is the veteran's text and

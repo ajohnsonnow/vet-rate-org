@@ -51,6 +51,7 @@ import * as localServerClient from "./localServerClient";
 import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
 import {
+  ASK_SEPARATELY_SENTENCE,
   buildCalculatorExplanation,
   mentionsUnemployability,
 } from "./raterGrounding";
@@ -3196,11 +3197,12 @@ function _answerFromCalculator(prompt, options) {
   const used =
     calc.bilateralConditions.length + calc.nonBilateralConditions.length;
   if (used === 0) return null;
+  const explanation = buildCalculatorExplanation(calc, {
+    tdiu: mentionsUnemployability(prompt),
+    question: prompt,
+  });
   return {
-    text: buildCalculatorExplanation(calc, {
-      tdiu: mentionsUnemployability(prompt),
-      question: prompt,
-    }),
+    text: [explanation, ASK_SEPARATELY_SENTENCE].join("\n\n"),
     onDevice: true,
     modelCalled: false,
     calculatorLead: { expected: calc.combinedRating },

@@ -67,7 +67,10 @@ import * as diamondSwarm from "../../utils/diamondSwarm";
 import * as wllamaService from "../../utils/wllamaService";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
 import { calculateVARating } from "../../utils/vaCalculator";
-import { buildCalculatorExplanation } from "../../utils/raterGrounding";
+import {
+  buildCalculatorExplanation,
+  ASK_SEPARATELY_SENTENCE,
+} from "../../utils/raterGrounding";
 import { savedRatingsGrounding } from "../../utils/savedRatingsGrounding";
 import { GOLDEN } from "./recordedAnswers";
 
@@ -203,6 +206,26 @@ describe("what the calculator's answer covers", () => {
     expect(result.calculatorLead).toEqual({ expected: 80 });
   });
 
+  it.each([
+    ["a plain rating question", QUESTION],
+    [
+      "a question that also asks about pay and filing",
+      "What is my combined rating, what will I be paid each month, and how do I file?",
+    ],
+  ])(
+    "ends by inviting any other part as a separate question (%s)",
+    async (_name, question) => {
+      BACKENDS.swarm();
+      const result = await generateAI(question, callOptions());
+      noEngineWasCalled();
+      expect(ASK_SEPARATELY_SENTENCE).toBe(
+        "This answer covers the rating calculation only. If you also asked about something else, such as monthly pay or how to file, please ask it as a separate question.",
+      );
+      expect(result.text.endsWith(`\n\n${ASK_SEPARATELY_SENTENCE}`)).toBe(true);
+      expect(result.text.split(ASK_SEPARATELY_SENTENCE)).toHaveLength(2);
+    },
+  );
+
   it("still runs the crisis check on the question", async () => {
     BACKENDS.swarm();
     crisisSpy.mockReturnValue({ shouldBlock: true });
@@ -254,5 +277,7 @@ describe("calls the calculator cannot answer still go to the model", () => {
     expect(result.calculatorLead).toBeUndefined();
     const [sent] = diamondSwarm.generateWithSwarm.mock.calls[0];
     expect(sent).not.toContain("=== COMPUTED RESULT");
+    expect(sent).not.toContain(ASK_SEPARATELY_SENTENCE);
+    expect(result.text).not.toContain(ASK_SEPARATELY_SENTENCE);
   });
 });
