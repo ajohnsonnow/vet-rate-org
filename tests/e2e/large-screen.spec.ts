@@ -1,5 +1,11 @@
 import { test, expect, Page } from "@playwright/test";
-import { bootForSweep } from "./sweep";
+import {
+  bootForSweep,
+  describeFindings,
+  recordFindings,
+  sweep,
+  sweepStates,
+} from "./sweep";
 
 /**
  * Large screens: the app shell has a bounded width that grows with the
@@ -49,8 +55,99 @@ async function longParagraphMeasures(page: Page): Promise<number[]> {
   });
 }
 
+/**
+ * On whatever is open: text fields and selects whose type is smaller than the
+ * page's body size, and long paragraphs wider than about 90 characters.
+ */
+async function typeAndMeasureProblems(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const problems = new Set<string>();
+    const dialogs = [
+      ...document.querySelectorAll(
+        '[role="dialog"], [aria-modal="true"], [role="alertdialog"]',
+      ),
+    ].filter((el) => el.getBoundingClientRect().height > 1);
+    const scope: Element = dialogs.at(-1) ?? document.body;
+    const rootFont = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+
+    const controls = scope.querySelectorAll<HTMLElement>(
+      'input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"], [type="color"]), select, textarea',
+    );
+    for (const el of controls) {
+      const box = el.getBoundingClientRect();
+      if (box.width < 2 || box.height < 2) continue;
+      const size = Number.parseFloat(getComputedStyle(el).fontSize);
+      if (size < rootFont - 0.5) {
+        const name =
+          el.getAttribute("aria-label") ||
+          el.getAttribute("placeholder") ||
+          el.id ||
+          el.tagName.toLowerCase();
+        problems.add(
+          `${el.tagName.toLowerCase()} "${name.slice(0, 30)}" text is ${size}px, body is ${rootFont}px`,
+        );
+      }
+    }
+
+    for (const el of scope.querySelectorAll<HTMLElement>("p, li")) {
+      const text = (el.textContent ?? "").trim();
+      if (text.length <= 90 || el.getBoundingClientRect().width < 2) continue;
+      const probe = document.createElement("span");
+      probe.style.cssText =
+        "position:absolute;visibility:hidden;width:1ch;display:block";
+      el.appendChild(probe);
+      const ch = probe.getBoundingClientRect().width;
+      probe.remove();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const lines = new Map<number, { left: number; right: number }>();
+      for (const rect of range.getClientRects()) {
+        const key = Math.round(rect.top / 4);
+        const line = lines.get(key);
+        lines.set(key, {
+          left: Math.min(line?.left ?? rect.left, rect.left),
+          right: Math.max(line?.right ?? rect.right, rect.right),
+        });
+      }
+      const widest = Math.max(
+        0,
+        ...[...lines.values()].map((line) => line.right - line.left),
+      );
+      const measure = Math.round(widest / ch);
+      if (measure > 90) {
+        problems.add(
+          `paragraph is ${measure} characters wide: "${text.slice(0, 50)}"`,
+        );
+      }
+    }
+    return [...problems].slice(0, 12);
+  });
+}
+
 test.describe("at 3840px", () => {
   test.use({ viewport: { width: 3840, height: 2160 } });
+
+  test("form controls are at least body size and no paragraph runs past about 90 characters, on every tool and tab", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(900_000);
+    await bootForSweep(page);
+    const result = await sweep(page, typeAndMeasureProblems);
+    recordFindings("type-measure", 3840, testInfo.project.name, result);
+    expect(describeFindings(result.findings)).toBe("");
+  });
+
+  test("the same holds in the states behind input", async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(900_000);
+    await bootForSweep(page);
+    const result = await sweepStates(page, typeAndMeasureProblems);
+    recordFindings("type-measure-states", 3840, testInfo.project.name, result);
+    expect(describeFindings(result.findings)).toBe("");
+  });
 
   test("the shell fills most of the screen but stays bounded", async ({
     page,
