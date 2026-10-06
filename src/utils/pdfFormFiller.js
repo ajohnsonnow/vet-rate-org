@@ -588,6 +588,9 @@ const VA_FORM_FIELDS = {
   },
 };
 
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export const _VA_FORM_FIELDS = VA_FORM_FIELDS;
+
 /**
  * Load a PDF form from the copy the app ships. The official files on
  * www.vba.va.gov cannot be fetched from the page: the Content Security
@@ -675,18 +678,6 @@ function parseZipParts(zip) {
 }
 
 /**
- * Get today's date split into padded month/day/year parts
- */
-function getTodayParts() {
-  const today = new Date();
-  return {
-    month: String(today.getMonth() + 1).padStart(2, "0"),
-    day: String(today.getDate()).padStart(2, "0"),
-    year: String(today.getFullYear()),
-  };
-}
-
-/**
  * Safely set a PDF text field's value, ignoring fields that don't exist
  */
 function setPdfTextField(form, fieldName, value) {
@@ -701,12 +692,15 @@ function setPdfTextField(form, fieldName, value) {
 }
 
 /**
- * Safely check a PDF checkbox, ignoring fields that don't exist
+ * Tick a PDF checkbox, ignoring fields that don't exist. A box on an
+ * official form is ticked only for an explicit yes (`true`), never for a
+ * default, a missing answer or any other value: the veteran signs what the
+ * form says.
  */
 function setPdfCheckbox(form, fieldName, checked) {
   try {
     const field = form.getCheckBox(fieldName);
-    if (field && checked) field.check();
+    if (field && checked === true) field.check();
   } catch {
     // eslint-disable-next-line no-console
     console.log(`Checkbox not found: ${fieldName}`);
@@ -815,7 +809,7 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranState, data.veteranState || "");
   setTextField(fieldMap.veteranZip5, vetZip.five);
   setTextField(fieldMap.veteranZip4, vetZip.four);
-  setTextField(fieldMap.veteranCountry, data.veteranCountry || "USA");
+  setTextField(fieldMap.veteranCountry, data.veteranCountry || "");
   setTextField(fieldMap.veteranPhone1, vetPhone.area);
   setTextField(fieldMap.veteranPhone2, vetPhone.prefix);
   setTextField(fieldMap.veteranPhone3, vetPhone.line);
@@ -919,7 +913,6 @@ function fill21_10210_WitnessSection(
 ) {
   const witnessNameParts = (data.witnessName || "").split(" ");
   const witnessPhone = parsePhoneParts(data.witnessPhone);
-  const todayParts = getTodayParts();
 
   setTextField(fieldMap.witnessFirstName, witnessNameParts[0]);
   setTextField(
@@ -934,9 +927,6 @@ function fill21_10210_WitnessSection(
   setTextField(fieldMap.witnessPhone2, witnessPhone.prefix);
   setTextField(fieldMap.witnessPhone3, witnessPhone.line);
   setTextField(fieldMap.witnessEmail, data.witnessEmail || "");
-  setTextField(fieldMap.witnessDateMonth, todayParts.month);
-  setTextField(fieldMap.witnessDateDay, todayParts.day);
-  setTextField(fieldMap.witnessDateYear, todayParts.year);
 
   fill21_10210_RelationshipCheckbox(setTextField, setCheckbox, fieldMap, data);
 }
@@ -1058,7 +1048,7 @@ function drawBuddyStatementCertification(
   drawText("Signature: _______________________________________");
   adjustY(-5);
   drawText(`Printed Name: ${data.witnessName || "_______________________"}`);
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 }
 
 /**
@@ -1160,7 +1150,7 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || data.veteranApt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.country, data.country || "");
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
@@ -1204,12 +1194,6 @@ export async function fillForm21_4138(data) {
 
       setTextField(fieldMap.remarks, build21_4138_Remarks(data));
       setTextField(fieldMap.remarksPage2, ""); // Page 2 continuation if needed
-
-      // Signature date
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.dateMonth, todayParts.month);
-      setTextField(fieldMap.dateDay, todayParts.day);
-      setTextField(fieldMap.dateYear, todayParts.year);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -1278,7 +1262,7 @@ function drawPersonalStatementSignature(
   adjustY(-20);
   drawText("Signature: _______________________________________");
   drawText(`Printed Name: ${data.veteranName || ""}`);
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 }
 
 /**
@@ -1488,7 +1472,7 @@ function fill21_0781_RemarksAndConsent(
 ) {
   setTextField(fieldMap.remarks, data.remarks || data.additionalInfo);
 
-  setCheckbox(fieldMap.consentVBA, data.consentVBA !== false); // Default to consent
+  setCheckbox(fieldMap.consentVBA, data.consentVBA);
   setCheckbox(fieldMap.noConsentVBA, data.noConsentVBA);
   setCheckbox(fieldMap.revokeConsent, data.revokeConsent);
   setCheckbox(fieldMap.notEnrolledVHA, data.notEnrolledVHA);
@@ -1516,12 +1500,6 @@ export async function fillForm21_0781(data) {
       fill21_0781_ReportsInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_TreatmentInfo(setTextField, setCheckbox, fieldMap, data);
       fill21_0781_RemarksAndConsent(setTextField, setCheckbox, fieldMap, data);
-
-      // Today's date for signature
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.signDateMonth, todayParts.month);
-      setTextField(fieldMap.signDateDay, todayParts.day);
-      setTextField(fieldMap.signDateYear, todayParts.year);
 
       // Flatten to make form read-only if desired
       // form.flatten();
@@ -1604,7 +1582,7 @@ async function createPTSDStatementPdfFallback(data) {
 
   adjustY(-20);
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -1637,7 +1615,7 @@ function fill21_0966_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.country, data.country || "");
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
@@ -1674,12 +1652,6 @@ export async function fillForm21_0966(data) {
 
       fill21_0966_VeteranInfo(setTextField, fieldMap, data);
       fill21_0966_BenefitCheckboxes(setCheckbox, fieldMap, data);
-
-      // Signature date
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.dateMonth, todayParts.month);
-      setTextField(fieldMap.dateDay, todayParts.day);
-      setTextField(fieldMap.dateYear, todayParts.year);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -1745,7 +1717,7 @@ async function createIntentToFilePdf(data) {
   );
 
   adjustY(-30);
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -1855,7 +1827,7 @@ async function createMedicalReleasePdf(data) {
   drawText(`This authorization expires: ${expDate}`, { bold: true });
   adjustY(-20);
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -1887,7 +1859,7 @@ function fill20_10207_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.apt, data.apt || "");
   setTextField(fieldMap.city, data.city || data.veteranCity || "");
   setTextField(fieldMap.state, data.state || data.veteranState || "");
-  setTextField(fieldMap.country, data.country || "USA");
+  setTextField(fieldMap.country, data.country || "");
   setTextField(fieldMap.zip5, zipParts.five);
   setTextField(fieldMap.zip4, zipParts.four);
   setTextField(fieldMap.phone1, phone.area);
@@ -1930,12 +1902,6 @@ export async function fillForm20_10207(data) {
 
       fill20_10207_VeteranInfo(setTextField, fieldMap, data);
       fill20_10207_PriorityCheckboxes(setCheckbox, fieldMap, data);
-
-      // Signature date
-      const todayParts = getTodayParts();
-      setTextField(fieldMap.dateMonth, todayParts.month);
-      setTextField(fieldMap.dateDay, todayParts.day);
-      setTextField(fieldMap.dateYear, todayParts.year);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2007,7 +1973,7 @@ async function createPriorityProcessingPdf(data) {
 
   adjustY(-20);
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -2069,7 +2035,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantApt, data.claimantApt || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
-  setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
+  setTextField(fieldMap.claimantCountry, data.claimantCountry || "");
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
   setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
@@ -2077,7 +2043,7 @@ function fill21_22_ClaimantInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
 }
 
-function fill21_22_OrganizationInfo(setTextField, fieldMap, data, today) {
+function fill21_22_OrganizationInfo(setTextField, fieldMap, data) {
   setTextField(
     fieldMap.organizationName,
     data.vsoName || data.organizationName || "",
@@ -2099,12 +2065,12 @@ function fill21_22_OrganizationInfo(setTextField, fieldMap, data, today) {
     fieldMap.organizationState,
     data.organizationState || data.vsoState || "",
   );
-  setTextField(fieldMap.organizationCountry, data.organizationCountry || "USA");
+  setTextField(fieldMap.organizationCountry, data.organizationCountry || "");
   const orgZip = (data.organizationZip || data.vsoZip || "").replace(/\D/g, "");
   setTextField(fieldMap.organizationZip5, orgZip.substring(0, 5));
   setTextField(fieldMap.organizationZip4, orgZip.substring(5, 9));
 
-  setTextField(fieldMap.appointmentDate, data.appointmentDate || today);
+  setTextField(fieldMap.appointmentDate, data.appointmentDate);
 }
 
 function fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data) {
@@ -2113,7 +2079,7 @@ function fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data) {
   setCheckbox(fieldMap.lgFile, data.lgFile || data.authLoanGuaranty);
   setCheckbox(fieldMap.insuranceFile, data.insuranceFile || data.authInsurance);
 
-  setCheckbox(fieldMap.authorizeDisclosure, data.authorizeDisclosure !== false);
+  setCheckbox(fieldMap.authorizeDisclosure, data.authorizeDisclosure);
   setCheckbox(fieldMap.drugAbuse, data.discloseDrugAbuse);
   setCheckbox(fieldMap.alcoholism, data.discloseAlcoholism);
   setCheckbox(fieldMap.hivInfection, data.discloseHIV);
@@ -2136,24 +2102,19 @@ export async function fillForm21_22(data) {
       const setCheckbox = (fieldName, checked) =>
         setPdfCheckbox(form, fieldName, checked);
 
-      const today = new Date().toLocaleDateString("en-US");
-
       fill21_22_VeteranInfo(setTextField, fieldMap, data);
       fill21_22_ClaimantInfo(setTextField, fieldMap, data);
-      fill21_22_OrganizationInfo(setTextField, fieldMap, data, today);
+      fill21_22_OrganizationInfo(setTextField, fieldMap, data);
       fill21_22_AuthorizationCheckboxes(setCheckbox, fieldMap, data);
 
       // Signature dates
-      setTextField(fieldMap.claimantSignDate, data.signDate || today);
+      setTextField(fieldMap.claimantSignDate, data.signDate);
 
       // Page 2 SSN
       const ssn = parseSSNParts(data.ssn || data.veteranSSN);
       setTextField(fieldMap.page2SSN1, ssn.first);
       setTextField(fieldMap.page2SSN2, ssn.middle);
       setTextField(fieldMap.page2SSN3, ssn.last);
-
-      // Flatten form to prevent further editing (optional)
-      form.flatten();
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2224,7 +2185,7 @@ async function createVSOAppointmentPdf(data) {
   adjustY(-20);
 
   drawText("Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
@@ -2237,7 +2198,6 @@ function _parseForm2122aFields(data) {
   const ssnRaw = (data.ssn || data.veteranSSN || "").replace(/\D/g, "");
   const dobParts = (data.dob || data.veteranDOB || "").split(/[/-]/);
   const phoneRaw = (data.phone || data.veteranPhone || "").replace(/\D/g, "");
-  const today = new Date();
 
   return {
     firstName: nameParts[0] || "",
@@ -2257,11 +2217,6 @@ function _parseForm2122aFields(data) {
       area: phoneRaw.substring(0, 3),
       prefix: phoneRaw.substring(3, 6),
       line: phoneRaw.substring(6, 10),
-    },
-    todayParts: {
-      month: String(today.getMonth() + 1).padStart(2, "0"),
-      day: String(today.getDate()).padStart(2, "0"),
-      year: String(today.getFullYear()),
     },
   };
 }
@@ -2313,7 +2268,7 @@ function _fillForm2122aClaimantContact(setTextField, fieldMap, data) {
   setTextField(fieldMap.claimantApt, data.claimantApt || "");
   setTextField(fieldMap.claimantCity, data.claimantCity || "");
   setTextField(fieldMap.claimantState, data.claimantState || "");
-  setTextField(fieldMap.claimantCountry, data.claimantCountry || "USA");
+  setTextField(fieldMap.claimantCountry, data.claimantCountry || "");
   const claimantZip = (data.claimantZip || "").replace(/\D/g, "");
   setTextField(fieldMap.claimantZip5, claimantZip.substring(0, 5));
   setTextField(fieldMap.claimantZip4, claimantZip.substring(5, 9));
@@ -2360,7 +2315,7 @@ function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   setTextField(fieldMap.repApt, data.repApt || "");
   setTextField(fieldMap.repCity, data.repCity || "");
   setTextField(fieldMap.repState, data.repState || "");
-  setTextField(fieldMap.repCountry, data.repCountry || "USA");
+  setTextField(fieldMap.repCountry, data.repCountry || "");
   const repZip = (data.repZip || "").replace(/\D/g, "");
   setTextField(fieldMap.repZip5, repZip.substring(0, 5));
   setTextField(fieldMap.repZip4, repZip.substring(5, 9));
@@ -2379,41 +2334,23 @@ function _fillForm2122aAuthorizationAndSignature(
   data,
   parsed,
 ) {
-  setCheckbox(
-    fieldMap.authorizeRecordAccess,
-    data.authorizeRecordAccess !== false,
-  );
-  setCheckbox(
-    fieldMap.authorizeActOnBehalf,
-    data.authorizeActOnBehalf !== false,
-  );
-  setCheckbox(
-    fieldMap.authorizeDisclosure1,
-    data.authorizeDisclosure !== false,
-  );
+  setCheckbox(fieldMap.authorizeRecordAccess, data.authorizeRecordAccess);
+  setCheckbox(fieldMap.authorizeActOnBehalf, data.authorizeActOnBehalf);
+  setCheckbox(fieldMap.authorizeDisclosure1, data.authorizeDisclosure);
   setCheckbox(fieldMap.authorizeDisclosure2, data.authorizeDisclosure2);
 
-  setTextField(
-    fieldMap.claimantSignDateMonth,
-    data.signDateMonth || parsed.todayParts.month,
-  );
-  setTextField(
-    fieldMap.claimantSignDateDay,
-    data.signDateDay || parsed.todayParts.day,
-  );
-  setTextField(
-    fieldMap.claimantSignDateYear,
-    data.signDateYear || parsed.todayParts.year,
-  );
+  setTextField(fieldMap.claimantSignDateMonth, data.signDateMonth);
+  setTextField(fieldMap.claimantSignDateDay, data.signDateDay);
+  setTextField(fieldMap.claimantSignDateYear, data.signDateYear);
 
   if (!data.limitations) return;
   setTextField(fieldMap.limitations, data.limitations);
   setTextField(fieldMap.page3SSN1, parsed.ssn.first);
   setTextField(fieldMap.page3SSN2, parsed.ssn.middle);
   setTextField(fieldMap.page3SSN3, parsed.ssn.last);
-  setTextField(fieldMap.page3SignDateMonth, parsed.todayParts.month);
-  setTextField(fieldMap.page3SignDateDay, parsed.todayParts.day);
-  setTextField(fieldMap.page3SignDateYear, parsed.todayParts.year);
+  setTextField(fieldMap.page3SignDateMonth, data.signDateMonth);
+  setTextField(fieldMap.page3SignDateDay, data.signDateDay);
+  setTextField(fieldMap.page3SignDateYear, data.signDateYear);
 }
 
 export async function fillForm21_22a(data) {
@@ -2438,15 +2375,8 @@ export async function fillForm21_22a(data) {
         }
       };
 
-      const setCheckbox = (fieldName, checked) => {
-        try {
-          const field = form.getCheckBox(fieldName);
-          if (field && checked) field.check();
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.log(`Checkbox not found: ${fieldName}`, e.message);
-        }
-      };
+      const setCheckbox = (fieldName, checked) =>
+        setPdfCheckbox(form, fieldName, checked);
 
       const parsed = _parseForm2122aFields(data);
       _fillForm2122aVeteranInfo(setTextField, fieldMap, data, parsed);
@@ -2464,8 +2394,6 @@ export async function fillForm21_22a(data) {
         data,
         parsed,
       );
-
-      form.flatten();
 
       return await pdfDoc.save();
     } catch (error) {
@@ -2556,10 +2484,10 @@ async function createIndividualRepPdf(data) {
   y -= 20;
 
   drawText("Claimant Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
   y -= 20;
   drawText("Representative Signature: _______________________________________");
-  drawText(`Date: ${new Date().toLocaleDateString()}`);
+  drawText("Date: _______________________________________");
 
   return pdfDoc.save();
 }
