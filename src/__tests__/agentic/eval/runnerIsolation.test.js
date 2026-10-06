@@ -144,6 +144,12 @@ describe("assembleCaseRecord", () => {
     expect(build(ok())).not.toHaveProperty("citationsUnverified");
   });
 
+  it("keeps the form numbers the answer check could not verify", () => {
+    const record = build(ok({ formsUnverified: { forms: ["22-5388"] } }));
+    expect(record.formsUnverified).toEqual({ forms: ["22-5388"] });
+    expect(build(ok())).not.toHaveProperty("formsUnverified");
+  });
+
   it("keeps the contradictions the answer check found", () => {
     const found = [{ rule: "secondary-barred", sentence: "It cannot." }];
     expect(build(ok({ contradictionsFound: found })).contradictionsFound).toBe(

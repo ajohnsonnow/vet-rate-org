@@ -77,6 +77,7 @@ interface EvalWindow {
             validationWarnings?: unknown;
             calculatorReplacement?: CalculatorReplacement;
             citationsUnverified?: unknown;
+            formsUnverified?: unknown;
             contradictionsFound?: unknown;
           }
       >;
@@ -238,6 +239,7 @@ interface CaseOutcome {
   validationWarnings?: unknown;
   calculatorReplacement?: CalculatorReplacement;
   citationsUnverified?: unknown;
+  formsUnverified?: unknown;
   contradictionsFound?: unknown;
   rawResponse?: string;
   outputCleanup?: unknown;
@@ -289,6 +291,8 @@ function runCase(
             : result?.calculatorReplacement,
         citationsUnverified:
           typeof result === "string" ? undefined : result?.citationsUnverified,
+        formsUnverified:
+          typeof result === "string" ? undefined : result?.formsUnverified,
         resultFlags:
           typeof result === "string"
             ? undefined

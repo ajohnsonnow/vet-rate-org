@@ -58,6 +58,7 @@ import {
 import * as diamondSwarm from "../../utils/diamondSwarm";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
 import { buildCitationNotice } from "../../utils/citationCheck";
+import { buildFormNotice } from "../../utils/formCheck";
 
 const callOptions = (overrides = {}) => ({
   dataClass: AI_DATA_CLASS.CONTEXT,
@@ -139,6 +140,44 @@ describe("generateAI citation check", () => {
     expect(result.citationsUnverified).toEqual({ sections: ["4.99"] });
     expect(result.text).toContain("Your combined rating is 50%.");
     expect(result.text.endsWith(buildCitationNotice(["4.99"]))).toBe(true);
+  });
+});
+
+describe("generateAI form check", () => {
+  it("adds the notice and marker when the answer names a form number in neither list", async () => {
+    const answer =
+      "After the Intent to File (VA Form 21-0966), VA will issue the application (VA Form 22-5300).";
+    modelSays(answer);
+
+    const result = await generateAI(
+      "What is an intent to file?",
+      callOptions(),
+    );
+
+    expect(result.text).toBe(`${answer}\n\n${buildFormNotice(["22-5300"])}`);
+    expect(result.formsUnverified).toEqual({ forms: ["22-5300"] });
+  });
+
+  it("puts it after the citation notice when both apply", async () => {
+    modelSays("Under 38 CFR § 4.37, file VA Form 22-5388.");
+
+    const result = await generateAI("Explain my denial", callOptions());
+
+    expect(
+      result.text.endsWith(
+        `${buildCitationNotice(["4.37"])}\n\n${buildFormNotice(["22-5388"])}`,
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves an answer with known forms as the model wrote it", async () => {
+    const answer = "File a Supplemental Claim on VA Form 20-0995.";
+    modelSays(answer);
+
+    const result = await generateAI("Explain my denial", callOptions());
+
+    expect(result.text).toBe(answer);
+    expect(result.formsUnverified).toBeUndefined();
   });
 });
 
