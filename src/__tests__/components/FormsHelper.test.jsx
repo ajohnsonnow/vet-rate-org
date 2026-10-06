@@ -17,6 +17,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import FormsHelper from "../../components/FormsHelper.jsx";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
+import { fillRequiredOnScreen } from "../helpers/formMarkers";
 import {
   updateVeteranProfile,
   saveMyRatings,
@@ -69,8 +70,10 @@ describe("FormsHelper prefill from records", () => {
 
     renderFormsHelper();
     openIntentToFileWizard();
-    fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+    for (let step = 0; step < 2; step++) {
+      fillRequiredOnScreen(fireEvent.change, fireEvent.click);
+      fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+    }
 
     expect(
       screen.getByPlaceholderText(/PTSD, back injury, hearing loss/),

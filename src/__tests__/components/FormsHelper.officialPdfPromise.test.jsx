@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
+import { fillRequiredOnScreen } from "../helpers/formMarkers";
 import { APP_TRANSLATIONS } from "../../i18n/translations";
 
 vi.mock("../../utils/unifiedAIService", async (importOriginal) => ({
@@ -28,23 +29,10 @@ function openResult(formName) {
   fireEvent.click(screen.getByText("Start Guided Builder"));
   const next = () => screen.queryByRole("button", { name: /^next$/i });
   for (let guard = 0; next() && guard < 12; guard++) {
-    for (const field of document.querySelectorAll(
-      "input[required], textarea[required], select[required]",
-    )) {
-      const value =
-        field.tagName === "SELECT" ? field.options[1].value : "Answer";
-      fireEvent.change(field, { target: { value } });
-    }
-    for (const box of document.querySelectorAll("input[type=checkbox]")) {
-      if (!box.checked) fireEvent.click(box);
-    }
+    fillRequiredOnScreen(fireEvent.change, fireEvent.click);
     fireEvent.click(next());
   }
-  for (const field of document.querySelectorAll(
-    "input[required], textarea[required], select[required]",
-  )) {
-    fireEvent.change(field, { target: { value: "Answer" } });
-  }
+  fillRequiredOnScreen(fireEvent.change, fireEvent.click);
   fireEvent.click(screen.getByRole("button", { name: /generate statement/i }));
 }
 

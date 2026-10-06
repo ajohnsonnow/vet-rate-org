@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
+import { fillRequiredOnScreen } from "../helpers/formMarkers";
 import {
   AI_NO_CHANGE_NOTE,
   STANDARD_DRAFT_NOTE,
@@ -62,8 +63,10 @@ function openResult() {
       /Describe the specific event, injury/,
     );
     if (event) fireEvent.change(event, { target: { value: EVENT } });
+    fillRequiredOnScreen(fireEvent.change, fireEvent.click);
     fireEvent.click(next());
   }
+  fillRequiredOnScreen(fireEvent.change, fireEvent.click);
   fireEvent.click(screen.getByRole("button", { name: /generate statement/i }));
 }
 
@@ -95,7 +98,7 @@ describe("Forms Helper with no AI set up", () => {
       (await screen.findByRole("status", { name: "Draft notice" })).textContent,
     ).toBe(STANDARD_DRAFT_NOTE);
     expect(draft().value).toContain(`${EVENT}.`);
-    expect(draft().value).toContain("[date the symptoms began]");
+    expect(draft().value).toContain("[when you first sought treatment]");
     expect(draft().value).toContain("SECTION I - CLAIMANT INFORMATION");
     expect(generateAI).not.toHaveBeenCalled();
   });
@@ -134,7 +137,7 @@ describe("Forms Helper with no AI set up", () => {
       screen.queryByRole("region", { name: "Statement text preview" }),
     ).not.toBeInTheDocument();
     const edited = draft().value.replace(
-      "[date the symptoms began]",
+      "[when you first sought treatment]",
       "March 2011",
     );
     fireEvent.change(draft(), { target: { value: edited } });

@@ -4143,20 +4143,66 @@ Record Access: ${recordAccess}
 ${limitationsText}`;
 }
 
-function ChecklistField({ field, formData, handleChecklistChange }) {
+const fieldId = (name) => `forms-helper-field-${name}`;
+
+// A required answer is missing when it is empty, blank, unticked or has
+// nothing chosen.
+function isMissing(value) {
+  if (Array.isArray(value)) return value.length === 0;
+  return typeof value === "string" ? value.trim() === "" : !value;
+}
+
+const missingRequired = (step, formData) =>
+  step.fields
+    .filter((field) => field.required && isMissing(formData[field.name]))
+    .map((field) => field.name);
+
+// What ties a field to its "required" message for assistive technology.
+const invalidProps = (name, hasError) =>
+  hasError
+    ? { "aria-invalid": "true", "aria-describedby": `${fieldId(name)}-error` }
+    : {};
+
+// The message under a required field left empty. Words and a symbol, not
+// colour alone.
+function FieldError({ name, hasError }) {
+  if (!hasError) return null;
   return (
-    <div key={field.name} className="mb-6">
-      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+    <p
+      id={`${fieldId(name)}-error`}
+      className="mt-1 text-sm font-semibold text-red-800 dark:text-red-200"
+    >
+      <span aria-hidden="true">⚠ </span>
+      This answer is required. Fill it in to continue.
+    </p>
+  );
+}
+
+function ChecklistField({ field, formData, handleChecklistChange, hasError }) {
+  return (
+    <div
+      key={field.name}
+      role="group"
+      aria-labelledby={`${fieldId(field.name)}-label`}
+      {...invalidProps(field.name, hasError)}
+      className="mb-6"
+    >
+      <span
+        id={`${fieldId(field.name)}-label`}
+        className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3"
+      >
         {field.label}{" "}
         {field.required && <span className="text-red-500">*</span>}
-      </label>
+      </span>
+      <FieldError name={field.name} hasError={hasError} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {field.options.map((option) => (
+        {field.options.map((option, optionIndex) => (
           <label
             key={option}
             className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
           >
             <input
+              id={optionIndex === 0 ? fieldId(field.name) : undefined}
               type="checkbox"
               checked={(formData[field.name] || []).includes(option)}
               onChange={(e) =>
@@ -4174,8 +4220,8 @@ function ChecklistField({ field, formData, handleChecklistChange }) {
   );
 }
 
-function TextareaField({ field, formData, handleFieldChange }) {
-  const id = `forms-helper-field-${field.name}`;
+function TextareaField({ field, formData, handleFieldChange, hasError }) {
+  const id = fieldId(field.name);
   return (
     <div key={field.name} className="mb-4">
       <label
@@ -4194,6 +4240,7 @@ function TextareaField({ field, formData, handleFieldChange }) {
           rows={field.rows || 4}
           className="w-full pr-12 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
           required={field.required}
+          {...invalidProps(field.name, hasError)}
         />
         {isSpeechRecognitionSupported() && (
           <div
@@ -4213,13 +4260,14 @@ function TextareaField({ field, formData, handleFieldChange }) {
           </div>
         )}
       </div>
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
 
 // A select with its label tied to it, so it has an accessible name.
-function SelectField({ field, value, onChange }) {
-  const id = `forms-helper-field-${field.name}`;
+function SelectField({ field, value, onChange, hasError }) {
+  const id = fieldId(field.name);
   return (
     <div className="mb-4">
       <label
@@ -4235,6 +4283,7 @@ function SelectField({ field, value, onChange }) {
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
         required={field.required}
+        {...invalidProps(field.name, hasError)}
       >
         {field.options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -4242,6 +4291,7 @@ function SelectField({ field, value, onChange }) {
           </option>
         ))}
       </select>
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
@@ -4251,6 +4301,7 @@ function FormField({
   formData,
   handleFieldChange,
   handleChecklistChange,
+  hasError,
 }) {
   if (field.type === "checklist") {
     return (
@@ -4258,24 +4309,29 @@ function FormField({
         field={field}
         formData={formData}
         handleChecklistChange={handleChecklistChange}
+        hasError={hasError}
       />
     );
   }
 
   if (field.type === "checkbox") {
     return (
-      <label
-        key={field.name}
-        className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer mb-4"
-      >
-        <input
-          type="checkbox"
-          checked={formData[field.name] || false}
-          onChange={(e) => handleFieldChange(field.name, e.target.checked)}
-          className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
-        />
-        <span className="text-gray-700 dark:text-gray-300">{field.label}</span>
-      </label>
+      <div key={field.name} className="mb-4">
+        <label className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
+          <input
+            id={fieldId(field.name)}
+            type="checkbox"
+            checked={formData[field.name] || false}
+            onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+            className="rounded border-gray-300 text-va-blue focus:ring-va-blue"
+            {...invalidProps(field.name, hasError)}
+          />
+          <span className="text-gray-700 dark:text-gray-300">
+            {field.label}
+          </span>
+        </label>
+        <FieldError name={field.name} hasError={hasError} />
+      </div>
     );
   }
 
@@ -4285,6 +4341,7 @@ function FormField({
         field={field}
         value={formData[field.name] || ""}
         onChange={(value) => handleFieldChange(field.name, value)}
+        hasError={hasError}
       />
     );
   }
@@ -4295,6 +4352,7 @@ function FormField({
         field={field}
         formData={formData}
         handleFieldChange={handleFieldChange}
+        hasError={hasError}
       />
     );
   }
@@ -4316,7 +4374,9 @@ function FormField({
         placeholder={field.placeholder}
         className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-va-blue focus:ring-va-blue"
         required={field.required}
+        {...invalidProps(field.name, hasError)}
       />
+      <FieldError name={field.name} hasError={hasError} />
     </div>
   );
 }
@@ -4507,7 +4567,8 @@ function WizardStepNavigation({
   currentStep,
   setCurrentStep,
   isLastStep,
-  handleFinishWizard,
+  onNext,
+  onFinish,
   t,
 }) {
   return (
@@ -4529,7 +4590,7 @@ function WizardStepNavigation({
       {isLastStep ? (
         <button
           type="button"
-          onClick={handleFinishWizard}
+          onClick={onFinish}
           className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2"
         >
           {t("formsHelper", "generateStatement")}
@@ -4550,7 +4611,7 @@ function WizardStepNavigation({
       ) : (
         <button
           type="button"
-          onClick={() => setCurrentStep((prev) => prev + 1)}
+          onClick={onNext}
           className="px-6 py-2 bg-va-blue hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
         >
           {t("formsHelper", "next")}
@@ -4573,6 +4634,25 @@ function WizardStepNavigation({
   );
 }
 
+// Required means required: moving on with a required answer missing is
+// stopped, each missing field says so, and focus goes to the first one.
+function useRequiredAnswers(currentStep, formData) {
+  const [asked, setAsked] = useState({ step: 0, names: [] });
+  const forStep = (step) => ({
+    flagged:
+      asked.step === currentStep
+        ? asked.names.filter((name) => isMissing(formData[name]))
+        : [],
+    ifComplete: (go) => () => {
+      const names = missingRequired(step, formData);
+      setAsked({ step: currentStep, names });
+      if (names.length === 0) go();
+      else document.getElementById(fieldId(names[0]))?.focus();
+    },
+  });
+  return { forStep };
+}
+
 function WizardStepPanel({
   selectedForm,
   currentStep,
@@ -4585,6 +4665,7 @@ function WizardStepPanel({
 }) {
   const steps = _getFormStepsForForm(selectedForm);
   const stepHeadingRef = useRef(null);
+  const required = useRequiredAnswers(currentStep, formData);
 
   // "Start Guided Builder" (setCurrentStep(1)) and every Next/Back removes
   // the button that had focus from the DOM - the step content it belonged
@@ -4599,6 +4680,7 @@ function WizardStepPanel({
 
   const step = steps[currentStep - 1];
   const isLastStep = currentStep === steps.length;
+  const { flagged, ifComplete } = required.forStep(step);
 
   return (
     <div className="space-y-6">
@@ -4632,16 +4714,29 @@ function WizardStepPanel({
               formData={formData}
               handleFieldChange={handleFieldChange}
               handleChecklistChange={handleChecklistChange}
+              hasError={flagged.includes(field.name)}
             />
           ))}
         </div>
       </div>
 
+      {flagged.length > 0 && (
+        <p
+          role="alert"
+          className="p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm font-semibold text-red-900 dark:text-red-100"
+        >
+          {flagged.length === 1
+            ? "1 required answer is missing on this step."
+            : `${flagged.length} required answers are missing on this step.`}
+        </p>
+      )}
+
       <WizardStepNavigation
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
         isLastStep={isLastStep}
-        handleFinishWizard={handleFinishWizard}
+        onNext={ifComplete(() => setCurrentStep((prev) => prev + 1))}
+        onFinish={ifComplete(handleFinishWizard)}
         t={t}
       />
     </div>
