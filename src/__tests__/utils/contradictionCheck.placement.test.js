@@ -20,12 +20,12 @@ const a26 = readFileSync(RUN, "utf8")
   .find((record) => record.id === "a26");
 const MODEL_ANSWER = a26.response.split("\n\nVet-Rate check:")[0];
 
-const A26_LEAD = `Vet-Rate check: part of the answer below conflicts with the regulation.
+const A26_LEAD = `Vet-Rate check: part of the answer below may not match the regulation.
 
 The answer says: "Immediate Action: File an Intent to File (ITF) for Pending Claims"
-That recommends an Intent to File for a claim that is already filed, and a filed claim already has its own filing date. 38 CFR § 3.155(d)(1) says: "(1) Requirement for complete claim and date of claim. A complete claim is required for all types of claims, and will generally be considered filed as of the date it was received by VA for an evaluation or award of benefits under the laws administered by the Department of Veterans Affairs."
+This reads as if it recommends an Intent to File for a claim that is already filed, and a filed claim already has its own filing date. Compare it with 38 CFR § 3.155(d)(1): "(1) Requirement for complete claim and date of claim. A complete claim is required for all types of claims, and will generally be considered filed as of the date it was received by VA for an evaluation or award of benefits under the laws administered by the Department of Veterans Affairs."
 
-Check that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.`;
+This check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. The answer follows, unchanged.`;
 
 describe("a26 from the final-build run", () => {
   const out = flagContradictions(

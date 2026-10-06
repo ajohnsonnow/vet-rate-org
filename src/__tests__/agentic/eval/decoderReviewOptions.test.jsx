@@ -91,7 +91,7 @@ describe("t08 through decodeDecision with a wrong filing instruction", () => {
       "tells you to file a Statement of the Case, which is not one of the review options",
     );
     expect(data.review_corrections[0].note).toContain(
-      "38 CFR § 3.2500(a) says:",
+      "Compare it with 38 CFR § 3.2500(a):",
     );
   });
 
@@ -179,7 +179,7 @@ describe("t08 with the deadline the 22:16 graded run gave", () => {
       rule: "supplemental-claim-deadline",
     });
     expect(data.review_corrections[0].note).toContain(
-      '38 CFR § 3.2500(a)(2) says: "(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501."',
+      'Compare it with 38 CFR § 3.2500(a)(2): "(2) At any time after VA issues notice of a decision on an issue within a claim, a claimant may file a supplemental claim under § 3.2501."',
     );
   });
 
@@ -204,7 +204,7 @@ describe("t08 with the deadline the 22:16 graded run gave", () => {
     });
     expect(notes).toHaveLength(1);
     expect(notes[0].textContent).toContain(
-      "this answer puts a deadline on filing a Supplemental Claim",
+      "this reads as if it puts a deadline on filing a Supplemental Claim",
     );
     expect(notes[0].textContent).toContain("At any time after VA issues");
   });

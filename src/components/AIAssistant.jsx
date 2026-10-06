@@ -145,6 +145,7 @@ async function sendMessage({
         veteranContext,
       ),
       taskType: "assistant",
+      answerChecks: true,
       context: {
         currentTool,
         isHelperMode,

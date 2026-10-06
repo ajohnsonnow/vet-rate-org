@@ -17,7 +17,7 @@ describe("the TDIU percentage for one disability", () => {
   it.each([
     "Current Disability Status: Confirm if you have one disability rated at 70% or two or more disabilities rated at 40% or higher.",
     "If you have only one disability rated at 70% or two disabilities where one is rated at 40% or more and the combined total is 70% or more, you meet the threshold for TDIU benefits.",
-    "TDIU needs a single disability ratable at 50 percent or more, or two or more with a combined 70 percent.",
+    "TDIU needs a single disability ratable at 50 percent or more, or two or more disabilities with a combined 70 percent.",
   ])("flags: %s", (sentence) => {
     expect(rules(sentence, ["tdiu"])).toEqual([RULE]);
   });

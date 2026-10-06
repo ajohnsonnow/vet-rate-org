@@ -30,7 +30,6 @@ describe("ratings said to be added", () => {
 
   it.each([
     "PTSD + Tinnitus: 50% + 30% = 80%",
-    "Pairing: Left knee (10%) + Right knee (10%) = 20%",
     "Step 1: 60% + 20% = 80%",
     "Combine the two highest ratings: 60\\% + 20\\% = 80\\%",
   ])("flags a combined rating shown as a plain sum: %s", (sentence) => {
@@ -85,7 +84,7 @@ describe("flagContradictions for a20 in the final-build run", () => {
       "ratings-added-together",
     ]);
     expect(out.text).toContain(
-      `That adds VA ratings together. 38 CFR § 4.25 says: "${quotes.corrections["ratings-combined"].text}"`,
+      `This reads as if it adds VA ratings together. Compare it with 38 CFR § 4.25: "${quotes.corrections["ratings-combined"].text}"`,
     );
     expect(out.text.endsWith(ANSWER)).toBe(true);
   });
@@ -154,7 +153,6 @@ describe("the all-answers rule over every recorded response", () => {
       "105010 a20",
       "122217 a20",
       "123216 a20",
-      "135040 a12",
       "135040 a20",
       "135908 a13",
       "201248 a13",

@@ -97,7 +97,7 @@ describe("the coverage-date rule", () => {
       "Am I eligible for any PACT Act presumptive conditions based on my Iraq deployment?",
     );
     expect(out.text).toContain(
-      `The answer says: "${WRONG}"\nThat gives September 11, 2001 as the start date for a place the table lists under August 2, 1990. VA manual M21-1 VIII.ii.2.A.1.e-h says: "${EARLY_LINE}"\n`,
+      `The answer says: "${WRONG}"\nThis reads as if it gives September 11, 2001 as the start date for a place the table lists under August 2, 1990. Compare it with VA manual M21-1 VIII.ii.2.A.1.e-h: "${EARLY_LINE}"\n`,
     );
     expect(out.contradictionsFound).toEqual([
       { rule: "coverage-date-for-wrong-place", sentence: WRONG },
@@ -117,15 +117,13 @@ const RUN_L2_A16 =
   "Service Connection (SC): You must have served on or after the effective date of the specific regulation (e.g., August 10, 2022, for the PACT Act).";
 
 describe("a service date that is neither of the table's dates", () => {
-  it("is corrected with the line for the place the veteran asked about", () => {
-    const found = findWrongCoverageDate(RUN_L2_A16, {
-      question: IRAQ_QUESTION,
-    });
-    expect(found).toMatchObject({
-      place: "Iraq",
-      wrongDate: "August 10, 2022",
-    });
-    expect(found.quote.text).toBe(EARLY_LINE);
+  // Known miss since the QA review: the sentence names no place, and taking
+  // the place from the veteran's question put this correction on true
+  // sentences about Vietnam, Camp Lejeune and the Act's effective date.
+  it("is not corrected when the sentence names no place", () => {
+    expect(
+      findWrongCoverageDate(RUN_L2_A16, { question: IRAQ_QUESTION }),
+    ).toBeNull();
   });
 
   it("is corrected when the sentence names the place itself", () => {
@@ -134,17 +132,6 @@ describe("a service date that is neither of the table's dates", () => {
         "For Afghanistan, you must have served on or after 10 August 2022.",
       ),
     ).toMatchObject({ place: "Afghanistan", wrongDate: "August 10, 2022" });
-  });
-
-  it("puts the correction above the answer through the answer check", () => {
-    const out = flagContradictions(
-      { text: RUN_L2_A16 },
-      { toolId: "pact-navigator", dataClass: "context" },
-      IRAQ_QUESTION,
-    );
-    expect(out.text).toContain(
-      `That gives August 10, 2022 as the start date for a place the table lists under August 2, 1990. VA manual M21-1 VIII.ii.2.A.1.e-h says: "${EARLY_LINE}"`,
-    );
   });
 
   it.each([
@@ -239,14 +226,6 @@ describe("a date in neither row, for places from both rows", () => {
     expect(found.quote.text).toBe(EARLY_LINE);
   });
 
-  it("is corrected when the question names both and the sentence none", () => {
-    expect(
-      findWrongCoverageDate(RUN_L2_A16, {
-        question: "Am I covered for my Iraq and Afghanistan deployments?",
-      }),
-    ).toMatchObject({ place: "Iraq", wrongDate: "August 10, 2022" });
-  });
-
   it("applies on a herbicide question too, where run D3 a27 said it", () => {
     expect(
       findContradictions(RUN_D3_A27, { topics: ["herbicide"] }).map(
@@ -314,11 +293,10 @@ describe("the coverage-date rule over every recorded response", () => {
         .map((r) => `${name.slice(4, 21)} ${r.id}`),
     );
 
-  it("flags the five answers that misdated a place and nothing else", () => {
+  it("flags the four answers that misdated a place and nothing else", () => {
     expect(hits).toEqual([
       "2026-10-05_210108 a16",
       "2026-10-06_000820 a16",
-      "2026-10-06_034657 a16",
       "2026-10-06_045147 a16",
       "2026-10-06_045147 a27",
     ]);
