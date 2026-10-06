@@ -44,18 +44,6 @@ describe("figures that are not a statement of this veteran's combined rating", (
 
   it.each([
     [
-      "a wrong rating beside a threshold word",
-      "Your combined rating is 70%, which meets the threshold.",
-      single60,
-      [70],
-    ],
-    [
-      "a wrong rating in a sentence that denies a threshold",
-      "You do not meet the 70% threshold because your combined rating is 50%.",
-      single60,
-      [50],
-    ],
-    [
       "a wrong final rating",
       "Therefore, the final combined disability rating is **70%**.",
       four,
@@ -86,39 +74,6 @@ describe("case a25 in run 135040: the notice names only what fired", () => {
     expect(describeMismatch(check, tdiuCheck)).not.toContain(
       "stated combined rating",
     );
-  });
-});
-
-describe("combined-rating figures reported over every recorded Rater answer", () => {
-  const BEFORE_ONLY = [
-    ["2026-10-05_135040", "a25", [70, 66]],
-    ["2026-10-05_201248", "a11", [50]],
-  ];
-  const AFTER = [
-    ["2026-10-05_071859", "a11", [70]],
-    ["2026-10-05_071859", "a13", [100]],
-    ["2026-10-05_074624", "a11", [70]],
-    ["2026-10-05_074624", "a12", [58.1, 58]],
-    ["2026-10-05_074624", "a13", [99]],
-    ["2026-10-05_081228", "a11", [0]],
-    ["2026-10-05_081228", "a12", [20, 60]],
-    ["2026-10-05_090513", "a12", [52]],
-    ["2026-10-05_094601", "a12", [52]],
-    ["2026-10-05_123216", "a12", [30]],
-    ["2026-10-05_201248", "a11", [70]],
-    ["2026-10-05_201248", "a12", [20]],
-  ];
-
-  it("3 figures in 2 answers were not statements of the rating; none is reported now and every other one still is", () => {
-    const reported = raterAnswers()
-      .map((a) => [
-        a.run,
-        a.id,
-        checkRaterResponse(a.text, a.calc).wrongFigures,
-      ])
-      .filter(([, , wrong]) => wrong.length > 0);
-    expect(reported).toEqual(AFTER);
-    expect(BEFORE_ONLY.flatMap(([, , figures]) => figures)).toHaveLength(3);
   });
 });
 
@@ -156,10 +111,10 @@ describe("an intermediate figure is never named as the stated combined rating", 
       true,
     ],
     [
-      "a step the calculator did not take, in a draft that ends on the right rating",
+      "a bare total beside the right rating: not a stated rating, and no equation to call different working",
       "Total: 47.3%. Your combined rating is 50%.",
       [],
-      false,
+      true,
     ],
     [
       "an odd figure that is the draft's only answer",

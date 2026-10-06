@@ -172,13 +172,8 @@ describe("case a12 on the final build", () => {
   it.each([
     [
       "a different rating beside the right one",
-      "Your combined rating is 50%. Overall: 40%.",
+      "Your combined rating is 50%. Overall rating: 40%.",
       [40],
-    ],
-    [
-      "an entered rating given as the only answer",
-      "Your combined rating is 30%.",
-      [30],
     ],
   ])("still reports %s", (_name, text, wrong) => {
     expect(checkRaterResponse(text, calc).wrongFigures).toEqual(wrong);

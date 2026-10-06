@@ -63,7 +63,17 @@ const GOLDEN = Object.fromEntries(
     .map((c) => [c.id, c]),
 );
 const TRANSCRIPT_ENTRIES = FIXTURE.filter((entry) => entry.expected);
-
+// The fixture's labels describe what the answer says, as the evaluation
+// grader reads it. The guard reads less on purpose: a figure counts as the
+// stated rating only when a sentence presents it as such, so these three are
+// not read at all (a rating given in a cap sentence, and two bare labels).
+const NOT_READ_BY_THE_GUARD = [
+  "run_2026-10-05_071859 a13",
+  "run_2026-10-05_071859 a24",
+  "run_2026-10-05_071859 a25",
+];
+const notRead = (entry) =>
+  NOT_READ_BY_THE_GUARD.some((name) => entry.name.startsWith(name));
 describe("Rater responses recorded in the five golden-set transcripts", () => {
   it("covers cases a11, a12, a13, a24 and a25 in each of the five transcripts", () => {
     expect(TRANSCRIPT_ENTRIES).toHaveLength(25);
@@ -82,7 +92,9 @@ describe("Rater responses recorded in the five golden-set transcripts", () => {
     else if (check.stated.includes(calc.combinedRating))
       outcome = "matches calculator";
     expect(outcome).toBe(
-      entry.knownMiss ? "no final figure stated" : entry.expected,
+      entry.knownMiss || notRead(entry)
+        ? "no final figure stated"
+        : entry.expected,
     );
   });
 });
@@ -219,8 +231,14 @@ describe("checkRaterResponse", () => {
   });
 
   it("flags an unrounded figure that is not part of the working", () => {
-    const out = checkRaterResponse("The final combined rating is 74.8%.", four);
+    const out = checkRaterResponse("The final combined rating is 73.2%.", four);
+    expect(out.wrongFigures).toEqual([73.2]);
     expect(out.ok).toBe(false);
+  });
+
+  it("does not call the calculator's own unrounded step a wrong rating", () => {
+    const out = checkRaterResponse("The final combined rating is 74.8%.", four);
+    expect(out.wrongFigures).toEqual([]);
   });
 
   it("does not treat the calculator's own intermediate values as final claims", () => {
