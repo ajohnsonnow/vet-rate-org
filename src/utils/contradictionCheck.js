@@ -19,6 +19,9 @@ import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
 import {
   citesIntentParagraphForSupplementalClaim,
+  countsYearFromReceivingAForm,
+  filesNewClaimToReopen,
+  saysEmploymentBarsTdiu,
   givesTdiuThresholdsWithoutForty,
   putsBilateralOnOneSide,
   givesNewAndMaterialAsAdvice,
@@ -338,6 +341,27 @@ const RULES = [
     matches: givesTdiuThresholdsWithoutForty,
     says: "gives a combined 70 percent for TDIU and leaves out that one disability must be ratable at 40 percent or more",
     correction: () => "tdiu-judgment",
+  },
+  {
+    id: "tdiu-barred-by-any-employment",
+    topics: ["tdiu"],
+    matches: saysEmploymentBarsTdiu,
+    says: "says being employed rules out TDIU, but marginal employment does not count as substantially gainful employment",
+    correction: () => "marginal-employment",
+  },
+  {
+    id: "year-from-receiving-a-form",
+    topics: FILING_TOPICS,
+    matches: countsYearFromReceivingAForm,
+    says: "counts the year from when you receive a form, but it runs from the day VA receives the intent to file",
+    correction: () => "intent-year-from-receipt",
+  },
+  {
+    id: "new-claim-to-reopen",
+    topics: FILING_TOPICS,
+    matches: filesNewClaimToReopen,
+    says: "has you file a new claim to reopen a decided one, where the regulation provides a Supplemental Claim",
+    correction: () => "supplemental-any-time",
   },
   {
     id: "intent-paragraph-for-supplemental-claim",

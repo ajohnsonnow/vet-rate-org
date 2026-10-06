@@ -135,6 +135,95 @@ describe("a denial said to be unappealable without new evidence", () => {
   });
 });
 
+describe("the year after an intent to file counted from receiving a form", () => {
+  const RULE = "year-from-receiving-a-form";
+  const INTENT = ["intent-to-file"];
+
+  // L3 a30, 231514 a30 and 000014 a15.
+  it.each([
+    "You must then file a complete claim (not just an intent) within 1 year of receiving that form.",
+    "You can then file a complete claim within 1 year of receiving that form.",
+    "Once received, VA will issue the appropriate application form which must be filed within one year of receiving that form as well.",
+  ])("flags: %s", (sentence) => {
+    expect(rules(sentence, INTENT)).toEqual([RULE]);
+  });
+
+  it.each([
+    "VA must receive your complete claim within 1 year of receiving the intent to file.",
+    "File the complete claim within 1 year of the date VA receives your Intent to File.",
+    "You will hear back within 30 days of receiving that form.",
+  ])("leaves alone: %s", (sentence) => {
+    expect(rules(sentence, INTENT)).toEqual([]);
+  });
+
+  it("quotes the sentence of 38 CFR 3.155(b) that starts the year", () => {
+    const [hit] = findContradictions(
+      "File a complete claim within 1 year of receiving that form.",
+      { topics: INTENT },
+    );
+    expect(quotes.corrections[hit.correction]).toMatchObject({
+      citation: "38 CFR § 3.155(b)",
+      text: "If VA receives a complete application form prescribed by the Secretary, as defined in paragraph (a) of § 3.160, appropriate to the benefit sought within 1 year of receipt of the intent to file a claim, VA will consider the complete claim filed as of the date the intent to file a claim was received.",
+    });
+  });
+});
+
+describe("a new claim given as the way to reopen a decided one", () => {
+  const RULE = "new-claim-to-reopen";
+  const FILING = ["next-claim-step"];
+
+  it("flags run D3 a15", () => {
+    expect(
+      rules(
+        "If you are reopening a closed claim: You must file a new claim (or an ITF) citing the new evidence.",
+        FILING,
+      ),
+    ).toEqual([RULE]);
+  });
+
+  it.each([
+    "To reopen a denied claim, you should file a Supplemental Claim, not a new claim.",
+    "If you are adding a secondary condition: You must file a new claim (or an ITF) for that specific secondary condition.",
+    "You do not need to reopen anything; for a new condition you must file a new claim.",
+  ])("leaves alone: %s", (sentence) => {
+    expect(rules(sentence, FILING)).toEqual([]);
+  });
+});
+
+describe("any employment said to rule out TDIU", () => {
+  const RULE = "tdiu-barred-by-any-employment";
+
+  // Run L3 a15, both forms of the sentence.
+  it.each([
+    'Action Required: Before filing for TDIU, you must confirm if you are "unable to secure or follow a substantially gainful occupation." If you are currently employed (even part-time) or can work, you cannot receive TDIU benefits.',
+    "If you are currently employed, you cannot receive TDIU benefits.",
+  ])("flags: %s", (text) => {
+    expect(rules(text, ["tdiu"])).toEqual([RULE]);
+  });
+
+  it.each([
+    "If you are employed in substantially gainful employment, you cannot receive TDIU.",
+    "Marginal employment aside, if you are employed full time you cannot receive TDIU.",
+    "If you are currently employed, you can still receive TDIU when the work is marginal.",
+    "If you are unemployed because of your disabilities, you may qualify for TDIU.",
+  ])("leaves alone: %s", (sentence) => {
+    expect(rules(sentence, ["tdiu"])).toEqual([]);
+  });
+
+  it("quotes the marginal-employment sentence of 38 CFR 4.16(a)", () => {
+    const [hit] = findContradictions(
+      "If you are currently employed, you cannot receive TDIU benefits.",
+      { topics: ["tdiu"] },
+    );
+    expect(quotes.corrections[hit.correction]).toEqual(
+      expect.objectContaining({
+        citation: "38 CFR § 4.16(a)",
+        text: "Marginal employment shall not be considered substantially gainful employment.",
+      }),
+    );
+  });
+});
+
 describe("the intent-to-file paragraph cited for a Supplemental Claim", () => {
   const RULE = "intent-paragraph-for-supplemental-claim";
   const FILING = ["next-claim-step"];

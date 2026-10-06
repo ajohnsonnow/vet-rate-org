@@ -232,6 +232,22 @@
         "retrieved": "2026-07-10"
       }
     },
+    "intent-year-from-receipt": {
+      "citation": "38 CFR § 3.155(b)",
+      "text": "If VA receives a complete application form prescribed by the Secretary, as defined in paragraph (a) of § 3.160, appropriate to the benefit sought within 1 year of receipt of the intent to file a claim, VA will consider the complete claim filed as of the date the intent to file a claim was received.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
+    "marginal-employment": {
+      "citation": "38 CFR § 4.16(a)",
+      "text": "Marginal employment shall not be considered substantially gainful employment.",
+      "source": {
+        "file": "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
+        "retrieved": "2026-07-10"
+      }
+    },
     "intent-paragraph-scope": {
       "citation": "38 CFR § 3.155",
       "text": "The provisions of this section are applicable to all claims governed by part 3, with the exception that paragraph (b) of this section, regarding intent to file a claim, does not apply to supplemental claims.",

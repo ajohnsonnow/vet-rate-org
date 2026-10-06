@@ -78,6 +78,8 @@ describe("correction quotes", () => {
       "supplemental-any-time",
       "new-and-relevant",
       "claim-has-its-own-date",
+      "intent-year-from-receipt",
+      "marginal-employment",
       "intent-paragraph-scope",
       "review-filing",
     ]);

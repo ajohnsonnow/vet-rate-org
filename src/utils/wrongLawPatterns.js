@@ -82,6 +82,36 @@ export function givesNewAndMaterialAsAdvice(sentence) {
   );
 }
 
+// The year after an intent to file runs from VA's receipt of the intent.
+// "Within 1 year of receiving that form" starts it when the veteran is sent
+// an application form.
+const YEAR_FROM_RECEIVING_THAT_FORM =
+  /\bwithin (?:1|one) year of receiving that form\b/i;
+
+export function countsYearFromReceivingAForm(sentence) {
+  return YEAR_FROM_RECEIVING_THAT_FORM.test(sentence);
+}
+
+// A decided claim goes back by Supplemental Claim, not by a new claim.
+const NEW_CLAIM_TO_REOPEN =
+  /\breopen(?:ing|ed|s)?\b[^.]{0,50}\bclaim\b[^.]{0,30}\b(?:must|should|need to|have to) file a new claim\b/i;
+
+export function filesNewClaimToReopen(sentence) {
+  return NEW_CLAIM_TO_REOPEN.test(sentence) && !/\bnot\b|n't\b/i.test(sentence);
+}
+
+// "If you are currently employed, you cannot receive TDIU": marginal
+// employment is not substantially gainful employment (38 CFR 4.16(a)).
+const EMPLOYED_SO_NO_TDIU =
+  /\bemployed\b[^.;]{0,40}\byou (?:cannot|can't|will not|won't) (?:receive|get|qualify for|be eligible for) TDIU\b/i;
+
+export function saysEmploymentBarsTdiu(sentence) {
+  return (
+    EMPLOYED_SO_NO_TDIU.test(sentence) &&
+    !/\bmarginal\b|\bsubstantially gainful employment\b/i.test(sentence)
+  );
+}
+
 const INTENT_PARAGRAPH = /\b3\.155\(b\)/;
 const SUPPLEMENTAL_CLAIM_CALLED_FOR =
   /\bsupplemental claims?\b[^.;]{0,20}\b(?:is|are) required\b|\b(?:should|must|need to|have to) (?:file|submit) a supplemental claim\b/i;
