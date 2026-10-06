@@ -32,7 +32,9 @@ import {
   resolvePassageDraft,
   standardDraft,
 } from "./writerDraftCheck";
+import { smallModelAnswering } from "./smallModelAnswering";
 import {
+  SMALL_MODEL_REWORDING_OFF,
   appealStatementPlan,
   buildPassagePrompt,
   formStatementPlan,
@@ -519,6 +521,18 @@ const callGeminiAPI = async (
 async function draftWithModel(plan, { toolId, userInput = null }) {
   const crisisBlock = blockIfCrisisDetected(userInput);
   if (crisisBlock) return crisisBlock;
+
+  // A small on-device model is never asked to reword: the app-built draft
+  // is returned with no model call.
+  if (smallModelAnswering(getAIStatus())) {
+    const draft = standardDraft(plan);
+    return {
+      success: true,
+      ...draft,
+      draftNote: `${SMALL_MODEL_REWORDING_OFF} ${draft.draftNote}`,
+      rewordingOff: "small-model",
+    };
+  }
 
   const offered = selectPassages(plan);
   const redacted = await _redactForAi(offered.map((passage) => passage.text));

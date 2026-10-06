@@ -11,6 +11,7 @@ import StandardDraftNotice from "./common/StandardDraftNotice";
 import { EditedDraftDialog } from "./common/ChoiceDialog";
 import {
   AI_NO_CHANGE_NOTE,
+  rewordingOffNote,
   formStatementPlan,
   standardDraftNote,
 } from "../utils/writerTemplates";
@@ -7992,7 +7993,9 @@ function showAIOutcome(ctx, result) {
   ctx.setAiEnhancedContent(reworded ? text : null);
   ctx.setShowAIVersion(reworded);
   ctx.setAiDraftNote(
-    reworded || result.draftErrorReason ? null : AI_NO_CHANGE_NOTE,
+    reworded || result.draftErrorReason
+      ? null
+      : (rewordingOffNote(result) ?? AI_NO_CHANGE_NOTE),
   );
   ctx.setAiError(
     result.draftErrorReason

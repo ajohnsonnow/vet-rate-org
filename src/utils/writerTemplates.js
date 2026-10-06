@@ -411,6 +411,16 @@ export const STANDARD_DRAFT_NOTE_NO_BLANKS =
 export const AI_NO_CHANGE_NOTE =
   "The AI did not change the wording, so this is still the standard draft.";
 
+// Said when the veteran asks for AI wording and the model that would answer
+// is in the small class. Small on-device models changed the meaning of what
+// people typed, so they are not asked to reword anything.
+export const SMALL_MODEL_REWORDING_OFF =
+  "The AI on this device is a small one, and small ones changed the meaning of what people wrote, so it is not used to reword statements. Your draft is in your own words, as you typed them.";
+
+/** Why a tool result was not reworded on purpose, or null when it was asked. */
+export const rewordingOffNote = (result) =>
+  result?.rewordingOff === "small-model" ? SMALL_MODEL_REWORDING_OFF : null;
+
 /** The one-line note for an app-built draft, with or without blanks. */
 export const standardDraftNote = (draft) =>
   listPlaceholders(draft).length > 0
