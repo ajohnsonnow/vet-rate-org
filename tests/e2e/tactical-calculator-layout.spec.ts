@@ -124,6 +124,44 @@ for (const viewport of VIEWPORTS) {
       }
     });
 
+    test("on the Rates tab, the element that scrolls is the one a keyboard can focus", async ({
+      page,
+    }) => {
+      const dialog = await openCalculatorWithConditions(page);
+      await dialog.locator("nav button").filter({ hasText: /Rates/ }).click();
+      const regions = dialog.locator('section[tabindex="0"]:has(table)');
+      await expect(regions).toHaveCount(3);
+
+      const measured = await regions.evaluateAll((sections) =>
+        sections.map((section) => {
+          const table = section.querySelector("table")!;
+          return {
+            name: section.getAttribute("aria-label"),
+            regionOverflow: section.scrollWidth - section.clientWidth,
+            tableOverflow: table.scrollWidth - table.clientWidth,
+          };
+        }),
+      );
+      for (const region of measured) {
+        expect(region.name).toBeTruthy();
+        // The table must never be the scroller: it cannot take focus.
+        expect(region.tableOverflow).toBeLessThanOrEqual(1);
+      }
+
+      const scrolling = measured.findIndex((r) => r.regionOverflow > 1);
+      if (viewport.width <= 390) expect(scrolling).toBeGreaterThanOrEqual(0);
+      if (scrolling >= 0) {
+        const region = regions.nth(scrolling);
+        await region.focus();
+        await expect(region).toBeFocused();
+        await page.keyboard.press("ArrowRight");
+        await page.keyboard.press("ArrowRight");
+        await expect
+          .poll(() => region.evaluate((el) => el.scrollLeft))
+          .toBeGreaterThan(0);
+      }
+    });
+
     test("no condition row shows above the sticky tab bar after scrolling", async ({
       page,
     }) => {
