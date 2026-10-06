@@ -987,6 +987,26 @@ const WitnessNameInput = ({ t, witnessName, onChange }) => (
   </div>
 );
 
+// Shown in place of the AI interview card while a small on-device model is
+// the one that would answer: that model is not asked for questions, so the
+// screen does not say an AI will run the interview.
+const BuiltInQuestionsCard = ({ t }) => (
+  <section
+    aria-labelledby="witness-built-in-questions"
+    className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
+  >
+    <h3
+      id="witness-built-in-questions"
+      className="text-lg font-bold text-gray-800 dark:text-gray-100"
+    >
+      {t("witnessBench", "builtInQuestionsTitle")}
+    </h3>
+    <p className="text-sm text-gray-700 dark:text-gray-300">
+      {t("witnessBench", "builtInQuestionsDesc")}
+    </p>
+  </section>
+);
+
 const AIToggleCard = ({
   t,
   aiAvailable,
@@ -1081,14 +1101,18 @@ const SetupStep = ({
       onChange={onWitnessNameChange}
     />
 
-    <AIToggleCard
-      t={t}
-      aiAvailable={aiAvailable}
-      aiStatus={aiStatus}
-      useAI={useAI}
-      onToggleAI={onToggleAI}
-      onOpenAISettings={onOpenAISettings}
-    />
+    {aiAvailable && smallModelAnswering(aiStatus) ? (
+      <BuiltInQuestionsCard t={t} />
+    ) : (
+      <AIToggleCard
+        t={t}
+        aiAvailable={aiAvailable}
+        aiStatus={aiStatus}
+        useAI={useAI}
+        onToggleAI={onToggleAI}
+        onOpenAISettings={onOpenAISettings}
+      />
+    )}
 
     {/* Error Display */}
     {error && (

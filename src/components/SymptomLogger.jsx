@@ -6,6 +6,9 @@ import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { jsPDF } from "jspdf";
 import ShareButton from "./ShareButton";
 import { generateAI, getAIStatus } from "../utils/unifiedAIService";
+import { smallModelAnswering } from "../utils/smallModelAnswering";
+import { useLanguage } from "../contexts/LanguageContext";
+import RewordingOffNote from "./common/RewordingOffNote";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import { AIStatusBadge, AIModeSelector } from "./AIModeSelector";
 import VoiceInputButton from "./VoiceInput";
@@ -1244,13 +1247,37 @@ const TriggersNotesFields = ({
   </>
 );
 
-const LogAttackTab = ({
+// The "AI" buttons write a model's words into the veteran's own entry. A
+// small on-device model is not asked to do that, so while one would answer
+// the buttons are not offered and one line above the fields says why.
+const suggestionsOff = (aiStatus) =>
+  Boolean(aiStatus.anyAvailable) && smallModelAnswering(aiStatus);
+
+const SuggestionsOffNote = () => {
+  const { t } = useLanguage();
+  return <RewordingOffNote text={t("smallModelCaveat", "rewordingOff")} />;
+};
+
+const LogAttackTab = ({ aiStatus: fullStatus, ...rest }) => (
+  <LogAttackFields
+    {...rest}
+    noSuggestions={suggestionsOff(fullStatus)}
+    aiStatus={
+      suggestionsOff(fullStatus)
+        ? { ...fullStatus, anyAvailable: false }
+        : fullStatus
+    }
+  />
+);
+
+const LogAttackFields = ({
   newLog,
   setNewLog,
   config,
   colors,
   symptomType,
   aiStatus,
+  noSuggestions,
   isAIGenerating,
   generateAISuggestion,
   aiError,
@@ -1258,6 +1285,7 @@ const LogAttackTab = ({
 }) => (
   <div className="space-y-6">
     <TrackFrequencyBanner config={config} colors={colors} />
+    {noSuggestions && <SuggestionsOffNote />}
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <DateTimeFields newLog={newLog} setNewLog={setNewLog} />
@@ -1915,6 +1943,7 @@ function useSymptomLoggerHandlers({
   };
 
   const generateAISuggestion = (field) => {
+    if (suggestionsOff(aiStatus)) return Promise.resolve();
     if (!aiStatus.anyAvailable) {
       setAIError("Please configure AI in settings first");
       return Promise.resolve();

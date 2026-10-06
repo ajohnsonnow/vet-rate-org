@@ -11795,6 +11795,20 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
 
   // Witness Bench (Buddy Letter Wizard)
   witnessBench: {
+    builtInQuestionsTitle: {
+      en: "Built-in questions",
+      es: "Preguntas incorporadas",
+      tl: "Mga nakahandang tanong",
+      vi: "Câu hỏi có sẵn",
+      ko: "기본 질문",
+    },
+    builtInQuestionsDesc: {
+      en: "This interview uses the built-in questions.",
+      es: "Esta entrevista usa las preguntas incorporadas.",
+      tl: "Ginagamit ng interview na ito ang mga nakahandang tanong.",
+      vi: "Cuộc phỏng vấn này dùng các câu hỏi có sẵn.",
+      ko: "이 인터뷰는 기본으로 준비된 질문을 사용합니다.",
+    },
     smallModelQuestionsNote: {
       en: "The AI on this device is a small one, so it is not asked to write questions. These are the built-in questions.",
       es: "La IA de este dispositivo es pequeña, así que no se le pide que escriba preguntas. Estas son las preguntas incorporadas.",

@@ -515,6 +515,8 @@ const VALID_FORM_TYPES = [
   "priority-processing",
   "vso-appointment",
   "vso-appointment-individual",
+  // TDIU Builder's statement for VA Form 21-8940, Box 18.
+  "tdiu-statement",
 ];
 
 /**
