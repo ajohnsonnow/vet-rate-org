@@ -10,8 +10,6 @@ import {
   buildTdiuAnalysisTemplate,
   buildWitnessStatementBody,
   buildWitnessStatementTemplate,
-  formStatementInputs,
-  formStatementPlan,
   listPlaceholders,
   witnessRelationshipLabel,
   tdiuAnalysisText,
@@ -303,42 +301,6 @@ describe("standard draft note", () => {
 });
 
 describe("stored codes are printed as the form's own labels", () => {
-  it("Forms Helper witness relationship", () => {
-    const { answers, condition } = formStatementInputs("buddy-statement", {
-      witnessRelation: "fellow-service-member",
-      conditionName: "PTSD",
-    });
-    const draft = buildBuddyStatementTemplate(answers, condition);
-    expect(draft).toContain(
-      "My relationship to [Veteran]: Fellow Service Member",
-    );
-    expect(draft).not.toContain("fellow-service-member");
-  });
-
-  it("Forms Helper stressor type", () => {
-    const { answers } = formStatementInputs("ptsd-stressor", {
-      stressorType: "fear-hostile",
-    });
-    const draft = buildPTSDStressorTemplate(answers);
-    expect(draft).toContain(
-      "Type of stressor: Fear of Hostile Military/Terrorist Activity",
-    );
-    expect(draft).not.toContain("fear-hostile");
-  });
-
-  it("a value with no label, and an empty one, are left as they are", () => {
-    expect(
-      formStatementInputs("buddy-statement", { witnessRelation: "godparent" })
-        .answers.relationship,
-    ).toBe("godparent");
-    expect(
-      buildBuddyStatementTemplate(
-        formStatementInputs("buddy-statement", {}).answers,
-        "",
-      ),
-    ).toContain("[your relationship to the veteran]");
-  });
-
   it("Witness Bench relationship, in the app's English wording", () => {
     const draft = buildWitnessStatementTemplate("buddy", "PTSD", {});
     expect(draft).toContain("Witness Type: Battle Buddy / Fellow Veteran");
@@ -542,61 +504,5 @@ describe("appeal statement follows the review lane", () => {
       "Evidence that supports my appeal\n[the evidence that supports a different decision]",
     );
     expect(draft).not.toMatch(/new evidence/i);
-  });
-});
-
-describe("Forms Helper personal statement and the claim type", () => {
-  const form = (claimType) =>
-    formStatementInputs("personal-statement", {
-      claimType,
-      conditionName: "Sleep apnea",
-      primaryCondition: "Tinnitus",
-    });
-  const draft = (claimType) => {
-    const { answers, condition, primaryCondition } = form(claimType);
-    return buildPersonalStatementTemplate(answers, condition, primaryCondition);
-  };
-
-  it.each(["initial", "increase", "reopened", "", undefined])(
-    "claim type %s is not written as secondary, whatever the optional field holds",
-    (claimType) => {
-      expect(form(claimType).primaryCondition).toBeNull();
-      expect(draft(claimType)).not.toMatch(/secondary|Tinnitus/);
-      expect(draft(claimType)).toContain(
-        "my claim for service connection for Sleep apnea.",
-      );
-    },
-  );
-
-  it("a secondary claim names its primary condition", () => {
-    expect(draft("secondary")).toContain(
-      "Sleep apnea as secondary to my service-connected Tinnitus",
-    );
-  });
-});
-
-describe("Forms Helper personal statement: current treatment", () => {
-  const draftFor = (currentTreatment) => {
-    const plan = formStatementPlan("personal-statement", {
-      conditionName: "Tinnitus",
-      claimType: "initial",
-      currentTreatment,
-    });
-    return plan.build(plan.answers);
-  };
-
-  it.each(["None right now", "none", "No", "Physical therapy twice a month"])(
-    "prints the answer %s as typed and claims no treatment of its own",
-    (answer) => {
-      const draft = draftFor(answer);
-      expect(draft).toContain(`Current treatment: ${answer}.`);
-      expect(draft).not.toMatch(/receiving treatment|sought medical treatment/);
-    },
-  );
-
-  it("leaves a blank when the question was not answered", () => {
-    const draft = draftFor("");
-    expect(draft).toContain("Current treatment: [the treatment you are");
-    expect(draft).not.toMatch(/receiving treatment|sought medical treatment/);
   });
 });

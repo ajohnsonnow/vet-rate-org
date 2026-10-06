@@ -51,14 +51,28 @@ describe("Forms Helper accessibility", () => {
     ).toBeInTheDocument();
   });
 
-  it("the statement preview is a named region the keyboard can reach", () => {
+  it("the statement is an editable field named by its label, with a hint", () => {
     openResult();
 
-    const preview = screen.getByRole("region", {
-      name: "Statement text preview",
+    const draft = screen.getByRole("textbox", {
+      name: "Your statement (Standard draft)",
     });
-    expect(preview).toHaveAttribute("tabindex", "0");
-    expect(preview.className).toMatch(/focus-visible:ring/);
+    expect(draft).toHaveAccessibleDescription(
+      /Downloads and Save to Packet use exactly what this box shows/,
+    );
+    expect(draft.className).toMatch(/focus-visible:ring/);
+  });
+
+  it("a text field and a text area in the builder are named by their labels", () => {
+    openBuilder();
+
+    expect(
+      screen.getByRole("textbox", { name: /Your Full Name/ }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+    expect(
+      screen.getByRole("textbox", { name: /What in-service event/ }),
+    ).toBeInTheDocument();
   });
 });
 describe("Forms Helper on a 390px screen", () => {

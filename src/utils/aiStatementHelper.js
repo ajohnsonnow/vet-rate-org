@@ -36,7 +36,7 @@ import {
   appealStatementPlan,
   buddyStatementPlan,
   buildPassagePrompt,
-  formStatementInputs,
+  formStatementPlan,
   nexusRequestPlan,
   personalStatementPlan,
   ptsdStatementPlan,
@@ -617,24 +617,14 @@ export const generateNexusLetterRequest = async (answers) =>
  * This allows the FormsHelper to call AI enhancement on any generated statement
  */
 export const enhanceFormStatement = async (formType, formData) => {
-  const mapped = formStatementInputs(formType, formData);
-  switch (mapped?.kind) {
-    case "buddy":
-      return enhanceBuddyStatement(mapped.answers, mapped.condition);
-    case "personal":
-      return enhancePersonalStatement(
-        mapped.answers,
-        mapped.condition,
-        mapped.primaryCondition,
-      );
-    case "ptsd":
-      return enhancePTSDStatement(mapped.answers);
-    default:
-      return {
-        success: false,
-        error: "Unsupported form type for AI enhancement",
-      };
+  const plan = formStatementPlan(formType, formData);
+  if (!plan) {
+    return {
+      success: false,
+      error: "Unsupported form type for AI enhancement",
+    };
   }
+  return draftWithModel(plan, { toolId: plan.toolId, userInput: plan.answers });
 };
 
 /**

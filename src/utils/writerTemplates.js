@@ -16,6 +16,12 @@
  * app swaps for the real name locally after generation (ADR-008).
  */
 
+export {
+  STRESSOR_TYPE_LABELS,
+  WITNESS_RELATION_LABELS,
+  formStatementPlan,
+} from "./formStatementDrafts.js";
+
 export const STANDARD_DRAFT_NOTE =
   "This is the standard draft with blanks to fill in: replace each [bracketed] item with your own details.";
 
@@ -68,16 +74,10 @@ const TREATMENT = {
   no: "I have not yet had formal treatment for this condition.",
 };
 
-// The Forms Helper asks what treatment the veteran is receiving and takes a
-// typed answer, which is printed as typed ("None right now" included).
-function treatmentLine(answers) {
-  if (Object.hasOwn(answers, "currentTreatment")) {
-    return `Current treatment: ${said(answers.currentTreatment, "the treatment you are getting now, or none")}`;
-  }
-  return Object.hasOwn(TREATMENT, answers.hasTreatment ?? "")
-    ? TREATMENT[answers.hasTreatment]
+const treatmentLine = (hasTreatment) =>
+  Object.hasOwn(TREATMENT, hasTreatment ?? "")
+    ? TREATMENT[hasTreatment]
     : blank("whether you have sought treatment for this condition, and where");
-}
 
 function secondaryLink(answers) {
   const mechanism = text(answers.aggravationMechanism);
@@ -116,7 +116,7 @@ const impactLines = (answers) =>
     ),
     `Effect on my work: ${said(answers.workImpact, "how this condition affects your work")}`,
     `Effect on my family and social life: ${said(answers.socialImpact, "how this condition affects your family and social life")}`,
-    treatmentLine(answers),
+    treatmentLine(answers.hasTreatment),
   ].join("\n");
 
 /**
@@ -383,32 +383,6 @@ export const tdiuAnalysisText = (analysis) =>
     .filter((part) => typeof part === "string")
     .join("\n");
 
-/*
- * A form stores a select's code ("fellow-service-member"); a statement
- * prints its label. These are the labels the Forms Helper's own statements
- * print, and the Witness Bench's English relationship labels.
- */
-export const WITNESS_RELATION_LABELS = {
-  "fellow-service-member": "Fellow Service Member",
-  supervisor: "Military Supervisor/NCO/Officer",
-  spouse: "Spouse",
-  family: "Family Member",
-  friend: "Friend",
-  coworker: "Civilian Coworker",
-  caregiver: "Caregiver",
-  other: "Other",
-};
-
-export const STRESSOR_TYPE_LABELS = {
-  combat: "Combat-Related Trauma",
-  mst: "Military Sexual Trauma (MST)",
-  "personal-assault": "Personal Assault",
-  accident: "Serious Accident/Injury",
-  death: "Witnessing Death or Serious Injury",
-  "fear-hostile": "Fear of Hostile Military/Terrorist Activity",
-  other: "Other Traumatic Event",
-};
-
 const WITNESS_BENCH_RELATIONSHIP_LABELS = {
   spouse: "Spouse / Partner",
   parent: "Parent",
@@ -425,63 +399,6 @@ const labelFor = (labels, value) =>
 
 export const witnessRelationshipLabel = (value) =>
   labelFor(WITNESS_BENCH_RELATIONSHIP_LABELS, value);
-
-/**
- * The Forms Helper's field names mapped to the answers each statement
- * builder reads, or null for a form with no AI wording step.
- */
-export function formStatementInputs(formType, formData = {}) {
-  switch (formType) {
-    case "buddy-statement":
-      return {
-        kind: "buddy",
-        answers: {
-          relationship: labelFor(
-            WITNESS_RELATION_LABELS,
-            formData.witnessRelation,
-          ),
-          knownDuration: formData.knownSince,
-          observations: formData.whatObserved,
-          changesNoticed: formData.specificExamples,
-          dailyImpact: formData.dailyImpact,
-        },
-        condition: formData.conditionName,
-      };
-    case "personal-statement":
-      return {
-        kind: "personal",
-        answers: {
-          inServiceEvent: formData.inServiceEvent,
-          specificExamples: formData.worstDays,
-          workImpact: formData.workImpact,
-          socialImpact: formData.socialImpact,
-          symptomOnsetDate: formData.onsetDate,
-          currentTreatment: formData.currentTreatment ?? "",
-        },
-        condition: formData.conditionName,
-        // The primary-condition field is optional and shown for every claim
-        // type; it makes the claim secondary only when the veteran said so.
-        primaryCondition:
-          formData.claimType === "secondary"
-            ? (formData.primaryCondition ?? null)
-            : null,
-      };
-    case "ptsd-stressor":
-      return {
-        kind: "ptsd",
-        answers: {
-          stressorType: labelFor(STRESSOR_TYPE_LABELS, formData.stressorType),
-          eventDescription: formData.eventDescription,
-          currentSymptoms: Array.isArray(formData.symptoms)
-            ? formData.symptoms.join(", ")
-            : formData.symptomDetails,
-          dailyImpact: formData.symptomDetails,
-        },
-      };
-    default:
-      return null;
-  }
-}
 
 /**
  * Every bracketed blank still standing in the text of a TDIU analysis, one
@@ -621,25 +538,6 @@ export const witnessStatementPlan = (relationship, condition, answers) =>
     [condition],
     "witness",
   );
-
-/** The plan for a Forms Helper form, or null when it has no wording step. */
-export function formStatementPlan(formType, formData) {
-  const mapped = formStatementInputs(formType, formData);
-  switch (mapped?.kind) {
-    case "buddy":
-      return buddyStatementPlan(mapped.answers, mapped.condition);
-    case "personal":
-      return personalStatementPlan(
-        mapped.answers,
-        mapped.condition,
-        mapped.primaryCondition,
-      );
-    case "ptsd":
-      return ptsdStatementPlan(mapped.answers);
-    default:
-      return null;
-  }
-}
 
 // A passage this short ("None", "Daily") has nothing to reword.
 const MIN_PASSAGE_WORDS = 3;

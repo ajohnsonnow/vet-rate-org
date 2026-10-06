@@ -174,7 +174,7 @@ describe("dry run tool cases", () => {
       passages: { sent: 2, accepted: 0, rejected: 2 },
     });
     expect(byId.get("t03").response).toContain(
-      "[how you have seen the condition affect the veteran's daily life]",
+      "[how you have seen the condition affect the veteran's daily activities]",
     );
     expect(byId.get("t04").passages).toEqual({
       sent: 4,

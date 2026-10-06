@@ -11,6 +11,7 @@ import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
 import {
   AI_NO_CHANGE_NOTE,
   STANDARD_DRAFT_NOTE,
+  STANDARD_DRAFT_NOTE_NO_BLANKS,
 } from "../../utils/writerTemplates";
 
 const ai = vi.hoisted(() => ({ available: true }));
@@ -40,8 +41,8 @@ const modelRewords = () =>
   }));
 
 const notice = () => screen.queryByRole("status", { name: "Draft notice" });
-const preview = () =>
-  screen.getByRole("region", { name: "Statement text preview" });
+const draft = () => screen.getByRole("textbox", { name: /^Your statement/ });
+const STANDARD = "Your statement (Standard draft)";
 
 function openResult() {
   render(
@@ -93,11 +94,9 @@ describe("Forms Helper with no AI set up", () => {
     expect(
       (await screen.findByRole("status", { name: "Draft notice" })).textContent,
     ).toBe(STANDARD_DRAFT_NOTE);
-    expect(preview().textContent).toContain(`${EVENT}.`);
-    expect(preview().textContent).toContain("[date the symptoms began]");
-    expect(preview().textContent).toContain(
-      "[whether the symptoms have continued since then]",
-    );
+    expect(draft().value).toContain(`${EVENT}.`);
+    expect(draft().value).toContain("[date the symptoms began]");
+    expect(draft().value).toContain("SECTION I - CLAIMANT INFORMATION");
     expect(generateAI).not.toHaveBeenCalled();
   });
 
@@ -105,12 +104,7 @@ describe("Forms Helper with no AI set up", () => {
     openResult();
     await screen.findByRole("status", { name: "Draft notice" });
 
-    expect(
-      screen.getByRole("button", { name: /standard draft/i }),
-    ).toBeInTheDocument();
-    expect(document.body.textContent).toMatch(
-      /Text Preview \(Standard draft\)/,
-    );
+    expect(draft()).toHaveAccessibleName(STANDARD);
     expect(document.body.textContent).not.toMatch(AI_LABELS);
   });
 
@@ -129,13 +123,32 @@ describe("Forms Helper with no AI set up", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("still shows the full form text under Original", async () => {
+  it("is one editable draft, with no second document behind a toggle", async () => {
     openResult();
     await screen.findByRole("status", { name: "Draft notice" });
-    fireEvent.click(screen.getByRole("button", { name: /original/i }));
 
-    expect(preview().textContent).toContain("SECTION I - CLAIMANT INFORMATION");
-    expect(notice()).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /original|standard draft/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: "Statement text preview" }),
+    ).not.toBeInTheDocument();
+    const edited = draft().value.replace(
+      "[date the symptoms began]",
+      "March 2011",
+    );
+    fireEvent.change(draft(), { target: { value: edited } });
+    expect(draft().value).toBe(edited);
+  });
+
+  it("stops asking for blanks once the veteran has filled them all in", async () => {
+    openResult();
+    await screen.findByRole("status", { name: "Draft notice" });
+    fireEvent.change(draft(), {
+      target: { value: "My statement, with nothing left to fill in." },
+    });
+
+    expect(notice().textContent).toBe(STANDARD_DRAFT_NOTE_NO_BLANKS);
   });
 });
 
@@ -164,10 +177,8 @@ describe("Forms Helper with AI set up", () => {
     await screen.findByText(new RegExp(AI_NO_CHANGE_NOTE));
     expect(notice().textContent).toContain(STANDARD_DRAFT_NOTE);
     expect(generateAI.mock.calls[0][0]).toContain(`1. ${EVENT}`);
-    expect(preview().textContent).toContain(`${EVENT}.`);
-    expect(document.body.textContent).toMatch(
-      /Text Preview \(Standard draft\)/,
-    );
+    expect(draft().value).toContain(`${EVENT}.`);
+    expect(draft()).toHaveAccessibleName(STANDARD);
     expect(document.body.textContent).not.toMatch(
       /AI Version|AI-Enhanced|Viewing AI/i,
     );
@@ -178,9 +189,7 @@ describe("Forms Helper with AI set up", () => {
     await enhance();
 
     await screen.findByText(new RegExp(AI_NO_CHANGE_NOTE));
-    expect(
-      screen.getByRole("button", { name: /standard draft/i }),
-    ).toBeInTheDocument();
+    expect(draft()).toHaveAccessibleName(STANDARD);
   });
 
   it("names an engine error, keeps the Standard draft labels, and allows a retry", async () => {
@@ -189,9 +198,7 @@ describe("Forms Helper with AI set up", () => {
 
     await screen.findByText(/timed out/i);
     expect(notice().textContent).toBe(STANDARD_DRAFT_NOTE);
-    expect(document.body.textContent).toMatch(
-      /Text Preview \(Standard draft\)/,
-    );
+    expect(draft()).toHaveAccessibleName(STANDARD);
     expect(document.body.textContent).not.toMatch(
       /AI Version|AI-Enhanced|Viewing AI/i,
     );
@@ -217,9 +224,13 @@ describe("Forms Helper with AI set up", () => {
     expect(
       screen.getByRole("button", { name: /AI Version/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /standard draft/i }),
-    ).not.toBeInTheDocument();
-    expect(preview().textContent).toContain(EVENT_REWORDED);
+    expect(draft()).toHaveAccessibleName(/AI.Enhanced/i);
+    expect(draft().value).toContain(EVENT_REWORDED);
+
+    fireEvent.click(screen.getByRole("button", { name: "Standard draft" }));
+    expect(draft()).toHaveAccessibleName(STANDARD);
+    expect(draft().value).toContain(`${EVENT}.`);
+    expect(draft().value).not.toContain(EVENT_REWORDED);
+    expect(notice().textContent).toBe(STANDARD_DRAFT_NOTE);
   });
 });
