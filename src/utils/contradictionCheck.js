@@ -13,6 +13,7 @@
  */
 
 import quotes from "../data/verifiedQuotes.json";
+import { findWrongCoverageDate } from "./coverageDates";
 import { detectReferenceTopics } from "./verifiedReference";
 
 const anyMatch = (text, ...patterns) =>
@@ -209,6 +210,22 @@ const RULES = [
     correction: () => "presumed-toxic-exposure",
   },
   {
+    id: "coverage-date-for-wrong-place",
+    topics: ["toxic-exposure"],
+    matches: (sentence) => findWrongCoverageDate(sentence) !== null,
+    describe: (sentence) => {
+      const { wrongDate, quote } = findWrongCoverageDate(sentence);
+      const rightDate = quote.text.slice(
+        "Active service on or after ".length,
+        quote.text.indexOf(":"),
+      );
+      return {
+        says: `gives ${wrongDate} as the start date for a place the table lists under ${rightDate}`,
+        quote,
+      };
+    },
+  },
+  {
     id: "tdiu-from-percentages",
     topics: ["tdiu"],
     matches: (sentence, { next }) =>
@@ -303,8 +320,10 @@ export const CONTRADICTION_RULE_IDS = RULES.map((rule) => rule.id);
 
 /**
  * The contradictions in an answer, at most one per rule: { rule, sentence,
- * says, correction }. `topics` are the verified-reference topics of the
- * request; rules of other topics are not applied.
+ * says, correction } (or `quote` in place of `correction` when the rule
+ * takes its quotation from the bundled entry itself). `topics` are the
+ * verified-reference topics of the request; rules of other topics are not
+ * applied.
  */
 export function findContradictions(
   text,
@@ -326,14 +345,15 @@ export function findContradictions(
       rule: rule.id,
       sentence,
       says: rule.says,
-      correction: rule.correction(topics),
+      ...(rule.correction ? { correction: rule.correction(topics) } : {}),
+      ...(rule.describe ? rule.describe(sentence) : {}),
     });
   }
   return hits;
 }
 
-function quoteWithSource(correctionId) {
-  const quote = quotes.corrections[correctionId];
+function quoteWithSource(hit) {
+  const quote = hit.quote ?? quotes.corrections[hit.correction];
   const meanings = (quote.abbreviations ?? [])
     .map((a) => `${a.short} means ${a.long}`)
     .join("; ");
@@ -346,7 +366,7 @@ function quoteWithSource(correctionId) {
  * Decision Decoder puts it under the field that carried the sentence).
  */
 export function buildContradictionNote(hit) {
-  return `Vet-Rate check: this answer ${hit.says}. ${quoteWithSource(hit.correction)} Check this point with a Veterans Service Officer before relying on it.`;
+  return `Vet-Rate check: this answer ${hit.says}. ${quoteWithSource(hit)} Check this point with a Veterans Service Officer before relying on it.`;
 }
 
 const MAX_QUOTED_SENTENCE = 200;
@@ -367,7 +387,7 @@ export function buildContradictionLead(hits) {
     "Vet-Rate check: part of the answer below conflicts with the regulation.",
     ...hits.map(
       (hit) =>
-        `\nThe answer says: "${trimmed(hit.sentence)}"\nThat ${hit.says}. ${quoteWithSource(hit.correction)}`,
+        `\nThe answer says: "${trimmed(hit.sentence)}"\nThat ${hit.says}. ${quoteWithSource(hit)}`,
     ),
     "\nCheck that part with a Veterans Service Officer before relying on it. The answer follows, unchanged.",
   ].join("\n");
