@@ -25,30 +25,28 @@ const L3_A17 = {
 };
 
 describe("new and material, with no topic", () => {
+  // The rule is back behind the review topics. With no topic it met too
+  // many sentences that only recount an older decision.
   it.each([
     L3_A17.newAndMaterial,
     "A Supplemental Claim is only appropriate if you have new and material evidence that was not previously associated with your claim.",
-    "Reopening Bilateral Flatfoot (Pes Planus): If you have new and material evidence, you can file a request to reopen this claim.",
-  ])("flags: %s", (sentence) => {
-    expect(rules(sentence)).toEqual(["new-and-material-standard"]);
-  });
-
-  it.each([
     "- Order: New and material evidence having been received, the application to reopen the previously denied claim for service connection for bilateral flatfoot (pes planus) is granted.",
-    "- BVA Decision: ORDER: New and material evidence having been received, the application to reopen the previously denied claim for service connection for a stomach disability is granted.",
     "The Board found that new and material evidence had been submitted.",
-    "- New Evidence: New and material evidence was submitted, leading to a grant of the reopened claim.",
-    "The Veteran did not appeal this denial or submit new and material evidence within one year.",
-    '- Explain what constitutes "new and material evidence" per 38 CFR § 3.156',
-    "In 2014 I submitted new and material evidence and my claim was reopened.",
-    "My claim was reopened on new and material evidence.",
     "The old new and material test was replaced by new and relevant evidence.",
-  ])("leaves alone: %s", (sentence) => {
+  ])("does not run: %s", (sentence) => {
     expect(rules(sentence)).toEqual([]);
   });
 });
 
 describe("new and material, on a review question", () => {
+  it("reads 'a previous year' as a time, not as the previous standard", () => {
+    expect(
+      findContradictions(L3_A17.newAndMaterial, {
+        topics: ["decision-review"],
+      }).map((hit) => hit.rule),
+    ).toEqual(["new-and-material-standard"]);
+  });
+
   it("is flagged as before, with or without a word to the reader", () => {
     expect(
       findContradictions('Consider the "New and Material Evidence" Doctrine', {
@@ -72,15 +70,13 @@ describe("a form given to the wrong filing, with no topic", () => {
 describe("the table said to add ratings", () => {
   it("is caught by the ratings rule", () => {
     expect(rules(L3_A17.ratingsAdded)).toEqual(["ratings-added-together"]);
-    expect(rules("The formula adds the individual ratings.")).toEqual([
-      "ratings-added-together",
-    ]);
   });
 
   it.each([
     "VA does not add ratings together.",
     "The table combines the ratings; it never adds the ratings.",
     "Combine the bilateral pair, then the calculator adds the bilateral factor.",
+    "Dependents are different: the pay table adds the ratings-based dependent amount at 30 percent and above.",
   ])("leaves alone: %s", (sentence) => {
     expect(rules(sentence)).toEqual([]);
   });

@@ -25,7 +25,6 @@ import {
   saysEmploymentBarsTdiu,
   givesTdiuThresholdsWithoutForty,
   putsBilateralOnOneSide,
-  givesNewAndMaterialAsAdvice,
   saysAppealNeedsNewEvidence,
   takesHigherOfTwoAsCombined,
   wrongSingleDisabilityThreshold,
@@ -83,6 +82,11 @@ const QUALIFIES_YOU = /\bqualif(?:ies|y) you for\b/i;
 const WORK_CAVEAT = /\bunable\b|\bemploy\w*|\bgainful\b|\bable to work\b/i;
 const IS_QUESTION = /\?$/;
 
+// A higher-level review can end with the claim sent back for VA to gather
+// evidence it should have had. That is VA's evidence, not the veteran's.
+const EVIDENCE_VA_GATHERS =
+  /\bduty[- ]to[- ]assist\b|\bsend(?:s|ing)? (?:the claim|it) back\b|\breturn(?:ed|s)? (?:the claim|it|for)\b/i;
+
 const HIGHER_LEVEL_REVIEW = /\bhigher[- ]level review\b|\bHLR\b/i;
 const ADDS_EVIDENCE = /\b(?:new|additional) evidence\b/i;
 const NOT_ABOUT_ADDING =
@@ -137,6 +141,10 @@ const FORMER_STANDARD =
 
 // "Made in a previous year" is about when, not about the former standard.
 const PREVIOUS_YEAR = /\bprevious years?\b/gi;
+// A Board order or an older decision recounted in its own words: it was the
+// test when that decision was made.
+const RECOUNTS_A_DECISION =
+  /\bBVA\b|\bBoard\b|\bORDER\b|\bhaving been (?:received|submitted|presented)\b|\bpreviously denied\b|\bwas (?:received|submitted)\b|\breopened\b/i;
 
 const INTENT_TO_FILE = /\bintent to file\b|\bITF\b/i;
 const FOR_PENDING_CLAIMS = /\bfor (?:\w+ ){0,5}(?:pending|existing) claims?\b/i;
@@ -148,7 +156,7 @@ const BY_ADDING_RATINGS =
 const ADD_RATINGS_TOGETHER =
   /\badd(?:s|ed|ing)? (?:up )?(?:the |your |all )?(?:individual )?ratings (?:of [^.]{0,40} )?together\b/i;
 const SOMETHING_ADDS_THE_RATINGS =
-  /\b(?:that|which|table|formula|va) adds (?:up )?the (?:percentage |individual |separate )?ratings\b/i;
+  /\b(?:that|which|table) adds (?:up )?the (?:percentage |individual |separate )?ratings\b(?!-)/i;
 const RATINGS_ARE_ADDED =
   /\bratings (?:are|get) (?:simply |just )?added (?:together|up)\b/i;
 // An answer that explains combining, or says adding is wrong, uses the same
@@ -172,12 +180,20 @@ const isRating = (value) => value > 0 && value <= 100 && value % 10 === 0;
  * wrong whenever both operands are ratings. A bilateral factor being added
  * ("20% + 2% = 22%") is not two ratings.
  */
+// Two 10s combine to 19, which rounds to 20: there the sum is also the
+// right answer, and saying so is no error.
+const combinedAndRounded = (first, second) =>
+  Math.round((100 - ((100 - first) * (100 - second)) / 100) / 10) * 10;
+
 function showsRatingsSummed(sentence) {
   return [...sentence.matchAll(TWO_RATINGS_SUMMED)].some(([, a, b, total]) => {
     const first = Number(a);
     const second = Number(b);
     return (
-      isRating(first) && isRating(second) && Number(total) === first + second
+      isRating(first) &&
+      isRating(second) &&
+      Number(total) === first + second &&
+      combinedAndRounded(first, second) !== first + second
     );
   });
 }
@@ -282,11 +298,10 @@ const RULES = [
     id: "coverage-date-for-wrong-place",
     guard: { datedClaim: true },
     topics: PACT_TOPICS,
-    matches: (sentence, { question, next }) =>
-      findWrongCoverageDate(sentence, { question, next }) !== null,
-    describe: (sentence, { question, next }) => {
+    matches: (sentence, { next }) =>
+      findWrongCoverageDate(sentence, { next }) !== null,
+    describe: (sentence, { next }) => {
       const { wrongDate, quote, shownWith } = findWrongCoverageDate(sentence, {
-        question,
         next,
       });
       const rightDate = quote.text.slice(
@@ -389,6 +404,7 @@ const RULES = [
     topics: REVIEW_TOPICS,
     matches: (sentence) => {
       const plain = withoutLikelihoodWording(sentence);
+      if (EVIDENCE_VA_GATHERS.test(plain)) return false;
       return (
         (HIGHER_LEVEL_REVIEW.test(plain) &&
           ADDS_EVIDENCE.test(plain) &&
@@ -458,16 +474,12 @@ const RULES = [
     correction: () => "review-period-start",
   },
   {
-    // On a review question, as before. On any other answer only where the
-    // sentence gives it to the reader as today's test: answers about older
-    // decisions recount them in these words and are right to.
     id: "new-and-material-standard",
-    topics: EVERY_ANSWER,
-    matches: (sentence, { topics }) =>
+    topics: REVIEW_TOPICS,
+    matches: (sentence) =>
       NEW_AND_MATERIAL.test(sentence) &&
       !FORMER_STANDARD.test(sentence.replace(PREVIOUS_YEAR, "")) &&
-      (REVIEW_TOPICS.some((topic) => topics.includes(topic)) ||
-        givesNewAndMaterialAsAdvice(sentence)),
+      !RECOUNTS_A_DECISION.test(sentence),
     says: 'gives "new and material" evidence as the test, which is the previous standard',
     correction: () => "new-and-relevant",
   },

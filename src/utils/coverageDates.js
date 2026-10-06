@@ -121,7 +121,18 @@ const found = (block, place, wrongDate) => ({
   },
 });
 
+// "Covered on or after <date>", "counts only from <date>": the sentence
+// gives the date as where coverage starts. "You deployed to Iraq after
+// September 11, 2001" gives a date in someone's service, which is after 1990
+// too, and is no error.
+const GIVES_A_COVERAGE_START =
+  /\bon or after\b|\b(?:covered|counts?(?: only)?|only) from\b/i;
+const A_DEPLOYMENT = /\bdeploy(?:ed|ment|ments)?\b/i;
+const givesACoverageStart = (text) =>
+  GIVES_A_COVERAGE_START.test(text) && !A_DEPLOYMENT.test(text);
+
 function swappedDate(text) {
+  if (!givesACoverageStart(text)) return null;
   const written = datesIn(text);
   const named = properNouns(text);
   for (const block of COVERAGE_BLOCKS) {
@@ -174,7 +185,7 @@ const APPLIES_TO_SERVICE_AFTER =
 const firstNamed = (text, rows) =>
   [...rows].sort((a, b) => text.indexOf(a.place) - text.indexOf(b.place))[0];
 
-function dateOutsideTheTable(text, question) {
+function dateOutsideTheTable(text) {
   if (!SERVICE_MUST_START.test(text) && !APPLIES_TO_SERVICE_AFTER.test(text)) {
     return null;
   }
@@ -183,12 +194,10 @@ function dateOutsideTheTable(text, question) {
   if (dates.length === 0 || dates.some((date) => tableDates.includes(date))) {
     return null;
   }
-  const inSentence = rowsNamedIn(text);
-  const source = inSentence.length > 0 ? text : String(question ?? "");
-  const rows = inSentence.length > 0 ? inSentence : rowsNamedIn(question);
+  const rows = rowsNamedIn(text);
   if (rows.length === 0) return null;
   if (rows.some(({ block }) => statesYearOf(text, block))) return null;
-  const { block, place } = firstNamed(source, rows);
+  const { block, place } = firstNamed(text, rows);
   return found(block, place, written(dates[0]));
 }
 
@@ -200,6 +209,7 @@ const DENIES = /\bnot\b|n't\b|\bnever\b/i;
 // itself lends its date to the next line.
 function headingDateForNextLine(text, next) {
   if (!next || !ENDS_AS_A_HEADING.test(text.trim())) return null;
+  if (!givesACoverageStart(text)) return null;
   if (rowsNamedIn(text).length > 0 || DENIES.test(next)) return null;
   const dates = datesIn(text);
   const heading = COVERAGE_BLOCKS.filter((block) => dates.includes(block.iso));
@@ -219,16 +229,16 @@ function headingDateForNextLine(text, next) {
  * consistent with the table. With one of the table's two dates, a sentence
  * that names places from both rows is left alone: the date may belong to
  * either, and a sentence is not parsed finely enough to say which.
- * `question` is what the veteran asked, used for the place only when the
- * sentence names none. `next` is the sentence after this one, read only
+ * The place has to be in the sentence itself (or, for a heading, in the
+ * line under it). `next` is the sentence after this one, read only
  * when this one is a heading that carries the date (the result then has
  * `shownWith`, the line that names the place).
  */
-export function findWrongCoverageDate(sentence, { question, next } = {}) {
+export function findWrongCoverageDate(sentence, { next } = {}) {
   const text = String(sentence ?? "");
   return (
     swappedDate(text) ??
-    dateOutsideTheTable(text, question) ??
+    dateOutsideTheTable(text) ??
     headingDateForNextLine(text, next)
   );
 }

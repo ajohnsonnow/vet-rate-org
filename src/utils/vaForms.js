@@ -110,10 +110,18 @@ const FORM_THEN_LANE = new RegExp(
 );
 const DENIES = /\bnot\b|n't\b|\bnever\b|\binstead of\b|\brather than\b/i;
 
+// "A Higher-Level Review of a Supplemental Claim decision (VA Form 20-0996)":
+// the Supplemental Claim is what was decided, not the filing being made.
+const WHAT_WAS_DECIDED = /^ (?:decisions?|denials?|was denied|is denied)\b/i;
+
 function laneBefore(sentence, mention) {
-  const before = [
-    ...sentence.slice(0, mention.start).matchAll(LANE_WORDS),
-  ].pop();
+  const upToTheForm = sentence.slice(0, mention.start);
+  const before = [...upToTheForm.matchAll(LANE_WORDS)]
+    .filter(
+      (lane) =>
+        !WHAT_WAS_DECIDED.test(upToTheForm.slice(lane.index + lane[0].length)),
+    )
+    .pop();
   if (!before) return null;
   const between = sentence.slice(
     before.index + before[0].length,
@@ -137,7 +145,12 @@ const APPLICATION_FORM = TABLE.forms.find((form) =>
   APPLICATION_TITLE.test(form.title),
 ).number;
 const CALLED_THE_APPLICATION =
-  /(?<!\b(?:intent to file|ITF) (?:a claim )?)\b(?:application(?: form)?|complete claim)\s*\($/i;
+  /\b(?:application(?: form)?|complete claim)\s*\($/i;
+// "The Intent to File a Claim for Compensation application (VA Form
+// 21-0966)" names the form rightly in the same phrase.
+const CALLED_AN_INTENT_TO_FILE =
+  /\b(?:intent[- ]to[- ]file|ITF)\b[^,;]{0,45}$/i;
+const CLOSES_THE_NAME = /^\s*[),.]|^\s*$/;
 
 /**
  * The Intent to File form named as the application form ("the appropriate
@@ -149,6 +162,8 @@ export function findIntentFormAsApplication(sentence) {
     if (mention.number !== LANE_FORMS["intent-to-file"]) continue;
     const before = sentence.slice(0, mention.start);
     if (DENIES.test(before) || !CALLED_THE_APPLICATION.test(before)) continue;
+    if (CALLED_AN_INTENT_TO_FILE.test(before)) continue;
+    if (!CLOSES_THE_NAME.test(sentence.slice(mention.end))) continue;
     return {
       number: mention.number,
       quote: {

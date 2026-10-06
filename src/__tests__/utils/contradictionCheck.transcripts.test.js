@@ -91,22 +91,30 @@ const WRITER_ROUTE_HITS = [
   "034657 a20 ratings-higher-of-two",
 ];
 
+// True contradictions the rules no longer reach, given up so that no rule
+// fires on a true sentence (QA review, 2026-10-06): "new and material" with
+// no review topic, and a wrong service date in a sentence naming no place.
+const GIVEN_UP = [
+  "071859 a28 new-and-material-standard",
+  "074624 a28 new-and-material-standard",
+  "105010 a18 new-and-material-standard",
+  "034657 a16 coverage-date-for-wrong-place",
+  "045832 a17 new-and-material-standard",
+];
+
 const PROSE_HITS = [
   "071859 a11 bilateral-same-side",
   "071859 a13 tdiu-from-percentages",
   "071859 a16 presumptive-needs-exposure-proof",
-  "071859 a28 new-and-material-standard",
   "074624 a11 bilateral-same-side",
   "074624 a13 tdiu-from-percentages",
   "074624 a18 form-for-another-filing",
   "074624 a27 presumptive-needs-exposure-proof",
-  "074624 a28 new-and-material-standard",
   "081228 a16 presumptive-needs-exposure-proof",
   "081228 a25 tdiu-from-percentages",
   "090513 a16 presumptive-needs-exposure-proof",
   "094601 a16 presumptive-needs-exposure-proof",
   "094601 a26 higher-level-review-new-evidence",
-  "105010 a18 new-and-material-standard",
   "110055 a26 new-and-material-standard",
   "124154 a13 tdiu-from-percentages",
   "124154 a24 bilateral-same-side",
@@ -152,7 +160,6 @@ const PROSE_HITS = [
   "033751 a26 intent-to-file-for-filed-claim",
   "034657 a04 form-for-another-filing",
   "034657 a15 tdiu-wrong-single-threshold",
-  "034657 a16 coverage-date-for-wrong-place",
   "034657 a30 intent-form-as-application",
   "045147 a15 new-claim-to-reopen",
   "045147 a15 new-and-material-standard",
@@ -161,7 +168,6 @@ const PROSE_HITS = [
   "045147 a27 coverage-date-for-wrong-place",
   "045832 a15 tdiu-barred-by-any-employment",
   "045832 a17 bilateral-same-side",
-  "045832 a17 new-and-material-standard",
   "045832 a21 tdiu-threshold-omits-forty",
   "045832 a30 year-from-receiving-a-form",
   "045832 a30 intent-form-as-application",
@@ -186,6 +192,7 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       .filter((record) => answerChecksApply({ toolId: record.toolId }))
       .flatMap((record) => hitsFor(record, topicsOf(record)));
     expect(flagged).toEqual(PROSE_HITS);
+    expect(flagged.filter((hit) => GIVEN_UP.includes(hit))).toEqual([]);
   });
 
   it("no longer corrects these, because the tool they ran in writes drafts", () => {
@@ -212,15 +219,16 @@ describe("contradiction rules outside the topic of the question", () => {
     ]);
   });
 
-  it("would misfire on quoted legacy decisions if a rule ran outside its topic", () => {
+  // Case a28 recounts older Board decisions. With every topic on, the rule
+  // reaches only the two answers that go on to advise the reader in the old
+  // words ("Ensure you submit new and material evidence to reopen the claim").
+  it("reads past recounted Board orders to the advice, even with every topic on", () => {
     const outside = prose
       .flatMap((record) => hitsFor(record, ALL_TOPICS))
       .filter((hit) => hit.includes(" a28 "));
     expect(outside).toEqual([
       "071859 a28 new-and-material-standard",
       "074624 a28 new-and-material-standard",
-      "090513 a28 new-and-material-standard",
-      "094601 a28 new-and-material-standard",
     ]);
   });
 
