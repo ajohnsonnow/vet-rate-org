@@ -29,10 +29,10 @@ describe("system requirements notice states the first download", () => {
     );
     render(<SystemRequirementsNotice />);
     const first = await screen.findByText(/First run:/);
-    expect(first.parentElement.textContent).toMatch(
-      /downloading Qwen 3\.5 4B, about 2\.4 GB/,
-    );
-    expect(first.parentElement.textContent).toMatch(/one-time/);
+    const text = first.parentElement.textContent;
+    expect(text).toMatch(/one-time download of Qwen 3\.5 4B \(about 2\.4 GB\)/);
+    expect(text).toMatch(/several minutes, or longer on slower devices/);
+    expect(text).not.toMatch(/\d{1,3}-\d{1,3} min/);
   });
 
   it("lists the same size and that it is kept on the device in the requirements", async () => {

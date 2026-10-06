@@ -26,22 +26,23 @@
 // Warmup phases (browser-side WebLLM initialization)
 // ---------------------------------------------------------------------------
 
+// What these figures rest on: the only recorded timing is the benchmark log
+// above, ~45 min first-run warmup with Qwen2.5-3B on the June 2026 build
+// (RTX 4080 SUPER). The earlier 20-45 and 3-8 minute ranges, and the Apple
+// Silicon 5-15 minute range, came in with a checkpoint commit and have no
+// recorded measurement in this repository, and none is for Qwen3.5. The
+// evaluation runs (Qwen3.5-4B from cache, 38 cases in about 9 minutes) do not
+// fit a 3-8 minute session start. The copy therefore states no minutes.
 export const AI_WARMUP = {
   firstRun: {
-    minMin: 20,
-    maxMin: 45,
     reason:
       "WebGPU shader compilation (thousands of GPU programs, one-time per GPU driver version) + model weight load from browser storage to GPU.",
   },
   firstRunAppleSilicon: {
-    minMin: 5,
-    maxMin: 15,
     reason:
-      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders in 5-15 min (vs 20-45 min on Windows/NVIDIA). model weight load is the same.",
+      "Metal Pipeline State Object (PSO) caching on Apple Silicon compiles shaders, usually faster than on Windows/NVIDIA. The model weight load is the same.",
   },
   subsequentRun: {
-    minMin: 3,
-    maxMin: 8,
     reason:
       "Shaders already compiled and cached. Only the model weights need to load from IndexedDB to GPU.",
   },
