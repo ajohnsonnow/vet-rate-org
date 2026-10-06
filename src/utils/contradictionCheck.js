@@ -13,7 +13,7 @@
  */
 
 import quotes from "../data/verifiedQuotes.json";
-import { claimAsserted } from "./assertionGuard";
+import { claimAsserted, isDenyingHeading } from "./assertionGuard";
 import { findWrongCoverageDate } from "./coverageDates";
 import { submitsNewMaterialInReview } from "./reviewSubmissions";
 import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
@@ -33,12 +33,36 @@ import {
 const anyMatch = (text, ...patterns) =>
   patterns.some((pattern) => pattern.test(text));
 
-const sentencesOf = (text) =>
-  String(text ?? "")
-    .replace(/[*_`#>]/g, "")
-    .split(/(?<=[.!?])\s+|\n+/)
+const MARKDOWN_MARKS = /[*_`#>]/g;
+const SENTENCE_END = /(?<=[.!?])\s+/;
+
+const sentencesOfLine = (line) =>
+  line
+    .split(SENTENCE_END)
     .map((sentence) => sentence.trim())
     .filter(Boolean);
+
+/**
+ * The sentences of an answer, each with whether it sits under a heading such
+ * as "Common mistakes:". A heading holds until the next heading or a blank
+ * line.
+ */
+function readSentences(text) {
+  const read = [];
+  let underDenyingHeading = false;
+  for (const raw of String(text ?? "").split("\n")) {
+    const line = raw.replace(MARKDOWN_MARKS, "").trim();
+    if (line === "") {
+      underDenyingHeading = false;
+      continue;
+    }
+    if (line.endsWith(":")) underDenyingHeading = isDenyingHeading(line);
+    for (const sentence of sentencesOfLine(line)) {
+      read.push({ sentence, underDenyingHeading });
+    }
+  }
+  return read;
+}
 
 const NO_MECHANISM =
   /\bno (?:established|recognized|known|such|accepted|valid) (?:medical )?(?:mechanism|link|connection|relationship)\b/i;
@@ -141,10 +165,12 @@ const FORMER_STANDARD =
 
 // "Made in a previous year" is about when, not about the former standard.
 const PREVIOUS_YEAR = /\bprevious years?\b/gi;
+// A sentence that names today's test beside the old one is comparing them.
+const NEW_AND_RELEVANT = /\bnew and relevant\b/i;
 // A Board order or an older decision recounted in its own words: it was the
 // test when that decision was made.
 const RECOUNTS_A_DECISION =
-  /\bBVA\b|\bBoard\b|\bORDER\b|\bhaving been (?:received|submitted|presented)\b|\bpreviously denied\b|\bwas (?:received|submitted)\b|\breopened\b/i;
+  /\bBVA\b|\bBoard\b|\bORDER\b|\bhaving been (?:received|submitted|presented)\b|\bpreviously denied\b|\bwas (?:received|submitted)\b|\breopened\b|\brating decision\b/i;
 
 const INTENT_TO_FILE = /\bintent to file\b|\bITF\b/i;
 const FOR_PENDING_CLAIMS = /\bfor (?:\w+ ){0,5}(?:pending|existing) claims?\b/i;
@@ -479,7 +505,8 @@ const RULES = [
     matches: (sentence) =>
       NEW_AND_MATERIAL.test(sentence) &&
       !FORMER_STANDARD.test(sentence.replace(PREVIOUS_YEAR, "")) &&
-      !RECOUNTS_A_DECISION.test(sentence),
+      !RECOUNTS_A_DECISION.test(sentence) &&
+      !NEW_AND_RELEVANT.test(sentence),
     says: 'gives "new and material" evidence as the test, which is the previous standard',
     correction: () => "new-and-relevant",
   },
@@ -534,7 +561,8 @@ export function findContradictions(
   text,
   { topics = [], hasConditions = false, question = "" } = {},
 ) {
-  const sentences = sentencesOf(text);
+  const read = readSentences(text);
+  const sentences = read.map((entry) => entry.sentence);
   const context = {
     hasConditions,
     question,
@@ -547,9 +575,19 @@ export function findContradictions(
       rule.topics === EVERY_ANSWER ||
       rule.topics.some((topic) => topics.includes(topic));
     if (!applies) continue;
-    const around = (i) => ({ ...context, next: sentences[i + 1] ?? "" });
+    const around = (i) => ({
+      ...context,
+      next: sentences[i + 1] ?? "",
+      previous: sentences[i - 1] ?? "",
+      underDenyingHeading: read[i].underDenyingHeading,
+    });
     const at = sentences.findIndex((s, i) =>
-      claimAsserted(s, rule.guard, (part) => rule.matches(part, around(i))),
+      claimAsserted(
+        s,
+        rule.guard,
+        (part) => rule.matches(part, around(i)),
+        around(i),
+      ),
     );
     if (at < 0) continue;
     const sentence = sentences[at];
