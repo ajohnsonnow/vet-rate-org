@@ -1,18 +1,38 @@
+import { useState, useEffect } from "react";
 import { APP_TRANSLATIONS } from "../i18n/translations";
 import { useOptionalLanguage } from "../contexts/LanguageContext";
 import { isSmallModel } from "../utils/deviceCapabilityDetector";
-import { useDeviceModel } from "../utils/localModelLabels";
+import { getAIStatus } from "../utils/unifiedAIService";
+
+const POLL_MS = 1000;
+
+// True only while an on-device model of the small class is the one loaded and
+// answering: the swarm is ready, it is the effective mode, and the model that
+// is actually loaded is in the small class. Cloud answers, no AI, and a model
+// that is not loaded all give false.
+const smallModelAnswering = (status) =>
+  status?.effectiveMode === "swarm" &&
+  Boolean(status.swarmAvailable) &&
+  isSmallModel(status.swarmStatus?.model);
 
 /**
- * Always-visible caveat on AI answers when this device loads a laptop or
- * tablet class model (2B or smaller, per the device profile table). It has no
- * control, so there is nothing to dismiss and no touch target to size. It
- * names itself and says why in words, so it does not rely on colour.
+ * Always-visible caveat on AI answers when a laptop or tablet class model
+ * (2B or smaller, per the device profile table) is loaded and answering. It
+ * has no control, so there is nothing to dismiss and no touch target to size.
+ * It names itself and says why in words, so it does not rely on colour.
  */
 export default function SmallModelCaveat({ className = "" }) {
-  const deviceModel = useDeviceModel();
+  const [active, setActive] = useState(() =>
+    smallModelAnswering(getAIStatus()),
+  );
+  useEffect(() => {
+    const check = () => setActive(smallModelAnswering(getAIStatus()));
+    check();
+    const timer = setInterval(check, POLL_MS);
+    return () => clearInterval(timer);
+  }, []);
   const language = useOptionalLanguage();
-  if (!isSmallModel(deviceModel?.modelId)) return null;
+  if (!active) return null;
 
   const text = (key) =>
     language
