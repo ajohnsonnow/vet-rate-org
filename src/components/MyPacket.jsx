@@ -1421,7 +1421,7 @@ function MyRatingEntry({
   handleRemoveRating,
   t,
 }) {
-  const isEditing = editingRating?.id === rating.id;
+  const isEditing = editingRating != null && editingRating.id === rating.id;
   return (
     <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-all">
       {isEditing ? (
