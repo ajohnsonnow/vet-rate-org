@@ -191,8 +191,7 @@ export function buildBuddyStatementTemplate(answers = {}, conditionName = "") {
  * answers, in the order given. `relationship_context` leads; every other
  * answered question follows as an observation.
  */
-export function buildWitnessStatementBody(condition = "", answers = {}) {
-  const claimed = orBlank(condition, "the veteran's condition");
+export function buildWitnessStatementBody(answers = {}) {
   const context = text(answers.relationship_context);
   const observations = Object.entries(answers)
     .filter(([key, value]) => key !== "relationship_context" && text(value))
@@ -200,7 +199,7 @@ export function buildWitnessStatementBody(condition = "", answers = {}) {
 
   return paragraphs([
     context,
-    `I am writing to provide my personal observations regarding [Veteran]'s ${claimed}.`,
+    "I am writing to provide my personal observations of [Veteran].",
     "Based on my direct observations:",
     ...(observations.length > 0
       ? observations
@@ -228,7 +227,7 @@ export function buildWitnessStatementTemplate(
       `Witness Type: ${orBlank(relationshipLabel, "your relationship to the veteran")}`,
       `Regarding: ${orBlank(condition, "the veteran's condition")}`,
     ].join("\n"),
-    buildWitnessStatementBody(condition, answers),
+    buildWitnessStatementBody(answers),
   ]);
 }
 

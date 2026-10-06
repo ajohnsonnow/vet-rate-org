@@ -14,15 +14,6 @@ import { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  HeadingLevel,
-  AlignmentType,
-} from "docx";
-import jsPDF from "jspdf";
 import { saveClaim } from "../utils/claimsStorage";
 import {
   generateAI,
@@ -31,10 +22,12 @@ import {
 } from "../utils/unifiedAIService";
 import { AI_DATA_CLASS } from "../utils/aiDataClassPolicy";
 import {
+  DRAFT_PATH,
   draftAfterModelError,
   resolvePassageDraft,
   standardDraft,
 } from "../utils/writerDraftCheck";
+import { downloadDraft } from "../utils/draftExport";
 import {
   STANDARD_DRAFT_NOTE,
   buildPassagePrompt,
@@ -505,7 +498,7 @@ const compileStatementWithoutAI = (relationship, condition, answers) => {
   statement += `Date: ${currentDate}\n\n`;
   statement += `---\n\n`;
 
-  statement += `${buildWitnessStatementBody(condition, answers)}\n\n`;
+  statement += `${buildWitnessStatementBody(answers)}\n\n`;
 
   // AIS-03 / LEGAL-03: do not pre-assert "I certify ... true and correct" above a
   // blank signature line - that presents AI-drafted testimony as already attested.
@@ -548,151 +541,63 @@ const getRelationshipLabel = (relationshipValue, t) => {
   return rel ? t("witnessBench", rel.labelKey) : relationshipValue;
 };
 
+const SAVE_FAILED =
+  "The statement could not be saved on this device. It is still here. Download it or copy the text so you do not lose it, then try saving again.";
+const DOWNLOAD_FAILED =
+  "The download did not work. The statement is still here. Try the other format, or copy the text.";
+
 /**
- * Save buddy statement to My Packet
+ * Save the statement as it stands on screen to My Packet. Nothing is saved
+ * until the witness asks, so My Packet never holds a copy without their
+ * edits. Returns whether it was saved.
  */
 const saveWitnessStatementToPacket = (
-  { condition, relationship, generatedStatement, witnessName },
-  setSavedToPacket,
+  { condition, relationship, generatedStatement, witnessName, answers },
   t,
 ) => {
-  try {
-    const claim = {
-      conditionName: condition,
-      status: "Evidence Gathered",
-      evidence: [
-        {
-          type: "Buddy Statement",
-          description: `Lay/Witness Statement (Form 21-10210) from ${getRelationshipLabel(relationship, t)}`,
-          statement: generatedStatement,
-          relationship: relationship,
-          witness: witnessName,
-          dateSaved: new Date().toISOString(),
-        },
-      ],
-      notes: `Buddy statement from ${getRelationshipLabel(relationship, t)} regarding observable behaviors and functional impacts.`,
-    };
-
-    const success = saveClaim(claim);
-    if (success) {
-      setSavedToPacket(true);
-      setTimeout(() => setSavedToPacket(false), 3000); // Reset after 3 seconds
-    }
-  } catch (error) {
-    console.error("Error saving to My Packet:", error);
-  }
-};
-
-/**
- * Download as PDF
- */
-const downloadWitnessPDF = (generatedStatement, condition) => {
-  const doc = new jsPDF();
-  // RT2-5: honest provenance metadata - never a misleading "official"/physician author.
-  doc.setProperties({
-    title: "Lay/Witness Statement (VA Form 21-10210)",
-    subject: "AI-assisted draft lay/witness statement",
-    author: "Vet-Rate.org (AI-assisted draft)",
-    creator: "Vet-Rate.org",
-  });
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 20;
-  const maxWidth = pageWidth - margin * 2;
-
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("Lay/Witness Statement (VA Form 21-10210)", margin, 20);
-
-  // RT2-5: prominent page-1 banner so the AI-draft + false-statement warning
-  // travels with the exported file, not just the on-screen UI. ASCII-only -
-  // jsPDF's standard helvetica does not render the section sign or em dash.
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
-  let yPosition = 28;
-  doc
-    .splitTextToSize(
-      "AI-ASSISTED DRAFT - not a sworn statement. The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of law (18 U.S.C. 1001 - knowingly false statements are a federal crime).",
-      maxWidth,
-    )
-    .forEach((line) => {
-      doc.text(line, margin, yPosition);
-      yPosition += 4;
-    });
-  yPosition += 4;
-
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-
-  const lines = doc.splitTextToSize(generatedStatement, maxWidth);
-  lines.forEach((line) => {
-    if (yPosition > 280) {
-      doc.addPage();
-      yPosition = 20;
-    }
-    doc.text(line, margin, yPosition);
-    yPosition += 5;
-  });
-
-  doc.save(`Buddy_Statement_${condition.replace(/\s+/g, "_")}.pdf`);
-};
-
-/**
- * Download as DOCX
- */
-const downloadWitnessDOCX = async (generatedStatement, condition) => {
-  const doc = new Document({
-    // RT2-5: honest provenance metadata - never a misleading "official"/physician author.
-    creator: "Vet-Rate.org (AI-assisted draft)",
-    title: "Lay/Witness Statement (VA Form 21-10210)",
-    description: "AI-assisted draft lay/witness statement",
-    sections: [
+  const saved = saveClaim({
+    conditionName: condition,
+    status: "Evidence Gathered",
+    evidence: [
       {
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "Lay/Witness Statement (VA Form 21-10210)",
-                bold: true,
-                size: 28,
-              }),
-            ],
-            heading: HeadingLevel.HEADING_1,
-            alignment: AlignmentType.CENTER,
-          }),
-          // RT2-5: prominent page-1 AI-draft + false-statement banner so the
-          // warning travels with the exported file, not just the on-screen UI.
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: "AI-ASSISTED DRAFT - not a sworn statement. The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of 18 U.S.C. § 1001 (knowingly false statements are a federal crime).",
-                italics: true,
-                size: 16,
-              }),
-            ],
-            spacing: { after: 200 },
-          }),
-          new Paragraph({ text: "" }),
-          ...generatedStatement.split("\n").map(
-            (line) =>
-              new Paragraph({
-                children: [new TextRun({ text: line, size: 24 })],
-                spacing: { after: 120 },
-              }),
-          ),
-        ],
+        type: "Buddy Statement",
+        description: `Lay/Witness Statement (Form 21-10210) from ${getRelationshipLabel(relationship, t)}`,
+        statement: generatedStatement,
+        relationship: relationship,
+        witness: witnessName,
+        dateSaved: new Date().toISOString(),
       },
     ],
+    notes: `Buddy statement from ${getRelationshipLabel(relationship, t)} regarding observable behaviors and functional impacts.`,
   });
-
-  const blob = await Packer.toBlob(doc);
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `Buddy_Statement_${condition.replace(/\s+/g, "_")}.docx`;
-  a.click();
-  URL.revokeObjectURL(url);
+  if (!saved) return false;
+  saveAnalysisResults({
+    toolName: "Witness Bench",
+    classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+    rawText: generatedStatement,
+    extractedData: {
+      relationship,
+      condition,
+      answers,
+      statementLength: generatedStatement.length,
+    },
+  }).catch((err) => console.warn("Failed to save buddy statement:", err));
+  return true;
 };
+
+const SIGNING_NOTICE =
+  "The witness must read every sentence, confirm it is their own personal knowledge, edit anything inaccurate, and sign. Filed with the VA under penalty of law (18 U.S.C. 1001 - knowingly false statements are a federal crime).";
+
+/**
+ * The line a downloaded statement opens with, so the warning travels with
+ * the file. It mentions AI only when the model reworded a passage. ASCII
+ * only: the PDF's standard font has no section sign.
+ */
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export const _witnessFileBanner = (draftPath) =>
+  draftPath === DRAFT_PATH.MODEL
+    ? `DRAFT - not a sworn statement. The wording of some passages was suggested by AI. ${SIGNING_NOTICE}`
+    : `DRAFT - not a sworn statement. ${SIGNING_NOTICE}`;
 
 /**
  * Copy to clipboard
@@ -782,12 +687,21 @@ function useOutputState() {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [savedToPacket, setSavedToPacket] = useState(false);
   const [draftNote, setDraftNote] = useState(null);
+  const [draftPath, setDraftPath] = useState(DRAFT_PATH.TEMPLATE);
+  const [aiFailure, setAiFailure] = useState(null);
+  const [outputError, setOutputError] = useState(null);
 
   return {
     generatedStatement,
     setGeneratedStatement,
     draftNote,
     setDraftNote,
+    draftPath,
+    setDraftPath,
+    aiFailure,
+    setAiFailure,
+    outputError,
+    setOutputError,
     showDownloadMenu,
     setShowDownloadMenu,
     savedToPacket,
@@ -874,71 +788,43 @@ function useGenerateStatement({
   aiAvailable,
   setError,
   setIsGeneratingStatement,
-  setGeneratedStatement,
-  setDraftNote,
+  output,
   setStep,
 }) {
   return useCallback(async () => {
     setError(null);
-    setDraftNote(null);
+    output.setDraftNote(null);
+    output.setAiFailure(null);
+    output.setOutputError(null);
     setIsGeneratingStatement(true);
 
+    const standard = () => ({
+      statement: compileStatementWithoutAI(relationship, condition, answers),
+      draftPath: DRAFT_PATH.TEMPLATE,
+      draftNote: STANDARD_DRAFT_NOTE,
+    });
+    let drafted;
     try {
-      let statement;
-
-      if (useAI && aiAvailable) {
-        const drafted = await _compileStatementWithAI(
-          relationship,
-          condition,
-          answers,
-        );
-        statement = drafted.statement;
-        setDraftNote(drafted.draftNote);
-      } else {
-        statement = compileStatementWithoutAI(relationship, condition, answers);
-        setDraftNote(STANDARD_DRAFT_NOTE);
-      }
-
-      statement = _finishWitnessStatement(statement, {
-        veteranName: await resolveVeteranDisplayName(),
-        witnessName,
-      });
-      setGeneratedStatement(statement);
-      setStep(3);
-
-      // Save buddy statement to My Packet
-      saveAnalysisResults({
-        toolName: "Witness Bench",
-        classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
-        rawText: statement,
-        extractedData: {
-          relationship,
-          condition,
-          answers,
-          statementLength: statement.length,
-        },
-      }).catch((err) => console.warn("Failed to save buddy statement:", err));
+      drafted =
+        useAI && aiAvailable
+          ? await _compileStatementWithAI(relationship, condition, answers)
+          : standard();
     } catch (err) {
       console.error("Statement generation failed:", err);
-      // Fall back to template
-      const statement = _finishWitnessStatement(
-        compileStatementWithoutAI(relationship, condition, answers),
-        { veteranName: await resolveVeteranDisplayName(), witnessName },
-      );
-      setGeneratedStatement(statement);
-      setDraftNote(STANDARD_DRAFT_NOTE);
-      setStep(3);
-
-      // Still save even template-based output
-      saveAnalysisResults({
-        toolName: "Witness Bench",
-        classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
-        rawText: statement,
-        extractedData: { relationship, condition, answers },
-      }).catch((err) => console.warn("Failed to save buddy statement:", err));
-    } finally {
-      setIsGeneratingStatement(false);
+      drafted = standard();
     }
+
+    output.setGeneratedStatement(
+      _finishWitnessStatement(drafted.statement, {
+        veteranName: await resolveVeteranDisplayName(),
+        witnessName,
+      }),
+    );
+    output.setDraftPath(drafted.draftPath);
+    output.setDraftNote(drafted.draftNote);
+    output.setAiFailure(drafted.draftErrorReason ?? null);
+    setStep(3);
+    setIsGeneratingStatement(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relationship, condition, witnessName, answers, useAI]);
 }
@@ -971,8 +857,7 @@ function useWitnessBench(t) {
     aiAvailable: ai.aiAvailable,
     setError: ai.setError,
     setIsGeneratingStatement: ai.setIsGeneratingStatement,
-    setGeneratedStatement: output.setGeneratedStatement,
-    setDraftNote: output.setDraftNote,
+    output,
     setStep: wizard.setStep,
   });
 
@@ -985,6 +870,9 @@ function useWitnessBench(t) {
     interview.setCurrentQuestionIndex(0);
     output.setGeneratedStatement("");
     output.setDraftNote(null);
+    output.setDraftPath(DRAFT_PATH.TEMPLATE);
+    output.setAiFailure(null);
+    output.setOutputError(null);
   };
 
   return {
@@ -1681,9 +1569,32 @@ const NextStepsPanel = ({ t }) => (
   </div>
 );
 
+// Why the statement is the standard one after the AI was asked and failed,
+// with a way to ask again.
+const AIFailureNotice = ({ reason, onRetry, isRetrying }) => (
+  <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg text-red-800 dark:text-red-200 text-sm">
+    <p>
+      The AI could not reword this statement: {reason} This is the standard
+      statement, built from your answers.
+    </p>
+    <button
+      type="button"
+      onClick={onRetry}
+      disabled={isRetrying}
+      className="block mt-2 min-h-[44px] px-3 underline font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-red-700 rounded disabled:opacity-60"
+    >
+      Try the AI again
+    </button>
+  </div>
+);
+
 const OutputStep = ({
   t,
   draftNote,
+  aiFailure,
+  onRetryAI,
+  isRetryingAI,
+  outputError,
   generatedStatement,
   onGeneratedStatementChange,
   onCopyToClipboard,
@@ -1698,7 +1609,22 @@ const OutputStep = ({
 }) => (
   <div className="max-w-3xl mx-auto space-y-6">
     <OutputSuccessBanner t={t} />
+    {aiFailure && (
+      <AIFailureNotice
+        reason={aiFailure}
+        onRetry={onRetryAI}
+        isRetrying={isRetryingAI}
+      />
+    )}
     <StandardDraftNotice note={draftNote} />
+    {outputError && (
+      <p
+        role="alert"
+        className="p-3 rounded-lg border border-red-700 bg-red-50 dark:bg-red-900/30 text-sm text-red-900 dark:text-red-100"
+      >
+        {outputError}
+      </p>
+    )}
 
     <StatementPreviewPanel
       t={t}
@@ -1726,6 +1652,69 @@ const OutputStep = ({
     </button>
   </div>
 );
+
+// The output step's handlers. Copy, each download and Save to My Packet all
+// take the statement as it stands in the text box.
+const WitnessOutput = ({ t, wb }) => {
+  const { output, wizard } = wb;
+  const download = async (format) => {
+    output.setOutputError(null);
+    try {
+      await downloadDraft(
+        output.generatedStatement,
+        `Buddy_Statement_${wizard.condition.replace(/\s+/g, "_")}`,
+        format,
+        { banner: _witnessFileBanner(output.draftPath) },
+      );
+    } catch (error) {
+      console.error("Witness Bench download failed:", error);
+      output.setOutputError(DOWNLOAD_FAILED);
+    }
+  };
+  const save = () => {
+    const saved = saveWitnessStatementToPacket(
+      {
+        condition: wizard.condition,
+        relationship: wizard.relationship,
+        generatedStatement: output.generatedStatement,
+        witnessName: wizard.witnessName,
+        answers: wb.interview.answers,
+      },
+      t,
+    );
+    output.setOutputError(saved ? null : SAVE_FAILED);
+    if (saved) {
+      output.setSavedToPacket(true);
+      setTimeout(() => output.setSavedToPacket(false), 3000);
+    }
+  };
+
+  return (
+    <OutputStep
+      t={t}
+      draftNote={output.draftNote}
+      aiFailure={output.aiFailure}
+      onRetryAI={wb.generateStatement}
+      isRetryingAI={wb.ai.isGeneratingStatement}
+      outputError={output.outputError}
+      generatedStatement={output.generatedStatement}
+      onGeneratedStatementChange={output.setGeneratedStatement}
+      onCopyToClipboard={() =>
+        copyWitnessStatement(output.generatedStatement, t)
+      }
+      showDownloadMenu={output.showDownloadMenu}
+      onToggleDownloadMenu={() =>
+        output.setShowDownloadMenu(!output.showDownloadMenu)
+      }
+      onCloseDownloadMenu={() => output.setShowDownloadMenu(false)}
+      onSaveToMyPacket={save}
+      savedToPacket={output.savedToPacket}
+      onDownloadPDF={() => download("pdf")}
+      onDownloadDOCX={() => download("docx")}
+      onStartOver={wb.startOver}
+    />
+  );
+};
 
 const WitnessBenchStepContent = ({ t, wb, onOpenAISettings }) => {
   if (wb.wizard.step === 1) {
@@ -1766,42 +1755,7 @@ const WitnessBenchStepContent = ({ t, wb, onOpenAISettings }) => {
   }
 
   if (wb.wizard.step === 3) {
-    return (
-      <OutputStep
-        t={t}
-        draftNote={wb.output.draftNote}
-        generatedStatement={wb.output.generatedStatement}
-        onGeneratedStatementChange={wb.output.setGeneratedStatement}
-        onCopyToClipboard={() =>
-          copyWitnessStatement(wb.output.generatedStatement, t)
-        }
-        showDownloadMenu={wb.output.showDownloadMenu}
-        onToggleDownloadMenu={() =>
-          wb.output.setShowDownloadMenu(!wb.output.showDownloadMenu)
-        }
-        onCloseDownloadMenu={() => wb.output.setShowDownloadMenu(false)}
-        onSaveToMyPacket={() =>
-          saveWitnessStatementToPacket(
-            {
-              condition: wb.wizard.condition,
-              relationship: wb.wizard.relationship,
-              generatedStatement: wb.output.generatedStatement,
-              witnessName: wb.wizard.witnessName,
-            },
-            wb.output.setSavedToPacket,
-            t,
-          )
-        }
-        savedToPacket={wb.output.savedToPacket}
-        onDownloadPDF={() =>
-          downloadWitnessPDF(wb.output.generatedStatement, wb.wizard.condition)
-        }
-        onDownloadDOCX={() =>
-          downloadWitnessDOCX(wb.output.generatedStatement, wb.wizard.condition)
-        }
-        onStartOver={wb.startOver}
-      />
-    );
+    return <WitnessOutput t={t} wb={wb} />;
   }
 
   return null;

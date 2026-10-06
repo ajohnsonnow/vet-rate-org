@@ -184,11 +184,11 @@ describe("other statement templates", () => {
       q2: "   ",
       q3: "They no longer drive at night.",
     };
-    const body = buildWitnessStatementBody("PTSD", answers);
+    const body = buildWitnessStatementBody(answers);
     expect(body).toBe(
       [
         "I have been married to the veteran since 2012.",
-        "I am writing to provide my personal observations regarding [Veteran]'s PTSD.",
+        "I am writing to provide my personal observations of [Veteran].",
         "Based on my direct observations:",
         "They leave the room when fireworks start.",
         "They no longer drive at night.",
