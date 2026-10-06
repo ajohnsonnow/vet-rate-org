@@ -4901,7 +4901,39 @@ function AIEnhancementSection({
   );
 }
 
-function DownloadOptionsCard({ t, handleDownloadOfficialPdf, handleDownload }) {
+// What the official PDF holds for each form and what it leaves to the
+// veteran. It is never described as filled out or ready to sign.
+const OFFICIAL_PDF_REST =
+  "For you to complete on the form: anything still blank, any boxes to tick, your signature and the date.";
+const OFFICIAL_PDF_NOTES = {
+  "personal-statement": `Filled in from your answers: your name and contact details, and your statement goes in Remarks (it carries over to page 2 if it is long). ${OFFICIAL_PDF_REST}`,
+  "ptsd-stressor": `Filled in from your answers: your name and contact details, the event, its date and its place, and the type of event where the form has a matching box. Your other answers go in Remarks. For you to complete on the form: the consent boxes about notifying VHA (none is ticked for you), the sections on behavior changes, reports and treatment, anything still blank, your signature and the date.`,
+  "buddy-statement": `Filled in from your answers: the veteran's and the witness's names and contact details, the relationship box, and the statement goes in the statement box. For you to complete on the form: the claimant section if the claimant is not the veteran, anything still blank, the witness's signature and the date.`,
+};
+const OFFICIAL_PDF_NOTE_OTHER = `Filled in from your answers where the form has a place for them. ${OFFICIAL_PDF_REST}`;
+const OFFICIAL_PDF_EDITS =
+  "The official PDF is built from the answers you gave in the steps, not from edits typed into the statement box.";
+
+function OfficialPdfNote({ formType, isStatement }) {
+  return (
+    <p
+      role="note"
+      aria-label="About the official PDF"
+      className="mt-3 text-sm text-gray-700 dark:text-gray-300"
+    >
+      {OFFICIAL_PDF_NOTES[formType] ?? OFFICIAL_PDF_NOTE_OTHER}
+      {isStatement ? ` ${OFFICIAL_PDF_EDITS}` : ""}
+    </p>
+  );
+}
+
+function DownloadOptionsCard({
+  t,
+  handleDownloadOfficialPdf,
+  handleDownload,
+  formType,
+  isStatement,
+}) {
   return (
     <div className="bg-white dark:bg-gray-800 border-2 border-va-blue dark:border-va-gold rounded-lg p-4">
       <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
@@ -4960,6 +4992,7 @@ function DownloadOptionsCard({ t, handleDownloadOfficialPdf, handleDownload }) {
           </button>
         </div>
       </div>
+      <OfficialPdfNote formType={formType} isStatement={isStatement} />
     </div>
   );
 }
@@ -5010,6 +5043,8 @@ function ReviewDownloadSection({
   handleDownload,
   handleSaveToPacket,
   importStatus,
+  formType,
+  isStatement,
 }) {
   return (
     <>
@@ -5017,6 +5052,8 @@ function ReviewDownloadSection({
         t={t}
         handleDownloadOfficialPdf={handleDownloadOfficialPdf}
         handleDownload={handleDownload}
+        formType={formType}
+        isStatement={isStatement}
       />
 
       <SaveToPacketCard t={t} handleSaveToPacket={handleSaveToPacket} />
@@ -8073,6 +8110,8 @@ function FormsHelperReviewStep({ state, handlers }) {
         handleDownload={handleDownload}
         handleSaveToPacket={handleSaveToPacket}
         importStatus={state.importStatus}
+        formType={state.selectedForm?.id}
+        isStatement={isStatement}
       />
 
       {!isStatement && (

@@ -10233,11 +10233,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "공식 VA 양식 PDF",
     },
     readyToSign: {
-      en: "Ready to sign & submit",
-      es: "Listo para firmar y enviar",
-      tl: "Handa nang pirmahan at isumite",
-      vi: "Sẵn sàng ký và gửi",
-      ko: "서명 및 제출 준비 완료",
+      en: "Partly filled in from your answers",
+      es: "Llenado en parte con sus respuestas",
+      tl: "Bahagyang napunan mula sa iyong mga sagot",
+      vi: "Đã điền một phần từ câu trả lời của bạn",
+      ko: "답변을 바탕으로 일부만 작성됨",
     },
     saveToPacketBtn: {
       en: "Save to Packet",
@@ -10295,11 +10295,11 @@ Tôi là hướng dẫn AI của bạn cho Vet-Rate.org và quy trình yêu cầ
       ko: "제출",
     },
     nextStepDownload: {
-      en: 'the "Official VA Form PDF" above - it\'s already filled out!',
-      es: 'el "PDF del Formulario VA Oficial" arriba - ¡ya está llenado!',
-      tl: 'ang "Official VA Form PDF" sa itaas - naka-fill na!',
-      vi: '"PDF Biểu Mẫu VA Chính Thức" ở trên - đã được điền sẵn!',
-      ko: '위의 "공식 VA 양식 PDF" - 이미 작성되어 있습니다!',
+      en: 'the "Official VA Form PDF" above. It is partly filled in from your answers. You complete the rest by hand.',
+      es: 'el "PDF del Formulario VA Oficial" arriba. Está llenado en parte con sus respuestas. Usted completa el resto a mano.',
+      tl: 'ang "Official VA Form PDF" sa itaas. Bahagya itong napunan mula sa iyong mga sagot. Ikaw ang kukumpleto sa natitira.',
+      vi: '"PDF Biểu Mẫu VA Chính Thức" ở trên. Biểu mẫu đã được điền một phần từ câu trả lời của bạn. Bạn tự điền phần còn lại.',
+      ko: '위의 "공식 VA 양식 PDF". 답변을 바탕으로 일부만 작성되어 있습니다. 나머지는 직접 작성하셔야 합니다.',
     },
     nextStepReview: {
       en: "the PDF to make sure all information is correct",

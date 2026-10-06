@@ -9,6 +9,7 @@
  */
 
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { officialFormNarrative } from "./formStatementDrafts";
 
 // Local copies of VA forms
 const LOCAL_FORM_PATHS = {
@@ -816,14 +817,12 @@ function fill21_10210_VeteranSection(setTextField, fieldMap, data) {
   setTextField(fieldMap.veteranEmail, data.veteranEmail || "");
 }
 
+// The claimant section is the claimant's. The witness has a section of
+// their own and is never entered here.
 function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
-  const claimantNameParts = (data.claimantName || data.witnessName || "").split(
-    " ",
-  );
-  const claimantPhone = parsePhoneParts(
-    data.claimantPhone || data.witnessPhone,
-  );
-  const claimantZip = parseZipParts(data.claimantZip || data.witnessZip);
+  const claimantNameParts = (data.claimantName || "").split(" ");
+  const claimantPhone = parsePhoneParts(data.claimantPhone);
+  const claimantZip = parseZipParts(data.claimantZip);
 
   setTextField(fieldMap.claimantFirstName, claimantNameParts[0]);
   setTextField(
@@ -834,44 +833,28 @@ function fill21_10210_ClaimantSection(setTextField, fieldMap, data) {
     fieldMap.claimantLastName,
     claimantNameParts[claimantNameParts.length - 1],
   );
-  setTextField(
-    fieldMap.claimantStreet,
-    data.claimantStreet || data.witnessStreet || "",
-  );
-  setTextField(
-    fieldMap.claimantCity,
-    data.claimantCity || data.witnessCity || "",
-  );
-  setTextField(
-    fieldMap.claimantState,
-    data.claimantState || data.witnessState || "",
-  );
+  setTextField(fieldMap.claimantStreet, data.claimantStreet || "");
+  setTextField(fieldMap.claimantCity, data.claimantCity || "");
+  setTextField(fieldMap.claimantState, data.claimantState || "");
   setTextField(fieldMap.claimantZip5, claimantZip.five);
   setTextField(fieldMap.claimantPhone1, claimantPhone.area);
   setTextField(fieldMap.claimantPhone2, claimantPhone.prefix);
   setTextField(fieldMap.claimantPhone3, claimantPhone.line);
-  setTextField(
-    fieldMap.claimantEmail,
-    data.claimantEmail || data.witnessEmail || "",
-  );
+  setTextField(fieldMap.claimantEmail, data.claimantEmail || "");
 }
 
-function build21_10210_Statement(data) {
-  let fullStatement = "";
-  if (data.howKnown)
-    fullStatement += `HOW I KNOW THE VETERAN:\n${data.howKnown}\n\n`;
-  if (data.whatObserved)
-    fullStatement += `WHAT I PERSONALLY OBSERVED:\n${data.whatObserved}\n\n`;
-  if (data.whenObserved) fullStatement += `WHEN: ${data.whenObserved}\n`;
-  if (data.whereObserved) fullStatement += `WHERE: ${data.whereObserved}\n\n`;
-  if (data.dailyImpact)
-    fullStatement += `IMPACT ON DAILY LIFE:\n${data.dailyImpact}\n\n`;
-  if (data.workImpact)
-    fullStatement += `IMPACT ON WORK:\n${data.workImpact}\n\n`;
-  if (data.additionalInfo)
-    fullStatement += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
-  return fullStatement.trim();
-}
+// The wizard's relationship choices and the box each one ticks. A choice
+// with no box of its own ticks "Other", with its label where it has one.
+const WITNESS_RELATION_BOXES = {
+  "fellow-service-member": ["relationServedWith"],
+  supervisor: ["relationServedWith"],
+  spouse: ["relationFamilyFriend"],
+  family: ["relationFamilyFriend"],
+  friend: ["relationFamilyFriend"],
+  coworker: ["relationCoworker"],
+  caregiver: ["relationOther", "Caregiver"],
+  other: ["relationOther"],
+};
 
 function fill21_10210_RelationshipCheckbox(
   setTextField,
@@ -879,30 +862,11 @@ function fill21_10210_RelationshipCheckbox(
   fieldMap,
   data,
 ) {
-  const relation = (data.witnessRelation || "").toLowerCase();
-  if (
-    relation.includes("served") ||
-    relation.includes("military") ||
-    relation.includes("unit")
-  ) {
-    setCheckbox(fieldMap.relationServedWith, true);
-  } else if (
-    relation.includes("family") ||
-    relation.includes("friend") ||
-    relation.includes("spouse") ||
-    relation.includes("parent")
-  ) {
-    setCheckbox(fieldMap.relationFamilyFriend, true);
-  } else if (
-    relation.includes("coworker") ||
-    relation.includes("supervisor") ||
-    relation.includes("work")
-  ) {
-    setCheckbox(fieldMap.relationCoworker, true);
-  } else if (relation) {
-    setCheckbox(fieldMap.relationOther, true);
-    setTextField(fieldMap.relationOtherText, data.witnessRelation);
-  }
+  const relation = data.witnessRelation ?? "";
+  if (!Object.hasOwn(WITNESS_RELATION_BOXES, relation)) return;
+  const [box, otherText] = WITNESS_RELATION_BOXES[relation];
+  setCheckbox(fieldMap[box], true);
+  setTextField(fieldMap.relationOtherText, otherText);
 }
 
 function fill21_10210_WitnessSection(
@@ -948,7 +912,10 @@ export async function fillForm21_10210(data) {
 
       fill21_10210_VeteranSection(setTextField, fieldMap, data);
       fill21_10210_ClaimantSection(setTextField, fieldMap, data);
-      setTextField(fieldMap.statementContent, build21_10210_Statement(data));
+      setTextField(
+        fieldMap.statementContent,
+        officialFormNarrative("buddy-statement", data),
+      );
       fill21_10210_WitnessSection(setTextField, setCheckbox, fieldMap, data);
 
       return await pdfDoc.save();
@@ -1159,21 +1126,28 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.email, data.email || data.veteranEmail || "");
 }
 
-function build21_4138_Remarks(data) {
-  let remarks = "";
-  if (data.conditionName) remarks += `CONDITION: ${data.conditionName}\n\n`;
-  if (data.serviceConnection)
-    remarks += `SERVICE CONNECTION:\n${data.serviceConnection}\n\n`;
-  if (data.currentSymptoms)
-    remarks += `CURRENT SYMPTOMS:\n${data.currentSymptoms}\n\n`;
-  if (data.dailyImpact) remarks += `DAILY IMPACT:\n${data.dailyImpact}\n\n`;
-  if (data.workImpact) remarks += `WORK IMPACT:\n${data.workImpact}\n\n`;
-  if (data.treatmentHistory)
-    remarks += `TREATMENT HISTORY:\n${data.treatmentHistory}\n\n`;
-  if (data.additionalInfo)
-    remarks += `ADDITIONAL INFORMATION:\n${data.additionalInfo}\n`;
-  if (data.remarks) remarks = data.remarks;
-  return remarks.trim();
+// Roughly what the first remarks box shows at a readable size; the rest
+// goes to the continuation box on page 2.
+const REMARKS_FIRST_BOX_CHARS = 1800;
+const REMARKS_CONTINUED = "(continued on the next page)";
+
+/** The remarks split across the form's two boxes, at a paragraph break. */
+function split21_4138_Remarks(data) {
+  const remarks =
+    data.remarks || officialFormNarrative("personal-statement", data);
+  if (remarks.length <= REMARKS_FIRST_BOX_CHARS) return [remarks, ""];
+
+  const first = [];
+  const rest = remarks.split("\n\n");
+  let used = 0;
+  while (
+    rest.length > 1 &&
+    (first.length === 0 || used + rest[0].length <= REMARKS_FIRST_BOX_CHARS)
+  ) {
+    used += rest[0].length + 2;
+    first.push(rest.shift());
+  }
+  return [[...first, REMARKS_CONTINUED].join("\n\n"), rest.join("\n\n")];
 }
 
 export async function fillForm21_4138(data) {
@@ -1192,8 +1166,9 @@ export async function fillForm21_4138(data) {
       fill21_4138_IdentityInfo(setTextField, fieldMap, data);
       fill21_4138_ContactInfo(setTextField, fieldMap, data);
 
-      setTextField(fieldMap.remarks, build21_4138_Remarks(data));
-      setTextField(fieldMap.remarksPage2, ""); // Page 2 continuation if needed
+      const [remarks, continuation] = split21_4138_Remarks(data);
+      setTextField(fieldMap.remarks, remarks);
+      setTextField(fieldMap.remarksPage2, continuation);
 
       return await pdfDoc.save();
     } catch (error) {
@@ -1339,33 +1314,38 @@ function fill21_0781_VeteranInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.email, data.email || data.veteranEmail);
 }
 
+// The wizard's stressor types that match one of the form's four boxes.
+// The others (accident, witnessing death, fear of hostile activity) could
+// belong under more than one box, so none is ticked for them: the label
+// goes in Remarks and the veteran ticks the box that fits.
+const STRESSOR_TYPE_BOXES = {
+  combat: "combatTraumatic",
+  mst: "personalTraumaticMST",
+  "personal-assault": "personalTraumaticNonMST",
+  other: "otherTraumatic",
+};
+
 function fill21_0781_StressorTypeCheckboxes(setCheckbox, fieldMap, data) {
-  setCheckbox(
-    fieldMap.combatTraumatic,
-    data.stressorType === "combat" || data.combatTraumatic,
-  );
-  setCheckbox(
-    fieldMap.personalTraumaticNonMST,
-    data.stressorType === "personal_non_mst" || data.personalTraumaticNonMST,
-  );
-  setCheckbox(
-    fieldMap.personalTraumaticMST,
-    data.stressorType === "personal_mst" || data.personalTraumaticMST,
-  );
-  setCheckbox(
-    fieldMap.otherTraumatic,
-    data.stressorType === "other" || data.otherTraumatic,
-  );
+  const chosen = Object.hasOwn(STRESSOR_TYPE_BOXES, data.stressorType ?? "")
+    ? STRESSOR_TYPE_BOXES[data.stressorType]
+    : null;
+  for (const box of Object.values(STRESSOR_TYPE_BOXES)) {
+    setCheckbox(fieldMap[box], box === chosen || data[box] === true);
+  }
 }
 
 function fill21_0781_StressorEvents(setTextField, fieldMap, data) {
   // Stressor events - support both single incident and multiple incidents
   // For single incident data format
-  if (data.incidentDescription || data.incidentLocation || data.incidentDate) {
-    setTextField(fieldMap.stressor1Description, data.incidentDescription);
-    setTextField(fieldMap.stressor1Location, data.incidentLocation);
-    setTextField(fieldMap.stressor1Dates, data.incidentDate);
-  }
+  setTextField(
+    fieldMap.stressor1Description,
+    data.incidentDescription || data.eventDescription,
+  );
+  setTextField(
+    fieldMap.stressor1Location,
+    data.incidentLocation || data.eventLocation,
+  );
+  setTextField(fieldMap.stressor1Dates, data.incidentDate || data.eventDate);
 
   // For multiple stressor format (stressors array)
   if (data.stressors && Array.isArray(data.stressors)) {
@@ -1470,7 +1450,12 @@ function fill21_0781_RemarksAndConsent(
   fieldMap,
   data,
 ) {
-  setTextField(fieldMap.remarks, data.remarks || data.additionalInfo);
+  setTextField(
+    fieldMap.remarks,
+    data.remarks ||
+      data.additionalInfo ||
+      officialFormNarrative("ptsd-stressor", data),
+  );
 
   setCheckbox(fieldMap.consentVBA, data.consentVBA);
   setCheckbox(fieldMap.noConsentVBA, data.noConsentVBA);
