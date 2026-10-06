@@ -8,6 +8,7 @@
  * max-lines-per-function / complexity budget.
  */
 
+import { logger } from "../utils/logger";
 import { useState, useRef, useCallback } from "react";
 import { validateFilesBatch } from "../utils/musterCallProcessor";
 
@@ -68,8 +69,7 @@ function runFileSelect(selectedFiles, ctx) {
 
   // Validate files
   const validationResult = validateFilesBatch(fileArray);
-  // eslint-disable-next-line no-console
-  console.log("🎯 validationResult:", {
+  logger.info("🎯 validationResult:", {
     valid: validationResult.valid.length,
     invalid: validationResult.invalid.length,
     warnings: validationResult.warnings.length,

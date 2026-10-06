@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { lfsFile } from "../helpers/lfsFile";
 import {
   spotlight,
   untrustedSection,
@@ -17,7 +18,7 @@ import {
   RATING_CRITERIA_SYSTEM_PROMPT,
 } from "../../utils/aiSystemPrompts";
 
-const ECFR_PATH = "public/legal-index/v0.1.0/chunks/ecfr.jsonl";
+const ECFR = lfsFile("public/legal-index/v0.1.0/chunks/ecfr.jsonl");
 
 describe("buildSystemPrompt - calculated NGB-22 entry date", () => {
   afterEach(() => {
@@ -565,10 +566,12 @@ describe("KEY_REGULATIONS_SUMMARY - 38 CFR 4.16 TDIU thresholds", () => {
     expect(KEY_REGULATIONS_SUMMARY).toContain("§ 4.16(b)");
   });
 
-  it.skipIf(!existsSync(ECFR_PATH))(
-    "keeps every threshold phrase verbatim from the eCFR chunk (needs the local legal index)",
+  it.skipIf(!ECFR.available)(
+    ECFR.name(
+      "keeps every threshold phrase verbatim from the eCFR chunk (needs the local legal index)",
+    ),
     () => {
-      const chunk = readFileSync(ECFR_PATH, "utf8")
+      const chunk = readFileSync(ECFR.path, "utf8")
         .split("\n")
         .filter(Boolean)
         .map((line) => JSON.parse(line))

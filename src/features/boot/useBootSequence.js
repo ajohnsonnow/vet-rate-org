@@ -1,3 +1,4 @@
+import { logger } from "../../utils/logger";
 import { useState, useEffect } from "react";
 import { migrateUserData } from "../../utils/migrationManager";
 import { needsMigration, migrateFromLocalStorage } from "../../utils/storage";
@@ -37,8 +38,7 @@ function createMaintenanceKillSwitch() {
 export const MIGRATION_DECISION_TIMEOUT_MS = 3000;
 
 async function runMigrationCopy(setIsMigrating, shouldAbort) {
-  // eslint-disable-next-line no-console
-  console.log("🔄 IndexedDB Migration: Migrating data from localStorage...");
+  logger.info("🔄 IndexedDB Migration: Migrating data from localStorage...");
   setIsMigrating(true);
 
   const migrationResult = await migrateFromLocalStorage({ shouldAbort });
@@ -74,8 +74,7 @@ function finishMigrationInBackground(
     .then((shouldMigrate) =>
       shouldMigrate
         ? runMigrationCopy(setIsMigrating, shouldAbort)
-        : // eslint-disable-next-line no-console
-          console.log(
+        : logger.info(
             "✅ IndexedDB Migration: Already complete, using IndexedDB",
           ),
     )

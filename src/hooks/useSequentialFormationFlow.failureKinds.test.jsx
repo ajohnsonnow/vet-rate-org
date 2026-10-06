@@ -108,7 +108,7 @@ beforeEach(() => {
   sessionStorage.clear();
   localStorage.clear();
   logged = [];
-  for (const method of ["log", "warn", "error"]) {
+  for (const method of ["log", "info", "warn", "error"]) {
     vi.spyOn(console, method).mockImplementation((...args) =>
       logged.push(args.map(String).join(" ")),
     );

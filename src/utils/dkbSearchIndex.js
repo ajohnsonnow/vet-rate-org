@@ -29,6 +29,8 @@
  * yield between batches for the same reason - see yieldToEventLoop below.
  */
 
+import { logger } from "./logger";
+
 // `setTimeout(resolve, 0)` clamps to >= 4ms once nested a few levels deep
 // (a chunking loop's own await chain reaches that depth immediately). A
 // MessageChannel round trip returns control to the event loop the same way
@@ -195,8 +197,7 @@ export async function buildDKBIndex(entries) {
   // too early (during the fetch's own genuine async gap - a false pass,
   // even on broken code) or has to budget for irrelevant network-transfer
   // time (a false failure, even on correct code).
-  // eslint-disable-next-line no-console
-  console.log("[DKB] 🔧 buildDKBIndex starting");
+  logger.info("[DKB] 🔧 buildDKBIndex starting");
   const state = {
     entries,
     lowerInstruction: new Array(entries.length),

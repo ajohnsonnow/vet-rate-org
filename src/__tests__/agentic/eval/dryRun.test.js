@@ -1,5 +1,12 @@
 import { describe, it, expect, afterAll } from "vitest";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -310,6 +317,32 @@ describe("run files", () => {
     expect(second.name).toBe(`${first.name}-2`);
     expect(readFileSync(first.transcriptPath, "utf8")).toContain("first");
     expect(existsSync(second.summaryPath)).toBe(true);
+  });
+
+  it("skips a name whose summary already exists, and leaves no stray transcript", () => {
+    const dir = makeTmp();
+    const when = new Date("2026-10-04T12:00:00Z");
+    const first = claimRunFiles(dir, "Model-B", when);
+    rmSync(first.transcriptPath);
+    writeFileSync(first.summaryPath, "an earlier summary");
+
+    const second = claimRunFiles(dir, "Model-B", when);
+
+    expect(second.name).toBe(`${first.name}-2`);
+    expect(readFileSync(first.summaryPath, "utf8")).toBe("an earlier summary");
+    expect(existsSync(first.transcriptPath)).toBe(false);
+    expect(readdirSync(dir).sort()).toEqual(
+      [`${first.name}.md`, `${second.name}.jsonl`, `${second.name}.md`].sort(),
+    );
+  });
+
+  it("reports an error that is not a name collision", () => {
+    const dir = makeTmp();
+    const notADirectory = join(dir, "a-file");
+    writeFileSync(notADirectory, "x");
+    expect(() =>
+      claimRunFiles(join(notADirectory, "runs"), "Model-C"),
+    ).toThrow();
   });
 });
 

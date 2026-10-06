@@ -387,9 +387,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
 
     await startBackgroundImport(page, fixturePath);
     const latencyMs = await measureKeydownToNavigation(page);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] triple-Escape during segmentation: ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] triple-Escape during segmentation: ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -409,9 +408,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
 
     await startBackgroundImport(page, fixturePath);
     const latencyMs = await measureClickToNavigation(page, box);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] Quick Exit during segmentation: ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] Quick Exit during segmentation: ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -436,9 +434,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
       await startBackgroundImport(page, fixturePath);
       latencyMs = await measureKeydownToNavigation(page);
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] triple-Escape during segmentation (4x): ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] triple-Escape during segmentation (4x): ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -466,9 +463,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
       await startBackgroundImport(page, fixturePath);
       latencyMs = await measureClickToNavigation(page, box);
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] Quick Exit during segmentation (4x): ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] Quick Exit during segmentation (4x): ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -491,9 +487,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
 
     await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
     const latencyMs = await measureKeydownToNavigation(page);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] triple-Escape during code-sheet phase: ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] triple-Escape during code-sheet phase: ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -513,9 +508,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
 
     await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
     const latencyMs = await measureClickToNavigation(page, box);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] Quick Exit during code-sheet phase: ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] Quick Exit during code-sheet phase: ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -540,9 +534,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
       await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
       latencyMs = await measureKeydownToNavigation(page);
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] triple-Escape during code-sheet phase (4x): ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] triple-Escape during code-sheet phase (4x): ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -570,9 +563,8 @@ test.describe("D19-7: real PDF C-File segmentation never blocks the panic key", 
       await startBackgroundImport(page, fixturePath, SEGMENTED_INTO_LOG);
       latencyMs = await measureClickToNavigation(page, box);
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      `[cfile-seg-latency] Quick Exit during code-sheet phase (4x): ${latencyMs}ms`,
+    process.stdout.write(
+      `[cfile-seg-latency] Quick Exit during code-sheet phase (4x): ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);

@@ -75,13 +75,13 @@ const issues = await api(
   `issues/search?components=${PROJECT}&issueStatuses=OPEN,CONFIRMED&ps=1` +
     "&facets=impactSoftwareQualities,impactSeverities",
 );
-console.log(`\nQuality gate: ${gate.projectStatus.status}`);
-console.log(`Open issues: ${issues.total}`);
+process.stdout.write(`\nQuality gate: ${gate.projectStatus.status}\n`);
+process.stdout.write(`Open issues: ${issues.total}\n`);
 for (const facet of issues.facets) {
   const counts = facet.values
     .filter((v) => v.count > 0)
     .map((v) => `${v.val}=${v.count}`)
     .join(" ");
-  console.log(`  ${facet.property}: ${counts}`);
+  process.stdout.write(`  ${facet.property}: ${counts}\n`);
 }
-console.log(`Dashboard: ${HOST}/dashboard?id=${PROJECT}`);
+process.stdout.write(`Dashboard: ${HOST}/dashboard?id=${PROJECT}\n`);

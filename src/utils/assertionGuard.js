@@ -110,10 +110,17 @@ const givesTheRightRule = any([
   /\bVA combines them\b|^they are combined\b/i,
 ]);
 
-const plain = (sentence) =>
-  String(sentence ?? "")
-    .replace(NOT_A_DENIAL, "")
-    .trim();
+// Taking one phrase out can leave another behind ("not not previously"
+// becomes "not previously"), so it repeats until nothing more comes out.
+function plain(sentence) {
+  let text = String(sentence ?? "");
+  let before;
+  do {
+    before = text;
+    text = text.replace(NOT_A_DENIAL, "");
+  } while (text !== before);
+  return text.trim();
+}
 
 /**
  * Whether a sentence is the kind that can state a claim to the reader at

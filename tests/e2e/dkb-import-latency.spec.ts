@@ -433,8 +433,9 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
 
     await startPrimedBackgroundImport(page, fixturePath);
     const latencyMs = await measureKeydownToNavigation(page);
-    // eslint-disable-next-line no-console
-    console.log(`[dkb-latency] triple-Escape during import: ${latencyMs}ms`);
+    process.stdout.write(
+      `[dkb-latency] triple-Escape during import: ${latencyMs}ms\n`,
+    );
 
     expect(page.url()).toMatch(/weather\.com/);
     expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_1X_MS);
@@ -453,8 +454,9 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
 
     await startPrimedBackgroundImport(page, fixturePath);
     const latencyMs = await measureClickToNavigation(page, box);
-    // eslint-disable-next-line no-console
-    console.log(`[dkb-latency] Quick Exit during import: ${latencyMs}ms`);
+    process.stdout.write(
+      `[dkb-latency] Quick Exit during import: ${latencyMs}ms\n`,
+    );
 
     expect(page.url()).toMatch(/weather\.com/);
     expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_1X_MS);
@@ -478,9 +480,8 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
       await startPrimedBackgroundImport(page, fixturePath);
       latencyMs = await measureKeydownToNavigation(page);
     });
-    // eslint-disable-next-line no-console
-    console.log(
-      `[dkb-latency] triple-Escape during import (4x): ${latencyMs}ms`,
+    process.stdout.write(
+      `[dkb-latency] triple-Escape during import (4x): ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -508,8 +509,9 @@ test.describe("D16-7: DKB scoring during a large C-File import never blocks the 
       await startPrimedBackgroundImport(page, fixturePath);
       latencyMs = await measureClickToNavigation(page, box);
     });
-    // eslint-disable-next-line no-console
-    console.log(`[dkb-latency] Quick Exit during import (4x): ${latencyMs}ms`);
+    process.stdout.write(
+      `[dkb-latency] Quick Exit during import (4x): ${latencyMs}ms\n`,
+    );
 
     expect(page.url()).toMatch(/weather\.com/);
     expect(latencyMs).toBeLessThan(PANIC_KEY_LATENCY_TRIGGER_4X_MS);
@@ -548,9 +550,8 @@ test.describe("D16-7 follow-up: DKB index construction on a COLD cache never blo
 
     await startColdBackgroundImport(page, fixturePath);
     const latencyMs = await measureKeydownToNavigation(page);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[dkb-latency] triple-Escape during a cold-cache import: ${latencyMs}ms`,
+    process.stdout.write(
+      `[dkb-latency] triple-Escape during a cold-cache import: ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);
@@ -570,9 +571,8 @@ test.describe("D16-7 follow-up: DKB index construction on a COLD cache never blo
 
     await startColdBackgroundImport(page, fixturePath);
     const latencyMs = await measureClickToNavigation(page, box);
-    // eslint-disable-next-line no-console
-    console.log(
-      `[dkb-latency] Quick Exit during a cold-cache import: ${latencyMs}ms`,
+    process.stdout.write(
+      `[dkb-latency] Quick Exit during a cold-cache import: ${latencyMs}ms\n`,
     );
 
     expect(page.url()).toMatch(/weather\.com/);

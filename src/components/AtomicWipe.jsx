@@ -13,6 +13,7 @@
  * - Privacy-conscious data clearing
  */
 
+import { logger } from "../utils/logger";
 import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -244,8 +245,7 @@ export async function wipeAllLocalData() {
   await clearCacheStorage();
   await unregisterServiceWorkers();
 
-  // eslint-disable-next-line no-console
-  console.log("✅ Wipe complete!");
+  logger.info("✅ Wipe complete!");
 }
 
 /**

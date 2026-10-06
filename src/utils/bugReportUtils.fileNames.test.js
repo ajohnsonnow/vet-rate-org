@@ -104,6 +104,9 @@ describe("console interceptor: file names never reach storage or a report", () =
 
   it("console.warn, a keyword console.log and the stack/url of a logged entry", () => {
     console.warn("Skipping Faketon_Jordan_6789.pdf");
+    // The capture of console.log is what this test exercises, so it has to
+    // call it. The file name is planted test data.
+    // nosemgrep: semgrep.no-console-log-production
     console.log("import failed for Faketon Jordan DD214 6789.pdf");
     logConsoleError({
       type: "error",

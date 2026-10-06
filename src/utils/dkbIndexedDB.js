@@ -12,6 +12,7 @@
  * @file dkbIndexedDB.js
  */
 
+import { logger } from "./logger";
 import { MOBILE_MAX } from "./breakpoints";
 
 const DB_NAME = "VetRate_DKB";
@@ -165,8 +166,7 @@ async function _downloadDKBEntries(url, onProgress) {
   const data = JSON.parse(new TextDecoder().decode(allChunks));
 
   const entries = data.entries || data || [];
-  // eslint-disable-next-line no-console
-  console.log(`[DKB] Parsed ${entries.length} entries from ${url}`);
+  logger.info(`[DKB] Parsed ${entries.length} entries from ${url}`);
   return entries;
 }
 
@@ -219,8 +219,7 @@ async function _storeDKBEntries(entries, onProgress) {
 async function _downloadFullDKBImpl(onProgress) {
   try {
     onProgress(5);
-    // eslint-disable-next-line no-console
-    console.log("[DKB] Starting database download...");
+    logger.info("[DKB] Starting database download...");
 
     const entries = await _downloadDKBEntries(WEB_DKB_URL, onProgress);
 

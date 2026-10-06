@@ -529,12 +529,12 @@ test.describe("golden-set evaluation", () => {
 
     page.on("pageerror", (err) => {
       // eslint-disable-next-line no-console -- forensic
-      console.log(`[pageerror] ${err.message}`);
+      process.stdout.write(`[pageerror] ${err.message}\n`);
     });
     page.context().on("requestfailed", (req) => {
       // eslint-disable-next-line no-console -- forensic
-      console.log(
-        `[requestfailed] ${req.url()} ${req.failure()?.errorText ?? ""}`,
+      process.stdout.write(
+        `[requestfailed] ${req.url()} ${req.failure()?.errorText ?? ""}\n`,
       );
     });
     await page.addInitScript((keys) => {

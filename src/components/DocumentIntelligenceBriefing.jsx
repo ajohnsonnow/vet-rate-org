@@ -7,6 +7,7 @@
  * User verifies extracted data before saving to VKB
  */
 
+import { logger } from "../utils/logger";
 import { useState, useEffect } from "react";
 import { getDocumentTypeLabel } from "../utils/documentClassifier";
 import ResponsiveModal from "./common/ResponsiveModal";
@@ -889,8 +890,9 @@ function useDocumentBriefingDebugLog({
   totalDocuments,
 }) {
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log("🛡️ SigInt Briefing classification:", classification?.type);
+    logger.info("🛡️ SigInt Briefing classification", {
+      type: classification?.type,
+    });
     if (isMultiDocument) {
       // eslint-disable-next-line no-console
       console.log(`🛡️ Multiple documents detected: ${totalDocuments} DD214(s)`);

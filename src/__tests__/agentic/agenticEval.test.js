@@ -18,7 +18,8 @@
  * src/__tests__/agentic/JUDGE_RUBRIC.md when a real model is loaded.
  */
 import { describe, it, expect } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { lfsFile } from "../helpers/lfsFile";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -357,15 +358,13 @@ describe("Agentic harness - Intent to File wording comes from the app's own data
     expect(flat).toContain("Must file complete claim within 1 year");
   });
 
-  it.skipIf(!existsSync("public/legal-index/v0.1.0/chunks/ecfr.jsonl"))(
-    "the quoted one-year language is in the eCFR index",
+  const ecfr = lfsFile("public/legal-index/v0.1.0/chunks/ecfr.jsonl");
+  it.skipIf(!ecfr.available)(
+    ecfr.name("the quoted one-year language is in the eCFR index"),
     () => {
       const quoted = "within 1 year of receipt of the intent to file a claim";
       expect(SWARM_AGENTS.AUDITOR.systemPrompt).toContain(`"${quoted}"`);
-      const index = readFileSync(
-        "public/legal-index/v0.1.0/chunks/ecfr.jsonl",
-        "utf8",
-      );
+      const index = readFileSync(ecfr.path, "utf8");
       expect(index.replace(/\s+/g, " ")).toContain(quoted);
     },
   );
