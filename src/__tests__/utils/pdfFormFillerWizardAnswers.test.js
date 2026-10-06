@@ -166,7 +166,7 @@ describe("names and addresses the wizards collect in parts", () => {
       "Avery",
       "J",
       "Placeholder",
-      "Placeholder Law Office",
+      "",
       "12 Example Street",
       "Nowhere",
       "KS",

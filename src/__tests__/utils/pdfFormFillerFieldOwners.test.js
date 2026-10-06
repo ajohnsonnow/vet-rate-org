@@ -137,3 +137,20 @@ describe("the veteran's contact details", () => {
     expect(form.checkedKeys()).toEqual([]);
   });
 });
+
+describe("21-22a organization line", () => {
+  it.each(["attorney", "claims-agent", undefined])(
+    "is left blank for representative type %s: the line is the service-organization representative's",
+    async (repType) => {
+      const form = await fillSyntheticForm("21-22a", fillForm21_22a, {
+        repType,
+        repName: "Avery J Placeholder",
+        repOrganization: "Placeholder Law Office",
+      });
+
+      expect(form.text("representativeOrganization")).toBe("");
+      expect(form.text("firmName")).toBe("");
+      expect(form.text("representativeLastName")).toBe("Placeholder");
+    },
+  );
+});

@@ -2493,6 +2493,8 @@ function _fillForm2122aClaimantInfo(setTextField, fieldMap, data) {
   _fillForm2122aClaimantContact(setTextField, fieldMap, data);
 }
 
+const SERVICE_ORGANIZATION_REP = "service-organization";
+
 /** The representative's name as three boxes, from one name or from parts. */
 function representativeNameParts(data) {
   const parts = (data.repName || data.representativeName || "")
@@ -2511,9 +2513,12 @@ function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   setTextField(fieldMap.representativeFirstName, rep.first);
   setTextField(fieldMap.representativeMiddleInitial, rep.middle);
   setTextField(fieldMap.representativeLastName, rep.last);
+  // Item 16B's "specify organization" line belongs to the service
+  // organization representative. An attorney's or agent's firm has no line
+  // of its own on the form, so it is not written anywhere.
   setTextField(
     fieldMap.representativeOrganization,
-    data.repOrganization || data.firmName || "",
+    data.repType === SERVICE_ORGANIZATION_REP ? data.repOrganization : "",
   );
 
   setTextField(fieldMap.page2SSN1, ssn.first);
