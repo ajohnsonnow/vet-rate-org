@@ -289,7 +289,7 @@ const CurrentModelInfo = ({ currentModel, tokenLimit }) => (
         )}
       </div>
       <div className="text-right">
-        <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+        <p className="text-lg font-bold text-purple-800 dark:text-purple-200">
           {tokenLimit.toLocaleString()}
         </p>
         <p className="text-xs text-gray-600 dark:text-gray-400">tokens</p>

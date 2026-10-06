@@ -400,7 +400,7 @@ const TheBigNumber = ({ animatedTotal, currentAge }) => (
       Your Claim&apos;s Total Lifetime Value
     </p>
     <div className="relative">
-      <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-pulse">
+      <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500">
         {formatCurrency(animatedTotal)}
       </h1>
       <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-transparent to-yellow-400/20 blur-3xl -z-10"></div>
@@ -1042,7 +1042,7 @@ const LunaTreatFund = ({ animatedTotal, grandTotal }) => {
               href="https://buymeacoffee.com/anthonyjohnson"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-amber-900 text-xs font-bold rounded-lg transition-colors"
+              className="inline-block px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-lg transition-colors"
             >
               🍪 Buy Luna a Treat
             </a>

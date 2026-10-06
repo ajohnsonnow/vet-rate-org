@@ -440,7 +440,7 @@ const LoadFromPacketSection = ({
       className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition flex items-center justify-center gap-2"
     >
       📁 Load from My Packet{" "}
-      <span className="text-blue-200 text-sm">
+      <span className="text-white text-sm">
         ({savedClaims.length} claims, {savedForms.length} forms)
       </span>
     </button>

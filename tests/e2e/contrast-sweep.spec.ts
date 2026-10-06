@@ -32,16 +32,21 @@ async function contrastProblems(
   // A tab that has just lost its active state can still be mid-transition;
   // wait for every running animation and transition to finish before reading
   // colours.
+  // Bounded: an animation that repeats for ever would otherwise hold the sweep
+  // until the test times out.
   await page.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
-        .map((animation) =>
-          animation.playState === "running"
-            ? animation.finished.catch(() => undefined)
-            : undefined,
-        ),
-    ),
+    Promise.race([
+      Promise.all(
+        document
+          .getAnimations()
+          .map((animation) =>
+            animation.playState === "running"
+              ? animation.finished.catch(() => undefined)
+              : undefined,
+          ),
+      ),
+      new Promise((resolve) => setTimeout(resolve, 2000)),
+    ]),
   );
   const inDialog = !wholePage && (await page.locator(DIALOG).count()) > 0;
   let builder = new AxeBuilder({ page }).withRules(["color-contrast"]);
