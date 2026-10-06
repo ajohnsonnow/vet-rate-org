@@ -598,6 +598,8 @@ export const _VA_FORM_FIELDS = VA_FORM_FIELDS;
  * Policy does not list that host, and it sends no cross-origin headers.
  */
 async function fetchPdfForm(formNumber) {
+  // Every fill starts by loading its form, so its report starts here too.
+  fillReport = { leftBlank: [], overflow: "" };
   const localPath = LOCAL_FORM_PATHS[formNumber];
   if (!localPath) return null;
   try {
@@ -643,31 +645,43 @@ function parsePhoneParts(phone) {
 }
 
 /**
- * Parse a raw SSN string into first/middle/last digit groups
+ * A Social Security number as the form's three boxes. Nine digits fill all
+ * three. Four digits are the last four (several wizards ask only for
+ * those) and go in the last box alone. Anything else fills nothing: the
+ * app does not guess which digits it was given.
  */
 function parseSSNParts(ssn) {
-  const digits = (ssn || "").replace(/\D/g, "");
-  return {
-    first: digits.substring(0, 3),
-    middle: digits.substring(3, 5),
-    last: digits.substring(5, 9),
-  };
+  const digits = String(ssn || "").replace(/\D/g, "");
+  if (digits.length === 9) {
+    return {
+      first: digits.substring(0, 3),
+      middle: digits.substring(3, 5),
+      last: digits.substring(5, 9),
+    };
+  }
+  return { first: "", middle: "", last: digits.length === 4 ? digits : "" };
 }
 
 /**
- * Parse a date of birth string (MM/DD/YYYY or YYYY-MM-DD) into parts
+ * A date as month, day and year boxes, from a date picker's YYYY-MM-DD or
+ * a typed MM/DD/YYYY. Anything that is not a full date fills nothing.
  */
 function parseDOBParts(dob) {
-  if (!dob) return { month: "", day: "", year: "" };
-  const parts = dob.split(/[-/]/);
-  if (parts.length === 3) {
-    // Assume MM/DD/YYYY or YYYY-MM-DD format
-    if (parts[0].length === 4) {
-      return { year: parts[0], month: parts[1], day: parts[2] };
-    }
-    return { month: parts[0], day: parts[1], year: parts[2] };
+  const none = { month: "", day: "", year: "" };
+  const parts = String(dob || "")
+    .trim()
+    .split(/[-/]/);
+  if (parts.length !== 3 || !parts.every((part) => /^\d{1,4}$/.test(part))) {
+    return none;
   }
-  return { month: "", day: "", year: "" };
+  const [year, month, day] =
+    parts[0].length === 4 ? parts : [parts[2], parts[0], parts[1]];
+  if (year.length !== 4 || month.length > 2 || day.length > 2) return none;
+  return {
+    month: month.padStart(2, "0"),
+    day: day.padStart(2, "0"),
+    year,
+  };
 }
 
 /**
@@ -678,18 +692,39 @@ function parseZipParts(zip) {
   return { five: digits.substring(0, 5), four: digits.substring(5, 9) };
 }
 
+/*
+ * What the last fill could not put on the form, so the screen can say so
+ * instead of the text vanishing: `leftBlank` holds answers longer than
+ * their box allows (the box is left empty for the veteran to write in),
+ * and `overflow` holds the part of a statement that did not fit the form's
+ * remarks boxes.
+ */
+let fillReport = { leftBlank: [], overflow: "" };
+// Exported (test-only, per this codebase's underscore-prefix convention).
+export const _lastFillReport = () => fillReport;
+
 /**
- * Safely set a PDF text field's value, ignoring fields that don't exist
+ * Set a PDF text field's value, ignoring fields that don't exist. A value
+ * longer than the box allows is not cut short: the box is left blank and
+ * the value is reported.
  */
 function setPdfTextField(form, fieldName, value) {
   if (!value) return;
+  let field;
   try {
-    const field = form.getTextField(fieldName);
-    if (field) field.setText(String(value));
+    field = form.getTextField(fieldName);
   } catch {
     // eslint-disable-next-line no-console
     console.log(`Field not found: ${fieldName}`);
+    return;
   }
+  const text = String(value);
+  const max = field.getMaxLength();
+  if (max !== undefined && text.length > max) {
+    fillReport.leftBlank.push(text);
+    return;
+  }
+  field.setText(text);
 }
 
 /**
@@ -1126,28 +1161,106 @@ function fill21_4138_ContactInfo(setTextField, fieldMap, data) {
   setTextField(fieldMap.email, data.email || data.veteranEmail || "");
 }
 
-// Roughly what the first remarks box shows at a readable size; the rest
-// goes to the continuation box on page 2.
-const REMARKS_FIRST_BOX_CHARS = 1800;
-const REMARKS_CONTINUED = "(continued on the next page)";
+const REMARKS_ON_PAGE_2 = "(continued on page 2)";
+const REMARKS_IN_DOWNLOAD = "(continued in the text download)";
+const DEFAULT_FIELD_FONT_SIZE = 10;
+const FIELD_LINE_HEIGHT = 1.2;
+const FIELD_PADDING = 4;
 
-/** The remarks split across the form's two boxes, at a paragraph break. */
-function split21_4138_Remarks(data) {
-  const remarks =
-    data.remarks || officialFormNarrative("personal-statement", data);
-  if (remarks.length <= REMARKS_FIRST_BOX_CHARS) return [remarks, ""];
-
-  const first = [];
-  const rest = remarks.split("\n\n");
-  let used = 0;
-  while (
-    rest.length > 1 &&
-    (first.length === 0 || used + rest[0].length <= REMARKS_FIRST_BOX_CHARS)
-  ) {
-    used += rest[0].length + 2;
-    first.push(rest.shift());
+/** How many lines of what width a text field shows, at its font size. */
+function fieldRoom(form, fieldName) {
+  let field;
+  try {
+    field = form.getTextField(fieldName);
+  } catch {
+    return null;
   }
-  return [[...first, REMARKS_CONTINUED].join("\n\n"), rest.join("\n\n")];
+  const { width, height } = field.acroField.getWidgets()[0].getRectangle();
+  const appearance = field.acroField.getDefaultAppearance() ?? "";
+  const tokens = appearance.trim().split(" ").filter(Boolean);
+  let size = Number(tokens[tokens.indexOf("Tf") - 1]) || 0;
+  if (size === 0) {
+    // An auto-sized box shrinks its text to fit. Give it a size so what
+    // fits can be counted and stays readable.
+    size = DEFAULT_FIELD_FONT_SIZE;
+    field.setFontSize(size);
+  }
+  return {
+    size,
+    width: width - FIELD_PADDING * 2,
+    lines: Math.max(
+      1,
+      Math.floor((height - FIELD_PADDING) / (size * FIELD_LINE_HEIGHT)),
+    ),
+  };
+}
+
+/** Where each shown line of `text` starts, wrapped to `room`. */
+function lineStarts(text, font, room) {
+  const starts = [];
+  let offset = 0;
+  for (const paragraph of text.split("\n")) {
+    let lineStart = offset;
+    let line = "";
+    starts.push(lineStart);
+    for (const match of paragraph.matchAll(/\S+/g)) {
+      const word = match[0];
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && font.widthOfTextAtSize(candidate, room.size) > room.width) {
+        lineStart = offset + match.index;
+        starts.push(lineStart);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    }
+    offset += paragraph.length + 1;
+  }
+  return starts;
+}
+
+/** `text` cut where its line `lines + 1` begins: [what fits, the rest]. */
+function cutAtLine(text, font, room, lines) {
+  const starts = lineStarts(text, font, room);
+  if (starts.length <= lines) return [text, ""];
+  const at = starts[lines];
+  return [text.slice(0, at).trimEnd(), text.slice(at).trimStart()];
+}
+
+/**
+ * The statement across the form's two remarks boxes. What does not fit the
+ * first box goes to the page 2 box; what fits neither is returned as the
+ * third item and never dropped. Each cut leaves a line saying where the
+ * statement goes on.
+ */
+function fitRemarks(form, fieldMap, text, font) {
+  const firstRoom = fieldRoom(form, fieldMap.remarks);
+  if (!firstRoom) return [text, "", ""];
+  if (lineStarts(text, font, firstRoom).length <= firstRoom.lines) {
+    return [text, "", ""];
+  }
+  const secondRoom = fieldRoom(form, fieldMap.remarksPage2);
+  const [first, rest] = cutAtLine(
+    text,
+    font,
+    firstRoom,
+    Math.max(1, firstRoom.lines - 1),
+  );
+  if (!secondRoom) return [`${first}\n${REMARKS_IN_DOWNLOAD}`, "", rest];
+  if (lineStarts(rest, font, secondRoom).length <= secondRoom.lines) {
+    return [`${first}\n${REMARKS_ON_PAGE_2}`, rest, ""];
+  }
+  const [second, overflow] = cutAtLine(
+    rest,
+    font,
+    secondRoom,
+    Math.max(1, secondRoom.lines - 1),
+  );
+  return [
+    `${first}\n${REMARKS_ON_PAGE_2}`,
+    `${second}\n${REMARKS_IN_DOWNLOAD}`,
+    overflow,
+  ];
 }
 
 export async function fillForm21_4138(data) {
@@ -1166,9 +1279,15 @@ export async function fillForm21_4138(data) {
       fill21_4138_IdentityInfo(setTextField, fieldMap, data);
       fill21_4138_ContactInfo(setTextField, fieldMap, data);
 
-      const [remarks, continuation] = split21_4138_Remarks(data);
+      const [remarks, continuation, overflow] = fitRemarks(
+        form,
+        fieldMap,
+        data.remarks || officialFormNarrative("personal-statement", data),
+        await pdfDoc.embedFont(StandardFonts.Helvetica),
+      );
       setTextField(fieldMap.remarks, remarks);
       setTextField(fieldMap.remarksPage2, continuation);
+      fillReport.overflow = overflow;
 
       return await pdfDoc.save();
     } catch (error) {
@@ -1966,21 +2085,26 @@ async function createPriorityProcessingPdf(data) {
 /**
  * Fill VA Form 21-22 (VSO Appointment) with actual field mappings
  */
-function fill21_22_VeteranInfo(setTextField, fieldMap, data) {
-  const nameParts = (data.veteranName || "").split(" ").filter(Boolean);
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts[nameParts.length - 1] || "";
-  const middleInitial = nameParts.length > 2 ? nameParts[1]?.[0] : "";
-
-  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
-
-  const dobRaw = data.dob || data.veteranDOB || "";
-  const dobParts = dobRaw.split(/[/-]/);
-  const dob = {
-    month: dobParts[0] || "",
-    day: dobParts[1] || "",
-    year: dobParts[2] || "",
+/**
+ * The veteran's name as the form's three boxes: from the wizard's three
+ * answers where it asks for them apart, otherwise from one full name.
+ */
+function veteranNameParts(data) {
+  const parts = (data.veteranName || "").split(" ").filter(Boolean);
+  return {
+    firstName: data.veteranFirstName || parts[0] || "",
+    middleInitial:
+      (data.veteranMiddleInitial || "").charAt(0) ||
+      (parts.length > 2 ? parts[1].charAt(0) : ""),
+    lastName:
+      data.veteranLastName || (parts.length > 1 ? parts[parts.length - 1] : ""),
   };
+}
+
+function fill21_22_VeteranInfo(setTextField, fieldMap, data) {
+  const { firstName, middleInitial, lastName } = veteranNameParts(data);
+  const ssn = parseSSNParts(data.ssn || data.veteranSSN);
+  const dob = parseDOBParts(data.dob || data.veteranDOB);
 
   setTextField(fieldMap.veteranFirstName, firstName);
   setTextField(fieldMap.veteranMiddleInitial, middleInitial);
@@ -2179,25 +2303,12 @@ async function createVSOAppointmentPdf(data) {
  * Fill VA Form 21-22a (Individual Representative Appointment) with actual field mappings
  */
 function _parseForm2122aFields(data) {
-  const nameParts = (data.veteranName || "").split(" ").filter(Boolean);
-  const ssnRaw = (data.ssn || data.veteranSSN || "").replace(/\D/g, "");
-  const dobParts = (data.dob || data.veteranDOB || "").split(/[/-]/);
   const phoneRaw = (data.phone || data.veteranPhone || "").replace(/\D/g, "");
 
   return {
-    firstName: nameParts[0] || "",
-    lastName: nameParts[nameParts.length - 1] || "",
-    middleInitial: nameParts.length > 2 ? nameParts[1]?.[0] : "",
-    ssn: {
-      first: ssnRaw.substring(0, 3),
-      middle: ssnRaw.substring(3, 5),
-      last: ssnRaw.substring(5, 9),
-    },
-    dob: {
-      month: dobParts[0] || "",
-      day: dobParts[1] || "",
-      year: dobParts[2] || "",
-    },
+    ...veteranNameParts(data),
+    ssn: parseSSNParts(data.ssn || data.veteranSSN),
+    dob: parseDOBParts(data.dob || data.veteranDOB),
     phone: {
       area: phoneRaw.substring(0, 3),
       prefix: phoneRaw.substring(3, 6),
@@ -2242,10 +2353,10 @@ function _fillForm2122aClaimantIdentity(setTextField, fieldMap, data) {
   );
   setTextField(fieldMap.claimantRelationship, data.claimantRelationship || "");
 
-  const claimantDobParts = (data.claimantDOB || "").split(/[/-]/);
-  setTextField(fieldMap.claimantDOBMonth, claimantDobParts[0] || "");
-  setTextField(fieldMap.claimantDOBDay, claimantDobParts[1] || "");
-  setTextField(fieldMap.claimantDOBYear, claimantDobParts[2] || "");
+  const claimantDob = parseDOBParts(data.claimantDOB);
+  setTextField(fieldMap.claimantDOBMonth, claimantDob.month);
+  setTextField(fieldMap.claimantDOBDay, claimantDob.day);
+  setTextField(fieldMap.claimantDOBYear, claimantDob.year);
 }
 
 function _fillForm2122aClaimantContact(setTextField, fieldMap, data) {
@@ -2271,20 +2382,24 @@ function _fillForm2122aClaimantInfo(setTextField, fieldMap, data) {
   _fillForm2122aClaimantContact(setTextField, fieldMap, data);
 }
 
+/** The representative's name as three boxes, from one name or from parts. */
+function representativeNameParts(data) {
+  const parts = (data.repName || data.representativeName || "")
+    .split(" ")
+    .filter(Boolean);
+  return {
+    first: data.repFirstName || parts[0] || "",
+    middle:
+      data.repMiddleInitial || (parts.length > 2 ? parts[1].charAt(0) : ""),
+    last: data.repLastName || (parts.length > 1 ? parts[parts.length - 1] : ""),
+  };
+}
+
 function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
-  const repParts = (data.representativeName || "").split(" ").filter(Boolean);
-  setTextField(
-    fieldMap.representativeFirstName,
-    data.repFirstName || repParts[0] || "",
-  );
-  setTextField(
-    fieldMap.representativeMiddleInitial,
-    data.repMiddleInitial || (repParts.length > 2 ? repParts[1]?.[0] : ""),
-  );
-  setTextField(
-    fieldMap.representativeLastName,
-    data.repLastName || repParts[repParts.length - 1] || "",
-  );
+  const rep = representativeNameParts(data);
+  setTextField(fieldMap.representativeFirstName, rep.first);
+  setTextField(fieldMap.representativeMiddleInitial, rep.middle);
+  setTextField(fieldMap.representativeLastName, rep.last);
   setTextField(
     fieldMap.representativeOrganization,
     data.repOrganization || data.firmName || "",
@@ -2296,7 +2411,7 @@ function _fillForm2122aRepresentativeInfo(setTextField, fieldMap, data, ssn) {
   setTextField(fieldMap.firmName, data.firmName || "");
   setTextField(fieldMap.additionalReps, data.additionalReps || "");
 
-  setTextField(fieldMap.repStreet, data.repStreet || "");
+  setTextField(fieldMap.repStreet, data.repStreet || data.repAddress || "");
   setTextField(fieldMap.repApt, data.repApt || "");
   setTextField(fieldMap.repCity, data.repCity || "");
   setTextField(fieldMap.repState, data.repState || "");
@@ -2477,6 +2592,25 @@ async function createIndividualRepPdf(data) {
   return pdfDoc.save();
 }
 
+/*
+ * The forms the app can fill an official PDF for. The Priority Processing
+ * Request (20-10207) has a filler but is not offered: on the real form
+ * nothing it sets appears, so its field names need checking against the
+ * form before it is offered again.
+ */
+const OFFICIAL_PDF_FORMS = new Set([
+  "buddy-statement",
+  "personal-statement",
+  "ptsd-stressor",
+  "intent-to-file",
+  "medical-release",
+  "vso-appointment",
+  "vso-appointment-individual",
+]);
+
+/** Whether the app can fill the official PDF for this form. */
+export const hasOfficialPdf = (formType) => OFFICIAL_PDF_FORMS.has(formType);
+
 /**
  * Main function to fill and download a VA form
  */
@@ -2505,10 +2639,6 @@ export async function fillAndDownloadForm(formType, data) {
       pdfBytes = await fillForm21_4142(data);
       fileName = "VA_Form_21-4142_Medical_Release.pdf";
       break;
-    case "priority-processing":
-      pdfBytes = await fillForm20_10207(data);
-      fileName = "VA_Form_20-10207_Priority_Processing.pdf";
-      break;
     case "vso-appointment":
       pdfBytes = await fillForm21_22(data);
       fileName = "VA_Form_21-22_VSO_Appointment.pdf";
@@ -2532,7 +2662,7 @@ export async function fillAndDownloadForm(formType, data) {
   a.remove();
   URL.revokeObjectURL(url);
 
-  return { success: true, fileName };
+  return { success: true, fileName, ...fillReport };
 }
 
 export default {

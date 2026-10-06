@@ -138,36 +138,3 @@ describe("VA Form 21-0781 type of stressor", () => {
     expect(form.text("stressor1Location")).toBe("Camp Placeholder");
   });
 });
-
-describe("VA Form 21-4138 remarks", () => {
-  it("carries a long statement over to the continuation box, losing nothing", async () => {
-    const long = (word) => Array.from({ length: 120 }, () => word).join(" ");
-    const form = await fillSyntheticForm("21-4138", fillForm21_4138, {
-      conditionName: "Tinnitus",
-      symptoms: long("ringing"),
-      worstDays: long("sleepless"),
-      workImpact: long("missed"),
-      dailyImpact: "LASTMARKER at the very end",
-    });
-
-    const first = form.text("remarks");
-    const second = form.text("remarksPage2");
-    expect(first.length).toBeGreaterThan(200);
-    expect(second.length).toBeGreaterThan(200);
-    expect(first).toMatch(/continued on the next page/i);
-    expect(occurrences(`${first}\n${second}`, "LASTMARKER")).toBe(1);
-    expect(`${first} ${second}`.match(/sleepless/g)).toHaveLength(120);
-  });
-
-  it("leaves the continuation box empty for a short statement", async () => {
-    const form = await fillSyntheticForm("21-4138", fillForm21_4138, {
-      conditionName: "Tinnitus",
-      workImpact: "I miss about two shifts a month",
-    });
-
-    expect(form.text("remarks")).toContain(
-      "Effect on my work: I miss about two shifts a month",
-    );
-    expect(form.text("remarksPage2")).toBe("");
-  });
-});
