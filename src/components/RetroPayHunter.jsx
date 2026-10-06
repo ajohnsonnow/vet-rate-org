@@ -49,10 +49,11 @@ const formatRatingHistoryLine = (p) => {
   return `• ${formatLocalDate(p.effectiveDate).toLocaleDateString()}: ${p.rating}% ${spouseNote} ${childrenNote}`;
 };
 
-// Whether the decision applied the factor is never examined here, so the
-// bilateral check is a prompt to verify, not a CUE alert.
-export const buildRetroPayAlerts = () => [];
-
+// This tool reads rating periods the veteran types in and nothing else. It
+// never sees a rating decision, so it cannot establish that the bilateral
+// factor was left out or that any error was made, and it raises no alert. The
+// bilateral check is information: the factor applies to these ratings, and
+// the veteran should check the decision.
 export const formatBilateralPromptBlock = (bilateralCheck) =>
   bilateralCheck?.applicable
     ? `\n**Bilateral factor (38 CFR § 4.26):**\nIt applies to: ${bilateralCheck.pairedParts.join(", ")}\nWhether the rating decision applied it has not been checked; tell the veteran to verify it.`
@@ -67,12 +68,6 @@ export const RETRO_PAY_ACTION_STEPS =
 
 export const formatRetroPayFindings = (totalMonths, total) =>
   `Analyzed ${totalMonths || 0} months, est. $${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
-
-const formatCueIssuesBlock = (alerts) => {
-  if (alerts.length === 0) return "";
-  const lines = alerts.map((a) => `• ${a.message}`).join("\n");
-  return `\n**Potential CUE Issues:**\n${lines}`;
-};
 
 const getRatingDotClasses = (rating) => {
   if (rating >= 70) return "bg-green-500 border-green-400";
@@ -243,7 +238,6 @@ function useRunAnalysisCallback({
   conditions,
   setAnalysis,
   setBilateralCheck,
-  setCueAlerts,
   setIsAnalyzing,
 }) {
   return useCallback(() => {
@@ -266,7 +260,6 @@ function useRunAnalysisCallback({
           : null;
       if (bilateral) setBilateralCheck(bilateral);
 
-      setCueAlerts(buildRetroPayAlerts());
       setIsAnalyzing(false);
     }, 1500);
   }, [
@@ -274,7 +267,6 @@ function useRunAnalysisCallback({
     conditions,
     setAnalysis,
     setBilateralCheck,
-    setCueAlerts,
     setIsAnalyzing,
   ]);
 }
@@ -283,7 +275,6 @@ function createAIAnalysisHandler({
   analysis,
   ratingHistory,
   bilateralCheck,
-  cueAlerts,
   setIsAIThinking,
   setAIAnalysis,
   setShowAIAnalysis,
@@ -317,8 +308,6 @@ ${ratingHistory.map(formatRatingHistoryLine).join("\n")}
 
 ${formatBilateralPromptBlock(bilateralCheck)}
 
-${formatCueIssuesBlock(cueAlerts)}
-
 Provide a veteran-focused analysis covering:
 
 1. **What This Means**: Explain the findings in plain language - no VA jargon
@@ -348,7 +337,6 @@ Be direct, practical, and emphasize that retroactive pay claims have specific ti
         rawText: typeof aiText === "string" ? aiText : JSON.stringify(aiText),
         extractedData: {
           totalMonths: analysis?.totalMonths,
-          cueAlerts: cueAlerts?.length || 0,
           ...bilateralSaveFields(bilateralCheck),
           ratingPeriods: ratingHistory?.length || 0,
         },
@@ -990,62 +978,6 @@ function EffectiveDateInfoNote() {
   );
 }
 
-function CueAlertItem({ alert }) {
-  return (
-    <div
-      className={`p-4 rounded-lg ${
-        alert.severity === "high"
-          ? "bg-red-900/30 border border-red-500/50"
-          : "bg-yellow-900/30 border border-yellow-500/30"
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <span
-          className={`${
-            alert.severity === "high" ? "text-red-500" : "text-yellow-500"
-          }`}
-        >
-          {alert.severity === "high" ? "🚨" : "⚡"}
-        </span>
-        <div>
-          <p
-            className={`font-semibold ${
-              alert.severity === "high" ? "text-red-400" : "text-yellow-400"
-            }`}
-          >
-            {alert.pattern?.name}
-          </p>
-          <p className="text-gray-300 text-sm mt-1">{alert.message}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CueAlertsList({ cueAlerts }) {
-  if (cueAlerts.length === 0) return null;
-
-  return (
-    <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-xl p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-2xl">⚠️</span>
-        <h3 className="text-lg font-bold text-yellow-400">
-          Potential Issues Detected
-        </h3>
-      </div>
-
-      <div className="space-y-3">
-        {cueAlerts.map((alert) => (
-          <CueAlertItem
-            key={`${alert.pattern?.name}-${alert.message}`}
-            alert={alert}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function BilateralCheckCard({ bilateralCheck }) {
   if (!bilateralCheck) return null;
 
@@ -1075,7 +1007,7 @@ export function BilateralCheckCard({ bilateralCheck }) {
   );
 }
 
-function AnalysisResults({ analysis, totals, cueAlerts, bilateralCheck }) {
+function AnalysisResults({ analysis, totals, bilateralCheck }) {
   if (!analysis) return null;
 
   return (
@@ -1083,7 +1015,6 @@ function AnalysisResults({ analysis, totals, cueAlerts, bilateralCheck }) {
       <FoundMoneyBanner analysis={analysis} totals={totals} />
       <CoverageGapNotice analysis={analysis} />
       <YearlyBreakdown totals={totals} />
-      <CueAlertsList cueAlerts={cueAlerts} />
       <EffectiveDateInfoNote />
       <BilateralCheckCard bilateralCheck={bilateralCheck} />
     </div>
@@ -1225,7 +1156,6 @@ function RetroPayHunterBody({
   runAnalysis,
   analysis,
   totals,
-  cueAlerts,
   bilateralCheck,
   showAIAnalysis,
   handleAIAnalysis,
@@ -1273,7 +1203,6 @@ function RetroPayHunterBody({
       <AnalysisResults
         analysis={analysis}
         totals={totals}
-        cueAlerts={cueAlerts}
         bilateralCheck={bilateralCheck}
       />
 
@@ -1308,7 +1237,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
   });
 
   const [analysis, setAnalysis] = useState(null);
-  const [cueAlerts, setCueAlerts] = useState([]);
   const [showCuePatterns, setShowCuePatterns] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [conditions, setConditions] = useState([]);
@@ -1335,7 +1263,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
     conditions,
     setAnalysis,
     setBilateralCheck,
-    setCueAlerts,
     setIsAnalyzing,
   });
 
@@ -1345,7 +1272,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
     analysis,
     ratingHistory,
     bilateralCheck,
-    cueAlerts,
     setIsAIThinking,
     setAIAnalysis,
     setShowAIAnalysis,
@@ -1364,7 +1290,6 @@ function useRetroPayHunterState({ onAISettingsClick }) {
     runAnalysis,
     analysis,
     totals,
-    cueAlerts,
     bilateralCheck,
     showAIAnalysis,
     handleAIAnalysis,

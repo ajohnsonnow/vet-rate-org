@@ -267,8 +267,12 @@ const ProviderComparisonChart = () => (
               className={`h-full rounded-full ${getProviderBarClass(data.grantRate)}`}
               style={{ width: `${data.grantRate}%` }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-900 dark:text-white">
-              {data.grantRate}%
+            <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
+              {/* Its own chip: the bar behind it changes colour and length, so
+                  text straight on the bar cannot hold a contrast ratio. */}
+              <span className="rounded bg-white px-1.5 text-gray-900 dark:bg-gray-900 dark:text-white">
+                {data.grantRate}%
+              </span>
             </span>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { triggerTourRestart } from "./BootCampTour";
 import { getTotalToolCount } from "../data/toolkitData";
 import { getDisabilityCount } from "../utils/disabilityCount";
 import { sanitizeUrl, escapeHtml } from "../utils/sanitize";
+import ScrollRegion from "./common/ScrollRegion";
 
 // Navigation structure matching the docs - organized by category
 const navigationStructure = [
@@ -3925,9 +3926,10 @@ function _flushTable(state) {
     const headers = state.tableRows[0];
     const dataRows = state.tableRows.slice(2); // Skip header separator
     state.elements.push(
-      <div
+      <ScrollRegion
         key={`table-${state.elements.length}`}
-        className="overflow-x-auto mb-4"
+        label={`Table: ${headers.join(", ")}`}
+        className="mb-4"
       >
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
@@ -3957,7 +3959,7 @@ function _flushTable(state) {
             ))}
           </tbody>
         </table>
-      </div>,
+      </ScrollRegion>,
     );
     state.tableRows = [];
   }

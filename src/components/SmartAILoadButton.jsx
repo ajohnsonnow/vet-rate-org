@@ -191,7 +191,7 @@ const SmartAILoadButton = ({
 
   if (!support.canRun) {
     return (
-      <div className="p-4 bg-gray-800/40 border border-gray-600 rounded-xl text-xs text-gray-300">
+      <div className="p-4 bg-gray-800 border border-gray-600 rounded-xl text-xs text-gray-200">
         <p>
           Device: <span className="font-medium">{deviceType}</span>
         </p>

@@ -67,11 +67,30 @@ input[type="submit"] {
   -webkit-tap-highlight-color: rgb(59 130 246 / 10%);
 }
 
-/* Remove default mobile input styling */
-input,
+/* Remove default mobile input styling. Checkboxes and radios are excluded:
+   with no native appearance they draw no box and no tick at all (0px wide
+   unless a component sized them, and blank even then). */
+input:not([type="checkbox"], [type="radio"]),
 textarea,
 select {
   appearance: none;
+}
+
+/* A visible default for every checkbox and radio: the native box and tick, a
+   size that can be seen and hit, and a focus ring. :where() keeps the
+   specificity at zero so a component's own size, colour or sr-only classes
+   still win. */
+:where(input[type="checkbox"], input[type="radio"]) {
+  appearance: auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  accent-color: rgb(var(--brand-700));
+}
+
+:where(input[type="checkbox"], input[type="radio"]):focus-visible {
+  outline: 2px solid rgb(var(--brand-700));
+  outline-offset: 2px;
 }
 
 * {
@@ -388,6 +407,137 @@ html:not(.dark) .bg-yellow-50 {
 html:not(.dark) .bg-purple-50,
 html:not(.dark) .bg-indigo-50 {
   background-color: #e8e6eb !important;
+}
+
+/* Text on the light theme's surfaces. The overrides above replace white and
+   the -50 tints with cream and sage, which are darker, so the 500-700 text
+   utilities that reach 4.5:1 on white fall short on them (green-600 is 2.7:1,
+   amber-700 4.2:1). In the light theme each family takes the step that
+   reaches 4.5:1 on the darkest of those surfaces.
+
+   A dark tool shown in the light theme (a dialog or panel with a gray-900,
+   gray-800 or slate-800 fill) is the opposite case: there the original,
+   lighter steps are the readable ones, so the same variables are set back,
+   and the muted gray used for .text-gray-500 becomes gray-400. */
+html:not(.dark) {
+  --on-light-green: #166534; /* green-800 */
+  --on-light-emerald: #065f46; /* emerald-800 */
+  --on-light-amber: #92400e; /* amber-800 */
+  --on-light-yellow: #854d0e; /* yellow-800 */
+  --on-light-orange: #9a3412; /* orange-800 */
+  --on-light-red: #b91c1c; /* red-700 */
+  --on-light-blue: rgb(var(--brand-700));
+}
+
+html:not(.dark)
+  :is(
+    .bg-gray-900,
+    .bg-gray-800,
+    .bg-slate-900,
+    .bg-slate-800,
+    .bg-gray-900\/50,
+    .bg-gray-800\/50,
+    .bg-slate-900\/50,
+    .bg-slate-800\/50,
+    .\!bg-gray-900,
+    .\!bg-gray-800,
+    .\!bg-slate-900,
+    .\!bg-slate-800
+  ) {
+  --on-light-green: #4ade80; /* green-400 */
+  --on-light-emerald: #34d399; /* emerald-400 */
+  --on-light-amber: #fbbf24; /* amber-400 */
+  --on-light-yellow: #facc15; /* yellow-400 */
+  --on-light-orange: #fb923c; /* orange-400 */
+  --on-light-red: #f87171; /* red-400 */
+  --on-light-blue: rgb(var(--brand-300));
+  --text-muted: #9ca3af; /* gray-400 */
+}
+
+html:not(.dark) :is(.text-green-600, .text-green-700) {
+  color: var(--on-light-green);
+}
+
+html:not(.dark) :is(.text-emerald-600, .text-emerald-700) {
+  color: var(--on-light-emerald);
+}
+
+html:not(.dark) :is(.text-amber-500, .text-amber-600, .text-amber-700) {
+  color: var(--on-light-amber);
+}
+
+html:not(.dark) :is(.text-yellow-600, .text-yellow-700) {
+  color: var(--on-light-yellow);
+}
+
+html:not(.dark) :is(.text-orange-600, .text-orange-700) {
+  color: var(--on-light-orange);
+}
+
+html:not(.dark) .text-red-600 {
+  color: var(--on-light-red);
+}
+
+/* blue, indigo, sky and cyan all resolve to the brand ramp (tailwind.config.js) */
+html:not(.dark)
+  :is(.text-blue-600, .text-indigo-600, .text-sky-600, .text-cyan-600) {
+  color: var(--on-light-blue);
+}
+
+/* White text on a mid-tone fill. Tailwind's 500 and 600 fills are too light
+   for white text (green-600 is 3.3:1, amber-600 3.2:1, yellow-500 1.9:1). An
+   element that sets both takes the first step of the same family that
+   reaches 4.5:1, in both themes, and its hover step moves with it. */
+.text-white:is(.bg-green-500, .bg-green-600) {
+  background-color: #15803d; /* green-700 */
+}
+
+.text-white:is(.hover\:bg-green-600, .hover\:bg-green-700):hover {
+  background-color: #166534; /* green-800 */
+}
+
+.text-white:is(.bg-amber-500, .bg-amber-600) {
+  background-color: #b45309; /* amber-700 */
+}
+
+.text-white:is(.hover\:bg-amber-600, .hover\:bg-amber-700):hover {
+  background-color: #92400e; /* amber-800 */
+}
+
+.text-white.bg-orange-500 {
+  background-color: #c2410c; /* orange-700 */
+}
+
+.text-white.bg-yellow-500 {
+  background-color: #a16207; /* yellow-700 */
+}
+
+.text-white.bg-teal-500 {
+  background-color: #0f766e; /* teal-700 */
+}
+
+.text-white.bg-red-500 {
+  background-color: #dc2626; /* red-600 */
+}
+
+.text-white.bg-violet-500 {
+  background-color: #7c3aed; /* violet-600 */
+}
+
+.text-white.bg-blue-500 {
+  background-color: rgb(var(--brand-600));
+}
+
+.text-white.bg-gray-400 {
+  background-color: #6b7280; /* gray-500 */
+}
+
+.text-white.bg-purple-500 {
+  background-color: #9333ea; /* purple-600 */
+}
+
+.text-white.hover\:bg-purple-600:hover {
+  background-color: #7e22ce; /* purple-700 */
 }
 
 /* ============================================
@@ -805,6 +955,29 @@ html.font-large {
 
 html.font-xlarge {
   font-size: 20px;
+}
+
+/* Very large screens. Above 2560px the root font size grows with the
+   viewport, up to 1.5x at 3840px, so every rem-based width, gap and type size
+   scales together instead of leaving a desktop-sized column in a void. Each
+   user font-size setting keeps its ratio. Below 2560px nothing changes. */
+@media (width >= 2560px) {
+  html,
+  html.font-normal {
+    font-size: clamp(16px, calc(100vw / 160), 24px);
+  }
+
+  html.font-small {
+    font-size: clamp(14px, calc(100vw / 182.857), 21px);
+  }
+
+  html.font-large {
+    font-size: clamp(18px, calc(100vw / 142.222), 27px);
+  }
+
+  html.font-xlarge {
+    font-size: clamp(20px, calc(100vw / 128), 30px);
+  }
 }
 
 /* ============================================
@@ -1391,9 +1564,11 @@ html.dark
     .bg-blue-600,
     .bg-green-600,
     .bg-sky-600,
-    .bg-amber-700
+    .bg-amber-700,
+    .text-white
   ) {
-  color: #93c5fd;
+  /* blue-200: blue-300 was 4.48:1 on the dark theme's lighter green panels */
+  color: #bfdbfe;
 }
 
 html.dark
@@ -1403,9 +1578,10 @@ html.dark
     .bg-blue-600,
     .bg-green-600,
     .bg-sky-600,
-    .bg-amber-700
+    .bg-amber-700,
+    .text-white
   ):hover {
-  color: #bfdbfe;
+  color: #dbeafe;
 }
 
 /* Dark scrollbar */
@@ -1885,7 +2061,7 @@ a {
   /* Optimal 2-column grid for tablet portrait */
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3,
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 16px;
   }
 
@@ -1920,11 +2096,11 @@ a {
 @media (width >= 1024px) and (width <= 1366px) and (orientation: landscape) {
   /* 3-column grid for tablet landscape */
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
   .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
   /* Modal slightly narrower in landscape */
@@ -2060,12 +2236,11 @@ a {
     line-height: 1.7;
   }
 
-  /* Scrollable tables on mobile */
-  table {
-    display: block;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-  }
+  /* No rule makes a bare <table> its own scroller here. "display: block;
+     overflow-x: auto" on the table took the scrolling away from its wrapper,
+     and a table cannot take keyboard focus, so wide tables could not be
+     scrolled without a pointer. A wide table goes inside
+     components/common/ScrollRegion, which is named and focusable. */
 }
 
 /* Progressive Disclosure - Collapsible Sections */
@@ -2139,10 +2314,14 @@ body {
   }
 }
 
-/* Optimize Grid Layouts for Mobile */
+/* Optimize Grid Layouts for Mobile.
+   Every forced track is minmax(0, 1fr), never a bare 1fr: 1fr means
+   minmax(auto, 1fr), which will not let a grid child be narrower than its
+   widest unwrappable content, so one long row made a whole dialog scroll
+   sideways (the calculator's columns were 501px wide in a 358px body). */
 @media (width <= 640px) {
   .grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 16px;
   }
 
@@ -2150,7 +2329,7 @@ body {
   .grid-cols-2,
   .grid-cols-3,
   .grid-cols-4 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }
 
@@ -2315,7 +2494,7 @@ body {
 /* Stat Cards in Modals - Stack nicely on mobile */
 @media (width <= 640px) {
   .grid.grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px;
   }
 
@@ -2323,7 +2502,7 @@ body {
   @media (width <= 360px) {
     .grid.grid-cols-4,
     .grid.grid-cols-3 {
-      grid-template-columns: 1fr !important;
+      grid-template-columns: minmax(0, 1fr) !important;
     }
   }
 }
@@ -2337,8 +2516,10 @@ body {
 @media (width <= 640px) {
   .modal-content .flex.gap-2 > button:not(.modal-header *),
   .modal-content .flex.gap-3 > button:not(.modal-header *) {
+    /* No min-width: a 120px floor also caught icon buttons in "flex gap-2"
+       rows and pushed their neighbours off a 390px screen. Each button still
+       grows to share the row and cannot shrink below its own content. */
     flex: 1;
-    min-width: 120px;
   }
 
   /* If too many buttons, stack them */

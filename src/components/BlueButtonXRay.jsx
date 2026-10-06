@@ -859,7 +859,7 @@ export function InfoBanner({ aiAvailable }) {
               href="https://www.va.gov/my-health/medical-records/download/"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-cyan-600"
+              className="underline text-cyan-800 dark:text-cyan-200 hover:text-cyan-900 dark:hover:text-cyan-100"
             >
               VA.gov
             </a>

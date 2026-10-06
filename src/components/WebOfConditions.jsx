@@ -1489,7 +1489,7 @@ const SeedFromRecordsBanner = ({ show, conditionName }) => {
   if (!show) return null;
 
   return (
-    <div className="mb-4 bg-purple-900/30 border border-purple-700/50 rounded-xl p-3">
+    <div className="mb-4 bg-purple-900 border border-purple-700 rounded-xl p-3">
       <p className="text-purple-200 text-sm">
         <span className="text-lg mr-2">📋</span> We started you off with{" "}
         <strong>{conditionName}</strong> from your saved ratings — explore its

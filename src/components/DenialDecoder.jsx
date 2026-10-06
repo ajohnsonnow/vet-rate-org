@@ -378,14 +378,14 @@ const DenialDecoderHeader = ({ t, onClose, onOpenAISettings }) => (
 const UploadNotices = ({ t, aiStatus, error }) => (
   <>
     {/* Privacy Notice */}
-    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
       <div className="flex items-start gap-3">
-        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-green-900">
+        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-300 flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-green-900 dark:text-green-100">
           <p className="font-semibold mb-1">
             {t("denialDecoder.privacyProtected")}
           </p>
-          <p className="text-green-800">
+          <p className="text-green-800 dark:text-green-200">
             {t("denialDecoder.ocrProcessingLocal")}{" "}
             {aiStatus.isPrivate
               ? t("denialDecoder.aiAnalysisLocal")
@@ -397,14 +397,14 @@ const UploadNotices = ({ t, aiStatus, error }) => (
 
     {/* AI Setup Message */}
     {!isAnyAIAvailable() && (
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-900">
+          <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-300 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-900 dark:text-amber-100">
             <p className="font-semibold mb-1">
               {t("denialDecoder.aiRequired")}
             </p>
-            <p className="text-amber-800">
+            <p className="text-amber-800 dark:text-amber-200">
               {t("denialDecoder.aiSetupMessage")}
             </p>
           </div>
