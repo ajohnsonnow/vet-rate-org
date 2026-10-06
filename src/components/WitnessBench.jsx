@@ -1348,7 +1348,7 @@ const DownloadMenu = ({
     <button
       type="button"
       onClick={onToggle}
-      className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
+      className="min-h-[44px] px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
     >
       📥 {t("witnessBench", "download")}
       <svg
@@ -1367,7 +1367,7 @@ const DownloadMenu = ({
     </button>
 
     {showDownloadMenu && (
-      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-10">
+      <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-10">
         <button
           type="button"
           onClick={() => {
@@ -1407,7 +1407,7 @@ const SaveToPacketButton = ({ t, onSave, savedItem, isSavedNow }) => {
       type="button"
       onClick={onSave}
       disabled={isSavedNow}
-      className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 disabled:cursor-default transition-colors"
+      className="min-h-[44px] px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 disabled:cursor-default transition-colors"
     >
       {label}
     </button>
@@ -1428,15 +1428,18 @@ const StatementPreviewPanel = ({
   onDownloadDOCX,
 }) => (
   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
-      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <h3 className="min-w-0 break-words text-lg font-bold text-gray-800 dark:text-gray-100">
         📄 {t("witnessBench", "yourBuddyStatement")}
       </h3>
-      <div className="flex gap-2">
+      {/* gap-x/gap-y, not gap-2: a global phone rule gives every button
+          in a "flex gap-2" row a 120px minimum, which pushed Download off
+          a 390px screen. */}
+      <div className="flex flex-wrap gap-x-2 gap-y-2">
         <button
           type="button"
           onClick={onCopyToClipboard}
-          className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+          className="min-h-[44px] px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
         >
           📋 {t("witnessBench", "copy")}
         </button>
