@@ -21,7 +21,11 @@ import CertificationCheckbox from "./CertificationCheckbox";
 import StatementAnalyzer from "./StatementAnalyzer";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
-import { AGGRAVATION_OPTIONS } from "../utils/writerTemplates";
+import {
+  AGGRAVATION_OPTIONS,
+  buildPersonalStatementTemplate,
+  standardDraftNote,
+} from "../utils/writerTemplates";
 import StandardDraftNotice from "./common/StandardDraftNotice";
 import {
   isAIAvailable,
@@ -36,80 +40,8 @@ import { getMyRatings } from "../utils/veteranProfile";
 import { getSavedClaims, getStatement } from "../utils/claimsStorage";
 import { normalizeConditionName } from "../utils/conditionName";
 
-// Pure statement generator, split out of NexusBuilder purely to keep its
-// function body under the line-count/complexity limits. Same logic, same
-// order of operations, same text.
-function generateStatement({
-  answers,
-  condition,
-  primaryCondition,
-  isSecondary,
-}) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  let statement = `To the Department of Veterans Affairs:\n\n`;
-
-  if (isSecondary) {
-    statement += `I am submitting a claim for **${condition}** as secondary to my service-connected **${primaryCondition}**.\n\n`;
-  } else {
-    statement += `I am submitting a claim for service connection of **${condition}**.\n\n`;
-  }
-
-  statement += `**Onset and Progression:**\n`;
-  statement += `I first noted symptoms of ${condition} around ${answers.symptomOnsetDate || new Date().toLocaleDateString()}. These symptoms have persisted and worsened over time. `;
-
-  if (answers.hasTreatment === "yes-va") {
-    statement += `I have sought treatment through the VA medical system for this condition.\n\n`;
-  } else if (answers.hasTreatment === "yes-private") {
-    statement += `I have sought treatment through private medical care for this condition.\n\n`;
-  } else if (answers.hasTreatment === "no") {
-    statement += `Due to the nature of my service-connected disabilities, I have not yet been able to seek formal treatment for this condition.\n\n`;
-  }
-
-  if (isSecondary) {
-    statement += `**Nexus (Connection to Service):**\n`;
-    const mechanismText =
-      AGGRAVATION_OPTIONS.find(
-        (opt) => opt.value === answers.aggravationMechanism,
-      )?.label || answers.aggravationMechanism;
-    statement += `My service-connected ${primaryCondition} directly causes or aggravates this condition through the following mechanism: ${mechanismText}. `;
-
-    if (answers.aggravationExplanation) {
-      statement += `${answers.aggravationExplanation} `;
-    }
-
-    if (answers.specificIncident) {
-      statement += `\n\nSpecifically, ${answers.specificIncident}`;
-    }
-    statement += `\n\n`;
-  }
-
-  statement += `**Severity and Impact:**\n`;
-  statement += `This condition significantly affects my daily life. `;
-
-  if (answers.workImpact) {
-    statement += `In terms of employment, ${answers.workImpact} `;
-  }
-
-  if (answers.socialImpact) {
-    statement += `Regarding my social and family life, ${answers.socialImpact} `;
-  }
-
-  if (answers.specificExamples) {
-    statement += `\n\nSpecific examples include: ${answers.specificExamples}`;
-  }
-
-  statement += `\n\n**Request:**\n`;
-  statement += `I respectfully request a Compensation & Pension (C&P) examination to evaluate this condition and its connection to my service${isSecondary ? "-connected disability" : ""}.\n\n`;
-  statement += `Respectfully submitted,\n\n`;
-  statement += `Date: ${currentDate}`;
-
-  return statement;
-}
+const AI_NO_CHANGE_NOTE =
+  "The AI did not change the wording, so this is still the standard draft.";
 
 // Pure doctor-note generator, split out of NexusBuilder purely to keep its
 // function body under the line-count/complexity limits. Same logic, same
@@ -928,6 +860,7 @@ const NexusReviewControls = ({
 const NexusReviewBanners = ({
   aiError,
   draftNote,
+  standardNote,
   useAIVersion,
   aiEnhancedStatement,
   handleRequestAIEnhance,
@@ -962,12 +895,15 @@ const NexusReviewBanners = ({
       </div>
     )}
 
-    {useAIVersion && aiEnhancedStatement && (
-      <StandardDraftNotice note={draftNote} />
+    {!(useAIVersion && aiEnhancedStatement) && (
+      <>
+        <StandardDraftNotice note={standardNote} />
+        <StandardDraftNotice note={draftNote} label="AI result" />
+      </>
     )}
 
     {/* AI Success indicator */}
-    {useAIVersion && aiEnhancedStatement && !draftNote && (
+    {useAIVersion && aiEnhancedStatement && (
       <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3 flex items-center gap-2">
         <svg
           className="w-5 h-5 text-purple-500"
@@ -1000,6 +936,7 @@ const NexusStatementPanels = ({
   useAIVersion,
   aiEnhancedStatement,
   currentStatement,
+  editStatement,
   currentDoctorNote,
   t,
 }) => (
@@ -1008,20 +945,25 @@ const NexusStatementPanels = ({
     <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
       <DraftWatermark variant="banner" />
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+        <label
+          htmlFor="nexus-statement-text"
+          className="font-semibold text-gray-900 dark:text-gray-100"
+        >
           {t("nexusBuilder.statementFormTitle")}
-        </h4>
+        </label>
         {useAIVersion && aiEnhancedStatement && (
           <span className="text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full">
             ✨ {t("nexusBuilder.aiEnhanced")}
           </span>
         )}
       </div>
-      <div className="prose prose-sm max-w-none">
-        <pre className="whitespace-pre-wrap text-sm text-gray-800 dark:text-gray-200 font-sans">
-          {currentStatement}
-        </pre>
-      </div>
+      <textarea
+        id="nexus-statement-text"
+        value={currentStatement}
+        onChange={(e) => editStatement(e.target.value)}
+        rows={18}
+        className="w-full min-h-[18rem] p-3 text-sm border-2 border-gray-400 dark:border-gray-500 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-sans focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+      />
     </div>
 
     {/* Doctor's Cheat Sheet with Medical Disclaimer */}
@@ -1039,7 +981,10 @@ const NexusStatementPanels = ({
       </div>
 
       {/* Medical Disclaimer Footer */}
-      <NexusDisclaimerFooter className="mt-4" />
+      <NexusDisclaimerFooter
+        className="mt-4"
+        showCitationWarning={Boolean(useAIVersion && aiEnhancedStatement)}
+      />
     </div>
   </>
 );
@@ -1116,6 +1061,7 @@ const NexusStepReview = ({
   aiError,
   draftNote,
   currentStatement,
+  editStatement,
   currentDoctorNote,
   isSecondary,
   primaryCondition,
@@ -1136,6 +1082,7 @@ const NexusStepReview = ({
     <NexusReviewBanners
       aiError={aiError}
       draftNote={draftNote}
+      standardNote={standardDraftNote(currentStatement)}
       useAIVersion={useAIVersion}
       aiEnhancedStatement={aiEnhancedStatement}
       handleRequestAIEnhance={handleRequestAIEnhance}
@@ -1146,6 +1093,7 @@ const NexusStepReview = ({
       useAIVersion={useAIVersion}
       aiEnhancedStatement={aiEnhancedStatement}
       currentStatement={currentStatement}
+      editStatement={editStatement}
       currentDoctorNote={currentDoctorNote}
       t={t}
     />
@@ -1228,15 +1176,16 @@ function createAIConsentHandler({
         primaryCondition,
       );
 
-      if (result.success) {
+      if (result.success && result.draftPath === "model") {
         setAiEnhancedStatement(
           result.content.replaceAll("[Date]", new Date().toLocaleDateString()),
         );
-        setDraftNote(result.draftNote ?? null);
-        // The app-built draft is shown either way; when the AI itself
-        // failed, say why, next to the control that tries it again.
-        setAiError(result.draftErrorReason ?? null);
         setUseAIVersion(true);
+      } else if (result.success) {
+        // Nothing was reworded, so the standard draft stays on screen under
+        // its own label. Say why: the AI failed, or changed nothing usable.
+        setAiError(result.draftErrorReason ?? null);
+        setDraftNote(result.draftErrorReason ? null : AI_NO_CHANGE_NOTE);
       } else {
         setAiError(result.error);
       }
@@ -1595,20 +1544,26 @@ function useNexusDocumentOutput({
   setShowDownloadMenu,
   setNexusDownloaded,
 }) {
-  const getCurrentStatement = () => {
-    if (useAIVersion && aiEnhancedStatement) {
-      return aiEnhancedStatement;
-    }
-    return generateStatement({
-      answers,
-      condition,
-      primaryCondition,
-      isSecondary,
-    });
-  };
+  // What is on screen before any edit: the model-reworded draft when there
+  // is one and it is chosen, otherwise the app-built draft, which is the
+  // same draft the AI path starts from. An edit belongs to the draft it was
+  // made on, so switching version or changing an answer starts clean.
+  const standardStatement = buildPersonalStatementTemplate(
+    answers,
+    condition,
+    isSecondary ? primaryCondition : null,
+  );
+  const baseStatement =
+    useAIVersion && aiEnhancedStatement
+      ? aiEnhancedStatement
+      : standardStatement;
+  const [edit, setEdit] = useState({ base: null, text: "" });
+  const currentStatement =
+    edit.base === baseStatement ? edit.text : baseStatement;
+  const editStatement = (text) => setEdit({ base: baseStatement, text });
 
   const handleFinish = () => {
-    const statement = getCurrentStatement();
+    const statement = currentStatement;
     const doctorNote = generateDoctorNote({
       answers,
       condition,
@@ -1627,7 +1582,7 @@ function useNexusDocumentOutput({
   };
 
   const handleDownload = (format = "txt") => {
-    const statement = getCurrentStatement();
+    const statement = currentStatement;
     const doctorNote = generateDoctorNote({
       answers,
       condition,
@@ -1654,7 +1609,6 @@ function useNexusDocumentOutput({
     setNexusDownloaded(true);
   };
 
-  const currentStatement = getCurrentStatement();
   const currentDoctorNote = generateDoctorNote({
     answers,
     condition,
@@ -1662,7 +1616,13 @@ function useNexusDocumentOutput({
     isSecondary,
   });
 
-  return { handleFinish, handleDownload, currentStatement, currentDoctorNote };
+  return {
+    handleFinish,
+    handleDownload,
+    currentStatement,
+    editStatement,
+    currentDoctorNote,
+  };
 }
 
 // Renders the active wizard step. Split out of NexusBuilder purely to keep
@@ -1725,6 +1685,7 @@ const NexusStepContent = ({
         aiError={ai.aiError}
         draftNote={ai.draftNote}
         currentStatement={output.currentStatement}
+        editStatement={output.editStatement}
         currentDoctorNote={output.currentDoctorNote}
         isSecondary={wizard.isSecondary}
         primaryCondition={primaryCondition}
