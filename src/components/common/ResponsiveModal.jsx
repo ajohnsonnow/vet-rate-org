@@ -31,9 +31,9 @@ import useFocusTrap from "../../hooks/useFocusTrap";
 const SIZE = {
   sm: "sm:max-w-md",
   md: "sm:max-w-lg",
-  lg: "sm:max-w-2xl",
-  xl: "sm:max-w-4xl",
-  "2xl": "sm:max-w-6xl",
+  lg: "sm:max-w-2xl 3xl:max-w-3xl",
+  xl: "sm:max-w-4xl 3xl:max-w-5xl",
+  "2xl": "sm:max-w-6xl 3xl:max-w-7xl 4xl:max-w-[88rem]",
   full: "sm:max-w-[95vw]",
 };
 

@@ -241,7 +241,7 @@ export default function AppFooter() {
       className="bg-gray-900 dark:bg-black text-white py-8 mt-12"
       role="contentinfo"
     >
-      <div className="container mx-auto px-4 max-w-7xl">
+      <div className="container mx-auto px-4 max-w-7xl 3xl:max-w-[96rem] 4xl:max-w-[120rem]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <FooterAboutColumn />
           <FooterPrivacyColumn />

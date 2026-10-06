@@ -185,7 +185,7 @@ export default function HomeMain({
   return (
     <main
       id="main-content"
-      className="flex-1 container mx-auto px-4 py-8 max-w-7xl"
+      className="flex-1 container mx-auto px-4 py-8 max-w-7xl 3xl:max-w-[96rem] 4xl:max-w-[120rem]"
       role="main"
       aria-label="Main content"
     >

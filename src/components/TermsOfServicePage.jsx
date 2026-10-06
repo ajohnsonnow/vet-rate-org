@@ -891,7 +891,7 @@ const TermsOfServicePage = ({ onClose }) => {
       footer={<TermsFooter onClose={onClose} />}
     >
       {/* Content */}
-      <div className="space-y-8 text-gray-800 dark:text-gray-200">
+      <div className="mx-auto max-w-[62ch] space-y-8 text-gray-800 dark:text-gray-200">
         {/* Effective Date */}
         <EffectiveDateBanner />
 

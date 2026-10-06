@@ -957,6 +957,29 @@ html.font-xlarge {
   font-size: 20px;
 }
 
+/* Very large screens. Above 2560px the root font size grows with the
+   viewport, up to 1.5x at 3840px, so every rem-based width, gap and type size
+   scales together instead of leaving a desktop-sized column in a void. Each
+   user font-size setting keeps its ratio. Below 2560px nothing changes. */
+@media (width >= 2560px) {
+  html,
+  html.font-normal {
+    font-size: clamp(16px, calc(100vw / 160), 24px);
+  }
+
+  html.font-small {
+    font-size: clamp(14px, calc(100vw / 182.857), 21px);
+  }
+
+  html.font-large {
+    font-size: clamp(18px, calc(100vw / 142.222), 27px);
+  }
+
+  html.font-xlarge {
+    font-size: clamp(20px, calc(100vw / 128), 30px);
+  }
+}
+
 /* ============================================
    REDUCED MOTION — in-app override
    System-preference variant lives at the top of this file (Sprint 5 / WCAG 2.3.3);

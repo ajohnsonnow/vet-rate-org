@@ -2067,7 +2067,7 @@ function Header(props) {
       {/* Crisis Line Banner - Always Visible */}
       <CrisisLineBanner />
 
-      <div className="container mx-auto px-4 py-4 md:py-6 max-w-7xl">
+      <div className="container mx-auto px-4 py-4 md:py-6 max-w-7xl 3xl:max-w-[96rem] 4xl:max-w-[120rem]">
         <div className="flex flex-col md:flex-row justify-center items-center gap-3 md:gap-6">
           <HeaderBrand t={t} />
 

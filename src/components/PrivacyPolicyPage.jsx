@@ -377,7 +377,7 @@ const PrivacyPolicy = ({ onClose, onReportBug }) => {
         </div>
       }
     >
-      <div>
+      <div className="mx-auto max-w-[62ch]">
         <p className={`text-sm mb-6 ${getColorClass(colors.text.secondary)}`}>
           <strong>{t("privacyPolicy", "lastUpdated")}</strong> January 23, 2026
         </p>
