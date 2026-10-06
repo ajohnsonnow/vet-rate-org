@@ -13,6 +13,8 @@
 import { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 import ResponsiveModal from "./common/ResponsiveModal";
+import { UnsavedEditDialog } from "./common/ChoiceDialog";
+import useAskBeforeClose from "../hooks/useAskBeforeClose";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import { saveClaim } from "../utils/claimsStorage";
 import {
@@ -625,6 +627,8 @@ function useAIFlowState() {
 
 function useOutputState() {
   const [generatedStatement, setGeneratedStatement] = useState("");
+  // The statement as the app built it, to tell when the witness changed it.
+  const [builtStatement, setBuiltStatement] = useState("");
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [savedItem, setSavedItem] = useState(null);
   const [draftNote, setDraftNote] = useState(null);
@@ -633,6 +637,8 @@ function useOutputState() {
   return {
     generatedStatement,
     setGeneratedStatement,
+    builtStatement,
+    setBuiltStatement,
     draftNote,
     setDraftNote,
     outputError,
@@ -731,12 +737,12 @@ function useGenerateStatement({
     setIsGeneratingStatement(true);
 
     const drafted = _compileWitnessStatement(relationship, condition, answers);
-    output.setGeneratedStatement(
-      _finishWitnessStatement(drafted.statement, {
-        veteranName: await resolveVeteranDisplayName(),
-        witnessName,
-      }),
-    );
+    const built = _finishWitnessStatement(drafted.statement, {
+      veteranName: await resolveVeteranDisplayName(),
+      witnessName,
+    });
+    output.setGeneratedStatement(built);
+    output.setBuiltStatement(built);
     output.setDraftNote(drafted.draftNote);
     setStep(3);
     setIsGeneratingStatement(false);
@@ -782,6 +788,7 @@ function useWitnessBench(t) {
     interview.setAnswers({});
     interview.setCurrentQuestionIndex(0);
     output.setGeneratedStatement("");
+    output.setBuiltStatement("");
     output.setDraftNote(null);
     output.setOutputError(null);
     output.setSavedItem(null);
@@ -1462,6 +1469,7 @@ const StatementPreviewPanel = ({
 
     <div className="p-6">
       <textarea
+        id="witness-bench-statement"
         aria-label={t("witnessBench", "yourBuddyStatement")}
         value={generatedStatement}
         onChange={(e) => onGeneratedStatementChange(e.target.value)}
@@ -1663,17 +1671,24 @@ export default function WitnessBench({
   const { t } = useLanguage();
   const witnessContentRef = useRef(null);
   const wb = useWitnessBench(t);
+  const { generatedStatement, builtStatement, savedItem } = wb.output;
+  const closing = useAskBeforeClose(
+    wb.wizard.step === 3 &&
+      generatedStatement !== builtStatement &&
+      generatedStatement !== savedItem?.text,
+    onClose,
+  );
 
   return (
     <ResponsiveModal
       isOpen
-      onClose={onClose}
+      onClose={closing.requestClose}
       size="2xl"
       labelledBy="witness-bench-title"
       header={
         <WitnessBenchHeader
           t={t}
-          onClose={onClose}
+          onClose={closing.requestClose}
           onOpenAISettings={onOpenAISettings}
           onReportBug={onReportBug}
           contentRef={witnessContentRef}
@@ -1693,6 +1708,13 @@ export default function WitnessBench({
           />
         </div>
       </div>
+      {closing.asking && (
+        <UnsavedEditDialog
+          onStay={closing.stay}
+          onClose={closing.closeAnyway}
+          returnFocusTo="witness-bench-statement"
+        />
+      )}
     </ResponsiveModal>
   );
 }

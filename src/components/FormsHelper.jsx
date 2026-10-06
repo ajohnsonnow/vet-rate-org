@@ -8,7 +8,8 @@ import VoiceInputButton, { isSpeechRecognitionSupported } from "./VoiceInput";
 import ResponsiveModal from "./common/ResponsiveModal";
 import HeaderCloseSlot from "./common/HeaderCloseSlot";
 import StandardDraftNotice from "./common/StandardDraftNotice";
-import { EditedDraftDialog } from "./common/ChoiceDialog";
+import { EditedDraftDialog, UnsavedEditDialog } from "./common/ChoiceDialog";
+import useAskBeforeClose from "../hooks/useAskBeforeClose";
 import {
   AI_NO_CHANGE_NOTE,
   rewordingOffNote,
@@ -4788,6 +4789,20 @@ function shownDraft({
   return { base, text: draftEdit?.base === base ? draftEdit.text : base };
 }
 
+/**
+ * Whether closing now would lose words the veteran typed into a draft: an
+ * edited draft on screen, or one being kept while the answers are changed,
+ * that is not what was last saved.
+ */
+function hasUnsavedDraftEdit(state) {
+  const saved = state.savedItem?.text;
+  if (state.generatedContent) {
+    const box = shownDraft(state);
+    return box.text !== box.base && box.text !== saved;
+  }
+  return Boolean(state.keptDraft) && state.keptDraft.text !== saved;
+}
+
 function AIUnavailableNotice({ onOpenAISettings, t }) {
   return (
     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-xl p-4">
@@ -8527,17 +8542,18 @@ function FormsHelperView({ state, handlers }) {
     showAIConsent,
   } = state;
   const { handleAIConsent, handleAICancel, getAIStatementType } = handlers;
+  const closing = useAskBeforeClose(hasUnsavedDraftEdit(state), onClose);
 
   return (
     <>
       <ResponsiveModal
         isOpen
-        onClose={onClose}
+        onClose={closing.requestClose}
         size="xl"
         labelledBy="forms-helper-title"
         header={
           <FormsHelperHeader
-            onClose={onClose}
+            onClose={closing.requestClose}
             onReportBug={onReportBug}
             onOpenAISettings={onOpenAISettings}
             formsContentRef={formsContentRef}
@@ -8553,6 +8569,13 @@ function FormsHelperView({ state, handlers }) {
         <div ref={formsContentRef}>
           <FormsHelperContent state={state} handlers={handlers} />
         </div>
+        {closing.asking && (
+          <UnsavedEditDialog
+            onStay={closing.stay}
+            onClose={closing.closeAnyway}
+            returnFocusTo="forms-helper-draft"
+          />
+        )}
       </ResponsiveModal>
 
       {/* Luna encouragement — lifted above the z-60 shell */}

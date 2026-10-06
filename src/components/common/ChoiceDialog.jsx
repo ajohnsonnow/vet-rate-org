@@ -114,3 +114,20 @@ export function EditedDraftDialog({ onKeep, onRebuild, returnFocusTo }) {
     </ChoiceDialog>
   );
 }
+
+/** Asked before a tool closes with an edit that has not been saved. */
+export function UnsavedEditDialog({ onStay, onClose, returnFocusTo }) {
+  return (
+    <ChoiceDialog
+      title="Close without saving?"
+      keepLabel="Stay and keep my edits"
+      onKeep={onStay}
+      replaceLabel="Close and lose my edits"
+      onReplace={onClose}
+      returnFocusTo={returnFocusTo}
+    >
+      You edited this draft and have not saved it. Closing now loses your edits.
+      To keep them, stay, then save or download the draft.
+    </ChoiceDialog>
+  );
+}
