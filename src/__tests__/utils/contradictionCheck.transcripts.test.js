@@ -102,6 +102,14 @@ const GIVEN_UP = [
   "045832 a17 new-and-material-standard",
 ];
 
+// Requests ("Please provide ... documentation regarding toxic exposure"),
+// which QA judged questionable as statements of law. A request is no longer
+// read as an assertion, so these two answers get no block.
+const REQUESTS_NO_LONGER_FLAGGED = [
+  "135040 a16 presumptive-needs-exposure-proof",
+  "000820 a27 presumptive-needs-exposure-proof",
+];
+
 const PROSE_HITS = [
   "071859 a11 bilateral-same-side",
   "071859 a13 tdiu-from-percentages",
@@ -122,7 +130,6 @@ const PROSE_HITS = [
   "125630 a25 tdiu-from-percentages",
   "125630 a26 new-and-material-standard",
   "135040 a13 tdiu-from-percentages",
-  "135040 a16 presumptive-needs-exposure-proof",
   "135040 a26 new-and-material-standard",
   "135040 a26 intent-to-file-for-filed-claim",
   "135908 a15 bilateral-same-side",
@@ -143,7 +150,6 @@ const PROSE_HITS = [
   "000014 a26 form-for-another-filing",
   "000820 a16 coverage-date-for-wrong-place",
   "000820 a26 intent-to-file-for-filed-claim",
-  "000820 a27 presumptive-needs-exposure-proof",
   "002046 a26 intent-to-file-for-filed-claim",
   "002046 a27 presumptive-needs-exposure-proof",
   "012539 a30 intent-form-as-application",
@@ -193,6 +199,9 @@ describe("contradiction rules over the recorded evaluation answers", () => {
       .flatMap((record) => hitsFor(record, topicsOf(record)));
     expect(flagged).toEqual(PROSE_HITS);
     expect(flagged.filter((hit) => GIVEN_UP.includes(hit))).toEqual([]);
+    expect(
+      flagged.filter((hit) => REQUESTS_NO_LONGER_FLAGGED.includes(hit)),
+    ).toEqual([]);
   });
 
   it("no longer corrects these, because the tool they ran in writes drafts", () => {

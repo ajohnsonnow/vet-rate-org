@@ -41,8 +41,12 @@ const any = (patterns) => (text) => patterns.some((p) => p.test(text));
 
 // "Myth: X", "A common mistake is X", "It is false that X", "The idea that X
 // is mistaken": the sentence is about the error, it does not state it.
+const LABELS = [
+  "myths?|false|untrue|not true|wrong|incorrect|misconceptions?|mistakes?",
+  "errors?|rumou?rs?|fiction|outdated advice|bad advice",
+].join("|");
 const framedAsAnError = any([
-  /^\W*(?:myths?|false|untrue|wrong|incorrect|misconceptions?|mistakes?|errors?)\s*[:–—-]/i,
+  new RegExp(String.raw`^\W*(?:${LABELS})\s*[:–—-]`, "i"),
   /\b(?:myths?|misconceptions?|mistake(?:s|n|nly)?|mix-ups?|wrongly|typos?)\b/i,
   /\bmis(?:label|quot|stat)\w*/i,
   /\b(?:common|classic|frequent|usual|familiar|big|biggest) errors?\b|\bis (?:the|an?) (?:\w+ )?error\b/i,
@@ -93,6 +97,7 @@ const DATED_BEFORE_2019 =
 
 // The answer saying what it lacks in order to decide: a request, not a rule.
 const saysWhatItLacks = any([
+  /\bplease (?:provide|upload|share|send|supply|attach)\b/i,
   /\bI (?:do not|don't) have\b|\bwould allow me to\b/,
   /\bI (?:cannot|can't) (?:determine|tell|say) (?:if|whether)\b/,
 ]);

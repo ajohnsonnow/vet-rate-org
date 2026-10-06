@@ -134,3 +134,14 @@ Decision: the contradiction block is added only when the result says an on-devic
 Reversal: one function, `contradictionRulesApply`. Widen it when there are recorded cloud answers on the golden questions and the rules have been measured on them with no false block.
 
 Consequences: a cloud answer that states wrong law is shown with no correction. That was already true of every route outside the advice list. A false correction above a true answer was judged the worse failure, because it tells a veteran to distrust something true.
+
+### Limits of the contradiction block, as checked by QA on 2026-10-06
+
+QA's third check passed the block for on-device answers with these limits. They are stated here so nobody reads the block as more than it is.
+
+1. **It is a short list of known mistakes, not a check of the answer.** It looks for about twenty-five specific wrong statements, in the wording the small on-device models were recorded using. No block does not mean the answer is right. A wrong statement put in other words was missed almost every time in QA's tests (0 of 45 caught in the first review; 14 of 15 missed in the third).
+2. **It can be wrong in both directions.** It can still mark a correct sentence, most likely one that names a wrong form or rule in order to warn against it without a word such as Myth, False or mistake, or a true sentence about an appeal that needs new evidence. The block says it can be wrong and tells the veteran not to act on the sentence until it is checked, which is the right instruction in both cases.
+3. **A sentence is skipped when** it sits under a heading containing mistake, error, myth, pitfall or avoid (until a blank line or the next line ending in a colon); when the next sentence opens "Actually" or "In fact" or says "the correct ... is"; when it contains a word such as mistake, wrongly, typo, excludes, skips or unavailable; when it reads as someone else's words, as a dated history or as a request ("Please provide ..."); and, for the appeal rule, when it contains any word of time. A real error written in one of those forms is not caught.
+4. **It runs only where the model ran on the device.** That includes a local server on the same machine with any model loaded, which may be larger than the models the rules were measured on. It does not run on cloud answers or on a server on another machine; those get only the citation and form notices.
+5. **It runs only on prose shown as advice:** the assistant chat and Ask the Regs. It never runs on the statement tools or on text placed in a field, and it does nothing on screens that parse JSON (Denial Decoder, Red Team, Pathfinder).
+6. **The evidence is narrow.** 575 recorded answers from 1.5B to 9B models, on the thirty golden questions, on one machine: 86 blocks, none judged false, three judged questionable (requests, since exempted). Real veterans' questions, and how those models answer them, are not in it.
