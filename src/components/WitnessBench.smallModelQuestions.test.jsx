@@ -36,12 +36,15 @@ const CLOUD = { statusText: "Cloud AI", effectiveMode: "cloud" };
 const note = () =>
   screen.queryByRole("note", { name: "About these questions" });
 
-async function startInterview() {
+const openStartScreen = () =>
   render(
     <LanguageProvider>
       <WitnessBench onClose={() => {}} />
     </LanguageProvider>,
   );
+
+async function startInterview() {
+  openStartScreen();
   fireEvent.click(screen.getByRole("button", { name: /spouse \/ partner/i }));
   fireEvent.change(
     screen.getByPlaceholderText(
@@ -86,5 +89,34 @@ describe("Witness Bench interview questions", () => {
 
     expect(generateAI).toHaveBeenCalledTimes(1);
     expect(note()).not.toBeInTheDocument();
+  });
+});
+
+describe("Witness Bench start screen", () => {
+  it("says the built-in questions are used on a small on-device model, and names no AI", () => {
+    ai.status = onDevice(SMALL);
+    openStartScreen();
+
+    const card = screen.getByRole("region", { name: "Built-in questions" });
+    expect(card.textContent).toBe(
+      "Built-in questionsThis interview uses the built-in questions.",
+    );
+    expect(document.body.textContent).not.toMatch(
+      /AI-Powered Interview|Using: |Local AI/,
+    );
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["a larger on-device model", onDevice(LARGER)],
+    ["the cloud", CLOUD],
+  ])("offers the AI-powered interview with %s", (_name, status) => {
+    ai.status = status;
+    openStartScreen();
+
+    expect(document.body.textContent).toMatch(/AI-Powered Interview/);
+    expect(
+      screen.queryByRole("region", { name: "Built-in questions" }),
+    ).not.toBeInTheDocument();
   });
 });
