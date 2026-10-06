@@ -9,11 +9,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext.jsx";
 import { STANDARD_DRAFT_NOTE } from "../utils/writerTemplates";
 
+const ai = vi.hoisted(() => ({ available: true }));
+
 vi.mock("../utils/unifiedAIService", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    isAnyAIAvailable: () => true,
+    isAnyAIAvailable: () => ai.available,
     getAIStatus: () => ({ statusText: "Local AI" }),
     generateAI: vi.fn(),
   };
@@ -87,6 +89,7 @@ async function generateStatement() {
 
 beforeEach(() => {
   localStorage.clear();
+  ai.available = true;
   generateAI.mockReset();
 });
 
@@ -101,8 +104,35 @@ describe("Witness Bench standard-draft notice", () => {
     const notice = screen.getByRole("status", { name: "Draft notice" });
     expect(notice.textContent).toBe(STANDARD_DRAFT_NOTE);
     expect(statement.value).toContain("Witness Type: Spouse / Partner");
+    expect(statement.value).not.toMatch(/\bAI\b/);
+    expect(statement.value).toContain("Sam Example");
     expect(statement.value).toContain(
       "WITNESS ATTESTATION (read before you sign)",
+    );
+  });
+
+  it("is shown with no AI set up, on a statement that never mentions AI", async () => {
+    ai.available = false;
+    const statement = await generateStatement();
+
+    expect(generateAI).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("status", { name: "Draft notice" }).textContent,
+    ).toBe(STANDARD_DRAFT_NOTE);
+    expect(statement.value).toContain(
+      "They leave the room when fireworks start.",
+    );
+    expect(statement.value).toContain("[Witness Signature]");
+    expect(statement.value).toContain("Sam Example");
+    expect(statement.value).not.toMatch(/\bAI\b/);
+  });
+
+  it("the statement text box has an accessible name", async () => {
+    modelAnswersStatement((prompt) => numbered(passagesIn(prompt)));
+    const statement = await generateStatement();
+
+    expect(screen.getByRole("textbox", { name: "Your Buddy Statement" })).toBe(
+      statement,
     );
   });
 
@@ -128,6 +158,12 @@ describe("Witness Bench standard-draft notice", () => {
     expect(statement.value).toContain(
       "To put it plainly, they leave the room when fireworks start.",
     );
+    expect(statement.value).toContain("was suggested by AI");
+    expect(statement.value).toContain("Sam Example");
+    expect(statement.value).not.toContain("[Witness Printed Name]");
+    for (const [prompt] of generateAI.mock.calls) {
+      expect(prompt).not.toContain("Sam Example");
+    }
     expect(statement.value).toContain(
       "WITNESS ATTESTATION (read before you sign)",
     );

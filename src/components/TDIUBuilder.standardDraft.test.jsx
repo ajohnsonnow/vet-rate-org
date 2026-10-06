@@ -66,6 +66,8 @@ const expectStandardDraft = () => {
   expect(document.body.textContent).not.toMatch(
     /exceed employer tolerance|No reasonable accommodations|8-hour workday/,
   );
+  // A stray escape sequence once printed as text above the support banner.
+  expect(document.body.textContent).not.toContain("\\n");
 };
 
 beforeEach(() => {
@@ -103,8 +105,8 @@ describe("TDIU Builder saves what the veteran sees", () => {
     ai.available = false;
     await generate();
     expect(
-      screen.getByRole("status", { name: "Blanks to fill in" }).textContent,
-    ).toMatch(/4 blanks are still to be filled in/);
+      screen.getByRole("status", { name: "Still to do" }).textContent,
+    ).toMatch(/3 blanks are still to be filled in/);
 
     fireEvent.click(screen.getByRole("button", { name: "Save to My Packet" }));
     await screen.findByText("Saved to My Packet.");
@@ -129,9 +131,9 @@ describe("TDIU Builder saves what the veteran sees", () => {
       target: { value: "I have to rest after an hour of any task." },
     });
     fireEvent.click(screen.getByRole("checkbox", { name: "Heavy work" }));
-    expect(
-      screen.getByRole("status", { name: "Blanks to fill in" }).textContent,
-    ).toMatch(/1 blank is still to be filled in/);
+    const stillToDo = screen.getByRole("status", { name: "Still to do" });
+    expect(stillToDo.textContent).toMatch(/1 blank is still to be filled in/);
+    expect(stillToDo.textContent).not.toMatch(/kind of work/);
 
     fireEvent.click(screen.getByRole("button", { name: "Save to My Packet" }));
     await waitFor(() => expect(saveAnalysisResults).toHaveBeenCalledTimes(1));

@@ -16,6 +16,7 @@ import {
   tdiuAnalysisText,
   tdiuSavePayload,
   tdiuUnfilledBlanks,
+  tdiuWorkTypesChosen,
 } from "../../utils/writerTemplates";
 
 // Every value below is invented for these tests.
@@ -349,9 +350,17 @@ describe("saving a TDIU analysis", () => {
     job_types_precluded: ["Medium", "Heavy"],
   };
 
-  it("counts every blank still standing", () => {
-    expect(tdiuUnfilledBlanks(template)).toHaveLength(4);
+  it("counts the bracketed blanks in the text, and the work types apart", () => {
+    expect(tdiuUnfilledBlanks(template)).toHaveLength(3);
+    expect(tdiuWorkTypesChosen(template)).toBe(false);
     expect(tdiuUnfilledBlanks(filled)).toEqual([]);
+    expect(tdiuWorkTypesChosen(filled)).toBe(true);
+    expect(
+      tdiuUnfilledBlanks({
+        ...filled,
+        job_types_precluded: template.job_types_precluded,
+      }),
+    ).toEqual([]);
   });
 
   it("saves what the veteran sees, and all insights once nothing is blank", () => {
@@ -506,5 +515,35 @@ describe("appeal statement follows the review lane", () => {
       "Evidence that supports my appeal\n[the evidence that supports a different decision]",
     );
     expect(draft).not.toMatch(/new evidence/i);
+  });
+});
+
+describe("Forms Helper personal statement and the claim type", () => {
+  const form = (claimType) =>
+    formStatementInputs("personal-statement", {
+      claimType,
+      conditionName: "Sleep apnea",
+      primaryCondition: "Tinnitus",
+    });
+  const draft = (claimType) => {
+    const { answers, condition, primaryCondition } = form(claimType);
+    return buildPersonalStatementTemplate(answers, condition, primaryCondition);
+  };
+
+  it.each(["initial", "increase", "reopened", "", undefined])(
+    "claim type %s is not written as secondary, whatever the optional field holds",
+    (claimType) => {
+      expect(form(claimType).primaryCondition).toBeNull();
+      expect(draft(claimType)).not.toMatch(/secondary|Tinnitus/);
+      expect(draft(claimType)).toContain(
+        "my claim for service connection for Sleep apnea.",
+      );
+    },
+  );
+
+  it("a secondary claim names its primary condition", () => {
+    expect(draft("secondary")).toContain(
+      "Sleep apnea as secondary to my service-connected Tinnitus",
+    );
   });
 });

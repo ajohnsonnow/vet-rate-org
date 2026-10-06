@@ -133,28 +133,42 @@ describe("TdiuAnalysisEditor work types", () => {
 });
 
 describe("TdiuAnalysisEditor save control", () => {
-  it("says in words how many blanks remain, next to the save button", () => {
+  const stillToDo = () => screen.queryByRole("status", { name: "Still to do" });
+
+  it("counts bracketed blanks and names the work types separately", () => {
     const { onSave } = renderEditor(TEMPLATE);
-    const notice = screen.getByRole("status", { name: "Blanks to fill in" });
-    expect(notice.textContent).toMatch(/5 blanks are still to be filled in/);
-    expect(notice.textContent).toMatch(/left out of your saved insights/);
+    expect(stillToDo().textContent).toMatch(
+      /4 blanks are still to be filled in/,
+    );
+    expect(stillToDo().textContent).toMatch(
+      /Choose at least one kind of work you cannot do/,
+    );
+    expect(stillToDo().textContent).toMatch(/left out of your saved insights/);
 
     fireEvent.click(screen.getByRole("button", { name: "Save to My Packet" }));
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
-  it("uses the singular for one blank and says nothing when none remain", () => {
+  it("uses the singular for one blank", () => {
     renderEditor({ ...FILLED, combined_effect: TEMPLATE.combined_effect });
-    expect(
-      screen.getByRole("status", { name: "Blanks to fill in" }).textContent,
-    ).toMatch(/1 blank is still to be filled in/);
+    expect(stillToDo().textContent).toMatch(/1 blank is still to be filled in/);
+    expect(stillToDo().textContent).not.toMatch(/kind of work/);
   });
 
-  it("has no blanks message when everything is filled in", () => {
+  it("with every bracket filled and no work type ticked, asks only for a work type", () => {
+    renderEditor({
+      ...FILLED,
+      job_types_precluded: TEMPLATE.job_types_precluded,
+    });
+    expect(stillToDo().textContent).toMatch(
+      /Choose at least one kind of work you cannot do/,
+    );
+    expect(stillToDo().textContent).not.toMatch(/blank|bracketed/);
+  });
+
+  it("says nothing when everything is filled in", () => {
     renderEditor(FILLED);
-    expect(
-      screen.queryByRole("status", { name: "Blanks to fill in" }),
-    ).not.toBeInTheDocument();
+    expect(stillToDo()).not.toBeInTheDocument();
   });
 
   it.each([
