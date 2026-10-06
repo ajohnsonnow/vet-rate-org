@@ -74,6 +74,7 @@ describe("a request to the veteran is not a statement of law", () => {
     "Please provide the relevant service records or evidence detailing those exposures.",
     "Action Required: Please provide the veteran's MOS and any documentation regarding toxic exposure (e.g., service in a specific location, MOS hazardous to health, or service in a specific theater).",
     "Please provide the veteran's service dates and locations or any specific toxic exposure documentation (e.g., DD Form 2799, service treatment records noting exposure to specific toxic agents).",
+    "To determine which PACT conditions apply, I need the veteran's specific toxic exposure history.",
     "Please upload any evidence of exposure to burn pits.",
     "Please share documentation of your exposure.",
   ])("draws no block: %s", (text) => {

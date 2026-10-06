@@ -271,7 +271,7 @@ describe("an answer that gives each place its own date", () => {
 
 describe("the coverage-date rule over every recorded response", () => {
   const DIR = "llm-compiler/logs/golden-set-results";
-  const LAST_REVIEWED_RUN = "run_2026-10-06_045832";
+  const LAST_REVIEWED_RUN = "run_2026-10-06_071544";
   const hits = readdirSync(DIR)
     .filter((name) => name.endsWith(".jsonl"))
     .filter(

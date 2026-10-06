@@ -15,7 +15,10 @@
 import quotes from "../data/verifiedQuotes.json";
 import { claimAsserted, isDenyingHeading } from "./assertionGuard";
 import { findWrongCoverageDate } from "./coverageDates";
-import { submitsNewMaterialInReview } from "./reviewSubmissions";
+import {
+  evidenceGoesToAnotherLane,
+  submitsNewMaterialInReview,
+} from "./reviewSubmissions";
 import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
 import { detectReferenceTopics } from "./verifiedReference";
 import {
@@ -436,6 +439,9 @@ const RULES = [
       const plain = withoutLikelihoodWording(sentence);
       if (EVIDENCE_VA_GATHERS.test(plain)) return false;
       if (ANOTHER_LANE_OVER_THE_REVIEW.test(plain)) return false;
+      if (HIGHER_LEVEL_REVIEW.test(plain) && evidenceGoesToAnotherLane(plain)) {
+        return false;
+      }
       return (
         (HIGHER_LEVEL_REVIEW.test(plain) &&
           ADDS_EVIDENCE.test(plain) &&
@@ -622,7 +628,7 @@ function quoteWithSource(hit) {
  * Decision Decoder puts it under the field that carried the sentence).
  */
 export function buildContradictionNote(hit) {
-  return `Vet-Rate check: this reads as if it ${hit.says}. ${quoteWithSource(hit)} This check is automatic and can be wrong; confirm the point with a Veterans Service Officer. Until you have checked, do not act on that sentence.`;
+  return `Vet-Rate check: "${trimmed(hit.sentence)}" reads as if it ${hit.says}. ${quoteWithSource(hit)} This check is automatic and can be wrong; confirm the point with a Veterans Service Officer. Until you have checked, do not act on that sentence.`;
 }
 
 const MAX_QUOTED_SENTENCE = 200;

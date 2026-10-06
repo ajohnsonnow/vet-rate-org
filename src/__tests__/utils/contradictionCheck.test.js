@@ -208,7 +208,7 @@ describe("buildContradictionNote", () => {
     );
     const note = buildContradictionNote(hit);
     expect(note).toBe(
-      `Vet-Rate check: this reads as if it says a secondary connection cannot be made. Compare it with 38 CFR § 3.310(a): "${quotes.corrections.secondary.text}" This check is automatic and can be wrong; confirm the point with a Veterans Service Officer. Until you have checked, do not act on that sentence.`,
+      `Vet-Rate check: "Sleep apnea cannot be service-connected secondary to PTSD." reads as if it says a secondary connection cannot be made. Compare it with 38 CFR § 3.310(a): "${quotes.corrections.secondary.text}" This check is automatic and can be wrong; confirm the point with a Veterans Service Officer. Until you have checked, do not act on that sentence.`,
     );
   });
 

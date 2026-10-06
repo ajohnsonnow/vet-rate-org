@@ -98,7 +98,7 @@ const DATED_BEFORE_2019 =
 // The answer saying what it lacks in order to decide: a request, not a rule.
 const saysWhatItLacks = any([
   /\bplease (?:provide|upload|share|send|supply|attach)\b/i,
-  /\bI (?:do not|don't) have\b|\bwould allow me to\b/,
+  /\bI (?:do not|don't) have\b|\bwould allow me to\b|\bI (?:would )?need\b/,
   /\bI (?:cannot|can't) (?:determine|tell|say) (?:if|whether)\b/,
 ]);
 
