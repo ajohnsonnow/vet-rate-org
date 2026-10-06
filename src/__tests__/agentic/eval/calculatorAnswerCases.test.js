@@ -159,7 +159,7 @@ describe("routing for a calculator case", () => {
 
 describe("calc-match for a calculator case", () => {
   it.each(CALCULATOR_CASES)(
-    "%s: reads the rating the answer opens with, not its working",
+    "%s: reads the rating the answer states, not its working",
     (id) => {
       const caseDef = byId(id);
       const expected = calculateVARating(caseDef.conditions).combinedRating;
@@ -177,7 +177,7 @@ describe("calc-match for a calculator case", () => {
     },
   );
 
-  it("fails an answer that opens with a different rating", () => {
+  it("fails an answer that states a different rating", () => {
     const caseDef = byId("a11");
     const out = checkCalcMatch(
       caseDef,
@@ -189,11 +189,11 @@ describe("calc-match for a calculator case", () => {
     );
     expect(out.status).toBe(AUTO_FAIL);
     expect(out.detail).toBe(
-      "the calculator's answer opens with 70%, calculator 80%",
+      "the calculator's answer states 70%, calculator 80%",
     );
   });
 
-  it("fails an answer that does not open with the rating", () => {
+  it("fails an answer that does not state the rating", () => {
     const caseDef = byId("a11");
     const out = checkCalcMatch(
       caseDef,
@@ -202,7 +202,7 @@ describe("calc-match for a calculator case", () => {
     );
     expect(out.status).toBe(AUTO_FAIL);
     expect(out.detail).toBe(
-      "the calculator's answer does not open with the combined rating (calculator: 80%)",
+      "the calculator's answer does not state the combined rating (calculator: 80%)",
     );
   });
 
@@ -281,7 +281,7 @@ describe("the dry run's calculator cases", () => {
       "- `routing` is `n/a` for a rater case with structured conditions: the calculator answers it and no model is called. A model call on such a case is a `routing` FAIL.",
     );
     expect(md).toContain(
-      "- `calc-match` on those cases reads the rating the calculator's answer opens with. The text is the calculator's, so grade it on whether the working is correct and clear, not on model behaviour.",
+      "- `calc-match` on those cases reads the sentence in which the calculator's answer states the combined rating. The text is the calculator's, so grade it on whether the working is correct and clear, not on model behaviour.",
     );
   });
 });

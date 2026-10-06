@@ -136,26 +136,27 @@ export function extractStatedCombinedRatings(text) {
 }
 
 /*
- * The calculator's own answer opens with the combined rating and then shows
- * its working, which names intermediate values. Only the opening is read.
+ * The calculator's own answer states the combined rating in a sentence of its
+ * own and then shows its working, which names intermediate values. Only that
+ * sentence is read.
  */
 function checkCalculatorAnswer(record, expected) {
-  const opening = /^Your combined rating is (\d{1,3})%\./.exec(
+  const opening = /(?:^|\n\n)Your combined rating is (\d{1,3})%\./.exec(
     String(record.response ?? ""),
   );
   if (!opening) {
     return result(
       AUTO_FAIL,
-      `the calculator's answer does not open with the combined rating (calculator: ${expected}%)`,
+      `the calculator's answer does not state the combined rating (calculator: ${expected}%)`,
     );
   }
   const value = Number(opening[1]);
   const data = { stated: value, expected, multipleOf10: value % 10 === 0 };
   return value === expected
-    ? result(AUTO_PASS, `the calculator's answer opens with ${value}%`, data)
+    ? result(AUTO_PASS, `the calculator's answer states ${value}%`, data)
     : result(
         AUTO_FAIL,
-        `the calculator's answer opens with ${value}%, calculator ${expected}%`,
+        `the calculator's answer states ${value}%, calculator ${expected}%`,
         data,
       );
 }

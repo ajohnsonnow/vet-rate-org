@@ -182,9 +182,12 @@ describe("what the calculator's answer covers", () => {
     noEngineWasCalled();
     expect(
       result.text.startsWith(
-        "Your combined rating is 80%.\n\nAbout your question on individual unemployability (TDIU):",
+        "On these ratings, the percentage thresholds for TDIU in 38 CFR § 4.16(a) are met.",
       ),
     ).toBe(true);
+    expect(result.text).toContain(
+      "Your combined rating is 80%.\n\nAbout your question on individual unemployability (TDIU):",
+    );
     expect(result.text).toContain("Vet-Rate cannot determine that.");
     expect(result.text).not.toContain("No bilateral pair applies");
   });
