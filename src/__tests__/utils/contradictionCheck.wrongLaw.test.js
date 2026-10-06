@@ -158,7 +158,7 @@ describe("the year after an intent to file counted from receiving a form", () =>
 
   it("quotes the sentence of 38 CFR 3.155(b) that starts the year", () => {
     const [hit] = findContradictions(
-      "File a complete claim within 1 year of receiving that form.",
+      "You must file a complete claim within 1 year of receiving that form.",
       { topics: INTENT },
     );
     expect(quotes.corrections[hit.correction]).toMatchObject({

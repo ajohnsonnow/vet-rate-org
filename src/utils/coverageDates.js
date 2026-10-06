@@ -131,6 +131,19 @@ const A_DEPLOYMENT = /\bdeploy(?:ed|ment|ments)?\b/i;
 const givesACoverageStart = (text) =>
   GIVES_A_COVERAGE_START.test(text) && !A_DEPLOYMENT.test(text);
 
+// "Unlike Kuwait, Camp Lejeune coverage applies to service on or after
+// August 1, 1953": the date belongs to the programme named before it, not to
+// the table place named for contrast. These programmes have dates of their
+// own that the table does not hold.
+const ANOTHER_PROGRAMME =
+  /\bcamp lejeune\b|\bthailand\b|\bvietnam\b|\bkorea\b|\bgi bill\b|\bherbicides?\b|\bagent orange\b|\bradiation\b/i;
+const A_YEAR = /\b(?:19|20)\d\d\b/;
+
+function datesAnotherProgramme(text) {
+  const year = A_YEAR.exec(text);
+  return year !== null && ANOTHER_PROGRAMME.test(text.slice(0, year.index));
+}
+
 function swappedDate(text) {
   if (!givesACoverageStart(text)) return null;
   const written = datesIn(text);
@@ -236,6 +249,7 @@ function headingDateForNextLine(text, next) {
  */
 export function findWrongCoverageDate(sentence, { next } = {}) {
   const text = String(sentence ?? "");
+  if (datesAnotherProgramme(text)) return null;
   return (
     swappedDate(text) ??
     dateOutsideTheTable(text) ??

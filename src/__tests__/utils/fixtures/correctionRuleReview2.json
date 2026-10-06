@@ -1,0 +1,829 @@
+{
+  "_source": "QA's second adversarial review, 2026-10-06 (rule-review-2.md, rr2-attack). `true`: 90 true sentences in the forms a careful explainer uses; no rule may fire on any. `wrong`: 24 wrong sentences that carry a word the guard reads; the 17 marked incidentalGuardWord were silenced only by that word and should fire. Each goes through flagContradictions with the tool and question QA used.",
+  "true": [
+    {
+      "text": "Myth: your ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "myth label",
+      "firedInReview": false
+    },
+    {
+      "text": "A common mistake is believing your ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "mistake label",
+      "firedInReview": true
+    },
+    {
+      "text": "False: ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "false label",
+      "firedInReview": true
+    },
+    {
+      "text": "Common mistakes:\n- Assuming ratings are added together",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "list under 'Common mistakes'",
+      "firedInReview": true
+    },
+    {
+      "text": "50% + 30% = 80% is the classic error; the real answer is 65%, which rounds to 70%.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "wrong then right, one sentence",
+      "firedInReview": true
+    },
+    {
+      "text": "If someone tells you that ratings are added together, ask them to read 38 CFR 4.25.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "conditional",
+      "firedInReview": true
+    },
+    {
+      "text": "You may have heard that the ratings are added together. VA combines them, each applied to what is left.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "wrong then right, two sentences",
+      "firedInReview": true
+    },
+    {
+      "text": "Ratings are added together only in the popular imagination; VA combines them.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "irony",
+      "firedInReview": true
+    },
+    {
+      "text": "Far from being simple addition, where ratings are added together, VA math applies each rating to the efficiency left.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "denial in another clause",
+      "firedInReview": true
+    },
+    {
+      "text": "Neither is it true that ratings get added up.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "neither",
+      "firedInReview": true
+    },
+    {
+      "text": "It is a misconception that VA works by adding the ratings.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "misconception",
+      "firedInReview": true
+    },
+    {
+      "text": "The idea that 60% + 40% = 100% is mistaken.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "mistaken",
+      "firedInReview": true
+    },
+    {
+      "text": "It is often claimed that ratings are added together. They are combined.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "wrong then right, two sentences",
+      "firedInReview": true
+    },
+    {
+      "text": "You heard from another veteran that ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "second-person history",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: the bilateral factor applies to two conditions on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "A common mistake is applying the bilateral factor to two conditions on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "mistake label",
+      "firedInReview": true
+    },
+    {
+      "text": "The bilateral factor requires a left and a right, so two conditions on the same side are just combined.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "The bilateral factor skips conditions that are on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "If someone tells you the bilateral factor covers two conditions on the same side, check 38 CFR 4.26.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "conditional",
+      "firedInReview": true
+    },
+    {
+      "text": "Common mistakes:\n- Claiming the bilateral factor for a knee and an ankle on the same side",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "list under 'Common mistakes'",
+      "firedInReview": true
+    },
+    {
+      "text": "Only paired limbs count: the bilateral factor is unavailable when both conditions are on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "It is false that the bilateral factor applies to conditions on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "false label",
+      "firedInReview": true
+    },
+    {
+      "text": "The bilateral factor is reserved for left-and-right pairs, never two on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "denial in another clause",
+      "firedInReview": false
+    },
+    {
+      "text": "Having two conditions on the same side excludes the bilateral factor.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "Some say the bilateral factor applies to two conditions on the same side. In fact it needs one on each side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "wrong then right, two sentences",
+      "firedInReview": true
+    },
+    {
+      "text": "Your combined rating is a separate matter from 38 CFR 4.7, which gives the higher of two evaluations for a single disability.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "true rule",
+      "firedInReview": false
+    },
+    {
+      "text": "The combined rating is always more than the higher of the two ratings and less than their sum.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "true rule",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: the combined rating is simply the higher of the two.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "A common mistake is to treat the combined rating as the higher of the two.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "mistake label",
+      "firedInReview": true
+    },
+    {
+      "text": "With two or more disabilities one of them must be at 40%. So the TDIU thresholds are 60% or more, or a combined rating of 70% or more.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "the 40 is in the sentence before",
+      "firedInReview": true
+    },
+    {
+      "text": "If all you remember is 'TDIU: 60% or more, or a combined rating of 70% or more', you have left out half the rule.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "conditional warning",
+      "firedInReview": true
+    },
+    {
+      "text": "A common shorthand for TDIU is 60% or more, or a combined rating of 70% or more; the shorthand drops a condition, covered below.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "warning",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: TDIU only takes 60% or more, or a combined rating of 70% or more.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "The short version, TDIU at 60% or more, or a combined rating of 70% or more, is incomplete. The full rule adds a 40% disability.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "wrong then right, two sentences",
+      "firedInReview": false
+    },
+    {
+      "text": "People often misquote the TDIU rule as one disability rated at 70 percent or two disabilities combining to 80; the real single-disability figure is 60.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "misquote",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: TDIU needs one disability rated at 70% or two disabilities at 50%.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "Some advisers wrongly claim that if you are employed, you cannot receive TDIU.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "warning",
+      "firedInReview": true
+    },
+    {
+      "text": "If you are employed full time at a living wage, you cannot receive TDIU.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "true of full-time work",
+      "firedInReview": true
+    },
+    {
+      "text": "It is a myth that if you are employed you cannot get TDIU.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "If you were told that because you are employed you cannot receive TDIU, that is wrong.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "conditional, told",
+      "firedInReview": false
+    },
+    {
+      "text": "Common mistakes:\n- Believing that if you are employed, you cannot get TDIU",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "list under 'Common mistakes'",
+      "firedInReview": true
+    },
+    {
+      "text": "It is not the case that if you are employed you cannot receive TDIU.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "double negative",
+      "firedInReview": true
+    },
+    {
+      "text": "Some forums still talk about new and material evidence; the current term is new and relevant evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "wrong then right, one sentence",
+      "firedInReview": true
+    },
+    {
+      "text": "New and material evidence was the pre-2019 phrase.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "old law",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: you need new and material evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "If your paperwork mentions new and material evidence, it is describing the earlier test.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "old law",
+      "firedInReview": true
+    },
+    {
+      "text": "New and material evidence is a stricter-sounding phrase, but the new and relevant test is no harder to meet.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "denial in another clause",
+      "firedInReview": true
+    },
+    {
+      "text": "You were told in 2016 that you needed new and material evidence, which was right at the time.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "second-person history",
+      "firedInReview": false
+    },
+    {
+      "text": "The phrase to use is new and relevant, in place of new and material.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true rule",
+      "firedInReview": true
+    },
+    {
+      "text": "A Higher-Level Review is closed to new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "If you have new evidence, skip the Higher-Level Review.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "Because a Higher-Level Review is limited to the record, new evidence belongs in a different lane.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: you can add new evidence in a Higher-Level Review.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "A common mistake is sending new evidence with a Higher-Level Review.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "mistake label",
+      "firedInReview": true
+    },
+    {
+      "text": "A Higher-Level Review excludes additional evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true rule, no denial word",
+      "firedInReview": true
+    },
+    {
+      "text": "New evidence and a Higher-Level Review do not mix: the reviewer sees the same file.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "denial in another clause",
+      "firedInReview": false
+    },
+    {
+      "text": "Not only is new evidence kept out of a Higher-Level Review, but so are arguments about facts outside the file.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "not only ... but",
+      "firedInReview": false
+    },
+    {
+      "text": "Common mistakes:\n- Submitting a new medical opinion with your Higher-Level Review",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "list under 'Common mistakes'",
+      "firedInReview": true
+    },
+    {
+      "text": "After twelve months have passed, you cannot appeal the decision without new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true after the period",
+      "firedInReview": true
+    },
+    {
+      "text": "Once the review period has run, you cannot challenge the decision unless you have new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true after the period",
+      "firedInReview": true
+    },
+    {
+      "text": "If the letter is from more than twelve months ago, you cannot appeal it without new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "true after the period",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: you cannot appeal a denial without new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "It is not true that you cannot appeal without new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "double negative",
+      "firedInReview": true
+    },
+    {
+      "text": "If you were told you cannot appeal without new evidence, that is wrong.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "conditional, told",
+      "firedInReview": false
+    },
+    {
+      "text": "A common mistake is to believe you cannot appeal the denial without new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "mistake label",
+      "firedInReview": true
+    },
+    {
+      "text": "A common mix-up is filing the Supplemental Claim on VA Form 20-0996, which is the Higher-Level Review form.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "warning",
+      "firedInReview": true
+    },
+    {
+      "text": "Some websites list the Supplemental Claim (VA Form 20-0996); the right number is VA Form 20-0995.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "wrong then right, one sentence",
+      "firedInReview": true
+    },
+    {
+      "text": "If your letter lists a Higher-Level Review on VA Form 20-0995, the letter has a typo.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "conditional",
+      "firedInReview": true
+    },
+    {
+      "text": "VA counts the claim as filed that day if the rest arrives within one year of receiving that form.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "true when VA receives",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: the complete claim must be filed within 1 year of receiving that form.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "If the earlier claim was for the left knee and you want to reopen that claim for the right knee, you should file a new claim, because the right knee was never decided.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "true: a condition never decided",
+      "firedInReview": true
+    },
+    {
+      "text": "A common mistake is thinking that to reopen a denied claim you must file a new claim.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "mistake label",
+      "firedInReview": true
+    },
+    {
+      "text": "Myth: to reopen a denied claim you must file a new claim.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "Your earlier VSO advised that to reopen the denied claim you must file a new claim.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "second-person history",
+      "firedInReview": true
+    },
+    {
+      "text": "Because 3.155(b) excludes supplemental claims, you should file a Supplemental Claim directly.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "true rule",
+      "firedInReview": true
+    },
+    {
+      "text": "3.155(b) is the placeholder rule and has nothing for a denial, so you must file a Supplemental Claim there.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "denial in another clause",
+      "firedInReview": true
+    },
+    {
+      "text": "Some guides mislabel the application form (VA Form 21-0966); the application is VA Form 21-526EZ.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "warning",
+      "firedInReview": true
+    },
+    {
+      "text": "Unlike Kuwait, Camp Lejeune coverage applies to service on or after August 1, 1953.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "correct Camp Lejeune date",
+      "firedInReview": true
+    },
+    {
+      "text": "For Thailand the herbicide presumption applies to service on or after January 9, 1962, a separate rule from the Iraq burn pit one.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "correct Thailand date",
+      "firedInReview": true
+    },
+    {
+      "text": "For the herbicide presumption a Vietnam veteran must have served on or after January 9, 1962, which is separate from the Iraq burn pit table.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "correct Vietnam date",
+      "firedInReview": true
+    },
+    {
+      "text": "If you served in Iraq, note that the Post-9/11 GI Bill requires service on or after September 11, 2001.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "another law's date",
+      "firedInReview": true
+    },
+    {
+      "text": "Gulf War illness under 38 CFR 3.317 requires service in the Southwest Asia theater, which includes Iraq and Kuwait, on or after August 2, 1990.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "correct Gulf War date",
+      "firedInReview": false
+    },
+    {
+      "text": "A grant for service in Iraq under the Act is limited to an effective date on or after August 10, 2022 unless the claim was filed within a year of the law.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "effective date, not service date",
+      "firedInReview": false
+    },
+    {
+      "text": "Myth: Iraq is covered only from September 11, 2001.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "myth label",
+      "firedInReview": true
+    },
+    {
+      "text": "A common mistake is saying Iraq service counts only from September 11, 2001.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "mistake label",
+      "firedInReview": true
+    },
+    {
+      "text": "Iraq is not limited to service on or after September 11, 2001; it is covered from 1990.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "denial",
+      "firedInReview": false
+    },
+    {
+      "text": "The September 11, 2001 date is for Afghanistan, Djibouti, Syria and Uzbekistan, covered from that day.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "correct table reading",
+      "firedInReview": false
+    },
+    {
+      "text": "Persian Gulf service counts from August 2, 1990, and Camp Lejeune from August 1, 1953.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "correct dates",
+      "firedInReview": false
+    },
+    {
+      "text": "The Camp Lejeune law applies to service of 30 days or more after July 31, 1953, a different programme from the Kuwait presumption.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "correct Camp Lejeune date",
+      "firedInReview": true
+    },
+    {
+      "text": "Some sites say Somalia is covered only from September 11, 2001; the table puts it under August 2, 1990.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "wrong then right, one sentence",
+      "firedInReview": false
+    }
+  ],
+  "wrong": [
+    {
+      "text": "You do not need to worry: VA simply adds your ratings together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "not (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": false
+    },
+    {
+      "text": "I can confirm the bilateral factor applies to two conditions on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "I can",
+      "firedInReview": true,
+      "incidentalGuardWord": false
+    },
+    {
+      "text": "Let me be clear: the bilateral factor applies to two conditions on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "me (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "As I said, ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "said",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "In my experience, ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "my (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "If a veteran has two conditions on the same side, he gets the bilateral factor.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "he (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "A veteran with a 50 and a 30 has his ratings added together: 50% + 30% = 80%.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "his (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "VA told Congress it would keep the rule simple: ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "told (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "No matter what you read, ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "no (incidental)",
+      "firedInReview": true,
+      "incidentalGuardWord": false
+    },
+    {
+      "text": "There is nothing complicated here: your ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "nothing (incidental)",
+      "firedInReview": true,
+      "incidentalGuardWord": false
+    },
+    {
+      "text": "It turned out to be simple: ratings are added together.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "turned out (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "Your combined rating is the higher of the two ratings, which is what he should have told you.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "her/he, told",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "Do not let anyone confuse you: the bilateral factor applies to conditions on the same side.",
+      "toolId": "rating-analyzer",
+      "question": "How does VA combine my ratings, and does the bilateral factor apply?",
+      "kind": "not (incidental)",
+      "firedInReview": true,
+      "incidentalGuardWord": false
+    },
+    {
+      "text": "Since 2015 the rule has been simple: you cannot appeal the denial without new evidence.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "older year (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "You cannot appeal the denial without new evidence, and I have checked.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "I have (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "I was able to confirm that the Supplemental Claim (VA Form 10182) is the right form.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "I was (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "Send new evidence with your Higher-Level Review; I have seen it work.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "I have (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "My advice: you need new and material evidence to get the claim looked at again.",
+      "toolId": "war-room",
+      "question": "My claim was denied. Should I appeal, ask for a higher-level review, or file a supplemental claim?",
+      "kind": "my (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "To reopen a denied claim you must file a new claim, which I am happy to walk you through.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "I am (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "The clerk is right: file within 1 year of receiving that form.",
+      "toolId": "pathfinder",
+      "question": "I was denied before. Where do I start with an intent to file and reopening?",
+      "kind": "the clerk",
+      "firedInReview": false,
+      "incidentalGuardWord": false
+    },
+    {
+      "text": "If you are employed, you cannot receive TDIU, and that is my final answer.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "my (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "TDIU requires 60% or more, or a combined rating of 70% or more, as I have told many veterans.",
+      "toolId": "tdiu-builder",
+      "question": "Am I eligible for TDIU if I still work part-time?",
+      "kind": "told, I have",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    },
+    {
+      "text": "As the Secretary said in 2022, Iraq is covered only from September 11, 2001.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "said",
+      "firedInReview": false,
+      "incidentalGuardWord": false
+    },
+    {
+      "text": "A veteran and her spouse should know that Iraq is covered only from September 11, 2001.",
+      "toolId": "pact-navigator",
+      "question": "Am I eligible for PACT Act presumptive conditions for burn pits in Iraq?",
+      "kind": "her (incidental)",
+      "firedInReview": false,
+      "incidentalGuardWord": true
+    }
+  ]
+}
