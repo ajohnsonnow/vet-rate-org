@@ -791,11 +791,15 @@ const NexusReviewBanners = ({
 // Review-step statement display + doctor's cheat sheet. Split out of
 // NexusStepReview purely to keep its function body under the
 // line-count/complexity limits. Same markup, same behavior.
+const STATEMENT_OUT_OF_STEP =
+  "You kept your edited statement, so it does not include the answer you changed. The notes for your doctor below use your current answers. Edit the statement here if it should say the same.";
+
 const NexusStatementPanels = ({
   useAIVersion,
   aiEnhancedStatement,
   currentStatement,
   editStatement,
+  editIsOutOfStep,
   currentDoctorNote,
   t,
 }) => (
@@ -816,8 +820,21 @@ const NexusStatementPanels = ({
           </span>
         )}
       </div>
+      {editIsOutOfStep && (
+        <p
+          id="nexus-statement-out-of-step"
+          role="note"
+          aria-label="Statement and answers differ"
+          className="mb-3 p-3 text-sm rounded-lg border-2 border-amber-700 bg-amber-50 dark:bg-amber-900/30 text-gray-900 dark:text-gray-100"
+        >
+          {STATEMENT_OUT_OF_STEP}
+        </p>
+      )}
       <textarea
         id="nexus-statement-text"
+        aria-describedby={
+          editIsOutOfStep ? "nexus-statement-out-of-step" : undefined
+        }
         value={currentStatement}
         onChange={(e) => editStatement(e.target.value)}
         rows={18}
@@ -921,6 +938,7 @@ const NexusStepReview = ({
   draftNote,
   currentStatement,
   editStatement,
+  editIsOutOfStep,
   currentDoctorNote,
   isSecondary,
   primaryCondition,
@@ -953,6 +971,7 @@ const NexusStepReview = ({
       aiEnhancedStatement={aiEnhancedStatement}
       currentStatement={currentStatement}
       editStatement={editStatement}
+      editIsOutOfStep={editIsOutOfStep}
       currentDoctorNote={currentDoctorNote}
       t={t}
     />
@@ -1435,7 +1454,8 @@ function useNexusModalState() {
 // The statement in the box. An edit is kept per version. When an answer
 // changes after the standard statement was edited, the edited statement
 // stays in the box and the veteran is asked whether to keep it or rebuild
-// from the answers.
+// from the answers. A kept edit no longer matches the answers, and the
+// screen says so until the statement is rebuilt.
 function useStatementEdits(baseStatement, standardStatement, savedText) {
   const version = baseStatement === standardStatement ? "standard" : "ai";
   // A statement being continued starts as the veteran saved it.
@@ -1447,13 +1467,21 @@ function useStatementEdits(baseStatement, standardStatement, savedText) {
   const edit = edits[version];
   const isEdited = Boolean(edit) && edit.text !== edit.base;
   const setEdit = (next) => setEdits((all) => ({ ...all, [version]: next }));
+  const editIsStale =
+    isEdited && edit.base !== baseStatement && version === "standard";
+  const kept = isEdited && Boolean(edit.kept);
   return {
     currentStatement: isEdited ? edit.text : baseStatement,
-    editIsStale:
-      isEdited && edit.base !== baseStatement && version === "standard",
-    editStatement: (text) => setEdit({ base: baseStatement, text }),
+    editIsStale,
+    editIsOutOfStep: kept && !editIsStale,
+    editStatement: (text) =>
+      setEdit({
+        base: baseStatement,
+        text,
+        kept: Boolean(edit?.kept) && edit.base === baseStatement,
+      }),
     keepEditedStatement: () =>
-      setEdit({ base: baseStatement, text: edit.text }),
+      setEdit({ base: baseStatement, text: edit.text, kept: true }),
     rebuildStatement: () => setEdit(null),
   };
 }
@@ -1503,13 +1531,8 @@ function useNexusDocumentOutput({
     useAIVersion && aiEnhancedStatement
       ? aiEnhancedStatement
       : standardStatement;
-  const {
-    currentStatement,
-    editStatement,
-    editIsStale,
-    keepEditedStatement,
-    rebuildStatement,
-  } = useStatementEdits(baseStatement, standardStatement, savedText);
+  const edits = useStatementEdits(baseStatement, standardStatement, savedText);
+  const { currentStatement } = edits;
   const [outputError, setOutputError] = useState("");
 
   const currentDoctorNote = generateDoctorNote({
@@ -1553,14 +1576,10 @@ function useNexusDocumentOutput({
     askReplace,
     keepSavedStatement: () => setAskReplace(false),
     saveStatementNow,
-    editIsStale,
-    keepEditedStatement,
-    rebuildStatement,
+    ...edits,
     outputError,
     handleFinish,
     handleDownload,
-    currentStatement,
-    editStatement,
     currentDoctorNote,
   };
 }
@@ -1626,6 +1645,7 @@ const NexusStepContent = ({
         draftNote={ai.draftNote}
         currentStatement={output.currentStatement}
         editStatement={output.editStatement}
+        editIsOutOfStep={output.editIsOutOfStep}
         currentDoctorNote={output.currentDoctorNote}
         isSecondary={wizard.isSecondary}
         primaryCondition={primaryCondition}

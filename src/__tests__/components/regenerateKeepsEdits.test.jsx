@@ -146,6 +146,8 @@ describe("Nexus Builder", () => {
   const LABEL = "Statement in Support of Claim (VA Form 21-4138)";
   const statement = () => screen.getByRole("textbox", { name: LABEL });
   const step = (name) => fireEvent.click(screen.getByRole("button", { name }));
+  const differs = () =>
+    screen.queryByRole("note", { name: "Statement and answers differ" });
 
   function editThenGoBack() {
     render(
@@ -185,6 +187,26 @@ describe("Nexus Builder", () => {
     expect(statement()).toHaveFocus();
   });
 
+  it("says the kept statement and the answers differ, and keeps saying so while it is edited", () => {
+    const edited = editThenGoBack();
+    fireEvent.change(screen.getAllByRole("textbox")[0], {
+      target: { value: "I lost my job in May" },
+    });
+    step(/next step/i);
+    expect(differs()).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: KEEP }));
+
+    expect(differs().textContent).toMatch(
+      /does not include the answer you changed.*notes for your doctor below use your current answers/i,
+    );
+    expect(statement()).toHaveAccessibleDescription(
+      /does not include the answer/,
+    );
+
+    fireEvent.change(statement(), { target: { value: `${edited} More.` } });
+    expect(differs()).toBeInTheDocument();
+  });
+
   it("rebuilds from the answers when the veteran says so", () => {
     editThenGoBack();
     fireEvent.change(screen.getAllByRole("textbox")[0], {
@@ -196,6 +218,7 @@ describe("Nexus Builder", () => {
     expect(statement().value).toContain("I lost my job in May.");
     expect(statement().value).not.toContain(EDIT);
     expect(statement()).toHaveFocus();
+    expect(differs()).not.toBeInTheDocument();
   });
 
   it("does not ask when no answer changed", () => {
@@ -204,5 +227,6 @@ describe("Nexus Builder", () => {
 
     expect(dialog()).not.toBeInTheDocument();
     expect(statement().value).toBe(edited);
+    expect(differs()).not.toBeInTheDocument();
   });
 });
