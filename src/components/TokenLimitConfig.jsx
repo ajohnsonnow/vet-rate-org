@@ -266,7 +266,7 @@ const ConfigHeader = ({ showAdvanced, onToggleAdvanced }) => (
     </div>
     <button
       onClick={onToggleAdvanced}
-      className="text-sm text-purple-600 dark:text-purple-400 hover:underline"
+      className="min-h-[44px] px-2 text-sm text-purple-600 dark:text-purple-400 hover:underline"
     >
       {showAdvanced ? "Hide Details" : "Show Details"}
     </button>

@@ -44,7 +44,8 @@ const describeLoadedModel = (deviceModel) =>
 export const getRecommendedModelForDevice = (toolId) => {
   const toolRec = getToolRecommendation(toolId);
   const primaryModel = toolRec?.primary;
-  const deviceModel = describeDeviceModel(getCachedDeviceProfile());
+  const profile = getCachedDeviceProfile();
+  const deviceModel = profile?.hasWebGPU ? describeDeviceModel(profile) : null;
 
   if (!primaryModel?.modelId) {
     return {

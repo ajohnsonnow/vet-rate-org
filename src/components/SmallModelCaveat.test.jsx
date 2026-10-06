@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const device = vi.hoisted(() => ({ model: null }));
-vi.mock("../utils/localModelLabels", async (importOriginal) => ({
-  ...(await importOriginal()),
-  useDeviceModel: () => device.model,
+const status = vi.hoisted(() => ({ value: null }));
+vi.mock("../utils/unifiedAIService", () => ({
+  getAIStatus: () => status.value,
 }));
 
 import SmallModelCaveat from "./SmallModelCaveat";
@@ -12,10 +11,21 @@ import { LanguageProvider } from "../contexts/LanguageContext";
 import { APP_TRANSLATIONS } from "../i18n/translations";
 import { isSmallModel } from "../utils/deviceCapabilityDetector";
 
-const model = (modelId) => ({ modelId });
+const swarm = (modelId, extra = {}) => ({
+  effectiveMode: "swarm",
+  swarmAvailable: true,
+  swarmStatus: { model: modelId },
+  ...extra,
+});
+const NO_AI = {
+  effectiveMode: "cloud",
+  swarmAvailable: false,
+  cloudAvailable: false,
+  swarmStatus: { model: null },
+};
 
 beforeEach(() => {
-  device.model = null;
+  status.value = NO_AI;
   localStorage.clear();
 });
 
@@ -36,7 +46,7 @@ describe("isSmallModel reads the per-model table", () => {
 
 describe("SmallModelCaveat", () => {
   it("shows a plain note, with a name and words not only colour, on a device running the 2B", () => {
-    device.model = model("Qwen3.5-2B-q4f16_1-MLC");
+    status.value = swarm("Qwen3.5-2B-q4f16_1-MLC");
     render(<SmallModelCaveat />);
     const note = screen.getByRole("note", {
       name: "This device runs a smaller AI model",
@@ -52,29 +62,42 @@ describe("SmallModelCaveat", () => {
   });
 
   it("shows on the tablet's 1.5B", () => {
-    device.model = model("Qwen2.5-1.5B-Instruct-q4f16_1-MLC");
+    status.value = swarm("Qwen2.5-1.5B-Instruct-q4f16_1-MLC");
     render(<SmallModelCaveat />);
     expect(screen.getByRole("note")).toBeTruthy();
   });
 
   it.each([
-    ["the 4B", model("Qwen3.5-4B-q4f16_1-MLC")],
-    ["a device not yet probed", null],
-    ["a phone with no on-device model", null],
-  ])("shows nothing for %s", (_name, deviceModel) => {
-    device.model = deviceModel;
+    ["the 4B loaded", swarm("Qwen3.5-4B-q4f16_1-MLC")],
+    ["no AI set up", NO_AI],
+    [
+      "cloud AI answering while a small model sits loaded",
+      swarm("Qwen3.5-2B-q4f16_1-MLC", { effectiveMode: "cloud" }),
+    ],
+    [
+      "a small model that is not loaded (swarm not ready)",
+      swarm("Qwen3.5-2B-q4f16_1-MLC", { swarmAvailable: false }),
+    ],
+  ])("shows nothing for %s", (_name, value) => {
+    status.value = value;
+    const { container } = render(<SmallModelCaveat />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("follows the model actually loaded, not a profile's first model", () => {
+    status.value = swarm("Qwen2.5-3B-Instruct-q4f16_1-MLC");
     const { container } = render(<SmallModelCaveat />);
     expect(container.firstChild).toBeNull();
   });
 
   it("is always visible: it has no dismiss control", () => {
-    device.model = model("Qwen3.5-2B-q4f16_1-MLC");
+    status.value = swarm("Qwen3.5-2B-q4f16_1-MLC");
     render(<SmallModelCaveat />);
     expect(screen.queryByRole("button")).toBeNull();
   });
 
   it("uses the chosen language when a provider is present", () => {
-    device.model = model("Qwen3.5-2B-q4f16_1-MLC");
+    status.value = swarm("Qwen3.5-2B-q4f16_1-MLC");
     localStorage.setItem("vetrate_language", "es");
     render(
       <LanguageProvider>

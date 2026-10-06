@@ -50,7 +50,7 @@ export default function GeminiApiKeyForm({
         href="https://aistudio.google.com/app/apikey"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
+        className="inline-flex min-h-[44px] items-center gap-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
       >
         🔗 Get free API key from Google AI Studio →
       </a>

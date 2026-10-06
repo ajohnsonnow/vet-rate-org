@@ -1374,7 +1374,7 @@ function MyRatingEditForm({
 
 function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-3 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 min-w-0 break-words">
@@ -1393,18 +1393,18 @@ function MyRatingDisplay({ rating, setEditingRating, handleRemoveRating, t }) {
           </p>
         )}
       </div>
-      <div className="flex gap-2 flex-shrink-0">
+      <div className="flex w-full gap-2 sm:w-auto">
         <button
           type="button"
           onClick={() => setEditingRating({ ...rating })}
-          className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+          className="min-h-[44px] px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
         >
           {t("myPacketSection.edit")}
         </button>
         <button
           type="button"
           onClick={() => handleRemoveRating(rating.id)}
-          className="px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+          className="min-h-[44px] px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
         >
           {t("myPacketSection.remove")}
         </button>

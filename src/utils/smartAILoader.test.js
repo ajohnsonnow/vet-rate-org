@@ -29,8 +29,14 @@ vi.mock("./diamondSwarm", () => ({
 const { getRecommendedModelForDevice, smartLoadAI } =
   await import("./smartAILoader");
 
-const DESKTOP = { recommendedModels: ["Qwen3.5-4B-q4f16_1-MLC"] };
-const LAPTOP = { recommendedModels: ["Qwen3.5-2B-q4f16_1-MLC"] };
+const DESKTOP = {
+  hasWebGPU: true,
+  recommendedModels: ["Qwen3.5-4B-q4f16_1-MLC"],
+};
+const LAPTOP = {
+  hasWebGPU: true,
+  recommendedModels: ["Qwen3.5-2B-q4f16_1-MLC"],
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -74,5 +80,15 @@ describe("smartAILoader takes its model from the device profile", () => {
     await expect(smartLoadAI("no-such-tool")).resolves.toBe(true);
     const { modelId } = mocks.initializeSwarm.mock.calls[0][0];
     expect(modelId).toMatch(/^diamond-/);
+  });
+
+  it("says nothing of a model on a tablet whose browser has no WebGPU", () => {
+    mocks.cachedProfile.mockReturnValue({
+      hasWebGPU: false,
+      recommendedModels: ["Qwen2.5-1.5B-Instruct-q4f16_1-MLC"],
+    });
+    const rec = getRecommendedModelForDevice("no-such-tool");
+    expect(rec.deviceModel).toBeNull();
+    expect(rec.reason).not.toMatch(/Qwen|\d GB/);
   });
 });

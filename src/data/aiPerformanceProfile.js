@@ -86,7 +86,7 @@ export const AI_REQUIREMENTS = {
   },
   ram: { minGB: 8, recGB: 16 },
   formFactor:
-    "Desktop or laptop - phones and tablets are not supported for on-device AI.",
+    "Desktop or laptop recommended. Tablets with WebGPU load a smaller model and have not been tested; phones are not supported.",
   model: {
     sizeNote: "size varies by device",
     cachedAfterFirstDownload: true,
