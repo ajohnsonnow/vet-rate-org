@@ -6388,15 +6388,17 @@ function QuickLinksSection({ t }) {
   );
 }
 
-function buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow) {
+// No date is worked out from today: the year runs from the day VA receives
+// the form, which the app cannot know.
+function buildIntentToFileDeadlinesSection() {
   return `
 ================================================================================
 
                          *** CRITICAL DEADLINES ***
 
-If you file your Intent to File on: ${currentDate}
+Your Intent to File date is the day VA receives it.
 
-Your deadline to submit a complete claim is: ${oneYearFromNow}
+Your deadline to submit a complete claim is one year from that date.
 
 You have exactly ONE YEAR from your Intent to File date to submit your
 complete disability claim (VA Form 21-526EZ).
@@ -6408,7 +6410,7 @@ WHY INTENT TO FILE MATTERS:
 If approved, your VA benefits can be BACKDATED to your Intent to File date.
 
 Example:
-- You file Intent to File on ${currentDate}
+- VA receives your Intent to File
 - You submit your complete claim 6 months later
 - If approved, you receive 6 months of BACK PAY
 
@@ -6422,7 +6424,7 @@ NEXT STEPS CHECKLIST:
 
 [ ] 2. Save your confirmation number: _______________________
 
-[ ] 3. Note your 1-year deadline: ${oneYearFromNow}
+[ ] 3. Note your 1-year deadline (one year from the day VA receives it): _______________________
 
 [ ] 4. Gather evidence:
     [ ] Service treatment records
@@ -7409,20 +7411,6 @@ Complete official form at: https://www.va.gov/find-forms/about-form-21-4192/
 }
 
 function generateIntentToFile(formData) {
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const oneYearFromNow = new Date(
-    Date.now() + 365 * 24 * 60 * 60 * 1000,
-  ).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   const benefitLabels = {
     compensation: "Disability Compensation",
     pension: "Pension",
@@ -7494,7 +7482,7 @@ ${formData.conditions}
     : ""
 }
 Preferred Submission Method: ${methodLabels[formData.preferredMethod] || "________________________________________"}
-${buildIntentToFileDeadlinesSection(currentDate, oneYearFromNow)}`;
+${buildIntentToFileDeadlinesSection()}`;
 
   return statement;
 }
