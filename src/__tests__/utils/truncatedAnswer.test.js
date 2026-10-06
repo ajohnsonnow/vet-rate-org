@@ -50,7 +50,7 @@ import {
 import * as diamondSwarm from "../../utils/diamondSwarm";
 import { AI_DATA_CLASS } from "../../utils/aiDataClassPolicy";
 import { trimToLastSentence } from "../../utils/outputCleanup";
-import { GOLDEN, gradedIntegratedCase } from "./recordedAnswers";
+import { gradedIntegratedCase } from "./recordedAnswers";
 
 const callOptions = (overrides = {}) => ({
   dataClass: AI_DATA_CLASS.CONTEXT,
@@ -283,28 +283,6 @@ describe("the other engines and the rating answer", () => {
       `File an Intent to File first.\n\n${CUT_SHORT_NOTICE}`,
     );
     expect(result.text).not.toContain("[This response was cut off");
-  });
-
-  it("a rating answer cut short keeps the calculator's working and drops the commentary", async () => {
-    swarmReplies({
-      text: "The order of the ratings does not matter. The largest ra",
-      truncated: true,
-    });
-    const result = await generateAI(
-      "What is my combined rating?",
-      callOptions({
-        toolId: "rating-calculator",
-        conditions: GOLDEN.a11.conditions,
-      }),
-    );
-    expect(result.text.startsWith("Your combined rating is 80%.")).toBe(true);
-    expect(result.text).not.toContain("The largest ra");
-    expect(result.text).not.toContain(CUT_SHORT_NOTICE);
-    expect(result.calculatorLead).toEqual({
-      expected: 80,
-      commentaryKept: false,
-      commentaryDropped: ["cut short"],
-    });
   });
 });
 

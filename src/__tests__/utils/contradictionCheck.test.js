@@ -276,20 +276,23 @@ describe("flagContradictions", () => {
     expect(
       flagContradictions(optedOut, { useDKB: false }, SECONDARY_PROMPT),
     ).toBe(optedOut);
-    const replaced = { text: wrong, calculatorReplacement: { reason: "x" } };
-    expect(flagContradictions(replaced, {}, SECONDARY_PROMPT)).toBe(replaced);
+    const calculatorText = { text: wrong, modelCalled: false };
+    expect(flagContradictions(calculatorText, {}, SECONDARY_PROMPT)).toBe(
+      calculatorText,
+    );
   });
 
-  it("uses the call's structured conditions to leave TDIU denials to the calculator guard", () => {
+  it("checks a TDIU denial in a model answer whether or not the call carried conditions", () => {
     const denial = {
       text: "No, you cannot qualify for TDIU on these ratings.",
     };
     const conditions = [
       { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
     ];
-    expect(flagContradictions(denial, { conditions }, "Can I get TDIU?")).toBe(
-      denial,
-    );
+    expect(
+      flagContradictions(denial, { conditions }, "Can I get TDIU?")
+        .contradictionsFound,
+    ).toHaveLength(1);
     expect(
       flagContradictions(denial, {}, "Can I get TDIU?").contradictionsFound,
     ).toEqual([

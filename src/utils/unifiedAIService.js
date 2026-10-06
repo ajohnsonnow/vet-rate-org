@@ -52,17 +52,9 @@ import { detectDeviceCapabilities } from "./deviceCapabilityDetector";
 import { calculateVARating } from "./vaCalculator";
 import {
   buildCalculatorExplanation,
-  buildComputedResultBlock,
-  checkRaterResponse,
-  checkTdiuConclusion,
   mentionsUnemployability,
-  describeMismatch,
-  findCommentaryArithmetic,
 } from "./raterGrounding";
-import {
-  buildVerifiedReferenceBlock,
-  detectReferenceTopics,
-} from "./verifiedReference";
+import { buildVerifiedReferenceBlock } from "./verifiedReference";
 import {
   MIN_OUTPUT_TOKENS,
   cannotFit,
@@ -72,7 +64,7 @@ import {
 import { flagUnverifiedCitations, looksStructured } from "./citationCheck";
 import { flagUnverifiedForms } from "./formCheck";
 import { trimToLastSentence } from "./outputCleanup";
-import { findContradictions, flagContradictions } from "./contradictionCheck";
+import { flagContradictions } from "./contradictionCheck";
 import {
   AI_DATA_CLASS,
   resolveDataClass,
@@ -1101,143 +1093,6 @@ const scrubPromptForWarrantCouncil = (prompt, scrubPIIEnabled) => {
 };
 
 /**
- * Ground a Rater-agent prompt in the deterministic combined-rating calculator
- * (38 CFR § 4.25/4.26 - vaCalculator.js) instead of letting the LLM freehand
- * the bilateral-factor arithmetic, which is the confirmed root cause of the
- * swarm's bilateral-pairing hallucinations. Only activates when the caller
- * supplies structured `options.conditions` ({name, rating, side, bodyPart}[]);
- * free-text-only prompts pass through unchanged - there's no reliable parse
- * step from prose to structured conditions, and a wrong parse would be worse
- * than no injection at all.
- */
-export const injectCalculatorForRater = (prompt, options) => {
-  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
-    return prompt;
-  }
-
-  return (
-    prompt + buildComputedResultBlock(calculateVARating(options.conditions))
-  );
-};
-
-/**
- * After generation, compare a rater-routed response with the calculator. A
- * response that states a different combined rating, presents a bilateral
- * pair the calculator did not find, shows working the calculator did not
- * produce, calls the computed block wrong, or (for a TDIU question) states a
- * percentage-threshold conclusion that contradicts 38 CFR § 4.16(a) as
- * evaluateTdiuThresholds applies it, is replaced by the calculator's own
- * working in plain language, plus the TDIU threshold paragraph when the
- * veteran's prompt asks about TDIU. The replacement is recorded on the result
- * (validationWarnings, plus calculatorReplacement) so callers can see it
- * happened. A response that passes is kept, but only as commentary: the text
- * returned always leads with the calculator's working, so the figures a
- * veteran reads first never come from the model's arithmetic. Either way
- * `calculatorLead` records the calculator's figure and whether the model's
- * text was kept.
- */
-export const enforceCalculatorOnResult = (result, options, prompt = "") => {
-  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
-    return result;
-  }
-  const calc = calculateVARating(options.conditions);
-  const check = checkRaterResponse(result.text, calc);
-  const asksTdiu = mentionsUnemployability(prompt);
-  const tdiuCheck = asksTdiu ? checkTdiuConclusion(result.text, calc) : null;
-  if (check.ok && !tdiuCheck?.contradicted) {
-    return leadWithCalculatorWorking(result, calc, asksTdiu, prompt, options);
-  }
-
-  const reason = describeMismatch(check, tdiuCheck);
-  console.warn(`🧮 Rater response replaced by calculator working: ${reason}`);
-  return {
-    ...result,
-    text: buildCalculatorExplanation(calc, {
-      tdiu: asksTdiu,
-      check,
-      tdiuCheck,
-      question: prompt,
-    }),
-    calculatorLead: { expected: check.expected, commentaryKept: false },
-    validationWarnings: [
-      ...(result.validationWarnings || []),
-      `Response replaced with the calculator's working: ${reason}`,
-    ],
-    calculatorReplacement: {
-      reason,
-      draft: result.text,
-      expected: check.expected,
-      stated: check.stated,
-      inventedPairs: check.inventedPairs,
-      deniedPairs: check.deniedPairs,
-      reworked: check.reworked,
-      disputes: check.disputes,
-      ...(tdiuCheck?.contradicted
-        ? { tdiuConclusion: tdiuCheck.sentences }
-        : {}),
-    },
-  };
-};
-
-export const CALCULATOR_COMMENTARY_LEAD =
-  "The AI's comments on this result follow. The figures above come from Vet-Rate's calculator, not from the AI.";
-
-// The contradiction check runs later on the whole answer, and would put its
-// correction above the calculator's working. Commentary that would trigger it
-// is dropped here instead, checked on its own with the same topics.
-function _commentaryContradictions(commentary, options, question) {
-  const topics =
-    options.useDKB === false
-      ? []
-      : detectReferenceTopics(question, options.toolId, {
-          conditions: options.conditions,
-          dataClass: options.dataClass,
-        });
-  return findContradictions(commentary, { topics, hasConditions: true }).map(
-    (hit) => `contradiction: ${hit.rule}`,
-  );
-}
-
-function _commentaryDropReasons(result, commentary, calc, asksTdiu, context) {
-  if (result.blocked) return [];
-  if (result.truncated) return ["cut short"];
-  return [
-    ...findCommentaryArithmetic(commentary, calc, { tdiu: asksTdiu }),
-    ..._commentaryContradictions(commentary, context.options, context.question),
-  ];
-}
-
-// The model's text is kept under the working only when it adds words and no
-// arithmetic of its own (findCommentaryArithmetic). Otherwise the working
-// stands alone: the draft did not contradict the calculator, so there is no
-// notice to give, and `commentaryDropped` records why it was left out.
-function leadWithCalculatorWorking(result, calc, asksTdiu, question, options) {
-  const commentary = String(result.text ?? "").trim();
-  const working = buildCalculatorExplanation(calc, {
-    tdiu: asksTdiu,
-    question,
-  });
-  const dropped = _commentaryDropReasons(result, commentary, calc, asksTdiu, {
-    options,
-    question,
-  });
-  const commentaryKept =
-    commentary !== "" && !result.blocked && dropped.length === 0;
-  const parts = [working];
-  if (commentaryKept) parts.push(CALCULATOR_COMMENTARY_LEAD);
-  if (commentaryKept || result.blocked) parts.push(commentary);
-  return {
-    ...result,
-    text: parts.filter(Boolean).join("\n\n"),
-    calculatorLead: {
-      expected: calc.combinedRating,
-      commentaryKept,
-      ...(dropped.length > 0 ? { commentaryDropped: dropped } : {}),
-    },
-  };
-}
-
-/**
  * Determine the right Warrant Council agent based on tool or task type.
  */
 const resolveWarrantCouncilAgent = (toolId, taskType) => {
@@ -2169,6 +2024,7 @@ function _recordGenerationFailure(err) {
 // audit log (SHA-256 digests only - never raw prompt/output PII). Fire-and-
 // forget so a logging failure can never break the AI response.
 function _logAiCallAudit(prompt, result, options, startedAt) {
+  if (result?.modelCalled === false) return;
   const auditOutput =
     typeof result === "string" ? result : (result?.text ?? "");
   logModelCallWithDigests({
@@ -2513,7 +2369,7 @@ const _longestPersonaChars = () =>
  * Without a caller system prompt the swarm sends the persona as the system
  * message and folds the default prompt into the user turn, so both count.
  */
-async function _planSwarmFit(prompt, baseSystemPrompt, options, computedChars) {
+async function _planSwarmFit(prompt, baseSystemPrompt, options) {
   const profile = await detectDeviceCapabilities();
   const contextWindow =
     profile?.contextWindowSize ?? SWARM_DEFAULT_CONTEXT_WINDOW;
@@ -2525,7 +2381,6 @@ async function _planSwarmFit(prompt, baseSystemPrompt, options, computedChars) {
     contextWindow,
     requestedOutputTokens,
     fixedChars: personaChars + baseSystemPrompt.length + prompt.length,
-    computedChars,
   });
   return { ...plan, contextWindow, requestedOutputTokens, personaChars };
 }
@@ -2562,7 +2417,7 @@ export class OnDevicePromptTooLargeError extends Error {
  * of Vet-Rate's own default prompt ("instructions") or the caller's text
  * ("request").
  */
-function _planWllamaFit(prompt, baseSystemPrompt, options, computedChars) {
+function _planWllamaFit(prompt, baseSystemPrompt, options) {
   const model = wllamaService.WLLAMA_MODELS?.[wllamaCurrentModel || "auditor"];
   const contextWindow = model?.contextSize ?? WLLAMA_DEFAULT_CONTEXT_WINDOW;
   const requestedOutputTokens = options.maxTokens ?? getUserTokenLimit();
@@ -2571,7 +2426,7 @@ function _planWllamaFit(prompt, baseSystemPrompt, options, computedChars) {
     WLLAMA_WRAPPER_CHARS;
   const fixedChars = personaChars + baseSystemPrompt.length + prompt.length;
   const sizes = { contextWindow, requestedOutputTokens };
-  const plan = planPromptFit({ ...sizes, fixedChars, computedChars });
+  const plan = planPromptFit({ ...sizes, fixedChars });
   const instructionsAlone = options.systemPrompt
     ? false
     : cannotFit({ ...sizes, fixedChars: fixedChars - prompt.length });
@@ -2667,26 +2522,17 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
       includeVeteranData: true,
     });
 
-  // The single grounding point: appended to the user piece before
-  // _redactPiecesForSend, so every backend receives the computed block once
-  // and it is redacted like the rest of the request.
-  const groundedPrompt = _isRaterRoute(options, effectiveMode)
-    ? injectCalculatorForRater(prompt, options)
-    : prompt;
-
   // In-browser engines only (WebLLM swarm, wllama): what the loaded context
   // window leaves for the blocks below. The keyword block is sized last, so
-  // it gives way first; the verified block next; the computed block only
-  // when it cannot fit at all.
+  // it gives way first, then the verified block.
   const fit = await _planOnDeviceFit(
     effectiveMode,
     prompt,
     baseSystemPrompt,
     options,
-    groundedPrompt.length - prompt.length,
   );
   const roomChars = fit ? fit.referenceChars : Infinity;
-  const userPrompt = fit && !fit.keepComputed ? prompt : groundedPrompt;
+  const userPrompt = prompt;
 
   // Verified reference goes in here, before _redactPiecesForSend, so every
   // backend receives it once. It sits ahead of the keyword-search block and
@@ -2716,10 +2562,7 @@ async function _buildFullPrompt(prompt, options, effectiveMode) {
     ..._fittedOutputTokens(fit, systemPrompt.length + userPrompt.length),
   };
 
-  const offDeviceUserPrompt =
-    options.conditionsOnDeviceOnly && userPrompt !== prompt ? prompt : null;
-
-  return { systemPrompt, userPrompt, offDeviceUserPrompt, enhancedOptions };
+  return { systemPrompt, userPrompt, enhancedOptions };
 }
 
 // `maxTokens` for an in-browser engine when the request asked for more output
@@ -2744,10 +2587,6 @@ function _fittedOutputTokens(fit, assembledChars) {
   return maxTokens === fit.requestedOutputTokens ? {} : { maxTokens };
 }
 
-// conditionsOnDeviceOnly: the ratings in the computed block stay on the
-// device. Every send to a backend goes through here, so a mode that is not
-// on-device (cloud, a local server on another host) gets the veteran's
-// question without the block, whether it was the first choice or a fallback.
 // Whether the engine stopped the answer for length, noted by the backend on
 // a holder that belongs to this one generateAI call (`options._finish`), so
 // concurrent calls cannot read each other's. WebLLM (swarm and the legacy
@@ -2774,14 +2613,11 @@ export const REPEATED_NOTICE =
  * its parser, a blocked answer is already a message, and on a rating answer
  * the calculator lead drops the cut-off commentary instead.
  */
-function _settleTruncation(result, finish, options, hasCalculatorLead) {
+function _settleTruncation(result, finish, options) {
   if (!finish.truncated || result.blocked) return result;
   const text = String(result.text ?? "");
   const leaveAsIs =
-    hasCalculatorLead ||
-    options.expectJSON ||
-    options.responseFormat ||
-    looksStructured(text);
+    options.expectJSON || options.responseFormat || looksStructured(text);
   return {
     ...result,
     truncated: true,
@@ -2796,18 +2632,12 @@ function _settleTruncation(result, finish, options, hasCalculatorLead) {
   };
 }
 
-const _userPromptForMode = (mode, userPrompt, options) =>
-  typeof options._offDeviceUserPrompt === "string" && !_isModeOnDevice(mode)
-    ? options._offDeviceUserPrompt
-    : userPrompt;
-
 // One call site per backend, shared by both the mode-directed dispatch and
 // the "whatever's available" fallback chain in _dispatchAiGeneration below -
 // each backend's (systemPrompt, userPrompt, options) argument shape now
 // exists exactly once instead of being repeated per branch.
-async function _invokeBackend(mode, systemPrompt, sentUserPrompt, options) {
+async function _invokeBackend(mode, systemPrompt, userPrompt, options) {
   _noteStoppedForLength(options, false);
-  const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   switch (mode) {
     case AI_MODES.SWARM: {
       const { text, agent } = await runWarrantCouncil(
@@ -3107,7 +2937,7 @@ async function _handleContextOverflowFallback(
       // here would be exactly the re-assembly this refactor removes.
       const text = await generateWithCloudAI(
         systemPrompt,
-        _userPromptForMode(AI_MODES.CLOUD, userPrompt, enhancedOptions),
+        userPrompt,
         enhancedOptions,
       );
       return {
@@ -3185,9 +3015,8 @@ function _pickDocumentFallbackMode(effectiveMode) {
   return { mode, available: mode !== null };
 }
 
-async function _generateFallback(mode, systemPrompt, sentUserPrompt, options) {
+async function _generateFallback(mode, systemPrompt, userPrompt, options) {
   _noteStoppedForLength(options, false);
-  const userPrompt = _userPromptForMode(mode, sentUserPrompt, options);
   if (mode === AI_MODES.SWARM) {
     const { text, agent } = await runWarrantCouncil(
       systemPrompt,
@@ -3348,6 +3177,37 @@ export const getDocumentAIRouting = () => {
 };
 
 /**
+ * A rating question that comes with the veteran's ratings as structured
+ * conditions is answered by the calculator: its working, the TDIU threshold
+ * paragraph when the question asks about TDIU, and its notes on the bilateral
+ * factor and on entries it left out. No engine is called, on-device or cloud,
+ * and nothing leaves the device. Recorded runs showed that a model's text on
+ * these questions was either wrong and replaced, or redundant, or its own
+ * system prompt recited; none of it was worth showing. Returns null when the
+ * call is not a rater route or no entry has a rating the calculator can use,
+ * and the call then goes to the model like any other.
+ */
+function _answerFromCalculator(prompt, options) {
+  if (!Array.isArray(options.conditions) || options.conditions.length === 0) {
+    return null;
+  }
+  if (!_isRaterRoute(options, getEffectiveAIMode())) return null;
+  const calc = calculateVARating(options.conditions);
+  const used =
+    calc.bilateralConditions.length + calc.nonBilateralConditions.length;
+  if (used === 0) return null;
+  return {
+    text: buildCalculatorExplanation(calc, {
+      tdiu: mentionsUnemployability(prompt),
+      question: prompt,
+    }),
+    onDevice: true,
+    modelCalled: false,
+    calculatorLead: { expected: calc.combinedRating },
+  };
+}
+
+/**
  * Internal generateAI implementation (wrapped by timeout in public API)
  */
 const generateAIInternal = async (prompt, options = {}) => {
@@ -3356,6 +3216,9 @@ const generateAIInternal = async (prompt, options = {}) => {
 
   // Crisis safety check (unless explicitly skipped)
   await _checkCrisisSafety(prompt, options);
+
+  const calculatorAnswer = _answerFromCalculator(prompt, options);
+  if (calculatorAnswer) return calculatorAnswer;
 
   const effectiveMode = getEffectiveAIMode();
 
@@ -3382,7 +3245,6 @@ const generateAIInternal = async (prompt, options = {}) => {
   const {
     systemPrompt: builtSystemPrompt,
     userPrompt: builtUserPrompt,
-    offDeviceUserPrompt,
     enhancedOptions: builtOptions,
   } = await _buildFullPrompt(prompt, options, effectiveMode);
 
@@ -3397,20 +3259,12 @@ const generateAIInternal = async (prompt, options = {}) => {
   // the veteran's machine. Redacting it anyway would feed the on-device model
   // "[REDACTED]" tokens that downstream consumers read as genuine values
   // (identifier fields themselves never come from the model - decision F).
-  const pieces = [builtSystemPrompt, builtUserPrompt];
-  if (offDeviceUserPrompt !== null) pieces.push(offDeviceUserPrompt);
-  const [systemPrompt, userPrompt, offDevicePrompt] =
+  const [systemPrompt, userPrompt] =
     dataClass === AI_DATA_CLASS.DOCUMENT
-      ? pieces
-      : await _redactPiecesForSend(pieces);
+      ? [builtSystemPrompt, builtUserPrompt]
+      : await _redactPiecesForSend([builtSystemPrompt, builtUserPrompt]);
   const finish = { truncated: false };
-  const enhancedOptions = {
-    ...builtOptions,
-    _finish: finish,
-    ...(offDevicePrompt === undefined
-      ? {}
-      : { _offDeviceUserPrompt: offDevicePrompt }),
-  };
+  const enhancedOptions = { ...builtOptions, _finish: finish };
 
   const dispatched = await _dispatchWithRecovery(
     effectiveMode,
@@ -3419,22 +3273,9 @@ const generateAIInternal = async (prompt, options = {}) => {
     enhancedOptions,
     options,
   );
-  const isRater = _isRaterRoute(options, effectiveMode);
-  const hasCalculatorLead =
-    isRater &&
-    Array.isArray(options.conditions) &&
-    options.conditions.length > 0;
-  const result = _settleTruncation(
-    dispatched,
-    finish,
-    options,
-    hasCalculatorLead,
-  );
-  const grounded = isRater
-    ? enforceCalculatorOnResult(result, options, prompt)
-    : result;
+  const result = _settleTruncation(dispatched, finish, options);
   return flagContradictions(
-    flagUnverifiedForms(flagUnverifiedCitations(grounded, options), options),
+    flagUnverifiedForms(flagUnverifiedCitations(result, options), options),
     options,
     prompt,
   );

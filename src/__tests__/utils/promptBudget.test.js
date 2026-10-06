@@ -15,7 +15,6 @@ const PERSONA = Math.max(
 const BASE = buildSystemPrompt({ task: "general" }).length;
 const QUESTION = 100;
 const FIXED = PERSONA + BASE + QUESTION;
-const COMPUTED = 800;
 
 describe("the real sizes this budget works with", () => {
   it("the default system prompt is 12,316 characters and the longest persona 2,906", () => {
@@ -29,43 +28,22 @@ describe("the real sizes this budget works with", () => {
 });
 
 describe("planPromptFit", () => {
-  const plan = (contextWindow, requestedOutputTokens, computedChars = 0) =>
-    planPromptFit({
-      contextWindow,
-      requestedOutputTokens,
-      fixedChars: FIXED,
-      computedChars,
-    });
+  const plan = (contextWindow, requestedOutputTokens) =>
+    planPromptFit({ contextWindow, requestedOutputTokens, fixedChars: FIXED });
 
   it("desktop-high (12,288): the whole 4,000-character reference budget fits beside 2,048 output tokens", () => {
-    const out = plan(12288, 2048, COMPUTED);
-    expect(out.keepComputed).toBe(true);
-    expect(out.referenceChars).toBeGreaterThan(4000);
+    expect(plan(12288, 2048).referenceChars).toBeGreaterThan(4000);
   });
 
   it("8,192 with 2,048 output tokens leaves about 3,000 characters for reference material", () => {
     expect(plan(8192, 2048)).toEqual({
-      keepComputed: true,
       referenceChars: 8192 * 3 - 2048 * 3 - FIXED - 200,
     });
     expect(plan(8192, 2048).referenceChars).toBe(2910);
   });
 
   it("8,192 with 1,024 output tokens (the evaluation setting) fits the whole budget", () => {
-    expect(plan(8192, 1024, COMPUTED).referenceChars).toBeGreaterThan(4000);
-  });
-
-  it("the computed block is charged before reference material, so it is the last to go", () => {
-    const out = plan(8192, 2048, COMPUTED);
-    expect(out.keepComputed).toBe(true);
-    expect(out.referenceChars).toBe(2910 - COMPUTED);
-  });
-
-  it("drops the computed block only when it cannot fit even with no reference material", () => {
-    expect(plan(8192, 2048, 4000)).toEqual({
-      keepComputed: false,
-      referenceChars: 2910,
-    });
+    expect(plan(8192, 1024).referenceChars).toBeGreaterThan(4000);
   });
 
   it("reserves no more than 2,048 output tokens when a caller asks for more", () => {
@@ -74,10 +52,7 @@ describe("planPromptFit", () => {
 
   it("4,096 cannot hold the persona and the default prompt at all, whatever the output", () => {
     expect(FIXED).toBeGreaterThan(4096 * 3 - 768 * 3);
-    expect(plan(4096, 768, COMPUTED)).toEqual({
-      keepComputed: false,
-      referenceChars: 0,
-    });
+    expect(plan(4096, 768)).toEqual({ referenceChars: 0 });
   });
 });
 

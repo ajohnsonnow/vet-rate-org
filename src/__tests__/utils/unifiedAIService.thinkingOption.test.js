@@ -58,13 +58,6 @@ const base = {
   useDKB: false,
 };
 
-const FOUR = [
-  { name: "PTSD", rating: 50, side: "none", bodyPart: "mental" },
-  { name: "Tinnitus", rating: 30, side: "none", bodyPart: "ear" },
-  { name: "Back", rating: 20, side: "none", bodyPart: "back" },
-  { name: "Knee", rating: 10, side: "none", bodyPart: "knee" },
-];
-
 beforeEach(() => {
   vi.clearAllMocks();
   resetAICircuitBreaker();
@@ -88,30 +81,5 @@ describe("thinking option passthrough", () => {
     expect(diamondSwarm.generateWithSwarm.mock.calls[0][1]).not.toHaveProperty(
       "thinking",
     );
-  });
-});
-
-describe("calculator replacement keeps the replaced draft", () => {
-  const ask = (text) => {
-    diamondSwarm.generateWithSwarm.mockResolvedValue({ text });
-    return generateAI("What is my combined rating?", {
-      ...base,
-      toolId: "rating-calculator",
-      conditions: FOUR,
-    });
-  };
-
-  it("records the draft next to the reason, and shows the user the calculator's text", async () => {
-    const draft = "The final combined disability rating is 70%.";
-    const result = await ask(draft);
-    expect(result.calculatorReplacement.draft).toBe(draft);
-    expect(result.calculatorReplacement.reason).toEqual(expect.any(String));
-    expect(result.text).not.toContain("70%.");
-    expect(result.text).toContain("Step 3: 72% combined with 10% = 75%");
-  });
-
-  it("adds nothing when the response agrees with the calculator", async () => {
-    const result = await ask("Your combined rating is 80%.");
-    expect(result.calculatorReplacement).toBeUndefined();
   });
 });

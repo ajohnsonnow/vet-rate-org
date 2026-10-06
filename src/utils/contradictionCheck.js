@@ -273,8 +273,10 @@ const RULES = [
     correction: () => "tdiu-judgment",
   },
   {
-    // Calls that carry structured conditions already have their threshold
-    // conclusion checked against the calculator (raterGrounding.js).
+    // `hasConditions` marks an answer recorded when a calculator guard checked
+    // threshold conclusions on calls with structured conditions. No live call
+    // sets it: such a call is now answered by the calculator, or, when its
+    // conditions are unusable, by the model with this rule applied.
     id: "tdiu-denied-on-percentages",
     topics: ["tdiu"],
     matches: (sentence, { hasConditions, text }) =>
@@ -465,22 +467,19 @@ export function buildContradictionLead(hits) {
 
 const looksStructured = (text) => /^\s*(?:```|[{[])/.test(text);
 
-const hasConditions = (options) =>
-  Array.isArray(options.conditions) && options.conditions.length > 0;
-
 /**
  * Put a correction above a prose answer that contradicts the verified text,
  * leaving the answer itself unaltered below it, and record what was found on
  * the result (contradictionsFound, plus validationWarnings).
- * Nothing is checked when the answer is structured output or when the
- * calculator guard already replaced it with the app's own text. A call with
+ * Nothing is checked when the answer is structured output or when it is the
+ * calculator's own text, written without a model (`modelCalled: false`). A call with
  * reference material turned off raises no topic, so only the rule that
  * applies to every answer runs on it.
  */
 export function flagContradictions(result, options = {}, prompt = "") {
   const text = result?.text;
   if (typeof text !== "string" || text === "") return result;
-  if (result.calculatorReplacement) return result;
+  if (result.modelCalled === false) return result;
   if (options.responseFormat || looksStructured(text)) return result;
   const topics =
     options.useDKB === false
@@ -489,10 +488,7 @@ export function flagContradictions(result, options = {}, prompt = "") {
           conditions: options.conditions,
           dataClass: options.dataClass,
         });
-  const hits = findContradictions(text, {
-    topics,
-    hasConditions: hasConditions(options),
-  });
+  const hits = findContradictions(text, { topics });
   if (hits.length === 0) return result;
   return {
     ...result,
