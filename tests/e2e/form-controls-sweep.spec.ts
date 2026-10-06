@@ -62,6 +62,24 @@ async function tickBoxProblems(page: Page): Promise<string[]> {
         `${input.type} "${name}" draws no box (${Math.round(box.width)}x${Math.round(box.height)}${native ? "" : ", native box off"})`,
       );
     }
+    // A slider with its native look switched off shows only what a component
+    // paints for it. A thin painted bar is a custom track; a tall filled box
+    // is a slider nobody can read.
+    for (const slider of scope.querySelectorAll<HTMLInputElement>(
+      'input[type="range"]',
+    )) {
+      const cs = getComputedStyle(slider);
+      const box = slider.getBoundingClientRect();
+      if (cs.display === "none" || box.width < 2) continue;
+      const native = (cs.appearance || cs.webkitAppearance) !== "none";
+      const paintedTrack =
+        box.height <= 16 &&
+        !["rgba(0, 0, 0, 0)", "transparent"].includes(cs.backgroundColor);
+      if (native || paintedTrack) continue;
+      problems.add(
+        `slider "${slider.getAttribute("aria-label") || slider.id || "(unnamed)"}" draws no track (native look off, ${Math.round(box.width)}x${Math.round(box.height)})`,
+      );
+    }
     return [...problems];
   });
 }
