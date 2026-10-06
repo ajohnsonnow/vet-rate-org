@@ -13,6 +13,7 @@
  */
 
 import quotes from "../data/verifiedQuotes.json";
+import { claimAsserted } from "./assertionGuard";
 import { findWrongCoverageDate } from "./coverageDates";
 import { submitsNewMaterialInReview } from "./reviewSubmissions";
 import { findFormMismatch, findIntentFormAsApplication } from "./vaForms";
@@ -230,6 +231,7 @@ const RULES = [
   },
   {
     id: "secondary-barred",
+    guard: { readsDenialItself: true },
     topics: ["secondary"],
     matches: (sentence) =>
       anyMatch(
@@ -278,6 +280,7 @@ const RULES = [
   },
   {
     id: "coverage-date-for-wrong-place",
+    guard: { datedClaim: true },
     topics: PACT_TOPICS,
     matches: (sentence, { question, next }) =>
       findWrongCoverageDate(sentence, { question, next }) !== null,
@@ -316,6 +319,7 @@ const RULES = [
     // sets it: such a call is now answered by the calculator, or, when its
     // conditions are unusable, by the model with this rule applied.
     id: "tdiu-denied-on-percentages",
+    guard: { readsDenialItself: true },
     topics: ["tdiu"],
     matches: (sentence, { hasConditions, text }) =>
       !hasConditions &&
@@ -344,6 +348,7 @@ const RULES = [
   },
   {
     id: "tdiu-barred-by-any-employment",
+    guard: { readsDenialItself: true },
     topics: ["tdiu"],
     matches: saysEmploymentBarsTdiu,
     says: "says being employed rules out TDIU, but marginal employment does not count as substantially gainful employment",
@@ -409,6 +414,7 @@ const RULES = [
   },
   {
     id: "appeal-said-to-need-new-evidence",
+    guard: { readsDenialItself: true },
     topics: REVIEW_TOPICS,
     matches: saysAppealNeedsNewEvidence,
     says: "says a denial cannot be appealed without new evidence, but a higher-level review is decided on the evidence already in the file",
@@ -426,6 +432,7 @@ const RULES = [
     // Filing inside the year keeps the effective date (38 CFR 3.2500(h)), so
     // a sentence about the date is not a sentence about a deadline.
     id: "supplemental-claim-deadline",
+    guard: { readsDenialItself: true },
     topics: REVIEW_TOPICS,
     matches: (sentence) =>
       SUPPLEMENTAL_CLAIM.test(sentence) &&
@@ -529,7 +536,9 @@ export function findContradictions(
       rule.topics.some((topic) => topics.includes(topic));
     if (!applies) continue;
     const around = (i) => ({ ...context, next: sentences[i + 1] ?? "" });
-    const at = sentences.findIndex((s, i) => rule.matches(s, around(i)));
+    const at = sentences.findIndex((s, i) =>
+      claimAsserted(s, rule.guard, (part) => rule.matches(part, around(i))),
+    );
     if (at < 0) continue;
     const sentence = sentences[at];
     hits.push({
