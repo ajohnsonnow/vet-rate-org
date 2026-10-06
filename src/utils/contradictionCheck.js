@@ -593,6 +593,7 @@ export function findContradictions(
     const sentence = sentences[at];
     hits.push({
       rule: rule.id,
+      position: at,
       sentence,
       says: rule.says,
       ...(rule.correction ? { correction: rule.correction(topics) } : {}),
@@ -616,10 +617,13 @@ function quoteWithSource(hit) {
  * Decision Decoder puts it under the field that carried the sentence).
  */
 export function buildContradictionNote(hit) {
-  return `Vet-Rate check: this reads as if it ${hit.says}. ${quoteWithSource(hit)} This check is automatic and can be wrong; confirm the point with a Veterans Service Officer.`;
+  return `Vet-Rate check: this reads as if it ${hit.says}. ${quoteWithSource(hit)} This check is automatic and can be wrong; confirm the point with a Veterans Service Officer. Until you have checked, do not act on that sentence.`;
 }
 
 const MAX_QUOTED_SENTENCE = 200;
+// The answer has to stay near the top: two points, earliest in the answer
+// first, and a count of the rest.
+const MAX_HITS_SHOWN = 2;
 
 const trimmed = (sentence) =>
   sentence.length > MAX_QUOTED_SENTENCE
@@ -633,13 +637,23 @@ const trimmed = (sentence) =>
  * acted on by the time a note at the bottom is read.
  */
 export function buildContradictionLead(hits) {
+  const inAnswerOrder = [...hits].sort(
+    (a, b) => (a.position ?? 0) - (b.position ?? 0),
+  );
+  const shown = inAnswerOrder.slice(0, MAX_HITS_SHOWN);
+  const more = hits.length - shown.length;
   return [
     "Vet-Rate check: part of the answer below may not match the regulation.",
-    ...hits.map(
+    ...shown.map(
       (hit) =>
         `\nThe answer says: "${trimmed(hit.sentence)}"\nThis reads as if it ${hit.says}. ${quoteWithSource(hit)}`,
     ),
-    "\nThis check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. The answer follows, unchanged.",
+    ...(more > 0
+      ? [
+          `\nThe check noticed ${more} more ${more === 1 ? "point" : "points"} in this answer.`,
+        ]
+      : []),
+    "\nThis check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. Until you have checked, do not act on that sentence. The answer follows, unchanged.",
   ].join("\n");
 }
 

@@ -93,7 +93,7 @@ describe("a filing paired with another filing's form", () => {
         'The answer says: "Action: You must submit supplemental claims for the three denied claims using VA Form 21-0966 (or via electronic submission if available)."',
         'This reads as if it gives VA Form 21-0966 as the form for a Supplemental Claim. Compare it with the list of VA claim forms (titles as cited in VA Adjudication Procedures Manual M21-1): "VA Form 20-0995: Decision Review Request: Supplemental Claim"',
         "",
-        "This check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. The answer follows, unchanged.",
+        "This check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. Until you have checked, do not act on that sentence. The answer follows, unchanged.",
       ].join("\n"),
     );
   });

@@ -25,7 +25,7 @@ const A26_LEAD = `Vet-Rate check: part of the answer below may not match the reg
 The answer says: "Immediate Action: File an Intent to File (ITF) for Pending Claims"
 This reads as if it recommends an Intent to File for a claim that is already filed, and a filed claim already has its own filing date. Compare it with 38 CFR § 3.155(d)(1): "(1) Requirement for complete claim and date of claim. A complete claim is required for all types of claims, and will generally be considered filed as of the date it was received by VA for an evaluation or award of benefits under the laws administered by the Department of Veterans Affairs."
 
-This check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. The answer follows, unchanged.`;
+This check is automatic and can be wrong. Confirm that part with a Veterans Service Officer. Until you have checked, do not act on that sentence. The answer follows, unchanged.`;
 
 describe("a26 from the final-build run", () => {
   const out = flagContradictions(
@@ -80,5 +80,47 @@ describe("buildContradictionLead", () => {
     expect(quoted.length).toBeLessThanOrEqual(203);
     expect(quoted.endsWith("...")).toBe(true);
     expect(long.startsWith(quoted.slice(0, -3))).toBe(true);
+  });
+});
+
+describe("an answer with more than two points", () => {
+  const hit = (position, sentence) => ({
+    rule: "ratings-added-together",
+    position,
+    sentence,
+    says: "adds VA ratings together",
+    correction: "ratings-combined",
+  });
+
+  it("shows the two that come first in the answer and counts the rest", () => {
+    const lead = buildContradictionLead([
+      hit(9, "Third in the answer."),
+      hit(2, "First in the answer."),
+      hit(5, "Second in the answer."),
+      hit(12, "Fourth in the answer."),
+    ]);
+    expect(lead).toContain('The answer says: "First in the answer."');
+    expect(lead).toContain('The answer says: "Second in the answer."');
+    expect(lead).not.toContain("Third in the answer.");
+    expect(lead).not.toContain("Fourth in the answer.");
+    expect(lead).toContain("The check noticed 2 more points in this answer.");
+    expect(lead.indexOf("First in the answer.")).toBeLessThan(
+      lead.indexOf("Second in the answer."),
+    );
+  });
+
+  it("says 'point' for one more, and nothing for none", () => {
+    expect(
+      buildContradictionLead([hit(1, "A."), hit(2, "B."), hit(3, "C.")]),
+    ).toContain("The check noticed 1 more point in this answer.");
+    expect(buildContradictionLead([hit(1, "A."), hit(2, "B.")])).not.toContain(
+      "The check noticed",
+    );
+  });
+
+  it("tells the reader what to do in the meantime", () => {
+    expect(buildContradictionLead([hit(1, "A.")])).toContain(
+      "Until you have checked, do not act on that sentence.",
+    );
   });
 });
