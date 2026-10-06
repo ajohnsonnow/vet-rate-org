@@ -39,12 +39,17 @@ vi.mock("../utils/unifiedAIService", async (importOriginal) => ({
 vi.mock("../utils/veteranContextProvider", async (importOriginal) => ({
   ...(await importOriginal()),
   getVeteranAIContext: vi.fn(async () => ""),
-  saveAnalysisResults: vi.fn(async () => ({})),
+  saveAnalysisResults: vi.fn(async () => ({ documentId: "doc-1" })),
+}));
+vi.mock("../utils/myPacketManager", async (importOriginal) => ({
+  ...(await importOriginal()),
+  updatePacketDocument: vi.fn(async () => ({ success: true })),
 }));
 
 const { downloadDraft } = await import("../utils/draftExport");
 const { generateAI } = await import("../utils/unifiedAIService");
 const { saveAnalysisResults } = await import("../utils/veteranContextProvider");
+const { updatePacketDocument } = await import("../utils/myPacketManager");
 const { default: WitnessBench } = await import("./WitnessBench.jsx");
 
 const CONDITION = "Marker10 condition";
@@ -124,6 +129,7 @@ beforeEach(() => {
   generateAI.mockReset();
   downloadDraft.mockClear();
   saveAnalysisResults.mockClear();
+  updatePacketDocument.mockClear();
 });
 
 describe("Witness Bench, standard statement", () => {
@@ -172,7 +178,6 @@ describe("Witness Bench, standard statement", () => {
     const printed = [...(await answerEverything()), EDIT];
     expect(saveAnalysisResults).not.toHaveBeenCalled();
     const onScreen = typeAnEdit();
-    fireEvent.click(screen.getByRole("button", { name: /download/i }));
     fireEvent.click(screen.getByRole("button", { name: /save to my packet/i }));
 
     const [claim] = getSavedClaims();
@@ -188,7 +193,6 @@ describe("Witness Bench, standard statement", () => {
     vi.spyOn(localStorage, "setItem").mockImplementation(() => {
       throw new Error("QuotaExceededError");
     });
-    fireEvent.click(screen.getByRole("button", { name: /download/i }));
     fireEvent.click(screen.getByRole("button", { name: /save to my packet/i }));
 
     expect((await screen.findByRole("alert")).textContent).toMatch(
@@ -348,5 +352,50 @@ describe("Witness Bench, asking the AI again after it failed", () => {
 
     await screen.findByText(/did not change the wording/i);
     expect(statementField().value).toBe(mine);
+  });
+});
+
+describe("Witness Bench saving the same statement again", () => {
+  const saveButton = () => screen.getByRole("button", { name: /my packet/i });
+
+  it("has a Save button beside Download, outside the menu", async () => {
+    await answerEverything();
+
+    expect(saveButton()).toBeVisible();
+    expect(saveButton().textContent).toMatch(/Save to My Packet/);
+    fireEvent.click(screen.getByRole("button", { name: /download/i }));
+    expect(screen.getAllByRole("button", { name: /my packet/i })).toHaveLength(
+      1,
+    );
+  });
+
+  it("says it was saved and when, and does not offer to save the same text twice", async () => {
+    await answerEverything();
+    fireEvent.click(saveButton());
+
+    await waitFor(() => expect(saveButton()).toBeDisabled());
+    expect(saveButton().textContent).toMatch(/Saved to My Packet at \d/);
+    expect(getSavedClaims()).toHaveLength(1);
+  });
+
+  it("updates the same claim and the same packet document when the statement changes", async () => {
+    await answerEverything();
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveButton()).toBeDisabled());
+
+    const changed = typeAnEdit();
+    expect(saveButton()).toBeEnabled();
+    expect(saveButton().textContent).toMatch(/Save changes to My Packet/);
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveButton()).toBeDisabled());
+
+    const claims = getSavedClaims();
+    expect(claims).toHaveLength(1);
+    expect(claims[0].evidence).toHaveLength(1);
+    expect(claims[0].evidence[0].statement).toBe(changed);
+    expect(saveAnalysisResults).toHaveBeenCalledTimes(1);
+    expect(updatePacketDocument).toHaveBeenCalledTimes(1);
+    expect(updatePacketDocument.mock.calls[0][0]).toBe("doc-1");
+    expect(updatePacketDocument.mock.calls[0][1].rawText).toBe(changed);
   });
 });

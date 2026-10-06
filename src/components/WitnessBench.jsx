@@ -51,6 +51,7 @@ import {
   saveAnalysisResults,
   PACKET_DOC_TYPES,
 } from "../utils/veteranContextProvider";
+import { updatePacketDocument } from "../utils/myPacketManager";
 import {
   substituteVeteranNamePlaceholder,
   resolveVeteranDisplayName,
@@ -552,14 +553,18 @@ const DOWNLOAD_FAILED =
 /**
  * Save the statement as it stands on screen to My Packet. Nothing is saved
  * until the witness asks, so My Packet never holds a copy without their
- * edits. Returns whether it was saved.
+ * edits. Saving again updates the same claim and the same packet document
+ * (`documentId`, from the first save); it never makes a second. Returns
+ * null when it could not be saved, otherwise a promise of the document id.
  */
 const saveWitnessStatementToPacket = (
   { condition, relationship, generatedStatement, witnessName, answers },
   t,
+  documentId,
 ) => {
   const saved = saveClaim({
     conditionName: condition,
+    parentCondition: null,
     status: "Evidence Gathered",
     evidence: [
       {
@@ -573,10 +578,8 @@ const saveWitnessStatementToPacket = (
     ],
     notes: `Buddy statement from ${getRelationshipLabel(relationship, t)} regarding observable behaviors and functional impacts.`,
   });
-  if (!saved) return false;
-  saveAnalysisResults({
-    toolName: "Witness Bench",
-    classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+  if (!saved) return null;
+  const document = {
     rawText: generatedStatement,
     extractedData: {
       relationship,
@@ -584,8 +587,18 @@ const saveWitnessStatementToPacket = (
       answers,
       statementLength: generatedStatement.length,
     },
-  }).catch((err) => console.warn("Failed to save buddy statement:", err));
-  return true;
+  };
+  const filed = documentId
+    ? updatePacketDocument(documentId, document).then(() => documentId)
+    : saveAnalysisResults({
+        toolName: "Witness Bench",
+        classification: PACKET_DOC_TYPES.BUDDY_STATEMENT,
+        ...document,
+      }).then((result) => result?.documentId ?? null);
+  return filed.catch((err) => {
+    console.warn("Failed to save buddy statement:", err);
+    return documentId ?? null;
+  });
 };
 
 const SIGNING_NOTICE =
@@ -688,7 +701,7 @@ function useAIFlowState() {
 function useOutputState() {
   const [generatedStatement, setGeneratedStatement] = useState("");
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-  const [savedToPacket, setSavedToPacket] = useState(false);
+  const [savedItem, setSavedItem] = useState(null);
   const [draftNote, setDraftNote] = useState(null);
   const [draftPath, setDraftPath] = useState(DRAFT_PATH.TEMPLATE);
   const [aiFailure, setAiFailure] = useState(null);
@@ -707,8 +720,8 @@ function useOutputState() {
     setOutputError,
     showDownloadMenu,
     setShowDownloadMenu,
-    savedToPacket,
-    setSavedToPacket,
+    savedItem,
+    setSavedItem,
   };
 }
 
@@ -937,6 +950,7 @@ function useWitnessBench(t) {
     output.setDraftPath(DRAFT_PATH.TEMPLATE);
     output.setAiFailure(null);
     output.setOutputError(null);
+    output.setSavedItem(null);
   };
 
   return {
@@ -1493,8 +1507,6 @@ const DownloadMenu = ({
   t,
   showDownloadMenu,
   onToggle,
-  onSaveToMyPacket,
-  savedToPacket,
   onDownloadPDF,
   onDownloadDOCX,
   onCloseMenu,
@@ -1526,22 +1538,6 @@ const DownloadMenu = ({
         <button
           type="button"
           onClick={() => {
-            onSaveToMyPacket();
-            onCloseMenu();
-          }}
-          className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors rounded-t-lg ${
-            savedToPacket
-              ? "text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30"
-              : "text-gray-700 dark:text-gray-200"
-          }`}
-        >
-          {savedToPacket
-            ? `✅ ${t("witnessBench", "savedToMyPacket")}`
-            : `📁 ${t("witnessBench", "saveToMyPacket")}`}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
             onDownloadPDF();
             onCloseMenu();
           }}
@@ -1564,6 +1560,27 @@ const DownloadMenu = ({
   </div>
 );
 
+const savedTime = (date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// Says what it will do: save, save changes to what is already saved, or
+// nothing because this text was saved (and when).
+const SaveToPacketButton = ({ t, onSave, savedItem, isSavedNow }) => {
+  let label = `📁 ${t("witnessBench", "saveToMyPacket")}`;
+  if (isSavedNow) label = `✅ Saved to My Packet at ${savedTime(savedItem.at)}`;
+  else if (savedItem) label = "📁 Save changes to My Packet";
+  return (
+    <button
+      type="button"
+      onClick={onSave}
+      disabled={isSavedNow}
+      className="px-3 py-1.5 text-sm bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 disabled:cursor-default transition-colors"
+    >
+      {label}
+    </button>
+  );
+};
+
 const StatementPreviewPanel = ({
   t,
   generatedStatement,
@@ -1573,7 +1590,7 @@ const StatementPreviewPanel = ({
   onToggleDownloadMenu,
   onCloseDownloadMenu,
   onSaveToMyPacket,
-  savedToPacket,
+  savedItem,
   onDownloadPDF,
   onDownloadDOCX,
 }) => (
@@ -1590,12 +1607,16 @@ const StatementPreviewPanel = ({
         >
           📋 {t("witnessBench", "copy")}
         </button>
+        <SaveToPacketButton
+          t={t}
+          onSave={onSaveToMyPacket}
+          savedItem={savedItem}
+          isSavedNow={savedItem?.text === generatedStatement}
+        />
         <DownloadMenu
           t={t}
           showDownloadMenu={showDownloadMenu}
           onToggle={onToggleDownloadMenu}
-          onSaveToMyPacket={onSaveToMyPacket}
-          savedToPacket={savedToPacket}
           onDownloadPDF={onDownloadPDF}
           onDownloadDOCX={onDownloadDOCX}
           onCloseMenu={onCloseDownloadMenu}
@@ -1667,7 +1688,7 @@ const OutputStep = ({
   onToggleDownloadMenu,
   onCloseDownloadMenu,
   onSaveToMyPacket,
-  savedToPacket,
+  savedItem,
   onDownloadPDF,
   onDownloadDOCX,
   onStartOver,
@@ -1700,7 +1721,7 @@ const OutputStep = ({
       onToggleDownloadMenu={onToggleDownloadMenu}
       onCloseDownloadMenu={onCloseDownloadMenu}
       onSaveToMyPacket={onSaveToMyPacket}
-      savedToPacket={savedToPacket}
+      savedItem={savedItem}
       onDownloadPDF={onDownloadPDF}
       onDownloadDOCX={onDownloadDOCX}
     />
@@ -1737,21 +1758,25 @@ const WitnessOutput = ({ t, wb }) => {
     }
   };
   const save = () => {
-    const saved = saveWitnessStatementToPacket(
+    const text = output.generatedStatement;
+    const filed = saveWitnessStatementToPacket(
       {
         condition: wizard.condition,
         relationship: wizard.relationship,
-        generatedStatement: output.generatedStatement,
+        generatedStatement: text,
         witnessName: wizard.witnessName,
         answers: wb.interview.answers,
       },
       t,
+      output.savedItem?.documentId,
     );
-    output.setOutputError(saved ? null : SAVE_FAILED);
-    if (saved) {
-      output.setSavedToPacket(true);
-      setTimeout(() => output.setSavedToPacket(false), 3000);
-    }
+    output.setOutputError(filed ? null : SAVE_FAILED);
+    if (!filed) return;
+    const at = new Date();
+    output.setSavedItem((earlier) => ({ ...earlier, text, at }));
+    filed.then((documentId) =>
+      output.setSavedItem((item) => (item ? { ...item, documentId } : item)),
+    );
   };
 
   return (
@@ -1773,7 +1798,7 @@ const WitnessOutput = ({ t, wb }) => {
       }
       onCloseDownloadMenu={() => output.setShowDownloadMenu(false)}
       onSaveToMyPacket={save}
-      savedToPacket={output.savedToPacket}
+      savedItem={output.savedItem}
       onDownloadPDF={() => download("pdf")}
       onDownloadDOCX={() => download("docx")}
       onStartOver={wb.startOver}

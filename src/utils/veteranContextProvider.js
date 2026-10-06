@@ -850,6 +850,8 @@ export const saveAnalysisResults = async ({
     sourceDocumentId,
     timestamp,
   });
+
+  return { documentId: sourceDocumentId };
 };
 
 // For a tool that has already filed its document: merges only the structured

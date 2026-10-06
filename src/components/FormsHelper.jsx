@@ -29,6 +29,7 @@ import {
   saveVeteranProfile,
   hasVeteranProfile,
   saveForm,
+  updateSavedForm,
   exportAllVeteranData,
   importVeteranData,
   getMyRatings,
@@ -4999,7 +5000,19 @@ function DownloadOptionsCard({
   );
 }
 
-function SaveToPacketCard({ t, handleSaveToPacket }) {
+const savedTime = (date) =>
+  date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// The save button says what it will do: save, save changes to the item
+// already saved, or nothing because this text was saved (and when).
+function savePacketLabel({ savedItem, isSavedNow, t }) {
+  if (isSavedNow) return `Saved to My Packet at ${savedTime(savedItem.at)}`;
+  return savedItem
+    ? "Save changes to Packet"
+    : t("formsHelper", "saveToPacketBtn");
+}
+
+function SaveToPacketCard({ t, handleSaveToPacket, savedItem, isSavedNow }) {
   return (
     <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -5017,7 +5030,8 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
         <button
           type="button"
           onClick={handleSaveToPacket}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
+          disabled={isSavedNow}
+          className="min-h-[44px] px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-default text-white rounded-lg font-semibold flex items-center gap-2 transition-all"
         >
           <svg
             className="w-5 h-5"
@@ -5032,7 +5046,7 @@ function SaveToPacketCard({ t, handleSaveToPacket }) {
               d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
             />
           </svg>
-          {t("formsHelper", "saveToPacketBtn")}
+          {savePacketLabel({ savedItem, isSavedNow, t })}
         </button>
       </div>
     </div>
@@ -5047,6 +5061,8 @@ function ReviewDownloadSection({
   importStatus,
   formType,
   isStatement,
+  savedItem,
+  isSavedNow,
 }) {
   return (
     <>
@@ -5058,7 +5074,12 @@ function ReviewDownloadSection({
         isStatement={isStatement}
       />
 
-      <SaveToPacketCard t={t} handleSaveToPacket={handleSaveToPacket} />
+      <SaveToPacketCard
+        t={t}
+        handleSaveToPacket={handleSaveToPacket}
+        savedItem={savedItem}
+        isSavedNow={isSavedNow}
+      />
 
       {/* Import Status Message */}
       {importStatus && (
@@ -7380,6 +7401,7 @@ function useFormsHelperAIState() {
   const [aiDraftNote, setAiDraftNote] = useState(null);
   const [draftEdit, setDraftEdit] = useState(null);
   const [keptDraft, setKeptDraft] = useState(null);
+  const [savedItem, setSavedItem] = useState(null);
   const [askRebuild, setAskRebuild] = useState(false);
 
   return {
@@ -7387,6 +7409,8 @@ function useFormsHelperAIState() {
     setDraftEdit,
     keptDraft,
     setKeptDraft,
+    savedItem,
+    setSavedItem,
     askRebuild,
     setAskRebuild,
     aiDraftNote,
@@ -7707,17 +7731,27 @@ function _buildFormsHelperFormDataHandlers(ctx) {
   };
 
   const handleSaveToPacket = () => {
-    const formId = saveForm({
-      formType: selectedForm?.id,
-      formNumber: selectedForm?.formNumber,
-      formName: selectedForm?.name,
+    // Saving again updates the item already saved; it never makes a second.
+    const text = shownDraft(ctx).text;
+    const fields = {
       title: formData.conditionName || selectedForm?.name,
       formData: formData,
-      generatedContent: shownDraft(ctx).text,
-      status: "Draft",
-    });
+      generatedContent: text,
+    };
+    const earlier = ctx.savedItem?.id;
+    const formId =
+      earlier && updateSavedForm(earlier, fields)
+        ? earlier
+        : saveForm({
+            formType: selectedForm?.id,
+            formNumber: selectedForm?.formNumber,
+            formName: selectedForm?.name,
+            status: "Draft",
+            ...fields,
+          });
 
     if (formId) {
+      ctx.setSavedItem({ id: formId, text, at: new Date() });
       setImportStatus({ type: "success", message: "Form saved to My Packet!" });
       setTimeout(() => setImportStatus(null), 3000);
     } else {
@@ -7834,6 +7868,7 @@ function _buildFormsHelperGenerationHandlers(ctx) {
 
   const handleStartNewForm = () => {
     clearDraftState();
+    ctx.setSavedItem(null);
     ctx.setSelectedForm(null);
     ctx.setFormData({});
     setCurrentStep(0);
@@ -8165,6 +8200,8 @@ function FormsHelperReviewStep({ state, handlers }) {
         importStatus={state.importStatus}
         formType={state.selectedForm?.id}
         isStatement={isStatement}
+        savedItem={state.savedItem}
+        isSavedNow={state.savedItem?.text === displayContent}
       />
 
       {!isStatement && (

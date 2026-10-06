@@ -45,10 +45,12 @@ function findExistingClaimIndex(claims, claim) {
   if (claim.vaAppealId) {
     return claims.findIndex((c) => c.vaAppealId === claim.vaAppealId);
   }
+  // A claim saved with no parent condition is stored with null; one passed
+  // in without the field has undefined. They are the same claim.
   return claims.findIndex(
     (c) =>
       c.conditionName === claim.conditionName &&
-      c.parentCondition === claim.parentCondition,
+      (c.parentCondition || null) === (claim.parentCondition || null),
   );
 }
 
