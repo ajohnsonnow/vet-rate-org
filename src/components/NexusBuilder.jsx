@@ -61,6 +61,9 @@ Sincerely,
 const DOWNLOAD_FAILED =
   "The download did not work. Your statement is still here. Try another format, or copy the text.";
 
+const SAVE_FAILED =
+  "Your statement could not be saved on this device. It is still here. Download it or copy the text so you do not lose it, then try saving again.";
+
 const downloadText = (statement, doctorNote) =>
   `${statement}\n\n---\n\nDOCTOR'S CHEAT SHEET\n\n${doctorNote}`;
 
@@ -1428,7 +1431,7 @@ function useNexusDocumentOutput({
       isSecondary,
     });
 
-    onSave({
+    const saved = onSave({
       condition,
       primaryCondition,
       answers,
@@ -1436,6 +1439,7 @@ function useNexusDocumentOutput({
       doctorNote,
       generatedDate: new Date().toISOString(),
     });
+    setOutputError(saved === false ? SAVE_FAILED : "");
   };
 
   const currentDoctorNote = generateDoctorNote({
