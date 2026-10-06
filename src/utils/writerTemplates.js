@@ -672,7 +672,7 @@ export function buildPassagePrompt(passages, voice = "veteran") {
 Rules:
 - Say only what the passage says. Do not add any fact, number, date, place, name, unit, diagnosis, rating, cause, feeling or detail that is not in it.
 - Keep every number, date and name exactly as written.
-- Keep who is speaking, and who is spoken about, the same.
+- Keep who is speaking, and who is spoken about, the same. Keep "I", "they", "he" and "she" exactly as the writer used them. Do not replace one with a name or with a description such as "the veteran", or the other way round.
 - A passage that is not a full sentence (a list, a phrase with no subject or no verb) must be rewritten as one or more full sentences ${SUBJECT_FOR_VOICE[voice] ?? SUBJECT_FOR_VOICE.veteran}
 - Return a passage unchanged only if every part of it is already a full sentence.
 - Do not use square brackets. Do not ask questions, give advice, or add a heading, a greeting, a closing or a certification.

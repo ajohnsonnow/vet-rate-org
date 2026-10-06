@@ -406,17 +406,28 @@ describe("rewordings the real model produced (Witness Bench, t04)", () => {
   const original =
     "They leave the room when the fireworks start and do not come back for the evening.";
 
+  it("accepts a change of verb and word order that keeps 'they'", () => {
+    const rewrite =
+      "When the fireworks start, they leave the room and do not return for the evening.";
+    expect(
+      checkPassageRewrite({ original, rewrite, voice: "witness" }),
+    ).toEqual({ status: "accepted", text: rewrite, reasons: [] });
+  });
+
   it.each([
     "The veteran leaves the room when the fireworks start and does not return for the evening.",
     "When fireworks start, the veteran leaves the room and does not return for the evening.",
-    "When the fireworks start, they leave the room and do not return for the evening.",
   ])(
-    "accepts a change of verb form and of 'they' to 'the veteran': %s",
+    "rejects 'they' turned into 'the veteran', and for that alone: %s",
     (rewrite) => {
-      expect(checkPassageRewrite({ original, rewrite })).toEqual({
-        status: "accepted",
-        text: rewrite,
-        reasons: [],
+      expect(
+        checkPassageRewrite({ original, rewrite, voice: "witness" }),
+      ).toEqual({
+        status: "rejected",
+        text: original,
+        reasons: [
+          'refers to people differently from the passage: "they" is gone, "veteran" is new',
+        ],
       });
     },
   );
@@ -485,5 +496,126 @@ describe("resolvePassageDraft records each passage", () => {
       },
     ]);
     expect(standardDraft(plan).passageOutcomes).toEqual([]);
+  });
+});
+
+describe("a rewording refers to people the way its passage does", () => {
+  const reject = (args) => {
+    const result = checkPassageRewrite(args);
+    expect(result.status).toBe("rejected");
+    expect(result.text).toBe(args.original);
+    return result.reasons.join("; ");
+  };
+
+  it.each([
+    [
+      "They check the door locks three or four times before bed.",
+      "The veteran checks the door locks three or four times before bed.",
+    ],
+    [
+      "They no longer drive at night, so I do all of the evening driving.",
+      "The veteran no longer drives at night, so I perform all of the evening driving.",
+    ],
+    [
+      "They leave the room when the fireworks start and do not come back for the evening.",
+      "When fireworks start, the veteran leaves the room and does not return for the evening.",
+    ],
+  ])("rejects a pronoun replaced by a noun: %s", (original, rewrite) => {
+    expect(reject({ original, rewrite, voice: "witness" })).toMatch(
+      /refers to people differently/,
+    );
+  });
+
+  it("rejects a noun replaced by a pronoun", () => {
+    expect(
+      reject({
+        original:
+          "The veteran checks the door locks three or four times before bed",
+        rewrite: "They check the door locks three or four times before bed.",
+        voice: "witness",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+
+  it("rejects one pronoun swapped for another", () => {
+    expect(
+      reject({
+        original: "They leave the room when the fireworks start",
+        rewrite: "He leaves the room when the fireworks start.",
+        voice: "witness",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+
+  it("rejects first person turned into third, and the reverse", () => {
+    expect(
+      reject({
+        original: "I miss about two shifts a month at the warehouse",
+        rewrite: "They miss about two shifts a month at the warehouse.",
+      }),
+    ).toMatch(/refers to people differently/);
+    expect(
+      reject({
+        original: "They miss about two shifts a month at the warehouse",
+        rewrite: "I miss about two shifts a month at the warehouse.",
+        voice: "witness",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+
+  it("rejects a veteran's own fragment turned into third person", () => {
+    expect(
+      reject({
+        original: FRAGMENT,
+        rewrite: "They startle at engine noise and have broken sleep.",
+        voice: "veteran",
+      }),
+    ).toMatch(/refers to people differently/);
+  });
+});
+
+describe("a rewording that keeps the passage's way of referring to people", () => {
+  it("lets a fragment with no subject take the writer's own", () => {
+    expect(
+      checkPassageRewrite({
+        original: FRAGMENT,
+        rewrite: SENTENCES,
+        voice: "veteran",
+      }).status,
+    ).toBe("accepted");
+    expect(
+      checkPassageRewrite({
+        original:
+          "Lights off at the desk, sunglasses indoors, head down on the bench",
+        rewrite:
+          "They keep the lights off at the desk, wear sunglasses indoors and put their head down on the bench.",
+        voice: "witness",
+      }).status,
+    ).toBe("accepted");
+  });
+
+  it("accepts a rewording that keeps every pronoun the writer used", () => {
+    expect(
+      checkPassageRewrite({
+        original:
+          "They leave the room when the fireworks start and do not come back for the evening.",
+        rewrite:
+          "When the fireworks start, they leave the room and do not return for the evening.",
+        voice: "witness",
+      }).status,
+    ).toBe("accepted");
+    expect(
+      checkPassageRewrite({
+        original: "I see them wake up shouting several nights a week",
+        rewrite: "Several nights a week, I see them wake up shouting.",
+        voice: "witness",
+      }).status,
+    ).toBe("accepted");
+  });
+
+  it("the request tells the model to keep the writer's pronouns", () => {
+    expect(buildPassagePrompt([FRAGMENT])).toContain(
+      'Keep "I", "they", "he" and "she" exactly as the writer used them. Do not replace one with a name or with a description such as "the veteran", or the other way round.',
+    );
   });
 });

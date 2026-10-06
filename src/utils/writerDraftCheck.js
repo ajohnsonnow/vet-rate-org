@@ -19,7 +19,9 @@
  *      redaction marker: an invented fact in brackets is still invented;
  *   5. it is not much longer or much newer than the passage. This is what
  *      catches an invented account that happens to contain no number, name
- *      or diagnosis.
+ *      or diagnosis;
+ *   6. it refers to people the way the passage does: the same pronouns, no
+ *      "the veteran" for "they", no first person turned into third.
  *
  * A rewording that fails keeps the writer's own words. The check errs
  * toward rejecting: a rejected good rewording costs some polish, an
@@ -705,11 +707,77 @@ const MAX_PASSAGE_GROWTH = 1.75;
 const PASSAGE_GROWTH_ALLOWANCE = 40;
 const MIN_NEW_WORDS_ALLOWED = 2;
 
-function passageProblems(original, rewrite, keep) {
+const PRONOUN_FAMILIES = {
+  I: "i me my mine myself i'm i've i'd i'll we us our ours".split(" "),
+  they: "they them their theirs themselves they're they've they'd they'll".split(
+    " ",
+  ),
+  he: "he him his himself he's he'd he'll".split(" "),
+  she: "she her hers herself she's she'd she'll".split(" "),
+};
+const THIRD_PERSON = ["they", "he", "she"];
+const PERSON_NOUNS =
+  "veteran husband wife spouse partner son daughter brother sister father mother dad mom friend buddy coworker supervisor patient claimant soldier".split(
+    " ",
+  );
+
+/** How a text refers to people: which pronoun families and person nouns it uses. */
+function peopleIn(value) {
+  const words = wordSet(value);
+  const has = (list) => list.some((word) => words.has(word));
+  return {
+    pronouns: Object.keys(PRONOUN_FAMILIES).filter((family) =>
+      has(PRONOUN_FAMILIES[family]),
+    ),
+    nouns: PERSON_NOUNS.filter((noun) => words.has(noun)),
+  };
+}
+
+/**
+ * A rewording has to refer to people the way its passage does, so one
+ * statement does not call the same person "they" in one sentence and "the
+ * veteran" in the next, or slip from "I" to "they". It may not drop a
+ * pronoun the passage used, swap one pronoun for another, bring in or leave
+ * out a noun for a person ("the veteran", "my wife"), or turn first person
+ * into third or third into first.
+ *
+ * One thing is allowed: a passage with no subject at all ("Startle at
+ * engine noise") may be given the writer's. That is "I" for anyone, and for
+ * a witness also "they", the person they are describing.
+ */
+function peopleProblems(original, rewrite, voice) {
+  const before = peopleIn(original);
+  const after = peopleIn(rewrite);
+  const noOneNamed = before.pronouns.length === 0 && before.nouns.length === 0;
+  const changes = [
+    ...before.pronouns
+      .filter((family) => !after.pronouns.includes(family))
+      .map((family) => `"${family}" is gone`),
+    ...before.nouns
+      .filter((noun) => !after.nouns.includes(noun))
+      .map((noun) => `"${noun}" is gone`),
+    ...after.nouns
+      .filter((noun) => !before.nouns.includes(noun))
+      .map((noun) => `"${noun}" is new`),
+    ...after.pronouns
+      .filter(
+        (family) =>
+          THIRD_PERSON.includes(family) &&
+          !before.pronouns.includes(family) &&
+          !(noOneNamed && voice === "witness"),
+      )
+      .map((family) => `"${family}" is new`),
+  ];
+  return changes.length > 0
+    ? [`refers to people differently from the passage: ${changes.join(", ")}`]
+    : [];
+}
+
+function passageProblems(original, rewrite, keep, voice) {
   const kind = classifyReplyKind(rewrite);
   if (kind !== "rewording") return [`not a rewording: ${kind}`];
 
-  const problems = [];
+  const problems = peopleProblems(original, rewrite, voice);
   if (REDACTION_MARKER.test(rewrite))
     problems.push("contains a redaction marker");
   const brackets = (rewrite.match(BRACKETED) ?? []).filter(
@@ -762,9 +830,16 @@ function passageProblems(original, rewrite, keep) {
  * certification wording; every number and required phrase of the passage
  * kept, and most of its wording. On top of those: no bracketed text the
  * passage did not have (an invented fact in brackets is still invented), no
- * redaction marker, and not much longer or much newer than the passage.
+ * redaction marker, not much longer or much newer than the passage, and the
+ * same way of referring to people (see peopleProblems). `voice` is the
+ * plan's: who is writing.
  */
-export function checkPassageRewrite({ original, rewrite, keep = [] }) {
+export function checkPassageRewrite({
+  original,
+  rewrite,
+  keep = [],
+  voice = "veteran",
+}) {
   const source = String(original ?? "").trim();
   const text = String(rewrite ?? "").trim();
   if (text === "") {
@@ -777,7 +852,7 @@ export function checkPassageRewrite({ original, rewrite, keep = [] }) {
   if (sameWording(source, text)) {
     return { status: "unchanged", text: source, reasons: [] };
   }
-  const reasons = passageProblems(source, text, keep);
+  const reasons = passageProblems(source, text, keep, voice);
   return reasons.length > 0
     ? { status: "rejected", text: source, reasons }
     : { status: "accepted", text, reasons: [] };
@@ -830,6 +905,7 @@ export function resolvePassageDraft({ plan, sent, reply }) {
       original: passage.text,
       rewrite: rewrites[i],
       keep: plan.keep,
+      voice: plan.voice,
     }),
   }));
   const count = (status) =>
