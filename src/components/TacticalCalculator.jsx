@@ -998,7 +998,7 @@ function PayResults({ t, results, compensation }) {
 
 function PaycheckTab({ t, dependents, setDependents, results, compensation }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid [&>*]:min-w-0 grid-cols-1 lg:grid-cols-2 gap-6">
       <DependentsInput
         t={t}
         dependents={dependents}
@@ -1035,7 +1035,7 @@ function WhatIfScenarioInput({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t("tacticalCalc", "newRatingPercentage")}
           </label>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="grid [&>*]:min-w-0 grid-cols-3 sm:grid-cols-6 gap-2">
             {ratingOptions
               .filter((r) => r > 0)
               .map((r) => (
@@ -1146,7 +1146,7 @@ function WhatIfResultsPanel({ t, whatIfRating, whatIfResults }) {
       </h3>
 
       {/* Before/After Comparison */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid [&>*]:min-w-0 grid-cols-2 gap-4">
         <div className="bg-gray-100 dark:bg-gray-900 rounded-xl p-4 text-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
             {t("tacticalCalc", "current")}
@@ -1219,7 +1219,7 @@ function WhatIfTab({
   whatIfResults,
 }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid [&>*]:min-w-0 grid-cols-1 lg:grid-cols-2 gap-6">
       <WhatIfScenarioInput
         t={t}
         whatIfRating={whatIfRating}
@@ -1323,7 +1323,7 @@ function AddConditionForm({
         <span>➕</span> {t("tacticalCalc", "addRatedCondition")}
       </h3>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid [&>*]:min-w-0 grid-cols-1 sm:grid-cols-2 gap-4">
         <BodyPartSelectField
           t={t}
           newCondition={newCondition}
@@ -1442,11 +1442,14 @@ function ConditionRow({
           />
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      {/* index.css widens ".modal-content .flex.gap-2 > button" to 120px on a
+          phone for Save/Cancel rows; these are icon buttons, so they opt out
+          and take a 44px target instead. */}
+      <div className="flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={() => handleEditCondition(condition)}
-          className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+          className="!flex-none !min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-gray-400 hover:text-blue-500 transition-colors"
           aria-label="Edit"
         >
           <svg
@@ -1466,7 +1469,7 @@ function ConditionRow({
         <button
           type="button"
           onClick={() => handleRemoveCondition(condition.id)}
-          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+          className="!flex-none !min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-gray-400 hover:text-red-500 transition-colors"
           aria-label="Remove"
         >
           <svg
@@ -2085,7 +2088,7 @@ function CalculatorTab({
     setActiveTab,
   };
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+    <div className="grid [&>*]:min-w-0 grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       <CalculatorInputSection {...props} />
 
       <CalculatorResultsSection {...props} />
@@ -2365,7 +2368,7 @@ function MyRatingsSummaryFilled({
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid [&>*]:min-w-0 grid-cols-2 gap-3">
         <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-center">
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {myRatings.length}
@@ -2471,7 +2474,7 @@ function MyRatingsTab({
 
       <SaveConfirmationBanner t={t} showSaveConfirm={showSaveConfirm} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid [&>*]:min-w-0 grid-cols-1 lg:grid-cols-2 gap-6">
         <SavedRatingsList
           t={t}
           myRatings={myRatings}
@@ -2622,7 +2625,7 @@ function CapResultsGrid({
   removeCapResult,
 }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid [&>*]:min-w-0 grid-cols-1 md:grid-cols-2 gap-4">
       {capResults.map((result, index) => (
         <CapResultCard
           key={result.id || index}
@@ -2652,7 +2655,7 @@ function CapResultsPreviewStats({ t, conditions, capResults }) {
   const previewResults = calculateVARating(previewConditions);
 
   return (
-    <div className="grid grid-cols-3 gap-3 text-center">
+    <div className="grid [&>*]:min-w-0 grid-cols-3 gap-3 text-center">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
         <div className="text-2xl font-bold text-blue-600">
           {conditions.length}
@@ -2853,7 +2856,7 @@ function BasicRatesCards({ t }) {
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
         {t("tacticalCalc", "noDependentBenefits")}
       </p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid [&>*]:min-w-0 grid-cols-2 gap-3">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             ${VA_PAY_RATES_2026.solo[10].toFixed(2)}
@@ -3063,7 +3066,7 @@ function AddedAmountsTable({ t }) {
 
 function RatesQuickReferenceCards({ t }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid [&>*]:min-w-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-4">
         <div className="text-3xl font-bold">$3,938.58</div>
         <div className="text-green-100 text-sm">
