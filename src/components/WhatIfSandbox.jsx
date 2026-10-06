@@ -556,7 +556,7 @@ const ScenarioCanvas = ({
         {hasMyRatings() && (
           <button
             onClick={onLoadMyRatings}
-            className="rounded bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700"
+            className="rounded bg-green-700 px-4 py-2 text-sm text-white transition-colors hover:bg-green-800"
           >
             📊 Load My Ratings
           </button>

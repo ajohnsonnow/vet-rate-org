@@ -12,6 +12,12 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import BilateralIssuesSummary from "../../components/BilateralIssuesSummary.jsx";
 import WhatIfSandbox from "../../components/WhatIfSandbox.jsx";
 import { LanguageProvider } from "../../contexts/LanguageContext.jsx";
+import { saveMyRatings } from "../../utils/veteranProfile.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const here = dirname(fileURLToPath(import.meta.url));
 
 const HEX = {
   white: "#ffffff",
@@ -27,6 +33,7 @@ const HEX = {
   "purple-50": "#faf5ff",
   "purple-300": "#d8b4fe",
   "purple-700": "#7e22ce",
+  "yellow-700": "#a16207",
   "gray-200": "#e5e7eb",
   "gray-700": "#374151",
   // brand-700 of the gold palette, the lightest of the four brand ramps
@@ -63,6 +70,8 @@ const PAIRS = [
   ["rule sentence, light", "purple-700", "purple-50"],
   ["rule sentence, dark", "purple-300", "purple-900/30 on dark"],
   ["add to scenario button", "white", "blue-700"],
+  ["sandbox Load My Ratings button", "white", "green-700"],
+  ["Secondary Scout combined rating badge", "white", "yellow-700"],
 ];
 
 beforeEach(() => {
@@ -77,6 +86,44 @@ describe("text introduced with the bilateral notices meets 4.5:1", () => {
   it("the old sandbox rule colour, green-600 on green-50, did not", () => {
     HEX["green-600"] = "#16a34a";
     expect(contrast("green-600", "green-50")).toBeLessThan(4.5);
+  });
+});
+
+describe("two older white-on-colour elements, now at 4.5:1", () => {
+  it("white on green-600 and on yellow-600 did not meet it", () => {
+    HEX["green-600"] = "#16a34a";
+    HEX["yellow-600"] = "#ca8a04";
+    expect(contrast("white", "green-600")).toBeLessThan(4.5);
+    expect(contrast("white", "yellow-600")).toBeLessThan(4.5);
+  });
+
+  it("the sandbox Load My Ratings button is white on green-700", async () => {
+    saveMyRatings([{ name: "PTSD", rating: 50, side: "none" }]);
+    render(
+      <LanguageProvider>
+        <WhatIfSandbox onClose={() => {}} />
+      </LanguageProvider>,
+    );
+    const button = await screen.findByRole("button", {
+      name: /load my ratings/i,
+    });
+    expect(button).toHaveClass("bg-green-700", "text-white");
+    expect(button).not.toHaveClass("bg-green-600");
+  });
+
+  // Secondary Scout cannot be rendered under jsdom (its PDF import needs
+  // DOMMatrix), so its badge is checked in the source.
+  it("the Secondary Scout combined rating badge is white on yellow-700", () => {
+    const source = readFileSync(
+      join(here, "..", "..", "components", "SecondaryScoutLauncher.jsx"),
+      "utf8",
+    );
+    const badge = source.slice(
+      source.indexOf("Combined Rating:"),
+      source.indexOf("{calculateCombinedRating(savedRatings)}%"),
+    );
+    expect(badge).toContain("bg-yellow-700 text-white");
+    expect(badge).not.toContain("bg-yellow-600");
   });
 });
 

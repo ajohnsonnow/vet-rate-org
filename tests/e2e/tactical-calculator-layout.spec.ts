@@ -102,6 +102,28 @@ for (const viewport of VIEWPORTS) {
       }
     });
 
+    test("condition names keep a readable width and their buttons a 44px target", async ({
+      page,
+    }) => {
+      const dialog = await openCalculatorWithConditions(page);
+      const name = dialog.getByText("Knee (Left)", { exact: true }).first();
+      const nameBox = await name.boundingBox();
+      expect(nameBox).not.toBeNull();
+      // A name squeezed to nothing wraps one letter per line.
+      expect(nameBox!.width).toBeGreaterThanOrEqual(80);
+      expect(nameBox!.height).toBeLessThanOrEqual(60);
+      for (const label of ["Edit", "Remove"]) {
+        const box = await dialog
+          .getByRole("button", { name: label, exact: true })
+          .first()
+          .boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.width).toBeGreaterThanOrEqual(44);
+        expect(box!.width).toBeLessThanOrEqual(60);
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+      }
+    });
+
     test("no condition row shows above the sticky tab bar after scrolling", async ({
       page,
     }) => {
